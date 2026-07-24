@@ -1,0 +1,5 @@
+res://scripts/hud.gd
+res://scripts/lunar_player.gd
+res://scripts/main.gd
+res://scripts/moon_world.gd
+res://scripts/spectator_controller.gd

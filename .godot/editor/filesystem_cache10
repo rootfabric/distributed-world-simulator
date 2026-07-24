@@ -1,0 +1,11 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1784899872
+main.tscn::PackedScene::-1::1784782896::0::1::::<><><>0<>0<><>::res://scripts/main.gd
+PROJECT_MANIFEST.txt::TextFile::-1::1784783692::0::1::::<><><>0<>0<><>::
+README_RU.md::TextFile::-1::1784783646::0::1::::<><><>0<>0<><>::
+::res://scripts/::1784899065
+hud.gd::GDScript::1534098182488699668::1784899065::0::1::::<>CanvasLayer<><>0<>0<><>::
+lunar_player.gd::GDScript::1981879421383353698::1784783622::0::1::::<>CharacterBody3D<><>0<>0<><>::
+main.gd::GDScript::3304446103858455830::1784783348::0::1::::<>Node3D<><>0<>0<><>::
+moon_world.gd::GDScript::8150845217655966924::1784783614::0::1::::<>Node3D<><>0<>0<><>::
+spectator_controller.gd::GDScript::2131762878217345553::1784783162::0::1::::<>Node3D<><>0<>0<><>::

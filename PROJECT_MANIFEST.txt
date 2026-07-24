@@ -1,0 +1,15 @@
+Real Scale Procedural Moon
+Version: 6 - brighter lighting, spectator roll and teleport
+
+ee3e32140ad4e3d63b503b144b23d6ea9527361fa143b14709f943da86c7d1a2  README_RU.md  12069 bytes
+57c41f585120aaf6ef3424a11107518d21741a2c7fad118884f4a491bffc683a  RUN_EDITOR_DOUBLE.ps1  913 bytes
+4c181d1efbb887dfdb9d30b003ecc40668ff916439250a82879cf162a05e4ef0  VALIDATE_WITH_DOUBLE.ps1  889 bytes
+b7b4505571ea10529e1b2b6417fed60b79981425b85b438b003732081cd350cf  main.tscn  179 bytes
+2b209d24622526336b7dfe2b929068a68f5f7d8fce6d235132105d6d4b593dac  project.godot  823 bytes
+a134d22b833446e246fa93b9e170010600e73501d2d4a747986325d395f92746  scripts/hud.gd  5217 bytes
+af7f3320f82d12f9f7e03866bd814ae6d69d0dc1a0bb3dd6e7218f669c37b22b  scripts/lunar_player.gd  7938 bytes
+444519cb6acccfee711dcaa164d8a3d6d172498a82a793a2f9e4b7bdbea21b86  scripts/main.gd  5311 bytes
+4b55fcdd16ae747cdbf653b76a44d8546635cc9ba4fe486776a35f2bc44122cb  scripts/moon_world.gd  41391 bytes
+d98341138ee1e9810be18517c489ae8f65120ee18b4deaf75c2893fa9acb4651  scripts/spectator_controller.gd  4515 bytes
+
+V6: brighter baked vertex lighting; Q/E roll; H horizon level; T surface teleport.
