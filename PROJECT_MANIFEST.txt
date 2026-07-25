@@ -1,31 +1,31 @@
-Real Scale Procedural Moon v13 — Persistent World Layer
+Real Scale Procedural Moon v14 — Pluggable Controller Layer
 
 Core additions:
-- scripts/persistence/lunar_world_repository.gd
-- scripts/simulation/entities/entity_record.gd
-- scripts/simulation/entities/entity_registry.gd
-- scripts/world/moon_world.gd
+- scripts/actors/controllers/controller_host.gd
+- scripts/actors/controllers/controller_profile_loader.gd
+- scripts/actors/controllers/base_movement_controller.gd
+- scripts/actors/controllers/planetary_humanoid_controller.gd
+- scripts/actors/controllers/jetpack_controller.gd
+- config/controllers/lunar_humanoid.json
+- config/controllers/lunar_jetpack.json
+- config/controllers/earth_humanoid.json
+- scripts/actors/player/lunar_player.gd
 - scripts/app/lunar_app.gd
 - scripts/ui/lunar_hud.gd
-- tests/integration/test_persistence_roundtrip.gd
-- RUN_PERSISTENCE_TEST.ps1
+- tests/integration/test_controller_profiles.gd
+- RUN_CONTROLLER_TEST.ps1
 
 Runtime hotkeys:
+- C: first-person / third-person camera
+- J: Lunar EVA / Jetpack controller
+- F12: controller integration mini-test
+- F1 / Escape: toggle menu
 - B: place Survey Beacon
 - Delete: remove nearest Survey Beacon
-- Ctrl+S: save persistent world layer
-- F10: persistence roundtrip mini-test
-- F7: entity migration mini-test
-- F9: diagnostic snapshot
-- F1 / Escape: toggle menu
 
 Schemas:
+- lunar.controller_profile.v1
+- lunar.controller_host.v1
 - lunar.world.v1
-- lunar.chunk.v1
-- lunar.journal_event.v1
-- lunar.persistence_runtime.v1
-- lunar.persistence_test.v1
 - lunar.entity.v1
-- lunar.entity_event.v1
-- lunar.entity_registry.v1
 - lunar.partition.v1

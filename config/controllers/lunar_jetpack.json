@@ -1,0 +1,47 @@
+{
+  "schema": "lunar.controller_profile.v1",
+  "profile_id": "lunar_jetpack",
+  "display_name": "Lunar EVA Jetpack",
+  "controller_script": "res://scripts/actors/controllers/jetpack_controller.gd",
+  "body_kind": "humanoid",
+  "movement": {
+    "flight_speed": 18.0,
+    "boost_speed": 65.0,
+    "flight_acceleration": 22.0,
+    "vertical_speed": 14.0,
+    "vertical_boost_speed": 38.0,
+    "auto_hover": true,
+    "gravity_scale": 0.0,
+    "floor_release_speed": 2.0,
+    "floor_max_angle_deg": 65.0,
+    "floor_snap_length": 0.15
+  },
+  "camera": {
+    "default_mode": "first_person",
+    "mouse_sensitivity": 0.0012,
+    "pitch_min_deg": -88.0,
+    "pitch_max_deg": 88.0,
+    "default_pitch_deg": -5.0,
+    "first_person_fov": 78.0,
+    "first_person_near": 0.06,
+    "eye_height": 1.62,
+    "third_person_fov": 72.0,
+    "third_person_near": 0.18,
+    "third_person_distance": 7.0,
+    "third_person_height_offset": 0.82
+  },
+  "capabilities": [
+    "walk",
+    "fly",
+    "hover",
+    "boost",
+    "first_person",
+    "third_person"
+  ],
+  "environment_tags": [
+    "moon",
+    "low_gravity",
+    "vacuum",
+    "jetpack"
+  ]
+}

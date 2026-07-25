@@ -51,3 +51,29 @@ user://worlds/moon-experiment-001/
 ```
 
 Подробная документация находится в `docs/README_RU.md`.
+
+
+# v14 — подключаемые контроллеры
+
+Новые клавиши:
+
+```text
+C    первое/третье лицо
+J    Lunar EVA/Jetpack
+F12  мини-тест controller/camera
+```
+
+Профили:
+
+```text
+config/controllers/lunar_humanoid.json
+config/controllers/lunar_jetpack.json
+config/controllers/earth_humanoid.json
+```
+
+Архитектура описана в:
+
+```text
+docs/architecture/PLUGGABLE_CONTROLLER_ARCHITECTURE_RU.md
+docs/contracts/CONTROLLER_PROFILE_V1_RU.md
+```

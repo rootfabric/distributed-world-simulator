@@ -1,0 +1,43 @@
+{
+  "schema": "lunar.controller_profile.v1",
+  "profile_id": "earth_humanoid",
+  "display_name": "Earth Humanoid Template",
+  "controller_script": "res://scripts/actors/controllers/planetary_humanoid_controller.gd",
+  "body_kind": "humanoid",
+  "movement": {
+    "walk_speed": 4.8,
+    "run_speed": 8.5,
+    "ground_acceleration": 28.0,
+    "air_acceleration": 2.0,
+    "jump_speed": 4.7,
+    "gravity_scale": 1.0,
+    "floor_max_angle_deg": 48.0,
+    "floor_snap_length": 0.45
+  },
+  "camera": {
+    "default_mode": "first_person",
+    "mouse_sensitivity": 0.00125,
+    "pitch_min_deg": -82.0,
+    "pitch_max_deg": 72.0,
+    "default_pitch_deg": -5.0,
+    "first_person_fov": 75.0,
+    "first_person_near": 0.06,
+    "eye_height": 1.68,
+    "third_person_fov": 68.0,
+    "third_person_near": 0.18,
+    "third_person_distance": 4.8,
+    "third_person_height_offset": 0.65
+  },
+  "capabilities": [
+    "walk",
+    "run",
+    "jump",
+    "first_person",
+    "third_person"
+  ],
+  "environment_tags": [
+    "earth",
+    "atmosphere",
+    "normal_gravity"
+  ]
+}

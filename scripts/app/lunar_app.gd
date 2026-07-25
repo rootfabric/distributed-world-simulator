@@ -47,6 +47,7 @@ var fullscreen_enabled: bool = false
 var resolution_index: int = 2
 var last_mini_test_result: String = "Не запускался"
 var last_persistence_test_result: String = "Не запускался"
+var last_controller_test_result: String = "Не запускался"
 var last_diagnostic_path: String = "-"
 var last_action_result: String = "-"
 var clear_confirmation_deadline_msec: int = 0
@@ -87,7 +88,9 @@ func _ready() -> void:
 	player = LunarPlayerScript.new()
 	player.name = "LunarPlayer"
 	add_child(player)
-	player.setup(moon_world)
+	player.setup(moon_world, logger)
+	player.controller_changed.connect(_on_player_controller_changed)
+	player.camera_mode_changed.connect(_on_player_camera_mode_changed)
 
 	spectator = SpectatorScript.new()
 	spectator.name = "SpectatorController"
@@ -206,6 +209,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if event.physical_keycode == KEY_T and spectator_enabled:
 			teleport_player_to_spectator()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_C and not spectator_enabled and not _is_menu_open():
+			toggle_player_camera()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_J and not spectator_enabled and not _is_menu_open():
+			toggle_player_controller()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F12:
+			run_controller_mini_test()
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_F11:
@@ -357,6 +372,98 @@ func teleport_player_to_spectator() -> void:
 	logger.info("gameplay", "player_teleported_from_spectator", {
 		"world_position": _vector_to_array(player.get_world_position()),
 	})
+
+
+func toggle_player_camera() -> String:
+	if player == null or spectator_enabled:
+		return ""
+	var mode: String = player.toggle_camera_mode()
+	last_action_result = "Камера: %s" % player.get_camera_mode_display_name()
+	return mode
+
+
+func toggle_player_controller() -> String:
+	if player == null or spectator_enabled:
+		return ""
+	var current_id: String = player.get_controller_id()
+	var target_id: String = (
+		"lunar_jetpack" if current_id != "lunar_jetpack" else "lunar_humanoid"
+	)
+	if not player.activate_controller(target_id):
+		last_action_result = "Не удалось подключить контроллер %s" % target_id
+		return current_id
+	last_action_result = "Контроллер: %s" % player.get_controller_display_name()
+	return player.get_controller_id()
+
+
+func activate_player_controller(profile_id: String) -> bool:
+	if player == null or spectator_enabled:
+		return false
+	var activated: bool = player.activate_controller(profile_id)
+	last_action_result = (
+		"Контроллер: %s" % player.get_controller_display_name()
+		if activated
+		else "Не удалось подключить контроллер %s" % profile_id
+	)
+	return activated
+
+
+func run_controller_mini_test() -> Dictionary:
+	if player == null or spectator_enabled:
+		last_controller_test_result = "FAIL: нужен режим персонажа"
+		return {"passed": false, "summary": last_controller_test_result}
+	var original_controller: String = player.get_controller_id()
+	var original_camera: String = player.get_camera_mode()
+	var target_controller: String = (
+		"lunar_jetpack"
+		if original_controller != "lunar_jetpack"
+		else "lunar_humanoid"
+	)
+	var controller_switched: bool = player.activate_controller(target_controller)
+	var controller_verified: bool = player.get_controller_id() == target_controller
+	var toggled_camera: String = player.toggle_camera_mode()
+	var camera_verified: bool = toggled_camera != original_camera
+	var active_camera_valid: bool = (
+		player.get_active_camera() != null
+		and player.get_active_camera().current
+	)
+	var restored_controller: bool = player.activate_controller(original_controller)
+	player.set_camera_mode(original_camera)
+	var restored: bool = (
+		restored_controller
+		and player.get_controller_id() == original_controller
+		and player.get_camera_mode() == original_camera
+	)
+	var passed: bool = (
+		controller_switched
+		and controller_verified
+		and camera_verified
+		and active_camera_valid
+		and restored
+	)
+	last_controller_test_result = (
+		"PASS: %s ↔ %s, %s ↔ %s" % [
+			original_controller,
+			target_controller,
+			original_camera,
+			toggled_camera,
+		]
+		if passed
+		else "FAIL: controller/camera contract"
+	)
+	var result: Dictionary = {
+		"passed": passed,
+		"original_controller": original_controller,
+		"target_controller": target_controller,
+		"original_camera": original_camera,
+		"target_camera": toggled_camera,
+		"active_camera_valid": active_camera_valid,
+		"restored": restored,
+		"summary": last_controller_test_result,
+	}
+	logger.info("integration_test", "controller_mini_test", result)
+	last_action_result = last_controller_test_result
+	return result
 
 
 func place_survey_beacon() -> String:
@@ -541,7 +648,10 @@ func save_diagnostic_snapshot() -> String:
 			),
 			"last_mini_test_result": last_mini_test_result,
 			"last_persistence_test_result": last_persistence_test_result,
+			"last_controller_test_result": last_controller_test_result,
 			"last_action_result": last_action_result,
+			"controller": player.get_controller_snapshot(),
+			"camera_mode": player.get_camera_mode(),
 		},
 		"partitions": zone_manager.create_partition_snapshot(),
 		"entities": entity_registry.create_snapshot(),
@@ -568,6 +678,10 @@ func get_last_mini_test_result() -> String:
 
 func get_last_persistence_test_result() -> String:
 	return last_persistence_test_result
+
+
+func get_last_controller_test_result() -> String:
+	return last_controller_test_result
 
 
 func get_last_action_result() -> String:
@@ -656,7 +770,11 @@ func _ensure_player_entity_registered() -> void:
 		player.get_world_position(),
 		{
 			"persistence": {"persistent": false},
-			"controller": {"type": "local_player"},
+			"controller": {
+				"type": "local_player",
+				"profile_id": player.get_controller_id(),
+				"camera_mode": player.get_camera_mode(),
+			},
 		}
 	)
 	entity_registry.register_entity(record)
@@ -672,6 +790,39 @@ func _sync_player_entity() -> void:
 		else player.get_world_position()
 	)
 	entity_registry.update_entity_position(PLAYER_ENTITY_ID, position)
+
+
+func _on_player_controller_changed(previous_id: String, current_id: String) -> void:
+	_sync_player_controller_component()
+	if logger != null:
+		logger.info("controller", "player_controller_changed", {
+			"previous_id": previous_id,
+			"current_id": current_id,
+			"camera_mode": player.get_camera_mode(),
+		})
+
+
+func _on_player_camera_mode_changed(mode: String) -> void:
+	_sync_player_controller_component()
+	if logger != null:
+		logger.info("controller", "player_camera_mode_changed", {
+			"mode": mode,
+			"controller_id": player.get_controller_id(),
+		})
+
+
+func _sync_player_controller_component() -> void:
+	if entity_registry == null or player == null:
+		return
+	var record = entity_registry.get_entity(PLAYER_ENTITY_ID)
+	if record == null:
+		return
+	record.set_component("controller", {
+		"type": "local_player",
+		"profile_id": player.get_controller_id(),
+		"display_name": player.get_controller_display_name(),
+		"camera_mode": player.get_camera_mode(),
+	})
 
 
 func _on_partition_window_changed(snapshot: Dictionary) -> void:

@@ -38,7 +38,7 @@ func setup(
 
 	panel = PanelContainer.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(830.0, 650.0)
+	panel.size = Vector2(860.0, 735.0)
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
@@ -63,7 +63,7 @@ func setup(
 	margin.add_child(vertical)
 
 	var title := Label.new()
-	title.text = "REAL SCALE PROCEDURAL MOON — PERSISTENT WORLD"
+	title.text = "REAL SCALE PROCEDURAL MOON — PLUGGABLE CONTROLLERS"
 	title.add_theme_font_size_override("font_size", 19)
 	vertical.add_child(title)
 
@@ -77,17 +77,24 @@ func setup(
 
 	help_label = Label.new()
 	help_label.text = (
-		"B — поставить Survey Beacon   Delete — удалить ближайший маяк\n"
-		+ "Ctrl+S — сохранить постоянный слой   F10 — тест save/unload/load\n"
-		+ "F7 — тест миграции сущности   F9 — сохранить диагностику\n"
-		+ "WASD — движение   Shift — ускорение   Space/Ctrl — вверх/вниз\n"
-		+ "Q — крен вправо   E — крен влево   H — горизонт   T — телепорт\n"
-		+ "F2 — LOD follow   F4 — цвета LOD   V — материал   F3 — спектатор\n"
+		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
+		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
+		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк\n"
+		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
+		+ "F9 — диагностика   F3 — спектатор   T — телепорт из спектатора\n"
+		+ "F2 — LOD follow   F4 — цвета LOD   V — материал\n"
 		+ "F8 — разрешение   F11 — полный экран   F6/R — случайная точка"
 	)
 	help_label.add_theme_font_size_override("font_size", 13)
 	help_label.modulate = Color(0.78, 0.82, 0.90)
 	vertical.add_child(help_label)
+
+	var controller_row := HBoxContainer.new()
+	controller_row.add_theme_constant_override("separation", 8)
+	vertical.add_child(controller_row)
+	_add_button(controller_row, "Камера 1/3 лицо (C)", _on_camera_mode_pressed)
+	_add_button(controller_row, "Lunar EVA / Jetpack (J)", _on_controller_toggle_pressed)
+	_add_button(controller_row, "Тест контроллера (F12)", _on_controller_test_pressed)
 
 	var placement_row := HBoxContainer.new()
 	placement_row.add_theme_constant_override("separation", 8)
@@ -111,7 +118,7 @@ func setup(
 	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1 / Esc — меню   |   B — маяк   |   Delete — удалить"
+	compact_hint.text = "F1 / Esc — меню   |   C — камера   |   J — контроллер   |   B — маяк"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
@@ -147,6 +154,18 @@ func set_menu_visible(visible_value: bool) -> void:
 
 func is_menu_visible() -> bool:
 	return menu_visible
+
+
+func _on_camera_mode_pressed() -> void:
+	main_controller.toggle_player_camera()
+
+
+func _on_controller_toggle_pressed() -> void:
+	main_controller.toggle_player_controller()
+
+
+func _on_controller_test_pressed() -> void:
+	main_controller.run_controller_mini_test()
 
 
 func _on_place_beacon_pressed() -> void:
@@ -216,6 +235,8 @@ func update_values(
 	info_label.text = (
 		(
 			"Режим: %s   |   мышь: %s   |   %s %s\n"
+			+ "Контроллер: %s   |   Камера: %s\n"
+			+ "Тест контроллера: %s\n"
 			+ "Разбиение: %s\n"
 			+ "Сущности: %s\n"
 			+ "Хранилище: %s\n"
@@ -234,6 +255,9 @@ func update_values(
 			capture_text,
 			main_controller.get_display_mode_name(),
 			main_controller.get_display_resolution_name(),
+			player.get_controller_display_name(),
+			player.get_camera_mode_display_name(),
+			main_controller.get_last_controller_test_result(),
 			partition_text,
 			entity_text,
 			persistence_text,

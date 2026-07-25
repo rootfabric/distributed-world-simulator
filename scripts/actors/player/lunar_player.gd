@@ -1,27 +1,40 @@
 extends CharacterBody3D
 
-const WALK_SPEED: float = 6.0
-const RUN_SPEED: float = 11.0
-const GROUND_ACCELERATION: float = 20.0
-const AIR_ACCELERATION: float = 3.0
-const JUMP_SPEED: float = 3.3
-const MOUSE_SENSITIVITY: float = 0.00135
+signal controller_changed(previous_id: String, current_id: String)
+signal camera_mode_changed(mode: String)
+
+const ControllerHostScript = preload(
+	"res://scripts/actors/controllers/controller_host.gd"
+)
+
+const CAMERA_FIRST_PERSON: String = "first_person"
+const CAMERA_THIRD_PERSON: String = "third_person"
 
 var moon_world
+var logger
 var control_enabled: bool = true
 var stored_world_position: Vector3 = Vector3.ZERO
 
-var camera_rig: Node3D
-var camera_pivot: Node3D
-var camera: Camera3D
+var controller_host
+var camera_anchor: Node3D
+var camera_yaw_node: Node3D
+var camera_pitch_node: Node3D
+var first_person_camera: Camera3D
+var third_person_arm: SpringArm3D
+var third_person_camera: Camera3D
 var visual_root: Node3D
 
+var camera_mode: String = CAMERA_FIRST_PERSON
 var camera_yaw: float = 0.0
-var camera_pitch: float = -0.20
+var camera_pitch: float = deg_to_rad(-8.0)
+var camera_pitch_min: float = deg_to_rad(-82.0)
+var camera_pitch_max: float = deg_to_rad(72.0)
+var default_camera_pitch: float = deg_to_rad(-8.0)
 
 
-func setup(moon_reference) -> void:
+func setup(moon_reference, logger_reference = null) -> void:
 	moon_world = moon_reference
+	logger = logger_reference
 	collision_layer = 2
 	collision_mask = 1
 	floor_snap_length = 0.75
@@ -41,89 +54,156 @@ func setup(moon_reference) -> void:
 	visual_root.name = "AstronautVisual"
 	add_child(visual_root)
 	_build_astronaut_visual()
+	_build_camera_system()
 
-	camera_rig = Node3D.new()
-	camera_rig.name = "CameraRig"
-	camera_rig.position.y = 1.35
-	add_child(camera_rig)
-
-	camera_pivot = Node3D.new()
-	camera_pivot.name = "CameraPivot"
-	camera_rig.add_child(camera_pivot)
-
-	camera = Camera3D.new()
-	camera.name = "PlayerCamera"
-	camera.current = true
-	camera.near = 0.18
-	camera.far = 650_000.0
-	camera.fov = 68.0
-	camera.position = Vector3(0.0, 1.15, 5.8)
-	camera_pivot.add_child(camera)
+	controller_host = ControllerHostScript.new()
+	controller_host.name = "ControllerHost"
+	add_child(controller_host)
+	controller_host.controller_changed.connect(_on_controller_changed)
+	controller_host.setup(self, moon_world, logger)
 	_update_camera_rotation()
+	set_camera_mode(camera_mode)
+
+
+func _build_camera_system() -> void:
+	camera_anchor = Node3D.new()
+	camera_anchor.name = "CameraAnchor"
+	camera_anchor.position.y = 1.62
+	add_child(camera_anchor)
+
+	camera_yaw_node = Node3D.new()
+	camera_yaw_node.name = "CameraYaw"
+	camera_anchor.add_child(camera_yaw_node)
+
+	camera_pitch_node = Node3D.new()
+	camera_pitch_node.name = "CameraPitch"
+	camera_yaw_node.add_child(camera_pitch_node)
+
+	first_person_camera = Camera3D.new()
+	first_person_camera.name = "FirstPersonCamera"
+	first_person_camera.near = 0.06
+	first_person_camera.far = 650_000.0
+	first_person_camera.fov = 75.0
+	camera_pitch_node.add_child(first_person_camera)
+
+	third_person_arm = SpringArm3D.new()
+	third_person_arm.name = "ThirdPersonSpringArm"
+	third_person_arm.spring_length = 5.8
+	third_person_arm.margin = 0.25
+	third_person_arm.collision_mask = 1
+	camera_pitch_node.add_child(third_person_arm)
+	third_person_arm.add_excluded_object(get_rid())
+
+	third_person_camera = Camera3D.new()
+	third_person_camera.name = "ThirdPersonCamera"
+	third_person_camera.position.y = 0.72
+	third_person_camera.near = 0.18
+	third_person_camera.far = 650_000.0
+	third_person_camera.fov = 68.0
+	third_person_arm.add_child(third_person_camera)
 
 
 func _physics_process(delta: float) -> void:
-	if moon_world == null or not control_enabled:
-		return
-
-	var absolute_position: Vector3 = get_world_position()
-	var distance_from_center: float = absolute_position.length()
-	if distance_from_center < 1.0:
-		return
-
-	var up := absolute_position / distance_from_center
-	up_direction = up
-	_align_body_to_up(up)
-
-	var input_vector := Input.get_vector(
-		"move_left",
-		"move_right",
-		"move_forward",
-		"move_back"
-	)
-	var camera_forward := -camera_rig.global_transform.basis.z
-	camera_forward = camera_forward.slide(up).normalized()
-	var camera_right := camera_rig.global_transform.basis.x
-	camera_right = camera_right.slide(up).normalized()
-	var desired_direction := (
-		camera_right * input_vector.x
-		+ camera_forward * -input_vector.y
-	)
-	if desired_direction.length_squared() > 1.0:
-		desired_direction = desired_direction.normalized()
-
-	var radial_speed: float = velocity.dot(up)
-	var horizontal_velocity := velocity - up * radial_speed
-	var target_speed: float = RUN_SPEED if Input.is_action_pressed("boost") else WALK_SPEED
-	var acceleration: float = GROUND_ACCELERATION if is_on_floor() else AIR_ACCELERATION
-	horizontal_velocity = horizontal_velocity.move_toward(
-		desired_direction * target_speed,
-		acceleration * delta
-	)
-
-	if is_on_floor():
-		radial_speed = 0.0
-		if Input.is_action_just_pressed("jump"):
-			radial_speed = JUMP_SPEED
-	else:
-		radial_speed -= moon_world.get_gravity_at_distance(distance_from_center) * delta
-
-	velocity = horizontal_velocity + up * radial_speed
-	move_and_slide()
-	moon_world.recenter_player(self)
-
-	if moon_world.get_altitude(get_world_position()) < -120.0:
-		teleport_to_surface(get_world_position().normalized())
+	if control_enabled and controller_host != null:
+		controller_host.physics_step(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not control_enabled:
+	if control_enabled and controller_host != null:
+		controller_host.handle_input(event)
+
+
+func apply_camera_profile(camera_config: Dictionary, apply_default_mode: bool = false) -> void:
+	camera_anchor.position.y = float(camera_config.get("eye_height", 1.62))
+	camera_pitch_min = deg_to_rad(float(camera_config.get("pitch_min_deg", -82.0)))
+	camera_pitch_max = deg_to_rad(float(camera_config.get("pitch_max_deg", 72.0)))
+	default_camera_pitch = deg_to_rad(float(camera_config.get("default_pitch_deg", -8.0)))
+	first_person_camera.fov = float(camera_config.get("first_person_fov", 75.0))
+	first_person_camera.near = float(camera_config.get("first_person_near", 0.06))
+	third_person_camera.fov = float(camera_config.get("third_person_fov", 68.0))
+	third_person_camera.near = float(camera_config.get("third_person_near", 0.18))
+	third_person_camera.position.y = float(camera_config.get("third_person_height_offset", 0.72))
+	third_person_arm.spring_length = float(camera_config.get("third_person_distance", 5.8))
+	camera_pitch = clampf(camera_pitch, camera_pitch_min, camera_pitch_max)
+	if apply_default_mode:
+		camera_pitch = default_camera_pitch
+		set_camera_mode(String(camera_config.get("default_mode", CAMERA_FIRST_PERSON)))
+	_update_camera_rotation()
+
+
+func adjust_view(yaw_delta: float, pitch_delta: float) -> void:
+	camera_yaw += yaw_delta
+	camera_pitch = clampf(camera_pitch + pitch_delta, camera_pitch_min, camera_pitch_max)
+	_update_camera_rotation()
+
+
+func _update_camera_rotation() -> void:
+	if camera_yaw_node == null or camera_pitch_node == null:
 		return
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		camera_yaw -= event.relative.x * MOUSE_SENSITIVITY
-		camera_pitch -= event.relative.y * MOUSE_SENSITIVITY
-		camera_pitch = clampf(camera_pitch, -1.18, 0.48)
-		_update_camera_rotation()
+	camera_yaw_node.rotation = Vector3(0.0, camera_yaw, 0.0)
+	camera_pitch_node.rotation = Vector3(camera_pitch, 0.0, 0.0)
+
+
+func set_camera_mode(mode: String) -> void:
+	var normalized: String = (
+		CAMERA_THIRD_PERSON if mode == CAMERA_THIRD_PERSON else CAMERA_FIRST_PERSON
+	)
+	var changed: bool = normalized != camera_mode
+	camera_mode = normalized
+	if first_person_camera != null:
+		first_person_camera.current = control_enabled and camera_mode == CAMERA_FIRST_PERSON
+	if third_person_camera != null:
+		third_person_camera.current = control_enabled and camera_mode == CAMERA_THIRD_PERSON
+	if visual_root != null:
+		visual_root.visible = control_enabled and camera_mode == CAMERA_THIRD_PERSON
+	if changed:
+		camera_mode_changed.emit(camera_mode)
+
+
+func toggle_camera_mode() -> String:
+	set_camera_mode(
+		CAMERA_THIRD_PERSON
+		if camera_mode == CAMERA_FIRST_PERSON
+		else CAMERA_FIRST_PERSON
+	)
+	return camera_mode
+
+
+func get_camera_mode() -> String:
+	return camera_mode
+
+
+func get_camera_mode_display_name() -> String:
+	return "Первое лицо" if camera_mode == CAMERA_FIRST_PERSON else "Третье лицо"
+
+
+func get_active_camera() -> Camera3D:
+	return first_person_camera if camera_mode == CAMERA_FIRST_PERSON else third_person_camera
+
+
+func get_view_basis() -> Basis:
+	var active_camera: Camera3D = get_active_camera()
+	return active_camera.global_transform.basis if active_camera != null else global_transform.basis
+
+
+func activate_controller(profile_id: String) -> bool:
+	return controller_host != null and controller_host.activate_controller(profile_id, true)
+
+
+func get_controller_id() -> String:
+	return controller_host.get_current_profile_id() if controller_host != null else ""
+
+
+func get_controller_display_name() -> String:
+	return controller_host.get_current_display_name() if controller_host != null else "Не выбран"
+
+
+func get_controller_snapshot() -> Dictionary:
+	return controller_host.create_snapshot() if controller_host != null else {}
+
+
+func get_available_controller_ids() -> Array[String]:
+	return controller_host.get_available_profile_ids() if controller_host != null else []
 
 
 func teleport_to_surface(direction_value: Vector3) -> void:
@@ -133,9 +213,9 @@ func teleport_to_surface(direction_value: Vector3) -> void:
 	var world_position: Vector3 = moon_world.get_surface_point(direction) + direction * 1.15
 	global_position = moon_world.world_to_render(world_position)
 	velocity = Vector3.ZERO
-	_align_body_to_up(direction)
+	align_body_to_up(direction)
 	camera_yaw = 0.0
-	camera_pitch = -0.20
+	camera_pitch = default_camera_pitch
 	_update_camera_rotation()
 	reset_physics_interpolation()
 
@@ -154,7 +234,10 @@ func freeze_for_spectator() -> void:
 	stored_world_position = get_world_position()
 	control_enabled = false
 	set_physics_process(false)
-	camera.current = false
+	if controller_host != null:
+		controller_host.set_enabled(false)
+	first_person_camera.current = false
+	third_person_camera.current = false
 	visual_root.visible = false
 	velocity = Vector3.ZERO
 
@@ -163,8 +246,9 @@ func restore_from_spectator() -> void:
 	set_world_position(stored_world_position)
 	control_enabled = true
 	set_physics_process(true)
-	camera.current = true
-	visual_root.visible = true
+	if controller_host != null:
+		controller_host.set_enabled(true)
+	set_camera_mode(camera_mode)
 	reset_physics_interpolation()
 
 
@@ -178,15 +262,17 @@ func set_control_enabled(enabled_value: bool) -> void:
 func activate_after_spawn() -> void:
 	control_enabled = true
 	set_physics_process(true)
-	camera.current = true
-	visual_root.visible = true
+	if controller_host != null:
+		controller_host.set_enabled(true)
+	set_camera_mode(camera_mode)
 	reset_physics_interpolation()
 
 
 func get_active_camera_world_transform() -> Transform3D:
+	var active_camera: Camera3D = get_active_camera()
 	return Transform3D(
-		camera.global_transform.basis,
-		moon_world.render_to_world(camera.global_position)
+		active_camera.global_transform.basis,
+		moon_world.render_to_world(active_camera.global_position)
 	)
 
 
@@ -194,24 +280,26 @@ func get_stored_world_position() -> Vector3:
 	return stored_world_position
 
 
-func _align_body_to_up(up: Vector3) -> void:
-	var current_forward := -global_transform.basis.z
+func align_body_to_up(up: Vector3) -> void:
+	var current_forward: Vector3 = -global_transform.basis.z
 	current_forward = current_forward.slide(up)
 	if current_forward.length_squared() < 0.0001:
 		current_forward = Vector3.FORWARD.slide(up)
 	if current_forward.length_squared() < 0.0001:
 		current_forward = Vector3.RIGHT.slide(up)
 	current_forward = current_forward.normalized()
-	var right := current_forward.cross(up).normalized()
+	var right: Vector3 = current_forward.cross(up).normalized()
 	var basis := Basis(right, up, -current_forward).orthonormalized()
 	global_transform = Transform3D(basis, global_position)
 
 
-func _update_camera_rotation() -> void:
-	if camera_rig == null or camera_pivot == null:
-		return
-	camera_rig.rotation = Vector3(0.0, camera_yaw, 0.0)
-	camera_pivot.rotation = Vector3(camera_pitch, 0.0, 0.0)
+func recover_if_below_surface() -> void:
+	if moon_world.get_altitude(get_world_position()) < -120.0:
+		teleport_to_surface(get_world_position().normalized())
+
+
+func _on_controller_changed(previous_id: String, current_id: String) -> void:
+	controller_changed.emit(previous_id, current_id)
 
 
 func _make_unshaded_material(color: Color) -> StandardMaterial3D:

@@ -1,3 +1,25 @@
+# Ближайшие итерации после v14
+
+## v14.1 — First-person Interaction
+
+- центральный raycast из активной камеры;
+- подсветка интерактивного объекта;
+- контракт `Interactable`;
+- действие `E`;
+- получение информации о Survey Beacon;
+- подготовка к placement preview.
+
+## v15 — первая локальная база
+
+- Foundation;
+- Solar Panel;
+- Battery;
+- Charging Dock;
+- preview и проверка уклона;
+- sockets и простой power graph.
+
+---
+
 # Следующие итерации
 
 ## Выполнено в v13

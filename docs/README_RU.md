@@ -7,6 +7,7 @@
 - `architecture/ZONES_AND_CHUNKS_RU.md`
 - `architecture/ENTITY_REGISTRY_V1_RU.md`
 - `architecture/PERSISTENT_WORLD_LAYER_V1_RU.md`
+- `architecture/PLUGGABLE_CONTROLLER_ARCHITECTURE_RU.md`
 - `architecture/adr/`
 
 ## Контракты
@@ -15,6 +16,7 @@
 - `contracts/WORLD_MANIFEST_V1_RU.md`
 - `contracts/CHUNK_STATE_V1_RU.md`
 - `contracts/JOURNAL_V1_RU.md`
+- `contracts/CONTROLLER_PROFILE_V1_RU.md`
 
 ## Диагностика
 
@@ -27,6 +29,7 @@
 - `plans/V11_ACCEPTANCE_TESTS_RU.md`
 - `plans/V12_ACCEPTANCE_TESTS_RU.md`
 - `plans/V13_ACCEPTANCE_TESTS_RU.md`
+- `plans/V14_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 
