@@ -6,11 +6,15 @@
 - `architecture/PROJECT_STRUCTURE_RU.md`
 - `architecture/ZONES_AND_CHUNKS_RU.md`
 - `architecture/ENTITY_REGISTRY_V1_RU.md`
+- `architecture/PERSISTENT_WORLD_LAYER_V1_RU.md`
 - `architecture/adr/`
 
 ## Контракты
 
 - `contracts/PARTITION_SNAPSHOT_V1_RU.md`
+- `contracts/WORLD_MANIFEST_V1_RU.md`
+- `contracts/CHUNK_STATE_V1_RU.md`
+- `contracts/JOURNAL_V1_RU.md`
 
 ## Диагностика
 
@@ -22,6 +26,7 @@
 - `plans/NEXT_ITERATIONS_RU.md`
 - `plans/V11_ACCEPTANCE_TESTS_RU.md`
 - `plans/V12_ACCEPTANCE_TESTS_RU.md`
+- `plans/V13_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 

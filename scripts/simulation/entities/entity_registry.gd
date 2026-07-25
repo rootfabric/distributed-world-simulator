@@ -26,7 +26,7 @@ func setup(zone_manager_reference, logger_reference = null) -> void:
 	_log("INFO", "registry_started", {})
 
 
-func register_entity(entity_record) -> bool:
+func register_entity(entity_record, emit_lifecycle_events: bool = true) -> bool:
 	if entity_record == null or entity_record.entity_id.is_empty():
 		return false
 	if entities.has(entity_record.entity_id):
@@ -40,20 +40,21 @@ func register_entity(entity_record) -> bool:
 	entities[entity_record.entity_id] = entity_record
 	_sync_loaded_chunk_counts()
 
-	var event := _make_event(
-		"entity_registered",
-		entity_record,
-		"",
-		entity_record.zone_id,
-		"",
-		entity_record.chunk_id
-	)
-	entity_registered.emit(event)
-	_log("INFO", "entity_registered", event)
+	if emit_lifecycle_events:
+		var event := _make_event(
+			"entity_registered",
+			entity_record,
+			"",
+			entity_record.zone_id,
+			"",
+			entity_record.chunk_id
+		)
+		entity_registered.emit(event)
+		_log("INFO", "entity_registered", event)
 	return true
 
 
-func unregister_entity(entity_id: String) -> bool:
+func unregister_entity(entity_id: String, emit_lifecycle_events: bool = true) -> bool:
 	if not entities.has(entity_id):
 		return false
 	var entity_record = entities[entity_id]
@@ -67,8 +68,9 @@ func unregister_entity(entity_id: String) -> bool:
 	)
 	entities.erase(entity_id)
 	_sync_loaded_chunk_counts()
-	entity_unregistered.emit(event)
-	_log("INFO", "entity_unregistered", event)
+	if emit_lifecycle_events:
+		entity_unregistered.emit(event)
+		_log("INFO", "entity_unregistered", event)
 	return true
 
 
@@ -164,6 +166,22 @@ func entities_in_chunk(chunk_id: String) -> Array:
 	var result: Array = []
 	for entity_value in entities.values():
 		if entity_value.chunk_id == chunk_id:
+			result.append(entity_value)
+	return result
+
+
+func get_entities_by_type(entity_type: String) -> Array:
+	var result: Array = []
+	for entity_value in entities.values():
+		if entity_value.entity_type == entity_type:
+			result.append(entity_value)
+	return result
+
+
+func get_persistent_entities_in_chunk(chunk_id: String) -> Array:
+	var result: Array = []
+	for entity_value in entities.values():
+		if entity_value.chunk_id == chunk_id and entity_value.is_persistent():
 			result.append(entity_value)
 	return result
 

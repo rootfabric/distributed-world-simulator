@@ -16,6 +16,9 @@ const EntityRecordScript = preload(
 const LunarLoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
 )
+const WorldRepositoryScript = preload(
+	"res://scripts/persistence/lunar_world_repository.gd"
+)
 
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
@@ -36,16 +39,21 @@ var hud
 var zone_manager
 var entity_registry
 var logger
+var persistence
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
 var fullscreen_enabled: bool = false
 var resolution_index: int = 2
 var last_mini_test_result: String = "Не запускался"
+var last_persistence_test_result: String = "Не запускался"
 var last_diagnostic_path: String = "-"
+var last_action_result: String = "-"
+var clear_confirmation_deadline_msec: int = 0
 
 
 func _ready() -> void:
+	get_tree().auto_accept_quit = false
 	_ensure_input_actions()
 	_load_display_settings()
 	_apply_display_settings()
@@ -86,6 +94,16 @@ func _ready() -> void:
 	add_child(spectator)
 	spectator.setup(moon_world)
 
+	persistence = WorldRepositoryScript.new()
+	persistence.name = "LunarWorldRepository"
+	add_child(persistence)
+	persistence.setup(
+		moon_world,
+		zone_manager,
+		entity_registry,
+		logger
+	)
+
 	hud = HudScript.new()
 	hud.name = "HUD"
 	add_child(hud)
@@ -96,11 +114,13 @@ func _ready() -> void:
 		spectator,
 		zone_manager,
 		entity_registry,
+		persistence,
 		logger
 	)
 
-	random_spawn()
+	_restore_saved_location_or_random_spawn()
 	_ensure_player_entity_registered()
+	zone_manager.update_observer(player.get_world_position(), false)
 	_set_menu_visible(true)
 
 
@@ -128,8 +148,14 @@ func _process(delta: float) -> void:
 
 	if zone_manager != null:
 		zone_manager.update_observer(active_world_position, spectator_enabled)
-
 	_sync_player_entity()
+	if persistence != null:
+		persistence.set_last_player_world_position(
+			player.get_stored_world_position()
+			if spectator_enabled
+			else player.get_world_position()
+		)
+		persistence.update_runtime_transforms()
 
 	if hud != null:
 		hud.update_values(
@@ -166,6 +192,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			save_diagnostic_snapshot()
 			get_viewport().set_input_as_handled()
 			return
+		if event.keycode == KEY_F10:
+			run_persistence_mini_test()
+			get_viewport().set_input_as_handled()
+			return
 		if event.physical_keycode == KEY_V:
 			moon_world.cycle_surface_style()
 			get_viewport().set_input_as_handled()
@@ -186,6 +216,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			cycle_resolution()
 			get_viewport().set_input_as_handled()
 			return
+		if event.ctrl_pressed and event.physical_keycode == KEY_S:
+			save_world_now()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_B and not _is_menu_open():
+			place_survey_beacon()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_DELETE and not _is_menu_open():
+			remove_nearest_survey_beacon()
+			get_viewport().set_input_as_handled()
+			return
 		if event.keycode == KEY_TAB:
 			_set_mouse_capture(not mouse_captured)
 			get_viewport().set_input_as_handled()
@@ -193,7 +235,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not mouse_captured:
-			if hud == null or not hud.is_menu_visible():
+			if not _is_menu_open():
 				_set_mouse_capture(true)
 				get_viewport().set_input_as_handled()
 
@@ -212,6 +254,10 @@ func _set_menu_visible(visible_value: bool) -> void:
 		logger.info("ui", "menu_visibility_changed", {
 			"visible": visible_value,
 		})
+
+
+func _is_menu_open() -> bool:
+	return hud != null and hud.is_menu_visible()
 
 
 func toggle_spectator() -> void:
@@ -250,6 +296,23 @@ func toggle_lod_debug_colors() -> void:
 	})
 
 
+func _restore_saved_location_or_random_spawn() -> void:
+	var saved_position: Vector3 = persistence.get_last_player_world_position()
+	if saved_position.length_squared() <= 1.0:
+		random_spawn()
+		return
+	var direction: Vector3 = saved_position.normalized()
+	moon_world.prepare_surface_region(direction, true)
+	moon_world.set_render_origin(moon_world.get_surface_anchor())
+	player.teleport_to_surface(direction)
+	player.activate_after_spawn()
+	_sync_player_entity()
+	last_action_result = "Восстановлена последняя точка мира"
+	logger.info("persistence", "player_location_restored", {
+		"world_position": _vector_to_array(player.get_world_position()),
+	})
+
+
 func random_spawn() -> void:
 	if spectator_enabled:
 		spectator_enabled = false
@@ -265,6 +328,8 @@ func random_spawn() -> void:
 	if hud != null:
 		hud.set_menu_visible(false)
 	_sync_player_entity()
+	if zone_manager != null:
+		zone_manager.update_observer(player.get_world_position(), false)
 	if logger != null:
 		logger.info("gameplay", "random_spawn", {
 			"world_position": _vector_to_array(player.get_world_position()),
@@ -274,11 +339,9 @@ func random_spawn() -> void:
 func teleport_player_to_spectator() -> void:
 	if not spectator_enabled or spectator == null:
 		return
-
 	var spectator_world_position: Vector3 = spectator.get_world_position()
 	if spectator_world_position.length_squared() < 1.0:
 		return
-
 	var target_direction: Vector3 = spectator_world_position.normalized()
 	spectator_enabled = false
 	spectator.deactivate()
@@ -290,16 +353,102 @@ func teleport_player_to_spectator() -> void:
 	if hud != null:
 		hud.set_menu_visible(false)
 	_sync_player_entity()
+	zone_manager.update_observer(player.get_world_position(), false)
 	logger.info("gameplay", "player_teleported_from_spectator", {
 		"world_position": _vector_to_array(player.get_world_position()),
 	})
+
+
+func place_survey_beacon() -> String:
+	if spectator_enabled:
+		last_action_result = "Маяк можно ставить только в режиме персонажа"
+		return ""
+	var player_position: Vector3 = player.get_world_position()
+	var up: Vector3 = player_position.normalized()
+	var camera_transform: Transform3D = player.get_active_camera_world_transform()
+	var forward: Vector3 = (-camera_transform.basis.z).slide(up)
+	if forward.length_squared() < 0.000001:
+		forward = (-player.global_transform.basis.z).slide(up)
+	forward = forward.normalized()
+	var approximate: Vector3 = player_position + forward * 5.0
+	var direction: Vector3 = approximate.normalized()
+	var beacon_position: Vector3 = moon_world.get_surface_point(direction) + direction * 0.06
+	var entity_id: String = persistence.create_survey_beacon(
+		beacon_position,
+		forward
+	)
+	last_action_result = (
+		"Маяк установлен: %s" % entity_id
+		if not entity_id.is_empty()
+		else "Ошибка установки маяка"
+	)
+	logger.info("construction", "survey_beacon_placed", {
+		"entity_id": entity_id,
+		"world_position": _vector_to_array(beacon_position),
+	})
+	return entity_id
+
+
+func remove_nearest_survey_beacon() -> String:
+	var position: Vector3 = (
+		player.get_stored_world_position()
+		if spectator_enabled
+		else player.get_world_position()
+	)
+	var entity_id: String = persistence.remove_nearest_survey_beacon(position, 18.0)
+	last_action_result = (
+		"Маяк удалён: %s" % entity_id
+		if not entity_id.is_empty()
+		else "Рядом нет маяка (радиус 18 м)"
+	)
+	return entity_id
+
+
+func save_world_now() -> Dictionary:
+	var result: Dictionary = persistence.save_all_loaded_chunks()
+	last_action_result = "Мир сохранён: %s" % String(result.get("summary", "-"))
+	return result
+
+
+func clear_persistent_world() -> void:
+	var now: int = Time.get_ticks_msec()
+	if now > clear_confirmation_deadline_msec:
+		clear_confirmation_deadline_msec = now + 5000
+		last_action_result = "Нажмите «Очистить» ещё раз в течение 5 секунд"
+		return
+	persistence.clear_world_data()
+	clear_confirmation_deadline_msec = 0
+	last_action_result = "Постоянный слой тестового мира очищен"
+	last_persistence_test_result = "Не запускался"
+
+
+func run_persistence_mini_test() -> Dictionary:
+	var position: Vector3 = (
+		player.get_stored_world_position()
+		if spectator_enabled
+		else player.get_world_position()
+	)
+	var up: Vector3 = position.normalized()
+	var forward: Vector3
+	if spectator_enabled:
+		forward = (-spectator.orientation.z).slide(up)
+	else:
+		forward = (-player.get_active_camera_world_transform().basis.z).slide(up)
+	if forward.length_squared() < 0.000001:
+		forward = Vector3.FORWARD.slide(up)
+	var result: Dictionary = persistence.run_roundtrip_test(
+		position,
+		forward.normalized()
+	)
+	last_persistence_test_result = String(result.get("summary", "FAIL"))
+	last_action_result = last_persistence_test_result
+	return result
 
 
 func run_entity_migration_mini_test() -> Dictionary:
 	if entity_registry == null or zone_manager == null or player == null:
 		last_mini_test_result = "FAIL: подсистемы не готовы"
 		return {"passed": false, "reason": last_mini_test_result}
-
 	entity_registry.unregister_entity(MINI_TEST_ENTITY_ID)
 	var start_position: Vector3 = (
 		player.get_stored_world_position()
@@ -312,7 +461,7 @@ func run_entity_migration_mini_test() -> Dictionary:
 		MINI_TEST_ENTITY_ID,
 		"diagnostic_probe",
 		start_position,
-		{"purpose": "chunk_migration_mini_test"}
+		{"purpose": {"name": "chunk_migration_mini_test"}}
 	)
 	var registered: bool = entity_registry.register_entity(probe)
 	if not registered:
@@ -321,7 +470,6 @@ func run_entity_migration_mini_test() -> Dictionary:
 			"reason": last_mini_test_result,
 		})
 		return {"passed": false, "reason": last_mini_test_result}
-
 	var transition_before: int = entity_registry.chunk_transition_count
 	var target_position: Vector3 = start_position
 	var target_partition: Dictionary = start_partition
@@ -335,19 +483,15 @@ func run_entity_migration_mini_test() -> Dictionary:
 		target_partition = zone_manager.resolve_partition(target_position)
 		if String(target_partition.get("chunk_id", "")) != String(start_partition.get("chunk_id", "")):
 			break
-
 	entity_registry.update_entity_position(MINI_TEST_ENTITY_ID, target_position)
 	var chunk_changed: bool = (
 		String(start_partition.get("chunk_id", ""))
 		!= String(target_partition.get("chunk_id", ""))
 	)
-	var event_created: bool = (
-		entity_registry.chunk_transition_count > transition_before
-	)
+	var event_created: bool = entity_registry.chunk_transition_count > transition_before
 	var passed: bool = chunk_changed and event_created
 	last_mini_test_result = (
-		"PASS: %s → %s"
-		% [
+		"PASS: %s → %s" % [
 			String(start_partition.get("chunk_name", "-")),
 			String(target_partition.get("chunk_name", "-")),
 		]
@@ -396,9 +540,12 @@ func save_diagnostic_snapshot() -> String:
 				else player.get_world_position()
 			),
 			"last_mini_test_result": last_mini_test_result,
+			"last_persistence_test_result": last_persistence_test_result,
+			"last_action_result": last_action_result,
 		},
 		"partitions": zone_manager.create_partition_snapshot(),
 		"entities": entity_registry.create_snapshot(),
+		"persistence": persistence.create_snapshot(),
 		"recent_migrations": entity_registry.get_recent_migrations(),
 		"recent_logs": logger.get_recent_entries(),
 		"log_path": logger.get_log_path(),
@@ -417,6 +564,14 @@ func save_diagnostic_snapshot() -> String:
 
 func get_last_mini_test_result() -> String:
 	return last_mini_test_result
+
+
+func get_last_persistence_test_result() -> String:
+	return last_persistence_test_result
+
+
+func get_last_action_result() -> String:
+	return last_action_result
 
 
 func get_last_diagnostic_path() -> String:
@@ -458,7 +613,6 @@ func _apply_display_settings() -> void:
 	if fullscreen_enabled:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		return
-
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	var target_size: Vector2i = WINDOWED_RESOLUTIONS[resolution_index]
 	DisplayServer.window_set_size(target_size)
@@ -501,8 +655,8 @@ func _ensure_player_entity_registered() -> void:
 		"player_astronaut",
 		player.get_world_position(),
 		{
-			"persistent": true,
-			"controller": "local_player",
+			"persistence": {"persistent": false},
+			"controller": {"type": "local_player"},
 		}
 	)
 	entity_registry.register_entity(record)
@@ -567,3 +721,15 @@ func _set_single_key_action(action_name: StringName, physical_key: int) -> void:
 
 func _vector_to_array(value: Vector3) -> Array[float]:
 	return [value.x, value.y, value.z]
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if persistence != null and is_instance_valid(persistence):
+			persistence.flush()
+		get_tree().quit()
+
+
+func _exit_tree() -> void:
+	if persistence != null and is_instance_valid(persistence):
+		persistence.flush()

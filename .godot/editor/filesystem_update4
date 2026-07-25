@@ -21,3 +21,12 @@ res://scripts/world/zones/lunar_zone_manager.gd
 res://scripts/world/zones/lunar_zone_runtime.gd
 res://tests/support/mock_moon_world.gd
 res://tests/unit/test_partition_foundation.gd
+res://PROJECT_MANIFEST.txt
+res://README_RU.md
+res://docs/architecture/ENTITY_REGISTRY_V1_RU.md
+res://docs/architecture/TARGET_ARCHITECTURE_RU.md
+res://docs/architecture/ZONES_AND_CHUNKS_RU.md
+res://docs/plans/NEXT_ITERATIONS_RU.md
+res://docs/plans/ROADMAP_RU.md
+res://scripts/diagnostics/lunar_logger.gd
+res://tests/integration/test_entity_registry_migration.gd
