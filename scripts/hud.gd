@@ -23,7 +23,7 @@ func setup(
 
 	var panel := PanelContainer.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(590.0, 348.0)
+	panel.size = Vector2(690.0, 425.0)
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
@@ -65,6 +65,8 @@ func setup(
 		"WASD — движение   Shift — ускорение   Space/Ctrl — вверх/вниз\n"
 		+ "Q/E — крен спектатора   H — выровнять горизонт\n"
 		+ "T — персонаж на поверхность под спектатором\n"
+		+ "F2 — автоподгрузка LOD под спектатором\n"
+		+ "F4 — цветовая визуализация слоёв LOD\n"
 		+ "F3 — персонаж/спектатор   F6 или R — случайная точка\n"
 		+ "Колесо — скорость спектатора   Tab/Esc — захват курсора"
 	)
@@ -120,7 +122,11 @@ func update_values(
 		(
 			"Режим: %s   |   мышь: %s\n"
 			+ "LOD: %s\n"
+			+ "Стек: %s\n"
 			+ "Детализация: %s\n"
+			+ "Поток: %s\n"
+			+ "Якорь под спектатором: %s м\n"
+			+ "Debug-цвета: %s   Авто-follow: %s\n"
 			+ "Регион: %s\n"
 			+ "Высота: %s м\n"
 			+ "Широта: %.4f°   Долгота: %.4f°%s"
@@ -129,7 +135,12 @@ func update_values(
 			mode_text,
 			capture_text,
 			moon_world.get_lod_name(),
+			moon_world.get_layer_stack_name(),
 			moon_world.get_detail_name(),
+			moon_world.get_streaming_status(),
+			_format_number(moon_world.get_spectator_anchor_distance()),
+			"ВКЛ" if moon_world.is_lod_debug_enabled() else "ВЫКЛ",
+			"ВКЛ" if moon_world.is_spectator_tracking_enabled() else "ВЫКЛ",
 			moon_world.get_region_name(direction),
 			_format_number(altitude),
 			latitude,

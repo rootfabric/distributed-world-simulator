@@ -20,8 +20,8 @@ const CAP_SEGMENTS: int = 128
 const MEDIUM_CAP_RADIUS: float = 520_000.0
 const MEDIUM_CAP_RINGS: int = 56
 
-const LOCAL_LOD_EXIT_ALTITUDE: float = 3_500.0
-const LOCAL_LOD_ENTER_ALTITUDE: float = 2_700.0
+const LOCAL_LOD_EXIT_ALTITUDE: float = 12_000.0
+const LOCAL_LOD_ENTER_ALTITUDE: float = 9_000.0
 const MEDIUM_LOD_EXIT_ALTITUDE: float = 620_000.0
 const MEDIUM_LOD_ENTER_ALTITUDE: float = 520_000.0
 
@@ -32,7 +32,17 @@ const PLAYER_RECENTER_DISTANCE: float = 150.0
 const MICRO_DETAIL_FADE_END: float = 720.0
 const MESO_DETAIL_FADE_END: float = 3200.0
 const MEDIUM_LOCAL_RECENTER_DISTANCE: float = 1200.0
-const SPECTATOR_CAP_RECENTER_DISTANCE: float = 75_000.0
+# Spectator streaming thresholds. At low altitude the ultra-detailed centre
+# follows the point directly below the camera. Higher up, recentering becomes
+# progressively less frequent because only regional/global geometry is useful.
+const SPECTATOR_ULTRA_ALTITUDE: float = 900.0
+const SPECTATOR_LOCAL_ALTITUDE: float = 12_000.0
+const SPECTATOR_MEDIUM_ALTITUDE: float = 180_000.0
+const SPECTATOR_ULTRA_RECENTER_DISTANCE: float = 105.0
+const SPECTATOR_LOCAL_RECENTER_DISTANCE: float = 1_100.0
+const SPECTATOR_MEDIUM_RECENTER_DISTANCE: float = 18_000.0
+const SPECTATOR_HIGH_RECENTER_DISTANCE: float = 62_000.0
+const SPECTATOR_REBUILD_COOLDOWN: float = 0.40
 
 const LARGE_CRATER_COUNT: int = 22
 const MEDIUM_CRATER_COUNT: int = 70
@@ -96,6 +106,9 @@ var surface_root: Node3D
 
 var surface_material: StandardMaterial3D
 var rock_material: StandardMaterial3D
+var local_debug_material: StandardMaterial3D
+var medium_debug_material: StandardMaterial3D
+var global_debug_material: StandardMaterial3D
 var rock_mesh: ArrayMesh
 var rock_meshes: Array[ArrayMesh] = []
 
@@ -110,6 +123,11 @@ var current_lod: int = 0
 var initialized: bool = false
 var spawn_rng := RandomNumberGenerator.new()
 var last_spawn_region_name: String = "Не определён"
+var spectator_tracking_enabled: bool = true
+var lod_debug_enabled: bool = false
+var spectator_stream_cooldown: float = 0.0
+var last_spectator_anchor_distance: float = 0.0
+var last_streaming_status: String = "Ожидание"
 
 
 func setup() -> void:
@@ -495,6 +513,20 @@ func _create_materials() -> void:
 	rock_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	rock_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
+	local_debug_material = _create_debug_material(Color(0.95, 0.30, 0.08))
+	medium_debug_material = _create_debug_material(Color(0.05, 0.48, 0.92))
+	global_debug_material = _create_debug_material(Color(0.44, 0.18, 0.72))
+
+
+func _create_debug_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 1.0
+	material.metallic = 0.0
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return material
+
 
 func _create_environment() -> void:
 	var world_environment := WorldEnvironment.new()
@@ -517,6 +549,7 @@ func _create_global_moon() -> void:
 	global_moon.mesh = _build_global_uv_sphere()
 	global_moon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(global_moon)
+	_apply_debug_materials()
 	_update_root_positions()
 
 
@@ -604,6 +637,7 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 	medium_full_cap.position = Vector3.ZERO
 
 	_create_rocks()
+	_apply_debug_materials()
 
 	if include_collision:
 		_build_collision_from_local_mesh()
@@ -650,6 +684,7 @@ func _rebuild_local_playable_surface(center_direction: Vector3) -> void:
 	)
 	surface_root.add_child(local_cap)
 	_create_rocks()
+	_apply_debug_materials()
 	_build_collision_from_local_mesh()
 
 	if medium_annulus_cap != null and is_instance_valid(medium_annulus_cap):
@@ -658,6 +693,53 @@ func _rebuild_local_playable_surface(center_direction: Vector3) -> void:
 		medium_full_cap.position = medium_anchor_world - surface_anchor_world
 
 	current_lod = 0
+	_update_root_positions()
+	_apply_lod_visibility()
+
+
+func _rebuild_spectator_local_surface(center_direction: Vector3) -> void:
+	# Spectator version of the local rebuild. It deliberately does not create a
+	# physics shape: the frozen astronaut keeps its old collision region until
+	# the user returns or teleports. The visible ultra mesh and rocks follow the
+	# surface point under the spectator camera.
+	if local_cap != null and is_instance_valid(local_cap):
+		if local_cap.get_parent() != null:
+			local_cap.get_parent().remove_child(local_cap)
+		local_cap.free()
+	local_cap = null
+
+	for rock_instance in rock_instances:
+		if rock_instance != null and is_instance_valid(rock_instance):
+			if rock_instance.get_parent() != null:
+				rock_instance.get_parent().remove_child(rock_instance)
+			rock_instance.free()
+	rock_instances.clear()
+	rocks_instance = null
+
+	surface_center_direction = center_direction.normalized()
+	surface_east = _make_east(surface_center_direction)
+	surface_north = surface_east.cross(surface_center_direction).normalized()
+	_generate_local_craters_for_region(surface_center_direction)
+	_generate_micro_craters_for_region(surface_center_direction)
+	surface_anchor_world = get_surface_point(surface_center_direction)
+
+	local_cap = _create_cap_instance(
+		"LocalHighDetail",
+		0.0,
+		LOCAL_CAP_RADIUS,
+		LOCAL_CAP_RINGS,
+		LOCAL_CAP_SEGMENTS,
+		false
+	)
+	surface_root.add_child(local_cap)
+	_create_rocks()
+
+	if medium_annulus_cap != null and is_instance_valid(medium_annulus_cap):
+		medium_annulus_cap.position = medium_anchor_world - surface_anchor_world
+	if medium_full_cap != null and is_instance_valid(medium_full_cap):
+		medium_full_cap.position = medium_anchor_world - surface_anchor_world
+
+	_apply_debug_materials()
 	_update_root_positions()
 	_apply_lod_visibility()
 
@@ -1176,18 +1258,100 @@ func _create_rock_mesh(seed_value: int, variant_index: int = 0) -> ArrayMesh:
 func update_for_view(
 	view_world_position: Vector3,
 	new_render_origin_world: Vector3,
-	spectator_mode: bool
+	spectator_mode: bool,
+	delta: float = 0.0
 ) -> void:
 	set_render_origin(new_render_origin_world)
+	spectator_stream_cooldown = maxf(0.0, spectator_stream_cooldown - delta)
+
 	var altitude: float = get_altitude(view_world_position)
 	_update_lod_state(altitude)
 
-	if spectator_mode and altitude < MEDIUM_LOD_EXIT_ALTITUDE:
-		var center_distance: float = (
-			get_surface_point(view_world_position.normalized()) - surface_anchor_world
-		).length()
-		if center_distance > SPECTATOR_CAP_RECENTER_DISTANCE:
-			prepare_surface_region(view_world_position.normalized(), false)
+	if spectator_mode and spectator_tracking_enabled:
+		_update_spectator_streaming(view_world_position, altitude)
+	elif spectator_mode:
+		last_streaming_status = "Автоподгрузка спектатора выключена"
+	else:
+		last_spectator_anchor_distance = 0.0
+		last_streaming_status = "Детальная поверхность следует за персонажем"
+
+
+func _update_spectator_streaming(
+	view_world_position: Vector3,
+	altitude: float
+) -> void:
+	if view_world_position.length_squared() < 1.0:
+		return
+
+	if altitude >= MEDIUM_LOD_EXIT_ALTITUDE:
+		last_spectator_anchor_distance = 0.0
+		last_streaming_status = "Только глобальная Луна: локальные слои не нужны"
+		return
+
+	var view_direction: Vector3 = view_world_position.normalized()
+	var target_surface_point: Vector3 = get_surface_point(view_direction)
+	var anchor_distance: float = (target_surface_point - surface_anchor_world).length()
+	last_spectator_anchor_distance = anchor_distance
+	var recenter_distance: float = _get_spectator_recenter_distance(altitude)
+
+	if anchor_distance <= recenter_distance:
+		last_streaming_status = _spectator_streaming_status_for_altitude(altitude)
+		return
+	if spectator_stream_cooldown > 0.0:
+		last_streaming_status = "Ожидание следующей перестройки LOD"
+		return
+
+	var medium_distance: float = (target_surface_point - medium_anchor_world).length()
+	if altitude <= SPECTATOR_LOCAL_ALTITUDE:
+		# Near the ground, rebuild only the 14 km local mesh and its four rock
+		# layers. The expensive 520 km regional cap is reused when possible.
+		if medium_distance > SPECTATOR_MEDIUM_RECENTER_DISTANCE:
+			prepare_surface_region(view_direction, false)
+		else:
+			_rebuild_spectator_local_surface(view_direction)
+	elif medium_distance > recenter_distance:
+		prepare_surface_region(view_direction, false)
+
+	spectator_stream_cooldown = SPECTATOR_REBUILD_COOLDOWN
+	last_streaming_status = _spectator_streaming_status_for_altitude(altitude)
+
+
+func _get_spectator_recenter_distance(altitude: float) -> float:
+	if altitude <= SPECTATOR_ULTRA_ALTITUDE:
+		return SPECTATOR_ULTRA_RECENTER_DISTANCE
+	if altitude <= SPECTATOR_LOCAL_ALTITUDE:
+		var local_t: float = inverse_lerp(
+			SPECTATOR_ULTRA_ALTITUDE,
+			SPECTATOR_LOCAL_ALTITUDE,
+			altitude
+		)
+		return lerpf(
+			SPECTATOR_ULTRA_RECENTER_DISTANCE,
+			SPECTATOR_LOCAL_RECENTER_DISTANCE,
+			local_t
+		)
+	if altitude <= SPECTATOR_MEDIUM_ALTITUDE:
+		var medium_t: float = inverse_lerp(
+			SPECTATOR_LOCAL_ALTITUDE,
+			SPECTATOR_MEDIUM_ALTITUDE,
+			altitude
+		)
+		return lerpf(
+			SPECTATOR_LOCAL_RECENTER_DISTANCE,
+			SPECTATOR_MEDIUM_RECENTER_DISTANCE,
+			medium_t
+		)
+	return SPECTATOR_HIGH_RECENTER_DISTANCE
+
+
+func _spectator_streaming_status_for_altitude(altitude: float) -> String:
+	if altitude <= SPECTATOR_ULTRA_ALTITUDE:
+		return "ULTRA следует под спектатором: микрорельеф + 4 слоя камней"
+	if altitude <= SPECTATOR_LOCAL_ALTITUDE:
+		return "LOCAL следует под спектатором: поверхность радиусом 14 км"
+	if altitude <= SPECTATOR_MEDIUM_ALTITUDE:
+		return "REGIONAL следует под спектатором: cap радиусом 520 км"
+	return "REGIONAL редкой частоты + глобальная сфера"
 
 
 func _update_lod_state(altitude: float) -> void:
@@ -1216,6 +1380,66 @@ func _apply_lod_visibility() -> void:
 	for rock_instance in rock_instances:
 		if rock_instance != null:
 			rock_instance.visible = current_lod == 0
+
+
+func set_spectator_tracking_enabled(enabled: bool) -> void:
+	spectator_tracking_enabled = enabled
+	spectator_stream_cooldown = 0.0
+	last_streaming_status = (
+		"Автоподгрузка спектатора включена"
+		if enabled
+		else "Автоподгрузка спектатора выключена"
+	)
+
+
+func is_spectator_tracking_enabled() -> bool:
+	return spectator_tracking_enabled
+
+
+func set_lod_debug_enabled(enabled: bool) -> void:
+	lod_debug_enabled = enabled
+	_apply_debug_materials()
+
+
+func is_lod_debug_enabled() -> bool:
+	return lod_debug_enabled
+
+
+func _apply_debug_materials() -> void:
+	if global_moon != null:
+		global_moon.material_override = (
+			global_debug_material if lod_debug_enabled else null
+		)
+	if local_cap != null:
+		local_cap.material_override = (
+			local_debug_material if lod_debug_enabled else null
+		)
+	if medium_full_cap != null:
+		medium_full_cap.material_override = (
+			medium_debug_material if lod_debug_enabled else null
+		)
+	if medium_annulus_cap != null:
+		medium_annulus_cap.material_override = (
+			medium_debug_material if lod_debug_enabled else null
+		)
+
+
+func get_streaming_status() -> String:
+	return last_streaming_status
+
+
+func get_spectator_anchor_distance() -> float:
+	return last_spectator_anchor_distance
+
+
+func get_layer_stack_name() -> String:
+	match current_lod:
+		0:
+			return "ULTRA 0–240 м → LOCAL 14 км → REGIONAL 520 км → GLOBAL"
+		1:
+			return "REGIONAL 520 км → GLOBAL"
+		_:
+			return "GLOBAL UV-сфера"
 
 
 func set_render_origin(new_origin_world: Vector3) -> void:

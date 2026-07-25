@@ -49,14 +49,16 @@ func _process(_delta: float) -> void:
 		moon_world.update_for_view(
 			active_world_position,
 			active_world_position,
-			true
+			true,
+			_delta
 		)
 	else:
 		active_world_position = player.get_world_position()
 		moon_world.update_for_view(
 			active_world_position,
 			moon_world.get_render_origin(),
-			false
+			false,
+			_delta
 		)
 
 	if hud != null:
@@ -72,6 +74,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F3:
 			toggle_spectator()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F2:
+			toggle_spectator_lod_tracking()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F4:
+			toggle_lod_debug_colors()
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_F6 or event.physical_keycode == KEY_R:
@@ -106,6 +116,16 @@ func toggle_spectator() -> void:
 		moon_world.set_render_origin(moon_world.get_surface_anchor())
 		player.restore_from_spectator()
 	_set_mouse_capture(true)
+
+
+func toggle_spectator_lod_tracking() -> void:
+	moon_world.set_spectator_tracking_enabled(
+		not moon_world.is_spectator_tracking_enabled()
+	)
+
+
+func toggle_lod_debug_colors() -> void:
+	moon_world.set_lod_debug_enabled(not moon_world.is_lod_debug_enabled())
 
 
 func random_spawn() -> void:
