@@ -23,7 +23,7 @@ func setup(
 
 	var panel := PanelContainer.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(560.0, 326.0)
+	panel.size = Vector2(590.0, 348.0)
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
@@ -120,6 +120,7 @@ func update_values(
 		(
 			"Режим: %s   |   мышь: %s\n"
 			+ "LOD: %s\n"
+			+ "Детализация: %s\n"
 			+ "Регион: %s\n"
 			+ "Высота: %s м\n"
 			+ "Широта: %.4f°   Долгота: %.4f°%s"
@@ -128,6 +129,7 @@ func update_values(
 			mode_text,
 			capture_text,
 			moon_world.get_lod_name(),
+			moon_world.get_detail_name(),
 			moon_world.get_region_name(direction),
 			_format_number(altitude),
 			latitude,

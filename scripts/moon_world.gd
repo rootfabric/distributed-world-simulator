@@ -9,7 +9,13 @@ const GLOBAL_RINGS: int = 64
 const GLOBAL_SURFACE_OFFSET: float = -650.0
 
 const LOCAL_CAP_RADIUS: float = 14_000.0
-const LOCAL_CAP_RINGS: int = 72
+# One adaptive playable mesh: ultra-dense around the astronaut, progressively
+# coarser toward the 14 km boundary. Rendering and collision share this mesh.
+const MICRO_DETAIL_RADIUS: float = 240.0
+const MICRO_DETAIL_RINGS: int = 112
+const LOCAL_OUTER_RINGS: int = 88
+const LOCAL_CAP_RINGS: int = MICRO_DETAIL_RINGS + LOCAL_OUTER_RINGS
+const LOCAL_CAP_SEGMENTS: int = 224
 const CAP_SEGMENTS: int = 128
 const MEDIUM_CAP_RADIUS: float = 520_000.0
 const MEDIUM_CAP_RINGS: int = 56
@@ -22,7 +28,10 @@ const MEDIUM_LOD_ENTER_ALTITUDE: float = 520_000.0
 # The playable surface is a single radial mesh. The exact same ArrayMesh is
 # used for rendering and ConcavePolygonShape3D collision.
 const LOCAL_RADIAL_DISTRIBUTION_POWER: float = 2.0
-const PLAYER_RECENTER_DISTANCE: float = 680.0
+const PLAYER_RECENTER_DISTANCE: float = 150.0
+const MICRO_DETAIL_FADE_END: float = 720.0
+const MESO_DETAIL_FADE_END: float = 3200.0
+const MEDIUM_LOCAL_RECENTER_DISTANCE: float = 1200.0
 const SPECTATOR_CAP_RECENTER_DISTANCE: float = 75_000.0
 
 const LARGE_CRATER_COUNT: int = 22
@@ -31,8 +40,14 @@ const LOCAL_CRATER_COUNT: int = 180
 const MOUNTAIN_MASSIF_COUNT: int = 44
 const LOCAL_CRATER_CELL_SIZE: float = 6000.0
 const LOCAL_CRATER_MAX_RADIUS: float = 5200.0
-const ROCK_COUNT: int = 240
-const ROCK_RADIUS: float = 6800.0
+const MICRO_CRATER_CELL_SIZE: float = 95.0
+const MICRO_CRATER_FIELD_RADIUS: float = 650.0
+const MICRO_CRATER_MAX_RADIUS: float = 46.0
+
+const LARGE_ROCK_RADIUS: float = 6800.0
+const MEDIUM_ROCK_RADIUS: float = 1900.0
+const SMALL_ROCK_RADIUS: float = 540.0
+const PEBBLE_RADIUS: float = 190.0
 const SUN_DIRECTION := Vector3(-0.34, 0.58, -0.74)
 
 var macro_noise := FastNoiseLite.new()
@@ -44,6 +59,10 @@ var rugged_region_noise := FastNoiseLite.new()
 var mountain_region_noise := FastNoiseLite.new()
 var crater_region_noise := FastNoiseLite.new()
 var local_shape_noise := FastNoiseLite.new()
+var meso_surface_noise := FastNoiseLite.new()
+var micro_surface_noise := FastNoiseLite.new()
+var fine_surface_noise := FastNoiseLite.new()
+var grain_surface_noise := FastNoiseLite.new()
 
 var crater_centers := PackedVector3Array()
 var crater_radii := PackedFloat64Array()
@@ -61,20 +80,28 @@ var local_crater_radii := PackedFloat64Array()
 var local_crater_depths := PackedFloat64Array()
 var local_crater_rims := PackedFloat64Array()
 
+var micro_crater_centers := PackedVector3Array()
+var micro_crater_radii := PackedFloat64Array()
+var micro_crater_depths := PackedFloat64Array()
+var micro_crater_rims := PackedFloat64Array()
+
 var global_moon: MeshInstance3D
 var local_cap: MeshInstance3D
 var medium_full_cap: MeshInstance3D
 var medium_annulus_cap: MeshInstance3D
 var rocks_instance: MultiMeshInstance3D
+var rock_instances: Array[MultiMeshInstance3D] = []
 var collision_root: Node3D
 var surface_root: Node3D
 
 var surface_material: StandardMaterial3D
 var rock_material: StandardMaterial3D
 var rock_mesh: ArrayMesh
+var rock_meshes: Array[ArrayMesh] = []
 
 var render_origin_world: Vector3 = Vector3.ZERO
 var surface_anchor_world: Vector3 = Vector3.ZERO
+var medium_anchor_world: Vector3 = Vector3.ZERO
 var surface_center_direction: Vector3 = Vector3.UP
 var surface_east: Vector3 = Vector3.RIGHT
 var surface_north: Vector3 = Vector3.FORWARD
@@ -106,7 +133,13 @@ func setup() -> void:
 	collision_root.name = "LocalCollision"
 	add_child(collision_root)
 
-	rock_mesh = _create_rock_mesh(WORLD_SEED + 9001)
+	rock_meshes.clear()
+	for variant_index in range(4):
+		rock_meshes.append(_create_rock_mesh(
+			WORLD_SEED + 9001 + variant_index * 977,
+			variant_index
+		))
+	rock_mesh = rock_meshes[0]
 	_create_global_moon()
 
 
@@ -129,6 +162,14 @@ func _configure_noise() -> void:
 	crater_region_noise.frequency = 1.0
 	local_shape_noise.seed = WORLD_SEED + 809
 	local_shape_noise.frequency = 1.0
+	meso_surface_noise.seed = WORLD_SEED + 907
+	meso_surface_noise.frequency = 1.0
+	micro_surface_noise.seed = WORLD_SEED + 1009
+	micro_surface_noise.frequency = 1.0
+	fine_surface_noise.seed = WORLD_SEED + 1103
+	fine_surface_noise.frequency = 1.0
+	grain_surface_noise.seed = WORLD_SEED + 1201
+	grain_surface_noise.frequency = 1.0
 
 
 func _generate_craters() -> void:
@@ -314,6 +355,96 @@ func _generate_local_craters_for_region(center_direction: Vector3) -> void:
 				local_crater_rims.append(depth_m * rng.randf_range(0.20, 0.48))
 
 
+func _generate_micro_craters_for_region(center_direction: Vector3) -> void:
+	micro_crater_centers.clear()
+	micro_crater_radii.clear()
+	micro_crater_depths.clear()
+	micro_crater_rims.clear()
+
+	var cell_angle: float = MICRO_CRATER_CELL_SIZE / MOON_RADIUS
+	var latitude: float = asin(clampf(center_direction.y, -1.0, 1.0))
+	var longitude: float = atan2(center_direction.z, center_direction.x)
+	var center_lat_cell: int = floori(latitude / cell_angle)
+	var center_lon_cell: int = floori(longitude / cell_angle)
+	var search_radius: float = MICRO_CRATER_FIELD_RADIUS + MICRO_CRATER_MAX_RADIUS * 1.8
+	var cell_radius: int = ceili(search_radius / MICRO_CRATER_CELL_SIZE) + 1
+
+	for lat_offset in range(-cell_radius, cell_radius + 1):
+		var lat_cell: int = center_lat_cell + lat_offset
+		var cell_latitude: float = (float(lat_cell) + 0.5) * cell_angle
+		if cell_latitude <= -PI * 0.5 or cell_latitude >= PI * 0.5:
+			continue
+
+		for lon_offset in range(-cell_radius, cell_radius + 1):
+			var lon_cell: int = center_lon_cell + lon_offset
+			var cell_seed: int = (
+				WORLD_SEED * 193
+				+ lat_cell * 73_856_093
+				+ lon_cell * 19_349_663
+				+ 1_297_423
+			)
+			if cell_seed < 0:
+				cell_seed = -cell_seed
+			var rng := RandomNumberGenerator.new()
+			rng.seed = cell_seed
+
+			var crater_latitude: float = (
+				float(lat_cell) + rng.randf_range(0.10, 0.90)
+			) * cell_angle
+			var crater_longitude: float = (
+				float(lon_cell) + rng.randf_range(0.10, 0.90)
+			) * cell_angle
+			var crater_direction := _direction_from_lat_lon(
+				crater_latitude,
+				crater_longitude
+			)
+			var distance_from_center: float = (
+				crater_direction - center_direction
+			).length() * MOON_RADIUS
+			if distance_from_center > search_radius:
+				continue
+
+			var factors := _get_region_factors(crater_direction)
+			var probability: float = 0.10 + factors.w * 0.23 + factors.y * 0.05
+			if rng.randf() > probability:
+				continue
+
+			var radius_m: float = rng.randf_range(1.4, 17.0)
+			if rng.randf() < 0.18 + factors.w * 0.12:
+				radius_m = rng.randf_range(18.0, MICRO_CRATER_MAX_RADIUS)
+			var depth_m: float = radius_m * rng.randf_range(0.075, 0.18)
+			micro_crater_centers.append(crater_direction)
+			micro_crater_radii.append(radius_m)
+			micro_crater_depths.append(depth_m)
+			micro_crater_rims.append(depth_m * rng.randf_range(0.18, 0.42))
+
+
+func _get_micro_crater_height(direction: Vector3) -> float:
+	if micro_crater_centers.is_empty():
+		return 0.0
+	var center_distance: float = (
+		direction - surface_center_direction
+	).length() * MOON_RADIUS
+	if center_distance > MICRO_CRATER_FIELD_RADIUS + MICRO_CRATER_MAX_RADIUS * 1.8:
+		return 0.0
+
+	var result: float = 0.0
+	for crater_index in range(micro_crater_centers.size()):
+		var radius_m: float = micro_crater_radii[crater_index]
+		var distance_m: float = (
+			direction - micro_crater_centers[crater_index]
+		).length() * MOON_RADIUS
+		if distance_m > radius_m * 1.48:
+			continue
+		var normalized_distance: float = distance_m / radius_m
+		if normalized_distance < 1.0:
+			var bowl: float = 1.0 - normalized_distance * normalized_distance
+			result -= micro_crater_depths[crater_index] * bowl * bowl
+		var rim_distance: float = (normalized_distance - 1.0) / 0.13
+		result += micro_crater_rims[crater_index] * exp(-rim_distance * rim_distance)
+	return result
+
+
 func _direction_from_lat_lon(latitude: float, longitude: float) -> Vector3:
 	var horizontal: float = cos(latitude)
 	return Vector3(
@@ -358,7 +489,8 @@ func _create_materials() -> void:
 	surface_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 	rock_material = StandardMaterial3D.new()
-	rock_material.albedo_color = Color(0.38, 0.39, 0.41)
+	rock_material.albedo_color = Color.WHITE
+	rock_material.vertex_color_use_as_albedo = true
 	rock_material.roughness = 1.0
 	rock_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	rock_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -431,6 +563,7 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 	surface_east = _make_east(surface_center_direction)
 	surface_north = surface_east.cross(surface_center_direction).normalized()
 	_generate_local_craters_for_region(surface_center_direction)
+	_generate_micro_craters_for_region(surface_center_direction)
 	surface_anchor_world = get_surface_point(surface_center_direction)
 
 	_clear_node(surface_root)
@@ -442,7 +575,7 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 		0.0,
 		LOCAL_CAP_RADIUS,
 		LOCAL_CAP_RINGS,
-		CAP_SEGMENTS,
+		LOCAL_CAP_SEGMENTS,
 		false
 	)
 	surface_root.add_child(local_cap)
@@ -466,6 +599,9 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 		true
 	)
 	surface_root.add_child(medium_full_cap)
+	medium_anchor_world = surface_anchor_world
+	medium_annulus_cap.position = Vector3.ZERO
+	medium_full_cap.position = Vector3.ZERO
 
 	_create_rocks()
 
@@ -474,6 +610,54 @@ func prepare_surface_region(center_direction: Vector3, include_collision: bool =
 
 	if include_collision:
 		current_lod = 0
+	_update_root_positions()
+	_apply_lod_visibility()
+
+
+func _rebuild_local_playable_surface(center_direction: Vector3) -> void:
+	# Frequent recentering only rebuilds the single playable mesh, its collision
+	# and nearby rocks. The expensive 520 km medium cap stays in place until the
+	# player has moved far enough to justify rebuilding it.
+	if local_cap != null and is_instance_valid(local_cap):
+		if local_cap.get_parent() != null:
+			local_cap.get_parent().remove_child(local_cap)
+		local_cap.free()
+	local_cap = null
+
+	for rock_instance in rock_instances:
+		if rock_instance != null and is_instance_valid(rock_instance):
+			if rock_instance.get_parent() != null:
+				rock_instance.get_parent().remove_child(rock_instance)
+			rock_instance.free()
+	rock_instances.clear()
+	rocks_instance = null
+	_clear_node(collision_root)
+
+	surface_center_direction = center_direction.normalized()
+	surface_east = _make_east(surface_center_direction)
+	surface_north = surface_east.cross(surface_center_direction).normalized()
+	_generate_local_craters_for_region(surface_center_direction)
+	_generate_micro_craters_for_region(surface_center_direction)
+	surface_anchor_world = get_surface_point(surface_center_direction)
+
+	local_cap = _create_cap_instance(
+		"LocalHighDetail",
+		0.0,
+		LOCAL_CAP_RADIUS,
+		LOCAL_CAP_RINGS,
+		LOCAL_CAP_SEGMENTS,
+		false
+	)
+	surface_root.add_child(local_cap)
+	_create_rocks()
+	_build_collision_from_local_mesh()
+
+	if medium_annulus_cap != null and is_instance_valid(medium_annulus_cap):
+		medium_annulus_cap.position = medium_anchor_world - surface_anchor_world
+	if medium_full_cap != null and is_instance_valid(medium_full_cap):
+		medium_full_cap.position = medium_anchor_world - surface_anchor_world
+
+	current_lod = 0
 	_update_root_positions()
 	_apply_lod_visibility()
 
@@ -511,6 +695,23 @@ func _build_radial_cap_mesh(
 	var heights := PackedFloat64Array()
 	var indices := PackedInt32Array()
 	var has_center: bool = inner_radius <= 0.001
+	var ring_radii := PackedFloat64Array()
+
+	if has_center and absf(outer_radius - LOCAL_CAP_RADIUS) < 0.01:
+		ring_radii = _build_local_ring_radii()
+	else:
+		for ring_index in range(ring_count + 1):
+			if has_center and ring_index == 0:
+				continue
+			var ring_t: float = float(ring_index) / float(ring_count)
+			var radial_distance: float = lerpf(inner_radius, outer_radius, ring_t)
+			if has_center:
+				var distributed_t: float = pow(
+					ring_t,
+					LOCAL_RADIAL_DISTRIBUTION_POWER
+				)
+				radial_distance = outer_radius * distributed_t
+			ring_radii.append(radial_distance)
 
 	if has_center:
 		var center_height: float = get_surface_height(surface_center_direction)
@@ -521,20 +722,11 @@ func _build_radial_cap_mesh(
 		directions.append(surface_center_direction)
 		heights.append(center_height)
 
-	for ring_index in range(ring_count + 1):
-		if has_center and ring_index == 0:
-			continue
-
-		var ring_t: float = float(ring_index) / float(ring_count)
-		var radial_distance: float = lerpf(inner_radius, outer_radius, ring_t)
-		if has_center:
-			# Concentrate vertices around the player. The first rings are only a
-			# few metres apart, while the outer part becomes progressively coarser.
-			var distributed_t: float = pow(
-				ring_t,
-				LOCAL_RADIAL_DISTRIBUTION_POWER
-			)
-			radial_distance = outer_radius * distributed_t
+	for ring_array_index in range(ring_radii.size()):
+		var radial_distance: float = ring_radii[ring_array_index]
+		var ring_t: float = (
+			float(ring_array_index) / float(maxi(ring_radii.size() - 1, 1))
+		)
 
 		for segment_index in range(segment_count):
 			var angle: float = float(segment_index) / float(segment_count) * TAU
@@ -547,7 +739,9 @@ func _build_radial_cap_mesh(
 			if blend_to_global:
 				var edge_blend: float = smoothstep(0.72, 1.0, ring_t)
 				var global_height: float = (
-					get_coarse_surface_height(direction) + GLOBAL_SURFACE_OFFSET + 120.0
+					get_coarse_surface_height(direction)
+					+ GLOBAL_SURFACE_OFFSET
+					+ 120.0
 				)
 				final_height = lerpf(detailed_height, global_height, edge_blend)
 
@@ -567,12 +761,12 @@ func _build_radial_cap_mesh(
 				first_ring_start + next_segment,
 			]))
 
-		for ring_index in range(1, ring_count):
+		for ring_index in range(1, ring_radii.size()):
 			var current_start: int = 1 + (ring_index - 1) * segment_count
 			var next_start: int = current_start + segment_count
 			_add_ring_indices(indices, current_start, next_start, segment_count)
 	else:
-		for ring_index in range(ring_count):
+		for ring_index in range(ring_radii.size() - 1):
 			var current_start: int = ring_index * segment_count
 			var next_start: int = current_start + segment_count
 			_add_ring_indices(indices, current_start, next_start, segment_count)
@@ -587,6 +781,28 @@ func _build_radial_cap_mesh(
 		))
 
 	return _make_array_mesh(vertices, normals, colors, indices, surface_material)
+
+
+func _build_local_ring_radii() -> PackedFloat64Array:
+	var radii := PackedFloat64Array()
+
+	# About 1–2 m radial spacing near the astronaut. This captures footprints-scale
+	# undulations and metre-scale crater rims without creating a second surface.
+	for ring_index in range(1, MICRO_DETAIL_RINGS + 1):
+		var t: float = float(ring_index) / float(MICRO_DETAIL_RINGS)
+		radii.append(MICRO_DETAIL_RADIUS * pow(t, 1.12))
+
+	# The same mesh then expands to 14 km. Ring spacing grows smoothly, so the
+	# collision remains affordable while the central area stays very dense.
+	for ring_index in range(1, LOCAL_OUTER_RINGS + 1):
+		var t: float = float(ring_index) / float(LOCAL_OUTER_RINGS)
+		radii.append(lerpf(
+			MICRO_DETAIL_RADIUS,
+			LOCAL_CAP_RADIUS,
+			pow(t, 1.68)
+		))
+
+	return radii
 
 
 func _add_ring_indices(
@@ -698,57 +914,205 @@ func _build_collision_from_local_mesh() -> void:
 
 
 func _create_rocks() -> void:
-	rocks_instance = MultiMeshInstance3D.new()
-	rocks_instance.name = "ProceduralRocks"
-	rocks_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	rock_instances.clear()
+	if rock_meshes.size() < 4:
+		return
+
+	_create_rock_layer(
+		"AngularBoulders",
+		0,
+		LARGE_ROCK_RADIUS,
+		310.0,
+		0.12,
+		0.75,
+		5.8,
+		320,
+		301,
+		true,
+		0.23
+	)
+	_create_rock_layer(
+		"FlatSlabs",
+		1,
+		MEDIUM_ROCK_RADIUS,
+		82.0,
+		0.25,
+		0.30,
+		2.4,
+		520,
+		503,
+		true,
+		0.08
+	)
+	_create_rock_layer(
+		"SharpFragments",
+		2,
+		SMALL_ROCK_RADIUS,
+		19.0,
+		0.34,
+		0.10,
+		0.72,
+		1250,
+		709,
+		false,
+		0.11
+	)
+	_create_rock_layer(
+		"PebbleScatter",
+		3,
+		PEBBLE_RADIUS,
+		7.0,
+		0.56,
+		0.025,
+		0.16,
+		2100,
+		907,
+		false,
+		0.025
+	)
+
+	rocks_instance = rock_instances[0] if not rock_instances.is_empty() else null
+
+
+func _create_rock_layer(
+	layer_name: String,
+	variant_index: int,
+	layer_radius: float,
+	cell_size: float,
+	spawn_probability: float,
+	min_scale: float,
+	max_scale: float,
+	max_instances: int,
+	seed_offset: int,
+	align_to_surface: bool,
+	bury_factor: float
+) -> void:
+	var transforms: Array[Transform3D] = []
+	var cell_angle: float = cell_size / MOON_RADIUS
+	var latitude: float = asin(clampf(surface_center_direction.y, -1.0, 1.0))
+	var longitude: float = atan2(surface_center_direction.z, surface_center_direction.x)
+	var center_lat_cell: int = floori(latitude / cell_angle)
+	var center_lon_cell: int = floori(longitude / cell_angle)
+	var cell_radius: int = ceili(layer_radius / cell_size) + 2
+
+	for lat_offset in range(-cell_radius, cell_radius + 1):
+		if transforms.size() >= max_instances:
+			break
+		var lat_cell: int = center_lat_cell + lat_offset
+		var cell_latitude: float = (float(lat_cell) + 0.5) * cell_angle
+		if cell_latitude <= -PI * 0.5 or cell_latitude >= PI * 0.5:
+			continue
+
+		for lon_offset in range(-cell_radius, cell_radius + 1):
+			if transforms.size() >= max_instances:
+				break
+			var lon_cell: int = center_lon_cell + lon_offset
+			var cell_seed: int = (
+				WORLD_SEED * 211
+				+ lat_cell * 73_856_093
+				+ lon_cell * 19_349_663
+				+ seed_offset * 83_492_791
+			)
+			if cell_seed < 0:
+				cell_seed = -cell_seed
+			var rng := RandomNumberGenerator.new()
+			rng.seed = cell_seed
+			if rng.randf() > spawn_probability:
+				continue
+
+			var candidate_latitude: float = (
+				float(lat_cell) + rng.randf_range(0.06, 0.94)
+			) * cell_angle
+			var candidate_longitude: float = (
+				float(lon_cell) + rng.randf_range(0.06, 0.94)
+			) * cell_angle
+			var direction := _direction_from_lat_lon(
+				candidate_latitude,
+				candidate_longitude
+			)
+			var distance_m: float = (
+				direction - surface_center_direction
+			).length() * MOON_RADIUS
+			if distance_m > layer_radius:
+				continue
+
+			var normal: Vector3 = direction
+			if align_to_surface:
+				normal = _estimate_surface_normal(
+					direction,
+					clampf(cell_size * 0.12, 1.0, 28.0)
+				)
+				if normal.dot(direction) < 0.58:
+					continue
+
+			var point_world := get_surface_point(direction)
+			var scale_value: float = rng.randf_range(min_scale, max_scale)
+			var tangent_x := _make_east(normal)
+			var tangent_z := tangent_x.cross(normal).normalized()
+			var basis := Basis(tangent_x, normal, tangent_z)
+			basis = Basis(normal, rng.randf_range(0.0, TAU)) * basis
+			var anisotropy := Vector3(
+				rng.randf_range(0.82, 1.22),
+				rng.randf_range(0.82, 1.16),
+				rng.randf_range(0.82, 1.22)
+			)
+			basis = basis.scaled(anisotropy * scale_value)
+			transforms.append(Transform3D(
+				basis,
+				point_world - surface_anchor_world + normal * (bury_factor * scale_value)
+			))
+
+	if transforms.is_empty():
+		return
 
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = rock_mesh
-	multimesh.instance_count = ROCK_COUNT
-	multimesh.visible_instance_count = ROCK_COUNT
+	multimesh.mesh = rock_meshes[variant_index]
+	multimesh.instance_count = transforms.size()
+	multimesh.visible_instance_count = transforms.size()
+	for instance_index in range(transforms.size()):
+		multimesh.set_instance_transform(instance_index, transforms[instance_index])
 
-	var rng := RandomNumberGenerator.new()
-	rng.seed = WORLD_SEED + int(absf(surface_center_direction.x) * 100000.0) + int(absf(surface_center_direction.z) * 170000.0)
-
-	for rock_index in range(ROCK_COUNT):
-		var radius_value: float = sqrt(rng.randf()) * ROCK_RADIUS
-		var angle: float = rng.randf_range(0.0, TAU)
-		var local_x: float = cos(angle) * radius_value
-		var local_z: float = sin(angle) * radius_value
-		var direction := _direction_from_surface_local(local_x, local_z)
-		var point_world := get_surface_point(direction)
-		var scale_value: float = (
-			rng.randf_range(0.45, 2.4)
-			if rock_index > 8
-			else rng.randf_range(2.5, 7.5)
-		)
-		var tangent_x := _make_east(direction)
-		var tangent_z := tangent_x.cross(direction).normalized()
-		var basis := Basis(tangent_x, direction, tangent_z)
-		basis = Basis(direction, rng.randf_range(0.0, TAU)) * basis
-		basis = basis.scaled(Vector3.ONE * scale_value)
-		multimesh.set_instance_transform(rock_index, Transform3D(
-			basis,
-			point_world - surface_anchor_world + direction * (0.16 * scale_value)
-		))
-
-	rocks_instance.multimesh = multimesh
-	surface_root.add_child(rocks_instance)
+	var instance := MultiMeshInstance3D.new()
+	instance.name = layer_name
+	instance.multimesh = multimesh
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	surface_root.add_child(instance)
+	rock_instances.append(instance)
 
 
-func _create_rock_mesh(seed_value: int) -> ArrayMesh:
+func _estimate_surface_normal(direction: Vector3, sample_distance: float) -> Vector3:
+	var east := _make_east(direction)
+	var north := east.cross(direction).normalized()
+	var angular_step: float = sample_distance / MOON_RADIUS
+	var east_direction := (direction + east * angular_step).normalized()
+	var west_direction := (direction - east * angular_step).normalized()
+	var north_direction := (direction + north * angular_step).normalized()
+	var south_direction := (direction - north * angular_step).normalized()
+	var east_point := get_surface_point(east_direction)
+	var west_point := get_surface_point(west_direction)
+	var north_point := get_surface_point(north_direction)
+	var south_point := get_surface_point(south_direction)
+	var tangent_east := east_point - west_point
+	var tangent_north := north_point - south_point
+	var normal := tangent_north.cross(tangent_east).normalized()
+	if normal.dot(direction) < 0.0:
+		normal = -normal
+	return normal
+
+
+func _create_rock_mesh(seed_value: int, variant_index: int = 0) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var segments: int = 10
-	var rings: int = 5
+	var segments: int = 11
+	var rings: int = 6
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var indices := PackedInt32Array()
 
 	var ring_offsets: Array[float] = []
 	for _ring_index in range(rings + 1):
-		ring_offsets.append(rng.randf_range(-0.08, 0.08))
+		ring_offsets.append(rng.randf_range(-0.11, 0.11))
 
 	for ring_index in range(rings + 1):
 		var vertical_t: float = float(ring_index) / float(rings)
@@ -760,17 +1124,29 @@ func _create_rock_mesh(seed_value: int) -> ArrayMesh:
 			var theta: float = float(segment_index) / float(segments) * TAU
 			var wobble: float = (
 				1.0
-				+ 0.17 * sin(theta * 3.0 + 0.7)
-				+ 0.11 * cos(theta * 5.0 - 0.4)
+				+ 0.20 * sin(theta * 3.0 + 0.7)
+				+ 0.10 * cos(theta * 5.0 - 0.4)
 				+ ring_offsets[ring_index]
 			)
 			var vertex := Vector3(
 				cos(theta) * ring_radius * wobble,
-				y_value * (1.0 + 0.13 * sin(theta * 2.0)),
+				y_value * (1.0 + 0.15 * sin(theta * 2.0)),
 				sin(theta) * ring_radius * wobble
 			)
-			vertex.x *= 1.15
-			vertex.z *= 0.92
+
+			match variant_index:
+				0: # angular boulder
+					vertex *= Vector3(1.18, 0.95, 0.94)
+				1: # flat fractured slab
+					vertex *= Vector3(1.55, 0.34, 1.12)
+					vertex.x += vertex.y * 0.18
+				2: # sharp ejecta fragment
+					vertex *= Vector3(0.62, 1.55, 0.54)
+					vertex.x += (vertical_t - 0.5) * 0.22
+					vertex.z -= (vertical_t - 0.5) * 0.13
+				_: # rounded pebble
+					vertex *= Vector3(1.18, 0.54, 0.92)
+
 			vertices.append(vertex)
 			normals.append(vertex.normalized())
 
@@ -784,9 +1160,16 @@ func _create_rock_mesh(seed_value: int) -> ArrayMesh:
 			indices.append_array(PackedInt32Array([i0, i1, i2]))
 			indices.append_array(PackedInt32Array([i1, i3, i2]))
 
+	var variant_colors: Array[Color] = [
+		Color(0.31, 0.315, 0.33),
+		Color(0.38, 0.37, 0.36),
+		Color(0.27, 0.28, 0.30),
+		Color(0.46, 0.45, 0.43),
+	]
 	var colors := PackedColorArray()
-	for _vertex in vertices:
-		colors.append(Color(0.28, 0.285, 0.295))
+	for vertex_index in range(vertices.size()):
+		var height_mix: float = clampf(vertices[vertex_index].y + 0.5, 0.0, 1.0)
+		colors.append(variant_colors[variant_index].lightened(height_mix * 0.10))
 	return _make_array_mesh(vertices, normals, colors, indices, rock_material)
 
 
@@ -830,8 +1213,9 @@ func _apply_lod_visibility() -> void:
 	local_cap.visible = current_lod == 0
 	medium_annulus_cap.visible = current_lod == 0
 	medium_full_cap.visible = current_lod == 1
-	if rocks_instance != null:
-		rocks_instance.visible = current_lod == 0
+	for rock_instance in rock_instances:
+		if rock_instance != null:
+			rock_instance.visible = current_lod == 0
 
 
 func set_render_origin(new_origin_world: Vector3) -> void:
@@ -853,7 +1237,17 @@ func recenter_player(player: CharacterBody3D) -> void:
 		return
 
 	var absolute_position: Vector3 = render_to_world(player.global_position)
-	prepare_surface_region(absolute_position.normalized(), true)
+	var new_direction := absolute_position.normalized()
+	var approximate_surface_point := new_direction * MOON_RADIUS
+	var medium_distance: float = (
+		approximate_surface_point - medium_anchor_world
+	).length()
+
+	if medium_distance > MEDIUM_LOCAL_RECENTER_DISTANCE:
+		prepare_surface_region(new_direction, true)
+	else:
+		_rebuild_local_playable_surface(new_direction)
+
 	set_render_origin(surface_anchor_world)
 	player.global_position = world_to_render(absolute_position)
 	player.reset_physics_interpolation()
@@ -883,6 +1277,12 @@ func get_lod_name() -> String:
 			return "MEDIUM + GLOBAL"
 		_:
 			return "GLOBAL"
+
+
+func get_detail_name() -> String:
+	if current_lod != 0:
+		return "Планетарный LOD"
+	return "ULTRA: микрорельеф 240 м, 4 слоя камней"
 
 
 func get_moon_radius() -> float:
@@ -930,7 +1330,54 @@ func get_surface_height(direction_value: Vector3) -> float:
 	result += small_shape * (28.0 + factors.y * 80.0 + factors.z * 135.0)
 	result += micro_ridge * (factors.y * 90.0 + factors.z * 330.0)
 	result += _get_local_crater_height(direction)
+	result += _get_micro_surface_relief(direction, factors)
+	result += _get_micro_crater_height(direction)
 	return clampf(result, -9200.0, 11_200.0)
+
+
+func _get_micro_surface_relief(direction: Vector3, factors: Vector4) -> float:
+	var center_distance: float = (
+		direction - surface_center_direction
+	).length() * MOON_RADIUS
+	var meso_fade: float = 1.0 - smoothstep(1600.0, MESO_DETAIL_FADE_END, center_distance)
+	var micro_fade: float = 1.0 - smoothstep(360.0, MICRO_DETAIL_FADE_END, center_distance)
+	var fine_fade: float = 1.0 - smoothstep(210.0, 470.0, center_distance)
+	var grain_fade: float = 1.0 - smoothstep(105.0, 260.0, center_distance)
+
+	var ruggedness: float = clampf(
+		0.35 + factors.y * 0.50 + factors.z * 0.85 + factors.w * 0.28,
+		0.25,
+		1.65
+	)
+	var meso: float = meso_surface_noise.get_noise_3d(
+		direction.x * 6500.0,
+		direction.y * 6500.0,
+		direction.z * 6500.0
+	)
+	var micro: float = micro_surface_noise.get_noise_3d(
+		direction.x * 22_000.0,
+		direction.y * 22_000.0,
+		direction.z * 22_000.0
+	)
+	var fine: float = fine_surface_noise.get_noise_3d(
+		direction.x * 78_000.0,
+		direction.y * 78_000.0,
+		direction.z * 78_000.0
+	)
+	var grain_source: float = grain_surface_noise.get_noise_3d(
+		direction.x * 245_000.0,
+		direction.y * 245_000.0,
+		direction.z * 245_000.0
+	)
+	var broken_regolith: float = (
+		pow(absf(grain_source), 1.7) - 0.28
+	)
+
+	var result: float = meso * (10.0 + 30.0 * ruggedness) * meso_fade
+	result += micro * (1.8 + 7.2 * ruggedness) * micro_fade
+	result += fine * (0.35 + 1.55 * ruggedness) * fine_fade
+	result += broken_regolith * (0.08 + 0.28 * ruggedness) * grain_fade
+	return result
 
 
 func get_coarse_surface_height(direction_value: Vector3) -> float:
@@ -1298,6 +1745,15 @@ func _surface_base_color(height: float, direction: Vector3) -> Color:
 	result = result.lerp(Color(0.76, 0.73, 0.68), factors.y * 0.16)
 	result = result.lerp(Color(0.80, 0.76, 0.69), factors.z * 0.22)
 	result = result.lerp(Color(0.42, 0.41, 0.42), factors.w * 0.10)
+	var regolith_variation: float = grain_surface_noise.get_noise_3d(
+		direction.x * 92_000.0,
+		direction.y * 92_000.0,
+		direction.z * 92_000.0
+	)
+	if regolith_variation >= 0.0:
+		result = result.lightened(regolith_variation * 0.045)
+	else:
+		result = result.darkened(-regolith_variation * 0.035)
 	return result
 
 
@@ -1318,4 +1774,4 @@ func _clear_node(node: Node) -> void:
 		return
 	for child in node.get_children():
 		node.remove_child(child)
-		child.queue_free()
+		child.free()
