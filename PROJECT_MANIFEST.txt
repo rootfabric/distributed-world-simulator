@@ -1,22 +1,24 @@
-Real Scale Procedural Moon v8
+Real Scale Procedural Moon v12 — Entity Registry Integration
 
-Files:
-ec71668d3e862c49e993d1d4435ab3d46f9e4f842b911b200556c4f711c147af  LOD_LAYERS_V8_RU.md  4732 bytes
-eb5fdfedbab5431765366552eb226d7139bf6d689b74290e588a5bd70095113c  MICRO_DETAIL_ARCHITECTURE_RU.md  4659 bytes
-9d2c68bf9f794203ed7ec5b96356497626e5541411d7452c65d9fa756d9d996b  README_RU.md  16169 bytes
-57c41f585120aaf6ef3424a11107518d21741a2c7fad118884f4a491bffc683a  RUN_EDITOR_DOUBLE.ps1  913 bytes
-4c181d1efbb887dfdb9d30b003ecc40668ff916439250a82879cf162a05e4ef0  VALIDATE_WITH_DOUBLE.ps1  889 bytes
-b7b4505571ea10529e1b2b6417fed60b79981425b85b438b003732081cd350cf  main.tscn  179 bytes
-2b209d24622526336b7dfe2b929068a68f5f7d8fce6d235132105d6d4b593dac  project.godot  823 bytes
-dfa0b40caca3ad2690c512156ece14fc8f405e2bf34c4169324b0f837f9cabaf  scripts/hud.gd  5869 bytes
-af7f3320f82d12f9f7e03866bd814ae6d69d0dc1a0bb3dd6e7218f669c37b22b  scripts/lunar_player.gd  7938 bytes
-5c844a69c019f049823108ccb52cda76bf1f454a1c1314e0c8f88dca203eb28a  scripts/main.gd  5818 bytes
-58fdf2d5ae4aaacd431ef2e20ee7a46fa5991dc2b8da5cfddc3a0c16b88c4b0e  scripts/moon_world.gd  63982 bytes
-d98341138ee1e9810be18517c489ae8f65120ee18b4deaf75c2893fa9acb4651  scripts/spectator_controller.gd  4515 bytes
+Core additions:
+- scripts/diagnostics/lunar_logger.gd
+- scripts/simulation/entities/entity_record.gd
+- scripts/simulation/entities/entity_registry.gd
+- scripts/world/zones/lunar_zone_manager.gd
+- scripts/app/lunar_app.gd
+- scripts/ui/lunar_hud.gd
+- tests/integration/test_entity_registry_migration.gd
+- RUN_ENTITY_INTEGRATION_TEST.ps1
 
-V8 changes:
-- spectator-follow streaming under camera subpoint
-- ULTRA follows below 0.9 km; LOCAL below 12 km; REGIONAL below 620 km
-- F2 toggles auto-follow
-- F4 toggles LOD debug colors
-- LOCAL rendering and collision remain one ArrayMesh
+Runtime hotkeys:
+- F1 / Escape: toggle menu
+- F7: entity migration mini-test
+- F9: diagnostic snapshot
+
+Schemas:
+- lunar.partition.v1
+- lunar.entity.v1
+- lunar.entity_event.v1
+- lunar.entity_registry.v1
+- lunar.log.v1
+- lunar.diagnostic.v1

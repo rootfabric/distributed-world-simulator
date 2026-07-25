@@ -1,0 +1,4 @@
+Generated procedural tile
+size=1024
+tile_meters=32000
+seed=202607242

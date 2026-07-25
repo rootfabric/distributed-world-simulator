@@ -1,0 +1,569 @@
+extends Node3D
+
+const MoonWorldScript = preload("res://scripts/world/moon_world.gd")
+const LunarPlayerScript = preload("res://scripts/actors/player/lunar_player.gd")
+const SpectatorScript = preload("res://scripts/actors/spectator/spectator_controller.gd")
+const HudScript = preload("res://scripts/ui/lunar_hud.gd")
+const LunarZoneManagerScript = preload(
+	"res://scripts/world/zones/lunar_zone_manager.gd"
+)
+const EntityRegistryScript = preload(
+	"res://scripts/simulation/entities/entity_registry.gd"
+)
+const EntityRecordScript = preload(
+	"res://scripts/simulation/entities/entity_record.gd"
+)
+const LunarLoggerScript = preload(
+	"res://scripts/diagnostics/lunar_logger.gd"
+)
+
+const PLAYER_ENTITY_ID: String = "player/local-astronaut"
+const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
+const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
+const DIAGNOSTIC_DIR: String = "user://diagnostics"
+const WINDOWED_RESOLUTIONS := [
+	Vector2i(1280, 720),
+	Vector2i(1600, 900),
+	Vector2i(1920, 1080),
+	Vector2i(2560, 1440),
+	Vector2i(3440, 1440),
+]
+
+var moon_world
+var player
+var spectator
+var hud
+var zone_manager
+var entity_registry
+var logger
+
+var spectator_enabled: bool = false
+var mouse_captured: bool = true
+var fullscreen_enabled: bool = false
+var resolution_index: int = 2
+var last_mini_test_result: String = "Не запускался"
+var last_diagnostic_path: String = "-"
+
+
+func _ready() -> void:
+	_ensure_input_actions()
+	_load_display_settings()
+	_apply_display_settings()
+
+	logger = LunarLoggerScript.new()
+	logger.name = "LunarLogger"
+	add_child(logger)
+	logger.setup(false)
+	logger.info("application", "startup", {
+		"engine": Engine.get_version_info(),
+		"display_mode": get_display_mode_name(),
+		"resolution": get_display_resolution_name(),
+	})
+
+	moon_world = MoonWorldScript.new()
+	moon_world.name = "MoonWorld"
+	add_child(moon_world)
+	moon_world.setup()
+
+	zone_manager = LunarZoneManagerScript.new()
+	zone_manager.name = "LunarZoneManager"
+	add_child(zone_manager)
+	zone_manager.setup(moon_world)
+	zone_manager.partition_window_changed.connect(_on_partition_window_changed)
+
+	entity_registry = EntityRegistryScript.new()
+	entity_registry.name = "EntityRegistry"
+	add_child(entity_registry)
+	entity_registry.setup(zone_manager, logger)
+
+	player = LunarPlayerScript.new()
+	player.name = "LunarPlayer"
+	add_child(player)
+	player.setup(moon_world)
+
+	spectator = SpectatorScript.new()
+	spectator.name = "SpectatorController"
+	add_child(spectator)
+	spectator.setup(moon_world)
+
+	hud = HudScript.new()
+	hud.name = "HUD"
+	add_child(hud)
+	hud.setup(
+		self,
+		moon_world,
+		player,
+		spectator,
+		zone_manager,
+		entity_registry,
+		logger
+	)
+
+	random_spawn()
+	_ensure_player_entity_registered()
+	_set_menu_visible(true)
+
+
+func _process(delta: float) -> void:
+	if moon_world == null or player == null:
+		return
+
+	var active_world_position: Vector3
+	if spectator_enabled:
+		active_world_position = spectator.get_world_position()
+		moon_world.update_for_view(
+			active_world_position,
+			active_world_position,
+			true,
+			delta
+		)
+	else:
+		active_world_position = player.get_world_position()
+		moon_world.update_for_view(
+			active_world_position,
+			moon_world.get_render_origin(),
+			false,
+			delta
+		)
+
+	if zone_manager != null:
+		zone_manager.update_observer(active_world_position, spectator_enabled)
+
+	_sync_player_entity()
+
+	if hud != null:
+		hud.update_values(
+			spectator_enabled,
+			mouse_captured,
+			player.get_world_position() if not spectator_enabled else player.get_stored_world_position(),
+			active_world_position
+		)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F1 or event.keycode == KEY_ESCAPE:
+			toggle_menu()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F3:
+			toggle_spectator()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F2:
+			toggle_spectator_lod_tracking()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F4:
+			toggle_lod_debug_colors()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F7:
+			run_entity_migration_mini_test()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F9:
+			save_diagnostic_snapshot()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_V:
+			moon_world.cycle_surface_style()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F6 or event.physical_keycode == KEY_R:
+			random_spawn()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_T and spectator_enabled:
+			teleport_player_to_spectator()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F11:
+			toggle_fullscreen()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_F8:
+			cycle_resolution()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_TAB:
+			_set_mouse_capture(not mouse_captured)
+			get_viewport().set_input_as_handled()
+			return
+
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not mouse_captured:
+			if hud == null or not hud.is_menu_visible():
+				_set_mouse_capture(true)
+				get_viewport().set_input_as_handled()
+
+
+func toggle_menu() -> void:
+	if hud == null:
+		return
+	_set_menu_visible(not hud.is_menu_visible())
+
+
+func _set_menu_visible(visible_value: bool) -> void:
+	if hud != null:
+		hud.set_menu_visible(visible_value)
+	_set_mouse_capture(not visible_value)
+	if logger != null:
+		logger.info("ui", "menu_visibility_changed", {
+			"visible": visible_value,
+		})
+
+
+func toggle_spectator() -> void:
+	spectator_enabled = not spectator_enabled
+	if spectator_enabled:
+		var camera_world_transform: Transform3D = player.get_active_camera_world_transform()
+		player.freeze_for_spectator()
+		spectator.activate(camera_world_transform)
+	else:
+		var player_world_position: Vector3 = player.get_stored_world_position()
+		spectator.deactivate()
+		moon_world.prepare_surface_region(player_world_position.normalized(), true)
+		moon_world.set_render_origin(moon_world.get_surface_anchor())
+		player.restore_from_spectator()
+	_set_mouse_capture(true)
+	if hud != null:
+		hud.set_menu_visible(false)
+	logger.info("gameplay", "spectator_mode_changed", {
+		"enabled": spectator_enabled,
+	})
+
+
+func toggle_spectator_lod_tracking() -> void:
+	moon_world.set_spectator_tracking_enabled(
+		not moon_world.is_spectator_tracking_enabled()
+	)
+	logger.info("lod", "spectator_tracking_changed", {
+		"enabled": moon_world.is_spectator_tracking_enabled(),
+	})
+
+
+func toggle_lod_debug_colors() -> void:
+	moon_world.set_lod_debug_enabled(not moon_world.is_lod_debug_enabled())
+	logger.info("lod", "debug_colors_changed", {
+		"enabled": moon_world.is_lod_debug_enabled(),
+	})
+
+
+func random_spawn() -> void:
+	if spectator_enabled:
+		spectator_enabled = false
+		spectator.deactivate()
+
+	var spawn_direction: Vector3 = moon_world.get_random_spawn_direction()
+	moon_world.prepare_surface_region(spawn_direction, true)
+	spawn_direction = moon_world.get_safe_spawn_direction_near(spawn_direction)
+	moon_world.set_render_origin(moon_world.get_surface_anchor())
+	player.teleport_to_surface(spawn_direction)
+	player.activate_after_spawn()
+	_set_mouse_capture(true)
+	if hud != null:
+		hud.set_menu_visible(false)
+	_sync_player_entity()
+	if logger != null:
+		logger.info("gameplay", "random_spawn", {
+			"world_position": _vector_to_array(player.get_world_position()),
+		})
+
+
+func teleport_player_to_spectator() -> void:
+	if not spectator_enabled or spectator == null:
+		return
+
+	var spectator_world_position: Vector3 = spectator.get_world_position()
+	if spectator_world_position.length_squared() < 1.0:
+		return
+
+	var target_direction: Vector3 = spectator_world_position.normalized()
+	spectator_enabled = false
+	spectator.deactivate()
+	moon_world.prepare_surface_region(target_direction, true)
+	moon_world.set_render_origin(moon_world.get_surface_anchor())
+	player.teleport_to_surface(target_direction)
+	player.activate_after_spawn()
+	_set_mouse_capture(true)
+	if hud != null:
+		hud.set_menu_visible(false)
+	_sync_player_entity()
+	logger.info("gameplay", "player_teleported_from_spectator", {
+		"world_position": _vector_to_array(player.get_world_position()),
+	})
+
+
+func run_entity_migration_mini_test() -> Dictionary:
+	if entity_registry == null or zone_manager == null or player == null:
+		last_mini_test_result = "FAIL: подсистемы не готовы"
+		return {"passed": false, "reason": last_mini_test_result}
+
+	entity_registry.unregister_entity(MINI_TEST_ENTITY_ID)
+	var start_position: Vector3 = (
+		player.get_stored_world_position()
+		if spectator_enabled
+		else player.get_world_position()
+	)
+	var start_partition: Dictionary = zone_manager.resolve_partition(start_position)
+	var probe = EntityRecordScript.new()
+	probe.setup(
+		MINI_TEST_ENTITY_ID,
+		"diagnostic_probe",
+		start_position,
+		{"purpose": "chunk_migration_mini_test"}
+	)
+	var registered: bool = entity_registry.register_entity(probe)
+	if not registered:
+		last_mini_test_result = "FAIL: тестовая сущность не зарегистрирована"
+		logger.error("integration_test", "entity_migration_test_failed", {
+			"reason": last_mini_test_result,
+		})
+		return {"passed": false, "reason": last_mini_test_result}
+
+	var transition_before: int = entity_registry.chunk_transition_count
+	var target_position: Vector3 = start_position
+	var target_partition: Dictionary = start_partition
+	for multiplier in [1.35, 2.5, 4.0, 7.0]:
+		target_position = zone_manager.offset_surface_position(
+			start_position,
+			zone_manager.get_nominal_chunk_size_m() * float(multiplier),
+			zone_manager.get_nominal_chunk_size_m() * 0.37,
+			0.0
+		)
+		target_partition = zone_manager.resolve_partition(target_position)
+		if String(target_partition.get("chunk_id", "")) != String(start_partition.get("chunk_id", "")):
+			break
+
+	entity_registry.update_entity_position(MINI_TEST_ENTITY_ID, target_position)
+	var chunk_changed: bool = (
+		String(start_partition.get("chunk_id", ""))
+		!= String(target_partition.get("chunk_id", ""))
+	)
+	var event_created: bool = (
+		entity_registry.chunk_transition_count > transition_before
+	)
+	var passed: bool = chunk_changed and event_created
+	last_mini_test_result = (
+		"PASS: %s → %s"
+		% [
+			String(start_partition.get("chunk_name", "-")),
+			String(target_partition.get("chunk_name", "-")),
+		]
+		if passed
+		else "FAIL: граница чанка не зафиксирована"
+	)
+	var result: Dictionary = {
+		"passed": passed,
+		"from_zone": start_partition.get("zone_id", ""),
+		"to_zone": target_partition.get("zone_id", ""),
+		"from_chunk": start_partition.get("chunk_id", ""),
+		"to_chunk": target_partition.get("chunk_id", ""),
+		"chunk_event_created": event_created,
+		"summary": last_mini_test_result,
+	}
+	logger.info("integration_test", "entity_migration_mini_test", result)
+	entity_registry.unregister_entity(MINI_TEST_ENTITY_ID)
+	return result
+
+
+func save_diagnostic_snapshot() -> String:
+	DirAccess.make_dir_recursive_absolute(
+		ProjectSettings.globalize_path(DIAGNOSTIC_DIR)
+	)
+	var stamp: String = Time.get_datetime_string_from_system(false, false)
+	stamp = stamp.replace(":", "-")
+	var path: String = "%s/diagnostic_%s.json" % [DIAGNOSTIC_DIR, stamp]
+	var payload: Dictionary = {
+		"schema": "lunar.diagnostic.v1",
+		"created_at_utc": Time.get_datetime_string_from_system(true, true),
+		"engine": Engine.get_version_info(),
+		"os": {
+			"name": OS.get_name(),
+			"version": OS.get_version(),
+			"processor_count": OS.get_processor_count(),
+		},
+		"display": {
+			"mode": get_display_mode_name(),
+			"resolution": get_display_resolution_name(),
+		},
+		"gameplay": {
+			"spectator_enabled": spectator_enabled,
+			"player_world_position": _vector_to_array(
+				player.get_stored_world_position()
+				if spectator_enabled
+				else player.get_world_position()
+			),
+			"last_mini_test_result": last_mini_test_result,
+		},
+		"partitions": zone_manager.create_partition_snapshot(),
+		"entities": entity_registry.create_snapshot(),
+		"recent_migrations": entity_registry.get_recent_migrations(),
+		"recent_logs": logger.get_recent_entries(),
+		"log_path": logger.get_log_path(),
+	}
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		last_diagnostic_path = "ERROR"
+		logger.error("diagnostics", "snapshot_write_failed", {"path": path})
+		return last_diagnostic_path
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.flush()
+	last_diagnostic_path = path
+	logger.info("diagnostics", "snapshot_saved", {"path": path})
+	return path
+
+
+func get_last_mini_test_result() -> String:
+	return last_mini_test_result
+
+
+func get_last_diagnostic_path() -> String:
+	return last_diagnostic_path
+
+
+func toggle_fullscreen() -> void:
+	fullscreen_enabled = not fullscreen_enabled
+	_apply_display_settings()
+	_save_display_settings()
+	logger.info("display", "fullscreen_changed", {
+		"enabled": fullscreen_enabled,
+		"resolution": get_display_resolution_name(),
+	})
+
+
+func cycle_resolution() -> void:
+	resolution_index = (resolution_index + 1) % WINDOWED_RESOLUTIONS.size()
+	_apply_display_settings()
+	_save_display_settings()
+	logger.info("display", "resolution_changed", {
+		"resolution": get_display_resolution_name(),
+	})
+
+
+func get_display_mode_name() -> String:
+	return "Полный экран" if fullscreen_enabled else "Окно"
+
+
+func get_display_resolution_name() -> String:
+	var window_size: Vector2i = DisplayServer.window_get_size()
+	if fullscreen_enabled:
+		return "%d×%d (рабочий экран)" % [window_size.x, window_size.y]
+	var preset_size: Vector2i = WINDOWED_RESOLUTIONS[resolution_index]
+	return "%d×%d" % [preset_size.x, preset_size.y]
+
+
+func _apply_display_settings() -> void:
+	if fullscreen_enabled:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		return
+
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var target_size: Vector2i = WINDOWED_RESOLUTIONS[resolution_index]
+	DisplayServer.window_set_size(target_size)
+	_center_window(target_size)
+
+
+func _center_window(target_size: Vector2i) -> void:
+	var screen_index: int = DisplayServer.window_get_current_screen()
+	var screen_position: Vector2i = DisplayServer.screen_get_position(screen_index)
+	var screen_size: Vector2i = DisplayServer.screen_get_size(screen_index)
+	var centered_position := Vector2i(
+		screen_position.x + maxi(int((screen_size.x - target_size.x) / 2), 0),
+		screen_position.y + maxi(int((screen_size.y - target_size.y) / 2), 0)
+	)
+	DisplayServer.window_set_position(centered_position)
+
+
+func _load_display_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(DISPLAY_SETTINGS_PATH) != OK:
+		return
+	fullscreen_enabled = bool(cfg.get_value("display", "fullscreen", false))
+	resolution_index = int(cfg.get_value("display", "resolution_index", resolution_index))
+	resolution_index = clampi(resolution_index, 0, WINDOWED_RESOLUTIONS.size() - 1)
+
+
+func _save_display_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("display", "fullscreen", fullscreen_enabled)
+	cfg.set_value("display", "resolution_index", resolution_index)
+	cfg.save(DISPLAY_SETTINGS_PATH)
+
+
+func _ensure_player_entity_registered() -> void:
+	if entity_registry.has_entity(PLAYER_ENTITY_ID):
+		return
+	var record = EntityRecordScript.new()
+	record.setup(
+		PLAYER_ENTITY_ID,
+		"player_astronaut",
+		player.get_world_position(),
+		{
+			"persistent": true,
+			"controller": "local_player",
+		}
+	)
+	entity_registry.register_entity(record)
+
+
+func _sync_player_entity() -> void:
+	if entity_registry == null or player == null:
+		return
+	_ensure_player_entity_registered()
+	var position: Vector3 = (
+		player.get_stored_world_position()
+		if spectator_enabled
+		else player.get_world_position()
+	)
+	entity_registry.update_entity_position(PLAYER_ENTITY_ID, position)
+
+
+func _on_partition_window_changed(snapshot: Dictionary) -> void:
+	if logger == null:
+		return
+	logger.info("partition", "active_partition_changed", {
+		"active_zone": snapshot.get("active_zone", ""),
+		"active_chunk": snapshot.get("active_chunk", ""),
+		"observer": snapshot.get("observer", ""),
+		"loaded_zones": zone_manager.get_loaded_zone_count(),
+		"loaded_chunks": zone_manager.get_loaded_chunk_count(),
+	})
+
+
+func _set_mouse_capture(captured: bool) -> void:
+	mouse_captured = captured
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if captured else Input.MOUSE_MODE_VISIBLE
+
+
+func _ensure_input_actions() -> void:
+	_set_single_key_action("move_forward", KEY_W)
+	_set_single_key_action("move_back", KEY_S)
+	_set_single_key_action("move_left", KEY_A)
+	_set_single_key_action("move_right", KEY_D)
+	_set_single_key_action("jump", KEY_SPACE)
+	_set_single_key_action("move_up", KEY_SPACE)
+	_set_single_key_action("move_down", KEY_CTRL)
+	_set_single_key_action("boost", KEY_SHIFT)
+	_set_single_key_action("random_spawn", KEY_R)
+	_set_single_key_action("roll_left", KEY_E)
+	_set_single_key_action("roll_right", KEY_Q)
+	_set_single_key_action("level_horizon", KEY_H)
+	_set_single_key_action("teleport_player", KEY_T)
+	_set_single_key_action("cycle_surface_style", KEY_V)
+
+
+func _set_single_key_action(action_name: StringName, physical_key: int) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	for existing_event in InputMap.action_get_events(action_name):
+		if existing_event is InputEventKey:
+			InputMap.action_erase_event(action_name, existing_event)
+	var input_event := InputEventKey.new()
+	input_event.physical_keycode = physical_key
+	InputMap.action_add_event(action_name, input_event)
+
+
+func _vector_to_array(value: Vector3) -> Array[float]:
+	return [value.x, value.y, value.z]
