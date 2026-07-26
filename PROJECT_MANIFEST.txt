@@ -1,31 +1,39 @@
-Real Scale Procedural Moon v15.2 — Recent Surface Cache and Landmarks
+Real Scale Procedural Moon v15.3 — First-person World Interaction
 
 Core changes:
+- central first-person physics ray with a 6 m interaction distance
+- reusable world_interactable contract
+- focus descriptor, HUD card and material-overlay outline
+- E toggles the Survey Beacon signal
+- beacon_state and landmark.enabled are persisted per chunk
+- component changes are appended to the world journal
+- inactive beacon markers and terrain cache pins are disabled
+- distant landmark font reduced from 56 to 11 and outline from 12 to 2
+- existing v15.2 recent/pinned surface cache remains intact
+
+Streaming and cache retained from v15.2:
 - in-memory LRU cache of ready LOCAL terrain resources
 - 8 recent cells plus up to 8 additional pinned beacon cells
 - early pinned-cell return trigger at 1800 m with approach-direction guard
 - cache hit can preempt a stale background generation job
 - cached ArrayMesh, collision Shape3D and rock MultiMesh resources are reused
 - sparse persistent landmark index at user://worlds/<world_id>/landmarks.json
-- distant billboard marker and distance label for Survey Beacon
-- M toggles navigation markers
-- explicit project_version/build_id in startup and diagnostics
 
 Important files:
 - config/terrain_streaming.json
 - config/navigation_markers.json
 - scripts/world/terrain/streaming/terrain_streaming_manager.gd
 - scripts/world/terrain/procedural_moon_terrain.gd
+- scripts/interaction/world_interactor.gd
+- scripts/interaction/survey_beacon_interactable.gd
 - scripts/persistence/lunar_world_repository.gd
 - scripts/app/lunar_app.gd
 - scripts/ui/lunar_hud.gd
-- tests/integration/test_terrain_streaming_contract.gd
-- tests/integration/test_persistence_roundtrip.gd
-- ANALYZE_TERRAIN_LOG.ps1
-- docs/architecture/RECENT_SURFACE_CACHE_V1_RU.md
-- docs/architecture/LANDMARK_MARKERS_V1_RU.md
-- docs/diagnostics/V15_2_USER_LOG_ANALYSIS_RU.md
-- docs/plans/V15_2_ACCEPTANCE_TESTS_RU.md
+- tests/integration/test_first_person_interaction.gd
+- tests/support/mock_interaction_repository.gd
+- RUN_INTERACTION_TEST.ps1
+- docs/architecture/FIRST_PERSON_INTERACTION_V1_RU.md
+- docs/plans/V15_3_ACCEPTANCE_TESTS_RU.md
 
 Diagnostics:
 - user://logs/terrain_performance.jsonl
@@ -35,4 +43,8 @@ Diagnostics:
 - terrain_surface_cache_evicted
 - terrain_pinned_cache_return_triggered
 - terrain_cached_surface_activated
-- startup project_version=15.2
+- startup project_version=15.3
+- build_id=first-person-world-interaction
+- interaction/interaction_performed
+- persistence/survey_beacon_signal_toggled
+- journal operation=entity_component_changed

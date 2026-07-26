@@ -4,5 +4,7 @@
   "max_distance_m": 250000.0,
   "min_distance_m": 18.0,
   "height_above_surface_m": 7.0,
-  "text_update_interval_sec": 0.25
+  "text_update_interval_sec": 0.25,
+  "font_size": 11,
+  "outline_size": 2
 }

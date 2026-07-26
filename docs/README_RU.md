@@ -11,6 +11,7 @@
 - `architecture/ASYNC_TERRAIN_STREAMING_V1_RU.md`
 - `architecture/RECENT_SURFACE_CACHE_V1_RU.md`
 - `architecture/LANDMARK_MARKERS_V1_RU.md`
+- `architecture/FIRST_PERSON_INTERACTION_V1_RU.md`
 - `architecture/adr/`
 
 ## Контракты
@@ -39,6 +40,7 @@
 - `plans/V15_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_1_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_2_ACCEPTANCE_TESTS_RU.md`
+- `plans/V15_3_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 

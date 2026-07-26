@@ -9,6 +9,9 @@ signal persistence_error(message: String)
 const EntityRecordScript = preload(
 	"res://scripts/simulation/entities/entity_record.gd"
 )
+const SurveyBeaconInteractableScript = preload(
+	"res://scripts/interaction/survey_beacon_interactable.gd"
+)
 
 const DEFAULT_WORLD_ID: String = "moon-experiment-001"
 const WORLD_SCHEMA: String = "lunar.world.v1"
@@ -36,6 +39,8 @@ var landmark_markers_enabled: bool = true
 var landmark_marker_max_distance_m: float = 250_000.0
 var landmark_marker_min_distance_m: float = 18.0
 var landmark_marker_height_m: float = 7.0
+var landmark_marker_font_size: int = 11
+var landmark_marker_outline_size: int = 2
 var landmark_text_update_interval_sec: float = 0.25
 var landmark_text_accumulator: float = 0.0
 var landmark_index_rebuilt: bool = false
@@ -152,8 +157,10 @@ func update_landmark_markers(observer_world_position: Vector3, delta: float) -> 
 		var max_distance_m: float = float(
 			snapshot.get("max_distance_m", landmark_marker_max_distance_m)
 		)
+		var marker_enabled: bool = bool(snapshot.get("enabled", true))
 		node.visible = (
 			landmark_markers_enabled
+			and marker_enabled
 			and distance_m >= landmark_marker_min_distance_m
 			and distance_m <= max_distance_m
 		)
@@ -170,7 +177,7 @@ func set_landmark_markers_enabled(enabled: bool) -> void:
 	landmark_markers_enabled = enabled
 	for node_value in landmark_nodes.values():
 		if node_value != null and is_instance_valid(node_value):
-			node_value.visible = enabled
+			node_value.visible = false
 	_log("INFO", "landmark_markers_toggled", {
 		"enabled": enabled,
 		"landmark_count": landmark_records.size(),
@@ -203,7 +210,7 @@ func get_landmark_world_positions() -> Array[Vector3]:
 		var position: Vector3 = _array_to_vector3(
 			snapshot.get("world_position", [0.0, 0.0, 0.0])
 		)
-		if position.length_squared() > 1.0:
+		if bool(snapshot.get("enabled", true)) and position.length_squared() > 1.0:
 			positions.append(position)
 	return positions
 
@@ -244,6 +251,14 @@ func _load_navigation_marker_config() -> void:
 			"height_above_surface_m",
 			landmark_marker_height_m
 		))
+	)
+	landmark_marker_font_size = maxi(
+		6,
+		int(config.get("font_size", landmark_marker_font_size))
+	)
+	landmark_marker_outline_size = maxi(
+		0,
+		int(config.get("outline_size", landmark_marker_outline_size))
 	)
 	landmark_text_update_interval_sec = maxf(
 		0.05,
@@ -352,6 +367,7 @@ func _landmark_snapshot_from_record(record) -> Dictionary:
 		"entity_type": record.entity_type,
 		"world_position": _vector_to_array(record.world_position),
 		"label": String(landmark_component.get("label", "МАЯК")),
+		"enabled": bool(landmark_component.get("enabled", true)),
 		"marker_type": String(
 			landmark_component.get("marker_type", "survey_beacon")
 		),
@@ -380,6 +396,7 @@ func _landmark_snapshot_from_entity_snapshot(
 			[0.0, 0.0, 0.0]
 		),
 		"label": String(landmark_component.get("label", "МАЯК")),
+		"enabled": bool(landmark_component.get("enabled", true)),
 		"marker_type": String(
 			landmark_component.get("marker_type", "survey_beacon")
 		),
@@ -426,11 +443,12 @@ func _instantiate_landmark_marker(snapshot: Dictionary) -> void:
 		return
 	var marker := Node3D.new()
 	marker.name = "Landmark_%s" % entity_id.get_file()
+	marker.visible = false
 	var label := Label3D.new()
 	label.name = "Label"
 	label.text = String(snapshot.get("label", "МАЯК"))
-	label.font_size = 56
-	label.outline_size = 12
+	label.font_size = landmark_marker_font_size
+	label.outline_size = landmark_marker_outline_size
 	label.modulate = Color(1.0, 0.46, 0.10, 1.0)
 	label.outline_modulate = Color(0.01, 0.01, 0.015, 0.95)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -497,6 +515,15 @@ func create_survey_beacon(
 		"ownership": {
 			"owner": "local-player",
 		},
+		"interaction": {
+			"contract": "lunar.interactable.v1",
+			"primary_action": "toggle_signal",
+			"max_distance_m": 6.0,
+		},
+		"beacon_state": {
+			"active": true,
+			"last_toggled_utc": "",
+		},
 		"landmark": {
 			"enabled": true,
 			"marker_type": "survey_beacon",
@@ -516,6 +543,48 @@ func create_survey_beacon(
 	if not entity_registry.register_entity(record):
 		return ""
 	return entity_id
+
+
+func toggle_survey_beacon_signal(entity_id: String) -> Dictionary:
+	var record = entity_registry.get_entity(entity_id)
+	if record == null or record.entity_type != "survey_beacon":
+		return {
+			"success": false,
+			"message": "Маяк не найден или не загружен",
+		}
+	var state: Dictionary = record.get_component("beacon_state")
+	var active: bool = not bool(state.get("active", true))
+	state["active"] = active
+	state["last_toggled_utc"] = Time.get_datetime_string_from_system(true, true)
+	record.set_component("beacon_state", state)
+
+	var landmark: Dictionary = record.get_component("landmark")
+	landmark["enabled"] = active
+	record.set_component("landmark", landmark)
+	_upsert_landmark_from_record(record)
+
+	var runtime_node = runtime_nodes.get(entity_id)
+	if runtime_node != null and is_instance_valid(runtime_node):
+		if runtime_node.has_method("set_beacon_active"):
+			runtime_node.set_beacon_active(active)
+	dirty_chunks[record.chunk_id] = true
+	var journal_data: Dictionary = {
+		"entity_id": entity_id,
+		"entity_type": record.entity_type,
+		"chunk_id": record.chunk_id,
+		"component": "beacon_state",
+		"active": active,
+		"revision": record.revision,
+	}
+	_append_journal("entity_component_changed", journal_data)
+	_save_chunk(record.chunk_id)
+	_log("INFO", "survey_beacon_signal_toggled", journal_data)
+	return {
+		"success": true,
+		"active": active,
+		"entity_id": entity_id,
+		"message": "Сигнал маяка %s" % ("включён" if active else "выключен"),
+	}
 
 
 func remove_entity(entity_id: String) -> bool:
@@ -587,6 +656,7 @@ func run_roundtrip_test(
 		return _test_result(false, "Не удалось создать тестовый маяк", {})
 	var record = entity_registry.get_entity(test_id)
 	var chunk_id: String = record.chunk_id
+	var interaction_result: Dictionary = toggle_survey_beacon_signal(test_id)
 	var save_result: Dictionary = _save_chunk(chunk_id)
 	var chunk_path: String = get_chunk_file_path(chunk_id)
 	var file_exists: bool = FileAccess.file_exists(chunk_path)
@@ -595,11 +665,26 @@ func run_roundtrip_test(
 	_load_chunk(chunk_id)
 	var restored: bool = entity_registry.has_entity(test_id)
 	var restored_node: bool = runtime_nodes.has(test_id)
+	var restored_record = entity_registry.get_entity(test_id)
+	var restored_state: Dictionary = (
+		restored_record.get_component("beacon_state")
+		if restored_record != null
+		else {}
+	)
+	var restored_inactive: bool = not bool(restored_state.get("active", true))
+	var restored_runtime_inactive: bool = false
+	var restored_runtime = runtime_nodes.get(test_id)
+	if restored_runtime != null and is_instance_valid(restored_runtime):
+		restored_runtime_inactive = not bool(restored_runtime.get("beacon_active"))
 	var passed: bool = (
-		bool(save_result.get("saved", false))
+		bool(interaction_result.get("success", false))
+		and not bool(interaction_result.get("active", true))
+		and bool(save_result.get("saved", false))
 		and file_exists
 		and restored
 		and restored_node
+		and restored_inactive
+		and restored_runtime_inactive
 	)
 	var result: Dictionary = _test_result(
 		passed,
@@ -609,8 +694,13 @@ func run_roundtrip_test(
 			"chunk_id": chunk_id,
 			"chunk_path": chunk_path,
 			"file_exists": file_exists,
+			"interaction_success": bool(
+				interaction_result.get("success", false)
+			),
 			"entity_restored": restored,
 			"runtime_node_restored": restored_node,
+			"beacon_state_restored": restored_inactive,
+			"runtime_state_restored": restored_runtime_inactive,
 		}
 	)
 	if entity_registry.has_entity(test_id):
@@ -903,7 +993,7 @@ func _instantiate_runtime_entity(record) -> void:
 		return
 	if record.entity_type != "survey_beacon":
 		return
-	var beacon := StaticBody3D.new()
+	var beacon = SurveyBeaconInteractableScript.new()
 	beacon.name = "SurveyBeacon_%s" % record.entity_id.get_file()
 	beacon.collision_layer = 1
 	beacon.collision_mask = 1
@@ -922,12 +1012,12 @@ func _instantiate_runtime_entity(record) -> void:
 	dark.albedo_color = Color(0.025, 0.03, 0.04)
 	dark.roughness = 0.88
 
-	_add_mesh(beacon, _cylinder_mesh(0.46, 0.18), metal, Vector3(0.0, 0.09, 0.0))
-	_add_mesh(beacon, _cylinder_mesh(0.075, 2.4), metal, Vector3(0.0, 1.3, 0.0))
-	_add_mesh(beacon, _sphere_mesh(0.22), accent, Vector3(0.0, 2.55, 0.0))
+	_add_mesh(beacon, _cylinder_mesh(0.46, 0.18), metal, Vector3(0.0, 0.09, 0.0), "Base")
+	_add_mesh(beacon, _cylinder_mesh(0.075, 2.4), metal, Vector3(0.0, 1.3, 0.0), "Mast")
+	_add_mesh(beacon, _sphere_mesh(0.22), accent, Vector3(0.0, 2.55, 0.0), "Signal")
 	var panel := BoxMesh.new()
 	panel.size = Vector3(0.72, 0.46, 0.08)
-	_add_mesh(beacon, panel, dark, Vector3(0.0, 1.65, -0.17))
+	_add_mesh(beacon, panel, dark, Vector3(0.0, 1.65, -0.17), "Panel")
 
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
@@ -938,6 +1028,7 @@ func _instantiate_runtime_entity(record) -> void:
 	beacon.add_child(collision)
 
 	var label := Label3D.new()
+	label.name = "BeaconLabel"
 	label.text = "SURVEY"
 	label.font_size = 38
 	label.modulate = Color(1.0, 0.42, 0.18)
@@ -948,6 +1039,12 @@ func _instantiate_runtime_entity(record) -> void:
 
 	entity_root.add_child(beacon)
 	runtime_nodes[record.entity_id] = beacon
+	var state: Dictionary = record.get_component("beacon_state")
+	beacon.setup_interactable(
+		self,
+		record.entity_id,
+		bool(state.get("active", true))
+	)
 	update_runtime_transforms()
 
 
@@ -962,14 +1059,17 @@ func _add_mesh(
 	parent: Node3D,
 	mesh: Mesh,
 	material: Material,
-	position_value: Vector3
-) -> void:
+	position_value: Vector3,
+	name_value: String = "Mesh"
+) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
+	instance.name = name_value
 	instance.mesh = mesh
 	instance.material_override = material
 	instance.position = position_value
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(instance)
+	return instance
 
 
 func _cylinder_mesh(radius: float, height: float) -> CylinderMesh:

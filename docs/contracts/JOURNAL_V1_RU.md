@@ -16,6 +16,7 @@ user://worlds/<world_id>/journal/events.jsonl
 
 - `entity_created`;
 - `entity_removed`;
-- `entity_moved`.
+- `entity_moved`;
+- `entity_component_changed` — изменение постоянного компонента без перемещения сущности.
 
 Журнал нужен для диагностики, будущего восстановления после сбоя, воспроизведения экспериментов и переноса чанка между владельцами.

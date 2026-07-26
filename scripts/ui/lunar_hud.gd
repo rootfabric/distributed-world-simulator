@@ -14,7 +14,15 @@ var compact_hint: Label
 var info_label: Label
 var help_label: Label
 var precision_label: Label
+var crosshair: Label
+var interaction_panel: PanelContainer
+var interaction_title: Label
+var interaction_details: Label
+var interaction_prompt: Label
+var interaction_snapshot: Dictionary = {}
 var menu_visible: bool = true
+var spectator_mode: bool = false
+var pointer_captured: bool = true
 
 
 func setup(
@@ -70,7 +78,7 @@ func setup(
 	scroll.add_child(vertical)
 
 	var title := Label.new()
-	title.text = "REAL SCALE PROCEDURAL MOON — CACHE + LANDMARKS"
+	title.text = "REAL SCALE PROCEDURAL MOON — INTERACTION + CACHE"
 	title.add_theme_font_size_override("font_size", 19)
 	vertical.add_child(title)
 
@@ -87,6 +95,7 @@ func setup(
 		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
 		+ "K — тест фоновой генерации без смены активной поверхности\n"
 		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
+		+ "E — взаимодействие с объектом в центре экрана\n"
 		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк   M — дальние метки\n"
 		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
 		+ "F9 — диагностика   F3 — спектатор   T — телепорт из спектатора\n"
@@ -132,11 +141,62 @@ func setup(
 	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1/Esc — меню | C — камера | J — контроллер | K — streaming | B — маяк | M — метки"
+	compact_hint.text = "F1/Esc — меню | E — действие | C — камера | J — контроллер | B — маяк | M — метки"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
 	add_child(compact_hint)
+
+	crosshair = Label.new()
+	crosshair.text = "+"
+	crosshair.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	crosshair.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	crosshair.set_anchors_preset(Control.PRESET_CENTER)
+	crosshair.position = Vector2(-12.0, -15.0)
+	crosshair.size = Vector2(24.0, 30.0)
+	crosshair.add_theme_font_size_override("font_size", 20)
+	crosshair.modulate = Color(0.92, 0.95, 1.0, 0.88)
+	add_child(crosshair)
+
+	interaction_panel = PanelContainer.new()
+	interaction_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	interaction_panel.position = Vector2(-250.0, -142.0)
+	interaction_panel.size = Vector2(500.0, 112.0)
+	interaction_panel.visible = false
+	add_child(interaction_panel)
+
+	var interaction_style := StyleBoxFlat.new()
+	interaction_style.bg_color = Color(0.012, 0.016, 0.026, 0.90)
+	interaction_style.border_color = Color(0.95, 0.45, 0.12, 0.78)
+	interaction_style.set_border_width_all(1)
+	interaction_style.set_corner_radius_all(6)
+	interaction_panel.add_theme_stylebox_override("panel", interaction_style)
+
+	var interaction_margin := MarginContainer.new()
+	interaction_margin.add_theme_constant_override("margin_left", 12)
+	interaction_margin.add_theme_constant_override("margin_right", 12)
+	interaction_margin.add_theme_constant_override("margin_top", 8)
+	interaction_margin.add_theme_constant_override("margin_bottom", 8)
+	interaction_panel.add_child(interaction_margin)
+
+	var interaction_column := VBoxContainer.new()
+	interaction_column.add_theme_constant_override("separation", 2)
+	interaction_margin.add_child(interaction_column)
+
+	interaction_title = Label.new()
+	interaction_title.add_theme_font_size_override("font_size", 17)
+	interaction_column.add_child(interaction_title)
+
+	interaction_details = Label.new()
+	interaction_details.add_theme_font_size_override("font_size", 13)
+	interaction_details.modulate = Color(0.82, 0.86, 0.92)
+	interaction_column.add_child(interaction_details)
+
+	interaction_prompt = Label.new()
+	interaction_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_prompt.add_theme_font_size_override("font_size", 15)
+	interaction_prompt.modulate = Color(1.0, 0.60, 0.20)
+	interaction_column.add_child(interaction_prompt)
 
 	var capture_hint := Label.new()
 	capture_hint.text = "Клик по окну возвращает управление мышью"
@@ -164,6 +224,47 @@ func set_menu_visible(visible_value: bool) -> void:
 		panel.visible = visible_value
 	if compact_hint != null:
 		compact_hint.visible = not visible_value
+	_refresh_interaction_visibility()
+
+
+func set_interaction_state(snapshot: Dictionary) -> void:
+	interaction_snapshot = snapshot.duplicate(true)
+	if interaction_snapshot.is_empty():
+		_refresh_interaction_visibility()
+		return
+	if interaction_title != null:
+		interaction_title.text = String(
+			interaction_snapshot.get("title", "Объект")
+		)
+	if interaction_details != null:
+		var distance_m: float = float(
+			interaction_snapshot.get("distance_m", 0.0)
+		)
+		var details: String = String(
+			interaction_snapshot.get("details", "")
+		)
+		interaction_details.text = "%s\nДистанция: %.1f м" % [details, distance_m]
+	if interaction_prompt != null:
+		interaction_prompt.text = String(
+			interaction_snapshot.get("prompt", "E — взаимодействовать")
+		)
+	_refresh_interaction_visibility()
+
+
+func _refresh_interaction_visibility() -> void:
+	var gameplay_visible: bool = (
+		not menu_visible
+		and not spectator_mode
+		and pointer_captured
+		and player != null
+		and player.get_camera_mode() == "first_person"
+	)
+	if crosshair != null:
+		crosshair.visible = gameplay_visible
+	if interaction_panel != null:
+		interaction_panel.visible = (
+			gameplay_visible and not interaction_snapshot.is_empty()
+		)
 
 
 func is_menu_visible() -> bool:
@@ -234,6 +335,9 @@ func update_values(
 ) -> void:
 	if moon_world == null or info_label == null:
 		return
+	spectator_mode = spectator_enabled
+	pointer_captured = mouse_captured
+	_refresh_interaction_visibility()
 	var mode_text: String = "СПЕКТАТОР" if spectator_enabled else "ПЕРСОНАЖ"
 	var altitude: float = moon_world.get_altitude(active_position)
 	var direction := active_position.normalized()
