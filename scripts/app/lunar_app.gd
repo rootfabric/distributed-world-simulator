@@ -29,8 +29,8 @@ const RuntimeTestRegistryScript = preload(
 	"res://scripts/core/runtime_test_registry.gd"
 )
 
-const PROJECT_VERSION: String = "15.5.2-r0"
-const BUILD_ID: String = "r0-stabilization-checkpoint"
+const PROJECT_VERSION: String = "15.7.0-r1.2"
+const BUILD_ID: String = "r1.2-safe-item-operations"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

@@ -10,20 +10,22 @@
 | `v15.4.1` | реализовано | фундамент предметов, контейнеров и сборок |
 | `v15.5` | реализовано | общее ядро, миры, консоль и регрессия |
 | `v15.5.2-r0` | реализовано | нормализация репозитория и усиленный regression barrier |
-| `v15.6.0-r1.1` | текущий чекпоинт | глобальные item ID, versioned registry, ItemStateStore и полный SpatialRef |
-| `v15.6` | следующий срез | persistent Item Aggregate и пользовательские контейнеры |
+| `v15.6.2-r1.1-fix2` | принято | глобальные item ID, versioned registry, ItemStateStore и полный SpatialRef |
+| `v15.7.0-r1.2` | текущий чекпоинт | expected revision, payload fingerprint и persistent operation ledger |
+| `v15.8-r1.3` | следующий срез | world physics policy и рекурсивная физическая масса |
 | `v16` | после v15.6 | первая локальная база |
 
-Текущий обязательный барьер — приёмка `v15.6.0-r1.1` поверх зелёного R0:
-editor import/parse, полный набор из 26 headless-тестов и ручная проверка на
-целевой double-precision сборке Godot. Чекпоинты:
-`docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md` и
-`docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`.
+Текущий обязательный барьер — приёмка `v15.7.0-r1.2` поверх зелёного
+R1.1: editor import/parse, полный набор из 27 headless-тестов, persistent replay
+после restart и main-scene regression. Чекпоинты:
+`docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,
+`docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md` и
+`docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`.
 
 
-## v15.6.0-r1.1 — Item identity and state store
+## v15.6.2-r1.1-fix2 — Item identity and state store
 
-**Статус:** реализовано, требуется приёмочный прогон на целевой double build.
+**Статус:** принято полным item и world regression.
 
 - UUID v4 для новых item instances;
 - отдельный `display_name`;
@@ -34,8 +36,22 @@ editor import/parse, полный набор из 26 headless-тестов и р
 - сохранение полного SpatialRef при capture;
 - отдельный regression test.
 
-Следующий шаг: R1.2 — operation payload fingerprint, expected revision и
-persistent idempotency ledger.
+## v15.7.0-r1.2 — Safe item operations
+
+**Статус:** реализовано, требуется приёмочный прогон на целевой double build.
+
+- optimistic `expected_revision` для move и split;
+- canonical SHA-256 payload fingerprint;
+- exact replay без повторной мутации;
+- `OPERATION_ID_CONFLICT` для другого payload;
+- `REVISION_CONFLICT` для stale write;
+- bounded versioned operation ledger;
+- terminal/retryable error semantics;
+- persistence через ItemStateStore и replay после restart;
+- отдельный regression test.
+
+Следующий шаг: R1.3 — world-specific gravity/physics environment и рекурсивная
+физическая масса контейнеров.
 
 ## v15.5.2-r0 — Stabilization checkpoint
 

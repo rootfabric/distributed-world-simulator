@@ -113,13 +113,15 @@ func run_lab_action(action_id: String) -> Dictionary:
 				lidar.instance_id,
 				"rover_01",
 				"roof_sensor",
-				_operation("attach_lidar")
+				_operation("attach_lidar"),
+				int(lidar.revision)
 			)
 		"detach_lidar":
 			result = domain.attachments.detach_to_container(
 				lidar.instance_id,
 				"player_backpack",
-				_operation("detach_lidar")
+				_operation("detach_lidar"),
+				int(lidar.revision)
 			)
 		"validate":
 			result = domain.validator.validate_graph()
@@ -674,10 +676,13 @@ func _world_relation(
 
 func _pickup(item_id: String) -> Dictionary:
 	presenter.capture_world_state(item_id)
+	var item = domain.items.get_item(item_id)
+	var expected_revision: int = int(item.revision) if item != null else -1
 	return domain.transfer.move_item(
 		item_id,
 		Relations.container("player_backpack"),
-		_operation("pickup")
+		_operation("pickup"),
+		expected_revision
 	)
 
 
@@ -685,6 +690,8 @@ func _drop(
 	item_id: String,
 	position: Vector3
 ) -> Dictionary:
+	var item = domain.items.get_item(item_id)
+	var expected_revision: int = int(item.revision) if item != null else -1
 	return domain.transfer.move_item(
 		item_id,
 		_world_relation(
@@ -694,7 +701,8 @@ func _drop(
 			),
 			Vector3(0.0, 0.0, -1.0)
 		),
-		_operation("drop")
+		_operation("drop"),
+		expected_revision
 	)
 
 

@@ -130,10 +130,32 @@ func _test_capacity_and_nesting_guards() -> void:
 func _test_operation_idempotency() -> void:
 	var fixture = _fixture()
 	var rock = fixture.items.create_item("rock", 1, {}, Relations.world())
-	var first: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.container("backpack"), "same-operation")
-	var second: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.world(), "same-operation")
-	_assert(first == second, "Repeated operation_id must return original result")
-	_assert(Relations.kind_of(rock.relation) == Relations.CONTAINER, "Repeated operation must not mutate item twice")
+	var target_relation: Dictionary = Relations.container("backpack")
+	var first: Dictionary = fixture.transfer.move_item(
+		rock.instance_id,
+		target_relation,
+		"same-operation",
+		0
+	)
+	var replay: Dictionary = fixture.transfer.move_item(
+		rock.instance_id,
+		target_relation,
+		"same-operation",
+		0
+	)
+	_assert(first == replay, "Exact operation replay must return original result")
+	var conflict: Dictionary = fixture.transfer.move_item(
+		rock.instance_id,
+		Relations.world(),
+		"same-operation",
+		1
+	)
+	_assert_error(
+		conflict,
+		"OPERATION_ID_CONFLICT",
+		"Repeated operation_id with another payload must be rejected"
+	)
+	_assert(Relations.kind_of(rock.relation) == Relations.CONTAINER, "Operation replay must not mutate item twice")
 	_assert(fixture.containers.get_container("backpack").item_ids.count(rock.instance_id) == 1, "Idempotent transfer must not duplicate membership")
 
 

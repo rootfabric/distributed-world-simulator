@@ -116,6 +116,14 @@ Invoke-GodotCheck -Name "Item identity and state store" -Arguments @(
     "res://tests/items/test_item_identity_and_state_store.gd"
 )
 
+Invoke-GodotCheck -Name "Item operation ledger" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_item_operation_ledger.gd"
+)
+
 Invoke-GodotCheck -Name "Item laboratory integration" -Arguments @(
     "--headless",
     "--path",

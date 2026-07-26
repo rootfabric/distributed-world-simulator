@@ -27,7 +27,13 @@ func register_socket(assembly_id: String, parent_item_id: String, socket_id: Str
 	}
 
 
-func attach(item_id: String, assembly_id: String, socket_id: String, operation_id: String) -> Dictionary:
+func attach(
+	item_id: String,
+	assembly_id: String,
+	socket_id: String,
+	operation_id: String,
+	expected_revision: int = -1
+) -> Dictionary:
 	var socket = sockets.get(_key(assembly_id, socket_id))
 	if socket == null:
 		return {"success": false, "error_code": "SOCKET_NOT_FOUND"}
@@ -49,20 +55,31 @@ func attach(item_id: String, assembly_id: String, socket_id: String, operation_i
 	var result = transfer_service.move_item(
 		item_id,
 		Relations.attachment(assembly_id, String(socket.parent_item_id), socket_id),
-		operation_id
+		operation_id,
+		expected_revision
 	)
 	if bool(result.get("success", false)):
 		socket.item_id = item_id
 	return result
 
 
-func detach_to_container(item_id: String, container_id: String, operation_id: String) -> Dictionary:
+func detach_to_container(
+	item_id: String,
+	container_id: String,
+	operation_id: String,
+	expected_revision: int = -1
+) -> Dictionary:
 	var item = item_registry.get_item(item_id)
 	if item == null or Relations.kind_of(item.relation) != Relations.ATTACHMENT:
 		return {"success": false, "error_code": "ITEM_NOT_ATTACHED"}
 	var assembly_id = String(item.relation.get("assembly_id", ""))
 	var socket_id = String(item.relation.get("socket_id", ""))
-	var result = transfer_service.move_item(item_id, Relations.container(container_id), operation_id)
+	var result = transfer_service.move_item(
+		item_id,
+		Relations.container(container_id),
+		operation_id,
+		expected_revision
+	)
 	if bool(result.get("success", false)):
 		var socket = sockets.get(_key(assembly_id, socket_id))
 		if socket != null:
@@ -70,13 +87,24 @@ func detach_to_container(item_id: String, container_id: String, operation_id: St
 	return result
 
 
-func detach_to_world(item_id: String, transform: Transform3D, velocity: Vector3, operation_id: String) -> Dictionary:
+func detach_to_world(
+	item_id: String,
+	transform: Transform3D,
+	velocity: Vector3,
+	operation_id: String,
+	expected_revision: int = -1
+) -> Dictionary:
 	var item = item_registry.get_item(item_id)
 	if item == null or Relations.kind_of(item.relation) != Relations.ATTACHMENT:
 		return {"success": false, "error_code": "ITEM_NOT_ATTACHED"}
 	var assembly_id = String(item.relation.get("assembly_id", ""))
 	var socket_id = String(item.relation.get("socket_id", ""))
-	var result = transfer_service.move_item(item_id, Relations.world(transform, velocity), operation_id)
+	var result = transfer_service.move_item(
+		item_id,
+		Relations.world(transform, velocity),
+		operation_id,
+		expected_revision
+	)
 	if bool(result.get("success", false)):
 		var socket = sockets.get(_key(assembly_id, socket_id))
 		if socket != null:

@@ -1,4 +1,16 @@
-Planetary World v15.6.2-r1.1-fix2
+Planetary World v15.7.0-r1.2
+
+R1.2 safe item operations v15.7.0-r1.2:
+- expected_revision optimistic concurrency for move and split commands
+- canonical full-precision JSON payload envelope and SHA-256 fingerprint
+- exact operation replay without duplicate mutation
+- OPERATION_ID_CONFLICT for reused IDs with different payloads
+- REVISION_CONFLICT for stale aggregate writes
+- versioned bounded terminal operation ledger
+- retryable dependency failures do not poison the ledger
+- ItemStateStore persistence and deterministic replay after runtime restart
+- tests/items/test_item_operation_ledger.gd
+- docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md
 
 R1.1 item identity and state store v15.6.2-r1.1-fix2:
 - cryptographically random item/UUID-v4 identifiers replace local sequences

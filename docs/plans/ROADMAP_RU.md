@@ -390,28 +390,33 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v15.6.0-r1.1
+## Текущее состояние: v15.7.0-r1.2
 
-R0 остаётся обязательной стабильной базой. R1.1 поверх неё вводит глобальную
-идентичность предметов, versioned Item Registry, JSON ItemStateStore и полный
-SpatialRef для WORLD relation. Новые item IDs больше не зависят от локальной
-последовательности, а legacy IDs остаются читаемыми без разрушения существующих
-ссылок.
+R0 и R1.1 приняты полным regression-runner. R1.2 добавляет optimistic
+concurrency и безопасную повторную доставку item-команд:
 
-`RUN_WORLD_REGRESSION_TESTS.ps1` теперь обязан выполнить 26 тестов, включая
-`test_item_identity_and_state_store.gd`, и записать JSON-отчёт с checkpoint
-`v15.6.0-r1.1`.
+- expected revision для MOVE_ITEM и SPLIT_AND_MOVE;
+- JSON-канонический SHA-256 payload fingerprint;
+- `OPERATION_ID_CONFLICT` для повторного ID с другим payload;
+- `REVISION_CONFLICT` для устаревшего состояния;
+- versioned bounded operation ledger;
+- terminal/retryable разделение ошибок;
+- persistence ledger через ItemStateStore и replay после restart.
+
+`RUN_WORLD_REGRESSION_TESTS.ps1` обязан выполнить 27 тестов, включая
+`test_item_operation_ledger.gd`, и записать checkpoint `v15.7.0-r1.2`.
 
 Полные чекпоинты:
 
 - `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`;
-- `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`.
+- `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`;
+- `docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`.
 
 ## Текущий приоритет: R1 → R2, затем первая база
 
-1. принять зелёный `v15.6.0-r1.1` поверх обязательной базы R0;
-2. в R1.2 добавить expected revision, payload fingerprint и persistent operation ledger;
-3. в R1.3 отделить gravity policy от Луны и исправить рекурсивную физическую массу;
+1. принять зелёный `v15.7.0-r1.2` с persistent operation replay;
+2. в R1.3 отделить gravity policy от Луны и исправить рекурсивную физическую массу;
+3. в R1.4 собрать атомарный snapshot Items + Containers + Attachments + Ledger;
 4. в R2 связать предметы с игроком на `playground` через ray interaction;
 5. проверить pickup/drop/container/attachment после перезапуска;
 6. затем перейти к placement preview, sockets и минимальному power graph;
