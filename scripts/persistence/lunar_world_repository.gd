@@ -9,13 +9,17 @@ signal persistence_error(message: String)
 const EntityRecordScript = preload(
 	"res://scripts/simulation/entities/entity_record.gd"
 )
+const PartitionAddressScript = preload(
+	"res://scripts/simulation/partition/partition_address.gd"
+)
 const SurveyBeaconInteractableScript = preload(
 	"res://scripts/interaction/survey_beacon_interactable.gd"
 )
 
 const DEFAULT_WORLD_ID: String = "moon-experiment-001"
 const WORLD_SCHEMA: String = "lunar.world.v1"
-const CHUNK_SCHEMA: String = "lunar.chunk.v1"
+const CHUNK_SCHEMA: String = "planet_simulator.chunk.v2"
+const LEGACY_CHUNK_SCHEMA: String = "lunar.chunk.v1"
 const JOURNAL_SCHEMA: String = "lunar.journal_event.v1"
 const LANDMARK_INDEX_SCHEMA: String = "lunar.landmark_index.v1"
 const NAVIGATION_MARKER_CONFIG_PATH: String = "res://config/navigation_markers.json"
@@ -26,6 +30,12 @@ var entity_registry
 var logger
 
 var world_id: String = DEFAULT_WORLD_ID
+var universe_id: String = PartitionAddressScript.DEFAULT_UNIVERSE_ID
+var instance_id: String = PartitionAddressScript.DEFAULT_INSTANCE_ID
+var partition_space_id: String = PartitionAddressScript.DEFAULT_SPACE_ID
+var partition_scheme: String = PartitionAddressScript.DEFAULT_SCHEME
+var partition_scheme_revision: int = PartitionAddressScript.DEFAULT_SCHEME_REVISION
+var partition_grid_descriptor: Dictionary = {}
 var world_root: String = ""
 var manifest_path: String = ""
 var journal_path: String = ""
@@ -55,6 +65,7 @@ var loaded_entity_count: int = 0
 var last_player_world_position: Vector3 = Vector3.ZERO
 var chunk_load_count: int = 0
 var chunk_unload_count: int = 0
+var initialized: bool = false
 
 
 func setup(
@@ -64,16 +75,42 @@ func setup(
 	logger_reference = null,
 	world_id_override: String = DEFAULT_WORLD_ID,
 	root_override: String = ""
-) -> void:
+) -> bool:
+	initialized = false
+	universe_id = PartitionAddressScript.DEFAULT_UNIVERSE_ID
+	instance_id = PartitionAddressScript.DEFAULT_INSTANCE_ID
+	partition_space_id = PartitionAddressScript.DEFAULT_SPACE_ID
+	partition_scheme = PartitionAddressScript.DEFAULT_SCHEME
+	partition_scheme_revision = PartitionAddressScript.DEFAULT_SCHEME_REVISION
+	partition_grid_descriptor = {}
 	moon_world = moon_reference
 	zone_manager = zone_manager_reference
 	entity_registry = registry_reference
 	logger = logger_reference
 	world_id = world_id_override
+	var partition_snapshot: Dictionary = (
+		zone_manager.create_partition_snapshot()
+		if zone_manager != null and zone_manager.has_method("create_partition_snapshot")
+		else {}
+	)
+	universe_id = String(partition_snapshot.get("universe_id", universe_id))
+	instance_id = String(partition_snapshot.get("instance_id", instance_id))
+	partition_space_id = String(partition_snapshot.get("space_id", partition_space_id))
+	partition_scheme = String(partition_snapshot.get("partition_scheme", partition_scheme))
+	partition_scheme_revision = int(partition_snapshot.get(
+		"partition_scheme_revision",
+		partition_scheme_revision
+	))
+	var grid_descriptor_value = partition_snapshot.get("partition_grid", {})
+	partition_grid_descriptor = (
+		grid_descriptor_value.duplicate(true)
+		if grid_descriptor_value is Dictionary
+		else {}
+	)
 	world_root = (
 		root_override
 		if not root_override.is_empty()
-		else "user://worlds/%s" % world_id
+		else _resolve_default_world_root()
 	)
 	manifest_path = world_root.path_join("world.json")
 	journal_path = world_root.path_join("journal/events.jsonl")
@@ -88,13 +125,21 @@ func setup(
 
 	_load_navigation_marker_config()
 	_ensure_world_layout()
-	_ensure_world_manifest()
+	if not _ensure_world_manifest():
+		_log("ERROR", "repository_start_aborted", {
+			"world_root": world_root,
+			"universe_id": universe_id,
+			"instance_id": instance_id,
+		})
+		return false
 	_load_journal_revision()
 	_load_or_rebuild_landmark_index()
 	_rebuild_landmark_marker_nodes()
 	_connect_signals()
 	_sync_partition_window(zone_manager.create_partition_snapshot())
+	initialized = true
 	_log("INFO", "repository_started", create_snapshot())
+	return true
 
 
 func update_runtime_transforms() -> void:
@@ -297,13 +342,11 @@ func _load_or_rebuild_landmark_index() -> void:
 
 func _rebuild_landmark_index_from_chunk_files() -> void:
 	var files: Array[String] = []
-	_collect_json_files_recursive(
-		world_root.path_join("zones"),
-		files
-	)
+	_collect_json_files_recursive(world_root.path_join("zones"), files)
+	_collect_json_files_recursive(world_root.path_join("partitions"), files)
 	for path in files:
 		var payload: Dictionary = _read_json(path)
-		if String(payload.get("schema", "")) != CHUNK_SCHEMA:
+		if not _is_supported_chunk_schema(String(payload.get("schema", ""))):
 			continue
 		for entity_snapshot_value in payload.get("entities", []):
 			if not (entity_snapshot_value is Dictionary):
@@ -481,7 +524,7 @@ func create_survey_beacon(
 	entity_id_override: String = "",
 	extra_components: Dictionary = {}
 ) -> String:
-	if world_position.length_squared() < 1.0:
+	if not initialized or world_position.length_squared() < 1.0:
 		return ""
 	var entity_id: String = entity_id_override
 	if entity_id.is_empty():
@@ -539,13 +582,31 @@ func create_survey_beacon(
 			components[key] = extra_value
 
 	var record = EntityRecordScript.new()
-	record.setup(entity_id, "survey_beacon", world_position, components)
+	record.setup(
+		entity_id,
+		"survey_beacon",
+		world_position,
+		components,
+		entity_registry.authority_owner_id,
+		entity_registry.authority_epoch,
+		{
+			"universe_id": universe_id,
+			"instance_id": instance_id,
+			"space_id": "sol",
+			"frame_id": "body/moon/fixed",
+		}
+	)
 	if not entity_registry.register_entity(record):
 		return ""
 	return entity_id
 
 
 func toggle_survey_beacon_signal(entity_id: String) -> Dictionary:
+	if not initialized:
+		return {
+			"success": false,
+			"message": "Persistence repository не инициализирован",
+		}
 	var record = entity_registry.get_entity(entity_id)
 	if record == null or record.entity_type != "survey_beacon":
 		return {
@@ -556,11 +617,16 @@ func toggle_survey_beacon_signal(entity_id: String) -> Dictionary:
 	var active: bool = not bool(state.get("active", true))
 	state["active"] = active
 	state["last_toggled_utc"] = Time.get_datetime_string_from_system(true, true)
-	record.set_component("beacon_state", state)
-
 	var landmark: Dictionary = record.get_component("landmark")
 	landmark["enabled"] = active
-	record.set_component("landmark", landmark)
+	if not entity_registry.update_entity_components(entity_id, {
+		"beacon_state": state,
+		"landmark": landmark,
+	}):
+		return {
+			"success": false,
+			"message": "Изменение маяка отклонено authority-контрактом",
+		}
 	_upsert_landmark_from_record(record)
 
 	var runtime_node = runtime_nodes.get(entity_id)
@@ -588,13 +654,15 @@ func toggle_survey_beacon_signal(entity_id: String) -> Dictionary:
 
 
 func remove_entity(entity_id: String) -> bool:
-	return entity_registry.unregister_entity(entity_id)
+	return initialized and entity_registry.unregister_entity(entity_id)
 
 
 func remove_nearest_survey_beacon(
 	world_position: Vector3,
 	max_distance_m: float = 14.0
 ) -> String:
+	if not initialized:
+		return ""
 	var nearest_id: String = ""
 	var nearest_distance: float = max_distance_m
 	for entity_value in entity_registry.get_entities_by_type("survey_beacon"):
@@ -604,11 +672,18 @@ func remove_nearest_survey_beacon(
 			nearest_id = entity_value.entity_id
 	if nearest_id.is_empty():
 		return ""
-	remove_entity(nearest_id)
-	return nearest_id
+	return nearest_id if remove_entity(nearest_id) else ""
 
 
 func save_all_loaded_chunks() -> Dictionary:
+	if not initialized:
+		return {
+			"saved_chunks": 0,
+			"removed_empty_chunks": 0,
+			"loaded_chunks": 0,
+			"persistent_entities": 0,
+			"summary": "repository_not_initialized",
+		}
 	var saved_count: int = 0
 	var removed_count: int = 0
 	var chunks_to_save: Dictionary = loaded_chunk_ids.duplicate()
@@ -639,6 +714,10 @@ func run_roundtrip_test(
 	origin_world_position: Vector3,
 	forward_direction: Vector3
 ) -> Dictionary:
+	if not initialized:
+		return _test_result(false, "Persistence repository не инициализирован", {
+			"reason": "repository_not_initialized",
+		})
 	var test_id: String = "test/persistence-roundtrip"
 	if entity_registry.has_entity(test_id):
 		remove_entity(test_id)
@@ -711,6 +790,9 @@ func run_roundtrip_test(
 
 
 func clear_world_data() -> void:
+	if not initialized:
+		_emit_error("Refusing to clear an uninitialized persistence repository.")
+		return
 	var persistent_ids: Array[String] = []
 	for entity_value in entity_registry.entities.values():
 		if entity_value.is_persistent():
@@ -718,7 +800,7 @@ func clear_world_data() -> void:
 	for entity_id in persistent_ids:
 		_free_runtime_node(entity_id)
 		persistent_entity_ids.erase(entity_id)
-		entity_registry.unregister_entity(entity_id, false)
+		entity_registry.delete_authoritative_entity(entity_id, false)
 	loaded_chunk_ids.clear()
 	dirty_chunks.clear()
 	journal_revision = 0
@@ -727,7 +809,9 @@ func clear_world_data() -> void:
 		_free_landmark_marker(String(landmark_id))
 	_remove_tree(world_root)
 	_ensure_world_layout()
-	_ensure_world_manifest()
+	initialized = _ensure_world_manifest()
+	if not initialized:
+		return
 	_save_landmark_index()
 	_sync_partition_window(zone_manager.create_partition_snapshot())
 	world_cleared.emit()
@@ -735,7 +819,8 @@ func clear_world_data() -> void:
 
 
 func flush() -> void:
-	save_all_loaded_chunks()
+	if initialized:
+		save_all_loaded_chunks()
 
 
 func set_last_player_world_position(world_position: Vector3) -> void:
@@ -748,12 +833,17 @@ func get_last_player_world_position() -> Vector3:
 
 
 func get_chunk_file_path(chunk_id: String) -> String:
-	var parts: PackedStringArray = chunk_id.split("/")
-	if parts.size() < 7:
+	var address: Dictionary = PartitionAddressScript.parse(
+		chunk_id,
+		_partition_defaults()
+	)
+	if address.is_empty() or not PartitionAddressScript.has_chunk(address):
 		return ""
-	var zone_folder: String = "%s_%s_%s" % [parts[1], parts[2], parts[3]]
-	var chunk_file: String = "%s_%s.json" % [parts[5], parts[6]]
-	return world_root.path_join("zones/%s/chunks/%s" % [zone_folder, chunk_file])
+	var components: PackedStringArray = PartitionAddressScript.file_components(address)
+	var path: String = world_root.path_join("partitions")
+	for component in components:
+		path = path.path_join(component)
+	return path
 
 
 func get_manifest_path() -> String:
@@ -791,7 +881,14 @@ func get_runtime_summary() -> String:
 func create_snapshot() -> Dictionary:
 	return {
 		"schema": "lunar.persistence_runtime.v1",
+		"initialized": initialized,
 		"world_id": world_id,
+		"universe_id": universe_id,
+		"instance_id": instance_id,
+		"partition_space_id": partition_space_id,
+		"partition_scheme": partition_scheme,
+		"partition_scheme_revision": partition_scheme_revision,
+		"partition_grid": partition_grid_descriptor.duplicate(true),
 		"world_root": world_root,
 		"manifest_path": manifest_path,
 		"journal_path": journal_path,
@@ -886,9 +983,31 @@ func _load_chunk(chunk_id: String) -> void:
 	loaded_chunk_ids[chunk_id] = true
 	var restored_ids: Array = []
 	var path: String = get_chunk_file_path(chunk_id)
+	var loaded_from_legacy_path: bool = false
+	var loaded_from_previous_namespaced_path: bool = false
+	var loaded_from_pre_instance_namespaced_path: bool = false
+	if not FileAccess.file_exists(path):
+		var previous_namespaced_path: String = (
+			_get_previous_namespaced_chunk_file_path(chunk_id)
+		)
+		if FileAccess.file_exists(previous_namespaced_path):
+			path = previous_namespaced_path
+			loaded_from_previous_namespaced_path = true
+		else:
+			var pre_instance_path: String = (
+				_get_pre_instance_namespaced_chunk_file_path(chunk_id)
+			)
+			if FileAccess.file_exists(pre_instance_path):
+				path = pre_instance_path
+				loaded_from_pre_instance_namespaced_path = true
+			else:
+				var legacy_path: String = _get_legacy_chunk_file_path(chunk_id)
+				if FileAccess.file_exists(legacy_path):
+					path = legacy_path
+					loaded_from_legacy_path = true
 	if not path.is_empty() and FileAccess.file_exists(path):
 		var payload: Dictionary = _read_json(path)
-		if String(payload.get("schema", "")) == CHUNK_SCHEMA:
+		if _is_supported_chunk_schema(String(payload.get("schema", ""))):
 			for snapshot in payload.get("entities", []):
 				var record = EntityRecordScript.new()
 				if not record.setup_from_snapshot(snapshot):
@@ -897,11 +1016,21 @@ func _load_chunk(chunk_id: String) -> void:
 					continue
 				if entity_registry.has_entity(record.entity_id):
 					continue
-				if entity_registry.register_entity(record, false):
+				if entity_registry.register_entity(
+					record,
+					false,
+					{"adopt_authority": true}
+				):
 					persistent_entity_ids[record.entity_id] = true
 					_instantiate_runtime_entity(record)
 					restored_ids.append(record.entity_id)
 					loaded_entity_count += 1
+	if (
+		loaded_from_legacy_path
+		or loaded_from_previous_namespaced_path
+		or loaded_from_pre_instance_namespaced_path
+	):
+		dirty_chunks[chunk_id] = true
 	chunk_load_count += 1
 	chunk_loaded.emit(chunk_id, restored_ids)
 	_log("INFO", "chunk_loaded", {
@@ -909,6 +1038,9 @@ func _load_chunk(chunk_id: String) -> void:
 		"restored_entities": restored_ids,
 		"path": path,
 		"file_exists": FileAccess.file_exists(path),
+		"loaded_from_legacy_path": loaded_from_legacy_path,
+		"loaded_from_previous_namespaced_path": loaded_from_previous_namespaced_path,
+		"loaded_from_pre_instance_namespaced_path": loaded_from_pre_instance_namespaced_path,
 		"duration_msec": Time.get_ticks_msec() - started_msec,
 	})
 
@@ -924,7 +1056,7 @@ func _unload_chunk(chunk_id: String) -> void:
 	for entity_id in entity_ids:
 		_free_runtime_node(entity_id)
 		persistent_entity_ids.erase(entity_id)
-		entity_registry.unregister_entity(entity_id, false)
+		entity_registry.evict_local_record(entity_id, "partition_unload")
 	loaded_chunk_ids.erase(chunk_id)
 	dirty_chunks.erase(chunk_id)
 	chunk_unload_count += 1
@@ -946,17 +1078,21 @@ func _save_chunk(chunk_id: String) -> Dictionary:
 	for entity_value in entity_registry.get_persistent_entities_in_chunk(chunk_id):
 		snapshots.append(entity_value.to_snapshot())
 	if snapshots.is_empty():
-		var existed: bool = FileAccess.file_exists(path)
-		if existed:
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+		var removed_any: bool = false
+		if FileAccess.file_exists(path):
+			removed_any = (
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK
+				or removed_any
+			)
+		removed_any = _remove_obsolete_chunk_paths(chunk_id, path) or removed_any
 		dirty_chunks.erase(chunk_id)
-		if existed:
-			_log("INFO", "empty_chunk_file_removed", {
+		if removed_any:
+			_log("INFO", "empty_chunk_files_removed", {
 				"chunk_id": chunk_id,
 				"path": path,
 				"duration_msec": Time.get_ticks_msec() - started_msec,
 			})
-		return {"saved": false, "removed": existed, "path": path}
+		return {"saved": false, "removed": removed_any, "path": path}
 	var partition: Dictionary = _partition_from_chunk_id(chunk_id)
 	var payload: Dictionary = {
 		"schema": CHUNK_SCHEMA,
@@ -964,6 +1100,7 @@ func _save_chunk(chunk_id: String) -> Dictionary:
 		"generator_version": moon_world.get_generator_version(),
 		"chunk_id": chunk_id,
 		"zone_id": partition.get("zone_id", ""),
+		"partition_address": partition.duplicate(true),
 		"revision": _max_entity_revision(snapshots),
 		"updated_at_utc": Time.get_datetime_string_from_system(true, true),
 		"entities": snapshots,
@@ -971,6 +1108,7 @@ func _save_chunk(chunk_id: String) -> Dictionary:
 	}
 	var success: bool = _write_json_atomic(path, payload)
 	if success:
+		_remove_obsolete_chunk_paths(chunk_id, path)
 		dirty_chunks.erase(chunk_id)
 		var absolute_path: String = ProjectSettings.globalize_path(path)
 		var file_size: int = 0
@@ -1091,14 +1229,117 @@ func _sphere_mesh(radius: float) -> SphereMesh:
 	return mesh
 
 
+func _resolve_default_world_root() -> String:
+	if (
+		universe_id == PartitionAddressScript.DEFAULT_UNIVERSE_ID
+		and instance_id == PartitionAddressScript.DEFAULT_INSTANCE_ID
+	):
+		return "user://worlds/%s" % _sanitize_path_component(world_id)
+	return "user://universes/%s/instances/%s/worlds/%s" % [
+		_sanitize_path_component(universe_id),
+		_sanitize_path_component(instance_id),
+		_sanitize_path_component(world_id),
+	]
+
+
+func _validate_or_migrate_manifest_identity(manifest: Dictionary) -> bool:
+	var migrated_fields := PackedStringArray()
+	var legacy_scheme: String = "%s_v%d" % [
+		partition_scheme,
+		partition_scheme_revision,
+	]
+	if String(manifest.get("partition_scheme", "")) == legacy_scheme:
+		manifest["partition_scheme"] = partition_scheme
+		manifest["partition_scheme_revision"] = partition_scheme_revision
+		migrated_fields.append("partition_scheme")
+		migrated_fields.append("partition_scheme_revision")
+	var identity_fields: Dictionary = {
+		"universe_id": universe_id,
+		"instance_id": instance_id,
+		"partition_space_id": partition_space_id,
+		"partition_scheme": partition_scheme,
+		"partition_scheme_revision": partition_scheme_revision,
+	}
+	var mismatches := PackedStringArray()
+	for field_value in identity_fields.keys():
+		var field_name: String = String(field_value)
+		var expected_value = identity_fields[field_name]
+		if not manifest.has(field_name):
+			manifest[field_name] = expected_value
+			migrated_fields.append(field_name)
+		elif str(manifest.get(field_name, "")) != str(expected_value):
+			mismatches.append(field_name)
+	if not partition_grid_descriptor.is_empty():
+		if not manifest.has("partition_grid"):
+			manifest["partition_grid"] = partition_grid_descriptor.duplicate(true)
+			migrated_fields.append("partition_grid")
+		elif not _partition_grid_identity_matches(
+			manifest.get("partition_grid", {}),
+			partition_grid_descriptor
+		):
+			mismatches.append("partition_grid")
+	if not mismatches.is_empty():
+		_emit_error(
+			"World manifest identity mismatch (%s): %s" % [
+				", ".join(mismatches),
+				manifest_path,
+			]
+		)
+		return false
+	if not migrated_fields.is_empty():
+		_write_json_atomic(manifest_path, manifest)
+		_log("INFO", "world_manifest_identity_migrated", {
+			"fields": Array(migrated_fields),
+			"universe_id": universe_id,
+			"instance_id": instance_id,
+			"partition_space_id": partition_space_id,
+		})
+	return true
+
+
+func _partition_grid_identity_matches(saved_value, expected: Dictionary) -> bool:
+	if not saved_value is Dictionary:
+		return false
+	var saved: Dictionary = saved_value
+	for field_name in [
+		"schema",
+		"scheme_id",
+		"scheme_revision",
+		"body_frame_id",
+		"zones_per_face",
+		"chunks_per_zone",
+	]:
+		if str(saved.get(field_name, "")) != str(expected.get(field_name, "")):
+			return false
+	return is_equal_approx(
+		float(saved.get("body_radius_m", 0.0)),
+		float(expected.get("body_radius_m", -1.0))
+	)
+
+
+func _sanitize_path_component(value: String) -> String:
+	var result: String = value.strip_edges().to_lower()
+	for character in ["/", "\\", ":", " ", ".."]:
+		result = result.replace(character, "_")
+	return result if not result.is_empty() else "unknown"
+
+
 func _ensure_world_layout() -> void:
-	for path in [world_root, world_root.path_join("zones"), world_root.path_join("journal")]:
+	for path in [
+		world_root,
+		world_root.path_join("zones"),
+		world_root.path_join("partitions"),
+		world_root.path_join("journal"),
+	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path))
 
 
-func _ensure_world_manifest() -> void:
+func _ensure_world_manifest() -> bool:
 	if FileAccess.file_exists(manifest_path):
 		var manifest: Dictionary = _read_json(manifest_path)
+		if not _validate_or_migrate_manifest_identity(manifest):
+			last_player_world_position = Vector3.ZERO
+			return false
 		last_player_world_position = _array_to_vector3(
 			manifest.get("last_player_world_position", [])
 		)
@@ -1110,11 +1351,17 @@ func _ensure_world_manifest() -> void:
 				"current": moon_world.get_generator_version(),
 			})
 		_update_manifest_open_time()
-		return
+		return true
 	var now: String = Time.get_datetime_string_from_system(true, true)
 	var manifest: Dictionary = {
 		"schema": WORLD_SCHEMA,
 		"world_id": world_id,
+		"universe_id": universe_id,
+		"instance_id": instance_id,
+		"partition_space_id": partition_space_id,
+		"partition_scheme": partition_scheme,
+		"partition_scheme_revision": partition_scheme_revision,
+		"partition_grid": partition_grid_descriptor.duplicate(true),
 		"world_seed": moon_world.get_world_seed(),
 		"generator_version": moon_world.get_generator_version(),
 		"created_at_utc": now,
@@ -1126,7 +1373,7 @@ func _ensure_world_manifest() -> void:
 			"only_modified_chunks_exist_on_disk": true,
 		},
 	}
-	_write_json_atomic(manifest_path, manifest)
+	return _write_json_atomic(manifest_path, manifest)
 
 
 func _update_manifest_open_time() -> void:
@@ -1166,6 +1413,11 @@ func _append_journal(operation: String, data: Dictionary) -> void:
 	var event: Dictionary = {
 		"schema": JOURNAL_SCHEMA,
 		"world_id": world_id,
+		"universe_id": universe_id,
+		"instance_id": instance_id,
+		"partition_space_id": partition_space_id,
+		"partition_scheme": partition_scheme,
+		"partition_scheme_revision": partition_scheme_revision,
 		"revision": journal_revision,
 		"timestamp_utc": Time.get_datetime_string_from_system(true, true),
 		"operation": operation,
@@ -1234,14 +1486,107 @@ func _read_json(path: String) -> Dictionary:
 
 
 func _partition_from_chunk_id(chunk_id: String) -> Dictionary:
-	var parts: PackedStringArray = chunk_id.split("/")
-	if parts.size() < 7:
-		return {}
+	return PartitionAddressScript.parse(chunk_id, _partition_defaults())
+
+
+func _partition_defaults() -> Dictionary:
 	return {
-		"zone_id": "zone/%s/%s/%s" % [parts[1], parts[2], parts[3]],
-		"chunk_x": int(parts[5]),
-		"chunk_y": int(parts[6]),
+		"universe_id": universe_id,
+		"instance_id": instance_id,
+		"space_id": partition_space_id,
+		"partition_scheme": partition_scheme,
+		"partition_scheme_revision": partition_scheme_revision,
 	}
+
+
+func _get_previous_namespaced_chunk_file_path(chunk_id: String) -> String:
+	var address: Dictionary = _partition_from_chunk_id(chunk_id)
+	if address.is_empty() or not PartitionAddressScript.has_chunk(address):
+		return ""
+	var legacy_scheme_folder: String = "%s_v%d" % [
+		String(address.get("partition_scheme", partition_scheme)),
+		int(address.get("partition_scheme_revision", partition_scheme_revision)),
+	]
+	var path: String = world_root.path_join("partitions")
+	for component in [
+		_sanitize_path_component(String(address.get("universe_id", universe_id))),
+		_sanitize_path_component(String(address.get("instance_id", instance_id))),
+		_sanitize_path_component(String(address.get("space_id", partition_space_id))),
+		_sanitize_path_component(legacy_scheme_folder),
+		"face_%d" % int(address.get("face", 0)),
+		"zone_%02d_%02d" % [
+			int(address.get("zone_x", 0)),
+			int(address.get("zone_y", 0)),
+		],
+		"chunk_%02d_%02d.json" % [
+			int(address.get("chunk_x", 0)),
+			int(address.get("chunk_y", 0)),
+		],
+	]:
+		path = path.path_join(String(component))
+	return path
+
+
+func _get_pre_instance_namespaced_chunk_file_path(chunk_id: String) -> String:
+	var address: Dictionary = _partition_from_chunk_id(chunk_id)
+	if address.is_empty() or not PartitionAddressScript.has_chunk(address):
+		return ""
+	var legacy_scheme_folder: String = "%s_v%d" % [
+		String(address.get("partition_scheme", partition_scheme)),
+		int(address.get("partition_scheme_revision", partition_scheme_revision)),
+	]
+	var path: String = world_root.path_join("partitions")
+	for component in [
+		_sanitize_path_component(String(address.get("universe_id", universe_id))),
+		_sanitize_path_component(String(address.get("space_id", partition_space_id))),
+		_sanitize_path_component(legacy_scheme_folder),
+		"face_%d" % int(address.get("face", 0)),
+		"zone_%02d_%02d" % [
+			int(address.get("zone_x", 0)),
+			int(address.get("zone_y", 0)),
+		],
+		"chunk_%02d_%02d.json" % [
+			int(address.get("chunk_x", 0)),
+			int(address.get("chunk_y", 0)),
+		],
+	]:
+		path = path.path_join(String(component))
+	return path
+
+
+func _remove_obsolete_chunk_paths(chunk_id: String, current_path: String) -> bool:
+	var removed_any: bool = false
+	for obsolete_path in [
+		_get_previous_namespaced_chunk_file_path(chunk_id),
+		_get_pre_instance_namespaced_chunk_file_path(chunk_id),
+		_get_legacy_chunk_file_path(chunk_id),
+	]:
+		var path: String = String(obsolete_path)
+		if path.is_empty() or path == current_path or not FileAccess.file_exists(path):
+			continue
+		if DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK:
+			removed_any = true
+	return removed_any
+
+
+func _get_legacy_chunk_file_path(chunk_id: String) -> String:
+	var address: Dictionary = _partition_from_chunk_id(chunk_id)
+	if address.is_empty() or not PartitionAddressScript.has_chunk(address):
+		return ""
+	var zone_folder: String = "f%d_%02d_%02d" % [
+		int(address.get("face", 0)),
+		int(address.get("zone_x", 0)),
+		int(address.get("zone_y", 0)),
+	]
+	var chunk_file: String = "%02d_%02d.json" % [
+		int(address.get("chunk_x", 0)),
+		int(address.get("chunk_y", 0)),
+	]
+	return world_root.path_join("zones/%s/chunks/%s" % [zone_folder, chunk_file])
+
+
+func _is_supported_chunk_schema(schema: String) -> bool:
+	return schema == CHUNK_SCHEMA or schema == LEGACY_CHUNK_SCHEMA
 
 
 func _max_entity_revision(snapshots: Array[Dictionary]) -> int:

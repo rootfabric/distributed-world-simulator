@@ -1,89 +1,107 @@
 # Единое пространство Земля–Луна и последующее разбиение по серверам
 
-## Что проверяет текущий эксперимент
+## Текущая модель v15.5.1
 
-Земля и Луна находятся в одной системе координат `float64`, измеряемой в метрах:
-
-- центр Луны: `[0, 0, 0]`;
-- центр Земли: `[384400000, 0, 0]`;
-- расстояние между центрами: `384400 км`.
-
-Спектатор хранит одну абсолютную позицию. Генераторы тел не перемещают эту позицию и не подменяют планеты отдельными сценами. Для каждого тела вычисляется только локальная координата:
+Земля и Луна больше не хранятся как два статических центра в одном
+неуточнённом `Vector3`. Они входят в time-dependent frame graph:
 
 ```text
-body_local = absolute_space_position - body_absolute_center
+sol.barycentric
+├── body/earth/inertial
+│   ├── body/earth/fixed
+│   └── body/moon/inertial
+│       └── body/moon/fixed
+└── body/sun/inertial
+    └── body/sun/fixed
 ```
 
-Каждый генератор получает собственную body-local позицию наблюдателя и выполняет floating-origin относительно неё. Поэтому результирующая render-координата одинакова для всех тел:
+Положение крупных тел вычисляется аналитическими providers по единому
+`SimulationClock`. Surface objects остаются неподвижными в body-fixed frame.
+
+## Почему это остаётся единым миром
+
+Объект можно преобразовать между frame в один и тот же момент времени:
 
 ```text
-render_position = body_local_point - observer_body_local
-                = absolute_point - absolute_observer
+moon surface SpatialRef
+→ body/moon/inertial
+→ sol.barycentric
+→ body/earth/inertial
+→ earth surface observer frame
 ```
 
-Это позволяет одновременно держать Землю и Луну в одном simulation-space, не передавая в GPU координаты порядка сотен миллионов метров рядом с камерой.
+Смена frame не создаёт отдельную копию объекта и не меняет его identity.
+Floating origin применяется после выбора observer frame и не является границей
+мира или сервера.
 
-## Почему floating origin не означает разные миры
+## Partition не равен frame
 
-Simulation-space остаётся единым. Floating origin является только преобразованием представления перед рендерингом и локальной физикой. Абсолютные координаты сущностей, орбиты, маршруты и межпланетные расстояния не меняются.
-
-В текущем тесте оба генератора работают в одном процессе. Удалённое тело отображается его глобальным LOD. Локальные terrain, растительность и камни активируются только возле соответствующего тела.
-
-## Контракт локального сервера пространства
-
-Сейчас роль локального in-process space authority выполняет `CelestialSystem`:
-
-- `get_body_center(body_id)`;
-- `to_body_local(space_position, body_id)`;
-- `to_space(body_local_position, body_id)`;
-- `get_surface_distance(body_id, space_position)`;
-- `get_nearest_body_id(space_position)`;
-- `get_space_snapshot(space_position)`.
-
-Игровая логика и спектатор зависят от этого контракта, а не от того, находится реализация в одном процессе или на сетевом сервере.
-
-## Как позже разбить пространство по бесшовным серверам
-
-Рекомендуемая схема:
+Лунные surface chunks адресуются в:
 
 ```text
-Global Space Directory
-        │
-        ├── space/moon  ── Moon authority + chunks + entities
-        ├── space/earth ── Earth authority + chunks + entities
-        └── transit     ── межпланетное пространство и орбиты
+partition_frame_id = body/moon/fixed
+partition_scheme = cube_sphere
+partition_scheme_revision = 1
 ```
 
-Каждая сущность всегда имеет:
+Полный адрес:
 
 ```text
-entity_id
-absolute_position_m: Vector3d
-absolute_velocity_mps: Vector3d
-authority_partition_id
+universe/main/instance/persistent/space/moon/partition/cube_sphere/revision/1/
+zone/f4/17/09/chunk/03/28
+```
+
+Межпланетный transit позднее может использовать `sol.barycentric` и другую
+схему, например sparse Cartesian/orbital sectors.
+
+## Будущее серверное разбиение
+
+```text
+UniverseDirectory
+├── SystemEphemerisAuthority
+├── EarthAuthority
+├── MoonAuthority
+└── TransitAuthority
+```
+
+Рекомендуемая граница проходит через разреженное пространство, а не через базу
+или физически взаимодействующую группу.
+
+Authority handoff использует:
+
+```text
+SpatialRef
+authority_owner_id
+authority_epoch
 state_revision
+operation_id
+aggregate snapshot
 ```
 
-Передача между серверами выполняется не по визуальной границе LOD, а по области authority с гистерезисом:
+Новый authority повышает epoch. Старые команды fenced и не могут изменить
+переданную сущность.
 
-1. текущий сервер создаёт handoff snapshot;
-2. целевой сервер подтверждает создание ghost entity;
-3. оба сервера короткое время реплицируют состояние;
-4. authority переключается по монотонной revision;
-5. старый сервер удаляет ghost после подтверждения клиента.
+## Interest и activation
 
-LOD, terrain streaming и серверная authority должны оставаться независимыми. Игрок может видеть Землю с сервера Луны как глобальный proxy, но её authoritative сущности будут подгружены только при переходе в область Земли.
+Следует различать:
 
-## Диагностика рельефа
+```text
+AuthoritySet   — чем владеет сервер
+InterestSet    — что требуется конкретному клиенту/роботу
+ActivationSet  — где выполняется дорогая локальная симуляция
+```
 
-Каждая перестройка земного патча теперь пишет в `user://logs/terrain_performance.jsonl` событие `earth_surface_rebuild` со следующими полями:
+`LunarZoneManager` уже поддерживает несколько interest sources и объединяет их
+Warm/Active окна. Это локальный прототип будущего server interest management.
 
-- минимальная и максимальная высота;
-- реальный перепад высот патча;
-- средний и максимальный геометрический склон;
-- доля воды и снега;
-- распределение биомов;
-- число pipeline samples;
-- время terrain и vegetation generation.
+## Что не зависит от серверной границы
 
-Эти значения также отображаются в верхней панели. Это отделяет проблему генератора высот от проблем камеры, материала или освещения.
+- GLOBAL/REGIONAL/LOCAL/ULTRA render LOD;
+- terrain streaming cells;
+- camera-relative origin;
+- визуальный proxy далёкого тела;
+- body-fixed координаты базы;
+- глобальный `entity_id`.
+
+Подробная математическая модель:
+`REFERENCE_FRAMES_AND_DISTRIBUTED_SPACE_RU.md`.

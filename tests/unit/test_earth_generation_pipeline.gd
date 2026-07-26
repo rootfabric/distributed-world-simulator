@@ -187,18 +187,20 @@ func _test_real_scale_body_contract() -> void:
 		is_equal_approx(system.get_body_radius("moon"), 1_737_400.0),
 		"Moon radius changed unexpectedly."
 	)
+	var earth_moon_distance_m: float = system.get_distance_between("earth", "moon", 0.0)
 	_assert(
-		absf(system.get_distance_between("earth", "moon") - 384_400_000.0) < 0.5,
-		"Earth-Moon center distance is not 384,400 km."
+		earth_moon_distance_m > 350_000_000.0
+		and earth_moon_distance_m < 410_000_000.0,
+		"Earth-Moon distance is outside the configured analytic orbit."
 	)
 	var earth_local := Vector3(6_371_450.0, 20.0, -30.0)
-	var absolute_position: Vector3 = system.to_space(earth_local, "earth")
+	var root_position: Vector3 = system.to_space(earth_local, "earth", 0.0)
 	_assert(
-		system.to_body_local(absolute_position, "earth").is_equal_approx(earth_local),
+		system.to_body_local(root_position, "earth", 0.0).is_equal_approx(earth_local),
 		"Shared-space body-local conversion is not reversible."
 	)
 	_assert(
-		system.get_nearest_body_id(absolute_position) == "earth",
+		system.get_nearest_body_id(root_position) == "earth",
 		"Shared-space nearest-body selection failed near Earth."
 	)
 	system.free()

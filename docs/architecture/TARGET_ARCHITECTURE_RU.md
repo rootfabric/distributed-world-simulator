@@ -80,11 +80,21 @@ Cube Face → Zone → Chunk → Entity
 
 ## Координаты
 
-Используются три уровня:
+Используются четыре независимых уровня:
 
-1. **Moon-fixed double position** — абсолютная позиция относительно центра Луны.
-2. **Zone/Chunk address** — устойчивый дискретный адрес данных.
-3. **Camera-relative local position** — координаты рядом с нулём для Godot и GPU.
+1. **SpatialRef в reference frame** — double position/orientation/velocity в
+   `body/moon/fixed`, `body/earth/inertial`, `sol.barycentric` или другом frame.
+2. **PartitionAddress** — устойчивый дискретный адрес данных с namespace
+   Вселенной, space и схемы разбиения.
+3. **Authority state** — server owner и fencing epoch, не входящие в стабильный
+   адрес partition.
+4. **Camera-relative render position** — временные координаты рядом с нулём для
+   Godot, GPU и локальной физики.
+
+Орбиты и вращения вычисляются через time-dependent `FrameGraph` по единым
+`SimulationClock`. Объект на поверхности не меняет body-fixed координаты из-за
+движения планеты. Подробный контракт описан в
+`REFERENCE_FRAMES_AND_DISTRIBUTED_SPACE_RU.md`.
 
 ## Сущности
 

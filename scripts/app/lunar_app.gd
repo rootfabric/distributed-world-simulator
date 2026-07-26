@@ -22,9 +22,15 @@ const WorldRepositoryScript = preload(
 const WorldInteractorScript = preload(
 	"res://scripts/interaction/world_interactor.gd"
 )
+const CommandRegistryScript = preload(
+	"res://scripts/core/command_registry.gd"
+)
+const RuntimeTestRegistryScript = preload(
+	"res://scripts/core/runtime_test_registry.gd"
+)
 
-const PROJECT_VERSION: String = "15.4.1"
-const BUILD_ID: String = "planetary-items-and-interaction"
+const PROJECT_VERSION: String = "15.5.1"
+const BUILD_ID: String = "distributed-coordinate-foundation-fixed"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -48,6 +54,17 @@ var logger
 var persistence
 var world_interactor
 
+var simulator_app
+var simulation_clock
+var runtime_universe_id: String = "main"
+var runtime_instance_id: String = "persistent"
+var local_authority_id: String = "local-process"
+var runtime_command_registry
+var runtime_test_registry
+var runtime_world_definition: Dictionary = {}
+var runtime_command_owner: String = "active_world"
+var runtime_test_owner: String = "active_world"
+
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
 var fullscreen_enabled: bool = false
@@ -61,11 +78,27 @@ var last_action_result: String = "-"
 var clear_confirmation_deadline_msec: int = 0
 
 
+func configure_runtime(context: Dictionary) -> void:
+	simulator_app = context.get("simulator_app")
+	simulation_clock = context.get("simulation_clock")
+	runtime_universe_id = String(context.get("universe_id", runtime_universe_id))
+	runtime_instance_id = String(context.get("instance_id", runtime_instance_id))
+	local_authority_id = String(context.get("local_authority_id", local_authority_id))
+	runtime_command_registry = context.get("command_registry")
+	runtime_test_registry = context.get("test_registry")
+	runtime_world_definition = context.get("world_definition", {}).duplicate(true)
+	runtime_command_owner = String(
+		context.get("command_owner_id", runtime_command_owner)
+	)
+	runtime_test_owner = String(context.get("test_owner_id", runtime_test_owner))
+
+
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
-	_ensure_input_actions()
-	_load_display_settings()
-	_apply_display_settings()
+	if simulator_app == null:
+		_ensure_input_actions()
+		_load_display_settings()
+		_apply_display_settings()
 
 	logger = LunarLoggerScript.new()
 	logger.name = "LunarLogger"
@@ -74,6 +107,10 @@ func _ready() -> void:
 	logger.info("application", "startup", {
 		"project_version": PROJECT_VERSION,
 		"build_id": BUILD_ID,
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"local_authority_id": local_authority_id,
+		"simulation_clock": simulation_clock.create_snapshot() if simulation_clock != null else {},
 		"engine": Engine.get_version_info(),
 		"display_mode": get_display_mode_name(),
 		"resolution": get_display_resolution_name(),
@@ -90,13 +127,32 @@ func _ready() -> void:
 	zone_manager = LunarZoneManagerScript.new()
 	zone_manager.name = "LunarZoneManager"
 	add_child(zone_manager)
-	zone_manager.setup(moon_world)
+	if not zone_manager.setup(moon_world, {
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"space_id": "moon",
+		"partition_grid_config_path": "res://config/partitions/moon_surface.json",
+		"partition_scheme": "cube_sphere",
+		"partition_scheme_revision": 1,
+		"partition_frame_id": "body/moon/fixed",
+		"authority_owner_id": local_authority_id,
+	}):
+		logger.error("partition", "partition_grid_setup_failed", {
+			"universe_id": runtime_universe_id,
+			"instance_id": runtime_instance_id,
+			"space_id": "moon",
+		})
+		return
 	zone_manager.partition_window_changed.connect(_on_partition_window_changed)
 
 	entity_registry = EntityRegistryScript.new()
 	entity_registry.name = "EntityRegistry"
 	add_child(entity_registry)
-	entity_registry.setup(zone_manager, logger)
+	entity_registry.setup(zone_manager, logger, {
+		"simulation_clock": simulation_clock,
+		"authority_owner_id": local_authority_id,
+		"authority_epoch": 1,
+	})
 
 	player = LunarPlayerScript.new()
 	player.name = "LunarPlayer"
@@ -114,12 +170,16 @@ func _ready() -> void:
 	persistence = WorldRepositoryScript.new()
 	persistence.name = "LunarWorldRepository"
 	add_child(persistence)
-	persistence.setup(
+	if not persistence.setup(
 		moon_world,
 		zone_manager,
 		entity_registry,
 		logger
-	)
+	):
+		logger.error("persistence", "repository_setup_failed", {
+			"universe_id": runtime_universe_id,
+			"instance_id": runtime_instance_id,
+		})
 	_sync_streaming_landmark_pins()
 
 	world_interactor = WorldInteractorScript.new()
@@ -146,7 +206,23 @@ func _ready() -> void:
 	_restore_saved_location_or_random_spawn()
 	_ensure_player_entity_registered()
 	zone_manager.update_observer(player.get_world_position(), false)
-	_set_menu_visible(true)
+	# The common simulator starts every world in gameplay mode. The large Lunar
+	# diagnostics panel remains available through ui.menu.toggle, but it is not
+	# a second world-specific entry interface. Legacy standalone launch keeps
+	# the historical open-menu behavior.
+	_set_menu_visible(simulator_app == null)
+	call_deferred("_initialize_standalone_runtime_services")
+
+
+func _initialize_standalone_runtime_services() -> void:
+	if simulator_app != null:
+		return
+	if runtime_command_registry == null:
+		runtime_command_registry = CommandRegistryScript.new()
+		register_runtime_commands(runtime_command_registry, runtime_command_owner)
+	if runtime_test_registry == null:
+		runtime_test_registry = RuntimeTestRegistryScript.new()
+		register_runtime_tests(runtime_test_registry, runtime_test_owner)
 
 
 func _process(delta: float) -> void:
@@ -195,6 +271,10 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# The common SimulatorApp owns functional shortcuts. The old bindings remain
+	# only when this runtime is launched directly for legacy diagnostics.
+	if simulator_app != null:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F1 or event.keycode == KEY_ESCAPE:
 			toggle_menu()
@@ -299,6 +379,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func open_item_system_lab() -> void:
 	if persistence != null:
 		persistence.save_all_loaded_chunks()
+	if simulator_app != null and simulator_app.has_method("load_world"):
+		simulator_app.load_world("item_lab")
+		return
 	get_tree().change_scene_to_file(ITEM_SYSTEM_LAB_SCENE)
 
 
@@ -705,7 +788,20 @@ func run_entity_migration_mini_test() -> Dictionary:
 		MINI_TEST_ENTITY_ID,
 		"diagnostic_probe",
 		start_position,
-		{"purpose": {"name": "chunk_migration_mini_test"}}
+		{"purpose": {"name": "chunk_migration_mini_test"}},
+		local_authority_id,
+		1,
+		{
+			"universe_id": runtime_universe_id,
+			"instance_id": runtime_instance_id,
+			"space_id": "sol",
+			"frame_id": "body/moon/fixed",
+			"sample_time_s": (
+				float(simulation_clock.get_time_seconds())
+				if simulation_clock != null
+				else 0.0
+			),
+		}
 	)
 	var registered: bool = entity_registry.register_entity(probe)
 	if not registered:
@@ -883,15 +979,20 @@ func cycle_resolution() -> void:
 
 
 func get_display_mode_name() -> String:
-	return "Полный экран" if fullscreen_enabled else "Окно"
+	var mode: int = DisplayServer.window_get_mode()
+	return (
+		"Полный экран"
+		if mode in [
+			DisplayServer.WINDOW_MODE_FULLSCREEN,
+			DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN,
+		]
+		else "Окно"
+	)
 
 
 func get_display_resolution_name() -> String:
 	var window_size: Vector2i = DisplayServer.window_get_size()
-	if fullscreen_enabled:
-		return "%d×%d (рабочий экран)" % [window_size.x, window_size.y]
-	var preset_size: Vector2i = WINDOWED_RESOLUTIONS[resolution_index]
-	return "%d×%d" % [preset_size.x, preset_size.y]
+	return "%d×%d" % [window_size.x, window_size.y]
 
 
 func _apply_display_settings() -> void:
@@ -946,6 +1047,19 @@ func _ensure_player_entity_registered() -> void:
 				"profile_id": player.get_controller_id(),
 				"camera_mode": player.get_camera_mode(),
 			},
+		},
+		local_authority_id,
+		1,
+		{
+			"universe_id": runtime_universe_id,
+			"instance_id": runtime_instance_id,
+			"space_id": "sol",
+			"frame_id": "body/moon/fixed",
+			"sample_time_s": (
+				float(simulation_clock.get_time_seconds())
+				if simulation_clock != null
+				else 0.0
+			),
 		}
 	)
 	entity_registry.register_entity(record)
@@ -988,11 +1102,13 @@ func _sync_player_controller_component() -> void:
 	var record = entity_registry.get_entity(PLAYER_ENTITY_ID)
 	if record == null:
 		return
-	record.set_component("controller", {
-		"type": "local_player",
-		"profile_id": player.get_controller_id(),
-		"display_name": player.get_controller_display_name(),
-		"camera_mode": player.get_camera_mode(),
+	entity_registry.update_entity_components(PLAYER_ENTITY_ID, {
+		"controller": {
+			"type": "local_player",
+			"profile_id": player.get_controller_id(),
+			"display_name": player.get_controller_display_name(),
+			"camera_mode": player.get_camera_mode(),
+		},
 	})
 
 
@@ -1055,3 +1171,417 @@ func _notification(what: int) -> void:
 func _exit_tree() -> void:
 	if persistence != null and is_instance_valid(persistence):
 		persistence.flush()
+
+
+func register_runtime_commands(registry, owner_id: String) -> void:
+	_register_runtime_command(registry, owner_id, {
+		"id": "ui.menu.toggle",
+		"description": "Открыть или закрыть диагностическое меню текущего мира.",
+		"usage": "ui.menu.toggle",
+		"category": "ui",
+	}, Callable(self, "_command_menu_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.interact",
+		"description": "Выполнить основное действие с объектом в центре экрана.",
+		"usage": "player.interact",
+		"category": "player",
+	}, Callable(self, "_command_interact"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.camera.toggle",
+		"description": "Переключить первое и третье лицо.",
+		"usage": "player.camera.toggle",
+		"category": "player",
+	}, Callable(self, "_command_camera_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.controller.toggle",
+		"description": "Переключить Lunar EVA и Jetpack.",
+		"usage": "player.controller.toggle",
+		"category": "player",
+	}, Callable(self, "_command_controller_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.controller.set",
+		"description": "Подключить профиль контроллера по идентификатору.",
+		"usage": "player.controller.set <profile_id>",
+		"category": "player",
+	}, Callable(self, "_command_controller_set"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.spectator.toggle",
+		"description": "Переключить персонажа и лунный спектатор.",
+		"usage": "player.spectator.toggle",
+		"category": "player",
+	}, Callable(self, "_command_spectator_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.teleport.spectator",
+		"description": "Перенести персонажа к позиции спектатора.",
+		"usage": "player.teleport.spectator",
+		"category": "player",
+	}, Callable(self, "_command_teleport_from_spectator"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "player.spawn.random",
+		"description": "Переместить персонажа в новую безопасную точку Луны.",
+		"usage": "player.spawn.random",
+		"category": "player",
+	}, Callable(self, "_command_random_spawn"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.surface_style.cycle",
+		"description": "Переключить материал поверхности Луны.",
+		"usage": "world.surface_style.cycle",
+		"category": "world",
+	}, Callable(self, "_command_surface_style_cycle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.lod.debug.toggle",
+		"description": "Переключить диагностические цвета LOD.",
+		"usage": "world.lod.debug.toggle",
+		"category": "world",
+	}, Callable(self, "_command_lod_debug_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.lod.spectator_tracking.toggle",
+		"description": "Переключить привязку LOD к спектатору.",
+		"usage": "world.lod.spectator_tracking.toggle",
+		"category": "world",
+	}, Callable(self, "_command_lod_tracking_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.beacon.place",
+		"description": "Установить постоянный Survey Beacon.",
+		"usage": "world.beacon.place",
+		"category": "world",
+	}, Callable(self, "_command_beacon_place"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.beacon.remove_nearest",
+		"description": "Удалить ближайший Survey Beacon.",
+		"usage": "world.beacon.remove_nearest",
+		"category": "world",
+	}, Callable(self, "_command_beacon_remove"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.beacon.markers.toggle",
+		"description": "Переключить дальние навигационные метки маяков.",
+		"usage": "world.beacon.markers.toggle",
+		"category": "world",
+	}, Callable(self, "_command_beacon_markers_toggle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.save",
+		"description": "Сохранить загруженные чанки постоянного слоя.",
+		"usage": "world.save",
+		"category": "persistence",
+	}, Callable(self, "_command_world_save"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "world.persistence.clear",
+		"description": "Очистить постоянный слой. Требует явного confirm.",
+		"usage": "world.persistence.clear confirm",
+		"category": "persistence",
+	}, Callable(self, "_command_persistence_clear"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "diagnostics.save",
+		"description": "Сохранить диагностический JSON текущего мира.",
+		"usage": "diagnostics.save",
+		"category": "diagnostics",
+	}, Callable(self, "_command_diagnostics_save"))
+	if simulator_app == null:
+		_register_runtime_command(registry, owner_id, {
+			"id": "display.fullscreen.toggle",
+			"description": "Переключить полноэкранный режим.",
+			"usage": "display.fullscreen.toggle",
+			"category": "display",
+		}, Callable(self, "_command_fullscreen_toggle"))
+		_register_runtime_command(registry, owner_id, {
+			"id": "display.resolution.cycle",
+			"description": "Переключить оконное разрешение.",
+			"usage": "display.resolution.cycle",
+			"category": "display",
+		}, Callable(self, "_command_resolution_cycle"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "item.lab.open",
+		"description": "Открыть отдельный мир лаборатории предметов.",
+		"usage": "item.lab.open",
+		"category": "items",
+	}, Callable(self, "_command_item_lab_open"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "test.entity_migration",
+		"description": "Запустить проверку миграции сущности между чанками.",
+		"usage": "test.entity_migration",
+		"category": "test",
+	}, Callable(self, "_command_entity_migration_test"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "test.persistence_roundtrip",
+		"description": "Запустить roundtrip-тест постоянного слоя.",
+		"usage": "test.persistence_roundtrip",
+		"category": "test",
+	}, Callable(self, "_command_persistence_test"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "test.controller",
+		"description": "Проверить переключение controller/camera.",
+		"usage": "test.controller",
+		"category": "test",
+	}, Callable(self, "_command_controller_test"))
+	_register_runtime_command(registry, owner_id, {
+		"id": "test.terrain_streaming",
+		"description": "Запустить безопасный staged terrain streaming test.",
+		"usage": "test.terrain_streaming",
+		"category": "test",
+	}, Callable(self, "_command_terrain_streaming_test"))
+
+
+func register_runtime_tests(registry, owner_id: String) -> void:
+	registry.register_test({
+		"id": "world.lunar.boot",
+		"description": "Лунный runtime создал общие подсистемы и активную камеру.",
+		"category": "world",
+	}, Callable(self, "_runtime_boot_test"), owner_id)
+	registry.register_test({
+		"id": "world.lunar.command_contract",
+		"description": "Лунный runtime предоставляет базовые универсальные команды.",
+		"category": "world",
+	}, Callable(self, "_runtime_command_contract_test"), owner_id)
+
+
+func prepare_for_unload() -> void:
+	if persistence != null:
+		persistence.save_all_loaded_chunks()
+	_set_mouse_capture(false)
+
+
+func create_runtime_snapshot() -> Dictionary:
+	return {
+		"schema": "planet_simulator.world_runtime.v1",
+		"world_id": get_runtime_id(),
+		"display_name": get_runtime_display_name(),
+		"project_version": PROJECT_VERSION,
+		"build_id": BUILD_ID,
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"local_authority_id": local_authority_id,
+		"simulation_clock": simulation_clock.create_snapshot() if simulation_clock != null else {},
+		"partition_window": zone_manager.create_partition_snapshot() if zone_manager != null else {},
+		"entity_registry": entity_registry.create_snapshot() if entity_registry != null else {},
+		"spectator_enabled": spectator_enabled,
+		"mouse_captured": mouse_captured,
+		"player_position": _vector_to_array(
+			player.get_stored_world_position()
+			if spectator_enabled
+			else player.get_world_position()
+		),
+		"controller": player.get_controller_snapshot() if player != null else {},
+		"interaction": get_interaction_snapshot(),
+		"persistence": persistence.create_snapshot() if persistence != null else {},
+		"terrain_streaming": (
+			moon_world.get_terrain_streaming_snapshot() if moon_world != null else {}
+		),
+	}
+
+
+func get_runtime_id() -> String:
+	return String(runtime_world_definition.get("id", "moon"))
+
+
+func get_runtime_display_name() -> String:
+	return String(runtime_world_definition.get("display_name", "Луна"))
+
+
+func execute_runtime_command(command_line: String) -> Dictionary:
+	if simulator_app != null and simulator_app.has_method("execute_command"):
+		return simulator_app.execute_command(command_line)
+	if runtime_command_registry != null:
+		return runtime_command_registry.execute_line(command_line)
+	return {
+		"success": false,
+		"output": "Командный реестр не подключён",
+	}
+
+
+func _command_menu_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_menu()
+	return {"success": true, "output": "Меню: %s" % ("открыто" if _is_menu_open() else "закрыто")}
+
+
+func _command_mouse_toggle(_arguments: Array[String]) -> Dictionary:
+	_set_mouse_capture(not mouse_captured)
+	return {"success": true, "output": "Мышь: %s" % ("захвачена" if mouse_captured else "свободна")}
+
+
+func _command_mouse_capture(_arguments: Array[String]) -> Dictionary:
+	_set_mouse_capture(true)
+	return {"success": true, "output": "Мышь захвачена"}
+
+
+func set_runtime_mouse_capture(captured: bool) -> void:
+	_set_mouse_capture(captured)
+
+
+func _command_interact(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = interact_with_world()
+	result["output"] = String(result.get("message", "Действие завершено"))
+	return result
+
+
+func _command_camera_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_player_camera()
+	return {"success": true, "output": last_action_result}
+
+
+func _command_controller_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_player_controller()
+	return {"success": true, "output": last_action_result}
+
+
+func _command_controller_set(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty():
+		return {"success": false, "output": "Использование: player.controller.set <profile_id>"}
+	var activated: bool = activate_player_controller(arguments[0])
+	return {"success": activated, "output": last_action_result}
+
+
+func _command_spectator_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_spectator()
+	return {"success": true, "output": "Спектатор: %s" % ("включён" if spectator_enabled else "выключен")}
+
+
+func _command_teleport_from_spectator(_arguments: Array[String]) -> Dictionary:
+	if not spectator_enabled:
+		return {"success": false, "output": "Сначала включите спектатор"}
+	teleport_player_to_spectator()
+	return {"success": true, "output": "Персонаж перемещён к спектатору"}
+
+
+func _command_random_spawn(_arguments: Array[String]) -> Dictionary:
+	random_spawn()
+	return {"success": true, "output": "Выбрана новая безопасная точка"}
+
+
+func _command_surface_style_cycle(_arguments: Array[String]) -> Dictionary:
+	moon_world.cycle_surface_style()
+	return {"success": true, "output": "Материал: %s" % moon_world.get_surface_style_name()}
+
+
+func _command_lod_debug_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_lod_debug_colors()
+	return {"success": true, "output": "LOD debug: %s" % moon_world.is_lod_debug_enabled()}
+
+
+func _command_lod_tracking_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_spectator_lod_tracking()
+	return {"success": true, "output": "LOD spectator tracking: %s" % moon_world.is_spectator_tracking_enabled()}
+
+
+func _command_beacon_place(_arguments: Array[String]) -> Dictionary:
+	var entity_id: String = place_survey_beacon()
+	return {"success": not entity_id.is_empty(), "output": last_action_result}
+
+
+func _command_beacon_remove(_arguments: Array[String]) -> Dictionary:
+	var entity_id: String = remove_nearest_survey_beacon()
+	return {"success": not entity_id.is_empty(), "output": last_action_result}
+
+
+func _command_beacon_markers_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_beacon_markers()
+	return {"success": true, "output": last_action_result}
+
+
+func _command_world_save(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = save_world_now()
+	result["output"] = last_action_result
+	return result
+
+
+func _command_persistence_clear(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty() or arguments[0].to_lower() != "confirm":
+		return {"success": false, "output": "Для удаления используйте: world.persistence.clear confirm"}
+	persistence.clear_world_data()
+	_sync_streaming_landmark_pins()
+	last_action_result = "Постоянный слой очищен"
+	return {"success": true, "output": last_action_result}
+
+
+func save_runtime_diagnostic_snapshot() -> String:
+	return save_diagnostic_snapshot()
+
+
+func _command_diagnostics_save(_arguments: Array[String]) -> Dictionary:
+	var path: String = save_runtime_diagnostic_snapshot()
+	return {"success": path != "ERROR", "output": "Диагностика: %s" % path}
+
+
+func _command_fullscreen_toggle(_arguments: Array[String]) -> Dictionary:
+	toggle_fullscreen()
+	return {"success": true, "output": "Экран: %s" % get_display_mode_name()}
+
+
+func _command_resolution_cycle(_arguments: Array[String]) -> Dictionary:
+	cycle_resolution()
+	return {"success": true, "output": "Разрешение: %s" % get_display_resolution_name()}
+
+
+func _command_item_lab_open(_arguments: Array[String]) -> Dictionary:
+	open_item_system_lab()
+	return {"success": true, "output": "Открывается лаборатория предметов"}
+
+
+func _command_entity_migration_test(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = run_entity_migration_mini_test()
+	result["output"] = String(result.get("summary", last_mini_test_result))
+	return result
+
+
+func _command_persistence_test(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = run_persistence_mini_test()
+	result["output"] = String(result.get("summary", last_persistence_test_result))
+	return result
+
+
+func _command_controller_test(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = run_controller_mini_test()
+	result["output"] = String(result.get("summary", last_controller_test_result))
+	return result
+
+
+func _command_terrain_streaming_test(_arguments: Array[String]) -> Dictionary:
+	var result: Dictionary = run_terrain_streaming_mini_test()
+	result["output"] = String(result.get("summary", last_terrain_streaming_test_result))
+	return result
+
+
+func _runtime_boot_test() -> Dictionary:
+	var passed: bool = (
+		moon_world != null
+		and player != null
+		and player.get_active_camera() != null
+		and zone_manager != null
+		and entity_registry != null
+		and persistence != null
+		and world_interactor != null
+	)
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: lunar runtime boot" if passed else "FAIL: lunar runtime boot",
+	}
+
+
+func _runtime_command_contract_test() -> Dictionary:
+	var required := [
+		"ui.menu.toggle",
+		"player.interact",
+		"player.camera.toggle",
+		"world.save",
+		"diagnostics.save",
+	]
+	var missing := PackedStringArray()
+	for command_id in required:
+		if runtime_command_registry == null or not runtime_command_registry.has_command(command_id):
+			missing.append(command_id)
+	var passed: bool = missing.is_empty()
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: lunar command contract" if passed else "FAIL: missing %s" % ", ".join(missing),
+	}
+
+
+func _register_runtime_command(
+	registry,
+	owner_id: String,
+	definition: Dictionary,
+	callback: Callable
+) -> void:
+	if not registry.register_command(definition, callback, owner_id):
+		push_error("Runtime command registration failed: %s" % definition.get("id", ""))

@@ -1,0 +1,104 @@
+{
+  "schema": "planet_simulator.world_catalog.v1",
+  "default_world": "earth_moon",
+  "worlds": [
+    {
+      "id": "moon",
+      "display_name": "Луна",
+      "description": "Процедурная Луна, постоянные маяки, персонаж и спектатор.",
+      "runtime_script": "res://scripts/app/lunar_app.gd",
+      "tags": [
+        "planet",
+        "procedural",
+        "persistent"
+      ],
+      "options": {
+        "startup_mode": "moon"
+      },
+      "universe_id": "main",
+      "instance_id": "persistent",
+      "local_authority_id": "local-process"
+    },
+    {
+      "id": "earth",
+      "display_name": "Земля",
+      "description": "Процедурная Земля с атмосферой без отображения Луны.",
+      "runtime_script": "res://scripts/app/earth_app.gd",
+      "tags": [
+        "planet",
+        "procedural",
+        "atmosphere"
+      ],
+      "options": {
+        "startup_mode": "earth",
+        "visible_bodies": [
+          "earth"
+        ],
+        "default_biome": "forest"
+      },
+      "universe_id": "main",
+      "instance_id": "persistent",
+      "local_authority_id": "local-process"
+    },
+    {
+      "id": "earth_moon",
+      "display_name": "Система Земля — Луна",
+      "description": "Земля и Луна в едином double-precision пространстве.",
+      "runtime_script": "res://scripts/app/planetary_app.gd",
+      "tags": [
+        "planetary_system",
+        "procedural",
+        "shared_space"
+      ],
+      "options": {
+        "startup_mode": "shared_space",
+        "visible_bodies": [
+          "earth",
+          "moon"
+        ],
+        "default_body": "moon"
+      },
+      "universe_id": "main",
+      "instance_id": "persistent",
+      "local_authority_id": "local-process"
+    },
+    {
+      "id": "item_lab",
+      "display_name": "Лаборатория предметов",
+      "description": "Изолированная тестовая локация для предметов, контейнеров и сборок.",
+      "runtime_scene": "res://scenes/items/item_system_lab.tscn",
+      "tags": [
+        "test",
+        "items",
+        "containers"
+      ],
+      "options": {
+        "return_world": "earth_moon"
+      },
+      "universe_id": "main",
+      "instance_id": "scenario-item-lab",
+      "local_authority_id": "local-process"
+    },
+    {
+      "id": "playground",
+      "display_name": "Испытательный полигон",
+      "description": "Небольшая плоская площадка с универсальным персонажем для опытов.",
+      "runtime_scene": "res://scenes/testing/playground.tscn",
+      "tags": [
+        "test",
+        "character",
+        "sandbox"
+      ],
+      "options": {
+        "spawn": [
+          0.0,
+          1.2,
+          6.0
+        ]
+      },
+      "universe_id": "main",
+      "instance_id": "scenario-playground",
+      "local_authority_id": "local-process"
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 # Контракт `lunar.chunk.v1`
 
+> **Legacy:** новые записи используют `planet_simulator.chunk.v2`, `SpatialRef` и `PartitionAddress v2`. Старый путь `zones/...` остаётся fallback для миграции.
+
+
 Файл создаётся только для изменённого чанка:
 
 ```text

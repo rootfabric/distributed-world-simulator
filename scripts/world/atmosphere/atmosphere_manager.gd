@@ -61,7 +61,12 @@ func setup(
 	return true
 
 
-func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float) -> void:
+func update_for_observer(
+	space_position: Vector3,
+	camera: Camera3D,
+	delta: float,
+	observer_frame_id: String = ""
+) -> void:
 	if not initialized:
 		return
 	var selected_atmosphere
@@ -70,7 +75,12 @@ func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float
 	for body_id_value in atmospheres.keys():
 		var body_id: String = String(body_id_value)
 		var atmosphere = atmospheres[body_id]
-		var state: Dictionary = atmosphere.update_for_observer(space_position, camera, delta)
+		var state: Dictionary = atmosphere.update_for_observer(
+			space_position,
+			camera,
+			delta,
+			observer_frame_id
+		)
 		var score: float = float(state.get("intensity", 0.0))
 		if bool(state.get("active", false)) and score > selected_score:
 			selected_score = score

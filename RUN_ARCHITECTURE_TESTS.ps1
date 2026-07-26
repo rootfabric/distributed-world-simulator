@@ -1,28 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Candidates = @(
-    "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe",
-    "C:\Godot\bin\godot.windows.editor.double.x86_64.exe"
-)
-
-$Godot = $null
-foreach ($Candidate in $Candidates) {
-    if (Test-Path $Candidate) {
-        $Godot = $Candidate
-        break
-    }
-}
-
-if ($null -eq $Godot) {
-    throw "Double-precision Godot editor was not found. Update RUN_ARCHITECTURE_TESTS.ps1 with its path."
-}
-
-& $Godot `
-    --headless `
-    --path $ProjectRoot `
-    --script res://tests/unit/test_partition_foundation.gd
-
+& (Join-Path $ProjectRoot "RUN_COORDINATE_FOUNDATION_TESTS.ps1")
 if ($LASTEXITCODE -ne 0) {
     throw "Architecture tests failed with exit code $LASTEXITCODE"
 }

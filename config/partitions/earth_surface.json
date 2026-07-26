@@ -1,0 +1,9 @@
+{
+  "schema": "planet_simulator.cube_sphere_grid.v1",
+  "scheme_id": "cube_sphere",
+  "scheme_revision": 1,
+  "body_frame_id": "body/earth/fixed",
+  "body_radius_m": 6371000.0,
+  "zones_per_face": 96,
+  "chunks_per_zone": 32
+}

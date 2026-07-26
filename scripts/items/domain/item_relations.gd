@@ -1,14 +1,39 @@
 extends RefCounted
 
+const SpatialRefScript = preload(
+	"res://scripts/simulation/spatial/spatial_ref.gd"
+)
+
 const WORLD := "WORLD"
 const CONTAINER := "CONTAINER"
 const ATTACHMENT := "ATTACHMENT"
 const DESTROYED := "DESTROYED"
 
 
-static func world(transform: Transform3D = Transform3D.IDENTITY, linear_velocity: Vector3 = Vector3.ZERO) -> Dictionary:
+static func world(
+	transform: Transform3D = Transform3D.IDENTITY,
+	linear_velocity: Vector3 = Vector3.ZERO,
+	frame_id: String = "scenario/local",
+	sample_time_s: float = 0.0,
+	universe_id: String = "main",
+	space_id: String = "scenario",
+	instance_id: String = "scenario"
+) -> Dictionary:
 	return {
 		"kind": WORLD,
+		"spatial_ref": SpatialRefScript.create(
+			frame_id,
+			transform.origin,
+			transform.basis,
+			linear_velocity,
+			Vector3.ZERO,
+			sample_time_s,
+			universe_id,
+			space_id,
+			instance_id
+		),
+		# Compatibility fields remain until all current item representations read
+		# SPATIAL_REF_V1 directly.
 		"transform": _transform_to_array(transform),
 		"linear_velocity": [linear_velocity.x, linear_velocity.y, linear_velocity.z],
 	}
@@ -49,6 +74,24 @@ static func relation_parent_item_id(relation: Dictionary, container_registry) ->
 			if container != null and container.owner_kind == "ITEM_INSTANCE":
 				return container.owner_id
 	return ""
+
+
+static func spatial_ref_from_relation(relation: Dictionary) -> Dictionary:
+	var value = relation.get("spatial_ref", {})
+	if value is Dictionary and SpatialRefScript.is_valid(value):
+		return SpatialRefScript.normalize(value)
+	var legacy_transform: Transform3D = transform_from_relation(relation)
+	return SpatialRefScript.create(
+		"scenario/local",
+		legacy_transform.origin,
+		legacy_transform.basis,
+		velocity_from_relation(relation),
+		Vector3.ZERO,
+		0.0,
+		"main",
+		"scenario",
+		"scenario"
+	)
 
 
 static func transform_from_relation(relation: Dictionary) -> Transform3D:

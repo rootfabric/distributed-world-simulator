@@ -1,40 +1,99 @@
 {
-  "schema": "planet_simulator.celestial_system.v2",
-  "distance_model": "double_precision_absolute_meters",
-  "simulation_model": "single_shared_absolute_space",
-  "render_model": "per_body_floating_origin_with_proxy_fallback",
+  "schema": "planet_simulator.celestial_system.v3",
+  "universe_id": "main",
+  "space_id": "sol",
+  "root_frame_id": "sol.barycentric",
+  "distance_model": "double_precision_hierarchical_frames",
+  "motion_model": "analytic_orbits_and_time_dependent_body_frames",
+  "render_model": "observer_frame_floating_origin",
+  "clock": {
+    "epoch_seconds": 0.0,
+    "initial_time_s": 0.0,
+    "time_scale": 1.0,
+    "paused": false
+  },
   "space_domain": {
-    "id": "earth-moon-local-test",
+    "id": "sol",
     "authority": "in_process",
-    "future_partition_strategy": "body_sphere_of_influence_with_hysteresis"
+    "future_partition_strategy": "body_and_transit_authorities_with_hysteresis"
   },
   "bodies": [
     {
-      "id": "moon",
-      "display_name": "Moon",
-      "radius_m": 1737400.0,
-      "gravity_mps2": 1.62,
-      "absolute_center_m": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "future_partition_id": "space/moon"
+      "id": "sun",
+      "display_name": "Sun",
+      "radius_m": 695700000.0,
+      "gravity_mps2": 274.0,
+      "parent_frame_id": "sol.barycentric",
+      "inertial_frame_id": "body/sun/inertial",
+      "body_fixed_frame_id": "body/sun/fixed",
+      "authority_space_id": "sun",
+      "orbit": {
+        "type": "static",
+        "position_m": [0.0, 0.0, 0.0],
+        "velocity_mps": [0.0, 0.0, 0.0]
+      },
+      "rotation": {
+        "type": "uniform",
+        "period_s": 2160000.0,
+        "axial_tilt_deg": 7.25,
+        "phase_deg": 0.0
+      }
     },
     {
       "id": "earth",
       "display_name": "Earth",
       "radius_m": 6371000.0,
       "gravity_mps2": 9.80665,
-      "absolute_center_m": [
-        384400000.0,
-        0.0,
-        0.0
-      ],
-      "future_partition_id": "space/earth",
+      "parent_frame_id": "sol.barycentric",
+      "inertial_frame_id": "body/earth/inertial",
+      "body_fixed_frame_id": "body/earth/fixed",
+      "authority_space_id": "earth",
+      "orbit": {
+        "type": "kepler",
+        "semi_major_axis_m": 149597870700.0,
+        "eccentricity": 0.0167086,
+        "period_s": 31558149.7635456,
+        "inclination_deg": 0.00005,
+        "longitude_ascending_node_deg": -11.26064,
+        "argument_periapsis_deg": 114.20783,
+        "mean_anomaly_at_epoch_deg": 357.51716,
+        "epoch_s": 0.0
+      },
+      "rotation": {
+        "type": "uniform",
+        "period_s": 86164.0905,
+        "axial_tilt_deg": 23.439281,
+        "axis_longitude_deg": 0.0,
+        "phase_deg": 0.0,
+        "epoch_s": 0.0
+      },
       "atmosphere_config": "res://config/atmospheres/earth.json"
+    },
+    {
+      "id": "moon",
+      "display_name": "Moon",
+      "radius_m": 1737400.0,
+      "gravity_mps2": 1.62,
+      "parent_frame_id": "body/earth/inertial",
+      "inertial_frame_id": "body/moon/inertial",
+      "body_fixed_frame_id": "body/moon/fixed",
+      "authority_space_id": "moon",
+      "orbit": {
+        "type": "kepler",
+        "semi_major_axis_m": 384400000.0,
+        "eccentricity": 0.0549,
+        "period_s": 2360591.5,
+        "inclination_deg": 5.145,
+        "longitude_ascending_node_deg": 125.08,
+        "argument_periapsis_deg": 318.15,
+        "mean_anomaly_at_epoch_deg": 115.3654,
+        "epoch_s": 0.0
+      },
+      "rotation": {
+        "type": "tidally_locked",
+        "phase_offset_deg": 0.0
+      }
     }
   ],
-  "earth_moon_center_distance_m": 384400000.0,
   "proxy_render_distance_m": 500000.0
 }

@@ -1,4 +1,55 @@
-Planetary World v15.4.1
+Planetary World v15.5.1-fixed
+
+
+Distributed coordinate foundation v15.5.1-fixed:
+- scripts/simulation/time/simulation_clock.gd
+- scripts/simulation/spatial/spatial_ref.gd
+- scripts/simulation/frames/frame_graph.gd
+- scripts/simulation/frames/providers/orbit_provider.gd
+- scripts/simulation/frames/providers/rotation_provider.gd
+- scripts/simulation/frames/providers/frame_motion_provider.gd
+- scripts/simulation/partition/partition_address.gd
+- scripts/simulation/partition/cube_sphere_grid.gd
+- config/partitions/moon_surface.json
+- config/partitions/earth_surface.json
+- config/planets/celestial_system.json schema v3
+- entity/registry/partition persistence schema migration
+- revisioned partition identity and cube_sphere_v1 storage migration
+- tests/unit/test_reference_frame_graph.gd
+- tests/unit/test_celestial_motion.gd
+- tests/unit/test_partition_address_v2.gd
+- tests/unit/test_cube_sphere_grid.gd
+- RUN_COORDINATE_FOUNDATION_TESTS.ps1
+- docs/architecture/REFERENCE_FRAMES_AND_DISTRIBUTED_SPACE_RU.md
+- docs/contracts/SPATIAL_REF_V1_RU.md
+- docs/contracts/PARTITION_ADDRESS_V2_RU.md
+- docs/contracts/ENTITY_STATE_V2_RU.md
+- docs/plans/V15_5_1_COORDINATE_FOUNDATION_PLAN_RU.md
+- docs/plans/V15_5_1_ACCEPTANCE_TESTS_RU.md
+- docs/diagnostics/V15_5_1_FIXED_VALIDATION_RU.md
+
+Multi-world simulator core v15.5:
+- main.tscn -> scripts/app/simulator_app.gd
+- config/worlds/catalog.json
+- scripts/core/command_registry.gd
+- scripts/core/runtime_test_registry.gd
+- scripts/core/world_catalog.gd
+- scripts/ui/developer_console.gd
+- scripts/app/earth_app.gd
+- scripts/world/testing/playground_runtime.gd
+- scenes/testing/playground.tscn
+- config/controllers/flat_humanoid.json
+- scripts/actors/controllers/flat_humanoid_controller.gd
+- scripts/actors/controllers/controller_profile_loader.gd
+- tests/core/test_command_registry.gd
+- tests/core/test_world_catalog.gd
+- tests/core/test_controller_profiles.gd
+- tests/runtime/test_world_boot_matrix.gd
+- RUN_WORLD_REGRESSION_TESTS.ps1
+- docs/architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md
+- docs/contracts/WORLD_RUNTIME_V1_RU.md
+- docs/plans/V15_5_ACCEPTANCE_TESTS_RU.md
+
 
 Unified runtime:
 - scripts/app/planetary_app.gd
@@ -11,7 +62,7 @@ Integrated capabilities:
 - one double-precision Earth-Moon simulation space
 - persistent survey beacons, navigation markers and first-person interaction
 - item, container and assembly relation domain
-- visual item laboratory available with F5
+- visual item laboratory available as world.load item_lab
 
 Architecture test additions:
 - independent real-scale Earth body: radius 6,371,000 m
@@ -24,7 +75,9 @@ Architecture test additions:
 - four procedural tree forms, three grass types and three rock variants
 - deterministic nonuniform placement with water/snow/slope/rock filters
 - MultiMesh vegetation and tiered geometry/billboard/removal LOD
-- Earth is lazily initialized with P and does not change lunar terrain code
+- Earth/Moon startup policy is selected by the world catalog without changing lunar terrain code
+- dedicated Earth runtime filters the celestial body catalog to Earth only
+- common display/input/world commands stay owned by SimulatorApp in every world
 
 Changed entrypoint:
 - main.tscn

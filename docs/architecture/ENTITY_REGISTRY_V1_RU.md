@@ -1,5 +1,8 @@
 # Entity Registry v1
 
+> **Legacy:** актуальное состояние описано контрактом `planet_simulator.entity.v2` в `docs/contracts/ENTITY_STATE_V2_RU.md`.
+
+
 ## Назначение
 
 Entity Registry связывает игровые сущности с логической сеткой зон и чанков.

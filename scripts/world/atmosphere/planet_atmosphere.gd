@@ -59,7 +59,16 @@ func setup(
 	return true
 
 
-func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float) -> Dictionary:
+func update_for_observer(
+	space_position: Vector3,
+	camera: Camera3D,
+	delta: float,
+	observer_frame_id: String = ""
+) -> Dictionary:
+	if observer_frame_id.is_empty():
+		observer_frame_id = celestial_system.get_root_frame_id()
+	var body_fixed_frame_id: String = celestial_system.get_body_fixed_frame_id(body_id)
+	basis = celestial_system.get_relative_basis(body_fixed_frame_id, observer_frame_id)
 	var body_local_position: Vector3 = celestial_system.to_body_local(space_position, body_id)
 	var direction := Vector3.UP
 	if body_local_position.length_squared() > 1.0:
@@ -94,10 +103,17 @@ func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float
 		"camera": camera,
 		"body_world": body_world,
 		"celestial_system": celestial_system,
+		"observer_frame_id": observer_frame_id,
+		"body_fixed_frame_id": body_fixed_frame_id,
 	}
 	for plugin in plugins:
 		if plugin != null and plugin.has_method("update_layer"):
 			plugin.update_layer(context, delta)
+	var observer_up: Vector3 = celestial_system.transform_direction(
+		direction,
+		body_fixed_frame_id,
+		observer_frame_id
+	).normalized()
 	last_state = {
 		"body_id": body_id,
 		"active": active,
@@ -106,7 +122,8 @@ func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float
 		"surface_height_m": surface_height_m,
 		# JSON-safe radial up vector. The environment layer uses it to align
 		# a sky material with the local horizon of this spherical body.
-		"local_up": [direction.x, direction.y, direction.z],
+		"local_up": [observer_up.x, observer_up.y, observer_up.z],
+		"observer_frame_id": observer_frame_id,
 	}
 	return last_state
 
