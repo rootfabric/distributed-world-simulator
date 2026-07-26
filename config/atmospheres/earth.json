@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.atmosphere.v1",
+  "id": "earth_atmosphere",
+  "body_id": "earth",
+  "enabled": true,
+  "bottom_altitude_m": -1000.0,
+  "top_altitude_m": 100000.0,
+  "full_effect_altitude_m": 18000.0,
+  "fade_start_altitude_m": 65000.0,
+  "environment": {
+    "surface_sky_top": [0.08, 0.32, 0.72, 1.0],
+    "surface_sky_horizon": [0.48, 0.72, 0.96, 1.0],
+    "surface_ground_horizon": [0.42, 0.61, 0.78, 1.0],
+    "surface_ground_bottom": [0.06, 0.10, 0.16, 1.0],
+    "upper_sky_top": [0.004, 0.018, 0.065, 1.0],
+    "upper_sky_horizon": [0.06, 0.18, 0.36, 1.0],
+    "space_color": [0.00015, 0.00018, 0.00035, 1.0],
+    "ambient_surface_color": [0.49, 0.62, 0.78, 1.0],
+    "ambient_surface_energy": 0.72,
+    "ambient_space_energy": 0.34,
+    "sky_energy_surface": 1.0,
+    "sky_energy_upper": 0.20
+  },
+  "fog": {
+    "enabled": true,
+    "maximum_altitude_m": 24000.0,
+    "surface_density": 0.000035,
+    "density_exponent": 1.65,
+    "light_color": [0.62, 0.76, 0.94, 1.0],
+    "light_energy": 0.72,
+    "sky_affect": 0.28
+  },
+  "plugins": [
+    {
+      "id": "earth_low_clouds",
+      "enabled": true,
+      "script": "res://scripts/world/atmosphere/plugins/cloud_layer_plugin.gd",
+      "config": "res://config/atmosphere_plugins/earth_low_clouds.json"
+    }
+  ]
+}

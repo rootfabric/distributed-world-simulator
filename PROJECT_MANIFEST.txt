@@ -1,50 +1,71 @@
-Real Scale Procedural Moon v15.3 — First-person World Interaction
+Real Scale Procedural Moon v15.2 + Procedural Earth Architecture Test
 
-Core changes:
-- central first-person physics ray with a 6 m interaction distance
-- reusable world_interactable contract
-- focus descriptor, HUD card and material-overlay outline
-- E toggles the Survey Beacon signal
-- beacon_state and landmark.enabled are persisted per chunk
-- component changes are appended to the world journal
-- inactive beacon markers and terrain cache pins are disabled
-- distant landmark font reduced from 56 to 11 and outline from 12 to 2
-- existing v15.2 recent/pinned surface cache remains intact
+Architecture test additions:
+- independent real-scale Earth body: radius 6,371,000 m
+- Moon remains at radius 1,737,400 m and keeps the original v15.2 implementation
+- real simulation-space Earth-Moon center distance: 384,400,000 m
+- floating-origin Earth view and angular-size Earth proxy from the Moon
+- validated procedural rule pipeline: relief -> hydrology -> climate -> biome -> surface
+- explicit requires/writes ownership prevents hidden rule conflicts
+- forest, grassland, rocky desert, tundra, alpine snow, ocean, rivers and lakes
+- four procedural tree forms, three grass types and three rock variants
+- deterministic nonuniform placement with water/snow/slope/rock filters
+- MultiMesh vegetation and tiered geometry/billboard/removal LOD
+- Earth is lazily initialized with P and does not change lunar terrain code
 
-Streaming and cache retained from v15.2:
-- in-memory LRU cache of ready LOCAL terrain resources
-- 8 recent cells plus up to 8 additional pinned beacon cells
-- early pinned-cell return trigger at 1800 m with approach-direction guard
-- cache hit can preempt a stale background generation job
-- cached ArrayMesh, collision Shape3D and rock MultiMesh resources are reused
-- sparse persistent landmark index at user://worlds/<world_id>/landmarks.json
+Changed entrypoint:
+- main.tscn
 
-Important files:
-- config/terrain_streaming.json
-- config/navigation_markers.json
-- scripts/world/terrain/streaming/terrain_streaming_manager.gd
-- scripts/world/terrain/procedural_moon_terrain.gd
-- scripts/interaction/world_interactor.gd
-- scripts/interaction/survey_beacon_interactable.gd
-- scripts/persistence/lunar_world_repository.gd
-- scripts/app/lunar_app.gd
-- scripts/ui/lunar_hud.gd
-- tests/integration/test_first_person_interaction.gd
-- tests/support/mock_interaction_repository.gd
-- RUN_INTERACTION_TEST.ps1
-- docs/architecture/FIRST_PERSON_INTERACTION_V1_RU.md
-- docs/plans/V15_3_ACCEPTANCE_TESTS_RU.md
+New configuration:
+- config/planets/celestial_system.json
+- config/planets/earth.json
+- config/generation/earth_rules.json
+- config/generation/earth_vegetation.json
+- config/generation/earth_lod.json
 
-Diagnostics:
-- user://logs/terrain_performance.jsonl
-- terrain_surface_cached
-- terrain_surface_cache_hit
-- terrain_surface_cache_miss
-- terrain_surface_cache_evicted
-- terrain_pinned_cache_return_triggered
-- terrain_cached_surface_activated
-- startup project_version=15.3
-- build_id=first-person-world-interaction
-- interaction/interaction_performed
-- persistence/survey_beacon_signal_toggled
-- journal operation=entity_component_changed
+New runtime modules:
+- scripts/app/planetary_architecture_test_app.gd
+- scripts/world/planetary/celestial_system.gd
+- scripts/world/planetary/earth_rule_pipeline.gd
+- scripts/world/planetary/rules/*.gd
+- scripts/world/earth/procedural_earth_world.gd
+- scripts/world/earth/earth_asset_library.gd
+- scripts/world/vegetation/earth_placement_system.gd
+- scripts/actors/earth/earth_explorer.gd
+- scripts/ui/planetary_test_overlay.gd
+
+Validation and documentation:
+- tests/unit/test_earth_generation_pipeline.gd
+- RUN_EARTH_ARCHITECTURE_TEST.ps1
+- docs/architecture/PROCEDURAL_EARTH_RULE_PIPELINE_RU.md
+- docs/plans/EARTH_MOON_ARCHITECTURE_TEST_RU.md
+
+Original Moon v15.2 features retained:
+- asynchronous terrain streaming
+- recent local surface cache
+- pinned landmark cells
+- persistent landmark index
+- distant navigation markers
+- entity registry, persistence, controllers and diagnostics
+
+Atmosphere layer v1 additions:
+- per-body atmosphere_config reference in celestial_system.json
+- independent PlanetAtmosphere volume, selected by AtmosphereManager
+- altitude-dependent procedural Earth sky and low-altitude fog
+- original lunar space environment restored outside Earth atmosphere
+- plugin contract for clouds, aurora, storms, dust and future phenomena
+- Earth low cloud plugin at 4,000 m using one procedural MultiMesh layer
+- cloud visibility restricted to local/regional atmospheric observation
+- atmosphere runtime state included in F9 diagnostics
+
+New atmosphere files:
+- config/atmospheres/earth.json
+- config/atmosphere_plugins/earth_low_clouds.json
+- scripts/world/atmosphere/atmosphere_manager.gd
+- scripts/world/atmosphere/planet_atmosphere.gd
+- scripts/world/atmosphere/atmosphere_plugin_base.gd
+- scripts/world/atmosphere/plugins/cloud_layer_plugin.gd
+- tests/unit/test_atmosphere_layer.gd
+- RUN_ATMOSPHERE_ARCHITECTURE_TEST.ps1
+- docs/architecture/ATMOSPHERE_LAYER_V1_RU.md
+- docs/plans/ATMOSPHERE_LAYER_V1_PLAN_RU.md

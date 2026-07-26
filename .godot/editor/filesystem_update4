@@ -1,0 +1,17 @@
+res://PROJECT_MANIFEST.txt
+res://README_RU.md
+res://scripts/actors/earth/earth_explorer.gd
+res://scripts/app/planetary_architecture_test_app.gd
+res://scripts/ui/planetary_test_overlay.gd
+res://scripts/world/earth/earth_asset_library.gd
+res://scripts/world/earth/procedural_earth_world.gd
+res://scripts/world/planetary/celestial_system.gd
+res://scripts/world/planetary/earth_rule_pipeline.gd
+res://scripts/world/planetary/rules/biome_rule.gd
+res://scripts/world/planetary/rules/climate_rule.gd
+res://scripts/world/planetary/rules/continental_relief_rule.gd
+res://scripts/world/planetary/rules/earth_rule_base.gd
+res://scripts/world/planetary/rules/hydrology_rule.gd
+res://scripts/world/planetary/rules/surface_composer_rule.gd
+res://scripts/world/vegetation/earth_placement_system.gd
+res://tests/unit/test_earth_generation_pipeline.gd

@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.earth_placement.v1",
+  "seed": 20260726,
+  "placement_radius_m": 9200.0,
+  "near_tree_radius_m": 3600.0,
+  "billboard_tree_radius_m": 9200.0,
+  "grass_radius_m": 1250.0,
+  "rock_radius_m": 5400.0,
+  "max_near_trees": 1600,
+  "max_billboard_trees": 5200,
+  "max_grass_instances": 14000,
+  "max_rocks": 2300,
+  "maximum_tree_slope_deg": 31.0,
+  "maximum_grass_slope_deg": 38.0,
+  "snow_tree_cutoff": 0.22,
+  "tree_types": [
+    {
+      "id": "conifer",
+      "weight": 0.34,
+      "min_scale": 0.72,
+      "max_scale": 1.42
+    },
+    {
+      "id": "broadleaf",
+      "weight": 0.38,
+      "min_scale": 0.68,
+      "max_scale": 1.35
+    },
+    {
+      "id": "columnar",
+      "weight": 0.18,
+      "min_scale": 0.75,
+      "max_scale": 1.55
+    },
+    {
+      "id": "small_broadleaf",
+      "weight": 0.1,
+      "min_scale": 0.55,
+      "max_scale": 1.05
+    }
+  ],
+  "grass_types": [
+    {
+      "id": "short",
+      "weight": 0.48,
+      "min_scale": 0.65,
+      "max_scale": 1.25
+    },
+    {
+      "id": "meadow",
+      "weight": 0.34,
+      "min_scale": 0.75,
+      "max_scale": 1.55
+    },
+    {
+      "id": "coarse",
+      "weight": 0.18,
+      "min_scale": 0.8,
+      "max_scale": 1.7
+    }
+  ]
+}

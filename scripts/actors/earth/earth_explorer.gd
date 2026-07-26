@@ -1,0 +1,244 @@
+extends Node3D
+
+const MOUSE_SENSITIVITY: float = 0.00110
+const ROLL_SPEED: float = 1.35
+const MIN_SPEED: float = 1.0
+const MAX_SPEED: float = 250_000_000.0
+const SPACE_CAMERA_FAR_M: float = 900_000_000.0
+
+var earth_world
+var celestial_system
+var moon_world
+var camera: Camera3D
+var active: bool = false
+var movement_speed: float = 900.0
+var orientation := Basis.IDENTITY
+# Absolute double-precision position in the shared Earth-Moon coordinate frame.
+var world_position: Vector3 = Vector3.ZERO
+
+
+func setup(
+	earth_reference,
+	celestial_reference = null,
+	moon_reference = null
+) -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	earth_world = earth_reference
+	celestial_system = celestial_reference
+	moon_world = moon_reference
+	camera = Camera3D.new()
+	camera.name = "SharedSpaceSpectatorCamera"
+	camera.current = false
+	camera.near = 0.20
+	camera.far = SPACE_CAMERA_FAR_M
+	camera.fov = 72.0
+	add_child(camera)
+	set_process(false)
+	set_process_unhandled_input(false)
+
+
+func activate(direction: Vector3) -> void:
+	active = true
+	teleport_to_direction(direction, 450.0)
+	camera.current = true
+	set_process(true)
+	set_process_unhandled_input(true)
+	_update_camera_clipping()
+
+
+func activate_at_space_position(
+	space_position: Vector3,
+	basis_value: Basis = Basis.IDENTITY
+) -> void:
+	active = true
+	world_position = space_position
+	orientation = basis_value.orthonormalized()
+	global_transform = Transform3D(orientation, Vector3.ZERO)
+	camera.current = true
+	set_process(true)
+	set_process_unhandled_input(true)
+	_update_camera_clipping()
+
+
+func deactivate() -> void:
+	active = false
+	camera.current = false
+	set_process(false)
+	set_process_unhandled_input(false)
+
+
+func teleport_to_direction(direction_value: Vector3, altitude_m: float = 450.0) -> void:
+	teleport_to_body_surface("earth", direction_value, altitude_m)
+
+
+func teleport_to_body_surface(
+	body_id: String,
+	direction_value: Vector3,
+	altitude_m: float = 450.0
+) -> void:
+	if celestial_system == null:
+		return
+	var direction: Vector3 = direction_value.normalized()
+	var body_local_surface: Vector3
+	if body_id == "earth" and earth_world != null:
+		earth_world.prepare_surface_region(direction, false)
+		body_local_surface = earth_world.get_surface_point(direction)
+	elif body_id == "moon" and moon_world != null:
+		moon_world.prepare_surface_region(direction, false)
+		body_local_surface = moon_world.get_surface_point(direction)
+	else:
+		body_local_surface = direction * celestial_system.get_body_radius(body_id)
+	world_position = (
+		celestial_system.get_body_center(body_id)
+		+ body_local_surface
+		+ direction * altitude_m
+	)
+	orientation = _surface_orientation(direction)
+	global_transform = Transform3D(orientation, Vector3.ZERO)
+	_update_camera_clipping()
+
+
+func _process(delta: float) -> void:
+	if not active:
+		return
+	var input_vector := Input.get_vector(
+		"move_left",
+		"move_right",
+		"move_forward",
+		"move_back"
+	)
+	var vertical: float = (
+		Input.get_action_strength("move_up")
+		- Input.get_action_strength("move_down")
+	)
+	var direction := (
+		orientation.x * input_vector.x
+		+ (-orientation.z) * -input_vector.y
+		+ orientation.y * vertical
+	)
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
+	var actual_speed: float = movement_speed
+	if Input.is_action_pressed("boost"):
+		actual_speed *= 12.0
+	world_position += direction * actual_speed * delta
+
+	var roll_input: float = (
+		Input.get_action_strength("roll_right")
+		- Input.get_action_strength("roll_left")
+	)
+	if absf(roll_input) > 0.001:
+		var forward_axis: Vector3 = (-orientation.z).normalized()
+		orientation = (
+			Basis(forward_axis, -roll_input * ROLL_SPEED * delta)
+			* orientation
+		).orthonormalized()
+	if Input.is_action_just_pressed("level_horizon"):
+		level_to_horizon()
+	global_transform = Transform3D(orientation, Vector3.ZERO)
+	_update_camera_clipping()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not active:
+		return
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var yaw_delta: float = -event.relative.x * MOUSE_SENSITIVITY
+		var pitch_delta: float = -event.relative.y * MOUSE_SENSITIVITY
+		orientation = Basis(orientation.y.normalized(), yaw_delta) * orientation
+		orientation = Basis(orientation.x.normalized(), pitch_delta) * orientation
+		orientation = orientation.orthonormalized()
+		global_transform = Transform3D(orientation, Vector3.ZERO)
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			movement_speed = clampf(movement_speed * 2.0, MIN_SPEED, MAX_SPEED)
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			movement_speed = clampf(movement_speed * 0.5, MIN_SPEED, MAX_SPEED)
+			get_viewport().set_input_as_handled()
+
+
+func level_to_horizon() -> void:
+	if celestial_system == null:
+		return
+	var nearest_body_id: String = get_nearest_body_id()
+	if nearest_body_id.is_empty():
+		return
+	var radial: Vector3 = world_position - celestial_system.get_body_center(nearest_body_id)
+	if radial.length_squared() < 1.0:
+		return
+	var radial_up: Vector3 = radial.normalized()
+	var forward: Vector3 = (-orientation.z).normalized()
+	var right: Vector3 = forward.cross(radial_up)
+	if right.length_squared() < 0.000001:
+		right = orientation.x.slide(forward)
+	if right.length_squared() < 0.000001:
+		return
+	right = right.normalized()
+	var corrected_up: Vector3 = right.cross(forward).normalized()
+	orientation = Basis(right, corrected_up, -forward).orthonormalized()
+
+
+func look_at_body(body_id: String) -> void:
+	if celestial_system == null:
+		return
+	var forward: Vector3 = celestial_system.get_body_center(body_id) - world_position
+	if forward.length_squared() < 1.0:
+		return
+	forward = forward.normalized()
+	var up_hint: Vector3 = orientation.y.normalized()
+	var right: Vector3 = forward.cross(up_hint)
+	if right.length_squared() < 0.000001:
+		right = forward.cross(Vector3.UP)
+	if right.length_squared() < 0.000001:
+		right = forward.cross(Vector3.RIGHT)
+	right = right.normalized()
+	var corrected_up: Vector3 = right.cross(forward).normalized()
+	orientation = Basis(right, corrected_up, -forward).orthonormalized()
+	global_transform = Transform3D(orientation, Vector3.ZERO)
+
+
+func _surface_orientation(direction: Vector3) -> Basis:
+	var east: Vector3 = Vector3.UP.cross(direction)
+	if east.length_squared() < 0.000001:
+		east = Vector3.RIGHT.cross(direction)
+	east = east.normalized()
+	var forward: Vector3 = direction.cross(east).normalized()
+	return Basis(east, direction, -forward).orthonormalized()
+
+
+func _update_camera_clipping() -> void:
+	if camera == null:
+		return
+	var nearest_surface_distance: float = INF
+	if celestial_system != null:
+		for body_id in celestial_system.get_body_ids():
+			nearest_surface_distance = minf(
+				nearest_surface_distance,
+				absf(celestial_system.get_surface_distance(body_id, world_position))
+			)
+	if nearest_surface_distance < 10_000.0:
+		camera.near = 0.18
+	elif nearest_surface_distance < 1_000_000.0:
+		camera.near = clampf(nearest_surface_distance * 0.00012, 0.5, 120.0)
+	else:
+		camera.near = clampf(nearest_surface_distance * 0.00002, 120.0, 20_000.0)
+	camera.far = SPACE_CAMERA_FAR_M
+
+
+func get_nearest_body_id() -> String:
+	if celestial_system == null:
+		return ""
+	return celestial_system.get_nearest_body_id(world_position)
+
+
+func get_world_position() -> Vector3:
+	return world_position
+
+
+func get_movement_speed() -> float:
+	return movement_speed
+
+
+func get_camera() -> Camera3D:
+	return camera

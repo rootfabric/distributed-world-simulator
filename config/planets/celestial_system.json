@@ -1,0 +1,40 @@
+{
+  "schema": "planet_simulator.celestial_system.v2",
+  "distance_model": "double_precision_absolute_meters",
+  "simulation_model": "single_shared_absolute_space",
+  "render_model": "per_body_floating_origin_with_proxy_fallback",
+  "space_domain": {
+    "id": "earth-moon-local-test",
+    "authority": "in_process",
+    "future_partition_strategy": "body_sphere_of_influence_with_hysteresis"
+  },
+  "bodies": [
+    {
+      "id": "moon",
+      "display_name": "Moon",
+      "radius_m": 1737400.0,
+      "gravity_mps2": 1.62,
+      "absolute_center_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "future_partition_id": "space/moon"
+    },
+    {
+      "id": "earth",
+      "display_name": "Earth",
+      "radius_m": 6371000.0,
+      "gravity_mps2": 9.80665,
+      "absolute_center_m": [
+        384400000.0,
+        0.0,
+        0.0
+      ],
+      "future_partition_id": "space/earth",
+      "atmosphere_config": "res://config/atmospheres/earth.json"
+    }
+  ],
+  "earth_moon_center_distance_m": 384400000.0,
+  "proxy_render_distance_m": 500000.0
+}

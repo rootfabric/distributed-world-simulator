@@ -2,6 +2,8 @@
 
 ## Архитектура
 
+- `architecture/PROCEDURAL_EARTH_RULE_PIPELINE_RU.md`
+
 - `architecture/TARGET_ARCHITECTURE_RU.md`
 - `architecture/PROJECT_STRUCTURE_RU.md`
 - `architecture/ZONES_AND_CHUNKS_RU.md`
@@ -11,7 +13,6 @@
 - `architecture/ASYNC_TERRAIN_STREAMING_V1_RU.md`
 - `architecture/RECENT_SURFACE_CACHE_V1_RU.md`
 - `architecture/LANDMARK_MARKERS_V1_RU.md`
-- `architecture/FIRST_PERSON_INTERACTION_V1_RU.md`
 - `architecture/adr/`
 
 ## Контракты
@@ -31,6 +32,8 @@
 
 ## Планы и приёмка
 
+- `plans/EARTH_MOON_ARCHITECTURE_TEST_RU.md`
+
 - `plans/ROADMAP_RU.md`
 - `plans/NEXT_ITERATIONS_RU.md`
 - `plans/V11_ACCEPTANCE_TESTS_RU.md`
@@ -40,7 +43,6 @@
 - `plans/V15_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_1_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_2_ACCEPTANCE_TESTS_RU.md`
-- `plans/V15_3_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 
