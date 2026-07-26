@@ -32,7 +32,11 @@ var camera_pitch_max: float = deg_to_rad(72.0)
 var default_camera_pitch: float = deg_to_rad(-8.0)
 
 
-func setup(moon_reference, logger_reference = null) -> void:
+func setup(
+	moon_reference,
+	logger_reference = null,
+	default_controller_id: String = "lunar_humanoid"
+) -> void:
 	moon_world = moon_reference
 	logger = logger_reference
 	collision_layer = 2
@@ -60,7 +64,7 @@ func setup(moon_reference, logger_reference = null) -> void:
 	controller_host.name = "ControllerHost"
 	add_child(controller_host)
 	controller_host.controller_changed.connect(_on_controller_changed)
-	controller_host.setup(self, moon_world, logger)
+	controller_host.setup(self, moon_world, logger, default_controller_id)
 	_update_camera_rotation()
 	set_camera_mode(camera_mode)
 

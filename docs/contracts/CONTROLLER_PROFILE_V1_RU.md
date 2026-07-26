@@ -3,14 +3,14 @@
 Схема:
 
 ```text
-lunar.controller_profile.v1
+planet_simulator.controller_profile.v1
 ```
 
 Пример:
 
 ```json
 {
-  "schema": "lunar.controller_profile.v1",
+  "schema": "planet_simulator.controller_profile.v1",
   "profile_id": "lunar_humanoid",
   "display_name": "Lunar EVA Humanoid",
   "controller_script": "res://scripts/actors/controllers/planetary_humanoid_controller.gd",
@@ -36,6 +36,15 @@ lunar.controller_profile.v1
 config/controllers/lunar_humanoid.json
 config/controllers/lunar_jetpack.json
 config/controllers/earth_humanoid.json
+config/controllers/flat_humanoid.json
 ```
 
 JSON-конфигурация является частью проекта и редактируется без изменения контроллера. Runtime-настройки пользователя позже следует сохранять отдельно в `user://`, не изменяя базовый профиль.
+
+
+## Совместимость
+
+Встроенные профили переведены на общее имя схемы симулятора. Loader временно
+принимает legacy-схему `lunar.controller_profile.v1`, чтобы старые world packs
+и сохранённые конфигурации не перестали загружаться одномоментно. Новые профили
+обязаны использовать `planet_simulator.controller_profile.v1`.

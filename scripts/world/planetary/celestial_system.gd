@@ -8,14 +8,22 @@ var earth_proxy: MeshInstance3D
 var initialized: bool = false
 
 
-func setup() -> bool:
+func setup(body_filter: Array[String] = []) -> bool:
 	config = _load_json(CONFIG_PATH)
 	if config.is_empty():
 		return false
+	bodies.clear()
 	for body_value in config.get("bodies", []):
-		if body_value is Dictionary:
-			bodies[String(body_value.get("id", "unknown"))] = body_value
-	_create_earth_proxy()
+		if not body_value is Dictionary:
+			continue
+		var body_id: String = String(body_value.get("id", "unknown"))
+		if not body_filter.is_empty() and not body_filter.has(body_id):
+			continue
+		bodies[body_id] = body_value
+	if bodies.is_empty():
+		return false
+	if bodies.has("earth") and bodies.has("moon"):
+		_create_earth_proxy()
 	initialized = true
 	return true
 
@@ -100,7 +108,11 @@ func create_snapshot() -> Dictionary:
 		"schema": "planet_simulator.celestial_system_runtime.v1",
 		"distance_model": config.get("distance_model", "unknown"),
 		"render_model": config.get("render_model", "unknown"),
-		"earth_moon_distance_m": get_distance_between("earth", "moon"),
+		"earth_moon_distance_m": (
+			get_distance_between("earth", "moon")
+			if bodies.has("earth") and bodies.has("moon")
+			else 0.0
+		),
 		"body_ids": bodies.keys(),
 		"atmosphere_bodies": _get_atmosphere_body_ids(),
 	}

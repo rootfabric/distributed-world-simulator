@@ -1,0 +1,7 @@
+res://README_RU.md
+res://scripts/app/lunar_app.gd
+res://scripts/app/planetary_app.gd
+res://scripts/app/simulator_app.gd
+res://scripts/ui/lunar_hud.gd
+res://scripts/world/testing/playground_runtime.gd
+res://tests/integration/test_unified_runtime_boot.gd

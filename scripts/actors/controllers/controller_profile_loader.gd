@@ -1,6 +1,8 @@
 extends RefCounted
 
-const PROFILE_SCHEMA: String = "lunar.controller_profile.v1"
+const PROFILE_SCHEMA: String = "planet_simulator.controller_profile.v1"
+const LEGACY_PROFILE_SCHEMA: String = "lunar.controller_profile.v1"
+const SUPPORTED_PROFILE_SCHEMAS := [PROFILE_SCHEMA, LEGACY_PROFILE_SCHEMA]
 
 
 static func load_profile(path: String) -> Dictionary:
@@ -20,8 +22,9 @@ static func load_profile(path: String) -> Dictionary:
 
 static func validate_profile(profile: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	if String(profile.get("schema", "")) != PROFILE_SCHEMA:
-		errors.append("Unexpected controller profile schema.")
+	var schema: String = String(profile.get("schema", ""))
+	if not SUPPORTED_PROFILE_SCHEMAS.has(schema):
+		errors.append("Unexpected controller profile schema: %s" % schema)
 	if String(profile.get("profile_id", "")).is_empty():
 		errors.append("profile_id is required.")
 	if String(profile.get("controller_script", "")).is_empty():

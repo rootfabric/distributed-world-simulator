@@ -1,6 +1,8 @@
-# Документация Lunar Simulator
+# Документация Planet Simulator
 
 ## Архитектура
+
+- `architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`
 
 - `architecture/PROCEDURAL_EARTH_RULE_PIPELINE_RU.md`
 
@@ -14,6 +16,8 @@
 - `architecture/adr/`
 
 ## Контракты
+
+- `contracts/WORLD_RUNTIME_V1_RU.md`
 
 - `contracts/PARTITION_SNAPSHOT_V1_RU.md`
 - `contracts/WORLD_MANIFEST_V1_RU.md`
@@ -37,6 +41,7 @@
 - `plans/V13_ACCEPTANCE_TESTS_RU.md`
 - `plans/V14_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_ACCEPTANCE_TESTS_RU.md`
+- `plans/V15_5_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 

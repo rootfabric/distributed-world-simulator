@@ -9,6 +9,7 @@ const PROFILE_PATHS := {
 	"lunar_humanoid": "res://config/controllers/lunar_humanoid.json",
 	"lunar_jetpack": "res://config/controllers/lunar_jetpack.json",
 	"earth_humanoid": "res://config/controllers/earth_humanoid.json",
+	"flat_humanoid": "res://config/controllers/flat_humanoid.json",
 }
 
 var actor
@@ -20,12 +21,18 @@ var current_profile_id: String = ""
 var enabled: bool = true
 
 
-func setup(actor_reference, world_reference, logger_reference = null) -> void:
+func setup(
+	actor_reference,
+	world_reference,
+	logger_reference = null,
+	default_profile_id: String = "lunar_humanoid"
+) -> void:
 	actor = actor_reference
 	world = world_reference
 	logger = logger_reference
 	_load_profiles()
-	activate_controller("lunar_humanoid", false)
+	if not activate_controller(default_profile_id, false):
+		activate_controller("lunar_humanoid", false)
 
 
 func _load_profiles() -> void:
@@ -50,13 +57,32 @@ func activate_controller(profile_id: String, preserve_camera_mode: bool = true) 
 	var profile: Dictionary = profiles[profile_id]
 	var controller_script_path: String = String(profile.get("controller_script", ""))
 	var controller_script = load(controller_script_path)
-	if controller_script == null:
+	if (
+		controller_script == null
+		or not controller_script is Script
+		or not controller_script.can_instantiate()
+	):
 		return false
+	var candidate = controller_script.new()
+	if not candidate is Node:
+		return false
+	for required_method in [
+		"setup",
+		"set_enabled",
+		"physics_step",
+		"handle_input",
+		"on_activated",
+		"on_deactivated",
+		"get_display_name",
+	]:
+		if not candidate.has_method(String(required_method)):
+			candidate.free()
+			return false
 	var previous_id: String = current_profile_id
 	if current_controller != null:
 		current_controller.on_deactivated()
 		current_controller.queue_free()
-	current_controller = controller_script.new()
+	current_controller = candidate
 	current_controller.name = "MovementController_%s" % profile_id
 	add_child(current_controller)
 	current_controller.setup(actor, world, profile, logger)
@@ -117,7 +143,7 @@ func get_profile(profile_id: String) -> Dictionary:
 
 func create_snapshot() -> Dictionary:
 	return {
-		"schema": "lunar.controller_host.v1",
+		"schema": "planet_simulator.controller_host.v1",
 		"current_profile_id": current_profile_id,
 		"display_name": get_current_display_name(),
 		"enabled": enabled,

@@ -35,6 +35,17 @@ var last_action_result: Dictionary = {
 	"success": true,
 	"message": "Лаборатория готова",
 }
+var simulator_app
+var runtime_command_registry
+var runtime_test_registry
+var runtime_world_definition: Dictionary = {}
+
+
+func configure_runtime(context: Dictionary) -> void:
+	simulator_app = context.get("simulator_app")
+	runtime_command_registry = context.get("command_registry")
+	runtime_test_registry = context.get("test_registry")
+	runtime_world_definition = context.get("world_definition", {}).duplicate(true)
 
 
 func _ready() -> void:
@@ -45,6 +56,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if simulator_app != null:
+		return
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
 	match event.physical_keycode:
@@ -174,6 +187,9 @@ func get_debug_snapshot() -> Dictionary:
 
 
 func return_to_main() -> void:
+	if simulator_app != null and simulator_app.has_method("execute_command"):
+		simulator_app.execute_command("world.back")
+		return
 	get_tree().change_scene_to_file(MAIN_SCENE_PATH)
 
 
@@ -512,7 +528,7 @@ func _build_ui() -> void:
 	margin.add_child(vertical)
 
 	var title = Label.new()
-	title.text = "ЛАБОРАТОРИЯ ПРЕДМЕТОВ v15.4.1"
+	title.text = "ЛАБОРАТОРИЯ ПРЕДМЕТОВ v15.5"
 	title.add_theme_font_size_override("font_size", 22)
 	vertical.add_child(title)
 
@@ -542,42 +558,42 @@ func _build_ui() -> void:
 
 	_add_action_button(
 		grid,
-		"1. Подобрать камень",
+		"Подобрать камень",
 		"pickup_rock"
 	)
 	_add_action_button(
 		grid,
-		"2. Выбросить камень",
+		"Выбросить камень",
 		"drop_rock"
 	)
 	_add_action_button(
 		grid,
-		"3. Подобрать ящик",
+		"Подобрать ящик",
 		"pickup_crate"
 	)
 	_add_action_button(
 		grid,
-		"4. Выбросить ящик",
+		"Выбросить ящик",
 		"drop_crate"
 	)
 	_add_action_button(
 		grid,
-		"5. Подобрать лидар",
+		"Подобрать лидар",
 		"pickup_lidar"
 	)
 	_add_action_button(
 		grid,
-		"6. Поставить лидар",
+		"Поставить лидар",
 		"attach_lidar"
 	)
 	_add_action_button(
 		grid,
-		"7. Снять лидар",
+		"Снять лидар",
 		"detach_lidar"
 	)
 	_add_action_button(
 		grid,
-		"T. Проверить граф",
+		"Проверить граф",
 		"validate"
 	)
 
@@ -609,7 +625,7 @@ func _build_ui() -> void:
 
 	var return_button = Button.new()
 	return_button.text = (
-		"Вернуться в основной мир (F5 / Esc)"
+		"Вернуться в предыдущий мир"
 	)
 	return_button.pressed.connect(return_to_main)
 	vertical.add_child(return_button)
@@ -629,6 +645,9 @@ func _add_action_button(
 
 
 func _on_action_button_pressed(action_id: String) -> void:
+	if simulator_app != null and simulator_app.has_method("execute_command"):
+		simulator_app.execute_command("item.action %s" % action_id)
+		return
 	run_lab_action(action_id)
 
 
@@ -762,3 +781,156 @@ func _world_item_has_albedo_texture(
 			):
 				return true
 	return false
+
+
+func register_runtime_commands(registry, owner_id: String) -> void:
+	_register_lab_command(registry, owner_id, {
+		"id": "item.action",
+		"description": "Выполнить действие лаборатории по идентификатору.",
+		"usage": "item.action <pickup_rock|drop_rock|pickup_crate|drop_crate|pickup_lidar|attach_lidar|detach_lidar|validate>",
+		"category": "items",
+	}, Callable(self, "_command_item_action"))
+	for action_definition in [
+		["item.rock.pickup", "pickup_rock", "Поместить лунный камень в рюкзак."],
+		["item.rock.drop", "drop_rock", "Вернуть лунный камень в физический мир."],
+		["item.crate.pickup", "pickup_crate", "Поместить заполненный ящик в рюкзак."],
+		["item.crate.drop", "drop_crate", "Вернуть заполненный ящик в физический мир."],
+		["item.lidar.pickup", "pickup_lidar", "Поместить лидар в рюкзак."],
+		["item.lidar.attach", "attach_lidar", "Закрепить лидар на сокете ровера."],
+		["item.lidar.detach", "detach_lidar", "Снять лидар обратно в рюкзак."],
+		["item.graph.validate", "validate", "Проверить граф отношений предметов."],
+	]:
+		_register_lab_command(registry, owner_id, {
+			"id": String(action_definition[0]),
+			"description": String(action_definition[2]),
+			"usage": String(action_definition[0]),
+			"category": "items",
+		}, Callable(self, "_command_bound_action").bind(String(action_definition[1])))
+	_register_lab_command(registry, owner_id, {
+		"id": "item.lab.reset",
+		"description": "Пересоздать предметный домен лаборатории.",
+		"usage": "item.lab.reset",
+		"category": "items",
+	}, Callable(self, "_command_reset_lab"))
+
+
+func register_runtime_tests(registry, owner_id: String) -> void:
+	registry.register_test({
+		"id": "world.item_lab.boot",
+		"description": "Лаборатория создала предметный домен и физические представления.",
+		"category": "world",
+	}, Callable(self, "_test_lab_boot"), owner_id)
+	registry.register_test({
+		"id": "world.item_lab.relations",
+		"description": "Граф предметных отношений валиден после полного цикла действий.",
+		"category": "world",
+	}, Callable(self, "_test_lab_relations"), owner_id)
+
+
+func create_runtime_snapshot() -> Dictionary:
+	return {
+		"schema": "planet_simulator.item_lab_runtime.v1",
+		"world_id": String(runtime_world_definition.get("id", "item_lab")),
+		"last_action_result": last_action_result.duplicate(true),
+		"items": get_debug_snapshot(),
+	}
+
+
+func set_runtime_mouse_capture(captured: bool) -> void:
+	Input.mouse_mode = (
+		Input.MOUSE_MODE_CAPTURED if captured else Input.MOUSE_MODE_VISIBLE
+	)
+
+
+func prepare_for_unload() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _command_item_action(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty():
+		return {
+			"success": false,
+			"output": "Использование: item.action <action_id>",
+		}
+	var result: Dictionary = run_lab_action(arguments[0])
+	result["output"] = String(last_action_result.get("message", "Действие завершено"))
+	return result
+
+
+func _command_bound_action(arguments: Array[String], action_id: String) -> Dictionary:
+	var result: Dictionary = run_lab_action(action_id)
+	result["output"] = String(last_action_result.get("message", action_id))
+	return result
+
+func _command_reset_lab(_arguments: Array[String]) -> Dictionary:
+	_reset_lab_state()
+	return {"success": true, "output": "Лаборатория пересоздана"}
+
+
+func _reset_lab_state() -> void:
+	if presenter != null and is_instance_valid(presenter):
+		presenter.free()
+	for child in $WorldItems.get_children():
+		child.free()
+	operation_counter = 1
+	last_action_result = {
+		"success": true,
+		"message": "Лаборатория готова",
+	}
+	_build_domain()
+	if status_label != null:
+		_refresh()
+
+
+func _test_lab_boot() -> Dictionary:
+	_reset_lab_state()
+	var snapshot: Dictionary = get_debug_snapshot()
+	var passed: bool = (
+		domain is Dictionary
+		and not domain.is_empty()
+		and bool(snapshot.get("graph_valid", false))
+		and bool(snapshot.get("rock_world_body", false))
+		and bool(snapshot.get("crate_world_body", false))
+	)
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: item lab boot" if passed else "FAIL: item lab boot",
+	}
+
+
+func _test_lab_relations() -> Dictionary:
+	_reset_lab_state()
+	var initial_snapshot: Dictionary = get_debug_snapshot()
+	var pickup_result: Dictionary = run_lab_action("pickup_lidar")
+	var attach_result: Dictionary = run_lab_action("attach_lidar")
+	var detach_result: Dictionary = run_lab_action("detach_lidar")
+	var validation: Dictionary = run_lab_action("validate")
+	var final_snapshot: Dictionary = get_debug_snapshot()
+	var passed: bool = (
+		bool(initial_snapshot.get("graph_valid", false))
+		and bool(pickup_result.get("success", false))
+		and bool(attach_result.get("success", false))
+		and bool(detach_result.get("success", false))
+		and bool(validation.get("success", false))
+		and bool(final_snapshot.get("graph_valid", false))
+	)
+	var output: String = (
+		"PASS: item relations cycle" if passed else "FAIL: item relations cycle"
+	)
+	_reset_lab_state()
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": output,
+	}
+
+
+func _register_lab_command(
+	registry,
+	owner_id: String,
+	definition: Dictionary,
+	callback: Callable
+) -> void:
+	if not registry.register_command(definition, callback, owner_id):
+		push_error("Item lab command registration failed: %s" % definition.get("id", ""))
