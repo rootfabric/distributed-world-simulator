@@ -9,7 +9,12 @@ const FACE_NEG_Z: int = 5
 
 
 static func direction_to_face_uv(direction_value: Vector3) -> Vector3:
-    var direction := direction_value.normalized()
+    # Cube-face selection depends only on component ratios. Normalizing first
+    # introduces tiny scale-dependent rounding differences into the returned
+    # UV values, which can destabilize exact partition addresses.
+    if direction_value.length_squared() <= 1.0e-24:
+        return Vector3(float(FACE_POS_X), 0.0, 0.0)
+    var direction := direction_value
     var ax: float = absf(direction.x)
     var ay: float = absf(direction.y)
     var az: float = absf(direction.z)

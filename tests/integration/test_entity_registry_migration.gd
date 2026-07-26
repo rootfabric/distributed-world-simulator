@@ -72,6 +72,11 @@ func _init() -> void:
 	_assert(int(snapshot.get("entity_count", 0)) == 1, "Unexpected entity count.")
 	_assert(logger.get_recent_entries().size() > 0, "Logger did not capture events.")
 
+	registry.free()
+	manager.free()
+	logger.free()
+	mock_world.free()
+
 	if failures.is_empty():
 		print("Entity registry integration tests: PASS")
 		quit(0)

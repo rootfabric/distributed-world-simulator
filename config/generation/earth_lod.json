@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.earth_lod.v1",
+  "tiers": [
+    {
+      "id": "surface_ultra",
+      "max_altitude_m": 3500.0,
+      "terrain": true,
+      "near_trees": true,
+      "billboard_trees": true,
+      "grass": true,
+      "rocks": true
+    },
+    {
+      "id": "surface_local",
+      "max_altitude_m": 30000.0,
+      "terrain": true,
+      "near_trees": false,
+      "billboard_trees": true,
+      "grass": false,
+      "rocks": true
+    },
+    {
+      "id": "regional",
+      "max_altitude_m": 180000.0,
+      "terrain": true,
+      "near_trees": false,
+      "billboard_trees": false,
+      "grass": false,
+      "rocks": false
+    },
+    {
+      "id": "global",
+      "max_altitude_m": 1000000000.0,
+      "terrain": false,
+      "near_trees": false,
+      "billboard_trees": false,
+      "grass": false,
+      "rocks": false
+    }
+  ]
+}

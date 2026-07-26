@@ -7,5 +7,17 @@
   "long_frame_threshold_ms": 50.0,
   "performance_summary_interval_sec": 10.0,
   "main_thread_commit_budget_ms": 3.0,
-  "max_performance_history": 40
+  "max_performance_history": 40,
+  "minimum_predictive_speed_mps": 1.25,
+  "prefetch_trigger_distance_m": 170.0,
+  "stationary_recenter_distance_m": 720.0,
+  "emergency_recenter_distance_m": 1100.0,
+  "max_target_step_m": 470.0,
+  "post_swap_cooldown_sec": 1.25,
+  "collision_triangles_per_tile": 2048,
+  "stale_result_margin_m": 160.0,
+  "recent_surface_cache_capacity": 8,
+  "streaming_build": "v15.2-recent-surface-cache",
+  "max_pinned_surface_cells": 8,
+  "pinned_return_trigger_distance_m": 1800.0
 }

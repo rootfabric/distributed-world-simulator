@@ -155,6 +155,13 @@ var last_streaming_status: String = "Ожидание"
 var logger
 var terrain_streamer
 var generation_only_initialized: bool = false
+var streaming_actors: Array[CharacterBody3D] = []
+var recent_surface_cache: Dictionary = {}
+var recent_surface_cache_order: Array[String] = []
+var recent_surface_cache_capacity: int = 8
+var recent_surface_cache_evictions: int = 0
+var pinned_surface_cells: Dictionary = {}
+var max_pinned_surface_cells: int = 8
 
 
 func setup(logger_reference = null) -> void:
@@ -2358,6 +2365,16 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 	var local_data: Dictionary = local_profile.get("data", {})
 	_merge_prefixed_timings(timings, "local_", local_profile.get("timings_ms", {}))
 
+	var include_collision: bool = bool(request.get("include_collision", false))
+	var collision_tiles: Array[Dictionary] = []
+	if include_collision:
+		stage_started_usec = Time.get_ticks_usec()
+		collision_tiles = _partition_collision_faces(
+			local_data,
+			maxi(256, int(request.get("collision_triangles_per_tile", 2048)))
+		)
+		timings["collision_partition_ms"] = _elapsed_ms(stage_started_usec)
+
 	var include_medium: bool = bool(request.get("include_medium", false))
 	var medium_annulus_data: Dictionary = {}
 	var medium_full_data: Dictionary = {}
@@ -2403,7 +2420,9 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 		"generation_revision": request.get("generation_revision", -1),
 		"cell_id": request.get("cell_id", "-"),
 		"reason": request.get("reason", ""),
-		"include_collision": request.get("include_collision", false),
+		"extra": request.get("extra", {}).duplicate(true),
+		"center_direction": center_direction,
+		"include_collision": include_collision,
 		"include_medium": include_medium,
 		"requested_ticks_usec": request.get("requested_ticks_usec", 0),
 		"completed_ticks_usec": Time.get_ticks_usec(),
@@ -2412,6 +2431,8 @@ func build_streaming_payload(request: Dictionary) -> Dictionary:
 		"medium_annulus_data": medium_annulus_data,
 		"medium_full_data": medium_full_data,
 		"rock_layers": rock_layers,
+		"collision_tiles": collision_tiles,
+		"collision_tile_count": collision_tiles.size(),
 		"timings_ms": timings,
 		"local_vertex_count": int(local_data.get("vertex_count", 0)),
 		"local_triangle_count": int(local_data.get("triangle_count", 0)),
@@ -2548,6 +2569,44 @@ func _profiled_radial_cap_data(
 		},
 		"timings_ms": timings,
 	}
+
+
+func _partition_collision_faces(
+	mesh_data: Dictionary,
+	triangles_per_tile: int
+) -> Array[Dictionary]:
+	var vertices: PackedVector3Array = mesh_data.get("vertices", PackedVector3Array())
+	var indices: PackedInt32Array = mesh_data.get("indices", PackedInt32Array())
+	var result: Array[Dictionary] = []
+	if vertices.is_empty() or indices.size() < 3:
+		return result
+	var tile_faces := PackedVector3Array()
+	var triangle_count: int = 0
+	var tile_index: int = 0
+	for triangle_offset in range(0, indices.size(), 3):
+		var ia: int = indices[triangle_offset]
+		var ib: int = indices[triangle_offset + 1]
+		var ic: int = indices[triangle_offset + 2]
+		tile_faces.append(vertices[ia])
+		tile_faces.append(vertices[ib])
+		tile_faces.append(vertices[ic])
+		triangle_count += 1
+		if triangle_count >= triangles_per_tile:
+			result.append({
+				"tile_index": tile_index,
+				"faces": tile_faces,
+				"triangle_count": triangle_count,
+			})
+			tile_index += 1
+			tile_faces = PackedVector3Array()
+			triangle_count = 0
+	if triangle_count > 0:
+		result.append({
+			"tile_index": tile_index,
+			"faces": tile_faces,
+			"triangle_count": triangle_count,
+		})
+	return result
 
 
 func _build_streaming_rock_layers() -> Array[Dictionary]:
@@ -2799,7 +2858,36 @@ func streaming_create_mesh_instance(instance_name: String, mesh: ArrayMesh) -> M
 	return instance
 
 
+func streaming_create_collision_root() -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = "PlayableSurfaceTiled"
+	body.collision_layer = 1
+	body.collision_mask = 1
+	return body
+
+
+func streaming_add_collision_tile(
+	body: StaticBody3D,
+	tile_data: Dictionary,
+	tile_index: int
+) -> bool:
+	if body == null:
+		return false
+	var faces: PackedVector3Array = tile_data.get("faces", PackedVector3Array())
+	if faces.size() < 3:
+		return false
+	var terrain_shape := ConcavePolygonShape3D.new()
+	terrain_shape.backface_collision = true
+	terrain_shape.set_faces(faces)
+	var collision_shape := CollisionShape3D.new()
+	collision_shape.name = "CollisionTile_%03d" % tile_index
+	collision_shape.shape = terrain_shape
+	body.add_child(collision_shape)
+	return true
+
+
 func streaming_create_collision_body(mesh: ArrayMesh) -> StaticBody3D:
+	# Legacy synchronous fallback retained for spawn/teleport paths.
 	if mesh == null:
 		return null
 	var terrain_shape := mesh.create_trimesh_shape() as ConcavePolygonShape3D
@@ -2838,7 +2926,412 @@ func streaming_create_rock_instance(layer_data: Dictionary) -> MultiMeshInstance
 	return instance
 
 
-func streaming_apply_swap(result: Dictionary, staging: Dictionary) -> void:
+func configure_recent_surface_cache(capacity: int) -> void:
+	recent_surface_cache_capacity = maxi(0, capacity)
+	_prune_recent_surface_cache()
+
+
+func configure_pinned_surface_cells(
+	cell_ids: Array,
+	max_pinned: int = 8
+) -> void:
+	max_pinned_surface_cells = maxi(0, max_pinned)
+	pinned_surface_cells.clear()
+	if max_pinned_surface_cells <= 0:
+		_prune_recent_surface_cache()
+		return
+	for cell_id_value in cell_ids:
+		var cell_id: String = String(cell_id_value)
+		if cell_id.is_empty() or cell_id == "-":
+			continue
+		pinned_surface_cells[cell_id] = true
+		if pinned_surface_cells.size() >= max_pinned_surface_cells:
+			break
+	_prune_recent_surface_cache()
+
+
+func streaming_has_cached_surface(cell_id: String) -> bool:
+	return (
+		recent_surface_cache_capacity > 0
+		and not cell_id.is_empty()
+		and recent_surface_cache.has(cell_id)
+	)
+
+
+func get_recent_surface_cache_snapshot() -> Dictionary:
+	var entries: Array[Dictionary] = []
+	for cell_id in recent_surface_cache_order:
+		var entry: Dictionary = recent_surface_cache.get(cell_id, {})
+		if entry.is_empty():
+			continue
+		entries.append({
+			"cell_id": cell_id,
+			"pinned": pinned_surface_cells.has(cell_id),
+			"vertex_count": entry.get("vertex_count", 0),
+			"triangle_count": entry.get("triangle_count", 0),
+			"collision_shape_count": entry.get("collision_shape_count", 0),
+			"rock_layer_count": entry.get("rock_layer_count", 0),
+			"cached_ticks_msec": entry.get("cached_ticks_msec", 0),
+		})
+	return {
+		"schema": "lunar.recent_surface_cache.v1",
+		"size": recent_surface_cache.size(),
+		"capacity": recent_surface_cache_capacity,
+		"max_pinned_surface_cells": max_pinned_surface_cells,
+		"pinned_cell_ids": pinned_surface_cells.keys(),
+		"evictions": recent_surface_cache_evictions,
+		"cells_lru": recent_surface_cache_order.duplicate(),
+		"entries": entries,
+	}
+
+
+func _cache_current_surface(cell_id: String) -> Dictionary:
+	if (
+		recent_surface_cache_capacity <= 0
+		or cell_id.is_empty()
+		or cell_id == "-"
+		or local_cap == null
+		or not is_instance_valid(local_cap)
+		or local_cap.mesh == null
+	):
+		return {"cached": false}
+
+	var local_mesh_resource: ArrayMesh = local_cap.mesh as ArrayMesh
+	if local_mesh_resource == null:
+		return {"cached": false}
+
+	var collision_shapes: Array = []
+	for body in collision_root.get_children():
+		if not (body is CollisionObject3D):
+			continue
+		for child in body.get_children():
+			if child is CollisionShape3D and child.shape != null:
+				collision_shapes.append(child.shape)
+
+	var rock_multimeshes: Array = []
+	var rock_names: Array[String] = []
+	for rock_instance in rock_instances:
+		if (
+			rock_instance != null
+			and is_instance_valid(rock_instance)
+			and rock_instance.multimesh != null
+		):
+			rock_multimeshes.append(rock_instance.multimesh)
+			rock_names.append(String(rock_instance.name))
+
+	var vertex_count: int = 0
+	var index_count: int = 0
+	if local_mesh_resource.get_surface_count() > 0:
+		vertex_count = local_mesh_resource.surface_get_array_len(0)
+		index_count = local_mesh_resource.surface_get_array_index_len(0)
+
+	recent_surface_cache.erase(cell_id)
+	recent_surface_cache_order.erase(cell_id)
+	recent_surface_cache[cell_id] = {
+		"schema": "lunar.cached_surface.v1",
+		"cell_id": cell_id,
+		"generation_state": _capture_generation_state(),
+		"local_mesh": local_mesh_resource,
+		"collision_shapes": collision_shapes,
+		"rock_multimeshes": rock_multimeshes,
+		"rock_names": rock_names,
+		"vertex_count": vertex_count,
+		"triangle_count": int(index_count / 3),
+		"collision_shape_count": collision_shapes.size(),
+		"rock_layer_count": rock_multimeshes.size(),
+		"cached_ticks_msec": Time.get_ticks_msec(),
+	}
+	recent_surface_cache_order.append(cell_id)
+	_prune_recent_surface_cache()
+	var summary: Dictionary = {
+		"cached": true,
+		"cell_id": cell_id,
+		"cache_size": recent_surface_cache.size(),
+		"cache_capacity": recent_surface_cache_capacity,
+		"pinned": pinned_surface_cells.has(cell_id),
+		"vertex_count": vertex_count,
+		"triangle_count": int(index_count / 3),
+		"collision_shape_count": collision_shapes.size(),
+		"rock_layer_count": rock_multimeshes.size(),
+	}
+	_log_terrain_performance("terrain_surface_cached", summary)
+	return summary
+
+
+func _prune_recent_surface_cache() -> void:
+	var pinned_in_cache: int = 0
+	for cell_id in recent_surface_cache_order:
+		if pinned_surface_cells.has(cell_id):
+			pinned_in_cache += 1
+	var allowed_pinned: int = mini(
+		pinned_in_cache,
+		max_pinned_surface_cells
+	)
+	var max_total: int = recent_surface_cache_capacity + allowed_pinned
+	while recent_surface_cache_order.size() > max_total:
+		var eviction_index: int = -1
+		for index in range(recent_surface_cache_order.size()):
+			var candidate: String = recent_surface_cache_order[index]
+			if not pinned_surface_cells.has(candidate):
+				eviction_index = index
+				break
+		if eviction_index < 0:
+			eviction_index = 0
+		var evicted_cell_id: String = recent_surface_cache_order[eviction_index]
+		recent_surface_cache_order.remove_at(eviction_index)
+		var evicted_entry: Dictionary = recent_surface_cache.get(
+			evicted_cell_id,
+			{}
+		)
+		recent_surface_cache.erase(evicted_cell_id)
+		recent_surface_cache_evictions += 1
+		_log_terrain_performance("terrain_surface_cache_evicted", {
+			"cell_id": evicted_cell_id,
+			"pinned": pinned_surface_cells.has(evicted_cell_id),
+			"cache_size": recent_surface_cache.size(),
+			"cache_capacity": recent_surface_cache_capacity,
+			"max_total_with_pins": max_total,
+			"vertex_count": evicted_entry.get("vertex_count", 0),
+			"triangle_count": evicted_entry.get("triangle_count", 0),
+		})
+
+
+func streaming_activate_cached_surface(
+	cell_id: String,
+	previous_cell_id: String
+) -> Dictionary:
+	if not recent_surface_cache.has(cell_id):
+		return {
+			"success": false,
+			"reason": "cache_entry_not_found",
+			"cell_id": cell_id,
+		}
+	var total_started_usec: int = Time.get_ticks_usec()
+	var entry: Dictionary = recent_surface_cache.get(cell_id, {})
+	recent_surface_cache.erase(cell_id)
+	recent_surface_cache_order.erase(cell_id)
+
+	var actor_snapshots: Array[Dictionary] = _capture_streaming_actor_snapshots()
+	var old_local = local_cap
+	var old_rocks: Array = rock_instances.duplicate()
+	var old_collision_bodies: Array[Node] = []
+	for child in collision_root.get_children():
+		old_collision_bodies.append(child)
+
+	var cache_started_usec: int = Time.get_ticks_usec()
+	if previous_cell_id != cell_id:
+		_cache_current_surface(previous_cell_id)
+	var cache_previous_ms: float = _elapsed_ms(cache_started_usec)
+
+	var state_started_usec: int = Time.get_ticks_usec()
+	_apply_generation_state(entry.get("generation_state", {}))
+	var apply_state_ms: float = _elapsed_ms(state_started_usec)
+
+	var local_started_usec: int = Time.get_ticks_usec()
+	var cached_local_mesh: ArrayMesh = entry.get("local_mesh") as ArrayMesh
+	local_cap = streaming_create_mesh_instance(
+		"LocalHighDetail",
+		cached_local_mesh
+	)
+	if local_cap == null:
+		recent_surface_cache[cell_id] = entry
+		recent_surface_cache_order.append(cell_id)
+		return {
+			"success": false,
+			"reason": "cached_local_instance_failed",
+			"cell_id": cell_id,
+		}
+	surface_root.add_child(local_cap)
+	var local_instance_ms: float = _elapsed_ms(local_started_usec)
+
+	if medium_annulus_cap != null:
+		medium_annulus_cap.position = medium_anchor_world - surface_anchor_world
+	if medium_full_cap != null:
+		medium_full_cap.position = medium_anchor_world - surface_anchor_world
+
+	var collision_started_usec: int = Time.get_ticks_usec()
+	var collision_body := streaming_create_collision_root()
+	var collision_index: int = 0
+	for shape_resource in entry.get("collision_shapes", []):
+		if shape_resource == null:
+			continue
+		var collision_shape := CollisionShape3D.new()
+		collision_shape.name = "CachedCollision_%03d" % collision_index
+		collision_shape.shape = shape_resource
+		collision_body.add_child(collision_shape)
+		collision_index += 1
+	if collision_index > 0:
+		collision_root.add_child(collision_body)
+		current_lod = 0
+	else:
+		collision_body.free()
+		collision_body = null
+	var collision_nodes_ms: float = _elapsed_ms(collision_started_usec)
+
+	var rocks_started_usec: int = Time.get_ticks_usec()
+	rock_instances.clear()
+	var cached_multimeshes: Array = entry.get("rock_multimeshes", [])
+	var cached_names: Array = entry.get("rock_names", [])
+	for layer_index in range(cached_multimeshes.size()):
+		var multimesh_resource = cached_multimeshes[layer_index]
+		if multimesh_resource == null:
+			continue
+		var rock_instance := MultiMeshInstance3D.new()
+		rock_instance.name = (
+			String(cached_names[layer_index])
+			if layer_index < cached_names.size()
+			else "CachedRockLayer_%d" % layer_index
+		)
+		rock_instance.multimesh = multimesh_resource
+		rock_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		surface_root.add_child(rock_instance)
+		rock_instances.append(rock_instance)
+	rocks_instance = rock_instances[0] if not rock_instances.is_empty() else null
+	var rock_nodes_ms: float = _elapsed_ms(rocks_started_usec)
+
+	var swap_started_usec: int = Time.get_ticks_usec()
+	_update_root_positions()
+	_apply_debug_materials()
+	_apply_lod_visibility()
+	_reconcile_streaming_actors(actor_snapshots)
+
+	if old_local != null:
+		old_local.visible = false
+	for old_rock in old_rocks:
+		if old_rock != null:
+			old_rock.visible = false
+	for old_body in old_collision_bodies:
+		if old_body is CollisionObject3D:
+			old_body.collision_layer = 0
+			old_body.collision_mask = 0
+
+	_retire_node_deferred(old_local)
+	for old_rock in old_rocks:
+		_retire_node_deferred(old_rock)
+	for old_body in old_collision_bodies:
+		_retire_node_deferred(old_body)
+	var swap_ms: float = _elapsed_ms(swap_started_usec)
+
+	var cached_generation_state: Dictionary = entry.get("generation_state", {})
+	var center_direction = cached_generation_state.get(
+		"surface_center_direction",
+		surface_center_direction
+	)
+	var result: Dictionary = {
+		"success": true,
+		"cell_id": cell_id,
+		"previous_cell_id": previous_cell_id,
+		"center_direction": center_direction,
+		"cache_size": recent_surface_cache.size(),
+		"cache_capacity": recent_surface_cache_capacity,
+		"timings_ms": {
+			"cache_previous_surface_ms": cache_previous_ms,
+			"apply_generation_state_ms": apply_state_ms,
+			"local_instance_ms": local_instance_ms,
+			"collision_nodes_ms": collision_nodes_ms,
+			"rock_nodes_ms": rock_nodes_ms,
+			"swap_ms": swap_ms,
+			"total_cache_activation_ms": _elapsed_ms(total_started_usec),
+		},
+	}
+	_log_terrain_performance("terrain_cached_surface_activated", result)
+	return result
+
+
+func register_streaming_actor(actor: CharacterBody3D) -> void:
+	if actor == null or not is_instance_valid(actor):
+		return
+	if not streaming_actors.has(actor):
+		streaming_actors.append(actor)
+
+
+func unregister_streaming_actor(actor: CharacterBody3D) -> void:
+	streaming_actors.erase(actor)
+
+
+func _capture_streaming_actor_snapshots() -> Array[Dictionary]:
+	var snapshots: Array[Dictionary] = []
+	for actor in streaming_actors:
+		if actor == null or not is_instance_valid(actor) or not actor.is_inside_tree():
+			continue
+		var world_position: Vector3 = render_to_world(actor.global_position)
+		if world_position.length_squared() < 1.0:
+			continue
+		var direction: Vector3 = world_position.normalized()
+		var old_surface_point: Vector3 = get_surface_point(direction)
+		var clearance: float = world_position.length() - old_surface_point.length()
+		snapshots.append({
+			"actor": actor,
+			"world_position": world_position,
+			"direction": direction,
+			"clearance": clearance,
+			"was_on_floor": actor.is_on_floor(),
+		})
+	return snapshots
+
+
+func _reconcile_streaming_actors(snapshots: Array[Dictionary]) -> void:
+	for snapshot in snapshots:
+		var actor = snapshot.get("actor")
+		if actor == null or not is_instance_valid(actor):
+			continue
+		var direction: Vector3 = snapshot.get("direction", Vector3.ZERO)
+		if direction.length_squared() < 0.5:
+			continue
+		var distance_from_new_center: float = (
+			direction - surface_center_direction
+		).length() * MOON_RADIUS
+		if distance_from_new_center > LOCAL_CAP_RADIUS * 0.88:
+			continue
+		var old_clearance: float = float(snapshot.get("clearance", 0.0))
+		var was_on_floor: bool = bool(snapshot.get("was_on_floor", false))
+		# Do not pull a hovering jetpack/drone down to the terrain. Reconciliation
+		# is only for grounded actors or actors already almost touching the surface.
+		if not was_on_floor and (old_clearance > 0.65 or old_clearance < -3.0):
+			continue
+		var previous_world_position: Vector3 = snapshot.get("world_position", Vector3.ZERO)
+		var new_surface_point: Vector3 = get_surface_point(direction)
+		var target_clearance: float = clampf(old_clearance, 0.08, 1.5)
+		var target_world_position: Vector3 = new_surface_point + direction * target_clearance
+		var vertical_delta: float = target_world_position.length() - previous_world_position.length()
+		actor.global_position = world_to_render(target_world_position)
+		var radial_speed: float = actor.velocity.dot(direction)
+		if was_on_floor or radial_speed < 0.0:
+			actor.velocity -= direction * radial_speed
+		actor.reset_physics_interpolation()
+		_log_terrain_performance("terrain_actor_surface_reconciled", {
+			"actor_path": String(actor.get_path()),
+			"vertical_delta_m": vertical_delta,
+			"old_clearance_m": old_clearance,
+			"target_clearance_m": target_clearance,
+			"was_on_floor": was_on_floor,
+		})
+
+
+func streaming_discard_staging(staging_data: Dictionary) -> void:
+	var node_keys := [
+		"local_instance",
+		"medium_annulus_instance",
+		"medium_full_instance",
+		"collision_body",
+	]
+	for key in node_keys:
+		var node = staging_data.get(key)
+		if node != null and is_instance_valid(node):
+			node.free()
+	var staged_rocks: Array = staging_data.get("rock_instances", [])
+	for rock_instance in staged_rocks:
+		if rock_instance != null and is_instance_valid(rock_instance):
+			rock_instance.free()
+
+
+func streaming_apply_swap(
+	result: Dictionary,
+	staging: Dictionary,
+	previous_cell_id: String = "",
+	cache_capacity: int = 4
+) -> void:
+	var actor_snapshots: Array[Dictionary] = _capture_streaming_actor_snapshots()
 	var old_local = local_cap
 	var old_medium_annulus = medium_annulus_cap
 	var old_medium_full = medium_full_cap
@@ -2847,21 +3340,11 @@ func streaming_apply_swap(result: Dictionary, staging: Dictionary) -> void:
 	for child in collision_root.get_children():
 		old_collision_bodies.append(child)
 
-	if old_local != null:
-		old_local.visible = false
-	for old_rock in old_rocks:
-		if old_rock != null:
-			old_rock.visible = false
-	if bool(result.get("include_medium", false)):
-		if old_medium_annulus != null:
-			old_medium_annulus.visible = false
-		if old_medium_full != null:
-			old_medium_full.visible = false
-	for old_body in old_collision_bodies:
-		if old_body is CollisionObject3D:
-			old_body.collision_layer = 0
-			old_body.collision_mask = 0
+	configure_recent_surface_cache(cache_capacity)
+	_cache_current_surface(previous_cell_id)
 
+	# Apply the data snapshot first, while the previous collision is still active.
+	# This prevents actors from entering a frame with no supporting surface.
 	_apply_generation_state(result.get("generation_state", {}))
 	local_cap = staging.get("local_instance")
 	if local_cap != null:
@@ -2900,6 +3383,25 @@ func streaming_apply_swap(result: Dictionary, staging: Dictionary) -> void:
 	_update_root_positions()
 	_apply_debug_materials()
 	_apply_lod_visibility()
+	_reconcile_streaming_actors(actor_snapshots)
+
+	# Only after the new mesh, tiled collision and actor reconciliation are ready
+	# do we retire the previous slot.
+	if old_local != null:
+		old_local.visible = false
+	for old_rock in old_rocks:
+		if old_rock != null:
+			old_rock.visible = false
+	if bool(result.get("include_medium", false)):
+		if old_medium_annulus != null:
+			old_medium_annulus.visible = false
+		if old_medium_full != null:
+			old_medium_full.visible = false
+	if collision_body != null:
+		for old_body in old_collision_bodies:
+			if old_body is CollisionObject3D:
+				old_body.collision_layer = 0
+				old_body.collision_mask = 0
 
 	_retire_node_deferred(old_local)
 	if bool(result.get("include_medium", false)):
@@ -2916,6 +3418,19 @@ func _retire_node_deferred(node) -> void:
 	if node == null or not is_instance_valid(node):
 		return
 	node.queue_free()
+
+
+func set_streaming_landmark_positions(world_positions: Array) -> void:
+	if terrain_streamer == null:
+		return
+	var directions: Array = []
+	for position_value in world_positions:
+		if not (position_value is Vector3):
+			continue
+		var world_position: Vector3 = position_value
+		if world_position.length_squared() > 1.0:
+			directions.append(world_position.normalized())
+	terrain_streamer.set_pinned_surface_directions(directions)
 
 
 func get_terrain_streaming_snapshot() -> Dictionary:

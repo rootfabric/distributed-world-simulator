@@ -1,45 +1,87 @@
-Real Scale Procedural Moon v15 — Asynchronous Terrain Streaming
+Planetary World v15.4.1
 
-Core additions:
-- config/terrain_streaming.json
-- scripts/world/terrain/streaming/terrain_streaming_manager.gd
-- scripts/world/terrain/procedural_moon_terrain.gd
-- scripts/diagnostics/lunar_logger.gd
+Unified runtime:
+- scripts/app/planetary_app.gd
 - scripts/app/lunar_app.gd
-- scripts/ui/lunar_hud.gd
-- tests/integration/test_terrain_streaming_contract.gd
-- RUN_TERRAIN_STREAMING_TEST.ps1
-- EXPORT_TERRAIN_DIAGNOSTICS.ps1
-- ANALYZE_TERRAIN_LOG.ps1
+- main.tscn
 
-Architecture:
-- 512 m Terrain Streaming Cells independent from simulation chunks and render LOD
-- WorkerThreadPool data-only generation
-- one running job + latest pending request
-- predictive prefetch from tangential velocity
-- double-buffered old/new surface
-- staged main-thread ArrayMesh/collision/MultiMesh commit
-- revision-based cancellation
+Integrated capabilities:
+- procedural Moon with asynchronous streaming and recent-surface cache
+- procedural Earth with rules, vegetation and atmosphere
+- one double-precision Earth-Moon simulation space
+- persistent survey beacons, navigation markers and first-person interaction
+- item, container and assembly relation domain
+- visual item laboratory available with F5
 
-Diagnostics:
-- user://logs/terrain_performance.jsonl
-- synchronous_surface_rebuild timings
-- background sampler stage timings
-- main-thread commit stage timings
-- long_frame_detected correlation
-- F9 diagnostic snapshot
-- K runtime streaming mini-test
+Architecture test additions:
+- independent real-scale Earth body: radius 6,371,000 m
+- Moon remains at radius 1,737,400 m and keeps the original v15.2 implementation
+- real simulation-space Earth-Moon center distance: 384,400,000 m
+- floating-origin Earth view and angular-size Earth proxy from the Moon
+- validated procedural rule pipeline: relief -> hydrology -> climate -> biome -> surface
+- explicit requires/writes ownership prevents hidden rule conflicts
+- forest, grassland, rocky desert, tundra, alpine snow, ocean, rivers and lakes
+- four procedural tree forms, three grass types and three rock variants
+- deterministic nonuniform placement with water/snow/slope/rock filters
+- MultiMesh vegetation and tiered geometry/billboard/removal LOD
+- Earth is lazily initialized with P and does not change lunar terrain code
 
-Schemas:
-- lunar.terrain_streaming_config.v1
-- lunar.terrain_build_request.v1
-- lunar.terrain_build_result.v1
-- lunar.terrain_streaming_snapshot.v1
-- lunar.log.v1
+Changed entrypoint:
+- main.tscn
 
-Runtime hotkeys:
-- K: background terrain generation test
-- F9: diagnostic snapshot
-- C: first/third person
-- J: Lunar EVA/Jetpack
-- F12: controller integration test
+New configuration:
+- config/planets/celestial_system.json
+- config/planets/earth.json
+- config/generation/earth_rules.json
+- config/generation/earth_vegetation.json
+- config/generation/earth_lod.json
+
+New runtime modules:
+- scripts/app/planetary_app.gd
+- scripts/world/planetary/celestial_system.gd
+- scripts/world/planetary/earth_rule_pipeline.gd
+- scripts/world/planetary/rules/*.gd
+- scripts/world/earth/procedural_earth_world.gd
+- scripts/world/earth/earth_asset_library.gd
+- scripts/world/vegetation/earth_placement_system.gd
+- scripts/actors/earth/earth_explorer.gd
+- scripts/ui/planetary_overlay.gd
+
+Validation and documentation:
+- tests/integration/test_unified_planetary_runtime.gd
+- tests/integration/test_unified_runtime_boot.gd
+- RUN_UNIFIED_ARCHITECTURE_TEST.ps1
+- tests/unit/test_earth_generation_pipeline.gd
+- RUN_EARTH_ARCHITECTURE_TEST.ps1
+- docs/architecture/PROCEDURAL_EARTH_RULE_PIPELINE_RU.md
+- docs/plans/EARTH_MOON_ARCHITECTURE_TEST_RU.md
+
+Original Moon v15.2 features retained:
+- asynchronous terrain streaming
+- recent local surface cache
+- pinned landmark cells
+- persistent landmark index
+- distant navigation markers
+- entity registry, persistence, controllers and diagnostics
+
+Atmosphere layer v1 additions:
+- per-body atmosphere_config reference in celestial_system.json
+- independent PlanetAtmosphere volume, selected by AtmosphereManager
+- altitude-dependent procedural Earth sky and low-altitude fog
+- original lunar space environment restored outside Earth atmosphere
+- plugin contract for clouds, aurora, storms, dust and future phenomena
+- Earth low cloud plugin at 4,000 m using one procedural MultiMesh layer
+- cloud visibility restricted to local/regional atmospheric observation
+- atmosphere runtime state included in F9 diagnostics
+
+New atmosphere files:
+- config/atmospheres/earth.json
+- config/atmosphere_plugins/earth_low_clouds.json
+- scripts/world/atmosphere/atmosphere_manager.gd
+- scripts/world/atmosphere/planet_atmosphere.gd
+- scripts/world/atmosphere/atmosphere_plugin_base.gd
+- scripts/world/atmosphere/plugins/cloud_layer_plugin.gd
+- tests/unit/test_atmosphere_layer.gd
+- RUN_ATMOSPHERE_ARCHITECTURE_TEST.ps1
+- docs/architecture/ATMOSPHERE_LAYER_V1_RU.md
+- docs/plans/ATMOSPHERE_LAYER_V1_PLAN_RU.md

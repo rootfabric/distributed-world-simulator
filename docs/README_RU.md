@@ -2,6 +2,8 @@
 
 ## Архитектура
 
+- `architecture/PROCEDURAL_EARTH_RULE_PIPELINE_RU.md`
+
 - `architecture/TARGET_ARCHITECTURE_RU.md`
 - `architecture/PROJECT_STRUCTURE_RU.md`
 - `architecture/ZONES_AND_CHUNKS_RU.md`
@@ -25,6 +27,8 @@
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
 
 ## Планы
+
+- `plans/EARTH_MOON_ARCHITECTURE_TEST_RU.md`
 
 - `plans/ROADMAP_RU.md`
 - `plans/NEXT_ITERATIONS_RU.md`

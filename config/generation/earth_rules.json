@@ -1,0 +1,93 @@
+{
+  "schema": "planet_simulator.rule_pipeline.v1",
+  "seed": 20260726,
+  "rules": [
+    {
+      "id": "continental_relief",
+      "script": "res://scripts/world/planetary/rules/continental_relief_rule.gd",
+      "enabled": true,
+      "stage": 100,
+      "lod_max": 2,
+      "parameters": {
+        "continent_scale": 1.45,
+        "coast_low": -0.12,
+        "coast_high": 0.055,
+        "mountain_selector_scale": 4.2,
+        "mountain_scale": 13.0,
+        "ridge_detail_scale": 86.0,
+        "hill_scale": 430.0,
+        "local_relief_scale": 2200.0,
+        "ocean_depth_m": -6200.0,
+        "continental_shelf_m": -180.0,
+        "mountain_height_m": 7600.0,
+        "ridge_height_m": 1850.0,
+        "foothill_height_m": 780.0,
+        "hill_height_m": 360.0,
+        "local_relief_height_m": 115.0
+      }
+    },
+    {
+      "id": "hydrology",
+      "script": "res://scripts/world/planetary/rules/hydrology_rule.gd",
+      "enabled": true,
+      "stage": 200,
+      "lod_max": 2,
+      "parameters": {
+        "river_scale": 31.0,
+        "river_core_width": 0.008,
+        "river_outer_width": 0.06,
+        "river_water_threshold": 0.34,
+        "lake_water_threshold": 0.42
+      }
+    },
+    {
+      "id": "climate",
+      "script": "res://scripts/world/planetary/rules/climate_rule.gd",
+      "enabled": true,
+      "stage": 300,
+      "lod_max": 2,
+      "parameters": {
+        "equator_temperature_c": 31.0,
+        "pole_temperature_c": -31.0,
+        "latitude_exponent": 1.25,
+        "lapse_rate_c_per_m": 0.0062
+      }
+    },
+    {
+      "id": "biomes",
+      "script": "res://scripts/world/planetary/rules/biome_rule.gd",
+      "enabled": true,
+      "stage": 400,
+      "lod_max": 2,
+      "parameters": {
+        "snow_start_m": 2500.0,
+        "snow_full_m": 4700.0,
+        "tundra_polar_threshold": 0.48,
+        "tundra_temperature_c": -5.0,
+        "alpine_elevation_m": 3300.0,
+        "alpine_mountain_threshold": 0.74,
+        "desert_aridity_threshold": 0.66,
+        "desert_min_temperature_c": 8.0,
+        "forest_moisture_threshold": 0.5,
+        "forest_min_temperature_c": -3.0,
+        "tree_snow_cutoff": 0.22,
+        "grass_snow_cutoff": 0.16
+      }
+    },
+    {
+      "id": "surface_composer",
+      "script": "res://scripts/world/planetary/rules/surface_composer_rule.gd",
+      "enabled": true,
+      "stage": 500,
+      "lod_max": 2,
+      "parameters": {
+        "regional_texture_scale": 1050.0,
+        "meso_texture_scale": 6200.0,
+        "micro_texture_scale": 30000.0,
+        "regional_relief_m": 135.0,
+        "meso_relief_m": 38.0,
+        "micro_relief_m": 6.0
+      }
+    }
+  ]
+}

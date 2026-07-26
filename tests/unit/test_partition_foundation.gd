@@ -102,6 +102,8 @@ func _test_partition_runtime() -> void:
 	_assert(snapshot.get("schema", "") == "lunar.partition.v1", "Unexpected partition schema.")
 	_assert(not String(snapshot.get("active_zone", "")).is_empty(), "Active zone is missing.")
 	_assert(not String(snapshot.get("active_chunk", "")).is_empty(), "Active chunk is missing.")
+	manager.free()
+	mock_world.free()
 
 
 func _assert(condition: bool, message: String) -> void:

@@ -19,7 +19,12 @@ const LunarLoggerScript = preload(
 const WorldRepositoryScript = preload(
 	"res://scripts/persistence/lunar_world_repository.gd"
 )
+const WorldInteractorScript = preload(
+	"res://scripts/interaction/world_interactor.gd"
+)
 
+const PROJECT_VERSION: String = "15.4.1"
+const BUILD_ID: String = "planetary-items-and-interaction"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -41,6 +46,7 @@ var zone_manager
 var entity_registry
 var logger
 var persistence
+var world_interactor
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
@@ -66,6 +72,8 @@ func _ready() -> void:
 	add_child(logger)
 	logger.setup(false)
 	logger.info("application", "startup", {
+		"project_version": PROJECT_VERSION,
+		"build_id": BUILD_ID,
 		"engine": Engine.get_version_info(),
 		"display_mode": get_display_mode_name(),
 		"resolution": get_display_resolution_name(),
@@ -94,6 +102,7 @@ func _ready() -> void:
 	player.name = "LunarPlayer"
 	add_child(player)
 	player.setup(moon_world, logger)
+	moon_world.register_streaming_actor(player)
 	player.controller_changed.connect(_on_player_controller_changed)
 	player.camera_mode_changed.connect(_on_player_camera_mode_changed)
 
@@ -111,6 +120,14 @@ func _ready() -> void:
 		entity_registry,
 		logger
 	)
+	_sync_streaming_landmark_pins()
+
+	world_interactor = WorldInteractorScript.new()
+	world_interactor.name = "WorldInteractor"
+	add_child(world_interactor)
+	world_interactor.setup(player, logger)
+	world_interactor.focus_changed.connect(_on_interaction_focus_changed)
+	world_interactor.interaction_completed.connect(_on_interaction_completed)
 
 	hud = HudScript.new()
 	hud.name = "HUD"
@@ -164,6 +181,9 @@ func _process(delta: float) -> void:
 			else player.get_world_position()
 		)
 		persistence.update_runtime_transforms()
+		persistence.update_landmark_markers(active_world_position, delta)
+
+	_update_interaction_enabled()
 
 	if hud != null:
 		hud.update_values(
@@ -246,6 +266,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if event.ctrl_pressed and event.physical_keycode == KEY_S:
 			save_world_now()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_M:
+			toggle_beacon_markers()
+			get_viewport().set_input_as_handled()
+			return
+		if event.physical_keycode == KEY_E and not spectator_enabled and not _is_menu_open():
+			interact_with_world()
 			get_viewport().set_input_as_handled()
 			return
 		if event.physical_keycode == KEY_B and not _is_menu_open():
@@ -485,6 +513,93 @@ func run_controller_mini_test() -> Dictionary:
 	return result
 
 
+func _sync_streaming_landmark_pins() -> void:
+	if (
+		moon_world == null
+		or persistence == null
+		or not moon_world.has_method("set_streaming_landmark_positions")
+	):
+		return
+	moon_world.set_streaming_landmark_positions(
+		persistence.get_landmark_world_positions()
+	)
+
+
+func interact_with_world() -> Dictionary:
+	if (
+		world_interactor == null
+		or spectator_enabled
+		or _is_menu_open()
+		or not mouse_captured
+	):
+		var unavailable: Dictionary = {
+			"success": false,
+			"message": "Взаимодействие сейчас недоступно",
+		}
+		last_action_result = String(unavailable["message"])
+		return unavailable
+	if player.get_camera_mode() != "first_person":
+		var camera_required: Dictionary = {
+			"success": false,
+			"message": "Для взаимодействия переключитесь в первое лицо (C)",
+		}
+		last_action_result = String(camera_required["message"])
+		return camera_required
+	var result: Dictionary = world_interactor.perform_interaction()
+	last_action_result = String(result.get("message", "Действие завершено"))
+	return result
+
+
+func get_interaction_snapshot() -> Dictionary:
+	return (
+		world_interactor.get_current_snapshot()
+		if world_interactor != null
+		else {}
+	)
+
+
+func _update_interaction_enabled() -> void:
+	if world_interactor == null:
+		return
+	world_interactor.set_enabled(
+		not spectator_enabled
+		and not _is_menu_open()
+		and mouse_captured
+		and player != null
+		and player.get_camera_mode() == "first_person"
+	)
+
+
+func _on_interaction_focus_changed(snapshot: Dictionary) -> void:
+	if hud != null:
+		hud.set_interaction_state(snapshot)
+
+
+func _on_interaction_completed(result: Dictionary) -> void:
+	last_action_result = String(result.get("message", "Действие завершено"))
+	_sync_streaming_landmark_pins()
+	if hud != null:
+		hud.set_interaction_state(get_interaction_snapshot())
+
+
+func toggle_beacon_markers() -> bool:
+	if persistence == null:
+		return false
+	var enabled: bool = persistence.toggle_landmark_markers()
+	last_action_result = (
+		"Дальние метки маяков включены"
+		if enabled
+		else "Дальние метки маяков выключены"
+	)
+	return enabled
+
+
+func get_beacon_marker_summary() -> String:
+	if persistence == null:
+		return "не инициализированы"
+	return persistence.get_landmark_summary()
+
+
 func place_survey_beacon() -> String:
 	if spectator_enabled:
 		last_action_result = "Маяк можно ставить только в режиме персонажа"
@@ -503,6 +618,7 @@ func place_survey_beacon() -> String:
 		beacon_position,
 		forward
 	)
+	_sync_streaming_landmark_pins()
 	last_action_result = (
 		"Маяк установлен: %s" % entity_id
 		if not entity_id.is_empty()
@@ -522,6 +638,7 @@ func remove_nearest_survey_beacon() -> String:
 		else player.get_world_position()
 	)
 	var entity_id: String = persistence.remove_nearest_survey_beacon(position, 18.0)
+	_sync_streaming_landmark_pins()
 	last_action_result = (
 		"Маяк удалён: %s" % entity_id
 		if not entity_id.is_empty()
@@ -543,6 +660,7 @@ func clear_persistent_world() -> void:
 		last_action_result = "Нажмите «Очистить» ещё раз в течение 5 секунд"
 		return
 	persistence.clear_world_data()
+	_sync_streaming_landmark_pins()
 	clear_confirmation_deadline_msec = 0
 	last_action_result = "Постоянный слой тестового мира очищен"
 	last_persistence_test_result = "Не запускался"
@@ -671,6 +789,8 @@ func save_diagnostic_snapshot() -> String:
 	var path: String = "%s/diagnostic_%s.json" % [DIAGNOSTIC_DIR, stamp]
 	var payload: Dictionary = {
 		"schema": "lunar.diagnostic.v1",
+		"project_version": PROJECT_VERSION,
+		"build_id": BUILD_ID,
 		"created_at_utc": Time.get_datetime_string_from_system(true, true),
 		"engine": Engine.get_version_info(),
 		"os": {
@@ -696,6 +816,7 @@ func save_diagnostic_snapshot() -> String:
 			"last_action_result": last_action_result,
 			"controller": player.get_controller_snapshot(),
 			"camera_mode": player.get_camera_mode(),
+			"interaction": get_interaction_snapshot(),
 		},
 		"partitions": zone_manager.create_partition_snapshot(),
 		"entities": entity_registry.create_snapshot(),
