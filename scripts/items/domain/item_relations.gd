@@ -44,7 +44,7 @@ static func relation_parent_item_id(relation: Dictionary, container_registry) ->
 		ATTACHMENT:
 			return String(relation.get("parent_item_id", ""))
 		CONTAINER:
-			var container_id := String(relation.get("container_id", ""))
+			var container_id = String(relation.get("container_id", ""))
 			var container = container_registry.get_container(container_id)
 			if container != null and container.owner_kind == "ITEM_INSTANCE":
 				return container.owner_id

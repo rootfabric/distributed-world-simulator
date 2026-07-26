@@ -85,7 +85,7 @@ func setup(
 	help_label = Label.new()
 	help_label.text = (
 		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
-		+ "K — тест фоновой генерации и staged commit\n"
+		+ "K — тест фоновой генерации и staged commit   F5 — лаборатория предметов\n"
 		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
 		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк\n"
 		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
@@ -122,6 +122,7 @@ func setup(
 	vertical.add_child(test_row)
 	_add_button(test_row, "Тест миграции (F7)", _on_migration_test_pressed)
 	_add_button(test_row, "Тест сохранения (F10)", _on_persistence_test_pressed)
+	_add_button(test_row, "Лаборатория предметов (F5)", _on_item_lab_pressed)
 
 	var world_row := HBoxContainer.new()
 	world_row.add_theme_constant_override("separation", 8)
@@ -131,7 +132,7 @@ func setup(
 	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1/Esc — меню | C — камера | J — контроллер | K — streaming test | B — маяк"
+	compact_hint.text = "F1/Esc — меню | F5 — предметы | C — камера | J — контроллер | B — маяк"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
@@ -207,6 +208,10 @@ func _on_persistence_test_pressed() -> void:
 
 func _on_diagnostic_pressed() -> void:
 	main_controller.save_diagnostic_snapshot()
+
+
+func _on_item_lab_pressed() -> void:
+	main_controller.open_item_system_lab()
 
 
 func _on_random_spawn_pressed() -> void:

@@ -10,7 +10,8 @@
 - `ArrayMesh`, collision и шесть rock layers подключаются по стадиям;
 - отдельный JSONL-лог времени каждой стадии;
 - runtime streaming test по `K`;
-- persistent world, Survey Beacons и pluggable controllers сохранены.
+- persistent world, Survey Beacons и pluggable controllers сохранены;
+- добавлена проверяемая лаборатория предметов: WORLD ↔ CONTAINER ↔ ATTACHMENT.
 
 ## Управление
 
@@ -18,6 +19,7 @@
 C          первое/третье лицо
 J          Lunar EVA/Jetpack
 K          тест фоновой генерации и staged commit
+F5         открыть лабораторию предметов
 F12        тест controller/camera
 B          поставить Survey Beacon
 Delete     удалить ближайший маяк
@@ -58,6 +60,25 @@ user://diagnostics/diagnostic_*.json
 .\RUN_PERSISTENCE_TEST.ps1
 .\RUN_CONTROLLER_TEST.ps1
 .\RUN_TERRAIN_STREAMING_TEST.ps1
+.\RUN_ITEM_SYSTEM_TESTS.ps1
 ```
+
+## Лаборатория предметов
+
+Открыть из главного меню кнопкой `Лаборатория предметов`, клавишей `F5`
+или отдельным запуском:
+
+```powershell
+.\ITEM_SYSTEM_LAB.ps1
+```
+
+Проверяемые сценарии:
+
+- предмет в мире имеет `RigidBody3D`, коллизию и материал;
+- после подбора физическое представление удаляется, а предмет оказывается в рюкзаке;
+- после выбрасывания физика восстанавливается с тем же `instance_id`;
+- заполненный ящик переносится целиком и сохраняет содержимое;
+- лидар устанавливается в сокет ровера и демонтируется обратно;
+- `F5` или `Esc` возвращает в основной мир.
 
 Подробная документация находится в `docs/README_RU.md`.

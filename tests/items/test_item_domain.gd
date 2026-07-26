@@ -16,6 +16,8 @@ func _init() -> void:
 	_test_nested_container_transfer()
 	_test_capacity_and_nesting_guards()
 	_test_operation_idempotency()
+	_test_same_container_move_and_operation_validation()
+	_test_graph_integrity_guards()
 	_test_attachment_roundtrip()
 	_test_mixed_relation_cycle_guard()
 	_test_mass_and_external_volume()
@@ -32,13 +34,13 @@ func _init() -> void:
 
 
 func _test_world_container_roundtrip() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var rock = fixture.items.create_item("rock", 2, {}, Relations.world(Transform3D.IDENTITY))
 	var pickup: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.container("backpack"), "pickup-1")
 	_assert_success(pickup, "World -> container transfer must succeed")
 	_assert(Relations.kind_of(rock.relation) == Relations.CONTAINER, "Picked item relation must be CONTAINER")
 	_assert(fixture.containers.get_container("backpack").item_ids.has(rock.instance_id), "Backpack must contain picked item")
-	var drop_transform := Transform3D(Basis.IDENTITY, Vector3(2.0, 3.0, 4.0))
+	var drop_transform = Transform3D(Basis.IDENTITY, Vector3(2.0, 3.0, 4.0))
 	var drop: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.world(drop_transform, Vector3(1.0, 0.0, 0.0)), "drop-1")
 	_assert_success(drop, "Container -> world transfer must succeed")
 	_assert(Relations.kind_of(rock.relation) == Relations.WORLD, "Dropped item relation must be WORLD")
@@ -47,7 +49,7 @@ func _test_world_container_roundtrip() -> void:
 
 
 func _test_stack_merge_and_split() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var first = fixture.items.create_item("rock", 10, {}, Relations.container("backpack"))
 	fixture.containers.get_container("backpack").item_ids.append(first.instance_id)
 	var second = fixture.items.create_item("rock", 5, {}, Relations.world())
@@ -62,10 +64,14 @@ func _test_stack_merge_and_split() -> void:
 	var new_item = fixture.items.get_item(String(split.get("new_item_id", "")))
 	_assert(new_item != null and new_item.quantity == 4, "Split stack must preserve moved quantity")
 	_assert(Relations.kind_of(new_item.relation) == Relations.WORLD, "Split output must reach requested relation")
+	_assert_success(
+		fixture.validator.validate_graph(),
+		"Split transfer must leave relationship graph valid"
+	)
 
 
 func _test_nested_container_transfer() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var crate = fixture.items.create_item("crate", 1, {"container": {"container_id": "crate_contents"}}, Relations.world())
 	var contents = ContainerState.new({
 		"container_id": "crate_contents", "owner_kind": "ITEM_INSTANCE", "owner_id": crate.instance_id,
@@ -85,7 +91,7 @@ func _test_nested_container_transfer() -> void:
 
 
 func _test_capacity_and_nesting_guards() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var heavy = fixture.items.create_item("heavy", 1, {}, Relations.world())
 	var mass_result: Dictionary = fixture.transfer.move_item(heavy.instance_id, Relations.container("backpack"), "heavy-pickup")
 	_assert_error(mass_result, "MAXIMUM_MASS_EXCEEDED", "Backpack mass limit must be enforced")
@@ -106,7 +112,7 @@ func _test_capacity_and_nesting_guards() -> void:
 
 
 func _test_operation_idempotency() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var rock = fixture.items.create_item("rock", 1, {}, Relations.world())
 	var first: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.container("backpack"), "same-operation")
 	var second: Dictionary = fixture.transfer.move_item(rock.instance_id, Relations.world(), "same-operation")
@@ -115,8 +121,119 @@ func _test_operation_idempotency() -> void:
 	_assert(fixture.containers.get_container("backpack").item_ids.count(rock.instance_id) == 1, "Idempotent transfer must not duplicate membership")
 
 
+func _test_same_container_move_and_operation_validation() -> void:
+	var fixture = _fixture()
+	var rock = fixture.items.create_item(
+		"rock",
+		2,
+		{},
+		Relations.container("backpack")
+	)
+	fixture.containers.get_container("backpack").item_ids.append(
+		rock.instance_id
+	)
+	var move_inside: Dictionary = fixture.transfer.move_item(
+		rock.instance_id,
+		Relations.container("backpack", 3),
+		"same-container-slot"
+	)
+	_assert_success(
+		move_inside,
+		"Moving inside the same container must not count mass twice"
+	)
+	_assert(
+		fixture.containers.get_container("backpack").item_ids.count(
+			rock.instance_id
+		) == 1,
+		"Same-container move must preserve one membership"
+	)
+	_assert(
+		is_equal_approx(
+			fixture.mass.container_mass_kg("backpack"),
+			4.0
+		),
+		"Same-container move must preserve exact mass"
+	)
+	var empty_operation: Dictionary = fixture.transfer.move_item(
+		rock.instance_id,
+		Relations.world(),
+		""
+	)
+	_assert_error(
+		empty_operation,
+		"OPERATION_ID_REQUIRED",
+		"Transfer must require operation_id"
+	)
+	var empty_split_operation: Dictionary = (
+		fixture.transfer.split_and_move(
+			rock.instance_id,
+			1,
+			Relations.world(),
+			""
+		)
+	)
+	_assert_error(
+		empty_split_operation,
+		"OPERATION_ID_REQUIRED",
+		"Split transfer must require operation_id"
+	)
+
+
+func _test_graph_integrity_guards() -> void:
+	var missing_membership = _fixture()
+	var orphaned = missing_membership.items.create_item(
+		"rock",
+		1,
+		{},
+		Relations.container("backpack")
+	)
+	var missing_result: Dictionary = (
+		missing_membership.validator.validate_graph()
+	)
+	_assert_error(
+		missing_result,
+		"ITEM_CONTAINER_MEMBERSHIP_MISSING",
+		"Graph validation must detect missing container membership"
+	)
+
+	var duplicate_membership = _fixture()
+	var duplicated = duplicate_membership.items.create_item(
+		"rock",
+		1,
+		{},
+		Relations.container("backpack")
+	)
+	var duplicate_container = (
+		duplicate_membership.containers.get_container("backpack")
+	)
+	duplicate_container.item_ids.append(duplicated.instance_id)
+	duplicate_container.item_ids.append(duplicated.instance_id)
+	var duplicate_result: Dictionary = (
+		duplicate_membership.validator.validate_graph()
+	)
+	_assert_error(
+		duplicate_result,
+		"DUPLICATE_CONTAINER_MEMBERSHIP",
+		"Graph validation must detect duplicate membership"
+	)
+
+	var missing_item = _fixture()
+	missing_item.containers.get_container(
+		"backpack"
+	).item_ids.append("missing_item")
+	var missing_item_result: Dictionary = (
+		missing_item.validator.validate_graph()
+	)
+	_assert_error(
+		missing_item_result,
+		"CONTAINER_MEMBER_NOT_FOUND",
+		"Graph validation must reject unknown member IDs"
+	)
+
+
+
 func _test_attachment_roundtrip() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var chassis = fixture.items.create_item("chassis", 1, {}, Relations.world())
 	var lidar = fixture.items.create_item("lidar", 1, {}, Relations.container("backpack"))
 	fixture.containers.get_container("backpack").item_ids.append(lidar.instance_id)
@@ -132,10 +249,35 @@ func _test_attachment_roundtrip() -> void:
 	_assert_success(detach, "Attached module must detach to container")
 	_assert(Relations.kind_of(lidar.relation) == Relations.CONTAINER, "Detached item relation must be CONTAINER")
 	_assert(lidar.instance_id == String(detach.get("item_id", "")), "Attachment roundtrip must preserve instance identity")
+	var reattach: Dictionary = fixture.attachments.attach(
+		lidar.instance_id,
+		"rover",
+		"roof",
+		"attach-2"
+	)
+	_assert_success(reattach, "Module must attach again after detachment")
+	var direct_world_move: Dictionary = fixture.transfer.move_item(
+		lidar.instance_id,
+		Relations.world(),
+		"direct-attached-to-world"
+	)
+	_assert_success(
+		direct_world_move,
+		"Direct relation transfer must be able to remove attached item"
+	)
+	_assert(
+		String(
+			fixture.attachments.get_socket_state(
+				"rover",
+				"roof"
+			).get("item_id", "")
+		).is_empty(),
+		"Socket state must follow relation changes even outside attachment facade"
+	)
 
 
 func _test_mixed_relation_cycle_guard() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var parent = fixture.items.create_item("crate", 1, {"container": {"container_id": "parent_contents"}}, Relations.world())
 	fixture.containers.add_container(ContainerState.new({
 		"container_id": "parent_contents", "owner_kind": "ITEM_INSTANCE", "owner_id": parent.instance_id,
@@ -148,7 +290,7 @@ func _test_mixed_relation_cycle_guard() -> void:
 
 
 func _test_mass_and_external_volume() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var crate = fixture.items.create_item("crate", 1, {"container": {"container_id": "crate_contents"}}, Relations.container("backpack"))
 	fixture.containers.get_container("backpack").item_ids.append(crate.instance_id)
 	fixture.containers.add_container(ContainerState.new({
@@ -162,7 +304,7 @@ func _test_mass_and_external_volume() -> void:
 
 
 func _test_serialization_roundtrip() -> void:
-	var fixture := _fixture()
+	var fixture = _fixture()
 	var crate = fixture.items.create_item("crate", 1, {"container": {"container_id": "crate_contents"}}, Relations.container("backpack"))
 	fixture.containers.get_container("backpack").item_ids.append(crate.instance_id)
 	fixture.containers.add_container(ContainerState.new({
@@ -172,7 +314,7 @@ func _test_serialization_roundtrip() -> void:
 	fixture.containers.get_container("crate_contents").item_ids.append(rock.instance_id)
 	var item_data: Dictionary = fixture.items.to_dict()
 	var container_data: Dictionary = fixture.containers.to_dict()
-	var restored := Factory.create()
+	var restored = Factory.create()
 	restored.items.load_dict(item_data)
 	restored.containers.load_dict(container_data)
 	var restored_crate = restored.items.get_item(crate.instance_id)
@@ -185,9 +327,9 @@ func _test_serialization_roundtrip() -> void:
 
 
 func _test_representation_lifecycle() -> void:
-	var fixture := _fixture()
-	var world_root := Node3D.new()
-	var attachment_root := Node3D.new()
+	var fixture = _fixture()
+	var world_root = Node3D.new()
+	var attachment_root = Node3D.new()
 	get_root().add_child(world_root)
 	get_root().add_child(attachment_root)
 	var presenter = Presenter.new()
@@ -196,8 +338,30 @@ func _test_representation_lifecycle() -> void:
 	var chassis = fixture.items.create_item("chassis", 1, {}, Relations.world())
 	var lidar = fixture.items.create_item("lidar", 1, {}, Relations.world())
 	presenter.synchronize_item(lidar.instance_id)
-	_assert(presenter.get_world_node(lidar.instance_id) is RigidBody3D, "WORLD relation must create RigidBody3D")
-	fixture.transfer.move_item(lidar.instance_id, Relations.container("backpack"), "visual-pickup")
+	_assert(
+		presenter.get_world_node(lidar.instance_id) is RigidBody3D,
+		"WORLD relation must create RigidBody3D"
+	)
+	var loose_body: RigidBody3D = presenter.get_world_node(
+		lidar.instance_id
+	)
+	loose_body.position = Vector3(7.0, 8.0, 9.0)
+	loose_body.linear_velocity = Vector3(1.0, 2.0, 3.0)
+	_assert(
+		presenter.capture_world_state(lidar.instance_id),
+		"World presenter must capture physics state into the domain"
+	)
+	_assert(
+		Relations.transform_from_relation(
+			lidar.relation
+		).origin.is_equal_approx(Vector3(7.0, 8.0, 9.0)),
+		"Captured world transform must update ItemInstance"
+	)
+	fixture.transfer.move_item(
+		lidar.instance_id,
+		Relations.container("backpack"),
+		"visual-pickup"
+	)
 	presenter.synchronize_item(lidar.instance_id)
 	await process_frame
 	_assert(presenter.get_world_node(lidar.instance_id) == null, "CONTAINER relation must remove world physics")
@@ -219,7 +383,7 @@ func _test_representation_lifecycle() -> void:
 
 
 func _fixture() -> Dictionary:
-	var fixture := Factory.create()
+	var fixture = Factory.create()
 	fixture.items.register_definition(Definition.new({
 		"id": "rock", "display_name": "Rock", "max_stack": 50,
 		"unit_mass_kg": 2.0, "external_volume_l": 0.8, "tags": ["rock", "resource"],
@@ -234,7 +398,9 @@ func _fixture() -> Dictionary:
 	}))
 	fixture.items.register_definition(Definition.new({
 		"id": "chassis", "display_name": "Chassis", "max_stack": 1,
-		"unit_mass_kg": 100.0, "external_volume_l": 300.0, "tags": ["assembly_root"],
+		"unit_mass_kg": 100.0, "external_volume_l": 300.0,
+		"tags": ["assembly_root"],
+		"metadata": {"presentation_mode": "EXTERNAL"},
 	}))
 	fixture.items.register_definition(Definition.new({
 		"id": "heavy", "display_name": "Heavy", "max_stack": 1,

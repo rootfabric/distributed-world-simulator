@@ -24,6 +24,7 @@ const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
 const DIAGNOSTIC_DIR: String = "user://diagnostics"
+const ITEM_SYSTEM_LAB_SCENE: String = "res://scenes/items/item_system_lab.tscn"
 const WINDOWED_RESOLUTIONS := [
 	Vector2i(1280, 720),
 	Vector2i(1600, 900),
@@ -235,6 +236,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_fullscreen()
 			get_viewport().set_input_as_handled()
 			return
+		if event.keycode == KEY_F5:
+			get_viewport().set_input_as_handled()
+			open_item_system_lab()
+			return
 		if event.keycode == KEY_F8:
 			cycle_resolution()
 			get_viewport().set_input_as_handled()
@@ -261,6 +266,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not _is_menu_open():
 				_set_mouse_capture(true)
 				get_viewport().set_input_as_handled()
+
+
+func open_item_system_lab() -> void:
+	if persistence != null:
+		persistence.save_all_loaded_chunks()
+	get_tree().change_scene_to_file(ITEM_SYSTEM_LAB_SCENE)
 
 
 func toggle_menu() -> void:

@@ -20,7 +20,7 @@ func create_item(definition_id: String, quantity: int = 1, components: Dictionar
 		return null
 	if quantity < 1 or quantity > definition.max_stack:
 		return null
-	var item_id := _next_id(definition_id)
+	var item_id = _next_id(definition_id)
 	var item = ItemInstanceScript.new({
 		"instance_id": item_id,
 		"definition_id": definition_id,
@@ -85,6 +85,6 @@ func load_dict(data: Dictionary) -> void:
 
 
 func _next_id(prefix: String) -> String:
-	var result := "%s_%06d" % [prefix, _sequence]
+	var result = "%s_%06d" % [prefix, _sequence]
 	_sequence += 1
 	return result

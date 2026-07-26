@@ -18,6 +18,10 @@ func get_container(container_id: String) -> Variant:
 	return containers.get(container_id)
 
 
+func all_containers() -> Array:
+	return containers.values()
+
+
 func remove_container(container_id: String) -> bool:
 	var container = get_container(container_id)
 	if container == null or not container.item_ids.is_empty():
