@@ -106,6 +106,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			developer_console.execute_line("help")
 			get_viewport().set_input_as_handled()
 			return
+		var hotkey_commands: Array[String] = get_hotkey_command_candidates(
+			event.keycode
+		)
+		if _execute_first_available_command(hotkey_commands):
+			get_viewport().set_input_as_handled()
+			return
 		var command_line: String = ""
 		match event.physical_keycode:
 			KEY_TAB:
@@ -127,6 +133,31 @@ func _unhandled_input(event: InputEvent) -> void:
 	):
 		execute_command("input.mouse.capture")
 		get_viewport().set_input_as_handled()
+
+
+func _execute_first_available_command(command_ids: Array[String]) -> bool:
+	for command_id in command_ids:
+		if command_registry.has_command(command_id):
+			execute_command(command_id)
+			return true
+	return false
+
+
+func get_hotkey_command_candidates(keycode: int) -> Array[String]:
+	match keycode:
+		KEY_F2:
+			return ["player.teleport.spectator"]
+		KEY_F3:
+			return [
+				"space.mode.toggle",
+				"player.spectator.toggle",
+			]
+		KEY_F4:
+			return [
+				"world.lod.debug.toggle",
+				"earth.debug.cycle",
+			]
+	return []
 
 
 func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
@@ -176,7 +207,9 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		"simulation_clock": simulation_clock,
 		"universe_id": String(definition.get("universe_id", "main")),
 		"instance_id": String(definition.get("instance_id", "persistent")),
-		"local_authority_id": String(definition.get("local_authority_id", "local-process")),
+		"local_authority_id": String(
+			definition.get("local_authority_id", "local-process")
+		),
 	}
 	runtime.call("configure_runtime", context)
 	current_runtime = runtime
@@ -692,7 +725,10 @@ func _command_time_scale(arguments: Array[String]) -> Dictionary:
 		return _failure("INVALID_TIME_SCALE", "Использование: time.scale <multiplier>")
 	var scale_value: float = float(arguments[0])
 	if scale_value < 0.0:
-		return _failure("INVALID_TIME_SCALE", "Множитель времени не может быть отрицательным")
+		return _failure(
+			"INVALID_TIME_SCALE",
+			"Множитель времени не может быть отрицательным"
+		)
 	simulation_clock.set_time_scale(scale_value)
 	return _command_time_status([])
 
@@ -1002,8 +1038,8 @@ func _ensure_input_actions() -> void:
 	_set_single_key_action("move_up", KEY_SPACE)
 	_set_single_key_action("move_down", KEY_CTRL)
 	_set_single_key_action("boost", KEY_SHIFT)
-	_set_single_key_action("roll_left", KEY_Q)
-	_set_single_key_action("roll_right", KEY_R)
+	_set_single_key_action("roll_left", KEY_E)
+	_set_single_key_action("roll_right", KEY_Q)
 	_set_single_key_action("level_horizon", KEY_H)
 
 

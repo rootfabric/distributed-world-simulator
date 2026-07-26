@@ -1,5 +1,5 @@
 {
-  "schema": "lunar.controller_profile.v1",
+  "schema": "planet_simulator.controller_profile.v1",
   "profile_id": "lunar_jetpack",
   "display_name": "Lunar EVA Jetpack",
   "controller_script": "res://scripts/actors/controllers/jetpack_controller.gd",

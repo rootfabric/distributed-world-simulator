@@ -272,13 +272,14 @@ func _test_physics_object() -> Dictionary:
 	var after_create: int = spawned_objects.get_child_count()
 	var object_name: String = String(create_result.get("object_name", ""))
 	var created_object: Node = spawned_objects.get_node_or_null(object_name)
-	if created_object != null:
+	var object_was_found: bool = is_instance_valid(created_object)
+	if object_was_found:
 		created_object.free()
 	var after_cleanup: int = spawned_objects.get_child_count()
 	var passed: bool = (
 		bool(create_result.get("success", false))
 		and after_create == before + 1
-		and created_object != null
+		and object_was_found
 		and after_cleanup == before
 	)
 	return {

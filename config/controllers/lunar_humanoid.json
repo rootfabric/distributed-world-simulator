@@ -1,5 +1,5 @@
 {
-  "schema": "lunar.controller_profile.v1",
+  "schema": "planet_simulator.controller_profile.v1",
   "profile_id": "lunar_humanoid",
   "display_name": "Lunar EVA Humanoid",
   "controller_script": "res://scripts/actors/controllers/planetary_humanoid_controller.gd",

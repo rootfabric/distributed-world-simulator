@@ -309,6 +309,69 @@ func _leave_shared_space_mode() -> void:
 	logger.info("space", "shared_space_mode_left", {})
 
 
+func teleport_player_to_spectator() -> void:
+	if not shared_space_mode:
+		super.teleport_player_to_spectator()
+		return
+	if earth_explorer == null or celestial_system == null:
+		return
+	var observer_space_position: Vector3 = earth_explorer.get_world_position()
+	var observer_body_id: String = _get_nearest_visible_body_id(
+		observer_space_position
+	)
+	# The current controllable player belongs to the lunar runtime. Until a
+	# planet-independent player is introduced, F2 can safely land it only on
+	# the Moon.
+	if observer_body_id != "moon":
+		last_action_result = (
+			"Игрок пока может телепортироваться только к спектатору у Луны"
+		)
+		return
+	var moon_local_position: Vector3 = celestial_system.to_body_local(
+		observer_space_position,
+		"moon"
+	)
+	if moon_local_position.length_squared() < 1.0:
+		return
+	var target_direction: Vector3 = moon_local_position.normalized()
+	_leave_shared_space_mode()
+	moon_world.prepare_surface_region(target_direction, true)
+	moon_world.set_render_origin(moon_world.get_surface_anchor())
+	player.teleport_to_surface(target_direction)
+	player.activate_after_spawn()
+	_set_mouse_capture(true)
+	if hud != null:
+		hud.set_menu_visible(false)
+	_sync_player_entity()
+	zone_manager.update_observer(player.get_world_position(), false)
+	last_action_result = "Игрок перемещён к позиции спектатора"
+	logger.info("gameplay", "player_teleported_from_shared_space_spectator", {
+		"observer_space_position": [
+			observer_space_position.x,
+			observer_space_position.y,
+			observer_space_position.z,
+		],
+		"player_world_position": _vector_to_array(player.get_world_position()),
+	})
+
+
+func _command_teleport_from_spectator(
+	_arguments: Array[String]
+) -> Dictionary:
+	if not shared_space_mode:
+		return super._command_teleport_from_spectator(_arguments)
+	teleport_player_to_spectator()
+	if shared_space_mode:
+		return {
+			"success": false,
+			"output": last_action_result,
+		}
+	return {
+		"success": true,
+		"output": "Персонаж перемещён к позиции спектатора",
+	}
+
+
 func _teleport_to_earth_biome(biome_name: String) -> void:
 	var direction: Vector3 = earth_world.find_biome_direction(biome_name)
 	earth_explorer.teleport_to_body_surface("earth", direction, 450.0)

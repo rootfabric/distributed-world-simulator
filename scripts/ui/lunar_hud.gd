@@ -92,15 +92,11 @@ func setup(
 
 	help_label = Label.new()
 	help_label.text = (
-		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
-		+ "K — тест фоновой генерации   F5 — лаборатория предметов   P — Земля/Луна\n"
-		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
-		+ "E — взаимодействие с объектом в центре экрана\n"
-		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк   M — дальние метки\n"
-		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
-		+ "F9 — диагностика   F3 — спектатор   T — телепорт из спектатора\n"
-		+ "F2 — LOD follow   F4 — цвета LOD   V — материал\n"
-		+ "F8 — разрешение   F11 — полный экран   F6/R — случайная точка"
+		"~ — консоль   F1 — команды   F2 — игрок к спектатору\n"
+		+ "F3 — игрок/спектатор   F4 — показать LOD   Tab — мышь\n"
+		+ "WASD, Shift, Space — движение   Q/E — крен спектатора\n"
+		+ "Вся функциональность доступна командами независимо от выбранного мира.\n"
+		+ "Начните с: help, world.list, test.list, runtime.snapshot"
 	)
 	help_label.add_theme_font_size_override("font_size", 13)
 	help_label.modulate = Color(0.78, 0.82, 0.90)
@@ -109,40 +105,40 @@ func setup(
 	var controller_row := HBoxContainer.new()
 	controller_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(controller_row)
-	_add_button(controller_row, "Камера 1/3 лицо (C)", _on_camera_mode_pressed)
-	_add_button(controller_row, "Lunar EVA / Jetpack (J)", _on_controller_toggle_pressed)
-	_add_button(controller_row, "Тест контроллера (F12)", _on_controller_test_pressed)
+	_add_button(controller_row, "Камера 1/3 лицо", _on_camera_mode_pressed)
+	_add_button(controller_row, "Lunar EVA / Jetpack", _on_controller_toggle_pressed)
+	_add_button(controller_row, "Тест контроллера", _on_controller_test_pressed)
 
 	var streaming_row := HBoxContainer.new()
 	streaming_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(streaming_row)
-	_add_button(streaming_row, "Безопасный streaming-тест (K)", _on_streaming_test_pressed)
-	_add_button(streaming_row, "Сохранить диагностику (F9)", _on_diagnostic_pressed)
+	_add_button(streaming_row, "Streaming-тест", _on_streaming_test_pressed)
+	_add_button(streaming_row, "Сохранить диагностику", _on_diagnostic_pressed)
 
 	var placement_row := HBoxContainer.new()
 	placement_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(placement_row)
-	_add_button(placement_row, "Поставить маяк (B)", _on_place_beacon_pressed)
-	_add_button(placement_row, "Удалить ближайший (Delete)", _on_remove_beacon_pressed)
-	_add_button(placement_row, "Метки маяков (M)", _on_toggle_markers_pressed)
-	_add_button(placement_row, "Сохранить мир (Ctrl+S)", _on_save_world_pressed)
+	_add_button(placement_row, "Поставить маяк", _on_place_beacon_pressed)
+	_add_button(placement_row, "Удалить ближайший", _on_remove_beacon_pressed)
+	_add_button(placement_row, "Метки маяков", _on_toggle_markers_pressed)
+	_add_button(placement_row, "Сохранить мир", _on_save_world_pressed)
 
 	var test_row := HBoxContainer.new()
 	test_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(test_row)
-	_add_button(test_row, "Тест миграции (F7)", _on_migration_test_pressed)
-	_add_button(test_row, "Тест сохранения (F10)", _on_persistence_test_pressed)
-	_add_button(test_row, "Лаборатория предметов (F5)", _on_item_lab_pressed)
+	_add_button(test_row, "Тест миграции", _on_migration_test_pressed)
+	_add_button(test_row, "Тест сохранения", _on_persistence_test_pressed)
+	_add_button(test_row, "Лаборатория предметов", _on_item_lab_pressed)
 
 	var world_row := HBoxContainer.new()
 	world_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(world_row)
-	_add_button(world_row, "Случайная точка (F6/R)", _on_random_spawn_pressed)
+	_add_button(world_row, "Случайная точка", _on_random_spawn_pressed)
 	_add_button(world_row, "Очистить постоянный слой", _on_clear_world_pressed)
-	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
+	_add_button(world_row, "Закрыть меню", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1/Esc — меню | F5 — предметы | P — планеты | E — действие | B — маяк | M — метки"
+	compact_hint.text = "F2 — ТП игрока | F3 — спектатор | F4 — LOD | Q/E — крен | ~ — консоль"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
@@ -272,65 +268,69 @@ func is_menu_visible() -> bool:
 	return menu_visible
 
 
+func _run_command(command_line: String) -> void:
+	if main_controller != null and main_controller.has_method("execute_runtime_command"):
+		main_controller.execute_runtime_command(command_line)
+
+
 func _on_camera_mode_pressed() -> void:
-	main_controller.toggle_player_camera()
+	_run_command("player.camera.toggle")
 
 
 func _on_controller_toggle_pressed() -> void:
-	main_controller.toggle_player_controller()
+	_run_command("player.controller.toggle")
 
 
 func _on_controller_test_pressed() -> void:
-	main_controller.run_controller_mini_test()
+	_run_command("test.controller")
 
 
 func _on_streaming_test_pressed() -> void:
-	main_controller.run_terrain_streaming_mini_test()
+	_run_command("test.terrain_streaming")
 
 
 func _on_place_beacon_pressed() -> void:
-	main_controller.place_survey_beacon()
+	_run_command("world.beacon.place")
 
 
 func _on_remove_beacon_pressed() -> void:
-	main_controller.remove_nearest_survey_beacon()
+	_run_command("world.beacon.remove_nearest")
 
 
 func _on_toggle_markers_pressed() -> void:
-	main_controller.toggle_beacon_markers()
+	_run_command("world.beacon.markers.toggle")
 
 
 func _on_save_world_pressed() -> void:
-	main_controller.save_world_now()
+	_run_command("world.save")
 
 
 func _on_migration_test_pressed() -> void:
-	main_controller.run_entity_migration_mini_test()
+	_run_command("test.entity_migration")
 
 
 func _on_persistence_test_pressed() -> void:
-	main_controller.run_persistence_mini_test()
+	_run_command("test.persistence_roundtrip")
 
 
 func _on_diagnostic_pressed() -> void:
-	main_controller.save_diagnostic_snapshot()
+	_run_command("diagnostics.save")
 
 
 func _on_item_lab_pressed() -> void:
-	main_controller.open_item_system_lab()
+	_run_command("item.lab.open")
 
 
 func _on_random_spawn_pressed() -> void:
-	main_controller.random_spawn()
+	_run_command("player.spawn.random")
 
 
 func _on_clear_world_pressed() -> void:
-	main_controller.clear_persistent_world()
+	_run_command("world.persistence.clear confirm")
 
 
 func _on_close_pressed() -> void:
-	main_controller.toggle_menu()
-
+	_run_command("ui.menu.toggle")
 
 func update_values(
 	spectator_enabled: bool,
