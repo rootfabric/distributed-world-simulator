@@ -171,35 +171,3 @@ config/terrain_streaming.json
 ```
 
 Перед экспортом полезно нажать `F9` сразу после заметного зависания.
-
-## Новые события v15.1
-
-### `terrain_stream_test_staged`
-
-Безопасный тест `K` полностью создаёт staging slot, но не заменяет активную
-поверхность. Поле `surface_swapped` должно быть `false`.
-
-### `terrain_actor_surface_reconciled`
-
-Записывается, когда наземный актор был перенесён на точную высоту новой сетки
-во время swap. Полезные поля:
-
-- `vertical_delta_m`;
-- `old_clearance_m`;
-- `target_clearance_m`;
-- `was_on_floor`.
-
-### `collision_tile_N`
-
-Большая коллизия разбита на сбалансированные части. Анализатор объединяет эти
-стадии под именем `collision_tile` и показывает average/P95/max.
-
-### `prediction_skip_counts`
-
-Периодический snapshot содержит агрегированные причины отсутствия новой job:
-
-- `stationary_hysteresis`;
-- `inside_prefetch_radius`;
-- `post_swap_cooldown`;
-- `worker_busy_prefetch_kept`;
-- `pending_request_locked`.

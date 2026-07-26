@@ -1,20 +1,33 @@
-# Ближайшие итерации после v15.2
+# Ближайшие итерации после v15
 
-## v15.2.1 — валидация terrain cache
+## v15.1 — анализ реальных performance logs
 
-- выполнить полёт на 2–5 км и возврат к маякам;
-- подтвердить `project_version=15.2` в startup-log;
-- подтвердить `terrain_surface_cached` при уходе;
-- подтвердить `terrain_pinned_cache_return_triggered` и `terrain_surface_cache_hit` при возврате;
-- измерить `total_cache_activation_ms`;
-- проверить, что движение от маяка не вызывает обратное переключение pinned-cell;
-- оценить размер RAM при 8 обычных и нескольких pinned cells.
+- пройти 2–5 км пешком и на джетпаке;
+- выполнить несколько разворотов во время GENERATING;
+- сопоставить `long_frame_detected` с `terrain_commit_stage`;
+- определить долю CPU generation, ArrayMesh, collision и rocks;
+- зафиксировать baseline для компьютера тестирования.
 
-Решения по результатам:
+## v15.2 — устранение подтверждённого main-thread bottleneck
 
-- уменьшить или увеличить `recent_surface_cache_capacity`;
-- изменить `pinned_return_trigger_distance_m`;
-- при длинном cache activation разбить создание CollisionShape3D-узлов на несколько кадров.
+При доминировании `collision_shape`:
+
+- разбить collision на небольшие tiles;
+- подключать ближайшие tiles раньше дальних;
+- заменять только вышедшие tiles;
+- оставить визуальную и физическую поверхность основанными на одинаковых samples.
+
+При доминировании `local_mesh_resource`:
+
+- разделить LOCAL на concentric clipmap rings;
+- создавать по одному ring resource за кадр;
+- выполнять swap только после готовности критического внутреннего ring.
+
+При доминировании `rock_descriptors` или `rock_layer_N`:
+
+- отделить decoration queue от critical terrain;
+- камни подключать после поверхности и collision;
+- разбить крупные MultiMesh на пространственные batches.
 
 ## v15.3 — First-person Interaction
 
@@ -35,6 +48,8 @@
 - sockets и простой power graph;
 - сохранение через существующий persistent layer.
 
+---
+
 ## Параллельный долг по фундаменту
 
 ### Chunk Lifecycle
@@ -44,13 +59,6 @@
 3. В Active создавать визуальную сцену и коллизию.
 4. Очередь создания сущностей по frame budget.
 5. Метрики чтения JSON и создания runtime scenes.
-
-### Terrain Streaming
-
-1. Clipmap rings вместо единого LOCAL ArrayMesh.
-2. Низкоприоритетная очередь декоративных камней.
-3. Удаляемый disk cache, отделённый от авторитетного мира.
-4. Ограничение памяти по оценочному размеру, а не только числу cells.
 
 ### Controller Layer
 

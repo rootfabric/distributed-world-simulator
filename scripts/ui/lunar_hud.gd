@@ -70,7 +70,7 @@ func setup(
 	scroll.add_child(vertical)
 
 	var title := Label.new()
-	title.text = "REAL SCALE PROCEDURAL MOON — CACHE + LANDMARKS"
+	title.text = "REAL SCALE PROCEDURAL MOON — ASYNC TERRAIN STREAMING"
 	title.add_theme_font_size_override("font_size", 19)
 	vertical.add_child(title)
 
@@ -85,9 +85,9 @@ func setup(
 	help_label = Label.new()
 	help_label.text = (
 		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
-		+ "K — тест фоновой генерации без смены активной поверхности\n"
+		+ "K — тест фоновой генерации и staged commit\n"
 		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
-		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк   M — дальние метки\n"
+		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк\n"
 		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
 		+ "F9 — диагностика   F3 — спектатор   T — телепорт из спектатора\n"
 		+ "F2 — LOD follow   F4 — цвета LOD   V — материал\n"
@@ -107,7 +107,7 @@ func setup(
 	var streaming_row := HBoxContainer.new()
 	streaming_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(streaming_row)
-	_add_button(streaming_row, "Безопасный streaming-тест (K)", _on_streaming_test_pressed)
+	_add_button(streaming_row, "Тест фоновой генерации (K)", _on_streaming_test_pressed)
 	_add_button(streaming_row, "Сохранить диагностику (F9)", _on_diagnostic_pressed)
 
 	var placement_row := HBoxContainer.new()
@@ -115,7 +115,6 @@ func setup(
 	vertical.add_child(placement_row)
 	_add_button(placement_row, "Поставить маяк (B)", _on_place_beacon_pressed)
 	_add_button(placement_row, "Удалить ближайший (Delete)", _on_remove_beacon_pressed)
-	_add_button(placement_row, "Метки маяков (M)", _on_toggle_markers_pressed)
 	_add_button(placement_row, "Сохранить мир (Ctrl+S)", _on_save_world_pressed)
 
 	var test_row := HBoxContainer.new()
@@ -132,7 +131,7 @@ func setup(
 	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1/Esc — меню | C — камера | J — контроллер | K — streaming | B — маяк | M — метки"
+	compact_hint.text = "F1/Esc — меню | C — камера | J — контроллер | K — streaming test | B — маяк"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
@@ -192,10 +191,6 @@ func _on_place_beacon_pressed() -> void:
 
 func _on_remove_beacon_pressed() -> void:
 	main_controller.remove_nearest_survey_beacon()
-
-
-func _on_toggle_markers_pressed() -> void:
-	main_controller.toggle_beacon_markers()
 
 
 func _on_save_world_pressed() -> void:
@@ -265,7 +260,6 @@ func update_values(
 			+ "Разбиение: %s\n"
 			+ "Сущности: %s\n"
 			+ "Хранилище: %s\n"
-			+ "Навигационные метки: %s\n"
 			+ "Тест миграции: %s\n"
 			+ "Тест persistence: %s\n"
 			+ "Последнее действие: %s\n"
@@ -289,7 +283,6 @@ func update_values(
 			partition_text,
 			entity_text,
 			persistence_text,
-			main_controller.get_beacon_marker_summary(),
 			main_controller.get_last_mini_test_result(),
 			main_controller.get_last_persistence_test_result(),
 			main_controller.get_last_action_result(),

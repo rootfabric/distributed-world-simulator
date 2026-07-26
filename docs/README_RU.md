@@ -9,8 +9,6 @@
 - `architecture/PERSISTENT_WORLD_LAYER_V1_RU.md`
 - `architecture/PLUGGABLE_CONTROLLER_ARCHITECTURE_RU.md`
 - `architecture/ASYNC_TERRAIN_STREAMING_V1_RU.md`
-- `architecture/RECENT_SURFACE_CACHE_V1_RU.md`
-- `architecture/LANDMARK_MARKERS_V1_RU.md`
 - `architecture/adr/`
 
 ## Контракты
@@ -25,10 +23,8 @@
 
 - `diagnostics/LOGGING_RU.md`
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
-- `diagnostics/V15_USER_LOG_ANALYSIS_RU.md`
-- `diagnostics/V15_2_USER_LOG_ANALYSIS_RU.md`
 
-## Планы и приёмка
+## Планы
 
 - `plans/ROADMAP_RU.md`
 - `plans/NEXT_ITERATIONS_RU.md`
@@ -37,8 +33,6 @@
 - `plans/V13_ACCEPTANCE_TESTS_RU.md`
 - `plans/V14_ACCEPTANCE_TESTS_RU.md`
 - `plans/V15_ACCEPTANCE_TESTS_RU.md`
-- `plans/V15_1_ACCEPTANCE_TESTS_RU.md`
-- `plans/V15_2_ACCEPTANCE_TESTS_RU.md`
 
 ## Рельеф и LOD
 

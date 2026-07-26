@@ -20,10 +20,6 @@ var failures: Array[String] = []
 
 
 func _init() -> void:
-	_assert(
-		FileAccess.file_exists("res://config/navigation_markers.json"),
-		"Navigation marker config is missing."
-	)
 	var test_root: String = "user://tests/persistence_%d" % Time.get_ticks_msec()
 	var container := Node.new()
 	get_root().add_child(container)
@@ -64,14 +60,6 @@ func _init() -> void:
 	_assert(record != null, "Beacon record is missing from registry.")
 	var chunk_path: String = repository.get_chunk_file_path(record.chunk_id)
 	_assert(FileAccess.file_exists(chunk_path), "Changed chunk file was not created.")
-	_assert(
-		FileAccess.file_exists(test_root.path_join("landmarks.json")),
-		"Landmark index was not created."
-	)
-	_assert(
-		repository.get_landmark_summary().contains("маяков=1"),
-		"Survey beacon was not added to the landmark index."
-	)
 
 	var result: Dictionary = repository.run_roundtrip_test(start, forward)
 	_assert(bool(result.get("passed", false)), "Persistence roundtrip mini-test failed.")
