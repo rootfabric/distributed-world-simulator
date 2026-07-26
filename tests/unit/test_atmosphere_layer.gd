@@ -6,6 +6,9 @@ const CelestialSystemScript = preload(
 const PlanetAtmosphereScript = preload(
 	"res://scripts/world/atmosphere/planet_atmosphere.gd"
 )
+const AtmosphereManagerScript = preload(
+	"res://scripts/world/atmosphere/atmosphere_manager.gd"
+)
 
 var failures: Array[String] = []
 
@@ -50,6 +53,39 @@ func _init() -> void:
 	_assert(
 		float(near_surface_state.get("intensity", 0.0)) > 0.95,
 		"Atmosphere intensity is unexpectedly weak near the surface."
+	)
+	var near_surface_up = near_surface_state.get("local_up", [])
+	_assert(
+		near_surface_up is Array
+		and near_surface_up.size() >= 3
+		and Vector3(
+			float(near_surface_up[0]),
+			float(near_surface_up[1]),
+			float(near_surface_up[2])
+		).dot(Vector3.RIGHT) > 0.999,
+		"Atmosphere state does not expose the observer's radial local-up vector."
+	)
+
+	var world_environment := WorldEnvironment.new()
+	world_environment.environment = Environment.new()
+	root.add_child(world_environment)
+	var manager = AtmosphereManagerScript.new()
+	root.add_child(manager)
+	_assert(
+		manager.setup(system, {}, world_environment, null),
+		"Atmosphere manager setup failed."
+	)
+	manager.update_for_observer(
+		earth_center + Vector3(earth_radius + 1000.0, 0.0, 0.0),
+		null,
+		0.016
+	)
+	var rotated_sky_up: Vector3 = (
+		Basis.from_euler(world_environment.environment.sky_rotation) * Vector3.UP
+	).normalized()
+	_assert(
+		rotated_sky_up.dot(Vector3.RIGHT) > 0.999,
+		"Procedural sky +Y was not aligned to the planet-local radial up."
 	)
 
 	var upper_state: Dictionary = atmosphere.update_for_observer(

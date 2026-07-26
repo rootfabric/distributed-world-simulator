@@ -15,3 +15,11 @@ res://scripts/world/planetary/rules/hydrology_rule.gd
 res://scripts/world/planetary/rules/surface_composer_rule.gd
 res://scripts/world/vegetation/earth_placement_system.gd
 res://tests/unit/test_earth_generation_pipeline.gd
+res://docs/architecture/TARGET_ARCHITECTURE_RU.md
+res://docs/plans/NEXT_ITERATIONS_RU.md
+res://docs/plans/ROADMAP_RU.md
+res://scripts/app/lunar_app.gd
+res://scripts/persistence/lunar_world_repository.gd
+res://scripts/ui/lunar_hud.gd
+res://scripts/world/terrain/procedural_moon_terrain.gd
+res://scripts/world/terrain/streaming/terrain_streaming_manager.gd

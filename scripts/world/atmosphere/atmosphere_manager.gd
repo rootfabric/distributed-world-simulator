@@ -18,6 +18,7 @@ var active_body_id: String = ""
 var last_applied_body_id: String = ""
 var last_applied_altitude_m: float = INF
 var last_applied_intensity: float = -1.0
+var last_applied_up_direction: Vector3 = Vector3.ZERO
 var last_summary: Dictionary = {}
 
 
@@ -156,6 +157,14 @@ func _apply_atmosphere_environment(atmosphere, state: Dictionary) -> void:
 		world_environment.environment = active_environment
 	var altitude_m: float = maxf(0.0, float(state.get("altitude_m", 0.0)))
 	var intensity: float = clampf(float(state.get("intensity", 0.0)), 0.0, 1.0)
+	var environment_config: Dictionary = atmosphere.get_environment_config()
+
+	# ProceduralSkyMaterial assumes that its +Y axis is the zenith. On a
+	# spherical world the observer's zenith is the radial vector from the body
+	# centre, not the global +Y axis. Environment.sky_rotation is therefore
+	# updated independently from color/altitude throttling.
+	_apply_local_sky_orientation(environment_config, state)
+
 	if (
 		last_applied_body_id == active_body_id
 		and absf(last_applied_altitude_m - altitude_m) < 50.0
@@ -165,7 +174,6 @@ func _apply_atmosphere_environment(atmosphere, state: Dictionary) -> void:
 	last_applied_body_id = active_body_id
 	last_applied_altitude_m = altitude_m
 	last_applied_intensity = intensity
-	var environment_config: Dictionary = atmosphere.get_environment_config()
 	var fog_config: Dictionary = atmosphere.get_fog_config()
 	var top_altitude_m: float = maxf(1.0, atmosphere.top_altitude_m)
 	var altitude_t: float = clampf(altitude_m / top_altitude_m, 0.0, 1.0)
@@ -202,6 +210,11 @@ func _apply_atmosphere_environment(atmosphere, state: Dictionary) -> void:
 		space_color,
 		1.0 - intensity
 	)
+	# Matching both horizon colors removes the one-pixel discontinuity between
+	# ProceduralSkyMaterial's sky and ground hemispheres. The lower hemisphere
+	# can still darken normally through ground_bottom_color.
+	if bool(environment_config.get("continuous_horizon", true)):
+		ground_horizon = horizon_color
 	var ground_bottom: Color = surface_ground_bottom.lerp(space_color, upper_t)
 	_set_property_if_present(sky_material, "sky_top_color", top_color)
 	_set_property_if_present(sky_material, "sky_horizon_color", horizon_color)
@@ -227,6 +240,53 @@ func _apply_atmosphere_environment(atmosphere, state: Dictionary) -> void:
 		upper_t
 	)
 	_apply_fog(fog_config, altitude_m, intensity)
+
+
+func _apply_local_sky_orientation(
+	environment_config: Dictionary,
+	state: Dictionary
+) -> void:
+	if not bool(environment_config.get("align_sky_to_local_up", true)):
+		if last_applied_up_direction != Vector3.UP:
+			active_environment.sky_rotation = Vector3.ZERO
+			last_applied_up_direction = Vector3.UP
+		return
+
+	var local_up: Vector3 = _vector3_from_value(
+		state.get("local_up", [0.0, 1.0, 0.0]),
+		Vector3.UP
+	)
+	if local_up.length_squared() < 0.5:
+		local_up = Vector3.UP
+	else:
+		local_up = local_up.normalized()
+
+	# Avoid rewriting the Environment resource when the radial direction has
+	# not changed enough to affect the rendered horizon.
+	if (
+		last_applied_up_direction.length_squared() > 0.5
+		and last_applied_up_direction.dot(local_up) > 0.9999995
+	):
+		return
+
+	# This basis maps the procedural sky's local +Y to the body's radial up.
+	# Godot internally applies the inverse sky orientation before the camera
+	# basis, which is exactly the required world-to-sky conversion.
+	var sky_orientation := Basis(Quaternion(Vector3.UP, local_up)).orthonormalized()
+	active_environment.sky_rotation = sky_orientation.get_euler()
+	last_applied_up_direction = local_up
+
+
+func _vector3_from_value(value, fallback: Vector3) -> Vector3:
+	if value is Vector3:
+		return value
+	if value is Array and value.size() >= 3:
+		return Vector3(
+			float(value[0]),
+			float(value[1]),
+			float(value[2])
+		)
+	return fallback
 
 
 func _apply_fog(fog_config: Dictionary, altitude_m: float, intensity: float) -> void:
@@ -269,6 +329,7 @@ func _restore_baseline_environment() -> void:
 	last_applied_body_id = ""
 	last_applied_altitude_m = INF
 	last_applied_intensity = -1.0
+	last_applied_up_direction = Vector3.ZERO
 	if world_environment != null and baseline_environment != null:
 		world_environment.environment = baseline_environment
 

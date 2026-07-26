@@ -104,6 +104,9 @@ func update_for_observer(space_position: Vector3, camera: Camera3D, delta: float
 		"altitude_m": altitude_m,
 		"intensity": intensity,
 		"surface_height_m": surface_height_m,
+		# JSON-safe radial up vector. The environment layer uses it to align
+		# a sky material with the local horizon of this spherical body.
+		"local_up": [direction.x, direction.y, direction.z],
 	}
 	return last_state
 
