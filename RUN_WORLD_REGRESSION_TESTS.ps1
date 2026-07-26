@@ -41,6 +41,7 @@ $Tests = @(
     "res://tests/core/test_command_registry.gd",
     "res://tests/core/test_world_catalog.gd",
     "res://tests/core/test_controller_profiles.gd",
+    "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
     "res://tests/unit/test_celestial_motion.gd",
     "res://tests/unit/test_partition_address_v2.gd",

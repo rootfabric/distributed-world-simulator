@@ -24,14 +24,13 @@ func physics_step(delta: float) -> void:
 		- Input.get_action_strength("move_down")
 	)
 	var view_basis: Basis = actor.get_view_basis()
-	var forward: Vector3 = (-view_basis.z).slide(up)
-	var right: Vector3 = view_basis.x.slide(up)
-	if forward.length_squared() < 0.000001:
-		forward = (-actor.global_transform.basis.z).slide(up)
-	if right.length_squared() < 0.000001:
-		right = actor.global_transform.basis.x.slide(up)
-	forward = forward.normalized()
-	right = right.normalized()
+	var flight_axes: Dictionary = get_view_relative_flight_axes(
+		up,
+		view_basis,
+		actor.global_transform.basis
+	)
+	var forward: Vector3 = flight_axes["forward"]
+	var right: Vector3 = flight_axes["right"]
 
 	var boost: bool = Input.is_action_pressed("boost")
 	var horizontal_speed: float = float(
@@ -66,3 +65,26 @@ func physics_step(delta: float) -> void:
 	actor.move_and_slide()
 	world.recenter_player(actor)
 	actor.recover_if_below_surface()
+
+
+func get_view_relative_flight_axes(
+	up: Vector3,
+	view_basis: Basis,
+	fallback_basis: Basis = Basis.IDENTITY
+) -> Dictionary:
+	var forward: Vector3 = -view_basis.z
+	var right: Vector3 = view_basis.x
+	if forward.length_squared() < 0.000001:
+		forward = -fallback_basis.z
+	if right.length_squared() < 0.000001:
+		right = fallback_basis.x
+	if forward.length_squared() < 0.000001:
+		forward = up.cross(Vector3.RIGHT)
+		if forward.length_squared() < 0.000001:
+			forward = up.cross(Vector3.FORWARD)
+	if right.length_squared() < 0.000001:
+		right = forward.cross(up)
+	return {
+		"forward": forward.normalized(),
+		"right": right.normalized(),
+	}

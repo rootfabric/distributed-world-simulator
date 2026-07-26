@@ -25,6 +25,16 @@ func _init() -> void:
 		"F4 must toggle LOD visualization."
 	)
 	_assert(
+		app.get_hotkey_command_candidates(KEY_F5)
+		== ["player.camera.toggle"],
+		"F5 must toggle first-person and third-person camera modes."
+	)
+	_assert(
+		app.get_hotkey_command_candidates(KEY_J)
+		== ["player.controller.toggle"],
+		"J must toggle the humanoid and jetpack controllers."
+	)
+	_assert(
 		_action_has_physical_key("roll_left", KEY_E),
 		"E must roll the spectator left."
 	)

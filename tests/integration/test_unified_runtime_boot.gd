@@ -54,6 +54,29 @@ func _run() -> void:
 			) > 0.999,
 			"F2 did not move the player to the spectator surface position."
 		)
+		var camera_mode_before: String = (
+			planetary_runtime.player.get_camera_mode()
+		)
+		_assert(
+			simulator._execute_first_available_command(
+				simulator.get_hotkey_command_candidates(KEY_F5)
+			),
+			"F5 camera command route was not executed."
+		)
+		_assert(
+			planetary_runtime.player.get_camera_mode() != camera_mode_before,
+			"F5 did not toggle first-person and third-person camera modes."
+		)
+		_assert(
+			simulator._execute_first_available_command(
+				simulator.get_hotkey_command_candidates(KEY_J)
+			),
+			"J controller command route was not executed."
+		)
+		_assert(
+			planetary_runtime.player.get_controller_id() == "lunar_jetpack",
+			"J did not activate the lunar jetpack controller."
+		)
 		_assert(
 			simulator._execute_first_available_command(
 				simulator.get_hotkey_command_candidates(KEY_F3)

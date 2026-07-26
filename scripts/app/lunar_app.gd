@@ -337,8 +337,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_F5:
+			if not spectator_enabled and not _is_menu_open():
+				toggle_player_camera()
 			get_viewport().set_input_as_handled()
-			open_item_system_lab()
 			return
 		if event.keycode == KEY_F8:
 			cycle_resolution()

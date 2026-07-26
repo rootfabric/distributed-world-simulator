@@ -157,6 +157,10 @@ func get_hotkey_command_candidates(keycode: int) -> Array[String]:
 				"world.lod.debug.toggle",
 				"earth.debug.cycle",
 			]
+		KEY_F5:
+			return ["player.camera.toggle"]
+		KEY_J:
+			return ["player.controller.toggle"]
 	return []
 
 
