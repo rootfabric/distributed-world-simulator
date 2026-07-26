@@ -1,4 +1,15 @@
-Planetary World v15.5.2-r0
+Planetary World v15.6.2-r1.1-fix2
+
+R1.1 item identity and state store v15.6.2-r1.1-fix2:
+- cryptographically random item/UUID-v4 identifiers replace local sequences
+- ItemInstance and ItemRegistry snapshots declare versioned schemas
+- legacy sequential item IDs remain readable but are never generated
+- ItemStateStore port plus atomic JSON implementation
+- WORLD relation preserves full SpatialRef including angular velocity
+- all item relations are canonicalized to full-precision JSON form at aggregate boundaries
+- capture_world_state keeps frame/universe/space/instance/sample-time context
+- dedicated identity, migration, JSON store and SpatialRef regression test
+- docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md
 
 
 R0 stabilization checkpoint v15.5.2-r0:

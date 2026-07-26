@@ -43,7 +43,8 @@ func move_item(
 	var item = item_registry.get_item(item_id)
 	if item == null:
 		return _remember(operation_id, _fail("ITEM_NOT_FOUND"))
-	if item.relation == new_relation:
+	var canonical_relation: Dictionary = Relations.canonicalize(new_relation)
+	if item.relation == canonical_relation:
 		var graph_validation: Dictionary = validator.validate_graph()
 		if not bool(graph_validation.get("success", false)):
 			return _remember(operation_id, graph_validation)
@@ -57,22 +58,22 @@ func move_item(
 
 	var validation: Dictionary = validator.validate_reparent(
 		item_id,
-		new_relation
+		canonical_relation
 	)
 	if not bool(validation.get("success", false)):
 		return _remember(operation_id, validation)
 
-	var capacity = _validate_capacity(item_id, new_relation)
+	var capacity = _validate_capacity(item_id, canonical_relation)
 	if not bool(capacity.get("success", false)):
 		return _remember(operation_id, capacity)
 
 	var old_relation: Dictionary = item.relation.duplicate(true)
 	_remove_from_old_container(item)
 
-	if Relations.kind_of(new_relation) == Relations.CONTAINER:
+	if Relations.kind_of(canonical_relation) == Relations.CONTAINER:
 		var merge_result = _try_merge(
 			item,
-			String(new_relation.get("container_id", ""))
+			String(canonical_relation.get("container_id", ""))
 		)
 		if bool(merge_result.get("merged", false)):
 			var result = {
@@ -88,7 +89,7 @@ func move_item(
 			item_removed.emit(item_id)
 			return _remember(operation_id, result)
 
-	item.relation = new_relation.duplicate(true)
+	item.set_relation(canonical_relation)
 	item.revision += 1
 	_add_to_new_container(item)
 
@@ -145,7 +146,8 @@ func split_and_move(
 		source.definition_id,
 		quantity,
 		source.components,
-		Relations.destroyed()
+		Relations.destroyed(),
+		source.display_name
 	)
 	if new_item == null:
 		return _remember(operation_id, _fail("SPLIT_CREATE_FAILED"))

@@ -3,6 +3,7 @@
 ## Чекпоинты
 
 - `checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`
+- `checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`
 
 ## Архитектура
 

@@ -50,9 +50,13 @@ func _test_world_container_roundtrip() -> void:
 
 func _test_stack_merge_and_split() -> void:
 	var fixture = _fixture()
-	var first = fixture.items.create_item("rock", 10, {}, Relations.container("backpack"))
+	var first = fixture.items.create_item(
+		"rock", 10, {}, Relations.container("backpack"), "Sample A"
+	)
 	fixture.containers.get_container("backpack").item_ids.append(first.instance_id)
-	var second = fixture.items.create_item("rock", 5, {}, Relations.world())
+	var second = fixture.items.create_item(
+		"rock", 5, {}, Relations.world(), "Sample A"
+	)
 	var merge: Dictionary = fixture.transfer.move_item(second.instance_id, Relations.container("backpack"), "merge-1")
 	_assert_success(merge, "Compatible stacks must merge")
 	_assert(bool(merge.get("merged", false)), "Merge result must report merged=true")
@@ -63,7 +67,19 @@ func _test_stack_merge_and_split() -> void:
 	_assert(first.quantity == 11, "Source stack must retain remaining quantity")
 	var new_item = fixture.items.get_item(String(split.get("new_item_id", "")))
 	_assert(new_item != null and new_item.quantity == 4, "Split stack must preserve moved quantity")
+	_assert(new_item != null and new_item.display_name == "Sample A", "Split stack must preserve instance display name")
 	_assert(Relations.kind_of(new_item.relation) == Relations.WORLD, "Split output must reach requested relation")
+	var differently_named = fixture.items.create_item(
+		"rock", 1, {}, Relations.world(), "Sample B"
+	)
+	var separate_move: Dictionary = fixture.transfer.move_item(
+		differently_named.instance_id,
+		Relations.container("backpack"),
+		"different-name"
+	)
+	_assert_success(separate_move, "Differently named stack must still move to container")
+	_assert(not bool(separate_move.get("merged", false)), "Stacks with different display names must not merge")
+	_assert(fixture.items.get_item(differently_named.instance_id) != null, "Differently named stack must preserve its identity")
 	_assert_success(
 		fixture.validator.validate_graph(),
 		"Split transfer must leave relationship graph valid"

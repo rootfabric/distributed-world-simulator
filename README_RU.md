@@ -1,4 +1,4 @@
-# Planetary World v15.5.2-r0 — стабилизированное ядро симулятора
+# Planetary World v15.6.2-r1.1-fix2 — постоянная идентичность предметов
 
 Проект для Godot 4.7.1, собранного с `precision=double`.
 
@@ -60,6 +60,11 @@ Runner сначала выполняет headless editor import/parse, зате�
 `test_*.gd`, проверяет полноту списка и сохраняет JSON-отчёт в
 `artifacts/test-results/world-regression-summary.json`. Чекпоинт R0 описан в
 `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`.
+
+Чекпоинт R1.1 описан в
+`docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`. Новые
+предметы используют глобальные UUID, Item Registry имеет versioned JSON
+snapshot, а полный SpatialRef сохраняется через ItemStateStore.
 
 Архитектура: `docs/architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`.
 Приёмка: `docs/plans/V15_5_ACCEPTANCE_TESTS_RU.md`.

@@ -6,6 +6,7 @@ const ValidatorScript = preload("res://scripts/items/services/item_relationship_
 const MassServiceScript = preload("res://scripts/items/services/item_mass_service.gd")
 const TransferServiceScript = preload("res://scripts/items/services/item_transfer_service.gd")
 const AttachmentServiceScript = preload("res://scripts/assemblies/item_attachment_service.gd")
+const JsonItemStateStoreScript = preload("res://scripts/items/persistence/json_item_state_store.gd")
 
 
 static func create() -> Dictionary:
@@ -27,3 +28,9 @@ static func create() -> Dictionary:
 		"transfer": transfer_service,
 		"attachments": attachment_service,
 	}
+
+
+static func create_json_state_store(
+	root_path: String = "user://planet_simulator/item_states"
+):
+	return JsonItemStateStoreScript.new(root_path)

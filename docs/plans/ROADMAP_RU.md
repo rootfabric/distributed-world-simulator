@@ -390,31 +390,28 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v15.5.2-r0
+## Текущее состояние: v15.6.0-r1.1
 
-R0 фиксирует стабильную границу поверх `v15.5.1-fixed`. Основная архитектура не
-переписывается: усилены репозиторный контракт, документация и обязательная
-регрессия. Активная лунная terrain generation теперь помечается отменённой до
-выгрузки runtime, а отдельный тест проверяет смену мира в этом состоянии.
+R0 остаётся обязательной стабильной базой. R1.1 поверх неё вводит глобальную
+идентичность предметов, versioned Item Registry, JSON ItemStateStore и полный
+SpatialRef для WORLD relation. Новые item IDs больше не зависят от локальной
+последовательности, а legacy IDs остаются читаемыми без разрушения существующих
+ссылок.
 
-`RUN_WORLD_REGRESSION_TESTS.ps1` обязан:
+`RUN_WORLD_REGRESSION_TESTS.ps1` теперь обязан выполнить 26 тестов, включая
+`test_item_identity_and_state_store.gd`, и записать JSON-отчёт с checkpoint
+`v15.6.0-r1.1`.
 
-1. импортировать и разобрать весь проект headless editor-режимом;
-2. подтвердить, что runner охватывает все `test_*.gd`;
-3. отклонить single-precision engine через precision contract;
-4. выполнить hotkey contract и world-switch-during-generation;
-5. последовательно проверить все пять миров;
-6. записать JSON-отчёт.
+Полные чекпоинты:
 
-Полный анализ и известные ограничения:
-`docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`.
+- `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`;
+- `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`.
 
 ## Текущий приоритет: R1 → R2, затем первая база
 
-1. принять зелёный `v15.5.2-r0` как обязательную базу;
-2. в R1 добавить глобальные ID, persistence-port, revisions и operation ledger
-   предметного aggregate;
-3. сохранить полный `SpatialRef` предмета и отделить gravity policy от Луны;
+1. принять зелёный `v15.6.0-r1.1` поверх обязательной базы R0;
+2. в R1.2 добавить expected revision, payload fingerprint и persistent operation ledger;
+3. в R1.3 отделить gravity policy от Луны и исправить рекурсивную физическую массу;
 4. в R2 связать предметы с игроком на `playground` через ray interaction;
 5. проверить pickup/drop/container/attachment после перезапуска;
 6. затем перейти к placement preview, sockets и минимальному power graph;

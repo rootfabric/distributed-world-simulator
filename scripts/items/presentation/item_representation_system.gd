@@ -92,10 +92,12 @@ func capture_world_state(item_id: String) -> bool:
 		or Relations.kind_of(item.relation) != Relations.WORLD
 	):
 		return false
-	item.relation = Relations.world(
+	item.set_relation(Relations.update_world_state(
+		item.relation,
 		body.transform,
-		body.linear_velocity
-	)
+		body.linear_velocity,
+		body.angular_velocity
+	))
 	item.revision += 1
 	return true
 
@@ -109,7 +111,7 @@ func _ensure_world_node(item) -> void:
 	var body: RigidBody3D = world_nodes.get(item.instance_id)
 	if body == null or not is_instance_valid(body):
 		body = RigidBody3D.new()
-		body.name = "WorldItem_%s" % item.instance_id
+		body.name = "WorldItem_%s" % _safe_node_name(item.instance_id)
 		body.set_meta("item_instance_id", item.instance_id)
 		body.add_child(_create_visual_node(item))
 		body.add_child(_create_collision(item))
@@ -129,6 +131,7 @@ func _ensure_world_node(item) -> void:
 	body.constant_force = Vector3(0.0, -1.62 * body.mass, 0.0)
 	body.transform = Relations.transform_from_relation(item.relation)
 	body.linear_velocity = Relations.velocity_from_relation(item.relation)
+	body.angular_velocity = Relations.angular_velocity_from_relation(item.relation)
 
 
 func _ensure_attached_node(item) -> void:
@@ -139,7 +142,7 @@ func _ensure_attached_node(item) -> void:
 
 	if holder == null or not is_instance_valid(holder):
 		holder = Node3D.new()
-		holder.name = "AttachedItem_%s" % item.instance_id
+		holder.name = "AttachedItem_%s" % _safe_node_name(item.instance_id)
 		holder.set_meta("item_instance_id", item.instance_id)
 		holder.add_child(_create_visual_node(item))
 		if show_debug_labels:
@@ -284,3 +287,7 @@ func _remove_attached_node(item_id: String) -> void:
 
 func _anchor_key(assembly_id: String, socket_id: String) -> String:
 	return assembly_id + "::" + socket_id
+
+
+func _safe_node_name(value: String) -> String:
+	return value.replace("/", "_").replace("\\", "_").replace(":", "_")

@@ -59,6 +59,7 @@ $Tests = @(
     "res://tests/integration/test_persistence_roundtrip.gd",
     "res://tests/integration/test_terrain_streaming_contract.gd",
     "res://tests/items/test_item_domain.gd",
+    "res://tests/items/test_item_identity_and_state_store.gd",
     "res://tests/items/test_item_lab_integration.gd",
     "res://tests/integration/test_unified_planetary_runtime.gd",
     "res://tests/integration/test_unified_runtime_boot.gd",
@@ -68,7 +69,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v15.5.2-r0"
+    checkpoint = "v15.6.2-r1.1-fix2"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

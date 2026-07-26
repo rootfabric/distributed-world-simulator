@@ -9,14 +9,33 @@
 | `v15.3` | реализовано | взаимодействие от первого лица |
 | `v15.4.1` | реализовано | фундамент предметов, контейнеров и сборок |
 | `v15.5` | реализовано | общее ядро, миры, консоль и регрессия |
-| `v15.5.2-r0` | текущий чекпоинт | нормализация репозитория и усиленный regression barrier |
+| `v15.5.2-r0` | реализовано | нормализация репозитория и усиленный regression barrier |
+| `v15.6.0-r1.1` | текущий чекпоинт | глобальные item ID, versioned registry, ItemStateStore и полный SpatialRef |
 | `v15.6` | следующий срез | persistent Item Aggregate и пользовательские контейнеры |
 | `v16` | после v15.6 | первая локальная база |
 
-Текущий обязательный барьер — R0 regression для `v15.5.2-r0`. Новая
-функциональность предметов начинается только после editor import/parse, полного
-набора headless-тестов и ручной матрицы на целевой double-precision сборке Godot.
-Чекпоинт: `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`.
+Текущий обязательный барьер — приёмка `v15.6.0-r1.1` поверх зелёного R0:
+editor import/parse, полный набор из 26 headless-тестов и ручная проверка на
+целевой double-precision сборке Godot. Чекпоинты:
+`docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md` и
+`docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`.
+
+
+## v15.6.0-r1.1 — Item identity and state store
+
+**Статус:** реализовано, требуется приёмочный прогон на целевой double build.
+
+- UUID v4 для новых item instances;
+- отдельный `display_name`;
+- схемы ItemInstance/ItemRegistry/JSON state file;
+- legacy load без разрушения старых ссылок;
+- транзакционный registry load;
+- JSON ItemStateStore;
+- сохранение полного SpatialRef при capture;
+- отдельный regression test.
+
+Следующий шаг: R1.2 — operation payload fingerprint, expected revision и
+persistent idempotency ledger.
 
 ## v15.5.2-r0 — Stabilization checkpoint
 

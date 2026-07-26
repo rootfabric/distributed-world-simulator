@@ -27,7 +27,7 @@ static func create(
 		"space_id": space_id.strip_edges().to_lower(),
 		"frame_id": frame_id.strip_edges(),
 		"position_m": _vector_to_array(position_m),
-		"rotation_xyzw": [rotation.x, rotation.y, rotation.z, rotation.w],
+		"rotation_xyzw": _quaternion_to_array(rotation),
 		"linear_velocity_mps": _vector_to_array(linear_velocity_mps),
 		"angular_velocity_rps": _vector_to_array(angular_velocity_rps),
 		"sample_time_s": sample_time_s,
@@ -143,8 +143,15 @@ static func _is_finite_number(value) -> bool:
 	return value_type in [TYPE_INT, TYPE_FLOAT] and is_finite(float(value))
 
 
-static func _vector_to_array(value: Vector3) -> Array[float]:
+# Persistence payloads must use untyped Arrays. JSON.parse_string() returns
+# untyped Arrays, so retaining Array[float] metadata here would make an otherwise
+# identical Dictionary compare unequal after a JSON round-trip.
+static func _vector_to_array(value: Vector3) -> Array:
 	return [value.x, value.y, value.z]
+
+
+static func _quaternion_to_array(value: Quaternion) -> Array:
+	return [value.x, value.y, value.z, value.w]
 
 
 static func _array_to_vector3(value) -> Vector3:
