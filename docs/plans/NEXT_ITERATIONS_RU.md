@@ -8,13 +8,38 @@
 | `v15.2` | реализовано | асинхронный terrain streaming и RAM cache |
 | `v15.3` | реализовано | взаимодействие от первого лица |
 | `v15.4.1` | реализовано | фундамент предметов, контейнеров и сборок |
-| `v15.5` | текущий срез | общее ядро, миры, консоль и регрессия |
-| `v15.6` | следующий срез | пользовательские контейнеры на playground |
+| `v15.5` | реализовано | общее ядро, миры, консоль и регрессия |
+| `v15.5.2-r0` | текущий чекпоинт | нормализация репозитория и усиленный regression barrier |
+| `v15.6` | следующий срез | persistent Item Aggregate и пользовательские контейнеры |
 | `v16` | после v15.6 | первая локальная база |
 
-Текущий обязательный барьер — зелёная multi-world regression v15.5. Новая
-функциональность контейнеров начинается только после её прохождения на целевой
-double-precision сборке Godot.
+Текущий обязательный барьер — R0 regression для `v15.5.2-r0`. Новая
+функциональность предметов начинается только после editor import/parse, полного
+набора headless-тестов и ручной матрицы на целевой double-precision сборке Godot.
+Чекпоинт: `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`.
+
+## v15.5.2-r0 — Stabilization checkpoint
+
+**Статус:** изменения R0 внесены, требуется приёмочный прогон на целевой сборке.
+
+Выполнено:
+
+- `.godot` и `.import` исключены из репозитория;
+- line endings зафиксированы через `.gitattributes`;
+- добавлен однократный repository preparation script;
+- regression runner проверяет полноту всех `test_*.gd`;
+- editor import/parse выполняется до отдельных тестов;
+- single-precision сборка отклоняется отдельным contract-тестом;
+- hotkey contract включён в обязательный набор;
+- добавлен тест смены мира при активной terrain generation;
+- результат runner сохраняется в JSON.
+
+Приёмка:
+
+```powershell
+.\PREPARE_R0_REPOSITORY.ps1
+.\RUN_WORLD_REGRESSION_TESTS.ps1
+```
 
 ## v15.5 — Multi-world Simulator Core
 
@@ -41,8 +66,12 @@ double-precision сборке Godot.
 4. все новые действия оформлять командами, а не новыми прямыми клавишами;
 5. не продолжать контейнеры пользователя, пока matrix не остаётся зелёной.
 
-## v15.6 — пользовательские контейнеры в закрытой площадке
+## v15.6 — persistent Item Aggregate и контейнеры в закрытой площадке
 
+- глобальные UUID/ULID для `ItemInstance`;
+- persistence-port для Item Registry и Container Registry;
+- revision fencing и persistent operation ledger;
+- сохранение полного `SpatialRef` без потери reference frame;
 - actor-owned inventory/container через существующий Item Domain;
 - перенос предметов ray interaction командами;
 - открытие/закрытие физического контейнера;

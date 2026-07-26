@@ -149,7 +149,7 @@ func show_shared_space_mode(
 		+ "%s\n"
 		+ "Патч Земли: min %.1f м | max %.1f м | перепад %.1f м | geom-склон max %.1f°\n"
 		+ "~ — консоль | earth.teleport.biome <name> | space.teleport.body <id>\n"
-		+ "WASD/Q/R — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
+		+ "WASD/Q/E — движение и крен | Shift — ускорение | колесо — скорость | H — горизонт"
 	) % [
 		world_title,
 		body_description,

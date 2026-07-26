@@ -1,6 +1,10 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
+$ReportPath = Join-Path $ReportDirectory "world-regression-summary.json"
+New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
+
 $Candidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:GODOT_BIN)) {
     $Candidates += $env:GODOT_BIN
@@ -34,13 +38,13 @@ if ($null -eq $Godot) {
     throw "Double-precision Godot editor was not found. Set GODOT_BIN or add Godot to PATH."
 }
 
-Write-Host "Godot: $Godot"
-
 $Tests = @(
+    "res://tests/core/test_double_precision_contract.gd",
     "res://tests/unit/test_simulation_clock.gd",
     "res://tests/core/test_command_registry.gd",
     "res://tests/core/test_world_catalog.gd",
     "res://tests/core/test_controller_profiles.gd",
+    "res://tests/core/test_hotkey_contract.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
     "res://tests/unit/test_celestial_motion.gd",
@@ -58,21 +62,119 @@ $Tests = @(
     "res://tests/items/test_item_lab_integration.gd",
     "res://tests/integration/test_unified_planetary_runtime.gd",
     "res://tests/integration/test_unified_runtime_boot.gd",
+    "res://tests/runtime/test_world_switch_during_generation.gd",
     "res://tests/runtime/test_world_boot_matrix.gd"
 )
 
-foreach ($TestScript in $Tests) {
-    Write-Host "Running $TestScript"
-    & $Godot --headless --path $ProjectRoot --script $TestScript
-    if ($LASTEXITCODE -ne 0) {
-        throw "Regression test failed: $TestScript"
+$Summary = [ordered]@{
+    schema = "planet_simulator.world_regression_summary.v1"
+    checkpoint = "v15.5.2-r0"
+    started_at_utc = [DateTime]::UtcNow.ToString("o")
+    finished_at_utc = $null
+    godot = $Godot
+    project_root = $ProjectRoot
+    declared_test_count = $Tests.Count
+    discovered_test_count = 0
+    passed = $false
+    steps = @()
+}
+
+function Save-Summary {
+    $Summary.finished_at_utc = [DateTime]::UtcNow.ToString("o")
+    $Summary | ConvertTo-Json -Depth 8 | Set-Content -Path $ReportPath -Encoding UTF8
+}
+
+function Add-StepResult {
+    param(
+        [string]$Name,
+        [string]$Kind,
+        [int]$ExitCode,
+        [double]$DurationSeconds,
+        [string]$Target = ""
+    )
+
+    $Summary.steps += [ordered]@{
+        name = $Name
+        kind = $Kind
+        target = $Target
+        exit_code = $ExitCode
+        duration_seconds = [Math]::Round($DurationSeconds, 3)
+        passed = ($ExitCode -eq 0)
     }
 }
 
-Write-Host "Running main-scene CLI test contract"
-& $Godot --headless --path $ProjectRoot -- --world=playground --run-tests=all
-if ($LASTEXITCODE -ne 0) {
-    throw "Main-scene CLI regression suite failed."
+function Invoke-GodotStep {
+    param(
+        [string]$Name,
+        [string]$Kind,
+        [string[]]$Arguments,
+        [string]$Target = ""
+    )
+
+    Write-Host "Running $Name"
+    $Started = [DateTime]::UtcNow
+    & $Godot @Arguments
+    $ExitCode = $LASTEXITCODE
+    $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
+    Add-StepResult -Name $Name -Kind $Kind -ExitCode $ExitCode -DurationSeconds $Duration -Target $Target
+    Save-Summary
+    if ($ExitCode -ne 0) {
+        throw "Regression step failed: $Name (exit code $ExitCode)"
+    }
 }
 
-Write-Host "All world/core regression tests passed."
+try {
+    Write-Host "Godot: $Godot"
+
+    $DiscoveredTests = Get-ChildItem -Path (Join-Path $ProjectRoot "tests") -Recurse -File -Filter "test_*.gd" |
+        ForEach-Object {
+            $RelativePath = $_.FullName.Substring($ProjectRoot.Length).TrimStart([char[]]@('\', '/'))
+            "res://" + $RelativePath.Replace('\', '/')
+        } |
+        Sort-Object -Unique
+
+    $Summary.discovered_test_count = $DiscoveredTests.Count
+    $MissingFromRunner = @($DiscoveredTests | Where-Object { $_ -notin $Tests })
+    $MissingFromProject = @($Tests | Where-Object { $_ -notin $DiscoveredTests })
+    if ($MissingFromRunner.Count -gt 0 -or $MissingFromProject.Count -gt 0) {
+        $CoverageMessage = @(
+            "Regression runner coverage mismatch."
+            "Missing from runner: $($MissingFromRunner -join ', ')"
+            "Missing from project: $($MissingFromProject -join ', ')"
+        ) -join [Environment]::NewLine
+        Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 1 -DurationSeconds 0.0 -Target $CoverageMessage
+        throw $CoverageMessage
+    }
+    Add-StepResult -Name "test_manifest_coverage" -Kind "static" -ExitCode 0 -DurationSeconds 0.0 -Target "$($Tests.Count) tests"
+
+    Invoke-GodotStep `
+        -Name "editor_import_parse" `
+        -Kind "editor" `
+        -Arguments @("--headless", "--editor", "--path", $ProjectRoot, "--quit") `
+        -Target "res://"
+
+    foreach ($TestScript in $Tests) {
+        Invoke-GodotStep `
+            -Name ([IO.Path]::GetFileNameWithoutExtension($TestScript)) `
+            -Kind "headless_script" `
+            -Arguments @("--headless", "--path", $ProjectRoot, "--script", $TestScript) `
+            -Target $TestScript
+    }
+
+    Invoke-GodotStep `
+        -Name "main_scene_cli_all" `
+        -Kind "main_scene_cli" `
+        -Arguments @("--headless", "--path", $ProjectRoot, "--", "--world=playground", "--run-tests=all") `
+        -Target "playground:test.run all"
+
+    $Summary.passed = $true
+    Save-Summary
+    Write-Host "All world/core regression tests passed."
+    Write-Host "Report: $ReportPath"
+}
+catch {
+    $Summary.passed = $false
+    Save-Summary
+    Write-Host $_ -ForegroundColor Red
+    exit 1
+}

@@ -1,0 +1,17 @@
+# Godot generated state and imported resources.
+.godot/
+.import/
+
+# Local editor and operating-system files.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary and diagnostic output created outside user://.
+*.tmp
+*.bak
+*.swp
+mono_crash.*.json
+artifacts/test-results/

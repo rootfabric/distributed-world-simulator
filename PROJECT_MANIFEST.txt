@@ -1,5 +1,16 @@
-Planetary World v15.5.1-fixed
+Planetary World v15.5.2-r0
 
+
+R0 stabilization checkpoint v15.5.2-r0:
+- .gitignore excludes generated .godot/.import state and local test artifacts
+- .gitattributes fixes deterministic LF text normalization
+- PREPARE_R0_REPOSITORY.ps1 cleans the Git index and renormalizes tracked text
+- RUN_WORLD_REGRESSION_TESTS.ps1 performs editor import/parse and complete test coverage
+- tests/core/test_double_precision_contract.gd rejects single-precision engine builds
+- tests/core/test_hotkey_contract.gd is part of the mandatory regression runner
+- tests/runtime/test_world_switch_during_generation.gd fences active terrain work on unload
+- artifacts/test-results/world-regression-summary.json is produced by the runner
+- docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md records the roadmap decision
 
 Distributed coordinate foundation v15.5.1-fixed:
 - scripts/simulation/time/simulation_clock.gd

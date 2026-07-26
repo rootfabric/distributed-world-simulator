@@ -29,8 +29,8 @@ const RuntimeTestRegistryScript = preload(
 	"res://scripts/core/runtime_test_registry.gd"
 )
 
-const PROJECT_VERSION: String = "15.5.1"
-const BUILD_ID: String = "distributed-coordinate-foundation-fixed"
+const PROJECT_VERSION: String = "15.5.2-r0"
+const BUILD_ID: String = "r0-stabilization-checkpoint"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -1336,6 +1336,12 @@ func register_runtime_tests(registry, owner_id: String) -> void:
 
 
 func prepare_for_unload() -> void:
+	if (
+		moon_world != null
+		and moon_world.get("terrain_streamer") != null
+		and moon_world.get("terrain_streamer").has_method("cancel_all")
+	):
+		moon_world.get("terrain_streamer").cancel_all("runtime_unload")
 	if persistence != null:
 		persistence.save_all_loaded_chunks()
 	_set_mouse_capture(false)

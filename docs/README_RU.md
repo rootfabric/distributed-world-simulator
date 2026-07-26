@@ -1,5 +1,9 @@
 # Документация Planet Simulator
 
+## Чекпоинты
+
+- `checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`
+
 ## Архитектура
 
 - `architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`

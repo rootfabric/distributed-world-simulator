@@ -1,0 +1,27 @@
+# Keep the repository deterministic on Windows and Linux.
+* text=auto eol=lf
+
+# Explicit text formats used by the project.
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.godot text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.cfg text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.ps1 text eol=lf
+*.uid text eol=lf
+
+# Binary assets must never be line-ending normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.svgz binary
+*.ctex binary
+*.bin binary
+*.cache binary
+*.zip binary
+*.7z binary
