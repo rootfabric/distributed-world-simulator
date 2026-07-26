@@ -1,61 +1,59 @@
-# Ближайшие итерации после v14
+# Ближайшие итерации после v15.2
 
-## v14.1 — First-person Interaction
+## v15.2.1 — валидация terrain cache
+
+- выполнить полёт на 2–5 км и возврат к маякам;
+- подтвердить `project_version=15.2` в startup-log;
+- подтвердить `terrain_surface_cached` при уходе;
+- подтвердить `terrain_pinned_cache_return_triggered` и `terrain_surface_cache_hit` при возврате;
+- измерить `total_cache_activation_ms`;
+- проверить, что движение от маяка не вызывает обратное переключение pinned-cell;
+- оценить размер RAM при 8 обычных и нескольких pinned cells.
+
+Решения по результатам:
+
+- уменьшить или увеличить `recent_surface_cache_capacity`;
+- изменить `pinned_return_trigger_distance_m`;
+- при длинном cache activation разбить создание CollisionShape3D-узлов на несколько кадров.
+
+## v15.3 — First-person Interaction
 
 - центральный raycast из активной камеры;
-- подсветка интерактивного объекта;
 - контракт `Interactable`;
 - действие `E`;
-- получение информации о Survey Beacon;
-- подготовка к placement preview.
+- информация о Survey Beacon;
+- outline/подсветка объекта;
+- начало placement preview.
 
-## v15 — первая локальная база
+## v16 — первая локальная база
 
 - Foundation;
 - Solar Panel;
 - Battery;
 - Charging Dock;
 - preview и проверка уклона;
-- sockets и простой power graph.
+- sockets и простой power graph;
+- сохранение через существующий persistent layer.
 
----
+## Параллельный долг по фундаменту
 
-# Следующие итерации
-
-## Выполнено в v13
-
-- `lunar.world.v1` и постоянный `world_id`;
-- фиксация seed и версии процедурного генератора;
-- разреженные файлы `lunar.chunk.v1`;
-- Survey Beacon как первый размещаемый объект;
-- запись и удаление сущности;
-- загрузка и выгрузка сущностей по окну чанков;
-- журнал `lunar.journal_event.v1`;
-- атомарная запись через temporary file + rename;
-- сохранение последней точки игрока;
-- runtime-тест `F10` и headless-тест persistence.
-
-## Итерация v13.1 — завершение Chunk Lifecycle
+### Chunk Lifecycle
 
 1. Явные состояния `Dormant`, `Warm`, `Active`, `Unloading`.
 2. В Warm хранить только EntityRecord без физического узла.
 3. В Active создавать визуальную сцену и коллизию.
-4. Очередь загрузки, чтобы не создавать много объектов за один кадр.
-5. Метрики времени чтения JSON и создания сцен.
+4. Очередь создания сущностей по frame budget.
+5. Метрики чтения JSON и создания runtime scenes.
 
-## Итерация v14 — первая локальная база
+### Terrain Streaming
 
-1. Режим строительства с preview.
-2. Foundation Module.
-3. Solar Panel.
-4. Battery Module.
-5. Charging Dock.
-6. Проверка уклона поверхности.
-7. Проверка пересечений.
-8. Connection sockets.
-9. Простой Power Graph.
-10. Сохранение компонентов модулей через текущий chunk persistence.
+1. Clipmap rings вместо единого LOCAL ArrayMesh.
+2. Низкоприоритетная очередь декоративных камней.
+3. Удаляемый disk cache, отделённый от авторитетного мира.
+4. Ограничение памяти по оценочному размеру, а не только числу cells.
 
-Критерий:
+### Controller Layer
 
-> Игрок размещает несколько соединённых модулей, перезапускает проект и получает ту же базу с тем же состоянием энергетической сети.
+1. equipment slots;
+2. сохранение выбранного профиля;
+3. отдельные wheel/track/flight contracts для Robot Actor.

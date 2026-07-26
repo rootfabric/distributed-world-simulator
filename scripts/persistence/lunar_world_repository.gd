@@ -14,6 +14,8 @@ const DEFAULT_WORLD_ID: String = "moon-experiment-001"
 const WORLD_SCHEMA: String = "lunar.world.v1"
 const CHUNK_SCHEMA: String = "lunar.chunk.v1"
 const JOURNAL_SCHEMA: String = "lunar.journal_event.v1"
+const LANDMARK_INDEX_SCHEMA: String = "lunar.landmark_index.v1"
+const NAVIGATION_MARKER_CONFIG_PATH: String = "res://config/navigation_markers.json"
 
 var moon_world
 var zone_manager
@@ -24,7 +26,19 @@ var world_id: String = DEFAULT_WORLD_ID
 var world_root: String = ""
 var manifest_path: String = ""
 var journal_path: String = ""
+var landmark_index_path: String = ""
 var entity_root: Node3D
+var landmark_root: Node3D
+
+var landmark_records: Dictionary = {}
+var landmark_nodes: Dictionary = {}
+var landmark_markers_enabled: bool = true
+var landmark_marker_max_distance_m: float = 250_000.0
+var landmark_marker_min_distance_m: float = 18.0
+var landmark_marker_height_m: float = 7.0
+var landmark_text_update_interval_sec: float = 0.25
+var landmark_text_accumulator: float = 0.0
+var landmark_index_rebuilt: bool = false
 
 var loaded_chunk_ids: Dictionary = {}
 var runtime_nodes: Dictionary = {}
@@ -58,14 +72,21 @@ func setup(
 	)
 	manifest_path = world_root.path_join("world.json")
 	journal_path = world_root.path_join("journal/events.jsonl")
+	landmark_index_path = world_root.path_join("landmarks.json")
 
 	entity_root = Node3D.new()
 	entity_root.name = "PersistentEntities"
 	add_child(entity_root)
+	landmark_root = Node3D.new()
+	landmark_root.name = "PersistentLandmarkMarkers"
+	add_child(landmark_root)
 
+	_load_navigation_marker_config()
 	_ensure_world_layout()
 	_ensure_world_manifest()
 	_load_journal_revision()
+	_load_or_rebuild_landmark_index()
+	_rebuild_landmark_marker_nodes()
 	_connect_signals()
 	_sync_partition_window(zone_manager.create_partition_snapshot())
 	_log("INFO", "repository_started", create_snapshot())
@@ -96,6 +117,344 @@ func update_runtime_transforms() -> void:
 			basis,
 			moon_world.world_to_render(entity_record.world_position)
 		)
+
+
+func update_landmark_markers(observer_world_position: Vector3, delta: float) -> void:
+	if landmark_root == null or moon_world == null:
+		return
+	landmark_text_accumulator += delta
+	var update_text: bool = landmark_text_accumulator >= landmark_text_update_interval_sec
+	if update_text:
+		landmark_text_accumulator = 0.0
+	for entity_id in landmark_records.keys():
+		var snapshot: Dictionary = landmark_records.get(entity_id, {})
+		var node: Node3D = landmark_nodes.get(entity_id)
+		if node == null or not is_instance_valid(node):
+			_instantiate_landmark_marker(snapshot)
+			node = landmark_nodes.get(entity_id)
+		if node == null or not is_instance_valid(node):
+			continue
+		var world_position: Vector3 = _array_to_vector3(
+			snapshot.get("world_position", [0.0, 0.0, 0.0])
+		)
+		if world_position.length_squared() < 1.0:
+			node.visible = false
+			continue
+		var up: Vector3 = world_position.normalized()
+		node.position = moon_world.world_to_render(
+			world_position + up * landmark_marker_height_m
+		)
+		var distance_m: float = (
+			observer_world_position.distance_to(world_position)
+			if observer_world_position.length_squared() > 1.0
+			else INF
+		)
+		var max_distance_m: float = float(
+			snapshot.get("max_distance_m", landmark_marker_max_distance_m)
+		)
+		node.visible = (
+			landmark_markers_enabled
+			and distance_m >= landmark_marker_min_distance_m
+			and distance_m <= max_distance_m
+		)
+		if update_text and node.visible:
+			var label := node.get_node_or_null("Label") as Label3D
+			if label != null:
+				label.text = "%s\n%s" % [
+					String(snapshot.get("label", "МАЯК")),
+					_format_landmark_distance(distance_m),
+				]
+
+
+func set_landmark_markers_enabled(enabled: bool) -> void:
+	landmark_markers_enabled = enabled
+	for node_value in landmark_nodes.values():
+		if node_value != null and is_instance_valid(node_value):
+			node_value.visible = enabled
+	_log("INFO", "landmark_markers_toggled", {
+		"enabled": enabled,
+		"landmark_count": landmark_records.size(),
+	})
+
+
+func toggle_landmark_markers() -> bool:
+	set_landmark_markers_enabled(not landmark_markers_enabled)
+	return landmark_markers_enabled
+
+
+func are_landmark_markers_enabled() -> bool:
+	return landmark_markers_enabled
+
+
+func get_landmark_summary() -> String:
+	return "%s, маяков=%d, дальность=%.0f км" % [
+		"включены" if landmark_markers_enabled else "выключены",
+		landmark_records.size(),
+		landmark_marker_max_distance_m / 1000.0,
+	]
+
+
+func get_landmark_world_positions() -> Array[Vector3]:
+	var positions: Array[Vector3] = []
+	for snapshot_value in landmark_records.values():
+		if not (snapshot_value is Dictionary):
+			continue
+		var snapshot: Dictionary = snapshot_value
+		var position: Vector3 = _array_to_vector3(
+			snapshot.get("world_position", [0.0, 0.0, 0.0])
+		)
+		if position.length_squared() > 1.0:
+			positions.append(position)
+	return positions
+
+
+func _load_navigation_marker_config() -> void:
+	if not FileAccess.file_exists(NAVIGATION_MARKER_CONFIG_PATH):
+		return
+	var file := FileAccess.open(
+		NAVIGATION_MARKER_CONFIG_PATH,
+		FileAccess.READ
+	)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not (parsed is Dictionary):
+		return
+	var config: Dictionary = parsed
+	landmark_markers_enabled = bool(
+		config.get("enabled", landmark_markers_enabled)
+	)
+	landmark_marker_max_distance_m = maxf(
+		1000.0,
+		float(config.get(
+			"max_distance_m",
+			landmark_marker_max_distance_m
+		))
+	)
+	landmark_marker_min_distance_m = maxf(
+		0.0,
+		float(config.get(
+			"min_distance_m",
+			landmark_marker_min_distance_m
+		))
+	)
+	landmark_marker_height_m = maxf(
+		1.0,
+		float(config.get(
+			"height_above_surface_m",
+			landmark_marker_height_m
+		))
+	)
+	landmark_text_update_interval_sec = maxf(
+		0.05,
+		float(config.get(
+			"text_update_interval_sec",
+			landmark_text_update_interval_sec
+		))
+	)
+
+
+func _load_or_rebuild_landmark_index() -> void:
+	landmark_records.clear()
+	landmark_index_rebuilt = false
+	if FileAccess.file_exists(landmark_index_path):
+		var payload: Dictionary = _read_json(landmark_index_path)
+		if String(payload.get("schema", "")) == LANDMARK_INDEX_SCHEMA:
+			for snapshot_value in payload.get("landmarks", []):
+				if not (snapshot_value is Dictionary):
+					continue
+				var snapshot: Dictionary = snapshot_value
+				var entity_id: String = String(
+					snapshot.get("entity_id", "")
+				)
+				if not entity_id.is_empty():
+					landmark_records[entity_id] = snapshot.duplicate(true)
+	if landmark_records.is_empty():
+		_rebuild_landmark_index_from_chunk_files()
+		landmark_index_rebuilt = true
+		_save_landmark_index()
+	_log("INFO", "landmark_index_loaded", {
+		"path": landmark_index_path,
+		"landmark_count": landmark_records.size(),
+		"rebuilt": landmark_index_rebuilt,
+	})
+
+
+func _rebuild_landmark_index_from_chunk_files() -> void:
+	var files: Array[String] = []
+	_collect_json_files_recursive(
+		world_root.path_join("zones"),
+		files
+	)
+	for path in files:
+		var payload: Dictionary = _read_json(path)
+		if String(payload.get("schema", "")) != CHUNK_SCHEMA:
+			continue
+		for entity_snapshot_value in payload.get("entities", []):
+			if not (entity_snapshot_value is Dictionary):
+				continue
+			var entity_snapshot: Dictionary = entity_snapshot_value
+			if String(entity_snapshot.get("entity_type", "")) != "survey_beacon":
+				continue
+			var landmark_snapshot: Dictionary = (
+				_landmark_snapshot_from_entity_snapshot(entity_snapshot)
+			)
+			var entity_id: String = String(
+				landmark_snapshot.get("entity_id", "")
+			)
+			if not entity_id.is_empty():
+				landmark_records[entity_id] = landmark_snapshot
+
+
+func _collect_json_files_recursive(
+	directory_path: String,
+	output: Array[String]
+) -> void:
+	var directory := DirAccess.open(directory_path)
+	if directory == null:
+		return
+	for file_name in directory.get_files():
+		if file_name.ends_with(".json"):
+			output.append(directory_path.path_join(file_name))
+	for directory_name in directory.get_directories():
+		_collect_json_files_recursive(
+			directory_path.path_join(directory_name),
+			output
+		)
+
+
+func _save_landmark_index() -> bool:
+	var landmarks: Array[Dictionary] = []
+	for entity_id in landmark_records.keys():
+		var snapshot: Dictionary = landmark_records.get(entity_id, {})
+		if not snapshot.is_empty():
+			landmarks.append(snapshot.duplicate(true))
+	var payload: Dictionary = {
+		"schema": LANDMARK_INDEX_SCHEMA,
+		"world_id": world_id,
+		"updated_at_utc": Time.get_datetime_string_from_system(true, true),
+		"landmarks": landmarks,
+	}
+	var success: bool = _write_json_atomic(landmark_index_path, payload)
+	_log("INFO" if success else "ERROR", "landmark_index_saved", {
+		"path": landmark_index_path,
+		"landmark_count": landmarks.size(),
+		"success": success,
+	})
+	return success
+
+
+func _landmark_snapshot_from_record(record) -> Dictionary:
+	var landmark_component: Dictionary = record.get_component("landmark")
+	return {
+		"schema": "lunar.landmark.v1",
+		"entity_id": record.entity_id,
+		"entity_type": record.entity_type,
+		"world_position": _vector_to_array(record.world_position),
+		"label": String(landmark_component.get("label", "МАЯК")),
+		"marker_type": String(
+			landmark_component.get("marker_type", "survey_beacon")
+		),
+		"max_distance_m": float(
+			landmark_component.get(
+				"max_distance_m",
+				landmark_marker_max_distance_m
+			)
+		),
+	}
+
+
+func _landmark_snapshot_from_entity_snapshot(
+	entity_snapshot: Dictionary
+) -> Dictionary:
+	var components: Dictionary = entity_snapshot.get("components", {})
+	var landmark_component: Dictionary = components.get("landmark", {})
+	return {
+		"schema": "lunar.landmark.v1",
+		"entity_id": String(entity_snapshot.get("entity_id", "")),
+		"entity_type": String(
+			entity_snapshot.get("entity_type", "survey_beacon")
+		),
+		"world_position": entity_snapshot.get(
+			"world_position",
+			[0.0, 0.0, 0.0]
+		),
+		"label": String(landmark_component.get("label", "МАЯК")),
+		"marker_type": String(
+			landmark_component.get("marker_type", "survey_beacon")
+		),
+		"max_distance_m": float(
+			landmark_component.get(
+				"max_distance_m",
+				landmark_marker_max_distance_m
+			)
+		),
+	}
+
+
+func _upsert_landmark_from_record(record, save_now: bool = true) -> void:
+	if record == null or record.entity_type != "survey_beacon":
+		return
+	var snapshot: Dictionary = _landmark_snapshot_from_record(record)
+	landmark_records[record.entity_id] = snapshot
+	_free_landmark_marker(record.entity_id)
+	_instantiate_landmark_marker(snapshot)
+	if save_now:
+		_save_landmark_index()
+
+
+func _remove_landmark(entity_id: String, save_now: bool = true) -> void:
+	landmark_records.erase(entity_id)
+	_free_landmark_marker(entity_id)
+	if save_now:
+		_save_landmark_index()
+
+
+func _rebuild_landmark_marker_nodes() -> void:
+	for entity_id in landmark_nodes.keys():
+		_free_landmark_marker(String(entity_id))
+	for snapshot_value in landmark_records.values():
+		if snapshot_value is Dictionary:
+			_instantiate_landmark_marker(snapshot_value)
+
+
+func _instantiate_landmark_marker(snapshot: Dictionary) -> void:
+	if landmark_root == null:
+		return
+	var entity_id: String = String(snapshot.get("entity_id", ""))
+	if entity_id.is_empty() or landmark_nodes.has(entity_id):
+		return
+	var marker := Node3D.new()
+	marker.name = "Landmark_%s" % entity_id.get_file()
+	var label := Label3D.new()
+	label.name = "Label"
+	label.text = String(snapshot.get("label", "МАЯК"))
+	label.font_size = 56
+	label.outline_size = 12
+	label.modulate = Color(1.0, 0.46, 0.10, 1.0)
+	label.outline_modulate = Color(0.01, 0.01, 0.015, 0.95)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.fixed_size = true
+	label.no_depth_test = true
+	label.double_sided = true
+	label.pixel_size = 0.0025
+	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	marker.add_child(label)
+	landmark_root.add_child(marker)
+	landmark_nodes[entity_id] = marker
+
+
+func _free_landmark_marker(entity_id: String) -> void:
+	var node = landmark_nodes.get(entity_id)
+	if node != null and is_instance_valid(node):
+		node.queue_free()
+	landmark_nodes.erase(entity_id)
+
+
+func _format_landmark_distance(distance_m: float) -> String:
+	if distance_m >= 1000.0:
+		return "%.1f км" % (distance_m / 1000.0)
+	return "%.0f м" % distance_m
 
 
 func create_survey_beacon(
@@ -137,6 +496,12 @@ func create_survey_beacon(
 		},
 		"ownership": {
 			"owner": "local-player",
+		},
+		"landmark": {
+			"enabled": true,
+			"marker_type": "survey_beacon",
+			"label": "МАЯК",
+			"max_distance_m": landmark_marker_max_distance_m,
 		},
 	}
 	for key in extra_components.keys():
@@ -267,9 +632,13 @@ func clear_world_data() -> void:
 	loaded_chunk_ids.clear()
 	dirty_chunks.clear()
 	journal_revision = 0
+	landmark_records.clear()
+	for landmark_id in landmark_nodes.keys():
+		_free_landmark_marker(String(landmark_id))
 	_remove_tree(world_root)
 	_ensure_world_layout()
 	_ensure_world_manifest()
+	_save_landmark_index()
 	_sync_partition_window(zone_manager.create_partition_snapshot())
 	world_cleared.emit()
 	_log("WARNING", "world_cleared", {"world_id": world_id})
@@ -318,10 +687,11 @@ func get_persistent_entity_count() -> int:
 
 
 func get_runtime_summary() -> String:
-	return "world=%s loaded_chunks=%d entities=%d loads=%d unloads=%d save=%s" % [
+	return "world=%s loaded_chunks=%d entities=%d landmarks=%d loads=%d unloads=%d save=%s" % [
 		world_id,
 		loaded_chunk_ids.size(),
 		get_persistent_entity_count(),
+		landmark_records.size(),
 		chunk_load_count,
 		chunk_unload_count,
 		last_save_summary,
@@ -335,6 +705,12 @@ func create_snapshot() -> Dictionary:
 		"world_root": world_root,
 		"manifest_path": manifest_path,
 		"journal_path": journal_path,
+		"landmark_index_path": landmark_index_path,
+		"landmark_count": landmark_records.size(),
+		"landmark_marker_node_count": landmark_nodes.size(),
+		"landmark_markers_enabled": landmark_markers_enabled,
+		"landmark_marker_max_distance_m": landmark_marker_max_distance_m,
+		"landmark_index_rebuilt": landmark_index_rebuilt,
 		"loaded_chunk_count": loaded_chunk_ids.size(),
 		"runtime_node_count": runtime_nodes.size(),
 		"persistent_entity_count": get_persistent_entity_count(),
@@ -377,6 +753,7 @@ func _on_entity_registered(event: Dictionary) -> void:
 		return
 	persistent_entity_ids[entity_id] = true
 	_instantiate_runtime_entity(record)
+	_upsert_landmark_from_record(record)
 	dirty_chunks[record.chunk_id] = true
 	_append_journal("entity_created", record.to_snapshot())
 	_save_chunk(record.chunk_id)
@@ -388,6 +765,7 @@ func _on_entity_unregistered(event: Dictionary) -> void:
 		return
 	var chunk_id: String = String(event.get("from_chunk", ""))
 	_free_runtime_node(entity_id)
+	_remove_landmark(entity_id)
 	persistent_entity_ids.erase(entity_id)
 	if not chunk_id.is_empty():
 		dirty_chunks[chunk_id] = true
@@ -401,6 +779,7 @@ func _on_entity_moved(event: Dictionary) -> void:
 	if record == null or not record.is_persistent():
 		return
 	var previous_chunk: String = String(event.get("from_chunk", ""))
+	_upsert_landmark_from_record(record)
 	if not previous_chunk.is_empty():
 		dirty_chunks[previous_chunk] = true
 		dirty_chunks[record.chunk_id] = true

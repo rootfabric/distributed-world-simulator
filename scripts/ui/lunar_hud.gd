@@ -38,7 +38,7 @@ func setup(
 
 	panel = PanelContainer.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(860.0, 735.0)
+	panel.size = Vector2(900.0, 680.0)
 	add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
@@ -58,12 +58,19 @@ func setup(
 	margin.add_theme_constant_override("margin_bottom", 12)
 	panel.add_child(margin)
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	margin.add_child(scroll)
+
 	var vertical := VBoxContainer.new()
+	vertical.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vertical.add_theme_constant_override("separation", 5)
-	margin.add_child(vertical)
+	scroll.add_child(vertical)
 
 	var title := Label.new()
-	title.text = "REAL SCALE PROCEDURAL MOON — PLUGGABLE CONTROLLERS"
+	title.text = "REAL SCALE PROCEDURAL MOON — CACHE + LANDMARKS"
 	title.add_theme_font_size_override("font_size", 19)
 	vertical.add_child(title)
 
@@ -78,8 +85,9 @@ func setup(
 	help_label = Label.new()
 	help_label.text = (
 		"C — первое/третье лицо   J — Lunar EVA/Jetpack   F12 — тест контроллера\n"
+		+ "K — тест фоновой генерации без смены активной поверхности\n"
 		+ "Lunar EVA: WASD, Shift, Space   Jetpack: WASD, Space/Ctrl, Shift\n"
-		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк\n"
+		+ "B — поставить Survey Beacon   Delete — удалить ближайший маяк   M — дальние метки\n"
 		+ "Ctrl+S — сохранить мир   F10 — тест persistence   F7 — миграция\n"
 		+ "F9 — диагностика   F3 — спектатор   T — телепорт из спектатора\n"
 		+ "F2 — LOD follow   F4 — цвета LOD   V — материал\n"
@@ -96,11 +104,18 @@ func setup(
 	_add_button(controller_row, "Lunar EVA / Jetpack (J)", _on_controller_toggle_pressed)
 	_add_button(controller_row, "Тест контроллера (F12)", _on_controller_test_pressed)
 
+	var streaming_row := HBoxContainer.new()
+	streaming_row.add_theme_constant_override("separation", 8)
+	vertical.add_child(streaming_row)
+	_add_button(streaming_row, "Безопасный streaming-тест (K)", _on_streaming_test_pressed)
+	_add_button(streaming_row, "Сохранить диагностику (F9)", _on_diagnostic_pressed)
+
 	var placement_row := HBoxContainer.new()
 	placement_row.add_theme_constant_override("separation", 8)
 	vertical.add_child(placement_row)
 	_add_button(placement_row, "Поставить маяк (B)", _on_place_beacon_pressed)
 	_add_button(placement_row, "Удалить ближайший (Delete)", _on_remove_beacon_pressed)
+	_add_button(placement_row, "Метки маяков (M)", _on_toggle_markers_pressed)
 	_add_button(placement_row, "Сохранить мир (Ctrl+S)", _on_save_world_pressed)
 
 	var test_row := HBoxContainer.new()
@@ -108,7 +123,6 @@ func setup(
 	vertical.add_child(test_row)
 	_add_button(test_row, "Тест миграции (F7)", _on_migration_test_pressed)
 	_add_button(test_row, "Тест сохранения (F10)", _on_persistence_test_pressed)
-	_add_button(test_row, "Диагностика (F9)", _on_diagnostic_pressed)
 
 	var world_row := HBoxContainer.new()
 	world_row.add_theme_constant_override("separation", 8)
@@ -118,7 +132,7 @@ func setup(
 	_add_button(world_row, "Закрыть меню (F1/Esc)", _on_close_pressed)
 
 	compact_hint = Label.new()
-	compact_hint.text = "F1 / Esc — меню   |   C — камера   |   J — контроллер   |   B — маяк"
+	compact_hint.text = "F1/Esc — меню | C — камера | J — контроллер | K — streaming | B — маяк | M — метки"
 	compact_hint.position = Vector2(18.0, 18.0)
 	compact_hint.add_theme_font_size_override("font_size", 15)
 	compact_hint.modulate = Color(0.90, 0.93, 1.0, 0.92)
@@ -168,12 +182,20 @@ func _on_controller_test_pressed() -> void:
 	main_controller.run_controller_mini_test()
 
 
+func _on_streaming_test_pressed() -> void:
+	main_controller.run_terrain_streaming_mini_test()
+
+
 func _on_place_beacon_pressed() -> void:
 	main_controller.place_survey_beacon()
 
 
 func _on_remove_beacon_pressed() -> void:
 	main_controller.remove_nearest_survey_beacon()
+
+
+func _on_toggle_markers_pressed() -> void:
+	main_controller.toggle_beacon_markers()
 
 
 func _on_save_world_pressed() -> void:
@@ -227,6 +249,7 @@ func update_values(
 	var persistence_text: String = (
 		persistence.get_runtime_summary() if persistence != null else "инициализация"
 	)
+	var terrain_streaming_text: String = moon_world.get_terrain_streaming_summary()
 	var extra_text: String = ""
 	if spectator_enabled and spectator != null:
 		extra_text = "\nСкорость спектатора: %s м/с" % _format_number(
@@ -237,9 +260,12 @@ func update_values(
 			"Режим: %s   |   мышь: %s   |   %s %s\n"
 			+ "Контроллер: %s   |   Камера: %s\n"
 			+ "Тест контроллера: %s\n"
+			+ "Terrain streaming: %s\n"
+			+ "Тест streaming: %s\n"
 			+ "Разбиение: %s\n"
 			+ "Сущности: %s\n"
 			+ "Хранилище: %s\n"
+			+ "Навигационные метки: %s\n"
 			+ "Тест миграции: %s\n"
 			+ "Тест persistence: %s\n"
 			+ "Последнее действие: %s\n"
@@ -258,9 +284,12 @@ func update_values(
 			player.get_controller_display_name(),
 			player.get_camera_mode_display_name(),
 			main_controller.get_last_controller_test_result(),
+			terrain_streaming_text,
+			main_controller.get_last_terrain_streaming_test_result(),
 			partition_text,
 			entity_text,
 			persistence_text,
+			main_controller.get_beacon_marker_summary(),
 			main_controller.get_last_mini_test_result(),
 			main_controller.get_last_persistence_test_result(),
 			main_controller.get_last_action_result(),

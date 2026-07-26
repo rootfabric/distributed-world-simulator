@@ -2,13 +2,14 @@ extends Node
 
 const LOG_DIR: String = "user://logs"
 const LOG_PATH: String = "user://logs/lunar_simulation.jsonl"
+const TERRAIN_PERFORMANCE_LOG_PATH: String = "user://logs/terrain_performance.jsonl"
 const MAX_LOG_BYTES: int = 2 * 1024 * 1024
 const ROTATED_FILE_COUNT: int = 3
 
 var memory_only: bool = false
 var session_id: String = ""
 var recent_entries: Array[Dictionary] = []
-var max_recent_entries: int = 100
+var max_recent_entries: int = 300
 
 
 func setup(use_memory_only: bool = false) -> void:
@@ -25,6 +26,7 @@ func setup(use_memory_only: bool = false) -> void:
 	info("application", "logger_started", {
 		"session_id": session_id,
 		"log_path": LOG_PATH,
+		"terrain_performance_log_path": TERRAIN_PERFORMANCE_LOG_PATH,
 	})
 
 
@@ -40,8 +42,16 @@ func error(category: String, event_name: String, data: Dictionary = {}) -> void:
 	_write("ERROR", category, event_name, data)
 
 
+func performance(event_name: String, data: Dictionary = {}) -> void:
+	_write("INFO", "terrain_performance", event_name, data)
+
+
 func get_log_path() -> String:
 	return LOG_PATH
+
+
+func get_performance_log_path() -> String:
+	return TERRAIN_PERFORMANCE_LOG_PATH
 
 
 func get_recent_entries() -> Array[Dictionary]:
@@ -78,19 +88,10 @@ func _write(
 		return
 
 	_rotate_if_needed()
-	var mode: int = (
-		FileAccess.READ_WRITE
-		if FileAccess.file_exists(LOG_PATH)
-		else FileAccess.WRITE
-	)
-	var file := FileAccess.open(LOG_PATH, mode)
-	if file == null:
-		push_error("Could not open lunar log: %s" % LOG_PATH)
-		return
-	if mode == FileAccess.READ_WRITE:
-		file.seek_end()
-	file.store_line(line)
-	file.flush()
+	_append_line(LOG_PATH, line)
+	if category == "terrain_performance":
+		_rotate_path_if_needed(TERRAIN_PERFORMANCE_LOG_PATH, MAX_LOG_BYTES * 2)
+		_append_line(TERRAIN_PERFORMANCE_LOG_PATH, line)
 
 
 func _rotate_if_needed() -> void:
@@ -117,3 +118,38 @@ func _rotate_if_needed() -> void:
 			ProjectSettings.globalize_path(source_path),
 			ProjectSettings.globalize_path(target_path)
 		)
+
+
+func _append_line(path: String, line: String) -> void:
+	var mode: int = (
+		FileAccess.READ_WRITE
+		if FileAccess.file_exists(path)
+		else FileAccess.WRITE
+	)
+	var file := FileAccess.open(path, mode)
+	if file == null:
+		push_error("Could not open lunar log: %s" % path)
+		return
+	if mode == FileAccess.READ_WRITE:
+		file.seek_end()
+	file.store_line(line)
+	file.flush()
+
+
+func _rotate_path_if_needed(path: String, max_bytes: int) -> void:
+	if memory_only or not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return
+	var current_size: int = file.get_length()
+	file = null
+	if current_size < max_bytes:
+		return
+	var rotated_path: String = "%s.1" % path
+	if FileAccess.file_exists(rotated_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(rotated_path))
+	DirAccess.rename_absolute(
+		ProjectSettings.globalize_path(path),
+		ProjectSettings.globalize_path(rotated_path)
+	)

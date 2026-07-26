@@ -30,3 +30,7 @@ res://docs/plans/NEXT_ITERATIONS_RU.md
 res://docs/plans/ROADMAP_RU.md
 res://scripts/diagnostics/lunar_logger.gd
 res://tests/integration/test_entity_registry_migration.gd
+res://scripts/world/terrain/streaming/terrain_streaming_manager.gd
+res://tests/integration/test_terrain_streaming_contract.gd
+res://scripts/persistence/lunar_world_repository.gd
+res://tests/integration/test_persistence_roundtrip.gd
