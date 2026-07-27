@@ -1,0 +1,46 @@
+{
+  "schema": "planet_simulator.network_lab_topology.v1",
+  "run_id": "local-seamless-smoke",
+  "instance_id": "network-test-001",
+  "seed": 42017,
+  "engine": {
+    "binary_env": "GODOT_BIN",
+    "required_precision": "double",
+    "headless": true
+  },
+  "directory": {
+    "node_id": "directory-01",
+    "host": "127.0.0.1",
+    "port": 18990
+  },
+  "simulation_nodes": [
+    {
+      "node_id": "sim-space-a",
+      "space_id": "sol",
+      "region_id": "region/sol/a",
+      "host": "127.0.0.1",
+      "port": 19001
+    },
+    {
+      "node_id": "sim-moon-b",
+      "space_id": "moon",
+      "region_id": "region/moon/b",
+      "host": "127.0.0.1",
+      "port": 19002
+    }
+  ],
+  "clients": [
+    {
+      "node_id": "bot-01",
+      "role": "client-bot",
+      "connect_to": "sim-space-a"
+    }
+  ],
+  "timeouts_seconds": {
+    "process_start": 20,
+    "node_ready": 30,
+    "scenario": 60,
+    "graceful_shutdown": 10
+  },
+  "artifacts_root": "artifacts/network-runs"
+}

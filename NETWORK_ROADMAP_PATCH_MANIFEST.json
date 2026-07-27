@@ -1,0 +1,26 @@
+{
+  "schema": "planet_simulator.documentation_patch_manifest.v1",
+  "title": "Seamless network world roadmap",
+  "created_at_utc": "2026-07-27T00:00:00Z",
+  "based_on_checkpoint": "v16.1.0-r2-stack-controls",
+  "runtime_code_changed": false,
+  "documentation_only": true,
+  "files": [
+    "NETWORK_ROADMAP_RU.md",
+    "NETWORK_ROADMAP_PATCH_MANIFEST.json",
+    "config/network/local-lab.example.json",
+    "config/network/network-roadmap.v1.json",
+    "docs/architecture/adr/ADR-005-network-stack-and-protocol-boundaries.md",
+    "docs/architecture/adr/ADR-006-authority-lease-and-handoff.md",
+    "docs/network/AGENT_TASK_CARDS_RU.md",
+    "docs/network/LOCAL_MULTI_PROCESS_TESTING_RU.md",
+    "docs/network/NETWORK_PROTOCOL_GLOSSARY_RU.md",
+    "docs/network/NETWORK_READINESS_CHECKPOINT_RU.md",
+    "docs/network/NETWORK_STACK_RESEARCH_RU.md",
+    "docs/network/NETWORK_TEST_MATRIX_RU.md",
+    "docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md",
+    "docs/network/SEAMLESS_WORLD_ROADMAP_RU.md",
+    "tools/network_lab/README_RU.md"
+  ],
+  "file_count": 15
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "planet_simulator.network_roadmap.v1",
+  "document_revision": 1,
+  "created_at_utc": "2026-07-27T00:00:00Z",
+  "project_checkpoint": "v16.1.0-r2-stack-controls",
+  "strategy": "incremental_authoritative_server_mesh",
+  "principles": [
+    "stable_entity_identity",
+    "spatial_ref_is_canonical",
+    "single_authority_per_entity_or_island",
+    "authority_epoch_fencing",
+    "make_before_break_handoff",
+    "offline_and_online_share_domain_commands",
+    "multi_process_tests_are_mandatory",
+    "presentation_is_not_canonical_state"
+  ],
+  "recommended_stack": {
+    "realtime_transport_initial": "Godot ENetMultiplayerPeer",
+    "domain_contracts": "versioned DTO plus canonical JSON fixtures",
+    "test_orchestrator": "Python pytest subprocess",
+    "local_topology": "Docker Compose after N2",
+    "control_plane_later": "NATS Core plus JetStream",
+    "fault_injection_udp": "tc netem",
+    "fault_injection_tcp": "Toxiproxy",
+    "orchestration_production": "Agones after N9",
+    "prediction_optional": "netfox after N5",
+    "accounts_optional": "Nakama"
+  },
+  "phases": [
+    {"id":"N0","name":"Network contracts without sockets","complexity":"M","depends_on":[],"acceptance":"contract tests pass"},
+    {"id":"N1","name":"One authoritative Godot server and bot client","complexity":"M","depends_on":["N0"],"acceptance":"single item command round-trip"},
+    {"id":"N2","name":"Local multi-process test lab","complexity":"M","depends_on":["N1"],"acceptance":"pytest starts and stops real Godot processes"},
+    {"id":"N3","name":"World Directory and authority leases","complexity":"L","depends_on":["N2"],"acceptance":"two static authority regions with epoch fencing"},
+    {"id":"N4","name":"Object authority handoff","complexity":"L","depends_on":["N3"],"acceptance":"stone transfers A to B without duplication"},
+    {"id":"N5","name":"Dual connection player handoff","complexity":"L","depends_on":["N4"],"acceptance":"100 player crossings preserve identity and input"},
+    {"id":"N6","name":"Overlap ghosts and interest management","complexity":"L","depends_on":["N5"],"acceptance":"read-only ghosts and bounded interest"},
+    {"id":"N7","name":"Moon cave child space","complexity":"L","depends_on":["N6"],"acceptance":"surface cave round-trip"},
+    {"id":"N8","name":"Static Earth surface regions","complexity":"XL","depends_on":["N6"],"acceptance":"cube-sphere boundary handoff"},
+    {"id":"N9","name":"Interaction islands and dynamic rebalance","complexity":"XL","depends_on":["N8"],"acceptance":"safe region split and merge"},
+    {"id":"N10","name":"Production orchestration and regions","complexity":"XL","depends_on":["N9"],"acceptance":"multi-region allocated server fleet"},
+    {"id":"N11","name":"Continuous seamlessness improvements","complexity":"XL","depends_on":["N10"],"acceptance":"production SLO and soak targets"}
+  ],
+  "parallel_tracks": ["gameplay","network","test_infrastructure"]
+}
