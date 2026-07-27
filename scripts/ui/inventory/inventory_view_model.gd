@@ -39,6 +39,8 @@ var pending_operation: Dictionary = {}
 var container_pages: Dictionary = {}
 var _activity_sequences: Dictionary = {}
 var _activity_ledger_next_sequence: int = -1
+var _activity_ledger_generation: int = -1
+var _activity_ledger_instance_id: int = 0
 
 
 func setup(controller) -> void:
@@ -370,12 +372,22 @@ func _refresh_activity_sequences() -> void:
 	if gameplay_controller == null or not gameplay_controller.domain.has("operations"):
 		_activity_sequences.clear()
 		_activity_ledger_next_sequence = -1
+		_activity_ledger_generation = -1
+		_activity_ledger_instance_id = 0
 		return
 	var ledger = gameplay_controller.domain.operations
 	var next_sequence := int(ledger.next_sequence)
-	if next_sequence == _activity_ledger_next_sequence:
+	var generation := int(ledger.get_content_generation()) if ledger.has_method("get_content_generation") else -1
+	var instance_id := int(ledger.get_instance_id())
+	if (
+		next_sequence == _activity_ledger_next_sequence
+		and generation == _activity_ledger_generation
+		and instance_id == _activity_ledger_instance_id
+	):
 		return
 	_activity_ledger_next_sequence = next_sequence
+	_activity_ledger_generation = generation
+	_activity_ledger_instance_id = instance_id
 	_activity_sequences.clear()
 	var snapshot: Dictionary = ledger.to_dict()
 	for record_value in Array(snapshot.get("records", [])):

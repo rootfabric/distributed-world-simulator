@@ -1,10 +1,11 @@
-Planetary World v16.3.6-ui-i2-fix1
+Planetary World v16.3.7-ui-i2-fix2
 
 
-UI-I2 search and large storage fix1 v16.3.6-ui-i2-fix1:
+UI-I2 search and large storage fix2 v16.3.7-ui-i2-fix2:
 - search matches display name, definition ID, tags and relation kind
 - category filters cover resources, tools, containers, batteries, mountables and construction
 - recent-operation sort uses globally comparable successful ledger sequence; all sort modes remain presentation-only
+- transient operation-ledger content generation invalidates recent-operation cache on terminal writes, clear, load and persistence replace
 - SLOTS keep canonical physical positions while match statistics count occupied matching slots only
 - persistent inspector shows canonical quantity, relation, mass, volume, tags, components and revision
 - UI preferences are stored per profile outside Item Graph persistence

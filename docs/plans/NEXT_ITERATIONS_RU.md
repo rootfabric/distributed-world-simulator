@@ -19,7 +19,7 @@
 | `v16.3.0-r2-inventory-ux` | базовый checkpoint | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
 | `v16.3.1-ui-i0` | реализовано в feature-ветке | component shell, ViewModel, CommandFacade и legacy fallback без изменения Item Graph |
 | `v16.3.4-ui-i1-fix1` | принято в feature-ветке | quick transfer whole-stack semantics, context actions, explicit split, tooltip/toast и local rejection feedback |
-| `v16.3.6-ui-i2-fix1` | реализовано в feature-ветке | search/filter/view-only sort, persistent inspector, UI preferences, cell pool и large-storage page window |
+| `v16.3.7-ui-i2-fix2` | готово к повторной приёмке в feature-ветке | UI-I2 плюс надёжная invalidation recent-operation cache при замене ledger |
 | `v16.4 Foundation Gate + N0` | следующий архитектурный срез | server-safe kernel и сетевые контракты без сокетов |
 | `R3.1` | параллельный gameplay-срез | foundation и строительство через доменные команды |
 
@@ -48,7 +48,7 @@
 После UI-I2 feature-ветка проходит merge gate с основной архитектурной веткой.
 UI-I3 batch/multi-select остаётся отдельной будущей веткой после появления transactional command contract.
 
-Текущий UX-барьер — приёмка `v16.3.6-ui-i2-fix1`: editor import/parse,
+Текущий UX-барьер — приёмка `v16.3.7-ui-i2-fix2`: editor import/parse,
 полный набор из 36 headless-тестов, матрицы stack UI и context container,
 проверка двухслойного фонаря, session-scoped operation IDs и main-scene playground regression. Чекпоинты:
 `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,

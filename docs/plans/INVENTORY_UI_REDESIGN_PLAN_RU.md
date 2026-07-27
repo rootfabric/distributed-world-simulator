@@ -8,7 +8,7 @@
 
 - `UI-I0` — реализован в `feature/ui-i0-inventory-shell`, checkpoint `v16.3.1-ui-i0`;
 - `UI-I1` — принят, checkpoint `v16.3.4-ui-i1-fix1`;
-- `UI-I2` — реализован, checkpoint `v16.3.6-ui-i2-fix1`;
+- `UI-I2` — реализован, checkpoint `v16.3.7-ui-i2-fix2`;
 - checkpoints: `docs/checkpoints/2026-07-27_UI_I0_COMPONENT_INVENTORY_SHELL_RU.md` и `docs/checkpoints/2026-07-27_UI_I1_PLAYER_INVENTORY_INTERACTIONS_RU.md`.
 
 ## 1. Цель

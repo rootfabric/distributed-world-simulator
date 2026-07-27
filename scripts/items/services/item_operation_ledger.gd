@@ -12,6 +12,7 @@ const DEFAULT_MAXIMUM_ENTRIES: int = 2048
 var records: Dictionary = {}
 var next_sequence: int = 1
 var maximum_entries: int = DEFAULT_MAXIMUM_ENTRIES
+var content_generation: int = 0
 
 
 func _init(configured_maximum_entries: int = DEFAULT_MAXIMUM_ENTRIES) -> void:
@@ -98,6 +99,7 @@ func remember_terminal(
 	next_sequence += 1
 	records[operation_id] = record
 	_prune_oldest()
+	_mark_content_changed()
 	return result
 
 
@@ -136,9 +138,22 @@ func size() -> int:
 	return records.size()
 
 
+func get_content_generation() -> int:
+	return content_generation
+
+
 func clear() -> void:
 	records.clear()
 	next_sequence = 1
+	_mark_content_changed()
+
+
+func replace_from(other) -> void:
+	assert(other != null)
+	records = other.records.duplicate(true)
+	next_sequence = int(other.next_sequence)
+	maximum_entries = int(other.maximum_entries)
+	_mark_content_changed()
 
 
 func to_dict() -> Dictionary:
@@ -218,6 +233,7 @@ func load_dict(data: Dictionary) -> Dictionary:
 	records = next_records
 	maximum_entries = raw_maximum_entries
 	next_sequence = raw_next_sequence
+	_mark_content_changed()
 	return {
 		"success": true,
 		"record_count": records.size(),
@@ -365,6 +381,10 @@ func _prune_oldest() -> void:
 		if oldest_id.is_empty():
 			break
 		records.erase(oldest_id)
+
+
+func _mark_content_changed() -> void:
+	content_generation += 1
 
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:

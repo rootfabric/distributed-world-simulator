@@ -5,6 +5,7 @@ const Relations = preload("res://scripts/items/domain/item_relations.gd")
 const Gameplay = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const ContainerState = preload("res://scripts/containers/container_state.gd")
 const PreferencesStore = preload("res://scripts/ui/inventory/inventory_preferences_store.gd")
+const OperationLedger = preload("res://scripts/items/services/item_operation_ledger.gd")
 
 const STORE_ROOT := "user://planet_simulator/item_graphs"
 const STATE_KEY := "test-inventory-ui-i2"
@@ -90,6 +91,36 @@ func _run() -> void:
 	var recent_model: Dictionary = view_model.build_container(RECENT_CONTAINER_ID)
 	_assert(String(recent_model.get("cells", [])[0].get("item_id", "")) == newly_changed.instance_id, "Recent sorting must prefer the later ledger sequence even when its local revision is lower")
 	_assert(int(recent_model.get("cells", [])[0].get("activity_sequence", 0)) > int(recent_model.get("cells", [])[1].get("activity_sequence", 0)), "Recent sorting must expose globally comparable operation activity sequence")
+	var cached_next_sequence := int(controller.domain.operations.next_sequence)
+	var cached_generation := int(controller.domain.operations.get_content_generation())
+	var replacement_ledger := OperationLedger.new()
+	replacement_ledger.remember_terminal(
+		"ui-i2-recent-replacement-new-first",
+		"ui_i2_test_touch",
+		"%064d" % 1,
+		newly_changed.instance_id,
+		0,
+		1,
+		"SUCCEEDED",
+		{"success": true, "item_id": newly_changed.instance_id}
+	)
+	replacement_ledger.remember_terminal(
+		"ui-i2-recent-replacement-old-later",
+		"ui_i2_test_touch",
+		"%064d" % 2,
+		old_high_revision.instance_id,
+		9,
+		10,
+		"SUCCEEDED",
+		{"success": true, "item_id": old_high_revision.instance_id}
+	)
+	_assert(int(replacement_ledger.next_sequence) == cached_next_sequence, "Replacement fixture must preserve next_sequence to reproduce stale-cache risk")
+	_assert_success(controller.domain.operations.load_dict(replacement_ledger.to_dict()), "Active ledger must accept replacement records with the same next_sequence")
+	_assert(int(controller.domain.operations.next_sequence) == cached_next_sequence, "Ledger replacement must keep the same next_sequence")
+	_assert(int(controller.domain.operations.get_content_generation()) > cached_generation, "Ledger replacement must advance transient content generation")
+	var replaced_recent_model: Dictionary = view_model.build_container(RECENT_CONTAINER_ID)
+	_assert(String(replaced_recent_model.get("cells", [])[0].get("item_id", "")) == old_high_revision.instance_id, "Recent cache must refresh when ledger records change but next_sequence stays equal")
+	_assert(int(replaced_recent_model.get("cells", [])[0].get("activity_sequence", 0)) == 2, "Refreshed recent projection must expose replacement ledger sequence")
 	view_model.set_sort_mode(view_model.SORT_CONTAINER_ORDER)
 
 	# SLOTS search keeps physical slots and dims nonmatching occupants instead of reordering them.

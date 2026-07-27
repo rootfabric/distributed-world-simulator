@@ -1,7 +1,7 @@
 # Checkpoint UI-I2 — поиск и большие хранилища
 
 Дата: 28 июля 2026 года
-Checkpoint: `v16.3.6-ui-i2-fix1`
+Checkpoint: `v16.3.7-ui-i2-fix2`
 Feature-ветка: `feature/ui-i0-inventory-shell`
 
 ## Цель
