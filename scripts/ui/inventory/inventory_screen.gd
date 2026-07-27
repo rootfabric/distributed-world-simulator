@@ -23,6 +23,7 @@ var pending_target_slot_index: int = -1
 var pending_target_item_id: String = ""
 var pending_total_quantity: int = 0
 var compatibility_external_title: Label
+var _context_screen_position: Vector2 = Vector2.ZERO
 
 
 func setup(controller, model: InventoryViewModel, commands: InventoryCommandFacade) -> void:
@@ -38,19 +39,25 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 	player_panel.set_visual_role("player")
 	external_panel.set_visual_role("external")
 	hotbar_panel.set_visual_role("hotbar")
-	player_panel.drop_requested.connect(_on_drop_requested)
-	player_panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
-	player_panel.activated.connect(_on_slot_activated)
-	external_panel.drop_requested.connect(_on_drop_requested)
-	external_panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
-	external_panel.activated.connect(_on_slot_activated)
-	hotbar_panel.drop_requested.connect(_on_drop_requested)
-	hotbar_panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
-	hotbar_panel.activated.connect(_on_slot_activated)
+	_wire_panel(player_panel)
+	_wire_panel(external_panel)
+	_wire_panel(hotbar_panel)
 	split_dialog.transfer_confirmed.connect(_on_split_confirmed)
 	split_dialog.transfer_cancelled.connect(_on_split_cancelled)
+	context_menu.action_requested.connect(_on_context_action_requested)
 	set_inventory_visible(false)
 	refresh()
+
+
+func _wire_panel(panel: InventoryContainerPanel) -> void:
+	panel.drop_requested.connect(_on_drop_requested)
+	panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
+	panel.activated.connect(_on_slot_activated)
+	panel.quick_transfer_requested.connect(_on_quick_transfer_requested)
+	panel.context_requested.connect(_on_context_requested)
+	panel.item_hovered.connect(_on_item_hovered)
+	panel.item_unhovered.connect(_on_item_unhovered)
+	panel.drop_preview_rejected.connect(_on_drop_preview_rejected)
 
 
 func set_inventory_visible(value: bool) -> void:
@@ -58,8 +65,11 @@ func set_inventory_visible(value: bool) -> void:
 	visible = value
 	if value:
 		_recenter_panel()
+		status_label.text = "ЛКМ drag — весь стак · Shift+ЛКМ — быстрый перенос · ПКМ — действия"
 	else:
 		split_dialog.hide()
+		context_menu.close_menu()
+		tooltip.clear_item(true)
 		_clear_pending_quantity_drop()
 
 
@@ -71,7 +81,11 @@ func _input(event: InputEvent) -> void:
 	if not visible_inventory:
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
-		if split_dialog.visible:
+		if context_menu.visible:
+			context_menu.close_menu()
+		elif tooltip.visible and tooltip.pinned:
+			tooltip.clear_item(true)
+		elif split_dialog.visible:
 			split_dialog.cancel()
 		else:
 			gameplay_controller.set_inventory_visible(false)
@@ -136,6 +150,14 @@ func create_debug_snapshot() -> Dictionary:
 			"external": external_panel.get_boundary_snapshot(),
 			"hotbar": hotbar_panel.get_boundary_snapshot(),
 		},
+		"ui_i1": {
+			"context_menu_visible": context_menu.visible,
+			"split_dialog_visible": split_dialog.visible,
+			"tooltip_visible": tooltip.visible,
+			"tooltip_pinned": tooltip.pinned,
+			"toast_visible": toast_layer.visible,
+			"toast_kind": toast_layer.message_kind,
+		},
 	}
 
 
@@ -154,27 +176,14 @@ func _on_quantity_drop_requested(
 		target_item_id
 	)
 	if not bool(preview.get("success", false)):
-		refresh(command_facade.result_message(preview))
+		_present_result(preview, target_container_id)
 		return
-	pending_item_id = item_id
-	pending_target_container_id = target_container_id
-	pending_target_slot_index = target_slot_index
-	pending_target_item_id = target_item_id
-	pending_total_quantity = mini(
-		maxi(1, total_quantity),
-		maxi(1, int(preview.get("maximum_quantity", total_quantity)))
-	)
-	var item = gameplay_controller.get_item(item_id)
-	var definition = gameplay_controller.get_definition(item.definition_id) if item != null else null
-	var display_name: String = String(item.display_name) if item != null and not String(item.display_name).is_empty() else (String(definition.display_name) if definition != null else "Предмет")
-	split_dialog.open_request(
+	_open_split_for_target(
 		item_id,
-		pending_total_quantity,
+		mini(maxi(1, total_quantity), maxi(1, int(preview.get("maximum_quantity", total_quantity)))),
 		target_container_id,
 		target_slot_index,
-		target_item_id,
-		display_name,
-		gameplay_controller.get_container_display_name(target_container_id)
+		target_item_id
 	)
 
 
@@ -185,6 +194,7 @@ func _on_drop_requested(
 	quantity: int = -1,
 	target_item_id: String = ""
 ) -> void:
+	var cell_data := _cell_data_for_item(item_id)
 	var result: Dictionary = command_facade.transfer_quantity(
 		item_id,
 		quantity,
@@ -192,7 +202,10 @@ func _on_drop_requested(
 		target_slot_index,
 		target_item_id
 	)
-	refresh(command_facade.result_message(result))
+	var requested_quantity := int(cell_data.get("quantity", 1)) if quantity < 0 else quantity
+	var moved_quantity := int(result.get("moved_quantity", requested_quantity))
+	var success_message := "" if moved_quantity <= 0 else "Перенесено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), moved_quantity]
+	_present_result(result, target_container_id, success_message)
 
 
 func _on_split_confirmed(
@@ -202,6 +215,7 @@ func _on_split_confirmed(
 	target_slot_index: int,
 	target_item_id: String
 ) -> void:
+	var cell_data := _cell_data_for_item(item_id)
 	var result: Dictionary = command_facade.transfer_quantity(
 		item_id,
 		quantity,
@@ -210,12 +224,15 @@ func _on_split_confirmed(
 		target_item_id
 	)
 	_clear_pending_quantity_drop()
-	refresh(command_facade.result_message(result))
+	var moved_quantity := int(result.get("moved_quantity", quantity))
+	var success_message := "" if moved_quantity <= 0 else "Перенесено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), moved_quantity]
+	_present_result(result, target_container_id, success_message)
 	call_deferred("_restore_inventory_focus")
 
 
 func _on_split_cancelled() -> void:
 	_clear_pending_quantity_drop()
+	status_label.text = "Перенос отменён"
 	call_deferred("_restore_inventory_focus")
 
 
@@ -232,13 +249,211 @@ func _on_quantity_confirmed() -> void:
 	_on_split_confirmed(item_id, quantity, target_container_id, target_slot_index, target_item_id)
 
 
+func _on_quick_transfer_requested(item_id: String, source_container_id: String, _source_slot_index: int) -> void:
+	var cell_data := _cell_data_for_item(item_id)
+	var preview := command_facade.preview_quick_transfer(item_id, source_container_id, external_container_id)
+	var target_container_id := String(preview.get("target_container_id", source_container_id))
+	if not bool(preview.get("success", false)):
+		_present_result(preview, target_container_id)
+		return
+	var result := command_facade.quick_transfer(item_id, source_container_id, external_container_id)
+	var moved_quantity := int(result.get("moved_quantity", 0))
+	var success_message := "" if moved_quantity <= 0 else "Быстро перенесено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), moved_quantity]
+	_present_result(result, target_container_id, success_message)
+
+
+func _on_context_requested(
+	item_id: String,
+	source_container_id: String,
+	source_slot_index: int,
+	screen_position: Vector2
+) -> void:
+	var cell_data := _cell_data_for_item(item_id)
+	if cell_data.is_empty():
+		return
+	_context_screen_position = screen_position
+	tooltip.clear_item(true)
+	var can_quick := (
+		not external_container_id.is_empty()
+		and source_container_id in [gameplay_controller.player_inventory_id, external_container_id]
+	)
+	var hotbar_slots: Array[Dictionary] = []
+	if source_container_id != gameplay_controller.player_hotbar_id:
+		hotbar_slots = command_facade.hotbar_slot_options(item_id)
+	context_menu.open_for_item(cell_data, Vector2i(screen_position), {
+		"can_quick_transfer": can_quick,
+		"can_drop": true,
+		"hotbar_slots": hotbar_slots,
+		"source_slot_index": source_slot_index,
+	})
+
+
+func _on_context_action_requested(action_id: int, context: Dictionary) -> void:
+	var item_id := String(context.get("item_id", ""))
+	var source_container_id := String(context.get("source_container_id", ""))
+	var quantity := int(context.get("quantity", 1))
+	match action_id:
+		InventoryItemContextMenu.ACTION_INSPECT:
+			var cell_data: Dictionary = Dictionary(context.get("cell_data", {}))
+			tooltip.show_item(cell_data, true)
+			_position_tooltip(_context_screen_position)
+		InventoryItemContextMenu.ACTION_TRANSFER_ALL:
+			_perform_context_quick_transfer(item_id, source_container_id, -1)
+		InventoryItemContextMenu.ACTION_TRANSFER_ONE:
+			_perform_context_quick_transfer(item_id, source_container_id, 1)
+		InventoryItemContextMenu.ACTION_TRANSFER_HALF:
+			_perform_context_quick_transfer(item_id, source_container_id, maxi(1, int(ceil(float(quantity) * 0.5))))
+		InventoryItemContextMenu.ACTION_TRANSFER_EXACT:
+			_open_context_split(item_id, source_container_id, quantity)
+		InventoryItemContextMenu.ACTION_DROP_ONE:
+			var drop_one_result := command_facade.drop_one(item_id)
+			_present_result(drop_one_result, source_container_id, "Выброшено: %s ×1" % String(context.get("display_name", "Предмет")))
+		InventoryItemContextMenu.ACTION_DROP_ALL:
+			var drop_all_result := command_facade.drop_stack(item_id)
+			_present_result(drop_all_result, source_container_id, "Выброшен стак: %s ×%d" % [String(context.get("display_name", "Предмет")), quantity])
+		InventoryItemContextMenu.ACTION_HOTBAR_FIRST_FREE:
+			var first_result := command_facade.assign_hotbar_first_free(item_id)
+			_present_result(first_result, gameplay_controller.player_hotbar_id, "Предмет назначен в первый свободный слот hotbar")
+		_:
+			if action_id >= InventoryItemContextMenu.ACTION_HOTBAR_SLOT_BASE:
+				var slot_index := int(context.get("hotbar_slot_index", -1))
+				var hotbar_result := command_facade.assign_hotbar(item_id, slot_index)
+				var key_name := "0" if slot_index == 9 else str(slot_index + 1)
+				_present_result(hotbar_result, gameplay_controller.player_hotbar_id, "Предмет назначен в hotbar %s" % key_name)
+
+
+func _perform_context_quick_transfer(item_id: String, source_container_id: String, quantity: int) -> void:
+	var cell_data := _cell_data_for_item(item_id)
+	var preview := command_facade.preview_quick_transfer(item_id, source_container_id, external_container_id, quantity)
+	var target_container_id := String(preview.get("target_container_id", source_container_id))
+	if not bool(preview.get("success", false)):
+		_present_result(preview, target_container_id)
+		return
+	var result := command_facade.quick_transfer_quantity(item_id, source_container_id, external_container_id, quantity)
+	var moved_quantity := int(result.get("moved_quantity", 0))
+	var success_message := "" if moved_quantity <= 0 else "Перенесено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), moved_quantity]
+	_present_result(result, target_container_id, success_message)
+
+
+func _open_context_split(item_id: String, source_container_id: String, total_quantity: int) -> void:
+	var preview := command_facade.preview_quick_transfer(item_id, source_container_id, external_container_id, total_quantity)
+	var target_container_id := String(preview.get("target_container_id", source_container_id))
+	if not bool(preview.get("success", false)):
+		_present_result(preview, target_container_id)
+		return
+	_open_split_for_target(
+		item_id,
+		mini(total_quantity, maxi(1, int(preview.get("maximum_quantity", total_quantity)))),
+		target_container_id,
+		int(preview.get("target_slot_index", -1)),
+		String(preview.get("target_item_id", ""))
+	)
+
+
+func _open_split_for_target(
+	item_id: String,
+	maximum_quantity: int,
+	target_container_id: String,
+	target_slot_index: int,
+	target_item_id: String
+) -> void:
+	pending_item_id = item_id
+	pending_target_container_id = target_container_id
+	pending_target_slot_index = target_slot_index
+	pending_target_item_id = target_item_id
+	pending_total_quantity = maxi(1, maximum_quantity)
+	var cell_data := _cell_data_for_item(item_id)
+	split_dialog.open_request(
+		item_id,
+		pending_total_quantity,
+		target_container_id,
+		target_slot_index,
+		target_item_id,
+		String(cell_data.get("display_name", "Предмет")),
+		gameplay_controller.get_container_display_name(target_container_id)
+	)
+
+
+func _on_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
+	if context_menu.visible or split_dialog.visible or tooltip.pinned:
+		return
+	tooltip.show_item(cell_data, false)
+	_position_tooltip(screen_position)
+
+
+func _on_item_unhovered(_item_id: String) -> void:
+	tooltip.clear_item(false)
+
+
+func _on_drop_preview_rejected(target_container_id: String, _target_slot_index: int, error_code: String) -> void:
+	var message: String = command_facade.result_message({"success": false, "error_code": error_code})
+	var panel: InventoryContainerPanel = _panel_for_container(target_container_id)
+	if panel != null:
+		panel.show_feedback(message, false, 1.4)
+
+
 func _on_slot_activated(item_id: String, container_id: String, slot_index: int) -> void:
 	if container_id == gameplay_controller.player_hotbar_id and slot_index >= 0:
 		var result: Dictionary = command_facade.select_hotbar(slot_index)
-		refresh(command_facade.result_message(result))
+		_present_result(result, container_id, "Выбран слот hotbar")
 	elif not item_id.is_empty() and container_id == external_container_id:
 		var result: Dictionary = command_facade.transfer_stack(item_id, gameplay_controller.player_inventory_id)
-		refresh(command_facade.result_message(result))
+		_present_result(result, gameplay_controller.player_inventory_id, "Предмет перенесён в рюкзак")
+
+
+func _present_result(result: Dictionary, target_container_id: String = "", success_message: String = "") -> void:
+	var success := bool(result.get("success", false))
+	var message: String = success_message if success and not success_message.is_empty() else command_facade.result_message(result)
+	refresh()
+	status_label.text = message
+	var panel: InventoryContainerPanel = _panel_for_container(target_container_id)
+	if success:
+		toast_layer.show_success(message)
+		if panel != null:
+			panel.show_feedback("Готово", true, 1.2)
+	else:
+		toast_layer.show_error(message)
+		if panel != null:
+			panel.show_feedback(message, false)
+
+
+func _panel_for_container(container_id: String) -> InventoryContainerPanel:
+	if container_id == gameplay_controller.player_inventory_id:
+		return player_panel
+	if container_id == gameplay_controller.player_hotbar_id:
+		return hotbar_panel
+	if not external_container_id.is_empty() and container_id == external_container_id:
+		return external_panel
+	return null
+
+
+func _cell_data_for_item(item_id: String) -> Dictionary:
+	for panel in [player_panel, external_panel, hotbar_panel]:
+		for value in panel.current_model.get("cells", []):
+			var cell: Dictionary = Dictionary(value)
+			if String(cell.get("item_id", "")) == item_id:
+				return cell.duplicate(true)
+	var item = gameplay_controller.get_item(item_id)
+	if item == null:
+		return {}
+	var definition = gameplay_controller.get_definition(item.definition_id)
+	return {
+		"item_id": item_id,
+		"definition_id": String(item.definition_id),
+		"display_name": String(item.display_name) if not String(item.display_name).is_empty() else String(definition.display_name),
+		"quantity": int(item.quantity),
+		"tags": Array(definition.tags),
+		"unit_mass_kg": float(definition.unit_mass_kg),
+		"unit_volume_l": float(definition.external_volume_l),
+	}
+
+
+func _position_tooltip(screen_position: Vector2) -> void:
+	var local_position := screen_position - global_position + Vector2(10.0, 8.0)
+	var expected_size := Vector2(maxf(300.0, tooltip.custom_minimum_size.x), maxf(150.0, tooltip.size.y))
+	local_position.x = clampf(local_position.x, 8.0, maxf(8.0, size.x - expected_size.x - 8.0))
+	local_position.y = clampf(local_position.y, 8.0, maxf(8.0, size.y - expected_size.y - 8.0))
+	tooltip.position = local_position
 
 
 func _clear_pending_quantity_drop() -> void:
@@ -276,7 +491,7 @@ func _apply_panel_size(has_external: bool, external_columns: int) -> void:
 	var width := 800.0
 	if has_external:
 		width = minf(1240.0, 800.0 + maxf(310.0, external_columns * 76.0))
-	var panel_size := Vector2(width, 600.0)
+	var panel_size := Vector2(width, 640.0)
 	custom_minimum_size = panel_size
 	size = panel_size
 	_recenter_panel()

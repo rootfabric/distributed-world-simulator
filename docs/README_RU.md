@@ -1,3 +1,8 @@
+
+## UI-I1 — рабочие операции инвентаря
+
+- `checkpoints/2026-07-27_UI_I1_PLAYER_INVENTORY_INTERACTIONS_RU.md`
+- Shift+ЛКМ, ПКМ actions, explicit split, tooltip, toast и local errors.
 ## v16.3.0 — contextual inventory UX and dual-fill flashlight
 
 Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.

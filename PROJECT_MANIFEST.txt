@@ -1,4 +1,17 @@
-Planetary World v16.3.2-ui-i0-boundaries
+Planetary World v16.3.4-ui-i1-fix1
+
+
+UI-I1 player inventory interactions v16.3.4-ui-i1-fix1:
+- Shift+LMB quick transfer uses domain preview and active player/external pair
+- RMB context menu exposes inspect, whole/one/half/exact transfer, hotbar and drop actions
+- SLOTS quick transfer prefers a slot that accepts the complete request; partial-only targets remain fail-closed
+- split dialog provides slider, numeric input and 1/half/maximum shortcuts
+- tooltip shows quantity, physical mass, volume and definition tags
+- success/error toast and local target-panel rejection feedback
+- drop_item_stack/drop_item_quantity remain controller-level delegates to ItemTransferService
+- quick-transfer toast uses result.moved_quantity, never stale source quantity
+- tests/ui/test_inventory_ui_i1_interactions.gd
+- docs/checkpoints/2026-07-27_UI_I1_PLAYER_INVENTORY_INTERACTIONS_RU.md
 
 
 UI-I0 component inventory shell v16.3.2-ui-i0-boundaries:

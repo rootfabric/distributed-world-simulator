@@ -131,10 +131,17 @@ func _build_cell(
 	var tags: Array = []
 	var icon_color: Array = []
 	var revision: int = -1
+	var unit_mass_kg: float = 0.0
+	var unit_volume_l: float = 0.0
+	var max_stack: int = 1
+	var owns_container: bool = false
+	var relation_kind: String = ""
 	if item != null:
 		definition_id = String(item.definition_id)
 		quantity = int(item.quantity)
 		revision = int(item.revision)
+		owns_container = bool(item.owns_container())
+		relation_kind = String(item.relation.get("kind", ""))
 		if not String(item.display_name).is_empty():
 			display_name = String(item.display_name)
 		elif definition != null:
@@ -142,6 +149,9 @@ func _build_cell(
 	if definition != null:
 		tags = Array(definition.tags).duplicate()
 		icon_color = Array(definition.metadata.get("icon_color", [])).duplicate()
+		unit_mass_kg = float(definition.unit_mass_kg)
+		unit_volume_l = float(definition.external_volume_l)
+		max_stack = int(definition.max_stack)
 	return {
 		"item_id": item_id,
 		"definition_id": definition_id,
@@ -150,6 +160,13 @@ func _build_cell(
 		"revision": revision,
 		"tags": tags,
 		"icon_color": icon_color,
+		"unit_mass_kg": unit_mass_kg,
+		"unit_volume_l": unit_volume_l,
+		"total_mass_kg": unit_mass_kg * quantity,
+		"total_volume_l": unit_volume_l * quantity,
+		"max_stack": max_stack,
+		"owns_container": owns_container,
+		"relation_kind": relation_kind,
 		"source_container_id": container_id,
 		"source_slot_index": slot_index,
 		"target_container_id": container_id,

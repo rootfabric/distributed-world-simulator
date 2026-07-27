@@ -68,3 +68,17 @@ horizontal_alignment = 1
 autowrap_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.63, 0.72, 1)
 theme_override_font_sizes/font_size = 12
+
+[node name="FeedbackLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.48, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="FeedbackTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+one_shot = true

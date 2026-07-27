@@ -4,6 +4,11 @@ extends PanelContainer
 signal drop_requested(item_id: String, target_container_id: String, target_slot_index: int, quantity: int, target_item_id: String)
 signal quantity_drop_requested(item_id: String, target_container_id: String, target_slot_index: int, total_quantity: int, target_item_id: String)
 signal activated(item_id: String, container_id: String, slot_index: int)
+signal quick_transfer_requested(item_id: String, source_container_id: String, source_slot_index: int)
+signal context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2)
+signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
+signal item_unhovered(item_id: String)
+signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
 
 const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 
@@ -13,6 +18,8 @@ const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 @onready var scroll: ScrollContainer = %Scroll
 @onready var grid: GridContainer = %Grid
 @onready var drop_hint_label: Label = %DropHintLabel
+@onready var feedback_label: Label = %FeedbackLabel
+@onready var feedback_timer: Timer = %FeedbackTimer
 
 var container_id: String = ""
 var storage_mode: String = ""
@@ -26,6 +33,7 @@ var visual_role: String = "container"
 
 func _ready() -> void:
 	_apply_boundary_style()
+	feedback_timer.timeout.connect(_clear_feedback)
 
 
 func set_visual_role(role: String) -> void:
@@ -57,9 +65,15 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 		cell.drop_requested.connect(_forward_drop_requested)
 		cell.quantity_drop_requested.connect(_forward_quantity_drop_requested)
 		cell.activated.connect(_forward_activated)
+		cell.quick_transfer_requested.connect(_forward_quick_transfer_requested)
+		cell.context_requested.connect(_forward_context_requested)
+		cell.item_hovered.connect(_forward_item_hovered)
+		cell.item_unhovered.connect(_forward_item_unhovered)
+		cell.drop_preview_rejected.connect(_forward_drop_preview_rejected)
 		grid.add_child(cell)
 	rendered_cell_count = grid.get_child_count()
 	visible = not model.is_empty()
+	_clear_feedback()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_update_role_copy()
 	set_meta("inventory_container_model", current_model.duplicate(true))
@@ -74,6 +88,7 @@ func clear_panel() -> void:
 	metadata_label.text = ""
 	_clear_grid()
 	visible = false
+	_clear_feedback()
 
 
 func get_visual_cell_count() -> int:
@@ -82,6 +97,32 @@ func get_visual_cell_count() -> int:
 
 func get_rendered_cell_count() -> int:
 	return rendered_cell_count
+
+
+func show_feedback(message: String, success: bool = false, duration_seconds: float = 2.8) -> void:
+	if feedback_label == null or message.is_empty():
+		return
+	feedback_label.text = message
+	feedback_label.visible = true
+	feedback_label.add_theme_color_override(
+		"font_color",
+		Color(0.55, 0.95, 0.68) if success else Color(1.0, 0.55, 0.48)
+	)
+	feedback_timer.start(maxf(0.1, duration_seconds))
+
+
+func find_cell_by_item_id(item_id: String):
+	for child in grid.get_children():
+		if String(child.get("item_id")) == item_id:
+			return child
+	return null
+
+
+func _clear_feedback() -> void:
+	if feedback_label == null:
+		return
+	feedback_label.visible = false
+	feedback_label.text = ""
 
 
 func get_boundary_snapshot() -> Dictionary:
@@ -123,7 +164,11 @@ func _can_drop_data(_at_position: Vector2, data) -> bool:
 		-1,
 		""
 	)
-	return result is Dictionary and bool(result.get("success", false))
+	var success := result is Dictionary and bool(result.get("success", false))
+	if not success:
+		var error_code := String(result.get("error_code", "DROP_REJECTED")) if result is Dictionary else "DROP_REJECTED"
+		drop_preview_rejected.emit(container_id, -1, error_code)
+	return success
 
 
 func _drop_data(_at_position: Vector2, data) -> void:
@@ -235,3 +280,23 @@ func _forward_quantity_drop_requested(item_id: String, target_container_id: Stri
 
 func _forward_activated(item_id: String, source_container_id: String, slot_index: int) -> void:
 	activated.emit(item_id, source_container_id, slot_index)
+
+
+func _forward_quick_transfer_requested(item_id: String, source_container_id: String, source_slot_index: int) -> void:
+	quick_transfer_requested.emit(item_id, source_container_id, source_slot_index)
+
+
+func _forward_context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2) -> void:
+	context_requested.emit(item_id, source_container_id, source_slot_index, screen_position)
+
+
+func _forward_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
+	item_hovered.emit(cell_data, screen_position)
+
+
+func _forward_item_unhovered(item_id: String) -> void:
+	item_unhovered.emit(item_id)
+
+
+func _forward_drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String) -> void:
+	drop_preview_rejected.emit(target_container_id, target_slot_index, error_code)
