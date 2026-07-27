@@ -1,4 +1,13 @@
-Planetary World v16.3.3-foundation-world-aggregate-part3-fix1
+Planetary World v16.3.3-foundation-world-aggregate-part3-fix2
+
+Foundation world aggregate part 3 fix2:
+- SimulationKernel recursively rejects presentation objects in Dictionary keys
+- SimulationKernel recursively rejects presentation objects in Object metadata
+- WorldEntityAggregate validates raw SpatialRef before quaternion canonicalization
+- setup/apply_spatial_state reject non-unit raw quaternions without mutation
+- tests/runtime/test_simulation_kernel_boundary.gd covers key and metadata bypasses
+- tests/entities/test_world_entity_aggregate.gd covers raw quaternion rejection
+- docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX2_RU.md
 
 Foundation world aggregate part 3 v16.3.3:
 - SimulationKernel / PresentationHost boundary with recursive presentation-object rejection

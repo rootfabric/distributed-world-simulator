@@ -2,7 +2,7 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.3.3-foundation-world-aggregate-part3-fix1`. N0 находится в работе: строгие command/result/snapshot contracts и loopback реализованы, transport sockets ещё не начаты. Foundation теперь содержит lifecycle barrier, presentation-free SimulationKernel boundary, WorldEntityAggregate, Item Graph v2 и формальный Entity/Chunk Lifecycle.
+Текущий статус: `v16.3.3-foundation-world-aggregate-part3-fix2`. N0 находится в работе: строгие command/result/snapshot contracts и loopback реализованы, transport sockets ещё не начаты. Foundation теперь содержит lifecycle barrier, presentation-free SimulationKernel boundary, WorldEntityAggregate, Item Graph v2 и формальный Entity/Chunk Lifecycle.
 
 ## Основные документы
 

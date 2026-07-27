@@ -55,6 +55,15 @@ func _run() -> void:
 		unexpected_spatial
 	), "Aggregate setup must reject unknown SpatialRef fields")
 	_assert(invalid_setup.entity_id.is_empty(), "Rejected setup must not partially initialize aggregate")
+	var nonunit_setup_spatial: Dictionary = spatial.duplicate(true)
+	nonunit_setup_spatial["rotation_xyzw"] = [0.0, 0.0, 0.0, 2.0]
+	var nonunit_setup_aggregate = Aggregate.new()
+	_assert(not nonunit_setup_aggregate.setup(
+		"entity/item/nonunit-setup",
+		"item/nonunit-setup",
+		nonunit_setup_spatial
+	), "Aggregate setup must reject raw non-unit quaternion before canonicalization")
+	_assert(nonunit_setup_aggregate.entity_id.is_empty(), "Rejected non-unit setup must not partially initialize aggregate")
 	var missing_sample: Dictionary = spatial.duplicate(true)
 	missing_sample.erase("sample_time_s")
 	_assert(not Aggregate.new().setup(
@@ -71,6 +80,13 @@ func _run() -> void:
 	)
 	_assert(aggregate.spatial_ref == spatial_before_invalid_apply, "Rejected spatial update must not mutate aggregate")
 	_assert(aggregate.state_revision == revision_before_invalid_apply, "Rejected spatial update must not increment revision")
+	_assert_error(
+		aggregate.apply_spatial_state(nonunit_setup_spatial, {}, {}, revision_before_invalid_apply, 3),
+		"INVALID_SPATIAL_REF",
+		"Spatial update must reject raw non-unit quaternion before canonicalization"
+	)
+	_assert(aggregate.spatial_ref == spatial_before_invalid_apply, "Rejected non-unit spatial update must not mutate aggregate")
+	_assert(aggregate.state_revision == revision_before_invalid_apply, "Rejected non-unit spatial update must not increment revision")
 
 	var unchanged := aggregate.apply_spatial_state(
 		spatial,

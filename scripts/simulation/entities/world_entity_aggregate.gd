@@ -61,6 +61,9 @@ func setup(
 	spatial_ref_value: Dictionary,
 	context: Dictionary = {}
 ) -> bool:
+	var raw_spatial_validation: Dictionary = _validate_spatial_ref_payload(spatial_ref_value)
+	if not bool(raw_spatial_validation.get("success", false)):
+		return false
 	var normalized_spatial: Dictionary = _canonicalize_transport_dictionary(spatial_ref_value)
 	var partition_value = context.get("partition_address", {})
 	if not partition_value is Dictionary:
@@ -213,8 +216,11 @@ func apply_spatial_state(
 		})
 	if lifecycle_state != EntityLifecycle.ACTIVE:
 		return _failure("ENTITY_NOT_ACTIVE", {"lifecycle_state": lifecycle_state})
+	var spatial_validation: Dictionary = _validate_spatial_ref_payload(spatial_ref_value)
+	if not bool(spatial_validation.get("success", false)):
+		return spatial_validation
 	var normalized_ref: Dictionary = _canonicalize_transport_dictionary(spatial_ref_value)
-	var spatial_validation: Dictionary = _validate_spatial_ref_payload(normalized_ref)
+	spatial_validation = _validate_spatial_ref_payload(normalized_ref)
 	if not bool(spatial_validation.get("success", false)):
 		return spatial_validation
 	var next_partition: Dictionary = _normalize_optional_partition(partition_value)

@@ -4,6 +4,12 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.
 
 Контракты: `contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`, `contracts/ITEM_GRAPH_V2_RU.md`.
 
+## v16.3.3 fix2 — presentation/spatial boundary hardening
+
+- `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX2_RU.md`
+- Dictionary keys and Object metadata are inspected for presentation objects.
+- Raw SpatialRef is validated before quaternion canonicalization.
+
 ## v16.3.2 fix2 — terminal lifecycle world-load fence
 
 Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`.

@@ -1,4 +1,4 @@
-# Planetary World v16.3.3-foundation-world-aggregate-part3-fix1 — canonical WORLD aggregate
+# Planetary World v16.3.3-foundation-world-aggregate-part3-fix2 — canonical WORLD aggregate
 
 Версия сохраняет принятый R2 gameplay, строгую N0 boundary и server-safe lifecycle, добавляя единый `WorldEntityAggregate` для WORLD-предметов, Item Graph v2, формальный Entity/Chunk Lifecycle, `SimulationKernel`/`PresentationHost` boundary и server-safe persistence port.
 
@@ -6,9 +6,9 @@
 
 ## Архитектурный checkpoint после R2
 
-Ревизия `v16.3.3-foundation-world-aggregate-part3-fix1` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
+Ревизия `v16.3.3-foundation-world-aggregate-part3-fix2` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
 
-Fix1 усиливает границы целостности: live-миграция выполняется через staging и единый commit, `WorldEntityAggregate.setup()` принимает только сохраняемый строгий `SpatialRef`, а `SimulationKernel` рекурсивно проверяет presentation-объекты внутри service objects.
+Fix2 закрывает оставшиеся обходы границы: `SimulationKernel` рекурсивно проверяет не только значения, но и ключи `Dictionary`, а также metadata произвольных service objects. `WorldEntityAggregate.setup()` и `apply_spatial_state()` теперь сначала валидируют сырой `SpatialRef`, затем канонизируют его; неединичный quaternion не может быть молча нормализован и принят.
 
 Следующий основной пакет:
 
@@ -25,6 +25,8 @@ command/snapshot DTO, authority lease/handoff contracts и тесты без о�
 
 Документы:
 
+- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX2_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md`;
 - `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
 - `docs/contracts/ITEM_GRAPH_V2_RU.md`;

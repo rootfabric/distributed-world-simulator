@@ -2,7 +2,7 @@
 
 # Статус реализации
 
-Checkpoint `v16.3.3-foundation-world-aggregate-part3-fix1`:
+Checkpoint `v16.3.3-foundation-world-aggregate-part3-fix2`:
 
 - [x] pure-domain runtime roles;
 - [x] launch option parser;

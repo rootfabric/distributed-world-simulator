@@ -91,8 +91,10 @@ func _is_presentation_object(value, depth: int = 0, visited: Dictionary = {}) ->
 	):
 		return true
 	if value is Dictionary:
-		for child in value.values():
-			if _is_presentation_object(child, depth + 1, visited):
+		for key in value.keys():
+			if _is_presentation_object(key, depth + 1, visited):
+				return true
+			if _is_presentation_object(value[key], depth + 1, visited):
 				return true
 		return false
 	if value is Array:
@@ -110,6 +112,11 @@ func _is_presentation_object(value, depth: int = 0, visited: Dictionary = {}) ->
 			for child_node in object_value.get_children():
 				if _is_presentation_object(child_node, depth + 1, visited):
 					return true
+		for meta_name in object_value.get_meta_list():
+			if _is_presentation_object(meta_name, depth + 1, visited):
+				return true
+			if _is_presentation_object(object_value.get_meta(meta_name), depth + 1, visited):
+				return true
 		for property_info in object_value.get_property_list():
 			var usage: int = int(property_info.get("usage", 0))
 			if (usage & PROPERTY_USAGE_SCRIPT_VARIABLE) == 0:

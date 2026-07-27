@@ -72,6 +72,15 @@ func _run() -> void:
 	var nested_control := Control.new()
 	_assert_error(kernel.register_service("nested-ui", {"layers": [[nested_control]]}), "PRESENTATION_OBJECT_REJECTED", "Nested presentation object must be rejected recursively")
 	nested_control.free()
+	var key_camera := Camera2D.new()
+	_assert_error(kernel.register_service("dictionary-key-ui", {key_camera: "presentation-key"}), "PRESENTATION_OBJECT_REJECTED", "Presentation object used as dictionary key must be rejected")
+	key_camera.free()
+	var metadata_carrier := RefCounted.new()
+	var metadata_camera := Camera2D.new()
+	metadata_carrier.set_meta("presentation", metadata_camera)
+	_assert_error(kernel.register_service("metadata-ui", metadata_carrier), "PRESENTATION_OBJECT_REJECTED", "Presentation object stored in service metadata must be rejected")
+	metadata_carrier.remove_meta("presentation")
+	metadata_camera.free()
 
 	var host = PresentationHost.new()
 	host.name = "PresentationHostTest"
