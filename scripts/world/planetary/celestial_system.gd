@@ -19,12 +19,19 @@ const RotationProviderScript = preload(
 const FrameMotionProviderScript = preload(
 	"res://scripts/simulation/frames/providers/frame_motion_provider.gd"
 )
+const GravityFieldScript = preload(
+	"res://scripts/simulation/gravity/gravity_field.gd"
+)
+const GravityMathScript = preload(
+	"res://scripts/simulation/gravity/gravity_math.gd"
+)
 
 var config: Dictionary = {}
 var all_bodies: Dictionary = {}
 var bodies: Dictionary = {}
 var body_order: Array[String] = []
 var frame_graph
+var gravity_field
 var simulation_clock
 var owns_clock: bool = false
 var earth_proxy: MeshInstance3D
@@ -71,6 +78,9 @@ func setup(
 		return false
 	if not _build_frame_graph():
 		return false
+	gravity_field = GravityFieldScript.new()
+	if not gravity_field.setup_celestial_system(self):
+		return false
 	if bodies.has("earth") and bodies.has("moon"):
 		_create_earth_proxy()
 	set_process(true)
@@ -84,6 +94,7 @@ func _reset_runtime_state() -> void:
 	owns_clock = false
 	simulation_clock = null
 	frame_graph = null
+	gravity_field = null
 	if earth_proxy != null and is_instance_valid(earth_proxy):
 		if earth_proxy.get_parent() != null:
 			earth_proxy.get_parent().remove_child(earth_proxy)
@@ -115,6 +126,57 @@ func get_body_ids() -> Array[String]:
 		if bodies.has(body_id):
 			result.append(body_id)
 	return result
+
+
+func get_gravity_body_ids() -> Array[String]:
+	var result: Array[String] = []
+	for body_id in body_order:
+		var body: Dictionary = all_bodies.get(body_id, {})
+		if GravityMathScript.resolve_gravitational_parameter(body) > 0.0:
+			result.append(body_id)
+	return result
+
+
+func get_reference_body_for_frame(frame_id: String) -> String:
+	for body_id in body_order:
+		if (
+			frame_id == get_body_inertial_frame_id(body_id)
+			or frame_id == get_body_fixed_frame_id(body_id)
+		):
+			return body_id
+	return ""
+
+
+func get_body_gravitational_parameter(body_id: String) -> float:
+	return GravityMathScript.resolve_gravitational_parameter(
+		all_bodies.get(body_id, {})
+	)
+
+
+func get_gravity_field():
+	return gravity_field
+
+
+func get_gravity_acceleration_at_position(
+	position_m: Vector3,
+	frame_id: String = "",
+	sample_time_s: float = INF,
+	reference_body_id: String = ""
+) -> Vector3:
+	if gravity_field == null:
+		return Vector3.ZERO
+	return gravity_field.get_acceleration_at_position(
+		position_m,
+		root_frame_id if frame_id.is_empty() else frame_id,
+		sample_time_s,
+		reference_body_id
+	)
+
+
+func get_gravity_acceleration_at_spatial_ref(spatial_ref: Dictionary) -> Vector3:
+	if gravity_field == null:
+		return Vector3.ZERO
+	return gravity_field.get_acceleration_at_spatial_ref(spatial_ref)
 
 
 func get_root_frame_id() -> String:
@@ -286,8 +348,12 @@ func get_space_snapshot(space_position: Vector3) -> Dictionary:
 	var distances: Dictionary = {}
 	for body_id in get_body_ids():
 		distances[body_id] = get_surface_distance(body_id, space_position)
+	var gravity_acceleration_root_mps2: Vector3 = get_gravity_acceleration_at_position(
+		space_position,
+		root_frame_id
+	)
 	return {
-		"schema": "planet_simulator.space_observer.v2",
+		"schema": "planet_simulator.space_observer.v3",
 		"universe_id": universe_id,
 		"instance_id": instance_id,
 		"space_id": space_id,
@@ -296,6 +362,19 @@ func get_space_snapshot(space_position: Vector3) -> Dictionary:
 		"space_position_m": [space_position.x, space_position.y, space_position.z],
 		"nearest_body_id": get_nearest_body_id(space_position),
 		"surface_distances_m": distances,
+		"gravity_acceleration_root_mps2": [
+			gravity_acceleration_root_mps2.x,
+			gravity_acceleration_root_mps2.y,
+			gravity_acceleration_root_mps2.z,
+		],
+		"gravity_dominant_source_id": (
+			gravity_field.get_dominant_source_id_at_position(
+				space_position,
+				root_frame_id
+			)
+			if gravity_field != null
+			else ""
+		),
 	}
 
 
@@ -357,7 +436,7 @@ func create_snapshot() -> Dictionary:
 			"radius_m": get_body_radius(body_id),
 		}
 	return {
-		"schema": "planet_simulator.celestial_system_runtime.v2",
+		"schema": "planet_simulator.celestial_system_runtime.v3",
 		"universe_id": universe_id,
 		"instance_id": instance_id,
 		"space_id": space_id,
@@ -375,6 +454,7 @@ func create_snapshot() -> Dictionary:
 		"atmosphere_bodies": _get_atmosphere_body_ids(),
 		"clock": simulation_clock.create_snapshot() if simulation_clock != null else {},
 		"frame_graph": frame_graph.create_snapshot(time_s) if frame_graph != null else {},
+		"gravity_field": gravity_field.create_snapshot(time_s) if gravity_field != null else {},
 	}
 
 

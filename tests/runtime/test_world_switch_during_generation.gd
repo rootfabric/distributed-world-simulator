@@ -46,27 +46,16 @@ func _run() -> void:
 		_finish()
 		return
 
-	await _wait_until_streamer_is_active(streamer)
-	var active_snapshot: Dictionary = streamer.create_snapshot()
+	var request_context: Dictionary = await _acquire_generation_request(streamer)
 	_assert(
-		String(active_snapshot.get("state", "")) == "ACTIVE",
-		"Terrain streamer did not become ACTIVE before the forced request."
+		not request_context.is_empty(),
+		"Terrain streamer did not expose an active request before the world switch."
 	)
-
-	var active_direction := _vector_from_array(
-		active_snapshot.get("active_center_direction", [0.0, 1.0, 0.0])
-	)
-	if active_direction.length_squared() < 0.5:
-		active_direction = Vector3.UP
-	var request_id: int = int(streamer.request_surface(
-		-active_direction.normalized(),
-		false,
-		false,
-		"world_switch_during_generation_test",
-		0,
-		true
-	))
-	_assert(request_id > 0, "The forced terrain request was not accepted.")
+	if request_context.is_empty():
+		_finish()
+		return
+	var request_id: int = int(request_context.get("request_id", -1))
+	_assert(request_id > 0, "The terrain request ID is invalid.")
 
 	var generating_snapshot: Dictionary = streamer.create_snapshot()
 	_assert(
@@ -125,17 +114,41 @@ func _run() -> void:
 	_finish()
 
 
-func _wait_until_streamer_is_active(streamer) -> void:
+func _acquire_generation_request(streamer) -> Dictionary:
 	for _frame_index in range(MAX_IDLE_WAIT_FRAMES):
 		var snapshot: Dictionary = streamer.create_snapshot()
+		var running_request: Dictionary = snapshot.get("running_request", {})
+		if (
+			String(snapshot.get("state", "")) == "GENERATING"
+			and not running_request.is_empty()
+		):
+			return {
+				"request_id": int(running_request.get("request_id", -1)),
+				"source": "existing",
+			}
 		if (
 			String(snapshot.get("state", "")) == "ACTIVE"
-			and snapshot.get("running_request", {}).is_empty()
+			and running_request.is_empty()
 			and snapshot.get("pending_request", {}).is_empty()
 			and String(snapshot.get("commit_stage", "")) == "idle"
 		):
-			return
-		await process_frame
+			var active_direction := _vector_from_array(
+				snapshot.get("active_center_direction", [0.0, 1.0, 0.0])
+			)
+			if active_direction.length_squared() < 0.5:
+				active_direction = Vector3.UP
+			var request_id: int = int(streamer.request_surface(
+				-active_direction.normalized(),
+				false,
+				false,
+				"world_switch_during_generation_test",
+				0,
+				true
+			))
+			if request_id > 0:
+				return {"request_id": request_id, "source": "forced"}
+		await create_timer(0.01).timeout
+	return {}
 
 
 func _vector_from_array(value) -> Vector3:

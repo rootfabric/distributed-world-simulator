@@ -20,7 +20,7 @@ const COMMAND_EXPECTATIONS := {
 		"forbidden": ["world.beacon.place", "earth.rules.reload", "playground.spawn_box"],
 	},
 	"playground": {
-		"required": ["playground.spawn_box", "player.reset"],
+		"required": ["playground.spawn_box", "player.reset", "player.interact"],
 		"forbidden": ["world.beacon.place", "earth.rules.reload", "item.graph.validate"],
 	},
 }

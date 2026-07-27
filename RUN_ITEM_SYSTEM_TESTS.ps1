@@ -116,12 +116,52 @@ Invoke-GodotCheck -Name "Item identity and state store" -Arguments @(
     "res://tests/items/test_item_identity_and_state_store.gd"
 )
 
+Invoke-GodotCheck -Name "Complete item graph persistence" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_item_graph_persistence.gd"
+)
+
 Invoke-GodotCheck -Name "Item operation ledger" -Arguments @(
     "--headless",
     "--path",
     $ProjectRoot,
     "--script",
     "res://tests/items/test_item_operation_ledger.gd"
+)
+
+Invoke-GodotCheck -Name "Item gravity and recursive physical mass" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_item_physics_environment.gd"
+)
+
+Invoke-GodotCheck -Name "Player inventory and interaction matrix" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_player_inventory_flow.gd"
+)
+
+Invoke-GodotCheck -Name "Stack merge, split and quantity UI" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_item_stack_transfers.gd"
+)
+
+Invoke-GodotCheck -Name "Placeable fixtures and admin grants" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_item_placement_and_admin.gd"
 )
 
 Invoke-GodotCheck -Name "Item laboratory integration" -Arguments @(

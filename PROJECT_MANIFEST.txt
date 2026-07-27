@@ -1,4 +1,73 @@
-Planetary World v15.7.0-r1.2
+Planetary World v16.3.0-r2-inventory-ux
+
+
+R2 inventory UX and dual-fill lighting v16.3.0-r2-inventory-ux:
+- left drag always transfers the full stack
+- right-button drag asks quantity only after a valid target is selected
+- external container section is context-only and hidden for plain Tab inventory
+- container UI uses actual BULK/SLOTS capacity and adaptive columns
+- UI operation IDs use a random per-runtime namespace to avoid persisted ledger conflicts
+- player flood light combines wide 1000 m and near OmniLight layers
+- tests/items/test_item_stack_transfers.gd
+- tests/items/test_player_inventory_flow.gd
+- tests/ui/test_console_system_menu_and_flashlight.gd
+- docs/checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md
+
+R2 placement/debug UI and stack reliability v16.2.0-r2-placement-debug-ui:
+- stale inventory slot controls are detached immediately during refresh
+- partial stack drag keeps the selected quantity and logs rejected transfers
+- placeable beacon mount socket is a persistent WORLD item
+- high-level placement profile/factory contract supports future fixture kinds
+- starter backpack contains three beacons and three mount sockets
+- F10 right-side system menu provides one-click worlds and admin grants ×1/×100
+- console Tab completion handles command arguments; history restores focus/caret
+- F toggles an omnidirectional 1000 m player area light
+- tests/items/test_item_placement_and_admin.gd
+- tests/ui/test_console_system_menu_and_flashlight.gd
+- docs/checkpoints/2026-07-27_R2_PLACEMENT_DEBUG_UI_RU.md
+
+R2 stack controls v16.1.0-r2-stack-controls:
+- BULK containers without fixed slots automatically fill all compatible stacks
+- SLOTS containers merge only when dropped onto an occupied compatible slot
+- dropping onto an empty fixed slot preserves a separate stack
+- right-click quantity popup prepares partial drag-and-drop transfer
+- overflowing slot merge fills target and leaves remainder in source slot
+- tests/items/test_item_stack_transfers.gd
+- docs/checkpoints/2026-07-27_R2_STACK_CONTROLS_RU.md
+
+R1.4 full item graph + R2 player inventory v16.0.1-r2-fix1:
+- atomic planet_simulator.item_graph.v1 snapshot
+- transactional Item/Container/Attachment/Operation graph load
+- fail-closed read-only recovery preserves corrupt source snapshots
+- Container State/Registry v2 with BULK and configurable SLOTS modes
+- child hotbar container with 10 slots inside player backpack
+- per-slot accepted tags and definition IDs
+- icon inventory opened by Tab with drag-and-drop transfers
+- hotbar selection through 1-9 and 0, G drop, E pickup/open/mount
+- playground crate with beacons, battery-only rack and beacon mount station
+- Moon player starts with a stack of three beacons
+- playground registers player.interact for E pickup/open/mount
+- live WORLD bodies keep their physics transform across unrelated graph synchronization
+- beacon mount moved between the crate and battery rack
+- tests/items/test_item_graph_persistence.gd
+- tests/items/test_player_inventory_flow.gd
+- docs/contracts/ITEM_GRAPH_V1_RU.md
+- docs/contracts/CONTAINER_STATE_V2_RU.md
+- docs/checkpoints/2026-07-27_R1_4_R2_ITEM_GRAPH_AND_PLAYER_INVENTORY_RU.md
+
+
+R1.3 gravity wells and recursive physical mass v15.8.1-r1.3-fix1:
+- shared inverse-square gravity field for Sun, Earth, Moon and future sources
+- gravitational_parameter_m3_s2 stored per celestial body
+- body-relative external acceleration compensation for Earth/Moon frames
+- uniform-sphere interior model prevents centre singularities
+- velocity-Verlet test-particle trajectory integrator for future satellites
+- dynamic GravityBodyDriver replaces hard-coded lunar force
+- WORLD container RigidBody mass includes recursive contents
+- tests/unit/test_gravity_field.gd
+- tests/items/test_item_physics_environment.gd
+- docs/contracts/GRAVITY_FIELD_V1_RU.md
+- docs/checkpoints/2026-07-27_R1_3_GRAVITY_AND_PHYSICAL_MASS_RU.md
 
 R1.2 safe item operations v15.7.0-r1.2:
 - expected_revision optimistic concurrency for move and split commands
@@ -46,7 +115,7 @@ Distributed coordinate foundation v15.5.1-fixed:
 - scripts/simulation/partition/cube_sphere_grid.gd
 - config/partitions/moon_surface.json
 - config/partitions/earth_surface.json
-- config/planets/celestial_system.json schema v3
+- config/planets/celestial_system.json schema v4
 - entity/registry/partition persistence schema migration
 - revisioned partition identity and cube_sphere_v1 storage migration
 - tests/unit/test_reference_frame_graph.gd

@@ -1,6 +1,12 @@
 extends Node3D
 
 const Relations = preload("res://scripts/items/domain/item_relations.gd")
+const GravityBodyDriver = preload(
+	"res://scripts/simulation/gravity/gravity_body_driver.gd"
+)
+const ItemWorldBody = preload(
+	"res://scripts/items/presentation/item_world_body.gd"
+)
 
 const ROCK_ALBEDO_PATH := "res://assets/textures/generated/rock_surface_albedo.png"
 const ROCK_NORMAL_PATH := "res://assets/textures/generated/rock_surface_normal.png"
@@ -10,22 +16,45 @@ var item_registry
 var world_root: Node3D
 var default_attachment_root: Node3D
 var show_debug_labels: bool = false
+var mass_service
+var gravity_field
+var physics_frame_id: String = ""
+var gravity_reference_body_id: String = ""
+var interaction_controller
 
 var world_nodes: Dictionary = {}
 var attached_nodes: Dictionary = {}
 var attachment_anchors: Dictionary = {}
+var world_applied_revisions: Dictionary = {}
+var synchronization_batch_depth: int = 0
 
 
 func setup(
 	new_item_registry,
 	new_world_root: Node3D,
 	new_attachment_root: Node3D,
-	debug_labels: bool = false
+	debug_labels: bool = false,
+	new_mass_service = null,
+	new_gravity_field = null,
+	new_physics_frame_id: String = "",
+	new_gravity_reference_body_id: String = ""
 ) -> void:
 	item_registry = new_item_registry
 	world_root = new_world_root
 	default_attachment_root = new_attachment_root
 	show_debug_labels = debug_labels
+	mass_service = new_mass_service
+	gravity_field = new_gravity_field
+	physics_frame_id = new_physics_frame_id
+	gravity_reference_body_id = new_gravity_reference_body_id
+
+
+func set_interaction_controller(controller) -> void:
+	interaction_controller = controller
+	for item_id in world_nodes.keys():
+		var body = world_nodes[item_id]
+		if body != null and is_instance_valid(body) and body.has_method("setup_interaction"):
+			body.setup_interaction(controller, String(item_id))
 
 
 func register_attachment_anchor(
@@ -43,10 +72,12 @@ func synchronize_item(item_id: String) -> void:
 	if item == null:
 		_remove_world_node(item_id)
 		_remove_attached_node(item_id)
+		_finish_synchronize()
 		return
 	if _uses_external_presentation(item):
 		_remove_world_node(item_id)
 		_remove_attached_node(item_id)
+		_finish_synchronize()
 		return
 
 	match Relations.kind_of(item.relation):
@@ -59,9 +90,11 @@ func synchronize_item(item_id: String) -> void:
 		_:
 			_remove_world_node(item_id)
 			_remove_attached_node(item_id)
+	_finish_synchronize()
 
 
 func synchronize_all() -> void:
+	synchronization_batch_depth += 1
 	var active: Dictionary = {}
 	for item in item_registry.all_items():
 		active[item.instance_id] = true
@@ -72,6 +105,8 @@ func synchronize_all() -> void:
 	for item_id in attached_nodes.keys():
 		if not active.has(item_id):
 			_remove_attached_node(item_id)
+	synchronization_batch_depth = maxi(0, synchronization_batch_depth - 1)
+	_refresh_existing_world_physics()
 
 
 func get_world_node(item_id: String) -> Node3D:
@@ -80,6 +115,18 @@ func get_world_node(item_id: String) -> Node3D:
 
 func get_attached_node(item_id: String) -> Node3D:
 	return attached_nodes.get(item_id)
+
+
+func get_world_physical_mass_kg(item_id: String) -> float:
+	var body: RigidBody3D = world_nodes.get(item_id)
+	return body.mass if body != null and is_instance_valid(body) else 0.0
+
+
+func get_world_gravity_acceleration_mps2(item_id: String) -> Vector3:
+	var body: RigidBody3D = world_nodes.get(item_id)
+	if body == null or not is_instance_valid(body):
+		return Vector3.ZERO
+	return body.get_meta("gravity_acceleration_mps2", Vector3.ZERO)
 
 
 func capture_world_state(item_id: String) -> bool:
@@ -92,13 +139,21 @@ func capture_world_state(item_id: String) -> bool:
 		or Relations.kind_of(item.relation) != Relations.WORLD
 	):
 		return false
-	item.set_relation(Relations.update_world_state(
+	var updated_relation: Dictionary = Relations.update_world_state(
 		item.relation,
 		body.transform,
 		body.linear_velocity,
 		body.angular_velocity
-	))
+	)
+	if item.relation == updated_relation:
+		world_applied_revisions[item_id] = int(item.revision)
+		return true
+	item.set_relation(updated_relation)
 	item.revision += 1
+	# The body already contains this exact captured state. Mark the new domain
+	# revision as presented so a later unrelated synchronize_all() cannot
+	# teleport the live body back to an older persisted transform.
+	world_applied_revisions[item_id] = int(item.revision)
 	return true
 
 
@@ -109,8 +164,9 @@ func capture_all_world_states() -> void:
 
 func _ensure_world_node(item) -> void:
 	var body: RigidBody3D = world_nodes.get(item.instance_id)
+	var created := false
 	if body == null or not is_instance_valid(body):
-		body = RigidBody3D.new()
+		body = ItemWorldBody.new()
 		body.name = "WorldItem_%s" % _safe_node_name(item.instance_id)
 		body.set_meta("item_instance_id", item.instance_id)
 		body.add_child(_create_visual_node(item))
@@ -118,20 +174,72 @@ func _ensure_world_node(item) -> void:
 		if show_debug_labels:
 			body.add_child(_create_debug_label(item))
 		world_root.add_child(body)
+		if interaction_controller != null and body.has_method("setup_interaction"):
+			body.setup_interaction(interaction_controller, item.instance_id)
 		world_nodes[item.instance_id] = body
+		created = true
 
+	body.mass = maxf(0.01, _physical_mass_kg(item))
 	var definition = item_registry.get_definition(item.definition_id)
-	body.mass = maxf(
-		0.01,
-		definition.unit_mass_kg * float(item.quantity)
+	body.freeze = bool(definition.metadata.get("freeze_world_body", false)) if definition != null else false
+
+	# A live WORLD body owns its transform between explicit domain relation
+	# revisions. Reapplying the stored relation during every synchronize_all()
+	# made an already dropped object jump back whenever another stack item was
+	# dropped. Apply pose/velocity only for a newly created representation or
+	# when the item's relation revision actually changed.
+	var applied_revision := int(world_applied_revisions.get(item.instance_id, -1))
+	if created or applied_revision != int(item.revision):
+		body.transform = Relations.transform_from_relation(item.relation)
+		body.linear_velocity = Relations.velocity_from_relation(item.relation)
+		body.angular_velocity = Relations.angular_velocity_from_relation(item.relation)
+		world_applied_revisions[item.instance_id] = int(item.revision)
+
+	var gravity_driver = _ensure_gravity_driver(body)
+	gravity_driver.setup(
+		body,
+		gravity_field,
+		physics_frame_id,
+		gravity_reference_body_id,
+		world_root
 	)
-	# The main lunar project disables Godot's global gravity because the Moon
-	# applies its own radial field. The isolated item lab uses a local constant
-	# lunar force so loose objects visibly fall and collide with the floor.
-	body.constant_force = Vector3(0.0, -1.62 * body.mass, 0.0)
-	body.transform = Relations.transform_from_relation(item.relation)
-	body.linear_velocity = Relations.velocity_from_relation(item.relation)
-	body.angular_velocity = Relations.angular_velocity_from_relation(item.relation)
+
+
+func _finish_synchronize() -> void:
+	if synchronization_batch_depth == 0:
+		_refresh_existing_world_physics()
+
+
+func _refresh_existing_world_physics() -> void:
+	for item_id_value in world_nodes.keys():
+		var item_id: String = String(item_id_value)
+		var item = item_registry.get_item(item_id)
+		var body: RigidBody3D = world_nodes.get(item_id)
+		if item == null or body == null or not is_instance_valid(body):
+			continue
+		body.mass = maxf(0.01, _physical_mass_kg(item))
+		var driver = body.get_node_or_null("GravityBodyDriver")
+		if driver != null and driver.has_method("apply_now"):
+			driver.apply_now()
+
+
+func _physical_mass_kg(item) -> float:
+	if mass_service != null and mass_service.has_method("item_recursive_mass_kg"):
+		return float(mass_service.item_recursive_mass_kg(item.instance_id))
+	var definition = item_registry.get_definition(item.definition_id)
+	if definition == null:
+		return 0.01
+	return float(definition.unit_mass_kg) * float(item.quantity)
+
+
+func _ensure_gravity_driver(body: RigidBody3D):
+	var existing = body.get_node_or_null("GravityBodyDriver")
+	if existing != null:
+		return existing
+	var driver = GravityBodyDriver.new()
+	driver.name = "GravityBodyDriver"
+	body.add_child(driver)
+	return driver
 
 
 func _ensure_attached_node(item) -> void:
@@ -259,6 +367,10 @@ func _definition_color(definition_id: String) -> Color:
 			return Color(0.58, 0.37, 0.16)
 		"lidar_module", "lidar":
 			return Color(0.10, 0.72, 0.78)
+		"survey_beacon":
+			return Color(1.0, 0.34, 0.05)
+		"battery_pack":
+			return Color(0.20, 0.82, 0.32)
 	return Color(0.70, 0.70, 0.72)
 
 
@@ -276,6 +388,7 @@ func _remove_world_node(item_id: String) -> void:
 	if node != null and is_instance_valid(node):
 		node.queue_free()
 	world_nodes.erase(item_id)
+	world_applied_revisions.erase(item_id)
 
 
 func _remove_attached_node(item_id: String) -> void:

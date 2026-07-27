@@ -1,9 +1,19 @@
+## v16.3.0 — contextual inventory UX and dual-fill flashlight
+
+Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
+
 # Документация Planet Simulator
 
 ## Чекпоинты
 
 - `checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`
 - `checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`
+- `checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`
+- `checkpoints/2026-07-27_R1_3_GRAVITY_AND_PHYSICAL_MASS_RU.md`
+- `checkpoints/2026-07-27_R1_4_R2_ITEM_GRAPH_AND_PLAYER_INVENTORY_RU.md`
+- `checkpoints/2026-07-27_R2_STACK_CONTROLS_RU.md`
+- `checkpoints/2026-07-27_R2_PLACEMENT_DEBUG_UI_RU.md`
+- `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`
 
 ## Архитектура
 
@@ -28,6 +38,9 @@
 - `contracts/SPATIAL_REF_V1_RU.md`
 - `contracts/PARTITION_ADDRESS_V2_RU.md`
 - `contracts/ENTITY_STATE_V2_RU.md`
+- `contracts/GRAVITY_FIELD_V1_RU.md`
+- `contracts/ITEM_GRAPH_V1_RU.md`
+- `contracts/CONTAINER_STATE_V2_RU.md`
 
 - `contracts/PARTITION_SNAPSHOT_V1_RU.md`
 - `contracts/WORLD_MANIFEST_V1_RU.md`

@@ -17,9 +17,13 @@ const Relations = preload(
 const Presenter = preload(
 	"res://scripts/items/presentation/item_representation_system.gd"
 )
+const GravityField = preload(
+	"res://scripts/simulation/gravity/gravity_field.gd"
+)
 
 var domain: Dictionary
 var presenter
+var gravity_field
 var backpack
 var crate
 var crate_contents
@@ -160,6 +164,15 @@ func get_debug_snapshot() -> Dictionary:
 		"crate_item_ids": crate_contents.item_ids.duplicate(),
 		"backpack_mass_kg": domain.mass.container_mass_kg(
 			"player_backpack"
+		),
+		"crate_recursive_mass_kg": domain.mass.item_recursive_mass_kg(
+			crate.instance_id
+		),
+		"crate_physical_mass_kg": presenter.get_world_physical_mass_kg(
+			crate.instance_id
+		),
+		"rock_gravity_acceleration_mps2": _vector_to_array(
+			presenter.get_world_gravity_acceleration_mps2(rock.instance_id)
 		),
 		"rock_world_body": (
 			presenter.get_world_node(rock.instance_id)
@@ -337,6 +350,17 @@ func _build_domain() -> void:
 		["lidar"]
 	)
 
+	gravity_field = GravityField.new()
+	gravity_field.setup_static_sources([
+		{
+			"id": "moon-lab",
+			"radius_m": 1_737_400.0,
+			"gravitational_parameter_m3_s2": 4_890_065_191_200.0,
+			"center_m": [0.0, -1_737_400.0, 0.0],
+			"interior_model": "uniform_sphere",
+		},
+	], runtime_frame_id)
+
 	presenter = Presenter.new()
 	presenter.name = "ItemRepresentationSystem"
 	add_child(presenter)
@@ -344,7 +368,10 @@ func _build_domain() -> void:
 		items,
 		$WorldItems,
 		$Rover/AttachmentRoot,
-		true
+		true,
+		domain.mass,
+		gravity_field,
+		runtime_frame_id
 	)
 	presenter.register_attachment_anchor(
 		"rover_01",
@@ -536,7 +563,7 @@ func _build_ui() -> void:
 	margin.add_child(vertical)
 
 	var title = Label.new()
-	title.text = "ЛАБОРАТОРИЯ ПРЕДМЕТОВ v15.5"
+	title.text = "ЛАБОРАТОРИЯ ПРЕДМЕТОВ v15.8 / R1.3"
 	title.add_theme_font_size_override("font_size", 22)
 	vertical.add_child(title)
 
@@ -967,3 +994,7 @@ func _register_lab_command(
 ) -> void:
 	if not registry.register_command(definition, callback, owner_id):
 		push_error("Item lab command registration failed: %s" % definition.get("id", ""))
+
+
+func _vector_to_array(value: Vector3) -> Array:
+	return [value.x, value.y, value.z]

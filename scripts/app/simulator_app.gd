@@ -4,6 +4,7 @@ const CommandRegistryScript = preload("res://scripts/core/command_registry.gd")
 const RuntimeTestRegistryScript = preload("res://scripts/core/runtime_test_registry.gd")
 const WorldCatalogScript = preload("res://scripts/core/world_catalog.gd")
 const DeveloperConsoleScript = preload("res://scripts/ui/developer_console.gd")
+const SystemMenuScript = preload("res://scripts/ui/system_menu.gd")
 const SimulationClockScript = preload(
 	"res://scripts/simulation/time/simulation_clock.gd"
 )
@@ -32,12 +33,15 @@ var test_registry
 var world_catalog
 var world_host: Node3D
 var developer_console
+var system_menu
 var current_runtime: Node
 var current_world_id: String = ""
 var current_world_definition: Dictionary = {}
 var world_history: Array[String] = []
 var _runtime_process_mode_before_console: int = Node.PROCESS_MODE_INHERIT
 var _mouse_mode_before_console: int = Input.MOUSE_MODE_VISIBLE
+var _runtime_process_mode_before_system: int = Node.PROCESS_MODE_INHERIT
+var _mouse_mode_before_system: int = Input.MOUSE_MODE_VISIBLE
 var _cli_test_scope: String = ""
 var _loading_world: bool = false
 var _windowed_resolution_index: int = 2
@@ -75,7 +79,13 @@ func _ready() -> void:
 	developer_console.name = "DeveloperConsole"
 	add_child(developer_console)
 	developer_console.setup(command_registry, self)
+	developer_console.set_completion_provider(Callable(self, "get_console_completions"))
 	developer_console.console_visibility_changed.connect(_on_console_visibility_changed)
+	system_menu = SystemMenuScript.new()
+	system_menu.name = "SystemMenu"
+	add_child(system_menu)
+	system_menu.setup(self, world_catalog)
+	system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
 
 	var launch_options: Dictionary = _parse_launch_options()
 	_cli_test_scope = String(launch_options.get("run_tests", ""))
@@ -98,6 +108,18 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10 and not event.shift_pressed:
+		if developer_console != null and developer_console.is_open():
+			developer_console.set_open(false)
+		if system_menu != null:
+			system_menu.set_open(not system_menu.is_open())
+		get_viewport().set_input_as_handled()
+		return
+	if system_menu != null and system_menu.is_open():
+		if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+			system_menu.set_open(false)
+			get_viewport().set_input_as_handled()
+		return
 	if developer_console != null and developer_console.is_open():
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -112,15 +134,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _execute_first_available_command(hotkey_commands):
 			get_viewport().set_input_as_handled()
 			return
-		var command_line: String = ""
-		match event.physical_keycode:
-			KEY_TAB:
-				command_line = "input.mouse.toggle"
-			KEY_E:
-				command_line = "player.interact"
-			_:
-				pass
-		if not command_line.is_empty() and command_registry.has_command(command_line):
+		var command_line: String = get_inventory_hotbar_command_for_key(event.physical_keycode)
+		if command_line.is_empty():
+			match event.physical_keycode:
+				KEY_TAB:
+					command_line = "inventory.toggle" if command_registry.has_command("inventory.toggle") else "input.mouse.toggle"
+				KEY_E:
+					command_line = "player.interact"
+				KEY_G:
+					command_line = "inventory.drop"
+				KEY_F:
+					command_line = "player.flashlight.toggle"
+				_:
+					pass
+		var command_id := command_line.get_slice(" ", 0)
+		if not command_line.is_empty() and command_registry.has_command(command_id):
 			execute_command(command_line)
 			get_viewport().set_input_as_handled()
 			return
@@ -136,11 +164,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _execute_first_available_command(command_ids: Array[String]) -> bool:
-	for command_id in command_ids:
+	for command_line in command_ids:
+		var command_id := command_line.get_slice(" ", 0)
 		if command_registry.has_command(command_id):
-			execute_command(command_id)
+			execute_command(command_line)
 			return true
 	return false
+
+
+func get_inventory_hotbar_command_for_key(keycode: int) -> String:
+	match keycode:
+		KEY_1: return "inventory.hotbar.select 1"
+		KEY_2: return "inventory.hotbar.select 2"
+		KEY_3: return "inventory.hotbar.select 3"
+		KEY_4: return "inventory.hotbar.select 4"
+		KEY_5: return "inventory.hotbar.select 5"
+		KEY_6: return "inventory.hotbar.select 6"
+		KEY_7: return "inventory.hotbar.select 7"
+		KEY_8: return "inventory.hotbar.select 8"
+		KEY_9: return "inventory.hotbar.select 9"
+		KEY_0: return "inventory.hotbar.select 10"
+	return ""
 
 
 func get_hotkey_command_candidates(keycode: int) -> Array[String]:
@@ -246,6 +290,11 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		_mouse_mode_before_console = Input.mouse_mode
 		runtime.process_mode = Node.PROCESS_MODE_DISABLED
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif system_menu != null and system_menu.is_open():
+		_runtime_process_mode_before_system = runtime.process_mode
+		_mouse_mode_before_system = Input.mouse_mode
+		runtime.process_mode = Node.PROCESS_MODE_DISABLED
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if developer_console != null:
 		developer_console.set_world_context(
 			current_world_id,
@@ -258,6 +307,8 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 			]
 		)
 	_loading_world = false
+	if system_menu != null and system_menu.is_open():
+		system_menu.call_deferred("refresh")
 	return {
 		"success": true,
 		"output": "Мир загружен: %s" % String(
@@ -930,7 +981,83 @@ func _test_simulation_clock() -> Dictionary:
 	}
 
 
+func get_debug_item_catalog() -> Array[Dictionary]:
+	if current_runtime == null or not is_instance_valid(current_runtime) or not current_runtime.has_method("get_item_gameplay_controller"):
+		return []
+	var controller = current_runtime.call("get_item_gameplay_controller")
+	if controller == null or not controller.has_method("list_debug_item_catalog"):
+		return []
+	return controller.call("list_debug_item_catalog")
+
+
+func grant_debug_item(definition_id: String, quantity: int) -> Dictionary:
+	if current_runtime == null or not is_instance_valid(current_runtime) or not current_runtime.has_method("get_item_gameplay_controller"):
+		return {"success": false, "message": "В текущей локации нет инвентаря игрока"}
+	var controller = current_runtime.call("get_item_gameplay_controller")
+	if controller == null or not controller.has_method("grant_debug_item"):
+		return {"success": false, "message": "Админская выдача недоступна"}
+	return controller.call("grant_debug_item", definition_id, maxi(1, quantity))
+
+
+func get_console_completions(command_line: String, caret_column: int = -1) -> Array[String]:
+	var limit := command_line.length() if caret_column < 0 else clampi(caret_column, 0, command_line.length())
+	var before := command_line.left(limit)
+	var trailing_space := before.ends_with(" ") or before.ends_with("\t")
+	var parsed: Dictionary = command_registry.parse_command_line(before)
+	if not bool(parsed.get("success", false)):
+		return []
+	var tokens: Array[String] = parsed.get("tokens", [])
+	if tokens.is_empty():
+		return command_registry.find_completions("")
+	if tokens.size() == 1 and not trailing_space:
+		return command_registry.find_completions(tokens[0])
+	var command_id := String(tokens[0]).to_lower()
+	var argument_prefix := "" if trailing_space else String(tokens[-1])
+	var candidates: Array[String] = []
+	match command_id:
+		"world.load":
+			for world in world_catalog.list_worlds():
+				candidates.append(String(world.get("id", "")))
+		"test.run":
+			candidates = ["all", "core", "world"]
+			for test_definition in test_registry.list_tests():
+				candidates.append(String(test_definition.get("id", "")))
+		"test.list":
+			candidates = ["core", "world"]
+		"inventory.hotbar.select":
+			for index in range(1, 11):
+				candidates.append(str(index))
+		"inventory.debug.grant":
+			for row in get_debug_item_catalog():
+				candidates.append(String(row.get("definition_id", "")))
+		_:
+			var command: Dictionary = command_registry.get_command(command_id)
+			if not command.is_empty() and String(command.get("usage", "")).contains("<"):
+				candidates = []
+	var results: Array[String] = []
+	for candidate in candidates:
+		if argument_prefix.is_empty() or candidate.begins_with(argument_prefix.to_lower()):
+			results.append(candidate)
+	results.sort()
+	return results
+
+
+func _on_system_menu_visibility_changed(opened: bool) -> void:
+	if current_runtime == null or not is_instance_valid(current_runtime):
+		return
+	if opened:
+		_runtime_process_mode_before_system = current_runtime.process_mode
+		_mouse_mode_before_system = Input.mouse_mode
+		current_runtime.process_mode = Node.PROCESS_MODE_DISABLED
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		current_runtime.process_mode = _runtime_process_mode_before_system
+		Input.mouse_mode = _mouse_mode_before_system
+
+
 func _on_console_visibility_changed(opened: bool) -> void:
+	if opened and system_menu != null and system_menu.is_open():
+		system_menu.set_open(false)
 	if current_runtime == null or not is_instance_valid(current_runtime):
 		return
 	if opened:

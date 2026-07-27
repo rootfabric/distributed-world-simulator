@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.earth_body.v1",
+  "schema": "planet_simulator.earth_body.v2",
   "id": "earth",
   "display_name": "Procedural Earth",
   "seed": 20260726,
@@ -25,5 +25,7 @@
     "latitude_deg": 45.0,
     "longitude_deg": 25.0,
     "altitude_m": 450.0
-  }
+  },
+  "gravitational_parameter_m3_s2": 398048402912650.0,
+  "interior_model": "uniform_sphere"
 }

@@ -15,6 +15,7 @@ const OperationLedger = preload("res://scripts/items/services/item_operation_led
 
 const COMMAND_MOVE_ITEM: String = "MOVE_ITEM"
 const COMMAND_SPLIT_AND_MOVE: String = "SPLIT_AND_MOVE"
+const COMMAND_STACK_ITEMS: String = "STACK_ITEMS"
 
 var item_registry
 var container_registry
@@ -241,7 +242,183 @@ func split_and_move(
 	)
 
 
+func stack_items(
+	source_item_id: String,
+	target_item_id: String,
+	quantity: int,
+	operation_id: String,
+	expected_source_revision: int = -1,
+	expected_target_revision: int = -1
+) -> Dictionary:
+	if operation_id.is_empty():
+		return _fail("OPERATION_ID_REQUIRED")
+	if expected_source_revision < -1 or expected_target_revision < -1:
+		return _fail("INVALID_EXPECTED_REVISION")
+	var prepared: Dictionary = _prepare_operation(
+		operation_id,
+		COMMAND_STACK_ITEMS,
+		source_item_id,
+		expected_source_revision,
+		{
+			"target_item_id": target_item_id,
+			"quantity": quantity,
+			"expected_target_revision": expected_target_revision,
+		}
+	)
+	if not bool(prepared.get("ready", false)):
+		return Dictionary(prepared.get("result", {})).duplicate(true)
+	var payload_hash: String = String(prepared.get("payload_hash", ""))
+	var source = item_registry.get_item(source_item_id)
+	var target = item_registry.get_item(target_item_id)
+	if source == null or target == null:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			-1,
+			_fail("ITEM_NOT_FOUND")
+		)
+	if Relations.kind_of(target.relation) != Relations.CONTAINER:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("STACK_TARGET_NOT_IN_CONTAINER")
+		)
+	if source_item_id == target_item_id:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("STACK_TARGET_IS_SOURCE")
+		)
+	if expected_source_revision >= 0 and int(source.revision) != expected_source_revision:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("REVISION_CONFLICT", {
+				"aggregate_id": source_item_id,
+				"expected_revision": expected_source_revision,
+				"actual_revision": int(source.revision),
+			})
+		)
+	if expected_target_revision >= 0 and int(target.revision) != expected_target_revision:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("REVISION_CONFLICT", {
+				"aggregate_id": target_item_id,
+				"expected_revision": expected_target_revision,
+				"actual_revision": int(target.revision),
+			})
+		)
+	if not source.is_stack_compatible(target):
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("STACK_INCOMPATIBLE")
+		)
+	var definition = item_registry.get_definition(source.definition_id)
+	if definition == null:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("ITEM_DEFINITION_NOT_FOUND")
+		)
+	var requested: int = int(source.quantity) if quantity < 0 else clampi(quantity, 1, int(source.quantity))
+	var available: int = maxi(0, int(definition.max_stack) - int(target.quantity))
+	if available <= 0:
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			_fail("STACK_FULL")
+		)
+	var moved: int = mini(requested, available)
+	var capacity: Dictionary = _validate_stack_capacity(source, target, moved)
+	if not bool(capacity.get("success", false)):
+		return _finish_operation(
+			operation_id,
+			COMMAND_STACK_ITEMS,
+			payload_hash,
+			source_item_id,
+			expected_source_revision,
+			int(source.revision),
+			capacity
+		)
+
+	var source_old_quantity: int = int(source.quantity)
+	var target_old_quantity: int = int(target.quantity)
+	target.quantity += moved
+	target.revision += 1
+	source.quantity -= moved
+	var source_removed: bool = int(source.quantity) <= 0
+	if source_removed:
+		_remove_from_old_container(source)
+		item_registry.remove_item(source_item_id)
+		item_removed.emit(source_item_id)
+	else:
+		source.revision += 1
+		_touch_relation_container(source.relation)
+		quantity_changed.emit(source_item_id, source_old_quantity, int(source.quantity))
+	_touch_relation_container(target.relation)
+	quantity_changed.emit(target_item_id, target_old_quantity, int(target.quantity))
+
+	var result: Dictionary = {
+		"success": true,
+		"item_id": source_item_id,
+		"source_item_id": source_item_id,
+		"target_item_id": target_item_id,
+		"result_item_id": target_item_id if source_removed else source_item_id,
+		"merged": true,
+		"partial_merge": not source_removed,
+		"moved_quantity": moved,
+		"remaining_quantity": 0 if source_removed else int(source.quantity),
+		"source_removed": source_removed,
+		"source_result_revision": -1 if source_removed else int(source.revision),
+		"target_result_revision": int(target.revision),
+		"no_change": false,
+	}
+	return _finish_operation(
+		operation_id,
+		COMMAND_STACK_ITEMS,
+		payload_hash,
+		source_item_id,
+		expected_source_revision,
+		int(target.revision) if source_removed else int(source.revision),
+		result
+	)
+
+
 func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
+	canonical_relation = _resolve_container_relation(item, canonical_relation)
 	if item.relation == canonical_relation:
 		var graph_validation: Dictionary = validator.validate_graph()
 		if not bool(graph_validation.get("success", false)):
@@ -275,12 +452,14 @@ func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
 	var old_relation: Dictionary = item.relation.duplicate(true)
 	_remove_from_old_container(item)
 
+	var merge_result: Dictionary = {"merged": false, "transferred_quantity": 0}
 	if Relations.kind_of(canonical_relation) == Relations.CONTAINER:
-		var merge_result: Dictionary = _try_merge(
+		merge_result = _try_merge(
 			item,
-			String(canonical_relation.get("container_id", ""))
+			String(canonical_relation.get("container_id", "")),
+			int(canonical_relation.get("slot_index", -1))
 		)
-		if bool(merge_result.get("merged", false)):
+		if bool(merge_result.get("fully_merged", false)):
 			var merged_into_item_id: String = String(
 				merge_result.get("merged_into_item_id", "")
 			)
@@ -290,7 +469,11 @@ func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
 				"item_id": item.instance_id,
 				"result_item_id": merged_into_item_id,
 				"merged": true,
+				"partial_merge": false,
 				"merged_into_item_id": merged_into_item_id,
+				"merged_into_item_ids": merge_result.get("merged_into_item_ids", []).duplicate(),
+				"moved_quantity": int(merge_result.get("transferred_quantity", 0)),
+				"remaining_quantity": 0,
 				"no_change": false,
 				"_result_revision": int(
 					merge_result.get("result_revision", -1)
@@ -301,11 +484,17 @@ func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
 	item.revision += 1
 	_add_to_new_container(item)
 
+	var transferred_quantity := int(merge_result.get("transferred_quantity", 0))
 	var result: Dictionary = {
 		"success": true,
 		"item_id": item.instance_id,
 		"result_item_id": item.instance_id,
-		"merged": false,
+		"merged": transferred_quantity > 0,
+		"partial_merge": transferred_quantity > 0,
+		"merged_into_item_id": String(merge_result.get("merged_into_item_id", "")),
+		"merged_into_item_ids": merge_result.get("merged_into_item_ids", []).duplicate(),
+		"moved_quantity": transferred_quantity + int(item.quantity),
+		"remaining_quantity": int(item.quantity),
 		"no_change": false,
 		"_result_revision": int(item.revision),
 	}
@@ -315,6 +504,30 @@ func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
 		item.relation.duplicate(true)
 	)
 	return result
+
+
+func _resolve_container_relation(item, relation: Dictionary) -> Dictionary:
+	if Relations.kind_of(relation) != Relations.CONTAINER:
+		return relation
+	var container_id := String(relation.get("container_id", ""))
+	var container = container_registry.get_container(container_id)
+	if container == null or not container.is_slot_container():
+		return Relations.container(container_id, -1)
+	var requested_slot := int(relation.get("slot_index", -1))
+	if requested_slot >= 0:
+		return Relations.container(container_id, requested_slot)
+	var definition = item_registry.get_definition(item.definition_id)
+	for slot_index in range(container.slot_count):
+		var occupant_id: String = String(container.get_item_at_slot(slot_index))
+		if occupant_id.is_empty():
+			if definition != null and container.can_accept_definition_in_slot(definition, slot_index):
+				return Relations.container(container_id, slot_index)
+			continue
+		var occupant = item_registry.get_item(occupant_id)
+		if occupant != null and occupant.is_stack_compatible(item):
+			if int(occupant.quantity) + int(item.quantity) <= int(definition.max_stack):
+				return Relations.container(container_id, slot_index)
+	return relation
 
 
 func _prepare_operation(
@@ -440,6 +653,40 @@ func _validate_capacity(
 	return {"success": true}
 
 
+func _validate_stack_capacity(source, target, moved_quantity: int) -> Dictionary:
+	if moved_quantity <= 0 or Relations.kind_of(target.relation) != Relations.CONTAINER:
+		return {"success": true}
+	var target_container_id := String(target.relation.get("container_id", ""))
+	var target_container = container_registry.get_container(target_container_id)
+	if target_container == null:
+		return _fail("CONTAINER_NOT_FOUND")
+	var source_container_id := ""
+	if Relations.kind_of(source.relation) == Relations.CONTAINER:
+		source_container_id = String(source.relation.get("container_id", ""))
+	if source_container_id == target_container_id:
+		return {"success": true}
+	var definition = item_registry.get_definition(source.definition_id)
+	if definition == null:
+		return _fail("ITEM_DEFINITION_NOT_FOUND")
+	var added_mass: float = float(definition.unit_mass_kg) * float(moved_quantity)
+	var added_volume: float = float(definition.external_volume_l) * float(moved_quantity)
+	var current_mass: float = mass_service.container_mass_kg(target_container_id)
+	var current_volume: float = mass_service.container_direct_volume_l(target_container_id)
+	if current_mass + added_mass > target_container.maximum_mass_kg + 0.000001:
+		return _fail("MAXIMUM_MASS_EXCEEDED")
+	if current_volume + added_volume > target_container.maximum_volume_l + 0.000001:
+		return _fail("MAXIMUM_VOLUME_EXCEEDED")
+	return {"success": true}
+
+
+func _touch_relation_container(relation: Dictionary) -> void:
+	if Relations.kind_of(relation) != Relations.CONTAINER:
+		return
+	var container = container_registry.get_container(String(relation.get("container_id", "")))
+	if container != null:
+		container.revision += 1
+
+
 func _remove_from_old_container(item) -> void:
 	if Relations.kind_of(item.relation) != Relations.CONTAINER:
 		return
@@ -447,7 +694,7 @@ func _remove_from_old_container(item) -> void:
 		String(item.relation.get("container_id", ""))
 	)
 	if container != null:
-		container.item_ids.erase(item.instance_id)
+		container.remove_item(item.instance_id)
 		container.revision += 1
 
 
@@ -458,38 +705,77 @@ func _add_to_new_container(item) -> void:
 		String(item.relation.get("container_id", ""))
 	)
 	if container != null and not container.item_ids.has(item.instance_id):
-		container.item_ids.append(item.instance_id)
+		var assigned_slot: int = int(container.assign_item(
+			item.instance_id,
+			int(item.relation.get("slot_index", -1))
+		))
+		if container.is_slot_container() and assigned_slot >= 0:
+			item.set_relation(Relations.container(container.container_id, assigned_slot))
 		container.revision += 1
 
 
-func _try_merge(item, container_id: String) -> Dictionary:
+func _try_merge(item, container_id: String, requested_slot_index: int = -1) -> Dictionary:
 	var container = container_registry.get_container(container_id)
 	var definition = item_registry.get_definition(item.definition_id)
-	for existing_id in container.item_ids:
+	if container == null or definition == null or int(definition.max_stack) <= 1:
+		return {"merged": false, "transferred_quantity": 0}
+
+	var candidate_ids: Array[String] = []
+	if container.is_slot_container():
+		if requested_slot_index < 0:
+			return {"merged": false, "transferred_quantity": 0}
+		var occupant_id: String = String(container.get_item_at_slot(requested_slot_index))
+		if not occupant_id.is_empty():
+			candidate_ids.append(occupant_id)
+	else:
+		for existing_id in container.item_ids:
+			candidate_ids.append(String(existing_id))
+
+	var original_quantity: int = int(item.quantity)
+	var transferred_quantity: int = 0
+	var merged_into_ids: Array[String] = []
+	var highest_result_revision: int = -1
+	for existing_id in candidate_ids:
+		if item.quantity <= 0:
+			break
 		if existing_id == item.instance_id:
 			continue
 		var existing = item_registry.get_item(existing_id)
 		if existing == null or not existing.is_stack_compatible(item):
 			continue
-		var available: int = definition.max_stack - existing.quantity
-		if available < item.quantity:
+		var available: int = maxi(0, int(definition.max_stack) - int(existing.quantity))
+		if available <= 0:
 			continue
-		var old_quantity: int = existing.quantity
-		existing.quantity += item.quantity
+		var moved: int = mini(available, int(item.quantity))
+		var old_existing_quantity: int = int(existing.quantity)
+		existing.quantity += moved
 		existing.revision += 1
-		container.revision += 1
+		item.quantity -= moved
+		transferred_quantity += moved
+		merged_into_ids.append(existing.instance_id)
+		highest_result_revision = maxi(highest_result_revision, int(existing.revision))
+		quantity_changed.emit(existing.instance_id, old_existing_quantity, int(existing.quantity))
+
+	if transferred_quantity <= 0:
+		return {"merged": false, "transferred_quantity": 0}
+
+	container.revision += 1
+	var fully_merged: bool = int(item.quantity) <= 0
+	if fully_merged:
 		item_registry.remove_item(item.instance_id)
-		quantity_changed.emit(
-			existing.instance_id,
-			old_quantity,
-			existing.quantity
-		)
-		return {
-			"merged": true,
-			"merged_into_item_id": existing.instance_id,
-			"result_revision": int(existing.revision),
-		}
-	return {"merged": false}
+	else:
+		item.revision += 1
+		quantity_changed.emit(item.instance_id, original_quantity, int(item.quantity))
+
+	return {
+		"merged": true,
+		"fully_merged": fully_merged,
+		"transferred_quantity": transferred_quantity,
+		"remaining_quantity": int(item.quantity),
+		"merged_into_item_id": merged_into_ids[0] if not merged_into_ids.is_empty() else "",
+		"merged_into_item_ids": merged_into_ids,
+		"result_revision": highest_result_revision if fully_merged else int(item.revision),
+	}
 
 
 func _fail(code: String, details: Dictionary = {}) -> Dictionary:

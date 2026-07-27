@@ -11,13 +11,17 @@
 | `v15.5` | реализовано | общее ядро, миры, консоль и регрессия |
 | `v15.5.2-r0` | реализовано | нормализация репозитория и усиленный regression barrier |
 | `v15.6.2-r1.1-fix2` | принято | глобальные item ID, versioned registry, ItemStateStore и полный SpatialRef |
-| `v15.7.0-r1.2` | текущий чекпоинт | expected revision, payload fingerprint и persistent operation ledger |
-| `v15.8-r1.3` | следующий срез | world physics policy и рекурсивная физическая масса |
-| `v16` | после v15.6 | первая локальная база |
+| `v15.7.0-r1.2` | принято | expected revision, payload fingerprint и persistent operation ledger |
+| `v15.8.1-r1.3-fix1` | принято | gravity wells, test-particle trajectories и рекурсивная физическая масса |
+| `v16.0.1-r2-fix1` | принято | полный item graph, BULK/SLOTS containers, player inventory, hotbar и interaction demo |
+| `v16.1.0-r2-stack-controls` | реализовано | автостак BULK, точный stack-on-stack, разделение количества через ПКМ |
+| `v16.2.0-r2-placement-debug-ui` | реализовано | placeable mount item, F10 debug UI, console completion и flashlight |
+| `v16.3.0-r2-inventory-ux` | текущий чекпоинт | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
+| `v16.4-r3` | следующий срез | placement preview и строительство |
 
-Текущий обязательный барьер — приёмка `v15.7.0-r1.2` поверх зелёного
-R1.1: editor import/parse, полный набор из 27 headless-тестов, persistent replay
-после restart и main-scene regression. Чекпоинты:
+Текущий обязательный барьер — приёмка `v16.3.0-r2-inventory-ux`: editor import/parse,
+полный набор из 34 headless-тестов, матрицы stack UI и context container,
+проверка двухслойного фонаря, session-scoped operation IDs и main-scene playground regression. Чекпоинты:
 `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,
 `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md` и
 `docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`.
@@ -38,7 +42,7 @@ R1.1: editor import/parse, полный набор из 27 headless-тестов
 
 ## v15.7.0-r1.2 — Safe item operations
 
-**Статус:** реализовано, требуется приёмочный прогон на целевой double build.
+**Статус:** принято полным item и world regression.
 
 - optimistic `expected_revision` для move и split;
 - canonical SHA-256 payload fingerprint;
@@ -50,8 +54,42 @@ R1.1: editor import/parse, полный набор из 27 headless-тестов
 - persistence через ItemStateStore и replay после restart;
 - отдельный regression test.
 
-Следующий шаг: R1.3 — world-specific gravity/physics environment и рекурсивная
-физическая масса контейнеров.
+## v15.8.1-r1.3-fix1 — Gravity wells and recursive physical mass
+
+**Статус:** принято на целевой double build.
+
+- общий GravityField для Солнца, Земли, Луны и будущих источников;
+- inverse-square falloff и uniform-sphere interior;
+- body-relative external acceleration compensation;
+- velocity-Verlet test-particle propagation;
+- dynamic item gravity driver;
+- recursive RigidBody mass контейнеров;
+- отдельные gravity и item physics regression tests.
+
+## v16.0.1-r2-fix1 — Full item graph and player inventory
+
+**Статус:** реализовано и самостоятельно проверено на целевой Linux double build.
+
+- атомарный ItemGraph v1 и fail-closed staged load;
+- Container v2: BULK, SLOTS, slot filters и child hotbar;
+- icon inventory и drag-and-drop;
+- pickup/drop/open/mount/detach;
+- playground demo и стартовые лунные маяки;
+- автоматические тесты сохранности, уникальности и физического presentation.
+
+Следующий шаг: R3 — placement preview и строительные операции.
+
+## v16.1.0-r2-stack-controls — Stack merge and split UI
+
+**Статус:** реализовано, требуется полный целевой regression.
+
+- ПКМ popup выбора количества следующего drag-and-drop;
+- точное объединение stack-on-stack;
+- частичное заполнение занятого fixed slot с остатком в source slot;
+- пустой fixed slot сохраняет отдельный stack;
+- BULK автоматически распределяет количество по нескольким совместимым стакам;
+- STACK_ITEMS защищён source/target revision и operation ledger;
+- отдельный `test_item_stack_transfers.gd`.
 
 ## v15.5.2-r0 — Stabilization checkpoint
 

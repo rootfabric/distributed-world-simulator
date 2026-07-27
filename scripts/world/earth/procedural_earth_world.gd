@@ -13,6 +13,9 @@ const EarthAssetLibraryScript = preload(
 const EarthPlacementSystemScript = preload(
 	"res://scripts/world/vegetation/earth_placement_system.gd"
 )
+const GravityMathScript = preload(
+	"res://scripts/simulation/gravity/gravity_math.gd"
+)
 
 var body_config: Dictionary = {}
 var lod_config: Dictionary = {}
@@ -23,6 +26,8 @@ var logger
 
 var planet_radius_m: float = 6_371_000.0
 var gravity_mps2: float = 9.80665
+var gravitational_parameter_m3_s2: float = 398_048_402_912_650.0
+var gravity_interior_model: String = "uniform_sphere"
 var global_segments: int = 128
 var global_rings: int = 64
 var global_surface_offset_m: float = -120.0
@@ -96,6 +101,8 @@ func setup(logger_reference = null) -> bool:
 func _apply_config() -> void:
 	planet_radius_m = float(body_config.get("radius_m", planet_radius_m))
 	gravity_mps2 = float(body_config.get("gravity_mps2", gravity_mps2))
+	gravitational_parameter_m3_s2 = GravityMathScript.resolve_gravitational_parameter(body_config)
+	gravity_interior_model = String(body_config.get("interior_model", gravity_interior_model))
 	var global_config: Dictionary = body_config.get("global", {})
 	global_segments = int(global_config.get("segments", global_segments))
 	global_rings = int(global_config.get("rings", global_rings))
@@ -269,10 +276,12 @@ func get_altitude(world_position: Vector3) -> float:
 
 
 func get_gravity_at_distance(distance_from_center: float) -> float:
-	if distance_from_center <= 1.0:
-		return gravity_mps2
-	var radius_ratio: float = planet_radius_m / distance_from_center
-	return gravity_mps2 * radius_ratio * radius_ratio
+	return GravityMathScript.acceleration_magnitude(
+		distance_from_center,
+		planet_radius_m,
+		gravitational_parameter_m3_s2,
+		gravity_interior_model
+	)
 
 
 func recenter_player(actor: CharacterBody3D) -> void:
@@ -401,6 +410,7 @@ func create_snapshot() -> Dictionary:
 		"schema": "planet_simulator.earth_runtime.v1",
 		"radius_m": planet_radius_m,
 		"gravity_mps2": gravity_mps2,
+		"gravitational_parameter_m3_s2": gravitational_parameter_m3_s2,
 		"lod_tier": current_lod_tier,
 		"debug_view": get_debug_view_name(),
 		"active_rules": pipeline.get_active_rule_ids() if pipeline != null else [],

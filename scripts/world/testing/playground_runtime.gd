@@ -4,6 +4,9 @@ const PlayerScript = preload("res://scripts/actors/player/lunar_player.gd")
 const FlatWorldAdapterScript = preload(
 	"res://scripts/world/testing/flat_world_adapter.gd"
 )
+const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
+const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
+const WorldInteractorScript = preload("res://scripts/interaction/world_interactor.gd")
 
 var simulator
 var command_registry
@@ -19,6 +22,12 @@ var spawned_objects: Node3D
 var spawn_position: Vector3 = Vector3(0.0, 1.2, 6.0)
 var object_counter: int = 0
 var overlay_label: Label
+var interaction_label: Label
+var item_world_root: Node3D
+var item_attachment_root: Node3D
+var item_gameplay
+var gravity_field
+var world_interactor
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -55,6 +64,7 @@ func _ready() -> void:
 	player.align_body_to_up(Vector3.UP)
 	player.activate_after_spawn()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_setup_item_gameplay()
 	_build_overlay()
 
 
@@ -72,6 +82,14 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"category": "player",
 	}, Callable(self, "_command_player_reset"))
 	_register_command(registry, owner_id, {
+		"id": "player.interact",
+		"description": "Подобрать предмет, открыть контейнер или использовать mount.",
+		"usage": "player.interact",
+		"category": "player",
+	}, Callable(self, "_command_player_interact"))
+	_register_command(registry, owner_id, {"id": "player.flashlight.toggle", "description": "Включить или выключить круговой фонарь.", "usage": "player.flashlight.toggle", "category": "player"}, Callable(self, "_command_flashlight_toggle"))
+	_register_command(registry, owner_id, {"id": "inventory.debug.grant", "description": "Выдать предмет в рюкзак.", "usage": "inventory.debug.grant <definition_id> [quantity]", "category": "items"}, Callable(self, "_command_debug_grant"))
+	_register_command(registry, owner_id, {
 		"id": "playground.spawn_box",
 		"description": "Создать физический тестовый ящик перед персонажем.",
 		"usage": "playground.spawn_box [size_m]",
@@ -83,6 +101,10 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"usage": "playground.clear",
 		"category": "playground",
 	}, Callable(self, "_command_clear"))
+	_register_command(registry, owner_id, {"id": "inventory.toggle", "description": "Открыть инвентарь.", "usage": "inventory.toggle", "category": "items"}, Callable(self, "_command_inventory_toggle"))
+	_register_command(registry, owner_id, {"id": "inventory.drop", "description": "Выбросить предмет выбранного hotbar stack.", "usage": "inventory.drop", "category": "items"}, Callable(self, "_command_inventory_drop"))
+	_register_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
+	_register_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
 
 
 func register_runtime_tests(registry, owner_id: String) -> void:
@@ -96,6 +118,11 @@ func register_runtime_tests(registry, owner_id: String) -> void:
 		"description": "Полигон создаёт и удаляет физический объект.",
 		"category": "world",
 	}, Callable(self, "_test_physics_object"), owner_id)
+	registry.register_test({
+		"id": "world.playground.inventory_demo",
+		"description": "R2 demo создал рюкзак, hotbar, ящик, rack и socket.",
+		"category": "world",
+	}, Callable(self, "_test_inventory_demo"), owner_id)
 
 
 func create_runtime_snapshot() -> Dictionary:
@@ -109,10 +136,13 @@ func create_runtime_snapshot() -> Dictionary:
 		),
 		"controller": player.get_controller_snapshot() if player != null else {},
 		"spawned_object_count": spawned_objects.get_child_count() if spawned_objects != null else 0,
+		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
 	}
 
 
 func prepare_for_unload() -> void:
+	if item_gameplay != null:
+		item_gameplay.save_graph()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -138,6 +168,12 @@ func _build_environment() -> void:
 	spawned_objects = Node3D.new()
 	spawned_objects.name = "SpawnedObjects"
 	add_child(spawned_objects)
+	item_world_root = Node3D.new()
+	item_world_root.name = "ItemWorldRoot"
+	add_child(item_world_root)
+	item_attachment_root = Node3D.new()
+	item_attachment_root.name = "ItemAttachmentRoot"
+	add_child(item_attachment_root)
 
 	_create_static_box("Floor", Vector3(40.0, 0.5, 40.0), Vector3(0.0, -0.25, 0.0))
 	_create_static_box("NorthWall", Vector3(40.0, 4.0, 0.5), Vector3(0.0, 2.0, -20.0))
@@ -151,6 +187,57 @@ func _build_environment() -> void:
 			Vector3(2.5, 0.35 + index * 0.25, 2.5),
 			Vector3(-7.0 + index * 3.0, (0.35 + index * 0.25) * 0.5, -5.0)
 		)
+
+
+
+func _setup_item_gameplay() -> void:
+	gravity_field = GravityFieldScript.new()
+	gravity_field.setup_static_sources([{
+		"id": "playground-moon",
+		"radius_m": 1737400.0,
+		"gravitational_parameter_m3_s2": 4890065191200.0,
+		"center_m": [0.0, -1737400.0, 0.0],
+		"interior_model": "uniform_sphere",
+	}], "scenario/playground/local")
+	item_gameplay = ItemGameplayControllerScript.new()
+	item_gameplay.name = "ItemGameplayController"
+	add_child(item_gameplay)
+	item_gameplay.setup_runtime(player, item_world_root, item_attachment_root, gravity_field, "scenario/playground/local", "playground-moon", "playground-r2-demo", "playground", true)
+	item_gameplay.inventory_visibility_changed.connect(_on_inventory_visibility_changed)
+	world_interactor = WorldInteractorScript.new()
+	world_interactor.name = "ItemWorldInteractor"
+	add_child(world_interactor)
+	world_interactor.setup(player, null)
+	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
+	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
+	world_interactor.set_enabled(true)
+
+
+func _on_inventory_visibility_changed(visible_value: bool) -> void:
+	if world_interactor != null:
+		world_interactor.set_enabled(not visible_value)
+
+
+
+func _on_world_interaction_focus_changed(snapshot: Dictionary) -> void:
+	if interaction_label == null:
+		return
+	if snapshot.is_empty():
+		interaction_label.visible = false
+		interaction_label.text = ""
+		return
+	interaction_label.text = "%s\n%s" % [
+		String(snapshot.get("title", "Объект")),
+		String(snapshot.get("prompt", "E — взаимодействовать")),
+	]
+	interaction_label.visible = true
+
+
+func _on_world_interaction_completed(result: Dictionary) -> void:
+	if interaction_label == null:
+		return
+	interaction_label.text = String(result.get("message", result.get("output", "Взаимодействие выполнено")))
+	interaction_label.visible = true
 
 
 func _create_static_box(node_name: String, size: Vector3, position_value: Vector3) -> void:
@@ -187,11 +274,22 @@ func _build_overlay() -> void:
 	overlay_label.text = (
 		"ИСПЫТАТЕЛЬНЫЙ ПОЛИГОН\n"
 		+ "WASD — движение, Shift — бег, Space — прыжок\n"
-		+ "~ — универсальная консоль, Tab — освободить мышь\n"
-		+ "Команды: player.camera.toggle, playground.spawn_box, test.run world"
+		+ "Tab — инвентарь, E — взаимодействие/установка, G — выбросить, F — фонарь\n"
+		+ "1–0 — hotbar; ящик справа, battery rack слева, mount между ними"
 	)
 	overlay_label.add_theme_font_size_override("font_size", 15)
 	canvas.add_child(overlay_label)
+
+	interaction_label = Label.new()
+	interaction_label.name = "InteractionHint"
+	interaction_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	interaction_label.position = Vector2(-300.0, -105.0)
+	interaction_label.size = Vector2(600.0, 72.0)
+	interaction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_label.add_theme_font_size_override("font_size", 16)
+	interaction_label.visible = false
+	canvas.add_child(interaction_label)
 
 
 func _command_camera_toggle(_arguments: Array[String]) -> Dictionary:
@@ -204,10 +302,60 @@ func _command_player_reset(_arguments: Array[String]) -> Dictionary:
 	return {"success": true, "output": "Персонаж возвращён в стартовую точку"}
 
 
+func _command_player_interact(_arguments: Array[String]) -> Dictionary:
+	if world_interactor == null:
+		return {"success": false, "output": "Взаимодействие не готово"}
+	var result: Dictionary = world_interactor.perform_interaction()
+	if not bool(result.get("success", false)) and String(result.get("message", "")) == "Нет объекта для взаимодействия" and item_gameplay != null:
+		result = item_gameplay.place_selected_item_from_view()
+	if not result.has("output"):
+		result["output"] = String(result.get("message", "Взаимодействие выполнено"))
+	return result
+
+
 func set_runtime_mouse_capture(captured: bool) -> void:
 	Input.mouse_mode = (
 		Input.MOUSE_MODE_CAPTURED if captured else Input.MOUSE_MODE_VISIBLE
 	)
+
+
+func _command_inventory_toggle(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.toggle_inventory() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.drop_selected_item() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or arguments.is_empty() or not arguments[0].is_valid_int():
+		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
+	return item_gameplay.select_hotbar(clampi(int(arguments[0]), 1, 10) - 1)
+
+
+func _command_inventory_save(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.save_graph() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+
+func _command_flashlight_toggle(_arguments: Array[String]) -> Dictionary:
+	var enabled: bool = bool(player.toggle_flashlight()) if player != null else false
+	return {"success": player != null, "output": "Фонарь: %s" % ("включён" if enabled else "выключен"), "enabled": enabled}
+
+
+func _command_debug_grant(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or arguments.is_empty():
+		return {"success": false, "output": "Использование: inventory.debug.grant <definition_id> [quantity]"}
+	var quantity := 1
+	if arguments.size() > 1 and arguments[1].is_valid_int():
+		quantity = maxi(1, int(arguments[1]))
+	var result: Dictionary = item_gameplay.grant_debug_item(arguments[0], quantity)
+	result["output"] = item_gameplay.result_message(result)
+	return result
+
+
+func get_item_gameplay_controller():
+	return item_gameplay
 
 
 func _command_spawn_box(arguments: Array[String]) -> Dictionary:
@@ -287,6 +435,24 @@ func _test_physics_object() -> Dictionary:
 		"passed": passed,
 		"output": "PASS: physics object lifecycle" if passed else "FAIL: physics object lifecycle",
 	}
+
+
+func _test_inventory_demo() -> Dictionary:
+	var passed: bool = (
+		item_gameplay != null
+		and item_gameplay.get_container(item_gameplay.player_inventory_id) != null
+		and item_gameplay.get_container(item_gameplay.player_hotbar_id) != null
+		and item_gameplay.get_container("demo_crate_contents") != null
+		and item_gameplay.get_container("battery_rack_slots") != null
+		and not item_gameplay.get_socket_state("demo_mount", "beacon_socket").is_empty()
+		and item_gameplay.placement_service != null
+		and item_gameplay.placement_service.fixture_nodes.size() >= 1
+		and command_registry != null
+		and command_registry.has_command("player.interact")
+		and bool(item_gameplay.domain.validator.validate_graph().get("success", false))
+	)
+	return {"success": passed, "passed": passed, "output": "PASS: inventory demo" if passed else "FAIL: inventory demo"}
+
 
 
 func _register_command(registry, owner_id: String, definition: Dictionary, callback: Callable) -> void:

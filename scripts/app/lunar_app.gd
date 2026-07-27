@@ -28,9 +28,11 @@ const CommandRegistryScript = preload(
 const RuntimeTestRegistryScript = preload(
 	"res://scripts/core/runtime_test_registry.gd"
 )
+const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
+const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "15.7.0-r1.2"
-const BUILD_ID: String = "r1.2-safe-item-operations"
+const PROJECT_VERSION: String = "16.3.0-r2-inventory-ux"
+const BUILD_ID: String = "r2-context-inventory-dual-fill-light"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -53,6 +55,10 @@ var entity_registry
 var logger
 var persistence
 var world_interactor
+var item_world_root: Node3D
+var item_attachment_root: Node3D
+var item_gravity_field
+var item_gameplay
 
 var simulator_app
 var simulation_clock
@@ -206,12 +212,40 @@ func _ready() -> void:
 	_restore_saved_location_or_random_spawn()
 	_ensure_player_entity_registered()
 	zone_manager.update_observer(player.get_world_position(), false)
+	_setup_item_gameplay()
 	# The common simulator starts every world in gameplay mode. The large Lunar
 	# diagnostics panel remains available through ui.menu.toggle, but it is not
 	# a second world-specific entry interface. Legacy standalone launch keeps
 	# the historical open-menu behavior.
 	_set_menu_visible(simulator_app == null)
 	call_deferred("_initialize_standalone_runtime_services")
+
+
+func _setup_item_gameplay() -> void:
+	item_world_root = Node3D.new()
+	item_world_root.name = "LunarItemWorldRoot"
+	add_child(item_world_root)
+	item_attachment_root = Node3D.new()
+	item_attachment_root.name = "LunarItemAttachmentRoot"
+	add_child(item_attachment_root)
+	item_gravity_field = GravityFieldScript.new()
+	item_gravity_field.setup_static_sources([{
+		"id": "moon-local",
+		"radius_m": 1737400.0,
+		"gravitational_parameter_m3_s2": 4890065191200.0,
+		"center_m": [0.0, -1737400.0, 0.0],
+		"interior_model": "uniform_sphere",
+	}], "body/moon/fixed")
+	item_gameplay = ItemGameplayControllerScript.new()
+	item_gameplay.name = "LunarItemGameplay"
+	add_child(item_gameplay)
+	item_gameplay.setup_runtime(player, item_world_root, item_attachment_root, item_gravity_field, "body/moon/fixed", "moon-local", "moon-player-r2", "moon", true)
+	item_gameplay.inventory_visibility_changed.connect(_on_item_inventory_visibility_changed)
+
+
+func _on_item_inventory_visibility_changed(visible_value: bool) -> void:
+	mouse_captured = not visible_value
+	_update_interaction_enabled()
 
 
 func _initialize_standalone_runtime_services() -> void:
@@ -300,7 +334,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			save_diagnostic_snapshot()
 			get_viewport().set_input_as_handled()
 			return
-		if event.keycode == KEY_F10:
+		if event.keycode == KEY_F10 and event.shift_pressed:
 			run_persistence_mini_test()
 			get_viewport().set_input_as_handled()
 			return
@@ -357,6 +391,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			interact_with_world()
 			get_viewport().set_input_as_handled()
 			return
+		if event.physical_keycode == KEY_G and item_gameplay != null and not _is_menu_open():
+			item_gameplay.drop_selected_item()
+			get_viewport().set_input_as_handled()
+			return
+		var hotbar_number: int = _hotbar_number_for_key(event.physical_keycode)
+		if hotbar_number > 0 and item_gameplay != null and not _is_menu_open():
+			item_gameplay.select_hotbar(hotbar_number - 1)
+			get_viewport().set_input_as_handled()
+			return
 		if event.physical_keycode == KEY_B and not _is_menu_open():
 			place_survey_beacon()
 			get_viewport().set_input_as_handled()
@@ -366,7 +409,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_TAB:
-			_set_mouse_capture(not mouse_captured)
+			if item_gameplay != null:
+				item_gameplay.toggle_inventory()
+			else:
+				_set_mouse_capture(not mouse_captured)
 			get_viewport().set_input_as_handled()
 			return
 
@@ -375,6 +421,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not _is_menu_open():
 				_set_mouse_capture(true)
 				get_viewport().set_input_as_handled()
+
+
+func _hotbar_number_for_key(keycode: int) -> int:
+	match keycode:
+		KEY_1: return 1
+		KEY_2: return 2
+		KEY_3: return 3
+		KEY_4: return 4
+		KEY_5: return 5
+		KEY_6: return 6
+		KEY_7: return 7
+		KEY_8: return 8
+		KEY_9: return 9
+		KEY_0: return 10
+	return 0
 
 
 func open_item_system_lab() -> void:
@@ -630,6 +691,8 @@ func interact_with_world() -> Dictionary:
 		last_action_result = String(camera_required["message"])
 		return camera_required
 	var result: Dictionary = world_interactor.perform_interaction()
+	if not bool(result.get("success", false)) and String(result.get("message", "")) == "Нет объекта для взаимодействия" and item_gameplay != null:
+		result = item_gameplay.place_selected_item_from_view()
 	last_action_result = String(result.get("message", "Действие завершено"))
 	return result
 
@@ -1187,6 +1250,12 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"usage": "player.interact",
 		"category": "player",
 	}, Callable(self, "_command_interact"))
+	_register_runtime_command(registry, owner_id, {"id": "player.flashlight.toggle", "description": "Включить или выключить круговой фонарь.", "usage": "player.flashlight.toggle", "category": "player"}, Callable(self, "_command_flashlight_toggle"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.debug.grant", "description": "Выдать предмет в рюкзак.", "usage": "inventory.debug.grant <definition_id> [quantity]", "category": "items"}, Callable(self, "_command_debug_grant"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.toggle", "description": "Открыть предметный инвентарь.", "usage": "inventory.toggle", "category": "items"}, Callable(self, "_command_inventory_toggle"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.drop", "description": "Выбросить один предмет выбранного stack.", "usage": "inventory.drop", "category": "items"}, Callable(self, "_command_inventory_drop"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
 	_register_runtime_command(registry, owner_id, {
 		"id": "player.camera.toggle",
 		"description": "Переключить первое и третье лицо.",
@@ -1344,6 +1413,8 @@ func prepare_for_unload() -> void:
 		moon_world.get("terrain_streamer").cancel_all("runtime_unload")
 	if persistence != null:
 		persistence.save_all_loaded_chunks()
+	if item_gameplay != null:
+		item_gameplay.save_graph()
 	_set_mouse_capture(false)
 
 
@@ -1373,6 +1444,7 @@ func create_runtime_snapshot() -> Dictionary:
 		"terrain_streaming": (
 			moon_world.get_terrain_streaming_snapshot() if moon_world != null else {}
 		),
+		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
 	}
 
 
@@ -1418,6 +1490,44 @@ func _command_interact(_arguments: Array[String]) -> Dictionary:
 	var result: Dictionary = interact_with_world()
 	result["output"] = String(result.get("message", "Действие завершено"))
 	return result
+
+
+func _command_inventory_toggle(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.toggle_inventory() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.drop_selected_item() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or arguments.is_empty() or not arguments[0].is_valid_int():
+		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
+	return item_gameplay.select_hotbar(clampi(int(arguments[0]), 1, 10) - 1)
+
+
+func _command_inventory_save(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.save_graph() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_flashlight_toggle(_arguments: Array[String]) -> Dictionary:
+	var enabled: bool = bool(player.toggle_flashlight()) if player != null else false
+	return {"success": player != null, "output": "Фонарь: %s" % ("включён" if enabled else "выключен"), "enabled": enabled}
+
+
+func _command_debug_grant(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or arguments.is_empty():
+		return {"success": false, "output": "Использование: inventory.debug.grant <definition_id> [quantity]"}
+	var quantity := 1
+	if arguments.size() > 1 and arguments[1].is_valid_int():
+		quantity = maxi(1, int(arguments[1]))
+	var result: Dictionary = item_gameplay.grant_debug_item(arguments[0], quantity)
+	result["output"] = item_gameplay.result_message(result)
+	return result
+
+
+func get_item_gameplay_controller():
+	return item_gameplay
 
 
 func _command_camera_toggle(_arguments: Array[String]) -> Dictionary:

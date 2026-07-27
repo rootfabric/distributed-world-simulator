@@ -322,15 +322,35 @@ func _validate_record(record: Dictionary) -> Dictionary:
 
 
 func _normalize_record_types(record: Dictionary) -> Dictionary:
-	var normalized: Dictionary = record.duplicate(true)
-	normalized["sequence"] = int(record.get("sequence", 0))
-	normalized["expected_revision"] = int(record.get("expected_revision", -1))
-	normalized["result_revision"] = int(record.get("result_revision", -1))
-	var result: Dictionary = Dictionary(record.get("result", {})).duplicate(true)
-	result["expected_revision"] = int(result.get("expected_revision", -1))
-	result["result_revision"] = int(result.get("result_revision", -1))
-	normalized["result"] = result
-	return normalized
+	return Dictionary(_normalize_semantic_integers(record, ""))
+
+
+func _normalize_semantic_integers(value, key_name: String):
+	if value is Dictionary:
+		var result: Dictionary = {}
+		for key in value.keys():
+			var name := String(key)
+			result[key] = _normalize_semantic_integers(value[key], name)
+		return result
+	if value is Array:
+		var result: Array = []
+		for entry in value:
+			result.append(_normalize_semantic_integers(entry, key_name))
+		return result
+	if value is float and _is_integer_semantic_key(key_name):
+		return int(value)
+	return value
+
+
+func _is_integer_semantic_key(key_name: String) -> bool:
+	return (
+		key_name == "sequence"
+		or key_name == "quantity"
+		or key_name.ends_with("_revision")
+		or key_name.ends_with("_quantity")
+		or key_name.ends_with("_count")
+		or key_name.ends_with("_index")
+	)
 
 
 func _prune_oldest() -> void:

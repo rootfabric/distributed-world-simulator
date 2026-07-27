@@ -48,6 +48,7 @@ $Tests = @(
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
     "res://tests/unit/test_celestial_motion.gd",
+    "res://tests/unit/test_gravity_field.gd",
     "res://tests/unit/test_partition_address_v2.gd",
     "res://tests/unit/test_cube_sphere_grid.gd",
     "res://tests/unit/test_partition_foundation.gd",
@@ -60,8 +61,14 @@ $Tests = @(
     "res://tests/integration/test_terrain_streaming_contract.gd",
     "res://tests/items/test_item_domain.gd",
     "res://tests/items/test_item_identity_and_state_store.gd",
+    "res://tests/items/test_item_graph_persistence.gd",
     "res://tests/items/test_item_operation_ledger.gd",
+    "res://tests/items/test_item_physics_environment.gd",
+    "res://tests/items/test_player_inventory_flow.gd",
+    "res://tests/items/test_item_stack_transfers.gd",
+    "res://tests/items/test_item_placement_and_admin.gd",
     "res://tests/items/test_item_lab_integration.gd",
+    "res://tests/ui/test_console_system_menu_and_flashlight.gd",
     "res://tests/integration/test_unified_planetary_runtime.gd",
     "res://tests/integration/test_unified_runtime_boot.gd",
     "res://tests/runtime/test_world_switch_during_generation.gd",
@@ -70,7 +77,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v15.7.0-r1.2"
+    checkpoint = "v16.3.0-r2-inventory-ux"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

@@ -7,9 +7,13 @@ const LunarMaterialLibraryScript = preload("res://scripts/world/materials/lunar_
 const TerrainStreamingManagerScript = preload(
 	"res://scripts/world/terrain/streaming/terrain_streaming_manager.gd"
 )
+const GravityMathScript = preload(
+	"res://scripts/simulation/gravity/gravity_math.gd"
+)
 
 const MOON_RADIUS: float = 1_737_400.0
 const MOON_GRAVITY: float = 1.62
+const MOON_GRAVITATIONAL_PARAMETER_M3_S2: float = 4_890_065_191_200.0
 const WORLD_SEED: int = 20260724
 
 const GLOBAL_SEGMENTS: int = LunarLodPolicyScript.GLOBAL_SEGMENTS
@@ -1824,10 +1828,12 @@ func get_moon_radius() -> float:
 
 
 func get_gravity_at_distance(distance_from_center: float) -> float:
-	if distance_from_center <= 1.0:
-		return MOON_GRAVITY
-	var ratio: float = MOON_RADIUS / distance_from_center
-	return MOON_GRAVITY * ratio * ratio
+	return GravityMathScript.acceleration_magnitude(
+		distance_from_center,
+		MOON_RADIUS,
+		MOON_GRAVITATIONAL_PARAMETER_M3_S2,
+		"uniform_sphere"
+	)
 
 
 func get_surface_height(direction_value: Vector3) -> float:

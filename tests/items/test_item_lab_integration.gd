@@ -62,6 +62,20 @@ func _init() -> void:
 		bool(initial.graph_valid),
 		"Initial item relation graph must be valid"
 	)
+	_assert(
+		is_equal_approx(float(initial.crate_recursive_mass_kg), 10.0),
+		"Lab filled crate domain mass must be 10 kg"
+	)
+	_assert(
+		is_equal_approx(float(initial.crate_physical_mass_kg), 10.0),
+		"Lab filled crate rigid body must use recursive 10 kg mass"
+	)
+	var initial_rock_gravity: Array = initial.rock_gravity_acceleration_mps2
+	_assert(
+		initial_rock_gravity.size() == 3
+		and float(initial_rock_gravity[1]) < -1.619,
+		"Lab loose item must use radial Moon gravity field"
+	)
 
 	var pickup_rock: Dictionary = lab.run_lab_action(
 		"pickup_rock"
@@ -133,6 +147,10 @@ func _init() -> void:
 	_assert(
 		after_pickup_crate.crate_rocks_relation == "CONTAINER",
 		"Contained rock relation must not be rewritten"
+	)
+	_assert(
+		is_equal_approx(float(after_pickup_crate.crate_recursive_mass_kg), 10.0),
+		"Picking a filled crate must preserve recursive mass"
 	)
 
 	var pickup_lidar: Dictionary = lab.run_lab_action(

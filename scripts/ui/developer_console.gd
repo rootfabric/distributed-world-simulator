@@ -12,6 +12,7 @@ var opened: bool = false
 var history: Array[String] = []
 var history_index: int = 0
 var maximum_history: int = 100
+var completion_provider: Callable
 
 
 func setup(command_registry_reference, simulator_reference) -> void:
@@ -22,6 +23,10 @@ func setup(command_registry_reference, simulator_reference) -> void:
 	_build_ui()
 	set_open(false)
 	_print_line("PlanetSimulator Console. Введите help для списка команд.")
+
+
+func set_completion_provider(provider: Callable) -> void:
+	completion_provider = provider
 
 
 func _build_ui() -> void:
@@ -197,24 +202,55 @@ func _show_history(direction: int) -> void:
 		return
 	history_index = clampi(history_index + direction, 0, history.size())
 	input_line.text = "" if history_index == history.size() else history[history_index]
-	input_line.caret_column = input_line.text.length()
+	_restore_input_focus.call_deferred()
+
+
+func _restore_input_focus(target_caret: int = -1) -> void:
+	if input_line == null or not opened:
+		return
+	input_line.grab_focus()
+	input_line.deselect()
+	input_line.caret_column = input_line.text.length() if target_caret < 0 else clampi(target_caret, 0, input_line.text.length())
 
 
 func _complete_command() -> void:
 	var current_text: String = input_line.text
-	var first_space: int = current_text.find(" ")
-	var prefix: String = current_text if first_space < 0 else current_text.left(first_space)
-	var completions: Array[String] = command_registry.find_completions(prefix)
+	var caret: int = input_line.caret_column
+	var before := current_text.left(caret)
+	var token_start := maxi(before.rfind(" "), before.rfind("\t")) + 1
+	var prefix := before.substr(token_start)
+	var completions: Array[String] = []
+	if completion_provider.is_valid():
+		completions = completion_provider.call(current_text, caret)
+	else:
+		completions = command_registry.find_completions(prefix)
 	if completions.is_empty():
 		return
+	var replacement := ""
 	if completions.size() == 1:
-		var suffix: String = current_text.substr(prefix.length())
-		input_line.text = completions[0] + suffix
-		if first_space < 0:
-			input_line.text += " "
-		input_line.caret_column = input_line.text.length()
+		replacement = completions[0]
+	else:
+		replacement = _common_prefix(completions)
+		_print_line("Варианты: %s" % ", ".join(PackedStringArray(completions)))
+	if replacement.is_empty() or replacement.length() <= prefix.length():
+		_restore_input_focus.call_deferred(caret)
 		return
-	_print_line("Варианты: %s" % ", ".join(PackedStringArray(completions)))
+	input_line.text = current_text.left(token_start) + replacement + current_text.substr(caret)
+	input_line.caret_column = token_start + replacement.length()
+	if completions.size() == 1 and input_line.caret_column == input_line.text.length():
+		input_line.text += " "
+		input_line.caret_column = input_line.text.length()
+	_restore_input_focus.call_deferred(input_line.caret_column)
+
+
+func _common_prefix(values: Array[String]) -> String:
+	if values.is_empty():
+		return ""
+	var prefix := values[0]
+	for value in values:
+		while not String(value).begins_with(prefix) and not prefix.is_empty():
+			prefix = prefix.left(prefix.length() - 1)
+	return prefix
 
 
 func _print_line(message: String) -> void:

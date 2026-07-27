@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.celestial_system.v3",
+  "schema": "planet_simulator.celestial_system.v4",
   "universe_id": "main",
   "space_id": "sol",
   "root_frame_id": "sol.barycentric",
@@ -29,15 +29,25 @@
       "authority_space_id": "sun",
       "orbit": {
         "type": "static",
-        "position_m": [0.0, 0.0, 0.0],
-        "velocity_mps": [0.0, 0.0, 0.0]
+        "position_m": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "velocity_mps": [
+          0.0,
+          0.0,
+          0.0
+        ]
       },
       "rotation": {
         "type": "uniform",
         "period_s": 2160000.0,
         "axial_tilt_deg": 7.25,
         "phase_deg": 0.0
-      }
+      },
+      "gravitational_parameter_m3_s2": 1.3261558626e+20,
+      "interior_model": "uniform_sphere"
     },
     {
       "id": "earth",
@@ -53,7 +63,7 @@
         "semi_major_axis_m": 149597870700.0,
         "eccentricity": 0.0167086,
         "period_s": 31558149.7635456,
-        "inclination_deg": 0.00005,
+        "inclination_deg": 5e-05,
         "longitude_ascending_node_deg": -11.26064,
         "argument_periapsis_deg": 114.20783,
         "mean_anomaly_at_epoch_deg": 357.51716,
@@ -67,7 +77,9 @@
         "phase_deg": 0.0,
         "epoch_s": 0.0
       },
-      "atmosphere_config": "res://config/atmospheres/earth.json"
+      "atmosphere_config": "res://config/atmospheres/earth.json",
+      "gravitational_parameter_m3_s2": 398048402912650.0,
+      "interior_model": "uniform_sphere"
     },
     {
       "id": "moon",
@@ -92,8 +104,18 @@
       "rotation": {
         "type": "tidally_locked",
         "phase_offset_deg": 0.0
-      }
+      },
+      "gravitational_parameter_m3_s2": 4890065191200.0,
+      "interior_model": "uniform_sphere"
     }
   ],
-  "proxy_render_distance_m": 500000.0
+  "proxy_render_distance_m": 500000.0,
+  "gravity_model": {
+    "schema": "planet_simulator.gravity_model.v1",
+    "field_model": "spherical_sources_inverse_square_superposition",
+    "interior_model": "uniform_sphere",
+    "reference_frame_compensation": "external_acceleration_at_reference_body_center",
+    "rotating_frame_pseudo_forces_included": false,
+    "body_motion_coupling": "analytic_body_motion_test_particle_dynamics"
+  }
 }

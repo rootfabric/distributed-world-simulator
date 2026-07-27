@@ -390,38 +390,74 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v15.7.0-r1.2
+## Текущее состояние: v15.8.1-r1.3-fix1
 
-R0 и R1.1 приняты полным regression-runner. R1.2 добавляет optimistic
-concurrency и безопасную повторную доставку item-команд:
+R0, R1.1 и R1.2 приняты полным regression-runner. R1.3 добавляет общий
+gravity/physical-mass слой:
 
-- expected revision для MOVE_ITEM и SPLIT_AND_MOVE;
-- JSON-канонический SHA-256 payload fingerprint;
-- `OPERATION_ID_CONFLICT` для повторного ID с другим payload;
-- `REVISION_CONFLICT` для устаревшего состояния;
-- versioned bounded operation ledger;
-- terminal/retryable разделение ошибок;
-- persistence ledger через ItemStateStore и replay после restart.
+- inverse-square gravity wells Солнца, Земли и Луны;
+- explicit gravitational parameter и uniform-sphere interior;
+- superposition и body-relative external acceleration compensation;
+- velocity-Verlet test-particle integrator для будущих спутников;
+- dynamic gravity driver для WORLD items;
+- recursive physical mass контейнеров и обновление силы после изменения графа.
 
-`RUN_WORLD_REGRESSION_TESTS.ps1` обязан выполнить 27 тестов, включая
-`test_item_operation_ledger.gd`, и записать checkpoint `v15.7.0-r1.2`.
+`RUN_WORLD_REGRESSION_TESTS.ps1` обязан выполнить 29 тестов, включая
+`test_gravity_field.gd` и `test_item_physics_environment.gd`, и записать
+checkpoint `v15.8.1-r1.3-fix1`.
 
 Полные чекпоинты:
 
 - `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`;
 - `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`;
-- `docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`.
+- `docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`;
+- `docs/checkpoints/2026-07-27_R1_3_GRAVITY_AND_PHYSICAL_MASS_RU.md`.
 
-## Текущий приоритет: R1 → R2, затем первая база
+## Текущий приоритет: завершить R1.3 → R1.4 → R2
 
-1. принять зелёный `v15.7.0-r1.2` с persistent operation replay;
-2. в R1.3 отделить gravity policy от Луны и исправить рекурсивную физическую массу;
-3. в R1.4 собрать атомарный snapshot Items + Containers + Attachments + Ledger;
-4. в R2 связать предметы с игроком на `playground` через ray interaction;
-5. проверить pickup/drop/container/attachment после перезапуска;
+1. принять зелёный `v15.8.1-r1.3-fix1`;
+2. в R1.4 собрать атомарный snapshot Items + Containers + Attachments + Ledger;
+3. связать physics SpatialRef и operation replay в одном save transaction;
+4. в R2 перенести pickup/drop/container/attachment на `playground`;
+5. проверить полный restart пользовательского сценария;
 6. затем перейти к placement preview, sockets и минимальному power graph;
-7. первого автономного ровера начинать после устойчивой локальной базы.
+7. orbital motion расширять через тот же GravityField без отдельной лунной логики.
 
 Описание слоя: `docs/architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`.
 Контракт runtime: `docs/contracts/WORLD_RUNTIME_V1_RU.md`.
 Приёмка исходного ядра: `docs/plans/V15_5_ACCEPTANCE_TESTS_RU.md`.
+
+
+## Этап R1.4 — полный предметный граф
+
+**Статус:** выполнен в `v16.0.1-r2-fix1`.
+
+Item Registry, Container Registry, attachment sockets и operation ledger
+сохраняются единым транзакционным snapshot. Повреждённый graph не может быть
+частично загружен или автоматически перезаписан recovery-runtime.
+
+## Этап R2 — инвентарь и взаимодействие игрока
+
+**Статус:** выполнен в `v16.0.1-r2-fix1`.
+
+- рюкзак BULK;
+- hotbar как дочерний SLOTS-контейнер;
+- внешние контейнеры и slot filters;
+- icon UI и drag-and-drop;
+- WORLD pickup/drop;
+- монтаж и снятие маяка;
+- восстановление физического тела и рекурсивной массы;
+- автоматическая матрица без потери и дублирования предметов.
+
+### R2.1 — управление стаками
+
+**Статус:** выполнен в `v16.1.0-r2-stack-controls`.
+
+- BULK auto-stack с заполнением нескольких частичных стаков;
+- stack-on-stack для BULK и SLOTS;
+- пустой фиксированный слот не объединяет соседние стаки;
+- ПКМ выбирает количество частичного переноса;
+- новый STACK_ITEMS command имеет source/target revision guard и persistent replay;
+- автоматическая проверка сохранности количества, UUID и memberships.
+
+Следующий вертикальный срез — R3 placement/building поверх того же item graph.

@@ -213,3 +213,17 @@ Godot.
 - сохранять результаты тестов в JSON/JUnit;
 - отделить persistent world identity от записи каталога запуска;
 - добавить загрузку пользовательских world packs без изменения проекта.
+
+
+## R2: предметный gameplay как runtime capability
+
+`ItemGameplayController` подключается к runtime через общие корни WORLD и
+ATTACHMENT. UI, interaction raycast, hotbar и автоматические тесты не меняют
+Node3D напрямую: они вызывают те же revision-fenced domain-команды, которые
+используют operation ledger и полный ItemGraphPersistence.
+
+Playground предоставляет полный демонстрационный вертикальный срез. LunarApp
+подключает ту же capability без playground-декораций и создаёт стартовый
+рюкзак с маяками. Контейнерные режимы BULK/SLOTS остаются данными, поэтому
+будущие трюмы, equipment slots, robot payload bays и tool racks не требуют
+нового transfer service.

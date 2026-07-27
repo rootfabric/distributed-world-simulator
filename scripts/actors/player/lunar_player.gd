@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 signal controller_changed(previous_id: String, current_id: String)
 signal camera_mode_changed(mode: String)
+signal flashlight_changed(enabled: bool)
 
 const ControllerHostScript = preload(
 	"res://scripts/actors/controllers/controller_host.gd"
@@ -23,6 +24,9 @@ var first_person_camera: Camera3D
 var third_person_arm: SpringArm3D
 var third_person_camera: Camera3D
 var visual_root: Node3D
+var area_flashlight: OmniLight3D
+var near_flashlight: OmniLight3D
+var flashlight_enabled: bool = false
 
 var camera_mode: String = CAMERA_FIRST_PERSON
 var camera_yaw: float = 0.0
@@ -59,6 +63,7 @@ func setup(
 	add_child(visual_root)
 	_build_astronaut_visual()
 	_build_camera_system()
+	_build_area_flashlight()
 
 	controller_host = ControllerHostScript.new()
 	controller_host.name = "ControllerHost"
@@ -105,6 +110,64 @@ func _build_camera_system() -> void:
 	third_person_camera.far = 650_000.0
 	third_person_camera.fov = 68.0
 	third_person_arm.add_child(third_person_camera)
+
+
+func _build_area_flashlight() -> void:
+	# Two-layer flood light. A single 1000 m OmniLight with ordinary attenuation
+	# becomes almost black at terrain scale, so the wide fill and readable near
+	# field are intentionally separated. Both remain shadowless for performance.
+	area_flashlight = OmniLight3D.new()
+	area_flashlight.name = "AreaFlashlightWideFill"
+	area_flashlight.position = Vector3(0.0, 1.45, 0.0)
+	area_flashlight.omni_range = 1000.0
+	area_flashlight.omni_attenuation = 0.04
+	area_flashlight.light_energy = 65.0
+	area_flashlight.light_color = Color(0.92, 0.96, 1.0)
+	area_flashlight.shadow_enabled = false
+	area_flashlight.visible = false
+	add_child(area_flashlight)
+
+	near_flashlight = OmniLight3D.new()
+	near_flashlight.name = "AreaFlashlightNearFill"
+	near_flashlight.position = Vector3(0.0, 1.35, -0.35)
+	near_flashlight.omni_range = 100.0
+	near_flashlight.omni_attenuation = 0.22
+	near_flashlight.light_energy = 7.0
+	near_flashlight.light_color = Color(0.96, 0.98, 1.0)
+	near_flashlight.shadow_enabled = false
+	near_flashlight.visible = false
+	add_child(near_flashlight)
+
+
+func set_flashlight_enabled(value: bool) -> bool:
+	flashlight_enabled = value
+	if area_flashlight != null:
+		area_flashlight.visible = flashlight_enabled
+	if near_flashlight != null:
+		near_flashlight.visible = flashlight_enabled
+	flashlight_changed.emit(flashlight_enabled)
+	return flashlight_enabled
+
+
+func toggle_flashlight() -> bool:
+	return set_flashlight_enabled(not flashlight_enabled)
+
+
+func is_flashlight_enabled() -> bool:
+	return flashlight_enabled
+
+
+func get_flashlight_snapshot() -> Dictionary:
+	return {
+		"enabled": flashlight_enabled,
+		"range_m": area_flashlight.omni_range if area_flashlight != null else 0.0,
+		"energy": area_flashlight.light_energy if area_flashlight != null else 0.0,
+		"attenuation": area_flashlight.omni_attenuation if area_flashlight != null else 0.0,
+		"near_range_m": near_flashlight.omni_range if near_flashlight != null else 0.0,
+		"near_energy": near_flashlight.light_energy if near_flashlight != null else 0.0,
+		"layer_count": 2 if area_flashlight != null and near_flashlight != null else 0,
+		"light_type": "OMNI_DUAL_FILL",
+	}
 
 
 func _physics_process(delta: float) -> void:
@@ -203,7 +266,9 @@ func get_controller_display_name() -> String:
 
 
 func get_controller_snapshot() -> Dictionary:
-	return controller_host.create_snapshot() if controller_host != null else {}
+	var snapshot: Dictionary = controller_host.create_snapshot() if controller_host != null else {}
+	snapshot["flashlight"] = get_flashlight_snapshot()
+	return snapshot
 
 
 func get_available_controller_ids() -> Array[String]:

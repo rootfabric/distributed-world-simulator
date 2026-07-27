@@ -34,6 +34,8 @@ func _init() -> void:
 		== ["player.controller.toggle"],
 		"J must toggle the humanoid and jetpack controllers."
 	)
+	_assert(app.get_inventory_hotbar_command_for_key(KEY_1) == "inventory.hotbar.select 1", "1 must select the first inventory hotbar slot.")
+	_assert(app.get_inventory_hotbar_command_for_key(KEY_0) == "inventory.hotbar.select 10", "0 must select the tenth inventory hotbar slot.")
 	_assert(
 		_action_has_physical_key("roll_left", KEY_E),
 		"E must roll the spectator left."
