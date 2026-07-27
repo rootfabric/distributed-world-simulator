@@ -1,7 +1,7 @@
-Planetary World v16.3.1-ui-i0
+Planetary World v16.3.2-ui-i0-boundaries
 
 
-UI-I0 component inventory shell v16.3.1-ui-i0:
+UI-I0 component inventory shell v16.3.2-ui-i0-boundaries:
 - feature branch feature/ui-i0-inventory-shell
 - ItemInventoryUI is a compatibility facade with component/legacy implementations
 - InventoryViewModel projects BULK/SLOTS state without mutating Item Graph

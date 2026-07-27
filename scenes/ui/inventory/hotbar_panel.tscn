@@ -2,28 +2,66 @@
 
 [ext_resource type="Script" path="res://scripts/ui/inventory/hotbar_panel.gd" id="1_hotbar"]
 
-[node name="HotbarPanel" type="VBoxContainer"]
+[node name="HotbarPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 150)
 size_flags_horizontal = 3
 script = ExtResource("1_hotbar")
 
-[node name="TitleLabel" type="Label" parent="."]
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/separation = 5
+
+[node name="RoleLabel" type="Label" parent="Content"]
 unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+text = "БЫСТРЫЙ ДОСТУП"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.62, 0.78, 0.76, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="TitleLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
 text = "Быстрая панель 1–0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 17
 
-[node name="MetadataLabel" type="Label" parent="."]
+[node name="MetadataLabel" type="Label" parent="Content"]
 unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
 horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.76, 0.82, 1)
 theme_override_font_sizes/font_size = 12
 
-[node name="Scroll" type="ScrollContainer" parent="."]
+[node name="Separator" type="HSeparator" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Content"]
 unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
 size_flags_horizontal = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 0
 
-[node name="Grid" type="GridContainer" parent="Scroll"]
+[node name="Grid" type="GridContainer" parent="Content/Scroll"]
 unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
 size_flags_horizontal = 3
 columns = 10
+
+[node name="DropHintLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+text = "Перетащите предмет в нужный слот 1–0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.55, 0.68, 0.68, 1)
+theme_override_font_sizes/font_size = 12

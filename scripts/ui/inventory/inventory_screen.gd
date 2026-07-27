@@ -35,6 +35,9 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 	command_facade = commands
 	view_model.setup(controller)
 	command_facade.setup(controller)
+	player_panel.set_visual_role("player")
+	external_panel.set_visual_role("external")
+	hotbar_panel.set_visual_role("hotbar")
 	player_panel.drop_requested.connect(_on_drop_requested)
 	player_panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
 	player_panel.activated.connect(_on_slot_activated)
@@ -128,6 +131,11 @@ func create_debug_snapshot() -> Dictionary:
 		"player": player_panel.current_model.duplicate(true),
 		"external": external_panel.current_model.duplicate(true),
 		"hotbar": hotbar_panel.current_model.duplicate(true),
+		"boundaries": {
+			"player": player_panel.get_boundary_snapshot(),
+			"external": external_panel.get_boundary_snapshot(),
+			"hotbar": hotbar_panel.get_boundary_snapshot(),
+		},
 	}
 
 

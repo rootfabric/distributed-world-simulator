@@ -1,4 +1,4 @@
-# Planetary World v16.3.1-ui-i0 — компонентный каркас инвентаря
+# Planetary World v16.3.2-ui-i0-boundaries — компонентный каркас инвентаря
 
 ## UI-I0 feature branch
 

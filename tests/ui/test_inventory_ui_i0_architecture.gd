@@ -36,6 +36,13 @@ func _run() -> void:
 	_assert(String(hotbar_model.get("storage_mode", "")) == "SLOTS", "Hotbar must be projected as SLOTS")
 	_assert(int(hotbar_model.get("rendered_cell_count", 0)) == 10, "Fixed hotbar must render all ten real slots")
 	_assert(inventory_ui.hotbar_grid.get_child_count() == 10, "Compatibility facade must expose component hotbar grid")
+	var initial_boundaries: Dictionary = Dictionary(initial_snapshot.get("boundaries", {}))
+	var player_boundary: Dictionary = Dictionary(initial_boundaries.get("player", {}))
+	var hotbar_boundary: Dictionary = Dictionary(initial_boundaries.get("hotbar", {}))
+	_assert(bool(player_boundary.get("visible", false)), "Player BULK area must have a persistent visible boundary")
+	_assert(String(player_boundary.get("role", "")) == "player", "Player boundary must expose its visual role")
+	_assert(String(player_boundary.get("drop_hint", "")).contains("свободную область"), "BULK boundary must explain that the whole area accepts drops")
+	_assert(bool(hotbar_boundary.get("visible", false)) and String(hotbar_boundary.get("role", "")) == "hotbar", "Hotbar must have a separate visible boundary")
 
 	var backpack = controller.get_container(controller.player_inventory_id)
 	var original_order: Array = backpack.item_ids.duplicate()
@@ -76,6 +83,9 @@ func _run() -> void:
 	_assert(inventory_ui.external_title.text.contains("Универсальный ящик"), "Compatibility title bridge must expose component panel title")
 	var external_snapshot: Dictionary = inventory_ui.create_debug_snapshot()
 	_assert(String(external_snapshot.get("external", {}).get("storage_mode", "")) == "BULK", "External snapshot must identify BULK mode")
+	var external_boundary: Dictionary = Dictionary(external_snapshot.get("boundaries", {}).get("external", {}))
+	_assert(bool(external_boundary.get("visible", false)), "Opened external container must expose a visible drop boundary")
+	_assert(String(external_boundary.get("role", "")) == "external", "External container boundary must be visually distinguishable from player inventory")
 
 	var rack = _find_item(controller, "battery_rack", "", Relations.WORLD)
 	_assert(rack != null, "Playground UI fixture must contain SLOTS rack")
