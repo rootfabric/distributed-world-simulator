@@ -4,6 +4,33 @@
 
 Проект для Godot 4.7.1, собранного с `precision=double`.
 
+## Архитектурный checkpoint после R2
+
+Ревизия `v16.3.0-r2-inventory-ux` зафиксировала, что локальный simulator/item/
+coordinate фундамент готов к началу сетевой ветки, но фактический network layer
+пока находится до N0.
+
+Следующий основной пакет:
+
+```text
+v16.4 Foundation Gate
++
+N0 Network Contracts
+```
+
+Foundation отделяет `SimulationKernel` от presentation, вводит server-safe
+lifecycle, shutdown barrier и единый WORLD aggregate. N0 добавляет versioned
+command/snapshot DTO, authority lease/handoff contracts и тесты без открытия
+сокетов.
+
+Документы:
+
+- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`;
+- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
+- `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
+- `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `NETWORK_ROADMAP_RU.md`.
+
 Точка входа — единый `scripts/app/simulator_app.gd`. Конкретные карты больше не
 создают отдельные варианты симулятора: они загружаются как runtime-модули из
 `config/worlds/catalog.json`, используют общий ввод, командную консоль и

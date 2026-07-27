@@ -1,4 +1,51 @@
-# Параллельная разработка сети и игрового мира
+# Правила параллельной разработки сети и gameplay
+
+## Текущий режим после v16.3
+
+Одновременно разрешены три потока:
+
+```text
+Track C — v16.4 Foundation Gate
+Track N — N0 Network Contracts
+Track G — R3.1 Construction Vertical Slice
+```
+
+Track C и Track N являются обязательными основными потоками. Track G не должен
+менять canonical state напрямую из presentation и обязан использовать те же
+commands, revisions и snapshots, которые далее будут доступны server authority.
+
+Рекомендуемые каталоги ответственности:
+
+```text
+Track C:
+  scripts/simulation/kernel/
+  scripts/simulation/lifecycle/
+  scripts/app/runtime_roles/
+  tests/runtime/
+
+Track N:
+  scripts/network/contracts/
+  scripts/network/handoff/
+  config/network/fixtures/
+  tests/network/
+
+Track G:
+  scripts/construction/domain/
+  scripts/construction/services/
+  scripts/construction/presentation/
+  tests/construction/
+```
+
+Общие файлы `CommandGateway`, `WorldEntityAggregate` и schema registry меняются
+только через заранее согласованный контракт и отдельный integration gate.
+
+Связанные планы:
+
+- `../plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
+- `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `../checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+
+## Базовые правила параллельной разработки
 
 ## 1. Можно ли вести сеть параллельно
 

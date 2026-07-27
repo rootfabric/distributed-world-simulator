@@ -1,232 +1,174 @@
-# Ближайшие итерации после v15
+# Ближайшие итерации после v16.3
+
+## Зафиксированный checkpoint
+
+Текущий проверенный код:
+
+```text
+v16.3.0-r2-inventory-ux
+```
+
+Основание решения:
+
+- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`;
+- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`.
 
 ## Динамика версий
 
-| Версия | Состояние | Роль в проекте |
+| Версия/этап | Состояние | Роль |
 |---|---|---|
-| `v15.1` | аналитический долг | разбор реальных performance logs |
-| `v15.2` | реализовано | асинхронный terrain streaming и RAM cache |
-| `v15.3` | реализовано | взаимодействие от первого лица |
-| `v15.4.1` | реализовано | фундамент предметов, контейнеров и сборок |
-| `v15.5` | реализовано | общее ядро, миры, консоль и регрессия |
-| `v15.5.2-r0` | реализовано | нормализация репозитория и усиленный regression barrier |
-| `v15.6.2-r1.1-fix2` | принято | глобальные item ID, versioned registry, ItemStateStore и полный SpatialRef |
-| `v15.7.0-r1.2` | принято | expected revision, payload fingerprint и persistent operation ledger |
-| `v15.8.1-r1.3-fix1` | принято | gravity wells, test-particle trajectories и рекурсивная физическая масса |
-| `v16.0.1-r2-fix1` | принято | полный item graph, BULK/SLOTS containers, player inventory, hotbar и interaction demo |
-| `v16.1.0-r2-stack-controls` | реализовано | автостак BULK, точный stack-on-stack, разделение количества через ПКМ |
-| `v16.2.0-r2-placement-debug-ui` | реализовано | placeable mount item, F10 debug UI, console completion и flashlight |
-| `v16.3.0-r2-inventory-ux` | текущий чекпоинт | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
-| `v16.4-r3` | следующий срез | placement preview и строительство |
+| `v15.5.2-r0` | принято | repository и regression stabilization |
+| `v15.6.2-r1.1-fix2` | принято | UUID, ItemStateStore, полный SpatialRef |
+| `v15.7.0-r1.2` | принято | revisions, fingerprints, operation ledger |
+| `v15.8.1-r1.3-fix1` | принято | gravity wells и recursive physical mass |
+| `v16.0.1-r2-fix1` | принято | полный Item Graph и player inventory |
+| `v16.1.0-r2-stack-controls` | принято | stack merge/split и BULK auto-stack |
+| `v16.2.0-r2-placement-debug-ui` | принято | placeable mount, admin UI, console, flashlight |
+| `v16.3.0-r2-inventory-ux` | текущий checkpoint | contextual containers, post-drop split, operation namespace, dual-fill light |
+| `v16.4 Foundation Gate` | следующий core-этап | server-safe kernel и lifecycle |
+| `N0` | следующий network-этап | versioned contracts без сокетов |
+| `R3.1` | параллельный gameplay | foundation и construction aggregate |
+| `N1` | после N0/Foundation | один server + bot client |
+| `N2` | после N1 | local multi-process lab |
+| `N3` | после N2 | World Directory и leases |
+| `N4` | после N3 | handoff одного объекта |
 
-Текущий обязательный барьер — приёмка `v16.3.0-r2-inventory-ux`: editor import/parse,
-полный набор из 34 headless-тестов, матрицы stack UI и context container,
-проверка двухслойного фонаря, session-scoped operation IDs и main-scene playground regression. Чекпоинты:
-`docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,
-`docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md` и
-`docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`.
+## Итерация A — v16.4 Foundation Gate
 
+Полный план: `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.
 
-## v15.6.2-r1.1-fix2 — Item identity and state store
+Минимальный scope:
 
-**Статус:** принято полным item и world regression.
+1. `RuntimeRole` и launch options;
+2. `SimulationKernel` без presentation;
+3. подключаемый `PresentationHost`;
+4. shutdown barrier;
+5. entity/chunk lifecycle;
+6. `WorldEntityAggregate`;
+7. revision monotonicity;
+8. isolated user data.
 
-- UUID v4 для новых item instances;
-- отдельный `display_name`;
-- схемы ItemInstance/ItemRegistry/JSON state file;
-- legacy load без разрушения старых ссылок;
-- транзакционный registry load;
-- JSON ItemStateStore;
-- сохранение полного SpatialRef при capture;
-- отдельный regression test.
+Критерий:
 
-## v15.7.0-r1.2 — Safe item operations
+> Headless simulation role запускается без UI, завершает active terrain workers и
+> выходит code 0, сохраняя старую offline regression зелёной.
 
-**Статус:** принято полным item и world regression.
+## Итерация B — N0 Network Contracts
 
-- optimistic `expected_revision` для move и split;
-- canonical SHA-256 payload fingerprint;
-- exact replay без повторной мутации;
-- `OPERATION_ID_CONFLICT` для другого payload;
-- `REVISION_CONFLICT` для stale write;
-- bounded versioned operation ledger;
-- terminal/retryable error semantics;
-- persistence через ItemStateStore и replay после restart;
-- отдельный regression test.
+Полный план: `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`.
 
-## v15.8.1-r1.3-fix1 — Gravity wells and recursive physical mass
+Минимальный scope:
 
-**Статус:** принято на целевой double build.
+- versioned command/snapshot DTO;
+- authority lease/route DTO;
+- handoff state machine;
+- canonical fixtures;
+- runtime-type lint;
+- local loopback transport interface;
+- отдельный runner и JSON report.
 
-- общий GravityField для Солнца, Земли, Луны и будущих источников;
-- inverse-square falloff и uniform-sphere interior;
-- body-relative external acceleration compensation;
-- velocity-Verlet test-particle propagation;
-- dynamic item gravity driver;
-- recursive RigidBody mass контейнеров;
-- отдельные gravity и item physics regression tests.
+Критерий:
 
-## v16.0.1-r2-fix1 — Full item graph and player inventory
+> Все network contracts проходят round-trip и fencing tests без открытия сокетов.
 
-**Статус:** реализовано и самостоятельно проверено на целевой Linux double build.
+## Параллельная работа A+B
 
-- атомарный ItemGraph v1 и fail-closed staged load;
-- Container v2: BULK, SLOTS, slot filters и child hotbar;
-- icon inventory и drag-and-drop;
-- pickup/drop/open/mount/detach;
-- playground demo и стартовые лунные маяки;
-- автоматические тесты сохранности, уникальности и физического presentation.
+Допускается параллельная разработка, если каталоги ответственности разделены:
 
-Следующий шаг: R3 — placement preview и строительные операции.
+```text
+Core Foundation:
+  scripts/simulation/kernel/
+  scripts/simulation/lifecycle/
+  scripts/app/runtime_roles/
 
-## v16.1.0-r2-stack-controls — Stack merge and split UI
-
-**Статус:** реализовано, требуется полный целевой regression.
-
-- ПКМ popup выбора количества следующего drag-and-drop;
-- точное объединение stack-on-stack;
-- частичное заполнение занятого fixed slot с остатком в source slot;
-- пустой fixed slot сохраняет отдельный stack;
-- BULK автоматически распределяет количество по нескольким совместимым стакам;
-- STACK_ITEMS защищён source/target revision и operation ledger;
-- отдельный `test_item_stack_transfers.gd`.
-
-## v15.5.2-r0 — Stabilization checkpoint
-
-**Статус:** изменения R0 внесены, требуется приёмочный прогон на целевой сборке.
-
-Выполнено:
-
-- `.godot` и `.import` исключены из репозитория;
-- line endings зафиксированы через `.gitattributes`;
-- добавлен однократный repository preparation script;
-- regression runner проверяет полноту всех `test_*.gd`;
-- editor import/parse выполняется до отдельных тестов;
-- single-precision сборка отклоняется отдельным contract-тестом;
-- hotkey contract включён в обязательный набор;
-- добавлен тест смены мира при активной terrain generation;
-- результат runner сохраняется в JSON.
-
-Приёмка:
-
-```powershell
-.\PREPARE_R0_REPOSITORY.ps1
-.\RUN_WORLD_REGRESSION_TESTS.ps1
+Network N0:
+  scripts/network/contracts/
+  scripts/network/handoff/
+  tests/network/
+  config/network/fixtures/
 ```
 
-## v15.5 — Multi-world Simulator Core
+Общая точка интеграции — `CommandGateway` и `WorldEntityAggregate`.
 
-**Статус:** первый вертикальный срез реализован.
+## Итерация C — N1 + R3.1
 
-Перед дальнейшим ростом предметной системы введён обязательный фундамент:
+### N1
 
-- одно ядро `SimulatorApp` для всех карт;
-- каталог `moon`, `earth`, `earth_moon`, `item_lab`, `playground`;
-- отдельный Earth runtime без скрытого создания Луны;
-- команда `world.load` и история переходов;
-- консоль по `~`;
-- общие команды окна, ввода и навигации на уровне ядра;
-- реестры команд и runtime-тестов с очисткой по владельцу;
-- отказ от частичной загрузки при конфликте команд или тестов;
-- headless boot matrix всех миров;
-- отдельная закрытая площадка с общим контроллером персонажа.
+- simulation-server role;
+- bot-client role;
+- ENet adapter;
+- initial snapshot;
+- удалённая команда перемещения маяка;
+- checksum equality.
 
-Ближайшая проверка:
+### R3.1
 
-1. выполнить `RUN_WORLD_REGRESSION_TESTS.ps1`;
-2. пройти ручную матрицу из `V15_5_ACCEPTANCE_TESTS_RU.md`;
-3. проверить, что `earth` содержит только тело `earth`, а команды Луны отсутствуют;
-4. все новые действия оформлять командами, а не новыми прямыми клавишами;
-5. не продолжать контейнеры пользователя, пока matrix не остаётся зелёной.
-
-## v15.6 — persistent Item Aggregate и контейнеры в закрытой площадке
-
-- глобальные UUID/ULID для `ItemInstance`;
-- persistence-port для Item Registry и Container Registry;
-- revision fencing и persistent operation ledger;
-- сохранение полного `SpatialRef` без потери reference frame;
-- actor-owned inventory/container через существующий Item Domain;
-- перенос предметов ray interaction командами;
-- открытие/закрытие физического контейнера;
-- проверка массы, объёма, вложенности и persistence;
-- сценарий `playground` без зависимости от планетарного terrain;
-- runtime и headless regression для полного цикла.
-
-## v15.1 — анализ реальных performance logs
-
-- пройти 2–5 км пешком и на джетпаке;
-- выполнить несколько разворотов во время GENERATING;
-- сопоставить `long_frame_detected` с `terrain_commit_stage`;
-- определить долю CPU generation, ArrayMesh, collision и rocks;
-- зафиксировать baseline для компьютера тестирования.
-
-## v15.2 — устранение подтверждённого main-thread bottleneck
-
-При доминировании `collision_shape`:
-
-- разбить collision на небольшие tiles;
-- подключать ближайшие tiles раньше дальних;
-- заменять только вышедшие tiles;
-- оставить визуальную и физическую поверхность основанными на одинаковых samples.
-
-При доминировании `local_mesh_resource`:
-
-- разделить LOCAL на concentric clipmap rings;
-- создавать по одному ring resource за кадр;
-- выполнять swap только после готовности критического внутреннего ring.
-
-При доминировании `rock_descriptors` или `rock_layer_N`:
-
-- отделить decoration queue от critical terrain;
-- камни подключать после поверхности и collision;
-- разбить крупные MultiMesh на пространственные batches.
-
-## v15.3 — First-person Interaction
-
-**Статус:** первая рабочая итерация реализована.
-
-Готово:
-
-- центральный raycast из камеры первого лица;
-- контракт `world_interactable`;
-- действие `E`;
-- информация о Survey Beacon;
-- outline/подсветка объекта;
-- постоянное включение/выключение сигнала маяка;
-- HUD-карточка состояния и дистанции;
-- интеграционный contract-тест.
-
-Остаётся для следующего среза:
-
+- foundation item/aggregate;
 - placement preview;
-- проверка уклона и пересечений;
-- secondary/hold actions;
-- отдельная модель рук и инструментов.
+- validation поверхности;
+- socket graph;
+- save/restart;
+- remote-command-ready handler.
 
-## v16 — первая локальная база
+Оба потока используют один command envelope и один aggregate serializer.
 
-- Foundation;
-- Solar Panel;
-- Battery;
-- Charging Dock;
-- preview и проверка уклона;
-- sockets и простой power graph;
-- сохранение через существующий persistent layer.
+## Итерация D — N2
 
----
+- Python process harness;
+- readiness через JSONL;
+- свободные порты;
+- отдельный user data dir;
+- restart/reconnect;
+- duplicate command;
+- timeout и cleanup;
+- JSON/JUnit result.
 
-## Параллельный долг по фундаменту
+## Итерация E — N3
 
-### Chunk Lifecycle
+- in-memory World Directory;
+- node descriptors;
+- authority routes;
+- lease acquire/renew/release;
+- два статических region owner;
+- stale epoch rejection.
 
-1. Явные состояния `Dormant`, `Warm`, `Active`, `Unloading`.
-2. В Warm хранить только EntityRecord без физического узла.
-3. В Active создавать визуальную сцену и коллизию.
-4. Очередь создания сущностей по frame budget.
-5. Метрики чтения JSON и создания runtime scenes.
+## Итерация F — N4
 
-### Controller Layer
+- freeze source aggregate;
+- snapshot transfer;
+- prepare target;
+- atomic authority commit;
+- source demotion;
+- no duplicate authority;
+- conservation checks для item quantity, UUID, mass и velocity.
 
-1. equipment slots;
-2. сохранение выбранного профиля;
-3. отдельные wheel/track/flight contracts для Robot Actor.
+## Обязательные merge gates
+
+Каждый core/gameplay patch:
+
+```text
+existing offline regression
+snapshot round-trip
+no direct presentation mutation
+process cleanup where applicable
+```
+
+Каждый network patch:
+
+```text
+existing offline regression unchanged
+network contract tests
+isolated user data
+JSON report
+no Godot runtime types in DTO
+```
+
+## Отдельный технический долг
+
+Параллельно, но без подмены основного этапа:
+
+- legacy manifest migration/изоляция;
+- terrain worker shutdown;
+- декомпозиция больших orchestration-файлов;
+- Linux/Windows runner parity;
+- обновление acceptance docs после каждого checkpoint.

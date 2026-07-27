@@ -6,6 +6,8 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 
 ## Чекпоинты
 
+- `checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md` — архитектурная ревизия и решение Foundation Gate + N0.
+
 - `checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`
 - `checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`
 - `checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`
@@ -16,6 +18,8 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 - `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`
 
 ## Архитектура
+
+- `architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`
 
 - `architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`
 - `architecture/REFERENCE_FRAMES_AND_DISTRIBUTED_SPACE_RU.md`
@@ -53,7 +57,17 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 - `diagnostics/LOGGING_RU.md`
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
 
+## Сеть
+
+- `network/NETWORK_READINESS_CHECKPOINT_RU.md`
+- `network/SEAMLESS_WORLD_ROADMAP_RU.md`
+- `network/N0_NETWORK_CONTRACTS_PLAN_RU.md`
+- `network/NETWORK_TEST_MATRIX_RU.md`
+- `network/PARALLEL_DEVELOPMENT_RULES_RU.md`
+
 ## Планы
+
+- `plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`
 
 - `plans/EARTH_MOON_ARCHITECTURE_TEST_RU.md`
 

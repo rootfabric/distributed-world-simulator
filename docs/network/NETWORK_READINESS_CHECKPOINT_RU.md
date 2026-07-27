@@ -1,31 +1,31 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
-**Дата исследования:** 27 июля 2026 года
-**Текущий подтверждённый checkpoint:** `v16.1.0-r2-stack-controls`
-**Назначение:** определить, что уже можно использовать для сети, а что должно быть закрыто до настоящего authority handoff.
+**Дата ревизии:** 27 июля 2026 года
+**Текущий проверенный checkpoint:** `v16.3.0-r2-inventory-ux`
+**Фактическая сетевая стадия:** до `N0`
 
-## 1. Фактическая стадия проекта
+## 1. Проверенная база
 
-Последняя сохранённая в проекте валидация подтверждает:
+Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- `32/32` обнаруженных и выполненных regression-теста;
-- `6/6` main-scene smoke-тестов;
-- стабильные предметы, контейнеры, слоты и stack transfers;
-- `Item Graph` save/load;
-- operation ledger и optimistic revisions;
-- гравитационное поле и физическую массу;
-- несколько миров и единый runtime lifecycle;
-- `SimulationClock`, `FrameGraph`, `SpatialRef` и `PartitionAddress v2`;
-- `authority_owner_id` и `authority_epoch` в локальном entity registry.
+- 34 обязательных headless test scripts;
+- 5 runtime-миров;
+- 133 global GDScript classes;
+- единый Simulator Core;
+- полный persistent Item Graph;
+- revisions, operation ledger и payload fingerprint;
+- gravity field и physics state;
+- `SimulationClock`, `FrameGraph`, `SpatialRef`, `PartitionAddress v2`;
+- `authority_owner_id` и `authority_epoch` в локальном entity domain.
 
-Это означает, что проект уже прошёл стадию, на которой сеть пришлось бы «прикручивать» к случайным `Node3D.global_position` и локальным ID.
+Два тяжёлых Linux runtime-теста достигают `PASS`, но процесс может оставаться живым
+из-за фонового terrain worker. Для multi-process network lab это считается
+lifecycle-блокером, а не допустимым шумом.
 
-## 2. Что уже является сетевым фундаментом
+## 2. Что уже готово для повторного использования
 
-### 2.1 Постоянная идентичность
-
-Для сетевого объекта уже можно использовать:
+### Identity
 
 ```text
 entity_id / item_id
@@ -38,24 +38,16 @@ authority_owner_id
 authority_epoch
 ```
 
-UUID не должен меняться при:
+UUID не меняется при container/mount/world переходах и будущем handoff.
 
-- переходе между серверами;
-- смене `Space`;
-- входе в контейнер;
-- монтаже;
-- выгрузке физического представления;
-- восстановлении после рестарта.
+### Canonical coordinates
 
-### 2.2 Координатный контракт
+Сетевой слой должен передавать `SpatialRef`, а не `global_transform` как
+единственную истину.
 
-`SpatialRef` уже отделяет каноническое состояние от render-local координат Godot. Это обязательное условие для передачи объекта между процессами.
+### Safe commands
 
-Сетевой слой не должен передавать `global_transform` как единственную истину. Он передаёт `SpatialRef` с явными universe, instance, space, frame и временем.
-
-### 2.3 Защита команд
-
-R1.2 уже дал:
+Уже доступны:
 
 ```text
 operation_id
@@ -65,95 +57,106 @@ result_revision
 operation ledger
 ```
 
-Эти поля почти напрямую переходят в сетевой command envelope и защищают от:
+### Transactional state
 
-- повторной доставки;
-- задержанного пакета;
-- повторного выполнения после reconnect;
-- конфликта двух клиентов;
-- повторного сообщения после authority handoff.
+Item Registry, Container Registry, Attachments и operation ledger сохраняются
+единым fail-closed snapshot.
 
-### 2.4 Единственный владелец
+### Observability
 
-В проекте уже принят инвариант `ADR-003`: изменяемый chunk имеет одного владельца. Для сетевой версии он расширяется с chunk до entity и interaction island.
+Есть JSONL logging, runtime tests и JSON regression report.
 
-## 3. Что можно начинать прямо сейчас
+## 3. Что существует только в документации
 
-Можно немедленно запускать параллельный сетевой трек:
+В коде пока отсутствуют:
 
-1. сетевые DTO и JSON fixtures;
-2. `SimulationNodeRole` и headless startup arguments;
-3. одиночный authoritative server и один клиент;
-4. локальный Python launcher нескольких Godot-процессов;
-5. World Directory в памяти;
-6. authority lease без настоящего handoff;
-7. тесты подключения, команд и snapshot replication.
+- network command/snapshot envelopes;
+- authority lease и route;
+- handoff ticket/state machine;
+- simulation-server/client roles;
+- ENet adapter;
+- Python process harness;
+- World Directory;
+- network tests.
 
-Эти работы не требуют остановки развития предметов, строительства, энергетики и новых миров.
+Поэтому нельзя считать, что N0 уже начат или завершён.
 
-## 4. Что нельзя начинать сразу
+## 4. Foundation barriers
 
-Пока рано реализовывать:
+### A. Server-safe runtime
 
-- динамическое дробление Земли по нагрузке;
-- WAN-handoff игрока между континентами;
-- физическое столкновение, одновременно рассчитанное двумя серверами;
-- rollback всех `RigidBody3D`;
-- Kubernetes и Agones как первый шаг;
-- глобальную N-body симуляцию, распределённую по узлам;
-- произвольную миграцию огромной базы во время активной физики.
+- `--role=simulation-server`;
+- kernel без UI и камеры;
+- presentation отключаем;
+- отдельный `user://`;
+- JSONL `node_ready/node_stopped`;
+- корректный exit code 0.
 
-## 5. Обязательные предварительные барьеры
+### B. Shutdown lifecycle
 
-Перед первым объектным handoff должны быть выполнены:
+- запрет новых работ;
+- cancel/await terrain workers;
+- persistence flush;
+- transport close;
+- process exit.
 
-### Барьер A — server-safe runtime
+### C. Unified WORLD aggregate
 
-- мир запускается с `--headless --role=simulation`;
-- сервер не создаёт обязательные UI, камеру и визуальные материалы;
-- presentation можно полностью отключить;
-- `user://` каждого процесса изолирован;
-- процесс выдаёт JSONL-событие `node_ready`.
+Нужна одна canonical spatial truth для Entity и WORLD Item.
 
-### Барьер B — authoritative input
+### D. Monotonic revisions
 
-- клиент отправляет команды, а не изменяет домен напрямую;
-- сервер проверяет `authority_epoch` и `expected_revision`;
-- клиентская сцена является представлением серверного snapshot;
-- offline mode использует тот же command path через loopback adapter.
+Authority transfer увеличивает epoch и не обнуляет state revision.
 
-### Барьер C — переносимый aggregate snapshot
-
-- entity/item graph сериализуется без `NodePath` и instance ID Godot;
-- snapshot содержит все физические скорости и relation;
-- snapshot можно загрузить в чистый процесс;
-- checksum до и после загрузки совпадает.
-
-### Барьер D — наблюдаемость
-
-Каждый процесс пишет:
+### E. Formal lifecycle
 
 ```text
-node_id
-role
-space_id
-region_id
-server_tick
-authority_epoch
-connected_peers
-entity_count
-ghost_count
-handoff_state
+Dormant / Warm / Active / Unloading
 ```
 
-## 6. Главные текущие риски
+### F. Portable snapshot
 
-1. **Смешение simulation и presentation.** Любая новая система должна иметь headless-safe доменную часть.
-2. **Скрытые прямые изменения.** UI и сцены не должны обходить command services.
-3. **Physics nondeterminism.** Для server authority допустима коррекция клиента; lockstep между серверами не принимается как базовая модель.
-4. **Legacy persistence.** Ошибка старого `moon-experiment-001/world.json` должна быть изолирована от сетевых тестов отдельным `user://` на каждый процесс.
-5. **Слишком ранняя инфраструктура.** Kubernetes не решает authority, handoff и interest management.
+Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scene instance ID.
 
-## 7. Решение checkpoint
+## 5. Решение
 
-> Сетевой слой можно начинать сейчас и вести параллельно. Первый настоящий seamless handoff начинается только после N0–N3 дорожной карты. До этого сеть является отдельным adapter/test layer и не меняет каноническую offline-симуляцию.
+Сетевую ветку можно начинать сейчас, но первым этапом является `N0`, а не ENet и
+не authority handoff.
+
+Foundation и N0 выполняются параллельно:
+
+```text
+v16.4 Foundation Gate
+N0 Network Contracts
+```
+
+Подробности:
+
+- `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
+- `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+
+## 6. После N0
+
+1. N1 — один authoritative server и bot client.
+2. N2 — local multi-process lab.
+3. N3 — World Directory и leases.
+4. N4 — handoff одного камня или маяка.
+5. Затем player handoff, ghosts, child spaces и dynamic regions.
+
+## 7. Что пока не начинать
+
+- Kubernetes/Agones;
+- NATS control plane;
+- WAN player handoff;
+- distributed collision;
+- dynamic Earth split;
+- distributed N-body.
+
+## 8. Архитектурный принцип
+
+```text
+canonical simulation ≠ presentation ≠ transport
+```
+
+Offline mode собирает слои в одном процессе, но не нарушает эту границу.

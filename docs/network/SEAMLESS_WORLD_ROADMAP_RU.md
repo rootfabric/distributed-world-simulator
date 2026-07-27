@@ -1,5 +1,27 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
+## Статус на checkpoint v16.3
+
+Фактическая стадия реализации — **до N0**. Документ описывает целевую программу,
+а не уже существующий сетевой код.
+
+Перед N1 обязателен параллельный `v16.4 Foundation Gate`:
+
+- server-safe `SimulationKernel`;
+- отключаемый presentation;
+- shutdown barrier;
+- единый `WorldEntityAggregate`;
+- монотонные revisions;
+- формальный entity/chunk lifecycle;
+- isolated user data.
+
+Связанные планы:
+
+- `../plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
+- `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `../checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+
+
 ## Принцип декомпозиции
 
 Каждая стадия должна:

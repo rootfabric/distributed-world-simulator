@@ -390,74 +390,176 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v15.8.1-r1.3-fix1
+## Текущее состояние: v16.3.0-r2-inventory-ux
 
-R0, R1.1 и R1.2 приняты полным regression-runner. R1.3 добавляет общий
-gravity/physical-mass слой:
+Этапы R0, R1.1, R1.2, R1.3, R1.4 и R2 сформировали устойчивый локальный
+фундамент:
 
-- inverse-square gravity wells Солнца, Земли и Луны;
-- explicit gravitational parameter и uniform-sphere interior;
-- superposition и body-relative external acceleration compensation;
-- velocity-Verlet test-particle integrator для будущих спутников;
-- dynamic gravity driver для WORLD items;
-- recursive physical mass контейнеров и обновление силы после изменения графа.
+- единое multi-world ядро;
+- double-precision coordinate foundation;
+- `SpatialRef`, `FrameGraph` и `PartitionAddress v2`;
+- procedural Earth/Moon и gravity field;
+- persistent Item Graph;
+- UUID, revisions и operation ledger;
+- BULK/SLOTS containers, inventory, hotbar, pickup/drop/mount;
+- stack merge/split и contextual external containers;
+- 34 обязательных headless regression tests.
 
-`RUN_WORLD_REGRESSION_TESTS.ps1` обязан выполнить 29 тестов, включая
-`test_gravity_field.gd` и `test_item_physics_environment.gd`, и записать
-checkpoint `v15.8.1-r1.3-fix1`.
+Полная архитектурная ревизия:
 
-Полные чекпоинты:
+- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
 
-- `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`;
-- `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md`;
-- `docs/checkpoints/2026-07-27_R1_2_OPERATION_LEDGER_RU.md`;
-- `docs/checkpoints/2026-07-27_R1_3_GRAVITY_AND_PHYSICAL_MASS_RU.md`.
+Сетевой слой пока не реализован: существующие network documents, ADR и JSON
+examples описывают будущую программу, но фактическая стадия проекта находится
+**до N0**.
 
-## Текущий приоритет: завершить R1.3 → R1.4 → R2
+## Следующий главный приоритет: v16.4 Foundation Gate + N0
 
-1. принять зелёный `v15.8.1-r1.3-fix1`;
-2. в R1.4 собрать атомарный snapshot Items + Containers + Attachments + Ledger;
-3. связать physics SpatialRef и operation replay в одном save transaction;
-4. в R2 перенести pickup/drop/container/attachment на `playground`;
-5. проверить полный restart пользовательского сценария;
-6. затем перейти к placement preview, sockets и минимальному power graph;
-7. orbital motion расширять через тот же GravityField без отдельной лунной логики.
+Дальнейшее расширение UI и каталога предметов не должно опережать выделение
+правильных архитектурных границ.
 
-Описание слоя: `docs/architecture/MULTI_WORLD_SIMULATOR_CORE_RU.md`.
-Контракт runtime: `docs/contracts/WORLD_RUNTIME_V1_RU.md`.
-Приёмка исходного ядра: `docs/plans/V15_5_ACCEPTANCE_TESTS_RU.md`.
+Следующие два потока выполняются параллельно:
 
+```text
+Track C: v16.4 Foundation Gate
+Track N: N0 Network Contracts
+```
 
-## Этап R1.4 — полный предметный граф
+### Track C — v16.4 Foundation Gate
 
-**Статус:** выполнен в `v16.0.1-r2-fix1`.
+Цель — отделить canonical simulation от presentation и подготовить server-safe
+runtime без настоящих сетевых сокетов.
 
-Item Registry, Container Registry, attachment sockets и operation ledger
-сохраняются единым транзакционным snapshot. Повреждённый graph не может быть
-частично загружен или автоматически перезаписан recovery-runtime.
+Обязательные результаты:
 
-## Этап R2 — инвентарь и взаимодействие игрока
+1. runtime roles `offline/client/simulation-server/bot-client`;
+2. `SimulationKernel` без UI и камеры;
+3. подключаемый `PresentationHost`;
+4. shutdown barrier для terrain workers и persistence;
+5. формальные lifecycle states `Dormant/Warm/Active/Unloading`;
+6. единый `WorldEntityAggregate`;
+7. монотонная revision при authority transfer;
+8. изолированный `user://` на каждый процесс/тест.
 
-**Статус:** выполнен в `v16.0.1-r2-fix1`.
+Подробный план:
+`docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.
 
-- рюкзак BULK;
-- hotbar как дочерний SLOTS-контейнер;
-- внешние контейнеры и slot filters;
-- icon UI и drag-and-drop;
-- WORLD pickup/drop;
-- монтаж и снятие маяка;
-- восстановление физического тела и рекурсивной массы;
-- автоматическая матрица без потери и дублирования предметов.
+### Track N — N0 Network Contracts
 
-### R2.1 — управление стаками
+Цель — создать versioned сетевые DTO и pure-domain handoff semantics без ENet.
 
-**Статус:** выполнен в `v16.1.0-r2-stack-controls`.
+Обязательные результаты:
 
-- BULK auto-stack с заполнением нескольких частичных стаков;
-- stack-on-stack для BULK и SLOTS;
-- пустой фиксированный слот не объединяет соседние стаки;
-- ПКМ выбирает количество частичного переноса;
-- новый STACK_ITEMS command имеет source/target revision guard и persistent replay;
-- автоматическая проверка сохранности количества, UUID и memberships.
+1. `NetworkCommandEnvelope`;
+2. `EntitySnapshotEnvelope`;
+3. `AuthorityLease` и `AuthorityRoute`;
+4. `HandoffTicket/HandoffResult`;
+5. canonical JSON и golden fixtures;
+6. authority epoch fencing;
+7. handoff state machine;
+8. network contract lint;
+9. `RUN_NETWORK_CONTRACT_TESTS`.
 
-Следующий вертикальный срез — R3 placement/building поверх того же item graph.
+Подробный план:
+`docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`.
+
+## Параллельный gameplay-трек: R3
+
+R3 разрешено развивать одновременно с Foundation/N0, если gameplay не обходит
+канонические команды и snapshots.
+
+Первый вертикальный срез:
+
+```text
+Foundation
+→ Beacon Mount
+→ Solar Panel
+→ Battery
+→ Charging Dock
+→ simple Power Graph
+→ save/restart
+```
+
+Каждый объект обязан иметь:
+
+- UUID;
+- versioned aggregate state;
+- placement command;
+- socket graph;
+- snapshot round-trip;
+- interaction island descriptor;
+- автоматический тест без UI;
+- presentation adapter, не меняющий домен напрямую.
+
+## Сетевая последовательность после N0
+
+### N1 — один authoritative server и bot client
+
+- headless simulation server;
+- один bot client;
+- local loopback и ENet adapter;
+- initial snapshot;
+- одна удалённая item command;
+- server/client checksum equality.
+
+### N2 — multi-process local lab
+
+- Python harness;
+- изолированные user data directories;
+- 1 server + 2 clients;
+- reconnect/restart;
+- duplicate delivery;
+- JSON/JUnit report;
+- гарантированный process cleanup.
+
+### N3 — World Directory и leases
+
+- node registration;
+- authority routes;
+- acquire/renew/release lease;
+- два статических authority region;
+- epoch renewal и stale-owner fencing.
+
+### N4 — handoff одного объекта
+
+Первый переносимый aggregate:
+
+```text
+один камень или маяк
+Server A → Server B
+```
+
+Player handoff, ghosts и dynamic region split начинаются только после успешного N4.
+
+## Обязательные архитектурные инварианты
+
+```text
+canonical simulation ≠ presentation ≠ transport
+```
+
+Также обязательны:
+
+- один authoritative owner на entity/interaction island;
+- `authority_epoch` увеличивается при смене владельца;
+- `state_revision` никогда не уменьшается;
+- сеть передаёт `SpatialRef`, а не только `Node3D.global_transform`;
+- UI отправляет команды, а не мутирует домен;
+- offline mode использует тот же command path через loopback adapter;
+- persistent snapshot не содержит `NodePath`, `RID` и scene instance ID.
+
+## Отложенные крупные направления
+
+До N4 не использовать как основной трек:
+
+- Kubernetes и Agones;
+- NATS control plane;
+- WAN player handoff;
+- distributed collision;
+- динамический split Земли;
+- распределённую N-body симуляцию;
+- большой корабль с интерьером;
+- сложную энергетическую экономику.
+
+Каждый следующий этап должен оставлять offline mode рабочим и завершаться
+автоматически проверяемым вертикальным срезом.
