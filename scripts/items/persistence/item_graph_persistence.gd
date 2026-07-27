@@ -20,29 +20,43 @@ func setup(domain_reference: Dictionary, store_reference, configured_state_key: 
 
 
 func create_snapshot(extra_metadata: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = create_snapshot_result(extra_metadata)
+	if not bool(result.get("success", false)):
+		push_error("Unable to create item graph snapshot: %s" % result)
+		return {}
+	return Dictionary(result.get("snapshot", {}))
+
+
+func create_snapshot_result(extra_metadata: Dictionary = {}) -> Dictionary:
 	if domain.has("world_entities"):
 		var migration_result: Dictionary = domain.world_entities.migrate_legacy_item_relations(domain.items)
 		if not bool(migration_result.get("success", false)):
-			push_error("Unable to canonicalize WORLD items before snapshot: %s" % migration_result)
+			return _section_failure("world_entity_migration", migration_result)
 	var merged_metadata := metadata.duplicate(true)
 	merged_metadata.merge(extra_metadata, true)
 	merged_metadata = _normalize_metadata_types(merged_metadata)
 	return {
-		"schema": SCHEMA,
-		"schema_version": SCHEMA_VERSION,
-		"items": domain.items.to_dict(),
-		"containers": domain.containers.to_dict(),
-		"attachments": domain.attachments.to_dict(),
-		"operations": domain.operations.to_dict(),
-		"world_entities": domain.world_entities.to_dict(),
-		"metadata": merged_metadata,
+		"success": true,
+		"snapshot": {
+			"schema": SCHEMA,
+			"schema_version": SCHEMA_VERSION,
+			"items": domain.items.to_dict(),
+			"containers": domain.containers.to_dict(),
+			"attachments": domain.attachments.to_dict(),
+			"operations": domain.operations.to_dict(),
+			"world_entities": domain.world_entities.to_dict(),
+			"metadata": merged_metadata,
+		},
 	}
 
 
 func save(extra_metadata: Dictionary = {}) -> Dictionary:
 	if store == null or not store.has_method("save_state"):
 		return _failure("ITEM_STATE_STORE_REQUIRED")
-	var snapshot := create_snapshot(extra_metadata)
+	var snapshot_result: Dictionary = create_snapshot_result(extra_metadata)
+	if not bool(snapshot_result.get("success", false)):
+		return snapshot_result
+	var snapshot: Dictionary = Dictionary(snapshot_result.get("snapshot", {}))
 	var validation := validate_snapshot(snapshot)
 	if not bool(validation.get("success", false)):
 		return validation

@@ -46,6 +46,31 @@ func _run() -> void:
 	_assert(aggregate.authority_epoch == 3, "Authority epoch must be preserved")
 	_assert(aggregate.lifecycle_state == EntityLifecycle.ACTIVE, "World aggregate must start ACTIVE")
 	_assert(SpatialRef.get_position(aggregate.spatial_ref).is_equal_approx(Vector3(10, 20, 30)), "Spatial position must be canonical")
+	var unexpected_spatial: Dictionary = spatial.duplicate(true)
+	unexpected_spatial["unexpected"] = true
+	var invalid_setup = Aggregate.new()
+	_assert(not invalid_setup.setup(
+		"entity/item/invalid-spatial",
+		"item/invalid-spatial",
+		unexpected_spatial
+	), "Aggregate setup must reject unknown SpatialRef fields")
+	_assert(invalid_setup.entity_id.is_empty(), "Rejected setup must not partially initialize aggregate")
+	var missing_sample: Dictionary = spatial.duplicate(true)
+	missing_sample.erase("sample_time_s")
+	_assert(not Aggregate.new().setup(
+		"entity/item/missing-sample",
+		"item/missing-sample",
+		missing_sample
+	), "Aggregate setup must reject incomplete SpatialRef")
+	var spatial_before_invalid_apply: Dictionary = aggregate.spatial_ref.duplicate(true)
+	var revision_before_invalid_apply: int = aggregate.state_revision
+	_assert_error(
+		aggregate.apply_spatial_state(unexpected_spatial, {}, {}, revision_before_invalid_apply, 3),
+		"INVALID_SPATIAL_REF",
+		"Spatial update must reject unknown fields"
+	)
+	_assert(aggregate.spatial_ref == spatial_before_invalid_apply, "Rejected spatial update must not mutate aggregate")
+	_assert(aggregate.state_revision == revision_before_invalid_apply, "Rejected spatial update must not increment revision")
 
 	var unchanged := aggregate.apply_spatial_state(
 		spatial,

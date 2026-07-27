@@ -9,6 +9,11 @@ const LifecycleCoordinator = preload("res://scripts/runtime/lifecycle_coordinato
 const CanonicalStatePort = preload("res://scripts/persistence/canonical_state_port.gd")
 const Factory = preload("res://scripts/items/services/item_domain_factory.gd")
 
+class PresentationCarrier:
+	extends RefCounted
+	var payload
+
+
 var failures: Array[String] = []
 var assertions: int = 0
 
@@ -44,8 +49,22 @@ func _run() -> void:
 	_assert_error(kernel.register_service("bad-ui", rejected_control), "PRESENTATION_OBJECT_REJECTED", "Control must be rejected at kernel boundary")
 	rejected_control.free()
 	var rejected_camera := Camera3D.new()
-	_assert_error(kernel.register_service("bad-camera", rejected_camera), "PRESENTATION_OBJECT_REJECTED", "Camera must be rejected at kernel boundary")
+	_assert_error(kernel.register_service("bad-camera", rejected_camera), "PRESENTATION_OBJECT_REJECTED", "Camera3D must be rejected at kernel boundary")
 	rejected_camera.free()
+	var rejected_camera_2d := Camera2D.new()
+	_assert_error(kernel.register_service("bad-camera-2d", rejected_camera_2d), "PRESENTATION_OBJECT_REJECTED", "Camera2D must be rejected at kernel boundary")
+	rejected_camera_2d.free()
+	var rejected_audio_2d := AudioStreamPlayer2D.new()
+	_assert_error(kernel.register_service("bad-audio-2d", rejected_audio_2d), "PRESENTATION_OBJECT_REJECTED", "AudioStreamPlayer2D must be rejected")
+	rejected_audio_2d.free()
+	var rejected_audio_3d := AudioStreamPlayer3D.new()
+	_assert_error(kernel.register_service("bad-audio-3d", rejected_audio_3d), "PRESENTATION_OBJECT_REJECTED", "AudioStreamPlayer3D must be rejected")
+	rejected_audio_3d.free()
+	var carrier := PresentationCarrier.new()
+	carrier.payload = {"nested": Camera2D.new()}
+	_assert_error(kernel.register_service("poisoned-carrier", carrier), "PRESENTATION_OBJECT_REJECTED", "Presentation node inside service object must be rejected")
+	carrier.payload["nested"].free()
+	carrier.payload = null
 	var rejected_viewport := SubViewport.new()
 	var poisoned_kernel = SimulationKernel.new()
 	_assert_error(poisoned_kernel.setup({"services": {"viewport": rejected_viewport}}), "PRESENTATION_OBJECT_REJECTED", "Viewport in setup must fail boundary")

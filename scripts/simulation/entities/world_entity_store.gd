@@ -109,6 +109,14 @@ func replace_from(other) -> void:
 
 
 func migrate_legacy_item_relations(item_registry) -> Dictionary:
+	# Migration is staged against an isolated store. Neither the live store nor
+	# any ItemInstance relation is changed until every WORLD binding validates.
+	var staged = get_script().new()
+	staged.authority_owner_id = authority_owner_id
+	staged.authority_epoch = authority_epoch
+	staged.entities = entities.duplicate()
+	staged.item_to_entity = item_to_entity.duplicate()
+	var relation_updates: Array[Dictionary] = []
 	var migrated: int = 0
 	var created: int = 0
 	for item in item_registry.all_items():
@@ -116,17 +124,20 @@ func migrate_legacy_item_relations(item_registry) -> Dictionary:
 			continue
 		var relation_entity_id: String = Relations.world_entity_id(item.relation)
 		if not relation_entity_id.is_empty():
-			var existing = get_entity(relation_entity_id)
+			var existing = staged.get_entity(relation_entity_id)
 			if existing == null:
 				return _failure("WORLD_ENTITY_NOT_FOUND", {
 					"item_id": item.instance_id,
 					"entity_id": relation_entity_id,
 				})
 			if existing.item_instance_id != item.instance_id:
-				return _failure("WORLD_ENTITY_ITEM_MISMATCH")
+				return _failure("WORLD_ENTITY_ITEM_MISMATCH", {
+					"item_id": item.instance_id,
+					"entity_id": relation_entity_id,
+				})
 			continue
 		var spatial_ref: Dictionary = Relations.spatial_ref_from_relation(item.relation)
-		var aggregate = create_for_item(item.instance_id, spatial_ref, {
+		var aggregate = staged.create_for_item(item.instance_id, spatial_ref, {
 			"state_revision": int(item.revision),
 			"domain_components": {
 				"definition_id": item.definition_id,
@@ -136,9 +147,18 @@ func migrate_legacy_item_relations(item_registry) -> Dictionary:
 		})
 		if aggregate == null:
 			return _failure("WORLD_ENTITY_CREATE_FAILED", {"item_id": item.instance_id})
+		relation_updates.append({
+			"item": item,
+			"relation": Relations.world_entity(aggregate.entity_id),
+		})
 		created += 1
-		item.set_relation(Relations.world_entity(aggregate.entity_id))
 		migrated += 1
+
+	# Commit is intentionally last and contains no fallible operations.
+	entities = staged.entities
+	item_to_entity = staged.item_to_entity
+	for update in relation_updates:
+		update["item"].set_relation(Dictionary(update["relation"]))
 	return {
 		"success": true,
 		"migrated_relation_count": migrated,

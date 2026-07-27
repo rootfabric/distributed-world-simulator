@@ -61,33 +61,52 @@ func setup(
 	spatial_ref_value: Dictionary,
 	context: Dictionary = {}
 ) -> bool:
-	if (
-		entity_id_value.is_empty()
-		or item_instance_id_value.is_empty()
-		or not SpatialRefScript.is_valid(spatial_ref_value)
-	):
-		return false
-	entity_id = entity_id_value
-	item_instance_id = item_instance_id_value
-	entity_type = String(context.get("entity_type", ENTITY_TYPE_WORLD_ITEM))
-	# Persist the exact representation produced by Godot's JSON boundary once.
-	# This prevents one-bit quaternion drift on save/load while avoiding repeated
-	# Basis/Quaternion reconstruction.
-	spatial_ref = _canonicalize_transport_dictionary(spatial_ref_value)
+	var normalized_spatial: Dictionary = _canonicalize_transport_dictionary(spatial_ref_value)
 	var partition_value = context.get("partition_address", {})
-	partition_address = _normalize_optional_partition(partition_value)
-	physics_state = _normalize_json_dictionary(context.get("physics_state", {}))
-	domain_components = _normalize_json_dictionary(context.get("domain_components", {}))
-	authority_owner_id = String(context.get("authority_owner_id", "local-process"))
-	authority_epoch = maxi(1, int(context.get("authority_epoch", 1)))
-	state_revision = maxi(0, int(context.get("state_revision", 0)))
-	last_simulation_tick = maxi(0, int(context.get("last_simulation_tick", 0)))
-	lifecycle_state = String(context.get("lifecycle_state", EntityLifecycle.ACTIVE))
-	if not EntityLifecycle.is_valid(lifecycle_state):
+	if not partition_value is Dictionary:
 		return false
-	created_at_utc = String(context.get("created_at_utc", Time.get_datetime_string_from_system(true, true)))
-	updated_at_utc = String(context.get("updated_at_utc", created_at_utc))
-	return validate().get("success", false)
+	if not Dictionary(partition_value).is_empty() and not PartitionAddressScript.is_valid(Dictionary(partition_value)):
+		return false
+	var physics_value = context.get("physics_state", {})
+	var components_value = context.get("domain_components", {})
+	if not physics_value is Dictionary or not components_value is Dictionary:
+		return false
+	var now: String = Time.get_datetime_string_from_system(true, true)
+	var candidate: Dictionary = {
+		"schema": SCHEMA,
+		"entity_id": entity_id_value,
+		"entity_type": String(context.get("entity_type", ENTITY_TYPE_WORLD_ITEM)),
+		"item_instance_id": item_instance_id_value,
+		"spatial_ref": normalized_spatial,
+		"partition_address": _normalize_optional_partition(partition_value),
+		"physics_state": _normalize_json_dictionary(physics_value),
+		"domain_components": _normalize_json_dictionary(components_value),
+		"authority_owner_id": String(context.get("authority_owner_id", "local-process")),
+		"authority_epoch": maxi(1, int(context.get("authority_epoch", 1))),
+		"state_revision": maxi(0, int(context.get("state_revision", 0))),
+		"last_simulation_tick": maxi(0, int(context.get("last_simulation_tick", 0))),
+		"lifecycle_state": String(context.get("lifecycle_state", EntityLifecycle.ACTIVE)),
+		"created_at_utc": String(context.get("created_at_utc", now)),
+		"updated_at_utc": String(context.get("updated_at_utc", context.get("created_at_utc", now))),
+	}
+	var validation: Dictionary = validate_snapshot_payload(candidate)
+	if not bool(validation.get("success", false)):
+		return false
+	entity_id = String(candidate["entity_id"])
+	entity_type = String(candidate["entity_type"])
+	item_instance_id = String(candidate["item_instance_id"])
+	spatial_ref = Dictionary(candidate["spatial_ref"]).duplicate(true)
+	partition_address = Dictionary(candidate["partition_address"]).duplicate(true)
+	physics_state = Dictionary(candidate["physics_state"]).duplicate(true)
+	domain_components = Dictionary(candidate["domain_components"]).duplicate(true)
+	authority_owner_id = String(candidate["authority_owner_id"])
+	authority_epoch = int(candidate["authority_epoch"])
+	state_revision = int(candidate["state_revision"])
+	last_simulation_tick = int(candidate["last_simulation_tick"])
+	lifecycle_state = String(candidate["lifecycle_state"])
+	created_at_utc = String(candidate["created_at_utc"])
+	updated_at_utc = String(candidate["updated_at_utc"])
+	return true
 
 
 func setup_from_snapshot(snapshot: Dictionary) -> bool:
@@ -158,8 +177,9 @@ func validate() -> Dictionary:
 		return _failure("EMPTY_ITEM_INSTANCE_ID")
 	if entity_type != ENTITY_TYPE_WORLD_ITEM:
 		return _failure("UNSUPPORTED_WORLD_ENTITY_TYPE")
-	if not SpatialRefScript.is_valid(spatial_ref):
-		return _failure("INVALID_SPATIAL_REF")
+	var spatial_result: Dictionary = _validate_spatial_ref_payload(spatial_ref)
+	if not bool(spatial_result.get("success", false)):
+		return spatial_result
 	if not partition_address.is_empty() and not PartitionAddressScript.is_valid(partition_address):
 		return _failure("INVALID_PARTITION_ADDRESS")
 	if authority_owner_id.is_empty() or authority_epoch <= 0:
@@ -193,15 +213,16 @@ func apply_spatial_state(
 		})
 	if lifecycle_state != EntityLifecycle.ACTIVE:
 		return _failure("ENTITY_NOT_ACTIVE", {"lifecycle_state": lifecycle_state})
-	if not SpatialRefScript.is_valid(spatial_ref_value):
-		return _failure("INVALID_SPATIAL_REF")
+	var normalized_ref: Dictionary = _canonicalize_transport_dictionary(spatial_ref_value)
+	var spatial_validation: Dictionary = _validate_spatial_ref_payload(normalized_ref)
+	if not bool(spatial_validation.get("success", false)):
+		return spatial_validation
 	var next_partition: Dictionary = _normalize_optional_partition(partition_value)
 	if not partition_value.is_empty() and next_partition.is_empty():
 		return _failure("INVALID_PARTITION_ADDRESS")
 	var next_physics: Dictionary = _normalize_json_dictionary(physics_state_value)
 	if not _is_json_safe(next_physics):
 		return _failure("NON_SERIALIZABLE_PHYSICS_STATE")
-	var normalized_ref: Dictionary = _canonicalize_transport_dictionary(spatial_ref_value)
 	var changed: bool = (
 		normalized_ref != spatial_ref
 		or next_physics != physics_state

@@ -1,4 +1,4 @@
-# Planetary World v16.3.3-foundation-world-aggregate-part3 — canonical WORLD aggregate
+# Planetary World v16.3.3-foundation-world-aggregate-part3-fix1 — canonical WORLD aggregate
 
 Версия сохраняет принятый R2 gameplay, строгую N0 boundary и server-safe lifecycle, добавляя единый `WorldEntityAggregate` для WORLD-предметов, Item Graph v2, формальный Entity/Chunk Lifecycle, `SimulationKernel`/`PresentationHost` boundary и server-safe persistence port.
 
@@ -6,7 +6,9 @@
 
 ## Архитектурный checkpoint после R2
 
-Ревизия `v16.3.3-foundation-world-aggregate-part3` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
+Ревизия `v16.3.3-foundation-world-aggregate-part3-fix1` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
+
+Fix1 усиливает границы целостности: live-миграция выполняется через staging и единый commit, `WorldEntityAggregate.setup()` принимает только сохраняемый строгий `SpatialRef`, а `SimulationKernel` рекурсивно проверяет presentation-объекты внутри service objects.
 
 Следующий основной пакет:
 

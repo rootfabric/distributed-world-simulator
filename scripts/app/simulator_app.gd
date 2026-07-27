@@ -16,8 +16,8 @@ const SimulationKernelScript = preload("res://scripts/runtime/simulation_kernel.
 const PresentationHostScript = preload("res://scripts/runtime/presentation_host.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.3.3-foundation-world-aggregate-part3"
-const FOUNDATION_BUILD_ID: String = "foundation-world-aggregate-lifecycle-boundary-part3"
+const FOUNDATION_CHECKPOINT: String = "v16.3.3-foundation-world-aggregate-part3-fix1"
+const FOUNDATION_BUILD_ID: String = "foundation-world-aggregate-transactional-boundary-fix1"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

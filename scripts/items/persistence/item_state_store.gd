@@ -15,4 +15,3 @@ func delete_state(_state_key: String) -> Dictionary:
 
 func has_state(_state_key: String) -> bool:
 	return false
-

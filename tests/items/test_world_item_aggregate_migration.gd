@@ -7,6 +7,15 @@ const Relations = preload("res://scripts/items/domain/item_relations.gd")
 const GraphPersistence = preload("res://scripts/items/persistence/item_graph_persistence.gd")
 const Presenter = preload("res://scripts/items/presentation/item_representation_system.gd")
 const SpatialRef = preload("res://scripts/simulation/spatial/spatial_ref.gd")
+const ItemInstance = preload("res://scripts/items/domain/item_instance.gd")
+
+
+class OrderedItemRegistry:
+	extends RefCounted
+	var rows: Array = []
+
+	func all_items() -> Array:
+		return rows
 
 var failures: Array[String] = []
 var assertions: int = 0
@@ -50,6 +59,58 @@ func _run() -> void:
 	var canonical_legacy = JSON.parse_string(JSON.stringify(legacy_spatial, "", true, true))
 	_assert(canonical_legacy is Dictionary and aggregate.spatial_ref == Dictionary(canonical_legacy), "Migration must preserve canonical SpatialRef")
 	_assert_success(restored.world_entities.validate_item_bindings(restored.items), "Migrated bindings must validate")
+
+	var transactional_store = restored.world_entities.get_script().new()
+	var first_item = ItemInstance.new({
+		"instance_id": "item/00000000-0000-4000-8000-0000000000a1",
+		"definition_id": "beacon",
+		"quantity": 1,
+		"relation": Relations.world(Transform3D.IDENTITY, Vector3.ZERO, "scenario/test/local"),
+	})
+	var second_item = ItemInstance.new({
+		"instance_id": "item/00000000-0000-4000-8000-0000000000a2",
+		"definition_id": "beacon",
+		"quantity": 1,
+		"relation": Relations.world_entity("entity/item/missing"),
+	})
+	var ordered_registry = OrderedItemRegistry.new()
+	ordered_registry.rows = [first_item, second_item]
+	var first_relation_before: Dictionary = first_item.relation.duplicate(true)
+	var second_relation_before: Dictionary = second_item.relation.duplicate(true)
+	var transactional_failure: Dictionary = transactional_store.migrate_legacy_item_relations(ordered_registry)
+	_assert(not bool(transactional_failure.get("success", false)), "Migration with a later invalid item must fail")
+	_assert(String(transactional_failure.get("error_code", "")) == "WORLD_ENTITY_NOT_FOUND", "Migration failure must preserve precise error")
+	_assert(transactional_store.size() == 0, "Failed live migration must not commit staged aggregates")
+	_assert(first_item.relation == first_relation_before, "Failed live migration must not rewrite earlier item relation")
+	_assert(second_item.relation == second_relation_before, "Failed live migration must preserve failing item relation")
+	var snapshot_domain := Factory.create()
+	snapshot_domain.items.register_definition(Definition.new({
+		"id": "beacon",
+		"display_name": "Beacon",
+		"max_stack": 5,
+		"unit_mass_kg": 2.0,
+		"external_volume_l": 1.0,
+		"tags": ["beacon"],
+	}))
+	var snapshot_first = ItemInstance.new({
+		"instance_id": "item/00000000-0000-4000-8000-0000000000b1",
+		"definition_id": "beacon",
+		"relation": first_relation_before,
+	})
+	var snapshot_second = ItemInstance.new({
+		"instance_id": "item/00000000-0000-4000-8000-0000000000b2",
+		"definition_id": "beacon",
+		"relation": second_relation_before,
+	})
+	snapshot_domain.items.items[snapshot_first.instance_id] = snapshot_first
+	snapshot_domain.items.items[snapshot_second.instance_id] = snapshot_second
+	var failed_persistence = GraphPersistence.new()
+	failed_persistence.setup(snapshot_domain, null, "failed-snapshot")
+	var failed_snapshot_result: Dictionary = failed_persistence.create_snapshot_result()
+	_assert(not bool(failed_snapshot_result.get("success", false)), "Snapshot creation must stop on migration failure")
+	_assert(String(failed_snapshot_result.get("error_code", "")) == "WORLD_ENTITY_NOT_FOUND", "Snapshot creation must preserve migration error")
+	_assert(snapshot_domain.world_entities.size() == 0, "Failed snapshot migration must not mutate live entity store")
+	_assert(snapshot_first.relation == first_relation_before, "Failed snapshot migration must not rewrite earlier relation")
 
 	var current_snapshot: Dictionary = persistence.create_snapshot({"checkpoint": "v16.3.3"})
 	_assert(String(current_snapshot.get("schema", "")) == GraphPersistence.SCHEMA, "New snapshot must use v2 graph schema")
