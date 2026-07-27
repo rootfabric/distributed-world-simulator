@@ -1,14 +1,12 @@
-# Planetary World v16.3.0-r2-inventory-ux — контекстный инвентарь и улучшенный свет
+# Planetary World v16.3.1-foundation-n0-part1-fix3 — каноническая граница N0 fix3
 
-Версия упрощает drag-and-drop: ЛКМ сразу переносит весь стак, а ПКМ перетаскивает стак к цели и только затем спрашивает количество. Внешний контейнер появляется только после взаимодействия через E, UI учитывает его реальную вместимость, а фонарь использует двухслойный круговой свет.
+Версия сохраняет принятый R2 gameplay и добавляет первую часть Foundation/N0: runtime roles, launch options, versioned command/result/snapshot envelopes, JSON-safe canonicalization, local loopback gateway и монотонные revisions при authority transfer.
 
 Проект для Godot 4.7.1, собранного с `precision=double`.
 
 ## Архитектурный checkpoint после R2
 
-Ревизия `v16.3.0-r2-inventory-ux` зафиксировала, что локальный simulator/item/
-coordinate фундамент готов к началу сетевой ветки, но фактический network layer
-пока находится до N0.
+Ревизия `v16.3.1-foundation-n0-part1-fix3` начала сетевую ветку без сокетов и усилила строгую проверку сетевых DTO. Реализована первая часть контрактов, но Foundation Gate и N0 пока не закрыты. Следующий блок — lifecycle, isolated user data и terrain shutdown barrier.
 
 Следующий основной пакет:
 
@@ -25,6 +23,10 @@ command/snapshot DTO, authority lease/handoff contracts и тесты без о�
 
 Документы:
 
+- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX2_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX3_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`;
 - `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
 - `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
@@ -69,6 +71,7 @@ world.load playground
 world.back
 test.list
 test.run all
+runtime.descriptor
 runtime.snapshot
 input.bindings
 display.fullscreen.toggle

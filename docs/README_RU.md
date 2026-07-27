@@ -6,6 +6,7 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 
 ## Чекпоинты
 
+- `checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md` — runtime role contracts, N0 envelopes, loopback и authority fencing.
 - `checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md` — архитектурная ревизия и решение Foundation Gate + N0.
 
 - `checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`
@@ -93,3 +94,5 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 ## Зафиксированная проверка coordinate foundation
 
 - `docs/diagnostics/V15_5_1_FIXED_VALIDATION_RU.md`
+
+- [`checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md`](checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md) — strict schema и fail-closed handler result;

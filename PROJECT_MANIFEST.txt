@@ -1,4 +1,24 @@
-Planetary World v16.3.0-r2-inventory-ux
+Planetary World v16.3.1-foundation-n0-part1-fix3
+
+
+Foundation/N0 canonical boundary hardening v16.3.1-foundation-n0-part1-fix3:
+- strict snapshot SpatialRef accepts only near-unit quaternions
+- snapshot normalization canonicalizes quaternion magnitude and q/-q sign
+- malformed correlation IDs receive safe placeholders in valid REJECTED envelopes
+- original EMPTY_FIELD/INVALID_FIELD_TYPE errors survive loopback transport
+- tests/network/test_network_contracts.gd
+- tests/network/test_loopback_command_transport.gd
+- docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX3_RU.md
+
+
+Foundation/N0 boundary hardening v16.3.1-foundation-n0-part1-fix2:
+- terminal replay is derived from SUCCEEDED/REJECTED status, not retryable flag
+- success=true with retryable=true is rejected and safely cached
+- canonicalizer rejects unsafe JSON integers at every nested depth
+- EntitySnapshotEnvelope validates exact nested SpatialRef schema
+- tests/network/test_network_contracts.gd
+- tests/network/test_loopback_command_transport.gd
+- docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX2_RU.md
 
 
 R2 inventory UX and dual-fill lighting v16.3.0-r2-inventory-ux:
@@ -241,3 +261,33 @@ New atmosphere files:
 - RUN_ATMOSPHERE_ARCHITECTURE_TEST.ps1
 - docs/architecture/ATMOSPHERE_LAYER_V1_RU.md
 - docs/plans/ATMOSPHERE_LAYER_V1_PLAN_RU.md
+
+Foundation/N0 part 1 v16.3.1:
+- scripts/runtime/runtime_role.gd
+- scripts/runtime/launch_options.gd
+- scripts/runtime/runtime_descriptor.gd
+- scripts/network/contracts/network_contract_utils.gd
+- scripts/network/contracts/network_command_envelope.gd
+- scripts/network/contracts/network_command_result_envelope.gd
+- scripts/network/contracts/entity_snapshot_envelope.gd
+- scripts/network/loopback/network_command_gateway.gd
+- scripts/network/loopback/loopback_command_transport.gd
+- tests/runtime/test_launch_options.gd
+- tests/network/test_network_contracts.gd
+- tests/network/test_loopback_command_transport.gd
+- tests/entities/test_authority_revision_semantics.gd
+- RUN_NETWORK_CONTRACT_TESTS.ps1
+- docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md
+
+Foundation/N0 part 1 boundary hardening fix1:
+- command payload is required and cannot be defaulted
+- command/result/snapshot envelopes reject missing and unexpected fields
+- JSON scalar types are validated without String/int coercion
+- integer-valued JSON floats remain valid after transport round-trip
+- integral numbers use one canonical representation for stable hashes
+- gateway validates handler output and ResultEnvelope before terminal storage
+- invalid handler output becomes cached REJECTED/INVALID_HANDLER_RESULT
+- loopback transport validates gateway results before serialization
+- tests/network/test_network_contracts.gd
+- tests/network/test_loopback_command_transport.gd
+- docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md

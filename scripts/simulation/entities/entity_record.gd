@@ -268,9 +268,7 @@ func transfer_authority(next_owner_id: String, next_epoch: int) -> bool:
 		return false
 	authority_owner_id = next_owner_id
 	authority_epoch = next_epoch
-	state_revision = 0
-	revision = 0
-	updated_at_utc = Time.get_datetime_string_from_system(true, true)
+	_touch_revision()
 	return true
 
 

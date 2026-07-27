@@ -1,5 +1,32 @@
 # N0 — план сетевых контрактов без сокетов
 
+# Статус реализации
+
+Checkpoint `v16.3.1-foundation-n0-part1-fix3` закрыл и усилил первую часть:
+
+- [x] NetworkCommandEnvelope v1;
+- [x] NetworkCommandResultEnvelope v1;
+- [x] EntitySnapshotEnvelope v1;
+- [x] canonical JSON и runtime-type lint;
+- [x] deterministic command fingerprint;
+- [x] exact replay и operation ID conflict;
+- [x] stale authority epoch rejection;
+- [x] local JSON loopback transport;
+- [x] monotonic authority revision;
+- [x] exact required/allowed field sets for command/result/snapshot;
+- [x] strict JSON scalar typing without String/int coercion;
+- [x] handler result validation before terminal replay storage;
+- [x] stable numeric canonicalization across JSON round-trip;
+- [x] strict near-unit quaternion validation and canonical q/-q snapshot hashing;
+- [x] valid rejection envelopes for malformed correlation IDs;
+- [ ] delta envelope;
+- [ ] leases/routes/node/region descriptors;
+- [ ] handoff state machine;
+- [ ] golden fixtures;
+- [ ] полная N0 acceptance matrix.
+
+N0 остаётся незавершённым.
+
 ## Цель
 
 Создать стабильный versioned protocol/domain contract, который можно проверить

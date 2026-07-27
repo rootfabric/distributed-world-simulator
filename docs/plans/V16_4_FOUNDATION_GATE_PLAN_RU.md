@@ -1,5 +1,24 @@
 # План v16.4 — Foundation Gate
 
+# Статус реализации
+
+Checkpoint `v16.3.1-foundation-n0-part1`:
+
+- [x] pure-domain runtime roles;
+- [x] launch option parser;
+- [x] runtime descriptor;
+- [x] launch context передаётся runtime;
+- [x] authority transfer сохраняет monotonic revision;
+- [ ] simulation-server без presentation;
+- [ ] SimulationKernel boundary;
+- [ ] LifecycleCoordinator;
+- [ ] terrain shutdown barrier;
+- [ ] isolated user data;
+- [ ] WorldEntityAggregate;
+- [ ] entity/chunk lifecycle.
+
+Foundation Gate остаётся незавершённым. Следующий блок — lifecycle и shutdown.
+
 ## Цель
 
 Подготовить локальную архитектуру PlanetSimulator к выделенному simulation server,

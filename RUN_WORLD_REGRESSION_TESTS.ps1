@@ -45,6 +45,10 @@ $Tests = @(
     "res://tests/core/test_world_catalog.gd",
     "res://tests/core/test_controller_profiles.gd",
     "res://tests/core/test_hotkey_contract.gd",
+    "res://tests/runtime/test_launch_options.gd",
+    "res://tests/network/test_network_contracts.gd",
+    "res://tests/network/test_loopback_command_transport.gd",
+    "res://tests/entities/test_authority_revision_semantics.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
     "res://tests/unit/test_celestial_motion.gd",
@@ -77,7 +81,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.3.0-r2-inventory-ux"
+    checkpoint = "v16.3.1-foundation-n0-part1-fix3"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

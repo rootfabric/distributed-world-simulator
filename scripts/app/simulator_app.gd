@@ -8,8 +8,12 @@ const SystemMenuScript = preload("res://scripts/ui/system_menu.gd")
 const SimulationClockScript = preload(
 	"res://scripts/simulation/time/simulation_clock.gd"
 )
+const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
+const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
+const FOUNDATION_CHECKPOINT: String = "v16.3.1-foundation-n0-part1-fix3"
+const FOUNDATION_BUILD_ID: String = "foundation-n0-contracts-part1"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -42,6 +46,9 @@ var _runtime_process_mode_before_console: int = Node.PROCESS_MODE_INHERIT
 var _mouse_mode_before_console: int = Input.MOUSE_MODE_VISIBLE
 var _runtime_process_mode_before_system: int = Node.PROCESS_MODE_INHERIT
 var _mouse_mode_before_system: int = Input.MOUSE_MODE_VISIBLE
+var launch_options: Dictionary = {}
+var runtime_descriptor: Dictionary = {}
+var launch_option_errors: Array[String] = []
 var _cli_test_scope: String = ""
 var _loading_world: bool = false
 var _windowed_resolution_index: int = 2
@@ -87,11 +94,23 @@ func _ready() -> void:
 	system_menu.setup(self, world_catalog)
 	system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
 
-	var launch_options: Dictionary = _parse_launch_options()
+	launch_options = _parse_launch_options()
+	if not launch_option_errors.is_empty():
+		for error_message in launch_option_errors:
+			push_error(error_message)
+		get_tree().quit(2)
+		return
 	_cli_test_scope = String(launch_options.get("run_tests", ""))
-	var requested_world: String = String(
-		launch_options.get("world", world_catalog.get_default_world_id())
-	)
+	var requested_world: String = String(launch_options.get("world", ""))
+	if requested_world.is_empty():
+		requested_world = world_catalog.get_default_world_id()
+	launch_options["world"] = requested_world
+	runtime_descriptor = RuntimeDescriptorScript.create(launch_options, {
+		"checkpoint": FOUNDATION_CHECKPOINT,
+		"build_id": FOUNDATION_BUILD_ID,
+	})
+	if bool(launch_options.get("print_runtime_descriptor", false)):
+		print("[runtime_descriptor] %s" % JSON.stringify(runtime_descriptor, "", true, true))
 	var load_result: Dictionary = load_world(requested_world, false)
 	if not bool(load_result.get("success", false)):
 		push_error(String(load_result.get("output", "World load failed")))
@@ -258,11 +277,17 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		"local_authority_id": String(
 			definition.get("local_authority_id", "local-process")
 		),
+		"runtime_role": String(launch_options.get("role", "offline")),
+		"node_id": String(launch_options.get("node_id", "local-offline")),
+		"launch_options": launch_options.duplicate(true),
+		"runtime_descriptor": runtime_descriptor.duplicate(true),
 	}
 	runtime.call("configure_runtime", context)
 	current_runtime = runtime
 	current_world_id = normalized
 	current_world_definition = definition.duplicate(true)
+	if not runtime_descriptor.is_empty():
+		runtime_descriptor["world_id"] = current_world_id
 	runtime.name = "WorldRuntime_%s" % normalized
 	world_host.add_child(runtime)
 	command_registry.clear_registration_errors()
@@ -554,6 +579,12 @@ func _register_core_commands() -> void:
 		"usage": "test.run <test_id|all|core|world>",
 		"category": "test",
 	}, Callable(self, "_command_test_run"))
+	_register_command({
+		"id": "runtime.descriptor",
+		"description": "Показать роль процесса и диагностический runtime descriptor.",
+		"usage": "runtime.descriptor",
+		"category": "diagnostics",
+	}, Callable(self, "_command_runtime_descriptor"))
 	_register_command({
 		"id": "runtime.snapshot",
 		"description": "Показать диагностический snapshot активного runtime.",
@@ -884,6 +915,14 @@ func _command_test_run(arguments: Array[String]) -> Dictionary:
 			return _format_single_test_result(test_registry.run_test(target))
 
 
+func _command_runtime_descriptor(_arguments: Array[String]) -> Dictionary:
+	return {
+		"success": true,
+		"output": JSON.stringify(runtime_descriptor, "  ", true, true),
+		"runtime_descriptor": runtime_descriptor.duplicate(true),
+	}
+
+
 func _command_runtime_snapshot(_arguments: Array[String]) -> Dictionary:
 	var snapshot: Dictionary = {
 		"schema": "planet_simulator.runtime_shell.v1",
@@ -892,6 +931,7 @@ func _command_runtime_snapshot(_arguments: Array[String]) -> Dictionary:
 		"command_count": command_registry.get_command_count(),
 		"test_count": test_registry.get_test_count(),
 		"simulation_clock": simulation_clock.create_snapshot(),
+		"runtime_descriptor": runtime_descriptor.duplicate(true),
 	}
 	if current_runtime != null and current_runtime.has_method("create_runtime_snapshot"):
 		snapshot["runtime"] = current_runtime.call("create_runtime_snapshot")
@@ -1071,14 +1111,12 @@ func _on_console_visibility_changed(opened: bool) -> void:
 
 
 func _parse_launch_options() -> Dictionary:
-	var result: Dictionary = {}
-	for argument_value in OS.get_cmdline_user_args():
-		var argument: String = String(argument_value)
-		if argument.begins_with("--world="):
-			result["world"] = argument.trim_prefix("--world=")
-		elif argument.begins_with("--run-tests="):
-			result["run_tests"] = argument.trim_prefix("--run-tests=")
-	return result
+	var parsed: Dictionary = LaunchOptionsScript.from_os()
+	launch_option_errors.clear()
+	for error_value in parsed.get("errors", []):
+		launch_option_errors.append(String(error_value))
+	var options_value = parsed.get("options", {})
+	return options_value.duplicate(true) if options_value is Dictionary else {}
 
 
 func _run_cli_tests() -> void:
