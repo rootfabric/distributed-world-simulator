@@ -10,6 +10,13 @@ extends PanelContainer
 @onready var toast_layer: InventoryToastLayer = %ToastLayer
 @onready var tooltip: InventoryItemTooltip = %ItemTooltip
 @onready var context_menu: InventoryItemContextMenu = %ItemContextMenu
+@onready var search_edit: LineEdit = %SearchEdit
+@onready var filter_option: OptionButton = %FilterOption
+@onready var sort_option: OptionButton = %SortOption
+@onready var reset_projection_button: Button = %ResetProjectionButton
+@onready var inspector_toggle: CheckButton = %InspectorToggle
+@onready var projection_summary: Label = %ProjectionSummary
+@onready var inspector: InventoryInspector = %Inspector
 
 var gameplay_controller
 var view_model: InventoryViewModel
@@ -24,6 +31,8 @@ var pending_target_item_id: String = ""
 var pending_total_quantity: int = 0
 var compatibility_external_title: Label
 var _context_screen_position: Vector2 = Vector2.ZERO
+var preferences_store: InventoryPreferencesStore
+var _syncing_projection_controls: bool = false
 
 
 func setup(controller, model: InventoryViewModel, commands: InventoryCommandFacade) -> void:
@@ -36,6 +45,11 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 	command_facade = commands
 	view_model.setup(controller)
 	command_facade.setup(controller)
+	preferences_store = InventoryPreferencesStore.new()
+	preferences_store.setup(String(controller.profile_id))
+	_setup_projection_toolbar()
+	view_model.apply_preferences(preferences_store.load_preferences())
+	_sync_projection_controls()
 	player_panel.set_visual_role("player")
 	external_panel.set_visual_role("external")
 	hotbar_panel.set_visual_role("hotbar")
@@ -45,6 +59,12 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 	split_dialog.transfer_confirmed.connect(_on_split_confirmed)
 	split_dialog.transfer_cancelled.connect(_on_split_cancelled)
 	context_menu.action_requested.connect(_on_context_action_requested)
+	search_edit.text_changed.connect(_on_search_changed)
+	filter_option.item_selected.connect(_on_filter_selected)
+	sort_option.item_selected.connect(_on_sort_selected)
+	reset_projection_button.pressed.connect(_on_projection_reset)
+	inspector_toggle.toggled.connect(_on_inspector_toggled)
+	inspector.close_requested.connect(func() -> void: inspector_toggle.button_pressed = false)
 	set_inventory_visible(false)
 	refresh()
 
@@ -57,6 +77,8 @@ func _wire_panel(panel: InventoryContainerPanel) -> void:
 	panel.context_requested.connect(_on_context_requested)
 	panel.item_hovered.connect(_on_item_hovered)
 	panel.item_unhovered.connect(_on_item_unhovered)
+	panel.item_selected.connect(_on_item_selected)
+	panel.page_requested.connect(_on_page_requested)
 	panel.drop_preview_rejected.connect(_on_drop_preview_rejected)
 
 
@@ -79,6 +101,11 @@ func is_inventory_visible() -> bool:
 
 func _input(event: InputEvent) -> void:
 	if not visible_inventory:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.ctrl_pressed and event.keycode == KEY_F:
+		search_edit.grab_focus()
+		search_edit.select_all()
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		if context_menu.visible:
@@ -122,6 +149,12 @@ func refresh(message: String = "") -> void:
 		external_panel.render(external_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 		compatibility_external_title.text = "%s\n%s" % [external_panel.title_label.text, external_panel.metadata_label.text]
 		_apply_panel_size(true, int(external_model.get("columns", 4)))
+	var inspector_model: Dictionary = Dictionary(screen_model.get("selected_item", {}))
+	if inspector_model.is_empty():
+		inspector.clear_item()
+	else:
+		inspector.show_item(inspector_model)
+	_update_projection_summary(player_model, external_model)
 	if not message.is_empty():
 		status_label.text = message
 		toast_layer.show_message(message)
@@ -157,6 +190,15 @@ func create_debug_snapshot() -> Dictionary:
 			"tooltip_pinned": tooltip.pinned,
 			"toast_visible": toast_layer.visible,
 			"toast_kind": toast_layer.message_kind,
+		},
+		"ui_i2": {
+			"search_query": view_model.search_query,
+			"active_filter": view_model.active_filter,
+			"sort_mode": view_model.sort_mode,
+			"inspector": inspector.create_debug_snapshot(),
+			"preferences_path": preferences_store.file_path if preferences_store != null else "",
+			"player_pool_size": player_panel.get_pool_size(),
+			"external_pool_size": external_panel.get_pool_size(),
 		},
 	}
 
@@ -294,6 +336,8 @@ func _on_context_action_requested(action_id: int, context: Dictionary) -> void:
 	var quantity := int(context.get("quantity", 1))
 	match action_id:
 		InventoryItemContextMenu.ACTION_INSPECT:
+			_on_item_selected(item_id)
+			inspector_toggle.button_pressed = true
 			var cell_data: Dictionary = Dictionary(context.get("cell_data", {}))
 			tooltip.show_item(cell_data, true)
 			_position_tooltip(_context_screen_position)
@@ -488,10 +532,13 @@ func _icon_for_cell(cell_data: Dictionary) -> Texture2D:
 
 
 func _apply_panel_size(has_external: bool, external_columns: int) -> void:
-	var width := 800.0
+	var desired_width := 1060.0
 	if has_external:
-		width = minf(1240.0, 800.0 + maxf(310.0, external_columns * 76.0))
-	var panel_size := Vector2(width, 640.0)
+		desired_width = 1120.0 + maxf(260.0, external_columns * 44.0)
+	var viewport_size := get_viewport().get_visible_rect().size if get_viewport() != null else Vector2(1280.0, 720.0)
+	var width := minf(desired_width, maxf(760.0, viewport_size.x - 32.0))
+	var height := minf(680.0, maxf(600.0, viewport_size.y - 32.0))
+	var panel_size := Vector2(width, height)
 	custom_minimum_size = panel_size
 	size = panel_size
 	_recenter_panel()
@@ -502,6 +549,129 @@ func _recenter_panel() -> void:
 	if viewport == null:
 		return
 	position = (viewport.get_visible_rect().size - size) * 0.5
+
+
+func _setup_projection_toolbar() -> void:
+	filter_option.clear()
+	for entry in [
+		["Все", InventoryViewModel.FILTER_ALL],
+		["Ресурсы", InventoryViewModel.FILTER_RESOURCE],
+		["Инструменты", InventoryViewModel.FILTER_TOOL],
+		["Контейнеры", InventoryViewModel.FILTER_CONTAINER],
+		["Аккумуляторы", InventoryViewModel.FILTER_BATTERY],
+		["Монтируемые", InventoryViewModel.FILTER_MOUNTABLE],
+		["Строительство", InventoryViewModel.FILTER_CONSTRUCTION],
+	]:
+		filter_option.add_item(String(entry[0]))
+		filter_option.set_item_metadata(filter_option.item_count - 1, String(entry[1]))
+	sort_option.clear()
+	for entry in [
+		["Порядок контейнера", InventoryViewModel.SORT_CONTAINER_ORDER],
+		["По имени", InventoryViewModel.SORT_NAME],
+		["По типу", InventoryViewModel.SORT_TYPE],
+		["По количеству", InventoryViewModel.SORT_QUANTITY],
+		["По массе", InventoryViewModel.SORT_MASS],
+		["По объёму", InventoryViewModel.SORT_VOLUME],
+		["Недавно изменённые", InventoryViewModel.SORT_RECENT],
+	]:
+		sort_option.add_item(String(entry[0]))
+		sort_option.set_item_metadata(sort_option.item_count - 1, String(entry[1]))
+
+
+func _sync_projection_controls() -> void:
+	_syncing_projection_controls = true
+	search_edit.text = view_model.search_query
+	_select_option_metadata(filter_option, view_model.active_filter)
+	_select_option_metadata(sort_option, view_model.sort_mode)
+	var preferences := preferences_store.load_preferences() if preferences_store != null else {}
+	inspector_toggle.button_pressed = bool(preferences.get("inspector_visible", true))
+	inspector.visible = inspector_toggle.button_pressed
+	_syncing_projection_controls = false
+
+
+func _select_option_metadata(option: OptionButton, value: String) -> void:
+	for index in range(option.item_count):
+		if String(option.get_item_metadata(index)) == value:
+			option.select(index)
+			return
+
+
+func _on_search_changed(value: String) -> void:
+	if _syncing_projection_controls:
+		return
+	view_model.set_search_query(value)
+	_save_preferences()
+	refresh()
+
+
+func _on_filter_selected(index: int) -> void:
+	if _syncing_projection_controls:
+		return
+	view_model.set_active_filter(String(filter_option.get_item_metadata(index)))
+	_save_preferences()
+	refresh()
+
+
+func _on_sort_selected(index: int) -> void:
+	if _syncing_projection_controls:
+		return
+	view_model.set_sort_mode(String(sort_option.get_item_metadata(index)))
+	_save_preferences()
+	refresh()
+
+
+func _on_projection_reset() -> void:
+	view_model.set_search_query("")
+	view_model.set_active_filter(InventoryViewModel.FILTER_ALL)
+	view_model.set_sort_mode(InventoryViewModel.SORT_CONTAINER_ORDER)
+	_sync_projection_controls()
+	_save_preferences()
+	refresh("Поиск, фильтр и сортировка сброшены")
+
+
+func _on_inspector_toggled(value: bool) -> void:
+	if inspector != null:
+		inspector.visible = value
+	if not _syncing_projection_controls:
+		_save_preferences()
+		_apply_panel_size(not external_container_id.is_empty(), int(external_panel.current_model.get("columns", 4)))
+
+
+func _on_item_selected(item_id: String) -> void:
+	if item_id.is_empty():
+		return
+	view_model.set_selected_item(item_id)
+	if not inspector_toggle.button_pressed:
+		inspector_toggle.button_pressed = true
+	refresh()
+
+
+func _on_page_requested(container_id: String, page_index: int) -> void:
+	view_model.set_container_page(container_id, page_index)
+	refresh()
+
+
+func _save_preferences() -> void:
+	if preferences_store == null:
+		return
+	preferences_store.save_preferences(view_model.preferences_snapshot(inspector_toggle.button_pressed))
+
+
+func _update_projection_summary(player_model: Dictionary, external_model: Dictionary) -> void:
+	var total := int(player_model.get("projected_total_count", 0))
+	var source_total := int(player_model.get("used_entries", 0))
+	if not external_model.is_empty():
+		total += int(external_model.get("projected_total_count", 0))
+		source_total += int(external_model.get("used_entries", 0))
+	var parts := PackedStringArray()
+	parts.append("Показано %d из %d агрегатов" % [total, source_total])
+	if not view_model.search_query.is_empty():
+		parts.append("поиск: «%s»" % view_model.search_query)
+	if view_model.active_filter != InventoryViewModel.FILTER_ALL:
+		parts.append("фильтр: %s" % filter_option.get_item_text(filter_option.selected))
+	if view_model.sort_mode != InventoryViewModel.SORT_CONTAINER_ORDER:
+		parts.append("сортировка: %s" % sort_option.get_item_text(sort_option.selected))
+	projection_summary.text = " · ".join(parts)
 
 
 func _restore_inventory_focus() -> void:

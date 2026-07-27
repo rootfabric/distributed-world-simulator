@@ -5,6 +5,7 @@ signal quick_transfer_requested(item_id: String, source_container_id: String, so
 signal context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2)
 signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
 signal item_unhovered(item_id: String)
+signal item_selected(item_id: String)
 signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
 
 var view_data: Dictionary = {}
@@ -30,15 +31,18 @@ func render_cell(data: Dictionary, texture: Texture2D, validator: Callable) -> v
 		"icon_texture": texture,
 		"title": String(data.get("display_name", "Пусто")),
 		"quantity": int(data.get("quantity", 0)),
-		"selected": bool(data.get("selected", false)),
+		"selected": bool(data.get("selected", false)) or bool(data.get("inspected", false)),
 		"drop_validator": validator,
 	})
 	set_meta("inventory_view_data", view_data.duplicate(true))
+	modulate = Color.WHITE if bool(data.get("projection_match", true)) else Color(1.0, 1.0, 1.0, 0.24)
 
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed and not item_id.is_empty():
+			item_selected.emit(item_id)
 		if (
 			mouse_event.button_index == MOUSE_BUTTON_LEFT
 			and mouse_event.pressed

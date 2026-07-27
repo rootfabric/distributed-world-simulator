@@ -1,4 +1,16 @@
-Planetary World v16.3.4-ui-i1-fix1
+Planetary World v16.3.5-ui-i2
+
+
+UI-I2 search and large storage v16.3.5-ui-i2:
+- search matches display name, definition ID, tags and relation kind
+- category filters cover resources, tools, containers, batteries, mountables and construction
+- sort order is presentation-only and never mutates ContainerState or revisions
+- SLOTS keep canonical physical positions while nonmatching entries are dimmed
+- persistent inspector shows canonical quantity, relation, mass, volume, tags, components and revision
+- UI preferences are stored per profile outside Item Graph persistence
+- large BULK containers use a 96-cell page window and reuse pooled item controls
+- tests/ui/test_inventory_ui_i2_large_storage.gd
+- docs/checkpoints/2026-07-28_UI_I2_SEARCH_AND_LARGE_STORAGE_RU.md
 
 
 UI-I1 player inventory interactions v16.3.4-ui-i1-fix1:

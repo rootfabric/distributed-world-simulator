@@ -18,13 +18,14 @@
 | `v16.2.0-r2-placement-debug-ui` | реализовано | placeable mount item, F10 debug UI, console completion и flashlight |
 | `v16.3.0-r2-inventory-ux` | базовый checkpoint | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
 | `v16.3.1-ui-i0` | реализовано в feature-ветке | component shell, ViewModel, CommandFacade и legacy fallback без изменения Item Graph |
-| `v16.3.4-ui-i1-fix1` | реализовано в feature-ветке | quick transfer whole-stack semantics, context actions, explicit split, tooltip/toast и local rejection feedback |
+| `v16.3.4-ui-i1-fix1` | принято в feature-ветке | quick transfer whole-stack semantics, context actions, explicit split, tooltip/toast и local rejection feedback |
+| `v16.3.5-ui-i2` | реализовано в feature-ветке | search/filter/view-only sort, persistent inspector, UI preferences, cell pool и large-storage page window |
 | `v16.4 Foundation Gate + N0` | следующий архитектурный срез | server-safe kernel и сетевые контракты без сокетов |
 | `R3.1` | параллельный gameplay-срез | foundation и строительство через доменные команды |
 
 ## Pre-roadmap UI-I0/UI-I1 — Inventory UX stabilization
 
-**Статус:** UI-I0 и UI-I1 реализованы в `feature/ui-i0-inventory-shell`; ветка готовится к отдельной приёмке и merge.
+**Статус:** UI-I0, UI-I1 и UI-I2 реализованы в отдельной feature-ветке; после приёмки ветка готова к merge gate.
 
 Цель — заменить текущий монолитный presentation на hybrid two-pane grid, не
 изменяя Item Graph, `ContainerState`, persistence и `ItemTransferService`.
@@ -44,11 +45,10 @@
 
 Полный план: `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
 
-После UI-I1 основная архитектурная ветка продолжает `v16.4 Foundation Gate + N0`.
-UI-I2 search/large storage может идти параллельно, а batch/multi-select откладывается
-до появления transactional command contract.
+После UI-I2 feature-ветка проходит merge gate с основной архитектурной веткой.
+UI-I3 batch/multi-select остаётся отдельной будущей веткой после появления transactional command contract.
 
-Текущий UX-барьер — приёмка `v16.3.4-ui-i1-fix1`: editor import/parse,
+Текущий UX-барьер — приёмка `v16.3.5-ui-i2`: editor import/parse,
 полный набор из 36 headless-тестов, матрицы stack UI и context container,
 проверка двухслойного фонаря, session-scoped operation IDs и main-scene playground regression. Чекпоинты:
 `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,

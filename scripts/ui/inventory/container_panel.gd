@@ -8,7 +8,9 @@ signal quick_transfer_requested(item_id: String, source_container_id: String, so
 signal context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2)
 signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
 signal item_unhovered(item_id: String)
+signal item_selected(item_id: String)
 signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
+signal page_requested(container_id: String, page_index: int)
 
 const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 
@@ -20,6 +22,10 @@ const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 @onready var drop_hint_label: Label = %DropHintLabel
 @onready var feedback_label: Label = %FeedbackLabel
 @onready var feedback_timer: Timer = %FeedbackTimer
+@onready var virtualization_bar: HBoxContainer = %VirtualizationBar
+@onready var previous_page_button: Button = %PreviousPageButton
+@onready var page_label: Label = %PageLabel
+@onready var next_page_button: Button = %NextPageButton
 
 var container_id: String = ""
 var storage_mode: String = ""
@@ -29,11 +35,14 @@ var drop_validator: Callable
 var icon_provider: Callable
 var current_model: Dictionary = {}
 var visual_role: String = "container"
+var active_cell_count: int = 0
 
 
 func _ready() -> void:
 	_apply_boundary_style()
 	feedback_timer.timeout.connect(_clear_feedback)
+	previous_page_button.pressed.connect(_request_previous_page)
+	next_page_button.pressed.connect(_request_next_page)
 
 
 func set_visual_role(role: String) -> void:
@@ -54,28 +63,26 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 	grid.columns = maxi(1, int(model.get("columns", 1)))
 	title_label.text = String(model.get("display_name", container_id))
 	metadata_label.text = _format_metadata(model)
-	_clear_grid()
-	for cell_data_value in model.get("cells", []):
-		var cell_data: Dictionary = Dictionary(cell_data_value)
-		var cell = ItemCellScene.instantiate()
+	var cells: Array = Array(model.get("cells", []))
+	_ensure_pool_size(cells.size())
+	for index in range(grid.get_child_count()):
+		var cell = grid.get_child(index)
+		if index >= cells.size():
+			cell.visible = false
+			continue
+		var cell_data := Dictionary(cells[index])
 		var texture: Texture2D
 		if icon_provider.is_valid():
 			texture = icon_provider.call(cell_data)
 		cell.render_cell(cell_data, texture, drop_validator)
-		cell.drop_requested.connect(_forward_drop_requested)
-		cell.quantity_drop_requested.connect(_forward_quantity_drop_requested)
-		cell.activated.connect(_forward_activated)
-		cell.quick_transfer_requested.connect(_forward_quick_transfer_requested)
-		cell.context_requested.connect(_forward_context_requested)
-		cell.item_hovered.connect(_forward_item_hovered)
-		cell.item_unhovered.connect(_forward_item_unhovered)
-		cell.drop_preview_rejected.connect(_forward_drop_preview_rejected)
-		grid.add_child(cell)
-	rendered_cell_count = grid.get_child_count()
+		cell.visible = true
+	active_cell_count = cells.size()
+	rendered_cell_count = active_cell_count
 	visible = not model.is_empty()
 	_clear_feedback()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_update_role_copy()
+	_update_virtualization(model)
 	set_meta("inventory_container_model", current_model.duplicate(true))
 
 
@@ -86,7 +93,8 @@ func clear_panel() -> void:
 	current_model = {}
 	title_label.text = ""
 	metadata_label.text = ""
-	_clear_grid()
+	_hide_pool()
+	virtualization_bar.visible = false
 	visible = false
 	_clear_feedback()
 
@@ -97,6 +105,10 @@ func get_visual_cell_count() -> int:
 
 func get_rendered_cell_count() -> int:
 	return rendered_cell_count
+
+
+func get_pool_size() -> int:
+	return grid.get_child_count()
 
 
 func show_feedback(message: String, success: bool = false, duration_seconds: float = 2.8) -> void:
@@ -113,7 +125,7 @@ func show_feedback(message: String, success: bool = false, duration_seconds: flo
 
 func find_cell_by_item_id(item_id: String):
 	for child in grid.get_children():
-		if String(child.get("item_id")) == item_id:
+		if child.visible and String(child.get("item_id")) == item_id:
 			return child
 	return null
 
@@ -146,6 +158,11 @@ func get_boundary_snapshot() -> Dictionary:
 		"border_color": [border_color.r, border_color.g, border_color.b, border_color.a],
 		"minimum_size": [custom_minimum_size.x, custom_minimum_size.y],
 		"drop_hint": drop_hint_label.text if drop_hint_label != null else "",
+		"pool_size": get_pool_size(),
+		"active_cell_count": active_cell_count,
+		"virtualized": bool(current_model.get("virtualized", false)),
+		"page_index": int(current_model.get("page_index", 0)),
+		"page_count": int(current_model.get("page_count", 1)),
 	}
 
 
@@ -198,6 +215,11 @@ func _format_metadata(model: Dictionary) -> String:
 	var mode_text: String = "%s · %s" % [mode, entry_text]
 	if mode == "BULK":
 		mode_text += " · автостак"
+	var projected_total := int(model.get("projected_total_count", used))
+	if projected_total != used and mode == "BULK":
+		mode_text += " · найдено %d" % projected_total
+	if bool(model.get("virtualized", false)):
+		mode_text += " · окно %d/%d" % [int(model.get("page_index", 0)) + 1, int(model.get("page_count", 1))]
 	return "%s · масса %s · объём %s" % [
 		mode_text,
 		_format_capacity(float(model.get("current_mass_kg", 0.0)), float(model.get("maximum_mass_kg", INF)), "кг"),
@@ -211,13 +233,52 @@ func _format_capacity(current: float, maximum: float, unit: String) -> String:
 	return "%.1f/%.1f %s" % [current, maximum, unit]
 
 
-func _clear_grid() -> void:
+func _ensure_pool_size(required: int) -> void:
+	while grid.get_child_count() < required:
+		var cell = ItemCellScene.instantiate()
+		_wire_cell(cell)
+		grid.add_child(cell)
+
+
+func _wire_cell(cell) -> void:
+	cell.drop_requested.connect(_forward_drop_requested)
+	cell.quantity_drop_requested.connect(_forward_quantity_drop_requested)
+	cell.activated.connect(_forward_activated)
+	cell.quick_transfer_requested.connect(_forward_quick_transfer_requested)
+	cell.context_requested.connect(_forward_context_requested)
+	cell.item_hovered.connect(_forward_item_hovered)
+	cell.item_unhovered.connect(_forward_item_unhovered)
+	cell.item_selected.connect(_forward_item_selected)
+	cell.drop_preview_rejected.connect(_forward_drop_preview_rejected)
+
+
+func _hide_pool() -> void:
 	for child in grid.get_children():
-		if child is Control:
-			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-		grid.remove_child(child)
-		child.queue_free()
+		child.visible = false
+	active_cell_count = 0
 	rendered_cell_count = 0
+
+
+func _update_virtualization(model: Dictionary) -> void:
+	var page_count := int(model.get("page_count", 1))
+	var page_index := int(model.get("page_index", 0))
+	virtualization_bar.visible = bool(model.get("virtualized", false))
+	page_label.text = "Страница %d из %d · показано %d из %d" % [
+		page_index + 1,
+		page_count,
+		int(model.get("rendered_cell_count", 0)),
+		int(model.get("projected_total_count", 0)),
+	]
+	previous_page_button.disabled = page_index <= 0
+	next_page_button.disabled = page_index >= page_count - 1
+
+
+func _request_previous_page() -> void:
+	page_requested.emit(container_id, maxi(0, int(current_model.get("page_index", 0)) - 1))
+
+
+func _request_next_page() -> void:
+	page_requested.emit(container_id, int(current_model.get("page_index", 0)) + 1)
 
 
 func _update_role_copy() -> void:
@@ -296,6 +357,10 @@ func _forward_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> v
 
 func _forward_item_unhovered(item_id: String) -> void:
 	item_unhovered.emit(item_id)
+
+
+func _forward_item_selected(item_id: String) -> void:
+	item_selected.emit(item_id)
 
 
 func _forward_drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String) -> void:
