@@ -1,3 +1,4 @@
+- `checkpoints/2026-07-28_UI_I2_FIX1_RU.md` — исправление лимита pool, recent sort и SLOTS statistics.
 
 ## UI-I1 — рабочие операции инвентаря
 

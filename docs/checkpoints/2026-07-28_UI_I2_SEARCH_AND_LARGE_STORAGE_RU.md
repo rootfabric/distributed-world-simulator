@@ -1,7 +1,7 @@
 # Checkpoint UI-I2 — поиск и большие хранилища
 
 Дата: 28 июля 2026 года
-Checkpoint: `v16.3.5-ui-i2`
+Checkpoint: `v16.3.6-ui-i2-fix1`
 Feature-ветка: `feature/ui-i0-inventory-shell`
 
 ## Цель
@@ -14,13 +14,13 @@ Feature-ветка: `feature/ui-i0-inventory-shell`
 
 - поиск по display name, definition ID, tags и relation kind;
 - фильтры `ALL / RESOURCE / TOOL / CONTAINER / BATTERY / MOUNTABLE / CONSTRUCTION`;
-- view-only sort по имени, типу, количеству, массе, объёму и revision;
-- SLOTS сохраняют физическую раскладку, несовпадающие элементы только затемняются;
+- view-only sort по имени, типу, количеству, массе, объёму и sequence успешной операции;
+- SLOTS сохраняют физическую раскладку, несовпадающие элементы затемняются, а статистика считает только совпавшие занятые слоты;
 - persistent inspector показывает canonical relation, components, mass, volume и revision;
 - отдельный `InventoryPreferencesStore` в `user://planet_simulator/ui/`;
 - cell pool в `InventoryContainerPanel`;
-- page-window для более чем 120 projected aggregates;
-- не более 96 активных карточек на virtual page;
+- page-window для любого BULK projection более 96 агрегатов;
+- жёсткий предел BULK pool — 96 карточек, включая диапазон 97–120;
 - фильтрация и переход страниц переиспользуют существующий pool.
 
 ## Архитектурные ограничения

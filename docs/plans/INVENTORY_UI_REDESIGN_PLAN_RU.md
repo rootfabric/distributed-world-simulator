@@ -8,7 +8,7 @@
 
 - `UI-I0` — реализован в `feature/ui-i0-inventory-shell`, checkpoint `v16.3.1-ui-i0`;
 - `UI-I1` — принят, checkpoint `v16.3.4-ui-i1-fix1`;
-- `UI-I2` — реализован, checkpoint `v16.3.5-ui-i2`;
+- `UI-I2` — реализован, checkpoint `v16.3.6-ui-i2-fix1`;
 - checkpoints: `docs/checkpoints/2026-07-27_UI_I0_COMPONENT_INVENTORY_SHELL_RU.md` и `docs/checkpoints/2026-07-27_UI_I1_PLAYER_INVENTORY_INTERACTIONS_RU.md`.
 
 ## 1. Цель
@@ -281,7 +281,7 @@ Facade вызывает существующие методы `ItemGameplayContr
 | Малый | до 12 | 4 колонки, без scroll при возможности |
 | Средний | 13–36 | 6 колонок, вертикальный scroll |
 | Большой | 37–120 | 8 колонок, поиск и фильтры всегда видимы |
-| Склад | более 120 | recycled/virtualized cells, поиск обязателен |
+| Склад | более 96 результатов | recycled/virtualized cells, поиск обязателен |
 
 Панель внешнего контейнера существует только при активной container interaction
 session. Обычный `Tab` показывает только игрока и hotbar.
@@ -408,7 +408,7 @@ Batch-операции нельзя реализовывать как набор
 По количеству
 По массе
 По объёму
-Недавно изменённые
+Недавние операции
 ```
 
 Сортируется только `visible_items` во ViewModel. Канонический порядок контейнера

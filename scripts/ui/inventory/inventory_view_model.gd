@@ -17,8 +17,8 @@ const FILTER_BATTERY: String = "BATTERY"
 const FILTER_MOUNTABLE: String = "MOUNTABLE"
 const FILTER_CONSTRUCTION: String = "CONSTRUCTION"
 
-const VIRTUALIZATION_THRESHOLD: int = 120
 const VIRTUAL_PAGE_SIZE: int = 96
+const VIRTUALIZATION_THRESHOLD: int = VIRTUAL_PAGE_SIZE
 
 const FILTER_TAGS := {
 	FILTER_RESOURCE: ["resource", "rock", "ore", "material"],
@@ -37,6 +37,8 @@ var sort_mode: String = SORT_CONTAINER_ORDER
 var selected_item_id: String = ""
 var pending_operation: Dictionary = {}
 var container_pages: Dictionary = {}
+var _activity_sequences: Dictionary = {}
+var _activity_ledger_next_sequence: int = -1
 
 
 func setup(controller) -> void:
@@ -147,6 +149,7 @@ func build_container(container_id: String, selected_slot_index: int = -1) -> Dic
 	var container = gameplay_controller.get_container(container_id)
 	if container == null:
 		return {}
+	_refresh_activity_sequences()
 	var all_cells: Array[Dictionary] = []
 	var matched_count := 0
 	if container.is_slot_container():
@@ -160,7 +163,7 @@ func build_container(container_id: String, selected_slot_index: int = -1) -> Dic
 				container.get_slot_rule(slot_index)
 			)
 			cell["projection_match"] = _matches_projection(cell)
-			if bool(cell.projection_match) or item_id.is_empty():
+			if not item_id.is_empty() and bool(cell.projection_match):
 				matched_count += 1
 			all_cells.append(cell)
 	else:
@@ -172,8 +175,8 @@ func build_container(container_id: String, selected_slot_index: int = -1) -> Dic
 		_sort_cells(all_cells)
 		matched_count = all_cells.size()
 
-	var projected_total := all_cells.size()
-	var virtualized := projected_total > VIRTUALIZATION_THRESHOLD
+	var projected_total := matched_count if container.is_slot_container() else all_cells.size()
+	var virtualized: bool = not container.is_slot_container() and projected_total > VIRTUALIZATION_THRESHOLD
 	var page_count := maxi(1, ceili(float(projected_total) / float(VIRTUAL_PAGE_SIZE)))
 	var requested_page := int(container_pages.get(container_id, 0))
 	var page_index := clampi(requested_page, 0, page_count - 1)
@@ -207,9 +210,10 @@ func build_container(container_id: String, selected_slot_index: int = -1) -> Dic
 		"columns": _columns_for_capacity(visual_capacity),
 		"cells": cells,
 		"rendered_cell_count": cells.size(),
+		"physical_cell_count": all_cells.size(),
 		"projected_total_count": projected_total,
 		"matched_count": matched_count,
-		"unfiltered_count": int(container.slot_count) if container.is_slot_container() else used_entries,
+		"unfiltered_count": used_entries,
 		"virtualized": virtualized,
 		"page_index": page_index,
 		"page_count": page_count,
@@ -281,6 +285,7 @@ func _build_cell(
 		"display_name": display_name,
 		"quantity": quantity,
 		"revision": revision,
+		"activity_sequence": int(_activity_sequences.get(item_id, 0)),
 		"tags": tags,
 		"icon_color": icon_color,
 		"unit_mass_kg": unit_mass_kg,
@@ -351,14 +356,48 @@ func _sort_cells(cells: Array[Dictionary]) -> void:
 			)
 		SORT_RECENT:
 			cells.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-				var revision_a := int(a.get("revision", -1))
-				var revision_b := int(b.get("revision", -1))
-				if revision_a == revision_b:
+				var sequence_a := int(a.get("activity_sequence", 0))
+				var sequence_b := int(b.get("activity_sequence", 0))
+				if sequence_a == sequence_b:
 					return String(a.get("item_id", "")) < String(b.get("item_id", ""))
-				return revision_a > revision_b
+				return sequence_a > sequence_b
 			)
 		_:
 			pass
+
+
+func _refresh_activity_sequences() -> void:
+	if gameplay_controller == null or not gameplay_controller.domain.has("operations"):
+		_activity_sequences.clear()
+		_activity_ledger_next_sequence = -1
+		return
+	var ledger = gameplay_controller.domain.operations
+	var next_sequence := int(ledger.next_sequence)
+	if next_sequence == _activity_ledger_next_sequence:
+		return
+	_activity_ledger_next_sequence = next_sequence
+	_activity_sequences.clear()
+	var snapshot: Dictionary = ledger.to_dict()
+	for record_value in Array(snapshot.get("records", [])):
+		var record := Dictionary(record_value)
+		if String(record.get("status", "")) != "SUCCEEDED":
+			continue
+		var sequence := int(record.get("sequence", 0))
+		var related_ids := PackedStringArray()
+		_append_activity_id(related_ids, String(record.get("aggregate_id", "")))
+		var result := Dictionary(record.get("result", {}))
+		for key in ["item_id", "source_item_id", "target_item_id", "result_item_id", "new_item_id", "merged_into_item_id"]:
+			_append_activity_id(related_ids, String(result.get(key, "")))
+		for merged_id_value in Array(result.get("merged_into_item_ids", [])):
+			_append_activity_id(related_ids, String(merged_id_value))
+		for item_id in related_ids:
+			_activity_sequences[item_id] = maxi(int(_activity_sequences.get(item_id, 0)), sequence)
+
+
+func _append_activity_id(target: PackedStringArray, item_id: String) -> void:
+	if item_id.is_empty() or target.has(item_id):
+		return
+	target.append(item_id)
 
 
 func _visual_capacity(container) -> int:

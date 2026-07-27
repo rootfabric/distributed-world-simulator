@@ -572,7 +572,7 @@ func _setup_projection_toolbar() -> void:
 		["По количеству", InventoryViewModel.SORT_QUANTITY],
 		["По массе", InventoryViewModel.SORT_MASS],
 		["По объёму", InventoryViewModel.SORT_VOLUME],
-		["Недавно изменённые", InventoryViewModel.SORT_RECENT],
+		["Недавние операции", InventoryViewModel.SORT_RECENT],
 	]:
 		sort_option.add_item(String(entry[0]))
 		sort_option.set_item_metadata(sort_option.item_count - 1, String(entry[1]))
@@ -658,11 +658,11 @@ func _save_preferences() -> void:
 
 
 func _update_projection_summary(player_model: Dictionary, external_model: Dictionary) -> void:
-	var total := int(player_model.get("projected_total_count", 0))
-	var source_total := int(player_model.get("used_entries", 0))
+	var total := int(player_model.get("matched_count", player_model.get("projected_total_count", 0)))
+	var source_total := int(player_model.get("unfiltered_count", player_model.get("used_entries", 0)))
 	if not external_model.is_empty():
-		total += int(external_model.get("projected_total_count", 0))
-		source_total += int(external_model.get("used_entries", 0))
+		total += int(external_model.get("matched_count", external_model.get("projected_total_count", 0)))
+		source_total += int(external_model.get("unfiltered_count", external_model.get("used_entries", 0)))
 	var parts := PackedStringArray()
 	parts.append("Показано %d из %d агрегатов" % [total, source_total])
 	if not view_model.search_query.is_empty():

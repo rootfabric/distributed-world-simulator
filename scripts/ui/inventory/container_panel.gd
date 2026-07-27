@@ -13,6 +13,7 @@ signal drop_preview_rejected(target_container_id: String, target_slot_index: int
 signal page_requested(container_id: String, page_index: int)
 
 const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
+const MAX_BULK_POOL_SIZE: int = 96
 
 @onready var title_label: Label = %TitleLabel
 @onready var metadata_label: Label = %MetadataLabel
@@ -64,6 +65,11 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 	title_label.text = String(model.get("display_name", container_id))
 	metadata_label.text = _format_metadata(model)
 	var cells: Array = Array(model.get("cells", []))
+	var is_slot_container := bool(model.get("is_slot_container", false))
+	if not is_slot_container:
+		_trim_pool_size(MAX_BULK_POOL_SIZE)
+		if cells.size() > MAX_BULK_POOL_SIZE:
+			cells = cells.slice(0, MAX_BULK_POOL_SIZE)
 	_ensure_pool_size(cells.size())
 	for index in range(grid.get_child_count()):
 		var cell = grid.get_child(index)
@@ -238,6 +244,13 @@ func _ensure_pool_size(required: int) -> void:
 		var cell = ItemCellScene.instantiate()
 		_wire_cell(cell)
 		grid.add_child(cell)
+
+
+func _trim_pool_size(maximum: int) -> void:
+	while grid.get_child_count() > maximum:
+		var cell = grid.get_child(grid.get_child_count() - 1)
+		grid.remove_child(cell)
+		cell.queue_free()
 
 
 func _wire_cell(cell) -> void:
