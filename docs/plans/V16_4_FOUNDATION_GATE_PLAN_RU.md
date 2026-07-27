@@ -2,22 +2,24 @@
 
 # Статус реализации
 
-Checkpoint `v16.3.1-foundation-n0-part1`:
+Checkpoint `v16.3.2-foundation-lifecycle-part2-fix2`:
 
 - [x] pure-domain runtime roles;
 - [x] launch option parser;
 - [x] runtime descriptor;
 - [x] launch context передаётся runtime;
 - [x] authority transfer сохраняет monotonic revision;
-- [ ] simulation-server без presentation;
-- [ ] SimulationKernel boundary;
-- [ ] LifecycleCoordinator;
-- [ ] terrain shutdown barrier;
-- [ ] isolated user data;
+- [x] LifecycleCoordinator процесса;
+- [x] graceful shutdown и command fencing;
+- [x] terrain stop/drain barrier;
+- [x] synchronous world-runtime disposal;
+- [x] isolated process user data в Python harness;
+- [x] simulation-server без активных UI, камер и local input;
+- [ ] физическое разделение SimulationKernel/PresentationHost;
 - [ ] WorldEntityAggregate;
-- [ ] entity/chunk lifecycle.
+- [ ] entity/chunk lifecycle Dormant/Warm/Active/Unloading.
 
-Foundation Gate остаётся незавершённым. Следующий блок — lifecycle и shutdown.
+Foundation Gate остаётся незавершённым. Lifecycle Part 2 fix2 закрывает terminal world-load fence после failed shutdown; следующий core-блок — canonical WorldEntityAggregate и формальная граница SimulationKernel/PresentationHost.
 
 ## Цель
 

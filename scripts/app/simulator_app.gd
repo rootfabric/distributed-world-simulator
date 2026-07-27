@@ -10,10 +10,12 @@ const SimulationClockScript = preload(
 )
 const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
 const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
+const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
+const LifecycleCoordinatorScript = preload("res://scripts/runtime/lifecycle_coordinator.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.3.1-foundation-n0-part1-fix3"
-const FOUNDATION_BUILD_ID: String = "foundation-n0-contracts-part1"
+const FOUNDATION_CHECKPOINT: String = "v16.3.2-foundation-lifecycle-part2-fix2"
+const FOUNDATION_BUILD_ID: String = "foundation-lifecycle-failed-world-load-fence-fix2"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -52,13 +54,47 @@ var launch_option_errors: Array[String] = []
 var _cli_test_scope: String = ""
 var _loading_world: bool = false
 var _windowed_resolution_index: int = 2
+var lifecycle_coordinator
+var presentation_enabled: bool = true
+var local_input_enabled: bool = true
+var _shutdown_in_progress: bool = false
+var _requested_exit_code: int = 0
+var _shutdown_reason: String = ""
+var _last_runtime_drain: Dictionary = {}
+var _role_policy_removed_nodes: int = 0
+var _detached_presentation_nodes: Array[Node] = []
+var _emergency_shutdown_scheduled: bool = false
+var _runtime_release_blocked: bool = false
+var _process_quit_handler: Callable
 
 
 func _ready() -> void:
 	name = "SimulatorApp"
 	get_tree().auto_accept_quit = false
+	launch_options = _parse_launch_options()
+	if not launch_option_errors.is_empty():
+		for error_message in launch_option_errors:
+			push_error(error_message)
+		get_tree().quit(2)
+		return
+	var runtime_role: String = String(
+		launch_options.get("role", RuntimeRoleScript.OFFLINE)
+	)
+	presentation_enabled = RuntimeRoleScript.presentation_enabled(runtime_role)
+	local_input_enabled = RuntimeRoleScript.accepts_local_input(runtime_role)
+	set_process_unhandled_input(local_input_enabled)
+	# Controller code still queries action names in server mode. Registering the
+	# actions does not enable local input; input callbacks remain disabled.
 	_ensure_input_actions()
-	_sync_windowed_resolution_index()
+	if presentation_enabled:
+		_sync_windowed_resolution_index()
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	lifecycle_coordinator = LifecycleCoordinatorScript.new()
+	lifecycle_coordinator.setup({
+		"node_id": String(launch_options.get("node_id", "local-offline")),
+	})
 
 	simulation_clock = SimulationClockScript.new()
 	simulation_clock.setup({
@@ -82,24 +118,19 @@ func _ready() -> void:
 	world_host.name = "WorldHost"
 	add_child(world_host)
 
-	developer_console = DeveloperConsoleScript.new()
-	developer_console.name = "DeveloperConsole"
-	add_child(developer_console)
-	developer_console.setup(command_registry, self)
-	developer_console.set_completion_provider(Callable(self, "get_console_completions"))
-	developer_console.console_visibility_changed.connect(_on_console_visibility_changed)
-	system_menu = SystemMenuScript.new()
-	system_menu.name = "SystemMenu"
-	add_child(system_menu)
-	system_menu.setup(self, world_catalog)
-	system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
+	if presentation_enabled:
+		developer_console = DeveloperConsoleScript.new()
+		developer_console.name = "DeveloperConsole"
+		add_child(developer_console)
+		developer_console.setup(command_registry, self)
+		developer_console.set_completion_provider(Callable(self, "get_console_completions"))
+		developer_console.console_visibility_changed.connect(_on_console_visibility_changed)
+		system_menu = SystemMenuScript.new()
+		system_menu.name = "SystemMenu"
+		add_child(system_menu)
+		system_menu.setup(self, world_catalog)
+		system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
 
-	launch_options = _parse_launch_options()
-	if not launch_option_errors.is_empty():
-		for error_message in launch_option_errors:
-			push_error(error_message)
-		get_tree().quit(2)
-		return
 	_cli_test_scope = String(launch_options.get("run_tests", ""))
 	var requested_world: String = String(launch_options.get("world", ""))
 	if requested_world.is_empty():
@@ -114,9 +145,22 @@ func _ready() -> void:
 	var load_result: Dictionary = load_world(requested_world, false)
 	if not bool(load_result.get("success", false)):
 		push_error(String(load_result.get("output", "World load failed")))
+		lifecycle_coordinator.mark_failed(String(load_result.get("output", "World load failed")))
 		if not _cli_test_scope.is_empty():
 			get_tree().quit(1)
 		return
+	lifecycle_coordinator.mark_running("world_ready")
+	_print_lifecycle_event("node_ready", {
+		"world_id": current_world_id,
+		"runtime_role": runtime_role,
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"active_presentation_nodes": count_runtime_presentation_nodes(),
+		"suppressed_presentation_roots": _role_policy_removed_nodes,
+	})
+	var shutdown_after_ms: int = int(launch_options.get("shutdown_after_ms", 0))
+	if shutdown_after_ms > 0:
+		_schedule_shutdown(shutdown_after_ms)
 	if not _cli_test_scope.is_empty():
 		call_deferred("_run_cli_tests")
 
@@ -127,6 +171,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not local_input_enabled or _shutdown_in_progress:
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10 and not event.shift_pressed:
 		if developer_console != null and developer_console.is_open():
 			developer_console.set_open(false)
@@ -228,6 +274,25 @@ func get_hotkey_command_candidates(keycode: int) -> Array[String]:
 
 
 func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
+	# A failed drain is a hard release fence. It must remain authoritative even
+	# when the worker finishes later: only the emergency shutdown path may retry
+	# the drain and clear the fence. UI callers (including SystemMenu) call this
+	# method directly, so the guard belongs at the world-loading boundary.
+	if _runtime_release_blocked:
+		return _failure(
+			"RUNTIME_RELEASE_BLOCKED",
+			"Загрузка мира запрещена: предыдущий runtime не прошёл drain barrier"
+		)
+	if (
+		lifecycle_coordinator != null
+		and lifecycle_coordinator.state == LifecycleCoordinatorScript.FAILED
+	):
+		return _failure(
+			"LIFECYCLE_FAILED",
+			"Загрузка мира запрещена после отказа lifecycle; требуется аварийное завершение процесса"
+		)
+	if _shutdown_in_progress:
+		return _failure("RUNTIME_DRAINING", "Процесс уже завершает работу")
 	if _loading_world:
 		return _failure("WORLD_LOAD_IN_PROGRESS", "Уже выполняется загрузка мира")
 	var normalized: String = world_id.strip_edges().to_lower()
@@ -256,11 +321,23 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		)
 
 	_loading_world = true
-	if remember_current and not current_world_id.is_empty() and current_world_id != normalized:
-		world_history.append(current_world_id)
+	var previous_world_id: String = current_world_id
+	var unload_result: Dictionary = _unload_current_world("world_switch")
+	if not bool(unload_result.get("success", false)):
+		runtime.free()
+		_loading_world = false
+		var blocked_result: Dictionary = unload_result.duplicate(true)
+		blocked_result["target_world_id"] = normalized
+		blocked_result["output"] = (
+			"Переключение на %s отменено: предыдущий runtime не прошёл drain barrier"
+			% normalized
+		)
+		blocked_result["message"] = blocked_result["output"]
+		return blocked_result
+	if remember_current and not previous_world_id.is_empty() and previous_world_id != normalized:
+		world_history.append(previous_world_id)
 		if world_history.size() > 16:
 			world_history.pop_front()
-	_unload_current_world()
 
 	var context: Dictionary = {
 		"simulator_app": self,
@@ -278,9 +355,14 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 			definition.get("local_authority_id", "local-process")
 		),
 		"runtime_role": String(launch_options.get("role", "offline")),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
 		"node_id": String(launch_options.get("node_id", "local-offline")),
 		"launch_options": launch_options.duplicate(true),
 		"runtime_descriptor": runtime_descriptor.duplicate(true),
+		"lifecycle": lifecycle_coordinator.create_snapshot() if lifecycle_coordinator != null else {},
+		"last_runtime_drain": _last_runtime_drain.duplicate(true),
+		"role_policy_removed_nodes": _role_policy_removed_nodes,
 	}
 	runtime.call("configure_runtime", context)
 	current_runtime = runtime
@@ -290,6 +372,7 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		runtime_descriptor["world_id"] = current_world_id
 	runtime.name = "WorldRuntime_%s" % normalized
 	world_host.add_child(runtime)
+	_apply_runtime_role_policy(runtime)
 	command_registry.clear_registration_errors()
 	test_registry.clear_registration_errors()
 	runtime.call("register_runtime_commands", command_registry, RUNTIME_COMMAND_OWNER)
@@ -346,17 +429,24 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 func _abort_runtime_load(world_id: String, errors: Array[Dictionary]) -> Dictionary:
 	command_registry.unregister_owner(RUNTIME_COMMAND_OWNER)
 	test_registry.unregister_owner(RUNTIME_TEST_OWNER)
-	if current_runtime != null and is_instance_valid(current_runtime):
-		current_runtime.call("prepare_for_unload")
-		if current_runtime.get_parent() != null:
-			current_runtime.get_parent().remove_child(current_runtime)
-		current_runtime.queue_free()
-	current_runtime = null
-	current_world_id = ""
-	current_world_definition.clear()
+	var dispose_result: Dictionary = _dispose_current_runtime(
+		"runtime_registration_failed"
+	)
 	if developer_console != null:
 		developer_console.set_world_context("-", "runtime не загружен")
 	_loading_world = false
+	if not bool(dispose_result.get("success", false)):
+		if lifecycle_coordinator != null:
+			lifecycle_coordinator.mark_failed(
+				"Registration abort could not drain runtime"
+			)
+		return {
+			"success": false,
+			"error_code": "RUNTIME_ABORT_DRAIN_FAILED",
+			"output": "Runtime регистрации удержан: drain barrier не подтверждён",
+			"message": "Runtime регистрации удержан: drain barrier не подтверждён",
+			"drain": dispose_result,
+		}
 	return _failure(
 		"RUNTIME_REGISTRATION_FAILED",
 		"Runtime %s не прошёл регистрацию команд/тестов: %s" % [
@@ -375,6 +465,13 @@ func load_previous_world() -> Dictionary:
 
 
 func execute_command(command_line: String) -> Dictionary:
+	var command_id: String = command_line.strip_edges().get_slice(" ", 0)
+	if (
+		lifecycle_coordinator != null
+		and not lifecycle_coordinator.accepts_commands()
+		and command_id != "app.quit"
+	):
+		return _failure("RUNTIME_DRAINING", "Процесс не принимает новые команды")
 	var result: Dictionary = command_registry.execute_line(command_line)
 	if developer_console != null and not developer_console.is_open():
 		var output: String = String(result.get("output", ""))
@@ -430,18 +527,75 @@ func _validate_runtime_contract(runtime: Node) -> PackedStringArray:
 	return missing
 
 
-func _unload_current_world() -> void:
-	if current_runtime != null and is_instance_valid(current_runtime):
-		current_runtime.call("prepare_for_unload")
+func _unload_current_world(reason: String = "world_unload") -> Dictionary:
+	var dispose_result: Dictionary = _dispose_current_runtime(reason)
+	if not bool(dispose_result.get("success", false)):
+		return dispose_result
 	command_registry.unregister_owner(RUNTIME_COMMAND_OWNER)
 	test_registry.unregister_owner(RUNTIME_TEST_OWNER)
-	if current_runtime != null and is_instance_valid(current_runtime):
-		if current_runtime.get_parent() != null:
-			current_runtime.get_parent().remove_child(current_runtime)
-		current_runtime.queue_free()
+	return dispose_result
+
+
+func _dispose_current_runtime(reason: String) -> Dictionary:
+	var runtime := current_runtime
+	if runtime == null or not is_instance_valid(runtime):
+		current_runtime = null
+		current_world_id = ""
+		current_world_definition.clear()
+		_runtime_release_blocked = false
+		_last_runtime_drain = {
+			"success": true,
+			"drained": true,
+			"details": {},
+			"reason": reason,
+		}
+		return _last_runtime_drain.duplicate(true)
+
+	if lifecycle_coordinator != null:
+		_last_runtime_drain = lifecycle_coordinator.drain_runtime(
+			runtime,
+			reason,
+			int(launch_options.get("shutdown_timeout_ms", 30000))
+		)
+	else:
+		runtime.call("prepare_for_unload")
+		_last_runtime_drain = {
+			"success": true,
+			"drained": true,
+			"details": {},
+		}
+
+	var drain_success: bool = bool(_last_runtime_drain.get("success", false))
+	var fully_drained: bool = bool(_last_runtime_drain.get("drained", false))
+	if not drain_success or not fully_drained:
+		_runtime_release_blocked = true
+		return {
+			"success": false,
+			"drained": fully_drained,
+			"error_code": "RUNTIME_DRAIN_FAILED",
+			"message": "Runtime retained because drain barrier was not confirmed",
+			"runtime_retained": true,
+			"world_id": current_world_id,
+			"drain": _last_runtime_drain.duplicate(true),
+		}
+
+	if runtime.get_parent() != null:
+		runtime.get_parent().remove_child(runtime)
+	runtime.free()
+	for detached in _detached_presentation_nodes:
+		if detached != null and is_instance_valid(detached):
+			detached.free()
+	_detached_presentation_nodes.clear()
 	current_runtime = null
 	current_world_id = ""
 	current_world_definition.clear()
+	_runtime_release_blocked = false
+	return {
+		"success": true,
+		"drained": true,
+		"runtime_retained": false,
+		"drain": _last_runtime_drain.duplicate(true),
+	}
 
 
 func _register_core_commands() -> void:
@@ -654,6 +808,8 @@ func _command_help(arguments: Array[String]) -> Dictionary:
 
 
 func _command_console_toggle(_arguments: Array[String]) -> Dictionary:
+	if developer_console == null:
+		return _failure("PRESENTATION_DISABLED", "Консоль недоступна в этой runtime-роли")
 	developer_console.set_open(not developer_console.is_open())
 	return {
 		"success": true,
@@ -664,11 +820,15 @@ func _command_console_toggle(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_console_open(_arguments: Array[String]) -> Dictionary:
+	if developer_console == null:
+		return _failure("PRESENTATION_DISABLED", "Консоль недоступна в этой runtime-роли")
 	developer_console.set_open(true)
 	return {"success": true, "output": "Консоль открыта"}
 
 
 func _command_console_close(_arguments: Array[String]) -> Dictionary:
+	if developer_console == null:
+		return _failure("PRESENTATION_DISABLED", "Консоль недоступна в этой runtime-роли")
 	developer_console.set_open(false)
 	return {"success": true, "output": "Консоль закрыта"}
 
@@ -689,8 +849,10 @@ func _command_input_bindings(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_input_mouse_toggle(_arguments: Array[String]) -> Dictionary:
+	if not local_input_enabled:
+		return _failure("LOCAL_INPUT_DISABLED", "Локальный ввод отключён для runtime-роли")
 	var capture: bool = Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
-	if developer_console.is_open():
+	if developer_console != null and developer_console.is_open():
 		developer_console.set_open(false)
 		capture = true
 	_set_runtime_mouse_capture(capture)
@@ -701,7 +863,9 @@ func _command_input_mouse_toggle(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_input_mouse_capture(_arguments: Array[String]) -> Dictionary:
-	if developer_console.is_open():
+	if not local_input_enabled:
+		return _failure("LOCAL_INPUT_DISABLED", "Локальный ввод отключён для runtime-роли")
+	if developer_console != null and developer_console.is_open():
 		developer_console.set_open(false)
 	_set_runtime_mouse_capture(true)
 	return {"success": true, "output": "Мышь захвачена"}
@@ -949,9 +1113,8 @@ func _command_console_clear(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_app_quit(_arguments: Array[String]) -> Dictionary:
-	_unload_current_world()
-	get_tree().quit(0)
-	return {"success": true, "output": "Завершение симулятора"}
+	call_deferred("request_graceful_shutdown", "command_app_quit", 0)
+	return {"success": true, "output": "Запущено корректное завершение симулятора"}
 
 
 func _test_world_catalog() -> Dictionary:
@@ -1136,7 +1299,287 @@ func _run_cli_tests() -> void:
 			"PASS" if bool(test_result.get("passed", false)) else "FAIL",
 			String(test_result.get("test_id", "unknown")),
 		])
-	get_tree().quit(0 if bool(result.get("passed", false)) else 1)
+	request_graceful_shutdown(
+		"cli_tests_complete",
+		0 if bool(result.get("passed", false)) else 1
+	)
+
+
+func request_graceful_shutdown(reason: String = "shutdown", exit_code: int = 0) -> Dictionary:
+	if _shutdown_in_progress:
+		return {
+			"success": true,
+			"already_in_progress": true,
+			"reason": _shutdown_reason,
+			"exit_code": _requested_exit_code,
+		}
+	var requested_reason: String = (
+		reason.strip_edges() if not reason.strip_edges().is_empty() else "shutdown"
+	)
+	if lifecycle_coordinator != null:
+		var begin_result: Dictionary = lifecycle_coordinator.begin_shutdown(
+			requested_reason,
+			exit_code
+		)
+		if not bool(begin_result.get("success", false)):
+			_schedule_emergency_shutdown(
+				"begin_shutdown_failed",
+				requested_reason,
+				exit_code,
+				begin_result
+			)
+			var failed_begin: Dictionary = begin_result.duplicate(true)
+			failed_begin["emergency_shutdown_scheduled"] = true
+			return failed_begin
+
+	_shutdown_in_progress = true
+	_shutdown_reason = requested_reason
+	_requested_exit_code = exit_code
+	_print_lifecycle_event("node_draining", {
+		"reason": _shutdown_reason,
+		"exit_code": _requested_exit_code,
+		"world_id": current_world_id,
+	})
+	call_deferred("_complete_graceful_shutdown")
+	return {"success": true, "reason": _shutdown_reason, "exit_code": _requested_exit_code}
+
+
+func _complete_graceful_shutdown() -> void:
+	var unload_result: Dictionary = _unload_current_world(
+		"process_shutdown:%s" % _shutdown_reason
+	)
+	if not bool(unload_result.get("success", false)):
+		if lifecycle_coordinator != null:
+			lifecycle_coordinator.mark_failed(
+				"Runtime drain barrier failed during shutdown"
+			)
+		_print_lifecycle_event("node_shutdown_failed", {
+			"reason": _shutdown_reason,
+			"exit_code": _requested_exit_code,
+			"failure_stage": "runtime_drain",
+			"runtime_retained": true,
+			"will_quit": false,
+			"unload": unload_result,
+			"lifecycle": lifecycle_coordinator.create_snapshot() if lifecycle_coordinator != null else {},
+		})
+		_shutdown_in_progress = false
+		return
+
+	if lifecycle_coordinator != null:
+		var stopping_result: Dictionary = lifecycle_coordinator.mark_stopping(
+			"runtime_drained"
+		)
+		if not bool(stopping_result.get("success", false)):
+			_complete_emergency_shutdown(
+				"mark_stopping_failed",
+				_shutdown_reason,
+				_requested_exit_code,
+				stopping_result
+			)
+			return
+		var stopped_result: Dictionary = lifecycle_coordinator.mark_stopped(
+			"runtime_drained"
+		)
+		if not bool(stopped_result.get("success", false)):
+			_complete_emergency_shutdown(
+				"mark_stopped_failed",
+				_shutdown_reason,
+				_requested_exit_code,
+				stopped_result
+			)
+			return
+	_print_lifecycle_event("node_stopped", {
+		"reason": _shutdown_reason,
+		"exit_code": _requested_exit_code,
+		"last_runtime_drain": _last_runtime_drain,
+		"lifecycle": lifecycle_coordinator.create_snapshot() if lifecycle_coordinator != null else {},
+	})
+	_quit_process(_requested_exit_code)
+
+
+func _schedule_emergency_shutdown(
+	trigger: String,
+	reason: String,
+	exit_code: int,
+	failure: Dictionary
+) -> void:
+	if _emergency_shutdown_scheduled:
+		return
+	_emergency_shutdown_scheduled = true
+	call_deferred(
+		"_complete_emergency_shutdown",
+		trigger,
+		reason,
+		exit_code,
+		failure.duplicate(true)
+	)
+
+
+func _complete_emergency_shutdown(
+	trigger: String,
+	reason: String,
+	exit_code: int,
+	failure: Dictionary
+) -> Dictionary:
+	_emergency_shutdown_scheduled = false
+	_shutdown_in_progress = true
+	_shutdown_reason = reason
+	_requested_exit_code = exit_code if exit_code != 0 else 1
+	var cleanup_result: Dictionary = _unload_current_world(
+		"emergency_shutdown:%s" % trigger
+	)
+	var cleanup_safe: bool = bool(cleanup_result.get("success", false))
+	if lifecycle_coordinator != null and lifecycle_coordinator.state != LifecycleCoordinatorScript.FAILED:
+		lifecycle_coordinator.mark_failed(
+			"Emergency shutdown: %s" % trigger
+		)
+	_print_lifecycle_event("node_shutdown_failed", {
+		"reason": _shutdown_reason,
+		"exit_code": _requested_exit_code,
+		"failure_stage": trigger,
+		"failure": failure,
+		"cleanup": cleanup_result,
+		"runtime_retained": not cleanup_safe,
+		"will_quit": cleanup_safe,
+		"lifecycle": lifecycle_coordinator.create_snapshot() if lifecycle_coordinator != null else {},
+	})
+	if not cleanup_safe:
+		_runtime_release_blocked = true
+		_shutdown_in_progress = false
+		return {
+			"success": false,
+			"error_code": "EMERGENCY_DRAIN_FAILED",
+			"runtime_retained": true,
+			"cleanup": cleanup_result,
+		}
+	_quit_process(_requested_exit_code)
+	return {
+		"success": true,
+		"exit_code": _requested_exit_code,
+		"runtime_retained": false,
+	}
+
+
+func set_process_quit_handler_for_tests(handler: Callable) -> void:
+	_process_quit_handler = handler
+
+
+func _quit_process(exit_code: int) -> void:
+	if _process_quit_handler.is_valid():
+		_process_quit_handler.call(exit_code)
+		return
+	var scene_tree := get_tree()
+	if scene_tree != null:
+		scene_tree.quit(exit_code)
+
+
+func _schedule_shutdown(delay_ms: int) -> void:
+	var delay_seconds: float = maxf(float(delay_ms) / 1000.0, 0.001)
+	var timer := get_tree().create_timer(delay_seconds)
+	timer.timeout.connect(func() -> void:
+		request_graceful_shutdown("scheduled_shutdown", 0)
+	)
+
+
+func _apply_runtime_role_policy(runtime: Node) -> void:
+	if runtime == null or not is_instance_valid(runtime):
+		return
+	if not local_input_enabled:
+		_disable_local_input_recursive(runtime)
+	if presentation_enabled:
+		return
+	var presentation_roots: Array[Node] = []
+	_collect_presentation_roots(runtime, presentation_roots, false)
+	for node in presentation_roots:
+		if node == null or not is_instance_valid(node):
+			continue
+		_suppress_presentation_node(node)
+		_role_policy_removed_nodes += 1
+
+
+func _suppress_presentation_node(node: Node) -> void:
+	node.process_mode = Node.PROCESS_MODE_DISABLED
+	if node is Camera3D:
+		node.current = false
+		if node.get_parent() != null:
+			node.get_parent().remove_child(node)
+		_detached_presentation_nodes.append(node)
+	elif node is Camera2D:
+		node.enabled = false
+		if node.get_parent() != null:
+			node.get_parent().remove_child(node)
+		_detached_presentation_nodes.append(node)
+	elif node is Control:
+		node.visible = false
+	elif node is CanvasLayer:
+		node.visible = false
+	elif node is Window:
+		node.visible = false
+	elif node is AudioStreamPlayer or node is AudioStreamPlayer2D or node is AudioStreamPlayer3D:
+		node.stop()
+
+
+func _disable_local_input_recursive(node: Node) -> void:
+	node.set_process_input(false)
+	node.set_process_unhandled_input(false)
+	node.set_process_unhandled_key_input(false)
+	node.set_process_shortcut_input(false)
+	for child in node.get_children():
+		_disable_local_input_recursive(child)
+
+
+func _collect_presentation_roots(
+	node: Node,
+	output: Array[Node],
+	parent_is_presentation: bool
+) -> void:
+	var is_presentation: bool = (
+		node is Control
+		or node is CanvasLayer
+		or node is Camera2D
+		or node is Camera3D
+		or node is AudioStreamPlayer
+		or node is AudioStreamPlayer2D
+		or node is AudioStreamPlayer3D
+		or node is Window
+	)
+	if is_presentation and not parent_is_presentation:
+		output.append(node)
+		return
+	for child in node.get_children():
+		_collect_presentation_roots(child, output, parent_is_presentation or is_presentation)
+
+
+func count_runtime_presentation_nodes() -> int:
+	if current_runtime == null or not is_instance_valid(current_runtime):
+		return 0
+	var nodes: Array[Node] = []
+	_collect_presentation_roots(current_runtime, nodes, false)
+	var active_count: int = 0
+	for node in nodes:
+		if node == null or not is_instance_valid(node):
+			continue
+		if node is Camera3D and node.current:
+			active_count += 1
+		elif node is Camera2D and node.enabled:
+			active_count += 1
+		elif node is Control and node.visible:
+			active_count += 1
+		elif node is CanvasLayer and node.visible:
+			active_count += 1
+		elif node is Window and node.visible:
+			active_count += 1
+	return active_count
+
+
+func _print_lifecycle_event(event_name: String, data: Dictionary) -> void:
+	var payload: Dictionary = data.duplicate(true)
+	payload["event"] = event_name
+	payload["checkpoint"] = FOUNDATION_CHECKPOINT
+	payload["build_id"] = FOUNDATION_BUILD_ID
+	payload["node_id"] = String(launch_options.get("node_id", "local-offline"))
+	payload["ticks_msec"] = Time.get_ticks_msec()
+	print("[lifecycle] %s" % JSON.stringify(payload, "", true, true))
 
 
 func _format_command_list(commands: Array[Dictionary]) -> String:
@@ -1185,17 +1628,15 @@ func _failure(code: String, message: String) -> Dictionary:
 
 
 func _exit_tree() -> void:
+	if _runtime_release_blocked:
+		return
 	if current_runtime != null and is_instance_valid(current_runtime):
-		current_runtime.call("prepare_for_unload")
+		_dispose_current_runtime("exit_tree")
 
 
 func _notification(what: int) -> void:
-	if what != NOTIFICATION_WM_CLOSE_REQUEST:
-		return
-	_unload_current_world()
-	var scene_tree := get_tree()
-	if scene_tree != null:
-		scene_tree.quit()
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		request_graceful_shutdown("window_close", 0)
 
 
 func _ensure_input_actions() -> void:

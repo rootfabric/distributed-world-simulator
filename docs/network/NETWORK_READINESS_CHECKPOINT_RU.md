@@ -1,15 +1,15 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 27 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.3.0-r2-inventory-ux`
-**Фактическая сетевая стадия:** до `N0`
+**Текущий проверенный checkpoint:** `v16.3.2-foundation-lifecycle-part2-fix2`
+**Фактическая сетевая стадия:** N0 в работе, transport до N1 не начат
 
 ## 1. Проверенная база
 
 Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- 34 обязательных headless test scripts;
+- 40 обязательных headless test scripts;
 - 5 runtime-миров;
 - 133 global GDScript classes;
 - единый Simulator Core;
@@ -19,9 +19,7 @@
 - `SimulationClock`, `FrameGraph`, `SpatialRef`, `PartitionAddress v2`;
 - `authority_owner_id` и `authority_epoch` в локальном entity domain.
 
-Два тяжёлых Linux runtime-теста достигают `PASS`, но процесс может оставаться живым
-из-за фонового terrain worker. Для multi-process network lab это считается
-lifecycle-блокером, а не допустимым шумом.
+Lifecycle-блокер закрыт fail-closed: terminal `FAILED` и release fence запрещают обычную загрузку нового мира; `unified_runtime_boot`, `world_boot_matrix` и переключение мира при активной генерации завершают Godot после drain worker-а. Отдельный Python process test запускает `simulation-server` с изолированным профилем и проверяет последовательность `node_ready → node_draining → node_stopped`.
 
 ## 2. Что уже готово для повторного использования
 
@@ -66,39 +64,30 @@ Item Registry, Container Registry, Attachments и operation ledger сохран�
 
 Есть JSONL logging, runtime tests и JSON regression report.
 
-## 3. Что существует только в документации
+## 3. Состояние N0 и отсутствующие компоненты
 
-В коде пока отсутствуют:
+В коде уже есть runtime roles, строгие command/result/snapshot envelopes, canonical hashing, local JSON loopback, replay, epoch fencing и network contract tests.
 
-- network command/snapshot envelopes;
-- authority lease и route;
+Пока отсутствуют:
+
+- EntityDeltaEnvelope;
+- AuthorityLease и AuthorityRoute;
 - handoff ticket/state machine;
-- simulation-server/client roles;
 - ENet adapter;
-- Python process harness;
 - World Directory;
-- network tests.
+- golden fixtures и полная N0 acceptance matrix.
 
-Поэтому нельзя считать, что N0 уже начат или завершён.
+Поэтому N0 начат, но не завершён.
 
 ## 4. Foundation barriers
 
 ### A. Server-safe runtime
 
-- `--role=simulation-server`;
-- kernel без UI и камеры;
-- presentation отключаем;
-- отдельный `user://`;
-- JSONL `node_ready/node_stopped`;
-- корректный exit code 0.
+Выполнено в `v16.3.2`: `--role=simulation-server`, отсутствие активных UI/камер/input, изолированный process profile, lifecycle JSON и exit code 0. Полное физическое выделение SimulationKernel из scene presentation ещё впереди.
 
 ### B. Shutdown lifecycle
 
-- запрет новых работ;
-- cancel/await terrain workers;
-- persistence flush;
-- transport close;
-- process exit.
+Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. Transport close будет добавлен вместе с реальным transport.
 
 ### C. Unified WORLD aggregate
 

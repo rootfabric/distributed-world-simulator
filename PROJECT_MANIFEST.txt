@@ -1,4 +1,41 @@
-Planetary World v16.3.1-foundation-n0-part1-fix3
+Planetary World v16.3.2-foundation-lifecycle-part2-fix2
+
+
+Foundation lifecycle terminal world-load fence fix2:
+- load_world rejects while _runtime_release_blocked is set
+- load_world rejects terminal lifecycle FAILED even when no release fence remains
+- SystemMenu direct world loads pass through the same central boundary
+- a worker becoming drainable later does not reopen normal world switching
+- only emergency shutdown may retry drain and clear the release fence
+- tests/runtime/test_simulator_shutdown_failures.gd now covers the late-drain scenario
+- docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md
+
+
+Foundation lifecycle fail-closed fix1:
+- failed begin_shutdown schedules safe emergency cleanup instead of sticking the flag
+- runtime disposal is conditional on success=true and drained=true
+- failed drain retains current runtime, world identity and presentation nodes
+- world switching is cancelled when the old runtime does not cross the drain barrier
+- shutdown drain failure emits node_shutdown_failed and never publishes STOPPED
+- tests/runtime/test_simulator_shutdown_failures.gd
+- docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md
+
+
+Foundation lifecycle part 2 v16.3.2:
+- Runtime LifecycleCoordinator: CREATED/STARTING/RUNNING/DRAINING/STOPPING/STOPPED/FAILED
+- graceful app shutdown fences new commands before runtime disposal
+- terrain streaming rejects new requests after stop and drains active WorkerThreadPool task
+- world switching drains the previous runtime synchronously before freeing nodes
+- simulation-server creates no shell UI and leaves zero active presentation nodes
+- process launch options include scheduled shutdown and diagnostic timeout
+- process harness isolates HOME/XDG/APPDATA for a clean Godot user:// root
+- lifecycle JSON events: node_ready -> node_draining -> node_stopped
+- scripts/runtime/lifecycle_coordinator.gd
+- tests/runtime/test_lifecycle_coordinator.gd
+- tests/runtime/test_world_switch_during_generation.gd
+- tests/process/test_simulation_server_lifecycle.py
+- RUN_FOUNDATION_LIFECYCLE_TESTS.ps1
+- docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md
 
 
 Foundation/N0 canonical boundary hardening v16.3.1-foundation-n0-part1-fix3:

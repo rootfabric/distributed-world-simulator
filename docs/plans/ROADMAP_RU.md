@@ -403,16 +403,14 @@
 - UUID, revisions и operation ledger;
 - BULK/SLOTS containers, inventory, hotbar, pickup/drop/mount;
 - stack merge/split и contextual external containers;
-- 34 обязательных headless regression tests.
+- 39 обязательных headless regression tests.
 
 Полная архитектурная ревизия:
 
 - `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
 
-Сетевой слой пока не реализован: существующие network documents, ADR и JSON
-examples описывают будущую программу, но фактическая стадия проекта находится
-**до N0**.
+Сетевой транспорт пока не реализован. N0 уже начат: присутствуют строгие command/result/snapshot envelopes, canonical JSON, loopback gateway, replay и authority fencing. Leases, routes, handoff state machine и реальные сокеты ещё отсутствуют.
 
 ## Следующий главный приоритет: v16.4 Foundation Gate + N0
 
@@ -436,11 +434,11 @@ runtime без настоящих сетевых сокетов.
 1. runtime roles `offline/client/simulation-server/bot-client`;
 2. `SimulationKernel` без UI и камеры;
 3. подключаемый `PresentationHost`;
-4. shutdown barrier для terrain workers и persistence;
+4. shutdown barrier для terrain workers и persistence — выполнено в `v16.3.2`;
 5. формальные lifecycle states `Dormant/Warm/Active/Unloading`;
 6. единый `WorldEntityAggregate`;
 7. монотонная revision при authority transfer;
-8. изолированный `user://` на каждый процесс/тест.
+8. изолированный `user://` на каждый process test — выполнено в `v16.3.2`.
 
 Подробный план:
 `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.

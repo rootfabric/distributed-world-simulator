@@ -13,8 +13,8 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
-		"checkpoint": String(context.get("checkpoint", "v16.3.1-foundation-n0-part1-fix3")),
-		"build_id": String(context.get("build_id", "foundation-n0-contracts-part1")),
+		"checkpoint": String(context.get("checkpoint", "v16.3.2-foundation-lifecycle-part2-fix2")),
+		"build_id": String(context.get("build_id", "foundation-lifecycle-failed-world-load-fence-fix2")),
 		"project_name": String(ProjectSettings.get_setting(
 			"application/config/name",
 			"PlanetSimulator"
@@ -25,7 +25,10 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 		"instance_id": String(normalized.get("instance_id", "persistent")),
 		"space_id": String(normalized.get("space_id", "sol")),
 		"authority_region": String(normalized.get("authority_region", "")),
-		"user_data_dir": String(normalized.get("user_data_dir", "")),
+		"requested_user_data_dir": String(normalized.get("user_data_dir", "")),
+		"resolved_user_data_dir": OS.get_user_data_dir(),
+		"shutdown_after_ms": int(normalized.get("shutdown_after_ms", 0)),
+		"shutdown_timeout_ms": int(normalized.get("shutdown_timeout_ms", 30000)),
 		"process_id": OS.get_process_id(),
 		"presentation_enabled": RuntimeRoleScript.presentation_enabled(role),
 		"local_input_enabled": RuntimeRoleScript.accepts_local_input(role),

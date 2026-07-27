@@ -1,10 +1,24 @@
-## v16.3.0 — contextual inventory UX and dual-fill flashlight
+## v16.3.2 fix2 — terminal lifecycle world-load fence
 
-Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
+Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`.
+
+## v16.3.2 fix1 — Foundation lifecycle fail-closed
+
+Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md`.
+
+## v16.3.2 — Foundation lifecycle part 2
+
+Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 # Документация Planet Simulator
 
 ## Чекпоинты
+
+- `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md` — terminal FAILED и release fence запрещают обычную загрузку мира после failed shutdown.
+
+- `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md` — fail-closed drain barrier и аварийное завершение после отказа begin_shutdown.
+
+- `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md` — LifecycleCoordinator, graceful shutdown, terrain drain и simulation-server process test.
 
 - `checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md` — runtime role contracts, N0 envelopes, loopback и authority fencing.
 - `checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md` — архитектурная ревизия и решение Foundation Gate + N0.

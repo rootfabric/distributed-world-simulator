@@ -17,6 +17,8 @@ static func defaults() -> Dictionary:
 		"authority_region": "",
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
+		"shutdown_after_ms": 0,
+		"shutdown_timeout_ms": 30000,
 	}
 
 
@@ -53,6 +55,10 @@ static func parse(arguments) -> Dictionary:
 				options["authority_region"] = value
 			"user-data-dir":
 				options["user_data_dir"] = value
+			"shutdown-after-ms":
+				options["shutdown_after_ms"] = _parse_non_negative_int(value, key, errors)
+			"shutdown-timeout-ms":
+				options["shutdown_timeout_ms"] = _parse_positive_int(value, key, errors)
 			_:
 				errors.append("Unknown launch option: --%s" % key)
 	_validate(options, errors)
@@ -73,6 +79,28 @@ static func to_snapshot(options: Dictionary) -> Dictionary:
 		if options.has(key):
 			snapshot[key] = options[key]
 	return snapshot
+
+
+static func _parse_non_negative_int(value: String, key: String, errors: Array[String]) -> int:
+	if not value.is_valid_int():
+		errors.append("Launch option --%s must be an integer" % key)
+		return 0
+	var parsed: int = value.to_int()
+	if parsed < 0:
+		errors.append("Launch option --%s cannot be negative" % key)
+		return 0
+	return parsed
+
+
+static func _parse_positive_int(value: String, key: String, errors: Array[String]) -> int:
+	if not value.is_valid_int():
+		errors.append("Launch option --%s must be an integer" % key)
+		return 0
+	var parsed: int = value.to_int()
+	if parsed <= 0:
+		errors.append("Launch option --%s must be greater than zero" % key)
+		return 0
+	return parsed
 
 
 static func _validate(options: Dictionary, errors: Array[String]) -> void:

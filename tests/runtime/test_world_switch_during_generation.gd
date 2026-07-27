@@ -82,26 +82,29 @@ func _run() -> void:
 		"WorldHost must contain exactly one runtime after the switch."
 	)
 
-	var cancelled_snapshot: Dictionary = streamer.create_snapshot()
+	var drain_result: Dictionary = simulator._last_runtime_drain
+	var terrain_drain: Dictionary = drain_result.get("details", {}).get("terrain", {})
+	_assert(bool(drain_result.get("success", false)), "Runtime lifecycle drain failed.")
+	_assert(bool(drain_result.get("drained", false)), "Runtime was not fully drained.")
 	_assert(
-		int(cancelled_snapshot.get("cancelled_through_revision", 0)) >= request_id,
+		int(terrain_drain.get("cancelled_through_revision", 0)) >= request_id,
 		"Runtime unload did not fence the active terrain generation revision."
 	)
 	_assert(
-		String(cancelled_snapshot.get("state", "")) == "ACTIVE",
-		"Terrain streamer was not returned to a safe state during unload."
+		String(terrain_drain.get("state", "")) == "STOPPED",
+		"Terrain streamer did not reach STOPPED before runtime disposal."
 	)
 	_assert(
-		cancelled_snapshot.get("pending_request", {}).is_empty(),
-		"A pending terrain request survived runtime unload."
+		bool(terrain_drain.get("within_timeout", false)),
+		"Terrain streamer exceeded the configured drain timeout."
+	)
+	_assert(
+		not is_instance_valid(old_runtime),
+		"The previous planetary runtime survived synchronous drain/disposal."
 	)
 
 	await process_frame
 	await process_frame
-	_assert(
-		not is_instance_valid(old_runtime),
-		"The previous planetary runtime survived deferred unload."
-	)
 	_assert(
 		simulator.command_registry.has_command("playground.spawn_box"),
 		"Playground commands were not registered after the switch."

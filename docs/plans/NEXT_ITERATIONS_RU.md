@@ -5,7 +5,7 @@
 Текущий проверенный код:
 
 ```text
-v16.3.0-r2-inventory-ux
+v16.3.2-foundation-lifecycle-part2-fix2
 ```
 
 Основание решения:
@@ -24,8 +24,10 @@ v16.3.0-r2-inventory-ux
 | `v16.0.1-r2-fix1` | принято | полный Item Graph и player inventory |
 | `v16.1.0-r2-stack-controls` | принято | stack merge/split и BULK auto-stack |
 | `v16.2.0-r2-placement-debug-ui` | принято | placeable mount, admin UI, console, flashlight |
-| `v16.3.0-r2-inventory-ux` | текущий checkpoint | contextual containers, post-drop split, operation namespace, dual-fill light |
-| `v16.4 Foundation Gate` | следующий core-этап | server-safe kernel и lifecycle |
+| `v16.3.0-r2-inventory-ux` | принято | contextual containers, post-drop split, operation namespace, dual-fill light |
+| `v16.3.1-foundation-n0-part1-fix3` | принято | строгая N0 command/snapshot boundary и loopback |
+| `v16.3.2-foundation-lifecycle-part2-fix2` | текущий checkpoint | fail-closed shutdown, terrain drain и terminal world-load fence |
+| `v16.4 Foundation Gate` | в работе | следующий блок: SimulationKernel boundary, WorldEntityAggregate и entity/chunk lifecycle |
 | `N0` | следующий network-этап | versioned contracts без сокетов |
 | `R3.1` | параллельный gameplay | foundation и construction aggregate |
 | `N1` | после N0/Foundation | один server + bot client |
@@ -42,7 +44,7 @@ v16.3.0-r2-inventory-ux
 1. `RuntimeRole` и launch options;
 2. `SimulationKernel` без presentation;
 3. подключаемый `PresentationHost`;
-4. shutdown barrier;
+4. shutdown barrier — выполнено в v16.3.2;
 5. entity/chunk lifecycle;
 6. `WorldEntityAggregate`;
 7. revision monotonicity;

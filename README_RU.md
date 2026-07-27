@@ -1,12 +1,12 @@
-# Planetary World v16.3.1-foundation-n0-part1-fix3 — каноническая граница N0 fix3
+# Planetary World v16.3.2-foundation-lifecycle-part2-fix2 — terminal lifecycle world-load fence
 
-Версия сохраняет принятый R2 gameplay и добавляет первую часть Foundation/N0: runtime roles, launch options, versioned command/result/snapshot envelopes, JSON-safe canonicalization, local loopback gateway и монотонные revisions при authority transfer.
+Версия сохраняет принятый R2 gameplay и строгую сетевую границу N0, добавляя server-safe lifecycle: LifecycleCoordinator, graceful shutdown, остановку terrain workers, изолированные process profiles и режим simulation-server без активных UI, камер и локального ввода.
 
 Проект для Godot 4.7.1, собранного с `precision=double`.
 
 ## Архитектурный checkpoint после R2
 
-Ревизия `v16.3.1-foundation-n0-part1-fix3` начала сетевую ветку без сокетов и усилила строгую проверку сетевых DTO. Реализована первая часть контрактов, но Foundation Gate и N0 пока не закрыты. Следующий блок — lifecycle, isolated user data и terrain shutdown barrier.
+Ревизия `v16.3.2-foundation-lifecycle-part2-fix2` закрывает последний найденный fail-closed сценарий: после failed shutdown ни UI, ни прямой вызов `load_world()` не могут перезапустить симуляцию, даже если worker завершился позднее. Тяжёлые runtime-тесты теперь не только печатают `PASS`, но и завершают процесс после drain активного terrain worker. Полное разделение SimulationKernel/PresentationHost, единый WorldEntityAggregate и формальный Entity/Chunk Lifecycle остаются следующими частями Foundation Gate.
 
 Следующий основной пакет:
 
@@ -23,6 +23,9 @@ command/snapshot DTO, authority lease/handoff contracts и тесты без о�
 
 Документы:
 
+- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md`;
+- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX2_RU.md`;
@@ -110,6 +113,7 @@ Q/E        крен в режиме свободного полёта
 ```powershell
 .\PREPARE_R0_REPOSITORY.ps1
 .\RUN_WORLD_REGRESSION_TESTS.ps1
+.\RUN_FOUNDATION_LIFECYCLE_TESTS.ps1
 ```
 
 Runner сначала выполняет headless editor import/parse, затем запускает все

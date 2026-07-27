@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.3.1-foundation-n0-part1-fix3"
-const BUILD_ID: String = "foundation-n0-contracts-part1"
+const PROJECT_VERSION: String = "16.3.2-foundation-lifecycle-part2-fix2"
+const BUILD_ID: String = "foundation-lifecycle-failed-world-load-fence-fix2"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -70,6 +70,12 @@ var runtime_test_registry
 var runtime_world_definition: Dictionary = {}
 var runtime_command_owner: String = "active_world"
 var runtime_test_owner: String = "active_world"
+var runtime_role: String = "offline"
+var presentation_enabled: bool = true
+var local_input_enabled: bool = true
+var _runtime_stop_requested: bool = false
+var _runtime_drained: bool = false
+var _runtime_stop_reason: String = ""
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
@@ -97,6 +103,9 @@ func configure_runtime(context: Dictionary) -> void:
 		context.get("command_owner_id", runtime_command_owner)
 	)
 	runtime_test_owner = String(context.get("test_owner_id", runtime_test_owner))
+	runtime_role = String(context.get("runtime_role", runtime_role))
+	presentation_enabled = bool(context.get("presentation_enabled", true))
+	local_input_enabled = bool(context.get("local_input_enabled", true))
 
 
 func _ready() -> void:
@@ -116,6 +125,11 @@ func _ready() -> void:
 		"universe_id": runtime_universe_id,
 		"instance_id": runtime_instance_id,
 		"local_authority_id": local_authority_id,
+		"runtime_role": runtime_role,
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"stop_requested": _runtime_stop_requested,
+		"drained": _runtime_drained,
 		"simulation_clock": simulation_clock.create_snapshot() if simulation_clock != null else {},
 		"engine": Engine.get_version_info(),
 		"display_mode": get_display_mode_name(),
@@ -1404,18 +1418,61 @@ func register_runtime_tests(registry, owner_id: String) -> void:
 	}, Callable(self, "_runtime_command_contract_test"), owner_id)
 
 
-func prepare_for_unload() -> void:
-	if (
-		moon_world != null
-		and moon_world.get("terrain_streamer") != null
-		and moon_world.get("terrain_streamer").has_method("cancel_all")
-	):
-		moon_world.get("terrain_streamer").cancel_all("runtime_unload")
+func request_runtime_stop(reason: String = "runtime_unload") -> Dictionary:
+	if _runtime_stop_requested:
+		return {"success": true, "drained": _runtime_drained, "reason": _runtime_stop_reason}
+	_runtime_stop_requested = true
+	_runtime_stop_reason = reason
+	var streamer = _get_terrain_streamer()
+	var terrain_result: Dictionary = {"success": true, "drained": true}
+	if streamer != null and streamer.has_method("request_stop"):
+		var value = streamer.call("request_stop", reason)
+		if value is Dictionary:
+			terrain_result = value
+	return {
+		"success": bool(terrain_result.get("success", true)),
+		"drained": bool(terrain_result.get("drained", false)),
+		"terrain": terrain_result,
+		"reason": reason,
+	}
+
+
+func drain_runtime_stop(timeout_ms: int = 30000) -> Dictionary:
+	if _runtime_drained:
+		return {"success": true, "drained": true, "already_drained": true}
+	if not _runtime_stop_requested:
+		request_runtime_stop("runtime_drain")
+	var terrain_result: Dictionary = {"success": true, "drained": true}
+	var streamer = _get_terrain_streamer()
+	if streamer != null and streamer.has_method("drain_blocking"):
+		var value = streamer.call("drain_blocking", timeout_ms)
+		if value is Dictionary:
+			terrain_result = value
+	if not bool(terrain_result.get("success", true)):
+		return terrain_result
 	if persistence != null:
 		persistence.save_all_loaded_chunks()
 	if item_gameplay != null:
 		item_gameplay.save_graph()
 	_set_mouse_capture(false)
+	_runtime_drained = true
+	return {
+		"success": true,
+		"drained": true,
+		"terrain": terrain_result,
+		"reason": _runtime_stop_reason,
+	}
+
+
+func prepare_for_unload() -> void:
+	request_runtime_stop("runtime_unload")
+	drain_runtime_stop(30000)
+
+
+func _get_terrain_streamer():
+	if moon_world == null or not is_instance_valid(moon_world):
+		return null
+	return moon_world.get("terrain_streamer")
 
 
 func create_runtime_snapshot() -> Dictionary:

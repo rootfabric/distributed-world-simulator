@@ -89,6 +89,10 @@ var current_test_revision: int = -1
 var current_test_started_msec: int = 0
 var current_test_max_frame_ms: float = 0.0
 var last_test_result: String = "Не запускался"
+var accepting_requests: bool = true
+var stop_requested: bool = false
+var stop_reason: String = ""
+var drained_at_msec: int = 0
 
 
 func setup(terrain_reference, worker_sampler_reference, logger_reference = null) -> void:
@@ -216,6 +220,96 @@ func mark_active_surface(center_direction: Vector3) -> void:
 		state = "ACTIVE"
 
 
+func request_stop(reason: String = "shutdown") -> Dictionary:
+	if stop_requested:
+		return {"success": true, "drained": is_drained(), "state": state}
+	stop_requested = true
+	accepting_requests = false
+	stop_reason = reason
+	cancel_all(reason)
+	state = "STOPPED" if is_drained() else "DRAINING"
+	set_process(false)
+	_log_performance("terrain_streaming_stop_requested", {
+		"reason": reason,
+		"task_id": task_id,
+		"running_request_id": running_request.get("request_id", -1),
+	})
+	return {"success": true, "drained": is_drained(), "state": state}
+
+
+func is_drained() -> bool:
+	result_mutex.lock()
+	var no_completed_results: bool = completed_results.is_empty()
+	result_mutex.unlock()
+	return (
+		task_id < 0
+		and running_request.is_empty()
+		and pending_request.is_empty()
+		and commit_stage < 0
+		and commit_result.is_empty()
+		and no_completed_results
+	)
+
+
+func drain_blocking(timeout_ms: int = 30000) -> Dictionary:
+	if stop_requested and state == "STOPPED" and is_drained():
+		return {
+			"success": true,
+			"drained": true,
+			"already_drained": true,
+			"elapsed_ms": 0,
+			"timeout_ms": timeout_ms,
+			"within_timeout": true,
+			"waited_task_id": -1,
+			"state": state,
+			"cancelled_through_revision": cancelled_through_revision,
+			"latest_revision": latest_revision,
+		}
+	if not stop_requested:
+		request_stop("drain_blocking")
+	var started: int = Time.get_ticks_msec()
+	var waited_task_id: int = task_id
+	if task_id >= 0:
+		WorkerThreadPool.wait_for_task_completion(task_id)
+		task_id = -1
+	running_request.clear()
+	pending_request.clear()
+	result_mutex.lock()
+	completed_results.clear()
+	result_mutex.unlock()
+	if commit_stage >= 0:
+		if terrain != null and terrain.has_method("streaming_discard_staging"):
+			terrain.streaming_discard_staging(staging)
+		commit_result.clear()
+		staging.clear()
+		commit_stage = -1
+		rock_stage_index = 0
+		collision_tile_index = 0
+	target_cell_id = active_cell_id
+	drained_at_msec = Time.get_ticks_msec()
+	state = "STOPPED"
+	var elapsed: int = drained_at_msec - started
+	var within_timeout: bool = timeout_ms <= 0 or elapsed <= timeout_ms
+	_log_performance("terrain_streaming_drained", {
+		"reason": stop_reason,
+		"waited_task_id": waited_task_id,
+		"elapsed_ms": elapsed,
+		"timeout_ms": timeout_ms,
+		"within_timeout": within_timeout,
+	})
+	return {
+		"success": true,
+		"drained": true,
+		"elapsed_ms": elapsed,
+		"timeout_ms": timeout_ms,
+		"within_timeout": within_timeout,
+		"waited_task_id": waited_task_id,
+		"state": state,
+		"cancelled_through_revision": cancelled_through_revision,
+		"latest_revision": latest_revision,
+	}
+
+
 func cancel_all(reason: String) -> void:
 	if not running_request.is_empty():
 		cancelled_through_revision = maxi(
@@ -239,7 +333,7 @@ func cancel_all(reason: String) -> void:
 		rock_stage_index = 0
 		collision_tile_index = 0
 	target_cell_id = active_cell_id
-	state = "ACTIVE"
+	state = "DRAINING" if stop_requested else "ACTIVE"
 
 
 func request_predicted_surface(
@@ -355,7 +449,7 @@ func request_surface(
 	force: bool = false,
 	extra: Dictionary = {}
 ) -> int:
-	if not enabled or worker_sampler == null:
+	if not enabled or worker_sampler == null or not accepting_requests or stop_requested:
 		return -1
 	var target_direction: Vector3 = _cell_center_direction(center_direction)
 	var cell_id: String = _cell_id(target_direction)
@@ -580,6 +674,8 @@ func _execute_job(request: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	if stop_requested:
+		return
 	_monitor_frame(delta)
 	_drain_completed_results()
 	if commit_stage >= 0:
@@ -944,6 +1040,11 @@ func _commit_stage_name(stage: int) -> String:
 
 func create_snapshot() -> Dictionary:
 	return {
+		"accepting_requests": accepting_requests,
+		"stop_requested": stop_requested,
+		"stop_reason": stop_reason,
+		"drained": is_drained(),
+		"drained_at_msec": drained_at_msec,
 		"schema": "lunar.terrain_streaming_snapshot.v1",
 		"enabled": enabled,
 		"state": state,
@@ -1264,9 +1365,8 @@ func _make_east(direction: Vector3) -> Vector3:
 
 
 func _exit_tree() -> void:
-	if task_id >= 0:
-		WorkerThreadPool.wait_for_task_completion(task_id)
-		task_id = -1
+	request_stop("exit_tree")
+	drain_blocking(0)
 	if worker_sampler != null and is_instance_valid(worker_sampler):
 		worker_sampler.free()
 	worker_sampler = null
