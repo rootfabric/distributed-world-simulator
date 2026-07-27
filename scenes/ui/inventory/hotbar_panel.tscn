@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/hotbar_panel.gd" id="1_hotbar"]
+
+[node name="HotbarPanel" type="VBoxContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_hotbar")
+
+[node name="TitleLabel" type="Label" parent="."]
+unique_name_in_owner = true
+text = "Быстрая панель 1–0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 17
+
+[node name="MetadataLabel" type="Label" parent="."]
+unique_name_in_owner = true
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 0
+
+[node name="Grid" type="GridContainer" parent="Scroll"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+columns = 10

@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.3.0-r2-inventory-ux"
-const BUILD_ID: String = "r2-context-inventory-dual-fill-light"
+const PROJECT_VERSION: String = "16.3.1-ui-i0"
+const BUILD_ID: String = "ui-i0-component-inventory-shell"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

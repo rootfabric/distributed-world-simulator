@@ -172,5 +172,13 @@ Invoke-GodotCheck -Name "Item laboratory integration" -Arguments @(
     "res://tests/items/test_item_lab_integration.gd"
 )
 
+Invoke-GodotCheck -Name "Inventory UI-I0 component architecture" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/ui/test_inventory_ui_i0_architecture.gd"
+)
+
 Write-Host ""
 Write-Host "All item-system tests passed." -ForegroundColor Green

@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/container_panel.gd" id="1_panel"]
+
+[node name="ContainerPanel" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_panel")
+
+[node name="TitleLabel" type="Label" parent="."]
+unique_name_in_owner = true
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 17
+
+[node name="MetadataLabel" type="Label" parent="."]
+unique_name_in_owner = true
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="Grid" type="GridContainer" parent="Scroll"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+columns = 6

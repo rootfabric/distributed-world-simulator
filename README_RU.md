@@ -1,4 +1,20 @@
-# Planetary World v16.3.0-r2-inventory-ux — контекстный инвентарь и улучшенный свет
+# Planetary World v16.3.1-ui-i0 — компонентный каркас инвентаря
+
+## UI-I0 feature branch
+
+Текущий feature checkpoint выделяет presentation-слой инвентаря в компоненты:
+
+- `InventoryViewModel`;
+- `InventoryCommandFacade`;
+- `InventoryScreen`;
+- отдельные панели `BULK`, `SLOTS` и hotbar;
+- TSCN-заготовки tooltip/context/split/toast;
+- feature flag `config/ui/inventory_ui.json`;
+- legacy fallback без изменения Item Graph и `ItemTransferService`.
+
+По умолчанию включён `component`; для сравнения можно временно установить
+`PLANET_SIMULATOR_INVENTORY_UI=legacy`.
+
 
 Версия упрощает drag-and-drop: ЛКМ сразу переносит весь стак, а ПКМ перетаскивает стак к цели и только затем спрашивает количество. Внешний контейнер появляется только после взаимодействия через E, UI учитывает его реальную вместимость, а фонарь использует двухслойный круговой свет.
 

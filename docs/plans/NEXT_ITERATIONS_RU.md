@@ -16,11 +16,40 @@
 | `v16.0.1-r2-fix1` | принято | полный item graph, BULK/SLOTS containers, player inventory, hotbar и interaction demo |
 | `v16.1.0-r2-stack-controls` | реализовано | автостак BULK, точный stack-on-stack, разделение количества через ПКМ |
 | `v16.2.0-r2-placement-debug-ui` | реализовано | placeable mount item, F10 debug UI, console completion и flashlight |
-| `v16.3.0-r2-inventory-ux` | текущий чекпоинт | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
-| `v16.4-r3` | следующий срез | placement preview и строительство |
+| `v16.3.0-r2-inventory-ux` | базовый checkpoint | context-only external container, post-drop split UI, session-scoped operation IDs и dual-fill light |
+| `v16.3.1-ui-i0` | реализовано в feature-ветке | component shell, ViewModel, CommandFacade и legacy fallback без изменения Item Graph |
+| `UI-I1` | следующий UX-срез ветки | quick transfer, context actions, explicit split, tooltip/toast и адаптивный two-pane UX |
+| `v16.4 Foundation Gate + N0` | следующий архитектурный срез | server-safe kernel и сетевые контракты без сокетов |
+| `R3.1` | параллельный gameplay-срез | foundation и строительство через доменные команды |
 
-Текущий обязательный барьер — приёмка `v16.3.0-r2-inventory-ux`: editor import/parse,
-полный набор из 34 headless-тестов, матрицы stack UI и context container,
+## Pre-roadmap UI-I0/UI-I1 — Inventory UX stabilization
+
+**Статус:** UI-I0 реализован в `feature/ui-i0-inventory-shell`; UI-I1 остаётся следующим UX-срезом.
+
+Цель — заменить текущий монолитный presentation на hybrid two-pane grid, не
+изменяя Item Graph, `ContainerState`, persistence и `ItemTransferService`.
+
+Обязательный объём:
+
+- динамический `BULK` без фиктивных semantic slots;
+- настоящий фиксированный `SLOTS` grid;
+- contextual external panel;
+- LMB drag whole stack;
+- Shift-click quick transfer;
+- ПКМ context actions и явный split;
+- tooltip/toast/local rejection feedback;
+- adaptive container size;
+- ViewModel и CommandFacade;
+- старый facade API сохраняется.
+
+Полный план: `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
+
+После UI-I1 основная архитектурная ветка продолжает `v16.4 Foundation Gate + N0`.
+UI-I2 search/large storage может идти параллельно, а batch/multi-select откладывается
+до появления transactional command contract.
+
+Текущий UX-барьер — приёмка `v16.3.1-ui-i0`: editor import/parse,
+полный набор из 35 headless-тестов, матрицы stack UI и context container,
 проверка двухслойного фонаря, session-scoped operation IDs и main-scene playground regression. Чекпоинты:
 `docs/checkpoints/2026-07-26_R0_STABILIZATION_CHECKPOINT_RU.md`,
 `docs/checkpoints/2026-07-27_R1_1_ITEM_IDENTITY_STATE_STORE_RU.md` и

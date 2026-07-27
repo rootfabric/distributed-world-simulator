@@ -14,6 +14,8 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 - `checkpoints/2026-07-27_R2_STACK_CONTROLS_RU.md`
 - `checkpoints/2026-07-27_R2_PLACEMENT_DEBUG_UI_RU.md`
 - `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`
+- `checkpoints/2026-07-27_INVENTORY_UI_RESEARCH_DECISION_RU.md`
+- `checkpoints/2026-07-27_UI_I0_COMPONENT_INVENTORY_SHELL_RU.md`
 
 ## Архитектура
 
@@ -59,6 +61,7 @@ Checkpoint: `checkpoints/2026-07-27_R2_INVENTORY_UX_LIGHTING_RU.md`.
 
 - `plans/ROADMAP_RU.md`
 - `plans/NEXT_ITERATIONS_RU.md`
+- `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`
 - `plans/V11_ACCEPTANCE_TESTS_RU.md`
 - `plans/V12_ACCEPTANCE_TESTS_RU.md`
 - `plans/V13_ACCEPTANCE_TESTS_RU.md`

@@ -1,5 +1,17 @@
-Planetary World v16.3.0-r2-inventory-ux
+Planetary World v16.3.1-ui-i0
 
+
+UI-I0 component inventory shell v16.3.1-ui-i0:
+- feature branch feature/ui-i0-inventory-shell
+- ItemInventoryUI is a compatibility facade with component/legacy implementations
+- InventoryViewModel projects BULK/SLOTS state without mutating Item Graph
+- InventoryCommandFacade delegates all operations to ItemGameplayController
+- component TSCN scenes for screen, panels, cells, split, tooltip, context and toast
+- BULK component renders actual aggregates; compatibility API preserves capacity reporting
+- SLOTS component renders every real fixed slot
+- config/ui/inventory_ui.json selects component by default
+- tests/ui/test_inventory_ui_i0_architecture.gd
+- docs/checkpoints/2026-07-27_UI_I0_COMPONENT_INVENTORY_SHELL_RU.md
 
 R2 inventory UX and dual-fill lighting v16.3.0-r2-inventory-ux:
 - left drag always transfers the full stack

@@ -108,6 +108,7 @@ func setup_runtime(
 		"persistence_error": persistence_error.duplicate(true),
 		"item_count": domain.items.items.size(),
 		"container_count": domain.containers.containers.size(),
+		"inventory_ui_implementation": inventory_ui.get_implementation_id() if inventory_ui != null else "disabled",
 	}
 
 
@@ -530,6 +531,7 @@ func create_debug_snapshot() -> Dictionary:
 		"schema": "planet_simulator.item_gameplay_snapshot.v1",
 		"profile_id": profile_id,
 		"inventory_open": inventory_open,
+		"inventory_ui_implementation": inventory_ui.get_implementation_id() if inventory_ui != null else "disabled",
 		"selected_hotbar_index": selected_hotbar_index,
 		"selected_item_id": get_selected_hotbar_item_id(),
 		"operation_session_id": operation_session_id,
