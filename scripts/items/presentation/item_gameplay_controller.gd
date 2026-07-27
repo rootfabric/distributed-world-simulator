@@ -58,6 +58,10 @@ func setup_runtime(
 	operation_counter = 1
 	operation_session_id = _create_operation_session_id()
 	domain = Factory.create()
+	domain.world_entities.setup({
+		"authority_owner_id": "local-process",
+		"authority_epoch": 1,
+	})
 	_register_default_definitions()
 	var store = Factory.create_json_state_store("user://planet_simulator/item_graphs")
 	graph_persistence = GraphPersistence.new()
@@ -83,10 +87,14 @@ func setup_runtime(
 	_register_default_definitions()
 	_upgrade_legacy_mount_fixture()
 	_ensure_starter_pack()
+	var migration_result: Dictionary = _migrate_all_world_items_to_aggregates()
+	if not bool(migration_result.get("success", false)):
+		persistence_blocked = true
+		persistence_error = migration_result.duplicate(true)
 	presenter = Presenter.new()
 	presenter.name = "ItemRepresentationSystem"
 	add_child(presenter)
-	presenter.setup(domain.items, world_root, attachment_root, false, domain.mass, gravity_field, physics_frame_id, gravity_reference_body_id)
+	presenter.setup(domain.items, world_root, attachment_root, false, domain.mass, gravity_field, physics_frame_id, gravity_reference_body_id, domain.world_entities)
 	presenter.set_interaction_controller(self)
 	placement_service = PlacementService.new()
 	placement_service.name = "ItemPlacementService"
@@ -108,6 +116,7 @@ func setup_runtime(
 		"persistence_error": persistence_error.duplicate(true),
 		"item_count": domain.items.items.size(),
 		"container_count": domain.containers.containers.size(),
+		"world_entity_count": domain.world_entities.size(),
 	}
 
 
@@ -353,6 +362,31 @@ func interact_world_item(item_id: String) -> Dictionary:
 		set_inventory_visible(true)
 		return _remember({"success": true, "container_id": container_id, "message": "Открыт контейнер"})
 	return pickup_world_item(item_id)
+
+
+func get_world_item_aggregate(item_id: String):
+	return domain.world_entities.get_for_item(item_id) if not domain.is_empty() else null
+
+
+func get_world_item_spatial_ref(item_id: String) -> Dictionary:
+	var aggregate = get_world_item_aggregate(item_id)
+	if aggregate != null:
+		return aggregate.spatial_ref.duplicate(true)
+	var item = get_item(item_id)
+	if item != null and Relations.kind_of(item.relation) == Relations.WORLD:
+		return Relations.spatial_ref_from_relation(item.relation)
+	return {}
+
+
+func get_world_item_transform(item_id: String) -> Transform3D:
+	var spatial_ref: Dictionary = get_world_item_spatial_ref(item_id)
+	if spatial_ref.is_empty():
+		return Transform3D.IDENTITY
+	var SpatialRefScript = preload("res://scripts/simulation/spatial/spatial_ref.gd")
+	return Transform3D(
+		SpatialRefScript.get_basis(spatial_ref),
+		SpatialRefScript.get_position(spatial_ref)
+	)
 
 
 func pickup_world_item(item_id: String) -> Dictionary:
@@ -805,6 +839,59 @@ func _ensure_starter_pack() -> void:
 		starter_pack_revision = 2
 
 
+func _migrate_all_world_items_to_aggregates() -> Dictionary:
+	var result: Dictionary = domain.world_entities.migrate_legacy_item_relations(domain.items)
+	if not bool(result.get("success", false)):
+		return result
+	return domain.world_entities.validate_item_bindings(domain.items)
+
+
+func _reconcile_world_entity_binding(item_id: String, old_relation: Dictionary) -> Dictionary:
+	var item = get_item(item_id)
+	var old_entity_id: String = Relations.world_entity_id(old_relation)
+	if item == null:
+		if not old_entity_id.is_empty():
+			domain.world_entities.remove_entity(old_entity_id)
+		else:
+			domain.world_entities.remove_for_item(item_id)
+		return {"success": true}
+	if Relations.kind_of(item.relation) != Relations.WORLD:
+		domain.world_entities.remove_for_item(item_id)
+		return {"success": true}
+	var current_entity_id: String = Relations.world_entity_id(item.relation)
+	if not current_entity_id.is_empty():
+		var bound = domain.world_entities.get_entity(current_entity_id)
+		if bound == null or bound.item_instance_id != item_id:
+			return {"success": false, "error_code": "WORLD_ENTITY_BINDING_INVALID"}
+		return {"success": true, "entity_id": current_entity_id}
+	var spatial_ref: Dictionary = Relations.spatial_ref_from_relation(item.relation)
+	var aggregate = null
+	if not old_entity_id.is_empty():
+		aggregate = domain.world_entities.get_entity(old_entity_id)
+	if aggregate != null:
+		var update_result: Dictionary = aggregate.apply_spatial_state(
+			spatial_ref,
+			aggregate.physics_state,
+			aggregate.partition_address,
+			-1,
+			aggregate.authority_epoch
+		)
+		if not bool(update_result.get("success", false)):
+			return update_result
+	else:
+		aggregate = domain.world_entities.create_for_item(item_id, spatial_ref, {
+			"state_revision": int(item.revision),
+			"domain_components": {
+				"definition_id": item.definition_id,
+				"quantity": int(item.quantity),
+			},
+		})
+		if aggregate == null:
+			return {"success": false, "error_code": "WORLD_ENTITY_CREATE_FAILED"}
+	item.set_relation(Relations.world_entity(aggregate.entity_id))
+	return {"success": true, "entity_id": aggregate.entity_id}
+
+
 func _connect_domain_signals() -> void:
 	domain.transfer.relation_changed.connect(_on_relation_changed)
 	domain.transfer.item_removed.connect(_on_item_removed)
@@ -812,7 +899,11 @@ func _connect_domain_signals() -> void:
 	domain.transfer.quantity_changed.connect(_on_quantity_changed)
 
 
-func _on_relation_changed(item_id: String, _old: Dictionary, _new: Dictionary) -> void:
+func _on_relation_changed(item_id: String, old_relation: Dictionary, _new: Dictionary) -> void:
+	var reconcile_result: Dictionary = _reconcile_world_entity_binding(item_id, old_relation)
+	if not bool(reconcile_result.get("success", false)):
+		persistence_blocked = true
+		persistence_error = reconcile_result.duplicate(true)
 	if presenter != null:
 		presenter.synchronize_item(item_id)
 	if placement_service != null:
@@ -821,6 +912,7 @@ func _on_relation_changed(item_id: String, _old: Dictionary, _new: Dictionary) -
 
 
 func _on_item_removed(item_id: String) -> void:
+	domain.world_entities.remove_for_item(item_id)
 	if presenter != null:
 		presenter.synchronize_item(item_id)
 	if placement_service != null:
@@ -836,7 +928,10 @@ func _on_item_created(item_id: String) -> void:
 	_refresh_ui()
 
 
-func _on_quantity_changed(_item_id: String, _old: int, _new: int) -> void:
+func _on_quantity_changed(item_id: String, _old: int, new_quantity: int) -> void:
+	var aggregate = domain.world_entities.get_for_item(item_id)
+	if aggregate != null:
+		aggregate.apply_domain_components({"quantity": new_quantity})
 	if presenter != null:
 		presenter.synchronize_all()
 	if placement_service != null:

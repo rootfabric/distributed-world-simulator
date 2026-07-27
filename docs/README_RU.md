@@ -1,3 +1,9 @@
+## v16.3.3 — Foundation world aggregate part 3
+
+Checkpoint: `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md`.
+
+Контракты: `contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`, `contracts/ITEM_GRAPH_V2_RU.md`.
+
 ## v16.3.2 fix2 — terminal lifecycle world-load fence
 
 Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`.
@@ -13,6 +19,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 # Документация Planet Simulator
 
 ## Чекпоинты
+
+- `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md` — canonical WORLD aggregate, Item Graph v2 и SimulationKernel boundary.
 
 - `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md` — terminal FAILED и release fence запрещают обычную загрузку мира после failed shutdown.
 
@@ -59,6 +67,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `contracts/ENTITY_STATE_V2_RU.md`
 - `contracts/GRAVITY_FIELD_V1_RU.md`
 - `contracts/ITEM_GRAPH_V1_RU.md`
+- `contracts/ITEM_GRAPH_V2_RU.md`
+- `contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`
 - `contracts/CONTAINER_STATE_V2_RU.md`
 
 - `contracts/PARTITION_SNAPSHOT_V1_RU.md`

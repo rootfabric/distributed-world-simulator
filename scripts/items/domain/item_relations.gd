@@ -52,6 +52,27 @@ static func world_from_spatial_ref(spatial_ref: Dictionary) -> Dictionary:
 	})
 
 
+static func world_entity(entity_id: String) -> Dictionary:
+	return canonicalize({
+		"kind": WORLD,
+		"entity_id": entity_id,
+	})
+
+
+static func world_entity_id(relation: Dictionary) -> String:
+	if kind_of(relation) != WORLD:
+		return ""
+	return String(relation.get("entity_id", ""))
+
+
+static func is_entity_world_relation(relation: Dictionary) -> bool:
+	return not world_entity_id(relation).is_empty()
+
+
+static func is_legacy_world_relation(relation: Dictionary) -> bool:
+	return kind_of(relation) == WORLD and world_entity_id(relation).is_empty()
+
+
 static func update_world_state(
 	relation: Dictionary,
 	transform: Transform3D,

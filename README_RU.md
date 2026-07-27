@@ -1,12 +1,12 @@
-# Planetary World v16.3.2-foundation-lifecycle-part2-fix2 — terminal lifecycle world-load fence
+# Planetary World v16.3.3-foundation-world-aggregate-part3 — canonical WORLD aggregate
 
-Версия сохраняет принятый R2 gameplay и строгую сетевую границу N0, добавляя server-safe lifecycle: LifecycleCoordinator, graceful shutdown, остановку terrain workers, изолированные process profiles и режим simulation-server без активных UI, камер и локального ввода.
+Версия сохраняет принятый R2 gameplay, строгую N0 boundary и server-safe lifecycle, добавляя единый `WorldEntityAggregate` для WORLD-предметов, Item Graph v2, формальный Entity/Chunk Lifecycle, `SimulationKernel`/`PresentationHost` boundary и server-safe persistence port.
 
 Проект для Godot 4.7.1, собранного с `precision=double`.
 
 ## Архитектурный checkpoint после R2
 
-Ревизия `v16.3.2-foundation-lifecycle-part2-fix2` закрывает последний найденный fail-closed сценарий: после failed shutdown ни UI, ни прямой вызов `load_world()` не могут перезапустить симуляцию, даже если worker завершился позднее. Тяжёлые runtime-тесты теперь не только печатают `PASS`, но и завершают процесс после drain активного terrain worker. Полное разделение SimulationKernel/PresentationHost, единый WorldEntityAggregate и формальный Entity/Chunk Lifecycle остаются следующими частями Foundation Gate.
+Ревизия `v16.3.3-foundation-world-aggregate-part3` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
 
 Следующий основной пакет:
 
@@ -23,6 +23,9 @@ command/snapshot DTO, authority lease/handoff contracts и тесты без о�
 
 Документы:
 
+- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md`;
+- `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
+- `docs/contracts/ITEM_GRAPH_V2_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`;
@@ -114,6 +117,7 @@ Q/E        крен в режиме свободного полёта
 .\PREPARE_R0_REPOSITORY.ps1
 .\RUN_WORLD_REGRESSION_TESTS.ps1
 .\RUN_FOUNDATION_LIFECYCLE_TESTS.ps1
+.\RUN_FOUNDATION_WORLD_AGGREGATE_TESTS.ps1
 ```
 
 Runner сначала выполняет headless editor import/parse, затем запускает все

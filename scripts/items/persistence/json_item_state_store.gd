@@ -15,6 +15,9 @@ func _init(custom_root_path: String = DEFAULT_ROOT_PATH) -> void:
 
 
 func save_state(state_key: String, state: Dictionary) -> Dictionary:
+	var payload_result: Dictionary = validate_payload(state)
+	if not bool(payload_result.get("success", false)):
+		return payload_result
 	var key_result: Dictionary = _validate_key(state_key)
 	if not bool(key_result.get("success", false)):
 		return key_result

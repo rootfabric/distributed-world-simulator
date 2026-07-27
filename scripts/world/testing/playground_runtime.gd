@@ -140,6 +140,12 @@ func create_runtime_snapshot() -> Dictionary:
 	}
 
 
+func get_world_entity_store():
+	if item_gameplay == null or item_gameplay.domain.is_empty():
+		return null
+	return item_gameplay.domain.world_entities
+
+
 func prepare_for_unload() -> void:
 	if item_gameplay != null:
 		item_gameplay.save_graph()

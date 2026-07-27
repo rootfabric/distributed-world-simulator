@@ -158,11 +158,13 @@ func load_dict(data: Dictionary) -> Dictionary:
 			source_version >= SCHEMA_VERSION
 			and ItemRelationsScript.kind_of(relation_data) == ItemRelationsScript.WORLD
 		):
-			var spatial_ref_value = relation_data.get("spatial_ref", {})
-			if not spatial_ref_value is Dictionary or not SpatialRefScript.is_valid(spatial_ref_value):
-				return _failure("INVALID_ITEM_SPATIAL_REF", {
-					"item_id": String(item_data.get("instance_id", "")),
-				})
+			var world_entity_id: String = ItemRelationsScript.world_entity_id(relation_data)
+			if world_entity_id.is_empty():
+				var spatial_ref_value = relation_data.get("spatial_ref", {})
+				if not spatial_ref_value is Dictionary or not SpatialRefScript.is_valid(spatial_ref_value):
+					return _failure("INVALID_ITEM_SPATIAL_REF", {
+						"item_id": String(item_data.get("instance_id", "")),
+					})
 		if not item_data.get("components", {}) is Dictionary:
 			return _failure("INVALID_ITEM_COMPONENTS")
 		var raw_quantity: int = int(item_data.get("quantity", 1))

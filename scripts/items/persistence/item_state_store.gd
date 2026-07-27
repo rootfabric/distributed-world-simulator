@@ -1,4 +1,4 @@
-extends RefCounted
+extends "res://scripts/persistence/canonical_state_port.gd"
 
 
 func save_state(_state_key: String, _state: Dictionary) -> Dictionary:
@@ -16,17 +16,3 @@ func delete_state(_state_key: String) -> Dictionary:
 func has_state(_state_key: String) -> bool:
 	return false
 
-
-func _success(extra: Dictionary = {}) -> Dictionary:
-	var result: Dictionary = {"success": true}
-	for key in extra.keys():
-		result[key] = extra[key]
-	return result
-
-
-func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
-	return {
-		"success": false,
-		"error_code": error_code,
-		"details": details.duplicate(true),
-	}

@@ -124,6 +124,14 @@ Invoke-GodotCheck -Name "Complete item graph persistence" -Arguments @(
     "res://tests/items/test_item_graph_persistence.gd"
 )
 
+Invoke-GodotCheck -Name "WORLD aggregate migration and physics capture" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/items/test_world_item_aggregate_migration.gd"
+)
+
 Invoke-GodotCheck -Name "Item operation ledger" -Arguments @(
     "--headless",
     "--path",

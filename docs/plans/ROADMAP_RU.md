@@ -435,6 +435,8 @@ runtime без настоящих сетевых сокетов.
 2. `SimulationKernel` без UI и камеры;
 3. подключаемый `PresentationHost`;
 4. shutdown barrier для terrain workers и persistence — выполнено в `v16.3.2`;
+5. canonical WORLD aggregate и Item Graph v2 — выполнено в `v16.3.3`;
+6. Entity/Chunk lifecycle и kernel/presentation boundary — выполнено в `v16.3.3`;
 5. формальные lifecycle states `Dormant/Warm/Active/Unloading`;
 6. единый `WorldEntityAggregate`;
 7. монотонная revision при authority transfer;

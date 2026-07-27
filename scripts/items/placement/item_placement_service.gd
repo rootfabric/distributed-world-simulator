@@ -111,7 +111,7 @@ func _synchronize_fixture(item) -> void:
 			return
 		world_root.add_child(node)
 		fixture_nodes[item.instance_id] = node
-	node.transform = Relations.transform_from_relation(item.relation)
+	node.transform = gameplay_controller.get_world_item_transform(item.instance_id)
 	_bind_mount_socket(item, node, profile)
 
 

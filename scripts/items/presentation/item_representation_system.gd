@@ -7,12 +7,14 @@ const GravityBodyDriver = preload(
 const ItemWorldBody = preload(
 	"res://scripts/items/presentation/item_world_body.gd"
 )
+const SpatialRefScript = preload("res://scripts/simulation/spatial/spatial_ref.gd")
 
 const ROCK_ALBEDO_PATH := "res://assets/textures/generated/rock_surface_albedo.png"
 const ROCK_NORMAL_PATH := "res://assets/textures/generated/rock_surface_normal.png"
 const ROCK_ROUGHNESS_PATH := "res://assets/textures/generated/rock_surface_roughness.png"
 
 var item_registry
+var world_entity_store
 var world_root: Node3D
 var default_attachment_root: Node3D
 var show_debug_labels: bool = false
@@ -26,6 +28,7 @@ var world_nodes: Dictionary = {}
 var attached_nodes: Dictionary = {}
 var attachment_anchors: Dictionary = {}
 var world_applied_revisions: Dictionary = {}
+var world_applied_spatial_states: Dictionary = {}
 var synchronization_batch_depth: int = 0
 
 
@@ -37,7 +40,8 @@ func setup(
 	new_mass_service = null,
 	new_gravity_field = null,
 	new_physics_frame_id: String = "",
-	new_gravity_reference_body_id: String = ""
+	new_gravity_reference_body_id: String = "",
+	new_world_entity_store = null
 ) -> void:
 	item_registry = new_item_registry
 	world_root = new_world_root
@@ -47,6 +51,7 @@ func setup(
 	gravity_field = new_gravity_field
 	physics_frame_id = new_physics_frame_id
 	gravity_reference_body_id = new_gravity_reference_body_id
+	world_entity_store = new_world_entity_store
 
 
 func set_interaction_controller(controller) -> void:
@@ -139,6 +144,36 @@ func capture_world_state(item_id: String) -> bool:
 		or Relations.kind_of(item.relation) != Relations.WORLD
 	):
 		return false
+	var aggregate = _get_world_aggregate(item)
+	if aggregate != null:
+		var current_ref: Dictionary = aggregate.spatial_ref
+		var next_ref: Dictionary = SpatialRefScript.create(
+			String(current_ref.get("frame_id", SpatialRefScript.DEFAULT_FRAME_ID)),
+			body.transform.origin,
+			body.transform.basis,
+			body.linear_velocity,
+			body.angular_velocity,
+			float(current_ref.get("sample_time_s", 0.0)),
+			String(current_ref.get("universe_id", SpatialRefScript.DEFAULT_UNIVERSE_ID)),
+			String(current_ref.get("space_id", SpatialRefScript.DEFAULT_SPACE_ID)),
+			String(current_ref.get("instance_id", SpatialRefScript.DEFAULT_INSTANCE_ID))
+		)
+		var physics_state: Dictionary = {
+			"sleeping": bool(body.sleeping),
+			"freeze": bool(body.freeze),
+			"mass_kg": float(body.mass),
+		}
+		var capture_result: Dictionary = aggregate.apply_spatial_state(
+			next_ref,
+			physics_state,
+			aggregate.partition_address,
+			-1,
+			aggregate.authority_epoch
+		)
+		if not bool(capture_result.get("success", false)):
+			return false
+		world_applied_spatial_states[item_id] = _aggregate_presentation_state(aggregate)
+		return true
 	var updated_relation: Dictionary = Relations.update_world_state(
 		item.relation,
 		body.transform,
@@ -150,9 +185,6 @@ func capture_world_state(item_id: String) -> bool:
 		return true
 	item.set_relation(updated_relation)
 	item.revision += 1
-	# The body already contains this exact captured state. Mark the new domain
-	# revision as presented so a later unrelated synchronize_all() cannot
-	# teleport the live body back to an older persisted transform.
 	world_applied_revisions[item_id] = int(item.revision)
 	return true
 
@@ -188,12 +220,30 @@ func _ensure_world_node(item) -> void:
 	# made an already dropped object jump back whenever another stack item was
 	# dropped. Apply pose/velocity only for a newly created representation or
 	# when the item's relation revision actually changed.
-	var applied_revision := int(world_applied_revisions.get(item.instance_id, -1))
-	if created or applied_revision != int(item.revision):
-		body.transform = Relations.transform_from_relation(item.relation)
-		body.linear_velocity = Relations.velocity_from_relation(item.relation)
-		body.angular_velocity = Relations.angular_velocity_from_relation(item.relation)
-		world_applied_revisions[item.instance_id] = int(item.revision)
+	var aggregate = _get_world_aggregate(item)
+	var should_apply_state: bool = created
+	var spatial_ref: Dictionary = {}
+	if aggregate != null:
+		var presentation_state: Dictionary = _aggregate_presentation_state(aggregate)
+		should_apply_state = should_apply_state or world_applied_spatial_states.get(item.instance_id, {}) != presentation_state
+		spatial_ref = aggregate.spatial_ref
+		if should_apply_state:
+			world_applied_spatial_states[item.instance_id] = presentation_state.duplicate(true)
+	else:
+		var presentation_revision: int = int(item.revision)
+		should_apply_state = should_apply_state or int(world_applied_revisions.get(item.instance_id, -1)) != presentation_revision
+		spatial_ref = Relations.spatial_ref_from_relation(item.relation)
+		if should_apply_state:
+			world_applied_revisions[item.instance_id] = presentation_revision
+	if should_apply_state:
+		body.transform = Transform3D(
+			SpatialRefScript.get_basis(spatial_ref),
+			SpatialRefScript.get_position(spatial_ref)
+		)
+		body.linear_velocity = SpatialRefScript.get_linear_velocity(spatial_ref)
+		body.angular_velocity = SpatialRefScript.get_angular_velocity(spatial_ref)
+		if aggregate != null:
+			body.sleeping = bool(aggregate.physics_state.get("sleeping", false))
 
 	var gravity_driver = _ensure_gravity_driver(body)
 	gravity_driver.setup(
@@ -203,6 +253,22 @@ func _ensure_world_node(item) -> void:
 		gravity_reference_body_id,
 		world_root
 	)
+
+
+func _get_world_aggregate(item):
+	if world_entity_store == null or item == null:
+		return null
+	var entity_id: String = Relations.world_entity_id(item.relation)
+	if entity_id.is_empty():
+		return null
+	return world_entity_store.get_entity(entity_id)
+
+
+func _aggregate_presentation_state(aggregate) -> Dictionary:
+	return {
+		"spatial_ref": aggregate.spatial_ref.duplicate(true),
+		"physics_state": aggregate.physics_state.duplicate(true),
+	}
 
 
 func _finish_synchronize() -> void:
@@ -389,6 +455,7 @@ func _remove_world_node(item_id: String) -> void:
 		node.queue_free()
 	world_nodes.erase(item_id)
 	world_applied_revisions.erase(item_id)
+	world_applied_spatial_states.erase(item_id)
 
 
 func _remove_attached_node(item_id: String) -> void:

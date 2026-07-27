@@ -1,4 +1,21 @@
-Planetary World v16.3.2-foundation-lifecycle-part2-fix2
+Planetary World v16.3.3-foundation-world-aggregate-part3
+
+Foundation world aggregate part 3 v16.3.3:
+- SimulationKernel / PresentationHost boundary with recursive presentation-object rejection
+- WorldEntityAggregate v1 and WorldEntityStore v1
+- Item Graph v2 with canonical WORLD {kind, entity_id} relations
+- transactional migration from Item Graph v1 embedded SpatialRef relations
+- Entity/Chunk lifecycle state machines and fail-closed zone child preflight
+- CanonicalStatePort and JSON payload validation before persistence write
+- tests/entities/test_world_entity_aggregate.gd
+- tests/entities/test_world_entity_store_failures.gd
+- tests/items/test_world_item_aggregate_migration.gd
+- tests/runtime/test_simulation_kernel_boundary.gd
+- RUN_FOUNDATION_WORLD_AGGREGATE_TESTS.ps1
+- docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md
+- docs/contracts/ITEM_GRAPH_V2_RU.md
+- docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md
+
 
 
 Foundation lifecycle terminal world-load fence fix2:

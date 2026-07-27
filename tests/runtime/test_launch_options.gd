@@ -52,8 +52,8 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.OFFLINE, "Default role is not offline")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.3.2-foundation-lifecycle-part2-fix2", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "foundation-lifecycle-failed-world-load-fence-fix2", "Default descriptor build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.3.3-foundation-world-aggregate-part3", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "foundation-world-aggregate-lifecycle-boundary-part3", "Default descriptor build id is stale")
 
 	var unsupported: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=directory-server"]))
 	_assert(not bool(unsupported.get("success", true)), "Unsupported role was accepted")

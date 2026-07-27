@@ -2,7 +2,7 @@
 
 # Статус реализации
 
-Checkpoint `v16.3.2-foundation-lifecycle-part2-fix2`:
+Checkpoint `v16.3.3-foundation-world-aggregate-part3`:
 
 - [x] pure-domain runtime roles;
 - [x] launch option parser;
@@ -15,11 +15,13 @@ Checkpoint `v16.3.2-foundation-lifecycle-part2-fix2`:
 - [x] synchronous world-runtime disposal;
 - [x] isolated process user data в Python harness;
 - [x] simulation-server без активных UI, камер и local input;
-- [ ] физическое разделение SimulationKernel/PresentationHost;
-- [ ] WorldEntityAggregate;
-- [ ] entity/chunk lifecycle Dormant/Warm/Active/Unloading.
+- [x] явная граница SimulationKernel/PresentationHost;
+- [x] WorldEntityAggregate для WORLD-items;
+- [x] entity/chunk lifecycle Dormant/Warm/Active/Unloading;
+- [x] Item Graph v2 и миграция legacy WORLD relations;
+- [x] server-safe CanonicalStatePort.
 
-Foundation Gate остаётся незавершённым. Lifecycle Part 2 fix2 закрывает terminal world-load fence после failed shutdown; следующий core-блок — canonical WorldEntityAggregate и формальная граница SimulationKernel/PresentationHost.
+Foundation Gate остаётся незавершённым только в части общего EntityRegistry/repository ports и полного физического исключения presentation-конструирования из world runtime scenes. `v16.3.3` закрывает canonical WORLD aggregate и формальную kernel/presentation boundary; следующий блок — завершение N0 contracts и общих kernel ports перед итоговым `v16.4.0-foundation-n0`.
 
 ## Цель
 
@@ -92,7 +94,7 @@ PresentationHost
 ```
 
 Offline mode создаёт `SimulationKernel + PresentationHost`.
-Simulation-server создаёт только kernel.
+Simulation-server создаёт kernel и не создаёт глобальный `PresentationHost`; отдельные старые world runtime scenes пока могут конструировать локальные presentation adapters, которые server policy отключает. Полное исключение их создания остаётся финальным Foundation cleanup.
 
 ## 4. Shutdown barrier
 
@@ -161,6 +163,10 @@ WORLD relation предмета не должна хранить вторую н
 
 - ссылка на `entity_id`;
 - embedded snapshot только как transport/persistence representation одного aggregate.
+
+### Статус v16.3.3
+
+Для WORLD-items целевая модель реализована: Item relation содержит только `entity_id`, а `SpatialRef`, physics state, authority, revision и lifecycle принадлежат `WorldEntityAggregate`. Item Graph v1 загружается через staged migration и сохраняется как v2. Общий `EntityRegistry` пока не объединён с `WorldEntityStore`.
 
 ## 7. Revision semantics
 

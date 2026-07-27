@@ -12,10 +12,12 @@ const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
 const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
 const LifecycleCoordinatorScript = preload("res://scripts/runtime/lifecycle_coordinator.gd")
+const SimulationKernelScript = preload("res://scripts/runtime/simulation_kernel.gd")
+const PresentationHostScript = preload("res://scripts/runtime/presentation_host.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.3.2-foundation-lifecycle-part2-fix2"
-const FOUNDATION_BUILD_ID: String = "foundation-lifecycle-failed-world-load-fence-fix2"
+const FOUNDATION_CHECKPOINT: String = "v16.3.3-foundation-world-aggregate-part3"
+const FOUNDATION_BUILD_ID: String = "foundation-world-aggregate-lifecycle-boundary-part3"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -55,6 +57,8 @@ var _cli_test_scope: String = ""
 var _loading_world: bool = false
 var _windowed_resolution_index: int = 2
 var lifecycle_coordinator
+var simulation_kernel
+var presentation_host
 var presentation_enabled: bool = true
 var local_input_enabled: bool = true
 var _shutdown_in_progress: bool = false
@@ -111,6 +115,18 @@ func _ready() -> void:
 		for error_message in world_catalog.get_validation_errors():
 			push_error(String(error_message))
 
+	simulation_kernel = SimulationKernelScript.new()
+	var kernel_result: Dictionary = simulation_kernel.setup({
+		"simulation_clock": simulation_clock,
+		"command_gateway": command_registry,
+		"test_registry": test_registry,
+		"lifecycle_coordinator": lifecycle_coordinator,
+	})
+	if not bool(kernel_result.get("success", false)):
+		push_error("SimulationKernel boundary validation failed: %s" % kernel_result)
+		get_tree().quit(3)
+		return
+
 	_register_core_commands()
 	_register_core_tests()
 
@@ -119,15 +135,19 @@ func _ready() -> void:
 	add_child(world_host)
 
 	if presentation_enabled:
+		presentation_host = PresentationHostScript.new()
+		presentation_host.name = "PresentationHost"
+		presentation_host.setup(true)
+		add_child(presentation_host)
 		developer_console = DeveloperConsoleScript.new()
 		developer_console.name = "DeveloperConsole"
-		add_child(developer_console)
+		presentation_host.attach_presentation(developer_console)
 		developer_console.setup(command_registry, self)
 		developer_console.set_completion_provider(Callable(self, "get_console_completions"))
 		developer_console.console_visibility_changed.connect(_on_console_visibility_changed)
 		system_menu = SystemMenuScript.new()
 		system_menu.name = "SystemMenu"
-		add_child(system_menu)
+		presentation_host.attach_presentation(system_menu)
 		system_menu.setup(self, world_catalog)
 		system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
 
@@ -157,6 +177,12 @@ func _ready() -> void:
 		"local_input_enabled": local_input_enabled,
 		"active_presentation_nodes": count_runtime_presentation_nodes(),
 		"suppressed_presentation_roots": _role_policy_removed_nodes,
+		"simulation_kernel": simulation_kernel.create_snapshot(),
+		"presentation_host": (
+			presentation_host.create_snapshot()
+			if presentation_host != null
+			else {"schema": "planet_simulator.presentation_host.v1", "enabled": false, "active_node_count": 0}
+		),
 	})
 	var shutdown_after_ms: int = int(launch_options.get("shutdown_after_ms", 0))
 	if shutdown_after_ms > 0:
@@ -361,6 +387,7 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		"launch_options": launch_options.duplicate(true),
 		"runtime_descriptor": runtime_descriptor.duplicate(true),
 		"lifecycle": lifecycle_coordinator.create_snapshot() if lifecycle_coordinator != null else {},
+		"simulation_kernel": simulation_kernel,
 		"last_runtime_drain": _last_runtime_drain.duplicate(true),
 		"role_policy_removed_nodes": _role_policy_removed_nodes,
 	}
@@ -372,6 +399,7 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		runtime_descriptor["world_id"] = current_world_id
 	runtime.name = "WorldRuntime_%s" % normalized
 	world_host.add_child(runtime)
+	_bind_runtime_kernel_services(runtime)
 	_apply_runtime_role_policy(runtime)
 	command_registry.clear_registration_errors()
 	test_registry.clear_registration_errors()
@@ -1096,6 +1124,12 @@ func _command_runtime_snapshot(_arguments: Array[String]) -> Dictionary:
 		"test_count": test_registry.get_test_count(),
 		"simulation_clock": simulation_clock.create_snapshot(),
 		"runtime_descriptor": runtime_descriptor.duplicate(true),
+		"simulation_kernel": simulation_kernel.create_snapshot(),
+		"presentation_host": (
+			presentation_host.create_snapshot()
+			if presentation_host != null
+			else {"schema": "planet_simulator.presentation_host.v1", "enabled": false, "active_node_count": 0}
+		),
 	}
 	if current_runtime != null and current_runtime.has_method("create_runtime_snapshot"):
 		snapshot["runtime"] = current_runtime.call("create_runtime_snapshot")
@@ -1479,6 +1513,15 @@ func _schedule_shutdown(delay_ms: int) -> void:
 	timer.timeout.connect(func() -> void:
 		request_graceful_shutdown("scheduled_shutdown", 0)
 	)
+
+
+func _bind_runtime_kernel_services(runtime: Node) -> void:
+	if simulation_kernel == null:
+		return
+	var store = null
+	if runtime != null and runtime.has_method("get_world_entity_store"):
+		store = runtime.call("get_world_entity_store")
+	simulation_kernel.set_world_entity_store(store)
 
 
 func _apply_runtime_role_policy(runtime: Node) -> void:

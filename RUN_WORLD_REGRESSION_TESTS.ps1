@@ -51,6 +51,10 @@ $Tests = @(
     "res://tests/network/test_network_contracts.gd",
     "res://tests/network/test_loopback_command_transport.gd",
     "res://tests/entities/test_authority_revision_semantics.gd",
+    "res://tests/entities/test_world_entity_aggregate.gd",
+    "res://tests/entities/test_world_entity_store_failures.gd",
+    "res://tests/items/test_world_item_aggregate_migration.gd",
+    "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
     "res://tests/unit/test_celestial_motion.gd",
@@ -83,7 +87,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.3.2-foundation-lifecycle-part2-fix2"
+    checkpoint = "v16.3.3-foundation-world-aggregate-part3"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

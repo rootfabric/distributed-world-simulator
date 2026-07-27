@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 27 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.3.2-foundation-lifecycle-part2-fix2`
+**Текущий проверенный checkpoint:** `v16.3.3-foundation-world-aggregate-part3`
 **Фактическая сетевая стадия:** N0 в работе, transport до N1 не начат
 
 ## 1. Проверенная база
@@ -9,9 +9,9 @@
 Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- 40 обязательных headless test scripts;
+- 44 обязательных headless test scripts;
 - 5 runtime-миров;
-- 133 global GDScript classes;
+- 160 импортированных GDScript UID-записей;
 - единый Simulator Core;
 - полный persistent Item Graph;
 - revisions, operation ledger и payload fingerprint;
@@ -83,7 +83,7 @@ Item Registry, Container Registry, Attachments и operation ledger сохран�
 
 ### A. Server-safe runtime
 
-Выполнено в `v16.3.2`: `--role=simulation-server`, отсутствие активных UI/камер/input, изолированный process profile, lifecycle JSON и exit code 0. Полное физическое выделение SimulationKernel из scene presentation ещё впереди.
+Выполнено в `v16.3.2`: server role, lifecycle и process isolation. В `v16.3.3` добавлены pure `SimulationKernel`, optional `PresentationHost` и recursive boundary validation. World runtime scenes пока ещё содержат локальные presentation adapters.
 
 ### B. Shutdown lifecycle
 
@@ -91,13 +91,15 @@ Item Registry, Container Registry, Attachments и operation ledger сохран�
 
 ### C. Unified WORLD aggregate
 
-Нужна одна canonical spatial truth для Entity и WORLD Item.
+Выполнено для WORLD-items в `v16.3.3`: relation хранит `entity_id`, а `SpatialRef`, physics state, authority и lifecycle принадлежат `WorldEntityAggregate`. Общий EntityRegistry пока остаётся отдельным store и будет объединён через kernel ports позже.
 
 ### D. Monotonic revisions
 
 Authority transfer увеличивает epoch и не обнуляет state revision.
 
 ### E. Formal lifecycle
+
+Выполнено в `v16.3.3` для Entity aggregate, Chunk и Zone runtime:
 
 ```text
 Dormant / Warm / Active / Unloading

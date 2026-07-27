@@ -107,6 +107,11 @@ def main() -> int:
         stopped = event_by_name["node_stopped"]
         assert ready["active_presentation_nodes"] == 0
         assert ready["local_input_enabled"] is False
+        assert ready["simulation_kernel"]["initialized"] is True
+        assert ready["simulation_kernel"]["presentation_free"] is True
+        assert ready["simulation_kernel"]["has_world_entity_store"] is True
+        assert ready["presentation_host"]["enabled"] is False
+        assert ready["presentation_host"]["active_node_count"] == 0
         assert stopped["exit_code"] == 0
         assert stopped["lifecycle"]["state"] == "STOPPED"
         assert stopped["last_runtime_drain"]["drained"] is True

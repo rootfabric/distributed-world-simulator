@@ -2,8 +2,10 @@ extends RefCounted
 
 const Factory = preload("res://scripts/items/services/item_domain_factory.gd")
 
-const SCHEMA: String = "planet_simulator.item_graph.v1"
-const SCHEMA_VERSION: int = 1
+const SCHEMA: String = "planet_simulator.item_graph.v2"
+const LEGACY_SCHEMA: String = "planet_simulator.item_graph.v1"
+const SCHEMA_VERSION: int = 2
+const LEGACY_SCHEMA_VERSION: int = 1
 
 var domain: Dictionary = {}
 var store
@@ -18,6 +20,10 @@ func setup(domain_reference: Dictionary, store_reference, configured_state_key: 
 
 
 func create_snapshot(extra_metadata: Dictionary = {}) -> Dictionary:
+	if domain.has("world_entities"):
+		var migration_result: Dictionary = domain.world_entities.migrate_legacy_item_relations(domain.items)
+		if not bool(migration_result.get("success", false)):
+			push_error("Unable to canonicalize WORLD items before snapshot: %s" % migration_result)
 	var merged_metadata := metadata.duplicate(true)
 	merged_metadata.merge(extra_metadata, true)
 	merged_metadata = _normalize_metadata_types(merged_metadata)
@@ -28,6 +34,7 @@ func create_snapshot(extra_metadata: Dictionary = {}) -> Dictionary:
 		"containers": domain.containers.to_dict(),
 		"attachments": domain.attachments.to_dict(),
 		"operations": domain.operations.to_dict(),
+		"world_entities": domain.world_entities.to_dict(),
 		"metadata": merged_metadata,
 	}
 
@@ -85,6 +92,7 @@ func load_snapshot(snapshot: Dictionary) -> Dictionary:
 	domain.operations.next_sequence = staged.operations.next_sequence
 	domain.operations.maximum_entries = staged.operations.maximum_entries
 	domain.attachments.replace_from(staged.attachments)
+	domain.world_entities.replace_from(staged.world_entities)
 	metadata = _normalize_metadata_types(Dictionary(snapshot.get("metadata", {})))
 	return {
 		"success": true,
@@ -92,15 +100,24 @@ func load_snapshot(snapshot: Dictionary) -> Dictionary:
 		"container_count": domain.containers.containers.size(),
 		"socket_count": domain.attachments.sockets.size(),
 		"operation_count": domain.operations.size(),
+		"world_entity_count": domain.world_entities.size(),
+		"migrated_relation_count": int(staged_result.get("migrated_relation_count", 0)),
+		"source_schema_version": int(staged_result.get("source_schema_version", SCHEMA_VERSION)),
 		"metadata": metadata.duplicate(true),
 	}
 
 
 func _load_into_staged(staged: Dictionary, snapshot: Dictionary) -> Dictionary:
-	if String(snapshot.get("schema", "")) != SCHEMA:
+	var source_schema: String = String(snapshot.get("schema", ""))
+	var source_version: int = int(snapshot.get("schema_version", 0))
+	if source_schema == LEGACY_SCHEMA:
+		if source_version != LEGACY_SCHEMA_VERSION:
+			return _failure("UNSUPPORTED_ITEM_GRAPH_VERSION")
+	elif source_schema == SCHEMA:
+		if source_version != SCHEMA_VERSION:
+			return _failure("UNSUPPORTED_ITEM_GRAPH_VERSION")
+	else:
 		return _failure("UNSUPPORTED_ITEM_GRAPH_SCHEMA")
-	if int(snapshot.get("schema_version", 0)) != SCHEMA_VERSION:
-		return _failure("UNSUPPORTED_ITEM_GRAPH_VERSION")
 	for required_key in ["items", "containers", "attachments", "operations"]:
 		if not snapshot.get(required_key, {}) is Dictionary:
 			return _failure("INVALID_ITEM_GRAPH_SECTION", {"section": required_key})
@@ -116,12 +133,28 @@ func _load_into_staged(staged: Dictionary, snapshot: Dictionary) -> Dictionary:
 	var operations_result: Dictionary = staged.operations.load_dict(Dictionary(snapshot.operations))
 	if not bool(operations_result.get("success", false)):
 		return _section_failure("operations", operations_result)
+	if source_version == SCHEMA_VERSION:
+		if not snapshot.get("world_entities", {}) is Dictionary:
+			return _failure("INVALID_ITEM_GRAPH_SECTION", {"section": "world_entities"})
+		var entities_result: Dictionary = staged.world_entities.load_dict(Dictionary(snapshot.world_entities))
+		if not bool(entities_result.get("success", false)):
+			return _section_failure("world_entities", entities_result)
+	var migration_result: Dictionary = staged.world_entities.migrate_legacy_item_relations(staged.items)
+	if not bool(migration_result.get("success", false)):
+		return _section_failure("world_entity_migration", migration_result)
 	var graph_result: Dictionary = staged.validator.validate_graph()
 	if not bool(graph_result.get("success", false)):
 		return _section_failure("graph", graph_result)
+	var binding_result: Dictionary = staged.world_entities.validate_item_bindings(staged.items)
+	if not bool(binding_result.get("success", false)):
+		return _section_failure("world_entity_bindings", binding_result)
 	if not snapshot.get("metadata", {}) is Dictionary:
 		return _failure("INVALID_ITEM_GRAPH_METADATA")
-	return {"success": true}
+	return {
+		"success": true,
+		"source_schema_version": source_version,
+		"migrated_relation_count": int(migration_result.get("migrated_relation_count", 0)),
+	}
 
 
 func _normalize_metadata_types(value):

@@ -13,8 +13,8 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
-		"checkpoint": String(context.get("checkpoint", "v16.3.2-foundation-lifecycle-part2-fix2")),
-		"build_id": String(context.get("build_id", "foundation-lifecycle-failed-world-load-fence-fix2")),
+		"checkpoint": String(context.get("checkpoint", "v16.3.3-foundation-world-aggregate-part3")),
+		"build_id": String(context.get("build_id", "foundation-world-aggregate-lifecycle-boundary-part3")),
 		"project_name": String(ProjectSettings.get_setting(
 			"application/config/name",
 			"PlanetSimulator"

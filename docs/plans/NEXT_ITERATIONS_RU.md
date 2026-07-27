@@ -5,7 +5,7 @@
 Текущий проверенный код:
 
 ```text
-v16.3.2-foundation-lifecycle-part2-fix2
+v16.3.3-foundation-world-aggregate-part3
 ```
 
 Основание решения:
@@ -26,8 +26,9 @@ v16.3.2-foundation-lifecycle-part2-fix2
 | `v16.2.0-r2-placement-debug-ui` | принято | placeable mount, admin UI, console, flashlight |
 | `v16.3.0-r2-inventory-ux` | принято | contextual containers, post-drop split, operation namespace, dual-fill light |
 | `v16.3.1-foundation-n0-part1-fix3` | принято | строгая N0 command/snapshot boundary и loopback |
-| `v16.3.2-foundation-lifecycle-part2-fix2` | текущий checkpoint | fail-closed shutdown, terrain drain и terminal world-load fence |
-| `v16.4 Foundation Gate` | в работе | следующий блок: SimulationKernel boundary, WorldEntityAggregate и entity/chunk lifecycle |
+| `v16.3.2-foundation-lifecycle-part2-fix2` | принято | fail-closed shutdown, terrain drain и terminal world-load fence |
+| `v16.3.3-foundation-world-aggregate-part3` | текущий checkpoint | canonical WORLD aggregate, Item Graph v2, kernel/presentation boundary и entity/chunk lifecycle |
+| `v16.4 Foundation Gate` | в работе | завершить общие kernel/repository ports и закрыть acceptance gate |
 | `N0` | следующий network-этап | versioned contracts без сокетов |
 | `R3.1` | параллельный gameplay | foundation и construction aggregate |
 | `N1` | после N0/Foundation | один server + bot client |
@@ -42,11 +43,11 @@ v16.3.2-foundation-lifecycle-part2-fix2
 Минимальный scope:
 
 1. `RuntimeRole` и launch options;
-2. `SimulationKernel` без presentation;
-3. подключаемый `PresentationHost`;
+2. `SimulationKernel` без presentation — boundary реализована в v16.3.3;
+3. подключаемый `PresentationHost` — реализован для глобального UI в v16.3.3;
 4. shutdown barrier — выполнено в v16.3.2;
-5. entity/chunk lifecycle;
-6. `WorldEntityAggregate`;
+5. entity/chunk lifecycle — выполнено в v16.3.3;
+6. `WorldEntityAggregate` — выполнено для WORLD-items в v16.3.3;
 7. revision monotonicity;
 8. isolated user data.
 

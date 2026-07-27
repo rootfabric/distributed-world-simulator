@@ -902,6 +902,10 @@ func set_runtime_mouse_capture(captured: bool) -> void:
 	)
 
 
+func get_world_entity_store():
+	return domain.world_entities if not domain.is_empty() else null
+
+
 func prepare_for_unload() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 

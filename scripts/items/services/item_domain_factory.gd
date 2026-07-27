@@ -8,6 +8,7 @@ const TransferServiceScript = preload("res://scripts/items/services/item_transfe
 const OperationLedgerScript = preload("res://scripts/items/services/item_operation_ledger.gd")
 const AttachmentServiceScript = preload("res://scripts/assemblies/item_attachment_service.gd")
 const JsonItemStateStoreScript = preload("res://scripts/items/persistence/json_item_state_store.gd")
+const WorldEntityStoreScript = preload("res://scripts/simulation/entities/world_entity_store.gd")
 
 
 static func create(
@@ -15,6 +16,7 @@ static func create(
 ) -> Dictionary:
 	var item_registry = ItemRegistryScript.new()
 	var container_registry = ContainerRegistryScript.new()
+	var world_entity_store = WorldEntityStoreScript.new()
 	var validator = ValidatorScript.new()
 	validator.setup(item_registry, container_registry)
 	var mass_service = MassServiceScript.new()
@@ -40,6 +42,7 @@ static func create(
 		"operations": operation_ledger,
 		"transfer": transfer_service,
 		"attachments": attachment_service,
+		"world_entities": world_entity_store,
 	}
 
 

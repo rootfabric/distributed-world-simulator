@@ -45,6 +45,10 @@ func _run() -> void:
 	var world_beacon_id := String(drop_result.get("new_item_id", drop_result.get("result_item_id", "")))
 	var world_beacon: Variant = controller.get_item(world_beacon_id)
 	_assert(world_beacon != null and Relations.kind_of(world_beacon.relation) == Relations.WORLD, "Dropped split must create one WORLD beacon")
+	_assert(Relations.is_entity_world_relation(world_beacon.relation), "Dropped WORLD item must reference canonical entity aggregate")
+	_assert(world_beacon.relation.keys().size() == 2 and not world_beacon.relation.has("spatial_ref"), "WORLD item relation must not duplicate spatial state")
+	var world_beacon_aggregate = controller.get_world_item_aggregate(world_beacon_id)
+	_assert(world_beacon_aggregate != null and world_beacon_aggregate.item_instance_id == world_beacon_id, "Dropped WORLD item must own one aggregate")
 	_assert(controller.get_item(starter.instance_id).quantity == 2, "Dropping one from stack must leave two in hotbar")
 	_assert(controller.presenter.get_world_node(world_beacon_id) is RigidBody3D, "WORLD beacon must have physics body")
 
@@ -53,6 +57,13 @@ func _run() -> void:
 	var first_live_velocity := Vector3(1.5, 0.25, -0.75)
 	world_body.transform = first_live_transform
 	world_body.linear_velocity = first_live_velocity
+
+	# A non-spatial aggregate revision (for example quantity or another domain
+	# component) must not replay the persisted pose over a live physics body.
+	_assert_success(world_beacon_aggregate.apply_domain_components({"diagnostic_tag": "live-body"}), "WORLD aggregate domain components must update")
+	controller.presenter.synchronize_all()
+	_assert(world_body.transform.is_equal_approx(first_live_transform), "Domain-only aggregate revision must not teleport live WORLD body")
+	_assert(world_body.linear_velocity.is_equal_approx(first_live_velocity), "Domain-only aggregate revision must not replay stored velocity")
 
 	# Dropping another item from the same source stack must not replay the
 	# first WORLD relation onto its already live physics body.
@@ -76,6 +87,7 @@ func _run() -> void:
 	_assert_success(pickup_result, "WorldInteractor E path must pick beacon up")
 	_assert(controller.presenter.get_world_node(world_beacon_id) == null, "Container item must lose physical body")
 	_assert(Relations.kind_of(controller.get_item(world_beacon_id).relation) == Relations.CONTAINER, "Picked beacon must enter backpack")
+	_assert(controller.get_world_item_aggregate(world_beacon_id) == null, "Picked item must release WORLD aggregate")
 
 	var crate: Variant = _find_item(controller, "portable_crate", Relations.WORLD)
 	_assert(crate != null, "Playground must spawn external beacon crate")
@@ -132,6 +144,8 @@ func _run() -> void:
 	_assert(controller.presenter.get_world_physical_mass_kg(crate.instance_id) > 4.0, "Dropped crate physics mass must include recursive contents")
 
 	_assert_success(controller.domain.validator.validate_graph(), "All R2 moves must leave graph valid")
+	_assert_success(controller.domain.world_entities.validate_item_bindings(controller.domain.items), "All WORLD relations must have exactly one aggregate binding")
+	_assert(_all_world_relations_are_entity_references(controller), "No live WORLD item may persist duplicate spatial state")
 	_assert(_memberships_are_unique(controller), "No item may be lost or duplicated across containers")
 	var total_before := _total_quantity(controller)
 	_assert_success(controller.save_graph(), "R2 graph must save after all movement types")
@@ -143,6 +157,8 @@ func _run() -> void:
 	_assert(bool(restored_fixture.setup.loaded), "Second runtime must load saved player graph")
 	_assert(_total_quantity(restored) == total_before, "Restart must preserve total item quantity")
 	_assert_success(restored.domain.validator.validate_graph(), "Reloaded player graph must remain valid")
+	_assert_success(restored.domain.world_entities.validate_item_bindings(restored.domain.items), "Reloaded WORLD aggregate bindings must validate")
+	_assert(_all_world_relations_are_entity_references(restored), "Reloaded WORLD relations must remain canonical")
 	_assert(String(restored.get_socket_state("demo_mount", "beacon_socket").get("item_id", "")).is_empty(), "Restart must preserve detached socket")
 
 	var loaded: Dictionary = store.load_state(STATE_KEY)
@@ -205,6 +221,19 @@ func _find_item(controller, definition_id: String, relation_kind: String = "", c
 			continue
 		return item
 	return null
+
+
+func _all_world_relations_are_entity_references(controller) -> bool:
+	for item in controller.domain.items.all_items():
+		if Relations.kind_of(item.relation) != Relations.WORLD:
+			continue
+		if not Relations.is_entity_world_relation(item.relation):
+			return false
+		if item.relation.has("spatial_ref") or item.relation.has("transform"):
+			return false
+		if controller.get_world_item_aggregate(item.instance_id) == null:
+			return false
+	return true
 
 
 func _memberships_are_unique(controller) -> bool:
