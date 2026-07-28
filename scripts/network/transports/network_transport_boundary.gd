@@ -19,6 +19,9 @@ const ALLOWED_MESSAGE_TYPES := {
 	"HANDSHAKE": true,
 	"HANDSHAKE_RESULT": true,
 	"SNAPSHOT_ACK": true,
+	"RESUME_TICKET": true,
+	"SESSION_RESUME": true,
+	"SESSION_RESUME_RESULT": true,
 }
 
 var _port

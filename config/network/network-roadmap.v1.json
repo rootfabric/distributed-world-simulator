@@ -1,8 +1,8 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 6,
+  "document_revision": 7,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "project_checkpoint": "v16.5.1-network-n1-remote-item-command",
+  "project_checkpoint": "v16.5.2-foundation-network-n1",
   "strategy": "incremental_authoritative_server_mesh",
   "principles": [
     "stable_entity_identity",
@@ -42,8 +42,8 @@
       "depends_on": [
         "N0"
       ],
-      "acceptance": "single item command round-trip",
-      "status": "in_progress",
+      "acceptance": "reconnect replay returns one committed item mutation with checksum equality",
+      "status": "candidate",
       "subphases": [
         {
           "id": "N1.0",
@@ -60,13 +60,13 @@
         {
           "id": "N1.2",
           "name": "Remote authoritative item command",
-          "status": "candidate",
+          "status": "accepted",
           "checkpoint": "v16.5.1-network-n1-remote-item-command"
         },
         {
           "id": "N1.3",
           "name": "Reconnect and replay",
-          "status": "next",
+          "status": "candidate",
           "checkpoint": "v16.5.2-foundation-network-n1"
         }
       ]

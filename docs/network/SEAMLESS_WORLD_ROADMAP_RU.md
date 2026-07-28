@@ -1,6 +1,6 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.5.1-network-n1-remote-item-command
+## Статус на checkpoint v16.5.2-foundation-network-n1
 
 Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
 `SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority
@@ -537,14 +537,14 @@ memory_bytes
 
 ## Рекомендуемый первый практический пакет
 
-Следующая реализация после N1.1 должна быть **N1.2 remote item command**, а не попытка сразу соединить два сервера или Землю и Луну.
+После завершения N1 следующая реализация должна быть **N2 multi-process harness**, а не попытка сразу соединить два authoritative сервера или Землю и Луну.
 
 Порядок:
 
 ```text
-N1.2 remote authoritative command
-→ N1.3 reconnect/replay
-→ N2 multi-process harness
+N1.2 remote authoritative command   ACCEPTED
+→ N1.3 reconnect/replay             CANDIDATE
+→ N2 multi-process harness          NEXT
 → R3.1 persistence/recovery
 → N3 directory/leases
 → N4 entity handoff

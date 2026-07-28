@@ -2,12 +2,13 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.5.1-network-n1-remote-item-command` (candidate). N1.0 и N1.1 приняты. N1.2 проводит первую authoritative `item.move_to_container` через настоящий ENet между отдельными headless Godot-процессами. Следующий этап — N1.3 reconnect и replay.
+Текущий статус: `v16.5.2-foundation-network-n1` (candidate). N1.0–N1.2 приняты. N1.3 доказывает reconnect/replay после потери command result: новая transport session получает сохранённые result/delta без второй authoritative mutation. Следующий этап — N2 multi-process harness.
 
 ## Основные документы
 
-1. [`docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`](docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md) — текущий N1.2 candidate.
-2. [`docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`](docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md) — принятый N1.1 ENet snapshot path.
+1. [`docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`](docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md) — текущий N1.3 candidate и завершение N1.
+2. [`docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`](docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md) — принятый N1.2 authoritative command.
+3. [`docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`](docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md) — принятый N1.1 ENet snapshot path.
 3. [`docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`](docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md) — точный план N1.0–N5 и checkpoint gates.
 4. [`docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md`](docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md) — принятый N1.0.
 5. [`docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`](docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md) — закрытие найденных N0 boundary bypasses.

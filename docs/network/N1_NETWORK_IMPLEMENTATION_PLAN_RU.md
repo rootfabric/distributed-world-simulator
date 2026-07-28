@@ -5,127 +5,88 @@
 ```text
 v16.4.2-network-transport-boundary       принят
 v16.5.0-network-n1-snapshot              принят
-v16.5.1-network-n1-remote-item-command   candidate текущего этапа
+v16.5.1-network-n1-remote-item-command   принят
+v16.5.2-foundation-network-n1            candidate N1.3
 ```
-
-Foundation, N0, Inventory UI-I0–UI-I2, transport lifecycle и ENet handshake/snapshot path сохранены. N1.2 доказывает первую реальную authoritative domain-команду между двумя отдельными Godot-процессами.
 
 ## Критический путь
 
 ```text
-N1.0 transport boundary                         ACCEPTED
-→ N1.1 ENet handshake + initial snapshot       ACCEPTED
-→ N1.2 remote item.move_to_container           CURRENT CANDIDATE
-→ N1.3 reconnect + replay                      NEXT
-→ N2 multi-process harness
-→ R3.1 authoritative persistence/recovery
+N1.0 transport boundary                   ACCEPTED
+→ N1.1 ENet handshake + initial snapshot ACCEPTED
+→ N1.2 remote item.move_to_container     ACCEPTED
+→ N1.3 reconnect + bounded replay        CURRENT CANDIDATE
+→ N2 multi-process harness               NEXT
+→ R3.1 persistence/recovery
 → N3 World Directory
 → N4 cross-server handoff
 → N5 ghost replicas/interest management
 ```
 
-## N1.0 — transport boundary
-
-Checkpoint: `v16.4.2-network-transport-boundary`.
-
-Общий lifecycle для loopback и реальных adapters, canonical JSON fence, ограничения payload/queue и строгий transport port.
-
-## N1.1 — ENet handshake и initial snapshot
-
-Checkpoint: `v16.5.0-network-n1-snapshot`.
-
-Два headless Godot-процесса согласуют protocol/capabilities/contracts, получают transport session, передают initial `EntitySnapshotEnvelope` и подтверждают checksum через `SnapshotAckEnvelope`.
-
-## N1.2 — удалённая authoritative item-команда
-
-Checkpoint candidate: `v16.5.1-network-n1-remote-item-command`.
-
-Ветка: `feature/n1-remote-item-command`.
-
-Полный путь:
-
-```text
-bot-client
-→ NetworkCommandEnvelope(item.move_to_container)
-→ ENet wire frame
-→ simulation-server
-→ authority/session/revision validation
-→ ItemTransferService
-→ Item Registry + Container Registry + operation ledger
-→ WorldEntityAggregate
-→ EntityDeltaEnvelope
-→ ENet
-→ bot-client snapshot apply
-→ final checksum equality
-```
-
-Обязательные гарантии:
-
-- клиент не мутирует authoritative state самостоятельно;
-- owner, epoch, aggregate revision и item revision проверяются до mutation;
-- source/destination membership проверяется сервером;
-- доменная операция фиксируется в ledger ровно один раз;
-- aggregate revision и server tick увеличиваются монотонно;
-- exact replay одного `operation_id` возвращает прежний результат;
-- exact replay не вызывает handler и mutation второй раз;
-- другой payload с тем же `operation_id` отклоняется;
-- повторная доставка того же delta не применяется второй раз;
-- stale revision после успешной команды отклоняется;
-- при ошибке aggregate/delta commit восстанавливаются items, containers, ledger и aggregate;
-- server/client final snapshot checksums совпадают.
-
-N1.2 не включает reconnect и устойчивость deduplication cache после перезапуска процесса.
-
 ## N1.3 — reconnect и replay
 
-Следующая ветка: `feature/n1-reconnect-replay`.
+Checkpoint: `v16.5.2-foundation-network-n1`.
+Ветка: `feature/n1-reconnect-replay`.
 
-Checkpoint target: `v16.5.2-foundation-network-n1`.
+Сервер коммитит команду, но обрывает соединение до доставки результата. Клиент подключается с новой transport session, предъявляет ограниченный resume-ticket и повторяет прежний `operation_id`. Replay cache возвращает исходные result/delta без повторного вызова domain handler.
 
-Реализовать:
+Обязательные свойства:
 
-1. потерю ENet-соединения после отправки команды и до ответа;
-2. новую transport session без изменения entity/item identity;
-3. повторную отправку исходного `operation_id`;
-4. replay сохранённого command result и delta/snapshot;
-5. отсутствие второй domain mutation;
-6. bounded deduplication/replay window;
-7. handshake timeout, command timeout и graceful drain;
-8. несколько последовательных reconnect в process test.
+- logical session не меняется при reconnect;
+- transport session меняется на каждом reconnect;
+- resume ticket связан с client identity, logical session, token и tick-window;
+- command fingerprint, operation ID и last snapshot checksum совпадают;
+- replay grant одноразовый и связан с новой transport session;
+- cache ограничен по tickets, records, TTL и resume count;
+- повторная доставка delta не применяет mutation второй раз;
+- handler, mutation и ledger record остаются равными одному;
+- server/client checksum совпадает после reconnect.
 
-Модель доставки:
-
-```text
-at-least-once delivery
-+ idempotent command processing
-+ stable operation_id
-+ replayable result
-```
+N1.3 намеренно не сохраняет replay cache после рестарта server process. Это обязанность R3.1.
 
 ## N2 — общий multi-process harness
 
-После N1.3 один кроссплатформенный runner должен управлять портами, isolated `user://`, readiness, timeout, process cleanup, fault scenarios, JSON и JUnit reports. Текущие Godot process tests являются вертикальными fixtures, но не заменяют общий harness.
+Следующая ветка: `feature/n2-process-harness`.
+Target checkpoint: `v16.6.0-network-n2-process-harness`.
 
-## R3.1 — authoritative persistence и recovery
+Один кроссплатформенный runner должен:
 
-Сохранить snapshot, authority metadata, operation ledger и replay records. Проверить падение процесса до/после mutation, ledger write, flush и response. Старый несовместимый `user://world.json` должен получать backup/migration или явную безопасную очистку.
+1. выбирать свободные порты;
+2. создавать isolated `user://` для каждого процесса;
+3. запускать server/client и ждать readiness;
+4. выполнять handshake, command, disconnect/reconnect и fault scenarios;
+5. контролировать per-state timeout;
+6. собирать stdout/stderr и machine-readable события;
+7. завершать или принудительно очищать дочерние процессы;
+8. формировать JSON и JUnit отчёты.
 
-## N3 — World Directory
+Минимальные сценарии N2:
 
-Регистрация simulation nodes, heartbeat, authority regions, lease issuance/renewal, route lookup, drain и expired-lease fencing. На N3 ещё не требуется перенос сущности.
+```text
+handshake_and_snapshot
+remote_item_command
+lost_result_reconnect_replay
+malformed_packet
+stale_revision
+stale_authority
+disconnect_during_handshake
+server_drain
+process_timeout_cleanup
+```
 
-## N4 — cross-process handoff
+## R3.1 — persistence/recovery
 
-Подключить N0 handoff state machine к двум серверам и Directory. Инвариант: число active authoritative writers для сущности не превышает одного.
+После N2 replay/dedup records, ledger и authoritative snapshot должны переживать server restart. Повторный `operation_id` после crash возвращает прежний terminal result и не выполняет mutation заново.
 
-## N5 — ghosts и interest management
+## N3–N5
 
-Read-only replicas около границ, bounded subscriptions, route switching и promotion только после принятого N4.
+- N3: World Directory, node heartbeat, authority lease/route и epoch fencing.
+- N4: make-before-break cross-server authority handoff.
+- N5: bounded ghost replicas и interest management.
 
-## Веточная политика
+## Правила веток
 
-- новый этап — новая короткая ветка от актуального `main`;
-- review fixes непринятого N1.2 выполняются в `feature/n1-remote-item-command`;
-- fix-коммит: `fix(network): harden authoritative remote item command`;
-- после принятия N1.2 ветка сливается и удаляется;
-- N1.3 начинается в `feature/n1-reconnect-replay`.
+- новый этап: отдельная короткая `feature/<stage>-<purpose>` ветка;
+- review fixes непринятого checkpoint: в той же ветке отдельными `fix(...)` commits;
+- новая fix-ветка: только для уже принятого и влитого checkpoint;
+- каждый patch содержит только изменённые файлы и сопровождается branch/apply/commit/test инструкцией.

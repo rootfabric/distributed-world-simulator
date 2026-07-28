@@ -1,19 +1,19 @@
-# Planetary World v16.5.1-network-n1-remote-item-command — первая authoritative ENet-команда
+# Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay
 
-Текущий candidate строится поверх `v16.5.0-network-n1-snapshot` и сохраняет принятые Foundation, N0 fix1, Inventory UI-I0–UI-I2, transport boundary и реальный ENet snapshot path.
+Текущий candidate строится поверх принятого `v16.5.1-network-n1-remote-item-command` и завершает первый сетевой vertical slice N1.
 
 Проект рассчитан на Godot 4.7.1 с `precision=double`.
 
 ## Текущий checkpoint
 
 ```text
-v16.5.1-network-n1-remote-item-command
+v16.5.2-foundation-network-n1
 ```
 
 Build ID:
 
 ```text
-n1-enet-authoritative-item-command
+n1-reconnect-replay-bounded-cache
 ```
 
 Главный инвариант:
@@ -22,43 +22,42 @@ n1-enet-authoritative-item-command
 canonical simulation ≠ presentation ≠ transport
 ```
 
-Что добавляет N1.2:
+Что добавляет N1.3:
 
-- строгие DTO `item.move_to_container` request/result;
-- реальную authoritative item/container fixture на сервере;
-- выполнение команды через существующий `ItemTransferService` и operation ledger;
-- обновление `WorldEntityAggregate` с монотонными revision и server tick;
-- `EntityDeltaEnvelope`, который повторно применяется к initial snapshot;
-- равенство итогового checksum на server и bot-client;
-- exact command replay без повторной mutation;
-- duplicate delta replay fence на клиенте;
-- stale revision и authority fencing;
-- transactional rollback item/container/ledger/aggregate при отказе после domain mutation;
-- отдельные server/client headless Godot-процессы через настоящий ENet;
-- отдельный runner `RUN_N1_REMOTE_ITEM_COMMAND_TESTS.ps1`.
+- logical session, независимую от сменяемых ENet transport sessions;
+- строгие resume-ticket/resume/result DTO;
+- ограниченные TTL, размер replay cache и число resume;
+- cryptographic resume token;
+- повторную доставку прежнего `operation_id` после потери результата;
+- cached result/delta без повторного вызова domain handler;
+- два последовательных reconnect в реальных Godot-процессах;
+- один server commit, одну ledger-запись и один client delta apply;
+- conflict, expiry, wrong-client/fingerprint/checksum и replay-grant fences;
+- отдельный runner `RUN_N1_RECONNECT_REPLAY_TESTS.ps1`.
 
-N1.2 намеренно не добавляет reconnect после потери transport session. Следующий этап N1.3 закрепит reconnect, повторную доставку команды и replay результата после восстановления соединения.
+N1 теперь закрывает transport boundary, ENet handshake/snapshot, authoritative item command и reconnect/replay. Следующий этап N2 создаёт общий кроссплатформенный multi-process harness с isolated `user://`, fault scenarios, timeout/process cleanup и JSON/JUnit reports.
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`;
+- `docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`;
 - `docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`;
-- `docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`;
+- `docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`;
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/NEXT_ITERATIONS_RU.md`.
 
 Следующий основной этап:
 
 ```text
-N1.3 — reconnect + replay
-	 + новая transport session
-	 + стабильный operation_id
-	 + повторная доставка команды
-	 + replay сохранённого результата
-	 + отсутствие повторной mutation
+N2 — общий multi-process harness
+   + динамические порты
+   + isolated user://
+   + readiness и timeout
+   + cleanup зависших процессов
+   + fault/reconnect scenarios
+   + JSON/JUnit reports
 ```
 
-`UI-I3` с batch/multi-select остаётся отложен до фиксации reconnect/replay и batch command semantics.
+`UI-I3` остаётся отложен до фиксации batch command semantics поверх завершённого N1.
 
 ## Установка и отладка
 

@@ -1,8 +1,8 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 28 июля 2026 года
-**Текущий candidate checkpoint:** `v16.5.1-network-n1-remote-item-command`
-**Фактическая сетевая стадия:** N1.0 и N1.1 приняты; N1.2 remote authoritative item command реализован как candidate
+**Текущий candidate checkpoint:** `v16.5.2-foundation-network-n1`
+**Фактическая сетевая стадия:** N1.0–N1.2 приняты; N1.3 reconnect и bounded replay реализованы как candidate
 
 ## 1. Проверенная база
 
@@ -88,7 +88,7 @@ Fix1 закрывает post-review обходы: owner не меняется п
 
 До следующих подэтапов намеренно отсутствуют:
 
-- reconnect после обрыва и replay через новую session — N1.3;
+- persistence replay cache после restart — R3.1;
 - World Directory и lease renewal — N3;
 - cross-server handoff — N4.
 
@@ -103,7 +103,7 @@ World Directory и исполняемый lease service относятся к N3
 
 ### B. Shutdown lifecycle
 
-Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. N1.2 ENet command session выполняет drain/stop; общий application lifecycle и reconnect будут связаны с transport shutdown на N1.3.
+Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. N1.3 ENet sessions выполняют disconnect/reconnect, progress timeout и drain/stop; общий fault orchestration будет вынесен в N2.
 
 ### C. Unified WORLD aggregate
 
@@ -127,7 +127,7 @@ Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scen
 
 ## 5. Решение
 
-Сетевой фундамент N0, transport boundary N1.0 и ENet snapshot path N1.1 приняты. N1.2 доказывает удалённую authoritative `item.move_to_container`, exact replay fencing и checksum equality. Следующий этап — N1.3 reconnect и replay через новую transport session.
+Сетевой фундамент N0 и N1.0–N1.2 приняты. N1.3 доказывает reconnect через новые transport sessions, replay сохранённых result/delta и отсутствие второй authoritative mutation. Следующий этап — N2 multi-process harness.
 
 Foundation Gate и N0 завершены в принятом исправленном checkpoint:
 

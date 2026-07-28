@@ -41,6 +41,13 @@
 | NS-005C | повторный delta ID/checksum не применяется клиентом второй раз | N1.2 |
 | NS-005D | post-domain failure восстанавливает item/container/ledger/aggregate | N1.2 |
 | NS-006 | disconnect/reconnect возвращает replay результата без второй mutation | N1.3 |
+| NS-006A | logical session сохраняется, transport session ротируется | N1.3 |
+| NS-006B | resume ticket связан с client identity, token и tick-window | N1.3 |
+| NS-006C | command fingerprint/checksum conflict отклоняется | N1.3 |
+| NS-006D | replay grant одноразовый и не протекает после serve | N1.3 |
+| NS-006E | bounded ticket/record cache и expiry выполняются детерминированно | N1.3 |
+| NS-006F | два reconnect оставляют handler/mutation/ledger равными одному | N1.3 |
+| NS-006G | клиент применяет replay delta один раз и ограждает duplicate | N1.3 |
 | NS-007 | два клиента видят одинаковую revision | N2 |
 
 ## 3. Directory и lease

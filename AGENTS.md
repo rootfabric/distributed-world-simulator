@@ -25,6 +25,7 @@ Examples:
 feature/n1-transport-boundary
 feature/n1-enet-snapshot
 feature/n1-remote-item-command
+feature/n1-reconnect-replay
 feature/n2-process-harness
 feature/r3.1-authoritative-recovery
 feature/n3-world-directory

@@ -18,8 +18,8 @@ const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/enti
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.5.1-network-n1-remote-item-command"
-const FOUNDATION_BUILD_ID: String = "n1-enet-authoritative-item-command"
+const FOUNDATION_CHECKPOINT: String = "v16.5.2-foundation-network-n1"
+const FOUNDATION_BUILD_ID: String = "n1-reconnect-replay-bounded-cache"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

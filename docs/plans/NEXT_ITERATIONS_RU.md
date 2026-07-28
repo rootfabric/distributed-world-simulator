@@ -1,92 +1,52 @@
-# Ближайшие итерации после v16.5.1-network-n1-remote-item-command
+# Ближайшие итерации после v16.5.2-foundation-network-n1
 
-## Зафиксированная база
+## Текущее состояние
 
 ```text
-v16.4.1-foundation-inventory-merge       принято
-v16.4.2-network-transport-boundary       принято
-v16.5.0-network-n1-snapshot              принято
-v16.5.1-network-n1-remote-item-command   текущий candidate
+N1.0 transport boundary                   принято
+N1.1 ENet handshake + initial snapshot   принято
+N1.2 authoritative item command          принято
+N1.3 reconnect + bounded replay          current candidate
 ```
 
-## Текущий этап — N1.2
+## Текущий gate — принять N1.3
 
-Ветка:
+Ветка: `feature/n1-reconnect-replay`.
+
+Acceptance:
+
+- потеря первого результата после commit воспроизводится;
+- два reconnect создают три уникальные transport sessions;
+- logical session и `operation_id` сохраняются;
+- domain handler, mutation и ledger вызываются ровно один раз;
+- cached result/delta возвращаются дважды;
+- клиент применяет delta один раз;
+- bounded cache/TTL/conflict/resume-limit тесты проходят;
+- полный network/world regression зелёный.
+
+## Следующий этап — N2
+
+Ветка после принятия N1.3:
 
 ```text
-feature/n1-remote-item-command
+feature/n2-process-harness
 ```
 
-Проверяемый сценарий:
+Target checkpoint:
 
 ```text
-initial snapshot
-→ remote item.move_to_container
-→ one server-side ItemTransferService mutation
-→ one ledger record
-→ aggregate revision/tick advance
-→ EntityDeltaEnvelope
-→ exact replay without mutation
-→ stale revision rejection
-→ final checksum equality
+v16.6.0-network-n2-process-harness
 ```
 
-Review fixes остаются в той же ветке.
+Результат N2 — один кроссплатформенный runner, который запускает реальные Godot server/client процессы на динамических портах, выдаёт им isolated `user://`, управляет readiness/timeouts/cleanup, выполняет fault scenarios и пишет JSON/JUnit.
 
-## Следующий этап — N1.3
-
-Ветка после принятия N1.2:
+После N2:
 
 ```text
-feature/n1-reconnect-replay
-```
-
-Задачи:
-
-1. обрыв после отправки команды до получения ответа;
-2. reconnect с новой session ID;
-3. повторная доставка прежнего operation ID;
-4. replay прежнего result/delta;
-5. mutation count остаётся равным одному;
-6. bounded replay cache и timeout semantics;
-7. clean drain без process leaks.
-
-Checkpoint target: `v16.5.2-foundation-network-n1`.
-
-## Затем
-
-```text
-N2 multi-process harness
-→ R3.1 persistence/crash recovery и migration старого user-state
-→ N3 World Directory + leases
+R3.1 authoritative persistence/recovery
+→ N3 World Directory
 → N4 cross-server handoff
 → N5 ghost replicas
 ```
 
-## Не расширять до N1.3
-
-- UI-I3 batch/multi-select;
-- optimistic inventory mutation;
-- второй authoritative simulation-server;
-- World Directory;
-- player prediction;
-- ghost streaming;
-- распределённую физику.
-
-## Merge gate
-
-```text
-editor import/parse
-все test_*.gd объявлены в regression runner
-N0/N1 network profile
-N1.2 dedicated runner
-полный Godot regression
-main scene CLI
-simulation-server lifecycle
-real ENet server/client command process
-no process leaks
-no stale checkpoint/build ID
-git diff --check
-```
-
-Новый этап получает новую ветку. Review fixes текущего непринятого этапа выполняются в той же ветке отдельными `fix(...)` коммитами.
+UI-I3 и новые крупные gameplay API не должны менять authoritative command semantics до принятия N2.

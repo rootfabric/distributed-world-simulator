@@ -390,85 +390,47 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.5.1-network-n1-remote-item-command
+## Текущее состояние: v16.5.2-foundation-network-n1
 
-В одной mainline объединены:
-
-- локальный item/gameplay фундамент R0–R2;
-- server-safe Foundation Part 1–3;
-- canonical `WorldEntityAggregate` и Item Graph v2;
-- строгие N0 contracts, authority fencing и loopback transports;
-- component inventory UI-I0–UI-I2;
-- search/filter/sort, inspector и bounded cell pool;
-- aggregate-aware drop/split/move command path;
-- 60 обязательных headless Godot tests;
-
-Checkpoint:
-
-- `docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
-- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
-- `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
-
-## Текущий главный приоритет: принятие N1.2
-
-N1.0 и N1.1 приняты. N1.2 реализует узкий vertical slice:
+Приняты Foundation/N0, Inventory UI-I0–UI-I2, N1.0 transport boundary, N1.1 ENet snapshot и N1.2 authoritative item command. Текущий candidate N1.3 завершает N1 reconnect/replay:
 
 ```text
-one simulation-server
-+ one bot-client
-+ real ENet adapter
-+ initial snapshot
-+ remote item.move_to_container
-+ one ItemTransferService mutation
-+ one operation-ledger record
-+ EntityDeltaEnvelope
-+ exact replay fence
-+ stale revision rejection
-+ checksum equality
+commit item mutation
+→ потеря command result
+→ новая transport session
+→ resume ticket + same operation_id
+→ cached result/delta
+→ mutation/ledger остаются равны 1
 ```
 
-После независимой проверки N1.2 следующий приоритет — N1.3 reconnect/replay: новая transport session должна повторно доставить прежний `operation_id` и получить сохранённый результат без второй mutation.
+## Текущий главный приоритет: принятие N1.3
 
-## Затем: N1.3 → N2 → R3.1 → N3 → N4
+Обязательный gate:
 
-### N2 — multi-process lab
+- logical session сохраняется, transport session ротируется;
+- resume ticket и replay cache bounded;
+- command fingerprint, client identity и checksum fenced;
+- два reconnect не вызывают второй domain handler;
+- клиент применяет delta только один раз;
+- полный network/world regression проходит.
 
-- Python process harness;
-- isolated `user://`;
-- restart/reconnect;
-- duplicate delivery;
-- JSON/JUnit;
-- гарантированный cleanup.
+## Затем: N2 → R3.1 → N3 → N4
 
-### R3.1 — construction vertical slice
+### N2 — multi-process harness
 
-После появления надёжного удалённого command path:
+Единый кроссплатформенный runner: динамические порты, isolated `user://`, readiness, timeouts, cleanup, fault scenarios, JSON/JUnit.
 
-```text
-Foundation
-→ Beacon Mount
-→ Solar Panel
-→ Battery
-→ Charging Dock
-→ simple Power Graph
-→ save/restart
-```
+### R3.1 — authoritative persistence/recovery
 
-### N3 — World Directory и leases
+Replay/dedup records, ledger и snapshot переживают restart; тот же `operation_id` возвращает прежний terminal result без mutation.
 
-- node registration;
-- authority routes;
-- lease acquire/renew/release;
-- stale epoch rejection;
-- два статических region owner.
+### N3 — World Directory
 
-### N4 — handoff одного объекта
+Node registration, heartbeat, authority lease/route и epoch fencing.
 
-```text
-один камень или маяк
-Server A → Server B
-```
+### N4 — cross-server handoff
+
+Make-before-break transfer с одним active authoritative writer.
 
 ## Отложено до N1/N2
 

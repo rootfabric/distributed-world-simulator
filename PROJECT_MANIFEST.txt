@@ -1,4 +1,20 @@
-Planetary World v16.5.1-network-n1-remote-item-command
+Planetary World v16.5.2-foundation-network-n1
+
+Network N1.3 reconnect and bounded replay:
+- logical session separated from rotated ENet transport sessions
+- strict resume-ticket, session-resume and resume-result DTOs
+- cryptographic opaque resume token and bounded validity window
+- bounded ticket/record caches, TTL, resume limits and deterministic eviction tests
+- lost command-result scenario after authoritative commit
+- same operation_id and command fingerprint replayed after reconnect
+- cached result/delta without a second ItemTransferService invocation
+- two sequential reconnects with three unique transport sessions
+- exactly one mutation, one ledger record and one client delta application
+- conflict, expiry, wrong checksum/client/fingerprint and grant fences
+- tests/network/test_n1_reconnect_replay_contracts.gd
+- tests/network/test_n1_reconnect_replay_processes.gd
+- RUN_N1_RECONNECT_REPLAY_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md
 
 Network N1.2 authoritative remote item command:
 - strict item.move_to_container request and success-result DTOs

@@ -94,6 +94,13 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `diagnostics/LOGGING_RU.md`
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
 
+## Network N1 checkpoints
+
+- `checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`
+- `checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`
+- `checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`
+- `network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`
+
 ## Foundation/N0 checkpoint
 
 - `checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`
