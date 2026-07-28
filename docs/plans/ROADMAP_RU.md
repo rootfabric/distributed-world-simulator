@@ -1,8 +1,30 @@
 # Дорожная карта PlanetSimulator
 
-## Текущий repository/network gate — R3.1
+## Текущий architecture gate — A0
 
-`v16.7.0-repository-r3.1-authoritative-recovery` добавляет атомарный authoritative checkpoint и crash/restart recovery без повторной domain mutation. После принятия следующий приоритет — N3 World Directory, затем N4 cross-server handoff.
+```text
+documentation: v16.7.1-architecture-a0-distributed-runtime
+runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+```
+
+Перед N3 проект фиксирует foundation-линейку:
+
+```text
+H0 listen-host
+→ A1 generic aggregates
+→ S0 spatial cells/shards
+→ T1 multi-peer transport
+→ B0 message-bus ports
+→ M0 multi-aggregate transactions/outbox
+→ S1 distributed compute contracts
+```
+
+Только затем подключаются NATS adapters, Population Field, compute-worker MVP и World Directory.
+
+Подробности:
+
+- `docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
+- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
 
 # Дорожная карта к лунному симулятору мечты
 

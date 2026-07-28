@@ -1,248 +1,186 @@
-# Правила параллельной разработки сети и gameplay
+# Правила параллельной разработки distributed runtime и gameplay
 
-## Текущий режим на v16.5.2-foundation-network-n1
-
-Foundation Gate и N0 завершены. Одновременно разрешены три потока:
+## Текущий режим
 
 ```text
-Track N — N1 Authoritative Server + Bot Client
-Track G — R3.1 Construction Vertical Slice
-Track T — Multi-process Test Infrastructure
+runtime base: R3.1 accepted
+architecture: A0 current candidate
+next implementation: H0 listen-host
 ```
 
-Track N уже проводит одну authoritative item-команду через реальный transport и не меняет доменную
-семантику без отдельной версии протокола. Следующая задача Track N — reconnect/replay. Track G использует те же commands,
-revisions, aggregates и snapshots. Track T обеспечивает process isolation,
-fault injection, reconnect и отчёты.
+До принятия S1 основной foundation-track идёт последовательно. Разрешено параллельно развивать gameplay только при соблюдении стабильных command/persistence boundaries.
 
-Рекомендуемые каталоги ответственности:
+## 1. Tracks
+
+### Track F — Foundation
 
 ```text
-Track N:
-  scripts/network/transports/
-  scripts/network/client/
-  scripts/network/server/
-  tests/network/
-  tests/process/
-
-Track G:
-  scripts/construction/domain/
-  scripts/construction/services/
-  scripts/construction/presentation/
-  tests/construction/
-
-Track T:
-  tests/process/
-  tools/network/
-  artifacts/test-results/
+H0 → A1 → S0 → T1 → B0 → M0 → S1
 ```
 
-Общие файлы `CommandGateway`, `WorldEntityAggregate`, schema registry и N0 DTO
-меняются только через versioned contract change и integration gate.
-
-Связанные документы:
-
-- `../checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
-- `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
-- `../contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
-- `../checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `../checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
-
-## Базовые правила параллельной разработки
-
-## 1. Можно ли вести сеть параллельно
-
-Да. После N0 сетевой трек может развиваться независимо от:
-
-- новых предметов;
-- строительства;
-- power/data/mechanical graph;
-- новых планет и terrain;
-- UI;
-- роботов;
-- транспорта.
-
-Но обе ветки должны соблюдать единые доменные правила.
-
-## 2. Три параллельных потока
+В один момент активен один основной F-checkpoint.
 
 ### Track G — Gameplay
 
-- предметы;
-- строительство;
-- энергетика;
-- инструменты;
-- базы;
-- роботы;
-- транспорт.
+- items/inventory;
+- construction;
+- controllers;
+- terrain/visual worlds;
+- robots.
 
-### Track N — Network
-
-- DTO;
-- transports;
-- server roles;
-- directory;
-- authority;
-- handoff;
-- ghosts;
-- routing.
+Новая authoritative операция обязана иметь domain command и не должна добавлять новый прямой UI mutation path.
 
 ### Track T — Test Infrastructure
 
-- Python harness;
-- process lifecycle;
-- isolated user data;
-- Docker Compose;
+- N2 harness extensions;
+- external process descriptors;
+- readiness probes;
 - fault injection;
-- reports;
-- soak tests.
+- JSON/JUnit;
+- future NATS/worker orchestration.
 
-Track N не должен блокировать Track G после завершения N0. Track T развивается вместе с каждым N-этапом.
+### Track C — Content research
 
-## 3. Обязательный контракт новой игровой сущности
+- type schemas;
+- vegetation model;
+- rule IR design;
+- visual procedural prototypes.
 
-Любая изменяемая сущность должна иметь:
+До A1/P0 этот track не меняет authoritative runtime.
 
-```text
-stable entity_id
-schema + schema_version
-state_revision
-authority_owner_id
-authority_epoch
-snapshot serializer
-command handlers
-validation
-persistence adapter
-network interest descriptor
-```
+## 2. Shared critical files
 
-Для мировой сущности дополнительно:
+Изменения в следующих слоях требуют отдельного versioned checkpoint:
 
 ```text
-SpatialRef
-bounds
-activation policy
-physics island relation
+network DTO/protocol frame
+authority/revision semantics
+aggregate descriptor/registry
+repository transaction format
+runtime topology
+message bus ports
+spatial address/shard contracts
 ```
 
-## 4. Запрещённые паттерны
+Gameplay branch не расширяет эти контракты ad hoc.
 
-Нельзя:
-
-- менять item/container state прямо из UI;
-- хранить canonical position только в `Node3D`;
-- использовать peer ID как entity ID;
-- сохранять NodePath в network snapshot;
-- считать server process постоянным владельцем пространства;
-- отправлять полное SceneTree как сетевой контракт;
-- запускать отдельную бизнес-логику для offline и online;
-- добавлять клавишу, которая обходит `CommandRegistry`;
-- делать сетевую репликацию до domain validation.
-
-## 5. Правильный путь команды
+## 3. Обязательный путь новой gameplay-команды
 
 ```text
 Input/UI/AI
-→ CommandRegistry
-→ Domain Command
-→ validation + revision + authority
-→ canonical state mutation
-→ persistence/event
-→ presentation update
-→ network snapshot/delta
+→ client/domain command adapter
+→ validation + operation ID
+→ authoritative application service
+→ staged mutation
+→ persistence/result
+→ snapshot/delta
+→ client replica/presentation
 ```
 
-Offline mode использует local transport adapter:
+До H0 старые локальные paths могут существовать, но новая authoritative функция обязана иметь network command path. После H0 обычный gameplay UI постепенно переводится на client replica.
+
+## 4. Aggregate rule
+
+Новая сущность не обязана использовать `WorldEntityAggregate`.
+
+До A1:
+
+- новые non-item aggregate implementations не добавляются в runtime;
+- проводится только research/schema work.
+
+После A1 aggregate kind обязан иметь:
 
 ```text
-LocalLoopbackTransport
+stable aggregate_id
+exact state_schema
+adapter validator
+authority/revision/tick
+snapshot/delta
+persistence adapter
+spatial_scope
 ```
 
-Online mode:
+## 5. Worker rule
+
+Worker:
+
+- читает immutable job input;
+- не получает repository write port;
+- возвращает proposal;
+- объявляет read/write sets;
+- ограничен budget;
+- не является authority.
+
+Любой direct worker mutation запрещён.
+
+## 6. Transport rule
+
+Application/domain зависит от semantic port, а не от implementation.
+
+Запрещено:
 
 ```text
-ENetCommandTransport
+nats.publish inside domain
+enet peer calls inside aggregate
+HTTP URL inside authoritative state
+broker subject as entity identity
 ```
 
-Domain service не знает, откуда пришла команда.
+## 7. Merge gates
 
-## 6. Как параллельно делать строительство
-
-Строительная система может развиваться до настоящей сети, если:
-
-- placement оформлен командой;
-- foundation/module получают UUID;
-- socket graph имеет snapshot;
-- power graph имеет versioned state;
-- вся конструкция определяет interaction island;
-- изменяемые chunks имеют owner token;
-- тест может воспроизвести строительство без UI.
-
-Когда появится handoff, целая связанная конструкция мигрирует одним aggregate/island, а не по одному блоку.
-
-## 7. Как параллельно делать транспорт
-
-Корабль или rover заранее должны иметь:
-
-- control input DTO;
-- authoritative motion state;
-- `SpatialRef`;
-- child space для интерьера при необходимости;
-- список attached/contained entities;
-- boundary crossing policy;
-- promotion/demotion between analytical and local physics.
-
-## 8. Merge gates
-
-Каждый PR/патч Track G проходит:
+### Foundation patch
 
 ```text
-existing offline regression
-snapshot round-trip
+focused contracts
+negative/bypass tests
+relevant loopback/process scenario
+full network profile
+full world regression
+updated ADR/checkpoint/roadmap
+```
+
+### Gameplay patch
+
+```text
+domain test
+persistence/replay test
 no direct presentation mutation
-network contract lint
+network command compatibility
+existing process regression
 ```
 
-Каждый PR/патч Track N проходит:
+### Test infrastructure patch
 
 ```text
-existing offline regression unchanged
-network contract tests
-multi-process scenario
+expected failure classification
 process cleanup
-JSON report
+atomic reports
+cross-platform path handling
+no false PASS on stderr/exit mismatch
 ```
 
-## 9. Версионирование
+## 8. Branch policy
 
-Изменение DTO:
+```text
+feature/h0-listen-host-runtime
+feature/a1-generic-aggregate-foundation
+feature/s0-spatial-simulation-substrate
+feature/t1-multi-peer-transport-v2
+feature/b0-message-bus-contracts
+feature/m0-aggregate-transactions
+feature/s1-distributed-compute-contracts
+```
 
-- добавление optional поля — minor protocol revision;
-- изменение семантики — новая schema version;
-- удаление поля — новая schema version;
-- server поддерживает текущую и предыдущую версию во время rolling upgrade;
-- golden fixtures хранятся в репозитории.
+Review fixes remain in the same unaccepted feature branch.
 
-## 10. Definition of Done для agent task
+## 9. No-go list
 
-Агентская задача завершена только когда присутствуют:
+До foundation gates нельзя:
 
-1. изменённый код;
-2. локальный test command;
-3. acceptance assertions;
-4. JSON report;
-5. обновлённая документация контракта;
-6. список изменённых файлов;
-7. отсутствие ручных шагов для базовой проверки.
-
-## Обязательная branch-инструкция в выдаче агента
-
-Каждая выдача нового кода обязана содержать точные команды создания рабочей ветки, применения patch-архива, commit и запуска тестов. Для нового этапа создаётся короткая `feature/...` ветка от актуального `main`. Review fixes до принятия этапа продолжаются в той же ветке и оформляются `fix(<scope>): ...`; новая ветка для `fix1/fix2` не создаётся. Полные правила: `../../AGENTS.md` и `../agent/AGENT_BRANCH_AND_DELIVERY_RULES_RU.md`.
-
-## Текущая ветка N1.3
-
-`feature/n1-reconnect-replay`; review fixes остаются в ней. После принятия следующий этап создаёт `feature/n2-process-harness`.
-
-## R3.1 branch boundary
-
-Текущий repository checkpoint разрабатывается только в `feature/r3.1-authoritative-recovery`. Review fixes остаются в этой же ветке. Изменения Directory/lease или cross-server handoff не должны попадать в R3.1; для них после принятия создаются `feature/n3-world-directory` и `feature/n4-authority-handoff`.
+- добавлять giant universal aggregate;
+- хранить every grass blade as entity;
+- внедрять NATS subject logic в domain;
+- строить Directory route только по process/peer ID;
+- применять несколько partial commits для одной materialization;
+- создавать shared client/server object references;
+- использовать generated arbitrary GDScript в authority.

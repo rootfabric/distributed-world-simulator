@@ -1,11 +1,22 @@
 # Документация PlanetSimulator
 
-Текущий checkpoint: `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`.
+Текущий документационный checkpoint: `checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`.
 
-- `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md` — единый multi-process network harness N2.
-- `testing/N2_PROCESS_HARNESS_RU.md` — manifest, сценарии, отчёты и команды запуска.
-- `plans/NEXT_ITERATIONS_RU.md` — очередь R3.1 → N3 → N4 → N5.
-- `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md` — принятый компонентный UI и отложенный UI-I3.
+Runtime-база: `v16.7.0-repository-r3.1-authoritative-recovery`.
+
+Ключевые документы текущего направления:
+
+- `checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md` — решения A0;
+- `architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md` — self-host, aggregates, workers и transports;
+- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md` — последовательность H0–N4;
+- `architecture/adr/ADR-007-runtime-topology-and-listen-host.md`;
+- `architecture/adr/ADR-008-generic-aggregate-boundary.md`;
+- `architecture/adr/ADR-009-transport-families-and-message-bus.md`;
+- `architecture/adr/ADR-010-authority-compute-separation.md`;
+- `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md` — принятый runtime foundation;
+- `testing/N2_PROCESS_HARNESS_RU.md` — принятый process harness.
+
+Следующий кодовый этап: `H0 listen-host`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 

@@ -1,18 +1,25 @@
-## Текущий checkpoint repository/network
+## Текущий архитектурный checkpoint
 
 ```text
-v16.7.0-repository-r3.1-authoritative-recovery
-build: r3.1-authoritative-persistence-crash-recovery
-branch: feature/r3.1-authoritative-recovery
+v16.7.1-architecture-a0-distributed-runtime
+runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+branch: feature/a0-distributed-runtime-architecture
 ```
 
-R3.1 сохраняет authoritative aggregate, Item Graph, operation ledger, completed command records и bounded reconnect replay state в строгом атомарном checkpoint. После crash/restart повтор прежнего `operation_id` возвращает сохранённый результат без второй мутации. Следующий этап — N3 World Directory и authority leases.
+R3.1 функционально принят. A0 не меняет runtime-код: он фиксирует архитектуру self-host/listen-host, generic aggregates, spatial cells/shards, authority-vs-compute, multi-peer transport и transport-independent message bus. World Directory перенесён после foundation-этапов, чтобы не закрепить узкую item/single-peer/ENet модель.
+
+Следующий кодовый checkpoint:
+
+```text
+H0 — listen-host runtime
+branch: feature/h0-listen-host-runtime
+```
 
 Основные документы:
 
-- `docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
-- `docs/checkpoints/2026-07-29_V16_7_0_REPOSITORY_R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
-- `docs/testing/N2_PROCESS_HARNESS_RU.md`;
+- `docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`;
+- `docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
+- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
 
 # Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay

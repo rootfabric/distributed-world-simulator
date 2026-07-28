@@ -457,3 +457,19 @@ REPOSITORY CHECKPOINT R3.1
 - recovery: Item Graph, WORLD aggregate, operation ledger, command dedup, reconnect replay records
 - runner: RUN_R3_AUTHORITATIVE_RECOVERY_TESTS.ps1
 - next: N3 World Directory and authority leases
+
+
+ARCHITECTURE CHECKPOINT A0
+- documentation checkpoint: v16.7.1-architecture-a0-distributed-runtime
+- runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+- branch: feature/a0-distributed-runtime-architecture
+- runtime code changes: none
+- decisions: listen-host topology, client replica boundary, generic aggregate layer, spatial cells/shards
+- decisions: authority ownership separated from compute assignment
+- decisions: replication/request-reply/events/jobs/bulk use separate semantic ports
+- decisions: NATS is an adapter; subjects and broker identities are not canonical domain state
+- decisions: multi-aggregate transactions and atomic outbox precede materialization/remote workers
+- roadmap: H0 -> A1 -> S0 -> T1 -> B0 -> M0 -> S1 -> B1/B2/P0/D1 -> N3/N4
+- next branch: feature/h0-listen-host-runtime
+- primary architecture: docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md
+- implementation roadmap: docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md
