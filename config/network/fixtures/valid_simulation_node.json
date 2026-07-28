@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "f836de0111f1229c662983e854cb9d9bc284726e30e964125a8af0a50d39d98d",
+  "expected_hash": "24cfc96d558e5827e8d0defd665a237d68679f9ccc3f7e78325f9c93ea6c4120",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "r3.1-authoritative-persistence-crash-recovery",
+    "build_id": "h0-single-process-network-first-host",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
+    "checkpoint": "v16.8.0-runtime-h0-listen-host",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

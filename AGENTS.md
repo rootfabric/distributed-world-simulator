@@ -110,10 +110,10 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime base: v16.7.0-repository-r3.1-authoritative-recovery
-current documentation candidate: v16.7.1-architecture-a0-distributed-runtime
-branch: feature/a0-distributed-runtime-architecture
-next implementation branch after acceptance: feature/h0-listen-host-runtime
+runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+architecture base: v16.7.1-architecture-a0-distributed-runtime
+branch: feature/h0-listen-host-runtime
+next implementation branch after acceptance: feature/a1-generic-aggregate-foundation
 ```
 
 Foundation order is mandatory unless the roadmap checkpoint explicitly changes it:

@@ -168,7 +168,7 @@ Handoff-specific тест требуется только для объекто�
 | PR-006 | failed staged recovery не изменяет live state | R3.1 |
 | PR-007 | legacy world.json требует явной migration | R3.1 |
 
-## 11. H0 listen-host gates
+## 11. H0 listen-host gates — implemented candidate
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -177,7 +177,9 @@ Handoff-specific тест требуется только для объекто�
 | LH-003 | loopback и ENet дают одинаковый final checksum | H0 |
 | LH-004 | UI не может вызвать authoritative service напрямую | H0 |
 | LH-005 | duplicate delta применяется client replica один раз | H0 |
-| LH-006 | listen-host shutdown drains server и client components | H0 |
+| LH-006 | listen-host process и ENet comparison children завершаются без leaks | H0 |
+| LH-007 | stale client revision отклоняется без второй authoritative mutation | H0 |
+| LH-008 | exact operation replay возвращает результат, duplicate delta fenced | H0 |
 
 ## 12. Generic aggregate и spatial gates
 

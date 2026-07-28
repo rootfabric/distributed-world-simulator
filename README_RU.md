@@ -1,24 +1,19 @@
-## Текущий архитектурный checkpoint
+## Текущий runtime checkpoint
 
 ```text
-v16.7.1-architecture-a0-distributed-runtime
-runtime base: v16.7.0-repository-r3.1-authoritative-recovery
-branch: feature/a0-distributed-runtime-architecture
-```
-
-R3.1 функционально принят. A0 не меняет runtime-код: он фиксирует архитектуру self-host/listen-host, generic aggregates, spatial cells/shards, authority-vs-compute, multi-peer transport и transport-independent message bus. World Directory перенесён после foundation-этапов, чтобы не закрепить узкую item/single-peer/ENet модель.
-
-Следующий кодовый checkpoint:
-
-```text
-H0 — listen-host runtime
+v16.8.0-runtime-h0-listen-host
+base: v16.7.1-architecture-a0-distributed-runtime
 branch: feature/h0-listen-host-runtime
 ```
 
+H0 реализует первый single-process network-first host: authoritative server runtime и ClientRuntime находятся в одном Godot-процессе, но команды, snapshot и delta проходят через canonical loopback boundary. Финальный checksum существующей item-команды совпадает с реальным двухпроцессным ENet-путём. Default F5 пока остаётся `offline`; роль `listen-host` доступна как opt-in foundation.
+
+Следующий этап: `A1 — Generic Aggregate Foundation`.
+
 Основные документы:
 
-- `docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`;
-- `docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
+- `docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`;
+- `docs/runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
 - `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
 

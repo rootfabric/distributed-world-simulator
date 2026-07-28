@@ -3,8 +3,8 @@
 ## Текущий статус
 
 ```text
-runtime base: v16.7.0-repository-r3.1-authoritative-recovery
-documentation: v16.7.1-architecture-a0-distributed-runtime
+runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
 N0–N2 и R3.1 приняты. Перед Directory добавлена foundation-линия для self-host, generic aggregates, spatial shards, multi-peer transport, message bus ports, transactions и compute proposals.
@@ -48,13 +48,13 @@ World Directory / Content Registry / other services
 
 ### A0 — distributed runtime architecture
 
-Статус: current candidate, documentation only.
+Статус: accepted architecture base.
 
 Фиксирует решения, которые предотвращают преждевременную реализацию Directory и NATS вокруг узкой модели.
 
 ### H0 — listen-host
 
-Один F5, но client/server разделены loopback DTO boundary.
+Статус: current candidate. Один процесс, но client/server разделены loopback DTO boundary; итоговый checksum эквивалентен реальному ENet process path.
 
 ### A1 — generic aggregates
 

@@ -16,10 +16,11 @@ const SimulationKernelScript = preload("res://scripts/runtime/simulation_kernel.
 const PresentationHostScript = preload("res://scripts/runtime/presentation_host.gd")
 const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/entity_registry_kernel_port.gd")
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
+const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.7.0-repository-r3.1-authoritative-recovery"
-const FOUNDATION_BUILD_ID: String = "r3.1-authoritative-persistence-crash-recovery"
+const FOUNDATION_CHECKPOINT: String = "v16.8.0-runtime-h0-listen-host"
+const FOUNDATION_BUILD_ID: String = "h0-single-process-network-first-host"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -72,6 +73,8 @@ var _detached_presentation_nodes: Array[Node] = []
 var _emergency_shutdown_scheduled: bool = false
 var _runtime_release_blocked: bool = false
 var _process_quit_handler: Callable
+var listen_host_runtime
+var listen_host_runtime_setup: Dictionary = {}
 
 
 func _ready() -> void:
@@ -129,6 +132,19 @@ func _ready() -> void:
 		get_tree().quit(3)
 		return
 
+	if runtime_role == RuntimeRoleScript.LISTEN_HOST:
+		listen_host_runtime = ListenHostRuntimeScript.new()
+		listen_host_runtime_setup = listen_host_runtime.setup({
+			"authority_owner_id": String(launch_options.get("node_id", "local-listen-host")),
+			"authority_epoch": 1,
+			"server_tick": 0,
+			"session_id": "session/runtime/listen-host/%d" % OS.get_process_id(),
+		})
+		if not bool(listen_host_runtime_setup.get("success", false)):
+			push_error("ListenHostRuntime setup failed: %s" % listen_host_runtime_setup)
+			get_tree().quit(4)
+			return
+
 	_register_core_commands()
 	_register_core_tests()
 
@@ -162,6 +178,8 @@ func _ready() -> void:
 		"checkpoint": FOUNDATION_CHECKPOINT,
 		"build_id": FOUNDATION_BUILD_ID,
 	})
+	if listen_host_runtime != null:
+		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
 	if bool(launch_options.get("print_runtime_descriptor", false)):
 		print("[runtime_descriptor] %s" % JSON.stringify(runtime_descriptor, "", true, true))
 	var load_result: Dictionary = load_world(requested_world, false)

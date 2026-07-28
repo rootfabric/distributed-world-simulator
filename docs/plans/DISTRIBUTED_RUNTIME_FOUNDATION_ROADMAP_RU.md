@@ -1,7 +1,7 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Документационный checkpoint:** `v16.7.1-architecture-a0-distributed-runtime`
-**Runtime-база:** `v16.7.0-repository-r3.1-authoritative-recovery`
+**Текущий runtime checkpoint:** `v16.8.0-runtime-h0-listen-host`
+**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
 
 ## 1. Почему N3 перенесён
@@ -58,10 +58,10 @@ Acceptance:
 - runtime-код не изменён;
 - следующий кодовый checkpoint однозначен.
 
-## 4. H0 — listen-host runtime
+## 4. H0 — listen-host runtime — реализован, candidate
 
 ```text
-proposed checkpoint: v16.8.0-runtime-h0-listen-host
+checkpoint: v16.8.0-runtime-h0-listen-host
 branch: feature/h0-listen-host-runtime
 ```
 
@@ -105,7 +105,7 @@ local UI item command
 - plants/fields;
 - Directory.
 
-## 5. A1 — Generic Aggregate Foundation
+## 5. A1 — Generic Aggregate Foundation — следующий этап
 
 ```text
 proposed checkpoint: v16.8.1-architecture-a1-generic-aggregate

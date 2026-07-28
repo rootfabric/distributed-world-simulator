@@ -10,11 +10,12 @@ const PROTOCOL_VERSION: int = 1
 static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 	var normalized: Dictionary = LaunchOptionsScript.to_snapshot(options)
 	var role: String = String(normalized.get("role", RuntimeRoleScript.OFFLINE))
+	var role_descriptor: Dictionary = RuntimeRoleScript.describe(role)
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
-		"checkpoint": String(context.get("checkpoint", "v16.7.0-repository-r3.1-authoritative-recovery")),
-		"build_id": String(context.get("build_id", "r3.1-authoritative-persistence-crash-recovery")),
+		"checkpoint": String(context.get("checkpoint", "v16.8.0-runtime-h0-listen-host")),
+		"build_id": String(context.get("build_id", "h0-single-process-network-first-host")),
 		"project_name": String(ProjectSettings.get_setting(
 			"application/config/name",
 			"PlanetSimulator"
@@ -33,6 +34,9 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 		"presentation_enabled": RuntimeRoleScript.presentation_enabled(role),
 		"local_input_enabled": RuntimeRoleScript.accepts_local_input(role),
 		"authoritative": RuntimeRoleScript.is_authoritative(role),
+		"client_replica_enabled": bool(role_descriptor.get("client_replica_enabled", false)),
+		"embedded_authority": bool(role_descriptor.get("embedded_authority", false)),
+		"direct_client_domain_access_allowed": bool(role_descriptor.get("direct_client_domain_access_allowed", false)),
 		"started_at_utc": Time.get_datetime_string_from_system(true, true),
 	}
 

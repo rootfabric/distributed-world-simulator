@@ -1,17 +1,17 @@
 # Дорожная карта PlanetSimulator
 
-## Текущий architecture gate — A0
+## Текущий runtime gate — H0
 
 ```text
-documentation: v16.7.1-architecture-a0-distributed-runtime
-runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+runtime candidate: v16.8.0-runtime-h0-listen-host
+architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
-Перед N3 проект фиксирует foundation-линейку:
+Перед N3 проект последовательно закрывает foundation-линейку:
 
 ```text
-H0 listen-host
-→ A1 generic aggregates
+H0 listen-host — current candidate
+→ A1 generic aggregates — next
 → S0 spatial cells/shards
 → T1 multi-peer transport
 → B0 message-bus ports

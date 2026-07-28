@@ -3,9 +3,9 @@
 ## Текущий режим
 
 ```text
-runtime base: R3.1 accepted
-architecture: A0 current candidate
-next implementation: H0 listen-host
+runtime candidate: H0 listen-host
+architecture base: A0 accepted
+next implementation after acceptance: A1 generic aggregates
 ```
 
 До принятия S1 основной foundation-track идёт последовательно. Разрешено параллельно развивать gameplay только при соблюдении стабильных command/persistence boundaries.
@@ -77,7 +77,7 @@ Input/UI/AI
 → client replica/presentation
 ```
 
-До H0 старые локальные paths могут существовать, но новая authoritative функция обязана иметь network command path. После H0 обычный gameplay UI постепенно переводится на client replica.
+H0 уже предоставляет network-first composition и client replica boundary. Старые локальные paths могут временно существовать только как legacy/offline paths; новая authoritative функция обязана иметь network command path, а gameplay UI переводится на client replica отдельными вертикальными checkpoint.
 
 ## 4. Aggregate rule
 

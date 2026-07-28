@@ -1,3 +1,19 @@
+Planetary World v16.8.0-runtime-h0-listen-host
+
+H0 listen-host runtime:
+- single-process authority + ClientRuntime composition
+- ClientReplicaStore accepts only canonical EntitySnapshot/Delta envelopes
+- ClientCommandGateway builds commands from replica state
+- loopback command and replication paths preserve JSON boundary
+- deterministic N1 fixture identity allows exact loopback/ENet checksum comparison
+- exact command replay performs one mutation and duplicate delta is fenced
+- stale revision is rejected without additional mutation
+- runtime role listen-host enables presentation/input/authority/client replica while forbidding direct client-domain access
+- tests/runtime/test_h0_listen_host_contracts.gd
+- tests/runtime/test_h0_listen_host_processes.gd
+- docs/runtime/H0_LISTEN_HOST_RUNTIME_RU.md
+- docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md
+
 Planetary World v16.5.2-foundation-network-n1
 
 Network N1.3 reconnect and bounded replay:

@@ -2,7 +2,8 @@
 
 **Статус:** архитектурное решение A0
 **Документационный checkpoint:** `v16.7.1-architecture-a0-distributed-runtime`
-**Runtime-база:** `v16.7.0-repository-r3.1-authoritative-recovery`
+**Runtime checkpoint candidate:** `v16.8.0-runtime-h0-listen-host`
+**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Назначение:** зафиксировать устойчивую основу для self-host, multiplayer, сложных агрегатов, compute workers, сменяемых транспортов и будущего горизонтального масштабирования мира.
 
 ## 1. Причина появления A0
@@ -876,8 +877,8 @@ Rules возвращают proposals и имеют read/write sets и budgets.
 
 - N0–N2 и R3.1 сохраняются без концептуального переписывания;
 - N3 откладывается до generic aggregate, spatial, multi-peer и bus boundaries;
-- первым кодовым этапом становится H0 listen-host;
-- затем A1 generic aggregate foundation;
+- H0 listen-host реализован как current candidate;
+- следующим кодовым этапом становится A1 generic aggregate foundation;
 - transport, message bus, transactions и compute contracts развиваются отдельными ports;
 - NATS вводится после transport-independent B0;
 - Population Field строится после aggregate/spatial/transaction foundations;

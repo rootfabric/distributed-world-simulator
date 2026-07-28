@@ -1,6 +1,7 @@
 extends RefCounted
 
 const FactoryScript = preload("res://scripts/items/services/item_domain_factory.gd")
+const DeterministicIdGeneratorScript = preload("res://scripts/network/session/n1_deterministic_item_id_generator.gd")
 const DefinitionScript = preload("res://scripts/items/domain/item_definition.gd")
 const ContainerStateScript = preload("res://scripts/containers/container_state.gd")
 const RelationsScript = preload("res://scripts/items/domain/item_relations.gd")
@@ -47,6 +48,7 @@ func setup(owner_id: String = "sim-n1", epoch: int = 5, tick: int = INITIAL_SERV
 	authority_epoch = epoch
 	server_tick = tick
 	domain = FactoryScript.create()
+	domain.items.setup_id_generator(DeterministicIdGeneratorScript.new())
 	domain.world_entities.setup({
 		"authority_owner_id": authority_owner_id,
 		"authority_epoch": authority_epoch,

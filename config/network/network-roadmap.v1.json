@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 10,
+  "document_revision": 11,
   "created_at_utc": "2026-07-27T00:00:00Z",
   "updated_at_utc": "2026-07-29T00:00:00Z",
-  "project_checkpoint": "v16.7.1-architecture-a0-distributed-runtime",
-  "runtime_base_checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
+  "project_checkpoint": "v16.8.0-runtime-h0-listen-host",
+  "runtime_base_checkpoint": "v16.8.0-runtime-h0-listen-host",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -90,7 +90,7 @@
     {
       "id": "A0",
       "name": "Distributed runtime architecture checkpoint",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "R3.1"
       ],
@@ -101,18 +101,26 @@
     {
       "id": "H0",
       "name": "Listen-host runtime and client replica",
-      "status": "next",
+      "status": "candidate",
       "depends_on": [
         "A0"
       ],
-      "proposed_checkpoint": "v16.8.0-runtime-h0-listen-host",
       "branch": "feature/h0-listen-host-runtime",
-      "acceptance": "same item command over loopback host and ENet produces equal final checksum without direct client-domain access"
+      "acceptance": "same item command over loopback host and ENet produces equal final checksum without direct client-domain access",
+      "checkpoint": "v16.8.0-runtime-h0-listen-host",
+      "implementation": {
+        "client_runtime": "implemented",
+        "client_replica_store": "implemented",
+        "client_command_gateway": "implemented",
+        "listen_host_composition": "implemented",
+        "loopback_enet_checksum_equivalence": "implemented",
+        "default_f5_migration": "deferred"
+      }
     },
     {
       "id": "A1",
       "name": "Generic aggregate foundation",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "H0"
       ],

@@ -1,25 +1,26 @@
 # Дорожная карта сетевой и распределённой архитектуры PlanetSimulator
 
-Текущий документационный checkpoint:
+Текущий runtime checkpoint:
 
 ```text
-v16.7.1-architecture-a0-distributed-runtime
-branch: feature/a0-distributed-runtime-architecture
-runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+v16.8.0-runtime-h0-listen-host
+branch: feature/h0-listen-host-runtime
+base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
-R3.1 функционально принят. Перед N3 выполнена архитектурная ревизия self-host, сложных aggregates, distributed compute и transport-independent server messaging. Решение: сначала укрепить runtime/aggregate/data-plane foundations, затем строить World Directory и handoff.
+A0 принят как архитектурная основа. H0 реализует однопроцессный listen-host с отдельными authoritative и client runtime boundaries. Следующий этап — A1 generic aggregate foundation; N3 остаётся отложен до завершения foundation-линии.
 
 ## Основные документы
 
-1. [`docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md) — текущий A0 checkpoint.
-2. [`docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md) — целевая архитектура runtime, aggregates, workers и transports.
-3. [`docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md) — точная последовательность H0 → A1 → S0 → T1 → B0 → M0 → S1.
-4. [`docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`](docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md) — принятый authoritative recovery foundation.
-5. [`docs/testing/N2_PROCESS_HARNESS_RU.md`](docs/testing/N2_PROCESS_HARNESS_RU.md) — multi-process test infrastructure.
-6. [`docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`](docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md) — принятые сетевые invariants.
-7. [`docs/network/NETWORK_TEST_MATRIX_RU.md`](docs/network/NETWORK_TEST_MATRIX_RU.md) — test gates.
-8. [`docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md`](docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md) — границы ownership между tracks.
+1. [`docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md) — текущий H0 runtime candidate.
+2. [`docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md) — принятая A0 architecture base.
+3. [`docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md) — целевая архитектура runtime, aggregates, workers и transports.
+4. [`docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md) — точная последовательность H0 → A1 → S0 → T1 → B0 → M0 → S1.
+5. [`docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`](docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md) — принятый authoritative recovery foundation.
+6. [`docs/testing/N2_PROCESS_HARNESS_RU.md`](docs/testing/N2_PROCESS_HARNESS_RU.md) — multi-process test infrastructure.
+7. [`docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`](docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md) — принятые сетевые invariants.
+8. [`docs/network/NETWORK_TEST_MATRIX_RU.md`](docs/network/NETWORK_TEST_MATRIX_RU.md) — test gates.
+9. [`docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md`](docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md) — границы ownership между tracks.
 
 ## Принятая база
 
@@ -28,7 +29,8 @@ N0   network contracts                         accepted
 N1   ENet snapshot/command/reconnect           accepted
 N2   multi-process harness                     accepted
 R3.1 authoritative persistence/recovery        accepted
-A0   distributed runtime architecture          current candidate
+A0   distributed runtime architecture          accepted
+H0   single-process network-first listen-host   current candidate
 ```
 
 ## Скорректированная foundation-линия
@@ -114,7 +116,7 @@ ENet, loopback, NATS и другие технологии реализуют ada
 ## Следующий кодовый этап
 
 ```text
-H0 — listen-host runtime
-branch: feature/h0-listen-host-runtime
-proposed checkpoint: v16.8.0-runtime-h0-listen-host
+A1 — Generic Aggregate Foundation
+branch: feature/a1-generic-aggregate-foundation
+proposed checkpoint: v16.8.1-architecture-a1-generic-aggregate
 ```

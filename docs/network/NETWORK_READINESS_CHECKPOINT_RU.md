@@ -1,8 +1,8 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Документационный checkpoint:** `v16.7.1-architecture-a0-distributed-runtime`
-**Runtime-база:** `v16.7.0-repository-r3.1-authoritative-recovery`
+**Runtime checkpoint candidate:** `v16.8.0-runtime-h0-listen-host`
+**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
 
@@ -75,9 +75,9 @@
 
 ## 3. Выявленные архитектурные ограничения
 
-### Current offline is not network-semantic host
+### Listen-host foundation реализован, gameplay migration ещё не завершена
 
-UI может использовать локальный application path. Нужен H0 ClientRuntime/ReplicaStore.
+H0 уже создаёт отдельные `ClientRuntime`, `ClientCommandGateway` и `ClientReplicaStore`, а loopback и ENet дают одинаковый итоговый checksum. Default F5 и существующий gameplay UI пока остаются `offline`; их вертикальный перенос выполняется последовательно после принятия H0.
 
 ### Current aggregate is item-backed
 
@@ -113,13 +113,14 @@ B0 message bus contracts
 
 Это позволяет Directory маршрутизировать generic aggregate/shard и transport-neutral route, а не только item/ENet endpoint.
 
-## 5. Следующий gate
+## 5. Текущий и следующий gate
 
 ```text
-H0 — listen-host runtime
+H0 — listen-host runtime — current candidate
+A1 — Generic Aggregate Foundation — next
 ```
 
-H0 не добавляет новых игровых механик. Он проводит существующую item-команду через настоящий client replica boundary внутри одного процесса и сравнивает результат с ENet process path.
+H0 не добавляет новых игровых механик. Он проводит существующую item-команду через настоящий client replica boundary внутри одного процесса и сравнивает результат с ENet process path. После принятия H0 следующий фундаментальный шаг — generic aggregate contracts без ослабления существующих item invariants.
 
 ## 6. Что пока не начинать
 
@@ -135,4 +136,5 @@ H0 не добавляет новых игровых механик. Он про
 
 - [`../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md);
 - [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md);
-- [`../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md).
+- [`../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md);
+- [`../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md).
