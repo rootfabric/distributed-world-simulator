@@ -1,5 +1,7 @@
 extends RefCounted
 
+const AtomicJsonScript = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
+
 const EndpointScript = preload("res://scripts/network/contracts/network_endpoint.gd")
 const HandshakeScript = preload("res://scripts/network/contracts/network_handshake_envelope.gd")
 const SnapshotScript = preload("res://scripts/network/contracts/entity_snapshot_envelope.gd")
@@ -115,15 +117,7 @@ static func create_handshake(client_node_id: String) -> Dictionary:
 
 
 static func write_json(path: String, value: Dictionary) -> bool:
-	var directory: String = path.get_base_dir()
-	if not directory.is_empty():
-		DirAccess.make_dir_recursive_absolute(directory)
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		return false
-	file.store_string(JSON.stringify(value, "  ", true, true) + "\n")
-	file.close()
-	return true
+	return bool(AtomicJsonScript.write_dictionary(path, value).get("success", false))
 
 
 static func _parse_positive_int(value: String, key: String, errors: Array[String]) -> int:

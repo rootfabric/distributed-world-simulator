@@ -48,6 +48,8 @@ func _finalize() -> void:
 
 func _finish_from_session() -> void:
 	var report: Dictionary = _session.get_report()
+	report["process_id"] = OS.get_process_id()
+	report["resolved_user_data_dir"] = OS.get_user_data_dir()
 	SupportScript.write_json(String(_options["result_file"]), report)
 	_finished = true
 	print("N1_RECONNECT_CLIENT_RESULT %s" % JSON.stringify(report))
@@ -56,6 +58,8 @@ func _finish_from_session() -> void:
 
 func _finish_failure(error_code: String, details: Dictionary = {}) -> void:
 	var report: Dictionary = {
+		"process_id": OS.get_process_id(),
+		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"schema": "planet_simulator.n1_reconnect_replay_client_report.v1",
 		"state": "FAILED", "passed": false, "failure_code": error_code, "details": details.duplicate(true),
 	}

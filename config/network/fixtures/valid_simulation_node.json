@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "949f94dbe7f08c5aaff549dcd1342306f26fd4f726f91bfacec1f91c1b9ebcb3",
+  "expected_hash": "e569e23740b371d8008bae91dfc777a29e2923a988b87de6582a7b38e9278108",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "n1-reconnect-replay-bounded-cache",
+    "build_id": "n2-cross-platform-process-orchestration",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.5.2-foundation-network-n1",
+    "checkpoint": "v16.6.0-network-n2-process-harness",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

@@ -65,6 +65,8 @@ func _finalize() -> void:
 
 func _finish_from_session() -> void:
 	var report: Dictionary = _session.get_report()
+	report["process_id"] = OS.get_process_id()
+	report["resolved_user_data_dir"] = OS.get_user_data_dir()
 	SupportScript.write_json(String(_options["result_file"]), report)
 	_exit_code = 0 if bool(report.get("passed", false)) else 1
 	_finished = true
@@ -75,6 +77,8 @@ func _finish_from_session() -> void:
 func _finish_failure(error_code: String, details: Dictionary = {}) -> void:
 	var path: String = String(_options.get("result_file", ""))
 	var report: Dictionary = {
+		"process_id": OS.get_process_id(),
+		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"schema": "planet_simulator.n1_snapshot_server_report.v1",
 		"state": "FAILED",
 		"passed": false,

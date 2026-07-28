@@ -439,3 +439,11 @@ Foundation/N0 part 1 boundary hardening fix1:
 - tests/network/test_network_contracts.gd
 - tests/network/test_loopback_command_transport.gd
 - docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md
+
+NETWORK CHECKPOINT N2
+- checkpoint: v16.6.0-network-n2-process-harness
+- build: n2-cross-platform-process-orchestration
+- branch: feature/n2-process-harness
+- manifest: config/testing/network-process-scenarios.v1.json
+- runner: RUN_N2_PROCESS_HARNESS_TESTS.ps1 / .sh
+- next: R3.1 authoritative persistence/recovery

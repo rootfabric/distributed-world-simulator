@@ -1,3 +1,13 @@
+## Текущий checkpoint сети
+
+```text
+v16.6.0-network-n2-process-harness
+build: n2-cross-platform-process-orchestration
+branch: feature/n2-process-harness
+```
+
+N2 запускает реальные N1 server/client процессы по единому manifest, изолирует `user://`, классифицирует ожидаемые аварии, гарантирует cleanup и формирует JSON/JUnit. Следующий этап — R3.1 authoritative persistence/recovery.
+
 # Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay
 
 Текущий candidate строится поверх принятого `v16.5.1-network-n1-remote-item-command` и завершает первый сетевой vertical slice N1.

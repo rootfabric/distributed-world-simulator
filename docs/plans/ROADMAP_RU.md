@@ -1,3 +1,9 @@
+# Дорожная карта PlanetSimulator
+
+## Текущий сетевой gate — N2
+
+`v16.6.0-network-n2-process-harness` объединяет реальные N1 process fixtures в единый manifest-driven harness. После принятия следующий приоритет — `R3.1 authoritative persistence/recovery`, затем N3 Directory и N4 handoff.
+
 # Дорожная карта к лунному симулятору мечты
 
 ## Видение финальной системы

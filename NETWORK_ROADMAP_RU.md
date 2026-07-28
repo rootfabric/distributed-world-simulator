@@ -2,11 +2,12 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.5.2-foundation-network-n1` (candidate). N1.0–N1.2 приняты. N1.3 доказывает reconnect/replay после потери command result: новая transport session получает сохранённые result/delta без второй authoritative mutation. Следующий этап — N2 multi-process harness.
+Текущий статус: `v16.6.0-network-n2-process-harness` (candidate). Полный N1 принят. N2 объединяет реальные ENet-сценарии в единый кроссплатформенный harness с динамическими портами, isolated user-state, fault classification, cleanup и JSON/JUnit отчётами. Следующий этап — R3.1 authoritative persistence/recovery.
 
 ## Основные документы
 
-1. [`docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`](docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md) — текущий N1.3 candidate и завершение N1.
+1. [`docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`](docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md) — текущий N2 candidate.
+2. [`docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`](docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md) — принятый полный N1.
 2. [`docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`](docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md) — принятый N1.2 authoritative command.
 3. [`docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`](docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md) — принятый N1.1 ENet snapshot path.
 3. [`docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`](docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md) — точный план N1.0–N5 и checkpoint gates.

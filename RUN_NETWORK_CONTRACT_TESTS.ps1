@@ -41,6 +41,8 @@ $Tests = @(
     "res://tests/network/test_n1_remote_item_command_processes.gd",
     "res://tests/network/test_n1_reconnect_replay_contracts.gd",
     "res://tests/network/test_n1_reconnect_replay_processes.gd",
+    "res://tests/testing/test_n2_process_harness_contracts.gd",
+    "res://tests/testing/test_n2_process_harness_processes.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -54,8 +56,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.5.2-foundation-network-n1"
-    build_id = "n1-reconnect-replay-bounded-cache"
+    checkpoint = "v16.6.0-network-n2-process-harness"
+    build_id = "n2-cross-platform-process-orchestration"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -80,8 +82,30 @@ function Invoke-CheckedProcess {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
     $Started = [DateTime]::UtcNow
-    & $Godot @Arguments
-    $ExitCode = $LASTEXITCODE
+    $Captured = @()
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
+    $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    try {
+        # Expected Godot diagnostics may be emitted on stderr even when the
+        # test succeeds. Capture them without turning NativeCommandError into
+        # a terminating PowerShell exception.
+        $ErrorActionPreference = "Continue"
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+        }
+        & $Godot @Arguments 2>&1 | Tee-Object -Variable Captured | ForEach-Object { Write-Host $_ }
+        $RawExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
+        }
+    }
+    $OutputText = ($Captured | Out-String)
+    $HasFailureMarker = $OutputText -match '(?m): FAIL(?:\s|\()'
+    $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     $Summary.steps += [ordered]@{
         name = $Name
@@ -101,7 +125,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.5.2-foundation-network-n1"
+    Write-Host "Checkpoint: v16.6.0-network-n2-process-harness"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `

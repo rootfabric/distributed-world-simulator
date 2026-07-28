@@ -1,52 +1,34 @@
-# Ближайшие итерации после v16.5.2-foundation-network-n1
+# Ближайшие итерации после v16.6.0-network-n2-process-harness
 
-## Текущее состояние
+## Текущий gate — N2 process harness
 
-```text
-N1.0 transport boundary                   принято
-N1.1 ENet handshake + initial snapshot   принято
-N1.2 authoritative item command          принято
-N1.3 reconnect + bounded replay          current candidate
-```
+Ветка: `feature/n2-process-harness`.
 
-## Текущий gate — принять N1.3
+N2 объединяет N1.1–N1.3 process fixtures в один manifest-driven runner:
 
-Ветка: `feature/n1-reconnect-replay`.
+- динамические UDP-порты;
+- отдельные server/client `user://`;
+- readiness и per-scenario timeout;
+- проверка terminal report и process exit code;
+- гарантированная cleanup-ветка;
+- success и expected-failure сценарии;
+- stdout/stderr, JSON и JUnit.
 
-Acceptance:
+Acceptance: все сценарии классифицированы точно, после каждого запуска нет живых дочерних процессов, полный сетевой профиль и world regression проходят.
 
-- потеря первого результата после commit воспроизводится;
-- два reconnect создают три уникальные transport sessions;
-- logical session и `operation_id` сохраняются;
-- domain handler, mutation и ledger вызываются ровно один раз;
-- cached result/delta возвращаются дважды;
-- клиент применяет delta один раз;
-- bounded cache/TTL/conflict/resume-limit тесты проходят;
-- полный network/world regression зелёный.
-
-## Следующий этап — N2
-
-Ветка после принятия N1.3:
+## Следующий этап — R3.1
 
 ```text
-feature/n2-process-harness
+branch: feature/r3.1-authoritative-recovery
+target: v16.7.0-repository-r3.1-authoritative-recovery
 ```
 
-Target checkpoint:
+R3.1 сохраняет authoritative snapshot, revision/epoch, operation ledger и replay/dedup records. Повторный `operation_id` после server restart должен вернуть прежний terminal result без второй мутации.
+
+После R3.1:
 
 ```text
-v16.6.0-network-n2-process-harness
+N3 World Directory и authority leases
+→ N4 cross-server authority handoff
+→ N5 ghost replicas и interest management
 ```
-
-Результат N2 — один кроссплатформенный runner, который запускает реальные Godot server/client процессы на динамических портах, выдаёт им isolated `user://`, управляет readiness/timeouts/cleanup, выполняет fault scenarios и пишет JSON/JUnit.
-
-После N2:
-
-```text
-R3.1 authoritative persistence/recovery
-→ N3 World Directory
-→ N4 cross-server handoff
-→ N5 ghost replicas
-```
-
-UI-I3 и новые крупные gameplay API не должны менять authoritative command semantics до принятия N2.

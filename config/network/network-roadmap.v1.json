@@ -1,8 +1,8 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 7,
+  "document_revision": 8,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "project_checkpoint": "v16.5.2-foundation-network-n1",
+  "project_checkpoint": "v16.6.0-network-n2-process-harness",
   "strategy": "incremental_authoritative_server_mesh",
   "principles": [
     "stable_entity_identity",
@@ -17,7 +17,7 @@
   "recommended_stack": {
     "realtime_transport_initial": "Godot ENetMultiplayerPeer",
     "domain_contracts": "versioned DTO plus canonical JSON fixtures",
-    "test_orchestrator": "Python pytest subprocess",
+    "test_orchestrator": "Godot cross-platform subprocess harness with JSON and JUnit reports",
     "local_topology": "Docker Compose after N2",
     "control_plane_later": "NATS Core plus JetStream",
     "fault_injection_udp": "tc netem",
@@ -43,7 +43,7 @@
         "N0"
       ],
       "acceptance": "reconnect replay returns one committed item mutation with checksum equality",
-      "status": "candidate",
+      "status": "accepted",
       "subphases": [
         {
           "id": "N1.0",
@@ -66,7 +66,7 @@
         {
           "id": "N1.3",
           "name": "Reconnect and replay",
-          "status": "candidate",
+          "status": "accepted",
           "checkpoint": "v16.5.2-foundation-network-n1"
         }
       ]
@@ -78,7 +78,18 @@
       "depends_on": [
         "N1"
       ],
-      "acceptance": "pytest starts and stops real Godot processes",
+      "acceptance": "one manifest runs real N1 success and fault scenarios with isolated user state, exact failure classification, process cleanup, JSON and JUnit reports",
+      "status": "candidate",
+      "checkpoint": "v16.6.0-network-n2-process-harness"
+    },
+    {
+      "id": "R3.1",
+      "name": "Authoritative persistence and restart recovery",
+      "complexity": "L",
+      "depends_on": [
+        "N2"
+      ],
+      "acceptance": "server restart preserves snapshot, revision, epoch, ledger and replay records without a second mutation",
       "status": "planned"
     },
     {
@@ -86,7 +97,7 @@
       "name": "World Directory and authority leases",
       "complexity": "L",
       "depends_on": [
-        "N2"
+        "R3.1"
       ],
       "acceptance": "two static authority regions with epoch fencing",
       "status": "planned"
