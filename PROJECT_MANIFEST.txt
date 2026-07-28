@@ -1,3 +1,19 @@
+Planetary World v16.8.0-runtime-h0-listen-host
+
+H0 listen-host runtime:
+- single-process authority + ClientRuntime composition
+- ClientReplicaStore accepts only canonical EntitySnapshot/Delta envelopes
+- ClientCommandGateway builds commands from replica state
+- loopback command and replication paths preserve JSON boundary
+- deterministic N1 fixture identity allows exact loopback/ENet checksum comparison
+- exact command replay performs one mutation and duplicate delta is fenced
+- stale revision is rejected without additional mutation
+- runtime role listen-host enables presentation/input/authority/client replica while forbidding direct client-domain access
+- tests/runtime/test_h0_listen_host_contracts.gd
+- tests/runtime/test_h0_listen_host_processes.gd
+- docs/runtime/H0_LISTEN_HOST_RUNTIME_RU.md
+- docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md
+
 Planetary World v16.5.2-foundation-network-n1
 
 Network N1.3 reconnect and bounded replay:
@@ -457,3 +473,19 @@ REPOSITORY CHECKPOINT R3.1
 - recovery: Item Graph, WORLD aggregate, operation ledger, command dedup, reconnect replay records
 - runner: RUN_R3_AUTHORITATIVE_RECOVERY_TESTS.ps1
 - next: N3 World Directory and authority leases
+
+
+ARCHITECTURE CHECKPOINT A0
+- documentation checkpoint: v16.7.1-architecture-a0-distributed-runtime
+- runtime base: v16.7.0-repository-r3.1-authoritative-recovery
+- branch: feature/a0-distributed-runtime-architecture
+- runtime code changes: none
+- decisions: listen-host topology, client replica boundary, generic aggregate layer, spatial cells/shards
+- decisions: authority ownership separated from compute assignment
+- decisions: replication/request-reply/events/jobs/bulk use separate semantic ports
+- decisions: NATS is an adapter; subjects and broker identities are not canonical domain state
+- decisions: multi-aggregate transactions and atomic outbox precede materialization/remote workers
+- roadmap: H0 -> A1 -> S0 -> T1 -> B0 -> M0 -> S1 -> B1/B2/P0/D1 -> N3/N4
+- next branch: feature/h0-listen-host-runtime
+- primary architecture: docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md
+- implementation roadmap: docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md

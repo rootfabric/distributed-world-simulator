@@ -1,172 +1,140 @@
-# Checkpoint готовности PlanetSimulator к сетевому слою
+# Checkpoint готовности PlanetSimulator к distributed runtime
 
-**Дата ревизии:** 28 июля 2026 года
-**Текущий candidate checkpoint:** `v16.5.2-foundation-network-n1`
-**Фактическая сетевая стадия:** N1.0–N1.2 приняты; N1.3 reconnect и bounded replay реализованы как candidate
+**Дата ревизии:** 29 июля 2026 года
+**Runtime checkpoint candidate:** `v16.8.0-runtime-h0-listen-host`
+**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
-## 1. Проверенная база
+## 1. Что доказано кодом
 
-Ревизия архива подтверждает:
+### N0
 
-- Godot `4.7.1 stable double custom build`;
-- 60 обязательных headless test script;
-- 5 runtime-миров;
-- 228 импортированных GDScript UID-записей;
-- единый Simulator Core;
-- полный persistent Item Graph;
-- revisions, operation ledger и payload fingerprint;
-- gravity field и physics state;
-- `SimulationClock`, `FrameGraph`, `SpatialRef`, `PartitionAddress v2`;
-- `authority_owner_id` и `authority_epoch` в локальном entity domain.
+- strict versioned DTO;
+- canonical JSON/checksums;
+- authority owner/epoch;
+- revision/tick fences;
+- snapshot/delta;
+- handoff state machine contracts;
+- presentation/runtime object rejection.
 
-Lifecycle-блокер закрыт fail-closed: terminal `FAILED` и release fence запрещают обычную загрузку нового мира; `unified_runtime_boot`, `world_boot_matrix` и переключение мира при активной генерации завершают Godot после drain worker-а. Отдельный Python process test запускает `simulation-server` с изолированным профилем и проверяет последовательность `node_ready → node_draining → node_stopped`.
+### N1
 
-## 2. Что уже готово для повторного использования
+- ENet handshake;
+- initial snapshot;
+- remote authoritative item command;
+- result/delta;
+- logical session и transport session separation;
+- reconnect/replay без второй mutation.
 
-### Identity
+### N2
 
-```text
-entity_id / item_id
-universe_id
-instance_id
-space_id
-frame_id
-state_revision
-authority_owner_id
-authority_epoch
-```
+- multi-process orchestration;
+- isolated user state;
+- dynamic ports;
+- readiness/timeouts;
+- fault classification;
+- cleanup;
+- JSON/JUnit reports.
 
-UUID не меняется при container/mount/world переходах и будущем handoff.
+### R3.1
 
-### Canonical coordinates
+- strict authoritative checkpoint;
+- active/previous/pending atomic layout;
+- staged recovery;
+- command/replay state recovery;
+- crash after commit и crash before commit;
+- fail-closed corruption/rollback handling.
 
-Сетевой слой должен передавать `SpatialRef`, а не `global_transform` как
-единственную истину.
+## 2. К чему база готова
 
-### Safe commands
+Высокая готовность:
 
-Уже доступны:
+- dedicated server;
+- localhost server/client;
+- first listen-host implementation;
+- generic aggregate contracts;
+- transport-independent ports;
+- outbox foundation;
+- local compute-worker contracts.
 
-```text
-operation_id
-payload_hash
-expected_revision
-result_revision
-operation ledger
-```
+Средняя готовность:
 
-### Transactional state
+- multiple peers;
+- NATS service bus;
+- spatial shards;
+- population fields;
+- multi-aggregate transactions.
 
-Item Registry, Container Registry, Attachments и operation ledger сохраняются
-единым fail-closed snapshot.
+Пока не готово:
 
-### Observability
+- executable World Directory;
+- live authority leases;
+- generic cross-server handoff;
+- ghosts/interest streaming;
+- dynamic region split;
+- safe dynamic rule runtime.
 
-Есть JSONL logging, runtime tests и JSON regression report.
+## 3. Выявленные архитектурные ограничения
 
-## 3. Состояние N0
+### Listen-host foundation реализован, gameplay migration ещё не завершена
 
-N0 завершён. Реализованы command/result/snapshot/delta envelopes, canonical
-checksums, AuthorityLease/Route, node/space/region descriptors, ghost/client
-routes, handoff ticket/result/state machine, golden fixtures, mutation matrix и
-JSON loopback для command и replication paths.
+H0 уже создаёт отдельные `ClientRuntime`, `ClientCommandGateway` и `ClientReplicaStore`, а loopback и ENet дают одинаковый итоговый checksum. Default F5 и существующий gameplay UI пока остаются `offline`; их вертикальный перенос выполняется последовательно после принятия H0.
 
-Fix1 закрывает post-review обходы: owner не меняется при прежнем epoch,
-`state_revision` и `server_tick` не откатываются, delta path не теряет пустые
-сегменты, а kernel принимает только точные port scripts с валидным descriptor и
-повторно проверенным внутренним snapshot.
+### Current aggregate is item-backed
 
-В N1.1 и N1.2 уже добавлены:
+Нужен A1 generic descriptor/adapter, а не снятие item invariants.
 
-- настоящий ENet adapter за общим transport port;
-- отдельный headless bot-client;
-- handshake protocol/capability/contract-version negotiation;
-- initial snapshot streaming и checksum acknowledgement между процессами;
-- remote `item.move_to_container` через `ItemTransferService`;
-- один authoritative aggregate/item/container mutation;
-- delta delivery, exact replay fence, stale revision rejection и checksum equality.
+### Current transport is single-peer oriented
 
-До следующих подэтапов намеренно отсутствуют:
+Нужен T1 listener/peer lifecycle и per-peer queues.
 
-- persistence replay cache после restart — R3.1;
-- World Directory и lease renewal — N3;
-- cross-server handoff — N4.
+### Current wire routing is DTO allowlist-oriented
 
-World Directory и исполняемый lease service относятся к N3; реальный handoff
-между процессами — к N4.
+Нужен protocol frame v2 с channel/payload schema.
 
-## 4. Foundation barriers
+### Current command is single-aggregate
 
-### A. Server-safe runtime
+Нужен M0 staged mutation batch.
 
-Выполнено в `v16.3.2`: server role, lifecycle и process isolation. В `v16.3.3` добавлены pure `SimulationKernel`, optional `PresentationHost` и recursive boundary validation. World runtime scenes пока ещё содержат локальные presentation adapters.
+### Current persistence has no general outbox
 
-### B. Shutdown lifecycle
+R3.1 должен быть расширен atomic outbox, не заменён.
 
-Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. N1.3 ENet sessions выполняют disconnect/reconnect, progress timeout и drain/stop; общий fault orchestration будет вынесен в N2.
+## 4. Решение о N3
 
-### C. Unified WORLD aggregate
-
-Выполнено для WORLD-items в `v16.3.3`: relation хранит `entity_id`, а `SpatialRef`, physics state, authority и lifecycle принадлежат `WorldEntityAggregate`. Общий EntityRegistry остаётся отдельным store, но в `v16.4.0` подключён к `SimulationKernel` через строгий read-only `EntityRegistryKernelPort`; repository подключён через `WorldRepositoryKernelPort`.
-
-### D. Monotonic revisions
-
-Authority transfer увеличивает epoch и не обнуляет state revision.
-
-### E. Formal lifecycle
-
-Выполнено в `v16.3.3` для Entity aggregate, Chunk и Zone runtime:
+World Directory не отменён, но перенесён после:
 
 ```text
-Dormant / Warm / Active / Unloading
+H0 listen-host
+A1 generic aggregate
+S0 spatial substrate
+T1 multi-peer transport
+B0 message bus contracts
 ```
 
-### F. Portable snapshot
+Это позволяет Directory маршрутизировать generic aggregate/shard и transport-neutral route, а не только item/ENet endpoint.
 
-Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scene instance ID.
-
-## 5. Решение
-
-Сетевой фундамент N0 и N1.0–N1.2 приняты. N1.3 доказывает reconnect через новые transport sessions, replay сохранённых result/delta и отсутствие второй authoritative mutation. Следующий этап — N2 multi-process harness.
-
-Foundation Gate и N0 завершены в принятом исправленном checkpoint:
+## 5. Текущий и следующий gate
 
 ```text
-v16.4.0-foundation-n0-fix1
+H0 — listen-host runtime — current candidate
+A1 — Generic Aggregate Foundation — next
 ```
 
-Подробности:
+H0 не добавляет новых игровых механик. Он проводит существующую item-команду через настоящий client replica boundary внутри одного процесса и сравнивает результат с ENet process path. После принятия H0 следующий фундаментальный шаг — generic aggregate contracts без ослабления существующих item invariants.
 
-- `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
-- `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
-- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`.
+## 6. Что пока не начинать
 
-## 6. После N0
+- NATS adapter до B0 ports;
+- Population Field до A1/S0/M0;
+- generated rule runtime;
+- World Directory до T1/B0;
+- cross-server handoff до N3/M0;
+- production orchestration;
+- massive entity-per-grass representation.
 
-1. N1 — один authoritative server и bot client.
-2. N2 — local multi-process lab.
-3. N3 — World Directory и leases.
-4. N4 — handoff одного камня или маяка.
-5. Затем player handoff, ghosts, child spaces и dynamic regions.
+## 7. Связанные документы
 
-## 7. Что пока не начинать
-
-- Kubernetes/Agones;
-- NATS control plane;
-- WAN player handoff;
-- distributed collision;
-- dynamic Earth split;
-- distributed N-body.
-
-## 8. Архитектурный принцип
-
-```text
-canonical simulation ≠ presentation ≠ transport
-```
-
-Offline mode собирает слои в одном процессе, но не нарушает эту границу.
-
-## Обновление R3.1 — authoritative restart recovery
-
-Checkpoint `v16.7.0-repository-r3.1-authoritative-recovery` сохраняет канонический aggregate, revision/epoch/tick, Item Graph, ledger, completed command results и reconnect replay records. Commit публикуется через active/previous/pending repository layout. После restart exact `operation_id` возвращает cached terminal result без второй мутации. Orphan pending checkpoint игнорируется, повреждённый active checkpoint отклоняется fail-closed. Следующий gate — N3 Directory/leases.
+- [`../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md);
+- [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md);
+- [`../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md);
+- [`../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md).

@@ -28,6 +28,14 @@ feature/n1-remote-item-command
 feature/n1-reconnect-replay
 feature/n2-process-harness
 feature/r3.1-authoritative-recovery
+feature/a0-distributed-runtime-architecture
+feature/h0-listen-host-runtime
+feature/a1-generic-aggregate-foundation
+feature/s0-spatial-simulation-substrate
+feature/t1-multi-peer-transport-v2
+feature/b0-message-bus-contracts
+feature/m0-aggregate-transactions
+feature/s1-distributed-compute-contracts
 feature/n3-world-directory
 feature/n4-authority-handoff
 ```
@@ -102,8 +110,16 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-base: v16.6.0-network-n2-process-harness
-current candidate: v16.7.0-repository-r3.1-authoritative-recovery
-branch: feature/r3.1-authoritative-recovery
-next branch after acceptance: feature/n3-world-directory
+runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+architecture base: v16.7.1-architecture-a0-distributed-runtime
+branch: feature/h0-listen-host-runtime
+next implementation branch after acceptance: feature/a1-generic-aggregate-foundation
 ```
+
+Foundation order is mandatory unless the roadmap checkpoint explicitly changes it:
+
+```text
+H0 → A1 → S0 → T1 → B0 → M0 → S1
+```
+
+Do not start World Directory, NATS adapters, Population Field runtime or distributed workers by bypassing these contract boundaries.

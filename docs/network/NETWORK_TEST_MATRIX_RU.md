@@ -48,7 +48,7 @@
 | NS-006E | bounded ticket/record cache и expiry выполняются детерминированно | N1.3 |
 | NS-006F | два reconnect оставляют handler/mutation/ledger равными одному | N1.3 |
 | NS-006G | клиент применяет replay delta один раз и ограждает duplicate | N1.3 |
-| NS-007 | два клиента видят одинаковую revision | N2 |
+| NS-007 | два peer одновременно видят согласованную revision | T1 |
 
 ## 3. Directory и lease
 
@@ -167,3 +167,78 @@ Handoff-specific тест требуется только для объекто�
 | PR-005 | generation/epoch/revision/tick rollback отклоняется | R3.1 |
 | PR-006 | failed staged recovery не изменяет live state | R3.1 |
 | PR-007 | legacy world.json требует явной migration | R3.1 |
+
+## 11. H0 listen-host gates — implemented candidate
+
+| ID | Проверка | Этап |
+|---|---|---|
+| LH-001 | client replica не содержит ссылки на server Objects | H0 |
+| LH-002 | loopback command проходит canonical serialization boundary | H0 |
+| LH-003 | loopback и ENet дают одинаковый final checksum | H0 |
+| LH-004 | UI не может вызвать authoritative service напрямую | H0 |
+| LH-005 | duplicate delta применяется client replica один раз | H0 |
+| LH-006 | listen-host process и ENet comparison children завершаются без leaks | H0 |
+| LH-007 | stale client revision отклоняется без второй authoritative mutation | H0 |
+| LH-008 | exact operation replay возвращает результат, duplicate delta fenced | H0 |
+
+## 12. Generic aggregate и spatial gates
+
+| ID | Проверка | Этап |
+|---|---|---|
+| AG-001 | unknown aggregate kind/schema отклоняется | A1 |
+| AG-002 | aggregate snapshot/delta canonical round-trip | A1 |
+| AG-003 | item compatibility adapter сохраняет N1 semantics | A1 |
+| AG-004 | aggregate adapter не экспортирует runtime Objects | A1 |
+| SP-001 | cell address стабилен при render-origin shift | S0 |
+| SP-002 | одна cell индексирует несколько aggregate kinds | S0 |
+| SP-003 | aggregate spatial scope покрывает несколько cells | S0 |
+| SP-004 | authority owner не выводится из cell ID | S0 |
+| SP-005 | shard neighbour/boundary summary canonical | S0 |
+
+## 13. Multi-peer и bus gates
+
+| ID | Проверка | Этап |
+|---|---|---|
+| TP-001 | listener остаётся LISTENING при disconnect одного peer | T1 |
+| TP-002 | peer sessions имеют независимые lifecycle/sequence | T1 |
+| TP-003 | per-peer queues и metrics не смешиваются | T1 |
+| TP-004 | frame v2 routes by channel/payload schema | T1 |
+| TP-005 | N1 compatibility shim сохраняет accepted vertical slice | T1 |
+| BUS-001 | semantic port round-trip не зависит от adapter | B0 |
+| BUS-002 | job/event/request semantics нельзя взаимозаменить | B0 |
+| BUS-003 | domain state не содержит subject/channel/broker ID | B0 |
+| BUS-004 | timeout/backpressure result strict and versioned | B0 |
+
+## 14. Transaction/outbox gates
+
+| ID | Проверка | Этап |
+|---|---|---|
+| TX-001 | batch над двумя aggregates commit all-or-nothing | M0 |
+| TX-002 | staged failure не меняет live aggregates | M0 |
+| TX-003 | duplicate operation не создаёт второй aggregate | M0 |
+| TX-004 | state/result/ledger/outbox восстанавливаются вместе | M0 |
+| TX-005 | conservation invariant failure aborts batch | M0 |
+| TX-006 | crash between commit and publish leaves durable outbox | M0/B2 |
+
+## 15. Distributed compute gates
+
+| ID | Проверка | Этап |
+|---|---|---|
+| DC-001 | worker input immutable и checksum-bound | S1 |
+| DC-002 | worker не получает repository/registry write port | S1 |
+| DC-003 | same input/package даёт same result hash | S1 |
+| DC-004 | stale proposal rejected without mutation | S1 |
+| DC-005 | undeclared write set rejected | S1 |
+| DC-006 | budget overflow rejected | S1 |
+| DC-007 | duplicate result processed once | S1/B2 |
+
+## 16. Population/materialization gates
+
+| ID | Проверка | Этап |
+|---|---|---|
+| PF-001 | field regenerates same visual instances from seed | P0 |
+| PF-002 | procedural instance key stable within generation | P0 |
+| PF-003 | materialization changes field and creates item atomically | P0 |
+| PF-004 | replay/restart does not create duplicate item | P0 |
+| PF-005 | mass disturbance compacts to patch state | P0 |
+| PF-006 | aggregate delta updates client procedural representation | P0/D1 |

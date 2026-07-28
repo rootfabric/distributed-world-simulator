@@ -1,18 +1,20 @@
-## Текущий checkpoint repository/network
+## Текущий runtime checkpoint
 
 ```text
-v16.7.0-repository-r3.1-authoritative-recovery
-build: r3.1-authoritative-persistence-crash-recovery
-branch: feature/r3.1-authoritative-recovery
+v16.8.0-runtime-h0-listen-host
+base: v16.7.1-architecture-a0-distributed-runtime
+branch: feature/h0-listen-host-runtime
 ```
 
-R3.1 сохраняет authoritative aggregate, Item Graph, operation ledger, completed command records и bounded reconnect replay state в строгом атомарном checkpoint. После crash/restart повтор прежнего `operation_id` возвращает сохранённый результат без второй мутации. Следующий этап — N3 World Directory и authority leases.
+H0 реализует первый single-process network-first host: authoritative server runtime и ClientRuntime находятся в одном Godot-процессе, но команды, snapshot и delta проходят через canonical loopback boundary. Финальный checksum существующей item-команды совпадает с реальным двухпроцессным ENet-путём. Default F5 пока остаётся `offline`; роль `listen-host` доступна как opt-in foundation.
+
+Следующий этап: `A1 — Generic Aggregate Foundation`.
 
 Основные документы:
 
-- `docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
-- `docs/checkpoints/2026-07-29_V16_7_0_REPOSITORY_R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
-- `docs/testing/N2_PROCESS_HARNESS_RU.md`;
+- `docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`;
+- `docs/runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
+- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
 
 # Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay

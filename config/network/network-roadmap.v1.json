@@ -1,196 +1,329 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 9,
+  "document_revision": 11,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "project_checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
-  "strategy": "incremental_authoritative_server_mesh",
+  "updated_at_utc": "2026-07-29T00:00:00Z",
+  "project_checkpoint": "v16.8.0-runtime-h0-listen-host",
+  "runtime_base_checkpoint": "v16.8.0-runtime-h0-listen-host",
+  "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
-    "stable_entity_identity",
+    "stable_entity_and_aggregate_identity",
     "spatial_ref_is_canonical",
-    "single_authority_per_entity_or_island",
+    "single_authority_per_aggregate_or_shard",
     "authority_epoch_fencing",
-    "make_before_break_handoff",
+    "client_replica_is_not_server_aggregate",
+    "authority_ownership_is_not_compute_assignment",
     "offline_and_online_share_domain_commands",
+    "transport_semantics_are_separate_from_adapters",
     "multi_process_tests_are_mandatory",
-    "presentation_is_not_canonical_state"
+    "presentation_is_not_canonical_state",
+    "multi_aggregate_commits_are_atomic",
+    "durable_publication_uses_outbox"
   ],
+  "runtime_topologies": [
+    "offline_tools",
+    "listen_host",
+    "local_dedicated",
+    "local_cluster",
+    "production_cluster"
+  ],
+  "transport_families": {
+    "replication": [
+      "loopback",
+      "enet",
+      "nats_benchmark_optional"
+    ],
+    "request_reply": [
+      "loopback",
+      "nats_core"
+    ],
+    "events": [
+      "local",
+      "jetstream"
+    ],
+    "jobs": [
+      "local",
+      "jetstream"
+    ],
+    "bulk": [
+      "filesystem",
+      "http_or_object_store_later"
+    ]
+  },
   "recommended_stack": {
     "realtime_transport_initial": "Godot ENetMultiplayerPeer",
     "domain_contracts": "versioned DTO plus canonical JSON fixtures",
     "test_orchestrator": "Godot cross-platform subprocess harness with JSON and JUnit reports",
-    "local_topology": "Docker Compose after N2",
-    "control_plane_later": "NATS Core plus JetStream",
+    "self_host_default_future": "single-process listen-host over loopback DTO boundary",
+    "local_real_network": "separate Godot server and client over ENet localhost",
+    "service_bus_adapter": "NATS Core after B0",
+    "durable_bus_adapter": "NATS JetStream after M0/B1",
     "fault_injection_udp": "tc netem",
     "fault_injection_tcp": "Toxiproxy",
-    "orchestration_production": "Agones after N9",
-    "prediction_optional": "netfox after N5",
-    "accounts_optional": "Nakama"
+    "orchestration_production": "Agones after dynamic region foundations"
   },
   "phases": [
     {
       "id": "N0",
       "name": "Network contracts without sockets",
-      "complexity": "M",
-      "depends_on": [],
-      "acceptance": "contract tests pass",
-      "status": "accepted"
+      "status": "accepted",
+      "checkpoint": "v16.4.0-foundation-n0-fix1"
     },
     {
       "id": "N1",
-      "name": "One authoritative Godot server and bot client",
-      "complexity": "M",
-      "depends_on": [
-        "N0"
-      ],
-      "acceptance": "reconnect replay returns one committed item mutation with checksum equality",
+      "name": "One authoritative server and client vertical slice",
       "status": "accepted",
-      "subphases": [
-        {
-          "id": "N1.0",
-          "name": "Transport lifecycle boundary",
-          "status": "accepted",
-          "checkpoint": "v16.4.2-network-transport-boundary"
-        },
-        {
-          "id": "N1.1",
-          "name": "ENet handshake and initial snapshot",
-          "status": "accepted",
-          "checkpoint": "v16.5.0-network-n1-snapshot"
-        },
-        {
-          "id": "N1.2",
-          "name": "Remote authoritative item command",
-          "status": "accepted",
-          "checkpoint": "v16.5.1-network-n1-remote-item-command"
-        },
-        {
-          "id": "N1.3",
-          "name": "Reconnect and replay",
-          "status": "accepted",
-          "checkpoint": "v16.5.2-foundation-network-n1"
-        }
-      ]
+      "checkpoint": "v16.5.2-foundation-network-n1"
     },
     {
       "id": "N2",
-      "name": "Local multi-process test lab",
-      "complexity": "M",
-      "depends_on": [
-        "N1"
-      ],
-      "acceptance": "one manifest runs real N1 success and fault scenarios with isolated user state, exact failure classification, process cleanup, JSON and JUnit reports",
+      "name": "Cross-platform multi-process harness",
       "status": "accepted",
       "checkpoint": "v16.6.0-network-n2-process-harness"
     },
     {
       "id": "R3.1",
-      "name": "Authoritative persistence and restart recovery",
-      "complexity": "L",
+      "name": "Authoritative persistence and crash recovery",
+      "status": "accepted",
+      "checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery"
+    },
+    {
+      "id": "A0",
+      "name": "Distributed runtime architecture checkpoint",
+      "status": "accepted",
       "depends_on": [
+        "R3.1"
+      ],
+      "checkpoint": "v16.7.1-architecture-a0-distributed-runtime",
+      "branch": "feature/a0-distributed-runtime-architecture",
+      "acceptance": "documentation and machine-readable roadmap define non-conflicting runtime, aggregate, spatial, transport and compute boundaries"
+    },
+    {
+      "id": "H0",
+      "name": "Listen-host runtime and client replica",
+      "status": "candidate",
+      "depends_on": [
+        "A0"
+      ],
+      "branch": "feature/h0-listen-host-runtime",
+      "acceptance": "same item command over loopback host and ENet produces equal final checksum without direct client-domain access",
+      "checkpoint": "v16.8.0-runtime-h0-listen-host",
+      "implementation": {
+        "client_runtime": "implemented",
+        "client_replica_store": "implemented",
+        "client_command_gateway": "implemented",
+        "listen_host_composition": "implemented",
+        "loopback_enet_checksum_equivalence": "implemented",
+        "default_f5_migration": "deferred"
+      }
+    },
+    {
+      "id": "A1",
+      "name": "Generic aggregate foundation",
+      "status": "next",
+      "depends_on": [
+        "H0"
+      ],
+      "proposed_checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
+      "branch": "feature/a1-generic-aggregate-foundation"
+    },
+    {
+      "id": "S0",
+      "name": "Spatial simulation cells and shards",
+      "status": "planned",
+      "depends_on": [
+        "A1"
+      ],
+      "proposed_checkpoint": "v16.8.2-simulation-s0-spatial-substrate",
+      "branch": "feature/s0-spatial-simulation-substrate"
+    },
+    {
+      "id": "T1",
+      "name": "Multi-peer transport v2",
+      "status": "planned",
+      "depends_on": [
+        "S0",
+        "N1"
+      ],
+      "proposed_checkpoint": "v16.8.3-network-t1-multi-peer",
+      "branch": "feature/t1-multi-peer-transport-v2"
+    },
+    {
+      "id": "B0",
+      "name": "Transport-independent message bus contracts",
+      "status": "planned",
+      "depends_on": [
+        "T1"
+      ],
+      "proposed_checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
+      "branch": "feature/b0-message-bus-contracts"
+    },
+    {
+      "id": "M0",
+      "name": "Multi-aggregate transactions and outbox foundation",
+      "status": "planned",
+      "depends_on": [
+        "A1",
+        "R3.1",
+        "B0"
+      ],
+      "proposed_checkpoint": "v16.8.5-domain-m0-aggregate-transactions",
+      "branch": "feature/m0-aggregate-transactions"
+    },
+    {
+      "id": "S1",
+      "name": "Distributed compute jobs and mutation proposals",
+      "status": "planned",
+      "depends_on": [
+        "S0",
+        "M0",
+        "B0"
+      ],
+      "proposed_checkpoint": "v16.9.0-simulation-s1-distributed-compute",
+      "branch": "feature/s1-distributed-compute-contracts"
+    },
+    {
+      "id": "B1",
+      "name": "NATS Core service adapter",
+      "status": "planned",
+      "depends_on": [
+        "B0",
         "N2"
       ],
-      "acceptance": "server restart preserves snapshot, revision, epoch, ledger and replay records without a second mutation",
-      "status": "candidate",
-      "checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
-      "branch": "feature/r3.1-authoritative-recovery"
+      "proposed_checkpoint": "v16.9.1-data-plane-b1-nats-core",
+      "branch": "feature/b1-nats-core-adapter"
+    },
+    {
+      "id": "B2",
+      "name": "JetStream durable jobs/events and outbox publisher",
+      "status": "planned",
+      "depends_on": [
+        "B1",
+        "M0",
+        "S1"
+      ],
+      "proposed_checkpoint": "v16.9.2-data-plane-b2-jetstream-outbox",
+      "branch": "feature/b2-nats-jetstream-outbox"
+    },
+    {
+      "id": "P0",
+      "name": "Population field foundation",
+      "status": "planned",
+      "depends_on": [
+        "A1",
+        "S0",
+        "M0"
+      ],
+      "proposed_checkpoint": "v16.10.0-simulation-p0-population-field",
+      "branch": "feature/p0-population-field"
+    },
+    {
+      "id": "D1",
+      "name": "Remote vegetation worker MVP",
+      "status": "planned",
+      "depends_on": [
+        "P0",
+        "S1",
+        "B2",
+        "H0"
+      ],
+      "proposed_checkpoint": "v16.10.1-simulation-d1-worker-mvp",
+      "branch": "feature/d1-vegetation-worker-mvp"
     },
     {
       "id": "N3",
       "name": "World Directory and authority leases",
-      "complexity": "L",
+      "status": "planned",
       "depends_on": [
-        "R3.1"
+        "A1",
+        "S0",
+        "T1",
+        "B1"
       ],
-      "acceptance": "two static authority regions with epoch fencing",
-      "status": "next"
+      "proposed_checkpoint": "v16.11.0-network-n3-world-directory",
+      "branch": "feature/n3-world-directory"
     },
     {
       "id": "N4",
-      "name": "Object authority handoff",
-      "complexity": "L",
+      "name": "Generic cross-server aggregate handoff",
+      "status": "planned",
       "depends_on": [
-        "N3"
+        "N3",
+        "M0",
+        "R3.1"
       ],
-      "acceptance": "stone transfers A to B without duplication",
-      "status": "planned"
+      "proposed_checkpoint": "v16.12.0-network-n4-authority-handoff",
+      "branch": "feature/n4-authority-handoff"
     },
     {
       "id": "N5",
-      "name": "Dual connection player handoff",
-      "complexity": "L",
+      "name": "Dual-route player handoff",
+      "status": "planned",
       "depends_on": [
         "N4"
-      ],
-      "acceptance": "100 player crossings preserve identity and input",
-      "status": "planned"
+      ]
     },
     {
       "id": "N6",
-      "name": "Overlap ghosts and interest management",
-      "complexity": "L",
+      "name": "Ghost replicas and interest management",
+      "status": "planned",
       "depends_on": [
         "N5"
-      ],
-      "acceptance": "read-only ghosts and bounded interest",
-      "status": "planned"
+      ]
     },
     {
       "id": "N7",
-      "name": "Moon cave child space",
-      "complexity": "L",
+      "name": "Child spaces",
+      "status": "planned",
       "depends_on": [
         "N6"
-      ],
-      "acceptance": "surface cave round-trip",
-      "status": "planned"
+      ]
     },
     {
       "id": "N8",
-      "name": "Static Earth surface regions",
-      "complexity": "XL",
+      "name": "Planetary surface authority regions",
+      "status": "planned",
       "depends_on": [
         "N6"
-      ],
-      "acceptance": "cube-sphere boundary handoff",
-      "status": "planned"
+      ]
     },
     {
       "id": "N9",
-      "name": "Interaction islands and dynamic rebalance",
-      "complexity": "XL",
+      "name": "Dynamic shard split and merge",
+      "status": "planned",
       "depends_on": [
         "N8"
-      ],
-      "acceptance": "safe region split and merge",
-      "status": "planned"
-    },
-    {
-      "id": "N10",
-      "name": "Production orchestration and regions",
-      "complexity": "XL",
-      "depends_on": [
-        "N9"
-      ],
-      "acceptance": "multi-region allocated server fleet",
-      "status": "planned"
-    },
-    {
-      "id": "N11",
-      "name": "Continuous seamlessness improvements",
-      "complexity": "XL",
-      "depends_on": [
-        "N10"
-      ],
-      "acceptance": "production SLO and soak targets",
-      "status": "planned"
+      ]
     }
   ],
-  "parallel_tracks": [
-    "gameplay",
-    "network",
-    "test_infrastructure"
+  "foundation_sequence": [
+    "A0",
+    "H0",
+    "A1",
+    "S0",
+    "T1",
+    "B0",
+    "M0",
+    "S1"
   ],
-  "updated_at_utc": "2026-07-29T00:00:00Z",
+  "parallel_after_s1": {
+    "infrastructure": [
+      "B1",
+      "B2",
+      "N3"
+    ],
+    "simulation": [
+      "P0",
+      "D1"
+    ],
+    "join_before": "N4"
+  },
+  "parallel_tracks": [
+    "foundation",
+    "gameplay",
+    "test_infrastructure",
+    "content_research"
+  ],
   "branch_policy": {
     "new_stage": "feature/<stage>-<short-purpose>",
     "review_fix": "same_branch_with_fix_commit",

@@ -1,11 +1,20 @@
 # Документация PlanetSimulator
 
-Текущий checkpoint: `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`.
+Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`.
 
-- `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md` — единый multi-process network harness N2.
-- `testing/N2_PROCESS_HARNESS_RU.md` — manifest, сценарии, отчёты и команды запуска.
-- `plans/NEXT_ITERATIONS_RU.md` — очередь R3.1 → N3 → N4 → N5.
-- `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md` — принятый компонентный UI и отложенный UI-I3.
+Runtime-база: `v16.8.0-runtime-h0-listen-host`.
+
+Ключевые документы текущего направления:
+
+- `checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`;
+- `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
+- `architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
+- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
+- `architecture/adr/ADR-007-runtime-topology-and-listen-host.md`;
+- `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
+- `testing/N2_PROCESS_HARNESS_RU.md`.
+
+Следующий кодовый этап: `A1 Generic Aggregate Foundation`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 
