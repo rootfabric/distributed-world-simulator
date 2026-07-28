@@ -390,7 +390,7 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.5.0-network-n1-snapshot
+## Текущее состояние: v16.5.1-network-n1-remote-item-command
 
 В одной mainline объединены:
 
@@ -401,7 +401,7 @@
 - component inventory UI-I0–UI-I2;
 - search/filter/sort, inspector и bounded cell pool;
 - aggregate-aware drop/split/move command path;
-- 58 обязательных headless Godot tests;
+- 60 обязательных headless Godot tests;
 
 Checkpoint:
 
@@ -410,25 +410,27 @@ Checkpoint:
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
 
-## Следующий главный приоритет: N1.2
+## Текущий главный приоритет: принятие N1.2
 
-N1.0 принят, N1.1 реализовал реальный ENet handshake и initial snapshot. Следующий узкий vertical slice:
+N1.0 и N1.1 приняты. N1.2 реализует узкий vertical slice:
 
 ```text
 one simulation-server
 + one bot-client
-+ existing ENet adapter
++ real ENet adapter
 + initial snapshot
 + remote item.move_to_container
-+ server-side aggregate mutation
-+ snapshot/delta response
-+ duplicate fence
++ one ItemTransferService mutation
++ one operation-ledger record
++ EntityDeltaEnvelope
++ exact replay fence
++ stale revision rejection
 + checksum equality
 ```
 
-Команда уже имеет UUID, revisions, operation ledger, aggregate persistence и UI command facade, поэтому проверяет domain, transport и replay boundary без создания второго command API.
+После независимой проверки N1.2 следующий приоритет — N1.3 reconnect/replay: новая transport session должна повторно доставить прежний `operation_id` и получить сохранённый результат без второй mutation.
 
-## Затем: N2 → R3.1 → N3 → N4
+## Затем: N1.3 → N2 → R3.1 → N3 → N4
 
 ### N2 — multi-process lab
 

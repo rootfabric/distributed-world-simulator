@@ -1,6 +1,6 @@
 # Правила параллельной разработки сети и gameplay
 
-## Текущий режим после v16.5.0-network-n1-snapshot
+## Текущий режим на v16.5.1-network-n1-remote-item-command
 
 Foundation Gate и N0 завершены. Одновременно разрешены три потока:
 
@@ -10,8 +10,8 @@ Track G — R3.1 Construction Vertical Slice
 Track T — Multi-process Test Infrastructure
 ```
 
-Track N подключает реальный transport к принятым N0 DTO и не меняет доменную
-семантику без отдельной версии протокола. Track G использует те же commands,
+Track N уже проводит одну authoritative item-команду через реальный transport и не меняет доменную
+семантику без отдельной версии протокола. Следующая задача Track N — reconnect/replay. Track G использует те же commands,
 revisions, aggregates и snapshots. Track T обеспечивает process isolation,
 fault injection, reconnect и отчёты.
 

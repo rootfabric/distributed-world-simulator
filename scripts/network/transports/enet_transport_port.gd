@@ -11,6 +11,7 @@ var _peer: ENetMultiplayerPeer
 var _mode: String = ""
 var _events: Array[Dictionary] = []
 var _active_peer_id: int = 0
+var _active_packet_peer: ENetPacketPeer
 var _last_connection_status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
 var _connected_event_emitted: bool = false
 var _disconnect_event_emitted: bool = false
@@ -73,12 +74,14 @@ func disconnect_peer() -> Dictionary:
 		var disconnected_id: int = _active_peer_id
 		_peer.disconnect_peer(disconnected_id, false)
 		_active_peer_id = 0
+		_active_packet_peer = null
 		_events.append({"type": "PEER_DISCONNECTED", "peer_id": disconnected_id, "local_request": true})
 		return _success()
 	_peer.close()
 	_peer = null
 	_mode = ""
 	_active_peer_id = 0
+	_active_packet_peer = null
 	_last_connection_status = MultiplayerPeer.CONNECTION_DISCONNECTED
 	return _success()
 
@@ -146,6 +149,7 @@ func stop() -> Dictionary:
 	_mode = ""
 	_events.clear()
 	_active_peer_id = 0
+	_active_packet_peer = null
 	_last_connection_status = MultiplayerPeer.CONNECTION_DISCONNECTED
 	_connected_event_emitted = false
 	_disconnect_event_emitted = false
@@ -189,6 +193,7 @@ func _poll_peer() -> void:
 		if _mode == "SERVER":
 			if _active_peer_id == 0:
 				_active_peer_id = source_peer_id
+				_active_packet_peer = _peer.get_peer(source_peer_id)
 				_events.append({"type": "PEER_CONNECTED", "peer_id": source_peer_id})
 			elif source_peer_id != _active_peer_id:
 				_peer.disconnect_peer(source_peer_id, true)
@@ -213,10 +218,10 @@ func _poll_peer() -> void:
 			"payload_hash": String(frame["payload_hash"]),
 		})
 	if _mode == "SERVER" and _active_peer_id > 0:
-		var active_peer = _peer.get_peer(_active_peer_id)
-		if active_peer == null or not active_peer.is_active():
+		if _active_packet_peer == null or not _active_packet_peer.is_active():
 			var disconnected_id: int = _active_peer_id
 			_active_peer_id = 0
+			_active_packet_peer = null
 			_events.append({"type": "PEER_DISCONNECTED", "peer_id": disconnected_id, "local_request": false})
 	_last_connection_status = status_after
 

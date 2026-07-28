@@ -1,4 +1,22 @@
-Planetary World v16.5.0-network-n1-snapshot
+Planetary World v16.5.1-network-n1-remote-item-command
+
+Network N1.2 authoritative remote item command:
+- strict item.move_to_container request and success-result DTOs
+- server-owned Item Registry, Container Registry and WorldEntityAggregate fixture
+- real NetworkCommandEnvelope delivery through ENet between separate Godot processes
+- authority owner/epoch, aggregate revision, item revision, source/destination and session fencing
+- ItemTransferService mutation and exactly one operation-ledger record
+- monotonic aggregate revision and server tick update
+- EntityDeltaEnvelope delivery and client-side snapshot revalidation
+- equal final server/client snapshot checksum
+- exact command replay without a second domain mutation
+- duplicate delta replay fence on the client
+- stale revision rejection after the committed command
+- transactional rollback when aggregate/delta commit cannot complete
+- tests/network/test_n1_remote_item_command_contracts.gd
+- tests/network/test_n1_remote_item_command_processes.gd
+- RUN_N1_REMOTE_ITEM_COMMAND_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md
 
 Network N1.1 ENet handshake and initial snapshot:
 - real ENetMultiplayerPeer server/client adapter behind the N1.0 transport port

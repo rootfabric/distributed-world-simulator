@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "a19909d8c233e50bf2fa00f6cad489e29c401edb484b32d15f861c854d2fe6ed",
+  "expected_hash": "f2242ea73944a1812fff31ecab8ab03882f55a314a6df93b9566af01adfccbf0",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "n1-enet-handshake-initial-snapshot",
+    "build_id": "n1-enet-authoritative-item-command",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.5.0-network-n1-snapshot",
+    "checkpoint": "v16.5.1-network-n1-remote-item-command",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

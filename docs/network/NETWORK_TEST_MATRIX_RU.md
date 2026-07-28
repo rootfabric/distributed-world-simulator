@@ -36,7 +36,11 @@
 | NS-003 | duplicate operation возвращает прежний результат | N1.2 |
 | NS-004 | stale revision отклоняется | N1.2 |
 | NS-005 | stale epoch отклоняется | N1.2 |
-| NS-006 | disconnect/reconnect восстанавливает snapshot | N2 |
+| NS-005A | server/client final snapshot checksum совпадает после delta apply | N1.2 |
+| NS-005B | operation ledger и mutation count остаются равны одному после exact replay | N1.2 |
+| NS-005C | повторный delta ID/checksum не применяется клиентом второй раз | N1.2 |
+| NS-005D | post-domain failure восстанавливает item/container/ledger/aggregate | N1.2 |
+| NS-006 | disconnect/reconnect возвращает replay результата без второй mutation | N1.3 |
 | NS-007 | два клиента видят одинаковую revision | N2 |
 
 ## 3. Directory и lease

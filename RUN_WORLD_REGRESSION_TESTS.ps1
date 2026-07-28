@@ -53,6 +53,8 @@ $Tests = @(
     "res://tests/network/test_network_transport_boundary.gd",
     "res://tests/network/test_n1_enet_snapshot_contracts.gd",
     "res://tests/network/test_n1_enet_snapshot_processes.gd",
+    "res://tests/network/test_n1_remote_item_command_contracts.gd",
+    "res://tests/network/test_n1_remote_item_command_processes.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -101,7 +103,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.5.0-network-n1-snapshot"
+    checkpoint = "v16.5.1-network-n1-remote-item-command"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

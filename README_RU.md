@@ -1,19 +1,19 @@
-# Planetary World v16.5.0-network-n1-snapshot — первый реальный ENet snapshot path
+# Planetary World v16.5.1-network-n1-remote-item-command — первая authoritative ENet-команда
 
-Текущий candidate строится поверх принятого `v16.4.2-network-transport-boundary` и сохраняет объединённые Foundation, N0 fix1 и Inventory UI-I0–UI-I2.
+Текущий candidate строится поверх `v16.5.0-network-n1-snapshot` и сохраняет принятые Foundation, N0 fix1, Inventory UI-I0–UI-I2, transport boundary и реальный ENet snapshot path.
 
 Проект рассчитан на Godot 4.7.1 с `precision=double`.
 
 ## Текущий checkpoint
 
 ```text
-v16.5.0-network-n1-snapshot
+v16.5.1-network-n1-remote-item-command
 ```
 
 Build ID:
 
 ```text
-n1-enet-handshake-initial-snapshot
+n1-enet-authoritative-item-command
 ```
 
 Главный инвариант:
@@ -22,41 +22,43 @@ n1-enet-handshake-initial-snapshot
 canonical simulation ≠ presentation ≠ transport
 ```
 
-Что добавляет N1.1:
+Что добавляет N1.2:
 
-- реальный `ENetMultiplayerPeer` adapter за общим N1.0 transport port;
-- канонический JSON wire frame с payload SHA-256;
-- строгие handshake/result/snapshot-ack DTO;
-- capability и contract-version negotiation;
-- server-assigned transport session;
-- initial `EntitySnapshotEnvelope` между двумя отдельными headless Godot-процессами;
-- повторную DTO/checksum/authority validation на bot-client;
-- process-level server/client smoke test с динамическим localhost-портом;
-- отдельный runner `RUN_N1_ENET_SNAPSHOT_TESTS.ps1`;
-- полный regression manifest из 58 Godot test scripts.
+- строгие DTO `item.move_to_container` request/result;
+- реальную authoritative item/container fixture на сервере;
+- выполнение команды через существующий `ItemTransferService` и operation ledger;
+- обновление `WorldEntityAggregate` с монотонными revision и server tick;
+- `EntityDeltaEnvelope`, который повторно применяется к initial snapshot;
+- равенство итогового checksum на server и bot-client;
+- exact command replay без повторной mutation;
+- duplicate delta replay fence на клиенте;
+- stale revision и authority fencing;
+- transactional rollback item/container/ledger/aggregate при отказе после domain mutation;
+- отдельные server/client headless Godot-процессы через настоящий ENet;
+- отдельный runner `RUN_N1_REMOTE_ITEM_COMMAND_TESTS.ps1`.
 
-N1.1 намеренно не выполняет доменную mutation. Следующий этап N1.2 проведёт через этот же transport команду `item.move_to_container`, существующий `ItemTransferService`, `WorldEntityAggregate` и operation ledger.
+N1.2 намеренно не добавляет reconnect после потери transport session. Следующий этап N1.3 закрепит reconnect, повторную доставку команды и replay результата после восстановления соединения.
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`;
+- `docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`;
 - `docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`;
-- `docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md`;
+- `docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`;
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/NEXT_ITERATIONS_RU.md`.
 
 Следующий основной этап:
 
 ```text
-N1.2 — remote item.move_to_container
-	 + authoritative owner/epoch/revision validation
-	 + one server-side mutation
-	 + delta/snapshot response
-	 + duplicate delivery fence
-	 + checksum equality
+N1.3 — reconnect + replay
+	 + новая transport session
+	 + стабильный operation_id
+	 + повторная доставка команды
+	 + replay сохранённого результата
+	 + отсутствие повторной mutation
 ```
 
-`UI-I3` с batch/multi-select отложен до появления реального authoritative command path и replay semantics.
+`UI-I3` с batch/multi-select остаётся отложен до фиксации reconnect/replay и batch command semantics.
 
 ## Установка и отладка
 

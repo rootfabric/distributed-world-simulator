@@ -257,12 +257,18 @@ func apply_spatial_state(
 func apply_domain_components(
 	component_patch: Dictionary,
 	expected_revision: int = -1,
-	expected_authority_epoch: int = -1
+	expected_authority_epoch: int = -1,
+	simulation_tick: int = -1
 ) -> Dictionary:
 	if expected_revision >= 0 and expected_revision != state_revision:
 		return _failure("REVISION_CONFLICT")
 	if expected_authority_epoch >= 0 and expected_authority_epoch != authority_epoch:
 		return _failure("STALE_AUTHORITY_EPOCH")
+	if simulation_tick >= 0 and simulation_tick < last_simulation_tick:
+		return _failure("STALE_SIMULATION_TICK", {
+			"current_tick": last_simulation_tick,
+			"received_tick": simulation_tick,
+		})
 	if not _is_json_safe(component_patch):
 		return _failure("NON_SERIALIZABLE_COMPONENTS")
 	var next_components: Dictionary = domain_components.duplicate(true)
@@ -273,9 +279,12 @@ func apply_domain_components(
 			next_components.erase(key)
 		else:
 			next_components[key] = _normalize_json_value(value)
-	if next_components == domain_components:
+	var tick_changed: bool = simulation_tick >= 0 and simulation_tick != last_simulation_tick
+	if next_components == domain_components and not tick_changed:
 		return {"success": true, "changed": false, "state_revision": state_revision}
 	domain_components = next_components
+	if simulation_tick >= 0:
+		last_simulation_tick = simulation_tick
 	_touch_revision()
 	return {"success": true, "changed": true, "state_revision": state_revision}
 

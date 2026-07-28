@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.5.0-network-n1-snapshot"
-const BUILD_ID: String = "n1-enet-handshake-initial-snapshot"
+const PROJECT_VERSION: String = "16.5.1-network-n1-remote-item-command"
+const BUILD_ID: String = "n1-enet-authoritative-item-command"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

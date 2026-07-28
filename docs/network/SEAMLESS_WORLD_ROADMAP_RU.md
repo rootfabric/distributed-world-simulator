@@ -1,6 +1,6 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.5.0-network-n1-snapshot
+## Статус на checkpoint v16.5.1-network-n1-remote-item-command
 
 Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
 `SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority
@@ -8,9 +8,9 @@ lease/route contracts, handoff state machine, golden fixtures и loopback
 command/replication paths. Fix1 дополнительно закрывает owner/epoch, revision/tick
 fencing, неканонические delta paths и поддельные kernel ports.
 
-N1.0 transport boundary принят. N1.1 добавляет настоящий ENet adapter, отдельный
-headless bot-client, handshake negotiation и initial snapshot с checksum ack.
-Следующий исполняемый этап — N1.2 remote authoritative item command.
+N1.0 transport boundary и N1.1 ENet snapshot path приняты. N1.2 добавляет реальную
+authoritative `item.move_to_container`, mutation через `ItemTransferService`, operation ledger,
+`EntityDeltaEnvelope`, exact replay fence и checksum equality. Следующий этап — N1.3 reconnect/replay.
 
 Связанные планы:
 

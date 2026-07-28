@@ -54,12 +54,12 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.OFFLINE, "Default role is not offline")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.5.0-network-n1-snapshot", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "n1-enet-handshake-initial-snapshot", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.5.0-network-n1-snapshot", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "n1-enet-handshake-initial-snapshot", "Simulator build id is stale")
-	_assert(LunarAppScript.PROJECT_VERSION == "16.5.0-network-n1-snapshot", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "n1-enet-handshake-initial-snapshot", "Lunar build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.5.1-network-n1-remote-item-command", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "n1-enet-authoritative-item-command", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.5.1-network-n1-remote-item-command", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "n1-enet-authoritative-item-command", "Simulator build id is stale")
+	_assert(LunarAppScript.PROJECT_VERSION == "16.5.1-network-n1-remote-item-command", "Lunar project version is stale")
+	_assert(LunarAppScript.BUILD_ID == "n1-enet-authoritative-item-command", "Lunar build id is stale")
 
 	var unsupported: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=directory-server"]))
 	_assert(not bool(unsupported.get("success", true)), "Unsupported role was accepted")
