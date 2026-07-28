@@ -1,4 +1,4 @@
-# Ближайшие итерации после v16.4.1-foundation-inventory-merge
+# Ближайшие итерации после v16.4.2-network-transport-boundary
 
 ## Зафиксированный checkpoint
 
@@ -31,10 +31,23 @@ UI вызова `drop_item_stack()` с aggregate-aware контроллером 
 | UI-I2 + fix2 | объединено | search/filter/sort, inspector, preferences, bounded pool и cache invalidation |
 | v16.4.1-foundation-inventory-merge | текущий | единая mainline без долгоживущей inventory-ветки |
 
-## Главный следующий этап — N1
+## Текущий этап — N1.0 transport boundary
 
 N1 должен быть одним небольшим сетевым вертикальным срезом, а не началом общего
 MMO runtime.
+
+N1 разделён на принимаемые по отдельности checkpoint:
+
+```text
+N1.0 общий transport boundary без сокетов
+N1.1 ENet handshake + initial snapshot
+N1.2 remote item.move_to_container
+N1.3 reconnect + replay
+```
+
+Подробный план: `docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`.
+
+## Следующий после текущего патча этап — N1.1
 
 Обязательный сценарий:
 
@@ -106,7 +119,10 @@ N1/N2. Batch обязан иметь один operation ID, атомарный a
 Рекомендуемые новые ветки:
 
 ```text
-feature/n1-enet-authoritative-slice
+feature/n1-transport-boundary
+feature/n1-enet-snapshot
+feature/n1-remote-item-command
+feature/n1-reconnect-replay
 feature/n2-network-process-harness
 feature/r3-1-construction-slice
 ```
@@ -116,7 +132,7 @@ feature/r3-1-construction-slice
 ```text
 editor import/parse
 all discovered test_*.gd declared in runner
-55/55 Godot regression tests
+56/56 Godot regression tests
 main scene CLI tests
 simulation-server process lifecycle
 network contract profile

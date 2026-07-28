@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "e91f25310b7efabb1ec47b8c71ae62bed2d2a651df128d2ed1f489245b8ada1f",
+  "expected_hash": "61b414971c7e2fee3bee91b9105e7ebfde4373c2bbe4980cf1fed2844281e3b3",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "foundation-n0-fix1-ui-i2-integration",
+    "build_id": "n1-transport-lifecycle-boundary",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.4.1-foundation-inventory-merge",
+    "checkpoint": "v16.4.2-network-transport-boundary",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

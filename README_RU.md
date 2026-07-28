@@ -1,4 +1,4 @@
-# Planetary World v16.4.1-foundation-inventory-merge — Foundation N0 и Inventory UI объединены
+# Planetary World v16.4.2-network-transport-boundary — Foundation N0 и Inventory UI объединены
 
 Checkpoint объединяет принятый `v16.4.0-foundation-n0-fix1` с веткой
 `feature/ui-i0-inventory-shell` (`UI-I0`–`UI-I2`). В основной линии теперь
@@ -10,13 +10,13 @@ Checkpoint объединяет принятый `v16.4.0-foundation-n0-fix1` с
 ## Текущий checkpoint
 
 ```text
-v16.4.1-foundation-inventory-merge
+v16.4.2-network-transport-boundary
 ```
 
 Build ID:
 
 ```text
-foundation-n0-fix1-ui-i2-integration
+n1-transport-lifecycle-boundary
 ```
 
 Интеграция сохраняет главный инвариант:
