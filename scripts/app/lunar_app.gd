@@ -32,7 +32,7 @@ const ItemGameplayControllerScript = preload("res://scripts/items/presentation/i
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
 const PROJECT_VERSION: String = "16.4.1-foundation-inventory-merge"
-const BUILD_ID: String = "foundation-n0-fix1-ui-i2-integration"
+const BUILD_ID: String = "n1-transport-lifecycle-boundary"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

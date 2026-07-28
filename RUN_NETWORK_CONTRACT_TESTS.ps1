@@ -34,6 +34,7 @@ $Tests = @(
     "res://tests/runtime/test_launch_options.gd",
     "res://tests/network/test_network_contracts.gd",
     "res://tests/network/test_loopback_command_transport.gd",
+    "res://tests/network/test_network_transport_boundary.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -47,8 +48,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.4.1-foundation-inventory-merge"
-    build_id = "foundation-n0-fix1-ui-i2-integration"
+    checkpoint = "v16.4.2-network-transport-boundary"
+    build_id = "n1-transport-lifecycle-boundary"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -94,7 +95,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.4.1-foundation-inventory-merge"
+    Write-Host "Checkpoint: v16.4.2-network-transport-boundary"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
