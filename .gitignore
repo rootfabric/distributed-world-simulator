@@ -14,4 +14,4 @@ desktop.ini
 *.bak
 *.swp
 mono_crash.*.json
-artifacts/test-results/
+artifacts/

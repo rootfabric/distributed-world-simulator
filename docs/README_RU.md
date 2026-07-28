@@ -2,6 +2,9 @@
 
 Текущий checkpoint: `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`.
 
+- `MCP_GODOT.md` — полный контракт автономного агента: запуск double Godot,
+  управление миром только через MCP, viewport screenshots, runtime/managed логи,
+  готовые сценарии инвентаря и контейнера, диагностика и корректный stop.
 - `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md` — объединение Foundation N0 fix1 и UI-I0–UI-I2, merge audit и следующий приоритет N1.
 - `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md` — принятый компонентный UI и отложенный UI-I3.
 - `plans/NEXT_ITERATIONS_RU.md` — упорядоченная очередь N1 → N2 → R3.1/N3.

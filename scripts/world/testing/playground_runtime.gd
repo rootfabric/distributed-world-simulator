@@ -50,6 +50,7 @@ func configure_runtime(context: Dictionary) -> void:
 
 
 func _ready() -> void:
+	_ensure_input_actions()
 	_build_environment()
 	world_adapter = FlatWorldAdapterScript.new()
 	world_adapter.name = "FlatWorldAdapter"
@@ -66,6 +67,26 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_setup_item_gameplay()
 	_build_overlay()
+
+
+func _ensure_input_actions() -> void:
+	_set_single_key_action("move_forward", KEY_W)
+	_set_single_key_action("move_back", KEY_S)
+	_set_single_key_action("move_left", KEY_A)
+	_set_single_key_action("move_right", KEY_D)
+	_set_single_key_action("jump", KEY_SPACE)
+	_set_single_key_action("boost", KEY_SHIFT)
+
+
+func _set_single_key_action(action_name: StringName, physical_key: int) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	for existing_event in InputMap.action_get_events(action_name):
+		if existing_event is InputEventKey:
+			InputMap.action_erase_event(action_name, existing_event)
+	var input_event := InputEventKey.new()
+	input_event.physical_keycode = physical_key
+	InputMap.action_add_event(action_name, input_event)
 
 
 func register_runtime_commands(registry, owner_id: String) -> void:
@@ -222,6 +243,27 @@ func _setup_item_gameplay() -> void:
 func _on_inventory_visibility_changed(visible_value: bool) -> void:
 	if world_interactor != null:
 		world_interactor.set_enabled(not visible_value)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	var keycode: int = int(event.physical_keycode if event.physical_keycode != 0 else event.keycode)
+	match keycode:
+		KEY_TAB:
+			_command_inventory_toggle([])
+		KEY_E:
+			_command_player_interact([])
+		KEY_G:
+			_command_inventory_drop([])
+		KEY_F:
+			_command_flashlight_toggle([])
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0:
+			var hotbar_index: int = 9 if keycode == KEY_0 else keycode - KEY_1
+			_command_hotbar_select([str(hotbar_index + 1)])
+		_:
+			return
+	get_viewport().set_input_as_handled()
 
 
 
