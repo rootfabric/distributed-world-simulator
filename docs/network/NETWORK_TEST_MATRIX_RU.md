@@ -17,6 +17,11 @@
 | NC-011 | golden fixtures всех DTO сохраняют hash | N0 |
 | NC-012 | missing/wrong-type/extra-field mutation matrix | N0 |
 | NC-013 | EntityRegistry/Repository kernel ports strict and presentation-free | N0 |
+| NC-014 | owner не меняется без повышения authority epoch | N0 fix1 |
+| NC-015 | state revision и server tick не откатываются через новый epoch | N0 fix1 |
+| NC-016 | delta paths с пустыми/пробельными сегментами отклоняются | N0 fix1 |
+| NC-017 | forged и повреждённый kernel port отклоняются без замены live port | N0 fix1 |
+| NC-018 | higher epoch с равным revision не скрывает domain-state mutation | N0 fix1 |
 
 ## 2. Single authority
 

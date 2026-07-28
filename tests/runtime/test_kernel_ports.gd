@@ -8,6 +8,39 @@ var failures: Array[String] = []
 var assertions: int = 0
 
 
+class ForgedEntityRegistryPort:
+	extends RefCounted
+
+	func create_descriptor() -> Dictionary:
+		return {
+			"schema": "planet_simulator.entity_registry_kernel_port.v1",
+			"configured": true,
+			"read_only": true,
+			"entity_count": 1,
+			"authority_owner_id": "sim-a",
+			"authority_epoch": 4,
+		}
+
+	func validate_contract_state() -> Dictionary:
+		return {"success": true}
+
+
+class ForgedWorldRepositoryPort:
+	extends RefCounted
+
+	func create_descriptor() -> Dictionary:
+		return {
+			"schema": "planet_simulator.world_repository_kernel_port.v1",
+			"configured": true,
+			"world_id": "moon",
+			"instance_id": "persistent",
+			"supports_flush_request": true,
+		}
+
+	func validate_contract_state() -> Dictionary:
+		return {"success": true}
+
+
 func _init() -> void:
 	var entity_record: Dictionary = {
 		"schema": "planet_simulator.entity.v2",
@@ -47,6 +80,16 @@ func _init() -> void:
 	_assert_code(entity_port.get_entity_snapshot("entity/missing"), "ENTITY_NOT_FOUND", "Missing entity returned success")
 	_assert(bool(entity_port.create_descriptor()["read_only"]), "Entity port is not read-only")
 	_assert(String(entity_port.create_descriptor()["authority_owner_id"]) == "sim-a", "Entity port authority owner lost")
+	_assert_ok(EntityPortScript.validate_descriptor(entity_port.create_descriptor()), "Entity port descriptor rejected")
+	var entity_descriptor_extra: Dictionary = entity_port.create_descriptor()
+	entity_descriptor_extra["callback"] = "forbidden"
+	_assert_code(EntityPortScript.validate_descriptor(entity_descriptor_extra), "UNEXPECTED_FIELD", "Entity descriptor extra field accepted")
+	var entity_descriptor_writable: Dictionary = entity_port.create_descriptor()
+	entity_descriptor_writable["read_only"] = false
+	_assert_code(EntityPortScript.validate_descriptor(entity_descriptor_writable), "INVALID_PORT_DESCRIPTOR", "Writable entity descriptor accepted")
+	var entity_descriptor_bad_configured: Dictionary = entity_port.create_descriptor()
+	entity_descriptor_bad_configured["configured"] = "true"
+	_assert_code(EntityPortScript.validate_descriptor(entity_descriptor_bad_configured), "INVALID_PORT_DESCRIPTOR", "String configured flag accepted")
 
 	var bad_count: Dictionary = registry_snapshot.duplicate(true)
 	bad_count["entity_count"] = 2
@@ -101,6 +144,13 @@ func _init() -> void:
 	var repository_port = RepositoryPortScript.new()
 	_assert_ok(repository_port.setup(repository_snapshot), "Repository port setup failed")
 	_assert_ok(repository_port.create_repository_snapshot(), "Repository snapshot failed")
+	_assert_ok(RepositoryPortScript.validate_descriptor(repository_port.create_descriptor()), "Repository port descriptor rejected")
+	var repository_descriptor_extra: Dictionary = repository_port.create_descriptor()
+	repository_descriptor_extra["callback"] = "forbidden"
+	_assert_code(RepositoryPortScript.validate_descriptor(repository_descriptor_extra), "UNEXPECTED_FIELD", "Repository descriptor extra field accepted")
+	var repository_descriptor_no_flush: Dictionary = repository_port.create_descriptor()
+	repository_descriptor_no_flush["supports_flush_request"] = false
+	_assert_code(RepositoryPortScript.validate_descriptor(repository_descriptor_no_flush), "INVALID_PORT_DESCRIPTOR", "Configured repository without flush support accepted")
 	var flush_request: Dictionary = repository_port.create_flush_request("operation/flush/1", 100)
 	_assert_ok(flush_request, "Flush request creation failed")
 	_assert(String(flush_request["request"]["world_id"]) == "moon", "Flush request lost world ID")
@@ -133,8 +183,20 @@ func _init() -> void:
 	_assert_ok(kernel.set_world_repository_port(repository_port), "Kernel rejected repository port")
 	_assert_code(kernel.set_entity_registry_port(RefCounted.new()), "INVALID_KERNEL_PORT", "Kernel accepted arbitrary entity port")
 	_assert_code(kernel.set_world_repository_port(entity_port), "KERNEL_PORT_SCHEMA_MISMATCH", "Kernel accepted wrong repository port schema")
+	_assert_code(kernel.set_entity_registry_port(ForgedEntityRegistryPort.new()), "INVALID_KERNEL_PORT_TYPE", "Kernel accepted forged entity port")
+	_assert_code(kernel.set_world_repository_port(ForgedWorldRepositoryPort.new()), "INVALID_KERNEL_PORT_TYPE", "Kernel accepted forged repository port")
 	var unconfigured_repository_port = RepositoryPortScript.new()
 	_assert_code(kernel.set_world_repository_port(unconfigured_repository_port), "KERNEL_PORT_NOT_CONFIGURED", "Kernel accepted unconfigured repository port")
+	var tampered_entity_port = EntityPortScript.new()
+	_assert_ok(tampered_entity_port.setup(registry_snapshot), "Tampered entity port setup failed")
+	tampered_entity_port.registry_snapshot["entity_count"] = 2
+	_assert_code(kernel.set_entity_registry_port(tampered_entity_port), "INVALID_KERNEL_PORT_STATE", "Kernel accepted corrupted entity port state")
+	_assert(kernel.entity_registry_port == entity_port, "Rejected entity port replaced live kernel port")
+	var tampered_repository_port = RepositoryPortScript.new()
+	_assert_ok(tampered_repository_port.setup(repository_snapshot), "Tampered repository port setup failed")
+	tampered_repository_port.repository_snapshot["partition_scheme_revision"] = 0
+	_assert_code(kernel.set_world_repository_port(tampered_repository_port), "INVALID_KERNEL_PORT_STATE", "Kernel accepted corrupted repository port state")
+	_assert(kernel.world_repository_port == repository_port, "Rejected repository port replaced live kernel port")
 	var kernel_snapshot: Dictionary = kernel.create_snapshot()
 	_assert(bool(kernel_snapshot["has_entity_registry_port"]), "Kernel missed entity port")
 	_assert(bool(kernel_snapshot["has_world_repository_port"]), "Kernel missed repository port")

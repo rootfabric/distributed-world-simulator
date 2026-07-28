@@ -1,5 +1,8 @@
 extends RefCounted
 
+const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/entity_registry_kernel_port.gd")
+const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
+
 const SCHEMA: String = "planet_simulator.simulation_kernel.v1"
 
 var simulation_clock
@@ -36,7 +39,10 @@ func set_world_entity_store(store) -> Dictionary:
 
 func set_entity_registry_port(port) -> Dictionary:
 	var validation: Dictionary = _validate_kernel_port(
-		port, "entity_registry_port", "planet_simulator.entity_registry_kernel_port.v1"
+		port,
+		"entity_registry_port",
+		"planet_simulator.entity_registry_kernel_port.v1",
+		EntityRegistryKernelPortScript
 	)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -46,7 +52,10 @@ func set_entity_registry_port(port) -> Dictionary:
 
 func set_world_repository_port(port) -> Dictionary:
 	var validation: Dictionary = _validate_kernel_port(
-		port, "world_repository_port", "planet_simulator.world_repository_kernel_port.v1"
+		port,
+		"world_repository_port",
+		"planet_simulator.world_repository_kernel_port.v1",
+		WorldRepositoryKernelPortScript
 	)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -77,12 +86,18 @@ func validate_boundary() -> Dictionary:
 		if _is_presentation_object(core_services[service_id]):
 			return _failure("PRESENTATION_OBJECT_REJECTED", {"service_id": service_id})
 	var entity_port_validation: Dictionary = _validate_kernel_port(
-		entity_registry_port, "entity_registry_port", "planet_simulator.entity_registry_kernel_port.v1"
+		entity_registry_port,
+		"entity_registry_port",
+		"planet_simulator.entity_registry_kernel_port.v1",
+		EntityRegistryKernelPortScript
 	)
 	if not bool(entity_port_validation.get("success", false)):
 		return entity_port_validation
 	var repository_port_validation: Dictionary = _validate_kernel_port(
-		world_repository_port, "world_repository_port", "planet_simulator.world_repository_kernel_port.v1"
+		world_repository_port,
+		"world_repository_port",
+		"planet_simulator.world_repository_kernel_port.v1",
+		WorldRepositoryKernelPortScript
 	)
 	if not bool(repository_port_validation.get("success", false)):
 		return repository_port_validation
@@ -108,7 +123,7 @@ func create_snapshot() -> Dictionary:
 	}
 
 
-func _validate_kernel_port(port, service_id: String, expected_schema: String) -> Dictionary:
+func _validate_kernel_port(port, service_id: String, expected_schema: String, expected_script: Script) -> Dictionary:
 	if port == null:
 		return {"success": true}
 	if _is_presentation_object(port):
@@ -125,8 +140,32 @@ func _validate_kernel_port(port, service_id: String, expected_schema: String) ->
 			"expected_schema": expected_schema,
 			"actual_schema": descriptor.get("schema"),
 		})
-	if not bool(descriptor.get("configured", false)):
+	if port.get_script() != expected_script:
+		return _failure("INVALID_KERNEL_PORT_TYPE", {
+			"service_id": service_id,
+			"expected_script": expected_script.resource_path,
+			"actual_script": port.get_script().resource_path if port.get_script() is Script else "",
+		})
+	var descriptor_validation: Dictionary
+	if expected_script == EntityRegistryKernelPortScript:
+		descriptor_validation = EntityRegistryKernelPortScript.validate_descriptor(descriptor)
+	else:
+		descriptor_validation = WorldRepositoryKernelPortScript.validate_descriptor(descriptor)
+	if not bool(descriptor_validation.get("success", false)):
+		return _failure("INVALID_KERNEL_PORT_DESCRIPTOR", {
+			"service_id": service_id,
+			"validation_error_code": String(descriptor_validation.get("error_code", "")),
+			"validation_details": descriptor_validation.get("details", {}),
+		})
+	if not bool(descriptor["configured"]):
 		return _failure("KERNEL_PORT_NOT_CONFIGURED", {"service_id": service_id})
+	var state_validation: Dictionary = port.call("validate_contract_state")
+	if not bool(state_validation.get("success", false)):
+		return _failure("INVALID_KERNEL_PORT_STATE", {
+			"service_id": service_id,
+			"validation_error_code": String(state_validation.get("error_code", "")),
+			"validation_details": state_validation.get("details", {}),
+		})
 	return {"success": true}
 
 

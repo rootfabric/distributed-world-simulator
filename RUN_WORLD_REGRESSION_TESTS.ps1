@@ -54,6 +54,7 @@ $Tests = @(
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
     "res://tests/network/test_loopback_replication_transport.gd",
+    "res://tests/network/test_n0_review_regressions.gd",
     "res://tests/network/test_handoff_state_machine.gd",
     "res://tests/network/test_handoff_transition_matrix.gd",
     "res://tests/entities/test_authority_revision_semantics.gd",
@@ -94,7 +95,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.4.0-foundation-n0"
+    checkpoint = "v16.4.0-foundation-n0-fix1"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

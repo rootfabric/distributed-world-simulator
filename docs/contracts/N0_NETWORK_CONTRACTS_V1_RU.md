@@ -1,6 +1,6 @@
 # N0 Network Contracts v1
 
-**Checkpoint:** `v16.4.0-foundation-n0`
+**Checkpoint:** `v16.4.0-foundation-n0-fix1`
 **Protocol version:** `1`
 **Transport:** только локальный JSON loopback; сетевые сокеты не входят в N0.
 
@@ -144,9 +144,24 @@ domain_components.item.condition
 ```
 
 Обязательные корни snapshot удалить нельзя. Пересекающиеся parent/child paths
-отклоняются. Delta применяется только к строго валидному snapshot с совпадающими
-`entity_id`, `entity_type`, `base_revision` и `authority_epoch`. После применения
-пересчитывается checksum и результат повторно проходит строгую snapshot validation.
+отклоняются. Путь разбирается с сохранением пустых сегментов, поэтому формы
+`physics_state..sleeping`, `.physics_state` и `physics_state.` не могут быть
+нормализованы в другой путь и отклоняются fail closed.
+
+Delta применяется только к строго валидному snapshot с совпадающими
+`entity_id`, `entity_type`, `base_revision`, `authority_owner_id` и
+`authority_epoch`. `server_tick` delta не может быть меньше tick базового
+snapshot. После применения пересчитывается checksum и результат повторно
+проходит строгую snapshot validation.
+
+Replication store применяет дополнительные fences:
+
+- смена `authority_owner_id` требует большего `authority_epoch`;
+- `state_revision` не может уменьшаться даже при большем epoch;
+- при равном `state_revision` больший epoch не может скрыть изменение spatial/partition/physics/domain state;
+- `server_tick` не может уменьшаться даже при большем epoch;
+- `entity_type` существующей entity неизменяем;
+- отказ не заменяет сохранённый snapshot.
 
 ## 5. Authority contracts
 
@@ -287,8 +302,10 @@ WorldRepositoryKernelPort
 
 - хранят только canonical snapshot;
 - не содержат callback/Node/scene references;
-- имеют строгий descriptor schema;
-- регистрируются в `SimulationKernel` только после проверки schema/configured;
+- имеют точный набор полей descriptor и строгие JSON-типы;
+- регистрируются в `SimulationKernel` только при точном совпадении script type;
+- перед регистрацией повторно валидируют descriptor и внутренний canonical snapshot;
+- объект с поддельным descriptor правильной schema отклоняется;
 - подтверждаются настоящим process-level `simulation-server` тестом.
 
 Repository port не выполняет callback flush. Он формирует versioned

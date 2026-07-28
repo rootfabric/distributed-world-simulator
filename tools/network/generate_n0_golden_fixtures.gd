@@ -87,7 +87,9 @@ func _init() -> void:
 	)
 	_write("valid_authority_route", "authority_route", true, "", Utils.payload_hash(Route.normalize(route)), route, {})
 	var node: Dictionary = NodeDescriptor.create(
-		"sim-a", "simulation-server", "foundation-n0-final", "v16.4.0-foundation-n0",
+		"sim-a", "simulation-server",
+		"foundation-n0-authority-monotonicity-kernel-port-type-fix1",
+		"v16.4.0-foundation-n0-fix1",
 		"persistent", [space], endpoint, ["command", "delta", "snapshot"],
 		"READY", 100, 110, 1
 	)

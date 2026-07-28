@@ -27,15 +27,29 @@ func send_snapshot(snapshot_value: Dictionary) -> Dictionary:
 	var entity_id: String = String(normalized["entity_id"])
 	if snapshots_by_entity.has(entity_id):
 		var current: Dictionary = snapshots_by_entity[entity_id]
+		if String(normalized["entity_type"]) != String(current["entity_type"]):
+			return _failure("ENTITY_TYPE_MISMATCH")
 		var incoming_epoch: int = int(normalized["authority_epoch"])
 		var current_epoch: int = int(current["authority_epoch"])
 		if incoming_epoch < current_epoch:
 			return _failure("STALE_AUTHORITY_EPOCH")
+		var incoming_owner: String = String(normalized["authority_owner_id"])
+		var current_owner: String = String(current["authority_owner_id"])
+		if incoming_epoch == current_epoch and incoming_owner != current_owner:
+			return _failure("AUTHORITY_OWNER_EPOCH_CONFLICT")
+		var incoming_revision: int = int(normalized["state_revision"])
+		var current_revision: int = int(current["state_revision"])
+		if incoming_revision < current_revision:
+			return _failure("STALE_SNAPSHOT_REVISION")
+		var incoming_tick: int = int(normalized["server_tick"])
+		var current_tick: int = int(current["server_tick"])
+		if incoming_tick < current_tick:
+			return _failure("STALE_SERVER_TICK")
+		if incoming_epoch > current_epoch and incoming_revision == current_revision:
+			for field in ["spatial_ref", "partition_address", "physics_state", "domain_components"]:
+				if normalized[field] != current[field]:
+					return _failure("SNAPSHOT_REVISION_CONFLICT")
 		if incoming_epoch == current_epoch:
-			var incoming_revision: int = int(normalized["state_revision"])
-			var current_revision: int = int(current["state_revision"])
-			if incoming_revision < current_revision:
-				return _failure("STALE_SNAPSHOT_REVISION")
 			if incoming_revision == current_revision:
 				if String(normalized["checksum"]) == String(current["checksum"]):
 					return _success(current, true)

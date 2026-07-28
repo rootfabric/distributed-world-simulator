@@ -5,7 +5,7 @@
 Текущий проверенный код:
 
 ```text
-v16.4.0-foundation-n0
+v16.4.0-foundation-n0-fix1
 ```
 
 Основание решения:
@@ -27,7 +27,8 @@ v16.4.0-foundation-n0
 | `v16.3.0-r2-inventory-ux` | принято | contextual containers, post-drop split, operation namespace, dual-fill light |
 | `v16.3.1-foundation-n0-part1-fix3` | принято | строгая N0 command/snapshot boundary и loopback |
 | `v16.3.2-foundation-lifecycle-part2-fix2` | принято | fail-closed shutdown, terrain drain и terminal world-load fence |
-| `v16.4.0-foundation-n0` | текущий checkpoint | Foundation Gate, canonical aggregate, kernel ports и N0 contracts приняты |
+| `v16.4.0-foundation-n0` | принято | Foundation Gate, canonical aggregate, kernel ports и N0 contracts |
+| `v16.4.0-foundation-n0-fix1` | текущий checkpoint | authority/revision/tick fencing, canonical delta paths и exact-type kernel ports |
 | `R3.1` | параллельный gameplay | foundation и construction aggregate |
 | `N1` | после N0/Foundation | один server + bot client |
 | `N2` | после N1 | local multi-process lab |

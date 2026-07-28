@@ -2,7 +2,7 @@
 
 # Статус реализации
 
-**Принят:** `v16.4.0-foundation-n0`.
+**Принят:** `v16.4.0-foundation-n0`; post-review hardening принят в `v16.4.0-foundation-n0-fix1`.
 
 - [x] command/result/snapshot/delta envelopes;
 - [x] exact schema and strict JSON typing;
@@ -16,9 +16,12 @@
 - [x] canonical golden fixtures;
 - [x] mutation matrix and runtime-type lint;
 - [x] strict kernel ports;
+- [x] owner/epoch, revision и server-tick monotonic fencing;
+- [x] canonical delta paths без пустых сегментов;
+- [x] exact-script и internal-state validation kernel ports;
 - [x] separate runner and JSON report.
 
-N0 завершён. Следующий сетевой этап — N1 с реальным transport adapter и bot client.
+N0 завершён и усилен fix1. Следующий сетевой этап — N1 с реальным transport adapter и bot client.
 
 ## Цель
 

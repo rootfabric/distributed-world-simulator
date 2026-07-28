@@ -1,4 +1,15 @@
-Planetary World v16.4.0-foundation-n0
+Planetary World v16.4.0-foundation-n0-fix1
+
+Foundation N0 fix1:
+- snapshot authority owner cannot change without a higher authority epoch
+- state_revision and server_tick cannot roll back across accepted snapshots
+- equal revision across a higher epoch cannot hide domain-state mutation
+- delta requires the current authority owner and non-decreasing server_tick
+- delta paths preserve and reject empty segments such as physics_state..sleeping
+- SimulationKernel accepts only exact EntityRegistry/Repository port scripts
+- port descriptors and internal snapshots are revalidated before registration
+- tests/network/test_n0_review_regressions.gd covers the reported bypasses
+- docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md
 
 Foundation Gate + N0 final:
 - EntitySnapshotEnvelope v1 includes entity_type, partition_address, server_tick and checksum

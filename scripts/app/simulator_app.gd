@@ -18,8 +18,8 @@ const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/enti
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.4.0-foundation-n0"
-const FOUNDATION_BUILD_ID: String = "foundation-n0-contracts-handoff-kernel-ports"
+const FOUNDATION_CHECKPOINT: String = "v16.4.0-foundation-n0-fix1"
+const FOUNDATION_BUILD_ID: String = "foundation-n0-authority-monotonicity-kernel-port-type-fix1"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

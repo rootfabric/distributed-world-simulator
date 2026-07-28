@@ -3,6 +3,10 @@ extends RefCounted
 const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA: String = "planet_simulator.entity_registry_kernel_port.v1"
+const DESCRIPTOR_FIELDS: Array[String] = [
+	"schema", "configured", "read_only", "entity_count",
+	"authority_owner_id", "authority_epoch",
+]
 const REGISTRY_FIELDS: Array[String] = [
 	"schema", "authority_owner_id", "authority_epoch", "entity_count",
 	"migration_count", "chunk_transition_count", "zone_transition_count",
@@ -25,7 +29,7 @@ func setup(snapshot_value: Dictionary) -> Dictionary:
 
 func refresh(snapshot_value: Dictionary) -> Dictionary:
 	var staged: Dictionary = snapshot_value.duplicate(true)
-	var validation: Dictionary = _validate_registry_snapshot(staged)
+	var validation: Dictionary = validate_registry_snapshot(staged)
 	if not bool(validation.get("success", false)):
 		return validation
 	var safe: Dictionary = UtilsScript.canonicalize(staged)
@@ -70,50 +74,97 @@ func create_descriptor() -> Dictionary:
 	}
 
 
-func _validate_registry_snapshot(value: Dictionary) -> Dictionary:
+func validate_contract_state() -> Dictionary:
+	var descriptor_validation: Dictionary = validate_descriptor(create_descriptor())
+	if not bool(descriptor_validation.get("success", false)):
+		return descriptor_validation
+	if not configured:
+		return _failure("PORT_NOT_CONFIGURED")
+	var snapshot_validation: Dictionary = validate_registry_snapshot(registry_snapshot)
+	if not bool(snapshot_validation.get("success", false)):
+		return snapshot_validation
+	if int(registry_snapshot["entity_count"]) != get_entity_count():
+		return _failure("PORT_STATE_MISMATCH", {"field": "entity_count"})
+	return {"success": true}
+
+
+static func validate_descriptor(value: Dictionary) -> Dictionary:
+	var fields: Dictionary = UtilsScript.validate_exact_fields(value, DESCRIPTOR_FIELDS)
+	if not bool(fields.get("success", false)):
+		return fields
+	if typeof(value.get("schema")) != TYPE_STRING or String(value["schema"]) != SCHEMA:
+		return _static_failure("UNSUPPORTED_PORT_SCHEMA")
+	if typeof(value.get("configured")) != TYPE_BOOL:
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "configured"})
+	if typeof(value.get("read_only")) != TYPE_BOOL or not bool(value["read_only"]):
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "read_only"})
+	if not UtilsScript.is_json_integer(value.get("entity_count")):
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "entity_count"})
+	if typeof(value.get("authority_owner_id")) != TYPE_STRING:
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "authority_owner_id"})
+	if not UtilsScript.is_json_integer(value.get("authority_epoch")):
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "authority_epoch"})
+	if bool(value["configured"]):
+		if int(value["entity_count"]) < 0:
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "entity_count"})
+		if String(value["authority_owner_id"]).is_empty():
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "authority_owner_id"})
+		if int(value["authority_epoch"]) < 1:
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "authority_epoch"})
+	else:
+		if int(value["entity_count"]) != -1 or not String(value["authority_owner_id"]).is_empty() or int(value["authority_epoch"]) != 0:
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "unconfigured_state"})
+	return {"success": true}
+
+
+static func validate_registry_snapshot(value: Dictionary) -> Dictionary:
 	var fields: Dictionary = UtilsScript.validate_exact_fields(value, REGISTRY_FIELDS)
 	if not bool(fields.get("success", false)):
 		return fields
 	if typeof(value.get("schema")) != TYPE_STRING or String(value["schema"]) != "planet_simulator.entity_registry.v2":
-		return _failure("UNSUPPORTED_REGISTRY_SCHEMA")
+		return _static_failure("UNSUPPORTED_REGISTRY_SCHEMA")
 	for counter_field in [
 		"entity_count", "migration_count", "chunk_transition_count",
 		"zone_transition_count", "stale_write_rejection_count",
 	]:
 		if not UtilsScript.is_json_integer(value.get(counter_field)) or int(value[counter_field]) < 0:
-			return _failure("INVALID_REGISTRY_COUNTER", {"field": counter_field})
+			return _static_failure("INVALID_REGISTRY_COUNTER", {"field": counter_field})
 	if not UtilsScript.is_json_integer(value.get("authority_epoch")) or int(value["authority_epoch"]) < 1:
-		return _failure("INVALID_AUTHORITY_EPOCH")
+		return _static_failure("INVALID_AUTHORITY_EPOCH")
 	if typeof(value.get("authority_owner_id")) != TYPE_STRING or String(value["authority_owner_id"]).is_empty():
-		return _failure("INVALID_AUTHORITY_OWNER")
+		return _static_failure("INVALID_AUTHORITY_OWNER")
 	var entities_value = value.get("entities")
 	if typeof(entities_value) != TYPE_ARRAY or entities_value.size() != int(value["entity_count"]):
-		return _failure("REGISTRY_COUNT_MISMATCH")
+		return _static_failure("REGISTRY_COUNT_MISMATCH")
 	var entity_ids: Dictionary = {}
 	for entity_value in entities_value:
 		if typeof(entity_value) != TYPE_DICTIONARY:
-			return _failure("INVALID_ENTITY_SNAPSHOT")
+			return _static_failure("INVALID_ENTITY_SNAPSHOT")
 		var entity_fields: Dictionary = UtilsScript.validate_exact_fields(entity_value, ENTITY_FIELDS)
 		if not bool(entity_fields.get("success", false)):
-			return _failure("INVALID_ENTITY_SNAPSHOT", {"validation": entity_fields})
+			return _static_failure("INVALID_ENTITY_SNAPSHOT", {"validation": entity_fields})
 		if typeof(entity_value.get("schema")) != TYPE_STRING or String(entity_value["schema"]) != "planet_simulator.entity.v2":
-			return _failure("UNSUPPORTED_ENTITY_SCHEMA")
+			return _static_failure("UNSUPPORTED_ENTITY_SCHEMA")
 		if typeof(entity_value.get("entity_id")) != TYPE_STRING or String(entity_value["entity_id"]).is_empty():
-			return _failure("INVALID_ENTITY_ID")
+			return _static_failure("INVALID_ENTITY_ID")
 		if typeof(entity_value.get("entity_type")) != TYPE_STRING or String(entity_value["entity_type"]).is_empty():
-			return _failure("INVALID_ENTITY_TYPE")
+			return _static_failure("INVALID_ENTITY_TYPE")
 		for revision_field in ["authority_epoch", "state_revision", "revision", "last_simulation_tick"]:
 			if not UtilsScript.is_json_integer(entity_value.get(revision_field)) or int(entity_value[revision_field]) < 0:
-				return _failure("INVALID_ENTITY_REVISION", {"field": revision_field})
+				return _static_failure("INVALID_ENTITY_REVISION", {"field": revision_field})
 		var entity_id: String = String(entity_value["entity_id"])
 		if entity_ids.has(entity_id):
-			return _failure("DUPLICATE_ENTITY_ID")
+			return _static_failure("DUPLICATE_ENTITY_ID")
 		entity_ids[entity_id] = true
 	var safe: Dictionary = UtilsScript.canonicalize(value)
 	if not bool(safe.get("success", false)):
-		return _failure("NON_CANONICAL_REGISTRY_SNAPSHOT", {"message": safe.get("error", "")})
+		return _static_failure("NON_CANONICAL_REGISTRY_SNAPSHOT", {"message": safe.get("error", "")})
 	return {"success": true}
 
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
+	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
+
+
+static func _static_failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}

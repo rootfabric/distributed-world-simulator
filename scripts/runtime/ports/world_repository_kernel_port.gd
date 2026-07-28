@@ -3,6 +3,9 @@ extends RefCounted
 const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA: String = "planet_simulator.world_repository_kernel_port.v1"
+const DESCRIPTOR_FIELDS: Array[String] = [
+	"schema", "configured", "world_id", "instance_id", "supports_flush_request",
+]
 const FLUSH_REQUEST_SCHEMA: String = "planet_simulator.repository_flush_request.v1"
 const FLUSH_REQUEST_FIELDS: Array[String] = ["schema", "operation_id", "requested_at_tick", "world_id", "instance_id"]
 const REPOSITORY_FIELDS: Array[String] = [
@@ -25,7 +28,7 @@ func setup(snapshot_value: Dictionary) -> Dictionary:
 
 
 func refresh(snapshot_value: Dictionary) -> Dictionary:
-	var validation: Dictionary = _validate_repository_snapshot(snapshot_value)
+	var validation: Dictionary = validate_repository_snapshot(snapshot_value)
 	if not bool(validation.get("success", false)):
 		return validation
 	var safe: Dictionary = UtilsScript.canonicalize(snapshot_value)
@@ -36,58 +39,58 @@ func refresh(snapshot_value: Dictionary) -> Dictionary:
 	return {"success": true}
 
 
-func _validate_repository_snapshot(value: Dictionary) -> Dictionary:
+static func validate_repository_snapshot(value: Dictionary) -> Dictionary:
 	var fields: Dictionary = UtilsScript.validate_exact_fields(value, REPOSITORY_FIELDS)
 	if not bool(fields.get("success", false)):
 		return fields
 	if typeof(value.get("schema")) != TYPE_STRING or String(value["schema"]) != "lunar.persistence_runtime.v1":
-		return _failure("UNSUPPORTED_REPOSITORY_SCHEMA")
+		return _static_failure("UNSUPPORTED_REPOSITORY_SCHEMA")
 	if typeof(value.get("initialized")) != TYPE_BOOL:
-		return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "initialized"})
+		return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "initialized"})
 	for field in [
 		"world_id", "universe_id", "instance_id", "partition_space_id",
 		"partition_scheme", "world_root", "manifest_path", "journal_path",
 		"landmark_index_path", "last_save_summary",
 	]:
 		if typeof(value.get(field)) != TYPE_STRING:
-			return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": field})
+			return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": field})
 	for required_field in ["world_id", "universe_id", "instance_id", "partition_space_id", "partition_scheme"]:
 		if String(value[required_field]).is_empty():
-			return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": required_field})
+			return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": required_field})
 	for counter_field in [
 		"partition_scheme_revision", "landmark_count", "landmark_marker_node_count",
 		"loaded_chunk_count", "runtime_node_count", "persistent_entity_count",
 		"chunk_load_count", "chunk_unload_count",
 	]:
 		if not UtilsScript.is_json_integer(value.get(counter_field)) or int(value[counter_field]) < 0:
-			return _failure("INVALID_REPOSITORY_COUNTER", {"field": counter_field})
+			return _static_failure("INVALID_REPOSITORY_COUNTER", {"field": counter_field})
 	if int(value["partition_scheme_revision"]) < 1:
-		return _failure("INVALID_REPOSITORY_COUNTER", {"field": "partition_scheme_revision"})
+		return _static_failure("INVALID_REPOSITORY_COUNTER", {"field": "partition_scheme_revision"})
 	for bool_field in ["landmark_markers_enabled", "landmark_index_rebuilt"]:
 		if typeof(value.get(bool_field)) != TYPE_BOOL:
-			return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": bool_field})
+			return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": bool_field})
 	if typeof(value.get("partition_grid")) != TYPE_DICTIONARY:
-		return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "partition_grid"})
+		return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "partition_grid"})
 	var marker_distance = value.get("landmark_marker_max_distance_m")
 	if typeof(marker_distance) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(marker_distance)) or float(marker_distance) < 0.0:
-		return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "landmark_marker_max_distance_m"})
+		return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "landmark_marker_max_distance_m"})
 	if typeof(value.get("dirty_chunks")) != TYPE_ARRAY:
-		return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "dirty_chunks"})
+		return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "dirty_chunks"})
 	var seen_chunks: Dictionary = {}
 	for chunk_value in value["dirty_chunks"]:
 		if typeof(chunk_value) != TYPE_STRING or String(chunk_value).is_empty():
-			return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "dirty_chunks"})
+			return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "dirty_chunks"})
 		if seen_chunks.has(chunk_value):
-			return _failure("DUPLICATE_DIRTY_CHUNK")
+			return _static_failure("DUPLICATE_DIRTY_CHUNK")
 		seen_chunks[chunk_value] = true
 	if typeof(value.get("last_player_world_position")) != TYPE_ARRAY or value["last_player_world_position"].size() != 3:
-		return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "last_player_world_position"})
+		return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "last_player_world_position"})
 	for coordinate in value["last_player_world_position"]:
 		if typeof(coordinate) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(coordinate)):
-			return _failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "last_player_world_position"})
+			return _static_failure("INVALID_REPOSITORY_SNAPSHOT", {"field": "last_player_world_position"})
 	var safe: Dictionary = UtilsScript.canonicalize(value)
 	if not bool(safe.get("success", false)):
-		return _failure("NON_CANONICAL_REPOSITORY_SNAPSHOT", {"message": safe.get("error", "")})
+		return _static_failure("NON_CANONICAL_REPOSITORY_SNAPSHOT", {"message": safe.get("error", "")})
 	return {"success": true}
 
 
@@ -140,5 +143,45 @@ func create_descriptor() -> Dictionary:
 	}
 
 
+func validate_contract_state() -> Dictionary:
+	var descriptor_validation: Dictionary = validate_descriptor(create_descriptor())
+	if not bool(descriptor_validation.get("success", false)):
+		return descriptor_validation
+	if not configured:
+		return _failure("PORT_NOT_CONFIGURED")
+	var snapshot_validation: Dictionary = validate_repository_snapshot(repository_snapshot)
+	if not bool(snapshot_validation.get("success", false)):
+		return snapshot_validation
+	return {"success": true}
+
+
+static func validate_descriptor(value: Dictionary) -> Dictionary:
+	var fields: Dictionary = UtilsScript.validate_exact_fields(value, DESCRIPTOR_FIELDS)
+	if not bool(fields.get("success", false)):
+		return fields
+	if typeof(value.get("schema")) != TYPE_STRING or String(value["schema"]) != SCHEMA:
+		return _static_failure("UNSUPPORTED_PORT_SCHEMA")
+	if typeof(value.get("configured")) != TYPE_BOOL:
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "configured"})
+	if typeof(value.get("supports_flush_request")) != TYPE_BOOL:
+		return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "supports_flush_request"})
+	for field in ["world_id", "instance_id"]:
+		if typeof(value.get(field)) != TYPE_STRING:
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": field})
+	if bool(value["configured"]):
+		if not bool(value["supports_flush_request"]):
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "supports_flush_request"})
+		if String(value["world_id"]).is_empty() or String(value["instance_id"]).is_empty():
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "identity"})
+	else:
+		if bool(value["supports_flush_request"]) or not String(value["world_id"]).is_empty() or not String(value["instance_id"]).is_empty():
+			return _static_failure("INVALID_PORT_DESCRIPTOR", {"field": "unconfigured_state"})
+	return {"success": true}
+
+
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
+	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
+
+
+static func _static_failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}

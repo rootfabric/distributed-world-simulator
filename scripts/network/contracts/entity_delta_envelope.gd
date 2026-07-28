@@ -153,6 +153,10 @@ static func apply_to_snapshot(snapshot: Dictionary, delta: Dictionary) -> Dictio
 		return {"success": false, "error_code": "BASE_REVISION_MISMATCH", "snapshot": {}}
 	if not UtilsScript.is_json_integer(snapshot.get("authority_epoch")) or int(snapshot["authority_epoch"]) != int(delta["authority_epoch"]):
 		return {"success": false, "error_code": "STALE_AUTHORITY_EPOCH", "snapshot": {}}
+	if String(snapshot.get("authority_owner_id", "")) != String(delta["authority_owner_id"]):
+		return {"success": false, "error_code": "AUTHORITY_OWNER_MISMATCH", "snapshot": {}}
+	if not UtilsScript.is_json_integer(snapshot.get("server_tick")) or int(delta["server_tick"]) < int(snapshot["server_tick"]):
+		return {"success": false, "error_code": "STALE_SERVER_TICK", "snapshot": {}}
 	var output: Dictionary = snapshot.duplicate(true)
 	var removals: Array = Array(delta["removed_fields"]).duplicate()
 	removals.sort_custom(func(first, second): return String(first).count(".") > String(second).count("."))
@@ -181,7 +185,7 @@ static func apply_to_snapshot(snapshot: Dictionary, delta: Dictionary) -> Dictio
 
 
 static func _validate_mutable_path(path: String, removal: bool) -> Dictionary:
-	var parts: PackedStringArray = path.split(".", false)
+	var parts: PackedStringArray = path.split(".", true)
 	if parts.is_empty() or not MUTABLE_ROOTS.has(parts[0]):
 		return UtilsScript.validation_failure("PROTECTED_DELTA_FIELD", "Delta path must start with a mutable snapshot field")
 	if removal and parts.size() < 2:
@@ -197,7 +201,9 @@ static func _paths_overlap(first: String, second: String) -> bool:
 
 
 static func _erase_path(target: Dictionary, path: String) -> bool:
-	var parts: PackedStringArray = path.split(".", false)
+	var parts: PackedStringArray = path.split(".", true)
+	if parts.is_empty() or parts.has(""):
+		return false
 	var current: Dictionary = target
 	for index in range(parts.size() - 1):
 		var segment: String = parts[index]
@@ -212,7 +218,9 @@ static func _erase_path(target: Dictionary, path: String) -> bool:
 
 
 static func _set_path(target: Dictionary, path: String, value) -> bool:
-	var parts: PackedStringArray = path.split(".", false)
+	var parts: PackedStringArray = path.split(".", true)
+	if parts.is_empty() or parts.has(""):
+		return false
 	var current: Dictionary = target
 	for index in range(parts.size() - 1):
 		var segment: String = parts[index]

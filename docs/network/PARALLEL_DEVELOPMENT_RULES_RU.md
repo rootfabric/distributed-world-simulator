@@ -1,6 +1,6 @@
 # Правила параллельной разработки сети и gameplay
 
-## Текущий режим после v16.4.0-foundation-n0
+## Текущий режим после v16.4.0-foundation-n0-fix1
 
 Foundation Gate и N0 завершены. Одновременно разрешены три потока:
 
@@ -44,6 +44,7 @@ Track T:
 
 - `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
 - `../contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
+- `../checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
 - `../checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
 
 ## Базовые правила параллельной разработки

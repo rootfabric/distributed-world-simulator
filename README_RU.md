@@ -1,4 +1,4 @@
-# Planetary World v16.4.0-foundation-n0 — Foundation Gate и N0 завершены
+# Planetary World v16.4.0-foundation-n0-fix1 — N0 authority и kernel boundary исправлены
 
 Версия сохраняет R2 gameplay и закрывает архитектурный этап перед первым
 настоящим authoritative server. В проекте работают server-safe lifecycle,
@@ -13,13 +13,13 @@ canonical `WorldEntityAggregate`, строгая presentation-free границ�
 Checkpoint:
 
 ```text
-v16.4.0-foundation-n0
+v16.4.0-foundation-n0-fix1
 ```
 
 Build ID:
 
 ```text
-foundation-n0-contracts-handoff-kernel-ports
+foundation-n0-authority-monotonicity-kernel-port-type-fix1
 ```
 
 N0 включает command/result/snapshot/delta envelopes, authority lease/route,
@@ -34,6 +34,12 @@ machine, canonical fixtures и JSON loopback для command и replication paths
 `EntityRegistryKernelPort` и `WorldRepositoryKernelPort` подключаются к реальному
 simulation-server process и не содержат presentation/runtime callbacks.
 
+Fix1 закрывает найденные после N0 обходы: смена authority owner при прежнем
+epoch, откат `state_revision` или `server_tick`, неканонические delta paths с
+пустыми сегментами и подмена kernel port произвольным объектом с поддельным
+descriptor. Kernel теперь проверяет точный script type, точную descriptor schema
+и повторно валидирует внутренний snapshot порта перед регистрацией.
+
 Главный инвариант:
 
 ```text
@@ -42,6 +48,7 @@ canonical simulation ≠ presentation ≠ transport
 
 Основные документы:
 
+- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
