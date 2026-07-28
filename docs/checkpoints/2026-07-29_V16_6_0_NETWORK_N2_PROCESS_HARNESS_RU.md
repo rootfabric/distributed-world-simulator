@@ -1,6 +1,6 @@
 # Checkpoint v16.6.0 — Network N2 process harness
 
-**Статус:** candidate для независимой Windows-проверки
+**Статус:** принят после независимой Windows-проверки
 **Build ID:** `n2-cross-platform-process-orchestration`
 **Ветка:** `feature/n2-process-harness`
 **База:** `v16.5.2-foundation-network-n1`
@@ -54,16 +54,16 @@ nonzero_exit_after_terminal
 
 ```text
 Editor import/parse:             PASS
-N2 contracts:                    95/95
+N2 contracts:                   102/102
 N2 process assertions:           76/76
 Direct harness stability:        5/5 запусков, 6/6 scenarios
-Network profile:                 21/21 suites, 1917/1917 assertions
+Network profile:                 21/21 suites, 1924/1924 assertions
 Main scene:                      6 PASS, 0 FAIL
 Simulation-server lifecycle:     PASS
 Terrain drain:                   4196 мс
 ```
 
-Полный world regression является обязательным acceptance gate на пользовательской Windows double-сборке.
+Независимая Windows-проверка подтвердила N2 contracts/process harness и два последовательных полных world regression без повреждения атомарного summary.
 
 ## Следующий этап
 

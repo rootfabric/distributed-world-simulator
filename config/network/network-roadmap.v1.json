@@ -1,8 +1,8 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 8,
+  "document_revision": 9,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "project_checkpoint": "v16.6.0-network-n2-process-harness",
+  "project_checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
   "strategy": "incremental_authoritative_server_mesh",
   "principles": [
     "stable_entity_identity",
@@ -79,7 +79,7 @@
         "N1"
       ],
       "acceptance": "one manifest runs real N1 success and fault scenarios with isolated user state, exact failure classification, process cleanup, JSON and JUnit reports",
-      "status": "candidate",
+      "status": "accepted",
       "checkpoint": "v16.6.0-network-n2-process-harness"
     },
     {
@@ -90,7 +90,9 @@
         "N2"
       ],
       "acceptance": "server restart preserves snapshot, revision, epoch, ledger and replay records without a second mutation",
-      "status": "planned"
+      "status": "candidate",
+      "checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
+      "branch": "feature/r3.1-authoritative-recovery"
     },
     {
       "id": "N3",
@@ -100,7 +102,7 @@
         "R3.1"
       ],
       "acceptance": "two static authority regions with epoch fencing",
-      "status": "planned"
+      "status": "next"
     },
     {
       "id": "N4",
@@ -188,7 +190,7 @@
     "network",
     "test_infrastructure"
   ],
-  "updated_at_utc": "2026-07-28T00:00:00Z",
+  "updated_at_utc": "2026-07-29T00:00:00Z",
   "branch_policy": {
     "new_stage": "feature/<stage>-<short-purpose>",
     "review_fix": "same_branch_with_fix_commit",

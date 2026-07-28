@@ -242,3 +242,7 @@ JSON report
 ## Текущая ветка N1.3
 
 `feature/n1-reconnect-replay`; review fixes остаются в ней. После принятия следующий этап создаёт `feature/n2-process-harness`.
+
+## R3.1 branch boundary
+
+Текущий repository checkpoint разрабатывается только в `feature/r3.1-authoritative-recovery`. Review fixes остаются в этой же ветке. Изменения Directory/lease или cross-server handoff не должны попадать в R3.1; для них после принятия создаются `feature/n3-world-directory` и `feature/n4-authority-handoff`.

@@ -1,8 +1,8 @@
 # Дорожная карта PlanetSimulator
 
-## Текущий сетевой gate — N2
+## Текущий repository/network gate — R3.1
 
-`v16.6.0-network-n2-process-harness` объединяет реальные N1 process fixtures в единый manifest-driven harness. После принятия следующий приоритет — `R3.1 authoritative persistence/recovery`, затем N3 Directory и N4 handoff.
+`v16.7.0-repository-r3.1-authoritative-recovery` добавляет атомарный authoritative checkpoint и crash/restart recovery без повторной domain mutation. После принятия следующий приоритет — N3 World Directory, затем N4 cross-server handoff.
 
 # Дорожная карта к лунному симулятору мечты
 
@@ -420,7 +420,7 @@ commit item mutation
 - клиент применяет delta только один раз;
 - полный network/world regression проходит.
 
-## Затем: N2 → R3.1 → N3 → N4
+## Затем: R3.1 → N3 → N4 → N5
 
 ### N2 — multi-process harness
 

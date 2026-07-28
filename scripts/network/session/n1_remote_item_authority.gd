@@ -12,6 +12,7 @@ const GatewayScript = preload("res://scripts/network/loopback/network_command_ga
 const CommandScript = preload("res://scripts/network/contracts/network_command_envelope.gd")
 const MovePayloadScript = preload("res://scripts/network/contracts/item_move_to_container_payload.gd")
 const MoveResultScript = preload("res://scripts/network/contracts/item_move_to_container_result.gd")
+const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const COMMAND_TYPE: String = "item.move_to_container"
 const SNAPSHOT_ID: String = "snapshot/n1/remote-item/1"
@@ -20,6 +21,7 @@ const SOURCE_CONTAINER_ID: String = "container/n1/source"
 const DESTINATION_CONTAINER_ID: String = "container/n1/destination"
 const INITIAL_REVISION: int = 12
 const INITIAL_SERVER_TICK: int = 500
+const RECOVERY_STATE_SCHEMA: String = "planet_simulator.n1_remote_item_authority_state.v1"
 
 var domain: Dictionary = {}
 var aggregate
@@ -166,6 +168,177 @@ func get_delta(operation_id: String) -> Dictionary:
 
 func get_final_snapshot(operation_id: String) -> Dictionary:
 	return Dictionary(final_snapshots_by_operation.get(operation_id, {})).duplicate(true)
+
+
+func export_recovery_state() -> Dictionary:
+	if aggregate == null or gateway == null or domain.is_empty() or session_id.is_empty():
+		return {}
+	return {
+		"schema": RECOVERY_STATE_SCHEMA,
+		"authority_owner_id": authority_owner_id,
+		"authority_epoch": authority_epoch,
+		"server_tick": server_tick,
+		"session_id": session_id,
+		"command_item_id": command_item_id,
+		"terminal_item_id": terminal_item_id,
+		"mutation_count": mutation_count,
+		"handler_invocation_count": handler_invocation_count,
+		"domain_state": _capture_domain_state(),
+		"gateway_state": gateway.to_dict(),
+		"deltas_by_operation": deltas_by_operation.duplicate(true),
+		"final_snapshots_by_operation": final_snapshots_by_operation.duplicate(true),
+		"current_snapshot": create_snapshot(),
+	}
+
+
+func restore_recovery_state(value: Dictionary) -> Dictionary:
+	var validation: Dictionary = validate_recovery_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	var staged_domain: Dictionary = FactoryScript.create()
+	var domain_state: Dictionary = value["domain_state"]
+	var item_result: Dictionary = staged_domain.items.load_dict(domain_state["items"])
+	var container_result: Dictionary = staged_domain.containers.load_dict(domain_state["containers"])
+	var attachment_result: Dictionary = staged_domain.attachments.load_dict(domain_state["attachments"])
+	var operation_result: Dictionary = staged_domain.operations.load_dict(domain_state["operations"])
+	var entity_result: Dictionary = staged_domain.world_entities.load_dict(domain_state["world_entities"])
+	if not (
+		bool(item_result.get("success", false))
+		and bool(container_result.get("success", false))
+		and bool(attachment_result.get("success", false))
+		and bool(operation_result.get("success", false))
+		and bool(entity_result.get("success", false))
+	):
+		return _failure("AUTHORITATIVE_DOMAIN_RESTORE_FAILED", {
+			"items": item_result,
+			"containers": container_result,
+			"attachments": attachment_result,
+			"operations": operation_result,
+			"world_entities": entity_result,
+		})
+	var graph_validation: Dictionary = staged_domain.validator.validate_graph()
+	var binding_validation: Dictionary = staged_domain.world_entities.validate_item_bindings(staged_domain.items)
+	if not bool(graph_validation.get("success", false)):
+		return _failure("RECOVERED_ITEM_GRAPH_INVALID", {"cause": graph_validation})
+	if not bool(binding_validation.get("success", false)):
+		return _failure("RECOVERED_WORLD_BINDING_INVALID", {"cause": binding_validation})
+	var restored_aggregate = staged_domain.world_entities.get_entity(ENTITY_ID)
+	if restored_aggregate == null:
+		return _failure("RECOVERED_AGGREGATE_NOT_FOUND")
+	var staged_gateway = GatewayScript.new()
+	staged_gateway.setup(int(value["authority_epoch"]), Callable())
+	if not staged_gateway.register_handler(COMMAND_TYPE, _handle_move_to_container):
+		return _failure("RECOVERED_HANDLER_REGISTRATION_FAILED")
+	var gateway_result: Dictionary = staged_gateway.load_dict(value["gateway_state"])
+	if not bool(gateway_result.get("success", false)):
+		return _failure("RECOVERED_GATEWAY_STATE_INVALID", {"cause": gateway_result})
+	var restored_snapshot: Dictionary = SnapshotScript.create(
+		SNAPSHOT_ID,
+		String(restored_aggregate.entity_id),
+		String(restored_aggregate.entity_type),
+		int(restored_aggregate.state_revision),
+		String(restored_aggregate.authority_owner_id),
+		int(restored_aggregate.authority_epoch),
+		int(restored_aggregate.last_simulation_tick),
+		restored_aggregate.spatial_ref,
+		restored_aggregate.partition_address,
+		restored_aggregate.physics_state,
+		restored_aggregate.domain_components
+	)
+	if restored_snapshot.is_empty():
+		return _failure("RECOVERED_SNAPSHOT_INVALID")
+	if String(restored_snapshot.get("checksum", "")) != String(value["current_snapshot"]["checksum"]):
+		return _failure("RECOVERED_SNAPSHOT_CHECKSUM_MISMATCH")
+	# Commit only after the whole recovered domain, snapshot and dedup state have passed validation.
+	domain = staged_domain
+	aggregate = restored_aggregate
+	authority_owner_id = String(value["authority_owner_id"])
+	authority_epoch = int(value["authority_epoch"])
+	server_tick = int(value["server_tick"])
+	session_id = String(value["session_id"])
+	command_item_id = String(value["command_item_id"])
+	terminal_item_id = String(value["terminal_item_id"])
+	mutation_count = int(value["mutation_count"])
+	handler_invocation_count = int(value["handler_invocation_count"])
+	deltas_by_operation = Dictionary(value["deltas_by_operation"]).duplicate(true)
+	final_snapshots_by_operation = Dictionary(value["final_snapshots_by_operation"]).duplicate(true)
+	gateway = staged_gateway
+	gateway.authority_epoch_resolver = _resolve_authority_epoch
+	return _success({
+		"entity_id": String(aggregate.entity_id),
+		"operation_count": gateway.completed_operations.size(),
+		"snapshot_checksum": String(restored_snapshot["checksum"]),
+	})
+
+
+static func validate_recovery_state(value: Dictionary) -> Dictionary:
+	var fields: Array[String] = [
+		"schema", "authority_owner_id", "authority_epoch", "server_tick", "session_id",
+		"command_item_id", "terminal_item_id", "mutation_count", "handler_invocation_count",
+		"domain_state", "gateway_state", "deltas_by_operation", "final_snapshots_by_operation",
+		"current_snapshot",
+	]
+	var exact: Dictionary = UtilsScript.validate_exact_fields(value, fields)
+	if not bool(exact.get("success", false)):
+		return _failure_static("INVALID_AUTHORITY_RECOVERY_FIELDS")
+	if typeof(value["schema"]) != TYPE_STRING or String(value["schema"]) != RECOVERY_STATE_SCHEMA:
+		return _failure_static("UNSUPPORTED_AUTHORITY_RECOVERY_SCHEMA")
+	for field in ["authority_owner_id", "session_id", "command_item_id", "terminal_item_id"]:
+		if typeof(value[field]) != TYPE_STRING or String(value[field]).strip_edges().is_empty():
+			return _failure_static("INVALID_AUTHORITY_RECOVERY_ID", {"field": field})
+	for field in ["authority_epoch", "server_tick", "mutation_count", "handler_invocation_count"]:
+		if not UtilsScript.is_json_integer(value[field]) or int(value[field]) < 0:
+			return _failure_static("INVALID_AUTHORITY_RECOVERY_INTEGER", {"field": field})
+	if int(value["authority_epoch"]) < 1:
+		return _failure_static("INVALID_AUTHORITY_RECOVERY_EPOCH")
+	for field in ["domain_state", "gateway_state", "deltas_by_operation", "final_snapshots_by_operation", "current_snapshot"]:
+		if typeof(value[field]) != TYPE_DICTIONARY:
+			return _failure_static("INVALID_AUTHORITY_RECOVERY_SECTION", {"field": field})
+	var domain_state: Dictionary = value["domain_state"]
+	var domain_exact: Dictionary = UtilsScript.validate_exact_fields(
+		domain_state,
+		["items", "containers", "attachments", "operations", "world_entities", "server_tick", "mutation_count"]
+	)
+	if not bool(domain_exact.get("success", false)):
+		return _failure_static("INVALID_AUTHORITY_DOMAIN_STATE")
+	var snapshot_validation: Dictionary = SnapshotScript.validate(value["current_snapshot"])
+	if not bool(snapshot_validation.get("success", false)):
+		return _failure_static("INVALID_AUTHORITY_RECOVERY_SNAPSHOT")
+	var snapshot: Dictionary = value["current_snapshot"]
+	if String(snapshot["authority_owner_id"]) != String(value["authority_owner_id"]):
+		return _failure_static("AUTHORITY_RECOVERY_OWNER_MISMATCH")
+	if int(snapshot["authority_epoch"]) != int(value["authority_epoch"]):
+		return _failure_static("AUTHORITY_RECOVERY_EPOCH_MISMATCH")
+	if int(snapshot["server_tick"]) != int(value["server_tick"]):
+		return _failure_static("AUTHORITY_RECOVERY_TICK_MISMATCH")
+	if int(domain_state["server_tick"]) != int(value["server_tick"]) or int(domain_state["mutation_count"]) != int(value["mutation_count"]):
+		return _failure_static("AUTHORITY_RECOVERY_COUNTER_MISMATCH")
+	var staged_gateway = GatewayScript.new()
+	staged_gateway.setup(int(value["authority_epoch"]), Callable())
+	var gateway_validation: Dictionary = staged_gateway.load_dict(value["gateway_state"])
+	if not bool(gateway_validation.get("success", false)):
+		return _failure_static("INVALID_AUTHORITY_RECOVERY_GATEWAY", {"cause": gateway_validation})
+	for operation_id_value in value["deltas_by_operation"].keys():
+		var operation_id: String = String(operation_id_value)
+		var delta_value = value["deltas_by_operation"][operation_id_value]
+		var final_value = value["final_snapshots_by_operation"].get(operation_id, {})
+		if not delta_value is Dictionary or not final_value is Dictionary:
+			return _failure_static("INVALID_AUTHORITY_RECOVERY_ARTIFACT")
+		if not bool(DeltaScript.validate(delta_value).get("success", false)) or not bool(SnapshotScript.validate(final_value).get("success", false)):
+			return _failure_static("INVALID_AUTHORITY_RECOVERY_ARTIFACT")
+		if not staged_gateway.completed_operations.has(operation_id):
+			return _failure_static("AUTHORITY_RECOVERY_ARTIFACT_WITHOUT_RESULT")
+	for operation_id_value in value["final_snapshots_by_operation"].keys():
+		if not value["deltas_by_operation"].has(operation_id_value):
+			return _failure_static("AUTHORITY_RECOVERY_SNAPSHOT_WITHOUT_DELTA")
+	var safe: Dictionary = UtilsScript.canonicalize(value, "$.authority_recovery_state")
+	if not bool(safe.get("success", false)):
+		return _failure_static("AUTHORITY_RECOVERY_STATE_NOT_JSON_SAFE")
+	return {"success": true, "error_code": "", "details": {}}
+
+
+static func _failure_static(error_code: String, details: Dictionary = {}) -> Dictionary:
+	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
 
 
 func get_report() -> Dictionary:
@@ -389,6 +562,7 @@ func _capture_domain_state() -> Dictionary:
 		"items": domain.items.to_dict(),
 		"containers": domain.containers.to_dict(),
 		"operations": domain.operations.to_dict(),
+		"attachments": domain.attachments.to_dict(),
 		"world_entities": domain.world_entities.to_dict(),
 		"server_tick": server_tick,
 		"mutation_count": mutation_count,
@@ -400,11 +574,13 @@ func _restore_domain_state(state: Dictionary) -> bool:
 	var item_result: Dictionary = restored_domain.items.load_dict(state["items"])
 	var container_result: Dictionary = restored_domain.containers.load_dict(state["containers"])
 	var operation_result: Dictionary = restored_domain.operations.load_dict(state["operations"])
+	var attachment_result: Dictionary = restored_domain.attachments.load_dict(state["attachments"])
 	var entity_result: Dictionary = restored_domain.world_entities.load_dict(state["world_entities"])
 	if not (
 		bool(item_result.get("success", false))
 		and bool(container_result.get("success", false))
 		and bool(operation_result.get("success", false))
+		and bool(attachment_result.get("success", false))
 		and bool(entity_result.get("success", false))
 	):
 		return false

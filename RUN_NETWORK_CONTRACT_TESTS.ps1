@@ -43,6 +43,8 @@ $Tests = @(
     "res://tests/network/test_n1_reconnect_replay_processes.gd",
     "res://tests/testing/test_n2_process_harness_contracts.gd",
     "res://tests/testing/test_n2_process_harness_processes.gd",
+    "res://tests/persistence/test_r3_authoritative_recovery_contracts.gd",
+    "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -56,8 +58,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.6.0-network-n2-process-harness"
-    build_id = "n2-cross-platform-process-orchestration"
+    checkpoint = "v16.7.0-repository-r3.1-authoritative-recovery"
+    build_id = "r3.1-authoritative-persistence-crash-recovery"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -125,7 +127,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.6.0-network-n2-process-harness"
+    Write-Host "Checkpoint: v16.7.0-repository-r3.1-authoritative-recovery"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
