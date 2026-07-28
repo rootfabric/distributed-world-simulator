@@ -1,176 +1,132 @@
-# Ближайшие итерации после v16.4
+# Ближайшие итерации после v16.4.1-foundation-inventory-merge
 
 ## Зафиксированный checkpoint
 
-Текущий проверенный код:
-
 ```text
-v16.4.0-foundation-n0-fix1
+v16.4.1-foundation-inventory-merge
 ```
 
-Основание решения:
+Этот checkpoint объединяет две ранее разошедшиеся линии:
 
-- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`;
-- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`.
+```text
+main: Foundation Part 1–3 + N0 + N0 fix1
+feature/ui-i0-inventory-shell: UI-I0 + UI-I1 + UI-I2 + fix1/fix2
+```
 
-## Динамика версий
+Merge base веток: `35cb5da`. До объединения `main` имел 8 собственных коммитов,
+inventory-ветка — 6. Прямое слияние давало 7 конфликтов: 5 документационных/
+runner-конфликтов и 2 кодовых. Дополнительно тест выявил несовместимость старого
+UI вызова `drop_item_stack()` с aggregate-aware контроллером Foundation Part 3;
+она закрыта совместимым доменным API.
 
-| Версия/этап | Состояние | Роль |
+## Что завершено
+
+| Этап | Статус | Результат |
 |---|---|---|
-| `v15.5.2-r0` | принято | repository и regression stabilization |
-| `v15.6.2-r1.1-fix2` | принято | UUID, ItemStateStore, полный SpatialRef |
-| `v15.7.0-r1.2` | принято | revisions, fingerprints, operation ledger |
-| `v15.8.1-r1.3-fix1` | принято | gravity wells и recursive physical mass |
-| `v16.0.1-r2-fix1` | принято | полный Item Graph и player inventory |
-| `v16.1.0-r2-stack-controls` | принято | stack merge/split и BULK auto-stack |
-| `v16.2.0-r2-placement-debug-ui` | принято | placeable mount, admin UI, console, flashlight |
-| `v16.3.0-r2-inventory-ux` | принято | contextual containers, post-drop split, operation namespace, dual-fill light |
-| `v16.3.1-foundation-n0-part1-fix3` | принято | строгая N0 command/snapshot boundary и loopback |
-| `v16.3.2-foundation-lifecycle-part2-fix2` | принято | fail-closed shutdown, terrain drain и terminal world-load fence |
-| `v16.4.0-foundation-n0` | принято | Foundation Gate, canonical aggregate, kernel ports и N0 contracts |
-| `v16.4.0-foundation-n0-fix1` | текущий checkpoint | authority/revision/tick fencing, canonical delta paths и exact-type kernel ports |
-| `R3.1` | параллельный gameplay | foundation и construction aggregate |
-| `N1` | после N0/Foundation | один server + bot client |
-| `N2` | после N1 | local multi-process lab |
-| `N3` | после N2 | World Directory и leases |
-| `N4` | после N3 | handoff одного объекта |
+| R0–R2 | принято | Item Graph, revisions, operation ledger, placement и contextual inventory |
+| Foundation Part 1–3 | принято | runtime roles, lifecycle, kernel boundary, aggregate и persistence ports |
+| N0 + fix1 | принято | строгие DTO, loopback, handoff contracts, authority fencing и kernel ports |
+| UI-I0 | объединено | component shell, ViewModel, CommandFacade |
+| UI-I1 | объединено | drag, quick transfer, context actions, split, tooltip и toast |
+| UI-I2 + fix2 | объединено | search/filter/sort, inspector, preferences, bounded pool и cache invalidation |
+| v16.4.1-foundation-inventory-merge | текущий | единая mainline без долгоживущей inventory-ветки |
 
-## Завершено — v16.4 Foundation Gate
+## Главный следующий этап — N1
 
-Полный план: `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.
+N1 должен быть одним небольшим сетевым вертикальным срезом, а не началом общего
+MMO runtime.
 
-Минимальный scope:
+Обязательный сценарий:
 
-1. `RuntimeRole` и launch options;
-2. `SimulationKernel` без presentation — boundary реализована в v16.3.3;
-3. подключаемый `PresentationHost` — реализован для глобального UI в v16.3.3;
-4. shutdown barrier — выполнено в v16.3.2;
-5. entity/chunk lifecycle — выполнено в v16.3.3;
-6. `WorldEntityAggregate` — выполнено для WORLD-items в v16.3.3;
-7. revision monotonicity;
-8. isolated user data.
+1. запустить headless `simulation-server`;
+2. запустить отдельный `bot-client`;
+3. выполнить handshake protocol/capabilities;
+4. передать initial `EntitySnapshotEnvelope`;
+5. отправить одну `item.move_to_container` команду;
+6. применить её существующим domain service на сервере;
+7. вернуть snapshot или delta;
+8. подтвердить равенство checksum клиента и сервера;
+9. повторить тот же сценарий через loopback и ENet;
+10. корректно завершить оба процесса.
 
-Критерий:
+### Границы N1
 
-> Headless simulation role запускается без UI, завершает active terrain workers и
-> выходит code 0, сохраняя старую offline regression зелёной.
+Не включать:
 
-## Завершено — N0 Network Contracts
+- второго simulation-server;
+- World Directory и lease renewal;
+- cross-process handoff;
+- player prediction;
+- ghost streaming;
+- UI-I3 batch operations;
+- распределённую физику.
 
-Полный план: `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`.
+## После N1 — N2 process lab
 
-Минимальный scope:
+- Python harness и свободные порты;
+- отдельный `user://` для каждого процесса;
+- readiness/shutdown JSONL;
+- server restart и client reconnect;
+- duplicate delivery и operation replay;
+- timeout/cleanup;
+- JSON/JUnit report.
 
-- versioned command/snapshot DTO;
-- authority lease/route DTO;
-- handoff state machine;
-- canonical fixtures;
-- runtime-type lint;
-- local loopback transport interface;
-- отдельный runner и JSON report.
+## После N2 — выбор gameplay или authority
 
-Критерий:
-
-> Все network contracts проходят round-trip и fencing tests без открытия сокетов.
-
-## Параллельная работа A+B
-
-Допускается параллельная разработка, если каталоги ответственности разделены:
+Рекомендуемый порядок:
 
 ```text
-Core Foundation:
-  scripts/simulation/kernel/
-  scripts/simulation/lifecycle/
-  scripts/app/runtime_roles/
-
-Network N0:
-  scripts/network/contracts/
-  scripts/network/handoff/
-  tests/network/
-  config/network/fixtures/
+N1 transport vertical slice
+→ N2 reliable multi-process harness
+→ R3.1 construction/placement vertical slice
+→ N3 World Directory + leases
+→ N4 one-entity handoff
 ```
 
-Общая точка интеграции — `CommandGateway` и `WorldEntityAggregate`.
+R3.1 после N2 получит уже проверенный remote-command path и не создаст второй
+несовместимый command API.
 
-## Итерация C — N1 + R3.1
+## UI-I3
 
-### N1
+Batch/multi-select, take-all/deposit-all и move-matching выполнять только после
+N1/N2. Batch обязан иметь один operation ID, атомарный authoritative result и
+безопасный replay. До этого UI-I0–UI-I2 считаются завершённым presentation scope.
 
-- simulation-server role;
-- bot-client role;
-- ENet adapter;
-- initial snapshot;
-- удалённая команда перемещения маяка;
-- checksum equality.
+## Политика веток
 
-### R3.1
+После фиксации checkpoint:
 
-- foundation item/aggregate;
-- placement preview;
-- validation поверхности;
-- socket graph;
-- save/restart;
-- remote-command-ready handler.
+- удалить локальные `earth` и `feature/console-space-hotkeys`: они уже входят в `main`;
+- закрыть/архивировать `feature/ui-i0-inventory-shell` после merge commit;
+- удалить stash с `.godot` cache;
+- удалить ранний stash UI-I0 после подтверждения merge checkpoint;
+- создавать короткие ветки от текущего `main`;
+- не держать gameplay-ветку через несколько foundation/network checkpoints.
 
-Оба потока используют один command envelope и один aggregate serializer.
-
-## Итерация D — N2
-
-- Python process harness;
-- readiness через JSONL;
-- свободные порты;
-- отдельный user data dir;
-- restart/reconnect;
-- duplicate command;
-- timeout и cleanup;
-- JSON/JUnit result.
-
-## Итерация E — N3
-
-- in-memory World Directory;
-- node descriptors;
-- authority routes;
-- lease acquire/renew/release;
-- два статических region owner;
-- stale epoch rejection.
-
-## Итерация F — N4
-
-- freeze source aggregate;
-- snapshot transfer;
-- prepare target;
-- atomic authority commit;
-- source demotion;
-- no duplicate authority;
-- conservation checks для item quantity, UUID, mass и velocity.
-
-## Обязательные merge gates
-
-Каждый core/gameplay patch:
+Рекомендуемые новые ветки:
 
 ```text
-existing offline regression
-snapshot round-trip
+feature/n1-enet-authoritative-slice
+feature/n2-network-process-harness
+feature/r3-1-construction-slice
+```
+
+## Обязательный merge gate
+
+```text
+editor import/parse
+all discovered test_*.gd declared in runner
+55/55 Godot regression tests
+main scene CLI tests
+simulation-server process lifecycle
+network contract profile
 no direct presentation mutation
-process cleanup where applicable
+no stale branch-specific project version
 ```
 
-Каждый network patch:
+## Технический долг
 
-```text
-existing offline regression unchanged
-network contract tests
-isolated user data
-JSON report
-no Godot runtime types in DTO
-```
-
-## Отдельный технический долг
-
-Параллельно, но без подмены основного этапа:
-
-- legacy manifest migration/изоляция;
-- terrain worker shutdown;
-- декомпозиция больших orchestration-файлов;
-- Linux/Windows runner parity;
-- обновление acceptance docs после каждого checkpoint.
+- stale `user://worlds/moon-experiment-001` manifest создаёт ожидаемый error log в некоторых runtime-тестах; тесты изолируют данные и проходят, но diagnostic noise стоит убрать отдельной миграцией;
+- централизовать project checkpoint/build ID, чтобы не обновлять несколько runtime/fixture точек вручную;
+- добавить Linux shell runner, эквивалентный PowerShell runner;
+- продолжить декомпозицию крупных orchestration-файлов.

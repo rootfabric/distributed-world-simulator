@@ -47,8 +47,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.4.0-foundation-n0-fix1"
-    build_id = "foundation-n0-authority-monotonicity-kernel-port-type-fix1"
+    checkpoint = "v16.4.1-foundation-inventory-merge"
+    build_id = "foundation-n0-fix1-ui-i2-integration"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -94,7 +94,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.4.0-foundation-n0-fix1"
+    Write-Host "Checkpoint: v16.4.1-foundation-inventory-merge"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `

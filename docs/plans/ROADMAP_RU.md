@@ -390,72 +390,58 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.4.0-foundation-n0-fix1
+## Текущее состояние: v16.4.1-foundation-inventory-merge
 
-Этапы R0–R2 сформировали локальный gameplay-фундамент, а Foundation Part 1–3
-закрыли обязательную архитектурную подготовку к настоящему сетевому runtime:
+В одной mainline объединены:
 
-- runtime roles `offline/client/simulation-server/bot-client`;
-- server-safe lifecycle и terrain worker drain barrier;
-- `SimulationKernel` и отключаемый `PresentationHost`;
-- persistent Item Graph v2 и единый `WorldEntityAggregate` для WORLD-items;
-- формальные Entity/Chunk lifecycle states;
-- монотонные `state_revision` и `authority_epoch`;
-- строгие N0 command/result/snapshot/delta envelopes;
-- `AuthorityLease`, `AuthorityRoute`, node/space/region descriptors;
-- `HandoffTicket`, `HandoffResult` и handoff state machine;
-- canonical JSON, checksums, golden fixtures и mutation matrix;
-- loopback command и replication transports;
-- pure kernel ports для EntityRegistry и repository;
-- 52 обязательных headless regression test;
-- post-review fencing для owner/epoch, revision и server tick;
-- canonical delta paths без пустых сегментов;
-- exact-script kernel ports с повторной проверкой внутреннего состояния.
+- локальный item/gameplay фундамент R0–R2;
+- server-safe Foundation Part 1–3;
+- canonical `WorldEntityAggregate` и Item Graph v2;
+- строгие N0 contracts, authority fencing и loopback transports;
+- component inventory UI-I0–UI-I2;
+- search/filter/sort, inspector и bounded cell pool;
+- aggregate-aware drop/split/move command path;
+- 55 обязательных headless Godot tests.
 
-Checkpoint и контракты:
+Checkpoint:
 
+- `docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
 - `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
-- `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
-- `docs/contracts/ITEM_GRAPH_V2_RU.md`.
+- `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
 
-N0 завершён и усилен post-review fix1 без реальных сокетов. Контракты authority lease/route и handoff
-являются pure-domain семантикой; исполняемый World Directory и перенос между
-процессами начнутся на N3/N4.
+## Следующий главный приоритет: N1
 
-## Следующий главный приоритет: N1 + R3.1
-
-После закрытия Foundation Gate проект может безопасно развиваться двумя
-параллельными вертикальными потоками:
+Цель N1 — проверить Foundation реальным transport, не расширяя scope:
 
 ```text
-Track N — N1: один authoritative server и bot client
-Track G — R3.1: construction/power vertical slice
-Track T — process/network test infrastructure
+one simulation-server
++ one bot-client
++ ENet adapter
++ initial snapshot
++ one remote item command
++ snapshot/delta response
++ checksum equality
 ```
 
-### Track N — N1
+Команда первого среза: `item.move_to_container`. Она уже имеет UUID, revisions,
+operation ledger, aggregate persistence и UI command facade, поэтому проверяет
+сразу domain, transport и replay boundary.
 
-Цель — подключить реальный transport adapter к уже принятому command/snapshot
-контракту без изменения доменных DTO и authority semantics.
+## Затем: N2 → R3.1 → N3 → N4
 
-Обязательный результат:
+### N2 — multi-process lab
 
-1. один headless `simulation-server`;
-2. один отдельный `bot-client`;
-3. реальный ENet или эквивалентный локальный transport;
-4. protocol handshake и capability check;
-5. initial snapshot;
-6. одна удалённая item-команда;
-7. snapshot/delta replication;
-8. reconnect и duplicate-delivery test;
-9. server/client checksum equality;
-10. process cleanup и JSON/JUnit report.
+- Python process harness;
+- isolated `user://`;
+- restart/reconnect;
+- duplicate delivery;
+- JSON/JUnit;
+- гарантированный cleanup.
 
-### Track G — R3.1
+### R3.1 — construction vertical slice
 
-Первый строительный вертикальный срез:
+После появления надёжного удалённого command path:
 
 ```text
 Foundation
@@ -467,58 +453,29 @@ Foundation
 → save/restart
 ```
 
-Каждый объект обязан иметь UUID, versioned aggregate state, command handler,
-placement validation, socket graph, snapshot round-trip и тест без UI.
-
-### Track T — инфраструктура
-
-- Python multi-process harness;
-- isolated `user://` для каждого процесса;
-- свободные порты;
-- JSONL readiness/shutdown events;
-- fault injection;
-- timeout и гарантированный cleanup;
-- машиночитаемые отчёты.
-
-## Сетевая последовательность после N0
-
-### N1 — один authoritative server и bot client
-
-- headless simulation server;
-- один bot client;
-- local loopback и ENet adapter;
-- initial snapshot;
-- одна удалённая item command;
-- server/client checksum equality.
-
-### N2 — multi-process local lab
-
-- Python harness;
-- изолированные user data directories;
-- 1 server + 2 clients;
-- reconnect/restart;
-- duplicate delivery;
-- JSON/JUnit report;
-- гарантированный process cleanup.
-
 ### N3 — World Directory и leases
 
 - node registration;
 - authority routes;
-- acquire/renew/release lease;
-- два статических authority region;
-- epoch renewal и stale-owner fencing.
+- lease acquire/renew/release;
+- stale epoch rejection;
+- два статических region owner.
 
 ### N4 — handoff одного объекта
-
-Первый переносимый aggregate:
 
 ```text
 один камень или маяк
 Server A → Server B
 ```
 
-Player handoff, ghosts и dynamic region split начинаются только после успешного N4.
+## Отложено до N1/N2
+
+- UI-I3 batch/multi-select;
+- take-all/deposit-all;
+- prediction;
+- ghosts;
+- второй authoritative server;
+- dynamic region split.
 
 ## Обязательные архитектурные инварианты
 
@@ -526,28 +483,12 @@ Player handoff, ghosts и dynamic region split начинаются только
 canonical simulation ≠ presentation ≠ transport
 ```
 
-Также обязательны:
+- один authoritative owner;
+- owner change всегда повышает `authority_epoch`;
+- `state_revision` и `server_tick` не откатываются;
+- UI отправляет команды и не мутирует домен;
+- offline и network используют одинаковые command handlers;
+- persistent/network payload не содержит scene/runtime objects.
 
-- один authoritative owner на entity/interaction island;
-- `authority_epoch` увеличивается при смене владельца;
-- `state_revision` никогда не уменьшается;
-- сеть передаёт `SpatialRef`, а не только `Node3D.global_transform`;
-- UI отправляет команды, а не мутирует домен;
-- offline mode использует тот же command path через loopback adapter;
-- persistent snapshot не содержит `NodePath`, `RID` и scene instance ID.
-
-## Отложенные крупные направления
-
-До N4 не использовать как основной трек:
-
-- Kubernetes и Agones;
-- NATS control plane;
-- WAN player handoff;
-- distributed collision;
-- динамический split Земли;
-- распределённую N-body симуляцию;
-- большой корабль с интерьером;
-- сложную энергетическую экономику.
-
-Каждый следующий этап должен оставлять offline mode рабочим и завершаться
-автоматически проверяемым вертикальным срезом.
+Каждый следующий этап завершается автоматическим вертикальным тестом и оставляет
+offline mode рабочим.

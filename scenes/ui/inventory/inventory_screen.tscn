@@ -1,0 +1,132 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/inventory_screen.gd" id="1_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/container_panel.tscn" id="2_container"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/hotbar_panel.tscn" id="3_hotbar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/stack_split_dialog.tscn" id="4_split"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/inventory_toast_layer.tscn" id="5_toast"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/item_tooltip.tscn" id="6_tooltip"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/item_context_menu.tscn" id="7_context"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory/inventory_inspector.tscn" id="8_inspector"]
+
+[sub_resource type="StyleBoxFlat" id="Style_inventory"]
+bg_color = Color(0.035, 0.045, 0.065, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.22, 0.5, 0.72, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="InventoryScreen" type="PanelContainer"]
+custom_minimum_size = Vector2(1060, 680)
+offset_right = 1060.0
+offset_bottom = 680.0
+theme_override_styles/panel = SubResource("Style_inventory")
+script = ExtResource("1_screen")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="Main" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="Label" parent="Margin/Main"]
+layout_mode = 2
+text = "ИНВЕНТАРЬ — drag переносит стак · Shift+ЛКМ быстро · ПКМ действия"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+
+[node name="ProjectionToolbar" type="HBoxContainer" parent="Margin/Main"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SearchEdit" type="LineEdit" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Поиск по названию, типу и тегам…"
+clear_button_enabled = true
+
+[node name="FilterOption" type="OptionButton" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+tooltip_text = "Фильтр категории"
+
+[node name="SortOption" type="OptionButton" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+tooltip_text = "Визуальная сортировка; Item Graph не изменяется"
+
+[node name="ResetProjectionButton" type="Button" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Сбросить"
+tooltip_text = "Очистить поиск, фильтр и сортировку"
+
+[node name="InspectorToggle" type="CheckButton" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Инспектор"
+
+[node name="ProjectionSummary" type="Label" parent="Margin/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Показываются все предметы"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.62, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="PlayerPanel" parent="Margin/Main/Columns" instance=ExtResource("2_container")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ExternalPanel" parent="Margin/Main/Columns" instance=ExtResource("2_container")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Inspector" parent="Margin/Main/Columns" instance=ExtResource("8_inspector")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HotbarPanel" parent="Margin/Main" instance=ExtResource("3_hotbar")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Margin/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ЛКМ drag — весь стак · Shift+ЛКМ — быстрый перенос · ПКМ — действия · Tab — закрыть"
+horizontal_alignment = 1
+
+[node name="ToastLayer" parent="Margin/Main" instance=ExtResource("5_toast")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StackSplitDialog" parent="." instance=ExtResource("4_split")]
+unique_name_in_owner = true
+
+[node name="ItemTooltip" parent="." instance=ExtResource("6_tooltip")]
+unique_name_in_owner = true
+
+[node name="ItemContextMenu" parent="." instance=ExtResource("7_context")]
+unique_name_in_owner = true

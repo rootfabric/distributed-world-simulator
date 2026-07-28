@@ -1,67 +1,67 @@
-# Planetary World v16.4.0-foundation-n0-fix1 — N0 authority и kernel boundary исправлены
+# Planetary World v16.4.1-foundation-inventory-merge — Foundation N0 и Inventory UI объединены
 
-Версия сохраняет R2 gameplay и закрывает архитектурный этап перед первым
-настоящим authoritative server. В проекте работают server-safe lifecycle,
-canonical `WorldEntityAggregate`, строгая presentation-free граница
-`SimulationKernel`, kernel ports и полный набор versioned N0 contracts без
-сетевых сокетов.
+Checkpoint объединяет принятый `v16.4.0-foundation-n0-fix1` с веткой
+`feature/ui-i0-inventory-shell` (`UI-I0`–`UI-I2`). В основной линии теперь
+одновременно находятся server-safe foundation, строгие N0 contracts и новый
+компонентный интерфейс инвентаря.
 
 Проект рассчитан на Godot 4.7.1 с `precision=double`.
 
-## Архитектурный checkpoint
-
-Checkpoint:
+## Текущий checkpoint
 
 ```text
-v16.4.0-foundation-n0-fix1
+v16.4.1-foundation-inventory-merge
 ```
 
 Build ID:
 
 ```text
-foundation-n0-authority-monotonicity-kernel-port-type-fix1
+foundation-n0-fix1-ui-i2-integration
 ```
 
-N0 включает command/result/snapshot/delta envelopes, authority lease/route,
-node/space/region descriptors, ghost/client routes, handoff ticket/result/state
-machine, canonical fixtures и JSON loopback для command и replication paths.
-
-Строгий `EntitySnapshotEnvelope` содержит `entity_type`, `partition_address`,
-`server_tick` и checksum. Delta использует защищённые nested paths внутри
-`spatial_ref`, `partition_address`, `physics_state` и `domain_components`, а
-результат всегда повторно проходит snapshot validation.
-
-`EntityRegistryKernelPort` и `WorldRepositoryKernelPort` подключаются к реальному
-simulation-server process и не содержат presentation/runtime callbacks.
-
-Fix1 закрывает найденные после N0 обходы: смена authority owner при прежнем
-epoch, откат `state_revision` или `server_tick`, неканонические delta paths с
-пустыми сегментами и подмена kernel port произвольным объектом с поддельным
-descriptor. Kernel теперь проверяет точный script type, точную descriptor schema
-и повторно валидирует внутренний snapshot порта перед регистрацией.
-
-Главный инвариант:
+Интеграция сохраняет главный инвариант:
 
 ```text
 canonical simulation ≠ presentation ≠ transport
 ```
 
+Что вошло:
+
+- component inventory shell, ViewModel и CommandFacade;
+- contextual external containers, drag/Shift-click/context actions;
+- search, filters, view-only sort, inspector и bounded cell pool;
+- сохранение UI preferences отдельно от Item Graph;
+- совместимость UI drop-one/drop-stack с canonical `WorldEntityAggregate`;
+- полный Foundation/N0 authority, revision, tick и kernel-port fencing;
+- 55 обязательных Godot regression tests.
+
+При пробном merge был найден реальный API-разрыв: UI-I1 вызывал старый
+`drop_item_stack()`, отсутствующий после Foundation Part 3. Контроллер снова
+публикует `drop_item`, `drop_item_stack` и `drop_item_quantity`, но все три пути
+используют текущий `ItemTransferService`, WORLD relation и aggregate
+reconciliation — прямой presentation mutation не возвращён.
+
 Основные документы:
 
+- `docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
 - `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
-- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
-- `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
-- `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
-- `docs/network/NETWORK_READINESS_CHECKPOINT_RU.md`;
-- `NETWORK_ROADMAP_RU.md`.
+- `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`;
+- `docs/plans/NEXT_ITERATIONS_RU.md`;
+- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.
 
-Следующие параллельные этапы:
+Следующий основной этап:
 
 ```text
-N1 — authoritative server + bot client + ENet adapter
-R3.1 — construction/power vertical slice через domain commands
+N1 — один authoritative simulation-server
+   + отдельный bot-client
+   + ENet transport adapter
+   + initial snapshot
+   + одна remote item command
+   + checksum equality
 ```
+
+`UI-I3` с batch/multi-select отложен до появления реального authoritative
+command path на N1/N2.
 
 ## Установка и отладка
 

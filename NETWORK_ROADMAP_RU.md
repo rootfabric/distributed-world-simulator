@@ -2,7 +2,7 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.4.0-foundation-n0-fix1`. Foundation Gate и N0 приняты после закрытия authority/revision/tick fencing, canonical delta paths и exact-type kernel port boundary. Настоящие transport sockets начинаются на N1.
+Текущий статус: `v16.4.1-foundation-inventory-merge`. Foundation Gate и N0 приняты после закрытия authority/revision/tick fencing, canonical delta paths и exact-type kernel port boundary. Настоящие transport sockets начинаются на N1.
 
 ## Основные документы
 

@@ -1,6 +1,6 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.4.0-foundation-n0-fix1
+## Статус на checkpoint v16.4.1-foundation-inventory-merge
 
 Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
 `SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority

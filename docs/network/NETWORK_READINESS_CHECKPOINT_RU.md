@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 28 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.4.0-foundation-n0-fix1`
+**Текущий проверенный checkpoint:** `v16.4.1-foundation-inventory-merge`
 **Фактическая сетевая стадия:** N0 принят; реальный transport начинается на N1
 
 ## 1. Проверенная база

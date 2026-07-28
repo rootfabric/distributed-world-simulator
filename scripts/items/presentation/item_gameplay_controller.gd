@@ -117,6 +117,7 @@ func setup_runtime(
 		"item_count": domain.items.items.size(),
 		"container_count": domain.containers.containers.size(),
 		"world_entity_count": domain.world_entities.size(),
+		"inventory_ui_implementation": inventory_ui.get_implementation_id() if inventory_ui != null else "disabled",
 	}
 
 
@@ -407,19 +408,57 @@ func drop_selected_item() -> Dictionary:
 
 
 func drop_item(item_id: String, override_transform: Transform3D = Transform3D.IDENTITY) -> Dictionary:
+	return drop_item_quantity(item_id, 1, override_transform)
+
+
+func drop_item_stack(item_id: String, override_transform: Transform3D = Transform3D.IDENTITY) -> Dictionary:
+	return drop_item_quantity(item_id, -1, override_transform)
+
+
+func drop_item_quantity(
+	item_id: String,
+	quantity: int,
+	override_transform: Transform3D = Transform3D.IDENTITY
+) -> Dictionary:
 	var item = get_item(item_id)
 	if item == null:
 		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
+	var requested_quantity := int(item.quantity) if quantity < 0 else quantity
+	if requested_quantity <= 0 or requested_quantity > int(item.quantity):
+		return _remember({
+			"success": false,
+			"error_code": "INVALID_SPLIT_QUANTITY",
+			"requested_quantity": requested_quantity,
+			"available_quantity": int(item.quantity),
+		})
+	if requested_quantity < int(item.quantity) and item.owns_container():
+		return _remember({
+			"success": false,
+			"error_code": "CONTAINER_ITEM_CANNOT_SPLIT",
+			"message": "Предмет-контейнер нельзя разделить",
+		})
 	var transform := override_transform
 	if transform == Transform3D.IDENTITY:
 		transform = _default_drop_transform()
 	var relation := Relations.world(transform, Vector3.ZERO, physics_frame_id)
 	var result: Dictionary
-	if int(item.quantity) > 1 and not item.owns_container():
-		result = domain.transfer.split_and_move(item_id, 1, relation, _operation("drop_one"), int(item.revision))
+	if requested_quantity < int(item.quantity):
+		result = domain.transfer.split_and_move(
+			item_id,
+			requested_quantity,
+			relation,
+			_operation("drop_one" if requested_quantity == 1 else "drop_quantity"),
+			int(item.revision)
+		)
 	else:
-		result = domain.transfer.move_item(item_id, relation, _operation("drop"), int(item.revision))
-	return _after_operation(result, "Предмет выброшен")
+		result = domain.transfer.move_item(
+			item_id,
+			relation,
+			_operation("drop" if requested_quantity == 1 else "drop_stack"),
+			int(item.revision)
+		)
+	var message := "Предмет выброшен" if requested_quantity == 1 else "Стак выброшен: ×%d" % requested_quantity
+	return _after_operation(result, message)
 
 
 func mount_selected_item(assembly_id: String, socket_id: String) -> Dictionary:

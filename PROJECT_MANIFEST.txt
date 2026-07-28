@@ -1,3 +1,13 @@
+Planetary World v16.4.1-foundation-inventory-merge
+
+Foundation + Inventory integration:
+- merged feature/ui-i0-inventory-shell (UI-I0, UI-I1, UI-I2) into accepted N0 fix1 base
+- component inventory UI, search/filter/sort, inspector and bounded cell pool
+- contextual external container lifecycle and adaptive BULK/SLOTS presentation
+- aggregate-aware drop_item/drop_item_stack/drop_item_quantity compatibility API
+- 55-test unified regression manifest
+- docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md
+
 Planetary World v16.4.0-foundation-n0-fix1
 
 Foundation N0 fix1:

@@ -102,9 +102,7 @@ func load_snapshot(snapshot: Dictionary) -> Dictionary:
 	domain.items.definitions = staged.items.definitions.duplicate()
 	domain.items.items = staged.items.items.duplicate()
 	domain.containers.replace_from(staged.containers)
-	domain.operations.records = staged.operations.records.duplicate(true)
-	domain.operations.next_sequence = staged.operations.next_sequence
-	domain.operations.maximum_entries = staged.operations.maximum_entries
+	domain.operations.replace_from(staged.operations)
 	domain.attachments.replace_from(staged.attachments)
 	domain.world_entities.replace_from(staged.world_entities)
 	metadata = _normalize_metadata_types(Dictionary(snapshot.get("metadata", {})))
