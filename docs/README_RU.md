@@ -1,3 +1,11 @@
+# Документация PlanetSimulator
+
+Текущий checkpoint: `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`.
+
+- `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md` — объединение Foundation N0 fix1 и UI-I0–UI-I2, merge audit и следующий приоритет N1.
+- `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md` — принятый компонентный UI и отложенный UI-I3.
+- `plans/NEXT_ITERATIONS_RU.md` — упорядоченная очередь N1 → N2 → R3.1/N3.
+
 ## v16.3.3 — Foundation world aggregate part 3
 
 Checkpoint: `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md`.
@@ -21,8 +29,6 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.m
 ## v16.3.2 — Foundation lifecycle part 2
 
 Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
-
-# Документация Planet Simulator
 
 ## Чекпоинты
 

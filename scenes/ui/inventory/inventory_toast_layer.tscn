@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/inventory_toast_layer.gd" id="1_toast"]
+
+[node name="InventoryToastLayer" type="MarginContainer"]
+mouse_filter = 2
+script = ExtResource("1_toast")
+
+[node name="MessageLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Timer" type="Timer" parent="."]
+unique_name_in_owner = true
+one_shot = true

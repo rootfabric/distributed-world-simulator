@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/stack_split_dialog.gd" id="1_split"]
+
+[node name="StackSplitDialog" type="PopupPanel"]
+size = Vector2i(470, 260)
+script = ExtResource("1_split")
+
+[node name="Margin" type="MarginContainer" parent="."]
+offset_right = 470.0
+offset_bottom = 260.0
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Column"]
+layout_mode = 2
+text = "СКОЛЬКО ПЕРЕМЕСТИТЬ?"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="PromptLabel" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="QuickButtons" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="OneButton" type="Button" parent="Margin/Column/QuickButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1"
+
+[node name="HalfButton" type="Button" parent="Margin/Column/QuickButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Половина"
+
+[node name="MaximumButton" type="Button" parent="Margin/Column/QuickButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Максимум"
+
+[node name="QuantitySlider" type="HSlider" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 1.0
+step = 1.0
+value = 1.0
+
+[node name="QuantitySpin" type="SpinBox" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+step = 1.0
+allow_greater = false
+allow_lesser = false
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="ConfirmButton" type="Button" parent="Margin/Column/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Переместить"
+
+[node name="CancelButton" type="Button" parent="Margin/Column/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Отмена"

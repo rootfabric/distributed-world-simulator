@@ -180,5 +180,29 @@ Invoke-GodotCheck -Name "Item laboratory integration" -Arguments @(
     "res://tests/items/test_item_lab_integration.gd"
 )
 
+Invoke-GodotCheck -Name "Inventory UI-I0 component architecture" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/ui/test_inventory_ui_i0_architecture.gd"
+)
+
+Invoke-GodotCheck -Name "Inventory UI-I1 player interactions" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/ui/test_inventory_ui_i1_interactions.gd"
+)
+
+Invoke-GodotCheck -Name "Inventory UI-I2 search and large storage" -Arguments @(
+    "--headless",
+    "--path",
+    $ProjectRoot,
+    "--script",
+    "res://tests/ui/test_inventory_ui_i2_large_storage.gd"
+)
+
 Write-Host ""
 Write-Host "All item-system tests passed." -ForegroundColor Green

@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "daf4bb9c0e96c70fd1eefb15641997e9aa7ff57c20ba0db4960b423269b55a21",
+  "expected_hash": "e91f25310b7efabb1ec47b8c71ae62bed2d2a651df128d2ed1f489245b8ada1f",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "foundation-n0-authority-monotonicity-kernel-port-type-fix1",
+    "build_id": "foundation-n0-fix1-ui-i2-integration",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.4.0-foundation-n0-fix1",
+    "checkpoint": "v16.4.1-foundation-inventory-merge",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

@@ -18,6 +18,7 @@ func _init() -> void:
 	_test_split_revision_and_replay()
 	_test_retryable_failure_can_be_retried()
 	_test_ledger_schema_and_bounded_history()
+	_test_transient_content_generation()
 	_test_persistent_ledger_replay_after_restart()
 	_finish()
 
@@ -290,6 +291,36 @@ func _test_ledger_schema_and_bounded_history() -> void:
 	var invalid_result: Dictionary = restored.load_dict(invalid)
 	_assert_error(invalid_result, "UNSUPPORTED_OPERATION_LEDGER_VERSION", "Future ledger version must fail closed")
 	_assert(restored.to_dict() == before_invalid, "Failed ledger load must not mutate active records")
+
+
+func _test_transient_content_generation() -> void:
+	var ledger := OperationLedger.new()
+	var initial_generation := int(ledger.get_content_generation())
+	ledger.remember_terminal(
+		"generation-terminal",
+		"TEST",
+		"%064d" % 3,
+		"item/generation",
+		0,
+		1,
+		OperationLedger.STATUS_SUCCEEDED,
+		{"success": true, "item_id": "item/generation"}
+	)
+	var remembered_generation := int(ledger.get_content_generation())
+	_assert(remembered_generation > initial_generation, "remember_terminal must advance transient ledger generation")
+	var snapshot := ledger.to_dict()
+	ledger.clear()
+	var cleared_generation := int(ledger.get_content_generation())
+	_assert(cleared_generation > remembered_generation, "clear must advance transient ledger generation")
+	_assert_success(ledger.load_dict(snapshot), "Generation fixture must reload valid ledger snapshot")
+	var loaded_generation := int(ledger.get_content_generation())
+	_assert(loaded_generation > cleared_generation, "load_dict must advance transient ledger generation")
+	var before_invalid_generation := loaded_generation
+	var invalid_snapshot := snapshot.duplicate(true)
+	invalid_snapshot["schema_version"] = 999
+	_assert_error(ledger.load_dict(invalid_snapshot), "UNSUPPORTED_OPERATION_LEDGER_VERSION", "Invalid load must fail")
+	_assert(int(ledger.get_content_generation()) == before_invalid_generation, "Failed load_dict must not advance transient ledger generation")
+	_assert(not ledger.to_dict().has("content_generation"), "Transient generation must not enter persisted ledger schema")
 
 
 func _test_persistent_ledger_replay_after_restart() -> void:

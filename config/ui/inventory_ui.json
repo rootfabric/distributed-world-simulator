@@ -1,0 +1,5 @@
+{
+  "schema": "planet_simulator.inventory_ui_config.v1",
+  "implementation": "component",
+  "allow_legacy_fallback": true
+}
