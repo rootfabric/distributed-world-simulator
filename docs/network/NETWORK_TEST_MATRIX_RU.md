@@ -27,11 +27,15 @@
 
 | ID | Проверка | Этап |
 |---|---|---|
-| NS-001 | клиент подключается и получает initial snapshot | N1 |
-| NS-002 | сервер применяет item command | N1 |
-| NS-003 | duplicate operation возвращает прежний результат | N1 |
-| NS-004 | stale revision отклоняется | N1 |
-| NS-005 | stale epoch отклоняется | N1 |
+| NS-001 | реальный bot-client подключается по ENet и получает initial snapshot | N1.1 |
+| NS-001A | handshake согласует protocol, role, capabilities и contract versions | N1.1 |
+| NS-001B | malformed/non-canonical wire packet отклоняется fail-closed | N1.1 |
+| NS-001C | server/client подтверждают одинаковый snapshot checksum | N1.1 |
+| NS-001D | ранний disconnect и timeout завершают сценарий FAIL без process leak | N1.1 |
+| NS-002 | сервер применяет item command | N1.2 |
+| NS-003 | duplicate operation возвращает прежний результат | N1.2 |
+| NS-004 | stale revision отклоняется | N1.2 |
+| NS-005 | stale epoch отклоняется | N1.2 |
 | NS-006 | disconnect/reconnect восстанавливает snapshot | N2 |
 | NS-007 | два клиента видят одинаковую revision | N2 |
 

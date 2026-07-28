@@ -2,12 +2,13 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.4.2-network-transport-boundary` (candidate). Foundation Gate, N0 и inventory merge приняты. N1.0 добавляет общий lifecycle boundary без сокетов; настоящий ENet начинается на N1.1.
+Текущий статус: `v16.5.0-network-n1-snapshot` (candidate). N1.0 принят. N1.1 реализует настоящий ENet handshake и initial snapshot между отдельными headless Godot-процессами. Следующий этап — N1.2 remote authoritative item command.
 
 ## Основные документы
 
-1. [`docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`](docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md) — точный план N1.0–N5 и checkpoint gates.
-2. [`docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md`](docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md) — candidate N1.0.
+1. [`docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`](docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md) — текущий N1.1 candidate.
+2. [`docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`](docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md) — точный план N1.0–N5 и checkpoint gates.
+3. [`docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md`](docs/checkpoints/2026-07-28_V16_4_2_NETWORK_TRANSPORT_BOUNDARY_RU.md) — принятый N1.0.
 3. [`docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`](docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md) — закрытие найденных N0 boundary bypasses.
 4. [`docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`](docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md) — исходный Foundation/N0 checkpoint.
 5. [`docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`](docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md) — точные DTO, checksums, handoff и loopback.

@@ -18,8 +18,8 @@ const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/enti
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.4.2-network-transport-boundary"
-const FOUNDATION_BUILD_ID: String = "n1-transport-lifecycle-boundary"
+const FOUNDATION_CHECKPOINT: String = "v16.5.0-network-n1-snapshot"
+const FOUNDATION_BUILD_ID: String = "n1-enet-handshake-initial-snapshot"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

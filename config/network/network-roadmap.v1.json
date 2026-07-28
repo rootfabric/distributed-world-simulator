@@ -1,8 +1,8 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 4,
+  "document_revision": 5,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "project_checkpoint": "v16.4.2-network-transport-boundary",
+  "project_checkpoint": "v16.5.0-network-n1-snapshot",
   "strategy": "incremental_authoritative_server_mesh",
   "principles": [
     "stable_entity_identity",
@@ -48,19 +48,19 @@
         {
           "id": "N1.0",
           "name": "Transport lifecycle boundary",
-          "status": "candidate",
-          "checkpoint": "v16.4.2-network-transport-boundary"
+          "status": "accepted",
+          "checkpoint": "v16.5.0-network-n1-snapshot"
         },
         {
           "id": "N1.1",
           "name": "ENet handshake and initial snapshot",
-          "status": "next",
+          "status": "candidate",
           "checkpoint": "v16.5.0-network-n1-snapshot"
         },
         {
           "id": "N1.2",
           "name": "Remote authoritative item command",
-          "status": "planned",
+          "status": "next",
           "checkpoint": "v16.5.1-network-n1-item-command"
         },
         {

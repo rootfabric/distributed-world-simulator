@@ -390,7 +390,7 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.4.2-network-transport-boundary
+## Текущее состояние: v16.5.0-network-n1-snapshot
 
 В одной mainline объединены:
 
@@ -401,7 +401,7 @@
 - component inventory UI-I0–UI-I2;
 - search/filter/sort, inspector и bounded cell pool;
 - aggregate-aware drop/split/move command path;
-- 55 обязательных headless Godot tests.
+- 58 обязательных headless Godot tests;
 
 Checkpoint:
 
@@ -410,23 +410,23 @@ Checkpoint:
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
 
-## Следующий главный приоритет: N1
+## Следующий главный приоритет: N1.2
 
-Цель N1 — проверить Foundation реальным transport, не расширяя scope:
+N1.0 принят, N1.1 реализовал реальный ENet handshake и initial snapshot. Следующий узкий vertical slice:
 
 ```text
 one simulation-server
 + one bot-client
-+ ENet adapter
++ existing ENet adapter
 + initial snapshot
-+ one remote item command
++ remote item.move_to_container
++ server-side aggregate mutation
 + snapshot/delta response
++ duplicate fence
 + checksum equality
 ```
 
-Команда первого среза: `item.move_to_container`. Она уже имеет UUID, revisions,
-operation ledger, aggregate persistence и UI command facade, поэтому проверяет
-сразу domain, transport и replay boundary.
+Команда уже имеет UUID, revisions, operation ledger, aggregate persistence и UI command facade, поэтому проверяет domain, transport и replay boundary без создания второго command API.
 
 ## Затем: N2 → R3.1 → N3 → N4
 

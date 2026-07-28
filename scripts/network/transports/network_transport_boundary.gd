@@ -18,6 +18,7 @@ const ALLOWED_MESSAGE_TYPES := {
 	"DELTA": true,
 	"HANDSHAKE": true,
 	"HANDSHAKE_RESULT": true,
+	"SNAPSHOT_ACK": true,
 }
 
 var _port
@@ -78,7 +79,8 @@ func connect_client(endpoint: Dictionary) -> Dictionary:
 	var result: Dictionary = _normalize_result(_port.connect_client(endpoint))
 	if not bool(result.get("success", false)):
 		return _enter_failed(String(result.get("error_code", "CONNECT_FAILED")))
-	_state = STATE_READY
+	if bool(_port.get_descriptor().get("synchronous_delivery", false)):
+		_state = STATE_READY
 	return _success({"state": _state})
 
 

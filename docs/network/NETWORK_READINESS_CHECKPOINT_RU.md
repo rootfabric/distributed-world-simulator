@@ -1,15 +1,15 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 28 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.4.2-network-transport-boundary`
-**Фактическая сетевая стадия:** N0 принят; реальный transport начинается на N1
+**Текущий проверенный checkpoint:** `v16.5.0-network-n1-snapshot`
+**Фактическая сетевая стадия:** N1.0 принят; N1.1 ENet handshake + initial snapshot реализован как candidate
 
 ## 1. Проверенная база
 
 Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- 52 обязательных headless test script;
+- 58 обязательных headless test script;
 - 5 runtime-миров;
 - 185 импортированных GDScript UID-записей;
 - единый Simulator Core;
@@ -76,12 +76,19 @@ Fix1 закрывает post-review обходы: owner не меняется п
 сегменты, а kernel принимает только точные port scripts с валидным descriptor и
 повторно проверенным внутренним snapshot.
 
-До N1 отсутствуют намеренно:
+В N1.1 уже добавлены:
 
-- ENet/WebSocket adapter;
-- удалённый bot client;
-- snapshot streaming между процессами;
-- reconnect protocol.
+- настоящий ENet adapter за общим transport port;
+- отдельный headless bot-client;
+- handshake protocol/capability/contract-version negotiation;
+- initial snapshot streaming и checksum acknowledgement между процессами.
+
+До следующих подэтапов намеренно отсутствуют:
+
+- удалённая authoritative item command — N1.2;
+- reconnect и replay — N1.3;
+- World Directory и lease renewal — N3;
+- cross-server handoff — N4.
 
 World Directory и исполняемый lease service относятся к N3; реальный handoff
 между процессами — к N4.
@@ -94,7 +101,7 @@ World Directory и исполняемый lease service относятся к N3
 
 ### B. Shutdown lifecycle
 
-Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. Transport close будет добавлен вместе с реальным transport.
+Выполнено для текущего локального runtime: command fencing, запрет новых terrain requests, stale/cancel fence, ожидание worker, persistence flush и process exit. N1.1 ENet session выполняет drain/stop; общий application lifecycle будет связан с transport shutdown на N1.3.
 
 ### C. Unified WORLD aggregate
 
@@ -118,7 +125,7 @@ Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scen
 
 ## 5. Решение
 
-Сетевой фундамент N0 принят. Следующий этап — N1: один authoritative server, bot client и реальный transport adapter.
+Сетевой фундамент N0 и transport boundary N1.0 приняты. N1.1 доказал handshake и initial snapshot. Следующий этап — N1.2: одна удалённая authoritative `item.move_to_container` с checksum equality.
 
 Foundation Gate и N0 завершены в принятом исправленном checkpoint:
 

@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "61b414971c7e2fee3bee91b9105e7ebfde4373c2bbe4980cf1fed2844281e3b3",
+  "expected_hash": "a19909d8c233e50bf2fa00f6cad489e29c401edb484b32d15f861c854d2fe6ed",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "n1-transport-lifecycle-boundary",
+    "build_id": "n1-enet-handshake-initial-snapshot",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.4.2-network-transport-boundary",
+    "checkpoint": "v16.5.0-network-n1-snapshot",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

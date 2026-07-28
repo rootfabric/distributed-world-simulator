@@ -1,4 +1,20 @@
-Planetary World v16.4.2-network-transport-boundary
+Planetary World v16.5.0-network-n1-snapshot
+
+Network N1.1 ENet handshake and initial snapshot:
+- real ENetMultiplayerPeer server/client adapter behind the N1.0 transport port
+- canonical planet_simulator.network_wire_frame.v1 JSON packet envelope
+- strict handshake, handshake-result and snapshot-ack DTOs with SHA-256 checksums
+- protocol, runtime-role, capability and contract-version negotiation
+- server-assigned session identity independent from entity identity
+- initial EntitySnapshotEnvelope delivery between separate headless Godot processes
+- client revalidation of snapshot schema, checksum, authority owner/epoch and tick
+- strict snapshot acknowledgement bound to session/snapshot/entity/checksum
+- fail-closed malformed/non-canonical packet and early-disconnect handling
+- single-client N1 ENet limit and reliable packet channel
+- tests/network/test_n1_enet_snapshot_contracts.gd
+- tests/network/test_n1_enet_snapshot_processes.gd
+- RUN_N1_ENET_SNAPSHOT_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md
 
 Foundation + Inventory integration:
 - merged feature/ui-i0-inventory-shell (UI-I0, UI-I1, UI-I2) into accepted N0 fix1 base

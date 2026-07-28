@@ -1,6 +1,6 @@
 # Правила параллельной разработки сети и gameplay
 
-## Текущий режим после v16.4.2-network-transport-boundary
+## Текущий режим после v16.5.0-network-n1-snapshot
 
 Foundation Gate и N0 завершены. Одновременно разрешены три потока:
 

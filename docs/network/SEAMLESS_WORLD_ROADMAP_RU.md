@@ -1,6 +1,6 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.4.2-network-transport-boundary
+## Статус на checkpoint v16.5.0-network-n1-snapshot
 
 Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
 `SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority
@@ -8,8 +8,9 @@ lease/route contracts, handoff state machine, golden fixtures и loopback
 command/replication paths. Fix1 дополнительно закрывает owner/epoch, revision/tick
 fencing, неканонические delta paths и поддельные kernel ports.
 
-Следующий исполняемый сетевой этап — N1: один authoritative Godot server,
-отдельный bot client и реальный transport adapter.
+N1.0 transport boundary принят. N1.1 добавляет настоящий ENet adapter, отдельный
+headless bot-client, handshake negotiation и initial snapshot с checksum ack.
+Следующий исполняемый этап — N1.2 remote authoritative item command.
 
 Связанные планы:
 
@@ -536,16 +537,17 @@ memory_bytes
 
 ## Рекомендуемый первый практический пакет
 
-Следующая реализация должна быть **N0**, а не попытка сразу соединить Землю и Луну.
+Следующая реализация после N1.1 должна быть **N1.2 remote item command**, а не попытка сразу соединить два сервера или Землю и Луну.
 
 Порядок:
 
 ```text
-N0 contracts
-→ N1 one server/one bot
+N1.2 remote authoritative command
+→ N1.3 reconnect/replay
 → N2 multi-process harness
+→ R3.1 persistence/recovery
 → N3 directory/leases
-→ N4 stone handoff
+→ N4 entity handoff
 ```
 
 После N4 станет понятно, жизнеспособна ли выбранная архитектура. До этого любые Kubernetes и динамические регионы будут преждевременными.
