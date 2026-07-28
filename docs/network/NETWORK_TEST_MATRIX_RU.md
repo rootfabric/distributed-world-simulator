@@ -10,6 +10,13 @@
 | NC-004 | DTO не содержит Godot runtime references | N0 |
 | NC-005 | authority epoch монотонен | N0 |
 | NC-006 | handoff state machine запрещает нелегальные переходы | N0 |
+| NC-007 | exhaustive handoff state transition matrix | N0 |
+| NC-008 | snapshot checksum и delta result checksum | N0 |
+| NC-009 | nested delta path conflict/protected roots | N0 |
+| NC-010 | snapshot/delta loopback replay и ID conflict | N0 |
+| NC-011 | golden fixtures всех DTO сохраняют hash | N0 |
+| NC-012 | missing/wrong-type/extra-field mutation matrix | N0 |
+| NC-013 | EntityRegistry/Repository kernel ports strict and presentation-free | N0 |
 
 ## 2. Single authority
 

@@ -1,0 +1,37 @@
+{
+  "context": {},
+  "contract": "client_route",
+  "expected_error_code": "",
+  "expected_hash": "a120c8d648b8e5f70162d195b5ce0fa1e54c78ce339ff34c24c382fc815bc6b2",
+  "expected_valid": true,
+  "fixture_id": "valid_client_route",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "client_id": "client/golden",
+    "entity_id": "entity/item/golden",
+    "expires_at_tick": 200,
+    "primary_endpoint": {
+      "channel": "simulation",
+      "host": "127.0.0.1",
+      "port": 19001,
+      "secure": false,
+      "transport": "ENET"
+    },
+    "primary_node_id": "sim-a",
+    "protocol_version": 1,
+    "reason": "handoff_overlap",
+    "route_id": "client-route/golden/1",
+    "route_revision": 1,
+    "schema": "planet_simulator.client_route.v1",
+    "secondary_endpoint": {
+      "channel": "simulation",
+      "host": "127.0.0.1",
+      "port": 19002,
+      "secure": false,
+      "transport": "ENET"
+    },
+    "secondary_node_id": "sim-b",
+    "valid_from_tick": 100
+  }
+}

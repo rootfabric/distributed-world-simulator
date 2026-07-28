@@ -390,86 +390,68 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.3.0-r2-inventory-ux
+## Текущее состояние: v16.4.0-foundation-n0
 
-Этапы R0, R1.1, R1.2, R1.3, R1.4 и R2 сформировали устойчивый локальный
-фундамент:
+Этапы R0–R2 сформировали локальный gameplay-фундамент, а Foundation Part 1–3
+закрыли обязательную архитектурную подготовку к настоящему сетевому runtime:
 
-- единое multi-world ядро;
-- double-precision coordinate foundation;
-- `SpatialRef`, `FrameGraph` и `PartitionAddress v2`;
-- procedural Earth/Moon и gravity field;
-- persistent Item Graph;
-- UUID, revisions и operation ledger;
-- BULK/SLOTS containers, inventory, hotbar, pickup/drop/mount;
-- stack merge/split и contextual external containers;
-- 39 обязательных headless regression tests.
+- runtime roles `offline/client/simulation-server/bot-client`;
+- server-safe lifecycle и terrain worker drain barrier;
+- `SimulationKernel` и отключаемый `PresentationHost`;
+- persistent Item Graph v2 и единый `WorldEntityAggregate` для WORLD-items;
+- формальные Entity/Chunk lifecycle states;
+- монотонные `state_revision` и `authority_epoch`;
+- строгие N0 command/result/snapshot/delta envelopes;
+- `AuthorityLease`, `AuthorityRoute`, node/space/region descriptors;
+- `HandoffTicket`, `HandoffResult` и handoff state machine;
+- canonical JSON, checksums, golden fixtures и mutation matrix;
+- loopback command и replication transports;
+- pure kernel ports для EntityRegistry и repository;
+- 51 обязательный headless regression test.
 
-Полная архитектурная ревизия:
+Checkpoint и контракты:
 
-- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
+- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
+- `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
+- `docs/contracts/ITEM_GRAPH_V2_RU.md`.
 
-Сетевой транспорт пока не реализован. N0 уже начат: присутствуют строгие command/result/snapshot envelopes, canonical JSON, loopback gateway, replay и authority fencing. Leases, routes, handoff state machine и реальные сокеты ещё отсутствуют.
+N0 завершён без реальных сокетов. Контракты authority lease/route и handoff
+являются pure-domain семантикой; исполняемый World Directory и перенос между
+процессами начнутся на N3/N4.
 
-## Следующий главный приоритет: v16.4 Foundation Gate + N0
+## Следующий главный приоритет: N1 + R3.1
 
-Дальнейшее расширение UI и каталога предметов не должно опережать выделение
-правильных архитектурных границ.
-
-Следующие два потока выполняются параллельно:
+После закрытия Foundation Gate проект может безопасно развиваться двумя
+параллельными вертикальными потоками:
 
 ```text
-Track C: v16.4 Foundation Gate
-Track N: N0 Network Contracts
+Track N — N1: один authoritative server и bot client
+Track G — R3.1: construction/power vertical slice
+Track T — process/network test infrastructure
 ```
 
-### Track C — v16.4 Foundation Gate
+### Track N — N1
 
-Цель — отделить canonical simulation от presentation и подготовить server-safe
-runtime без настоящих сетевых сокетов.
+Цель — подключить реальный transport adapter к уже принятому command/snapshot
+контракту без изменения доменных DTO и authority semantics.
 
-Обязательные результаты:
+Обязательный результат:
 
-1. runtime roles `offline/client/simulation-server/bot-client`;
-2. `SimulationKernel` без UI и камеры;
-3. подключаемый `PresentationHost`;
-4. shutdown barrier для terrain workers и persistence — выполнено в `v16.3.2`;
-5. canonical WORLD aggregate и Item Graph v2 — выполнено в `v16.3.3`;
-6. Entity/Chunk lifecycle и kernel/presentation boundary — выполнено в `v16.3.3`;
-5. формальные lifecycle states `Dormant/Warm/Active/Unloading`;
-6. единый `WorldEntityAggregate`;
-7. монотонная revision при authority transfer;
-8. изолированный `user://` на каждый process test — выполнено в `v16.3.2`.
+1. один headless `simulation-server`;
+2. один отдельный `bot-client`;
+3. реальный ENet или эквивалентный локальный transport;
+4. protocol handshake и capability check;
+5. initial snapshot;
+6. одна удалённая item-команда;
+7. snapshot/delta replication;
+8. reconnect и duplicate-delivery test;
+9. server/client checksum equality;
+10. process cleanup и JSON/JUnit report.
 
-Подробный план:
-`docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.
+### Track G — R3.1
 
-### Track N — N0 Network Contracts
-
-Цель — создать versioned сетевые DTO и pure-domain handoff semantics без ENet.
-
-Обязательные результаты:
-
-1. `NetworkCommandEnvelope`;
-2. `EntitySnapshotEnvelope`;
-3. `AuthorityLease` и `AuthorityRoute`;
-4. `HandoffTicket/HandoffResult`;
-5. canonical JSON и golden fixtures;
-6. authority epoch fencing;
-7. handoff state machine;
-8. network contract lint;
-9. `RUN_NETWORK_CONTRACT_TESTS`.
-
-Подробный план:
-`docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`.
-
-## Параллельный gameplay-трек: R3
-
-R3 разрешено развивать одновременно с Foundation/N0, если gameplay не обходит
-канонические команды и snapshots.
-
-Первый вертикальный срез:
+Первый строительный вертикальный срез:
 
 ```text
 Foundation
@@ -481,16 +463,18 @@ Foundation
 → save/restart
 ```
 
-Каждый объект обязан иметь:
+Каждый объект обязан иметь UUID, versioned aggregate state, command handler,
+placement validation, socket graph, snapshot round-trip и тест без UI.
 
-- UUID;
-- versioned aggregate state;
-- placement command;
-- socket graph;
-- snapshot round-trip;
-- interaction island descriptor;
-- автоматический тест без UI;
-- presentation adapter, не меняющий домен напрямую.
+### Track T — инфраструктура
+
+- Python multi-process harness;
+- isolated `user://` для каждого процесса;
+- свободные порты;
+- JSONL readiness/shutdown events;
+- fault injection;
+- timeout и гарантированный cleanup;
+- машиночитаемые отчёты.
 
 ## Сетевая последовательность после N0
 

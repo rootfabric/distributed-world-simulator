@@ -1,0 +1,31 @@
+{
+  "context": {},
+  "contract": "authority_route",
+  "expected_error_code": "",
+  "expected_hash": "72a14366cc785ee5a0c73a9166be59c5711efd80f093d311dd99b9fb6280c6cc",
+  "expected_valid": true,
+  "fixture_id": "valid_authority_route",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "endpoint": {
+      "channel": "simulation",
+      "host": "127.0.0.1",
+      "port": 19001,
+      "secure": false,
+      "transport": "ENET"
+    },
+    "expires_at_tick": 200,
+    "lease_id": "lease/golden/1",
+    "owner_node_id": "sim-a",
+    "protocol_version": 1,
+    "region_id": "region/moon/a",
+    "route_id": "route/golden/1",
+    "route_revision": 1,
+    "schema": "planet_simulator.authority_route.v1",
+    "status": "ACTIVE",
+    "subject_id": "entity/item/golden",
+    "subject_type": "ENTITY",
+    "valid_from_tick": 100
+  }
+}

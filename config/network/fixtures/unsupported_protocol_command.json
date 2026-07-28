@@ -1,0 +1,25 @@
+{
+  "context": {},
+  "contract": "network_command",
+  "expected_error_code": "UNSUPPORTED_PROTOCOL",
+  "expected_hash": "",
+  "expected_valid": false,
+  "fixture_id": "unsupported_protocol_command",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "client_tick": 100,
+    "command_type": "item.move",
+    "entity_id": "entity/item/golden",
+    "expected_revision": 7,
+    "message_id": "message/golden/unsupported",
+    "operation_id": "operation/golden/unsupported",
+    "payload": {
+      "quantity": 2,
+      "target_container_id": "container/golden"
+    },
+    "protocol_version": 99,
+    "schema": "planet_simulator.network_command.v1",
+    "sent_at_monotonic_ms": 12345
+  }
+}

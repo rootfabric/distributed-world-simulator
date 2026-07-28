@@ -1,0 +1,23 @@
+{
+  "context": {},
+  "contract": "simulation_space",
+  "expected_error_code": "",
+  "expected_hash": "0c709a31717ff6b330009f92a5889603968bc630afa0e78596f533fbd1be2d3c",
+  "expected_valid": true,
+  "fixture_id": "valid_simulation_space",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_region_ids": [
+      "region/moon/a"
+    ],
+    "descriptor_revision": 1,
+    "frame_id": "body/moon/fixed",
+    "instance_id": "persistent",
+    "partition_revision": 1,
+    "partition_scheme": "cube_sphere",
+    "protocol_version": 1,
+    "schema": "planet_simulator.simulation_space_descriptor.v1",
+    "space_id": "moon",
+    "universe_id": "main"
+  }
+}

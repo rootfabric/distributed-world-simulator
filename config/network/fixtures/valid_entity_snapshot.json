@@ -1,0 +1,59 @@
+{
+  "context": {},
+  "contract": "entity_snapshot",
+  "expected_error_code": "",
+  "expected_hash": "a4d5facb693ced2d770464ce45490d3a468ae27475d5c7d8bae073da5f252508",
+  "expected_valid": true,
+  "fixture_id": "valid_entity_snapshot",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "authority_owner_id": "sim-a",
+    "checksum": "a4d5facb693ced2d770464ce45490d3a468ae27475d5c7d8bae073da5f252508",
+    "domain_components": {
+      "item": {
+        "definition_id": "survey_beacon"
+      }
+    },
+    "entity_id": "entity/item/golden",
+    "entity_type": "world_item",
+    "partition_address": {},
+    "physics_state": {
+      "mass_kg": 5.0
+    },
+    "protocol_version": 1,
+    "schema": "planet_simulator.entity_snapshot_envelope.v1",
+    "server_tick": 101,
+    "snapshot_id": "snapshot/golden/1",
+    "spatial_ref": {
+      "angular_velocity_rps": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "frame_id": "body/moon/fixed",
+      "instance_id": "persistent",
+      "linear_velocity_mps": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "position_m": [
+        10.0,
+        20.0,
+        30.0
+      ],
+      "rotation_xyzw": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "sample_time_s": 42.0,
+      "schema": "planet_simulator.spatial_ref.v1",
+      "space_id": "sol",
+      "universe_id": "main"
+    },
+    "state_revision": 8
+  }
+}

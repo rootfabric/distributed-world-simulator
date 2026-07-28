@@ -1,0 +1,16 @@
+{
+  "context": {},
+  "contract": "network_endpoint",
+  "expected_error_code": "",
+  "expected_hash": "5156382609d0ee8ca6b6032aee35452563a710bfff7c1825d05e2960e6e31c37",
+  "expected_valid": true,
+  "fixture_id": "valid_network_endpoint",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "channel": "simulation",
+    "host": "127.0.0.1",
+    "port": 19001,
+    "secure": false,
+    "transport": "ENET"
+  }
+}

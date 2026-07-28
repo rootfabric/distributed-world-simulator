@@ -1,15 +1,15 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
 **Дата ревизии:** 27 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.3.3-foundation-world-aggregate-part3-fix2`
-**Фактическая сетевая стадия:** N0 в работе, transport до N1 не начат
+**Текущий проверенный checkpoint:** `v16.4.0-foundation-n0`
+**Фактическая сетевая стадия:** N0 принят; реальный transport начинается на N1
 
 ## 1. Проверенная база
 
 Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- 44 обязательных headless test scripts;
+- 51 обязательный headless test script;
 - 5 runtime-миров;
 - 160 импортированных GDScript UID-записей;
 - единый Simulator Core;
@@ -64,20 +64,22 @@ Item Registry, Container Registry, Attachments и operation ledger сохран�
 
 Есть JSONL logging, runtime tests и JSON regression report.
 
-## 3. Состояние N0 и отсутствующие компоненты
+## 3. Состояние N0
 
-В коде уже есть runtime roles, строгие command/result/snapshot envelopes, canonical hashing, local JSON loopback, replay, epoch fencing и network contract tests.
+N0 завершён. Реализованы command/result/snapshot/delta envelopes, canonical
+checksums, AuthorityLease/Route, node/space/region descriptors, ghost/client
+routes, handoff ticket/result/state machine, golden fixtures, mutation matrix и
+JSON loopback для command и replication paths.
 
-Пока отсутствуют:
+До N1 отсутствуют намеренно:
 
-- EntityDeltaEnvelope;
-- AuthorityLease и AuthorityRoute;
-- handoff ticket/state machine;
-- ENet adapter;
-- World Directory;
-- golden fixtures и полная N0 acceptance matrix.
+- ENet/WebSocket adapter;
+- удалённый bot client;
+- snapshot streaming между процессами;
+- reconnect protocol.
 
-Поэтому N0 начат, но не завершён.
+World Directory и исполняемый lease service относятся к N3; реальный handoff
+между процессами — к N4.
 
 ## 4. Foundation barriers
 
@@ -91,7 +93,7 @@ Item Registry, Container Registry, Attachments и operation ledger сохран�
 
 ### C. Unified WORLD aggregate
 
-Выполнено для WORLD-items в `v16.3.3`: relation хранит `entity_id`, а `SpatialRef`, physics state, authority и lifecycle принадлежат `WorldEntityAggregate`. Общий EntityRegistry пока остаётся отдельным store и будет объединён через kernel ports позже.
+Выполнено для WORLD-items в `v16.3.3`: relation хранит `entity_id`, а `SpatialRef`, physics state, authority и lifecycle принадлежат `WorldEntityAggregate`. Общий EntityRegistry остаётся отдельным store, но в `v16.4.0` подключён к `SimulationKernel` через строгий read-only `EntityRegistryKernelPort`; repository подключён через `WorldRepositoryKernelPort`.
 
 ### D. Monotonic revisions
 
@@ -111,21 +113,19 @@ Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scen
 
 ## 5. Решение
 
-Сетевую ветку можно начинать сейчас, но первым этапом является `N0`, а не ENet и
-не authority handoff.
+Сетевой фундамент N0 принят. Следующий этап — N1: один authoritative server, bot client и реальный transport adapter.
 
-Foundation и N0 выполняются параллельно:
+Foundation Gate и N0 завершены в одном принятом checkpoint:
 
 ```text
-v16.4 Foundation Gate
-N0 Network Contracts
+v16.4.0-foundation-n0
 ```
 
 Подробности:
 
 - `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
 - `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
 
 ## 6. После N0
 

@@ -1,0 +1,23 @@
+{
+  "context": {},
+  "contract": "ghost_replica",
+  "expected_error_code": "",
+  "expected_hash": "545d397d649dc25cbad6a058fa155e4180f152d76ba3f3f84898fb20ddf39710",
+  "expected_valid": true,
+  "fixture_id": "valid_ghost_replica",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "entity_id": "entity/item/golden",
+    "expires_at_tick": 200,
+    "interest_region_id": "interest/golden",
+    "protocol_version": 1,
+    "read_only": true,
+    "replica_id": "replica/golden/1",
+    "replica_tick": 101,
+    "schema": "planet_simulator.ghost_replica_state.v1",
+    "snapshot_hash": "a4d5facb693ced2d770464ce45490d3a468ae27475d5c7d8bae073da5f252508",
+    "source_authority_epoch": 4,
+    "source_owner_node_id": "sim-a",
+    "state_revision": 8
+  }
+}

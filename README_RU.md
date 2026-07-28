@@ -1,52 +1,60 @@
-# Planetary World v16.3.3-foundation-world-aggregate-part3-fix2 — canonical WORLD aggregate
+# Planetary World v16.4.0-foundation-n0 — Foundation Gate и N0 завершены
 
-Версия сохраняет принятый R2 gameplay, строгую N0 boundary и server-safe lifecycle, добавляя единый `WorldEntityAggregate` для WORLD-предметов, Item Graph v2, формальный Entity/Chunk Lifecycle, `SimulationKernel`/`PresentationHost` boundary и server-safe persistence port.
+Версия сохраняет R2 gameplay и закрывает архитектурный этап перед первым
+настоящим authoritative server. В проекте работают server-safe lifecycle,
+canonical `WorldEntityAggregate`, строгая presentation-free граница
+`SimulationKernel`, kernel ports и полный набор versioned N0 contracts без
+сетевых сокетов.
 
-Проект для Godot 4.7.1, собранного с `precision=double`.
+Проект рассчитан на Godot 4.7.1 с `precision=double`.
 
-## Архитектурный checkpoint после R2
+## Архитектурный checkpoint
 
-Ревизия `v16.3.3-foundation-world-aggregate-part3-fix2` устраняет вторую spatial truth у WORLD-предметов. Item relation хранит только `entity_id`; координаты, скорости, physics state, authority и lifecycle принадлежат aggregate. Старые Item Graph v1 snapshots мигрируют транзакционно в v2. `SimulationKernel` теперь имеет проверяемую presentation-free границу, а chunk/zone transitions работают fail closed.
-
-Fix2 закрывает оставшиеся обходы границы: `SimulationKernel` рекурсивно проверяет не только значения, но и ключи `Dictionary`, а также metadata произвольных service objects. `WorldEntityAggregate.setup()` и `apply_spatial_state()` теперь сначала валидируют сырой `SpatialRef`, затем канонизируют его; неединичный quaternion не может быть молча нормализован и принят.
-
-Следующий основной пакет:
+Checkpoint:
 
 ```text
-v16.4 Foundation Gate
-+
-N0 Network Contracts
+v16.4.0-foundation-n0
 ```
 
-Foundation отделяет `SimulationKernel` от presentation, вводит server-safe
-lifecycle, shutdown barrier и единый WORLD aggregate. N0 добавляет versioned
-command/snapshot DTO, authority lease/handoff contracts и тесты без открытия
-сокетов.
+Build ID:
 
-Документы:
+```text
+foundation-n0-contracts-handoff-kernel-ports
+```
 
-- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX2_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_FIX1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md`;
-- `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
-- `docs/contracts/ITEM_GRAPH_V2_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX2_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX2_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX3_RU.md`;
-- `docs/checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`;
-- `docs/architecture/audits/2026-07-27_V16_3_ARCHITECTURE_AND_NETWORK_AUDIT_RU.md`;
+N0 включает command/result/snapshot/delta envelopes, authority lease/route,
+node/space/region descriptors, ghost/client routes, handoff ticket/result/state
+machine, canonical fixtures и JSON loopback для command и replication paths.
+
+Строгий `EntitySnapshotEnvelope` содержит `entity_type`, `partition_address`,
+`server_tick` и checksum. Delta использует защищённые nested paths внутри
+`spatial_ref`, `partition_address`, `physics_state` и `domain_components`, а
+результат всегда повторно проходит snapshot validation.
+
+`EntityRegistryKernelPort` и `WorldRepositoryKernelPort` подключаются к реальному
+simulation-server process и не содержат presentation/runtime callbacks.
+
+Главный инвариант:
+
+```text
+canonical simulation ≠ presentation ≠ transport
+```
+
+Основные документы:
+
+- `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
+- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
 - `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `docs/network/NETWORK_READINESS_CHECKPOINT_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
 
-Точка входа — единый `scripts/app/simulator_app.gd`. Конкретные карты больше не
-создают отдельные варианты симулятора: они загружаются как runtime-модули из
-`config/worlds/catalog.json`, используют общий ввод, командную консоль и
-регрессионный реестр.
+Следующие параллельные этапы:
+
+```text
+N1 — authoritative server + bot client + ENet adapter
+R3.1 — construction/power vertical slice через domain commands
+```
 
 ## Установка и отладка
 
@@ -122,6 +130,7 @@ Q/E        крен в режиме свободного полёта
 .\RUN_WORLD_REGRESSION_TESTS.ps1
 .\RUN_FOUNDATION_LIFECYCLE_TESTS.ps1
 .\RUN_FOUNDATION_WORLD_AGGREGATE_TESTS.ps1
+.\RUN_NETWORK_CONTRACT_TESTS.ps1
 ```
 
 Runner сначала выполняет headless editor import/parse, затем запускает все

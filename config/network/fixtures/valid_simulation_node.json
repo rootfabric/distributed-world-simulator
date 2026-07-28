@@ -1,0 +1,50 @@
+{
+  "context": {},
+  "contract": "simulation_node",
+  "expected_error_code": "",
+  "expected_hash": "5f7ef14c5e8a813492f28ddf722b14015c671480c729847e70edcea1cef16965",
+  "expected_valid": true,
+  "fixture_id": "valid_simulation_node",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "build_id": "foundation-n0-final",
+    "capabilities": [
+      "command",
+      "delta",
+      "snapshot"
+    ],
+    "checkpoint": "v16.4.0-foundation-n0",
+    "descriptor_revision": 1,
+    "endpoint": {
+      "channel": "simulation",
+      "host": "127.0.0.1",
+      "port": 19001,
+      "secure": false,
+      "transport": "ENET"
+    },
+    "heartbeat_tick": 110,
+    "instance_id": "persistent",
+    "node_id": "sim-a",
+    "protocol_version": 1,
+    "runtime_role": "simulation-server",
+    "schema": "planet_simulator.simulation_node_descriptor.v1",
+    "spaces": [
+      {
+        "authority_region_ids": [
+          "region/moon/a"
+        ],
+        "descriptor_revision": 1,
+        "frame_id": "body/moon/fixed",
+        "instance_id": "persistent",
+        "partition_revision": 1,
+        "partition_scheme": "cube_sphere",
+        "protocol_version": 1,
+        "schema": "planet_simulator.simulation_space_descriptor.v1",
+        "space_id": "moon",
+        "universe_id": "main"
+      }
+    ],
+    "started_at_tick": 100,
+    "status": "READY"
+  }
+}

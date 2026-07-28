@@ -88,6 +88,11 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `diagnostics/LOGGING_RU.md`
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
 
+## Foundation/N0 checkpoint
+
+- `checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`
+- `contracts/N0_NETWORK_CONTRACTS_V1_RU.md`
+
 ## Сеть
 
 - `network/NETWORK_READINESS_CHECKPOINT_RU.md`

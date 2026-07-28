@@ -1,19 +1,14 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.3
+## Статус на checkpoint v16.4.0-foundation-n0
 
-Фактическая стадия реализации — **до N0**. Документ описывает целевую программу,
-а не уже существующий сетевой код.
+Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
+`SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority
+lease/route contracts, handoff state machine, golden fixtures и loopback
+command/replication paths.
 
-Перед N1 обязателен параллельный `v16.4 Foundation Gate`:
-
-- server-safe `SimulationKernel`;
-- отключаемый presentation;
-- shutdown barrier;
-- единый `WorldEntityAggregate`;
-- монотонные revisions;
-- формальный entity/chunk lifecycle;
-- isolated user data.
+Следующий исполняемый сетевой этап — N1: один authoritative Godot server,
+отдельный bot client и реальный transport adapter.
 
 Связанные планы:
 
@@ -46,7 +41,7 @@ XL  — отдельная программа работ
 ## N0 — сетевые контракты без сети
 
 **Сложность:** M
-**Можно начинать:** немедленно.
+**Статус:** выполнено в `v16.4.0-foundation-n0`.
 
 ### Реализация
 

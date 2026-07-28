@@ -1,0 +1,25 @@
+{
+  "context": {},
+  "contract": "network_command",
+  "expected_error_code": "",
+  "expected_hash": "d0a83ab105d494270da96624bc74f452b6ea3ec0118de5dbb12a8deb69d35760",
+  "expected_valid": true,
+  "fixture_id": "valid_command",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "client_tick": 100,
+    "command_type": "item.move",
+    "entity_id": "entity/item/golden",
+    "expected_revision": 7,
+    "message_id": "message/golden/1",
+    "operation_id": "operation/golden/1",
+    "payload": {
+      "quantity": 2,
+      "target_container_id": "container/golden"
+    },
+    "protocol_version": 1,
+    "schema": "planet_simulator.network_command.v1",
+    "sent_at_monotonic_ms": 12345
+  }
+}

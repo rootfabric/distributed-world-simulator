@@ -1,3 +1,17 @@
+Planetary World v16.4.0-foundation-n0
+
+Foundation Gate + N0 final:
+- EntitySnapshotEnvelope v1 includes entity_type, partition_address, server_tick and checksum
+- EntityDeltaEnvelope v1 applies canonical nested paths and revalidates result snapshots
+- AuthorityLease, AuthorityRoute, node/space/region descriptors, ghosts and client routes
+- HandoffTicket/Result and exhaustive fail-closed HandoffStateMachine
+- command and snapshot/delta JSON loopback transports with replay/conflict fencing
+- canonical golden fixtures for every N0 DTO family
+- strict EntityRegistryKernelPort and WorldRepositoryKernelPort
+- RUN_NETWORK_CONTRACT_TESTS.ps1 with JSON summary
+- docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md
+- docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md
+
 Planetary World v16.3.3-foundation-world-aggregate-part3-fix2
 
 Foundation world aggregate part 3 fix2:

@@ -1,27 +1,16 @@
-# План v16.4 — Foundation Gate
+# v16.4 Foundation Gate — план и зафиксированная приёмка
 
-# Статус реализации
+## Статус реализации
 
-Checkpoint `v16.3.3-foundation-world-aggregate-part3-fix2`:
+Checkpoint `v16.4.0-foundation-n0` закрывает Foundation Gate. Выполнены runtime
+roles, lifecycle/drain, SimulationKernel/PresentationHost boundary, canonical
+WORLD aggregate, Item Graph v2, entity/chunk lifecycle, server-safe persistence
+и strict EntityRegistry/WorldRepository kernel ports.
 
-- [x] pure-domain runtime roles;
-- [x] launch option parser;
-- [x] runtime descriptor;
-- [x] launch context передаётся runtime;
-- [x] authority transfer сохраняет monotonic revision;
-- [x] LifecycleCoordinator процесса;
-- [x] graceful shutdown и command fencing;
-- [x] terrain stop/drain barrier;
-- [x] synchronous world-runtime disposal;
-- [x] isolated process user data в Python harness;
-- [x] simulation-server без активных UI, камер и local input;
-- [x] явная граница SimulationKernel/PresentationHost;
-- [x] WorldEntityAggregate для WORLD-items;
-- [x] entity/chunk lifecycle Dormant/Warm/Active/Unloading;
-- [x] Item Graph v2 и миграция legacy WORLD relations;
-- [x] server-safe CanonicalStatePort.
-
-Foundation Gate остаётся незавершённым только в части общего EntityRegistry/repository ports и полного физического исключения presentation-конструирования из world runtime scenes. `v16.3.3` закрывает canonical WORLD aggregate и формальную kernel/presentation boundary; следующий блок — завершение N0 contracts и общих kernel ports перед итоговым `v16.4.0-foundation-n0`.
+Process-level simulation-server подтверждает ноль активных presentation nodes,
+оба kernel port и корректный exit после terrain drain. Физическое исключение
+конструирования некоторых локальных world presentation adapters остаётся
+неблокирующим cleanup: server policy отключает их до активации.
 
 ## Цель
 

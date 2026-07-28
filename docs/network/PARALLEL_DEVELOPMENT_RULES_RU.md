@@ -1,49 +1,50 @@
 # Правила параллельной разработки сети и gameplay
 
-## Текущий режим после v16.3
+## Текущий режим после v16.4.0-foundation-n0
 
-Одновременно разрешены три потока:
+Foundation Gate и N0 завершены. Одновременно разрешены три потока:
 
 ```text
-Track C — v16.4 Foundation Gate
-Track N — N0 Network Contracts
+Track N — N1 Authoritative Server + Bot Client
 Track G — R3.1 Construction Vertical Slice
+Track T — Multi-process Test Infrastructure
 ```
 
-Track C и Track N являются обязательными основными потоками. Track G не должен
-менять canonical state напрямую из presentation и обязан использовать те же
-commands, revisions и snapshots, которые далее будут доступны server authority.
+Track N подключает реальный transport к принятым N0 DTO и не меняет доменную
+семантику без отдельной версии протокола. Track G использует те же commands,
+revisions, aggregates и snapshots. Track T обеспечивает process isolation,
+fault injection, reconnect и отчёты.
 
 Рекомендуемые каталоги ответственности:
 
 ```text
-Track C:
-  scripts/simulation/kernel/
-  scripts/simulation/lifecycle/
-  scripts/app/runtime_roles/
-  tests/runtime/
-
 Track N:
-  scripts/network/contracts/
-  scripts/network/handoff/
-  config/network/fixtures/
+  scripts/network/transports/
+  scripts/network/client/
+  scripts/network/server/
   tests/network/
+  tests/process/
 
 Track G:
   scripts/construction/domain/
   scripts/construction/services/
   scripts/construction/presentation/
   tests/construction/
+
+Track T:
+  tests/process/
+  tools/network/
+  artifacts/test-results/
 ```
 
-Общие файлы `CommandGateway`, `WorldEntityAggregate` и schema registry меняются
-только через заранее согласованный контракт и отдельный integration gate.
+Общие файлы `CommandGateway`, `WorldEntityAggregate`, schema registry и N0 DTO
+меняются только через versioned contract change и integration gate.
 
-Связанные планы:
+Связанные документы:
 
-- `../plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
 - `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
-- `../checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
+- `../contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
+- `../checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
 
 ## Базовые правила параллельной разработки
 

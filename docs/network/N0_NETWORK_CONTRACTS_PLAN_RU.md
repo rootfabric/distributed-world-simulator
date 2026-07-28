@@ -1,31 +1,24 @@
-# N0 — план сетевых контрактов без сокетов
+# N0 — сетевые контракты без сокетов
 
 # Статус реализации
 
-Checkpoint `v16.3.1-foundation-n0-part1-fix3` закрыл и усилил первую часть:
+**Принят:** `v16.4.0-foundation-n0`.
 
-- [x] NetworkCommandEnvelope v1;
-- [x] NetworkCommandResultEnvelope v1;
-- [x] EntitySnapshotEnvelope v1;
-- [x] canonical JSON и runtime-type lint;
-- [x] deterministic command fingerprint;
-- [x] exact replay и operation ID conflict;
-- [x] stale authority epoch rejection;
-- [x] local JSON loopback transport;
-- [x] monotonic authority revision;
-- [x] exact required/allowed field sets for command/result/snapshot;
-- [x] strict JSON scalar typing without String/int coercion;
-- [x] handler result validation before terminal replay storage;
-- [x] stable numeric canonicalization across JSON round-trip;
-- [x] strict near-unit quaternion validation and canonical q/-q snapshot hashing;
-- [x] valid rejection envelopes for malformed correlation IDs;
-- [ ] delta envelope;
-- [ ] leases/routes/node/region descriptors;
-- [ ] handoff state machine;
-- [ ] golden fixtures;
-- [ ] полная N0 acceptance matrix.
+- [x] command/result/snapshot/delta envelopes;
+- [x] exact schema and strict JSON typing;
+- [x] canonical checksums/fingerprints;
+- [x] AuthorityLease/AuthorityRoute;
+- [x] node/space/region descriptors;
+- [x] ghost and client route contracts;
+- [x] handoff ticket/result/state machine;
+- [x] exhaustive handoff transition matrix;
+- [x] command and replication JSON loopback;
+- [x] canonical golden fixtures;
+- [x] mutation matrix and runtime-type lint;
+- [x] strict kernel ports;
+- [x] separate runner and JSON report.
 
-N0 остаётся незавершённым.
+N0 завершён. Следующий сетевой этап — N1 с реальным transport adapter и bot client.
 
 ## Цель
 

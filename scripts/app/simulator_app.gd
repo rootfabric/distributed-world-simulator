@@ -14,10 +14,12 @@ const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
 const LifecycleCoordinatorScript = preload("res://scripts/runtime/lifecycle_coordinator.gd")
 const SimulationKernelScript = preload("res://scripts/runtime/simulation_kernel.gd")
 const PresentationHostScript = preload("res://scripts/runtime/presentation_host.gd")
+const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/entity_registry_kernel_port.gd")
+const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.3.3-foundation-world-aggregate-part3-fix2"
-const FOUNDATION_BUILD_ID: String = "foundation-world-aggregate-presentation-spatial-boundary-fix2"
+const FOUNDATION_CHECKPOINT: String = "v16.4.0-foundation-n0"
+const FOUNDATION_BUILD_ID: String = "foundation-n0-contracts-handoff-kernel-ports"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -1522,6 +1524,24 @@ func _bind_runtime_kernel_services(runtime: Node) -> void:
 	if runtime != null and runtime.has_method("get_world_entity_store"):
 		store = runtime.call("get_world_entity_store")
 	simulation_kernel.set_world_entity_store(store)
+
+	var entity_port = null
+	if runtime != null and runtime.has_method("get_entity_registry_snapshot"):
+		var entity_snapshot = runtime.call("get_entity_registry_snapshot")
+		if entity_snapshot is Dictionary and not entity_snapshot.is_empty():
+			entity_port = EntityRegistryKernelPortScript.new()
+			if not bool(entity_port.setup(entity_snapshot).get("success", false)):
+				entity_port = null
+	simulation_kernel.set_entity_registry_port(entity_port)
+
+	var repository_port = null
+	if runtime != null and runtime.has_method("get_world_repository_snapshot"):
+		var repository_snapshot = runtime.call("get_world_repository_snapshot")
+		if repository_snapshot is Dictionary and not repository_snapshot.is_empty():
+			repository_port = WorldRepositoryKernelPortScript.new()
+			if not bool(repository_port.setup(repository_snapshot).get("success", false)):
+				repository_port = null
+	simulation_kernel.set_world_repository_port(repository_port)
 
 
 func _apply_runtime_role_policy(runtime: Node) -> void:

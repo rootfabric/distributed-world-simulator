@@ -7,6 +7,8 @@ var command_gateway
 var test_registry
 var lifecycle_coordinator
 var world_entity_store
+var entity_registry_port
+var world_repository_port
 var services: Dictionary = {}
 var initialized: bool = false
 
@@ -17,6 +19,8 @@ func setup(context: Dictionary) -> Dictionary:
 	test_registry = context.get("test_registry")
 	lifecycle_coordinator = context.get("lifecycle_coordinator")
 	world_entity_store = context.get("world_entity_store")
+	entity_registry_port = context.get("entity_registry_port")
+	world_repository_port = context.get("world_repository_port")
 	services = Dictionary(context.get("services", {})).duplicate()
 	var validation: Dictionary = validate_boundary()
 	initialized = bool(validation.get("success", false))
@@ -27,6 +31,26 @@ func set_world_entity_store(store) -> Dictionary:
 	if _is_presentation_object(store):
 		return _failure("PRESENTATION_OBJECT_REJECTED", {"service_id": "world_entity_store"})
 	world_entity_store = store
+	return {"success": true}
+
+
+func set_entity_registry_port(port) -> Dictionary:
+	var validation: Dictionary = _validate_kernel_port(
+		port, "entity_registry_port", "planet_simulator.entity_registry_kernel_port.v1"
+	)
+	if not bool(validation.get("success", false)):
+		return validation
+	entity_registry_port = port
+	return {"success": true}
+
+
+func set_world_repository_port(port) -> Dictionary:
+	var validation: Dictionary = _validate_kernel_port(
+		port, "world_repository_port", "planet_simulator.world_repository_kernel_port.v1"
+	)
+	if not bool(validation.get("success", false)):
+		return validation
+	world_repository_port = port
 	return {"success": true}
 
 
@@ -46,10 +70,22 @@ func validate_boundary() -> Dictionary:
 		"test_registry": test_registry,
 		"lifecycle_coordinator": lifecycle_coordinator,
 		"world_entity_store": world_entity_store,
+		"entity_registry_port": entity_registry_port,
+		"world_repository_port": world_repository_port,
 	}
 	for service_id in core_services.keys():
 		if _is_presentation_object(core_services[service_id]):
 			return _failure("PRESENTATION_OBJECT_REJECTED", {"service_id": service_id})
+	var entity_port_validation: Dictionary = _validate_kernel_port(
+		entity_registry_port, "entity_registry_port", "planet_simulator.entity_registry_kernel_port.v1"
+	)
+	if not bool(entity_port_validation.get("success", false)):
+		return entity_port_validation
+	var repository_port_validation: Dictionary = _validate_kernel_port(
+		world_repository_port, "world_repository_port", "planet_simulator.world_repository_kernel_port.v1"
+	)
+	if not bool(repository_port_validation.get("success", false)):
+		return repository_port_validation
 	for service_id in services.keys():
 		if _is_presentation_object(services[service_id]):
 			return _failure("PRESENTATION_OBJECT_REJECTED", {"service_id": service_id})
@@ -66,8 +102,32 @@ func create_snapshot() -> Dictionary:
 		"has_test_registry": test_registry != null,
 		"has_lifecycle": lifecycle_coordinator != null,
 		"has_world_entity_store": world_entity_store != null,
+		"has_entity_registry_port": entity_registry_port != null,
+		"has_world_repository_port": world_repository_port != null,
 		"presentation_free": bool(validate_boundary().get("success", false)),
 	}
+
+
+func _validate_kernel_port(port, service_id: String, expected_schema: String) -> Dictionary:
+	if port == null:
+		return {"success": true}
+	if _is_presentation_object(port):
+		return _failure("PRESENTATION_OBJECT_REJECTED", {"service_id": service_id})
+	if not port is Object or not port.has_method("create_descriptor"):
+		return _failure("INVALID_KERNEL_PORT", {"service_id": service_id})
+	var descriptor_value = port.call("create_descriptor")
+	if typeof(descriptor_value) != TYPE_DICTIONARY:
+		return _failure("INVALID_KERNEL_PORT_DESCRIPTOR", {"service_id": service_id})
+	var descriptor: Dictionary = descriptor_value
+	if typeof(descriptor.get("schema")) != TYPE_STRING or String(descriptor["schema"]) != expected_schema:
+		return _failure("KERNEL_PORT_SCHEMA_MISMATCH", {
+			"service_id": service_id,
+			"expected_schema": expected_schema,
+			"actual_schema": descriptor.get("schema"),
+		})
+	if not bool(descriptor.get("configured", false)):
+		return _failure("KERNEL_PORT_NOT_CONFIGURED", {"service_id": service_id})
+	return {"success": true}
 
 
 func _is_presentation_object(value, depth: int = 0, visited: Dictionary = {}) -> bool:

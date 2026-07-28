@@ -1,0 +1,27 @@
+{
+  "context": {
+    "actual_authority_epoch": 4
+  },
+  "contract": "gateway_command",
+  "expected_error_code": "STALE_AUTHORITY_EPOCH",
+  "expected_hash": "133306ff49284462705dbc4750d0d0c9f2502f029c28d2bf332f782e3a67ca45",
+  "expected_valid": true,
+  "fixture_id": "stale_authority_command",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 3,
+    "client_tick": 100,
+    "command_type": "item.move",
+    "entity_id": "entity/item/golden",
+    "expected_revision": 7,
+    "message_id": "message/golden/stale",
+    "operation_id": "operation/golden/stale",
+    "payload": {
+      "quantity": 2,
+      "target_container_id": "container/golden"
+    },
+    "protocol_version": 1,
+    "schema": "planet_simulator.network_command.v1",
+    "sent_at_monotonic_ms": 12345
+  }
+}

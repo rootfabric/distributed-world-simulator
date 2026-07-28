@@ -1,0 +1,28 @@
+{
+  "context": {},
+  "contract": "handoff_ticket",
+  "expected_error_code": "",
+  "expected_hash": "d726efaefd593e2140962f8612ae1d126364ec479d46bef023cda0010524b3de",
+  "expected_valid": true,
+  "fixture_id": "valid_handoff_ticket",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "created_at_tick": 100,
+    "entity_id": "entity/item/golden",
+    "expected_state_revision": 8,
+    "expires_at_tick": 200,
+    "protocol_version": 1,
+    "reason": "",
+    "region_id": "region/moon/b",
+    "schema": "planet_simulator.handoff_ticket.v1",
+    "snapshot_hash": "",
+    "snapshot_id": "",
+    "source_authority_epoch": 4,
+    "source_node_id": "sim-a",
+    "state": "REQUESTED",
+    "target_authority_epoch": 5,
+    "target_node_id": "sim-b",
+    "ticket_id": "handoff/golden/1",
+    "transition_revision": 0
+  }
+}

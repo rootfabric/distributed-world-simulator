@@ -1,0 +1,26 @@
+{
+  "context": {},
+  "contract": "handoff_result",
+  "expected_error_code": "",
+  "expected_hash": "db0fc22a01a051c8876d26b34682682d23d46c037ae67137ba029cda90920cf0",
+  "expected_valid": true,
+  "fixture_id": "committed_handoff_result",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 5,
+    "authority_owner_id": "sim-b",
+    "completed_at_tick": 130,
+    "entity_id": "entity/item/golden",
+    "error_code": "",
+    "payload": {
+      "transition_revision": 5
+    },
+    "protocol_version": 1,
+    "schema": "planet_simulator.handoff_result.v1",
+    "source_node_id": "sim-a",
+    "state_revision": 9,
+    "status": "COMMITTED",
+    "target_node_id": "sim-b",
+    "ticket_id": "handoff/golden/1"
+  }
+}

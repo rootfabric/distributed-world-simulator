@@ -97,8 +97,9 @@ func _init() -> void:
 		"persistent"
 	)
 	var snapshot: Dictionary = SnapshotEnvelopeScript.create(
-		"snapshot/1", "entity/probe", 12, "sim-01", 4, 500,
+		"snapshot/1", "entity/probe", "world_item", 12, "sim-01", 4, 500,
 		spatial_ref,
+		{},
 		{"mass_kg": 5.0},
 		{"item": {"definition_id": "survey_beacon"}}
 	)
@@ -147,7 +148,7 @@ func _init() -> void:
 	snapshot_string_revision["state_revision"] = "12"
 	_assert(_error_code(SnapshotEnvelopeScript.validate(snapshot_string_revision)) == "INVALID_FIELD_TYPE", "String snapshot revision was normalized")
 	var snapshot_fractional_tick: Dictionary = snapshot.duplicate(true)
-	snapshot_fractional_tick["simulation_tick"] = 500.25
+	snapshot_fractional_tick["server_tick"] = 500.25
 	_assert(_error_code(SnapshotEnvelopeScript.validate(snapshot_fractional_tick)) == "INVALID_FIELD_TYPE", "Fractional simulation tick was truncated")
 	var snapshot_extra_field: Dictionary = snapshot.duplicate(true)
 	snapshot_extra_field["presentation_node"] = "forbidden"

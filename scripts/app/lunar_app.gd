@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.3.3-foundation-world-aggregate-part3-fix2"
-const BUILD_ID: String = "foundation-world-aggregate-presentation-spatial-boundary-fix2"
+const PROJECT_VERSION: String = "16.4.0-foundation-n0"
+const BUILD_ID: String = "foundation-n0-contracts-handoff-kernel-ports"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -1765,3 +1765,11 @@ func _register_runtime_command(
 ) -> void:
 	if not registry.register_command(definition, callback, owner_id):
 		push_error("Runtime command registration failed: %s" % definition.get("id", ""))
+
+
+func get_entity_registry_snapshot() -> Dictionary:
+	return entity_registry.create_snapshot() if entity_registry != null else {}
+
+
+func get_world_repository_snapshot() -> Dictionary:
+	return persistence.create_snapshot() if persistence != null else {}

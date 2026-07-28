@@ -1,0 +1,28 @@
+{
+  "context": {},
+  "contract": "entity_delta",
+  "expected_error_code": "",
+  "expected_hash": "8c6175c2159dce4bc24e3c17c6af96c29a2227f79a3ff29bd0d6aaaa03fe257f",
+  "expected_valid": true,
+  "fixture_id": "valid_entity_delta",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "authority_owner_id": "sim-a",
+    "base_revision": 8,
+    "changed_fields": {
+      "physics_state.sleeping": false
+    },
+    "checksum": "8c6175c2159dce4bc24e3c17c6af96c29a2227f79a3ff29bd0d6aaaa03fe257f",
+    "delta_id": "delta/golden/1",
+    "entity_id": "entity/item/golden",
+    "entity_type": "world_item",
+    "protocol_version": 1,
+    "removed_fields": [
+      "domain_components.legacy"
+    ],
+    "result_revision": 9,
+    "schema": "planet_simulator.entity_delta_envelope.v1",
+    "server_tick": 102
+  }
+}

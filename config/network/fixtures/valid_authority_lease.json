@@ -1,0 +1,24 @@
+{
+  "context": {},
+  "contract": "authority_lease",
+  "expected_error_code": "",
+  "expected_hash": "3401274c55aba8ac3760671a595da64ade177b662c45528dcac0687168026332",
+  "expected_valid": true,
+  "fixture_id": "valid_authority_lease",
+  "schema": "planet_simulator.network_golden_fixture.v1",
+  "value": {
+    "authority_epoch": 4,
+    "expires_at_tick": 200,
+    "issued_at_tick": 100,
+    "lease_id": "lease/golden/1",
+    "lease_token_hash": "2d8e51f847d93dbce1c9c2cac0bf6102a8173a58919519a5330d09babb2e6893",
+    "owner_node_id": "sim-a",
+    "protocol_version": 1,
+    "renew_after_tick": 140,
+    "schema": "planet_simulator.authority_lease.v1",
+    "state_revision_at_acquire": 8,
+    "status": "ACTIVE",
+    "subject_id": "entity/item/golden",
+    "subject_type": "ENTITY"
+  }
+}

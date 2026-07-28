@@ -110,6 +110,8 @@ def main() -> int:
         assert ready["simulation_kernel"]["initialized"] is True
         assert ready["simulation_kernel"]["presentation_free"] is True
         assert ready["simulation_kernel"]["has_world_entity_store"] is True
+        assert ready["simulation_kernel"]["has_entity_registry_port"] is True
+        assert ready["simulation_kernel"]["has_world_repository_port"] is True
         assert ready["presentation_host"]["enabled"] is False
         assert ready["presentation_host"]["active_node_count"] == 0
         assert stopped["exit_code"] == 0

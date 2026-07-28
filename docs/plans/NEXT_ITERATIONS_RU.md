@@ -1,11 +1,11 @@
-# Ближайшие итерации после v16.3
+# Ближайшие итерации после v16.4
 
 ## Зафиксированный checkpoint
 
 Текущий проверенный код:
 
 ```text
-v16.3.3-foundation-world-aggregate-part3-fix2
+v16.4.0-foundation-n0
 ```
 
 Основание решения:
@@ -27,16 +27,14 @@ v16.3.3-foundation-world-aggregate-part3-fix2
 | `v16.3.0-r2-inventory-ux` | принято | contextual containers, post-drop split, operation namespace, dual-fill light |
 | `v16.3.1-foundation-n0-part1-fix3` | принято | строгая N0 command/snapshot boundary и loopback |
 | `v16.3.2-foundation-lifecycle-part2-fix2` | принято | fail-closed shutdown, terrain drain и terminal world-load fence |
-| `v16.3.3-foundation-world-aggregate-part3-fix2` | текущий checkpoint | canonical WORLD aggregate, Item Graph v2, kernel/presentation boundary и entity/chunk lifecycle |
-| `v16.4 Foundation Gate` | в работе | завершить общие kernel/repository ports и закрыть acceptance gate |
-| `N0` | следующий network-этап | versioned contracts без сокетов |
+| `v16.4.0-foundation-n0` | текущий checkpoint | Foundation Gate, canonical aggregate, kernel ports и N0 contracts приняты |
 | `R3.1` | параллельный gameplay | foundation и construction aggregate |
 | `N1` | после N0/Foundation | один server + bot client |
 | `N2` | после N1 | local multi-process lab |
 | `N3` | после N2 | World Directory и leases |
 | `N4` | после N3 | handoff одного объекта |
 
-## Итерация A — v16.4 Foundation Gate
+## Завершено — v16.4 Foundation Gate
 
 Полный план: `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`.
 
@@ -56,7 +54,7 @@ v16.3.3-foundation-world-aggregate-part3-fix2
 > Headless simulation role запускается без UI, завершает active terrain workers и
 > выходит code 0, сохраняя старую offline regression зелёной.
 
-## Итерация B — N0 Network Contracts
+## Завершено — N0 Network Contracts
 
 Полный план: `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`.
 
