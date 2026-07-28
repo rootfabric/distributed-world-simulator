@@ -1,10 +1,11 @@
 # Документация PlanetSimulator
 
-Текущий checkpoint: `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`.
+Текущий checkpoint: `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`.
 
-- `checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md` — объединение Foundation N0 fix1 и UI-I0–UI-I2, merge audit и следующий приоритет N1.
+- `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md` — единый multi-process network harness N2.
+- `testing/N2_PROCESS_HARNESS_RU.md` — manifest, сценарии, отчёты и команды запуска.
+- `plans/NEXT_ITERATIONS_RU.md` — очередь R3.1 → N3 → N4 → N5.
 - `plans/INVENTORY_UI_REDESIGN_PLAN_RU.md` — принятый компонентный UI и отложенный UI-I3.
-- `plans/NEXT_ITERATIONS_RU.md` — упорядоченная очередь N1 → N2 → R3.1/N3.
 
 ## v16.3.3 — Foundation world aggregate part 3
 
@@ -31,6 +32,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_FIX1_RU.m
 Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 ## Чекпоинты
+
+- `checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md` — N2 process orchestration, fault classification и JSON/JUnit.
 
 - `checkpoints/2026-07-27_V16_3_3_FOUNDATION_WORLD_AGGREGATE_PART3_RU.md` — canonical WORLD aggregate, Item Graph v2 и SimulationKernel boundary.
 
@@ -93,6 +96,13 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 - `diagnostics/LOGGING_RU.md`
 - `diagnostics/TERRAIN_PERFORMANCE_LOGGING_RU.md`
+
+## Network N1 checkpoints
+
+- `checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`
+- `checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`
+- `checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`
+- `network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`
 
 ## Foundation/N0 checkpoint
 

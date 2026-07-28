@@ -1,67 +1,73 @@
-# Planetary World v16.4.2-network-transport-boundary — Foundation N0 и Inventory UI объединены
+## Текущий checkpoint сети
 
-Checkpoint объединяет принятый `v16.4.0-foundation-n0-fix1` с веткой
-`feature/ui-i0-inventory-shell` (`UI-I0`–`UI-I2`). В основной линии теперь
-одновременно находятся server-safe foundation, строгие N0 contracts и новый
-компонентный интерфейс инвентаря.
+```text
+v16.6.0-network-n2-process-harness
+build: n2-cross-platform-process-orchestration
+branch: feature/n2-process-harness
+```
+
+N2 запускает реальные N1 server/client процессы по единому manifest, изолирует `user://`, классифицирует ожидаемые аварии, гарантирует cleanup и формирует JSON/JUnit. Следующий этап — R3.1 authoritative persistence/recovery.
+
+# Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay
+
+Текущий candidate строится поверх принятого `v16.5.1-network-n1-remote-item-command` и завершает первый сетевой vertical slice N1.
 
 Проект рассчитан на Godot 4.7.1 с `precision=double`.
 
 ## Текущий checkpoint
 
 ```text
-v16.4.2-network-transport-boundary
+v16.5.2-foundation-network-n1
 ```
 
 Build ID:
 
 ```text
-n1-transport-lifecycle-boundary
+n1-reconnect-replay-bounded-cache
 ```
 
-Интеграция сохраняет главный инвариант:
+Главный инвариант:
 
 ```text
 canonical simulation ≠ presentation ≠ transport
 ```
 
-Что вошло:
+Что добавляет N1.3:
 
-- component inventory shell, ViewModel и CommandFacade;
-- contextual external containers, drag/Shift-click/context actions;
-- search, filters, view-only sort, inspector и bounded cell pool;
-- сохранение UI preferences отдельно от Item Graph;
-- совместимость UI drop-one/drop-stack с canonical `WorldEntityAggregate`;
-- полный Foundation/N0 authority, revision, tick и kernel-port fencing;
-- 55 обязательных Godot regression tests.
+- logical session, независимую от сменяемых ENet transport sessions;
+- строгие resume-ticket/resume/result DTO;
+- ограниченные TTL, размер replay cache и число resume;
+- cryptographic resume token;
+- повторную доставку прежнего `operation_id` после потери результата;
+- cached result/delta без повторного вызова domain handler;
+- два последовательных reconnect в реальных Godot-процессах;
+- один server commit, одну ledger-запись и один client delta apply;
+- conflict, expiry, wrong-client/fingerprint/checksum и replay-grant fences;
+- отдельный runner `RUN_N1_RECONNECT_REPLAY_TESTS.ps1`.
 
-При пробном merge был найден реальный API-разрыв: UI-I1 вызывал старый
-`drop_item_stack()`, отсутствующий после Foundation Part 3. Контроллер снова
-публикует `drop_item`, `drop_item_stack` и `drop_item_quantity`, но все три пути
-используют текущий `ItemTransferService`, WORLD relation и aggregate
-reconciliation — прямой presentation mutation не возвращён.
+N1 теперь закрывает transport boundary, ENet handshake/snapshot, authoritative item command и reconnect/replay. Следующий этап N2 создаёт общий кроссплатформенный multi-process harness с isolated `user://`, fault scenarios, timeout/process cleanup и JSON/JUnit reports.
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
-- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`;
-- `docs/plans/NEXT_ITERATIONS_RU.md`;
-- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.
+- `docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`;
+- `docs/network/N1_NETWORK_IMPLEMENTATION_PLAN_RU.md`;
+- `docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`;
+- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
+- `docs/plans/NEXT_ITERATIONS_RU.md`.
 
 Следующий основной этап:
 
 ```text
-N1 — один authoritative simulation-server
-   + отдельный bot-client
-   + ENet transport adapter
-   + initial snapshot
-   + одна remote item command
-   + checksum equality
+N2 — общий multi-process harness
+   + динамические порты
+   + isolated user://
+   + readiness и timeout
+   + cleanup зависших процессов
+   + fault/reconnect scenarios
+   + JSON/JUnit reports
 ```
 
-`UI-I3` с batch/multi-select отложен до появления реального authoritative
-command path на N1/N2.
+`UI-I3` остаётся отложен до фиксации batch command semantics поверх завершённого N1.
 
 ## Установка и отладка
 
@@ -138,6 +144,7 @@ Q/E        крен в режиме свободного полёта
 .\RUN_FOUNDATION_LIFECYCLE_TESTS.ps1
 .\RUN_FOUNDATION_WORLD_AGGREGATE_TESTS.ps1
 .\RUN_NETWORK_CONTRACT_TESTS.ps1
+.\RUN_N1_ENET_SNAPSHOT_TESTS.ps1
 ```
 
 Runner сначала выполняет headless editor import/parse, затем запускает все

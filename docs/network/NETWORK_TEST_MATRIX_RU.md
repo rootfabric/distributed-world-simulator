@@ -27,12 +27,27 @@
 
 | ID | Проверка | Этап |
 |---|---|---|
-| NS-001 | клиент подключается и получает initial snapshot | N1 |
-| NS-002 | сервер применяет item command | N1 |
-| NS-003 | duplicate operation возвращает прежний результат | N1 |
-| NS-004 | stale revision отклоняется | N1 |
-| NS-005 | stale epoch отклоняется | N1 |
-| NS-006 | disconnect/reconnect восстанавливает snapshot | N2 |
+| NS-001 | реальный bot-client подключается по ENet и получает initial snapshot | N1.1 |
+| NS-001A | handshake согласует protocol, role, capabilities и contract versions | N1.1 |
+| NS-001B | malformed/non-canonical wire packet отклоняется fail-closed | N1.1 |
+| NS-001C | server/client подтверждают одинаковый snapshot checksum | N1.1 |
+| NS-001D | ранний disconnect и timeout завершают сценарий FAIL без process leak | N1.1 |
+| NS-002 | сервер применяет item command | N1.2 |
+| NS-003 | duplicate operation возвращает прежний результат | N1.2 |
+| NS-004 | stale revision отклоняется | N1.2 |
+| NS-005 | stale epoch отклоняется | N1.2 |
+| NS-005A | server/client final snapshot checksum совпадает после delta apply | N1.2 |
+| NS-005B | operation ledger и mutation count остаются равны одному после exact replay | N1.2 |
+| NS-005C | повторный delta ID/checksum не применяется клиентом второй раз | N1.2 |
+| NS-005D | post-domain failure восстанавливает item/container/ledger/aggregate | N1.2 |
+| NS-006 | disconnect/reconnect возвращает replay результата без второй mutation | N1.3 |
+| NS-006A | logical session сохраняется, transport session ротируется | N1.3 |
+| NS-006B | resume ticket связан с client identity, token и tick-window | N1.3 |
+| NS-006C | command fingerprint/checksum conflict отклоняется | N1.3 |
+| NS-006D | replay grant одноразовый и не протекает после serve | N1.3 |
+| NS-006E | bounded ticket/record cache и expiry выполняются детерминированно | N1.3 |
+| NS-006F | два reconnect оставляют handler/mutation/ledger равными одному | N1.3 |
+| NS-006G | клиент применяет replay delta один раз и ограждает duplicate | N1.3 |
 | NS-007 | два клиента видят одинаковую revision | N2 |
 
 ## 3. Directory и lease

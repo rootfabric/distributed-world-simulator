@@ -1,4 +1,54 @@
-Planetary World v16.4.2-network-transport-boundary
+Planetary World v16.5.2-foundation-network-n1
+
+Network N1.3 reconnect and bounded replay:
+- logical session separated from rotated ENet transport sessions
+- strict resume-ticket, session-resume and resume-result DTOs
+- cryptographic opaque resume token and bounded validity window
+- bounded ticket/record caches, TTL, resume limits and deterministic eviction tests
+- lost command-result scenario after authoritative commit
+- same operation_id and command fingerprint replayed after reconnect
+- cached result/delta without a second ItemTransferService invocation
+- two sequential reconnects with three unique transport sessions
+- exactly one mutation, one ledger record and one client delta application
+- conflict, expiry, wrong checksum/client/fingerprint and grant fences
+- tests/network/test_n1_reconnect_replay_contracts.gd
+- tests/network/test_n1_reconnect_replay_processes.gd
+- RUN_N1_RECONNECT_REPLAY_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md
+
+Network N1.2 authoritative remote item command:
+- strict item.move_to_container request and success-result DTOs
+- server-owned Item Registry, Container Registry and WorldEntityAggregate fixture
+- real NetworkCommandEnvelope delivery through ENet between separate Godot processes
+- authority owner/epoch, aggregate revision, item revision, source/destination and session fencing
+- ItemTransferService mutation and exactly one operation-ledger record
+- monotonic aggregate revision and server tick update
+- EntityDeltaEnvelope delivery and client-side snapshot revalidation
+- equal final server/client snapshot checksum
+- exact command replay without a second domain mutation
+- duplicate delta replay fence on the client
+- stale revision rejection after the committed command
+- transactional rollback when aggregate/delta commit cannot complete
+- tests/network/test_n1_remote_item_command_contracts.gd
+- tests/network/test_n1_remote_item_command_processes.gd
+- RUN_N1_REMOTE_ITEM_COMMAND_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md
+
+Network N1.1 ENet handshake and initial snapshot:
+- real ENetMultiplayerPeer server/client adapter behind the N1.0 transport port
+- canonical planet_simulator.network_wire_frame.v1 JSON packet envelope
+- strict handshake, handshake-result and snapshot-ack DTOs with SHA-256 checksums
+- protocol, runtime-role, capability and contract-version negotiation
+- server-assigned session identity independent from entity identity
+- initial EntitySnapshotEnvelope delivery between separate headless Godot processes
+- client revalidation of snapshot schema, checksum, authority owner/epoch and tick
+- strict snapshot acknowledgement bound to session/snapshot/entity/checksum
+- fail-closed malformed/non-canonical packet and early-disconnect handling
+- single-client N1 ENet limit and reliable packet channel
+- tests/network/test_n1_enet_snapshot_contracts.gd
+- tests/network/test_n1_enet_snapshot_processes.gd
+- RUN_N1_ENET_SNAPSHOT_TESTS.ps1
+- docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md
 
 Foundation + Inventory integration:
 - merged feature/ui-i0-inventory-shell (UI-I0, UI-I1, UI-I2) into accepted N0 fix1 base
@@ -389,3 +439,11 @@ Foundation/N0 part 1 boundary hardening fix1:
 - tests/network/test_network_contracts.gd
 - tests/network/test_loopback_command_transport.gd
 - docs/checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md
+
+NETWORK CHECKPOINT N2
+- checkpoint: v16.6.0-network-n2-process-harness
+- build: n2-cross-platform-process-orchestration
+- branch: feature/n2-process-harness
+- manifest: config/testing/network-process-scenarios.v1.json
+- runner: RUN_N2_PROCESS_HARNESS_TESTS.ps1 / .sh
+- next: R3.1 authoritative persistence/recovery

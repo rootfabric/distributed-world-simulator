@@ -1,0 +1,234 @@
+{
+  "schema": "planet_simulator.network_process_harness_manifest.v1",
+  "checkpoint": "v16.6.0-network-n2-process-harness",
+  "build_id": "n2-cross-platform-process-orchestration",
+  "defaults": {
+    "host": "127.0.0.1",
+    "port_range_start": 24000,
+    "port_range_end": 39000,
+    "readiness_timeout_ms": 5000,
+    "scenario_timeout_ms": 30000,
+    "shutdown_timeout_ms": 4000,
+    "poll_delay_ms": 25
+  },
+  "scenarios": [
+    {
+      "id": "n1_snapshot_success",
+      "server_script": "res://tools/network/n1_snapshot_server.gd",
+      "client_script": "res://tools/network/n1_snapshot_client.gd",
+      "server_node_id": "sim-n2-snapshot",
+      "client_node_id": "bot-n2-snapshot",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "SUCCESS",
+      "expected_failure_code": "",
+      "server_args": {},
+      "client_args": {},
+      "server_expect": {
+        "passed": true,
+        "ack_accepted": true
+      },
+      "client_expect": {
+        "passed": true,
+        "ack_accepted": true
+      },
+      "shared_fields": [
+        "session_id",
+        "snapshot_checksum",
+        "entity_id"
+      ],
+      "assertions": [
+        {
+          "source": "client",
+          "actual": "snapshot_revision",
+          "equals": 12
+        }
+      ],
+      "readiness_timeout_ms": 0,
+      "timeout_ms": 0
+    },
+    {
+      "id": "n1_remote_item_success",
+      "server_script": "res://tools/network/n1_remote_item_server.gd",
+      "client_script": "res://tools/network/n1_remote_item_client.gd",
+      "server_node_id": "sim-n2-item",
+      "client_node_id": "bot-n2-item",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "SUCCESS",
+      "expected_failure_code": "",
+      "server_args": {},
+      "client_args": {},
+      "server_expect": {
+        "passed": true,
+        "mutation_count": 1,
+        "operation_ledger_count": 1
+      },
+      "client_expect": {
+        "passed": true,
+        "mutations_applied": 1,
+        "stale_revision_rejected": true
+      },
+      "shared_fields": [
+        "final_snapshot_checksum",
+        "entity_id",
+        "command_item_id"
+      ],
+      "assertions": [
+        {
+          "source": "server",
+          "actual": "destination_contains_item",
+          "equals": true
+        }
+      ],
+      "readiness_timeout_ms": 0,
+      "timeout_ms": 0
+    },
+    {
+      "id": "n1_reconnect_replay_success",
+      "server_script": "res://tools/network/n1_reconnect_replay_server.gd",
+      "client_script": "res://tools/network/n1_reconnect_replay_client.gd",
+      "server_node_id": "sim-n2-reconnect",
+      "client_node_id": "bot-n2-reconnect",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "SUCCESS",
+      "expected_failure_code": "",
+      "server_args": {},
+      "client_args": {},
+      "server_expect": {
+        "passed": true,
+        "mutation_count": 1,
+        "handler_invocation_count": 1,
+        "operation_ledger_count": 1,
+        "replay_served_count": 2
+      },
+      "client_expect": {
+        "passed": true,
+        "mutations_applied": 1,
+        "reconnect_count": 2,
+        "duplicate_delta_replays": 1
+      },
+      "shared_fields": [
+        "final_snapshot_checksum",
+        "logical_session_id",
+        "transport_session_ids"
+      ],
+      "assertions": [
+        {
+          "source": "server",
+          "actual": "unique_transport_sessions",
+          "equals": 3
+        }
+      ],
+      "readiness_timeout_ms": 0,
+      "timeout_ms": 0
+    },
+    {
+      "id": "readiness_timeout_cleanup",
+      "server_script": "res://tools/testing/n2_harness_probe.gd",
+      "client_script": "res://tools/testing/n2_harness_probe.gd",
+      "server_node_id": "probe-server-timeout",
+      "client_node_id": "probe-client-unused",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "EXPECTED_FAILURE",
+      "expected_failure_code": "READINESS_TIMEOUT",
+      "server_args": {
+        "mode": "hang-no-ready"
+      },
+      "client_args": {
+        "mode": "complete"
+      },
+      "server_expect": {},
+      "client_expect": {},
+      "shared_fields": [],
+      "assertions": [],
+      "readiness_timeout_ms": 250,
+      "timeout_ms": 1000
+    },
+    {
+      "id": "client_failure_cleanup",
+      "server_script": "res://tools/testing/n2_harness_probe.gd",
+      "client_script": "res://tools/testing/n2_harness_probe.gd",
+      "server_node_id": "probe-server-ready",
+      "client_node_id": "probe-client-fail",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "EXPECTED_FAILURE",
+      "expected_failure_code": "CLIENT_FAILED",
+      "server_args": {
+        "mode": "ready-hang"
+      },
+      "client_args": {
+        "mode": "fail",
+        "failure-code": "EXPECTED_CLIENT_FAILURE"
+      },
+      "server_expect": {},
+      "client_expect": {},
+      "shared_fields": [],
+      "assertions": [],
+      "readiness_timeout_ms": 1000,
+      "timeout_ms": 1500
+    },
+    {
+      "id": "nonzero_exit_after_terminal",
+      "server_script": "res://tools/testing/n2_harness_probe.gd",
+      "client_script": "res://tools/testing/n2_harness_probe.gd",
+      "server_node_id": "probe-server-complete",
+      "client_node_id": "probe-client-nonzero",
+      "server_ready_state": "LISTENING",
+      "server_terminal_states": [
+        "COMPLETE"
+      ],
+      "client_terminal_states": [
+        "COMPLETE"
+      ],
+      "expected_outcome": "EXPECTED_FAILURE",
+      "expected_failure_code": "PROCESS_EXIT_NONZERO",
+      "server_args": {
+        "mode": "complete",
+        "complete-delay-ms": 1500
+      },
+      "client_args": {
+        "mode": "complete-nonzero",
+        "complete-delay-ms": 250
+      },
+      "server_expect": {
+        "passed": true
+      },
+      "client_expect": {
+        "passed": true
+      },
+      "shared_fields": [],
+      "assertions": [],
+      "readiness_timeout_ms": 4000,
+      "timeout_ms": 6000
+    }
+  ]
+}

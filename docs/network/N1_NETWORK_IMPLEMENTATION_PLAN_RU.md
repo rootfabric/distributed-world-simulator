@@ -3,146 +3,90 @@
 ## Текущая база
 
 ```text
-v16.4.1-foundation-inventory-merge
-main tree: 05161a3d2fb5f36520977ce1b801058aca215a43
+v16.4.2-network-transport-boundary       принят
+v16.5.0-network-n1-snapshot              принят
+v16.5.1-network-n1-remote-item-command   принят
+v16.5.2-foundation-network-n1            candidate N1.3
 ```
-
-Foundation, N0 и Inventory UI-I0–UI-I2 приняты. Следующая цель — доказать один реальный authoritative command path между двумя Godot-процессами.
 
 ## Критический путь
 
 ```text
-N1.0 transport boundary
-→ N1.1 ENet handshake + initial snapshot
-→ N1.2 remote item.move_to_container
-→ N1.3 reconnect + replay
-→ N2 process harness
-→ R3.1 authoritative persistence/recovery
+N1.0 transport boundary                   ACCEPTED
+→ N1.1 ENet handshake + initial snapshot ACCEPTED
+→ N1.2 remote item.move_to_container     ACCEPTED
+→ N1.3 reconnect + bounded replay        CURRENT CANDIDATE
+→ N2 multi-process harness               NEXT
+→ R3.1 persistence/recovery
 → N3 World Directory
 → N4 cross-server handoff
 → N5 ghost replicas/interest management
 ```
 
-## N1.0 — transport boundary
+## N1.3 — reconnect и replay
 
-Checkpoint: `v16.4.2-network-transport-boundary`.
+Checkpoint: `v16.5.2-foundation-network-n1`.
+Ветка: `feature/n1-reconnect-replay`.
 
-Реализуется общий lifecycle, одинаковый для loopback и будущего ENet:
-
-```text
-STOPPED
-→ STARTING/LISTENING или CONNECTING
-→ READY
-→ DRAINING
-→ STOPPED
-```
-
-Аварийное состояние: `FAILED`.
+Сервер коммитит команду, но обрывает соединение до доставки результата. Клиент подключается с новой transport session, предъявляет ограниченный resume-ticket и повторяет прежний `operation_id`. Replay cache возвращает исходные result/delta без повторного вызова domain handler.
 
 Обязательные свойства:
 
-- transport принимает только наследников канонического transport port script;
-- descriptor имеет точную схему без дополнительных полей;
-- send разрешён только в `READY`;
-- message type ограничен allowlist;
-- payload проходит canonical JSON validation;
-- runtime objects отклоняются;
-- размер сообщения и очередь ограничены;
-- lifecycle transitions fail-closed;
-- `drain()` и `stop()` идемпотентны;
-- loopback реализует тот же порт, что позже реализует ENet.
+- logical session не меняется при reconnect;
+- transport session меняется на каждом reconnect;
+- resume ticket связан с client identity, logical session, token и tick-window;
+- command fingerprint, operation ID и last snapshot checksum совпадают;
+- replay grant одноразовый и связан с новой transport session;
+- cache ограничен по tickets, records, TTL и resume count;
+- повторная доставка delta не применяет mutation второй раз;
+- handler, mutation и ledger record остаются равными одному;
+- server/client checksum совпадает после reconnect.
 
-N1.0 не содержит сокетов и не меняет domain API.
+N1.3 намеренно не сохраняет replay cache после рестарта server process. Это обязанность R3.1.
 
-## N1.1 — ENet handshake и initial snapshot
+## N2 — общий multi-process harness
 
-Отдельные процессы:
+Следующая ветка: `feature/n2-process-harness`.
+Target checkpoint: `v16.6.0-network-n2-process-harness`.
 
-```text
-simulation-server ↔ ENet ↔ bot-client
-```
+Один кроссплатформенный runner должен:
 
-Handshake согласует protocol version, capabilities, runtime role и contract versions. После него сервер отправляет строгий `EntitySnapshotEnvelope`, клиент проверяет JSON boundary и checksum.
+1. выбирать свободные порты;
+2. создавать isolated `user://` для каждого процесса;
+3. запускать server/client и ждать readiness;
+4. выполнять handshake, command, disconnect/reconnect и fault scenarios;
+5. контролировать per-state timeout;
+6. собирать stdout/stderr и machine-readable события;
+7. завершать или принудительно очищать дочерние процессы;
+8. формировать JSON и JUnit отчёты.
 
-Checkpoint: `v16.5.0-network-n1-snapshot`.
-
-## N1.2 — удалённая authoritative item command
-
-Первая команда: `item.move_to_container`.
-
-Путь:
-
-```text
-bot-client
-→ NetworkCommandEnvelope
-→ ENet
-→ command gateway
-→ authority/revision validation
-→ ItemTransferService
-→ WorldEntityAggregate
-→ operation ledger
-→ snapshot/delta
-→ bot-client
-```
-
-Клиент не мутирует canonical state самостоятельно. Duplicate delivery выполняет mutation не более одного раза.
-
-Checkpoint: `v16.5.1-network-n1-item-command`.
-
-## N1.3 — reconnect и replay
-
-Используется модель:
+Минимальные сценарии N2:
 
 ```text
-at-least-once delivery
-+ stable operation_id
-+ idempotent execution
-+ replayable terminal result
+handshake_and_snapshot
+remote_item_command
+lost_result_reconnect_replay
+malformed_packet
+stale_revision
+stale_authority
+disconnect_during_handshake
+server_drain
+process_timeout_cleanup
 ```
 
-Добавляются timeout, reconnect, bounded deduplication и graceful drain.
+## R3.1 — persistence/recovery
 
-Checkpoint: `v16.5.2-foundation-network-n1`.
+После N2 replay/dedup records, ledger и authoritative snapshot должны переживать server restart. Повторный `operation_id` после crash возвращает прежний terminal result и не выполняет mutation заново.
 
-## N2 — multi-process harness
+## N3–N5
 
-Runner автоматически выделяет порт, запускает процессы с изолированными `user://`, ждёт readiness, собирает JSONL, завершает процессы и формирует JSON/JUnit report.
+- N3: World Directory, node heartbeat, authority lease/route и epoch fencing.
+- N4: make-before-break cross-server authority handoff.
+- N5: bounded ghost replicas и interest management.
 
-Checkpoint: `v16.6.0-network-n2-process-harness`.
+## Правила веток
 
-## R3.1 — persistence и crash recovery
-
-Сохраняются snapshot, revision, epoch, tick, ledger и replayable command results. Проверяются падения между mutation, ledger, flush и response.
-
-Checkpoint: `v16.7.0-repository-r3.1-authoritative-recovery`.
-
-## N3 — World Directory
-
-Регистрация nodes, heartbeat, authority regions, leases, renewal, route lookup, draining и expired-owner fencing.
-
-Checkpoint: `v16.8.0-network-n3-world-directory`.
-
-## N4 — cross-server handoff
-
-Подключение существующей N0 handoff state machine к двум реальным simulation-server и Directory. Главный инвариант: одновременно не более одного authoritative writer.
-
-Checkpoint: `v16.9.0-network-n4-cross-server-handoff`.
-
-## N5 — ghosts и interest management
-
-Read-only replicas, border overlap, subscriptions, promotion/demotion и bounded update frequency. Начинается только после принятого N4.
-
-## Политика веток
-
-```text
-feature/n1-transport-boundary
-feature/n1-enet-snapshot
-feature/n1-remote-item-command
-feature/n1-reconnect-replay
-feature/n2-process-harness
-feature/r3.1-authoritative-recovery
-feature/n3-world-directory
-feature/n4-authority-handoff
-```
-
-Review fixes непринятого этапа остаются в той же ветке и оформляются `fix(network): ...`.
+- новый этап: отдельная короткая `feature/<stage>-<purpose>` ветка;
+- review fixes непринятого checkpoint: в той же ветке отдельными `fix(...)` commits;
+- новая fix-ветка: только для уже принятого и влитого checkpoint;
+- каждый patch содержит только изменённые файлы и сопровождается branch/apply/commit/test инструкцией.

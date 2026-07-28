@@ -1,3 +1,9 @@
+# Дорожная карта PlanetSimulator
+
+## Текущий сетевой gate — N2
+
+`v16.6.0-network-n2-process-harness` объединяет реальные N1 process fixtures в единый manifest-driven harness. После принятия следующий приоритет — `R3.1 authoritative persistence/recovery`, затем N3 Directory и N4 handoff.
+
 # Дорожная карта к лунному симулятору мечты
 
 ## Видение финальной системы
@@ -390,83 +396,47 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.4.2-network-transport-boundary
+## Текущее состояние: v16.5.2-foundation-network-n1
 
-В одной mainline объединены:
-
-- локальный item/gameplay фундамент R0–R2;
-- server-safe Foundation Part 1–3;
-- canonical `WorldEntityAggregate` и Item Graph v2;
-- строгие N0 contracts, authority fencing и loopback transports;
-- component inventory UI-I0–UI-I2;
-- search/filter/sort, inspector и bounded cell pool;
-- aggregate-aware drop/split/move command path;
-- 55 обязательных headless Godot tests.
-
-Checkpoint:
-
-- `docs/checkpoints/2026-07-28_V16_4_1_FOUNDATION_INVENTORY_MERGE_RU.md`;
-- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
-- `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
-- `docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md`.
-
-## Следующий главный приоритет: N1
-
-Цель N1 — проверить Foundation реальным transport, не расширяя scope:
+Приняты Foundation/N0, Inventory UI-I0–UI-I2, N1.0 transport boundary, N1.1 ENet snapshot и N1.2 authoritative item command. Текущий candidate N1.3 завершает N1 reconnect/replay:
 
 ```text
-one simulation-server
-+ one bot-client
-+ ENet adapter
-+ initial snapshot
-+ one remote item command
-+ snapshot/delta response
-+ checksum equality
+commit item mutation
+→ потеря command result
+→ новая transport session
+→ resume ticket + same operation_id
+→ cached result/delta
+→ mutation/ledger остаются равны 1
 ```
 
-Команда первого среза: `item.move_to_container`. Она уже имеет UUID, revisions,
-operation ledger, aggregate persistence и UI command facade, поэтому проверяет
-сразу domain, transport и replay boundary.
+## Текущий главный приоритет: принятие N1.3
+
+Обязательный gate:
+
+- logical session сохраняется, transport session ротируется;
+- resume ticket и replay cache bounded;
+- command fingerprint, client identity и checksum fenced;
+- два reconnect не вызывают второй domain handler;
+- клиент применяет delta только один раз;
+- полный network/world regression проходит.
 
 ## Затем: N2 → R3.1 → N3 → N4
 
-### N2 — multi-process lab
+### N2 — multi-process harness
 
-- Python process harness;
-- isolated `user://`;
-- restart/reconnect;
-- duplicate delivery;
-- JSON/JUnit;
-- гарантированный cleanup.
+Единый кроссплатформенный runner: динамические порты, isolated `user://`, readiness, timeouts, cleanup, fault scenarios, JSON/JUnit.
 
-### R3.1 — construction vertical slice
+### R3.1 — authoritative persistence/recovery
 
-После появления надёжного удалённого command path:
+Replay/dedup records, ledger и snapshot переживают restart; тот же `operation_id` возвращает прежний terminal result без mutation.
 
-```text
-Foundation
-→ Beacon Mount
-→ Solar Panel
-→ Battery
-→ Charging Dock
-→ simple Power Graph
-→ save/restart
-```
+### N3 — World Directory
 
-### N3 — World Directory и leases
+Node registration, heartbeat, authority lease/route и epoch fencing.
 
-- node registration;
-- authority routes;
-- lease acquire/renew/release;
-- stale epoch rejection;
-- два статических region owner.
+### N4 — cross-server handoff
 
-### N4 — handoff одного объекта
-
-```text
-один камень или маяк
-Server A → Server B
-```
+Make-before-break transfer с одним active authoritative writer.
 
 ## Отложено до N1/N2
 

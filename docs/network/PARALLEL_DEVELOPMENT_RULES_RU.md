@@ -1,6 +1,6 @@
 # Правила параллельной разработки сети и gameplay
 
-## Текущий режим после v16.4.2-network-transport-boundary
+## Текущий режим на v16.5.2-foundation-network-n1
 
 Foundation Gate и N0 завершены. Одновременно разрешены три потока:
 
@@ -10,8 +10,8 @@ Track G — R3.1 Construction Vertical Slice
 Track T — Multi-process Test Infrastructure
 ```
 
-Track N подключает реальный transport к принятым N0 DTO и не меняет доменную
-семантику без отдельной версии протокола. Track G использует те же commands,
+Track N уже проводит одну authoritative item-команду через реальный transport и не меняет доменную
+семантику без отдельной версии протокола. Следующая задача Track N — reconnect/replay. Track G использует те же commands,
 revisions, aggregates и snapshots. Track T обеспечивает process isolation,
 fault injection, reconnect и отчёты.
 
@@ -238,3 +238,7 @@ JSON report
 ## Обязательная branch-инструкция в выдаче агента
 
 Каждая выдача нового кода обязана содержать точные команды создания рабочей ветки, применения patch-архива, commit и запуска тестов. Для нового этапа создаётся короткая `feature/...` ветка от актуального `main`. Review fixes до принятия этапа продолжаются в той же ветке и оформляются `fix(<scope>): ...`; новая ветка для `fix1/fix2` не создаётся. Полные правила: `../../AGENTS.md` и `../agent/AGENT_BRANCH_AND_DELIVERY_RULES_RU.md`.
+
+## Текущая ветка N1.3
+
+`feature/n1-reconnect-replay`; review fixes остаются в ней. После принятия следующий этап создаёт `feature/n2-process-harness`.
