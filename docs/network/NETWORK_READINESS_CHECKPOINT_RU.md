@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к сетевому слою
 
-**Дата ревизии:** 27 июля 2026 года
-**Текущий проверенный checkpoint:** `v16.4.0-foundation-n0`
+**Дата ревизии:** 28 июля 2026 года
+**Текущий проверенный checkpoint:** `v16.4.0-foundation-n0-fix1`
 **Фактическая сетевая стадия:** N0 принят; реальный transport начинается на N1
 
 ## 1. Проверенная база
@@ -9,9 +9,9 @@
 Ревизия архива подтверждает:
 
 - Godot `4.7.1 stable double custom build`;
-- 51 обязательный headless test script;
+- 52 обязательных headless test script;
 - 5 runtime-миров;
-- 160 импортированных GDScript UID-записей;
+- 185 импортированных GDScript UID-записей;
 - единый Simulator Core;
 - полный persistent Item Graph;
 - revisions, operation ledger и payload fingerprint;
@@ -71,6 +71,11 @@ checksums, AuthorityLease/Route, node/space/region descriptors, ghost/client
 routes, handoff ticket/result/state machine, golden fixtures, mutation matrix и
 JSON loopback для command и replication paths.
 
+Fix1 закрывает post-review обходы: owner не меняется при прежнем epoch,
+`state_revision` и `server_tick` не откатываются, delta path не теряет пустые
+сегменты, а kernel принимает только точные port scripts с валидным descriptor и
+повторно проверенным внутренним snapshot.
+
 До N1 отсутствуют намеренно:
 
 - ENet/WebSocket adapter;
@@ -115,10 +120,10 @@ Snapshot не содержит `NodePath`, `RID`, `Resource`, `Callable` и scen
 
 Сетевой фундамент N0 принят. Следующий этап — N1: один authoritative server, bot client и реальный transport adapter.
 
-Foundation Gate и N0 завершены в одном принятом checkpoint:
+Foundation Gate и N0 завершены в принятом исправленном checkpoint:
 
 ```text
-v16.4.0-foundation-n0
+v16.4.0-foundation-n0-fix1
 ```
 
 Подробности:
@@ -126,6 +131,7 @@ v16.4.0-foundation-n0
 - `docs/plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
 - `docs/network/N0_NETWORK_CONTRACTS_PLAN_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`.
+- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`.
 
 ## 6. После N0
 

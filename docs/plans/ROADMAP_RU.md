@@ -390,7 +390,7 @@
 Каждый этап должен завершаться рабочим вертикальным срезом.
 
 
-## Текущее состояние: v16.4.0-foundation-n0
+## Текущее состояние: v16.4.0-foundation-n0-fix1
 
 Этапы R0–R2 сформировали локальный gameplay-фундамент, а Foundation Part 1–3
 закрыли обязательную архитектурную подготовку к настоящему сетевому runtime:
@@ -407,16 +407,20 @@
 - canonical JSON, checksums, golden fixtures и mutation matrix;
 - loopback command и replication transports;
 - pure kernel ports для EntityRegistry и repository;
-- 51 обязательный headless regression test.
+- 52 обязательных headless regression test;
+- post-review fencing для owner/epoch, revision и server tick;
+- canonical delta paths без пустых сегментов;
+- exact-script kernel ports с повторной проверкой внутреннего состояния.
 
 Checkpoint и контракты:
 
+- `docs/checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
 - `docs/checkpoints/2026-07-27_V16_4_0_FOUNDATION_N0_RU.md`;
 - `docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`;
 - `docs/contracts/WORLD_ENTITY_AGGREGATE_V1_RU.md`;
 - `docs/contracts/ITEM_GRAPH_V2_RU.md`.
 
-N0 завершён без реальных сокетов. Контракты authority lease/route и handoff
+N0 завершён и усилен post-review fix1 без реальных сокетов. Контракты authority lease/route и handoff
 являются pure-domain семантикой; исполняемый World Directory и перенос между
 процессами начнутся на N3/N4.
 

@@ -1,11 +1,12 @@
 # Дорожная карта бесшовного сетевого мира PlanetSimulator
 
-## Статус на checkpoint v16.4.0-foundation-n0
+## Статус на checkpoint v16.4.0-foundation-n0-fix1
 
 Foundation Gate и N0 приняты. В проекте уже существуют server-safe runtime,
 `SimulationKernel`, `WorldEntityAggregate`, строгие versioned DTO, authority
 lease/route contracts, handoff state machine, golden fixtures и loopback
-command/replication paths.
+command/replication paths. Fix1 дополнительно закрывает owner/epoch, revision/tick
+fencing, неканонические delta paths и поддельные kernel ports.
 
 Следующий исполняемый сетевой этап — N1: один authoritative Godot server,
 отдельный bot client и реальный transport adapter.
@@ -14,6 +15,7 @@ command/replication paths.
 
 - `../plans/V16_4_FOUNDATION_GATE_PLAN_RU.md`;
 - `N0_NETWORK_CONTRACTS_PLAN_RU.md`;
+- `../checkpoints/2026-07-28_V16_4_0_FOUNDATION_N0_FIX1_RU.md`;
 - `../checkpoints/2026-07-27_V16_3_FOUNDATION_AND_NETWORK_CHECKPOINT_RU.md`.
 
 
@@ -41,7 +43,7 @@ XL  — отдельная программа работ
 ## N0 — сетевые контракты без сети
 
 **Сложность:** M
-**Статус:** выполнено в `v16.4.0-foundation-n0`.
+**Статус:** выполнено в `v16.4.0-foundation-n0`, усилено в `v16.4.0-foundation-n0-fix1`.
 
 ### Реализация
 
