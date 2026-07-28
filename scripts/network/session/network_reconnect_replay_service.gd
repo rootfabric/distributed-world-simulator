@@ -10,6 +10,7 @@ const DeltaScript = preload("res://scripts/network/contracts/entity_delta_envelo
 const SnapshotScript = preload("res://scripts/network/contracts/entity_snapshot_envelope.gd")
 
 const SCHEMA: String = "planet_simulator.network_reconnect_replay_service.v1"
+const PERSISTENCE_SCHEMA: String = "planet_simulator.network_reconnect_replay_state.v1"
 
 var _max_tickets: int = 8
 var _max_records: int = 32
@@ -160,6 +161,7 @@ func record_completed_operation(
 		"result": result.duplicate(true),
 		"delta": delta.duplicate(true),
 		"final_snapshot": final_snapshot.duplicate(true),
+		"base_snapshot": base_snapshot.duplicate(true),
 		"base_snapshot_checksum": String(base_snapshot["checksum"]),
 		"completed_tick": completed_tick,
 		"expires_tick": completed_tick + _record_ttl_ticks,
@@ -258,6 +260,191 @@ func serve_replay(transport_session_id: String, command: Dictionary, current_tic
 		"final_snapshot": record["final_snapshot"].duplicate(true),
 		"logical_session_id": String(record["logical_session_id"]),
 	})
+
+
+func to_dict() -> Dictionary:
+	var ticket_rows: Array = []
+	var ticket_ids: Array = _tickets.keys()
+	ticket_ids.sort()
+	for ticket_id_value in ticket_ids:
+		var ticket_id: String = String(ticket_id_value)
+		var stored: Dictionary = _tickets[ticket_id]
+		ticket_rows.append({
+			"sequence": int(stored.get("sequence", 0)),
+			"ticket": Dictionary(stored.get("ticket", {})).duplicate(true),
+			"resume_count": int(stored.get("resume_count", 0)),
+		})
+	var record_rows: Array = []
+	var operation_ids: Array = _records.keys()
+	operation_ids.sort()
+	for operation_id_value in operation_ids:
+		record_rows.append(Dictionary(_records[operation_id_value]).duplicate(true))
+	return {
+		"schema": PERSISTENCE_SCHEMA,
+		"max_tickets": _max_tickets,
+		"max_records": _max_records,
+		"ticket_ttl_ticks": _ticket_ttl_ticks,
+		"record_ttl_ticks": _record_ttl_ticks,
+		"max_resumes_per_ticket": _max_resumes_per_ticket,
+		"sequence": _sequence,
+		"ticket_evictions": _ticket_evictions,
+		"record_evictions": _record_evictions,
+		"resume_accepts": _resume_accepts,
+		"resume_rejects": _resume_rejects,
+		"replay_serves": _replay_serves,
+		"tickets": ticket_rows,
+		"records": record_rows,
+	}
+
+
+func load_dict(value: Dictionary, current_tick: int = -1) -> Dictionary:
+	var fields: Array[String] = [
+		"schema", "max_tickets", "max_records", "ticket_ttl_ticks", "record_ttl_ticks",
+		"max_resumes_per_ticket", "sequence", "ticket_evictions", "record_evictions",
+		"resume_accepts", "resume_rejects", "replay_serves", "tickets", "records",
+	]
+	var exact: Dictionary = UtilsScript.validate_exact_fields(value, fields)
+	if not bool(exact.get("success", false)):
+		return _failure("INVALID_REPLAY_STATE_FIELDS")
+	if typeof(value["schema"]) != TYPE_STRING or String(value["schema"]) != PERSISTENCE_SCHEMA:
+		return _failure("UNSUPPORTED_REPLAY_STATE_SCHEMA")
+	for field in [
+		"max_tickets", "max_records", "ticket_ttl_ticks", "record_ttl_ticks",
+		"max_resumes_per_ticket", "sequence", "ticket_evictions", "record_evictions",
+		"resume_accepts", "resume_rejects", "replay_serves",
+	]:
+		if not UtilsScript.is_json_integer(value[field]) or int(value[field]) < 0:
+			return _failure("INVALID_REPLAY_STATE_INTEGER", {"field": field})
+	var staged = get_script().new()
+	var configured: Dictionary = staged.configure(
+		int(value["max_tickets"]),
+		int(value["max_records"]),
+		int(value["ticket_ttl_ticks"]),
+		int(value["record_ttl_ticks"]),
+		int(value["max_resumes_per_ticket"])
+	)
+	if not bool(configured.get("success", false)):
+		return configured
+	if typeof(value["tickets"]) != TYPE_ARRAY or typeof(value["records"]) != TYPE_ARRAY:
+		return _failure("INVALID_REPLAY_STATE_ROWS")
+	if value["tickets"].size() > staged._max_tickets or value["records"].size() > staged._max_records:
+		return _failure("REPLAY_STATE_LIMIT_EXCEEDED")
+	var maximum_sequence: int = 0
+	for row_value in value["tickets"]:
+		if not row_value is Dictionary:
+			return _failure("INVALID_REPLAY_TICKET_ROW")
+		var row: Dictionary = row_value
+		var row_exact: Dictionary = UtilsScript.validate_exact_fields(row, ["sequence", "ticket", "resume_count"])
+		if not bool(row_exact.get("success", false)):
+			return _failure("INVALID_REPLAY_TICKET_ROW")
+		if not UtilsScript.is_json_integer(row["sequence"]) or int(row["sequence"]) < 1:
+			return _failure("INVALID_REPLAY_TICKET_SEQUENCE")
+		if not UtilsScript.is_json_integer(row["resume_count"]) or int(row["resume_count"]) < 0 or int(row["resume_count"]) > staged._max_resumes_per_ticket:
+			return _failure("INVALID_REPLAY_TICKET_COUNT")
+		if typeof(row["ticket"]) != TYPE_DICTIONARY:
+			return _failure("INVALID_REPLAY_TICKET")
+		var ticket: Dictionary = row["ticket"]
+		var ticket_validation: Dictionary = TicketScript.validate(ticket)
+		if not bool(ticket_validation.get("success", false)):
+			return _failure("INVALID_REPLAY_TICKET")
+		var ticket_id: String = String(ticket["ticket_id"])
+		if staged._tickets.has(ticket_id):
+			return _failure("DUPLICATE_REPLAY_TICKET")
+		staged._tickets[ticket_id] = {
+			"sequence": int(row["sequence"]),
+			"ticket": ticket.duplicate(true),
+			"resume_count": int(row["resume_count"]),
+		}
+		maximum_sequence = maxi(maximum_sequence, int(row["sequence"]))
+	for record_value in value["records"]:
+		if not record_value is Dictionary:
+			return _failure("INVALID_REPLAY_RECORD")
+		var record: Dictionary = record_value
+		var record_validation: Dictionary = _validate_persisted_record(record)
+		if not bool(record_validation.get("success", false)):
+			return record_validation
+		var operation_id: String = String(record["operation_id"])
+		if staged._records.has(operation_id):
+			return _failure("DUPLICATE_REPLAY_OPERATION")
+		staged._records[operation_id] = record.duplicate(true)
+		maximum_sequence = maxi(maximum_sequence, int(record["sequence"]))
+	if int(value["sequence"]) < maximum_sequence:
+		return _failure("INVALID_REPLAY_SEQUENCE")
+	staged._sequence = int(value["sequence"])
+	staged._ticket_evictions = int(value["ticket_evictions"])
+	staged._record_evictions = int(value["record_evictions"])
+	staged._resume_accepts = int(value["resume_accepts"])
+	staged._resume_rejects = int(value["resume_rejects"])
+	staged._replay_serves = int(value["replay_serves"])
+	staged._grants.clear()
+	if current_tick >= 0:
+		staged._purge(current_tick)
+	_max_tickets = staged._max_tickets
+	_max_records = staged._max_records
+	_ticket_ttl_ticks = staged._ticket_ttl_ticks
+	_record_ttl_ticks = staged._record_ttl_ticks
+	_max_resumes_per_ticket = staged._max_resumes_per_ticket
+	_max_grants = staged._max_grants
+	_sequence = staged._sequence
+	_tickets = staged._tickets
+	_records = staged._records
+	_grants = {}
+	_ticket_evictions = staged._ticket_evictions
+	_record_evictions = staged._record_evictions
+	_grant_evictions = 0
+	_resume_accepts = staged._resume_accepts
+	_resume_rejects = staged._resume_rejects
+	_replay_serves = staged._replay_serves
+	return _success({"ticket_count": _tickets.size(), "record_count": _records.size()})
+
+
+func _validate_persisted_record(record: Dictionary) -> Dictionary:
+	var fields: Array[String] = [
+		"sequence", "logical_session_id", "client_node_id", "operation_id", "fingerprint",
+		"command", "result", "delta", "final_snapshot", "base_snapshot", "base_snapshot_checksum",
+		"completed_tick", "expires_tick",
+	]
+	var exact: Dictionary = UtilsScript.validate_exact_fields(record, fields)
+	if not bool(exact.get("success", false)):
+		return _failure("INVALID_REPLAY_RECORD_FIELDS")
+	for field in ["sequence", "completed_tick", "expires_tick"]:
+		if not UtilsScript.is_json_integer(record[field]) or int(record[field]) < 0:
+			return _failure("INVALID_REPLAY_RECORD_INTEGER", {"field": field})
+	if int(record["sequence"]) < 1 or int(record["expires_tick"]) <= int(record["completed_tick"]):
+		return _failure("INVALID_REPLAY_RECORD_WINDOW")
+	if not _is_canonical_id(String(record["logical_session_id"])) or not _is_canonical_id(String(record["client_node_id"])):
+		return _failure("INVALID_REPLAY_RECORD_ID")
+	for field in ["command", "result", "delta", "final_snapshot", "base_snapshot"]:
+		if typeof(record[field]) != TYPE_DICTIONARY:
+			return _failure("INVALID_REPLAY_RECORD_SECTION", {"field": field})
+	var command: Dictionary = record["command"]
+	var result: Dictionary = record["result"]
+	var delta: Dictionary = record["delta"]
+	var final_snapshot: Dictionary = record["final_snapshot"]
+	var base_snapshot: Dictionary = record["base_snapshot"]
+	if not bool(CommandScript.validate(command).get("success", false)):
+		return _failure("INVALID_REPLAY_RECORD_COMMAND")
+	if not bool(ResultScript.validate(result).get("success", false)):
+		return _failure("INVALID_REPLAY_RECORD_RESULT")
+	if not bool(DeltaScript.validate(delta).get("success", false)):
+		return _failure("INVALID_REPLAY_RECORD_DELTA")
+	if not bool(SnapshotScript.validate(final_snapshot).get("success", false)) or not bool(SnapshotScript.validate(base_snapshot).get("success", false)):
+		return _failure("INVALID_REPLAY_RECORD_SNAPSHOT")
+	var operation_id: String = String(record["operation_id"])
+	if operation_id != String(command["operation_id"]) or operation_id != String(result["operation_id"]):
+		return _failure("REPLAY_OPERATION_MISMATCH")
+	if String(record["fingerprint"]) != CommandScript.command_fingerprint(command):
+		return _failure("REPLAY_FINGERPRINT_MISMATCH")
+	if String(record["base_snapshot_checksum"]) != String(base_snapshot["checksum"]):
+		return _failure("REPLAY_BASE_CHECKSUM_MISMATCH")
+	if String(result["status"]) != "SUCCEEDED":
+		return _failure("ONLY_SUCCESSFUL_OPERATION_CAN_REPLAY")
+	var applied: Dictionary = DeltaScript.apply_to_snapshot(base_snapshot, delta)
+	if not bool(applied.get("success", false)) or String(applied.get("snapshot", {}).get("checksum", "")) != String(final_snapshot["checksum"]):
+		return _failure("REPLAY_DELTA_SNAPSHOT_MISMATCH")
+	if int(result["result_revision"]) != int(final_snapshot["state_revision"]):
+		return _failure("REPLAY_RESULT_REVISION_MISMATCH")
+	return _success()
 
 
 func get_snapshot() -> Dictionary:

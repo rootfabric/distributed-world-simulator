@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "e569e23740b371d8008bae91dfc777a29e2923a988b87de6582a7b38e9278108",
+  "expected_hash": "f836de0111f1229c662983e854cb9d9bc284726e30e964125a8af0a50d39d98d",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "n2-cross-platform-process-orchestration",
+    "build_id": "r3.1-authoritative-persistence-crash-recovery",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.6.0-network-n2-process-harness",
+    "checkpoint": "v16.7.0-repository-r3.1-authoritative-recovery",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

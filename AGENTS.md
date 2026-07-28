@@ -98,3 +98,12 @@ A task is complete only when it includes:
 - changed-file list;
 - `git diff --check` result;
 - archive with only changed files.
+
+## Current roadmap checkpoint
+
+```text
+base: v16.6.0-network-n2-process-harness
+current candidate: v16.7.0-repository-r3.1-authoritative-recovery
+branch: feature/r3.1-authoritative-recovery
+next branch after acceptance: feature/n3-world-directory
+```

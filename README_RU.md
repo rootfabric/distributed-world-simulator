@@ -1,12 +1,19 @@
-## Текущий checkpoint сети
+## Текущий checkpoint repository/network
 
 ```text
-v16.6.0-network-n2-process-harness
-build: n2-cross-platform-process-orchestration
-branch: feature/n2-process-harness
+v16.7.0-repository-r3.1-authoritative-recovery
+build: r3.1-authoritative-persistence-crash-recovery
+branch: feature/r3.1-authoritative-recovery
 ```
 
-N2 запускает реальные N1 server/client процессы по единому manifest, изолирует `user://`, классифицирует ожидаемые аварии, гарантирует cleanup и формирует JSON/JUnit. Следующий этап — R3.1 authoritative persistence/recovery.
+R3.1 сохраняет authoritative aggregate, Item Graph, operation ledger, completed command records и bounded reconnect replay state в строгом атомарном checkpoint. После crash/restart повтор прежнего `operation_id` возвращает сохранённый результат без второй мутации. Следующий этап — N3 World Directory и authority leases.
+
+Основные документы:
+
+- `docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
+- `docs/checkpoints/2026-07-29_V16_7_0_REPOSITORY_R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
+- `docs/testing/N2_PROCESS_HARNESS_RU.md`;
+- `NETWORK_ROADMAP_RU.md`.
 
 # Planetary World v16.5.2-foundation-network-n1 — завершение N1 reconnect/replay
 

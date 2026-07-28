@@ -155,3 +155,15 @@ stale revision/epoch test
 ```
 
 Handoff-specific тест требуется только для объектов, которые могут пересекать authority boundary.
+
+## R3.1 persistence/recovery additions
+
+| ID | Проверка | Этап |
+|---|---|---|
+| PR-001 | committed checkpoint восстанавливает snapshot/revision/epoch/tick | R3.1 |
+| PR-002 | exact operation replay после restart не вызывает вторую mutation | R3.1 |
+| PR-003 | orphan pending checkpoint не становится active | R3.1 |
+| PR-004 | corrupted active checkpoint отклоняется fail-closed | R3.1 |
+| PR-005 | generation/epoch/revision/tick rollback отклоняется | R3.1 |
+| PR-006 | failed staged recovery не изменяет live state | R3.1 |
+| PR-007 | legacy world.json требует явной migration | R3.1 |

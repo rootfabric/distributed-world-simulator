@@ -54,12 +54,12 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.OFFLINE, "Default role is not offline")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.6.0-network-n2-process-harness", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "n2-cross-platform-process-orchestration", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.6.0-network-n2-process-harness", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "n2-cross-platform-process-orchestration", "Simulator build id is stale")
-	_assert(LunarAppScript.PROJECT_VERSION == "16.6.0-network-n2-process-harness", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "n2-cross-platform-process-orchestration", "Lunar build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.7.0-repository-r3.1-authoritative-recovery", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "r3.1-authoritative-persistence-crash-recovery", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.7.0-repository-r3.1-authoritative-recovery", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "r3.1-authoritative-persistence-crash-recovery", "Simulator build id is stale")
+	_assert(LunarAppScript.PROJECT_VERSION == "16.7.0-repository-r3.1-authoritative-recovery", "Lunar project version is stale")
+	_assert(LunarAppScript.BUILD_ID == "r3.1-authoritative-persistence-crash-recovery", "Lunar build id is stale")
 
 	var unsupported: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=directory-server"]))
 	_assert(not bool(unsupported.get("success", true)), "Unsupported role was accepted")

@@ -551,3 +551,14 @@ N1.2 remote authoritative command   ACCEPTED
 ```
 
 После N4 станет понятно, жизнеспособна ли выбранная архитектура. До этого любые Kubernetes и динамические регионы будут преждевременными.
+
+## Принятый порядок после N2
+
+```text
+N2 process harness                 ACCEPTED
+→ R3.1 authoritative recovery      CURRENT CANDIDATE
+→ N3 World Directory / leases      NEXT
+→ N4 cross-server handoff
+```
+
+R3.1 необходим до Directory и handoff: authority route нельзя безопасно переносить, пока restart текущего writer не восстанавливает revision, epoch, ledger и replay records без повторной мутации.

@@ -18,8 +18,8 @@ const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/enti
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.6.0-network-n2-process-harness"
-const FOUNDATION_BUILD_ID: String = "n2-cross-platform-process-orchestration"
+const FOUNDATION_CHECKPOINT: String = "v16.7.0-repository-r3.1-authoritative-recovery"
+const FOUNDATION_BUILD_ID: String = "r3.1-authoritative-persistence-crash-recovery"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

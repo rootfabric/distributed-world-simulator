@@ -47,7 +47,7 @@ if ($null -eq $Python) { throw "Python 3 is required for the process-level serve
 
 Write-Host "Godot: $Godot"
 Write-Host "Project: $ProjectRoot"
-Write-Host "Checkpoint: v16.6.0-network-n2-process-harness"
+Write-Host "Checkpoint: v16.7.0-repository-r3.1-authoritative-recovery"
 
 Invoke-Step -Name "Editor import and parse" -Action {
     & $Godot --headless --editor --path $ProjectRoot --quit

@@ -2,11 +2,13 @@
 
 Этот файл — точка входа в отдельную сетевую программу проекта.
 
-Текущий статус: `v16.6.0-network-n2-process-harness` (candidate). Полный N1 принят. N2 объединяет реальные ENet-сценарии в единый кроссплатформенный harness с динамическими портами, isolated user-state, fault classification, cleanup и JSON/JUnit отчётами. Следующий этап — R3.1 authoritative persistence/recovery.
+Текущий статус: `v16.7.0-repository-r3.1-authoritative-recovery` (candidate). N2 принят. R3.1 добавляет атомарные authoritative checkpoints, restart recovery и сохранение command/replay dedup без повторной item mutation. Следующий этап — N3 World Directory и authority leases.
 
 ## Основные документы
 
-1. [`docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`](docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md) — текущий N2 candidate.
+1. [`docs/checkpoints/2026-07-29_V16_7_0_REPOSITORY_R3_1_AUTHORITATIVE_RECOVERY_RU.md`](docs/checkpoints/2026-07-29_V16_7_0_REPOSITORY_R3_1_AUTHORITATIVE_RECOVERY_RU.md) — текущий R3.1 candidate.
+2. [`docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`](docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md) — authoritative checkpoint, crash/restart и fail-closed recovery.
+3. [`docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md`](docs/checkpoints/2026-07-29_V16_6_0_NETWORK_N2_PROCESS_HARNESS_RU.md) — принятый N2 harness.
 2. [`docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md`](docs/checkpoints/2026-07-28_V16_5_2_FOUNDATION_NETWORK_N1_RU.md) — принятый полный N1.
 2. [`docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md`](docs/checkpoints/2026-07-28_V16_5_1_NETWORK_N1_REMOTE_ITEM_COMMAND_RU.md) — принятый N1.2 authoritative command.
 3. [`docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md`](docs/checkpoints/2026-07-28_V16_5_0_NETWORK_N1_SNAPSHOT_RU.md) — принятый N1.1 ENet snapshot path.

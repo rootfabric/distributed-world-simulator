@@ -166,3 +166,7 @@ canonical simulation ≠ presentation ≠ transport
 ```
 
 Offline mode собирает слои в одном процессе, но не нарушает эту границу.
+
+## Обновление R3.1 — authoritative restart recovery
+
+Checkpoint `v16.7.0-repository-r3.1-authoritative-recovery` сохраняет канонический aggregate, revision/epoch/tick, Item Graph, ledger, completed command results и reconnect replay records. Commit публикуется через active/previous/pending repository layout. После restart exact `operation_id` возвращает cached terminal result без второй мутации. Orphan pending checkpoint игнорируется, повреждённый active checkpoint отклоняется fail-closed. Следующий gate — N3 Directory/leases.

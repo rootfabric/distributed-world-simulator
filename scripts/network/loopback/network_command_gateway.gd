@@ -6,6 +6,7 @@ const UtilsScript = preload("res://scripts/network/contracts/network_contract_ut
 
 const INVALID_MESSAGE_ID: String = "message/invalid"
 const INVALID_OPERATION_ID: String = "operation/invalid"
+const STATE_SCHEMA: String = "planet_simulator.network_command_gateway_state.v1"
 
 const HANDLER_RESULT_FIELDS: Array[String] = [
 	"success",
@@ -131,6 +132,76 @@ func handle(envelope_value: Dictionary) -> Dictionary:
 	if status in ["SUCCEEDED", "REJECTED"]:
 		_store_validated(operation_id, fingerprint, result)
 	return result
+
+
+func to_dict() -> Dictionary:
+	var rows: Array = []
+	var operation_ids: Array = completed_operations.keys()
+	operation_ids.sort()
+	for operation_id_value in operation_ids:
+		var operation_id: String = String(operation_id_value)
+		var record: Dictionary = Dictionary(completed_operations[operation_id])
+		rows.append({
+			"operation_id": operation_id,
+			"fingerprint": String(record.get("fingerprint", "")),
+			"result": Dictionary(record.get("result", {})).duplicate(true),
+		})
+	return {
+		"schema": STATE_SCHEMA,
+		"default_authority_epoch": default_authority_epoch,
+		"completed_operations": rows,
+	}
+
+
+func load_dict(value: Dictionary) -> Dictionary:
+	var expected_fields: Array[String] = ["schema", "default_authority_epoch", "completed_operations"]
+	var exact: Dictionary = UtilsScript.validate_exact_fields(value, expected_fields)
+	if not bool(exact.get("success", false)):
+		return {"success": false, "error_code": String(exact.get("error_code", "INVALID_GATEWAY_STATE"))}
+	if typeof(value["schema"]) != TYPE_STRING or String(value["schema"]) != STATE_SCHEMA:
+		return {"success": false, "error_code": "UNSUPPORTED_GATEWAY_STATE_SCHEMA"}
+	if not UtilsScript.is_json_integer(value["default_authority_epoch"]) or int(value["default_authority_epoch"]) < 1:
+		return {"success": false, "error_code": "INVALID_GATEWAY_AUTHORITY_EPOCH"}
+	if typeof(value["completed_operations"]) != TYPE_ARRAY:
+		return {"success": false, "error_code": "INVALID_GATEWAY_COMPLETED_OPERATIONS"}
+	var staged: Dictionary = {}
+	for row_value in value["completed_operations"]:
+		if not row_value is Dictionary:
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_ROW"}
+		var row: Dictionary = row_value
+		var row_exact: Dictionary = UtilsScript.validate_exact_fields(row, ["operation_id", "fingerprint", "result"])
+		if not bool(row_exact.get("success", false)):
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_ROW"}
+		if typeof(row["operation_id"]) != TYPE_STRING or String(row["operation_id"]).strip_edges().is_empty():
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_ID"}
+		if typeof(row["fingerprint"]) != TYPE_STRING or not _is_sha256(String(row["fingerprint"])):
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_FINGERPRINT"}
+		if typeof(row["result"]) != TYPE_DICTIONARY:
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_RESULT"}
+		var result: Dictionary = row["result"]
+		var result_validation: Dictionary = ResultEnvelopeScript.validate(result)
+		if not bool(result_validation.get("success", false)):
+			return {"success": false, "error_code": "INVALID_GATEWAY_OPERATION_RESULT"}
+		var operation_id: String = String(row["operation_id"])
+		if String(result["operation_id"]) != operation_id or staged.has(operation_id):
+			return {"success": false, "error_code": "GATEWAY_OPERATION_ID_MISMATCH"}
+		staged[operation_id] = {
+			"fingerprint": String(row["fingerprint"]),
+			"result_revision": int(result["result_revision"]),
+			"result": result.duplicate(true),
+		}
+	default_authority_epoch = int(value["default_authority_epoch"])
+	completed_operations = staged
+	return {"success": true, "operation_count": completed_operations.size()}
+
+
+func _is_sha256(value: String) -> bool:
+	if value.length() != 64 or value != value.to_lower():
+		return false
+	for character in value:
+		if not ((character >= "0" and character <= "9") or (character >= "a" and character <= "f")):
+			return false
+	return true
 
 
 func _resolve_authority_epoch(entity_id: String) -> int:

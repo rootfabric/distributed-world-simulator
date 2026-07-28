@@ -1,34 +1,31 @@
-# Ближайшие итерации после v16.6.0-network-n2-process-harness
+# Ближайшие итерации после v16.7.0-repository-r3.1-authoritative-recovery
 
-## Текущий gate — N2 process harness
+## Текущий gate — R3.1 authoritative recovery
 
-Ветка: `feature/n2-process-harness`.
+R3.1 сохраняет authoritative snapshot, revision/epoch/tick, Item Graph, operation ledger, command dedup и reconnect replay records в атомарном versioned checkpoint. Crash после commit возвращает cached result без второй мутации; orphan pending checkpoint не активируется.
 
-N2 объединяет N1.1–N1.3 process fixtures в один manifest-driven runner:
-
-- динамические UDP-порты;
-- отдельные server/client `user://`;
-- readiness и per-scenario timeout;
-- проверка terminal report и process exit code;
-- гарантированная cleanup-ветка;
-- success и expected-failure сценарии;
-- stdout/stderr, JSON и JUnit.
-
-Acceptance: все сценарии классифицированы точно, после каждого запуска нет живых дочерних процессов, полный сетевой профиль и world regression проходят.
-
-## Следующий этап — R3.1
+## Следующий этап — N3 World Directory
 
 ```text
-branch: feature/r3.1-authoritative-recovery
-target: v16.7.0-repository-r3.1-authoritative-recovery
+branch: feature/n3-world-directory
+checkpoint: v16.8.0-network-n3-world-directory
 ```
 
-R3.1 сохраняет authoritative snapshot, revision/epoch, operation ledger и replay/dedup records. Повторный `operation_id` после server restart должен вернуть прежний terminal result без второй мутации.
+N3 должен реализовать:
 
-После R3.1:
+- регистрацию simulation nodes;
+- heartbeat и health;
+- authority region descriptors;
+- lease issuance/renewal/expiration;
+- route lookup;
+- node draining;
+- fencing старого authority owner по epoch.
+
+Acceptance: два simulation-server регистрируются в Directory, один регион имеет ровно одного writer, клиент получает правильный endpoint, а expired/stale lease больше не разрешает mutation.
+
+После N3:
 
 ```text
-N3 World Directory и authority leases
-→ N4 cross-server authority handoff
-→ N5 ghost replicas и interest management
+N4 cross-process authority handoff
+→ N5 ghost replicas / interest management
 ```

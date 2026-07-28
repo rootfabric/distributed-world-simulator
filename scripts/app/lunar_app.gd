@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.6.0-network-n2-process-harness"
-const BUILD_ID: String = "n2-cross-platform-process-orchestration"
+const PROJECT_VERSION: String = "16.7.0-repository-r3.1-authoritative-recovery"
+const BUILD_ID: String = "r3.1-authoritative-persistence-crash-recovery"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

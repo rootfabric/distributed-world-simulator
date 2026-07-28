@@ -447,3 +447,13 @@ NETWORK CHECKPOINT N2
 - manifest: config/testing/network-process-scenarios.v1.json
 - runner: RUN_N2_PROCESS_HARNESS_TESTS.ps1 / .sh
 - next: R3.1 authoritative persistence/recovery
+
+REPOSITORY CHECKPOINT R3.1
+- checkpoint: v16.7.0-repository-r3.1-authoritative-recovery
+- build: r3.1-authoritative-persistence-crash-recovery
+- branch: feature/r3.1-authoritative-recovery
+- base: v16.6.0-network-n2-process-harness
+- contracts: authoritative checkpoint v1, atomic active/previous/pending repository
+- recovery: Item Graph, WORLD aggregate, operation ledger, command dedup, reconnect replay records
+- runner: RUN_R3_AUTHORITATIVE_RECOVERY_TESTS.ps1
+- next: N3 World Directory and authority leases
