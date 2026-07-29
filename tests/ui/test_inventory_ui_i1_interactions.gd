@@ -71,6 +71,8 @@ func _run() -> void:
 	_assert(external_cell != null, "External panel must render transferred aggregate")
 	external_cell._on_mouse_entered()
 	_assert(screen.tooltip.visible, "Hovering item must show tooltip")
+	_assert(screen.tooltip.top_level and screen.tooltip.z_index > screen.z_index, "Item tooltip must float above the menu instead of inheriting PanelContainer layout")
+	_assert(screen.tooltip.size.x < screen.size.x and screen.tooltip.size.y < screen.size.y, "Item tooltip must not cover the full inventory menu")
 	_assert(screen.tooltip.text_label.text.contains("Масса:") and screen.tooltip.text_label.text.contains("Объём:"), "Tooltip must show unit and total physical properties")
 	_assert(screen.tooltip.text_label.text.contains("Категории:"), "Tooltip must expose definition tags")
 	external_cell._on_mouse_exited()

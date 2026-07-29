@@ -7,6 +7,15 @@ var pinned: bool = false
 var current_item_id: String = ""
 
 
+func _ready() -> void:
+	# InventoryScreen is a PanelContainer and stretches regular Control children
+	# to its content rectangle. A floating tooltip must opt out of that layout.
+	top_level = true
+	z_as_relative = false
+	z_index = 4095
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
 func show_item(cell_data: Dictionary, pin: bool = false) -> void:
 	current_item_id = String(cell_data.get("item_id", ""))
 	pinned = pin
