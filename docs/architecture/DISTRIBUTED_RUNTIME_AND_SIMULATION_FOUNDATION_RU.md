@@ -2,7 +2,7 @@
 
 **Статус:** архитектурное решение A0
 **Документационный checkpoint:** `v16.7.1-architecture-a0-distributed-runtime`
-**Runtime checkpoint candidate:** `v16.8.3-network-t1-multi-peer`
+**Runtime checkpoint candidate:** `v16.8.4-data-plane-b0-message-bus-contracts`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Назначение:** зафиксировать устойчивую основу для self-host, multiplayer, сложных агрегатов, compute workers, сменяемых транспортов и будущего горизонтального масштабирования мира.
 
@@ -877,10 +877,11 @@ Rules возвращают proposals и имеют read/write sets и budgets.
 
 - N0–N2 и R3.1 сохраняются без концептуального переписывания;
 - N3 откладывается до generic aggregate, spatial, multi-peer и bus boundaries;
-- H0 listen-host реализован как current candidate;
-- следующим кодовым этапом становится A1 generic aggregate foundation;
+- H0, A1, S0 и T1 приняты;
+- B0 transport-independent message bus contracts реализован как current candidate;
+- следующим foundation-этапом становится M0 multi-aggregate transactions/outbox;
 - transport, message bus, transactions и compute contracts развиваются отдельными ports;
-- NATS вводится после transport-independent B0;
+- NATS adapter вводится только после принятия transport-independent B0;
 - Population Field строится после aggregate/spatial/transaction foundations;
 - World Directory строится на generic aggregate/shard routing, а не только на `world_item`.
 

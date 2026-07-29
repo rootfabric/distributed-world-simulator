@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.3-network-t1-multi-peer
+runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
@@ -62,15 +62,15 @@ World Directory / Content Registry / other services
 
 ### S0 — cells/scopes/shards
 
-Статус: current candidate. Реализованы stable hierarchical addresses, cell descriptors, explicit shard bindings, neighbour topology и boundary summaries. Spatial index отделён от authority routing.
+Статус: accepted. Реализованы stable hierarchical addresses, cell descriptors, explicit shard bindings, neighbour topology и boundary summaries. Spatial index отделён от authority routing.
 
 ### T1 — multi-peer transport
 
-Статус: next. Listener и peer sessions, per-peer queues, frame v2.
+Статус: accepted. Listener и peer sessions разделены; реализованы strict frame v2, targeted delivery и реальные per-peer outbound queues.
 
 ### B0 — message bus ports
 
-Transport semantics отделены от NATS/ENet adapters.
+Статус: current candidate. Request/reply, events, jobs, replication и bulk transfer выражены отдельными transport-independent ports; NATS/JetStream SDK отсутствуют.
 
 ### M0 — aggregate transactions/outbox
 

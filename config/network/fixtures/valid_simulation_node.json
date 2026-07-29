@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "55e01fbdf1a44ca8719600b1d3fca5f8a3d829c3807647ef46e61287ebc18f0a",
+  "expected_hash": "9f661a94343b18ee05419c71759bd93ecf527022e5fbf1eada638a2c513615d4",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "t1-multi-peer-transport-v2",
+    "build_id": "b0-transport-independent-message-bus-contracts",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.3-network-t1-multi-peer",
+    "checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

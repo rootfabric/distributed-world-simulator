@@ -168,7 +168,7 @@ Handoff-specific тест требуется только для объекто�
 | PR-006 | failed staged recovery не изменяет live state | R3.1 |
 | PR-007 | legacy world.json требует явной migration | R3.1 |
 
-## 11. H0 listen-host gates — implemented candidate
+## 11. H0 listen-host gates — accepted
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -200,7 +200,7 @@ Handoff-specific тест требуется только для объекто�
 | SP-009 | boundary summary revision/tick stream монотонен | S0 |
 | SP-010 | reverse duplicate bidirectional topology link отклоняется | S0 |
 
-## 13. Multi-peer и bus gates
+## 13. Multi-peer и message-bus gates — T1 accepted, B0 candidate
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -217,6 +217,12 @@ Handoff-specific тест требуется только для объекто�
 | BUS-002 | job/event/request semantics нельзя взаимозаменить | B0 |
 | BUS-003 | domain state не содержит subject/channel/broker ID | B0 |
 | BUS-004 | timeout/backpressure result strict and versioned | B0 |
+| BUS-005 | exact request replay не вызывает второй handler call; changed request ID conflict отклоняется | B0 |
+| BUS-006 | event sequence монотонен, exact duplicate идемпотентен, buffered capacity даёт backpressure | B0 |
+| BUS-007 | job claim/ack/retry сохраняет worker fence, attempt limit и delivery identity | B0 |
+| BUS-008 | replication backpressure изолирован per peer и не блокирует соседний peer | B0 |
+| BUS-009 | bulk object проверяет canonical base64, size, SHA-256, capacity и ID conflict | B0 |
+| BUS-010 | direct/routed request-reply и direct/buffered event adapters дают одинаковую application semantics | B0 |
 
 ## 14. Transaction/outbox gates
 
@@ -251,4 +257,3 @@ Handoff-specific тест требуется только для объекто�
 | PF-004 | replay/restart does not create duplicate item | P0 |
 | PF-005 | mass disturbance compacts to patch state | P0 |
 | PF-006 | aggregate delta updates client procedural representation | P0/D1 |
-\n\n## AG — Generic aggregate foundation\n\n| ID | Проверка | Ожидание |\n|---|---|---|\n| AG-01 | DynamicTypeReference exact schema/hash | invalid fields and runtime objects rejected |\n| AG-02 | Aggregate descriptor identity/authority/scope | canonical descriptor accepted |\n| AG-03 | Aggregate snapshot/delta checksum | mutation or stale revision rejected |\n| AG-04 | World item adapter | legacy item invariants preserved |\n| AG-05 | EnvironmentCell adapter | non-item aggregate requires no item/physics/point state |\n| AG-06 | GenericAggregateStore replay | exact replay fenced; conflicting delta ID rejected |\n

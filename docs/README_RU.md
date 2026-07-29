@@ -1,11 +1,13 @@
 # Документация PlanetSimulator
 
-Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_3_NETWORK_T1_MULTI_PEER_RU.md`.
+Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md`.
 
-Runtime-база: `v16.8.3-network-t1-multi-peer`.
+Runtime-база: `v16.8.4-data-plane-b0-message-bus-contracts`.
 
 Ключевые документы текущего направления:
 
+- `checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md`;
+- `architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
 - `checkpoints/2026-07-29_V16_8_3_NETWORK_T1_MULTI_PEER_RU.md`;
 - `architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
 - `architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
@@ -16,7 +18,7 @@ Runtime-база: `v16.8.3-network-t1-multi-peer`.
 - `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
 - `testing/N2_PROCESS_HARNESS_RU.md`.
 
-Следующий кодовый этап: `B0 Transport-independent Message Bus Contracts`.
+Следующий кодовый этап: `M0 Multi-aggregate Transactions and Outbox Foundation`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 

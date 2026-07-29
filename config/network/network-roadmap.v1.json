@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 14,
+  "document_revision": 15,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-29T03:00:00Z",
-  "project_checkpoint": "v16.8.3-network-t1-multi-peer",
-  "runtime_base_checkpoint": "v16.8.3-network-t1-multi-peer",
+  "updated_at_utc": "2026-07-29T05:10:00Z",
+  "project_checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
+  "runtime_base_checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -160,7 +160,7 @@
     {
       "id": "T1",
       "name": "Multi-peer transport v2",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "S0",
         "N1"
@@ -182,17 +182,29 @@
     {
       "id": "B0",
       "name": "Transport-independent message bus contracts",
-      "status": "next",
+      "status": "candidate",
       "depends_on": [
         "T1"
       ],
-      "proposed_checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
-      "branch": "feature/b0-message-bus-contracts"
+      "branch": "feature/b0-message-bus-contracts",
+      "checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
+      "acceptance": "five strict semantic ports preserve canonical DTOs across interchangeable in-memory adapters while timeout, backpressure, duplicate and acknowledgement semantics remain explicit and no concrete broker SDK leaks into application/domain code",
+      "implementation": {
+        "semantic_port_descriptor": "implemented",
+        "bus_operation_result": "implemented",
+        "service_request_reply": "implemented",
+        "event_stream": "implemented",
+        "job_queue": "implemented",
+        "replication_transport": "implemented",
+        "bulk_transfer": "implemented",
+        "composition_root": "implemented",
+        "in_memory_adapters": "implemented"
+      }
     },
     {
       "id": "M0",
       "name": "Multi-aggregate transactions and outbox foundation",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "A1",
         "R3.1",

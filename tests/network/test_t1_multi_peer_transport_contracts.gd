@@ -238,11 +238,11 @@ func _test_project_wiring() -> void:
 	var roadmap = JSON.parse_string(roadmap_text)
 	_assert(roadmap is Dictionary, "Network roadmap is not valid JSON")
 	if roadmap is Dictionary:
-		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.8.3-network-t1-multi-peer", "Network roadmap checkpoint is stale")
+		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.8.4-data-plane-b0-message-bus-contracts", "Network roadmap checkpoint is stale")
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))
-		_assert(String(statuses.get("S0", "")) == "accepted" and String(statuses.get("T1", "")) == "candidate" and String(statuses.get("B0", "")) == "next", "Foundation phase statuses are inconsistent")
+		_assert(String(statuses.get("S0", "")) == "accepted" and String(statuses.get("T1", "")) == "accepted" and String(statuses.get("B0", "")) == "candidate", "Foundation phase statuses are inconsistent")
 	var legacy_boundary: String = FileAccess.get_file_as_string("res://scripts/network/transports/network_transport_boundary.gd")
 	var legacy_port: String = FileAccess.get_file_as_string("res://scripts/network/transports/network_transport_port.gd")
 	_assert(legacy_boundary.contains("planet_simulator.network_transport_boundary.v1") and legacy_port.contains("planet_simulator.network_transport_port.v1"), "T1 replaced accepted N1 transport contracts")

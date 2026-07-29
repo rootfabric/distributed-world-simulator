@@ -19,8 +19,8 @@ const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/wor
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.8.3-network-t1-multi-peer"
-const FOUNDATION_BUILD_ID: String = "t1-multi-peer-transport-v2"
+const FOUNDATION_CHECKPOINT: String = "v16.8.4-data-plane-b0-message-bus-contracts"
+const FOUNDATION_BUILD_ID: String = "b0-transport-independent-message-bus-contracts"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

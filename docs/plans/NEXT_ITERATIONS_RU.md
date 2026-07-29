@@ -1,35 +1,34 @@
-# Ближайшие итерации после T1 Multi-peer Transport v2
+# Ближайшие итерации после B0 Message Bus Contracts
 
 ## Текущая точка
 
 ```text
-runtime checkpoint candidate: v16.8.3-network-t1-multi-peer
-accepted spatial base: v16.8.2-simulation-s0-spatial-substrate
+runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
+accepted transport base: v16.8.3-network-t1-multi-peer
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-branch: feature/t1-multi-peer-transport-v2
+branch: feature/b0-message-bus-contracts
 ```
 
-T1 реализует listener lifecycle отдельно от peer lifecycle, строгие transport events, ProtocolFrame v2, targeted delivery, per-peer backpressure, route generation и реальный ENet listener с двумя клиентами.
+B0 реализует пять независимых semantic ports, строгие versioned results и in-memory adapters без concrete broker SDK.
 
-## Следующий этап после принятия T1
+## Следующий этап после принятия B0
 
 ```text
-B0 Message-bus Contracts
-→ M0 Aggregate Transactions + Outbox
+M0 Aggregate Transactions + Outbox
 → S1 Distributed Compute Contracts
 ```
 
-B0 должен определить semantic ports для request/reply, events, jobs, replication и bulk transfer без зависимости domain-кода от NATS subjects, ENet channels или конкретного broker SDK.
+M0 должен добавить atomic multi-aggregate staging/commit и durable OutboxRecord как часть authoritative repository transaction.
 
 ## Правило фокуса
 
-До принятия T1:
+До принятия B0:
 
-- не начинать NATS adapter;
-- не смешивать authority epoch с route generation;
-- не удалять N1 transport v1;
-- не переносить domain schemas в transport allowlist;
+- не начинать NATS/JetStream adapters;
+- не считать broker ACK authoritative commit;
+- не объединять пять semantic ports в один universal bus;
+- не помещать subjects/channels/broker IDs в domain DTO;
 - не начинать Directory, Population Field или workers;
-- не вводить durable delivery до M0/B2.
+- не вводить durable publication до M0/B2.
 
 Подробности: [`DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).
