@@ -1,3 +1,18 @@
+Planetary World v16.8.2-simulation-s0-spatial-substrate
+
+S0 spatial simulation substrate:
+- stable hierarchical SimulationCellAddress independent from render origin
+- SpatialCellDescriptor with explicit frame, bounds, parent and child capacity
+- AggregateAuthorityAddress kept separate from spatial identity
+- AggregateShardDescriptor binds logical aggregate shards to one or more cells
+- explicit CellNeighbourDescriptor topology for face/edge/corner/portal/parent-child relations
+- checksum-protected monotonic BoundarySummary streams
+- SpatialAggregateIndex supports multiple aggregate kinds and authority owners per cell
+- tests/simulation/test_s0_spatial_substrate_contracts.gd
+- tests/simulation/test_s0_spatial_substrate_integration.gd
+- docs/architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md
+- docs/checkpoints/2026-07-29_V16_8_2_SIMULATION_S0_SPATIAL_SUBSTRATE_RU.md
+
 Planetary World v16.8.1-architecture-a1-generic-aggregate
 
 A1 generic aggregate foundation:

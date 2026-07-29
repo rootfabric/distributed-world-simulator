@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.1-architecture-a1-generic-aggregate`
+**Runtime checkpoint candidate:** `v16.8.2-simulation-s0-spatial-substrate`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -44,6 +44,15 @@
 - crash after commit и crash before commit;
 - fail-closed corruption/rollback handling.
 
+### H0/A1/S0
+
+- single-process listen-host с client replica boundary;
+- generic item/non-item aggregate contracts;
+- stable hierarchical SimulationCellAddress;
+- explicit cell descriptors, shards и neighbour topology;
+- independent spatial and authority addresses;
+- monotonic boundary summaries.
+
 ## 2. К чему база готова
 
 Высокая готовность:
@@ -52,6 +61,7 @@
 - localhost server/client;
 - first listen-host implementation;
 - generic aggregate contracts;
+- spatial cell/shard substrate;
 - transport-independent ports;
 - outbox foundation;
 - local compute-worker contracts.
@@ -60,7 +70,7 @@
 
 - multiple peers;
 - NATS service bus;
-- spatial shards;
+- multi-peer transport;
 - population fields;
 - multi-aggregate transactions.
 

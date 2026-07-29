@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "f4b0ccf6858686ccf7c887d5c8ba2a696228dc5280ed92dc521458b114ac58f6",
+  "expected_hash": "6caa2ee45f71b24e97ec8e9295cf4d04a686e8d3ca41a65dc89701b16a8cf55d",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "a1-generic-aggregate-foundation",
+    "build_id": "s0-spatial-simulation-substrate",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
+    "checkpoint": "v16.8.2-simulation-s0-spatial-substrate",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.1-architecture-a1-generic-aggregate
+runtime checkpoint candidate: v16.8.2-simulation-s0-spatial-substrate
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
@@ -58,15 +58,15 @@ World Directory / Content Registry / other services
 
 ### A1 — generic aggregates
 
-Статус: current candidate. Item entity остаётся существующим path; fields/cells/processes получают отдельные schemas/envelopes, adapters и generic replica store.
+Статус: accepted. Item entity остаётся существующим path; fields/cells/processes получают отдельные schemas/envelopes, adapters и generic replica store.
 
 ### S0 — cells/scopes/shards
 
-Spatial index отделяется от authority routing.
+Статус: current candidate. Реализованы stable hierarchical addresses, cell descriptors, explicit shard bindings, neighbour topology и boundary summaries. Spatial index отделён от authority routing.
 
 ### T1 — multi-peer transport
 
-Listener и peer sessions, per-peer queues, frame v2.
+Статус: next. Listener и peer sessions, per-peer queues, frame v2.
 
 ### B0 — message bus ports
 
