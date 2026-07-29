@@ -140,8 +140,8 @@ func _write_summary(port: int, server: Dictionary, client_a: Dictionary, client_
 	if file != null:
 		file.store_string(JSON.stringify({
 			"schema": "planet_simulator.t1_multi_peer_summary.v1",
-			"checkpoint": "v16.8.5-domain-m0-aggregate-transactions",
-			"build_id": "m0-multi-aggregate-transactions-outbox",
+			"checkpoint": "v16.9.0-simulation-s1-distributed-compute",
+			"build_id": "s1-distributed-compute-contracts",
 			"passed": failures.is_empty(), "port": port,
 			"server": server, "client_a": client_a, "client_b": client_b,
 		}, "  ", true, true) + "\n")

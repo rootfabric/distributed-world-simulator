@@ -240,15 +240,16 @@ Handoff-specific тест требуется только для объекто�
 
 ## 15. Distributed compute gates
 
-| ID | Проверка | Этап |
-|---|---|---|
-| DC-001 | worker input immutable и checksum-bound | S1 |
-| DC-002 | worker не получает repository/registry write port | S1 |
-| DC-003 | same input/package даёт same result hash | S1 |
-| DC-004 | stale proposal rejected without mutation | S1 |
-| DC-005 | undeclared write set rejected | S1 |
-| DC-006 | budget overflow rejected | S1 |
-| DC-007 | duplicate result processed once | S1/B2 |
+| ID | Проверка | Этап | Статус |
+|---|---|---|---|
+| DC-001 | worker input immutable и checksum-bound | S1 | реализовано |
+| DC-002 | worker не получает repository/registry write port | S1 | реализовано |
+| DC-003 | same input/package даёт same result hash | S1 | реализовано |
+| DC-004 | stale proposal rejected without mutation | S1 | реализовано |
+| DC-005 | undeclared write set rejected | S1 | реализовано |
+| DC-006 | operation/output/instruction budgets и non-finite output rejected | S1 | реализовано |
+| DC-007 | exact accepted result processed once within authority runtime | S1 | реализовано |
+| DC-008 | durable result inbox survives authority restart | B2 | запланировано |
 
 ## 16. Population/materialization gates
 

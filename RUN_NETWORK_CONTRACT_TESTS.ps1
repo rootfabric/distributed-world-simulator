@@ -57,6 +57,8 @@ $Tests = @(
     "res://tests/network/test_b0_message_bus_integration.gd",
     "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
     "res://tests/simulation/test_m0_aggregate_transaction_integration.gd",
+    "res://tests/simulation/test_s1_distributed_compute_contracts.gd",
+    "res://tests/simulation/test_s1_distributed_compute_integration.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -70,8 +72,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.8.5-domain-m0-aggregate-transactions"
-    build_id = "m0-multi-aggregate-transactions-outbox"
+    checkpoint = "v16.9.0-simulation-s1-distributed-compute"
+    build_id = "s1-distributed-compute-contracts"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -139,7 +141,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.8.5-domain-m0-aggregate-transactions"
+    Write-Host "Checkpoint: v16.9.0-simulation-s1-distributed-compute"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `

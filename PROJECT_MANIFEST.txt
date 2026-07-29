@@ -1,4 +1,4 @@
-Planetary World v16.8.5-domain-m0-aggregate-transactions
+Planetary World v16.9.0-simulation-s1-distributed-compute
 
 B0 transport-independent message bus contracts:
 - five separate semantic ports: request/reply, events, jobs, replication and bulk
@@ -542,3 +542,16 @@ M0 transaction foundation: scripts/simulation/transactions/
 - invariants: kind adapters validate each snapshot; transaction validators enforce cross-aggregate conservation
 - runner: RUN_M0_AGGREGATE_TRANSACTION_TESTS.ps1 / .sh
 - next: S1 distributed compute jobs and MutationProposal contracts
+
+
+S1 distributed compute foundation: scripts/simulation/compute/
+- checkpoint: v16.9.0-simulation-s1-distributed-compute
+- branch: feature/s1-distributed-compute-contracts
+- contracts: SimulationJobEnvelope, input references, read/write sets, execution budgets and deterministic fingerprints
+- runtime: local compute worker, worker registry, B0 job queue bridge and authority validation
+- boundary: worker receives immutable projected state and never receives authoritative repository or registry write ports
+- commit: accepted MutationProposal is converted into an M0 MutationBatch and committed only by authority
+- fences: stale revision/epoch/tick/hash, unknown capability, undeclared writes, non-finite output and budget overflow
+- replay: exact accepted result returns stable result without a second M0 mutation
+- runner: RUN_S1_DISTRIBUTED_COMPUTE_TESTS.ps1 / .sh
+- next: B1 NATS Core adapter

@@ -54,12 +54,12 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.OFFLINE, "Default role is not offline")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.8.5-domain-m0-aggregate-transactions", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "m0-multi-aggregate-transactions-outbox", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.8.5-domain-m0-aggregate-transactions", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "m0-multi-aggregate-transactions-outbox", "Simulator build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.9.0-simulation-s1-distributed-compute", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "s1-distributed-compute-contracts", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.9.0-simulation-s1-distributed-compute", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "s1-distributed-compute-contracts", "Simulator build id is stale")
 	_assert(LunarAppScript.PROJECT_VERSION == "16.8.5-domain-m0-aggregate-transactions", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "m0-multi-aggregate-transactions-outbox", "Lunar build id is stale")
+	_assert(LunarAppScript.BUILD_ID == "s1-distributed-compute-contracts", "Lunar build id is stale")
 
 
 	var host_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=listen-host"]))
