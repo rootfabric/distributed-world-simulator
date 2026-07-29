@@ -12,6 +12,11 @@ const InventoryUI = preload("res://scripts/items/presentation/item_inventory_ui.
 const GraphPersistence = preload("res://scripts/items/persistence/item_graph_persistence.gd")
 const PlacementContract = preload("res://scripts/items/placement/item_placement_contract.gd")
 const PlacementService = preload("res://scripts/items/placement/item_placement_service.gd")
+const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+
+const RUNTIME_MODE_LEGACY: String = "legacy"
+const RUNTIME_MODE_AUTHORITY: String = "authority"
+const RUNTIME_MODE_REPLICA: String = "replica"
 
 var domain: Dictionary = {}
 var presenter
@@ -35,6 +40,12 @@ var persistence_blocked: bool = false
 var persistence_error: Dictionary = {}
 var last_result: Dictionary = {"success": true, "message": "Готово"}
 var starter_pack_revision: int = 0
+var runtime_mode: String = RUNTIME_MODE_LEGACY
+var network_command_bridge
+var network_replica_revision: int = -1
+var network_replica_checksum: String = ""
+var persistence_enabled: bool = true
+var presentation_enabled: bool = true
 
 
 func setup_runtime(
@@ -46,7 +57,8 @@ func setup_runtime(
 	configured_reference_body_id: String = "",
 	configured_state_key: String = "playground-items",
 	configured_profile_id: String = "playground",
-	enable_ui: bool = true
+	enable_ui: bool = true,
+	runtime_options: Dictionary = {}
 ) -> Dictionary:
 	player = player_reference
 	world_root = world_root_reference
@@ -55,35 +67,56 @@ func setup_runtime(
 	gravity_reference_body_id = configured_reference_body_id
 	state_key = configured_state_key
 	profile_id = configured_profile_id
+	runtime_mode = String(runtime_options.get("mode", RUNTIME_MODE_LEGACY)).strip_edges().to_lower()
+	if runtime_mode not in [RUNTIME_MODE_LEGACY, RUNTIME_MODE_AUTHORITY, RUNTIME_MODE_REPLICA]:
+		return {"success": false, "error_code": "INVALID_ITEM_RUNTIME_MODE"}
+	persistence_enabled = bool(runtime_options.get("persistence_enabled", runtime_mode != RUNTIME_MODE_REPLICA))
+	presentation_enabled = bool(runtime_options.get("presentation_enabled", runtime_mode != RUNTIME_MODE_AUTHORITY))
+	network_command_bridge = runtime_options.get("network_command_bridge")
 	operation_counter = 1
 	operation_session_id = _create_operation_session_id()
 	domain = Factory.create()
 	domain.world_entities.setup({
-		"authority_owner_id": "local-process",
-		"authority_epoch": 1,
+		"authority_owner_id": String(runtime_options.get("authority_owner_id", "local-process")),
+		"authority_epoch": int(runtime_options.get("authority_epoch", 1)),
 	})
 	_register_default_definitions()
-	var store = Factory.create_json_state_store("user://planet_simulator/item_graphs")
 	graph_persistence = GraphPersistence.new()
+	var store = null
+	if persistence_enabled:
+		store = Factory.create_json_state_store(String(runtime_options.get("persistence_root", "user://planet_simulator/item_graphs")))
 	graph_persistence.setup(domain, store, state_key)
 	var loaded := false
 	persistence_blocked = false
 	persistence_error = {}
-	if graph_persistence.has_state():
-		var load_result: Dictionary = graph_persistence.load()
-		loaded = bool(load_result.get("success", false))
-		if loaded:
-			var loaded_metadata: Dictionary = Dictionary(load_result.get("metadata", {}))
-			selected_hotbar_index = clampi(int(loaded_metadata.get("selected_hotbar_index", 0)), 0, 9)
-			starter_pack_revision = int(loaded_metadata.get("starter_pack_revision", 0))
-		else:
-			persistence_blocked = true
-			persistence_error = load_result.duplicate(true)
-	if not loaded:
-		_seed_default_graph(profile_id == "playground")
+	if runtime_mode == RUNTIME_MODE_REPLICA:
+		var initial_snapshot_value = runtime_options.get("initial_graph_snapshot", {})
+		if not initial_snapshot_value is Dictionary or Dictionary(initial_snapshot_value).is_empty():
+			return {"success": false, "error_code": "REPLICA_GRAPH_SNAPSHOT_REQUIRED"}
+		var replica_load: Dictionary = graph_persistence.load_snapshot(Dictionary(initial_snapshot_value))
+		if not bool(replica_load.get("success", false)):
+			return replica_load
+		loaded = true
+		var replica_metadata: Dictionary = Dictionary(replica_load.get("metadata", {}))
+		selected_hotbar_index = clampi(int(replica_metadata.get("selected_hotbar_index", 0)), 0, 9)
+		starter_pack_revision = int(replica_metadata.get("starter_pack_revision", 0))
+		network_replica_revision = int(runtime_options.get("replica_revision", -1))
+		network_replica_checksum = String(runtime_options.get("replica_checksum", ""))
+	else:
+		if graph_persistence.has_state():
+			var load_result: Dictionary = graph_persistence.load()
+			loaded = bool(load_result.get("success", false))
+			if loaded:
+				var loaded_metadata: Dictionary = Dictionary(load_result.get("metadata", {}))
+				selected_hotbar_index = clampi(int(loaded_metadata.get("selected_hotbar_index", 0)), 0, 9)
+				starter_pack_revision = int(loaded_metadata.get("starter_pack_revision", 0))
+			else:
+				persistence_blocked = true
+				persistence_error = load_result.duplicate(true)
+		if not loaded:
+			_seed_default_graph(bool(runtime_options.get("include_demo_world", profile_id == "playground")))
 	# A snapshot stores definitions as well. Re-register runtime definitions after
-	# loading so non-destructive metadata upgrades (placement profiles, icons,
-	# debug grant flags) are available to older saves.
+	# loading so non-destructive metadata upgrades remain available to old saves.
 	_register_default_definitions()
 	_upgrade_legacy_mount_fixture()
 	_ensure_starter_pack()
@@ -91,19 +124,20 @@ func setup_runtime(
 	if not bool(migration_result.get("success", false)):
 		persistence_blocked = true
 		persistence_error = migration_result.duplicate(true)
-	presenter = Presenter.new()
-	presenter.name = "ItemRepresentationSystem"
-	add_child(presenter)
-	presenter.setup(domain.items, world_root, attachment_root, false, domain.mass, gravity_field, physics_frame_id, gravity_reference_body_id, domain.world_entities)
-	presenter.set_interaction_controller(self)
-	placement_service = PlacementService.new()
-	placement_service.name = "ItemPlacementService"
-	add_child(placement_service)
-	placement_service.setup(self, player, world_root)
 	_connect_domain_signals()
-	presenter.synchronize_all()
-	placement_service.synchronize_all()
-	if enable_ui:
+	if presentation_enabled:
+		presenter = Presenter.new()
+		presenter.name = "ItemRepresentationSystem"
+		add_child(presenter)
+		presenter.setup(domain.items, world_root, attachment_root, false, domain.mass, gravity_field, physics_frame_id, gravity_reference_body_id, domain.world_entities)
+		presenter.set_interaction_controller(self)
+		placement_service = PlacementService.new()
+		placement_service.name = "ItemPlacementService"
+		add_child(placement_service)
+		placement_service.setup(self, player, world_root)
+		presenter.synchronize_all()
+		placement_service.synchronize_all()
+	if enable_ui and presentation_enabled:
 		inventory_ui = InventoryUI.new()
 		inventory_ui.name = "ItemInventoryUI"
 		add_child(inventory_ui)
@@ -112,6 +146,10 @@ func setup_runtime(
 	return {
 		"success": true,
 		"loaded": loaded,
+		"runtime_mode": runtime_mode,
+		"network_replica": runtime_mode == RUNTIME_MODE_REPLICA,
+		"persistence_enabled": persistence_enabled,
+		"presentation_enabled": presentation_enabled,
 		"persistence_blocked": persistence_blocked,
 		"persistence_error": persistence_error.duplicate(true),
 		"item_count": domain.items.items.size(),
@@ -138,6 +176,8 @@ func toggle_inventory() -> Dictionary:
 
 
 func set_inventory_visible(value: bool) -> void:
+	if not value and inventory_ui != null and not String(inventory_ui.external_container_id).is_empty():
+		close_external_container()
 	inventory_open = value
 	if inventory_ui != null:
 		if not value:
@@ -152,6 +192,12 @@ func set_inventory_visible(value: bool) -> void:
 
 
 func select_hotbar(index: int) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"inventory.select_hotbar",
+			{"selected_hotbar_index": posmod(index, 10)},
+			"select_hotbar"
+		)
 	selected_hotbar_index = posmod(index, 10)
 	_refresh_ui()
 	save_graph()
@@ -253,6 +299,18 @@ func move_item_quantity_to_container(
 	target_slot_index: int = -1,
 	target_item_id: String = ""
 ) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"item.move_to_container",
+			{
+				"item_id": item_id,
+				"quantity": requested_quantity,
+				"target_container_id": target_container_id,
+				"target_slot_index": target_slot_index,
+				"target_item_id": target_item_id,
+			},
+			"move_to_container"
+		)
 	var item = get_item(item_id)
 	if item == null:
 		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
@@ -357,11 +415,7 @@ func interact_world_item(item_id: String) -> Dictionary:
 	if item == null:
 		return _remember({"success": false, "message": "Предмет уже недоступен"})
 	if item.owns_container():
-		var container_id := String(item.get_owned_container_id())
-		if inventory_ui != null:
-			inventory_ui.open_external_container(container_id)
-		set_inventory_visible(true)
-		return _remember({"success": true, "container_id": container_id, "message": "Открыт контейнер"})
+		return open_container(String(item.get_owned_container_id()))
 	return pickup_world_item(item_id)
 
 
@@ -391,6 +445,8 @@ func get_world_item_transform(item_id: String) -> Transform3D:
 
 
 func pickup_world_item(item_id: String) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation("item.pickup", {"item_id": item_id}, "pickup")
 	var item = get_item(item_id)
 	if item == null:
 		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
@@ -420,6 +476,19 @@ func drop_item_quantity(
 	quantity: int,
 	override_transform: Transform3D = Transform3D.IDENTITY
 ) -> Dictionary:
+	if _uses_network_commands():
+		var network_transform := override_transform
+		if network_transform == Transform3D.IDENTITY:
+			network_transform = _default_drop_transform()
+		return _submit_network_operation(
+			"item.drop",
+			{
+				"item_id": item_id,
+				"quantity": quantity,
+				"transform": PlayableStateCodec.create_transform_dto(network_transform),
+			},
+			"drop"
+		)
 	var item = get_item(item_id)
 	if item == null:
 		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
@@ -462,6 +531,12 @@ func drop_item_quantity(
 
 
 func mount_selected_item(assembly_id: String, socket_id: String) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"item.mount",
+			{"assembly_id": assembly_id, "socket_id": socket_id},
+			"mount"
+		)
 	var item_id := get_selected_hotbar_item_id()
 	if item_id.is_empty():
 		return _remember({"success": false, "error_code": "HOTBAR_SLOT_EMPTY", "message": "Поместите маяк в выбранный быстрый слот"})
@@ -490,6 +565,12 @@ func mount_selected_item(assembly_id: String, socket_id: String) -> Dictionary:
 
 
 func detach_socket_to_inventory(assembly_id: String, socket_id: String) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"item.detach",
+			{"assembly_id": assembly_id, "socket_id": socket_id},
+			"detach"
+		)
 	var socket: Dictionary = domain.attachments.get_socket_state(assembly_id, socket_id)
 	var item_id := String(socket.get("item_id", ""))
 	if item_id.is_empty():
@@ -500,6 +581,18 @@ func detach_socket_to_inventory(assembly_id: String, socket_id: String) -> Dicti
 
 
 func open_container(container_id: String) -> Dictionary:
+	if _uses_network_commands():
+		var network_result: Dictionary = _submit_network_operation(
+			"container.open",
+			{"container_id": container_id},
+			"open_container"
+		)
+		if not bool(network_result.get("success", false)):
+			return network_result
+		if inventory_ui != null:
+			inventory_ui.open_external_container(container_id)
+		set_inventory_visible(true)
+		return _remember(network_result)
 	if get_container(container_id) == null:
 		return _remember({"success": false, "error_code": "CONTAINER_NOT_FOUND"})
 	if inventory_ui != null:
@@ -508,7 +601,27 @@ func open_container(container_id: String) -> Dictionary:
 	return _remember({"success": true, "container_id": container_id, "message": "Контейнер открыт"})
 
 
+func close_external_container() -> Dictionary:
+	var container_id: String = (
+		String(inventory_ui.external_container_id)
+		if inventory_ui != null
+		else ""
+	)
+	var result: Dictionary = {"success": true, "container_id": container_id}
+	if _uses_network_commands() and not container_id.is_empty():
+		result = _submit_network_operation(
+			"container.close",
+			{"container_id": container_id},
+			"close_container"
+		)
+	if inventory_ui != null:
+		inventory_ui.close_external_container(false)
+	return _remember(result)
+
+
 func save_graph() -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation("item.save", {}, "save")
 	if graph_persistence == null:
 		return {"success": false, "error_code": "PERSISTENCE_NOT_READY"}
 	if persistence_blocked:
@@ -525,6 +638,8 @@ func save_graph() -> Dictionary:
 
 
 func reload_graph() -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation("item.reload", {}, "reload")
 	var result: Dictionary = graph_persistence.load()
 	if bool(result.get("success", false)):
 		persistence_blocked = false
@@ -534,7 +649,8 @@ func reload_graph() -> Dictionary:
 		starter_pack_revision = int(loaded_metadata.get("starter_pack_revision", starter_pack_revision))
 		_register_default_definitions()
 		_upgrade_legacy_mount_fixture()
-		presenter.synchronize_all()
+		if presenter != null:
+			presenter.synchronize_all()
 		if placement_service != null:
 			placement_service.synchronize_all()
 		_refresh_ui()
@@ -608,6 +724,10 @@ func create_debug_snapshot() -> Dictionary:
 		"operation_session_id": operation_session_id,
 		"persistence_blocked": persistence_blocked,
 		"persistence_error": persistence_error.duplicate(true),
+		"runtime_mode": runtime_mode,
+		"network_replica_revision": network_replica_revision,
+		"network_replica_checksum": network_replica_checksum,
+		"direct_authority_references": 0,
 		"items": domain.items.to_dict(),
 		"containers": domain.containers.to_dict(),
 		"attachments": domain.attachments.to_dict(),
@@ -734,13 +854,19 @@ func place_selected_item_from_view() -> Dictionary:
 
 
 func place_selected_item_at_transform(target_transform: Transform3D) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"item.place",
+			{"transform": PlayableStateCodec.create_transform_dto(target_transform)},
+			"place"
+		)
 	var source_item_id := get_selected_hotbar_item_id()
 	var source = get_item(source_item_id)
 	if source == null:
 		return _remember({"success": false, "error_code": "HOTBAR_SLOT_EMPTY", "message": "Выберите устанавливаемый предмет в панели 1–0"})
 	var definition = get_definition(source.definition_id)
 	var profile := PlacementContract.get_profile(definition)
-	if profile.is_empty() or placement_service == null or not placement_service.can_place_definition(definition):
+	if profile.is_empty() or (placement_service != null and not placement_service.can_place_definition(definition)):
 		return _remember({"success": false, "error_code": "ITEM_NOT_PLACEABLE", "message": "Этот предмет не поддерживает установку"})
 	var relation := Relations.world(target_transform, Vector3.ZERO, physics_frame_id)
 	var transfer_result: Dictionary
@@ -767,8 +893,10 @@ func place_selected_item_at_transform(target_transform: Transform3D) -> Dictiona
 	placed.components = components
 	placed.revision += 1
 	domain.attachments.ensure_socket(assembly_id, placed_item_id, socket_id, socket_profile.get("accepted_tags", []))
-	presenter.synchronize_item(placed_item_id)
-	placement_service.synchronize_item(placed_item_id)
+	if presenter != null:
+		presenter.synchronize_item(placed_item_id)
+	if placement_service != null:
+		placement_service.synchronize_item(placed_item_id)
 	_refresh_ui()
 	save_graph()
 	gameplay_state_changed.emit()
@@ -800,6 +928,12 @@ func list_debug_item_catalog() -> Array[Dictionary]:
 
 
 func grant_debug_item(definition_id: String, total_quantity: int) -> Dictionary:
+	if _uses_network_commands():
+		return _submit_network_operation(
+			"item.grant_debug",
+			{"definition_id": definition_id, "quantity": total_quantity},
+			"grant_debug"
+		)
 	var definition = get_definition(definition_id)
 	if definition == null:
 		return _remember({"success": false, "error_code": "ITEM_DEFINITION_NOT_FOUND", "message": "Неизвестный предмет: %s" % definition_id})
@@ -837,7 +971,8 @@ func grant_debug_item(definition_id: String, total_quantity: int) -> Dictionary:
 		inventory.assign_item(created.instance_id)
 		remaining -= chunk
 	inventory.revision += 1
-	presenter.synchronize_all()
+	if presenter != null:
+		presenter.synchronize_all()
 	if placement_service != null:
 		placement_service.synchronize_all()
 	_refresh_ui()
@@ -976,6 +1111,116 @@ func _on_quantity_changed(item_id: String, _old: int, new_quantity: int) -> void
 	if placement_service != null:
 		placement_service.synchronize_all()
 	_refresh_ui()
+
+
+func create_network_graph_snapshot() -> Dictionary:
+	if graph_persistence == null:
+		return {}
+	var result: Dictionary = graph_persistence.create_snapshot_result({
+		"profile_id": profile_id,
+		"selected_hotbar_index": selected_hotbar_index,
+		"player_inventory_id": player_inventory_id,
+		"player_hotbar_id": player_hotbar_id,
+		"starter_pack_revision": starter_pack_revision,
+	})
+	return (
+		Dictionary(result.get("snapshot", {})).duplicate(true)
+		if bool(result.get("success", false))
+		else {}
+	)
+
+
+func apply_network_graph_snapshot(
+	graph_snapshot: Dictionary,
+	replica_revision: int = -1,
+	replica_checksum: String = ""
+) -> Dictionary:
+	if runtime_mode != RUNTIME_MODE_REPLICA or graph_persistence == null:
+		return {"success": false, "error_code": "ITEM_CONTROLLER_NOT_REPLICA"}
+	var load_result: Dictionary = graph_persistence.load_snapshot(graph_snapshot)
+	if not bool(load_result.get("success", false)):
+		return load_result
+	_register_default_definitions()
+	var loaded_metadata: Dictionary = Dictionary(load_result.get("metadata", {}))
+	selected_hotbar_index = clampi(
+		int(loaded_metadata.get("selected_hotbar_index", selected_hotbar_index)),
+		0,
+		9
+	)
+	starter_pack_revision = int(
+		loaded_metadata.get("starter_pack_revision", starter_pack_revision)
+	)
+	network_replica_revision = replica_revision
+	network_replica_checksum = replica_checksum
+	if presenter != null:
+		presenter.synchronize_all()
+	if placement_service != null:
+		placement_service.synchronize_all()
+	_refresh_ui()
+	gameplay_state_changed.emit()
+	return {
+		"success": true,
+		"item_count": domain.items.items.size(),
+		"container_count": domain.containers.containers.size(),
+		"replica_revision": network_replica_revision,
+		"replica_checksum": network_replica_checksum,
+	}
+
+
+func _uses_network_commands() -> bool:
+	return runtime_mode == RUNTIME_MODE_REPLICA and network_command_bridge != null
+
+
+func _submit_network_operation(
+	command_type: String,
+	payload: Dictionary,
+	operation_prefix: String
+) -> Dictionary:
+	if not _uses_network_commands():
+		return _remember({
+			"success": false,
+			"error_code": "NETWORK_COMMAND_BRIDGE_REQUIRED",
+		})
+	if not network_command_bridge.has_method("submit_item_command"):
+		return _remember({
+			"success": false,
+			"error_code": "INVALID_NETWORK_COMMAND_BRIDGE",
+		})
+	var result_value = network_command_bridge.call(
+		"submit_item_command",
+		command_type,
+		payload.duplicate(true),
+		_operation(operation_prefix)
+	)
+	if not result_value is Dictionary:
+		return _remember({
+			"success": false,
+			"error_code": "INVALID_NETWORK_COMMAND_RESULT",
+		})
+	var result: Dictionary = Dictionary(result_value).duplicate(true)
+	var snapshot_value = result.get("replica_snapshot", {})
+	if snapshot_value is Dictionary and not Dictionary(snapshot_value).is_empty():
+		var components_value = Dictionary(snapshot_value).get("domain_components", {})
+		var graph_value = (
+			Dictionary(components_value).get("item_graph", {})
+			if components_value is Dictionary
+			else {}
+		)
+		if graph_value is Dictionary and not Dictionary(graph_value).is_empty():
+			var apply_result: Dictionary = apply_network_graph_snapshot(
+				Dictionary(graph_value),
+				int(Dictionary(snapshot_value).get("state_revision", -1)),
+				String(Dictionary(snapshot_value).get("checksum", ""))
+			)
+			if not bool(apply_result.get("success", false)):
+				return _remember({
+					"success": false,
+					"error_code": "REPLICA_GRAPH_APPLY_FAILED",
+					"cause": apply_result,
+				})
+	result.erase("replica_snapshot")
+	result.erase("network_result")
+	return _remember(result)
 
 
 func _after_operation(result: Dictionary, success_message: String = "") -> Dictionary:

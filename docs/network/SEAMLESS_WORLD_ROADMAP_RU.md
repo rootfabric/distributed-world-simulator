@@ -3,13 +3,14 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
-status: accepted
+accepted checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
+current candidate: v16.9.1-runtime-h1-playable-listen-host
+status: H1 candidate
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-next gate: H1 playable listen-host
+next gate after acceptance: H2 dedicated single-player
 ```
 
-N0–S1 приняты. Контракты multi-peer, spatial shards, transactions/outbox и compute proposals существуют, но полноценный graphical gameplay ещё не переведён на client/server boundary.
+N0–S1 приняты. H1 переводит основной graphical gameplay на embedded client/server boundary и находится в статусе candidate; H2–H3 должны доказать тот же путь в отдельных процессах и для двух игроков.
 
 ## Целевая архитектура
 

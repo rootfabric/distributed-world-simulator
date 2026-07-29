@@ -1,9 +1,10 @@
-# Ближайшие итерации после принятия S1
+# Ближайшие итерации: приёмка H1 и переход к H2
 
 ## Текущая точка
 
 ```text
 accepted checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
+candidate checkpoint: v16.9.1-runtime-h1-playable-listen-host
 accepted domain base: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 architecture base: v16.7.1-architecture-a0-distributed-runtime
@@ -15,12 +16,12 @@ S1 завершил foundation-последовательность:
 A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
 ```
 
-Следующая задача — доказать принятые контракты на полноценной graphical gameplay vertical slice.
+H1 уже реализует graphical listen-host vertical slice и ожидает независимой приёмки. Следующая кодовая задача после PASS — H2 с отдельным headless server и graphical client.
 
 ## Утверждённый ближайший порядок
 
 ```text
-H1 — Playable listen-host
+H1 — Playable listen-host (candidate)
 → H2 — Dedicated server + 1 graphical client
 → H3 — Dedicated server + 2 graphical clients
 → A2 — Networked gameplay architecture checkpoint
@@ -34,11 +35,12 @@ H1 — Playable listen-host
 → N6 — Ghosts + interest management
 ```
 
-## H1 — текущий следующий gate
+## H1 — текущий candidate gate
 
 ```text
-proposed checkpoint: v16.9.1-runtime-h1-playable-listen-host
+checkpoint: v16.9.1-runtime-h1-playable-listen-host
 branch: feature/h1-playable-listen-host
+status: candidate
 ```
 
 H1 переводит основной F5/gameplay path на embedded authority + graphical client. Movement, inventory, containers, pickup/drop, stack/split и mount interactions должны проходить через command/result/delta и отображаться из client replicas.

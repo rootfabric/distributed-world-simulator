@@ -1,6 +1,7 @@
 # PlanetSimulator — текущая distributed runtime roadmap
 
 Текущий принятый checkpoint: `v16.9.0-simulation-s1-distributed-compute-fix1`.
+Текущий кандидат: `v16.9.1-runtime-h1-playable-listen-host`.
 
 ```text
 N0–N2 accepted
@@ -20,7 +21,7 @@ S1 accepted
 ```text
 S1 ACCEPTED
 │
-├─ H1  Playable listen-host
+├─ H1  Playable listen-host — candidate
 ├─ H2  Dedicated server + 1 graphical client
 ├─ H3  Dedicated server + 2 graphical clients
 ├─ A2  Networked gameplay architecture checkpoint

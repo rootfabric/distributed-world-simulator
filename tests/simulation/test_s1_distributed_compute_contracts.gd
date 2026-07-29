@@ -18,6 +18,8 @@ const ResultScript = preload("res://scripts/simulation/compute/simulation_job_re
 const RULE_HASH := "8e4e34193f8d28f82f391f67c7e9984e2497c6dd8e9771cc18c23bbeb441a5de"
 const CHECKPOINT := "v16.9.0-simulation-s1-distributed-compute-fix1"
 const BUILD_ID := "s1-distributed-compute-contracts-fix1"
+const CURRENT_CHECKPOINT := "v16.9.1-runtime-h1-playable-listen-host"
+const CURRENT_BUILD_ID := "h1-playable-listen-host"
 
 var assertions := 0
 var failures: Array[String] = []
@@ -189,18 +191,18 @@ func _test_project_wiring() -> void:
 	_assert(not s1_runner.is_empty(), "S1 PowerShell runner missing")
 	_assert(s1_runner.contains("Write-JsonFileAtomically") and s1_runner.contains("PSNativeCommandUseErrorActionPreference"), "S1 runner lacks atomic/stderr-safe summary")
 	_assert(network_runner.contains("test_s1_distributed_compute_contracts.gd") and network_runner.contains("test_s1_distributed_compute_integration.gd"), "Network runner does not include S1")
-	_assert(network_runner.contains("Foundation N0 through S1"), "Network runner final status still ends at M0")
+	_assert(network_runner.contains("Foundation N0 through H1"), "Network runner final status still ends at M0")
 	_assert(world_runner.contains("test_s1_distributed_compute_contracts.gd") and world_runner.contains("test_s1_distributed_compute_integration.gd"), "World runner does not include S1")
 	_assert(architecture.contains("issued job") and architecture.contains("job_checksum") and architecture.contains("M0"), "S1 architecture does not document issued-job boundary")
 	var roadmap = JSON.parse_string(roadmap_text)
 	_assert(roadmap is Dictionary, "Roadmap JSON invalid")
 	if roadmap is Dictionary:
-		_assert(String(roadmap.get("project_checkpoint", "")) == CHECKPOINT, "Roadmap checkpoint stale")
+		_assert(String(roadmap.get("project_checkpoint", "")) == CURRENT_CHECKPOINT, "Roadmap checkpoint stale")
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))
 		_assert(String(statuses.get("M0", "")) == "accepted" and String(statuses.get("S1", "")) == "accepted", "M0/S1 roadmap statuses inconsistent")
-	_assert(s1_runner.contains(CHECKPOINT) and s1_runner.contains(BUILD_ID), "S1 runner checkpoint/build ID stale")
+	_assert(s1_runner.contains(CURRENT_CHECKPOINT) and s1_runner.contains(CURRENT_BUILD_ID), "S1 runner checkpoint/build ID stale")
 	var sources := [
 		"res://scripts/simulation/compute/local_compute_worker_adapter.gd",
 		"res://scripts/simulation/compute/distributed_compute_authority.gd",

@@ -3,8 +3,8 @@
   "document_revision": 18,
   "created_at_utc": "2026-07-27T00:00:00Z",
   "updated_at_utc": "2026-07-29T12:16:00Z",
-  "project_checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
-  "runtime_base_checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
+  "project_checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
+  "runtime_base_checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -269,7 +269,7 @@
     {
       "id": "H1",
       "name": "Playable listen-host graphical vertical slice",
-      "status": "next",
+      "status": "candidate",
       "depends_on": [
         "S1",
         "H0",
@@ -278,12 +278,39 @@
       ],
       "checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
       "branch": "feature/h1-playable-listen-host",
-      "acceptance": "default graphical launch uses embedded authority and client replicas for player movement, inventory, containers and world interactions without direct client-domain access"
+      "acceptance": "default graphical launch uses embedded authority and client replicas for player movement, inventory, containers and world interactions without direct client-domain access",
+      "implementation": {
+        "default_listen_host_launch": "implemented",
+        "separate_embedded_authority_node": "implemented",
+        "client_replica_store_player_and_item_graph": "implemented",
+        "player_state_command_delta_path": "implemented",
+        "inventory_container_world_item_command_path": "implemented",
+        "authority_range_revision_epoch_session_fencing": "implemented",
+        "operation_replay_and_collision_fencing": "implemented",
+        "authoritative_item_graph_persistence": "implemented",
+        "explicit_offline_tool_role": "preserved",
+        "restricted_playable_client_session": "implemented",
+        "trusted_kernel_authority_store_binding": "implemented"
+      },
+      "acceptance_evidence": {
+        "launch_contracts": "39/39",
+        "h0_compatibility": "71/71",
+        "contracts": "76/76",
+        "integration": "32/32",
+        "network_suites": "39/39",
+        "network_assertions": "3168/3168",
+        "world_tests": "82/82",
+        "world_steps": "85/85",
+        "main_scene": "playground 6/6; earth_moon H1 8/8",
+        "runtime_roles": "offline/listen-host/simulation-server PASS",
+        "status": "local_validation_passed_candidate",
+        "client_capability_boundary": "restricted session; no authority/store/controller access"
+      }
     },
     {
       "id": "H2",
       "name": "Dedicated server with one graphical client",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "H1",
         "N2",

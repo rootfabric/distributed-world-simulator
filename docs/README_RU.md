@@ -2,9 +2,11 @@
 
 Текущий принятый checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`.
 
-Runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
+Принятая runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 
-Ближайший этап: `H1 — Playable listen-host`.
+Текущий кандидат: `v16.9.1-runtime-h1-playable-listen-host`.
+
+Ближайший gate: независимая приёмка H1; после неё — `H2`.
 
 Утверждённая последовательность:
 
@@ -14,6 +16,8 @@ H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
 
 Ключевые документы текущего направления:
 
+- `checkpoints/2026-07-29_V16_9_1_RUNTIME_H1_PLAYABLE_LISTEN_HOST_RU.md`;
+- `architecture/H1_PLAYABLE_LISTEN_HOST_RU.md`;
 - `checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
 - `plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
 - `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;

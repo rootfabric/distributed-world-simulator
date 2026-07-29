@@ -111,6 +111,7 @@ A task is complete only when it includes:
 
 ```text
 runtime checkpoint accepted: v16.9.0-simulation-s1-distributed-compute-fix1
+runtime checkpoint candidate: v16.9.1-runtime-h1-playable-listen-host
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 accepted transport base: v16.8.3-network-t1-multi-peer
 next implementation branch: feature/h1-playable-listen-host

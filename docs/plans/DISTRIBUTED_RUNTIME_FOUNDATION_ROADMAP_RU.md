@@ -1,8 +1,9 @@
 # План развития distributed runtime PlanetSimulator
 
 **Текущий принятый runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
+**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
-**Следующий основной gate:** `H1 — Playable listen-host`
+**Следующий основной gate после приёмки:** `H2 — Dedicated server + 1 graphical client`
 **Стратегия:** сначала доказать единый graphical gameplay path в трёх топологиях, затем подключать broker infrastructure и несколько authorities.
 
 ## 1. Принцип выполнения
@@ -93,9 +94,9 @@ status: accepted
 
 Authority выдаёт checksum-bound immutable job. Worker получает exact projected state и capability-scoped budget, возвращает proposal, а authority проверяет read/write scope, staleness, determinism и commit’ит через M0.
 
-## 3. Почему следующий этап — H1, а не B1
+## 3. Почему H1 выполняется перед B1
 
-Foundation уже поддерживает listen-host, dedicated process, multi-peer transport, transactions и compute proposals. Но существующая реальная игра ещё не полностью использует этот путь.
+Foundation уже поддерживает listen-host, dedicated process, multi-peer transport, transactions и compute proposals. H1 переводит существующую реальную игру на этот путь и находится в статусе candidate.
 
 Без H1–H3 можно построить NATS и World Directory вокруг непроверенных assumptions о:
 
@@ -116,9 +117,9 @@ H1 → H2 → H3 → A2
 ## 4. H1 — Playable listen-host
 
 ```text
-proposed checkpoint: v16.9.1-runtime-h1-playable-listen-host
+checkpoint: v16.9.1-runtime-h1-playable-listen-host
 branch: feature/h1-playable-listen-host
-status: next
+status: candidate
 ```
 
 ### Цель

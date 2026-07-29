@@ -1,4 +1,25 @@
-Planetary World v16.9.0-simulation-s1-distributed-compute-fix1
+Planetary World v16.9.1-runtime-h1-playable-listen-host
+
+H1 playable listen-host candidate:
+- default graphical role is listen-host; explicit offline remains available
+- separate ListenHostAuthorityHost owns authoritative player state and Item Graph
+- graphical item controller runs in replica mode and mutates only through command DTOs
+- player movement crosses ClientRuntime and returns through EntityDelta
+- item commands cover hotbar, transfer/split/stack, pickup/drop, mount/detach, placement and external containers
+- authority validates session, epoch, revision, input sequence, distance and movement limits
+- exact operation replay is stable; operation collisions are rejected
+- authoritative Item Graph persistence survives detach/restart
+- scripts/runtime/listen_host/playable_state_codec.gd
+- scripts/runtime/listen_host/playable_listen_host_authority.gd
+- scripts/runtime/listen_host/playable_authority_gateway_adapter.gd
+- scripts/runtime/listen_host/playable_item_command_bridge.gd
+- scripts/runtime/listen_host/playable_client_session.gd
+- tests/runtime/test_h1_playable_listen_host_contracts.gd
+- tests/runtime/test_h1_playable_listen_host_integration.gd
+- RUN_H1_PLAYABLE_LISTEN_HOST_TESTS.ps1
+- RUN_H1_PLAYABLE_LISTEN_HOST_TESTS.sh
+- docs/architecture/H1_PLAYABLE_LISTEN_HOST_RU.md
+- docs/checkpoints/2026-07-29_V16_9_1_RUNTIME_H1_PLAYABLE_LISTEN_HOST_RU.md
 
 B0 transport-independent message bus contracts:
 - five separate semantic ports: request/reply, events, jobs, replication and bulk

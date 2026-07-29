@@ -2,14 +2,15 @@
 
 **Статус решения:** утверждено 29 июля 2026 года
 **Текущая принятая база:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Главный следующий этап:** `H1 — Playable listen-host`
+**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
+**Главный следующий gate:** независимая приёмка H1; затем `H2`
 
 ## 1. Утверждённая последовательность
 
 ```text
 S1 ACCEPTED
 │
-├─ H1  Playable listen-host
+├─ H1  Playable listen-host — candidate
 ├─ H2  Dedicated server + 1 graphical client
 ├─ H3  Dedicated server + 2 graphical clients
 ├─ A2  Networked gameplay architecture checkpoint
@@ -65,6 +66,10 @@ input/UI
 - одинаковые command/result semantics для loopback и ENet.
 
 ## 3. H1 — Playable listen-host
+
+### Статус
+
+Реализован, `candidate`, ожидает независимой приёмки.
 
 ### Цель
 

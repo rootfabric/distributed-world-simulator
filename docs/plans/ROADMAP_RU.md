@@ -1,9 +1,10 @@
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий принятый gate — S1 fix1
+## Текущий gate — H1 candidate поверх принятого S1 fix1
 
 ```text
 runtime accepted: v16.9.0-simulation-s1-distributed-compute-fix1
+runtime candidate: v16.9.1-runtime-h1-playable-listen-host
 accepted domain base: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 ```
@@ -21,14 +22,14 @@ M0 accepted
 S1 accepted
 ```
 
-S1 закрепляет безопасную границу `worker computes → authority validates → M0 commits`. Следующий основной риск — не отсутствие ещё одного infrastructure adapter, а отсутствие полной graphical gameplay vertical slice через уже принятый client/server boundary.
+S1 закрепил безопасную границу `worker computes → authority validates → M0 commits`. H1 реализует первую полную graphical gameplay vertical slice через embedded client/server boundary; после независимой приёмки работа переходит к H2.
 
 ## Утверждённая последовательность после S1
 
 ```text
 S1 ACCEPTED
 │
-├─ H1  Playable listen-host
+├─ H1  Playable listen-host — candidate
 ├─ H2  Dedicated server + 1 graphical client
 ├─ H3  Dedicated server + 2 graphical clients
 ├─ A2  Networked gameplay architecture checkpoint
