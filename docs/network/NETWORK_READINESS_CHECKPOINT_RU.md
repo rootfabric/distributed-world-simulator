@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.5-domain-m0-aggregate-transactions`
+**Runtime checkpoint candidate:** `v16.9.0-simulation-s1-distributed-compute-fix1`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -44,7 +44,7 @@
 - crash after commit и crash before commit;
 - fail-closed corruption/rollback handling.
 
-### H0/A1/S0/T1/B0
+### H0/A1/S0/T1/B0/M0/S1
 
 - single-process listen-host с client replica boundary;
 - generic item/non-item aggregate contracts;
@@ -55,7 +55,9 @@
 - multi-peer listener/session separation и targeted delivery;
 - real per-peer outbound queues/backpressure;
 - transport-independent request/reply, event, job, replication и bulk ports;
-- strict versioned timeout/backpressure/acknowledgement results.
+- strict versioned timeout/backpressure/acknowledgement results;
+- atomic multi-aggregate transactions, stable replay and transactional outbox;
+- immutable compute jobs, projected read-state, capability-scoped workers and authority-side M0 commit.
 
 ## 2. К чему база готова
 
@@ -67,15 +69,16 @@
 - generic aggregate contracts;
 - spatial cell/shard substrate;
 - multiple peers и targeted transport;
-- transport-independent semantic message-bus ports.
+- transport-independent semantic message-bus ports;
+- local multi-aggregate transactions/outbox;
+- local distributed-compute contracts and authority commit path.
 
 Средняя готовность:
 
 - NATS Core adapter;
-- JetStream/outbox;
-- population fields;
-- multi-aggregate transactions;
-- local compute-worker contracts.
+- JetStream durable delivery and outbox publisher;
+- production population fields;
+- remote worker orchestration.
 
 Пока не готово:
 
@@ -104,13 +107,13 @@ T1 разделяет listener и peer lifecycle, использует strict Pr
 
 B0 разделяет request/reply, events, jobs, replication и bulk transfer. Реальный NATS/JetStream adapter и durable outbox ещё не реализованы.
 
-### Current command is single-aggregate
+### Multi-aggregate transaction foundation реализован
 
-Нужен M0 staged mutation batch.
+M0 выполняет staged validation, cross-aggregate invariants, atomic state/result/ledger/outbox commit и crash-safe replay. Distributed consensus и cross-authority transactions намеренно не входят в этот слой.
 
-### Current persistence has no general outbox
+### Distributed compute foundation реализован локально
 
-R3.1 должен быть расширен atomic outbox, не заменён.
+S1 связывает B0 JobQueuePort, capability-scoped local worker и M0 authority commit. Durable result inbox и реальный удалённый broker adapter остаются B2/B1.
 
 ## 4. Решение о N3
 
@@ -134,15 +137,16 @@ A1 — Generic Aggregate Foundation — accepted
 S0 — Spatial Simulation Substrate — accepted
 T1 — Multi-peer Transport v2 — accepted
 B0 — Transport-independent Message Bus Contracts — accepted
-M0 — Multi-aggregate Transactions/Outbox Foundation — current candidate
-S1 — Distributed Compute Contracts — next
+M0 — Multi-aggregate Transactions/Outbox Foundation — accepted
+S1 — Distributed Compute Contracts — current candidate
+B1 — NATS Core adapter — next
 ```
 
-M0 реализует staged multi-aggregate mutation, обязательные cross-aggregate validators, atomic persistence, stable replay result и outbox records. Следующий foundation gate — S1: immutable simulation jobs, declared read/write sets и MutationProposal.
+S1 реализует immutable simulation jobs, declared read/write sets, budgets, deterministic results и authority-side conversion в M0 atomic commit. Следующий infrastructure gate — B1: NATS Core adapter поверх B0 semantic ports.
 
 ## 6. Что пока не начинать
 
-- NATS adapter до принятия M0/S1 contracts;
+- NATS adapter до принятия S1 contracts;
 - Population Field до A1/S0/M0;
 - generated rule runtime;
 - World Directory до принятия M0/S1 и последующих bus adapters;

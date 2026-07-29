@@ -1,26 +1,24 @@
 # Документация PlanetSimulator
 
-Текущий candidate checkpoint: `checkpoints/2026-07-29_V16_8_5_DOMAIN_M0_AGGREGATE_TRANSACTIONS_RU.md`.
+Текущий candidate checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_RU.md`.
 
-Runtime-база: `v16.8.5-domain-m0-aggregate-transactions`.
+Runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 
 Ключевые документы текущего направления:
 
+- `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_RU.md`;
+- `architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
 - `checkpoints/2026-07-29_V16_8_5_DOMAIN_M0_AGGREGATE_TRANSACTIONS_RU.md`;
 - `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
-- `checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md`;
 - `architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
-- `checkpoints/2026-07-29_V16_8_3_NETWORK_T1_MULTI_PEER_RU.md`;
 - `architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
 - `architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
 - `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md`;
 - `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
 - `architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
-- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
-- `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
-- `testing/N2_PROCESS_HARNESS_RU.md`.
+- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
 
-Следующий кодовый этап после принятия M0: `S1 Distributed Compute Contracts`.
+Следующий кодовый этап после принятия S1: `B1 NATS Core adapter`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 

@@ -1,10 +1,11 @@
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий runtime gate — B0
+## Текущий runtime gate — S1
 
 ```text
-runtime candidate: v16.8.5-domain-m0-aggregate-transactions
-accepted base: v16.8.3-network-t1-multi-peer
+runtime candidate: v16.9.0-simulation-s1-distributed-compute-fix1
+accepted domain base: v16.8.5-domain-m0-aggregate-transactions
+accepted transport base: v16.8.3-network-t1-multi-peer
 ```
 
 ```text
@@ -14,22 +15,24 @@ A0 accepted
 H0 accepted
 A1 accepted
 S0 accepted
-T1 multi-peer transport — accepted
-B0 transport-independent message bus contracts — current candidate
-→ M0 aggregate transactions + atomic outbox
-→ S1 distributed compute contracts
-→ B1/B2 and P0/D1 controlled tracks
+T1 accepted
+B0 accepted
+M0 accepted
+S1 distributed compute contracts — current candidate
+→ B1 NATS Core adapter
+→ B2 JetStream/outbox publisher
+→ P0/D1 population and remote-worker experiment
 → N3 Directory
 → N4 generic handoff
 ```
 
-B0 создаёт transport-independent semantic ports для request/reply, events, jobs, replication и bulk transfer. T1 остаётся принятой multi-peer transport-базой; следующий foundation gate — M0 transactions/outbox.
+S1 закрепляет безопасную границу `worker computes → authority validates → M0 commits`. Worker получает только immutable projected state и не видит live repository, aggregate registry или authoritative object graph.
 
 Основные документы:
 
+- `docs/architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
+- `docs/architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
 - `docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
-- `docs/architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
-- `docs/architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
 - `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
 
 # Дорожная карта к лунному симулятору мечты

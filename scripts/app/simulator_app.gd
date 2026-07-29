@@ -19,8 +19,8 @@ const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/wor
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.8.5-domain-m0-aggregate-transactions"
-const FOUNDATION_BUILD_ID: String = "m0-multi-aggregate-transactions-outbox"
+const FOUNDATION_CHECKPOINT: String = "v16.9.0-simulation-s1-distributed-compute-fix1"
+const FOUNDATION_BUILD_ID: String = "s1-distributed-compute-contracts-fix1"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

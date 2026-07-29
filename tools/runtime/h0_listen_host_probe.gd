@@ -25,8 +25,8 @@ func _init() -> void:
 	if bool(setup_result.get("success", false)):
 		scenario_result = runtime.run_vertical_scenario()
 	var report: Dictionary = runtime.get_report()
-	report["checkpoint"] = "v16.8.5-domain-m0-aggregate-transactions"
-	report["build_id"] = "m0-multi-aggregate-transactions-outbox"
+	report["checkpoint"] = "v16.9.0-simulation-s1-distributed-compute-fix1"
+	report["build_id"] = "s1-distributed-compute-contracts-fix1"
 	report["setup_success"] = bool(setup_result.get("success", false))
 	report["scenario_success"] = bool(scenario_result.get("success", false))
 	var write_result: Dictionary = AtomicJsonScript.write_dictionary(result_file, report)

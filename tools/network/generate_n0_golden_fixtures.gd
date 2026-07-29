@@ -88,8 +88,8 @@ func _init() -> void:
 	_write("valid_authority_route", "authority_route", true, "", Utils.payload_hash(Route.normalize(route)), route, {})
 	var node: Dictionary = NodeDescriptor.create(
 		"sim-a", "simulation-server",
-		"m0-multi-aggregate-transactions-outbox",
-		"v16.8.5-domain-m0-aggregate-transactions",
+		"s1-distributed-compute-contracts-fix1",
+		"v16.9.0-simulation-s1-distributed-compute-fix1",
 		"persistent", [space], endpoint, ["command", "delta", "snapshot"],
 		"READY", 100, 110, 1
 	)

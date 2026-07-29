@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "2712c3720d088f7142ad0fb41ba5e00c82f8d7c0de33c135d6e376e95d2ac5eb",
+  "expected_hash": "90f40407b7104eff914b3cf31230b09e189a28a2b671ce6718e2f839350c8769",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "m0-multi-aggregate-transactions-outbox",
+    "build_id": "s1-distributed-compute-contracts-fix1",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.5-domain-m0-aggregate-transactions",
+    "checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

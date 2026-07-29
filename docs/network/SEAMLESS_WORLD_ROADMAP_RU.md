@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.5-domain-m0-aggregate-transactions
+runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
@@ -70,15 +70,15 @@ World Directory / Content Registry / other services
 
 ### B0 — message bus ports
 
-Статус: current candidate. Request/reply, events, jobs, replication и bulk transfer выражены отдельными transport-independent ports; NATS/JetStream SDK отсутствуют.
+Статус: accepted. Request/reply, events, jobs, replication и bulk transfer выражены отдельными transport-independent ports; NATS/JetStream SDK отсутствуют.
 
 ### M0 — aggregate transactions/outbox
 
-Atomic operations над несколькими aggregates.
+Статус: accepted. Atomic create/update/delete над несколькими aggregates, stable replay result и transactional outbox сохраняются одной authoritative транзакцией.
 
 ### S1 — compute jobs/proposals
 
-Workers рассчитывают, authority commit.
+Статус: current candidate. Worker получает immutable projected state, возвращает deterministic MutationProposal, а только authority проверяет его и commit’ит через M0.
 
 ### B1/B2 — NATS Core и JetStream
 
