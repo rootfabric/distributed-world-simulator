@@ -5,6 +5,7 @@ signal drop_requested(item_id: String, target_container_id: String, target_slot_
 signal quantity_drop_requested(item_id: String, target_container_id: String, target_slot_index: int, total_quantity: int, target_item_id: String)
 signal activated(item_id: String, container_id: String, slot_index: int)
 signal quick_transfer_requested(item_id: String, source_container_id: String, source_slot_index: int)
+signal drop_outside_requested(item_id: String, quantity: int)
 signal context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2)
 signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
 signal item_unhovered(item_id: String)
@@ -256,6 +257,7 @@ func _trim_pool_size(maximum: int) -> void:
 func _wire_cell(cell) -> void:
 	cell.drop_requested.connect(_forward_drop_requested)
 	cell.quantity_drop_requested.connect(_forward_quantity_drop_requested)
+	cell.drop_outside_requested.connect(_forward_drop_outside_requested)
 	cell.activated.connect(_forward_activated)
 	cell.quick_transfer_requested.connect(_forward_quick_transfer_requested)
 	cell.context_requested.connect(_forward_context_requested)
@@ -350,6 +352,10 @@ func _forward_drop_requested(item_id: String, target_container_id: String, targe
 
 func _forward_quantity_drop_requested(item_id: String, target_container_id: String, target_slot_index: int, total_quantity: int, target_item_id: String) -> void:
 	quantity_drop_requested.emit(item_id, target_container_id, target_slot_index, total_quantity, target_item_id)
+
+
+func _forward_drop_outside_requested(item_id: String, quantity: int) -> void:
+	drop_outside_requested.emit(item_id, quantity)
 
 
 func _forward_activated(item_id: String, source_container_id: String, slot_index: int) -> void:

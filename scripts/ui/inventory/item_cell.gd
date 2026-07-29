@@ -7,12 +7,14 @@ signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
 signal item_unhovered(item_id: String)
 signal item_selected(item_id: String)
 signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
+signal drop_outside_requested(item_id: String, quantity: int)
 
 var view_data: Dictionary = {}
 var _context_press_position: Vector2 = Vector2.ZERO
 var _context_pressed: bool = false
 var _context_dragged: bool = false
 var _last_preview_error: String = ""
+var _active_drag_payload: Dictionary = {}
 
 
 func _ready() -> void:
@@ -79,7 +81,26 @@ func _gui_input(event: InputEvent) -> void:
 func _get_drag_data(at_position: Vector2):
 	if Input.is_key_pressed(KEY_SHIFT):
 		return null
-	return super._get_drag_data(at_position)
+	var payload = super._get_drag_data(at_position)
+	if payload is Dictionary:
+		_active_drag_payload = (payload as Dictionary).duplicate(true)
+	return payload
+
+
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_DRAG_END:
+		return
+	_complete_drag(get_viewport().gui_is_drag_successful())
+
+
+func _complete_drag(drop_was_accepted: bool) -> void:
+	if _active_drag_payload.is_empty():
+		return
+	var payload := _active_drag_payload.duplicate(true)
+	_active_drag_payload.clear()
+	if drop_was_accepted or bool(payload.get("ask_quantity", false)):
+		return
+	drop_outside_requested.emit(String(payload.get("item_id", "")), int(payload.get("quantity", -1)))
 
 
 func _can_drop_data(_at_position: Vector2, data) -> bool:

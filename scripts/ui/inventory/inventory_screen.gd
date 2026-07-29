@@ -72,6 +72,7 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 func _wire_panel(panel: InventoryContainerPanel) -> void:
 	panel.drop_requested.connect(_on_drop_requested)
 	panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
+	panel.drop_outside_requested.connect(_on_drop_outside_requested)
 	panel.activated.connect(_on_slot_activated)
 	panel.quick_transfer_requested.connect(_on_quick_transfer_requested)
 	panel.context_requested.connect(_on_context_requested)
@@ -248,6 +249,19 @@ func _on_drop_requested(
 	var moved_quantity := int(result.get("moved_quantity", requested_quantity))
 	var success_message := "" if moved_quantity <= 0 else "Перенесено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), moved_quantity]
 	_present_result(result, target_container_id, success_message)
+
+
+func _on_drop_outside_requested(item_id: String, requested_quantity: int) -> void:
+	var cell_data := _cell_data_for_item(item_id)
+	var quantity := maxi(1, requested_quantity)
+	if item_id.is_empty():
+		return
+	var result: Dictionary = command_facade.drop_stack(item_id)
+	_present_result(
+		result,
+		String(cell_data.get("source_container_id", "")),
+		"Выброшен стак: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), quantity]
+	)
 
 
 func _on_split_confirmed(

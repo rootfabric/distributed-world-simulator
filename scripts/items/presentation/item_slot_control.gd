@@ -131,6 +131,9 @@ func _get_drag_data(_at_position: Vector2):
 
 func _build_drag_preview(preview_quantity: int) -> Control:
 	var preview_root := VBoxContainer.new()
+	preview_root.z_as_relative = false
+	preview_root.z_index = 4096
+	preview_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var preview := TextureRect.new()
 	preview.custom_minimum_size = Vector2(48.0, 48.0)
 	preview.texture = icon_texture
