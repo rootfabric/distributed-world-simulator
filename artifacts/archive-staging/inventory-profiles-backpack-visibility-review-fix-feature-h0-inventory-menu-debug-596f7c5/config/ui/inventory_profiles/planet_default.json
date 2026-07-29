@@ -1,0 +1,24 @@
+{
+  "schema": "planet_simulator.inventory_interaction_profile.v1",
+  "profile_id": "planet_default",
+  "display_name": "Как было",
+  "description": "Текущее управление PlanetSimulator.",
+  "drag_threshold_px": 5.0,
+  "bindings": [
+    {"gesture": "PRIMARY_CLICK", "action": "SELECT_ITEM"},
+    {"gesture": "PRIMARY_DOUBLE_CLICK", "action": "ACTIVATE_SLOT"},
+    {"gesture": "PRIMARY_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "ALL", "ask_quantity_after_target": false},
+    {"gesture": "SHIFT_PRIMARY_CLICK", "action": "QUICK_TRANSFER"},
+    {"gesture": "SECONDARY_CLICK", "action": "OPEN_CONTEXT_MENU"},
+    {"gesture": "SECONDARY_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "ALL", "ask_quantity_after_target": true},
+    {"gesture": "MIDDLE_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "HALF_CEIL", "ask_quantity_after_target": false}
+  ],
+  "outside_drop": {"action": "DROP_TO_WORLD"},
+  "legend": [
+    "ЛКМ drag — весь стак",
+    "Shift+ЛКМ — быстрый перенос",
+    "ПКМ drag — выбрать количество",
+    "средняя кнопка drag — половина",
+    "ПКМ — действия"
+  ]
+}

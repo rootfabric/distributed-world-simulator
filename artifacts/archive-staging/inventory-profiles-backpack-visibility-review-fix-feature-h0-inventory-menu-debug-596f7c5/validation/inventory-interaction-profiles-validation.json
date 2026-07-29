@@ -1,0 +1,125 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_interaction_profiles",
+  "branch": "fix/inventory-drag-overlay-drop",
+  "base_commit": "e00162c",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "status": "passed",
+  "profiles": [
+    {
+      "profile_id": "planet_default",
+      "display_name": "Как было",
+      "status": "passed"
+    },
+    {
+      "profile_id": "rust_like",
+      "display_name": "Rust",
+      "status": "passed"
+    },
+    {
+      "profile_id": "seven_days_like",
+      "display_name": "7 Days",
+      "status": "passed"
+    }
+  ],
+  "tests": [
+    {
+      "kind": "editor_import_parse",
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_interaction_profiles.gd",
+      "assertions": 69,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/items/test_item_stack_transfers.gd",
+      "assertions": 61,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i0_architecture.gd",
+      "assertions": 43,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "assertions": 69,
+      "status": "passed",
+      "known_teardown_warning": "existing CanvasItem/ObjectDB/RID leak warnings"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i2_large_storage.gd",
+      "assertions": 55,
+      "status": "passed"
+    },
+    {
+      "suite": "item_system_relevant_regression",
+      "tests_passed": 14,
+      "tests_total": 14,
+      "assertions": 1823,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/integration/test_unified_planetary_runtime.gd",
+      "status": "passed"
+    },
+    {
+      "suite": "main_scene_cli_all",
+      "tests_passed": 6,
+      "tests_total": 6,
+      "status": "passed"
+    }
+  ],
+  "negative_checks": [
+    "duplicate profile gestures are rejected",
+    "unknown profile IDs use deterministic fallback",
+    "opening exact split does not mutate Item Graph",
+    "rejected carry target preserves quantity and revision",
+    "Escape-equivalent cancellation does not mutate Item Graph",
+    "profile switch cancels virtual carry and pending split without mutation",
+    "partial outside drop moves only requested quantity"
+  ],
+  "replay_tests": "not_applicable_presentation_only_until_commit",
+  "static_checks": {
+    "git_diff_check": "passed",
+    "json_parse": "passed",
+    "bash_syntax": "passed",
+    "world_regression_manifest_updated": true,
+    "item_system_runner_updated": true,
+    "clean_archive_apply": "passed",
+    "archive_file_count": 30
+  },
+  "changed_files": [
+    "RUN_INVENTORY_PROFILE_TESTS.ps1",
+    "RUN_INVENTORY_PROFILE_TESTS.sh",
+    "RUN_ITEM_SYSTEM_TESTS.ps1",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "config/ui/inventory_profiles/catalog.json",
+    "config/ui/inventory_profiles/planet_default.json",
+    "config/ui/inventory_profiles/rust_like.json",
+    "config/ui/inventory_profiles/seven_days_like.json",
+    "config/ui/inventory_ui.json",
+    "docs/checkpoints/2026-07-29_INVENTORY_INTERACTION_PROFILES_RU.md",
+    "docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md",
+    "scenes/ui/inventory/inventory_screen.tscn",
+    "scripts/items/presentation/item_inventory_ui.gd",
+    "scripts/items/presentation/item_slot_control.gd",
+    "scripts/ui/inventory/container_panel.gd",
+    "scripts/ui/inventory/interactions/inventory_interaction_profile.gd",
+    "scripts/ui/inventory/interactions/inventory_interaction_profile.gd.uid",
+    "scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd",
+    "scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd.uid",
+    "scripts/ui/inventory/interactions/inventory_interaction_router.gd",
+    "scripts/ui/inventory/interactions/inventory_interaction_router.gd.uid",
+    "scripts/ui/inventory/interactions/inventory_transfer_session.gd",
+    "scripts/ui/inventory/interactions/inventory_transfer_session.gd.uid",
+    "scripts/ui/inventory/inventory_command_facade.gd",
+    "scripts/ui/inventory/inventory_preferences_store.gd",
+    "scripts/ui/inventory/inventory_screen.gd",
+    "scripts/ui/inventory/item_cell.gd",
+    "tests/ui/test_inventory_interaction_profiles.gd",
+    "tests/ui/test_inventory_interaction_profiles.gd.uid",
+    "validation/inventory-interaction-profiles-validation.json"
+  ]
+}

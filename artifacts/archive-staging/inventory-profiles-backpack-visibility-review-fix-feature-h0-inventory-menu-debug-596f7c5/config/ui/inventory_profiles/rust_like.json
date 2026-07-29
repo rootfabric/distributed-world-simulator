@@ -1,0 +1,27 @@
+{
+  "schema": "planet_simulator.inventory_interaction_profile.v1",
+  "profile_id": "rust_like",
+  "display_name": "Rust",
+  "description": "Точный split до выбора цели, быстрый перенос половины и трети.",
+  "drag_threshold_px": 5.0,
+  "bindings": [
+    {"gesture": "PRIMARY_CLICK", "action": "PLACE_ALL_OR_SELECT"},
+    {"gesture": "PRIMARY_DOUBLE_CLICK", "action": "ACTIVATE_SLOT"},
+    {"gesture": "PRIMARY_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "ALL", "ask_quantity_after_target": false},
+    {"gesture": "SHIFT_PRIMARY_CLICK", "action": "QUICK_TRANSFER"},
+    {"gesture": "SECONDARY_CLICK", "action": "CARRY_EXACT_OR_PLACE_ONE", "quantity_mode": "ALL"},
+    {"gesture": "ALT_SECONDARY_CLICK", "action": "OPEN_CONTEXT_MENU"},
+    {"gesture": "MIDDLE_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "HALF_CEIL", "ask_quantity_after_target": false},
+    {"gesture": "SHIFT_MIDDLE_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "THIRD_CEIL", "ask_quantity_after_target": false}
+  ],
+  "outside_drop": {"action": "DROP_TO_WORLD"},
+  "legend": [
+    "ПКМ — выбрать точное количество / положить один",
+    "ЛКМ — положить весь виртуальный стак",
+    "ЛКМ drag — весь стак",
+    "Shift+ЛКМ — быстрый перенос",
+    "средняя кнопка drag — половина",
+    "Shift+средняя кнопка drag — треть",
+    "Alt+ПКМ — действия"
+  ]
+}

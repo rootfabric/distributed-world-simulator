@@ -1,0 +1,24 @@
+{
+  "schema": "planet_simulator.inventory_interaction_profile.v1",
+  "profile_id": "seven_days_like",
+  "display_name": "7 Days",
+  "description": "Клик подхватывает виртуальный стак на курсор; Item Graph меняется только после выбора цели.",
+  "drag_threshold_px": 5.0,
+  "bindings": [
+    {"gesture": "PRIMARY_CLICK", "action": "CARRY_ALL_OR_PLACE_ALL", "quantity_mode": "ALL"},
+    {"gesture": "PRIMARY_DOUBLE_CLICK", "action": "ACTIVATE_SLOT"},
+    {"gesture": "PRIMARY_DRAG", "action": "MOVE_TO_TARGET", "quantity_mode": "ALL", "ask_quantity_after_target": false},
+    {"gesture": "SHIFT_PRIMARY_CLICK", "action": "QUICK_TRANSFER"},
+    {"gesture": "SECONDARY_CLICK", "action": "CARRY_HALF_OR_PLACE_ONE", "quantity_mode": "HALF_CEIL"},
+    {"gesture": "ALT_SECONDARY_CLICK", "action": "OPEN_CONTEXT_MENU"}
+  ],
+  "outside_drop": {"action": "CANCEL"},
+  "legend": [
+    "ЛКМ — взять стак / положить всё",
+    "ПКМ — взять половину / положить один",
+    "ЛКМ drag — перенос всего стака",
+    "Shift+ЛКМ — быстрый перенос",
+    "Alt+ПКМ — действия",
+    "Esc — вернуть виртуальный стак"
+  ]
+}
