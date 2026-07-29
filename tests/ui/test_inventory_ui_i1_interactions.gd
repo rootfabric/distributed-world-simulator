@@ -36,6 +36,8 @@ func _run() -> void:
 	_assert_success(controller.open_container(rack_id), "Opening battery rack must establish a slot-container drag target")
 	var battery_for_drag = _find_item(controller, "battery_pack", controller.player_inventory_id)
 	var battery_cell_for_drag = screen.player_panel.find_cell_by_item_id(battery_for_drag.instance_id)
+	var middle_drag_payload = battery_cell_for_drag.build_middle_drag_payload()
+	_assert(int(middle_drag_payload.get("quantity", 0)) == int(ceil(float(battery_for_drag.quantity) * 0.5)), "Middle-button drag must carry the upper half of a stack")
 	var rack_cell_for_drag = screen.external_panel.grid.get_child(1)
 	var drag_payload = battery_cell_for_drag.build_drag_payload(false)
 	_assert(drag_payload is Dictionary and int(drag_payload.get("quantity", 0)) == int(battery_for_drag.quantity), "LMB drag must produce the complete battery stack payload")

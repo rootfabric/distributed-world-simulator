@@ -28,6 +28,11 @@ func _run() -> void:
 	_assert(inventory_ui.view_model != null and inventory_ui.command_facade != null, "Component UI must own ViewModel and CommandFacade")
 
 	var initial_snapshot: Dictionary = inventory_ui.create_debug_snapshot()
+	_assert(inventory_ui.persistent_hotbar != null and inventory_ui.persistent_hotbar.visible, "Persistent hotbar must exist outside the inventory window")
+	_assert(inventory_ui.persistent_hotbar.grid.columns == 10, "Persistent hotbar must keep all slots in one row")
+	controller.set_inventory_visible(false)
+	_assert(inventory_ui.persistent_hotbar.visible, "Persistent hotbar must remain visible while inventory is closed")
+	controller.set_inventory_visible(true)
 	var player_model: Dictionary = Dictionary(initial_snapshot.get("player", {}))
 	var hotbar_model: Dictionary = Dictionary(initial_snapshot.get("hotbar", {}))
 	_assert(String(player_model.get("storage_mode", "")) == "BULK", "Player backpack must be projected as BULK")

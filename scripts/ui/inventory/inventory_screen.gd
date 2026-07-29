@@ -144,6 +144,10 @@ func refresh(message: String = "") -> void:
 	var hotbar_model: Dictionary = Dictionary(screen_model.get("hotbar", {}))
 	player_panel.render(player_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 	hotbar_panel.render_hotbar(hotbar_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
+	# The interactive hotbar is rendered as a persistent overlay by
+	# ItemInventoryUI. Keep this compatibility instance populated for tests and
+	# adapters, but do not let it change the inventory panel's layout.
+	hotbar_panel.visible = false
 	var external_model: Dictionary = Dictionary(screen_model.get("external", {}))
 	if external_container_id.is_empty() or external_model.is_empty():
 		external_panel.clear_panel()
@@ -171,6 +175,16 @@ func get_external_visible_cell_count() -> int:
 
 func get_external_rendered_cell_count() -> int:
 	return external_panel.get_rendered_cell_count()
+
+
+func render_persistent_hotbar(panel: InventoryHotbarPanel) -> void:
+	if panel == null or gameplay_controller == null or view_model == null or command_facade == null:
+		return
+	var model := view_model.build_container(
+		gameplay_controller.player_hotbar_id,
+		int(gameplay_controller.selected_hotbar_index)
+	)
+	panel.render_hotbar(model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 
 
 func create_debug_snapshot() -> Dictionary:
