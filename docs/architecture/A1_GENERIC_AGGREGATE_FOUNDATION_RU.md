@@ -248,4 +248,4 @@ A1 принят как prerequisite S0. Spatial substrate реализован �
 - [`S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`](S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md);
 - checkpoint `v16.8.2-simulation-s0-spatial-substrate`.
 
-Следующий этап — `T1 Multi-peer Transport v2`.
+T1 Multi-peer Transport v2 реализован как candidate `v16.8.3-network-t1-multi-peer`. Следующий этап — `B0 Transport-independent Message Bus Contracts`.

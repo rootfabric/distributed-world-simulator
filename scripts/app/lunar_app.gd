@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.8.2-simulation-s0-spatial-substrate"
-const BUILD_ID: String = "s0-spatial-simulation-substrate"
+const PROJECT_VERSION: String = "16.8.3-network-t1-multi-peer"
+const BUILD_ID: String = "t1-multi-peer-transport-v2"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

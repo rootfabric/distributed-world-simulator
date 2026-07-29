@@ -1,25 +1,33 @@
-# Дорожная карта PlanetSimulator
+# PlanetSimulator — текущая дорожная карта
 
-## Текущий runtime gate — S0
+## Текущий runtime gate — T1
 
 ```text
-runtime candidate: v16.8.2-simulation-s0-spatial-substrate
-accepted aggregate base: v16.8.1-architecture-a1-generic-aggregate
-architecture base: v16.7.1-architecture-a0-distributed-runtime
+runtime candidate: v16.8.3-network-t1-multi-peer
+accepted base: v16.8.2-simulation-s0-spatial-substrate
 ```
 
 ```text
-H0 listen-host — accepted
-A1 generic aggregates — accepted
-S0 spatial cells/shards — current candidate
-→ T1 multi-peer transport — next
-→ B0 message-bus ports
-→ M0 multi-aggregate transactions/outbox
+N0–N2 accepted
+R3.1 accepted
+A0 accepted
+H0 accepted
+A1 accepted
+S0 accepted
+T1 multi-peer transport — current candidate
+→ B0 transport-independent message bus contracts
+→ M0 aggregate transactions + atomic outbox
 → S1 distributed compute contracts
+→ B1/B2 and P0/D1 controlled tracks
+→ N3 Directory
+→ N4 generic handoff
 ```
 
-S0 создаёт стабильный spatial substrate без смешения пространства и authority. Подробности:
+T1 создаёт устойчивую многопировую сетевую границу, не привязанную к одному gameplay message type и не смешивающую transport session, route freshness и authority ownership.
 
+Основные документы:
+
+- `docs/architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
 - `docs/architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
 - `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
 

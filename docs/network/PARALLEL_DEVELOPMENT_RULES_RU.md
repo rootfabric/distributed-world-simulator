@@ -164,7 +164,7 @@ no false PASS on stderr/exit mismatch
 ```text
 feature/h0-listen-host-runtime
 feature/a1-generic-aggregate-foundation
-feature/s0-spatial-simulation-substrate
+feature/t1-multi-peer-transport-v2
 feature/t1-multi-peer-transport-v2
 feature/b0-message-bus-contracts
 feature/m0-aggregate-transactions

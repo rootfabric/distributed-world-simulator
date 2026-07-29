@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 13,
+  "document_revision": 14,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-29T00:00:00Z",
-  "project_checkpoint": "v16.8.2-simulation-s0-spatial-substrate",
-  "runtime_base_checkpoint": "v16.8.2-simulation-s0-spatial-substrate",
+  "updated_at_utc": "2026-07-29T03:00:00Z",
+  "project_checkpoint": "v16.8.3-network-t1-multi-peer",
+  "runtime_base_checkpoint": "v16.8.3-network-t1-multi-peer",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -140,7 +140,7 @@
     {
       "id": "S0",
       "name": "Spatial simulation cells and shards",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "A1"
       ],
@@ -160,18 +160,29 @@
     {
       "id": "T1",
       "name": "Multi-peer transport v2",
-      "status": "next",
+      "status": "candidate",
       "depends_on": [
         "S0",
         "N1"
       ],
-      "proposed_checkpoint": "v16.8.3-network-t1-multi-peer",
-      "branch": "feature/t1-multi-peer-transport-v2"
+      "branch": "feature/t1-multi-peer-transport-v2",
+      "checkpoint": "v16.8.3-network-t1-multi-peer",
+      "acceptance": "one listener maintains independent peer sessions, targeted delivery, monotonic route generations, per-peer backpressure and real two-client ENet isolation without changing N1 contracts",
+      "implementation": {
+        "protocol_frame_v2": "implemented",
+        "network_transport_event_v2": "implemented",
+        "peer_session_lifecycle": "implemented",
+        "multi_peer_boundary": "implemented",
+        "loopback_multi_peer": "implemented",
+        "enet_multi_peer": "implemented",
+        "single_peer_compatibility": "implemented",
+        "route_generation": "implemented"
+      }
     },
     {
       "id": "B0",
       "name": "Transport-independent message bus contracts",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "T1"
       ],

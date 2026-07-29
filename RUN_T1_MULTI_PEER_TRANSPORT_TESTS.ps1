@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
-$ReportPath = Join-Path $ReportDirectory "s0-spatial-substrate-summary.json"
+$ReportPath = Join-Path $ReportDirectory "t1-multi-peer-transport-summary.json"
 New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
 
 function Resolve-GodotExecutable {
@@ -154,11 +154,11 @@ function Write-JsonFileAtomically {
 
 $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $Tests = @(
-    "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
-    "res://tests/simulation/test_s0_spatial_substrate_integration.gd"
+    "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
+    "res://tests/network/test_t1_multi_peer_transport_processes.gd"
 )
 $Summary = [ordered]@{
-    schema = "planet_simulator.s0_spatial_substrate_runner_summary.v1"
+    schema = "planet_simulator.t1_multi_peer_transport_runner_summary.v1"
     checkpoint = "v16.8.3-network-t1-multi-peer"
     build_id = "t1-multi-peer-transport-v2"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
@@ -215,7 +215,7 @@ try {
     }
     $Summary.passed = $true
     Save-Summary
-    Write-Host "S0 spatial substrate tests passed." -ForegroundColor Green
+    Write-Host "T1 multi-peer transport tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

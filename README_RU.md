@@ -1,7 +1,7 @@
 # PlanetSimulator
 
-Текущий candidate: `v16.8.2-simulation-s0-spatial-substrate`.
+Текущий candidate: `v16.8.3-network-t1-multi-peer`.
 
-Принятая база включает N0–N2, R3.1, A0, network-first listen-host H0 и generic aggregate foundation A1. S0 добавляет stable hierarchical cells, explicit aggregate shards, neighbour topology и boundary summaries, сохраняя authority address отдельно от spatial identity.
+Принятая база включает N0–N2, R3.1, A0, H0, A1 и S0. T1 добавляет multi-peer transport v2: отдельный listener lifecycle, независимые peer sessions, targeted delivery, route generation, per-peer backpressure и реальный ENet-сценарий с двумя клиентами.
 
-Следующий этап: `T1 — Multi-peer Transport v2`. Подробности: `docs/architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md` и `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
+Следующий этап: `B0 — Transport-independent Message Bus Contracts`. Подробности: `docs/architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md` и `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.

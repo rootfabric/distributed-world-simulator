@@ -1,4 +1,4 @@
-Planetary World v16.8.2-simulation-s0-spatial-substrate
+Planetary World v16.8.3-network-t1-multi-peer
 
 S0 spatial simulation substrate:
 - stable hierarchical SimulationCellAddress independent from render origin

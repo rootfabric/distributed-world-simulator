@@ -51,6 +51,8 @@ $Tests = @(
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
     "res://tests/simulation/test_s0_spatial_substrate_integration.gd",
+    "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
+    "res://tests/network/test_t1_multi_peer_transport_processes.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -64,8 +66,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.8.2-simulation-s0-spatial-substrate"
-    build_id = "s0-spatial-simulation-substrate"
+    checkpoint = "v16.8.3-network-t1-multi-peer"
+    build_id = "t1-multi-peer-transport-v2"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -133,7 +135,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.8.2-simulation-s0-spatial-substrate"
+    Write-Host "Checkpoint: v16.8.3-network-t1-multi-peer"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
@@ -152,7 +154,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through H0 network/runtime tests passed." -ForegroundColor Green
+    Write-Host "Foundation N0 through T1 network/runtime tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {
