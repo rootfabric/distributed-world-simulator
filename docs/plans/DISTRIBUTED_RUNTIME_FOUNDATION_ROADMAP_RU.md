@@ -1,6 +1,6 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.8.4-data-plane-b0-message-bus-contracts`
+**Текущий runtime checkpoint:** `v16.8.5-domain-m0-aggregate-transactions`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Принятая aggregate-база:** `v16.8.1-architecture-a1-generic-aggregate`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
@@ -189,7 +189,7 @@ status: accepted
 ## 8. B0 — Transport-independent message bus contracts — реализован, candidate
 
 ```text
-checkpoint: v16.8.4-data-plane-b0-message-bus-contracts
+checkpoint: v16.8.5-domain-m0-aggregate-transactions
 branch: feature/b0-message-bus-contracts
 status: candidate
 ```

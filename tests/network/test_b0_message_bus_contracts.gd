@@ -178,11 +178,11 @@ func _test_project_wiring() -> void:
 	var roadmap = JSON.parse_string(roadmap_text)
 	_assert(roadmap is Dictionary, "Network roadmap JSON is invalid")
 	if roadmap is Dictionary:
-		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.8.4-data-plane-b0-message-bus-contracts", "Network roadmap checkpoint is stale")
+		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.8.5-domain-m0-aggregate-transactions", "Network roadmap checkpoint is stale")
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))
-		_assert(String(statuses.get("T1", "")) == "accepted" and String(statuses.get("B0", "")) == "candidate" and String(statuses.get("M0", "")) == "next", "Foundation phase statuses are inconsistent")
+		_assert(String(statuses.get("T1", "")) == "accepted" and String(statuses.get("B0", "")) == "accepted" and String(statuses.get("M0", "")) == "candidate", "Foundation phase statuses are inconsistent")
 	var bus_sources: Array[String] = [
 		"res://scripts/network/bus/message_bus_composition_root.gd",
 		"res://scripts/network/bus/adapters/in_memory_service_request_reply_adapter.gd",

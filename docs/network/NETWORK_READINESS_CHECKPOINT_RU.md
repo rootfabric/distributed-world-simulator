@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.4-data-plane-b0-message-bus-contracts`
+**Runtime checkpoint candidate:** `v16.8.5-domain-m0-aggregate-transactions`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -133,18 +133,19 @@ H0 — listen-host runtime — accepted
 A1 — Generic Aggregate Foundation — accepted
 S0 — Spatial Simulation Substrate — accepted
 T1 — Multi-peer Transport v2 — accepted
-B0 — Transport-independent Message Bus Contracts — current candidate
-M0 — Multi-aggregate Transactions/Outbox Foundation — next
+B0 — Transport-independent Message Bus Contracts — accepted
+M0 — Multi-aggregate Transactions/Outbox Foundation — current candidate
+S1 — Distributed Compute Contracts — next
 ```
 
-B0 реализует строгие transport-neutral semantic ports и in-memory proof adapters. Следующий foundation gate — M0: staged multi-aggregate mutation, atomic persistence и outbox records.
+M0 реализует staged multi-aggregate mutation, обязательные cross-aggregate validators, atomic persistence, stable replay result и outbox records. Следующий foundation gate — S1: immutable simulation jobs, declared read/write sets и MutationProposal.
 
 ## 6. Что пока не начинать
 
-- NATS adapter до принятия B0 contracts;
+- NATS adapter до принятия M0/S1 contracts;
 - Population Field до A1/S0/M0;
 - generated rule runtime;
-- World Directory до принятия B0 и реализации M0;
+- World Directory до принятия M0/S1 и последующих bus adapters;
 - cross-server handoff до N3/M0;
 - production orchestration;
 - massive entity-per-grass representation.

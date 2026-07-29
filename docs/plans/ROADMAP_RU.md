@@ -3,7 +3,7 @@
 ## Текущий runtime gate — B0
 
 ```text
-runtime candidate: v16.8.4-data-plane-b0-message-bus-contracts
+runtime candidate: v16.8.5-domain-m0-aggregate-transactions
 accepted base: v16.8.3-network-t1-multi-peer
 ```
 
