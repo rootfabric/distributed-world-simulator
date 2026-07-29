@@ -8,10 +8,10 @@ const SCHEMA: String = "planet_simulator.launch_options.v1"
 static func defaults() -> Dictionary:
 	return {
 		"schema": SCHEMA,
-		"role": RuntimeRoleScript.OFFLINE,
+		"role": RuntimeRoleScript.LISTEN_HOST,
 		"world": "",
 		"run_tests": "",
-		"node_id": "local-offline",
+		"node_id": "local-listen-host",
 		"instance_id": "persistent",
 		"space_id": "sol",
 		"authority_region": "",
@@ -115,5 +115,8 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 	for required_key in ["node_id", "instance_id", "space_id"]:
 		if String(options.get(required_key, "")).strip_edges().is_empty():
 			errors.append("Launch option '%s' cannot be empty" % required_key)
-	if role != RuntimeRoleScript.OFFLINE and String(options.get("node_id", "")) == "local-offline":
+	var node_id: String = String(options.get("node_id", ""))
+	if role == RuntimeRoleScript.OFFLINE and node_id == "local-listen-host":
+		options["node_id"] = "local-offline"
+	elif role != RuntimeRoleScript.OFFLINE and node_id in ["local-offline", "local-listen-host"]:
 		options["node_id"] = "local-%s" % role

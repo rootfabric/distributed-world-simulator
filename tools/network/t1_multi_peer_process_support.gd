@@ -3,8 +3,8 @@ extends RefCounted
 const AtomicJsonScript = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
 const EndpointScript = preload("res://scripts/network/contracts/network_endpoint.gd")
 
-const CHECKPOINT := "v16.9.0-simulation-s1-distributed-compute-fix1"
-const BUILD_ID := "s1-distributed-compute-contracts-fix1"
+const CHECKPOINT := "v16.9.1-runtime-h1-playable-listen-host"
+const BUILD_ID := "h1-playable-listen-host"
 
 
 static func parse_options(arguments: PackedStringArray, mode: String) -> Dictionary:

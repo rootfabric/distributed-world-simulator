@@ -63,6 +63,8 @@ $Tests = @(
     "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
     "res://tests/runtime/test_h0_listen_host_contracts.gd",
     "res://tests/runtime/test_h0_listen_host_processes.gd",
+    "res://tests/runtime/test_h1_playable_listen_host_contracts.gd",
+    "res://tests/runtime/test_h1_playable_listen_host_integration.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -123,7 +125,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.9.0-simulation-s1-distributed-compute-fix1"
+    checkpoint = "v16.9.1-runtime-h1-playable-listen-host"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

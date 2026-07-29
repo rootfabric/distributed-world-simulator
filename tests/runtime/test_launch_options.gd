@@ -51,15 +51,15 @@ func _init() -> void:
 
 	var default_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray())
 	_assert(bool(default_parse.get("success", false)), "Default launch options are invalid")
-	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.OFFLINE, "Default role is not offline")
+	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.LISTEN_HOST, "Default role is not listen-host")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.9.0-simulation-s1-distributed-compute-fix1", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "s1-distributed-compute-contracts-fix1", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.9.0-simulation-s1-distributed-compute-fix1", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "s1-distributed-compute-contracts-fix1", "Simulator build id is stale")
-	_assert(LunarAppScript.PROJECT_VERSION == "16.8.5-domain-m0-aggregate-transactions", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "s1-distributed-compute-contracts-fix1", "Lunar build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.9.1-runtime-h1-playable-listen-host", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "h1-playable-listen-host", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.9.1-runtime-h1-playable-listen-host", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "h1-playable-listen-host", "Simulator build id is stale")
+	_assert(LunarAppScript.PROJECT_VERSION == "16.9.1-runtime-h1-playable-listen-host", "Lunar project version is stale")
+	_assert(LunarAppScript.BUILD_ID == "h1-playable-listen-host", "Lunar build id is stale")
 
 
 	var host_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=listen-host"]))

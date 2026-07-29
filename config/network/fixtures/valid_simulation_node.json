@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "90f40407b7104eff914b3cf31230b09e189a28a2b671ce6718e2f839350c8769",
+  "expected_hash": "bbcd958d296d54c681c339e51c39d0f432c91e42fe796ed1343c3c7b656014d4",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "s1-distributed-compute-contracts-fix1",
+    "build_id": "h1-playable-listen-host",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
+    "checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

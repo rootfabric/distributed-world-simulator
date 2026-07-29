@@ -1,9 +1,10 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Статус:** **ACCEPTED**
-**Следующий gate:** `H1 — Playable listen-host`
+**Принятый runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
+**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
+**Статус H1:** **CANDIDATE**
+**Следующий gate после приёмки:** `H2 — Dedicated server + 1 graphical client`
 
 ## 1. Что уже доказано кодом
 

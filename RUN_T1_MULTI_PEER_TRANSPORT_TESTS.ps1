@@ -159,8 +159,8 @@ $Tests = @(
 )
 $Summary = [ordered]@{
     schema = "planet_simulator.t1_multi_peer_transport_runner_summary.v1"
-    checkpoint = "v16.9.0-simulation-s1-distributed-compute-fix1"
-    build_id = "s1-distributed-compute-contracts-fix1"
+    checkpoint = "v16.9.1-runtime-h1-playable-listen-host"
+    build_id = "h1-playable-listen-host"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -208,7 +208,7 @@ function Invoke-CheckedGodot {
 
 try {
     Write-Host "Godot: $Godot"
-    Write-Host "Checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1"
+    Write-Host "Checkpoint: v16.9.1-runtime-h1-playable-listen-host"
     Invoke-CheckedGodot -Name "editor_import_parse" -Arguments @("--headless", "--editor", "--path", $ProjectRoot, "--quit") -Target "res://"
     foreach ($Test in $Tests) {
         Invoke-CheckedGodot -Name ([IO.Path]::GetFileNameWithoutExtension($Test)) -Arguments @("--headless", "--path", $ProjectRoot, "--script", $Test) -Target $Test

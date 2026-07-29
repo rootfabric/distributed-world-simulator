@@ -5,6 +5,10 @@ const AuthorityAdapterScript = preload("res://scripts/runtime/listen_host/listen
 const CommandTransportScript = preload("res://scripts/network/loopback/loopback_command_transport.gd")
 const ClientRuntimeScript = preload("res://scripts/runtime/listen_host/client_runtime.gd")
 const MoveResultScript = preload("res://scripts/network/contracts/item_move_to_container_result.gd")
+const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
+const PlayableAuthorityAdapterScript = preload("res://scripts/runtime/listen_host/playable_authority_gateway_adapter.gd")
+const PlayableItemBridgeScript = preload("res://scripts/runtime/listen_host/playable_item_command_bridge.gd")
+const PlayableClientSessionScript = preload("res://scripts/runtime/listen_host/playable_client_session.gd")
 
 const SCHEMA: String = "planet_simulator.listen_host_runtime.v1"
 const STATE_STOPPED: String = "STOPPED"
@@ -32,6 +36,17 @@ var _stale_revision_rejected: bool = false
 var _boundary_round_trips: int = 0
 var _alias_isolation_verified: bool = false
 
+var _playable_authority_host: Node
+var _playable_authority
+var _playable_authority_adapter
+var _playable_command_transport
+var _playable_client_runtime
+var _playable_item_bridge
+var _playable_client_session
+var _playable_session_id: String = ""
+var _playable_attached: bool = false
+var _playable_attach_count: int = 0
+
 
 func setup(config: Dictionary = {}) -> Dictionary:
 	if _state != STATE_STOPPED:
@@ -42,6 +57,9 @@ func setup(config: Dictionary = {}) -> Dictionary:
 	var session_id: String = String(config.get("session_id", DEFAULT_SESSION_ID))
 	if owner_id.strip_edges().is_empty() or authority_epoch < 1 or server_tick < 0 or session_id.strip_edges().is_empty():
 		return _failure("INVALID_LISTEN_HOST_CONFIGURATION")
+	var authority_host_value = config.get("authority_host")
+	if authority_host_value != null and authority_host_value is Node:
+		_playable_authority_host = authority_host_value
 
 	_authority = AuthorityScript.new()
 	var authority_setup: Dictionary = _authority.setup(owner_id, authority_epoch, server_tick)
@@ -188,6 +206,7 @@ func get_report() -> Dictionary:
 		"client_gateway": gateway_report,
 		"transport_kind": "LOOPBACK",
 		"direct_client_domain_access": false,
+		"playable": get_playable_report(),
 	}
 
 
@@ -220,6 +239,189 @@ func _verify_alias_isolation() -> bool:
 		and not client_after.get("domain_components", {}).has("alias_probe")
 		and not authority_after.get("domain_components", {}).has("alias_probe")
 	)
+
+
+func attach_playable_world(config: Dictionary) -> Dictionary:
+	if _playable_attached:
+		var detached: Dictionary = detach_playable_world()
+		if not bool(detached.get("success", false)):
+			return detached
+	if _playable_authority_host == null or not is_instance_valid(_playable_authority_host):
+		return _failure("PLAYABLE_AUTHORITY_HOST_REQUIRED")
+	_playable_session_id = String(
+		config.get("session_id", "session/h1/playable-listen-host/1")
+	).strip_edges()
+	if _playable_session_id.is_empty():
+		return _failure("PLAYABLE_SESSION_ID_REQUIRED")
+
+	_playable_authority = PlayableAuthorityScript.new()
+	_playable_authority.name = "H1PlayableAuthority"
+	_playable_authority_host.add_child(_playable_authority)
+	var authority_config: Dictionary = config.duplicate(true)
+	authority_config["session_id"] = _playable_session_id
+	var authority_setup: Dictionary = _playable_authority.setup(authority_config)
+	if not bool(authority_setup.get("success", false)):
+		_cleanup_playable_objects()
+		return _failure(
+			String(authority_setup.get("error_code", "PLAYABLE_AUTHORITY_SETUP_FAILED")),
+			authority_setup.get("details", {})
+		)
+
+	_playable_authority_adapter = PlayableAuthorityAdapterScript.new()
+	var adapter_setup: Dictionary = _playable_authority_adapter.setup(_playable_authority)
+	if not bool(adapter_setup.get("success", false)):
+		_cleanup_playable_objects()
+		return adapter_setup
+	_playable_command_transport = CommandTransportScript.new()
+	_playable_command_transport.setup(_playable_authority_adapter)
+	_playable_client_runtime = ClientRuntimeScript.new()
+	var client_setup: Dictionary = _playable_client_runtime.setup(
+		_playable_command_transport,
+		_playable_session_id
+	)
+	if not bool(client_setup.get("success", false)):
+		_cleanup_playable_objects()
+		return client_setup
+
+	for snapshot in _playable_authority.create_initial_snapshots():
+		var delivered: Dictionary = _playable_client_runtime.accept_snapshot(snapshot)
+		if not bool(delivered.get("success", false)):
+			_cleanup_playable_objects()
+			return _failure(
+				String(delivered.get("error_code", "PLAYABLE_INITIAL_SNAPSHOT_REJECTED")),
+				delivered.get("details", {})
+			)
+
+	_playable_item_bridge = PlayableItemBridgeScript.new()
+	var bridge_setup: Dictionary = _playable_item_bridge.setup(
+		_playable_client_runtime,
+		PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID,
+		_playable_session_id
+	)
+	if not bool(bridge_setup.get("success", false)):
+		_cleanup_playable_objects()
+		return bridge_setup
+	_playable_client_session = PlayableClientSessionScript.new()
+	var session_setup: Dictionary = _playable_client_session.setup(
+		_playable_client_runtime,
+		_playable_item_bridge,
+		_playable_session_id
+	)
+	if not bool(session_setup.get("success", false)):
+		_cleanup_playable_objects()
+		return session_setup
+	_playable_attached = true
+	_playable_attach_count += 1
+	return _success({
+		"player_entity_id": PlayableAuthorityScript.PLAYER_ENTITY_ID,
+		"item_graph_entity_id": PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID,
+		"player_snapshot": get_playable_snapshot(PlayableAuthorityScript.PLAYER_ENTITY_ID),
+		"item_snapshot": get_playable_snapshot(PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID),
+	})
+
+
+func detach_playable_world() -> Dictionary:
+	if not _playable_attached and _playable_authority == null:
+		return _success({"already_detached": true})
+	var shutdown_result: Dictionary = _success()
+	if _playable_authority != null and _playable_authority.has_method("shutdown"):
+		shutdown_result = _playable_authority.shutdown()
+	_cleanup_playable_objects()
+	return shutdown_result
+
+
+func get_playable_client_session():
+	return _playable_client_session
+
+
+func get_playable_item_bridge():
+	return (
+		_playable_client_session.get_item_bridge()
+		if _playable_client_session != null
+		else null
+	)
+
+
+func get_playable_snapshot(entity_id: String) -> Dictionary:
+	if _playable_client_session == null:
+		return {}
+	return _playable_client_session.get_snapshot(entity_id)
+
+
+func submit_player_state(
+	player_state: Dictionary,
+	delta_seconds: float,
+	operation_id: String
+) -> Dictionary:
+	if not _playable_attached or _playable_client_session == null:
+		return _failure("PLAYABLE_WORLD_NOT_ATTACHED")
+	return _playable_client_session.submit_player_state(
+		player_state, delta_seconds, operation_id
+	)
+
+
+func get_playable_report() -> Dictionary:
+	var client_session_report: Dictionary = (
+		_playable_client_session.get_report()
+		if _playable_client_session != null
+		else {}
+	)
+	var authority_report: Dictionary = (
+		_playable_authority.get_report()
+		if _playable_authority != null and _playable_authority.has_method("get_report")
+		else {}
+	)
+	var client_report: Dictionary = (
+		_playable_client_runtime.get_report()
+		if _playable_client_runtime != null
+		else {}
+	)
+	return {
+		"schema": "planet_simulator.h1_playable_listen_host_report.v1",
+		"attached": _playable_attached,
+		"session_id": _playable_session_id,
+		"attach_count": _playable_attach_count,
+		"command_count": int(client_session_report.get("command_count", 0)),
+		"delta_count": int(client_session_report.get("delta_count", 0)),
+		"rejection_count": int(client_session_report.get("rejection_count", 0)),
+		"authority": authority_report,
+		"client_session": client_session_report,
+		"client_runtime": client_report,
+		"item_bridge": (
+			_playable_item_bridge.get_report()
+			if _playable_item_bridge != null
+			else {}
+		),
+		"player_replica": get_playable_snapshot(PlayableAuthorityScript.PLAYER_ENTITY_ID),
+		"item_replica": get_playable_snapshot(PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID),
+		"direct_client_authority_access": false,
+		"direct_client_domain_access": false,
+	}
+
+
+func get_playable_authority_world_entity_store_for_kernel():
+	if _playable_authority == null:
+		return null
+	return _playable_authority.get_world_entity_store_for_kernel()
+
+
+func _cleanup_playable_objects() -> void:
+	if _playable_client_session != null and _playable_client_session.has_method("invalidate"):
+		_playable_client_session.invalidate()
+	_playable_client_session = null
+	if _playable_item_bridge != null and _playable_item_bridge.has_method("invalidate"):
+		_playable_item_bridge.invalidate()
+	_playable_item_bridge = null
+	_playable_client_runtime = null
+	_playable_command_transport = null
+	_playable_authority_adapter = null
+	if _playable_authority != null and is_instance_valid(_playable_authority):
+		if _playable_authority.get_parent() != null:
+			_playable_authority.get_parent().remove_child(_playable_authority)
+		_playable_authority.free()
+	_playable_authority = null
+	_playable_session_id = ""
+	_playable_attached = false
 
 
 func _enter_failed(error_code: String) -> Dictionary:

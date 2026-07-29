@@ -19,8 +19,8 @@ const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/wor
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.9.0-simulation-s1-distributed-compute-fix1"
-const FOUNDATION_BUILD_ID: String = "s1-distributed-compute-contracts-fix1"
+const FOUNDATION_CHECKPOINT: String = "v16.9.1-runtime-h1-playable-listen-host"
+const FOUNDATION_BUILD_ID: String = "h1-playable-listen-host"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -43,6 +43,7 @@ var simulation_clock
 var test_registry
 var world_catalog
 var world_host: Node3D
+var listen_host_authority_host: Node
 var developer_console
 var system_menu
 var current_runtime: Node
@@ -133,8 +134,12 @@ func _ready() -> void:
 		return
 
 	if runtime_role == RuntimeRoleScript.LISTEN_HOST:
+		listen_host_authority_host = Node.new()
+		listen_host_authority_host.name = "ListenHostAuthorityHost"
+		add_child(listen_host_authority_host)
 		listen_host_runtime = ListenHostRuntimeScript.new()
 		listen_host_runtime_setup = listen_host_runtime.setup({
+			"authority_host": listen_host_authority_host,
 			"authority_owner_id": String(launch_options.get("node_id", "local-listen-host")),
 			"authority_epoch": 1,
 			"server_tick": 0,
@@ -178,10 +183,6 @@ func _ready() -> void:
 		"checkpoint": FOUNDATION_CHECKPOINT,
 		"build_id": FOUNDATION_BUILD_ID,
 	})
-	if listen_host_runtime != null:
-		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
-	if bool(launch_options.get("print_runtime_descriptor", false)):
-		print("[runtime_descriptor] %s" % JSON.stringify(runtime_descriptor, "", true, true))
 	var load_result: Dictionary = load_world(requested_world, false)
 	if not bool(load_result.get("success", false)):
 		push_error(String(load_result.get("output", "World load failed")))
@@ -189,6 +190,9 @@ func _ready() -> void:
 		if not _cli_test_scope.is_empty():
 			get_tree().quit(1)
 		return
+	_refresh_runtime_descriptor()
+	if bool(launch_options.get("print_runtime_descriptor", false)):
+		print("[runtime_descriptor] %s" % JSON.stringify(runtime_descriptor, "", true, true))
 	lifecycle_coordinator.mark_running("world_ready")
 	_print_lifecycle_event("node_ready", {
 		"world_id": current_world_id,
@@ -209,6 +213,14 @@ func _ready() -> void:
 		_schedule_shutdown(shutdown_after_ms)
 	if not _cli_test_scope.is_empty():
 		call_deferred("_run_cli_tests")
+
+
+func _refresh_runtime_descriptor() -> void:
+	if runtime_descriptor.is_empty():
+		return
+	runtime_descriptor["world_id"] = current_world_id
+	if listen_host_runtime != null:
+		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
 
 
 func _physics_process(delta: float) -> void:
@@ -419,6 +431,17 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 		runtime_descriptor["world_id"] = current_world_id
 	runtime.name = "WorldRuntime_%s" % normalized
 	world_host.add_child(runtime)
+	var playable_attach: Dictionary = _attach_playable_listen_host(runtime)
+	if not bool(playable_attach.get("success", false)):
+		return _abort_runtime_load(normalized, [{
+			"owner_id": RUNTIME_COMMAND_OWNER,
+			"reason": String(
+				playable_attach.get("error_code", "PLAYABLE_LISTEN_HOST_ATTACH_FAILED")
+			),
+			"details": playable_attach.get("details", {}),
+		}])
+	if listen_host_runtime != null and not runtime_descriptor.is_empty():
+		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
 	_bind_runtime_kernel_services(runtime)
 	_apply_runtime_role_policy(runtime)
 	command_registry.clear_registration_errors()
@@ -627,6 +650,18 @@ func _dispose_current_runtime(reason: String) -> Dictionary:
 			"drain": _last_runtime_drain.duplicate(true),
 		}
 
+	if listen_host_runtime != null:
+		var playable_detach: Dictionary = listen_host_runtime.detach_playable_world()
+		if not bool(playable_detach.get("success", false)):
+			_runtime_release_blocked = true
+			return {
+				"success": false,
+				"drained": true,
+				"error_code": "PLAYABLE_AUTHORITY_DETACH_FAILED",
+				"runtime_retained": true,
+				"world_id": current_world_id,
+				"details": playable_detach,
+			}
 	if runtime.get_parent() != null:
 		runtime.get_parent().remove_child(runtime)
 	runtime.free()
@@ -1535,11 +1570,59 @@ func _schedule_shutdown(delay_ms: int) -> void:
 	)
 
 
+func _attach_playable_listen_host(runtime: Node) -> Dictionary:
+	if listen_host_runtime == null or runtime == null:
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	if (
+		not runtime.has_method("create_playable_listen_host_config")
+		or not runtime.has_method("attach_playable_client_session")
+	):
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	var config_value = runtime.call("create_playable_listen_host_config")
+	if not config_value is Dictionary or Dictionary(config_value).is_empty():
+		return {
+			"success": false,
+			"error_code": "PLAYABLE_LISTEN_HOST_CONFIG_REQUIRED",
+			"details": {},
+		}
+	var authority_attach: Dictionary = listen_host_runtime.attach_playable_world(
+		Dictionary(config_value)
+	)
+	if not bool(authority_attach.get("success", false)):
+		return authority_attach
+	var client_session = listen_host_runtime.get_playable_client_session()
+	var client_attach_value = runtime.call(
+		"attach_playable_client_session", client_session
+	)
+	if not client_attach_value is Dictionary:
+		listen_host_runtime.detach_playable_world()
+		return {
+			"success": false,
+			"error_code": "INVALID_PLAYABLE_CLIENT_ATTACH_RESULT",
+			"details": {},
+		}
+	var client_attach: Dictionary = Dictionary(client_attach_value)
+	if not bool(client_attach.get("success", false)):
+		listen_host_runtime.detach_playable_world()
+		return client_attach
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"required": true,
+			"authority": authority_attach.get("details", {}),
+			"client": client_attach.duplicate(true),
+		},
+	}
+
+
 func _bind_runtime_kernel_services(runtime: Node) -> void:
 	if simulation_kernel == null:
 		return
 	var store = null
-	if runtime != null and runtime.has_method("get_world_entity_store"):
+	if listen_host_runtime != null:
+		store = listen_host_runtime.get_playable_authority_world_entity_store_for_kernel()
+	if store == null and runtime != null and runtime.has_method("get_world_entity_store"):
 		store = runtime.call("get_world_entity_store")
 	simulation_kernel.set_world_entity_store(store)
 

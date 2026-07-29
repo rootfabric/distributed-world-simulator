@@ -30,9 +30,12 @@ const RuntimeTestRegistryScript = preload(
 )
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
+const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+const NetworkContractUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
 
-const PROJECT_VERSION: String = "16.8.5-domain-m0-aggregate-transactions"
-const BUILD_ID: String = "s1-distributed-compute-contracts-fix1"
+const PROJECT_VERSION: String = "16.9.1-runtime-h1-playable-listen-host"
+const BUILD_ID: String = "h1-playable-listen-host"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
@@ -62,6 +65,7 @@ var item_gameplay
 
 var simulator_app
 var simulation_clock
+var playable_client_session
 var runtime_universe_id: String = "main"
 var runtime_instance_id: String = "persistent"
 var local_authority_id: String = "local-process"
@@ -76,6 +80,13 @@ var local_input_enabled: bool = true
 var _runtime_stop_requested: bool = false
 var _runtime_drained: bool = false
 var _runtime_stop_reason: String = ""
+var _h1_attached: bool = false
+var _h1_player_input_sequence: int = 0
+var _h1_player_operation_sequence: int = 0
+var _h1_last_candidate_hash: String = ""
+var _h1_last_sync_error: String = ""
+var _h1_sync_count: int = 0
+var _h1_rejection_count: int = 0
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
@@ -226,7 +237,8 @@ func _ready() -> void:
 	_restore_saved_location_or_random_spawn()
 	_ensure_player_entity_registered()
 	zone_manager.update_observer(player.get_world_position(), false)
-	_setup_item_gameplay()
+	if runtime_role != "listen-host":
+		_setup_item_gameplay()
 	# The common simulator starts every world in gameplay mode. The large Lunar
 	# diagnostics panel remains available through ui.menu.toggle, but it is not
 	# a second world-specific entry interface. Legacy standalone launch keeps
@@ -235,7 +247,49 @@ func _ready() -> void:
 	call_deferred("_initialize_standalone_runtime_services")
 
 
-func _setup_item_gameplay() -> void:
+func create_playable_listen_host_config() -> Dictionary:
+	if runtime_role != "listen-host" or player == null:
+		return {}
+	return {
+		"authority_owner_id": local_authority_id,
+		"authority_epoch": 1,
+		"server_tick": 0,
+		"session_id": "session/h1/%s/%s" % [runtime_instance_id, get_runtime_id()],
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"space_id": "moon",
+		"frame_id": "body/moon/fixed",
+		"gravity_reference_body_id": "moon-local",
+		"item_state_key": "moon-player-r2",
+		"item_profile_id": "moon",
+		"item_persistence_enabled": true,
+		"include_demo_world": false,
+		"player_state": _create_h1_player_state(0),
+	}
+
+
+func attach_playable_client_session(session) -> Dictionary:
+	if runtime_role != "listen-host":
+		return {"success": false, "error_code": "LISTEN_HOST_ROLE_REQUIRED"}
+	if playable_client_session != null or item_gameplay != null:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ALREADY_ATTACHED"}
+	if session == null or not session is RefCounted:
+		return {"success": false, "error_code": "INVALID_PLAYABLE_CLIENT_SESSION"}
+	for method_name in ["get_snapshot", "get_item_bridge", "submit_player_state", "get_report"]:
+		if not session.has_method(method_name):
+			return {
+				"success": false,
+				"error_code": "PLAYABLE_CLIENT_SESSION_METHOD_MISSING",
+				"method": method_name,
+			}
+	playable_client_session = session
+	var setup_result: Dictionary = _setup_item_gameplay()
+	if not bool(setup_result.get("success", false)):
+		playable_client_session = null
+	return setup_result
+
+
+func _setup_item_gameplay() -> Dictionary:
 	item_world_root = Node3D.new()
 	item_world_root.name = "LunarItemWorldRoot"
 	add_child(item_world_root)
@@ -253,8 +307,61 @@ func _setup_item_gameplay() -> void:
 	item_gameplay = ItemGameplayControllerScript.new()
 	item_gameplay.name = "LunarItemGameplay"
 	add_child(item_gameplay)
-	item_gameplay.setup_runtime(player, item_world_root, item_attachment_root, item_gravity_field, "body/moon/fixed", "moon-local", "moon-player-r2", "moon", true)
+
+	var setup_result: Dictionary
+	if runtime_role == "listen-host":
+		if playable_client_session == null:
+			return {"success": false, "error_code": "PLAYABLE_CLIENT_SESSION_REQUIRED"}
+		var item_snapshot: Dictionary = playable_client_session.get_snapshot(
+			PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID
+		)
+		var graph_value = item_snapshot.get("domain_components", {}).get("item_graph", {})
+		if not graph_value is Dictionary or Dictionary(graph_value).is_empty():
+			_h1_last_sync_error = "H1_ITEM_GRAPH_REPLICA_MISSING"
+			push_error(_h1_last_sync_error)
+			return {"success": false, "error_code": _h1_last_sync_error}
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			item_gravity_field,
+			"body/moon/fixed",
+			"moon-local",
+			"moon-player-r2",
+			"moon",
+			true,
+			{
+				"mode": ItemGameplayControllerScript.RUNTIME_MODE_REPLICA,
+				"authority_owner_id": String(item_snapshot.get("authority_owner_id", local_authority_id)),
+				"authority_epoch": int(item_snapshot.get("authority_epoch", 1)),
+				"initial_graph_snapshot": Dictionary(graph_value),
+				"replica_revision": int(item_snapshot.get("state_revision", -1)),
+				"replica_checksum": String(item_snapshot.get("checksum", "")),
+				"network_command_bridge": playable_client_session.get_item_bridge(),
+				"persistence_enabled": false,
+				"presentation_enabled": true,
+			}
+		)
+		_h1_attached = bool(setup_result.get("success", false))
+		_h1_last_candidate_hash = _h1_state_content_hash(_create_h1_player_state(0))
+	else:
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			item_gravity_field,
+			"body/moon/fixed",
+			"moon-local",
+			"moon-player-r2",
+			"moon",
+			true
+		)
+	if not bool(setup_result.get("success", false)):
+		_h1_last_sync_error = String(setup_result.get("error_code", "ITEM_GAMEPLAY_SETUP_FAILED"))
+		push_error("Item gameplay setup failed: %s" % setup_result)
+		return setup_result
 	item_gameplay.inventory_visibility_changed.connect(_on_item_inventory_visibility_changed)
+	return setup_result
 
 
 func _on_item_inventory_visibility_changed(visible_value: bool) -> void:
@@ -276,6 +383,8 @@ func _initialize_standalone_runtime_services() -> void:
 func _process(delta: float) -> void:
 	if moon_world == null or player == null:
 		return
+	if _h1_attached and not spectator_enabled:
+		_sync_h1_player_state(delta)
 
 	var active_world_position: Vector3
 	if spectator_enabled:
@@ -872,7 +981,7 @@ func run_entity_migration_mini_test() -> Dictionary:
 		{
 			"universe_id": runtime_universe_id,
 			"instance_id": runtime_instance_id,
-			"space_id": "sol",
+			"space_id": "moon",
 			"frame_id": "body/moon/fixed",
 			"sample_time_s": (
 				float(simulation_clock.get_time_seconds())
@@ -1131,7 +1240,7 @@ func _ensure_player_entity_registered() -> void:
 		{
 			"universe_id": runtime_universe_id,
 			"instance_id": runtime_instance_id,
-			"space_id": "sol",
+			"space_id": "moon",
 			"frame_id": "body/moon/fixed",
 			"sample_time_s": (
 				float(simulation_clock.get_time_seconds())
@@ -1418,6 +1527,125 @@ func register_runtime_tests(registry, owner_id: String) -> void:
 	}, Callable(self, "_runtime_command_contract_test"), owner_id)
 
 
+
+func _create_h1_player_state(input_sequence: int) -> Dictionary:
+	var sample_time_s: float = (
+		float(simulation_clock.get_time_seconds())
+		if simulation_clock != null
+		else 0.0
+	)
+	return PlayableStateCodec.create_player_state(
+		player.get_world_position(),
+		player.global_transform.basis,
+		player.velocity,
+		player.global_position,
+		player.get_controller_id(),
+		player.get_camera_mode(),
+		player.is_flashlight_enabled(),
+		input_sequence,
+		"body/moon/fixed",
+		runtime_universe_id,
+		"moon",
+		runtime_instance_id,
+		sample_time_s
+	)
+
+
+func _h1_state_content_hash(player_state: Dictionary) -> String:
+	var comparable: Dictionary = player_state.duplicate(true)
+	comparable["last_input_sequence"] = 0
+	var spatial: Dictionary = Dictionary(comparable.get("spatial_ref", {})).duplicate(true)
+	# Simulation time changes every frame but is not itself a player mutation.
+	spatial["sample_time_s"] = 0.0
+	comparable["spatial_ref"] = spatial
+	return NetworkContractUtils.payload_hash(comparable)
+
+
+func _sync_h1_player_state(delta: float) -> void:
+	if playable_client_session == null or player == null:
+		return
+	var bounded_delta: float = clampf(delta, 0.000001, 0.25)
+	var probe_state: Dictionary = _create_h1_player_state(_h1_player_input_sequence + 1)
+	var content_hash: String = _h1_state_content_hash(probe_state)
+	if content_hash == _h1_last_candidate_hash:
+		return
+	_h1_player_input_sequence += 1
+	_h1_player_operation_sequence += 1
+	probe_state["last_input_sequence"] = _h1_player_input_sequence
+	var result: Dictionary = playable_client_session.submit_player_state(
+		probe_state,
+		bounded_delta,
+		"operation/h1/player/%d" % _h1_player_operation_sequence
+	)
+	if not bool(result.get("success", false)):
+		_h1_rejection_count += 1
+		_h1_last_sync_error = String(result.get("error_code", "PLAYER_SYNC_REJECTED"))
+		_apply_h1_player_snapshot(
+			Dictionary(result.get("details", {}).get("snapshot", {}))
+		)
+		return
+	var snapshot: Dictionary = Dictionary(result.get("details", {}).get("snapshot", {}))
+	if not _apply_h1_player_snapshot(snapshot):
+		_h1_rejection_count += 1
+		_h1_last_sync_error = "INVALID_PLAYER_REPLICA_SNAPSHOT"
+		return
+	_h1_last_candidate_hash = content_hash
+	_h1_last_sync_error = ""
+	_h1_sync_count += 1
+
+
+func _apply_h1_player_snapshot(snapshot: Dictionary) -> bool:
+	if snapshot.is_empty():
+		return false
+	var state_value = snapshot.get("domain_components", {}).get("player_state", {})
+	if not state_value is Dictionary:
+		return false
+	var state: Dictionary = Dictionary(state_value)
+	if not bool(PlayableStateCodec.validate_player_state(state).get("success", false)):
+		return false
+	player.set_world_position(PlayableStateCodec.player_position(state))
+	player.global_transform = Transform3D(
+		PlayableStateCodec.player_basis(state),
+		player.global_position
+	)
+	player.velocity = PlayableStateCodec.player_velocity(state)
+	if player.get_controller_id() != String(state.get("controller_id", "")):
+		player.activate_controller(String(state.get("controller_id", "")))
+	if player.get_camera_mode() != String(state.get("camera_mode", "")):
+		player.set_camera_mode(String(state.get("camera_mode", "")))
+	if player.is_flashlight_enabled() != bool(state.get("flashlight_enabled", false)):
+		player.set_flashlight_enabled(bool(state.get("flashlight_enabled", false)))
+	_h1_player_input_sequence = maxi(
+		_h1_player_input_sequence,
+		int(state.get("last_input_sequence", 0))
+	)
+	return true
+
+
+func _create_h1_runtime_report() -> Dictionary:
+	return {
+		"schema": "planet_simulator.h1_world_runtime_report.v1",
+		"attached": _h1_attached,
+		"player_entity_id": PlayableAuthorityScript.PLAYER_ENTITY_ID,
+		"item_graph_entity_id": PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID,
+		"player_input_sequence": _h1_player_input_sequence,
+		"player_sync_count": _h1_sync_count,
+		"player_rejection_count": _h1_rejection_count,
+		"last_sync_error": _h1_last_sync_error,
+		"item_controller_mode": (
+			String(item_gameplay.runtime_mode)
+			if item_gameplay != null
+			else ""
+		),
+		"client_direct_authority_references": 0,
+		"client_direct_authoritative_domain_references": 0,
+		"client_session": (
+			playable_client_session.get_report()
+			if playable_client_session != null
+			else {}
+		),
+	}
+
 func request_runtime_stop(reason: String = "runtime_unload") -> Dictionary:
 	if _runtime_stop_requested:
 		return {"success": true, "drained": _runtime_drained, "reason": _runtime_stop_reason}
@@ -1465,6 +1693,8 @@ func drain_runtime_stop(timeout_ms: int = 30000) -> Dictionary:
 
 
 func get_world_entity_store():
+	if _h1_attached:
+		return null
 	if item_gameplay == null or item_gameplay.domain.is_empty():
 		return null
 	return item_gameplay.domain.world_entities
@@ -1508,6 +1738,7 @@ func create_runtime_snapshot() -> Dictionary:
 			moon_world.get_terrain_streaming_snapshot() if moon_world != null else {}
 		),
 		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
+		"playable_listen_host": _create_h1_runtime_report(),
 	}
 
 
@@ -1721,6 +1952,17 @@ func _command_terrain_streaming_test(_arguments: Array[String]) -> Dictionary:
 
 
 func _runtime_boot_test() -> Dictionary:
+	var h1_ready: bool = true
+	if runtime_role == "listen-host":
+		var h1_report: Dictionary = _create_h1_runtime_report()
+		h1_ready = (
+			_h1_attached
+			and item_gameplay != null
+			and String(item_gameplay.runtime_mode) == ItemGameplayControllerScript.RUNTIME_MODE_REPLICA
+			and bool(h1_report.get("client_session", {}).get("configured", false))
+			and int(h1_report.get("client_direct_authority_references", -1)) == 0
+			and int(h1_report.get("client_direct_authoritative_domain_references", -1)) == 0
+		)
 	var passed: bool = (
 		moon_world != null
 		and player != null
@@ -1729,6 +1971,8 @@ func _runtime_boot_test() -> Dictionary:
 		and entity_registry != null
 		and persistence != null
 		and world_interactor != null
+		and item_gameplay != null
+		and h1_ready
 	)
 	return {
 		"success": passed,

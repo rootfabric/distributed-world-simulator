@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
-$ReportPath = Join-Path $ReportDirectory "network-contract-summary.json"
+$ReportPath = Join-Path $ReportDirectory "h1-playable-listen-host-summary.json"
 New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
 
 function Resolve-GodotExecutable {
@@ -32,48 +32,13 @@ function Resolve-GodotExecutable {
 $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $Tests = @(
     "res://tests/runtime/test_launch_options.gd",
-    "res://tests/network/test_network_contracts.gd",
-    "res://tests/network/test_loopback_command_transport.gd",
-    "res://tests/network/test_network_transport_boundary.gd",
-    "res://tests/network/test_n1_enet_snapshot_contracts.gd",
-    "res://tests/network/test_n1_enet_snapshot_processes.gd",
-    "res://tests/network/test_n1_remote_item_command_contracts.gd",
-    "res://tests/network/test_n1_remote_item_command_processes.gd",
-    "res://tests/network/test_n1_reconnect_replay_contracts.gd",
-    "res://tests/network/test_n1_reconnect_replay_processes.gd",
-    "res://tests/testing/test_n2_process_harness_contracts.gd",
-    "res://tests/testing/test_n2_process_harness_processes.gd",
-    "res://tests/persistence/test_r3_authoritative_recovery_contracts.gd",
-    "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
     "res://tests/runtime/test_h0_listen_host_contracts.gd",
-    "res://tests/runtime/test_h0_listen_host_processes.gd",
     "res://tests/runtime/test_h1_playable_listen_host_contracts.gd",
-    "res://tests/runtime/test_h1_playable_listen_host_integration.gd",
-    "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
-    "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
-    "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
-    "res://tests/simulation/test_s0_spatial_substrate_integration.gd",
-    "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
-    "res://tests/network/test_t1_multi_peer_transport_processes.gd",
-    "res://tests/network/test_b0_message_bus_contracts.gd",
-    "res://tests/network/test_b0_message_bus_integration.gd",
-    "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
-    "res://tests/simulation/test_m0_aggregate_transaction_integration.gd",
-    "res://tests/simulation/test_s1_distributed_compute_contracts.gd",
-    "res://tests/simulation/test_s1_distributed_compute_integration.gd",
-    "res://tests/network/test_n0_extended_contracts.gd",
-    "res://tests/network/test_n0_contract_mutation_matrix.gd",
-    "res://tests/network/test_n0_golden_fixtures.gd",
-    "res://tests/network/test_loopback_replication_transport.gd",
-    "res://tests/network/test_n0_review_regressions.gd",
-    "res://tests/network/test_handoff_state_machine.gd",
-    "res://tests/network/test_handoff_transition_matrix.gd",
-    "res://tests/entities/test_authority_revision_semantics.gd",
-    "res://tests/runtime/test_kernel_ports.gd"
+    "res://tests/runtime/test_h1_playable_listen_host_integration.gd"
 )
 
 $Summary = [ordered]@{
-    schema = "planet_simulator.network_contract_summary.v1"
+    schema = "planet_simulator.h1_playable_listen_host_summary.v1"
     checkpoint = "v16.9.1-runtime-h1-playable-listen-host"
     build_id = "h1-playable-listen-host"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
@@ -105,9 +70,6 @@ function Invoke-CheckedProcess {
     $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
     try {
-        # Expected Godot diagnostics may be emitted on stderr even when the
-        # test succeeds. Capture them without turning NativeCommandError into
-        # a terminating PowerShell exception.
         $ErrorActionPreference = "Continue"
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
@@ -162,7 +124,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through H1 network/runtime tests passed." -ForegroundColor Green
+    Write-Host "H1 playable listen-host tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {
