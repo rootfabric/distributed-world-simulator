@@ -200,7 +200,7 @@ Handoff-specific тест требуется только для объекто�
 | SP-009 | boundary summary revision/tick stream монотонен | S0 |
 | SP-010 | reverse duplicate bidirectional topology link отклоняется | S0 |
 
-## 13. Multi-peer и message-bus gates — T1 accepted, B0 candidate
+## 13. Multi-peer и message-bus gates — T1/B0 accepted
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -234,6 +234,9 @@ Handoff-specific тест требуется только для объекто�
 | TX-004 | state/result/ledger/outbox восстанавливаются вместе | M0 |
 | TX-005 | conservation invariant failure aborts batch | M0 |
 | TX-006 | crash between commit and publish leaves durable outbox | M0/B2 |
+| TX-007 | item/container cross-reference conservation проверяется до prepare | M0 |
+| TX-008 | result effect sets и outbox/result cross-links каноничны | M0 |
+| TX-009 | outbox publish transition не меняет aggregate snapshots | M0 |
 
 ## 15. Distributed compute gates
 

@@ -1,4 +1,4 @@
-Planetary World v16.8.4-data-plane-b0-message-bus-contracts
+Planetary World v16.8.5-domain-m0-aggregate-transactions
 
 B0 transport-independent message bus contracts:
 - five separate semantic ports: request/reply, events, jobs, replication and bulk
@@ -531,3 +531,14 @@ ARCHITECTURE CHECKPOINT A0
 - next branch: feature/h0-listen-host-runtime
 - primary architecture: docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md
 - implementation roadmap: docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md
+
+M0 transaction foundation: scripts/simulation/transactions/
+- checkpoint: v16.8.5-domain-m0-aggregate-transactions
+- branch: feature/m0-aggregate-transactions
+- contracts: MutationBatch, AggregatePrecondition, CREATE/UPDATE/DELETE, MutationBatchResult, OutboxRecord
+- runtime: AggregateTransactionCoordinator, AggregateTransactionRepository, TransactionInvariantRegistry
+- atomic state: aggregates + stable operation result + replay fingerprint + outbox
+- recovery: prepare-only pending is ignored; after-commit replay returns stored result without second mutation
+- invariants: kind adapters validate each snapshot; transaction validators enforce cross-aggregate conservation
+- runner: RUN_M0_AGGREGATE_TRANSACTION_TESTS.ps1 / .sh
+- next: S1 distributed compute jobs and MutationProposal contracts
