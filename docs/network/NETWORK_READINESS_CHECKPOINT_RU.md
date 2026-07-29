@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.3-network-t1-multi-peer`
+**Runtime checkpoint candidate:** `v16.8.4-data-plane-b0-message-bus-contracts`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -44,14 +44,18 @@
 - crash after commit и crash before commit;
 - fail-closed corruption/rollback handling.
 
-### H0/A1/S0
+### H0/A1/S0/T1/B0
 
 - single-process listen-host с client replica boundary;
 - generic item/non-item aggregate contracts;
 - stable hierarchical SimulationCellAddress;
 - explicit cell descriptors, shards и neighbour topology;
 - independent spatial and authority addresses;
-- monotonic boundary summaries.
+- monotonic boundary summaries;
+- multi-peer listener/session separation и targeted delivery;
+- real per-peer outbound queues/backpressure;
+- transport-independent request/reply, event, job, replication и bulk ports;
+- strict versioned timeout/backpressure/acknowledgement results.
 
 ## 2. К чему база готова
 
@@ -62,17 +66,16 @@
 - first listen-host implementation;
 - generic aggregate contracts;
 - spatial cell/shard substrate;
-- transport-independent ports;
-- outbox foundation;
-- local compute-worker contracts.
+- multiple peers и targeted transport;
+- transport-independent semantic message-bus ports.
 
 Средняя готовность:
 
-- multiple peers;
-- NATS service bus;
-- multi-peer transport;
+- NATS Core adapter;
+- JetStream/outbox;
 - population fields;
-- multi-aggregate transactions.
+- multi-aggregate transactions;
+- local compute-worker contracts.
 
 Пока не готово:
 
@@ -93,13 +96,13 @@ H0 уже создаёт отдельные `ClientRuntime`, `ClientCommandGatew
 
 Нужен A1 generic descriptor/adapter, а не снятие item invariants.
 
-### Current transport is single-peer oriented
+### Multi-peer transport foundation реализован
 
-Нужен T1 listener/peer lifecycle и per-peer queues.
+T1 разделяет listener и peer lifecycle, использует strict ProtocolFrame v2 и реальные per-peer outbound queues. Миграция N1 session services на v2 может выполняться постепенно через compatibility adapter.
 
-### Current wire routing is DTO allowlist-oriented
+### Semantic bus ports реализованы без broker SDK
 
-Нужен protocol frame v2 с channel/payload schema.
+B0 разделяет request/reply, events, jobs, replication и bulk transfer. Реальный NATS/JetStream adapter и durable outbox ещё не реализованы.
 
 ### Current command is single-aggregate
 
@@ -127,20 +130,21 @@ B0 message bus contracts
 
 ```text
 H0 — listen-host runtime — accepted
-A1 — Generic Aggregate Foundation — current candidate
+A1 — Generic Aggregate Foundation — accepted
 S0 — Spatial Simulation Substrate — accepted
-
-T1 — Multi-peer Transport v2 — current candidate
+T1 — Multi-peer Transport v2 — accepted
+B0 — Transport-independent Message Bus Contracts — current candidate
+M0 — Multi-aggregate Transactions/Outbox Foundation — next
 ```
 
-H0, A1 и S0 приняты. T1 добавляет multi-peer transport v2, targeted delivery, route generation и независимые peer sessions. Следующий gate — B0 semantic message-bus ports.
+B0 реализует строгие transport-neutral semantic ports и in-memory proof adapters. Следующий foundation gate — M0: staged multi-aggregate mutation, atomic persistence и outbox records.
 
 ## 6. Что пока не начинать
 
-- NATS adapter до B0 ports;
+- NATS adapter до принятия B0 contracts;
 - Population Field до A1/S0/M0;
 - generated rule runtime;
-- World Directory до T1/B0;
+- World Directory до принятия B0 и реализации M0;
 - cross-server handoff до N3/M0;
 - production orchestration;
 - massive entity-per-grass representation.

@@ -1,6 +1,6 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.8.3-network-t1-multi-peer`
+**Текущий runtime checkpoint:** `v16.8.4-data-plane-b0-message-bus-contracts`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Принятая aggregate-база:** `v16.8.1-architecture-a1-generic-aggregate`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
@@ -148,12 +148,12 @@ status: accepted
 - compute workers;
 - NATS.
 
-## 7. T1 — Multi-peer Transport v2 — реализован, candidate
+## 7. T1 — Multi-peer Transport v2 — accepted
 
 ```text
 checkpoint: v16.8.3-network-t1-multi-peer
 branch: feature/t1-multi-peer-transport-v2
-status: candidate
+status: accepted
 ```
 
 ### Scope
@@ -186,11 +186,12 @@ status: candidate
 - queue metrics не глобальные;
 - старый N1 single-peer vertical slice проходит через shim.
 
-## 8. B0 — Transport-independent message bus contracts
+## 8. B0 — Transport-independent message bus contracts — реализован, candidate
 
 ```text
-proposed checkpoint: v16.8.4-data-plane-b0-message-bus-contracts
+checkpoint: v16.8.4-data-plane-b0-message-bus-contracts
 branch: feature/b0-message-bus-contracts
+status: candidate
 ```
 
 ### Scope
@@ -203,14 +204,25 @@ JobQueuePort
 BulkTransferPort
 ```
 
-Добавить loopback/in-memory adapters и contract tests. NATS dependency отсутствует.
+Реализованы strict DTO, composition root и in-memory proof adapters. NATS dependency отсутствует.
+
+### Реализовано
+
+- versioned `BusOperationResult`;
+- direct и routed request/reply adapters;
+- direct и buffered event adapters;
+- job claim/ack/retry semantics;
+- targeted replication queues;
+- content-addressed bulk transfer;
+- fail-closed semantic port composition.
 
 ### Acceptance
 
 - domain service не знает subject/channel implementation;
 - разные semantics нельзя подменить одним несовместимым port;
 - exact DTO survives adapter round-trip;
-- duplicate/timeout/backpressure contracts выражены явно.
+- duplicate/timeout/backpressure contracts выражены явно;
+- одинаковый application workflow даёт одинаковый canonical result через разные adapters.
 
 ## 9. M0 — Multi-aggregate transactions и outbox foundation
 

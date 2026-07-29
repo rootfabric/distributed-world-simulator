@@ -3,8 +3,8 @@ extends RefCounted
 const AtomicJsonScript = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
 const EndpointScript = preload("res://scripts/network/contracts/network_endpoint.gd")
 
-const CHECKPOINT := "v16.8.3-network-t1-multi-peer"
-const BUILD_ID := "t1-multi-peer-transport-v2"
+const CHECKPOINT := "v16.8.4-data-plane-b0-message-bus-contracts"
+const BUILD_ID := "b0-transport-independent-message-bus-contracts"
 
 
 static func parse_options(arguments: PackedStringArray, mode: String) -> Dictionary:

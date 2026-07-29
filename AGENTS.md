@@ -110,11 +110,11 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint candidate: v16.8.2-simulation-s0-spatial-substrate
+runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-accepted aggregate base: v16.8.1-architecture-a1-generic-aggregate
-branch: feature/s0-spatial-simulation-substrate
-next implementation branch after acceptance: feature/t1-multi-peer-transport-v2
+accepted transport base: v16.8.3-network-t1-multi-peer
+branch: feature/b0-message-bus-contracts
+next implementation branch after acceptance: feature/m0-aggregate-transactions
 ```
 
 Foundation order remains mandatory:

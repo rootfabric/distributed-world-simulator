@@ -1,4 +1,17 @@
-Planetary World v16.8.3-network-t1-multi-peer
+Planetary World v16.8.4-data-plane-b0-message-bus-contracts
+
+B0 transport-independent message bus contracts:
+- five separate semantic ports: request/reply, events, jobs, replication and bulk
+- strict SemanticPortDescriptor and BusOperationResult v1
+- explicit timeout, backpressure, duplicate, claim/ack and content-hash semantics
+- adapter-specific subjects/channels/broker IDs forbidden in semantic payloads
+- direct/routed request-reply and direct/buffered event in-memory adapters
+- in-memory job queue, per-peer replication and bulk object adapters
+- MessageBusCompositionRoot rejects semantic port substitution
+- tests/network/test_b0_message_bus_contracts.gd
+- tests/network/test_b0_message_bus_integration.gd
+- docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md
+- docs/checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md
 
 S0 spatial simulation substrate:
 - stable hierarchical SimulationCellAddress independent from render origin

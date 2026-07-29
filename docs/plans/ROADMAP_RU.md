@@ -1,10 +1,10 @@
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий runtime gate — T1
+## Текущий runtime gate — B0
 
 ```text
-runtime candidate: v16.8.3-network-t1-multi-peer
-accepted base: v16.8.2-simulation-s0-spatial-substrate
+runtime candidate: v16.8.4-data-plane-b0-message-bus-contracts
+accepted base: v16.8.3-network-t1-multi-peer
 ```
 
 ```text
@@ -14,8 +14,8 @@ A0 accepted
 H0 accepted
 A1 accepted
 S0 accepted
-T1 multi-peer transport — current candidate
-→ B0 transport-independent message bus contracts
+T1 multi-peer transport — accepted
+B0 transport-independent message bus contracts — current candidate
 → M0 aggregate transactions + atomic outbox
 → S1 distributed compute contracts
 → B1/B2 and P0/D1 controlled tracks
@@ -23,10 +23,11 @@ T1 multi-peer transport — current candidate
 → N4 generic handoff
 ```
 
-T1 создаёт устойчивую многопировую сетевую границу, не привязанную к одному gameplay message type и не смешивающую transport session, route freshness и authority ownership.
+B0 создаёт transport-independent semantic ports для request/reply, events, jobs, replication и bulk transfer. T1 остаётся принятой multi-peer transport-базой; следующий foundation gate — M0 transactions/outbox.
 
 Основные документы:
 
+- `docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
 - `docs/architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
 - `docs/architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
 - `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.

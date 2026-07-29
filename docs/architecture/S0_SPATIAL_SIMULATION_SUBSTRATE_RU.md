@@ -367,4 +367,4 @@ T1 должен сохранить весь существующий single-peer
 
 ## 14. Следующий слой
 
-T1 Multi-peer Transport v2 реализован как candidate `v16.8.3-network-t1-multi-peer`. S0 cell/shard identity остаётся независимой от peer sessions и route generation.
+T1 Multi-peer Transport v2 принят как `v16.8.3-network-t1-multi-peer`; B0 Message Bus Contracts реализован как candidate `v16.8.4-data-plane-b0-message-bus-contracts`. S0 cell/shard identity остаётся независимой от peer sessions, route generation и bus adapter routes.
