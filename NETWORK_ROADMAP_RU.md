@@ -1,122 +1,19 @@
-# Дорожная карта сетевой и распределённой архитектуры PlanetSimulator
+# PlanetSimulator — укреплённая distributed runtime roadmap
 
-Текущий runtime checkpoint:
-
-```text
-v16.8.0-runtime-h0-listen-host
-branch: feature/h0-listen-host-runtime
-base: v16.7.1-architecture-a0-distributed-runtime
-```
-
-A0 принят как архитектурная основа. H0 реализует однопроцессный listen-host с отдельными authoritative и client runtime boundaries. Следующий этап — A1 generic aggregate foundation; N3 остаётся отложен до завершения foundation-линии.
-
-## Основные документы
-
-1. [`docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](docs/checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md) — текущий H0 runtime candidate.
-2. [`docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](docs/checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md) — принятая A0 architecture base.
-3. [`docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md) — целевая архитектура runtime, aggregates, workers и transports.
-4. [`docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md) — точная последовательность H0 → A1 → S0 → T1 → B0 → M0 → S1.
-5. [`docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`](docs/persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md) — принятый authoritative recovery foundation.
-6. [`docs/testing/N2_PROCESS_HARNESS_RU.md`](docs/testing/N2_PROCESS_HARNESS_RU.md) — multi-process test infrastructure.
-7. [`docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md`](docs/contracts/N0_NETWORK_CONTRACTS_V1_RU.md) — принятые сетевые invariants.
-8. [`docs/network/NETWORK_TEST_MATRIX_RU.md`](docs/network/NETWORK_TEST_MATRIX_RU.md) — test gates.
-9. [`docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md`](docs/network/PARALLEL_DEVELOPMENT_RULES_RU.md) — границы ownership между tracks.
-
-## Принятая база
+Текущий candidate: `v16.8.1-architecture-a1-generic-aggregate`.
+Принятый runtime: `v16.8.0-runtime-h0-listen-host`.
 
 ```text
-N0   network contracts                         accepted
-N1   ENet snapshot/command/reconnect           accepted
-N2   multi-process harness                     accepted
-R3.1 authoritative persistence/recovery        accepted
-A0   distributed runtime architecture          accepted
-H0   single-process network-first listen-host   current candidate
+N0–N2 accepted
+R3.1 accepted
+A0 accepted
+H0 accepted
+A1 current candidate
+→ S0 next
+→ T1
+→ B0
+→ M0
+→ S1
 ```
 
-## Скорректированная foundation-линия
-
-```text
-A0  architecture decisions
- ↓
-H0  listen-host + ClientReplicaStore
- ↓
-A1  generic aggregate contracts
- ↓
-S0  spatial cells/scopes/shards
- ↓
-T1  multi-peer transport v2
- ↓
-B0  transport-independent bus ports
- ↓
-M0  multi-aggregate transactions + outbox
- ↓
-S1  simulation jobs + mutation proposals
-```
-
-После foundation:
-
-```text
-B1 NATS Core
-→ B2 JetStream/outbox
-→ N3 World Directory
-
-P0 Population Field
-→ D1 remote vegetation worker MVP
-```
-
-Обе линии сходятся перед N4 generic authority handoff.
-
-## Главные инварианты
-
-```text
-canonical simulation ≠ presentation ≠ transport
-client replica ≠ server aggregate
-authority ownership ≠ compute assignment
-spatial location ≠ authority route
-transport semantics ≠ transport adapter
-```
-
-## Self-host решение
-
-Основной будущий локальный режим:
-
-```text
-listen-host
-├── embedded Region Authority
-├── loopback DTO boundary
-└── embedded ClientRuntime + replica + presentation
-```
-
-Для реалистичной локальной проверки:
-
-```text
-local-dedicated
-├── headless server process
-└── graphical client process over ENet localhost
-```
-
-## Transport policy
-
-Отдельные ports:
-
-```text
-ReplicationTransportPort
-ServiceRequestReplyPort
-EventStreamPort
-JobQueuePort
-BulkTransferPort
-```
-
-ENet, loopback, NATS и другие технологии реализуют adapters. Domain-код не знает subjects, sockets или broker IDs.
-
-## Машиночитаемый план
-
-- [`config/network/network-roadmap.v1.json`](config/network/network-roadmap.v1.json)
-
-## Следующий кодовый этап
-
-```text
-A1 — Generic Aggregate Foundation
-branch: feature/a1-generic-aggregate-foundation
-proposed checkpoint: v16.8.1-architecture-a1-generic-aggregate
-```
+A1 создаёт generic identity/authority/spatial/snapshot/delta/adapter/store слой, не изменяя EntitySnapshotEnvelope v1 и item-backed WorldEntityAggregate. Directory, NATS, Population Field и workers остаются после обязательных foundation prerequisites.

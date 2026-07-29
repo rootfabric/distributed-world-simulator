@@ -1,71 +1,36 @@
-# Ближайшие итерации после H0 Listen-host Runtime
+# Ближайшие итерации после A1 Generic Aggregate Foundation
 
 ## Текущая точка
 
 ```text
-runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+runtime checkpoint candidate: v16.8.1-architecture-a1-generic-aggregate
+accepted runtime: v16.8.0-runtime-h0-listen-host
 architecture base: v16.7.1-architecture-a0-distributed-runtime
+branch: feature/a1-generic-aggregate-foundation
 ```
 
-R3.1 принят: authoritative snapshot, ledger, command/replay dedup и crash recovery подтверждены. A0 принят как архитектурная база. H0 реализует первый однопроцессный network-first host и находится на независимой приёмке.
+A1 реализует общий aggregate contract, adapter registry и generic replica store. Существующий item-backed `WorldEntityAggregate` не ослаблен и подключён через `WorldItemAggregateAdapter`. Отдельный EnvironmentCell fixture доказывает non-item path.
 
-## Текущий candidate — H0 listen-host
-
-```text
-branch: feature/h0-listen-host-runtime
-proposed checkpoint: v16.8.0-runtime-h0-listen-host
-```
-
-H0 реализует:
-
-- отдельный `ClientRuntime`;
-- `ClientReplicaStore` для текущего item snapshot/delta;
-- `ClientCommandGateway`;
-- `HostRuntime` composition root;
-- loopback transport pair;
-- сериализационную/deep-copy boundary;
-- тест запрета прямого UI → server domain доступа;
-- opt-in запуск одним F5.
-
-Главный acceptance:
+## Следующий этап после принятия A1
 
 ```text
-одна item-команда
-→ listen-host loopback
-→ separate ENet server/client
-→ одинаковый final authoritative/client checksum
-```
-
-## Следующий кодовый этап после принятия H0
-
-```text
-A1 Generic Aggregate Foundation
-→ S0 Spatial Simulation Substrate
+S0 Spatial Simulation Substrate
 → T1 Multi-peer Transport v2
 → B0 Message-bus Contracts
 → M0 Aggregate Transactions + Outbox
 → S1 Distributed Compute Contracts
 ```
 
-Только после этого начинаются:
-
-```text
-B1 NATS Core
-B2 JetStream/outbox
-P0 Population Field
-D1 Remote Worker MVP
-N3 World Directory
-```
+S0 должен определить stable cell addressing, spatial scopes, shard descriptors и boundary summaries. Он не должен реализовывать Population Field gameplay, NATS или Directory.
 
 ## Правило фокуса
 
-Пока foundation checkpoint не принят:
+До принятия A1:
 
-- не начинать следующую foundation-ветку;
-- не добавлять растения или worker runtime напрямую в item aggregate;
-- не подключать NATS из domain-кода;
-- не строить Directory вокруг текущего single-item route;
-- не переводить обычный F5 на host до отдельной вертикальной миграции UI;
-- не начинать A1 до независимого принятия H0.
+- не начинать S0 в отдельной незавершённой ветке;
+- не добавлять новые aggregate kinds через условные ветки в `WorldEntityAggregate`;
+- не использовать generic `state` без kind adapter и exact schema;
+- не начинать Population Field, NATS, Directory или workers;
+- не вводить multi-aggregate commit до M0.
 
-Подробный план: [`DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).
+Подробности: [`DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).

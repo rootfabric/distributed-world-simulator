@@ -2,7 +2,7 @@
 
 Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`.
 
-Runtime-база: `v16.8.0-runtime-h0-listen-host`.
+Runtime-база: `v16.8.1-architecture-a1-generic-aggregate`.
 
 Ключевые документы текущего направления:
 
@@ -156,3 +156,6 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `docs/diagnostics/V15_5_1_FIXED_VALIDATION_RU.md`
 
 - [`checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md`](checkpoints/2026-07-27_V16_3_1_FOUNDATION_N0_PART1_FIX1_RU.md) — strict schema и fail-closed handler result;
+
+- `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md` — generic aggregate contracts, adapters and replica store.
+- `checkpoints/2026-07-29_V16_8_1_ARCHITECTURE_A1_GENERIC_AGGREGATE_RU.md` — A1 checkpoint.

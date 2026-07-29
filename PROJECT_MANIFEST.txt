@@ -1,4 +1,18 @@
-Planetary World v16.8.0-runtime-h0-listen-host
+Planetary World v16.8.1-architecture-a1-generic-aggregate
+
+A1 generic aggregate foundation:
+- immutable DynamicTypeReference with exact package hash and state schema
+- AggregateIdentity, AggregateAuthorityState and AggregateSpatialScope contracts
+- AggregateDescriptor separates identity, authority, space and partition
+- AggregateSnapshotEnvelope and AggregateDeltaEnvelope preserve canonical JSON fencing
+- AggregateAdapterPort and AggregateAdapterRegistry isolate aggregate implementations
+- GenericAggregateStore provides replica, replay and monotonic revision fencing
+- WorldItemAggregateAdapter preserves current WorldEntityAggregate invariants
+- non-item EnvironmentCell fixture proves no item_instance_id, physics_state or point position is required
+- tests/simulation/test_a1_generic_aggregate_contracts.gd
+- tests/simulation/test_a1_generic_aggregate_integration.gd
+- docs/architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md
+- docs/checkpoints/2026-07-29_V16_8_1_ARCHITECTURE_A1_GENERIC_AGGREGATE_RU.md
 
 H0 listen-host runtime:
 - single-process authority + ClientRuntime composition

@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 11,
+  "document_revision": 12,
   "created_at_utc": "2026-07-27T00:00:00Z",
   "updated_at_utc": "2026-07-29T00:00:00Z",
-  "project_checkpoint": "v16.8.0-runtime-h0-listen-host",
-  "runtime_base_checkpoint": "v16.8.0-runtime-h0-listen-host",
+  "project_checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
+  "runtime_base_checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -101,7 +101,7 @@
     {
       "id": "H0",
       "name": "Listen-host runtime and client replica",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "A0"
       ],
@@ -120,17 +120,27 @@
     {
       "id": "A1",
       "name": "Generic aggregate foundation",
-      "status": "next",
+      "status": "candidate",
       "depends_on": [
         "H0"
       ],
-      "proposed_checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
-      "branch": "feature/a1-generic-aggregate-foundation"
+      "branch": "feature/a1-generic-aggregate-foundation",
+      "checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
+      "acceptance": "item-backed and non-item aggregates share strict identity, authority, spatial scope, snapshot, delta, adapter and replica-store invariants without weakening WorldEntityAggregate",
+      "implementation": {
+        "dynamic_type_reference": "implemented",
+        "aggregate_descriptor": "implemented",
+        "aggregate_snapshot_delta": "implemented",
+        "adapter_registry": "implemented",
+        "generic_replica_store": "implemented",
+        "world_item_adapter": "implemented",
+        "non_item_fixture": "implemented"
+      }
     },
     {
       "id": "S0",
       "name": "Spatial simulation cells and shards",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "A1"
       ],

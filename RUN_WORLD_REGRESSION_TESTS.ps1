@@ -63,6 +63,8 @@ $Tests = @(
     "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
     "res://tests/runtime/test_h0_listen_host_contracts.gd",
     "res://tests/runtime/test_h0_listen_host_processes.gd",
+    "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
+    "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/network/test_n0_extended_contracts.gd",
     "res://tests/network/test_n0_contract_mutation_matrix.gd",
     "res://tests/network/test_n0_golden_fixtures.gd",
@@ -111,7 +113,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.8.0-runtime-h0-listen-host"
+    checkpoint = "v16.8.1-architecture-a1-generic-aggregate"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -313,7 +315,34 @@ function Invoke-GodotStep {
 try {
     Write-Host "Godot: $Godot"
 
-    $DiscoveredTests = Get-ChildItem -Path (Join-Path $ProjectRoot "tests") -Recurse -File -Filter "test_*.gd" |
+    # Scripts below a directory named `fixtures` are support types loaded by
+    # standalone tests. They intentionally keep the `test_*.gd` prefix so
+    # their purpose is obvious, but they must not be executed as SceneTree
+    # entry points or counted as independent regression tests.
+    $ExcludedTestDirectoryNames = @("fixtures")
+
+    function Test-IsStandaloneTestScript {
+        param(
+            [Parameter(Mandatory = $true)]
+            [System.IO.FileInfo]$File
+        )
+
+        $TestsRoot = Join-Path $ProjectRoot "tests"
+        $RelativeToTests = $File.FullName.Substring($TestsRoot.Length).TrimStart([char[]]@('\', '/'))
+        $PathSegments = @($RelativeToTests.Replace('\', '/').Split('/'))
+        for ($Index = 0; $Index -lt ($PathSegments.Count - 1); $Index++) {
+            if ($PathSegments[$Index] -in $ExcludedTestDirectoryNames) {
+                return $false
+            }
+        }
+        return $true
+    }
+
+    $DiscoveredTestFiles = @(
+        Get-ChildItem -Path (Join-Path $ProjectRoot "tests") -Recurse -File -Filter "test_*.gd" |
+            Where-Object { Test-IsStandaloneTestScript -File $_ }
+    )
+    $DiscoveredTests = $DiscoveredTestFiles |
         ForEach-Object {
             $RelativePath = $_.FullName.Substring($ProjectRoot.Length).TrimStart([char[]]@('\', '/'))
             "res://" + $RelativePath.Replace('\', '/')

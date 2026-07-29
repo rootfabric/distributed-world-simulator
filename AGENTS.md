@@ -110,16 +110,16 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+runtime checkpoint candidate: v16.8.1-architecture-a1-generic-aggregate
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-branch: feature/h0-listen-host-runtime
-next implementation branch after acceptance: feature/a1-generic-aggregate-foundation
+branch: feature/a1-generic-aggregate-foundation
+next implementation branch after acceptance: feature/s0-spatial-simulation-substrate
 ```
 
 Foundation order is mandatory unless the roadmap checkpoint explicitly changes it:
 
 ```text
-H0 → A1 → S0 → T1 → B0 → M0 → S1
+A1 → S0 → T1 → B0 → M0 → S1
 ```
 
 Do not start World Directory, NATS adapters, Population Field runtime or distributed workers by bypassing these contract boundaries.

@@ -1,29 +1,26 @@
 # Дорожная карта PlanetSimulator
 
-## Текущий runtime gate — H0
+## Текущий runtime gate — A1
 
 ```text
-runtime candidate: v16.8.0-runtime-h0-listen-host
+runtime candidate: v16.8.1-architecture-a1-generic-aggregate
+accepted runtime: v16.8.0-runtime-h0-listen-host
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
-Перед N3 проект последовательно закрывает foundation-линейку:
-
 ```text
-H0 listen-host — current candidate
-→ A1 generic aggregates — next
-→ S0 spatial cells/shards
+H0 listen-host — accepted
+A1 generic aggregates — current candidate
+→ S0 spatial cells/shards — next
 → T1 multi-peer transport
 → B0 message-bus ports
 → M0 multi-aggregate transactions/outbox
 → S1 distributed compute contracts
 ```
 
-Только затем подключаются NATS adapters, Population Field, compute-worker MVP и World Directory.
+A1 сохраняет существующий item path и добавляет отдельный generic aggregate layer для будущих fields/cells/processes. Подробности:
 
-Подробности:
-
-- `docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
+- `docs/architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md`;
 - `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
 
 # Дорожная карта к лунному симулятору мечты
