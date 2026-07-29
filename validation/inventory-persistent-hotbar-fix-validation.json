@@ -11,7 +11,7 @@
     },
     {
       "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
-      "assertions": 64,
+      "assertions": 71,
       "status": "passed"
     }
   ],

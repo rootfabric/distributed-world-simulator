@@ -663,7 +663,9 @@ func _on_item_selected(item_id: String) -> void:
 	view_model.set_selected_item(item_id)
 	if not inspector_toggle.button_pressed:
 		inspector_toggle.button_pressed = true
-	refresh()
+	# Godot requests drag data from this same Control after the LMB press.
+	# Rebuilding the grid here destroys the source cell before drag can start.
+	inspector.show_item(view_model.build_item_inspector(item_id))
 
 
 func _on_page_requested(container_id: String, page_index: int) -> void:
