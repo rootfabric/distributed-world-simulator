@@ -132,10 +132,10 @@ func _setup_persistent_hotbar() -> void:
 	persistent_hotbar.name = "PersistentHotbar"
 	persistent_hotbar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	persistent_hotbar.offset_left = -390.0
-	persistent_hotbar.offset_top = -172.0
+	persistent_hotbar.offset_top = -94.0
 	persistent_hotbar.offset_right = 390.0
 	persistent_hotbar.offset_bottom = -16.0
-	persistent_hotbar.custom_minimum_size = Vector2(780.0, 150.0)
+	persistent_hotbar.custom_minimum_size = Vector2(780.0, 72.0)
 	persistent_hotbar.set_visual_role("hotbar")
 	persistent_hotbar.drop_requested.connect(_on_drop_requested)
 	persistent_hotbar.quantity_drop_requested.connect(_on_quantity_drop_requested)
