@@ -1,4 +1,4 @@
-Planetary World v16.9.0-simulation-s1-distributed-compute
+Planetary World v16.9.0-simulation-s1-distributed-compute-fix1
 
 B0 transport-independent message bus contracts:
 - five separate semantic ports: request/reply, events, jobs, replication and bulk
@@ -545,13 +545,14 @@ M0 transaction foundation: scripts/simulation/transactions/
 
 
 S1 distributed compute foundation: scripts/simulation/compute/
-- checkpoint: v16.9.0-simulation-s1-distributed-compute
+- checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
 - branch: feature/s1-distributed-compute-contracts
 - contracts: SimulationJobEnvelope, input references, read/write sets, execution budgets and deterministic fingerprints
+- issued-job boundary: factory registers a canonical job in authority; result/proposal must carry the same job_checksum
 - runtime: local compute worker, worker registry, B0 job queue bridge and authority validation
 - boundary: worker receives immutable projected state and never receives authoritative repository or registry write ports
 - commit: accepted MutationProposal is converted into an M0 MutationBatch and committed only by authority
-- fences: stale revision/epoch/tick/hash, unknown capability, undeclared writes, non-finite output and budget overflow
+- fences: non-issued/conflicting jobs, exact projection scope, stale revision/epoch/tick/hash, identity mismatch, undeclared writes, non-finite output and budget overflow
 - replay: exact accepted result returns stable result without a second M0 mutation
 - runner: RUN_S1_DISTRIBUTED_COMPUTE_TESTS.ps1 / .sh
 - next: B1 NATS Core adapter

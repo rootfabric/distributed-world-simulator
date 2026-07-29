@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute
+runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 

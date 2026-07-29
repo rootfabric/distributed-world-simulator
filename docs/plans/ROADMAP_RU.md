@@ -3,7 +3,7 @@
 ## Текущий runtime gate — S1
 
 ```text
-runtime candidate: v16.9.0-simulation-s1-distributed-compute
+runtime candidate: v16.9.0-simulation-s1-distributed-compute-fix1
 accepted domain base: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 ```

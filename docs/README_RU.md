@@ -2,7 +2,7 @@
 
 Текущий candidate checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_RU.md`.
 
-Runtime-база: `v16.9.0-simulation-s1-distributed-compute`.
+Runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 
 Ключевые документы текущего направления:
 

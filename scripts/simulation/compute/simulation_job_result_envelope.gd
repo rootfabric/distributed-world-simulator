@@ -7,8 +7,8 @@ const ProposalScript = preload("res://scripts/simulation/compute/mutation_propos
 const SCHEMA := "planet_simulator.simulation_job_result_envelope.v1"
 const PROTOCOL_VERSION := 1
 const FIELDS: Array[String] = [
-	"schema", "protocol_version", "result_id", "job_id", "job_attempt", "worker_id",
-	"success", "error_code", "retryable", "proposal", "result_hash", "checksum",
+	"schema", "protocol_version", "result_id", "job_id", "job_attempt", "job_checksum",
+	"worker_id", "success", "error_code", "retryable", "proposal", "result_hash", "checksum",
 ]
 
 
@@ -19,6 +19,7 @@ static func success_result(result_id: String, proposal: Dictionary) -> Dictionar
 		"result_id": result_id,
 		"job_id": String(proposal.get("job_id", "")),
 		"job_attempt": int(proposal.get("job_attempt", 0)),
+		"job_checksum": String(proposal.get("job_checksum", "")),
 		"worker_id": String(proposal.get("worker_id", "")),
 		"success": true,
 		"error_code": "",
@@ -32,13 +33,14 @@ static func success_result(result_id: String, proposal: Dictionary) -> Dictionar
 	return value
 
 
-static func failure_result(result_id: String, job_id: String, job_attempt: int, worker_id: String, error_code: String, retryable: bool) -> Dictionary:
+static func failure_result(result_id: String, job_id: String, job_attempt: int, job_checksum: String, worker_id: String, error_code: String, retryable: bool) -> Dictionary:
 	var value := {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
 		"result_id": result_id,
 		"job_id": job_id,
 		"job_attempt": job_attempt,
+		"job_checksum": job_checksum,
 		"worker_id": worker_id,
 		"success": false,
 		"error_code": error_code,
@@ -73,6 +75,8 @@ static func validate(value: Dictionary) -> Dictionary:
 		return ComputeUtilsScript.failure("UNSUPPORTED_SIMULATION_JOB_RESULT_SCHEMA")
 	if not ComputeUtilsScript.is_identifier(String(value.get("result_id", "")), "result/") or not ComputeUtilsScript.is_identifier(String(value.get("job_id", "")), "job/") or not ComputeUtilsScript.is_identifier(String(value.get("worker_id", "")), "worker/"):
 		return ComputeUtilsScript.failure("INVALID_SIMULATION_JOB_RESULT_IDENTITY")
+	if not ComputeUtilsScript.is_lower_hex_64(String(value.get("job_checksum", ""))):
+		return ComputeUtilsScript.failure("INVALID_SIMULATION_JOB_RESULT_JOB_CHECKSUM")
 	if not NetworkUtilsScript.is_json_integer(value.get("job_attempt")) or int(value["job_attempt"]) < 1 or typeof(value.get("success")) != TYPE_BOOL or typeof(value.get("retryable")) != TYPE_BOOL or typeof(value.get("error_code")) != TYPE_STRING or typeof(value.get("proposal")) != TYPE_DICTIONARY:
 		return ComputeUtilsScript.failure("INVALID_SIMULATION_JOB_RESULT_FIELDS")
 	if bool(value["success"]):
@@ -81,7 +85,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		var proposal_check := ProposalScript.validate(value["proposal"])
 		if not bool(proposal_check.get("success", false)):
 			return proposal_check
-		if String(value["proposal"]["job_id"]) != String(value["job_id"]) or int(value["proposal"]["job_attempt"]) != int(value["job_attempt"]) or String(value["proposal"]["worker_id"]) != String(value["worker_id"]):
+		if String(value["proposal"]["job_id"]) != String(value["job_id"]) or int(value["proposal"]["job_attempt"]) != int(value["job_attempt"]) or String(value["proposal"]["job_checksum"]) != String(value["job_checksum"]) or String(value["proposal"]["worker_id"]) != String(value["worker_id"]):
 			return ComputeUtilsScript.failure("SIMULATION_JOB_RESULT_PROPOSAL_MISMATCH")
 	else:
 		if String(value["error_code"]).is_empty() or not value["proposal"].is_empty():

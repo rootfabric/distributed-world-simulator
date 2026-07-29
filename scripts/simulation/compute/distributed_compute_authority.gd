@@ -17,6 +17,7 @@ var _transaction_coordinator
 var _adapter_registry
 var _worker_registry
 var _configured := false
+var _issued_jobs_by_attempt: Dictionary = {}
 var _accepted_results_by_job_attempt: Dictionary = {}
 
 
@@ -34,28 +35,60 @@ func configure(transaction_coordinator, adapter_registry, worker_registry) -> Di
 	return ComputeUtilsScript.success()
 
 
-func accept_result(job: Dictionary, result: Dictionary) -> Dictionary:
+func register_issued_job(job: Dictionary) -> Dictionary:
 	if not _configured:
 		return ComputeUtilsScript.failure("DISTRIBUTED_COMPUTE_AUTHORITY_NOT_CONFIGURED")
 	var job_check := JobScript.validate(job)
 	if not bool(job_check.get("success", false)):
 		return job_check
+	var copied := ComputeUtilsScript.canonical_copy(job)
+	if not bool(copied.get("success", false)):
+		return copied
+	var canonical_job: Dictionary = copied["details"]["value"]
+	var key := _job_attempt_key(String(canonical_job["job_id"]), int(canonical_job["job_attempt"]))
+	if _issued_jobs_by_attempt.has(key):
+		var issued: Dictionary = _issued_jobs_by_attempt[key]
+		if String(issued["checksum"]) != String(canonical_job["checksum"]):
+			return ComputeUtilsScript.failure("COMPUTE_JOB_CONFLICT", {"job_id": canonical_job["job_id"], "job_attempt": canonical_job["job_attempt"]})
+		return ComputeUtilsScript.success({"job": issued["job"].duplicate(true), "replay": true})
+	_issued_jobs_by_attempt[key] = {"checksum": canonical_job["checksum"], "job": canonical_job.duplicate(true)}
+	return ComputeUtilsScript.success({"job": canonical_job.duplicate(true), "replay": false})
+
+
+func get_issued_job(job_id: String, job_attempt: int) -> Dictionary:
+	if not _configured:
+		return ComputeUtilsScript.failure("DISTRIBUTED_COMPUTE_AUTHORITY_NOT_CONFIGURED")
+	var key := _job_attempt_key(job_id, job_attempt)
+	if not _issued_jobs_by_attempt.has(key):
+		return ComputeUtilsScript.failure("COMPUTE_JOB_NOT_ISSUED", {"job_id": job_id, "job_attempt": job_attempt})
+	return ComputeUtilsScript.success({"job": _issued_jobs_by_attempt[key]["job"].duplicate(true)})
+
+
+func accept_result(result: Dictionary) -> Dictionary:
+	if not _configured:
+		return ComputeUtilsScript.failure("DISTRIBUTED_COMPUTE_AUTHORITY_NOT_CONFIGURED")
 	var result_check := ResultScript.validate(result)
 	if not bool(result_check.get("success", false)):
 		return result_check
+	var issued_result := get_issued_job(String(result["job_id"]), int(result["job_attempt"]))
+	if not bool(issued_result.get("success", false)):
+		return issued_result
+	var job: Dictionary = issued_result["details"]["job"]
+	if String(result["job_checksum"]) != String(job["checksum"]):
+		return ComputeUtilsScript.failure("COMPUTE_JOB_CHECKSUM_MISMATCH")
 	if not bool(result["success"]):
 		return ComputeUtilsScript.failure("COMPUTE_RESULT_FAILED", {"worker_error_code": result["error_code"], "retryable": result["retryable"]})
-	if String(result["job_id"]) != String(job["job_id"]) or int(result["job_attempt"]) != int(job["job_attempt"]):
-		return ComputeUtilsScript.failure("COMPUTE_RESULT_JOB_MISMATCH")
-	var replay_key := "%s#%d" % [String(job["job_id"]), int(job["job_attempt"])]
+	var replay_key := _job_attempt_key(String(job["job_id"]), int(job["job_attempt"]))
 	if _accepted_results_by_job_attempt.has(replay_key):
 		var accepted: Dictionary = _accepted_results_by_job_attempt[replay_key]
-		if String(accepted["job_checksum"]) != String(job["checksum"]) or String(accepted["result_checksum"]) != String(result["checksum"]):
+		if String(accepted["result_checksum"]) != String(result["checksum"]):
 			return ComputeUtilsScript.failure("COMPUTE_RESULT_CONFLICT")
 		var replay_response: Dictionary = accepted["response"].duplicate(true)
 		replay_response["details"]["replay"] = true
 		return replay_response
 	var proposal: Dictionary = result["proposal"]
+	if String(proposal["job_checksum"]) != String(job["checksum"]):
+		return ComputeUtilsScript.failure("COMPUTE_JOB_CHECKSUM_MISMATCH")
 	if String(proposal["determinism_fingerprint"]) != String(job["determinism_fingerprint"]["fingerprint"]) or String(proposal["rule_package_hash"]) != String(job["rule_package_hash"]) or String(proposal["capability_id"]) != String(job["required_capability_id"]):
 		return ComputeUtilsScript.failure("COMPUTE_RESULT_DETERMINISM_MISMATCH")
 	var worker_result: Dictionary = _worker_registry.get_worker(String(result["worker_id"]))
@@ -75,7 +108,10 @@ func accept_result(job: Dictionary, result: Dictionary) -> Dictionary:
 		if not bool(current_result.get("success", false)):
 			return ComputeUtilsScript.failure("COMPUTE_INPUT_NOT_FOUND", {"aggregate_id": aggregate_id})
 		var current: Dictionary = current_result["details"]["snapshot"]
+		var identity: Dictionary = current["descriptor"]["identity"]
 		var authority: Dictionary = current["descriptor"]["authority"]
+		if String(identity["aggregate_kind"]) != String(input_reference["aggregate_kind"]) or String(identity["state_schema"]) != String(input_reference["state_schema"]):
+			return ComputeUtilsScript.failure("STALE_COMPUTE_INPUT_IDENTITY", {"aggregate_id": aggregate_id})
 		if String(current["checksum"]) != String(input_reference["snapshot_checksum"]):
 			return ComputeUtilsScript.failure("STALE_COMPUTE_INPUT_CHECKSUM", {"aggregate_id": aggregate_id})
 		if String(authority["authority_owner_id"]) != String(input_reference["authority_owner_id"]) or int(authority["authority_epoch"]) != int(input_reference["authority_epoch"]):
@@ -95,6 +131,9 @@ func accept_result(job: Dictionary, result: Dictionary) -> Dictionary:
 		if not current_by_id.has(aggregate_id):
 			return ComputeUtilsScript.failure("COMPUTE_WRITE_INPUT_NOT_FOUND", {"aggregate_id": aggregate_id})
 		var current: Dictionary = current_by_id[aggregate_id]
+		var authoritative_identity := _validate_authoritative_write_identity(job["write_set"], proposal_operation, current)
+		if not bool(authoritative_identity.get("success", false)):
+			return authoritative_identity
 		var result_snapshot := current.duplicate(true)
 		for path_value in proposal_operation["removed_fields"]:
 			var erase_result := ComputeUtilsScript.remove_state_path(result_snapshot["state"], String(path_value))
@@ -121,6 +160,7 @@ func accept_result(job: Dictionary, result: Dictionary) -> Dictionary:
 	var outbox := OutboxIntentScript.create("outbox-intent/simulation/%s/attempt-%d" % [suffix, int(job["job_attempt"])], "stream/domain-events", "planet_simulator.simulation_job_committed.v1", {
 		"job_id": job["job_id"],
 		"job_attempt": job["job_attempt"],
+		"job_checksum": job["checksum"],
 		"result_id": result["result_id"],
 		"result_hash": result["result_hash"],
 		"proposal_id": proposal["proposal_id"],
@@ -132,7 +172,7 @@ func accept_result(job: Dictionary, result: Dictionary) -> Dictionary:
 	if not bool(committed.get("success", false)):
 		return committed
 	var response := ComputeUtilsScript.success({"replay": bool(committed["details"].get("replay", false)), "transaction_result": committed["details"]["result"], "proposal_id": proposal["proposal_id"], "result_id": result["result_id"]})
-	_accepted_results_by_job_attempt[replay_key] = {"job_checksum": job["checksum"], "result_checksum": result["checksum"], "response": response.duplicate(true)}
+	_accepted_results_by_job_attempt[replay_key] = {"result_checksum": result["checksum"], "response": response.duplicate(true)}
 	return response
 
 
@@ -153,3 +193,16 @@ func _validate_proposal_operation(write_set: Dictionary, operation: Dictionary) 
 		if not WriteSetScript.allows_path(write_set, aggregate_id, String(path_value)):
 			return ComputeUtilsScript.failure("UNDECLARED_COMPUTE_WRITE", {"path": path_value})
 	return ComputeUtilsScript.success()
+
+
+func _validate_authoritative_write_identity(write_set: Dictionary, operation: Dictionary, current: Dictionary) -> Dictionary:
+	var aggregate_id := String(operation["aggregate_id"])
+	var write_entry := WriteSetScript.entry_for(write_set, aggregate_id)
+	var identity: Dictionary = current["descriptor"]["identity"]
+	if String(write_entry.get("aggregate_kind", "")) != String(identity["aggregate_kind"]) or String(write_entry.get("state_schema", "")) != String(identity["state_schema"]) or String(operation["aggregate_kind"]) != String(identity["aggregate_kind"]) or String(operation["state_schema"]) != String(identity["state_schema"]):
+		return ComputeUtilsScript.failure("COMPUTE_WRITE_AUTHORITY_IDENTITY_MISMATCH", {"aggregate_id": aggregate_id})
+	return ComputeUtilsScript.success()
+
+
+func _job_attempt_key(job_id: String, job_attempt: int) -> String:
+	return "%s#%d" % [job_id, job_attempt]

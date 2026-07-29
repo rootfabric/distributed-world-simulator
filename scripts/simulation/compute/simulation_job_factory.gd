@@ -7,13 +7,17 @@ const InputScript = preload("res://scripts/simulation/compute/simulation_job_inp
 const JobScript = preload("res://scripts/simulation/compute/simulation_job_envelope.gd")
 
 var _transaction_coordinator
+var _job_issuer
 var _configured := false
 
 
-func configure(transaction_coordinator) -> Dictionary:
+func configure(transaction_coordinator, job_issuer) -> Dictionary:
 	if transaction_coordinator == null or not transaction_coordinator.has_method("get_snapshot"):
 		return ComputeUtilsScript.failure("SIMULATION_JOB_FACTORY_TRANSACTION_COORDINATOR_REQUIRED")
+	if job_issuer == null or not job_issuer.has_method("register_issued_job"):
+		return ComputeUtilsScript.failure("SIMULATION_JOB_FACTORY_ISSUER_REQUIRED")
 	_transaction_coordinator = transaction_coordinator
+	_job_issuer = job_issuer
 	_configured = true
 	return ComputeUtilsScript.success()
 
@@ -42,12 +46,13 @@ func create_job(
 	var write_check := WriteSetScript.validate(write_set)
 	if not bool(write_check.get("success", false)):
 		return write_check
-	var read_ids: Array[String] = []
-	for entry in read_set["entries"]:
-		read_ids.append(String(entry["aggregate_id"]))
-	for entry in write_set["entries"]:
-		if not read_ids.has(String(entry["aggregate_id"])):
-			return ComputeUtilsScript.failure("SIMULATION_JOB_WRITE_INPUT_MISSING", {"aggregate_id": entry["aggregate_id"]})
+	for write_entry in write_set["entries"]:
+		var aggregate_id := String(write_entry["aggregate_id"])
+		var read_entry := ReadSetScript.entry_for(read_set, aggregate_id)
+		if read_entry.is_empty():
+			return ComputeUtilsScript.failure("SIMULATION_JOB_WRITE_INPUT_MISSING", {"aggregate_id": aggregate_id})
+		if String(read_entry["aggregate_kind"]) != String(write_entry["aggregate_kind"]) or String(read_entry["state_schema"]) != String(write_entry["state_schema"]):
+			return ComputeUtilsScript.failure("SIMULATION_JOB_WRITE_INPUT_IDENTITY_MISMATCH", {"aggregate_id": aggregate_id})
 	var inputs: Array = []
 	for entry in read_set["entries"]:
 		var aggregate_id: String = String(entry["aggregate_id"])
@@ -76,4 +81,7 @@ func create_job(
 	var job_check := JobScript.validate(job)
 	if not bool(job_check.get("success", false)):
 		return job_check
-	return ComputeUtilsScript.success({"job": job})
+	var issued: Dictionary = _job_issuer.register_issued_job(job)
+	if not bool(issued.get("success", false)):
+		return issued
+	return ComputeUtilsScript.success({"job": issued["details"]["job"], "replay": bool(issued["details"].get("replay", false))})

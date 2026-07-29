@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.9.0-simulation-s1-distributed-compute`
+**Runtime checkpoint candidate:** `v16.9.0-simulation-s1-distributed-compute-fix1`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом

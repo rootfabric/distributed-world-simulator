@@ -35,7 +35,18 @@ static func create(
 	deterministic_seed: int,
 	execution_budget: Dictionary
 ) -> Dictionary:
-	var fingerprint := FingerprintScript.create(input_references, rule_package_hash, algorithm_version, deterministic_seed, from_tick, to_tick)
+	var fingerprint := FingerprintScript.create(
+		input_references,
+		job_type,
+		required_capability_id,
+		read_set,
+		write_set,
+		rule_package_hash,
+		algorithm_version,
+		deterministic_seed,
+		from_tick,
+		to_tick
+	)
 	var value := {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
@@ -96,7 +107,8 @@ static func validate(value: Dictionary) -> Dictionary:
 		if int(input_reference["server_tick"]) > int(value["from_tick"]):
 			return ComputeUtilsScript.failure("SIMULATION_JOB_INPUT_TICK_AHEAD")
 		input_ids.append(String(input_reference["aggregate_id"]))
-	var sorted_ids := input_ids.duplicate(); sorted_ids.sort()
+	var sorted_ids := input_ids.duplicate()
+	sorted_ids.sort()
 	if input_ids != sorted_ids or _has_duplicates(input_ids):
 		return ComputeUtilsScript.failure("SIMULATION_JOB_INPUTS_NOT_CANONICAL")
 	var read_check := ReadSetScript.validate(value.get("read_set", {}))
@@ -105,12 +117,28 @@ static func validate(value: Dictionary) -> Dictionary:
 	var write_check := WriteSetScript.validate(value.get("write_set", {}))
 	if not bool(write_check.get("success", false)):
 		return write_check
+	if input_ids.size() != value["read_set"]["entries"].size():
+		return ComputeUtilsScript.failure("SIMULATION_JOB_INPUT_READ_SET_MISMATCH")
+	for input_reference in value["input_references"]:
+		var aggregate_id := String(input_reference["aggregate_id"])
+		var read_entry := ReadSetScript.entry_for(value["read_set"], aggregate_id)
+		if read_entry.is_empty():
+			return ComputeUtilsScript.failure("SIMULATION_JOB_INPUT_READ_SET_MISSING", {"aggregate_id": aggregate_id})
+		if String(input_reference["aggregate_kind"]) != String(read_entry["aggregate_kind"]) or String(input_reference["state_schema"]) != String(read_entry["state_schema"]):
+			return ComputeUtilsScript.failure("READ_SET_INPUT_IDENTITY_MISMATCH", {"aggregate_id": aggregate_id})
+		var projection_check := _validate_projected_state(input_reference, read_entry)
+		if not bool(projection_check.get("success", false)):
+			return projection_check
 	for read_entry in value["read_set"]["entries"]:
 		if not input_ids.has(String(read_entry["aggregate_id"])):
-			return ComputeUtilsScript.failure("READ_SET_INPUT_MISSING")
-		var input_reference := _input_by_id(value["input_references"], String(read_entry["aggregate_id"]))
-		if String(input_reference["aggregate_kind"]) != String(read_entry["aggregate_kind"]) or String(input_reference["state_schema"]) != String(read_entry["state_schema"]):
-			return ComputeUtilsScript.failure("READ_SET_INPUT_IDENTITY_MISMATCH")
+			return ComputeUtilsScript.failure("READ_SET_INPUT_MISSING", {"aggregate_id": read_entry["aggregate_id"]})
+	for write_entry in value["write_set"]["entries"]:
+		var aggregate_id := String(write_entry["aggregate_id"])
+		var input_reference := _input_by_id(value["input_references"], aggregate_id)
+		if input_reference.is_empty():
+			return ComputeUtilsScript.failure("SIMULATION_JOB_WRITE_INPUT_MISSING", {"aggregate_id": aggregate_id})
+		if String(input_reference["aggregate_kind"]) != String(write_entry["aggregate_kind"]) or String(input_reference["state_schema"]) != String(write_entry["state_schema"]):
+			return ComputeUtilsScript.failure("WRITE_SET_INPUT_IDENTITY_MISMATCH", {"aggregate_id": aggregate_id})
 	var budget_check := BudgetScript.validate(value.get("execution_budget", {}))
 	if not bool(budget_check.get("success", false)):
 		return budget_check
@@ -119,11 +147,37 @@ static func validate(value: Dictionary) -> Dictionary:
 	var fingerprint_check := FingerprintScript.validate(value.get("determinism_fingerprint", {}))
 	if not bool(fingerprint_check.get("success", false)):
 		return fingerprint_check
-	var expected_fingerprint := FingerprintScript.create(value["input_references"], String(value["rule_package_hash"]), String(value["algorithm_version"]), int(value["deterministic_seed"]), int(value["from_tick"]), int(value["to_tick"]))
+	var expected_fingerprint := FingerprintScript.create(
+		value["input_references"],
+		String(value["job_type"]),
+		String(value["required_capability_id"]),
+		value["read_set"],
+		value["write_set"],
+		String(value["rule_package_hash"]),
+		String(value["algorithm_version"]),
+		int(value["deterministic_seed"]),
+		int(value["from_tick"]),
+		int(value["to_tick"])
+	)
 	if String(expected_fingerprint["fingerprint"]) != String(value["determinism_fingerprint"]["fingerprint"]):
 		return ComputeUtilsScript.failure("SIMULATION_JOB_DETERMINISM_FINGERPRINT_MISMATCH")
 	if not ComputeUtilsScript.is_lower_hex_64(String(value.get("checksum", ""))) or String(value["checksum"]) != compute_checksum(value):
 		return ComputeUtilsScript.failure("SIMULATION_JOB_CHECKSUM_MISMATCH")
+	return ComputeUtilsScript.success()
+
+
+static func _validate_projected_state(input_reference: Dictionary, read_entry: Dictionary) -> Dictionary:
+	var expected_projection: Dictionary = {}
+	for path_value in read_entry["paths"]:
+		var path := String(path_value)
+		var read_value := ComputeUtilsScript.read_state_path(input_reference["projected_state"], path)
+		if not bool(read_value.get("success", false)):
+			return ComputeUtilsScript.failure("SIMULATION_JOB_PROJECTED_READ_PATH_MISSING", {"aggregate_id": input_reference["aggregate_id"], "path": path})
+		var set_result := ComputeUtilsScript.write_state_path(expected_projection, path, read_value["details"]["value"])
+		if not bool(set_result.get("success", false)):
+			return set_result
+	if NetworkUtilsScript.canonical_json(expected_projection) != NetworkUtilsScript.canonical_json(input_reference["projected_state"]):
+		return ComputeUtilsScript.failure("SIMULATION_JOB_PROJECTED_STATE_SCOPE_MISMATCH", {"aggregate_id": input_reference["aggregate_id"]})
 	return ComputeUtilsScript.success()
 
 
@@ -137,6 +191,7 @@ static func _input_by_id(inputs: Array, aggregate_id: String) -> Dictionary:
 static func _has_duplicates(values: Array[String]) -> bool:
 	var seen: Dictionary = {}
 	for value in values:
-		if seen.has(value): return true
+		if seen.has(value):
+			return true
 		seen[value] = true
 	return false

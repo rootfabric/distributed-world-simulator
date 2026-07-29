@@ -1,6 +1,6 @@
 # PlanetSimulator — укреплённая distributed runtime roadmap
 
-Текущий candidate: `v16.9.0-simulation-s1-distributed-compute`.
+Текущий candidate: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 Принятая база: `v16.8.5-domain-m0-aggregate-transactions`.
 
 ```text

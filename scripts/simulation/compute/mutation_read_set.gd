@@ -34,6 +34,13 @@ static func validate(value: Dictionary) -> Dictionary:
 	return ComputeUtilsScript.success()
 
 
+static func entry_for(value: Dictionary, aggregate_id: String) -> Dictionary:
+	for raw in value.get("entries", []):
+		if String(raw.get("aggregate_id", "")) == aggregate_id:
+			return Dictionary(raw).duplicate(true)
+	return {}
+
+
 static func paths_for(value: Dictionary, aggregate_id: String) -> Array:
 	for raw in value.get("entries", []):
 		if String(raw.get("aggregate_id", "")) == aggregate_id:

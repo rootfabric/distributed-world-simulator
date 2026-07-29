@@ -1,6 +1,6 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute`
+**Текущий runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Принятая aggregate-база:** `v16.8.1-architecture-a1-generic-aggregate`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
@@ -189,7 +189,7 @@ status: accepted
 ## 8. B0 — Transport-independent message bus contracts — реализован, candidate
 
 ```text
-checkpoint: v16.9.0-simulation-s1-distributed-compute
+checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
 branch: feature/b0-message-bus-contracts
 status: candidate
 ```
@@ -227,7 +227,7 @@ BulkTransferPort
 ## 9. M0 — Multi-aggregate transactions и outbox foundation
 
 ```text
-checkpoint candidate: v16.9.0-simulation-s1-distributed-compute
+checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
 branch: feature/m0-aggregate-transactions
 ```
 
@@ -253,7 +253,7 @@ branch: feature/m0-aggregate-transactions
 ## 10. S1 — Distributed compute contracts
 
 ```text
-checkpoint candidate: v16.9.0-simulation-s1-distributed-compute
+checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
 branch: feature/s1-distributed-compute-contracts
 ```
 

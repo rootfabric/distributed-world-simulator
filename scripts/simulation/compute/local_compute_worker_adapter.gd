@@ -62,7 +62,18 @@ func execute(job: Dictionary) -> Dictionary:
 		if not bool(write_check.get("success", false)):
 			return _failure_result(job, String(write_check.get("error_code", "UNDECLARED_COMPUTE_WRITE")), false)
 	var proposal_id := "proposal/%s/attempt-%d/%s" % [String(job["job_id"]).trim_prefix("job/"), int(job["job_attempt"]), String(_descriptor["worker_id"]).trim_prefix("worker/")]
-	var proposal := ProposalScript.create(proposal_id, String(job["job_id"]), int(job["job_attempt"]), String(_descriptor["worker_id"]), String(job["required_capability_id"]), String(job["determinism_fingerprint"]["fingerprint"]), String(job["rule_package_hash"]), operations, int(handler_result["instruction_units"]))
+	var proposal := ProposalScript.create(
+		proposal_id,
+		String(job["job_id"]),
+		int(job["job_attempt"]),
+		String(job["checksum"]),
+		String(_descriptor["worker_id"]),
+		String(job["required_capability_id"]),
+		String(job["determinism_fingerprint"]["fingerprint"]),
+		String(job["rule_package_hash"]),
+		operations,
+		int(handler_result["instruction_units"])
+	)
 	var proposal_check := ProposalScript.validate(proposal)
 	if not bool(proposal_check.get("success", false)):
 		return _failure_result(job, String(proposal_check.get("error_code", "INVALID_MUTATION_PROPOSAL")), false)
@@ -95,4 +106,4 @@ func _validate_operation_against_write_set(write_set: Dictionary, operation: Dic
 
 func _failure_result(job: Dictionary, error_code: String, retryable: bool) -> Dictionary:
 	var result_id := "result/%s/attempt-%d/%s" % [String(job.get("job_id", "job/invalid")).trim_prefix("job/"), int(job.get("job_attempt", 1)), String(_descriptor.get("worker_id", "worker/invalid")).trim_prefix("worker/")]
-	return ComputeUtilsScript.success({"result": ResultScript.failure_result(result_id, String(job.get("job_id", "job/invalid")), int(job.get("job_attempt", 1)), String(_descriptor.get("worker_id", "worker/invalid")), error_code, retryable)})
+	return ComputeUtilsScript.success({"result": ResultScript.failure_result(result_id, String(job.get("job_id", "job/invalid")), int(job.get("job_attempt", 1)), String(job.get("checksum", "")), String(_descriptor.get("worker_id", "worker/invalid")), error_code, retryable)})

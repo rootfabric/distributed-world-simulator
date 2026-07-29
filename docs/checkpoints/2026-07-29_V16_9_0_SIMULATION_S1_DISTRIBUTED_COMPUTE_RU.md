@@ -1,6 +1,8 @@
 # Checkpoint v16.9.0 — S1 Distributed Compute
 
 Статус: **candidate**
+
+> Superseded: замечания authority-issued job boundary закрыты в `v16.9.0-simulation-s1-distributed-compute-fix1`.
 Ветка: `feature/s1-distributed-compute-contracts`
 База: `v16.8.5-domain-m0-aggregate-transactions`
 

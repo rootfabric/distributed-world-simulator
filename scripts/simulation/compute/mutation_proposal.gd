@@ -7,8 +7,8 @@ const OperationScript = preload("res://scripts/simulation/compute/mutation_propo
 const SCHEMA := "planet_simulator.mutation_proposal.v1"
 const PROTOCOL_VERSION := 1
 const FIELDS: Array[String] = [
-	"schema", "protocol_version", "proposal_id", "job_id", "job_attempt", "worker_id",
-	"capability_id", "determinism_fingerprint", "rule_package_hash", "operations",
+	"schema", "protocol_version", "proposal_id", "job_id", "job_attempt", "job_checksum",
+	"worker_id", "capability_id", "determinism_fingerprint", "rule_package_hash", "operations",
 	"operation_count", "output_bytes", "instruction_units", "proposal_hash", "checksum",
 ]
 
@@ -17,6 +17,7 @@ static func create(
 	proposal_id: String,
 	job_id: String,
 	job_attempt: int,
+	job_checksum: String,
 	worker_id: String,
 	capability_id: String,
 	determinism_fingerprint: String,
@@ -30,6 +31,7 @@ static func create(
 		"proposal_id": proposal_id,
 		"job_id": job_id,
 		"job_attempt": job_attempt,
+		"job_checksum": job_checksum,
 		"worker_id": worker_id,
 		"capability_id": capability_id,
 		"determinism_fingerprint": determinism_fingerprint,
@@ -70,7 +72,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		return ComputeUtilsScript.failure("INVALID_MUTATION_PROPOSAL_IDENTITY")
 	if not NetworkUtilsScript.is_json_integer(value.get("job_attempt")) or int(value["job_attempt"]) < 1:
 		return ComputeUtilsScript.failure("INVALID_MUTATION_PROPOSAL_ATTEMPT")
-	for field in ["determinism_fingerprint", "rule_package_hash", "proposal_hash", "checksum"]:
+	for field in ["job_checksum", "determinism_fingerprint", "rule_package_hash", "proposal_hash", "checksum"]:
 		if not ComputeUtilsScript.is_lower_hex_64(String(value.get(field, ""))):
 			return ComputeUtilsScript.failure("INVALID_MUTATION_PROPOSAL_HASH", {"field": field})
 	if typeof(value.get("operations")) != TYPE_ARRAY or value["operations"].is_empty():
@@ -83,7 +85,8 @@ static func validate(value: Dictionary) -> Dictionary:
 		if not bool(operation_check.get("success", false)):
 			return operation_check
 		aggregate_ids.append(String(operation["aggregate_id"]))
-	var sorted_ids := aggregate_ids.duplicate(); sorted_ids.sort()
+	var sorted_ids := aggregate_ids.duplicate()
+	sorted_ids.sort()
 	if aggregate_ids != sorted_ids or _has_duplicates(aggregate_ids):
 		return ComputeUtilsScript.failure("MUTATION_PROPOSAL_OPERATIONS_NOT_CANONICAL")
 	for field in ["operation_count", "output_bytes", "instruction_units"]:
@@ -107,6 +110,7 @@ static func _measure_output_bytes(value: Dictionary) -> int:
 static func _has_duplicates(values: Array[String]) -> bool:
 	var seen: Dictionary = {}
 	for value in values:
-		if seen.has(value): return true
+		if seen.has(value):
+			return true
 		seen[value] = true
 	return false

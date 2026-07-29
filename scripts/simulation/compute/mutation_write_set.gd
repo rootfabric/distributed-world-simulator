@@ -6,7 +6,8 @@ const ComputeUtilsScript = preload("res://scripts/simulation/compute/compute_con
 const SCHEMA := "planet_simulator.mutation_write_set.v1"
 const FIELDS: Array[String] = ["schema", "entries"]
 const ENTRY_FIELDS: Array[String] = ["aggregate_id", "aggregate_kind", "state_schema", "operation_kinds", "paths"]
-const OPERATION_KINDS: Array[String] = ["CREATE", "DELETE", "UPDATE"]
+const OP_UPDATE := "UPDATE"
+const OPERATION_KINDS: Array[String] = [OP_UPDATE]
 
 
 static func create(entries: Array) -> Dictionary:
@@ -29,7 +30,8 @@ static func validate(value: Dictionary) -> Dictionary:
 		if not bool(check.get("success", false)):
 			return check
 		aggregate_ids.append(String(raw["aggregate_id"]))
-	var sorted_ids := aggregate_ids.duplicate(); sorted_ids.sort()
+	var sorted_ids := aggregate_ids.duplicate()
+	sorted_ids.sort()
 	if aggregate_ids != sorted_ids or _has_duplicates(aggregate_ids):
 		return ComputeUtilsScript.failure("MUTATION_WRITE_SET_NOT_CANONICAL")
 	return ComputeUtilsScript.success()
@@ -68,7 +70,8 @@ static func _validate_entry(raw) -> Dictionary:
 		if typeof(operation_kind) != TYPE_STRING or not OPERATION_KINDS.has(String(operation_kind)):
 			return ComputeUtilsScript.failure("INVALID_MUTATION_WRITE_OPERATION_KIND")
 		operation_kinds.append(String(operation_kind))
-	var sorted_kinds := operation_kinds.duplicate(); sorted_kinds.sort()
+	var sorted_kinds := operation_kinds.duplicate()
+	sorted_kinds.sort()
 	if operation_kinds != sorted_kinds or _has_duplicates(operation_kinds):
 		return ComputeUtilsScript.failure("MUTATION_WRITE_OPERATION_KINDS_NOT_CANONICAL")
 	var paths: Array[String] = []
@@ -76,10 +79,11 @@ static func _validate_entry(raw) -> Dictionary:
 		if typeof(path_value) != TYPE_STRING or not ComputeUtilsScript.is_state_path(String(path_value)):
 			return ComputeUtilsScript.failure("INVALID_MUTATION_WRITE_PATH")
 		paths.append(String(path_value))
-	var sorted_paths := paths.duplicate(); sorted_paths.sort()
+	var sorted_paths := paths.duplicate()
+	sorted_paths.sort()
 	if paths != sorted_paths or _has_duplicates(paths) or _has_overlaps(paths):
 		return ComputeUtilsScript.failure("MUTATION_WRITE_PATHS_NOT_CANONICAL")
-	if raw["operation_kinds"].has("UPDATE") and paths.is_empty():
+	if paths.is_empty():
 		return ComputeUtilsScript.failure("UPDATE_WRITE_SET_REQUIRES_PATHS")
 	return ComputeUtilsScript.success()
 
@@ -87,7 +91,8 @@ static func _validate_entry(raw) -> Dictionary:
 static func _has_duplicates(values: Array[String]) -> bool:
 	var seen: Dictionary = {}
 	for value in values:
-		if seen.has(value): return true
+		if seen.has(value):
+			return true
 		seen[value] = true
 	return false
 
@@ -95,5 +100,6 @@ static func _has_duplicates(values: Array[String]) -> bool:
 static func _has_overlaps(values: Array[String]) -> bool:
 	for first_index in range(values.size()):
 		for second_index in range(first_index + 1, values.size()):
-			if ComputeUtilsScript.paths_overlap(values[first_index], values[second_index]): return true
+			if ComputeUtilsScript.paths_overlap(values[first_index], values[second_index]):
+				return true
 	return false

@@ -123,7 +123,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.9.0-simulation-s1-distributed-compute"
+    checkpoint = "v16.9.0-simulation-s1-distributed-compute-fix1"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
