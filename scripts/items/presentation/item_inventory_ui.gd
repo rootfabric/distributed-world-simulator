@@ -7,12 +7,14 @@ const ComponentScreenScene = preload("res://scenes/ui/inventory/inventory_screen
 const LegacyScreen = preload("res://scripts/items/presentation/legacy_item_inventory_screen.gd")
 const ViewModel = preload("res://scripts/ui/inventory/inventory_view_model.gd")
 const CommandFacade = preload("res://scripts/ui/inventory/inventory_command_facade.gd")
+const HotbarPanelScene = preload("res://scenes/ui/inventory/hotbar_panel.tscn")
 
 var gameplay_controller
 var active_screen
 var implementation_id: String = COMPONENT_IMPLEMENTATION
 var view_model
 var command_facade
+var persistent_hotbar
 
 var external_container_id: String:
 	get:
@@ -88,6 +90,7 @@ func setup(controller, implementation_override: String = "") -> void:
 		active_screen = ComponentScreenScene.instantiate()
 		add_child(active_screen)
 		active_screen.setup(controller, view_model, command_facade)
+		_setup_persistent_hotbar()
 		return
 	active_screen = LegacyScreen.new()
 	add_child(active_screen)
@@ -97,6 +100,7 @@ func setup(controller, implementation_override: String = "") -> void:
 func set_inventory_visible(value: bool) -> void:
 	if active_screen != null:
 		active_screen.set_inventory_visible(value)
+	_refresh_persistent_hotbar()
 
 
 func is_inventory_visible() -> bool:
@@ -106,16 +110,49 @@ func is_inventory_visible() -> bool:
 func open_external_container(container_id: String) -> void:
 	if active_screen != null:
 		active_screen.open_external_container(container_id)
+	_refresh_persistent_hotbar()
 
 
 func close_external_container(refresh_now: bool = true) -> void:
 	if active_screen != null:
 		active_screen.close_external_container(refresh_now)
+	_refresh_persistent_hotbar()
 
 
 func refresh(message: String = "") -> void:
 	if active_screen != null:
 		active_screen.refresh(message)
+	_refresh_persistent_hotbar()
+
+
+func _setup_persistent_hotbar() -> void:
+	if implementation_id != COMPONENT_IMPLEMENTATION or active_screen == null:
+		return
+	persistent_hotbar = HotbarPanelScene.instantiate()
+	persistent_hotbar.name = "PersistentHotbar"
+	persistent_hotbar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	persistent_hotbar.offset_left = -390.0
+	persistent_hotbar.offset_top = -94.0
+	persistent_hotbar.offset_right = 390.0
+	persistent_hotbar.offset_bottom = -16.0
+	persistent_hotbar.custom_minimum_size = Vector2(780.0, 72.0)
+	persistent_hotbar.z_as_relative = false
+	persistent_hotbar.z_index = 100
+	persistent_hotbar.set_visual_role("hotbar")
+	persistent_hotbar.drop_requested.connect(_on_drop_requested)
+	persistent_hotbar.quantity_drop_requested.connect(_on_quantity_drop_requested)
+	persistent_hotbar.drop_outside_requested.connect(active_screen._on_drop_outside_requested)
+	persistent_hotbar.activated.connect(func(item_id: String, container_id: String, slot_index: int) -> void:
+		if active_screen != null:
+			active_screen._on_slot_activated(item_id, container_id, slot_index)
+	)
+	add_child(persistent_hotbar)
+	_refresh_persistent_hotbar()
+
+
+func _refresh_persistent_hotbar() -> void:
+	if persistent_hotbar != null and active_screen != null and active_screen.has_method("render_persistent_hotbar"):
+		active_screen.render_persistent_hotbar(persistent_hotbar)
 
 
 func get_external_visible_cell_count() -> int:

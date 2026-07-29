@@ -1,0 +1,19 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "branch": "fix/inventory-drag-overlay-drop",
+  "base_checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
+  "status": "passed",
+  "tests": [
+    {
+      "script": "res://tests/ui/test_inventory_ui_i0_architecture.gd",
+      "assertions": 43,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "assertions": 64,
+      "status": "passed"
+    }
+  ],
+  "git_diff_check": "passed"
+}

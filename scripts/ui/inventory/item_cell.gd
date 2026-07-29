@@ -37,6 +37,9 @@ func render_cell(data: Dictionary, texture: Texture2D, validator: Callable) -> v
 		"drop_validator": validator,
 	})
 	set_meta("inventory_view_data", view_data.duplicate(true))
+	# Detailed data is rendered in InventoryInspector; native hover tooltips
+	# would cover the inventory and duplicate that information.
+	tooltip_text = ""
 	modulate = Color.WHITE if bool(data.get("projection_match", true)) else Color(1.0, 1.0, 1.0, 0.24)
 
 

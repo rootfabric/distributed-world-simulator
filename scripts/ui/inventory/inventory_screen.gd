@@ -141,6 +141,8 @@ func refresh(message: String = "") -> void:
 	var hotbar_model: Dictionary = Dictionary(screen_model.get("hotbar", {}))
 	player_panel.render(player_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 	hotbar_panel.render_hotbar(hotbar_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
+	# The interactive hotbar lives in a persistent overlay outside this window.
+	hotbar_panel.visible = false
 	var external_model: Dictionary = Dictionary(screen_model.get("external", {}))
 	if external_container_id.is_empty() or external_model.is_empty():
 		external_panel.clear_panel()
@@ -168,6 +170,16 @@ func get_external_visible_cell_count() -> int:
 
 func get_external_rendered_cell_count() -> int:
 	return external_panel.get_rendered_cell_count()
+
+
+func render_persistent_hotbar(panel: InventoryHotbarPanel) -> void:
+	if panel == null or gameplay_controller == null or view_model == null or command_facade == null:
+		return
+	var model := view_model.build_container(
+		gameplay_controller.player_hotbar_id,
+		int(gameplay_controller.selected_hotbar_index)
+	)
+	panel.render_hotbar(model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 
 
 func create_debug_snapshot() -> Dictionary:
@@ -328,7 +340,6 @@ func _on_context_requested(
 	if cell_data.is_empty():
 		return
 	_context_screen_position = screen_position
-	tooltip.clear_item(true)
 	var can_quick := (
 		not external_container_id.is_empty()
 		and source_container_id in [gameplay_controller.player_inventory_id, external_container_id]
@@ -352,9 +363,6 @@ func _on_context_action_requested(action_id: int, context: Dictionary) -> void:
 		InventoryItemContextMenu.ACTION_INSPECT:
 			_on_item_selected(item_id)
 			inspector_toggle.button_pressed = true
-			var cell_data: Dictionary = Dictionary(context.get("cell_data", {}))
-			tooltip.show_item(cell_data, true)
-			_position_tooltip(_context_screen_position)
 		InventoryItemContextMenu.ACTION_TRANSFER_ALL:
 			_perform_context_quick_transfer(item_id, source_container_id, -1)
 		InventoryItemContextMenu.ACTION_TRANSFER_ONE:
@@ -432,15 +440,13 @@ func _open_split_for_target(
 	)
 
 
-func _on_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
-	if context_menu.visible or split_dialog.visible or tooltip.pinned:
-		return
-	tooltip.show_item(cell_data, false)
-	_position_tooltip(screen_position)
+func _on_item_hovered(_cell_data: Dictionary, _screen_position: Vector2) -> void:
+	# Detailed item data is intentionally shown only in the inspector.
+	pass
 
 
 func _on_item_unhovered(_item_id: String) -> void:
-	tooltip.clear_item(false)
+	pass
 
 
 func _on_drop_preview_rejected(target_container_id: String, _target_slot_index: int, error_code: String) -> void:

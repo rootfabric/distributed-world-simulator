@@ -30,6 +30,8 @@ var selected: bool = false
 var drop_validator: Callable
 var _right_drag_armed: bool = false
 var _right_press_position: Vector2 = Vector2.ZERO
+var _middle_drag_armed: bool = false
+var _middle_press_position: Vector2 = Vector2.ZERO
 
 
 func setup_slot(data: Dictionary) -> void:
@@ -84,6 +86,11 @@ func _build_content() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_MIDDLE:
+			_middle_drag_armed = mouse_event.pressed and not item_id.is_empty()
+			_middle_press_position = mouse_event.position
+			accept_event()
+			return
 		if mouse_event.button_index == MOUSE_BUTTON_RIGHT:
 			_right_drag_armed = mouse_event.pressed and not item_id.is_empty()
 			_right_press_position = mouse_event.position
@@ -106,6 +113,20 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		force_drag(payload, _build_drag_preview(quantity))
 		accept_event()
+		return
+	if event is InputEventMouseMotion and _middle_drag_armed:
+		var middle_motion := event as InputEventMouseMotion
+		if (middle_motion.button_mask & MOUSE_BUTTON_MASK_MIDDLE) == 0:
+			_middle_drag_armed = false
+			return
+		if middle_motion.position.distance_to(_middle_press_position) < RIGHT_DRAG_THRESHOLD_PX:
+			return
+		_middle_drag_armed = false
+		var half_payload := build_middle_drag_payload()
+		if half_payload.is_empty():
+			return
+		force_drag(half_payload, _build_drag_preview(int(half_payload.get("quantity", 1))))
+		accept_event()
 
 
 func build_drag_payload(ask_quantity_after_drop: bool = false) -> Dictionary:
@@ -121,6 +142,15 @@ func build_drag_payload(ask_quantity_after_drop: bool = false) -> Dictionary:
 	}
 
 
+func build_middle_drag_payload() -> Dictionary:
+	if item_id.is_empty():
+		return {}
+	var payload := build_drag_payload(false)
+	payload["quantity"] = maxi(1, int(ceil(float(quantity) * 0.5)))
+	payload["middle_drag"] = true
+	return payload
+
+
 func _get_drag_data(_at_position: Vector2):
 	var payload: Dictionary = build_drag_payload(false)
 	if payload.is_empty():
@@ -131,6 +161,7 @@ func _get_drag_data(_at_position: Vector2):
 
 func _build_drag_preview(preview_quantity: int) -> Control:
 	var preview_root := VBoxContainer.new()
+	preview_root.top_level = true
 	preview_root.z_as_relative = false
 	preview_root.z_index = 4096
 	preview_root.mouse_filter = Control.MOUSE_FILTER_IGNORE

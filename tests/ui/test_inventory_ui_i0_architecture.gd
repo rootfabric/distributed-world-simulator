@@ -28,6 +28,14 @@ func _run() -> void:
 	_assert(inventory_ui.view_model != null and inventory_ui.command_facade != null, "Component UI must own ViewModel and CommandFacade")
 
 	var initial_snapshot: Dictionary = inventory_ui.create_debug_snapshot()
+	_assert(inventory_ui.persistent_hotbar != null and inventory_ui.persistent_hotbar.visible, "Persistent hotbar must exist outside the inventory window")
+	_assert(inventory_ui.persistent_hotbar.grid.columns == 10, "Persistent hotbar must keep all slots in one row")
+	_assert(is_equal_approx(inventory_ui.persistent_hotbar.custom_minimum_size.y, 72.0), "Persistent hotbar must remain a compact one-row strip")
+	var persistent_style = inventory_ui.persistent_hotbar.get_theme_stylebox("panel")
+	_assert(persistent_style is StyleBoxFlat and (persistent_style as StyleBoxFlat).bg_color.a < 0.7, "Persistent hotbar background must be translucent")
+	controller.set_inventory_visible(false)
+	_assert(inventory_ui.persistent_hotbar.visible, "Persistent hotbar must remain visible while inventory is closed")
+	controller.set_inventory_visible(true)
 	var player_model: Dictionary = Dictionary(initial_snapshot.get("player", {}))
 	var hotbar_model: Dictionary = Dictionary(initial_snapshot.get("hotbar", {}))
 	_assert(String(player_model.get("storage_mode", "")) == "BULK", "Player backpack must be projected as BULK")
@@ -42,7 +50,7 @@ func _run() -> void:
 	_assert(bool(player_boundary.get("visible", false)), "Player BULK area must have a persistent visible boundary")
 	_assert(String(player_boundary.get("role", "")) == "player", "Player boundary must expose its visual role")
 	_assert(String(player_boundary.get("drop_hint", "")).contains("свободную область"), "BULK boundary must explain that the whole area accepts drops")
-	_assert(bool(hotbar_boundary.get("visible", false)) and String(hotbar_boundary.get("role", "")) == "hotbar", "Hotbar must have a separate visible boundary")
+	_assert(not inventory_ui.active_screen.hotbar_panel.visible and String(hotbar_boundary.get("role", "")) == "hotbar", "Compatibility hotbar inside inventory must stay hidden")
 
 	var backpack = controller.get_container(controller.player_inventory_id)
 	var original_order: Array = backpack.item_ids.duplicate()

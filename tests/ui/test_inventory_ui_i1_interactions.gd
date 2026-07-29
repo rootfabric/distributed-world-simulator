@@ -40,7 +40,9 @@ func _run() -> void:
 	var beacon_cell = screen.player_panel.find_cell_by_item_id(beacon.instance_id)
 	_assert(beacon_cell != null, "Player panel must render beacon aggregate")
 	var drag_preview: Control = beacon_cell._build_drag_preview(int(beacon.quantity))
-	_assert(drag_preview.z_as_relative == false and drag_preview.z_index > 0, "Drag preview must render above the persistent hotbar")
+	_assert(drag_preview.top_level and drag_preview.z_as_relative == false and drag_preview.z_index == 4096, "Drag preview must render above every inventory and hotbar window")
+	var middle_drag_payload: Dictionary = beacon_cell.build_middle_drag_payload()
+	_assert(int(middle_drag_payload.get("quantity", 0)) == 2, "Middle-button drag must carry the upper half of a stack")
 	var beacon_count_before_outside_drop := int(beacon.quantity)
 	beacon_cell._active_drag_payload = beacon_cell.build_drag_payload(false)
 	beacon_cell._complete_drag(false)
@@ -70,13 +72,8 @@ func _run() -> void:
 	var external_cell = screen.external_panel.find_cell_by_item_id(external_beacon.instance_id)
 	_assert(external_cell != null, "External panel must render transferred aggregate")
 	external_cell._on_mouse_entered()
-	_assert(screen.tooltip.visible, "Hovering item must show tooltip")
-	_assert(screen.tooltip.top_level and screen.tooltip.z_index > screen.z_index, "Item tooltip must float above the menu instead of inheriting PanelContainer layout")
-	_assert(screen.tooltip.size.x < screen.size.x and screen.tooltip.size.y < screen.size.y, "Item tooltip must not cover the full inventory menu")
-	_assert(screen.tooltip.text_label.text.contains("Масса:") and screen.tooltip.text_label.text.contains("Объём:"), "Tooltip must show unit and total physical properties")
-	_assert(screen.tooltip.text_label.text.contains("Категории:"), "Tooltip must expose definition tags")
+	_assert(not screen.tooltip.visible and external_cell.tooltip_text.is_empty(), "Hovering item must not open any duplicate description")
 	external_cell._on_mouse_exited()
-	_assert(not screen.tooltip.visible, "Leaving unpinned item must hide tooltip")
 
 	var right_press := InputEventMouseButton.new()
 	right_press.button_index = MOUSE_BUTTON_RIGHT
@@ -95,12 +92,7 @@ func _run() -> void:
 	_assert(context_labels.has("Выбросить 1") and context_labels.has("Выбросить весь стак"), "Context menu must expose safe explicit drop actions")
 
 	screen.context_menu._on_action_pressed(ContextMenu.ACTION_INSPECT)
-	_assert(screen.tooltip.visible and screen.tooltip.pinned, "Inspect action must pin detailed tooltip")
-	var escape_tooltip := InputEventKey.new()
-	escape_tooltip.keycode = KEY_ESCAPE
-	escape_tooltip.pressed = true
-	screen._input(escape_tooltip)
-	_assert(not screen.tooltip.visible and screen.visible_inventory, "First Escape must close pinned inspector without closing inventory")
+	_assert(screen.inspector.visible and not screen.tooltip.visible, "Inspect action must use the inspector without opening a tooltip")
 
 	# Re-open context for exact transfer from crate back to backpack.
 	external_cell = screen.external_panel.find_cell_by_item_id(external_beacon.instance_id)
