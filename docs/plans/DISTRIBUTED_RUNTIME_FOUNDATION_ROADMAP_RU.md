@@ -1,6 +1,6 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.8.2-simulation-s0-spatial-substrate`
+**Текущий runtime checkpoint:** `v16.8.3-network-t1-multi-peer`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Принятая aggregate-база:** `v16.8.1-architecture-a1-generic-aggregate`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
@@ -107,12 +107,12 @@ status: accepted
 - Directory;
 - worker execution.
 
-## 6. S0 — Spatial Simulation Substrate — реализован, candidate
+## 6. S0 — Spatial Simulation Substrate — accepted
 
 ```text
 checkpoint: v16.8.2-simulation-s0-spatial-substrate
 branch: feature/s0-spatial-simulation-substrate
-status: candidate
+status: accepted
 ```
 
 ### Scope
@@ -148,11 +148,12 @@ status: candidate
 - compute workers;
 - NATS.
 
-## 7. T1 — Multi-peer Transport v2
+## 7. T1 — Multi-peer Transport v2 — реализован, candidate
 
 ```text
-proposed checkpoint: v16.8.3-network-t1-multi-peer
+checkpoint: v16.8.3-network-t1-multi-peer
 branch: feature/t1-multi-peer-transport-v2
+status: candidate
 ```
 
 ### Scope
@@ -164,6 +165,18 @@ branch: feature/t1-multi-peer-transport-v2
 - per-peer sequence/queues/metrics;
 - protocol frame v2 с channel и payload schema;
 - compatibility shim для текущих N1 tests.
+
+### Реализовано
+
+- strict `ProtocolFrame v2`;
+- strict `NetworkTransportEvent v2`;
+- `NetworkPeerSession`;
+- listener/peer lifecycle separation;
+- `send_to_peer`;
+- per-peer queue metrics;
+- route generation;
+- loopback and ENet multi-peer adapters;
+- v1 compatibility adapter.
 
 ### Acceptance
 

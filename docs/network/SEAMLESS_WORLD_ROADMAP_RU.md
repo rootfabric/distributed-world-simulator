@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.2-simulation-s0-spatial-substrate
+runtime checkpoint candidate: v16.8.3-network-t1-multi-peer
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 

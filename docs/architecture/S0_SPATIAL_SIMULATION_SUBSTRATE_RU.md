@@ -1,6 +1,7 @@
 # S0 — Spatial Simulation Substrate
 
 **Checkpoint:** `v16.8.2-simulation-s0-spatial-substrate`
+**Статус:** accepted
 **Build ID:** `s0-spatial-simulation-substrate`
 **База:** `v16.8.1-architecture-a1-generic-aggregate`
 **Ветка:** `feature/s0-spatial-simulation-substrate`
@@ -362,3 +363,8 @@ checkpoint: v16.8.3-network-t1-multi-peer
 ```
 
 T1 должен сохранить весь существующий single-peer N1 path через compatibility shim, но отделить listener lifecycle от peer sessions и добавить per-peer queues/events.
+
+
+## 14. Следующий слой
+
+T1 Multi-peer Transport v2 реализован как candidate `v16.8.3-network-t1-multi-peer`. S0 cell/shard identity остаётся независимой от peer sessions и route generation.

@@ -181,7 +181,7 @@ Handoff-specific тест требуется только для объекто�
 | LH-007 | stale client revision отклоняется без второй authoritative mutation | H0 |
 | LH-008 | exact operation replay возвращает результат, duplicate delta fenced | H0 |
 
-## 12. Generic aggregate и spatial gates — A1 accepted, S0 candidate
+## 12. Generic aggregate и spatial gates — A1/S0 accepted
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -209,6 +209,10 @@ Handoff-specific тест требуется только для объекто�
 | TP-003 | per-peer queues и metrics не смешиваются | T1 |
 | TP-004 | frame v2 routes by channel/payload schema | T1 |
 | TP-005 | N1 compatibility shim сохраняет accepted vertical slice | T1 |
+| TP-006 | route change требует monotonic route generation | T1 |
+| TP-007 | stale transport session fenced после reconnect | T1 |
+| TP-008 | один ENet listener обслуживает два client process и сохраняет targeted isolation | T1 |
+| TP-009 | outgoing sequence commit происходит только после successful enqueue | T1 |
 | BUS-001 | semantic port round-trip не зависит от adapter | B0 |
 | BUS-002 | job/event/request semantics нельзя взаимозаменить | B0 |
 | BUS-003 | domain state не содержит subject/channel/broker ID | B0 |

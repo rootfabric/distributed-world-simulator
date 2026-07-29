@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "6caa2ee45f71b24e97ec8e9295cf4d04a686e8d3ca41a65dc89701b16a8cf55d",
+  "expected_hash": "55e01fbdf1a44ca8719600b1d3fca5f8a3d829c3807647ef46e61287ebc18f0a",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "s0-spatial-simulation-substrate",
+    "build_id": "t1-multi-peer-transport-v2",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.2-simulation-s0-spatial-substrate",
+    "checkpoint": "v16.8.3-network-t1-multi-peer",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

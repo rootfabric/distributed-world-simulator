@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.2-simulation-s0-spatial-substrate`
+**Runtime checkpoint candidate:** `v16.8.3-network-t1-multi-peer`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -128,10 +128,12 @@ B0 message bus contracts
 ```text
 H0 — listen-host runtime — accepted
 A1 — Generic Aggregate Foundation — current candidate
-S0 — Spatial Simulation Substrate — next
+S0 — Spatial Simulation Substrate — accepted
+
+T1 — Multi-peer Transport v2 — current candidate
 ```
 
-H0 принят. A1 добавляет generic aggregate contracts, adapters и replica store без ослабления item invariants. После принятия A1 следующий gate — S0 spatial cells/scopes/shards.
+H0, A1 и S0 приняты. T1 добавляет multi-peer transport v2, targeted delivery, route generation и независимые peer sessions. Следующий gate — B0 semantic message-bus ports.
 
 ## 6. Что пока не начинать
 
