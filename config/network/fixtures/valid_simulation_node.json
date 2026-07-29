@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "9f661a94343b18ee05419c71759bd93ecf527022e5fbf1eada638a2c513615d4",
+  "expected_hash": "2712c3720d088f7142ad0fb41ba5e00c82f8d7c0de33c135d6e376e95d2ac5eb",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "b0-transport-independent-message-bus-contracts",
+    "build_id": "m0-multi-aggregate-transactions-outbox",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.4-data-plane-b0-message-bus-contracts",
+    "checkpoint": "v16.8.5-domain-m0-aggregate-transactions",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

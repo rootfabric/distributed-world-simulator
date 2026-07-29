@@ -110,7 +110,7 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
+runtime checkpoint candidate: v16.8.5-domain-m0-aggregate-transactions
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 accepted transport base: v16.8.3-network-t1-multi-peer
 branch: feature/b0-message-bus-contracts

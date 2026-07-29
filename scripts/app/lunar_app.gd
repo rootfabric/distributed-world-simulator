@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.8.4-data-plane-b0-message-bus-contracts"
-const BUILD_ID: String = "b0-transport-independent-message-bus-contracts"
+const PROJECT_VERSION: String = "16.8.5-domain-m0-aggregate-transactions"
+const BUILD_ID: String = "m0-multi-aggregate-transactions-outbox"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

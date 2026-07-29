@@ -1,11 +1,13 @@
 # Документация PlanetSimulator
 
-Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md`.
+Текущий candidate checkpoint: `checkpoints/2026-07-29_V16_8_5_DOMAIN_M0_AGGREGATE_TRANSACTIONS_RU.md`.
 
-Runtime-база: `v16.8.4-data-plane-b0-message-bus-contracts`.
+Runtime-база: `v16.8.5-domain-m0-aggregate-transactions`.
 
 Ключевые документы текущего направления:
 
+- `checkpoints/2026-07-29_V16_8_5_DOMAIN_M0_AGGREGATE_TRANSACTIONS_RU.md`;
+- `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
 - `checkpoints/2026-07-29_V16_8_4_DATA_PLANE_B0_MESSAGE_BUS_RU.md`;
 - `architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
 - `checkpoints/2026-07-29_V16_8_3_NETWORK_T1_MULTI_PEER_RU.md`;
@@ -18,7 +20,7 @@ Runtime-база: `v16.8.4-data-plane-b0-message-bus-contracts`.
 - `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
 - `testing/N2_PROCESS_HARNESS_RU.md`.
 
-Следующий кодовый этап: `M0 Multi-aggregate Transactions and Outbox Foundation`.
+Следующий кодовый этап после принятия M0: `S1 Distributed Compute Contracts`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 
@@ -163,3 +165,5 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 - `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md` — generic aggregate contracts, adapters and replica store.
 - `checkpoints/2026-07-29_V16_8_1_ARCHITECTURE_A1_GENERIC_AGGREGATE_RU.md` — A1 checkpoint.
+
+- `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md` — атомарные multi-aggregate commits и transactional outbox.

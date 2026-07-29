@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
+runtime checkpoint candidate: v16.8.5-domain-m0-aggregate-transactions
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 

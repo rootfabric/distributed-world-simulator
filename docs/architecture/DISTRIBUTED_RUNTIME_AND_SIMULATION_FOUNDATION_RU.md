@@ -2,7 +2,7 @@
 
 **Статус:** архитектурное решение A0
 **Документационный checkpoint:** `v16.7.1-architecture-a0-distributed-runtime`
-**Runtime checkpoint candidate:** `v16.8.4-data-plane-b0-message-bus-contracts`
+**Runtime checkpoint candidate:** `v16.8.5-domain-m0-aggregate-transactions`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 **Назначение:** зафиксировать устойчивую основу для self-host, multiplayer, сложных агрегатов, compute workers, сменяемых транспортов и будущего горизонтального масштабирования мира.
 

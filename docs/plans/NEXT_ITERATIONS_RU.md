@@ -3,7 +3,7 @@
 ## Текущая точка
 
 ```text
-runtime checkpoint candidate: v16.8.4-data-plane-b0-message-bus-contracts
+runtime checkpoint candidate: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 branch: feature/b0-message-bus-contracts
