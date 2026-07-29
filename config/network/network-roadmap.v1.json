@@ -1,8 +1,8 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 17,
+  "document_revision": 18,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-29T08:15:00Z",
+  "updated_at_utc": "2026-07-29T12:16:00Z",
   "project_checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
   "runtime_base_checkpoint": "v16.9.0-simulation-s1-distributed-compute-fix1",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
@@ -229,7 +229,7 @@
     {
       "id": "S1",
       "name": "Distributed compute jobs and mutation proposals",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "S0",
         "M0",
@@ -256,7 +256,65 @@
         "exact_projection_validation": "implemented",
         "authoritative_write_identity_fencing": "implemented",
         "update_only_protocol_v1": "implemented"
+      },
+      "acceptance_evidence": {
+        "contracts": "64/64",
+        "integration": "147/147",
+        "network_suites": "37/37",
+        "network_assertions": "3060/3060",
+        "world_tests": "80/80",
+        "world_steps": "83/83"
       }
+    },
+    {
+      "id": "H1",
+      "name": "Playable listen-host graphical vertical slice",
+      "status": "next",
+      "depends_on": [
+        "S1",
+        "H0",
+        "M0",
+        "T1"
+      ],
+      "checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
+      "branch": "feature/h1-playable-listen-host",
+      "acceptance": "default graphical launch uses embedded authority and client replicas for player movement, inventory, containers and world interactions without direct client-domain access"
+    },
+    {
+      "id": "H2",
+      "name": "Dedicated server with one graphical client",
+      "status": "planned",
+      "depends_on": [
+        "H1",
+        "N2",
+        "R3.1"
+      ],
+      "checkpoint": "v16.9.2-runtime-h2-dedicated-single-player",
+      "branch": "feature/h2-dedicated-single-player",
+      "acceptance": "the same graphical client connects to a separate headless authority, reconnects and recovers committed player/world state without duplicate mutation"
+    },
+    {
+      "id": "H3",
+      "name": "Dedicated server with two graphical clients",
+      "status": "planned",
+      "depends_on": [
+        "H2",
+        "T1"
+      ],
+      "checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
+      "branch": "feature/h3-dedicated-multiplayer",
+      "acceptance": "two graphical clients observe each other, remain peer-isolated and resolve contested authoritative item/container operations exactly once"
+    },
+    {
+      "id": "A2",
+      "name": "Networked gameplay architecture checkpoint",
+      "status": "planned",
+      "depends_on": [
+        "H3"
+      ],
+      "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+      "branch": "feature/a2-networked-gameplay-architecture",
+      "acceptance": "H1-H3 contracts, player/session identity, movement, permissions, contention, reconnect and relevance assumptions are audited and frozen before broker and server-mesh work"
     },
     {
       "id": "B1",
@@ -265,10 +323,12 @@
       "depends_on": [
         "B0",
         "N2",
-        "S1"
+        "S1",
+        "A2"
       ],
       "proposed_checkpoint": "v16.9.1-data-plane-b1-nats-core",
-      "branch": "feature/b1-nats-core-adapter"
+      "branch": "feature/b1-nats-core-adapter",
+      "checkpoint": "v16.10.0-data-plane-b1-nats-core"
     },
     {
       "id": "B2",
@@ -277,10 +337,12 @@
       "depends_on": [
         "B1",
         "M0",
-        "S1"
+        "S1",
+        "A2"
       ],
       "proposed_checkpoint": "v16.9.2-data-plane-b2-jetstream-outbox",
-      "branch": "feature/b2-nats-jetstream-outbox"
+      "branch": "feature/b2-nats-jetstream-outbox",
+      "checkpoint": "v16.10.1-data-plane-b2-jetstream-outbox"
     },
     {
       "id": "P0",
@@ -289,10 +351,12 @@
       "depends_on": [
         "A1",
         "S0",
-        "M0"
+        "M0",
+        "H3"
       ],
       "proposed_checkpoint": "v16.10.0-simulation-p0-population-field",
-      "branch": "feature/p0-population-field"
+      "branch": "feature/p0-population-field",
+      "checkpoint": "v16.11.0-simulation-p0-population-field"
     },
     {
       "id": "D1",
@@ -302,23 +366,26 @@
         "P0",
         "S1",
         "B2",
-        "H0"
+        "H3"
       ],
       "proposed_checkpoint": "v16.10.1-simulation-d1-worker-mvp",
-      "branch": "feature/d1-vegetation-worker-mvp"
+      "branch": "feature/d1-vegetation-worker-mvp",
+      "checkpoint": "v16.11.1-simulation-d1-worker-mvp"
     },
     {
       "id": "N3",
       "name": "World Directory and authority leases",
       "status": "planned",
       "depends_on": [
+        "A2",
         "A1",
         "S0",
         "T1",
         "B1"
       ],
       "proposed_checkpoint": "v16.11.0-network-n3-world-directory",
-      "branch": "feature/n3-world-directory"
+      "branch": "feature/n3-world-directory",
+      "checkpoint": "v16.12.0-network-n3-world-directory"
     },
     {
       "id": "N4",
@@ -330,7 +397,8 @@
         "R3.1"
       ],
       "proposed_checkpoint": "v16.12.0-network-n4-authority-handoff",
-      "branch": "feature/n4-authority-handoff"
+      "branch": "feature/n4-authority-handoff",
+      "checkpoint": "v16.12.1-network-n4-authority-handoff"
     },
     {
       "id": "N5",
@@ -338,7 +406,9 @@
       "status": "planned",
       "depends_on": [
         "N4"
-      ]
+      ],
+      "branch": "feature/n5-seamless-player-handoff",
+      "checkpoint": "v16.12.2-network-n5-seamless-player-handoff"
     },
     {
       "id": "N6",
@@ -346,7 +416,9 @@
       "status": "planned",
       "depends_on": [
         "N5"
-      ]
+      ],
+      "branch": "feature/n6-ghosts-interest-management",
+      "checkpoint": "v16.12.3-network-n6-ghosts-interest-management"
     },
     {
       "id": "N7",
@@ -384,16 +456,27 @@
     "S1"
   ],
   "parallel_after_s1": {
-    "infrastructure": [
-      "B1",
-      "B2",
-      "N3"
+    "gameplay_validation": [
+      "H1",
+      "H2",
+      "H3",
+      "A2"
     ],
-    "simulation": [
+    "infrastructure_after_a2": [
+      "B1",
+      "B2"
+    ],
+    "simulation_after_b2": [
       "P0",
       "D1"
     ],
-    "join_before": "N4"
+    "server_mesh": [
+      "N3",
+      "N4",
+      "N5",
+      "N6"
+    ],
+    "join_before": "N3"
   },
   "parallel_tracks": [
     "foundation",
@@ -413,5 +496,19 @@
       "test_commands",
       "acceptance"
     ]
-  }
+  },
+  "approved_sequence_after_s1": [
+    "H1",
+    "H2",
+    "H3",
+    "A2",
+    "B1",
+    "B2",
+    "P0",
+    "D1",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+  ]
 }

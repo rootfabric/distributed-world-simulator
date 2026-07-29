@@ -1,6 +1,6 @@
 # Checkpoint v16.9.0 fix1 — S1 Distributed Compute hardening
 
-Статус: **candidate**
+Статус: **ACCEPTED**
 Checkpoint: `v16.9.0-simulation-s1-distributed-compute-fix1`
 Build ID: `s1-distributed-compute-contracts-fix1`
 Ветка: `feature/s1-distributed-compute-contracts`

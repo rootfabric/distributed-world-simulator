@@ -1,170 +1,131 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
+**Runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
+**Статус:** **ACCEPTED**
+**Следующий gate:** `H1 — Playable listen-host`
 
-## 1. Что доказано кодом
+## 1. Что уже доказано кодом
 
-### N0
+### Network and recovery foundation
 
-- strict versioned DTO;
-- canonical JSON/checksums;
-- authority owner/epoch;
-- revision/tick fences;
-- snapshot/delta;
-- handoff state machine contracts;
-- presentation/runtime object rejection.
+- strict versioned DTO и canonical checksums;
+- authority owner/epoch, revision и tick fences;
+- snapshot/delta и command result contracts;
+- ENet server/client vertical slice;
+- logical session отдельно от transport session;
+- reconnect/replay без второй mutation;
+- multi-process orchestration, isolated user state и process reports;
+- authoritative persistence и crash recovery до/после commit.
 
-### N1
+### Runtime and aggregate foundation
 
-- ENet handshake;
-- initial snapshot;
-- remote authoritative item command;
-- result/delta;
-- logical session и transport session separation;
-- reconnect/replay без второй mutation.
-
-### N2
-
-- multi-process orchestration;
-- isolated user state;
-- dynamic ports;
-- readiness/timeouts;
-- fault classification;
-- cleanup;
-- JSON/JUnit reports.
-
-### R3.1
-
-- strict authoritative checkpoint;
-- active/previous/pending atomic layout;
-- staged recovery;
-- command/replay state recovery;
-- crash after commit и crash before commit;
-- fail-closed corruption/rollback handling.
-
-### H0/A1/S0/T1/B0/M0/S1
-
-- single-process listen-host с client replica boundary;
+- embedded listen-host с отдельными client runtime/replica store;
 - generic item/non-item aggregate contracts;
-- stable hierarchical SimulationCellAddress;
-- explicit cell descriptors, shards и neighbour topology;
-- independent spatial and authority addresses;
-- monotonic boundary summaries;
-- multi-peer listener/session separation и targeted delivery;
-- real per-peer outbound queues/backpressure;
-- transport-independent request/reply, event, job, replication и bulk ports;
-- strict versioned timeout/backpressure/acknowledgement results;
-- atomic multi-aggregate transactions, stable replay and transactional outbox;
-- immutable compute jobs, projected read-state, capability-scoped workers and authority-side M0 commit.
+- stable hierarchical cells и explicit shards;
+- spatial identity отделена от authority ownership;
+- multi-peer listener с targeted delivery и per-peer backpressure;
+- request/reply, events, jobs, replication и bulk transfer как разные B0 ports;
+- atomic multi-aggregate create/update/delete;
+- stable replay result и transactional outbox;
+- immutable compute jobs и exact projected read state;
+- capability-scoped worker;
+- authority-issued job checksum binding;
+- proposal validation и M0 authoritative commit.
 
-## 2. К чему база готова
+## 2. Уровни фактической готовности
 
-Высокая готовность:
+### Готово как foundation
 
-- dedicated server;
-- localhost server/client;
-- first listen-host implementation;
-- generic aggregate contracts;
-- spatial cell/shard substrate;
-- multiple peers и targeted transport;
-- transport-independent semantic message-bus ports;
-- local multi-aggregate transactions/outbox;
-- local distributed-compute contracts and authority commit path.
+- offline/tools runtime;
+- listen-host composition;
+- headless dedicated server process;
+- localhost ENet client/server;
+- минимум два transport peers;
+- generic aggregate replication;
+- persistence/recovery;
+- local semantic bus adapters;
+- local transaction/outbox path;
+- local distributed-compute path.
 
-Средняя готовность:
+### Требует игровой вертикали H1–H3
 
-- NATS Core adapter;
-- JetStream durable delivery and outbox publisher;
-- production population fields;
-- remote worker orchestration.
+- default F5 playable listen-host;
+- graphical client, читающий только replica store;
+- authoritative player movement;
+- Player Aggregate и player identity;
+- сетевой inventory/container UI;
+- pickup/drop/stack/split/mount через commands;
+- отдельный dedicated server для graphical single-player;
+- два одновременных graphical players;
+- deterministic multiplayer contention;
+- remote player presentation и базовая relevance.
 
-Пока не готово:
+### Требует B1–N6
 
+- NATS Core discovery/request-reply;
+- JetStream durable delivery;
+- remote compute worker;
 - executable World Directory;
-- live authority leases;
+- authority leases двух servers;
 - generic cross-server handoff;
-- ghosts/interest streaming;
-- dynamic region split;
-- safe dynamic rule runtime.
+- seamless player handoff;
+- ghosts и interest management;
+- dynamic region split/merge.
 
-## 3. Выявленные архитектурные ограничения
+## 3. Главный текущий архитектурный риск
 
-### Listen-host foundation реализован, gameplay migration ещё не завершена
+Foundation уже достаточно широк. Главный риск — продолжать добавлять infrastructure, не доказав, что реальный graphical gameplay работает через client/server boundary.
 
-H0 уже создаёт отдельные `ClientRuntime`, `ClientCommandGateway` и `ClientReplicaStore`, а loopback и ENet дают одинаковый итоговый checksum. Default F5 и существующий gameplay UI пока остаются `offline`; их вертикальный перенос выполняется последовательно после принятия H0.
-
-### Current aggregate is item-backed
-
-Нужен A1 generic descriptor/adapter, а не снятие item invariants.
-
-### Multi-peer transport foundation реализован
-
-T1 разделяет listener и peer lifecycle, использует strict ProtocolFrame v2 и реальные per-peer outbound queues. Миграция N1 session services на v2 может выполняться постепенно через compatibility adapter.
-
-### Semantic bus ports реализованы без broker SDK
-
-B0 разделяет request/reply, events, jobs, replication и bulk transfer. Реальный NATS/JetStream adapter и durable outbox ещё не реализованы.
-
-### Multi-aggregate transaction foundation реализован
-
-M0 выполняет staged validation, cross-aggregate invariants, atomic state/result/ledger/outbox commit и crash-safe replay. Distributed consensus и cross-authority transactions намеренно не входят в этот слой.
-
-### Distributed compute foundation реализован локально
-
-S1 связывает B0 JobQueuePort, capability-scoped local worker и M0 authority commit. Durable result inbox и реальный удалённый broker adapter остаются B2/B1.
-
-## 4. Решение о N3
-
-World Directory не отменён, но перенесён после:
+Поэтому H1–H3 предшествуют B1:
 
 ```text
-H0 listen-host
-A1 generic aggregate
-S0 spatial substrate
-T1 multi-peer transport
-B0 message bus contracts
+H1 playable listen-host
+→ H2 dedicated + 1 graphical client
+→ H3 dedicated + 2 graphical clients
+→ A2 architecture checkpoint
+→ B1 NATS Core adapter
 ```
 
-Это позволяет Directory маршрутизировать generic aggregate/shard и transport-neutral route, а не только item/ENet endpoint.
-
-## 5. Текущий и следующий gate
+## 4. Текущий и последующие gates
 
 ```text
-H0 — listen-host runtime — accepted
-A1 — Generic Aggregate Foundation — accepted
-S0 — Spatial Simulation Substrate — accepted
-T1 — Multi-peer Transport v2 — accepted
-B0 — Transport-independent Message Bus Contracts — accepted
-M0 — Multi-aggregate Transactions/Outbox Foundation — accepted
-S1 — Distributed Compute Contracts — current candidate
-B1 — NATS Core adapter — next
+S1 — Distributed Compute Contracts — accepted
+H1 — Playable listen-host — next
+H2 — Dedicated server + 1 graphical client — planned
+H3 — Dedicated server + 2 graphical clients — planned
+A2 — Networked gameplay architecture checkpoint — planned
+B1 — NATS Core adapter — planned after A2
+B2 — JetStream/outbox delivery — planned
+P0/D1 — Population Field and remote worker — planned
+N3–N6 — multi-server and seamless world — planned
 ```
 
-S1 реализует immutable simulation jobs, declared read/write sets, budgets, deterministic results и authority-side conversion в M0 atomic commit. Следующий infrastructure gate — B1: NATS Core adapter поверх B0 semantic ports.
+## 5. Что нельзя обходить в H1–H3
 
-## 6. Что пока не начинать
+- graphical client не получает live aggregate/repository references;
+- listen-host не создаёт отдельный domain path;
+- movement и interactions не подтверждаются локально как canonical state;
+- reconnect не создаёт вторую player entity;
+- два peers не делят global outbound queue;
+- contested item/container operation commit’ится максимум один раз;
+- offline path не остаётся неявным production fallback;
+- UI не хранит собственную authoritative копию inventory.
 
-- NATS adapter до принятия S1 contracts;
-- Population Field до A1/S0/M0;
-- generated rule runtime;
-- World Directory до принятия M0/S1 и последующих bus adapters;
-- cross-server handoff до N3/M0;
-- production orchestration;
-- massive entity-per-grass representation.
+## 6. Решение о World Directory
+
+N3 остаётся обязательным, но начинается после:
+
+```text
+H1 → H2 → H3 → A2 → B1
+```
+
+К этому моменту Directory будет маршрутизировать доказанные player/aggregate/shard routes, а не абстрактную инфраструктуру без полноценного graphical client.
 
 ## 7. Связанные документы
 
-- [`../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`](../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md);
+- [`../plans/PLAYABLE_NETWORK_MILESTONES_RU.md`](../plans/PLAYABLE_NETWORK_MILESTONES_RU.md);
+- [`../checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`](../checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md);
+- [`SEAMLESS_WORLD_ROADMAP_RU.md`](SEAMLESS_WORLD_ROADMAP_RU.md);
 - [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md);
-- [`../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md);
-- [`../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md).
-
-## 8. A1 gate
-
-- strict aggregate identity/authority/spatial scope;
-- strict generic snapshot/delta;
-- adapter registry;
-- item and non-item vertical tests;
-- EntitySnapshotEnvelope v1 remains stable.
+- [`../checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`](../checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md).

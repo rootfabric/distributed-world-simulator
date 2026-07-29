@@ -1,9 +1,9 @@
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий runtime gate — S1
+## Текущий принятый gate — S1 fix1
 
 ```text
-runtime candidate: v16.9.0-simulation-s1-distributed-compute-fix1
+runtime accepted: v16.9.0-simulation-s1-distributed-compute-fix1
 accepted domain base: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 ```
@@ -18,22 +18,42 @@ S0 accepted
 T1 accepted
 B0 accepted
 M0 accepted
-S1 distributed compute contracts — current candidate
-→ B1 NATS Core adapter
-→ B2 JetStream/outbox publisher
-→ P0/D1 population and remote-worker experiment
-→ N3 Directory
-→ N4 generic handoff
+S1 accepted
 ```
 
-S1 закрепляет безопасную границу `worker computes → authority validates → M0 commits`. Worker получает только immutable projected state и не видит live repository, aggregate registry или authoritative object graph.
+S1 закрепляет безопасную границу `worker computes → authority validates → M0 commits`. Следующий основной риск — не отсутствие ещё одного infrastructure adapter, а отсутствие полной graphical gameplay vertical slice через уже принятый client/server boundary.
+
+## Утверждённая последовательность после S1
+
+```text
+S1 ACCEPTED
+│
+├─ H1  Playable listen-host
+├─ H2  Dedicated server + 1 graphical client
+├─ H3  Dedicated server + 2 graphical clients
+├─ A2  Networked gameplay architecture checkpoint
+│
+├─ B1  NATS Core adapter
+├─ B2  JetStream/outbox delivery
+│
+├─ P0  Population Field
+├─ D1  Remote worker MVP
+│
+├─ N3  World Directory + 2 authorities
+├─ N4  Generic object handoff
+├─ N5  Seamless player handoff
+└─ N6  Ghosts + interest management
+```
+
+После H3 выполняется отдельный A2 architecture audit/freeze checkpoint. Только после него начинается B1.
 
 Основные документы:
 
+- `docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
+- `docs/checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
 - `docs/architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
-- `docs/architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
-- `docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
-- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
+- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
+- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.
 
 # Дорожная карта к лунному симулятору мечты
 

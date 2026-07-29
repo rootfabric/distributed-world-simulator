@@ -527,8 +527,8 @@ ARCHITECTURE CHECKPOINT A0
 - decisions: replication/request-reply/events/jobs/bulk use separate semantic ports
 - decisions: NATS is an adapter; subjects and broker identities are not canonical domain state
 - decisions: multi-aggregate transactions and atomic outbox precede materialization/remote workers
-- roadmap: H0 -> A1 -> S0 -> T1 -> B0 -> M0 -> S1 -> B1/B2/P0/D1 -> N3/N4
-- next branch: feature/h0-listen-host-runtime
+- accepted foundation: H0 -> A1 -> S0 -> T1 -> B0 -> M0 -> S1
+- approved next sequence: H1 -> H2 -> H3 -> A2 -> B1 -> B2 -> P0 -> D1 -> N3 -> N4 -> N5 -> N6
 - primary architecture: docs/architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md
 - implementation roadmap: docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md
 
@@ -555,4 +555,9 @@ S1 distributed compute foundation: scripts/simulation/compute/
 - fences: non-issued/conflicting jobs, exact projection scope, stale revision/epoch/tick/hash, identity mismatch, undeclared writes, non-finite output and budget overflow
 - replay: exact accepted result returns stable result without a second M0 mutation
 - runner: RUN_S1_DISTRIBUTED_COMPUTE_TESTS.ps1 / .sh
-- next: B1 NATS Core adapter
+- status: accepted
+- next: H1 playable listen-host
+- roadmap decision: docs/checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md
+- playable network plan: docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md
+- after H3: A2 networked gameplay architecture checkpoint
+- after A2: B1 NATS Core adapter

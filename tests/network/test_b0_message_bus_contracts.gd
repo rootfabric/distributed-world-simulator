@@ -182,7 +182,7 @@ func _test_project_wiring() -> void:
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))
-		_assert(String(statuses.get("T1", "")) == "accepted" and String(statuses.get("B0", "")) == "accepted" and String(statuses.get("M0", "")) == "accepted" and String(statuses.get("S1", "")) == "candidate", "Foundation phase statuses are inconsistent")
+		_assert(String(statuses.get("T1", "")) == "accepted" and String(statuses.get("B0", "")) == "accepted" and String(statuses.get("M0", "")) == "accepted" and String(statuses.get("S1", "")) == "accepted", "Foundation phase statuses are inconsistent")
 	var bus_sources: Array[String] = [
 		"res://scripts/network/bus/message_bus_composition_root.gd",
 		"res://scripts/network/bus/adapters/in_memory_service_request_reply_adapter.gd",

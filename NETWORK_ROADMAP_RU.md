@@ -1,7 +1,6 @@
-# PlanetSimulator — укреплённая distributed runtime roadmap
+# PlanetSimulator — текущая distributed runtime roadmap
 
-Текущий candidate: `v16.9.0-simulation-s1-distributed-compute-fix1`.
-Принятая база: `v16.8.5-domain-m0-aggregate-transactions`.
+Текущий принятый checkpoint: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 
 ```text
 N0–N2 accepted
@@ -13,8 +12,38 @@ S0 accepted
 T1 accepted
 B0 accepted
 M0 accepted
-S1 current candidate
-→ B1
+S1 accepted
 ```
 
-S1 закрепляет immutable simulation jobs, projected read-state, declared read/write sets, worker capabilities, deterministic fingerprints и authority-side conversion в M0 atomic commit. Worker не получает authoritative write access. NATS Core, JetStream, Directory и production Population Field остаются последующими этапами.
+Утверждён следующий порядок:
+
+```text
+S1 ACCEPTED
+│
+├─ H1  Playable listen-host
+├─ H2  Dedicated server + 1 graphical client
+├─ H3  Dedicated server + 2 graphical clients
+├─ A2  Networked gameplay architecture checkpoint
+│
+├─ B1  NATS Core adapter
+├─ B2  JetStream/outbox delivery
+│
+├─ P0  Population Field
+├─ D1  Remote worker MVP
+│
+├─ N3  World Directory + 2 authorities
+├─ N4  Generic object handoff
+├─ N5  Seamless player handoff
+└─ N6  Ghosts + interest management
+```
+
+Ближайшая цель — не новый broker adapter, а перенос существующей игры на доказанный client/server path. H1–H3 должны последовательно доказать playable listen-host, отдельный dedicated server с одним graphical client и dedicated multiplayer минимум с двумя graphical clients.
+
+После H3 выполняется обязательный `A2` audit/freeze checkpoint. Только затем начинается B1.
+
+Подробности:
+
+- `docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
+- `docs/checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
+- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
+- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.

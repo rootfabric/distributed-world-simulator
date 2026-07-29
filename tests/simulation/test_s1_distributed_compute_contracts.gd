@@ -199,7 +199,7 @@ func _test_project_wiring() -> void:
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))
-		_assert(String(statuses.get("M0", "")) == "accepted" and String(statuses.get("S1", "")) == "candidate", "M0/S1 roadmap statuses inconsistent")
+		_assert(String(statuses.get("M0", "")) == "accepted" and String(statuses.get("S1", "")) == "accepted", "M0/S1 roadmap statuses inconsistent")
 	_assert(s1_runner.contains(CHECKPOINT) and s1_runner.contains(BUILD_ID), "S1 runner checkpoint/build ID stale")
 	var sources := [
 		"res://scripts/simulation/compute/local_compute_worker_adapter.gd",

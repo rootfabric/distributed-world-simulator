@@ -3,120 +3,114 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
+runtime checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
+status: accepted
 architecture base: v16.7.1-architecture-a0-distributed-runtime
+next gate: H1 playable listen-host
 ```
 
-N0–N2 и R3.1 приняты. Перед Directory добавлена foundation-линия для self-host, generic aggregates, spatial shards, multi-peer transport, message bus ports, transactions и compute proposals.
+N0–S1 приняты. Контракты multi-peer, spatial shards, transactions/outbox и compute proposals существуют, но полноценный graphical gameplay ещё не переведён на client/server boundary.
 
 ## Целевая архитектура
 
 ```text
-Clients
+Graphical clients
   ↓ commands / snapshots / deltas
-Client Gateway or embedded ClientRuntime
+ClientRuntime + ClientReplicaStore
   ↓ route
 Region Authority — single writer
-  ↕ repository + outbox
-  ↕ jobs / proposals
+  ↕ repository + transactional outbox
+  ↕ jobs / mutation proposals
 Simulation Workers
-  ↕ service/event/job adapters
-Message bus implementations
+  ↕ B0 semantic ports
+NATS Core / JetStream adapters
   ↕
-World Directory / Content Registry / other services
+World Directory and other authorities
 ```
 
-Топология может быть одним процессом, несколькими localhost processes или cluster deployment. Domain contracts не меняются.
+Топология может быть одним процессом, отдельными localhost processes или cluster deployment. Domain/gameplay contracts не должны меняться при смене topology.
 
-## Этапы
+## Утверждённые этапы
 
-### N0 — network contracts
+### Принятый foundation
 
-Статус: accepted.
+```text
+N0  network contracts                         accepted
+N1  one authority + client vertical slice    accepted
+N2  multi-process harness                    accepted
+R3.1 persistence/recovery                    accepted
+A0  distributed runtime architecture         accepted
+H0  listen-host foundation                   accepted
+A1  generic aggregates                       accepted
+S0  cells/scopes/shards                      accepted
+T1  multi-peer transport                     accepted
+B0  semantic message-bus ports               accepted
+M0  aggregate transactions/outbox            accepted
+S1  compute jobs/proposals                    accepted
+```
 
-### N1 — one authority + client vertical slice
+### H1 — Playable listen-host
 
-Статус: accepted.
+Основной graphical gameplay запускается как embedded authority + separate client runtime. Movement, inventory, containers и world interactions идут через command/result/delta.
 
-### N2 — multi-process harness
+### H2 — Dedicated server + 1 graphical client
 
-Статус: accepted.
+Тот же client подключается к отдельному headless server, переживает reconnect и получает восстановленное committed state.
 
-### R3.1 — persistence/recovery
+### H3 — Dedicated server + 2 graphical clients
 
-Статус: accepted.
+Два полноценных клиента видят друг друга, имеют разные player identities и безопасно конкурируют за один authoritative объект.
 
-### A0 — distributed runtime architecture
+### A2 — Networked gameplay architecture checkpoint
 
-Статус: accepted architecture base.
-
-Фиксирует решения, которые предотвращают преждевременную реализацию Directory и NATS вокруг узкой модели.
-
-### H0 — listen-host
-
-Статус: accepted. Один процесс, но client/server разделены loopback DTO boundary; итоговый checksum эквивалентен реальному ENet process path.
-
-### A1 — generic aggregates
-
-Статус: accepted. Item entity остаётся существующим path; fields/cells/processes получают отдельные schemas/envelopes, adapters и generic replica store.
-
-### S0 — cells/scopes/shards
-
-Статус: accepted. Реализованы stable hierarchical addresses, cell descriptors, explicit shard bindings, neighbour topology и boundary summaries. Spatial index отделён от authority routing.
-
-### T1 — multi-peer transport
-
-Статус: accepted. Listener и peer sessions разделены; реализованы strict frame v2, targeted delivery и реальные per-peer outbound queues.
-
-### B0 — message bus ports
-
-Статус: accepted. Request/reply, events, jobs, replication и bulk transfer выражены отдельными transport-independent ports; NATS/JetStream SDK отсутствуют.
-
-### M0 — aggregate transactions/outbox
-
-Статус: accepted. Atomic create/update/delete над несколькими aggregates, stable replay result и transactional outbox сохраняются одной authoritative транзакцией.
-
-### S1 — compute jobs/proposals
-
-Статус: current candidate. Worker получает immutable projected state, возвращает deterministic MutationProposal, а только authority проверяет его и commit’ит через M0.
+После H3 фиксируются доказанные Player Aggregate, session, movement, permission, contention, reconnect и relevance contracts. Это обязательный gate перед broker/server-mesh track.
 
 ### B1/B2 — NATS Core и JetStream
 
-Сначала discovery/request-reply, затем durable jobs/events/outbox.
+Сначала discovery/request-reply/health, затем durable jobs/events, outbox publisher и inbox/dedup.
 
-### P0/D1 — Population Field и worker MVP
+### P0/D1 — Population Field и remote worker MVP
 
-Первый сложный distributed simulation experiment.
+Первый сложный distributed simulation experiment поверх S1 и B2.
 
-### N3 — World Directory
+### N3 — World Directory + 2 authorities
 
-Регистрация nodes, generic shard leases и transport-neutral routes.
+Два server authority регистрируются и получают разные shard leases. Directory выдаёт transport-neutral routes.
 
-### N4 — authority handoff
+### N4 — Generic object handoff
 
-Generic aggregate transfer A → B.
+Aggregate передаётся A → B без изменения identity и без двух одновременных writers.
 
-### N5 — player dual-route handoff
+### N5 — Seamless player handoff
 
-Warm connection и непрерывность input/UI.
+Клиент заранее открывает warm route к B. Input sequence, UI и player state продолжаются без загрузочного экрана.
 
-### N6 — ghosts и interest management
+### N6 — Ghosts и interest management
 
-Read-only overlap replicas и bandwidth budgets.
+Read-only overlap replicas обеспечивают визуальную непрерывность и ограничивают bandwidth.
 
-### N7+ — child spaces, planetary regions, dynamic rebalance
+## Практические вехи
 
-Развиваются после доказанного generic handoff.
+```text
+H1: игру можно запустить как host
+H2: игру можно запустить на отдельном server для одного игрока
+H3: на одном dedicated server играют минимум два graphical clients
+N3: мир обслуживают минимум два authority servers
+N4: объект безопасно переходит между servers
+N5: игрок переходит между servers без reconnect screen
+N6: граница regions визуально скрыта ghosts/interest streaming
+```
 
 ## Главный acceptance каждого шага
 
 ```text
-one observable result
+one observable user result
 + strict contracts
 + negative/bypass tests
-+ process scenario
++ real process scenario
 + restart/replay where applicable
-+ no regression of local gameplay
++ full network/world regression
++ no alternate gameplay path
 ```
 
 ## Неподвижные правила
@@ -125,9 +119,11 @@ one observable result
 - stable identity independent of process;
 - authority epoch fencing;
 - client replica independent of server object graph;
+- presentation never becomes canonical state;
 - worker proposals instead of direct mutation;
-- adapter-independent domain;
-- content-addressed dynamic types;
-- sharding explicit, not accidental concurrent writes.
+- adapter-independent domain/gameplay;
+- explicit shard/route ownership;
+- handoff never creates two active writers;
+- topology changes do not fork gameplay semantics.
 
-Полный foundation plan: [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).
+Полный ближайший план: [`../plans/PLAYABLE_NETWORK_MILESTONES_RU.md`](../plans/PLAYABLE_NETWORK_MILESTONES_RU.md).

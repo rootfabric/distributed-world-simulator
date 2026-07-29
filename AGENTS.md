@@ -110,17 +110,24 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
+runtime checkpoint accepted: v16.9.0-simulation-s1-distributed-compute-fix1
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 accepted transport base: v16.8.3-network-t1-multi-peer
-branch: feature/s1-distributed-compute-contracts
-next implementation branch after acceptance: feature/b1-nats-core-adapter
+next implementation branch: feature/h1-playable-listen-host
 ```
 
-Foundation order remains mandatory:
+Accepted foundation order:
 
 ```text
 A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
 ```
+
+Approved next order:
+
+```text
+H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
+```
+
+After H3, A2 is a mandatory architecture audit/freeze checkpoint before B1.
 
 Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.

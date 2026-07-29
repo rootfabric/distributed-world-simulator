@@ -1,36 +1,86 @@
-# Ближайшие итерации после S1 Distributed Compute Contracts
+# Ближайшие итерации после принятия S1
 
 ## Текущая точка
 
 ```text
-runtime checkpoint candidate: v16.9.0-simulation-s1-distributed-compute-fix1
+accepted checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
 accepted domain base: v16.8.5-domain-m0-aggregate-transactions
 accepted transport base: v16.8.3-network-t1-multi-peer
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-branch: feature/s1-distributed-compute-contracts
 ```
 
-S1 завершает обязательную foundation-последовательность `A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1`. Реализованы immutable jobs, projected read-state, declared read/write sets, budgets, deterministic worker results и authority-side commit через M0.
-
-## Следующий этап после принятия S1
+S1 завершил foundation-последовательность:
 
 ```text
-B1 — NATS Core service adapter
-→ B2 — JetStream durable jobs/events и outbox publisher
-→ контролируемые simulation/network tracks
+A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
 ```
 
-B1 подключает реальную межпроцессную service bus реализацию только к уже принятым B0-портам. Domain/application-код не получает NATS subjects или broker SDK.
+Следующая задача — доказать принятые контракты на полноценной graphical gameplay vertical slice.
+
+## Утверждённый ближайший порядок
+
+```text
+H1 — Playable listen-host
+→ H2 — Dedicated server + 1 graphical client
+→ H3 — Dedicated server + 2 graphical clients
+→ A2 — Networked gameplay architecture checkpoint
+→ B1 — NATS Core adapter
+→ B2 — JetStream/outbox delivery
+→ P0 — Population Field
+→ D1 — Remote worker MVP
+→ N3 — World Directory + 2 authorities
+→ N4 — Generic object handoff
+→ N5 — Seamless player handoff
+→ N6 — Ghosts + interest management
+```
+
+## H1 — текущий следующий gate
+
+```text
+proposed checkpoint: v16.9.1-runtime-h1-playable-listen-host
+branch: feature/h1-playable-listen-host
+```
+
+H1 переводит основной F5/gameplay path на embedded authority + graphical client. Movement, inventory, containers, pickup/drop, stack/split и mount interactions должны проходить через command/result/delta и отображаться из client replicas.
+
+## H2
+
+```text
+proposed checkpoint: v16.9.2-runtime-h2-dedicated-single-player
+branch: feature/h2-dedicated-single-player
+```
+
+Тот же graphical client работает против отдельного headless server с connect, initial state, reconnect и persistence recovery.
+
+## H3
+
+```text
+proposed checkpoint: v16.9.3-runtime-h3-dedicated-multiplayer
+branch: feature/h3-dedicated-multiplayer
+```
+
+Один server обслуживает минимум два graphical clients. Оба игрока видят movement друг друга, имеют отдельные inventories и получают deterministic result при конфликте за один item/container/mount.
+
+## A2 после H3
+
+```text
+proposed checkpoint: v16.9.4-architecture-a2-networked-gameplay
+branch: feature/a2-networked-gameplay-architecture
+```
+
+A2 фиксирует доказанную H1–H3 архитектуру и является gate перед B1. Кодовые gameplay-функции в A2 не добавляются.
 
 ## Правило фокуса
 
-До принятия S1:
+До принятия H3 и A2:
 
-- не начинать NATS/JetStream adapters;
-- не давать worker прямой write-доступ к repository или aggregate registry;
-- не считать worker result authoritative state;
-- не обходить M0 при commit proposal;
-- не начинать World Directory, Population Field или dynamic rule runtime;
-- не заявлять durable compute-result inbox до B2.
+- не создавать отдельный gameplay implementation для каждой topology;
+- не переносить canonical state в presentation;
+- не начинать production NATS/JetStream integration в основном track;
+- не начинать World Directory и cross-server handoff;
+- не ослаблять authority/replay/session fences ради UI;
+- не считать transport-level multi-peer достаточным доказательством multiplayer gameplay.
 
-Подробности: [`DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md).
+Исследования следующих этапов допустимы только без parallel production path.
+
+Полный план: [`PLAYABLE_NETWORK_MILESTONES_RU.md`](PLAYABLE_NETWORK_MILESTONES_RU.md).

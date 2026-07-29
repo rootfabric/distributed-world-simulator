@@ -1,24 +1,34 @@
 # Документация PlanetSimulator
 
-Текущий candidate checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_RU.md`.
+Текущий принятый checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`.
 
 Runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
 
+Ближайший этап: `H1 — Playable listen-host`.
+
+Утверждённая последовательность:
+
+```text
+H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
+```
+
 Ключевые документы текущего направления:
 
-- `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_RU.md`;
+- `checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
+- `plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
+- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
+- `network/NETWORK_READINESS_CHECKPOINT_RU.md`;
+- `network/SEAMLESS_WORLD_ROADMAP_RU.md`;
+- `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`;
 - `architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
-- `checkpoints/2026-07-29_V16_8_5_DOMAIN_M0_AGGREGATE_TRANSACTIONS_RU.md`;
 - `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
 - `architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
 - `architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
 - `architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
 - `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md`;
-- `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
-- `architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
-- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`.
+- `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`.
 
-Следующий кодовый этап после принятия S1: `B1 NATS Core adapter`.
+После H3 выполняется обязательный `A2 — Networked gameplay architecture checkpoint`; B1 начинается только после A2.
 
 ## v16.3.3 — Foundation world aggregate part 3
 
