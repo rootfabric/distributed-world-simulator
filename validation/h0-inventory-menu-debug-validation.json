@@ -1,0 +1,27 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "h0-inventory-menu-debug",
+  "base_commit": "f5143e074d9b5f5ff7eec782529741434dde8e0a",
+  "branch": "feature/h0-inventory-menu-debug",
+  "status": "passed",
+  "tests": [
+    {
+      "script": "res://tests/items/test_item_placement_and_admin.gd",
+      "command": "C:\\Godot\\Godot_v4.7.1-stable_win64_console.exe --headless --path . --script res://tests/items/test_item_placement_and_admin.gd",
+      "assertions": 54,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "command": "C:\\Godot\\Godot_v4.7.1-stable_win64_console.exe --headless --path . --script res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "assertions": 68,
+      "status": "passed"
+    }
+  ],
+  "checks": [
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ]
+}

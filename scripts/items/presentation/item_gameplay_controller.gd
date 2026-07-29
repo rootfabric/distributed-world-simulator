@@ -639,6 +639,7 @@ func _register_default_definitions() -> void:
 					"kind": PlacementContract.KIND_MOUNT_SOCKET,
 					"max_distance_m": 8.0,
 					"collision_mask": 1,
+					"surface_offset_m": 0.17,
 					"socket": {"socket_id": "beacon_socket", "accepted_tags": ["beacon"]},
 				},
 			},

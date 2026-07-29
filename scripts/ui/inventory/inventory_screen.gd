@@ -114,6 +114,10 @@ func _input(event: InputEvent) -> void:
 			tooltip.clear_item(true)
 		elif split_dialog.visible:
 			split_dialog.cancel()
+		elif not inspector.current_item_id.is_empty():
+			view_model.clear_selected_item()
+			inspector.clear_item()
+			refresh()
 		else:
 			gameplay_controller.set_inventory_visible(false)
 		get_viewport().set_input_as_handled()
@@ -338,9 +342,6 @@ func _on_context_action_requested(action_id: int, context: Dictionary) -> void:
 		InventoryItemContextMenu.ACTION_INSPECT:
 			_on_item_selected(item_id)
 			inspector_toggle.button_pressed = true
-			var cell_data: Dictionary = Dictionary(context.get("cell_data", {}))
-			tooltip.show_item(cell_data, true)
-			_position_tooltip(_context_screen_position)
 		InventoryItemContextMenu.ACTION_TRANSFER_ALL:
 			_perform_context_quick_transfer(item_id, source_container_id, -1)
 		InventoryItemContextMenu.ACTION_TRANSFER_ONE:
@@ -418,15 +419,28 @@ func _open_split_for_target(
 	)
 
 
-func _on_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
-	if context_menu.visible or split_dialog.visible or tooltip.pinned:
+func _on_item_hovered(cell_data: Dictionary, _screen_position: Vector2) -> void:
+	if context_menu.visible or split_dialog.visible:
 		return
-	tooltip.show_item(cell_data, false)
-	_position_tooltip(screen_position)
+	var item_id := String(cell_data.get("item_id", ""))
+	if item_id.is_empty() or view_model == null:
+		return
+	# Full item data belongs in the dedicated inspector panel, never above the
+	# inventory grid where it obscures cells and transfer targets.
+	if not inspector_toggle.button_pressed:
+		inspector_toggle.set_pressed_no_signal(true)
+		inspector.visible = true
+	inspector.show_item(view_model.build_item_inspector(item_id))
 
 
 func _on_item_unhovered(_item_id: String) -> void:
-	tooltip.clear_item(false)
+	if view_model == null:
+		return
+	var selected_model := view_model.build_item_inspector(view_model.selected_item_id)
+	if selected_model.is_empty():
+		inspector.clear_item()
+	else:
+		inspector.show_item(selected_model)
 
 
 func _on_drop_preview_rejected(target_container_id: String, _target_slot_index: int, error_code: String) -> void:
@@ -643,7 +657,10 @@ func _on_item_selected(item_id: String) -> void:
 	view_model.set_selected_item(item_id)
 	if not inspector_toggle.button_pressed:
 		inspector_toggle.button_pressed = true
-	refresh()
+	# Do not rebuild the slot that has just received LMB. Godot asks that same
+	# Control for drag data after the press; a synchronous refresh here can
+	# interrupt the native drag before it begins.
+	inspector.show_item(view_model.build_item_inspector(item_id))
 
 
 func _on_page_requested(container_id: String, page_index: int) -> void:

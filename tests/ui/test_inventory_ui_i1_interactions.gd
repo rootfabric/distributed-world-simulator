@@ -33,6 +33,17 @@ func _run() -> void:
 	var rack_id: String = rack.get_owned_container_id()
 	_assert_success(controller.open_container(crate_id), "Opening crate through E contract must establish active two-pane pair")
 	_assert(screen.external_panel.visible and screen.external_container_id == crate_id, "Opened crate must be visible as external panel")
+	_assert_success(controller.open_container(rack_id), "Opening battery rack must establish a slot-container drag target")
+	var battery_for_drag = _find_item(controller, "battery_pack", controller.player_inventory_id)
+	var battery_cell_for_drag = screen.player_panel.find_cell_by_item_id(battery_for_drag.instance_id)
+	var rack_cell_for_drag = screen.external_panel.grid.get_child(1)
+	var drag_payload = battery_cell_for_drag.build_drag_payload(false)
+	_assert(drag_payload is Dictionary and int(drag_payload.get("quantity", 0)) == int(battery_for_drag.quantity), "LMB drag must produce the complete battery stack payload")
+	_assert(rack_cell_for_drag._can_drop_data(Vector2.ZERO, drag_payload), "Battery rack slot must accept the battery drag payload")
+	rack_cell_for_drag._drop_data(Vector2.ZERO, drag_payload)
+	_assert(String(battery_for_drag.relation.get("container_id", "")) == rack_id and int(battery_for_drag.relation.get("slot_index", -1)) == 1, "Dropping battery on an empty rack slot must move the complete stack")
+	_assert_success(controller.move_item_to_container(battery_for_drag.instance_id, controller.player_inventory_id), "Battery must move back after drag contract check")
+	_assert_success(controller.open_container(crate_id), "Switching back to crate must preserve the remaining inventory scenario")
 
 	var beacon = _find_item(controller, "survey_beacon", controller.player_inventory_id)
 	_assert(beacon != null and int(beacon.quantity) == 3, "Starter backpack must contain a stack of three beacons")
@@ -54,11 +65,12 @@ func _run() -> void:
 	var external_cell = screen.external_panel.find_cell_by_item_id(external_beacon.instance_id)
 	_assert(external_cell != null, "External panel must render transferred aggregate")
 	external_cell._on_mouse_entered()
-	_assert(screen.tooltip.visible, "Hovering item must show tooltip")
-	_assert(screen.tooltip.text_label.text.contains("Масса:") and screen.tooltip.text_label.text.contains("Объём:"), "Tooltip must show unit and total physical properties")
-	_assert(screen.tooltip.text_label.text.contains("Категории:"), "Tooltip must expose definition tags")
+	_assert(not screen.tooltip.visible, "Hovering item must not cover inventory cells with a tooltip")
+	_assert(screen.inspector.current_item_id == external_beacon.instance_id, "Hovering item must show details in the dedicated inspector")
+	_assert(screen.inspector.physical_label.text.contains("Масса:") and screen.inspector.physical_label.text.contains("Объём:"), "Inspector must show unit and total physical properties")
+	_assert(screen.inspector.tags_label.text.contains("Категории:"), "Inspector must expose definition tags")
 	external_cell._on_mouse_exited()
-	_assert(not screen.tooltip.visible, "Leaving unpinned item must hide tooltip")
+	_assert(not screen.tooltip.visible, "Leaving an item must keep the grid unobstructed")
 
 	var right_press := InputEventMouseButton.new()
 	right_press.button_index = MOUSE_BUTTON_RIGHT
@@ -77,12 +89,12 @@ func _run() -> void:
 	_assert(context_labels.has("Выбросить 1") and context_labels.has("Выбросить весь стак"), "Context menu must expose safe explicit drop actions")
 
 	screen.context_menu._on_action_pressed(ContextMenu.ACTION_INSPECT)
-	_assert(screen.tooltip.visible and screen.tooltip.pinned, "Inspect action must pin detailed tooltip")
+	_assert(not screen.tooltip.visible and screen.inspector.current_item_id == external_beacon.instance_id, "Inspect action must use the dedicated inspector instead of a pinned tooltip")
 	var escape_tooltip := InputEventKey.new()
 	escape_tooltip.keycode = KEY_ESCAPE
 	escape_tooltip.pressed = true
 	screen._input(escape_tooltip)
-	_assert(not screen.tooltip.visible and screen.visible_inventory, "First Escape must close pinned inspector without closing inventory")
+	_assert(screen.visible_inventory and screen.inspector.current_item_id.is_empty(), "Escape must clear the inspector without closing inventory")
 
 	# Re-open context for exact transfer from crate back to backpack.
 	external_cell = screen.external_panel.find_cell_by_item_id(external_beacon.instance_id)
