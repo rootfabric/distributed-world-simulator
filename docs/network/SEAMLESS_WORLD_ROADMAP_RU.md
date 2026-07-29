@@ -3,7 +3,7 @@
 ## Текущий статус
 
 ```text
-runtime checkpoint candidate: v16.8.0-runtime-h0-listen-host
+runtime checkpoint candidate: v16.8.1-architecture-a1-generic-aggregate
 architecture base: v16.7.1-architecture-a0-distributed-runtime
 ```
 
@@ -54,11 +54,11 @@ World Directory / Content Registry / other services
 
 ### H0 — listen-host
 
-Статус: current candidate. Один процесс, но client/server разделены loopback DTO boundary; итоговый checksum эквивалентен реальному ENet process path.
+Статус: accepted. Один процесс, но client/server разделены loopback DTO boundary; итоговый checksum эквивалентен реальному ENet process path.
 
 ### A1 — generic aggregates
 
-Item entity остаётся существующим path; fields/cells/processes получают отдельные schemas/envelopes.
+Статус: current candidate. Item entity остаётся существующим path; fields/cells/processes получают отдельные schemas/envelopes, adapters и generic replica store.
 
 ### S0 — cells/scopes/shards
 

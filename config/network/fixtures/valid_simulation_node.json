@@ -2,18 +2,18 @@
   "context": {},
   "contract": "simulation_node",
   "expected_error_code": "",
-  "expected_hash": "24cfc96d558e5827e8d0defd665a237d68679f9ccc3f7e78325f9c93ea6c4120",
+  "expected_hash": "f4b0ccf6858686ccf7c887d5c8ba2a696228dc5280ed92dc521458b114ac58f6",
   "expected_valid": true,
   "fixture_id": "valid_simulation_node",
   "schema": "planet_simulator.network_golden_fixture.v1",
   "value": {
-    "build_id": "h0-single-process-network-first-host",
+    "build_id": "a1-generic-aggregate-foundation",
     "capabilities": [
       "command",
       "delta",
       "snapshot"
     ],
-    "checkpoint": "v16.8.0-runtime-h0-listen-host",
+    "checkpoint": "v16.8.1-architecture-a1-generic-aggregate",
     "descriptor_revision": 1,
     "endpoint": {
       "channel": "simulation",

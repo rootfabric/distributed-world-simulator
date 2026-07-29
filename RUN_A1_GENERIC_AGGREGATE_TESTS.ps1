@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
-$ReportPath = Join-Path $ReportDirectory "h0-listen-host-summary.json"
+$ReportPath = Join-Path $ReportDirectory "a1-generic-aggregate-summary.json"
 New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
 
 function Resolve-GodotExecutable {
@@ -154,11 +154,11 @@ function Write-JsonFileAtomically {
 
 $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $Tests = @(
-    "res://tests/runtime/test_h0_listen_host_contracts.gd",
-    "res://tests/runtime/test_h0_listen_host_processes.gd"
+    "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
+    "res://tests/simulation/test_a1_generic_aggregate_integration.gd"
 )
 $Summary = [ordered]@{
-    schema = "planet_simulator.h0_listen_host_runner_summary.v1"
+    schema = "planet_simulator.a1_generic_aggregate_runner_summary.v1"
     checkpoint = "v16.8.1-architecture-a1-generic-aggregate"
     build_id = "a1-generic-aggregate-foundation"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
@@ -215,7 +215,7 @@ try {
     }
     $Summary.passed = $true
     Save-Summary
-    Write-Host "H0 listen-host tests passed." -ForegroundColor Green
+    Write-Host "A1 generic aggregate tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

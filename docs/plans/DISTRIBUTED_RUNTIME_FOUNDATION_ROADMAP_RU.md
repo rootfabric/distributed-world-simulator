@@ -1,7 +1,8 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.8.0-runtime-h0-listen-host`
+**Текущий runtime checkpoint:** `v16.8.1-architecture-a1-generic-aggregate`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
+**Принятый runtime:** `v16.8.0-runtime-h0-listen-host`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
 
 ## 1. Почему N3 перенесён
@@ -58,82 +59,53 @@ Acceptance:
 - runtime-код не изменён;
 - следующий кодовый checkpoint однозначен.
 
-## 4. H0 — listen-host runtime — реализован, candidate
+## 4. H0 — listen-host runtime — принят
 
 ```text
 checkpoint: v16.8.0-runtime-h0-listen-host
 branch: feature/h0-listen-host-runtime
+status: accepted
 ```
 
-### Scope
+H0 доказал single-process network-first composition: клиентская реплика и embedded authority разделены DTO/loopback boundary, а итоговый checksum совпадает с отдельным ENet server/client path. Полный UI ещё не мигрирован на replica store — это выполняется отдельными вертикальными этапами.
 
-- `ClientRuntime`;
-- `ClientReplicaStore` для существующего item snapshot/delta;
-- `ClientCommandGateway`;
-- `HostRuntime` composition root;
-- loopback transport pair;
-- canonical serialization/deep-copy boundary;
-- direct server-domain access fence;
-- launch topology `listen-host`;
-- F5 integration в отдельном opt-in профиле.
-
-### Первый сценарий
+## 5. A1 — Generic Aggregate Foundation — реализован, candidate
 
 ```text
-local UI item command
-→ NetworkCommandEnvelope
-→ loopback
-→ authoritative mutation
-→ EntityDeltaEnvelope
-→ ClientReplicaStore
-→ UI projection
-```
-
-### Acceptance
-
-- loopback host и ENet process path дают один final checksum;
-- client replica не содержит server Objects;
-- попытка прямого доступа UI к server service отклоняется тестом;
-- offline tools остаются доступны;
-- main scene может opt-in запускаться как listen-host.
-
-### Не включать
-
-- generic aggregate;
-- NATS;
-- multiple clients;
-- plants/fields;
-- Directory.
-
-## 5. A1 — Generic Aggregate Foundation — следующий этап
-
-```text
-proposed checkpoint: v16.8.1-architecture-a1-generic-aggregate
+checkpoint: v16.8.1-architecture-a1-generic-aggregate
 branch: feature/a1-generic-aggregate-foundation
+status: candidate
 ```
 
 ### Scope
 
+- `DynamicTypeReference`;
+- `AggregateIdentity`;
+- `AggregateAuthorityState`;
+- `AggregateSpatialScope`;
 - `AggregateDescriptor`;
-- `AggregateKind` registry;
-- `AggregateAdapterPort`;
-- `AggregateRegistryPort`;
 - `AggregateSnapshotEnvelope`;
 - `AggregateDeltaEnvelope`;
-- `DynamicTypeReference`;
-- compatibility adapter for existing `WorldEntityAggregate`.
+- `AggregateAdapterPort`;
+- `AggregateAdapterRegistry`;
+- `GenericAggregateStore`;
+- compatibility adapter for existing item-backed `WorldEntityAggregate`.
 
 ### Acceptance
 
-- существующий item path проходит без изменения semantics;
-- synthetic EnvironmentCell aggregate проходит snapshot/delta/persistence round-trip;
-- неизвестный aggregate kind/schema отклоняется;
-- adapter не может вернуть presentation/runtime Object;
-- entity envelope v1 остаётся неизменным.
+- item aggregate сохраняет прежние identity/authority/revision/tick/domain semantics;
+- non-item aggregate проходит snapshot/delta/replica path без `item_instance_id`, physics и point position;
+- exact schemas, checksums, replay и stale fences проверены;
+- `EntitySnapshotEnvelope v1` и `WorldEntityAggregate` не ослаблены.
 
-### Главный риск
+### Не включено
 
-Не превратить generic layer в бесконтрольный Dictionary. Каждый kind обязан иметь validator и exact schema.
+- Population Field gameplay;
+- PartGraph;
+- multi-aggregate transaction;
+- NATS;
+- Directory;
+- worker execution.
 
 ## 6. S0 — Spatial Simulation Substrate
 

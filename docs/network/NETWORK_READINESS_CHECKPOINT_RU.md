@@ -1,7 +1,7 @@
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
 **Дата ревизии:** 29 июля 2026 года
-**Runtime checkpoint candidate:** `v16.8.0-runtime-h0-listen-host`
+**Runtime checkpoint candidate:** `v16.8.1-architecture-a1-generic-aggregate`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
 
 ## 1. Что доказано кодом
@@ -116,11 +116,12 @@ B0 message bus contracts
 ## 5. Текущий и следующий gate
 
 ```text
-H0 — listen-host runtime — current candidate
-A1 — Generic Aggregate Foundation — next
+H0 — listen-host runtime — accepted
+A1 — Generic Aggregate Foundation — current candidate
+S0 — Spatial Simulation Substrate — next
 ```
 
-H0 не добавляет новых игровых механик. Он проводит существующую item-команду через настоящий client replica boundary внутри одного процесса и сравнивает результат с ENet process path. После принятия H0 следующий фундаментальный шаг — generic aggregate contracts без ослабления существующих item invariants.
+H0 принят. A1 добавляет generic aggregate contracts, adapters и replica store без ослабления item invariants. После принятия A1 следующий gate — S0 spatial cells/scopes/shards.
 
 ## 6. Что пока не начинать
 
@@ -138,3 +139,11 @@ H0 не добавляет новых игровых механик. Он про
 - [`../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`](../plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md);
 - [`../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md`](../checkpoints/2026-07-29_V16_7_1_ARCHITECTURE_A0_DISTRIBUTED_RUNTIME_RU.md);
 - [`../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`](../checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md).
+
+## 8. A1 gate
+
+- strict aggregate identity/authority/spatial scope;
+- strict generic snapshot/delta;
+- adapter registry;
+- item and non-item vertical tests;
+- EntitySnapshotEnvelope v1 remains stable.

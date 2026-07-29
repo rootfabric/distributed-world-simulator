@@ -242,3 +242,4 @@ Handoff-specific тест требуется только для объекто�
 | PF-004 | replay/restart does not create duplicate item | P0 |
 | PF-005 | mass disturbance compacts to patch state | P0 |
 | PF-006 | aggregate delta updates client procedural representation | P0/D1 |
+\n\n## AG — Generic aggregate foundation\n\n| ID | Проверка | Ожидание |\n|---|---|---|\n| AG-01 | DynamicTypeReference exact schema/hash | invalid fields and runtime objects rejected |\n| AG-02 | Aggregate descriptor identity/authority/scope | canonical descriptor accepted |\n| AG-03 | Aggregate snapshot/delta checksum | mutation or stale revision rejected |\n| AG-04 | World item adapter | legacy item invariants preserved |\n| AG-05 | EnvironmentCell adapter | non-item aggregate requires no item/physics/point state |\n| AG-06 | GenericAggregateStore replay | exact replay fenced; conflicting delta ID rejected |\n
