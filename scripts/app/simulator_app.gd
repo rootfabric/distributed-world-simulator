@@ -19,8 +19,8 @@ const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/wor
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.8.1-architecture-a1-generic-aggregate"
-const FOUNDATION_BUILD_ID: String = "a1-generic-aggregate-foundation"
+const FOUNDATION_CHECKPOINT: String = "v16.8.2-simulation-s0-spatial-substrate"
+const FOUNDATION_BUILD_ID: String = "s0-spatial-simulation-substrate"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

@@ -110,16 +110,17 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint candidate: v16.8.1-architecture-a1-generic-aggregate
+runtime checkpoint candidate: v16.8.2-simulation-s0-spatial-substrate
 architecture base: v16.7.1-architecture-a0-distributed-runtime
-branch: feature/a1-generic-aggregate-foundation
-next implementation branch after acceptance: feature/s0-spatial-simulation-substrate
+accepted aggregate base: v16.8.1-architecture-a1-generic-aggregate
+branch: feature/s0-spatial-simulation-substrate
+next implementation branch after acceptance: feature/t1-multi-peer-transport-v2
 ```
 
-Foundation order is mandatory unless the roadmap checkpoint explicitly changes it:
+Foundation order remains mandatory:
 
 ```text
-A1 → S0 → T1 → B0 → M0 → S1
+A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
 ```
 
-Do not start World Directory, NATS adapters, Population Field runtime or distributed workers by bypassing these contract boundaries.
+Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.

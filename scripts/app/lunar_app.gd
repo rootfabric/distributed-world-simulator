@@ -31,8 +31,8 @@ const RuntimeTestRegistryScript = preload(
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 
-const PROJECT_VERSION: String = "16.8.1-architecture-a1-generic-aggregate"
-const BUILD_ID: String = "a1-generic-aggregate-foundation"
+const PROJECT_VERSION: String = "16.8.2-simulation-s0-spatial-substrate"
+const BUILD_ID: String = "s0-spatial-simulation-substrate"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

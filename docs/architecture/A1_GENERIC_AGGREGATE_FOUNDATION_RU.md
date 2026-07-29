@@ -241,12 +241,11 @@ A1 не реализует:
 
 Эти элементы используют A1 как prerequisite и вводятся отдельными checkpoint.
 
-## 10. Следующий этап
+## 10. Продолжение
 
-```text
-S0 — Spatial Simulation Substrate
-branch: feature/s0-spatial-simulation-substrate
-checkpoint: v16.8.2-simulation-s0-spatial-substrate
-```
+A1 принят как prerequisite S0. Spatial substrate реализован в:
 
-S0 должен добавить stable hierarchical cell addressing, spatial scope indexing, aggregate shards, neighbour descriptors и boundary summaries, не связывая spatial cell автоматически с authority owner.
+- [`S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`](S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md);
+- checkpoint `v16.8.2-simulation-s0-spatial-substrate`.
+
+Следующий этап — `T1 Multi-peer Transport v2`.

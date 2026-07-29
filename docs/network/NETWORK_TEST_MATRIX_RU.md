@@ -181,7 +181,7 @@ Handoff-specific тест требуется только для объекто�
 | LH-007 | stale client revision отклоняется без второй authoritative mutation | H0 |
 | LH-008 | exact operation replay возвращает результат, duplicate delta fenced | H0 |
 
-## 12. Generic aggregate и spatial gates
+## 12. Generic aggregate и spatial gates — A1 accepted, S0 candidate
 
 | ID | Проверка | Этап |
 |---|---|---|
@@ -194,6 +194,11 @@ Handoff-specific тест требуется только для объекто�
 | SP-003 | aggregate spatial scope покрывает несколько cells | S0 |
 | SP-004 | authority owner не выводится из cell ID | S0 |
 | SP-005 | shard neighbour/boundary summary canonical | S0 |
+| SP-006 | child cell требует зарегистрированный parent и находится в его bounds | S0 |
+| SP-007 | одна cell хранит shards с разными authority addresses | S0 |
+| SP-008 | owner change требует повышенного authority epoch | S0 |
+| SP-009 | boundary summary revision/tick stream монотонен | S0 |
+| SP-010 | reverse duplicate bidirectional topology link отклоняется | S0 |
 
 ## 13. Multi-peer и bus gates
 

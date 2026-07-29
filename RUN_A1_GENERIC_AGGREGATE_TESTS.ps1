@@ -159,8 +159,8 @@ $Tests = @(
 )
 $Summary = [ordered]@{
     schema = "planet_simulator.a1_generic_aggregate_runner_summary.v1"
-    checkpoint = "v16.8.1-architecture-a1-generic-aggregate"
-    build_id = "a1-generic-aggregate-foundation"
+    checkpoint = "v16.8.2-simulation-s0-spatial-substrate"
+    build_id = "s0-spatial-simulation-substrate"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -208,7 +208,7 @@ function Invoke-CheckedGodot {
 
 try {
     Write-Host "Godot: $Godot"
-    Write-Host "Checkpoint: v16.8.1-architecture-a1-generic-aggregate"
+    Write-Host "Checkpoint: v16.8.2-simulation-s0-spatial-substrate"
     Invoke-CheckedGodot -Name "editor_import_parse" -Arguments @("--headless", "--editor", "--path", $ProjectRoot, "--quit") -Target "res://"
     foreach ($Test in $Tests) {
         Invoke-CheckedGodot -Name ([IO.Path]::GetFileNameWithoutExtension($Test)) -Arguments @("--headless", "--path", $ProjectRoot, "--script", $Test) -Target $Test

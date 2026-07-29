@@ -3,9 +3,9 @@
 ## Текущий режим
 
 ```text
-runtime candidate: H0 listen-host
-architecture base: A0 accepted
-next implementation after acceptance: A1 generic aggregates
+runtime candidate: S0 spatial substrate
+accepted aggregate base: A1 generic aggregates
+next implementation after acceptance: T1 multi-peer transport v2
 ```
 
 До принятия S1 основной foundation-track идёт последовательно. Разрешено параллельно развивать gameplay только при соблюдении стабильных command/persistence boundaries.
@@ -46,7 +46,7 @@ H0 → A1 → S0 → T1 → B0 → M0 → S1
 - rule IR design;
 - visual procedural prototypes.
 
-До A1/P0 этот track не меняет authoritative runtime.
+До P0 этот track не меняет authoritative runtime или spatial contracts.
 
 ## 2. Shared critical files
 

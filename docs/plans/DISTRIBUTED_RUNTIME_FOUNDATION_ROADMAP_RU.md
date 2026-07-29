@@ -1,8 +1,8 @@
 # План укрепления distributed runtime PlanetSimulator
 
-**Текущий runtime checkpoint:** `v16.8.1-architecture-a1-generic-aggregate`
+**Текущий runtime checkpoint:** `v16.8.2-simulation-s0-spatial-substrate`
 **Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
-**Принятый runtime:** `v16.8.0-runtime-h0-listen-host`
+**Принятая aggregate-база:** `v16.8.1-architecture-a1-generic-aggregate`
 **Стратегия:** сначала композиционные и контрактные основания, затем сложные симуляционные объекты и многосерверный runtime.
 
 ## 1. Почему N3 перенесён
@@ -69,12 +69,12 @@ status: accepted
 
 H0 доказал single-process network-first composition: клиентская реплика и embedded authority разделены DTO/loopback boundary, а итоговый checksum совпадает с отдельным ENet server/client path. Полный UI ещё не мигрирован на replica store — это выполняется отдельными вертикальными этапами.
 
-## 5. A1 — Generic Aggregate Foundation — реализован, candidate
+## 5. A1 — Generic Aggregate Foundation — принят
 
 ```text
 checkpoint: v16.8.1-architecture-a1-generic-aggregate
 branch: feature/a1-generic-aggregate-foundation
-status: candidate
+status: accepted
 ```
 
 ### Scope
@@ -107,34 +107,46 @@ status: candidate
 - Directory;
 - worker execution.
 
-## 6. S0 — Spatial Simulation Substrate
+## 6. S0 — Spatial Simulation Substrate — реализован, candidate
 
 ```text
-proposed checkpoint: v16.8.2-simulation-s0-spatial-substrate
+checkpoint: v16.8.2-simulation-s0-spatial-substrate
 branch: feature/s0-spatial-simulation-substrate
+status: candidate
 ```
 
 ### Scope
 
+- `SimulationCellAddress`;
 - `SpatialCellDescriptor`;
-- `SpatialScope`;
+- `AggregateAuthorityAddress`;
 - `AggregateShardDescriptor`;
-- neighbour and boundary summary contracts;
-- stable hierarchical cell address;
-- separation SpatialAddress/AuthorityAddress;
-- cell-to-aggregate index.
+- `CellNeighbourDescriptor`;
+- `BoundarySummary`;
+- `SpatialAggregateIndex`.
 
 ### Acceptance
 
 - несколько aggregate kinds находятся в одной cell;
-- один aggregate может покрывать несколько cells;
-- logical object состоит из shards;
-- cell address не меняется при render origin shift;
-- authority owner не выводится автоматически из cell ID.
+- одна cell сохраняет разные explicit authority addresses;
+- один shard покрывает несколько cells;
+- logical object состоит из нескольких shards;
+- cell address не меняется при render-origin shift;
+- authority owner не выводится из cell ID;
+- parent/child bounds и child capacity проверяются fail-closed;
+- shard authority epoch и boundary summary revision/tick монотонны.
 
-### Открытое решение
+### Решение о размере cell
 
-Физический размер cells не фиксируется глобально. Descriptor должен поддерживать level/resolution для поверхностей разных планет и пространств.
+Физический размер не фиксируется глобально. Address хранит grid/root/level/path, а descriptor — bounds в reference frame. Конкретный grid определяет subdivision semantics.
+
+### Не включено
+
+- dynamic split/merge;
+- authority leases и Directory;
+- Population Field gameplay;
+- compute workers;
+- NATS.
 
 ## 7. T1 — Multi-peer Transport v2
 

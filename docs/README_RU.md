@@ -1,20 +1,21 @@
 # Документация PlanetSimulator
 
-Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`.
+Текущий runtime checkpoint: `checkpoints/2026-07-29_V16_8_2_SIMULATION_S0_SPATIAL_SUBSTRATE_RU.md`.
 
-Runtime-база: `v16.8.1-architecture-a1-generic-aggregate`.
+Runtime-база: `v16.8.2-simulation-s0-spatial-substrate`.
 
 Ключевые документы текущего направления:
 
-- `checkpoints/2026-07-29_V16_8_0_RUNTIME_H0_LISTEN_HOST_RU.md`;
+- `checkpoints/2026-07-29_V16_8_2_SIMULATION_S0_SPATIAL_SUBSTRATE_RU.md`;
+- `architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
+- `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md`;
 - `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`;
 - `architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md`;
 - `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
-- `architecture/adr/ADR-007-runtime-topology-and-listen-host.md`;
 - `persistence/R3_1_AUTHORITATIVE_RECOVERY_RU.md`;
 - `testing/N2_PROCESS_HARNESS_RU.md`.
 
-Следующий кодовый этап: `A1 Generic Aggregate Foundation`.
+Следующий кодовый этап: `T1 Multi-peer Transport v2`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 
