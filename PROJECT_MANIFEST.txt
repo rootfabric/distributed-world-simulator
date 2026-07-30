@@ -1,3 +1,21 @@
+Planetary World v16.10.2-runtime-m3-dedicated-graphical-multiplayer
+
+M3 Dedicated server plus two graphical clients:
+- one headless dedicated authority using NetworkedGameplayService
+- two simultaneously connected ordinary graphical Godot clients
+- local LunarPlayer and replica-only RemotePlayerPresenter
+- remote spawn/despawn and reconnect respawn
+- authoritative position, velocity, orientation and flashlight replication
+- render interpolation without remote input authority
+- A disconnect while B continues authoritative gameplay
+- A reconnect to stable player/a with ownership epoch 1 -> 2
+- server/A/B checksum convergence barriers
+- isolated user profiles and graphical shutdown log checks
+- config/network/dedicated-graphical-multiplayer.v1.json
+- tests/runtime/test_m3_graphical_multiplayer_contracts.gd
+- tests/runtime/test_m3_graphical_multiplayer_processes.gd
+- RUN_M3_GRAPHICAL_MULTIPLAYER_TESTS.ps1 / .sh
+
 Planetary World v16.10.1-runtime-m2-dedicated-graphical-client
 
 M2 Dedicated server plus one graphical client:

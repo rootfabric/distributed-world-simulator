@@ -1,12 +1,12 @@
 {
   "schema": "planet_simulator.dedicated_graphical_client.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "build_id": "m2-dedicated-graphical-client",
-  "status": "candidate",
+  "status": "accepted_with_gates",
   "generated_at_utc": "2026-07-30T06:20:00Z",
   "base_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
-  "decision": "DEDICATED_PLUS_ONE_GRAPHICAL_CLIENT",
+  "decision": "ACCEPTED_WITH_GATES",
   "topology": {
     "server_process": {
       "role": "dedicated-server",
@@ -106,5 +106,22 @@
     "dedicated crash restart recovery"
   ],
   "next_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
-  "next_branch": "feature/m3-dedicated-graphical-multiplayer"
+  "next_branch": "feature/m3-dedicated-graphical-multiplayer",
+  "accepted_at_utc": "2026-07-30T07:35:00Z",
+  "verified_evidence": {
+    "focused_scripts": 16,
+    "focused_assertions": 1052,
+    "graphical_process_assertions": 70,
+    "network_runtime_suites": 49,
+    "world_tests": 92,
+    "notes": [
+      "world_boot_matrix completed separately after external full-runner timeout",
+      "shared user profile checksum mismatch is an environment contamination issue also reproducible on M1"
+    ]
+  },
+  "acceptance_gates": {
+    "M2-G01": "closed by corrected metadata in M3 checkpoint",
+    "M2-G02": "tracked: X11/ObjectDB shutdown diagnostics must remain non-fatal and process-owned resources must terminate",
+    "M2-G03": "closed for M3 acceptance by isolated HOME/XDG/APPDATA/LOCALAPPDATA roots"
+  }
 }

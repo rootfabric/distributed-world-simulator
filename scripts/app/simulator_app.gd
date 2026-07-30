@@ -20,10 +20,13 @@ const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/liste
 const DedicatedGameplayServerRuntimeScript = preload("res://scripts/runtime/networked_gameplay/transports/dedicated_gameplay_server_runtime.gd")
 const GraphicalGameClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd")
 const M2GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m2_graphical_acceptance_driver.gd")
+const M3DedicatedServerRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+const M3GraphicalClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_acceptance_driver.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.10.1-runtime-m2-dedicated-graphical-client"
-const FOUNDATION_BUILD_ID: String = "m2-dedicated-graphical-client"
+const FOUNDATION_CHECKPOINT: String = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
+const FOUNDATION_BUILD_ID: String = "m3-dedicated-two-graphical-clients"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -84,6 +87,8 @@ var dedicated_gameplay_server_setup: Dictionary = {}
 var graphical_game_client_runtime
 var graphical_game_client_setup: Dictionary = {}
 var m2_graphical_acceptance_driver
+var m3_graphical_acceptance_driver
+var _m3_mode: bool = false
 
 
 func _ready() -> void:
@@ -158,40 +163,50 @@ func _ready() -> void:
 			get_tree().quit(4)
 			return
 
+	_m3_mode = not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
 	if runtime_role == RuntimeRoleScript.DEDICATED_SERVER:
-		dedicated_gameplay_server_runtime = DedicatedGameplayServerRuntimeScript.new()
-		dedicated_gameplay_server_runtime.name = "DedicatedGameplayServerRuntime"
+		dedicated_gameplay_server_runtime = (
+			M3DedicatedServerRuntimeScript.new()
+			if _m3_mode
+			else DedicatedGameplayServerRuntimeScript.new()
+		)
+		dedicated_gameplay_server_runtime.name = "M3DedicatedServerRuntime" if _m3_mode else "DedicatedGameplayServerRuntime"
 		add_child(dedicated_gameplay_server_runtime)
-		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup({
+		var dedicated_config := {
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
-			"result_file": String(launch_options.get("m2_result_file", "")),
+			"result_file": String(launch_options.get("m3_result_file", "")) if _m3_mode else String(launch_options.get("m2_result_file", "")),
 			"authority_owner_id": String(launch_options.get("node_id", "local-dedicated-server")),
 			"authority_epoch": 1,
-			"gameplay_session_id": "session/m2/player/%s" % String(
-				launch_options.get("player_identity", "local-astronaut")
-			),
-		})
+			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
+		}
+		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):
-			push_error("DedicatedGameplayServerRuntime setup failed: %s" % dedicated_gameplay_server_setup)
+			push_error("Dedicated gameplay server setup failed: %s" % dedicated_gameplay_server_setup)
 			get_tree().quit(5)
 			return
 
 	if runtime_role == RuntimeRoleScript.GAME_CLIENT:
-		graphical_game_client_runtime = GraphicalGameClientRuntimeScript.new()
-		graphical_game_client_runtime.name = "GraphicalGameClientRuntime"
+		graphical_game_client_runtime = (
+			M3GraphicalClientRuntimeScript.new()
+			if _m3_mode
+			else GraphicalGameClientRuntimeScript.new()
+		)
+		graphical_game_client_runtime.name = "M3GraphicalClientRuntime" if _m3_mode else "GraphicalGameClientRuntime"
 		add_child(graphical_game_client_runtime)
 		graphical_game_client_runtime.session_ready.connect(_on_graphical_game_client_session_ready)
 		graphical_game_client_runtime.connection_failed.connect(_on_graphical_game_client_connection_failed)
 		graphical_game_client_setup = graphical_game_client_runtime.setup({
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
-			"logical_player_id": String(launch_options.get("player_identity", "local-astronaut")),
+			"logical_player_id": String(launch_options.get("player_identity", "a" if _m3_mode else "local-astronaut")),
 			"connect_timeout_ms": int(launch_options.get("connect_timeout_ms", 15000)),
 			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
+			"automated_acceptance": _m3_mode and int(launch_options.get("m3_phase", 0)) > 0,
+			"result_file": "",
 		})
 		if not bool(graphical_game_client_setup.get("success", false)):
-			push_error("GraphicalGameClientRuntime setup failed: %s" % graphical_game_client_setup)
+			push_error("Graphical game client setup failed: %s" % graphical_game_client_setup)
 			get_tree().quit(6)
 			return
 
@@ -499,7 +514,11 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 			"details": dedicated_attach.get("details", {}),
 		}])
 	if graphical_game_client_runtime != null and graphical_game_client_runtime.is_ready():
-		var remote_attach: Dictionary = _attach_graphical_game_client(runtime, graphical_game_client_runtime.get_playable_client_session())
+		var remote_attach: Dictionary = (
+			_attach_m3_graphical_game_client(runtime, graphical_game_client_runtime)
+			if _m3_mode
+			else _attach_graphical_game_client(runtime, graphical_game_client_runtime.get_playable_client_session())
+		)
 		if not bool(remote_attach.get("success", false)):
 			return _abort_runtime_load(normalized, [{
 				"owner_id": RUNTIME_COMMAND_OWNER,
@@ -1698,6 +1717,8 @@ func _attach_playable_listen_host(runtime: Node) -> Dictionary:
 func _attach_dedicated_gameplay_server(runtime: Node) -> Dictionary:
 	if dedicated_gameplay_server_runtime == null or runtime == null:
 		return {"success": true, "error_code": "", "details": {"required": false}}
+	if _m3_mode:
+		return {"success": true, "error_code": "", "details": {"required": true, "profile": "MULTIPLAYER_CORE"}}
 	if not runtime.has_method("create_playable_listen_host_config"):
 		return {"success": true, "error_code": "", "details": {"required": false}}
 	var config_value = runtime.call("create_playable_listen_host_config")
@@ -1720,10 +1741,47 @@ func _attach_graphical_game_client(runtime: Node, session) -> Dictionary:
 	return attached
 
 
+func _attach_m3_graphical_game_client(runtime: Node, client_runtime) -> Dictionary:
+	if client_runtime == null or runtime == null:
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	if not runtime.has_method("attach_m3_multiplayer_client"):
+		return {"success": false, "error_code": "M3_GRAPHICAL_RUNTIME_ATTACH_MISSING", "details": {}}
+	var result_value = runtime.call("attach_m3_multiplayer_client", client_runtime)
+	var result: Dictionary = Dictionary(result_value) if result_value is Dictionary else {"success": false, "error_code": "INVALID_M3_ATTACH_RESULT"}
+	if bool(result.get("success", false)):
+		_setup_m3_graphical_acceptance_driver()
+	return result
+
+
+func _setup_m3_graphical_acceptance_driver() -> void:
+	if not _m3_mode or m3_graphical_acceptance_driver != null:
+		return
+	var result_file := String(launch_options.get("m3_result_file", "")).strip_edges()
+	var phase := int(launch_options.get("m3_phase", 0))
+	if result_file.is_empty() or phase not in [1, 2, 3]:
+		return
+	m3_graphical_acceptance_driver = M3GraphicalAcceptanceDriverScript.new()
+	m3_graphical_acceptance_driver.name = "M3GraphicalAcceptanceDriver"
+	add_child(m3_graphical_acceptance_driver)
+	var setup_result: Dictionary = m3_graphical_acceptance_driver.setup(self, graphical_game_client_runtime, {
+		"result_file": result_file,
+		"peer_result_file": String(launch_options.get("m3_peer_result_file", "")),
+		"client_id": String(launch_options.get("player_identity", "")),
+		"phase": phase,
+	})
+	if not bool(setup_result.get("success", false)):
+		push_error("M3 acceptance driver setup failed: %s" % setup_result)
+		request_graceful_shutdown("m3_acceptance_driver_setup_failed", 10)
+
+
 func _on_graphical_game_client_session_ready(session) -> void:
 	if current_runtime == null or not is_instance_valid(current_runtime):
 		return
-	var attached: Dictionary = _attach_graphical_game_client(current_runtime, session)
+	var attached: Dictionary = (
+		_attach_m3_graphical_game_client(current_runtime, session)
+		if _m3_mode
+		else _attach_graphical_game_client(current_runtime, session)
+	)
 	if not bool(attached.get("success", false)):
 		push_error("Graphical game client attach failed: %s" % attached)
 		request_graceful_shutdown("graphical_game_client_attach_failed", 7)

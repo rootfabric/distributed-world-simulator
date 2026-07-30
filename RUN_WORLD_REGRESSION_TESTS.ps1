@@ -5,6 +5,23 @@ $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
 $ReportPath = Join-Path $ReportDirectory "world-regression-summary.json"
 New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
 
+# Every regression run receives a clean user profile. Old user:// manifests from
+# another checkpoint must never influence persistence or checksum contracts.
+$IsolatedProfileRoot = Join-Path $ReportDirectory ("world-profile-{0}" -f $PID)
+$IsolatedDataRoot = Join-Path $IsolatedProfileRoot "data"
+$IsolatedConfigRoot = Join-Path $IsolatedProfileRoot "config"
+$IsolatedCacheRoot = Join-Path $IsolatedProfileRoot "cache"
+foreach ($Path in @($IsolatedProfileRoot, $IsolatedDataRoot, $IsolatedConfigRoot, $IsolatedCacheRoot)) {
+    New-Item -ItemType Directory -Force -Path $Path | Out-Null
+}
+$env:APPDATA = $IsolatedDataRoot
+$env:LOCALAPPDATA = $IsolatedDataRoot
+$env:USERPROFILE = $IsolatedProfileRoot
+$env:HOME = $IsolatedProfileRoot
+$env:XDG_DATA_HOME = $IsolatedDataRoot
+$env:XDG_CONFIG_HOME = $IsolatedConfigRoot
+$env:XDG_CACHE_HOME = $IsolatedCacheRoot
+
 $Candidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:GODOT_BIN)) {
     $Candidates += $env:GODOT_BIN
@@ -75,6 +92,8 @@ $Tests = @(
     "res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
     "res://tests/runtime/test_m2_graphical_client_contracts.gd",
     "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
+    "res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
+    "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -135,11 +154,12 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.1-runtime-m2-dedicated-graphical-client"
+    checkpoint = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
     project_root = $ProjectRoot
+    isolated_user_profile = $IsolatedProfileRoot
     declared_test_count = $Tests.Count
     discovered_test_count = 0
     passed = $false
@@ -324,7 +344,7 @@ function Invoke-GodotStep {
         }
     }
     $OutputText = ($Captured | Out-String)
-    $HasFailureMarker = $OutputText -match '(?m): FAIL(?:\s|\()'
+    $HasFailureMarker = $OutputText -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     Add-StepResult -Name $Name -Kind $Kind -ExitCode $ExitCode -DurationSeconds $Duration -Target $Target

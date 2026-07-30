@@ -59,6 +59,8 @@ $Tests = @(
     "res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
     "res://tests/runtime/test_m2_graphical_client_contracts.gd",
     "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
+    "res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
+    "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -84,8 +86,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.10.1-runtime-m2-dedicated-graphical-client"
-    build_id = "post-a2-single-server-multiplayer-first"
+    checkpoint = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
+    build_id = "m3-dedicated-two-graphical-clients"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -132,7 +134,7 @@ function Invoke-CheckedProcess {
         }
     }
     $OutputText = ($Captured | Out-String)
-    $HasFailureMarker = $OutputText -match '(?m): FAIL(?:\s|\()'
+    $HasFailureMarker = $OutputText -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     $Summary.steps += [ordered]@{
@@ -153,7 +155,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.10.1-runtime-m2-dedicated-graphical-client"
+    Write-Host "Checkpoint: v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
@@ -172,7 +174,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through M2 dedicated graphical client network/runtime tests passed." -ForegroundColor Green
+    Write-Host "Foundation N0 through M3 graphical multiplayer network/runtime tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

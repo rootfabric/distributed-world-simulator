@@ -5,6 +5,7 @@ const NetworkCommand = preload("res://scripts/network/contracts/network_command_
 const JoinCommand = preload("res://scripts/runtime/networked_gameplay/contracts/player_join_command.gd")
 const LeaveCommand = preload("res://scripts/runtime/networked_gameplay/contracts/player_leave_command.gd")
 const InputCommand = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_command.gd")
+const PresentationCommand = preload("res://scripts/runtime/networked_gameplay/contracts/player_presentation_command.gd")
 const ItemCommand = preload("res://scripts/runtime/networked_gameplay/contracts/item_command.gd")
 const PlayerSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
 const PlayerDelta = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_delta.gd")
@@ -145,6 +146,8 @@ func handle_join_command(command: Dictionary) -> Dictionary:
 			"inventory": [],
 			"last_input_sequence": 0,
 			"state_revision": 1,
+			"orientation_yaw": 0.0,
+			"flashlight_enabled": false,
 		}
 	else:
 		record["transport_session_id"] = String(ownership_record.get("transport_session_id", ""))
@@ -225,6 +228,38 @@ func handle_player_input(command: Dictionary) -> Dictionary:
 	return result
 
 
+func handle_player_presentation(command: Dictionary) -> Dictionary:
+	if not _configured:
+		return _failure("NETWORKED_GAMEPLAY_SERVICE_NOT_READY")
+	var validation := PresentationCommand.validate(command)
+	if not bool(validation.get("success", false)):
+		return _failure(String(validation.get("error_code", "INVALID_PLAYER_PRESENTATION_COMMAND")))
+	if int(command.get("authority_epoch", 0)) != _authority_epoch:
+		return _failure("STALE_AUTHORITY_EPOCH")
+	var operation_id := String(command.get("operation_id", ""))
+	var fingerprint := Utils.payload_hash(command)
+	var replay := _replay(operation_id, fingerprint)
+	if not replay.is_empty():
+		return replay
+	var logical_player_id := String(command.get("logical_player_id", ""))
+	var owner_check := _validate_owner(logical_player_id, String(command.get("transport_session_id", "")), int(command.get("ownership_epoch", 0)))
+	if not bool(owner_check.get("success", false)):
+		return _record_failure(operation_id, fingerprint, String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
+	var record: Dictionary = _players.get_player(logical_player_id)
+	if record.is_empty():
+		return _record_failure(operation_id, fingerprint, "PLAYER_STATE_NOT_FOUND")
+	var before_revision := _revision
+	record["orientation_yaw"] = float(command.get("orientation_yaw", 0.0))
+	record["flashlight_enabled"] = bool(command.get("flashlight_enabled", false))
+	record["state_revision"] = int(record.get("state_revision", 0)) + 1
+	_players.upsert(record)
+	_advance()
+	var delta := _create_delta(before_revision, "PLAYER_PRESENTATION_UPDATED", record, {})
+	var result := _success({"replay": false, "player": record.duplicate(true), "delta": delta, "snapshot": create_snapshot()})
+	_record(operation_id, fingerprint, result)
+	return result
+
+
 func handle_item_command(command: Dictionary) -> Dictionary:
 	if not _configured:
 		return _failure("NETWORKED_GAMEPLAY_SERVICE_NOT_READY")
@@ -290,6 +325,10 @@ func leave_transport_session(transport_session_id: String, operation_id: String)
 
 func move_player(logical_player_id: String, transport_session_id: String, ownership_epoch: int, input_sequence: int, delta_x: float, delta_z: float, operation_id: String) -> Dictionary:
 	return handle_player_input(InputCommand.create("message/m1/move/%s" % operation_id.sha256_text().left(12), operation_id, logical_player_id, transport_session_id, _authority_epoch, ownership_epoch, input_sequence, "MOVEMENT_DELTA", {"delta_x": delta_x, "delta_z": delta_z}))
+
+
+func set_player_presentation(logical_player_id: String, transport_session_id: String, ownership_epoch: int, orientation_yaw: float, flashlight_enabled: bool, operation_id: String) -> Dictionary:
+	return handle_player_presentation(PresentationCommand.create("message/m3/presentation/%s" % operation_id.sha256_text().left(12), operation_id, logical_player_id, transport_session_id, _authority_epoch, ownership_epoch, orientation_yaw, flashlight_enabled))
 
 
 func pickup_shared_item(logical_player_id: String, transport_session_id: String, ownership_epoch: int, item_id: String, operation_id: String) -> Dictionary:

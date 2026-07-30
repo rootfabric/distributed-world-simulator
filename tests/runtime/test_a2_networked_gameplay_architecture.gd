@@ -113,8 +113,8 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 
 
 func _test_roadmap_alignment(roadmap: Dictionary) -> void:
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "Roadmap current checkpoint mismatch")
-	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "Roadmap runtime base mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.2-runtime-m3-dedicated-graphical-multiplayer", "Roadmap current checkpoint mismatch")
+	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.2-runtime-m3-dedicated-graphical-multiplayer", "Roadmap runtime base mismatch")
 	var phases: Dictionary = {}
 	for phase_value in roadmap.get("phases", []):
 		if phase_value is Dictionary:
@@ -123,7 +123,8 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 		_assert(String(phases.get(stage, {}).get("status", "")) == "accepted", "%s roadmap status is not accepted" % stage)
 	_assert(String(phases.get("A2", {}).get("status", "")) == "accepted", "A2 roadmap status mismatch")
 	_assert(String(phases.get("M1", {}).get("status", "")) == "accepted", "M1 roadmap status must be accepted")
-	_assert(String(phases.get("M2", {}).get("status", "")) == "current_candidate", "M2 roadmap status must be current candidate")
+	_assert(String(phases.get("M2", {}).get("status", "")) == "accepted_with_gates", "M2 roadmap status must be accepted with gates")
+	_assert(String(phases.get("M3", {}).get("status", "")) == "current_candidate", "M3 roadmap status must be current candidate")
 	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status must be deferred after A3")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
@@ -198,7 +199,7 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.10.1-runtime-m2-dedicated-graphical-client"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.10.2-runtime-m3-dedicated-graphical-multiplayer"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

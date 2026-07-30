@@ -1,0 +1,135 @@
+{
+  "schema": "planet_simulator.dedicated_graphical_multiplayer.v1",
+  "document_revision": 2,
+  "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+  "build_id": "m3-dedicated-two-graphical-clients",
+  "status": "candidate",
+  "generated_at_utc": "2026-07-30T08:55:00Z",
+  "base_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+  "base_decision": "ACCEPTED_WITH_GATES",
+  "decision": "DEDICATED_PLUS_TWO_GRAPHICAL_CLIENTS",
+  "topology": {
+    "server": {
+      "role": "dedicated-server",
+      "headless": true,
+      "authoritative": true,
+      "presentation_enabled": false
+    },
+    "client_a": {
+      "role": "game-client",
+      "headless": false,
+      "authoritative": false,
+      "embedded_authority": false
+    },
+    "client_b": {
+      "role": "game-client",
+      "headless": false,
+      "authoritative": false,
+      "embedded_authority": false
+    },
+    "transport": "ENet",
+    "gameplay_service": "NetworkedGameplayService",
+    "region_count": 1
+  },
+  "production_components": [
+    {
+      "name": "M3DedicatedServerRuntime",
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
+    },
+    {
+      "name": "M3GraphicalClientRuntime",
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
+    },
+    {
+      "name": "RemotePlayerPresenter",
+      "path": "scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd"
+    }
+  ],
+  "presentation_contract": {
+    "local_player": "real LunarPlayer driven by authoritative replica",
+    "remote_player": "RemotePlayerPresenter only",
+    "remote_input_authority": false,
+    "spawn_despawn": "replicated connected state",
+    "transform": "authoritative position",
+    "velocity": "authoritative velocity",
+    "orientation": "versioned orientation_yaw",
+    "flashlight": "versioned flashlight_enabled",
+    "interpolation": "exponential render interpolation toward authoritative target"
+  },
+  "wire_additions": [
+    "PlayerPresentationCommand",
+    "PlayerStateSnapshot.orientation_yaw",
+    "PlayerStateSnapshot.flashlight_enabled",
+    "PlayerStateDelta.PLAYER_PRESENTATION_UPDATED"
+  ],
+  "acceptance": [
+    "two ordinary graphical Godot clients are connected simultaneously",
+    "A sees B and B sees A through RemotePlayerPresenter",
+    "A movement is observed by B and B movement is observed by A",
+    "remote presenters have no input authority",
+    "orientation and flashlight presentation state replicate through authority",
+    "A disconnect removes its presenter while B remains playable",
+    "B performs authoritative movement while A is offline",
+    "A reconnect restores player/a and advances ownership epoch from 1 to 2",
+    "B respawns A presentation after reconnect",
+    "server A and B converge to one checksum before graceful shutdown",
+    "server and all graphical process phases use isolated user-data roots"
+  ],
+  "m2_gate_closure": {
+    "M2-G01_validation_metadata": "accepted M2 evidence remains 70 graphical process assertions and 1052 focused assertions",
+    "M2-G02_shutdown_hygiene": "M2 contract runtime nodes are explicitly freed; M3 process rejects ObjectDB/resource leak markers in every graphical client log",
+    "M2-G03_isolated_user_profile": "focused runner, world runner, server, A1, B and A2 use isolated HOME/XDG/APPDATA/LOCALAPPDATA roots"
+  },
+  "automated_evidence": {
+    "contract_test": "tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
+    "process_test": "tests/runtime/test_m3_graphical_multiplayer_processes.gd",
+    "focused_runner_ps1": "RUN_M3_GRAPHICAL_MULTIPLAYER_TESTS.ps1",
+    "focused_runner_sh": "RUN_M3_GRAPHICAL_MULTIPLAYER_TESTS.sh",
+    "graphical_environment": "X11 virtual display with gl_compatibility and llvmpipe; both client processes omit --headless"
+  },
+  "not_in_scope": [
+    "full canonical H1 Item Graph gameplay over ENet",
+    "two-client Item Graph contention",
+    "graphical acceptance including full shared gameplay",
+    "dedicated crash restart recovery"
+  ],
+  "next_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+  "next_branch": "feature/m4-canonical-shared-gameplay",
+  "verified_evidence": {
+    "editor_import": "PASS",
+    "contracts": {
+      "tests": 1,
+      "assertions": 63,
+      "status": "PASS"
+    },
+    "graphical_process": {
+      "tests": 1,
+      "assertions": 56,
+      "status": "PASS",
+      "clients": "two ordinary X11 Godot processes without --headless"
+    },
+    "focused_profile": {
+      "scripts": 18,
+      "assertions": 1180,
+      "status": "PASS"
+    },
+    "network_runtime": {
+      "suites": 51,
+      "assertions": 3989,
+      "status": "PASS"
+    },
+    "world_regression": {
+      "tests": 94,
+      "status": "PASS",
+      "isolated_profile": true
+    },
+    "main_scene": {
+      "tests": 6,
+      "status": "PASS"
+    },
+    "shutdown_hygiene": {
+      "objectdb_leak_markers": 0,
+      "resource_in_use_markers": 0
+    }
+  }
+}

@@ -1,15 +1,19 @@
 # Документация PlanetSimulator
 
-Принятый runtime checkpoint: `v16.10.0-runtime-m1-unified-networked-gameplay-core`.
-Текущий runtime candidate: `v16.10.1-runtime-m2-dedicated-graphical-client`.
+Принятый runtime checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
+Текущий runtime candidate: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`.
 
-M2 доказывает один headless dedicated server и один настоящий graphical Godot client без embedded authority: stable identity, authoritative movement, replica inventory/hotbar и reconnect к прежней entity.
+M3 доказывает один headless dedicated server и два одновременно работающих graphical Godot clients: local/remote presentation, mutual authoritative movement, orientation/flashlight replication, disconnect/reconnect и checksum convergence.
 
 Ключевые документы:
 
+- `checkpoints/2026-07-30_V16_10_2_RUNTIME_M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
+- `architecture/M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `architecture/M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
+- `architecture/adr/ADR-015-dedicated-graphical-multiplayer.md`;
 - `architecture/adr/ADR-014-dedicated-graphical-client.md`;
+- `../config/network/dedicated-graphical-multiplayer.v1.json`;
 - `../config/network/dedicated-graphical-client.v1.json`;
 - `plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.
 

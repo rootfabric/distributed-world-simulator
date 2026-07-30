@@ -7,6 +7,9 @@ static func create(schema: String, payload: Dictionary) -> Dictionary:
 	var value: Dictionary = payload.duplicate(true)
 	value["schema"] = schema
 	value.erase("checksum")
+	var round_trip := NetworkUtils.json_round_trip(value)
+	if bool(round_trip.get("success", false)) and round_trip.get("value") is Dictionary:
+		value = Dictionary(round_trip.get("value", {}))
 	value["checksum"] = NetworkUtils.payload_hash(value)
 	return value
 

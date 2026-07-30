@@ -4,7 +4,7 @@ const Wire = preload("res://scripts/runtime/networked_gameplay/contracts/wire_co
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const SCHEMA := "planet_simulator.player_state_snapshot.v1"
 const FIELDS: Array[String] = ["schema", "authority_owner_id", "authority_epoch", "revision", "server_tick", "region_id", "players", "shared_item"]
-const PLAYER_FIELDS: Array[String] = ["logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch", "connected", "position", "velocity", "inventory", "last_input_sequence", "state_revision"]
+const PLAYER_FIELDS: Array[String] = ["logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch", "connected", "position", "velocity", "inventory", "last_input_sequence", "state_revision", "orientation_yaw", "flashlight_enabled"]
 const SHARED_ITEM_FIELDS: Array[String] = ["item_id", "available", "owner_player_entity_id", "revision"]
 
 static func create(authority_owner_id: String, authority_epoch: int, revision: int, server_tick: int, region_id: String, players: Array, shared_item: Dictionary) -> Dictionary:
@@ -52,6 +52,11 @@ static func validate_player_record(record: Dictionary) -> Dictionary:
 		inventory_ids[String(item_value)] = true
 	if not Utils.is_json_integer(record.get("last_input_sequence")) or int(record.get("last_input_sequence", -1)) < 0: return Wire.failure("INVALID_MULTIPLAYER_INPUT_SEQUENCE")
 	if not Utils.is_json_integer(record.get("state_revision")) or int(record.get("state_revision", 0)) < 1: return Wire.failure("INVALID_MULTIPLAYER_PLAYER_REVISION")
+	var yaw_value = record.get("orientation_yaw")
+	if typeof(yaw_value) not in [TYPE_INT, TYPE_FLOAT]: return Wire.failure("INVALID_MULTIPLAYER_ORIENTATION")
+	var yaw := float(yaw_value)
+	if is_nan(yaw) or is_inf(yaw) or absf(yaw) > PI: return Wire.failure("INVALID_MULTIPLAYER_ORIENTATION")
+	if typeof(record.get("flashlight_enabled")) != TYPE_BOOL: return Wire.failure("INVALID_MULTIPLAYER_FLASHLIGHT")
 	return Wire.success()
 
 static func validate_shared_item(item: Dictionary) -> Dictionary:

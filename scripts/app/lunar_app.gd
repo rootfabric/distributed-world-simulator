@@ -33,9 +33,10 @@ const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_fie
 const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
 const NetworkContractUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
+const RemotePlayerPresenterScript = preload("res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd")
 
-const PROJECT_VERSION: String = "16.10.1-runtime-m2-dedicated-graphical-client"
-const BUILD_ID: String = "m2-dedicated-graphical-client"
+const PROJECT_VERSION: String = "16.10.2-runtime-m3-dedicated-graphical-multiplayer"
+const BUILD_ID: String = "m3-dedicated-two-graphical-clients"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 11.0
@@ -93,6 +94,14 @@ var _h1_rejection_count: int = 0
 var _h1_interaction_position: Vector3 = Vector3.ZERO
 var _m2_network_input_distance_m: float = 0.0
 var _m2_network_input_frames: int = 0
+var m3_multiplayer_client_runtime
+var _m3_attached: bool = false
+var _m3_remote_presenters: Dictionary = {}
+var _m3_local_sync_count: int = 0
+var _m3_remote_spawn_count: int = 0
+var _m3_remote_despawn_count: int = 0
+var _m3_remote_update_count: int = 0
+var _m3_input_accumulator: float = 0.0
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
@@ -409,7 +418,9 @@ func _initialize_standalone_runtime_services() -> void:
 func _process(delta: float) -> void:
 	if moon_world == null or player == null:
 		return
-	if _h1_attached and not spectator_enabled:
+	if _m3_attached and not spectator_enabled:
+		_apply_m3_network_input(delta)
+	elif _h1_attached and not spectator_enabled:
 		if runtime_role == "game-client":
 			_apply_m2_network_input(delta)
 		_sync_h1_player_state(delta)
@@ -1784,6 +1795,117 @@ func create_m2_graphical_client_report() -> Dictionary:
 		"direct_domain_references": 0,
 	}
 
+
+
+func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	if runtime_role != "game-client":
+		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
+	if runtime == null or not runtime.has_method("get_snapshot") or not runtime.has_method("move_blocking"):
+		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
+	if _m3_attached:
+		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+	m3_multiplayer_client_runtime = runtime
+	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
+		runtime.replica_updated.connect(_on_m3_replica_updated)
+	_m3_attached = true
+	player.set_network_replica_mode(true)
+	_on_m3_replica_updated(runtime.get_snapshot())
+	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id()}}
+
+
+func _on_m3_replica_updated(snapshot: Dictionary) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or player == null:
+		return
+	var local_id: String = m3_multiplayer_client_runtime.get_local_player_id()
+	var seen: Dictionary = {}
+	for player_value in snapshot.get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var record: Dictionary = player_value
+		var logical_id := String(record.get("logical_player_id", ""))
+		if logical_id == local_id:
+			if bool(record.get("connected", false)):
+				var position: Dictionary = record.get("position", {})
+				player.set_world_position(Vector3(float(position.get("x", 0.0)), float(position.get("y", 0.0)), float(position.get("z", 0.0))))
+				var velocity: Dictionary = record.get("velocity", {})
+				player.velocity = Vector3(float(velocity.get("x", 0.0)), float(velocity.get("y", 0.0)), float(velocity.get("z", 0.0)))
+				_m3_local_sync_count += 1
+			continue
+		if not bool(record.get("connected", false)):
+			continue
+		seen[logical_id] = true
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter == null or not is_instance_valid(presenter):
+			presenter = RemotePlayerPresenterScript.new()
+			add_child(presenter)
+			var setup_result: Dictionary = presenter.setup(record)
+			if not bool(setup_result.get("success", false)):
+				presenter.queue_free()
+				continue
+			_m3_remote_presenters[logical_id] = presenter
+			_m3_remote_spawn_count += 1
+		else:
+			presenter.apply_replica(record)
+		_m3_remote_update_count += 1
+	for logical_id_value in _m3_remote_presenters.keys().duplicate():
+		var logical_id := String(logical_id_value)
+		if seen.has(logical_id):
+			continue
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter != null and is_instance_valid(presenter):
+			presenter.queue_free()
+		_m3_remote_presenters.erase(logical_id)
+		_m3_remote_despawn_count += 1
+
+
+func _apply_m3_network_input(delta: float) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or not local_input_enabled:
+		return
+	if m3_multiplayer_client_runtime.has_method("is_automated_acceptance") and m3_multiplayer_client_runtime.is_automated_acceptance():
+		return
+	_m3_input_accumulator += delta
+	if _m3_input_accumulator < 0.05:
+		return
+	var input_vector := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if input_vector.length_squared() < 0.000001:
+		return
+	var step := minf(_m3_input_accumulator, 0.1)
+	_m3_input_accumulator = 0.0
+	var speed := M2_NETWORK_RUN_SPEED_MPS if Input.is_action_pressed("boost") else M2_NETWORK_WALK_SPEED_MPS
+	m3_multiplayer_client_runtime.move_nonblocking(input_vector.x * speed * step, input_vector.y * speed * step)
+
+
+func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M3_GAME_CLIENT_NOT_READY"}
+	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
+
+
+func create_m3_graphical_client_report() -> Dictionary:
+	var presenters: Dictionary = {}
+	for logical_id_value in _m3_remote_presenters.keys():
+		var presenter = _m3_remote_presenters[logical_id_value]
+		if presenter != null and is_instance_valid(presenter):
+			presenters[String(logical_id_value)] = presenter.get_report()
+	return {
+		"schema": "planet_simulator.m3_graphical_world_report.v1",
+		"runtime_role": runtime_role,
+		"attached": _m3_attached,
+		"local_player_id": m3_multiplayer_client_runtime.get_local_player_id() if m3_multiplayer_client_runtime != null else "",
+		"local_player_position": _vector_to_array(player.get_world_position()) if player != null else [],
+		"active_camera": String(player.get_active_camera().get_path()) if player != null and player.get_active_camera() != null and player.get_active_camera().current else NodePath(),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": bool(player.is_network_replica_mode()) if player != null else false,
+		"local_sync_count": _m3_local_sync_count,
+		"remote_presenter_count": _m3_remote_presenters.size(),
+		"remote_spawn_count": _m3_remote_spawn_count,
+		"remote_despawn_count": _m3_remote_despawn_count,
+		"remote_update_count": _m3_remote_update_count,
+		"remote_presenters": presenters,
+		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
+		"direct_authority_references": 0,
+	}
 
 func _create_h1_runtime_report() -> Dictionary:
 	return {

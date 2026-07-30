@@ -17,6 +17,8 @@ func apply_delta(record: Dictionary, input_sequence: int, delta_x: float, delta_
 	position["z"] = float(position.get("z", 0.0)) + delta_z
 	next["position"] = position
 	next["velocity"] = {"x": delta_x, "y": 0.0, "z": delta_z}
+	if absf(delta_x) + absf(delta_z) > 0.000001:
+		next["orientation_yaw"] = atan2(delta_x, delta_z)
 	next["last_input_sequence"] = input_sequence
 	next["state_revision"] = int(next.get("state_revision", 0)) + 1
 	return _success({"player": next})

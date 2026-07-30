@@ -34,8 +34,8 @@ func _init() -> void:
 	var host_report: Dictionary = _wait_for_report(host_path, TIMEOUT_MS)
 	_assert(not host_report.is_empty(), "Listen-host report was not produced")
 	_assert(bool(host_report.get("passed", false)), "Listen-host process failed: %s" % host_report)
-	_assert(String(host_report.get("checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "Listen-host checkpoint mismatch")
-	_assert(String(host_report.get("build_id", "")) == "m2-dedicated-graphical-client", "Listen-host build id mismatch")
+	_assert(String(host_report.get("checkpoint", "")) == "v16.10.2-runtime-m3-dedicated-graphical-multiplayer", "Listen-host checkpoint mismatch")
+	_assert(String(host_report.get("build_id", "")) == "m3-dedicated-two-graphical-clients", "Listen-host build id mismatch")
 	_assert(String(host_report.get("transport_kind", "")) == "LOOPBACK", "Listen-host did not use loopback")
 	_assert(not bool(host_report.get("direct_client_domain_access", true)), "Listen-host allowed direct domain access")
 

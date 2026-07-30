@@ -22,6 +22,10 @@ static func create(
 	payload_schema: String,
 	payload: Dictionary
 ) -> Dictionary:
+	var canonical_payload := payload.duplicate(true)
+	var round_trip := UtilsScript.json_round_trip(canonical_payload)
+	if bool(round_trip.get("success", false)) and round_trip.get("value") is Dictionary:
+		canonical_payload = Dictionary(round_trip.get("value", {}))
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
@@ -31,8 +35,8 @@ static func create(
 		"channel": channel,
 		"delivery_mode": delivery_mode,
 		"payload_schema": payload_schema,
-		"payload": payload.duplicate(true),
-		"payload_checksum": UtilsScript.payload_hash(payload),
+		"payload": canonical_payload,
+		"payload_checksum": UtilsScript.payload_hash(canonical_payload),
 	}
 
 

@@ -7,7 +7,7 @@ checkpoint: v16.10.1-runtime-m2-dedicated-graphical-client
 build_id: m2-dedicated-graphical-client
 base: v16.10.0-runtime-m1-unified-networked-gameplay-core
 branch: feature/m2-dedicated-graphical-client
-status: candidate
+status: accepted_with_gates
 ```
 
 ## Реализовано
@@ -50,10 +50,10 @@ M3 остаётся необходимым для двух одновремен�
 
 ```text
 Editor import:                    PASS
-M2 graphical client contracts:   92/92 PASS
-M2 graphical process acceptance: 71/71 PASS
-Focused M2 profile:               16/16 scripts, 1049 assertions PASS
-Network/runtime regression:       49/49 suites, 3858 assertions PASS
+M2 graphical client contracts:   98/98 PASS
+M2 graphical process acceptance: 70 assertions PASS (accepted delivery)
+Focused M2 profile:               16/16 scripts, 1052 assertions PASS
+Network/runtime regression:       49/49 suites PASS
 World regression:                 92/92 tests PASS
 Main scene playground:            6/6 PASS
 ```

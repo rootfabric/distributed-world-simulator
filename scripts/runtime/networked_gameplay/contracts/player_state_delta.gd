@@ -5,7 +5,7 @@ const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd
 const Snapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
 const SCHEMA := "planet_simulator.player_state_delta.v1"
 const FIELDS: Array[String] = ["schema", "authority_owner_id", "authority_epoch", "base_revision", "target_revision", "server_tick", "event_type", "player", "shared_item", "target_checksum"]
-const EVENTS := ["PLAYER_JOINED", "PLAYER_LEFT", "PLAYER_MOVED", "ITEM_PICKED_UP"]
+const EVENTS := ["PLAYER_JOINED", "PLAYER_LEFT", "PLAYER_MOVED", "ITEM_PICKED_UP", "PLAYER_PRESENTATION_UPDATED"]
 
 static func create(authority_owner_id: String, authority_epoch: int, base_revision: int, target_revision: int, server_tick: int, event_type: String, player: Dictionary, shared_item: Dictionary, target_checksum: String) -> Dictionary:
 	return Wire.create(SCHEMA, {"authority_owner_id": authority_owner_id, "authority_epoch": authority_epoch, "base_revision": base_revision, "target_revision": target_revision, "server_tick": server_tick, "event_type": event_type, "player": player.duplicate(true), "shared_item": shared_item.duplicate(true), "target_checksum": target_checksum})

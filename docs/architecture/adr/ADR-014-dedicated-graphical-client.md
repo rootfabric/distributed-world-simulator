@@ -1,6 +1,6 @@
 # ADR-014: Dedicated authority with replica-only graphical client
 
-- Status: Accepted as M2 candidate decision
+- Status: Accepted with gates
 - Date: 2026-07-30
 - Checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client`
 

@@ -106,7 +106,7 @@ Acceptance:
 Checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client`
 Branch: `feature/m2-dedicated-graphical-client`
 
-Статус: **current candidate**. Реализованы `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity. Автоматический process-test использует настоящий graphical display/renderer.
+Статус: **accepted with gates**. Реализованы `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity. Автоматический process-test использует настоящий graphical display/renderer.
 
 Acceptance:
 
@@ -125,7 +125,7 @@ graphical client starts
 Checkpoint: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`
 Branch: `feature/m3-dedicated-graphical-multiplayer`
 
-Добавляются local/remote distinction, `RemotePlayerPresenter`, spawn/despawn, transform/velocity/orientation, flashlight state, interpolation и отсутствие input authority у remote presentation.
+Статус: **current candidate**. Реализованы local/remote distinction, `RemotePlayerPresenter`, spawn/despawn, transform/velocity/orientation, flashlight state, interpolation и отсутствие input authority у remote presentation.
 
 Acceptance: A и B видят движение друг друга; отключение A не останавливает B; reconnect A восстанавливает ту же identity.
 

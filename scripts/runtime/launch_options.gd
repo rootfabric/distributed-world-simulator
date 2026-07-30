@@ -23,6 +23,9 @@ static func defaults() -> Dictionary:
 		"m2_result_file": "",
 		"m2_phase": 0,
 		"m2_expected_state_file": "",
+		"m3_result_file": "",
+		"m3_peer_result_file": "",
+		"m3_phase": 0,
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
 		"shutdown_after_ms": 0,
@@ -77,6 +80,12 @@ static func parse(arguments) -> Dictionary:
 				options["m2_phase"] = _parse_non_negative_int(value, key, errors)
 			"m2-expected-state-file":
 				options["m2_expected_state_file"] = value
+			"m3-result-file":
+				options["m3_result_file"] = value
+			"m3-peer-result-file":
+				options["m3_peer_result_file"] = value
+			"m3-phase":
+				options["m3_phase"] = _parse_non_negative_int(value, key, errors)
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":

@@ -3,7 +3,7 @@
 **Checkpoint:** `v16.10.1-runtime-m2-dedicated-graphical-client`
 **Build ID:** `m2-dedicated-graphical-client`
 **База:** принятый `v16.10.0-runtime-m1-unified-networked-gameplay-core`
-**Статус:** candidate
+**Статус:** accepted with gates
 
 ## Цель
 

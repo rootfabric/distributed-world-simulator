@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 3,
+  "document_revision": 4,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
   "status": "accepted",
@@ -89,7 +89,7 @@
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "current_candidate",
+      "status": "accepted_with_gates",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -102,12 +102,22 @@
         "inventory and hotbar are replica-driven",
         "reconnect restores the same player entity"
       ],
-      "implementation_manifest": "config/network/dedicated-graphical-client.v1.json"
+      "implementation_manifest": "config/network/dedicated-graphical-client.v1.json",
+      "accepted_at_utc": "2026-07-30T07:35:00Z",
+      "verified_assertions": {
+        "focused": 1052,
+        "process": 70
+      },
+      "acceptance_gates": [
+        "M2-G01 metadata correction",
+        "M2-G02 shutdown hygiene",
+        "M2-G03 isolated user profile"
+      ]
     },
     {
       "id": "M3",
       "name": "Dedicated server plus two graphical clients",
-      "status": "next_after_M2",
+      "status": "current_candidate",
       "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
       "branch": "feature/m3-dedicated-graphical-multiplayer",
       "depends_on": [
@@ -119,12 +129,22 @@
         "both clients observe authoritative movement of the other",
         "remote presentation has no input authority",
         "one client disconnect does not stop the other"
-      ]
+      ],
+      "implementation_manifest": "config/network/dedicated-graphical-multiplayer.v1.json",
+      "implementation": {
+        "two_graphical_clients": "implemented",
+        "remote_player_presenter": "implemented",
+        "spawn_despawn": "implemented",
+        "movement_interpolation": "implemented",
+        "orientation_flashlight_replication": "implemented",
+        "disconnect_reconnect": "implemented",
+        "canonical_item_graph_over_enet": "not_in_scope_M4"
+      }
     },
     {
       "id": "M4",
       "name": "Canonical shared gameplay over ENet",
-      "status": "planned",
+      "status": "next_after_M3",
       "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
       "branch": "feature/m4-canonical-shared-gameplay",
       "depends_on": [
@@ -285,5 +305,5 @@
   "current_implementation_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "current_implementation_manifest": "config/network/dedicated-graphical-client.v1.json",
   "current_implementation_stage": "M2",
-  "updated_at_utc": "2026-07-30T06:20:00Z"
+  "updated_at_utc": "2026-07-30T08:20:00Z"
 }

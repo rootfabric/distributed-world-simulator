@@ -152,6 +152,8 @@ func _test_runtime_validation() -> void:
 	_assert(Support.CHECKPOINT == "v16.10.1-runtime-m2-dedicated-graphical-client", "M2 checkpoint identity")
 	_assert(Support.BUILD_ID == "m2-dedicated-graphical-client", "M2 build identity")
 	_assert(String(Support.endpoint("127.0.0.1", 24580).get("transport", "")) == "ENET", "M2 endpoint uses ENet")
+	server.free()
+	client.free()
 
 
 func _test_snapshot_normalization_stability() -> void:
@@ -206,8 +208,10 @@ func _test_manifest() -> void:
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.dedicated_graphical_client.v1", "M2 manifest schema")
 	_assert(String(manifest.get("checkpoint", "")) == Support.CHECKPOINT, "M2 manifest checkpoint")
 	_assert(String(manifest.get("build_id", "")) == Support.BUILD_ID, "M2 manifest build")
-	_assert(String(manifest.get("status", "")) == "candidate", "M2 manifest candidate status")
+	_assert(String(manifest.get("status", "")) == "accepted_with_gates", "M2 manifest accepted-with-gates status")
 	_assert(String(manifest.get("base_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "M2 manifest M1 base")
+	_assert(int(manifest.get("verified_evidence", {}).get("graphical_process_assertions", 0)) == 70, "M2 corrected process assertion count")
+	_assert(int(manifest.get("verified_evidence", {}).get("focused_assertions", 0)) == 1052, "M2 corrected focused assertion count")
 	var topology: Dictionary = manifest.get("topology", {})
 	_assert(String(topology.get("transport", "")) == "ENet", "M2 graphical transport policy")
 	_assert(String(topology.get("gameplay_service", "")) == "NetworkedGameplayService", "M2 unified gameplay service")
