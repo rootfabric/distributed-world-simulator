@@ -13,6 +13,7 @@ signal item_selected(item_id: String)
 signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
 signal page_requested(container_id: String, page_index: int)
 signal interaction_requested(action_id: String, payload: Dictionary)
+signal background_interaction_requested(button_index: int)
 
 const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 const MAX_BULK_POOL_SIZE: int = 96
@@ -47,6 +48,14 @@ func _ready() -> void:
 	feedback_timer.timeout.connect(_clear_feedback)
 	previous_page_button.pressed.connect(_request_previous_page)
 	next_page_button.pressed.connect(_request_next_page)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if not mouse_event.pressed and mouse_event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+			background_interaction_requested.emit(mouse_event.button_index)
+			accept_event()
 
 
 func set_visual_role(role: String) -> void:
@@ -320,8 +329,8 @@ func _apply_profile_copy() -> void:
 	role_label.visible = not seven_days_style
 	metadata_label.visible = not seven_days_style
 	drop_hint_label.visible = not seven_days_style
-	grid.add_theme_constant_override("h_separation", 1 if seven_days_style else 4)
-	grid.add_theme_constant_override("v_separation", 1 if seven_days_style else 4)
+	grid.add_theme_constant_override("h_separation", 0)
+	grid.add_theme_constant_override("v_separation", 0)
 	custom_minimum_size = Vector2(548.0, 250.0) if seven_days_style else Vector2(270.0, 220.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if seven_days_style else HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_color_override("font_color", Color.WHITE if seven_days_style else Color(0.9, 0.92, 0.96, 1.0))

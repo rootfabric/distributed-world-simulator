@@ -135,7 +135,18 @@ func _complete_drag(drop_was_accepted: bool) -> void:
 		return
 	if String(payload.get("outside_drop_action", "DROP_TO_WORLD")) != "DROP_TO_WORLD":
 		return
+	if _is_pointer_inside_inventory_window():
+		return
 	drop_outside_requested.emit(String(payload.get("item_id", "")), int(payload.get("quantity", -1)))
+
+
+func _is_pointer_inside_inventory_window() -> bool:
+	var ancestor: Node = self
+	while ancestor != null:
+		if ancestor is Control and ancestor.has_method("is_inventory_visible"):
+			return (ancestor as Control).get_global_rect().has_point(get_global_mouse_position())
+		ancestor = ancestor.get_parent()
+	return false
 
 
 func _can_drop_data(_at_position: Vector2, data) -> bool:
@@ -209,6 +220,7 @@ func _handle_click_binding(binding: Dictionary, button_index: int) -> void:
 			payload["target_item_id"] = item_id
 			payload["icon_texture"] = icon_texture
 			interaction_requested.emit(action, payload)
+			accept_event()
 
 
 func _button_mask(button_index: int) -> int:

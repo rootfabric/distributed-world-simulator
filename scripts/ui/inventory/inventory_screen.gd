@@ -51,6 +51,9 @@ var slot_mode_adapter := SlotModeAdapter.new()
 var carry_preview: PanelContainer
 var carry_preview_icon: TextureRect
 var carry_preview_label: Label
+var _requested_panel_size: Vector2 = Vector2(1060.0, 680.0)
+var _panel_has_external: bool = false
+var _panel_external_columns: int = 0
 
 
 func setup(
@@ -95,6 +98,7 @@ func setup(
 	reset_projection_button.pressed.connect(_on_projection_reset)
 	inspector_toggle.toggled.connect(_on_inspector_toggled)
 	inspector.close_requested.connect(func() -> void: inspector_toggle.button_pressed = false)
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	set_process(true)
 	set_inventory_visible(false)
 	refresh()
@@ -113,13 +117,15 @@ func _wire_panel(panel: InventoryContainerPanel) -> void:
 	panel.page_requested.connect(_on_page_requested)
 	panel.drop_preview_rejected.connect(_on_drop_preview_rejected)
 	panel.interaction_requested.connect(_on_interaction_requested)
+	panel.background_interaction_requested.connect(_on_panel_background_interaction)
 
 
 func set_inventory_visible(value: bool) -> void:
 	visible_inventory = value
 	visible = value
 	if value:
-		_recenter_panel()
+		_stabilize_visible_panel_layout()
+		call_deferred("_stabilize_visible_panel_layout")
 		_update_profile_status()
 	else:
 		split_dialog.hide()
@@ -144,7 +150,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		if transfer_session.is_active():
 			_cancel_transfer_session(true)
-		elif not inspector.current_item_id.is_empty():
+		elif inspector.visible and not inspector.current_item_id.is_empty():
 			view_model.clear_selected_item()
 			inspector.clear_item()
 			refresh()
@@ -190,16 +196,18 @@ func refresh(message: String = "") -> void:
 	if external_container_id.is_empty() or external_model.is_empty():
 		external_panel.clear_panel()
 		compatibility_external_title.text = ""
-		_apply_panel_size(false, 0)
 	else:
 		external_panel.render(external_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 		compatibility_external_title.text = "%s\n%s" % [external_panel.title_label.text, external_panel.metadata_label.text]
-		_apply_panel_size(true, int(external_model.get("columns", 4)))
 	var inspector_model: Dictionary = Dictionary(screen_model.get("selected_item", {}))
 	if inspector_model.is_empty():
 		inspector.clear_item()
 	else:
 		inspector.show_item(inspector_model)
+	_apply_panel_size(
+		not external_container_id.is_empty() and not external_model.is_empty(),
+		int(external_model.get("columns", 0))
+	)
 	screen_model["player"] = player_model.duplicate(true)
 	screen_model["external"] = external_model.duplicate(true)
 	_update_projection_summary(player_model, external_model)
@@ -317,6 +325,9 @@ func _on_drop_requested(
 
 
 func _on_drop_outside_requested(item_id: String, requested_quantity: int) -> void:
+	if get_global_rect().has_point(get_global_mouse_position()):
+		status_label.text = "Выберите ячейку или вынесите предмет за пределы окна"
+		return
 	var cell_data := _cell_data_for_item(item_id)
 	var quantity := maxi(1, requested_quantity)
 	if item_id.is_empty():
@@ -327,6 +338,25 @@ func _on_drop_outside_requested(item_id: String, requested_quantity: int) -> voi
 		String(cell_data.get("source_container_id", "")),
 		"Выброшено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), quantity]
 	)
+
+
+func _on_panel_background_interaction(button_index: int) -> void:
+	if (
+		button_index != MOUSE_BUTTON_RIGHT
+		or not _is_seven_days_profile()
+		or not transfer_session.is_active()
+		or not transfer_session.domain_backed
+	):
+		return
+	var dropped_name := transfer_session.display_name
+	var result := cursor_controller.drop_to_world(1)
+	if not bool(result.get("success", false)):
+		_present_carry_error(result, transfer_session.source_container_id)
+		return
+	refresh()
+	_update_carry_preview()
+	status_label.text = "Выброшено на поверхность: %s ×1" % dropped_name
+	toast_layer.show_success("Выброшена одна единица")
 
 
 func _on_split_confirmed(
@@ -651,6 +681,8 @@ func _icon_for_cell(cell_data: Dictionary) -> Texture2D:
 
 
 func _apply_panel_size(has_external: bool, external_columns: int) -> void:
+	_panel_has_external = has_external
+	_panel_external_columns = external_columns
 	var seven_days_style := _is_seven_days_profile()
 	var desired_width := 1180.0 if seven_days_style else 1060.0
 	if has_external:
@@ -660,9 +692,11 @@ func _apply_panel_size(has_external: bool, external_columns: int) -> void:
 	var desired_height := 720.0 if seven_days_style else 680.0
 	var height := minf(desired_height, maxf(600.0, viewport_size.y - 32.0))
 	var panel_size := Vector2(width, height)
+	_requested_panel_size = panel_size
 	custom_minimum_size = panel_size
 	size = panel_size
 	_recenter_panel()
+	call_deferred("_stabilize_visible_panel_layout")
 
 
 func _recenter_panel() -> void:
@@ -670,6 +704,18 @@ func _recenter_panel() -> void:
 	if viewport == null:
 		return
 	position = (viewport.get_visible_rect().size - size) * 0.5
+
+
+func _stabilize_visible_panel_layout() -> void:
+	if visible_inventory:
+		custom_minimum_size = _requested_panel_size
+		size = _requested_panel_size
+		_recenter_panel()
+
+
+func _on_viewport_size_changed() -> void:
+	if visible_inventory:
+		_apply_panel_size(_panel_has_external, _panel_external_columns)
 
 
 func _setup_projection_toolbar() -> void:

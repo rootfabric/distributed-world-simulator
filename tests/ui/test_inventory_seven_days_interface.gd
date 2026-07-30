@@ -32,6 +32,7 @@ func _run() -> void:
 	screen._apply_interaction_profile(seven_profile, false, true)
 
 	_test_profile_and_skin(screen, seven_profile)
+	await _test_first_open_layout_and_escape(controller, screen)
 	_test_fixed_slot_projection(controller, screen)
 	_test_click_move_between_visual_slots(controller, screen)
 	_test_half_pickup_and_single_place(controller, screen)
@@ -64,6 +65,29 @@ func _test_profile_and_skin(screen, seven_profile) -> void:
 	_assert(screen.player_panel.title_label.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "7 Days panel titles must use left-aligned black-bar layout")
 	_assert(screen.columns.get_child(0) == screen.external_panel and screen.columns.get_child(1) == screen.player_panel, "7 Days layout must place external container left and player inventory right")
 	_assert(not screen.inspector.visible, "7 Days two-grid workspace must hide generic inspector column")
+	_assert(screen.player_panel.grid.get_theme_constant("h_separation") == 0, "Inventory slots must not have horizontal drop gaps")
+	_assert(screen.player_panel.grid.get_theme_constant("v_separation") == 0, "Inventory slots must not have vertical drop gaps")
+
+
+func _test_first_open_layout_and_escape(controller, screen) -> void:
+	controller.set_inventory_visible(false)
+	controller.set_inventory_visible(true)
+	await process_frame
+	var expected_position: Vector2 = (screen.get_viewport().get_visible_rect().size - screen.size) * 0.5
+	_assert(screen.position.is_equal_approx(expected_position), "7 Days inventory must be centered immediately after opening")
+	var selected_item = _first_item_in_container(controller, controller.player_inventory_id)
+	_assert(selected_item != null, "Escape regression fixture must provide a player item")
+	if selected_item == null:
+		return
+	screen._on_item_selected(String(selected_item.instance_id))
+	_assert(not screen.inspector.visible and not screen.inspector.current_item_id.is_empty(), "7 Days selection must not reveal the hidden inspector")
+	var escape_event := InputEventKey.new()
+	escape_event.keycode = KEY_ESCAPE
+	escape_event.pressed = true
+	screen._input(escape_event)
+	_assert(not controller.inventory_open and not screen.visible_inventory, "One Escape must close 7 Days inventory when its inspector is hidden")
+	controller.set_inventory_visible(true)
+	await process_frame
 
 
 func _test_fixed_slot_projection(controller, screen) -> void:
@@ -128,21 +152,32 @@ func _test_half_pickup_and_single_place(controller, screen) -> void:
 	var target_slot_a := _first_empty_projected_slot(screen.player_panel.current_model, [])
 	var target_slot_b := _first_empty_projected_slot(screen.player_panel.current_model, [target_slot_a])
 	_assert(target_slot_a >= 0 and target_slot_b >= 0, "Half-stack test must have two empty cells")
+	var world_before := _quantity_in_world(controller, "survey_beacon")
 	screen._on_interaction_requested("CARRY_HALF_OR_PLACE_ONE", source_payload)
 	var expected_half := int(ceil(float(source_quantity) * 0.5))
 	_assert(screen.transfer_session.remaining_quantity == expected_half, "RMB source click must pick ceil(half)")
 	beacon = controller.get_item(String(beacon.instance_id))
 	_assert(beacon != null and int(beacon.quantity) == source_quantity - expected_half, "Source stack must immediately retain the non-carried remainder")
-	screen._on_interaction_requested("CARRY_HALF_OR_PLACE_ONE", _empty_target(controller.player_inventory_id, target_slot_a))
+	var target_cell = _cell_at_slot(screen.player_panel, target_slot_a)
+	_assert(target_cell != null, "RMB placement test must resolve the empty target cell")
+	_right_click(target_cell)
 	_assert(screen.transfer_session.is_active() and screen.transfer_session.remaining_quantity == expected_half - 1, "RMB target click must place exactly one")
 	var placed_one_id: String = screen.slot_projection.item_at_slot(controller.player_inventory_id, target_slot_a)
 	var placed_one = controller.get_item(placed_one_id)
 	_assert(placed_one != null and int(placed_one.quantity) == 1, "Single-place cell must contain one unit")
-	screen._on_interaction_requested("CARRY_ALL_OR_PLACE_ALL", _empty_target(controller.player_inventory_id, target_slot_b))
-	_assert(not screen.transfer_session.is_active(), "LMB target click must place all cursor remainder")
-	var rest_id: String = screen.slot_projection.item_at_slot(controller.player_inventory_id, target_slot_b)
-	var placed_rest = controller.get_item(rest_id)
-	_assert(placed_rest != null and int(placed_rest.quantity) == expected_half - 1, "LMB must place complete remaining cursor stack")
+	var background_right_release := InputEventMouseButton.new()
+	background_right_release.button_index = MOUSE_BUTTON_RIGHT
+	background_right_release.pressed = false
+	screen.player_panel._gui_input(background_right_release)
+	_assert(_quantity_in_world(controller, "survey_beacon") == world_before + 1, "RMB outside cells must drop exactly one carried unit to WORLD")
+	var expected_remainder := expected_half - 2
+	_assert(screen.transfer_session.remaining_quantity == expected_remainder if expected_remainder > 0 else not screen.transfer_session.is_active(), "Dropping one outside cells must consume exactly one cursor unit")
+	if expected_remainder > 0:
+		screen._on_interaction_requested("CARRY_ALL_OR_PLACE_ALL", _empty_target(controller.player_inventory_id, target_slot_b))
+		_assert(not screen.transfer_session.is_active(), "LMB target click must place all cursor remainder")
+		var rest_id: String = screen.slot_projection.item_at_slot(controller.player_inventory_id, target_slot_b)
+		var placed_rest = controller.get_item(rest_id)
+		_assert(placed_rest != null and int(placed_rest.quantity) == expected_remainder, "LMB must place complete remaining cursor stack")
 	_assert(_total_quantity(controller, "survey_beacon") == total_before, "Half pickup and single placement must conserve quantity")
 
 
@@ -313,6 +348,24 @@ func _first_empty_projected_slot(model: Dictionary, excluded: Array) -> int:
 	return -1
 
 
+func _cell_at_slot(panel, slot_index: int):
+	for child in panel.grid.get_children():
+		if child.visible and int(child.target_slot_index) == slot_index:
+			return child
+	return null
+
+
+func _right_click(cell) -> void:
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_RIGHT
+	press.pressed = true
+	cell._gui_input(press)
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_RIGHT
+	release.pressed = false
+	cell._gui_input(release)
+
+
 func _find_item(controller, definition_id: String, container_id: String = ""):
 	for item in controller.domain.items.all_items():
 		if String(item.definition_id) != definition_id:
@@ -349,6 +402,14 @@ func _total_quantity(controller, definition_id: String) -> int:
 	var total := 0
 	for item in controller.domain.items.all_items():
 		if String(item.definition_id) == definition_id:
+			total += int(item.quantity)
+	return total
+
+
+func _quantity_in_world(controller, definition_id: String) -> int:
+	var total := 0
+	for item in controller.domain.items.all_items():
+		if String(item.definition_id) == definition_id and Relations.kind_of(item.relation) == Relations.WORLD:
 			total += int(item.quantity)
 	return total
 

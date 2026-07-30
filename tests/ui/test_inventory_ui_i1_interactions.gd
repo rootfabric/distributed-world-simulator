@@ -25,6 +25,8 @@ func _run() -> void:
 	var screen = ui.active_screen
 	_assert(ui.using_component_screen(), "UI-I1 must run on component inventory shell")
 	_assert(screen != null and screen.context_menu != null and screen.tooltip != null, "UI-I1 screen must expose context, tooltip and split components")
+	_assert(screen.player_panel.grid.get_theme_constant("h_separation") == 0, "Player inventory cells must not have horizontal drop gaps")
+	_assert(screen.player_panel.grid.get_theme_constant("v_separation") == 0, "Player inventory cells must not have vertical drop gaps")
 
 	var crate = _find_item(controller, "portable_crate", "", Relations.WORLD)
 	var rack = _find_item(controller, "battery_rack", "", Relations.WORLD)
@@ -35,6 +37,7 @@ func _run() -> void:
 	_assert(screen.external_panel.visible and screen.external_container_id == crate_id, "Opened crate must be visible as external panel")
 	_assert_success(controller.open_container(rack_id), "Opening battery rack must establish a slot-container drag target")
 	var battery_for_drag = _find_item(controller, "battery_pack", controller.player_inventory_id)
+	await _test_layout_stability(screen, battery_for_drag.instance_id)
 	var battery_cell_for_drag = screen.player_panel.find_cell_by_item_id(battery_for_drag.instance_id)
 	var middle_drag_payload = battery_cell_for_drag.build_middle_drag_payload()
 	_assert(int(middle_drag_payload.get("quantity", 0)) == int(ceil(float(battery_for_drag.quantity) * 0.5)), "Middle-button drag must carry the upper half of a stack")
@@ -235,6 +238,18 @@ func _run() -> void:
 	controller.queue_free()
 	await process_frame
 	_finish()
+
+
+func _test_layout_stability(screen, item_id: String) -> void:
+	await process_frame
+	var initial_size: Vector2 = screen.size
+	screen._on_item_selected(item_id)
+	await process_frame
+	_assert(screen.size.is_equal_approx(initial_size), "Inventory size must stay stable after inspector content appears")
+	screen.view_model.clear_selected_item()
+	screen.refresh()
+	await process_frame
+	_assert(screen.size.is_equal_approx(initial_size), "Inventory size must stay stable after inspector content is cleared")
 
 
 func _create_controller() -> Dictionary:

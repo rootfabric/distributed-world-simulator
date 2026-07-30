@@ -1,0 +1,53 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_layout_drop_and_single_place_review_fix",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "2fc77f6",
+  "status": "passed",
+  "tests": [
+    {
+      "command": "RUN_INVENTORY_PROFILE_TESTS.ps1",
+      "status": "passed"
+    },
+    {
+      "command": "RUN_ITEM_SYSTEM_TESTS.ps1",
+      "suites_passed": 15,
+      "suites_total": 15,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "assertions": 92,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "assertions": 73,
+      "status": "passed"
+    }
+  ],
+  "acceptance_checks": [
+    "Inventory size is unchanged when inspector content appears or clears.",
+    "Inventory slot grids have zero horizontal and vertical separation.",
+    "A rejected drop inside the inventory window does not drop the item to WORLD.",
+    "Seven Days RMB on an empty cell places exactly one carried unit.",
+    "Seven Days RMB outside cells drops exactly one carried unit to WORLD."
+  ],
+  "static_checks": {
+    "git_diff_check": "passed",
+    "json_parse": "passed",
+    "archive_contents": "passed"
+  },
+  "changed_files": [
+    "docs/checkpoints/2026-07-30_INVENTORY_INTERACTION_FIX2_RU.md",
+    "docs/checkpoints/2026-07-30_INVENTORY_SEVEN_DAYS_PROFILE_FIX1_RU.md",
+    "scripts/ui/inventory/container_panel.gd",
+    "scripts/ui/inventory/interactions/inventory_cursor_controller.gd",
+    "scripts/ui/inventory/inventory_screen.gd",
+    "scripts/ui/inventory/item_cell.gd",
+    "tests/ui/test_inventory_seven_days_interface.gd",
+    "tests/ui/test_inventory_ui_i1_interactions.gd",
+    "validation/inventory-interaction-fix2-validation.json",
+    "validation/inventory-seven-days-layout-escape-review-fix-validation.json"
+  ]
+}

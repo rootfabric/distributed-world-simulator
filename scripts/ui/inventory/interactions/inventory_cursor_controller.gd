@@ -112,6 +112,23 @@ func place(target_payload: Dictionary, requested_quantity: int) -> Dictionary:
 	return result
 
 
+func drop_to_world(requested_quantity: int) -> Dictionary:
+	if not session.is_active() or not session.domain_backed:
+		return _fail("CURSOR_NOT_ACTIVE")
+	var carried = gameplay_controller.get_item(session.item_id)
+	if carried == null:
+		return _fail("CURSOR_ITEM_NOT_FOUND")
+	var quantity := clampi(requested_quantity, 1, int(carried.quantity))
+	var result := command_facade.drop_quantity(session.item_id, quantity)
+	if not bool(result.get("success", false)):
+		return result
+	_sync_or_finalize()
+	result["dropped_quantity"] = quantity
+	result["session_active"] = session.is_active()
+	result["session"] = session.snapshot()
+	return result
+
+
 func cancel() -> Dictionary:
 	if not session.is_active():
 		return {"success": true, "no_change": true}
