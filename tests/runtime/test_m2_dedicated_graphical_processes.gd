@@ -74,7 +74,7 @@ func _init() -> void:
 		return
 
 	var phase1_pid := _spawn_graphical_client(
-		executable, project_root, port, 1, phase1_report_path, "", phase1_log_path, phase1_user, display_name
+		executable, project_root, port, "moon", 1, phase1_report_path, "", phase1_log_path, phase1_user, display_name
 	)
 	child_pids.append(phase1_pid)
 	_assert(phase1_pid > 0, "graphical client phase 1 launch")
@@ -92,7 +92,7 @@ func _init() -> void:
 	_assert(String(server_after_phase1.get("state", "")) == "READY", "dedicated listener survived first client")
 
 	var phase2_pid := _spawn_graphical_client(
-		executable, project_root, port, 2, phase2_report_path, phase1_report_path, phase2_log_path, phase2_user, display_name
+		executable, project_root, port, "moon", 2, phase2_report_path, phase1_report_path, phase2_log_path, phase2_user, display_name
 	)
 	child_pids.append(phase2_pid)
 	_assert(phase2_pid > 0, "graphical client reconnect process launch")
@@ -109,13 +109,119 @@ func _init() -> void:
 	_validate_server_report(server_final, phase2)
 	_validate_user_data_isolation(server_final, phase1, phase2)
 	_write_summary(root, port, server_final, phase1, phase2)
+	_run_playground_scenario(executable, project_root, root, display_name, port)
 	_finish()
+
+
+func _run_playground_scenario(
+	executable: String,
+	project_root: String,
+	root: String,
+	display_name: String,
+	excluded_port: int
+) -> void:
+	var port := _find_available_port(excluded_port)
+	_assert(port > 0, "playground UDP port allocation")
+	if port <= 0:
+		return
+	var playground_root := root.path_join("playground")
+	DirAccess.make_dir_recursive_absolute(playground_root)
+	var server_report_path := playground_root.path_join("server.json")
+	var client_report_path := playground_root.path_join("client.json")
+	var server_log_path := playground_root.path_join("server.log")
+	var client_log_path := playground_root.path_join("client.log")
+	var server_user := playground_root.path_join("user-server")
+	var client_user := playground_root.path_join("user-client")
+	for path in [server_user, client_user]:
+		DirAccess.make_dir_recursive_absolute(path)
+	var server_pid := _spawn_process(executable, [
+		"--headless", "--quiet", "--path", project_root,
+		"--log-file", server_log_path,
+		"--",
+		"--role=dedicated-server",
+		"--world=playground",
+		"--node-id=m2-playground-server",
+		"--server-address=127.0.0.1",
+		"--server-port=%d" % port,
+		"--player-identity=local-astronaut",
+		"--m2-result-file=%s" % server_report_path,
+		"--shutdown-after-ms=%d" % SERVER_SHUTDOWN_AFTER_MS,
+	], server_user, "")
+	child_pids.append(server_pid)
+	_assert(server_pid > 0, "playground dedicated server launch")
+	var server_ready := _wait_for_state(
+		server_report_path,
+		["READY", "FAILED", "STOPPED"],
+		SERVER_READY_TIMEOUT_MS
+	)
+	_assert(
+		String(server_ready.get("state", "")) == "READY",
+		"playground dedicated world ready: %s" % server_ready
+	)
+	if String(server_ready.get("state", "")) != "READY":
+		return
+	var client_pid := _spawn_graphical_client(
+		executable,
+		project_root,
+		port,
+		"playground",
+		1,
+		client_report_path,
+		"",
+		client_log_path,
+		client_user,
+		display_name
+	)
+	child_pids.append(client_pid)
+	_assert(client_pid > 0, "playground graphical client launch")
+	var client := _wait_for_state(
+		client_report_path,
+		["COMPLETE", "FAILED"],
+		CLIENT_TIMEOUT_MS
+	)
+	_assert(bool(client.get("passed", false)), "playground graphical client: %s" % client)
+	_wait_for_exit(client_pid, EXIT_TIMEOUT_MS)
+	var client_stopped := client_pid > 0 and not OS.is_process_running(client_pid)
+	_assert(client_stopped, "playground graphical client exited")
+	if client_stopped:
+		child_pids.erase(client_pid)
+	var server_final := _wait_for_server_counts(server_report_path, 1, 1, 20000)
+	var initial_world: Dictionary = client.get("initial_world", {})
+	var final_world: Dictionary = client.get("world", {})
+	_assert(
+		String(initial_world.get("world_id", "")) == "playground",
+		"graphical client entered playground immediately"
+	)
+	_assert(
+		_vector_distance(
+			initial_world.get("player_position", []),
+			[0.0, 1.2, 6.0]
+		) <= 0.001,
+		"playground authoritative spawn applied"
+	)
+	_assert(
+		String(final_world.get("item_controller_mode", "")) == "replica",
+		"playground inventory is replica-driven"
+	)
+	_assert(
+		int(final_world.get("player_sync_count", 0)) >= 1,
+		"playground authoritative movement synchronized"
+	)
+	_assert(
+		int(final_world.get("player_rejection_count", -1)) == 0,
+		"playground movement accepted"
+	)
+	_assert(
+		int(server_final.get("command_rejections", -1)) == 0,
+		"playground server rejected no commands"
+	)
 
 
 func _spawn_graphical_client(
 	executable: String,
 	project_root: String,
 	port: int,
+	world_id: String,
 	phase: int,
 	result_path: String,
 	expected_path: String,
@@ -130,7 +236,7 @@ func _spawn_graphical_client(
 		"--log-file", log_path,
 		"--",
 		"--role=game-client",
-		"--world=moon",
+		"--world=%s" % world_id,
 		"--node-id=local-game-client",
 		"--server-address=127.0.0.1",
 		"--server-port=%d" % port,
@@ -305,10 +411,12 @@ func _read_json(path: String) -> Dictionary:
 	return Dictionary(parsed) if parsed is Dictionary else {}
 
 
-func _find_available_port() -> int:
+func _find_available_port(excluded_port: int = -1) -> int:
 	var start := 28000 + (OS.get_process_id() % 15000)
 	for offset in range(500):
 		var port := 20000 + ((start + offset - 20000) % 30000)
+		if port == excluded_port:
+			continue
 		var probe := PacketPeerUDP.new()
 		var error := probe.bind(port, "127.0.0.1")
 		probe.close()

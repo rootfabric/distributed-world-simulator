@@ -25,7 +25,11 @@
     },
     "transport": "ENet",
     "gameplay_service": "NetworkedGameplayService",
-    "ordinary_client_scene": "res://main.tscn"
+    "ordinary_client_scene": "res://main.tscn",
+    "supported_worlds": [
+      "moon",
+      "playground"
+    ]
   },
   "runtime_components": [
     {
@@ -90,7 +94,8 @@
     "client disconnects gracefully and server remains listening",
     "second graphical process reconnects to the same player entity with ownership epoch 2",
     "server and reconnecting client converge on player and Item Graph checksums",
-    "server and both graphical processes use isolated user-data directories"
+    "server and both graphical processes use isolated user-data directories",
+    "dedicated playground starts the graphical client at the authoritative demo spawn"
   ],
   "automated_evidence": {
     "contract_test": "tests/runtime/test_m2_graphical_client_contracts.gd",
