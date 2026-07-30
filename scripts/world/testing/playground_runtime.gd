@@ -110,7 +110,14 @@ func _ready() -> void:
 	elif not local_input_enabled:
 		player.set_control_enabled(false)
 	if presentation_enabled:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		# A remote graphical client must leave the native title bar reachable on launch.
+		# The first click in the viewport is handled by SimulatorApp and captures the
+		# cursor for gameplay; this keeps normal Windows window movement available.
+		Input.mouse_mode = (
+			Input.MOUSE_MODE_VISIBLE
+			if runtime_role == "game-client"
+			else Input.MOUSE_MODE_CAPTURED
+		)
 	if runtime_role not in ["listen-host", "game-client", "dedicated-server"]:
 		_setup_item_gameplay()
 	if presentation_enabled:
