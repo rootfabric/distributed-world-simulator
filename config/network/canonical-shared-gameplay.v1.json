@@ -3,14 +3,21 @@
   "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
   "build_id": "m4-canonical-shared-gameplay-over-enet",
   "base_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
-  "status": "candidate",
+  "status": "accepted",
   "transport": "ENet",
   "authority": "NetworkedGameplayService",
   "item_graph": "CanonicalMultiplayerItemGraphService",
   "commands": [
-    "item.pickup", "item.drop", "item.split", "item.stack",
-    "container.open", "container.close", "item.move_to_container",
-    "item.mount", "item.detach", "inventory.select_hotbar",
+    "item.pickup",
+    "item.drop",
+    "item.split",
+    "item.stack",
+    "container.open",
+    "container.close",
+    "item.move_to_container",
+    "item.mount",
+    "item.detach",
+    "inventory.select_hotbar",
     "inventory.permission_probe"
   ],
   "acceptance": {
@@ -19,10 +26,17 @@
     "canonical_item_uniqueness": true,
     "permission_fencing": true,
     "operation_replay": true,
-    "checksum_convergence": ["server", "client_a", "client_b"]
+    "checksum_convergence": [
+      "server",
+      "client_a",
+      "client_b"
+    ]
   },
   "remaining_for_m5": [
     "full game-window UI-driven acceptance",
     "automated interaction through visible inventory widgets"
-  ]
+  ],
+  "accepted_at_utc": "2026-07-30T15:20:00Z",
+  "handoff_to_m5": "docs/architecture/M4_PRE_M5_HANDOFF_RU.md",
+  "preparation_manifest": "config/network/m5-graphical-acceptance-preparation.v1.json"
 }

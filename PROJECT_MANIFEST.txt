@@ -1,3 +1,14 @@
+Planetary World v16.10.3-pre-m5-graphical-acceptance-preparation
+
+Pre-M5 UI/replica preparation over main @ 2879fdb:
+- read-only M4 Item Graph UI projection
+- UI-to-M4 ITEM_COMMAND adapter
+- transient cursor/pending state outside canonical checksum
+- networked inventory/hotbar shell in playground
+- isolated user-data and disabled/unique MCP runtime ports
+- M5 preparation contracts and focused runner
+- full UI-driven M5 acceptance remains pending
+
 Planetary World v16.10.2-runtime-m3-dedicated-graphical-multiplayer
 
 M3 Dedicated server plus two graphical clients:

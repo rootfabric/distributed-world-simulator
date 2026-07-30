@@ -39,3 +39,11 @@ M4 доказывает canonical shared gameplay через два graphical Go
 Актуальная объединённая база (полигон, MCP-инструментирование, ручное окно
 client и camera-relative input) описана в
 [`M4_PRE_M5_HANDOFF_RU.md`](M4_PRE_M5_HANDOFF_RU.md).
+
+
+## Подготовка UI-driven M5
+
+Связующая граница реализована в
+[`M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`](M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md):
+read-only projection M4 snapshots, UI command adapter, transient cursor state и
+networked inventory shell. Canonical mutation остаётся только на dedicated server.

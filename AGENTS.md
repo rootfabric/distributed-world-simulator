@@ -126,6 +126,8 @@ architecture checkpoint accepted: v16.9.4-architecture-a2-networked-gameplay
 roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
 runtime checkpoint accepted: v16.10.3-domain-m4-canonical-shared-gameplay
 runtime extension accepted: M4 networked playground
+current preparation candidate: v16.10.3-pre-m5-graphical-acceptance-preparation
+preparation manifest: config/network/m5-graphical-acceptance-preparation.v1.json
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
 next: feature/m5-graphical-multiplayer-acceptance
 implementation manifest: config/network/canonical-shared-gameplay.v1.json

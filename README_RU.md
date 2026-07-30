@@ -4,17 +4,19 @@
 
 Принятый стратегический checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-Принятый runtime checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
+Принятый runtime/domain checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay` (`ACCEPTED`, delivery `fix1`).
 
-Текущий runtime candidate:
+Текущий подготовительный candidate:
 
 ```text
-v16.10.2-runtime-m3-dedicated-graphical-multiplayer
-branch: feature/m3-dedicated-graphical-multiplayer
-next after acceptance: M4 canonical shared gameplay over ENet
+v16.10.3-pre-m5-graphical-acceptance-preparation
+build_id: pre-m5-ui-replica-command-boundary
+base: main @ 2879fdb
+branch: feature/m5-graphical-multiplayer-acceptance
+next: M5 graphical multiplayer acceptance
 ```
 
-M3 запускает один headless dedicated server и два одновременно подключённых graphical Godot clients. На каждом клиенте локальный игрок остаётся настоящим `LunarPlayer`, удалённый создаётся как `RemotePlayerPresenter` без input authority; movement, orientation, flashlight, disconnect и reconnect проходят через authoritative replica path.
+Подготовительная граница M5 связывает существующий inventory UI с canonical M4 Item Graph только через read-only replica projection и versioned `ITEM_COMMAND`. Cursor/drag/pending state остаётся локальным transient overlay и не мутирует authoritative graph. Graphical process profiles получают изолированные `user://` roots и уникальные либо отключённые MCP runtime ports.
 
 ```text
 FULL SINGLE-SERVER MULTIPLAYER FIRST
@@ -25,17 +27,16 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-30_V16_10_2_RUNTIME_M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
-- `docs/checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
-- `docs/checkpoints/2026-07-30_V16_10_0_RUNTIME_M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
+- `docs/architecture/M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
+- `docs/checkpoints/2026-07-31_PRE_M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
+- `docs/architecture/M4_PRE_M5_HANDOFF_RU.md`;
+- `docs/architecture/M4_CANONICAL_SHARED_GAMEPLAY_RU.md`;
+- `docs/checkpoints/2026-07-30_V16_10_3_DOMAIN_M4_CANONICAL_SHARED_GAMEPLAY_RU.md`;
 - `docs/architecture/M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `docs/architecture/M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
 - `docs/architecture/M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
-- `docs/architecture/adr/ADR-015-dedicated-graphical-multiplayer.md`;
-- `docs/architecture/adr/ADR-014-dedicated-graphical-client.md`;
-- `docs/architecture/adr/ADR-013-unified-networked-gameplay-core.md`;
-- `config/network/dedicated-graphical-multiplayer.v1.json`;
-- `config/network/dedicated-graphical-client.v1.json`;
-- `config/network/networked-gameplay-core.v1.json`;
+- `config/network/m5-graphical-acceptance-preparation.v1.json`;
+- `config/network/canonical-shared-gameplay.v1.json`;
+- `config/network/network-roadmap.v1.json`;
 - `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.

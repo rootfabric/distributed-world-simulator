@@ -17,6 +17,9 @@ const NetworkContractUtils = preload(
 const RemotePlayerPresenterScript = preload(
 	"res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd"
 )
+const M5NetworkedInventoryShellScript = preload(
+	"res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"
+)
 
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
@@ -65,6 +68,7 @@ var _m4_item_graph_snapshot: Dictionary = {}
 var _m4_item_snapshot_updates: int = 0
 var _m4_item_commands: int = 0
 var _m4_item_rejections: int = 0
+var m5_networked_inventory_shell
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -212,6 +216,18 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	player.set_network_replica_mode(true)
 	_on_m3_replica_updated(runtime.get_snapshot())
 	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	if presentation_enabled:
+		m5_networked_inventory_shell = M5NetworkedInventoryShellScript.new()
+		m5_networked_inventory_shell.name = "M5NetworkedInventoryShell"
+		add_child(m5_networked_inventory_shell)
+		var shell_setup: Dictionary = m5_networked_inventory_shell.setup(
+			runtime,
+			runtime.get_local_player_id()
+		)
+		if not bool(shell_setup.get("success", false)):
+			m5_networked_inventory_shell.queue_free()
+			m5_networked_inventory_shell = null
+			return shell_setup
 	return {
 		"success": true,
 		"error_code": "",
@@ -399,6 +415,11 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"m4_item_snapshot_updates": _m4_item_snapshot_updates,
 		"m4_item_commands": _m4_item_commands,
 		"m4_item_rejections": _m4_item_rejections,
+		"m5_inventory_shell": (
+			m5_networked_inventory_shell.get_report()
+			if m5_networked_inventory_shell != null
+			else {}
+		),
 		"direct_authority_references": 0,
 	}
 
@@ -516,6 +537,11 @@ func create_runtime_snapshot() -> Dictionary:
 		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
 		"m3_multiplayer": create_m3_graphical_client_report(),
 		"m4_item_graph": _m4_item_graph_snapshot.duplicate(true),
+		"m5_inventory_shell": (
+			m5_networked_inventory_shell.get_report()
+			if m5_networked_inventory_shell != null
+			else {}
+		),
 	}
 
 
@@ -526,6 +552,9 @@ func get_world_entity_store():
 
 
 func prepare_for_unload() -> void:
+	if m5_networked_inventory_shell != null:
+		m5_networked_inventory_shell.queue_free()
+		m5_networked_inventory_shell = null
 	if item_gameplay != null:
 		item_gameplay.save_graph()
 	if m3_multiplayer_client_runtime != null:
@@ -796,7 +825,11 @@ func set_runtime_mouse_capture(captured: bool) -> void:
 
 
 func _command_inventory_toggle(_arguments: Array[String]) -> Dictionary:
-	return item_gameplay.toggle_inventory() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+	if item_gameplay != null:
+		return item_gameplay.toggle_inventory()
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.toggle_inventory()
+	return {"success": false, "output": "Инвентарь не готов"}
 
 
 func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
@@ -804,9 +837,14 @@ func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
-	if item_gameplay == null or arguments.is_empty() or not arguments[0].is_valid_int():
+	if arguments.is_empty() or not arguments[0].is_valid_int():
 		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
-	return item_gameplay.select_hotbar(clampi(int(arguments[0]), 1, 10) - 1)
+	var index := clampi(int(arguments[0]), 1, 10) - 1
+	if item_gameplay != null:
+		return item_gameplay.select_hotbar(index)
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.select_hotbar(mini(index, 7))
+	return {"success": false, "output": "Инвентарь не готов"}
 
 
 func _command_inventory_profile(arguments: Array[String]) -> Dictionary:

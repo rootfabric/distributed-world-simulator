@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 23,
+  "document_revision": 24,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-30T08:20:00Z",
-  "project_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
-  "runtime_base_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+  "updated_at_utc": "2026-07-30T15:20:00Z",
+  "project_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+  "runtime_base_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -458,7 +458,7 @@
     {
       "id": "M3",
       "name": "Dedicated server plus two graphical clients",
-      "status": "current_candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
       "branch": "feature/m3-dedicated-graphical-multiplayer",
       "depends_on": [
@@ -481,7 +481,7 @@
     {
       "id": "M4",
       "name": "Canonical shared gameplay over ENet",
-      "status": "next_after_M3",
+      "status": "accepted",
       "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
       "branch": "feature/m4-canonical-shared-gameplay",
       "depends_on": [
@@ -495,12 +495,18 @@
         "contention produces exactly one success and one deterministic rejection",
         "canonical Item Graph contains exactly one stable item identity",
         "foreign inventory mutation and stale session commands are rejected"
-      ]
+      ],
+      "implementation_manifest": "config/network/canonical-shared-gameplay.v1.json",
+      "evidence": {
+        "contracts": "tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd",
+        "process": "tests/runtime/test_m4_graphical_shared_gameplay_processes.gd",
+        "runner": "RUN_M4_CANONICAL_SHARED_GAMEPLAY_TESTS.ps1"
+      }
     },
     {
       "id": "M5",
       "name": "Graphical Multiplayer Acceptance",
-      "status": "planned",
+      "status": "preparation_in_progress",
       "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
       "branch": "feature/m5-graphical-multiplayer-acceptance",
       "depends_on": [
@@ -513,7 +519,8 @@
         "movement observation contention disconnect reconnect all pass",
         "server and both clients converge to one canonical checksum",
         "separate user-data directories and clean process shutdown"
-      ]
+      ],
+      "preparation_manifest": "config/network/m5-graphical-acceptance-preparation.v1.json"
     },
     {
       "id": "M6",
@@ -739,7 +746,7 @@
     "A2"
   ],
   "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
-  "current_gate": "M3 dedicated server plus two graphical clients candidate",
+  "current_gate": "M5 graphical multiplayer acceptance preparation",
   "architecture_base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "strategy_decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
   "single_server_multiplayer_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
