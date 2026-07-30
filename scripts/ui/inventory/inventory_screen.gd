@@ -54,6 +54,7 @@ var carry_preview_label: Label
 var _requested_panel_size: Vector2 = Vector2(1060.0, 680.0)
 var _panel_has_external: bool = false
 var _panel_external_columns: int = 0
+var _layout_stabilization_pending: bool = false
 
 
 func setup(
@@ -66,6 +67,8 @@ func setup(
 	compatibility_external_title.name = "CompatibilityExternalTitle"
 	compatibility_external_title.visible = false
 	add_child(compatibility_external_title)
+	status_label.clip_text = true
+	status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	gameplay_controller = controller
 	view_model = model
 	command_facade = commands
@@ -99,6 +102,8 @@ func setup(
 	inspector_toggle.toggled.connect(_on_inspector_toggled)
 	inspector.close_requested.connect(func() -> void: inspector_toggle.button_pressed = false)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	resized.connect(_on_panel_resized)
+	minimum_size_changed.connect(_queue_layout_stabilization)
 	set_process(true)
 	set_inventory_visible(false)
 	refresh()
@@ -125,7 +130,7 @@ func set_inventory_visible(value: bool) -> void:
 	visible = value
 	if value:
 		_stabilize_visible_panel_layout()
-		call_deferred("_stabilize_visible_panel_layout")
+		_queue_layout_stabilization()
 		_update_profile_status()
 	else:
 		split_dialog.hide()
@@ -696,21 +701,37 @@ func _apply_panel_size(has_external: bool, external_columns: int) -> void:
 	custom_minimum_size = panel_size
 	size = panel_size
 	_recenter_panel()
-	call_deferred("_stabilize_visible_panel_layout")
+	_queue_layout_stabilization()
 
 
 func _recenter_panel() -> void:
-	var viewport: Viewport = get_viewport()
-	if viewport == null:
+	anchor_left = 0.5
+	anchor_top = 0.5
+	anchor_right = 0.5
+	anchor_bottom = 0.5
+	offset_left = -_requested_panel_size.x * 0.5
+	offset_top = -_requested_panel_size.y * 0.5
+	offset_right = _requested_panel_size.x * 0.5
+	offset_bottom = _requested_panel_size.y * 0.5
+
+
+func _queue_layout_stabilization() -> void:
+	if not visible_inventory or _layout_stabilization_pending:
 		return
-	position = (viewport.get_visible_rect().size - size) * 0.5
+	_layout_stabilization_pending = true
+	call_deferred("_stabilize_visible_panel_layout")
 
 
 func _stabilize_visible_panel_layout() -> void:
+	_layout_stabilization_pending = false
 	if visible_inventory:
 		custom_minimum_size = _requested_panel_size
-		size = _requested_panel_size
 		_recenter_panel()
+
+
+func _on_panel_resized() -> void:
+	if visible_inventory and not size.is_equal_approx(_requested_panel_size):
+		_queue_layout_stabilization()
 
 
 func _on_viewport_size_changed() -> void:

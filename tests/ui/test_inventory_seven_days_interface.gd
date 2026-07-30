@@ -74,7 +74,25 @@ func _test_first_open_layout_and_escape(controller, screen) -> void:
 	controller.set_inventory_visible(true)
 	await process_frame
 	var expected_position: Vector2 = (screen.get_viewport().get_visible_rect().size - screen.size) * 0.5
-	_assert(screen.position.is_equal_approx(expected_position), "7 Days inventory must be centered immediately after opening")
+	_assert(
+		screen.position.is_equal_approx(expected_position),
+		"7 Days inventory must be centered immediately after opening: actual=%s expected=%s size=%s viewport=%s" % [
+			screen.position,
+			expected_position,
+			screen.size,
+			screen.get_viewport().get_visible_rect().size,
+		]
+	)
+	var expected_size: Vector2 = screen.size
+	screen.size = screen.get_viewport().get_visible_rect().size
+	await process_frame
+	_assert(screen.size.is_equal_approx(expected_size), "A late root-Control resize must be corrected without inventory interaction")
+	expected_position = (screen.get_viewport().get_visible_rect().size - screen.size) * 0.5
+	_assert(screen.position.is_equal_approx(expected_position), "A corrected late resize must keep the inventory centered")
+	for frame_index in range(3):
+		await process_frame
+		_assert(screen.size.is_equal_approx(expected_size), "Inventory size must remain stable on idle frame %d" % frame_index)
+		_assert(screen.position.is_equal_approx(expected_position), "Inventory position must remain centered on idle frame %d" % frame_index)
 	var selected_item = _first_item_in_container(controller, controller.player_inventory_id)
 	_assert(selected_item != null, "Escape regression fixture must provide a player item")
 	if selected_item == null:
