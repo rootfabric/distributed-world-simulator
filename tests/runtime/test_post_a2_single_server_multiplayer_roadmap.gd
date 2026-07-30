@@ -115,7 +115,7 @@ func _test_documentation_and_runners() -> void:
 		_assert(runner.contains("res://tests/runtime/test_m2_dedicated_graphical_processes.gd"), "Full runner missing M2 graphical process test")
 		_assert(runner.contains("res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd"), "Full runner missing M3 graphical contract test")
 		_assert(runner.contains("res://tests/runtime/test_m3_graphical_multiplayer_processes.gd"), "Full runner missing M3 graphical process test")
-		_assert(runner.contains("v16.10.2-runtime-m3-dedicated-graphical-multiplayer"), "Full runner checkpoint is stale")
+		_assert(runner.contains("v16.10.3-domain-m4-canonical-shared-gameplay"), "Full runner checkpoint is stale")
 
 func _load_json(path: String) -> Dictionary:
 	var parsed = JSON.parse_string(_read(path))

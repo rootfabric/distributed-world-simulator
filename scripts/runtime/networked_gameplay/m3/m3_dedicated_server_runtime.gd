@@ -87,6 +87,7 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 		"JOIN": _handle_join(peer_id, session_id, payload)
 		"MOVE": _handle_move(peer_id, session_id, payload)
 		"PRESENTATION": _handle_presentation(peer_id, session_id, payload)
+		"ITEM_COMMAND": _handle_item_command(peer_id, session_id, payload)
 		"LEAVE": _handle_leave(peer_id, session_id, payload)
 		_: _send_result(peer_id, String(payload.get("operation_id", "")), "UNKNOWN", _failure("UNKNOWN_M3_MESSAGE_TYPE"))
 
@@ -108,6 +109,7 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		"operation_id": operation_id,
 		"player": result.get("details", {}).get("player", {}),
 		"snapshot": result.get("details", {}).get("snapshot", {}),
+		"item_graph_snapshot": _service.create_canonical_item_graph_snapshot(),
 	})
 	_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
 	_broadcast_snapshot("PLAYER_JOINED")
@@ -159,6 +161,26 @@ func _handle_presentation(peer_id: String, session_id: String, payload: Dictiona
 	else:
 		_rejections += 1
 	_write_report("READY", false)
+
+func _handle_item_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
+		_send_result(peer_id, String(payload.get("operation_id", "")), "ITEM_COMMAND", _failure("STALE_TRANSPORT_SESSION"))
+		return
+	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var operation_id := String(payload.get("operation_id", ""))
+	var result: Dictionary = _service.handle_canonical_item_command(logical_id, session_id, int(payload.get("ownership_epoch", 0)), operation_id, String(payload.get("command_type", "")), Dictionary(payload.get("payload", {})))
+	_send_result(peer_id, operation_id, String(payload.get("command_type", "ITEM_COMMAND")), result)
+	if bool(result.get("success", false)):
+		_broadcast_item_snapshot(String(payload.get("command_type", "ITEM_COMMAND")))
+	else:
+		_rejections += 1
+	_write_report("READY", false)
+
+func _broadcast_item_snapshot(reason: String) -> void:
+	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	for peer_id_value in _peer_to_player.keys():
+		if _send(String(peer_id_value), "ITEM_GRAPH_SNAPSHOT", {"reason": reason, "snapshot": snapshot}):
+			_broadcasts += 1
 
 func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var logical_id := String(_peer_to_player.get(peer_id, payload.get("logical_player_id", "")))
@@ -261,6 +283,7 @@ func get_report() -> Dictionary:
 		"last_error_code": _last_error_code,
 		"last_two_connected_checksum": _last_two_connected_checksum,
 		"snapshot": _service.create_snapshot() if _service != null else {},
+		"item_graph_snapshot": _service.create_canonical_item_graph_snapshot() if _service != null else {},
 		"service": _service.get_report() if _service != null else {},
 		"boundary": _boundary.get_snapshot() if _boundary != null else {},
 		"resolved_user_data_dir": OS.get_user_data_dir(),

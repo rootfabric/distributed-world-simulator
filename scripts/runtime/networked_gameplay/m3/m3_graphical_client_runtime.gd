@@ -39,6 +39,8 @@ var _leave_acknowledged := false
 var _last_error_code := ""
 var _server_disconnects := 0
 var _automated_acceptance := false
+var _item_graph_snapshot: Dictionary = {}
+var _item_snapshot_updates := 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -91,6 +93,7 @@ func _handle_message(payload: Dictionary) -> void:
 		"JOIN_REJECTED": _fail_connection(String(payload.get("error_code", "JOIN_REJECTED")), payload)
 		"GAMEPLAY_DELTA": _accept_delta(payload.get("delta", {}))
 		"GAMEPLAY_SNAPSHOT": _accept_snapshot(payload.get("snapshot", {}))
+		"ITEM_GRAPH_SNAPSHOT": _accept_item_snapshot(payload.get("snapshot", {}))
 		"COMMAND_RESULT":
 			var operation_id := String(payload.get("operation_id", ""))
 			if not operation_id.is_empty(): _command_results[operation_id] = payload.duplicate(true)
@@ -111,7 +114,9 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(payload.get("snapshot", {}))
 	if not bool(accepted.get("success", false)):
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
-	_snapshot_updates += 1; _joined = true; _last_error_code = ""; _write_report("READY", false)
+	_snapshot_updates += 1
+	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
+	_joined = true; _last_error_code = ""; _write_report("READY", false)
 	replica_updated.emit(_replica.get_snapshot()); session_ready.emit(self)
 
 func _accept_snapshot(snapshot: Dictionary) -> void:
@@ -188,6 +193,28 @@ func set_presentation_blocking(orientation_yaw: float, flashlight_enabled: bool)
 		OS.delay_msec(2)
 	return _failure("M3_PRESENTATION_TIMEOUT")
 
+func _accept_item_snapshot(snapshot: Dictionary) -> void:
+	if snapshot.is_empty(): return
+	_item_graph_snapshot = snapshot.duplicate(true)
+	_item_snapshot_updates += 1
+
+func execute_item_command_blocking(command_type: String, payload: Dictionary, operation_id: String = "") -> Dictionary:
+	if not is_ready(): return _failure("M4_CLIENT_NOT_READY")
+	var op := operation_id if not operation_id.is_empty() else "operation/m4/%s/%s/%d/%d" % [_logical_player_id, command_type.replace(".", "-"), OS.get_process_id(), Time.get_ticks_msec()]
+	_command_results.erase(op)
+	if not _send("ITEM_COMMAND", {"logical_player_id":_logical_player_id,"ownership_epoch":_ownership_epoch,"operation_id":op,"command_type":command_type,"payload":payload.duplicate(true)}): return _failure("M4_ITEM_COMMAND_SEND_FAILED")
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started <= _command_timeout_ms:
+		_poll_blocking_once()
+		if _command_results.has(op):
+			var result: Dictionary = _command_results[op]; _command_results.erase(op)
+			if String(result.get("status", "")) != "SUCCEEDED": return _failure(String(result.get("error_code", "M4_ITEM_COMMAND_REJECTED")), result)
+			return _success({"operation_id":op,"result":result})
+		OS.delay_msec(2)
+	return _failure("M4_ITEM_COMMAND_TIMEOUT")
+
+func get_item_graph_snapshot() -> Dictionary: return _item_graph_snapshot.duplicate(true)
+
 func request_graceful_leave(timeout_ms: int = 2500) -> Dictionary:
 	if not _joined: return _success({"already_left": true})
 	_leave_acknowledged = false
@@ -249,6 +276,8 @@ func get_report() -> Dictionary:
 		"server_disconnects": _server_disconnects, "last_error_code": _last_error_code,
 		"display_server": DisplayServer.get_name(), "replica": _replica.get_report() if _replica != null else {},
 		"snapshot_checksum": String(get_snapshot().get("checksum", "")),
+		"item_graph_checksum": String(_item_graph_snapshot.get("checksum", "")),
+		"item_snapshot_updates": _item_snapshot_updates,
 		"direct_authority_references": 0, "direct_domain_references": 0,
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"automated_acceptance": _automated_acceptance,

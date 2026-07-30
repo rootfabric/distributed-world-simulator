@@ -94,6 +94,8 @@ $Tests = @(
     "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
     "res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
     "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
+    "res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd",
+    "res://tests/runtime/test_m4_graphical_shared_gameplay_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -154,7 +156,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
+    checkpoint = "v16.10.3-domain-m4-canonical-shared-gameplay"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -356,6 +358,7 @@ function Invoke-GodotStep {
 
 try {
     Write-Host "Godot: $Godot"
+    Write-Host "Checkpoint: v16.10.3-domain-m4-canonical-shared-gameplay"
 
     # Scripts below a directory named `fixtures` are support types loaded by
     # standalone tests. They intentionally keep the `test_*.gd` prefix so
@@ -427,7 +430,7 @@ try {
 
     $Summary.passed = $true
     Save-Summary
-    Write-Host "All world/core regression tests passed."
+    Write-Host "All world/core regression tests through M4 canonical shared gameplay passed."
     Write-Host "Report: $ReportPath"
 }
 catch {

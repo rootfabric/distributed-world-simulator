@@ -199,7 +199,7 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.10.2-runtime-m3-dedicated-graphical-multiplayer"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.10.3-domain-m4-canonical-shared-gameplay"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

@@ -61,6 +61,8 @@ $Tests = @(
     "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
     "res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
     "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
+    "res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd",
+    "res://tests/runtime/test_m4_graphical_shared_gameplay_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -86,8 +88,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
-    build_id = "m3-dedicated-two-graphical-clients"
+    checkpoint = "v16.10.3-domain-m4-canonical-shared-gameplay"
+    build_id = "m4-canonical-shared-gameplay-over-enet"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -155,7 +157,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
+    Write-Host "Checkpoint: v16.10.3-domain-m4-canonical-shared-gameplay"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
@@ -174,7 +176,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through M3 graphical multiplayer network/runtime tests passed." -ForegroundColor Green
+    Write-Host "Foundation N0 through M4 canonical shared gameplay network/runtime tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

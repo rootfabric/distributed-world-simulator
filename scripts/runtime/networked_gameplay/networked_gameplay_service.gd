@@ -20,6 +20,7 @@ const ItemGraphService = preload("res://scripts/runtime/networked_gameplay/servi
 const ContainerInteractionService = preload("res://scripts/runtime/networked_gameplay/services/container_interaction_service.gd")
 const MountInteractionService = preload("res://scripts/runtime/networked_gameplay/services/mount_interaction_service.gd")
 const CanonicalPlayableBackend = preload("res://scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd")
+const CanonicalMultiplayerItemGraph = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
 
 const SCHEMA := "planet_simulator.networked_gameplay_service.v1"
 const SNAPSHOT_SCHEMA := PlayerSnapshot.SCHEMA
@@ -47,6 +48,7 @@ var _container_interactions
 var _mount_interactions
 var _playable_backend
 var _operation_ledger: Dictionary = {}
+var _canonical_multiplayer_items
 
 
 func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 0, config: Dictionary = {}) -> Dictionary:
@@ -73,6 +75,10 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	_movement = MovementService.new()
 	_shared_items = SharedItemService.new()
 	_shared_items.setup()
+	_canonical_multiplayer_items = CanonicalMultiplayerItemGraph.new()
+	var multiplayer_items_setup: Dictionary = _canonical_multiplayer_items.setup(_authority_owner_id, _authority_epoch)
+	if not bool(multiplayer_items_setup.get("success", false)):
+		return multiplayer_items_setup
 	_result_router = ResultRouter.new()
 	_replication = ReplicationPublisher.new()
 	_configured = true
@@ -339,6 +345,23 @@ func request_inventory_write(requester_player_id: String, target_player_id: Stri
 	return handle_item_command(ItemCommand.create("message/m1/inventory/%s" % operation_id.sha256_text().left(12), operation_id, requester_player_id, transport_session_id, _authority_epoch, ownership_epoch, 0, "inventory.permission_probe", {"target_player_id": target_player_id}))
 
 
+
+func handle_canonical_item_command(logical_player_id: String, transport_session_id: String, ownership_epoch: int, operation_id: String, command_type: String, payload: Dictionary) -> Dictionary:
+	if not _configured or _canonical_multiplayer_items == null:
+		return _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
+	var owner_check := _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
+	if not bool(owner_check.get("success", false)):
+		return _failure(String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
+	return _canonical_multiplayer_items.execute(logical_player_id, ownership_epoch, operation_id, command_type, payload)
+
+
+func create_canonical_item_graph_snapshot() -> Dictionary:
+	return _canonical_multiplayer_items.create_snapshot() if _canonical_multiplayer_items != null else {}
+
+
+func validate_canonical_item_graph_snapshot(snapshot: Dictionary) -> Dictionary:
+	return _canonical_multiplayer_items.validate_snapshot(snapshot) if _canonical_multiplayer_items != null else _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
+
 func create_snapshot() -> Dictionary:
 	if not _configured:
 		return {}
@@ -435,6 +458,7 @@ func get_report() -> Dictionary:
 		"item_graph_service": _item_graph_service.get_report() if _item_graph_service != null else {},
 		"container_interaction_service": _container_interactions.get_report() if _container_interactions != null else {},
 		"mount_interaction_service": _mount_interactions.get_report() if _mount_interactions != null else {},
+		"canonical_multiplayer_item_graph": _canonical_multiplayer_items.create_snapshot() if _canonical_multiplayer_items != null else {},
 		"direct_client_authority_references": 0,
 	}
 	if _playable_backend != null:

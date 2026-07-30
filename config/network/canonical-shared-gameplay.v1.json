@@ -1,0 +1,28 @@
+{
+  "schema": "planet_simulator.canonical_shared_gameplay.v1",
+  "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+  "build_id": "m4-canonical-shared-gameplay-over-enet",
+  "base_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+  "status": "candidate",
+  "transport": "ENet",
+  "authority": "NetworkedGameplayService",
+  "item_graph": "CanonicalMultiplayerItemGraphService",
+  "commands": [
+    "item.pickup", "item.drop", "item.split", "item.stack",
+    "container.open", "container.close", "item.move_to_container",
+    "item.mount", "item.detach", "inventory.select_hotbar",
+    "inventory.permission_probe"
+  ],
+  "acceptance": {
+    "graphical_clients": 2,
+    "contention_single_winner": true,
+    "canonical_item_uniqueness": true,
+    "permission_fencing": true,
+    "operation_replay": true,
+    "checksum_convergence": ["server", "client_a", "client_b"]
+  },
+  "remaining_for_m5": [
+    "full game-window UI-driven acceptance",
+    "automated interaction through visible inventory widgets"
+  ]
+}
