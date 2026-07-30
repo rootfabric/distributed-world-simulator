@@ -5,12 +5,22 @@ const Relations = preload("res://scripts/items/domain/item_relations.gd")
 const Gameplay = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const MountSocket = preload("res://scripts/items/presentation/item_mount_socket.gd")
 const WorldInteractor = preload("res://scripts/interaction/world_interactor.gd")
+const SpatialRef = preload("res://scripts/simulation/spatial/spatial_ref.gd")
 
 const STORE_ROOT := "user://planet_simulator/item_graphs"
 const STATE_KEY := "test-player-flow-r2"
 
 var failures: Array[String] = []
 var assertions: int = 0
+
+
+class TestViewPlayer:
+	extends Node3D
+
+	var view_basis: Basis = Basis.IDENTITY
+
+	func get_view_basis() -> Basis:
+		return view_basis
 
 
 func _init() -> void:
@@ -40,6 +50,11 @@ func _run() -> void:
 	controller.inventory_ui._on_drop_requested(starter.instance_id, controller.player_hotbar_id, 0)
 	_assert(controller.get_container(controller.player_hotbar_id).get_item_at_slot(0) == starter.instance_id, "Drag/drop must place beacon stack in hotbar slot 1")
 	_assert_success(controller.select_hotbar(0), "Hotbar slot 1 must be selectable")
+	var view_player := TestViewPlayer.new()
+	fixture.world_root.add_child(view_player)
+	view_player.position = Vector3(3.0, 2.0, 5.0)
+	view_player.view_basis = Basis.from_euler(Vector3(deg_to_rad(-32.0), deg_to_rad(58.0), 0.0)).orthonormalized()
+	controller.player = view_player
 	var drop_result: Dictionary = controller.drop_selected_item()
 	_assert_success(drop_result, "Selected beacon must drop into WORLD")
 	var world_beacon_id := String(drop_result.get("new_item_id", drop_result.get("result_item_id", "")))
@@ -49,6 +64,24 @@ func _run() -> void:
 	_assert(world_beacon.relation.keys().size() == 2 and not world_beacon.relation.has("spatial_ref"), "WORLD item relation must not duplicate spatial state")
 	var world_beacon_aggregate = controller.get_world_item_aggregate(world_beacon_id)
 	_assert(world_beacon_aggregate != null and world_beacon_aggregate.item_instance_id == world_beacon_id, "Dropped WORLD item must own one aggregate")
+	var expected_drop_forward: Vector3 = (-view_player.view_basis.z).normalized()
+	var expected_drop_position: Vector3 = (
+		view_player.global_position
+		+ view_player.global_basis.y.normalized() * controller.DEFAULT_DROP_HEIGHT_M
+		+ expected_drop_forward * controller.DEFAULT_DROP_DISTANCE_M
+	)
+	_assert(
+		SpatialRef.get_position(world_beacon_aggregate.spatial_ref).is_equal_approx(expected_drop_position),
+		"Default WORLD drop position must follow the active controller view vector"
+	)
+	_assert(
+		SpatialRef.get_linear_velocity(world_beacon_aggregate.spatial_ref).is_equal_approx(
+			expected_drop_forward * controller.DEFAULT_DROP_SPEED_MPS
+		),
+		"Default WORLD drop impulse must follow the active controller view vector"
+	)
+	controller.player = null
+	view_player.queue_free()
 	_assert(controller.get_item(starter.instance_id).quantity == 2, "Dropping one from stack must leave two in hotbar")
 	_assert(controller.presenter.get_world_node(world_beacon_id) is RigidBody3D, "WORLD beacon must have physics body")
 

@@ -13,6 +13,10 @@ const GraphPersistence = preload("res://scripts/items/persistence/item_graph_per
 const PlacementContract = preload("res://scripts/items/placement/item_placement_contract.gd")
 const PlacementService = preload("res://scripts/items/placement/item_placement_service.gd")
 
+const DEFAULT_DROP_DISTANCE_M: float = 1.6
+const DEFAULT_DROP_HEIGHT_M: float = 0.8
+const DEFAULT_DROP_SPEED_MPS: float = 2.5
+
 var domain: Dictionary = {}
 var presenter
 var graph_persistence
@@ -554,9 +558,11 @@ func drop_item_quantity(
 			"message": "Предмет-контейнер нельзя разделить",
 		})
 	var transform := override_transform
+	var linear_velocity := Vector3.ZERO
 	if transform == Transform3D.IDENTITY:
 		transform = _default_drop_transform()
-	var relation := Relations.world(transform, Vector3.ZERO, physics_frame_id)
+		linear_velocity = _default_drop_linear_velocity()
+	var relation := Relations.world(transform, linear_velocity, physics_frame_id)
 	var result: Dictionary
 	if requested_quantity < int(item.quantity):
 		result = domain.transfer.split_and_move(
@@ -1145,7 +1151,36 @@ func _create_operation_session_id() -> String:
 func _default_drop_transform() -> Transform3D:
 	if player is Node3D and world_root != null:
 		var player_node := player as Node3D
-		var forward := -player_node.global_basis.z.normalized()
-		var target_global := Transform3D(Basis.IDENTITY, player_node.global_position + forward * 1.6 + Vector3.UP * 0.8)
+		var forward := _drop_view_forward_global(player_node)
+		var up := player_node.global_basis.y.normalized()
+		if up.length_squared() < 0.000001:
+			up = Vector3.UP
+		var target_global := Transform3D(
+			Basis.IDENTITY,
+			player_node.global_position
+				+ up * DEFAULT_DROP_HEIGHT_M
+				+ forward * DEFAULT_DROP_DISTANCE_M
+		)
 		return world_root.global_transform.affine_inverse() * target_global
 	return Transform3D(Basis.IDENTITY, Vector3(0.0, 1.5, -1.5))
+
+
+func _default_drop_linear_velocity() -> Vector3:
+	if not player is Node3D or world_root == null:
+		return Vector3.ZERO
+	var forward_global := _drop_view_forward_global(player as Node3D)
+	return world_root.global_basis.inverse() * (forward_global * DEFAULT_DROP_SPEED_MPS)
+
+
+func _drop_view_forward_global(player_node: Node3D) -> Vector3:
+	var forward := Vector3.ZERO
+	if player_node.has_method("get_view_basis"):
+		var view_basis_value: Variant = player_node.call("get_view_basis")
+		if view_basis_value is Basis:
+			var view_basis: Basis = view_basis_value
+			forward = -view_basis.z
+	if forward.length_squared() < 0.000001:
+		forward = -player_node.global_basis.z
+	if forward.length_squared() < 0.000001:
+		forward = Vector3.FORWARD
+	return forward.normalized()
