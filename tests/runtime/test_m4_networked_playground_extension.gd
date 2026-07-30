@@ -98,6 +98,10 @@ func _run() -> void:
 	root.add_child(runtime)
 	await process_frame
 	await process_frame
+	_assert(
+		Input.mouse_mode == Input.MOUSE_MODE_VISIBLE,
+		"graphical client starts with a visible cursor for native window movement"
+	)
 
 	var invalid_attach: Dictionary = runtime.attach_m3_multiplayer_client(null)
 	_assert(
