@@ -1,0 +1,162 @@
+{
+  "schema": "planet_simulator.networked_gameplay_core.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "build_id": "m1-unified-networked-gameplay-core",
+  "status": "candidate",
+  "generated_at_utc": "2026-07-30T04:00:00Z",
+  "base_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
+  "base_architecture_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "decision": "UNIFIED_NETWORKED_GAMEPLAY_CORE",
+  "service": {
+    "schema": "planet_simulator.networked_gameplay_service.v1",
+    "path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "profiles": [
+      "CANONICAL_PLAYABLE",
+      "MULTIPLAYER_CORE"
+    ],
+    "topology_adapters": [
+      "LOOPBACK",
+      "ENET"
+    ],
+    "canonical_state_must_ignore_topology": true
+  },
+  "components": [
+    {
+      "name": "PlayerRegistry",
+      "path": "scripts/runtime/networked_gameplay/services/player_registry.gd"
+    },
+    {
+      "name": "PlayerOwnershipService",
+      "path": "scripts/runtime/networked_gameplay/services/player_ownership_service.gd"
+    },
+    {
+      "name": "PlayerMovementService",
+      "path": "scripts/runtime/networked_gameplay/services/player_movement_service.gd"
+    },
+    {
+      "name": "ItemGraphService",
+      "path": "scripts/runtime/networked_gameplay/services/item_graph_service.gd"
+    },
+    {
+      "name": "ContainerInteractionService",
+      "path": "scripts/runtime/networked_gameplay/services/container_interaction_service.gd"
+    },
+    {
+      "name": "MountInteractionService",
+      "path": "scripts/runtime/networked_gameplay/services/mount_interaction_service.gd"
+    },
+    {
+      "name": "CommandResultRouter",
+      "path": "scripts/runtime/networked_gameplay/services/command_result_router.gd"
+    },
+    {
+      "name": "ReplicationPublisher",
+      "path": "scripts/runtime/networked_gameplay/services/replication_publisher.gd"
+    }
+  ],
+  "wire_contracts": [
+    {
+      "name": "PlayerJoinCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_join_command.gd"
+    },
+    {
+      "name": "PlayerLeaveCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_leave_command.gd"
+    },
+    {
+      "name": "PlayerInputCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_input_command.gd"
+    },
+    {
+      "name": "PlayerOwnershipSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_ownership_snapshot.gd"
+    },
+    {
+      "name": "PlayerStateSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd"
+    },
+    {
+      "name": "PlayerStateDelta",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_state_delta.gd"
+    },
+    {
+      "name": "ItemCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_command.gd"
+    },
+    {
+      "name": "ItemGraphSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_graph_snapshot.gd"
+    },
+    {
+      "name": "ItemGraphDelta",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_graph_delta.gd"
+    },
+    {
+      "name": "CommandResult",
+      "path": "scripts/runtime/networked_gameplay/contracts/command_result.gd"
+    }
+  ],
+  "contract_requirements": [
+    "versioned",
+    "json_safe",
+    "exact_field",
+    "checksum_bound",
+    "node_independent",
+    "scene_tree_independent",
+    "authority_implementation_independent",
+    "authority_epoch_fenced",
+    "ownership_epoch_fenced",
+    "revision_fenced"
+  ],
+  "compatibility_adapters": [
+    {
+      "stage": "H1",
+      "path": "scripts/runtime/listen_host/playable_listen_host_authority.gd",
+      "delegates_to": "NetworkedGameplayService/CANONICAL_PLAYABLE"
+    },
+    {
+      "stage": "H2",
+      "path": "scripts/runtime/host_client/player_ownership_registry.gd",
+      "delegates_to": "PlayerOwnershipService"
+    },
+    {
+      "stage": "H3",
+      "path": "scripts/runtime/host_client/multiplayer_gameplay_authority.gd",
+      "delegates_to": "NetworkedGameplayService/MULTIPLAYER_CORE"
+    }
+  ],
+  "debt_closure": {
+    "A2-D01": {
+      "status": "closed",
+      "closed_by": "M1",
+      "evidence": "H1 and H3 authorities are compatibility adapters over NetworkedGameplayService; H2 delegates to its PlayerOwnershipService"
+    },
+    "A2-D02": {
+      "status": "closed",
+      "closed_by": "M1",
+      "evidence": "replica stores use implementation-independent contracts under scripts/runtime/networked_gameplay/contracts"
+    },
+    "A2-D03": {
+      "status": "open",
+      "delivery_milestones": [
+        "M3",
+        "M4",
+        "M5"
+      ]
+    },
+    "A2-D04": {
+      "status": "open",
+      "delivery_milestone": "M6"
+    }
+  },
+  "acceptance": [
+    "H1 loopback and dedicated ENet use the same gameplay service implementation",
+    "same multiplayer command sequence produces identical canonical state for LOOPBACK and ENET topology adapters",
+    "H1 H2 H3 public interfaces remain compatibility adapters without independent player or operation state",
+    "all ten shared contracts validate independently from authority implementations",
+    "client and UI receive no authority references"
+  ],
+  "next_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+  "next_branch": "feature/m2-dedicated-graphical-client"
+}

@@ -71,3 +71,7 @@ Network-результат собран из полного принятого �
 ## Post-acceptance roadmap correction
 
 После независимой приёмки A2 утверждено решение `FULL SINGLE-SERVER MULTIPLAYER FIRST`. A2-D01…D04 закрываются этапами M1–M6; затем выполняется A3. B1/B2 перенесены после A3, N3–N6 — после B2.
+
+## M1 closure update
+
+Candidate `v16.10.0-runtime-m1-unified-networked-gameplay-core` свёл H1/H2/H3 к общей composition root и вынес validators из authority implementations. `A2-D01` и `A2-D02` отмечены closed by M1. `A2-D03` и `A2-D04` остаются открыты до M3–M6.

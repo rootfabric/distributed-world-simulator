@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 20,
+  "document_revision": 21,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-30T03:01:00Z",
-  "project_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
-  "runtime_base_checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
+  "updated_at_utc": "2026-07-30T04:00:00Z",
+  "project_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "runtime_base_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -396,7 +396,7 @@
     {
       "id": "M1",
       "name": "Unified Networked Gameplay Core",
-      "status": "next",
+      "status": "current_candidate",
       "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
       "branch": "feature/m1-unified-networked-gameplay-core",
       "depends_on": [
@@ -412,12 +412,26 @@
         "same command produces the same canonical state across loopback and ENet",
         "H1-H3 tests use the common service without topology-specific domain forks",
         "client and UI receive no authoritative references"
-      ]
+      ],
+      "implementation": {
+        "networked_gameplay_service": "implemented",
+        "shared_wire_contracts": "implemented",
+        "h1_compatibility_adapter": "implemented",
+        "h2_ownership_adapter": "implemented",
+        "h3_compatibility_adapter": "implemented",
+        "loopback_enet_canonical_equivalence": "implemented",
+        "direct_client_authority_references": "forbidden"
+      },
+      "evidence": {
+        "contracts": "tests/runtime/test_m1_networked_gameplay_contracts.gd",
+        "service": "tests/runtime/test_m1_unified_networked_gameplay_service.gd",
+        "manifest": "config/network/networked-gameplay-core.v1.json"
+      }
     },
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "planned",
+      "status": "next_after_M1",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -727,5 +741,6 @@
     "N4",
     "N5",
     "N6"
-  ]
+  ],
+  "current_implementation_manifest": "config/network/networked-gameplay-core.v1.json"
 }

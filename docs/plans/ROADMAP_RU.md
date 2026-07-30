@@ -1,62 +1,17 @@
-> **Current roadmap checkpoint:** `v16.9.5-roadmap-single-server-multiplayer-first`. A2 принят. Следующий кодовый этап — M1. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+> **Current runtime checkpoint:** `v16.10.0-runtime-m1-unified-networked-gameplay-core`. Roadmap `FULL SINGLE-SERVER MULTIPLAYER FIRST` принят. Следующий этап после приёмки M1 — M2. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
 
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий gate — M1 поверх принятого A2
-
 ```text
-runtime accepted: v16.9.3-runtime-h3-dedicated-multiplayer
-architecture accepted: v16.9.4-architecture-a2-networked-gameplay
-roadmap candidate: v16.9.5-roadmap-single-server-multiplayer-first
-next: v16.10.0-runtime-m1-unified-networked-gameplay-core
+A2 accepted
+roadmap v16.9.5 accepted
+M1 current candidate — unified gameplay core
+M2 next — dedicated + one graphical client
+M3 → M4 → M5 → M6 → A3 planned
+B1/B2 deferred; N3–N6 blocked
 ```
 
-```text
-N0–N2 accepted
-R3.1 accepted
-A0 accepted
-H0 accepted
-A1 accepted
-S0 accepted
-T1 accepted
-B0 accepted
-M0 accepted
-S1 accepted
-```
-
-S1 закрепил безопасную границу `worker computes → authority validates → M0 commits`. H1 реализует первую полную graphical gameplay vertical slice через embedded client/server boundary; после независимой приёмки работа переходит к H2.
-
-## Утверждённая последовательность после S1
-
-```text
-S1 ACCEPTED
-│
-├─ H1  Playable listen-host — candidate
-├─ H2  Dedicated server + 1 graphical client
-├─ H3  Dedicated server + 2 graphical clients
-├─ A2  Networked gameplay architecture checkpoint
-│
-├─ B1  NATS Core adapter
-├─ B2  JetStream/outbox delivery
-│
-├─ P0  Population Field
-├─ D1  Remote worker MVP
-│
-├─ N3  World Directory + 2 authorities
-├─ N4  Generic object handoff
-├─ N5  Seamless player handoff
-└─ N6  Ghosts + interest management
-```
-
-После H3 выполняется отдельный A2 architecture audit/freeze checkpoint. Только после него начинается B1.
-
-Основные документы:
-
-- `docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
-- `docs/checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
-- `docs/architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
-- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
-- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.
+M1 закрывает `A2-D01` и `A2-D02`. H1/H2/H3 больше не являются независимыми gameplay implementations. Общий `NetworkedGameplayService` и wire contracts являются обязательной базой всех следующих single-server multiplayer этапов.
 
 # Дорожная карта к лунному симулятору мечты
 

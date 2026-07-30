@@ -8,7 +8,7 @@ build_id: post-a2-single-server-multiplayer-first
 base: v16.9.4-architecture-a2-networked-gameplay
 branch: feature/post-a2-single-server-multiplayer-roadmap
 scope: documentation, roadmap dependencies, machine-readable strategy, contract gate
-status: candidate
+status: accepted
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
 ```
 
@@ -38,9 +38,9 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 ## Machine-readable sources
 
-- `config/network/network-roadmap.v1.json` revision 20;
-- `config/network/networked-gameplay-architecture.v1.json` revision 2;
-- `config/network/single-server-multiplayer-roadmap.v1.json` revision 1.
+- `config/network/network-roadmap.v1.json` revision 21;
+- `config/network/networked-gameplay-architecture.v1.json` revision 3;
+- `config/network/single-server-multiplayer-roadmap.v1.json` revision 2.
 
 ## Acceptance checkpoint
 
@@ -53,3 +53,7 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - NATS ограничен server-to-server communication;
 - runtime gameplay files не изменены;
 - roadmap contract test и full manifests зелёные.
+
+## M1 implementation update
+
+M1 реализован как candidate `v16.10.0-runtime-m1-unified-networked-gameplay-core`. Общий service и validators закрывают A2-D01/D02; M2 становится следующим этапом после независимой приёмки M1.

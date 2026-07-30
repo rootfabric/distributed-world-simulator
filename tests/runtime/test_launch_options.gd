@@ -54,12 +54,12 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.LISTEN_HOST, "Default role is not listen-host")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.9.1-runtime-h1-playable-listen-host", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "h1-playable-listen-host", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.9.1-runtime-h1-playable-listen-host", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "h1-playable-listen-host", "Simulator build id is stale")
-	_assert(LunarAppScript.PROJECT_VERSION == "16.9.1-runtime-h1-playable-listen-host", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "h1-playable-listen-host", "Lunar build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "m1-unified-networked-gameplay-core", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "m1-unified-networked-gameplay-core", "Simulator build id is stale")
+	_assert(LunarAppScript.PROJECT_VERSION == "16.10.0-runtime-m1-unified-networked-gameplay-core", "Lunar project version is stale")
+	_assert(LunarAppScript.BUILD_ID == "m1-unified-networked-gameplay-core", "Lunar build id is stale")
 
 
 	var host_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=listen-host"]))

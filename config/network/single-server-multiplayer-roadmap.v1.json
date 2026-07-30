@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
-  "status": "candidate",
+  "status": "accepted",
   "decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
   "approved_at_utc": "2026-07-30T03:01:00Z",
   "base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
@@ -66,7 +66,7 @@
     {
       "id": "M1",
       "name": "Unified Networked Gameplay Core",
-      "status": "next",
+      "status": "current_candidate",
       "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
       "branch": "feature/m1-unified-networked-gameplay-core",
       "depends_on": [
@@ -82,12 +82,13 @@
         "same command produces the same canonical state across loopback and ENet",
         "H1-H3 tests use the common service without topology-specific domain forks",
         "client and UI receive no authoritative references"
-      ]
+      ],
+      "implementation_manifest": "config/network/networked-gameplay-core.v1.json"
     },
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "planned",
+      "status": "next_after_M1",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -277,5 +278,8 @@
     "dynamic shard balancing",
     "multiple authoritative region servers"
   ],
-  "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks"
+  "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks",
+  "accepted_at_utc": "2026-07-30T03:40:00Z",
+  "current_implementation_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "current_implementation_manifest": "config/network/networked-gameplay-core.v1.json"
 }

@@ -1,6 +1,7 @@
 extends RefCounted
 
-const Authority = preload("res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd")
+const SnapshotContract = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
+const DeltaContract = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_delta.gd")
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA := "planet_simulator.multiplayer_gameplay_replica_store.v1"
@@ -12,7 +13,9 @@ var _replays := 0
 
 
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
-	var validation := Authority.new().validate_snapshot(snapshot)
+	var normalized: Dictionary = SnapshotContract.Wire.stringify_dictionary_keys(snapshot)
+	var validation := SnapshotContract.validate(normalized)
+	snapshot = normalized
 	if not bool(validation.get("success", false)):
 		return validation
 	if not _snapshot.is_empty():
@@ -31,7 +34,9 @@ func accept_snapshot(snapshot: Dictionary) -> Dictionary:
 
 
 func accept_delta(delta: Dictionary) -> Dictionary:
-	var validation := Authority.new().validate_delta(delta)
+	var normalized: Dictionary = DeltaContract.Wire.stringify_dictionary_keys(delta)
+	var validation := DeltaContract.validate(normalized)
+	delta = normalized
 	if not bool(validation.get("success", false)):
 		return validation
 	if _snapshot.is_empty():

@@ -123,10 +123,11 @@ A task is complete only when it includes:
 
 ```text
 architecture checkpoint accepted: v16.9.4-architecture-a2-networked-gameplay
-roadmap checkpoint candidate: v16.9.5-roadmap-single-server-multiplayer-first
+roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
+runtime checkpoint candidate: v16.10.0-runtime-m1-unified-networked-gameplay-core
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
-next branch: feature/m1-unified-networked-gameplay-core
-strategy manifest: config/network/single-server-multiplayer-roadmap.v1.json
+next after acceptance: feature/m2-dedicated-graphical-client
+implementation manifest: config/network/networked-gameplay-core.v1.json
 ```
 
 Accepted foundation order:

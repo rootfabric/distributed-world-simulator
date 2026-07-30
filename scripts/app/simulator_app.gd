@@ -19,8 +19,8 @@ const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/wor
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.9.1-runtime-h1-playable-listen-host"
-const FOUNDATION_BUILD_ID: String = "h1-playable-listen-host"
+const FOUNDATION_CHECKPOINT: String = "v16.10.0-runtime-m1-unified-networked-gameplay-core"
+const FOUNDATION_BUILD_ID: String = "m1-unified-networked-gameplay-core"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

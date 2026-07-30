@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.networked_gameplay_architecture.v1",
-  "document_revision": 2,
+  "document_revision": 3,
   "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "build_id": "a2-networked-gameplay-audit-freeze",
   "status": "accepted",
@@ -172,14 +172,15 @@
   "implementation_assessment": {
     "architecture_target_frozen": true,
     "one_semantic_pipeline_frozen": true,
-    "one_production_service_implementation_across_h1_h2_h3": false,
+    "one_production_service_implementation_across_h1_h2_h3": true,
     "two_graphical_client_windows_proven": false,
     "full_item_graph_contention_over_dedicated_transport_proven": false,
     "dedicated_server_restart_recovery_proven": false,
     "b1_allowed": true,
     "multi_authority_work_allowed": false,
     "b1_priority": "deferred_after_A3",
-    "single_server_multiplayer_first": true
+    "single_server_multiplayer_first": true,
+    "shared_wire_validators_independent_from_authority_implementations": true
   },
   "known_debt": [
     {
@@ -188,7 +189,12 @@
       "title": "Consolidate H1/H2/H3 authority fixtures behind one NetworkedGameplayService contract",
       "evidence": "PlayableListenHostAuthority, PlayerOwnershipRegistry and MultiplayerGameplayAuthority are separate implementations",
       "closure_before": "A3",
-      "delivery_milestone": "M1"
+      "delivery_milestone": "M1",
+      "status": "closed",
+      "closed_by": "M1",
+      "closed_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+      "closed_at_utc": "2026-07-30T04:00:00Z",
+      "closure_evidence": "config/network/networked-gameplay-core.v1.json"
     },
     {
       "id": "A2-D02",
@@ -196,7 +202,12 @@
       "title": "Extract shared snapshot/delta validators from authority implementations",
       "evidence": "H2/H3 replica stores preload registry/authority scripts for validation",
       "closure_before": "A3",
-      "delivery_milestone": "M1"
+      "delivery_milestone": "M1",
+      "status": "closed",
+      "closed_by": "M1",
+      "closed_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+      "closed_at_utc": "2026-07-30T04:00:00Z",
+      "closure_evidence": "config/network/networked-gameplay-core.v1.json"
     },
     {
       "id": "A2-D03",
@@ -204,7 +215,8 @@
       "title": "Run two real graphical clients with presentation interpolation and the canonical H1 item graph service",
       "evidence": "H3 process clients are headless protocol clients and use a reduced shared-item fixture",
       "closure_before": "A3",
-      "delivery_milestone": "M5"
+      "delivery_milestone": "M5",
+      "status": "open"
     },
     {
       "id": "A2-D04",
@@ -212,14 +224,16 @@
       "title": "Integrate dedicated ownership/gameplay state with R3.1 durable server restart recovery",
       "evidence": "H2/H3 prove reconnect in one server lifetime, not crash/restart recovery",
       "closure_before": "A3",
-      "delivery_milestone": "M6"
+      "delivery_milestone": "M6",
+      "status": "open"
     },
     {
       "id": "A2-D05",
       "severity": "P2",
       "title": "Define production authentication and logical player admission",
       "evidence": "logical IDs are trusted test inputs",
-      "closure_before": "production_public_access"
+      "closure_before": "production_public_access",
+      "status": "open"
     }
   ],
   "b1_constraints": {
@@ -284,5 +298,8 @@
   },
   "accepted_at_utc": "2026-07-30T03:01:00Z",
   "post_a2_strategy_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
-  "post_a2_strategy_manifest": "config/network/single-server-multiplayer-roadmap.v1.json"
+  "post_a2_strategy_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
+  "updated_at_utc": "2026-07-30T04:00:00Z",
+  "m1_core_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "m1_core_manifest": "config/network/networked-gameplay-core.v1.json"
 }

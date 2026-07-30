@@ -58,7 +58,9 @@ NATS используется только для service/server communication. 
 Checkpoint: `v16.10.0-runtime-m1-unified-networked-gameplay-core`
 Branch: `feature/m1-unified-networked-gameplay-core`
 
-Закрывает `A2-D01` и `A2-D02`.
+Статус: **current candidate**. Закрывает `A2-D01` и `A2-D02`.
+
+Реализация и доказательства: `docs/architecture/M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md` и `config/network/networked-gameplay-core.v1.json`.
 
 ```text
 NetworkedGameplayService

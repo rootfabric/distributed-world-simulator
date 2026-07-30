@@ -34,8 +34,8 @@ const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_s
 const NetworkContractUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
 
-const PROJECT_VERSION: String = "16.9.1-runtime-h1-playable-listen-host"
-const BUILD_ID: String = "h1-playable-listen-host"
+const PROJECT_VERSION: String = "16.10.0-runtime-m1-unified-networked-gameplay-core"
+const BUILD_ID: String = "m1-unified-networked-gameplay-core"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"

@@ -211,26 +211,29 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 
 
 func _send_command_result(peer_id: String, operation_id: String, command_type: String, result: Dictionary) -> void:
+	var wire_result: Dictionary = _authority.create_targeted_command_result(
+		"message/h3/result/%s" % operation_id.sha256_text().left(12),
+		operation_id,
+		result
+	)
 	var payload := {
 		"operation_id": operation_id,
 		"command_type": command_type,
-		"status": "SUCCEEDED" if bool(result.get("success", false)) else "REJECTED",
-		"error_code": String(result.get("error_code", "")),
-		"details": result.get("details", {}).duplicate(true),
+		"status": String(wire_result.get("status", "REJECTED")),
+		"error_code": String(wire_result.get("error_code", "")),
+		"details": wire_result.get("payload", {}).duplicate(true),
+		"wire_result_checksum": String(wire_result.get("checksum", "")),
 	}
 	_send(peer_id, "COMMAND_RESULT", payload)
 	_targeted_results += 1
 
 
 func _send_reject(peer_id: String, operation_id: String, error_code: String) -> void:
-	_send(peer_id, "COMMAND_RESULT", {
-		"operation_id": operation_id,
-		"command_type": "UNKNOWN",
-		"status": "REJECTED",
+	_send_command_result(peer_id, operation_id, "UNKNOWN", {
+		"success": false,
 		"error_code": error_code,
 		"details": {},
 	})
-	_targeted_results += 1
 
 
 func _send_stage(stage: String) -> void:

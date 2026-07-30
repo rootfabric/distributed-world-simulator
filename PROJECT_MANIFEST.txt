@@ -1,3 +1,20 @@
+Planetary World v16.10.0-runtime-m1-unified-networked-gameplay-core
+
+M1 Unified Networked Gameplay Core:
+- one NetworkedGameplayService composition root for H1/H3
+- shared PlayerOwnershipService for H2/H3
+- PlayerRegistry and PlayerMovementService
+- ItemGraphService, ContainerInteractionService and MountInteractionService
+- CommandResultRouter and ReplicationPublisher
+- ten authority-independent versioned wire contracts
+- H1/H2/H3 compatibility adapters preserve accepted public APIs
+- LOOPBACK and ENET common scenario canonical checksum equivalence
+- A2-D01 and A2-D02 closed; A2-D03 and A2-D04 remain open
+- config/network/networked-gameplay-core.v1.json
+- tests/runtime/test_m1_networked_gameplay_contracts.gd
+- tests/runtime/test_m1_unified_networked_gameplay_service.gd
+- RUN_M1_UNIFIED_NETWORKED_GAMEPLAY_TESTS.ps1 / .sh
+
 Planetary World v16.9.5-roadmap-single-server-multiplayer-first
 
 Post-A2 roadmap checkpoint:

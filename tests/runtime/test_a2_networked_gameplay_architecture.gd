@@ -24,7 +24,7 @@ func _init() -> void:
 func _test_manifest_identity(manifest: Dictionary) -> void:
 	_assert(not manifest.is_empty(), "A2 freeze manifest is missing or invalid")
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.networked_gameplay_architecture.v1", "A2 schema mismatch")
-	_assert(int(manifest.get("document_revision", 0)) == 2, "A2 document revision mismatch")
+	_assert(int(manifest.get("document_revision", 0)) == 3, "A2 document revision mismatch")
 	_assert(String(manifest.get("checkpoint", "")) == "v16.9.4-architecture-a2-networked-gameplay", "A2 checkpoint mismatch")
 	_assert(String(manifest.get("build_id", "")) == "a2-networked-gameplay-audit-freeze", "A2 build ID mismatch")
 	_assert(String(manifest.get("status", "")) == "accepted", "A2 status must be accepted after independent verification")
@@ -83,7 +83,8 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 	var assessment: Dictionary = manifest.get("implementation_assessment", {})
 	_assert(bool(assessment.get("architecture_target_frozen", false)), "Architecture target is not frozen")
 	_assert(bool(assessment.get("one_semantic_pipeline_frozen", false)), "Semantic pipeline is not frozen")
-	_assert(not bool(assessment.get("one_production_service_implementation_across_h1_h2_h3", true)), "A2 incorrectly claims implementation convergence")
+	_assert(bool(assessment.get("one_production_service_implementation_across_h1_h2_h3", false)), "M1 implementation convergence is not recorded")
+	_assert(bool(assessment.get("shared_wire_validators_independent_from_authority_implementations", false)), "M1 shared validator closure is not recorded")
 	_assert(not bool(assessment.get("two_graphical_client_windows_proven", true)), "A2 incorrectly claims two graphical windows")
 	_assert(not bool(assessment.get("full_item_graph_contention_over_dedicated_transport_proven", true)), "A2 incorrectly claims full Item Graph contention")
 	_assert(bool(assessment.get("b1_allowed", false)), "B1 should be allowed behind frozen B0 constraints")
@@ -95,7 +96,12 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 		if entry_value is Dictionary:
 			debt_by_id[String(entry_value.get("id", ""))] = entry_value
 	for debt_id in ["A2-D01", "A2-D02", "A2-D03", "A2-D04"]:
-		_assert(debt_by_id.has(debt_id), "Required multi-authority blocker missing: %s" % debt_id)
+		_assert(debt_by_id.has(debt_id), "Required architecture debt entry missing: %s" % debt_id)
+	for debt_id in ["A2-D01", "A2-D02"]:
+		_assert(String(debt_by_id.get(debt_id, {}).get("status", "")) == "closed", "%s must be closed by M1" % debt_id)
+		_assert(String(debt_by_id.get(debt_id, {}).get("closed_by", "")) == "M1", "%s closure checkpoint mismatch" % debt_id)
+	for debt_id in ["A2-D03", "A2-D04"]:
+		_assert(String(debt_by_id.get(debt_id, {}).get("status", "")) == "open", "%s must remain open" % debt_id)
 		_assert(String(debt_by_id.get(debt_id, {}).get("closure_before", "")) == "A3", "%s must close before A3" % debt_id)
 	var b1: Dictionary = manifest.get("b1_constraints", {})
 	_assert(String(b1.get("next_checkpoint", "")) == "v16.11.0-data-plane-b1-nats-core", "B1 checkpoint mismatch")
@@ -107,8 +113,8 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 
 
 func _test_roadmap_alignment(roadmap: Dictionary) -> void:
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.9.5-roadmap-single-server-multiplayer-first", "Roadmap current checkpoint mismatch")
-	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.9.3-runtime-h3-dedicated-multiplayer", "Roadmap runtime base mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Roadmap current checkpoint mismatch")
+	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Roadmap runtime base mismatch")
 	var phases: Dictionary = {}
 	for phase_value in roadmap.get("phases", []):
 		if phase_value is Dictionary:
@@ -116,7 +122,7 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 	for stage in ["H1", "H2", "H3"]:
 		_assert(String(phases.get(stage, {}).get("status", "")) == "accepted", "%s roadmap status is not accepted" % stage)
 	_assert(String(phases.get("A2", {}).get("status", "")) == "accepted", "A2 roadmap status mismatch")
-	_assert(String(phases.get("M1", {}).get("status", "")) == "next", "M1 roadmap status must be next")
+	_assert(String(phases.get("M1", {}).get("status", "")) == "current_candidate", "M1 roadmap status must be current candidate")
 	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status must be deferred after A3")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
@@ -129,29 +135,28 @@ func _test_source_evidence(manifest: Dictionary) -> void:
 	var h2_replica := _read("res://scripts/runtime/host_client/player_ownership_replica_store.gd")
 	var h3_authority := _read("res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd")
 	var h3_replica := _read("res://scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd")
+	var service := _read("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 	var h3_client := _read("res://tools/runtime/h3_multiplayer_client.gd")
 	var t1_boundary := _read("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
-	for content in [h1_authority, h1_session, h1_bridge, h2_registry, h2_replica, h3_authority, h3_replica, h3_client, t1_boundary]:
+	for content in [h1_authority, h1_session, h1_bridge, h2_registry, h2_replica, h3_authority, h3_replica, service, h3_client, t1_boundary]:
 		_assert(not content.is_empty(), "Required implementation evidence file is missing")
-	for token in ["OPERATION_REPLAY_CONFLICT", "authority_epoch", "session_id", "replication_delta"]:
-		_assert(h1_authority.contains(token), "H1 authority evidence missing token: %s" % token)
+	_assert(h1_authority.contains("networked_gameplay_service.gd"), "H1 adapter does not use NetworkedGameplayService")
+	_assert(h3_authority.contains("networked_gameplay_service.gd"), "H3 adapter does not use NetworkedGameplayService")
+	_assert(h2_registry.contains("player_ownership_service.gd"), "H2 adapter does not use shared PlayerOwnershipService")
+	_assert(not h1_authority.contains("_operation_ledger") and not h3_authority.contains("_operation_ledger"), "Compatibility authority retains an independent operation ledger")
+	_assert(h2_replica.contains("player_ownership_snapshot.gd"), "H2 replica does not use independent ownership validator")
+	_assert(not h2_replica.contains("player_ownership_registry.gd"), "H2 replica still depends on authority implementation")
+	_assert(h3_replica.contains("player_state_snapshot.gd") and h3_replica.contains("player_state_delta.gd"), "H3 replica does not use independent state validators")
+	_assert(not h3_replica.contains("multiplayer_gameplay_authority.gd"), "H3 replica still depends on authority implementation")
+	for component in ["PlayerRegistry", "OwnershipService", "MovementService", "ItemGraphService", "ContainerInteractionService", "MountInteractionService", "ResultRouter", "ReplicationPublisher"]:
+		_assert(service.contains(component), "NetworkedGameplayService component missing: %s" % component)
 	_assert(h1_session.contains('"direct_authority_references": 0'), "H1 client session authority boundary missing")
 	_assert(h1_bridge.contains('"direct_authority_references": 0'), "H1 item bridge authority boundary missing")
-	for token in ["func join", "func leave", "ownership_epoch", "PLAYER_ALREADY_CONNECTED", "STALE_PLAYER_SESSION"]:
-		_assert(h2_registry.contains(token), "H2 ownership evidence missing token: %s" % token)
-	_assert(h2_replica.contains("OWNERSHIP_REVISION_ROLLBACK"), "H2 replica rollback fence missing")
-	for token in ["func move_player", "func pickup_shared_item", "PLAYER_PERMISSION_DENIED", "ITEM_ALREADY_CLAIMED", "STALE_PLAYER_OWNERSHIP_EPOCH", "region/h3/test-arena"]:
-		_assert(h3_authority.contains(token), "H3 authority evidence missing token: %s" % token)
-	for token in ["MULTIPLAYER_AUTHORITY_MISMATCH", "MULTIPLAYER_DELTA_BASE_MISMATCH", "MULTIPLAYER_DELTA_TARGET_CHECKSUM_MISMATCH", '"direct_authority_references": 0']:
-		_assert(h3_replica.contains(token), "H3 replica fence missing token: %s" % token)
 	_assert(h3_client.contains("extends SceneTree"), "H3 client process evidence missing")
-	_assert(not h3_client.contains("Control") and not h3_client.contains("Camera3D"), "A2 evidence unexpectedly became a graphical client without updating the freeze")
-	_assert(t1_boundary.contains("_outbound_queues"), "T1 per-peer queue evidence missing")
-	_assert(t1_boundary.contains("STALE_TRANSPORT_SESSION"), "T1 stale session fence missing")
-	# Declared debt must remain tied to current source evidence until explicitly closed.
-	_assert(h2_replica.contains('preload("res://scripts/runtime/host_client/player_ownership_registry.gd")'), "A2-D02 H2 validator coupling evidence changed")
-	_assert(h3_replica.contains('preload("res://scripts/runtime/host_client/multiplayer_gameplay_authority.gd")'), "A2-D02 H3 validator coupling evidence changed")
-	_assert(not bool(manifest.get("implementation_assessment", {}).get("one_production_service_implementation_across_h1_h2_h3", true)), "A2 implementation convergence assessment changed")
+	_assert(not h3_client.contains("Control") and not h3_client.contains("Camera3D"), "M1 must not claim M3 graphical evidence")
+	_assert(t1_boundary.contains("_outbound_queues") and t1_boundary.contains("STALE_TRANSPORT_SESSION"), "T1 peer isolation evidence missing")
+	_assert(bool(manifest.get("implementation_assessment", {}).get("one_production_service_implementation_across_h1_h2_h3", false)), "M1 convergence assessment missing")
+	_assert(bool(manifest.get("implementation_assessment", {}).get("shared_wire_validators_independent_from_authority_implementations", false)), "M1 validator assessment missing")
 
 
 func _test_documentation_evidence() -> void:
@@ -180,6 +185,8 @@ func _test_regression_runner_coverage() -> void:
 	for runner in [network_runner, world_runner]:
 		_assert(not runner.is_empty(), "Required full regression runner is missing")
 		for path in [
+			"res://tests/runtime/test_m1_networked_gameplay_contracts.gd",
+			"res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
 			"res://tests/runtime/test_h2_player_ownership_contracts.gd",
 			"res://tests/runtime/test_h2_host_client_processes.gd",
 			"res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
@@ -188,7 +195,7 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.9.5-roadmap-single-server-multiplayer-first"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.10.0-runtime-m1-unified-networked-gameplay-core"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

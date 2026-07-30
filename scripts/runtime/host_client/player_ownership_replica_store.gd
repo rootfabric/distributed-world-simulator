@@ -1,12 +1,16 @@
 extends RefCounted
-const Registry = preload("res://scripts/runtime/host_client/player_ownership_registry.gd")
+const OwnershipSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_ownership_snapshot.gd")
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const SCHEMA := "planet_simulator.player_ownership_replica_store.v1"
 var _snapshot: Dictionary = {}
 var _mutations := 0
 var _replays := 0
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
-	var validation := Registry.new().validate_snapshot(snapshot)
+	var normalized: Dictionary = OwnershipSnapshot.Wire.stringify_dictionary_keys(snapshot)
+	var validation := OwnershipSnapshot.validate(normalized)
+	snapshot = normalized
+	if not bool(validation.get("success", false)) and String(validation.get("error_code", "")) == "WIRE_CHECKSUM_MISMATCH":
+		validation = _failure("OWNERSHIP_SNAPSHOT_CHECKSUM_MISMATCH")
 	if not bool(validation.success): return validation
 	if not _snapshot.is_empty():
 		if String(snapshot.authority_owner_id) != String(_snapshot.authority_owner_id) or int(snapshot.authority_epoch) != int(_snapshot.authority_epoch): return _failure("OWNERSHIP_AUTHORITY_MISMATCH")

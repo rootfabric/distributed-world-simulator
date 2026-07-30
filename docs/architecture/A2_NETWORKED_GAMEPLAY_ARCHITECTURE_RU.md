@@ -167,3 +167,7 @@ Identity, ownership, permissions, movement, replay, contention, peer mapping и 
 ## 12. Post-A2 delivery order
 
 После независимой приёмки A2 target остаётся `FROZEN_WITH_GATES`, но основной delivery order уточнён: `M1–M6 → A3 → B1/B2 → N3–N6`. B1 по-прежнему архитектурно допустим как adapter, однако не является ближайшим приоритетом. A2-D01/D02 закрывает M1, A2-D03 — M3–M5, A2-D04 — M6.
+
+## M1 closure update
+
+Candidate `v16.10.0-runtime-m1-unified-networked-gameplay-core` свёл H1/H2/H3 к общей composition root и вынес validators из authority implementations. `A2-D01` и `A2-D02` отмечены closed by M1. `A2-D03` и `A2-D04` остаются открыты до M3–M6.
