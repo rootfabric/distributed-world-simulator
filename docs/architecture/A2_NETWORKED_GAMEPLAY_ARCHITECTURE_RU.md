@@ -1,8 +1,8 @@
 # A2 — зафиксированная архитектура сетевого gameplay
 
-**Checkpoint:** `v16.9.4-architecture-a2-networked-gameplay`  
-**Build ID:** `a2-networked-gameplay-audit-freeze`  
-**База доказательств:** принятые H1, H2 и H3  
+**Checkpoint:** `v16.9.4-architecture-a2-networked-gameplay`
+**Build ID:** `a2-networked-gameplay-audit-freeze`
+**База доказательств:** принятые H1, H2 и H3
 **Статус решения:** `FROZEN_WITH_GATES`
 
 ## 1. Назначение
