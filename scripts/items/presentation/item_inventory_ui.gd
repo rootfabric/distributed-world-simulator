@@ -164,6 +164,11 @@ func _refresh_persistent_hotbar() -> void:
 		active_screen.render_persistent_hotbar(persistent_hotbar)
 
 
+func _set_persistent_hotbar_carry_state(active: bool, target_highlight_enabled: bool) -> void:
+	if persistent_hotbar != null and persistent_hotbar.has_method("set_cursor_carry_state"):
+		persistent_hotbar.set_cursor_carry_state(active, target_highlight_enabled)
+
+
 func get_external_visible_cell_count() -> int:
 	return int(active_screen.get_external_visible_cell_count()) if active_screen != null else 0
 

@@ -34,12 +34,15 @@ func _run() -> void:
 	_test_profile_and_skin(screen, seven_profile)
 	await _test_first_open_layout_and_escape(controller, screen)
 	_test_fixed_slot_projection(controller, screen)
+	await _test_immediate_pickup_pointer_and_hover(controller, screen)
 	_test_click_move_between_visual_slots(controller, screen)
 	_test_half_pickup_and_single_place(controller, screen)
 	_test_occupied_slot_swap(controller, screen)
 	_test_swap_cancel_unwinds(controller, screen)
 	_test_shift_quick_transfer(controller, screen)
 	_test_slot_persistence(controller, screen)
+	_test_background_drop_one_keeps_cursor(controller, screen)
+	_test_background_drop_all(controller, screen)
 	_assert_success(controller.domain.validator.validate_graph(), "7 Days interactions must preserve complete Item Graph")
 	_assert(not controller.is_transient_inventory_cursor_active(), "All tests must finish without transient cursor state")
 
@@ -130,6 +133,75 @@ func _test_fixed_slot_projection(controller, screen) -> void:
 	_assert(controller.get_container("demo_crate_contents") != null, "External domain container must remain unchanged by UI projection")
 
 
+func _test_immediate_pickup_pointer_and_hover(controller, screen) -> void:
+	screen.close_external_container()
+	screen.refresh()
+	var source = _find_item(controller, "survey_beacon", controller.player_inventory_id)
+	var underlying = _find_item(controller, "battery_pack", controller.player_inventory_id)
+	_assert(source != null and underlying != null, "Immediate pickup fixture must provide source and underlying items")
+	if source == null or underlying == null:
+		return
+	var source_cell = screen.player_panel.find_cell_by_item_id(String(source.instance_id))
+	var underlying_cell = screen.player_panel.find_cell_by_item_id(String(underlying.instance_id))
+	_assert(source_cell != null and underlying_cell != null, "Immediate pickup fixture items must render")
+	if source_cell == null or underlying_cell == null:
+		return
+	var source_screen_position: Vector2 = source_cell.global_position
+	var pointer_local := Vector2(17.0, 23.0)
+	var right_press := InputEventMouseButton.new()
+	right_press.button_index = MOUSE_BUTTON_RIGHT
+	right_press.button_mask = MOUSE_BUTTON_MASK_LEFT | MOUSE_BUTTON_MASK_RIGHT
+	right_press.pressed = true
+	right_press.position = pointer_local
+	source_cell._gui_input(right_press)
+	_assert(screen.transfer_session.is_active(), "RMB press must pick up the stack immediately without waiting for release or motion")
+	_assert(screen._carry_pickup_button_held and screen._carry_pickup_button == MOUSE_BUTTON_RIGHT, "RMB pickup must enter held phase even while LMB is already held")
+	_assert(screen._carry_preview_grab_offset.is_equal_approx(-pointer_local), "Carry preview must preserve the exact pointer offset inside the source cell")
+	_assert(
+		screen.carry_preview.position.is_equal_approx(source_screen_position),
+		"Carry preview must start at the physical source-cell position without a side jump"
+	)
+	_assert(not screen.carry_preview_label.visible, "Carried stack must not render a name caption")
+	_assert(screen.carry_preview_quantity_label.visible, "Carried stack must render its quantity over the icon")
+	_assert(
+		screen.carry_preview_quantity_label.text == str(screen.transfer_session.remaining_quantity),
+		"Carried stack quantity must match the remaining cursor quantity"
+	)
+	underlying_cell._on_mouse_entered()
+	_assert(not underlying_cell.drop_target_highlight, "Held pickup button must suppress destination highlighting")
+	_assert(screen.tooltip.visible and screen.tooltip.current_item_id == String(underlying.instance_id), "Hover description must show the item under the carried stack")
+	_assert(screen.tooltip.top_level, "7 Days hover description must stay outside inventory container layout")
+	_assert(screen.tooltip.text_label.text == String(underlying.display_name), "Hover description must contain only the underlying item name")
+	_assert(
+		screen.tooltip.size.x <= 260.0 and screen.tooltip.size.y < 80.0,
+		"Hover description must remain a compact name plate (actual: %s)" % screen.tooltip.size
+	)
+	var underlying_rect: Rect2 = underlying_cell.get_global_rect()
+	var tooltip_rect: Rect2 = screen.tooltip.get_global_rect()
+	_assert(not tooltip_rect.intersects(underlying_rect), "Hover description must not cover the hovered inventory slot")
+	_assert(tooltip_rect.position.y >= underlying_rect.end.y, "Hover description must appear below the hovered slot when space is available")
+	_assert(not screen.inspector.visible, "7 Days hover description must not reopen the generic inspector")
+	var carried_quantity := int(screen.transfer_session.remaining_quantity)
+	var right_release := InputEventMouseButton.new()
+	right_release.button_index = MOUSE_BUTTON_RIGHT
+	right_release.pressed = false
+	screen._input(right_release)
+	await process_frame
+	_assert(screen.transfer_session.is_active() and int(screen.transfer_session.remaining_quantity) == carried_quantity, "Initial button release must only arm placement and must not place the stack")
+	_assert(screen._carry_target_highlight_enabled and underlying_cell.drop_target_highlight, "Releasing pickup button must enable highlight for the hovered destination slot")
+	underlying_cell._on_mouse_exited()
+	_assert(not screen.tooltip.visible, "Hover description must disappear after leaving the underlying item")
+	_assert(bool(screen._cancel_transfer_session(false)), "Immediate RMB pickup must remain safely cancellable")
+	source_cell = screen.player_panel.find_cell_by_item_id(String(source.instance_id))
+	var left_press := InputEventMouseButton.new()
+	left_press.button_index = MOUSE_BUTTON_LEFT
+	left_press.pressed = true
+	left_press.position = Vector2(9.0, 11.0)
+	source_cell._gui_input(left_press)
+	_assert(screen.transfer_session.is_active() and screen._carry_pickup_button_held, "LMB press must also start carrying immediately before release")
+	_assert(bool(screen._cancel_transfer_session(false)), "Immediate LMB pickup must remain safely cancellable")
+
+
 func _test_click_move_between_visual_slots(controller, screen) -> void:
 	screen.close_external_container()
 	screen.refresh()
@@ -186,16 +258,16 @@ func _test_half_pickup_and_single_place(controller, screen) -> void:
 	var background_right_release := InputEventMouseButton.new()
 	background_right_release.button_index = MOUSE_BUTTON_RIGHT
 	background_right_release.pressed = false
-	screen.player_panel._gui_input(background_right_release)
+	background_right_release.position = screen.player_panel.get_global_rect().end - Vector2(12.0, 12.0)
+	_assert(screen._is_pointer_over_inventory_cell(target_cell.get_global_rect().get_center()), "Global drop routing must preserve releases over inventory cells")
+	_assert(not screen._is_pointer_over_inventory_cell(background_right_release.position), "Global drop routing must recognize free panel background through nested controls")
+	screen._input(background_right_release)
 	_assert(_quantity_in_world(controller, "survey_beacon") == world_before + 1, "RMB outside cells must drop exactly one carried unit to WORLD")
 	var expected_remainder := expected_half - 2
-	_assert(screen.transfer_session.remaining_quantity == expected_remainder if expected_remainder > 0 else not screen.transfer_session.is_active(), "Dropping one outside cells must consume exactly one cursor unit")
+	_assert(screen.transfer_session.remaining_quantity == expected_remainder if expected_remainder > 0 else not screen.transfer_session.is_active(), "RMB outside cells must consume only one cursor unit")
 	if expected_remainder > 0:
 		screen._on_interaction_requested("CARRY_ALL_OR_PLACE_ALL", _empty_target(controller.player_inventory_id, target_slot_b))
 		_assert(not screen.transfer_session.is_active(), "LMB target click must place all cursor remainder")
-		var rest_id: String = screen.slot_projection.item_at_slot(controller.player_inventory_id, target_slot_b)
-		var placed_rest = controller.get_item(rest_id)
-		_assert(placed_rest != null and int(placed_rest.quantity) == expected_remainder, "LMB must place complete remaining cursor stack")
 	_assert(_total_quantity(controller, "survey_beacon") == total_before, "Half pickup and single placement must conserve quantity")
 
 
@@ -299,6 +371,64 @@ func _test_slot_persistence(controller, screen) -> void:
 			_assert(item != null and int(item.relation.get("slot_index", -1)) == int(slot_key), "Serialized assignment must match item relation slot")
 
 
+func _test_background_drop_one_keeps_cursor(controller, screen) -> void:
+	screen.refresh()
+	var source = _first_stack_in_container(controller, controller.player_inventory_id, 2)
+	_assert(source != null, "RMB world-drop test must provide a stack with at least two units")
+	if source == null:
+		return
+	var source_cell = screen.player_panel.find_cell_by_item_id(String(source.instance_id))
+	_assert(source_cell != null, "RMB world-drop stack must render in the player inventory")
+	if source_cell == null:
+		return
+	var definition_id := String(source.definition_id)
+	var source_quantity := int(source.quantity)
+	var world_before := _quantity_in_world(controller, definition_id)
+	var source_payload: Dictionary = source_cell.view_data.duplicate(true)
+	source_payload["icon_texture"] = source_cell.icon_texture
+	screen._on_interaction_requested("CARRY_ALL_OR_PLACE_ALL", source_payload)
+	var background_position: Vector2 = screen.player_panel.get_global_rect().end - Vector2(12.0, 12.0)
+	var background_right_release := InputEventMouseButton.new()
+	background_right_release.button_index = MOUSE_BUTTON_RIGHT
+	background_right_release.pressed = false
+	background_right_release.position = background_position
+	screen._input(background_right_release)
+	_assert(_quantity_in_world(controller, definition_id) == world_before + 1, "RMB free-background release must drop exactly one unit to WORLD")
+	_assert(screen.transfer_session.is_active() and screen.transfer_session.remaining_quantity == source_quantity - 1, "RMB world drop must keep the remaining stack on the cursor")
+	_assert(screen.carry_preview.visible, "RMB world drop must keep the remaining stack preview visible")
+	_assert(screen.carry_preview.position.is_equal_approx(background_position + screen._carry_preview_grab_offset), "RMB world drop must keep the preview attached to the release position")
+	_assert(screen.carry_preview_quantity_label.text == str(source_quantity - 1), "RMB world drop must update the carried quantity label")
+	_assert(bool(screen._cancel_transfer_session(false)), "RMB world-drop remainder must remain safely cancellable")
+
+
+func _test_background_drop_all(controller, screen) -> void:
+	screen.refresh()
+	var source = _first_item_in_container(controller, controller.player_inventory_id)
+	_assert(source != null, "Background drop test must provide an item in the player inventory")
+	if source == null:
+		return
+	var source_cell = screen.player_panel.find_cell_by_item_id(String(source.instance_id))
+	_assert(source_cell != null, "Background drop test item must render in the player inventory")
+	if source_cell == null:
+		return
+	var definition_id := String(source.definition_id)
+	var source_quantity := int(source.quantity)
+	var world_before := _quantity_in_world(controller, definition_id)
+	var source_payload: Dictionary = source_cell.view_data.duplicate(true)
+	source_payload["icon_texture"] = source_cell.icon_texture
+	screen._on_interaction_requested("CARRY_ALL_OR_PLACE_ALL", source_payload)
+	_assert(screen.transfer_session.is_active(), "LMB background drop precondition must carry the complete stack")
+	var background_left_release := InputEventMouseButton.new()
+	background_left_release.button_index = MOUSE_BUTTON_LEFT
+	background_left_release.pressed = false
+	background_left_release.position = screen.player_panel.get_global_rect().end - Vector2(12.0, 12.0)
+	screen._input(background_left_release)
+	_assert(_quantity_in_world(controller, definition_id) == world_before + source_quantity, "LMB outside cells must drop the complete carried stack to WORLD")
+	_assert(not screen.transfer_session.is_active(), "LMB background drop must clear the cursor transfer session")
+	_assert(not screen.carry_preview.visible, "LMB background drop must immediately hide the cursor preview")
+	_assert(not controller.is_transient_inventory_cursor_active(), "LMB background drop must finalize the transient cursor container")
+
+
 func _create_controller() -> Dictionary:
 	var world_root := Node3D.new()
 	world_root.name = "WorldRoot"
@@ -399,6 +529,17 @@ func _find_item(controller, definition_id: String, container_id: String = ""):
 func _first_item_in_container(controller, container_id: String):
 	for item in controller.domain.items.all_items():
 		if Relations.kind_of(item.relation) == Relations.CONTAINER and String(item.relation.get("container_id", "")) == container_id:
+			return item
+	return null
+
+
+func _first_stack_in_container(controller, container_id: String, minimum_quantity: int):
+	for item in controller.domain.items.all_items():
+		if (
+			Relations.kind_of(item.relation) == Relations.CONTAINER
+			and String(item.relation.get("container_id", "")) == container_id
+			and int(item.quantity) >= minimum_quantity
+		):
 			return item
 	return null
 

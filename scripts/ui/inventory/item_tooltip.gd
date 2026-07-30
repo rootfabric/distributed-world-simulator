@@ -8,6 +8,8 @@ var current_item_id: String = ""
 
 
 func show_item(cell_data: Dictionary, pin: bool = false) -> void:
+	custom_minimum_size = Vector2(300.0, 0.0)
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	current_item_id = String(cell_data.get("item_id", ""))
 	pinned = pin
 	var quantity := maxi(1, int(cell_data.get("quantity", 1)))
@@ -29,6 +31,23 @@ func show_item(cell_data: Dictionary, pin: bool = false) -> void:
 			lines.append("UUID: %s" % current_item_id)
 	text_label.text = "\n".join(lines)
 	visible = true
+	reset_size()
+
+
+func show_name_only(cell_data: Dictionary) -> void:
+	current_item_id = String(cell_data.get("item_id", ""))
+	pinned = false
+	var display_name := String(cell_data.get("display_name", "Предмет"))
+	var font := text_label.get_theme_font("font")
+	var font_size := text_label.get_theme_font_size("font_size")
+	var measured_width := font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	custom_minimum_size = Vector2(clampf(measured_width + 24.0, 96.0, 260.0), 0.0)
+	text_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	text_label.clip_text = true
+	text_label.text = display_name
+	visible = not current_item_id.is_empty()
+	reset_size()
 
 
 func clear_item(force: bool = false) -> void:

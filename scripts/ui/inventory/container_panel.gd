@@ -41,6 +41,8 @@ var current_model: Dictionary = {}
 var visual_role: String = "container"
 var active_cell_count: int = 0
 var interaction_profile: InventoryInteractionProfile
+var cursor_carry_active: bool = false
+var carry_target_highlight_enabled: bool = false
 
 
 func _ready() -> void:
@@ -75,6 +77,14 @@ func set_interaction_profile(profile: InventoryInteractionProfile) -> void:
 			child.set_interaction_profile(profile)
 
 
+func set_cursor_carry_state(active: bool, target_highlight_enabled: bool) -> void:
+	cursor_carry_active = active
+	carry_target_highlight_enabled = target_highlight_enabled
+	for child in grid.get_children():
+		if child.has_method("set_cursor_carry_state"):
+			child.set_cursor_carry_state(active, target_highlight_enabled)
+
+
 func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: Callable) -> void:
 	current_model = model.duplicate(true)
 	icon_provider = new_icon_provider
@@ -100,6 +110,8 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 		var cell_data := Dictionary(cells[index])
 		if cell.has_method("set_interaction_profile"):
 			cell.set_interaction_profile(interaction_profile)
+		if cell.has_method("set_cursor_carry_state"):
+			cell.set_cursor_carry_state(cursor_carry_active, carry_target_highlight_enabled)
 		var texture: Texture2D
 		if icon_provider.is_valid():
 			texture = icon_provider.call(cell_data)
@@ -268,6 +280,8 @@ func _ensure_pool_size(required: int) -> void:
 		var cell = ItemCellScene.instantiate()
 		if cell.has_method("set_interaction_profile"):
 			cell.set_interaction_profile(interaction_profile)
+		if cell.has_method("set_cursor_carry_state"):
+			cell.set_cursor_carry_state(cursor_carry_active, carry_target_highlight_enabled)
 		_wire_cell(cell)
 		grid.add_child(cell)
 
@@ -442,8 +456,8 @@ func _forward_context_requested(item_id: String, source_container_id: String, so
 	context_requested.emit(item_id, source_container_id, source_slot_index, screen_position)
 
 
-func _forward_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
-	item_hovered.emit(cell_data, screen_position)
+func _forward_item_hovered(cell_data: Dictionary, cell_rect: Rect2) -> void:
+	item_hovered.emit(cell_data, cell_rect)
 
 
 func _forward_item_unhovered(item_id: String) -> void:

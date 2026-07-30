@@ -18,6 +18,9 @@ var _cell_press_modifiers: Dictionary = {}
 var _cell_dragged_buttons: Dictionary = {}
 var _double_click_buttons: Dictionary = {}
 var _press_actions_emitted: Dictionary = {}
+var _cursor_carry_active: bool = false
+var _carry_target_highlight_enabled: bool = false
+var _carry_hovered: bool = false
 
 
 func _ready() -> void:
@@ -45,6 +48,13 @@ func render_cell(data: Dictionary, texture: Texture2D, validator: Callable) -> v
 	# would cover the inventory and duplicate that information.
 	tooltip_text = ""
 	modulate = Color.WHITE if bool(data.get("projection_match", true)) else Color(1.0, 1.0, 1.0, 0.24)
+	_update_carry_hover()
+
+
+func set_cursor_carry_state(active: bool, target_highlight_enabled: bool) -> void:
+	_cursor_carry_active = active
+	_carry_target_highlight_enabled = target_highlight_enabled
+	_update_carry_hover()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -70,6 +80,16 @@ func _gui_input(event: InputEvent) -> void:
 					mouse_event.double_click
 				) if interaction_profile != null else {}
 				var press_action := String(press_binding.get("action", ""))
+				if (
+					_is_seven_days_style()
+					and not _cursor_carry_active
+					and not item_id.is_empty()
+					and press_action in ["CARRY_ALL_OR_PLACE_ALL", "CARRY_HALF_OR_PLACE_ONE"]
+				):
+					_press_actions_emitted[mouse_event.button_index] = true
+					_handle_click_binding(press_binding, mouse_event.button_index, "PRESS", mouse_event.position)
+					accept_event()
+					return
 				if mouse_event.button_index == MOUSE_BUTTON_LEFT and not item_id.is_empty() and press_action in ["SELECT_ITEM", "QUICK_TRANSFER"]:
 					item_selected.emit(item_id)
 					_press_actions_emitted[mouse_event.button_index] = true
@@ -84,7 +104,7 @@ func _gui_input(event: InputEvent) -> void:
 					var modifiers := Dictionary(_cell_press_modifiers.get(mouse_event.button_index, {}))
 					var release_binding := _resolve_click_binding(mouse_event.button_index, modifiers)
 					if not bool(_press_actions_emitted.get(mouse_event.button_index, false)):
-						_handle_click_binding(release_binding, mouse_event.button_index)
+						_handle_click_binding(release_binding, mouse_event.button_index, "RELEASE", mouse_event.position)
 				_cell_press_positions.erase(mouse_event.button_index)
 				_cell_press_modifiers.erase(mouse_event.button_index)
 				_cell_dragged_buttons.erase(mouse_event.button_index)
@@ -201,7 +221,12 @@ func _resolve_click_binding(button_index: int, modifiers: Dictionary) -> Diction
 	)
 
 
-func _handle_click_binding(binding: Dictionary, button_index: int) -> void:
+func _handle_click_binding(
+	binding: Dictionary,
+	button_index: int,
+	input_phase: String = "RELEASE",
+	pointer_position: Vector2 = Vector2.ZERO
+) -> void:
 	var action := String(binding.get("action", ""))
 	match action:
 		"SELECT_ITEM":
@@ -213,7 +238,11 @@ func _handle_click_binding(binding: Dictionary, button_index: int) -> void:
 		"CARRY_ALL_OR_PLACE_ALL", "CARRY_HALF_OR_PLACE_ONE", "CARRY_EXACT_OR_PLACE_ONE", "PLACE_ALL_OR_SELECT":
 			var payload := view_data.duplicate(true)
 			payload["button_index"] = button_index
-			payload["screen_position"] = get_global_mouse_position()
+			payload["input_phase"] = input_phase
+			payload["screen_position"] = global_position + pointer_position
+			payload["source_cell_screen_position"] = global_position
+			payload["source_cell_size"] = size
+			payload["pointer_local_position"] = pointer_position
 			payload["quantity_mode"] = String(binding.get("quantity_mode", "ALL"))
 			payload["target_container_id"] = target_container_id
 			payload["target_slot_index"] = target_slot_index
@@ -236,11 +265,21 @@ func _button_mask(button_index: int) -> int:
 
 
 func _on_mouse_entered() -> void:
+	_carry_hovered = true
+	_update_carry_hover()
 	if item_id.is_empty():
 		return
-	item_hovered.emit(view_data.duplicate(true), get_global_rect().end + Vector2(8.0, -custom_minimum_size.y))
+	item_hovered.emit(view_data.duplicate(true), get_global_rect())
 
 
 func _on_mouse_exited() -> void:
+	_carry_hovered = false
+	_update_carry_hover()
 	if not item_id.is_empty():
 		item_unhovered.emit(item_id)
+
+
+func _update_carry_hover() -> void:
+	set_drop_target_highlight(
+		_cursor_carry_active and _carry_target_highlight_enabled and _carry_hovered
+	)

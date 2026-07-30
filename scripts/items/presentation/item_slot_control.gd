@@ -30,6 +30,7 @@ var icon_texture: Texture2D
 var title_text: String = ""
 var quantity: int = 0
 var selected: bool = false
+var drop_target_highlight: bool = false
 var drop_validator: Callable
 var interaction_profile: InventoryInteractionProfile
 var interaction_router := Router.new()
@@ -65,6 +66,14 @@ func set_interaction_profile(profile: InventoryInteractionProfile) -> void:
 		_build_content()
 
 
+func set_drop_target_highlight(value: bool) -> void:
+	if drop_target_highlight == value:
+		return
+	drop_target_highlight = value
+	if is_inside_tree() and get_child_count() > 0:
+		_build_content()
+
+
 func _build_content() -> void:
 	for child in get_children():
 		remove_child(child)
@@ -90,7 +99,7 @@ func _build_content() -> void:
 	label.add_theme_font_size_override("font_size", 12)
 	root.add_child(label)
 	var style := StyleBoxFlat.new()
-	if selected:
+	if selected or drop_target_highlight:
 		style.bg_color = Color(0.15, 0.42, 0.62, 0.92)
 		style.border_color = Color(0.4, 0.82, 1.0)
 	else:
@@ -135,8 +144,8 @@ func _build_seven_days_content() -> void:
 	root.add_child(label)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.20, 0.20, 0.18, 0.52)
-	style.border_color = Color(0.96, 0.84, 0.28, 1.0) if selected else Color(0.04, 0.04, 0.035, 0.96)
-	style.set_border_width_all(2 if selected else 1)
+	style.border_color = Color(0.96, 0.84, 0.28, 1.0) if selected or drop_target_highlight else Color(0.04, 0.04, 0.035, 0.96)
+	style.set_border_width_all(2 if selected or drop_target_highlight else 1)
 	style.set_corner_radius_all(0)
 	add_theme_stylebox_override("panel", style)
 

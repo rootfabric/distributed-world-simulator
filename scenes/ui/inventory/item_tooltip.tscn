@@ -20,8 +20,10 @@ content_margin_bottom = 8.0
 
 [node name="ItemTooltip" type="PanelContainer"]
 visible = false
-custom_minimum_size = Vector2(300, 0)
 mouse_filter = 2
+top_level = true
+z_as_relative = false
+z_index = 4094
 theme_override_styles/panel = SubResource("Style_tooltip")
 script = ExtResource("1_tooltip")
 

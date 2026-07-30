@@ -136,7 +136,11 @@ layout_mode = 2
 [node name="StackSplitDialog" parent="." instance=ExtResource("4_split")]
 unique_name_in_owner = true
 
-[node name="ItemTooltip" parent="." instance=ExtResource("6_tooltip")]
+[node name="TooltipLayer" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ItemTooltip" parent="TooltipLayer" instance=ExtResource("6_tooltip")]
 unique_name_in_owner = true
 
 [node name="ItemContextMenu" parent="." instance=ExtResource("7_context")]

@@ -51,10 +51,17 @@ var slot_mode_adapter := SlotModeAdapter.new()
 var carry_preview: PanelContainer
 var carry_preview_icon: TextureRect
 var carry_preview_label: Label
+var carry_preview_quantity_label: Label
 var _requested_panel_size: Vector2 = Vector2(1060.0, 680.0)
 var _panel_has_external: bool = false
 var _panel_external_columns: int = 0
 var _layout_stabilization_pending: bool = false
+var _carry_pickup_button: int = 0
+var _carry_pickup_button_held: bool = false
+var _carry_target_highlight_enabled: bool = false
+var _carry_preview_grab_offset: Vector2 = Vector2(18.0, 18.0)
+var _carry_preview_initial_position: Vector2 = Vector2.ZERO
+var _carry_preview_initial_pending: bool = false
 
 
 func setup(
@@ -147,6 +154,27 @@ func is_inventory_visible() -> bool:
 func _input(event: InputEvent) -> void:
 	if not visible_inventory:
 		return
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if (
+			not mouse_event.pressed
+			and _carry_pickup_button_held
+			and mouse_event.button_index == _carry_pickup_button
+		):
+			get_viewport().set_input_as_handled()
+			call_deferred("_finish_carry_pickup_hold")
+			return
+		if (
+			not mouse_event.pressed
+			and mouse_event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]
+			and _is_seven_days_profile()
+			and transfer_session.is_active()
+			and transfer_session.domain_backed
+			and not _is_pointer_over_inventory_cell(mouse_event.position)
+		):
+			get_viewport().set_input_as_handled()
+			_drop_carried_to_world(mouse_event.button_index, mouse_event.position)
+			return
 	if event is InputEventKey and event.pressed and not event.echo and event.ctrl_pressed and event.keycode == KEY_F:
 		search_edit.grab_focus()
 		search_edit.select_all()
@@ -347,21 +375,52 @@ func _on_drop_outside_requested(item_id: String, requested_quantity: int) -> voi
 
 func _on_panel_background_interaction(button_index: int) -> void:
 	if (
-		button_index != MOUSE_BUTTON_RIGHT
-		or not _is_seven_days_profile()
+		not _is_seven_days_profile()
 		or not transfer_session.is_active()
 		or not transfer_session.domain_backed
 	):
 		return
+	if button_index not in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		return
+	_drop_carried_to_world(button_index, get_global_mouse_position())
+
+
+func _drop_carried_to_world(button_index: int, pointer_position: Vector2) -> void:
 	var dropped_name := transfer_session.display_name
-	var result := cursor_controller.drop_to_world(1)
+	var requested_quantity := 1 if button_index == MOUSE_BUTTON_RIGHT else transfer_session.remaining_quantity
+	var result := cursor_controller.drop_to_world(requested_quantity)
 	if not bool(result.get("success", false)):
 		_present_carry_error(result, transfer_session.source_container_id)
 		return
 	refresh()
 	_update_carry_preview()
-	status_label.text = "Выброшено на поверхность: %s ×1" % dropped_name
-	toast_layer.show_success("Выброшена одна единица")
+	if transfer_session.is_active():
+		carry_preview.position = pointer_position + _carry_preview_grab_offset
+	status_label.text = "Выброшено на поверхность: %s ×%d" % [dropped_name, requested_quantity]
+	toast_layer.show_success("Выброшено ×%d" % requested_quantity)
+
+
+func _is_pointer_over_inventory_cell(screen_position: Vector2) -> bool:
+	var hovered := get_viewport().gui_get_hovered_control()
+	while hovered != null:
+		if hovered is InventoryItemCell:
+			return true
+		hovered = hovered.get_parent_control()
+	var inventory_root: Node = get_parent() if get_parent() != null else self
+	return _control_tree_has_cell_at(inventory_root, screen_position)
+
+
+func _control_tree_has_cell_at(node: Node, screen_position: Vector2) -> bool:
+	for child in node.get_children():
+		if child is InventoryItemCell:
+			var cell := child as InventoryItemCell
+			if cell.is_visible_in_tree() and cell.get_global_rect().has_point(screen_position):
+				return true
+		if child is Control and not (child as Control).is_visible_in_tree():
+			continue
+		if _control_tree_has_cell_at(child, screen_position):
+			return true
+	return false
 
 
 func _on_split_confirmed(
@@ -558,11 +617,15 @@ func _open_split_for_target(
 	)
 
 
-func _on_item_hovered(cell_data: Dictionary, _screen_position: Vector2) -> void:
+func _on_item_hovered(cell_data: Dictionary, cell_rect: Rect2) -> void:
 	if context_menu.visible or split_dialog.visible:
 		return
 	var item_id := String(cell_data.get("item_id", ""))
 	if item_id.is_empty() or view_model == null:
+		return
+	if _is_seven_days_profile():
+		tooltip.show_name_only(cell_data)
+		_position_tooltip(cell_rect)
 		return
 	# The inspector is the only detailed presentation surface; it must still
 	# follow the hovered cell to preserve the established inventory contract.
@@ -574,6 +637,9 @@ func _on_item_hovered(cell_data: Dictionary, _screen_position: Vector2) -> void:
 
 func _on_item_unhovered(_item_id: String) -> void:
 	if view_model == null:
+		return
+	if _is_seven_days_profile():
+		tooltip.clear_item(true)
 		return
 	var selected_model := view_model.build_item_inspector(view_model.selected_item_id)
 	if selected_model.is_empty():
@@ -645,12 +711,27 @@ func _cell_data_for_item(item_id: String) -> Dictionary:
 	}
 
 
-func _position_tooltip(screen_position: Vector2) -> void:
-	var local_position := screen_position - global_position + Vector2(10.0, 8.0)
-	var expected_size := Vector2(maxf(300.0, tooltip.custom_minimum_size.x), maxf(150.0, tooltip.size.y))
-	local_position.x = clampf(local_position.x, 8.0, maxf(8.0, size.x - expected_size.x - 8.0))
-	local_position.y = clampf(local_position.y, 8.0, maxf(8.0, size.y - expected_size.y - 8.0))
-	tooltip.position = local_position
+func _position_tooltip(cell_rect: Rect2) -> void:
+	tooltip.reset_size()
+	var tooltip_size := tooltip.get_combined_minimum_size()
+	tooltip.size = tooltip_size
+	var screen_rect := get_global_rect()
+	var edge_margin := 8.0
+	var slot_gap := 6.0
+	var tooltip_position := Vector2(cell_rect.position.x, cell_rect.end.y + slot_gap)
+	tooltip_position.x = clampf(
+		tooltip_position.x,
+		screen_rect.position.x + edge_margin,
+		maxf(screen_rect.position.x + edge_margin, screen_rect.end.x - tooltip_size.x - edge_margin)
+	)
+	if tooltip_position.y + tooltip_size.y > screen_rect.end.y - edge_margin:
+		tooltip_position.y = cell_rect.position.y - tooltip_size.y - slot_gap
+	tooltip_position.y = clampf(
+		tooltip_position.y,
+		screen_rect.position.y + edge_margin,
+		maxf(screen_rect.position.y + edge_margin, screen_rect.end.y - tooltip_size.y - edge_margin)
+	)
+	tooltip.global_position = tooltip_position
 
 
 func _clear_pending_quantity_drop() -> void:
@@ -871,7 +952,7 @@ func _update_projection_summary(player_model: Dictionary, external_model: Dictio
 func _process(_delta: float) -> void:
 	if carry_preview == null or not carry_preview.visible:
 		return
-	carry_preview.position = get_global_mouse_position() - global_position + Vector2(18.0, 18.0)
+	carry_preview.position = get_global_mouse_position() + _carry_preview_grab_offset
 
 
 func _setup_interaction_profiles(preferences: Dictionary) -> void:
@@ -1018,14 +1099,14 @@ func _apply_profile_visual_style() -> void:
 	add_theme_stylebox_override("panel", style)
 	if carry_preview != null:
 		var carry_style := StyleBoxFlat.new()
-		carry_style.bg_color = Color(0.08, 0.08, 0.07, 0.92)
-		carry_style.border_color = Color(0.95, 0.82, 0.24, 1.0) if seven_days_style else Color(0.45, 0.82, 1.0, 1.0)
-		carry_style.set_border_width_all(2)
+		carry_style.bg_color = Color.TRANSPARENT if seven_days_style else Color(0.08, 0.08, 0.07, 0.92)
+		carry_style.border_color = Color.TRANSPARENT if seven_days_style else Color(0.45, 0.82, 1.0, 1.0)
+		carry_style.set_border_width_all(0 if seven_days_style else 2)
 		carry_style.set_corner_radius_all(2 if seven_days_style else 6)
-		carry_style.content_margin_left = 6.0
-		carry_style.content_margin_top = 5.0
-		carry_style.content_margin_right = 6.0
-		carry_style.content_margin_bottom = 5.0
+		carry_style.content_margin_left = 4.0 if seven_days_style else 6.0
+		carry_style.content_margin_top = 4.0 if seven_days_style else 5.0
+		carry_style.content_margin_right = 4.0 if seven_days_style else 6.0
+		carry_style.content_margin_bottom = 4.0 if seven_days_style else 5.0
 		carry_preview.add_theme_stylebox_override("panel", carry_style)
 
 
@@ -1037,6 +1118,7 @@ func _setup_carry_preview() -> void:
 	carry_preview.top_level = true
 	carry_preview.z_as_relative = false
 	carry_preview.z_index = 4095
+	carry_preview.custom_minimum_size = Vector2(56.0, 56.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.03, 0.04, 0.06, 0.94)
 	style.border_color = Color(0.45, 0.82, 1.0, 1.0)
@@ -1051,15 +1133,27 @@ func _setup_carry_preview() -> void:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	carry_preview.add_child(row)
 	carry_preview_icon = TextureRect.new()
-	carry_preview_icon.custom_minimum_size = Vector2(42.0, 42.0)
+	carry_preview_icon.custom_minimum_size = Vector2(48.0, 48.0)
 	carry_preview_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	carry_preview_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	carry_preview_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(carry_preview_icon)
 	carry_preview_label = Label.new()
+	carry_preview_label.visible = false
 	carry_preview_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	carry_preview_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(carry_preview_label)
+	carry_preview_quantity_label = Label.new()
+	carry_preview_quantity_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	carry_preview_quantity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	carry_preview_quantity_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	carry_preview_quantity_label.add_theme_font_size_override("font_size", 18)
+	carry_preview_quantity_label.add_theme_color_override("font_color", Color.WHITE)
+	carry_preview_quantity_label.add_theme_color_override("font_outline_color", Color(0.03, 0.03, 0.03, 1.0))
+	carry_preview_quantity_label.add_theme_constant_override("outline_size", 4)
+	carry_preview_quantity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	carry_preview_quantity_label.visible = false
+	carry_preview_icon.add_child(carry_preview_quantity_label)
 	add_child(carry_preview)
 	_apply_profile_visual_style()
 
@@ -1139,7 +1233,13 @@ func _begin_transfer_session(payload: Dictionary, carry_quantity: int) -> void:
 	if not bool(result.get("success", false)):
 		_present_carry_error(result, String(payload.get("source_container_id", "")))
 		return
-	_on_item_selected(source_item_id)
+	_prepare_carry_pointer_state(payload)
+	if _is_seven_days_profile():
+		view_model.clear_selected_item()
+		inspector.clear_item()
+		tooltip.clear_item(true)
+	else:
+		_on_item_selected(source_item_id)
 	refresh()
 	_update_carry_preview()
 	status_label.text = "На курсоре: %s ×%d · выберите слот · Esc — вернуть" % [
@@ -1257,12 +1357,60 @@ func _update_carry_preview() -> void:
 	if carry_preview == null:
 		return
 	carry_preview.visible = transfer_session.is_active() and visible_inventory
+	if not transfer_session.is_active():
+		_carry_pickup_button = 0
+		_carry_pickup_button_held = false
+		_carry_target_highlight_enabled = false
+		_sync_carry_target_state()
 	if not carry_preview.visible:
 		return
 	carry_preview_icon.texture = transfer_session.icon_texture
-	carry_preview_label.text = "%s
-×%d" % [transfer_session.display_name, transfer_session.remaining_quantity]
-	carry_preview.position = get_global_mouse_position() - global_position + Vector2(18.0, 18.0)
+	carry_preview_label.visible = false
+	var seven_days_style := _is_seven_days_profile()
+	carry_preview_quantity_label.visible = seven_days_style
+	if seven_days_style:
+		carry_preview_quantity_label.text = str(transfer_session.remaining_quantity)
+	_sync_carry_target_state()
+	if _carry_preview_initial_pending:
+		carry_preview.position = _carry_preview_initial_position
+		_carry_preview_initial_pending = false
+	else:
+		carry_preview.position = get_global_mouse_position() + _carry_preview_grab_offset
+
+
+func _prepare_carry_pointer_state(payload: Dictionary) -> void:
+	var input_phase := String(payload.get("input_phase", "RELEASE"))
+	_carry_pickup_button = int(payload.get("button_index", 0))
+	_carry_pickup_button_held = input_phase == "PRESS" and _carry_pickup_button > 0
+	_carry_target_highlight_enabled = not _carry_pickup_button_held
+	if payload.get("source_cell_screen_position") is Vector2 and payload.get("screen_position") is Vector2:
+		_carry_preview_initial_position = payload.get("source_cell_screen_position") as Vector2
+		_carry_preview_grab_offset = (
+			(payload.get("source_cell_screen_position") as Vector2)
+			- (payload.get("screen_position") as Vector2)
+		)
+		_carry_preview_initial_pending = true
+	else:
+		_carry_preview_grab_offset = Vector2(18.0, 18.0)
+		_carry_preview_initial_pending = false
+
+
+func _finish_carry_pickup_hold() -> void:
+	if not transfer_session.is_active():
+		return
+	_carry_pickup_button_held = false
+	_carry_target_highlight_enabled = true
+	_sync_carry_target_state()
+
+
+func _sync_carry_target_state() -> void:
+	var active := transfer_session.is_active() and _is_seven_days_profile()
+	var highlight_enabled := active and _carry_target_highlight_enabled
+	for panel in [player_panel, external_panel, hotbar_panel]:
+		panel.set_cursor_carry_state(active, highlight_enabled)
+	var parent := get_parent()
+	if parent != null and parent.has_method("_set_persistent_hotbar_carry_state"):
+		parent.call("_set_persistent_hotbar_carry_state", active, highlight_enabled)
 
 
 func _restore_inventory_focus() -> void:
