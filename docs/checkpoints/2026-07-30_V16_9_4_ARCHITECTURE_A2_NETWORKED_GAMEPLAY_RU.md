@@ -74,4 +74,7 @@ Network-результат собран из полного принятого �
 
 ## M1 closure update
 
-Candidate `v16.10.0-runtime-m1-unified-networked-gameplay-core` свёл H1/H2/H3 к общей composition root и вынес validators из authority implementations. `A2-D01` и `A2-D02` отмечены closed by M1. `A2-D03` и `A2-D04` остаются открыты до M3–M6.
+Accepted `v16.10.0-runtime-m1-unified-networked-gameplay-core` свёл H1/H2/H3 к общей composition root и вынес validators из authority implementations. `A2-D01` и `A2-D02` отмечены closed by M1. `A2-D03` и `A2-D04` остаются открыты до M3–M6.
+
+
+M2 candidate `v16.10.1-runtime-m2-dedicated-graphical-client` использует принятый M1 core в топологии headless dedicated + ordinary graphical client.

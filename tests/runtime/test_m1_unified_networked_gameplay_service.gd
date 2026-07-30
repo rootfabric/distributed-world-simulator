@@ -27,7 +27,7 @@ func _test_manifest() -> void:
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.networked_gameplay_core.v1", "M1 manifest schema mismatch")
 	_assert(String(manifest.get("checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "M1 checkpoint mismatch")
 	_assert(String(manifest.get("build_id", "")) == "m1-unified-networked-gameplay-core", "M1 build ID mismatch")
-	_assert(String(manifest.get("status", "")) == "candidate", "M1 status must remain candidate before independent acceptance")
+	_assert(String(manifest.get("status", "")) == "accepted", "M1 status must be accepted before M2")
 	_assert(String(manifest.get("decision", "")) == "UNIFIED_NETWORKED_GAMEPLAY_CORE", "M1 decision mismatch")
 	var component_names: Array[String] = []
 	for value in manifest.get("components", []):

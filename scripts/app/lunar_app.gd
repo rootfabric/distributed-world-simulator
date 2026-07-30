@@ -34,9 +34,11 @@ const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_s
 const NetworkContractUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
 
-const PROJECT_VERSION: String = "16.10.0-runtime-m1-unified-networked-gameplay-core"
-const BUILD_ID: String = "m1-unified-networked-gameplay-core"
+const PROJECT_VERSION: String = "16.10.1-runtime-m2-dedicated-graphical-client"
+const BUILD_ID: String = "m2-dedicated-graphical-client"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
+const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
+const M2_NETWORK_RUN_SPEED_MPS: float = 11.0
 const MINI_TEST_ENTITY_ID: String = "test/chunk-migration-probe"
 const DISPLAY_SETTINGS_PATH: String = "user://display_settings.cfg"
 const DIAGNOSTIC_DIR: String = "user://diagnostics"
@@ -85,8 +87,12 @@ var _h1_player_input_sequence: int = 0
 var _h1_player_operation_sequence: int = 0
 var _h1_last_candidate_hash: String = ""
 var _h1_last_sync_error: String = ""
+var _h1_last_sync_details: Dictionary = {}
 var _h1_sync_count: int = 0
 var _h1_rejection_count: int = 0
+var _h1_interaction_position: Vector3 = Vector3.ZERO
+var _m2_network_input_distance_m: float = 0.0
+var _m2_network_input_frames: int = 0
 
 var spectator_enabled: bool = false
 var mouse_captured: bool = true
@@ -189,6 +195,10 @@ func _ready() -> void:
 	player.name = "LunarPlayer"
 	add_child(player)
 	player.setup(moon_world, logger)
+	if runtime_role == "game-client":
+		player.set_network_replica_mode(true)
+	elif not local_input_enabled:
+		player.set_control_enabled(false)
 	moon_world.register_streaming_actor(player)
 	player.controller_changed.connect(_on_player_controller_changed)
 	player.camera_mode_changed.connect(_on_player_camera_mode_changed)
@@ -217,6 +227,8 @@ func _ready() -> void:
 	world_interactor.name = "WorldInteractor"
 	add_child(world_interactor)
 	world_interactor.setup(player, logger)
+	if not local_input_enabled:
+		world_interactor.set_physics_process(false)
 	world_interactor.focus_changed.connect(_on_interaction_focus_changed)
 	world_interactor.interaction_completed.connect(_on_interaction_completed)
 
@@ -235,9 +247,15 @@ func _ready() -> void:
 	)
 
 	_restore_saved_location_or_random_spawn()
+	# Spawn helpers enable local CharacterBody physics. Re-apply the runtime role
+	# after placement so dedicated and graphical replica roles remain passive.
+	if runtime_role == "game-client":
+		player.set_network_replica_mode(true)
+	elif not local_input_enabled:
+		player.set_control_enabled(false)
 	_ensure_player_entity_registered()
 	zone_manager.update_observer(player.get_world_position(), false)
-	if runtime_role != "listen-host":
+	if runtime_role not in ["listen-host", "game-client", "dedicated-server"]:
 		_setup_item_gameplay()
 	# The common simulator starts every world in gameplay mode. The large Lunar
 	# diagnostics panel remains available through ui.menu.toggle, but it is not
@@ -248,7 +266,7 @@ func _ready() -> void:
 
 
 func create_playable_listen_host_config() -> Dictionary:
-	if runtime_role != "listen-host" or player == null:
+	if runtime_role not in ["listen-host", "dedicated-server"] or player == null:
 		return {}
 	return {
 		"authority_owner_id": local_authority_id,
@@ -269,8 +287,8 @@ func create_playable_listen_host_config() -> Dictionary:
 
 
 func attach_playable_client_session(session) -> Dictionary:
-	if runtime_role != "listen-host":
-		return {"success": false, "error_code": "LISTEN_HOST_ROLE_REQUIRED"}
+	if runtime_role not in ["listen-host", "game-client"]:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ROLE_REQUIRED"}
 	if playable_client_session != null or item_gameplay != null:
 		return {"success": false, "error_code": "PLAYABLE_CLIENT_ALREADY_ATTACHED"}
 	if session == null or not session is RefCounted:
@@ -283,6 +301,12 @@ func attach_playable_client_session(session) -> Dictionary:
 				"method": method_name,
 			}
 	playable_client_session = session
+	var initial_player_snapshot: Dictionary = playable_client_session.get_snapshot(
+		PlayableAuthorityScript.PLAYER_ENTITY_ID
+	)
+	if not _apply_h1_player_snapshot(initial_player_snapshot):
+		playable_client_session = null
+		return {"success": false, "error_code": "PLAYABLE_PLAYER_REPLICA_MISSING"}
 	var setup_result: Dictionary = _setup_item_gameplay()
 	if not bool(setup_result.get("success", false)):
 		playable_client_session = null
@@ -309,7 +333,9 @@ func _setup_item_gameplay() -> Dictionary:
 	add_child(item_gameplay)
 
 	var setup_result: Dictionary
-	if runtime_role == "listen-host":
+	if playable_client_session != null:
+		if runtime_role not in ["listen-host", "game-client"]:
+			return {"success": false, "error_code": "PLAYABLE_REPLICA_ROLE_REQUIRED"}
 		if playable_client_session == null:
 			return {"success": false, "error_code": "PLAYABLE_CLIENT_SESSION_REQUIRED"}
 		var item_snapshot: Dictionary = playable_client_session.get_snapshot(
@@ -384,6 +410,8 @@ func _process(delta: float) -> void:
 	if moon_world == null or player == null:
 		return
 	if _h1_attached and not spectator_enabled:
+		if runtime_role == "game-client":
+			_apply_m2_network_input(delta)
 		_sync_h1_player_state(delta)
 
 	var active_world_position: Vector3
@@ -1538,7 +1566,11 @@ func _create_h1_player_state(input_sequence: int) -> Dictionary:
 		player.get_world_position(),
 		player.global_transform.basis,
 		player.velocity,
-		player.global_position,
+		(
+			_h1_interaction_position
+			if runtime_role == "game-client" and _h1_attached
+			else player.global_position
+		),
 		player.get_controller_id(),
 		player.get_camera_mode(),
 		player.is_flashlight_enabled(),
@@ -1572,17 +1604,26 @@ func _sync_h1_player_state(delta: float) -> void:
 	_h1_player_input_sequence += 1
 	_h1_player_operation_sequence += 1
 	probe_state["last_input_sequence"] = _h1_player_input_sequence
+	var operation_id: String = (
+		"operation/m2/player/%d/%d" % [OS.get_process_id(), _h1_player_operation_sequence]
+		if runtime_role == "game-client"
+		else "operation/h1/player/%d" % _h1_player_operation_sequence
+	)
 	var result: Dictionary = playable_client_session.submit_player_state(
 		probe_state,
 		bounded_delta,
-		"operation/h1/player/%d" % _h1_player_operation_sequence
+		operation_id
 	)
 	if not bool(result.get("success", false)):
 		_h1_rejection_count += 1
 		_h1_last_sync_error = String(result.get("error_code", "PLAYER_SYNC_REJECTED"))
+		_h1_last_sync_details = result.duplicate(true)
 		_apply_h1_player_snapshot(
 			Dictionary(result.get("details", {}).get("snapshot", {}))
 		)
+		# Do not retry the same rejected candidate every rendered frame. The next
+		# command is emitted only after new local input changes replica state.
+		_h1_last_candidate_hash = _h1_state_content_hash(_create_h1_player_state(0))
 		return
 	var snapshot: Dictionary = Dictionary(result.get("details", {}).get("snapshot", {}))
 	if not _apply_h1_player_snapshot(snapshot):
@@ -1591,6 +1632,7 @@ func _sync_h1_player_state(delta: float) -> void:
 		return
 	_h1_last_candidate_hash = content_hash
 	_h1_last_sync_error = ""
+	_h1_last_sync_details = {}
 	_h1_sync_count += 1
 
 
@@ -1609,6 +1651,7 @@ func _apply_h1_player_snapshot(snapshot: Dictionary) -> bool:
 		player.global_position
 	)
 	player.velocity = PlayableStateCodec.player_velocity(state)
+	_h1_interaction_position = PlayableStateCodec.player_interaction_position(state)
 	if player.get_controller_id() != String(state.get("controller_id", "")):
 		player.activate_controller(String(state.get("controller_id", "")))
 	if player.get_camera_mode() != String(state.get("camera_mode", "")):
@@ -1622,6 +1665,126 @@ func _apply_h1_player_snapshot(snapshot: Dictionary) -> bool:
 	return true
 
 
+func _apply_m2_network_input(delta: float) -> void:
+	if runtime_role != "game-client" or player == null or not local_input_enabled:
+		return
+	if item_gameplay != null and item_gameplay.inventory_open:
+		return
+	var input_vector := Input.get_vector(
+		"move_left", "move_right", "move_forward", "move_back"
+	)
+	if input_vector.length_squared() < 0.000001:
+		player.velocity = Vector3.ZERO
+		return
+	var world_position: Vector3 = player.get_world_position()
+	var up: Vector3 = world_position.normalized()
+	if up.length_squared() < 0.5:
+		up = player.global_transform.basis.y.normalized()
+	var view_basis: Basis = player.get_view_basis()
+	var forward: Vector3 = (-view_basis.z).slide(up)
+	var right: Vector3 = view_basis.x.slide(up)
+	if forward.length_squared() < 0.000001:
+		forward = (-player.global_transform.basis.z).slide(up)
+	if right.length_squared() < 0.000001:
+		right = player.global_transform.basis.x.slide(up)
+	forward = forward.normalized()
+	right = right.normalized()
+	var direction: Vector3 = right * input_vector.x + forward * -input_vector.y
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
+	var speed: float = (
+		M2_NETWORK_RUN_SPEED_MPS
+		if Input.is_action_pressed("boost")
+		else M2_NETWORK_WALK_SPEED_MPS
+	)
+	var bounded_delta: float = clampf(delta, 0.0, 0.05)
+	var offset: Vector3 = direction * speed * bounded_delta
+	if offset.length_squared() <= 0.0:
+		return
+	player.set_world_position(world_position + offset)
+	_h1_interaction_position += offset
+	player.velocity = direction * speed
+	_m2_network_input_distance_m += offset.length()
+	_m2_network_input_frames += 1
+
+
+func m2_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if runtime_role != "game-client" or not _h1_attached or player == null:
+		return {"success": false, "error_code": "M2_GAME_CLIENT_NOT_READY"}
+	var before_position: Vector3 = player.get_world_position()
+	player.set_world_position(before_position + offset)
+	_h1_interaction_position += offset
+	player.velocity = Vector3.ZERO
+	return {
+		"success": true,
+		"before_position": _vector_to_array(before_position),
+		"candidate_position": _vector_to_array(player.get_world_position()),
+		"sync_count": _h1_sync_count,
+	}
+
+
+func m2_open_inventory_and_select_hotbar(index: int) -> Dictionary:
+	if runtime_role != "game-client" or item_gameplay == null:
+		return {"success": false, "error_code": "M2_ITEM_REPLICA_NOT_READY"}
+	if not item_gameplay.inventory_open:
+		item_gameplay.toggle_inventory()
+	var selection: Dictionary = item_gameplay.select_hotbar(index)
+	return {
+		"success": bool(selection.get("success", false)),
+		"selection": selection.duplicate(true),
+		"inventory_open": item_gameplay.inventory_open,
+		"selected_hotbar_index": item_gameplay.selected_hotbar_index,
+		"runtime_mode": item_gameplay.runtime_mode,
+		"replica_revision": item_gameplay.network_replica_revision,
+		"replica_checksum": item_gameplay.network_replica_checksum,
+	}
+
+
+func create_m2_graphical_client_report() -> Dictionary:
+	var player_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.PLAYER_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	var item_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	return {
+		"schema": "planet_simulator.m2_graphical_world_report.v1",
+		"runtime_role": runtime_role,
+		"attached": _h1_attached,
+		"player_entity_id": PlayableAuthorityScript.PLAYER_ENTITY_ID,
+		"player_world_position": _vector_to_array(player.get_world_position()) if player != null else [],
+		"interaction_position": _vector_to_array(_h1_interaction_position),
+		"player_input_sequence": _h1_player_input_sequence,
+		"player_sync_count": _h1_sync_count,
+		"player_rejection_count": _h1_rejection_count,
+		"last_sync_error": _h1_last_sync_error,
+		"last_sync_details": _h1_last_sync_details.duplicate(true),
+		"player_snapshot": player_snapshot,
+		"item_snapshot": item_snapshot,
+		"item_controller_mode": String(item_gameplay.runtime_mode) if item_gameplay != null else "",
+		"inventory_open": bool(item_gameplay.inventory_open) if item_gameplay != null else false,
+		"selected_hotbar_index": int(item_gameplay.selected_hotbar_index) if item_gameplay != null else -1,
+		"item_replica_revision": int(item_gameplay.network_replica_revision) if item_gameplay != null else -1,
+		"item_replica_checksum": String(item_gameplay.network_replica_checksum) if item_gameplay != null else "",
+		"active_camera": (
+			String(player.get_active_camera().get_path())
+			if player != null and player.get_active_camera() != null and player.get_active_camera().current
+			else NodePath()
+		),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": bool(player.is_network_replica_mode()) if player != null else false,
+		"network_input_frames": _m2_network_input_frames,
+		"network_input_distance_m": _m2_network_input_distance_m,
+		"direct_authority_references": 0,
+		"direct_domain_references": 0,
+	}
+
+
 func _create_h1_runtime_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.h1_world_runtime_report.v1",
@@ -1632,6 +1795,7 @@ func _create_h1_runtime_report() -> Dictionary:
 		"player_sync_count": _h1_sync_count,
 		"player_rejection_count": _h1_rejection_count,
 		"last_sync_error": _h1_last_sync_error,
+		"last_sync_details": _h1_last_sync_details.duplicate(true),
 		"item_controller_mode": (
 			String(item_gameplay.runtime_mode)
 			if item_gameplay != null

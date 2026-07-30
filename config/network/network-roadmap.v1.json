@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 21,
+  "document_revision": 22,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-30T04:00:00Z",
-  "project_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
-  "runtime_base_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "updated_at_utc": "2026-07-30T06:20:00Z",
+  "project_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+  "runtime_base_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -396,7 +396,7 @@
     {
       "id": "M1",
       "name": "Unified Networked Gameplay Core",
-      "status": "current_candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
       "branch": "feature/m1-unified-networked-gameplay-core",
       "depends_on": [
@@ -426,12 +426,13 @@
         "contracts": "tests/runtime/test_m1_networked_gameplay_contracts.gd",
         "service": "tests/runtime/test_m1_unified_networked_gameplay_service.gd",
         "manifest": "config/network/networked-gameplay-core.v1.json"
-      }
+      },
+      "accepted_at_utc": "2026-07-30T06:20:00Z"
     },
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "next_after_M1",
+      "status": "current_candidate",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -443,12 +444,13 @@
         "authoritative movement and correction",
         "inventory and hotbar are replica-driven",
         "reconnect restores the same player entity"
-      ]
+      ],
+      "implementation_manifest": "config/network/dedicated-graphical-client.v1.json"
     },
     {
       "id": "M3",
       "name": "Dedicated server plus two graphical clients",
-      "status": "planned",
+      "status": "next_after_M2",
       "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
       "branch": "feature/m3-dedicated-graphical-multiplayer",
       "depends_on": [
@@ -723,7 +725,7 @@
     "A2"
   ],
   "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
-  "current_gate": "M1 Unified Networked Gameplay Core",
+  "current_gate": "M2 dedicated server plus one graphical client candidate",
   "architecture_base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "strategy_decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
   "single_server_multiplayer_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
@@ -742,5 +744,5 @@
     "N5",
     "N6"
   ],
-  "current_implementation_manifest": "config/network/networked-gameplay-core.v1.json"
+  "current_implementation_manifest": "config/network/dedicated-graphical-client.v1.json"
 }

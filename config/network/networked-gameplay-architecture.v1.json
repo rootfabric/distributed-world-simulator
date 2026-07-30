@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.networked_gameplay_architecture.v1",
-  "document_revision": 3,
+  "document_revision": 4,
   "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "build_id": "a2-networked-gameplay-audit-freeze",
   "status": "accepted",
@@ -299,7 +299,10 @@
   "accepted_at_utc": "2026-07-30T03:01:00Z",
   "post_a2_strategy_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "post_a2_strategy_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
-  "updated_at_utc": "2026-07-30T04:00:00Z",
+  "updated_at_utc": "2026-07-30T06:20:00Z",
   "m1_core_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
-  "m1_core_manifest": "config/network/networked-gameplay-core.v1.json"
+  "m1_core_manifest": "config/network/networked-gameplay-core.v1.json",
+  "m2_graphical_client_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+  "m2_graphical_client_manifest": "config/network/dedicated-graphical-client.v1.json",
+  "m2_evidence_status": "candidate"
 }

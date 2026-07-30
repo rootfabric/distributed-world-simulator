@@ -73,6 +73,8 @@ $Tests = @(
     "res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
     "res://tests/runtime/test_m1_networked_gameplay_contracts.gd",
     "res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
+    "res://tests/runtime/test_m2_graphical_client_contracts.gd",
+    "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -133,7 +135,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.0-runtime-m1-unified-networked-gameplay-core"
+    checkpoint = "v16.10.1-runtime-m2-dedicated-graphical-client"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot

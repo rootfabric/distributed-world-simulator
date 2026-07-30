@@ -17,10 +17,13 @@ const PresentationHostScript = preload("res://scripts/runtime/presentation_host.
 const EntityRegistryKernelPortScript = preload("res://scripts/runtime/ports/entity_registry_kernel_port.gd")
 const WorldRepositoryKernelPortScript = preload("res://scripts/runtime/ports/world_repository_kernel_port.gd")
 const ListenHostRuntimeScript = preload("res://scripts/runtime/listen_host/listen_host_runtime.gd")
+const DedicatedGameplayServerRuntimeScript = preload("res://scripts/runtime/networked_gameplay/transports/dedicated_gameplay_server_runtime.gd")
+const GraphicalGameClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd")
+const M2GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m2_graphical_acceptance_driver.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.10.0-runtime-m1-unified-networked-gameplay-core"
-const FOUNDATION_BUILD_ID: String = "m1-unified-networked-gameplay-core"
+const FOUNDATION_CHECKPOINT: String = "v16.10.1-runtime-m2-dedicated-graphical-client"
+const FOUNDATION_BUILD_ID: String = "m2-dedicated-graphical-client"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -76,6 +79,11 @@ var _runtime_release_blocked: bool = false
 var _process_quit_handler: Callable
 var listen_host_runtime
 var listen_host_runtime_setup: Dictionary = {}
+var dedicated_gameplay_server_runtime
+var dedicated_gameplay_server_setup: Dictionary = {}
+var graphical_game_client_runtime
+var graphical_game_client_setup: Dictionary = {}
+var m2_graphical_acceptance_driver
 
 
 func _ready() -> void:
@@ -150,6 +158,43 @@ func _ready() -> void:
 			get_tree().quit(4)
 			return
 
+	if runtime_role == RuntimeRoleScript.DEDICATED_SERVER:
+		dedicated_gameplay_server_runtime = DedicatedGameplayServerRuntimeScript.new()
+		dedicated_gameplay_server_runtime.name = "DedicatedGameplayServerRuntime"
+		add_child(dedicated_gameplay_server_runtime)
+		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup({
+			"host": String(launch_options.get("server_address", "127.0.0.1")),
+			"port": int(launch_options.get("server_port", 24580)),
+			"result_file": String(launch_options.get("m2_result_file", "")),
+			"authority_owner_id": String(launch_options.get("node_id", "local-dedicated-server")),
+			"authority_epoch": 1,
+			"gameplay_session_id": "session/m2/player/%s" % String(
+				launch_options.get("player_identity", "local-astronaut")
+			),
+		})
+		if not bool(dedicated_gameplay_server_setup.get("success", false)):
+			push_error("DedicatedGameplayServerRuntime setup failed: %s" % dedicated_gameplay_server_setup)
+			get_tree().quit(5)
+			return
+
+	if runtime_role == RuntimeRoleScript.GAME_CLIENT:
+		graphical_game_client_runtime = GraphicalGameClientRuntimeScript.new()
+		graphical_game_client_runtime.name = "GraphicalGameClientRuntime"
+		add_child(graphical_game_client_runtime)
+		graphical_game_client_runtime.session_ready.connect(_on_graphical_game_client_session_ready)
+		graphical_game_client_runtime.connection_failed.connect(_on_graphical_game_client_connection_failed)
+		graphical_game_client_setup = graphical_game_client_runtime.setup({
+			"host": String(launch_options.get("server_address", "127.0.0.1")),
+			"port": int(launch_options.get("server_port", 24580)),
+			"logical_player_id": String(launch_options.get("player_identity", "local-astronaut")),
+			"connect_timeout_ms": int(launch_options.get("connect_timeout_ms", 15000)),
+			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
+		})
+		if not bool(graphical_game_client_setup.get("success", false)):
+			push_error("GraphicalGameClientRuntime setup failed: %s" % graphical_game_client_setup)
+			get_tree().quit(6)
+			return
+
 	_register_core_commands()
 	_register_core_tests()
 
@@ -221,6 +266,10 @@ func _refresh_runtime_descriptor() -> void:
 	runtime_descriptor["world_id"] = current_world_id
 	if listen_host_runtime != null:
 		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
+	if dedicated_gameplay_server_runtime != null:
+		runtime_descriptor["dedicated_gameplay_server"] = dedicated_gameplay_server_runtime.get_report()
+	if graphical_game_client_runtime != null:
+		runtime_descriptor["graphical_game_client"] = graphical_game_client_runtime.get_report()
 
 
 func _physics_process(delta: float) -> void:
@@ -440,6 +489,23 @@ func load_world(world_id: String, remember_current: bool = true) -> Dictionary:
 			),
 			"details": playable_attach.get("details", {}),
 		}])
+	var dedicated_attach: Dictionary = _attach_dedicated_gameplay_server(runtime)
+	if not bool(dedicated_attach.get("success", false)):
+		return _abort_runtime_load(normalized, [{
+			"owner_id": RUNTIME_COMMAND_OWNER,
+			"reason": String(
+				dedicated_attach.get("error_code", "DEDICATED_GAMEPLAY_ATTACH_FAILED")
+			),
+			"details": dedicated_attach.get("details", {}),
+		}])
+	if graphical_game_client_runtime != null and graphical_game_client_runtime.is_ready():
+		var remote_attach: Dictionary = _attach_graphical_game_client(runtime, graphical_game_client_runtime.get_playable_client_session())
+		if not bool(remote_attach.get("success", false)):
+			return _abort_runtime_load(normalized, [{
+				"owner_id": RUNTIME_COMMAND_OWNER,
+				"reason": String(remote_attach.get("error_code", "GRAPHICAL_GAME_CLIENT_ATTACH_FAILED")),
+				"details": remote_attach.get("details", {}),
+			}])
 	if listen_host_runtime != null and not runtime_descriptor.is_empty():
 		runtime_descriptor["listen_host_runtime"] = listen_host_runtime.get_report()
 	_bind_runtime_kernel_services(runtime)
@@ -661,6 +727,18 @@ func _dispose_current_runtime(reason: String) -> Dictionary:
 				"runtime_retained": true,
 				"world_id": current_world_id,
 				"details": playable_detach,
+			}
+	if dedicated_gameplay_server_runtime != null:
+		var dedicated_detach: Dictionary = dedicated_gameplay_server_runtime.detach_playable_world()
+		if not bool(dedicated_detach.get("success", false)):
+			_runtime_release_blocked = true
+			return {
+				"success": false,
+				"drained": true,
+				"error_code": "DEDICATED_GAMEPLAY_DETACH_FAILED",
+				"runtime_retained": true,
+				"world_id": current_world_id,
+				"details": dedicated_detach,
 			}
 	if runtime.get_parent() != null:
 		runtime.get_parent().remove_child(runtime)
@@ -1477,6 +1555,7 @@ func _complete_graceful_shutdown() -> void:
 				stopped_result
 			)
 			return
+	_stop_networked_gameplay_runtimes()
 	_print_lifecycle_event("node_stopped", {
 		"reason": _shutdown_reason,
 		"exit_code": _requested_exit_code,
@@ -1616,12 +1695,81 @@ func _attach_playable_listen_host(runtime: Node) -> Dictionary:
 	}
 
 
+func _attach_dedicated_gameplay_server(runtime: Node) -> Dictionary:
+	if dedicated_gameplay_server_runtime == null or runtime == null:
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	if not runtime.has_method("create_playable_listen_host_config"):
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	var config_value = runtime.call("create_playable_listen_host_config")
+	if not config_value is Dictionary or Dictionary(config_value).is_empty():
+		return {"success": false, "error_code": "DEDICATED_PLAYABLE_CONFIG_REQUIRED", "details": {}}
+	return dedicated_gameplay_server_runtime.attach_playable_world(Dictionary(config_value))
+
+
+func _attach_graphical_game_client(runtime: Node, session) -> Dictionary:
+	if graphical_game_client_runtime == null or runtime == null:
+		return {"success": true, "error_code": "", "details": {"required": false}}
+	if not runtime.has_method("attach_playable_client_session"):
+		return {"success": false, "error_code": "GRAPHICAL_RUNTIME_SESSION_ATTACH_MISSING", "details": {}}
+	var attached_value = runtime.call("attach_playable_client_session", session)
+	if not attached_value is Dictionary:
+		return {"success": false, "error_code": "INVALID_GRAPHICAL_CLIENT_ATTACH_RESULT", "details": {}}
+	var attached: Dictionary = Dictionary(attached_value)
+	if bool(attached.get("success", false)):
+		_setup_m2_graphical_acceptance_driver()
+	return attached
+
+
+func _on_graphical_game_client_session_ready(session) -> void:
+	if current_runtime == null or not is_instance_valid(current_runtime):
+		return
+	var attached: Dictionary = _attach_graphical_game_client(current_runtime, session)
+	if not bool(attached.get("success", false)):
+		push_error("Graphical game client attach failed: %s" % attached)
+		request_graceful_shutdown("graphical_game_client_attach_failed", 7)
+	_refresh_runtime_descriptor()
+
+
+func _on_graphical_game_client_connection_failed(error_code: String, details: Dictionary) -> void:
+	push_error("Graphical game client connection failed: %s %s" % [error_code, details])
+	request_graceful_shutdown("graphical_game_client_connection_failed", 8)
+
+
+func _setup_m2_graphical_acceptance_driver() -> void:
+	if m2_graphical_acceptance_driver != null:
+		return
+	var phase: int = int(launch_options.get("m2_phase", 0))
+	var result_file: String = String(launch_options.get("m2_result_file", "")).strip_edges()
+	if phase not in [1, 2] or result_file.is_empty():
+		return
+	m2_graphical_acceptance_driver = M2GraphicalAcceptanceDriverScript.new()
+	m2_graphical_acceptance_driver.name = "M2GraphicalAcceptanceDriver"
+	add_child(m2_graphical_acceptance_driver)
+	var setup_result: Dictionary = m2_graphical_acceptance_driver.setup(self, graphical_game_client_runtime, {
+		"result_file": result_file,
+		"expected_state_file": String(launch_options.get("m2_expected_state_file", "")),
+		"phase": phase,
+	})
+	if not bool(setup_result.get("success", false)):
+		push_error("M2 graphical acceptance driver setup failed: %s" % setup_result)
+		request_graceful_shutdown("m2_acceptance_driver_setup_failed", 9)
+
+
+func _stop_networked_gameplay_runtimes() -> void:
+	if graphical_game_client_runtime != null and is_instance_valid(graphical_game_client_runtime):
+		graphical_game_client_runtime.stop()
+	if dedicated_gameplay_server_runtime != null and is_instance_valid(dedicated_gameplay_server_runtime):
+		dedicated_gameplay_server_runtime.stop()
+
+
 func _bind_runtime_kernel_services(runtime: Node) -> void:
 	if simulation_kernel == null:
 		return
 	var store = null
 	if listen_host_runtime != null:
 		store = listen_host_runtime.get_playable_authority_world_entity_store_for_kernel()
+	if store == null and dedicated_gameplay_server_runtime != null:
+		store = dedicated_gameplay_server_runtime.get_world_entity_store_for_kernel()
 	if store == null and runtime != null and runtime.has_method("get_world_entity_store"):
 		store = runtime.call("get_world_entity_store")
 	simulation_kernel.set_world_entity_store(store)
@@ -1792,6 +1940,7 @@ func _failure(code: String, message: String) -> Dictionary:
 
 
 func _exit_tree() -> void:
+	_stop_networked_gameplay_runtimes()
 	if _runtime_release_blocked:
 		return
 	if current_runtime != null and is_instance_valid(current_runtime):

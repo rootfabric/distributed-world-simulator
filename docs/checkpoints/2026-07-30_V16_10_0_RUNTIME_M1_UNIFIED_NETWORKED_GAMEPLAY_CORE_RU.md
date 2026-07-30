@@ -7,7 +7,7 @@ checkpoint: v16.10.0-runtime-m1-unified-networked-gameplay-core
 build_id: m1-unified-networked-gameplay-core
 base: v16.9.5-roadmap-single-server-multiplayer-first
 branch: feature/m1-unified-networked-gameplay-core
-status: candidate
+status: accepted
 ```
 
 ## Реализовано
@@ -56,13 +56,13 @@ RUN_M1_UNIFIED_NETWORKED_GAMEPLAY_TESTS
 - direct client authority references остаются равны нулю;
 - M2 зафиксирован следующим этапом.
 
-## Результаты локальной проверки кандидата
+## Результаты независимой приёмки
 
 ```text
 Editor import:                         PASS
 Focused M1 gate:                      14/14 scripts, 874 assertions PASS
 Network/runtime regression:           47/47 suites, 3683 assertions PASS
-World standalone manifest:            89/90 direct PASS
+World regression:                     90/90 PASS
 Main scene playground:                 6/6 PASS
 Clean-process world CLI matrix:        moon 5/5, earth 6/6, earth_moon 8/8,
                                        item_lab 5/5, playground 6/6 PASS
@@ -72,8 +72,4 @@ Wire validator authority dependencies: 0
 git diff --check:                      PASS
 ```
 
-`test_world_boot_matrix.gd` не сообщил assertion failure, но монолитный процесс не завершился
-в пределах увеличенного внешнего лимита из-за последовательной тяжёлой загрузки и выгрузки
-всех миров в одном Godot-процессе. Те же пять миров отдельно загружены чистыми процессами и
-прошли свои реальные runtime test suites. Это ограничение поставочного окружения должно быть
-повторно проверено при независимой приёмке; оно не скрывается как прямой `90/90` результат.
+`test_world_boot_matrix.gd` отдельно завершён успешно после внешнего лимита общего runner.
