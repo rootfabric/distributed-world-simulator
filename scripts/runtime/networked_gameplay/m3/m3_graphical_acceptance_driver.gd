@@ -16,6 +16,8 @@ var _stage := "WAIT_READY"
 var _move_result: Dictionary = {}
 var _second_move_result: Dictionary = {}
 var _presentation_result: Dictionary = {}
+var _playground_item_result: Dictionary = {}
+var _playground_item_verified := false
 var _initial_ownership_epoch := 0
 var _failures: Array[String] = []
 var _finished := false
@@ -58,6 +60,28 @@ func _process(_delta: float) -> void:
 			if int(world.get("remote_presenter_count", 0)) != 1: return
 			_validate_graphical_world(world)
 			if not _failures.is_empty(): _finish(false); return
+			if (
+				String(world.get("world_id", "")) == "playground"
+				and not _playground_item_verified
+			):
+				if not runtime.has_method("m4_execute_item_command"):
+					_failures.append("Playground M4 item command adapter is missing")
+					_finish(false)
+					return
+				_playground_item_result = runtime.m4_execute_item_command(
+					"inventory.select_hotbar",
+					{"selected_hotbar_index": _phase % 8},
+					"operation/m4/playground/acceptance/%s/%d/%d"
+					% [_client_id, _phase, OS.get_process_id()]
+				)
+				if not bool(_playground_item_result.get("success", false)):
+					_failures.append(
+						"Playground M4 item command failed: %s"
+						% _playground_item_result
+					)
+					_finish(false)
+					return
+				_playground_item_verified = true
 			_initial_ownership_epoch = int(local.get("ownership_epoch", 0))
 			if _phase == 3:
 				if _initial_ownership_epoch < 2: return
@@ -174,6 +198,7 @@ func _write_report(state: String, passed: bool, world: Dictionary, checksum: Str
 		"client_runtime": _client.get_report(), "world": world.duplicate(true),
 		"move_result": _move_result.duplicate(true), "second_move_result": _second_move_result.duplicate(true),
 		"presentation_result": _presentation_result.duplicate(true),
+		"playground_item_result": _playground_item_result.duplicate(true),
 		"initial_ownership_epoch": _initial_ownership_epoch,
 		"convergence_checksum": checksum if not checksum.is_empty() else String(_client.get_snapshot().get("checksum", "")),
 		"leave_result": leave_result.duplicate(true), "failures": _failures.duplicate(),

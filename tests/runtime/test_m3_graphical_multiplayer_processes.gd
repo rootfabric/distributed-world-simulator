@@ -11,8 +11,18 @@ var failures: Array[String] = []
 var assertions := 0
 var child_pids: Array[int] = []
 var xvfb_pid := -1
+var test_world := "moon"
 
 func _init() -> void:
+	var requested_world := OS.get_environment(
+		"PLANET_M3_PROCESS_WORLD"
+	).strip_edges().to_lower()
+	if not requested_world.is_empty():
+		test_world = requested_world
+	_assert(test_world in ["moon", "playground"], "supported graphical process world")
+	if test_world not in ["moon", "playground"]:
+		_finish()
+		return
 	var port := _find_available_port()
 	_assert(port > 0, "UDP port allocation")
 	if port <= 0: _finish(); return
@@ -31,7 +41,7 @@ func _init() -> void:
 	var project_root := ProjectSettings.globalize_path("res://")
 	var server_pid := _spawn(executable, [
 		"--headless", "--quiet", "--path", project_root, "--log-file", root.path_join("server.log"), "--",
-		"--role=dedicated-server", "--world=moon", "--node-id=m3-dedicated-server",
+		"--role=dedicated-server", "--world=%s" % test_world, "--node-id=m3-dedicated-server",
 		"--server-address=127.0.0.1", "--server-port=%d" % port,
 		"--m3-result-file=%s" % server_path, "--shutdown-after-ms=300000",
 	], root.path_join("user-server"), "")
@@ -78,7 +88,7 @@ func _init() -> void:
 func _spawn_client(executable: String, project_root: String, port: int, client_id: String, phase: int, result_path: String, peer_path: String, log_path: String, user_root: String, display_name: String) -> int:
 	return _spawn(executable, [
 		"--quiet", "--path", project_root, "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--log-file", log_path, "--",
-		"--role=game-client", "--world=moon", "--node-id=m3-client-%s" % client_id,
+		"--role=game-client", "--world=%s" % test_world, "--node-id=m3-client-%s" % client_id,
 		"--server-address=127.0.0.1", "--server-port=%d" % port, "--player-identity=%s" % client_id,
 		"--connect-timeout-ms=60000", "--command-timeout-ms=12000",
 		"--m3-result-file=%s" % result_path, "--m3-peer-result-file=%s" % peer_path, "--m3-phase=%d" % phase,
@@ -108,6 +118,23 @@ func _start_virtual_display(root: String) -> String:
 
 func _validate(a1: Dictionary, b: Dictionary, a2: Dictionary, server: Dictionary) -> void:
 	for report in [a1, b, a2]:
+		if test_world == "playground":
+			_assert(
+				String(report.get("world", {}).get("world_id", "")) == test_world,
+				"client loaded requested world %s" % test_world
+			)
+			_assert(
+				bool(report.get("playground_item_result", {}).get("success", false)),
+				"client routed canonical M4 item command from playground"
+			)
+			_assert(
+				int(report.get("world", {}).get("m4_item_commands", 0)) >= 1,
+				"playground counted canonical M4 item command"
+			)
+			_assert(
+				int(report.get("world", {}).get("m4_item_graph_revision", 0)) >= 1,
+				"playground received mutated M4 Item Graph"
+			)
 		_assert(String(report.get("display_server", "")).to_lower() not in ["", "headless", "dummy"], "client used graphical display")
 		_assert(String(report.get("rendering_method", "")) == "gl_compatibility", "client used GL compatibility")
 		_assert(int(report.get("client_runtime", {}).get("direct_authority_references", 1)) == 0, "client has no authority reference")

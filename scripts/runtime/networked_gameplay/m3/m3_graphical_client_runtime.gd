@@ -2,6 +2,7 @@ extends Node
 
 signal session_ready(runtime)
 signal replica_updated(snapshot: Dictionary)
+signal item_graph_updated(snapshot: Dictionary)
 signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
 
@@ -197,6 +198,7 @@ func _accept_item_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.is_empty(): return
 	_item_graph_snapshot = snapshot.duplicate(true)
 	_item_snapshot_updates += 1
+	item_graph_updated.emit(_item_graph_snapshot.duplicate(true))
 
 func execute_item_command_blocking(command_type: String, payload: Dictionary, operation_id: String = "") -> Dictionary:
 	if not is_ready(): return _failure("M4_CLIENT_NOT_READY")
