@@ -1,8 +1,8 @@
 # M1 — Unified Networked Gameplay Core
 
-**Checkpoint:** `v16.10.0-runtime-m1-unified-networked-gameplay-core`  
-**Build ID:** `m1-unified-networked-gameplay-core`  
-**База:** принятый `v16.9.5-roadmap-single-server-multiplayer-first`  
+**Checkpoint:** `v16.10.0-runtime-m1-unified-networked-gameplay-core`
+**Build ID:** `m1-unified-networked-gameplay-core`
+**База:** принятый `v16.9.5-roadmap-single-server-multiplayer-first`
 **Статус:** candidate
 
 ## Цель
