@@ -1,0 +1,325 @@
+{
+	"schema": "planet_simulator.item_state_file.v1",
+	"schema_version": 1,
+	"state": {
+		"attachments": {
+			"schema": "planet_simulator.item_attachments.v1",
+			"schema_version": 1,
+			"sockets": []
+		},
+		"containers": {
+			"containers": [
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": true,
+					"container_id": "player_hotbar",
+					"item_ids": [],
+					"maximum_mass_kg": 120.0,
+					"maximum_nested_depth": 8,
+					"maximum_volume_l": 120.0,
+					"owner_id": "player",
+					"owner_kind": "ACTOR",
+					"parent_container_id": "player_inventory",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {},
+					"slot_count": 10,
+					"slot_rules": [
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						}
+					],
+					"storage_mode": "SLOTS"
+				},
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": true,
+					"container_id": "player_inventory",
+					"item_ids": [
+						"item/aa2bcece-731c-4c61-bb9a-e5d7e68a371e",
+						"item/4d56d4e5-8884-4af7-8b67-1f821eddefdb",
+						"item/d1db7991-936c-4155-90cc-961982bc07f5"
+					],
+					"maximum_mass_kg": 180.0,
+					"maximum_nested_depth": 3,
+					"maximum_volume_l": 220.0,
+					"owner_id": "player",
+					"owner_kind": "ACTOR",
+					"parent_container_id": "",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {},
+					"slot_count": 18,
+					"slot_rules": [],
+					"storage_mode": "BULK"
+				}
+			],
+			"schema": "planet_simulator.container_registry.v2",
+			"schema_version": 2
+		},
+		"items": {
+			"definitions": [
+				{
+					"display_name": "Аккумулятор",
+					"external_volume_l": 6.0,
+					"id": "battery_pack",
+					"max_stack": 4,
+					"metadata": {
+						"icon_color": [
+							0.2,
+							0.82,
+							0.32
+						],
+						"size": [
+							0.42,
+							0.28,
+							0.3
+						]
+					},
+					"tags": [
+						"battery",
+						"power"
+					],
+					"unit_mass_kg": 8.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Батарейный шкаф",
+					"external_volume_l": 80.0,
+					"id": "battery_rack",
+					"max_stack": 1,
+					"metadata": {
+						"freeze_world_body": true,
+						"icon_color": [
+							0.2,
+							0.28,
+							0.34
+						],
+						"size": [
+							1.2,
+							1.4,
+							0.65
+						]
+					},
+					"tags": [
+						"container",
+						"rack"
+					],
+					"unit_mass_kg": 18.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Монтажное гнездо маяка",
+					"external_volume_l": 12.0,
+					"id": "beacon_mount_base",
+					"max_stack": 10,
+					"metadata": {
+						"debug_grantable": true,
+						"icon_color": [
+							0.18,
+							0.48,
+							0.6
+						],
+						"placement": {
+							"collision_mask": 1,
+							"kind": "MOUNT_SOCKET",
+							"max_distance_m": 8.0,
+							"schema": "planet_simulator.item_placement_profile.v1",
+							"socket": {
+								"accepted_tags": [
+									"beacon"
+								],
+								"socket_id": "beacon_socket"
+							}
+						},
+						"presentation_mode": "EXTERNAL"
+					},
+					"tags": [
+						"assembly_root",
+						"placeable",
+						"mount_socket"
+					],
+					"unit_mass_kg": 6.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Лунный камень",
+					"external_volume_l": 0.8,
+					"id": "lunar_rock",
+					"max_stack": 50,
+					"metadata": {
+						"icon_color": [
+							0.65,
+							0.65,
+							0.7
+						],
+						"size": [
+							0.34,
+							0.26,
+							0.36
+						]
+					},
+					"tags": [
+						"rock",
+						"resource"
+					],
+					"unit_mass_kg": 2.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Универсальный ящик",
+					"external_volume_l": 30.0,
+					"id": "portable_crate",
+					"max_stack": 1,
+					"metadata": {
+						"freeze_world_body": true,
+						"icon_color": [
+							0.62,
+							0.38,
+							0.14
+						],
+						"size": [
+							0.95,
+							0.65,
+							0.72
+						]
+					},
+					"tags": [
+						"container"
+					],
+					"unit_mass_kg": 4.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Полевой маяк",
+					"external_volume_l": 3.0,
+					"id": "survey_beacon",
+					"max_stack": 5,
+					"metadata": {
+						"icon_color": [
+							1.0,
+							0.34,
+							0.05
+						],
+						"size": [
+							0.32,
+							0.58,
+							0.32
+						]
+					},
+					"tags": [
+						"beacon",
+						"mountable",
+						"electronic"
+					],
+					"unit_mass_kg": 2.5,
+					"world_scene_path": ""
+				}
+			],
+			"items": [
+				{
+					"components": {},
+					"definition_id": "battery_pack",
+					"display_name": "Аккумулятор",
+					"instance_id": "item/4d56d4e5-8884-4af7-8b67-1f821eddefdb",
+					"quantity": 2,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "survey_beacon",
+					"display_name": "Полевой маяк",
+					"instance_id": "item/aa2bcece-731c-4c61-bb9a-e5d7e68a371e",
+					"quantity": 3,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "beacon_mount_base",
+					"display_name": "Монтажное гнездо маяка",
+					"instance_id": "item/d1db7991-936c-4155-90cc-961982bc07f5",
+					"quantity": 3,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				}
+			],
+			"schema": "planet_simulator.item_registry.v2",
+			"schema_version": 2
+		},
+		"metadata": {
+			"player_hotbar_id": "player_hotbar",
+			"player_inventory_id": "player_inventory",
+			"profile_id": "moon",
+			"selected_hotbar_index": 0,
+			"starter_pack_revision": 2
+		},
+		"operations": {
+			"maximum_entries": 2048,
+			"next_sequence": 1,
+			"records": [],
+			"schema": "planet_simulator.item_operation_ledger.v1",
+			"schema_version": 1
+		},
+		"schema": "planet_simulator.item_graph.v2",
+		"schema_version": 2,
+		"world_entities": {
+			"authority_epoch": 1,
+			"authority_owner_id": "manual-dedicated-server",
+			"entities": [],
+			"entity_count": 0,
+			"schema": "planet_simulator.world_entity_store.v1"
+		}
+	},
+	"state_key": "moon-player-r2"
+}

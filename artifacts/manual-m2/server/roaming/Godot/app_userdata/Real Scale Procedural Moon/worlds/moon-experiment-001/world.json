@@ -1,0 +1,28 @@
+{
+	"created_at_utc": "2026-07-30 08:09:28",
+	"generator_version": 9,
+	"instance_id": "persistent",
+	"last_opened_at_utc": "2026-07-30 08:09:28",
+	"last_player_world_position": [],
+	"partition_grid": {
+		"body_frame_id": "body/moon/fixed",
+		"body_radius_m": 1737400.0,
+		"chunks_per_zone": 32,
+		"schema": "planet_simulator.cube_sphere_grid.v1",
+		"scheme_id": "cube_sphere",
+		"scheme_revision": 1,
+		"zones_per_face": 48
+	},
+	"partition_scheme": "cube_sphere",
+	"partition_scheme_revision": 1,
+	"partition_space_id": "moon",
+	"schema": "lunar.world.v1",
+	"storage_policy": {
+		"only_modified_chunks_exist_on_disk": true,
+		"procedural_terrain_is_authoritative": true,
+		"terrain_meshes_are_cached": false
+	},
+	"universe_id": "main",
+	"world_id": "moon-experiment-001",
+	"world_seed": 20260724
+}

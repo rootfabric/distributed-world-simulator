@@ -1,0 +1,650 @@
+{
+	"schema": "planet_simulator.item_state_file.v1",
+	"schema_version": 1,
+	"state": {
+		"attachments": {
+			"schema": "planet_simulator.item_attachments.v1",
+			"schema_version": 1,
+			"sockets": [
+				{
+					"accepted_tags": [
+						"beacon"
+					],
+					"assembly_id": "demo_mount",
+					"item_id": "",
+					"parent_item_id": "item/9ebec92e-42d0-4f3e-b0cf-a0929d806096",
+					"socket_id": "beacon_socket"
+				}
+			]
+		},
+		"containers": {
+			"containers": [
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": false,
+					"container_id": "battery_rack_slots",
+					"item_ids": [
+						"item/4c497ca2-56da-4867-aeba-0f94047dcf64"
+					],
+					"maximum_mass_kg": 80.0,
+					"maximum_nested_depth": 8,
+					"maximum_volume_l": 40.0,
+					"owner_id": "item/a909534e-a22e-4332-98ce-dc5099853ea0",
+					"owner_kind": "ITEM_INSTANCE",
+					"parent_container_id": "",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {
+						"0": "item/4c497ca2-56da-4867-aeba-0f94047dcf64"
+					},
+					"slot_count": 4,
+					"slot_rules": [
+						{
+							"accepted_tags": [
+								"battery"
+							]
+						},
+						{
+							"accepted_tags": [
+								"battery"
+							]
+						},
+						{
+							"accepted_tags": [
+								"battery"
+							]
+						},
+						{
+							"accepted_tags": [
+								"battery"
+							]
+						}
+					],
+					"storage_mode": "SLOTS"
+				},
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": true,
+					"container_id": "demo_crate_contents",
+					"item_ids": [
+						"item/6c0fd862-8dbc-4f99-86ef-6a89e590ee74",
+						"item/84ce7335-0f7c-44f3-a532-a86fd0bd98b8"
+					],
+					"maximum_mass_kg": 120.0,
+					"maximum_nested_depth": 8,
+					"maximum_volume_l": 90.0,
+					"owner_id": "item/d480d85f-a2e4-4879-afae-4ad414501fc5",
+					"owner_kind": "ITEM_INSTANCE",
+					"parent_container_id": "",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {},
+					"slot_count": 12,
+					"slot_rules": [],
+					"storage_mode": "BULK"
+				},
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": true,
+					"container_id": "player_hotbar",
+					"item_ids": [],
+					"maximum_mass_kg": 120.0,
+					"maximum_nested_depth": 8,
+					"maximum_volume_l": 120.0,
+					"owner_id": "player",
+					"owner_kind": "ACTOR",
+					"parent_container_id": "player_inventory",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {},
+					"slot_count": 10,
+					"slot_rules": [
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						},
+						{
+							"accepted_tags": []
+						}
+					],
+					"storage_mode": "SLOTS"
+				},
+				{
+					"accepted_definition_ids": [],
+					"accepted_tags": [],
+					"allow_nested_containers": true,
+					"container_id": "player_inventory",
+					"item_ids": [
+						"item/171c0cd5-1583-452b-812d-a9500bb18501",
+						"item/06c7eae3-e697-43e2-b4ef-5157795f7706",
+						"item/2258e131-8d03-4b4f-9ff3-2791ffd6f718"
+					],
+					"maximum_mass_kg": 180.0,
+					"maximum_nested_depth": 3,
+					"maximum_volume_l": 220.0,
+					"owner_id": "player",
+					"owner_kind": "ACTOR",
+					"parent_container_id": "",
+					"revision": 0,
+					"schema": "planet_simulator.container_state.v2",
+					"schema_version": 2,
+					"slot_assignments": {},
+					"slot_count": 18,
+					"slot_rules": [],
+					"storage_mode": "BULK"
+				}
+			],
+			"schema": "planet_simulator.container_registry.v2",
+			"schema_version": 2
+		},
+		"items": {
+			"definitions": [
+				{
+					"display_name": "Аккумулятор",
+					"external_volume_l": 6.0,
+					"id": "battery_pack",
+					"max_stack": 4,
+					"metadata": {
+						"icon_color": [
+							0.2,
+							0.82,
+							0.32
+						],
+						"size": [
+							0.42,
+							0.28,
+							0.3
+						]
+					},
+					"tags": [
+						"battery",
+						"power"
+					],
+					"unit_mass_kg": 8.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Батарейный шкаф",
+					"external_volume_l": 80.0,
+					"id": "battery_rack",
+					"max_stack": 1,
+					"metadata": {
+						"freeze_world_body": true,
+						"icon_color": [
+							0.2,
+							0.28,
+							0.34
+						],
+						"size": [
+							1.2,
+							1.4,
+							0.65
+						]
+					},
+					"tags": [
+						"container",
+						"rack"
+					],
+					"unit_mass_kg": 18.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Монтажное гнездо маяка",
+					"external_volume_l": 12.0,
+					"id": "beacon_mount_base",
+					"max_stack": 10,
+					"metadata": {
+						"debug_grantable": true,
+						"icon_color": [
+							0.18,
+							0.48,
+							0.6
+						],
+						"placement": {
+							"collision_mask": 1,
+							"kind": "MOUNT_SOCKET",
+							"max_distance_m": 8.0,
+							"schema": "planet_simulator.item_placement_profile.v1",
+							"socket": {
+								"accepted_tags": [
+									"beacon"
+								],
+								"socket_id": "beacon_socket"
+							}
+						},
+						"presentation_mode": "EXTERNAL"
+					},
+					"tags": [
+						"assembly_root",
+						"placeable",
+						"mount_socket"
+					],
+					"unit_mass_kg": 6.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Лунный камень",
+					"external_volume_l": 0.8,
+					"id": "lunar_rock",
+					"max_stack": 50,
+					"metadata": {
+						"icon_color": [
+							0.65,
+							0.65,
+							0.7
+						],
+						"size": [
+							0.34,
+							0.26,
+							0.36
+						]
+					},
+					"tags": [
+						"rock",
+						"resource"
+					],
+					"unit_mass_kg": 2.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Универсальный ящик",
+					"external_volume_l": 30.0,
+					"id": "portable_crate",
+					"max_stack": 1,
+					"metadata": {
+						"freeze_world_body": true,
+						"icon_color": [
+							0.62,
+							0.38,
+							0.14
+						],
+						"size": [
+							0.95,
+							0.65,
+							0.72
+						]
+					},
+					"tags": [
+						"container"
+					],
+					"unit_mass_kg": 4.0,
+					"world_scene_path": ""
+				},
+				{
+					"display_name": "Полевой маяк",
+					"external_volume_l": 3.0,
+					"id": "survey_beacon",
+					"max_stack": 5,
+					"metadata": {
+						"icon_color": [
+							1.0,
+							0.34,
+							0.05
+						],
+						"size": [
+							0.32,
+							0.58,
+							0.32
+						]
+					},
+					"tags": [
+						"beacon",
+						"mountable",
+						"electronic"
+					],
+					"unit_mass_kg": 2.5,
+					"world_scene_path": ""
+				}
+			],
+			"items": [
+				{
+					"components": {},
+					"definition_id": "battery_pack",
+					"display_name": "Аккумулятор",
+					"instance_id": "item/06c7eae3-e697-43e2-b4ef-5157795f7706",
+					"quantity": 2,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "survey_beacon",
+					"display_name": "Полевой маяк",
+					"instance_id": "item/171c0cd5-1583-452b-812d-a9500bb18501",
+					"quantity": 3,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "beacon_mount_base",
+					"display_name": "Монтажное гнездо маяка",
+					"instance_id": "item/2258e131-8d03-4b4f-9ff3-2791ffd6f718",
+					"quantity": 3,
+					"relation": {
+						"container_id": "player_inventory",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "battery_pack",
+					"display_name": "Аккумулятор",
+					"instance_id": "item/4c497ca2-56da-4867-aeba-0f94047dcf64",
+					"quantity": 1,
+					"relation": {
+						"container_id": "battery_rack_slots",
+						"kind": "CONTAINER",
+						"slot_index": 0.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "survey_beacon",
+					"display_name": "Полевой маяк",
+					"instance_id": "item/6c0fd862-8dbc-4f99-86ef-6a89e590ee74",
+					"quantity": 4,
+					"relation": {
+						"container_id": "demo_crate_contents",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {},
+					"definition_id": "lunar_rock",
+					"display_name": "Лунный камень",
+					"instance_id": "item/84ce7335-0f7c-44f3-a532-a86fd0bd98b8",
+					"quantity": 6,
+					"relation": {
+						"container_id": "demo_crate_contents",
+						"kind": "CONTAINER",
+						"slot_index": -1.0
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {
+						"placement": {
+							"assembly_id": "demo_mount",
+							"installed": true,
+							"kind": "MOUNT_SOCKET",
+							"socket_id": "beacon_socket"
+						}
+					},
+					"definition_id": "beacon_mount_base",
+					"display_name": "Монтажное гнездо маяка",
+					"instance_id": "item/9ebec92e-42d0-4f3e-b0cf-a0929d806096",
+					"quantity": 1,
+					"relation": {
+						"entity_id": "entity/item/9ebec92e-42d0-4f3e-b0cf-a0929d806096",
+						"kind": "WORLD"
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {
+						"container": {
+							"container_id": "battery_rack_slots"
+						}
+					},
+					"definition_id": "battery_rack",
+					"display_name": "Батарейный шкаф",
+					"instance_id": "item/a909534e-a22e-4332-98ce-dc5099853ea0",
+					"quantity": 1,
+					"relation": {
+						"entity_id": "entity/item/a909534e-a22e-4332-98ce-dc5099853ea0",
+						"kind": "WORLD"
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				},
+				{
+					"components": {
+						"container": {
+							"container_id": "demo_crate_contents"
+						}
+					},
+					"definition_id": "portable_crate",
+					"display_name": "Универсальный ящик",
+					"instance_id": "item/d480d85f-a2e4-4879-afae-4ad414501fc5",
+					"quantity": 1,
+					"relation": {
+						"entity_id": "entity/item/d480d85f-a2e4-4879-afae-4ad414501fc5",
+						"kind": "WORLD"
+					},
+					"revision": 0,
+					"schema": "planet_simulator.item_instance.v2",
+					"schema_version": 2
+				}
+			],
+			"schema": "planet_simulator.item_registry.v2",
+			"schema_version": 2
+		},
+		"metadata": {
+			"player_hotbar_id": "player_hotbar",
+			"player_inventory_id": "player_inventory",
+			"profile_id": "playground",
+			"selected_hotbar_index": 0,
+			"starter_pack_revision": 2
+		},
+		"operations": {
+			"maximum_entries": 2048,
+			"next_sequence": 1,
+			"records": [],
+			"schema": "planet_simulator.item_operation_ledger.v1",
+			"schema_version": 1
+		},
+		"schema": "planet_simulator.item_graph.v2",
+		"schema_version": 2,
+		"world_entities": {
+			"authority_epoch": 1,
+			"authority_owner_id": "playground-server",
+			"entities": [
+				{
+					"authority_epoch": 1,
+					"authority_owner_id": "playground-server",
+					"created_at_utc": "2026-07-30 08:32:58",
+					"domain_components": {
+						"definition_id": "beacon_mount_base",
+						"quantity": 1
+					},
+					"entity_id": "entity/item/9ebec92e-42d0-4f3e-b0cf-a0929d806096",
+					"entity_type": "world_item",
+					"item_instance_id": "item/9ebec92e-42d0-4f3e-b0cf-a0929d806096",
+					"last_simulation_tick": 0,
+					"lifecycle_state": "ACTIVE",
+					"partition_address": {},
+					"physics_state": {},
+					"schema": "planet_simulator.world_entity_aggregate.v1",
+					"spatial_ref": {
+						"angular_velocity_rps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"frame_id": "scenario/playground/local",
+						"instance_id": "scenario",
+						"linear_velocity_mps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"position_m": [
+							0.0,
+							0.16,
+							-5.0
+						],
+						"rotation_xyzw": [
+							0.0,
+							0.0,
+							0.0,
+							1.0
+						],
+						"sample_time_s": 0.0,
+						"schema": "planet_simulator.spatial_ref.v1",
+						"space_id": "scenario",
+						"universe_id": "main"
+					},
+					"state_revision": 0,
+					"updated_at_utc": "2026-07-30 08:32:58"
+				},
+				{
+					"authority_epoch": 1,
+					"authority_owner_id": "playground-server",
+					"created_at_utc": "2026-07-30 08:32:58",
+					"domain_components": {
+						"definition_id": "battery_rack",
+						"quantity": 1
+					},
+					"entity_id": "entity/item/a909534e-a22e-4332-98ce-dc5099853ea0",
+					"entity_type": "world_item",
+					"item_instance_id": "item/a909534e-a22e-4332-98ce-dc5099853ea0",
+					"last_simulation_tick": 0,
+					"lifecycle_state": "ACTIVE",
+					"partition_address": {},
+					"physics_state": {},
+					"schema": "planet_simulator.world_entity_aggregate.v1",
+					"spatial_ref": {
+						"angular_velocity_rps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"frame_id": "scenario/playground/local",
+						"instance_id": "scenario",
+						"linear_velocity_mps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"position_m": [
+							-3.5,
+							0.75,
+							-2.0
+						],
+						"rotation_xyzw": [
+							0.0,
+							0.0,
+							0.0,
+							1.0
+						],
+						"sample_time_s": 0.0,
+						"schema": "planet_simulator.spatial_ref.v1",
+						"space_id": "scenario",
+						"universe_id": "main"
+					},
+					"state_revision": 0,
+					"updated_at_utc": "2026-07-30 08:32:58"
+				},
+				{
+					"authority_epoch": 1,
+					"authority_owner_id": "playground-server",
+					"created_at_utc": "2026-07-30 08:32:58",
+					"domain_components": {
+						"definition_id": "portable_crate",
+						"quantity": 1
+					},
+					"entity_id": "entity/item/d480d85f-a2e4-4879-afae-4ad414501fc5",
+					"entity_type": "world_item",
+					"item_instance_id": "item/d480d85f-a2e4-4879-afae-4ad414501fc5",
+					"last_simulation_tick": 0,
+					"lifecycle_state": "ACTIVE",
+					"partition_address": {},
+					"physics_state": {},
+					"schema": "planet_simulator.world_entity_aggregate.v1",
+					"spatial_ref": {
+						"angular_velocity_rps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"frame_id": "scenario/playground/local",
+						"instance_id": "scenario",
+						"linear_velocity_mps": [
+							0.0,
+							0.0,
+							0.0
+						],
+						"position_m": [
+							3.0,
+							0.8,
+							-2.0
+						],
+						"rotation_xyzw": [
+							0.0,
+							0.0,
+							0.0,
+							1.0
+						],
+						"sample_time_s": 0.0,
+						"schema": "planet_simulator.spatial_ref.v1",
+						"space_id": "scenario",
+						"universe_id": "main"
+					},
+					"state_revision": 0,
+					"updated_at_utc": "2026-07-30 08:32:58"
+				}
+			],
+			"entity_count": 3,
+			"schema": "planet_simulator.world_entity_store.v1"
+		}
+	},
+	"state_key": "playground-r2-demo"
+}
