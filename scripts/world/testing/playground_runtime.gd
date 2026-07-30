@@ -294,6 +294,8 @@ func _apply_m3_network_input(delta: float) -> void:
 	_m3_input_accumulator += delta
 	if _m3_input_accumulator < 0.05:
 		return
+	if player == null:
+		return
 	var input_vector := Input.get_vector(
 		"move_left", "move_right", "move_forward", "move_back"
 	)
@@ -306,9 +308,21 @@ func _apply_m3_network_input(delta: float) -> void:
 		if Input.is_action_pressed("boost")
 		else M2_NETWORK_WALK_SPEED_MPS
 	)
+	var view_basis: Basis = player.get_view_basis()
+	var forward: Vector3 = (-view_basis.z).slide(Vector3.UP)
+	var right: Vector3 = view_basis.x.slide(Vector3.UP)
+	if forward.length_squared() < 0.000001:
+		forward = -player.global_transform.basis.z
+	if right.length_squared() < 0.000001:
+		right = player.global_transform.basis.x
+	forward = forward.normalized()
+	right = right.normalized()
+	var direction: Vector3 = right * input_vector.x + forward * -input_vector.y
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
 	m3_multiplayer_client_runtime.move_nonblocking(
-		input_vector.x * speed * step,
-		input_vector.y * speed * step
+		direction.x * speed * step,
+		direction.z * speed * step
 	)
 
 
