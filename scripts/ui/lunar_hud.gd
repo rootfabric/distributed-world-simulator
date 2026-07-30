@@ -157,7 +157,9 @@ func setup(
 
 	interaction_panel = PanelContainer.new()
 	interaction_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	interaction_panel.position = Vector2(-250.0, -142.0)
+	# Keep the contextual object card above the persistent hotbar. The latter
+	# occupies the bottom 94 px of the viewport including its lower inset.
+	interaction_panel.position = Vector2(-250.0, -226.0)
 	interaction_panel.size = Vector2(500.0, 112.0)
 	interaction_panel.visible = false
 	add_child(interaction_panel)

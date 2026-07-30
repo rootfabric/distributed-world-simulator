@@ -16,6 +16,7 @@ const OperationLedger = preload("res://scripts/items/services/item_operation_led
 const COMMAND_MOVE_ITEM: String = "MOVE_ITEM"
 const COMMAND_SPLIT_AND_MOVE: String = "SPLIT_AND_MOVE"
 const COMMAND_STACK_ITEMS: String = "STACK_ITEMS"
+const COMMAND_SWAP_ITEMS: String = "SWAP_ITEMS"
 
 var item_registry
 var container_registry
@@ -417,6 +418,147 @@ func stack_items(
 	)
 
 
+func swap_items(
+	first_item_id: String,
+	second_item_id: String,
+	operation_id: String,
+	expected_first_revision: int = -1,
+	expected_second_revision: int = -1
+) -> Dictionary:
+	if operation_id.is_empty():
+		return _fail("OPERATION_ID_REQUIRED")
+	if first_item_id.is_empty() or second_item_id.is_empty():
+		return _fail("ITEM_ID_REQUIRED")
+	if first_item_id == second_item_id:
+		return _fail("SWAP_ITEMS_MUST_DIFFER")
+	if expected_first_revision < -1 or expected_second_revision < -1:
+		return _fail("INVALID_EXPECTED_REVISION")
+	var first = item_registry.get_item(first_item_id)
+	var second = item_registry.get_item(second_item_id)
+	if first == null or second == null:
+		return _fail("ITEM_NOT_FOUND")
+	var first_relation: Dictionary = Relations.canonicalize(first.relation)
+	var second_relation: Dictionary = Relations.canonicalize(second.relation)
+	if Relations.kind_of(first_relation) != Relations.CONTAINER or Relations.kind_of(second_relation) != Relations.CONTAINER:
+		return _fail("SWAP_REQUIRES_CONTAINER_ITEMS")
+	var prepared: Dictionary = _prepare_operation(
+		operation_id,
+		COMMAND_SWAP_ITEMS,
+		first_item_id,
+		expected_first_revision,
+		{
+			"second_item_id": second_item_id,
+			"expected_second_revision": expected_second_revision,
+		}
+	)
+	if not bool(prepared.get("ready", false)):
+		return Dictionary(prepared.get("result", {})).duplicate(true)
+	var payload_hash := String(prepared.get("payload_hash", ""))
+	if expected_first_revision >= 0 and int(first.revision) != expected_first_revision:
+		return _finish_operation(
+			operation_id,
+			COMMAND_SWAP_ITEMS,
+			payload_hash,
+			first_item_id,
+			expected_first_revision,
+			int(first.revision),
+			_fail("REVISION_CONFLICT", {
+				"item_id": first_item_id,
+				"expected_revision": expected_first_revision,
+				"actual_revision": int(first.revision),
+			})
+		)
+	if expected_second_revision >= 0 and int(second.revision) != expected_second_revision:
+		return _finish_operation(
+			operation_id,
+			COMMAND_SWAP_ITEMS,
+			payload_hash,
+			first_item_id,
+			expected_first_revision,
+			int(first.revision),
+			_fail("SWAP_SECOND_REVISION_CONFLICT", {
+				"item_id": second_item_id,
+				"expected_revision": expected_second_revision,
+				"actual_revision": int(second.revision),
+			})
+		)
+
+	var container_ids := PackedStringArray([
+		String(first_relation.get("container_id", "")),
+		String(second_relation.get("container_id", "")),
+	])
+	var snapshot := _snapshot_swap_state(first, second, container_ids)
+	_remove_item_membership_without_revision(first)
+	_remove_item_membership_without_revision(second)
+	var first_validation: Dictionary = validator.validate_reparent(first_item_id, second_relation)
+	if not bool(first_validation.get("success", false)):
+		_restore_swap_state(first, second, snapshot)
+		return _finish_operation(operation_id, COMMAND_SWAP_ITEMS, payload_hash, first_item_id, expected_first_revision, int(first.revision), first_validation)
+	var second_validation: Dictionary = validator.validate_reparent(second_item_id, first_relation)
+	if not bool(second_validation.get("success", false)):
+		_restore_swap_state(first, second, snapshot)
+		return _finish_operation(operation_id, COMMAND_SWAP_ITEMS, payload_hash, first_item_id, expected_first_revision, int(first.revision), second_validation)
+	var capacity_validation := _validate_swap_final_capacity(first, second, first_relation, second_relation, snapshot)
+	if not bool(capacity_validation.get("success", false)):
+		_restore_swap_state(first, second, snapshot)
+		return _finish_operation(operation_id, COMMAND_SWAP_ITEMS, payload_hash, first_item_id, expected_first_revision, int(first.revision), capacity_validation)
+
+	first.set_relation(second_relation)
+	second.set_relation(first_relation)
+	first.revision += 1
+	second.revision += 1
+	if not _assign_item_membership_without_revision(first) or not _assign_item_membership_without_revision(second):
+		_restore_swap_state(first, second, snapshot)
+		return _finish_operation(
+			operation_id,
+			COMMAND_SWAP_ITEMS,
+			payload_hash,
+			first_item_id,
+			expected_first_revision,
+			int(first.revision),
+			_fail("SWAP_ASSIGNMENT_FAILED")
+		)
+	var snapshot_containers := Dictionary(snapshot.get("containers", {}))
+	var touched_container_ids := PackedStringArray()
+	for container_id_value in container_ids:
+		var normalized_container_id := String(container_id_value)
+		if normalized_container_id.is_empty() or touched_container_ids.has(normalized_container_id):
+			continue
+		touched_container_ids.append(normalized_container_id)
+		var container = container_registry.get_container(normalized_container_id)
+		if container == null:
+			continue
+		var container_snapshot := Dictionary(snapshot_containers.get(normalized_container_id, {}))
+		container.revision = int(container_snapshot.get("revision", int(container.revision))) + 1
+	var graph_validation: Dictionary = validator.validate_graph()
+	if not bool(graph_validation.get("success", false)):
+		_restore_swap_state(first, second, snapshot)
+		return _finish_operation(operation_id, COMMAND_SWAP_ITEMS, payload_hash, first_item_id, expected_first_revision, int(first.revision), graph_validation)
+	relation_changed.emit(first_item_id, first_relation, first.relation.duplicate(true))
+	relation_changed.emit(second_item_id, second_relation, second.relation.duplicate(true))
+	return _finish_operation(
+		operation_id,
+		COMMAND_SWAP_ITEMS,
+		payload_hash,
+		first_item_id,
+		expected_first_revision,
+		int(first.revision),
+		{
+			"success": true,
+			"swapped": true,
+			"item_id": first_item_id,
+			"first_item_id": first_item_id,
+			"second_item_id": second_item_id,
+			"first_relation": first.relation.duplicate(true),
+			"second_relation": second.relation.duplicate(true),
+			"first_result_revision": int(first.revision),
+			"second_result_revision": int(second.revision),
+			"result_item_id": first_item_id,
+			"no_change": false,
+		}
+	)
+
+
 func _apply_move(item, canonical_relation: Dictionary) -> Dictionary:
 	canonical_relation = _resolve_container_relation(item, canonical_relation)
 	if item.relation == canonical_relation:
@@ -776,6 +918,113 @@ func _try_merge(item, container_id: String, requested_slot_index: int = -1) -> D
 		"merged_into_item_ids": merged_into_ids,
 		"result_revision": highest_result_revision if fully_merged else int(item.revision),
 	}
+
+
+func _snapshot_swap_state(first, second, container_ids: PackedStringArray) -> Dictionary:
+	var containers: Dictionary = {}
+	for container_id in container_ids:
+		var normalized := String(container_id)
+		if normalized.is_empty() or containers.has(normalized):
+			continue
+		var container = container_registry.get_container(normalized)
+		if container != null:
+			containers[normalized] = {
+				"item_ids": container.item_ids.duplicate(),
+				"slot_assignments": container.slot_assignments.duplicate(true),
+				"revision": int(container.revision),
+				"mass_kg": mass_service.container_mass_kg(normalized),
+				"volume_l": mass_service.container_direct_volume_l(normalized),
+			}
+	return {
+		"first_relation": first.relation.duplicate(true),
+		"second_relation": second.relation.duplicate(true),
+		"first_revision": int(first.revision),
+		"second_revision": int(second.revision),
+		"containers": containers,
+	}
+
+
+func _restore_swap_state(first, second, snapshot: Dictionary) -> void:
+	first.set_relation(Dictionary(snapshot.get("first_relation", {})).duplicate(true))
+	second.set_relation(Dictionary(snapshot.get("second_relation", {})).duplicate(true))
+	first.revision = int(snapshot.get("first_revision", int(first.revision)))
+	second.revision = int(snapshot.get("second_revision", int(second.revision)))
+	var containers := Dictionary(snapshot.get("containers", {}))
+	for container_id in containers:
+		var container = container_registry.get_container(String(container_id))
+		if container == null:
+			continue
+		var state := Dictionary(containers[container_id])
+		var restored_item_ids: Array[String] = []
+		for item_id_value in Array(state.get("item_ids", [])):
+			restored_item_ids.append(String(item_id_value))
+		container.item_ids = restored_item_ids
+		container.slot_assignments = Dictionary(state.get("slot_assignments", {})).duplicate(true)
+		container.revision = int(state.get("revision", int(container.revision)))
+
+
+func _remove_item_membership_without_revision(item) -> void:
+	if Relations.kind_of(item.relation) != Relations.CONTAINER:
+		return
+	var container = container_registry.get_container(String(item.relation.get("container_id", "")))
+	if container != null:
+		container.remove_item(String(item.instance_id))
+
+
+func _assign_item_membership_without_revision(item) -> bool:
+	if Relations.kind_of(item.relation) != Relations.CONTAINER:
+		return true
+	var container = container_registry.get_container(String(item.relation.get("container_id", "")))
+	if container == null:
+		return false
+	var requested_slot := int(item.relation.get("slot_index", -1))
+	var assigned_slot := int(container.assign_item(String(item.instance_id), requested_slot))
+	if container.is_slot_container():
+		if assigned_slot < 0:
+			return false
+		item.set_relation(Relations.container(String(container.container_id), assigned_slot))
+	return container.item_ids.has(String(item.instance_id))
+
+
+func _validate_swap_final_capacity(first, second, first_relation: Dictionary, second_relation: Dictionary, snapshot: Dictionary) -> Dictionary:
+	var first_old_container := String(first_relation.get("container_id", ""))
+	var second_old_container := String(second_relation.get("container_id", ""))
+	var destinations := {
+		String(first.instance_id): second_old_container,
+		String(second.instance_id): first_old_container,
+	}
+	var old_containers := {
+		String(first.instance_id): first_old_container,
+		String(second.instance_id): second_old_container,
+	}
+	var containers := Dictionary(snapshot.get("containers", {}))
+	for container_id in containers:
+		var container = container_registry.get_container(String(container_id))
+		if container == null:
+			return _fail("CONTAINER_NOT_FOUND")
+		var state := Dictionary(containers[container_id])
+		var final_mass := float(state.get("mass_kg", 0.0))
+		var final_volume := float(state.get("volume_l", 0.0))
+		var final_entries := Array(state.get("item_ids", [])).size()
+		for item in [first, second]:
+			var item_id := String(item.instance_id)
+			var item_mass: float = float(mass_service.item_recursive_mass_kg(item_id))
+			var item_volume: float = float(mass_service.item_external_volume_l(item_id))
+			if String(old_containers[item_id]) == String(container_id):
+				final_mass -= item_mass
+				final_volume -= item_volume
+				final_entries -= 1
+			if String(destinations[item_id]) == String(container_id):
+				final_mass += item_mass
+				final_volume += item_volume
+				final_entries += 1
+		if final_mass > float(container.maximum_mass_kg) + 0.000001:
+			return _fail("MAXIMUM_MASS_EXCEEDED")
+		if final_volume > float(container.maximum_volume_l) + 0.000001:
+			return _fail("MAXIMUM_VOLUME_EXCEEDED")
+		if not container.is_slot_container() and int(container.slot_count) > 0 and final_entries > int(container.slot_count):
+			return _fail("NO_FREE_SLOT")
+	return {"success": true}
 
 
 func _fail(code: String, details: Dictionary = {}) -> Dictionary:

@@ -1,0 +1,20 @@
+{
+  "schema": "planet_simulator.inventory_interaction_catalog.v1",
+  "profiles": [
+    {
+      "profile_id": "planet_default",
+      "display_name": "Как было",
+      "path": "res://config/ui/inventory_profiles/planet_default.json"
+    },
+    {
+      "profile_id": "rust_like",
+      "display_name": "Rust",
+      "path": "res://config/ui/inventory_profiles/rust_like.json"
+    },
+    {
+      "profile_id": "seven_days_like",
+      "display_name": "7 Days",
+      "path": "res://config/ui/inventory_profiles/seven_days_like.json"
+    }
+  ]
+}

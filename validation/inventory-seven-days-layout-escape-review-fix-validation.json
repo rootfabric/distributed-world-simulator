@@ -1,0 +1,32 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_seven_days_layout_escape_review_fix",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "2fc77f6",
+  "status": "passed",
+  "tests": [
+    {
+      "command": "RUN_INVENTORY_PROFILE_TESTS.ps1",
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "assertions": 90,
+      "status": "passed"
+    }
+  ],
+  "acceptance_checks": [
+    "The Seven Days inventory is centered after the first layout pass.",
+    "A viewport resize re-centers an open inventory.",
+    "One Escape closes Seven Days inventory when the inspector is hidden and no modal interaction is active."
+  ],
+  "static_checks": {
+    "git_diff_check": "passed"
+  },
+  "changed_files": [
+    "docs/checkpoints/2026-07-30_INVENTORY_SEVEN_DAYS_PROFILE_FIX1_RU.md",
+    "scripts/ui/inventory/inventory_screen.gd",
+    "tests/ui/test_inventory_seven_days_interface.gd",
+    "validation/inventory-seven-days-layout-escape-review-fix-validation.json"
+  ]
+}

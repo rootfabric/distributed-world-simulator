@@ -25,6 +25,8 @@ status: accepted_with_gates
 - отдельные process-scoped operation IDs;
 - automated real graphical process acceptance через X11/renderer;
 - отдельные user-data каталоги server/client phase 1/client phase 2.
+- сетевой `playground` с authoritative spawn `(0, 1.2, 6.0)`, replica
+  inventory и тем же ENet gameplay path.
 
 ## Acceptance
 
@@ -58,6 +60,9 @@ World regression:                 92/92 tests PASS
 Main scene playground:            6/6 PASS
 ```
 
-`test_m2_dedicated_graphical_processes.gd` запускает один headless dedicated server и два последовательных обычных graphical Godot process через X11 virtual display и `gl_compatibility`/llvmpipe. Клиенты не используют `--headless` и работают в раздельных user-data каталогах.
+`test_m2_dedicated_graphical_processes.gd` запускает lunar reconnect-профиль,
+а затем отдельную пару headless dedicated + graphical client для
+`playground`. Demo-клиент подтверждает authoritative spawn, движение и
+replica inventory в раздельных user-data каталогах.
 
 Общий focused/world runner в поставочном окружении может упираться во внешний лимит длительности одного процесса. Все составляющие exact manifests выполнены отдельно теми же test scripts; `test_world_boot_matrix.gd` завершился `exit 0`, а `main_scene_cli_all` — `6/6 PASS`.

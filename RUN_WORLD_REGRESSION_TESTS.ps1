@@ -148,6 +148,8 @@ $Tests = @(
     "res://tests/ui/test_inventory_ui_i0_architecture.gd",
     "res://tests/ui/test_inventory_ui_i1_interactions.gd",
     "res://tests/ui/test_inventory_ui_i2_large_storage.gd",
+    "res://tests/ui/test_inventory_interaction_profiles.gd",
+    "res://tests/ui/test_inventory_seven_days_interface.gd",
     "res://tests/integration/test_unified_planetary_runtime.gd",
     "res://tests/integration/test_unified_runtime_boot.gd",
     "res://tests/runtime/test_world_switch_during_generation.gd",

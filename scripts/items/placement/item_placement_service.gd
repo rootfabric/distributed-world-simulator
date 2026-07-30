@@ -55,7 +55,13 @@ func query_surface_from_actor(definition) -> Dictionary:
 	if hit.is_empty():
 		return {"success": false, "error_code": "PLACEMENT_SURFACE_NOT_FOUND", "message": "Наведите центр экрана на поверхность рядом с игроком"}
 	var normal: Vector3 = hit.get("normal", Vector3.UP)
-	var transform := PlacementContract.build_surface_transform(hit.get("position", to), normal, forward, world_root)
+	var transform := PlacementContract.build_surface_transform(
+		hit.get("position", to),
+		normal,
+		forward,
+		world_root,
+		float(profile.get("surface_offset_m", 0.0))
+	)
 	return {
 		"success": true,
 		"transform": transform,
@@ -134,10 +140,15 @@ func _create_mount_socket_fixture(item, _profile: Dictionary) -> Node3D:
 	mesh_instance.material_override = material
 	socket.add_child(mesh_instance)
 	var collision := CollisionShape3D.new()
+	collision.name = "InteractionCollision"
 	var shape := CylinderShape3D.new()
 	shape.radius = 0.72
-	shape.height = 0.32
+	# The mounted beacon is visual-only and sits above the base. The socket owns
+	# interaction, so its collider must cover that visual as well; otherwise a
+	# ray aimed at the beacon misses the base and falls back to placement.
+	shape.height = 1.0
 	collision.shape = shape
+	collision.position = Vector3(0.0, 0.34, 0.0)
 	socket.add_child(collision)
 	var anchor := Node3D.new()
 	anchor.name = "MountedItemAnchor"

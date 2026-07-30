@@ -1,0 +1,57 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_seven_days_pointer_pickup_hover_quantity_and_partial_global_drop_review_fix",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "dac5f16",
+  "status": "passed",
+  "tests": [
+    {
+      "command": "RUN_INVENTORY_PROFILE_TESTS.ps1",
+      "status": "passed"
+    },
+    {
+      "command": "RUN_ITEM_SYSTEM_TESTS.ps1",
+      "suites_passed": 15,
+      "suites_total": 15,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "assertions": 140,
+      "status": "passed"
+    }
+  ],
+  "acceptance_checks": [
+    "LMB and RMB begin pickup on button press without pointer motion.",
+    "RMB pickup works while LMB is already held.",
+    "Carry preview starts at the source cell and preserves the local grab offset.",
+    "The pickup button release does not place the item.",
+    "Target highlighting is disabled while pickup button is held and enabled after release.",
+    "Carry preview hides the item name but shows the remaining quantity over the icon.",
+    "LMB on a free container background drops the complete carried stack and clears the cursor preview.",
+    "RMB on a free container background drops exactly one carried unit and keeps the remainder attached to the pointer.",
+    "Partial world drop updates the carry quantity and restores the preview position at the pointer.",
+    "Global input recognizes free panel background through nested controls without intercepting real inventory cells.",
+    "Hover caption describes only an item already present under the pointer, including while carrying.",
+    "Hover caption is a compact floating name plate no wider than 260 px.",
+    "Hover caption is positioned below the hovered slot without covering it and stays within inventory bounds."
+  ],
+  "static_checks": {
+    "git_diff_check": "passed",
+    "json_parse": "passed",
+    "archive_contents": "passed"
+  },
+  "changed_files": [
+    "docs/checkpoints/2026-07-30_INVENTORY_SEVEN_DAYS_POINTER_FIX9_RU.md",
+    "scenes/ui/inventory/inventory_screen.tscn",
+    "scenes/ui/inventory/item_tooltip.tscn",
+    "scripts/items/presentation/item_inventory_ui.gd",
+    "scripts/items/presentation/item_slot_control.gd",
+    "scripts/ui/inventory/container_panel.gd",
+    "scripts/ui/inventory/inventory_screen.gd",
+    "scripts/ui/inventory/item_cell.gd",
+    "scripts/ui/inventory/item_tooltip.gd",
+    "tests/ui/test_inventory_seven_days_interface.gd",
+    "validation/inventory-seven-days-pointer-fix9-validation.json"
+  ]
+}

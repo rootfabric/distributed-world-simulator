@@ -1,6 +1,12 @@
 class_name InventoryScreen
 extends PanelContainer
 
+const InteractionProfileLoader = preload("res://scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd")
+const TransferSession = preload("res://scripts/ui/inventory/interactions/inventory_transfer_session.gd")
+const SlotProjection = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection.gd")
+const CursorController = preload("res://scripts/ui/inventory/interactions/inventory_cursor_controller.gd")
+const SlotModeAdapter = preload("res://scripts/ui/inventory/interactions/inventory_slot_mode_adapter.gd")
+
 @onready var columns: HBoxContainer = %Columns
 @onready var player_panel: InventoryContainerPanel = %PlayerPanel
 @onready var external_panel: InventoryContainerPanel = %ExternalPanel
@@ -13,6 +19,7 @@ extends PanelContainer
 @onready var search_edit: LineEdit = %SearchEdit
 @onready var filter_option: OptionButton = %FilterOption
 @onready var sort_option: OptionButton = %SortOption
+@onready var interaction_profile_option: OptionButton = %InteractionProfileOption
 @onready var reset_projection_button: Button = %ResetProjectionButton
 @onready var inspector_toggle: CheckButton = %InspectorToggle
 @onready var projection_summary: Label = %ProjectionSummary
@@ -29,26 +36,61 @@ var pending_target_container_id: String = ""
 var pending_target_slot_index: int = -1
 var pending_target_item_id: String = ""
 var pending_total_quantity: int = 0
+var pending_quantity_operation: String = "TRANSFER_TO_TARGET"
 var compatibility_external_title: Label
 var _context_screen_position: Vector2 = Vector2.ZERO
 var preferences_store: InventoryPreferencesStore
 var _syncing_projection_controls: bool = false
+var interaction_profile_loader := InteractionProfileLoader.new()
+var active_interaction_profile: InventoryInteractionProfile
+var interaction_profile_override: String = ""
+var transfer_session := TransferSession.new()
+var slot_projection := SlotProjection.new()
+var cursor_controller := CursorController.new()
+var slot_mode_adapter := SlotModeAdapter.new()
+var carry_preview: PanelContainer
+var carry_preview_icon: TextureRect
+var carry_preview_label: Label
+var carry_preview_quantity_label: Label
+var _requested_panel_size: Vector2 = Vector2(1060.0, 680.0)
+var _panel_has_external: bool = false
+var _panel_external_columns: int = 0
+var _layout_stabilization_pending: bool = false
+var _carry_pickup_button: int = 0
+var _carry_pickup_button_held: bool = false
+var _carry_target_highlight_enabled: bool = false
+var _carry_preview_grab_offset: Vector2 = Vector2(18.0, 18.0)
+var _carry_preview_initial_position: Vector2 = Vector2.ZERO
+var _carry_preview_initial_pending: bool = false
 
 
-func setup(controller, model: InventoryViewModel, commands: InventoryCommandFacade) -> void:
+func setup(
+	controller,
+	model: InventoryViewModel,
+	commands: InventoryCommandFacade,
+	profile_override: String = ""
+) -> void:
 	compatibility_external_title = Label.new()
 	compatibility_external_title.name = "CompatibilityExternalTitle"
 	compatibility_external_title.visible = false
 	add_child(compatibility_external_title)
+	status_label.clip_text = true
+	status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	gameplay_controller = controller
 	view_model = model
 	command_facade = commands
+	interaction_profile_override = profile_override.strip_edges().to_lower()
 	view_model.setup(controller)
 	command_facade.setup(controller)
+	slot_mode_adapter.setup(controller)
 	preferences_store = InventoryPreferencesStore.new()
 	preferences_store.setup(String(controller.profile_id))
+	var preferences := preferences_store.load_preferences()
 	_setup_projection_toolbar()
-	view_model.apply_preferences(preferences_store.load_preferences())
+	cursor_controller.setup(gameplay_controller, command_facade, transfer_session, slot_projection, Callable(self, "_icon_for_cell"))
+	_setup_interaction_profiles(preferences)
+	_setup_carry_preview()
+	view_model.apply_preferences(preferences)
 	_sync_projection_controls()
 	player_panel.set_visual_role("player")
 	external_panel.set_visual_role("external")
@@ -62,9 +104,14 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 	search_edit.text_changed.connect(_on_search_changed)
 	filter_option.item_selected.connect(_on_filter_selected)
 	sort_option.item_selected.connect(_on_sort_selected)
+	interaction_profile_option.item_selected.connect(_on_interaction_profile_selected)
 	reset_projection_button.pressed.connect(_on_projection_reset)
 	inspector_toggle.toggled.connect(_on_inspector_toggled)
 	inspector.close_requested.connect(func() -> void: inspector_toggle.button_pressed = false)
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	resized.connect(_on_panel_resized)
+	minimum_size_changed.connect(_queue_layout_stabilization)
+	set_process(true)
 	set_inventory_visible(false)
 	refresh()
 
@@ -72,6 +119,7 @@ func setup(controller, model: InventoryViewModel, commands: InventoryCommandFaca
 func _wire_panel(panel: InventoryContainerPanel) -> void:
 	panel.drop_requested.connect(_on_drop_requested)
 	panel.quantity_drop_requested.connect(_on_quantity_drop_requested)
+	panel.drop_outside_requested.connect(_on_drop_outside_requested)
 	panel.activated.connect(_on_slot_activated)
 	panel.quick_transfer_requested.connect(_on_quick_transfer_requested)
 	panel.context_requested.connect(_on_context_requested)
@@ -80,19 +128,23 @@ func _wire_panel(panel: InventoryContainerPanel) -> void:
 	panel.item_selected.connect(_on_item_selected)
 	panel.page_requested.connect(_on_page_requested)
 	panel.drop_preview_rejected.connect(_on_drop_preview_rejected)
+	panel.interaction_requested.connect(_on_interaction_requested)
+	panel.background_interaction_requested.connect(_on_panel_background_interaction)
 
 
 func set_inventory_visible(value: bool) -> void:
 	visible_inventory = value
 	visible = value
 	if value:
-		_recenter_panel()
-		status_label.text = "ЛКМ drag — весь стак · Shift+ЛКМ — быстрый перенос · ПКМ — действия"
+		_stabilize_visible_panel_layout()
+		_queue_layout_stabilization()
+		_update_profile_status()
 	else:
 		split_dialog.hide()
 		context_menu.close_menu()
 		tooltip.clear_item(true)
 		_clear_pending_quantity_drop()
+		_cancel_transfer_session(false)
 
 
 func is_inventory_visible() -> bool:
@@ -102,13 +154,40 @@ func is_inventory_visible() -> bool:
 func _input(event: InputEvent) -> void:
 	if not visible_inventory:
 		return
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if (
+			not mouse_event.pressed
+			and _carry_pickup_button_held
+			and mouse_event.button_index == _carry_pickup_button
+		):
+			get_viewport().set_input_as_handled()
+			call_deferred("_finish_carry_pickup_hold")
+			return
+		if (
+			not mouse_event.pressed
+			and mouse_event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]
+			and _is_seven_days_profile()
+			and transfer_session.is_active()
+			and transfer_session.domain_backed
+			and not _is_pointer_over_inventory_cell(mouse_event.position)
+		):
+			get_viewport().set_input_as_handled()
+			_drop_carried_to_world(mouse_event.button_index, mouse_event.position)
+			return
 	if event is InputEventKey and event.pressed and not event.echo and event.ctrl_pressed and event.keycode == KEY_F:
 		search_edit.grab_focus()
 		search_edit.select_all()
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
-		if context_menu.visible:
+		if transfer_session.is_active():
+			_cancel_transfer_session(true)
+		elif inspector.visible and not inspector.current_item_id.is_empty():
+			view_model.clear_selected_item()
+			inspector.clear_item()
+			refresh()
+		elif context_menu.visible:
 			context_menu.close_menu()
 		elif tooltip.visible and tooltip.pinned:
 			tooltip.clear_item(true)
@@ -121,6 +200,10 @@ func _input(event: InputEvent) -> void:
 
 func open_external_container(container_id: String) -> void:
 	external_container_id = container_id
+	if _is_seven_days_profile():
+		var migration := _ensure_slot_container(container_id)
+		if not bool(migration.get("success", false)):
+			_present_carry_error(migration, container_id)
 	set_inventory_visible(true)
 	refresh()
 
@@ -136,24 +219,30 @@ func refresh(message: String = "") -> void:
 	if gameplay_controller == null or view_model == null:
 		return
 	var screen_model: Dictionary = view_model.build_screen(external_container_id)
-	var player_model: Dictionary = Dictionary(screen_model.get("player", {}))
+	var player_model: Dictionary = slot_projection.project_container(Dictionary(screen_model.get("player", {})))
 	var hotbar_model: Dictionary = Dictionary(screen_model.get("hotbar", {}))
 	player_panel.render(player_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 	hotbar_panel.render_hotbar(hotbar_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
-	var external_model: Dictionary = Dictionary(screen_model.get("external", {}))
+	# The interactive hotbar lives in a persistent overlay outside this window.
+	hotbar_panel.visible = false
+	var external_model: Dictionary = slot_projection.project_container(Dictionary(screen_model.get("external", {})))
 	if external_container_id.is_empty() or external_model.is_empty():
 		external_panel.clear_panel()
 		compatibility_external_title.text = ""
-		_apply_panel_size(false, 0)
 	else:
 		external_panel.render(external_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 		compatibility_external_title.text = "%s\n%s" % [external_panel.title_label.text, external_panel.metadata_label.text]
-		_apply_panel_size(true, int(external_model.get("columns", 4)))
 	var inspector_model: Dictionary = Dictionary(screen_model.get("selected_item", {}))
 	if inspector_model.is_empty():
 		inspector.clear_item()
 	else:
 		inspector.show_item(inspector_model)
+	_apply_panel_size(
+		not external_container_id.is_empty() and not external_model.is_empty(),
+		int(external_model.get("columns", 0))
+	)
+	screen_model["player"] = player_model.duplicate(true)
+	screen_model["external"] = external_model.duplicate(true)
 	_update_projection_summary(player_model, external_model)
 	if not message.is_empty():
 		status_label.text = message
@@ -167,6 +256,17 @@ func get_external_visible_cell_count() -> int:
 
 func get_external_rendered_cell_count() -> int:
 	return external_panel.get_rendered_cell_count()
+
+
+func render_persistent_hotbar(panel: InventoryHotbarPanel) -> void:
+	if panel == null or gameplay_controller == null or view_model == null or command_facade == null:
+		return
+	var model := view_model.build_container(
+		gameplay_controller.player_hotbar_id,
+		int(gameplay_controller.selected_hotbar_index)
+	)
+	panel.set_interaction_profile(active_interaction_profile)
+	panel.render_hotbar(model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 
 
 func create_debug_snapshot() -> Dictionary:
@@ -199,6 +299,13 @@ func create_debug_snapshot() -> Dictionary:
 			"preferences_path": preferences_store.file_path if preferences_store != null else "",
 			"player_pool_size": player_panel.get_pool_size(),
 			"external_pool_size": external_panel.get_pool_size(),
+		},
+		"cursor_controller": cursor_controller.debug_snapshot(),
+		"interaction_profiles": {
+			"active_profile_id": active_interaction_profile.profile_id if active_interaction_profile != null else "",
+			"active_profile_name": active_interaction_profile.display_name if active_interaction_profile != null else "",
+			"loader": interaction_profile_loader.create_debug_snapshot(),
+			"transfer_session": transfer_session.snapshot(),
 		},
 	}
 
@@ -250,6 +357,72 @@ func _on_drop_requested(
 	_present_result(result, target_container_id, success_message)
 
 
+func _on_drop_outside_requested(item_id: String, requested_quantity: int) -> void:
+	if get_global_rect().has_point(get_global_mouse_position()):
+		status_label.text = "Выберите ячейку или вынесите предмет за пределы окна"
+		return
+	var cell_data := _cell_data_for_item(item_id)
+	var quantity := maxi(1, requested_quantity)
+	if item_id.is_empty():
+		return
+	var result: Dictionary = command_facade.drop_quantity(item_id, quantity)
+	_present_result(
+		result,
+		String(cell_data.get("source_container_id", "")),
+		"Выброшено: %s ×%d" % [String(cell_data.get("display_name", "Предмет")), quantity]
+	)
+
+
+func _on_panel_background_interaction(button_index: int) -> void:
+	if (
+		not _is_seven_days_profile()
+		or not transfer_session.is_active()
+		or not transfer_session.domain_backed
+	):
+		return
+	if button_index not in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		return
+	_drop_carried_to_world(button_index, get_global_mouse_position())
+
+
+func _drop_carried_to_world(button_index: int, pointer_position: Vector2) -> void:
+	var dropped_name := transfer_session.display_name
+	var requested_quantity := 1 if button_index == MOUSE_BUTTON_RIGHT else transfer_session.remaining_quantity
+	var result := cursor_controller.drop_to_world(requested_quantity)
+	if not bool(result.get("success", false)):
+		_present_carry_error(result, transfer_session.source_container_id)
+		return
+	refresh()
+	_update_carry_preview()
+	if transfer_session.is_active():
+		carry_preview.position = pointer_position + _carry_preview_grab_offset
+	status_label.text = "Выброшено на поверхность: %s ×%d" % [dropped_name, requested_quantity]
+	toast_layer.show_success("Выброшено ×%d" % requested_quantity)
+
+
+func _is_pointer_over_inventory_cell(screen_position: Vector2) -> bool:
+	var hovered := get_viewport().gui_get_hovered_control()
+	while hovered != null:
+		if hovered is InventoryItemCell:
+			return true
+		hovered = hovered.get_parent_control()
+	var inventory_root: Node = get_parent() if get_parent() != null else self
+	return _control_tree_has_cell_at(inventory_root, screen_position)
+
+
+func _control_tree_has_cell_at(node: Node, screen_position: Vector2) -> bool:
+	for child in node.get_children():
+		if child is InventoryItemCell:
+			var cell := child as InventoryItemCell
+			if cell.is_visible_in_tree() and cell.get_global_rect().has_point(screen_position):
+				return true
+		if child is Control and not (child as Control).is_visible_in_tree():
+			continue
+		if _control_tree_has_cell_at(child, screen_position):
+			return true
+	return false
+
+
 func _on_split_confirmed(
 	item_id: String,
 	quantity: int,
@@ -258,6 +431,11 @@ func _on_split_confirmed(
 	target_item_id: String
 ) -> void:
 	var cell_data := _cell_data_for_item(item_id)
+	if pending_quantity_operation == "BEGIN_VIRTUAL_CARRY":
+		_clear_pending_quantity_drop()
+		_begin_transfer_session(cell_data, quantity)
+		call_deferred("_restore_inventory_focus")
+		return
 	var result: Dictionary = command_facade.transfer_quantity(
 		item_id,
 		quantity,
@@ -292,7 +470,31 @@ func _on_quantity_confirmed() -> void:
 
 
 func _on_quick_transfer_requested(item_id: String, source_container_id: String, _source_slot_index: int) -> void:
+	if transfer_session.is_active():
+		toast_layer.show_error("Сначала положите предмет с курсора")
+		return
 	var cell_data := _cell_data_for_item(item_id)
+	if external_container_id.is_empty() and active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like":
+		var local_result: Dictionary
+		var target_container_id := ""
+		if source_container_id == gameplay_controller.player_inventory_id:
+			local_result = command_facade.assign_hotbar_first_free(item_id)
+			target_container_id = gameplay_controller.player_hotbar_id
+		elif source_container_id == gameplay_controller.player_hotbar_id:
+			local_result = command_facade.transfer_stack(item_id, gameplay_controller.player_inventory_id)
+			target_container_id = gameplay_controller.player_inventory_id
+		else:
+			local_result = {
+				"success": false,
+				"error_code": "QUICK_TRANSFER_SOURCE_UNSUPPORTED",
+				"message": "Быстрый перенос без открытого контейнера работает между рюкзаком и быстрой панелью",
+			}
+		_present_result(
+			local_result,
+			target_container_id,
+			"Быстро перенесено: %s" % String(cell_data.get("display_name", "Предмет"))
+		)
+		return
 	var preview := command_facade.preview_quick_transfer(item_id, source_container_id, external_container_id)
 	var target_container_id := String(preview.get("target_container_id", source_container_id))
 	if not bool(preview.get("success", false)):
@@ -314,7 +516,6 @@ func _on_context_requested(
 	if cell_data.is_empty():
 		return
 	_context_screen_position = screen_position
-	tooltip.clear_item(true)
 	var can_quick := (
 		not external_container_id.is_empty()
 		and source_container_id in [gameplay_controller.player_inventory_id, external_container_id]
@@ -338,9 +539,6 @@ func _on_context_action_requested(action_id: int, context: Dictionary) -> void:
 		InventoryItemContextMenu.ACTION_INSPECT:
 			_on_item_selected(item_id)
 			inspector_toggle.button_pressed = true
-			var cell_data: Dictionary = Dictionary(context.get("cell_data", {}))
-			tooltip.show_item(cell_data, true)
-			_position_tooltip(_context_screen_position)
 		InventoryItemContextMenu.ACTION_TRANSFER_ALL:
 			_perform_context_quick_transfer(item_id, source_container_id, -1)
 		InventoryItemContextMenu.ACTION_TRANSFER_ONE:
@@ -406,6 +604,7 @@ func _open_split_for_target(
 	pending_target_slot_index = target_slot_index
 	pending_target_item_id = target_item_id
 	pending_total_quantity = maxi(1, maximum_quantity)
+	pending_quantity_operation = "TRANSFER_TO_TARGET"
 	var cell_data := _cell_data_for_item(item_id)
 	split_dialog.open_request(
 		item_id,
@@ -418,15 +617,35 @@ func _open_split_for_target(
 	)
 
 
-func _on_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
-	if context_menu.visible or split_dialog.visible or tooltip.pinned:
+func _on_item_hovered(cell_data: Dictionary, cell_rect: Rect2) -> void:
+	if context_menu.visible or split_dialog.visible:
 		return
-	tooltip.show_item(cell_data, false)
-	_position_tooltip(screen_position)
+	var item_id := String(cell_data.get("item_id", ""))
+	if item_id.is_empty() or view_model == null:
+		return
+	if _is_seven_days_profile():
+		tooltip.show_name_only(cell_data)
+		_position_tooltip(cell_rect)
+		return
+	# The inspector is the only detailed presentation surface; it must still
+	# follow the hovered cell to preserve the established inventory contract.
+	if not inspector_toggle.button_pressed:
+		inspector_toggle.set_pressed_no_signal(true)
+		inspector.visible = true
+	inspector.show_item(view_model.build_item_inspector(item_id))
 
 
 func _on_item_unhovered(_item_id: String) -> void:
-	tooltip.clear_item(false)
+	if view_model == null:
+		return
+	if _is_seven_days_profile():
+		tooltip.clear_item(true)
+		return
+	var selected_model := view_model.build_item_inspector(view_model.selected_item_id)
+	if selected_model.is_empty():
+		inspector.clear_item()
+	else:
+		inspector.show_item(selected_model)
 
 
 func _on_drop_preview_rejected(target_container_id: String, _target_slot_index: int, error_code: String) -> void:
@@ -492,12 +711,27 @@ func _cell_data_for_item(item_id: String) -> Dictionary:
 	}
 
 
-func _position_tooltip(screen_position: Vector2) -> void:
-	var local_position := screen_position - global_position + Vector2(10.0, 8.0)
-	var expected_size := Vector2(maxf(300.0, tooltip.custom_minimum_size.x), maxf(150.0, tooltip.size.y))
-	local_position.x = clampf(local_position.x, 8.0, maxf(8.0, size.x - expected_size.x - 8.0))
-	local_position.y = clampf(local_position.y, 8.0, maxf(8.0, size.y - expected_size.y - 8.0))
-	tooltip.position = local_position
+func _position_tooltip(cell_rect: Rect2) -> void:
+	tooltip.reset_size()
+	var tooltip_size := tooltip.get_combined_minimum_size()
+	tooltip.size = tooltip_size
+	var screen_rect := get_global_rect()
+	var edge_margin := 8.0
+	var slot_gap := 6.0
+	var tooltip_position := Vector2(cell_rect.position.x, cell_rect.end.y + slot_gap)
+	tooltip_position.x = clampf(
+		tooltip_position.x,
+		screen_rect.position.x + edge_margin,
+		maxf(screen_rect.position.x + edge_margin, screen_rect.end.x - tooltip_size.x - edge_margin)
+	)
+	if tooltip_position.y + tooltip_size.y > screen_rect.end.y - edge_margin:
+		tooltip_position.y = cell_rect.position.y - tooltip_size.y - slot_gap
+	tooltip_position.y = clampf(
+		tooltip_position.y,
+		screen_rect.position.y + edge_margin,
+		maxf(screen_rect.position.y + edge_margin, screen_rect.end.y - tooltip_size.y - edge_margin)
+	)
+	tooltip.global_position = tooltip_position
 
 
 func _clear_pending_quantity_drop() -> void:
@@ -506,6 +740,7 @@ func _clear_pending_quantity_drop() -> void:
 	pending_target_slot_index = -1
 	pending_target_item_id = ""
 	pending_total_quantity = 0
+	pending_quantity_operation = "TRANSFER_TO_TARGET"
 
 
 func _icon_for_cell(cell_data: Dictionary) -> Texture2D:
@@ -532,23 +767,57 @@ func _icon_for_cell(cell_data: Dictionary) -> Texture2D:
 
 
 func _apply_panel_size(has_external: bool, external_columns: int) -> void:
-	var desired_width := 1060.0
+	_panel_has_external = has_external
+	_panel_external_columns = external_columns
+	var seven_days_style := _is_seven_days_profile()
+	var desired_width := 1180.0 if seven_days_style else 1060.0
 	if has_external:
-		desired_width = 1120.0 + maxf(260.0, external_columns * 44.0)
+		desired_width = (1280.0 + maxf(180.0, external_columns * 28.0)) if seven_days_style else (1120.0 + maxf(260.0, external_columns * 44.0))
 	var viewport_size := get_viewport().get_visible_rect().size if get_viewport() != null else Vector2(1280.0, 720.0)
 	var width := minf(desired_width, maxf(760.0, viewport_size.x - 32.0))
-	var height := minf(680.0, maxf(600.0, viewport_size.y - 32.0))
+	var desired_height := 720.0 if seven_days_style else 680.0
+	var height := minf(desired_height, maxf(600.0, viewport_size.y - 32.0))
 	var panel_size := Vector2(width, height)
+	_requested_panel_size = panel_size
 	custom_minimum_size = panel_size
 	size = panel_size
 	_recenter_panel()
+	_queue_layout_stabilization()
 
 
 func _recenter_panel() -> void:
-	var viewport: Viewport = get_viewport()
-	if viewport == null:
+	anchor_left = 0.5
+	anchor_top = 0.5
+	anchor_right = 0.5
+	anchor_bottom = 0.5
+	offset_left = -_requested_panel_size.x * 0.5
+	offset_top = -_requested_panel_size.y * 0.5
+	offset_right = _requested_panel_size.x * 0.5
+	offset_bottom = _requested_panel_size.y * 0.5
+
+
+func _queue_layout_stabilization() -> void:
+	if not visible_inventory or _layout_stabilization_pending:
 		return
-	position = (viewport.get_visible_rect().size - size) * 0.5
+	_layout_stabilization_pending = true
+	call_deferred("_stabilize_visible_panel_layout")
+
+
+func _stabilize_visible_panel_layout() -> void:
+	_layout_stabilization_pending = false
+	if visible_inventory:
+		custom_minimum_size = _requested_panel_size
+		_recenter_panel()
+
+
+func _on_panel_resized() -> void:
+	if visible_inventory and not size.is_equal_approx(_requested_panel_size):
+		_queue_layout_stabilization()
+
+
+func _on_viewport_size_changed() -> void:
+	if visible_inventory:
+		_apply_panel_size(_panel_has_external, _panel_external_columns)
 
 
 func _setup_projection_toolbar() -> void:
@@ -586,6 +855,8 @@ func _sync_projection_controls() -> void:
 	var preferences := preferences_store.load_preferences() if preferences_store != null else {}
 	inspector_toggle.button_pressed = bool(preferences.get("inspector_visible", true))
 	inspector.visible = inspector_toggle.button_pressed
+	if active_interaction_profile != null:
+		_select_option_metadata(interaction_profile_option, active_interaction_profile.profile_id)
 	_syncing_projection_controls = false
 
 
@@ -643,7 +914,9 @@ func _on_item_selected(item_id: String) -> void:
 	view_model.set_selected_item(item_id)
 	if not inspector_toggle.button_pressed:
 		inspector_toggle.button_pressed = true
-	refresh()
+	# Godot requests drag data from this same Control after the LMB press.
+	# Rebuilding the grid here destroys the source cell before drag can start.
+	inspector.show_item(view_model.build_item_inspector(item_id))
 
 
 func _on_page_requested(container_id: String, page_index: int) -> void:
@@ -654,7 +927,9 @@ func _on_page_requested(container_id: String, page_index: int) -> void:
 func _save_preferences() -> void:
 	if preferences_store == null:
 		return
-	preferences_store.save_preferences(view_model.preferences_snapshot(inspector_toggle.button_pressed))
+	var preferences := view_model.preferences_snapshot(inspector_toggle.button_pressed)
+	preferences["interaction_profile_id"] = active_interaction_profile.profile_id if active_interaction_profile != null else "planet_default"
+	preferences_store.save_preferences(preferences)
 
 
 func _update_projection_summary(player_model: Dictionary, external_model: Dictionary) -> void:
@@ -672,6 +947,470 @@ func _update_projection_summary(player_model: Dictionary, external_model: Dictio
 	if view_model.sort_mode != InventoryViewModel.SORT_CONTAINER_ORDER:
 		parts.append("сортировка: %s" % sort_option.get_item_text(sort_option.selected))
 	projection_summary.text = " · ".join(parts)
+
+
+func _process(_delta: float) -> void:
+	if carry_preview == null or not carry_preview.visible:
+		return
+	carry_preview.position = get_global_mouse_position() + _carry_preview_grab_offset
+
+
+func _setup_interaction_profiles(preferences: Dictionary) -> void:
+	interaction_profile_loader.load_catalog()
+	interaction_profile_option.clear()
+	for option in interaction_profile_loader.profile_options():
+		var option_data := Dictionary(option)
+		interaction_profile_option.add_item(String(option_data.get("display_name", option_data.get("profile_id", "Профиль"))))
+		var index := interaction_profile_option.item_count - 1
+		interaction_profile_option.set_item_metadata(index, String(option_data.get("profile_id", "")))
+		interaction_profile_option.set_item_tooltip(index, String(option_data.get("description", "")))
+	var requested_profile_id := interaction_profile_override
+	var environment_profile_id := interaction_profile_loader.environment_profile_id()
+	if requested_profile_id.is_empty() and not environment_profile_id.is_empty():
+		requested_profile_id = environment_profile_id
+	if requested_profile_id.is_empty() and interaction_profile_loader.allow_user_profile_override:
+		requested_profile_id = String(preferences.get("interaction_profile_id", "")).strip_edges().to_lower()
+	var resolved := interaction_profile_loader.resolve_profile(requested_profile_id)
+	if not bool(resolved.get("success", false)):
+		push_error("Inventory interaction profiles unavailable: %s" % resolved)
+		return
+	_apply_interaction_profile(resolved.get("profile") as InventoryInteractionProfile, false, false)
+
+
+func _apply_interaction_profile(
+	profile: InventoryInteractionProfile,
+	persist: bool = true,
+	refresh_now: bool = true
+) -> void:
+	if profile == null:
+		return
+	_cancel_transfer_session(false)
+	if split_dialog != null and split_dialog.visible:
+		split_dialog.hide()
+		split_dialog.clear_request()
+	_clear_pending_quantity_drop()
+	active_interaction_profile = profile
+	slot_projection.configure(profile)
+	if _is_seven_days_profile():
+		var player_migration := _ensure_slot_container(gameplay_controller.player_inventory_id)
+		if not bool(player_migration.get("success", false)):
+			toast_layer.show_error("Не удалось включить слотовый рюкзак")
+		if not external_container_id.is_empty():
+			var external_migration := _ensure_slot_container(external_container_id)
+			if not bool(external_migration.get("success", false)):
+				toast_layer.show_error("Не удалось включить слоты внешнего контейнера")
+	for panel in [player_panel, external_panel, hotbar_panel]:
+		panel.set_interaction_profile(profile)
+	_sync_interaction_profile_option()
+	_apply_profile_visual_style()
+	_update_profile_status()
+	if persist:
+		_save_preferences()
+	if refresh_now and gameplay_controller != null:
+		refresh()
+	var parent := get_parent()
+	if parent != null and parent.has_method("_refresh_persistent_hotbar"):
+		parent.call_deferred("_refresh_persistent_hotbar")
+
+
+func _is_seven_days_profile() -> bool:
+	return active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like"
+
+
+func _ensure_slot_container(container_id: String) -> Dictionary:
+	if container_id.is_empty():
+		return {"success": true, "no_change": true}
+	var preferred_layout: Array = Array(slot_projection.export_layouts().get(container_id, []))
+	var result: Dictionary = slot_mode_adapter.ensure_container_slots(container_id, preferred_layout)
+	if bool(result.get("success", false)):
+		slot_projection.clear_container(container_id)
+	return result
+
+
+func _sync_interaction_profile_option() -> void:
+	if interaction_profile_option == null or active_interaction_profile == null:
+		return
+	_syncing_projection_controls = true
+	_select_option_metadata(interaction_profile_option, active_interaction_profile.profile_id)
+	_syncing_projection_controls = false
+
+
+func _on_interaction_profile_selected(index: int) -> void:
+	if _syncing_projection_controls:
+		return
+	var profile_id := String(interaction_profile_option.get_item_metadata(index))
+	var profile := interaction_profile_loader.get_profile(profile_id)
+	if profile == null:
+		var resolved := interaction_profile_loader.resolve_profile(profile_id)
+		profile = resolved.get("profile") as InventoryInteractionProfile if bool(resolved.get("success", false)) else null
+	if profile == null:
+		toast_layer.show_error("Профиль управления недоступен")
+		_sync_interaction_profile_option()
+		return
+	_apply_interaction_profile(profile, true, true)
+	toast_layer.show_success("Профиль управления: %s" % profile.display_name)
+
+
+func _update_profile_status() -> void:
+	if status_label == null:
+		return
+	if active_interaction_profile == null:
+		status_label.text = "Профиль управления недоступен · Tab — закрыть"
+		return
+	var legend := active_interaction_profile.status_text()
+	status_label.text = "%s: %s · Tab — закрыть" % [active_interaction_profile.display_name, legend]
+
+
+func _apply_profile_visual_style() -> void:
+	if active_interaction_profile == null:
+		return
+	var seven_days_style := active_interaction_profile.ui_style == "SEVEN_DAYS"
+	$Margin/Main/Header.visible = not seven_days_style
+	search_edit.visible = not seven_days_style
+	filter_option.visible = not seven_days_style
+	sort_option.visible = not seven_days_style
+	reset_projection_button.visible = not seven_days_style
+	inspector_toggle.visible = not seven_days_style
+	projection_summary.visible = not seven_days_style
+	$Margin/Main/ProjectionToolbar.alignment = BoxContainer.ALIGNMENT_END if seven_days_style else BoxContainer.ALIGNMENT_BEGIN
+	columns.add_theme_constant_override("separation", 4 if seven_days_style else 14)
+	if seven_days_style:
+		columns.move_child(external_panel, 0)
+		columns.move_child(player_panel, 1)
+		columns.move_child(inspector, 2)
+		inspector.visible = false
+	else:
+		columns.move_child(player_panel, 0)
+		columns.move_child(external_panel, 1)
+		columns.move_child(inspector, 2)
+		inspector.visible = inspector_toggle.button_pressed
+	custom_minimum_size = Vector2(1240.0, 720.0) if seven_days_style else Vector2(1060.0, 680.0)
+	var style := StyleBoxFlat.new()
+	if seven_days_style:
+		style.bg_color = Color(0.035, 0.035, 0.03, 0.82)
+		style.border_color = Color(0.92, 0.75, 0.18, 1.0)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(0)
+	else:
+		style.bg_color = Color(0.035, 0.045, 0.065, 0.97)
+		style.border_color = Color(0.22, 0.5, 0.72, 1.0)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(10)
+	add_theme_stylebox_override("panel", style)
+	if carry_preview != null:
+		var carry_style := StyleBoxFlat.new()
+		carry_style.bg_color = Color.TRANSPARENT if seven_days_style else Color(0.08, 0.08, 0.07, 0.92)
+		carry_style.border_color = Color.TRANSPARENT if seven_days_style else Color(0.45, 0.82, 1.0, 1.0)
+		carry_style.set_border_width_all(0 if seven_days_style else 2)
+		carry_style.set_corner_radius_all(2 if seven_days_style else 6)
+		carry_style.content_margin_left = 4.0 if seven_days_style else 6.0
+		carry_style.content_margin_top = 4.0 if seven_days_style else 5.0
+		carry_style.content_margin_right = 4.0 if seven_days_style else 6.0
+		carry_style.content_margin_bottom = 4.0 if seven_days_style else 5.0
+		carry_preview.add_theme_stylebox_override("panel", carry_style)
+
+
+func _setup_carry_preview() -> void:
+	carry_preview = PanelContainer.new()
+	carry_preview.name = "CarryPreview"
+	carry_preview.visible = false
+	carry_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	carry_preview.top_level = true
+	carry_preview.z_as_relative = false
+	carry_preview.z_index = 4095
+	carry_preview.custom_minimum_size = Vector2(56.0, 56.0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.03, 0.04, 0.06, 0.94)
+	style.border_color = Color(0.45, 0.82, 1.0, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 6.0
+	style.content_margin_top = 5.0
+	style.content_margin_right = 6.0
+	style.content_margin_bottom = 5.0
+	carry_preview.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	carry_preview.add_child(row)
+	carry_preview_icon = TextureRect.new()
+	carry_preview_icon.custom_minimum_size = Vector2(48.0, 48.0)
+	carry_preview_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	carry_preview_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	carry_preview_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(carry_preview_icon)
+	carry_preview_label = Label.new()
+	carry_preview_label.visible = false
+	carry_preview_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	carry_preview_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(carry_preview_label)
+	carry_preview_quantity_label = Label.new()
+	carry_preview_quantity_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	carry_preview_quantity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	carry_preview_quantity_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	carry_preview_quantity_label.add_theme_font_size_override("font_size", 18)
+	carry_preview_quantity_label.add_theme_color_override("font_color", Color.WHITE)
+	carry_preview_quantity_label.add_theme_color_override("font_outline_color", Color(0.03, 0.03, 0.03, 1.0))
+	carry_preview_quantity_label.add_theme_constant_override("outline_size", 4)
+	carry_preview_quantity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	carry_preview_quantity_label.visible = false
+	carry_preview_icon.add_child(carry_preview_quantity_label)
+	add_child(carry_preview)
+	_apply_profile_visual_style()
+
+
+func _on_interaction_requested(action_id: String, payload: Dictionary) -> void:
+	if not visible_inventory:
+		return
+	match action_id:
+		"CARRY_ALL_OR_PLACE_ALL":
+			_handle_carry_interaction(payload, false)
+		"CARRY_HALF_OR_PLACE_ONE":
+			_handle_carry_interaction(payload, true)
+		"CARRY_EXACT_OR_PLACE_ONE":
+			if transfer_session.is_active():
+				_place_carried_quantity(payload, 1)
+			else:
+				_open_virtual_carry_quantity_dialog(payload)
+		"PLACE_ALL_OR_SELECT":
+			if transfer_session.is_active():
+				_place_carried_quantity(payload, transfer_session.remaining_quantity)
+			else:
+				_on_item_selected(String(payload.get("item_id", "")))
+
+
+func _handle_carry_interaction(payload: Dictionary, place_one: bool) -> void:
+	if transfer_session.is_active():
+		_place_carried_quantity(payload, 1 if place_one else transfer_session.remaining_quantity)
+		return
+	var available_quantity := maxi(1, int(payload.get("quantity", 1)))
+	var carry_quantity := maxi(1, int(ceil(float(available_quantity) * 0.5))) if place_one else available_quantity
+	_begin_transfer_session(payload, carry_quantity)
+
+
+func _open_virtual_carry_quantity_dialog(payload: Dictionary) -> void:
+	var item_id := String(payload.get("item_id", ""))
+	var available_quantity := int(payload.get("quantity", 0))
+	if item_id.is_empty() or available_quantity <= 0:
+		return
+	pending_item_id = item_id
+	pending_target_container_id = ""
+	pending_target_slot_index = -1
+	pending_target_item_id = ""
+	pending_total_quantity = available_quantity
+	pending_quantity_operation = "BEGIN_VIRTUAL_CARRY"
+	split_dialog.open_request(
+		item_id,
+		available_quantity,
+		"",
+		-1,
+		"",
+		String(payload.get("display_name", "Предмет")),
+		"виртуальный стак на курсоре"
+	)
+
+
+func _begin_transfer_session(payload: Dictionary, carry_quantity: int) -> void:
+	var source_item_id := String(payload.get("item_id", ""))
+	if source_item_id.is_empty():
+		return
+	var item = gameplay_controller.get_item(source_item_id)
+	if item == null:
+		toast_layer.show_error("Исходный предмет больше не существует")
+		return
+	var session_payload := payload.duplicate(true)
+	if not session_payload.has("icon_texture"):
+		session_payload["icon_texture"] = _icon_for_cell(session_payload)
+	var result: Dictionary
+	if active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like":
+		result = cursor_controller.begin(session_payload, carry_quantity)
+	else:
+		result = transfer_session.begin(
+			session_payload,
+			carry_quantity,
+			session_payload.get("icon_texture") as Texture2D,
+			int(item.revision)
+		)
+	if not bool(result.get("success", false)):
+		_present_carry_error(result, String(payload.get("source_container_id", "")))
+		return
+	_prepare_carry_pointer_state(payload)
+	if _is_seven_days_profile():
+		view_model.clear_selected_item()
+		inspector.clear_item()
+		tooltip.clear_item(true)
+	else:
+		_on_item_selected(source_item_id)
+	refresh()
+	_update_carry_preview()
+	status_label.text = "На курсоре: %s ×%d · выберите слот · Esc — вернуть" % [
+		transfer_session.display_name,
+		transfer_session.remaining_quantity,
+	]
+
+
+func _place_carried_quantity(target_payload: Dictionary, requested_quantity: int) -> void:
+	if not transfer_session.is_active():
+		return
+	var target_container_id := String(target_payload.get("target_container_id", target_payload.get("source_container_id", "")))
+	var target_slot_index := int(target_payload.get("target_slot_index", target_payload.get("source_slot_index", -1)))
+	var target_item_id := String(target_payload.get("target_item_id", target_payload.get("item_id", "")))
+	if target_container_id.is_empty():
+		toast_layer.show_error("Не выбрана цель переноса")
+		return
+	var requested := clampi(requested_quantity, 1, transfer_session.remaining_quantity)
+	if transfer_session.domain_backed:
+		var cursor_result := cursor_controller.place(target_payload, requested)
+		if not bool(cursor_result.get("success", false)):
+			_present_carry_error(cursor_result, target_container_id)
+			return
+		refresh()
+		_update_carry_preview()
+		if bool(cursor_result.get("swapped", false)):
+			status_label.text = "В слоте оставлен предмет; на курсоре теперь: %s ×%d" % [
+				transfer_session.display_name,
+				transfer_session.remaining_quantity,
+			]
+			toast_layer.show_message("Предметы поменяны местами")
+		elif transfer_session.is_active():
+			status_label.text = "Осталось на курсоре: %s ×%d" % [transfer_session.display_name, transfer_session.remaining_quantity]
+			var active_panel := _panel_for_container(target_container_id)
+			if active_panel != null:
+				active_panel.show_feedback("Положено ×%d" % int(cursor_result.get("moved_quantity", requested)), true, 1.2)
+		else:
+			status_label.text = "Предмет помещён в слот"
+			toast_layer.show_success("Предмет перенесён")
+		return
+	if (
+		target_item_id == transfer_session.item_id
+		and target_container_id == transfer_session.source_container_id
+		and target_slot_index == transfer_session.source_slot_index
+	):
+		_cancel_transfer_session(true)
+		return
+	var preview := command_facade.preview_transfer(
+		transfer_session.item_id,
+		requested,
+		target_container_id,
+		target_slot_index,
+		target_item_id
+	)
+	if not bool(preview.get("success", false)):
+		_present_carry_error(preview, target_container_id)
+		return
+	var maximum_quantity := maxi(0, int(preview.get("maximum_quantity", requested)))
+	var move_quantity := mini(requested, maximum_quantity)
+	if move_quantity <= 0:
+		_present_carry_error({"success": false, "error_code": "DROP_REJECTED"}, target_container_id)
+		return
+	var result := command_facade.transfer_quantity(
+		transfer_session.item_id,
+		move_quantity,
+		target_container_id,
+		target_slot_index,
+		target_item_id
+	)
+	if not bool(result.get("success", false)):
+		_present_carry_error(result, target_container_id)
+		return
+	var moved_quantity := maxi(0, int(result.get("moved_quantity", move_quantity)))
+	transfer_session.consume(moved_quantity)
+	refresh()
+	if transfer_session.is_active():
+		_update_carry_preview()
+		status_label.text = "Осталось на курсоре: %s ×%d" % [transfer_session.display_name, transfer_session.remaining_quantity]
+		var panel := _panel_for_container(target_container_id)
+		if panel != null:
+			panel.show_feedback("Положено ×%d" % moved_quantity, true, 1.2)
+	else:
+		_update_carry_preview()
+		status_label.text = "Перенесено ×%d" % moved_quantity
+		toast_layer.show_success("Предмет перенесён")
+
+
+func _present_carry_error(result: Dictionary, target_container_id: String) -> void:
+	var message := command_facade.result_message(result)
+	status_label.text = message
+	toast_layer.show_error(message)
+	var panel := _panel_for_container(target_container_id)
+	if panel != null:
+		panel.show_feedback(message, false)
+
+
+func _cancel_transfer_session(show_message: bool) -> bool:
+	var was_active := transfer_session.is_active()
+	if was_active and transfer_session.domain_backed:
+		var result := cursor_controller.cancel()
+		if not bool(result.get("success", false)):
+			_present_carry_error(result, transfer_session.source_container_id)
+			return false
+	else:
+		transfer_session.clear()
+	refresh()
+	_update_carry_preview()
+	if show_message and was_active:
+		status_label.text = "Предмет возвращён в исходный слот"
+		toast_layer.show_message("Перенос отменён")
+	return true
+
+
+func _update_carry_preview() -> void:
+	if carry_preview == null:
+		return
+	carry_preview.visible = transfer_session.is_active() and visible_inventory
+	if not transfer_session.is_active():
+		_carry_pickup_button = 0
+		_carry_pickup_button_held = false
+		_carry_target_highlight_enabled = false
+		_sync_carry_target_state()
+	if not carry_preview.visible:
+		return
+	carry_preview_icon.texture = transfer_session.icon_texture
+	carry_preview_label.visible = false
+	var seven_days_style := _is_seven_days_profile()
+	carry_preview_quantity_label.visible = seven_days_style
+	if seven_days_style:
+		carry_preview_quantity_label.text = str(transfer_session.remaining_quantity)
+	_sync_carry_target_state()
+	if _carry_preview_initial_pending:
+		carry_preview.position = _carry_preview_initial_position
+		_carry_preview_initial_pending = false
+	else:
+		carry_preview.position = get_global_mouse_position() + _carry_preview_grab_offset
+
+
+func _prepare_carry_pointer_state(payload: Dictionary) -> void:
+	var input_phase := String(payload.get("input_phase", "RELEASE"))
+	_carry_pickup_button = int(payload.get("button_index", 0))
+	_carry_pickup_button_held = input_phase == "PRESS" and _carry_pickup_button > 0
+	_carry_target_highlight_enabled = not _carry_pickup_button_held
+	if payload.get("source_cell_screen_position") is Vector2 and payload.get("screen_position") is Vector2:
+		_carry_preview_initial_position = payload.get("source_cell_screen_position") as Vector2
+		_carry_preview_grab_offset = (
+			(payload.get("source_cell_screen_position") as Vector2)
+			- (payload.get("screen_position") as Vector2)
+		)
+		_carry_preview_initial_pending = true
+	else:
+		_carry_preview_grab_offset = Vector2(18.0, 18.0)
+		_carry_preview_initial_pending = false
+
+
+func _finish_carry_pickup_hold() -> void:
+	if not transfer_session.is_active():
+		return
+	_carry_pickup_button_held = false
+	_carry_target_highlight_enabled = true
+	_sync_carry_target_state()
+
+
+func _sync_carry_target_state() -> void:
+	var active := transfer_session.is_active() and _is_seven_days_profile()
+	var highlight_enabled := active and _carry_target_highlight_enabled
+	for panel in [player_panel, external_panel, hotbar_panel]:
+		panel.set_cursor_carry_state(active, highlight_enabled)
+	var parent := get_parent()
+	if parent != null and parent.has_method("_set_persistent_hotbar_carry_state"):
+		parent.call("_set_persistent_hotbar_carry_state", active, highlight_enabled)
 
 
 func _restore_inventory_focus() -> void:

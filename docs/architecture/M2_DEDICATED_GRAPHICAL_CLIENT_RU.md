@@ -16,6 +16,11 @@ Process 2: обычный Godot window --role=game-client
 
 Оба процесса загружают обычную `main.tscn`. Dedicated создаёт authoritative `NetworkedGameplayService`, graphical client создаёт только transport, command gateway, replica store и presentation.
 
+M2 поддерживает два runtime-мира на едином gameplay path: production lunar
+`moon` и демонстрационный `playground`. В `playground` authoritative spawn
+равен `(0, 1.2, 6.0)`; graphical client сразу получает эту позицию, flat-world
+controller и Item Graph replica.
+
 ## Composition
 
 ```text
@@ -69,6 +74,7 @@ Operation ID движения включает PID graphical процесса и
 2. настоящий graphical client phase 1;
 3. graceful disconnect;
 4. второй настоящий graphical client phase 2 против того же server.
+5. отдельный dedicated `playground` и graphical client на demo spawn.
 
 На Linux используется X11 virtual display и `gl_compatibility`/llvmpipe. Клиент не получает `--headless`. На Windows и macOS запускается обычное graphical окно. Server и оба client process используют разные user-data каталоги.
 

@@ -7,6 +7,16 @@ const FlatWorldAdapterScript = preload(
 const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
 const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
 const WorldInteractorScript = preload("res://scripts/interaction/world_interactor.gd")
+const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+const PlayableAuthorityScript = preload(
+	"res://scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd"
+)
+const NetworkContractUtils = preload(
+	"res://scripts/network/contracts/network_contract_utils.gd"
+)
+
+const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
+const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
 
 var simulator
 var command_registry
@@ -28,6 +38,18 @@ var item_attachment_root: Node3D
 var item_gameplay
 var gravity_field
 var world_interactor
+var runtime_role: String = "offline"
+var presentation_enabled: bool = true
+var local_input_enabled: bool = true
+var playable_client_session
+var _m2_attached: bool = false
+var _m2_interaction_position: Vector3 = Vector3.ZERO
+var _m2_player_input_sequence: int = 0
+var _m2_player_operation_sequence: int = 0
+var _m2_last_candidate_hash: String = ""
+var _m2_last_sync_error: String = ""
+var _m2_sync_count: int = 0
+var _m2_rejection_count: int = 0
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -39,6 +61,9 @@ func configure_runtime(context: Dictionary) -> void:
 	test_owner = String(context.get("test_owner_id", test_owner))
 	runtime_universe_id = String(context.get("universe_id", runtime_universe_id))
 	runtime_instance_id = String(context.get("instance_id", runtime_instance_id))
+	runtime_role = String(context.get("runtime_role", runtime_role))
+	presentation_enabled = bool(context.get("presentation_enabled", true))
+	local_input_enabled = bool(context.get("local_input_enabled", true))
 	var options: Dictionary = world_definition.get("options", {})
 	var spawn_values = options.get("spawn", [0.0, 1.2, 6.0])
 	if spawn_values is Array and spawn_values.size() >= 3:
@@ -63,9 +88,82 @@ func _ready() -> void:
 	player.set_world_position(spawn_position)
 	player.align_body_to_up(Vector3.UP)
 	player.activate_after_spawn()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	_setup_item_gameplay()
-	_build_overlay()
+	_m2_interaction_position = spawn_position
+	if runtime_role == "game-client":
+		player.set_network_replica_mode(true)
+	elif not local_input_enabled:
+		player.set_control_enabled(false)
+	if presentation_enabled:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if runtime_role not in ["listen-host", "game-client", "dedicated-server"]:
+		_setup_item_gameplay()
+	if presentation_enabled:
+		_build_overlay()
+
+
+func create_playable_listen_host_config() -> Dictionary:
+	if runtime_role not in ["listen-host", "dedicated-server"] or player == null:
+		return {}
+	return {
+		"authority_owner_id": String(
+			world_definition.get("local_authority_id", "local-process")
+		),
+		"authority_epoch": 1,
+		"server_tick": 0,
+		"session_id": "session/m2/playground/%s" % runtime_instance_id,
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"space_id": "playground",
+		"frame_id": "scenario/playground/local",
+		"gravity_reference_body_id": "playground-moon",
+		"item_state_key": "playground-r2-demo",
+		"item_profile_id": "playground",
+		"item_persistence_enabled": true,
+		"include_demo_world": true,
+		"player_state": _create_m2_player_state(0),
+	}
+
+
+func attach_playable_client_session(session) -> Dictionary:
+	if runtime_role not in ["listen-host", "game-client"]:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ROLE_REQUIRED"}
+	if playable_client_session != null or item_gameplay != null:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ALREADY_ATTACHED"}
+	if session == null or not session is RefCounted:
+		return {"success": false, "error_code": "INVALID_PLAYABLE_CLIENT_SESSION"}
+	for method_name in ["get_snapshot", "get_item_bridge", "submit_player_state", "get_report"]:
+		if not session.has_method(method_name):
+			return {
+				"success": false,
+				"error_code": "PLAYABLE_CLIENT_SESSION_METHOD_MISSING",
+				"method": method_name,
+			}
+	playable_client_session = session
+	var initial_snapshot: Dictionary = playable_client_session.get_snapshot(
+		PlayableAuthorityScript.PLAYER_ENTITY_ID
+	)
+	if not _apply_m2_player_snapshot(initial_snapshot):
+		playable_client_session = null
+		return {"success": false, "error_code": "PLAYABLE_PLAYER_REPLICA_MISSING"}
+	var setup_result: Dictionary = _setup_item_gameplay()
+	if not bool(setup_result.get("success", false)):
+		playable_client_session = null
+		return setup_result
+	_m2_attached = true
+	_m2_last_candidate_hash = _m2_state_content_hash(_create_m2_player_state(0))
+	return {
+		"success": true,
+		"error_code": "",
+		"world_id": "playground",
+		"spawn_position": _vector_to_array(player.get_world_position()),
+	}
+
+
+func _process(delta: float) -> void:
+	if runtime_role != "game-client" or not _m2_attached:
+		return
+	_apply_m2_flat_input(delta)
+	_sync_m2_player_state(delta)
 
 
 func register_runtime_commands(registry, owner_id: String) -> void:
@@ -104,6 +202,7 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 	_register_command(registry, owner_id, {"id": "inventory.toggle", "description": "Открыть инвентарь.", "usage": "inventory.toggle", "category": "items"}, Callable(self, "_command_inventory_toggle"))
 	_register_command(registry, owner_id, {"id": "inventory.drop", "description": "Выбросить предмет выбранного hotbar stack.", "usage": "inventory.drop", "category": "items"}, Callable(self, "_command_inventory_drop"))
 	_register_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
+	_register_command(registry, owner_id, {"id": "inventory.profile", "description": "Показать или сменить профиль управления инвентарём.", "usage": "inventory.profile [planet_default|rust_like|seven_days_like]", "category": "items"}, Callable(self, "_command_inventory_profile"))
 	_register_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
 
 
@@ -196,7 +295,7 @@ func _build_environment() -> void:
 
 
 
-func _setup_item_gameplay() -> void:
+func _setup_item_gameplay() -> Dictionary:
 	gravity_field = GravityFieldScript.new()
 	gravity_field.setup_static_sources([{
 		"id": "playground-moon",
@@ -208,7 +307,65 @@ func _setup_item_gameplay() -> void:
 	item_gameplay = ItemGameplayControllerScript.new()
 	item_gameplay.name = "ItemGameplayController"
 	add_child(item_gameplay)
-	item_gameplay.setup_runtime(player, item_world_root, item_attachment_root, gravity_field, "scenario/playground/local", "playground-moon", "playground-r2-demo", "playground", true)
+	var setup_result: Dictionary
+	if playable_client_session != null:
+		var item_snapshot: Dictionary = playable_client_session.get_snapshot(
+			PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID
+		)
+		var graph_value = item_snapshot.get(
+			"domain_components", {}
+		).get("item_graph", {})
+		if not graph_value is Dictionary or Dictionary(graph_value).is_empty():
+			item_gameplay.queue_free()
+			item_gameplay = null
+			return {
+				"success": false,
+				"error_code": "PLAYGROUND_ITEM_GRAPH_REPLICA_MISSING",
+			}
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			gravity_field,
+			"scenario/playground/local",
+			"playground-moon",
+			"playground-r2-demo",
+			"playground",
+			true,
+			{
+				"mode": ItemGameplayControllerScript.RUNTIME_MODE_REPLICA,
+				"authority_owner_id": String(
+					item_snapshot.get("authority_owner_id", "local-process")
+				),
+				"authority_epoch": int(item_snapshot.get("authority_epoch", 1)),
+				"initial_graph_snapshot": Dictionary(graph_value),
+				"replica_revision": int(item_snapshot.get("state_revision", -1)),
+				"replica_checksum": String(item_snapshot.get("checksum", "")),
+				"network_command_bridge": playable_client_session.get_item_bridge(),
+				"persistence_enabled": false,
+				"presentation_enabled": presentation_enabled,
+			}
+		)
+	else:
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			gravity_field,
+			"scenario/playground/local",
+			"playground-moon",
+			"playground-r2-demo",
+			"playground",
+			true,
+			{
+				"include_demo_world": true,
+				"presentation_enabled": presentation_enabled,
+			}
+		)
+	if not bool(setup_result.get("success", false)):
+		item_gameplay.queue_free()
+		item_gameplay = null
+		return setup_result
 	item_gameplay.inventory_visibility_changed.connect(_on_inventory_visibility_changed)
 	world_interactor = WorldInteractorScript.new()
 	world_interactor.name = "ItemWorldInteractor"
@@ -217,6 +374,7 @@ func _setup_item_gameplay() -> void:
 	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
 	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
 	world_interactor.set_enabled(true)
+	return {"success": true, "error_code": ""}
 
 
 func _on_inventory_visibility_changed(visible_value: bool) -> void:
@@ -339,6 +497,24 @@ func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
 	return item_gameplay.select_hotbar(clampi(int(arguments[0]), 1, 10) - 1)
 
 
+func _command_inventory_profile(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or item_gameplay.inventory_ui == null or item_gameplay.inventory_ui.active_screen == null:
+		return {"success": false, "output": "Инвентарь не готов"}
+	var screen = item_gameplay.inventory_ui.active_screen
+	if arguments.is_empty():
+		var active = screen.active_interaction_profile
+		return {
+			"success": active != null,
+			"output": "Профиль инвентаря: %s" % (active.profile_id if active != null else "недоступен"),
+		}
+	var profile_id := arguments[0].strip_edges().to_lower()
+	var profile = screen.interaction_profile_loader.get_profile(profile_id)
+	if profile == null:
+		return {"success": false, "output": "Неизвестный профиль: %s" % profile_id}
+	screen._apply_interaction_profile(profile, true, true)
+	return {"success": true, "output": "Профиль инвентаря: %s" % profile.profile_id}
+
+
 func _command_inventory_save(_arguments: Array[String]) -> Dictionary:
 	return item_gameplay.save_graph() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
 
@@ -458,6 +634,230 @@ func _test_inventory_demo() -> Dictionary:
 		and bool(item_gameplay.domain.validator.validate_graph().get("success", false))
 	)
 	return {"success": passed, "passed": passed, "output": "PASS: inventory demo" if passed else "FAIL: inventory demo"}
+
+
+func _create_m2_player_state(input_sequence: int) -> Dictionary:
+	return PlayableStateCodec.create_player_state(
+		player.get_world_position(),
+		player.global_transform.basis,
+		player.velocity,
+		_m2_interaction_position,
+		player.get_controller_id(),
+		player.get_camera_mode(),
+		player.is_flashlight_enabled(),
+		input_sequence,
+		"scenario/playground/local",
+		runtime_universe_id,
+		"playground",
+		runtime_instance_id,
+		0.0
+	)
+
+
+func _m2_state_content_hash(player_state: Dictionary) -> String:
+	var comparable: Dictionary = player_state.duplicate(true)
+	comparable["last_input_sequence"] = 0
+	var spatial: Dictionary = Dictionary(
+		comparable.get("spatial_ref", {})
+	).duplicate(true)
+	spatial["sample_time_s"] = 0.0
+	comparable["spatial_ref"] = spatial
+	return NetworkContractUtils.payload_hash(comparable)
+
+
+func _apply_m2_player_snapshot(snapshot: Dictionary) -> bool:
+	if snapshot.is_empty() or player == null:
+		return false
+	var state_value = snapshot.get(
+		"domain_components", {}
+	).get("player_state", {})
+	if not state_value is Dictionary:
+		return false
+	var state: Dictionary = Dictionary(state_value)
+	if not bool(PlayableStateCodec.validate_player_state(state).get("success", false)):
+		return false
+	player.set_world_position(PlayableStateCodec.player_position(state))
+	player.global_transform = Transform3D(
+		PlayableStateCodec.player_basis(state),
+		player.global_position
+	)
+	player.velocity = PlayableStateCodec.player_velocity(state)
+	_m2_interaction_position = PlayableStateCodec.player_interaction_position(state)
+	if player.get_controller_id() != String(state.get("controller_id", "")):
+		player.activate_controller(String(state.get("controller_id", "")))
+	if player.get_camera_mode() != String(state.get("camera_mode", "")):
+		player.set_camera_mode(String(state.get("camera_mode", "")))
+	if player.is_flashlight_enabled() != bool(
+		state.get("flashlight_enabled", false)
+	):
+		player.set_flashlight_enabled(bool(state.get("flashlight_enabled", false)))
+	_m2_player_input_sequence = maxi(
+		_m2_player_input_sequence,
+		int(state.get("last_input_sequence", 0))
+	)
+	return true
+
+
+func _apply_m2_flat_input(delta: float) -> void:
+	if player == null or not local_input_enabled:
+		return
+	if item_gameplay != null and item_gameplay.inventory_open:
+		return
+	var input_vector := Input.get_vector(
+		"move_left", "move_right", "move_forward", "move_back"
+	)
+	if input_vector.length_squared() < 0.000001:
+		player.velocity = Vector3.ZERO
+		return
+	var view_basis: Basis = player.get_view_basis()
+	var forward: Vector3 = (-view_basis.z).slide(Vector3.UP).normalized()
+	var right: Vector3 = view_basis.x.slide(Vector3.UP).normalized()
+	var direction: Vector3 = right * input_vector.x + forward * -input_vector.y
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
+	var speed: float = (
+		M2_NETWORK_RUN_SPEED_MPS
+		if Input.is_action_pressed("boost")
+		else M2_NETWORK_WALK_SPEED_MPS
+	)
+	var offset: Vector3 = direction * speed * clampf(delta, 0.0, 0.05)
+	var candidate_position: Vector3 = player.get_world_position() + offset
+	candidate_position.y = maxf(candidate_position.y, spawn_position.y)
+	player.set_world_position(candidate_position)
+	_m2_interaction_position += offset
+	player.velocity = direction * speed
+
+
+func _sync_m2_player_state(delta: float) -> void:
+	if playable_client_session == null or player == null:
+		return
+	var candidate: Dictionary = _create_m2_player_state(
+		_m2_player_input_sequence + 1
+	)
+	var content_hash: String = _m2_state_content_hash(candidate)
+	if content_hash == _m2_last_candidate_hash:
+		return
+	_m2_player_input_sequence += 1
+	_m2_player_operation_sequence += 1
+	candidate["last_input_sequence"] = _m2_player_input_sequence
+	var result: Dictionary = playable_client_session.submit_player_state(
+		candidate,
+		clampf(delta, 0.000001, 0.25),
+		"operation/m2/playground/%d/%d" % [
+			OS.get_process_id(),
+			_m2_player_operation_sequence,
+		]
+	)
+	var snapshot: Dictionary = Dictionary(
+		result.get("details", {}).get("snapshot", {})
+	)
+	if not bool(result.get("success", false)):
+		_m2_rejection_count += 1
+		_m2_last_sync_error = String(
+			result.get("error_code", "PLAYGROUND_PLAYER_SYNC_REJECTED")
+		)
+		_apply_m2_player_snapshot(snapshot)
+		_m2_last_candidate_hash = _m2_state_content_hash(
+			_create_m2_player_state(0)
+		)
+		return
+	if not _apply_m2_player_snapshot(snapshot):
+		_m2_rejection_count += 1
+		_m2_last_sync_error = "INVALID_PLAYGROUND_PLAYER_REPLICA_SNAPSHOT"
+		return
+	_m2_last_sync_error = ""
+	_m2_last_candidate_hash = content_hash
+	_m2_sync_count += 1
+
+
+func m2_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if runtime_role != "game-client" or not _m2_attached or player == null:
+		return {"success": false, "error_code": "M2_PLAYGROUND_NOT_READY"}
+	var before_position: Vector3 = player.get_world_position()
+	var candidate_position: Vector3 = before_position + offset
+	candidate_position.y = maxf(candidate_position.y, spawn_position.y)
+	player.set_world_position(candidate_position)
+	_m2_interaction_position += candidate_position - before_position
+	player.velocity = Vector3.ZERO
+	return {
+		"success": true,
+		"before_position": _vector_to_array(before_position),
+		"candidate_position": _vector_to_array(candidate_position),
+		"sync_count": _m2_sync_count,
+	}
+
+
+func m2_open_inventory_and_select_hotbar(index: int) -> Dictionary:
+	if runtime_role != "game-client" or item_gameplay == null:
+		return {"success": false, "error_code": "M2_PLAYGROUND_ITEM_REPLICA_NOT_READY"}
+	if not item_gameplay.inventory_open:
+		item_gameplay.toggle_inventory()
+	var selection: Dictionary = item_gameplay.select_hotbar(index)
+	return {
+		"success": bool(selection.get("success", false)),
+		"selection": selection.duplicate(true),
+		"inventory_open": item_gameplay.inventory_open,
+		"selected_hotbar_index": item_gameplay.selected_hotbar_index,
+		"runtime_mode": item_gameplay.runtime_mode,
+		"replica_revision": item_gameplay.network_replica_revision,
+		"replica_checksum": item_gameplay.network_replica_checksum,
+	}
+
+
+func create_m2_graphical_client_report() -> Dictionary:
+	var player_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.PLAYER_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	var item_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	return {
+		"schema": "planet_simulator.m2_graphical_world_report.v1",
+		"runtime_role": runtime_role,
+		"attached": _m2_attached,
+		"world_id": "playground",
+		"spawn_position": _vector_to_array(spawn_position),
+		"player_position": _vector_to_array(
+			player.get_world_position() if player != null else Vector3.ZERO
+		),
+		"player_entity_id": PlayableAuthorityScript.PLAYER_ENTITY_ID,
+		"interaction_position": _vector_to_array(_m2_interaction_position),
+		"player_input_sequence": _m2_player_input_sequence,
+		"player_sync_count": _m2_sync_count,
+		"player_rejection_count": _m2_rejection_count,
+		"player_snapshot": player_snapshot,
+		"item_snapshot": item_snapshot,
+		"item_controller_mode": (
+			String(item_gameplay.runtime_mode) if item_gameplay != null else ""
+		),
+		"inventory_open": (
+			bool(item_gameplay.inventory_open) if item_gameplay != null else false
+		),
+		"selected_hotbar_index": (
+			int(item_gameplay.selected_hotbar_index) if item_gameplay != null else -1
+		),
+		"active_camera": (
+			String(player.get_active_camera().get_path())
+			if (
+				player != null
+				and player.get_active_camera() != null
+				and player.get_active_camera().current
+			)
+			else NodePath()
+		),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": (
+			bool(player.is_network_replica_mode()) if player != null else false
+		),
+		"last_sync_error": _m2_last_sync_error,
+		"direct_authority_references": 0,
+		"direct_domain_references": 0,
+	}
 
 
 

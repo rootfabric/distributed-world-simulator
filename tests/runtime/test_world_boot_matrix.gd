@@ -66,6 +66,7 @@ func _run() -> void:
 		_assert(simulator.command_registry.has_command("display.fullscreen.toggle"), "Core display command disappeared in %s" % world_id)
 		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command disappeared in %s" % world_id)
 		_assert_world_command_surface(simulator, world_id)
+		_test_inventory_profile_command(simulator, world_id)
 		if runtime == null:
 			continue
 		_assert(runtime.has_method("create_runtime_snapshot"), "Runtime snapshot contract missing: %s" % world_id)
@@ -94,6 +95,20 @@ func _test_console_process_lifecycle(simulator) -> void:
 		runtime.process_mode == initial_process_mode,
 		"Repeated console.open corrupted the runtime process mode."
 	)
+
+
+func _test_inventory_profile_command(simulator, world_id: String) -> void:
+	if not simulator.command_registry.has_command("inventory.profile"):
+		return
+	var selected: Dictionary = simulator.command_registry.execute_line("inventory.profile rust_like")
+	_assert(bool(selected.get("success", false)), "inventory.profile rust_like failed in %s: %s" % [world_id, selected])
+	var status: Dictionary = simulator.command_registry.execute_line("inventory.profile")
+	_assert(
+		bool(status.get("success", false)) and String(status.get("output", "")).contains("rust_like"),
+		"inventory.profile status did not report rust_like in %s: %s" % [world_id, status]
+	)
+	var rejected: Dictionary = simulator.command_registry.execute_line("inventory.profile unknown")
+	_assert(not bool(rejected.get("success", true)), "inventory.profile must reject unknown profile in %s" % world_id)
 
 
 func _assert_optional_diagnostic_menu_is_closed(runtime, world_id: String) -> void:

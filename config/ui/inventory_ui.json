@@ -1,5 +1,9 @@
 {
-  "schema": "planet_simulator.inventory_ui_config.v1",
+  "schema": "planet_simulator.inventory_ui_config.v2",
   "implementation": "component",
-  "allow_legacy_fallback": true
+  "allow_legacy_fallback": true,
+  "interaction_profiles_catalog": "res://config/ui/inventory_profiles/catalog.json",
+  "default_interaction_profile": "planet_default",
+  "allow_user_profile_override": true,
+  "environment_override": "PLANET_SIMULATOR_INVENTORY_PROFILE"
 }

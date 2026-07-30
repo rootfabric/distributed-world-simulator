@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_opening_alignment_review_fix",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "c919a7c",
+  "status": "passed",
+  "tests": [
+    {
+      "command": "RUN_INVENTORY_PROFILE_TESTS.ps1",
+      "status": "passed"
+    },
+    {
+      "command": "RUN_ITEM_SYSTEM_TESTS.ps1",
+      "suites_passed": 15,
+      "suites_total": 15,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "assertions": 100,
+      "status": "passed"
+    }
+  ],
+  "acceptance_checks": [
+    "The opening status legend cannot expand the inventory beyond its requested width.",
+    "The inventory is centered immediately after opening.",
+    "A late root-Control resize is corrected without item interaction.",
+    "Size and position remain stable for at least three idle frames."
+  ],
+  "static_checks": {
+    "git_diff_check": "passed",
+    "json_parse": "passed",
+    "archive_contents": "passed"
+  },
+  "changed_files": [
+    "docs/checkpoints/2026-07-30_INVENTORY_OPENING_ALIGNMENT_FIX3_RU.md",
+    "scripts/ui/inventory/inventory_screen.gd",
+    "tests/ui/test_inventory_seven_days_interface.gd",
+    "validation/inventory-opening-alignment-fix3-validation.json"
+  ]
+}

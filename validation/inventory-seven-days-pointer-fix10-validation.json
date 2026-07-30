@@ -1,0 +1,42 @@
+{
+  "schema": "planet_simulator.validation.v1",
+  "feature": "inventory_seven_days_controller_view_world_drop_review_fix",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "06b62a5",
+  "status": "passed",
+  "tests": [
+    {
+      "script": "res://tests/items/test_player_inventory_flow.gd",
+      "assertions": 79,
+      "status": "passed"
+    },
+    {
+      "command": "RUN_INVENTORY_PROFILE_TESTS.ps1",
+      "status": "passed"
+    },
+    {
+      "command": "RUN_ITEM_SYSTEM_TESTS.ps1",
+      "suites_passed": 15,
+      "suites_total": 15,
+      "status": "passed"
+    }
+  ],
+  "acceptance_checks": [
+    "Default WORLD drop position follows the active controller view vector, including camera pitch.",
+    "Default WORLD drop velocity follows the same controller view vector.",
+    "Drop direction is converted into the world-root local frame.",
+    "Explicit override transforms retain zero automatic drop velocity.",
+    "Runtime without a player preserves the safe fallback."
+  ],
+  "static_checks": {
+    "git_diff_check": "passed",
+    "json_parse": "passed",
+    "archive_contents": "passed"
+  },
+  "changed_files": [
+    "docs/checkpoints/2026-07-30_INVENTORY_SEVEN_DAYS_POINTER_FIX10_RU.md",
+    "scripts/items/presentation/item_gameplay_controller.gd",
+    "tests/items/test_player_inventory_flow.gd",
+    "validation/inventory-seven-days-pointer-fix10-validation.json"
+  ]
+}
