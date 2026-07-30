@@ -14,8 +14,7 @@ desktop.ini
 *.bak
 *.swp
 mono_crash.*.json
-artifacts/test-results/
-
-# Locally unpacked delivery packages; source files are tracked at their canonical paths.
-artifacts/archive-staging/
+# Runtime logs, test reports and locally assembled delivery packages.
+artifacts/*
+!artifacts/.gdignore
 inventory-*.zip

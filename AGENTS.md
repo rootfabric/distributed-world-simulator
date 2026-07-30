@@ -124,11 +124,11 @@ A task is complete only when it includes:
 ```text
 architecture checkpoint accepted: v16.9.4-architecture-a2-networked-gameplay
 roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
-runtime checkpoint accepted: v16.10.1-runtime-m2-dedicated-graphical-client (ACCEPTED_WITH_GATES)
-runtime checkpoint candidate: v16.10.2-runtime-m3-dedicated-graphical-multiplayer
+runtime checkpoint accepted: v16.10.3-domain-m4-canonical-shared-gameplay
+runtime extension accepted: M4 networked playground
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
-next after acceptance: feature/m4-canonical-shared-gameplay
-implementation manifest: config/network/dedicated-graphical-multiplayer.v1.json
+next: feature/m5-graphical-multiplayer-acceptance
+implementation manifest: config/network/canonical-shared-gameplay.v1.json
 ```
 
 Accepted foundation order:
@@ -146,3 +146,18 @@ M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 
 M1–M6 close A2-D01…D04. B1 remains adapter-only but is deferred until A3 acceptance. N3–N6 remain blocked until A3 and B2. ENet is the graphical realtime transport; NATS must not create a second gameplay path.
 
 Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.
+
+## MCP-driven Godot runtime control
+
+Если задача требует запустить Godot, управлять запущенной игрой, проверить UI,
+сделать игровой screenshot или прочитать runtime-логи, перед первым действием
+полностью прочитайте `docs/MCP_GODOT.md` и соблюдайте описанный там контракт.
+
+Критичные требования:
+
+- использовать double x86_64 console Godot из `C:\Godot\godot\bin\`;
+- запускать и завершать собственный процесс через MCP managed-process tools;
+- передавать игровой ввод только через `runtime_inject_input`;
+- получать изображение только через `runtime_screenshot`, не с рабочего стола;
+- подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
+- перед передачей управления человеку отпускать все удерживаемые actions.

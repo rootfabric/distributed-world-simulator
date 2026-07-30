@@ -7,6 +7,9 @@ M3 доказывает один headless dedicated server и два однов�
 
 Ключевые документы:
 
+- `MCP_GODOT.md` — контракт автономного управления double Godot через MCP:
+  managed processes, runtime input, viewport screenshots, assertions, логи и
+  корректное завершение процесса;
 - `checkpoints/2026-07-30_V16_10_2_RUNTIME_M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
 - `architecture/M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
