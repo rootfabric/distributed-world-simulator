@@ -1,27 +1,18 @@
 {
   "schema": "planet_simulator.validation.v1",
-  "feature": "inventory_interaction_profiles",
-  "branch": "fix/inventory-drag-overlay-drop",
-  "base_commit": "e00162c",
+  "feature": "inventory_seven_days_slot_interface",
+  "branch": "feature/h0-inventory-menu-debug",
+  "base_commit": "b34b4f3",
   "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "status": "passed",
-  "profiles": [
-    {
-      "profile_id": "planet_default",
-      "display_name": "Как было",
-      "status": "passed"
-    },
-    {
-      "profile_id": "rust_like",
-      "display_name": "Rust",
-      "status": "passed"
-    },
-    {
-      "profile_id": "seven_days_like",
-      "display_name": "7 Days",
-      "status": "passed"
-    }
-  ],
+  "behavior": {
+    "left_click": "carry full stack or place all",
+    "right_click": "carry ceil half or place one",
+    "occupied_incompatible_slot": "atomic swap; displaced item remains on cursor",
+    "shift_left_click": "quick transfer between player and opened external container",
+    "cancel": "reverse swap history and restore origin slot",
+    "container_model": "one-way BULK to SLOTS migration on Seven Days activation/open"
+  },
   "tests": [
     {
       "kind": "editor_import_parse",
@@ -29,24 +20,28 @@
     },
     {
       "script": "res://tests/ui/test_inventory_interaction_profiles.gd",
-      "assertions": 69,
+      "assertions": 86,
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "assertions": 86,
       "status": "passed"
     },
     {
       "script": "res://tests/items/test_item_stack_transfers.gd",
-      "assertions": 61,
+      "assertions": 74,
       "status": "passed"
     },
     {
       "script": "res://tests/ui/test_inventory_ui_i0_architecture.gd",
-      "assertions": 43,
+      "assertions": 44,
       "status": "passed"
     },
     {
       "script": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
       "assertions": 69,
-      "status": "passed",
-      "known_teardown_warning": "existing CanvasItem/ObjectDB/RID leak warnings"
+      "status": "passed"
     },
     {
       "script": "res://tests/ui/test_inventory_ui_i2_large_storage.gd",
@@ -54,14 +49,32 @@
       "status": "passed"
     },
     {
-      "suite": "item_system_relevant_regression",
-      "tests_passed": 14,
-      "tests_total": 14,
-      "assertions": 1823,
+      "suite": "item_system_regression",
+      "tests_passed": 15,
+      "tests_total": 15,
+      "assertions": 1940,
+      "status": "passed"
+    },
+    {
+      "suite": "world_core_regression",
+      "tests_passed": 70,
+      "tests_total": 70,
       "status": "passed"
     },
     {
       "script": "res://tests/integration/test_unified_planetary_runtime.gd",
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/integration/test_unified_runtime_boot.gd",
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/runtime/test_world_switch_during_generation.gd",
+      "status": "passed"
+    },
+    {
+      "script": "res://tests/runtime/test_world_boot_matrix.gd",
       "status": "passed"
     },
     {
@@ -72,54 +85,54 @@
     }
   ],
   "negative_checks": [
-    "duplicate profile gestures are rejected",
-    "unknown profile IDs use deterministic fallback",
-    "opening exact split does not mutate Item Graph",
-    "rejected carry target preserves quantity and revision",
-    "Escape-equivalent cancellation does not mutate Item Graph",
-    "profile switch cancels virtual carry and pending split without mutation",
-    "partial outside drop moves only requested quantity"
+    "partial incompatible right-click placement is rejected with SWAP_REQUIRES_FULL_STACK",
+    "capacity-rejected swap restores memberships, relations and revisions",
+    "stale revision swap preserves both slots",
+    "exact operation replay returns stored result without second mutation",
+    "Escape reverses a multi-swap cursor history",
+    "slot migration rolls back when graph validation or persistence fails",
+    "transient cursor state is excluded from persistence",
+    "archive staging scripts are excluded from Godot import by .gdignore"
   ],
-  "replay_tests": "not_applicable_presentation_only_until_commit",
   "static_checks": {
     "git_diff_check": "passed",
     "json_parse": "passed",
     "bash_syntax": "passed",
-    "world_regression_manifest_updated": true,
+    "world_regression_manifest": "70/70 synchronized",
     "item_system_runner_updated": true,
+    "inventory_profile_runner_updated": true,
     "clean_archive_apply": "passed",
-    "archive_file_count": 30
+    "archive_file_count": 29
   },
   "changed_files": [
     "RUN_INVENTORY_PROFILE_TESTS.ps1",
     "RUN_INVENTORY_PROFILE_TESTS.sh",
     "RUN_ITEM_SYSTEM_TESTS.ps1",
     "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "config/ui/inventory_profiles/catalog.json",
-    "config/ui/inventory_profiles/planet_default.json",
-    "config/ui/inventory_profiles/rust_like.json",
+    "artifacts/archive-staging/.gdignore",
     "config/ui/inventory_profiles/seven_days_like.json",
-    "config/ui/inventory_ui.json",
-    "docs/checkpoints/2026-07-29_INVENTORY_INTERACTION_PROFILES_RU.md",
+    "docs/checkpoints/2026-07-30_INVENTORY_SEVEN_DAYS_PROFILE_RU.md",
     "docs/plans/INVENTORY_UI_REDESIGN_PLAN_RU.md",
-    "scenes/ui/inventory/inventory_screen.tscn",
-    "scripts/items/presentation/item_inventory_ui.gd",
+    "scripts/items/presentation/item_gameplay_controller.gd",
     "scripts/items/presentation/item_slot_control.gd",
+    "scripts/items/services/item_transfer_service.gd",
     "scripts/ui/inventory/container_panel.gd",
+    "scripts/ui/inventory/hotbar_panel.gd",
+    "scripts/ui/inventory/interactions/inventory_cursor_controller.gd",
+    "scripts/ui/inventory/interactions/inventory_cursor_controller.gd.uid",
     "scripts/ui/inventory/interactions/inventory_interaction_profile.gd",
-    "scripts/ui/inventory/interactions/inventory_interaction_profile.gd.uid",
-    "scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd",
-    "scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd.uid",
-    "scripts/ui/inventory/interactions/inventory_interaction_router.gd",
-    "scripts/ui/inventory/interactions/inventory_interaction_router.gd.uid",
+    "scripts/ui/inventory/interactions/inventory_slot_mode_adapter.gd",
+    "scripts/ui/inventory/interactions/inventory_slot_mode_adapter.gd.uid",
+    "scripts/ui/inventory/interactions/inventory_slot_projection.gd",
+    "scripts/ui/inventory/interactions/inventory_slot_projection.gd.uid",
     "scripts/ui/inventory/interactions/inventory_transfer_session.gd",
-    "scripts/ui/inventory/interactions/inventory_transfer_session.gd.uid",
     "scripts/ui/inventory/inventory_command_facade.gd",
-    "scripts/ui/inventory/inventory_preferences_store.gd",
     "scripts/ui/inventory/inventory_screen.gd",
     "scripts/ui/inventory/item_cell.gd",
+    "tests/items/test_item_stack_transfers.gd",
     "tests/ui/test_inventory_interaction_profiles.gd",
-    "tests/ui/test_inventory_interaction_profiles.gd.uid",
+    "tests/ui/test_inventory_seven_days_interface.gd",
+    "tests/ui/test_inventory_seven_days_interface.gd.uid",
     "validation/inventory-interaction-profiles-validation.json"
   ]
 }

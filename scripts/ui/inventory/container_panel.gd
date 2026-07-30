@@ -59,6 +59,8 @@ func set_visual_role(role: String) -> void:
 
 func set_interaction_profile(profile: InventoryInteractionProfile) -> void:
 	interaction_profile = profile
+	_apply_boundary_style()
+	_apply_profile_copy()
 	for child in grid.get_children():
 		if child.has_method("set_interaction_profile"):
 			child.set_interaction_profile(profile)
@@ -100,6 +102,7 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 	_clear_feedback()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_update_role_copy()
+	_apply_profile_copy()
 	_update_virtualization(model)
 	set_meta("inventory_container_model", current_model.duplicate(true))
 
@@ -310,6 +313,37 @@ func _request_next_page() -> void:
 	page_requested.emit(container_id, int(current_model.get("page_index", 0)) + 1)
 
 
+func _apply_profile_copy() -> void:
+	if role_label == null or metadata_label == null or drop_hint_label == null or grid == null:
+		return
+	var seven_days_style := interaction_profile != null and interaction_profile.ui_style == "SEVEN_DAYS"
+	role_label.visible = not seven_days_style
+	metadata_label.visible = not seven_days_style
+	drop_hint_label.visible = not seven_days_style
+	grid.add_theme_constant_override("h_separation", 1 if seven_days_style else 4)
+	grid.add_theme_constant_override("v_separation", 1 if seven_days_style else 4)
+	custom_minimum_size = Vector2(548.0, 250.0) if seven_days_style else Vector2(270.0, 220.0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if seven_days_style else HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_color_override("font_color", Color.WHITE if seven_days_style else Color(0.9, 0.92, 0.96, 1.0))
+	title_label.add_theme_font_size_override("font_size", 19 if seven_days_style else 17)
+	if seven_days_style:
+		if visual_role == "player":
+			title_label.text = "ИНВЕНТАРЬ"
+		else:
+			title_label.text = title_label.text.to_upper()
+		var title_style := StyleBoxFlat.new()
+		title_style.bg_color = Color(0.015, 0.015, 0.012, 0.96)
+		title_style.border_color = Color(0.88, 0.7, 0.16, 1.0)
+		title_style.border_width_bottom = 2
+		title_style.content_margin_left = 8.0
+		title_style.content_margin_top = 4.0
+		title_style.content_margin_right = 8.0
+		title_style.content_margin_bottom = 4.0
+		title_label.add_theme_stylebox_override("normal", title_style)
+	else:
+		title_label.remove_theme_stylebox_override("normal")
+
+
 func _update_role_copy() -> void:
 	if role_label == null or drop_hint_label == null:
 		return
@@ -332,31 +366,46 @@ func _update_role_copy() -> void:
 
 func _apply_boundary_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.06, 0.085, 0.94)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 10.0
-	style.content_margin_top = 8.0
-	style.content_margin_right = 10.0
-	style.content_margin_bottom = 8.0
-	match visual_role:
-		"player":
-			style.border_color = Color(0.25, 0.56, 0.82, 1.0)
-			style.bg_color = Color(0.045, 0.075, 0.11, 0.94)
-		"external":
-			style.border_color = Color(0.88, 0.58, 0.18, 1.0)
-			style.bg_color = Color(0.095, 0.07, 0.035, 0.94)
-		"hotbar":
-			style.border_color = Color(0.26, 0.72, 0.68, 1.0)
-			style.bg_color = Color(0.035, 0.085, 0.085, 0.94)
-		_:
-			style.border_color = Color(0.4, 0.48, 0.58, 1.0)
+	var seven_days_style := interaction_profile != null and interaction_profile.ui_style == "SEVEN_DAYS"
+	if seven_days_style:
+		style.bg_color = Color(0.08, 0.08, 0.07, 0.74)
+		style.border_color = Color(0.05, 0.05, 0.04, 1.0)
+		style.set_border_width_all(2)
+		style.border_width_top = 4
+		style.corner_radius_top_left = 0
+		style.corner_radius_top_right = 0
+		style.corner_radius_bottom_right = 0
+		style.corner_radius_bottom_left = 0
+		style.content_margin_left = 6.0
+		style.content_margin_top = 5.0
+		style.content_margin_right = 6.0
+		style.content_margin_bottom = 6.0
+	else:
+		style.bg_color = Color(0.045, 0.06, 0.085, 0.94)
+		style.border_width_left = 2
+		style.border_width_top = 2
+		style.border_width_right = 2
+		style.border_width_bottom = 2
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_right = 8
+		style.corner_radius_bottom_left = 8
+		style.content_margin_left = 10.0
+		style.content_margin_top = 8.0
+		style.content_margin_right = 10.0
+		style.content_margin_bottom = 8.0
+		match visual_role:
+			"player":
+				style.border_color = Color(0.25, 0.56, 0.82, 1.0)
+				style.bg_color = Color(0.045, 0.075, 0.11, 0.94)
+			"external":
+				style.border_color = Color(0.88, 0.58, 0.18, 1.0)
+				style.bg_color = Color(0.095, 0.07, 0.035, 0.94)
+			"hotbar":
+				style.border_color = Color(0.26, 0.72, 0.68, 1.0)
+				style.bg_color = Color(0.035, 0.085, 0.085, 0.94)
+			_:
+				style.border_color = Color(0.4, 0.48, 0.58, 1.0)
 	add_theme_stylebox_override("panel", style)
 
 

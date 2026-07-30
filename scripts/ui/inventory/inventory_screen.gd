@@ -3,6 +3,9 @@ extends PanelContainer
 
 const InteractionProfileLoader = preload("res://scripts/ui/inventory/interactions/inventory_interaction_profile_loader.gd")
 const TransferSession = preload("res://scripts/ui/inventory/interactions/inventory_transfer_session.gd")
+const SlotProjection = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection.gd")
+const CursorController = preload("res://scripts/ui/inventory/interactions/inventory_cursor_controller.gd")
+const SlotModeAdapter = preload("res://scripts/ui/inventory/interactions/inventory_slot_mode_adapter.gd")
 
 @onready var columns: HBoxContainer = %Columns
 @onready var player_panel: InventoryContainerPanel = %PlayerPanel
@@ -42,6 +45,9 @@ var interaction_profile_loader := InteractionProfileLoader.new()
 var active_interaction_profile: InventoryInteractionProfile
 var interaction_profile_override: String = ""
 var transfer_session := TransferSession.new()
+var slot_projection := SlotProjection.new()
+var cursor_controller := CursorController.new()
+var slot_mode_adapter := SlotModeAdapter.new()
 var carry_preview: PanelContainer
 var carry_preview_icon: TextureRect
 var carry_preview_label: Label
@@ -63,10 +69,12 @@ func setup(
 	interaction_profile_override = profile_override.strip_edges().to_lower()
 	view_model.setup(controller)
 	command_facade.setup(controller)
+	slot_mode_adapter.setup(controller)
 	preferences_store = InventoryPreferencesStore.new()
 	preferences_store.setup(String(controller.profile_id))
 	var preferences := preferences_store.load_preferences()
 	_setup_projection_toolbar()
+	cursor_controller.setup(gameplay_controller, command_facade, transfer_session, slot_projection, Callable(self, "_icon_for_cell"))
 	_setup_interaction_profiles(preferences)
 	_setup_carry_preview()
 	view_model.apply_preferences(preferences)
@@ -153,6 +161,10 @@ func _input(event: InputEvent) -> void:
 
 func open_external_container(container_id: String) -> void:
 	external_container_id = container_id
+	if _is_seven_days_profile():
+		var migration := _ensure_slot_container(container_id)
+		if not bool(migration.get("success", false)):
+			_present_carry_error(migration, container_id)
 	set_inventory_visible(true)
 	refresh()
 
@@ -168,13 +180,13 @@ func refresh(message: String = "") -> void:
 	if gameplay_controller == null or view_model == null:
 		return
 	var screen_model: Dictionary = view_model.build_screen(external_container_id)
-	var player_model: Dictionary = Dictionary(screen_model.get("player", {}))
+	var player_model: Dictionary = slot_projection.project_container(Dictionary(screen_model.get("player", {})))
 	var hotbar_model: Dictionary = Dictionary(screen_model.get("hotbar", {}))
 	player_panel.render(player_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 	hotbar_panel.render_hotbar(hotbar_model, Callable(self, "_icon_for_cell"), Callable(command_facade, "preview_transfer"))
 	# The interactive hotbar lives in a persistent overlay outside this window.
 	hotbar_panel.visible = false
-	var external_model: Dictionary = Dictionary(screen_model.get("external", {}))
+	var external_model: Dictionary = slot_projection.project_container(Dictionary(screen_model.get("external", {})))
 	if external_container_id.is_empty() or external_model.is_empty():
 		external_panel.clear_panel()
 		compatibility_external_title.text = ""
@@ -188,6 +200,8 @@ func refresh(message: String = "") -> void:
 		inspector.clear_item()
 	else:
 		inspector.show_item(inspector_model)
+	screen_model["player"] = player_model.duplicate(true)
+	screen_model["external"] = external_model.duplicate(true)
 	_update_projection_summary(player_model, external_model)
 	if not message.is_empty():
 		status_label.text = message
@@ -245,6 +259,7 @@ func create_debug_snapshot() -> Dictionary:
 			"player_pool_size": player_panel.get_pool_size(),
 			"external_pool_size": external_panel.get_pool_size(),
 		},
+		"cursor_controller": cursor_controller.debug_snapshot(),
 		"interaction_profiles": {
 			"active_profile_id": active_interaction_profile.profile_id if active_interaction_profile != null else "",
 			"active_profile_name": active_interaction_profile.display_name if active_interaction_profile != null else "",
@@ -361,7 +376,31 @@ func _on_quantity_confirmed() -> void:
 
 
 func _on_quick_transfer_requested(item_id: String, source_container_id: String, _source_slot_index: int) -> void:
+	if transfer_session.is_active():
+		toast_layer.show_error("Сначала положите предмет с курсора")
+		return
 	var cell_data := _cell_data_for_item(item_id)
+	if external_container_id.is_empty() and active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like":
+		var local_result: Dictionary
+		var target_container_id := ""
+		if source_container_id == gameplay_controller.player_inventory_id:
+			local_result = command_facade.assign_hotbar_first_free(item_id)
+			target_container_id = gameplay_controller.player_hotbar_id
+		elif source_container_id == gameplay_controller.player_hotbar_id:
+			local_result = command_facade.transfer_stack(item_id, gameplay_controller.player_inventory_id)
+			target_container_id = gameplay_controller.player_inventory_id
+		else:
+			local_result = {
+				"success": false,
+				"error_code": "QUICK_TRANSFER_SOURCE_UNSUPPORTED",
+				"message": "Быстрый перенос без открытого контейнера работает между рюкзаком и быстрой панелью",
+			}
+		_present_result(
+			local_result,
+			target_container_id,
+			"Быстро перенесено: %s" % String(cell_data.get("display_name", "Предмет"))
+		)
+		return
 	var preview := command_facade.preview_quick_transfer(item_id, source_container_id, external_container_id)
 	var target_container_id := String(preview.get("target_container_id", source_container_id))
 	if not bool(preview.get("success", false)):
@@ -612,12 +651,14 @@ func _icon_for_cell(cell_data: Dictionary) -> Texture2D:
 
 
 func _apply_panel_size(has_external: bool, external_columns: int) -> void:
-	var desired_width := 1060.0
+	var seven_days_style := _is_seven_days_profile()
+	var desired_width := 1180.0 if seven_days_style else 1060.0
 	if has_external:
-		desired_width = 1120.0 + maxf(260.0, external_columns * 44.0)
+		desired_width = (1280.0 + maxf(180.0, external_columns * 28.0)) if seven_days_style else (1120.0 + maxf(260.0, external_columns * 44.0))
 	var viewport_size := get_viewport().get_visible_rect().size if get_viewport() != null else Vector2(1280.0, 720.0)
 	var width := minf(desired_width, maxf(760.0, viewport_size.x - 32.0))
-	var height := minf(680.0, maxf(600.0, viewport_size.y - 32.0))
+	var desired_height := 720.0 if seven_days_style else 680.0
+	var height := minf(desired_height, maxf(600.0, viewport_size.y - 32.0))
 	var panel_size := Vector2(width, height)
 	custom_minimum_size = panel_size
 	size = panel_size
@@ -801,9 +842,19 @@ func _apply_interaction_profile(
 		split_dialog.clear_request()
 	_clear_pending_quantity_drop()
 	active_interaction_profile = profile
+	slot_projection.configure(profile)
+	if _is_seven_days_profile():
+		var player_migration := _ensure_slot_container(gameplay_controller.player_inventory_id)
+		if not bool(player_migration.get("success", false)):
+			toast_layer.show_error("Не удалось включить слотовый рюкзак")
+		if not external_container_id.is_empty():
+			var external_migration := _ensure_slot_container(external_container_id)
+			if not bool(external_migration.get("success", false)):
+				toast_layer.show_error("Не удалось включить слоты внешнего контейнера")
 	for panel in [player_panel, external_panel, hotbar_panel]:
 		panel.set_interaction_profile(profile)
 	_sync_interaction_profile_option()
+	_apply_profile_visual_style()
 	_update_profile_status()
 	if persist:
 		_save_preferences()
@@ -812,6 +863,20 @@ func _apply_interaction_profile(
 	var parent := get_parent()
 	if parent != null and parent.has_method("_refresh_persistent_hotbar"):
 		parent.call_deferred("_refresh_persistent_hotbar")
+
+
+func _is_seven_days_profile() -> bool:
+	return active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like"
+
+
+func _ensure_slot_container(container_id: String) -> Dictionary:
+	if container_id.is_empty():
+		return {"success": true, "no_change": true}
+	var preferred_layout: Array = Array(slot_projection.export_layouts().get(container_id, []))
+	var result: Dictionary = slot_mode_adapter.ensure_container_slots(container_id, preferred_layout)
+	if bool(result.get("success", false)):
+		slot_projection.clear_container(container_id)
+	return result
 
 
 func _sync_interaction_profile_option() -> void:
@@ -848,6 +913,55 @@ func _update_profile_status() -> void:
 	status_label.text = "%s: %s · Tab — закрыть" % [active_interaction_profile.display_name, legend]
 
 
+func _apply_profile_visual_style() -> void:
+	if active_interaction_profile == null:
+		return
+	var seven_days_style := active_interaction_profile.ui_style == "SEVEN_DAYS"
+	$Margin/Main/Header.visible = not seven_days_style
+	search_edit.visible = not seven_days_style
+	filter_option.visible = not seven_days_style
+	sort_option.visible = not seven_days_style
+	reset_projection_button.visible = not seven_days_style
+	inspector_toggle.visible = not seven_days_style
+	projection_summary.visible = not seven_days_style
+	$Margin/Main/ProjectionToolbar.alignment = BoxContainer.ALIGNMENT_END if seven_days_style else BoxContainer.ALIGNMENT_BEGIN
+	columns.add_theme_constant_override("separation", 4 if seven_days_style else 14)
+	if seven_days_style:
+		columns.move_child(external_panel, 0)
+		columns.move_child(player_panel, 1)
+		columns.move_child(inspector, 2)
+		inspector.visible = false
+	else:
+		columns.move_child(player_panel, 0)
+		columns.move_child(external_panel, 1)
+		columns.move_child(inspector, 2)
+		inspector.visible = inspector_toggle.button_pressed
+	custom_minimum_size = Vector2(1240.0, 720.0) if seven_days_style else Vector2(1060.0, 680.0)
+	var style := StyleBoxFlat.new()
+	if seven_days_style:
+		style.bg_color = Color(0.035, 0.035, 0.03, 0.82)
+		style.border_color = Color(0.92, 0.75, 0.18, 1.0)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(0)
+	else:
+		style.bg_color = Color(0.035, 0.045, 0.065, 0.97)
+		style.border_color = Color(0.22, 0.5, 0.72, 1.0)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(10)
+	add_theme_stylebox_override("panel", style)
+	if carry_preview != null:
+		var carry_style := StyleBoxFlat.new()
+		carry_style.bg_color = Color(0.08, 0.08, 0.07, 0.92)
+		carry_style.border_color = Color(0.95, 0.82, 0.24, 1.0) if seven_days_style else Color(0.45, 0.82, 1.0, 1.0)
+		carry_style.set_border_width_all(2)
+		carry_style.set_corner_radius_all(2 if seven_days_style else 6)
+		carry_style.content_margin_left = 6.0
+		carry_style.content_margin_top = 5.0
+		carry_style.content_margin_right = 6.0
+		carry_style.content_margin_bottom = 5.0
+		carry_preview.add_theme_stylebox_override("panel", carry_style)
+
+
 func _setup_carry_preview() -> void:
 	carry_preview = PanelContainer.new()
 	carry_preview.name = "CarryPreview"
@@ -880,6 +994,7 @@ func _setup_carry_preview() -> void:
 	carry_preview_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(carry_preview_label)
 	add_child(carry_preview)
+	_apply_profile_visual_style()
 
 
 func _on_interaction_requested(action_id: String, payload: Dictionary) -> void:
@@ -944,18 +1059,23 @@ func _begin_transfer_session(payload: Dictionary, carry_quantity: int) -> void:
 	var session_payload := payload.duplicate(true)
 	if not session_payload.has("icon_texture"):
 		session_payload["icon_texture"] = _icon_for_cell(session_payload)
-	var result := transfer_session.begin(
-		session_payload,
-		carry_quantity,
-		session_payload.get("icon_texture") as Texture2D,
-		int(item.revision)
-	)
+	var result: Dictionary
+	if active_interaction_profile != null and active_interaction_profile.profile_id == "seven_days_like":
+		result = cursor_controller.begin(session_payload, carry_quantity)
+	else:
+		result = transfer_session.begin(
+			session_payload,
+			carry_quantity,
+			session_payload.get("icon_texture") as Texture2D,
+			int(item.revision)
+		)
 	if not bool(result.get("success", false)):
-		toast_layer.show_error("Не удалось подхватить предмет")
+		_present_carry_error(result, String(payload.get("source_container_id", "")))
 		return
 	_on_item_selected(source_item_id)
+	refresh()
 	_update_carry_preview()
-	status_label.text = "На курсоре: %s ×%d · выберите цель · Esc — отменить" % [
+	status_label.text = "На курсоре: %s ×%d · выберите слот · Esc — вернуть" % [
 		transfer_session.display_name,
 		transfer_session.remaining_quantity,
 	]
@@ -970,6 +1090,29 @@ func _place_carried_quantity(target_payload: Dictionary, requested_quantity: int
 	if target_container_id.is_empty():
 		toast_layer.show_error("Не выбрана цель переноса")
 		return
+	var requested := clampi(requested_quantity, 1, transfer_session.remaining_quantity)
+	if transfer_session.domain_backed:
+		var cursor_result := cursor_controller.place(target_payload, requested)
+		if not bool(cursor_result.get("success", false)):
+			_present_carry_error(cursor_result, target_container_id)
+			return
+		refresh()
+		_update_carry_preview()
+		if bool(cursor_result.get("swapped", false)):
+			status_label.text = "В слоте оставлен предмет; на курсоре теперь: %s ×%d" % [
+				transfer_session.display_name,
+				transfer_session.remaining_quantity,
+			]
+			toast_layer.show_message("Предметы поменяны местами")
+		elif transfer_session.is_active():
+			status_label.text = "Осталось на курсоре: %s ×%d" % [transfer_session.display_name, transfer_session.remaining_quantity]
+			var active_panel := _panel_for_container(target_container_id)
+			if active_panel != null:
+				active_panel.show_feedback("Положено ×%d" % int(cursor_result.get("moved_quantity", requested)), true, 1.2)
+		else:
+			status_label.text = "Предмет помещён в слот"
+			toast_layer.show_success("Предмет перенесён")
+		return
 	if (
 		target_item_id == transfer_session.item_id
 		and target_container_id == transfer_session.source_container_id
@@ -977,7 +1120,6 @@ func _place_carried_quantity(target_payload: Dictionary, requested_quantity: int
 	):
 		_cancel_transfer_session(true)
 		return
-	var requested := clampi(requested_quantity, 1, transfer_session.remaining_quantity)
 	var preview := command_facade.preview_transfer(
 		transfer_session.item_id,
 		requested,
@@ -1027,13 +1169,21 @@ func _present_carry_error(result: Dictionary, target_container_id: String) -> vo
 		panel.show_feedback(message, false)
 
 
-func _cancel_transfer_session(show_message: bool) -> void:
+func _cancel_transfer_session(show_message: bool) -> bool:
 	var was_active := transfer_session.is_active()
-	transfer_session.clear()
+	if was_active and transfer_session.domain_backed:
+		var result := cursor_controller.cancel()
+		if not bool(result.get("success", false)):
+			_present_carry_error(result, transfer_session.source_container_id)
+			return false
+	else:
+		transfer_session.clear()
+	refresh()
 	_update_carry_preview()
 	if show_message and was_active:
-		status_label.text = "Виртуальный стак возвращён без изменения инвентаря"
+		status_label.text = "Предмет возвращён в исходный слот"
 		toast_layer.show_message("Перенос отменён")
+	return true
 
 
 func _update_carry_preview() -> void:

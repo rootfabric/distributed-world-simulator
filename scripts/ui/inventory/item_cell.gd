@@ -100,7 +100,15 @@ func _gui_input(event: InputEvent) -> void:
 				continue
 			var press_position: Vector2 = _cell_press_positions[button_index]
 			if motion.position.distance_to(press_position) >= _drag_threshold():
-				_cell_dragged_buttons[button_index] = true
+				var modifiers := Dictionary(_cell_press_modifiers.get(button_index, {}))
+				var can_drag := interaction_profile == null or interaction_router.can_drag(
+					button_index,
+					bool(modifiers.get("shift", false)),
+					bool(modifiers.get("alt", false)),
+					bool(modifiers.get("ctrl", false))
+				)
+				if can_drag:
+					_cell_dragged_buttons[button_index] = true
 	super._gui_input(event)
 
 

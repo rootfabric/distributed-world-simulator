@@ -32,6 +32,7 @@ $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $Checks = @(
     [ordered]@{ Name = "editor-import"; Arguments = @("--headless", "--editor", "--path", $ProjectRoot, "--quit") },
     [ordered]@{ Name = "profiles"; Arguments = @("--headless", "--path", $ProjectRoot, "--script", "res://tests/ui/test_inventory_interaction_profiles.gd") },
+    [ordered]@{ Name = "seven-days-interface"; Arguments = @("--headless", "--path", $ProjectRoot, "--script", "res://tests/ui/test_inventory_seven_days_interface.gd") },
     [ordered]@{ Name = "stack-transfers"; Arguments = @("--headless", "--path", $ProjectRoot, "--script", "res://tests/items/test_item_stack_transfers.gd") },
     [ordered]@{ Name = "ui-i0"; Arguments = @("--headless", "--path", $ProjectRoot, "--script", "res://tests/ui/test_inventory_ui_i0_architecture.gd") },
     [ordered]@{ Name = "ui-i1"; Arguments = @("--headless", "--path", $ProjectRoot, "--script", "res://tests/ui/test_inventory_ui_i1_interactions.gd") },

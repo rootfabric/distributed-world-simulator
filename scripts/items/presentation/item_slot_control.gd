@@ -49,7 +49,7 @@ func setup_slot(data: Dictionary) -> void:
 	quantity = int(data.get("quantity", 0))
 	selected = bool(data.get("selected", false))
 	drop_validator = data.get("drop_validator", Callable())
-	custom_minimum_size = Vector2(72.0, 72.0)
+	custom_minimum_size = Vector2(56.0, 56.0) if _is_seven_days_style() else Vector2(72.0, 72.0)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	tooltip_text = _tooltip()
 	_build_content()
@@ -58,13 +58,20 @@ func setup_slot(data: Dictionary) -> void:
 func set_interaction_profile(profile: InventoryInteractionProfile) -> void:
 	interaction_profile = profile
 	interaction_router.setup(profile)
+	custom_minimum_size = Vector2(56.0, 56.0) if _is_seven_days_style() else Vector2(72.0, 72.0)
 	if not title_text.is_empty():
 		tooltip_text = _tooltip()
+	if is_inside_tree() and get_child_count() > 0:
+		_build_content()
 
 
 func _build_content() -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
+	if _is_seven_days_style():
+		_build_seven_days_content()
+		return
 	var root := VBoxContainer.new()
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(root)
@@ -91,6 +98,46 @@ func _build_content() -> void:
 		style.border_color = Color(0.32, 0.36, 0.44)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(5)
+	add_theme_stylebox_override("panel", style)
+
+
+func _build_seven_days_content() -> void:
+	var root := Control.new()
+	root.custom_minimum_size = Vector2(54.0, 54.0)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+	var icon := TextureRect.new()
+	icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	icon.offset_left = 3.0
+	icon.offset_top = 3.0
+	icon.offset_right = -3.0
+	icon.offset_bottom = -3.0
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture = icon_texture
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(icon)
+	var label := Label.new()
+	label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	label.offset_left = -42.0
+	label.offset_top = -24.0
+	label.offset_right = -3.0
+	label.offset_bottom = -1.0
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	label.text = str(quantity) if not item_id.is_empty() and quantity > 1 else ""
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 1.0))
+	label.add_theme_constant_override("shadow_offset_x", 2)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(label)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.20, 0.20, 0.18, 0.52)
+	style.border_color = Color(0.96, 0.84, 0.28, 1.0) if selected else Color(0.04, 0.04, 0.035, 0.96)
+	style.set_border_width_all(2 if selected else 1)
+	style.set_corner_radius_all(0)
 	add_theme_stylebox_override("panel", style)
 
 
@@ -285,6 +332,10 @@ func _drag_threshold() -> float:
 
 func _outside_drop_action() -> String:
 	return interaction_profile.outside_drop_action() if interaction_profile != null else "DROP_TO_WORLD"
+
+
+func _is_seven_days_style() -> bool:
+	return interaction_profile != null and interaction_profile.ui_style == "SEVEN_DAYS"
 
 
 func _tooltip() -> String:

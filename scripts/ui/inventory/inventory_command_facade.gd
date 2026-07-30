@@ -66,6 +66,19 @@ func transfer_quantity(
 	return result
 
 
+func swap_items(carried_item_id: String, target_item_id: String) -> Dictionary:
+	if gameplay_controller == null:
+		return {"success": false, "error_code": "CONTROLLER_NOT_READY"}
+	operation_started.emit({
+		"kind": "SWAP",
+		"carried_item_id": carried_item_id,
+		"target_item_id": target_item_id,
+	})
+	var result: Dictionary = gameplay_controller.swap_inventory_cursor_item(carried_item_id, target_item_id)
+	operation_finished.emit(result.duplicate(true))
+	return result
+
+
 func preview_quick_transfer(
 	item_id: String,
 	source_container_id: String,
@@ -309,5 +322,9 @@ func result_message(result: Dictionary) -> String:
 		"HOTBAR_NOT_READY": "Быстрая панель недоступна.",
 		"INVALID_HOTBAR_SLOT": "Выбран неверный слот быстрой панели.",
 		"DROP_REJECTED": "Сюда нельзя положить предмет.",
+		"CURSOR_ALREADY_OCCUPIED": "На курсоре уже находится предмет.",
+		"CURSOR_NOT_EMPTY": "Сначала положите предмет с курсора.",
+		"SWAP_REQUIRES_CONTAINER_ITEMS": "Менять местами можно только предметы в контейнерах.",
+		"SWAP_ASSIGNMENT_FAILED": "Не удалось поменять предметы местами.",
 	}
 	return String(ui_messages.get(code, message))

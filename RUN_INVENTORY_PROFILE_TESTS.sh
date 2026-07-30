@@ -37,6 +37,7 @@ run_checked() {
 
 run_checked editor-import --headless --editor --path "$PROJECT_ROOT" --quit
 run_checked profiles --headless --path "$PROJECT_ROOT" --script res://tests/ui/test_inventory_interaction_profiles.gd
+run_checked seven-days-interface --headless --path "$PROJECT_ROOT" --script res://tests/ui/test_inventory_seven_days_interface.gd
 run_checked stack-transfers --headless --path "$PROJECT_ROOT" --script res://tests/items/test_item_stack_transfers.gd
 run_checked ui-i0 --headless --path "$PROJECT_ROOT" --script res://tests/ui/test_inventory_ui_i0_architecture.gd
 run_checked ui-i1 --headless --path "$PROJECT_ROOT" --script res://tests/ui/test_inventory_ui_i1_interactions.gd

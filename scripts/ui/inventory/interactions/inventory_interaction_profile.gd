@@ -28,6 +28,9 @@ var drag_threshold_px: float = 5.0
 var bindings: Dictionary = {}
 var outside_drop: Dictionary = {"action": "DROP_TO_WORLD"}
 var legend: PackedStringArray = PackedStringArray()
+var ui_style: String = "DEFAULT"
+var container_layout: String = "DOMAIN"
+var slot_columns: int = 6
 var source_path: String = ""
 
 
@@ -76,6 +79,13 @@ func load_from_dictionary(data: Dictionary, path: String = "") -> Dictionary:
 	display_name = String(data.get("display_name", requested_id)).strip_edges()
 	description = String(data.get("description", "")).strip_edges()
 	drag_threshold_px = clampf(float(data.get("drag_threshold_px", 5.0)), 1.0, 64.0)
+	ui_style = String(data.get("ui_style", "DEFAULT")).strip_edges().to_upper()
+	if ui_style not in ["DEFAULT", "SEVEN_DAYS"]:
+		return _error("PROFILE_UI_STYLE_UNSUPPORTED", {"profile_id": requested_id, "ui_style": ui_style, "path": path})
+	container_layout = String(data.get("container_layout", "DOMAIN")).strip_edges().to_upper()
+	if container_layout not in ["DOMAIN", "FIXED_SLOTS"]:
+		return _error("PROFILE_CONTAINER_LAYOUT_UNSUPPORTED", {"profile_id": requested_id, "container_layout": container_layout, "path": path})
+	slot_columns = clampi(int(data.get("slot_columns", 6)), 1, 16)
 	bindings = parsed_bindings
 	outside_drop = parsed_outside
 	legend = parsed_legend
@@ -115,6 +125,9 @@ func to_dictionary() -> Dictionary:
 		"bindings": ordered_bindings,
 		"outside_drop": outside_drop.duplicate(true),
 		"legend": Array(legend),
+		"ui_style": ui_style,
+		"container_layout": container_layout,
+		"slot_columns": slot_columns,
 		"source_path": source_path,
 	}
 
