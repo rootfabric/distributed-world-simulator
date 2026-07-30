@@ -1,0 +1,52 @@
+extends SceneTree
+const Registry = preload("res://scripts/runtime/host_client/player_ownership_registry.gd")
+const Replica = preload("res://scripts/runtime/host_client/player_ownership_replica_store.gd")
+var failures: Array[String] = []
+var assertions := 0
+func _init() -> void:
+	var registry = Registry.new()
+	_assert(_ok(registry.setup("simulation/h2", 3, 100)), "registry setup")
+	var host := registry.join("host", "transport-session/h2/host/1", "operation/h2/host/join/1")
+	_assert(_ok(host), "host join")
+	_assert(String(host.details.player.player_entity_id) == "player/host", "stable host player id")
+	_assert(int(host.details.player.ownership_epoch) == 1, "host ownership epoch")
+	var remote := registry.join("remote", "transport-session/h2/remote/1", "operation/h2/remote/join/1")
+	_assert(_ok(remote), "remote join")
+	_assert(int(registry.get_report().player_count) == 2, "two logical players")
+	_assert(int(registry.get_report().connected_count) == 2, "two connected players")
+	var duplicate := registry.join("remote", "transport-session/h2/remote/1", "operation/h2/remote/join/1")
+	_assert(_ok(duplicate) and bool(duplicate.details.replay), "exact join replay")
+	var conflict := registry.join("remote", "transport-session/h2/remote/2", "operation/h2/remote/join/conflict")
+	_assert(_error(conflict) == "PLAYER_ALREADY_CONNECTED", "parallel ownership rejected")
+	var spoof := registry.leave("remote", "transport-session/h2/remote/spoof", "operation/h2/remote/leave/spoof")
+	_assert(_error(spoof) == "STALE_PLAYER_SESSION", "spoofed leave rejected")
+	var left := registry.leave("remote", "transport-session/h2/remote/1", "operation/h2/remote/leave/1")
+	_assert(_ok(left) and not bool(left.details.player.connected), "remote leave")
+	_assert(int(registry.get_report().connected_count) == 1, "host remains connected")
+	var rejoin := registry.join("remote", "transport-session/h2/remote/2", "operation/h2/remote/join/2")
+	_assert(_ok(rejoin), "remote rejoin")
+	_assert(String(rejoin.details.player.player_entity_id) == String(remote.details.player.player_entity_id), "rejoin preserves entity identity")
+	_assert(int(rejoin.details.player.ownership_epoch) == 2, "rejoin increments ownership epoch")
+	_assert(int(registry.get_report().player_count) == 2, "rejoin does not duplicate player")
+	var op_conflict := registry.join("other", "transport-session/h2/other/1", "operation/h2/remote/join/2")
+	_assert(_error(op_conflict) == "OPERATION_REPLAY_CONFLICT", "operation mutation rejected")
+	var snapshot := registry.create_snapshot()
+	_assert(_ok(registry.validate_snapshot(snapshot)), "snapshot validates")
+	var tampered := snapshot.duplicate(true); tampered.players[0].connected = false
+	_assert(_error(registry.validate_snapshot(tampered)) == "OWNERSHIP_SNAPSHOT_CHECKSUM_MISMATCH", "tampered snapshot rejected")
+	var replica = Replica.new()
+	_assert(_ok(replica.accept_snapshot(snapshot)), "replica accepts snapshot")
+	_assert(String(replica.get_player("remote").transport_session_id) == "transport-session/h2/remote/2", "replica sees current owner session")
+	_assert(_ok(replica.accept_snapshot(snapshot)) and int(replica.get_report().replays) == 1, "replica fences replay")
+	var rollback := snapshot.duplicate(true); rollback.revision = int(snapshot.revision) - 1; rollback.erase("checksum"); rollback.checksum = preload("res://scripts/network/contracts/network_contract_utils.gd").payload_hash(rollback)
+	_assert(_error(replica.accept_snapshot(rollback)) == "OWNERSHIP_REVISION_ROLLBACK", "replica rejects rollback")
+	_finish()
+func _ok(v: Dictionary) -> bool: return bool(v.get("success", false))
+func _error(v: Dictionary) -> String: return String(v.get("error_code", ""))
+func _assert(condition: bool, message: String) -> void:
+	assertions += 1
+	if not condition: failures.append(message)
+func _finish() -> void:
+	if failures.is_empty(): print("H2 player ownership contracts: PASS (%d assertions)" % assertions); quit(0); return
+	for f in failures: push_error(f)
+	print("H2 player ownership contracts: FAIL (%d failures, %d assertions)" % [failures.size(), assertions]); quit(1)
