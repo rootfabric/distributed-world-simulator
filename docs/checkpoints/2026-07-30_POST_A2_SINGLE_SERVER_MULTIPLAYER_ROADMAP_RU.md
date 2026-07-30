@@ -56,4 +56,7 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 ## M1 implementation update
 
-M1 реализован как candidate `v16.10.0-runtime-m1-unified-networked-gameplay-core`. Общий service и validators закрывают A2-D01/D02; M2 становится следующим этапом после независимой приёмки M1.
+M1 принят как checkpoint `v16.10.0-runtime-m1-unified-networked-gameplay-core`. Общий service и validators закрывают A2-D01/D02; M2 становится следующим этапом после независимой приёмки M1.
+
+
+M2 candidate `v16.10.1-runtime-m2-dedicated-graphical-client` использует принятый M1 core в топологии headless dedicated + ordinary graphical client.

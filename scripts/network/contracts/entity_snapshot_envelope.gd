@@ -5,6 +5,7 @@ const UtilsScript = preload("res://scripts/network/contracts/network_contract_ut
 const SPATIAL_REF_SCHEMA: String = "planet_simulator.spatial_ref.v1"
 const QUATERNION_NORM_SQUARED_TOLERANCE: float = 0.00001
 const QUATERNION_CANONICAL_EPSILON: float = 0.000000000001
+const QUATERNION_CANONICAL_STEP: float = 0.00000000000001
 const SPATIAL_REF_FIELDS: Array[String] = [
 	"schema",
 	"universe_id",
@@ -126,9 +127,15 @@ static func normalize(value: Dictionary) -> Dictionary:
 		return {}
 	var canonical_value: Dictionary = value.duplicate(true)
 	canonical_value["spatial_ref"] = _canonicalize_spatial_ref(value["spatial_ref"])
-	canonical_value["checksum"] = compute_checksum(canonical_value)
+	# JSON round-trip first, then bind the checksum to the exact JSON-safe
+	# floating-point payload that will be stored or sent over transport.
+	canonical_value["checksum"] = ""
 	var round_trip: Dictionary = UtilsScript.json_round_trip(canonical_value)
-	return round_trip.get("value", {}) if bool(round_trip.get("success", false)) else {}
+	if not bool(round_trip.get("success", false)):
+		return {}
+	var normalized: Dictionary = Dictionary(round_trip.get("value", {})).duplicate(true)
+	normalized["checksum"] = compute_checksum(normalized)
+	return normalized
 
 
 static func compute_checksum(value: Dictionary) -> String:
@@ -202,7 +209,10 @@ static func _canonicalize_spatial_ref(value: Dictionary) -> Dictionary:
 	var inverse_length: float = 1.0 / sqrt(length_squared)
 	var canonical_rotation: Array = []
 	for component in rotation:
-		var normalized_component: float = float(component) * inverse_length
+		var normalized_component: float = snappedf(
+			float(component) * inverse_length,
+			QUATERNION_CANONICAL_STEP
+		)
 		canonical_rotation.append(0.0 if absf(normalized_component) <= QUATERNION_CANONICAL_EPSILON else normalized_component)
 	if _quaternion_requires_sign_flip(canonical_rotation):
 		for index in range(canonical_rotation.size()):

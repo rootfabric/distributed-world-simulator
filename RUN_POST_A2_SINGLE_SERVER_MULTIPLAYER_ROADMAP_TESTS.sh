@@ -30,7 +30,7 @@ write_summary() {
   python3 - "$REPORT_PATH" "$steps" "$1" "$GODOT_BIN" "$PROJECT_ROOT" <<'PY2'
 import json,sys,datetime
 path,steps,passed,godot,root=sys.argv[1:]
-obj={'schema':'planet_simulator.post_a2_single_server_multiplayer_roadmap_summary.v1','checkpoint':'v16.10.0-runtime-m1-unified-networked-gameplay-core','build_id':'post-a2-single-server-multiplayer-first','decision':'FULL_SINGLE_SERVER_MULTIPLAYER_FIRST','finished_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'godot':godot,'project_root':root,'declared_test_count':2,'passed':passed=='true','steps':json.loads(steps)}
+obj={'schema':'planet_simulator.post_a2_single_server_multiplayer_roadmap_summary.v1','checkpoint':'v16.10.1-runtime-m2-dedicated-graphical-client','build_id':'post-a2-single-server-multiplayer-first','decision':'FULL_SINGLE_SERVER_MULTIPLAYER_FIRST','finished_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'godot':godot,'project_root':root,'declared_test_count':2,'passed':passed=='true','steps':json.loads(steps)}
 with open(path,'w',encoding='utf-8') as f: json.dump(obj,f,ensure_ascii=False,indent=2); f.write('\n')
 PY2
 }

@@ -4,14 +4,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
-$ReportPath = Join-Path $ReportDirectory "network-contract-summary.json"
-New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
+$ReportRoot = Join-Path $ProjectRoot "artifacts/test-results"
+$ReportPath = Join-Path $ReportRoot "m2-dedicated-graphical-client-summary.json"
+New-Item -ItemType Directory -Force -Path $ReportRoot | Out-Null
 
-function Resolve-GodotExecutable {
-    param([string]$RequestedPath)
+function Resolve-Godot {
+    param([string]$Requested)
+
     $Candidates = @()
-    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) { $Candidates += $RequestedPath }
+    if (-not [string]::IsNullOrWhiteSpace($Requested)) { $Candidates += $Requested }
     if (-not [string]::IsNullOrWhiteSpace($env:GODOT_BIN)) { $Candidates += $env:GODOT_BIN }
     $Candidates += @(
         "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe",
@@ -29,63 +30,31 @@ function Resolve-GodotExecutable {
     throw "Double-precision Godot was not found. Set GODOT_BIN or pass -GodotPath."
 }
 
-$Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
+$Godot = Resolve-Godot -Requested $GodotPath
 $Tests = @(
     "res://tests/runtime/test_launch_options.gd",
-    "res://tests/network/test_network_contracts.gd",
-    "res://tests/network/test_loopback_command_transport.gd",
-    "res://tests/network/test_network_transport_boundary.gd",
-    "res://tests/network/test_n1_enet_snapshot_contracts.gd",
-    "res://tests/network/test_n1_enet_snapshot_processes.gd",
-    "res://tests/network/test_n1_remote_item_command_contracts.gd",
-    "res://tests/network/test_n1_remote_item_command_processes.gd",
-    "res://tests/network/test_n1_reconnect_replay_contracts.gd",
-    "res://tests/network/test_n1_reconnect_replay_processes.gd",
-    "res://tests/testing/test_n2_process_harness_contracts.gd",
-    "res://tests/testing/test_n2_process_harness_processes.gd",
-    "res://tests/persistence/test_r3_authoritative_recovery_contracts.gd",
-    "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
     "res://tests/runtime/test_h0_listen_host_contracts.gd",
-    "res://tests/runtime/test_h0_listen_host_processes.gd",
     "res://tests/runtime/test_h1_playable_listen_host_contracts.gd",
     "res://tests/runtime/test_h1_playable_listen_host_integration.gd",
     "res://tests/runtime/test_h2_player_ownership_contracts.gd",
     "res://tests/runtime/test_h2_host_client_processes.gd",
     "res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
     "res://tests/runtime/test_h3_dedicated_multiplayer_processes.gd",
-    "res://tests/runtime/test_a2_networked_gameplay_architecture.gd",
-    "res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
     "res://tests/runtime/test_m1_networked_gameplay_contracts.gd",
     "res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
     "res://tests/runtime/test_m2_graphical_client_contracts.gd",
     "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
-    "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
-    "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
-    "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
-    "res://tests/simulation/test_s0_spatial_substrate_integration.gd",
     "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
     "res://tests/network/test_t1_multi_peer_transport_processes.gd",
-    "res://tests/network/test_b0_message_bus_contracts.gd",
-    "res://tests/network/test_b0_message_bus_integration.gd",
-    "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
-    "res://tests/simulation/test_m0_aggregate_transaction_integration.gd",
-    "res://tests/simulation/test_s1_distributed_compute_contracts.gd",
-    "res://tests/simulation/test_s1_distributed_compute_integration.gd",
-    "res://tests/network/test_n0_extended_contracts.gd",
-    "res://tests/network/test_n0_contract_mutation_matrix.gd",
-    "res://tests/network/test_n0_golden_fixtures.gd",
-    "res://tests/network/test_loopback_replication_transport.gd",
-    "res://tests/network/test_n0_review_regressions.gd",
-    "res://tests/network/test_handoff_state_machine.gd",
-    "res://tests/network/test_handoff_transition_matrix.gd",
-    "res://tests/entities/test_authority_revision_semantics.gd",
-    "res://tests/runtime/test_kernel_ports.gd"
+    "res://tests/runtime/test_a2_networked_gameplay_architecture.gd",
+    "res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd"
 )
 
 $Summary = [ordered]@{
-    schema = "planet_simulator.network_contract_summary.v1"
+    schema = "planet_simulator.m2_dedicated_graphical_client_summary.v1"
     checkpoint = "v16.10.1-runtime-m2-dedicated-graphical-client"
-    build_id = "post-a2-single-server-multiplayer-first"
+    build_id = "m2-dedicated-graphical-client"
+    decision = "DEDICATED_PLUS_ONE_GRAPHICAL_CLIENT"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -97,32 +66,43 @@ $Summary = [ordered]@{
 
 function Save-Summary {
     $Summary.finished_at_utc = [DateTime]::UtcNow.ToString("o")
-    $Summary | ConvertTo-Json -Depth 8 | Set-Content -Path $ReportPath -Encoding UTF8
+    $Json = $Summary | ConvertTo-Json -Depth 8
+    [IO.File]::WriteAllText(
+        $ReportPath,
+        $Json + [Environment]::NewLine,
+        (New-Object Text.UTF8Encoding($false))
+    )
 }
 
-function Invoke-CheckedProcess {
+function Run-Step {
     param(
         [string]$Name,
-        [string]$Kind,
-        [string[]]$Arguments,
-        [string]$Target
+        [string]$Target,
+        [string[]]$Arguments
     )
+
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
     $Started = [DateTime]::UtcNow
     $Captured = @()
+    $LogPath = Join-Path $ReportRoot "m2-$Name.log"
     $PreviousErrorActionPreference = $ErrorActionPreference
     $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    $RawExitCode = 1
+
     try {
-        # Expected Godot diagnostics may be emitted on stderr even when the
-        # test succeeds. Capture them without turning NativeCommandError into
-        # a terminating PowerShell exception.
+        # Godot may emit expected diagnostics on stderr even when it exits with
+        # code 0. Capture those diagnostics without converting NativeCommandError
+        # into a terminating PowerShell exception.
         $ErrorActionPreference = "Continue"
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
         }
-        & $Godot @Arguments 2>&1 | Tee-Object -Variable Captured | ForEach-Object { Write-Host $_ }
+        & $Godot @Arguments 2>&1 |
+            Tee-Object -Variable Captured |
+            Tee-Object -FilePath $LogPath |
+            ForEach-Object { Write-Host $_ }
         $RawExitCode = $LASTEXITCODE
     }
     finally {
@@ -131,19 +111,20 @@ function Invoke-CheckedProcess {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
         }
     }
+
     $OutputText = ($Captured | Out-String)
     $HasFailureMarker = $OutputText -match '(?m): FAIL(?:\s|\()'
     $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
-    $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     $Summary.steps += [ordered]@{
         name = $Name
-        kind = $Kind
         target = $Target
         exit_code = $ExitCode
-        duration_seconds = [Math]::Round($Duration, 3)
+        duration_seconds = [Math]::Round(([DateTime]::UtcNow - $Started).TotalSeconds, 3)
         passed = ($ExitCode -eq 0)
+        log_path = $LogPath
     }
     Save-Summary
+
     if ($ExitCode -ne 0) {
         throw "$Name failed with exit code $ExitCode"
     }
@@ -155,24 +136,22 @@ try {
     Write-Host "Project: $ProjectRoot"
     Write-Host "Checkpoint: v16.10.1-runtime-m2-dedicated-graphical-client"
 
-    Invoke-CheckedProcess `
-        -Name "editor_import_parse" `
-        -Kind "editor" `
-        -Arguments @("--headless", "--editor", "--path", $ProjectRoot, "--quit") `
-        -Target "res://"
+    Run-Step `
+        -Name "editor_import" `
+        -Target "res://" `
+        -Arguments @("--headless", "--editor", "--path", $ProjectRoot, "--quit")
 
     foreach ($Test in $Tests) {
-        Invoke-CheckedProcess `
+        Run-Step `
             -Name ([IO.Path]::GetFileNameWithoutExtension($Test)) `
-            -Kind "headless_script" `
-            -Arguments @("--headless", "--path", $ProjectRoot, "--script", $Test) `
-            -Target $Test
+            -Target $Test `
+            -Arguments @("--headless", "--path", $ProjectRoot, "--script", $Test)
     }
 
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through M2 dedicated graphical client network/runtime tests passed." -ForegroundColor Green
+    Write-Host "M2 dedicated graphical client: PASS" -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

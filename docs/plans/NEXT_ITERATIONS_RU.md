@@ -1,11 +1,11 @@
-# Ближайшие итерации после A2
+# Ближайшие итерации после M1
 
-Текущий roadmap candidate: `v16.9.5-roadmap-single-server-multiplayer-first`.
+Принятый M1: `v16.10.0-runtime-m1-unified-networked-gameplay-core`.
+Текущий candidate: `v16.10.1-runtime-m2-dedicated-graphical-client`.
 
 ```text
-M1 — Unified Networked Gameplay Core — next
-M2 — Dedicated + 1 graphical client
-M3 — Dedicated + 2 graphical clients
+M2 — Dedicated + 1 graphical client — current candidate
+M3 — Dedicated + 2 graphical clients — next
 M4 — Canonical shared gameplay over ENet
 M5 — Graphical Multiplayer Acceptance
 M6 — Dedicated persistence and recovery
@@ -14,13 +14,13 @@ B1/B2 — after A3
 N3–N6 — after B2
 ```
 
-## Следующая ветка
+## Текущая ветка
 
 ```text
-feature/m1-unified-networked-gameplay-core
-checkpoint: v16.10.0-runtime-m1-unified-networked-gameplay-core
+feature/m2-dedicated-graphical-client
+checkpoint: v16.10.1-runtime-m2-dedicated-graphical-client
 ```
 
-M1 должен объединить `PlayableListenHostAuthority`, `PlayerOwnershipRegistry` и `MultiplayerGameplayAuthority` за одним production `NetworkedGameplayService`, выделить shared DTO/validators и перевести H1–H3 tests на общий service.
+M2 запускает обычный graphical Godot client против headless dedicated server, проводит join/ownership handshake, authoritative movement, replica inventory/hotbar и reconnect к той же player entity.
 
 Полный scope и acceptance: `SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.networked_gameplay_core.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
   "build_id": "m1-unified-networked-gameplay-core",
-  "status": "candidate",
+  "status": "accepted",
   "generated_at_utc": "2026-07-30T04:00:00Z",
   "base_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "base_architecture_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
@@ -158,5 +158,11 @@
     "client and UI receive no authority references"
   ],
   "next_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
-  "next_branch": "feature/m2-dedicated-graphical-client"
+  "next_branch": "feature/m2-dedicated-graphical-client",
+  "accepted_at_utc": "2026-07-30T06:20:00Z",
+  "acceptance_evidence": {
+    "focused": "14/14 scripts, 874 assertions",
+    "network_runtime": "47/47 suites, 3683 assertions",
+    "world": "90/90"
+  }
 }

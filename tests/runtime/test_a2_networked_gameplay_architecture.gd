@@ -24,7 +24,7 @@ func _init() -> void:
 func _test_manifest_identity(manifest: Dictionary) -> void:
 	_assert(not manifest.is_empty(), "A2 freeze manifest is missing or invalid")
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.networked_gameplay_architecture.v1", "A2 schema mismatch")
-	_assert(int(manifest.get("document_revision", 0)) == 3, "A2 document revision mismatch")
+	_assert(int(manifest.get("document_revision", 0)) == 4, "A2 document revision mismatch")
 	_assert(String(manifest.get("checkpoint", "")) == "v16.9.4-architecture-a2-networked-gameplay", "A2 checkpoint mismatch")
 	_assert(String(manifest.get("build_id", "")) == "a2-networked-gameplay-audit-freeze", "A2 build ID mismatch")
 	_assert(String(manifest.get("status", "")) == "accepted", "A2 status must be accepted after independent verification")
@@ -113,8 +113,8 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 
 
 func _test_roadmap_alignment(roadmap: Dictionary) -> void:
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Roadmap current checkpoint mismatch")
-	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "Roadmap runtime base mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "Roadmap current checkpoint mismatch")
+	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "Roadmap runtime base mismatch")
 	var phases: Dictionary = {}
 	for phase_value in roadmap.get("phases", []):
 		if phase_value is Dictionary:
@@ -122,7 +122,8 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 	for stage in ["H1", "H2", "H3"]:
 		_assert(String(phases.get(stage, {}).get("status", "")) == "accepted", "%s roadmap status is not accepted" % stage)
 	_assert(String(phases.get("A2", {}).get("status", "")) == "accepted", "A2 roadmap status mismatch")
-	_assert(String(phases.get("M1", {}).get("status", "")) == "current_candidate", "M1 roadmap status must be current candidate")
+	_assert(String(phases.get("M1", {}).get("status", "")) == "accepted", "M1 roadmap status must be accepted")
+	_assert(String(phases.get("M2", {}).get("status", "")) == "current_candidate", "M2 roadmap status must be current candidate")
 	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status must be deferred after A3")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
@@ -187,6 +188,8 @@ func _test_regression_runner_coverage() -> void:
 		for path in [
 			"res://tests/runtime/test_m1_networked_gameplay_contracts.gd",
 			"res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
+			"res://tests/runtime/test_m2_graphical_client_contracts.gd",
+			"res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
 			"res://tests/runtime/test_h2_player_ownership_contracts.gd",
 			"res://tests/runtime/test_h2_host_client_processes.gd",
 			"res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
@@ -195,7 +198,7 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.10.0-runtime-m1-unified-networked-gameplay-core"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.10.1-runtime-m2-dedicated-graphical-client"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

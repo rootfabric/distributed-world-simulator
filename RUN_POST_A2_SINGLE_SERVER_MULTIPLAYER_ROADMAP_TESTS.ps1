@@ -38,7 +38,7 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.post_a2_single_server_multiplayer_roadmap_summary.v1"
-    checkpoint = "v16.10.0-runtime-m1-unified-networked-gameplay-core"
+    checkpoint = "v16.10.1-runtime-m2-dedicated-graphical-client"
     build_id = "post-a2-single-server-multiplayer-first"
     decision = "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
@@ -120,7 +120,7 @@ function Run-Step {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.10.0-runtime-m1-unified-networked-gameplay-core"
+    Write-Host "Checkpoint: v16.10.1-runtime-m2-dedicated-graphical-client"
 
     Run-Step `
         -Name "editor_import" `

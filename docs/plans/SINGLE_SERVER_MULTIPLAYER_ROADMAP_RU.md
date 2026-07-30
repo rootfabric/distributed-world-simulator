@@ -1,9 +1,10 @@
 # PlanetSimulator — FULL SINGLE-SERVER MULTIPLAYER FIRST
 
-**Статус:** официальный post-A2 roadmap candidate
+**Статус:** официальный принятый post-A2 roadmap
 **Checkpoint:** `v16.9.5-roadmap-single-server-multiplayer-first`
 **База:** принятый `v16.9.4-architecture-a2-networked-gameplay` (`FROZEN_WITH_GATES`)
-**Следующая реализация:** `M1 — Unified Networked Gameplay Core`
+**Принятая реализация:** `M1 — Unified Networked Gameplay Core`
+**Текущая реализация:** `M2 — Dedicated + 1 graphical client`
 
 ## 1. Стратегическое решение
 
@@ -58,7 +59,7 @@ NATS используется только для service/server communication. 
 Checkpoint: `v16.10.0-runtime-m1-unified-networked-gameplay-core`
 Branch: `feature/m1-unified-networked-gameplay-core`
 
-Статус: **current candidate**. Закрывает `A2-D01` и `A2-D02`.
+Статус: **accepted**. Закрывает `A2-D01` и `A2-D02`.
 
 Реализация и доказательства: `docs/architecture/M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md` и `config/network/networked-gameplay-core.v1.json`.
 
@@ -105,7 +106,7 @@ Acceptance:
 Checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client`
 Branch: `feature/m2-dedicated-graphical-client`
 
-Реализуются `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity.
+Статус: **current candidate**. Реализованы `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity. Автоматический process-test использует настоящий graphical display/renderer.
 
 Acceptance:
 

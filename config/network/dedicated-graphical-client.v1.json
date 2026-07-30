@@ -1,0 +1,110 @@
+{
+  "schema": "planet_simulator.dedicated_graphical_client.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+  "build_id": "m2-dedicated-graphical-client",
+  "status": "candidate",
+  "generated_at_utc": "2026-07-30T06:20:00Z",
+  "base_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+  "decision": "DEDICATED_PLUS_ONE_GRAPHICAL_CLIENT",
+  "topology": {
+    "server_process": {
+      "role": "dedicated-server",
+      "headless": true,
+      "authoritative": true,
+      "presentation_enabled": false,
+      "local_input_enabled": false
+    },
+    "client_process": {
+      "role": "game-client",
+      "headless": false,
+      "authoritative": false,
+      "presentation_enabled": true,
+      "local_input_enabled": true,
+      "embedded_authority": false
+    },
+    "transport": "ENet",
+    "gameplay_service": "NetworkedGameplayService",
+    "ordinary_client_scene": "res://main.tscn"
+  },
+  "runtime_components": [
+    {
+      "name": "DedicatedGameplayServerRuntime",
+      "path": "scripts/runtime/networked_gameplay/transports/dedicated_gameplay_server_runtime.gd"
+    },
+    {
+      "name": "GraphicalGameClientRuntime",
+      "path": "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd"
+    },
+    {
+      "name": "EnetCommandTransportAdapter",
+      "path": "scripts/runtime/networked_gameplay/transports/enet_command_transport_adapter.gd"
+    },
+    {
+      "name": "M2GraphicalAcceptanceDriver",
+      "path": "scripts/runtime/networked_gameplay/m2_graphical_acceptance_driver.gd"
+    }
+  ],
+  "launch_contract": {
+    "roles": [
+      "dedicated-server",
+      "game-client"
+    ],
+    "parameters": [
+      "server-address",
+      "server-port",
+      "player-identity",
+      "connect-timeout-ms",
+      "command-timeout-ms"
+    ],
+    "test_parameters": [
+      "m2-result-file",
+      "m2-phase",
+      "m2-expected-state-file"
+    ],
+    "stable_logical_player_id": "local-astronaut",
+    "stable_player_entity_id": "player/local-astronaut"
+  },
+  "client_boundary": {
+    "authority_references": 0,
+    "domain_references": 0,
+    "presentation_reads": "ClientReplicaStore only",
+    "movement": "bounded PlayerInputCommand over ENet",
+    "inventory_hotbar": "PlayableClientSession plus PlayableItemCommandBridge over ENet",
+    "local_character_physics_authority": false
+  },
+  "reconnect_contract": {
+    "same_logical_player": true,
+    "same_player_entity": true,
+    "ownership_epoch_advances": true,
+    "authoritative_state_restored": true,
+    "process_scoped_operation_ids": true
+  },
+  "acceptance": [
+    "headless dedicated server reaches READY with canonical moon world attached",
+    "ordinary graphical Godot client uses X11 or another non-headless display server",
+    "real LunarPlayer and active Camera3D are present",
+    "join and ownership handshake assign stable player/local-astronaut identity",
+    "movement is accepted by authority and returned through replica state",
+    "inventory and hotbar are driven by replica state",
+    "client disconnects gracefully and server remains listening",
+    "second graphical process reconnects to the same player entity with ownership epoch 2",
+    "server and reconnecting client converge on player and Item Graph checksums",
+    "server and both graphical processes use isolated user-data directories"
+  ],
+  "automated_evidence": {
+    "contract_test": "tests/runtime/test_m2_graphical_client_contracts.gd",
+    "process_test": "tests/runtime/test_m2_dedicated_graphical_processes.gd",
+    "focused_runner_ps1": "RUN_M2_DEDICATED_GRAPHICAL_CLIENT_TESTS.ps1",
+    "focused_runner_sh": "RUN_M2_DEDICATED_GRAPHICAL_CLIENT_TESTS.sh",
+    "graphical_linux_environment": "X11 virtual display with gl_compatibility and llvmpipe; client process is not launched with --headless"
+  },
+  "not_in_scope": [
+    "two simultaneous graphical clients",
+    "RemotePlayerPresenter and remote interpolation",
+    "full shared canonical Item Graph contention between two clients",
+    "dedicated crash restart recovery"
+  ],
+  "next_checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+  "next_branch": "feature/m3-dedicated-graphical-multiplayer"
+}

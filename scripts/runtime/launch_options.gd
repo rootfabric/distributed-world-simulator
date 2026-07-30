@@ -15,6 +15,14 @@ static func defaults() -> Dictionary:
 		"instance_id": "persistent",
 		"space_id": "sol",
 		"authority_region": "",
+		"server_address": "127.0.0.1",
+		"server_port": 24580,
+		"player_identity": "local-astronaut",
+		"connect_timeout_ms": 15000,
+		"command_timeout_ms": 5000,
+		"m2_result_file": "",
+		"m2_phase": 0,
+		"m2_expected_state_file": "",
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
 		"shutdown_after_ms": 0,
@@ -53,6 +61,22 @@ static func parse(arguments) -> Dictionary:
 				options["space_id"] = value
 			"authority-region":
 				options["authority_region"] = value
+			"server-address":
+				options["server_address"] = value
+			"server-port":
+				options["server_port"] = _parse_port(value, key, errors)
+			"player-identity":
+				options["player_identity"] = value.to_lower()
+			"connect-timeout-ms":
+				options["connect_timeout_ms"] = _parse_positive_int(value, key, errors)
+			"command-timeout-ms":
+				options["command_timeout_ms"] = _parse_positive_int(value, key, errors)
+			"m2-result-file":
+				options["m2_result_file"] = value
+			"m2-phase":
+				options["m2_phase"] = _parse_non_negative_int(value, key, errors)
+			"m2-expected-state-file":
+				options["m2_expected_state_file"] = value
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":
@@ -92,6 +116,14 @@ static func _parse_non_negative_int(value: String, key: String, errors: Array[St
 	return parsed
 
 
+static func _parse_port(value: String, key: String, errors: Array[String]) -> int:
+	var parsed: int = _parse_positive_int(value, key, errors)
+	if parsed > 65535:
+		errors.append("Launch option --%s must be at most 65535" % key)
+		return 0
+	return parsed
+
+
 static func _parse_positive_int(value: String, key: String, errors: Array[String]) -> int:
 	if not value.is_valid_int():
 		errors.append("Launch option --%s must be an integer" % key)
@@ -115,6 +147,13 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 	for required_key in ["node_id", "instance_id", "space_id"]:
 		if String(options.get(required_key, "")).strip_edges().is_empty():
 			errors.append("Launch option '%s' cannot be empty" % required_key)
+	if role in [RuntimeRoleScript.GAME_CLIENT, RuntimeRoleScript.DEDICATED_SERVER]:
+		if String(options.get("server_address", "")).strip_edges().is_empty():
+			errors.append("Launch option server_address cannot be empty")
+		if int(options.get("server_port", 0)) < 1:
+			errors.append("Launch option server_port is invalid")
+	if role == RuntimeRoleScript.GAME_CLIENT and String(options.get("player_identity", "")).strip_edges().is_empty():
+		errors.append("Launch option player_identity cannot be empty")
 	var node_id: String = String(options.get("node_id", ""))
 	if role == RuntimeRoleScript.OFFLINE and node_id == "local-listen-host":
 		options["node_id"] = "local-offline"

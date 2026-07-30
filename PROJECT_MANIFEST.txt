@@ -1,3 +1,19 @@
+Planetary World v16.10.1-runtime-m2-dedicated-graphical-client
+
+M2 Dedicated server plus one graphical client:
+- game-client and dedicated-server launch roles
+- ordinary graphical main.tscn client without embedded authority
+- ENet join/leave ownership handshake
+- stable player/local-astronaut entity and ownership epoch fencing
+- authoritative movement with replica correction
+- replica inventory and hotbar
+- graceful disconnect and reconnect to the same committed state
+- real X11/GL graphical process acceptance with isolated user-data directories
+- config/network/dedicated-graphical-client.v1.json
+- tests/runtime/test_m2_graphical_client_contracts.gd
+- tests/runtime/test_m2_dedicated_graphical_processes.gd
+- RUN_M2_DEDICATED_GRAPHICAL_CLIENT_TESTS.ps1 / .sh
+
 Planetary World v16.10.0-runtime-m1-unified-networked-gameplay-core
 
 M1 Unified Networked Gameplay Core:

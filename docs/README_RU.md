@@ -1,15 +1,16 @@
 # Документация PlanetSimulator
 
-Текущий runtime candidate: `v16.10.0-runtime-m1-unified-networked-gameplay-core`.
+Принятый runtime checkpoint: `v16.10.0-runtime-m1-unified-networked-gameplay-core`.
+Текущий runtime candidate: `v16.10.1-runtime-m2-dedicated-graphical-client`.
 
-M1 закрывает A2-D01/D02: H1/H2/H3 используют общую gameplay composition root и authority-independent validators. Следующий этап после принятия — M2 dedicated graphical client.
+M2 доказывает один headless dedicated server и один настоящий graphical Godot client без embedded authority: stable identity, authoritative movement, replica inventory/hotbar и reconnect к прежней entity.
 
 Ключевые документы:
 
-- `checkpoints/2026-07-30_V16_10_0_RUNTIME_M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
-- `architecture/M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
-- `architecture/adr/ADR-013-unified-networked-gameplay-core.md`;
-- `../config/network/networked-gameplay-core.v1.json`;
+- `checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
+- `architecture/M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
+- `architecture/adr/ADR-014-dedicated-graphical-client.md`;
+- `../config/network/dedicated-graphical-client.v1.json`;
 - `plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.
 
 ## v16.3.3 — Foundation world aggregate part 3

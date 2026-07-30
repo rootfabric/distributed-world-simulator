@@ -14,8 +14,8 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
-		"checkpoint": String(context.get("checkpoint", "v16.10.0-runtime-m1-unified-networked-gameplay-core")),
-		"build_id": String(context.get("build_id", "m1-unified-networked-gameplay-core")),
+		"checkpoint": String(context.get("checkpoint", "v16.10.1-runtime-m2-dedicated-graphical-client")),
+		"build_id": String(context.get("build_id", "m2-dedicated-graphical-client")),
 		"project_name": String(ProjectSettings.get_setting(
 			"application/config/name",
 			"PlanetSimulator"
@@ -26,6 +26,9 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 		"instance_id": String(normalized.get("instance_id", "persistent")),
 		"space_id": String(normalized.get("space_id", "sol")),
 		"authority_region": String(normalized.get("authority_region", "")),
+		"server_address": String(normalized.get("server_address", "127.0.0.1")),
+		"server_port": int(normalized.get("server_port", 24580)),
+		"player_identity": String(normalized.get("player_identity", "local-astronaut")),
 		"requested_user_data_dir": String(normalized.get("user_data_dir", "")),
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"shutdown_after_ms": int(normalized.get("shutdown_after_ms", 0)),
@@ -36,6 +39,8 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 		"authoritative": RuntimeRoleScript.is_authoritative(role),
 		"client_replica_enabled": bool(role_descriptor.get("client_replica_enabled", false)),
 		"embedded_authority": bool(role_descriptor.get("embedded_authority", false)),
+		"dedicated_authority": bool(role_descriptor.get("dedicated_authority", false)),
+		"remote_game_client": bool(role_descriptor.get("remote_game_client", false)),
 		"direct_client_domain_access_allowed": bool(role_descriptor.get("direct_client_domain_access_allowed", false)),
 		"started_at_utc": Time.get_datetime_string_from_system(true, true),
 	}

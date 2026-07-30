@@ -14,6 +14,7 @@ const CAMERA_THIRD_PERSON: String = "third_person"
 var moon_world
 var logger
 var control_enabled: bool = true
+var network_replica_mode: bool = false
 var stored_world_position: Vector3 = Vector3.ZERO
 
 var controller_host
@@ -171,7 +172,7 @@ func get_flashlight_snapshot() -> Dictionary:
 
 
 func _physics_process(delta: float) -> void:
-	if control_enabled and controller_host != null:
+	if control_enabled and not network_replica_mode and controller_host != null:
 		controller_host.physics_step(delta)
 
 
@@ -299,9 +300,31 @@ func set_world_position(world_position: Vector3) -> void:
 	global_position = moon_world.world_to_render(world_position)
 
 
+func set_network_replica_mode(enabled_value: bool) -> void:
+	network_replica_mode = enabled_value
+	if enabled_value:
+		# Keep the real graphical camera and input handlers alive, but never run
+		# local CharacterBody physics. Movement is proposed through the network
+		# command path and corrected from authoritative replica snapshots.
+		control_enabled = true
+		set_physics_process(false)
+		if controller_host != null:
+			controller_host.set_enabled(true)
+		velocity = Vector3.ZERO
+		set_camera_mode(camera_mode)
+		reset_physics_interpolation()
+	else:
+		activate_after_spawn()
+
+
+func is_network_replica_mode() -> bool:
+	return network_replica_mode
+
+
 func freeze_for_spectator() -> void:
 	stored_world_position = get_world_position()
 	control_enabled = false
+	network_replica_mode = false
 	set_physics_process(false)
 	if controller_host != null:
 		controller_host.set_enabled(false)
@@ -314,6 +337,7 @@ func freeze_for_spectator() -> void:
 func restore_from_spectator() -> void:
 	set_world_position(stored_world_position)
 	control_enabled = true
+	network_replica_mode = false
 	set_physics_process(true)
 	if controller_host != null:
 		controller_host.set_enabled(true)
@@ -330,6 +354,7 @@ func set_control_enabled(enabled_value: bool) -> void:
 
 func activate_after_spawn() -> void:
 	control_enabled = true
+	network_replica_mode = false
 	set_physics_process(true)
 	if controller_host != null:
 		controller_host.set_enabled(true)
