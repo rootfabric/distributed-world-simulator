@@ -10,6 +10,9 @@ M3 доказывает один headless dedicated server и два однов�
 - `MCP_GODOT.md` — контракт автономного управления double Godot через MCP:
   managed processes, runtime input, viewport screenshots, assertions, логи и
   корректное завершение процесса;
+- `architecture/M4_PRE_M5_HANDOFF_RU.md` — актуальная база `main` перед M5:
+  canonical M4 gameplay, сетевой полигон, MCP, окно client и camera-relative
+  movement;
 - `checkpoints/2026-07-30_V16_10_2_RUNTIME_M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
 - `architecture/M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;

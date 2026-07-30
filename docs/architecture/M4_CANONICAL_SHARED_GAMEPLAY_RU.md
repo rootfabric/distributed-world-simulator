@@ -35,3 +35,7 @@ graphical client
 ## Граница
 
 M4 доказывает canonical shared gameplay через два graphical Godot protocol process. M5 должен поднять действия до полностью UI-driven game-window acceptance, используя реальные inventory widgets и interaction input.
+
+Актуальная объединённая база (полигон, MCP-инструментирование, ручное окно
+client и camera-relative input) описана в
+[`M4_PRE_M5_HANDOFF_RU.md`](M4_PRE_M5_HANDOFF_RU.md).
