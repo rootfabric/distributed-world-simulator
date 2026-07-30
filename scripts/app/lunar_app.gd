@@ -1406,6 +1406,7 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 	_register_runtime_command(registry, owner_id, {"id": "inventory.toggle", "description": "Открыть предметный инвентарь.", "usage": "inventory.toggle", "category": "items"}, Callable(self, "_command_inventory_toggle"))
 	_register_runtime_command(registry, owner_id, {"id": "inventory.drop", "description": "Выбросить один предмет выбранного stack.", "usage": "inventory.drop", "category": "items"}, Callable(self, "_command_inventory_drop"))
 	_register_runtime_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
+	_register_runtime_command(registry, owner_id, {"id": "inventory.profile", "description": "Показать или сменить профиль управления инвентарём.", "usage": "inventory.profile [planet_default|rust_like|seven_days_like]", "category": "items"}, Callable(self, "_command_inventory_profile"))
 	_register_runtime_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
 	_register_runtime_command(registry, owner_id, {
 		"id": "player.camera.toggle",
@@ -1962,6 +1963,24 @@ func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
 	if item_gameplay == null or arguments.is_empty() or not arguments[0].is_valid_int():
 		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
 	return item_gameplay.select_hotbar(clampi(int(arguments[0]), 1, 10) - 1)
+
+
+func _command_inventory_profile(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or item_gameplay.inventory_ui == null or item_gameplay.inventory_ui.active_screen == null:
+		return {"success": false, "output": "Инвентарь не готов"}
+	var screen = item_gameplay.inventory_ui.active_screen
+	if arguments.is_empty():
+		var active = screen.active_interaction_profile
+		return {
+			"success": active != null,
+			"output": "Профиль инвентаря: %s" % (active.profile_id if active != null else "недоступен"),
+		}
+	var profile_id := arguments[0].strip_edges().to_lower()
+	var profile = screen.interaction_profile_loader.get_profile(profile_id)
+	if profile == null:
+		return {"success": false, "output": "Неизвестный профиль: %s" % profile_id}
+	screen._apply_interaction_profile(profile, true, true)
+	return {"success": true, "output": "Профиль инвентаря: %s" % profile.profile_id}
 
 
 func _command_inventory_save(_arguments: Array[String]) -> Dictionary:

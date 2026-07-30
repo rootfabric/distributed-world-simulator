@@ -1,18 +1,19 @@
 class_name InventoryPreferencesStore
 extends RefCounted
 
-const SCHEMA: String = "planet_simulator.inventory_ui_preferences.v1"
+const SCHEMA: String = "planet_simulator.inventory_ui_preferences.v2"
+const LEGACY_SCHEMA: String = "planet_simulator.inventory_ui_preferences.v1"
 const ROOT_PATH: String = "user://planet_simulator/ui"
 
-var profile_id: String = "default"
+var preferences_scope_id: String = "default"
 var file_path: String = ""
 
 
 func setup(value: String) -> void:
-	profile_id = value.strip_edges()
-	if profile_id.is_empty():
-		profile_id = "default"
-	var safe_profile := profile_id.replace("/", "_").replace("\\", "_").replace(":", "_")
+	preferences_scope_id = value.strip_edges()
+	if preferences_scope_id.is_empty():
+		preferences_scope_id = "default"
+	var safe_profile := preferences_scope_id.replace("/", "_").replace("\\", "_").replace(":", "_")
 	file_path = "%s/inventory_preferences_%s.json" % [ROOT_PATH, safe_profile]
 
 
@@ -27,7 +28,8 @@ func load_preferences() -> Dictionary:
 	if not parsed is Dictionary:
 		return defaults
 	var data := Dictionary(parsed)
-	if String(data.get("schema", "")) != SCHEMA:
+	var schema := String(data.get("schema", ""))
+	if schema not in [SCHEMA, LEGACY_SCHEMA]:
 		return defaults
 	return {
 		"schema": SCHEMA,
@@ -35,12 +37,13 @@ func load_preferences() -> Dictionary:
 		"active_filter": String(data.get("active_filter", defaults.active_filter)),
 		"sort_mode": String(data.get("sort_mode", defaults.sort_mode)),
 		"inspector_visible": bool(data.get("inspector_visible", defaults.inspector_visible)),
+		"interaction_profile_id": String(data.get("interaction_profile_id", defaults.interaction_profile_id)).strip_edges().to_lower(),
 	}
 
 
 func save_preferences(values: Dictionary) -> bool:
 	if file_path.is_empty():
-		setup(profile_id)
+		setup(preferences_scope_id)
 	var absolute_root := ProjectSettings.globalize_path(ROOT_PATH)
 	if DirAccess.make_dir_recursive_absolute(absolute_root) != OK:
 		return false
@@ -53,6 +56,7 @@ func save_preferences(values: Dictionary) -> bool:
 		"active_filter": String(values.get("active_filter", "ALL")),
 		"sort_mode": String(values.get("sort_mode", "CONTAINER_ORDER")),
 		"inspector_visible": bool(values.get("inspector_visible", true)),
+		"interaction_profile_id": String(values.get("interaction_profile_id", "planet_default")).strip_edges().to_lower(),
 	}
 	file.store_string(JSON.stringify(data, "  ", false, true))
 	return true
@@ -70,4 +74,5 @@ static func default_preferences() -> Dictionary:
 		"active_filter": "ALL",
 		"sort_mode": "CONTAINER_ORDER",
 		"inspector_visible": true,
+		"interaction_profile_id": "planet_default",
 	}

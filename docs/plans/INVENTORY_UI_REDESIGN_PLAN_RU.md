@@ -767,3 +767,50 @@ v16.3 UI-I0/UI-I1/UI-I2 feature line
 UI-I0–UI-I2 больше не являются отдельной долгоживущей веткой. Новые UI-функции
 должны добавляться короткими ветками от текущего `main` и проходить общий
 Foundation/network regression gate.
+
+## 20. Конфигурируемые профили взаимодействия
+
+Поверх общего `InventoryCommandFacade` введён presentation-слой профилей. Он меняет
+только интерпретацию жестов, порядок выбора количества и цели, а также временный
+стак на курсоре. `Item Graph`, контейнеры, operation ledger и persistence остаются
+общими.
+
+Профили загружаются из:
+
+```text
+config/ui/inventory_profiles/catalog.json
+config/ui/inventory_profiles/planet_default.json
+config/ui/inventory_profiles/rust_like.json
+config/ui/inventory_profiles/seven_days_like.json
+```
+
+Приоритет выбора:
+
+```text
+явный runtime/test override
+→ PLANET_SIMULATOR_INVENTORY_PROFILE
+→ сохранённая пользовательская настройка
+→ default_interaction_profile
+→ planet_default
+```
+
+Доступные схемы:
+
+- `planet_default` — полностью сохраняет прежние drag/Shift/ПКМ/MMB правила;
+- `rust_like` — точный split до цели, виртуальный стак, половина и треть через MMB;
+- `seven_days_like` — ЛКМ берёт/кладёт весь виртуальный стак, ПКМ берёт половину и кладёт по одному.
+
+Для `planet_default` и `rust_like` перенос до подтверждения цели остаётся
+presentation-only. Профиль `seven_days_like` использует другую, более строгую модель:
+при подхвате предмет реально переводится во временный односекционный контейнер
+курсора. Persistence блокируется до завершения операции, а `Esc` разворачивает
+цепочку обменов и возвращает предмет в исходный слот. Это необходимо, чтобы
+поддержать выкладывание по одной единице и замену занятого слота без расхождения UI
+и Item Graph.
+
+При первом включении `seven_days_like` рюкзак и каждый реально открытый внешний
+BULK-контейнер мигрируют в доменный режим `SLOTS`. Миграция односторонняя,
+транзакционная, проходит полную graph validation и сохраняет точные slot assignments.
+За курсорную механику отвечает `InventoryCursorController`, за миграцию —
+`InventorySlotModeAdapter`, а атомарный обмен реализован как `SWAP_ITEMS` в общем
+`ItemTransferService`.

@@ -3,6 +3,7 @@ extends SceneTree
 const Factory = preload("res://scripts/items/services/item_domain_factory.gd")
 const Relations = preload("res://scripts/items/domain/item_relations.gd")
 const Gameplay = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
+const PlacementContract = preload("res://scripts/items/placement/item_placement_contract.gd")
 
 const STORE_ROOT := "user://planet_simulator/item_graphs"
 const STATE_KEY := "test-item-placement-admin"
@@ -16,6 +17,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var raised_transform := PlacementContract.build_surface_transform(
+		Vector3(2.0, 3.0, 4.0), Vector3.UP, Vector3.FORWARD, null, 0.17
+	)
+	_assert(raised_transform.origin.is_equal_approx(Vector3(2.0, 3.17, 4.0)), "Placement transform must raise fixture collider above the surface")
 	var store = Factory.create_json_state_store(STORE_ROOT)
 	store.delete_state(STATE_KEY)
 	var fixture: Dictionary = await _create_controller()
@@ -41,6 +46,9 @@ func _run() -> void:
 	_assert(mount_stack.quantity == 2 and hotbar.get_item_at_slot(0) == mount_stack.instance_id, "Placing one unit must leave the remainder linked to hotbar")
 	var fixture_node = controller.placement_service.get_fixture_node(placed_id)
 	_assert(fixture_node != null and fixture_node.fixture_item_id == placed_id, "Placement service must create fixture presentation owned by item")
+	var interaction_collision := fixture_node.get_node_or_null("InteractionCollision") as CollisionShape3D
+	var interaction_shape := interaction_collision.shape as CylinderShape3D if interaction_collision != null else null
+	_assert(interaction_shape != null and interaction_shape.height >= 1.0, "Socket interaction collider must cover the mounted beacon")
 	var socket: Dictionary = controller.get_socket_state(String(place_result.get("assembly_id", "")), String(place_result.get("socket_id", "")))
 	_assert(String(socket.get("parent_item_id", "")) == placed_id, "Installed socket must use placed item as parent aggregate")
 

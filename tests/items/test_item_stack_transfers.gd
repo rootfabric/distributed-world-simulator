@@ -196,6 +196,8 @@ func _run() -> void:
 	)
 	_assert(String(stack_payload_conflict.get("error_code", "")) == "OPERATION_ID_CONFLICT", "Different stack payload under same operation ID must conflict")
 
+	_test_atomic_item_swap(controller)
+
 	_assert_success(controller.domain.validator.validate_graph(), "Stack operations must leave a valid unique item graph")
 	var first_session_id: String = controller.operation_session_id
 	_assert_success(controller.save_graph(), "Stack fixture must persist ledger before restart collision check")
@@ -212,6 +214,76 @@ func _run() -> void:
 	restarted.queue_free()
 	await process_frame
 	_finish()
+
+
+func _test_atomic_item_swap(controller) -> void:
+	var swap_left := ContainerState.new({
+		"container_id": "swap_left",
+		"storage_mode": ContainerState.STORAGE_SLOTS,
+		"slot_count": 1,
+		"slot_rules": [{"accepted_tags": []}],
+		"maximum_mass_kg": 3.0,
+	})
+	var swap_right := ContainerState.new({
+		"container_id": "swap_right",
+		"storage_mode": ContainerState.STORAGE_SLOTS,
+		"slot_count": 1,
+		"slot_rules": [{"accepted_tags": []}],
+	})
+	controller.domain.containers.add_container(swap_left)
+	controller.domain.containers.add_container(swap_right)
+	var light = controller.domain.items.create_item("survey_beacon", 1, {}, Relations.container(swap_left.container_id, 0))
+	var heavy = controller.domain.items.create_item("battery_pack", 1, {}, Relations.container(swap_right.container_id, 0))
+	swap_left.assign_item(light.instance_id, 0)
+	swap_right.assign_item(heavy.instance_id, 0)
+	var light_revision := int(light.revision)
+	var heavy_revision := int(heavy.revision)
+	var rejected: Dictionary = controller.domain.transfer.swap_items(
+		light.instance_id,
+		heavy.instance_id,
+		"swap-capacity-rejected",
+		light_revision,
+		heavy_revision
+	)
+	_assert(String(rejected.get("error_code", "")) == "MAXIMUM_MASS_EXCEEDED", "Swap must reject a final container capacity violation")
+	_assert(swap_left.get_item_at_slot(0) == light.instance_id and swap_right.get_item_at_slot(0) == heavy.instance_id, "Rejected swap must restore both slot memberships")
+	_assert(light.revision == light_revision and heavy.revision == heavy_revision, "Rejected swap must restore both item revisions")
+	_assert(String(light.relation.get("container_id", "")) == swap_left.container_id and String(heavy.relation.get("container_id", "")) == swap_right.container_id, "Rejected swap must restore both item relations")
+
+	swap_left.maximum_mass_kg = 20.0
+	var accepted: Dictionary = controller.domain.transfer.swap_items(
+		light.instance_id,
+		heavy.instance_id,
+		"swap-accepted",
+		light_revision,
+		heavy_revision
+	)
+	_assert_success(accepted, "Atomic swap must succeed when both final containers accept the displaced items")
+	_assert(swap_left.get_item_at_slot(0) == heavy.instance_id and swap_right.get_item_at_slot(0) == light.instance_id, "Atomic swap must exchange exact domain slots")
+	_assert(String(light.relation.get("container_id", "")) == swap_right.container_id and int(light.relation.get("slot_index", -1)) == 0, "First item relation must move to the second exact slot")
+	_assert(String(heavy.relation.get("container_id", "")) == swap_left.container_id and int(heavy.relation.get("slot_index", -1)) == 0, "Second item relation must move to the first exact slot")
+	_assert(light.revision == light_revision + 1 and heavy.revision == heavy_revision + 1, "Successful swap must advance both aggregate revisions exactly once")
+
+	var replay: Dictionary = controller.domain.transfer.swap_items(
+		light.instance_id,
+		heavy.instance_id,
+		"swap-accepted",
+		light_revision,
+		heavy_revision
+	)
+	_assert(replay == accepted, "Exact swap replay must return the stored operation result")
+	_assert(swap_left.get_item_at_slot(0) == heavy.instance_id and swap_right.get_item_at_slot(0) == light.instance_id, "Exact swap replay must not exchange the items a second time")
+
+	var stale: Dictionary = controller.domain.transfer.swap_items(
+		light.instance_id,
+		heavy.instance_id,
+		"swap-stale-revision",
+		light_revision,
+		heavy_revision
+	)
+	_assert(String(stale.get("error_code", "")) == "REVISION_CONFLICT", "Swap must reject stale first-item revision")
+	_assert(swap_left.get_item_at_slot(0) == heavy.instance_id and swap_right.get_item_at_slot(0) == light.instance_id, "Revision-conflicted swap must preserve slot membership")
+
 
 
 func _create_controller() -> Dictionary:

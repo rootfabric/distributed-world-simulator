@@ -1397,6 +1397,8 @@ func get_console_completions(command_line: String, caret_column: int = -1) -> Ar
 		"inventory.hotbar.select":
 			for index in range(1, 11):
 				candidates.append(str(index))
+		"inventory.profile":
+			candidates = ["planet_default", "rust_like", "seven_days_like"]
 		"inventory.debug.grant":
 			for row in get_debug_item_catalog():
 				candidates.append(String(row.get("definition_id", "")))

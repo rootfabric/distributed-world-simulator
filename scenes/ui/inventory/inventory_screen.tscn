@@ -41,7 +41,7 @@ theme_override_constants/separation = 10
 
 [node name="Header" type="Label" parent="Margin/Main"]
 layout_mode = 2
-text = "ИНВЕНТАРЬ — drag переносит стак · Shift+ЛКМ быстро · ПКМ действия"
+text = "ИНВЕНТАРЬ — ПРОФИЛИ УПРАВЛЕНИЯ ПРЕДМЕТАМИ"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 20
 
@@ -68,6 +68,17 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 tooltip_text = "Визуальная сортировка; Item Graph не изменяется"
+
+[node name="InteractionProfileLabel" type="Label" parent="Margin/Main/ProjectionToolbar"]
+layout_mode = 2
+text = "Управление:"
+vertical_alignment = 1
+
+[node name="InteractionProfileOption" type="OptionButton" parent="Margin/Main/ProjectionToolbar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(125, 0)
+layout_mode = 2
+tooltip_text = "Меняет только жесты и временное состояние переноса; Item Graph остаётся общим"
 
 [node name="ResetProjectionButton" type="Button" parent="Margin/Main/ProjectionToolbar"]
 unique_name_in_owner = true
@@ -115,7 +126,7 @@ layout_mode = 2
 [node name="StatusLabel" type="Label" parent="Margin/Main"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "ЛКМ drag — весь стак · Shift+ЛКМ — быстрый перенос · ПКМ — действия · Tab — закрыть"
+text = "Профиль управления загружается… · Tab — закрыть"
 horizontal_alignment = 1
 
 [node name="ToastLayer" parent="Margin/Main" instance=ExtResource("5_toast")]
@@ -125,7 +136,11 @@ layout_mode = 2
 [node name="StackSplitDialog" parent="." instance=ExtResource("4_split")]
 unique_name_in_owner = true
 
-[node name="ItemTooltip" parent="." instance=ExtResource("6_tooltip")]
+[node name="TooltipLayer" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ItemTooltip" parent="TooltipLayer" instance=ExtResource("6_tooltip")]
 unique_name_in_owner = true
 
 [node name="ItemContextMenu" parent="." instance=ExtResource("7_context")]

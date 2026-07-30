@@ -5,12 +5,15 @@ signal drop_requested(item_id: String, target_container_id: String, target_slot_
 signal quantity_drop_requested(item_id: String, target_container_id: String, target_slot_index: int, total_quantity: int, target_item_id: String)
 signal activated(item_id: String, container_id: String, slot_index: int)
 signal quick_transfer_requested(item_id: String, source_container_id: String, source_slot_index: int)
+signal drop_outside_requested(item_id: String, quantity: int)
 signal context_requested(item_id: String, source_container_id: String, source_slot_index: int, screen_position: Vector2)
 signal item_hovered(cell_data: Dictionary, screen_position: Vector2)
 signal item_unhovered(item_id: String)
 signal item_selected(item_id: String)
 signal drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String)
 signal page_requested(container_id: String, page_index: int)
+signal interaction_requested(action_id: String, payload: Dictionary)
+signal background_interaction_requested(button_index: int)
 
 const ItemCellScene = preload("res://scenes/ui/inventory/item_cell.tscn")
 const MAX_BULK_POOL_SIZE: int = 96
@@ -37,6 +40,9 @@ var icon_provider: Callable
 var current_model: Dictionary = {}
 var visual_role: String = "container"
 var active_cell_count: int = 0
+var interaction_profile: InventoryInteractionProfile
+var cursor_carry_active: bool = false
+var carry_target_highlight_enabled: bool = false
 
 
 func _ready() -> void:
@@ -46,12 +52,37 @@ func _ready() -> void:
 	next_page_button.pressed.connect(_request_next_page)
 
 
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if not mouse_event.pressed and mouse_event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+			background_interaction_requested.emit(mouse_event.button_index)
+			accept_event()
+
+
 func set_visual_role(role: String) -> void:
 	visual_role = role.strip_edges().to_lower()
 	if visual_role.is_empty():
 		visual_role = "container"
 	_apply_boundary_style()
 	_update_role_copy()
+
+
+func set_interaction_profile(profile: InventoryInteractionProfile) -> void:
+	interaction_profile = profile
+	_apply_boundary_style()
+	_apply_profile_copy()
+	for child in grid.get_children():
+		if child.has_method("set_interaction_profile"):
+			child.set_interaction_profile(profile)
+
+
+func set_cursor_carry_state(active: bool, target_highlight_enabled: bool) -> void:
+	cursor_carry_active = active
+	carry_target_highlight_enabled = target_highlight_enabled
+	for child in grid.get_children():
+		if child.has_method("set_cursor_carry_state"):
+			child.set_cursor_carry_state(active, target_highlight_enabled)
 
 
 func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: Callable) -> void:
@@ -77,6 +108,10 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 			cell.visible = false
 			continue
 		var cell_data := Dictionary(cells[index])
+		if cell.has_method("set_interaction_profile"):
+			cell.set_interaction_profile(interaction_profile)
+		if cell.has_method("set_cursor_carry_state"):
+			cell.set_cursor_carry_state(cursor_carry_active, carry_target_highlight_enabled)
 		var texture: Texture2D
 		if icon_provider.is_valid():
 			texture = icon_provider.call(cell_data)
@@ -88,6 +123,7 @@ func render(model: Dictionary, new_icon_provider: Callable, new_drop_validator: 
 	_clear_feedback()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_update_role_copy()
+	_apply_profile_copy()
 	_update_virtualization(model)
 	set_meta("inventory_container_model", current_model.duplicate(true))
 
@@ -242,6 +278,10 @@ func _format_capacity(current: float, maximum: float, unit: String) -> String:
 func _ensure_pool_size(required: int) -> void:
 	while grid.get_child_count() < required:
 		var cell = ItemCellScene.instantiate()
+		if cell.has_method("set_interaction_profile"):
+			cell.set_interaction_profile(interaction_profile)
+		if cell.has_method("set_cursor_carry_state"):
+			cell.set_cursor_carry_state(cursor_carry_active, carry_target_highlight_enabled)
 		_wire_cell(cell)
 		grid.add_child(cell)
 
@@ -256,6 +296,7 @@ func _trim_pool_size(maximum: int) -> void:
 func _wire_cell(cell) -> void:
 	cell.drop_requested.connect(_forward_drop_requested)
 	cell.quantity_drop_requested.connect(_forward_quantity_drop_requested)
+	cell.drop_outside_requested.connect(_forward_drop_outside_requested)
 	cell.activated.connect(_forward_activated)
 	cell.quick_transfer_requested.connect(_forward_quick_transfer_requested)
 	cell.context_requested.connect(_forward_context_requested)
@@ -263,6 +304,7 @@ func _wire_cell(cell) -> void:
 	cell.item_unhovered.connect(_forward_item_unhovered)
 	cell.item_selected.connect(_forward_item_selected)
 	cell.drop_preview_rejected.connect(_forward_drop_preview_rejected)
+	cell.interaction_requested.connect(_forward_interaction_requested)
 
 
 func _hide_pool() -> void:
@@ -294,6 +336,37 @@ func _request_next_page() -> void:
 	page_requested.emit(container_id, int(current_model.get("page_index", 0)) + 1)
 
 
+func _apply_profile_copy() -> void:
+	if role_label == null or metadata_label == null or drop_hint_label == null or grid == null:
+		return
+	var seven_days_style := interaction_profile != null and interaction_profile.ui_style == "SEVEN_DAYS"
+	role_label.visible = not seven_days_style
+	metadata_label.visible = not seven_days_style
+	drop_hint_label.visible = not seven_days_style
+	grid.add_theme_constant_override("h_separation", 0)
+	grid.add_theme_constant_override("v_separation", 0)
+	custom_minimum_size = Vector2(548.0, 250.0) if seven_days_style else Vector2(270.0, 220.0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if seven_days_style else HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_color_override("font_color", Color.WHITE if seven_days_style else Color(0.9, 0.92, 0.96, 1.0))
+	title_label.add_theme_font_size_override("font_size", 19 if seven_days_style else 17)
+	if seven_days_style:
+		if visual_role == "player":
+			title_label.text = "ИНВЕНТАРЬ"
+		else:
+			title_label.text = title_label.text.to_upper()
+		var title_style := StyleBoxFlat.new()
+		title_style.bg_color = Color(0.015, 0.015, 0.012, 0.96)
+		title_style.border_color = Color(0.88, 0.7, 0.16, 1.0)
+		title_style.border_width_bottom = 2
+		title_style.content_margin_left = 8.0
+		title_style.content_margin_top = 4.0
+		title_style.content_margin_right = 8.0
+		title_style.content_margin_bottom = 4.0
+		title_label.add_theme_stylebox_override("normal", title_style)
+	else:
+		title_label.remove_theme_stylebox_override("normal")
+
+
 func _update_role_copy() -> void:
 	if role_label == null or drop_hint_label == null:
 		return
@@ -316,31 +389,46 @@ func _update_role_copy() -> void:
 
 func _apply_boundary_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.06, 0.085, 0.94)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 10.0
-	style.content_margin_top = 8.0
-	style.content_margin_right = 10.0
-	style.content_margin_bottom = 8.0
-	match visual_role:
-		"player":
-			style.border_color = Color(0.25, 0.56, 0.82, 1.0)
-			style.bg_color = Color(0.045, 0.075, 0.11, 0.94)
-		"external":
-			style.border_color = Color(0.88, 0.58, 0.18, 1.0)
-			style.bg_color = Color(0.095, 0.07, 0.035, 0.94)
-		"hotbar":
-			style.border_color = Color(0.26, 0.72, 0.68, 1.0)
-			style.bg_color = Color(0.035, 0.085, 0.085, 0.94)
-		_:
-			style.border_color = Color(0.4, 0.48, 0.58, 1.0)
+	var seven_days_style := interaction_profile != null and interaction_profile.ui_style == "SEVEN_DAYS"
+	if seven_days_style:
+		style.bg_color = Color(0.08, 0.08, 0.07, 0.74)
+		style.border_color = Color(0.05, 0.05, 0.04, 1.0)
+		style.set_border_width_all(2)
+		style.border_width_top = 4
+		style.corner_radius_top_left = 0
+		style.corner_radius_top_right = 0
+		style.corner_radius_bottom_right = 0
+		style.corner_radius_bottom_left = 0
+		style.content_margin_left = 6.0
+		style.content_margin_top = 5.0
+		style.content_margin_right = 6.0
+		style.content_margin_bottom = 6.0
+	else:
+		style.bg_color = Color(0.045, 0.06, 0.085, 0.94)
+		style.border_width_left = 2
+		style.border_width_top = 2
+		style.border_width_right = 2
+		style.border_width_bottom = 2
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_right = 8
+		style.corner_radius_bottom_left = 8
+		style.content_margin_left = 10.0
+		style.content_margin_top = 8.0
+		style.content_margin_right = 10.0
+		style.content_margin_bottom = 8.0
+		match visual_role:
+			"player":
+				style.border_color = Color(0.25, 0.56, 0.82, 1.0)
+				style.bg_color = Color(0.045, 0.075, 0.11, 0.94)
+			"external":
+				style.border_color = Color(0.88, 0.58, 0.18, 1.0)
+				style.bg_color = Color(0.095, 0.07, 0.035, 0.94)
+			"hotbar":
+				style.border_color = Color(0.26, 0.72, 0.68, 1.0)
+				style.bg_color = Color(0.035, 0.085, 0.085, 0.94)
+			_:
+				style.border_color = Color(0.4, 0.48, 0.58, 1.0)
 	add_theme_stylebox_override("panel", style)
 
 
@@ -350,6 +438,10 @@ func _forward_drop_requested(item_id: String, target_container_id: String, targe
 
 func _forward_quantity_drop_requested(item_id: String, target_container_id: String, target_slot_index: int, total_quantity: int, target_item_id: String) -> void:
 	quantity_drop_requested.emit(item_id, target_container_id, target_slot_index, total_quantity, target_item_id)
+
+
+func _forward_drop_outside_requested(item_id: String, quantity: int) -> void:
+	drop_outside_requested.emit(item_id, quantity)
 
 
 func _forward_activated(item_id: String, source_container_id: String, slot_index: int) -> void:
@@ -364,8 +456,8 @@ func _forward_context_requested(item_id: String, source_container_id: String, so
 	context_requested.emit(item_id, source_container_id, source_slot_index, screen_position)
 
 
-func _forward_item_hovered(cell_data: Dictionary, screen_position: Vector2) -> void:
-	item_hovered.emit(cell_data, screen_position)
+func _forward_item_hovered(cell_data: Dictionary, cell_rect: Rect2) -> void:
+	item_hovered.emit(cell_data, cell_rect)
 
 
 func _forward_item_unhovered(item_id: String) -> void:
@@ -378,3 +470,7 @@ func _forward_item_selected(item_id: String) -> void:
 
 func _forward_drop_preview_rejected(target_container_id: String, target_slot_index: int, error_code: String) -> void:
 	drop_preview_rejected.emit(target_container_id, target_slot_index, error_code)
+
+
+func _forward_interaction_requested(action_id: String, payload: Dictionary) -> void:
+	interaction_requested.emit(action_id, payload.duplicate(true))

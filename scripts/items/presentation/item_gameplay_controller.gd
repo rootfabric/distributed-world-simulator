@@ -18,6 +18,10 @@ const RUNTIME_MODE_LEGACY: String = "legacy"
 const RUNTIME_MODE_AUTHORITY: String = "authority"
 const RUNTIME_MODE_REPLICA: String = "replica"
 
+const DEFAULT_DROP_DISTANCE_M: float = 1.6
+const DEFAULT_DROP_HEIGHT_M: float = 0.8
+const DEFAULT_DROP_SPEED_MPS: float = 2.5
+
 var domain: Dictionary = {}
 var presenter
 var graph_persistence
@@ -46,6 +50,7 @@ var network_replica_revision: int = -1
 var network_replica_checksum: String = ""
 var persistence_enabled: bool = true
 var presentation_enabled: bool = true
+var transient_inventory_cursor_ids: Dictionary = {}
 
 
 func setup_runtime(
@@ -75,6 +80,7 @@ func setup_runtime(
 	network_command_bridge = runtime_options.get("network_command_bridge")
 	operation_counter = 1
 	operation_session_id = _create_operation_session_id()
+	transient_inventory_cursor_ids.clear()
 	domain = Factory.create()
 	domain.world_entities.setup({
 		"authority_owner_id": String(runtime_options.get("authority_owner_id", "local-process")),
@@ -410,6 +416,120 @@ func move_item_quantity_to_container(
 	return _after_operation(result)
 
 
+func begin_inventory_cursor_carry(
+	item_id: String,
+	requested_quantity: int,
+	cursor_container_id: String
+) -> Dictionary:
+	if item_id.is_empty() or cursor_container_id.is_empty():
+		return _remember({"success": false, "error_code": "CURSOR_CARRY_ARGUMENT_INVALID"})
+	var item = get_item(item_id)
+	if item == null:
+		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
+	var cursor_result := _ensure_transient_inventory_cursor(cursor_container_id)
+	if not bool(cursor_result.get("success", false)):
+		return _remember(cursor_result)
+	var cursor = get_container(cursor_container_id)
+	if cursor == null or not cursor.item_ids.is_empty():
+		return _remember({"success": false, "error_code": "CURSOR_ALREADY_OCCUPIED"})
+	var quantity := clampi(requested_quantity, 1, int(item.quantity))
+	var result: Dictionary
+	if quantity >= int(item.quantity):
+		result = domain.transfer.move_item(
+			item_id,
+			Relations.container(cursor_container_id, 0),
+			_operation("inventory_cursor_pick_all"),
+			int(item.revision)
+		)
+	else:
+		if item.owns_container():
+			return _remember({
+				"success": false,
+				"error_code": "CONTAINER_ITEM_CANNOT_SPLIT",
+				"message": "Контейнер нельзя разделить",
+			})
+		result = domain.transfer.split_and_move(
+			item_id,
+			quantity,
+			Relations.container(cursor_container_id, 0),
+			_operation("inventory_cursor_pick_split"),
+			int(item.revision)
+		)
+	if bool(result.get("success", false)):
+		var carried_item_id := String(result.get("new_item_id", result.get("result_item_id", item_id)))
+		result["carried_item_id"] = carried_item_id
+		result["cursor_container_id"] = cursor_container_id
+		result["requested_quantity"] = quantity
+		result["moved_quantity"] = quantity
+	return _after_operation(result)
+
+
+func swap_inventory_cursor_item(carried_item_id: String, target_item_id: String) -> Dictionary:
+	var carried = get_item(carried_item_id)
+	var target = get_item(target_item_id)
+	if carried == null or target == null:
+		return _remember({"success": false, "error_code": "ITEM_NOT_FOUND"})
+	var result: Dictionary = domain.transfer.swap_items(
+		carried_item_id,
+		target_item_id,
+		_operation("inventory_cursor_swap"),
+		int(carried.revision),
+		int(target.revision)
+	)
+	if bool(result.get("success", false)):
+		result["message"] = "Предметы поменяны местами"
+	return _after_operation(result)
+
+
+func finalize_inventory_cursor(cursor_container_id: String) -> Dictionary:
+	if cursor_container_id.is_empty():
+		return {"success": true, "no_change": true}
+	var cursor = get_container(cursor_container_id)
+	if cursor != null and not cursor.item_ids.is_empty():
+		return _remember({
+			"success": false,
+			"error_code": "CURSOR_NOT_EMPTY",
+			"remaining_item_ids": cursor.item_ids.duplicate(),
+		})
+	if cursor != null and not domain.containers.remove_container(cursor_container_id):
+		return _remember({"success": false, "error_code": "CURSOR_CONTAINER_REMOVE_FAILED"})
+	transient_inventory_cursor_ids.erase(cursor_container_id)
+	var save_result := save_graph()
+	if not bool(save_result.get("success", false)):
+		return _remember(save_result)
+	_refresh_ui()
+	gameplay_state_changed.emit()
+	return _remember({"success": true, "cursor_container_id": cursor_container_id, "saved": true})
+
+
+func is_transient_inventory_cursor_active() -> bool:
+	return not transient_inventory_cursor_ids.is_empty()
+
+
+func _ensure_transient_inventory_cursor(cursor_container_id: String) -> Dictionary:
+	var existing = get_container(cursor_container_id)
+	if existing != null:
+		if not bool(transient_inventory_cursor_ids.get(cursor_container_id, false)):
+			return {"success": false, "error_code": "CURSOR_CONTAINER_ID_CONFLICT"}
+		return {"success": true, "container_id": cursor_container_id}
+	var cursor := ContainerState.new({
+		"container_id": cursor_container_id,
+		"owner_kind": "UI_TRANSIENT",
+		"owner_id": profile_id,
+		"storage_mode": ContainerState.STORAGE_SLOTS,
+		"slot_count": 1,
+		"slot_rules": [{"accepted_tags": []}],
+		"maximum_mass_kg": -1.0,
+		"maximum_volume_l": -1.0,
+		"allow_nested_containers": true,
+		"maximum_nested_depth": 32,
+	})
+	if not domain.containers.add_container(cursor):
+		return {"success": false, "error_code": "CURSOR_CONTAINER_CREATE_FAILED"}
+	transient_inventory_cursor_ids[cursor_container_id] = true
+	return {"success": true, "container_id": cursor_container_id}
+
+
 func interact_world_item(item_id: String) -> Dictionary:
 	var item = get_item(item_id)
 	if item == null:
@@ -507,9 +627,11 @@ func drop_item_quantity(
 			"message": "Предмет-контейнер нельзя разделить",
 		})
 	var transform := override_transform
+	var linear_velocity := Vector3.ZERO
 	if transform == Transform3D.IDENTITY:
 		transform = _default_drop_transform()
-	var relation := Relations.world(transform, Vector3.ZERO, physics_frame_id)
+		linear_velocity = _default_drop_linear_velocity()
+	var relation := Relations.world(transform, linear_velocity, physics_frame_id)
 	var result: Dictionary
 	if requested_quantity < int(item.quantity):
 		result = domain.transfer.split_and_move(
@@ -622,6 +744,13 @@ func close_external_container() -> Dictionary:
 func save_graph() -> Dictionary:
 	if _uses_network_commands():
 		return _submit_network_operation("item.save", {}, "save")
+	if not transient_inventory_cursor_ids.is_empty():
+		return {
+			"success": true,
+			"skipped": true,
+			"reason": "TRANSIENT_INVENTORY_CURSOR_ACTIVE",
+			"cursor_container_ids": transient_inventory_cursor_ids.keys(),
+		}
 	if graph_persistence == null:
 		return {"success": false, "error_code": "PERSISTENCE_NOT_READY"}
 	if persistence_blocked:
@@ -759,6 +888,7 @@ func _register_default_definitions() -> void:
 					"kind": PlacementContract.KIND_MOUNT_SOCKET,
 					"max_distance_m": 8.0,
 					"collision_mask": 1,
+					"surface_offset_m": 0.17,
 					"socket": {"socket_id": "beacon_socket", "accepted_tags": ["beacon"]},
 				},
 			},
@@ -1266,7 +1396,36 @@ func _create_operation_session_id() -> String:
 func _default_drop_transform() -> Transform3D:
 	if player is Node3D and world_root != null:
 		var player_node := player as Node3D
-		var forward := -player_node.global_basis.z.normalized()
-		var target_global := Transform3D(Basis.IDENTITY, player_node.global_position + forward * 1.6 + Vector3.UP * 0.8)
+		var forward := _drop_view_forward_global(player_node)
+		var up := player_node.global_basis.y.normalized()
+		if up.length_squared() < 0.000001:
+			up = Vector3.UP
+		var target_global := Transform3D(
+			Basis.IDENTITY,
+			player_node.global_position
+				+ up * DEFAULT_DROP_HEIGHT_M
+				+ forward * DEFAULT_DROP_DISTANCE_M
+		)
 		return world_root.global_transform.affine_inverse() * target_global
 	return Transform3D(Basis.IDENTITY, Vector3(0.0, 1.5, -1.5))
+
+
+func _default_drop_linear_velocity() -> Vector3:
+	if not player is Node3D or world_root == null:
+		return Vector3.ZERO
+	var forward_global := _drop_view_forward_global(player as Node3D)
+	return world_root.global_basis.inverse() * (forward_global * DEFAULT_DROP_SPEED_MPS)
+
+
+func _drop_view_forward_global(player_node: Node3D) -> Vector3:
+	var forward := Vector3.ZERO
+	if player_node.has_method("get_view_basis"):
+		var view_basis_value: Variant = player_node.call("get_view_basis")
+		if view_basis_value is Basis:
+			var view_basis: Basis = view_basis_value
+			forward = -view_basis.z
+	if forward.length_squared() < 0.000001:
+		forward = -player_node.global_basis.z
+	if forward.length_squared() < 0.000001:
+		forward = Vector3.FORWARD
+	return forward.normalized()
