@@ -104,13 +104,13 @@
     },
     "graphical_process": {
       "tests": 1,
-      "assertions": 56,
+      "assertions": 55,
       "status": "PASS",
       "clients": "two ordinary X11 Godot processes without --headless"
     },
     "focused_profile": {
       "scripts": 18,
-      "assertions": 1180,
+      "assertions": 1178,
       "status": "PASS"
     },
     "network_runtime": {

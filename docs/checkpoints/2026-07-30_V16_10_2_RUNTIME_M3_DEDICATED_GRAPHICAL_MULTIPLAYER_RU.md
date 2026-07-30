@@ -47,8 +47,8 @@ A joins
 ```text
 Editor import:                         PASS
 M3 graphical contracts:               63/63 PASS
-M3 two-graphical-client process:       56/56 PASS
-Focused M3 profile:                    18/18 scripts, 1180 assertions PASS
+M3 two-graphical-client process:       55 assertions PASS
+Focused M3 profile:                    18/18 scripts, 1178 assertions PASS
 Network/runtime regression:            51/51 suites, 3989 assertions PASS
 World regression:                      94/94 tests PASS
 Main scene playground:                  6/6 PASS
