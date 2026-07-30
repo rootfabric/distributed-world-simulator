@@ -41,6 +41,8 @@ class FakeM4ClientRuntime:
 		"checksum": "item-checksum-initial",
 	}
 	var commands: Array[Dictionary] = []
+	var movement_deltas: Array[Vector2] = []
+	var automated_acceptance := true
 
 	func get_snapshot() -> Dictionary:
 		return gameplay_snapshot.duplicate(true)
@@ -59,7 +61,8 @@ class FakeM4ClientRuntime:
 		}
 
 	func move_nonblocking(delta_x: float, delta_z: float) -> Dictionary:
-		return move_blocking(delta_x, delta_z)
+		movement_deltas.append(Vector2(delta_x, delta_z))
+		return {"success": true, "delta_x": delta_x, "delta_z": delta_z}
 
 	func execute_item_command_blocking(
 		command_type: String,
@@ -77,7 +80,7 @@ class FakeM4ClientRuntime:
 		return {"success": true, "error_code": ""}
 
 	func is_automated_acceptance() -> bool:
-		return true
+		return automated_acceptance
 
 
 func _init() -> void:
@@ -120,6 +123,22 @@ func _run() -> void:
 		String(initial.get("m4_item_graph_checksum", "")) == "item-checksum-initial",
 		"initial M4 Item Graph replica applied"
 	)
+	client.automated_acceptance = false
+	var camera_yaw := runtime.player.get_node_or_null("CameraAnchor/CameraYaw") as Node3D
+	_assert(camera_yaw != null, "playground camera yaw node is available")
+	if camera_yaw != null:
+		camera_yaw.rotation.y = PI * 0.5
+		Input.action_press("move_forward")
+		runtime._apply_m3_network_input(0.06)
+		Input.action_release("move_forward")
+		_assert(client.movement_deltas.size() == 1, "forward input reached M3 client runtime")
+		if client.movement_deltas.size() == 1:
+			var forward_delta: Vector2 = client.movement_deltas[0]
+			_assert(
+				absf(forward_delta.x) > absf(forward_delta.y),
+				"forward input follows camera direction instead of fixed world Z"
+			)
+	client.automated_acceptance = true
 
 	var move: Dictionary = runtime.m3_apply_test_input_offset(Vector3(0.5, 0.0, -0.25))
 	_assert(bool(move.get("success", false)), "authoritative playground movement routed")
