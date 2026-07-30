@@ -2,7 +2,7 @@
 
 **Checkpoint:** `v16.9.1-runtime-h1-playable-listen-host`
 **Build ID:** `h1-playable-listen-host`
-**Статус:** candidate
+**Статус:** accepted (независимая приёмка 30 июля 2026 года)
 **База:** `v16.9.0-simulation-s1-distributed-compute-fix1`
 
 ## 1. Назначение

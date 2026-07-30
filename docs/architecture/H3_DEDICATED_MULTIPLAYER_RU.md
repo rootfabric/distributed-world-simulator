@@ -6,6 +6,7 @@
 v16.9.3-runtime-h3-dedicated-multiplayer
 base: v16.9.2-runtime-h2-host-client-ownership
 branch: feature/h3-dedicated-multiplayer
+status: accepted
 ```
 
 ## Цель

@@ -1,0 +1,273 @@
+{
+  "schema": "planet_simulator.networked_gameplay_architecture.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "build_id": "a2-networked-gameplay-audit-freeze",
+  "status": "candidate",
+  "decision": "FROZEN_WITH_GATES",
+  "generated_at_utc": "2026-07-30T01:47:49Z",
+  "runtime_evidence_base": {
+    "H1": {
+      "checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
+      "status": "accepted",
+      "proof": "graphical listen-host, player/item command boundary, replica-only client capability"
+    },
+    "H2": {
+      "checkpoint": "v16.9.2-runtime-h2-host-client-ownership",
+      "status": "accepted",
+      "proof": "separate ENet client, join/leave/rejoin, stable player identity and ownership epoch"
+    },
+    "H3": {
+      "checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
+      "status": "accepted",
+      "proof": "dedicated authority, two simultaneous ENet protocol clients, movement replication, contention and reconnect"
+    }
+  },
+  "canonical_pipeline": [
+    "input_or_ui_intent",
+    "client_command_gateway",
+    "versioned_command_dto",
+    "authority_command_handler",
+    "authoritative_mutation",
+    "targeted_command_result",
+    "snapshot_or_delta",
+    "client_replica_store",
+    "presentation"
+  ],
+  "topology_matrix": [
+    {
+      "id": "listen_host",
+      "authority_location": "embedded_process",
+      "client_kind": "graphical",
+      "transport": "loopback_canonical_dto",
+      "proven_scope": [
+        "player_state",
+        "inventory",
+        "containers",
+        "pickup_drop",
+        "stack_split",
+        "mount_placement",
+        "persistence"
+      ],
+      "evidence": "H1",
+      "status": "PROVEN"
+    },
+    {
+      "id": "dedicated_single",
+      "authority_location": "headless_process",
+      "client_kind": "headless_protocol_client",
+      "transport": "enet_multi_peer_v2",
+      "proven_scope": [
+        "join",
+        "leave",
+        "rejoin",
+        "stable_player_entity",
+        "ownership_epoch"
+      ],
+      "evidence": "H2",
+      "status": "PROVEN_SUBSET"
+    },
+    {
+      "id": "dedicated_multi",
+      "authority_location": "headless_process",
+      "client_kind": "two_headless_protocol_clients",
+      "transport": "enet_multi_peer_v2",
+      "proven_scope": [
+        "two_players",
+        "movement_replication",
+        "targeted_results",
+        "region_deltas",
+        "shared_item_contention",
+        "disconnect_reconnect"
+      ],
+      "evidence": "H3",
+      "status": "PROVEN_SUBSET"
+    }
+  ],
+  "identity_model": {
+    "logical_player_id": "stable account/session-independent logical identity",
+    "player_entity_id": "stable canonical entity identity player/<logical_player_id>",
+    "transport_session_id": "ephemeral connection identity; rotates on reconnect",
+    "ownership_epoch": "monotonic per logical player join generation",
+    "authority_owner_id": "authoritative runtime identity",
+    "authority_epoch": "monotonic authority generation fence",
+    "route_generation": "monotonic transport route generation; independent from ownership epoch",
+    "rule": "transport identity never replaces player or aggregate identity"
+  },
+  "command_ownership_boundary": {
+    "required_fences": [
+      "logical_player_id",
+      "transport_session_id",
+      "ownership_epoch",
+      "operation_id",
+      "payload_fingerprint"
+    ],
+    "permission_rule": "a player may mutate only owned player state and explicitly authorized shared resources",
+    "replay_rule": "same operation_id plus same fingerprint returns stable result without second mutation",
+    "conflict_rule": "same operation_id plus different fingerprint is rejected",
+    "client_rule": "client and UI never receive live authority, aggregate, repository or registry references"
+  },
+  "movement_replication": {
+    "authority": "server validates ownership, input sequence and finite bounded movement before mutation",
+    "ordering": "last_input_sequence is monotonic per player ownership generation",
+    "replication": "accepted movement produces authoritative delta; local and remote presentation read replica state",
+    "prediction_policy": "NO_CANONICAL_CLIENT_PREDICTION",
+    "correction_policy": "authoritative snapshot or delta always wins",
+    "interpolation_policy": "presentation-only and not yet proven in a two-window graphical scenario"
+  },
+  "inventory_and_contention": {
+    "single_writer": "authority serializes contested mutations",
+    "permission": "requester ownership is validated before inventory mutation",
+    "contention_result": "exactly one success and deterministic rejection for an already claimed resource",
+    "conservation": [
+      "one stable item identity",
+      "no duplicate world plus inventory membership",
+      "winner inventory contains one item"
+    ],
+    "production_item_graph_status": "H1 full item graph path proven; H3 contention uses a reduced shared-item fixture"
+  },
+  "reconnect_and_replay": {
+    "logical_identity_persists": true,
+    "player_entity_identity_persists": true,
+    "transport_session_rotates": true,
+    "ownership_epoch_increments": true,
+    "duplicate_player_forbidden": true,
+    "stale_transport_session_rejected": true,
+    "exact_operation_replay_is_idempotent": true,
+    "durable_restart_proof": "R3.1/H1 persistence exists, but H2/H3 ownership/gameplay fixtures are not yet integrated with durable server restart"
+  },
+  "peer_to_player_mapping": {
+    "cardinality": "one connected transport session to at most one logical player; one logical player to at most one active transport session",
+    "source_of_truth": "authority-owned ownership registry",
+    "route_generation": "transport route/session generation is independent from ownership_epoch",
+    "disconnect": "peer disconnect may mark player disconnected but must not stop listener or other peers"
+  },
+  "relevance_model": {
+    "current_scope": "one authoritative server region",
+    "region_identity": "explicit region_id in multiplayer snapshot",
+    "delivery": "all gameplay deltas are broadcast inside the current test region; command results are targeted",
+    "not_frozen_yet": [
+      "distance interest filtering",
+      "ghost overlap",
+      "cross-region subscriptions",
+      "bandwidth prioritization"
+    ]
+  },
+  "client_capability_boundary": {
+    "allowed": [
+      "submit versioned commands",
+      "receive targeted results",
+      "accept validated snapshots and deltas",
+      "read deep-copied replica state"
+    ],
+    "forbidden": [
+      "live authority object",
+      "aggregate registry",
+      "repository write port",
+      "SceneTree or Node across DTO boundary",
+      "local authority creation in graphical client"
+    ],
+    "validation_note": "H2/H3 replica code currently reuses authority/registry validation scripts; this is code coupling, not a live authority reference"
+  },
+  "implementation_assessment": {
+    "architecture_target_frozen": true,
+    "one_semantic_pipeline_frozen": true,
+    "one_production_service_implementation_across_h1_h2_h3": false,
+    "two_graphical_client_windows_proven": false,
+    "full_item_graph_contention_over_dedicated_transport_proven": false,
+    "dedicated_server_restart_recovery_proven": false,
+    "b1_allowed": true,
+    "multi_authority_work_allowed": false
+  },
+  "known_debt": [
+    {
+      "id": "A2-D01",
+      "severity": "P1",
+      "title": "Consolidate H1/H2/H3 authority fixtures behind one NetworkedGameplayService contract",
+      "evidence": "PlayableListenHostAuthority, PlayerOwnershipRegistry and MultiplayerGameplayAuthority are separate implementations",
+      "closure_before": "N3"
+    },
+    {
+      "id": "A2-D02",
+      "severity": "P1",
+      "title": "Extract shared snapshot/delta validators from authority implementations",
+      "evidence": "H2/H3 replica stores preload registry/authority scripts for validation",
+      "closure_before": "N3"
+    },
+    {
+      "id": "A2-D03",
+      "severity": "P1",
+      "title": "Run two real graphical clients with presentation interpolation and the canonical H1 item graph service",
+      "evidence": "H3 process clients are headless protocol clients and use a reduced shared-item fixture",
+      "closure_before": "N3"
+    },
+    {
+      "id": "A2-D04",
+      "severity": "P1",
+      "title": "Integrate dedicated ownership/gameplay state with R3.1 durable server restart recovery",
+      "evidence": "H2/H3 prove reconnect in one server lifetime, not crash/restart recovery",
+      "closure_before": "N3"
+    },
+    {
+      "id": "A2-D05",
+      "severity": "P2",
+      "title": "Define production authentication and logical player admission",
+      "evidence": "logical IDs are trusted test inputs",
+      "closure_before": "production_public_access"
+    }
+  ],
+  "b1_constraints": {
+    "next_checkpoint": "v16.10.0-data-plane-b1-nats-core",
+    "branch": "feature/b1-nats-core-adapter",
+    "allowed_scope": [
+      "B0 service request_reply adapter",
+      "discovery",
+      "heartbeat",
+      "health",
+      "load",
+      "transport-neutral routing metadata"
+    ],
+    "forbidden_scope": [
+      "new gameplay command model",
+      "direct broker calls from domain/runtime gameplay",
+      "NATS subject names in canonical domain state",
+      "using broker delivery as authority ownership"
+    ],
+    "required_equivalence": "in-memory and NATS adapters must preserve identical B0 operation results and DTO checksums"
+  },
+  "multi_authority_gates": {
+    "blocked_until": [
+      "A2-D01",
+      "A2-D02",
+      "A2-D03",
+      "A2-D04"
+    ],
+    "N3": "requires canonical gameplay service, shared validators and durable player recovery",
+    "N4": "requires M0 transaction/handoff conservation over canonical aggregates",
+    "N5": "requires stable player identity, input sequence continuity and dual-route policy",
+    "N6": "requires versioned relevance and ghost contracts; presentation ghosts remain read-only"
+  },
+  "change_control": {
+    "frozen_contracts": [
+      "identity_model",
+      "command_ownership_boundary",
+      "movement_replication",
+      "inventory_and_contention",
+      "reconnect_and_replay",
+      "peer_to_player_mapping",
+      "client_capability_boundary"
+    ],
+    "compatible_change": "additive optional capability behind a new versioned DTO/schema",
+    "breaking_change": "requires new architecture checkpoint and migration plan",
+    "forbidden_shortcut": "topology-specific domain fork or direct client authority access"
+  },
+  "acceptance_evidence": {
+    "h1_assertions": "218 PASS",
+    "h2_assertions": "35 PASS",
+    "h3_focused": "10/10 tests, 477 assertions PASS",
+    "network_runtime": "39/39 suites, 3168 assertions PASS",
+    "world_regression": "82/82 tests PASS",
+    "main_scene": "6/6 PASS",
+    "independent_h3_acceptance": "confirmed by user on H1 + H2 overlay"
+  }
+}

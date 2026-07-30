@@ -261,3 +261,30 @@ Handoff-specific тест требуется только для объекто�
 | PF-004 | replay/restart does not create duplicate item | P0 |
 | PF-005 | mass disturbance compacts to patch state | P0 |
 | PF-006 | aggregate delta updates client procedural representation | P0/D1 |
+
+## 17. A2 networked gameplay architecture gates
+
+| ID | Проверка | Статус |
+|---|---|---|
+| GP-001 | H1/H2/H3 evidence checkpoints отмечены accepted | реализовано |
+| GP-002 | canonical client-command-authority-replica pipeline заморожен | реализовано |
+| GP-003 | logical player, player entity, transport session, ownership epoch и authority epoch разделены | реализовано |
+| GP-004 | stale session/epoch и cross-player inventory write отклоняются | реализовано |
+| GP-005 | exact replay идемпотентен, fingerprint conflict отклоняется | реализовано |
+| GP-006 | movement authority-owned, input sequence монотонен, replica authoritative | реализовано |
+| GP-007 | contention сохраняет одну item identity и одного победителя | реализовано на H3 fixture |
+| GP-008 | disconnect одного peer не останавливает listener/другого peer | реализовано |
+| GP-009 | source evidence и freeze manifest согласованы | реализовано |
+| GP-010 | B1 ограничен B0 adapters и не может создавать gameplay path | реализовано |
+| GP-011 | N3–N6 заблокированы до A2-D01…D04 | реализовано |
+| GP-012 | два graphical clients и full Item Graph dedicated contention | технический долг до N3 |
+| GP-013 | dedicated crash/restart ownership recovery | технический долг до N3 |
+
+Focused gate: `RUN_A2_NETWORKED_GAMEPLAY_AUDIT.ps1` или `.sh`.
+
+После A2 общие manifests обязаны включать H2/H3/A2 evidence:
+
+```text
+RUN_NETWORK_CONTRACT_TESTS: 44 suites
+RUN_WORLD_REGRESSION_TESTS: 87 standalone tests, exact discovery coverage
+```

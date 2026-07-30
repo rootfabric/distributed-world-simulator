@@ -1,50 +1,28 @@
 # PlanetSimulator — текущая distributed runtime roadmap
 
-Текущий принятый checkpoint: `v16.9.0-simulation-s1-distributed-compute-fix1`.
-Текущий кандидат: `v16.9.1-runtime-h1-playable-listen-host`.
+Принятая runtime-база: `v16.9.3-runtime-h3-dedicated-multiplayer`.
+Текущий архитектурный кандидат: `v16.9.4-architecture-a2-networked-gameplay`.
 
 ```text
-N0–N2 accepted
-R3.1 accepted
-A0 accepted
-H0 accepted
-A1 accepted
-S0 accepted
-T1 accepted
-B0 accepted
-M0 accepted
-S1 accepted
+A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1 accepted
+H1 → H2 → H3 accepted
+A2 candidate: FROZEN_WITH_GATES
+B1 next after independent A2 acceptance
 ```
 
-Утверждён следующий порядок:
+A2 разрешает B1 только как adapter-only этап через B0 semantic ports. NATS не может менять gameplay command, identity, ownership, replay или authority semantics.
+
+Перед N3 должны быть закрыты:
+
+- A2-D01 — единый production `NetworkedGameplayService` для H1/H2/H3;
+- A2-D02 — shared DTO validators вне authority implementations;
+- A2-D03 — два graphical clients и полный Item Graph over dedicated transport;
+- A2-D04 — dedicated crash/restart recovery player/gameplay state.
+
+Дальнейший порядок:
 
 ```text
-S1 ACCEPTED
-│
-├─ H1  Playable listen-host — candidate
-├─ H2  Dedicated server + 1 graphical client
-├─ H3  Dedicated server + 2 graphical clients
-├─ A2  Networked gameplay architecture checkpoint
-│
-├─ B1  NATS Core adapter
-├─ B2  JetStream/outbox delivery
-│
-├─ P0  Population Field
-├─ D1  Remote worker MVP
-│
-├─ N3  World Directory + 2 authorities
-├─ N4  Generic object handoff
-├─ N5  Seamless player handoff
-└─ N6  Ghosts + interest management
+A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
 ```
 
-Ближайшая цель — не новый broker adapter, а перенос существующей игры на доказанный client/server path. H1–H3 должны последовательно доказать playable listen-host, отдельный dedicated server с одним graphical client и dedicated multiplayer минимум с двумя graphical clients.
-
-После H3 выполняется обязательный `A2` audit/freeze checkpoint. Только затем начинается B1.
-
-Подробности:
-
-- `docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
-- `docs/checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
-- `docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
-- `docs/network/SEAMLESS_WORLD_ROADMAP_RU.md`.
+Источник архитектурного freeze: `config/network/networked-gameplay-architecture.v1.json`.

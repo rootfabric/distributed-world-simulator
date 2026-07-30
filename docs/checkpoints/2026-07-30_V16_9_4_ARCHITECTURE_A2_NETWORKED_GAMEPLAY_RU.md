@@ -1,0 +1,69 @@
+# Checkpoint v16.9.4 — A2 Networked Gameplay Architecture
+
+## Метаданные
+
+```text
+checkpoint: v16.9.4-architecture-a2-networked-gameplay
+build_id: a2-networked-gameplay-audit-freeze
+base: v16.9.3-runtime-h3-dedicated-multiplayer
+branch: feature/a2-networked-gameplay-architecture
+scope: documentation, ADR, contract audit, test matrix, machine-readable freeze
+status: candidate
+```
+
+## Зафиксировано
+
+- canonical client → authority → replica pipeline;
+- player/entity/session/ownership/authority identity model;
+- command ownership и permission fences;
+- movement replication и correction policy;
+- inventory/contention conservation;
+- reconnect/replay semantics;
+- peer-to-player mapping;
+- relevance одной server region;
+- client capability boundary;
+- change control перед B1 и N3–N6.
+
+## Итог аудита
+
+A2 честно разделяет frozen target и текущую implementation evidence. H1 доказывает graphical full gameplay path. H2/H3 доказывают dedicated transport, ownership, two-peer movement/contention/reconnect через headless protocol clients.
+
+Остаются P1 gates A2-D01…D04: общий production gameplay service, shared validators, two-window graphical/full Item Graph proof и dedicated crash/restart recovery. B1 разрешён только как adapter-only этап поверх B0. N3–N6 заблокированы до закрытия gates.
+
+## Проверка
+
+```text
+RUN_A2_NETWORKED_GAMEPLAY_AUDIT
+→ editor import
+→ A2 freeze manifest/source audit
+→ H3 focused profile regressions (H3/H2/H1/H0/T1)
+```
+
+Дополнительно обязательны:
+
+```text
+RUN_NETWORK_CONTRACT_TESTS
+RUN_WORLD_REGRESSION_TESTS
+main_scene_cli_all
+```
+
+Подтверждённое покрытие кандидата:
+
+```text
+A2 focused: 11/11 tests, 617 assertions PASS
+network/runtime manifest: 44 suites, 3426 assertions PASS
+world manifest: 87/87 standalone tests PASS
+main scene: 6/6 PASS
+```
+
+Network-результат собран из полного принятого профиля 39/39 (3168 assertions) и добавленных в A2 manifest пяти H2/H3/A2 suites (258 assertions). World-результат состоит из ранее полного 82/82 профиля и пяти новых manifest suites; все пять повторно прошли в A2 focused gate.
+
+## Acceptance
+
+- freeze manifest валиден и согласован с roadmap;
+- H1/H2/H3 отмечены accepted, A2 candidate, B1 next;
+- ADR-011 и audit document присутствуют;
+- source evidence подтверждает declared invariants и declared debts;
+- existing H3/H2/H1/H0/T1 tests зелёные;
+- B1 restrictions и multi-authority blockers однозначны;
+- production gameplay code не изменён.

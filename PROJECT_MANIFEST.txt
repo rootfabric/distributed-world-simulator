@@ -1,3 +1,17 @@
+Planetary World v16.9.4-architecture-a2-networked-gameplay
+
+A2 networked gameplay audit/freeze:
+- H1, H2 and H3 accepted evidence recorded
+- canonical client-command-authority-replica pipeline frozen
+- player/entity/session/ownership/authority identities separated
+- movement, permissions, replay, contention and peer mapping frozen
+- ADR-011 and machine-readable architecture manifest
+- A2 source/roadmap/document consistency audit test
+- B1 allowed only as B0 NATS Core adapter
+- N3-N6 blocked until A2-D01 through A2-D04 close
+- no production gameplay code changed
+- RUN_A2_NETWORKED_GAMEPLAY_AUDIT.ps1 / .sh
+
 Planetary World v16.9.1-runtime-h1-playable-listen-host
 
 H1 playable listen-host candidate:

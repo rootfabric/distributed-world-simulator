@@ -36,6 +36,11 @@ feature/t1-multi-peer-transport-v2
 feature/b0-message-bus-contracts
 feature/m0-aggregate-transactions
 feature/s1-distributed-compute-contracts
+feature/h1-playable-listen-host
+feature/h2-host-client-ownership
+feature/h3-dedicated-multiplayer
+feature/a2-networked-gameplay-architecture
+feature/b1-nats-core-adapter
 feature/n3-world-directory
 feature/n4-authority-handoff
 ```
@@ -110,11 +115,11 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint accepted: v16.9.0-simulation-s1-distributed-compute-fix1
-runtime checkpoint candidate: v16.9.1-runtime-h1-playable-listen-host
-architecture base: v16.7.1-architecture-a0-distributed-runtime
-accepted transport base: v16.8.3-network-t1-multi-peer
-next implementation branch: feature/h1-playable-listen-host
+runtime checkpoint accepted: v16.9.3-runtime-h3-dedicated-multiplayer
+architecture checkpoint candidate: v16.9.4-architecture-a2-networked-gameplay
+architecture decision: FROZEN_WITH_GATES
+next branch after acceptance: feature/b1-nats-core-adapter
+freeze manifest: config/network/networked-gameplay-architecture.v1.json
 ```
 
 Accepted foundation order:
@@ -129,6 +134,6 @@ Approved next order:
 H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
 ```
 
-After H3, A2 is a mandatory architecture audit/freeze checkpoint before B1.
+A2 is the mandatory audit/freeze gate. B1 may start only after A2 acceptance and only as a B0 adapter stage. N3–N6 remain blocked until A2-D01…D04 are closed.
 
 Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.

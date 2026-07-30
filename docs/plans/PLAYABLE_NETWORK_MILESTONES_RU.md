@@ -1,19 +1,19 @@
 # PlanetSimulator — игровые сетевые вехи после S1
 
 **Статус решения:** утверждено 29 июля 2026 года
-**Текущая принятая база:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
-**Главный следующий gate:** независимая приёмка H1; затем `H2`
+**Текущая принятая runtime-база:** `v16.9.3-runtime-h3-dedicated-multiplayer`
+**Текущий кандидат:** `v16.9.4-architecture-a2-networked-gameplay`
+**Главный следующий gate:** независимая приёмка A2; затем `B1`
 
 ## 1. Утверждённая последовательность
 
 ```text
 S1 ACCEPTED
 │
-├─ H1  Playable listen-host — candidate
-├─ H2  Dedicated server + 1 graphical client
-├─ H3  Dedicated server + 2 graphical clients
-├─ A2  Networked gameplay architecture checkpoint
+├─ H1  Playable listen-host — accepted
+├─ H2  Host/client ownership — accepted
+├─ H3  Dedicated multiplayer — accepted
+├─ A2  Networked gameplay architecture — candidate
 │
 ├─ B1  NATS Core adapter
 ├─ B2  JetStream/outbox delivery
@@ -69,7 +69,7 @@ input/UI
 
 ### Статус
 
-Реализован, `candidate`, ожидает независимой приёмки.
+`ACCEPTED`.
 
 ### Цель
 
@@ -296,6 +296,18 @@ scope: documentation, ADR, contract audit, test matrix
 - следующий checkpoint B1 однозначен.
 
 A2 не добавляет новые игровые функции. Это audit/freeze checkpoint перед инфраструктурной линией.
+
+### Реализованный результат A2
+
+A2 замораживает target architecture и вводит machine-readable manifest `config/network/networked-gameplay-architecture.v1.json`.
+
+Решение: `FROZEN_WITH_GATES`:
+
+- B1 разрешён только как B0/NATS adapter stage;
+- N3–N6 заблокированы до A2-D01…D04;
+- H1 является доказательством full graphical Item Graph path;
+- H2/H3 являются доказательствами dedicated ownership, peer isolation, movement, contention и reconnect;
+- два graphical windows, единый production service и dedicated restart recovery остаются обязательным долгом до N3.
 
 ## 7. Этапы после A2
 

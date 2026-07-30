@@ -1,38 +1,20 @@
 # Документация PlanetSimulator
 
-Текущий принятый checkpoint: `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`.
+Текущая принятая runtime-база: `v16.9.3-runtime-h3-dedicated-multiplayer`.
 
-Принятая runtime-база: `v16.9.0-simulation-s1-distributed-compute-fix1`.
+Текущий архитектурный кандидат: `v16.9.4-architecture-a2-networked-gameplay`.
 
-Текущий кандидат: `v16.9.1-runtime-h1-playable-listen-host`.
+Ключевые документы A2:
 
-Ближайший gate: независимая приёмка H1; после неё — `H2`.
+- `checkpoints/2026-07-30_V16_9_4_ARCHITECTURE_A2_NETWORKED_GAMEPLAY_RU.md`;
+- `architecture/A2_NETWORKED_GAMEPLAY_ARCHITECTURE_RU.md`;
+- `architecture/adr/ADR-011-networked-gameplay-boundary.md`;
+- `architecture/audits/2026-07-30_V16_9_4_NETWORKED_GAMEPLAY_AUDIT_RU.md`;
+- `../config/network/networked-gameplay-architecture.v1.json`;
+- `network/NETWORK_TEST_MATRIX_RU.md`;
+- `plans/PLAYABLE_NETWORK_MILESTONES_RU.md`.
 
-Утверждённая последовательность:
-
-```text
-H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
-```
-
-Ключевые документы текущего направления:
-
-- `checkpoints/2026-07-29_V16_9_1_RUNTIME_H1_PLAYABLE_LISTEN_HOST_RU.md`;
-- `architecture/H1_PLAYABLE_LISTEN_HOST_RU.md`;
-- `checkpoints/2026-07-29_POST_S1_PLAYABLE_NETWORK_ROADMAP_RU.md`;
-- `plans/PLAYABLE_NETWORK_MILESTONES_RU.md`;
-- `plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md`;
-- `network/NETWORK_READINESS_CHECKPOINT_RU.md`;
-- `network/SEAMLESS_WORLD_ROADMAP_RU.md`;
-- `checkpoints/2026-07-29_V16_9_0_SIMULATION_S1_DISTRIBUTED_COMPUTE_FIX1_RU.md`;
-- `architecture/S1_DISTRIBUTED_COMPUTE_CONTRACTS_RU.md`;
-- `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md`;
-- `architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md`;
-- `architecture/T1_MULTI_PEER_TRANSPORT_V2_RU.md`;
-- `architecture/S0_SPATIAL_SIMULATION_SUBSTRATE_RU.md`;
-- `architecture/A1_GENERIC_AGGREGATE_FOUNDATION_RU.md`;
-- `runtime/H0_LISTEN_HOST_RUNTIME_RU.md`.
-
-После H3 выполняется обязательный `A2 — Networked gameplay architecture checkpoint`; B1 начинается только после A2.
+Решение: `FROZEN_WITH_GATES`. B1 — следующий adapter-only checkpoint после независимой приёмки A2. N3–N6 остаются заблокированы до закрытия A2-D01…D04.
 
 ## v16.3.3 — Foundation world aggregate part 3
 

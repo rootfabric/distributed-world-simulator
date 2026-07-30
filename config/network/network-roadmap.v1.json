@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 18,
+  "document_revision": 19,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-29T12:16:00Z",
-  "project_checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
-  "runtime_base_checkpoint": "v16.9.1-runtime-h1-playable-listen-host",
+  "updated_at_utc": "2026-07-30T01:47:49Z",
+  "project_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "runtime_base_checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -269,7 +269,7 @@
     {
       "id": "H1",
       "name": "Playable listen-host graphical vertical slice",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "S1",
         "H0",
@@ -303,50 +303,94 @@
         "world_steps": "85/85",
         "main_scene": "playground 6/6; earth_moon H1 8/8",
         "runtime_roles": "offline/listen-host/simulation-server PASS",
-        "status": "local_validation_passed_candidate",
+        "status": "independently_accepted",
         "client_capability_boundary": "restricted session; no authority/store/controller access"
       }
     },
     {
       "id": "H2",
-      "name": "Dedicated server with one graphical client",
-      "status": "next",
+      "name": "Host/client join-leave and replicated player ownership",
+      "status": "accepted",
       "depends_on": [
         "H1",
         "N2",
         "R3.1"
       ],
-      "checkpoint": "v16.9.2-runtime-h2-dedicated-single-player",
-      "branch": "feature/h2-dedicated-single-player",
-      "acceptance": "the same graphical client connects to a separate headless authority, reconnects and recovers committed player/world state without duplicate mutation"
+      "checkpoint": "v16.9.2-runtime-h2-host-client-ownership",
+      "branch": "feature/h2-host-client-ownership",
+      "acceptance": "separate ENet client joins, leaves and rejoins with stable player entity and monotonic ownership epoch while host remains active",
+      "implementation": {
+        "ownership_registry": "implemented",
+        "ownership_replica_store": "implemented",
+        "stable_player_entity": "implemented",
+        "join_leave_rejoin": "implemented",
+        "ownership_epoch_fencing": "implemented",
+        "real_enet_process": "implemented"
+      },
+      "acceptance_evidence": {
+        "contracts": "23/23",
+        "process": "12/12",
+        "h1_compatibility": "218 assertions",
+        "t1_transport": "121/121 + 20/20",
+        "status": "independently_accepted"
+      }
     },
     {
       "id": "H3",
       "name": "Dedicated server with two graphical clients",
-      "status": "planned",
+      "status": "accepted",
       "depends_on": [
         "H2",
         "T1"
       ],
       "checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
       "branch": "feature/h3-dedicated-multiplayer",
-      "acceptance": "two graphical clients observe each other, remain peer-isolated and resolve contested authoritative item/container operations exactly once"
+      "acceptance": "dedicated authority and two ENet protocol clients preserve stable identity, replicated movement, peer isolation, deterministic contention and reconnect without duplicate player entity",
+      "implementation": {
+        "dedicated_authority": "implemented",
+        "two_enet_clients": "implemented",
+        "movement_replication": "implemented",
+        "targeted_results": "implemented",
+        "contention": "implemented",
+        "permission_fencing": "implemented",
+        "disconnect_reconnect": "implemented",
+        "graphical_two_window_launcher": "deferred"
+      },
+      "acceptance_evidence": {
+        "contracts": "50/50",
+        "process": "33/33",
+        "focused": "10/10, 477 assertions",
+        "network_runtime": "39/39, 3168 assertions",
+        "status": "independently_accepted"
+      }
     },
     {
       "id": "A2",
       "name": "Networked gameplay architecture checkpoint",
-      "status": "planned",
+      "status": "candidate",
       "depends_on": [
         "H3"
       ],
       "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
       "branch": "feature/a2-networked-gameplay-architecture",
-      "acceptance": "H1-H3 contracts, player/session identity, movement, permissions, contention, reconnect and relevance assumptions are audited and frozen before broker and server-mesh work"
+      "acceptance": "networked gameplay identity, ownership, permissions, movement, replication, contention, reconnect, peer mapping, relevance and change-control are audited and frozen; B1 is adapter-only and N3 remains gated",
+      "implementation": {
+        "architecture_document": "implemented",
+        "adr_011": "implemented",
+        "audit_report": "implemented",
+        "freeze_manifest": "implemented",
+        "source_alignment_test": "implemented",
+        "test_matrix": "implemented",
+        "known_debt_register": "implemented",
+        "b1_constraints": "implemented",
+        "multi_authority_gates": "implemented"
+      },
+      "decision": "FROZEN_WITH_GATES"
     },
     {
       "id": "B1",
       "name": "NATS Core service adapter",
-      "status": "planned",
+      "status": "next",
       "depends_on": [
         "B0",
         "N2",
@@ -537,5 +581,7 @@
     "N4",
     "N5",
     "N6"
-  ]
+  ],
+  "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
+  "current_gate": "A2 independent acceptance; B1 next after acceptance"
 }

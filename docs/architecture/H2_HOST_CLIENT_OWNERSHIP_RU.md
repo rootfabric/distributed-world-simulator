@@ -2,6 +2,7 @@
 
 Checkpoint: `v16.9.2-runtime-h2-host-client-ownership`  
 Base: `v16.9.1-runtime-h1-playable-listen-host`
+**Статус:** accepted (независимая приёмка 30 июля 2026 года)
 
 ## Цель
 

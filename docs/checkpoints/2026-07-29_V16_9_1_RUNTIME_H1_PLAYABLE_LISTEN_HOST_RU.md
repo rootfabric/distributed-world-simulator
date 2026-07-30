@@ -3,7 +3,7 @@
 **Build ID:** `h1-playable-listen-host`
 **Base:** `v16.9.0-simulation-s1-distributed-compute-fix1`
 **Branch:** `feature/h1-playable-listen-host`
-**Status:** candidate
+**Status:** accepted (независимая приёмка 30 июля 2026 года)
 
 ## Результат
 

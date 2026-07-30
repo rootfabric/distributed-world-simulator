@@ -6,7 +6,7 @@ build_id: h3-dedicated-two-client-gameplay
 base checkpoint: v16.9.2-runtime-h2-host-client-ownership
 base repository commit: main @ 0513be0
 branch: feature/h3-dedicated-multiplayer
-status: candidate
+status: accepted
 ```
 
 ## Реализовано
