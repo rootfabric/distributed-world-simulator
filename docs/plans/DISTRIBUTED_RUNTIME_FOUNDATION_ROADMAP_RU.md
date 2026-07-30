@@ -1,9 +1,11 @@
+> **Current post-A2 gate:** `M1 — Unified Networked Gameplay Core`. B1/B2 перенесены после A3. Основной порядок: `M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3–N6`. Подробности: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+
 # План развития distributed runtime PlanetSimulator
 
-**Текущий принятый runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
-**Архитектурная база:** `v16.7.1-architecture-a0-distributed-runtime`
-**Следующий основной gate после приёмки:** `H2 — Dedicated server + 1 graphical client`
+**Текущий принятый runtime checkpoint:** `v16.9.3-runtime-h3-dedicated-multiplayer`
+**Принятая architecture-база:** `v16.9.4-architecture-a2-networked-gameplay`
+**Текущий roadmap candidate:** `v16.9.5-roadmap-single-server-multiplayer-first`
+**Следующий основной gate:** `M1 — Unified Networked Gameplay Core`
 **Стратегия:** сначала доказать единый graphical gameplay path в трёх топологиях, затем подключать broker infrastructure и несколько authorities.
 
 ## 1. Принцип выполнения

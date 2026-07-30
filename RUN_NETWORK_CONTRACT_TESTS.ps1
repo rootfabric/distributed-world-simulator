@@ -54,6 +54,7 @@ $Tests = @(
     "res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
     "res://tests/runtime/test_h3_dedicated_multiplayer_processes.gd",
     "res://tests/runtime/test_a2_networked_gameplay_architecture.gd",
+    "res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -79,8 +80,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.9.4-architecture-a2-networked-gameplay"
-    build_id = "a2-networked-gameplay-audit-freeze"
+    checkpoint = "v16.9.5-roadmap-single-server-multiplayer-first"
+    build_id = "post-a2-single-server-multiplayer-first"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -148,7 +149,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.9.4-architecture-a2-networked-gameplay"
+    Write-Host "Checkpoint: v16.9.5-roadmap-single-server-multiplayer-first"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
@@ -167,7 +168,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through A2 network/runtime tests passed." -ForegroundColor Green
+    Write-Host "Foundation N0 through post-A2 multiplayer roadmap network/runtime tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

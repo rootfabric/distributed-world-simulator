@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 19,
+  "document_revision": 20,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-30T01:47:49Z",
-  "project_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "updated_at_utc": "2026-07-30T03:01:00Z",
+  "project_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "runtime_base_checkpoint": "v16.9.3-runtime-h3-dedicated-multiplayer",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
@@ -367,7 +367,7 @@
     {
       "id": "A2",
       "name": "Networked gameplay architecture checkpoint",
-      "status": "candidate",
+      "status": "accepted",
       "depends_on": [
         "H3"
       ],
@@ -385,111 +385,244 @@
         "b1_constraints": "implemented",
         "multi_authority_gates": "implemented"
       },
-      "decision": "FROZEN_WITH_GATES"
+      "decision": "FROZEN_WITH_GATES",
+      "acceptance_evidence": {
+        "focused": "11/11 tests, 617 assertions PASS",
+        "network_runtime": "44/44 suites, 3426 assertions PASS",
+        "world_regression": "87/87 PASS",
+        "status": "independently_accepted_fix1"
+      }
+    },
+    {
+      "id": "M1",
+      "name": "Unified Networked Gameplay Core",
+      "status": "next",
+      "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+      "branch": "feature/m1-unified-networked-gameplay-core",
+      "depends_on": [
+        "A2"
+      ],
+      "closes": [
+        "A2-D01",
+        "A2-D02"
+      ],
+      "acceptance": [
+        "listen-host and dedicated ENet use one NetworkedGameplayService",
+        "shared wire DTO validators are independent from authority implementations",
+        "same command produces the same canonical state across loopback and ENet",
+        "H1-H3 tests use the common service without topology-specific domain forks",
+        "client and UI receive no authoritative references"
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "Dedicated server plus one graphical client",
+      "status": "planned",
+      "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+      "branch": "feature/m2-dedicated-graphical-client",
+      "depends_on": [
+        "M1"
+      ],
+      "acceptance": [
+        "game-client graphical role connects without embedded authority",
+        "stable player identity and initial synchronization",
+        "authoritative movement and correction",
+        "inventory and hotbar are replica-driven",
+        "reconnect restores the same player entity"
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "Dedicated server plus two graphical clients",
+      "status": "planned",
+      "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+      "branch": "feature/m3-dedicated-graphical-multiplayer",
+      "depends_on": [
+        "M2"
+      ],
+      "acceptance": [
+        "two ordinary graphical clients connect simultaneously",
+        "local and remote player presentation are distinct",
+        "both clients observe authoritative movement of the other",
+        "remote presentation has no input authority",
+        "one client disconnect does not stop the other"
+      ]
+    },
+    {
+      "id": "M4",
+      "name": "Canonical shared gameplay over ENet",
+      "status": "planned",
+      "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+      "branch": "feature/m4-canonical-shared-gameplay",
+      "depends_on": [
+        "M3",
+        "M1",
+        "M0"
+      ],
+      "acceptance": [
+        "full H1 Item Graph is used by dedicated multiplayer",
+        "inventory hotbar pickup drop stack split containers mount detach are authoritative",
+        "contention produces exactly one success and one deterministic rejection",
+        "canonical Item Graph contains exactly one stable item identity",
+        "foreign inventory mutation and stale session commands are rejected"
+      ]
+    },
+    {
+      "id": "M5",
+      "name": "Graphical Multiplayer Acceptance",
+      "status": "planned",
+      "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+      "branch": "feature/m5-graphical-multiplayer-acceptance",
+      "depends_on": [
+        "M4",
+        "N2"
+      ],
+      "acceptance": [
+        "automated dedicated plus two graphical client process scenario",
+        "real renderer or virtual display; headless-only clients are insufficient",
+        "movement observation contention disconnect reconnect all pass",
+        "server and both clients converge to one canonical checksum",
+        "separate user-data directories and clean process shutdown"
+      ]
+    },
+    {
+      "id": "M6",
+      "name": "Dedicated persistence and recovery",
+      "status": "planned",
+      "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+      "branch": "feature/m6-dedicated-recovery",
+      "depends_on": [
+        "M5",
+        "R3.1",
+        "M0"
+      ],
+      "closes": [
+        "A2-D04"
+      ],
+      "acceptance": [
+        "dedicated crash and restart restore world players inventories and Item Graph",
+        "operation ledger revisions authority epoch and committed outbox state recover",
+        "no item duplication after restart",
+        "clients reconnect with updated ownership epochs",
+        "committed operations replay without second mutation"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "Single-server multiplayer architecture audit/freeze",
+      "status": "planned",
+      "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+      "branch": "feature/a3-single-server-multiplayer-architecture",
+      "depends_on": [
+        "M6"
+      ],
+      "acceptance": [
+        "M1-M6 accepted",
+        "one production gameplay service and one family of wire contracts",
+        "two graphical clients pass canonical Item Graph contention",
+        "reconnect replay and dedicated recovery are proven",
+        "no topology-specific gameplay forks",
+        "B1 scope is server-to-server only"
+      ]
     },
     {
       "id": "B1",
-      "name": "NATS Core service adapter",
-      "status": "next",
+      "name": "NATS Core adapter",
+      "status": "deferred_after_A3",
+      "checkpoint": "v16.11.0-data-plane-b1-nats-core",
+      "branch": "feature/b1-nats-core-adapter",
       "depends_on": [
+        "A3",
         "B0",
         "N2",
-        "S1",
-        "A2"
+        "S1"
       ],
-      "proposed_checkpoint": "v16.9.1-data-plane-b1-nats-core",
-      "branch": "feature/b1-nats-core-adapter",
-      "checkpoint": "v16.10.0-data-plane-b1-nats-core"
+      "scope": "server-to-server discovery heartbeat health load capability discovery and request/reply through B0 ports"
     },
     {
       "id": "B2",
-      "name": "JetStream durable jobs/events and outbox publisher",
-      "status": "planned",
+      "name": "JetStream/outbox delivery",
+      "status": "planned_after_B1",
+      "checkpoint": "v16.11.1-data-plane-b2-jetstream-outbox",
+      "branch": "feature/b2-nats-jetstream-outbox",
       "depends_on": [
         "B1",
         "M0",
         "S1",
-        "A2"
-      ],
-      "proposed_checkpoint": "v16.9.2-data-plane-b2-jetstream-outbox",
-      "branch": "feature/b2-nats-jetstream-outbox",
-      "checkpoint": "v16.10.1-data-plane-b2-jetstream-outbox"
-    },
-    {
-      "id": "P0",
-      "name": "Population field foundation",
-      "status": "planned",
-      "depends_on": [
-        "A1",
-        "S0",
-        "M0",
-        "H3"
-      ],
-      "proposed_checkpoint": "v16.10.0-simulation-p0-population-field",
-      "branch": "feature/p0-population-field",
-      "checkpoint": "v16.11.0-simulation-p0-population-field"
-    },
-    {
-      "id": "D1",
-      "name": "Remote vegetation worker MVP",
-      "status": "planned",
-      "depends_on": [
-        "P0",
-        "S1",
-        "B2",
-        "H3"
-      ],
-      "proposed_checkpoint": "v16.10.1-simulation-d1-worker-mvp",
-      "branch": "feature/d1-vegetation-worker-mvp",
-      "checkpoint": "v16.11.1-simulation-d1-worker-mvp"
+        "A3"
+      ]
     },
     {
       "id": "N3",
-      "name": "World Directory and authority leases",
-      "status": "planned",
+      "name": "World Directory plus two authorities",
+      "status": "blocked_until_A3_B2",
+      "checkpoint": "v16.12.0-network-n3-world-directory",
+      "branch": "feature/n3-world-directory",
       "depends_on": [
-        "A2",
+        "A3",
+        "B2",
         "A1",
         "S0",
-        "T1",
-        "B1"
-      ],
-      "proposed_checkpoint": "v16.11.0-network-n3-world-directory",
-      "branch": "feature/n3-world-directory",
-      "checkpoint": "v16.12.0-network-n3-world-directory"
+        "T1"
+      ]
     },
     {
       "id": "N4",
-      "name": "Generic cross-server aggregate handoff",
-      "status": "planned",
+      "name": "Generic object handoff",
+      "status": "blocked_until_N3",
+      "checkpoint": "v16.12.1-network-n4-authority-handoff",
+      "branch": "feature/n4-authority-handoff",
       "depends_on": [
         "N3",
         "M0",
         "R3.1"
-      ],
-      "proposed_checkpoint": "v16.12.0-network-n4-authority-handoff",
-      "branch": "feature/n4-authority-handoff",
-      "checkpoint": "v16.12.1-network-n4-authority-handoff"
+      ]
     },
     {
       "id": "N5",
-      "name": "Dual-route player handoff",
-      "status": "planned",
+      "name": "Seamless player handoff",
+      "status": "blocked_until_N4",
+      "checkpoint": "v16.12.2-network-n5-seamless-player-handoff",
+      "branch": "feature/n5-seamless-player-handoff",
       "depends_on": [
         "N4"
-      ],
-      "branch": "feature/n5-seamless-player-handoff",
-      "checkpoint": "v16.12.2-network-n5-seamless-player-handoff"
+      ]
     },
     {
       "id": "N6",
       "name": "Ghost replicas and interest management",
-      "status": "planned",
+      "status": "blocked_until_N5",
+      "checkpoint": "v16.12.3-network-n6-ghosts-interest-management",
+      "branch": "feature/n6-ghosts-interest-management",
       "depends_on": [
         "N5"
+      ]
+    },
+    {
+      "id": "P0",
+      "name": "Population field foundation",
+      "status": "planned_parallel_after_A3",
+      "depends_on": [
+        "A3",
+        "A1",
+        "S0",
+        "M0"
       ],
-      "branch": "feature/n6-ghosts-interest-management",
-      "checkpoint": "v16.12.3-network-n6-ghosts-interest-management"
+      "checkpoint": "v16.11.2-simulation-p0-population-field",
+      "branch": "feature/p0-population-field"
+    },
+    {
+      "id": "D1",
+      "name": "Remote vegetation worker MVP",
+      "status": "planned_parallel_after_B2",
+      "depends_on": [
+        "P0",
+        "S1",
+        "B2",
+        "A3"
+      ],
+      "checkpoint": "v16.11.3-simulation-d1-worker-mvp",
+      "branch": "feature/d1-vegetation-worker-mvp"
     },
     {
       "id": "N7",
@@ -566,22 +699,33 @@
       "commit_message",
       "test_commands",
       "acceptance"
-    ]
+    ],
+    "next_branch": "feature/m1-unified-networked-gameplay-core"
   },
   "approved_sequence_after_s1": [
     "H1",
     "H2",
     "H3",
-    "A2",
+    "A2"
+  ],
+  "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
+  "current_gate": "M1 Unified Networked Gameplay Core",
+  "architecture_base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "strategy_decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
+  "single_server_multiplayer_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
+  "approved_sequence_after_a2": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "A3",
     "B1",
     "B2",
-    "P0",
-    "D1",
     "N3",
     "N4",
     "N5",
     "N6"
-  ],
-  "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
-  "current_gate": "A2 independent acceptance; B1 next after acceptance"
+  ]
 }

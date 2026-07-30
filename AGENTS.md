@@ -40,6 +40,13 @@ feature/h1-playable-listen-host
 feature/h2-host-client-ownership
 feature/h3-dedicated-multiplayer
 feature/a2-networked-gameplay-architecture
+feature/m1-unified-networked-gameplay-core
+feature/m2-dedicated-graphical-client
+feature/m3-dedicated-graphical-multiplayer
+feature/m4-canonical-shared-gameplay
+feature/m5-graphical-multiplayer-acceptance
+feature/m6-dedicated-recovery
+feature/a3-single-server-multiplayer-architecture
 feature/b1-nats-core-adapter
 feature/n3-world-directory
 feature/n4-authority-handoff
@@ -115,25 +122,25 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-runtime checkpoint accepted: v16.9.3-runtime-h3-dedicated-multiplayer
-architecture checkpoint candidate: v16.9.4-architecture-a2-networked-gameplay
-architecture decision: FROZEN_WITH_GATES
-next branch after acceptance: feature/b1-nats-core-adapter
-freeze manifest: config/network/networked-gameplay-architecture.v1.json
+architecture checkpoint accepted: v16.9.4-architecture-a2-networked-gameplay
+roadmap checkpoint candidate: v16.9.5-roadmap-single-server-multiplayer-first
+strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
+next branch: feature/m1-unified-networked-gameplay-core
+strategy manifest: config/network/single-server-multiplayer-roadmap.v1.json
 ```
 
 Accepted foundation order:
 
 ```text
-A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
+A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1 → H1 → H2 → H3 → A2
 ```
 
 Approved next order:
 
 ```text
-H1 → H2 → H3 → A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
+M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-A2 is the mandatory audit/freeze gate. B1 may start only after A2 acceptance and only as a B0 adapter stage. N3–N6 remain blocked until A2-D01…D04 are closed.
+M1–M6 close A2-D01…D04. B1 remains adapter-only but is deferred until A3 acceptance. N3–N6 remain blocked until A3 and B2. ENet is the graphical realtime transport; NATS must not create a second gameplay path.
 
 Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.

@@ -163,3 +163,7 @@ In-memory и NATS adapters обязаны давать одинаковые B0 r
 ## 12. Change control
 
 Identity, ownership, permissions, movement, replay, contention, peer mapping и client capability boundary считаются frozen contracts. Breaking change требует нового architecture checkpoint, новой schema version и migration plan.
+
+## 12. Post-A2 delivery order
+
+После независимой приёмки A2 target остаётся `FROZEN_WITH_GATES`, но основной delivery order уточнён: `M1–M6 → A3 → B1/B2 → N3–N6`. B1 по-прежнему архитектурно допустим как adapter, однако не является ближайшим приоритетом. A2-D01/D02 закрывает M1, A2-D03 — M3–M5, A2-D04 — M6.

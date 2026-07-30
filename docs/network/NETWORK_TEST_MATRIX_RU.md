@@ -288,3 +288,22 @@ Focused gate: `RUN_A2_NETWORKED_GAMEPLAY_AUDIT.ps1` или `.sh`.
 RUN_NETWORK_CONTRACT_TESTS: 44 suites
 RUN_WORLD_REGRESSION_TESTS: 87 standalone tests, exact discovery coverage
 ```
+
+## 18. Post-A2 single-server multiplayer roadmap gates
+
+| ID | Проверка | Gate |
+|---|---|---|
+| MP-001 | H1/H2/H3 используют один `NetworkedGameplayService` | M1 |
+| MP-002 | shared DTO validators независимы от authority implementations | M1 |
+| MP-003 | dedicated server + один graphical `game-client` | M2 |
+| MP-004 | два graphical clients видят authoritative movement друг друга | M3 |
+| MP-005 | remote presentation не имеет input authority | M3 |
+| MP-006 | полный canonical Item Graph работает over ENet | M4 |
+| MP-007 | contention даёт один success, один rejection и одну item identity | M4 |
+| MP-008 | automated renderer/virtual-display two-client process test | M5 |
+| MP-009 | server и оба clients сходятся к одному checksum | M5 |
+| MP-010 | dedicated crash/restart восстанавливает players и Item Graph | M6 |
+| MP-011 | A3 подтверждает отсутствие topology-specific gameplay forks | A3 |
+| MP-012 | B1 не заменяет ENet и остаётся B0 server/service adapter | B1 |
+
+После добавления roadmap contract test manifests содержат 45 network suites (3517 assertions) и 88 world standalone tests.

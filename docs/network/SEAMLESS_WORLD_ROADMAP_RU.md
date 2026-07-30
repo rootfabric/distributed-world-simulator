@@ -1,16 +1,18 @@
+> **Post-A2 priority:** сначала полный single-server graphical multiplayer (`M1–M6 → A3`), затем `B1/B2`, и только после этого `N3–N6`. Этот документ описывает долгосрочный seamless-world track, но не ближайший implementation order.
+
 # Дорожная карта бесшовного распределённого мира PlanetSimulator
 
 ## Текущий статус
 
 ```text
-accepted checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
-current candidate: v16.9.1-runtime-h1-playable-listen-host
-status: H1 candidate
-architecture base: v16.7.1-architecture-a0-distributed-runtime
-next gate after acceptance: H2 dedicated single-player
+runtime accepted: v16.9.3-runtime-h3-dedicated-multiplayer
+architecture accepted: v16.9.4-architecture-a2-networked-gameplay
+roadmap candidate: v16.9.5-roadmap-single-server-multiplayer-first
+status: FULL SINGLE-SERVER MULTIPLAYER FIRST
+next gate: M1 unified gameplay core
 ```
 
-N0–S1 приняты. H1 переводит основной graphical gameplay на embedded client/server boundary и находится в статусе candidate; H2–H3 должны доказать тот же путь в отдельных процессах и для двух игроков.
+N0–S1, H1–H3 и A2 приняты. M1–M6 должны превратить доказанные fixtures в единый production single-server graphical multiplayer; A3 фиксирует результат перед B1/B2 и server mesh.
 
 ## Целевая архитектура
 

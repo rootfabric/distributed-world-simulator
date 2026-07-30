@@ -1,9 +1,12 @@
+> **Post-A2 correction (2026-07-30):** этот документ сохраняет исторический контекст H1–A2. Текущий официальный порядок заменён на `A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3–N6`. См. [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+
 # PlanetSimulator — игровые сетевые вехи после S1
 
 **Статус решения:** утверждено 29 июля 2026 года
 **Текущая принятая runtime-база:** `v16.9.3-runtime-h3-dedicated-multiplayer`
-**Текущий кандидат:** `v16.9.4-architecture-a2-networked-gameplay`
-**Главный следующий gate:** независимая приёмка A2; затем `B1`
+**Принятая architecture-база:** `v16.9.4-architecture-a2-networked-gameplay`
+**Текущий roadmap candidate:** `v16.9.5-roadmap-single-server-multiplayer-first`
+**Главный следующий gate:** `M1 — Unified Networked Gameplay Core`
 
 ## 1. Утверждённая последовательность
 
@@ -13,7 +16,10 @@ S1 ACCEPTED
 ├─ H1  Playable listen-host — accepted
 ├─ H2  Host/client ownership — accepted
 ├─ H3  Dedicated multiplayer — accepted
-├─ A2  Networked gameplay architecture — candidate
+├─ A2  Networked gameplay architecture — accepted
+│
+├─ M1 → M2 → M3 → M4 → M5 → M6
+├─ A3  Single-server multiplayer freeze
 │
 ├─ B1  NATS Core adapter
 ├─ B2  JetStream/outbox delivery

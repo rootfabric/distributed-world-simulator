@@ -1,3 +1,17 @@
+Planetary World v16.9.5-roadmap-single-server-multiplayer-first
+
+Post-A2 roadmap checkpoint:
+- decision FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
+- A2 accepted; M1 is next
+- approved order M1 -> M2 -> M3 -> M4 -> M5 -> M6 -> A3 -> B1 -> B2 -> N3 -> N4 -> N5 -> N6
+- B1/B2 deferred until A3; N3-N6 blocked until A3/B2
+- ENet remains graphical realtime transport; NATS is server/service only
+- config/network/single-server-multiplayer-roadmap.v1.json
+- docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md
+- docs/checkpoints/2026-07-30_POST_A2_SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md
+- docs/architecture/adr/ADR-012-single-server-multiplayer-first.md
+- tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd
+
 Planetary World v16.9.4-architecture-a2-networked-gameplay
 
 A2 networked gameplay audit/freeze:

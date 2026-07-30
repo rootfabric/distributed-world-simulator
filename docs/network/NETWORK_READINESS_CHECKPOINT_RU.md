@@ -1,10 +1,12 @@
+> **Current readiness decision:** H1–H3 и A2 приняты. Следующий gate — M1, не B1. Production multi-authority work заблокирован до M1–M6 и A3; B1/B2 выполняются после A3.
+
 # Checkpoint готовности PlanetSimulator к distributed runtime
 
-**Дата ревизии:** 29 июля 2026 года
-**Принятый runtime checkpoint:** `v16.9.0-simulation-s1-distributed-compute-fix1`
-**Текущий кандидат:** `v16.9.1-runtime-h1-playable-listen-host`
-**Статус H1:** **CANDIDATE**
-**Следующий gate после приёмки:** `H2 — Dedicated server + 1 graphical client`
+**Дата ревизии:** 30 июля 2026 года
+**Принятый runtime checkpoint:** `v16.9.3-runtime-h3-dedicated-multiplayer`
+**Принятый architecture checkpoint:** `v16.9.4-architecture-a2-networked-gameplay`
+**Текущий roadmap candidate:** `v16.9.5-roadmap-single-server-multiplayer-first`
+**Следующий gate:** `M1 — Unified Networked Gameplay Core`
 
 ## 1. Что уже доказано кодом
 

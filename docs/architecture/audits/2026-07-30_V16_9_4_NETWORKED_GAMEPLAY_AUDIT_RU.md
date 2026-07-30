@@ -54,3 +54,7 @@ B1 не имеет права создавать новый gameplay path или
 ## Машиночитаемый источник
 
 `config/network/networked-gameplay-architecture.v1.json` является authoritative freeze manifest. `test_a2_networked_gameplay_architecture.gd` проверяет его согласованность с roadmap, ADR, docs и source evidence.
+
+## Post-audit roadmap decision
+
+A2 принят. Несмотря на архитектурную допустимость B1, основной приоритет изменён на `FULL SINGLE-SERVER MULTIPLAYER FIRST`. Разрывы A2-D01…D04 закрываются M1–M6, после чего A3 выполняет повторный audit/freeze. B1/B2 следуют после A3.

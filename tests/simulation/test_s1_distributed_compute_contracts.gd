@@ -20,7 +20,7 @@ const CHECKPOINT := "v16.9.0-simulation-s1-distributed-compute-fix1"
 const BUILD_ID := "s1-distributed-compute-contracts-fix1"
 const CURRENT_CHECKPOINT := "v16.9.1-runtime-h1-playable-listen-host"
 const CURRENT_BUILD_ID := "h1-playable-listen-host"
-const CURRENT_ROADMAP_CHECKPOINT := "v16.9.4-architecture-a2-networked-gameplay"
+const CURRENT_ROADMAP_CHECKPOINT := "v16.9.5-roadmap-single-server-multiplayer-first"
 
 var assertions := 0
 var failures: Array[String] = []
@@ -192,7 +192,7 @@ func _test_project_wiring() -> void:
 	_assert(not s1_runner.is_empty(), "S1 PowerShell runner missing")
 	_assert(s1_runner.contains("Write-JsonFileAtomically") and s1_runner.contains("PSNativeCommandUseErrorActionPreference"), "S1 runner lacks atomic/stderr-safe summary")
 	_assert(network_runner.contains("test_s1_distributed_compute_contracts.gd") and network_runner.contains("test_s1_distributed_compute_integration.gd"), "Network runner does not include S1")
-	_assert(network_runner.contains("Foundation N0 through A2"), "Network runner final status does not include the current A2 checkpoint")
+	_assert(network_runner.contains("Foundation N0 through post-A2 multiplayer roadmap"), "Network runner final status does not include the current post-A2 roadmap checkpoint")
 	_assert(world_runner.contains("test_s1_distributed_compute_contracts.gd") and world_runner.contains("test_s1_distributed_compute_integration.gd"), "World runner does not include S1")
 	_assert(architecture.contains("issued job") and architecture.contains("job_checksum") and architecture.contains("M0"), "S1 architecture does not document issued-job boundary")
 	var roadmap = JSON.parse_string(roadmap_text)

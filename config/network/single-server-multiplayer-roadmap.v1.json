@@ -1,0 +1,281 @@
+{
+  "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
+  "build_id": "post-a2-single-server-multiplayer-first",
+  "status": "candidate",
+  "decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
+  "approved_at_utc": "2026-07-30T03:01:00Z",
+  "base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
+  "base_decision": "FROZEN_WITH_GATES",
+  "strategic_goal": "one headless dedicated server and at least two ordinary graphical Godot clients using one production gameplay path",
+  "historical_track_note": "M1-M6 are the single-server multiplayer track; historical M0 remains the accepted multi-aggregate transaction checkpoint",
+  "priority_sequence": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "A3",
+    "B1",
+    "B2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+  ],
+  "transport_policy": {
+    "graphical_client_realtime": "ENet",
+    "listen_host": "loopback canonical DTO boundary",
+    "server_to_server_after_A3": "NATS Core through B0 semantic ports",
+    "durable_delivery_after_B1": "JetStream/outbox through B0/M0",
+    "forbidden": "NATS must not replace ENet graphical client traffic or create a second gameplay path"
+  },
+  "a2_debt_closure": {
+    "A2-D01": "M1",
+    "A2-D02": "M1",
+    "A2-D03": "M3+M4+M5",
+    "A2-D04": "M6"
+  },
+  "shared_contracts": [
+    "PlayerJoinCommand",
+    "PlayerLeaveCommand",
+    "PlayerInputCommand",
+    "PlayerOwnershipSnapshot",
+    "PlayerStateSnapshot",
+    "PlayerStateDelta",
+    "ItemCommand",
+    "ItemGraphSnapshot",
+    "ItemGraphDelta",
+    "CommandResult"
+  ],
+  "contract_requirements": [
+    "versioned",
+    "json_safe",
+    "exact_field",
+    "checksum_bound",
+    "scene_tree_independent",
+    "node_independent",
+    "authority_implementation_independent",
+    "authority_epoch_fenced",
+    "ownership_epoch_fenced",
+    "revision_fenced"
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "Unified Networked Gameplay Core",
+      "status": "next",
+      "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+      "branch": "feature/m1-unified-networked-gameplay-core",
+      "depends_on": [
+        "A2"
+      ],
+      "closes": [
+        "A2-D01",
+        "A2-D02"
+      ],
+      "acceptance": [
+        "listen-host and dedicated ENet use one NetworkedGameplayService",
+        "shared wire DTO validators are independent from authority implementations",
+        "same command produces the same canonical state across loopback and ENet",
+        "H1-H3 tests use the common service without topology-specific domain forks",
+        "client and UI receive no authoritative references"
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "Dedicated server plus one graphical client",
+      "status": "planned",
+      "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+      "branch": "feature/m2-dedicated-graphical-client",
+      "depends_on": [
+        "M1"
+      ],
+      "acceptance": [
+        "game-client graphical role connects without embedded authority",
+        "stable player identity and initial synchronization",
+        "authoritative movement and correction",
+        "inventory and hotbar are replica-driven",
+        "reconnect restores the same player entity"
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "Dedicated server plus two graphical clients",
+      "status": "planned",
+      "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+      "branch": "feature/m3-dedicated-graphical-multiplayer",
+      "depends_on": [
+        "M2"
+      ],
+      "acceptance": [
+        "two ordinary graphical clients connect simultaneously",
+        "local and remote player presentation are distinct",
+        "both clients observe authoritative movement of the other",
+        "remote presentation has no input authority",
+        "one client disconnect does not stop the other"
+      ]
+    },
+    {
+      "id": "M4",
+      "name": "Canonical shared gameplay over ENet",
+      "status": "planned",
+      "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+      "branch": "feature/m4-canonical-shared-gameplay",
+      "depends_on": [
+        "M3",
+        "M1",
+        "M0"
+      ],
+      "acceptance": [
+        "full H1 Item Graph is used by dedicated multiplayer",
+        "inventory hotbar pickup drop stack split containers mount detach are authoritative",
+        "contention produces exactly one success and one deterministic rejection",
+        "canonical Item Graph contains exactly one stable item identity",
+        "foreign inventory mutation and stale session commands are rejected"
+      ]
+    },
+    {
+      "id": "M5",
+      "name": "Graphical Multiplayer Acceptance",
+      "status": "planned",
+      "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+      "branch": "feature/m5-graphical-multiplayer-acceptance",
+      "depends_on": [
+        "M4",
+        "N2"
+      ],
+      "acceptance": [
+        "automated dedicated plus two graphical client process scenario",
+        "real renderer or virtual display; headless-only clients are insufficient",
+        "movement observation contention disconnect reconnect all pass",
+        "server and both clients converge to one canonical checksum",
+        "separate user-data directories and clean process shutdown"
+      ]
+    },
+    {
+      "id": "M6",
+      "name": "Dedicated persistence and recovery",
+      "status": "planned",
+      "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+      "branch": "feature/m6-dedicated-recovery",
+      "depends_on": [
+        "M5",
+        "R3.1",
+        "M0"
+      ],
+      "closes": [
+        "A2-D04"
+      ],
+      "acceptance": [
+        "dedicated crash and restart restore world players inventories and Item Graph",
+        "operation ledger revisions authority epoch and committed outbox state recover",
+        "no item duplication after restart",
+        "clients reconnect with updated ownership epochs",
+        "committed operations replay without second mutation"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "Single-server multiplayer architecture audit/freeze",
+      "status": "planned",
+      "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+      "branch": "feature/a3-single-server-multiplayer-architecture",
+      "depends_on": [
+        "M6"
+      ],
+      "acceptance": [
+        "M1-M6 accepted",
+        "one production gameplay service and one family of wire contracts",
+        "two graphical clients pass canonical Item Graph contention",
+        "reconnect replay and dedicated recovery are proven",
+        "no topology-specific gameplay forks",
+        "B1 scope is server-to-server only"
+      ]
+    },
+    {
+      "id": "B1",
+      "name": "NATS Core adapter",
+      "status": "deferred_after_A3",
+      "checkpoint": "v16.11.0-data-plane-b1-nats-core",
+      "branch": "feature/b1-nats-core-adapter",
+      "depends_on": [
+        "A3",
+        "B0",
+        "N2",
+        "S1"
+      ],
+      "scope": "server-to-server discovery heartbeat health load capability discovery and request/reply through B0 ports"
+    },
+    {
+      "id": "B2",
+      "name": "JetStream/outbox delivery",
+      "status": "planned_after_B1",
+      "checkpoint": "v16.11.1-data-plane-b2-jetstream-outbox",
+      "branch": "feature/b2-nats-jetstream-outbox",
+      "depends_on": [
+        "B1",
+        "M0",
+        "S1",
+        "A3"
+      ]
+    },
+    {
+      "id": "N3",
+      "name": "World Directory plus two authorities",
+      "status": "blocked_until_A3_B2",
+      "checkpoint": "v16.12.0-network-n3-world-directory",
+      "branch": "feature/n3-world-directory",
+      "depends_on": [
+        "A3",
+        "B2",
+        "A1",
+        "S0",
+        "T1"
+      ]
+    },
+    {
+      "id": "N4",
+      "name": "Generic object handoff",
+      "status": "blocked_until_N3",
+      "checkpoint": "v16.12.1-network-n4-authority-handoff",
+      "branch": "feature/n4-authority-handoff",
+      "depends_on": [
+        "N3",
+        "M0",
+        "R3.1"
+      ]
+    },
+    {
+      "id": "N5",
+      "name": "Seamless player handoff",
+      "status": "blocked_until_N4",
+      "checkpoint": "v16.12.2-network-n5-seamless-player-handoff",
+      "branch": "feature/n5-seamless-player-handoff",
+      "depends_on": [
+        "N4"
+      ]
+    },
+    {
+      "id": "N6",
+      "name": "Ghost replicas and interest management",
+      "status": "blocked_until_N5",
+      "checkpoint": "v16.12.3-network-n6-ghosts-interest-management",
+      "branch": "feature/n6-ghosts-interest-management",
+      "depends_on": [
+        "N5"
+      ]
+    }
+  ],
+  "production_blocks_before_A3": [
+    "World Directory",
+    "authority handoff",
+    "seamless player handoff",
+    "ghost replicas",
+    "dynamic shard balancing",
+    "multiple authoritative region servers"
+  ],
+  "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks"
+}

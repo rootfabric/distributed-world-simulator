@@ -1,88 +1,26 @@
-# Ближайшие итерации: приёмка H1 и переход к H2
+# Ближайшие итерации после A2
 
-## Текущая точка
-
-```text
-accepted checkpoint: v16.9.0-simulation-s1-distributed-compute-fix1
-candidate checkpoint: v16.9.1-runtime-h1-playable-listen-host
-accepted domain base: v16.8.5-domain-m0-aggregate-transactions
-accepted transport base: v16.8.3-network-t1-multi-peer
-architecture base: v16.7.1-architecture-a0-distributed-runtime
-```
-
-S1 завершил foundation-последовательность:
+Текущий roadmap candidate: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
 ```text
-A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1
+M1 — Unified Networked Gameplay Core — next
+M2 — Dedicated + 1 graphical client
+M3 — Dedicated + 2 graphical clients
+M4 — Canonical shared gameplay over ENet
+M5 — Graphical Multiplayer Acceptance
+M6 — Dedicated persistence and recovery
+A3 — Single-server multiplayer audit/freeze
+B1/B2 — after A3
+N3–N6 — after B2
 ```
 
-H1 уже реализует graphical listen-host vertical slice и ожидает независимой приёмки. Следующая кодовая задача после PASS — H2 с отдельным headless server и graphical client.
-
-## Утверждённый ближайший порядок
+## Следующая ветка
 
 ```text
-H1 — Playable listen-host (candidate)
-→ H2 — Dedicated server + 1 graphical client
-→ H3 — Dedicated server + 2 graphical clients
-→ A2 — Networked gameplay architecture checkpoint
-→ B1 — NATS Core adapter
-→ B2 — JetStream/outbox delivery
-→ P0 — Population Field
-→ D1 — Remote worker MVP
-→ N3 — World Directory + 2 authorities
-→ N4 — Generic object handoff
-→ N5 — Seamless player handoff
-→ N6 — Ghosts + interest management
+feature/m1-unified-networked-gameplay-core
+checkpoint: v16.10.0-runtime-m1-unified-networked-gameplay-core
 ```
 
-## H1 — текущий candidate gate
+M1 должен объединить `PlayableListenHostAuthority`, `PlayerOwnershipRegistry` и `MultiplayerGameplayAuthority` за одним production `NetworkedGameplayService`, выделить shared DTO/validators и перевести H1–H3 tests на общий service.
 
-```text
-checkpoint: v16.9.1-runtime-h1-playable-listen-host
-branch: feature/h1-playable-listen-host
-status: candidate
-```
-
-H1 переводит основной F5/gameplay path на embedded authority + graphical client. Movement, inventory, containers, pickup/drop, stack/split и mount interactions должны проходить через command/result/delta и отображаться из client replicas.
-
-## H2
-
-```text
-proposed checkpoint: v16.9.2-runtime-h2-dedicated-single-player
-branch: feature/h2-dedicated-single-player
-```
-
-Тот же graphical client работает против отдельного headless server с connect, initial state, reconnect и persistence recovery.
-
-## H3
-
-```text
-proposed checkpoint: v16.9.3-runtime-h3-dedicated-multiplayer
-branch: feature/h3-dedicated-multiplayer
-```
-
-Один server обслуживает минимум два graphical clients. Оба игрока видят movement друг друга, имеют отдельные inventories и получают deterministic result при конфликте за один item/container/mount.
-
-## A2 после H3
-
-```text
-proposed checkpoint: v16.9.4-architecture-a2-networked-gameplay
-branch: feature/a2-networked-gameplay-architecture
-```
-
-A2 фиксирует доказанную H1–H3 архитектуру и является gate перед B1. Кодовые gameplay-функции в A2 не добавляются.
-
-## Правило фокуса
-
-До принятия H3 и A2:
-
-- не создавать отдельный gameplay implementation для каждой topology;
-- не переносить canonical state в presentation;
-- не начинать production NATS/JetStream integration в основном track;
-- не начинать World Directory и cross-server handoff;
-- не ослаблять authority/replay/session fences ради UI;
-- не считать transport-level multi-peer достаточным доказательством multiplayer gameplay.
-
-Исследования следующих этапов допустимы только без parallel production path.
-
-Полный план: [`PLAYABLE_NETWORK_MILESTONES_RU.md`](PLAYABLE_NETWORK_MILESTONES_RU.md).
+Полный scope и acceptance: `SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

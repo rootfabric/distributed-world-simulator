@@ -1,28 +1,36 @@
-# PlanetSimulator — текущая distributed runtime roadmap
+# PlanetSimulator — current network and multiplayer roadmap
 
 Принятая runtime-база: `v16.9.3-runtime-h3-dedicated-multiplayer`.
-Текущий архитектурный кандидат: `v16.9.4-architecture-a2-networked-gameplay`.
+Принятая architecture-база: `v16.9.4-architecture-a2-networked-gameplay`.
+Текущий roadmap candidate: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
 ```text
 A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1 accepted
-H1 → H2 → H3 accepted
-A2 candidate: FROZEN_WITH_GATES
-B1 next after independent A2 acceptance
+H1 → H2 → H3 → A2 accepted
+M1 next
+M2 → M3 → M4 → M5 → M6 → A3 planned
+B1/B2 deferred until A3
+N3–N6 blocked until A3 and B2
 ```
 
-A2 разрешает B1 только как adapter-only этап через B0 semantic ports. NATS не может менять gameplay command, identity, ownership, replay или authority semantics.
-
-Перед N3 должны быть закрыты:
-
-- A2-D01 — единый production `NetworkedGameplayService` для H1/H2/H3;
-- A2-D02 — shared DTO validators вне authority implementations;
-- A2-D03 — два graphical clients и полный Item Graph over dedicated transport;
-- A2-D04 — dedicated crash/restart recovery player/gameplay state.
-
-Дальнейший порядок:
+## Утверждённый основной порядок
 
 ```text
-A2 → B1 → B2 → P0 → D1 → N3 → N4 → N5 → N6
+A2
+└─ M1 Unified Networked Gameplay Core
+   └─ M2 Dedicated + 1 graphical client
+      └─ M3 Dedicated + 2 graphical clients
+         └─ M4 Canonical shared gameplay over ENet
+            └─ M5 Graphical multiplayer acceptance
+               └─ M6 Dedicated persistence/recovery
+                  └─ A3 Single-server multiplayer freeze
+                     └─ B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-Источник архитектурного freeze: `config/network/networked-gameplay-architecture.v1.json`.
+M1–M6 закрывают A2-D01…D04. B1 остаётся допустимым B0 adapter, но переносится после A3. NATS не используется для обычного graphical realtime traffic и не создаёт новый gameplay path.
+
+Authoritative sources:
+
+- `config/network/network-roadmap.v1.json`;
+- `config/network/single-server-multiplayer-roadmap.v1.json`;
+- `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

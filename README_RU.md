@@ -1,28 +1,25 @@
 # PlanetSimulator
 
-Текущая принятая runtime-база: `v16.9.3-runtime-h3-dedicated-multiplayer`.
+Текущая принятая архитектурная база: `v16.9.4-architecture-a2-networked-gameplay` (`FROZEN_WITH_GATES`).
 
-Текущий архитектурный кандидат: `v16.9.4-architecture-a2-networked-gameplay`.
+Текущий roadmap candidate: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-A2 фиксирует доказанную H1–H3 client/server архитектуру: stable player identity, ownership/session fencing, authority-only movement и inventory mutations, replica-only client boundary, deterministic contention, reconnect/replay и peer isolation.
-
-Решение A2: `FROZEN_WITH_GATES`.
+Стратегическое решение:
 
 ```text
-H1 accepted
-H2 accepted
-H3 accepted
-A2 candidate
-B1 next after A2 acceptance
+FULL SINGLE-SERVER MULTIPLAYER FIRST
+A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-B1 разрешён только как NATS Core adapter поверх B0 semantic ports. Он не может создавать новый gameplay path или переносить broker-specific state в domain. Multi-authority N3–N6 заблокированы до закрытия A2-D01…A2-D04.
+Ближайшая реализация — `M1 Unified Networked Gameplay Core`: свести H1/H2/H3 к одному `NetworkedGameplayService` и общим versioned wire validators.
+
+До принятия A3 B1/B2 не являются основным потоком, а production N3–N6 заблокирован. ENet остаётся realtime transport graphical clients; NATS после A3 используется только для server/service communication через B0 ports.
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-30_V16_9_4_ARCHITECTURE_A2_NETWORKED_GAMEPLAY_RU.md`;
-- `docs/architecture/A2_NETWORKED_GAMEPLAY_ARCHITECTURE_RU.md`;
-- `docs/architecture/adr/ADR-011-networked-gameplay-boundary.md`;
-- `docs/architecture/audits/2026-07-30_V16_9_4_NETWORKED_GAMEPLAY_AUDIT_RU.md`;
+- `docs/checkpoints/2026-07-30_POST_A2_SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
+- `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
+- `docs/architecture/adr/ADR-012-single-server-multiplayer-first.md`;
+- `config/network/single-server-multiplayer-roadmap.v1.json`;
 - `config/network/networked-gameplay-architecture.v1.json`;
-- `docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md`.
+- `NETWORK_ROADMAP_RU.md`.

@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.networked_gameplay_architecture.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "build_id": "a2-networked-gameplay-audit-freeze",
-  "status": "candidate",
+  "status": "accepted",
   "decision": "FROZEN_WITH_GATES",
   "generated_at_utc": "2026-07-30T01:47:49Z",
   "runtime_evidence_base": {
@@ -177,7 +177,9 @@
     "full_item_graph_contention_over_dedicated_transport_proven": false,
     "dedicated_server_restart_recovery_proven": false,
     "b1_allowed": true,
-    "multi_authority_work_allowed": false
+    "multi_authority_work_allowed": false,
+    "b1_priority": "deferred_after_A3",
+    "single_server_multiplayer_first": true
   },
   "known_debt": [
     {
@@ -185,28 +187,32 @@
       "severity": "P1",
       "title": "Consolidate H1/H2/H3 authority fixtures behind one NetworkedGameplayService contract",
       "evidence": "PlayableListenHostAuthority, PlayerOwnershipRegistry and MultiplayerGameplayAuthority are separate implementations",
-      "closure_before": "N3"
+      "closure_before": "A3",
+      "delivery_milestone": "M1"
     },
     {
       "id": "A2-D02",
       "severity": "P1",
       "title": "Extract shared snapshot/delta validators from authority implementations",
       "evidence": "H2/H3 replica stores preload registry/authority scripts for validation",
-      "closure_before": "N3"
+      "closure_before": "A3",
+      "delivery_milestone": "M1"
     },
     {
       "id": "A2-D03",
       "severity": "P1",
       "title": "Run two real graphical clients with presentation interpolation and the canonical H1 item graph service",
       "evidence": "H3 process clients are headless protocol clients and use a reduced shared-item fixture",
-      "closure_before": "N3"
+      "closure_before": "A3",
+      "delivery_milestone": "M5"
     },
     {
       "id": "A2-D04",
       "severity": "P1",
       "title": "Integrate dedicated ownership/gameplay state with R3.1 durable server restart recovery",
       "evidence": "H2/H3 prove reconnect in one server lifetime, not crash/restart recovery",
-      "closure_before": "N3"
+      "closure_before": "A3",
+      "delivery_milestone": "M6"
     },
     {
       "id": "A2-D05",
@@ -217,7 +223,7 @@
     }
   ],
   "b1_constraints": {
-    "next_checkpoint": "v16.10.0-data-plane-b1-nats-core",
+    "next_checkpoint": "v16.11.0-data-plane-b1-nats-core",
     "branch": "feature/b1-nats-core-adapter",
     "allowed_scope": [
       "B0 service request_reply adapter",
@@ -233,16 +239,22 @@
       "NATS subject names in canonical domain state",
       "using broker delivery as authority ownership"
     ],
-    "required_equivalence": "in-memory and NATS adapters must preserve identical B0 operation results and DTO checksums"
+    "required_equivalence": "in-memory and NATS adapters must preserve identical B0 operation results and DTO checksums",
+    "priority": "deferred_until_A3_acceptance"
   },
   "multi_authority_gates": {
     "blocked_until": [
-      "A2-D01",
-      "A2-D02",
-      "A2-D03",
-      "A2-D04"
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "M6",
+      "A3",
+      "B1",
+      "B2"
     ],
-    "N3": "requires canonical gameplay service, shared validators and durable player recovery",
+    "N3": "requires accepted A3, B1 and B2 after complete graphical single-server multiplayer and durable recovery",
     "N4": "requires M0 transaction/handoff conservation over canonical aggregates",
     "N5": "requires stable player identity, input sequence continuity and dual-route policy",
     "N6": "requires versioned relevance and ghost contracts; presentation ghosts remain read-only"
@@ -269,5 +281,8 @@
     "world_regression": "82/82 tests PASS",
     "main_scene": "6/6 PASS",
     "independent_h3_acceptance": "confirmed by user on H1 + H2 overlay"
-  }
+  },
+  "accepted_at_utc": "2026-07-30T03:01:00Z",
+  "post_a2_strategy_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
+  "post_a2_strategy_manifest": "config/network/single-server-multiplayer-roadmap.v1.json"
 }

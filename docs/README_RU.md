@@ -1,20 +1,15 @@
 # Документация PlanetSimulator
 
-Текущая принятая runtime-база: `v16.9.3-runtime-h3-dedicated-multiplayer`.
+Текущий roadmap candidate: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-Текущий архитектурный кандидат: `v16.9.4-architecture-a2-networked-gameplay`.
+A2 принят с решением `FROZEN_WITH_GATES`. Основной поток: `M1 → M2 → M3 → M4 → M5 → M6 → A3`, затем B1/B2 и N3–N6.
 
-Ключевые документы A2:
+Ключевые post-A2 документы:
 
-- `checkpoints/2026-07-30_V16_9_4_ARCHITECTURE_A2_NETWORKED_GAMEPLAY_RU.md`;
-- `architecture/A2_NETWORKED_GAMEPLAY_ARCHITECTURE_RU.md`;
-- `architecture/adr/ADR-011-networked-gameplay-boundary.md`;
-- `architecture/audits/2026-07-30_V16_9_4_NETWORKED_GAMEPLAY_AUDIT_RU.md`;
-- `../config/network/networked-gameplay-architecture.v1.json`;
-- `network/NETWORK_TEST_MATRIX_RU.md`;
-- `plans/PLAYABLE_NETWORK_MILESTONES_RU.md`.
-
-Решение: `FROZEN_WITH_GATES`. B1 — следующий adapter-only checkpoint после независимой приёмки A2. N3–N6 остаются заблокированы до закрытия A2-D01…D04.
+- `checkpoints/2026-07-30_POST_A2_SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
+- `plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
+- `architecture/adr/ADR-012-single-server-multiplayer-first.md`;
+- `../config/network/single-server-multiplayer-roadmap.v1.json`.
 
 ## v16.3.3 — Foundation world aggregate part 3
 

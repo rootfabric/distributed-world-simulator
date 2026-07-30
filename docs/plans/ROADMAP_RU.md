@@ -1,12 +1,14 @@
+> **Current roadmap checkpoint:** `v16.9.5-roadmap-single-server-multiplayer-first`. A2 принят. Следующий кодовый этап — M1. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+
 # PlanetSimulator — текущая дорожная карта
 
-## Текущий gate — H1 candidate поверх принятого S1 fix1
+## Текущий gate — M1 поверх принятого A2
 
 ```text
-runtime accepted: v16.9.0-simulation-s1-distributed-compute-fix1
-runtime candidate: v16.9.1-runtime-h1-playable-listen-host
-accepted domain base: v16.8.5-domain-m0-aggregate-transactions
-accepted transport base: v16.8.3-network-t1-multi-peer
+runtime accepted: v16.9.3-runtime-h3-dedicated-multiplayer
+architecture accepted: v16.9.4-architecture-a2-networked-gameplay
+roadmap candidate: v16.9.5-roadmap-single-server-multiplayer-first
+next: v16.10.0-runtime-m1-unified-networked-gameplay-core
 ```
 
 ```text

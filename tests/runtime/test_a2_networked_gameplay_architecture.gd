@@ -24,10 +24,10 @@ func _init() -> void:
 func _test_manifest_identity(manifest: Dictionary) -> void:
 	_assert(not manifest.is_empty(), "A2 freeze manifest is missing or invalid")
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.networked_gameplay_architecture.v1", "A2 schema mismatch")
-	_assert(int(manifest.get("document_revision", 0)) == 1, "A2 document revision mismatch")
+	_assert(int(manifest.get("document_revision", 0)) == 2, "A2 document revision mismatch")
 	_assert(String(manifest.get("checkpoint", "")) == "v16.9.4-architecture-a2-networked-gameplay", "A2 checkpoint mismatch")
 	_assert(String(manifest.get("build_id", "")) == "a2-networked-gameplay-audit-freeze", "A2 build ID mismatch")
-	_assert(String(manifest.get("status", "")) == "candidate", "A2 status must be candidate before independent acceptance")
+	_assert(String(manifest.get("status", "")) == "accepted", "A2 status must be accepted after independent verification")
 	_assert(String(manifest.get("decision", "")) == "FROZEN_WITH_GATES", "A2 decision mismatch")
 	var evidence: Dictionary = manifest.get("runtime_evidence_base", {})
 	for stage in ["H1", "H2", "H3"]:
@@ -96,18 +96,18 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 			debt_by_id[String(entry_value.get("id", ""))] = entry_value
 	for debt_id in ["A2-D01", "A2-D02", "A2-D03", "A2-D04"]:
 		_assert(debt_by_id.has(debt_id), "Required multi-authority blocker missing: %s" % debt_id)
-		_assert(String(debt_by_id.get(debt_id, {}).get("closure_before", "")) == "N3", "%s must close before N3" % debt_id)
+		_assert(String(debt_by_id.get(debt_id, {}).get("closure_before", "")) == "A3", "%s must close before A3" % debt_id)
 	var b1: Dictionary = manifest.get("b1_constraints", {})
-	_assert(String(b1.get("next_checkpoint", "")) == "v16.10.0-data-plane-b1-nats-core", "B1 checkpoint mismatch")
+	_assert(String(b1.get("next_checkpoint", "")) == "v16.11.0-data-plane-b1-nats-core", "B1 checkpoint mismatch")
 	_assert(String(b1.get("branch", "")) == "feature/b1-nats-core-adapter", "B1 branch mismatch")
 	for forbidden in ["new gameplay command model", "direct broker calls from domain/runtime gameplay", "NATS subject names in canonical domain state", "using broker delivery as authority ownership"]:
 		_assert(forbidden in b1.get("forbidden_scope", []), "B1 forbidden scope missing: %s" % forbidden)
 	var gates: Dictionary = manifest.get("multi_authority_gates", {})
-	_assert(gates.get("blocked_until", []) == ["A2-D01", "A2-D02", "A2-D03", "A2-D04"], "Multi-authority blockers changed")
+	_assert(gates.get("blocked_until", []) == ["M1", "M2", "M3", "M4", "M5", "M6", "A3", "B1", "B2"], "Multi-authority blockers changed")
 
 
 func _test_roadmap_alignment(roadmap: Dictionary) -> void:
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.9.4-architecture-a2-networked-gameplay", "Roadmap current checkpoint mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.9.5-roadmap-single-server-multiplayer-first", "Roadmap current checkpoint mismatch")
 	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.9.3-runtime-h3-dedicated-multiplayer", "Roadmap runtime base mismatch")
 	var phases: Dictionary = {}
 	for phase_value in roadmap.get("phases", []):
@@ -115,8 +115,9 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 			phases[String(phase_value.get("id", ""))] = phase_value
 	for stage in ["H1", "H2", "H3"]:
 		_assert(String(phases.get(stage, {}).get("status", "")) == "accepted", "%s roadmap status is not accepted" % stage)
-	_assert(String(phases.get("A2", {}).get("status", "")) == "candidate", "A2 roadmap status mismatch")
-	_assert(String(phases.get("B1", {}).get("status", "")) == "next", "B1 roadmap status must be next")
+	_assert(String(phases.get("A2", {}).get("status", "")) == "accepted", "A2 roadmap status mismatch")
+	_assert(String(phases.get("M1", {}).get("status", "")) == "next", "M1 roadmap status must be next")
+	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status must be deferred after A3")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
 
@@ -169,6 +170,7 @@ func _test_documentation_evidence() -> void:
 	_assert(architecture.contains("A2-D01"), "A2 architecture debt register link missing")
 	_assert(adr.contains("NetworkedGameplayService"), "ADR consolidation decision missing")
 	_assert(audit.contains("B1 adapter work: ALLOWED WITH GATES"), "A2 audit B1 decision missing")
+	_assert(audit.contains("FULL SINGLE-SERVER MULTIPLAYER FIRST"), "Post-A2 priority decision missing")
 	_assert(audit.contains("N3–N6 multi-authority work: BLOCKED"), "A2 audit multi-authority block missing")
 
 
@@ -183,9 +185,10 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
 			"res://tests/runtime/test_h3_dedicated_multiplayer_processes.gd",
 			"res://tests/runtime/test_a2_networked_gameplay_architecture.gd",
+			"res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.9.4-architecture-a2-networked-gameplay"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.9.5-roadmap-single-server-multiplayer-first"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

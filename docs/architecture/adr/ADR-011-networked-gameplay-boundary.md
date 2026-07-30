@@ -43,3 +43,7 @@ Identity, permission, replay, revision, authority и ownership fencing не за
 - transport session как player identity;
 - локальная client mutation с последующим «best effort» подтверждением;
 - развитие H3 shared-item fixture как отдельного production Item Graph.
+
+## Последующее решение
+
+ADR-012 уточняет delivery order: frozen gameplay boundary сначала доводится до полноценного single-server graphical multiplayer (M1–M6 и A3), затем подключаются B1/B2 и server mesh. Семантические решения ADR-011 не отменяются.

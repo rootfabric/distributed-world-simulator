@@ -8,7 +8,7 @@ build_id: a2-networked-gameplay-audit-freeze
 base: v16.9.3-runtime-h3-dedicated-multiplayer
 branch: feature/a2-networked-gameplay-architecture
 scope: documentation, ADR, contract audit, test matrix, machine-readable freeze
-status: candidate
+status: accepted
 ```
 
 ## Зафиксировано
@@ -61,9 +61,13 @@ Network-результат собран из полного принятого �
 ## Acceptance
 
 - freeze manifest валиден и согласован с roadmap;
-- H1/H2/H3 отмечены accepted, A2 candidate, B1 next;
+- H1/H2/H3 и A2 отмечены accepted; M1 является следующим этапом; B1 перенесён после A3;
 - ADR-011 и audit document присутствуют;
 - source evidence подтверждает declared invariants и declared debts;
 - existing H3/H2/H1/H0/T1 tests зелёные;
 - B1 restrictions и multi-authority blockers однозначны;
 - production gameplay code не изменён.
+
+## Post-acceptance roadmap correction
+
+После независимой приёмки A2 утверждено решение `FULL SINGLE-SERVER MULTIPLAYER FIRST`. A2-D01…D04 закрываются этапами M1–M6; затем выполняется A3. B1/B2 перенесены после A3, N3–N6 — после B2.
