@@ -661,3 +661,14 @@ S1 distributed compute foundation: scripts/simulation/compute/
 - playable network plan: docs/plans/PLAYABLE_NETWORK_MILESTONES_RU.md
 - after H3: A2 networked gameplay architecture checkpoint
 - after A2: B1 NATS Core adapter
+
+
+M4 networked playground extension
+- base: main @ 7f65563
+- branch: feature/m4-networked-playground-extension
+- runtime: scripts/world/testing/playground_runtime.gd
+- transport: existing M3/M4 ENet gameplay path
+- topology: dedicated server + two graphical playground clients
+- gameplay: authoritative movement, remote presentation, reconnect, canonical Item Graph
+- runner: RUN_M4_NETWORKED_PLAYGROUND_TESTS.ps1
+- boundary: inventory widget-driven M4 acceptance remains M5

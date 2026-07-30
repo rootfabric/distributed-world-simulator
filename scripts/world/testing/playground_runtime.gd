@@ -14,6 +14,9 @@ const PlayableAuthorityScript = preload(
 const NetworkContractUtils = preload(
 	"res://scripts/network/contracts/network_contract_utils.gd"
 )
+const RemotePlayerPresenterScript = preload(
+	"res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd"
+)
 
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
@@ -50,6 +53,18 @@ var _m2_last_candidate_hash: String = ""
 var _m2_last_sync_error: String = ""
 var _m2_sync_count: int = 0
 var _m2_rejection_count: int = 0
+var m3_multiplayer_client_runtime
+var _m3_attached: bool = false
+var _m3_input_accumulator: float = 0.0
+var _m3_local_sync_count: int = 0
+var _m3_remote_presenters: Dictionary = {}
+var _m3_remote_spawn_count: int = 0
+var _m3_remote_despawn_count: int = 0
+var _m3_remote_update_count: int = 0
+var _m4_item_graph_snapshot: Dictionary = {}
+var _m4_item_snapshot_updates: int = 0
+var _m4_item_commands: int = 0
+var _m4_item_rejections: int = 0
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -159,11 +174,221 @@ func attach_playable_client_session(session) -> Dictionary:
 	}
 
 
-func _process(delta: float) -> void:
-	if runtime_role != "game-client" or not _m2_attached:
+func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	if runtime_role != "game-client":
+		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
+	if runtime == null:
+		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
+	for method_name in [
+		"get_snapshot",
+		"get_item_graph_snapshot",
+		"get_local_player_id",
+		"move_blocking",
+		"move_nonblocking",
+		"execute_item_command_blocking",
+	]:
+		if not runtime.has_method(method_name):
+			return {
+				"success": false,
+				"error_code": "M3_CLIENT_RUNTIME_METHOD_MISSING",
+				"method": method_name,
+			}
+	if _m3_attached:
+		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+	m3_multiplayer_client_runtime = runtime
+	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
+		runtime.replica_updated.connect(_on_m3_replica_updated)
+	if not runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
+		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
+	_m3_attached = true
+	player.set_network_replica_mode(true)
+	_on_m3_replica_updated(runtime.get_snapshot())
+	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"world_id": "playground",
+			"local_player_id": runtime.get_local_player_id(),
+			"m4_item_graph": not _m4_item_graph_snapshot.is_empty(),
+		},
+	}
+
+
+func _on_m3_replica_updated(snapshot: Dictionary) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or player == null:
 		return
-	_apply_m2_flat_input(delta)
-	_sync_m2_player_state(delta)
+	var local_id: String = m3_multiplayer_client_runtime.get_local_player_id()
+	var seen: Dictionary = {}
+	for player_value in snapshot.get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var record: Dictionary = player_value
+		var logical_id := String(record.get("logical_player_id", ""))
+		if logical_id == local_id:
+			if bool(record.get("connected", false)):
+				var position: Dictionary = record.get("position", {})
+				player.set_world_position(Vector3(
+					float(position.get("x", 0.0)),
+					float(position.get("y", 0.0)),
+					float(position.get("z", 0.0))
+				))
+				var velocity: Dictionary = record.get("velocity", {})
+				player.velocity = Vector3(
+					float(velocity.get("x", 0.0)),
+					float(velocity.get("y", 0.0)),
+					float(velocity.get("z", 0.0))
+				)
+				_m3_local_sync_count += 1
+			continue
+		if not bool(record.get("connected", false)):
+			continue
+		seen[logical_id] = true
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter == null or not is_instance_valid(presenter):
+			presenter = RemotePlayerPresenterScript.new()
+			add_child(presenter)
+			var setup_result: Dictionary = presenter.setup(record)
+			if not bool(setup_result.get("success", false)):
+				presenter.queue_free()
+				continue
+			_m3_remote_presenters[logical_id] = presenter
+			_m3_remote_spawn_count += 1
+		else:
+			presenter.apply_replica(record)
+		_m3_remote_update_count += 1
+	for logical_id_value in _m3_remote_presenters.keys().duplicate():
+		var logical_id := String(logical_id_value)
+		if seen.has(logical_id):
+			continue
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter != null and is_instance_valid(presenter):
+			presenter.queue_free()
+		_m3_remote_presenters.erase(logical_id)
+		_m3_remote_despawn_count += 1
+
+
+func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	_m4_item_graph_snapshot = snapshot.duplicate(true)
+	_m4_item_snapshot_updates += 1
+
+
+func _apply_m3_network_input(delta: float) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or not local_input_enabled:
+		return
+	if (
+		m3_multiplayer_client_runtime.has_method("is_automated_acceptance")
+		and m3_multiplayer_client_runtime.is_automated_acceptance()
+	):
+		return
+	_m3_input_accumulator += delta
+	if _m3_input_accumulator < 0.05:
+		return
+	var input_vector := Input.get_vector(
+		"move_left", "move_right", "move_forward", "move_back"
+	)
+	if input_vector.length_squared() < 0.000001:
+		return
+	var step := minf(_m3_input_accumulator, 0.1)
+	_m3_input_accumulator = 0.0
+	var speed := (
+		M2_NETWORK_RUN_SPEED_MPS
+		if Input.is_action_pressed("boost")
+		else M2_NETWORK_WALK_SPEED_MPS
+	)
+	m3_multiplayer_client_runtime.move_nonblocking(
+		input_vector.x * speed * step,
+		input_vector.y * speed * step
+	)
+
+
+func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M3_PLAYGROUND_NOT_READY"}
+	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
+
+
+func m4_execute_item_command(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M4_PLAYGROUND_NOT_READY"}
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_blocking(
+		command_type,
+		payload,
+		operation_id
+	)
+	_m4_item_commands += 1
+	if not bool(result.get("success", false)):
+		_m4_item_rejections += 1
+	return result
+
+
+func create_m3_graphical_client_report() -> Dictionary:
+	var presenters: Dictionary = {}
+	for logical_id_value in _m3_remote_presenters.keys():
+		var presenter = _m3_remote_presenters[logical_id_value]
+		if presenter != null and is_instance_valid(presenter):
+			presenters[String(logical_id_value)] = presenter.get_report()
+	return {
+		"schema": "planet_simulator.m4_playground_graphical_world_report.v1",
+		"world_id": "playground",
+		"runtime_role": runtime_role,
+		"attached": _m3_attached,
+		"local_player_id": (
+			m3_multiplayer_client_runtime.get_local_player_id()
+			if m3_multiplayer_client_runtime != null
+			else ""
+		),
+		"local_player_position": _vector_to_array(
+			player.get_world_position() if player != null else Vector3.ZERO
+		),
+		"active_camera": (
+			String(player.get_active_camera().get_path())
+			if (
+				player != null
+				and player.get_active_camera() != null
+				and player.get_active_camera().current
+			)
+			else NodePath()
+		),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": (
+			bool(player.is_network_replica_mode()) if player != null else false
+		),
+		"local_sync_count": _m3_local_sync_count,
+		"remote_presenter_count": _m3_remote_presenters.size(),
+		"remote_spawn_count": _m3_remote_spawn_count,
+		"remote_despawn_count": _m3_remote_despawn_count,
+		"remote_update_count": _m3_remote_update_count,
+		"remote_presenters": presenters,
+		"snapshot_checksum": (
+			String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", ""))
+			if m3_multiplayer_client_runtime != null
+			else ""
+		),
+		"m4_item_graph_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+		"m4_item_graph_checksum": String(_m4_item_graph_snapshot.get("checksum", "")),
+		"m4_item_snapshot_updates": _m4_item_snapshot_updates,
+		"m4_item_commands": _m4_item_commands,
+		"m4_item_rejections": _m4_item_rejections,
+		"direct_authority_references": 0,
+	}
+
+
+func _process(delta: float) -> void:
+	if runtime_role != "game-client":
+		return
+	if _m3_attached:
+		_apply_m3_network_input(delta)
+	elif _m2_attached:
+		_apply_m2_flat_input(delta)
+		_sync_m2_player_state(delta)
 
 
 func register_runtime_commands(registry, owner_id: String) -> void:
@@ -204,6 +429,17 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 	_register_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
 	_register_command(registry, owner_id, {"id": "inventory.profile", "description": "Показать или сменить профиль управления инвентарём.", "usage": "inventory.profile [planet_default|rust_like|seven_days_like]", "category": "items"}, Callable(self, "_command_inventory_profile"))
 	_register_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
+	_register_command(registry, owner_id, {"id": "m4.item.pickup", "description": "Подобрать канонический M4 world item.", "usage": "m4.item.pickup <item_id>", "category": "m4"}, Callable(self, "_command_m4_pickup"))
+	_register_command(registry, owner_id, {"id": "m4.item.drop", "description": "Выбросить канонический M4 item.", "usage": "m4.item.drop <item_id> [quantity]", "category": "m4"}, Callable(self, "_command_m4_drop"))
+	_register_command(registry, owner_id, {"id": "m4.item.split", "description": "Разделить канонический M4 stack.", "usage": "m4.item.split <item_id> <quantity>", "category": "m4"}, Callable(self, "_command_m4_split"))
+	_register_command(registry, owner_id, {"id": "m4.item.stack", "description": "Объединить два канонических M4 stack.", "usage": "m4.item.stack <source_item_id> <target_item_id>", "category": "m4"}, Callable(self, "_command_m4_stack"))
+	_register_command(registry, owner_id, {"id": "m4.container.open", "description": "Открыть общий M4 container.", "usage": "m4.container.open <container_id>", "category": "m4"}, Callable(self, "_command_m4_container_open"))
+	_register_command(registry, owner_id, {"id": "m4.container.close", "description": "Закрыть общий M4 container.", "usage": "m4.container.close <container_id>", "category": "m4"}, Callable(self, "_command_m4_container_close"))
+	_register_command(registry, owner_id, {"id": "m4.item.move_to_container", "description": "Переместить M4 item в открытый container.", "usage": "m4.item.move_to_container <item_id> <container_id>", "category": "m4"}, Callable(self, "_command_m4_move_to_container"))
+	_register_command(registry, owner_id, {"id": "m4.item.mount", "description": "Установить M4 item в mount.", "usage": "m4.item.mount <item_id> <mount_id>", "category": "m4"}, Callable(self, "_command_m4_mount"))
+	_register_command(registry, owner_id, {"id": "m4.item.detach", "description": "Снять M4 item с mount.", "usage": "m4.item.detach <mount_id>", "category": "m4"}, Callable(self, "_command_m4_detach"))
+	_register_command(registry, owner_id, {"id": "m4.hotbar.select", "description": "Выбрать канонический M4 hotbar slot.", "usage": "m4.hotbar.select <0-7>", "category": "m4"}, Callable(self, "_command_m4_hotbar"))
+	_register_command(registry, owner_id, {"id": "m4.snapshot", "description": "Показать локальный canonical Item Graph snapshot.", "usage": "m4.snapshot", "category": "m4"}, Callable(self, "_command_m4_snapshot"))
 
 
 func register_runtime_tests(registry, owner_id: String) -> void:
@@ -236,6 +472,8 @@ func create_runtime_snapshot() -> Dictionary:
 		"controller": player.get_controller_snapshot() if player != null else {},
 		"spawned_object_count": spawned_objects.get_child_count() if spawned_objects != null else 0,
 		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
+		"m3_multiplayer": create_m3_graphical_client_report(),
+		"m4_item_graph": _m4_item_graph_snapshot.duplicate(true),
 	}
 
 
@@ -248,6 +486,17 @@ func get_world_entity_store():
 func prepare_for_unload() -> void:
 	if item_gameplay != null:
 		item_gameplay.save_graph()
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.replica_updated.is_connected(_on_m3_replica_updated):
+			m3_multiplayer_client_runtime.replica_updated.disconnect(_on_m3_replica_updated)
+		if m3_multiplayer_client_runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
+			m3_multiplayer_client_runtime.item_graph_updated.disconnect(_on_m4_item_graph_updated)
+	for presenter_value in _m3_remote_presenters.values():
+		if presenter_value != null and is_instance_valid(presenter_value):
+			presenter_value.queue_free()
+	_m3_remote_presenters.clear()
+	m3_multiplayer_client_runtime = null
+	_m3_attached = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -517,6 +766,131 @@ func _command_inventory_profile(arguments: Array[String]) -> Dictionary:
 
 func _command_inventory_save(_arguments: Array[String]) -> Dictionary:
 	return item_gameplay.save_graph() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_m4_pickup(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.item.pickup <item_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.pickup", {"item_id": arguments[0]}
+	))
+
+
+func _command_m4_drop(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty() or arguments.size() > 2:
+		return _m4_usage("m4.item.drop <item_id> [quantity]")
+	var quantity := -1
+	if arguments.size() == 2:
+		if not arguments[1].is_valid_int():
+			return _m4_usage("m4.item.drop <item_id> [quantity]")
+		quantity = int(arguments[1])
+	return _m4_console_result(m4_execute_item_command(
+		"item.drop", {"item_id": arguments[0], "quantity": quantity}
+	))
+
+
+func _command_m4_split(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2 or not arguments[1].is_valid_int():
+		return _m4_usage("m4.item.split <item_id> <quantity>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.split",
+		{"item_id": arguments[0], "quantity": int(arguments[1])}
+	))
+
+
+func _command_m4_stack(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.stack <source_item_id> <target_item_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.stack",
+		{"source_item_id": arguments[0], "target_item_id": arguments[1]}
+	))
+
+
+func _command_m4_container_open(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.container.open <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"container.open", {"container_id": arguments[0]}
+	))
+
+
+func _command_m4_container_close(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.container.close <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"container.close", {"container_id": arguments[0]}
+	))
+
+
+func _command_m4_move_to_container(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.move_to_container <item_id> <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.move_to_container",
+		{"item_id": arguments[0], "container_id": arguments[1]}
+	))
+
+
+func _command_m4_mount(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.mount <item_id> <mount_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.mount",
+		{"item_id": arguments[0], "mount_id": arguments[1]}
+	))
+
+
+func _command_m4_detach(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.item.detach <mount_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.detach", {"mount_id": arguments[0]}
+	))
+
+
+func _command_m4_hotbar(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1 or not arguments[0].is_valid_int():
+		return _m4_usage("m4.hotbar.select <0-7>")
+	return _m4_console_result(m4_execute_item_command(
+		"inventory.select_hotbar",
+		{"selected_hotbar_index": int(arguments[0])}
+	))
+
+
+func _command_m4_snapshot(_arguments: Array[String]) -> Dictionary:
+	if _m4_item_graph_snapshot.is_empty():
+		return {
+			"success": false,
+			"error_code": "M4_ITEM_GRAPH_REPLICA_MISSING",
+			"output": "M4 Item Graph replica не получена",
+		}
+	return {
+		"success": true,
+		"output": JSON.stringify(_m4_item_graph_snapshot, "  "),
+		"snapshot": _m4_item_graph_snapshot.duplicate(true),
+	}
+
+
+func _m4_usage(usage: String) -> Dictionary:
+	return {
+		"success": false,
+		"error_code": "INVALID_M4_COMMAND_ARGUMENTS",
+		"output": "Использование: %s" % usage,
+	}
+
+
+func _m4_console_result(result: Dictionary) -> Dictionary:
+	var output := (
+		"M4 command выполнена"
+		if bool(result.get("success", false))
+		else "M4 command отклонена: %s" % String(
+			result.get("error_code", "M4_COMMAND_REJECTED")
+		)
+	)
+	var normalized := result.duplicate(true)
+	normalized["output"] = output
+	return normalized
 
 
 
