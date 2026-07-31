@@ -28,6 +28,12 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 Основные документы:
 
+- `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая парадигма изменяемого вещества, астероидов, пещер и добычи;
+- `docs/architecture/MW0_MATTER_CONTRACTS_RU.md` — первый независимый code checkpoint новой geological ветки;
+- `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md`;
+- `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — typed normalization fix1;
+- `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md` — отдельный asteroid lab track и последующая интеграция в Луну;
+- `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md` — решение procedural volume + sparse persistent mutations;
 - `docs/architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md`;
 - `config/network/single-server-multiplayer-architecture.v1.json`;
 - `docs/checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;

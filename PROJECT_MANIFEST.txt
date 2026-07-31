@@ -1,3 +1,30 @@
+Planetary World v17.0.0-simulation-mw0-matter-contracts fix1 (candidate)
+
+MW0 fix1:
+- preserves declared numeric Variant types during in-memory contract normalization
+- removes lossy JSON decode from MatterContractUtils.normalize()
+- keeps canonical JSON and payload hashes unchanged
+- fixes composition mass_fraction=1.0 and body reference_radius_m=1000.0 normalization
+- focused assertion count remains 2011
+- docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md
+
+Planetary World v17.0.0-simulation-mw0-matter-contracts (candidate)
+
+MW0 Dynamic Matter Fabric contracts over v16.10.6 architecture snapshot:
+- pure JSON-safe matter domain without SceneTree/Node/Mesh dependencies
+- material definitions and deterministic seven-material core catalog
+- normalized compositions and occupied/vacuum MatterSample invariants
+- MatterBodyDefinition with fixed MW1 asteroid fixture identity
+- MatterBrickAddress reusing S0 SimulationCellAddress
+- separate geometry, composition and property snapshot channels
+- revision-fenced mutation request/result contracts
+- closed per-material MatterMassLedger required for commit
+- fixed laboratory fixture: radius 1000 m, seed 2026073101
+- config/matter/mw0-matter-contracts.v1.json
+- RUN_MW0_MATTER_CONTRACTS_TESTS.ps1 / .sh
+- docs/architecture/MW0_MATTER_CONTRACTS_RU.md
+- docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md
+
 Planetary World v16.10.6-architecture-a3-single-server-multiplayer
 
 A3 single-server multiplayer architecture freeze over accepted M6:

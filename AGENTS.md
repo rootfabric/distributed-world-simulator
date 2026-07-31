@@ -173,3 +173,19 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - B1 may add only server-to-server messaging through existing ports; it must not replace ENet or fork gameplay.
 - Focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
 - Next after acceptance: B1 NATS Core adapter.
+
+
+## Parallel mutable-worlds simulation track
+
+This track is independent from the accepted single-server multiplayer order and must not alter the production Moon runtime before its integration gates.
+
+```text
+architecture: Dynamic Matter Fabric
+current candidate: v17.0.0-simulation-mw0-matter-contracts
+branch: feature/mw0-matter-contracts
+production worlds changed: false
+next after acceptance: MW1 fixed-seed procedural asteroid sampler
+fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
+```
+
+MW0 review fixes remain on `feature/mw0-matter-contracts`. MW1 starts only after MW0 acceptance.

@@ -1,12 +1,26 @@
 # Документация PlanetSimulator
 
-Принятый runtime checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay`.
-Текущий этап: `v16.10.3-pre-m5-graphical-acceptance-preparation` (`candidate`).
+## Изменяемые миры и динамическое вещество
 
-M4 принят; подготовка M5 добавляет read-only Item Graph UI projection, command adapter, transient cursor state, networked inventory shell и изолированные process profiles. Полный UI-driven two-client acceptance ещё не заявлен.
+- `architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая модель: процедурный объём, sparse persistent mutations, сохранение массы и переходы field/fragment/item/construct;
+- `architecture/adr/ADR-017-dynamic-matter-fabric.md` — ADR, заменяющий прежнее общее решение heightfield + voxel;
+- `plans/MUTABLE_WORLDS_ROADMAP_RU.md` — MW0–MW8 изолированного астероида, MI0–MI4 интеграции Луны и MP0–MP4 production track;
+- `checkpoints/2026-07-31_MUTABLE_WORLDS_ARCHITECTURE_ROADMAP_RU.md` — документационный checkpoint анализа текущего среза.
+- `architecture/MW0_MATTER_CONTRACTS_RU.md` — реализованная граница контрактов вещества, snapshot channels, mutations и mass ledger;
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md` — первый code checkpoint geological track, статус candidate.
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — исправление typed normalization после первой независимой проверки MW0.
+
+Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
+Текущий architecture candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
+
+M1–M6 сформировали единый production gameplay path с graphical multiplayer, canonical Item Graph, reconnect/replay и durable recovery. A3 фиксирует эту архитектуру перед B1 NATS Core adapter.
 
 Ключевые документы:
 
+- `architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md` — freeze единственного production single-server gameplay path;
+- `checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;
+- `architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
+- `checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
 - `MCP_GODOT.md` — контракт автономного управления double Godot через MCP:
   managed processes, runtime input, viewport screenshots, assertions, логи и
   корректное завершение процесса;

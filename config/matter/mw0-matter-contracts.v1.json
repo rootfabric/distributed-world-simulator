@@ -1,0 +1,42 @@
+{
+  "schema": "planet_simulator.mw0_matter_contracts_manifest.v1",
+  "checkpoint": "v17.0.0-simulation-mw0-matter-contracts",
+  "build_id": "mw0-matter-contracts",
+  "status": "CANDIDATE",
+  "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "recommended_branch": "feature/mw0-matter-contracts",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "asteroid_fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_id": "matter-generator/fixed-seed-asteroid",
+    "generator_version": "1.0.0",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0
+  },
+  "contracts": [
+    "planet_simulator.matter_material_definition.v1",
+    "planet_simulator.matter_composition.v1",
+    "planet_simulator.matter_sample.v1",
+    "planet_simulator.matter_body_definition.v1",
+    "planet_simulator.matter_brick_address.v1",
+    "planet_simulator.matter_brick_snapshot.v1",
+    "planet_simulator.matter_mutation_request.v1",
+    "planet_simulator.matter_mutation_result.v1",
+    "planet_simulator.matter_mass_ledger.v1",
+    "planet_simulator.matter_material_catalog.v1"
+  ],
+  "material_ids": [
+    "matter/basalt",
+    "matter/fractured-basalt",
+    "matter/iron-nickel-ore",
+    "matter/regolith-compacted",
+    "matter/regolith-loose",
+    "matter/silicate-waste",
+    "matter/water-ice"
+  ],
+  "focused_runner_windows": "RUN_MW0_MATTER_CONTRACTS_TESTS.ps1",
+  "focused_runner_linux": "RUN_MW0_MATTER_CONTRACTS_TESTS.sh",
+  "next_stage": "MW1 fixed-seed procedural asteroid sampler"
+}
