@@ -61,9 +61,23 @@ func _execute(player_id: String, command_type: String, payload: Dictionary) -> D
 		"container.open": return _open_container(player_id, String(payload.get("container_id","")))
 		"container.close": return _close_container(player_id, String(payload.get("container_id","")))
 		"item.move_to_container": return _move_to_container(player_id, String(payload.get("item_id","")), String(payload.get("container_id","")))
+		"item.move_to_inventory": return _move_to_inventory(player_id, String(payload.get("item_id","")))
+		"item.transfer": return _transfer(
+			player_id,
+			String(payload.get("item_id", "")),
+			int(payload.get("quantity", -1)),
+			String(payload.get("target_container_id", "")),
+			int(payload.get("target_slot_index", -1)),
+			String(payload.get("target_item_id", ""))
+		)
 		"item.mount": return _mount(player_id, String(payload.get("item_id","")), String(payload.get("mount_id","")))
 		"item.detach": return _detach(player_id, String(payload.get("mount_id","")))
 		"inventory.select_hotbar": return _select_hotbar(player_id, int(payload.get("selected_hotbar_index",0)))
+		"inventory.assign_hotbar": return _assign_hotbar(
+			player_id,
+			String(payload.get("item_id", "")),
+			int(payload.get("slot_index", -1))
+		)
 		"inventory.permission_probe":
 			return _success() if String(payload.get("target_player_id","")) == player_id else _failure("PLAYER_PERMISSION_DENIED")
 	return _failure("UNSUPPORTED_ITEM_COMMAND")
@@ -112,12 +126,187 @@ func _close_container(player_id:String,container_id:String)->Dictionary:
 	if String(_open_containers.get(player_id,""))!=container_id:return _failure("EXTERNAL_CONTAINER_NOT_OPEN")
 	_open_containers.erase(player_id); return _success({"container_id":container_id})
 func _move_to_container(player_id:String,item_id:String,container_id:String)->Dictionary:
-	var access:=_owned_item(player_id,item_id); if not bool(access.get("success",false)):return access
-	if String(_open_containers.get(player_id,""))!=container_id:return _failure("TARGET_CONTAINER_ACCESS_DENIED")
-	var c:Dictionary=_containers.get(container_id,{}); var slots:Array=c.get("slots",[]); if slots.size()>=int(c.get("capacity",0)):return _failure("CONTAINER_FULL")
-	slots.append(item_id); c["slots"]=slots; _containers[container_id]=c; _remove_from_inventory(player_id,item_id)
-	var item:Dictionary=_items[item_id]; item["location"]={"kind":"CONTAINER","container_id":container_id}; _items[item_id]=item
-	return _success({"item_id":item_id,"container_id":container_id})
+	return _transfer(player_id, item_id, -1, container_id, -1, "")
+
+func _move_to_inventory(player_id: String, item_id: String) -> Dictionary:
+	return _transfer(player_id, item_id, -1, "inventory/%s" % player_id, -1, "")
+
+func _transfer(
+	player_id: String,
+	item_id: String,
+	quantity: int,
+	target_container_id: String,
+	target_slot_index: int,
+	target_item_id: String
+) -> Dictionary:
+	if not _items.has(item_id):
+		return _failure("ITEM_NOT_FOUND")
+	var access := _accessible_item(player_id, item_id)
+	if not bool(access.get("success", false)):
+		return access
+	var source: Dictionary = _items[item_id]
+	var source_quantity := int(source.get("quantity", 1))
+	var amount := source_quantity if quantity < 0 else quantity
+	if amount < 1 or amount > source_quantity:
+		return _failure("INVALID_TRANSFER_QUANTITY")
+	var normalized_target := target_container_id.strip_edges()
+	if normalized_target.is_empty():
+		return _failure("TARGET_CONTAINER_REQUIRED")
+	if not target_item_id.strip_edges().is_empty():
+		return _transfer_to_stack(player_id, item_id, amount, target_item_id.strip_edges())
+	if normalized_target == "inventory/%s" % player_id:
+		return _transfer_to_inventory(player_id, item_id, amount)
+	if normalized_target == "hotbar/%s" % player_id:
+		if amount != source_quantity:
+			return _failure("HOTBAR_ASSIGNMENT_REQUIRES_WHOLE_ITEM")
+		var location: Dictionary = source.get("location", {})
+		if String(location.get("kind", "")) == "WORLD":
+			var pickup_result := _transfer_to_inventory(player_id, item_id, source_quantity)
+			if not bool(pickup_result.get("success", false)):
+				return pickup_result
+		elif String(location.get("kind", "")) != "INVENTORY" or String(location.get("player_id", "")) != player_id:
+			return _failure("PLAYER_PERMISSION_DENIED")
+		return _assign_hotbar(player_id, item_id, target_slot_index)
+	if normalized_target.begins_with("container/"):
+		return _transfer_to_container(player_id, item_id, amount, normalized_target, target_slot_index)
+	return _failure("UNSUPPORTED_TRANSFER_TARGET")
+
+func _transfer_to_inventory(player_id: String, item_id: String, amount: int) -> Dictionary:
+	var item: Dictionary = _items[item_id]
+	var location: Dictionary = item.get("location", {})
+	var kind := String(location.get("kind", ""))
+	if kind == "INVENTORY" and String(location.get("player_id", "")) == player_id:
+		return _success({"item_id": item_id, "container_id": "inventory/%s" % player_id, "no_op": true})
+	if kind == "CONTAINER":
+		var source_container_id := String(location.get("container_id", ""))
+		if String(_open_containers.get(player_id, "")) != source_container_id:
+			return _failure("SOURCE_CONTAINER_ACCESS_DENIED")
+	if kind == "MOUNT":
+		return _failure("MOUNT_DETACH_REQUIRED")
+	var moved_item_id := _extract_transfer_item(item_id, amount)
+	if moved_item_id.is_empty():
+		return _failure("INVALID_TRANSFER_QUANTITY")
+	_remove_from_source(item_id if moved_item_id == item_id else "", location)
+	var moved: Dictionary = _items[moved_item_id]
+	moved["location"] = {"kind": "INVENTORY", "player_id": player_id}
+	_items[moved_item_id] = moved
+	_add_to_inventory(player_id, moved_item_id)
+	return _success({"item_id": moved_item_id, "container_id": "inventory/%s" % player_id, "quantity": amount})
+
+func _transfer_to_container(
+	player_id: String,
+	item_id: String,
+	amount: int,
+	container_id: String,
+	target_slot_index: int
+) -> Dictionary:
+	if not _containers.has(container_id):
+		return _failure("CONTAINER_NOT_FOUND")
+	if String(_open_containers.get(player_id, "")) != container_id:
+		return _failure("TARGET_CONTAINER_ACCESS_DENIED")
+	var item: Dictionary = _items[item_id]
+	var location: Dictionary = item.get("location", {})
+	if String(location.get("kind", "")) == "CONTAINER" and String(location.get("container_id", "")) == container_id:
+		return _success({"item_id": item_id, "container_id": container_id, "no_op": true})
+	var container: Dictionary = _containers[container_id]
+	var slots: Array = Array(container.get("slots", [])).duplicate()
+	if slots.size() >= int(container.get("capacity", 0)):
+		return _failure("CONTAINER_FULL")
+	var moved_item_id := _extract_transfer_item(item_id, amount)
+	if moved_item_id.is_empty():
+		return _failure("INVALID_TRANSFER_QUANTITY")
+	_remove_from_source(item_id if moved_item_id == item_id else "", location)
+	var insertion_index := target_slot_index
+	if insertion_index < 0 or insertion_index > slots.size():
+		insertion_index = slots.size()
+	slots.insert(insertion_index, moved_item_id)
+	container["slots"] = slots
+	_containers[container_id] = container
+	var moved: Dictionary = _items[moved_item_id]
+	moved["location"] = {"kind": "CONTAINER", "container_id": container_id}
+	_items[moved_item_id] = moved
+	return _success({"item_id": moved_item_id, "container_id": container_id, "quantity": amount, "target_slot_index": insertion_index})
+
+func _transfer_to_stack(player_id: String, source_id: String, amount: int, target_id: String) -> Dictionary:
+	if source_id == target_id:
+		return _failure("STACK_TARGET_EQUALS_SOURCE")
+	if not _items.has(target_id):
+		return _failure("ITEM_NOT_FOUND")
+	var target_access := _accessible_item(player_id, target_id)
+	if not bool(target_access.get("success", false)):
+		return target_access
+	var source: Dictionary = _items[source_id]
+	var target: Dictionary = _items[target_id]
+	if String(source.get("definition_id", "")) != String(target.get("definition_id", "")):
+		return _failure("STACK_DEFINITION_MISMATCH")
+	var source_location: Dictionary = source.get("location", {})
+	var target_location: Dictionary = target.get("location", {})
+	if String(target_location.get("kind", "")) == "WORLD":
+		return _failure("STACK_TARGET_NOT_ACCESSIBLE")
+	target["quantity"] = int(target.get("quantity", 1)) + amount
+	_items[target_id] = target
+	if amount == int(source.get("quantity", 1)):
+		_remove_from_source(source_id, source_location)
+		_items.erase(source_id)
+	else:
+		source["quantity"] = int(source.get("quantity", 1)) - amount
+		_items[source_id] = source
+	return _success({"item_id": target_id, "quantity": int(target.get("quantity", 1)), "moved_quantity": amount})
+
+func _extract_transfer_item(item_id: String, amount: int) -> String:
+	var item: Dictionary = _items[item_id]
+	var source_quantity := int(item.get("quantity", 1))
+	if amount < 1 or amount > source_quantity:
+		return ""
+	if amount == source_quantity:
+		return item_id
+	item["quantity"] = source_quantity - amount
+	_items[item_id] = item
+	var new_id := "%s/transfer/%d" % [item_id, _revision + 1]
+	var moved := item.duplicate(true)
+	moved["item_id"] = new_id
+	moved["quantity"] = amount
+	_items[new_id] = moved
+	return new_id
+
+func _accessible_item(player_id: String, item_id: String) -> Dictionary:
+	if not _items.has(item_id):
+		return _failure("ITEM_NOT_FOUND")
+	var location: Dictionary = _items[item_id].get("location", {})
+	match String(location.get("kind", "")):
+		"WORLD":
+			return _success()
+		"INVENTORY":
+			return _success() if String(location.get("player_id", "")) == player_id else _failure("PLAYER_PERMISSION_DENIED")
+		"CONTAINER":
+			return _success() if String(_open_containers.get(player_id, "")) == String(location.get("container_id", "")) else _failure("SOURCE_CONTAINER_ACCESS_DENIED")
+		"MOUNT":
+			return _success() if String(location.get("owner_player_id", "")) == player_id else _failure("PLAYER_PERMISSION_DENIED")
+	return _failure("ITEM_LOCATION_INVALID")
+
+func _remove_from_source(item_id: String, location: Dictionary) -> void:
+	if item_id.is_empty():
+		return
+	match String(location.get("kind", "")):
+		"INVENTORY":
+			_remove_from_inventory(String(location.get("player_id", "")), item_id)
+		"CONTAINER":
+			var container_id := String(location.get("container_id", ""))
+			if _containers.has(container_id):
+				var container: Dictionary = _containers[container_id]
+				var slots: Array = Array(container.get("slots", [])).duplicate()
+				slots.erase(item_id)
+				container["slots"] = slots
+				_containers[container_id] = container
+
+func _add_to_inventory(player_id: String, item_id: String) -> void:
+	ensure_player(player_id)
+	var inventory: Dictionary = _inventories[player_id]
+	var values: Array = Array(inventory.get("inventory", [])).duplicate()
+	if item_id not in values:
+		values.append(item_id)
+	inventory["inventory"] = values
+	_inventories[player_id] = inventory
 func _mount(player_id:String,item_id:String,mount_id:String)->Dictionary:
 	var access:=_owned_item(player_id,item_id); if not bool(access.get("success",false)):return access
 	if not _mounts.has(mount_id):return _failure("MOUNT_NOT_FOUND")
@@ -135,11 +324,42 @@ func _detach(player_id:String,mount_id:String)->Dictionary:
 func _select_hotbar(player_id:String,index:int)->Dictionary:
 	if index<0 or index>7:return _failure("INVALID_HOTBAR_INDEX")
 	var inv:Dictionary=_inventories[player_id]; inv["selected_hotbar_index"]=index; _inventories[player_id]=inv; return _success({"selected_hotbar_index":index})
+
+func _assign_hotbar(player_id: String, item_id: String, slot_index: int) -> Dictionary:
+	if slot_index < 0 or slot_index > 7:
+		return _failure("INVALID_HOTBAR_INDEX")
+	var access := _owned_item(player_id, item_id)
+	if not bool(access.get("success", false)):
+		return access
+	var inventory: Dictionary = _inventories[player_id]
+	var hotbar: Array = Array(inventory.get("hotbar", [])).duplicate()
+	while hotbar.size() < 8:
+		hotbar.append("")
+	for index in range(hotbar.size()):
+		if String(hotbar[index]) == item_id:
+			hotbar[index] = ""
+	hotbar[slot_index] = item_id
+	inventory["hotbar"] = hotbar
+	_inventories[player_id] = inventory
+	return _success({"item_id": item_id, "slot_index": slot_index})
+
 func _owned_item(player_id:String,item_id:String)->Dictionary:
 	if not _items.has(item_id):return _failure("ITEM_NOT_FOUND")
 	var loc:Dictionary=_items[item_id].get("location",{}); return _success() if String(loc.get("kind",""))=="INVENTORY" and String(loc.get("player_id",""))==player_id else _failure("PLAYER_PERMISSION_DENIED")
+
 func _remove_from_inventory(player_id:String,item_id:String)->void:
-	var inv:Dictionary=_inventories[player_id]; var list:Array=inv["inventory"]; list.erase(item_id); inv["inventory"]=list; _inventories[player_id]=inv
+	if not _inventories.has(player_id):
+		return
+	var inv:Dictionary=_inventories[player_id]
+	var list:Array=Array(inv.get("inventory", [])).duplicate()
+	list.erase(item_id)
+	inv["inventory"]=list
+	var hotbar: Array = Array(inv.get("hotbar", [])).duplicate()
+	for index in range(hotbar.size()):
+		if String(hotbar[index]) == item_id:
+			hotbar[index] = ""
+	inv["hotbar"] = hotbar
+	_inventories[player_id]=inv
 
 func create_snapshot()->Dictionary:
 	var body={"schema":SNAPSHOT_SCHEMA,"authority_owner_id":_authority_owner_id,"authority_epoch":_authority_epoch,"revision":_revision,"tick":_tick,"items":_sorted_values(_items),"inventories":_sorted_map(_inventories),"containers":_sorted_values(_containers),"mounts":_sorted_values(_mounts),"open_containers":_sorted_map(_open_containers)}

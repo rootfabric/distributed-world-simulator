@@ -21,7 +21,7 @@ func _init() -> void:
 
 func _test_identity(strategy: Dictionary) -> void:
 	_assert(String(strategy.get("schema", "")) == "planet_simulator.single_server_multiplayer_roadmap.v1", "Strategy schema mismatch")
-	_assert(int(strategy.get("document_revision", 0)) == 5, "Strategy revision mismatch")
+	_assert(int(strategy.get("document_revision", 0)) == 6, "Strategy revision mismatch")
 	_assert(String(strategy.get("checkpoint", "")) == "v16.9.5-roadmap-single-server-multiplayer-first", "Strategy checkpoint mismatch")
 	_assert(String(strategy.get("build_id", "")) == "post-a2-single-server-multiplayer-first", "Strategy build ID mismatch")
 	_assert(String(strategy.get("status", "")) == "accepted", "Roadmap checkpoint must be accepted")
@@ -42,7 +42,7 @@ func _test_sequence_and_milestones(strategy: Dictionary) -> void:
 	_assert(String(by_id.get("M2", {}).get("status", "")) == "accepted_with_gates", "M2 must be accepted with gates")
 	_assert(String(by_id.get("M3", {}).get("status", "")) == "accepted", "M3 must be accepted")
 	_assert(String(by_id.get("M4", {}).get("status", "")) == "accepted", "M4 must be accepted")
-	_assert(String(by_id.get("M5", {}).get("status", "")) == "preparation_in_progress", "M5 preparation must be current")
+	_assert(String(by_id.get("M5", {}).get("status", "")) == "candidate", "M5 candidate must be current")
 	_assert(by_id.get("M1", {}).get("closes", []) == ["A2-D01", "A2-D02"], "M1 debt closure mismatch")
 	_assert(by_id.get("M2", {}).get("depends_on", []) == ["M1"], "M2 dependency mismatch")
 	_assert(by_id.get("M3", {}).get("depends_on", []) == ["M2"], "M3 dependency mismatch")
@@ -51,7 +51,7 @@ func _test_sequence_and_milestones(strategy: Dictionary) -> void:
 	_assert(by_id.get("M6", {}).get("closes", []) == ["A2-D04"], "M6 debt closure mismatch")
 	_assert(by_id.get("A3", {}).get("depends_on", []) == ["M6"], "A3 dependency mismatch")
 	_assert(String(by_id.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status mismatch")
-	_assert(String(by_id.get("M5", {}).get("status", "")) == "preparation_in_progress", "M5 preparation roadmap status mismatch")
+	_assert(String(by_id.get("M5", {}).get("status", "")) == "candidate", "M5 candidate roadmap status mismatch")
 	_assert(String(by_id.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 must be deferred")
 	_assert("A3" in by_id.get("B1", {}).get("depends_on", []), "B1 must depend on A3")
 	_assert("B2" in by_id.get("N3", {}).get("depends_on", []), "N3 must wait for B2")
@@ -70,7 +70,7 @@ func _test_contracts_and_transport_policy(strategy: Dictionary) -> void:
 
 func _test_a2_alignment(strategy: Dictionary, a2: Dictionary) -> void:
 	_assert(String(a2.get("status", "")) == "accepted", "A2 must be accepted")
-	_assert(int(a2.get("document_revision", 0)) == 5, "A2 manifest revision mismatch")
+	_assert(int(a2.get("document_revision", 0)) == 6, "A2 manifest revision mismatch")
 	_assert(String(a2.get("post_a2_strategy_checkpoint", "")) == String(strategy.get("checkpoint", "")), "A2 strategy checkpoint link mismatch")
 	_assert(String(a2.get("post_a2_strategy_manifest", "")) == "config/network/single-server-multiplayer-roadmap.v1.json", "A2 strategy manifest link missing")
 	var mapping: Dictionary = strategy.get("a2_debt_closure", {})
@@ -82,11 +82,11 @@ func _test_a2_alignment(strategy: Dictionary, a2: Dictionary) -> void:
 	_assert(not bool(a2.get("implementation_assessment", {}).get("multi_authority_work_allowed", true)), "A2 must still block multi-authority work")
 
 func _test_network_roadmap_alignment(strategy: Dictionary, roadmap: Dictionary) -> void:
-	_assert(int(roadmap.get("document_revision", 0)) == 24, "Network roadmap revision mismatch")
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.3-domain-m4-canonical-shared-gameplay", "Network roadmap checkpoint mismatch")
+	_assert(int(roadmap.get("document_revision", 0)) == 25, "Network roadmap revision mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "Network roadmap checkpoint mismatch")
 	_assert(String(roadmap.get("strategy_decision", "")) == "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST", "Network roadmap strategy mismatch")
 	_assert(roadmap.get("approved_sequence_after_a2", []) == strategy.get("priority_sequence", []), "Network roadmap sequence mismatch")
-	_assert(String(roadmap.get("current_gate", "")).begins_with("M5"), "Network roadmap current gate must be M5")
+	_assert(String(roadmap.get("current_gate", "")).begins_with("M6"), "Network roadmap current gate must be M6")
 	var by_id: Dictionary = {}
 	for value in roadmap.get("phases", []):
 		if value is Dictionary:
@@ -96,7 +96,7 @@ func _test_network_roadmap_alignment(strategy: Dictionary, roadmap: Dictionary) 
 	_assert(String(by_id.get("M2", {}).get("status", "")) == "accepted_with_gates", "M2 accepted-with-gates roadmap status mismatch")
 	_assert(String(by_id.get("M3", {}).get("status", "")) == "accepted", "M3 roadmap status mismatch")
 	_assert(String(by_id.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status mismatch")
-	_assert(String(by_id.get("M5", {}).get("status", "")) == "preparation_in_progress", "M5 preparation roadmap status mismatch")
+	_assert(String(by_id.get("M5", {}).get("status", "")) == "candidate", "M5 candidate roadmap status mismatch")
 	_assert(String(by_id.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status mismatch")
 	_assert(String(by_id.get("N3", {}).get("status", "")) == "blocked_until_A3_B2", "N3 roadmap status mismatch")
 
@@ -124,7 +124,9 @@ func _test_documentation_and_runners() -> void:
 		_assert(runner.contains("res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd"), "Full runner missing M4 contract test")
 		_assert(runner.contains("res://tests/runtime/test_m4_graphical_shared_gameplay_processes.gd"), "Full runner missing M4 process test")
 		_assert(runner.contains("res://tests/runtime/test_m5_graphical_acceptance_preparation.gd"), "Full runner missing pre-M5 preparation test")
-		_assert(runner.contains("v16.10.3-domain-m4-canonical-shared-gameplay"), "Full runner checkpoint is stale")
+		_assert(runner.contains("res://tests/runtime/test_m5_graphical_acceptance_contracts.gd"), "Full runner missing M5 acceptance contracts")
+		_assert(runner.contains("res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd"), "Full runner missing M5 process acceptance")
+		_assert(runner.contains("v16.10.4-testing-m5-graphical-multiplayer-acceptance"), "Full runner checkpoint is stale")
 
 func _load_json(path: String) -> Dictionary:
 	var parsed = JSON.parse_string(_read(path))

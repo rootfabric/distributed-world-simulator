@@ -24,7 +24,7 @@ func _init() -> void:
 func _test_manifest_identity(manifest: Dictionary) -> void:
 	_assert(not manifest.is_empty(), "A2 freeze manifest is missing or invalid")
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.networked_gameplay_architecture.v1", "A2 schema mismatch")
-	_assert(int(manifest.get("document_revision", 0)) == 5, "A2 document revision mismatch")
+	_assert(int(manifest.get("document_revision", 0)) == 6, "A2 document revision mismatch")
 	_assert(String(manifest.get("checkpoint", "")) == "v16.9.4-architecture-a2-networked-gameplay", "A2 checkpoint mismatch")
 	_assert(String(manifest.get("build_id", "")) == "a2-networked-gameplay-audit-freeze", "A2 build ID mismatch")
 	_assert(String(manifest.get("status", "")) == "accepted", "A2 status must be accepted after independent verification")
@@ -87,7 +87,7 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 	_assert(bool(assessment.get("shared_wire_validators_independent_from_authority_implementations", false)), "M1 shared validator closure is not recorded")
 	_assert(bool(assessment.get("two_graphical_client_windows_proven", false)), "M3 graphical two-client evidence is not recorded")
 	_assert(bool(assessment.get("full_item_graph_contention_over_dedicated_transport_proven", false)), "M4 canonical Item Graph contention evidence is not recorded")
-	_assert(not bool(assessment.get("ui_driven_graphical_acceptance_proven", true)), "M5 UI-driven acceptance must remain unproven during preparation")
+	_assert(bool(assessment.get("ui_driven_graphical_acceptance_proven", false)), "M5 UI-driven acceptance evidence missing")
 	_assert(bool(assessment.get("b1_allowed", false)), "B1 should be allowed behind frozen B0 constraints")
 	_assert(not bool(assessment.get("multi_authority_work_allowed", true)), "Multi-authority work must remain blocked")
 	var debt: Array = manifest.get("known_debt", [])
@@ -101,7 +101,7 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 	for debt_id in ["A2-D01", "A2-D02"]:
 		_assert(String(debt_by_id.get(debt_id, {}).get("status", "")) == "closed", "%s must be closed by M1" % debt_id)
 		_assert(String(debt_by_id.get(debt_id, {}).get("closed_by", "")) == "M1", "%s closure checkpoint mismatch" % debt_id)
-	_assert(String(debt_by_id.get("A2-D03", {}).get("status", "")) == "runtime_closed_acceptance_pending", "A2-D03 must remain pending until M5 UI acceptance")
+	_assert(String(debt_by_id.get("A2-D03", {}).get("status", "")) == "closed", "A2-D03 must be closed by M5 UI acceptance")
 	_assert(String(debt_by_id.get("A2-D03", {}).get("closure_before", "")) == "A3", "A2-D03 must close before A3")
 	_assert(String(debt_by_id.get("A2-D04", {}).get("status", "")) == "open", "A2-D04 must remain open until M6")
 	_assert(String(debt_by_id.get("A2-D04", {}).get("closure_before", "")) == "A3", "A2-D04 must close before A3")
@@ -115,7 +115,7 @@ func _test_assessment_debt_and_gates(manifest: Dictionary) -> void:
 
 
 func _test_roadmap_alignment(roadmap: Dictionary) -> void:
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.3-domain-m4-canonical-shared-gameplay", "Roadmap current checkpoint mismatch")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "Roadmap current checkpoint mismatch")
 	_assert(String(roadmap.get("runtime_base_checkpoint", "")) == "v16.10.3-domain-m4-canonical-shared-gameplay", "Roadmap runtime base mismatch")
 	var phases: Dictionary = {}
 	for phase_value in roadmap.get("phases", []):
@@ -128,7 +128,7 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 	_assert(String(phases.get("M2", {}).get("status", "")) == "accepted_with_gates", "M2 roadmap status must be accepted with gates")
 	_assert(String(phases.get("M3", {}).get("status", "")) == "accepted", "M3 roadmap status must be accepted")
 	_assert(String(phases.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status must be accepted")
-	_assert(String(phases.get("M5", {}).get("status", "")) == "preparation_in_progress", "M5 roadmap status must be preparation_in_progress")
+	_assert(String(phases.get("M5", {}).get("status", "")) == "candidate", "M5 roadmap status must be candidate")
 	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_after_A3", "B1 roadmap status must be deferred after A3")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
@@ -204,7 +204,7 @@ func _test_regression_runner_coverage() -> void:
 			"res://tests/runtime/test_m5_graphical_acceptance_preparation.gd",
 		]:
 			_assert(runner.contains(path), "Regression runner does not cover accepted H2/H3/A2 evidence: %s" % path)
-		_assert(runner.contains("v16.10.3-domain-m4-canonical-shared-gameplay"), "Regression runner checkpoint is stale")
+		_assert(runner.contains("v16.10.4-testing-m5-graphical-multiplayer-acceptance"), "Regression runner checkpoint is stale")
 
 
 func _load_json(path: String) -> Dictionary:

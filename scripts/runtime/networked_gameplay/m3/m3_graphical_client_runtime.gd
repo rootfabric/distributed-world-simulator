@@ -19,6 +19,7 @@ var _replica
 var _configured := false
 var _joined := false
 var _join_sent := false
+var _join_operation_id := ""
 var _host := "127.0.0.1"
 var _port := 0
 var _logical_player_id := "a"
@@ -52,6 +53,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_connect_timeout_ms = int(config.get("connect_timeout_ms", 30000))
 	_command_timeout_ms = int(config.get("command_timeout_ms", 8000))
 	_automated_acceptance = bool(config.get("automated_acceptance", false))
+	_join_operation_id = ""
 	if _host.is_empty() or _port < 1 or _port > 65535 or _logical_player_id.is_empty():
 		return _failure("INVALID_M3_CLIENT_CONFIGURATION")
 	_replica = Replica.new()
@@ -75,7 +77,13 @@ func _process(_delta: float) -> void:
 		_fail_connection(String(polled.get("error_code", "M3_CLIENT_POLL_FAILED"))); return
 	if not _join_sent and String(_boundary.get_peer_snapshot(SERVER_PEER_ID).get("state", "")) == "TRANSPORT_CONNECTED":
 		if not _mark_peer_ready(): _fail_connection("M3_PEER_READY_FAILED"); return
-		_send("JOIN", {"logical_player_id": _logical_player_id, "operation_id": "operation/m3/%s/join/%d" % [_logical_player_id, Time.get_ticks_msec()]})
+		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
+		if _join_operation_id.is_empty():
+			_fail_connection("INVALID_M3_JOIN_OPERATION_ID")
+			return
+		if not _send("JOIN", {"logical_player_id": _logical_player_id, "operation_id": _join_operation_id}):
+			_fail_connection("M3_JOIN_SEND_FAILED")
+			return
 		_join_sent = true
 	for event_value in polled.get("details", {}).get("events", []):
 		if not event_value is Dictionary: continue
@@ -220,7 +228,9 @@ func get_item_graph_snapshot() -> Dictionary: return _item_graph_snapshot.duplic
 func request_graceful_leave(timeout_ms: int = 2500) -> Dictionary:
 	if not _joined: return _success({"already_left": true})
 	_leave_acknowledged = false
-	var operation_id := "operation/m3/%s/leave/%d" % [_logical_player_id, Time.get_ticks_msec()]
+	var operation_id := Support.transport_bound_operation_id(_logical_player_id, "leave", _transport_session_id)
+	if operation_id.is_empty():
+		return _failure("INVALID_M3_LEAVE_OPERATION_ID")
 	_send("LEAVE", {"logical_player_id": _logical_player_id, "operation_id": operation_id})
 	var started := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started <= timeout_ms:
@@ -272,7 +282,7 @@ func get_report() -> Dictionary:
 		"schema": SCHEMA, "checkpoint": Support.CHECKPOINT, "build_id": Support.BUILD_ID,
 		"configured": _configured, "joined": _joined, "logical_player_id": _logical_player_id,
 		"player_entity_id": _player_entity_id, "ownership_epoch": _ownership_epoch,
-		"transport_session_id": _transport_session_id, "input_sequence": _input_sequence,
+		"transport_session_id": _transport_session_id, "join_operation_id": _join_operation_id, "input_sequence": _input_sequence,
 		"messages_sent": _messages_sent, "messages_received": _messages_received,
 		"snapshot_updates": _snapshot_updates, "delta_updates": _delta_updates,
 		"server_disconnects": _server_disconnects, "last_error_code": _last_error_code,

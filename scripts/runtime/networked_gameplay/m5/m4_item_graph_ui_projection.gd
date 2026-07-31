@@ -118,6 +118,8 @@ func build_screen(
 		resolved_external = requested_external
 	var player_model := _build_inventory_container(player_id, inventory_record, transient_overlay)
 	var hotbar_model := _build_hotbar_container(player_id, inventory_record, transient_overlay)
+	var world_model := _build_world_container(transient_overlay)
+	var mounts_model := _build_mount_container(transient_overlay)
 	var external_model: Dictionary = {}
 	if not resolved_external.is_empty():
 		external_model = _build_external_container(resolved_external, transient_overlay)
@@ -131,6 +133,8 @@ func build_screen(
 		"logical_player_id": player_id,
 		"player": player_model,
 		"hotbar": hotbar_model,
+		"world": world_model,
+		"mounts_view": mounts_model,
 		"external": external_model,
 		"external_container_id": resolved_external,
 		"selected_item_id": selected_item_id,
@@ -215,6 +219,76 @@ func _build_external_container(container_id: String, transient_overlay: Dictiona
 	)
 
 
+func _build_world_container(transient_overlay: Dictionary) -> Dictionary:
+	var ids: Array = []
+	for item_value in _snapshot.get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var item: Dictionary = item_value
+		if String(item.get("location", {}).get("kind", "")) == "WORLD":
+			ids.append(String(item.get("item_id", "")))
+	ids.sort()
+	return _build_slot_container(
+		"world/shared",
+		"Предметы мира",
+		ids,
+		maxi(8, ids.size()),
+		-1,
+		transient_overlay,
+		"world"
+	)
+
+
+func _build_mount_container(transient_overlay: Dictionary) -> Dictionary:
+	var hidden_ids := PackedStringArray(transient_overlay.get("hidden_item_ids", []))
+	var pending_ids := PackedStringArray(transient_overlay.get("pending_item_ids", []))
+	var cells: Array[Dictionary] = []
+	var mounts: Array = Array(_snapshot.get("mounts", [])).duplicate(true)
+	mounts.sort_custom(func(a, b): return String(a.get("mount_id", "")) < String(b.get("mount_id", "")))
+	for slot_index in range(mounts.size()):
+		var mount: Dictionary = mounts[slot_index]
+		var mount_id := String(mount.get("mount_id", ""))
+		var item_id := String(mount.get("item_id", ""))
+		var cell := _build_cell(item_id, mount_id, slot_index, false)
+		cell["target_container_id"] = mount_id
+		cell["source_container_id"] = mount_id
+		cell["mount_id"] = mount_id
+		cell["display_name"] = String(cell.get("display_name", "Пусто")) if not item_id.is_empty() else "Монтажное гнездо"
+		cell["ui_transient_hidden"] = not item_id.is_empty() and hidden_ids.has(item_id)
+		cell["ui_transient_pending"] = not item_id.is_empty() and pending_ids.has(item_id)
+		cells.append(cell)
+	return {
+		"schema": CONTAINER_VIEW_SCHEMA,
+		"container_id": "mounts/shared",
+		"display_name": "Монтаж",
+		"storage_mode": "SLOTS",
+		"is_slot_container": true,
+		"slot_count": mounts.size(),
+		"used_entries": _non_empty_count(cells.map(func(cell): return cell.get("item_id", ""))),
+		"visual_capacity": mounts.size(),
+		"columns": maxi(1, mounts.size()),
+		"cells": cells,
+		"rendered_cell_count": cells.size(),
+		"physical_cell_count": cells.size(),
+		"projected_total_count": cells.size(),
+		"matched_count": cells.size(),
+		"unfiltered_count": cells.size(),
+		"virtualized": false,
+		"page_index": 0,
+		"page_count": 1,
+		"page_size": mounts.size(),
+		"pooling_enabled": true,
+		"current_mass_kg": 0.0,
+		"maximum_mass_kg": -1.0,
+		"current_volume_l": 0.0,
+		"maximum_volume_l": -1.0,
+		"allow_nested_containers": false,
+		"revision": _last_revision,
+		"canonical_checksum": _last_checksum,
+		"visual_role": "mounts",
+	}
+
+
 func _build_slot_container(
 	container_id: String,
 	display_name: String,
@@ -285,6 +359,7 @@ func _build_cell(item_id: String, container_id: String, slot_index: int, selecte
 		"total_volume_l": 0.0,
 		"max_stack": int(metadata.get("max_stack", 1)),
 		"owns_container": definition_id == "item/crate",
+		"owned_container_id": _owned_container_for_item(item_id),
 		"relation_kind": String(location.get("kind", "")),
 		"source_container_id": container_id,
 		"source_slot_index": slot_index,
@@ -330,6 +405,15 @@ func _item_by_id(item_id: String) -> Dictionary:
 		if item_value is Dictionary and String(item_value.get("item_id", "")) == item_id:
 			return Dictionary(item_value).duplicate(true)
 	return {}
+
+
+func _owned_container_for_item(item_id: String) -> String:
+	if item_id.is_empty():
+		return ""
+	for container_value in _snapshot.get("containers", []):
+		if container_value is Dictionary and String(container_value.get("owner_item_id", "")) == item_id:
+			return String(container_value.get("container_id", ""))
+	return ""
 
 
 func _container_by_id(container_id: String) -> Dictionary:

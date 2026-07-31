@@ -26,6 +26,11 @@ static func defaults() -> Dictionary:
 		"m3_result_file": "",
 		"m3_peer_result_file": "",
 		"m3_phase": 0,
+		"m5_result_file": "",
+		"m5_peer_result_file": "",
+		"m5_control_file": "",
+		"m5_screenshot_dir": "",
+		"m5_phase": 0,
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
 		"shutdown_after_ms": 0,
@@ -86,6 +91,16 @@ static func parse(arguments) -> Dictionary:
 				options["m3_peer_result_file"] = value
 			"m3-phase":
 				options["m3_phase"] = _parse_non_negative_int(value, key, errors)
+			"m5-result-file":
+				options["m5_result_file"] = value
+			"m5-peer-result-file":
+				options["m5_peer_result_file"] = value
+			"m5-control-file":
+				options["m5_control_file"] = value
+			"m5-screenshot-dir":
+				options["m5_screenshot_dir"] = value
+			"m5-phase":
+				options["m5_phase"] = _parse_non_negative_int(value, key, errors)
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":

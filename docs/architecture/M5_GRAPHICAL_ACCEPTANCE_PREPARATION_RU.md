@@ -3,7 +3,7 @@
 База: `main @ 2879fdb`.
 
 Подготовительный checkpoint: `v16.10.3-pre-m5-graphical-acceptance-preparation`.
-Он не объявляет M5 завершённым. Его задача — связать уже принятый M4 Item Graph
+Эта подготовительная граница завершена и использована checkpoint-кандидатом M5. Его задача — связать уже принятый M4 Item Graph
 с существующим inventory UI без второго gameplay path и подготовить стабильную
 многопроцессную среду для будущей UI-driven приёмки.
 
@@ -65,4 +65,4 @@ inventory gesture / hotbar key
 - disconnect/reconnect в середине UI operation;
 - финальный server/A/B checksum barrier после UI-driven сценария.
 
-До закрытия этих gates статус M5 остаётся `preparation_in_progress`.
+Все перечисленные gates закрыты в `v16.10.4-testing-m5-graphical-multiplayer-acceptance`; см. `M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`.

@@ -14,14 +14,16 @@ func accept_snapshot(snapshot: Dictionary) -> Dictionary:
 		return _failure("TRANSIENT_SNAPSHOT_REVISION_ROLLBACK")
 	_last_snapshot_revision = revision
 	var completed: Array[String] = []
+	var preserve_cursor := false
 	for operation_id_value in _pending.keys():
 		var operation_id := String(operation_id_value)
 		var record: Dictionary = _pending[operation_id]
 		if String(record.get("status", "")) == "SUCCEEDED" and revision > int(record.get("base_revision", -1)):
 			completed.append(operation_id)
+			preserve_cursor = preserve_cursor or bool(record.get("preserve_cursor", false))
 	for operation_id in completed:
 		_pending.erase(operation_id)
-	if not _cursor.is_empty() and not completed.is_empty():
+	if not _cursor.is_empty() and not completed.is_empty() and not preserve_cursor:
 		_cursor.clear()
 	return _success({"revision": revision, "completed_operations": completed})
 
@@ -78,12 +80,35 @@ func accept_command_result(result: Dictionary) -> Dictionary:
 	var succeeded := bool(result.get("success", false))
 	record["status"] = "SUCCEEDED" if succeeded else "REJECTED"
 	record["result"] = result.duplicate(true)
+	var ui_context: Dictionary = Dictionary(result.get("ui_context", {}))
+	var remaining_quantity := int(ui_context.get("cursor_remaining_quantity", 0))
+	record["preserve_cursor"] = succeeded and remaining_quantity > 0
+	if succeeded and remaining_quantity > 0 and not _cursor.is_empty():
+		_cursor["quantity"] = remaining_quantity
 	_pending[operation_id] = record
 	_result_history.append(record.duplicate(true))
 	if not succeeded:
 		_pending.erase(operation_id)
 		_cursor.clear()
 	return _success({"status": record["status"], "operation_id": operation_id})
+
+
+func has_cursor() -> bool:
+	return not _cursor.is_empty()
+
+
+func get_cursor() -> Dictionary:
+	return _cursor.duplicate(true)
+
+
+func update_cursor_quantity(quantity: int) -> Dictionary:
+	if _cursor.is_empty():
+		return _failure("CURSOR_NOT_ACTIVE")
+	if quantity < 1:
+		_cursor.clear()
+		return _success({"cursor": {}})
+	_cursor["quantity"] = quantity
+	return _success({"cursor": _cursor.duplicate(true)})
 
 
 func create_overlay() -> Dictionary:

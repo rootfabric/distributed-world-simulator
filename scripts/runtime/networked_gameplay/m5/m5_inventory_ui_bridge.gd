@@ -84,13 +84,17 @@ func preview_transfer(
 ) -> Dictionary:
 	if not _configured:
 		return _failure("M5_UI_BRIDGE_NOT_CONFIGURED")
-	return _commands.preview_transfer(
-		item_id,
-		quantity,
-		target_container_id,
-		target_slot_index,
-		target_item_id
-	)
+	var source := find_cell(item_id)
+	return _commands.preview_action("transfer", {
+		"item_id": item_id,
+		"quantity": quantity,
+		"source_quantity": int(source.get("quantity", quantity)),
+		"source_container_id": String(source.get("source_container_id", "")),
+		"source_slot_index": int(source.get("source_slot_index", -1)),
+		"target_container_id": target_container_id,
+		"target_slot_index": target_slot_index,
+		"target_item_id": target_item_id,
+	})
 
 
 func begin_cursor_carry(
@@ -112,6 +116,69 @@ func begin_cursor_carry(
 	if bool(result.get("success", false)):
 		_refresh_view()
 	return result
+
+
+func begin_cursor_from_cell(cell_data: Dictionary, quantity_mode: String = "ALL") -> Dictionary:
+	if not _configured:
+		return _failure("M5_UI_BRIDGE_NOT_CONFIGURED")
+	var item_id := String(cell_data.get("item_id", "")).strip_edges()
+	var total_quantity := int(cell_data.get("quantity", 0))
+	if item_id.is_empty() or total_quantity < 1:
+		return _failure("INVALID_CURSOR_SOURCE")
+	var quantity := total_quantity
+	if quantity_mode == "HALF_CEIL":
+		quantity = maxi(1, int(ceil(float(total_quantity) * 0.5)))
+	return begin_cursor_carry(
+		item_id,
+		quantity,
+		String(cell_data.get("source_container_id", "")),
+		int(cell_data.get("source_slot_index", -1))
+	)
+
+
+func place_cursor_blocking(
+	target_container_id: String,
+	target_slot_index: int = -1,
+	target_item_id: String = "",
+	quantity_mode: String = "ALL",
+	operation_id: String = ""
+) -> Dictionary:
+	if not _configured:
+		return _failure("M5_UI_BRIDGE_NOT_CONFIGURED")
+	if not _transient.has_cursor():
+		return _failure("CURSOR_NOT_ACTIVE")
+	var cursor: Dictionary = _transient.get_cursor()
+	var cursor_quantity := int(cursor.get("quantity", 0))
+	var transfer_quantity := cursor_quantity if quantity_mode != "ONE" else 1
+	var remaining_quantity := maxi(0, cursor_quantity - transfer_quantity)
+	return submit_ui_action_blocking("transfer", {
+		"item_id": String(cursor.get("item_id", "")),
+		"quantity": transfer_quantity,
+		"source_quantity": cursor_quantity,
+		"source_container_id": String(cursor.get("source_container_id", "")),
+		"source_slot_index": int(cursor.get("source_slot_index", -1)),
+		"target_container_id": target_container_id,
+		"target_slot_index": target_slot_index,
+		"target_item_id": target_item_id,
+		"cursor_remaining_quantity": remaining_quantity,
+	}, operation_id)
+
+
+func has_cursor() -> bool:
+	return _transient != null and _transient.has_cursor()
+
+
+func get_cursor() -> Dictionary:
+	return _transient.get_cursor() if _transient != null else {}
+
+
+func find_cell(item_id: String) -> Dictionary:
+	for key in ["player", "hotbar", "external", "world", "mounts_view"]:
+		var container: Dictionary = Dictionary(_last_view.get(key, {}))
+		for cell_value in container.get("cells", []):
+			if cell_value is Dictionary and String(cell_value.get("item_id", "")) == item_id:
+				return Dictionary(cell_value).duplicate(true)
+	return {}
 
 
 func cancel_cursor() -> Dictionary:
@@ -208,6 +275,9 @@ func _on_command_started(command: Dictionary) -> void:
 
 func _on_command_finished(result: Dictionary) -> void:
 	_transient.accept_command_result(result)
+	var snapshot: Dictionary = _projection.get_snapshot()
+	if not snapshot.is_empty():
+		_transient.accept_snapshot(snapshot)
 	_refresh_view()
 	command_completed.emit(result.duplicate(true))
 

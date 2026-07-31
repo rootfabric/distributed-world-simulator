@@ -170,3 +170,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `checkpoints/2026-07-29_V16_8_1_ARCHITECTURE_A1_GENERIC_AGGREGATE_RU.md` — A1 checkpoint.
 
 - `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md` — атомарные multi-aggregate commits и transactional outbox.
+
+## M5 graphical multiplayer acceptance
+
+- [`architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
+- [`checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)

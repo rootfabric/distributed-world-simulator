@@ -69,6 +69,7 @@ var _m4_item_snapshot_updates: int = 0
 var _m4_item_commands: int = 0
 var _m4_item_rejections: int = 0
 var m5_networked_inventory_shell
+var _m5_acceptance_input_enabled: bool = false
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -83,6 +84,8 @@ func configure_runtime(context: Dictionary) -> void:
 	runtime_role = String(context.get("runtime_role", runtime_role))
 	presentation_enabled = bool(context.get("presentation_enabled", true))
 	local_input_enabled = bool(context.get("local_input_enabled", true))
+	var launch_options: Dictionary = context.get("launch_options", {})
+	_m5_acceptance_input_enabled = int(launch_options.get("m5_phase", 0)) > 0
 	var options: Dictionary = world_definition.get("options", {})
 	var spawn_values = options.get("spawn", [0.0, 1.2, 6.0])
 	if spawn_values is Array and spawn_values.size() >= 3:
@@ -305,6 +308,7 @@ func _apply_m3_network_input(delta: float) -> void:
 	if (
 		m3_multiplayer_client_runtime.has_method("is_automated_acceptance")
 		and m3_multiplayer_client_runtime.is_automated_acceptance()
+		and not _m5_acceptance_input_enabled
 	):
 		return
 	_m3_input_accumulator += delta
@@ -364,6 +368,10 @@ func m4_execute_item_command(
 	if not bool(result.get("success", false)):
 		_m4_item_rejections += 1
 	return result
+
+
+func get_m5_inventory_shell():
+	return m5_networked_inventory_shell
 
 
 func create_m3_graphical_client_report() -> Dictionary:
@@ -833,8 +841,9 @@ func _command_inventory_toggle(_arguments: Array[String]) -> Dictionary:
 
 
 func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.acceptance_press_drop_selected()
 	return item_gameplay.drop_selected_item() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
-
 
 func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
 	if arguments.is_empty() or not arguments[0].is_valid_int():

@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.networked_gameplay_architecture.v1",
-  "document_revision": 5,
+  "document_revision": 6,
   "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "build_id": "a2-networked-gameplay-audit-freeze",
   "status": "accepted",
@@ -181,7 +181,8 @@
     "b1_priority": "deferred_after_A3",
     "single_server_multiplayer_first": true,
     "shared_wire_validators_independent_from_authority_implementations": true,
-    "ui_driven_graphical_acceptance_proven": false
+    "ui_driven_graphical_acceptance_proven": true,
+    "single_server_graphical_multiplayer_acceptance_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
   },
   "known_debt": [
     {
@@ -217,11 +218,10 @@
       "evidence": "M3 proves two graphical clients; M4 proves canonical Item Graph contention; M5 must prove UI-driven acceptance",
       "closure_before": "A3",
       "delivery_milestone": "M5",
-      "status": "runtime_closed_acceptance_pending",
-      "closure_evidence": [
-        "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
-        "v16.10.3-domain-m4-canonical-shared-gameplay"
-      ]
+      "status": "closed",
+      "closure_evidence": "config/network/graphical-multiplayer-acceptance.v1.json",
+      "closed_by": "M5",
+      "closed_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
     },
     {
       "id": "A2-D04",

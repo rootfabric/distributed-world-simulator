@@ -163,3 +163,11 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - получать изображение только через `runtime_screenshot`, не с рабочего стола;
 - подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
 - перед передачей управления человеку отпускать все удерживаемые actions.
+
+## Current M5 checkpoint
+
+- Candidate: `v16.10.4-testing-m5-graphical-multiplayer-acceptance`.
+- Base: `v16.10.3-pre-m5-graphical-acceptance-preparation` over integrated `main @ 2879fdb`.
+- UI must route through `M5InventoryUiBridge` and `M4ItemCommandAdapter`; direct Item Graph mutation is forbidden.
+- Focused runner: `RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1/.sh`.
+- Next stage: M6 dedicated persistence and recovery.

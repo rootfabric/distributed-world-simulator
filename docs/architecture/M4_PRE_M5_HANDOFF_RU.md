@@ -233,3 +233,7 @@ transport topology, NATS или distributed authority.
 Он добавляет read-only M4 projection, UI command adapter, transient cursor state,
 networked inventory shell и изоляцию MCP/user-data. Это не завершение M5:
 полный UI-driven two-client acceptance остаётся следующим runtime этапом.
+
+## Handoff fulfilled by M5
+
+Требования этого handoff реализованы в `v16.10.4-testing-m5-graphical-multiplayer-acceptance`. UI-driven graphical process acceptance использует тот же M4 authoritative Item Graph и не добавляет второй gameplay path.

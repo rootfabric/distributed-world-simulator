@@ -20,6 +20,7 @@ func _init() -> void:
 	_test_presentation_wire_contract()
 	_test_unified_service_presentation_state()
 	_test_protocol_float_round_trip()
+	_test_transport_bound_operation_identity()
 	_test_remote_presenter()
 	_test_manifest_and_source_boundaries()
 	_finish()
@@ -104,6 +105,32 @@ func _test_protocol_float_round_trip() -> void:
 	var decoded := ProtocolFrame.decode(encoded.get("details", {}).get("packet", PackedByteArray()))
 	_assert(bool(decoded.get("success", false)), "protocol frame decodes without payload checksum drift")
 	_assert(NetworkUtils.canonical_json(decoded.get("details", {}).get("frame", {})) == NetworkUtils.canonical_json(frame), "protocol frame is canonical JSON round-trip stable")
+
+func _test_transport_bound_operation_identity() -> void:
+	var first_session := "transport-session/m3/a/100/1785"
+	var reconnect_session := "transport-session/m3/a/200/1785"
+	var first_join := Support.transport_bound_operation_id("A", "JOIN", first_session)
+	var replay_join := Support.transport_bound_operation_id("a", "join", first_session)
+	var reconnect_join := Support.transport_bound_operation_id("a", "join", reconnect_session)
+	var first_leave := Support.transport_bound_operation_id("a", "leave", first_session)
+	_assert(not first_join.is_empty(), "transport-bound join operation ID created")
+	_assert(first_join == replay_join, "same transport session keeps idempotent join identity")
+	_assert(first_join != reconnect_join, "reconnect transport session gets a distinct join identity")
+	_assert(first_join != first_leave, "operation name remains part of replay identity")
+	_assert(first_join.ends_with(first_session.sha256_text().left(16)), "transport session fingerprint binds operation identity")
+	_assert(Support.transport_bound_operation_id("", "join", first_session).is_empty(), "empty player identity rejected")
+	_assert(Support.transport_bound_operation_id("a", "", first_session).is_empty(), "empty operation name rejected")
+	_assert(Support.transport_bound_operation_id("a", "join", "").is_empty(), "empty transport session rejected")
+	var service = Service.new()
+	_assert(bool(service.setup("m3-operation-identity", 1, 0, {"region_id": "region/m3/operation-identity", "topology_adapter": "ENET", "profile": Service.PROFILE_MULTIPLAYER_CORE}).get("success", false)), "operation identity service setup")
+	var first_result := service.join("a", first_session, first_join)
+	_assert(bool(first_result.get("success", false)), "first transport session join accepted")
+	var leave_result := service.leave_transport_session(first_session, first_leave)
+	_assert(bool(leave_result.get("success", false)), "first transport session leave accepted")
+	var reconnect_result := service.join("a", reconnect_session, reconnect_join)
+	_assert(bool(reconnect_result.get("success", false)), "reconnect join avoids replay conflict")
+	_assert(int(reconnect_result.get("details", {}).get("player", {}).get("ownership_epoch", 0)) == 2, "reconnect advances ownership epoch")
+	service.shutdown()
 
 func _test_remote_presenter() -> void:
 	var presenter = RemotePresenter.new()

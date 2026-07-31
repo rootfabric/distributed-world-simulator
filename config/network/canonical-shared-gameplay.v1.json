@@ -38,5 +38,9 @@
   ],
   "accepted_at_utc": "2026-07-30T15:20:00Z",
   "handoff_to_m5": "docs/architecture/M4_PRE_M5_HANDOFF_RU.md",
-  "preparation_manifest": "config/network/m5-graphical-acceptance-preparation.v1.json"
+  "preparation_manifest": "config/network/m5-graphical-acceptance-preparation.v1.json",
+  "document_revision": 2,
+  "m5_handoff_status": "fulfilled_by_candidate",
+  "m5_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "m5_manifest": "config/network/graphical-multiplayer-acceptance.v1.json"
 }

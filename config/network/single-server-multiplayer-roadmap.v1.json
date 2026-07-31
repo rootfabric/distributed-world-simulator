@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 5,
+  "document_revision": 6,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
   "status": "accepted",
@@ -164,7 +164,7 @@
     {
       "id": "M5",
       "name": "Graphical Multiplayer Acceptance",
-      "status": "preparation_in_progress",
+      "status": "candidate",
       "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
       "branch": "feature/m5-graphical-multiplayer-acceptance",
       "depends_on": [
@@ -178,12 +178,19 @@
         "server and both clients converge to one canonical checksum",
         "separate user-data directories and clean process shutdown"
       ],
-      "preparation_manifest": "config/network/m5-graphical-acceptance-preparation.v1.json"
+      "implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json",
+      "evidence": {
+        "contracts": "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+        "preparation_contracts": "tests/runtime/test_m5_graphical_acceptance_preparation.gd",
+        "graphical_process": "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+        "focused_runner_windows": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1",
+        "focused_runner_linux": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.sh"
+      }
     },
     {
       "id": "M6",
       "name": "Dedicated persistence and recovery",
-      "status": "planned",
+      "status": "next",
       "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
       "branch": "feature/m6-dedicated-recovery",
       "depends_on": [
@@ -304,8 +311,9 @@
   ],
   "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks",
   "accepted_at_utc": "2026-07-30T03:40:00Z",
-  "current_implementation_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
-  "current_implementation_manifest": "config/network/canonical-shared-gameplay.v1.json",
-  "current_implementation_stage": "M5_PREPARATION",
-  "updated_at_utc": "2026-07-30T15:20:00Z"
+  "current_implementation_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "current_implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json",
+  "current_implementation_stage": "M5",
+  "updated_at_utc": "2026-07-30T15:20:00Z",
+  "next_stage": "M6"
 }

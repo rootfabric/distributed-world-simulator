@@ -13,10 +13,11 @@ v16.10.3-pre-m5-graphical-acceptance-preparation
 build_id: pre-m5-ui-replica-command-boundary
 base: main @ 2879fdb
 branch: feature/m5-graphical-multiplayer-acceptance
-next: M5 graphical multiplayer acceptance
+current candidate: M5 graphical multiplayer acceptance
+next: M6 dedicated persistence and recovery
 ```
 
-Подготовительная граница M5 связывает существующий inventory UI с canonical M4 Item Graph только через read-only replica projection и versioned `ITEM_COMMAND`. Cursor/drag/pending state остаётся локальным transient overlay и не мутирует authoritative graph. Graphical process profiles получают изолированные `user://` roots и уникальные либо отключённые MCP runtime ports.
+M5 связывает существующий inventory UI с canonical M4 Item Graph только через read-only replica projection и versioned `ITEM_COMMAND`. Два обычных graphical clients проходят movement, contention, hotbar/container/mount/drop workflow и disconnect/reconnect; cursor/drag/pending state остаётся transient overlay и не переживает reconnect.
 
 ```text
 FULL SINGLE-SERVER MULTIPLAYER FIRST
@@ -27,7 +28,9 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 Основные документы:
 
+- `docs/architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;
 - `docs/architecture/M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
+- `docs/checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;
 - `docs/checkpoints/2026-07-31_PRE_M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
 - `docs/architecture/M4_PRE_M5_HANDOFF_RU.md`;
 - `docs/architecture/M4_CANONICAL_SHARED_GAMEPLAY_RU.md`;

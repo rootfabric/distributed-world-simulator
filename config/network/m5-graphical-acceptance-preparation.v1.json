@@ -4,7 +4,7 @@
   "build_id": "pre-m5-ui-replica-command-boundary",
   "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
   "base_runtime_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
-  "status": "candidate",
+  "status": "completed",
   "branch": "feature/m5-graphical-multiplayer-acceptance",
   "decision": "PREPARE_UI_DRIVEN_M5_WITHOUT_SECOND_GAMEPLAY_PATH",
   "components": {
@@ -66,5 +66,8 @@
       "status": "PASS"
     }
   },
-  "validated_at_utc": "2026-07-30T15:45:00Z"
+  "validated_at_utc": "2026-07-30T15:45:00Z",
+  "document_revision": 2,
+  "completed_by_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json"
 }

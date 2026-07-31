@@ -1,13 +1,13 @@
 Planetary World v16.10.3-pre-m5-graphical-acceptance-preparation
 
-Pre-M5 UI/replica preparation over main @ 2879fdb:
+M5 graphical multiplayer acceptance over main @ 2879fdb and pre-M5 UI/replica preparation:
 - read-only M4 Item Graph UI projection
 - UI-to-M4 ITEM_COMMAND adapter
 - transient cursor/pending state outside canonical checksum
 - networked inventory/hotbar shell in playground
 - isolated user-data and disabled/unique MCP runtime ports
 - M5 preparation contracts and focused runner
-- full UI-driven M5 acceptance remains pending
+- UI-driven M5 acceptance implemented with two graphical clients, reconnect and checksum convergence
 
 Planetary World v16.10.2-runtime-m3-dedicated-graphical-multiplayer
 
@@ -683,3 +683,11 @@ M4 networked playground extension
 - gameplay: authoritative movement, remote presentation, reconnect, canonical Item Graph
 - runner: RUN_M4_NETWORKED_PLAYGROUND_TESTS.ps1
 - boundary: inventory widget-driven M4 acceptance remains M5
+
+M5 checkpoint files:
+- config/network/graphical-multiplayer-acceptance.v1.json
+- docs/architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md
+- docs/checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md
+- RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1/.sh
+- tests/runtime/test_m5_graphical_acceptance_contracts.gd
+- tests/runtime/test_m5_graphical_multiplayer_acceptance.gd

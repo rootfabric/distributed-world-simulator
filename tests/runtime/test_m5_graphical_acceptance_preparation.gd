@@ -102,9 +102,14 @@ func _init() -> void:
 		"target_slot_index": 6,
 	})
 	_assert(bool(transfer_preview.get("success", false)), "UI transfer maps to M4 command")
-	_assert(String(transfer_preview.get("details", {}).get("command_type", "")) == "item.move_to_container", "transfer command type exact")
+	_assert(String(transfer_preview.get("details", {}).get("command_type", "")) == "item.transfer", "transfer command type exact")
 	var transfer_payload: Dictionary = transfer_preview.get("details", {}).get("payload", {})
-	_assert(transfer_payload == {"item_id": "item/shared/beacon/1", "container_id": "container/shared/crate/1"}, "slot-only UI fields excluded from wire payload")
+	_assert(transfer_payload == {
+		"item_id": "item/shared/beacon/1",
+		"quantity": -1,
+		"target_container_id": "container/shared/crate/1",
+		"target_slot_index": 6,
+	}, "UI transfer emits exact versioned M4 payload")
 	var mount_preview := adapter.preview_action("mount", {
 		"item_id": "item/shared/beacon/1",
 		"assembly_id": "assembly/demo",
@@ -115,7 +120,8 @@ func _init() -> void:
 		"item_id": "item/shared/beacon/1",
 		"target_container_id": "inventory/a",
 	})
-	_assert(String(reverse_preview.get("error_code", "")) == "M5_TRANSFER_TARGET_NOT_SUPPORTED", "unsupported reverse transfer fails explicitly")
+	_assert(bool(reverse_preview.get("success", false)), "reverse transfer to player inventory is supported")
+	_assert(String(reverse_preview.get("details", {}).get("command_type", "")) == "item.transfer", "reverse transfer uses canonical item.transfer")
 	var submitted := adapter.submit_action_blocking("select_hotbar", {"slot_index": 2}, "operation/pre-m5/ui/hotbar")
 	_assert(bool(submitted.get("success", false)), "adapter dispatches through runtime")
 	_assert(fake.calls.size() == 1, "one runtime command dispatched")
@@ -156,14 +162,14 @@ func _init() -> void:
 
 	var roadmap := _read_json("res://config/network/network-roadmap.v1.json")
 	var phases := _by_id(Array(roadmap.get("phases", [])))
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.3-domain-m4-canonical-shared-gameplay", "roadmap current accepted runtime is M4")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "roadmap current checkpoint is M5")
 	_assert(String(phases.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status accepted")
-	_assert(String(phases.get("M5", {}).get("status", "")) == "preparation_in_progress", "M5 preparation is current stage")
+	_assert(String(phases.get("M5", {}).get("status", "")) == "candidate", "M5 candidate is current stage")
 	var m4_manifest := _read_json("res://config/network/canonical-shared-gameplay.v1.json")
 	_assert(String(m4_manifest.get("status", "")) == "accepted", "M4 implementation manifest accepted")
 	var prep_manifest := _read_json("res://config/network/m5-graphical-acceptance-preparation.v1.json")
-	_assert(String(prep_manifest.get("status", "")) == "candidate", "pre-M5 preparation manifest candidate")
-	_assert(Array(prep_manifest.get("remaining_m5_runtime_gates", [])).has("ui_driven_two_client_contention"), "full UI contention remains M5 acceptance work")
+	_assert(String(prep_manifest.get("status", "")) == "completed", "pre-M5 preparation manifest completed")
+	_assert(String(prep_manifest.get("completed_by_checkpoint", "")) == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "pre-M5 preparation completion checkpoint")
 
 	service.shutdown()
 	_finish()

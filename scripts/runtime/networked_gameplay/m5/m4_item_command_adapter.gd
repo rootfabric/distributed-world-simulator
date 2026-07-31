@@ -156,6 +156,11 @@ func _normalize_action(action_id: String, ui_payload: Dictionary) -> Dictionary:
 			return _command("inventory.select_hotbar", {
 				"selected_hotbar_index": int(ui_payload.get("selected_hotbar_index", ui_payload.get("slot_index", -1))),
 			}, context)
+		"assign_hotbar", "inventory.assign_hotbar":
+			return _command("inventory.assign_hotbar", {
+				"item_id": _required_id(ui_payload, "item_id"),
+				"slot_index": int(ui_payload.get("slot_index", ui_payload.get("target_slot_index", -1))),
+			}, context)
 		"open_container", "container.open":
 			return _command("container.open", {
 				"container_id": _required_id(ui_payload, "container_id", "target_container_id"),
@@ -170,21 +175,38 @@ func _normalize_action(action_id: String, ui_payload: Dictionary) -> Dictionary:
 				"container_id": _required_id(ui_payload, "container_id", "target_container_id"),
 			}, context)
 		"transfer":
-			var target_item_id := String(ui_payload.get("target_item_id", "")).strip_edges()
-			if not target_item_id.is_empty():
-				return _command("item.stack", {
-					"source_item_id": _required_id(ui_payload, "item_id"),
-					"target_item_id": target_item_id,
-				}, context)
+			var item_id := _required_id(ui_payload, "item_id")
+			var source_container_id := String(ui_payload.get("source_container_id", "")).strip_edges()
 			var target_container_id := String(ui_payload.get("target_container_id", "")).strip_edges()
-			if target_container_id.begins_with("container/"):
-				return _command("item.move_to_container", {
-					"item_id": _required_id(ui_payload, "item_id"),
-					"container_id": target_container_id,
+			var target_item_id := String(ui_payload.get("target_item_id", "")).strip_edges()
+			var quantity := int(ui_payload.get("quantity", -1))
+			var source_quantity := int(ui_payload.get("source_quantity", quantity))
+			if target_container_id.begins_with("mount/"):
+				return _command("item.mount", {
+					"item_id": item_id,
+					"mount_id": target_container_id,
 				}, context)
+			if source_container_id.begins_with("mount/") and target_container_id.begins_with("inventory/"):
+				return _command("item.detach", {"mount_id": source_container_id}, context)
+			if source_container_id.begins_with("world/") and target_container_id.begins_with("inventory/") and (quantity < 0 or quantity == source_quantity):
+				return _command("item.pickup", {"item_id": item_id}, context)
+			if (
+				target_container_id.begins_with("container/")
+				or target_container_id.begins_with("inventory/")
+				or target_container_id.begins_with("hotbar/")
+			):
+				var transfer_payload := {
+					"item_id": item_id,
+					"quantity": quantity,
+					"target_container_id": target_container_id,
+					"target_slot_index": int(ui_payload.get("target_slot_index", -1)),
+				}
+				if not target_item_id.is_empty():
+					transfer_payload["target_item_id"] = target_item_id
+				return _command("item.transfer", transfer_payload, context)
 			return _failure("M5_TRANSFER_TARGET_NOT_SUPPORTED", {
+				"source_container_id": source_container_id,
 				"target_container_id": target_container_id,
-				"gate": "reverse_container_transfer_and_hotbar_assignment_remain_M5_runtime_work",
 			})
 		"mount", "item.mount":
 			return _command("item.mount", {
@@ -213,6 +235,12 @@ func _command(command_type: String, payload: Dictionary, context: Dictionary) ->
 		var index := int(payload.get("selected_hotbar_index", -1))
 		if index < 0 or index > 7:
 			return _failure("INVALID_HOTBAR_INDEX")
+	if command_type == "inventory.assign_hotbar":
+		var slot_index := int(payload.get("slot_index", -1))
+		if slot_index < 0 or slot_index > 7:
+			return _failure("INVALID_HOTBAR_INDEX")
+	if command_type == "item.transfer" and int(payload.get("quantity", -1)) == 0:
+		return _failure("INVALID_TRANSFER_QUANTITY")
 	return _success({
 		"command_type": command_type,
 		"payload": payload.duplicate(true),
