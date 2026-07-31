@@ -1,8 +1,8 @@
 # Checkpoint C10 — Parametric Members
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
-**База:** принятый C9, C8 commit `6ec6fdb`
+**Статус:** ACCEPTED
+**База:** C9 @ `8d8bf77`
 **Рекомендуемая ветка:** `feature/c10-parametric-members`
 
 ## Цель

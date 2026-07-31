@@ -85,8 +85,8 @@ C12 multiplayer construction → C13 federated constructs
 | C7 | sections, spaces, enclosure, openings, utilities и activation LOD | дом | **ACCEPTED** |
 | C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **ACCEPTED** |
 | C9 | damage, split, repair, salvage | стол/робот/секция | **ACCEPTED** |
-| C10 | beams, panels, pipes, cables, profiles | строение/корабль | **CURRENT CANDIDATE** |
-| C11 | local CSG/SDF/microgeometry | панель/корпус | PLANNED |
+| C10 | beams, panels, pipes, cables, profiles | строение/корабль | ACCEPTED |
+| C11 | constrained local geometry and control-point edits | параметрическая деталь | **CURRENT CANDIDATE** |
 | C12 | contention, permissions, reconnect, convergence | два клиента | PLANNED |
 | C13 | section aggregates and cross-server authority | дом/станция/город | PLANNED |
 
@@ -465,3 +465,30 @@ C9 conservative segmentation and repair
 - mesh/collision и local CSG остаются производными и переходят в C11.
 
 Контрольный vertical slice: S355 beam компилируется из размеров, производится C8-станком из рассчитанного steel stock, входит в C3 BuildPlan, переживает C9 split/repair и режется на три консервативных сегмента.
+
+
+## C11: Local Geometry Editing
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+C10 instance + edit request + constraints
+        ↓
+semantic control-point path / parameter update
+        ↓ C10 recompilation
+new geometry, mass and material usage
+        ↓ one authoritative transaction
+ItemProjection + PartRecord + ConstructSnapshot
+```
+
+Ключевые правила C11:
+
+- control points и constraints являются canonical DTO, а не editor-only state;
+- C10 definition/material provenance сохраняется;
+- relation, quantity и item identity edit не меняет;
+- effective path length управляет C10 mass/material recomputation;
+- part mass и parametric checksum синхронизируются с item projection;
+- exact replay не выполняет второй commit;
+- failure/constraint rejection не оставляет частичного состояния;
+- C5/C8 downstream projections перестраиваются из нового checksum;
+- mesh и collision остаются derived projections.

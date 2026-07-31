@@ -718,3 +718,54 @@ Editor parse:     PASS
 ```
 
 Полный C2B/network/world/main-scene profile остаётся внешним gate. Ожидаемый world profile: `121/121 tests`, `124 steps`.
+
+
+## 2026-08-01 — C10: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c10-parametric-members`.
+**База:** `C9 @ 8d8bf77`.
+
+```text
+C10 contracts:     PASS — 155 assertions
+C10 integration:   PASS — 84 assertions
+C10 total:         PASS — 239 assertions
+C2B regression:    PASS — 258 assertions
+Network N0–M4:     PASS
+World regression:  PASS — 121/121 tests, 124 steps
+git diff --check:  PASS
+Manifest:          50/50 unique
+```
+
+Reviewed SHA-256: `062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbddf9c`. C10 стал принятой базой C11.
+
+
+## 2026-08-01 — C11: Local Geometry Editing
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c11-local-geometry-editing`.
+**База:** принятый C10.
+
+Архитектурные решения:
+
+- edit request pin-ит member, item и construct preconditions;
+- parameter/control-point operations являются strict checksum DTO;
+- constraints хранятся в authoritative geometry state;
+- path length передаётся в C10 compiler для mass/material recomputation;
+- ItemProjection, PartRecord и ConstructSnapshot обновляются одной transaction;
+- relation и item/member/definition identities неизменны;
+- audit record сохраняется в construct facets и history store;
+- exact replay/crash recovery не повторяют authoritative commit;
+- C5 capabilities и C8 recipes перестраиваются из нового member checksum;
+- renderer/collision остаются derived.
+
+Focused профиль:
+
+```text
+C11 contracts:     PASS — 109 assertions
+C11 integration:   PASS — 90 assertions
+C11 total:         PASS — 199 assertions
+Editor parse:      PASS
+```
+
+Ожидаемый внешний world profile: `123/123 tests`, `126 steps`.

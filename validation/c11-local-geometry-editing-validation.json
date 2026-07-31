@@ -1,0 +1,106 @@
+{
+  "schema": "planet_simulator.c11_local_geometry_editing_validation.v1",
+  "checkpoint": "C11_LOCAL_GEOMETRY_EDITING",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C10_ACCEPTED",
+    "c9_commit": "8d8bf77",
+    "c10_reviewed_sha256": "062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbddf9c"
+  },
+  "branch": "feature/c11-local-geometry-editing",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_assertions": 225,
+    "c8_assertions": 221,
+    "c9_assertions": 204,
+    "c10_assertions": 239,
+    "c11_contract_assertions": 109,
+    "c11_integration_assertions": 90,
+    "c11_total_assertions": 199,
+    "locally_verified_total_assertions": 2175
+  },
+  "operation_kinds": [
+    "INSERT_CONTROL_POINT",
+    "MOVE_CONTROL_POINT",
+    "REMOVE_CONTROL_POINT",
+    "SET_PARAMETER"
+  ],
+  "constraint_kinds": [
+    "GRID_SNAP",
+    "LOCK_AXES",
+    "LOCK_CONTROL_POINT",
+    "LOCK_PARAMETER",
+    "MAX_TOTAL_LENGTH",
+    "MIN_SEGMENT_LENGTH",
+    "ORTHOGONAL_PATH"
+  ],
+  "contracts": {
+    "requests_pin_member_item_and_construct_preconditions": true,
+    "control_points_and_constraints_are_strict_checksum_dtos": true,
+    "effective_path_length_recompiles_c10_metrics": true,
+    "item_relation_quantity_and_identity_are_immutable": true,
+    "item_part_and_construct_change_in_one_transaction": true,
+    "exact_operation_replay_is_idempotent": true,
+    "crash_recovery_reconstructs_history_from_snapshot_audit": true,
+    "constraint_rejection_and_commit_failure_are_atomic": true,
+    "c5_capability_recompiles_local_geometry": true,
+    "c8_recipe_recompiles_member_checksum_and_stock_units": true,
+    "history_persistence_is_transactional": true,
+    "renderer_mesh_and_collision_remain_derived": true
+  },
+  "vertical_slices": {
+    "profile_edit": "Beam length and profile update recompiles C10 mass/material usage and atomically updates item, part and construct",
+    "polyline_edit": "Three-point orthogonal path uses semantic path length and actual local bounds",
+    "constraints": "Locked axis, minimum segment and maximum path constraints reject edits before commit",
+    "recovery": "Committed edit replay restores history without repeating authoritative mutation",
+    "downstream": "C5 capability and C8 fabrication recipe use the edited member checksum and metrics"
+  },
+  "world_manifest": {
+    "expected_tests": 123,
+    "expected_steps": 126,
+    "c11_tests_expected_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused integration: complete production item-domain dependency tree is absent from the isolated snapshot",
+    "Network N0-M4 regression: no local shell runner/full runtime tree in isolated snapshot",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 123,
+    "expected_world_steps": 126,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; C11 PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 168 unique UIDs in isolated workspace",
+    "manifest": "PASS — 44/44 unique files",
+    "world_runner_manifest": "PASS — 123/123 unique tests, C11 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_archive_replay": "PASS — final archive overlay verified 44/44"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c11-local-geometry-editing-files.txt",
+    "changed_files": 44
+  }
+}

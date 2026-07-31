@@ -466,11 +466,28 @@ Bridge-arm из шести частей теряет две связи. Source �
 
 Параметрическая S355-балка длиной 2 м вычисляет массу и steel-stock requirements, изготавливается в принятой C8 cell, становится обычным output `ItemInstance`, входит в C3 BuildPlan, затем переносится через C9 split/repair без изменения checksum. Отдельный cut plan делит 8-метровую балку на `3 + 2 + 3 м` с полной консервацией.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C11 — Local Geometry Editing
 
-Локальные CSG/SDF/voxel regions, отверстия, вырезы и surface processing без потери semantic parts и ports.
+1. Edit request pin-ит C10 member, ItemProjection и ConstructSnapshot checksums/revisions.
+2. Поддержаны parameter edit и ordered control-point operations.
+3. Grid snap, locks, segment limits и orthogonal path являются строгими DTO constraints.
+4. Effective path length передаётся обратно в C10 compiler.
+5. Mass, volume и material usage всегда пересчитываются C10, а не задаются вручную.
+6. Local geometry state хранит path, bounds, edit revision, constraints и provenance.
+7. Item projection, semantic part и construct snapshot обновляются одной C2A/C2B transaction.
+8. Item/member/definition identities и relation остаются неизменными.
+9. C5 capability и C8 fabrication recipe перестраиваются из нового member checksum.
+10. Exact replay и crash recovery используют operation ledger и snapshot audit record.
+11. History persistence transactional и не заменяет authoritative Item Graph.
+12. Renderer mesh/collision остаются удаляемыми derived projections.
+
+### Контрольный vertical slice
+
+Параметрическая балка превращается в constrained polyline, меняет профиль и длину, после чего её item projection, part mass и construct snapshot обновляются атомарно. Locked-axis и invalid-length edits отклоняются без частичного commit; crash после commit восстанавливает history через exact replay.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C12 — Multiplayer Acceptance
 

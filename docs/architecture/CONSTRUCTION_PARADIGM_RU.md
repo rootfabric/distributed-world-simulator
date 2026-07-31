@@ -561,3 +561,32 @@ Parametric segmentation делит геометрический member вдол�
 ### C11 меняет локальную форму, но не отменяет C10
 
 Отверстие, bevel или локальный SDF edit должны быть overlay над parametric base и обязаны обновлять mass/material deltas. Базовая parameter definition остаётся provenance, а mesh по-прежнему не становится источником истины.
+
+
+## 20. C11: локальная форма является семантическим overlay
+
+C11 вводит ordered control-point path и constraints поверх C10 member instance. Это не mesh editing: authoritative state по-прежнему состоит из definition provenance, параметров, control points, ограничений и checksum.
+
+```text
+parametric base
++ semantic local path
++ deterministic constraints
+→ recomputed C10 metrics
+→ item/part/construct atomic update
+```
+
+### Один источник вычисляемой массы
+
+Geometry editor не имеет права отдельно менять массу. Он вычисляет новый effective path и параметры, затем вызывает C10 compiler. Поэтому Item Graph, fabrication requirements и gameplay capabilities используют одну и ту же производную массу.
+
+### Constraints принадлежат миру
+
+Grid snap, locked axes и minimum segment length сохраняются в DTO и checksum. Это позволяет серверу, клиенту и агенту одинаково проверить edit, а не доверять поведению локального UI gizmo.
+
+### Edit является транзакцией домена
+
+ItemProjection, semantic part и ConstructSnapshot должны измениться вместе. Если commit не завершён, ни одна downstream projection не должна видеть новую форму. Exact replay восстанавливает результат по operation ledger и snapshot audit record.
+
+### Произвольная mesh-операция остаётся за границей
+
+Boolean holes, bevels, SDF/voxel patches требуют отдельного conservative material-delta контракта. C11 закладывает для него authoritative boundary, но не объявляет triangle mesh источником истины.

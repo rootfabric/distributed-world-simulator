@@ -20,6 +20,7 @@ const PURPOSE_APPLY_DAMAGE: String = "APPLY_CONSTRUCTION_DAMAGE"
 const PURPOSE_REBIND_SPLIT_PART: String = "REBIND_SPLIT_PART"
 const PURPOSE_SALVAGE_PART: String = "SALVAGE_CONSTRUCTION_PART"
 const PURPOSE_REPAIR_PART: String = "REPAIR_CONSTRUCTION_PART"
+const PURPOSE_EDIT_PARAMETRIC_MEMBER: String = "EDIT_PARAMETRIC_MEMBER"
 const PURPOSES: Array[String] = [
 	PURPOSE_CREATE_ROOT,
 	PURPOSE_ATTACH_PART,
@@ -33,6 +34,7 @@ const PURPOSES: Array[String] = [
 	PURPOSE_REBIND_SPLIT_PART,
 	PURPOSE_SALVAGE_PART,
 	PURPOSE_REPAIR_PART,
+	PURPOSE_EDIT_PARAMETRIC_MEMBER,
 ]
 const FIELDS: Array[String] = [
 	"schema",
@@ -188,9 +190,31 @@ static func _validate_update_purpose(purpose: String, before: Dictionary, after:
 				return _failure("REPAIR_PART_CHANGED_UNRELATED_COMPONENTS")
 			if String(after["components"].get("condition", "INTACT")) != "INTACT":
 				return _failure("REPAIR_PART_NOT_RESTORED")
+		PURPOSE_EDIT_PARAMETRIC_MEMBER:
+			if before_relation != after_relation or int(after["quantity"]) != int(before["quantity"]):
+				return _failure("PARAMETRIC_EDIT_CHANGED_IDENTITY_OR_LOCATION")
+			if not _parametric_member_only_change(before["components"], after["components"]):
+				return _failure("PARAMETRIC_EDIT_CHANGED_UNRELATED_COMPONENTS")
 		_:
 			return _failure("INVALID_UPDATE_ITEM_MUTATION_PURPOSE")
 	return _success()
+
+static func _parametric_member_only_change(before: Dictionary, after: Dictionary) -> bool:
+	var before_copy: Dictionary = before.duplicate(true)
+	var after_copy: Dictionary = after.duplicate(true)
+	var before_member = before_copy.get("parametric_member", {})
+	var after_member = after_copy.get("parametric_member", {})
+	if not before_member is Dictionary or not after_member is Dictionary:
+		return false
+	before_copy.erase("parametric_member")
+	after_copy.erase("parametric_member")
+	if UtilsScript.canonical_json(before_copy) != UtilsScript.canonical_json(after_copy):
+		return false
+	var immutable_fields: Array[String] = ["member_instance_id", "item_instance_id", "member_definition_id", "definition_version", "definition_checksum", "member_kind"]
+	for field in immutable_fields:
+		if Dictionary(before_member).get(field) != Dictionary(after_member).get(field):
+			return false
+	return String(Dictionary(before_member).get("checksum", "")) != String(Dictionary(after_member).get("checksum", ""))
 
 static func _same_or_condition_only_change(before: Dictionary, after: Dictionary) -> bool:
 	return before == after or _condition_only_change(before, after)

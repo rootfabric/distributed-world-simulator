@@ -1,11 +1,11 @@
 {
   "schema": "planet_simulator.c10_parametric_members_validation.v1",
   "checkpoint": "C10_PARAMETRIC_MEMBERS",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C9_ACCEPTED",
-    "c8_commit": "6ec6fdb",
-    "c9_reviewed_sha256": "1db35602564d6a3f77cbd7b49770839e36c7705c7e6ef40f33c073f20e4582fb"
+    "c9_commit": "8d8bf77",
+    "reviewed_sha256": "062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbddf9c"
   },
   "branch": "feature/c10-parametric-members",
   "engine": {
@@ -94,5 +94,12 @@
     "overlay_only": true,
     "manifest": "c10-parametric-members-files.txt",
     "changed_files": 50
+  },
+  "external_acceptance": {
+    "c2b_assertions": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": "PASS — 121/121 tests, 124 steps",
+    "git_diff_check": "PASS",
+    "manifest": "50/50 unique"
   }
 }
