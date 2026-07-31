@@ -89,7 +89,33 @@ static func validate_configuration(
 		return MatterUtilsScript.failure("ASTEROID_PROFILE_CHECKSUM_MISMATCH")
 	if String(metadata.get("feature_catalog_hash", "")) != String(feature_catalog["catalog_hash"]):
 		return MatterUtilsScript.failure("ASTEROID_FEATURE_HASH_MISMATCH")
+	var declared_root_radius_m: float = ProfileScript.root_bounds_radius_m(profile)
+	var required_root_radius_m: float = required_root_bounds_radius_m(profile, feature_catalog)
+	if not is_finite(required_root_radius_m) \
+		or declared_root_radius_m + MatterUtilsScript.DEFAULT_FLOAT_TOLERANCE < required_root_radius_m:
+		return MatterUtilsScript.failure("ASTEROID_FEATURES_ESCAPE_ROOT_BOUNDS", {
+			"declared_root_radius_m": declared_root_radius_m,
+			"required_root_radius_m": required_root_radius_m,
+		})
 	return MatterUtilsScript.success()
+
+
+static func required_root_bounds_radius_m(profile: Dictionary, feature_catalog: Dictionary) -> float:
+	if not bool(ProfileScript.validate(profile).get("success", false)) \
+		or not bool(FeatureCatalogScript.validate(feature_catalog).get("success", false)):
+		return INF
+	var required_radius_m: float = ProfileScript.required_root_bounds_radius_m(profile)
+	for feature in feature_catalog["features"]:
+		if String(feature["feature_kind"]) != "ADD_LOBE":
+			continue
+		var center_m: Vector3 = _vector3(feature["center_m"])
+		var radii_m: Vector3 = _vector3(feature["radii_m"])
+		var maximum_radius_m: float = maxf(radii_m.x, maxf(radii_m.y, radii_m.z))
+		required_radius_m = maxf(
+			required_radius_m,
+			center_m.length() + maximum_radius_m + ProfileScript.ROOT_BOUNDS_NUMERICAL_MARGIN_M
+		)
+	return required_radius_m
 
 
 static func sample(

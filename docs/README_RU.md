@@ -7,10 +7,13 @@
 - `plans/MUTABLE_WORLDS_ROADMAP_RU.md` — MW0–MW8 изолированного астероида, MI0–MI4 интеграции Луны и MP0–MP4 production track;
 - `checkpoints/2026-07-31_MUTABLE_WORLDS_ARCHITECTURE_ROADMAP_RU.md` — документационный checkpoint анализа текущего среза.
 - `architecture/MW0_MATTER_CONTRACTS_RU.md` — принятая граница контрактов вещества, snapshot channels, mutations и mass ledger;
-- `architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — fixed-seed volumetric asteroid, stable features, geology и mass integration;
+- `architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — accepted fixed-seed volumetric asteroid, stable features, geology и mass integration;
+- `architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — octree cells, sparse materialization, ghost seams и canonical query service;
 - `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md` — первый code checkpoint geological track.
 - `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятое исправление typed normalization MW0.
-- `checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — текущий MW1 candidate.
+- `checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — принятый MW1.
+- `checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_RU.md` — исходный MW2 candidate.
+- `checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_FIX1_RU.md` — текущий MW2 fix1 candidate: `get_snapshot()` вместо конфликтующего `get()`.
 
 Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
 Текущий architecture candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.

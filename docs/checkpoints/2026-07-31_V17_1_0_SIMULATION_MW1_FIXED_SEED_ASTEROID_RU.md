@@ -1,7 +1,7 @@
 # v17.1.0 — Simulation MW1 Fixed-Seed Asteroid
 
 Дата: `2026-07-31`
-Статус поставки: `CANDIDATE FOR INDEPENDENT REVIEW`
+Статус: `ACCEPTED`
 Base checkpoint: `v17.0.0-simulation-mw0-matter-contracts`, delivery `fix1`
 Ветка: `feature/mw1-fixed-seed-asteroid`
 Checkpoint: `v17.1.0-simulation-mw1-fixed-seed-asteroid`
@@ -24,6 +24,19 @@ Build ID: `mw1-fixed-seed-asteroid`
 - midpoint mass/material integration;
 - 128-point golden fixture;
 - focused Windows/Linux runners.
+
+## Независимая приёмка
+
+```text
+MW1 focused:    3685 assertions PASS
+MW0 regression: 2011 assertions PASS
+A3 regression:  12/12 PASS
+M6 regression:  10/10 PASS
+ZIP safety:     PASS, 23 files
+SHA-256:        35F8CECAD252777D80DFFC1A8DDB4EE6E4E667448669C0F397ADC4CBBCF8827E
+```
+
+Неблокирующая рекомендация по доказуемому root bounds закрывается в MW2.
 
 ## Identity
 

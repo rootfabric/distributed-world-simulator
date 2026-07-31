@@ -778,3 +778,21 @@ MW1 fixed-seed volumetric asteroid
 - mesh/collision: not included
 - runner: RUN_MW1_FIXED_SEED_ASTEROID_TESTS.ps1 / .sh
 - next: MW2 sparse matter cells, bricks and query service
+
+MW2 hierarchical matter cells and sparse bricks
+- checkpoint: v17.2.0-simulation-mw2-sparse-bricks
+- delivery: fix1
+- build: mw2-sparse-bricks-fix1
+- branch: feature/mw2-sparse-bricks
+- base: accepted MW1 v17.1.0
+- root bounds: feature-aware validation for axis/noise/lobes
+- spatial: body-fixed octree over SimulationCellAddress
+- grid: root half extent 1450 m, max level 5
+- brick: one per cell, 8 interior cells/axis, 11 samples/axis, ghost border 1
+- storage: in-memory sparse store with revision/idempotency/conflict fences
+- storage read API: get_snapshot(address), avoiding Object.get() preload-member conflict
+- query: procedural fallback and exact materialized-lattice precedence
+- runtime worlds changed: no
+- mesh/collision: not included
+- runner: RUN_MW2_SPARSE_BRICKS_TESTS.ps1 / .sh
+- next: MW3 local mesh, collision and streaming laboratory

@@ -7,6 +7,7 @@ const GENERATOR_ID: String = "matter-generator/fixed-seed-asteroid"
 const GENERATOR_VERSION: String = "1.0.0"
 const DEFAULT_SEED: int = 2026073101
 const DEFAULT_RADIUS_M: float = 1000.0
+const ROOT_BOUNDS_NUMERICAL_MARGIN_M: float = 4.0
 const FIELDS: Array[String] = [
 	"schema",
 	"generator_id",
@@ -84,6 +85,14 @@ static func validate(value: Dictionary) -> Dictionary:
 		return MatterUtilsScript.failure("INVALID_ASTEROID_NOISE_FREQUENCIES")
 	if not _is_non_negative_number_array(value.get("surface_noise_amplitudes_m"), 3):
 		return MatterUtilsScript.failure("INVALID_ASTEROID_NOISE_AMPLITUDES")
+	var declared_root_radius_m: float = root_bounds_radius_m(value)
+	var required_root_radius_m: float = required_root_bounds_radius_m(value)
+	if not is_finite(required_root_radius_m) \
+		or declared_root_radius_m + MatterUtilsScript.DEFAULT_FLOAT_TOLERANCE < required_root_radius_m:
+		return MatterUtilsScript.failure("ASTEROID_ROOT_BOUNDS_TOO_SMALL", {
+			"declared_root_radius_m": declared_root_radius_m,
+			"required_root_radius_m": required_root_radius_m,
+		})
 	if not MatterUtilsScript.is_positive_number(value.get("surface_regolith_depth_m")) \
 		or not MatterUtilsScript.is_positive_number(value.get("fractured_shell_depth_m")):
 		return MatterUtilsScript.failure("INVALID_ASTEROID_SHELL_DEPTH")
@@ -104,6 +113,29 @@ static func validate(value: Dictionary) -> Dictionary:
 	if not bool(safe.get("success", false)):
 		return safe
 	return MatterUtilsScript.validate_checksum(value)
+
+
+static func root_bounds_radius_m(value: Dictionary) -> float:
+	if not MatterUtilsScript.is_positive_number(value.get("reference_radius_m")) \
+		or not MatterUtilsScript.is_positive_number(value.get("root_bounds_radius_ratio")):
+		return INF
+	return float(value["reference_radius_m"]) * float(value["root_bounds_radius_ratio"])
+
+
+static func required_root_bounds_radius_m(value: Dictionary) -> float:
+	if not MatterUtilsScript.is_positive_number(value.get("reference_radius_m")) \
+		or not _is_positive_vector3(value.get("axis_scale")) \
+		or not _is_non_negative_number_array(value.get("surface_noise_amplitudes_m"), 3):
+		return INF
+	var maximum_axis_scale: float = 0.0
+	for component in value["axis_scale"]:
+		maximum_axis_scale = maxf(maximum_axis_scale, float(component))
+	var maximum_positive_displacement_m: float = 0.0
+	for amplitude in value["surface_noise_amplitudes_m"]:
+		maximum_positive_displacement_m += float(amplitude)
+	return float(value["reference_radius_m"]) * maximum_axis_scale \
+		+ maximum_positive_displacement_m \
+		+ ROOT_BOUNDS_NUMERICAL_MARGIN_M
 
 
 static func normalize(value: Dictionary) -> Dictionary:

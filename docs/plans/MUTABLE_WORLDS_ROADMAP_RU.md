@@ -222,7 +222,7 @@ No existing runtime file is modified.
 
 Доказать, что километровый астероид существует как детерминированное объёмное поле без полного voxel allocation.
 
-**Implementation candidate подготовлен 2026-07-31:** `v17.1.0-simulation-mw1-fixed-seed-asteroid`. Реализованы stable feature catalog, observer-independent sampler, closed outer-surface query, natural void, ore/ice geology, 128-point golden fixture и deterministic mass integration. Этап не меняет production worlds и до независимого Godot-прогона остаётся `CANDIDATE`.
+**Принят 2026-07-31:** `v17.1.0-simulation-mw1-fixed-seed-asteroid`. Независимая проверка: MW1 3685 assertions PASS, MW0 2011 PASS, A3 12/12, M6 10/10. Реализованы stable feature catalog, observer-independent sampler, closed outer-surface query, natural void, ore/ice geology, 128-point golden fixture и deterministic mass integration.
 
 ### Ветка
 
@@ -296,84 +296,98 @@ No mesh or collision code exists yet.
 
 ### Цель
 
-Материализовать только нужные области и получить стабильную 3D spatial identity.
+Материализовать только явно запрошенные области MW1 и получить стабильную body-fixed 3D identity без полного voxel allocation.
+
+**Implementation candidate подготовлен 2026-07-31:** `v17.2.0-simulation-mw2-sparse-bricks`.
 
 ### Ветка
 
 ```text
-feature/mw2-sparse-matter-storage
+feature/mw2-sparse-bricks
 ```
 
-### Grid первой версии
+### Зафиксированная grid первой версии
 
 ```text
-grid_id: body-cartesian-octree
+grid_id: matter-grid-mw2
 grid_revision: 1
-root bounds: 2048 × 2048 × 2048 m
-child capacity: 8
-brick cells per axis: 16
-standard edit spacing: 1.0 m
-precision edit spacing: 0.25 m, зарезервировано, не требуется для gate
-coarse topology spacing: 8.0 m
+root cube: [-1450, +1450] m по X/Y/Z
+branching: octree 2 × 2 × 2
+max level: 5
+one brick per cell: true
+interior cells per axis: 8
+ghost border: 1 sample per side
+sample axis count: 11
+sample count: 1331
 ```
 
-Полный астероид не разворачивается в standard bricks. Brick создаётся, когда:
+MW2 повторно использует `SimulationCellAddress`; spatial identity не означает authority ownership.
 
-- попадает в active query/mesh window;
-- пересечён mutation;
-- содержит persistent deviation;
-- нужен precise collision;
-- требуется refinement connectivity.
-
-### Добавить
+### Реализовано
 
 ```text
-scripts/simulation/matter/spatial/body_cartesian_octree_resolver.gd
-scripts/simulation/matter/storage/matter_repository_port.gd
-scripts/simulation/matter/storage/in_memory_sparse_matter_store.gd
-scripts/simulation/matter/queries/matter_query_service.gd
-scripts/simulation/matter/queries/matter_raycast_result.gd
+scripts/simulation/matter/spatial/matter_spatial_grid_profile.gd
+scripts/simulation/matter/spatial/matter_cell_grid.gd
+scripts/simulation/matter/spatial/matter_brick_layout.gd
+scripts/simulation/matter/storage/matter_brick_materializer.gd
+scripts/simulation/matter/storage/matter_sparse_brick_store.gd
+scripts/simulation/matter/query/matter_query_result.gd
+scripts/simulation/matter/query/matter_query_service.gd
 ```
 
-### Query API
+### Query API этапа
 
 ```text
-sample_matter(body_id, body_fixed_position)
-query_brick(address)
-raycast_matter(origin, direction, max_distance)
-find_nearest_surface(position, max_distance)
-query_material_column(origin, direction, max_distance, step_policy)
+query(body_fixed_position, requested_cell_level)
+query_cell_lattice(cell_address, x, y, z)
+materialize_cell(cell_address, state_revision)
 ```
 
-Query resolution выбирается явно. Gameplay не должен случайно получать render LOD sample.
+Точное совпадение с lattice point materialized brick читает `MATERIALIZED_BRICK`. Любой off-lattice запрос остаётся точным `PROCEDURAL_BASE` sample. MW2 не вводит скрытый nearest-neighbour snap и не смешивает storage resolution с gameplay semantics.
+
+Raycast, nearest surface и material column остаются в MW3, где появится реальный streaming/mesh consumer.
 
 ### Boundary rules
 
-- shared samples соседних bricks вычисляются из одного canonical coordinate;
+- shared face coordinates выводятся из exact cell minimum/maximum;
+- ghost samples воспроизводятся из канонического MW1 sampler;
 - ghost borders не являются отдельным persistent state;
-- lower-resolution parent summary не перезаписывает child edits;
-- empty procedural cells не сохраняются;
-- stored brick обязан ссылаться на exact base generator version.
+- one cell → one brick в первой версии;
+- untouched cells не создают snapshots;
+- snapshot связан с exact body checksum, generator version и seed;
+- lower revision отклоняется;
+- same revision идемпотентна только при same checksum + strict DTO equality;
+- same revision + different checksum является конфликтом.
+
+### Root bounds prerequisite
+
+MW2 закрывает рекомендацию review MW1: profile validation учитывает axis scale и сумму positive surface amplitudes, а generator configuration дополнительно учитывает extents `ADD_LOBE` features. Любая допустимая конфигурация обязана помещаться в заявленном root.
 
 ### Тесты
 
-- address parent/child;
-- bounds containment;
-- neighbour face consistency;
-- same point through two adjacent bricks;
+- profile/feature-aware root bound fences;
+- octree parent/child и bounds containment;
+- deterministic tie-break на разделяющих плоскостях;
+- 1331 flat/lattice coordinate round-trips;
+- deterministic materialization replay;
+- shared face consistency;
+- positive и negative ghost overlap consistency;
 - sparse allocation count;
-- query fallback to procedural base;
-- stored override precedence;
-- invalid mixed generator version;
-- deterministic raycast;
-- unload/reload without data loss.
+- stale/idempotent/conflicting revision semantics;
+- procedural fallback;
+- exact materialized precedence;
+- off-lattice no-snap;
+- foreign body/grid rejection.
 
 ### Gate
 
 ```text
-A tunnel-shaped synthetic mutation can cross multiple bricks in memory.
-Queries see one continuous result across every brick boundary.
-Untouched asteroid still allocates no full-volume brick set.
+Untouched asteroid allocates zero bricks.
+Requested cells materialize independently.
+Adjacent bricks expose identical shared and ghost samples.
+Exact stored lattice samples override procedural fallback.
+Off-lattice queries remain exact procedural samples.
+No Moon/runtime/mesh/network code changes.
 ```
 
 ---

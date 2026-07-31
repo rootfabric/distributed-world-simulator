@@ -1,10 +1,10 @@
 # MW1 — детерминированное объёмное тело астероида
 
 **Checkpoint:** `v17.1.0-simulation-mw1-fixed-seed-asteroid`
-**Статус поставки:** implementation candidate
+**Статус:** accepted — focused 3685 assertions, MW0/A3/M6 regressions PASS
 **Base:** принятый `v17.0.0-simulation-mw0-matter-contracts`, delivery `fix1`
 **Ветка:** `feature/mw1-fixed-seed-asteroid`
-**Следующий этап:** MW2 — sparse matter cells, bricks and query service
+**Следующий этап:** MW2 — sparse matter cells, bricks and query service (implementation candidate prepared)
 
 ## 1. Назначение
 
@@ -218,7 +218,7 @@ Quantization отделяет generator regression от несущественн
 
 ## 10. Граница этапа
 
-MW1 добавляет только domain/generation/analysis code.
+MW1 добавляет только domain/generation/analysis code. В MW2 поверх принятого sampler добавлена feature-aware проверка root bounds; значения default fixture и golden sampling MW1 не изменены.
 
 Не входят:
 

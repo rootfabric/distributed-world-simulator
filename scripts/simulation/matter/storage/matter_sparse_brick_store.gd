@@ -1,0 +1,129 @@
+extends RefCounted
+
+const MatterUtilsScript = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
+const BodyScript = preload("res://scripts/simulation/matter/contracts/matter_body_definition.gd")
+const BrickSnapshotScript = preload("res://scripts/simulation/matter/contracts/matter_brick_snapshot.gd")
+const BrickLayoutScript = preload("res://scripts/simulation/matter/spatial/matter_brick_layout.gd")
+const GridProfileScript = preload("res://scripts/simulation/matter/spatial/matter_spatial_grid_profile.gd")
+
+var _configured: bool = false
+var _body_definition_hash: String = ""
+var _generator_version: String = ""
+var _generator_seed: int = 0
+var _grid_profile: Dictionary = {}
+var _snapshots_by_address_id: Dictionary = {}
+
+
+func configure(body: Dictionary, grid_profile: Dictionary) -> Dictionary:
+	if not bool(BodyScript.validate(body).get("success", false)):
+		return MatterUtilsScript.failure("INVALID_SPARSE_STORE_BODY_DEFINITION")
+	if not bool(GridProfileScript.validate(grid_profile).get("success", false)):
+		return MatterUtilsScript.failure("INVALID_SPARSE_STORE_GRID_PROFILE")
+	if not MatterUtilsScript.is_lower_hex_64(body.get("checksum")):
+		return MatterUtilsScript.failure("INVALID_SPARSE_STORE_BODY_HASH")
+	if String(grid_profile["body_id"]) != String(body.get("body_id", "")) \
+		or String(grid_profile["body_frame_id"]) != String(body.get("body_frame_id", "")):
+		return MatterUtilsScript.failure("SPARSE_STORE_BODY_GRID_MISMATCH")
+	_body_definition_hash = String(body["checksum"])
+	_generator_version = String(body.get("generator_version", ""))
+	_generator_seed = int(body.get("generator_seed", 0))
+	_grid_profile = grid_profile.duplicate(true)
+	_snapshots_by_address_id.clear()
+	_configured = true
+	return MatterUtilsScript.success()
+
+
+func put(snapshot: Dictionary) -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.failure("SPARSE_STORE_NOT_CONFIGURED")
+	if not bool(BrickSnapshotScript.validate(snapshot).get("success", false)):
+		return MatterUtilsScript.failure("INVALID_SPARSE_STORE_SNAPSHOT")
+	if String(snapshot["body_definition_hash"]) != _body_definition_hash:
+		return MatterUtilsScript.failure("SPARSE_STORE_BODY_HASH_MISMATCH")
+	if String(snapshot["generator_version"]) != _generator_version \
+		or int(snapshot["generator_seed"]) != _generator_seed:
+		return MatterUtilsScript.failure("SPARSE_STORE_GENERATOR_MISMATCH")
+	if int(snapshot["sample_count"]) != GridProfileScript.sample_count(_grid_profile):
+		return MatterUtilsScript.failure("SPARSE_STORE_BRICK_LAYOUT_MISMATCH", {
+			"actual_sample_count": int(snapshot["sample_count"]),
+			"expected_sample_count": GridProfileScript.sample_count(_grid_profile),
+		})
+	var address: Dictionary = snapshot["address"]
+	var address_validation: Dictionary = BrickLayoutScript.validate_brick_address(_grid_profile, address)
+	if not bool(address_validation.get("success", false)):
+		return address_validation
+	var address_id: String = String(address["address_id"])
+	if _snapshots_by_address_id.has(address_id):
+		var existing: Dictionary = _snapshots_by_address_id[address_id]
+		var existing_revision: int = int(existing["state_revision"])
+		var incoming_revision: int = int(snapshot["state_revision"])
+		if incoming_revision < existing_revision:
+			return MatterUtilsScript.failure("STALE_MATTER_BRICK_REVISION")
+		if incoming_revision == existing_revision:
+			if String(existing["checksum"]) == String(snapshot["checksum"]) \
+				and existing == snapshot:
+				return MatterUtilsScript.success({"status": "IDEMPOTENT"})
+			return MatterUtilsScript.failure("SAME_REVISION_MATTER_BRICK_CONFLICT")
+	_snapshots_by_address_id[address_id] = snapshot.duplicate(true)
+	return MatterUtilsScript.success({"status": "STORED"})
+
+
+func get_snapshot(address: Dictionary) -> Dictionary:
+	if not _configured \
+		or not bool(BrickLayoutScript.validate_brick_address(_grid_profile, address).get("success", false)):
+		return {}
+	var address_id: String = String(address["address_id"])
+	return Dictionary(_snapshots_by_address_id.get(address_id, {})).duplicate(true)
+
+
+func has(address: Dictionary) -> bool:
+	if not _configured \
+		or not bool(BrickLayoutScript.validate_brick_address(_grid_profile, address).get("success", false)):
+		return false
+	return _snapshots_by_address_id.has(String(address["address_id"]))
+
+
+func erase(address: Dictionary, expected_revision: int) -> Dictionary:
+	if not _configured \
+		or not bool(BrickLayoutScript.validate_brick_address(_grid_profile, address).get("success", false)):
+		return MatterUtilsScript.failure("INVALID_SPARSE_STORE_ADDRESS")
+	var address_id: String = String(address["address_id"])
+	if not _snapshots_by_address_id.has(address_id):
+		return MatterUtilsScript.success({"status": "ABSENT"})
+	var existing: Dictionary = _snapshots_by_address_id[address_id]
+	if int(existing["state_revision"]) != expected_revision:
+		return MatterUtilsScript.failure("MATTER_BRICK_ERASE_REVISION_MISMATCH")
+	_snapshots_by_address_id.erase(address_id)
+	return MatterUtilsScript.success({"status": "ERASED"})
+
+
+func size() -> int:
+	return _snapshots_by_address_id.size()
+
+
+func address_ids() -> Array:
+	var result: Array = _snapshots_by_address_id.keys()
+	result.sort()
+	return result
+
+
+func content_hash() -> String:
+	if not _configured:
+		return ""
+	var entries: Array = []
+	for address_id in address_ids():
+		var snapshot: Dictionary = _snapshots_by_address_id[address_id]
+		entries.append({
+			"address_id": String(address_id),
+			"state_revision": int(snapshot["state_revision"]),
+			"snapshot_checksum": String(snapshot["checksum"]),
+		})
+	return MatterUtilsScript.payload_hash({
+		"body_definition_hash": _body_definition_hash,
+		"grid_profile_hash": GridProfileScript.content_hash(_grid_profile),
+		"entries": entries,
+	})
+
+
+func clear() -> void:
+	_snapshots_by_address_id.clear()

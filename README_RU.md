@@ -30,11 +30,15 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 - `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая парадигма изменяемого вещества, астероидов, пещер и добычи;
 - `docs/architecture/MW0_MATTER_CONTRACTS_RU.md` — принятая граница canonical matter contracts;
-- `docs/architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — детерминированное объёмное тело астероида, stable features и mass integration;
+- `docs/architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — принятое детерминированное объёмное тело астероида, stable features и mass integration;
+- `docs/architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — иерархические matter cells, sparse bricks, ghost samples и canonical query service;
 - `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md`;
 - `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятый typed normalization fix1;
-- `docs/checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — текущий geological candidate;
+- `docs/checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — принятый MW1;
+- `docs/checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_RU.md` — исходный MW2 candidate;
+- `docs/checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_FIX1_RU.md` — текущий MW2 fix1 candidate, исправляющий конфликт `Object.get()`;
 - `config/matter/mw1-fixed-seed-asteroid.v1.json`;
+- `config/matter/mw2-sparse-bricks-and-query.v1.json`;
 - `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md` — отдельный asteroid lab track и последующая интеграция в Луну;
 - `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md` — решение procedural volume + sparse persistent mutations;
 - `docs/architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md`;
