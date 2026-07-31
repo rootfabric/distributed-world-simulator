@@ -2,7 +2,7 @@
   "schema": "planet_simulator.mw0_matter_contracts_manifest.v1",
   "checkpoint": "v17.0.0-simulation-mw0-matter-contracts",
   "build_id": "mw0-matter-contracts",
-  "status": "CANDIDATE",
+  "status": "ACCEPTED",
   "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
   "recommended_branch": "feature/mw0-matter-contracts",
   "runtime_worlds_changed": false,
@@ -38,5 +38,5 @@
   ],
   "focused_runner_windows": "RUN_MW0_MATTER_CONTRACTS_TESTS.ps1",
   "focused_runner_linux": "RUN_MW0_MATTER_CONTRACTS_TESTS.sh",
-  "next_stage": "MW1 fixed-seed procedural asteroid sampler"
+  "next_stage": "MW1 fixed-seed procedural asteroid sampler candidate"
 }

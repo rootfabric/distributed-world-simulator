@@ -1,9 +1,9 @@
 # MW0 — канонические контракты изменяемого вещества
 
-**Checkpoint:** `v17.0.0-simulation-mw0-matter-contracts`  
-**Статус:** implementation candidate  
-**Base:** `v16.10.6-architecture-a3-single-server-multiplayer`  
-**Ветка:** `feature/mw0-matter-contracts`  
+**Checkpoint:** `v17.0.0-simulation-mw0-matter-contracts`
+**Статус:** accepted, delivery `fix1`
+**Base:** `v16.10.6-architecture-a3-single-server-multiplayer`
+**Ветка:** `feature/mw0-matter-contracts`
 **Связанная парадигма:** `DYNAMIC_MATTER_FABRIC_RU.md`
 
 ## 1. Назначение этапа

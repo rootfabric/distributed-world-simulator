@@ -151,7 +151,7 @@ feature/mw0-matter-contracts
 v17.0.0-simulation-mw0-matter-contracts
 ```
 
-**Implementation candidate подготовлен 2026-07-31.** Он реализует перечисленные ниже контракты, базовый каталог, focused runner и checkpoint documentation. До независимого прогона Godot и review этап остаётся `CANDIDATE`, а MW1 не считается начатым.
+**MW0 принят 2026-07-31, delivery `fix1`.** Focused-профиль прошёл `2011/2011`, A3 и M6 regression остались PASS. Контракты считаются базой geological track; несовместимые изменения требуют отдельной версии.
 
 Фактический version number следует подтвердить при старте ветки с актуального `main`; логический ID `MW0` менять нельзя.
 
@@ -222,6 +222,8 @@ No existing runtime file is modified.
 
 Доказать, что километровый астероид существует как детерминированное объёмное поле без полного voxel allocation.
 
+**Implementation candidate подготовлен 2026-07-31:** `v17.1.0-simulation-mw1-fixed-seed-asteroid`. Реализованы stable feature catalog, observer-independent sampler, closed outer-surface query, natural void, ore/ice geology, 128-point golden fixture и deterministic mass integration. Этап не меняет production worlds и до независимого Godot-прогона остаётся `CANDIDATE`.
+
 ### Ветка
 
 ```text
@@ -231,13 +233,14 @@ feature/mw1-fixed-seed-asteroid
 ### Добавить
 
 ```text
-config/matter/material_catalog.v1.json
-config/matter/asteroid_lab_body.v1.json
-scripts/simulation/matter/generation/matter_sampler_port.gd
-scripts/simulation/matter/generation/asteroid_matter_sampler.gd
+config/matter/mw1-fixed-seed-asteroid.v1.json
+scripts/simulation/matter/generation/deterministic_field_3d.gd
+scripts/simulation/matter/generation/fixed_seed_asteroid_profile.gd
 scripts/simulation/matter/generation/asteroid_feature_catalog.gd
-tests/matter/test_mw1_asteroid_sampler_contracts.gd
-tests/matter/test_mw1_asteroid_sampler_properties.gd
+scripts/simulation/matter/generation/fixed_seed_asteroid_generator.gd
+scripts/simulation/matter/contracts/matter_body_mass_estimate.gd
+scripts/simulation/matter/analysis/matter_body_mass_integrator.gd
+tests/matter/generation/test_mw1_fixed_seed_asteroid.gd
 ```
 
 ### Базовый генератор

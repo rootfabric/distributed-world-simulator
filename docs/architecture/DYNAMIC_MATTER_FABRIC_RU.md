@@ -1,11 +1,23 @@
 # Dynamic Matter Fabric — парадигма изменяемых миров PlanetSimulator
 
-**Статус:** целевая архитектура; MW0 contracts implementation candidate подготовлен.
+**Статус:** целевая архитектура; MW0 принят, MW1 implementation candidate подготовлен.
 **Основание анализа:** `v16.10.6-architecture-a3-single-server-multiplayer`.
 **Решение:** текущая планетарная поверхность сохраняется как совместимое дальнее и переходное представление; каноническое изменяемое состояние переносится в отдельный домен вещества.
 **Связанный ADR:** `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md`.
 **План реализации:** `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md`.
-**Первый implementation checkpoint:** `docs/architecture/MW0_MATTER_CONTRACTS_RU.md`.
+**Принятая contract base:** `docs/architecture/MW0_MATTER_CONTRACTS_RU.md`.
+**Текущий implementation candidate:** `docs/architecture/MW1_FIXED_SEED_ASTEROID_RU.md`.
+
+
+## Текущий implementation status
+
+```text
+MW0: accepted — canonical matter contracts and mass ledger
+MW1: candidate — fixed-seed volumetric asteroid sampler
+production Moon runtime changed: false
+```
+
+MW1 создаёт первый канонический procedural base: астероид радиусом 1000 м, seed `2026073101`, stable shape/geology features, natural void и mass integration. Sparse persistent mutations начинаются с MW2/MW4 и не смешиваются с presentation mesh.
 
 ## 1. Цель
 

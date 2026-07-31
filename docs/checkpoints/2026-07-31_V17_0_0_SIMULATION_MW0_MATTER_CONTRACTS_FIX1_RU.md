@@ -1,11 +1,11 @@
 # v17.0.0 — Simulation MW0 Matter Contracts fix1
 
-Дата: `2026-07-31`  
-Статус поставки: `CANDIDATE FOR INDEPENDENT REVIEW`  
-Base checkpoint: `v16.10.6-architecture-a3-single-server-multiplayer`  
-Ветка: `feature/mw0-matter-contracts`  
-Checkpoint: `v17.0.0-simulation-mw0-matter-contracts`  
-Delivery: `fix1`  
+Дата: `2026-07-31`
+Статус поставки: `ACCEPTED`
+Base checkpoint: `v16.10.6-architecture-a3-single-server-multiplayer`
+Ветка: `feature/mw0-matter-contracts`
+Checkpoint: `v17.0.0-simulation-mw0-matter-contracts`
+Delivery: `fix1`
 Build ID: `mw0-matter-contracts-fix1`
 
 ## Результат первой независимой проверки
@@ -102,3 +102,13 @@ exit code 0
 7. `git diff --check` остаётся `PASS`.
 
 После независимого PASS delivery `fix1` можно принять как MW0 и перейти к `MW1 fixed-seed procedural asteroid sampler`.
+## Независимая приёмка
+
+```text
+MW0: 2011/2011 PASS
+A3:  12/12 PASS
+M6:  10/10 PASS
+git diff --check: PASS
+```
+
+Delivery `fix1` является принятой базой MW1.

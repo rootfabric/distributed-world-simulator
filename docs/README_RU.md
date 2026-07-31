@@ -6,9 +6,11 @@
 - `architecture/adr/ADR-017-dynamic-matter-fabric.md` — ADR, заменяющий прежнее общее решение heightfield + voxel;
 - `plans/MUTABLE_WORLDS_ROADMAP_RU.md` — MW0–MW8 изолированного астероида, MI0–MI4 интеграции Луны и MP0–MP4 production track;
 - `checkpoints/2026-07-31_MUTABLE_WORLDS_ARCHITECTURE_ROADMAP_RU.md` — документационный checkpoint анализа текущего среза.
-- `architecture/MW0_MATTER_CONTRACTS_RU.md` — реализованная граница контрактов вещества, snapshot channels, mutations и mass ledger;
-- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md` — первый code checkpoint geological track, статус candidate.
-- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — исправление typed normalization после первой независимой проверки MW0.
+- `architecture/MW0_MATTER_CONTRACTS_RU.md` — принятая граница контрактов вещества, snapshot channels, mutations и mass ledger;
+- `architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — fixed-seed volumetric asteroid, stable features, geology и mass integration;
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md` — первый code checkpoint geological track.
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятое исправление typed normalization MW0.
+- `checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — текущий MW1 candidate.
 
 Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
 Текущий architecture candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.

@@ -181,11 +181,12 @@ This track is independent from the accepted single-server multiplayer order and 
 
 ```text
 architecture: Dynamic Matter Fabric
-current candidate: v17.0.0-simulation-mw0-matter-contracts
-branch: feature/mw0-matter-contracts
+accepted: v17.0.0-simulation-mw0-matter-contracts, delivery fix1
+current candidate: v17.1.0-simulation-mw1-fixed-seed-asteroid
+branch: feature/mw1-fixed-seed-asteroid
 production worlds changed: false
-next after acceptance: MW1 fixed-seed procedural asteroid sampler
+next after acceptance: MW2 sparse matter storage
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
-MW0 review fixes remain on `feature/mw0-matter-contracts`. MW1 starts only after MW0 acceptance.
+MW1 must remain headless/domain-only: no Moon runtime, world catalog, mesh, collision, Item Graph or network authority changes. Review fixes remain on `feature/mw1-fixed-seed-asteroid` until acceptance.

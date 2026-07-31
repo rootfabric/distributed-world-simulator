@@ -755,3 +755,26 @@ M6 checkpoint files:
 - RUN_M6_DEDICATED_RECOVERY_TESTS.ps1/.sh
 - tests/runtime/test_m6_dedicated_recovery_contracts.gd
 - tests/runtime/test_m6_dedicated_recovery_processes.gd
+
+MW0 mutable matter contracts
+- checkpoint: v17.0.0-simulation-mw0-matter-contracts
+- delivery: fix1
+- branch: feature/mw0-matter-contracts
+- status: accepted
+- focused: 2011/2011 assertions PASS
+
+MW1 fixed-seed volumetric asteroid
+- checkpoint: v17.1.0-simulation-mw1-fixed-seed-asteroid
+- build: mw1-fixed-seed-asteroid
+- branch: feature/mw1-fixed-seed-asteroid
+- base: accepted MW0 delivery fix1
+- fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
+- generator: reference ellipsoid + deterministic deformation + stable CSG features
+- geology: regolith/fractured shells, basalt interior, iron-nickel lens, water-ice pocket
+- topology: two additive lobes, two craters, one enclosed natural void
+- analysis: deterministic midpoint volume/mass/material integration
+- golden: 128 control points, quantized canonical SHA-256
+- runtime worlds changed: no
+- mesh/collision: not included
+- runner: RUN_MW1_FIXED_SEED_ASTEROID_TESTS.ps1 / .sh
+- next: MW2 sparse matter cells, bricks and query service
