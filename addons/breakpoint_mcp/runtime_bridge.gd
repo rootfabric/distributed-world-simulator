@@ -62,9 +62,19 @@ var _tree_dirty: bool = false
 var _log_dirty: bool = false
 var _log_capture = null  # registered Logger (Godot 4.5+) or null
 var _in_capture: bool = false
+var _disabled: bool = false
 
 
 func _ready() -> void:
+	# Multi-process graphical acceptance normally disables the bridge for all but
+	# the explicitly MCP-managed process. This avoids loopback port collisions
+	# without removing the autoload or changing gameplay composition.
+	var disabled_value := OS.get_environment("BREAKPOINT_RUNTIME_DISABLED").strip_edges().to_lower()
+	if disabled_value in ["1", "true", "yes", "on"]:
+		_disabled = true
+		set_process(false)
+		push_log("info", "BreakpointRuntimeBridge disabled by BREAKPOINT_RUNTIME_DISABLED")
+		return
 	# Keep servicing requests even while the game is paused (e.g. at a breakpoint).
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var env_port := OS.get_environment("BREAKPOINT_RUNTIME_PORT")
@@ -114,6 +124,8 @@ func push_log(level: String, message: String) -> void:
 
 
 func _exit_tree() -> void:
+	if _disabled:
+		return
 	var tree := get_tree()
 	if tree:
 		if tree.node_added.is_connected(_on_tree_structure_changed):

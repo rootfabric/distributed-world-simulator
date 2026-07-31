@@ -1,15 +1,17 @@
 # Документация PlanetSimulator
 
-Принятый runtime checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
-Текущий runtime candidate: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`.
+Принятый runtime checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay`.
+Текущий этап: `v16.10.3-pre-m5-graphical-acceptance-preparation` (`candidate`).
 
-M3 доказывает один headless dedicated server и два одновременно работающих graphical Godot clients: local/remote presentation, mutual authoritative movement, orientation/flashlight replication, disconnect/reconnect и checksum convergence.
+M4 принят; подготовка M5 добавляет read-only Item Graph UI projection, command adapter, transient cursor state, networked inventory shell и изолированные process profiles. Полный UI-driven two-client acceptance ещё не заявлен.
 
 Ключевые документы:
 
 - `MCP_GODOT.md` — контракт автономного управления double Godot через MCP:
   managed processes, runtime input, viewport screenshots, assertions, логи и
   корректное завершение процесса;
+- `architecture/M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md` — подготовительная UI/replica boundary M5;
+- `checkpoints/2026-07-31_PRE_M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
 - `architecture/M4_PRE_M5_HANDOFF_RU.md` — актуальная база `main` перед M5:
   canonical M4 gameplay, сетевой полигон, MCP, окно client и camera-relative
   movement;
@@ -168,3 +170,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - `checkpoints/2026-07-29_V16_8_1_ARCHITECTURE_A1_GENERIC_AGGREGATE_RU.md` — A1 checkpoint.
 
 - `architecture/M0_MULTI_AGGREGATE_TRANSACTIONS_OUTBOX_RU.md` — атомарные multi-aggregate commits и transactional outbox.
+
+## M5 graphical multiplayer acceptance
+
+- [`architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
+- [`checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)

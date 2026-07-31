@@ -1,25 +1,23 @@
-# Ближайшие итерации после M2
+# Ближайшие итерации после M6
 
-Принятый M2: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
-Текущий candidate: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`.
+Принятый M6: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
+Текущий candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
 
 ```text
-M3 — Dedicated + 2 graphical clients — current candidate
-M4 — Canonical shared gameplay over ENet — next
-M5 — Graphical Multiplayer Acceptance
-M6 — Dedicated persistence and recovery
-A3 — Single-server multiplayer audit/freeze
-B1/B2 — after A3
-N3–N6 — after B2
+A3 — Single-server multiplayer audit/freeze — current candidate
+B1 — NATS Core server-to-server adapter — next after A3 acceptance
+B2 — JetStream/outbox delivery — after B1
+N3–N6 — after A3 and B2
 ```
 
 ## Текущая ветка
 
 ```text
-feature/m3-dedicated-graphical-multiplayer
-checkpoint: v16.10.2-runtime-m3-dedicated-graphical-multiplayer
+feature/a3-single-server-multiplayer-architecture
+checkpoint: v16.10.6-architecture-a3-single-server-multiplayer
+runtime base: v16.10.5-persistence-m6-dedicated-recovery
 ```
 
-M3 запускает два одновременных graphical clients против headless dedicated server, добавляет `RemotePlayerPresenter`, взаимную authoritative movement/presentation replication, disconnect/reconnect и checksum convergence.
+A3 проверяет, что M1–M6 образуют один production gameplay path без topology-specific forks: единый service, общие contracts, LOOPBACK/ENet equivalence, graphical replica boundary, contention, reconnect, durable recovery и exact replay.
 
 Полный scope и acceptance: `SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

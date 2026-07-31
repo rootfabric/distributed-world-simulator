@@ -1,0 +1,310 @@
+{
+  "schema": "planet_simulator.single_server_multiplayer_architecture.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "build_id": "a3-single-server-multiplayer-architecture-freeze",
+  "base_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+  "status": "candidate",
+  "decision": "SINGLE_SERVER_MULTIPLAYER_FROZEN",
+  "branch": "feature/a3-single-server-multiplayer-architecture",
+  "generated_at_utc": "2026-07-31T03:39:00Z",
+  "purpose": "freeze the proven one-dedicated-server plus ordinary graphical clients architecture before introducing server-to-server message-bus adapters",
+  "accepted_milestones": [
+    {
+      "id": "M1",
+      "checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
+      "effective_status": "accepted",
+      "evidence": "config/network/networked-gameplay-core.v1.json"
+    },
+    {
+      "id": "M2",
+      "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
+      "effective_status": "accepted",
+      "evidence": "config/network/dedicated-graphical-client.v1.json",
+      "gate_closure": "M3 and M5 shutdown/profile evidence"
+    },
+    {
+      "id": "M3",
+      "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
+      "effective_status": "accepted",
+      "evidence": "config/network/dedicated-graphical-multiplayer.v1.json"
+    },
+    {
+      "id": "M4",
+      "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+      "effective_status": "accepted",
+      "evidence": "config/network/canonical-shared-gameplay.v1.json"
+    },
+    {
+      "id": "M5",
+      "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+      "effective_status": "accepted",
+      "evidence": "config/network/graphical-multiplayer-acceptance.v1.json",
+      "delivery": "fix1"
+    },
+    {
+      "id": "M6",
+      "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+      "effective_status": "accepted",
+      "evidence": "config/network/dedicated-persistence-recovery.v1.json",
+      "delivery": "fix1"
+    }
+  ],
+  "production_gameplay_path": {
+    "service_name": "NetworkedGameplayService",
+    "service_path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "service_count": "one",
+    "canonical_pipeline": [
+      "input_or_ui_intent",
+      "client_command_gateway",
+      "versioned_wire_command",
+      "NetworkedGameplayService",
+      "authoritative_mutation",
+      "durable_commit_when_enabled",
+      "targeted_result_and_replication",
+      "client_replica_store",
+      "presentation"
+    ],
+    "authority_adapters": [
+      {
+        "id": "listen_host",
+        "path": "scripts/runtime/listen_host/playable_listen_host_authority.gd",
+        "gameplay_service": "NetworkedGameplayService",
+        "transport": "loopback canonical DTO"
+      },
+      {
+        "id": "host_client_compatibility",
+        "path": "scripts/runtime/host_client/multiplayer_gameplay_authority.gd",
+        "gameplay_service": "NetworkedGameplayService",
+        "transport": "ENet compatibility adapter"
+      },
+      {
+        "id": "dedicated_enet",
+        "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+        "gameplay_service": "NetworkedGameplayService",
+        "transport": "ENet multi-peer v2"
+      },
+      {
+        "id": "dedicated_recovery",
+        "path": "scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd",
+        "gameplay_service": "NetworkedGameplayService",
+        "transport": "R3.1 recovery repository adapter"
+      }
+    ],
+    "graphical_clients": [
+      {
+        "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+        "authority_references": 0,
+        "domain_references": 0,
+        "state_source": "validated replica"
+      },
+      {
+        "path": "scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd",
+        "authority_references": 0,
+        "domain_references": 0,
+        "state_source": "validated replica"
+      }
+    ],
+    "topology_rule": "topology adapters may translate transport and lifecycle concerns but may not own independent gameplay state, replay ledgers or domain rules"
+  },
+  "wire_contract_family": [
+    {
+      "name": "PlayerJoinCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_join_command.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerLeaveCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_leave_command.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerInputCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_input_command.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerPresentationCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_presentation_command.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerOwnershipSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_ownership_snapshot.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerStateSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "PlayerStateDelta",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_state_delta.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "ItemCommand",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_command.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "ItemGraphSnapshot",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_graph_snapshot.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "ItemGraphDelta",
+      "path": "scripts/runtime/networked_gameplay/contracts/item_graph_delta.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    },
+    {
+      "name": "CommandResult",
+      "path": "scripts/runtime/networked_gameplay/contracts/command_result.gd",
+      "versioned": true,
+      "json_safe": true,
+      "exact_field": true,
+      "node_independent": true
+    }
+  ],
+  "frozen_invariants": {
+    "single_authoritative_writer": true,
+    "stable_player_identity": true,
+    "ownership_epoch_fencing": true,
+    "operation_replay_idempotency": true,
+    "canonical_item_identity_conservation": true,
+    "replica_only_graphical_clients": true,
+    "transient_transport_sessions": true,
+    "durable_recovery_before_ack": true,
+    "graphical_realtime_transport": "ENet",
+    "authority_scope": "one dedicated authoritative region server"
+  },
+  "proof_matrix": {
+    "two_graphical_clients": "M3 and M5",
+    "canonical_item_graph_contention": "M4 and M5",
+    "disconnect_reconnect": "M3 and M5",
+    "replay_identity": "M5 fix1 and M6",
+    "crash_restart_recovery": "M6 fix1",
+    "world_and_main_scene_regression": "A3 candidate validated on Godot 4.7.1 double; independent local acceptance remains required"
+  },
+  "a2_debt_closure": {
+    "A2-D01": {
+      "status": "closed",
+      "closed_by": "M1"
+    },
+    "A2-D02": {
+      "status": "closed",
+      "closed_by": "M1"
+    },
+    "A2-D03": {
+      "status": "closed",
+      "closed_by": "M5"
+    },
+    "A2-D04": {
+      "status": "closed",
+      "closed_by": "M6"
+    },
+    "A2-D05": {
+      "status": "open",
+      "severity": "P2",
+      "scope": "production authentication and player admission"
+    }
+  },
+  "b1_handoff": {
+    "checkpoint": "v16.11.0-data-plane-b1-nats-core",
+    "branch": "feature/b1-nats-core-adapter",
+    "scope": "server_to_server_only",
+    "allowed_scope": [
+      "B0 service request/reply adapter",
+      "discovery",
+      "heartbeat",
+      "health",
+      "load",
+      "capability discovery",
+      "transport-neutral routing metadata"
+    ],
+    "forbidden_scope": [
+      "graphical client realtime traffic",
+      "new gameplay command model",
+      "direct broker calls from gameplay or domain code",
+      "NATS subjects in canonical gameplay state",
+      "broker delivery as authority ownership"
+    ],
+    "may_replace_enet": false,
+    "may_create_second_gameplay_path": false,
+    "required_equivalence": "in-memory and NATS B0 adapters must preserve operation results and canonical DTO checksums"
+  },
+  "multi_authority_gate": {
+    "production_multi_authority_allowed": false,
+    "required_before_n3": [
+      "A3",
+      "B1",
+      "B2"
+    ],
+    "reason": "A3 freezes single-server gameplay; B1/B2 add server-to-server transport and durable delivery without changing gameplay ownership"
+  },
+  "acceptance": [
+    "M1-M6 are effectively accepted and their evidence manifests are linked",
+    "one production NetworkedGameplayService owns canonical gameplay semantics",
+    "all authority topologies delegate to the common service",
+    "graphical clients are replica-only and cannot construct authority state",
+    "one versioned node-independent wire contract family is frozen",
+    "M5 proves two graphical clients and canonical Item Graph contention",
+    "M6 proves reconnect replay and dedicated crash recovery",
+    "B1 is restricted to server-to-server B0 adapter scope",
+    "multi-authority production work remains blocked through B2"
+  ],
+  "evidence": {
+    "architecture_auditor": "scripts/runtime/networked_gameplay/a3/single_server_architecture_auditor.gd",
+    "contracts": "tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
+    "focused_runner_windows": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1",
+    "focused_runner_linux": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.sh",
+    "network_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "world_runner": "RUN_WORLD_REGRESSION_TESTS.ps1"
+  },
+  "verification_status": {
+    "static_validation": "passed",
+    "godot_double_precision_runtime": "passed_linux_a13da4f",
+    "engine": "Godot 4.7.1 stable.double custom build a13da4feb",
+    "focused_a3": "12/12 PASS",
+    "a3_contracts": "140 assertions, 0 failures",
+    "network_runtime": "60/60 PASS",
+    "world_regression": "105/105 PASS",
+    "main_scene": "6/6 PASS",
+    "independent_local_acceptance": "required_before_ACCEPTED",
+    "network_assertions": 4759
+  },
+  "next_stage": "B1",
+  "next_checkpoint": "v16.11.0-data-plane-b1-nats-core",
+  "updated_at_utc": "2026-07-31T03:39:00Z"
+}

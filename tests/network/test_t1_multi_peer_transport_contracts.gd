@@ -238,7 +238,7 @@ func _test_project_wiring() -> void:
 	var roadmap = JSON.parse_string(roadmap_text)
 	_assert(roadmap is Dictionary, "Network roadmap is not valid JSON")
 	if roadmap is Dictionary:
-		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.2-runtime-m3-dedicated-graphical-multiplayer", "Network roadmap checkpoint is stale")
+		_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.6-architecture-a3-single-server-multiplayer", "Network roadmap checkpoint is stale")
 		var statuses: Dictionary = {}
 		for phase in roadmap.get("phases", []):
 			statuses[String(phase.get("id", ""))] = String(phase.get("status", ""))

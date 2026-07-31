@@ -3,8 +3,8 @@
 **Статус:** официальный принятый post-A2 roadmap
 **Checkpoint:** `v16.9.5-roadmap-single-server-multiplayer-first`
 **База:** принятый `v16.9.4-architecture-a2-networked-gameplay` (`FROZEN_WITH_GATES`)
-**Принятая реализация:** `M1 — Unified Networked Gameplay Core`
-**Текущая реализация:** `M2 — Dedicated + 1 graphical client`
+**Принятая runtime-реализация:** `M6 — Dedicated persistence and recovery`
+**Текущая architecture-реализация:** `A3 — Single-server multiplayer audit/freeze`
 
 ## 1. Стратегическое решение
 
@@ -106,7 +106,7 @@ Acceptance:
 Checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client`
 Branch: `feature/m2-dedicated-graphical-client`
 
-Статус: **accepted with gates**. Реализованы `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity. Автоматический process-test использует настоящий graphical display/renderer.
+Статус: **ACCEPTED**. Реализованы `game-client`, connection parameters, join/ownership handshake, initial sync, реальный `LunarPlayer`, authoritative movement/correction, replica inventory/hotbar и reconnect без второй entity. Автоматический process-test использует настоящий graphical display/renderer.
 
 Acceptance:
 
@@ -125,7 +125,7 @@ graphical client starts
 Checkpoint: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`
 Branch: `feature/m3-dedicated-graphical-multiplayer`
 
-Статус: **current candidate**. Реализованы local/remote distinction, `RemotePlayerPresenter`, spawn/despawn, transform/velocity/orientation, flashlight state, interpolation и отсутствие input authority у remote presentation.
+Статус: **ACCEPTED**. Реализованы local/remote distinction, `RemotePlayerPresenter`, spawn/despawn, transform/velocity/orientation, flashlight state, interpolation и отсутствие input authority у remote presentation.
 
 Acceptance: A и B видят движение друг друга; отключение A не останавливает B; reconnect A восстанавливает ту же identity.
 
@@ -134,7 +134,7 @@ Acceptance: A и B видят движение друг друга; отключ
 Checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay`
 Branch: `feature/m4-canonical-shared-gameplay`
 
-Dedicated multiplayer использует полный канонический H1 Item Graph:
+Статус: **ACCEPTED**, delivery `fix1`. Dedicated multiplayer использует полный канонический H1 Item Graph:
 
 - inventory и hotbar;
 - pickup/drop;
@@ -153,21 +153,21 @@ Branch: `feature/m5-graphical-multiplayer-acceptance`
 
 Автоматический process-test запускает dedicated server и два graphical clients с отдельными user-data каталогами. Требуется renderer или virtual display; headless-only proof недостаточен.
 
-Полный сценарий включает join, взаимное движение, contention, disconnect/reconnect, canonical checksum convergence и корректное завершение процессов.
+Статус: **ACCEPTED**, delivery `fix1`. Полный сценарий включает join, взаимное движение, contention, disconnect/reconnect, canonical checksum convergence и корректное завершение процессов.
 
 ## 8. M6 — Dedicated persistence and recovery
 
 Checkpoint: `v16.10.5-persistence-m6-dedicated-recovery`
 Branch: `feature/m6-dedicated-recovery`
 
-Закрывает `A2-D04`: crash/restart восстанавливает player identities/state, Item Graph, inventories/containers, operation ledger, revisions, authority epoch и committed outbox state без дубликатов.
+Статус: **ACCEPTED**, delivery `fix1`. Закрывает `A2-D04`: crash/restart восстанавливает player identities/state, Item Graph, inventories/containers, operation ledgers, revisions, authority epoch и committed outbox state без дубликатов. ACK выдаётся только после atomic checkpoint; exact replay после restart не создаёт второй mutation.
 
 ## 9. A3 — Single-server multiplayer audit/freeze
 
 Checkpoint: `v16.10.6-architecture-a3-single-server-multiplayer`
 Branch: `feature/a3-single-server-multiplayer-architecture`
 
-A3 принимается только после M1–M6 и фиксирует единственный production service, shared wire contracts, graphical client composition, local/remote presentation, canonical Item Graph over ENet, contention, reconnect/replay, dedicated recovery и two-graphical-client process proof.
+Статус: **candidate**. A3 фиксирует единственный production service, shared wire contracts, graphical client composition, local/remote presentation, canonical Item Graph over ENet, contention, reconnect/replay, dedicated recovery и two-graphical-client process proof.
 
 ## 10. После A3
 
@@ -180,7 +180,7 @@ N5 v16.12.2 — Seamless player handoff
 N6 v16.12.3 — Ghosts + interest management
 ```
 
-До A3 запрещена production-реализация World Directory, handoff, ghosts, dynamic shard balancing и нескольких authoritative region servers. Исследования допускаются без production integration.
+До принятия A3 запрещена production-реализация World Directory, handoff, ghosts, dynamic shard balancing и нескольких authoritative region servers. Исследования допускаются без production integration.
 
 ## 11. Критерий перехода к multi-server
 

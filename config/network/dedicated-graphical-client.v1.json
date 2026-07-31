@@ -1,12 +1,12 @@
 {
   "schema": "planet_simulator.dedicated_graphical_client.v1",
-  "document_revision": 2,
+  "document_revision": 3,
   "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "build_id": "m2-dedicated-graphical-client",
-  "status": "accepted_with_gates",
+  "status": "accepted",
   "generated_at_utc": "2026-07-30T06:20:00Z",
   "base_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
-  "decision": "ACCEPTED_WITH_GATES",
+  "decision": "ACCEPTED",
   "topology": {
     "server_process": {
       "role": "dedicated-server",
@@ -126,7 +126,9 @@
   },
   "acceptance_gates": {
     "M2-G01": "closed by corrected metadata in M3 checkpoint",
-    "M2-G02": "tracked: X11/ObjectDB shutdown diagnostics must remain non-fatal and process-owned resources must terminate",
-    "M2-G03": "closed for M3 acceptance by isolated HOME/XDG/APPDATA/LOCALAPPDATA roots"
-  }
+    "M2-G02": "closed by M3 and M5 process shutdown hygiene with zero blocking ObjectDB/resource leak markers",
+    "M2-G03": "closed by isolated HOME/XDG/APPDATA/LOCALAPPDATA process profiles in M3-M6"
+  },
+  "finalized_by_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "finalized_at_utc": "2026-07-31T03:39:00Z"
 }

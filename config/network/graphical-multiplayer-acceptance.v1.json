@@ -1,0 +1,103 @@
+{
+  "schema": "planet_simulator.graphical_multiplayer_acceptance.v1",
+  "document_revision": 2,
+  "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "build_id": "m5-ui-driven-graphical-multiplayer-acceptance",
+  "base_checkpoint": "v16.10.3-pre-m5-graphical-acceptance-preparation",
+  "runtime_base_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+  "status": "accepted",
+  "decision": "UI_DRIVEN_GRAPHICAL_MULTIPLAYER_ACCEPTANCE",
+  "topology": {
+    "server": "headless dedicated Godot process",
+    "clients": [
+      "graphical Godot client A",
+      "graphical Godot client B",
+      "graphical reconnect client A2"
+    ],
+    "transport": "ENet multi-peer v2",
+    "renderer": "gl_compatibility on real or virtual display",
+    "headless_clients_allowed": false
+  },
+  "canonical_path": [
+    "inventory_widget",
+    "M5InventoryUiBridge",
+    "M4ItemCommandAdapter",
+    "ITEM_COMMAND",
+    "dedicated NetworkedGameplayService",
+    "canonical Item Graph mutation",
+    "CommandResult and Item Graph snapshot",
+    "M4ItemGraphUiProjection",
+    "inventory_widget"
+  ],
+  "ui_invariants": {
+    "authority_references": 0,
+    "domain_references": 0,
+    "canonical_mutation_from_ui": false,
+    "cursor_drag_pending_state": "transient client-only overlay",
+    "server_confirmation_required": true
+  },
+  "accepted_operations": [
+    "movement via InputMap",
+    "hotbar assignment",
+    "container open close",
+    "inventory to container",
+    "container to inventory",
+    "mount",
+    "detach",
+    "drop",
+    "repick",
+    "contention",
+    "disconnect",
+    "reconnect"
+  ],
+  "acceptance": [
+    "two graphical clients run concurrently against one headless dedicated server",
+    "movement is produced through real InputMap actions and observed through authoritative replication",
+    "inventory and hotbar are rendered from replica state",
+    "exactly one UI client wins shared item contention and loser receives ITEM_ALREADY_CLAIMED",
+    "winner completes hotbar container mount detach drop repick workflow through inventory widgets",
+    "client A disconnects with transient cursor and reconnects to same player entity with ownership epoch 2",
+    "transient cursor does not survive reconnect while canonical ore inventory does",
+    "server and both clients converge to identical player and Item Graph checksums before shutdown",
+    "all clients leave cleanly without ObjectDB resource or MCP port collision markers"
+  ],
+  "evidence": {
+    "contracts": "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+    "preparation_contracts": "tests/runtime/test_m5_graphical_acceptance_preparation.gd",
+    "graphical_process": "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+    "focused_runner_windows": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1",
+    "focused_runner_linux": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.sh"
+  },
+  "closes": [
+    "A2-D03"
+  ],
+  "next_stage": "M6",
+  "next_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+  "verified_results": {
+    "contracts_assertions": 78,
+    "preparation_assertions": 64,
+    "graphical_process_assertions": {
+      "windows": 89,
+      "linux": 90,
+      "linux_extra": "Xvfb startup assertion"
+    },
+    "focused_profile": {
+      "scripts": 15,
+      "windows_assertions": 1109,
+      "linux_assertions": 1110
+    },
+    "network_runtime": {
+      "suites": 57,
+      "assertions": 4320
+    },
+    "world_regression": {
+      "tests": 102
+    },
+    "main_scene": {
+      "assertions": 6
+    }
+  },
+  "delivery": "fix1",
+  "accepted_at_utc": "2026-07-31T00:04:00Z",
+  "fix1_sha256": "407B00755EC525213927E498E95176824F72A2EC82F3CCAE9C4A08470BF02FB9"
+}

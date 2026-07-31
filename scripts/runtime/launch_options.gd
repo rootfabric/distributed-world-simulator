@@ -26,6 +26,13 @@ static func defaults() -> Dictionary:
 		"m3_result_file": "",
 		"m3_peer_result_file": "",
 		"m3_phase": 0,
+		"m5_result_file": "",
+		"m5_peer_result_file": "",
+		"m5_control_file": "",
+		"m5_screenshot_dir": "",
+		"m5_phase": 0,
+		"m6_result_file": "",
+		"m6_persistence_root": "",
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
 		"shutdown_after_ms": 0,
@@ -86,6 +93,20 @@ static func parse(arguments) -> Dictionary:
 				options["m3_peer_result_file"] = value
 			"m3-phase":
 				options["m3_phase"] = _parse_non_negative_int(value, key, errors)
+			"m5-result-file":
+				options["m5_result_file"] = value
+			"m5-peer-result-file":
+				options["m5_peer_result_file"] = value
+			"m5-control-file":
+				options["m5_control_file"] = value
+			"m5-screenshot-dir":
+				options["m5_screenshot_dir"] = value
+			"m5-phase":
+				options["m5_phase"] = _parse_non_negative_int(value, key, errors)
+			"m6-result-file":
+				options["m6_result_file"] = value
+			"m6-persistence-root":
+				options["m6_persistence_root"] = value
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":
@@ -163,6 +184,12 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 			errors.append("Launch option server_port is invalid")
 	if role == RuntimeRoleScript.GAME_CLIENT and String(options.get("player_identity", "")).strip_edges().is_empty():
 		errors.append("Launch option player_identity cannot be empty")
+	var m6_result_file := String(options.get("m6_result_file", "")).strip_edges()
+	var m6_persistence_root := String(options.get("m6_persistence_root", "")).strip_edges()
+	if (not m6_result_file.is_empty() or not m6_persistence_root.is_empty()) and role != RuntimeRoleScript.DEDICATED_SERVER:
+		errors.append("M6 dedicated recovery options require dedicated-server role")
+	if not m6_result_file.is_empty() and m6_persistence_root.is_empty():
+		errors.append("Launch option m6_persistence_root is required for M6 dedicated recovery")
 	var node_id: String = String(options.get("node_id", ""))
 	if role == RuntimeRoleScript.OFFLINE and node_id == "local-listen-host":
 		options["node_id"] = "local-offline"

@@ -21,13 +21,28 @@ func _port()->int:
 	for i in range(300):
 		var p=23000+((OS.get_process_id()+i)%25000);var probe=PacketPeerUDP.new();var e=probe.bind(p,"127.0.0.1");probe.close();if e==OK:return p
 	return 0
-func _wait(path:String,states:Array[String],timeout:int)->Dictionary:
-	var start=Time.get_ticks_msec()
-	while Time.get_ticks_msec()-start<=timeout:
-		if FileAccess.file_exists(path):
-			var f=FileAccess.open(path,FileAccess.READ);var v=JSON.parse_string(f.get_as_text());f.close();if v is Dictionary and String(v.get("state","")) in states:return v
+func _wait(path: String, states: Array[String], timeout: int) -> Dictionary:
+	var started_at := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started_at <= timeout:
+		var result := _read_json_dictionary(path)
+		if not result.is_empty() and String(result.get("state", "")) in states:
+			return result
 		OS.delay_msec(25)
 	return {}
+
+
+func _read_json_dictionary(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		# Another process may be replacing or still closing the result file.
+		# Treat the transient sharing violation as "not ready" and retry.
+		return {}
+	var text := file.get_as_text()
+	file.close()
+	var parsed: Variant = JSON.parse_string(text)
+	return parsed if parsed is Dictionary else {}
 func _assert(c:bool,m:String)->void:assertions+=1;if not c:failures.append(m)
 func _finish()->void:
 	for pid in pids:

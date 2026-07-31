@@ -35,8 +35,8 @@ const NetworkContractUtils = preload("res://scripts/network/contracts/network_co
 const PlayableAuthorityScript = preload("res://scripts/runtime/listen_host/playable_listen_host_authority.gd")
 const RemotePlayerPresenterScript = preload("res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd")
 
-const PROJECT_VERSION: String = "16.10.2-runtime-m3-dedicated-graphical-multiplayer"
-const BUILD_ID: String = "m3-dedicated-two-graphical-clients"
+const PROJECT_VERSION: String = "16.10.6-architecture-a3-single-server-multiplayer"
+const BUILD_ID: String = "a3-single-server-multiplayer-architecture-freeze"
 const PLAYER_ENTITY_ID: String = "player/local-astronaut"
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 11.0

@@ -164,15 +164,17 @@ movement validation от этого не менялись.
 
 `Breakpoint MCP` добавлен в проект как локальный loopback-инструмент:
 
-- editor bridge: `127.0.0.1:9080`;
-- runtime bridge: `127.0.0.1:9081`;
+- editor bridge по умолчанию: `127.0.0.1:9080`;
+- runtime bridge по умолчанию: `127.0.0.1:9081`;
 - double Godot binary: `C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe`.
 
-MCP предназначен для запуска/наблюдения одного managed runtime, injection
-ввода, SceneTree assertions, runtime logs и viewport screenshots. Он не
-является network transport и не заменяет ENet. На одном порту `9081` может
-работать только один runtime bridge; перед запуском следующего MCP-managed
-runtime предыдущий нужно штатно остановить. Полный контракт и ограничения — в
+MCP предназначен для наблюдения managed runtime, injection ввода, SceneTree
+assertions, runtime logs и viewport screenshots. Он не является network
+transport и не заменяет ENet. Подготовительная граница M5 поддерживает два
+безопасных режима для многопроцессных тестов: runtime bridge отключается через
+`BREAKPOINT_RUNTIME_DISABLED=1` либо каждому процессу назначается уникальный
+порт. Server, client A, client B и reconnect process также используют отдельные
+user-data каталоги. Полный контракт и ограничения — в
 [`MCP_GODOT.md`](../MCP_GODOT.md).
 
 ## Граница M5
@@ -208,9 +210,7 @@ transport topology, NATS или distributed authority.
   -GodotPath "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 ```
 
-Если пользователь уже держит живой graphical client для ручного теста, не
-запускайте параллельно MCP-managed runtime на `9081`. Либо используйте этот
-клиент для наблюдения, либо сначала завершите его штатно.
+Если пользователь уже держит живой graphical client для ручного теста, новый process следует запускать с отключённым runtime bridge либо с другим портом. Совместное использование `9081` несколькими процессами запрещено.
 
 ## Связанные документы
 
@@ -225,3 +225,15 @@ transport topology, NATS или distributed authority.
 - [`M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`](M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md) —
   presentation/ownership база;
 - [`MCP_GODOT.md`](../MCP_GODOT.md) — контракт MCP tooling.
+
+## Реализованная подготовительная граница M5
+
+Подготовительный слой зафиксирован в
+[`M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`](M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md).
+Он добавляет read-only M4 projection, UI command adapter, transient cursor state,
+networked inventory shell и изоляцию MCP/user-data. Это не завершение M5:
+полный UI-driven two-client acceptance остаётся следующим runtime этапом.
+
+## Handoff fulfilled by M5
+
+Требования этого handoff реализованы в `v16.10.4-testing-m5-graphical-multiplayer-acceptance`. UI-driven graphical process acceptance использует тот же M4 authoritative Item Graph и не добавляет второй gameplay path.

@@ -1,0 +1,79 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "build_id": "a3-single-server-multiplayer-architecture-freeze",
+  "base_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+  "base_delivery": "fix1",
+  "local_base_commit": "b588d93",
+  "branch": "feature/a3-single-server-multiplayer-architecture",
+  "delivery_iteration": "review-fix1",
+  "status": "candidate",
+  "decision": "PENDING_DELIVERY_METADATA_REVIEW",
+  "generated_at_utc": "2026-07-31T04:52:00Z",
+  "engine": {
+    "version": "Godot 4.7.1 stable.double custom build",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "precision": "double"
+  },
+  "scope": {
+    "changed_paths": 41,
+    "new_paths": 13,
+    "modified_paths": 28,
+    "deleted_paths": 0,
+    "review_fix_paths": 2,
+    "runtime_code_changed_by_review_fix": false,
+    "test_code_changed_by_review_fix": false
+  },
+  "tests": {
+    "focused_a3": {
+      "result": "12/12 PASS",
+      "architecture_contract_assertions": 140,
+      "review_fix_rerun": "12/12 PASS",
+      "review_fix_runtime_code_delta": false
+    },
+    "network_runtime": {
+      "clean_repeat": "PASS",
+      "scope": "Foundation N0 through A3",
+      "first_run_observation": {
+        "result": "FLAKE",
+        "scenario": "embedded M5 convergence after reconnect",
+        "reproduced_on_clean_repeat": false,
+        "classification": "recorded_non_blocking_flake"
+      }
+    },
+    "world_regression": {
+      "result": "PASS"
+    },
+    "main_scene_cli": {
+      "result": "6/6 PASS"
+    }
+  },
+  "static_gates": {
+    "git_diff_check": "PASS",
+    "json": "60/60 PASS",
+    "shell_syntax": "PASS",
+    "conflict_markers": 0,
+    "nul_text_files": 0,
+    "remaining_godot_processes": 0
+  },
+  "delivery_metadata": {
+    "machine_readable_validation": "validation/v16.10.6-architecture-a3-single-server-multiplayer-validation.json",
+    "changed_file_list": "validation/v16.10.6-architecture-a3-single-server-multiplayer-files.txt",
+    "required_by": "AGENTS.md quality gate",
+    "included_in_patch": true
+  },
+  "acceptance": {
+    "functional_acceptance": "PASS",
+    "delivery_completeness": "PASS",
+    "independent_local_recheck": "focused rerun completed; full network/world results inherited from functional local acceptance because review fix is metadata-only",
+    "review_fix_result": "READY_FOR_FINAL_LOCAL_APPLICATION"
+  },
+  "delivery": {
+    "original_patch": "v16.10.6-architecture-a3-single-server-multiplayer-patch.zip",
+    "original_patch_sha256": "43AE2DED1739DF01F4073B2323C60799475C378F1344EED36DD9521685FD7D34",
+    "independently_checked_archive": "v16.10.6-architecture-a3-single-server-multiplayer-local-checked.zip",
+    "independently_checked_archive_sha256": "7D9F6F98A359CE019DC33191A0C3F35B2048DD7C992E283A6DFE41DE750CD304",
+    "review_fix_scope": "delivery metadata only",
+    "review_fix_files": 2
+  }
+}

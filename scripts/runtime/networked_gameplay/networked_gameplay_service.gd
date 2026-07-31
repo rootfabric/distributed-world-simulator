@@ -28,6 +28,8 @@ const DELTA_SCHEMA := PlayerDelta.SCHEMA
 const SHARED_ITEM_ID := SharedItemService.SHARED_ITEM_ID
 const PROFILE_MULTIPLAYER_CORE := "MULTIPLAYER_CORE"
 const PROFILE_CANONICAL_PLAYABLE := "CANONICAL_PLAYABLE"
+const DURABLE_SCHEMA := "planet_simulator.networked_gameplay_durable_state.v1"
+const REPLAY_SCHEMA := "planet_simulator.networked_gameplay_replay_state.v1"
 
 var _configured := false
 var _authority_owner_id := ""
@@ -349,10 +351,20 @@ func request_inventory_write(requester_player_id: String, target_player_id: Stri
 func handle_canonical_item_command(logical_player_id: String, transport_session_id: String, ownership_epoch: int, operation_id: String, command_type: String, payload: Dictionary) -> Dictionary:
 	if not _configured or _canonical_multiplayer_items == null:
 		return _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
+	var replay_lookup: Dictionary = _canonical_multiplayer_items.lookup_replay(
+		logical_player_id, ownership_epoch, operation_id, command_type, payload
+	)
+	if bool(replay_lookup.get("found", false)):
+		return Dictionary(replay_lookup.get("result", {})).duplicate(true)
 	var owner_check := _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
 	if not bool(owner_check.get("success", false)):
 		return _failure(String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
-	return _canonical_multiplayer_items.execute(logical_player_id, ownership_epoch, operation_id, command_type, payload)
+	var result: Dictionary = _canonical_multiplayer_items.execute(
+		logical_player_id, ownership_epoch, operation_id, command_type, payload
+	)
+	if bool(result.get("success", false)) and not bool(result.get("replay", false)):
+		_advance()
+	return result
 
 
 func create_canonical_item_graph_snapshot() -> Dictionary:
@@ -361,6 +373,283 @@ func create_canonical_item_graph_snapshot() -> Dictionary:
 
 func validate_canonical_item_graph_snapshot(snapshot: Dictionary) -> Dictionary:
 	return _canonical_multiplayer_items.validate_snapshot(snapshot) if _canonical_multiplayer_items != null else _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
+
+func export_durable_state() -> Dictionary:
+	if not _configured:
+		return {}
+	var state: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"region_id": _region_id,
+		"topology_adapter": _topology_adapter,
+		"profile": _profile,
+		"players": _players.export_durable_state(),
+		"ownership": _ownership.export_durable_state(),
+		"shared_item": _shared_items.export_durable_state(),
+		"canonical_item_graph": _canonical_multiplayer_items.export_durable_state(),
+		"checksum": "",
+	}
+	state["checksum"] = _state_checksum(state)
+	return state
+
+
+func restore_durable_state(value: Dictionary) -> Dictionary:
+	var validation := validate_durable_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	if _configured:
+		if String(value.get("authority_owner_id", "")) != _authority_owner_id:
+			return _failure("GAMEPLAY_RECOVERY_OWNER_MISMATCH")
+		if int(value.get("authority_epoch", 0)) != _authority_epoch:
+			return _failure("GAMEPLAY_RECOVERY_EPOCH_MISMATCH")
+	var staged_players = PlayerRegistry.new()
+	var players_result: Dictionary = staged_players.restore_durable_state(Dictionary(value.get("players", {})))
+	if not bool(players_result.get("success", false)):
+		return _failure("GAMEPLAY_PLAYER_RECOVERY_FAILED", {"cause": players_result})
+	var staged_ownership = OwnershipService.new()
+	var ownership_setup: Dictionary = staged_ownership.setup(
+		String(value.get("authority_owner_id", "")),
+		int(value.get("authority_epoch", 0)),
+		0
+	)
+	if not bool(ownership_setup.get("success", false)):
+		return _failure("GAMEPLAY_OWNERSHIP_RECOVERY_SETUP_FAILED", {"cause": ownership_setup})
+	var ownership_result: Dictionary = staged_ownership.restore_durable_state(Dictionary(value.get("ownership", {})))
+	if not bool(ownership_result.get("success", false)):
+		return _failure("GAMEPLAY_OWNERSHIP_RECOVERY_FAILED", {"cause": ownership_result})
+	var staged_shared = SharedItemService.new()
+	staged_shared.setup()
+	var shared_result: Dictionary = staged_shared.restore_durable_state(Dictionary(value.get("shared_item", {})))
+	if not bool(shared_result.get("success", false)):
+		return _failure("GAMEPLAY_SHARED_ITEM_RECOVERY_FAILED", {"cause": shared_result})
+	var staged_items = CanonicalMultiplayerItemGraph.new()
+	var item_setup: Dictionary = staged_items.setup(
+		String(value.get("authority_owner_id", "")),
+		int(value.get("authority_epoch", 0))
+	)
+	if not bool(item_setup.get("success", false)):
+		return _failure("GAMEPLAY_ITEM_RECOVERY_SETUP_FAILED", {"cause": item_setup})
+	var item_result: Dictionary = staged_items.restore_durable_state(Dictionary(value.get("canonical_item_graph", {})))
+	if not bool(item_result.get("success", false)):
+		return _failure("GAMEPLAY_ITEM_RECOVERY_FAILED", {"cause": item_result})
+	var consistency := _validate_recovered_player_consistency(staged_players, staged_ownership)
+	if not bool(consistency.get("success", false)):
+		return consistency
+	_authority_owner_id = String(value.get("authority_owner_id", ""))
+	_authority_epoch = int(value.get("authority_epoch", 0))
+	_revision = int(value.get("revision", 0))
+	_tick = int(value.get("server_tick", 0))
+	_region_id = String(value.get("region_id", ""))
+	_topology_adapter = String(value.get("topology_adapter", ""))
+	_profile = String(value.get("profile", PROFILE_MULTIPLAYER_CORE))
+	_players = staged_players
+	_ownership = staged_ownership
+	_shared_items = staged_shared
+	_canonical_multiplayer_items = staged_items
+	_movement = MovementService.new()
+	_result_router = ResultRouter.new()
+	_replication = ReplicationPublisher.new()
+	_operation_ledger.clear()
+	_configured = true
+	return _success({
+		"revision": _revision,
+		"server_tick": _tick,
+		"player_count": _players.get_players().size(),
+		"item_graph_checksum": String(create_canonical_item_graph_snapshot().get("checksum", "")),
+	})
+
+
+func validate_durable_state(value: Dictionary) -> Dictionary:
+	if String(value.get("schema", "")) != DURABLE_SCHEMA:
+		return _failure("INVALID_GAMEPLAY_DURABLE_SCHEMA")
+	var required := [
+		"authority_owner_id", "authority_epoch", "revision", "server_tick", "region_id",
+		"topology_adapter", "profile", "players", "ownership", "shared_item",
+		"canonical_item_graph", "checksum",
+	]
+	for field in required:
+		if not value.has(field):
+			return _failure("GAMEPLAY_DURABLE_FIELD_MISSING", {"field": field})
+	if String(value.get("authority_owner_id", "")).strip_edges().is_empty():
+		return _failure("INVALID_GAMEPLAY_DURABLE_OWNER")
+	if int(value.get("authority_epoch", 0)) < 1 or int(value.get("revision", -1)) < 0 or int(value.get("server_tick", -1)) < 0:
+		return _failure("INVALID_GAMEPLAY_DURABLE_REVISION")
+	if String(value.get("region_id", "")).strip_edges().is_empty() or String(value.get("topology_adapter", "")).strip_edges().is_empty():
+		return _failure("INVALID_GAMEPLAY_DURABLE_TOPOLOGY")
+	if String(value.get("profile", "")) not in [PROFILE_MULTIPLAYER_CORE, PROFILE_CANONICAL_PLAYABLE]:
+		return _failure("INVALID_GAMEPLAY_DURABLE_PROFILE")
+	if String(value.get("profile", "")) != PROFILE_MULTIPLAYER_CORE:
+		return _failure("M6_RECOVERY_REQUIRES_MULTIPLAYER_CORE_PROFILE")
+	for section in ["players", "ownership", "shared_item", "canonical_item_graph"]:
+		if typeof(value.get(section)) != TYPE_DICTIONARY:
+			return _failure("INVALID_GAMEPLAY_DURABLE_SECTION", {"section": section})
+	if typeof(value.get("checksum")) != TYPE_STRING or String(value.get("checksum", "")) != _state_checksum(value):
+		return _failure("GAMEPLAY_DURABLE_CHECKSUM_MISMATCH")
+	var players_validator = PlayerRegistry.new()
+	var players_result: Dictionary = players_validator.validate_durable_state(Dictionary(value.get("players", {})))
+	if not bool(players_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_PLAYER_STATE", {"cause": players_result})
+	var ownership_validator = OwnershipService.new()
+	var ownership_result: Dictionary = ownership_validator.validate_durable_state(Dictionary(value.get("ownership", {})))
+	if not bool(ownership_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_OWNERSHIP_STATE", {"cause": ownership_result})
+	var shared_validator = SharedItemService.new()
+	var shared_result: Dictionary = shared_validator.validate_durable_state(Dictionary(value.get("shared_item", {})))
+	if not bool(shared_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_SHARED_ITEM_STATE", {"cause": shared_result})
+	var item_validator = CanonicalMultiplayerItemGraph.new()
+	var item_result: Dictionary = item_validator.validate_durable_state(Dictionary(value.get("canonical_item_graph", {})))
+	if not bool(item_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_ITEM_GRAPH_STATE", {"cause": item_result})
+	var ownership_state: Dictionary = value.get("ownership", {})
+	var item_state: Dictionary = value.get("canonical_item_graph", {})
+	var item_snapshot: Dictionary = item_state.get("snapshot", {})
+	if (
+		String(ownership_state.get("authority_owner_id", "")) != String(value.get("authority_owner_id", ""))
+		or int(ownership_state.get("authority_epoch", 0)) != int(value.get("authority_epoch", 0))
+		or String(item_snapshot.get("authority_owner_id", "")) != String(value.get("authority_owner_id", ""))
+		or int(item_snapshot.get("authority_epoch", 0)) != int(value.get("authority_epoch", 0))
+	):
+		return _failure("GAMEPLAY_DURABLE_AUTHORITY_MISMATCH")
+	var player_ids: Dictionary = {}
+	for player_value in Dictionary(value.get("players", {})).get("players", []):
+		player_ids[String(Dictionary(player_value).get("logical_player_id", ""))] = true
+	for inventory_player_id_value in Dictionary(item_snapshot.get("inventories", {})).keys():
+		if not player_ids.has(String(inventory_player_id_value)):
+			return _failure("ITEM_GRAPH_INVENTORY_PLAYER_MISSING", {"logical_player_id": String(inventory_player_id_value)})
+	var safe := Utils.canonicalize(value, "$.networked_gameplay_durable_state")
+	if not bool(safe.get("success", false)):
+		return _failure("GAMEPLAY_DURABLE_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	return _success()
+
+
+func export_replay_state() -> Dictionary:
+	if not _configured:
+		return {}
+	var ledger: Dictionary = {}
+	var operation_ids := _operation_ledger.keys()
+	operation_ids.sort()
+	for operation_id_value in operation_ids:
+		ledger[String(operation_id_value)] = Dictionary(_operation_ledger[operation_id_value]).duplicate(true)
+	var state: Dictionary = {
+		"schema": REPLAY_SCHEMA,
+		"service_operation_ledger": ledger,
+		"ownership_replay": _ownership.export_replay_state(),
+		"item_graph_replay": _canonical_multiplayer_items.export_replay_state(),
+		"checksum": "",
+	}
+	state["checksum"] = _state_checksum(state)
+	return state
+
+
+func restore_replay_state(value: Dictionary) -> Dictionary:
+	var validation := validate_replay_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	var ownership_result: Dictionary = _ownership.restore_replay_state(Dictionary(value.get("ownership_replay", {})))
+	if not bool(ownership_result.get("success", false)):
+		return _failure("GAMEPLAY_OWNERSHIP_REPLAY_RECOVERY_FAILED", {"cause": ownership_result})
+	var item_result: Dictionary = _canonical_multiplayer_items.restore_replay_state(Dictionary(value.get("item_graph_replay", {})))
+	if not bool(item_result.get("success", false)):
+		return _failure("GAMEPLAY_ITEM_REPLAY_RECOVERY_FAILED", {"cause": item_result})
+	_operation_ledger = Dictionary(value.get("service_operation_ledger", {})).duplicate(true)
+	return _success({
+		"service_operation_count": _operation_ledger.size(),
+		"ownership_operation_count": int(ownership_result.get("details", {}).get("operation_count", 0)),
+		"item_operation_count": int(item_result.get("details", {}).get("operation_count", 0)),
+	})
+
+
+func validate_replay_state(value: Dictionary) -> Dictionary:
+	if String(value.get("schema", "")) != REPLAY_SCHEMA:
+		return _failure("INVALID_GAMEPLAY_REPLAY_SCHEMA")
+	if typeof(value.get("service_operation_ledger")) != TYPE_DICTIONARY:
+		return _failure("INVALID_GAMEPLAY_REPLAY_LEDGER")
+	if typeof(value.get("ownership_replay")) != TYPE_DICTIONARY or typeof(value.get("item_graph_replay")) != TYPE_DICTIONARY:
+		return _failure("INVALID_GAMEPLAY_REPLAY_SECTION")
+	if typeof(value.get("checksum")) != TYPE_STRING or String(value.get("checksum", "")) != _state_checksum(value):
+		return _failure("GAMEPLAY_REPLAY_CHECKSUM_MISMATCH")
+	for operation_id_value in value.get("service_operation_ledger", {}).keys():
+		var entry_value = value["service_operation_ledger"][operation_id_value]
+		if String(operation_id_value).strip_edges().is_empty() or not entry_value is Dictionary:
+			return _failure("INVALID_GAMEPLAY_REPLAY_RECORD")
+		var entry: Dictionary = entry_value
+		if String(entry.get("fingerprint", "")).length() != 64 or typeof(entry.get("result")) != TYPE_DICTIONARY:
+			return _failure("INVALID_GAMEPLAY_REPLAY_RECORD")
+	var ownership_validator = OwnershipService.new()
+	var ownership_result := ownership_validator.validate_replay_state(Dictionary(value.get("ownership_replay", {})))
+	if not bool(ownership_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_OWNERSHIP_REPLAY", {"cause": ownership_result})
+	var item_validator = CanonicalMultiplayerItemGraph.new()
+	var item_result := item_validator.validate_replay_state(Dictionary(value.get("item_graph_replay", {})))
+	if not bool(item_result.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_ITEM_REPLAY", {"cause": item_result})
+	var safe := Utils.canonicalize(value, "$.networked_gameplay_replay_state")
+	if not bool(safe.get("success", false)):
+		return _failure("GAMEPLAY_REPLAY_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	return _success()
+
+
+func has_durable_replay_operation(operation_id: String) -> bool:
+	if operation_id.is_empty():
+		return false
+	if _operation_ledger.has(operation_id):
+		return true
+	return (
+		_canonical_multiplayer_items != null
+		and _canonical_multiplayer_items.has_replay_operation(operation_id)
+	)
+
+
+func get_recovery_report() -> Dictionary:
+	return {
+		"durable_state_checksum": String(export_durable_state().get("checksum", "")),
+		"replay_state_checksum": String(export_replay_state().get("checksum", "")),
+		"service_operation_count": _operation_ledger.size(),
+		"ownership_operation_count": int(_ownership.get_report().get("operation_count", 0)) if _ownership != null else 0,
+		"item_operation_count": _canonical_multiplayer_items.get_replay_operation_count() if _canonical_multiplayer_items != null else 0,
+	}
+
+
+func _validate_recovered_player_consistency(players_service, ownership_service) -> Dictionary:
+	var player_records: Array = players_service.get_players()
+	var ownership_records: Array = ownership_service.get_players()
+	if player_records.size() != ownership_records.size():
+		return _failure("RECOVERED_PLAYER_OWNERSHIP_COUNT_MISMATCH", {
+			"player_count": player_records.size(),
+			"ownership_count": ownership_records.size(),
+		})
+	var player_ids: Dictionary = {}
+	for record_value in player_records:
+		var record: Dictionary = record_value
+		var logical_id := String(record.get("logical_player_id", ""))
+		player_ids[logical_id] = true
+		var ownership_record: Dictionary = ownership_service.get_player(logical_id)
+		if ownership_record.is_empty():
+			return _failure("RECOVERED_PLAYER_OWNERSHIP_MISSING", {"logical_player_id": logical_id})
+		if String(ownership_record.get("player_entity_id", "")) != String(record.get("player_entity_id", "")):
+			return _failure("RECOVERED_PLAYER_ENTITY_MISMATCH", {"logical_player_id": logical_id})
+		if int(ownership_record.get("ownership_epoch", 0)) != int(record.get("ownership_epoch", 0)):
+			return _failure("RECOVERED_PLAYER_EPOCH_MISMATCH", {"logical_player_id": logical_id})
+		if bool(record.get("connected", true)) or bool(ownership_record.get("connected", true)):
+			return _failure("RECOVERED_PLAYER_SESSION_NOT_CLEARED", {"logical_player_id": logical_id})
+		if not String(record.get("transport_session_id", "")).is_empty() or not String(ownership_record.get("transport_session_id", "")).is_empty():
+			return _failure("RECOVERED_PLAYER_TRANSPORT_NOT_CLEARED", {"logical_player_id": logical_id})
+	for ownership_value in ownership_records:
+		var logical_id := String(Dictionary(ownership_value).get("logical_player_id", ""))
+		if not player_ids.has(logical_id):
+			return _failure("RECOVERED_OWNERSHIP_PLAYER_MISSING", {"logical_player_id": logical_id})
+	return _success({"player_count": player_records.size()})
+
+
+func _state_checksum(value: Dictionary) -> String:
+	var payload := value.duplicate(true)
+	payload.erase("checksum")
+	return Utils.payload_hash(payload)
+
 
 func create_snapshot() -> Dictionary:
 	if not _configured:
@@ -460,6 +749,7 @@ func get_report() -> Dictionary:
 		"mount_interaction_service": _mount_interactions.get_report() if _mount_interactions != null else {},
 		"canonical_multiplayer_item_graph": _canonical_multiplayer_items.create_snapshot() if _canonical_multiplayer_items != null else {},
 		"direct_client_authority_references": 0,
+		"recovery": get_recovery_report() if _configured else {},
 	}
 	if _playable_backend != null:
 		report["playable_backend"] = _playable_backend.get_report()
@@ -497,7 +787,10 @@ func _replay(operation_id: String, fingerprint: String) -> Dictionary:
 	var entry: Dictionary = _operation_ledger[operation_id]
 	if String(entry.get("fingerprint", "")) != fingerprint: return _failure("OPERATION_REPLAY_CONFLICT")
 	var result: Dictionary = Dictionary(entry.get("result", {})).duplicate(true)
-	if bool(result.get("success", false)): result["details"]["replay"] = true
+	result["replay"] = true
+	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
+	details["replay"] = true
+	result["details"] = details
 	return result
 
 

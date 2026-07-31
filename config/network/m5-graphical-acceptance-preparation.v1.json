@@ -1,0 +1,73 @@
+{
+  "schema": "planet_simulator.m5_graphical_acceptance_preparation.v1",
+  "checkpoint": "v16.10.3-pre-m5-graphical-acceptance-preparation",
+  "build_id": "pre-m5-ui-replica-command-boundary",
+  "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
+  "base_runtime_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
+  "status": "completed",
+  "branch": "feature/m5-graphical-multiplayer-acceptance",
+  "decision": "PREPARE_UI_DRIVEN_M5_WITHOUT_SECOND_GAMEPLAY_PATH",
+  "components": {
+    "item_graph_ui_projection": "scripts/runtime/networked_gameplay/m5/m4_item_graph_ui_projection.gd",
+    "item_command_adapter": "scripts/runtime/networked_gameplay/m5/m4_item_command_adapter.gd",
+    "transient_ui_state": "scripts/runtime/networked_gameplay/m5/m4_inventory_transient_state.gd",
+    "ui_bridge": "scripts/runtime/networked_gameplay/m5/m5_inventory_ui_bridge.gd",
+    "networked_inventory_shell": "scripts/ui/inventory/networked/m5_networked_inventory_shell.gd",
+    "process_environment": "scripts/runtime/networked_gameplay/m5/m5_process_environment.gd"
+  },
+  "frozen_rules": [
+    "UI reads immutable M4 replica snapshots",
+    "UI emits ITEM_COMMAND through the existing graphical client runtime",
+    "drag cursor and pending state are presentation-only",
+    "canonical Item Graph mutation occurs only on dedicated server",
+    "MCP bridge is disabled or assigned a unique loopback port per process",
+    "server and clients use isolated user-data roots"
+  ],
+  "prepared_capabilities": [
+    "player inventory projection",
+    "hotbar selection projection and command",
+    "authoritative external-container visibility",
+    "UI payload normalization for M4 commands",
+    "transient cursor overlay without local graph mutation",
+    "networked playground shell composition",
+    "multi-process profile and MCP port isolation"
+  ],
+  "remaining_m5_runtime_gates": [
+    "ui_driven_two_client_contention",
+    "reverse_container_to_inventory_command",
+    "hotbar_item_assignment_command",
+    "full seven_days_like cursor gestures over server results",
+    "visible command rejection and rollback acceptance",
+    "automated screenshots and input injection in two graphical windows",
+    "final server client_a client_b checksum convergence"
+  ],
+  "tests": [
+    "tests/runtime/test_m5_graphical_acceptance_preparation.gd"
+  ],
+  "runner": "RUN_M5_GRAPHICAL_ACCEPTANCE_PREPARATION_TESTS.ps1",
+  "evidence": {
+    "editor_import": "PASS",
+    "focused": {
+      "scripts": 13,
+      "assertions": 939,
+      "status": "PASS"
+    },
+    "network_runtime": {
+      "suites": 55,
+      "assertions": 4149,
+      "status": "PASS"
+    },
+    "world_regression": {
+      "tests": 100,
+      "status": "PASS"
+    },
+    "main_scene": {
+      "tests": 6,
+      "status": "PASS"
+    }
+  },
+  "validated_at_utc": "2026-07-30T15:45:00Z",
+  "document_revision": 2,
+  "completed_by_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json"
+}

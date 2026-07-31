@@ -23,10 +23,11 @@ const M2GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/network
 const M3DedicatedServerRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
 const M3GraphicalClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_acceptance_driver.gd")
+const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.10.2-runtime-m3-dedicated-graphical-multiplayer"
-const FOUNDATION_BUILD_ID: String = "m3-dedicated-two-graphical-clients"
+const FOUNDATION_CHECKPOINT: String = "v16.10.6-architecture-a3-single-server-multiplayer"
+const FOUNDATION_BUILD_ID: String = "a3-single-server-multiplayer-architecture-freeze"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -88,7 +89,10 @@ var graphical_game_client_runtime
 var graphical_game_client_setup: Dictionary = {}
 var m2_graphical_acceptance_driver
 var m3_graphical_acceptance_driver
+var m5_graphical_acceptance_driver
 var _m3_mode: bool = false
+var _m5_mode: bool = false
+var _m6_mode: bool = false
 
 
 func _ready() -> void:
@@ -163,7 +167,12 @@ func _ready() -> void:
 			get_tree().quit(4)
 			return
 
-	_m3_mode = not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
+	_m6_mode = (
+		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
+		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
+	)
+	_m5_mode = not String(launch_options.get("m5_result_file", "")).strip_edges().is_empty()
+	_m3_mode = _m6_mode or _m5_mode or not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
 	if runtime_role == RuntimeRoleScript.DEDICATED_SERVER:
 		dedicated_gameplay_server_runtime = (
 			M3DedicatedServerRuntimeScript.new()
@@ -175,10 +184,18 @@ func _ready() -> void:
 		var dedicated_config := {
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
-			"result_file": String(launch_options.get("m3_result_file", "")) if _m3_mode else String(launch_options.get("m2_result_file", "")),
+			"result_file": (
+				String(launch_options.get("m6_result_file", ""))
+				if _m6_mode
+				else String(launch_options.get("m5_result_file", ""))
+				if _m5_mode
+				else String(launch_options.get("m3_result_file", "")) if _m3_mode
+				else String(launch_options.get("m2_result_file", ""))
+			),
 			"authority_owner_id": String(launch_options.get("node_id", "local-dedicated-server")),
 			"authority_epoch": 1,
 			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
+			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
 		}
 		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):
@@ -202,7 +219,10 @@ func _ready() -> void:
 			"logical_player_id": String(launch_options.get("player_identity", "a" if _m3_mode else "local-astronaut")),
 			"connect_timeout_ms": int(launch_options.get("connect_timeout_ms", 15000)),
 			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
-			"automated_acceptance": _m3_mode and int(launch_options.get("m3_phase", 0)) > 0,
+			"automated_acceptance": (
+				(_m5_mode and int(launch_options.get("m5_phase", 0)) > 0)
+				or (_m3_mode and int(launch_options.get("m3_phase", 0)) > 0)
+			),
 			"result_file": "",
 		})
 		if not bool(graphical_game_client_setup.get("success", false)):
@@ -1751,12 +1771,15 @@ func _attach_m3_graphical_game_client(runtime: Node, client_runtime) -> Dictiona
 	var result_value = runtime.call("attach_m3_multiplayer_client", client_runtime)
 	var result: Dictionary = Dictionary(result_value) if result_value is Dictionary else {"success": false, "error_code": "INVALID_M3_ATTACH_RESULT"}
 	if bool(result.get("success", false)):
-		_setup_m3_graphical_acceptance_driver()
+		if _m5_mode:
+			_setup_m5_graphical_acceptance_driver()
+		else:
+			_setup_m3_graphical_acceptance_driver()
 	return result
 
 
 func _setup_m3_graphical_acceptance_driver() -> void:
-	if not _m3_mode or m3_graphical_acceptance_driver != null:
+	if not _m3_mode or _m5_mode or m3_graphical_acceptance_driver != null:
 		return
 	var result_file := String(launch_options.get("m3_result_file", "")).strip_edges()
 	var phase := int(launch_options.get("m3_phase", 0))
@@ -1774,6 +1797,33 @@ func _setup_m3_graphical_acceptance_driver() -> void:
 	if not bool(setup_result.get("success", false)):
 		push_error("M3 acceptance driver setup failed: %s" % setup_result)
 		request_graceful_shutdown("m3_acceptance_driver_setup_failed", 10)
+
+
+func _setup_m5_graphical_acceptance_driver() -> void:
+	if not _m5_mode or m5_graphical_acceptance_driver != null:
+		return
+	var result_file := String(launch_options.get("m5_result_file", "")).strip_edges()
+	var phase := int(launch_options.get("m5_phase", 0))
+	if result_file.is_empty() or phase not in [1, 2, 3]:
+		return
+	m5_graphical_acceptance_driver = M5GraphicalAcceptanceDriverScript.new()
+	m5_graphical_acceptance_driver.name = "M5GraphicalAcceptanceDriver"
+	add_child(m5_graphical_acceptance_driver)
+	var setup_result: Dictionary = m5_graphical_acceptance_driver.setup(
+		self,
+		graphical_game_client_runtime,
+		{
+			"result_file": result_file,
+			"peer_result_file": String(launch_options.get("m5_peer_result_file", "")),
+			"control_file": String(launch_options.get("m5_control_file", "")),
+			"screenshot_dir": String(launch_options.get("m5_screenshot_dir", "")),
+			"client_id": String(launch_options.get("player_identity", "")),
+			"phase": phase,
+		}
+	)
+	if not bool(setup_result.get("success", false)):
+		push_error("M5 acceptance driver setup failed: %s" % setup_result)
+		request_graceful_shutdown("m5_acceptance_driver_setup_failed", 11)
 
 
 func _on_graphical_game_client_session_ready(session) -> void:

@@ -1,18 +1,16 @@
-> **Accepted runtime checkpoint:** `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`). **Current candidate:** `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`. Следующий этап после приёмки M3 — M4. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+> **Accepted runtime checkpoint:** `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`). **Current architecture candidate:** `v16.10.6-architecture-a3-single-server-multiplayer`. Следующий этап после приёмки A3 — B1 NATS Core adapter. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
 
 # PlanetSimulator — текущая дорожная карта
 
 ```text
 A2 accepted
 roadmap v16.9.5 accepted
-M1 accepted — unified gameplay core
-M2 accepted with gates — dedicated + one graphical client
-M3 current candidate — dedicated + two graphical clients
-M4 → M5 → M6 → A3 planned
-B1/B2 deferred; N3–N6 blocked
+M1 → M2 → M3 → M4 → M5 → M6 accepted
+A3 current candidate — single-server architecture freeze
+B1/B2 deferred until A3 acceptance; N3–N6 blocked until A3 and B2
 ```
 
-M1 закрыл `A2-D01` и `A2-D02`. M2 доказал один graphical client, M3 использует тот же core для двух одновременных graphical clients и remote presentation. H1/H2/H3 больше не являются независимыми gameplay implementations. Общий `NetworkedGameplayService` и wire contracts являются обязательной базой всех следующих single-server multiplayer этапов.
+M1–M6 закрыли `A2-D01…D04`: один `NetworkedGameplayService` обслуживает graphical multiplayer, canonical Item Graph, reconnect/replay и durable crash recovery. A3 фиксирует эту реализацию как единственный production single-server path и не добавляет новый authority runtime. H1/H2/H3 остаются adapters/acceptance harnesses, а не независимыми gameplay implementations.
 
 # Дорожная карта к лунному симулятору мечты
 

@@ -14,8 +14,8 @@ static func create(options: Dictionary, context: Dictionary = {}) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
-		"checkpoint": String(context.get("checkpoint", "v16.10.2-runtime-m3-dedicated-graphical-multiplayer")),
-		"build_id": String(context.get("build_id", "m3-dedicated-two-graphical-clients")),
+		"checkpoint": String(context.get("checkpoint", "v16.10.6-architecture-a3-single-server-multiplayer")),
+		"build_id": String(context.get("build_id", "a3-single-server-multiplayer-architecture-freeze")),
 		"project_name": String(ProjectSettings.get_setting(
 			"application/config/name",
 			"PlanetSimulator"

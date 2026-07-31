@@ -4,38 +4,48 @@
 
 Принятый стратегический checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-Принятый runtime checkpoint: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
+Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
 
-Текущий runtime candidate:
+Текущий architecture candidate:
 
 ```text
-v16.10.2-runtime-m3-dedicated-graphical-multiplayer
-branch: feature/m3-dedicated-graphical-multiplayer
-next after acceptance: M4 canonical shared gameplay over ENet
+v16.10.6-architecture-a3-single-server-multiplayer
+build_id: a3-single-server-multiplayer-architecture-freeze
+runtime base: v16.10.5-persistence-m6-dedicated-recovery
+branch: feature/a3-single-server-multiplayer-architecture
+status: candidate
+next after acceptance: B1 NATS Core adapter
 ```
 
-M3 запускает один headless dedicated server и два одновременно подключённых graphical Godot clients. На каждом клиенте локальный игрок остаётся настоящим `LunarPlayer`, удалённый создаётся как `RemotePlayerPresenter` без input authority; movement, orientation, flashlight, disconnect и reconnect проходят через authoritative replica path.
+A3 фиксирует единственный production gameplay path: один `NetworkedGameplayService`, общие versioned wire contracts, LOOPBACK/ENet adapters, replica-only graphical clients, canonical M4 Item Graph и M6 durable recovery/replay. B1 после A3 может добавлять только server-to-server transport и не вправе создавать второй gameplay authority.
 
 ```text
 FULL SINGLE-SERVER MULTIPLAYER FIRST
 A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-До принятия A3 production N3–N6 заблокирован. ENet остаётся realtime transport graphical clients; NATS после A3 используется только для server/service communication через B0 ports.
+До принятия A3 B1/B2 production integration отложена; N3–N6 заблокированы до A3 и B2. ENet остаётся realtime transport graphical clients.
 
 Основные документы:
 
-- `docs/checkpoints/2026-07-30_V16_10_2_RUNTIME_M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
-- `docs/checkpoints/2026-07-30_V16_10_1_RUNTIME_M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
-- `docs/checkpoints/2026-07-30_V16_10_0_RUNTIME_M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
+- `docs/architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md`;
+- `config/network/single-server-multiplayer-architecture.v1.json`;
+- `docs/checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;
+- `docs/architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
+- `docs/checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
+- `config/network/dedicated-persistence-recovery.v1.json`;
+- `docs/architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;
+- `docs/architecture/M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
+- `docs/checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;
+- `docs/checkpoints/2026-07-31_PRE_M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
+- `docs/architecture/M4_PRE_M5_HANDOFF_RU.md`;
+- `docs/architecture/M4_CANONICAL_SHARED_GAMEPLAY_RU.md`;
+- `docs/checkpoints/2026-07-30_V16_10_3_DOMAIN_M4_CANONICAL_SHARED_GAMEPLAY_RU.md`;
 - `docs/architecture/M3_DEDICATED_GRAPHICAL_MULTIPLAYER_RU.md`;
 - `docs/architecture/M2_DEDICATED_GRAPHICAL_CLIENT_RU.md`;
 - `docs/architecture/M1_UNIFIED_NETWORKED_GAMEPLAY_CORE_RU.md`;
-- `docs/architecture/adr/ADR-015-dedicated-graphical-multiplayer.md`;
-- `docs/architecture/adr/ADR-014-dedicated-graphical-client.md`;
-- `docs/architecture/adr/ADR-013-unified-networked-gameplay-core.md`;
-- `config/network/dedicated-graphical-multiplayer.v1.json`;
-- `config/network/dedicated-graphical-client.v1.json`;
-- `config/network/networked-gameplay-core.v1.json`;
+- `config/network/m5-graphical-acceptance-preparation.v1.json`;
+- `config/network/canonical-shared-gameplay.v1.json`;
+- `config/network/network-roadmap.v1.json`;
 - `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.

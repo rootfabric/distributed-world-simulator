@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 4,
+  "document_revision": 8,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
   "status": "accepted",
@@ -42,6 +42,7 @@
     "PlayerJoinCommand",
     "PlayerLeaveCommand",
     "PlayerInputCommand",
+    "PlayerPresentationCommand",
     "PlayerOwnershipSnapshot",
     "PlayerStateSnapshot",
     "PlayerStateDelta",
@@ -89,7 +90,7 @@
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "accepted_with_gates",
+      "status": "accepted",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -112,12 +113,15 @@
         "M2-G01 metadata correction",
         "M2-G02 shutdown hygiene",
         "M2-G03 isolated user profile"
-      ]
+      ],
+      "decision": "ACCEPTED",
+      "gates_closed_by": "M3+M5",
+      "finalized_by_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer"
     },
     {
       "id": "M3",
       "name": "Dedicated server plus two graphical clients",
-      "status": "current_candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
       "branch": "feature/m3-dedicated-graphical-multiplayer",
       "depends_on": [
@@ -139,12 +143,13 @@
         "orientation_flashlight_replication": "implemented",
         "disconnect_reconnect": "implemented",
         "canonical_item_graph_over_enet": "not_in_scope_M4"
-      }
+      },
+      "accepted_at_utc": "2026-07-30T09:30:00Z"
     },
     {
       "id": "M4",
       "name": "Canonical shared gameplay over ENet",
-      "status": "next_after_M3",
+      "status": "accepted",
       "checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
       "branch": "feature/m4-canonical-shared-gameplay",
       "depends_on": [
@@ -158,12 +163,13 @@
         "contention produces exactly one success and one deterministic rejection",
         "canonical Item Graph contains exactly one stable item identity",
         "foreign inventory mutation and stale session commands are rejected"
-      ]
+      ],
+      "implementation_manifest": "config/network/canonical-shared-gameplay.v1.json"
     },
     {
       "id": "M5",
       "name": "Graphical Multiplayer Acceptance",
-      "status": "planned",
+      "status": "accepted",
       "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
       "branch": "feature/m5-graphical-multiplayer-acceptance",
       "depends_on": [
@@ -176,12 +182,23 @@
         "movement observation contention disconnect reconnect all pass",
         "server and both clients converge to one canonical checksum",
         "separate user-data directories and clean process shutdown"
-      ]
+      ],
+      "implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json",
+      "evidence": {
+        "contracts": "tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+        "preparation_contracts": "tests/runtime/test_m5_graphical_acceptance_preparation.gd",
+        "graphical_process": "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+        "focused_runner_windows": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1",
+        "focused_runner_linux": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.sh"
+      },
+      "delivery": "fix1",
+      "accepted_at_utc": "2026-07-31T00:04:00Z",
+      "acceptance_sha256": "407B00755EC525213927E498E95176824F72A2EC82F3CCAE9C4A08470BF02FB9"
     },
     {
       "id": "M6",
       "name": "Dedicated persistence and recovery",
-      "status": "planned",
+      "status": "accepted",
       "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
       "branch": "feature/m6-dedicated-recovery",
       "depends_on": [
@@ -198,12 +215,22 @@
         "no item duplication after restart",
         "clients reconnect with updated ownership epochs",
         "committed operations replay without second mutation"
-      ]
+      ],
+      "implementation_manifest": "config/network/dedicated-persistence-recovery.v1.json",
+      "evidence": {
+        "contracts": "tests/runtime/test_m6_dedicated_recovery_contracts.gd",
+        "process": "tests/runtime/test_m6_dedicated_recovery_processes.gd",
+        "focused_runner_windows": "RUN_M6_DEDICATED_RECOVERY_TESTS.ps1",
+        "focused_runner_linux": "RUN_M6_DEDICATED_RECOVERY_TESTS.sh"
+      },
+      "delivery": "fix1",
+      "accepted_at_utc": "2026-07-31T03:39:00Z",
+      "acceptance_sha256": "7AF3317A3E2B9F24D452DECEC6A18D1AE0747A903F6C03A69DFFE0CC82B966BF"
     },
     {
       "id": "A3",
       "name": "Single-server multiplayer architecture audit/freeze",
-      "status": "planned",
+      "status": "candidate",
       "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
       "branch": "feature/a3-single-server-multiplayer-architecture",
       "depends_on": [
@@ -216,12 +243,19 @@
         "reconnect replay and dedicated recovery are proven",
         "no topology-specific gameplay forks",
         "B1 scope is server-to-server only"
-      ]
+      ],
+      "implementation_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
+      "evidence": {
+        "auditor": "scripts/runtime/networked_gameplay/a3/single_server_architecture_auditor.gd",
+        "contracts": "tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
+        "focused_runner_windows": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1",
+        "focused_runner_linux": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.sh"
+      }
     },
     {
       "id": "B1",
       "name": "NATS Core adapter",
-      "status": "deferred_after_A3",
+      "status": "deferred_until_A3_acceptance",
       "checkpoint": "v16.11.0-data-plane-b1-nats-core",
       "branch": "feature/b1-nats-core-adapter",
       "depends_on": [
@@ -302,8 +336,12 @@
   ],
   "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks",
   "accepted_at_utc": "2026-07-30T03:40:00Z",
-  "current_implementation_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
-  "current_implementation_manifest": "config/network/dedicated-graphical-client.v1.json",
-  "current_implementation_stage": "M2",
-  "updated_at_utc": "2026-07-30T08:20:00Z"
+  "current_implementation_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "current_implementation_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
+  "current_implementation_stage": "A3",
+  "updated_at_utc": "2026-07-31T03:39:00Z",
+  "next_stage": "B1 after A3 independent acceptance",
+  "current_stage": "A3",
+  "current_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "current_manifest": "config/network/single-server-multiplayer-architecture.v1.json"
 }

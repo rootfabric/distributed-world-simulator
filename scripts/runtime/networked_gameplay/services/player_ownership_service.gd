@@ -8,6 +8,8 @@ const OwnershipSnapshot = preload("res://scripts/runtime/networked_gameplay/cont
 const SCHEMA := "planet_simulator.player_ownership_service.v1"
 const SNAPSHOT_SCHEMA := OwnershipSnapshot.SCHEMA
 const DELTA_SCHEMA := "planet_simulator.player_ownership_delta.v1"
+const DURABLE_SCHEMA := "planet_simulator.player_ownership_state.v1"
+const REPLAY_SCHEMA := "planet_simulator.player_ownership_replay_state.v1"
 
 var _authority_owner_id := ""
 var _authority_epoch := 0
@@ -120,6 +122,147 @@ func get_player_for_session(transport_session_id: String) -> Dictionary:
 	return get_player(String(_session_to_player[transport_session_id]))
 
 
+func get_players() -> Array:
+	var result: Array = []
+	var ids := _players.keys()
+	ids.sort()
+	for logical_id in ids:
+		result.append(Dictionary(_players[logical_id]).duplicate(true))
+	return result
+
+
+
+func export_durable_state() -> Dictionary:
+	var players: Array = []
+	var ids := _players.keys()
+	ids.sort()
+	for id_value in ids:
+		var record: Dictionary = Dictionary(_players[id_value]).duplicate(true)
+		record["connected"] = false
+		record["transport_session_id"] = ""
+		players.append(record)
+	var state: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"players": players,
+		"checksum": "",
+	}
+	state["checksum"] = _state_checksum(state)
+	return state
+
+
+func restore_durable_state(value: Dictionary) -> Dictionary:
+	var validation := validate_durable_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	if not _authority_owner_id.is_empty() and String(value.get("authority_owner_id", "")) != _authority_owner_id:
+		return _failure("OWNERSHIP_RECOVERY_OWNER_MISMATCH")
+	if _authority_epoch > 0 and int(value.get("authority_epoch", 0)) != _authority_epoch:
+		return _failure("OWNERSHIP_RECOVERY_EPOCH_MISMATCH")
+	var staged_players: Dictionary = {}
+	for record_value in value.get("players", []):
+		var record: Dictionary = Dictionary(record_value).duplicate(true)
+		var logical_id := String(record.get("logical_player_id", ""))
+		record["connected"] = false
+		record["transport_session_id"] = ""
+		staged_players[logical_id] = record
+	_authority_owner_id = String(value.get("authority_owner_id", ""))
+	_authority_epoch = int(value.get("authority_epoch", 0))
+	_revision = int(value.get("revision", 0))
+	_tick = int(value.get("server_tick", 0))
+	_players = staged_players
+	_session_to_player.clear()
+	_operation_ledger.clear()
+	return _success({"player_count": _players.size(), "revision": _revision, "server_tick": _tick})
+
+
+func validate_durable_state(value: Dictionary) -> Dictionary:
+	if String(value.get("schema", "")) != DURABLE_SCHEMA:
+		return _failure("INVALID_OWNERSHIP_STATE_SCHEMA")
+	for field in ["authority_owner_id", "authority_epoch", "revision", "server_tick", "players", "checksum"]:
+		if not value.has(field):
+			return _failure("OWNERSHIP_STATE_FIELD_MISSING", {"field": field})
+	if String(value.get("authority_owner_id", "")).strip_edges().is_empty():
+		return _failure("INVALID_OWNERSHIP_STATE_OWNER")
+	if int(value.get("authority_epoch", 0)) < 1 or int(value.get("revision", -1)) < 0 or int(value.get("server_tick", -1)) < 0:
+		return _failure("INVALID_OWNERSHIP_STATE_REVISION")
+	if typeof(value.get("players")) != TYPE_ARRAY or typeof(value.get("checksum")) != TYPE_STRING:
+		return _failure("INVALID_OWNERSHIP_STATE")
+	if String(value.get("checksum", "")) != _state_checksum(value):
+		return _failure("OWNERSHIP_STATE_CHECKSUM_MISMATCH")
+	var seen: Dictionary = {}
+	for record_value in value.get("players", []):
+		if not record_value is Dictionary:
+			return _failure("INVALID_OWNERSHIP_PLAYER_RECORD")
+		var record: Dictionary = record_value
+		var logical_id := String(record.get("logical_player_id", ""))
+		if logical_id.is_empty() or logical_id != logical_id.strip_edges().to_lower() or seen.has(logical_id):
+			return _failure("INVALID_OWNERSHIP_PLAYER_ID")
+		if String(record.get("player_entity_id", "")) != "player/%s" % logical_id:
+			return _failure("INVALID_OWNERSHIP_PLAYER_ENTITY")
+		if int(record.get("ownership_epoch", 0)) < 1:
+			return _failure("INVALID_PLAYER_OWNERSHIP_EPOCH")
+		if int(record.get("joined_tick", -1)) < 0 or int(record.get("left_tick", -1)) < 0:
+			return _failure("INVALID_PLAYER_OWNERSHIP_TICK")
+		if int(record.get("joined_tick", 0)) > int(value.get("server_tick", 0)) or int(record.get("left_tick", 0)) > int(value.get("server_tick", 0)):
+			return _failure("PLAYER_OWNERSHIP_TICK_AHEAD_OF_SERVER")
+		if typeof(record.get("connected")) != TYPE_BOOL:
+			return _failure("INVALID_PLAYER_OWNERSHIP_CONNECTED_STATE")
+		if bool(record.get("connected", true)) or not String(record.get("transport_session_id", "")).is_empty():
+			return _failure("DURABLE_OWNERSHIP_SESSION_MUST_BE_DISCONNECTED")
+		seen[logical_id] = true
+	var safe := Utils.canonicalize(value, "$.ownership_state")
+	if not bool(safe.get("success", false)):
+		return _failure("OWNERSHIP_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	return _success({"player_count": seen.size()})
+
+
+func export_replay_state() -> Dictionary:
+	var records: Dictionary = {}
+	var operation_ids := _operation_ledger.keys()
+	operation_ids.sort()
+	for operation_id_value in operation_ids:
+		records[String(operation_id_value)] = Dictionary(_operation_ledger[operation_id_value]).duplicate(true)
+	var state: Dictionary = {"schema": REPLAY_SCHEMA, "records": records, "checksum": ""}
+	state["checksum"] = _state_checksum(state)
+	return state
+
+
+func restore_replay_state(value: Dictionary) -> Dictionary:
+	var validation := validate_replay_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	_operation_ledger = Dictionary(value.get("records", {})).duplicate(true)
+	return _success({"operation_count": _operation_ledger.size()})
+
+
+func validate_replay_state(value: Dictionary) -> Dictionary:
+	if String(value.get("schema", "")) != REPLAY_SCHEMA or typeof(value.get("records")) != TYPE_DICTIONARY:
+		return _failure("INVALID_OWNERSHIP_REPLAY_STATE")
+	if typeof(value.get("checksum")) != TYPE_STRING or String(value.get("checksum", "")) != _state_checksum(value):
+		return _failure("OWNERSHIP_REPLAY_CHECKSUM_MISMATCH")
+	for operation_id_value in value.get("records", {}).keys():
+		var operation_id := String(operation_id_value)
+		var entry_value = value["records"][operation_id_value]
+		if operation_id.strip_edges().is_empty() or not entry_value is Dictionary:
+			return _failure("INVALID_OWNERSHIP_REPLAY_RECORD")
+		var entry: Dictionary = entry_value
+		if String(entry.get("fingerprint", "")).length() != 64 or typeof(entry.get("result")) != TYPE_DICTIONARY:
+			return _failure("INVALID_OWNERSHIP_REPLAY_RECORD")
+	var safe := Utils.canonicalize(value, "$.ownership_replay")
+	if not bool(safe.get("success", false)):
+		return _failure("OWNERSHIP_REPLAY_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	return _success({"operation_count": value.get("records", {}).size()})
+
+
+func _state_checksum(value: Dictionary) -> String:
+	var payload := value.duplicate(true)
+	payload.erase("checksum")
+	return Utils.payload_hash(payload)
+
 func get_report() -> Dictionary:
 	var connected := 0
 	for record in _players.values():
@@ -231,8 +374,10 @@ func _replay(operation_id: String, fingerprint: String) -> Dictionary:
 	if String(entry.get("fingerprint", "")) != fingerprint:
 		return _failure("OPERATION_REPLAY_CONFLICT")
 	var result: Dictionary = Dictionary(entry.get("result", {})).duplicate(true)
-	if bool(result.get("success", false)):
-		result["details"]["replay"] = true
+	result["replay"] = true
+	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
+	details["replay"] = true
+	result["details"] = details
 	return result
 
 
