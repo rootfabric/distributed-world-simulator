@@ -252,3 +252,21 @@ socket_id      = part_id
 ```
 
 Резервирование не становится новым persistent relation. Оно остаётся частью ещё не зафиксированного transaction plan. Благодаря этому C2A не создаёт второй Item Graph и не вводит состояние, которое позднее пришлось бы мигрировать.
+
+## 16. C2B: M0 как авторитетная строительная граница
+
+C2B переводит принцип «стройка является сетевой с первого дня» в исполняемую архитектуру.
+
+```text
+ConstructionItemTransactionPlan
+→ deterministic M0 MutationBatch
+→ prepare/commit in AggregateTransactionRepository
+→ authoritative operation record
+→ production Item Graph materialization
+```
+
+M0 commit является точкой истины. Локальные `ItemRegistry`, `ContainerRegistry`, `ConstructStore` и `ItemOperationLedger` являются рабочей materialization этого состояния. При аварии после commit новый runtime обязан восстановить их из M0, а не повторять расход материалов.
+
+Внутренняя `ConstructSnapshot.state_revision` описывает историю семантической конструкции. `aggregate_snapshot_envelope.authority.state_revision` описывает историю сетевого aggregate. Эти счётчики не взаимозаменяемы и сохраняются отдельно.
+
+C2B также устанавливает правило persistence: файловый construction bundle может ускорять запуск и обеспечивать резервное хранение, но не имеет права откатывать или заменять отличающееся M0-authoritative состояние.

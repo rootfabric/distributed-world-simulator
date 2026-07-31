@@ -1,0 +1,110 @@
+{
+  "schema": "planet_simulator.c2b_authoritative_item_graph_validation.v1",
+  "stage": "C2B",
+  "delivery": {
+    "file_count": 31,
+    "manifest": "c2b-authoritative-item-graph-integration-files.txt",
+    "archive_root": "lunar-world-double-godot/",
+    "unsafe_paths": 0
+  },
+  "base": {
+    "stage": "C2A",
+    "commit": "68cf8b2",
+    "branch": "feature/c2a-item-graph-contracts"
+  },
+  "recommended_branch": "feature/c2b-authoritative-item-graph-integration",
+  "engine": {
+    "version": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64"
+  },
+  "scope": {
+    "production_item_registry": true,
+    "production_container_registry": true,
+    "production_relationship_validator": true,
+    "production_mass_service": true,
+    "shared_item_operation_ledger": true,
+    "m0_mutation_batch": true,
+    "m0_prepare_commit": true,
+    "m0_first_crash_recovery": true,
+    "persistence_checksum": true,
+    "runtime_ui_integration": false,
+    "network_command_endpoint": false
+  },
+  "focused_results": {
+    "c1_contracts": {
+      "passed": true,
+      "assertions": 26
+    },
+    "c1_aggregate": {
+      "passed": true,
+      "assertions": 40
+    },
+    "c1_total": {
+      "passed": true,
+      "assertions": 66
+    },
+    "c2a_contracts": {
+      "passed": true,
+      "assertions": 46
+    },
+    "c2a_transactions": {
+      "passed": true,
+      "assertions": 91
+    },
+    "c2a_total": {
+      "passed": true,
+      "assertions": 137
+    },
+    "c2b_contracts": {
+      "passed": true,
+      "assertions": 64
+    },
+    "c2b_integration": {
+      "passed": true,
+      "assertions": 194
+    },
+    "c2b_total": {
+      "passed": true,
+      "assertions": 258
+    },
+    "editor_import_parse": {
+      "passed": true
+    }
+  },
+  "covered_scenarios": [
+    "production ItemRegistry and ContainerRegistry assembly",
+    "canonical ATTACHMENT relations",
+    "real material stack consumption",
+    "shared ItemOperationLedger exact replay",
+    "operation ID conflict",
+    "terminal stale-plan replay",
+    "M0 three-aggregate atomic mutation batch",
+    "failure after M0 commit",
+    "restart recovery from newer M0 state",
+    "partial local materialization rollback",
+    "authoritative deconstruction and salvage",
+    "independent ConstructSnapshot and M0 revisions",
+    "persistence save/load and checksum rejection",
+    "persisted state rejected when it differs from M0 authority"
+  ],
+  "world_regression_manifest": {
+    "declared_test_count_expected": 105,
+    "unique_test_count_static": 105,
+    "expected_step_count": 108,
+    "c2b_tests_present": 2
+  },
+  "limitations": [
+    "The full repository network and world regression suites were not executable in the isolated build workspace.",
+    "Focused C2B tests used the project double-precision Godot binary and interface-compatible mirrors for base production/M0 dependencies; acceptance must rerun against the complete checkout.",
+    "C2B does not expose construction through gameplay UI, client transport, or scene representation."
+  ],
+  "acceptance_required": [
+    "RUN_C1_CONSTRUCTION_KERNEL_TESTS.ps1",
+    "RUN_C2A_CONSTRUCTION_ITEM_GRAPH_TESTS.ps1",
+    "RUN_C2B_AUTHORITATIVE_ITEM_GRAPH_TESTS.ps1",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "git diff --check"
+  ]
+}

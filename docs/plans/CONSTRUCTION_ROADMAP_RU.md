@@ -154,3 +154,53 @@ PlanetSimulator создаёт **конструктор нового уровн�
 ## C13 — Federated Large Constructs
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
+
+# Дополнение: реализованный этап C2B
+
+## C2B — Authoritative Item Graph Integration
+
+C2B переводит C2A из контрактного sandbox в production-domain integration, не подключая пока игровой UI и transport.
+
+### Авторитетная единица изменения
+
+Одна строительная операция транслируется в один M0 `MutationBatch`, содержащий:
+
+- обновление полного production Item Graph state;
+- обновление общего Item Operation Ledger;
+- CREATE/UPDATE/DELETE соответствующего Construct aggregate.
+
+M0 repository выполняет prepare/commit и хранит operation record. Локальные registries materialize уже закоммиченное состояние. Если процесс падает между этими фазами, M0 остаётся источником восстановления.
+
+### Инварианты C2B
+
+- item identity не меняется при attach/detach;
+- контейнер и relation обновляются согласованно;
+- attached item объявлен ровно одной part записью construct;
+- root item имеет `construction_root.construct_id`;
+- material consumption изменяет quantity и revision только один раз;
+- Item Graph, common ledger и construct переходят одной M0 generation;
+- internal construct revision не используется как M0 aggregate revision;
+- persisted state не может откатить более новое M0 state.
+
+### Acceptance scenarios
+
+1. Сборка стола из пяти production ItemInstance и четырёх единиц крепежа.
+2. Авария после M0 commit до локальной materialization.
+3. Восстановление нового runtime непосредственно из M0 repository.
+4. Exact replay без повторного расхода.
+5. Stale plan и operation ID conflict.
+6. Разборка с возвратом деталей и без восстановления расходников.
+7. Ошибка после частичного локального commit с полным rollback.
+8. Persistence, restart и checksum rejection.
+
+### Gate C2B → C3
+
+C3 начинается после внешнего PASS:
+
+```text
+Focused C1
+Focused C2A
+Focused C2B
+Network regression
+World regression including both C2B scenarios
+```

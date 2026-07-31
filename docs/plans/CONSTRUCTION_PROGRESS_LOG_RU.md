@@ -95,3 +95,52 @@ Focused total:    PASS — 2/2 tests, 137 assertions
 - расширение тестовых сложных случаев.
 
 Реальный Item Graph изменяется только на C2B.
+
+## 2026-07-31 — C2A: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c2a-item-graph-contracts`
+**Коммит:** `68cf8b2 feat(construction): add C2A Item Graph contracts`
+
+```text
+C1 compatibility:  PASS — 66 assertions
+Focused C2A:       PASS — 137 assertions
+Network N0–M4:     PASS
+World regression:  PASS — 103/103 tests, 106 steps
+```
+
+C2A сохранён как изолированный контрактный слой и стал базой C2B.
+
+## 2026-07-31 — C2B: Authoritative Item Graph Integration
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c2b-authoritative-item-graph-integration`
+**База:** принятый C2A `68cf8b2`.
+
+Реализовано:
+
+- production adapter к `ItemRegistry`, `ContainerRegistry`, `ItemRelationshipValidator`, `ItemMassService`;
+- общий `ItemOperationLedger` вместо отдельного construction ledger;
+- `ConstructStore` для item-backed constructs;
+- детерминированный перевод C2A plan в M0 `MutationBatch`;
+- три авторитетных aggregate family: Item Graph, ledger, Construct;
+- M0 adapter и transaction bridge;
+- атомарная сборка и разборка стола;
+- exact replay, operation conflict, terminal rejection и retryable failure;
+- rollback локальной materialization после частичного применения;
+- crash recovery после M0 commit;
+- раздельные revisions внутреннего construct и M0 envelope;
+- checksum-protected persistence и restart replay;
+- отказ от загрузки persisted state, расходящегося с M0 authority.
+
+Локальный focused-профиль реализации:
+
+```text
+C2B contracts:     PASS — 64 assertions
+C2B integration:   PASS — 194 assertions
+Focused C2B:       PASS — 258 assertions
+C1 compatibility: PASS — 66 assertions
+C2A compatibility: PASS — 137 assertions
+```
+
+Внешняя приёмка должна дополнительно подтвердить network regression и world regression с 105 тестами.

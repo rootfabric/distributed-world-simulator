@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.construction_item_graph_contracts_manifest.v1",
   "stage": "C2A",
-  "status": "IMPLEMENTED_CANDIDATE",
-  "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
-  "branch": "feature/c1-semantic-construction-kernel",
+  "status": "ACCEPTED",
+  "base_commit": "c2b9404",
+  "branch": "feature/c2a-item-graph-contracts",
   "runtime_integration": false,
   "production_store": false,
   "item_relation_mapping": {
@@ -25,6 +25,7 @@
     "PART_BINDING_CONSISTENCY"
   ],
   "prototype": "TABLE_ASSEMBLY_AND_DECONSTRUCTION",
-  "next_stage": "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION",
-  "next_stage_gate": "MULTIPLAYER_BASE_AND_M0_TRANSACTION_PATH_ACCEPTED"
+  "next_stage": "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION_IMPLEMENTED_CANDIDATE",
+  "next_stage_gate": "C2B_EXTERNAL_ACCEPTANCE",
+  "accepted_commit": "68cf8b2"
 }

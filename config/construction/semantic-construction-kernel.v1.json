@@ -17,7 +17,7 @@
     "planet_simulator.construct_snapshot.v1"
   ],
   "prototype": "TABLE",
-  "next_stage": "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION",
-  "current_stage": "C2A_ITEM_GRAPH_CONTRACTS",
+  "next_stage": "C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION",
+  "current_stage": "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION",
   "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md"
 }
