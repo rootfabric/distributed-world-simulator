@@ -496,3 +496,36 @@ Fabricated output возвращается в Item Graph и может быть 
 ### Деградация станка
 
 Machine availability компилируется из concrete providers/bonds, C5 WORKSTATION capability и C7 POWER utility. Потеря power или quorum блокирует новые material mutations; восстановление позволяет продолжить тот же pinned job.
+
+
+## 18. C9: повреждение как изменение topology, а не удаление prefab
+
+C9 рассматривает повреждение как authoritative изменение part/bond graph. Mesh fracture может визуализировать результат, но не определяет identity обломков и не решает, какие предметы сохранились.
+
+```text
+source ConstructSnapshot
+→ part conditions + broken bonds
+→ connected components
+→ retained aggregate / split aggregates / salvage items
+→ inverse repair transaction
+```
+
+### Identity сохраняется
+
+Split не клонирует parts. Исходный `ItemInstance` либо остаётся в source aggregate, либо меняет attachment на новый split aggregate, либо получает world/container salvage relation. Repair использует те же item IDs.
+
+### Aggregate split атомарен
+
+Source update, child creates, root item creates и relation changes входят в один multi-aggregate M0 batch. Частично созданного обломка быть не может. Exact replay не повторяет split.
+
+### Repair является обратной authoritative транзакцией
+
+Repair plan pin-ит original snapshot и требуемые parts. Repair удаляет временные child roots/aggregates, возвращает реальные детали, восстанавливает bonds и пересобирает derived C5–C8 profiles уже из нового source checksum.
+
+### Salvage policy отделена от topology
+
+Connected component определяет состав обломка, а policy определяет outcome: новый construct или salvage. Это позволяет менять правила мира без изменения алгоритма связности.
+
+### Damage history слабее authoritative мира
+
+History и repair ghost помогают UI/agent workflow, но состояние конструкции доказывается `ConstructSnapshot`, Item Graph и shared operation ledger. History можно восстановить или потерять без дублирования частей.

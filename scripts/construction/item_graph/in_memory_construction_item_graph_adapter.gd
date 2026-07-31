@@ -6,6 +6,7 @@ const ProjectionScript = preload("res://scripts/construction/item_graph/construc
 const ItemMutationScript = preload("res://scripts/construction/item_graph/construction_item_mutation.gd")
 const ConstructMutationScript = preload("res://scripts/construction/item_graph/construction_construct_mutation.gd")
 const PlanScript = preload("res://scripts/construction/item_graph/construction_item_transaction_plan.gd")
+const DamagePlanScript = preload("res://scripts/construction/damage/construction_damage_transaction_plan.gd")
 
 const STATE_SCHEMA: String = "planet_simulator.c2a_construction_item_graph_state.v1"
 const STATUS_SUCCEEDED: String = "SUCCEEDED"
@@ -110,6 +111,56 @@ func apply_plan(plan: Dictionary, failure_mode: String = "") -> Dictionary:
 	_terminal_operations[operation_id] = {"plan_checksum": plan_checksum, "result": result.duplicate(true)}
 	return result
 
+func apply_damage_plan(plan: Dictionary, failure_mode: String = "") -> Dictionary:
+	var validation: Dictionary = DamagePlanScript.validate(plan)
+	if not bool(validation.get("success", false)):
+		return _with_status(validation, STATUS_REJECTED)
+	var operation_id: String = String(plan["operation_id"])
+	var plan_checksum: String = String(plan["checksum"])
+	if _terminal_operations.has(operation_id):
+		var record: Dictionary = _terminal_operations[operation_id]
+		if String(record["plan_checksum"]) == plan_checksum:
+			return Dictionary(record["result"]).duplicate(true)
+		return _failure("CONSTRUCTION_OPERATION_ID_CONFLICT", {}, STATUS_REJECTED)
+	var precondition_validation: Dictionary = _validate_damage_preconditions(plan)
+	if not bool(precondition_validation.get("success", false)):
+		return _remember_damage_rejection(plan, precondition_validation)
+	var candidate_items: Dictionary = _items.duplicate(true)
+	var candidate_constructs: Dictionary = _constructs.duplicate(true)
+	for construct_mutation in plan["construct_mutations"]:
+		var construct_apply: Dictionary = _apply_construct_mutation(candidate_constructs, construct_mutation)
+		if not bool(construct_apply.get("success", false)):
+			return _remember_damage_rejection(plan, construct_apply)
+	for item_mutation in plan["item_mutations"]:
+		var item_apply: Dictionary = _apply_item_mutation(candidate_items, item_mutation)
+		if not bool(item_apply.get("success", false)):
+			return _remember_damage_rejection(plan, item_apply)
+	var invariant_validation: Dictionary = _validate_state_invariants(candidate_items, candidate_constructs)
+	if not bool(invariant_validation.get("success", false)):
+		return _remember_damage_rejection(plan, invariant_validation)
+	if failure_mode == "BEFORE_COMMIT":
+		return _failure("INJECTED_CONSTRUCTION_COMMIT_FAILURE", {}, STATUS_RETRYABLE)
+	if not failure_mode.is_empty():
+		return _failure("UNKNOWN_CONSTRUCTION_FAILURE_MODE", {}, STATUS_REJECTED)
+	_items = candidate_items
+	_constructs = candidate_constructs
+	_generation += 1
+	var affected_item_ids: Array = []
+	for mutation in plan["item_mutations"]:
+		affected_item_ids.append(String(mutation["item_instance_id"]))
+	var source_construct_id: String = String(plan["source_construct_id"])
+	var source_revision: int = -1
+	if _constructs.has(source_construct_id):
+		source_revision = int(_constructs[source_construct_id]["state_revision"])
+	var result: Dictionary = {
+		"success": true, "error_code": "", "message": "", "status": STATUS_SUCCEEDED,
+		"operation_id": operation_id, "plan_id": String(plan["plan_id"]), "plan_checksum": plan_checksum,
+		"generation": _generation, "construct_id": source_construct_id, "construct_revision": source_revision,
+		"affected_item_ids": affected_item_ids,
+	}
+	_terminal_operations[operation_id] = {"plan_checksum": plan_checksum, "result": result.duplicate(true)}
+	return result
+
 func get_item_projection(item_instance_id: String) -> Dictionary:
 	if not _items.has(item_instance_id):
 		return {}
@@ -208,6 +259,38 @@ func _validate_preconditions(plan: Dictionary) -> Dictionary:
 		):
 			return _failure("ITEM_PRECONDITION_MISMATCH", {"item_instance_id": item_id})
 	return _success()
+
+func _validate_damage_preconditions(plan: Dictionary) -> Dictionary:
+	for mutation in plan["construct_mutations"]:
+		var construct_id: String = String(mutation["construct_id"])
+		var before: Dictionary = mutation["before_snapshot"]
+		if before.is_empty():
+			if _constructs.has(construct_id):
+				return _failure("CONSTRUCT_PRECONDITION_EXPECTED_ABSENT", {"construct_id": construct_id})
+		elif not _constructs.has(construct_id) or not _canonical_equal(Dictionary(_constructs[construct_id]), before):
+			return _failure("CONSTRUCT_PRECONDITION_MISMATCH", {"construct_id": construct_id})
+	for mutation in plan["item_mutations"]:
+		var item_id: String = String(mutation["item_instance_id"])
+		var before: Dictionary = mutation["before_projection"]
+		if before.is_empty():
+			if _items.has(item_id):
+				return _failure("ITEM_PRECONDITION_EXPECTED_ABSENT", {"item_instance_id": item_id})
+		elif not _items.has(item_id) or not _canonical_equal(Dictionary(_items[item_id]), before):
+			return _failure("ITEM_PRECONDITION_MISMATCH", {"item_instance_id": item_id})
+	return _success()
+
+func _remember_damage_rejection(plan: Dictionary, failure: Dictionary) -> Dictionary:
+	var source_construct_id: String = String(plan["source_construct_id"])
+	var revision: int = int(_constructs[source_construct_id]["state_revision"]) if _constructs.has(source_construct_id) else -1
+	var result: Dictionary = {
+		"success": false, "error_code": String(failure.get("error_code", "CONSTRUCTION_DAMAGE_TRANSACTION_REJECTED")),
+		"message": String(failure.get("message", failure.get("error_code", "CONSTRUCTION_DAMAGE_TRANSACTION_REJECTED"))),
+		"status": STATUS_REJECTED, "operation_id": String(plan["operation_id"]), "plan_id": String(plan["plan_id"]),
+		"plan_checksum": String(plan["checksum"]), "generation": _generation, "construct_id": source_construct_id,
+		"construct_revision": revision, "affected_item_ids": [],
+	}
+	_terminal_operations[String(plan["operation_id"])] = {"plan_checksum": String(plan["checksum"]), "result": result.duplicate(true)}
+	return result
 
 func _apply_construct_mutation(target: Dictionary, mutation: Dictionary) -> Dictionary:
 	var construct_id: String = String(mutation["construct_id"])

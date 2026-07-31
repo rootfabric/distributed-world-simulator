@@ -1,0 +1,101 @@
+{
+  "schema": "planet_simulator.c9_damage_split_repair_validation.v1",
+  "checkpoint": "C9_DAMAGE_SPLIT_REPAIR",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C8_ACCEPTED",
+    "c7_commit": "923bfe1",
+    "c8_reviewed_sha256": "977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e"
+  },
+  "branch": "feature/c9-damage-split-repair",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_assertions": 225,
+    "c8_assertions": 221,
+    "c9_contract_assertions": 96,
+    "c9_integration_assertions": 108,
+    "c9_total_assertions": 204,
+    "locally_verified_total_assertions": 1737
+  },
+  "contracts": {
+    "damage_request_pins_source_checksum": true,
+    "broken_bonds_define_connected_components": true,
+    "retained_component_is_explicit": true,
+    "split_identifiers_are_preallocated": true,
+    "item_identity_is_conserved": true,
+    "source_child_and_item_mutations_are_atomic": true,
+    "small_components_follow_salvage_policy": true,
+    "destroyed_salvage_requires_explicit_policy": true,
+    "bond_only_degradation_requires_no_item_mutation": true,
+    "repair_plan_pins_original_topology": true,
+    "repair_reuses_original_item_instances": true,
+    "repair_deletes_temporary_split_roots": true,
+    "damage_and_repair_replay_are_idempotent": true,
+    "operation_conflicts_are_rejected": true,
+    "transient_failure_does_not_leave_partial_split": true,
+    "history_and_persistence_are_transactional": true,
+    "m0_batch_contains_all_affected_aggregates": true
+  },
+  "prototype": {
+    "kind": "SIX_PART_BRIDGE_ARM",
+    "source_parts": 6,
+    "source_bonds": 5,
+    "broken_bonds": 2,
+    "outcomes": {
+      "retained_parts": 3,
+      "split_construct_parts": 2,
+      "salvage_parts": 1
+    },
+    "repair_result": "6 parts, 5 bonds, OPERATIONAL"
+  },
+  "world_manifest": {
+    "declared_tests": 119,
+    "unique_tests": 119,
+    "expected_steps": 122,
+    "c9_tests_present_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: full production M0 dependency tree is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 119,
+    "expected_world_steps": 122,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 136 unique UIDs in isolated workspace",
+    "manifest": "PASS — 46/46 unique files",
+    "world_runner_manifest": "PASS — 119/119 unique tests, C9 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — 46/46 files"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c9-damage-split-repair-files.txt",
+    "changed_files": 46
+  }
+}

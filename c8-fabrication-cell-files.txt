@@ -1,6 +1,6 @@
 Checkpoint: C8 — Fabrication Cell
-Status: IMPLEMENTED CANDIDATE
-Base: C7 ACCEPTED, C6 @ 2837835
+Status: ACCEPTED
+Base: C7 @ 923bfe1
 Recommended branch: feature/c8-fabrication-cell
 Changed files: 45
 

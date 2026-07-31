@@ -1,0 +1,52 @@
+Checkpoint: C9 — Damage, Split, Repair
+Status: IMPLEMENTED CANDIDATE
+Base: C8 ACCEPTED, C7 @ 923bfe1
+Recommended branch: feature/c9-damage-split-repair
+Changed files: 46
+
+RUN_C9_DAMAGE_SPLIT_REPAIR_TESTS.ps1
+RUN_C9_DAMAGE_SPLIT_REPAIR_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c8-fabrication-cell-files.txt
+config/construction/construction-damage-split-repair.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C8_FABRICATION_CELL_RU.md
+docs/checkpoints/2026-07-31_C9_DAMAGE_SPLIT_REPAIR_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/authoritative/authoritative_construction_item_graph_adapter.gd
+scripts/construction/authoritative/construction_m0_batch_translator.gd
+scripts/construction/damage/construction_damage_component.gd
+scripts/construction/damage/construction_damage_component.gd.uid
+scripts/construction/damage/construction_damage_history_store.gd
+scripts/construction/damage/construction_damage_history_store.gd.uid
+scripts/construction/damage/construction_damage_persistence.gd
+scripts/construction/damage/construction_damage_persistence.gd.uid
+scripts/construction/damage/construction_damage_planner.gd
+scripts/construction/damage/construction_damage_planner.gd.uid
+scripts/construction/damage/construction_damage_process.gd
+scripts/construction/damage/construction_damage_process.gd.uid
+scripts/construction/damage/construction_damage_record.gd
+scripts/construction/damage/construction_damage_record.gd.uid
+scripts/construction/damage/construction_damage_request.gd
+scripts/construction/damage/construction_damage_request.gd.uid
+scripts/construction/damage/construction_damage_transaction_plan.gd
+scripts/construction/damage/construction_damage_transaction_plan.gd.uid
+scripts/construction/damage/construction_repair_ghost_state.gd
+scripts/construction/damage/construction_repair_ghost_state.gd.uid
+scripts/construction/damage/construction_repair_plan.gd
+scripts/construction/damage/construction_repair_plan.gd.uid
+scripts/construction/damage/construction_salvage_policy.gd
+scripts/construction/damage/construction_salvage_policy.gd.uid
+scripts/construction/item_graph/construction_item_mutation.gd
+scripts/construction/item_graph/in_memory_construction_item_graph_adapter.gd
+tests/construction/fixtures/c9_damage_split_repair_fixture.gd
+tests/construction/fixtures/c9_damage_split_repair_fixture.gd.uid
+tests/construction/test_c9_damage_split_repair_contracts.gd
+tests/construction/test_c9_damage_split_repair_contracts.gd.uid
+tests/construction/test_c9_damage_split_repair_integration.gd
+tests/construction/test_c9_damage_split_repair_integration.gd.uid
+validation/c8-fabrication-cell-validation.json
+validation/c9-damage-split-repair-validation.json
+c9-damage-split-repair-files.txt

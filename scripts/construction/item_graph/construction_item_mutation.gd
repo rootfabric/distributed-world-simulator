@@ -16,6 +16,10 @@ const PURPOSE_DESTROY_ROOT: String = "DESTROY_CONSTRUCT_ROOT"
 const PURPOSE_TRANSFER_FABRICATION_INPUT: String = "TRANSFER_FABRICATION_INPUT"
 const PURPOSE_CREATE_FABRICATED_ITEM: String = "CREATE_FABRICATED_ITEM"
 const PURPOSE_CONSUME_FABRICATION_INPUT: String = "CONSUME_FABRICATION_INPUT"
+const PURPOSE_APPLY_DAMAGE: String = "APPLY_CONSTRUCTION_DAMAGE"
+const PURPOSE_REBIND_SPLIT_PART: String = "REBIND_SPLIT_PART"
+const PURPOSE_SALVAGE_PART: String = "SALVAGE_CONSTRUCTION_PART"
+const PURPOSE_REPAIR_PART: String = "REPAIR_CONSTRUCTION_PART"
 const PURPOSES: Array[String] = [
 	PURPOSE_CREATE_ROOT,
 	PURPOSE_ATTACH_PART,
@@ -25,6 +29,10 @@ const PURPOSES: Array[String] = [
 	PURPOSE_TRANSFER_FABRICATION_INPUT,
 	PURPOSE_CREATE_FABRICATED_ITEM,
 	PURPOSE_CONSUME_FABRICATION_INPUT,
+	PURPOSE_APPLY_DAMAGE,
+	PURPOSE_REBIND_SPLIT_PART,
+	PURPOSE_SALVAGE_PART,
+	PURPOSE_REPAIR_PART,
 ]
 const FIELDS: Array[String] = [
 	"schema",
@@ -154,9 +162,48 @@ static func _validate_update_purpose(purpose: String, before: Dictionary, after:
 				return _failure("FABRICATION_TRANSFER_DID_NOT_MOVE")
 			if int(after["quantity"]) != int(before["quantity"]) or after["components"] != before["components"]:
 				return _failure("FABRICATION_TRANSFER_MUTATED_PAYLOAD")
+		PURPOSE_APPLY_DAMAGE:
+			if before_relation != after_relation or int(after["quantity"]) != int(before["quantity"]):
+				return _failure("DAMAGE_PART_CHANGED_IDENTITY_OR_LOCATION")
+			if not _condition_only_change(before["components"], after["components"]):
+				return _failure("DAMAGE_PART_CHANGED_UNRELATED_COMPONENTS")
+		PURPOSE_REBIND_SPLIT_PART:
+			if String(before_relation.get("kind", "")) != ProjectionScript.ATTACHMENT or String(after_relation.get("kind", "")) != ProjectionScript.ATTACHMENT:
+				return _failure("SPLIT_REBIND_REQUIRES_ATTACHMENTS")
+			if String(before_relation.get("assembly_id", "")) == String(after_relation.get("assembly_id", "")):
+				return _failure("SPLIT_REBIND_DID_NOT_CHANGE_CONSTRUCT")
+			if String(before_relation.get("socket_id", "")) != String(after_relation.get("socket_id", "")) or int(after["quantity"]) != int(before["quantity"]):
+				return _failure("SPLIT_REBIND_CHANGED_PART_IDENTITY")
+			if not _same_or_condition_only_change(before["components"], after["components"]):
+				return _failure("SPLIT_REBIND_CHANGED_UNRELATED_COMPONENTS")
+		PURPOSE_SALVAGE_PART:
+			if String(before_relation.get("kind", "")) != ProjectionScript.ATTACHMENT or String(after_relation.get("kind", "")) not in [ProjectionScript.WORLD, ProjectionScript.CONTAINER]:
+				return _failure("SALVAGE_PART_RELATION_INVALID")
+			if int(after["quantity"]) != int(before["quantity"]) or not _same_or_condition_only_change(before["components"], after["components"]):
+				return _failure("SALVAGE_PART_CHANGED_PAYLOAD")
+		PURPOSE_REPAIR_PART:
+			if String(after_relation.get("kind", "")) != ProjectionScript.ATTACHMENT or int(after["quantity"]) != int(before["quantity"]):
+				return _failure("REPAIR_PART_TARGET_INVALID")
+			if not _same_or_condition_only_change(before["components"], after["components"]):
+				return _failure("REPAIR_PART_CHANGED_UNRELATED_COMPONENTS")
+			if String(after["components"].get("condition", "INTACT")) != "INTACT":
+				return _failure("REPAIR_PART_NOT_RESTORED")
 		_:
 			return _failure("INVALID_UPDATE_ITEM_MUTATION_PURPOSE")
 	return _success()
+
+static func _same_or_condition_only_change(before: Dictionary, after: Dictionary) -> bool:
+	return before == after or _condition_only_change(before, after)
+
+static func _condition_only_change(before: Dictionary, after: Dictionary) -> bool:
+	var before_copy: Dictionary = before.duplicate(true)
+	var after_copy: Dictionary = after.duplicate(true)
+	before_copy.erase("condition")
+	after_copy.erase("condition")
+	if before_copy != after_copy:
+		return false
+	var next_condition: String = String(after.get("condition", ""))
+	return next_condition in ["INTACT", "DEGRADED", "DESTROYED"] and next_condition != String(before.get("condition", ""))
 
 static func _is_construction_root(projection: Dictionary) -> bool:
 	var components = projection.get("components", {})

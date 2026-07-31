@@ -599,3 +599,62 @@ Editor parse:    PASS
 ```
 
 C2B focused не запускается в isolated workspace из-за отсутствующей M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `117/117 tests`, `120 steps`.
+
+
+## 2026-07-31 — C8: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c8-fabrication-cell`.
+**База:** `C7 @ 923bfe1`.
+
+```text
+C8 contracts:     PASS — 91 assertions
+C8 integration:   PASS — 130 assertions
+C8 total:         PASS — 221 assertions
+C1–C7 + C2B:      PASS
+Network N0–M4:    PASS
+World regression: PASS — 117/117 tests, 120 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e`. C8 стал принятой базой C9.
+
+
+## 2026-07-31 — C9: Damage, Split, Repair
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c9-damage-split-repair`.
+**База:** принятый C8.
+
+Архитектурные решения:
+
+- damage pin-ит source checksum и explicit retained part;
+- topology split считается через connected components;
+- крупные components становятся child constructs, мелкие — salvage;
+- source/children/items изменяются одной multi-aggregate transaction;
+- C2A item mutations расширены damage/split/salvage/repair purposes;
+- C2B adapter и M0 translator получили общий multi-construct path;
+- repair plan хранит original snapshot и реальные required item IDs;
+- process replay восстанавливает outcome из authoritative damage metadata;
+- repair ghost показывает missing/available parts;
+- history store и persistence поддерживают replay/conflict/transactional load.
+
+Локальный focused/compatibility профиль:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5:              PASS — 204 assertions
+C6:              PASS — 218 assertions
+C7:              PASS — 225 assertions
+C8:              PASS — 221 assertions
+C9 contracts:    PASS — 96 assertions
+C9 integration:  PASS — 108 assertions
+C9 total:        PASS — 204 assertions
+Editor parse:    PASS
+```
+
+C2B focused не запускается в isolated workspace из-за отсутствующей полной M0 dependency tree. Production adapter/translator parse PASS, multi-aggregate batch покрыт contract test. Ожидаемый world profile: `119/119 tests`, `122 steps`.

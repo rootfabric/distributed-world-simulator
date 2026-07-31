@@ -1,8 +1,8 @@
 # Checkpoint C8 — Fabrication Cell
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
-**База:** принятый C7, C6 commit `2837835`
+**Статус:** ACCEPTED
+**База:** `C7 @ 923bfe1`
 **Рекомендуемая ветка:** `feature/c8-fabrication-cell`
 
 ## Цель
@@ -151,3 +151,20 @@ git diff --check PASS
 - UI очереди;
 - автоматическая логистическая сеть между несколькими cells;
 - damage/split/repair изготовленных constructs — C9.
+
+
+## Внешняя приёмка
+
+```text
+C8 contracts:     PASS — 91 assertions
+C8 integration:   PASS — 130 assertions
+C8 total:         PASS — 221 assertions
+C1–C7:            PASS
+C2B:              PASS — 258 assertions
+Network N0–M4:    PASS
+World regression: PASS — 117/117 tests, 120 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e`. C8 принят как база C9.

@@ -422,16 +422,28 @@ Intact house компилируется в `ACTIVE/HABITABLE/FUNCTIONAL`. Open d
 
 Powered CNC cell резервирует `coolant ×1` и `steel_ingot/S355 ×3`, выполняет десять work units и выпускает `beam ×1`. Полный coolant stack удаляется, steel stack уменьшается `6 → 3`, output получает immutable recipe/job/machine provenance и успешно входит как source projection в C3 BuildPlan. Power loss блокирует job без изменения Item Graph; cancel возвращает сырьё; crash после completion восстанавливается через machine runtime и exact replay.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C9 — Damage, Split, Repair
 
-- ослабление и разрушение bonds;
-- отделение частей;
-- новые aggregate IDs;
-- repair ghost;
-- salvage policy;
-- восстановление item parts.
+1. Damage request pin-ит source construct checksum.
+2. Broken/degraded bonds и part conditions применяются детерминированно.
+3. Connected components считаются без `BROKEN` bonds и `DESTROYED` parts.
+4. Компонента retained part остаётся source aggregate.
+5. Крупные отделившиеся компоненты получают заранее закреплённые aggregate/root IDs.
+6. Мелкие компоненты становятся salvage в world/container relation.
+7. Source, child constructs, roots и item relations меняются в одной C2B/M0 транзакции.
+8. Repair plan pin-ит original topology и реальные required item IDs.
+9. Repair удаляет временные split aggregates и восстанавливает source без копирования items.
+10. Damage/repair exact replay идемпотентен, operation conflicts отклоняются.
+11. History/persistence и repair ghost транзакционны, но не заменяют authoritative snapshot.
+12. Derived mobile/spatial/fabrication profiles перестраиваются после topology change.
+
+### Контрольный vertical slice
+
+Bridge-arm из шести частей теряет две связи. Source сохраняет anchor/core/joint, arm/tool образуют новый construct, sensor становится salvage. Repair возвращает все шесть исходных `ItemInstance`, удаляет временный child root, восстанавливает пять bonds и `OPERATIONAL` state.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C10 — Parametric Members
 
@@ -484,5 +496,18 @@ Focused C7
 Focused C8
 Network/runtime regression
 World regression including C3–C8 scenarios
+Main-scene CLI
+```
+
+
+## Gate C9 → C10
+
+C10 начинается только после внешней приёмки C9:
+
+```text
+Focused C1–C9
+C2B authoritative multi-aggregate profile
+Network/runtime regression
+World regression including C3–C9 scenarios
 Main-scene CLI
 ```

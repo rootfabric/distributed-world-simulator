@@ -8,6 +8,7 @@ const MassServiceScript = preload("res://scripts/items/services/item_mass_servic
 const OperationLedgerScript = preload("res://scripts/items/services/item_operation_ledger.gd")
 const RelationsScript = preload("res://scripts/items/domain/item_relations.gd")
 const PlanScript = preload("res://scripts/construction/item_graph/construction_item_transaction_plan.gd")
+const DamagePlanScript = preload("res://scripts/construction/damage/construction_damage_transaction_plan.gd")
 const ProjectionScript = preload("res://scripts/construction/item_graph/construction_item_projection.gd")
 const ItemMutationScript = preload("res://scripts/construction/item_graph/construction_item_mutation.gd")
 const ConstructMutationScript = preload("res://scripts/construction/item_graph/construction_construct_mutation.gd")
@@ -253,6 +254,86 @@ func apply_plan(plan: Dictionary, failure_mode: String = "") -> Dictionary:
 	return stored_result
 
 
+func apply_damage_plan(plan: Dictionary, failure_mode: String = "") -> Dictionary:
+	if not _configured:
+		return _failure("AUTHORITATIVE_CONSTRUCTION_ADAPTER_NOT_CONFIGURED", {}, STATUS_REJECTED)
+	if not SUPPORTED_FAILURE_MODES.has(failure_mode):
+		return _failure("UNKNOWN_AUTHORITATIVE_CONSTRUCTION_FAILURE_MODE", {}, STATUS_REJECTED)
+	var plan_validation: Dictionary = DamagePlanScript.validate(plan)
+	if not bool(plan_validation.get("success", false)):
+		return _with_status(plan_validation, STATUS_REJECTED)
+	var operation_id: String = String(plan["operation_id"])
+	var command_type: String = String(plan["command_type"])
+	var plan_checksum: String = String(plan["checksum"])
+	var source_construct_id: String = String(plan["source_construct_id"])
+	var source_before: Dictionary = {}
+	for mutation in plan["construct_mutations"]:
+		if String(mutation["construct_id"]) == source_construct_id:
+			source_before = mutation["before_snapshot"]
+			break
+	var expected_revision: int = int(source_before.get("state_revision", -1)) if not source_before.is_empty() else -1
+	var resolved: Dictionary = _operations.resolve(operation_id, command_type, plan_checksum, source_construct_id, expected_revision)
+	if bool(resolved.get("found", false)):
+		return Dictionary(resolved.get("result", {})).duplicate(true)
+	var candidate_result: Dictionary = _build_damage_candidate(plan)
+	if not bool(candidate_result.get("success", false)):
+		return _finish_damage_failure(plan, candidate_result, expected_revision)
+	var candidate_items = candidate_result["items"]
+	var candidate_containers = candidate_result["containers"]
+	var candidate_constructs = candidate_result["constructs"]
+	var affected_item_ids: Array = candidate_result["affected_item_ids"]
+	var source_revision: int = -1
+	if candidate_constructs.has_construct(source_construct_id):
+		source_revision = int(candidate_constructs.get_snapshot(source_construct_id)["state_revision"])
+	var next_tick: int = _server_tick + 1
+	var batch_id: String = M0TranslatorScript.batch_id_for_plan(plan)
+	var base_result: Dictionary = {
+		"success": true, "error_code": "", "message": "", "plan_id": String(plan["plan_id"]),
+		"plan_checksum": plan_checksum, "construct_id": source_construct_id, "construct_revision": source_revision,
+		"affected_item_ids": affected_item_ids, "item_graph_revision": _item_graph_revision + 1,
+		"ledger_revision": _ledger_revision + 1, "server_tick": next_tick, "authority_epoch": _authority_epoch,
+		"m0_batch_id": batch_id,
+	}
+	var candidate_ledger = OperationLedgerScript.new(int(_operations.maximum_entries))
+	var ledger_load: Dictionary = candidate_ledger.load_dict(_operations.to_dict())
+	if not bool(ledger_load.get("success", false)):
+		return _failure("AUTHORITATIVE_LEDGER_CLONE_FAILED", {"cause": ledger_load}, STATUS_RETRYABLE)
+	var stored_result: Dictionary = candidate_ledger.remember_terminal(operation_id, command_type, plan_checksum, source_construct_id, expected_revision, source_revision, OperationLedgerScript.STATUS_SUCCEEDED, base_result)
+	var translated: Dictionary = M0TranslatorScript.build_damage_batch(
+		plan, _item_graph_state(_items, _containers), _item_graph_state(candidate_items, candidate_containers),
+		_ledger_state(_operations), _ledger_state(candidate_ledger), _authority_owner_id, _authority_epoch,
+		_item_graph_revision, _ledger_revision, next_tick, _construct_authority_revisions
+	)
+	if not bool(translated.get("success", false)):
+		return _failure("AUTHORITATIVE_C9_M0_TRANSLATION_FAILED", {"cause": translated}, STATUS_REJECTED)
+	if failure_mode == FAILURE_BEFORE_COMMIT:
+		return _failure("INJECTED_AUTHORITATIVE_CONSTRUCTION_COMMIT_FAILURE", {}, STATUS_RETRYABLE)
+	var m0_options: Dictionary = {}
+	if failure_mode == FAILURE_M0_AFTER_PREPARE: m0_options["fault_point"] = "AFTER_PREPARE"
+	elif failure_mode == FAILURE_M0_AFTER_COMMIT: m0_options["fault_point"] = "AFTER_COMMIT"
+	var m0_result: Dictionary = _m0_bridge.execute_batch(translated["batch"], m0_options)
+	if not bool(m0_result.get("success", false)):
+		var m0_code: String = String(m0_result.get("error_code", "CONSTRUCTION_M0_EXECUTION_FAILED"))
+		var m0_status: String = STATUS_RETRYABLE if m0_code in ["FAULT_INJECTED_AFTER_PREPARE", "FAULT_INJECTED_AFTER_COMMIT", "TRANSACTION_COORDINATOR_BUSY"] else STATUS_REJECTED
+		return _failure(m0_code, {"cause": m0_result}, m0_status)
+	if failure_mode == FAILURE_AFTER_M0:
+		return _failure("INJECTED_FAILURE_AFTER_M0_COMMIT", {}, STATUS_RETRYABLE)
+	var committed: Dictionary = _commit_candidate(candidate_items, candidate_containers, candidate_constructs, candidate_ledger, failure_mode)
+	if not bool(committed.get("success", false)):
+		return committed
+	for mutation in plan["construct_mutations"]:
+		var construct_id: String = String(mutation["construct_id"])
+		match String(mutation["operation_kind"]):
+			ConstructMutationScript.OP_CREATE: _construct_authority_revisions[construct_id] = 0
+			ConstructMutationScript.OP_UPDATE: _construct_authority_revisions[construct_id] = int(_construct_authority_revisions.get(construct_id, -1)) + 1
+			ConstructMutationScript.OP_DELETE: _construct_authority_revisions.erase(construct_id)
+	_item_graph_revision += 1
+	_ledger_revision += 1
+	_server_tick = next_tick
+	_last_m0_batch = Dictionary(translated["batch"]).duplicate(true)
+	return stored_result
+
+
 func get_item_projection(item_instance_id: String) -> Dictionary:
 	if not _configured:
 		return {}
@@ -449,6 +530,49 @@ func _build_candidate(plan: Dictionary) -> Dictionary:
 		"constructs": candidate_constructs,
 		"affected_item_ids": affected_item_ids,
 	})
+
+
+func _build_damage_candidate(plan: Dictionary) -> Dictionary:
+	var item_state: Dictionary = _items.to_dict().duplicate(true)
+	var container_state: Dictionary = _containers.to_dict().duplicate(true)
+	var item_rows_result: Dictionary = _rows_by_id(item_state.get("items", []), "instance_id")
+	if not bool(item_rows_result.get("success", false)): return item_rows_result
+	var item_rows: Dictionary = item_rows_result["rows"]
+	var container_rows_result: Dictionary = _rows_by_id(container_state.get("containers", []), "container_id")
+	if not bool(container_rows_result.get("success", false)): return container_rows_result
+	var container_rows: Dictionary = container_rows_result["rows"]
+	var touched_containers: Dictionary = {}
+	var affected_item_ids: Array[String] = []
+	for mutation in plan["item_mutations"]:
+		var precondition: Dictionary = _validate_item_precondition(item_rows, mutation)
+		if not bool(precondition.get("success", false)): return precondition
+		var membership: Dictionary = _apply_container_membership(container_rows, mutation, touched_containers)
+		if not bool(membership.get("success", false)): return membership
+		var apply_item: Dictionary = _apply_item_row(item_rows, mutation)
+		if not bool(apply_item.get("success", false)): return apply_item
+		affected_item_ids.append(String(mutation["item_instance_id"]))
+	for container_id in touched_containers:
+		var row: Dictionary = container_rows[container_id]
+		row["revision"] = int(row.get("revision", 0)) + 1
+		container_rows[container_id] = row
+	item_state["items"] = _sorted_rows(item_rows)
+	container_state["containers"] = _sorted_rows(container_rows)
+	var candidate_items = ItemRegistryScript.new()
+	var item_load: Dictionary = candidate_items.load_dict(item_state)
+	if not bool(item_load.get("success", false)): return _failure("AUTHORITATIVE_ITEM_MUTATIONS_REJECTED", {"cause": item_load})
+	var candidate_containers = ContainerRegistryScript.new()
+	var container_load: Dictionary = candidate_containers.load_dict(container_state)
+	if not bool(container_load.get("success", false)): return _failure("AUTHORITATIVE_CONTAINER_MUTATIONS_REJECTED", {"cause": container_load})
+	var candidate_constructs = ConstructStoreScript.new()
+	var construct_load: Dictionary = candidate_constructs.load_dict(_constructs.to_dict())
+	if not bool(construct_load.get("success", false)): return construct_load
+	for mutation in plan["construct_mutations"]:
+		var construct_apply: Dictionary = candidate_constructs.apply_mutation(mutation)
+		if not bool(construct_apply.get("success", false)): return construct_apply
+	var candidate_validation: Dictionary = _validate_candidate(candidate_items, candidate_containers, candidate_constructs, affected_item_ids)
+	if not bool(candidate_validation.get("success", false)): return candidate_validation
+	affected_item_ids.sort()
+	return _success({"items": candidate_items, "containers": candidate_containers, "constructs": candidate_constructs, "affected_item_ids": affected_item_ids})
 
 
 func _validate_item_precondition(item_rows: Dictionary, mutation: Dictionary) -> Dictionary:
@@ -702,6 +826,17 @@ func _finish_failure(plan: Dictionary, failure: Dictionary, expected_revision: i
 		OperationLedgerScript.STATUS_REJECTED,
 		failure
 	)
+
+
+func _finish_damage_failure(plan: Dictionary, failure: Dictionary, expected_revision: int) -> Dictionary:
+	var retryable: bool = bool(failure.get("retryable", false)) or String(failure.get("error_code", "")) in ["AUTHORITATIVE_TARGET_CONTAINER_NOT_FOUND", "AUTHORITATIVE_SOURCE_CONTAINER_NOT_FOUND"]
+	if retryable:
+		return _with_status(failure, STATUS_RETRYABLE)
+	var source_construct_id: String = String(plan["source_construct_id"])
+	var result_revision: int = -1
+	var current: Dictionary = _constructs.get_snapshot(source_construct_id)
+	if not current.is_empty(): result_revision = int(current["state_revision"])
+	return _operations.remember_terminal(String(plan["operation_id"]), String(plan["command_type"]), String(plan["checksum"]), source_construct_id, expected_revision, result_revision, OperationLedgerScript.STATUS_REJECTED, failure)
 
 
 func _validate_live_state() -> Dictionary:

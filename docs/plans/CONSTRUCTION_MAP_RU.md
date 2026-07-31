@@ -364,7 +364,7 @@ ConstructionSpatialCommandAuthorizer
 
 ## C8: Fabrication Cell
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 Versioned FabricationRecipe
@@ -398,3 +398,36 @@ normal Item Graph + output container + C3 BuildPlan
 - анимация станка, tick-based power/heat/tool wear и UI остаются вне C8.
 
 Контрольный объект: CNC-cell, которая при наличии WORKSTATION capability и POWER utility резервирует coolant и steel, выполняет десять work units и выпускает structural beam.
+
+
+## C9: Damage, Split, Repair
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+DamageRequest + source checksum
+        ↓ deterministic topology update
+connected components
+├── retained source aggregate
+├── split child aggregate(s)
+└── salvage ItemInstance(s)
+        ↓ one authoritative transaction
+Item Graph + multiple ConstructSnapshots + shared ledger
+        ↓ pinned RepairPlan
+inverse transaction restores original topology
+```
+
+Ключевые правила C9:
+
+- broken bonds и destroyed parts исключаются из connectivity graph;
+- retained component выбирается explicit `retained_part_id`;
+- split identity задаётся до commit, а не генерируется внутри adapter;
+- parts никогда не копируются между outcomes;
+- source update, child create/delete и item relation changes атомарны;
+- salvage policy задаёт минимальный размер нового construct и конечную relation;
+- repair ghost проверяет наличие реальных item identities;
+- exact damage/repair replay не меняет generation;
+- terminal operation conflict отклоняет другой payload с тем же ID;
+- C5–C8 profiles после damage/repair должны перестраиваться из новых snapshots.
+
+Контрольный объект: bridge-arm из шести parts, который после двух broken bonds разделяется на source, двухкомпонентный child construct и одиночный salvage sensor, а затем полностью собирается обратно.

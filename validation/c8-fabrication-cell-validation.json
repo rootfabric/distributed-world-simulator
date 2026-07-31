@@ -1,11 +1,12 @@
 {
   "schema": "planet_simulator.c8_fabrication_cell_validation.v1",
   "checkpoint": "C8_FABRICATION_CELL",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C7_ACCEPTED",
     "c6_commit": "2837835",
-    "c7_reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87"
+    "c7_reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87",
+    "c7_commit": "923bfe1"
   },
   "branch": "feature/c8-fabrication-cell",
   "engine": {
@@ -100,5 +101,13 @@
     "overlay_only": true,
     "manifest": "c8-fabrication-cell-files.txt",
     "changed_files": 45
+  },
+  "external_acceptance": {
+    "reviewed_sha256": "977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e",
+    "c2b_assertions": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": "117/117 tests, 120 steps PASS",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS"
   }
 }
