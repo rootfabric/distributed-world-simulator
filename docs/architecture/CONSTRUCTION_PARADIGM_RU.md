@@ -426,3 +426,27 @@ SubSystem может зависеть от других subsystems. `DRIVE` за
 ### Профиль можно потерять
 
 Mobile profile store — производный cache. После restart он либо загружается транзакционно, либо полностью перестраивается из authoritative snapshots. Ни command, ни profile не меняют Item Graph, parts, bonds или physics state.
+
+
+## 16. C7: пространственная семантика
+
+C7 добавляет второй масштаб компиляции поверх parts/bonds: section → opening → space → building. Этот слой не заменяет item identity и не делает геометрию канонической.
+
+```text
+parts + bonds
+→ structural sections
+→ openings and closures
+→ Space Graph
+→ enclosure + utility availability
+→ activation level
+→ capabilities and affordances
+```
+
+Неподвижные правила:
+
+1. Mesh и collision не доказывают наличие комнаты.
+2. Space существует только через строгие section/opening references.
+3. Utility failure и enclosure breach — разные виды деградации.
+4. Exterior opening учитывается через состояние closure part и frame section.
+5. Building activation является rebuildable projection authoritative construct.
+6. Большие здания в будущем могут разделяться на section aggregates без изменения семантики Space Graph.

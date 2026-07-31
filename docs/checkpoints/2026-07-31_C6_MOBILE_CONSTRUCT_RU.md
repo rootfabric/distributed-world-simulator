@@ -1,8 +1,8 @@
 # Checkpoint C6 — Mobile Construct
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
-**База:** принятый C5 fix1, C4 base commit `b985cde`
+**Статус:** ACCEPTED
+**База:** `C5 @ 29cd8b1`
 **Рекомендуемая ветка:** `feature/c6-mobile-construct`
 
 ## Цель
@@ -71,3 +71,17 @@ World regression PASS — 113/113 tests, 116 steps
 Main-scene CLI PASS — 6/6
 git diff --check PASS
 ```
+
+
+## Внешняя приёмка
+
+```text
+C6 focused:       PASS — 218 assertions
+C1/C2A/C2B/C3/C4/C5: PASS
+Network N0–M4:    PASS
+World regression: PASS — 113/113 tests, 116 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04`.

@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_mobile_construct_manifest.v1",
   "stage": "C6",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base_stage": "C5_FIX1_ACCEPTED",
   "base_c4_commit": "b985cde",
   "recommended_branch": "feature/c6-mobile-construct",
@@ -67,5 +67,16 @@
     "changed_files": 38,
     "manifest": "c6-mobile-construct-files.txt",
     "overlay_only": true
-  }
+  },
+  "base_c5_commit": "29cd8b1",
+  "external_acceptance": {
+    "focused_c6": "PASS — 218 assertions",
+    "c1_c2a_c2b_c3_c4_c5_compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "113/113 tests, 116 steps",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS",
+    "reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04"
+  },
+  "accepted_base_for": "C7_SPATIAL_CONSTRUCT"
 }

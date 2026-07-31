@@ -135,6 +135,8 @@ $Tests = @(
     "res://tests/construction/test_c5_capability_affordance_integration.gd",
     "res://tests/construction/test_c6_mobile_construct_contracts.gd",
     "res://tests/construction/test_c6_mobile_construct_integration.gd",
+    "res://tests/construction/test_c7_spatial_construct_contracts.gd",
+    "res://tests/construction/test_c7_spatial_construct_integration.gd",
     "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",

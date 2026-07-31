@@ -29,12 +29,12 @@ flowchart TD
     C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
     C3 --> C4["C4 CompositeDefinition\nACCEPTED — fix1"]
     C4 --> C5["C5 Capability and Affordance Compilation\nACCEPTED — fix1"]
-    C5 --> C6["C6 Mobile Construct\nCURRENT CANDIDATE"]
-    C6 --> G6{"C6 focused + compatibility + network + world regression"}
-    G6 -- fail --> F6["review fixes in same C6 branch"]
-    F6 --> G6
-    G6 -- pass --> C7["C7 Spatial Construct — house"]
-    C7 --> C8["C8 Fabrication Cell — assembler"]
+    C5 --> C6["C6 Mobile Construct\nACCEPTED"]
+    C6 --> C7["C7 Spatial Construct\nCURRENT CANDIDATE"]
+    C7 --> G7{"C7 focused + compatibility + network + world regression"}
+    G7 -- fail --> F7["review fixes in same C7 branch"]
+    F7 --> G7
+    G7 -- pass --> C8["C8 Fabrication Cell — assembler"]
     C8 --> C9["C9 Damage, Split, Repair"]
     C9 --> C10["C10 Parametric Members"]
     C10 --> C11["C11 Local Geometry Editing"]
@@ -57,9 +57,11 @@ C4 accepted: reusable semantic definitions + deterministic late binding
   ↓
 C5 accepted: typed behavior profiles + part/port affordances + semantic queries
   ↓
-C6 current: mobile subsystem graph + dynamic degradation + checksum-pinned commands
+C6 accepted: mobile subsystem graph + dynamic degradation + checksum-pinned commands
+  ↓
+C7 current: sections + Space Graph + enclosure + utilities + activation
   ↓ acceptance gate
-C7 house → C8 assembler
+C8 assembler
   ↓
 C9 damage → C10 parametric construction → C11 local geometry
   ↓
@@ -77,8 +79,8 @@ C12 multiplayer construction → C13 federated constructs
 | C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **ACCEPTED — fix1** |
 | C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **ACCEPTED — fix1** |
 | C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **ACCEPTED — fix1** |
-| C6 | power/control/drive/sensor subsystems, quorum, dependency cascade и mobile commands | наземный робот | **CURRENT CANDIDATE** |
-| C7 | sections, spaces, enclosure, utilities | дом | PLANNED |
+| C6 | power/control/drive/sensor subsystems, quorum, dependency cascade и mobile commands | наземный робот | **ACCEPTED** |
+| C7 | sections, spaces, enclosure, openings, utilities и activation LOD | дом | **CURRENT CANDIDATE** |
 | C8 | fabrication through the same BuildPlan | сборщик | PLANNED |
 | C9 | damage, split, repair, salvage | стол/робот/секция | PLANNED |
 | C10 | beams, panels, pipes, cables, profiles | строение/корабль | PLANNED |
@@ -286,7 +288,7 @@ Spatial partition   C0 ───────────────── C7 �
 
 ## C6: Mobile Construct
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 Authoritative ConstructSnapshot
@@ -317,3 +319,42 @@ ConstructionMobileCommandAuthorizer
 - физическое движение, network endpoint и graphical control остаются за следующим runtime-интеграционным слоем.
 
 Контрольный объект: восьмикомпонентный колёсный rover. Потеря одного колеса снижает максимальную скорость `8 → 6 м/с`, потеря трёх колёс опускает drive ниже quorum и делает rover `IMMOBILE`, sensor failure сохраняет движение, battery/controller failure каскадно отключает зависимые подсистемы, а ремонт возвращает полный профиль.
+
+
+## C7: Spatial Construct
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+Authoritative ConstructSnapshot
+├── structural sections
+├── exterior/interior openings
+├── closure parts and bond states
+├── semantic spaces
+└── utility dependency graph
+        ↓ deterministic spatial compiler
+ConstructionSpatialProfile
+├── section states
+├── opening states
+├── HABITABLE / DEGRADED / EXPOSED / INACTIVE spaces
+├── POWER / DATA / WATER / AIR / HEAT utilities
+├── ACTIVE / DEGRADED / INACTIVE building state
+├── DORMANT / SUMMARY / FUNCTIONAL activation level
+├── C5 capabilities
+└── concrete spatial affordances
+        ↓ checksum-pinned command
+ConstructionSpatialCommandAuthorizer
+```
+
+Ключевые правила C7:
+
+- Space Graph является семантическим DTO и не выводится из mesh/Node3D;
+- enclosure зависит от section quorum, bonds и состояния exterior openings;
+- открытая исправная дверь деградирует герметичность, но не уничтожает помещение;
+- разрушенная стена, окно или door bond переводят room в `EXPOSED`;
+- utility failure деградирует функциональность независимо от enclosure;
+- зависимость DATA → POWER отключает data при потере power;
+- partial construct остаётся `DORMANT` и не публикует spatial behavior;
+- profile является rebuildable projection и pin-ит authoritative construct checksum.
+
+Контрольный объект: однокомнатный дом с шестью boundary sections, дверью, окном, power panel и data router.

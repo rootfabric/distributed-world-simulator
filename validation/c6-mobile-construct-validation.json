@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.c6_mobile_construct_validation.v1",
   "checkpoint": "C6_MOBILE_CONSTRUCT",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
-    "stage": "C5_FIX1_ACCEPTED",
-    "c4_commit": "b985cde"
+    "stage": "C5_ACCEPTED",
+    "c5_commit": "29cd8b1"
   },
   "branch": "feature/c6-mobile-construct",
   "focused_profile": {
@@ -90,5 +90,14 @@
     "archive_layout": "lunar-world-double-godot/<project paths>",
     "overlay_only": true,
     "manifest": "c6-mobile-construct-files.txt"
+  },
+  "external_acceptance": {
+    "focused_c6": "PASS — 218 assertions",
+    "c1_c2a_c2b_c3_c4_c5_compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "113/113 tests, 116 steps",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS",
+    "reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04"
   }
 }

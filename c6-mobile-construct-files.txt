@@ -1,6 +1,6 @@
 Checkpoint: C6 — Mobile Construct
-Status: IMPLEMENTED CANDIDATE
-Base: C5 fix1 ACCEPTED over C4 @ b985cde
+Status: ACCEPTED
+Base: C5 @ 29cd8b1
 Recommended branch: feature/c6-mobile-construct
 Changed files: 38
 

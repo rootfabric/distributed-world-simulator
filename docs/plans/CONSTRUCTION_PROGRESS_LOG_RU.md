@@ -484,3 +484,59 @@ Editor parse:    PASS
 ```
 
 C2B focused не запускается в isolated construction workspace из-за отсутствующей production M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `113/113 tests`, `116 steps`.
+
+
+## 2026-07-31 — C6: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c6-mobile-construct`.
+**База:** `C5 @ 29cd8b1`.
+
+```text
+C6 contracts:     PASS — 92 assertions
+C6 integration:   PASS — 126 assertions
+C6 total:         PASS — 218 assertions
+C1/C2A/C2B/C3/C4/C5: PASS
+Network N0–M4:    PASS
+World regression: PASS — 113/113 tests, 116 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04`. C6 стал принятой базой C7.
+
+## 2026-07-31 — C7: Spatial Construct
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c7-spatial-construct`.
+**База:** принятый C6.
+
+Архитектурные решения:
+
+- `ConstructSnapshot` остаётся authoritative source;
+- Space Graph хранится semantic DTO, а не извлекается из mesh;
+- sections вычисляют health из concrete parts, bonds и quorum;
+- openings связывают spaces с exterior и closure part;
+- enclosure и habitability вычисляются отдельно от utility availability;
+- utility graph поддерживает dependencies и cascade;
+- building state и activation LOD полностью derived;
+- C5 descriptors переиспользуются для spatial capabilities/affordances;
+- spatial command pin-ит profile checksum;
+- navigation, geometry activation, door animation и network endpoint не входят в C7.
+
+Локальный focused/compatibility профиль:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5:              PASS — 204 assertions
+C6:              PASS — 218 assertions
+C7 contracts:    PASS — 105 assertions
+C7 integration:  PASS — 120 assertions
+C7 total:        PASS — 225 assertions
+Editor parse:    PASS
+```
+
+C2B focused не запускается в isolated workspace из-за отсутствующей M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `115/115 tests`, `118 steps`.

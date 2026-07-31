@@ -354,11 +354,39 @@ C6 вводит rebuildable mobile profile поверх authoritative `Construct
 
 Колёсный rover состоит из chassis, четырёх wheels, battery, controller и sensor array. `DRIVE` требует quorum 2/4. Потеря одного wheel даёт `DEGRADED` и уменьшает effective speed по health ratio. Потеря трёх wheels делает rover `IMMOBILE`, но оставляет scan при здоровом sensor. Sensor failure убирает только perception. Battery/controller failure каскадно отключает зависимые subsystems. Repair с новой construct revision восстанавливает полный профиль и команды.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C7 — Spatial Construct
 
-Небольшой дом: foundation, стены, дверь, комнаты, enclosure, энергия и рабочее место. Проверяются Space Graph и section activation.
+Небольшой дом: foundation, floor, четыре стены, roof, exterior door/window, semantic room, power и data. Проверяются Space Graph, enclosure, utility dependencies и activation LOD.
+
+### Контракты
+
+- `ConstructionSpatialSectionDefinition/State`;
+- `ConstructionSpatialOpeningDefinition/State`;
+- `ConstructionSpatialSpaceDefinition/State`;
+- `ConstructionSpatialUtilityDefinition/State`;
+- `ConstructionSpatialProfile`;
+- profile store, persistence и checksum-pinned commands.
+
+### Инварианты
+
+1. Space, section, opening и utility IDs уникальны и отсортированы.
+2. Все references разрешаются в concrete parts/bonds или другие spatial definitions.
+3. Utility dependency graph не содержит циклов.
+4. Exterior breach делает помещение `EXPOSED`.
+5. Открытая исправная дверь даёт `DEGRADED`, но сохраняет occupancy.
+6. Utility failure не разрушает enclosure.
+7. `INACTIVE` profile не публикует capabilities/affordances.
+8. Stale и same-revision profile mutation fail closed.
+9. Persistence load транзакционен; profile полностью rebuilt из snapshot.
+10. C7 не делает mesh, navigation или door animation authoritative.
+
+### Контрольный vertical slice
+
+Intact house компилируется в `ACTIVE/HABITABLE/FUNCTIONAL`. Open door даёт `DEGRADED` и `CLOSE_DOOR`. Потеря wall/window/door bond даёт `EXPOSED/INACTIVE/SUMMARY`. Потеря power отключает power и dependent data, но сохраняет shelter. Repair с новой revision восстанавливает полный profile.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C8 — Fabrication Cell
 
@@ -389,9 +417,9 @@ C6 вводит rebuildable mobile profile поверх authoritative `Construct
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
 
-## Gate C6 → C7
+## Gate C7 → C8
 
-C6 реализован после внешнего PASS C5. C7 начинается после внешнего PASS C6:
+C7 реализован после внешнего PASS C6. C8 начинается после внешнего PASS C7:
 
 ```text
 Focused C1
@@ -401,7 +429,8 @@ Focused C3
 Focused C4
 Focused C5
 Focused C6
+Focused C7
 Network/runtime regression
-World regression including C3, C4, C5 and C6 scenarios
+World regression including C3, C4, C5, C6 and C7 scenarios
 Main-scene CLI
 ```
