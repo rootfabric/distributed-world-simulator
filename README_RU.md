@@ -4,20 +4,20 @@
 
 Принятый стратегический checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-Принятый runtime/domain checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay` (`ACCEPTED`, delivery `fix1`).
+Принятый runtime checkpoint: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`).
 
-Текущий подготовительный candidate:
+Текущий persistence candidate:
 
 ```text
-v16.10.3-pre-m5-graphical-acceptance-preparation
-build_id: pre-m5-ui-replica-command-boundary
-base: main @ 2879fdb
-branch: feature/m5-graphical-multiplayer-acceptance
-current candidate: M5 graphical multiplayer acceptance
-next: M6 dedicated persistence and recovery
+v16.10.5-persistence-m6-dedicated-recovery
+build_id: m6-dedicated-persistence-recovery
+runtime base: v16.10.4-testing-m5-graphical-multiplayer-acceptance
+branch: feature/m6-dedicated-recovery
+status: candidate_linux_double_verified_pending_independent_acceptance
+next after acceptance: A3 single-server multiplayer audit/freeze
 ```
 
-M5 связывает существующий inventory UI с canonical M4 Item Graph только через read-only replica projection и versioned `ITEM_COMMAND`. Два обычных graphical clients проходят movement, contention, hotbar/container/mount/drop workflow и disconnect/reconnect; cursor/drag/pending state остаётся transient overlay и не переживает reconnect.
+M6 подключает crash-safe R3.1 checkpoint к единому M3–M5 dedicated runtime. До ACK сохраняются player state, ownership epochs, canonical Item Graph, replay ledgers и committed outbox; transport sessions и transient UI state после restart очищаются. Exact replay не создаёт второй mutation или checkpoint.
 
 ```text
 FULL SINGLE-SERVER MULTIPLAYER FIRST
@@ -28,6 +28,9 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 Основные документы:
 
+- `docs/architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
+- `docs/checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
+- `config/network/dedicated-persistence-recovery.v1.json`;
 - `docs/architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;
 - `docs/architecture/M5_GRAPHICAL_ACCEPTANCE_PREPARATION_RU.md`;
 - `docs/checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`;

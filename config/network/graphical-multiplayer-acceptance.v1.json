@@ -1,11 +1,11 @@
 {
   "schema": "planet_simulator.graphical_multiplayer_acceptance.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
   "build_id": "m5-ui-driven-graphical-multiplayer-acceptance",
   "base_checkpoint": "v16.10.3-pre-m5-graphical-acceptance-preparation",
   "runtime_base_checkpoint": "v16.10.3-domain-m4-canonical-shared-gameplay",
-  "status": "candidate",
+  "status": "accepted",
   "decision": "UI_DRIVEN_GRAPHICAL_MULTIPLAYER_ACCEPTANCE",
   "topology": {
     "server": "headless dedicated Godot process",
@@ -74,7 +74,7 @@
   "next_stage": "M6",
   "next_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
   "verified_results": {
-    "contracts_assertions": 76,
+    "contracts_assertions": 78,
     "preparation_assertions": 64,
     "graphical_process_assertions": {
       "windows": 89,
@@ -96,5 +96,8 @@
     "main_scene": {
       "assertions": 6
     }
-  }
+  },
+  "delivery": "fix1",
+  "accepted_at_utc": "2026-07-31T00:04:00Z",
+  "fix1_sha256": "407B00755EC525213927E498E95176824F72A2EC82F3CCAE9C4A08470BF02FB9"
 }

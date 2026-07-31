@@ -26,8 +26,8 @@ const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/network
 const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
-const FOUNDATION_BUILD_ID: String = "m5-ui-driven-graphical-multiplayer-acceptance"
+const FOUNDATION_CHECKPOINT: String = "v16.10.5-persistence-m6-dedicated-recovery"
+const FOUNDATION_BUILD_ID: String = "m6-dedicated-persistence-recovery"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -92,6 +92,7 @@ var m3_graphical_acceptance_driver
 var m5_graphical_acceptance_driver
 var _m3_mode: bool = false
 var _m5_mode: bool = false
+var _m6_mode: bool = false
 
 
 func _ready() -> void:
@@ -166,8 +167,12 @@ func _ready() -> void:
 			get_tree().quit(4)
 			return
 
+	_m6_mode = (
+		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
+		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
+	)
 	_m5_mode = not String(launch_options.get("m5_result_file", "")).strip_edges().is_empty()
-	_m3_mode = _m5_mode or not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
+	_m3_mode = _m6_mode or _m5_mode or not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
 	if runtime_role == RuntimeRoleScript.DEDICATED_SERVER:
 		dedicated_gameplay_server_runtime = (
 			M3DedicatedServerRuntimeScript.new()
@@ -180,7 +185,9 @@ func _ready() -> void:
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
 			"result_file": (
-				String(launch_options.get("m5_result_file", ""))
+				String(launch_options.get("m6_result_file", ""))
+				if _m6_mode
+				else String(launch_options.get("m5_result_file", ""))
 				if _m5_mode
 				else String(launch_options.get("m3_result_file", "")) if _m3_mode
 				else String(launch_options.get("m2_result_file", ""))
@@ -188,6 +195,7 @@ func _ready() -> void:
 			"authority_owner_id": String(launch_options.get("node_id", "local-dedicated-server")),
 			"authority_epoch": 1,
 			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
+			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
 		}
 		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):

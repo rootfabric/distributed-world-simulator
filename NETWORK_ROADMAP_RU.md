@@ -2,27 +2,25 @@
 
 Принятая architecture-база: `v16.9.4-architecture-a2-networked-gameplay`.
 Принятый roadmap checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
-Принятый runtime checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay`.
-Текущий checkpoint-кандидат: M5 Graphical Multiplayer Acceptance поверх pre-M5 boundary и `main @ 2879fdb`.
+Принятый runtime checkpoint: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`).
+Текущий checkpoint-кандидат: `v16.10.5-persistence-m6-dedicated-recovery` поверх принятого M5.
 
 ```text
 A0 → H0 → A1 → S0 → T1 → B0 → M0 → S1 accepted
-H1 → H2 → H3 → A2 → M1 → M2 → M3 → M4 accepted
-M5 candidate implemented
-M6 → A3 planned
+H1 → H2 → H3 → A2 → M1 → M2 → M3 → M4 → M5 accepted
+M6 candidate implemented
+A3 planned
 B1/B2 deferred until A3
 N3–N6 blocked until A3 and B2
 ```
 
-## M5 graphical multiplayer acceptance
+## M6 dedicated persistence and recovery
 
-Подготовительный слой связывает существующий inventory UI с canonical M4 Item
-Graph только через `ITEM_COMMAND` и replica snapshots. Он включает read-only
-projection, command adapter, transient cursor/pending overlay, networked
-inventory shell и изолированные user-data/MCP settings.
+M6 связывает R3.1 atomic authoritative checkpoint с реальным dedicated `NetworkedGameplayService`. JOIN/MOVE/PRESENTATION/ITEM_COMMAND/LEAVE подтверждаются только после durable commit. Checkpoint восстанавливает player identities/state, ownership epochs, revision/tick, canonical Item Graph, replay ledgers и committed outbox.
 
-M5 доказывает UI-driven действия двух graphical clients,
-contention, reconnect и checksum convergence.
+Transport sessions, peer mapping, open-container access и cursor/drag overlay остаются transient. После restart players disconnected; reconnect привязывает новую session к прежней entity и увеличивает ownership epoch. Exact committed replay возвращается с `replay=true`, не мутирует state и не создаёт второй checkpoint.
+
+M5 Graphical Multiplayer Acceptance принят delivery `fix1`; M6 является текущим candidate и закрывает `A2-D04` только после локального double-precision acceptance.
 
 ## Историческая M3/M4 база
 
@@ -41,6 +39,9 @@ Dedicated использует единый M1 `NetworkedGameplayService`. Об�
 
 Authoritative sources:
 
+- `config/network/dedicated-persistence-recovery.v1.json`;
+- `docs/architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
+- `docs/checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
 - `config/network/network-roadmap.v1.json`;
 - `config/network/m5-graphical-acceptance-preparation.v1.json`;
 - `config/network/canonical-shared-gameplay.v1.json`;

@@ -208,11 +208,17 @@ func _accept_item_snapshot(snapshot: Dictionary) -> void:
 	_item_snapshot_updates += 1
 	item_graph_updated.emit(_item_graph_snapshot.duplicate(true))
 
-func execute_item_command_blocking(command_type: String, payload: Dictionary, operation_id: String = "") -> Dictionary:
+func execute_item_command_blocking(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = "",
+	ownership_epoch_override: int = 0
+) -> Dictionary:
 	if not is_ready(): return _failure("M4_CLIENT_NOT_READY")
+	var command_epoch := ownership_epoch_override if ownership_epoch_override > 0 else _ownership_epoch
 	var op := operation_id if not operation_id.is_empty() else "operation/m4/%s/%s/%d/%d" % [_logical_player_id, command_type.replace(".", "-"), OS.get_process_id(), Time.get_ticks_msec()]
 	_command_results.erase(op)
-	if not _send("ITEM_COMMAND", {"logical_player_id":_logical_player_id,"ownership_epoch":_ownership_epoch,"operation_id":op,"command_type":command_type,"payload":payload.duplicate(true)}): return _failure("M4_ITEM_COMMAND_SEND_FAILED")
+	if not _send("ITEM_COMMAND", {"logical_player_id":_logical_player_id,"ownership_epoch":command_epoch,"operation_id":op,"command_type":command_type,"payload":payload.duplicate(true)}): return _failure("M4_ITEM_COMMAND_SEND_FAILED")
 	var started := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started <= _command_timeout_ms:
 		_poll_blocking_once()

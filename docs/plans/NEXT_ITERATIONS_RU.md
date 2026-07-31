@@ -1,14 +1,11 @@
-# Ближайшие итерации после M2
+# Ближайшие итерации после M5
 
-Принятый M2: `v16.10.1-runtime-m2-dedicated-graphical-client` (`ACCEPTED_WITH_GATES`).
-Текущий candidate: `v16.10.2-runtime-m3-dedicated-graphical-multiplayer`.
+Принятый M5: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`).
+Текущий candidate: `v16.10.5-persistence-m6-dedicated-recovery`.
 
 ```text
-M3 — Dedicated + 2 graphical clients — current candidate
-M4 — Canonical shared gameplay over ENet — next
-M5 — Graphical Multiplayer Acceptance
-M6 — Dedicated persistence and recovery
-A3 — Single-server multiplayer audit/freeze
+M6 — Dedicated persistence and recovery — current candidate
+A3 — Single-server multiplayer audit/freeze — next after acceptance
 B1/B2 — after A3
 N3–N6 — after B2
 ```
@@ -16,10 +13,11 @@ N3–N6 — after B2
 ## Текущая ветка
 
 ```text
-feature/m3-dedicated-graphical-multiplayer
-checkpoint: v16.10.2-runtime-m3-dedicated-graphical-multiplayer
+feature/m6-dedicated-recovery
+checkpoint: v16.10.5-persistence-m6-dedicated-recovery
+runtime base: v16.10.4-testing-m5-graphical-multiplayer-acceptance
 ```
 
-M3 запускает два одновременных graphical clients против headless dedicated server, добавляет `RemotePlayerPresenter`, взаимную authoritative movement/presentation replication, disconnect/reconnect и checksum convergence.
+M6 интегрирует R3.1 recovery в реальный dedicated runtime: atomic checkpoint до ACK, player/Item Graph/replay/outbox restore, reconnect с новым ownership epoch и exact replay без повторной мутации.
 
 Полный scope и acceptance: `SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

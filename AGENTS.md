@@ -164,10 +164,13 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
 - перед передачей управления человеку отпускать все удерживаемые actions.
 
-## Current M5 checkpoint
+## Current M6 checkpoint
 
-- Candidate: `v16.10.4-testing-m5-graphical-multiplayer-acceptance`.
-- Base: `v16.10.3-pre-m5-graphical-acceptance-preparation` over integrated `main @ 2879fdb`.
-- UI must route through `M5InventoryUiBridge` and `M4ItemCommandAdapter`; direct Item Graph mutation is forbidden.
-- Focused runner: `RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1/.sh`.
-- Next stage: M6 dedicated persistence and recovery.
+- Accepted runtime base: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` delivery `fix1`.
+- Candidate: `v16.10.5-persistence-m6-dedicated-recovery`.
+- Branch: `feature/m6-dedicated-recovery`.
+- Durable ACK boundary is mutation → outbox stage → atomic checkpoint → client result/broadcast.
+- Transport sessions and transient UI state must never enter canonical durable state.
+- Persistence failure is fail-stop; do not write a final checkpoint after an unacknowledged failed commit.
+- Focused runner: `RUN_M6_DEDICATED_RECOVERY_TESTS.ps1/.sh`.
+- Next after acceptance: A3 single-server multiplayer audit/freeze.

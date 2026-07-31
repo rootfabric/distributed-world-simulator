@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 6,
+  "document_revision": 7,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
   "status": "accepted",
@@ -164,7 +164,7 @@
     {
       "id": "M5",
       "name": "Graphical Multiplayer Acceptance",
-      "status": "candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
       "branch": "feature/m5-graphical-multiplayer-acceptance",
       "depends_on": [
@@ -185,12 +185,15 @@
         "graphical_process": "tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
         "focused_runner_windows": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1",
         "focused_runner_linux": "RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.sh"
-      }
+      },
+      "delivery": "fix1",
+      "accepted_at_utc": "2026-07-31T00:04:00Z",
+      "acceptance_sha256": "407B00755EC525213927E498E95176824F72A2EC82F3CCAE9C4A08470BF02FB9"
     },
     {
       "id": "M6",
       "name": "Dedicated persistence and recovery",
-      "status": "next",
+      "status": "candidate",
       "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
       "branch": "feature/m6-dedicated-recovery",
       "depends_on": [
@@ -207,7 +210,14 @@
         "no item duplication after restart",
         "clients reconnect with updated ownership epochs",
         "committed operations replay without second mutation"
-      ]
+      ],
+      "implementation_manifest": "config/network/dedicated-persistence-recovery.v1.json",
+      "evidence": {
+        "contracts": "tests/runtime/test_m6_dedicated_recovery_contracts.gd",
+        "process": "tests/runtime/test_m6_dedicated_recovery_processes.gd",
+        "focused_runner_windows": "RUN_M6_DEDICATED_RECOVERY_TESTS.ps1",
+        "focused_runner_linux": "RUN_M6_DEDICATED_RECOVERY_TESTS.sh"
+      }
     },
     {
       "id": "A3",
@@ -311,9 +321,9 @@
   ],
   "multi_server_entry_criterion": "two reproducible graphical clients, authoritative movement, canonical shared Item Graph, deterministic contention, disconnect/reconnect and crash recovery without topology-specific gameplay forks",
   "accepted_at_utc": "2026-07-30T03:40:00Z",
-  "current_implementation_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
-  "current_implementation_manifest": "config/network/graphical-multiplayer-acceptance.v1.json",
-  "current_implementation_stage": "M5",
-  "updated_at_utc": "2026-07-30T15:20:00Z",
-  "next_stage": "M6"
+  "current_implementation_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+  "current_implementation_manifest": "config/network/dedicated-persistence-recovery.v1.json",
+  "current_implementation_stage": "M6",
+  "updated_at_utc": "2026-07-31T00:04:00Z",
+  "next_stage": "M6 local double-precision acceptance, then A3"
 }

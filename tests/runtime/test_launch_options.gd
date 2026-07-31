@@ -54,12 +54,12 @@ func _init() -> void:
 	_assert(String(default_parse.get("options", {}).get("role", "")) == RuntimeRoleScript.LISTEN_HOST, "Default role is not listen-host")
 
 	var default_descriptor: Dictionary = RuntimeDescriptorScript.create(default_parse.get("options", {}))
-	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "Default descriptor checkpoint is stale")
-	_assert(String(default_descriptor.get("build_id", "")) == "m5-ui-driven-graphical-multiplayer-acceptance", "Default descriptor build id is stale")
-	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.10.4-testing-m5-graphical-multiplayer-acceptance", "Simulator checkpoint is stale")
-	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "m5-ui-driven-graphical-multiplayer-acceptance", "Simulator build id is stale")
-	_assert(LunarAppScript.PROJECT_VERSION == "16.10.4-testing-m5-graphical-multiplayer-acceptance", "Lunar project version is stale")
-	_assert(LunarAppScript.BUILD_ID == "m5-ui-driven-graphical-multiplayer-acceptance", "Lunar build id is stale")
+	_assert(String(default_descriptor.get("checkpoint", "")) == "v16.10.5-persistence-m6-dedicated-recovery", "Default descriptor checkpoint is stale")
+	_assert(String(default_descriptor.get("build_id", "")) == "m6-dedicated-persistence-recovery", "Default descriptor build id is stale")
+	_assert(SimulatorAppScript.FOUNDATION_CHECKPOINT == "v16.10.5-persistence-m6-dedicated-recovery", "Simulator checkpoint is stale")
+	_assert(SimulatorAppScript.FOUNDATION_BUILD_ID == "m6-dedicated-persistence-recovery", "Simulator build id is stale")
+	_assert(LunarAppScript.PROJECT_VERSION == "16.10.5-persistence-m6-dedicated-recovery", "Lunar project version is stale")
+	_assert(LunarAppScript.BUILD_ID == "m6-dedicated-persistence-recovery", "Lunar build id is stale")
 
 
 	var host_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--role=listen-host"]))
@@ -84,6 +84,30 @@ func _init() -> void:
 	_assert(not bool(negative_delay.get("success", true)), "Negative shutdown delay was accepted")
 	var zero_timeout: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--shutdown-timeout-ms=0"]))
 	_assert(not bool(zero_timeout.get("success", true)), "Zero shutdown timeout was accepted")
+
+	var m6_dedicated: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--m6-persistence-root=user://m6-durable",
+		"--m6-result-file=user://m6-result.json",
+	]))
+	_assert(bool(m6_dedicated.get("success", false)), "Valid M6 dedicated recovery options were rejected")
+	_assert(String(m6_dedicated.get("options", {}).get("m6_persistence_root", "")) == "user://m6-durable", "M6 persistence root was not parsed")
+	_assert(String(m6_dedicated.get("options", {}).get("m6_result_file", "")) == "user://m6-result.json", "M6 result file was not parsed")
+	var m6_root_only: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--m6-persistence-root=user://m6-production",
+	]))
+	_assert(bool(m6_root_only.get("success", false)), "M6 production persistence without acceptance result file was rejected")
+	var m6_missing_root: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--m6-result-file=user://m6-result.json",
+	]))
+	_assert(not bool(m6_missing_root.get("success", true)), "M6 result file without persistence root was accepted")
+	var m6_client_role: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--m6-persistence-root=user://m6-invalid-client",
+	]))
+	_assert(not bool(m6_client_role.get("success", true)), "M6 persistence options were accepted for a graphical client")
 
 	_finish()
 

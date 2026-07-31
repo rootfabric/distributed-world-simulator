@@ -6,8 +6,14 @@ const Boundary = preload("res://scripts/network/transports/v2/network_transport_
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 const Service = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_support.gd")
+const RecoveryRepository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
+const RecoveryCoordinator = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
+const M6AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
+const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
 
 const SCHEMA := "planet_simulator.m3_dedicated_server_runtime.v1"
+const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
+const M6_BUILD_ID := "m6-dedicated-persistence-recovery"
 
 var _boundary
 var _service
@@ -29,6 +35,19 @@ var _messages_sent := 0
 var _messages_received := 0
 var _last_error_code := ""
 var _last_two_connected_checksum := ""
+var _persistence_root := ""
+var _persistence_enabled := false
+var _recovery_repository
+var _recovery_coordinator
+var _recovery_authority
+var _replay_outbox
+var _checkpoint_generation := 0
+var _recovered := false
+var _recovery_source := ""
+var _last_checkpoint_operation_id := ""
+var _persistence_failures := 0
+var _durable_commits := 0
+var _fatal_persistence_failure := false
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured:
@@ -38,6 +57,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_result_file = String(config.get("result_file", "")).strip_edges()
 	_authority_owner_id = String(config.get("authority_owner_id", _authority_owner_id)).strip_edges()
 	_authority_epoch = int(config.get("authority_epoch", 1))
+	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
+	_persistence_enabled = not _persistence_root.is_empty()
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
 	_service = Service.new()
@@ -48,6 +69,12 @@ func setup(config: Dictionary) -> Dictionary:
 	})
 	if not bool(service_setup.get("success", false)):
 		return service_setup
+	if _persistence_enabled:
+		var recovery_setup := _setup_recovery()
+		if not bool(recovery_setup.get("success", false)):
+			_service.shutdown()
+			_service = null
+			return recovery_setup
 	_boundary = Boundary.new()
 	var configured: Dictionary = _boundary.configure(Port.new(), 524288, 64, 2097152)
 	if not bool(configured.get("success", false)):
@@ -62,7 +89,7 @@ func setup(config: Dictionary) -> Dictionary:
 	return _success({"host": _host, "port": _port})
 
 func _process(_delta: float) -> void:
-	if not _configured or _boundary == null:
+	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var polled: Dictionary = _boundary.poll_events(128)
 	if not bool(polled.get("success", false)):
@@ -94,26 +121,37 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var logical_id := String(payload.get("logical_player_id", "")).strip_edges().to_lower()
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
-	if logical_id.is_empty() or operation_id.is_empty():
+	if logical_id.is_empty() or not _is_canonical_operation_id(operation_id):
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "INVALID_JOIN_PAYLOAD"})
 		return
 	var result: Dictionary = _service.join(logical_id, session_id, operation_id)
+	if not _persist_command_result(operation_id, "JOIN", logical_id, result):
+		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
+		return
 	if not bool(result.get("success", false)):
 		_rejections += 1
-		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": String(result.get("error_code", "JOIN_REJECTED"))})
+		var rejection_sent := _send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": String(result.get("error_code", "JOIN_REJECTED"))})
+		if rejection_sent:
+			_mark_operation_delivered(operation_id)
+		_write_report("READY", false)
 		return
 	_peer_to_player[peer_id] = logical_id
 	_peer_to_session[peer_id] = session_id
-	_joins += 1
-	_send(peer_id, "JOIN_ACK", {
+	var replay := _is_replay_result(result)
+	if not replay:
+		_joins += 1
+	var join_sent := _send(peer_id, "JOIN_ACK", {
 		"operation_id": operation_id,
 		"player": result.get("details", {}).get("player", {}),
 		"snapshot": result.get("details", {}).get("snapshot", {}),
 		"item_graph_snapshot": _service.create_canonical_item_graph_snapshot(),
 	})
-	_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
-	_broadcast_snapshot("PLAYER_JOINED")
-	_capture_two_connected_checksum()
+	if not replay:
+		_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
+		_broadcast_snapshot("PLAYER_JOINED")
+		_capture_two_connected_checksum()
+	if join_sent:
+		_mark_operation_delivered(operation_id)
 	_write_report("READY", false)
 
 func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -121,7 +159,13 @@ func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> v
 		_send_result(peer_id, String(payload.get("operation_id", "")), "MOVE", _failure("STALE_TRANSPORT_SESSION"))
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
-	var operation_id := String(payload.get("operation_id", ""))
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _is_canonical_operation_id(operation_id):
+		_reject_uncommitted_command(
+			peer_id, operation_id, "MOVE",
+			"OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID"
+		)
+		return
 	var result: Dictionary = _service.move_player(
 		logical_id,
 		session_id,
@@ -131,14 +175,20 @@ func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> v
 		float(payload.get("delta_z", 0.0)),
 		operation_id
 	)
-	_send_result(peer_id, operation_id, "MOVE", result)
+	if not _persist_command_result(operation_id, "MOVE", logical_id, result):
+		_send_result(peer_id, operation_id, "MOVE", _failure("M6_DURABLE_COMMIT_FAILED"))
+		return
+	var result_sent := _send_result(peer_id, operation_id, "MOVE", result)
 	if bool(result.get("success", false)):
-		_moves += 1
-		_broadcast_delta(result.get("details", {}).get("delta", {}))
-		_broadcast_snapshot("PLAYER_MOVED")
-		_capture_two_connected_checksum()
+		if not _is_replay_result(result):
+			_moves += 1
+			_broadcast_delta(result.get("details", {}).get("delta", {}))
+			_broadcast_snapshot("PLAYER_MOVED")
+			_capture_two_connected_checksum()
 	else:
 		_rejections += 1
+	if result_sent:
+		_mark_operation_delivered(operation_id)
 	_write_report("READY", false)
 
 
@@ -147,19 +197,31 @@ func _handle_presentation(peer_id: String, session_id: String, payload: Dictiona
 		_send_result(peer_id, String(payload.get("operation_id", "")), "PRESENTATION", _failure("STALE_TRANSPORT_SESSION"))
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
-	var operation_id := String(payload.get("operation_id", ""))
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _is_canonical_operation_id(operation_id):
+		_reject_uncommitted_command(
+			peer_id, operation_id, "PRESENTATION",
+			"OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID"
+		)
+		return
 	var result: Dictionary = _service.set_player_presentation(
 		logical_id, session_id, int(payload.get("ownership_epoch", 0)),
 		float(payload.get("orientation_yaw", 0.0)), bool(payload.get("flashlight_enabled", false)), operation_id
 	)
-	_send_result(peer_id, operation_id, "PRESENTATION", result)
+	if not _persist_command_result(operation_id, "PRESENTATION", logical_id, result):
+		_send_result(peer_id, operation_id, "PRESENTATION", _failure("M6_DURABLE_COMMIT_FAILED"))
+		return
+	var result_sent := _send_result(peer_id, operation_id, "PRESENTATION", result)
 	if bool(result.get("success", false)):
-		_presentation_updates += 1
-		_broadcast_delta(result.get("details", {}).get("delta", {}))
-		_broadcast_snapshot("PLAYER_PRESENTATION_UPDATED")
-		_capture_two_connected_checksum()
+		if not _is_replay_result(result):
+			_presentation_updates += 1
+			_broadcast_delta(result.get("details", {}).get("delta", {}))
+			_broadcast_snapshot("PLAYER_PRESENTATION_UPDATED")
+			_capture_two_connected_checksum()
 	else:
 		_rejections += 1
+	if result_sent:
+		_mark_operation_delivered(operation_id)
 	_write_report("READY", false)
 
 func _handle_item_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -167,13 +229,36 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		_send_result(peer_id, String(payload.get("operation_id", "")), "ITEM_COMMAND", _failure("STALE_TRANSPORT_SESSION"))
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
-	var operation_id := String(payload.get("operation_id", ""))
-	var result: Dictionary = _service.handle_canonical_item_command(logical_id, session_id, int(payload.get("ownership_epoch", 0)), operation_id, String(payload.get("command_type", "")), Dictionary(payload.get("payload", {})))
-	_send_result(peer_id, operation_id, String(payload.get("command_type", "ITEM_COMMAND")), result)
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	var command_type := String(payload.get("command_type", "")).strip_edges()
+	if not _is_canonical_operation_id(operation_id):
+		_reject_uncommitted_command(
+			peer_id, operation_id, "ITEM_COMMAND",
+			"OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID"
+		)
+		return
+	if command_type.is_empty():
+		_reject_uncommitted_command(peer_id, operation_id, "ITEM_COMMAND", "ITEM_COMMAND_TYPE_REQUIRED")
+		return
+	var command_payload_value = payload.get("payload", {})
+	if not command_payload_value is Dictionary:
+		_reject_uncommitted_command(peer_id, operation_id, "ITEM_COMMAND", "ITEM_COMMAND_PAYLOAD_REQUIRED")
+		return
+	var result: Dictionary = _service.handle_canonical_item_command(
+		logical_id, session_id, int(payload.get("ownership_epoch", 0)),
+		operation_id, command_type, Dictionary(command_payload_value)
+	)
+	if not _persist_command_result(operation_id, command_type, logical_id, result):
+		_send_result(peer_id, operation_id, command_type, _failure("M6_DURABLE_COMMIT_FAILED"))
+		return
+	var result_sent := _send_result(peer_id, operation_id, command_type, result)
 	if bool(result.get("success", false)):
-		_broadcast_item_snapshot(String(payload.get("command_type", "ITEM_COMMAND")))
+		if not _is_replay_result(result):
+			_broadcast_item_snapshot(command_type)
 	else:
 		_rejections += 1
+	if result_sent:
+		_mark_operation_delivered(operation_id)
 	_write_report("READY", false)
 
 func _broadcast_item_snapshot(reason: String) -> void:
@@ -184,34 +269,73 @@ func _broadcast_item_snapshot(reason: String) -> void:
 
 func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var logical_id := String(_peer_to_player.get(peer_id, payload.get("logical_player_id", "")))
-	var operation_id := String(payload.get("operation_id", "operation/m3/leave/%d" % Time.get_ticks_msec()))
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _is_canonical_operation_id(operation_id):
+		_reject_uncommitted_leave(
+			peer_id, operation_id,
+			"OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID"
+		)
+		return
 	var result: Dictionary = _service.leave(logical_id, session_id, operation_id)
+	if not _persist_command_result(operation_id, "LEAVE", logical_id, result):
+		_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
+		return
+	var leave_sent := false
 	if bool(result.get("success", false)):
+		leave_sent = _send(peer_id, "LEAVE_ACK", {"operation_id": operation_id, "logical_player_id": logical_id})
+		if not _is_replay_result(result):
+			_leaves += 1
+			_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
+		_peer_to_player.erase(peer_id)
+		_peer_to_session.erase(peer_id)
+		if not _is_replay_result(result):
+			_broadcast_snapshot("PLAYER_LEFT")
+	else:
+		_rejections += 1
+		leave_sent = _send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": String(result.get("error_code", "LEAVE_REJECTED"))})
+	if leave_sent:
+		_mark_operation_delivered(operation_id)
+	_write_report("READY", false)
+
+
+func _handle_disconnect(peer_id: String, session_id: String) -> void:
+	var mapped_session := String(_peer_to_session.get(peer_id, ""))
+	if _service == null or session_id.is_empty() or mapped_session != session_id:
+		_peer_to_player.erase(peer_id)
+		_peer_to_session.erase(peer_id)
+		_write_report("READY", false)
+		return
+	var operation_id := "operation/m3/disconnect/%s" % session_id.sha256_text().left(16)
+	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var result: Dictionary = _service.leave_transport_session(session_id, operation_id)
+	if not _persist_command_result(operation_id, "DISCONNECT", logical_id, result):
+		return
+	if bool(result.get("success", false)) and not _is_replay_result(result):
 		_leaves += 1
-		_send(peer_id, "LEAVE_ACK", {"operation_id": operation_id, "logical_player_id": logical_id})
 		_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
 	else:
 		_rejections += 1
-		_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": String(result.get("error_code", "LEAVE_REJECTED"))})
-	_peer_to_player.erase(peer_id)
-	_peer_to_session.erase(peer_id)
-	_broadcast_snapshot("PLAYER_LEFT")
-	_write_report("READY", false)
-
-func _handle_disconnect(peer_id: String, session_id: String) -> void:
-	if _service != null and not session_id.is_empty():
-		var result: Dictionary = _service.leave_transport_session(session_id, "operation/m3/disconnect/%s" % session_id.sha256_text().left(16))
-		if bool(result.get("success", false)) and not bool(result.get("details", {}).get("replay", true)):
-			_leaves += 1
-			_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
+	_mark_operation_delivered(operation_id)
 	_peer_to_player.erase(peer_id)
 	_peer_to_session.erase(peer_id)
 	_broadcast_snapshot("PEER_DISCONNECTED")
 	_write_report("READY", false)
 
-func _send_result(peer_id: String, operation_id: String, command_type: String, result: Dictionary) -> void:
+func _reject_uncommitted_command(peer_id: String, operation_id: String, command_type: String, error_code: String) -> void:
+	_rejections += 1
+	_send_result(peer_id, operation_id, command_type, _failure(error_code))
+	_write_report("READY", false)
+
+
+func _reject_uncommitted_leave(peer_id: String, operation_id: String, error_code: String) -> void:
+	_rejections += 1
+	_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": error_code})
+	_write_report("READY", false)
+
+
+func _send_result(peer_id: String, operation_id: String, command_type: String, result: Dictionary) -> bool:
 	var wire: Dictionary = _service.create_targeted_command_result("message/m3/result/%s" % operation_id.sha256_text().left(12), operation_id, result)
-	_send(peer_id, "COMMAND_RESULT", {
+	return _send(peer_id, "COMMAND_RESULT", {
 		"operation_id": operation_id,
 		"command_type": command_type,
 		"status": String(wire.get("status", "REJECTED")),
@@ -259,14 +383,174 @@ func _capture_two_connected_checksum() -> void:
 	if _peer_to_player.size() == 2 and _service != null:
 		_last_two_connected_checksum = String(_service.create_snapshot().get("checksum", ""))
 
+func _setup_recovery() -> Dictionary:
+	_recovery_repository = RecoveryRepository.new()
+	var repository_result: Dictionary = _recovery_repository.configure(_persistence_root)
+	if not bool(repository_result.get("success", false)):
+		return _failure("M6_RECOVERY_REPOSITORY_SETUP_FAILED", {"cause": repository_result})
+	_recovery_authority = M6AuthorityAdapter.new()
+	var authority_result: Dictionary = _recovery_authority.setup(
+		_service,
+		"session/m6/%s" % _authority_owner_id.sha256_text().left(16)
+	)
+	if not bool(authority_result.get("success", false)):
+		return authority_result
+	_replay_outbox = M6ReplayOutbox.new()
+	var replay_result: Dictionary = _replay_outbox.setup(_service)
+	if not bool(replay_result.get("success", false)):
+		return replay_result
+	_recovery_coordinator = RecoveryCoordinator.new()
+	var coordinator_result: Dictionary = _recovery_coordinator.configure(
+		_recovery_repository, _recovery_authority, _replay_outbox
+	)
+	if not bool(coordinator_result.get("success", false)):
+		return coordinator_result
+	var loaded: Dictionary = _recovery_repository.load_committed()
+	if bool(loaded.get("success", false)):
+		var checkpoint: Dictionary = loaded.get("details", {}).get("checkpoint", {})
+		var authority_validation: Dictionary = _recovery_authority.validate_recovery_state(
+			Dictionary(checkpoint.get("authority_state", {}))
+		)
+		if not bool(authority_validation.get("success", false)):
+			return _failure("M6_DEDICATED_AUTHORITY_PREVALIDATION_FAILED", {"cause": authority_validation})
+		var replay_validation: Dictionary = _replay_outbox.validate(
+			Dictionary(checkpoint.get("replay_state", {}))
+		)
+		if not bool(replay_validation.get("success", false)):
+			return _failure("M6_DEDICATED_REPLAY_PREVALIDATION_FAILED", {"cause": replay_validation})
+		var recovered: Dictionary = _recovery_coordinator.recover_latest()
+		if not bool(recovered.get("success", false)):
+			return _failure("M6_DEDICATED_RECOVERY_FAILED", {"cause": recovered})
+		checkpoint = recovered.get("details", {}).get("checkpoint", {})
+		_checkpoint_generation = int(checkpoint.get("generation", 0))
+		_last_checkpoint_operation_id = String(checkpoint.get("committed_operation_id", ""))
+		_recovered = true
+		_recovery_source = String(recovered.get("details", {}).get("source", ""))
+		return _success({"recovered": true, "generation": _checkpoint_generation, "source": _recovery_source})
+	var load_error := String(loaded.get("error_code", ""))
+	if load_error != "AUTHORITATIVE_CHECKPOINT_NOT_FOUND":
+		return _failure("M6_DEDICATED_RECOVERY_LOAD_FAILED", {"cause": loaded})
+	var seeded := _persist_checkpoint("")
+	if not bool(seeded.get("success", false)):
+		return seeded
+	return _success({"recovered": false, "generation": _checkpoint_generation, "source": "NEW"})
+
+
+func _persist_command_result(operation_id: String, command_type: String, logical_player_id: String, result: Dictionary) -> bool:
+	if not _persistence_enabled:
+		return true
+	if not _is_canonical_operation_id(operation_id):
+		if bool(result.get("success", false)):
+			_enter_persistence_failure("M6_COMMITTED_OPERATION_ID_INVALID")
+			return false
+		return true
+	if _is_replay_result(result) or String(result.get("error_code", "")) == "OPERATION_REPLAY_CONFLICT":
+		return true
+	var replay_recorded := bool(_service.has_durable_replay_operation(operation_id))
+	if not replay_recorded:
+		if bool(result.get("success", false)):
+			_enter_persistence_failure("M6_SUCCESS_RESULT_NOT_REPLAY_DURABLE")
+			return false
+		return true
+	var staged: Dictionary = _replay_outbox.stage_committed(operation_id, command_type, {
+		"logical_player_id": logical_player_id,
+		"success": bool(result.get("success", false)),
+		"error_code": String(result.get("error_code", "")),
+		"result": result.duplicate(true),
+		"player_snapshot_checksum": String(_service.create_snapshot().get("checksum", "")),
+		"item_graph_checksum": String(_service.create_canonical_item_graph_snapshot().get("checksum", "")),
+	})
+	if not bool(staged.get("success", false)):
+		_enter_persistence_failure(String(staged.get("error_code", "M6_OUTBOX_STAGE_FAILED")))
+		return false
+	var persisted := _persist_checkpoint(operation_id)
+	if not bool(persisted.get("success", false)):
+		_enter_persistence_failure(String(persisted.get("error_code", "M6_DURABLE_COMMIT_FAILED")))
+		return false
+	_durable_commits += 1
+	return true
+
+
+func _persist_checkpoint(operation_id: String) -> Dictionary:
+	if not _persistence_enabled or _recovery_coordinator == null:
+		return _success({"skipped": true})
+	var next_generation := _checkpoint_generation + 1
+	var checkpoint_id := "checkpoint/m6/dedicated/%d" % next_generation
+	var persisted: Dictionary = _recovery_coordinator.persist_checkpoint(
+		checkpoint_id,
+		next_generation,
+		_checkpoint_generation,
+		operation_id
+	)
+	if not bool(persisted.get("success", false)):
+		return _failure("M6_CHECKPOINT_PERSIST_FAILED", {"cause": persisted})
+	_checkpoint_generation = next_generation
+	_last_checkpoint_operation_id = operation_id
+	return _success({"generation": _checkpoint_generation, "checkpoint_id": checkpoint_id})
+
+
+func _mark_operation_delivered(operation_id: String) -> void:
+	if not _persistence_enabled or _replay_outbox == null or operation_id.is_empty():
+		return
+	var records: Array = _replay_outbox.get_records()
+	for index in range(records.size() - 1, -1, -1):
+		var record: Dictionary = records[index]
+		if String(record.get("operation_id", "")) == operation_id:
+			_replay_outbox.mark_delivered(int(record.get("sequence", 0)))
+			return
+
+
+func _is_replay_result(result: Dictionary) -> bool:
+	return bool(result.get("replay", false)) or bool(result.get("details", {}).get("replay", false))
+
+
+func _is_canonical_operation_id(value: String) -> bool:
+	if value.is_empty() or value != value.strip_edges().to_lower():
+		return false
+	for character in value:
+		if not (
+			(character >= "a" and character <= "z")
+			or (character >= "0" and character <= "9")
+			or character in ["/", "_", ".", "-"]
+		):
+			return false
+	return true
+
+
+func _enter_persistence_failure(error_code: String) -> void:
+	_persistence_failures += 1
+	_last_error_code = error_code if not error_code.is_empty() else "M6_DURABLE_COMMIT_FAILED"
+	_fatal_persistence_failure = true
+	set_process(false)
+	_write_report("FAILED", false)
+	if _boundary != null:
+		_boundary.stop()
+
+
+func _persistence_report() -> Dictionary:
+	return {
+		"enabled": _persistence_enabled,
+		"root_path": _persistence_root,
+		"checkpoint_generation": _checkpoint_generation,
+		"recovered": _recovered,
+		"recovery_source": _recovery_source,
+		"last_checkpoint_operation_id": _last_checkpoint_operation_id,
+		"durable_commits": _durable_commits,
+		"failures": _persistence_failures,
+		"fatal_failure": _fatal_persistence_failure,
+		"outbox": _replay_outbox.get_report() if _replay_outbox != null else {},
+		"service_recovery": _service.get_recovery_report() if _service != null else {},
+	}
+
+
 func get_world_entity_store_for_kernel():
 	return null
 
 func get_report() -> Dictionary:
 	return {
 		"schema": SCHEMA,
-		"checkpoint": Support.CHECKPOINT,
-		"build_id": Support.BUILD_ID,
+		"checkpoint": M6_CHECKPOINT if _persistence_enabled else Support.CHECKPOINT,
+		"build_id": M6_BUILD_ID if _persistence_enabled else Support.BUILD_ID,
 		"configured": _configured,
 		"host": _host,
 		"port": _port,
@@ -288,14 +572,28 @@ func get_report() -> Dictionary:
 		"boundary": _boundary.get_snapshot() if _boundary != null else {},
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"direct_client_authority_references": 0,
+		"persistence": _persistence_report(),
 	}
 
 func stop() -> Dictionary:
 	set_process(false)
-	_write_report("STOPPED", true)
-	if _boundary != null: _boundary.stop()
-	if _service != null: _service.shutdown()
-	_boundary = null; _service = null; _configured = false
+	if _persistence_enabled and not _fatal_persistence_failure and _service != null and _recovery_coordinator != null:
+		var persisted: Dictionary = _persist_checkpoint("")
+		if not bool(persisted.get("success", false)):
+			_enter_persistence_failure(String(persisted.get("error_code", "M6_FINAL_CHECKPOINT_FAILED")))
+	if _fatal_persistence_failure:
+		_write_report("FAILED", false)
+	else:
+		_write_report("STOPPED", true)
+	if _boundary != null:
+		_boundary.stop()
+	if _service != null:
+		_service.shutdown()
+	_boundary = null
+	_service = null
+	_configured = false
+	if _fatal_persistence_failure:
+		return _failure(_last_error_code if not _last_error_code.is_empty() else "M6_DURABLE_COMMIT_FAILED")
 	return _success()
 
 func _write_report(state: String, passed: bool) -> void:

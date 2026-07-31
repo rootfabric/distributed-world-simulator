@@ -1,3 +1,18 @@
+Planetary World v16.10.5-persistence-m6-dedicated-recovery
+
+M6 dedicated persistence and recovery over accepted M5:
+- atomic authoritative checkpoint before client ACK
+- durable player registry, ownership epochs, positions and presentation
+- canonical M4 Item Graph inventory/hotbar/container/mount recovery
+- service, ownership and Item Graph replay ledgers
+- committed result outbox with pending delivery recovery
+- hard-kill/restart process acceptance with two ENet clients
+- reconnect to stable player entities with ownership epoch 1 -> 2
+- exact pre-crash command replay without second mutation/checkpoint
+- fail-stop on persistence failure
+- config/network/dedicated-persistence-recovery.v1.json
+- RUN_M6_DEDICATED_RECOVERY_TESTS.ps1 / .sh
+
 Planetary World v16.10.3-pre-m5-graphical-acceptance-preparation
 
 M5 graphical multiplayer acceptance over main @ 2879fdb and pre-M5 UI/replica preparation:
@@ -691,3 +706,10 @@ M5 checkpoint files:
 - RUN_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_TESTS.ps1/.sh
 - tests/runtime/test_m5_graphical_acceptance_contracts.gd
 - tests/runtime/test_m5_graphical_multiplayer_acceptance.gd
+M6 checkpoint files:
+- config/network/dedicated-persistence-recovery.v1.json
+- docs/architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md
+- docs/checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md
+- RUN_M6_DEDICATED_RECOVERY_TESTS.ps1/.sh
+- tests/runtime/test_m6_dedicated_recovery_contracts.gd
+- tests/runtime/test_m6_dedicated_recovery_processes.gd

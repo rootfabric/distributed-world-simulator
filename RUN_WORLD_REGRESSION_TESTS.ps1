@@ -100,6 +100,8 @@ $Tests = @(
     "res://tests/runtime/test_m5_graphical_acceptance_preparation.gd",
     "res://tests/runtime/test_m5_graphical_acceptance_contracts.gd",
     "res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+    "res://tests/runtime/test_m6_dedicated_recovery_contracts.gd",
+    "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -162,8 +164,8 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
-    runtime_base_checkpoint = "v16.10.3-domain-m4-canonical-shared-gameplay"
+    checkpoint = "v16.10.5-persistence-m6-dedicated-recovery"
+    runtime_base_checkpoint = "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -353,7 +355,9 @@ function Invoke-GodotStep {
         }
     }
     $OutputText = ($Captured | Out-String)
-    $HasFailureMarker = $OutputText -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
+    # Keep failure-marker detection case-sensitive: successful assertion text
+    # may legitimately contain phrases such as "PASS: Failed durable restore...".
+    $HasFailureMarker = $OutputText -cmatch '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     Add-StepResult -Name $Name -Kind $Kind -ExitCode $ExitCode -DurationSeconds $Duration -Target $Target
@@ -365,7 +369,7 @@ function Invoke-GodotStep {
 
 try {
     Write-Host "Godot: $Godot"
-    Write-Host "Checkpoint: v16.10.4-testing-m5-graphical-multiplayer-acceptance (UI-driven M5, runtime base M4)"
+    Write-Host "Checkpoint: v16.10.5-persistence-m6-dedicated-recovery (dedicated recovery M6, runtime base M5)"
 
     # Scripts below a directory named `fixtures` are support types loaded by
     # standalone tests. They intentionally keep the `test_*.gd` prefix so
@@ -437,7 +441,7 @@ try {
 
     $Summary.passed = $true
     Save-Summary
-    Write-Host "All world/core regression tests through M5 graphical multiplayer acceptance passed."
+    Write-Host "All world/core regression tests through M6 dedicated persistence and recovery passed."
     Write-Host "Report: $ReportPath"
 }
 catch {
