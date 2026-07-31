@@ -233,3 +233,22 @@ C1 использует минимальное подмножество: `PLANNE
 - агент понимает capabilities и использует неизвестную конструкцию;
 - сервер хранит строгий aggregate, а не произвольный клиентский меш;
 - симуляция раскрывает детальность только там, где это действительно влияет на мир.
+
+## 15. Навигация и дисциплина движения
+
+Наглядная карта линии хранится в `docs/plans/CONSTRUCTION_MAP_RU.md`, а каждое фактическое продвижение записывается в `docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md`.
+
+Начиная с C2, Item Graph integration разделена на два этапа:
+
+- **C2A** формализует совместимые contracts, plans и invariants в изолированном sandbox;
+- **C2B** подключает эти contracts к реальным Item Graph services и M0 multi-aggregate transaction coordinator после готовности multiplayer gate.
+
+Установленная item-backed деталь в C2A выражается существующей relation `ATTACHMENT`:
+
+```text
+assembly_id    = construct_id
+parent_item_id = construct root item
+socket_id      = part_id
+```
+
+Резервирование не становится новым persistent relation. Оно остаётся частью ещё не зафиксированного transaction plan. Благодаря этому C2A не создаёт второй Item Graph и не вводит состояние, которое позднее пришлось бы мигрировать.

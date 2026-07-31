@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.semantic_construction_kernel_manifest.v1",
   "stage": "C1",
-  "status": "ISOLATED_CANDIDATE",
+  "status": "ACCEPTED_FOUNDATION",
   "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
   "recommended_branch": "feature/c1-semantic-construction-kernel",
   "paradigm": {
@@ -17,5 +17,7 @@
     "planet_simulator.construct_snapshot.v1"
   ],
   "prototype": "TABLE",
-  "next_stage": "C2_ITEM_GRAPH_TRANSACTION_INTEGRATION"
+  "next_stage": "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION",
+  "current_stage": "C2A_ITEM_GRAPH_CONTRACTS",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md"
 }

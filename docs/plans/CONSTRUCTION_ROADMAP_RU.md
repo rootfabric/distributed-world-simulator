@@ -1,8 +1,20 @@
 # Дорожная карта строительной линии PlanetSimulator
 
+## Стратегическая цель
+
+PlanetSimulator создаёт **конструктор нового уровня** на основе сочетания:
+
+- семантического масштаба;
+- составных предметов;
+- компиляции facets;
+- capability-based поведения.
+
+Наглядная актуальная карта: `docs/plans/CONSTRUCTION_MAP_RU.md`.
+Хронология решений: `docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md`.
+
 ## Стратегия интеграции
 
-Строительный трек развивается отдельно до завершения базовой multiplayer-линии. Он не создаёт второй Item Graph, authority или transport path. После стабилизации M6/A3 ядро подключается к canonical multiplayer через Generic Aggregate и multi-aggregate transactions.
+Строительный трек развивается отдельно до завершения базовой multiplayer-линии. Он не создаёт второй Item Graph, authority, persistence или transport path. Реальная интеграция выполняется только через canonical Generic Aggregate, Item Graph services, Operation Ledger и M0 multi-aggregate transactions.
 
 ## C0 — архитектурная фиксация
 
@@ -12,7 +24,7 @@
 - сетевые команды;
 - сценарии стола, робота, дома, сборщика и корабельной секции.
 
-Статус: выполнено этим checkpoint.
+**Статус:** ACCEPTED.
 
 ## C1 — Semantic Construction Kernel
 
@@ -24,18 +36,59 @@
 - стол как первый vertical slice;
 - повреждение bond и разделение rigid islands.
 
-Статус: первая реализация выполнена отдельно от gameplay runtime.
+**Статус:** ACCEPTED, fix1.
 
-## C2 — Item Graph transaction integration
+## C2A — Item Graph Contracts
+
+Изолированный контрактный этап без подключения к runtime.
+
+- совместимая проекция `item_instance.v2`;
+- создание construct root item;
+- `ATTACHMENT` как связь item-backed part с construct;
+- item mutations `CREATE/UPDATE/DELETE`;
+- construct mutations `CREATE/UPDATE/DELETE`;
+- checksum-protected transaction plan;
+- exact before-state preconditions;
+- root/identity/part-binding invariants;
+- атомарный in-memory adapter;
+- exact replay и operation-ID conflict;
+- retryable failure и rollback;
+- JSON persistence контракта;
+- сборка и разборка стола;
+- расход материалов без автоматического salvage.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+### Acceptance C2A
+
+- оба C2A focused tests проходят;
+- C1 focused tests не деградируют;
+- оба C2A tests внесены в обязательный world regression;
+- plan JSON-safe, canonical, checksum-protected;
+- exact replay не меняет generation;
+- conflicting payload с тем же operation ID отклоняется;
+- stale before-state отклоняется;
+- retryable failure ничего не фиксирует и не блокирует повтор;
+- сборка создаёт root item, construct и пять согласованных attachment bindings;
+- разборка удаляет root/construct и возвращает детали;
+- consumed fasteners не восстанавливаются;
+- полный network/world regression проходит на основном checkout.
+
+## C2B — Authoritative Item Graph Integration
+
+Реальная интеграция после multiplayer gate.
 
 - реальное изъятие деталей из контейнеров;
-- `part_of_construct` и mounted relations;
+- mapping C2A transaction plan → M0 MutationBatch;
+- canonical `AggregatePrecondition` для item, container и construct;
 - атомарная установка/снятие;
-- rollback расхода;
-- Operation Ledger через существующий canonical service;
-- deconstruction с возвратом предметов.
+- общий Operation Ledger;
+- persistence/recovery boundary;
+- reconnect/replay без повторного расхода;
+- deconstruction с slot allocation и container capacity validation.
 
-Gate: завершённая multiplayer-база и согласованный multi-aggregate command path.
+**Gate:** завершённая multiplayer-база и согласованный multi-aggregate command path.
+**Статус:** BLOCKED BY GATE.
 
 ## C3 — BuildPlan
 
@@ -101,15 +154,3 @@ Gate: завершённая multiplayer-база и согласованный 
 ## C13 — Federated Large Constructs
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
-
-## Acceptance C1
-
-- оба focused Godot tests проходят;
-- snapshot JSON-safe и checksum-protected;
-- duplicate IDs и неизвестные endpoints отклоняются;
-- exact replay не меняет revision;
-- operation collision и stale revision отклоняются;
-- failed operation не блокирует корректный retry с тем же operation ID;
-- повреждение bond меняет build state и rigid island count;
-- invalid snapshot load транзакционен;
-- код не подключён к M4/M5 runtime.
