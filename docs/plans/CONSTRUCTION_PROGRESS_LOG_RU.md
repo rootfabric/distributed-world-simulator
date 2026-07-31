@@ -658,3 +658,63 @@ Editor parse:    PASS
 ```
 
 C2B focused не запускается в isolated workspace из-за отсутствующей полной M0 dependency tree. Production adapter/translator parse PASS, multi-aggregate batch покрыт contract test. Ожидаемый world profile: `119/119 tests`, `122 steps`.
+
+
+## 2026-07-31 — C9: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c9-damage-split-repair`.
+**База:** `C8 @ 6ec6fdb`.
+
+```text
+C9 contracts:     PASS — 96 assertions
+C9 integration:   PASS — 108 assertions
+C9 total:         PASS — 204 assertions
+C1–C8 + C2B:      PASS
+Network N0–M4:    PASS
+World regression: PASS — 119/119 tests, 122 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `1db35602564d6a3f77cbd7b49770839e36c7705c7e6ef40f33c073f20e4582fb`. C9 стал принятой базой C10.
+
+
+## 2026-07-31 — C10: Parametric Members
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c10-parametric-members`.
+**База:** принятый C9.
+
+Архитектурные решения:
+
+- material/definition DTO versioned и checksum-pinned;
+- member instance вычисляет geometry, mass и stock usage;
+- beam/panel/pipe/cable/layered wall используют один compiler boundary;
+- fabricated output остаётся обычным Item Graph projection;
+- C3 BuildPlan использует тот же item ID;
+- C5 capabilities компилируются из member kind;
+- C9 split/repair сохраняет parametric component;
+- local segmentation консервативна по mass/volume/materials;
+- catalog/member store persistence transactional;
+- renderer geometry не является authoritative.
+
+Локальный профиль:
+
+```text
+C1:               PASS — 66 assertions
+C2A:              PASS — 137 assertions
+C3:               PASS — 194 assertions
+C4:               PASS — 268 assertions
+C5:               PASS — 204 assertions
+C6:               PASS — 218 assertions
+C7:               PASS — 225 assertions
+C8:               PASS — 221 assertions
+C9:               PASS — 204 assertions
+C10 contracts:    PASS — 155 assertions
+C10 integration:  PASS — 84 assertions
+C10 total:        PASS — 239 assertions
+Editor parse:     PASS
+```
+
+Полный C2B/network/world/main-scene profile остаётся внешним gate. Ожидаемый world profile: `121/121 tests`, `124 steps`.

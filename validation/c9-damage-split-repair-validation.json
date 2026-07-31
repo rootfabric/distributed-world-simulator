@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.c9_damage_split_repair_validation.v1",
   "checkpoint": "C9_DAMAGE_SPLIT_REPAIR",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C8_ACCEPTED",
-    "c7_commit": "923bfe1",
+    "c8_commit": "6ec6fdb",
     "c8_reviewed_sha256": "977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e"
   },
   "branch": "feature/c9-damage-split-repair",
@@ -97,5 +97,14 @@
     "overlay_only": true,
     "manifest": "c9-damage-split-repair-files.txt",
     "changed_files": 46
+  },
+  "external_acceptance": {
+    "reviewed_sha256": "1db35602564d6a3f77cbd7b49770839e36c7705c7e6ef40f33c073f20e4582fb",
+    "c2b_assertions": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": "119/119 tests, 122 steps PASS",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS",
+    "manifest": "46/46 unique"
   }
 }

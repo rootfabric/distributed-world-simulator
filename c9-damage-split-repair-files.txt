@@ -1,6 +1,6 @@
 Checkpoint: C9 — Damage, Split, Repair
-Status: IMPLEMENTED CANDIDATE
-Base: C8 ACCEPTED, C7 @ 923bfe1
+Status: ACCEPTED
+Base: C8 @ 6ec6fdb
 Recommended branch: feature/c9-damage-split-repair
 Changed files: 46
 

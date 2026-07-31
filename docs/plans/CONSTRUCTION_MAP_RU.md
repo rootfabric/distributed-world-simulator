@@ -83,9 +83,9 @@ C12 multiplayer construction → C13 federated constructs
 | C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **ACCEPTED — fix1** |
 | C6 | power/control/drive/sensor subsystems, quorum, dependency cascade и mobile commands | наземный робот | **ACCEPTED** |
 | C7 | sections, spaces, enclosure, openings, utilities и activation LOD | дом | **ACCEPTED** |
-| C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **CURRENT CANDIDATE** |
-| C9 | damage, split, repair, salvage | стол/робот/секция | PLANNED |
-| C10 | beams, panels, pipes, cables, profiles | строение/корабль | PLANNED |
+| C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **ACCEPTED** |
+| C9 | damage, split, repair, salvage | стол/робот/секция | **ACCEPTED** |
+| C10 | beams, panels, pipes, cables, profiles | строение/корабль | **CURRENT CANDIDATE** |
 | C11 | local CSG/SDF/microgeometry | панель/корпус | PLANNED |
 | C12 | contention, permissions, reconnect, convergence | два клиента | PLANNED |
 | C13 | section aggregates and cross-server authority | дом/станция/город | PLANNED |
@@ -402,7 +402,7 @@ normal Item Graph + output container + C3 BuildPlan
 
 ## C9: Damage, Split, Repair
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 DamageRequest + source checksum
@@ -431,3 +431,37 @@ inverse transaction restores original topology
 - C5–C8 profiles после damage/repair должны перестраиваться из новых snapshots.
 
 Контрольный объект: bridge-arm из шести parts, который после двух broken bonds разделяется на source, двухкомпонентный child construct и одиночный salvage sensor, а затем полностью собирается обратно.
+
+
+## C10: Parametric Members
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+material + versioned definition + parameters
+        ↓ deterministic metric compiler
+ParametricMemberInstance
+├── geometry / bounding box
+├── mass and per-material usage
+├── stock requirements
+├── item identity and provenance
+└── checksum
+        ↓
+C8 fabrication → Item Graph → C3 BuildPlan
+        ↓
+C9 conservative segmentation and repair
+```
+
+Ключевые правила C10:
+
+- поддержаны beam, panel, pipe, cable и layered wall;
+- exact parameter sets и limits являются частью versioned definition;
+- density и stock-unit mass закреплены versioned material definition;
+- material usage, volume и mass вычисляются, а не задаются вручную;
+- output C8 остаётся обычным item-backed projection;
+- C5 capability выводится из member kind и concrete part ID;
+- segmentation сохраняет массу, объём и расход каждого материала;
+- repair требует все pinned segment checksums и восстанавливает исходный parent instance;
+- mesh/collision и local CSG остаются производными и переходят в C11.
+
+Контрольный vertical slice: S355 beam компилируется из размеров, производится C8-станком из рассчитанного steel stock, входит в C3 BuildPlan, переживает C9 split/repair и режется на три консервативных сегмента.

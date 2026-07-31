@@ -443,11 +443,30 @@ Powered CNC cell резервирует `coolant ×1` и `steel_ingot/S355 ×3`,
 
 Bridge-arm из шести частей теряет две связи. Source сохраняет anchor/core/joint, arm/tool образуют новый construct, sensor становится salvage. Repair возвращает все шесть исходных `ItemInstance`, удаляет временный child root, восстанавливает пять bonds и `OPERATIONAL` state.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C10 — Parametric Members
 
-Балки, панели, трубы, кабели, profiles и layered walls с вычисляемым расходом материала.
+1. Versioned material definitions задают density, stock identity и массу stock unit.
+2. Versioned member definitions задают exact parameter schema, defaults и limits.
+3. Поддерживаются `BEAM`, `PANEL`, `PIPE`, `CABLE`, `LAYERED_WALL`.
+4. Compiler детерминированно выводит geometry, volume, surface area, bounding box и mass.
+5. Layered walls агрегируют per-material volume/mass по ordered layers.
+6. Instance pin-ит definition version/checksum и реальный item ID.
+7. Projection factory создаёт обычный Item Graph projection и semantic part record.
+8. C8 recipe compiler преобразует material usage в authoritative stock requirements.
+9. Fabricated member используется как source item C3 BuildPlan.
+10. C5 capability описывает structural/conduit/enclosure semantics без prefab lookup.
+11. Segmentation сохраняет mass, volume и per-material usage.
+12. Repair plan pin-ит segment checksums и восстанавливает исходный parent instance.
+13. C9 aggregate split/repair сохраняет parametric component и item identity.
+14. Catalog/store persistence transactional и exact replay не меняет generation.
+
+### Контрольный vertical slice
+
+Параметрическая S355-балка длиной 2 м вычисляет массу и steel-stock requirements, изготавливается в принятой C8 cell, становится обычным output `ItemInstance`, входит в C3 BuildPlan, затем переносится через C9 split/repair без изменения checksum. Отдельный cut plan делит 8-метровую балку на `3 + 2 + 3 м` с полной консервацией.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C11 — Local Geometry Editing
 

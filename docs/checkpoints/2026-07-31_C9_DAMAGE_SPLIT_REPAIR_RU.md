@@ -1,8 +1,8 @@
 # Checkpoint C9 — Damage, Split, Repair
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
-**База:** принятый C8, C7 commit `923bfe1`
+**Статус:** ACCEPTED
+**База:** C8 @ `6ec6fdb`
 **Рекомендуемая ветка:** `feature/c9-damage-split-repair`
 
 ## Цель
@@ -141,3 +141,23 @@ git diff --check PASS
 - visual repair animation;
 - автоматическое назначение новых spatial authorities;
 - parametric material members — C10.
+
+
+## Внешняя приёмка
+
+```text
+branch:            feature/c9-damage-split-repair
+SHA-256:           1db35602564d6a3f77cbd7b49770839e36c7705c7e6ef40f33c073f20e4582fb
+C9 contracts:      PASS — 96 assertions
+C9 integration:    PASS — 108 assertions
+C9 total:          PASS — 204 assertions
+C1–C8:             PASS
+C2B:               PASS — 258 assertions
+Network N0–M4:     PASS
+World regression:  PASS — 119/119 tests, 122 steps
+Main-scene CLI:    PASS — 6/6
+git diff --check:  PASS
+manifest:          46/46 unique
+```
+
+C9 принят как база C10.

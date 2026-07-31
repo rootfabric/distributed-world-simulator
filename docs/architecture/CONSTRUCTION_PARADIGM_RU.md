@@ -529,3 +529,35 @@ Connected component определяет состав обломка, а policy 
 ### Damage history слабее authoritative мира
 
 History и repair ghost помогают UI/agent workflow, но состояние конструкции доказывается `ConstructSnapshot`, Item Graph и shared operation ledger. History можно восстановить или потерять без дублирования частей.
+
+
+## 19. C10: параметры сильнее mesh
+
+C10 отделяет семантический строительный элемент от его визуальной tessellation. Балка существует как definition, параметры, material usage и item identity; mesh можно удалить и восстановить без потери конструкции.
+
+```text
+material physics + parameter schema
+→ canonical member instance
+→ item-backed projection / part record
+→ renderer and collision projection
+```
+
+### Масса является производной
+
+Для параметрической детали нельзя независимо записать размеры, volume и mass. Compiler выводит их из одной версии параметров и плотности материала. Instance проверяет conservation между общей mass/volume и суммой material usage.
+
+### Layered assemblies не являются одним материалом
+
+Многослойная стена сохраняет ordered semantic layers, но расход агрегируется по material identity. Это позволяет отдельно считать массу, производство, salvage, thermal/fire properties и последующую локальную обработку каждого слоя.
+
+### Fabrication не создаёт специальный класс детали
+
+C10 преобразует instance в обычный C8 recipe. После authoritative completion результат является тем же `ItemInstance`, который можно положить в контейнер, установить C3 BuildPlan, отделить C9 damage transaction или передать другому серверу.
+
+### Cut и aggregate split — разные уровни
+
+Parametric segmentation делит геометрический member вдоль его оси и создаёт pinned child member identities с conservation. C9 aggregate split делит topology конструкции. Они совместимы, но не подменяют друг друга.
+
+### C11 меняет локальную форму, но не отменяет C10
+
+Отверстие, bevel или локальный SDF edit должны быть overlay над parametric base и обязаны обновлять mass/material deltas. Базовая parameter definition остаётся provenance, а mesh по-прежнему не становится источником истины.

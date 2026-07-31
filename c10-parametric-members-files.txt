@@ -1,0 +1,56 @@
+Checkpoint: C10 — Parametric Members
+Status: IMPLEMENTED CANDIDATE
+Base: C9 ACCEPTED, C8 @ 6ec6fdb
+Recommended branch: feature/c10-parametric-members
+Changed files: 50
+
+RUN_C10_PARAMETRIC_MEMBERS_TESTS.ps1
+RUN_C10_PARAMETRIC_MEMBERS_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c9-damage-split-repair-files.txt
+config/construction/construction-parametric-members.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C10_PARAMETRIC_MEMBERS_RU.md
+docs/checkpoints/2026-07-31_C9_DAMAGE_SPLIT_REPAIR_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/parametric/construction_parametric_capability_compiler.gd
+scripts/construction/parametric/construction_parametric_capability_compiler.gd.uid
+scripts/construction/parametric/construction_parametric_catalog.gd
+scripts/construction/parametric/construction_parametric_catalog.gd.uid
+scripts/construction/parametric/construction_parametric_compiler.gd
+scripts/construction/parametric/construction_parametric_compiler.gd.uid
+scripts/construction/parametric/construction_parametric_fabrication_compiler.gd
+scripts/construction/parametric/construction_parametric_fabrication_compiler.gd.uid
+scripts/construction/parametric/construction_parametric_layer.gd
+scripts/construction/parametric/construction_parametric_layer.gd.uid
+scripts/construction/parametric/construction_parametric_material.gd
+scripts/construction/parametric/construction_parametric_material.gd.uid
+scripts/construction/parametric/construction_parametric_member_definition.gd
+scripts/construction/parametric/construction_parametric_member_definition.gd.uid
+scripts/construction/parametric/construction_parametric_member_instance.gd
+scripts/construction/parametric/construction_parametric_member_instance.gd.uid
+scripts/construction/parametric/construction_parametric_member_store.gd
+scripts/construction/parametric/construction_parametric_member_store.gd.uid
+scripts/construction/parametric/construction_parametric_persistence.gd
+scripts/construction/parametric/construction_parametric_persistence.gd.uid
+scripts/construction/parametric/construction_parametric_projection_factory.gd
+scripts/construction/parametric/construction_parametric_projection_factory.gd.uid
+scripts/construction/parametric/construction_parametric_repair_plan.gd
+scripts/construction/parametric/construction_parametric_repair_plan.gd.uid
+scripts/construction/parametric/construction_parametric_segmentation_plan.gd
+scripts/construction/parametric/construction_parametric_segmentation_plan.gd.uid
+scripts/construction/parametric/construction_parametric_segmenter.gd
+scripts/construction/parametric/construction_parametric_segmenter.gd.uid
+scripts/construction/parametric/construction_parametric_utils.gd
+scripts/construction/parametric/construction_parametric_utils.gd.uid
+tests/construction/fixtures/c10_parametric_members_fixture.gd
+tests/construction/fixtures/c10_parametric_members_fixture.gd.uid
+tests/construction/test_c10_parametric_members_contracts.gd
+tests/construction/test_c10_parametric_members_contracts.gd.uid
+tests/construction/test_c10_parametric_members_integration.gd
+tests/construction/test_c10_parametric_members_integration.gd.uid
+validation/c10-parametric-members-validation.json
+validation/c9-damage-split-repair-validation.json
+c10-parametric-members-files.txt

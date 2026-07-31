@@ -1,0 +1,34 @@
+{
+  "schema": "planet_simulator.construction_parametric_members_config.v1",
+  "checkpoint": "C10_PARAMETRIC_MEMBERS",
+  "metric_precision_decimal_places": 9,
+  "member_kinds": {
+    "BEAM": {
+      "parameters": ["height_m", "length_m", "width_m"],
+      "capability_kind": "LOAD_BEARING_MEMBER"
+    },
+    "PANEL": {
+      "parameters": ["length_m", "thickness_m", "width_m"],
+      "capability_kind": "STRUCTURAL_PANEL"
+    },
+    "PIPE": {
+      "parameters": ["length_m", "outer_diameter_m", "wall_thickness_m"],
+      "capability_kind": "FLUID_CONDUIT"
+    },
+    "CABLE": {
+      "parameters": ["diameter_m", "length_m"],
+      "capability_kind": "SIGNAL_CONDUIT"
+    },
+    "LAYERED_WALL": {
+      "parameters": ["height_m", "length_m"],
+      "capability_kind": "ENCLOSURE_ASSEMBLY"
+    }
+  },
+  "authoritative_rules": [
+    "Parametric definitions and instances are strict JSON-safe DTOs with checksums.",
+    "Mass and volume are derived from dimensions and versioned material density.",
+    "Fabrication outputs are normal ItemInstance projections and remain under C2B authority.",
+    "Segmentation conserves item identity, mass, volume and per-material usage.",
+    "Repair resolves the pinned parent instance only from all required segment checksums."
+  ]
+}
