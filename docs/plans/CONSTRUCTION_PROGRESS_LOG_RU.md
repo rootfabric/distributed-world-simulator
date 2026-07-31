@@ -332,3 +332,98 @@ Editor parse:   PASS
 ```
 
 C2B, network/runtime, полный world regression и main-scene CLI остаются обязательными для внешней приёмки C4 fix1.
+
+
+## 2026-07-31 — C4 fix1: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c4-composite-definition`.
+
+```text
+C4 contracts:     PASS — 112 assertions
+C4 integration:   PASS — 156 assertions
+C4 total:         PASS — 268 assertions
+C1/C2A/C2B/C3:    PASS
+Network N0–M4:    PASS
+World regression: PASS — 109/109 tests, 112 steps
+git diff --check: PASS
+```
+
+C4 fix1 SHA-256: `d6c03e2a9b2b34c879f45a392741ccddc01cf35fb5822ff8ec1e986bd0a0cb67`. C4 стал принятой базой C5.
+
+## 2026-07-31 — C5: Capability and Affordance Compilation
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c5-capability-affordance-compilation`.
+**База:** принятый C4 fix1.
+
+Архитектурные решения:
+
+- authoritative source остаётся `ConstructSnapshot`;
+- behavior profile является checksum-pinned rebuildable projection;
+- capability описывает semantic ability и concrete provider parts/ports;
+- affordance описывает concrete action, target, actor requirements и properties;
+- partial/damaged constructs публикуют пустой behavior profile;
+- C4 parameters (`load_rating_kg`, `finish`) становятся query constraints;
+- agent/resolver не зависят от prefab/display name;
+- одинаковые queries сортируются priority → construct ID → affordance ID;
+- stale и same-revision conflicts fail closed;
+- persisted cache загружается транзакционно и может быть полностью rebuilt.
+
+Реализовано:
+
+- `ConstructionCapabilityDescriptor`;
+- `ConstructionAffordanceDescriptor`;
+- `ConstructionBehaviorProfile`;
+- `ConstructionBehaviorCompiler`;
+- `ConstructionBehaviorProfileStore`;
+- `ConstructionBehaviorPersistence`;
+- `ConstructionAffordanceQuery`;
+- `ConstructionAffordanceResolver`;
+- `ConstructionAffordanceAgent`;
+- support/container/seat/climb/workstation/mounting vertical behaviors;
+- C4 staged table integration и damage invalidation.
+
+Локальный focused/compatibility профиль:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5 contracts:    PASS — 105 assertions
+C5 integration:  PASS — 99 assertions
+C5 total:        PASS — 204 assertions
+Editor parse:    PASS
+```
+
+Полный C2B/network/world/main-scene профиль должен быть выполнен на полном checkout. Ожидаемый world profile: `111/111 tests`, `114 steps`.
+
+
+## 2026-07-31 — C5 fix1: strict-schema negative-test
+
+**Статус:** BLOCKER FIXED LOCALLY, EXTERNAL RECHECK REQUIRED.
+**Ветка:** `feature/c5-capability-affordance-compilation`.
+
+Внешняя focused-проверка C5 остановилась на одном contracts-тесте: fixture добавлял поле через property syntax, поэтому ключ получал невалидный для JSON DTO тип и contract закономерно возвращал `INVALID_FIELD_NAME`. Тест должен был проверять другую ветку — корректный строковый неизвестный ключ и ответ `UNEXPECTED_FIELD`.
+
+Fix1:
+
+- negative-test использует `unexpected["unexpected_field"] = true`;
+- ожидание остаётся `UNEXPECTED_FIELD`;
+- production behavior contracts и compiler не изменены.
+
+Локальный профиль после fix1:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5 contracts:    PASS — 105 assertions
+C5 integration:  PASS — 99 assertions
+C5 total:        PASS — 204 assertions
+Editor parse:    PASS
+```
+
+Полный C2B/network/world/main-scene профиль требуется повторить на полном checkout.

@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.c4_composite_definition_validation.v1",
   "checkpoint": "C4_COMPOSITE_DEFINITION",
-  "status": "FIX1_IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C3_FIX1_ACCEPTED",
     "c2b_commit": "d5c9187",
@@ -79,6 +79,17 @@
     "reported_integration_assertions_before_fix": 152,
     "reported_failure_count": 5,
     "fix1": "compare parameters and exposed-port DTOs through NetworkContractUtils.canonical_json and cover numeric Variant equivalence explicitly",
-    "external_recheck_required": true
+    "external_recheck_required": false,
+    "decision": "ACCEPTED",
+    "external_profile": {
+      "c4_contract_assertions": 112,
+      "c4_integration_assertions": 156,
+      "c4_total_assertions": 268,
+      "c1_c2a_c2b_c3_compatibility": "PASS",
+      "network_n0_m4": "PASS",
+      "world_tests": 109,
+      "world_steps": 112,
+      "git_diff_check": "PASS"
+    }
   }
 }

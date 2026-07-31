@@ -6,8 +6,9 @@
 **C2A:** `68cf8b2`, ACCEPTED
 **C2B:** `d5c9187`, ACCEPTED
 **C3:** ACCEPTED вместе с fix1; reviewed delivery SHA-256 `2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256`
-**Рабочая ветка C4:** `feature/c4-composite-definition` поверх `feature/c3-build-plan-and-ghost`
-**Текущая позиция:** `C4 — CompositeDefinition, IMPLEMENTED CANDIDATE`
+**C4:** ACCEPTED вместе с fix1; commit pending
+**Рабочая ветка C5:** `feature/c5-capability-affordance-compilation` поверх принятого C4 fix1
+**Текущая позиция:** `C5 — Capability and Affordance Compilation, IMPLEMENTED CANDIDATE`
 
 ## Парадигма всей линии
 
@@ -25,12 +26,12 @@ flowchart TD
     C1 --> C2A["C2A Item Graph Contracts\nACCEPTED — 68cf8b2"]
     C2A --> C2B["C2B Authoritative Item Graph Integration\nACCEPTED"]
     C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
-    C3 --> C4["C4 CompositeDefinition\nCURRENT CANDIDATE"]
-    C4 --> G4{"C4 focused + compatibility + network + world regression"}
-    G4 -- fail --> F4["review fixes in same C4 branch"]
-    F4 --> G4
-    G4 -- pass --> C5["C5 Capabilities and Affordances"]
-    C5 --> C6["C6 Mobile Construct — robot"]
+    C3 --> C4["C4 CompositeDefinition\nACCEPTED — fix1"]
+    C4 --> C5["C5 Capability and Affordance Compilation\nCURRENT CANDIDATE"]
+    C5 --> G5{"C5 focused + compatibility + network + world regression"}
+    G5 -- fail --> F5["review fixes in same C5 branch"]
+    F5 --> G5
+    G5 -- pass --> C6["C6 Mobile Construct — robot"]
     C6 --> C7["C7 Spatial Construct — house"]
     C7 --> C8["C8 Fabrication Cell — assembler"]
     C8 --> C9["C9 Damage, Split, Repair"]
@@ -51,10 +52,10 @@ C2B accepted: production Item Graph + M0 authority
   ↓
 C3 accepted: immutable BuildPlan + weightless ghost + resumable stages
   ↓
-C4 current: reusable semantic definitions + deterministic late binding
-  ↓ acceptance gate
-C5 affordances
+C4 accepted: reusable semantic definitions + deterministic late binding
   ↓
+C5 current: typed behavior profiles + part/port affordances + semantic queries
+  ↓ acceptance gate
 C6 robot → C7 house → C8 assembler
   ↓
 C9 damage → C10 parametric construction → C11 local geometry
@@ -71,8 +72,8 @@ C12 multiplayer construction → C13 federated constructs
 | C2A | item projections, mutations, atomic plans | стол | **ACCEPTED — 68cf8b2** |
 | C2B | production registries, shared ledger, M0 authority и recovery | стол | **ACCEPTED** |
 | C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **ACCEPTED — fix1** |
-| C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **CURRENT CANDIDATE** |
-| C5 | capabilities and affordances | агент использует неизвестный стол | PLANNED |
+| C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **ACCEPTED — fix1** |
+| C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **CURRENT CANDIDATE** |
 | C6 | rigid islands, joints, power/control | наземный робот | PLANNED |
 | C7 | sections, spaces, enclosure, utilities | дом | PLANNED |
 | C8 | fabrication through the same BuildPlan | сборщик | PLANNED |
@@ -165,6 +166,8 @@ BuildPlan хранит исходные item projections и точные allocat
 
 ## C4: CompositeDefinition
 
+**Статус:** ACCEPTED вместе с fix1.
+
 ```text
 completed operational construct + accepted C3 BuildPlan
         ↓ promotion
@@ -199,6 +202,35 @@ composite_instantiation_id
 composite_parameters
 composite_exposed_ports
 ```
+
+
+## C5: Capability and Affordance Compilation
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+Authoritative ConstructSnapshot
+        ↓ deterministic behavior compiler
+ConstructionBehaviorProfile
+├── typed capabilities
+├── concrete provider parts
+├── concrete exposed ports
+└── action affordances + actor requirements
+        ↓ semantic query
+unknown-object agent action selection
+```
+
+Ключевые правила:
+
+- profile является rebuildable projection, а не новым authoritative aggregate;
+- partial и damaged constructs не публикуют operational actions;
+- affordance обязан ссылаться на provider part/port собственного capability;
+- C4 parameter values становятся queryable properties;
+- resolver не использует prefab/display name;
+- равные запросы детерминированно сортируют кандидатов;
+- stale и same-revision profile mutation отклоняются.
+
+Контрольный объект: два неизвестных параметризованных стола. Generic agent выбирает `PLACE_ITEM` по `load_rating_kg`, `finish` и своим actor capabilities, затем теряет действие после structural damage.
 
 ## Сквозные архитектурные линии
 

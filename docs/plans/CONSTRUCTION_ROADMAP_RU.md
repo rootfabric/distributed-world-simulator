@@ -282,17 +282,42 @@ BuildPlan хранит исходные projections и cumulative allocations, �
 
 Завершённый C3-стол повышается до `composite-definition/furniture/reusable-table`. Из определения компилируются два новых стола с разными item IDs, root IDs, construct IDs и parameter values. Для ножек требуется structural component grade; cosmetic beam детерминированно отклоняется. Четыре крепежа распределяются между двумя stacks, typed parameters pin-ятся в instances, exposed ports связываются с конкретными деталями, затем оба BuildPlan выполняются builder agents через C3.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED вместе с fix1.
 
-## C5 — Affordance и Capability Layer
+## C5 — Capability and Affordance Compilation
 
-- support surface;
-- container;
+C5 компилирует authoritative `ConstructSnapshot` в rebuildable `ConstructionBehaviorProfile`.
+
+Поддерживаются:
+
+- support surface и place-item;
+- container access: open/store/take;
 - seat;
 - climbable;
 - workstation;
 - mounting surface;
-- агент использует пользовательский объект без зависимости от имени prefab.
+- actor capability requirements;
+- property constraints по C4 parameters;
+- deterministic query ordering;
+- invalidation при PARTIAL/DAMAGED;
+- persistence и rebuild из authoritative snapshot.
+
+Критические инварианты:
+
+1. Profile pin-ит construct checksum/revision и не может менять authoritative state.
+2. Affordance ссылается только на provider part/port собственного capability.
+3. Partial и damaged objects имеют ноль operational affordances.
+4. Same revision с другим source checksum отклоняется.
+5. Stale profile не заменяет более новую проекцию.
+6. Resolver не использует prefab, scene или display name.
+7. Actor получает действие только при полном наборе requirements.
+8. Одинаковые profile/query inputs дают одинаковый ordered result.
+9. C4 numeric properties сравниваются канонически.
+10. Потерянный profile store полностью перестраивается из snapshots.
+
+Контрольный vertical slice: C4 table проходит три стадии; до commissioning действий нет. После commissioning generic agent находит concrete work-surface port. Среди двух неизвестных tables выбирается painted instance с нагрузкой не менее 120 кг. После break bond action исчезает.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C6 — Mobile Construct
 
@@ -331,9 +356,9 @@ BuildPlan хранит исходные projections и cumulative allocations, �
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
 
-## Gate C4 → C5
+## Gate C5 → C6
 
-C5 начинается после внешнего PASS C4:
+C5 реализован после внешнего PASS C4. C6 начинается после внешнего PASS C5:
 
 ```text
 Focused C1
@@ -341,7 +366,8 @@ Focused C2A
 Focused C2B
 Focused C3
 Focused C4
+Focused C5
 Network/runtime regression
-World regression including C3 and C4 scenarios
+World regression including C3, C4 and C5 scenarios
 Main-scene CLI
 ```

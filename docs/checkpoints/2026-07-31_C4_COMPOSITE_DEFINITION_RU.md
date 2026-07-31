@@ -1,7 +1,7 @@
 # Checkpoint C4 — CompositeDefinition
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED вместе с fix1
 **База:** принятый C3 fix1 поверх `C2B @ d5c9187`
 **Рекомендуемая ветка:** `feature/c4-composite-definition`
 
@@ -210,3 +210,18 @@ Editor parse:    PASS
 ```
 
 Статус: **BLOCKER FIXED LOCALLY, EXTERNAL RECHECK REQUIRED**. Полный C2B/network/world/main-scene профиль должен быть повторён на полном checkout до присвоения C4 статуса `ACCEPTED`.
+
+
+## Внешняя приёмка C4 fix1
+
+```text
+C4 contracts:     PASS — 112 assertions
+C4 integration:   PASS — 156 assertions
+C4 total:         PASS — 268 assertions
+C1/C2A/C2B/C3:    PASS
+Network N0–M4:    PASS
+World regression: PASS — 109/109 tests, 112 steps
+git diff --check: PASS
+```
+
+Fix1 SHA-256: `d6c03e2a9b2b34c879f45a392741ccddc01cf35fb5822ff8ec1e986bd0a0cb67`. Решение: **ACCEPTED**. C4 является принятой базой C5.

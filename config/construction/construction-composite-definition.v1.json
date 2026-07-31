@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_composite_definition_manifest.v1",
   "stage": "C4",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base_stage": "C3_FIX1_ACCEPTED",
   "base_c2b_commit": "d5c9187",
   "base_c3_reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256",
@@ -41,11 +41,19 @@
   "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
   "focused_assertions": {
     "contracts": 112,
-    "integration": 152,
-    "total": 264
+    "integration": 156,
+    "total": 268
   },
   "expected_world_profile": {
     "tests": 109,
     "steps": 112
+  },
+  "external_acceptance": {
+    "focused_c4": "PASS",
+    "c1_c2a_c2b_c3_compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "109/109 tests, 112 steps",
+    "git_diff_check": "PASS",
+    "fix1_sha256": "d6c03e2a9b2b34c879f45a392741ccddc01cf35fb5822ff8ec1e986bd0a0cb67"
   }
 }

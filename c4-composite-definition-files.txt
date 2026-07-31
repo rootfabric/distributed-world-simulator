@@ -1,5 +1,5 @@
 Checkpoint: C4 — CompositeDefinition
-Status: FIX1 IMPLEMENTED CANDIDATE
+Status: ACCEPTED — fix1
 Base: C3 fix1 ACCEPTED over C2B @ d5c9187
 Recommended branch: feature/c4-composite-definition
 Changed files: 43

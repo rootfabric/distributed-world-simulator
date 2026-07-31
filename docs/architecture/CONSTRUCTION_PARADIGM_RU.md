@@ -343,3 +343,51 @@ Part slot v1 связывается по точному `definition_id` и optio
 C4 также вводит typed parameters и exposed ports. Parameter definitions задают тип и default; каждый instantiation хранит полный нормализованный набор значений. В C4 параметры являются provenance и конфигурацией типа, а процедурная перестройка геометрии остаётся задачей C10. Exposed port привязан к semantic part slot и при компиляции превращается в связь с concrete part ID. В partial snapshot порт публикуется только после установки связанной детали.
 
 Каждый partial/final ConstructSnapshot сохраняет provenance definition ID, version, checksum, instantiation ID, parameter values и доступные exposed ports. Новая версия definition не переписывает существующие объекты: каждый экземпляр навсегда pinned к версии, по которой был скомпилирован.
+
+
+## 19. C5: поведение как компилируемый интерфейс
+
+C5 вводит формальную границу между внутренним устройством конструкции и действиями, доступными внешним системам:
+
+```text
+parts + bonds + build state + compiled facets + exposed ports
+        ↓
+ConstructionBehaviorProfile
+        ↓
+capability/affordance query
+        ↓
+agent or gameplay system
+```
+
+### Capability не является строкой имени объекта
+
+Capability descriptor содержит semantic kind, concrete provider parts, source exposed ports и свойства. Поэтому `SUPPORT_SURFACE` обеспечивается конкретной столешницей, а `MOUNTING_SURFACE` — конкретным service-anchor port.
+
+### Affordance является конкретным действием
+
+Capability отвечает «что объект умеет», affordance — «что актор может сделать сейчас и куда направить действие». Affordance содержит action kind, target part/port, actor requirements, parameters и deterministic priority.
+
+### Профиль является производным cache
+
+Authoritative checksum и revision берутся из ConstructSnapshot. Behavior profile можно сохранять, реплицировать или индексировать для поиска, но он не имеет права менять Item Graph, bonds или construct state. После потери cache профиль перестраивается.
+
+### Build state закрывает преждевременные действия
+
+C3 уже запрещает partial capabilities. C5 продолжает правило на уровне внешнего API: PARTIAL и DAMAGED получают валидный профиль с пустыми capabilities/affordances. Поэтому геометрически похожий, но незавершённый или разрушенный объект не рекламирует gameplay actions.
+
+### CompositeDefinition не обязателен
+
+Если C4 ports доступны, C5 использует их как preferred semantic targets. Для старых C1 constructs остаётся part-role fallback. Это позволяет внедрять capability layer постепенно и не мигрировать весь мир в prefabs или definitions.
+
+### Агент не знает prefab
+
+Агент формирует запрос вида:
+
+```text
+action = PLACE_ITEM
+minimum load_rating_kg = 120
+finish = painted
+actor capabilities = MANIPULATE_ITEM
+```
+
+Resolver возвращает конкретный construct, capability, provider part и port. Имя сцены, prefab или пользовательское название в контракте отсутствуют. Это основной переход от объектно-специфических скриптов к семантической симуляции.

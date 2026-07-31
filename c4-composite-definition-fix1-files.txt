@@ -1,5 +1,5 @@
 Checkpoint: C4 — CompositeDefinition fix1
-Status: IMPLEMENTED CANDIDATE — EXTERNAL RECHECK REQUIRED
+Status: ACCEPTED
 Base: C3 @ 4917f55 + original C4 candidate
 Branch: feature/c4-composite-definition
 Changed files: 7
