@@ -122,15 +122,13 @@ A task is complete only when it includes:
 ## Current roadmap checkpoint
 
 ```text
-architecture checkpoint accepted: v16.9.4-architecture-a2-networked-gameplay
+architecture base accepted: v16.9.4-architecture-a2-networked-gameplay
 roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
-runtime checkpoint accepted: v16.10.3-domain-m4-canonical-shared-gameplay
-runtime extension accepted: M4 networked playground
-current preparation candidate: v16.10.3-pre-m5-graphical-acceptance-preparation
-preparation manifest: config/network/m5-graphical-acceptance-preparation.v1.json
+runtime checkpoint accepted: v16.10.5-persistence-m6-dedicated-recovery (delivery fix1)
+current architecture candidate: v16.10.6-architecture-a3-single-server-multiplayer
+architecture manifest: config/network/single-server-multiplayer-architecture.v1.json
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
-next: feature/m5-graphical-multiplayer-acceptance
-implementation manifest: config/network/canonical-shared-gameplay.v1.json
+next after acceptance: feature/b1-nats-core-adapter
 ```
 
 Accepted foundation order:
@@ -145,7 +143,7 @@ Approved next order:
 M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-M1–M6 close A2-D01…D04. B1 remains adapter-only but is deferred until A3 acceptance. N3–N6 remain blocked until A3 and B2. ENet is the graphical realtime transport; NATS must not create a second gameplay path.
+M1–M6 close A2-D01…D04. A3 freezes the complete single-server production path. B1 remains adapter-only and may begin only after A3 acceptance. N3–N6 remain blocked until A3 and B2. ENet is the graphical realtime transport; NATS must not create a second gameplay path.
 
 Spatial identity never implies authority ownership. Cell/shard/address contracts may only be changed in an explicit versioned foundation checkpoint.
 
@@ -164,13 +162,14 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
 - перед передачей управления человеку отпускать все удерживаемые actions.
 
-## Current M6 checkpoint
+## Current A3 checkpoint
 
-- Accepted runtime base: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` delivery `fix1`.
-- Candidate: `v16.10.5-persistence-m6-dedicated-recovery`.
-- Branch: `feature/m6-dedicated-recovery`.
-- Durable ACK boundary is mutation → outbox stage → atomic checkpoint → client result/broadcast.
-- Transport sessions and transient UI state must never enter canonical durable state.
-- Persistence failure is fail-stop; do not write a final checkpoint after an unacknowledged failed commit.
-- Focused runner: `RUN_M6_DEDICATED_RECOVERY_TESTS.ps1/.sh`.
-- Next after acceptance: A3 single-server multiplayer audit/freeze.
+- Accepted runtime base: `v16.10.5-persistence-m6-dedicated-recovery`, delivery `fix1`.
+- Candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
+- Branch: `feature/a3-single-server-multiplayer-architecture`.
+- One `NetworkedGameplayService` remains the only production gameplay authority.
+- LOOPBACK and ENet are adapters over the same canonical command/state path.
+- Graphical clients are command producers and replica presenters, never authority owners.
+- B1 may add only server-to-server messaging through existing ports; it must not replace ENet or fork gameplay.
+- Focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
+- Next after acceptance: B1 NATS Core adapter.

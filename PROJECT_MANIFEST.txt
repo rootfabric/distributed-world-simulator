@@ -1,3 +1,18 @@
+Planetary World v16.10.6-architecture-a3-single-server-multiplayer
+
+A3 single-server multiplayer architecture freeze over accepted M6:
+- one production NetworkedGameplayService composition root
+- LOOPBACK and ENet topology adapters over one canonical gameplay path
+- eleven frozen versioned wire contracts
+- replica-only graphical clients without authoritative references
+- M1-M6 evidence matrix and source-boundary auditor
+- canonical state equivalence across topology adapters
+- durable recovery and exact replay without a second mutation
+- B1 restricted to server-to-server adapter integration
+- multi-authority gameplay blocked until B2 and N3-N6
+- config/network/single-server-multiplayer-architecture.v1.json
+- RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1 / .sh
+
 Planetary World v16.10.5-persistence-m6-dedicated-recovery
 
 M6 dedicated persistence and recovery over accepted M5:

@@ -208,7 +208,7 @@ func _test_manifest() -> void:
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.dedicated_graphical_client.v1", "M2 manifest schema")
 	_assert(String(manifest.get("checkpoint", "")) == Support.CHECKPOINT, "M2 manifest checkpoint")
 	_assert(String(manifest.get("build_id", "")) == Support.BUILD_ID, "M2 manifest build")
-	_assert(String(manifest.get("status", "")) == "accepted_with_gates", "M2 manifest accepted-with-gates status")
+	_assert(String(manifest.get("status", "")) == "accepted", "M2 manifest final accepted status")
 	_assert(String(manifest.get("base_checkpoint", "")) == "v16.10.0-runtime-m1-unified-networked-gameplay-core", "M2 manifest M1 base")
 	_assert(int(manifest.get("verified_evidence", {}).get("graphical_process_assertions", 0)) == 70, "M2 corrected process assertion count")
 	_assert(int(manifest.get("verified_evidence", {}).get("focused_assertions", 0)) == 1052, "M2 corrected focused assertion count")

@@ -1,23 +1,23 @@
-# Ближайшие итерации после M5
+# Ближайшие итерации после M6
 
-Принятый M5: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`).
-Текущий candidate: `v16.10.5-persistence-m6-dedicated-recovery`.
+Принятый M6: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
+Текущий candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
 
 ```text
-M6 — Dedicated persistence and recovery — current candidate
-A3 — Single-server multiplayer audit/freeze — next after acceptance
-B1/B2 — after A3
-N3–N6 — after B2
+A3 — Single-server multiplayer audit/freeze — current candidate
+B1 — NATS Core server-to-server adapter — next after A3 acceptance
+B2 — JetStream/outbox delivery — after B1
+N3–N6 — after A3 and B2
 ```
 
 ## Текущая ветка
 
 ```text
-feature/m6-dedicated-recovery
-checkpoint: v16.10.5-persistence-m6-dedicated-recovery
-runtime base: v16.10.4-testing-m5-graphical-multiplayer-acceptance
+feature/a3-single-server-multiplayer-architecture
+checkpoint: v16.10.6-architecture-a3-single-server-multiplayer
+runtime base: v16.10.5-persistence-m6-dedicated-recovery
 ```
 
-M6 интегрирует R3.1 recovery в реальный dedicated runtime: atomic checkpoint до ACK, player/Item Graph/replay/outbox restore, reconnect с новым ownership epoch и exact replay без повторной мутации.
+A3 проверяет, что M1–M6 образуют один production gameplay path без topology-specific forks: единый service, общие contracts, LOOPBACK/ENet equivalence, graphical replica boundary, contention, reconnect, durable recovery и exact replay.
 
 Полный scope и acceptance: `SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`.

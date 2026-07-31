@@ -69,6 +69,7 @@ $Tests = @(
     "res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
     "res://tests/runtime/test_m6_dedicated_recovery_contracts.gd",
     "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",
+    "res://tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -94,9 +95,9 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.network_contract_summary.v1"
-    checkpoint = "v16.10.5-persistence-m6-dedicated-recovery"
-    runtime_base_checkpoint = "v16.10.4-testing-m5-graphical-multiplayer-acceptance"
-    build_id = "m6-dedicated-persistence-recovery"
+    checkpoint = "v16.10.6-architecture-a3-single-server-multiplayer"
+    runtime_base_checkpoint = "v16.10.5-persistence-m6-dedicated-recovery"
+    build_id = "a3-single-server-multiplayer-architecture-freeze"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -166,7 +167,7 @@ function Invoke-CheckedProcess {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Project: $ProjectRoot"
-    Write-Host "Checkpoint: v16.10.5-persistence-m6-dedicated-recovery (dedicated recovery M6, runtime base M5)"
+    Write-Host "Checkpoint: v16.10.6-architecture-a3-single-server-multiplayer (A3 single-server architecture freeze, runtime base M6 v16.10.5-persistence-m6-dedicated-recovery)"
 
     Invoke-CheckedProcess `
         -Name "editor_import_parse" `
@@ -185,7 +186,7 @@ try {
     $Summary.passed = $true
     Save-Summary
     Write-Host ""
-    Write-Host "Foundation N0 through M6 dedicated persistence and recovery network/runtime tests passed." -ForegroundColor Green
+    Write-Host "Foundation N0 through A3 single-server multiplayer architecture network/runtime tests passed." -ForegroundColor Green
     Write-Host "Report: $ReportPath"
 }
 catch {

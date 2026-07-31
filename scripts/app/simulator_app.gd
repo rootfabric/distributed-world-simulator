@@ -26,8 +26,8 @@ const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/network
 const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd")
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
-const FOUNDATION_CHECKPOINT: String = "v16.10.5-persistence-m6-dedicated-recovery"
-const FOUNDATION_BUILD_ID: String = "m6-dedicated-persistence-recovery"
+const FOUNDATION_CHECKPOINT: String = "v16.10.6-architecture-a3-single-server-multiplayer"
+const FOUNDATION_BUILD_ID: String = "a3-single-server-multiplayer-architecture-freeze"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [

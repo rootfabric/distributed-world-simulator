@@ -1,16 +1,14 @@
 {
   "schema": "planet_simulator.dedicated_persistence_recovery.v1",
-  "document_revision": 2,
+  "document_revision": 3,
   "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
   "build_id": "m6-dedicated-persistence-recovery",
   "base_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
   "runtime_base_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
-  "status": "candidate",
+  "status": "accepted",
   "decision": "DEDICATED_AUTHORITATIVE_CHECKPOINT_AND_REPLAY_RECOVERY",
   "branch": "feature/m6-dedicated-recovery",
-  "closes_on_acceptance": [
-    "A2-D04"
-  ],
+  "closes_on_acceptance": [],
   "durability_boundary": {
     "authority": "one headless dedicated NetworkedGameplayService",
     "repository": "R3.1 authoritative recovery repository with active/previous atomic checkpoints",
@@ -76,18 +74,26 @@
   },
   "verification_status": {
     "static_validation": "passed",
-    "godot_double_precision_runtime": "passed_linux_a13da4f",
+    "godot_double_precision_runtime": "passed_linux_and_windows",
     "engine": "Godot 4.7.1 stable.double custom build a13da4feb",
     "focused_m6": "10/10 PASS",
     "m6_contracts": "118 assertions, 0 failures",
     "m6_processes": "124 assertions, 0 failures",
-    "network_runtime": "59/59 PASS",
-    "world_regression": "104/104 PASS",
+    "network_runtime": "PASS",
+    "world_regression": "PASS",
     "editor_import": "PASS",
-    "main_scene": "PASS",
-    "independent_local_acceptance": "required_before_ACCEPTED"
+    "main_scene": "6/6 PASS",
+    "independent_local_acceptance": "passed",
+    "independent_acceptance_sha256": "7AF3317A3E2B9F24D452DECEC6A18D1AE0747A903F6C03A69DFFE0CC82B966BF",
+    "remaining_godot_processes": 0
   },
   "next_stage": "A3",
   "next_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
-  "updated_at_utc": "2026-07-31T02:14:46Z"
+  "updated_at_utc": "2026-07-31T03:39:00Z",
+  "delivery": "fix1",
+  "accepted_at_utc": "2026-07-31T03:39:00Z",
+  "acceptance_sha256": "7AF3317A3E2B9F24D452DECEC6A18D1AE0747A903F6C03A69DFFE0CC82B966BF",
+  "closed_debt": [
+    "A2-D04"
+  ]
 }

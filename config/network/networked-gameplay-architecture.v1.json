@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.networked_gameplay_architecture.v1",
-  "document_revision": 7,
+  "document_revision": 8,
   "checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "build_id": "a2-networked-gameplay-audit-freeze",
   "status": "accepted",
@@ -134,7 +134,7 @@
     "duplicate_player_forbidden": true,
     "stale_transport_session_rejected": true,
     "exact_operation_replay_is_idempotent": true,
-    "durable_restart_proof": "M6 candidate integrates R3.1 recovery with the dedicated M3-M5 gameplay runtime; local double-precision acceptance remains required"
+    "durable_restart_proof": "M6 accepted fix1 proves crash/restart recovery, stable player entities, ownership epoch advancement and exact durable replay"
   },
   "peer_to_player_mapping": {
     "cardinality": "one connected transport session to at most one logical player; one logical player to at most one active transport session",
@@ -175,16 +175,18 @@
     "one_production_service_implementation_across_h1_h2_h3": true,
     "two_graphical_client_windows_proven": true,
     "full_item_graph_contention_over_dedicated_transport_proven": true,
-    "dedicated_server_restart_recovery_proven": false,
+    "dedicated_server_restart_recovery_proven": true,
     "b1_allowed": true,
     "multi_authority_work_allowed": false,
-    "b1_priority": "deferred_after_A3",
+    "b1_priority": "deferred_until_A3_acceptance",
     "single_server_multiplayer_first": true,
     "shared_wire_validators_independent_from_authority_implementations": true,
     "ui_driven_graphical_acceptance_proven": true,
     "single_server_graphical_multiplayer_acceptance_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
-    "dedicated_server_restart_recovery_candidate": true,
-    "dedicated_server_restart_recovery_candidate_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery"
+    "dedicated_server_restart_recovery_candidate": false,
+    "dedicated_server_restart_recovery_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+    "single_server_multiplayer_architecture_candidate": true,
+    "single_server_multiplayer_architecture_candidate_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer"
   },
   "known_debt": [
     {
@@ -229,13 +231,15 @@
       "id": "A2-D04",
       "severity": "P1",
       "title": "Integrate dedicated ownership/gameplay state with R3.1 durable server restart recovery",
-      "evidence": "H2/H3 prove reconnect in one server lifetime, not crash/restart recovery",
+      "evidence": "M6 fix1 independently accepted with focused, network, world and main-scene profiles",
       "closure_before": "A3",
       "delivery_milestone": "M6",
-      "status": "candidate",
-      "candidate_by": "M6",
-      "candidate_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
-      "closure_evidence": "config/network/dedicated-persistence-recovery.v1.json"
+      "status": "closed",
+      "closed_by": "M6",
+      "closed_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+      "closed_at_utc": "2026-07-31T03:39:00Z",
+      "closure_evidence": "config/network/dedicated-persistence-recovery.v1.json",
+      "acceptance_sha256": "7AF3317A3E2B9F24D452DECEC6A18D1AE0747A903F6C03A69DFFE0CC82B966BF"
     },
     {
       "id": "A2-D05",
@@ -311,12 +315,13 @@
   "accepted_at_utc": "2026-07-30T03:01:00Z",
   "post_a2_strategy_checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "post_a2_strategy_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
-  "updated_at_utc": "2026-07-31T00:04:00Z",
+  "updated_at_utc": "2026-07-31T03:39:00Z",
   "m1_core_checkpoint": "v16.10.0-runtime-m1-unified-networked-gameplay-core",
   "m1_core_manifest": "config/network/networked-gameplay-core.v1.json",
   "m2_graphical_client_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "m2_graphical_client_manifest": "config/network/dedicated-graphical-client.v1.json",
-  "m2_evidence_status": "candidate",
-  "m6_recovery_candidate_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
-  "m6_recovery_candidate_manifest": "config/network/dedicated-persistence-recovery.v1.json"
+  "m2_evidence_status": "accepted",
+  "a3_candidate_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
+  "m6_recovery_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
+  "m6_recovery_manifest": "config/network/dedicated-persistence-recovery.v1.json"
 }

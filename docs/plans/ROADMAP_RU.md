@@ -1,17 +1,16 @@
-> **Accepted runtime checkpoint:** `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`). **Current candidate:** `v16.10.5-persistence-m6-dedicated-recovery`. Следующий этап после приёмки M6 — A3. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
+> **Accepted runtime checkpoint:** `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`). **Current architecture candidate:** `v16.10.6-architecture-a3-single-server-multiplayer`. Следующий этап после приёмки A3 — B1 NATS Core adapter. Официальный маршрут: [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
 
 # PlanetSimulator — текущая дорожная карта
 
 ```text
 A2 accepted
 roadmap v16.9.5 accepted
-M1 → M2 → M3 → M4 → M5 accepted
-M6 current candidate — dedicated persistence and recovery
-A3 planned
-B1/B2 deferred; N3–N6 blocked
+M1 → M2 → M3 → M4 → M5 → M6 accepted
+A3 current candidate — single-server architecture freeze
+B1/B2 deferred until A3 acceptance; N3–N6 blocked until A3 and B2
 ```
 
-M1 закрыл `A2-D01` и `A2-D02`; M3–M5 закрыли graphical multiplayer и canonical Item Graph acceptance. M6 является текущим candidate на закрытие `A2-D04`: единый `NetworkedGameplayService` получает atomic dedicated checkpoint, crash/restart recovery и durable replay/outbox boundary. H1/H2/H3 не являются независимыми gameplay implementations.
+M1–M6 закрыли `A2-D01…D04`: один `NetworkedGameplayService` обслуживает graphical multiplayer, canonical Item Graph, reconnect/replay и durable crash recovery. A3 фиксирует эту реализацию как единственный production single-server path и не добавляет новый authority runtime. H1/H2/H3 остаются adapters/acceptance harnesses, а не независимыми gameplay implementations.
 
 # Дорожная карта к лунному симулятору мечты
 

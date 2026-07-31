@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.network_roadmap.v1",
-  "document_revision": 26,
+  "document_revision": 27,
   "created_at_utc": "2026-07-27T00:00:00Z",
-  "updated_at_utc": "2026-07-31T00:04:00Z",
-  "project_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
-  "runtime_base_checkpoint": "v16.10.4-testing-m5-graphical-multiplayer-acceptance",
+  "updated_at_utc": "2026-07-31T03:39:00Z",
+  "project_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "runtime_base_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
   "strategy": "composable_authoritative_runtime_and_server_mesh",
   "principles": [
     "stable_entity_and_aggregate_identity",
@@ -432,7 +432,7 @@
     {
       "id": "M2",
       "name": "Dedicated server plus one graphical client",
-      "status": "accepted_with_gates",
+      "status": "accepted",
       "checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
       "branch": "feature/m2-dedicated-graphical-client",
       "depends_on": [
@@ -453,7 +453,9 @@
         "manifest": "config/network/dedicated-graphical-client.v1.json",
         "focused_assertions": 1052,
         "process_assertions": 70
-      }
+      },
+      "gates_closed_by": "M3+M5",
+      "finalized_by_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer"
     },
     {
       "id": "M3",
@@ -476,7 +478,8 @@
         "contracts": "tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
         "process": "tests/runtime/test_m3_graphical_multiplayer_processes.gd",
         "runner": "RUN_M3_GRAPHICAL_MULTIPLAYER_TESTS.ps1"
-      }
+      },
+      "accepted_at_utc": "2026-07-30T09:30:00Z"
     },
     {
       "id": "M4",
@@ -535,7 +538,7 @@
     {
       "id": "M6",
       "name": "Dedicated persistence and recovery",
-      "status": "candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
       "branch": "feature/m6-dedicated-recovery",
       "depends_on": [
@@ -559,12 +562,15 @@
         "process": "tests/runtime/test_m6_dedicated_recovery_processes.gd",
         "focused_runner_windows": "RUN_M6_DEDICATED_RECOVERY_TESTS.ps1",
         "focused_runner_linux": "RUN_M6_DEDICATED_RECOVERY_TESTS.sh"
-      }
+      },
+      "delivery": "fix1",
+      "accepted_at_utc": "2026-07-31T03:39:00Z",
+      "acceptance_sha256": "7AF3317A3E2B9F24D452DECEC6A18D1AE0747A903F6C03A69DFFE0CC82B966BF"
     },
     {
       "id": "A3",
       "name": "Single-server multiplayer architecture audit/freeze",
-      "status": "planned",
+      "status": "candidate",
       "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
       "branch": "feature/a3-single-server-multiplayer-architecture",
       "depends_on": [
@@ -577,12 +583,19 @@
         "reconnect replay and dedicated recovery are proven",
         "no topology-specific gameplay forks",
         "B1 scope is server-to-server only"
-      ]
+      ],
+      "implementation_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
+      "evidence": {
+        "auditor": "scripts/runtime/networked_gameplay/a3/single_server_architecture_auditor.gd",
+        "contracts": "tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
+        "focused_runner_windows": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1",
+        "focused_runner_linux": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.sh"
+      }
     },
     {
       "id": "B1",
       "name": "NATS Core adapter",
-      "status": "deferred_after_A3",
+      "status": "deferred_until_A3_acceptance",
       "checkpoint": "v16.11.0-data-plane-b1-nats-core",
       "branch": "feature/b1-nats-core-adapter",
       "depends_on": [
@@ -763,7 +776,7 @@
     "A2"
   ],
   "architecture_freeze_manifest": "config/network/networked-gameplay-architecture.v1.json",
-  "current_gate": "M6 local double-precision dedicated recovery acceptance",
+  "current_gate": "A3 independent single-server architecture acceptance",
   "architecture_base_checkpoint": "v16.9.4-architecture-a2-networked-gameplay",
   "strategy_decision": "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST",
   "single_server_multiplayer_manifest": "config/network/single-server-multiplayer-roadmap.v1.json",
@@ -782,7 +795,7 @@
     "N5",
     "N6"
   ],
-  "current_implementation_manifest": "config/network/dedicated-persistence-recovery.v1.json",
-  "current_implementation_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
-  "current_implementation_stage": "M6"
+  "current_implementation_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
+  "current_implementation_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "current_implementation_stage": "A3"
 }

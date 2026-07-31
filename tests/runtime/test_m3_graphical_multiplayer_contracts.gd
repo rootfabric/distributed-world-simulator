@@ -154,7 +154,7 @@ func _test_manifest_and_source_boundaries() -> void:
 	var manifest := _load_json("res://config/network/dedicated-graphical-multiplayer.v1.json")
 	_assert(String(manifest.get("schema", "")) == "planet_simulator.dedicated_graphical_multiplayer.v1", "M3 manifest schema")
 	_assert(String(manifest.get("checkpoint", "")) == Support.CHECKPOINT, "M3 manifest checkpoint")
-	_assert(String(manifest.get("status", "")) == "candidate", "M3 manifest candidate status")
+	_assert(String(manifest.get("status", "")) == "accepted", "M3 manifest accepted status")
 	_assert(String(manifest.get("base_checkpoint", "")) == "v16.10.1-runtime-m2-dedicated-graphical-client", "M3 manifest M2 base")
 	_assert(int(manifest.get("topology", {}).get("region_count", 0)) == 1, "M3 remains single authoritative region")
 	_assert(String(manifest.get("topology", {}).get("transport", "")) == "ENet", "M3 graphical traffic uses ENet")

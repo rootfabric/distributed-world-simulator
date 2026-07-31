@@ -1,9 +1,9 @@
 {
   "schema": "planet_simulator.dedicated_graphical_multiplayer.v1",
-  "document_revision": 2,
+  "document_revision": 3,
   "checkpoint": "v16.10.2-runtime-m3-dedicated-graphical-multiplayer",
   "build_id": "m3-dedicated-two-graphical-clients",
-  "status": "candidate",
+  "status": "accepted",
   "generated_at_utc": "2026-07-30T08:55:00Z",
   "base_checkpoint": "v16.10.1-runtime-m2-dedicated-graphical-client",
   "base_decision": "ACCEPTED_WITH_GATES",
@@ -131,5 +131,7 @@
       "objectdb_leak_markers": 0,
       "resource_in_use_markers": 0
     }
-  }
+  },
+  "accepted_at_utc": "2026-07-30T09:30:00Z",
+  "finalized_by_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer"
 }

@@ -162,9 +162,10 @@ func _init() -> void:
 
 	var roadmap := _read_json("res://config/network/network-roadmap.v1.json")
 	var phases := _by_id(Array(roadmap.get("phases", [])))
-	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.5-persistence-m6-dedicated-recovery", "roadmap current checkpoint is M6 over accepted M5")
+	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.6-architecture-a3-single-server-multiplayer", "roadmap current checkpoint is A3 over accepted M6")
 	_assert(String(phases.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status accepted")
-	_assert(String(phases.get("M5", {}).get("status", "")) == "accepted", "M5 accepted before M6 candidate")
+	_assert(String(phases.get("M5", {}).get("status", "")) == "accepted", "M5 remains accepted")
+	_assert(String(phases.get("M6", {}).get("status", "")) == "accepted", "M6 accepted before A3 candidate")
 	var m4_manifest := _read_json("res://config/network/canonical-shared-gameplay.v1.json")
 	_assert(String(m4_manifest.get("status", "")) == "accepted", "M4 implementation manifest accepted")
 	var prep_manifest := _read_json("res://config/network/m5-graphical-acceptance-preparation.v1.json")

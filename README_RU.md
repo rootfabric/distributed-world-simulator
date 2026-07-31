@@ -4,30 +4,33 @@
 
 Принятый стратегический checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
 
-Принятый runtime checkpoint: `v16.10.4-testing-m5-graphical-multiplayer-acceptance` (`ACCEPTED`, delivery `fix1`).
+Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
 
-Текущий persistence candidate:
+Текущий architecture candidate:
 
 ```text
-v16.10.5-persistence-m6-dedicated-recovery
-build_id: m6-dedicated-persistence-recovery
-runtime base: v16.10.4-testing-m5-graphical-multiplayer-acceptance
-branch: feature/m6-dedicated-recovery
-status: candidate_linux_double_verified_pending_independent_acceptance
-next after acceptance: A3 single-server multiplayer audit/freeze
+v16.10.6-architecture-a3-single-server-multiplayer
+build_id: a3-single-server-multiplayer-architecture-freeze
+runtime base: v16.10.5-persistence-m6-dedicated-recovery
+branch: feature/a3-single-server-multiplayer-architecture
+status: candidate
+next after acceptance: B1 NATS Core adapter
 ```
 
-M6 подключает crash-safe R3.1 checkpoint к единому M3–M5 dedicated runtime. До ACK сохраняются player state, ownership epochs, canonical Item Graph, replay ledgers и committed outbox; transport sessions и transient UI state после restart очищаются. Exact replay не создаёт второй mutation или checkpoint.
+A3 фиксирует единственный production gameplay path: один `NetworkedGameplayService`, общие versioned wire contracts, LOOPBACK/ENet adapters, replica-only graphical clients, canonical M4 Item Graph и M6 durable recovery/replay. B1 после A3 может добавлять только server-to-server transport и не вправе создавать второй gameplay authority.
 
 ```text
 FULL SINGLE-SERVER MULTIPLAYER FIRST
 A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 → N5 → N6
 ```
 
-До принятия A3 production N3–N6 заблокирован. ENet остаётся realtime transport graphical clients; NATS после A3 используется только для server/service communication через B0 ports.
+До принятия A3 B1/B2 production integration отложена; N3–N6 заблокированы до A3 и B2. ENet остаётся realtime transport graphical clients.
 
 Основные документы:
 
+- `docs/architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md`;
+- `config/network/single-server-multiplayer-architecture.v1.json`;
+- `docs/checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;
 - `docs/architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
 - `docs/checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
 - `config/network/dedicated-persistence-recovery.v1.json`;
