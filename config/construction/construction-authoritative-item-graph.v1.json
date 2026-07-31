@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_authoritative_item_graph_manifest.v1",
   "stage": "C2B",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base_stage": "C2A",
   "base_commit": "68cf8b2",
   "recommended_branch": "feature/c2b-authoritative-item-graph-integration",
@@ -20,5 +20,6 @@
     "res://tests/construction/test_c2b_authoritative_item_graph_integration.gd"
   ],
   "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
-  "next_stage": "C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION"
+  "next_stage": "C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION_IMPLEMENTED_CANDIDATE",
+  "accepted_delivery_sha256": "960D14B3D120EFF2BCBAD04BD15FA161E759C07348548E67E147C65B52B7787E"
 }

@@ -270,3 +270,49 @@ M0 commit является точкой истины. Локальные `ItemRe
 Внутренняя `ConstructSnapshot.state_revision` описывает историю семантической конструкции. `aggregate_snapshot_envelope.authority.state_revision` описывает историю сетевого aggregate. Эти счётчики не взаимозаменяемы и сохраняются отдельно.
 
 C2B также устанавливает правило persistence: файловый construction bundle может ускорять запуск и обеспечивать резервное хранение, но не имеет права откатывать или заменять отличающееся M0-authoritative состояние.
+
+## 17. C3: BuildPlan как исполняемое намерение
+
+C3 вводит новый слой между пользовательским намерением и C2B authority:
+
+```text
+BuildPlan
+→ Ghost projection
+→ ordered BuildStage
+→ deterministic C2A transaction plan
+→ C2B authoritative commit
+→ partial/final ConstructSnapshot
+```
+
+`BuildPlan` не является prefab и не является новым Item Graph. Это immutable execution-plan конкретной стройки, уже связанный с реальными item IDs, исходными revisions и material allocations. Переиспользуемая definition появляется только в C4.
+
+### Ghost не является предметом
+
+До начала работ ghost существует только как намерение и presentation projection:
+
+- нет `ItemInstance`;
+- нет construct root;
+- нет массы;
+- нет collision;
+- нет capabilities;
+- нет права менять мир.
+
+После первой стадии появляется реальный partial construct. Ghost продолжает показывать будущие части и прогресс, но не дублирует physical/capability state.
+
+### Partial capabilities закрыты
+
+Facet compiler может вычислить геометрическую устойчивость промежуточной конструкции, но C3 запрещает публиковать её как operational behavior до финальной commissioning-stage. Поэтому partial snapshots сохраняют diagnostic facets, но `capabilities = []` и `operational = false`.
+
+### Progress является производной проекцией
+
+Источник истины после stage commit:
+
+1. C2B authoritative ConstructSnapshot;
+2. общий Item Operation Ledger;
+3. M0 repository.
+
+`GhostState` может отстать при аварии, но не может переписать authoritative состояние. Reconciliation сопоставляет текущий construct с детерминированными stage snapshots и восстанавливает progress без повторного расхода.
+
+### Builder agent не получает отдельный путь
+
+Минимальный builder-agent C3 только выбирает следующую стадию и вызывает `ConstructionBuildProcess`. Игрок, робот, фабрика и серверный сценарий должны исполнять один BuildPlan через одну authority boundary.

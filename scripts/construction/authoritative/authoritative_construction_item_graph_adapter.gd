@@ -271,6 +271,15 @@ func get_last_m0_batch() -> Dictionary:
 	return _last_m0_batch.duplicate(true)
 
 
+func get_operation_result(operation_id: String) -> Dictionary:
+	if not _configured:
+		return {}
+	var record: Dictionary = _operations.get_record(operation_id)
+	if record.is_empty():
+		return {}
+	return Dictionary(record.get("result", {})).duplicate(true)
+
+
 func get_authority_report() -> Dictionary:
 	return {
 		"authority_owner_id": _authority_owner_id,

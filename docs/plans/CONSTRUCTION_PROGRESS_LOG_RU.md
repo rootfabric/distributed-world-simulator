@@ -144,3 +144,107 @@ C2A compatibility: PASS — 137 assertions
 ```
 
 Внешняя приёмка должна дополнительно подтвердить network regression и world regression с 105 тестами.
+
+## 2026-07-31 — C2B: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c2b-authoritative-item-graph-integration`.
+**База:** `feature/c2a-item-graph-contracts @ 68cf8b2`.
+**Commit:** ещё не создан на момент начала C3.
+
+Подтверждено пользователем:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C2B:             PASS — 258 assertions
+Network/runtime: PASS
+World regression: PASS
+Main-scene CLI:  PASS — 6/6
+Static checks:   PASS
+```
+
+Проверенная поставка C2B:
+
+```text
+31 files
+SHA-256: 960D14B3D120EFF2BCBAD04BD15FA161E759C07348548E67E147C65B52B7787E
+```
+
+C2B принят как единственная authorititative граница реального расхода материалов, attach/detach и изменения ConstructAggregate.
+
+## 2026-07-31 — C3: BuildPlan and Ghost Construction
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c3-build-plan-and-ghost`.
+**База:** принятый C2B в `feature/c2b-authoritative-item-graph-integration`.
+
+Архитектурные решения:
+
+- BuildPlan является immutable execution-plan конкретной стройки;
+- reusable blueprint/definition separation отложена до C4;
+- BuildPlan хранит exact source item projections и exact material allocations;
+- каждая стадия детерминированно восстанавливает одинаковый C2A transaction checksum;
+- ghost не входит в Item Graph и не имеет массы/capabilities;
+- после первой стадии физическим является partial construct, а ghost остаётся projection прогресса;
+- progress ghost является recoverable projection и не сильнее C2B construct/ledger;
+- partial stage snapshots принудительно не публикуют operational capabilities;
+- stage execution всегда проходит через C2B-compatible `apply_plan()`;
+- crash после authoritative stage commit восстанавливается через construct checksum и shared operation result;
+- divergence между BuildPlan и authoritative construct отклоняется явно.
+
+Реализовано:
+
+- `ConstructionBuildStage`;
+- `ConstructionBuildPlan`;
+- `ConstructionGhostState`;
+- `ConstructionBuildPlanStore`;
+- `ConstructionStageSnapshotBuilder`;
+- `ConstructionStageTransactionPlanner`;
+- `ConstructionBuildProcess`;
+- `ConstructionBuildPlanPersistence`;
+- минимальный `ConstructionBuilderAgent`;
+- новая C2A command `ADVANCE_CONSTRUCTION_STAGE`;
+- operation-result lookup в C2A sandbox adapter и C2B production adapter;
+- трёхстадийный стол: FOUNDATION → FRAME → COMMISSIONING;
+- exact replay, capability gate, crash reconciliation, persistence и divergence guard.
+
+Локальный focused-профиль реализации:
+
+```text
+C3 contracts:    PASS — 80 assertions
+C3 integration:  PASS — 106 assertions
+Focused C3:      PASS — 2/2, 186 assertions
+C1 compatibility: PASS — 66 assertions
+C2A compatibility: PASS — 137 assertions
+```
+
+Полный C2B/network/world regression должен быть повторно запущен на основном checkout перед присвоением C3 статуса `ACCEPTED`.
+
+## 2026-07-31 — C3 review fix1: canonical preconditions
+
+**Статус:** BLOCKER FIXED LOCALLY, EXTERNAL RECHECK REQUIRED.
+**Ветка:** `feature/c3-build-plan-and-ghost`.
+**Base полного checkout:** `C2B @ d5c9187`.
+
+Внешняя проверка первоначального C3 остановила focused integration на FRAME: сохранённый FOUNDATION snapshot и новый raw before-snapshot были семантически равны, но отличались числовыми Variant-типами после canonicalization. Прямое сравнение словарей выдавало `CONSTRUCT_PRECONDITION_MISMATCH`.
+
+Fix1:
+
+- raw Dictionary equality заменено на `UtilsScript.canonical_json(...)` для construct preconditions;
+- такое же исправление применено к item preconditions;
+- добавлен regression, принудительно меняющий `state_revision` и item `revision` между `int` и `float`;
+- C3 integration увеличен с 106 до 114 assertions.
+
+Локальная повторная проверка:
+
+```text
+C1:            PASS — 66 assertions
+C2A:           PASS — 137 assertions
+C3 contracts:  PASS — 80 assertions
+C3 integration: PASS — 114 assertions
+C3 total:      PASS — 194 assertions
+Editor parse:  PASS
+```
+
+C2B, network/runtime, world regression и main-scene CLI остаются обязательными для внешней приёмки fix1.

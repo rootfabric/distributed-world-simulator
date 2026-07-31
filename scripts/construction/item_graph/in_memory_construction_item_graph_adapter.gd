@@ -126,6 +126,12 @@ func get_generation() -> int:
 func has_terminal_operation(operation_id: String) -> bool:
 	return _terminal_operations.has(operation_id)
 
+
+func get_operation_result(operation_id: String) -> Dictionary:
+	if not _terminal_operations.has(operation_id):
+		return {}
+	return Dictionary(_terminal_operations[operation_id].get("result", {})).duplicate(true)
+
 func export_state() -> Dictionary:
 	var operations: Array = []
 	var operation_ids: Array = _terminal_operations.keys()
@@ -185,7 +191,10 @@ func _validate_preconditions(plan: Dictionary) -> Dictionary:
 	if before_construct.is_empty():
 		if _constructs.has(construct_id):
 			return _failure("CONSTRUCT_PRECONDITION_EXPECTED_ABSENT")
-	elif not _constructs.has(construct_id) or _constructs[construct_id] != before_construct:
+	elif (
+		not _constructs.has(construct_id)
+		or not _canonical_equal(Dictionary(_constructs[construct_id]), before_construct)
+	):
 		return _failure("CONSTRUCT_PRECONDITION_MISMATCH")
 	for mutation in plan["item_mutations"]:
 		var item_id: String = String(mutation["item_instance_id"])
@@ -193,7 +202,10 @@ func _validate_preconditions(plan: Dictionary) -> Dictionary:
 		if before.is_empty():
 			if _items.has(item_id):
 				return _failure("ITEM_PRECONDITION_EXPECTED_ABSENT", {"item_instance_id": item_id})
-		elif not _items.has(item_id) or _items[item_id] != before:
+		elif (
+			not _items.has(item_id)
+			or not _canonical_equal(Dictionary(_items[item_id]), before)
+		):
 			return _failure("ITEM_PRECONDITION_MISMATCH", {"item_instance_id": item_id})
 	return _success()
 
@@ -402,6 +414,14 @@ func _validate_terminal_result(record: Dictionary) -> Dictionary:
 	if not bool(UtilsScript.canonicalize(result).get("success", false)):
 		return _failure("PERSISTED_CONSTRUCTION_RESULT_NOT_JSON_SAFE")
 	return _success()
+
+func _canonical_equal(left: Dictionary, right: Dictionary) -> bool:
+	var left_json: String = UtilsScript.canonical_json(left)
+	if left_json.is_empty():
+		return false
+	var right_json: String = UtilsScript.canonical_json(right)
+	return not right_json.is_empty() and left_json == right_json
+
 
 func _canonical_dictionary(value: Dictionary) -> Dictionary:
 	var result: Dictionary = UtilsScript.canonicalize(value)

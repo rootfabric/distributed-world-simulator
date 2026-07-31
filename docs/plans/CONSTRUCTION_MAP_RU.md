@@ -1,11 +1,12 @@
 # Наглядная карта строительной линии PlanetSimulator
 
-**Статус документа:** каноническая карта и журнал положения строительного трека
+**Статус документа:** каноническая карта строительного трека
 **База проекта:** `main @ 2879fdb7134032f645ffc5c98c0535aecfc09caf`
-**Принятый C1:** `c2b9404`
-**Принятый C2A:** `68cf8b2`
-**Рабочая ветка C2B:** `feature/c2b-authoritative-item-graph-integration`
-**Текущая позиция:** `C2B — Authoritative Item Graph Integration, IMPLEMENTED CANDIDATE`
+**C1:** `c2b9404`, ACCEPTED
+**C2A:** `68cf8b2`, ACCEPTED
+**C2B:** ACCEPTED после полного локального regression; commit ещё не зафиксирован
+**Рабочая ветка C3:** `feature/c3-build-plan-and-ghost` поверх `feature/c2b-authoritative-item-graph-integration`
+**Текущая позиция:** `C3 — BuildPlan and Ghost Construction, IMPLEMENTED CANDIDATE`
 
 ## Парадигма всей линии
 
@@ -13,7 +14,7 @@ PlanetSimulator создаёт не очередной редактор блок
 
 > семантический масштаб + составные предметы + компиляция facets + capability-based поведение.
 
-Стройка должна оставаться простой на уровне намерения игрока и глубокой внутри симуляции. Один объект может быть готовым предметом, раскрываемым composite, системой деталей, инженерных сетей и пространств. Полная сложность хранится, но активируется локально и по необходимости.
+Это попытка сделать стройку нового уровня и превратить её в парадигму всей линии симуляции. Игрок действует намерениями и стадиями, а система сохраняет реальный состав, identity деталей, материалы, связи, сетевую authority и возможность раскрыть объект до инженерного уровня.
 
 ## Карта движения
 
@@ -21,13 +22,13 @@ PlanetSimulator создаёт не очередной редактор блок
 flowchart TD
     C0["C0 Архитектурная парадигма\nACCEPTED"] --> C1["C1 Semantic Construction Kernel\nACCEPTED"]
     C1 --> C2A["C2A Item Graph Contracts\nACCEPTED — 68cf8b2"]
-    C2A --> C2B["C2B Authoritative Item Graph Integration\nCURRENT CANDIDATE"]
-    C2B --> G2{"C2B full regression\nand external acceptance"}
-    G2 -- fail --> F2["review fixes in same C2B branch"]
-    F2 --> G2
-    G2 -- pass --> C3["C3 BuildPlan and ghost construction"]
-    C3 --> C4["C4 CompositeDefinition"]
-    C4 --> C5["C5 Capabilities and affordances"]
+    C2A --> C2B["C2B Authoritative Item Graph Integration\nACCEPTED"]
+    C2B --> C3["C3 BuildPlan and Ghost Construction\nCURRENT CANDIDATE"]
+    C3 --> G3{"C3 focused + network + world regression"}
+    G3 -- fail --> F3["review fixes in same C3 branch"]
+    F3 --> G3
+    G3 -- pass --> C4["C4 CompositeDefinition"]
+    C4 --> C5["C5 Capabilities and Affordances"]
     C5 --> C6["C6 Mobile Construct — robot"]
     C6 --> C7["C7 Spatial Construct — house"]
     C7 --> C8["C8 Fabrication Cell — assembler"]
@@ -39,15 +40,17 @@ flowchart TD
 ```
 
 ```text
-C0 accepted
+C0 accepted: paradigm
   ↓
 C1 accepted: semantic construct kernel
   ↓
-C2A accepted: isolated Item Graph contracts
+C2A accepted: transaction contracts
   ↓
-C2B current: production registries + common ledger + M0 atomic authority
+C2B accepted: production Item Graph + M0 authority
+  ↓
+C3 current: immutable BuildPlan + weightless ghost + resumable stages
   ↓ acceptance gate
-C3 BuildPlan → C4 composites → C5 capabilities
+C4 reusable composites → C5 affordances
   ↓
 C6 robot → C7 house → C8 assembler
   ↓
@@ -61,10 +64,10 @@ C12 multiplayer construction → C13 federated constructs
 | Этап | Результат | Контрольный объект | Статус |
 |---|---|---|---|
 | C0 | парадигма, границы доменов, roadmap | вся линия | **ACCEPTED** |
-| C1 | parts, bonds, snapshots, revisions, capability compiler | стол | **ACCEPTED** |
-| C2A | item projections, mutation plan, sandbox adapter | стол | **ACCEPTED — 68cf8b2** |
-| C2B | production Item/Container registries, shared ledger, M0 authority, recovery | стол | **CURRENT CANDIDATE** |
-| C3 | ghost construct, stages, material reservation and jobs | стол/комната | PLANNED |
+| C1 | parts, bonds, snapshots, revisions, facet compiler | стол | **ACCEPTED** |
+| C2A | item projections, mutations, atomic plans | стол | **ACCEPTED — 68cf8b2** |
+| C2B | production registries, shared ledger, M0 authority и recovery | стол | **ACCEPTED** |
+| C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **CURRENT CANDIDATE** |
 | C4 | пользовательские composite definitions and instances | повторяемый стол | PLANNED |
 | C5 | capabilities and affordances | агент использует неизвестный стол | PLANNED |
 | C6 | rigid islands, joints, power/control | наземный робот | PLANNED |
@@ -76,53 +79,110 @@ C12 multiplayer construction → C13 federated constructs
 | C12 | contention, permissions, reconnect, convergence | два клиента | PLANNED |
 | C13 | section aggregates and cross-server authority | дом/станция/город | PLANNED |
 
-## Что именно закрывает C2B
+## C2A — Item Graph Contracts
+
+Статус: **ACCEPTED**. Этап зафиксировал строгие планы сборки и разборки, item-backed identity, транзакционные preconditions и тестовый adapter без изменения production Item Graph.
+
+## C2B — Authoritative Item Graph Integration
+
+Статус: **ACCEPTED**. Этап подключил реальные `ItemRegistry`/`ContainerRegistry`, общий `OperationLedger` и M0-first authoritative commit/recovery. C3 выполняет расход и перемещение предметов только через эту границу.
+
+## C3: что появилось
 
 ```text
+immutable BuildPlan
+├── target ConstructSnapshot
+├── exact source Item projections
+├── ordered BuildStages
+├── material allocations
+├── required tool capabilities
+└── ghost world relation
+        ↓
+weightless GhostState
+        ↓ execute stage
 C2A ConstructionItemTransactionPlan
-        ↓ deterministic translation
-M0 MutationBatch
-        ├── aggregate/construction/item-graph
-        ├── aggregate/construction/operation-ledger
-        └── aggregate/construction/construct:...
-        ↓ prepare + atomic commit
-production ItemRegistry + ContainerRegistry
-shared ItemOperationLedger + ConstructStore
+        ↓
+C2B authoritative Item Graph + shared ledger + M0
+        ↓
+partial ConstructSnapshot
+        ↓ next stage / crash recovery / exact replay
+        ↓
+OPERATIONAL ConstructSnapshot
 ```
 
-C2B вводит следующие обязательные свойства:
+### Ключевой принцип ghost
 
-1. Реальные `ItemRegistry`, `ContainerRegistry`, `ItemRelationshipValidator` и `ItemMassService` участвуют в проверке кандидата.
-2. Установленные детали используют каноническую `ATTACHMENT` relation.
-3. M0 commit выполняется до локальной materialization и становится авторитетной точкой восстановления.
-4. Exact replay не расходует материал повторно.
-5. Terminal rejection хранится в общем Item Operation Ledger.
-6. Retryable failure не отравляет operation ID.
-7. При аварии после M0 commit новый runtime восстанавливает Item Graph, ledger и constructs из M0 repository.
-8. Ревизия `ConstructSnapshot` отделена от ревизии M0 aggregate envelope.
-9. Persistence bundle защищён checksum и не может перезаписать отличающееся M0-состояние.
+Ghost до первой стадии:
 
-C2B пока не подключает строительные команды к игровому UI, клиентскому transport или сцене. Это будет отдельный последующий вертикальный этап после приёмки доменного integration boundary.
+- не является `ItemInstance`;
+- не имеет массы;
+- не имеет collision/physics authority;
+- не имеет capabilities;
+- не создаёт construct root;
+- является только persisted intention/projection BuildPlan.
+
+После первой стадии физическим становится **частично построенный construct**, а не ghost. Ghost продолжает показывать план и прогресс, но не дублирует массу и поведение объекта.
+
+### Стадии контрольного стола
+
+```text
+0 FOUNDATION
+  top + two supports + 2 fasteners
+  ConstructSnapshot = PARTIAL
+  capabilities = []
+
+1 FRAME
+  remaining two supports + 2 fasteners
+  ConstructSnapshot = PARTIAL
+  capabilities = []
+
+2 COMMISSIONING
+  sealant + inspection capability
+  ConstructSnapshot = OPERATIONAL
+  capabilities = PLACE_ITEMS / SUPPORT_SURFACE / WORK_SURFACE
+```
+
+### Recovery C3
+
+```text
+stage transaction committed in C2B
+→ process crashes before GhostState update
+→ ConstructSnapshot and shared ledger remain authoritative
+→ C3 reconcile identifies matching deterministic stage snapshot
+→ ghost progress advances without repeating material consumption
+→ repeated operation ID returns exact replay
+```
+
+BuildPlan хранит исходные item projections и точные allocations. Поэтому transaction plan каждой стадии детерминирован и может быть восстановлен после перезапуска с тем же checksum.
 
 ## Сквозные архитектурные линии
 
 ```text
-Item identity       C1 ─ C2A ─ C2B ───────────────────────────────► C13
-Authority/replay    C1 ─ C2A ─ C2B ───────────────────────────────► C13
-Facet compilation   C1 ───────── C5 ─ C6 ─ C7 ─ C9 ─ C11 ───────► C13
-Capabilities        C1 ───────── C5 ─ C6 ─ C7 ─ C8 ──────────────► C13
+Item identity       C1 ─ C2A ─ C2B ─ C3 ─────────────────────────► C13
+Authority/replay    C1 ─ C2A ─ C2B ─ C3 ─────────────────────────► C13
+Build intent        C0 ────────────── C3 ─ C4 ─ C8 ──────────────► C13
+Facet compilation   C1 ───────── C3 ─ C5 ─ C6 ─ C7 ─ C9 ─ C11 ─► C13
+Capabilities        C1 ───────── C3 ─ C5 ─ C6 ─ C7 ─ C8 ────────► C13
 Semantic scale      C0 ───────────────── C7 ─ C10 ─ C11 ─────────► C13
 Spatial partition   C0 ───────────────── C7 ───────── C12 ─ C13
 ```
 
-Новый этап не принимается, если он создаёт вторую identity предмета, меняет Item Graph вне authority boundary, делает Node3D/mesh источником истины, смешивает все инженерные графы или требует постоянно симулировать всю сохранённую сложность.
+Новый этап не принимается, если он:
+
+1. создаёт вторую identity предмета;
+2. меняет Item Graph вне C2B authority boundary;
+3. делает ghost физическим источником истины;
+4. выдаёт capabilities частичной конструкции как operational;
+5. повторно расходует материал после replay/recovery;
+6. делает progress state сильнее authoritative construct/ledger;
+7. превращает mesh или Node3D в каноническое состояние.
 
 ## Контрольные вертикальные объекты
 
-- **Стол:** identity, parts, bonds, material consumption, rollback, capabilities.
+- **Стол:** identity, parts, bonds, materials, stages, rollback, capabilities.
 - **Робот:** rigid islands, joints, power, control, sensors, container, partial failure.
 - **Дом:** sections, rooms, enclosure, utilities, semantic activation.
-- **Сборщик:** input/output, tooling, BuildPlan execution, production parity.
+- **Сборщик:** input/output, tooling и исполнение того же BuildPlan.
 - **Корабельная секция:** pressure topology, damage, leaks, split and authority transfer.
 
 ## Правило фиксации движения
@@ -139,11 +199,3 @@ Spatial partition   C0 ───────────────── C7 �
 8. обязательный world-regression manifest.
 
 Статус `ACCEPTED` назначается только после внешней проверки focused, network и полного world regression.
-
-## C2A — Item Graph Contracts
-
-Принятый изолированный слой контрактов и транзакционных планов, commit `68cf8b2`.
-
-## C2B — Authoritative Item Graph Integration
-
-Текущий реализованный кандидат, подключающий C2A к production Item Graph и M0 authority boundary.

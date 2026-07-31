@@ -1,0 +1,7 @@
+c3-build-plan-and-ghost-files.txt
+c3-build-plan-and-ghost-fix1-files.txt
+docs/checkpoints/2026-07-31_C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+scripts/construction/item_graph/in_memory_construction_item_graph_adapter.gd
+tests/construction/test_c3_build_plan_integration.gd
+validation/c3-build-plan-and-ghost-validation.json
