@@ -13,6 +13,8 @@ const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_
 
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const SERVER_PEER_ID := "peer/enet/m3-dedicated-server"
+const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
+const M7_BUILD_ID := "m7-playable-networked-playground"
 
 var _boundary
 var _replica
@@ -43,6 +45,7 @@ var _server_disconnects := 0
 var _automated_acceptance := false
 var _item_graph_snapshot: Dictionary = {}
 var _item_snapshot_updates := 0
+var _playable_sandbox := false
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -53,6 +56,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_connect_timeout_ms = int(config.get("connect_timeout_ms", 30000))
 	_command_timeout_ms = int(config.get("command_timeout_ms", 8000))
 	_automated_acceptance = bool(config.get("automated_acceptance", false))
+	_playable_sandbox = bool(config.get("playable_sandbox", false))
 	_join_operation_id = ""
 	if _host.is_empty() or _port < 1 or _port > 65535 or _logical_player_id.is_empty():
 		return _failure("INVALID_M3_CLIENT_CONFIGURATION")
@@ -104,6 +108,9 @@ func _handle_message(payload: Dictionary) -> void:
 		"GAMEPLAY_SNAPSHOT": _accept_snapshot(payload.get("snapshot", {}))
 		"ITEM_GRAPH_SNAPSHOT": _accept_item_snapshot(payload.get("snapshot", {}))
 		"COMMAND_RESULT":
+			var item_snapshot_value = payload.get("item_graph_snapshot", {})
+			if item_snapshot_value is Dictionary and not Dictionary(item_snapshot_value).is_empty():
+				_accept_item_snapshot(Dictionary(item_snapshot_value))
 			var operation_id := String(payload.get("operation_id", ""))
 			if not operation_id.is_empty(): _command_results[operation_id] = payload.duplicate(true)
 		"LEAVE_ACK": _leave_acknowledged = true; _joined = false; _write_report("LEFT", true)
@@ -179,6 +186,53 @@ func move_blocking(delta_x: float, delta_z: float) -> Dictionary:
 			return _success({"operation_id": operation_id, "result": result})
 		OS.delay_msec(2)
 	return _failure("M3_MOVE_TIMEOUT")
+
+
+func submit_movement_intent_nonblocking(intent: Dictionary) -> Dictionary:
+	if not is_ready():
+		return _failure("M7_CLIENT_NOT_READY")
+	_input_sequence += 1
+	var operation_id := "operation/m7/%s/input/%d/%d" % [_logical_player_id, OS.get_process_id(), _input_sequence]
+	var sent := _send("PLAYER_INPUT", {
+		"logical_player_id": _logical_player_id,
+		"ownership_epoch": _ownership_epoch,
+		"input_sequence": _input_sequence,
+		"intent": intent.duplicate(true),
+		"operation_id": operation_id,
+	})
+	return _success({"operation_id": operation_id, "input_sequence": _input_sequence}) if sent else _failure("M7_PLAYER_INPUT_SEND_FAILED")
+
+func submit_movement_intent_blocking(intent: Dictionary) -> Dictionary:
+	if not is_ready():
+		return _failure("M7_CLIENT_NOT_READY")
+	_input_sequence += 1
+	var operation_id := "operation/m7/%s/input/%d/%d" % [_logical_player_id, OS.get_process_id(), _input_sequence]
+	_command_results.erase(operation_id)
+	if not _send("PLAYER_INPUT", {
+		"logical_player_id": _logical_player_id,
+		"ownership_epoch": _ownership_epoch,
+		"input_sequence": _input_sequence,
+		"intent": intent.duplicate(true),
+		"operation_id": operation_id,
+	}):
+		return _failure("M7_PLAYER_INPUT_SEND_FAILED")
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started <= _command_timeout_ms:
+		_poll_blocking_once()
+		if _command_results.has(operation_id):
+			var result: Dictionary = _command_results[operation_id]
+			_command_results.erase(operation_id)
+			if String(result.get("status", "")) != "SUCCEEDED":
+				return _failure(String(result.get("error_code", "M7_PLAYER_INPUT_REJECTED")), result)
+			return _success({"operation_id": operation_id, "input_sequence": _input_sequence, "result": result})
+		OS.delay_msec(2)
+	return _failure("M7_PLAYER_INPUT_TIMEOUT")
+
+func submit_player_state_nonblocking(_player_state: Dictionary, _delta_seconds: float) -> Dictionary:
+	return _failure("M7_CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
+
+func submit_player_state_blocking(_player_state: Dictionary, _delta_seconds: float) -> Dictionary:
+	return _failure("M7_CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
 
 
 func set_presentation_blocking(orientation_yaw: float, flashlight_enabled: bool) -> Dictionary:
@@ -274,6 +328,7 @@ func get_player(logical_player_id: String) -> Dictionary:
 	return _replica.get_player(logical_player_id) if _replica != null else {}
 func get_snapshot() -> Dictionary: return _replica.get_snapshot() if _replica != null else {}
 func get_local_player_id() -> String: return _logical_player_id
+func get_local_player_record() -> Dictionary: return get_player(_logical_player_id)
 func get_remote_player_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for player in get_snapshot().get("players", []):
@@ -285,7 +340,9 @@ func is_automated_acceptance() -> bool: return _automated_acceptance
 
 func get_report() -> Dictionary:
 	return {
-		"schema": SCHEMA, "checkpoint": Support.CHECKPOINT, "build_id": Support.BUILD_ID,
+		"schema": SCHEMA,
+		"checkpoint": M7_CHECKPOINT if _playable_sandbox else Support.CHECKPOINT,
+		"build_id": M7_BUILD_ID if _playable_sandbox else Support.BUILD_ID,
 		"configured": _configured, "joined": _joined, "logical_player_id": _logical_player_id,
 		"player_entity_id": _player_entity_id, "ownership_epoch": _ownership_epoch,
 		"transport_session_id": _transport_session_id, "join_operation_id": _join_operation_id, "input_sequence": _input_sequence,
@@ -299,6 +356,7 @@ func get_report() -> Dictionary:
 		"direct_authority_references": 0, "direct_domain_references": 0,
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"automated_acceptance": _automated_acceptance,
+		"playable_sandbox": _playable_sandbox,
 	}
 
 func stop() -> Dictionary:

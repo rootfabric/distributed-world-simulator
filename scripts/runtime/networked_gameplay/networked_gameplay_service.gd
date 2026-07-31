@@ -21,6 +21,7 @@ const ContainerInteractionService = preload("res://scripts/runtime/networked_gam
 const MountInteractionService = preload("res://scripts/runtime/networked_gameplay/services/mount_interaction_service.gd")
 const CanonicalPlayableBackend = preload("res://scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd")
 const CanonicalMultiplayerItemGraph = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
+const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
 
 const SCHEMA := "planet_simulator.networked_gameplay_service.v1"
 const SNAPSHOT_SCHEMA := PlayerSnapshot.SCHEMA
@@ -51,6 +52,7 @@ var _mount_interactions
 var _playable_backend
 var _operation_ledger: Dictionary = {}
 var _canonical_multiplayer_items
+var _playable_sandbox := false
 
 
 func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 0, config: Dictionary = {}) -> Dictionary:
@@ -65,6 +67,7 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	_region_id = String(config.get("region_id", "region/m1/default")).strip_edges()
 	_topology_adapter = String(config.get("topology_adapter", "UNSPECIFIED")).strip_edges().to_upper()
 	_profile = String(config.get("profile", PROFILE_MULTIPLAYER_CORE)).strip_edges().to_upper()
+	_playable_sandbox = bool(config.get("playable_sandbox", false))
 	if _region_id.is_empty() or _topology_adapter.is_empty() or _profile not in [PROFILE_MULTIPLAYER_CORE, PROFILE_CANONICAL_PLAYABLE]:
 		return _failure("INVALID_NETWORKED_GAMEPLAY_CONFIGURATION")
 	_operation_ledger.clear()
@@ -78,7 +81,7 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	_shared_items = SharedItemService.new()
 	_shared_items.setup()
 	_canonical_multiplayer_items = CanonicalMultiplayerItemGraph.new()
-	var multiplayer_items_setup: Dictionary = _canonical_multiplayer_items.setup(_authority_owner_id, _authority_epoch)
+	var multiplayer_items_setup: Dictionary = _canonical_multiplayer_items.setup(_authority_owner_id, _authority_epoch, {"playable_sandbox": _playable_sandbox})
 	if not bool(multiplayer_items_setup.get("success", false)):
 		return multiplayer_items_setup
 	_result_router = ResultRouter.new()
@@ -220,10 +223,24 @@ func handle_player_input(command: Dictionary) -> Dictionary:
 		return _record_failure(operation_id, fingerprint, String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
 	var record: Dictionary = _players.get_player(logical_player_id)
 	var movement_result: Dictionary
-	if String(command.get("input_kind", "")) == "MOVEMENT_DELTA":
-		movement_result = _movement.apply_delta(record, int(command.get("input_sequence", 0)), float(command.get("payload", {}).get("delta_x", 0.0)), float(command.get("payload", {}).get("delta_z", 0.0)))
+	var input_kind := String(command.get("input_kind", ""))
+	if input_kind == "MOVEMENT_DELTA":
+		movement_result = _movement.apply_delta(
+			record,
+			int(command.get("input_sequence", 0)),
+			float(command.get("payload", {}).get("delta_x", 0.0)),
+			float(command.get("payload", {}).get("delta_z", 0.0))
+		)
+	elif input_kind == "MOVEMENT_INTENT":
+		if not _playable_sandbox:
+			return _record_failure(operation_id, fingerprint, "MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX")
+		movement_result = _movement.apply_movement_intent(
+			record,
+			int(command.get("input_sequence", 0)),
+			Dictionary(command.get("payload", {}))
+		)
 	else:
-		return _record_failure(operation_id, fingerprint, "AUTHORITATIVE_STATE_REQUIRES_PLAYABLE_ADAPTER")
+		return _record_failure(operation_id, fingerprint, "CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
 	if not bool(movement_result.get("success", false)):
 		return _record_failure(operation_id, fingerprint, String(movement_result.get("error_code", "PLAYER_MOVE_REJECTED")))
 	var before_revision := _revision
@@ -335,6 +352,33 @@ func move_player(logical_player_id: String, transport_session_id: String, owners
 	return handle_player_input(InputCommand.create("message/m1/move/%s" % operation_id.sha256_text().left(12), operation_id, logical_player_id, transport_session_id, _authority_epoch, ownership_epoch, input_sequence, "MOVEMENT_DELTA", {"delta_x": delta_x, "delta_z": delta_z}))
 
 
+
+func submit_movement_intent(logical_player_id: String, transport_session_id: String, ownership_epoch: int, input_sequence: int, intent: Dictionary, operation_id: String) -> Dictionary:
+	return handle_player_input(InputCommand.create(
+		"message/m7/input/%s" % operation_id.sha256_text().left(12),
+		operation_id,
+		logical_player_id,
+		transport_session_id,
+		_authority_epoch,
+		ownership_epoch,
+		input_sequence,
+		"MOVEMENT_INTENT",
+		intent.duplicate(true)
+	))
+
+func submit_player_state(logical_player_id: String, transport_session_id: String, ownership_epoch: int, input_sequence: int, player_state: Dictionary, delta_seconds: float, operation_id: String) -> Dictionary:
+	return handle_player_input(InputCommand.create(
+		"message/m7/rejected-state/%s" % operation_id.sha256_text().left(12),
+		operation_id,
+		logical_player_id,
+		transport_session_id,
+		_authority_epoch,
+		ownership_epoch,
+		input_sequence,
+		"AUTHORITATIVE_STATE",
+		{"player_state": player_state.duplicate(true), "delta_seconds": delta_seconds}
+	))
+
 func set_player_presentation(logical_player_id: String, transport_session_id: String, ownership_epoch: int, orientation_yaw: float, flashlight_enabled: bool, operation_id: String) -> Dictionary:
 	return handle_player_presentation(PresentationCommand.create("message/m3/presentation/%s" % operation_id.sha256_text().left(12), operation_id, logical_player_id, transport_session_id, _authority_epoch, ownership_epoch, orientation_yaw, flashlight_enabled))
 
@@ -360,7 +404,12 @@ func handle_canonical_item_command(logical_player_id: String, transport_session_
 	if not bool(owner_check.get("success", false)):
 		return _failure(String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
 	var result: Dictionary = _canonical_multiplayer_items.execute(
-		logical_player_id, ownership_epoch, operation_id, command_type, payload
+		logical_player_id,
+		ownership_epoch,
+		operation_id,
+		command_type,
+		payload,
+		_create_item_authority_context(logical_player_id)
 	)
 	if bool(result.get("success", false)) and not bool(result.get("replay", false)):
 		_advance()
@@ -426,13 +475,16 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	if not bool(shared_result.get("success", false)):
 		return _failure("GAMEPLAY_SHARED_ITEM_RECOVERY_FAILED", {"cause": shared_result})
 	var staged_items = CanonicalMultiplayerItemGraph.new()
+	var durable_item_state: Dictionary = Dictionary(value.get("canonical_item_graph", {}))
+	var durable_item_snapshot: Dictionary = Dictionary(durable_item_state.get("snapshot", {}))
 	var item_setup: Dictionary = staged_items.setup(
 		String(value.get("authority_owner_id", "")),
-		int(value.get("authority_epoch", 0))
+		int(value.get("authority_epoch", 0)),
+		{"playable_sandbox": bool(durable_item_snapshot.get("playable_sandbox", _playable_sandbox))}
 	)
 	if not bool(item_setup.get("success", false)):
 		return _failure("GAMEPLAY_ITEM_RECOVERY_SETUP_FAILED", {"cause": item_setup})
-	var item_result: Dictionary = staged_items.restore_durable_state(Dictionary(value.get("canonical_item_graph", {})))
+	var item_result: Dictionary = staged_items.restore_durable_state(durable_item_state)
 	if not bool(item_result.get("success", false)):
 		return _failure("GAMEPLAY_ITEM_RECOVERY_FAILED", {"cause": item_result})
 	var consistency := _validate_recovered_player_consistency(staged_players, staged_ownership)
@@ -445,6 +497,7 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_region_id = String(value.get("region_id", ""))
 	_topology_adapter = String(value.get("topology_adapter", ""))
 	_profile = String(value.get("profile", PROFILE_MULTIPLAYER_CORE))
+	_playable_sandbox = bool(durable_item_snapshot.get("playable_sandbox", false))
 	_players = staged_players
 	_ownership = staged_ownership
 	_shared_items = staged_shared
@@ -501,7 +554,16 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 	if not bool(shared_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_SHARED_ITEM_STATE", {"cause": shared_result})
 	var item_validator = CanonicalMultiplayerItemGraph.new()
-	var item_result: Dictionary = item_validator.validate_durable_state(Dictionary(value.get("canonical_item_graph", {})))
+	var durable_item_state: Dictionary = Dictionary(value.get("canonical_item_graph", {}))
+	var durable_item_snapshot: Dictionary = Dictionary(durable_item_state.get("snapshot", {}))
+	var validator_setup: Dictionary = item_validator.setup(
+		String(value.get("authority_owner_id", "")),
+		int(value.get("authority_epoch", 0)),
+		{"playable_sandbox": bool(durable_item_snapshot.get("playable_sandbox", false))}
+	)
+	if not bool(validator_setup.get("success", false)):
+		return _failure("INVALID_GAMEPLAY_ITEM_GRAPH_VALIDATOR_SETUP", {"cause": validator_setup})
+	var item_result: Dictionary = item_validator.validate_durable_state(durable_item_state)
 	if not bool(item_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_ITEM_GRAPH_STATE", {"cause": item_result})
 	var ownership_state: Dictionary = value.get("ownership", {})
@@ -770,6 +832,63 @@ func _validate_owner(logical_player_id: String, transport_session_id: String, ow
 	if String(record.get("transport_session_id", "")) != transport_session_id: return _failure("STALE_PLAYER_SESSION")
 	if int(record.get("ownership_epoch", 0)) != ownership_epoch: return _failure("STALE_PLAYER_OWNERSHIP_EPOCH")
 	return _success()
+
+
+func _record_to_playable_state(record: Dictionary) -> Dictionary:
+	var position: Dictionary = Dictionary(record.get("position", {}))
+	var velocity: Dictionary = Dictionary(record.get("velocity", {}))
+	var yaw := float(record.get("orientation_yaw", 0.0))
+	var basis := Basis(Vector3.UP, yaw)
+	var world_position := Vector3(float(position.get("x", 0.0)), float(position.get("y", 0.0)), float(position.get("z", 0.0)))
+	return PlayableStateCodec.create_player_state(
+		world_position,
+		basis,
+		Vector3(float(velocity.get("x", 0.0)), float(velocity.get("y", 0.0)), float(velocity.get("z", 0.0))),
+		world_position,
+		"flat_humanoid",
+		"first_person",
+		bool(record.get("flashlight_enabled", false)),
+		int(record.get("last_input_sequence", 0)),
+		"scenario/playground/local",
+		"main",
+		"playground",
+		"scenario-playground"
+	)
+
+func _apply_playable_state_to_record(record: Dictionary, player_state: Dictionary) -> Dictionary:
+	var next := record.duplicate(true)
+	var position := PlayableStateCodec.player_position(player_state)
+	var velocity := PlayableStateCodec.player_velocity(player_state)
+	var forward := -PlayableStateCodec.player_basis(player_state).z
+	next["position"] = {"x": position.x, "y": position.y, "z": position.z}
+	next["velocity"] = {"x": velocity.x, "y": velocity.y, "z": velocity.z}
+	if forward.slide(Vector3.UP).length_squared() > 0.000001:
+		next["orientation_yaw"] = atan2(forward.x, forward.z)
+	next["flashlight_enabled"] = bool(player_state.get("flashlight_enabled", false))
+	next["last_input_sequence"] = int(player_state.get("last_input_sequence", 0))
+	next["state_revision"] = int(next.get("state_revision", 0)) + 1
+	return next
+
+func _create_item_authority_context(logical_player_id: String) -> Dictionary:
+	var record: Dictionary = _players.get_player(logical_player_id)
+	if record.is_empty():
+		return {}
+	var position_value: Dictionary = Dictionary(record.get("position", {}))
+	var position := Vector3(
+		float(position_value.get("x", 0.0)),
+		float(position_value.get("y", 0.0)),
+		float(position_value.get("z", 0.0))
+	)
+	var yaw := float(record.get("orientation_yaw", 0.0))
+	var view_direction := (-Basis(Vector3.UP, yaw).z).normalized()
+	var interaction_origin := position + Vector3(0.0, 0.9, 0.0)
+	return {
+		"player_position": {"x": position.x, "y": position.y, "z": position.z},
+		"interaction_origin": {"x": interaction_origin.x, "y": interaction_origin.y, "z": interaction_origin.z},
+		"view_direction": {"x": view_direction.x, "y": view_direction.y, "z": view_direction.z},
+		"orientation_yaw": yaw,
+		"server_tick": _tick,
+	}
 
 
 func _spawn_position(logical_player_id: String) -> Dictionary:

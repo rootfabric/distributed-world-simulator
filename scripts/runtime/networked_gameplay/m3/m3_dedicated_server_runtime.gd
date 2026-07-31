@@ -14,6 +14,8 @@ const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_d
 const SCHEMA := "planet_simulator.m3_dedicated_server_runtime.v1"
 const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
 const M6_BUILD_ID := "m6-dedicated-persistence-recovery"
+const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
+const M7_BUILD_ID := "m7-playable-networked-playground"
 
 var _boundary
 var _service
@@ -48,6 +50,7 @@ var _last_checkpoint_operation_id := ""
 var _persistence_failures := 0
 var _durable_commits := 0
 var _fatal_persistence_failure := false
+var _playable_sandbox := false
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured:
@@ -59,6 +62,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_authority_epoch = int(config.get("authority_epoch", 1))
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
+	_playable_sandbox = bool(config.get("playable_sandbox", false))
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
 	_service = Service.new()
@@ -66,6 +70,7 @@ func setup(config: Dictionary) -> Dictionary:
 		"profile": Service.PROFILE_MULTIPLAYER_CORE,
 		"topology_adapter": "ENET",
 		"region_id": "region/m3/single-server",
+		"playable_sandbox": _playable_sandbox,
 	})
 	if not bool(service_setup.get("success", false)):
 		return service_setup
@@ -113,6 +118,8 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 	match String(payload.get("type", "")):
 		"JOIN": _handle_join(peer_id, session_id, payload)
 		"MOVE": _handle_move(peer_id, session_id, payload)
+		"PLAYER_INPUT": _handle_player_input(peer_id, session_id, payload)
+		"PLAYER_STATE": _handle_player_state_rejected(peer_id, session_id, payload)
 		"PRESENTATION": _handle_presentation(peer_id, session_id, payload)
 		"ITEM_COMMAND": _handle_item_command(peer_id, session_id, payload)
 		"LEAVE": _handle_leave(peer_id, session_id, payload)
@@ -192,6 +199,51 @@ func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> v
 	_write_report("READY", false)
 
 
+func _handle_player_input(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
+		_send_result(peer_id, String(payload.get("operation_id", "")), "PLAYER_INPUT", _failure("STALE_TRANSPORT_SESSION"))
+		return
+	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _is_canonical_operation_id(operation_id):
+		_reject_uncommitted_command(peer_id, operation_id, "PLAYER_INPUT", "OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID")
+		return
+	var intent_value = payload.get("intent", {})
+	if not intent_value is Dictionary:
+		_reject_uncommitted_command(peer_id, operation_id, "PLAYER_INPUT", "MOVEMENT_INTENT_REQUIRED")
+		return
+	var result: Dictionary = _service.submit_movement_intent(
+		logical_id,
+		session_id,
+		int(payload.get("ownership_epoch", 0)),
+		int(payload.get("input_sequence", 0)),
+		Dictionary(intent_value),
+		operation_id
+	)
+	if not _persist_command_result(operation_id, "PLAYER_INPUT", logical_id, result):
+		_send_result(peer_id, operation_id, "PLAYER_INPUT", _failure("M6_DURABLE_COMMIT_FAILED"))
+		return
+	var result_sent := _send_result(peer_id, operation_id, "PLAYER_INPUT", result)
+	if bool(result.get("success", false)):
+		if not _is_replay_result(result):
+			_moves += 1
+			_broadcast_delta(result.get("details", {}).get("delta", {}))
+			_broadcast_snapshot("PLAYER_INPUT_SIMULATED")
+			_capture_two_connected_checksum()
+	else:
+		_rejections += 1
+	if result_sent:
+		_mark_operation_delivered(operation_id)
+	_write_report("READY", false)
+
+func _handle_player_state_rejected(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
+		_send_result(peer_id, operation_id, "PLAYER_STATE", _failure("STALE_TRANSPORT_SESSION"))
+		return
+	_reject_uncommitted_command(peer_id, operation_id, "PLAYER_STATE", "CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
+
+
 func _handle_presentation(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
 		_send_result(peer_id, String(payload.get("operation_id", "")), "PRESENTATION", _failure("STALE_TRANSPORT_SESSION"))
@@ -255,6 +307,11 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			_broadcast_item_snapshot(command_type)
+			# Item commands advance the shared gameplay revision. Republish the
+			# player snapshot metadata as well, otherwise clients keep an older
+			# revision/checksum even though their player records are unchanged.
+			_broadcast_snapshot("ITEM_GRAPH_UPDATED")
+			_capture_two_connected_checksum()
 	else:
 		_rejections += 1
 	if result_sent:
@@ -335,14 +392,17 @@ func _reject_uncommitted_leave(peer_id: String, operation_id: String, error_code
 
 func _send_result(peer_id: String, operation_id: String, command_type: String, result: Dictionary) -> bool:
 	var wire: Dictionary = _service.create_targeted_command_result("message/m3/result/%s" % operation_id.sha256_text().left(12), operation_id, result)
-	return _send(peer_id, "COMMAND_RESULT", {
+	var payload := {
 		"operation_id": operation_id,
 		"command_type": command_type,
 		"status": String(wire.get("status", "REJECTED")),
 		"error_code": String(wire.get("error_code", "")),
 		"details": wire.get("payload", {}),
 		"checksum": String(wire.get("checksum", "")),
-	})
+	}
+	if command_type.begins_with("item.") or command_type.begins_with("inventory.") or command_type.begins_with("container."):
+		payload["item_graph_snapshot"] = _service.create_canonical_item_graph_snapshot()
+	return _send(peer_id, "COMMAND_RESULT", payload)
 
 func _broadcast_delta(delta: Dictionary, excluded_peer_id: String = "") -> void:
 	if delta.is_empty(): return
@@ -543,14 +603,28 @@ func _persistence_report() -> Dictionary:
 	}
 
 
+func detach_playable_world() -> Dictionary:
+	# M3/M7 dedicated runtime owns gameplay state directly and has no separate
+	# presentation world attachment. Keep SimulatorApp lifecycle polymorphic.
+	return _success({"detached": false, "reason": "DEDICATED_RUNTIME_OWNS_NO_PLAYABLE_WORLD"})
+
+
 func get_world_entity_store_for_kernel():
 	return null
 
 func get_report() -> Dictionary:
 	return {
 		"schema": SCHEMA,
-		"checkpoint": M6_CHECKPOINT if _persistence_enabled else Support.CHECKPOINT,
-		"build_id": M6_BUILD_ID if _persistence_enabled else Support.BUILD_ID,
+		"checkpoint": (
+			M7_CHECKPOINT if _playable_sandbox
+			else M6_CHECKPOINT if _persistence_enabled
+			else Support.CHECKPOINT
+		),
+		"build_id": (
+			M7_BUILD_ID if _playable_sandbox
+			else M6_BUILD_ID if _persistence_enabled
+			else Support.BUILD_ID
+		),
 		"configured": _configured,
 		"host": _host,
 		"port": _port,
@@ -573,6 +647,7 @@ func get_report() -> Dictionary:
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"direct_client_authority_references": 0,
 		"persistence": _persistence_report(),
+		"playable_sandbox": _playable_sandbox,
 	}
 
 func stop() -> Dictionary:

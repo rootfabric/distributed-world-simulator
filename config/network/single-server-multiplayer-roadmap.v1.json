@@ -1,6 +1,6 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_roadmap.v1",
-  "document_revision": 8,
+  "document_revision": 9,
   "checkpoint": "v16.9.5-roadmap-single-server-multiplayer-first",
   "build_id": "post-a2-single-server-multiplayer-first",
   "status": "accepted",
@@ -230,7 +230,7 @@
     {
       "id": "A3",
       "name": "Single-server multiplayer architecture audit/freeze",
-      "status": "candidate",
+      "status": "accepted",
       "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
       "branch": "feature/a3-single-server-multiplayer-architecture",
       "depends_on": [
@@ -250,12 +250,14 @@
         "contracts": "tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
         "focused_runner_windows": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1",
         "focused_runner_linux": "RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.sh"
-      }
+      },
+      "delivery": "review-fix1",
+      "acceptance_sha256": "BAFC96B451220A1D1D12B4BD3FB9F1F0D130B1BA652A1F70AEAC0661B041A380"
     },
     {
       "id": "B1",
       "name": "NATS Core adapter",
-      "status": "deferred_until_A3_acceptance",
+      "status": "ready_after_A3_acceptance",
       "checkpoint": "v16.11.0-data-plane-b1-nats-core",
       "branch": "feature/b1-nats-core-adapter",
       "depends_on": [
@@ -338,10 +340,10 @@
   "accepted_at_utc": "2026-07-30T03:40:00Z",
   "current_implementation_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
   "current_implementation_manifest": "config/network/single-server-multiplayer-architecture.v1.json",
-  "current_implementation_stage": "A3",
+  "current_implementation_stage": "M7_VALIDATION_OVER_ACCEPTED_A3",
   "updated_at_utc": "2026-07-31T03:39:00Z",
-  "next_stage": "B1 after A3 independent acceptance",
-  "current_stage": "A3",
-  "current_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "next_stage": "B1 after M7 playable validation",
+  "current_stage": "M7_VALIDATION",
+  "current_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
   "current_manifest": "config/network/single-server-multiplayer-architecture.v1.json"
 }

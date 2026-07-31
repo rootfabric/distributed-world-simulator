@@ -1,0 +1,82 @@
+{
+  "schema": "planet_simulator.playable_networked_playground.v1",
+  "checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "build_id": "m7-playable-networked-playground",
+  "status": "candidate",
+  "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "branch": "feature/m7-playable-networked-playground",
+  "world_id": "playground",
+  "purpose": "manual and automated end-to-end validation of the accepted single-server multiplayer architecture through the ordinary controller, Seven Days inventory UI and physical 3D item interactions",
+  "composition": {
+    "authority": "one headless NetworkedGameplayService dedicated server",
+    "graphical_transport": "ENet",
+    "client_count_default": 2,
+    "client_authority": "replica_only",
+    "legacy_m3_m5_acceptance_preserved": true,
+    "persistence": "M6 authoritative checkpoint repository",
+    "movement_authority": "server_simulated_from_input_intent",
+    "client_state_submission": "forbidden",
+    "item_spatial_authority": "server_validated_from_authoritative_player_state",
+    "sandbox_hotbar_slots": 10
+  },
+  "playable_features": [
+    "normal_character_controller_input_intent",
+    "server_side_character_movement_simulation",
+    "mouse_look_intent",
+    "remote_player_representation",
+    "seven_days_like_inventory",
+    "ten_slot_hotbar",
+    "server_validated_physical_world_pickup",
+    "server_constructed_physical_world_drop",
+    "server_constructed_mount_base_placement",
+    "beacon_mount_and_detach",
+    "shared_external_container",
+    "authoritative_item_graph_replication",
+    "m6_restart_recovery_and_reconnect"
+  ],
+  "controls": {
+    "capture_mouse": "click viewport",
+    "movement": "WASD",
+    "run": "Shift",
+    "jump": "Space",
+    "inventory": "Tab",
+    "interact": "E",
+    "drop": "G",
+    "flashlight": "F",
+    "hotbar": "1-0",
+    "system_menu": "Escape"
+  },
+  "launchers": {
+    "windows_start": "PLAY_M7_NETWORKED_PLAYGROUND.ps1",
+    "windows_stop": "STOP_M7_NETWORKED_PLAYGROUND.ps1",
+    "linux_start": "PLAY_M7_NETWORKED_PLAYGROUND.sh",
+    "linux_stop": "STOP_M7_NETWORKED_PLAYGROUND.sh"
+  },
+  "tests": {
+    "focused": "RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1/.sh",
+    "integration": "res://tests/runtime/test_m7_playable_networked_playground.gd",
+    "graphical_process": "res://tests/runtime/test_m7_playable_networked_processes.gd",
+    "full_network": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "full_world": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "recovery_process": "res://tests/runtime/test_m7_playable_networked_recovery_processes.gd"
+  },
+  "acceptance": [
+    "two ordinary graphical Godot clients use the same dedicated authority",
+    "clients submit InputMap movement intent while the server computes canonical position velocity and interaction origin",
+    "client-authored PLAYER_STATE position velocity basis and interaction position are rejected",
+    "pickup uses authoritative player range and deterministic server visibility checks",
+    "drop and placement transforms are constructed and bounded by the server",
+    "both clients use the existing seven_days_like presentation profile with ten hotbar slots",
+    "M7 durable state with a ten-slot hotbar survives stop or kill, server restart, reconnect and continued gameplay",
+    "server and both clients converge on player and Item Graph checksums while connected",
+    "disconnect and shutdown leave no Godot process or resource leak",
+    "M3 and M5 acceptance compositions remain available"
+  ],
+  "out_of_scope": [
+    "internet matchmaking",
+    "client-side movement prediction rollback and lag compensation",
+    "physics-engine collision simulation for the dedicated movement integrator beyond the bounded playground controller",
+    "distributed multi-authority handoff",
+    "production content and final level design"
+  ]
+}

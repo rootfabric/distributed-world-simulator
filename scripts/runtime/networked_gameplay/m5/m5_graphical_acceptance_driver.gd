@@ -230,18 +230,24 @@ func _process(_delta: float) -> void:
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
 		"WAIT_CONVERGENCE_PEER":
+			# A late authoritative snapshot can arrive after one client has already
+			# locked an older checksum. Keep the convergence lock revocable until
+			# both clients have locked the same latest canonical state.
+			var finish_requested := bool(Support.read(_control_file).get("finish", false))
+			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
+			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
+			if (
+				not (_convergence_locked and finish_requested)
+				and not latest_player_checksum.is_empty()
+				and not latest_item_checksum.is_empty()
+				and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
+			):
+				_player_checksum = latest_player_checksum
+				_item_checksum = latest_item_checksum
+				_convergence_world = runtime.create_m3_graphical_client_report()
+				_convergence_locked = false
+				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
 			if not _convergence_locked:
-				var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
-				var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
-				if (
-					not latest_player_checksum.is_empty()
-					and not latest_item_checksum.is_empty()
-					and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
-				):
-					_player_checksum = latest_player_checksum
-					_item_checksum = latest_item_checksum
-					_convergence_world = runtime.create_m3_graphical_client_report()
-					_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
 				var peer_ready := Support.read(_peer_result_file)
 				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]:
 					return
@@ -258,7 +264,7 @@ func _process(_delta: float) -> void:
 				return
 			if String(peer_convergence.get("item_checksum", "")) != _item_checksum:
 				return
-			if not bool(Support.read(_control_file).get("finish", false)):
+			if not finish_requested:
 				return
 			_finish(true)
 

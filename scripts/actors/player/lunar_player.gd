@@ -15,6 +15,7 @@ var moon_world
 var logger
 var control_enabled: bool = true
 var network_replica_mode: bool = false
+var network_prediction_mode: bool = false
 var stored_world_position: Vector3 = Vector3.ZERO
 
 var controller_host
@@ -172,7 +173,7 @@ func get_flashlight_snapshot() -> Dictionary:
 
 
 func _physics_process(delta: float) -> void:
-	if control_enabled and not network_replica_mode and controller_host != null:
+	if control_enabled and (not network_replica_mode or network_prediction_mode) and controller_host != null:
 		controller_host.physics_step(delta)
 
 
@@ -317,14 +318,28 @@ func set_network_replica_mode(enabled_value: bool) -> void:
 		activate_after_spawn()
 
 
+func set_network_prediction_mode(enabled_value: bool) -> void:
+	network_prediction_mode = enabled_value
+	if network_replica_mode:
+		set_physics_process(enabled_value)
+		if enabled_value:
+			velocity = Vector3.ZERO
+		reset_physics_interpolation()
+
+
 func is_network_replica_mode() -> bool:
 	return network_replica_mode
+
+
+func is_network_prediction_mode() -> bool:
+	return network_prediction_mode
 
 
 func freeze_for_spectator() -> void:
 	stored_world_position = get_world_position()
 	control_enabled = false
 	network_replica_mode = false
+	network_prediction_mode = false
 	set_physics_process(false)
 	if controller_host != null:
 		controller_host.set_enabled(false)
@@ -338,6 +353,7 @@ func restore_from_spectator() -> void:
 	set_world_position(stored_world_position)
 	control_enabled = true
 	network_replica_mode = false
+	network_prediction_mode = false
 	set_physics_process(true)
 	if controller_host != null:
 		controller_host.set_enabled(true)
@@ -355,6 +371,7 @@ func set_control_enabled(enabled_value: bool) -> void:
 func activate_after_spawn() -> void:
 	control_enabled = true
 	network_replica_mode = false
+	network_prediction_mode = false
 	set_physics_process(true)
 	if controller_host != null:
 		controller_host.set_enabled(true)

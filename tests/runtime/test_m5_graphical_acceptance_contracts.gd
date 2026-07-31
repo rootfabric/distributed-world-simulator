@@ -65,13 +65,13 @@ func _test_acceptance(manifest: Dictionary) -> void:
 func _test_roadmaps(manifest: Dictionary, preparation: Dictionary, roadmap: Dictionary, single_server: Dictionary, a2: Dictionary) -> void:
 	_assert(String(preparation.get("status", "")) == "completed", "Pre-M5 preparation must be completed")
 	_assert(String(preparation.get("completed_by_checkpoint", "")) == String(manifest.get("checkpoint", "")), "Pre-M5 completion link mismatch")
-	_assert(int(roadmap.get("document_revision", 0)) == 27, "Network roadmap revision mismatch")
+	_assert(int(roadmap.get("document_revision", 0)) == 28, "Network roadmap revision mismatch")
 	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.6-architecture-a3-single-server-multiplayer", "Network roadmap A3 checkpoint mismatch")
-	_assert(String(roadmap.get("current_gate", "")).begins_with("A3"), "Network roadmap next gate must be A3")
+	_assert(String(roadmap.get("current_gate", "")).begins_with("M7"), "Network roadmap current validation gate must be M7")
 	_assert(String(roadmap.get("current_implementation_manifest", "")) == "config/network/single-server-multiplayer-architecture.v1.json", "Network roadmap A3 manifest mismatch")
-	_assert(int(single_server.get("document_revision", 0)) == 8, "Single-server roadmap revision mismatch")
-	_assert(String(single_server.get("current_stage", "")) == "A3", "Single-server current A3 stage mismatch")
-	_assert(String(single_server.get("current_checkpoint", "")) == "v16.10.6-architecture-a3-single-server-multiplayer", "Single-server A3 checkpoint mismatch")
+	_assert(int(single_server.get("document_revision", 0)) == 9, "Single-server roadmap revision mismatch")
+	_assert(String(single_server.get("current_stage", "")) == "M7_VALIDATION", "Single-server current M7 validation stage mismatch")
+	_assert(String(single_server.get("current_checkpoint", "")) == "v16.10.6.1-testing-m7-playable-networked-playground", "Single-server M7 validation checkpoint mismatch")
 	for source in [roadmap, single_server]:
 		var phases: Array = source.get("phases", source.get("milestones", []))
 		var by_id: Dictionary = {}
@@ -80,8 +80,8 @@ func _test_roadmaps(manifest: Dictionary, preparation: Dictionary, roadmap: Dict
 				by_id[String(value.get("id", ""))] = value
 		_assert(String(by_id.get("M5", {}).get("status", "")) == "accepted", "M5 roadmap accepted status mismatch")
 		_assert(String(by_id.get("M6", {}).get("status", "")) == "accepted", "M6 roadmap accepted status mismatch")
-		_assert(String(by_id.get("A3", {}).get("status", "")) == "candidate", "A3 roadmap candidate status mismatch")
-	_assert(int(a2.get("document_revision", 0)) == 8, "A2 revision mismatch for A3 candidate")
+		_assert(String(by_id.get("A3", {}).get("status", "")) == "accepted", "A3 roadmap accepted status mismatch")
+	_assert(int(a2.get("document_revision", 0)) == 8, "A2 revision mismatch for accepted A3 base")
 	_assert(bool(a2.get("implementation_assessment", {}).get("ui_driven_graphical_acceptance_proven", false)), "A2 M5 acceptance evidence missing")
 	var d03: Dictionary = {}
 	for value in a2.get("known_debt", []):
@@ -106,7 +106,11 @@ func _test_source_and_runners(manifest: Dictionary) -> void:
 		var runner := _read(runner_path)
 		_assert(runner.contains("res://tests/runtime/test_m5_graphical_acceptance_contracts.gd"), "Full runner missing M5 contracts")
 		_assert(runner.contains("res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd"), "Full runner missing M5 process acceptance")
-		_assert(runner.contains("v16.10.6-architecture-a3-single-server-multiplayer") and runner.contains("v16.10.5-persistence-m6-dedicated-recovery"), "Full runner must identify A3 checkpoint over accepted M6 base")
+		_assert(
+			runner.contains("v16.10.6.1-testing-m7-playable-networked-playground")
+			and runner.contains("v16.10.6-architecture-a3-single-server-multiplayer"),
+			"Full runner must identify M7 validation over accepted A3 base"
+		)
 
 func _contains_fragment(values: Array, fragment: String) -> bool:
 	for value in values:

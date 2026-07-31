@@ -192,7 +192,7 @@ func _test_project_wiring() -> void:
 	_assert(not s1_runner.is_empty(), "S1 PowerShell runner missing")
 	_assert(s1_runner.contains("Write-JsonFileAtomically") and s1_runner.contains("PSNativeCommandUseErrorActionPreference"), "S1 runner lacks atomic/stderr-safe summary")
 	_assert(network_runner.contains("test_s1_distributed_compute_contracts.gd") and network_runner.contains("test_s1_distributed_compute_integration.gd"), "Network runner does not include S1")
-	_assert(network_runner.contains("Foundation N0 through A3 single-server multiplayer architecture"), "Network runner final status does not include the current A3 architecture checkpoint")
+	_assert(network_runner.contains("v16.10.6-architecture-a3-single-server-multiplayer") and network_runner.contains("Foundation N0 through M7 playable networked playground"), "Network runner does not preserve the accepted A3 base inside the current M7 validation profile")
 	_assert(world_runner.contains("test_s1_distributed_compute_contracts.gd") and world_runner.contains("test_s1_distributed_compute_integration.gd"), "World runner does not include S1")
 	_assert(architecture.contains("issued job") and architecture.contains("job_checksum") and architecture.contains("M0"), "S1 architecture does not document issued-job boundary")
 	var roadmap = JSON.parse_string(roadmap_text)

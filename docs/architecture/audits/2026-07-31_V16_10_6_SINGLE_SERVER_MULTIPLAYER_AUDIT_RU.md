@@ -45,8 +45,8 @@ World regression: 105/105 PASS
 Main scene CLI: 6/6 PASS
 ```
 
-Эти результаты подтверждают поставляемый candidate в Linux double-среде. Статус остаётся `candidate` до независимого локального прогона получателем поставки.
+Независимая локальная приёмка завершена: A3 принят с delivery `review-fix1`; focused 12/12, контракт 140 assertions, полные Network/runtime и World regression подтверждены.
 
 ## Решение
 
-A3 candidate может быть принят после focused, full network/runtime и world regression на Godot 4.7.1 double. До принятия A3 B1 остаётся deferred. После принятия A3 разрешается только adapter-only B1; N3 production work остаётся blocked до B2.
+A3 принят. B1 разблокирован только как adapter-only server-to-server этап; N3 production work остаётся blocked до B2. M7 выполняется отдельно как playable network validation поверх принятого A3.

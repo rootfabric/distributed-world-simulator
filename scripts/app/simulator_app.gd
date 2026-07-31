@@ -28,6 +28,8 @@ const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/network
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const FOUNDATION_CHECKPOINT: String = "v16.10.6-architecture-a3-single-server-multiplayer"
 const FOUNDATION_BUILD_ID: String = "a3-single-server-multiplayer-architecture-freeze"
+const M7_CHECKPOINT: String = "v16.10.6.1-testing-m7-playable-networked-playground"
+const M7_BUILD_ID: String = "m7-playable-networked-playground"
 const RUNTIME_COMMAND_OWNER := "active_world"
 const RUNTIME_TEST_OWNER := "active_world"
 const WINDOWED_RESOLUTIONS: Array[Vector2i] = [
@@ -93,6 +95,7 @@ var m5_graphical_acceptance_driver
 var _m3_mode: bool = false
 var _m5_mode: bool = false
 var _m6_mode: bool = false
+var _m7_mode: bool = false
 
 
 func _ready() -> void:
@@ -167,12 +170,13 @@ func _ready() -> void:
 			get_tree().quit(4)
 			return
 
+	_m7_mode = bool(launch_options.get("network_playground", false))
 	_m6_mode = (
 		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
 		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
 	)
 	_m5_mode = not String(launch_options.get("m5_result_file", "")).strip_edges().is_empty()
-	_m3_mode = _m6_mode or _m5_mode or not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
+	_m3_mode = _m7_mode or _m6_mode or _m5_mode or not String(launch_options.get("m3_result_file", "")).strip_edges().is_empty()
 	if runtime_role == RuntimeRoleScript.DEDICATED_SERVER:
 		dedicated_gameplay_server_runtime = (
 			M3DedicatedServerRuntimeScript.new()
@@ -185,7 +189,9 @@ func _ready() -> void:
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
 			"result_file": (
-				String(launch_options.get("m6_result_file", ""))
+				String(launch_options.get("m7_result_file", ""))
+				if _m7_mode and not String(launch_options.get("m7_result_file", "")).is_empty()
+				else String(launch_options.get("m6_result_file", ""))
 				if _m6_mode
 				else String(launch_options.get("m5_result_file", ""))
 				if _m5_mode
@@ -196,6 +202,7 @@ func _ready() -> void:
 			"authority_epoch": 1,
 			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
 			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
+			"playable_sandbox": _m7_mode,
 		}
 		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):
@@ -219,8 +226,10 @@ func _ready() -> void:
 			"logical_player_id": String(launch_options.get("player_identity", "a" if _m3_mode else "local-astronaut")),
 			"connect_timeout_ms": int(launch_options.get("connect_timeout_ms", 15000)),
 			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
+			"playable_sandbox": _m7_mode,
 			"automated_acceptance": (
-				(_m5_mode and int(launch_options.get("m5_phase", 0)) > 0)
+				(_m7_mode and int(launch_options.get("m7_phase", 0)) > 0)
+				or (_m5_mode and int(launch_options.get("m5_phase", 0)) > 0)
 				or (_m3_mode and int(launch_options.get("m3_phase", 0)) > 0)
 			),
 			"result_file": "",
@@ -260,8 +269,8 @@ func _ready() -> void:
 		requested_world = world_catalog.get_default_world_id()
 	launch_options["world"] = requested_world
 	runtime_descriptor = RuntimeDescriptorScript.create(launch_options, {
-		"checkpoint": FOUNDATION_CHECKPOINT,
-		"build_id": FOUNDATION_BUILD_ID,
+		"checkpoint": M7_CHECKPOINT if _m7_mode else FOUNDATION_CHECKPOINT,
+		"build_id": M7_BUILD_ID if _m7_mode else FOUNDATION_BUILD_ID,
 	})
 	var load_result: Dictionary = load_world(requested_world, false)
 	if not bool(load_result.get("success", false)):

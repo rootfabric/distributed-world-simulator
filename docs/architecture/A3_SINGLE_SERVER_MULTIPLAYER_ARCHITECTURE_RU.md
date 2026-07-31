@@ -5,7 +5,7 @@ checkpoint: v16.10.6-architecture-a3-single-server-multiplayer
 build_id: a3-single-server-multiplayer-architecture-freeze
 base: v16.10.5-persistence-m6-dedicated-recovery
 branch: feature/a3-single-server-multiplayer-architecture
-status: candidate
+status: accepted (delivery review-fix1)
 resolution: SINGLE_SERVER_MULTIPLAYER_FROZEN
 ```
 
@@ -69,7 +69,7 @@ A3 фиксирует одну versioned, JSON-safe, exact-field и Node-indepen
 
 ## B1 boundary
 
-После принятия A3 следующий этап — `v16.11.0-data-plane-b1-nats-core`.
+После независимой приёмки A3 следующий архитектурный этап — `v16.11.0-data-plane-b1-nats-core`.
 
 B1 имеет только **server-to-server** scope через B0 semantic ports:
 
@@ -104,3 +104,7 @@ RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.sh
 ```
 
 Обязательная приёмка также включает полный `RUN_NETWORK_CONTRACT_TESTS.ps1` и `RUN_WORLD_REGRESSION_TESTS.ps1`.
+
+## Независимая приёмка
+
+A3 принят 31 июля 2026 года, delivery `review-fix1`. Проверены focused A3 12/12, архитектурный контракт 140 assertions, полный Network/runtime, World regression и main scene CLI 6/6. Локальный acceptance archive SHA-256: `BAFC96B451220A1D1D12B4BD3FB9F1F0D130B1BA652A1F70AEAC0661B041A380`. M7 является отдельным playable validation checkpoint поверх принятой архитектуры и не изменяет B1 boundary.

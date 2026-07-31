@@ -125,10 +125,12 @@ A task is complete only when it includes:
 architecture base accepted: v16.9.4-architecture-a2-networked-gameplay
 roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
 runtime checkpoint accepted: v16.10.5-persistence-m6-dedicated-recovery (delivery fix1)
-current architecture candidate: v16.10.6-architecture-a3-single-server-multiplayer
+architecture checkpoint accepted: v16.10.6-architecture-a3-single-server-multiplayer (delivery review-fix1)
+current playable validation candidate: v16.10.6.1-testing-m7-playable-networked-playground
 architecture manifest: config/network/single-server-multiplayer-architecture.v1.json
+playable validation manifest: config/network/playable-networked-playground.v1.json
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
-next after acceptance: feature/b1-nats-core-adapter
+next architecture stage after M7 validation: feature/b1-nats-core-adapter
 ```
 
 Accepted foundation order:
@@ -162,14 +164,20 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
 - перед передачей управления человеку отпускать все удерживаемые actions.
 
-## Current A3 checkpoint
+## Current A3/M7 checkpoint
 
 - Accepted runtime base: `v16.10.5-persistence-m6-dedicated-recovery`, delivery `fix1`.
-- Candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
-- Branch: `feature/a3-single-server-multiplayer-architecture`.
+- Accepted architecture: `v16.10.6-architecture-a3-single-server-multiplayer`, delivery `review-fix1`.
+- Current playable validation candidate: `v16.10.6.1-testing-m7-playable-networked-playground`.
+- Branch: `feature/m7-playable-networked-playground`.
 - One `NetworkedGameplayService` remains the only production gameplay authority.
 - LOOPBACK and ENet are adapters over the same canonical command/state path.
 - Graphical clients are command producers and replica presenters, never authority owners.
+- M7 graphical clients send `MOVEMENT_INTENT` only; canonical position, velocity and interaction origin are calculated by the dedicated server.
+- M7 pickup/drop/place are spatially validated against authoritative player state; client transforms and client-authored `PLAYER_STATE` are rejected.
+- M7 durable restore must detect `playable_sandbox` before Item Graph validation so the ten-slot Seven Days hotbar survives restart/reconnect.
 - B1 may add only server-to-server messaging through existing ports; it must not replace ENet or fork gameplay.
-- Focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
-- Next after acceptance: B1 NATS Core adapter.
+- A3 focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
+- M7 focused runner: `RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1/.sh`.
+- M7 manual launch: `PLAY_M7_NETWORKED_PLAYGROUND.ps1/.sh`.
+- Next architecture stage after M7 validation: B1 NATS Core adapter.

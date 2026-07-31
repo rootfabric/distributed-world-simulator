@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
@@ -103,6 +103,9 @@ $Tests = @(
     "res://tests/runtime/test_m6_dedicated_recovery_contracts.gd",
     "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",
     "res://tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
+    "res://tests/runtime/test_m7_playable_networked_playground.gd",
+    "res://tests/runtime/test_m7_playable_networked_processes.gd",
+    "res://tests/runtime/test_m7_playable_networked_recovery_processes.gd",
     "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
     "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
     "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
@@ -165,9 +168,9 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.6-architecture-a3-single-server-multiplayer"
-    runtime_base_checkpoint = "v16.10.5-persistence-m6-dedicated-recovery"
-    build_id = "a3-single-server-multiplayer-architecture-freeze"
+    checkpoint = "v16.10.6.1-testing-m7-playable-networked-playground"
+    runtime_base_checkpoint = "v16.10.6-architecture-a3-single-server-multiplayer"
+    build_id = "m7-playable-networked-playground"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -443,7 +446,7 @@ try {
 
     $Summary.passed = $true
     Save-Summary
-    Write-Host "All world/core regression tests through A3 single-server multiplayer architecture passed."
+    Write-Host "All world/core regression tests through M7 playable networked playground passed."
     Write-Host "Report: $ReportPath"
 }
 catch {

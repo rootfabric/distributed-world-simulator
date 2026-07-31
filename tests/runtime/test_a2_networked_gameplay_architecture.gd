@@ -133,8 +133,8 @@ func _test_roadmap_alignment(roadmap: Dictionary) -> void:
 	_assert(String(phases.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status must be accepted")
 	_assert(String(phases.get("M5", {}).get("status", "")) == "accepted", "M5 roadmap status must be accepted")
 	_assert(String(phases.get("M6", {}).get("status", "")) == "accepted", "M6 roadmap status must be accepted")
-	_assert(String(phases.get("A3", {}).get("status", "")) == "candidate", "A3 roadmap status must be candidate")
-	_assert(String(phases.get("B1", {}).get("status", "")) == "deferred_until_A3_acceptance", "B1 roadmap status must be deferred until A3 acceptance")
+	_assert(String(phases.get("A3", {}).get("status", "")) == "accepted", "A3 roadmap status must be accepted")
+	_assert(String(phases.get("B1", {}).get("status", "")) == "ready_after_A3_acceptance", "B1 roadmap status must be unlocked after A3 acceptance")
 	_assert(String(roadmap.get("architecture_freeze_manifest", "")) == "config/network/networked-gameplay-architecture.v1.json", "Roadmap freeze manifest link missing")
 
 

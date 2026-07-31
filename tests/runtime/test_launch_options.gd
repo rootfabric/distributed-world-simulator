@@ -109,6 +109,32 @@ func _init() -> void:
 	]))
 	_assert(not bool(m6_client_role.get("success", true)), "M6 persistence options were accepted for a graphical client")
 
+	var m7_server: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-playground",
+	]))
+	_assert(bool(m7_server.get("success", false)), "Valid M7 dedicated playground options were rejected")
+	_assert(bool(m7_server.get("options", {}).get("network_playground", false)), "M7 playground flag was not parsed")
+	_assert(String(m7_server.get("options", {}).get("world", "")) == "playground", "M7 playground did not select the test world")
+	var m7_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-playground=true",
+		"--player-identity=a",
+	]))
+	_assert(bool(m7_client.get("success", false)), "Valid M7 graphical client options were rejected")
+	var m7_wrong_world: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-playground",
+		"--world=moon",
+		"--player-identity=a",
+	]))
+	_assert(not bool(m7_wrong_world.get("success", true)), "M7 playground accepted a non-playground world")
+	var m7_wrong_role: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=listen-host",
+		"--network-playground",
+	]))
+	_assert(not bool(m7_wrong_role.get("success", true)), "M7 playground accepted listen-host authority")
+
 	_finish()
 
 

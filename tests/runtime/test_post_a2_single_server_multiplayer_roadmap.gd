@@ -21,7 +21,7 @@ func _init() -> void:
 
 func _test_identity(strategy: Dictionary) -> void:
 	_assert(String(strategy.get("schema", "")) == "planet_simulator.single_server_multiplayer_roadmap.v1", "Strategy schema mismatch")
-	_assert(int(strategy.get("document_revision", 0)) == 8, "Strategy revision mismatch")
+	_assert(int(strategy.get("document_revision", 0)) == 9, "Strategy revision mismatch")
 	_assert(String(strategy.get("checkpoint", "")) == "v16.9.5-roadmap-single-server-multiplayer-first", "Strategy checkpoint mismatch")
 	_assert(String(strategy.get("build_id", "")) == "post-a2-single-server-multiplayer-first", "Strategy build ID mismatch")
 	_assert(String(strategy.get("status", "")) == "accepted", "Roadmap checkpoint must be accepted")
@@ -50,11 +50,11 @@ func _test_sequence_and_milestones(strategy: Dictionary) -> void:
 	_assert("N2" in by_id.get("M5", {}).get("depends_on", []), "M5 must use N2 process harness")
 	_assert(by_id.get("M6", {}).get("closes", []) == ["A2-D04"], "M6 debt closure mismatch")
 	_assert(String(by_id.get("M6", {}).get("status", "")) == "accepted", "M6 accepted roadmap status mismatch")
-	_assert(String(by_id.get("A3", {}).get("status", "")) == "candidate", "A3 candidate roadmap status mismatch")
+	_assert(String(by_id.get("A3", {}).get("status", "")) == "accepted", "A3 accepted roadmap status mismatch")
 	_assert(by_id.get("A3", {}).get("depends_on", []) == ["M6"], "A3 dependency mismatch")
 	_assert(String(by_id.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status mismatch")
 	_assert(String(by_id.get("M5", {}).get("status", "")) == "accepted", "M5 accepted roadmap status mismatch")
-	_assert(String(by_id.get("B1", {}).get("status", "")) == "deferred_until_A3_acceptance", "B1 must wait for A3 acceptance")
+	_assert(String(by_id.get("B1", {}).get("status", "")) == "ready_after_A3_acceptance", "B1 must be unlocked only after A3 acceptance")
 	_assert("A3" in by_id.get("B1", {}).get("depends_on", []), "B1 must depend on A3")
 	_assert("B2" in by_id.get("N3", {}).get("depends_on", []), "N3 must wait for B2")
 
@@ -84,11 +84,11 @@ func _test_a2_alignment(strategy: Dictionary, a2: Dictionary) -> void:
 	_assert(not bool(a2.get("implementation_assessment", {}).get("multi_authority_work_allowed", true)), "A2 must still block multi-authority work")
 
 func _test_network_roadmap_alignment(strategy: Dictionary, roadmap: Dictionary) -> void:
-	_assert(int(roadmap.get("document_revision", 0)) == 27, "Network roadmap revision mismatch")
+	_assert(int(roadmap.get("document_revision", 0)) == 28, "Network roadmap revision mismatch")
 	_assert(String(roadmap.get("project_checkpoint", "")) == "v16.10.6-architecture-a3-single-server-multiplayer", "Network roadmap checkpoint mismatch")
 	_assert(String(roadmap.get("strategy_decision", "")) == "FULL_SINGLE_SERVER_MULTIPLAYER_FIRST", "Network roadmap strategy mismatch")
 	_assert(roadmap.get("approved_sequence_after_a2", []) == strategy.get("priority_sequence", []), "Network roadmap sequence mismatch")
-	_assert(String(roadmap.get("current_gate", "")).begins_with("A3"), "Network roadmap current gate must be A3")
+	_assert(String(roadmap.get("current_gate", "")).begins_with("M7"), "Network roadmap current gate must be M7 validation")
 	var by_id: Dictionary = {}
 	for value in roadmap.get("phases", []):
 		if value is Dictionary:
@@ -100,8 +100,8 @@ func _test_network_roadmap_alignment(strategy: Dictionary, roadmap: Dictionary) 
 	_assert(String(by_id.get("M4", {}).get("status", "")) == "accepted", "M4 roadmap status mismatch")
 	_assert(String(by_id.get("M5", {}).get("status", "")) == "accepted", "M5 accepted roadmap status mismatch")
 	_assert(String(by_id.get("M6", {}).get("status", "")) == "accepted", "M6 network roadmap status mismatch")
-	_assert(String(by_id.get("A3", {}).get("status", "")) == "candidate", "A3 network roadmap status mismatch")
-	_assert(String(by_id.get("B1", {}).get("status", "")) == "deferred_until_A3_acceptance", "B1 roadmap status mismatch")
+	_assert(String(by_id.get("A3", {}).get("status", "")) == "accepted", "A3 network roadmap status mismatch")
+	_assert(String(by_id.get("B1", {}).get("status", "")) == "ready_after_A3_acceptance", "B1 roadmap status mismatch")
 	_assert(String(by_id.get("N3", {}).get("status", "")) == "blocked_until_A3_B2", "N3 roadmap status mismatch")
 
 func _test_documentation_and_runners() -> void:

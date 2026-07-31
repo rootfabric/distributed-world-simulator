@@ -1,0 +1,123 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "build_id": "m7-playable-networked-playground",
+  "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "base_delivery": "review-fix1 ACCEPTED",
+  "local_base_commit": "67359ba",
+  "branch": "feature/m7-playable-networked-playground",
+  "delivery_iteration": "fix1",
+  "status": "candidate",
+  "decision": "READY_FOR_INDEPENDENT_LOCAL_ACCEPTANCE",
+  "generated_at_utc": "2026-07-31T10:01:44.927233Z",
+  "engine": {
+    "version": "Godot 4.7.1 stable.double custom build",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "precision": "double",
+    "platform": "linux-x86_64"
+  },
+  "resolved_review_blockers": {
+    "m6_sandbox_hotbar_recovery": {
+      "result": "PASS",
+      "resolution": "playable_sandbox is extracted before durable Item Graph validation and restore",
+      "evidence": "M7 restart/reconnect recovery 36 assertions; hotbar 10 slots and slot 9 survive generation 1 to generation 2"
+    },
+    "server_side_movement_authority": {
+      "result": "PASS",
+      "resolution": "graphical clients submit MOVEMENT_INTENT; dedicated server computes canonical position velocity orientation and interaction origin",
+      "security": "client-authored PLAYER_STATE is rejected with CLIENT_AUTHORITATIVE_STATE_FORBIDDEN"
+    },
+    "server_side_spatial_item_authority": {
+      "result": "PASS",
+      "resolution": "pickup validates authoritative range and deterministic server visibility; drop/place transforms are server-constructed and bounded",
+      "security": "client transform 9000/9000/9000 is ignored and cannot determine canonical placement"
+    },
+    "roadmap_consistency": {
+      "result": "PASS",
+      "resolution": "A3 is explicitly ACCEPTED; M7 is the current playable validation candidate; B1 follows M7 validation"
+    }
+  },
+  "scope": {
+    "changed_paths": 50,
+    "new_paths": 25,
+    "modified_paths": 25,
+    "deleted_paths": 0,
+    "legacy_m3_m5_compositions_preserved": true
+  },
+  "composition": {
+    "world_id": "playground",
+    "authority": "one headless NetworkedGameplayService dedicated server",
+    "graphical_transport": "ENet",
+    "default_graphical_clients": 2,
+    "client_authority": "intent_producer_and_replica_only",
+    "movement": "server_simulated_from_MOVEMENT_INTENT",
+    "item_interaction": "server_validated_from_authoritative_player_spatial_state",
+    "inventory_profile": "seven_days_like",
+    "hotbar_slots": 10,
+    "persistence": "M6 authoritative checkpoint repository with playable_sandbox-aware restore"
+  },
+  "tests": {
+    "focused_m7": {
+      "result": "13/13 PASS",
+      "integration_security_assertions": 50,
+      "graphical_process_assertions": 28,
+      "recovery_process_assertions": 36
+    },
+    "m5_graphical_regression": {
+      "result": "93 assertions, 0 failures"
+    },
+    "network_runtime": {
+      "result": "63/63 PASS",
+      "assertions": 4879,
+      "scope": "Foundation N0 through M7 fix1"
+    },
+    "world_regression": {
+      "result": "108/108 PASS",
+      "manifest_coverage": "108/108"
+    },
+    "main_scene_cli": {
+      "result": "6/6 PASS"
+    },
+    "editor_import": {
+      "result": "PASS"
+    }
+  },
+  "static_gates": {
+    "git_diff_check": "PASS",
+    "json": "61/61 PASS",
+    "gdscript_uid": "475/475",
+    "missing_uid": 0,
+    "duplicate_uid": 0,
+    "missing_res_paths": 0,
+    "conflict_markers": 0,
+    "nul_text_files": 0,
+    "shell_syntax": "PASS",
+    "m7_shell_mode": "0755",
+    "remaining_godot_processes": 0
+  },
+  "delivery_metadata": {
+    "machine_readable_validation": "validation/v16.10.6.1-testing-m7-playable-networked-playground-validation.json",
+    "changed_file_list": "validation/v16.10.6.1-testing-m7-playable-networked-playground-files.txt",
+    "changed_file_list_entries": 50,
+    "required_by": "AGENTS.md quality gate",
+    "included_in_patch": true
+  },
+  "delivery": {
+    "archive": "v16.10.6.1-testing-m7-playable-networked-playground-fix1-patch.zip",
+    "archive_contains_only_changed_files": true,
+    "archive_sha256": "reported externally because embedding a self-hash would be circular",
+    "byte_exact_replay": "PASS 50/50",
+    "archive_focused_replay": "13/13 PASS",
+    "unsafe_paths": 0,
+    "zip_integrity": "PASS"
+  },
+  "acceptance": {
+    "implementation": "PASS",
+    "focused_profile": "PASS",
+    "full_network_regression": "PASS",
+    "full_world_regression": "PASS",
+    "security_authority_review": "PASS",
+    "delivery_completeness": "PASS",
+    "decision": "READY_FOR_INDEPENDENT_LOCAL_ACCEPTANCE"
+  }
+}

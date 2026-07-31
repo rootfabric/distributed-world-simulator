@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.single_server_multiplayer_architecture.v1",
-  "document_revision": 1,
+  "document_revision": 2,
   "checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
   "build_id": "a3-single-server-multiplayer-architecture-freeze",
   "base_checkpoint": "v16.10.5-persistence-m6-dedicated-recovery",
-  "status": "candidate",
+  "status": "accepted",
   "decision": "SINGLE_SERVER_MULTIPLAYER_FROZEN",
   "branch": "feature/a3-single-server-multiplayer-architecture",
   "generated_at_utc": "2026-07-31T03:39:00Z",
@@ -215,7 +215,7 @@
     "disconnect_reconnect": "M3 and M5",
     "replay_identity": "M5 fix1 and M6",
     "crash_restart_recovery": "M6 fix1",
-    "world_and_main_scene_regression": "A3 candidate validated on Godot 4.7.1 double; independent local acceptance remains required"
+    "world_and_main_scene_regression": "A3 independently accepted on Godot 4.7.1 double; focused 12/12, contracts 140, full network/world and main scene passed"
   },
   "a2_debt_closure": {
     "A2-D01": {
@@ -301,10 +301,15 @@
     "network_runtime": "60/60 PASS",
     "world_regression": "105/105 PASS",
     "main_scene": "6/6 PASS",
-    "independent_local_acceptance": "required_before_ACCEPTED",
-    "network_assertions": 4759
+    "independent_local_acceptance": "passed",
+    "network_assertions": 4759,
+    "delivery": "review-fix1",
+    "accepted_archive_sha256": "BAFC96B451220A1D1D12B4BD3FB9F1F0D130B1BA652A1F70AEAC0661B041A380"
   },
   "next_stage": "B1",
   "next_checkpoint": "v16.11.0-data-plane-b1-nats-core",
-  "updated_at_utc": "2026-07-31T03:39:00Z"
+  "updated_at_utc": "2026-07-31T09:00:00Z",
+  "delivery": "review-fix1",
+  "accepted_at_utc": "2026-07-31T09:00:00Z",
+  "acceptance_sha256": "BAFC96B451220A1D1D12B4BD3FB9F1F0D130B1BA652A1F70AEAC0661B041A380"
 }

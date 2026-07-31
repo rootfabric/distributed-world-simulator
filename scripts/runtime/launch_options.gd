@@ -33,6 +33,11 @@ static func defaults() -> Dictionary:
 		"m5_phase": 0,
 		"m6_result_file": "",
 		"m6_persistence_root": "",
+		"network_playground": false,
+		"m7_result_file": "",
+		"m7_phase": 0,
+		"m7_peer_result_file": "",
+		"m7_control_file": "",
 		"user_data_dir": "",
 		"print_runtime_descriptor": false,
 		"shutdown_after_ms": 0,
@@ -49,6 +54,9 @@ static func parse(arguments) -> Dictionary:
 			continue
 		if argument == "--print-runtime-descriptor":
 			options["print_runtime_descriptor"] = true
+			continue
+		if argument == "--network-playground":
+			options["network_playground"] = true
 			continue
 		if not argument.begins_with("--") or not argument.contains("="):
 			errors.append("Unknown launch argument: %s" % argument)
@@ -107,6 +115,16 @@ static func parse(arguments) -> Dictionary:
 				options["m6_result_file"] = value
 			"m6-persistence-root":
 				options["m6_persistence_root"] = value
+			"network-playground":
+				options["network_playground"] = value.to_lower() in ["1", "true", "yes", "on"]
+			"m7-result-file":
+				options["m7_result_file"] = value
+			"m7-phase":
+				options["m7_phase"] = _parse_non_negative_int(value, key, errors)
+			"m7-peer-result-file":
+				options["m7_peer_result_file"] = value
+			"m7-control-file":
+				options["m7_control_file"] = value
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":
@@ -184,6 +202,13 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 			errors.append("Launch option server_port is invalid")
 	if role == RuntimeRoleScript.GAME_CLIENT and String(options.get("player_identity", "")).strip_edges().is_empty():
 		errors.append("Launch option player_identity cannot be empty")
+	if bool(options.get("network_playground", false)):
+		if role not in [RuntimeRoleScript.GAME_CLIENT, RuntimeRoleScript.DEDICATED_SERVER]:
+			errors.append("Network playground requires game-client or dedicated-server role")
+		if String(options.get("world", "")).strip_edges().is_empty():
+			options["world"] = "playground"
+		elif String(options.get("world", "")) != "playground":
+			errors.append("Network playground requires --world=playground")
 	var m6_result_file := String(options.get("m6_result_file", "")).strip_edges()
 	var m6_persistence_root := String(options.get("m6_persistence_root", "")).strip_edges()
 	if (not m6_result_file.is_empty() or not m6_persistence_root.is_empty()) and role != RuntimeRoleScript.DEDICATED_SERVER:

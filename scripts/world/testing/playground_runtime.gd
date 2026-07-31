@@ -20,6 +20,12 @@ const RemotePlayerPresenterScript = preload(
 const M5NetworkedInventoryShellScript = preload(
 	"res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"
 )
+const M7ItemGraphReplicaAdapterScript = preload(
+	"res://scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd"
+)
+const M7NetworkItemCommandBridgeScript = preload(
+	"res://scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd"
+)
 
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
@@ -70,6 +76,16 @@ var _m4_item_commands: int = 0
 var _m4_item_rejections: int = 0
 var m5_networked_inventory_shell
 var _m5_acceptance_input_enabled: bool = false
+var _network_playground_enabled: bool = false
+var _m7_item_adapter
+var _m7_item_bridge
+var _m7_state_accumulator: float = 0.0
+var _m7_state_sync_enabled: bool = true
+var _m7_initial_player_replica_applied: bool = false
+var _m7_state_submissions: int = 0
+var _m7_reconciliations: int = 0
+var _m7_last_item_revision: int = -1
+var _m7_last_sync_error: String = ""
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -86,6 +102,7 @@ func configure_runtime(context: Dictionary) -> void:
 	local_input_enabled = bool(context.get("local_input_enabled", true))
 	var launch_options: Dictionary = context.get("launch_options", {})
 	_m5_acceptance_input_enabled = int(launch_options.get("m5_phase", 0)) > 0
+	_network_playground_enabled = bool(launch_options.get("network_playground", false))
 	var options: Dictionary = world_definition.get("options", {})
 	var spawn_values = options.get("spawn", [0.0, 1.2, 6.0])
 	if spawn_values is Array and spawn_values.size() >= 3:
@@ -194,14 +211,17 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
 	if runtime == null:
 		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
-	for method_name in [
+	var required_methods: Array[String] = [
 		"get_snapshot",
 		"get_item_graph_snapshot",
 		"get_local_player_id",
 		"move_blocking",
 		"move_nonblocking",
 		"execute_item_command_blocking",
-	]:
+	]
+	if _network_playground_enabled:
+		required_methods.append("submit_movement_intent_nonblocking")
+	for method_name in required_methods:
 		if not runtime.has_method(method_name):
 			return {
 				"success": false,
@@ -217,9 +237,15 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
 	_m3_attached = true
 	player.set_network_replica_mode(true)
+	if _network_playground_enabled:
+		player.set_network_prediction_mode(true)
+		var m7_setup := _setup_m7_networked_item_gameplay(runtime)
+		if not bool(m7_setup.get("success", false)):
+			_m3_attached = false
+			return m7_setup
 	_on_m3_replica_updated(runtime.get_snapshot())
 	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
-	if presentation_enabled:
+	if presentation_enabled and not _network_playground_enabled:
 		m5_networked_inventory_shell = M5NetworkedInventoryShellScript.new()
 		m5_networked_inventory_shell.name = "M5NetworkedInventoryShell"
 		add_child(m5_networked_inventory_shell)
@@ -242,6 +268,144 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	}
 
 
+func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
+	_m7_item_bridge = M7NetworkItemCommandBridgeScript.new()
+	var bridge_setup: Dictionary = _m7_item_bridge.setup(
+		runtime,
+		runtime.get_local_player_id(),
+		Callable(self, "_m7_selected_item_id")
+	)
+	if not bool(bridge_setup.get("success", false)):
+		return bridge_setup
+	_m7_item_adapter = _m7_item_bridge.get_adapter()
+	var converted: Dictionary = _m7_item_adapter.convert(runtime.get_item_graph_snapshot())
+	if not bool(converted.get("success", false)):
+		return converted
+	var details: Dictionary = Dictionary(converted.get("details", {}))
+	gravity_field = GravityFieldScript.new()
+	gravity_field.setup_static_sources([{
+		"id": "playground-moon",
+		"radius_m": 1737400.0,
+		"gravitational_parameter_m3_s2": 4890065191200.0,
+		"center_m": [0.0, -1737400.0, 0.0],
+		"interior_model": "uniform_sphere",
+	}], "scenario/playground/local")
+	item_gameplay = ItemGameplayControllerScript.new()
+	item_gameplay.name = "M7NetworkedItemGameplayController"
+	add_child(item_gameplay)
+	var setup_result: Dictionary = item_gameplay.setup_runtime(
+		player,
+		item_world_root,
+		item_attachment_root,
+		gravity_field,
+		"scenario/playground/local",
+		"playground-moon",
+		"m7-network-playground",
+		"playground",
+		presentation_enabled,
+		{
+			"mode": ItemGameplayControllerScript.RUNTIME_MODE_REPLICA,
+			"authority_owner_id": String(_m4_item_graph_snapshot.get("authority_owner_id", "network-authority")),
+			"authority_epoch": int(_m4_item_graph_snapshot.get("authority_epoch", 1)),
+			"initial_graph_snapshot": Dictionary(details.get("graph_snapshot", {})),
+			"replica_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+			"replica_checksum": String(_m4_item_graph_snapshot.get("checksum", "")),
+			"network_command_bridge": _m7_item_bridge,
+			"persistence_enabled": false,
+			"presentation_enabled": presentation_enabled,
+		}
+	)
+	if not bool(setup_result.get("success", false)):
+		item_gameplay.queue_free()
+		item_gameplay = null
+		return setup_result
+	item_gameplay.inventory_visibility_changed.connect(_on_inventory_visibility_changed)
+	world_interactor = WorldInteractorScript.new()
+	world_interactor.name = "M7NetworkWorldInteractor"
+	add_child(world_interactor)
+	world_interactor.setup(player, null)
+	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
+	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
+	world_interactor.set_enabled(true)
+	_m7_last_item_revision = int(_m4_item_graph_snapshot.get("revision", -1))
+	if presentation_enabled:
+		_command_inventory_profile(["seven_days_like"])
+	return {"success": true, "error_code": ""}
+
+
+func _m7_selected_item_id() -> String:
+	return item_gameplay.get_selected_hotbar_item_id() if item_gameplay != null else ""
+
+
+func _active_inventory_profile_id() -> String:
+	if item_gameplay == null or item_gameplay.inventory_ui == null or item_gameplay.inventory_ui.active_screen == null:
+		return ""
+	var profile = item_gameplay.inventory_ui.active_screen.active_interaction_profile
+	return String(profile.profile_id) if profile != null else ""
+
+
+func _create_m7_movement_intent(delta_seconds: float, input_override: Vector2 = Vector2(INF, INF), jump_override: int = -1, sprint_override: int = -1) -> Dictionary:
+	var input_vector := input_override
+	if is_inf(input_vector.x) or is_inf(input_vector.y):
+		input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if input_vector.length_squared() > 1.0:
+		input_vector = input_vector.normalized()
+	return {
+		"move_x": input_vector.x,
+		"move_z": -input_vector.y,
+		"look_yaw": clampf(player.camera_yaw, -PI, PI),
+		"look_pitch": clampf(player.camera_pitch, -1.45, 1.45),
+		"jump_pressed": Input.is_action_pressed("jump") if jump_override < 0 else jump_override > 0,
+		"sprint": Input.is_action_pressed("boost") if sprint_override < 0 else sprint_override > 0,
+		"delta_seconds": clampf(delta_seconds, 0.000001, 0.25),
+	}
+
+func _create_m7_player_state() -> Dictionary:
+	# Compatibility helper retained only for explicit security regression tests.
+	# The M7 network path never sends this client-authored state to authority.
+	var interaction_position: Vector3 = player.get_world_position()
+	var active_camera: Camera3D = player.get_active_camera()
+	if active_camera != null:
+		interaction_position = world_adapter.render_to_world(
+			active_camera.global_position + (-active_camera.global_transform.basis.z).normalized() * 2.0
+		)
+	return PlayableStateCodec.create_player_state(
+		player.get_world_position(), player.global_transform.basis, player.velocity,
+		interaction_position, player.get_controller_id(), player.get_camera_mode(),
+		player.is_flashlight_enabled(), 0, "scenario/playground/local",
+		runtime_universe_id, "playground", runtime_instance_id, 0.0
+	)
+
+
+func set_m7_state_sync_enabled(enabled: bool) -> void:
+	_m7_state_sync_enabled = enabled
+	if not enabled:
+		_m7_state_accumulator = 0.0
+
+
+func _sync_m7_predicted_player_state(delta: float) -> void:
+	if (
+		not _m7_state_sync_enabled
+		or m3_multiplayer_client_runtime == null
+		or player == null
+		or not local_input_enabled
+	):
+		return
+	_m7_state_accumulator += delta
+	if _m7_state_accumulator < 0.05:
+		return
+	var step := clampf(_m7_state_accumulator, 0.000001, 0.25)
+	_m7_state_accumulator = 0.0
+	var result: Dictionary = m3_multiplayer_client_runtime.submit_movement_intent_nonblocking(
+		_create_m7_movement_intent(step)
+	)
+	if bool(result.get("success", false)):
+		_m7_state_submissions += 1
+		_m7_last_sync_error = ""
+	else:
+		_m7_last_sync_error = String(result.get("error_code", "M7_PLAYER_INPUT_SEND_FAILED"))
+
+
 func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 	if not _m3_attached or m3_multiplayer_client_runtime == null or player == null:
 		return
@@ -255,17 +419,27 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 		if logical_id == local_id:
 			if bool(record.get("connected", false)):
 				var position: Dictionary = record.get("position", {})
-				player.set_world_position(Vector3(
+				var authoritative_position := Vector3(
 					float(position.get("x", 0.0)),
 					float(position.get("y", 0.0)),
 					float(position.get("z", 0.0))
-				))
+				)
 				var velocity: Dictionary = record.get("velocity", {})
-				player.velocity = Vector3(
+				var authoritative_velocity := Vector3(
 					float(velocity.get("x", 0.0)),
 					float(velocity.get("y", 0.0)),
 					float(velocity.get("z", 0.0))
 				)
+				if (
+					not _network_playground_enabled
+					or not _m7_initial_player_replica_applied
+					or player.get_world_position().distance_to(authoritative_position) > 1.25
+				):
+					player.set_world_position(authoritative_position)
+					player.velocity = authoritative_velocity
+					if _network_playground_enabled and _m7_initial_player_replica_applied:
+						_m7_reconciliations += 1
+				_m7_initial_player_replica_applied = true
 				_m3_local_sync_count += 1
 			continue
 		if not bool(record.get("connected", false)):
@@ -300,6 +474,26 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
 		return
 	_m4_item_graph_snapshot = snapshot.duplicate(true)
 	_m4_item_snapshot_updates += 1
+	if not _network_playground_enabled or item_gameplay == null or _m7_item_adapter == null:
+		return
+	var revision := int(snapshot.get("revision", -1))
+	if revision == _m7_last_item_revision:
+		return
+	var converted: Dictionary = _m7_item_adapter.convert(snapshot)
+	if not bool(converted.get("success", false)):
+		_m7_last_sync_error = String(converted.get("error_code", "M7_ITEM_REPLICA_CONVERSION_FAILED"))
+		return
+	var details: Dictionary = Dictionary(converted.get("details", {}))
+	var apply_result: Dictionary = item_gameplay.apply_network_graph_snapshot(
+		Dictionary(details.get("graph_snapshot", {})),
+		revision,
+		String(snapshot.get("checksum", ""))
+	)
+	if bool(apply_result.get("success", false)):
+		_m7_last_item_revision = revision
+		_m7_last_sync_error = ""
+	else:
+		_m7_last_sync_error = String(apply_result.get("error_code", "M7_ITEM_REPLICA_APPLY_FAILED"))
 
 
 func _apply_m3_network_input(delta: float) -> void:
@@ -407,6 +601,16 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"network_replica_mode": (
 			bool(player.is_network_replica_mode()) if player != null else false
 		),
+		"network_prediction_mode": (
+			bool(player.is_network_prediction_mode()) if player != null else false
+		),
+		"network_playground_enabled": _network_playground_enabled,
+		"m7_state_submissions": _m7_state_submissions,
+		"m7_state_sync_enabled": _m7_state_sync_enabled,
+		"m7_reconciliations": _m7_reconciliations,
+		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
+		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
 		"local_sync_count": _m3_local_sync_count,
 		"remote_presenter_count": _m3_remote_presenters.size(),
 		"remote_spawn_count": _m3_remote_spawn_count,
@@ -436,7 +640,10 @@ func _process(delta: float) -> void:
 	if runtime_role != "game-client":
 		return
 	if _m3_attached:
-		_apply_m3_network_input(delta)
+		if _network_playground_enabled:
+			_sync_m7_predicted_player_state(delta)
+		else:
+			_apply_m3_network_input(delta)
 	elif _m2_attached:
 		_apply_m2_flat_input(delta)
 		_sync_m2_player_state(delta)
@@ -576,6 +783,8 @@ func prepare_for_unload() -> void:
 	_m3_remote_presenters.clear()
 	m3_multiplayer_client_runtime = null
 	_m3_attached = false
+	_m7_item_adapter = null
+	_m7_item_bridge = null
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -1338,6 +1547,16 @@ func create_m2_graphical_client_report() -> Dictionary:
 		"network_replica_mode": (
 			bool(player.is_network_replica_mode()) if player != null else false
 		),
+		"network_prediction_mode": (
+			bool(player.is_network_prediction_mode()) if player != null else false
+		),
+		"network_playground_enabled": _network_playground_enabled,
+		"m7_state_submissions": _m7_state_submissions,
+		"m7_state_sync_enabled": _m7_state_sync_enabled,
+		"m7_reconciliations": _m7_reconciliations,
+		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
+		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
 		"last_sync_error": _m2_last_sync_error,
 		"direct_authority_references": 0,
 		"direct_domain_references": 0,
