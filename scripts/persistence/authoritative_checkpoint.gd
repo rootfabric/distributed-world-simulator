@@ -51,8 +51,8 @@ static func create(
 		"replay_state": replay_state.duplicate(true),
 		"checksum": "",
 	}
-	value["checksum"] = compute_checksum(value)
-	return value
+	# Bind the checksum to the exact JSON-safe representation written to disk.
+	return UtilsScript.finalize_json_checksum(value)
 
 
 static func compute_checksum(value: Dictionary) -> String:

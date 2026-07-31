@@ -124,7 +124,7 @@ func _spawn_server(executable: String, project_root: String, port: int, persiste
 	return _spawn(executable, [
 		"--headless", "--quiet", "--path", project_root,
 		"--log-file", log_file, "--",
-		"--role=dedicated-server", "--network-playground", "--world=playground",
+		"--role=dedicated-server", "--network-playground", "--network-debug", "--world=playground",
 		"--node-id=m7-recovery-server", "--server-address=127.0.0.1",
 		"--server-port=%d" % port,
 		"--m6-persistence-root=%s" % persistence_root,

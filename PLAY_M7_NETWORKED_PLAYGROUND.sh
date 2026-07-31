@@ -36,7 +36,7 @@ start_isolated() {
 
 SERVER_RESULT="$RUN_ROOT/server.json"
 start_isolated "$RUN_ROOT/profiles/server" --headless --path "$ROOT" --log-file "$RUN_ROOT/server.log" -- \
-  --role=dedicated-server --network-playground --world=playground \
+  --role=dedicated-server --network-playground --network-debug --world=playground \
   --node-id=m7-playground-server --instance-id=m7-playground \
   --server-address="$HOST" --server-port="$PORT" --m7-result-file="$SERVER_RESULT" \
   --m6-persistence-root="$PERSISTENCE_ROOT" --print-runtime-descriptor
@@ -61,7 +61,7 @@ CLIENT_PIDS=()
 for ((i=0;i<CLIENT_COUNT;i++)); do
   id="${IDS[$i]}"
   start_isolated "$RUN_ROOT/profiles/client-$id" --path "$ROOT" --rendering-method gl_compatibility \
-    --log-file "$RUN_ROOT/client-$id.log" -- --role=game-client --network-playground --world=playground \
+    --log-file "$RUN_ROOT/client-$id.log" -- --role=game-client --network-playground --network-debug --network-debug-stay-open --world=playground \
     --node-id="m7-client-$id" --instance-id="m7-client-$id" --player-identity="$id" \
     --server-address="$HOST" --server-port="$PORT" --print-runtime-descriptor
   CLIENT_PIDS+=("$STARTED_PID")

@@ -35,6 +35,8 @@ static func defaults() -> Dictionary:
 		"m6_persistence_root": "",
 		"network_playground": false,
 		"m7_result_file": "",
+		"network_debug": false,
+		"network_debug_stay_open": false,
 		"m7_phase": 0,
 		"m7_peer_result_file": "",
 		"m7_control_file": "",
@@ -57,6 +59,12 @@ static func parse(arguments) -> Dictionary:
 			continue
 		if argument == "--network-playground":
 			options["network_playground"] = true
+			continue
+		if argument == "--network-debug":
+			options["network_debug"] = true
+			continue
+		if argument == "--network-debug-stay-open":
+			options["network_debug_stay_open"] = true
 			continue
 		if not argument.begins_with("--") or not argument.contains("="):
 			errors.append("Unknown launch argument: %s" % argument)

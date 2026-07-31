@@ -29,6 +29,10 @@ const M7NetworkItemCommandBridgeScript = preload(
 
 const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
+const M7_INPUT_SEND_INTERVAL_SECONDS: float = 1.0 / 30.0
+const M7_AUTHORITATIVE_INTERPOLATION_RATE: float = 18.0
+const M7_AUTHORITATIVE_TELEPORT_DISTANCE_M: float = 6.0
+const M7_INTERACTION_RANGE_M: float = 5.0
 
 var simulator
 var command_registry
@@ -86,6 +90,13 @@ var _m7_state_submissions: int = 0
 var _m7_reconciliations: int = 0
 var _m7_last_item_revision: int = -1
 var _m7_last_sync_error: String = ""
+var _m7_authoritative_target_position: Vector3 = Vector3.ZERO
+var _m7_authoritative_target_velocity: Vector3 = Vector3.ZERO
+var _m7_authoritative_target_sequence: int = -1
+var _m7_authoritative_target_valid: bool = false
+var _m7_interpolation_updates: int = 0
+var _m7_hard_snaps: int = 0
+var _m7_network_error: String = ""
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -238,7 +249,8 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_m3_attached = true
 	player.set_network_replica_mode(true)
 	if _network_playground_enabled:
-		player.set_network_prediction_mode(true)
+		# Client sends input intent only; dedicated server owns movement simulation.
+		player.set_network_prediction_mode(false)
 		var m7_setup := _setup_m7_networked_item_gameplay(runtime)
 		if not bool(m7_setup.get("success", false)):
 			_m3_attached = false
@@ -324,6 +336,7 @@ func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
 	world_interactor.name = "M7NetworkWorldInteractor"
 	add_child(world_interactor)
 	world_interactor.setup(player, null)
+	world_interactor.interaction_distance_m = M7_INTERACTION_RANGE_M
 	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
 	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
 	world_interactor.set_enabled(true)
@@ -392,7 +405,7 @@ func _sync_m7_predicted_player_state(delta: float) -> void:
 	):
 		return
 	_m7_state_accumulator += delta
-	if _m7_state_accumulator < 0.05:
+	if _m7_state_accumulator < M7_INPUT_SEND_INTERVAL_SECONDS:
 		return
 	var step := clampf(_m7_state_accumulator, 0.000001, 0.25)
 	_m7_state_accumulator = 0.0
@@ -430,16 +443,21 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 					float(velocity.get("y", 0.0)),
 					float(velocity.get("z", 0.0))
 				)
-				if (
-					not _network_playground_enabled
-					or not _m7_initial_player_replica_applied
-					or player.get_world_position().distance_to(authoritative_position) > 1.25
-				):
+				if _network_playground_enabled:
+					var authoritative_sequence := int(record.get("last_input_sequence", -1))
+					if authoritative_sequence >= _m7_authoritative_target_sequence:
+						_m7_authoritative_target_position = authoritative_position
+						_m7_authoritative_target_velocity = authoritative_velocity
+						_m7_authoritative_target_sequence = authoritative_sequence
+						_m7_authoritative_target_valid = true
+					if not _m7_initial_player_replica_applied:
+						player.set_world_position(authoritative_position)
+						player.velocity = authoritative_velocity
+						_m7_initial_player_replica_applied = true
+				else:
 					player.set_world_position(authoritative_position)
 					player.velocity = authoritative_velocity
-					if _network_playground_enabled and _m7_initial_player_replica_applied:
-						_m7_reconciliations += 1
-				_m7_initial_player_replica_applied = true
+					_m7_initial_player_replica_applied = true
 				_m3_local_sync_count += 1
 			continue
 		if not bool(record.get("connected", false)):
@@ -568,6 +586,42 @@ func get_m5_inventory_shell():
 	return m5_networked_inventory_shell
 
 
+func _apply_m7_authoritative_interpolation(delta: float) -> void:
+	if (
+		not _network_playground_enabled
+		or not _m7_authoritative_target_valid
+		or player == null
+	):
+		return
+	var current: Vector3 = player.get_world_position()
+	var distance: float = current.distance_to(_m7_authoritative_target_position)
+	if distance > M7_AUTHORITATIVE_TELEPORT_DISTANCE_M:
+		player.set_world_position(_m7_authoritative_target_position)
+		player.velocity = _m7_authoritative_target_velocity
+		_m7_hard_snaps += 1
+		_m7_reconciliations += 1
+		return
+	var weight: float = 1.0 - exp(-M7_AUTHORITATIVE_INTERPOLATION_RATE * clampf(delta, 0.0, 0.1))
+	var next_position: Vector3 = current.lerp(_m7_authoritative_target_position, weight)
+	if next_position.distance_to(_m7_authoritative_target_position) < 0.001:
+		next_position = _m7_authoritative_target_position
+	player.set_world_position(next_position)
+	player.velocity = _m7_authoritative_target_velocity
+	_m7_interpolation_updates += 1
+
+
+func show_network_error(error_code: String, details: Dictionary = {}) -> void:
+	_m7_network_error = error_code
+	var message := "Сетевая ошибка: %s" % error_code
+	if details.has("error_code") and String(details.get("error_code", "")) != error_code:
+		message += " (%s)" % String(details.get("error_code", ""))
+	if interaction_label != null:
+		interaction_label.text = message
+	if overlay_label != null:
+		overlay_label.text = message
+	push_error("[m7_network_error] %s %s" % [error_code, JSON.stringify(details)])
+
+
 func create_m3_graphical_client_report() -> Dictionary:
 	var presenters: Dictionary = {}
 	for logical_id_value in _m3_remote_presenters.keys():
@@ -609,6 +663,11 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"m7_state_sync_enabled": _m7_state_sync_enabled,
 		"m7_reconciliations": _m7_reconciliations,
 		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_interpolation_mode": "AUTHORITATIVE_TARGET_SMOOTHING",
+		"m7_interpolation_updates": _m7_interpolation_updates,
+		"m7_hard_snaps": _m7_hard_snaps,
+		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,
+		"m7_network_error": _m7_network_error,
 		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
 		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
 		"local_sync_count": _m3_local_sync_count,
@@ -641,6 +700,7 @@ func _process(delta: float) -> void:
 		return
 	if _m3_attached:
 		if _network_playground_enabled:
+			_apply_m7_authoritative_interpolation(delta)
 			_sync_m7_predicted_player_state(delta)
 		else:
 			_apply_m3_network_input(delta)
@@ -1555,6 +1615,11 @@ func create_m2_graphical_client_report() -> Dictionary:
 		"m7_state_sync_enabled": _m7_state_sync_enabled,
 		"m7_reconciliations": _m7_reconciliations,
 		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_interpolation_mode": "AUTHORITATIVE_TARGET_SMOOTHING",
+		"m7_interpolation_updates": _m7_interpolation_updates,
+		"m7_hard_snaps": _m7_hard_snaps,
+		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,
+		"m7_network_error": _m7_network_error,
 		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
 		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
 		"last_sync_error": _m2_last_sync_error,

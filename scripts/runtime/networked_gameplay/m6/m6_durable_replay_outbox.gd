@@ -37,6 +37,10 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 	var safe := Utils.canonicalize(payload, "$.m6_outbox_payload")
 	if not bool(safe.get("success", false)):
 		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	var payload_round_trip: Dictionary = Utils.json_round_trip(payload)
+	if not bool(payload_round_trip.get("success", false)) or not payload_round_trip.get("value") is Dictionary:
+		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(payload_round_trip.get("error", ""))})
+	var stable_payload: Dictionary = Dictionary(payload_round_trip.get("value", {})).duplicate(true)
 	for record_value in _records:
 		if String(Dictionary(record_value).get("operation_id", "")) == normalized_operation:
 			return _failure("M6_OUTBOX_OPERATION_ALREADY_STAGED", {"operation_id": normalized_operation})
@@ -53,8 +57,8 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 		"service_revision": int(report.get("revision", 0)),
 		"delivery_attempts": 0,
 		"delivered": false,
-		"payload": payload.duplicate(true),
-		"payload_checksum": Utils.payload_hash(payload),
+		"payload": stable_payload,
+		"payload_checksum": Utils.payload_hash(stable_payload),
 	}
 	_next_sequence += 1
 	_records.append(record)
@@ -127,8 +131,7 @@ func to_dict() -> Dictionary:
 		"committed_outbox": get_records(),
 		"checksum": "",
 	}
-	value["checksum"] = _checksum(value)
-	return value
+	return Utils.finalize_json_checksum(value)
 
 
 func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:

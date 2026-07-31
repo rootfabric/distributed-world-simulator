@@ -117,6 +117,10 @@ func _run() -> void:
 	_assert(SimulatorApp.M7_CHECKPOINT == String(manifest.get("checkpoint", "")), "M7 runtime identity matches manifest")
 	for required_path in [
 		"res://PLAY_M7_NETWORKED_PLAYGROUND.ps1",
+		"res://START_M7_NETWORK_SERVER.ps1",
+		"res://START_M7_NETWORK_CLIENT.ps1",
+		"res://WATCH_M7_NETWORK_LOG.ps1",
+		"res://STOP_M7_NETWORK_DEBUG.ps1",
 		"res://STOP_M7_NETWORKED_PLAYGROUND.ps1",
 		"res://PLAY_M7_NETWORKED_PLAYGROUND.sh",
 		"res://STOP_M7_NETWORKED_PLAYGROUND.sh",
@@ -124,6 +128,14 @@ func _run() -> void:
 		"res://RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.sh",
 	]:
 		_assert(FileAccess.file_exists(required_path), "M7 delivery includes %s" % required_path.get_file())
+
+	var debug_client_launcher := FileAccess.get_file_as_string("res://START_M7_NETWORK_CLIENT.ps1")
+	_assert(debug_client_launcher.contains("Get-Process -Id $ServerPid"), "debug client rejects stale server process descriptors")
+	_assert(debug_client_launcher.contains("--network-debug-stay-open"), "debug client remains open after disconnect")
+	_assert(debug_client_launcher.contains("server/process.json"), "debug client validates the matching server process descriptor")
+	var debug_server_launcher := FileAccess.get_file_as_string("res://START_M7_NETWORK_SERVER.ps1")
+	_assert(debug_server_launcher.contains("server-state.json"), "debug server exposes a machine-readable state file")
+	_assert(debug_server_launcher.contains("godot.log"), "debug server persists its dedicated log")
 
 	var client := ServiceBackedClient.new()
 	var client_setup: Dictionary = client.setup()
@@ -158,7 +170,8 @@ func _run() -> void:
 	await process_frame
 	var report: Dictionary = runtime.create_m3_graphical_client_report()
 	_assert(bool(report.get("network_playground_enabled", false)), "M7 network playground profile enabled")
-	_assert(bool(report.get("network_prediction_mode", false)), "normal controller prediction enabled")
+	_assert(not bool(report.get("network_prediction_mode", true)), "client-side movement prediction is disabled")
+	_assert(String(report.get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "authoritative replica interpolation is enabled")
 	_assert(bool(report.get("seven_days_inventory_active", false)), "Seven Days inventory profile active")
 	_assert(runtime.item_gameplay != null, "real ItemGameplayController is attached")
 	_assert(runtime.m5_networked_inventory_shell == null, "legacy M5 inventory shell is not used")
@@ -176,6 +189,12 @@ func _run() -> void:
 		"operation/m7/contracts/far-pickup", "item.pickup", {"item_id":"item/shared/beacon/1"}
 	)
 	_assert(not bool(far_pickup.get("success", true)) and String(far_pickup.get("error_code", "")) in ["ITEM_INTERACTION_OUT_OF_RANGE", "ITEM_NOT_VISIBLE_TO_PLAYER", "ITEM_INTERACTION_OCCLUDED"], "server rejects remote pickup before movement")
+	var bridge_rejection: Dictionary = runtime._m7_item_bridge.submit_item_command(
+		"item.pickup", {"item_id": "item/shared/beacon/1"}, "operation/m7/contracts/bridge-far-pickup"
+	)
+	_assert(not bool(bridge_rejection.get("success", true)), "item bridge preserves the server-side pickup rejection")
+	_assert(not String(bridge_rejection.get("message", "")).is_empty(), "item bridge exposes a human-readable pickup rejection")
+	_assert(String(bridge_rejection.get("output", "")) == String(bridge_rejection.get("message", "")), "item rejection is visible through legacy gameplay output")
 
 	var beacon_target := Vector3(1.2, 0.4, -3.4)
 	var movement: Dictionary = _move_service_client_toward(runtime, client, beacon_target, 2)

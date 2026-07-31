@@ -16,6 +16,7 @@ const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
 const M6_BUILD_ID := "m6-dedicated-persistence-recovery"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
+const M7_MOVEMENT_CHECKPOINT_INTERVAL_MS := 1500
 
 var _boundary
 var _service
@@ -48,9 +49,17 @@ var _recovered := false
 var _recovery_source := ""
 var _last_checkpoint_operation_id := ""
 var _persistence_failures := 0
+var _last_persistence_error_details: Dictionary = {}
 var _durable_commits := 0
 var _fatal_persistence_failure := false
 var _playable_sandbox := false
+var _movement_checkpoint_dirty := false
+var _last_movement_checkpoint_ms := 0
+var _movement_checkpoints := 0
+var _movement_commands_since_checkpoint := 0
+var _debug_logging := false
+var _last_debug_report_ms := 0
+var _peer_last_input_ms: Dictionary = {}
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured:
@@ -63,6 +72,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	_debug_logging = bool(config.get("debug_logging", false))
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
 	_service = Service.new()
@@ -88,7 +98,10 @@ func setup(config: Dictionary) -> Dictionary:
 	if not bool(started.get("success", false)):
 		return started
 	_configured = true
+	_last_movement_checkpoint_ms = Time.get_ticks_msec()
+	_last_debug_report_ms = _last_movement_checkpoint_ms
 	set_process(true)
+	_debug_event("SERVER_READY", {"host":_host,"port":_port,"persistence_root":_persistence_root,"recovered":_recovered})
 	_write_report("READY", false)
 	ready_for_clients.emit(get_report())
 	return _success({"host": _host, "port": _port})
@@ -113,6 +126,16 @@ func _process(_delta: float) -> void:
 			_handle_message(peer_id, session_id, event.get("frame", {}).get("payload", {}))
 		elif event_type == "PEER_DISCONNECTED":
 			_handle_disconnect(peer_id, session_id)
+	_maybe_persist_movement_checkpoint()
+	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
+		_last_debug_report_ms = Time.get_ticks_msec()
+		_debug_event("SERVER_HEALTH", {
+			"connected_peers":_peer_to_player.size(),"moves":_moves,"rejections":_rejections,
+			"messages_received":_messages_received,"messages_sent":_messages_sent,
+			"checkpoint_generation":_checkpoint_generation,"movement_dirty":_movement_checkpoint_dirty,
+			"movement_commands_since_checkpoint":_movement_commands_since_checkpoint,
+			"last_error_code":_last_error_code,
+		})
 
 func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	match String(payload.get("type", "")):
@@ -144,6 +167,8 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		return
 	_peer_to_player[peer_id] = logical_id
 	_peer_to_session[peer_id] = session_id
+	_peer_last_input_ms[peer_id] = Time.get_ticks_msec()
+	_debug_event("PLAYER_JOINED", {"peer_id":peer_id,"session_id":session_id,"logical_player_id":logical_id})
 	var replay := _is_replay_result(result)
 	if not replay:
 		_joins += 1
@@ -212,29 +237,30 @@ func _handle_player_input(peer_id: String, session_id: String, payload: Dictiona
 	if not intent_value is Dictionary:
 		_reject_uncommitted_command(peer_id, operation_id, "PLAYER_INPUT", "MOVEMENT_INTENT_REQUIRED")
 		return
+	var now_ms := Time.get_ticks_msec()
+	var previous_ms := int(_peer_last_input_ms.get(peer_id, now_ms - 50))
+	_peer_last_input_ms[peer_id] = now_ms
+	var authority_intent := Dictionary(intent_value).duplicate(true)
+	authority_intent["delta_seconds"] = clampf(float(now_ms - previous_ms) / 1000.0, 1.0 / 30.0, 0.1)
 	var result: Dictionary = _service.submit_movement_intent(
-		logical_id,
-		session_id,
-		int(payload.get("ownership_epoch", 0)),
-		int(payload.get("input_sequence", 0)),
-		Dictionary(intent_value),
-		operation_id
+		logical_id, session_id, int(payload.get("ownership_epoch", 0)),
+		int(payload.get("input_sequence", 0)), authority_intent, operation_id
 	)
-	if not _persist_command_result(operation_id, "PLAYER_INPUT", logical_id, result):
-		_send_result(peer_id, operation_id, "PLAYER_INPUT", _failure("M6_DURABLE_COMMIT_FAILED"))
-		return
-	var result_sent := _send_result(peer_id, operation_id, "PLAYER_INPUT", result)
+	_send_result(peer_id, operation_id, "PLAYER_INPUT", result)
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			_moves += 1
+			_movement_checkpoint_dirty = true
+			_movement_commands_since_checkpoint += 1
 			_broadcast_delta(result.get("details", {}).get("delta", {}))
 			_broadcast_snapshot("PLAYER_INPUT_SIMULATED")
 			_capture_two_connected_checksum()
 	else:
 		_rejections += 1
-	if result_sent:
-		_mark_operation_delivered(operation_id)
-	_write_report("READY", false)
+		_debug_event("PLAYER_INPUT_REJECTED", {
+			"peer_id":peer_id,"player":logical_id,"operation_id":operation_id,
+			"error_code":String(result.get("error_code", "")),
+		})
 
 func _handle_player_state_rejected(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
@@ -356,6 +382,8 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 
 
 func _handle_disconnect(peer_id: String, session_id: String) -> void:
+	_peer_last_input_ms.erase(peer_id)
+	_debug_event("PEER_DISCONNECTED", {"peer_id":peer_id,"session_id":session_id})
 	var mapped_session := String(_peer_to_session.get(peer_id, ""))
 	if _service == null or session_id.is_empty() or mapped_session != session_id:
 		_peer_to_player.erase(peer_id)
@@ -528,6 +556,12 @@ func _persist_command_result(operation_id: String, command_type: String, logical
 		_enter_persistence_failure(String(persisted.get("error_code", "M6_DURABLE_COMMIT_FAILED")))
 		return false
 	_durable_commits += 1
+	# The command checkpoint contains the latest movement state as well. Do not
+	# emit a redundant movement-only checkpoint at the same gameplay revision.
+	if _movement_checkpoint_dirty:
+		_movement_checkpoint_dirty = false
+		_movement_commands_since_checkpoint = 0
+		_last_movement_checkpoint_ms = Time.get_ticks_msec()
 	return true
 
 
@@ -543,6 +577,12 @@ func _persist_checkpoint(operation_id: String) -> Dictionary:
 		operation_id
 	)
 	if not bool(persisted.get("success", false)):
+		_last_persistence_error_details = persisted.duplicate(true)
+		_debug_event("CHECKPOINT_PERSIST_REJECTED", {
+			"operation_id":operation_id,
+			"next_generation":next_generation,
+			"cause":persisted,
+		})
 		return _failure("M6_CHECKPOINT_PERSIST_FAILED", {"cause": persisted})
 	_checkpoint_generation = next_generation
 	_last_checkpoint_operation_id = operation_id
@@ -581,6 +621,11 @@ func _enter_persistence_failure(error_code: String) -> void:
 	_persistence_failures += 1
 	_last_error_code = error_code if not error_code.is_empty() else "M6_DURABLE_COMMIT_FAILED"
 	_fatal_persistence_failure = true
+	_debug_event("PERSISTENCE_FATAL", {
+		"error_code":_last_error_code,
+		"checkpoint_generation":_checkpoint_generation,
+		"cause":_last_persistence_error_details,
+	})
 	set_process(false)
 	_write_report("FAILED", false)
 	if _boundary != null:
@@ -598,10 +643,39 @@ func _persistence_report() -> Dictionary:
 		"durable_commits": _durable_commits,
 		"failures": _persistence_failures,
 		"fatal_failure": _fatal_persistence_failure,
+		"last_error_details": _last_persistence_error_details.duplicate(true),
 		"outbox": _replay_outbox.get_report() if _replay_outbox != null else {},
 		"service_recovery": _service.get_recovery_report() if _service != null else {},
 	}
 
+
+func _maybe_persist_movement_checkpoint() -> void:
+	if (
+		not _playable_sandbox
+		or not _persistence_enabled
+		or not _movement_checkpoint_dirty
+		or _fatal_persistence_failure
+		or Time.get_ticks_msec() - _last_movement_checkpoint_ms < M7_MOVEMENT_CHECKPOINT_INTERVAL_MS
+	):
+		return
+	var persisted := _persist_checkpoint("")
+	if not bool(persisted.get("success", false)):
+		_enter_persistence_failure(String(persisted.get("error_code", "M7_MOVEMENT_CHECKPOINT_FAILED")))
+		return
+	_movement_checkpoint_dirty = false
+	_movement_checkpoints += 1
+	_movement_commands_since_checkpoint = 0
+	_last_movement_checkpoint_ms = Time.get_ticks_msec()
+	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation":_checkpoint_generation})
+	_write_report("READY", false)
+
+func _debug_event(event_name: String, details: Dictionary = {}) -> void:
+	if not _debug_logging:
+		return
+	print("[m7_server] %s" % JSON.stringify({
+		"event":event_name,"process_id":OS.get_process_id(),"time_msec":Time.get_ticks_msec(),
+		"details":details,
+	}, "", true, true))
 
 func detach_playable_world() -> Dictionary:
 	# M3/M7 dedicated runtime owns gameplay state directly and has no separate
@@ -648,6 +722,13 @@ func get_report() -> Dictionary:
 		"direct_client_authority_references": 0,
 		"persistence": _persistence_report(),
 		"playable_sandbox": _playable_sandbox,
+		"movement_persistence": {
+			"mode":"THROTTLED_WORLD_CHECKPOINT",
+			"interval_ms":M7_MOVEMENT_CHECKPOINT_INTERVAL_MS,
+			"dirty":_movement_checkpoint_dirty,
+			"checkpoint_count":_movement_checkpoints,
+			"commands_since_checkpoint":_movement_commands_since_checkpoint,
+		},
 	}
 
 func stop() -> Dictionary:

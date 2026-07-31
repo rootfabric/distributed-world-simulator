@@ -214,16 +214,19 @@ func handle_player_input(command: Dictionary) -> Dictionary:
 		return _failure("STALE_AUTHORITY_EPOCH")
 	var operation_id := String(command.get("operation_id", ""))
 	var fingerprint := Utils.payload_hash(command)
-	var replay := _replay(operation_id, fingerprint)
-	if not replay.is_empty():
-		return replay
+	var input_kind := String(command.get("input_kind", ""))
+	var durable_replay := input_kind != "MOVEMENT_INTENT"
+	if durable_replay:
+		var replay := _replay(operation_id, fingerprint)
+		if not replay.is_empty():
+			return replay
 	var logical_player_id := String(command.get("logical_player_id", ""))
 	var owner_check := _validate_owner(logical_player_id, String(command.get("transport_session_id", "")), int(command.get("ownership_epoch", 0)))
 	if not bool(owner_check.get("success", false)):
-		return _record_failure(operation_id, fingerprint, String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED")))
+		var owner_error := String(owner_check.get("error_code", "PLAYER_OWNERSHIP_REJECTED"))
+		return _record_failure(operation_id, fingerprint, owner_error) if durable_replay else _failure(owner_error)
 	var record: Dictionary = _players.get_player(logical_player_id)
 	var movement_result: Dictionary
-	var input_kind := String(command.get("input_kind", ""))
 	if input_kind == "MOVEMENT_DELTA":
 		movement_result = _movement.apply_delta(
 			record,
@@ -233,23 +236,25 @@ func handle_player_input(command: Dictionary) -> Dictionary:
 		)
 	elif input_kind == "MOVEMENT_INTENT":
 		if not _playable_sandbox:
-			return _record_failure(operation_id, fingerprint, "MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX")
+			return _record_failure(operation_id, fingerprint, "MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX") if durable_replay else _failure("MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX")
 		movement_result = _movement.apply_movement_intent(
 			record,
 			int(command.get("input_sequence", 0)),
 			Dictionary(command.get("payload", {}))
 		)
 	else:
-		return _record_failure(operation_id, fingerprint, "CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
+		return _record_failure(operation_id, fingerprint, "CLIENT_AUTHORITATIVE_STATE_FORBIDDEN") if durable_replay else _failure("CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
 	if not bool(movement_result.get("success", false)):
-		return _record_failure(operation_id, fingerprint, String(movement_result.get("error_code", "PLAYER_MOVE_REJECTED")))
+		var movement_error := String(movement_result.get("error_code", "PLAYER_MOVE_REJECTED"))
+		return _record_failure(operation_id, fingerprint, movement_error) if durable_replay else _failure(movement_error)
 	var before_revision := _revision
 	record = movement_result.get("details", {}).get("player", {}).duplicate(true)
 	_players.upsert(record)
 	_advance()
 	var delta := _create_delta(before_revision, "PLAYER_MOVED", record, {})
 	var result := _success({"replay": false, "player": record.duplicate(true), "delta": delta, "snapshot": create_snapshot()})
-	_record(operation_id, fingerprint, result)
+	if durable_replay:
+		_record(operation_id, fingerprint, result)
 	return result
 
 
@@ -441,8 +446,7 @@ func export_durable_state() -> Dictionary:
 		"canonical_item_graph": _canonical_multiplayer_items.export_durable_state(),
 		"checksum": "",
 	}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
@@ -603,8 +607,7 @@ func export_replay_state() -> Dictionary:
 		"item_graph_replay": _canonical_multiplayer_items.export_replay_state(),
 		"checksum": "",
 	}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 
 func restore_replay_state(value: Dictionary) -> Dictionary:

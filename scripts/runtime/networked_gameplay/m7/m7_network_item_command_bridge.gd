@@ -11,6 +11,8 @@ var _selected_item_provider: Callable
 var _submitted := 0
 var _accepted := 0
 var _rejected := 0
+var _last_error_code := ""
+var _last_error_message := ""
 
 
 func setup(runtime, local_player_id: String, selected_item_provider: Callable = Callable()) -> Dictionary:
@@ -32,6 +34,8 @@ func submit_item_command(command_type: String, payload: Dictionary, operation_id
 	var normalized := _normalize(command_type, _canonicalize_item_ids(payload))
 	if not bool(normalized.get("success", false)):
 		_rejected += 1
+		_record_rejection(command_type, operation_id, normalized)
+		_attach_human_error(normalized)
 		return normalized
 	_submitted += 1
 	var details: Dictionary = Dictionary(normalized.get("details", {}))
@@ -42,8 +46,12 @@ func submit_item_command(command_type: String, payload: Dictionary, operation_id
 	)
 	if bool(result.get("success", false)):
 		_accepted += 1
+		_last_error_code = ""
+		_last_error_message = ""
 	else:
 		_rejected += 1
+		_record_rejection(command_type, operation_id, result)
+		_attach_human_error(result)
 	var canonical: Dictionary = _runtime.get_item_graph_snapshot()
 	var converted: Dictionary = _adapter.create_replica_snapshot(canonical)
 	if not bool(converted.get("success", false)):
@@ -117,7 +125,44 @@ func get_report() -> Dictionary:
 		"submitted": _submitted,
 		"accepted": _accepted,
 		"rejected": _rejected,
+		"last_error_code": _last_error_code,
+		"last_error_message": _last_error_message,
 	}
+
+
+func _record_rejection(command_type: String, operation_id: String, result: Dictionary) -> void:
+	_last_error_code = String(result.get("error_code", "M7_ITEM_COMMAND_REJECTED"))
+	_last_error_message = _human_error(_last_error_code)
+	print("[m7_item_rejected] %s" % JSON.stringify({
+		"command_type": command_type,
+		"operation_id": operation_id,
+		"error_code": _last_error_code,
+		"message": _last_error_message,
+		"details": result.get("details", {}),
+	}, "", true, true))
+
+
+func _attach_human_error(result: Dictionary) -> void:
+	if bool(result.get("success", false)):
+		return
+	if not result.has("message") or String(result.get("message", "")).strip_edges().is_empty():
+		result["message"] = _last_error_message
+	if not result.has("output") or String(result.get("output", "")).strip_edges().is_empty():
+		result["output"] = _last_error_message
+
+
+func _human_error(error_code: String) -> String:
+	match error_code:
+		"ITEM_INTERACTION_OUT_OF_RANGE": return "Предмет находится слишком далеко"
+		"ITEM_INTERACTION_NOT_VISIBLE": return "Предмет не находится в прямой видимости"
+		"ITEM_NOT_VISIBLE_TO_PLAYER": return "Предмет не находится в прямой видимости"
+		"ITEM_INTERACTION_OCCLUDED": return "Путь к предмету перекрыт"
+		"ITEM_NOT_FOUND": return "Предмет не найден на сервере"
+		"ITEM_ALREADY_CLAIMED": return "Предмет уже подобрал другой игрок"
+		"M4_ITEM_COMMAND_TIMEOUT": return "Сервер не ответил на действие с предметом"
+		"M4_ITEM_COMMAND_SEND_FAILED": return "Команда предмета не отправлена серверу"
+		"STALE_TRANSPORT_SESSION": return "Сетевая сессия устарела"
+		_: return "Сервер отклонил действие с предметом: %s" % error_code
 
 
 func _success(details: Dictionary = {}) -> Dictionary:

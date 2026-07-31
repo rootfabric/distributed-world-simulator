@@ -95,6 +95,7 @@ var m5_graphical_acceptance_driver
 var _m3_mode: bool = false
 var _m5_mode: bool = false
 var _m6_mode: bool = false
+var _network_debug_stay_open: bool = false
 var _m7_mode: bool = false
 
 
@@ -171,6 +172,7 @@ func _ready() -> void:
 			return
 
 	_m7_mode = bool(launch_options.get("network_playground", false))
+	_network_debug_stay_open = bool(launch_options.get("network_debug_stay_open", false))
 	_m6_mode = (
 		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
 		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
@@ -203,6 +205,7 @@ func _ready() -> void:
 			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
 			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
 			"playable_sandbox": _m7_mode,
+			"debug_logging": bool(launch_options.get("network_debug", false)),
 		}
 		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):
@@ -220,6 +223,7 @@ func _ready() -> void:
 		add_child(graphical_game_client_runtime)
 		graphical_game_client_runtime.session_ready.connect(_on_graphical_game_client_session_ready)
 		graphical_game_client_runtime.connection_failed.connect(_on_graphical_game_client_connection_failed)
+		graphical_game_client_runtime.server_disconnected.connect(_on_graphical_game_client_server_disconnected)
 		graphical_game_client_setup = graphical_game_client_runtime.setup({
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
@@ -227,6 +231,7 @@ func _ready() -> void:
 			"connect_timeout_ms": int(launch_options.get("connect_timeout_ms", 15000)),
 			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
 			"playable_sandbox": _m7_mode,
+			"debug_logging": bool(launch_options.get("network_debug", false)),
 			"automated_acceptance": (
 				(_m7_mode and int(launch_options.get("m7_phase", 0)) > 0)
 				or (_m5_mode and int(launch_options.get("m5_phase", 0)) > 0)
@@ -1845,13 +1850,28 @@ func _on_graphical_game_client_session_ready(session) -> void:
 	)
 	if not bool(attached.get("success", false)):
 		push_error("Graphical game client attach failed: %s" % attached)
+		if _network_debug_stay_open:
+			if current_runtime != null and current_runtime.has_method("show_network_error"):
+				current_runtime.call("show_network_error", "GRAPHICAL_CLIENT_ATTACH_FAILED", attached)
+			return
 		request_graceful_shutdown("graphical_game_client_attach_failed", 7)
 	_refresh_runtime_descriptor()
 
 
 func _on_graphical_game_client_connection_failed(error_code: String, details: Dictionary) -> void:
 	push_error("Graphical game client connection failed: %s %s" % [error_code, details])
+	if _network_debug_stay_open:
+		if current_runtime != null and current_runtime.has_method("show_network_error"):
+			current_runtime.call("show_network_error", error_code, details)
+		return
 	request_graceful_shutdown("graphical_game_client_connection_failed", 8)
+
+func _on_graphical_game_client_server_disconnected(report: Dictionary) -> void:
+	push_error("Graphical game client server disconnected: %s" % report)
+	if _network_debug_stay_open:
+		if current_runtime != null and current_runtime.has_method("show_network_error"):
+			current_runtime.call("show_network_error", "SERVER_DISCONNECTED", report)
+		return
 
 
 func _setup_m2_graphical_acceptance_driver() -> void:

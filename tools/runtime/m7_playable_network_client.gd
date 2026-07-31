@@ -73,12 +73,12 @@ func _on_failed(error_code: String, details: Dictionary) -> void:
 
 
 func _run_phase() -> void:
-	playground.set_m7_state_sync_enabled(false)
 	await process_frame
 	await process_frame
 	var report: Dictionary = playground.create_m3_graphical_client_report()
 	_assert(bool(report.get("network_playground_enabled", false)), "network playground mode active")
-	_assert(bool(report.get("network_prediction_mode", false)), "normal controller prediction active")
+	_assert(not bool(report.get("network_prediction_mode", true)), "client-side movement prediction disabled")
+	_assert(String(report.get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "authoritative movement interpolation active")
 	_assert(bool(report.get("seven_days_inventory_active", false)), "Seven Days inventory profile active")
 	_assert(playground.item_gameplay != null, "real ItemGameplayController active")
 	_assert(playground.m5_networked_inventory_shell == null, "M5 shell remains separate")
@@ -91,10 +91,12 @@ func _run_phase() -> void:
 func _run_a() -> void:
 	var before: Vector3 = playground.player.get_world_position()
 	Input.action_press("move_forward")
-	await _wait_physics_frames(12)
+	await _wait_physics_frames(24)
 	Input.action_release("move_forward")
+	await _wait_frames(12)
 	var after: Vector3 = playground.player.get_world_position()
-	_assert(after.distance_to(before) > 0.1, "A moved through normal controller input")
+	_assert(after.distance_to(before) > 0.1, "A moved through InputMap and server simulation")
+	playground.set_m7_state_sync_enabled(false)
 	var move_result: Dictionary = await _move_authority_toward(Vector3(1.2, 0.4, -3.4), 2)
 	_assert(bool(move_result.get("success", false)), "A movement intent accepted by server simulation")
 	await _wait_frames(8)
@@ -161,10 +163,12 @@ func _run_b() -> void:
 		return
 	var before: Vector3 = playground.player.get_world_position()
 	Input.action_press("move_left")
-	await _wait_physics_frames(12)
+	await _wait_physics_frames(24)
 	Input.action_release("move_left")
+	await _wait_frames(12)
 	var after: Vector3 = playground.player.get_world_position()
-	_assert(after.distance_to(before) > 0.1, "B moved through normal controller input")
+	_assert(after.distance_to(before) > 0.1, "B moved through InputMap and server simulation")
+	playground.set_m7_state_sync_enabled(false)
 	var move_result: Dictionary = await _move_authority_toward(Vector3(3.0, 0.8, -2.0), 1)
 	_assert(bool(move_result.get("success", false)), "B movement intent accepted by server simulation")
 	await _wait_frames(10)

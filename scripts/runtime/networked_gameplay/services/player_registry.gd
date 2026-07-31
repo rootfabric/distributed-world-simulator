@@ -42,8 +42,7 @@ func export_durable_state() -> Dictionary:
 		"players": players,
 		"checksum": "",
 	}
-	state["checksum"] = _checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
 	var validation := validate_durable_state(value)

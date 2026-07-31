@@ -103,7 +103,7 @@ $ServerResult = Join-Path $RunRoot "server.json"
 $ServerLog = Join-Path $RunRoot "server.log"
 $ServerArgs = @(
     "--headless","--path",$Root,"--log-file",$ServerLog,"--",
-    "--role=dedicated-server","--network-playground","--world=playground",
+    "--role=dedicated-server","--network-playground","--network-debug","--world=playground",
     "--node-id=m7-playground-server","--instance-id=m7-playground",
     "--server-address=$ServerAddress","--server-port=$Port",
     "--m7-result-file=$ServerResult","--m6-persistence-root=$PersistenceRoot",
@@ -133,7 +133,7 @@ for ($Index = 0; $Index -lt $ClientCount; $Index++) {
     $ClientLog = Join-Path $RunRoot "client-$Id.log"
     $ClientArgs = @(
         "--path",$Root,"--rendering-method","gl_compatibility","--log-file",$ClientLog,"--",
-        "--role=game-client","--network-playground","--world=playground",
+        "--role=game-client","--network-playground","--network-debug","--network-debug-stay-open","--world=playground",
         "--node-id=m7-client-$Id","--instance-id=m7-client-$Id",
         "--player-identity=$Id","--server-address=$ServerAddress","--server-port=$Port",
         "--print-runtime-descriptor"

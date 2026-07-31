@@ -6,8 +6,8 @@ const SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_service.v1"
 const SNAPSHOT_SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1"
 const DURABLE_SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_state.v1"
 const REPLAY_SCHEMA := "planet_simulator.canonical_multiplayer_item_graph_replay.v1"
-const SANDBOX_PICKUP_RANGE_M := 4.5
-const SANDBOX_INTERACTION_RANGE_M := 4.5
+const SANDBOX_PICKUP_RANGE_M := 5.0
+const SANDBOX_INTERACTION_RANGE_M := 5.0
 const SANDBOX_DROP_DISTANCE_M := 1.35
 const SANDBOX_PLACE_DISTANCE_M := 2.5
 const SANDBOX_VISIBILITY_DOT_MIN := 0.20
@@ -647,13 +647,11 @@ func _validated_transform(value: Dictionary) -> Dictionary:
 func export_durable_state() -> Dictionary:
 	var snapshot := create_snapshot()
 	snapshot["open_containers"] = {}
-	snapshot["checksum"] = ""
-	var snapshot_payload := snapshot.duplicate(true)
-	snapshot_payload.erase("checksum")
-	snapshot["checksum"] = Utils.payload_hash(snapshot_payload)
+	snapshot = Utils.finalize_json_checksum(snapshot)
+	if snapshot.is_empty():
+		return {}
 	var state: Dictionary = {"schema": DURABLE_SCHEMA, "snapshot": snapshot, "checksum": ""}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
 	var validation := validate_durable_state(value)
@@ -850,8 +848,7 @@ func export_replay_state() -> Dictionary:
 	for operation_id_value in operation_ids:
 		records[String(operation_id_value)] = Dictionary(_ledger[operation_id_value]).duplicate(true)
 	var state: Dictionary = {"schema": REPLAY_SCHEMA, "records": records, "checksum": ""}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 func restore_replay_state(value: Dictionary) -> Dictionary:
 	var validation := validate_replay_state(value)

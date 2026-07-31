@@ -119,9 +119,13 @@ func _init() -> void:
 	var m7_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=game-client",
 		"--network-playground=true",
+		"--network-debug",
+		"--network-debug-stay-open",
 		"--player-identity=a",
 	]))
 	_assert(bool(m7_client.get("success", false)), "Valid M7 graphical client options were rejected")
+	_assert(bool(m7_client.get("options", {}).get("network_debug", false)), "M7 network debug flag was not parsed")
+	_assert(bool(m7_client.get("options", {}).get("network_debug_stay_open", false)), "M7 debug stay-open flag was not parsed")
 	var m7_wrong_world: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=game-client",
 		"--network-playground",

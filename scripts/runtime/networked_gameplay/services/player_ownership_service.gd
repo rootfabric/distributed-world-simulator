@@ -150,8 +150,7 @@ func export_durable_state() -> Dictionary:
 		"players": players,
 		"checksum": "",
 	}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
@@ -227,8 +226,7 @@ func export_replay_state() -> Dictionary:
 	for operation_id_value in operation_ids:
 		records[String(operation_id_value)] = Dictionary(_operation_ledger[operation_id_value]).duplicate(true)
 	var state: Dictionary = {"schema": REPLAY_SCHEMA, "records": records, "checksum": ""}
-	state["checksum"] = _state_checksum(state)
-	return state
+	return Utils.finalize_json_checksum(state)
 
 
 func restore_replay_state(value: Dictionary) -> Dictionary:

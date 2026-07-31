@@ -35,7 +35,7 @@ func export_recovery_state() -> Dictionary:
 	var authority_epoch := int(durable_state.get("authority_epoch", 0))
 	var state_revision := int(durable_state.get("revision", 0))
 	var server_tick := int(durable_state.get("server_tick", 0))
-	var snapshot := EntitySnapshot.create(
+	var snapshot := EntitySnapshot.normalize(EntitySnapshot.create(
 		"snapshot/m6/dedicated/%d" % state_revision,
 		ENTITY_ID,
 		ENTITY_TYPE,
@@ -50,7 +50,9 @@ func export_recovery_state() -> Dictionary:
 			"networked_gameplay_state": durable_state,
 			"durable_state_checksum": String(durable_state.get("checksum", "")),
 		}
-	)
+	))
+	if snapshot.is_empty():
+		return {}
 	return {
 		"schema": SCHEMA,
 		"authority_owner_id": authority_owner_id,

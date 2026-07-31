@@ -56,6 +56,19 @@ static func payload_hash(value) -> String:
 	return encoded.sha256_text() if not encoded.is_empty() else ""
 
 
+static func finalize_json_checksum(value: Dictionary) -> Dictionary:
+	var candidate: Dictionary = value.duplicate(true)
+	candidate["checksum"] = ""
+	var round_trip: Dictionary = json_round_trip(candidate)
+	if not bool(round_trip.get("success", false)) or not round_trip.get("value") is Dictionary:
+		return {}
+	candidate = Dictionary(round_trip.get("value", {})).duplicate(true)
+	var payload := candidate.duplicate(true)
+	payload.erase("checksum")
+	candidate["checksum"] = payload_hash(payload)
+	return candidate
+
+
 static func json_round_trip(value) -> Dictionary:
 	var encoded: String = canonical_json(value)
 	if encoded.is_empty():

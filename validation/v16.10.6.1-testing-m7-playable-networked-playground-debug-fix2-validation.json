@@ -1,0 +1,96 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "delivery": "debug-fix2",
+  "base_delivery": {
+    "checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+    "delivery": "fix1",
+    "archive_sha256": "652F98F7FD418DBB11BA740DBBD6C7BB80D21EF906EABDE126438F64BF586530"
+  },
+  "branch": "feature/m7-playable-networked-playground",
+  "status": "candidate_pending_windows_manual_acceptance",
+  "purpose": "Stabilize authoritative movement and durable persistence, expose split server/client launch commands, and preserve diagnostic logs.",
+  "root_causes": [
+    "The graphical client and dedicated server simulated different movement models concurrently, causing authoritative rollback/rubber-banding.",
+    "High-frequency movement COMMAND_RESULT messages accumulated on the client and movement mutations forced synchronous durable checkpoints.",
+    "Double-precision movement coordinates changed their JSON numeric representation across persistence roundtrip, invalidating nested durable checksums and forcing server fail-stop.",
+    "Item-command rejection reasons and stale READY files were not visible enough for manual diagnosis."
+  ],
+  "fixes": [
+    "Client sends MOVEMENT_INTENT only and renders authoritative snapshots with target smoothing; local CharacterBody prediction is disabled.",
+    "Movement results are asynchronous and discarded after accounting; blocking command buffers stay bounded.",
+    "Movement checkpoints are batched at a 1500 ms interval and a following durable item command includes the latest movement state.",
+    "All durable checksum boundaries bind to the canonical JSON-roundtripped representation, including checkpoint, registry, ownership, Item Graph, replay and outbox payloads.",
+    "Dedicated server, client A and client B have independent PowerShell launch commands, profiles, process descriptors and log files.",
+    "Debug clients remain open after disconnect, reject stale server process descriptors, and expose human-readable item rejection messages."
+  ],
+  "runtime_validation": {
+    "engine": "Godot 4.7.1 stable.double",
+    "engine_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "platform": "linux-x86_64",
+    "editor_import": "PASS",
+    "focused_m7": {
+      "status": "PASS",
+      "tests_passed": 13,
+      "tests_total": 13
+    },
+    "m7_contract": {
+      "status": "PASS",
+      "assertions": 63,
+      "failures": 0
+    },
+    "m7_graphical_process": {
+      "status": "PASS",
+      "assertions": 32,
+      "failures": 0
+    },
+    "m7_recovery_process": {
+      "status": "PASS",
+      "assertions": 36,
+      "failures": 0
+    },
+    "network_runtime": {
+      "status": "PASS",
+      "tests_passed": 63,
+      "tests_total": 63
+    },
+    "world_regression": {
+      "status": "PASS",
+      "tests_passed": 108,
+      "tests_total": 108
+    },
+    "manifest_coverage": {
+      "status": "PASS",
+      "tests_discovered": 108,
+      "tests_listed": 108
+    },
+    "main_scene_cli": {
+      "status": "PASS",
+      "steps_passed": 6,
+      "steps_total": 6
+    },
+    "powershell_execution": "NOT_RUN_ON_LINUX; independent Windows launcher acceptance required"
+  },
+  "static_validation": {
+    "git_diff_check": "PASS",
+    "json": "62/62 PASS",
+    "gdscript_uid": "475/475",
+    "missing_uid": 0,
+    "duplicate_uid": 0,
+    "conflict_markers": 0,
+    "nul_text_files": 0,
+    "shell_syntax": "PASS",
+    "unsafe_zip_paths": 0,
+    "byte_exact_replay": "29/29 PASS",
+    "archive_focused_replay": "13/13 PASS",
+    "missing_res_paths_in_changed_files": 0,
+    "powershell_structural": "5/5 PASS; runtime execution requires Windows"
+  },
+  "delivery_files": {
+    "changed_path_count": 29,
+    "new_path_count": 7,
+    "modified_path_count": 22,
+    "deleted_path_count": 0,
+    "changed_file_list": "validation/v16.10.6.1-testing-m7-playable-networked-playground-debug-fix2-files.txt"
+  }
+}
