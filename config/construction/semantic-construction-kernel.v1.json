@@ -1,0 +1,21 @@
+{
+  "schema": "planet_simulator.semantic_construction_kernel_manifest.v1",
+  "stage": "C1",
+  "status": "ISOLATED_CANDIDATE",
+  "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
+  "recommended_branch": "feature/c1-semantic-construction-kernel",
+  "paradigm": {
+    "semantic_scale": true,
+    "composite_items": true,
+    "facet_compilation": true,
+    "capability_based_behavior": true
+  },
+  "runtime_integration": false,
+  "contracts": [
+    "planet_simulator.construction_part_record.v1",
+    "planet_simulator.construction_bond_record.v1",
+    "planet_simulator.construct_snapshot.v1"
+  ],
+  "prototype": "TABLE",
+  "next_stage": "C2_ITEM_GRAPH_TRANSACTION_INTEGRATION"
+}

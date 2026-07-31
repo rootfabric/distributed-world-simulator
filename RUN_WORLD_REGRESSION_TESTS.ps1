@@ -121,6 +121,8 @@ $Tests = @(
     "res://tests/entities/test_world_entity_aggregate.gd",
     "res://tests/entities/test_world_entity_store_failures.gd",
     "res://tests/items/test_world_item_aggregate_migration.gd",
+    "res://tests/construction/test_c1_construction_contracts.gd",
+    "res://tests/construction/test_c1_construct_aggregate.gd",
     "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",

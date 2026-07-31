@@ -1,0 +1,29 @@
+PlanetSimulator C1 semantic construction kernel
+Base commit: 2879fdb7134032f645ffc5c98c0535aecfc09caf
+Recommended branch: feature/c1-semantic-construction-kernel
+Review iteration: fix1 — world-regression manifest coverage
+Changed files: 23
+
+RUN_C1_CONSTRUCTION_KERNEL_TESTS.ps1
+RUN_C1_CONSTRUCTION_KERNEL_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+config/construction/semantic-construction-kernel.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C1_SEMANTIC_CONSTRUCTION_KERNEL_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/compilation/construction_capability_compiler.gd
+scripts/construction/compilation/construction_capability_compiler.gd.uid
+scripts/construction/contracts/construct_snapshot.gd
+scripts/construction/contracts/construct_snapshot.gd.uid
+scripts/construction/contracts/construction_bond_record.gd
+scripts/construction/contracts/construction_bond_record.gd.uid
+scripts/construction/contracts/construction_part_record.gd
+scripts/construction/contracts/construction_part_record.gd.uid
+scripts/construction/domain/construct_aggregate.gd
+scripts/construction/domain/construct_aggregate.gd.uid
+tests/construction/test_c1_construct_aggregate.gd
+tests/construction/test_c1_construct_aggregate.gd.uid
+tests/construction/test_c1_construction_contracts.gd
+tests/construction/test_c1_construction_contracts.gd.uid
+validation/c1-semantic-construction-kernel-validation.json
+c1-semantic-construction-kernel-files.txt
