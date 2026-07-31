@@ -1,7 +1,7 @@
 # Checkpoint C5 — Capability and Affordance Compilation
 
 **Дата:** 2026-07-31
-**Статус:** FIX1 IMPLEMENTED CANDIDATE — EXTERNAL RECHECK REQUIRED
+**Статус:** ACCEPTED вместе с fix1 — EXTERNAL RECHECK REQUIRED
 **Рекомендуемая ветка:** `feature/c5-capability-affordance-compilation`
 **База:** принятый C4 fix1 поверх `C3 @ 4917f55`
 
@@ -272,3 +272,17 @@ Editor parse:     PASS
 ```
 
 C2B, network/runtime, полный world regression и main-scene CLI остаются обязательными для внешней приёмки C5 fix1.
+
+
+## Внешняя приёмка fix1
+
+```text
+C1 66 / C2A 137 / C2B 258 / C3 194 / C4 268 assertions PASS
+C5 contracts 105, integration 99, total 204 assertions PASS
+Network N0–M4 PASS
+World regression 111/111 tests, 114 steps PASS
+Main-scene CLI 6/6 PASS
+git diff --check PASS
+```
+
+C5 принят и является базой C6.

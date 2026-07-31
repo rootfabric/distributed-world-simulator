@@ -391,3 +391,38 @@ actor capabilities = MANIPULATE_ITEM
 ```
 
 Resolver возвращает конкретный construct, capability, provider part и port. Имя сцены, prefab или пользовательское название в контракте отсутствуют. Это основной переход от объектно-специфических скриптов к семантической симуляции.
+
+
+## 20. C6: мобильность как граф зависимых подсистем
+
+C6 запрещает моделировать робота одним булевым флагом `can_move`. Мобильное поведение компилируется из concrete parts и bonds:
+
+```text
+parts + bond states + subsystem definitions
+        ↓
+POWER / CONTROL / DRIVE / SENSOR states
+        ↓
+provider quorum + dependency propagation
+        ↓
+mobile capabilities and affordances
+```
+
+### Повреждение не равно полному выключению
+
+C5 намеренно fail-closed выключал поведение повреждённой мебели. Для mobile constructs нужна более точная модель: `DAMAGED` rover может продолжать движение или сканирование, если соответствующие provider parts и зависимости ещё работоспособны. Поэтому C6 профиль использует build state как контекст, но выводит каждую capability отдельно.
+
+### Quorum вместо жёсткой целостности
+
+Однотипная subsystem может иметь несколько providers и minimum quorum. Четырёхколёсный drive способен работать на двух или трёх колёсах с пониженным health ratio, но становится offline ниже minimum. Это даёт общий механизм для колёс, двигателей, батарей, sensors и redundant controllers.
+
+### Dependency cascade
+
+SubSystem может зависеть от других subsystems. `DRIVE` зависит от `POWER` и `CONTROL`; `SENSOR` может зависеть от тех же источников. Degraded dependency делает результат degraded, offline dependency выключает его. Циклы запрещены.
+
+### Команда закреплена за профилем
+
+`ConstructionMobileCommand` содержит expected profile checksum. После повреждения, ремонта или reconfiguration старая команда отклоняется и должна быть пересобрана против нового профиля. Это не physics command bus, а контракт авторизации действия. Реальное движение должно позднее пройти через server authority и spatial transaction boundary.
+
+### Профиль можно потерять
+
+Mobile profile store — производный cache. После restart он либо загружается транзакционно, либо полностью перестраивается из authoritative snapshots. Ни command, ни profile не меняют Item Graph, parts, bonds или physics state.

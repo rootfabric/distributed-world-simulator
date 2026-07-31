@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.c5_capability_affordance_validation.v1",
   "checkpoint": "C5_CAPABILITY_AND_AFFORDANCE_COMPILATION",
-  "status": "FIX1_IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C4_FIX1_ACCEPTED",
     "c3_commit": "4917f55",
@@ -103,7 +103,21 @@
       "c4_assertions": 268,
       "editor_parse": "PASS"
     },
-    "external_recheck_required": true,
-    "decision": "PENDING"
+    "external_recheck_required": false,
+    "decision": "ACCEPTED",
+    "external_recheck": {
+      "c1_assertions": 66,
+      "c2a_assertions": 137,
+      "c2b_assertions": 258,
+      "c3_assertions": 194,
+      "c4_assertions": 268,
+      "c5_contract_assertions": 105,
+      "c5_integration_assertions": 99,
+      "network_n0_m4": "PASS",
+      "world_tests": 111,
+      "world_steps": 114,
+      "main_scene_cli": "6/6 PASS",
+      "git_diff_check": "PASS"
+    }
   }
 }

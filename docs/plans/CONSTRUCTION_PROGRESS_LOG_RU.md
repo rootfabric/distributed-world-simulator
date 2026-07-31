@@ -427,3 +427,60 @@ Editor parse:    PASS
 ```
 
 Полный C2B/network/world/main-scene профиль требуется повторить на полном checkout.
+
+## 2026-07-31 — C5 fix1: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c5-capability-affordance-compilation`.
+**База:** `C4 @ b985cde`.
+
+```text
+C1:               PASS — 66 assertions
+C2A:              PASS — 137 assertions
+C2B:              PASS — 258 assertions
+C3:               PASS — 194 assertions
+C4:               PASS — 268 assertions
+C5 contracts:     PASS — 105 assertions
+C5 integration:   PASS — 99 assertions
+Network N0–M4:    PASS
+World regression: PASS — 111/111 tests, 114 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+C5 стал принятой базой C6. Fix1 изменил только strict-schema negative-test и вошёл в общую C5-поставку.
+
+## 2026-07-31 — C6: Mobile Construct
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c6-mobile-construct`.
+**База:** принятый C5 fix1.
+
+Архитектурные решения:
+
+- authoritative source остаётся `ConstructSnapshot`;
+- subsystem definitions связывают semantic subsystem с concrete parts и bonds;
+- provider quorum поддерживает redundant components;
+- health выводится из part condition, bond state и dependency graph;
+- `DAMAGED` mobile construct может сохранять часть capabilities;
+- C5 capability/affordance descriptors переиспользуются без второго behavior vocabulary;
+- mobile command pin-ит profile checksum и actor requirements;
+- store отклоняет stale/same-revision mutation;
+- persistence/rebuild не создают новый authoritative state;
+- physics movement, network endpoint и UI не входят в C6.
+
+Локальный focused/compatibility профиль:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5:              PASS — 204 assertions
+C6 contracts:    PASS — 92 assertions
+C6 integration:  PASS — 126 assertions
+C6 total:        PASS — 218 assertions
+Editor parse:    PASS
+```
+
+C2B focused не запускается в isolated construction workspace из-за отсутствующей production M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `113/113 tests`, `116 steps`.

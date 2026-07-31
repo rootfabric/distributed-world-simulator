@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_capability_affordance_manifest.v1",
   "stage": "C5",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED_FIX1",
   "base_stage": "C4_FIX1_ACCEPTED",
   "base_c3_commit": "4917f55",
   "base_c4_candidate_sha256": "7301f3f0dead20ffc2a1c0b57d7a54f1df9198b6163abae3cd708695a724c4c8",
@@ -65,5 +65,6 @@
   "runtime_ui_integration": false,
   "network_query_endpoint": false,
   "next_stage": "C6_MOBILE_CONSTRUCT",
-  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md"
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "accepted_base_for": "C6_MOBILE_CONSTRUCT"
 }

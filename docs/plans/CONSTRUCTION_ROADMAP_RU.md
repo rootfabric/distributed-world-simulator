@@ -317,11 +317,44 @@ C5 компилирует authoritative `ConstructSnapshot` в rebuildable `Cons
 
 Контрольный vertical slice: C4 table проходит три стадии; до commissioning действий нет. После commissioning generic agent находит concrete work-surface port. Среди двух неизвестных tables выбирается painted instance с нагрузкой не менее 120 кг. После break bond action исчезает.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED вместе с fix1.
 
 ## C6 — Mobile Construct
 
-Наземный робот: корпус, колёса, моторы, батарея, контроллер, sensors и container. Проверяются rigid islands, joints, power/control graphs и partial failures.
+C6 вводит rebuildable mobile profile поверх authoritative `ConstructSnapshot`. Мобильность больше не является одним флагом объекта: она выводится из конкретных подсистем, provider quorum, bonds и dependency graph.
+
+Поддерживаются subsystem kinds:
+
+- `POWER`;
+- `CONTROL`;
+- `DRIVE`;
+- `SENSOR`;
+- `COMMUNICATION` как контракт для последующего remote-link vertical slice.
+
+Каждая subsystem definition содержит concrete provider parts, обязательные bonds, зависимости, minimum online providers и свойства. Compiler формирует `ONLINE`, `DEGRADED` или `OFFLINE` state и затем переиспользует C5 capability/affordance descriptors.
+
+### Инварианты C6
+
+1. Authoritative source — только `ConstructSnapshot`; mobile profile является cache/projection.
+2. Subsystem не может ссылаться на отсутствующую part, bond или dependency.
+3. Dependency graph не содержит циклов.
+4. Provider partition полон и не пересекается.
+5. Quorum ниже minimum переводит subsystem в `OFFLINE`.
+6. `DEGRADED` dependency ухудшает зависимую subsystem; `OFFLINE` dependency отключает её.
+7. Повреждение sensor не должно удалять независимую locomotion.
+8. Потеря power/control должна каскадно отключать drive.
+9. `IMMOBILE` profile не содержит locomotion/steering capabilities.
+10. Command pin-ит profile checksum и отклоняется после изменения конструкции.
+11. Actor получает command только при полном наборе requirements.
+12. Same-revision mutation и stale profile fail closed.
+13. Persistence load транзакционен; profile можно полностью rebuilt из snapshot.
+14. C6 не двигает physics body и не создаёт альтернативную authority boundary.
+
+### Контрольный vertical slice
+
+Колёсный rover состоит из chassis, четырёх wheels, battery, controller и sensor array. `DRIVE` требует quorum 2/4. Потеря одного wheel даёт `DEGRADED` и уменьшает effective speed по health ratio. Потеря трёх wheels делает rover `IMMOBILE`, но оставляет scan при здоровом sensor. Sensor failure убирает только perception. Battery/controller failure каскадно отключает зависимые subsystems. Repair с новой construct revision восстанавливает полный профиль и команды.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C7 — Spatial Construct
 
@@ -356,9 +389,9 @@ C5 компилирует authoritative `ConstructSnapshot` в rebuildable `Cons
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
 
-## Gate C5 → C6
+## Gate C6 → C7
 
-C5 реализован после внешнего PASS C4. C6 начинается после внешнего PASS C5:
+C6 реализован после внешнего PASS C5. C7 начинается после внешнего PASS C6:
 
 ```text
 Focused C1
@@ -367,7 +400,8 @@ Focused C2B
 Focused C3
 Focused C4
 Focused C5
+Focused C6
 Network/runtime regression
-World regression including C3, C4 and C5 scenarios
+World regression including C3, C4, C5 and C6 scenarios
 Main-scene CLI
 ```

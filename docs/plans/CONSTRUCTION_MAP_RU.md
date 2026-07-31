@@ -6,9 +6,10 @@
 **C2A:** `68cf8b2`, ACCEPTED
 **C2B:** `d5c9187`, ACCEPTED
 **C3:** ACCEPTED вместе с fix1; reviewed delivery SHA-256 `2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256`
-**C4:** ACCEPTED вместе с fix1; commit pending
-**Рабочая ветка C5:** `feature/c5-capability-affordance-compilation` поверх принятого C4 fix1
-**Текущая позиция:** `C5 — Capability and Affordance Compilation, IMPLEMENTED CANDIDATE`
+**C4:** ACCEPTED вместе с fix1
+**C5:** ACCEPTED вместе с fix1; база C4 `b985cde`
+**Рабочая ветка C6:** `feature/c6-mobile-construct` поверх принятого C5 fix1
+**Текущая позиция:** `C6 — Mobile Construct, IMPLEMENTED CANDIDATE`
 
 ## Парадигма всей линии
 
@@ -27,12 +28,12 @@ flowchart TD
     C2A --> C2B["C2B Authoritative Item Graph Integration\nACCEPTED"]
     C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
     C3 --> C4["C4 CompositeDefinition\nACCEPTED — fix1"]
-    C4 --> C5["C5 Capability and Affordance Compilation\nCURRENT CANDIDATE"]
-    C5 --> G5{"C5 focused + compatibility + network + world regression"}
-    G5 -- fail --> F5["review fixes in same C5 branch"]
-    F5 --> G5
-    G5 -- pass --> C6["C6 Mobile Construct — robot"]
-    C6 --> C7["C7 Spatial Construct — house"]
+    C4 --> C5["C5 Capability and Affordance Compilation\nACCEPTED — fix1"]
+    C5 --> C6["C6 Mobile Construct\nCURRENT CANDIDATE"]
+    C6 --> G6{"C6 focused + compatibility + network + world regression"}
+    G6 -- fail --> F6["review fixes in same C6 branch"]
+    F6 --> G6
+    G6 -- pass --> C7["C7 Spatial Construct — house"]
     C7 --> C8["C8 Fabrication Cell — assembler"]
     C8 --> C9["C9 Damage, Split, Repair"]
     C9 --> C10["C10 Parametric Members"]
@@ -54,9 +55,11 @@ C3 accepted: immutable BuildPlan + weightless ghost + resumable stages
   ↓
 C4 accepted: reusable semantic definitions + deterministic late binding
   ↓
-C5 current: typed behavior profiles + part/port affordances + semantic queries
+C5 accepted: typed behavior profiles + part/port affordances + semantic queries
+  ↓
+C6 current: mobile subsystem graph + dynamic degradation + checksum-pinned commands
   ↓ acceptance gate
-C6 robot → C7 house → C8 assembler
+C7 house → C8 assembler
   ↓
 C9 damage → C10 parametric construction → C11 local geometry
   ↓
@@ -73,8 +76,8 @@ C12 multiplayer construction → C13 federated constructs
 | C2B | production registries, shared ledger, M0 authority и recovery | стол | **ACCEPTED** |
 | C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **ACCEPTED — fix1** |
 | C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **ACCEPTED — fix1** |
-| C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **CURRENT CANDIDATE** |
-| C6 | rigid islands, joints, power/control | наземный робот | PLANNED |
+| C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **ACCEPTED — fix1** |
+| C6 | power/control/drive/sensor subsystems, quorum, dependency cascade и mobile commands | наземный робот | **CURRENT CANDIDATE** |
 | C7 | sections, spaces, enclosure, utilities | дом | PLANNED |
 | C8 | fabrication through the same BuildPlan | сборщик | PLANNED |
 | C9 | damage, split, repair, salvage | стол/робот/секция | PLANNED |
@@ -206,7 +209,7 @@ composite_exposed_ports
 
 ## C5: Capability and Affordance Compilation
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED вместе с fix1.
 
 ```text
 Authoritative ConstructSnapshot
@@ -279,3 +282,38 @@ Spatial partition   C0 ───────────────── C7 �
 8. обязательный world-regression manifest.
 
 Статус `ACCEPTED` назначается только после внешней проверки focused, network и полного world regression.
+
+
+## C6: Mobile Construct
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+Authoritative ConstructSnapshot
+├── concrete mobile parts
+├── bond states
+└── compiled_facets.mobile_subsystems
+        ↓ deterministic subsystem compiler
+ConstructionMobileProfile
+├── POWER / CONTROL / DRIVE / SENSOR states
+├── provider quorum
+├── dependency cascade
+├── MOBILE / DEGRADED / IMMOBILE
+├── C5 capability descriptors
+└── concrete mobile affordances
+        ↓ checksum-pinned command
+ConstructionMobileCommandAuthorizer
+```
+
+Ключевые правила C6:
+
+- profile остаётся rebuildable projection authoritative `ConstructSnapshot`;
+- health subsystem вычисляется из состояния конкретных parts, обязательных bonds и dependency graph;
+- quorum позволяет потерять часть однотипных providers без полного отказа;
+- `DAMAGED` больше не означает автоматический ноль всех возможностей: сохраняются только реально работоспособные подсистемы;
+- потеря sensor не лишает робота движения;
+- потеря power/control каскадно отключает drive и sensor;
+- команда pin-ит checksum профиля и не исполняется против устаревшей конфигурации;
+- физическое движение, network endpoint и graphical control остаются за следующим runtime-интеграционным слоем.
+
+Контрольный объект: восьмикомпонентный колёсный rover. Потеря одного колеса снижает максимальную скорость `8 → 6 м/с`, потеря трёх колёс опускает drive ниже quorum и делает rover `IMMOBILE`, sensor failure сохраняет движение, battery/controller failure каскадно отключает зависимые подсистемы, а ремонт возвращает полный профиль.

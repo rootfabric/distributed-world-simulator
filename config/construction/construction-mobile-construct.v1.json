@@ -1,0 +1,71 @@
+{
+  "schema": "planet_simulator.construction_mobile_construct_manifest.v1",
+  "stage": "C6",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base_stage": "C5_FIX1_ACCEPTED",
+  "base_c4_commit": "b985cde",
+  "recommended_branch": "feature/c6-mobile-construct",
+  "paradigm": {
+    "authoritative_source_is_construct_snapshot": true,
+    "mobile_profile_is_rebuildable_projection": true,
+    "subsystem_health_is_part_and_bond_derived": true,
+    "dependency_failures_propagate": true,
+    "provider_quorum_supported": true,
+    "damaged_constructs_may_retain_partial_capabilities": true,
+    "commands_pin_profile_checksum": true,
+    "physics_execution_out_of_scope": true
+  },
+  "contracts": [
+    "planet_simulator.construction_mobile_subsystem_definition.v1",
+    "planet_simulator.construction_mobile_subsystem_state.v1",
+    "planet_simulator.construction_mobile_profile.v1",
+    "planet_simulator.construction_mobile_profile_store.v1",
+    "planet_simulator.construction_mobile_command.v1"
+  ],
+  "prototype": "WHEELED_ROVER_WITH_DYNAMIC_SUBSYSTEM_DEGRADATION",
+  "subsystem_kinds": [
+    "COMMUNICATION",
+    "CONTROL",
+    "DRIVE",
+    "POWER",
+    "SENSOR"
+  ],
+  "mobile_capabilities": [
+    "LOCOMOTION_GROUND",
+    "MOBILE_CONTROL",
+    "PERCEPTION",
+    "POWERED",
+    "REMOTE_LINK",
+    "STEERING"
+  ],
+  "mobile_actions": [
+    "DRIVE_TO",
+    "ISSUE_REMOTE_COMMAND",
+    "ROTATE",
+    "SCAN_ENVIRONMENT",
+    "STOP"
+  ],
+  "focused_tests": [
+    "res://tests/construction/test_c6_mobile_construct_contracts.gd",
+    "res://tests/construction/test_c6_mobile_construct_integration.gd"
+  ],
+  "focused_assertions": {
+    "contracts": 92,
+    "integration": 126,
+    "total": 218
+  },
+  "expected_world_profile": {
+    "tests": 113,
+    "steps": 116
+  },
+  "runtime_physics_execution": false,
+  "network_command_endpoint": false,
+  "runtime_ui_integration": false,
+  "next_stage": "C7_SPATIAL_CONSTRUCT",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "delivery": {
+    "changed_files": 38,
+    "manifest": "c6-mobile-construct-files.txt",
+    "overlay_only": true
+  }
+}
