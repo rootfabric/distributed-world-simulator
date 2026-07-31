@@ -1,0 +1,10 @@
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/architecture/MW3_LOCAL_MESHING_RU.md
+docs/checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX1_RU.md
+scripts/world/matter/lab/matter_local_mesh_streamer.gd
+scripts/world/matter/meshing/matter_mesh_seam_validator.gd
+tests/matter/presentation/test_mw3_local_meshing.gd
+validation/v17.3.0-simulation-mw3-local-meshing-fix1-files.txt
+validation/v17.3.0-simulation-mw3-local-meshing-fix1-validation.json

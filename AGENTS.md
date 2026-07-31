@@ -181,12 +181,13 @@ This track is independent from the accepted single-server multiplayer order and 
 
 ```text
 architecture: Dynamic Matter Fabric
-accepted: v17.1.0-simulation-mw1-fixed-seed-asteroid
-current candidate: v17.2.0-simulation-mw2-sparse-bricks
-branch: feature/mw2-sparse-bricks
+accepted: v17.2.0-simulation-mw2-sparse-bricks, delivery fix1
+current candidate: v17.3.0-simulation-mw3-local-meshing
+branch: feature/mw3-local-meshing
 production worlds changed: false
-next after acceptance: MW3 asteroid matter laboratory
+world catalog changed: false
+next after acceptance: MW4 authoritative matter mutations
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
-MW2 must remain headless/domain-only: no Moon runtime, world catalog, mesh, collision, Item Graph, persistence or network authority changes. Review fixes remain on `feature/mw2-sparse-bricks` until acceptance.
+MW3 is presentation-only over canonical MW2 snapshots. It may add local mesh, static collision and a directly opened laboratory scene, but must not alter Moon runtime, production world catalog, Item Graph, persistence, network authority or canonical matter DTOs. Review fixes remain on `feature/mw3-local-meshing` until acceptance.

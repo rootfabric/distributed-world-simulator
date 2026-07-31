@@ -796,3 +796,42 @@ MW2 hierarchical matter cells and sparse bricks
 - mesh/collision: not included
 - runner: RUN_MW2_SPARSE_BRICKS_TESTS.ps1 / .sh
 - next: MW3 local mesh, collision and streaming laboratory
+
+MW3 local meshing, collision and camera-local laboratory
+- checkpoint: v17.3.0-simulation-mw3-local-meshing
+- branch: feature/mw3-local-meshing
+- base: accepted MW2 v17.2.0 delivery fix1
+- mesher: Freudenthal marching tetrahedra, 6 tetrahedra per cell
+- iso surface: signed_distance_m = 0
+- normals: central SDF gradients from MW2 ghost samples
+- winding: Godot-clockwise faces aligned against outward gradient cross product
+- seam validation: boundary vertices, boundary normals and boundary segments
+- mesh coordinates: cell-center-relative with body-fixed origin
+- collision: static two-sided ConcavePolygonShape3D from render triangles
+- streamer: camera-local desired cells, generation fence, bounded builds per frame, failed-build diagnostics
+- laboratory: scenes/labs/matter_asteroid_meshing_lab.tscn
+- production Moon/world catalog changed: no
+- runner: RUN_MW3_LOCAL_MESHING_TESTS.ps1 / .sh
+- next: MW4 authoritative excavation/deposition and Item Graph mass transfer
+
+MW3 local meshing fix1
+- checkpoint: v17.3.0-simulation-mw3-local-meshing
+- delivery: fix1
+- branch: feature/mw3-local-meshing
+- streamer: configure/refresh derive body-local observer position from local Transform3D parent chains; no global_position before Node ready
+- seam result: counts read from MatterContractUtils success.details
+- seam validation: empty vertex/normal/segment signatures reject with MATTER_MESH_SEAM_INTERSECTION_MISSING
+- focused expected topology: 7519 assertions
+- canonical matter changed: no
+- production Moon/world catalog changed: no
+
+MW3 local meshing fix2
+- checkpoint: v17.3.0-simulation-mw3-local-meshing
+- delivery: fix2
+- branch: feature/mw3-local-meshing
+- streamer cell identity: SimulationCellAddress.cell_id
+- queue key name: address_id retained internally, value sourced from cell_id
+- stale SimulationCellAddress.address_id reads: none
+- focused expected topology: 7519 assertions
+- canonical matter changed: no
+- production Moon/world catalog changed: no

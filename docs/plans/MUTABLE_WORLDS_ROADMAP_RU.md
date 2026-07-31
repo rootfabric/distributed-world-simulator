@@ -298,7 +298,7 @@ No mesh or collision code exists yet.
 
 Материализовать только явно запрошенные области MW1 и получить стабильную body-fixed 3D identity без полного voxel allocation.
 
-**Implementation candidate подготовлен 2026-07-31:** `v17.2.0-simulation-mw2-sparse-bricks`.
+**Accepted delivery 2026-07-31:** `v17.2.0-simulation-mw2-sparse-bricks`, delivery `fix1`.
 
 ### Ветка
 
@@ -345,7 +345,7 @@ materialize_cell(cell_address, state_revision)
 
 Точное совпадение с lattice point materialized brick читает `MATERIALIZED_BRICK`. Любой off-lattice запрос остаётся точным `PROCEDURAL_BASE` sample. MW2 не вводит скрытый nearest-neighbour snap и не смешивает storage resolution с gameplay semantics.
 
-Raycast, nearest surface и material column остаются в MW3, где появится реальный streaming/mesh consumer.
+Raycast, nearest surface и material column перенесены в MW4: MW3 намеренно ограничен lattice materialization, meshing, static collision и camera-local streaming.
 
 ### Boundary rules
 
@@ -387,110 +387,98 @@ Requested cells materialize independently.
 Adjacent bricks expose identical shared and ghost samples.
 Exact stored lattice samples override procedural fallback.
 Off-lattice queries remain exact procedural samples.
-No Moon/runtime/mesh/network code changes.
+No Moon/runtime/mesh/network code changes. MW2 accepted with delivery fix1.
 ```
 
 ---
 
 ## MW3 — Local mesh, collision and streaming laboratory
 
+### Статус
+
+**Implementation candidate подготовлен 2026-07-31:** `v17.3.0-simulation-mw3-local-meshing` поверх принятого MW2 `fix1`.
+
 ### Цель
 
-Создать отдельный playable/debug world с локальным SDF mesh и collision.
+Получить первую Godot presentation-проекцию канонического объёмного астероида: локальный mesh, static collision и camera-local загрузку bricks без изменения Moon runtime или production world catalog.
 
 ### Ветка
 
 ```text
-feature/mw3-asteroid-matter-lab
+feature/mw3-local-meshing
 ```
 
-### Добавить world
+### Реализовано
 
 ```text
-config/worlds/catalog.json                 modified
-scripts/app/asteroid_matter_lab_app.gd
-scenes/testing/asteroid_matter_lab.tscn
-scripts/world/matter/matter_mesh_adapter.gd
-scripts/world/matter/matter_collision_adapter.gd
-scripts/world/matter/matter_streaming_manager.gd
-scripts/world/matter/matter_debug_renderer.gd
-config/matter/asteroid_matter_lab.v1.json
+scripts/world/matter/meshing/matter_brick_mesh_data.gd
+scripts/world/matter/meshing/matter_tetrahedral_mesher.gd
+scripts/world/matter/meshing/matter_mesh_resource_factory.gd
+scripts/world/matter/meshing/matter_mesh_seam_validator.gd
+scripts/world/matter/lab/matter_local_mesh_streamer.gd
+scripts/world/matter/lab/matter_asteroid_meshing_lab.gd
+scripts/world/matter/lab/matter_lab_fly_camera.gd
+scenes/labs/matter_asteroid_meshing_lab.tscn
+config/matter/mw3-local-meshing.v1.json
 ```
 
-### Заимствовать из текущего terrain streaming
+Лаборатория запускается прямым открытием сцены и не регистрируется в `config/worlds/catalog.json`.
 
-Можно повторно использовать паттерны:
-
-- immutable request data;
-- off-tree worker sampler;
-- `WorkerThreadPool`;
-- latest-wins request fencing;
-- staged main-thread creation;
-- old representation active until new ready;
-- tiled collision commit;
-- drain on world unload;
-- performance JSONL.
-
-Нельзя вызывать текущий `TerrainStreamingManager` напрямую: его contracts radial-surface-specific. Нужен отдельный manager с общими низкоуровневыми helpers только после появления реального повторения.
-
-### Mesher
-
-Первая версия:
-
-- один выбранный CPU mesher;
-- deterministic cell traversal;
-- normal generation из SDF gradient или mesh topology;
-- material palette per surface vertex/triangle;
-- seam tests;
-- collision decimation отдельно от visual mesh.
-
-Конкретный алгоритм фиксируется внутри checkpoint после prototype comparison. Domain contracts не должны зависеть от Marching Cubes, Surface Nets, Dual Contouring или Transvoxel.
-
-### Лабораторные команды
+### Meshing v1
 
 ```text
-matter.debug.toggle
-matter.debug.mode sdf|material|brick|revision|connectivity
-matter.teleport.surface <x> <y> <z>
-matter.sample <x> <y> <z>
-matter.mesh.rebuild
-matter.cache.report
-matter.performance.save
+algorithm: Freudenthal marching tetrahedra
+cube decomposition: 6 tetrahedra
+iso-level: signed_distance_m = 0
+normals: central SDF gradients from MW2 ghost samples
+coordinates: cell-center-relative vertices + body-fixed origin
+vertex reuse: lattice edge identity inside one brick
 ```
 
-### Performance budgets первого gate
+Freudenthal decomposition согласует диагонали общих граней соседних cells. Focused seam fixture сравнивает не только boundary vertices, но и boundary segments, чтобы обнаруживать T-junction topology.
 
-Целевые, не production-финальные:
+### Collision
 
-```text
-active visual radius: 128 m
-active collision radius: 64 m
-standard sample spacing: 1 m
-main-thread commit budget: ≤ 4 ms per frame
-no frame > 100 ms during normal streamed activation after warm-up
-world unload drain: ≤ 30 s hard timeout, fail-closed
-```
+- render mesh и collision используют одну triangle topology;
+- `ConcavePolygonShape3D` применяется только как static laboratory collision;
+- empty bricks не создают `ArrayMesh` и collision resources;
+- dynamic fragments/convex decomposition остаются MW6.
+
+### Camera-local streamer
+
+- observer position отображается в body-fixed cell;
+- desired set — куб `(2r + 1)^3` cells;
+- очередь сортирована по stable address ID;
+- builds ограничены `max_builds_per_frame`;
+- request generation отсекает stale queue entries;
+- far bricks выгружаются;
+- resolved-empty cells кэшируются внутри текущего desired set;
+- sampling, meshing и resource commit в MW3 выполняются последовательно на main thread.
+
+Worker sampling и staged main-thread commit остаются оптимизацией после профилирования. Контракты mesh data и streamer не требуют изменения canonical Matter Domain.
 
 ### Тесты
 
-- lab boot;
-- isolated world commands;
-- no hidden Moon/Earth runtime;
-- worker produces data-only payload;
-- stale request rejection;
-- world switch during generation;
-- collision creation and removal;
-- mesh seam screenshot/geometry test;
-- cache and drain;
-- no canonical state mutation from presentation rebuild.
+- analytical sibling plane seam;
+- boundary vertex/segment equality;
+- deterministic replay hash и packed arrays;
+- finite vertices, unit outward-gradient normals и Godot-clockwise winding;
+- реальный +X surface brick fixed-seed астероида;
+- uniform interior/vacuum empty bricks;
+- ArrayMesh и ConcavePolygonShape3D projections;
+- presenter origin/node topology;
+- camera-local desired set и generation refresh;
+- corrupted snapshot/grid/iso/hash/normal rejection.
 
 ### Gate
 
 ```text
-world.load asteroid_matter_lab
-→ spectator flies around a 1000 m radius body
-→ local surface streams without changing moon/earth runtimes
-→ collision and mesh originate from Matter Query Service
+open scenes/labs/matter_asteroid_meshing_lab.tscn
+→ local surface bricks build around camera
+→ mesh and collision originate only from MatterBrickSnapshot
+→ sibling seams match by vertices and segments
+→ camera movement changes desired region
+→ Moon/main runtime and world catalog remain unchanged
 ```
 
 ---
@@ -1479,7 +1467,7 @@ scripts/app/
 └── asteroid_matter_lab_app.gd
 
 scenes/testing/
-└── asteroid_matter_lab.tscn
+└── matter_asteroid_meshing_lab.tscn
 
 tests/matter/
 ├── contracts/
@@ -1497,9 +1485,9 @@ tests/matter/
 
 ```text
 RUN_MW0_MATTER_CONTRACTS_TESTS
-RUN_MW1_ASTEROID_GENERATION_TESTS
-RUN_MW2_SPARSE_MATTER_TESTS
-RUN_MW3_ASTEROID_LAB_TESTS
+RUN_MW1_FIXED_SEED_ASTEROID_TESTS
+RUN_MW2_SPARSE_BRICKS_TESTS
+RUN_MW3_LOCAL_MESHING_TESTS
 RUN_MW4_MATTER_MUTATION_TESTS
 RUN_MW5_MATTER_PERSISTENCE_TESTS
 RUN_MW6_ASTEROID_DESTRUCTION_TESTS
