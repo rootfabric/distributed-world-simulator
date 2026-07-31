@@ -450,3 +450,49 @@ parts + bonds
 4. Exterior opening учитывается через состояние closure part и frame section.
 5. Building activation является rebuildable projection authoritative construct.
 6. Большие здания в будущем могут разделяться на section aggregates без изменения семантики Space Graph.
+
+
+## 17. C8: производство как authoritative material flow
+
+C8 не вводит отдельную систему «виртуальных ресурсов». Сырьё и продукт являются обычными item-backed сущностями, а machine — обычным construct. Recipe и queue описывают процесс, но не подменяют Item Graph.
+
+```text
+recipe + machine capability + utility availability
+→ exact input bindings
+→ authoritative reservation
+→ idempotent work progress
+→ authoritative consumption/output creation
+→ normal Item Graph
+```
+
+### Recipe не является готовым предметом
+
+Recipe хранит требования и output templates, но не содержит конкретных item IDs. Конкретные входы выбираются детерминированно при enqueue, а конкретные output IDs закрепляются в job до исполнения. Это делает replay и network acceptance проверяемыми.
+
+### Reservation физически перемещает предметы
+
+Входы не помечаются отдельным булевым флагом. Они переводятся в machine input container через C2A/C2B transaction. Поэтому контейнерное членство, масса, nested rules и persistence остаются едиными с остальным миром.
+
+### Completion — одна атомарная граница
+
+Завершение одной транзакцией:
+
+1. удаляет полностью израсходованные stacks;
+2. уменьшает partial stacks с revision increment;
+3. создаёт fabricated outputs с immutable provenance;
+4. обновляет machine `ConstructSnapshot`;
+5. фиксируется shared operation ledger и M0 batch.
+
+Если commit не состоялся, не меняется ничего. Если commit состоялся, повтор операции возвращает replay и не создаёт второй продукт.
+
+### Queue слабее authoritative мира
+
+Queue хранит schedule, priority и progress, но не доказывает расход или выпуск. После crash C8 сверяет job с `fabrication_runtime` machine snapshot. Authoritative completion сильнее отставшего queue state.
+
+### Производство замыкает строительный цикл
+
+Fabricated output возвращается в Item Graph и может быть выбран C4 compiler либо использоваться как source item C3 BuildPlan. Для игрока, агента и фабрики не создаются разные классы деталей.
+
+### Деградация станка
+
+Machine availability компилируется из concrete providers/bonds, C5 WORKSTATION capability и C7 POWER utility. Потеря power или quorum блокирует новые material mutations; восстановление позволяет продолжить тот же pinned job.

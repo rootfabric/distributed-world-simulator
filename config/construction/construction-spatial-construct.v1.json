@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_spatial_construct_manifest.v1",
   "stage": "C7",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base_stage": "C6_ACCEPTED",
   "base_c5_commit": "29cd8b1",
   "recommended_branch": "feature/c7-spatial-construct",
@@ -85,5 +85,13 @@
     "changed_files": 49,
     "manifest": "c7-spatial-construct-files.txt",
     "overlay_only": true
+  },
+  "base_c6_commit": "2837835",
+  "acceptance": {
+    "reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87",
+    "network": "PASS",
+    "world_tests": 115,
+    "world_steps": 118,
+    "main_scene_cli": "6/6 PASS"
   }
 }

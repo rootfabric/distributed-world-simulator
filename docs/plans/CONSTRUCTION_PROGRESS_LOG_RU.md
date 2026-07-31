@@ -540,3 +540,62 @@ Editor parse:    PASS
 ```
 
 C2B focused не запускается в isolated workspace из-за отсутствующей M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `115/115 tests`, `118 steps`.
+
+
+## 2026-07-31 — C7: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c7-spatial-construct`.
+**База:** `C6 @ 2837835`.
+
+```text
+C7 contracts:     PASS — 105 assertions
+C7 integration:   PASS — 120 assertions
+C7 total:         PASS — 225 assertions
+C1/C2A/C2B/C3/C4/C5/C6: PASS
+Network N0–M4:    PASS
+World regression: PASS — 115/115 tests, 118 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed SHA-256: `5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87`. C7 стал принятой базой C8.
+
+
+## 2026-07-31 — C8: Fabrication Cell
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c8-fabrication-cell`.
+**База:** принятый C7.
+
+Архитектурные решения:
+
+- recipes публикуются как immutable versioned DTO;
+- machine profile выводится из `ConstructSnapshot`, C5 behavior и C7 utilities;
+- job pin-ит recipe/machine checksum и точные item bindings;
+- C2A расширен командами reserve/complete/release и fabrication item purposes;
+- C2B authoritative adapter остаётся единственным production mutation path;
+- work progress идемпотентен по operation ID;
+- completion атомарно расходует input, создаёт output и обновляет machine snapshot;
+- cancel возвращает зарезервированные входы;
+- crash reconcile использует authoritative machine runtime и exact replay;
+- fabricated outputs возвращаются в обычный Item Graph и C3 BuildPlan;
+- integral float/int components сравниваются канонически.
+
+Локальный focused/compatibility профиль:
+
+```text
+C1:              PASS — 66 assertions
+C2A:             PASS — 137 assertions
+C3:              PASS — 194 assertions
+C4:              PASS — 268 assertions
+C5:              PASS — 204 assertions
+C6:              PASS — 218 assertions
+C7:              PASS — 225 assertions
+C8 contracts:    PASS — 91 assertions
+C8 integration:  PASS — 130 assertions
+C8 total:        PASS — 221 assertions
+Editor parse:    PASS
+```
+
+C2B focused не запускается в isolated workspace из-за отсутствующей M0 dependency tree. Network/runtime, полный world regression и main-scene CLI обязательны для внешней приёмки. Ожидаемый world profile: `117/117 tests`, `120 steps`.

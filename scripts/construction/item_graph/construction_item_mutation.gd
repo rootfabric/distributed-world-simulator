@@ -13,12 +13,18 @@ const PURPOSE_ATTACH_PART: String = "ATTACH_PART"
 const PURPOSE_DETACH_PART: String = "DETACH_PART"
 const PURPOSE_CONSUME_MATERIAL: String = "CONSUME_MATERIAL"
 const PURPOSE_DESTROY_ROOT: String = "DESTROY_CONSTRUCT_ROOT"
+const PURPOSE_TRANSFER_FABRICATION_INPUT: String = "TRANSFER_FABRICATION_INPUT"
+const PURPOSE_CREATE_FABRICATED_ITEM: String = "CREATE_FABRICATED_ITEM"
+const PURPOSE_CONSUME_FABRICATION_INPUT: String = "CONSUME_FABRICATION_INPUT"
 const PURPOSES: Array[String] = [
 	PURPOSE_CREATE_ROOT,
 	PURPOSE_ATTACH_PART,
 	PURPOSE_DETACH_PART,
 	PURPOSE_CONSUME_MATERIAL,
 	PURPOSE_DESTROY_ROOT,
+	PURPOSE_TRANSFER_FABRICATION_INPUT,
+	PURPOSE_CREATE_FABRICATED_ITEM,
+	PURPOSE_CONSUME_FABRICATION_INPUT,
 ]
 const FIELDS: Array[String] = [
 	"schema",
@@ -73,10 +79,17 @@ static func validate(value: Dictionary) -> Dictionary:
 				return after_validation
 			if String(after["item_instance_id"]) != item_id or int(after["revision"]) != 0:
 				return _failure("INVALID_CREATED_ITEM_PROJECTION")
-			if purpose != PURPOSE_CREATE_ROOT:
+			if purpose == PURPOSE_CREATE_ROOT:
+				if not _is_construction_root(after):
+					return _failure("CREATED_ROOT_ITEM_LACKS_CONSTRUCTION_COMPONENT")
+			elif purpose == PURPOSE_CREATE_FABRICATED_ITEM:
+				if String(after["relation"].get("kind", "")) != ProjectionScript.CONTAINER:
+					return _failure("FABRICATED_ITEM_TARGET_MUST_BE_CONTAINER")
+				var origin = after["components"].get("fabrication_origin", {})
+				if not origin is Dictionary or String(Dictionary(origin).get("job_id", "")).is_empty():
+					return _failure("FABRICATED_ITEM_ORIGIN_REQUIRED")
+			else:
 				return _failure("INVALID_CREATE_ITEM_MUTATION_PURPOSE")
-			if not _is_construction_root(after):
-				return _failure("CREATED_ROOT_ITEM_LACKS_CONSTRUCTION_COMPONENT")
 		OP_UPDATE:
 			var before_validation: Dictionary = ProjectionScript.validate(before)
 			if not bool(before_validation.get("success", false)):
@@ -101,7 +114,13 @@ static func validate(value: Dictionary) -> Dictionary:
 				return _failure("DELETE_ITEM_MUTATION_HAS_AFTER_STATE")
 			if String(before["item_instance_id"]) != item_id:
 				return _failure("DELETED_ITEM_IDENTITY_MISMATCH")
-			if purpose != PURPOSE_DESTROY_ROOT or not _is_construction_root(before):
+			if purpose == PURPOSE_DESTROY_ROOT:
+				if not _is_construction_root(before):
+					return _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")
+			elif purpose == PURPOSE_CONSUME_FABRICATION_INPUT:
+				if String(before["relation"].get("kind", "")) != ProjectionScript.CONTAINER:
+					return _failure("FABRICATION_INPUT_NOT_RESERVED")
+			else:
 				return _failure("INVALID_DELETE_ITEM_MUTATION_PURPOSE")
 	return _success()
 
@@ -123,11 +142,18 @@ static func _validate_update_purpose(purpose: String, before: Dictionary, after:
 				return _failure("DETACH_PART_TARGET_NOT_TRANSFERABLE")
 			if int(after["quantity"]) != int(before["quantity"]) or after["components"] != before["components"]:
 				return _failure("DETACH_PART_MUTATED_ITEM_PAYLOAD")
-		PURPOSE_CONSUME_MATERIAL:
+		PURPOSE_CONSUME_MATERIAL, PURPOSE_CONSUME_FABRICATION_INPUT:
 			if before_relation != after_relation or before["components"] != after["components"]:
 				return _failure("CONSUME_MATERIAL_CHANGED_LOCATION_OR_COMPONENTS")
 			if int(after["quantity"]) >= int(before["quantity"]):
 				return _failure("CONSUME_MATERIAL_DID_NOT_DECREASE_QUANTITY")
+		PURPOSE_TRANSFER_FABRICATION_INPUT:
+			if String(before_relation.get("kind", "")) != ProjectionScript.CONTAINER or String(after_relation.get("kind", "")) != ProjectionScript.CONTAINER:
+				return _failure("FABRICATION_TRANSFER_REQUIRES_CONTAINERS")
+			if before_relation == after_relation:
+				return _failure("FABRICATION_TRANSFER_DID_NOT_MOVE")
+			if int(after["quantity"]) != int(before["quantity"]) or after["components"] != before["components"]:
+				return _failure("FABRICATION_TRANSFER_MUTATED_PAYLOAD")
 		_:
 			return _failure("INVALID_UPDATE_ITEM_MUTATION_PURPOSE")
 	return _success()

@@ -1,7 +1,8 @@
 Checkpoint: C7 — Spatial Construct
-Status: IMPLEMENTED CANDIDATE
-Base: C6 ACCEPTED, C5 @ 29cd8b1
+Status: ACCEPTED
+Base: C6 @ 2837835, C5 @ 29cd8b1
 Recommended branch: feature/c7-spatial-construct
+Reviewed SHA-256: 5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87
 Changed files: 49
 
 RUN_C7_SPATIAL_CONSTRUCT_TESTS.ps1

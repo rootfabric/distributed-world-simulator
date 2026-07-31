@@ -1,11 +1,12 @@
 {
   "schema": "planet_simulator.c7_spatial_construct_validation.v1",
   "checkpoint": "C7_SPATIAL_CONSTRUCT",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "stage": "C6_ACCEPTED",
     "c5_commit": "29cd8b1",
-    "c6_reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04"
+    "c6_reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04",
+    "c6_commit": "2837835"
   },
   "branch": "feature/c7-spatial-construct",
   "focused_profile": {
@@ -97,5 +98,14 @@
     "overlay_only": true,
     "manifest": "c7-spatial-construct-files.txt",
     "changed_files": 49
+  },
+  "external_acceptance": {
+    "focused_c7_assertions": 225,
+    "compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "PASS — 115/115 tests, 118 steps",
+    "main_scene_cli": "PASS — 6/6",
+    "git_diff_check": "PASS",
+    "reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87"
   }
 }

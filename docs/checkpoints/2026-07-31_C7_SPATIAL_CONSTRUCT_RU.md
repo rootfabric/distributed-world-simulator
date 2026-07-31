@@ -1,8 +1,8 @@
 # Checkpoint C7 — Spatial Construct
 
 **Дата:** 2026-07-31
-**Статус:** IMPLEMENTED CANDIDATE
-**База:** принятый C6, C5 commit `29cd8b1`
+**Статус:** ACCEPTED
+**База:** `C6 @ 2837835`, C5 commit `29cd8b1`
 **Рекомендуемая ветка:** `feature/c7-spatial-construct`
 
 ## Цель
@@ -73,3 +73,19 @@ World regression PASS — 115/115 tests, 118 steps
 Main-scene CLI PASS — 6/6
 git diff --check PASS
 ```
+
+
+## Внешняя приёмка
+
+```text
+C7 contracts:     PASS — 105 assertions
+C7 integration:   PASS — 120 assertions
+C7 total:         PASS — 225 assertions
+C1/C2A/C2B/C3/C4/C5/C6: PASS
+Network N0–M4:    PASS
+World regression: PASS — 115/115 tests, 118 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+Reviewed delivery SHA-256: `5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87`.

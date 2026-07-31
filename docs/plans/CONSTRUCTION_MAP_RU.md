@@ -8,8 +8,10 @@
 **C3:** ACCEPTED вместе с fix1; reviewed delivery SHA-256 `2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256`
 **C4:** ACCEPTED вместе с fix1
 **C5:** ACCEPTED вместе с fix1; база C4 `b985cde`
-**Рабочая ветка C6:** `feature/c6-mobile-construct` поверх принятого C5 fix1
-**Текущая позиция:** `C6 — Mobile Construct, IMPLEMENTED CANDIDATE`
+**C6:** `2837835`, ACCEPTED
+**C7:** ACCEPTED; reviewed delivery SHA-256 `5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87`
+**Рабочая ветка C8:** `feature/c8-fabrication-cell` поверх принятого C7
+**Текущая позиция:** `C8 — Fabrication Cell, IMPLEMENTED CANDIDATE`
 
 ## Парадигма всей линии
 
@@ -29,13 +31,13 @@ flowchart TD
     C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
     C3 --> C4["C4 CompositeDefinition\nACCEPTED — fix1"]
     C4 --> C5["C5 Capability and Affordance Compilation\nACCEPTED — fix1"]
-    C5 --> C6["C6 Mobile Construct\nACCEPTED"]
-    C6 --> C7["C7 Spatial Construct\nCURRENT CANDIDATE"]
-    C7 --> G7{"C7 focused + compatibility + network + world regression"}
-    G7 -- fail --> F7["review fixes in same C7 branch"]
-    F7 --> G7
-    G7 -- pass --> C8["C8 Fabrication Cell — assembler"]
-    C8 --> C9["C9 Damage, Split, Repair"]
+    C5 --> C6["C6 Mobile Construct\nACCEPTED — 2837835"]
+    C6 --> C7["C7 Spatial Construct\nACCEPTED"]
+    C7 --> C8["C8 Fabrication Cell\nCURRENT CANDIDATE"]
+    C8 --> G8{"C8 focused + compatibility + network + world regression"}
+    G8 -- fail --> F8["review fixes in same C8 branch"]
+    F8 --> G8
+    G8 -- pass --> C9["C9 Damage, Split, Repair"]
     C9 --> C10["C10 Parametric Members"]
     C10 --> C11["C11 Local Geometry Editing"]
     C11 --> C12["C12 Multiplayer Construction Acceptance"]
@@ -59,10 +61,10 @@ C5 accepted: typed behavior profiles + part/port affordances + semantic queries
   ↓
 C6 accepted: mobile subsystem graph + dynamic degradation + checksum-pinned commands
   ↓
-C7 current: sections + Space Graph + enclosure + utilities + activation
-  ↓ acceptance gate
-C8 assembler
+C7 accepted: sections + Space Graph + enclosure + utilities + activation
   ↓
+C8 current: recipes + machine capabilities + queue + authoritative material flow
+  ↓ acceptance gate
 C9 damage → C10 parametric construction → C11 local geometry
   ↓
 C12 multiplayer construction → C13 federated constructs
@@ -80,8 +82,8 @@ C12 multiplayer construction → C13 federated constructs
 | C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **ACCEPTED — fix1** |
 | C5 | typed capabilities, concrete affordances, semantic query и rebuildable profiles | агент использует неизвестный стол | **ACCEPTED — fix1** |
 | C6 | power/control/drive/sensor subsystems, quorum, dependency cascade и mobile commands | наземный робот | **ACCEPTED** |
-| C7 | sections, spaces, enclosure, openings, utilities и activation LOD | дом | **CURRENT CANDIDATE** |
-| C8 | fabrication through the same BuildPlan | сборщик | PLANNED |
+| C7 | sections, spaces, enclosure, openings, utilities и activation LOD | дом | **ACCEPTED** |
+| C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **CURRENT CANDIDATE** |
 | C9 | damage, split, repair, salvage | стол/робот/секция | PLANNED |
 | C10 | beams, panels, pipes, cables, profiles | строение/корабль | PLANNED |
 | C11 | local CSG/SDF/microgeometry | панель/корпус | PLANNED |
@@ -323,7 +325,7 @@ ConstructionMobileCommandAuthorizer
 
 ## C7: Spatial Construct
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 Authoritative ConstructSnapshot
@@ -358,3 +360,41 @@ ConstructionSpatialCommandAuthorizer
 - profile является rebuildable projection и pin-ит authoritative construct checksum.
 
 Контрольный объект: однокомнатный дом с шестью boundary sections, дверью, окном, power panel и data router.
+
+
+## C8: Fabrication Cell
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+Versioned FabricationRecipe
+        ↓ deterministic allocation
+FabricationJob + exact item bindings
+        ↓ reserve
+C2A FABRICATION_RESERVE plan
+        ↓ C2B authority
+inputs in machine input container
+machine ConstructSnapshot pins active job
+        ↓ idempotent work progress
+C2A FABRICATION_COMPLETE plan
+├── consume exact/partial input stacks
+├── create fabricated ItemInstance outputs
+└── update machine ConstructSnapshot
+        ↓
+normal Item Graph + output container + C3 BuildPlan
+```
+
+Ключевые правила C8:
+
+- recipe version неизменяема и закрепляется checksum в каждом job;
+- очередь не хранит альтернативные предметы: input/output bindings ссылаются на реальные item identities;
+- reservation, completion и release проходят через расширенный C2A plan и общий C2B authoritative adapter;
+- machine availability выводится из concrete parts/bonds, C5 behavior capabilities и C7 utilities;
+- progress operation идемпотентна по operation ID;
+- crash после authoritative completion восстанавливается по `fabrication_runtime.last_completed_job_id`;
+- exact replay не расходует материал повторно и не создаёт второй продукт;
+- fabricated item содержит `fabrication_origin` и возвращается в обычный Item Graph;
+- изготовленная балка используется как source projection обычного C3 BuildPlan;
+- анимация станка, tick-based power/heat/tool wear и UI остаются вне C8.
+
+Контрольный объект: CNC-cell, которая при наличии WORKSTATION capability и POWER utility резервирует coolant и steel, выполняет десять work units и выпускает structural beam.

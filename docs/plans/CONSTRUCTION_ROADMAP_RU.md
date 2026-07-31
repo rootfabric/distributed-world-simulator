@@ -386,11 +386,43 @@ C6 вводит rebuildable mobile profile поверх authoritative `Construct
 
 Intact house компилируется в `ACTIVE/HABITABLE/FUNCTIONAL`. Open door даёт `DEGRADED` и `CLOSE_DOOR`. Потеря wall/window/door bond даёт `EXPOSED/INACTIVE/SUMMARY`. Потеря power отключает power и dependent data, но сохраняет shelter. Repair с новой revision восстанавливает полный profile.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C8 — Fabrication Cell
 
-Сборщик исполняет тот же BuildPlan, который может исполнять игрок или builder agent.
+Производственная ячейка превращает реальные item inputs в новые item outputs, не создавая отдельную производственную identity и не обходя C2A/C2B authority boundary. Изготовленный предмет возвращается в обычный Item Graph и может быть использован тем же C3 BuildPlan, который исполняет игрок или builder agent.
+
+### Контракты
+
+- `ConstructionFabricationRecipe` и immutable versioned catalog;
+- `ConstructionFabricationMachineDefinition/Profile`;
+- `ConstructionFabricationJob` и priority queue;
+- fabrication persistence;
+- transaction planner reserve/complete/release;
+- generic fabrication agent.
+
+### Инварианты
+
+1. Recipe, machine, job, catalog и queue имеют строгие schema/checksum.
+2. Job закрепляет точные recipe version/checksum, machine profile checksum и item bindings.
+3. Input/output IDs уникальны и канонически отсортированы.
+4. Reservation только перемещает реальные входы в machine input container.
+5. Completion одним планом расходует входы, создаёт выходы и обновляет machine construct.
+6. Exact stack consumption удаляет item; partial consumption увеличивает revision и уменьшает quantity.
+7. Fabricated output создаётся только в container relation и несёт `fabrication_origin`.
+8. Cancel возвращает зарезервированные предметы в исходные relations без изменения quantities.
+9. Progress operations идемпотентны и конфликтуют при повторном ID с другим payload.
+10. Offline machine не резервирует входы и не продвигает работу.
+11. Crash после authoritative completion восстанавливается без второго расхода и выпуска.
+12. Integral float/int DTO сравниваются через canonical JSON.
+13. Catalog/queue persistence load транзакционен.
+14. C8 не делает визуальную анимацию, physics-process или network command endpoint authoritative.
+
+### Контрольный vertical slice
+
+Powered CNC cell резервирует `coolant ×1` и `steel_ingot/S355 ×3`, выполняет десять work units и выпускает `beam ×1`. Полный coolant stack удаляется, steel stack уменьшается `6 → 3`, output получает immutable recipe/job/machine provenance и успешно входит как source projection в C3 BuildPlan. Power loss блокирует job без изменения Item Graph; cancel возвращает сырьё; crash после completion восстанавливается через machine runtime и exact replay.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C9 — Damage, Split, Repair
 
@@ -432,5 +464,25 @@ Focused C6
 Focused C7
 Network/runtime regression
 World regression including C3, C4, C5, C6 and C7 scenarios
+Main-scene CLI
+```
+
+
+## Gate C8 → C9
+
+C9 начинается только после внешней приёмки C8:
+
+```text
+Focused C1
+Focused C2A
+Focused C2B
+Focused C3
+Focused C4
+Focused C5
+Focused C6
+Focused C7
+Focused C8
+Network/runtime regression
+World regression including C3–C8 scenarios
 Main-scene CLI
 ```
