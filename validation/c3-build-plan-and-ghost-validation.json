@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.c3_build_plan_validation.v1",
   "stage": "C3",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED_FIX1",
   "delivery": {
     "file_count": 42,
     "manifest": "c3-build-plan-and-ghost-files.txt",
@@ -14,7 +14,7 @@
     "branch": "feature/c2b-authoritative-item-graph-integration",
     "c2a_commit": "68cf8b2",
     "c2b_reviewed_sha256": "960D14B3D120EFF2BCBAD04BD15FA161E759C07348548E67E147C65B52B7787E",
-    "c2b_commit": "pending"
+    "c2b_commit": "d5c9187"
   },
   "recommended_branch": "feature/c3-build-plan-and-ghost",
   "engine": {
@@ -127,7 +127,7 @@
     "git diff --check"
   ],
   "review_iteration": "fix1",
-  "review_status": "BLOCKER_FIXED_LOCALLY_REQUIRES_EXTERNAL_ACCEPTANCE",
+  "review_status": "ACCEPTED",
   "review_fix1": {
     "blocker": "CONSTRUCT_PRECONDITION_MISMATCH after canonical persistence changed numeric Variant types",
     "root_cause": "The C2A in-memory adapter compared raw Dictionary values for construct and item preconditions.",
@@ -147,5 +147,15 @@
       "World regression",
       "Main-scene CLI"
     ]
+  },
+  "external_acceptance": {
+    "c2b_total": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": {
+      "passed": true,
+      "tests": "107/107",
+      "steps": 110
+    },
+    "reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256"
   }
 }

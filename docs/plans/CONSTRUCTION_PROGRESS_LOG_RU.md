@@ -248,3 +248,87 @@ Editor parse:  PASS
 ```
 
 C2B, network/runtime, world regression и main-scene CLI остаются обязательными для внешней приёмки fix1.
+
+
+## 2026-07-31 — C3 fix1: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c3-build-plan-and-ghost`.
+**База:** `C2B @ d5c9187`.
+
+```text
+C1:               PASS — 66 assertions
+C2A:              PASS — 137 assertions
+C2B:              PASS — 258 assertions
+C3 contracts:     PASS — 80 assertions
+C3 integration:   PASS — 114 assertions
+C3 total:         PASS — 194 assertions
+Network N0–M4:    PASS
+World regression: PASS — 107/107 tests, 110 steps
+```
+
+Reviewed delivery: 42 files, SHA-256 `2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256`. C3 стал базой C4.
+
+## 2026-07-31 — C4: CompositeDefinition
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c4-composite-definition`.
+**База:** принятый C3 fix1.
+
+Архитектурные решения:
+
+- definition хранит semantic slots, topology и requirements, но не concrete instance IDs;
+- завершённый C3 construct можно повысить в reusable definition;
+- новый экземпляр создаётся deterministic late binding реальных item projections;
+- concrete binding сохраняется в отдельном immutable instantiation record;
+- definition versioning последовательное и replay-safe;
+- C4 компилирует обычный C3 BuildPlan и не меняет authoritative execution path;
+- partial/final constructs сохраняют pinned definition provenance;
+- typed parameters валидируются, нормализуются и pin-ятся в instantiation;
+- exposed ports связываются semantic slot → concrete part и появляются только после установки части;
+- material bindings обязаны точно совпадать с allocations конкретного BuildPlan;
+- cosmetic/incompatible parts и недостаточные materials fail closed.
+
+Локальный focused-профиль:
+
+```text
+C4 contracts:      PASS — 112 assertions
+C4 integration:    PASS — 152 assertions
+Focused C4 total:  PASS — 264 assertions
+C1 compatibility: PASS — 66 assertions
+C2A compatibility: PASS — 137 assertions
+C3 compatibility: PASS — 194 assertions
+Editor parse:      PASS
+```
+
+Полный C2B/network/world/main-scene профиль должен быть повторён на полном checkout перед присвоением C4 статуса `ACCEPTED`.
+
+
+## 2026-07-31 — C4 fix1: canonical provenance comparison
+
+**Статус:** BLOCKER FIXED LOCALLY, EXTERNAL RECHECK REQUIRED.
+**Ветка:** `feature/c4-composite-definition`.
+**Base полного checkout:** `C3 @ 4917f55`.
+
+Внешний focused C4 подтвердил contracts `112 assertions`, но integration завершился с 5 ошибками. Причина была не в потере provenance: C2A in-memory adapter канонизировал JSON DTO и мог преобразовать целочисленные `float` в `int`. Тесты сравнивали `composite_parameters` и `composite_exposed_ports` raw-оператором `==`, поэтому семантически одинаковые данные считались различными.
+
+Fix1:
+
+- parameters и exposed ports сравниваются через `NetworkContractUtils.canonical_json`;
+- contract comparison параметров приведён к той же семантике;
+- добавлен regression для `100.0 ↔ 100` и `0.0 ↔ 0`;
+- production schema и execution path C4 не изменялись.
+
+Локальная повторная проверка:
+
+```text
+C1:             PASS — 66 assertions
+C2A:            PASS — 137 assertions
+C3:             PASS — 194 assertions
+C4 contracts:   PASS — 112 assertions
+C4 integration: PASS — 156 assertions
+C4 total:       PASS — 268 assertions
+Editor parse:   PASS
+```
+
+C2B, network/runtime, полный world regression и main-scene CLI остаются обязательными для внешней приёмки C4 fix1.

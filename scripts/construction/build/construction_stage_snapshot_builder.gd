@@ -32,6 +32,21 @@ static func build_for_stage(build_plan: Dictionary, stage_index: int) -> Diction
 	compiled["construction_stage_id"] = String(stage["stage_id"])
 	compiled["construction_stage_index"] = stage_index
 	compiled["construction_semantic_state"] = String(stage["semantic_state"])
+	for provenance_field in [
+		"composite_definition_id",
+		"composite_definition_version",
+		"composite_definition_checksum",
+		"composite_instantiation_id",
+		"composite_parameters",
+	]:
+		if target["compiled_facets"].has(provenance_field):
+			compiled[provenance_field] = target["compiled_facets"][provenance_field]
+	if target["compiled_facets"].has("composite_exposed_ports"):
+		var visible_ports: Array = []
+		for port in target["compiled_facets"]["composite_exposed_ports"]:
+			if included_parts.has(String(port.get("part_id", ""))):
+				visible_ports.append(Dictionary(port).duplicate(true))
+		compiled["composite_exposed_ports"] = visible_ports
 	compiled["operational"] = operational
 	if not operational:
 		compiled["capabilities"] = []

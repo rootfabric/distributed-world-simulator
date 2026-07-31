@@ -235,17 +235,54 @@ BuildPlan хранит исходные projections и cumulative allocations, �
 - divergent construct не маскируется ghost progress;
 - `git diff --check` проходит.
 
+**Статус:** ACCEPTED вместе с fix1.
+
+## C4 — CompositeDefinition
+
+### Цель
+
+Сохранить завершённую пользовательскую конструкцию как повторно используемый **семантический тип**, не превращая её в жёсткий prefab и не теряя реальный состав каждого экземпляра.
+
+### Реализованный scope C4
+
+- promotion завершённого operational construct + C3 BuildPlan в `CompositeDefinition`;
+- part slots вместо конкретных item IDs;
+- bond templates, ссылающиеся на slots;
+- stage templates и material requirements по `definition_id`;
+- optional required component subset для выбора совместимых деталей;
+- immutable checksum и provenance source construct/build plan;
+- последовательное versioning в registry;
+- typed parameter definitions, defaults и pinned instance values;
+- exposed ports, привязанные к semantic part slots;
+- deterministic late binding реальных Item projections;
+- распределение расходников между несколькими stacks без полного исчерпания;
+- компиляция обычного C3 BuildPlan;
+- отдельный `CompositeInstantiation` с pinned definition version/checksum, parameter values и concrete bindings;
+- registry/persistence definitions и instantiations;
+- перенос definition provenance, parameters и доступных ports в partial и operational ConstructSnapshot;
+- два независимых экземпляра стола из одного определения;
+- execution, replay и crash reconciliation через неизменённый C3/C2A/C2B путь.
+
+### Инварианты C4
+
+1. Reusable definition не содержит `item/`, `construct/`, `build-plan/`, `operation/` или transaction plan identity.
+2. Definition topology выражается через semantic slots, а не instance records.
+3. Concrete binding детерминирован при одинаковом наборе источников независимо от порядка входного массива.
+4. Один item не связывается с двумя part slots.
+5. Material requirements разрешаются поздно и фиксируются в instantiation record как точное отражение stage allocations.
+6. Parameter set/type определяются definition, а полный нормализованный набор значений pin-ится в instantiation.
+7. Exposed port разрешается slot → concrete part и публикуется только когда part присутствует в stage snapshot.
+8. Definition version immutable; изменение требует следующей последовательной версии.
+9. Existing instantiation остаётся pinned на исходную version/checksum после публикации новой версии.
+10. Скомпилированный план является обычным C3 BuildPlan и не получает альтернативного execution path.
+11. Partial construct сохраняет definition provenance, но не operational capabilities.
+12. Реальный расход и attach по-прежнему проходят только через C2B authority boundary.
+
+### Контрольный vertical slice C4
+
+Завершённый C3-стол повышается до `composite-definition/furniture/reusable-table`. Из определения компилируются два новых стола с разными item IDs, root IDs, construct IDs и parameter values. Для ножек требуется structural component grade; cosmetic beam детерминированно отклоняется. Четыре крепежа распределяются между двумя stacks, typed parameters pin-ятся в instances, exposed ports связываются с конкретными деталями, затем оба BuildPlan выполняются builder agents через C3.
+
 **Статус:** IMPLEMENTED CANDIDATE.
-
-## C4 — Composite Definition
-
-- promotion завершённой сборки в повторно используемый composite;
-- definition/instance separation;
-- versioning;
-- exposed ports;
-- параметры;
-- раскрытие внутреннего состава;
-- BuildPlan generation из composite definition.
 
 ## C5 — Affordance и Capability Layer
 
@@ -294,16 +331,17 @@ BuildPlan хранит исходные projections и cumulative allocations, �
 
 Section aggregates, building coordinator, cross-section ports, spatial authority и compute-worker proposals.
 
-## Gate C3 → C4
+## Gate C4 → C5
 
-C4 начинается после внешнего PASS:
+C5 начинается после внешнего PASS C4:
 
 ```text
 Focused C1
 Focused C2A
 Focused C2B
 Focused C3
+Focused C4
 Network/runtime regression
-World regression including both C3 scenarios
+World regression including C3 and C4 scenarios
 Main-scene CLI
 ```

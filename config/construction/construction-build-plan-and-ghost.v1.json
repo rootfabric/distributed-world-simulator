@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_build_plan_manifest.v1",
   "stage": "C3",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED_FIX1",
   "base_stage": "C2B",
   "base_branch": "feature/c2b-authoritative-item-graph-integration",
   "recommended_branch": "feature/c3-build-plan-and-ghost",
@@ -30,5 +30,11 @@
   "runtime_ui_integration": false,
   "network_command_endpoint": false,
   "next_stage": "C4_COMPOSITE_DEFINITION",
-  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md"
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "acceptance": {
+    "c3_assertions": 194,
+    "network_n0_m4": "PASS",
+    "world_regression": "107/107 tests, 110 steps",
+    "reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256"
+  }
 }

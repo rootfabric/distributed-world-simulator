@@ -4,9 +4,10 @@
 **База проекта:** `main @ 2879fdb7134032f645ffc5c98c0535aecfc09caf`
 **C1:** `c2b9404`, ACCEPTED
 **C2A:** `68cf8b2`, ACCEPTED
-**C2B:** ACCEPTED после полного локального regression; commit ещё не зафиксирован
-**Рабочая ветка C3:** `feature/c3-build-plan-and-ghost` поверх `feature/c2b-authoritative-item-graph-integration`
-**Текущая позиция:** `C3 — BuildPlan and Ghost Construction, IMPLEMENTED CANDIDATE`
+**C2B:** `d5c9187`, ACCEPTED
+**C3:** ACCEPTED вместе с fix1; reviewed delivery SHA-256 `2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256`
+**Рабочая ветка C4:** `feature/c4-composite-definition` поверх `feature/c3-build-plan-and-ghost`
+**Текущая позиция:** `C4 — CompositeDefinition, IMPLEMENTED CANDIDATE`
 
 ## Парадигма всей линии
 
@@ -23,12 +24,12 @@ flowchart TD
     C0["C0 Архитектурная парадигма\nACCEPTED"] --> C1["C1 Semantic Construction Kernel\nACCEPTED"]
     C1 --> C2A["C2A Item Graph Contracts\nACCEPTED — 68cf8b2"]
     C2A --> C2B["C2B Authoritative Item Graph Integration\nACCEPTED"]
-    C2B --> C3["C3 BuildPlan and Ghost Construction\nCURRENT CANDIDATE"]
-    C3 --> G3{"C3 focused + network + world regression"}
-    G3 -- fail --> F3["review fixes in same C3 branch"]
-    F3 --> G3
-    G3 -- pass --> C4["C4 CompositeDefinition"]
-    C4 --> C5["C5 Capabilities and Affordances"]
+    C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
+    C3 --> C4["C4 CompositeDefinition\nCURRENT CANDIDATE"]
+    C4 --> G4{"C4 focused + compatibility + network + world regression"}
+    G4 -- fail --> F4["review fixes in same C4 branch"]
+    F4 --> G4
+    G4 -- pass --> C5["C5 Capabilities and Affordances"]
     C5 --> C6["C6 Mobile Construct — robot"]
     C6 --> C7["C7 Spatial Construct — house"]
     C7 --> C8["C8 Fabrication Cell — assembler"]
@@ -48,9 +49,11 @@ C2A accepted: transaction contracts
   ↓
 C2B accepted: production Item Graph + M0 authority
   ↓
-C3 current: immutable BuildPlan + weightless ghost + resumable stages
+C3 accepted: immutable BuildPlan + weightless ghost + resumable stages
+  ↓
+C4 current: reusable semantic definitions + deterministic late binding
   ↓ acceptance gate
-C4 reusable composites → C5 affordances
+C5 affordances
   ↓
 C6 robot → C7 house → C8 assembler
   ↓
@@ -67,8 +70,8 @@ C12 multiplayer construction → C13 federated constructs
 | C1 | parts, bonds, snapshots, revisions, facet compiler | стол | **ACCEPTED** |
 | C2A | item projections, mutations, atomic plans | стол | **ACCEPTED — 68cf8b2** |
 | C2B | production registries, shared ledger, M0 authority и recovery | стол | **ACCEPTED** |
-| C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **CURRENT CANDIDATE** |
-| C4 | пользовательские composite definitions and instances | повторяемый стол | PLANNED |
+| C3 | immutable BuildPlan, ghost projection, stages, requirements, resume и builder executor | стадийный стол | **ACCEPTED — fix1** |
+| C4 | semantic slots, typed parameters, exposed ports, reusable definitions и deterministic BuildPlan compilation | два параметризованных экземпляра стола | **CURRENT CANDIDATE** |
 | C5 | capabilities and affordances | агент использует неизвестный стол | PLANNED |
 | C6 | rigid islands, joints, power/control | наземный робот | PLANNED |
 | C7 | sections, spaces, enclosure, utilities | дом | PLANNED |
@@ -86,6 +89,10 @@ C12 multiplayer construction → C13 federated constructs
 ## C2B — Authoritative Item Graph Integration
 
 Статус: **ACCEPTED**. Этап подключил реальные `ItemRegistry`/`ContainerRegistry`, общий `OperationLedger` и M0-first authoritative commit/recovery. C3 выполняет расход и перемещение предметов только через эту границу.
+
+## C3 — BuildPlan and Ghost Construction
+
+Статус: **ACCEPTED вместе с fix1**. Этап зафиксировал resumable execution plan, невесомый ghost, staged partial constructs и recovery после authoritative commit.
 
 ## C3: что появилось
 
@@ -155,12 +162,51 @@ stage transaction committed in C2B
 
 BuildPlan хранит исходные item projections и точные allocations. Поэтому transaction plan каждой стадии детерминирован и может быть восстановлен после перезапуска с тем же checksum.
 
+
+## C4: CompositeDefinition
+
+```text
+completed operational construct + accepted C3 BuildPlan
+        ↓ promotion
+CompositeDefinition v1
+├── semantic part slots (no item IDs)
+├── bond templates (slot-to-slot topology)
+├── stage templates
+├── material requirements by definition
+├── typed parameter definitions
+├── exposed ports bound to semantic slots
+├── version + checksum + provenance
+└── no concrete construct/build-plan/container identity
+        ↓ deterministic late binding
+available Item projections
+        ↓
+concrete C3 BuildPlan + CompositeInstantiation record
+        ↓
+unchanged C3 → C2A → C2B execution path
+```
+
+Ключевой результат: один пользовательский тип создаёт несколько независимых constructs с разными реальными предметами. `CompositeDefinition` не является prefab: каноническими остаются реальные parts, bonds и Item Graph identity каждого экземпляра.
+
+C4 v1 использует точное `definition_id` и optional component subset для part slots. Typed parameters имеют строгий тип/default и pin-ятся в каждом instantiation. Exposed ports компилируются semantic slot → concrete part ID и публикуются по мере установки частей. Материалы выбираются детерминированно по item ID, могут распределяться между несколькими stacks и не исчерпывают stack из-за текущего C2A/C3 ограничения. Concrete binding сохраняется отдельным checksum-защищённым `CompositeInstantiation`, поэтому версия определения и происхождение каждого BuildPlan остаются проверяемыми.
+
+Partial и final snapshots несут pinned provenance:
+
+```text
+composite_definition_id
+composite_definition_version
+composite_definition_checksum
+composite_instantiation_id
+composite_parameters
+composite_exposed_ports
+```
+
 ## Сквозные архитектурные линии
 
 ```text
-Item identity       C1 ─ C2A ─ C2B ─ C3 ─────────────────────────► C13
-Authority/replay    C1 ─ C2A ─ C2B ─ C3 ─────────────────────────► C13
+Item identity       C1 ─ C2A ─ C2B ─ C3 ─ C4 ────────────────────► C13
+Authority/replay    C1 ─ C2A ─ C2B ─ C3 ─ C4 ────────────────────► C13
 Build intent        C0 ────────────── C3 ─ C4 ─ C8 ──────────────► C13
+Reusable types      C0 ───────────────── C4 ─ C5 ─ C8 ───────────► C13
 Facet compilation   C1 ───────── C3 ─ C5 ─ C6 ─ C7 ─ C9 ─ C11 ─► C13
 Capabilities        C1 ───────── C3 ─ C5 ─ C6 ─ C7 ─ C8 ────────► C13
 Semantic scale      C0 ───────────────── C7 ─ C10 ─ C11 ─────────► C13
@@ -175,7 +221,9 @@ Spatial partition   C0 ───────────────── C7 �
 4. выдаёт capabilities частичной конструкции как operational;
 5. повторно расходует материал после replay/recovery;
 6. делает progress state сильнее authoritative construct/ledger;
-7. превращает mesh или Node3D в каноническое состояние.
+7. превращает mesh или Node3D в каноническое состояние;
+8. сохраняет конкретные item/construct/build-plan IDs внутри reusable definition;
+9. связывает CompositeDefinition с отдельным execution path в обход C3/C2B.
 
 ## Контрольные вертикальные объекты
 

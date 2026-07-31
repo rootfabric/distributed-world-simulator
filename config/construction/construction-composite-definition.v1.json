@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.construction_composite_definition_manifest.v1",
+  "stage": "C4",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base_stage": "C3_FIX1_ACCEPTED",
+  "base_c2b_commit": "d5c9187",
+  "base_c3_reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256",
+  "recommended_branch": "feature/c4-composite-definition",
+  "paradigm": {
+    "semantic_definition_not_prefab": true,
+    "no_instance_ids_in_definition": true,
+    "definition_instance_separation": true,
+    "immutable_versioned_definitions": true,
+    "deterministic_late_binding": true,
+    "concrete_binding_recorded": true,
+    "compiled_to_standard_c3_build_plan": true,
+    "authoritative_execution_via_c2b": true,
+    "typed_parameters": true,
+    "exposed_semantic_ports": true,
+    "partial_ports_require_installed_part": true,
+    "parameter_values_pinned_in_instantiation": true
+  },
+  "contracts": [
+    "planet_simulator.composite_part_slot.v1",
+    "planet_simulator.composite_bond_template.v1",
+    "planet_simulator.composite_stage_template.v1",
+    "planet_simulator.composite_parameter_definition.v1",
+    "planet_simulator.composite_exposed_port.v1",
+    "planet_simulator.construction_composite_definition.v1",
+    "planet_simulator.construction_composite_instantiation.v1",
+    "planet_simulator.construction_composite_registry.v1"
+  ],
+  "prototype": "TWO_PARAMETERIZED_REUSABLE_TABLE_INSTANCES",
+  "focused_tests": [
+    "res://tests/construction/test_c4_composite_definition_contracts.gd",
+    "res://tests/construction/test_c4_composite_definition_integration.gd"
+  ],
+  "runtime_ui_integration": false,
+  "network_command_endpoint": false,
+  "next_stage": "C5_CAPABILITIES_AND_AFFORDANCES",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "focused_assertions": {
+    "contracts": 112,
+    "integration": 152,
+    "total": 264
+  },
+  "expected_world_profile": {
+    "tests": 109,
+    "steps": 112
+  }
+}

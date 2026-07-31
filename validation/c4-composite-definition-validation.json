@@ -1,0 +1,84 @@
+{
+  "schema": "planet_simulator.c4_composite_definition_validation.v1",
+  "checkpoint": "C4_COMPOSITE_DEFINITION",
+  "status": "FIX1_IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C3_FIX1_ACCEPTED",
+    "c2b_commit": "d5c9187",
+    "c3_reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256",
+    "c3_commit": "4917f55"
+  },
+  "branch": "feature/c4-composite-definition",
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_contract_assertions": 112,
+    "c4_integration_assertions": 156,
+    "c4_total_assertions": 268
+  },
+  "contracts": {
+    "semantic_definition_not_prefab": true,
+    "no_instance_ids_in_definition": true,
+    "deterministic_late_binding": true,
+    "typed_parameters": true,
+    "parameter_values_pinned": true,
+    "exposed_ports_bound_to_concrete_parts": true,
+    "partial_ports_require_installed_parts": true,
+    "exact_material_binding_to_build_plan": true,
+    "standard_c3_build_plan_output": true,
+    "authoritative_execution_remains_c2b": true,
+    "canonical_numeric_provenance_comparison": true,
+    "parameter_dto_int_float_equivalence": true,
+    "exposed_port_dto_int_float_equivalence": true
+  },
+  "world_manifest": {
+    "declared_tests": 109,
+    "unique_tests": 109,
+    "expected_steps": 112,
+    "c4_tests_present_once": true
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS",
+    "byte_exact_replay": "PASS"
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: unavailable because scripts/simulation/transactions/mutation_batch.gd is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 109,
+    "expected_world_steps": 112,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "delivery": {
+    "file_count": 43,
+    "manifest": "c4-composite-definition-files.txt",
+    "unsafe_paths": 0,
+    "byte_exact_files": 43,
+    "fix1_file_count": 7,
+    "fix1_manifest": "c4-composite-definition-fix1-files.txt"
+  },
+  "external_review": {
+    "original_candidate": "REJECTED",
+    "blocker": "raw Dictionary equality treated JSON-equivalent int/float values as different in C4 integration assertions",
+    "reported_contract_assertions": 112,
+    "reported_integration_assertions_before_fix": 152,
+    "reported_failure_count": 5,
+    "fix1": "compare parameters and exposed-port DTOs through NetworkContractUtils.canonical_json and cover numeric Variant equivalence explicitly",
+    "external_recheck_required": true
+  }
+}

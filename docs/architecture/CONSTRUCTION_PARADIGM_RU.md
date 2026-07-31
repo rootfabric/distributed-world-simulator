@@ -316,3 +316,30 @@ Facet compiler может вычислить геометрическую уст
 ### Builder agent не получает отдельный путь
 
 Минимальный builder-agent C3 только выбирает следующую стадию и вызывает `ConstructionBuildProcess`. Игрок, робот, фабрика и серверный сценарий должны исполнять один BuildPlan через одну authority boundary.
+
+
+## 18. C4: CompositeDefinition как семантический тип
+
+C4 отделяет **тип конструкции** от конкретного экземпляра:
+
+```text
+CompositeDefinition
+  semantic slots + bond topology + stage requirements
+        ↓ late binding
+CompositeInstantiation
+  pinned definition version + concrete item bindings
+        ↓ compile
+C3 BuildPlan
+        ↓
+C2A/C2B authoritative execution
+```
+
+`CompositeDefinition` не содержит реальных item, root, construct, BuildPlan или operation IDs. Это принципиальное отличие от prefab: definition описывает, **какие роли и связи нужны**, а каждый construct продолжает хранить собственные реальные parts и Item Graph identity.
+
+Part slot v1 связывается по точному `definition_id` и optional subset компонентов. Это позволяет, например, требовать structural-grade beam и отклонять визуально похожую cosmetic beam. Resolver позднее может расшириться tags и substitution policies, не меняя C3 execution contract.
+
+Материалы в definition задаются как требования по типу и количеству. Concrete stacks выбираются детерминированно при компиляции, а результат фиксируется в `CompositeInstantiation`. Поэтому replay использует уже конкретный checksum-protected BuildPlan и не выполняет повторный поиск ресурсов.
+
+C4 также вводит typed parameters и exposed ports. Parameter definitions задают тип и default; каждый instantiation хранит полный нормализованный набор значений. В C4 параметры являются provenance и конфигурацией типа, а процедурная перестройка геометрии остаётся задачей C10. Exposed port привязан к semantic part slot и при компиляции превращается в связь с concrete part ID. В partial snapshot порт публикуется только после установки связанной детали.
+
+Каждый partial/final ConstructSnapshot сохраняет provenance definition ID, version, checksum, instantiation ID, parameter values и доступные exposed ports. Новая версия definition не переписывает существующие объекты: каждый экземпляр навсегда pinned к версии, по которой был скомпилирован.
