@@ -616,12 +616,14 @@ Main-scene CLI
 9. Executable fabrication runtime ограничивает progress фактически доступными work units.
 10. Exact operation replay не дублирует C8 progress.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 
 ## C16 — Construction Interaction and Editing UX
 
-Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
+**Статус:** ACCEPTED @ `a4376cd`.
+
+Реализованы: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
 
 
 ## C17 — Distributed Construction Authority
@@ -631,3 +633,19 @@ Main-scene CLI
 **Ветка:** `feature/c17-distributed-construction-authority`
 
 Vertical slice закрепляет single-writer authority, owner routing существующих C12 commands, authority epoch, migration fence/handoff, read-only section/neighbor replicas, cross-zone split child, item-transfer authorization и lease-expiry takeover. Полное описание: `docs/checkpoints/2026-08-01_C17_DISTRIBUTED_CONSTRUCTION_AUTHORITY_RU.md`.
+
+
+## C18 — Streaming, LOD and Dormant Constructs
+
+1. Strict activity levels `DORMANT/SUMMARY/SIMULATED/PRESENTED`.
+2. Interest samples, distance hysteresis и delayed dormancy.
+3. Deterministic summary/simulation/presentation budgets.
+4. Pinned minimum level с atomic budget rejection.
+5. LOD contracts `NONE/IMPOSTOR/SIMPLIFIED/FULL`.
+6. Lazy C13 presentation rebuild и complete runtime eviction.
+7. Bounded deterministic catch-up для low-frequency simulation.
+8. Preservation C8 queues и pending operation identities.
+9. C17 owner/read-only separation и authority epoch fencing.
+10. Persistence без SceneTree serialization.
+
+**Статус:** IMPLEMENTED CANDIDATE.

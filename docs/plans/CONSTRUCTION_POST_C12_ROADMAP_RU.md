@@ -286,6 +286,22 @@ PRESENTED — mesh, collision, animation
 - сохранение queues и pending operations;
 - memory/CPU budgets и eviction policy.
 
+### Реализованный C18 vertical slice
+
+- strict activity record с authority epoch и source checksum;
+- interest/hysteresis/delayed dormancy policy;
+- independent summary/simulation/presentation budgets;
+- deterministic budget demotion и pinned-level atomic rejection;
+- compact summary из C14/C15/capability/pending-work данных;
+- LOD `FULL/SIMPLIFIED/IMPOSTOR/NONE`;
+- lazy C13 runtime rebuild и eviction;
+- bounded catch-up plans;
+- owner-only simulation и read-only presentation;
+- persistence без SceneTree.
+
+**Статус:** IMPLEMENTED CANDIDATE поверх C17 focused candidate.
+**Рекомендуемая ветка:** `feature/c18-streaming-lod-dormant-constructs`.
+
 ## C19 — Agent Construction and Automation API
 
 ### Цель

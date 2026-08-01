@@ -964,3 +964,19 @@ C17 total:        PASS — 125 assertions
 Local C1–C17:     PASS — 2798 assertions excluding C2B/C9
 Expected world:   135/135 tests, 138 steps
 ```
+
+
+## 2026-08-01 — C18: Streaming, LOD and Dormant Constructs
+
+**Статус:** IMPLEMENTED CANDIDATE поверх C17 focused candidate.
+**Рекомендуемая ветка:** `feature/c18-streaming-lod-dormant-constructs`.
+
+Реализованы activity levels, interest/hysteresis, три budget-класса, LOD contracts, C13 lazy rebuild, owner-only bounded catch-up, dormant preservation pending jobs/operations и persistence без SceneTree.
+
+```text
+C18 contracts:    PASS — 51 assertions
+C18 integration:  PASS — 84 assertions
+C18 total:        PASS — 135 assertions
+Local C1–C8/C10–C18: 2933 assertions, PASS
+Expected world:   137/137 tests, 140 steps
+```

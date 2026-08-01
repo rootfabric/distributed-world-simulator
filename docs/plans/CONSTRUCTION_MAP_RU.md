@@ -570,7 +570,7 @@ C9 damage / split / repair
 
 ## C15: Executable Utilities and Machines
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 C7 semantic utility topology
@@ -597,9 +597,24 @@ checksum-pinned C8 machine lease
 
 ## C16 — Construction Interaction and Editing UX
 
-Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
+**Статус:** ACCEPTED @ `a4376cd`.
+
+Реализованы: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
 
 
 ## C17 — Distributed Construction Authority
 
 Один aggregate имеет одного writer. Authority record закрепляет owner server/cell, epoch, lease и replicas. Команды C12 маршрутизируются к owner; migration включает fence и terminal-operation handoff; split child может получить owner в другой зоне; takeover разрешён только после lease expiry и из checksum-verified replica.
+
+
+## C18 — Streaming, LOD and Dormant Constructs
+
+**Статус:** IMPLEMENTED CANDIDATE поверх C17 focused candidate.
+
+```text
+interest + authority + budgets
+→ DORMANT / SUMMARY / SIMULATED / PRESENTED
+→ NONE / IMPOSTOR / SIMPLIFIED / FULL
+```
+
+C18 сохраняет authoritative snapshot checksums, C8 job IDs и pending operations, но удаляет derived summaries и C13 SceneTree по budget/interest policy. Owner выполняет bounded deterministic catch-up; read-only C17 replica может представляться, но не симулируется локально.

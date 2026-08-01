@@ -658,3 +658,8 @@ Construction interaction layer может выполнять raycast, snapping, 
 ## Distributed authority invariant — C17
 
 Каждый небольшой `ConstructAggregate` имеет ровно одного authoritative writer и монотонный authority epoch. Neighbor/section servers держат только read-only projections. Migration всегда включает fence, state/terminal-operation handoff и epoch increment. Owner failure не позволяет немедленный competing write: takeover возможен только после lease expiry и при наличии checksum-verified replica. Cross-zone item movement остаётся C2B/M0 transaction, а C17 только выбирает и проверяет coordinator/owner route.
+
+
+## Streaming authority invariant — C18
+
+Streaming может удалять только derived state. `DORMANT` не означает удаление конструкции: сохраняются authoritative identity, snapshot checksum, authority epoch, C8 job IDs и operation IDs. `SUMMARY`, `SIMULATED` и `PRESENTED` являются локальными activity projections. Только C17 owner может выполнять authoritative catch-up; read-only replica может иметь summary и presentation, но не получает write-capable simulation. Budget eviction, LOD и SceneTree lifecycle не изменяют Item Graph или ConstructSnapshot.

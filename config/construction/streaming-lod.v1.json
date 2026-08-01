@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.construction_streaming_config.v1",
+  "activity_levels": ["DORMANT", "SUMMARY", "SIMULATED", "PRESENTED"],
+  "lod_tiers": ["FULL", "SIMPLIFIED", "IMPOSTOR", "NONE"],
+  "policy": {
+    "presented_distance_m": 25.0,
+    "simulated_distance_m": 100.0,
+    "summary_distance_m": 500.0,
+    "hysteresis_m": 10.0,
+    "dormant_after_ticks": 30,
+    "catch_up_interval_ticks": 10,
+    "maximum_catch_up_steps": 32
+  },
+  "budgets": {
+    "summary_budget_bytes": 1048576,
+    "simulation_budget_units": 1000,
+    "presentation_budget_bytes": 1048576
+  },
+  "authority": {
+    "owner_runs_simulation": true,
+    "read_only_replica_may_present": true,
+    "read_only_replica_may_simulate": false,
+    "authority_epoch_required": true
+  },
+  "persistence": {
+    "persist_scene_tree": false,
+    "persist_activity_records": true,
+    "persist_compact_summaries": true,
+    "preserve_pending_jobs_and_operations": true
+  }
+}
