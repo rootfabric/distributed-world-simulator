@@ -177,7 +177,8 @@ providers → topology → capacity allocation → consumers
 
 ## C16 — Construction Interaction and Editing UX
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
+**Коммит:** `a4376cd`.
 **Рекомендуемая ветка:** `feature/c16-construction-interaction-editing-ux`.
 
 ### Цель
@@ -241,6 +242,23 @@ migration → explicit transaction
 ### Запрет
 
 Небольшой aggregate не должен одновременно иметь нескольких writers.
+
+### Реализованный C17 vertical slice
+
+- strict authority records с owner server/cell, epoch, lease и checksum;
+- owner routing существующих C12 commands без второго mutation path;
+- migration fence, state handoff и terminal-operation transfer;
+- cross-epoch exact replay после migration без двойного commit;
+- read-only neighbor replicas и section projections;
+- cross-zone C9 split child с отдельным owner record;
+- checksum-pinned cross-zone item transfer authorization;
+- lease-expiry takeover из актуальной replica;
+- stale owner/epoch fencing;
+- transactional registry/replica persistence.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c17-distributed-construction-authority`.
+
 
 ## C18 — Streaming, LOD and Dormant Constructs
 

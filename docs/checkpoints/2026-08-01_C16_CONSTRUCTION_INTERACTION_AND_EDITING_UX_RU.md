@@ -1,7 +1,8 @@
 # C16 — Construction Interaction and Editing UX
 
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED
 **База:** принятый C15
+**Коммит:** `a4376cd`
 **Рекомендуемая ветка:** `feature/c16-construction-interaction-editing-ux`
 
 ## Цель
@@ -102,7 +103,7 @@ C16 total:        PASS — 71 assertions
 Editor parse:     PASS
 ```
 
-Локально повторно пройдены C1–C8 и C10–C15. Полные C2B, C9, Network N0–M4, world regression и main scene остаются внешним gate.
+Полная внешняя приёмка подтверждена: C2B 258, C9 204, Network N0–M4 PASS, world 133/133 tests и 136 steps, main-scene CLI 6/6.
 
 Ожидаемый world profile:
 

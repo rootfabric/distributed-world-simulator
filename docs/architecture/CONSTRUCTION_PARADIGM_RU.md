@@ -653,3 +653,8 @@ Machine gameplay не должен вызывать C8 progress напрямую
 ## C16 — UI является клиентом authority, а не частью authority
 
 Construction interaction layer может выполнять raycast, snapping, selection, ghost rendering и локальный gizmo preview. Любое устойчивое изменение мира оформляется checksum-pinned командой и проходит через C12 gateway. UI-side constraints улучшают взаимодействие, но сервер повторно проверяет C3/C9/C11 contracts. Godot `Control`, `Node3D`, `Mesh` и input state запрещены в authoritative DTO.
+
+
+## Distributed authority invariant — C17
+
+Каждый небольшой `ConstructAggregate` имеет ровно одного authoritative writer и монотонный authority epoch. Neighbor/section servers держат только read-only projections. Migration всегда включает fence, state/terminal-operation handoff и epoch increment. Owner failure не позволяет немедленный competing write: takeover возможен только после lease expiry и при наличии checksum-verified replica. Cross-zone item movement остаётся C2B/M0 transaction, а C17 только выбирает и проверяет coordinator/owner route.

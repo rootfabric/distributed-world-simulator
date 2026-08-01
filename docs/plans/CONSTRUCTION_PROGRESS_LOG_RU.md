@@ -930,3 +930,37 @@ C16 integration:  PASS — 32 assertions
 C16 total:        PASS — 71 assertions
 Expected world:   133/133 tests, 136 steps
 ```
+
+
+## 2026-08-01 — C16: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c16-construction-interaction-editing-ux`.
+**Коммит:** `a4376cd`.
+
+```text
+C16 focused:      PASS — 71 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+Network N0–M4:    PASS
+World regression: PASS — 133/133 tests, 136 steps
+Main-scene CLI:   PASS — 6/6
+```
+
+C16 стал принятой базой C17.
+
+## 2026-08-01 — C17: Distributed Construction Authority
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**База:** C16 `a4376cd`.
+**Рекомендуемая ветка:** `feature/c17-distributed-construction-authority`.
+
+Реализованы single-writer authority records, owner routing, authority epoch, migration fence/handoff, terminal-operation transfer, cross-epoch replay, read-only replicas/sections, cross-zone split child, item-transfer authorization, owner-failure takeover и persistence.
+
+```text
+C17 contracts:    PASS — 59 assertions
+C17 integration:  PASS — 66 assertions
+C17 total:        PASS — 125 assertions
+Local C1–C17:     PASS — 2798 assertions excluding C2B/C9
+Expected world:   135/135 tests, 138 steps
+```

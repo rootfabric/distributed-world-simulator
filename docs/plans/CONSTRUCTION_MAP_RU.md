@@ -15,8 +15,12 @@
 **C10:** ACCEPTED; base C9 `8d8bf77`
 **C11:** `6d26f69`, ACCEPTED
 **C12:** ACCEPTED; reviewed delivery SHA-256 `85c455c72dc1d5651f86672dc3d20e851e3c650bfa575c5643883f1da78c7f29`
-**Рабочая ветка C13:** `feature/c13-runtime-geometry-physics-projection`
-**Текущая позиция:** `C13 — Runtime Geometry and Physics Projection, IMPLEMENTED CANDIDATE`
+**C13:** ACCEPTED
+**C14:** ACCEPTED
+**C15:** ACCEPTED
+**C16:** `a4376cd`, ACCEPTED
+**Рабочая ветка C17:** `feature/c17-distributed-construction-authority`
+**Текущая позиция:** `C17 — Distributed Construction Authority, IMPLEMENTED CANDIDATE`
 
 Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
@@ -46,9 +50,9 @@ flowchart TD
     C11 --> C12["C12 Multiplayer Acceptance — ACCEPTED"]
     C12 --> C13["C13 Runtime Geometry/Physics — ACCEPTED"]
     C13 --> C14["C14 Structural Integrity — ACCEPTED"]
-    C14 --> C15["C15 Executable Utilities — CURRENT CANDIDATE"]
-    C15 --> C16["C16 Construction UX"]
-    C16 --> C17["C17 Distributed Authority"]
+    C14 --> C15["C15 Executable Utilities — ACCEPTED"]
+    C15 --> C16["C16 Construction UX — ACCEPTED"]
+    C16 --> C17["C17 Distributed Authority — CURRENT CANDIDATE"]
     C17 --> C18["C18 Streaming/LOD"]
     C18 --> C19["C19 Agent Automation"]
     C19 --> C20["C20 Logistics/Economy"]
@@ -98,9 +102,14 @@ C12 multiplayer construction → C13 federated constructs
 | C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **ACCEPTED** |
 | C9 | damage, split, repair, salvage | стол/робот/секция | **ACCEPTED** |
 | C10 | beams, panels, pipes, cables, profiles | строение/корабль | ACCEPTED |
-| C11 | constrained local geometry and control-point edits | параметрическая деталь | **IMPLEMENTED CANDIDATE** |
-| C12 | contention, permissions, reconnect, replay и convergence | два клиента | **CURRENT CANDIDATE** |
-| C13–C22 | runtime, physics, distributed authority, streaming, agents, economy и hardening | мир проекта | PLANNED — см. `CONSTRUCTION_POST_C12_ROADMAP_RU.md` |
+| C11 | constrained local geometry and control-point edits | параметрическая деталь | **ACCEPTED** |
+| C12 | contention, permissions, reconnect, replay и convergence | два клиента | **ACCEPTED** |
+| C13 | runtime mesh/collision/physics projection | runtime construct | **ACCEPTED** |
+| C14 | load paths и progressive collapse | несущая конструкция | **ACCEPTED** |
+| C15 | executable utilities и machine leases | utility network / fabrication cell | **ACCEPTED** |
+| C16 | placement, snapping, gizmos и overlays | graphical client | **ACCEPTED — a4376cd** |
+| C17 | owner routing, migration, replicas и takeover | три spatial servers | **IMPLEMENTED CANDIDATE** |
+| C18–C22 | streaming, agents, economy, scale и hardening | мир проекта | PLANNED |
 
 ## C2A — Item Graph Contracts
 
@@ -589,3 +598,8 @@ checksum-pinned C8 machine lease
 ## C16 — Construction Interaction and Editing UX
 
 Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
+
+
+## C17 — Distributed Construction Authority
+
+Один aggregate имеет одного writer. Authority record закрепляет owner server/cell, epoch, lease и replicas. Команды C12 маршрутизируются к owner; migration включает fence и terminal-operation handoff; split child может получить owner в другой зоне; takeover разрешён только после lease expiry и из checksum-verified replica.

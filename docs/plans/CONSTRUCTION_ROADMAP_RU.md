@@ -622,3 +622,12 @@ Main-scene CLI
 ## C16 — Construction Interaction and Editing UX
 
 Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.
+
+
+## C17 — Distributed Construction Authority
+
+**Статус:** IMPLEMENTED CANDIDATE
+**База:** C16 `a4376cd`
+**Ветка:** `feature/c17-distributed-construction-authority`
+
+Vertical slice закрепляет single-writer authority, owner routing существующих C12 commands, authority epoch, migration fence/handoff, read-only section/neighbor replicas, cross-zone split child, item-transfer authorization и lease-expiry takeover. Полное описание: `docs/checkpoints/2026-08-01_C17_DISTRIBUTED_CONSTRUCTION_AUTHORITY_RU.md`.
