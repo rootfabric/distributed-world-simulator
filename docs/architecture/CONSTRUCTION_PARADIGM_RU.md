@@ -668,3 +668,7 @@ Streaming может удалять только derived state. `DORMANT` не �
 ## Agent automation invariant — C19
 
 Агент является клиентом строительной authority. Его goal, BOM, reservation и work queue не являются вторым Item Graph и не дают права напрямую менять construct. Любой устойчивый build/repair/salvage результат проходит через C12 command и C17 owner route. Fabrication output заранее получает identity, но становится реальным предметом только после C8 authoritative completion. Exact operation replay обязателен для reservation, fabrication, logistics и domain command, поэтому restart агента не создаёт второй расход материала или второй commit.
+
+## Logistics/economy authority invariant — C20
+
+Цена, заказ, маршрут, escrow и contractor contract являются workflow/economic state, но не заменяют Item Graph. Продажа не создаёт новый предмет: shipment переносит тот же `item_instance_id`. Stock reservation и escrow образуют атомарную бизнес-границу; при невозможности закрепить товар деньги возвращаются. Settlement допускается только после фактического transfer result, а C19 BOM line становится fulfilled только после доставки. Production chain pin-ит C8 recipes и output identities, но предмет появляется лишь после authoritative fabrication completion.

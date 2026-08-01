@@ -1,0 +1,52 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C20_LOGISTICS_AND_CONSTRUCTION_ECONOMY",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C19_AGENT_CONSTRUCTION_AND_AUTOMATION_API",
+    "decision": "ACCEPTED",
+    "note": "C19 passed focused, C2B, C9, C17, C18, Network, world and main-scene acceptance; no C19 commit SHA was reported."
+  },
+  "branch": "feature/c20-logistics-construction-economy",
+  "focused": {
+    "contracts": {"status": "PASS", "assertions": 38},
+    "integration": {"status": "PASS", "assertions": 76},
+    "total_assertions": 114,
+    "editor_parse": "PASS"
+  },
+  "coverage": [
+    "LANDED_COST_PROCUREMENT_SELECTION",
+    "ATOMIC_STOCK_AND_ESCROW_RESERVATION",
+    "MULTI_LEG_SHIPMENT_RECEIPTS",
+    "ITEM_IDENTITY_PRESERVING_DELIVERY",
+    "C19_BOM_FULFILLMENT_AFTER_DELIVERY",
+    "CONTRACTOR_CAPABILITY_MATCHING",
+    "MILESTONE_ESCROW_SETTLEMENT",
+    "SALVAGE_FIXED_PRICE_MARKET",
+    "C8_MULTI_CELL_PRODUCTION_CHAIN",
+    "EXACT_OPERATION_REPLAY",
+    "PERSISTENCE_AND_RESTART_RECOVERY"
+  ],
+  "delivery": {
+    "manifest": "c20-logistics-construction-economy-files.txt",
+    "world_test_entries": 2,
+    "expected_world_test_count": 141,
+    "expected_world_steps": 144,
+    "file_count": 50
+  },
+  "external_acceptance_required": {
+    "C2B": {"assertions": 258},
+    "C9": {"assertions": 204},
+    "C17_C18_C19": "PASS",
+    "network": "N0-M4 PASS",
+    "world_regression": "141/141 tests, 144 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "profiles": 38,
+    "status": "PASS",
+    "total_assertions": 3201,
+    "excluded": ["C2B", "C9"]
+  }
+}

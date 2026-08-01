@@ -1,0 +1,56 @@
+Checkpoint: C20 — Logistics and Construction Economy
+Status: IMPLEMENTED CANDIDATE
+Base: C19 ACCEPTED
+Recommended branch: feature/c20-logistics-construction-economy
+Changed files: 50
+
+RUN_C20_LOGISTICS_ECONOMY_TESTS.ps1
+RUN_C20_LOGISTICS_ECONOMY_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c20-logistics-construction-economy-files.txt
+config/construction/logistics-economy.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-02_C20_LOGISTICS_AND_CONSTRUCTION_ECONOMY_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/economy/construction_contractor_bid.gd
+scripts/construction/economy/construction_contractor_bid.gd.uid
+scripts/construction/economy/construction_contractor_contract.gd
+scripts/construction/economy/construction_contractor_contract.gd.uid
+scripts/construction/economy/construction_economy_coordinator.gd
+scripts/construction/economy/construction_economy_coordinator.gd.uid
+scripts/construction/economy/construction_economy_ledger.gd
+scripts/construction/economy/construction_economy_ledger.gd.uid
+scripts/construction/economy/construction_economy_persistence.gd
+scripts/construction/economy/construction_economy_persistence.gd.uid
+scripts/construction/economy/construction_economy_plan.gd
+scripts/construction/economy/construction_economy_plan.gd.uid
+scripts/construction/economy/construction_economy_planner.gd
+scripts/construction/economy/construction_economy_planner.gd.uid
+scripts/construction/economy/construction_economy_utils.gd
+scripts/construction/economy/construction_economy_utils.gd.uid
+scripts/construction/economy/construction_logistics_route.gd
+scripts/construction/economy/construction_logistics_route.gd.uid
+scripts/construction/economy/construction_procurement_offer.gd
+scripts/construction/economy/construction_procurement_offer.gd.uid
+scripts/construction/economy/construction_procurement_order.gd
+scripts/construction/economy/construction_procurement_order.gd.uid
+scripts/construction/economy/construction_production_chain.gd
+scripts/construction/economy/construction_production_chain.gd.uid
+scripts/construction/economy/construction_salvage_listing.gd
+scripts/construction/economy/construction_salvage_listing.gd.uid
+scripts/construction/economy/construction_shipment.gd
+scripts/construction/economy/construction_shipment.gd.uid
+scripts/construction/economy/construction_warehouse_state.gd
+scripts/construction/economy/construction_warehouse_state.gd.uid
+scripts/construction/economy/construction_warehouse_store.gd
+scripts/construction/economy/construction_warehouse_store.gd.uid
+tests/construction/fixtures/c20_logistics_economy_fixture.gd
+tests/construction/fixtures/c20_logistics_economy_fixture.gd.uid
+tests/construction/test_c20_logistics_economy_contracts.gd
+tests/construction/test_c20_logistics_economy_contracts.gd.uid
+tests/construction/test_c20_logistics_economy_integration.gd
+tests/construction/test_c20_logistics_economy_integration.gd.uid
+validation/c20-logistics-construction-economy-validation.json

@@ -663,3 +663,22 @@ Vertical slice закрепляет single-writer authority, owner routing су�
 
 **Статус:** IMPLEMENTED CANDIDATE.
 **Ветка:** `feature/c19-agent-construction-automation-api`.
+
+## C19 — Agent Construction and Automation API
+
+**Статус:** ACCEPTED.
+
+## C20 — Logistics and Construction Economy
+
+1. Procurement offers и orders с exact checksums.
+2. Landed-cost selection с deadline и budget.
+3. Atomic warehouse stock reservation + escrow.
+4. Multi-leg logistics routes и delivery receipts.
+5. Contractor bids, capability matching и milestone settlement.
+6. Salvage listings и identity-preserving resale.
+7. C8 production chains между несколькими fabrication cells.
+8. C19 fulfillment только после фактической поставки.
+9. Persistence/replay без двойного списания или доставки.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Ветка:** `feature/c20-logistics-construction-economy`.

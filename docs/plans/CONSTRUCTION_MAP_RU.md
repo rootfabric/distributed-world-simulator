@@ -634,3 +634,23 @@ semantic goal
 ```
 
 C19 поддерживает build, repair и salvage goals. Агент не получает прямого доступа к Item Graph или domain process: он создаёт проверяемый план, резервирует конкретные ресурсы, использует C8 для недостающих компонентов и выполняет mutation только через C12/C17. Exact replay и persistence исключают повторную фабрикацию и двойной commit после restart.
+
+## C19 — Agent Construction and Automation API
+
+**Статус:** ACCEPTED по полному gate C19.
+
+C19 goals, BOM, reservations и work queue используют C8/C12/C17 и не создают второй mutation path.
+
+## C20 — Logistics and Construction Economy
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+C19 PROCURE/FABRICATE demand
+→ offers / warehouses / routes / contractors
+→ escrow + stock reservation
+→ delivery / production chain
+→ C19 fulfillment
+```
+
+C20 добавляет landed-cost planning, склады, shipment receipts, подрядчиков, salvage market и производственные цепочки между C8 cells с сохранением item identity.

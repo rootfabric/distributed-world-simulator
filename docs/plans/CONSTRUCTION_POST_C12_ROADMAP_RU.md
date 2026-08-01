@@ -442,3 +442,7 @@ C14–C16 можно частично вести параллельно. C19–C
 5. теряет exact replay после reconnect/restart;
 6. публикует capability, не доказанную текущим authoritative state;
 7. нарушает checksum convergence клиентов и сервера.
+
+## C20 — реализованный vertical slice
+
+C20 формализует construction economy: procurement, warehouse reservations, routes, escrow, contractors, salvage и C8 production chains. Главная граница остаётся прежней: economy планирует и координирует, но реальные предметы изменяются только через Item Graph/C8/C2B, а agent workflow — через C19.

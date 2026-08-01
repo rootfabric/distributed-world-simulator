@@ -1013,3 +1013,33 @@ C19 total:        PASS — 154 assertions
 Local C1–C8/C10–C19: PASS — 3087 assertions
 Expected world:   139/139 tests, 142 steps
 ```
+
+## 2026-08-02 — C19: внешняя приёмка
+
+**Статус:** ACCEPTED.
+
+```text
+C19 focused:      PASS — 154 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17 regression:   PASS — 125 assertions
+C18 regression:   PASS — 135 assertions
+Network N0–M4:    PASS
+World regression: PASS — 139/139 tests, 142 steps
+Main-scene CLI:   PASS — 6/6
+```
+
+## 2026-08-02 — C20: Logistics and Construction Economy
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**База:** принятый C19.
+**Рекомендуемая ветка:** `feature/c20-logistics-construction-economy`.
+
+Реализованы procurement, landed-cost planning, atomic escrow/stock reservation, warehouses, multi-leg delivery, contractors, salvage market, C8 multi-cell production chains и persistence/replay.
+
+```text
+C20 contracts:    PASS — 38 assertions
+C20 integration:  PASS — 76 assertions
+C20 total:        PASS — 114 assertions
+Expected world:   141/141 tests, 144 steps
+```

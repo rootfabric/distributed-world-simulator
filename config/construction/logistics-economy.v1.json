@@ -1,0 +1,26 @@
+{
+  "schema": "planet_simulator.construction_logistics_economy_config.v1",
+  "currency": "CREDITS",
+  "procurement": {
+    "selection": "LANDED_COST_THEN_OFFER_ID",
+    "escrow_required": true,
+    "stock_reservation_required": true
+  },
+  "logistics": {
+    "route_selection": "COST_AND_DEADLINE",
+    "preserve_item_identity": true,
+    "multi_leg_receipts": true
+  },
+  "contractors": {
+    "milestone_escrow": true,
+    "capability_matching": true
+  },
+  "salvage": {
+    "fixed_price": true,
+    "auction_contract": true
+  },
+  "production_chains": {
+    "c8_recipe_validation": true,
+    "cross_cell_stages": true
+  }
+}
