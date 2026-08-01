@@ -663,3 +663,8 @@ Construction interaction layer может выполнять raycast, snapping, 
 ## Streaming authority invariant — C18
 
 Streaming может удалять только derived state. `DORMANT` не означает удаление конструкции: сохраняются authoritative identity, snapshot checksum, authority epoch, C8 job IDs и operation IDs. `SUMMARY`, `SIMULATED` и `PRESENTED` являются локальными activity projections. Только C17 owner может выполнять authoritative catch-up; read-only replica может иметь summary и presentation, но не получает write-capable simulation. Budget eviction, LOD и SceneTree lifecycle не изменяют Item Graph или ConstructSnapshot.
+
+
+## Agent automation invariant — C19
+
+Агент является клиентом строительной authority. Его goal, BOM, reservation и work queue не являются вторым Item Graph и не дают права напрямую менять construct. Любой устойчивый build/repair/salvage результат проходит через C12 command и C17 owner route. Fabrication output заранее получает identity, но становится реальным предметом только после C8 authoritative completion. Exact operation replay обязателен для reservation, fabrication, logistics и domain command, поэтому restart агента не создаёт второй расход материала или второй commit.

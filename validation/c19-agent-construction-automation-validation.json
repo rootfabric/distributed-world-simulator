@@ -1,0 +1,80 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C19_AGENT_CONSTRUCTION_AND_AUTOMATION_API",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C18_STREAMING_LOD_AND_DORMANT_CONSTRUCTS",
+    "decision": "ACCEPTED",
+    "base_commit": "a4376cd",
+    "note": "C18 passed focused, C2B, C9, C17, Network, world and main-scene acceptance; no C18 commit SHA was reported."
+  },
+  "branch": "feature/c19-agent-construction-automation-api",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 97
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 57
+    },
+    "total_assertions": 154,
+    "editor_parse": "PASS"
+  },
+  "coverage": [
+    "BUILD_COMPOSITE_GOAL_TO_C4_C3_PLAN",
+    "DETERMINISTIC_BOM_AND_ITEM_BINDINGS",
+    "C8_FABRICATION_FALLBACK",
+    "ATOMIC_ITEM_TOOL_WORKSPACE_BUDGET_RESERVATIONS",
+    "C12_COMMAND_FACTORY",
+    "C17_OWNER_SERVER_ROUTING",
+    "C9_REPAIR_PLAN_AUTOMATION",
+    "C9_SALVAGE_DAMAGE_AUTOMATION",
+    "MULTI_AGENT_RESOURCE_CONTENTION",
+    "WORK_QUEUE_RECEIPTS",
+    "EXACT_OPERATION_REPLAY",
+    "PERSISTENCE_AND_RESTART_RECOVERY"
+  ],
+  "delivery": {
+    "manifest": "c19-agent-construction-automation-files.txt",
+    "world_test_entries": 2,
+    "expected_world_test_count": 139,
+    "expected_world_steps": 142,
+    "file_count": 46
+  },
+  "external_acceptance_required": {
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "C17_C18": "PASS",
+    "network": "N0-M4 PASS",
+    "world_regression": "139/139 tests, 142 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "C1": 66,
+    "C2A": 137,
+    "C3": 194,
+    "C4": 268,
+    "C5": 204,
+    "C6": 218,
+    "C7": 225,
+    "C8": 221,
+    "C10": 239,
+    "C11": 199,
+    "C12": 124,
+    "C13": 124,
+    "C14": 168,
+    "C15": 215,
+    "C16": 71,
+    "C17": 125,
+    "C18": 135,
+    "C19": 154,
+    "status": "PASS",
+    "total": 3087
+  }
+}

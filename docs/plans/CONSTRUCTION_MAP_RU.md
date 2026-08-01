@@ -609,7 +609,7 @@ checksum-pinned C8 machine lease
 
 ## C18 — Streaming, LOD and Dormant Constructs
 
-**Статус:** IMPLEMENTED CANDIDATE поверх C17 focused candidate.
+**Статус:** ACCEPTED.
 
 ```text
 interest + authority + budgets
@@ -618,3 +618,19 @@ interest + authority + budgets
 ```
 
 C18 сохраняет authoritative snapshot checksums, C8 job IDs и pending operations, но удаляет derived summaries и C13 SceneTree по budget/interest policy. Owner выполняет bounded deterministic catch-up; read-only C17 replica может представляться, но не симулируется локально.
+
+
+## C19 — Agent Construction and Automation API
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+semantic goal
+→ BOM / fabrication / reservation
+→ work queue
+→ C12 command
+→ C17 owner
+→ C3/C9 authoritative process
+```
+
+C19 поддерживает build, repair и salvage goals. Агент не получает прямого доступа к Item Graph или domain process: он создаёт проверяемый план, резервирует конкретные ресурсы, использует C8 для недостающих компонентов и выполняет mutation только через C12/C17. Exact replay и persistence исключают повторную фабрикацию и двойной commit после restart.

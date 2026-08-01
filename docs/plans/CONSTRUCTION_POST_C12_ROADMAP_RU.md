@@ -256,7 +256,7 @@ migration → explicit transaction
 - stale owner/epoch fencing;
 - transactional registry/replica persistence.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED. Полный C17 regression подтверждён в составе C18 acceptance.
 **Рекомендуемая ветка:** `feature/c17-distributed-construction-authority`.
 
 
@@ -299,7 +299,7 @@ PRESENTED — mesh, collision, animation
 - owner-only simulation и read-only presentation;
 - persistence без SceneTree.
 
-**Статус:** IMPLEMENTED CANDIDATE поверх C17 focused candidate.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c18-streaming-lod-dormant-constructs`.
 
 ## C19 — Agent Construction and Automation API
@@ -333,6 +333,22 @@ PRESENTED — mesh, collision, animation
 → построить
 → проверить C7 enclosure
 ```
+
+### Реализованный C19 vertical slice
+
+- strict goals `BUILD_COMPOSITE`, `REPAIR_CONSTRUCT`, `SALVAGE_CONSTRUCT`;
+- deterministic BOM с точными ItemProjection bindings;
+- C8 fabrication fallback с заранее назначенной output identity;
+- formal procurement/block modes для unresolved BOM;
+- атомарные reservation batches для items, tools, workspaces и budget;
+- checksum-pinned work queue, step receipts и terminal replay;
+- реальные C12 `BUILD_STAGE/APPLY_REPAIR/APPLY_DAMAGE` команды;
+- C17 owner routing без локального mutation path;
+- C9 repair по исходным item identities;
+- persistence/restart без повторного fabrication или commit.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c19-agent-construction-automation-api`.
 
 ## C20 — Logistics and Construction Economy
 

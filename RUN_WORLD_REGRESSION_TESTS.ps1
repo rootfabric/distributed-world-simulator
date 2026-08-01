@@ -159,6 +159,8 @@ $Tests = @(
     "res://tests/construction/test_c17_distributed_authority_integration.gd",
     "res://tests/construction/test_c18_streaming_lod_contracts.gd",
     "res://tests/construction/test_c18_streaming_lod_integration.gd",
+    "res://tests/construction/test_c19_agent_automation_contracts.gd",
+    "res://tests/construction/test_c19_agent_automation_integration.gd",
     "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",

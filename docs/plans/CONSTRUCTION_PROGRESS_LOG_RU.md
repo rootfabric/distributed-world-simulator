@@ -980,3 +980,36 @@ C18 total:        PASS — 135 assertions
 Local C1–C8/C10–C18: 2933 assertions, PASS
 Expected world:   137/137 tests, 140 steps
 ```
+
+
+## 2026-08-02 — C17/C18: внешняя приёмка
+
+**Статус:** ACCEPTED.
+
+```text
+C18 focused:      PASS — 135 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17 regression:   PASS — 125 assertions
+Network N0–M4:    PASS
+World regression: PASS — 137/137 tests, 140 steps
+Main-scene CLI:   PASS — 6/6
+```
+
+C18 стал принятой базой C19.
+
+## 2026-08-02 — C19: Agent Construction and Automation API
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**База:** принятый C18.
+**Рекомендуемая ветка:** `feature/c19-agent-construction-automation-api`.
+
+Реализованы build/repair/salvage goals, deterministic BOM, C8 fabrication fallback, atomic resource reservations, persisted work queue, C12/C17 command execution и restart replay.
+
+```text
+C19 contracts:    PASS — 97 assertions
+C19 integration:  PASS — 57 assertions
+C19 total:        PASS — 154 assertions
+Local C1–C8/C10–C19: PASS — 3087 assertions
+Expected world:   139/139 tests, 142 steps
+```

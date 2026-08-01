@@ -628,7 +628,7 @@ Main-scene CLI
 
 ## C17 — Distributed Construction Authority
 
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED
 **База:** C16 `a4376cd`
 **Ветка:** `feature/c17-distributed-construction-authority`
 
@@ -649,3 +649,17 @@ Vertical slice закрепляет single-writer authority, owner routing су�
 10. Persistence без SceneTree serialization.
 
 **Статус:** IMPLEMENTED CANDIDATE.
+
+
+## C19 — Agent Construction and Automation API
+
+1. Goals высокого уровня для build, repair и salvage.
+2. Deterministic BOM с точными item/recipe checksums.
+3. C8 fabrication fallback и формальный procurement mode.
+4. Atomic reservations items/tools/workspaces/budget.
+5. Persisted work queue и receipts.
+6. Исполнение через C12 commands и C17 owner routing.
+7. Exact replay после restart без двойных side effects.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Ветка:** `feature/c19-agent-construction-automation-api`.
