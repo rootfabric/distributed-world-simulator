@@ -1,5 +1,16 @@
 # Документация PlanetSimulator
 
+## Mutable worlds
+
+- [`architecture/DYNAMIC_MATTER_FABRIC_RU.md`](architecture/DYNAMIC_MATTER_FABRIC_RU.md) — целевая парадигма вещества.
+- [`architecture/MW4_MATTER_MUTATIONS_RU.md`](architecture/MW4_MATTER_MUTATIONS_RU.md) — MW4: транзакционное бурение, session-local persistent mutations, fix1 performance boundary и fix2 JSON-safe energy boundary.
+- [`checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md`](checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md) — исходный checkpoint MW4.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md) — MW4 fix1: linear validated access, reduced focused fixture и bounded runner.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md) — функционально прошедший MW4 fix2; verified topology `187 assertions`.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md) — metadata-only fix3: topology correction `103 → 187`.
+- [`plans/MUTABLE_WORLDS_ROADMAP_RU.md`](plans/MUTABLE_WORLDS_ROADMAP_RU.md) — roadmap MW0–MW8 и интеграция Луны.
+
+
 ## Изменяемые миры и динамическое вещество
 
 - `architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая модель: процедурный объём, sparse persistent mutations, сохранение массы и переходы field/fragment/item/construct;
@@ -18,6 +29,10 @@
 - `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_RU.md` — исходный MW3 local meshing candidate.
 - `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX1_RU.md` — MW3 fix1: безопасная transform-композиция streamer и обязательный non-empty seam.
 - `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX2_RU.md` — текущий MW3 fix2 candidate: streamer использует `SimulationCellAddress.cell_id`.
+- `checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md` — исходный MW4 candidate.
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md` — текущий MW4 fix1 performance candidate.
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md` — функционально прошедший MW4 fix2 (`187 assertions`).
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md` — текущий metadata-only fix3.
 
 Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
 Текущий architecture candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.

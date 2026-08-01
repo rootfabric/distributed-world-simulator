@@ -181,13 +181,13 @@ This track is independent from the accepted single-server multiplayer order and 
 
 ```text
 architecture: Dynamic Matter Fabric
-accepted: v17.2.0-simulation-mw2-sparse-bricks, delivery fix1
-current candidate: v17.3.0-simulation-mw3-local-meshing
-branch: feature/mw3-local-meshing
+accepted: v17.3.0-simulation-mw3-local-meshing, delivery fix2
+current candidate: v17.4.0-simulation-mw4-matter-mutations, delivery fix3
+branch: feature/mw4-matter-mutations
 production worlds changed: false
 world catalog changed: false
-next after acceptance: MW4 authoritative matter mutations
+next after acceptance: MW5 disk persistence, journal and compaction
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
-MW3 is presentation-only over canonical MW2 snapshots. It may add local mesh, static collision and a directly opened laboratory scene, but must not alter Moon runtime, production world catalog, Item Graph, persistence, network authority or canonical matter DTOs. Review fixes remain on `feature/mw3-local-meshing` until acceptance.
+MW4 fix3 is a metadata-only correction over the functionally passing fix2 delivery: the verified focused topology is 187 assertions, not 103. Fix2 keeps the fix1 linear validated-access and bounded runner, and additionally enforces JSON-safe high-value energy budgets and laboratory receiver limits below `2^53`. MW4 adds authoritative session-local excavation over canonical MW2 snapshots: swept-capsule commands, revision fences, atomic multi-brick commit, exact replay, mass/energy/capacity accounting, extracted `MatterMaterialBatch`, continuous queries and selective MW3 presenter rebuilds. It must not alter Moon runtime, production world catalog, network authority or disk persistence. The Item Graph production adapter, deposition and compaction remain outside this checkpoint. Review fixes remain on `feature/mw4-matter-mutations` until acceptance.

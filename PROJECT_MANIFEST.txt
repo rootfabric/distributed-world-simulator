@@ -835,3 +835,62 @@ MW3 local meshing fix2
 - focused expected topology: 7519 assertions
 - canonical matter changed: no
 - production Moon/world catalog changed: no
+
+
+MW4 transactional excavation and session-local persistent mutations
+- checkpoint: v17.4.0-simulation-mw4-matter-mutations
+- build: mw4-matter-mutations
+- branch: feature/mw4-matter-mutations
+- base: accepted MW3 v17.3.0 delivery fix2
+- operation: EXCAVATE with deterministic swept capsule and SDF difference
+- fences: exact affected-brick set, expected revisions, energy, receiver capacity and stable operation fingerprint
+- storage: atomic multi-brick revision+1 commit with compensating rollback
+- output: checksum-protected MatterMaterialBatch and closed per-material MatterMassLedger
+- persistence scope: active world session; disk checkpoint/recovery deferred to MW5
+- query: trilinear stored-snapshot sampling and SDF raycast with procedural fallback
+- presentation: selective MW3 mesh/collision invalidation from changed brick addresses
+- laboratory: scenes/labs/matter_asteroid_excavation_lab.tscn
+- production Moon/world catalog changed: no
+- runner: RUN_MW4_MATTER_MUTATIONS_TESTS.ps1 / .sh
+- next: MW5 disk persistence, journal and compaction
+
+
+MW4 matter mutations fix1
+- checkpoint: v17.4.0-simulation-mw4-matter-mutations
+- delivery: fix1
+- build: mw4-matter-mutations-fix1
+- branch: feature/mw4-matter-mutations
+- blocker: focused runner exceeded 600 seconds without completion
+- root cause: full 1331-sample snapshot validation repeated for each lattice/corner read
+- performance boundary: one full snapshot validation followed by validated hot-loop accessors
+- raycast: per-operation stored-snapshot validation cache
+- focused fixture: deterministic four-target cross-brick tunnel; prior committed tunnel reused by streamer test
+- diagnostics: per-stage timings and immediate START marker
+- runner watchdog: 300 seconds default, timeout exit code 124
+- scope: no change to transaction, mass, revision or persistence semantics
+
+MW4 matter mutations fix2
+- checkpoint: v17.4.0-simulation-mw4-matter-mutations
+- delivery: fix2
+- build: mw4-matter-mutations-fix2
+- branch: feature/mw4-matter-mutations
+- blocker: fix1 completed in 2.561 seconds but rejected integer-valued energy budgets 1e18/1e19 as non-canonical JSON
+- canonical limit: integer-valued floats must not exceed 9007199254740991 (2^53 - 1)
+- focused energy budget: 9000000000000000 J
+- laboratory drill energy budget: 9000000000000000 J
+- laboratory receiver maximum mass: 9000000000000000 kg to preserve canonical receiver hashing
+- negative contract test: 9007199254740992 J rejects with NON_CANONICAL_JSON_VALUE and exact field path
+- focused expected topology: 187 assertions
+- scope: no transaction, mass, revision, persistence or performance semantic changes
+
+MW4 matter mutations fix3
+- checkpoint: v17.4.0-simulation-mw4-matter-mutations
+- delivery: fix3
+- build: mw4-matter-mutations-fix3
+- branch: feature/mw4-matter-mutations
+- scope: metadata-only correction; production code and focused test logic unchanged
+- independent focused result: 187 assertions PASS in 10.843 seconds
+- corrected topology: prior recorded value 103 -> verified value 187 assertions
+- regressions: MW3 7519 PASS; MW2 7470 PASS; MW1 3685 PASS; MW0 2011 PASS; A3 PASS; M6 10/10 PASS
+- git diff --check: PASS
+- next after acceptance: MW5 disk persistence, journal and compaction

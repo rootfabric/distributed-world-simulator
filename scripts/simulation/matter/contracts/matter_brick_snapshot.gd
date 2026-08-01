@@ -9,6 +9,7 @@ const SCHEMA: String = "planet_simulator.matter_brick_snapshot.v1"
 const GEOMETRY_SCHEMA: String = "planet_simulator.matter_geometry_channel.v1"
 const COMPOSITION_SCHEMA: String = "planet_simulator.matter_composition_channel.v1"
 const PROPERTY_SCHEMA: String = "planet_simulator.matter_property_channel.v1"
+const SAMPLE_SURFACE_EPSILON_M: float = 0.000000001
 const FIELDS: Array[String] = [
 	"schema",
 	"snapshot_id",
@@ -141,22 +142,50 @@ static func normalize(value: Dictionary) -> Dictionary:
 
 
 static func sample_at(value: Dictionary, index: int) -> Dictionary:
-	if not bool(validate(value).get("success", false)) or index < 0 or index >= int(value["sample_count"]):
+	if not bool(validate(value).get("success", false)):
+		return {}
+	return sample_at_validated(value, index)
+
+
+# Fast accessor for callers that already crossed the snapshot validation boundary.
+# It preserves the public MatterSample DTO while avoiding an O(sample_count)
+# snapshot validation for every lattice read.
+static func sample_at_validated(value: Dictionary, index: int) -> Dictionary:
+	var payload: Dictionary = sample_payload_at_validated(value, index)
+	if payload.is_empty():
+		return {}
+	return SampleScript.create(
+		float(payload["signed_distance_m"]),
+		float(payload["occupancy_ratio"]),
+		float(payload["density_kg_m3"]),
+		Dictionary(payload["composition"]),
+		float(payload["integrity_ratio"]),
+		float(payload["temperature_k"]),
+		float(payload["porosity_ratio"]),
+		Array(payload["flags"])
+	)
+
+
+# Internal channel view for hot loops. The caller must validate the snapshot once
+# before entering the loop. Snapshot.create() consumes exactly these fields, so
+# no per-sample checksum is needed while staging a new brick revision.
+static func sample_payload_at_validated(value: Dictionary, index: int) -> Dictionary:
+	if index < 0 or index >= int(value.get("sample_count", 0)):
 		return {}
 	var geometry: Dictionary = value["geometry_channel"]
 	var composition_channel: Dictionary = value["composition_channel"]
 	var properties: Dictionary = value["property_channel"]
 	var palette_index: int = int(composition_channel["palette_indices"][index])
-	return SampleScript.create(
-		float(geometry["signed_distance_m"][index]),
-		float(geometry["occupancy_ratio"][index]),
-		float(properties["density_kg_m3"][index]),
-		Dictionary(composition_channel["palette"][palette_index]),
-		float(properties["integrity_ratio"][index]),
-		float(properties["temperature_k"][index]),
-		float(properties["porosity_ratio"][index]),
-		Array(properties["flags"][index])
-	)
+	return {
+		"signed_distance_m": float(geometry["signed_distance_m"][index]),
+		"occupancy_ratio": float(geometry["occupancy_ratio"][index]),
+		"density_kg_m3": float(properties["density_kg_m3"][index]),
+		"composition": Dictionary(composition_channel["palette"][palette_index]),
+		"integrity_ratio": float(properties["integrity_ratio"][index]),
+		"temperature_k": float(properties["temperature_k"][index]),
+		"porosity_ratio": float(properties["porosity_ratio"][index]),
+		"flags": Array(properties["flags"][index]),
+	}
 
 
 static func _validate_channels(value: Dictionary, sample_count: int) -> Dictionary:
@@ -191,9 +220,9 @@ static func _validate_channels(value: Dictionary, sample_count: int) -> Dictiona
 		or composition_channel["palette_indices"].size() != sample_count:
 		return MatterUtilsScript.failure("MATTER_COMPOSITION_CHANNEL_SIZE_MISMATCH")
 	for palette_index in range(composition_channel["palette"].size()):
-		var composition = composition_channel["palette"][palette_index]
-		if typeof(composition) != TYPE_DICTIONARY \
-			or not bool(CompositionScript.validate(composition).get("success", false)):
+		var palette_composition = composition_channel["palette"][palette_index]
+		if typeof(palette_composition) != TYPE_DICTIONARY \
+			or not bool(CompositionScript.validate(palette_composition).get("success", false)):
 			return MatterUtilsScript.failure("INVALID_MATTER_COMPOSITION_PALETTE_ENTRY", {"index": palette_index})
 	for index in range(sample_count):
 		var selected_palette = composition_channel["palette_indices"][index]
@@ -210,16 +239,29 @@ static func _validate_channels(value: Dictionary, sample_count: int) -> Dictiona
 				return MatterUtilsScript.failure("INVALID_MATTER_PROPERTY_VALUE", {"field": numeric_field, "index": index})
 		if typeof(properties["flags"][index]) != TYPE_ARRAY:
 			return MatterUtilsScript.failure("INVALID_MATTER_PROPERTY_FLAGS", {"index": index})
-		var sample: Dictionary = SampleScript.create(
-			float(geometry["signed_distance_m"][index]),
-			float(geometry["occupancy_ratio"][index]),
-			float(properties["density_kg_m3"][index]),
-			Dictionary(composition_channel["palette"][palette_index]),
-			float(properties["integrity_ratio"][index]),
-			float(properties["temperature_k"][index]),
-			float(properties["porosity_ratio"][index]),
-			Array(properties["flags"][index])
-		)
-		if not bool(SampleScript.validate(sample).get("success", false)):
-			return MatterUtilsScript.failure("INVALID_MATTER_BRICK_SAMPLE", {"index": index})
+		# Mirror MatterSample.validate() directly on the columnar channels. The old
+		# path rebuilt and SHA-validated a temporary MatterSample for every lattice
+		# point, even though the palette and the whole snapshot are validated once.
+		var signed_distance_m: float = float(geometry["signed_distance_m"][index])
+		var occupancy_ratio: float = float(geometry["occupancy_ratio"][index])
+		var density_kg_m3: float = float(properties["density_kg_m3"][index])
+		var integrity_ratio: float = float(properties["integrity_ratio"][index])
+		var temperature_k: float = float(properties["temperature_k"][index])
+		var porosity_ratio: float = float(properties["porosity_ratio"][index])
+		if not MatterUtilsScript.is_ratio(occupancy_ratio) \
+			or not MatterUtilsScript.is_ratio(integrity_ratio) \
+			or not MatterUtilsScript.is_ratio(porosity_ratio):
+			return MatterUtilsScript.failure("INVALID_MATTER_BRICK_SAMPLE", {"index": index, "reason": "RATIO"})
+		if not MatterUtilsScript.is_non_negative_number(density_kg_m3) \
+			or not MatterUtilsScript.is_non_negative_number(temperature_k):
+			return MatterUtilsScript.failure("INVALID_MATTER_BRICK_SAMPLE", {"index": index, "reason": "PROPERTY"})
+		var composition: Dictionary = composition_channel["palette"][palette_index]
+		var composition_is_empty: bool = Array(composition["components"]).is_empty()
+		if occupancy_ratio <= 0.0:
+			if density_kg_m3 != 0.0 or not composition_is_empty or integrity_ratio != 0.0 \
+				or signed_distance_m < -SAMPLE_SURFACE_EPSILON_M:
+				return MatterUtilsScript.failure("INVALID_MATTER_BRICK_SAMPLE", {"index": index, "reason": "VACUUM_SEMANTICS"})
+		elif density_kg_m3 <= 0.0 or composition_is_empty \
+			or signed_distance_m > SAMPLE_SURFACE_EPSILON_M:
+			return MatterUtilsScript.failure("INVALID_MATTER_BRICK_SAMPLE", {"index": index, "reason": "OCCUPIED_SEMANTICS"})
 	return MatterUtilsScript.success()

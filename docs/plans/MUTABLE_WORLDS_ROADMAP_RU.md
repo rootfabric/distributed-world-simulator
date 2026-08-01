@@ -396,7 +396,7 @@ No Moon/runtime/mesh/network code changes. MW2 accepted with delivery fix1.
 
 ### Статус
 
-**Implementation candidate подготовлен 2026-07-31:** `v17.3.0-simulation-mw3-local-meshing` поверх принятого MW2 `fix1`.
+**Принят 2026-07-31:** `v17.3.0-simulation-mw3-local-meshing`, delivery `fix2`, поверх принятого MW2 `fix1`.
 
 ### Цель
 
@@ -483,7 +483,13 @@ open scenes/labs/matter_asteroid_meshing_lab.tscn
 
 ---
 
-## MW4 — Excavation, deposition and Item Graph mass transfer
+## MW4 — Transactional excavation and local persistent mutations
+
+### Статус
+
+**Implementation candidate подготовлен 2026-07-31:** `v17.4.0-simulation-mw4-matter-mutations` поверх принятого MW3 `fix2`.
+
+Текущий checkpoint намеренно реализует только `EXCAVATE`. `DEPOSIT_LOOSE`, `COMPACT` и production Item Graph adapter остаются последующими расширениями после стабилизации транзакционной семантики удаления вещества.
 
 ### Цель
 
@@ -494,6 +500,22 @@ open scenes/labs/matter_asteroid_meshing_lab.tscn
 ```text
 feature/mw4-matter-mutations
 ```
+
+### Реализовано
+
+```text
+scripts/simulation/matter/contracts/matter_material_batch.gd
+scripts/simulation/matter/mutation/matter_swept_shape.gd
+scripts/simulation/matter/mutation/matter_excavation_kernel.gd
+scripts/simulation/matter/mutation/matter_excavation_service.gd
+scripts/simulation/matter/mutation/matter_material_receiver.gd
+scripts/simulation/matter/mutation/matter_mutation_journal.gd
+scripts/simulation/matter/query/matter_snapshot_sampler.gd
+scripts/simulation/matter/query/matter_continuous_query_service.gd
+scenes/labs/matter_asteroid_excavation_lab.tscn
+```
+
+Persistent в MW4 означает сохранение canonical snapshots при выгрузке и повторной сборке mesh/collision в пределах active world session. Дисковый checkpoint и restart recovery относятся к MW5.
 
 ### Operation model
 
@@ -511,15 +533,13 @@ expected matter revisions
 
 Не отправлять список frame-based sphere stamps.
 
-### Mutation types v1
+### Mutation type v1
 
 ```text
 EXCAVATE
-DEPOSIT_LOOSE
-COMPACT
 ```
 
-`FRACTURE`, `MELT`, `VAPORIZE` остаются следующими versions.
+MW4 применяет `new_sdf = max(old_sdf, -tool_sdf)` ко всем затронутым samples, фиксирует только реально изменившиеся bricks и пересобирает их MW3 presentation. `DEPOSIT_LOOSE`, `COMPACT`, `FRACTURE`, `MELT` и `VAPORIZE` остаются отдельными версиями.
 
 ### Aggregate model
 

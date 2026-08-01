@@ -10,6 +10,7 @@ const FeatureCatalogScript = preload("res://scripts/simulation/matter/generation
 const GeneratorScript = preload("res://scripts/simulation/matter/generation/fixed_seed_asteroid_generator.gd")
 const GridProfileScript = preload("res://scripts/simulation/matter/spatial/matter_spatial_grid_profile.gd")
 const CellGridScript = preload("res://scripts/simulation/matter/spatial/matter_cell_grid.gd")
+const BrickLayoutScript = preload("res://scripts/simulation/matter/spatial/matter_brick_layout.gd")
 const MaterializerScript = preload("res://scripts/simulation/matter/storage/matter_brick_materializer.gd")
 const MeshDataScript = preload("res://scripts/world/matter/meshing/matter_brick_mesh_data.gd")
 const MesherScript = preload("res://scripts/world/matter/meshing/matter_tetrahedral_mesher.gd")
@@ -27,6 +28,7 @@ var _material_catalog: Dictionary = {}
 var _generator_profile: Dictionary = {}
 var _feature_catalog: Dictionary = {}
 var _grid_profile: Dictionary = {}
+var _snapshot_store = null
 var _material: StandardMaterial3D
 var _request_generation: int = 0
 var _last_observer_cell_id: String = ""
@@ -45,7 +47,8 @@ func configure(
 	generator_profile: Dictionary,
 	feature_catalog: Dictionary,
 	grid_profile: Dictionary,
-	observer: Node3D
+	observer: Node3D,
+	snapshot_store = null
 ) -> Dictionary:
 	if observer == null \
 		or not bool(BodyScript.validate(body).get("success", false)) \
@@ -64,11 +67,16 @@ func configure(
 		return MatterUtilsScript.failure("INVALID_MW3_STREAMER_CELL_LEVEL")
 	if load_radius_cells < 0 or max_builds_per_frame < 1:
 		return MatterUtilsScript.failure("INVALID_MW3_STREAMER_BUDGET")
+	if snapshot_store != null and (
+		not snapshot_store.has_method("has") or not snapshot_store.has_method("get_snapshot")
+	):
+		return MatterUtilsScript.failure("INVALID_MW4_STREAMER_SNAPSHOT_STORE")
 	_body = body.duplicate(true)
 	_material_catalog = material_catalog.duplicate(true)
 	_generator_profile = generator_profile.duplicate(true)
 	_feature_catalog = feature_catalog.duplicate(true)
 	_grid_profile = grid_profile.duplicate(true)
+	_snapshot_store = snapshot_store
 	_observer = observer
 	_material = ResourceFactoryScript.create_vertex_color_material()
 	_clear_presenters()
@@ -190,15 +198,22 @@ func build_next_pending() -> bool:
 			or _failed_by_id.has(address_id):
 			continue
 		var started_usec: int = Time.get_ticks_usec()
-		var snapshot: Dictionary = MaterializerScript.materialize(
-			_body,
-			_material_catalog,
-			_generator_profile,
-			_feature_catalog,
-			_grid_profile,
-			request["address"],
-			0
+		var brick_address: Dictionary = BrickLayoutScript.brick_address(
+			_grid_profile, request["address"]
 		)
+		var snapshot: Dictionary = {}
+		if _snapshot_store != null and _snapshot_store.has(brick_address):
+			snapshot = _snapshot_store.get_snapshot(brick_address)
+		else:
+			snapshot = MaterializerScript.materialize(
+				_body,
+				_material_catalog,
+				_generator_profile,
+				_feature_catalog,
+				_grid_profile,
+				request["address"],
+				0
+			)
 		var mesh_data: Dictionary = MesherScript.build_mesh_data(snapshot, _grid_profile)
 		_last_build_ms = float(Time.get_ticks_usec() - started_usec) / 1000.0
 		var mesh_validation: Dictionary = MeshDataScript.validate(mesh_data)
@@ -223,6 +238,37 @@ func build_next_pending() -> bool:
 		_emit_stats()
 		return true
 	return false
+
+
+func invalidate_brick_addresses(addresses: Array) -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.failure("MW3_STREAMER_NOT_CONFIGURED")
+	var invalidated_cell_ids: Array = []
+	for address in addresses:
+		if typeof(address) != TYPE_DICTIONARY \
+			or not bool(BrickLayoutScript.validate_brick_address(_grid_profile, address).get("success", false)):
+			return MatterUtilsScript.failure("INVALID_MW4_STREAMER_BRICK_ADDRESS")
+		var cell_id: String = String(address["cell_address"]["cell_id"])
+		if not invalidated_cell_ids.has(cell_id):
+			invalidated_cell_ids.append(cell_id)
+	invalidated_cell_ids.sort()
+	for cell_id in invalidated_cell_ids:
+		if _presenters_by_id.has(cell_id):
+			var presenter: Node3D = _presenters_by_id[cell_id]
+			_built_triangle_count -= int(presenter.get_meta("triangle_count", 0))
+			_presenters_by_id.erase(cell_id)
+			if is_instance_valid(presenter):
+				presenter.queue_free()
+		_empty_by_id.erase(cell_id)
+		_failed_by_id.erase(cell_id)
+		if _desired_by_id.has(cell_id):
+			_pending.append({
+				"generation": _request_generation,
+				"address_id": cell_id,
+				"address": Dictionary(_desired_by_id[cell_id]).duplicate(true),
+			})
+	_emit_stats()
+	return MatterUtilsScript.success({"invalidated_cell_ids": invalidated_cell_ids})
 
 
 func stats() -> Dictionary:
@@ -284,6 +330,7 @@ func _transform_to_root(node: Node3D) -> Dictionary:
 func _reset_failed_configuration() -> void:
 	_configured = false
 	_observer = null
+	_snapshot_store = null
 	_clear_presenters()
 	set_process(false)
 

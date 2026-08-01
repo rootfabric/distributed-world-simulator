@@ -128,6 +128,10 @@ static func normalize(value: Dictionary) -> Dictionary:
 	return MatterUtilsScript.normalize(value, validate)
 
 
+static func validate_shape(shape) -> Dictionary:
+	return _validate_shape(shape)
+
+
 static func _validate_shape(shape) -> Dictionary:
 	if typeof(shape) != TYPE_DICTIONARY:
 		return MatterUtilsScript.failure("INVALID_MATTER_MUTATION_SHAPE")

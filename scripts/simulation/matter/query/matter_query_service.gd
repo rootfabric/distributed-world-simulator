@@ -105,7 +105,7 @@ func query(local_position_m: Vector3, requested_level: int) -> Dictionary:
 			int(lattice_index[1]),
 			int(lattice_index[2])
 		)
-		var sample: Dictionary = BrickSnapshotScript.sample_at(snapshot, flat_index)
+		var sample: Dictionary = BrickSnapshotScript.sample_at_validated(snapshot, flat_index)
 		return _result(
 			local_position_m,
 			requested_level,
@@ -157,7 +157,7 @@ func query_cell_lattice(
 			brick_address,
 			[x, y, z],
 			int(snapshot["state_revision"]),
-			BrickSnapshotScript.sample_at(snapshot, flat_index)
+			BrickSnapshotScript.sample_at_validated(snapshot, flat_index)
 		)
 	return _result(
 		local_position_m,
