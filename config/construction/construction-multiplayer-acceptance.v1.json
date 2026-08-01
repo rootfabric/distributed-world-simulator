@@ -1,0 +1,25 @@
+{
+  "schema": "planet_simulator.construction_multiplayer_acceptance_config.v1",
+  "permission_epoch": 1,
+  "command_actions": [
+    "APPLY_DAMAGE",
+    "APPLY_REPAIR",
+    "BUILD_STAGE",
+    "EDIT_GEOMETRY"
+  ],
+  "optimistic_preconditions": {
+    "construct_checksum_required": true,
+    "server_generation_optional": true,
+    "stale_commands_are_terminal": true
+  },
+  "sessions": {
+    "ordered_sequence_required": true,
+    "reconnect_increments_session_epoch": true,
+    "old_session_epoch_rejected": true
+  },
+  "replication": {
+    "event_indices_are_contiguous": true,
+    "state_bundle_includes_items_and_constructs": true,
+    "checksum_convergence_required": true
+  }
+}

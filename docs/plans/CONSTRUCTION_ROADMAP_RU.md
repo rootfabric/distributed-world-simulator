@@ -15,6 +15,7 @@ PlanetSimulator создаёт **конструктор нового уровн�
 
 Наглядная актуальная карта: `docs/plans/CONSTRUCTION_MAP_RU.md`.
 Хронология решений: `docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md`.
+Подробная карта C13–C22: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
 ## Стратегия интеграции
 
@@ -547,3 +548,29 @@ Network/runtime regression
 World regression including C3–C9 scenarios
 Main-scene CLI
 ```
+
+
+## C12 — Multiplayer Construction Acceptance
+
+1. Permission grants pin subject, construct scope, actions and permission epoch.
+2. Session reconnect increments session epoch and rejects commands from old connections.
+3. Commands are strictly ordered per session and protected by checksums.
+4. Optimistic preconditions use construct checksum and optional server generation.
+5. `BUILD_STAGE`, `EDIT_GEOMETRY`, `APPLY_DAMAGE` and `APPLY_REPAIR` reuse existing domain processes.
+6. Exact command replay does not repeat authoritative mutation or publish a second event.
+7. Same command ID with another checksum is rejected.
+8. Gateway crash after domain commit is recovered through the domain operation ledger.
+9. Successful commands publish contiguous events with canonical item+construct state bundles.
+10. Reconnected replicas receive missing events and must converge to the server checksum.
+11. Permission revoke and epoch advance invalidate stale clients.
+12. Gateway/session/permission persistence is transactional and tamper-checked.
+
+### Контрольный vertical slice
+
+Два клиента строят первую стадию C3, конкурируют за один C11 geometry edit, затем выполняют C9 damage/repair. Устаревшая команда второго клиента отклоняется, crash после authoritative edit восстанавливается без второго commit, reconnect догоняет event stream, а обе replicas получают checksum authoritative bundle.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+## После C12
+
+Каноническое подробное описание C13–C22 находится в `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.

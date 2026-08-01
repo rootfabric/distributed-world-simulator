@@ -590,3 +590,28 @@ ItemProjection, semantic part и ConstructSnapshot должны изменить
 ### Произвольная mesh-операция остаётся за границей
 
 Boolean holes, bevels, SDF/voxel patches требуют отдельного conservative material-delta контракта. C11 закладывает для него authoritative boundary, но не объявляет triangle mesh источником истины.
+
+
+## 21. C12: multiplayer не создаёт второй строительный домен
+
+C12 принимает только команды намерений и маршрутизирует их в существующие C3, C9 и C11 processes. Permission/session/event слой не имеет права напрямую изменять Item Graph или ConstructSnapshot.
+
+```text
+client command
+→ permission/session/precondition gate
+→ existing domain process
+→ C2A/C2B/M0 authority
+→ canonical event bundle
+```
+
+### Optimistic concurrency
+
+Клиент pin-ит известный construct checksum и при необходимости server generation. Первый конкурентный commit меняет authority; второй command со старым precondition отклоняется до mutation. Advisory UI locks могут существовать, но корректность не зависит от них.
+
+### Replay сильнее reconnect
+
+Повтор command ID с тем же checksum возвращает terminal result. После gateway crash authoritative operation ledger позволяет определить уже выполненную domain operation и закончить публикацию одного event без повторного расхода или edit.
+
+### Convergence проверяется данными, а не сообщением UI
+
+Replica считается синхронизированной только если checksum canonical item+construct bundle совпадает с authoritative checksum. Event order, generation rollback и повреждённый payload отклоняются.

@@ -10,8 +10,14 @@
 **C5:** ACCEPTED вместе с fix1; база C4 `b985cde`
 **C6:** `2837835`, ACCEPTED
 **C7:** ACCEPTED; reviewed delivery SHA-256 `5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87`
-**Рабочая ветка C8:** `feature/c8-fabrication-cell` поверх принятого C7
-**Текущая позиция:** `C8 — Fabrication Cell, IMPLEMENTED CANDIDATE`
+**C8:** ACCEPTED
+**C9:** ACCEPTED
+**C10:** ACCEPTED; base C9 `8d8bf77`
+**C11:** IMPLEMENTED CANDIDATE
+**Рабочая ветка C12:** `feature/c12-multiplayer-construction-acceptance`
+**Текущая позиция:** `C12 — Multiplayer Construction Acceptance, IMPLEMENTED CANDIDATE`
+
+Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
 ## Парадигма всей линии
 
@@ -25,23 +31,28 @@ PlanetSimulator создаёт не очередной редактор блок
 
 ```mermaid
 flowchart TD
-    C0["C0 Архитектурная парадигма\nACCEPTED"] --> C1["C1 Semantic Construction Kernel\nACCEPTED"]
-    C1 --> C2A["C2A Item Graph Contracts\nACCEPTED — 68cf8b2"]
-    C2A --> C2B["C2B Authoritative Item Graph Integration\nACCEPTED"]
-    C2B --> C3["C3 BuildPlan and Ghost Construction\nACCEPTED — fix1"]
-    C3 --> C4["C4 CompositeDefinition\nACCEPTED — fix1"]
-    C4 --> C5["C5 Capability and Affordance Compilation\nACCEPTED — fix1"]
-    C5 --> C6["C6 Mobile Construct\nACCEPTED — 2837835"]
-    C6 --> C7["C7 Spatial Construct\nACCEPTED"]
-    C7 --> C8["C8 Fabrication Cell\nCURRENT CANDIDATE"]
-    C8 --> G8{"C8 focused + compatibility + network + world regression"}
-    G8 -- fail --> F8["review fixes in same C8 branch"]
-    F8 --> G8
-    G8 -- pass --> C9["C9 Damage, Split, Repair"]
-    C9 --> C10["C10 Parametric Members"]
-    C10 --> C11["C11 Local Geometry Editing"]
-    C11 --> C12["C12 Multiplayer Construction Acceptance"]
-    C12 --> C13["C13 Federated Large Constructs"]
+    C0["C0 Paradigm — ACCEPTED"] --> C1["C1 Kernel — ACCEPTED"]
+    C1 --> C2["C2A/C2B Item Authority — ACCEPTED"]
+    C2 --> C3["C3 BuildPlan — ACCEPTED"]
+    C3 --> C4["C4 CompositeDefinition — ACCEPTED"]
+    C4 --> C5["C5 Capabilities — ACCEPTED"]
+    C5 --> C6["C6 Mobile — ACCEPTED"]
+    C6 --> C7["C7 Spatial — ACCEPTED"]
+    C7 --> C8["C8 Fabrication — ACCEPTED"]
+    C8 --> C9["C9 Damage/Split/Repair — ACCEPTED"]
+    C9 --> C10["C10 Parametric Members — ACCEPTED"]
+    C10 --> C11["C11 Local Geometry — CANDIDATE"]
+    C11 --> C12["C12 Multiplayer Acceptance — CURRENT CANDIDATE"]
+    C12 --> C13["C13 Runtime Geometry/Physics"]
+    C13 --> C14["C14 Structural Integrity"]
+    C14 --> C15["C15 Executable Utilities"]
+    C15 --> C16["C16 Construction UX"]
+    C16 --> C17["C17 Distributed Authority"]
+    C17 --> C18["C18 Streaming/LOD"]
+    C18 --> C19["C19 Agent Automation"]
+    C19 --> C20["C20 Logistics/Economy"]
+    C20 --> C21["C21 Scale Acceptance"]
+    C21 --> C22["C22 Production Hardening"]
 ```
 
 ```text
@@ -86,9 +97,9 @@ C12 multiplayer construction → C13 federated constructs
 | C8 | recipes, machine profiles, work queue, atomic material reservation/consumption и fabricated outputs | производственная ячейка | **ACCEPTED** |
 | C9 | damage, split, repair, salvage | стол/робот/секция | **ACCEPTED** |
 | C10 | beams, panels, pipes, cables, profiles | строение/корабль | ACCEPTED |
-| C11 | constrained local geometry and control-point edits | параметрическая деталь | **CURRENT CANDIDATE** |
-| C12 | contention, permissions, reconnect, convergence | два клиента | PLANNED |
-| C13 | section aggregates and cross-server authority | дом/станция/город | PLANNED |
+| C11 | constrained local geometry and control-point edits | параметрическая деталь | **IMPLEMENTED CANDIDATE** |
+| C12 | contention, permissions, reconnect, replay и convergence | два клиента | **CURRENT CANDIDATE** |
+| C13–C22 | runtime, physics, distributed authority, streaming, agents, economy и hardening | мир проекта | PLANNED — см. `CONSTRUCTION_POST_C12_ROADMAP_RU.md` |
 
 ## C2A — Item Graph Contracts
 

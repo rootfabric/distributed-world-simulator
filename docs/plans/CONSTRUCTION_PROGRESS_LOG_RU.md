@@ -769,3 +769,33 @@ Editor parse:      PASS
 ```
 
 Ожидаемый внешний world profile: `123/123 tests`, `126 steps`.
+
+
+## 2026-08-01 — C12: Multiplayer Construction Acceptance
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c12-multiplayer-construction-acceptance`.
+**База:** C11 delivery поверх принятого C10; C11 ещё требует внешней приёмки.
+
+Архитектурные решения:
+
+- permissions являются checksum-pinned grants с монотонным epoch;
+- reconnect создаёт новый session epoch и сохраняет next command sequence;
+- commands pin-ят construct checksum и optional server generation;
+- C12 routes в существующие C3/C9/C11 processes и не создаёт второй mutation path;
+- successful commands публикуют contiguous events с canonical state bundle;
+- exact command replay не создаёт второй event;
+- gateway crash после domain commit восстанавливается через terminal operation ledger;
+- replicas отклоняют event gaps, rollback и tamper;
+- reconnect возвращает missing event range и доказывает checksum convergence;
+- gateway/session/permission state сохраняется транзакционно.
+
+Focused профиль:
+
+```text
+C12 contracts:    PASS — 53 assertions
+C12 integration:  PASS — 71 assertions
+C12 total:        PASS — 124 assertions
+```
+
+Ожидаемый внешний world profile: `125/125 tests`, `128 steps`.
