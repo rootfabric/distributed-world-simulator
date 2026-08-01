@@ -40,3 +40,39 @@ Authoritative sources:
 - `config/network/networked-gameplay-architecture.v1.json`;
 - `config/network/single-server-multiplayer-roadmap.v1.json`;
 - `config/network/network-roadmap.v1.json`.
+
+## Network Experience NX0–NX9
+
+С 1 августа 2026 года поверх принятой A3 single-server architecture открыт отдельный realtime-netcode roadmap:
+
+```text
+NX0 observability baseline
+→ NX1 deterministic network condition simulator
+→ NX2 traffic separation
+→ NX3 fixed-tick authority
+→ NX4 local prediction/reconciliation
+→ NX5 remote interpolation
+→ NX6 predicted item interactions
+→ NX7 physics authority profiles
+→ NX8 interest management
+→ NX9 async persistence hardening
+```
+
+Текущий подготовительный checkpoint:
+
+```text
+v16.10.7-network-nx0-observability-preparation
+base commit: 69bd7fc
+branch: feature/nx0-observability-baseline-preparation
+runtime behavior changed: no
+```
+
+Документы:
+
+- `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md`;
+- `config/network/network-experience-roadmap.v1.json`;
+- `config/network/nx0-observability-baseline-preparation.v1.json`;
+- `config/network/network-condition-presets.v1.json`.
+
+B1 остаётся допустимым server-to-server adapter после A3, но его реализация временно уступает продуктовому приоритету NX0–NX6. Existing B0/B1 contracts не изменяются.

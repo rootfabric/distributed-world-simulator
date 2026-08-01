@@ -49,3 +49,26 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `config/network/network-roadmap.v1.json`;
 - `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
+
+## Текущий realtime-netcode roadmap
+
+Новый рабочий приоритет — комфортное сетевое взаимодействие поверх принятого single-server authority path:
+
+```text
+NX0 → NX1 → NX2 → NX3 → NX4 → NX5 → NX6 → NX7 → NX8 → NX9
+```
+
+Текущий candidate не меняет production behavior и подготавливает NX0:
+
+```text
+checkpoint: v16.10.7-network-nx0-observability-preparation
+base commit: 69bd7fc
+branch: feature/nx0-observability-baseline-preparation
+```
+
+Основные документы:
+
+- `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md`;
+- `config/network/network-experience-roadmap.v1.json`;
+- `config/network/nx0-observability-baseline-preparation.v1.json`.

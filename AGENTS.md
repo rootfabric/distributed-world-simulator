@@ -181,3 +181,18 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - M7 focused runner: `RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1/.sh`.
 - M7 manual launch: `PLAY_M7_NETWORKED_PLAYGROUND.ps1/.sh`.
 - Next architecture stage after M7 validation: B1 NATS Core adapter.
+
+## Current NX0 network-experience preparation
+
+```text
+base commit: 69bd7fc
+base playable candidate: v16.10.6.1-testing-m7-playable-networked-playground
+current checkpoint: v16.10.7-network-nx0-observability-preparation
+branch: feature/nx0-observability-baseline-preparation
+runtime behavior changed: no
+focused runner: RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1/.sh
+```
+
+Product priority is now NX0–NX6 realtime network experience before B1 implementation. B1 remains architecturally valid and adapter-only; this priority change does not alter accepted A3/B0 contracts.
+
+The preparation checkpoint adds only pure contracts, bounded telemetry primitives, condition-profile presets, documentation and tests. Do not attach a packet-loss wrapper to production ENet until reliable retransmission semantics are explicitly preserved.

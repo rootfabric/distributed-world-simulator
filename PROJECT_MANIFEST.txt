@@ -1,3 +1,14 @@
+Planetary World v16.10.7-network-nx0-observability-preparation
+
+NX0 realtime network-experience preparation over M7 commit 69bd7fc:
+- full NX0-NX9 client network experience roadmap
+- validated build fingerprint contract
+- bounded JSON-safe telemetry sample and collector contracts
+- deterministic network-condition profile schema and eight presets
+- source-bound baseline probes for packet-arrival movement delta, result/snapshot amplification, 1500 ms movement persistence and three-channel ENet
+- production M3/M7 runtime, ENet adapter, Item Graph and persistence behavior unchanged
+- RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1 / .sh
+
 Planetary World v16.10.6-architecture-a3-single-server-multiplayer
 
 A3 single-server multiplayer architecture freeze over accepted M6:

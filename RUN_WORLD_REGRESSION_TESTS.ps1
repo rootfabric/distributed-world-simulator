@@ -112,6 +112,7 @@ $Tests = @(
     "res://tests/simulation/test_s0_spatial_substrate_integration.gd",
     "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
     "res://tests/network/test_t1_multi_peer_transport_processes.gd",
+    "res://tests/network/test_nx0_network_experience_preparation.gd",
     "res://tests/network/test_b0_message_bus_contracts.gd",
     "res://tests/network/test_b0_message_bus_integration.gd",
     "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",

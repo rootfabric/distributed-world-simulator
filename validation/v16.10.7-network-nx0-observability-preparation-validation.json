@@ -1,0 +1,168 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v16.10.7-network-nx0-observability-preparation",
+  "build_id": "nx0-observability-baseline-preparation",
+  "base_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "local_base_commit": "69bd7fc",
+  "branch": "feature/nx0-observability-baseline-preparation",
+  "delivery_iteration": "fix1",
+  "status": "candidate-fix1-rebuilt",
+  "decision": "READY_FOR_INDEPENDENT_LOCAL_ACCEPTANCE_AFTER_FIX1_REBUILD",
+  "generated_at_utc": "2026-08-01T10:20:46.363610Z",
+  "engine": {
+    "version": "Godot 4.7.1 stable.double custom build",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "source": "project-provided archive godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz"
+  },
+  "scope": {
+    "changed_paths": 27,
+    "new_paths": 21,
+    "modified_paths": 6,
+    "deleted_paths": 0,
+    "production_runtime_behavior_changed": false,
+    "production_enet_adapter_changed": false,
+    "networked_gameplay_service_changed": false,
+    "item_graph_changed": false,
+    "persistence_behavior_changed": false
+  },
+  "delivered_foundation": {
+    "roadmap": "NX0 through NX9 with authority profiles, gates, metrics and test matrix",
+    "build_fingerprint_contract": "planet_simulator.network_build_fingerprint.v1",
+    "telemetry_sample_contract": "planet_simulator.network_observability_sample.v1",
+    "bounded_collector": "planet_simulator.network_telemetry_collector.v1",
+    "condition_profile_contract": "planet_simulator.network_condition_profile.v1",
+    "condition_presets": 8,
+    "security_rule": "session_token accepts only session-id/<public-id> or sha256/<64-lowercase-hex>; all other strings are rejected"
+  },
+  "confirmed_m7_baseline_findings": {
+    "movement_delta_from_packet_arrival": true,
+    "successful_input_command_result": true,
+    "per_input_delta_and_full_snapshot": true,
+    "movement_checkpoint_interval_ms": 1500,
+    "nonblocking_async_results_accumulate": true,
+    "enet_v2_channel_count": 3,
+    "network_item_save_rejection_observed": true
+  },
+  "tests": {
+    "focused_nx0_preparation": {
+      "result": "2/2 PASS",
+      "contract_assertions": 115,
+      "editor_import": "PASS",
+      "runner": "RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.sh",
+      "engine": "project-provided Godot 4.7.1 stable.double a13da4feb",
+      "archive_replay_required": true,
+      "archive_replay": "PASS from clean base + initial patch + rebuilt fix1 archive"
+    },
+    "network_non_process_regression": {
+      "result": "NOT_RERUN_AFTER_FIX1_REBUILD; prior fix1 reported 47/47 PASS",
+      "scope": "all contract and in-process integration scripts from RUN_NETWORK_CONTRACT_TESTS.ps1, excluding scripts that launch child processes",
+      "excluded_hidden_process_test": "test_m5_graphical_multiplayer_acceptance.gd",
+      "note": "the hidden process test was identified by runtime behavior, terminated, and is not counted as a non-process pass",
+      "fix1_rebuild_reason": "rebuild changes only telemetry collector implementation and its focused regression assertion"
+    },
+    "world_extra_non_process_regression": {
+      "result": "NOT_RERUN_FIX1; initial delivery reported 45/45 PASS",
+      "scope": "core, entities, items, UI, persistence, planetary runtime, world switch and boot matrix tests not duplicated by network profile",
+      "fix1_reason": "fix1 changes are isolated to NX0 preparation contracts, docs and focused runners"
+    },
+    "m7_focused_components": {
+      "result": "NOT_RERUN_FIX1; initial delivery reported 13/13 PASS",
+      "launch_option_assertions": 53,
+      "playground_contract_assertions": 63,
+      "graphical_two_client_assertions": 32,
+      "restart_reconnect_assertions": 36,
+      "note": "Constituent scripts were executed independently after an earlier aggregate shell invocation was interrupted by the outer execution timeout.",
+      "fix1_reason": "production M3/M7 runtime and ENet adapter are unchanged by fix1"
+    },
+    "full_powershell_runners": {
+      "result": "NOT_RUN",
+      "reason": "pwsh/powershell is not installed in the Linux validation environment",
+      "mitigation": "PowerShell source is covered by focused contract assertions forbidding $env:HOME mutation; the equivalent Linux focused runner and Godot contracts passed"
+    }
+  },
+  "static_gates": {
+    "git_diff_check": "PASS",
+    "json": "94/94 PASS",
+    "gdscript_uid": "480/480",
+    "missing_uid": 0,
+    "duplicate_uid": 0,
+    "missing_changed_res_paths": 0,
+    "conflict_markers": 0,
+    "nul_text_files": 0,
+    "shell_syntax": "PASS",
+    "nx0_shell_mode": "0755",
+    "remaining_godot_processes": 0,
+    "powershell_home_assignment_occurrences": 0
+  },
+  "delivery_metadata": {
+    "machine_readable_validation": "validation/v16.10.7-network-nx0-observability-preparation-validation.json",
+    "changed_file_list": "validation/v16.10.7-network-nx0-observability-preparation-files.txt",
+    "patch_manifest": "NX0_NETWORK_EXPERIENCE_PREPARATION_PATCH_MANIFEST.json",
+    "changed_file_list_entries": 27,
+    "included_in_patch": true,
+    "fix1_incremental_changed_paths": 10,
+    "fix1_incremental_files": [
+      "NX0_NETWORK_EXPERIENCE_PREPARATION_PATCH_MANIFEST.json",
+      "RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1",
+      "config/network/nx0-observability-baseline-preparation.v1.json",
+      "docs/checkpoints/2026-08-01_V16_10_7_NETWORK_NX0_PREPARATION_RU.md",
+      "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md",
+      "scripts/network/observability/network_build_fingerprint.gd",
+      "scripts/network/observability/network_telemetry_collector.gd",
+      "tests/network/test_nx0_network_experience_preparation.gd",
+      "validation/v16.10.7-network-nx0-observability-preparation-validation.json"
+    ],
+    "focused_log_external": "v16.10.7-network-nx0-observability-preparation-fix1-focused.log"
+  },
+  "delivery": {
+    "archive": "v16.10.7-network-nx0-observability-preparation-fix1-patch.zip",
+    "archive_contains_only_changed_files": true,
+    "archive_sha256": "reported externally because embedding a self-hash would be circular",
+    "byte_exact_replay": "PASS 10/10",
+    "archive_focused_replay": "2/2 PASS; 115 contract assertions",
+    "unsafe_paths": 0,
+    "zip_integrity": "PASS",
+    "archive_scope": "incremental fix over the initial v16.10.7 preparation patch"
+  },
+  "acceptance": {
+    "roadmap_and_preparation": "PASS",
+    "focused_profile": "PASS 2/2, 115 assertions from clean archive replay",
+    "broad_non_process_regression": "NOT RERUN AFTER FIX1 REBUILD; prior fix1 47/47 PASS",
+    "m7_process_and_recovery": "NOT_RERUN_FIX1; initial delivery PASS retained as prior evidence",
+    "production_runtime_isolation": "PASS",
+    "delivery_completeness": "PASS",
+    "decision": "READY_FOR_INDEPENDENT_LOCAL_ACCEPTANCE_AFTER_FIX1_REBUILD",
+    "review_P1_telemetry": "PASS",
+    "review_P1_session_token": "PASS",
+    "review_P2_powershell_HOME": "PASS"
+  },
+  "review_resolution": {
+    "P1_telemetry_first_observations": {
+      "status": "CLOSED",
+      "implementation": "observe() duplicates the existing window, appends, bounds it with while, then calls _samples.set(distribution_name, values) after the loop",
+      "regression_test": "first observation is visible in get_report() and create_sample() before sample_limit is reached; source-shape assertion requires _samples.set() after the bounding loop"
+    },
+    "P1_session_token_credential_leakage": {
+      "status": "CLOSED",
+      "allowed_formats": [
+        "session-id/<public-id>",
+        "sha256/<64-lowercase-hex>"
+      ],
+      "rejected_examples": [
+        "password",
+        "bearer/secret-token",
+        "session-token/nx0/test-1",
+        "session-id/",
+        "sha256/abc",
+        "uppercase SHA-256 digest"
+      ]
+    },
+    "P2_powershell_home_mutation": {
+      "status": "CLOSED",
+      "implementation": "focused PowerShell runner isolates APPDATA, LOCALAPPDATA and XDG_* only; HOME is neither captured nor assigned"
+    }
+  }
+}
