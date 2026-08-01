@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.mw5_matter_persistence_manifest.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "build_id": "mw5-matter-persistence-fix6",
+  "base_checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "base_delivery": "fix3",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "world_catalog_changed": false,
+  "canonical_matter_changed": true,
+  "disk_persistence_added": true,
+  "process_restart_recovery_added": true,
+  "network_authority_added": false,
+  "checkpoint_contract": {
+    "schema": "planet_simulator.matter_persistence_checkpoint.v1",
+    "generation_chain": true,
+    "body_generator_grid_identity_fenced": true,
+    "stores_sparse_snapshots": true,
+    "stores_mutation_journal": true,
+    "stores_material_batches": true,
+    "stores_transient_reservations": false
+  },
+  "repository": {
+    "active_file": "matter-state.json",
+    "previous_file": "matter-state.previous.json",
+    "pending_pattern": ".matter-state.<pid>.<ticks>.pending.json",
+    "atomic_replace": true,
+    "previous_fallback": true,
+    "uncommitted_pending_is_not_authoritative": true,
+    "repairs_active_from_previous": true
+  },
+  "recovery": {
+    "reexecutes_committed_operations": false,
+    "exact_replay_uses_persisted_journal": true,
+    "restores_brick_revisions": true,
+    "restores_material_batches": true,
+    "rejects_incompatible_generator": true,
+    "rejects_corrupted_checkpoint": true,
+    "repairs_authoritative_active_file": true,
+    "component_restore_is_compensated": true
+  },
+  "focused_test": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+  "process_worker": "res://tools/matter/mw5_persistence_worker.gd",
+  "laboratory": {
+    "scene": "res://scenes/labs/matter_asteroid_excavation_lab.tscn",
+    "default_repository_root": "user://matter-labs/asteroid-mw5",
+    "restores_before_streaming": true,
+    "saves_after_committed_excavation": true,
+    "fails_closed_on_corrupted_or_incompatible_checkpoint": true
+  },
+  "transport": {
+    "schema": "planet_simulator.matter_persistence_transport.v1",
+    "float_encoding": "ieee754-binary64-le-hex",
+    "exact_binary64_roundtrip": true,
+    "untagged_fractional_numbers_forbidden": true,
+    "envelope_checksum": true,
+    "typed_checksum_verified_after_decode": true,
+    "packed_float_arrays": true,
+    "process_context_center_uses_binary64_transport": true
+  }
+}

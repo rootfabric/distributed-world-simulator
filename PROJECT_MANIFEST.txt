@@ -894,3 +894,126 @@ MW4 matter mutations fix3
 - regressions: MW3 7519 PASS; MW2 7470 PASS; MW1 3685 PASS; MW0 2011 PASS; A3 PASS; M6 10/10 PASS
 - git diff --check: PASS
 - next after acceptance: MW5 disk persistence, journal and compaction
+
+
+MW5 durable matter persistence and process restart recovery
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- build: mw5-matter-persistence-fix7
+- delivery: fix7
+- branch: feature/mw5-matter-persistence
+- base: accepted MW4 v17.4.0 delivery fix3
+- checkpoint: sparse snapshots/revisions + mutation journal + committed material batches
+- type recovery: raw structure -> canonical typed reconstruction -> strict typed validation -> reconstructed checksum equals persisted checksum
+- repository: matter-state.json, matter-state.previous.json and unique pending files
+- publication: validate pending -> active to previous -> pending to active -> verify active
+- recovery: active first, previous fallback repairs authoritative active, pending never authoritative
+- generation: strict +1 chain with previous checkpoint checksum and monotonic server tick
+- identity fences: body checksum, generator version/seed, grid checksum, cell level and container
+- replay: restored journal returns exact prior result without duplicate snapshots or batches
+- component restore: prevalidate + compensating rollback on unexpected apply failure
+- laboratory: restore before streamer, autosave generation after every committed drill
+- process acceptance: seed/save and recover/replay run in separate Godot processes with a proven positive SDF witness
+- production Moon/world catalog changed: no
+- runner: RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / .sh
+- next: MW6 storage scaling, compaction and regional streaming
+
+MW5 fix1 typed JSON rehydration correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix1
+- build: mw5-matter-persistence-fix1
+- branch: feature/mw5-matter-persistence
+- independent initial result: FAIL, 13 failures / 48 assertions / 9.914 s
+- initial blocker: MATTER_PENDING_VERIFY_FAILED during first checkpoint publication
+- cause: strict DTO validate(raw) ran before JSON-decoded integer-valued floats were reconstructed
+- corrected order attempted in fix1: raw structural checks -> typed constructors -> strict typed validation; raw checksum validation remained incorrect until fix4
+- nested cell and brick addresses are reconstructed and ID-verified
+- focused regression covers JSON-decoded composition, snapshot, request, ledger, result and batch
+- stale-checksum corruption is explicitly rejected
+- repository protocol and persistence schemas changed: no
+- production Moon/world catalog changed: no
+- exact assertion topology: to be fixed by first independent successful fix1 run
+
+MW5 fix2 canonical persistence serialization correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix2
+- branch: feature/mw5-matter-persistence
+- repository serialization: MatterPersistenceCodec.encode_persistence_json()
+- checksum domain: identical canonical JSON for disk bytes and DTO hashes
+- snapshot rehydration: preserves persisted columnar channels and palette order
+- focused JSON roundtrip: shared canonical persistence encoder
+- snapshot regression: persisted checksum retention, typed checksum validation and canonical representation equality
+- runtime code outside MW5 persistence changed: no
+- exact assertion topology: to be fixed by first independent successful fix2 run
+
+MW5 fix3 exact canonical persistence bytes correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix3
+- build: mw5-matter-persistence-fix3
+- branch: feature/mw5-matter-persistence
+- independent review blocker: repository appended one LF byte after canonical JSON and focused test hid it through strip_edges()
+- publication bytes: exactly MatterPersistenceCodec.encode_persistence_json(checkpoint).to_utf8_buffer()
+- terminal newline in matter-state.json: forbidden
+- focused byte assertion: FileAccess.get_buffer(get_length()) compared directly with canonical PackedByteArray
+- persistence schema/checksum/rehydration protocol changed: no
+- runtime code outside MatterStateRepository changed: no
+- exact assertion topology: to be fixed by first independent successful fix3 run
+
+MW5 fix4 typed checksum-domain correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix4
+- build: mw5-matter-persistence-fix4
+- branch: feature/mw5-matter-persistence
+- independent fix2+fix3 result: FAIL, 18 failures / 59 assertions / 10.682 seconds
+- blocker: _finish_rehydration() validated checksum on raw JSON-decoded DTO after integer-valued floats lost TYPE_FLOAT
+- corrected checksum order: raw structural checks -> typed reconstruction -> strict typed validation -> compute typed checksum -> compare with persisted checksum
+- forbidden path: MatterContractUtils.validate_checksum(raw) for float-bearing persisted DTOs
+- focused coverage: reconstructed snapshot, ledger and result pass their strict contract validators; stale persisted checksum remains rejected
+- repository exact-byte publication from fix3 preserved
+- runtime code outside MatterPersistenceCodec changed: no
+- exact assertion topology: to be fixed by first independent successful fix4 run
+
+MW5 fix5 exact binary64 persistence transport
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix5
+- build: mw5-matter-persistence-fix5
+- branch: feature/mw5-matter-persistence
+- independent fix4 result: FAIL, 20 failures / 62 assertions / 30.538 seconds
+- blocker: Godot JSON decimal roundtrip changed binary64 values, including 2026174.8885708766 -> 2026174.8885708768
+- transport schema: planet_simulator.matter_persistence_transport.v1
+- float encoding: ieee754-binary64-le-hex; scalar floats use 16 lower-case hex digits, homogeneous float arrays use a counted packed hex tag
+- integer-valued float preservation: 1.0 remains TYPE_FLOAT
+- integrity: envelope checksum before decode + original typed checksum after exact decode
+- forbidden: untagged fractional JSON numbers inside persistence payload
+- repository reader: MatterPersistenceCodec.decode_persistence_json()
+- process worker replay request: same exact transport codec
+- checksum-domain MW0-MW4 changed: no
+- production Moon/world catalog changed: no
+- exact assertion topology: to be fixed by first independent successful fix5 run
+
+MW5 fix6 process-context binary64 correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix6
+- build: mw5-matter-persistence-fix6
+- branch: feature/mw5-matter-persistence
+- independent fix5 result: FAIL, 6 failures / 128 assertions / 61.724 seconds
+- corrected probe LE hex: 886179e3beea3e41
+- corrected packed probe LE hex: 886179e3beea3e41000000000000f03f
+- process context: center_m is encoded in checksummed planet_simulator.mw5_process_context.v1 transport
+- AtomicJson payload: center_transport String; decimal center_m field forbidden
+- durable checkpoint/repository/checksum protocol changed: no
+- exact assertion topology: to be fixed by first independent successful fix6 run
+
+MW5 fix7 deterministic tunnel witness correction
+- checkpoint: v17.5.0-simulation-mw5-matter-persistence
+- delivery: fix7
+- build: mw5-matter-persistence-fix7
+- branch: feature/mw5-matter-persistence
+- independent fix6 result: FAIL, 4 failures / 136 assertions / 55.549 seconds
+- persistence state before/after restore: exact; prior fixture center remained signed_distance_m -0.28383418702205
+- blocker: test assumed geometric capsule center was vacuum without proving that mutation produced positive SDF there
+- witness selection: scan changed snapshot interior lattice, prefer maximum boundary margin, then maximum positive SDF, then stable address/index tie-break
+- witness proof: canonical continuous query must return occupancy_ratio 0 and signed_distance_m > 0 immediately after mutation
+- process context: exact binary64 witness position and pre-save SDF in planet_simulator.mw5_process_witness.v1
+- recovery acceptance: restored witness SDF must equal pre-save SDF exactly before tunnel survival is accepted
+- durable checkpoint, repository and binary64 transport protocol changed: no
+- exact assertion topology: to be fixed by first independent successful fix7 run

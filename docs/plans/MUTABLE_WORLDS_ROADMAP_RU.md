@@ -1646,3 +1646,31 @@ server + two graphical clients
 8. network clients являются command producers/replicas, а не matter authority;
 9. workers ускоряют расчёт, но не фиксируют canonical state;
 10. старые `moon`, `earth`, `earth_moon`, items и multiplayer regressions остаются рабочими.
+
+---
+
+## Текущее продвижение: MW5 durable persistence
+
+После принятого MW4 `fix3` реализован candidate `v17.5.0-simulation-mw5-matter-persistence`.
+
+MW5 закрывает разрыв между session-local изменениями и восстановлением мира после полного перезапуска:
+
+```text
+MW4 mutated snapshots + journal + batches
+                    ↓
+MW5 generation-chained atomic checkpoint
+                    ↓
+fresh process recovery without reexecution
+```
+
+Приёмочный gate MW5:
+
+- mutated bricks и revisions восстанавливаются;
+- тоннель доступен через canonical query после restart;
+- exact replay не создаёт вторую добычу;
+- незавершённый pending не становится authoritative;
+- corrupted active откатывается на previous и ремонтируется как новый authoritative active;
+- несовместимый generator/body/grid отклоняется до изменения памяти;
+- лаборатория восстанавливает мир до streaming и публикует generation после committed drill.
+
+После принятия MW5 следующий отдельный этап — MW6: масштабирование хранилища, shard/region files, compaction и lazy regional loading. Интеграция с Луной остаётся заблокированной до прохождения лабораторной durable/recovery цепочки.

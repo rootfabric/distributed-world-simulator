@@ -34,6 +34,12 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `docs/architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — принятые иерархические matter cells, sparse bricks, ghost samples и canonical query service;
 - `docs/architecture/MW3_LOCAL_MESHING_RU.md` — принятый local Freudenthal meshing, ghost-gradient normals, collision и camera-local laboratory;
 - `docs/architecture/MW4_MATTER_MUTATIONS_RU.md` — транзакционное swept-бурение, session-local persistent snapshots, mass ledger и Material Batch; MW4 fix2 дополнительно ограничивает integer-valued energy/capacity значения каноническим JSON-пределом `2^53−1`;
+- `docs/architecture/MW5_MATTER_PERSISTENCE_RU.md` — durable checkpoint, атомарный repository, typed JSON rehydration и process-level restart recovery;
+- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md` — MW5 fix2: единый canonical persistence encoder и checksum-preserving snapshot rehydration;
+- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md` — MW5 fix3: точное равенство опубликованных raw bytes и canonical persistence bytes;
+- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md` — MW5 fix5: exact binary64 transport envelope вместо decimal JSON float roundtrip;
+- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md` — MW5 fix6: corrected Godot binary64 probe and process-context center transport;
+- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md` — MW5 fix7: детерминированный положительный tunnel witness и exact SDF comparison после restart;
 - `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md`;
 - `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятый typed normalization fix1;
 - `docs/checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — принятый MW1;
@@ -75,3 +81,16 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `config/network/network-roadmap.v1.json`;
 - `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
+
+
+## MW5 matter persistence fix7 candidate
+
+```text
+checkpoint: v17.5.0-simulation-mw5-matter-persistence
+delivery: fix7
+base: v17.4.0-simulation-mw4-matter-mutations / fix3 (ACCEPTED)
+branch: feature/mw5-matter-persistence
+scope: isolated asteroid matter track; production Moon/world catalog unchanged
+```
+
+MW5 сохраняет изменённые sparse-brick snapshots и revisions, mutation journal и committed Material Batch в атомарный generation-chained checkpoint. Fix5 устраняет drift durable DTO, fix6 закрывает exact binary64 process transport, а fix7 устраняет недоказанную предпосылку о том, что геометрический центр drill capsule обязательно находится в vacuum. После commit focused-профиль сканирует interior lattice изменённых snapshots, детерминированно выбирает положительный SDF witness, подтверждает его через canonical continuous query и только затем сохраняет позицию и SDF через binary64 transport. После restart восстановленный SDF обязан быть побитово равен pre-save значению и оставаться положительным. Durable checkpoint/repository protocol при этом не изменяется.

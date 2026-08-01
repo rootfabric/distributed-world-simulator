@@ -4,6 +4,11 @@
 
 - [`architecture/DYNAMIC_MATTER_FABRIC_RU.md`](architecture/DYNAMIC_MATTER_FABRIC_RU.md) — целевая парадигма вещества.
 - [`architecture/MW4_MATTER_MUTATIONS_RU.md`](architecture/MW4_MATTER_MUTATIONS_RU.md) — MW4: транзакционное бурение, session-local persistent mutations, fix1 performance boundary и fix2 JSON-safe energy boundary.
+- [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — MW5: durable matter checkpoint, typed recovery и exact canonical bytes.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md) — MW5 fix4: checksum проверяется на восстановленном typed DTO, а не на JSON-decoded raw payload.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md) — MW5 fix5: exact IEEE-754 binary64 float tags и versioned transport envelope.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md) — MW5 fix6: фактический Godot binary64 hex и exact `center_m` transport между процессами.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md) — MW5 fix7: доказанный positive-SDF witness и exact comparison после restart.
 - [`checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md`](checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md) — исходный checkpoint MW4.
 - [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md) — MW4 fix1: linear validated access, reduced focused fixture и bounded runner.
 - [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md) — функционально прошедший MW4 fix2; verified topology `187 assertions`.
@@ -213,3 +218,14 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 - [`architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
 - [`checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
+
+
+## MW5 matter persistence
+
+- [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — формат checkpoint, typed rehydration, atomic repository и recovery semantics.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_RU.md) — исходный candidate checkpoint и acceptance matrix.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX1_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX1_RU.md) — исправление typed JSON rehydration до strict validation.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md) — единый canonical encoder для файла и checksum-domain, плюс snapshot channel-preserving rehydration.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md) — raw bytes опубликованного checkpoint строго равны canonical persistence bytes.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md) — typed checksum-domain после JSON transport и запрет validate_checksum(raw).
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md) — round-trip-safe binary64 transport, envelope checksum и exact typed checksum restore.

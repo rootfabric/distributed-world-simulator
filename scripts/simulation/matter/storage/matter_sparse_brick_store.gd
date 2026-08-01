@@ -5,6 +5,7 @@ const BodyScript = preload("res://scripts/simulation/matter/contracts/matter_bod
 const BrickSnapshotScript = preload("res://scripts/simulation/matter/contracts/matter_brick_snapshot.gd")
 const BrickLayoutScript = preload("res://scripts/simulation/matter/spatial/matter_brick_layout.gd")
 const GridProfileScript = preload("res://scripts/simulation/matter/spatial/matter_spatial_grid_profile.gd")
+const PersistenceCodecScript = preload("res://scripts/simulation/matter/persistence/matter_persistence_codec.gd")
 
 var _configured: bool = false
 var _body_definition_hash: String = ""
@@ -232,6 +233,130 @@ func content_hash() -> String:
 		"grid_profile_hash": GridProfileScript.content_hash(_grid_profile),
 		"entries": entries,
 	})
+
+
+func export_persistence_state() -> Dictionary:
+	if not _configured:
+		return {}
+	var snapshots: Array = []
+	var entries: Array = []
+	for address_id in address_ids():
+		var snapshot: Dictionary = _snapshots_by_address_id[address_id]
+		if int(snapshot["state_revision"]) < 1:
+			continue
+		snapshots.append(snapshot.duplicate(true))
+		entries.append({
+			"address_id": String(address_id),
+			"state_revision": int(snapshot["state_revision"]),
+			"snapshot_checksum": String(snapshot["checksum"]),
+		})
+	var persistence_hash: String = MatterUtilsScript.payload_hash({
+		"body_definition_hash": _body_definition_hash,
+		"grid_profile_hash": GridProfileScript.content_hash(_grid_profile),
+		"entries": entries,
+	})
+	var value: Dictionary = {
+		"schema": "planet_simulator.matter_sparse_store_state.v1",
+		"body_definition_hash": _body_definition_hash,
+		"generator_version": _generator_version,
+		"generator_seed": _generator_seed,
+		"grid_profile_hash": GridProfileScript.content_hash(_grid_profile),
+		"snapshots": snapshots,
+		"content_hash": persistence_hash,
+		"checksum": "",
+	}
+	value["checksum"] = MatterUtilsScript.compute_checksum(value)
+	return value
+
+
+static func validate_persistence_state(value: Dictionary) -> Dictionary:
+	var fields: Array[String] = [
+		"schema", "body_definition_hash", "generator_version", "generator_seed",
+		"grid_profile_hash", "snapshots", "content_hash", "checksum",
+	]
+	var exact: Dictionary = MatterUtilsScript.validate_exact_fields(value, fields)
+	if not bool(exact.get("success", false)):
+		return exact
+	if String(value.get("schema", "")) != "planet_simulator.matter_sparse_store_state.v1":
+		return MatterUtilsScript.failure("UNSUPPORTED_MATTER_SPARSE_STORE_STATE_SCHEMA")
+	if not MatterUtilsScript.is_lower_hex_64(value.get("body_definition_hash")) \
+		or not MatterUtilsScript.is_semantic_version(value.get("generator_version")) \
+		or not MatterUtilsScript.is_json_integer(value.get("generator_seed")) \
+		or not MatterUtilsScript.is_lower_hex_64(value.get("grid_profile_hash")) \
+		or not MatterUtilsScript.is_lower_hex_64(value.get("content_hash")):
+		return MatterUtilsScript.failure("INVALID_MATTER_SPARSE_STORE_STATE_IDENTITY")
+	if typeof(value.get("snapshots")) != TYPE_ARRAY:
+		return MatterUtilsScript.failure("INVALID_MATTER_SPARSE_STORE_STATE_SNAPSHOTS")
+	var previous_address_id: String = ""
+	var entries: Array = []
+	for index in range(value["snapshots"].size()):
+		var raw = value["snapshots"][index]
+		if typeof(raw) != TYPE_DICTIONARY:
+			return MatterUtilsScript.failure("INVALID_PERSISTED_MATTER_SNAPSHOT", {"index": index})
+		var snapshot: Dictionary = PersistenceCodecScript.rehydrate_snapshot(Dictionary(raw))
+		if snapshot.is_empty():
+			return MatterUtilsScript.failure("INVALID_PERSISTED_MATTER_SNAPSHOT", {"index": index})
+		var address_id: String = String(snapshot["address"]["address_id"])
+		if index > 0 and address_id <= previous_address_id:
+			return MatterUtilsScript.failure("PERSISTED_MATTER_SNAPSHOTS_NOT_SORTED_UNIQUE")
+		if String(snapshot["body_definition_hash"]) != String(value["body_definition_hash"]) \
+			or String(snapshot["generator_version"]) != String(value["generator_version"]) \
+			or int(snapshot["generator_seed"]) != int(value["generator_seed"]):
+			return MatterUtilsScript.failure("PERSISTED_MATTER_SNAPSHOT_IDENTITY_MISMATCH")
+		if int(snapshot["state_revision"]) < 1:
+			return MatterUtilsScript.failure("PERSISTED_MATTER_SNAPSHOT_REVISION_NOT_MUTATED")
+		entries.append({
+			"address_id": address_id,
+			"state_revision": int(snapshot["state_revision"]),
+			"snapshot_checksum": String(snapshot["checksum"]),
+		})
+		previous_address_id = address_id
+	var expected_content_hash: String = MatterUtilsScript.payload_hash({
+		"body_definition_hash": value["body_definition_hash"],
+		"grid_profile_hash": value["grid_profile_hash"],
+		"entries": entries,
+	})
+	if String(value["content_hash"]) != expected_content_hash:
+		return MatterUtilsScript.failure("MATTER_SPARSE_STORE_STATE_CONTENT_HASH_MISMATCH")
+	var safe: Dictionary = MatterUtilsScript.validate_json_safe(value, "$.matter_sparse_store_state")
+	if not bool(safe.get("success", false)):
+		return safe
+	return MatterUtilsScript.validate_checksum(value)
+
+
+func validate_restore_state(value: Dictionary) -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.failure("SPARSE_STORE_NOT_CONFIGURED")
+	var validation: Dictionary = validate_persistence_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	if String(value["body_definition_hash"]) != _body_definition_hash \
+		or String(value["generator_version"]) != _generator_version \
+		or int(value["generator_seed"]) != _generator_seed:
+		return MatterUtilsScript.failure("MATTER_SPARSE_STORE_RESTORE_IDENTITY_MISMATCH")
+	if String(value["grid_profile_hash"]) != GridProfileScript.content_hash(_grid_profile):
+		return MatterUtilsScript.failure("MATTER_SPARSE_STORE_RESTORE_GRID_MISMATCH")
+	for raw in value["snapshots"]:
+		var snapshot: Dictionary = PersistenceCodecScript.rehydrate_snapshot(Dictionary(raw))
+		var snapshot_validation: Dictionary = _validate_snapshot_for_store(snapshot)
+		if not bool(snapshot_validation.get("success", false)):
+			return snapshot_validation
+	return MatterUtilsScript.success()
+
+
+func restore_persistence_state(value: Dictionary) -> Dictionary:
+	var validation: Dictionary = validate_restore_state(value)
+	if not bool(validation.get("success", false)):
+		return validation
+	var staged: Dictionary = {}
+	for raw in value["snapshots"]:
+		var snapshot: Dictionary = PersistenceCodecScript.rehydrate_snapshot(Dictionary(raw))
+		staged[String(snapshot["address"]["address_id"])] = snapshot
+	_snapshots_by_address_id = staged
+	if content_hash() != String(value["content_hash"]):
+		_snapshots_by_address_id.clear()
+		return MatterUtilsScript.failure("MATTER_SPARSE_STORE_RESTORE_HASH_MISMATCH")
+	return MatterUtilsScript.success({"restored_snapshots": _snapshots_by_address_id.size()})
 
 
 func clear() -> void:

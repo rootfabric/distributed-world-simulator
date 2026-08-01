@@ -181,13 +181,16 @@ This track is independent from the accepted single-server multiplayer order and 
 
 ```text
 architecture: Dynamic Matter Fabric
-accepted: v17.3.0-simulation-mw3-local-meshing, delivery fix2
-current candidate: v17.4.0-simulation-mw4-matter-mutations, delivery fix3
-branch: feature/mw4-matter-mutations
+accepted: v17.4.0-simulation-mw4-matter-mutations, delivery fix3
+current candidate: v17.5.0-simulation-mw5-matter-persistence, delivery fix7
+branch: feature/mw5-matter-persistence
 production worlds changed: false
 world catalog changed: false
-next after acceptance: MW5 disk persistence, journal and compaction
+next after acceptance: MW6 storage scaling, compaction and regional streaming
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
-MW4 fix3 is a metadata-only correction over the functionally passing fix2 delivery: the verified focused topology is 187 assertions, not 103. Fix2 keeps the fix1 linear validated-access and bounded runner, and additionally enforces JSON-safe high-value energy budgets and laboratory receiver limits below `2^53`. MW4 adds authoritative session-local excavation over canonical MW2 snapshots: swept-capsule commands, revision fences, atomic multi-brick commit, exact replay, mass/energy/capacity accounting, extracted `MatterMaterialBatch`, continuous queries and selective MW3 presenter rebuilds. It must not alter Moon runtime, production world catalog, network authority or disk persistence. The Item Graph production adapter, deposition and compaction remain outside this checkpoint. Review fixes remain on `feature/mw4-matter-mutations` until acceptance.
+MW4 fix3 is accepted as a metadata-only correction over the functionally passing fix2 delivery: the verified focused topology is 187 assertions, not 103. Fix2 keeps the fix1 linear validated-access and bounded runner, and additionally enforces JSON-safe high-value energy budgets and laboratory receiver limits below `2^53`. MW4 adds authoritative session-local excavation over canonical MW2 snapshots: swept-capsule commands, revision fences, atomic multi-brick commit, exact replay, mass/energy/capacity accounting, extracted `MatterMaterialBatch`, continuous queries and selective MW3 presenter rebuilds. It must not alter Moon runtime, production world catalog, network authority or disk persistence. The Item Graph production adapter, deposition and compaction remain outside this checkpoint. Review fixes remain on `feature/mw4-matter-mutations` until acceptance.
+
+
+MW5 fix7 adds durable matter recovery for the isolated asteroid laboratory. Persistence bytes use `planet_simulator.matter_persistence_transport.v1`: every `TYPE_FLOAT` is encoded as exact IEEE-754 binary64 little-endian hex; contiguous float arrays use one length-delimited packed hex tag, while scalar and mixed-array floats use individual tags. Integer-valued floats such as `1.0` remain `TYPE_FLOAT`. The transport envelope has its own checksum; after exact decode the original typed DTO/checkpoint checksum is recomputed and compared. Untagged fractional JSON numbers are forbidden. Repository publication bytes must be exactly `MatterPersistenceCodec.encode_persistence_json(checkpoint).to_utf8_buffer()` with no terminal newline or normalization. Recovery must reject body/generator/grid incompatibility, ignore uncommitted pending files, fall back to a valid previous checkpoint when active is corrupted, repair that fallback as authoritative active, compensate unexpected component-restore failure, and serve exact replay without changing store/receiver/journal hashes. Process-level acceptance must not assume the capsule midpoint is vacuum: after commit it selects a deterministic positive-SDF lattice witness from changed snapshots, confirms it through the canonical continuous query, transports the witness position and pre-save SDF through exact binary64 encoding, and requires exact SDF equality after recovery in a fresh Godot process. Review fixes remain on `feature/mw5-matter-persistence` until acceptance.

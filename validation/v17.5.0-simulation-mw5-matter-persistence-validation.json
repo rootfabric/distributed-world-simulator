@@ -1,0 +1,70 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "build_id": "mw5-matter-persistence",
+  "base_checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "base_delivery": "fix3",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "scope": {
+    "changed_files": 23,
+    "runtime_world_catalog_changed": false,
+    "moon_runtime_changed": false,
+    "disk_persistence_added": true,
+    "process_restart_recovery_added": true,
+    "network_authority_added": false
+  },
+  "implemented": {
+    "generation_chained_checkpoint": true,
+    "atomic_pending_active_previous_repository": true,
+    "typed_json_rehydration": true,
+    "mutated_sparse_snapshot_restore": true,
+    "brick_revision_restore": true,
+    "mutation_journal_restore": true,
+    "material_batch_restore": true,
+    "transient_reservations_persisted": false,
+    "exact_replay_without_reexecution": true,
+    "previous_checkpoint_fallback": true,
+    "authoritative_active_repair": true,
+    "component_restore_compensation": true,
+    "laboratory_restore_before_streaming": true,
+    "laboratory_autosave_after_commit": true
+  },
+  "focused_acceptance": {
+    "runner": "RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / RUN_MW5_MATTER_PERSISTENCE_TESTS.sh",
+    "test": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+    "process_worker": "res://tools/matter/mw5_persistence_worker.gd",
+    "watchdog_seconds": 300,
+    "assertion_count": "TO_BE_FIXED_BY_FIRST_INDEPENDENT_SUCCESSFUL_RUN",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "preload_and_scene_targets": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "reserved_object_api_scan": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "bash_runner_syntax": "PASS",
+    "git_diff_check_equivalent": "PASS",
+    "world_catalog_byte_identity": "PASS",
+    "moon_runtime_boundary": "PASS"
+  },
+  "required_regression_after_focused_pass": {
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "a3": "PASS",
+    "m6": "10/10 PASS",
+    "git_diff_check": "PASS"
+  },
+  "known_limitations": [
+    "Checkpoint is one bounded JSON document for the asteroid laboratory.",
+    "No distributed or network-authoritative recovery is included.",
+    "No incremental region files, lazy loading or background compaction are included.",
+    "A mutation committed in memory but followed by a disk publication failure is reported as not durable; a unified mutation-plus-disk transaction is deferred."
+  ]
+}
