@@ -86,7 +86,7 @@ interactive nodes
 
 ## C14 — Structural Integrity and Load Paths
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c14-structural-integrity-load-paths`.
 
 ### Цель
@@ -159,6 +159,21 @@ providers → topology → capacity allocation → consumers
 - deterministic allocation при равных входах;
 - utility failure перекомпилирует capabilities;
 - C8 job не продвигается без реально выделенного ресурса.
+
+### Реализованный C15 vertical slice
+
+- strict POWER/WATER/AIR/HEAT/DATA network DTO;
+- source, consumer, storage и junction nodes;
+- link capacity и последовательные losses;
+- priority allocation и atomic minimum load shedding;
+- deterministic route choice;
+- storage discharge и surplus charging;
+- execution profile/store/persistence/dormant summary;
+- checksum-pinned machine utility lease;
+- C8 reserve/progress/complete gate по фактическим allocations;
+- work-unit capacity, exact replay и runtime recovery.
+
+**Статус:** IMPLEMENTED CANDIDATE.
 
 ## C16 — Construction Interaction and Editing UX
 

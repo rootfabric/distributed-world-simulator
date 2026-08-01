@@ -44,9 +44,9 @@ flowchart TD
     C9 --> C10["C10 Parametric Members — ACCEPTED"]
     C10 --> C11["C11 Local Geometry — ACCEPTED"]
     C11 --> C12["C12 Multiplayer Acceptance — ACCEPTED"]
-    C12 --> C13["C13 Runtime Geometry/Physics — CURRENT CANDIDATE"]
-    C13 --> C14["C14 Structural Integrity"]
-    C14 --> C15["C15 Executable Utilities"]
+    C12 --> C13["C13 Runtime Geometry/Physics — ACCEPTED"]
+    C13 --> C14["C14 Structural Integrity — ACCEPTED"]
+    C14 --> C15["C15 Executable Utilities — CURRENT CANDIDATE"]
     C15 --> C16["C16 Construction UX"]
     C16 --> C17["C17 Distributed Authority"]
     C17 --> C18["C18 Streaming/LOD"]
@@ -533,7 +533,7 @@ C9 split/removal + streaming rebuild
 
 ## C14: Structural Integrity and Load Paths
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 part mass + gravity + external load
@@ -557,3 +557,30 @@ C9 damage / split / repair
 - каскад каждый шаг пересчитывает после одного детерминированного отказа;
 - ни structural profile, ни C13 physics nodes не изменяют authority напрямую;
 - окончательное повреждение выполняется только через C9 multi-aggregate transaction.
+
+
+## C15: Executable Utilities and Machines
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+C7 semantic utility topology
++ sources / links / consumers / storage
+        ↓
+deterministic tick allocation
+        ↓
+losses / priorities / load shedding
+        ↓
+checksum-pinned C8 machine lease
+```
+
+Ключевые правила C15:
+
+- POWER/WATER/AIR/HEAT/DATA используют один strict generic flow contract;
+- demand ниже minimum не получает скрытый частичный расход, а атомарно shed;
+- source dispatch, link losses и storage deltas входят в execution profile;
+- profile является rebuildable projection и не изменяет C7 authority;
+- C8 progress разрешён только при фактически выделенном ресурсе;
+- lease pin-ит machine, recipe, tick, profiles и allocations;
+- work units ограничены delivered resource;
+- exact replay не дублирует progress.

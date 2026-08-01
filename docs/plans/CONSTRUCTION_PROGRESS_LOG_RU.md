@@ -867,3 +867,34 @@ C14 total:        PASS — 168 assertions
 ```
 
 Ожидаемый внешний world profile: `129/129 tests`, `132 steps`.
+
+
+## 2026-08-01 — C14: внешняя приёмка
+
+**Статус:** ACCEPTED.
+
+```text
+C14 focused:      PASS — 168 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+Network N0–M4:    PASS
+World regression: PASS — 129/129 tests, 132 steps
+Main-scene CLI:   PASS — 6/6
+```
+
+C14 стал принятой базой C15.
+
+## 2026-08-01 — C15: Executable Utilities and Machines
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c15-executable-utilities-machines`.
+
+Реализованы generic utility networks для POWER/WATER/AIR/HEAT/DATA, deterministic priority allocation, losses, storage charge/discharge, atomic load shedding, execution profile store/persistence и checksum-pinned utility lease для C8 fabrication.
+
+```text
+C15 contracts:    PASS — 92 assertions
+C15 integration:  PASS — 123 assertions
+C15 total:        PASS — 215 assertions
+```
+
+Локально повторно пройдены C1–C8 и C10–C14. Ожидаемый внешний world profile: `131/131 tests`, `134 steps`.

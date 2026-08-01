@@ -1,0 +1,54 @@
+Checkpoint: C15 — Executable Utilities and Machines
+Status: IMPLEMENTED CANDIDATE
+Base: C14 ACCEPTED over C13 base 1152c94
+Recommended branch: feature/c15-executable-utilities-machines
+Changed files: 48
+
+RUN_C15_EXECUTABLE_UTILITIES_TESTS.ps1
+RUN_C15_EXECUTABLE_UTILITIES_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c15-executable-utilities-machines-files.txt
+config/construction/construction-executable-utilities.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-01_C15_EXECUTABLE_UTILITIES_AND_MACHINES_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/utilities/construction_executable_fabrication_runtime.gd
+scripts/construction/utilities/construction_executable_fabrication_runtime.gd.uid
+scripts/construction/utilities/construction_machine_utility_lease.gd
+scripts/construction/utilities/construction_machine_utility_lease.gd.uid
+scripts/construction/utilities/construction_machine_utility_lease_compiler.gd
+scripts/construction/utilities/construction_machine_utility_lease_compiler.gd.uid
+scripts/construction/utilities/construction_utility_allocation.gd
+scripts/construction/utilities/construction_utility_allocation.gd.uid
+scripts/construction/utilities/construction_utility_contract_utils.gd
+scripts/construction/utilities/construction_utility_contract_utils.gd.uid
+scripts/construction/utilities/construction_utility_demand.gd
+scripts/construction/utilities/construction_utility_demand.gd.uid
+scripts/construction/utilities/construction_utility_execution_profile.gd
+scripts/construction/utilities/construction_utility_execution_profile.gd.uid
+scripts/construction/utilities/construction_utility_link_definition.gd
+scripts/construction/utilities/construction_utility_link_definition.gd.uid
+scripts/construction/utilities/construction_utility_network_definition.gd
+scripts/construction/utilities/construction_utility_network_definition.gd.uid
+scripts/construction/utilities/construction_utility_node_definition.gd
+scripts/construction/utilities/construction_utility_node_definition.gd.uid
+scripts/construction/utilities/construction_utility_persistence.gd
+scripts/construction/utilities/construction_utility_persistence.gd.uid
+scripts/construction/utilities/construction_utility_profile_store.gd
+scripts/construction/utilities/construction_utility_profile_store.gd.uid
+scripts/construction/utilities/construction_utility_simulator.gd
+scripts/construction/utilities/construction_utility_simulator.gd.uid
+scripts/construction/utilities/construction_utility_storage_state.gd
+scripts/construction/utilities/construction_utility_storage_state.gd.uid
+scripts/construction/utilities/construction_utility_summary.gd
+scripts/construction/utilities/construction_utility_summary.gd.uid
+tests/construction/fixtures/c15_executable_utilities_fixture.gd
+tests/construction/fixtures/c15_executable_utilities_fixture.gd.uid
+tests/construction/test_c15_executable_utilities_contracts.gd
+tests/construction/test_c15_executable_utilities_contracts.gd.uid
+tests/construction/test_c15_executable_utilities_integration.gd
+tests/construction/test_c15_executable_utilities_integration.gd.uid
+validation/c15-executable-utilities-machines-validation.json

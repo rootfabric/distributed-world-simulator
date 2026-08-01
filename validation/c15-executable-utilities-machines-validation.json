@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C15_EXECUTABLE_UTILITIES_AND_MACHINES",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C14_STRUCTURAL_INTEGRITY_AND_LOAD_PATHS",
+    "decision": "ACCEPTED",
+    "c13_base_commit": "1152c94"
+  },
+  "branch": "feature/c15-executable-utilities-machines",
+  "focused": {
+    "contracts": {"status": "PASS", "assertions": 92},
+    "integration": {"status": "PASS", "assertions": 123},
+    "total_assertions": 215,
+    "editor_parse": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "C1": 66,
+    "C2A": 137,
+    "C3": 194,
+    "C4": 268,
+    "C5": 204,
+    "C6": 218,
+    "C7": 225,
+    "C8": 221,
+    "C10": 239,
+    "C11": 199,
+    "C12": 124,
+    "C13": 124,
+    "C14": 168,
+    "status": "PASS"
+  },
+  "coverage": [
+    "POWER_WATER_AIR_HEAT_DATA",
+    "SOURCE_CONSUMER_STORAGE_JUNCTION",
+    "CAPACITY_AND_LINK_LOSSES",
+    "PRIORITY_ALLOCATION",
+    "ATOMIC_MINIMUM_LOAD_SHEDDING",
+    "STORAGE_CHARGE_DISCHARGE",
+    "DETERMINISTIC_ROUTING",
+    "EXECUTION_PROFILE_STORE_AND_PERSISTENCE",
+    "C8_MACHINE_UTILITY_LEASE",
+    "WORK_UNIT_CAPACITY",
+    "EXACT_PROGRESS_REPLAY",
+    "RUNTIME_RECOVERY"
+  ],
+  "delivery": {
+    "manifest": "c15-executable-utilities-machines-files.txt",
+    "file_count": 48,
+    "world_test_entries": 2,
+    "expected_world_test_count": 131,
+    "expected_world_steps": 134
+  },
+  "external_acceptance_required": {
+    "C2B": {"assertions": 258},
+    "C9": {"assertions": 204},
+    "network": "N0-M4 PASS",
+    "world_regression": "131/131 tests, 134 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  }
+}

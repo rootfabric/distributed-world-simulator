@@ -488,7 +488,7 @@ Bridge-arm из шести частей теряет две связи. Source �
 
 Параметрическая балка превращается в constrained polyline, меняет профиль и длину, после чего её item projection, part mass и construct snapshot обновляются атомарно. Locked-axis и invalid-length edits отклоняются без частичного commit; crash после commit восстанавливает history через exact replay.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C12 — Multiplayer Acceptance
 
@@ -599,5 +599,21 @@ Main-scene CLI
 6. Final failure proposal компилируется в обычный C9 DamageRequest.
 7. Split/repair сохраняют ItemInstance identity и проходят C9 authority.
 8. Compact summary поддерживает far/dormant simulation.
+
+**Статус:** ACCEPTED.
+
+
+## C15 — Executable Utilities and Machines
+
+1. Strict networks описывают SOURCE, CONSUMER, STORAGE и JUNCTION nodes.
+2. Links имеют capacity, loss fraction и enabled state.
+3. Demands сортируются по priority и имеют атомарный minimum.
+4. Simulator детерминированно распределяет ресурс по наиболее эффективным путям.
+5. Storage поддерживает charge/discharge limits и efficiencies.
+6. Execution profile хранит allocations, source dispatch, link flows и новый storage state.
+7. Profile store обеспечивает stale/same-tick rejection и persistence.
+8. C8 machine utility lease pin-ит recipe, machine profile, tick и allocation checksums.
+9. Executable fabrication runtime ограничивает progress фактически доступными work units.
+10. Exact operation replay не дублирует C8 progress.
 
 **Статус:** IMPLEMENTED CANDIDATE.

@@ -634,3 +634,18 @@ domain JSON DTO
 ## Structural authority после C14
 
 Несущая способность не хранится в mesh, collision или Godot physics body. C14 выводит load graph из authoritative `ConstructSnapshot`, масс частей, semantic capacities, bonds и load case. Structural profile является удаляемым cache. Любой реальный отказ применяется только через C9 `DamageRequest`, поэтому split, salvage, repair и item identity conservation остаются едиными для физического, игрового и агентного источника повреждения.
+
+
+## Executable utility authority после C15
+
+C7 доказывает наличие и структурную доступность utility topology, но не обещает ресурс потребителю. C15 вводит отдельную rebuildable execution projection, где каждый tick рассчитываются source dispatch, link losses, storage и allocations.
+
+```text
+semantic utility ONLINE
+≠ гарантированная доставка ресурса
+
+C15 allocation FULL/PARTIAL/SHED
+= фактическое право процесса работать в этом tick
+```
+
+Machine gameplay не должен вызывать C8 progress напрямую, когда включён C15 runtime. Сначала создаётся checksum-pinned lease по конкретным execution profiles и allocations. Lease ограничивает work units, но authoritative расход материалов и выпуск предметов остаются в C8/C2A/C2B. Ни utility profile, ни storage cache не создают второй Item Graph или вторую identity ресурса.
