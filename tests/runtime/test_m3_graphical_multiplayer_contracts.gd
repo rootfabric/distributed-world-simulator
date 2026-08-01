@@ -11,6 +11,8 @@ const PlayerDelta = preload("res://scripts/runtime/networked_gameplay/contracts/
 const ProtocolFrame = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const RemotePresenter = preload("res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd")
+const GraphicalClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+const GameplayReplica = preload("res://scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd")
 
 var failures: Array[String] = []
 var assertions := 0
@@ -21,6 +23,7 @@ func _init() -> void:
 	_test_unified_service_presentation_state()
 	_test_protocol_float_round_trip()
 	_test_transport_bound_operation_identity()
+	_test_snapshot_resync_after_delta_gap()
 	_test_remote_presenter()
 	_test_manifest_and_source_boundaries()
 	_finish()
@@ -130,6 +133,29 @@ func _test_transport_bound_operation_identity() -> void:
 	var reconnect_result := service.join("a", reconnect_session, reconnect_join)
 	_assert(bool(reconnect_result.get("success", false)), "reconnect join avoids replay conflict")
 	_assert(int(reconnect_result.get("details", {}).get("player", {}).get("ownership_epoch", 0)) == 2, "reconnect advances ownership epoch")
+	service.shutdown()
+
+func _test_snapshot_resync_after_delta_gap() -> void:
+	var service = Service.new()
+	_assert(bool(service.setup("m3-resync-contract", 1, 0, {"region_id": "region/m3/resync", "topology_adapter": "ENET", "profile": Service.PROFILE_MULTIPLAYER_CORE}).get("success", false)), "resync service setup")
+	var initial := service.create_snapshot()
+	var join_a := service.join("a", "transport-session/m3/resync/a/1", "operation/m3/resync/a/join/1")
+	var join_b := service.join("b", "transport-session/m3/resync/b/1", "operation/m3/resync/b/join/1")
+	_assert(bool(join_a.get("success", false)) and bool(join_b.get("success", false)), "resync fixture joins")
+	var runtime = GraphicalClientRuntime.new()
+	runtime.set("_replica", GameplayReplica.new())
+	runtime.call("_accept_snapshot", initial)
+	runtime.call("_accept_delta", join_b.get("details", {}).get("delta", {}))
+	var waiting: Dictionary = runtime.get_report()
+	_assert(bool(waiting.get("pending_replica_resync", false)), "delta gap enters bounded snapshot resync")
+	_assert(int(waiting.get("delta_base_mismatches", 0)) == 1, "delta gap is observable")
+	_assert(String(waiting.get("last_error_code", "")) != "MULTIPLAYER_DELTA_BASE_MISMATCH", "delta gap is not a sticky terminal client error")
+	runtime.call("_accept_snapshot", join_b.get("details", {}).get("snapshot", {}))
+	var repaired: Dictionary = runtime.get_report()
+	_assert(not bool(repaired.get("pending_replica_resync", true)), "authoritative snapshot completes replica resync")
+	_assert(int(repaired.get("snapshot_resyncs", 0)) == 1, "completed snapshot resync is observable")
+	_assert(String(repaired.get("last_error_code", "")) == "", "successful snapshot clears transient replication error state")
+	_assert(String(runtime.get_snapshot().get("checksum", "")) == String(join_b.get("details", {}).get("snapshot", {}).get("checksum", "")), "resynced client matches authoritative snapshot")
 	service.shutdown()
 
 func _test_remote_presenter() -> void:

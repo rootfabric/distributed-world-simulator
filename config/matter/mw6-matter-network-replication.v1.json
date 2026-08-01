@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.mw6_matter_network_manifest.v1",
+  "checkpoint": "v17.6.0-simulation-mw6-matter-network-replication",
+  "base_checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "base_delivery": "fix7",
+  "recommended_branch": "feature/mw6-matter-network-replication",
+  "fixture_body_id": "body/asteroid-mw0",
+  "authoritative_commands": true,
+  "persistent_bricks_only": true,
+  "procedural_revision_zero_replicated": false,
+  "exact_binary64_wire_payload": true,
+  "network_command_gateway_reused": true,
+  "replication_envelope_reused": true,
+  "reconnect_delta_replay": true,
+  "snapshot_fallback": true,
+  "replicated_rejected_outcomes": true,
+  "selective_presenter_invalidation": true,
+  "production_moon_changed": false,
+  "world_catalog_changed": false,
+  "cross_server_authority_handoff": false,
+  "network_transport": {
+    "command": "planet_simulator.network_command.v1",
+    "replication_envelope": "planet_simulator.replication_envelope.v1",
+    "matter_frame": "planet_simulator.matter_replication_frame.v1",
+    "exact_payload_transport": "planet_simulator.matter_persistence_transport.v1"
+  },
+  "authority": {
+    "single_writer": true,
+    "peer_actor_binding": true,
+    "authority_epoch_fence": true,
+    "brick_revision_fence": true,
+    "operation_id_replay": true
+  },
+  "reconnect": {
+    "contiguous_delta_replay": true,
+    "base_state_hash_fence": true,
+    "full_snapshot_on_gap_or_eviction": true,
+    "sequence_gap_requires_resync": true
+  },
+  "durable_journal_bootstrap": true
+}

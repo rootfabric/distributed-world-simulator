@@ -1,0 +1,70 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.6.0-simulation-mw6-matter-network-replication",
+  "delivery": "fix1",
+  "build_id": "mw6-matter-network-replication-fix1",
+  "base_delivery": "initial MW6 candidate",
+  "recommended_branch": "feature/mw6-matter-network-replication",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "independent_initial_result": {
+    "mw6_focused": "130 assertions PASS, 34.415 s",
+    "mw5": "142/142 PASS",
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "m6_standalone": "10/10 PASS",
+    "a3": "FAIL twice in test_m6_dedicated_recovery_processes",
+    "error_code": "MULTIPLAYER_DELTA_BASE_MISMATCH"
+  },
+  "fix": {
+    "superseded_delta_fence": true,
+    "same_revision_mutation_explicit_failure": true,
+    "future_gap_generic_replica_fail_closed": true,
+    "graphical_client_bounded_snapshot_resync": true,
+    "successful_snapshot_clears_transient_error": true,
+    "resync_observability": true,
+    "matter_network_runtime_changed": false,
+    "server_persistence_semantics_changed": false,
+    "production_moon_changed": false,
+    "world_catalog_changed": false
+  },
+  "tests_added": {
+    "h3_superseded_delta_and_future_gap": true,
+    "m3_client_gap_then_snapshot_resync": true,
+    "m6_contract_gap_then_snapshot_resync": true,
+    "m6_process_no_sticky_mismatch": true,
+    "m6_process_expected_assertions": 128
+  },
+  "required_acceptance": {
+    "mw6_focused": "130/130 PASS",
+    "mw5": "142/142 PASS",
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "m6_standalone": "10/10 PASS",
+    "a3_full_profile": "PASS three consecutive runs",
+    "git_diff_check": "PASS"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "gdscript_delimiter_scan": "PASS",
+    "duplicate_functions": 0,
+    "preload_target_audit": "PASS",
+    "superseded_delta_fence": "PRESENT",
+    "future_gap_fail_closed": "PRESENT",
+    "bounded_graphical_snapshot_resync": "PRESENT",
+    "process_completion_resync_assertions": "PRESENT",
+    "matter_network_files_changed": 0,
+    "world_catalog_changed": false,
+    "changed_file_manifest": "PASS",
+    "git_diff_check_equivalent": "PASS",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT"
+  }
+}

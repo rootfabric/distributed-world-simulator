@@ -83,7 +83,7 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `NETWORK_ROADMAP_RU.md`.
 
 
-## MW5 matter persistence fix7 candidate
+## MW5 matter persistence fix7 — ACCEPTED
 
 ```text
 checkpoint: v17.5.0-simulation-mw5-matter-persistence
@@ -94,3 +94,19 @@ scope: isolated asteroid matter track; production Moon/world catalog unchanged
 ```
 
 MW5 сохраняет изменённые sparse-brick snapshots и revisions, mutation journal и committed Material Batch в атомарный generation-chained checkpoint. Fix5 устраняет drift durable DTO, fix6 закрывает exact binary64 process transport, а fix7 устраняет недоказанную предпосылку о том, что геометрический центр drill capsule обязательно находится в vacuum. После commit focused-профиль сканирует interior lattice изменённых snapshots, детерминированно выбирает положительный SDF witness, подтверждает его через canonical continuous query и только затем сохраняет позицию и SDF через binary64 transport. После restart восстановленный SDF обязан быть побитово равен pre-save значению и оставаться положительным. Durable checkpoint/repository protocol при этом не изменяется.
+
+## MW6 matter network authority candidate
+
+```text
+checkpoint: v17.6.0-simulation-mw6-matter-network-replication
+base: v17.5.0-simulation-mw5-matter-persistence / fix7 (ACCEPTED)
+branch: feature/mw6-matter-network-replication
+scope: isolated asteroid matter track; production Moon/world catalog unchanged
+```
+
+MW6 подключает транзакции MW4 и durable state MW5 к уже принятому single-server network path. После MW5 recovery authoritative stream начинается с размера восстановленного journal, а клиент получает full snapshot без выдуманного replay-log. Клиент отправляет exact-transport mutation command через `NetworkCommandGateway`, сервер единолично вызывает `MatterExcavationService`, а persistent brick revisions и journal outcomes реплицируются через `ReplicationEnvelope`. Reconnect использует delta replay по sequence/base hash и переходит на full persistent snapshot при gap или вытеснении replay log. Procedural revision-0 bricks по сети не передаются.
+
+
+## MW6 fix2 — parse-only candidate
+
+`fix1` функционально прошёл MW6 focused (`130 assertions`), но новый M6 contract не компилировался: nullable helper `_new_service()` не даёт GDScript вывести тип результатов `create_snapshot()` и `join()`. В `fix2` обе локальные переменные явно объявлены как `Dictionary`. Производственный replica/client path, matter authority и persistence не изменены. Повторная приёмка требует M6 standalone и трёх последовательных полных A3 PASS.

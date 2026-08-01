@@ -1016,4 +1016,57 @@ MW5 fix7 deterministic tunnel witness correction
 - process context: exact binary64 witness position and pre-save SDF in planet_simulator.mw5_process_witness.v1
 - recovery acceptance: restored witness SDF must equal pre-save SDF exactly before tunnel survival is accepted
 - durable checkpoint, repository and binary64 transport protocol changed: no
-- exact assertion topology: to be fixed by first independent successful fix7 run
+- independent accepted topology: 142 assertions PASS in 58.108 seconds
+
+MW6 matter network authority and replication
+- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
+- build: mw6-matter-network-replication
+- branch: feature/mw6-matter-network-replication
+- base: accepted MW5 v17.5.0 delivery fix7
+- command path: existing NetworkCommandEnvelope + NetworkCommandGateway
+- replication path: existing ReplicationEnvelope + ReplicationTransportPort adapters
+- authority: one server-owned MatterExcavationService; clients are command producers and replica presenters
+- binding fences: peer/client/session/actor plus authority epoch and MW4 brick revisions
+- wire precision: exact MW5 ieee754-binary64-le-hex transport strings
+- stream bootstrap: initial sequence equals restored MW5 mutation journal size; restart replay log starts empty
+- stream: every new committed or rejected mutation journal record advances sequence once
+- reconnect: contiguous delta replay by sequence/base hash; full snapshot fallback on gap, eviction or mismatch
+- snapshots: persistent state_revision >= 1 only; procedural revision-0 bricks are not replicated
+- client apply: atomic store+journal update with compensating restore on failure
+- presentation: selective invalidation of changed MW3 brick presenters
+- production Moon/world catalog changed: no
+- runner: RUN_MW6_MATTER_NETWORK_TESTS.ps1 / .sh
+- exact focused assertion topology: to be fixed by first independent successful run
+- next after acceptance: MW7 regional storage scaling, compaction and interest streaming
+
+MW6 fix1 A3/M6 replica ordering stabilization
+- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
+- delivery: fix1
+- build: mw6-matter-network-replication-fix1
+- branch: feature/mw6-matter-network-replication
+- independent initial MW6 focused: 130 assertions PASS in 34.415 seconds
+- independent initial regression: MW5 142, MW4 187, MW3 7519, MW2 7470, MW1 3685, MW0 2011 PASS; M6 standalone 10/10 PASS
+- blocker: A3 failed twice inside test_m6_dedicated_recovery_processes with MULTIPLAYER_DELTA_BASE_MISMATCH
+- superseded delta rule: target_revision below current authoritative snapshot revision is replay-fenced without mutation
+- true delta gap rule: graphical client enters bounded pending snapshot resync; generic replica still fails closed
+- successful authoritative snapshot clears pending resync and transient error state
+- same-revision checksum divergence remains MULTIPLAYER_SAME_REVISION_MUTATION
+- process assertions added: both recovered clients finish with no sticky base mismatch and no pending resync
+- MW6 focused assertion topology: 130 assertions, unchanged
+- expected M6 process topology after fix1: 128 assertions
+- acceptance stability gate: A3 full profile PASS three consecutive runs plus M6 standalone 10/10 PASS
+- matter authority/replication production code changed: no
+- production Moon/world catalog changed: no
+
+MW6 fix2 M6 contract parse correction
+- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
+- delivery: fix2
+- build: mw6-matter-network-replication-fix2
+- branch: feature/mw6-matter-network-replication
+- independent fix1 result: MW6 focused 130 assertions PASS in 17.900 seconds; M6 standalone blocked by GDScript parse error
+- parse blocker: test_m6_dedicated_recovery_contracts.gd could not infer `initial` and `join_b` from calls through nullable `_new_service()` result
+- correction: explicit `Dictionary` annotations on both variables
+- production/runtime semantics changed: no
+- focused assertion topology changed: no
+- expected M6 process topology: 128 assertions
+- acceptance: MW6 130/130 PASS, M6 standalone 10/10 PASS, A3 full profile PASS three consecutive runs

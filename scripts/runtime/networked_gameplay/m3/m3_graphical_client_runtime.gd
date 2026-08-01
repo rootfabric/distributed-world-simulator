@@ -43,6 +43,9 @@ var _server_disconnects := 0
 var _automated_acceptance := false
 var _item_graph_snapshot: Dictionary = {}
 var _item_snapshot_updates := 0
+var _pending_replica_resync := false
+var _delta_base_mismatches := 0
+var _snapshot_resyncs := 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -124,6 +127,7 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	if not bool(accepted.get("success", false)):
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
 	_snapshot_updates += 1
+	_pending_replica_resync = false
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
 	_joined = true; _last_error_code = ""; _write_report("READY", false)
 	replica_updated.emit(_replica.get_snapshot()); session_ready.emit(self)
@@ -131,15 +135,33 @@ func _handle_join_ack(payload: Dictionary) -> void:
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)
 	if not bool(accepted.get("success", false)):
-		_last_error_code = String(accepted.get("error_code", "M3_SNAPSHOT_REJECTED")); return
-	if not bool(accepted.get("details", {}).get("replay", false)): _snapshot_updates += 1
+		_last_error_code = String(accepted.get("error_code", "M3_SNAPSHOT_REJECTED"))
+		return
+	if _pending_replica_resync:
+		_pending_replica_resync = false
+		_snapshot_resyncs += 1
+	_last_error_code = ""
+	if not bool(accepted.get("details", {}).get("replay", false)):
+		_snapshot_updates += 1
 	replica_updated.emit(_replica.get_snapshot())
 
 func _accept_delta(delta: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_delta(delta)
 	if not bool(accepted.get("success", false)):
-		_last_error_code = String(accepted.get("error_code", "M3_DELTA_REJECTED")); return
-	if not bool(accepted.get("details", {}).get("replay", false)): _delta_updates += 1
+		var error_code := String(accepted.get("error_code", "M3_DELTA_REJECTED"))
+		if error_code == "MULTIPLAYER_DELTA_BASE_MISMATCH":
+			# The M3/M6 server follows every gameplay delta with a full authoritative
+			# snapshot. A rare delivery interleaving therefore enters bounded resync
+			# instead of poisoning the session with a sticky terminal error.
+			_pending_replica_resync = true
+			_delta_base_mismatches += 1
+			return
+		_last_error_code = error_code
+		return
+	if not _pending_replica_resync:
+		_last_error_code = ""
+	if not bool(accepted.get("details", {}).get("replay", false)):
+		_delta_updates += 1
 	replica_updated.emit(_replica.get_snapshot())
 
 func move_nonblocking(delta_x: float, delta_z: float) -> Dictionary:
@@ -296,6 +318,9 @@ func get_report() -> Dictionary:
 		"snapshot_checksum": String(get_snapshot().get("checksum", "")),
 		"item_graph_checksum": String(_item_graph_snapshot.get("checksum", "")),
 		"item_snapshot_updates": _item_snapshot_updates,
+		"pending_replica_resync": _pending_replica_resync,
+		"delta_base_mismatches": _delta_base_mismatches,
+		"snapshot_resyncs": _snapshot_resyncs,
 		"direct_authority_references": 0, "direct_domain_references": 0,
 		"resolved_user_data_dir": OS.get_user_data_dir(),
 		"automated_acceptance": _automated_acceptance,

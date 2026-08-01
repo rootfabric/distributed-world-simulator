@@ -229,3 +229,10 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md) — raw bytes опубликованного checkpoint строго равны canonical persistence bytes.
 - [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md) — typed checksum-domain после JSON transport и запрет validate_checksum(raw).
 - [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md) — round-trip-safe binary64 transport, envelope checksum и exact typed checksum restore.
+
+## MW6 matter network authority
+
+- [`architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md`](architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md) — single-server authority, exact wire DTO, delta replay и snapshot fallback.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md) — candidate checkpoint и acceptance matrix.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md) — bounded snapshot-resync для A3/M6 и fencing superseded delta.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md) — parse-only исправление явных Dictionary-типов в новом M6 resync contract.
