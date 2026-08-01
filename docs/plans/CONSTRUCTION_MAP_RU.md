@@ -13,9 +13,10 @@
 **C8:** ACCEPTED
 **C9:** ACCEPTED
 **C10:** ACCEPTED; base C9 `8d8bf77`
-**C11:** IMPLEMENTED CANDIDATE
-**Рабочая ветка C12:** `feature/c12-multiplayer-construction-acceptance`
-**Текущая позиция:** `C12 — Multiplayer Construction Acceptance, IMPLEMENTED CANDIDATE`
+**C11:** `6d26f69`, ACCEPTED
+**C12:** ACCEPTED; reviewed delivery SHA-256 `85c455c72dc1d5651f86672dc3d20e851e3c650bfa575c5643883f1da78c7f29`
+**Рабочая ветка C13:** `feature/c13-runtime-geometry-physics-projection`
+**Текущая позиция:** `C13 — Runtime Geometry and Physics Projection, IMPLEMENTED CANDIDATE`
 
 Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
@@ -41,9 +42,9 @@ flowchart TD
     C7 --> C8["C8 Fabrication — ACCEPTED"]
     C8 --> C9["C9 Damage/Split/Repair — ACCEPTED"]
     C9 --> C10["C10 Parametric Members — ACCEPTED"]
-    C10 --> C11["C11 Local Geometry — CANDIDATE"]
-    C11 --> C12["C12 Multiplayer Acceptance — CURRENT CANDIDATE"]
-    C12 --> C13["C13 Runtime Geometry/Physics"]
+    C10 --> C11["C11 Local Geometry — ACCEPTED"]
+    C11 --> C12["C12 Multiplayer Acceptance — ACCEPTED"]
+    C12 --> C13["C13 Runtime Geometry/Physics — CURRENT CANDIDATE"]
     C13 --> C14["C14 Structural Integrity"]
     C14 --> C15["C15 Executable Utilities"]
     C15 --> C16["C16 Construction UX"]
@@ -503,3 +504,28 @@ ItemProjection + PartRecord + ConstructSnapshot
 - failure/constraint rejection не оставляет частичного состояния;
 - C5/C8 downstream projections перестраиваются из нового checksum;
 - mesh и collision остаются derived projections.
+
+
+## C13: Runtime Geometry and Physics Projection
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+authoritative ConstructSnapshot + C6/C7/C10/C11 projections
+        ↓ JSON-safe runtime descriptor
+MeshInstance3D + CollisionShape3D + StaticBody3D/RigidBody3D
+        ↓ checksum incremental synchronization
+C9 split/removal + streaming rebuild
+```
+
+Ключевые правила C13:
+
+- Node, Resource, RID и Transform3D никогда не входят в domain DTO;
+- descriptor pin-ит source construct checksum и revision;
+- неизменившиеся parts не перестраиваются;
+- collision shapes создаются под единым physics body конструкции;
+- C11 path становится набором детерминированных mesh/collision segments;
+- C7 opening status управляет runtime transform closure part;
+- C6 mobility state выбирает RigidBody3D и freeze;
+- runtime tree полностью удаляем и восстанавливаем из derived descriptor store;
+- C9 split сохраняет item identity и переносит presentation между construct roots.

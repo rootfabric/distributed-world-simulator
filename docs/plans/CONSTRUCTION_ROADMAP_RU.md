@@ -569,6 +569,20 @@ Main-scene CLI
 
 Два клиента строят первую стадию C3, конкурируют за один C11 geometry edit, затем выполняют C9 damage/repair. Устаревшая команда второго клиента отклоняется, crash после authoritative edit восстанавливается без второго commit, reconnect догоняет event stream, а обе replicas получают checksum authoritative bundle.
 
+**Статус:** ACCEPTED.
+
+## C13 — Runtime Geometry and Physics Projection
+
+1. Runtime descriptors являются JSON-safe derived projections.
+2. C10/C11 geometry компилируется в primitive/path mesh и collision.
+3. Static constructs используют `StaticBody3D`, C6 mobile constructs — `RigidBody3D`.
+4. Mobility `IMMOBILE` переводит rigid body в freeze без изменения domain state.
+5. C7 door/opening state обновляет closure transform и collision.
+6. Checksum incremental rebuild не затрагивает неизменившиеся parts.
+7. C9 split/removal синхронизируется world-batch операцией с conservation item identity.
+8. Runtime cache полностью перестраивается после очистки/streaming/reconnect.
+9. Presentation nodes никогда не записываются обратно в Item Graph или ConstructSnapshot.
+
 **Статус:** IMPLEMENTED CANDIDATE.
 
 ## После C12

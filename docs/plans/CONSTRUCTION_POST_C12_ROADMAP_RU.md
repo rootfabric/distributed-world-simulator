@@ -32,6 +32,9 @@ C22 Production Hardening
 
 ## C13 — Runtime Geometry and Physics Projection
 
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c13-runtime-geometry-physics-projection`.
+
 ### Цель
 
 Создать полностью удаляемую presentation/physics-проекцию из authoritative строительных данных.
@@ -66,6 +69,20 @@ interactive nodes
 - локальный rebuild части не изменяет соседние item identities;
 - split, repair и geometry edit корректно обновляют mesh/collision;
 - headless сервер может работать без presentation.
+
+### Реализованный C13 vertical slice
+
+- strict JSON-safe `RuntimeProjectionRequest`, part/opening/construct descriptors;
+- C10 primitive geometry и C11 semantic path segments;
+- реальные `MeshInstance3D`, `CollisionShape3D`, `StaticBody3D`, `RigidBody3D`;
+- collision shapes являются прямыми детьми `PhysicsBody3D`;
+- C7 door state меняет transform closure part и collision;
+- runtime openings создают NavigationLink3D и interaction anchors;
+- C6 mobility state управляет rigid-body freeze;
+- checksum-based incremental rebuild сохраняет неизменённые part nodes;
+- `sync_world()` переносит C9 split parts между construct projections и удаляет отсутствующие constructs;
+- runtime cache можно полностью удалить и восстановить из descriptors;
+- presentation слой не изменяет `ItemProjection` или `ConstructSnapshot`.
 
 ## C14 — Structural Integrity and Load Paths
 

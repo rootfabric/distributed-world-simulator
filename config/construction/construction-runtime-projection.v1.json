@@ -1,0 +1,32 @@
+{
+  "schema": "planet_simulator.construction_runtime_projection_config.v1",
+  "compiler_id": "construction-runtime-projection-compiler",
+  "compiler_version": 1,
+  "supported_geometry_kinds": [
+    "BOX",
+    "CYLINDER",
+    "PATH_BOXES"
+  ],
+  "supported_body_kinds": [
+    "STATIC",
+    "RIGID"
+  ],
+  "default_collision_layer": 1,
+  "default_collision_mask": 1,
+  "door_open_angle_rad": 1.5707963267948966,
+  "minimum_dimension_m": 0.02,
+  "invariants": {
+    "authoritative_state_is_json_only": true,
+    "godot_objects_are_presentation_only": true,
+    "unchanged_parts_preserve_runtime_node_identity": true,
+    "destroyed_parts_do_not_collide": true,
+    "runtime_cache_is_rebuildable": true,
+    "split_parts_preserve_item_identity": true
+  },
+  "runtime_openings": {
+    "navigation_link": "NavigationLink3D",
+    "interaction_anchor": "Marker3D",
+    "closed_link_enabled": false,
+    "open_link_enabled": true
+  }
+}

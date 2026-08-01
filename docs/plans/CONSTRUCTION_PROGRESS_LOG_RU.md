@@ -742,7 +742,8 @@ Reviewed SHA-256: `062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbdd
 
 ## 2026-08-01 — C11: Local Geometry Editing
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
+**Коммит:** `6d26f69`.
 **Рекомендуемая ветка:** `feature/c11-local-geometry-editing`.
 **База:** принятый C10.
 
@@ -773,7 +774,8 @@ Editor parse:      PASS
 
 ## 2026-08-01 — C12: Multiplayer Construction Acceptance
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
+**Reviewed SHA-256:** `85c455c72dc1d5651f86672dc3d20e851e3c650bfa575c5643883f1da78c7f29`.
 **Рекомендуемая ветка:** `feature/c12-multiplayer-construction-acceptance`.
 **База:** C11 delivery поверх принятого C10; C11 ещё требует внешней приёмки.
 
@@ -799,3 +801,35 @@ C12 total:        PASS — 124 assertions
 ```
 
 Ожидаемый внешний world profile: `125/125 tests`, `128 steps`.
+
+
+## 2026-08-01 — C13: Runtime Geometry and Physics Projection
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c13-runtime-geometry-physics-projection`.
+**База:** принятый C12 поверх C11 `6d26f69`.
+
+Архитектурные решения:
+
+- runtime request и descriptors остаются strict JSON DTO;
+- C10/C11 geometry компилируется в Box/Cylinder/path segments;
+- scene projection создаёт реальные MeshInstance3D и CollisionShape3D;
+- static/mobile body выбирается по C6 profile, immobile body замораживается;
+- C7 opening status обновляет door transform и collision;
+- runtime opening создаёт NavigationLink3D и interaction anchor;
+- unchanged part node сохраняется при incremental rebuild;
+- C9 split переносит item-backed part между runtime construct roots;
+- descriptor store поддерживает stale/same-revision rejection и persistence;
+- очистка всей presentation сцены и rebuild дают тот же world checksum;
+- ни один Godot Object не записывается в Item Graph/ConstructSnapshot.
+
+Focused профиль:
+
+```text
+C13 contracts:    PASS — 58 assertions
+C13 integration:  PASS — 66 assertions
+C13 total:        PASS — 124 assertions
+Editor parse:     PASS
+```
+
+Локально повторно пройдены C1–C8, C10–C12. C9/C2B/network/full world/main-scene остаются внешним gate из-за отсутствия полного production M0/item-domain дерева в изолированном workspace. Ожидаемый world profile: `127/127 tests`, `130 steps`.

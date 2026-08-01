@@ -1,0 +1,125 @@
+{
+  "schema": "planet_simulator.c13_runtime_geometry_physics_projection_validation.v1",
+  "checkpoint": "C13_RUNTIME_GEOMETRY_AND_PHYSICS_PROJECTION",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C12_ACCEPTED",
+    "c11_commit": "6d26f69",
+    "c12_reviewed_sha256": "85c455c72dc1d5651f86672dc3d20e851e3c650bfa575c5643883f1da78c7f29"
+  },
+  "branch": "feature/c13-runtime-geometry-physics-projection",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c13_contract_assertions": 58,
+    "c13_integration_assertions": 66,
+    "c13_total_assertions": 124,
+    "locally_verified_compatibility": {
+      "c1": 66,
+      "c2a": 137,
+      "c3": 194,
+      "c4": 268,
+      "c5": 204,
+      "c6": 218,
+      "c7": 225,
+      "c8": 221,
+      "c10": 239,
+      "c11": 199,
+      "c12": 124
+    },
+    "locally_verified_total_assertions_excluding_c9_c2b": 2219
+  },
+  "runtime_projection": {
+    "geometry_kinds": [
+      "BOX",
+      "CYLINDER",
+      "PATH_BOXES"
+    ],
+    "godot_nodes": [
+      "MeshInstance3D",
+      "CollisionShape3D",
+      "StaticBody3D",
+      "RigidBody3D"
+    ],
+    "sources": [
+      "ConstructSnapshot",
+      "ConstructionItemProjection",
+      "ConstructionMobileProfile",
+      "ConstructionSpatialProfile"
+    ],
+    "parametric_sources": [
+      "C10 geometry",
+      "C11 local geometry control-point path"
+    ],
+    "incremental_rebuild_by_part_checksum": true,
+    "collision_shapes_are_direct_physics_body_children": true,
+    "door_state_updates_visual_and_collision_transform": true,
+    "mobile_immobile_state_freezes_rigid_body": true,
+    "world_sync_removes_absent_constructs": true,
+    "c9_split_preserves_item_identity_across_runtime_roots": true,
+    "runtime_cache_is_rebuildable": true,
+    "opening_navigation_link": "NavigationLink3D enabled only for OPEN openings",
+    "opening_interaction_anchor": "Marker3D preserved for OPEN and CLOSED openings"
+  },
+  "authority_invariants": {
+    "godot_objects_are_never_serialized_to_domain_dto": true,
+    "presentation_does_not_mutate_authoritative_requests": true,
+    "descriptor_pins_construct_checksum_and_revision": true,
+    "destroyed_parts_are_hidden_and_non_colliding": true,
+    "duplicate_item_identity_across_runtime_constructs_is_rejected": true,
+    "stale_and_same_revision_mutations_are_rejected": true,
+    "exact_replay_does_not_rebuild_nodes_or_advance_generation": true
+  },
+  "vertical_slices": {
+    "c10_static_beam": "BoxMesh, BoxShape3D and StaticBody3D with authoritative mass and transform",
+    "c11_path": "Three control points compile to two deterministic mesh/collision segments",
+    "c7_door": "OPEN/CLOSED status updates closure part rotation/collision and NavigationLink3D enabled state; interaction anchor remains present",
+    "c6_mobile": "Mobile rover uses RigidBody3D; IMMOBILE state freezes it and destroyed wheels disappear",
+    "c9_split": "One item-backed arm moves from source runtime root to child runtime root without identity duplication",
+    "streaming_recovery": "All runtime nodes are deleted and rebuilt from descriptor store with the same world checksum"
+  },
+  "world_manifest": {
+    "expected_tests": 127,
+    "expected_steps": 130,
+    "c13_tests_expected_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C9 focused profile: production M0 mutation_batch dependency is absent from the isolated patch-only workspace",
+    "C2B focused integration: complete production item-domain dependency tree is absent",
+    "Network N0-M4 regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c9_assertions": 204,
+    "expected_c2b_assertions": 258,
+    "expected_c13_assertions": 124,
+    "expected_world_tests": 127,
+    "expected_world_steps": 130,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c13-runtime-geometry-physics-projection-files.txt",
+    "changed_files": 36
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 178 unique UIDs in isolated workspace",
+    "manifest": "PASS — 36/36 unique files",
+    "world_runner_manifest": "PASS — 127/127 unique tests, C13 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_archive_replay": "PASS — final archive overlay verified 36/36"
+  }
+}

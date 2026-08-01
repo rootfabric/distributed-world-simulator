@@ -615,3 +615,18 @@ client command
 ### Convergence проверяется данными, а не сообщением UI
 
 Replica считается синхронизированной только если checksum canonical item+construct bundle совпадает с authoritative checksum. Event order, generation rollback и повреждённый payload отклоняются.
+
+
+## C13: presentation/physics не являются authority
+
+C13 вводит жёсткую границу между семантическим миром и Godot SceneTree. `ConstructSnapshot`, реальные item identities и compiled profiles остаются источником истины. `Mesh`, `Shape3D`, `PhysicsBody3D`, Node paths и RID — удаляемые runtime-проекции.
+
+```text
+domain JSON DTO
+→ RuntimeConstructDescriptor
+→ Godot Node/Resource projection
+
+обратного пути Node → domain mutation нет
+```
+
+Любая потеря сцены, streaming unload или reconnect должны восстанавливаться из descriptors без изменения authoritative checksum. Локальная оптимизация mesh/collision допустима только при сохранении part/item provenance и source checksum.
