@@ -833,3 +833,37 @@ Editor parse:     PASS
 ```
 
 Локально повторно пройдены C1–C8, C10–C12. C9/C2B/network/full world/main-scene остаются внешним gate из-за отсутствия полного production M0/item-domain дерева в изолированном workspace. Ожидаемый world profile: `127/127 tests`, `130 steps`.
+
+
+## 2026-08-01 — C13: внешняя приёмка
+
+**Статус:** ACCEPTED.
+**Ветка:** `feature/c13-runtime-geometry-physics-projection`.
+**База:** C12 `1152c94`.
+**Reviewed SHA-256:** `7b08bfc5972cde3a3bf1435b6d27564caeb5111bf8aa6edbd75c0c24e08f6b73`.
+
+```text
+C13 focused:      PASS
+C2B regression:   PASS — 258 assertions
+Network N0–M4:    PASS
+World regression: PASS — 127/127 tests, 130 steps
+Manifest:         36/36
+```
+
+C13 стал принятой базой C14.
+
+
+## 2026-08-01 — C14: Structural Integrity and Load Paths
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c14-structural-integrity-load-paths`.
+
+Реализованы strict load cases, support/load-path compiler, part/bond utilization, safety/degraded/buckling limits, progressive collapse, C9 damage/split/repair integration, exact replay/conflict detection, profile store, persistence и dormant summary.
+
+```text
+C14 contracts:    PASS — 90 assertions
+C14 integration:  PASS — 78 assertions
+C14 total:        PASS — 168 assertions
+```
+
+Ожидаемый внешний world profile: `129/129 tests`, `132 steps`.

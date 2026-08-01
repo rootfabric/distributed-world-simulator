@@ -630,3 +630,7 @@ domain JSON DTO
 ```
 
 Любая потеря сцены, streaming unload или reconnect должны восстанавливаться из descriptors без изменения authoritative checksum. Локальная оптимизация mesh/collision допустима только при сохранении part/item provenance и source checksum.
+
+## Structural authority после C14
+
+Несущая способность не хранится в mesh, collision или Godot physics body. C14 выводит load graph из authoritative `ConstructSnapshot`, масс частей, semantic capacities, bonds и load case. Structural profile является удаляемым cache. Любой реальный отказ применяется только через C9 `DamageRequest`, поэтому split, salvage, repair и item identity conservation остаются едиными для физического, игрового и агентного источника повреждения.

@@ -508,7 +508,7 @@ ItemProjection + PartRecord + ConstructSnapshot
 
 ## C13: Runtime Geometry and Physics Projection
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 authoritative ConstructSnapshot + C6/C7/C10/C11 projections
@@ -529,3 +529,31 @@ C9 split/removal + streaming rebuild
 - C6 mobility state выбирает RigidBody3D и freeze;
 - runtime tree полностью удаляем и восстанавливаем из derived descriptor store;
 - C9 split сохраняет item identity и переносит presentation между construct roots.
+
+
+## C14: Structural Integrity and Load Paths
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+part mass + gravity + external load
++ supports + part/bond capacities
+        ↓
+deterministic shortest support paths
+        ↓
+reactions and utilization
+        ↓
+progressive collapse
+        ↓
+C9 damage / split / repair
+```
+
+Ключевые правила C14:
+
+- load case закрепляет checksum authoritative snapshot;
+- part capacity и buckling limits находятся в semantic metadata;
+- bond strength и degraded factor определяют effective capacity;
+- profile и dormant summary полностью перестраиваемы;
+- каскад каждый шаг пересчитывает после одного детерминированного отказа;
+- ни structural profile, ни C13 physics nodes не изменяют authority напрямую;
+- окончательное повреждение выполняется только через C9 multi-aggregate transaction.

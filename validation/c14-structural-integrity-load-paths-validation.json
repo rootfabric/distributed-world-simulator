@@ -1,0 +1,123 @@
+{
+  "schema": "planet_simulator.c14_structural_integrity_load_paths_validation.v1",
+  "checkpoint": "C14_STRUCTURAL_INTEGRITY_AND_LOAD_PATHS",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C13_ACCEPTED",
+    "c12_commit": "1152c94",
+    "c13_reviewed_sha256": "7b08bfc5972cde3a3bf1435b6d27564caeb5111bf8aa6edbd75c0c24e08f6b73"
+  },
+  "branch": "feature/c14-structural-integrity-load-paths",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c14_contract_assertions": 90,
+    "c14_integration_assertions": 78,
+    "c14_total_assertions": 168,
+    "locally_verified_compatibility": {
+      "c1": 66,
+      "c2a": 137,
+      "c3": 194,
+      "c4": 268,
+      "c5": 204,
+      "c6": 218,
+      "c7": 225,
+      "c8": 221,
+      "c10": 239,
+      "c11": 199,
+      "c12": 124,
+      "c13": 124
+    },
+    "locally_verified_total_assertions_excluding_c9_c2b": 2387
+  },
+  "structural_model": {
+    "algorithm": "deterministic-shortest-support-path-v1",
+    "load_types": [
+      "part self-weight",
+      "scalar external part load"
+    ],
+    "capacity_sources": [
+      "part.metadata.structural.capacity_n",
+      "part.metadata.structural.buckling_capacity_n",
+      "bond.strength_n"
+    ],
+    "capacity_modifiers": [
+      "safety factor",
+      "degraded capacity factor",
+      "part condition",
+      "bond state"
+    ],
+    "profile_states": [
+      "STABLE",
+      "OVERLOADED",
+      "UNSUPPORTED",
+      "FAILED"
+    ],
+    "progressive_collapse_recomputes_after_each_failure": true,
+    "far_dormant_summary": true,
+    "not_fem": true
+  },
+  "authority_invariants": {
+    "construct_snapshot_is_authoritative_source": true,
+    "structural_profiles_are_rebuildable": true,
+    "mesh_and_physics_are_not_structural_authority": true,
+    "damage_is_applied_only_through_c9": true,
+    "split_item_identity_is_conserved": true,
+    "exact_replay_does_not_repeat_commit": true,
+    "conflicting_replay_payload_is_rejected": true
+  },
+  "vertical_slices": {
+    "stable_structure": "Four deterministic load paths terminate at one foundation support",
+    "primary_failure": "External load overloads the shorter primary payload bond",
+    "alternate_path": "After primary failure the full load moves to the longer brace path",
+    "progressive_collapse": "The secondary bond then fails and payload plus tool become unsupported",
+    "c9_split": "Unsupported two-part component becomes a child aggregate through C9",
+    "c9_repair": "The same ItemInstance identities and original five bonds are restored",
+    "buckling": "Optional buckling_capacity_n limits effective part capacity",
+    "dormant": "Compact summary preserves state, utilization and counts"
+  },
+  "world_manifest": {
+    "expected_tests": 129,
+    "expected_steps": 132,
+    "c14_tests_expected_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C9 focused contracts: production M0 mutation_batch dependency is absent from the patch-only workspace; C14 integration still executes the real C9 in-memory damage/split/repair path",
+    "C2B focused integration: complete production item-domain dependency tree is absent",
+    "Network N0-M4 regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c9_assertions": 204,
+    "expected_c2b_assertions": 258,
+    "expected_c14_assertions": 168,
+    "expected_world_tests": 129,
+    "expected_world_steps": 132,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c14-structural-integrity-load-paths-files.txt",
+    "changed_files": 42
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 192 unique UIDs in isolated workspace",
+    "manifest": "PASS — 42/42 unique files",
+    "world_runner_manifest": "PASS — 129/129 unique tests, C14 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_archive_replay": "PASS — final archive overlay verified 42/42"
+  }
+}

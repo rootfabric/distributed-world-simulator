@@ -32,7 +32,7 @@ C22 Production Hardening
 
 ## C13 — Runtime Geometry and Physics Projection
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c13-runtime-geometry-physics-projection`.
 
 ### Цель
@@ -86,6 +86,9 @@ interactive nodes
 
 ## C14 — Structural Integrity and Load Paths
 
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c14-structural-integrity-load-paths`.
+
 ### Цель
 
 Связать массу, геометрию, bonds и гравитацию в упрощённую, но детерминированную модель несущей способности.
@@ -116,6 +119,19 @@ C9 damage/split
 ### Ограничение
 
 Первая версия не является полноценным FEM. Нужен графовый инженерный уровень, пригодный для массовой симуляции.
+
+### Реализованный C14 vertical slice
+
+- strict checksum-pinned load cases;
+- supports и scalar static loads;
+- детерминированные shortest support paths;
+- reactions, part/bond utilization и critical sets;
+- safety factor, degraded capacity и simplified buckling limit;
+- поэтапный progressive collapse с полным recompute;
+- deterministic split identities и C9 DamageRequest;
+- реальный C9 split/repair без клонирования ItemInstance;
+- exact retry/replay и conflict detection через terminal ledger;
+- rebuildable profile store и compact dormant summary.
 
 ## C15 — Executable Utilities and Machines
 

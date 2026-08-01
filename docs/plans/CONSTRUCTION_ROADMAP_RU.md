@@ -583,8 +583,21 @@ Main-scene CLI
 8. Runtime cache полностью перестраивается после очистки/streaming/reconnect.
 9. Presentation nodes никогда не записываются обратно в Item Graph или ConstructSnapshot.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## После C12
 
 Каноническое подробное описание C13–C22 находится в `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
+
+## C14 — Structural Integrity and Load Paths
+
+1. Strict load case pin-ит snapshot checksum, supports, gravity и external loads.
+2. Детерминированные shortest support paths формируют scalar static load graph.
+3. Part capacity учитывает semantic strength и simplified buckling limit.
+4. Bond capacity учитывает strength, safety factor и degraded factor.
+5. Progressive collapse пересчитывается после каждого отказа.
+6. Final failure proposal компилируется в обычный C9 DamageRequest.
+7. Split/repair сохраняют ItemInstance identity и проходят C9 authority.
+8. Compact summary поддерживает far/dormant simulation.
+
+**Статус:** IMPLEMENTED CANDIDATE.
