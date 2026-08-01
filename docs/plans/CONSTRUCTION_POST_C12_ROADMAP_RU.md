@@ -173,9 +173,12 @@ providers → topology → capacity allocation → consumers
 - C8 reserve/progress/complete gate по фактическим allocations;
 - work-unit capacity, exact replay и runtime recovery.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ## C16 — Construction Interaction and Editing UX
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c16-construction-interaction-editing-ux`.
 
 ### Цель
 
@@ -196,6 +199,19 @@ providers → topology → capacity allocation → consumers
 ```text
 UI intent → C12 command → authoritative commit → replicated result
 ```
+
+
+### Реализованный C16 vertical slice
+
+- strict semantic snap targets: surface, port, grid и free;
+- deterministic target selection по compatibility, priority, distance и ID;
+- checksum-pinned placement request/solution и negative no-target result;
+- реальный прозрачный `Node3D` placement ghost;
+- C11 gizmo с `Marker3D` handles, grid и axis mask;
+- build/repair material overlay с exact item identities;
+- headless `Control` overlay с status/progress;
+- C12-only command adapter без ссылок на domain processes;
+- authoritative error code отображается UI без локальной подмены результата.
 
 ## C17 — Distributed Construction Authority
 

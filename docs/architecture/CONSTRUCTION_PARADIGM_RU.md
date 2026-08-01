@@ -649,3 +649,7 @@ C15 allocation FULL/PARTIAL/SHED
 ```
 
 Machine gameplay не должен вызывать C8 progress напрямую, когда включён C15 runtime. Сначала создаётся checksum-pinned lease по конкретным execution profiles и allocations. Lease ограничивает work units, но authoritative расход материалов и выпуск предметов остаются в C8/C2A/C2B. Ни utility profile, ни storage cache не создают второй Item Graph или вторую identity ресурса.
+
+## C16 — UI является клиентом authority, а не частью authority
+
+Construction interaction layer может выполнять raycast, snapping, selection, ghost rendering и локальный gizmo preview. Любое устойчивое изменение мира оформляется checksum-pinned командой и проходит через C12 gateway. UI-side constraints улучшают взаимодействие, но сервер повторно проверяет C3/C9/C11 contracts. Godot `Control`, `Node3D`, `Mesh` и input state запрещены в authoritative DTO.

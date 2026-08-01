@@ -584,3 +584,8 @@ checksum-pinned C8 machine lease
 - lease pin-ит machine, recipe, tick, profiles и allocations;
 - work units ограничены delivered resource;
 - exact replay не дублирует progress.
+
+
+## C16 — Construction Interaction and Editing UX
+
+Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.

@@ -1,0 +1,9 @@
+{
+  "schema": "planet_simulator.construction_interaction_ux_config.v1",
+  "default_snap_radius_m": 1.0,
+  "default_grid_step_m": 0.5,
+  "supported_snap_targets": ["FREE", "GRID", "PORT", "SURFACE"],
+  "supported_modes": ["EDIT", "IDLE", "INSPECT", "PLACE", "REPAIR"],
+  "authority_boundary": "C12_MULTIPLAYER_GATEWAY",
+  "presentation_only": true
+}

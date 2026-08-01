@@ -617,3 +617,8 @@ Main-scene CLI
 10. Exact operation replay не дублирует C8 progress.
 
 **Статус:** IMPLEMENTED CANDIDATE.
+
+
+## C16 — Construction Interaction and Editing UX
+
+Текущий candidate: semantic snapping, placement ghost, C11 gizmos, build/repair material overlays и C12-only command submission. Подробности: `docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md`.

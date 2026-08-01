@@ -1,6 +1,6 @@
 # C15 — Executable Utilities and Machines
 
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED
 **База:** принятый C14 Structural Integrity and Load Paths
 **Рекомендуемая ветка:** `feature/c15-executable-utilities-machines`
 

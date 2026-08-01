@@ -898,3 +898,35 @@ C15 total:        PASS — 215 assertions
 ```
 
 Локально повторно пройдены C1–C8 и C10–C14. Ожидаемый внешний world profile: `131/131 tests`, `134 steps`.
+
+
+## 2026-08-01 — C15: внешняя приёмка
+
+**Статус:** ACCEPTED.
+
+```text
+C15 focused:      PASS — 215 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+Network N0–M4:    PASS
+World regression: PASS — 131/131 tests, 134 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+```
+
+C15 стал принятой базой C16.
+
+## 2026-08-01 — C16: Construction Interaction and Editing UX
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**База:** принятый C15.
+**Рекомендуемая ветка:** `feature/c16-construction-interaction-editing-ux`.
+
+Реализованы semantic snap targets/resolver, checksum-pinned placement solutions, headless placement ghost, C11 control-point gizmo, build/repair material overlays, graphical status panel и C12-only command adapter. UI не получает прямой ссылки на authoritative construction processes.
+
+```text
+C16 contracts:    PASS — 39 assertions
+C16 integration:  PASS — 32 assertions
+C16 total:        PASS — 71 assertions
+Expected world:   133/133 tests, 136 steps
+```
