@@ -19,8 +19,13 @@
 **C14:** ACCEPTED
 **C15:** ACCEPTED
 **C16:** `a4376cd`, ACCEPTED
-**Рабочая ветка C17:** `feature/c17-distributed-construction-authority`
-**Текущая позиция:** `C17 — Distributed Construction Authority, IMPLEMENTED CANDIDATE`
+**C17:** ACCEPTED
+**C18:** ACCEPTED
+**C19:** ACCEPTED
+**C20:** ACCEPTED
+**C21:** ACCEPTED
+**Рабочая ветка C22:** `feature/c22-compiled-construct-proxies-hlod-streaming`
+**Текущая позиция:** `C22 — Compiled Construct Proxies and Hierarchical Detail Streaming, IMPLEMENTED CANDIDATE`
 
 Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
@@ -52,12 +57,13 @@ flowchart TD
     C13 --> C14["C14 Structural Integrity — ACCEPTED"]
     C14 --> C15["C15 Executable Utilities — ACCEPTED"]
     C15 --> C16["C16 Construction UX — ACCEPTED"]
-    C16 --> C17["C17 Distributed Authority — CURRENT CANDIDATE"]
-    C17 --> C18["C18 Streaming/LOD"]
-    C18 --> C19["C19 Agent Automation"]
-    C19 --> C20["C20 Logistics/Economy"]
-    C20 --> C21["C21 Scale Acceptance"]
-    C21 --> C22["C22 Production Hardening"]
+    C16 --> C17["C17 Distributed Authority — ACCEPTED"]
+    C17 --> C18["C18 Streaming/LOD — ACCEPTED"]
+    C18 --> C19["C19 Agent Automation — ACCEPTED"]
+    C19 --> C20["C20 Logistics/Economy — ACCEPTED"]
+    C20 --> C21["C21 Scale Acceptance — ACCEPTED"]
+    C21 --> C22["C22 Compiled Proxies/HLOD — CURRENT CANDIDATE"]
+    C22 --> C23["C23 Production Hardening"]
 ```
 
 ```text
@@ -108,8 +114,13 @@ C12 multiplayer construction → C13 federated constructs
 | C14 | load paths и progressive collapse | несущая конструкция | **ACCEPTED** |
 | C15 | executable utilities и machine leases | utility network / fabrication cell | **ACCEPTED** |
 | C16 | placement, snapping, gizmos и overlays | graphical client | **ACCEPTED — a4376cd** |
-| C17 | owner routing, migration, replicas и takeover | три spatial servers | **IMPLEMENTED CANDIDATE** |
-| C18–C22 | streaming, agents, economy, scale и hardening | мир проекта | PLANNED |
+| C17 | owner routing, migration, replicas и takeover | три spatial servers | **ACCEPTED** |
+| C18 | activity levels, budget eviction и dormant recovery | large constructs | **ACCEPTED** |
+| C19 | agent goals, BOM, reservations и authoritative execution | строительные агенты | **ACCEPTED** |
+| C20 | logistics, procurement, contractors и economy | supply chain | **ACCEPTED** |
+| C21 | large-scale и soak acceptance | мир проекта | **ACCEPTED** |
+| C22 | compiled shell, section HLOD, interior streaming и proxy cache | станция из 10 000 частей | **IMPLEMENTED CANDIDATE** |
+| C23 | production hardening | release/runtime | PLANNED |
 
 ## C2A — Item Graph Contracts
 
@@ -672,3 +683,25 @@ C20 добавляет landed-cost planning, склады, shipment receipts, п
 ```
 
 C21 проверяет нулевые duplicate commits, exact replay, stale-epoch fencing, material conservation, item identity, budget limits, persistence/restart и deterministic checksum на focused и extended-soak профилях.
+
+
+## C22 — Compiled Construct Proxies and Hierarchical Detail Streaming
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+one authoritative large item / ConstructAggregate
+→ stable section topology
+→ exposed surfaces + greedy material batches
+→ content-addressed shell/section/interior artifacts
+→ interest-selected network packet
+→ replacement runtime presentation
+```
+
+C22 проверяет объект из 10 000 item-backed parts. Дальний клиент получает один shell artifact и ноль дочерних item identities. При приближении загружается не весь construct, а bounded набор section HLOD. Точные C13 descriptors создаются только для interactive parts выбранной local/interior области. После damage перестраиваются shell и dirty sections, неизменённые artifacts переиспользуются по content hash.
+
+Главный запрет: compiled proxy никогда не становится authoritative item и не существует одновременно с полным набором child presentation nodes на дальнем LOD.
+
+## C23 — Production Hardening
+
+Schema migrations, backward-compatible saves, rolling upgrades, observability, audit/security, rate limits, DTO fuzzing, corruption recovery, chaos profiles и release runbooks.

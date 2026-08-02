@@ -1,0 +1,99 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C22_COMPILED_CONSTRUCT_PROXIES_AND_HIERARCHICAL_DETAIL_STREAMING",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C21_LARGE_SCALE_CONSTRUCTION_ACCEPTANCE",
+    "decision": "ACCEPTED",
+    "note": "C21 passed focused, C2B, C9, C17-C20, Network, world and main-scene acceptance; no C21 commit SHA was reported."
+  },
+  "branch": "feature/c22-compiled-construct-proxies-hlod-streaming",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 29
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 52
+    },
+    "graphical": {
+      "status": "PASS",
+      "assertions": 35
+    },
+    "scale_soak": {
+      "status": "PASS",
+      "assertions": 75
+    },
+    "total_assertions": 191,
+    "editor_parse": "PASS"
+  },
+  "fixture": {
+    "authoritative_parts": 10000,
+    "sections": 80,
+    "interior_cells": 2,
+    "interactive_parts_per_cell": 8,
+    "raw_faces": 60000,
+    "exposed_faces": 3400,
+    "internal_faces_removed": 56600,
+    "cached_artifacts": 83
+  },
+  "coverage": [
+    "STABLE_SECTION_TOPOLOGY",
+    "EXPOSED_SURFACE_EXTRACTION",
+    "INTERNAL_FACE_CULLING",
+    "GREEDY_MESH_AND_MATERIAL_BATCHING",
+    "STATION_LEVEL_SHELL",
+    "CONTENT_ADDRESSED_PROXY_CACHE",
+    "SECTION_NETWORK_INTEREST_STREAMING",
+    "INTERIOR_CELL_AND_PORTAL_STREAMING",
+    "DISTANT_PACKET_SUPPRESSES_ALL_CHILD_IDENTITIES",
+    "LOCAL_INTERACTIVE_PART_STREAMING",
+    "INCREMENTAL_DAMAGE_REBUILD",
+    "READ_ONLY_DISTRIBUTED_COMPILATION",
+    "PERSISTENCE_AND_SOURCE_REATTACH",
+    "GRAPHICAL_SCENE_TREE_REPLACEMENT",
+    "SCALE_AND_INTEREST_SOAK"
+  ],
+  "delivery": {
+    "manifest": "c22-compiled-construct-proxies-hlod-streaming-files.txt",
+    "world_test_entries": 4,
+    "expected_world_test_count": 148,
+    "expected_world_steps": 151,
+    "file_count": 61
+  },
+  "external_acceptance_required": {
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "C17_C18_C19_C20_C21": "PASS",
+    "network": "N0-M4 PASS",
+    "world_regression": "148/148 tests, 151 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "profiles": 16,
+    "assertions": 921,
+    "status": "PASS",
+    "included": {
+      "C13": 124,
+      "C17": 125,
+      "C18": 135,
+      "C19": 154,
+      "C20": 114,
+      "C21_contracts_and_integration": 78,
+      "C22": 191
+    },
+    "not_redeclared_locally": [
+      "C21 extended soak (accepted base)",
+      "C2B production regression",
+      "C9 production regression",
+      "Network N0-M4",
+      "full world/main-scene"
+    ]
+  }
+}

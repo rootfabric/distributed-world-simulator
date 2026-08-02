@@ -1,6 +1,6 @@
 # Карта развития строительной системы после C12
 
-**Назначение документа:** каноническая карта этапов C13–C22.
+**Назначение документа:** каноническая карта этапов C13–C23.
 
 **Точка входа:** после принятия `C12 — Multiplayer Construction Acceptance` базовое семантическое ядро строительства считается завершённым. Последующие этапы превращают его в отображаемый, физический, распределённый и масштабируемый runtime.
 
@@ -27,7 +27,9 @@ C20 Logistics and Construction Economy
   ↓
 C21 Large-Scale Construction Acceptance
   ↓
-C22 Production Hardening
+C22 Compiled Construct Proxies and Hierarchical Detail Streaming
+  ↓
+C23 Production Hardening
 ```
 
 ## C13 — Runtime Geometry and Physics Projection
@@ -398,7 +400,38 @@ PRESENTED — mesh, collision, animation
 массовое повреждение и восстановление
 ```
 
-## C22 — Production Hardening
+## C22 — Compiled Construct Proxies and Hierarchical Detail Streaming
+
+### Цель
+
+Отделить authoritative состав крупных item-backed конструкций от сетевого и графического представления. Станция или корабль из тысяч частей остаётся одним `ConstructAggregate`, но дальний наблюдатель получает один compiled shell и не получает дочерние item identities.
+
+### Scope
+
+- stable spatial/semantic section topology;
+- exposed-surface extraction и удаление внутренних граней;
+- greedy meshing и material batching;
+- section mesh/collision proxies;
+- station-level shell и HLOD hierarchy;
+- content-addressed proxy cache;
+- section-based network interest streaming;
+- interior cells и portal streaming;
+- incremental rebuild после C3/C9 изменений;
+- read-only compilation на C17 neighbor servers;
+- C13 exact descriptors только для локальных interactive parts;
+- graphical/network/scale/soak acceptance на 10 000-part construct.
+
+### Ключевой инвариант
+
+```text
+DISTANT_SHELL полностью заменяет presentation дочерних частей;
+он не накладывается поверх 10 000 активных runtime nodes.
+```
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c22-compiled-construct-proxies-hlod-streaming`.
+
+## C23 — Production Hardening
 
 ### Цель
 
@@ -431,7 +464,7 @@ C13 presentation/physics
 
 C14–C16 можно частично вести параллельно. C19–C20 следует начинать после устойчивого C17/C18, чтобы агенты и экономика строились сразу поверх распределённой authority.
 
-## Общие инварианты C13–C22
+## Общие инварианты C13–C23
 
 Ни один этап не принимается, если он:
 
@@ -463,5 +496,25 @@ C20 формализует construction economy: procurement, warehouse reservat
 - persistence checkpoint и deterministic resume;
 - checksum rejection повреждённого snapshot.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c21-large-scale-construction-acceptance`.
+
+
+## C22 — реализованный proxy/HLOD vertical slice
+
+- реальный acceptance fixture из 10 000 authoritative item-backed parts;
+- 80 стабильных spatial sections и две semantic interior cells;
+- 60 000 raw faces → 3 400 exposed faces после удаления внутренних граней;
+- material-aware greedy shell и section artifacts;
+- content-addressed cache из 83 artifacts;
+- far packet: один shell, zero exact child descriptors, 10 000 suppressed parts;
+- section/local/interior interest modes с bounded payload;
+- C13 exact descriptors только для локальных interactive parts;
+- incremental C9 damage rebuild: shell + одна section, 79 sections reused;
+- read-only C17 compilation, persistence и source reattach;
+- graphical replacement, network suppression и 64-transition scale/soak.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c22-compiled-construct-proxies-hlod-streaming`.
+
+Production Hardening перенесён на C23.

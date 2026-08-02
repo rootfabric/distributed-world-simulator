@@ -1,0 +1,67 @@
+Checkpoint: C22 — Compiled Construct Proxies and Hierarchical Detail Streaming
+Status: IMPLEMENTED CANDIDATE
+Base: C21 ACCEPTED
+Recommended branch: feature/c22-compiled-construct-proxies-hlod-streaming
+Changed files: 61
+
+RUN_C22_COMPILED_PROXY_TESTS.ps1
+RUN_C22_COMPILED_PROXY_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c22-compiled-construct-proxies-hlod-streaming-files.txt
+config/construction/compiled-construct-proxy-streaming.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-02_C21_LARGE_SCALE_CONSTRUCTION_ACCEPTANCE_RU.md
+docs/checkpoints/2026-08-02_C22_COMPILED_CONSTRUCT_PROXIES_AND_HIERARCHICAL_DETAIL_STREAMING_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/proxies/construction_exposed_surface_extractor.gd
+scripts/construction/proxies/construction_exposed_surface_extractor.gd.uid
+scripts/construction/proxies/construction_greedy_mesh_compiler.gd
+scripts/construction/proxies/construction_greedy_mesh_compiler.gd.uid
+scripts/construction/proxies/construction_proxy_artifact.gd
+scripts/construction/proxies/construction_proxy_artifact.gd.uid
+scripts/construction/proxies/construction_proxy_cache.gd
+scripts/construction/proxies/construction_proxy_cache.gd.uid
+scripts/construction/proxies/construction_proxy_compile_request.gd
+scripts/construction/proxies/construction_proxy_compile_request.gd.uid
+scripts/construction/proxies/construction_proxy_compiler.gd
+scripts/construction/proxies/construction_proxy_compiler.gd.uid
+scripts/construction/proxies/construction_proxy_contract_utils.gd
+scripts/construction/proxies/construction_proxy_contract_utils.gd.uid
+scripts/construction/proxies/construction_proxy_interest_request.gd
+scripts/construction/proxies/construction_proxy_interest_request.gd.uid
+scripts/construction/proxies/construction_proxy_interior_cell.gd
+scripts/construction/proxies/construction_proxy_interior_cell.gd.uid
+scripts/construction/proxies/construction_proxy_invalidation_plan.gd
+scripts/construction/proxies/construction_proxy_invalidation_plan.gd.uid
+scripts/construction/proxies/construction_proxy_manifest.gd
+scripts/construction/proxies/construction_proxy_manifest.gd.uid
+scripts/construction/proxies/construction_proxy_network_packet.gd
+scripts/construction/proxies/construction_proxy_network_packet.gd.uid
+scripts/construction/proxies/construction_proxy_persistence.gd
+scripts/construction/proxies/construction_proxy_persistence.gd.uid
+scripts/construction/proxies/construction_proxy_portal.gd
+scripts/construction/proxies/construction_proxy_portal.gd.uid
+scripts/construction/proxies/construction_proxy_runtime_node.gd
+scripts/construction/proxies/construction_proxy_runtime_node.gd.uid
+scripts/construction/proxies/construction_proxy_section_topology.gd
+scripts/construction/proxies/construction_proxy_section_topology.gd.uid
+scripts/construction/proxies/construction_proxy_stream_plan.gd
+scripts/construction/proxies/construction_proxy_stream_plan.gd.uid
+scripts/construction/proxies/construction_proxy_streaming_controller.gd
+scripts/construction/proxies/construction_proxy_streaming_controller.gd.uid
+scripts/construction/proxies/construction_proxy_streaming_planner.gd
+scripts/construction/proxies/construction_proxy_streaming_planner.gd.uid
+tests/construction/fixtures/c22_compiled_proxy_fixture.gd
+tests/construction/fixtures/c22_compiled_proxy_fixture.gd.uid
+tests/construction/test_c22_compiled_proxy_contracts.gd
+tests/construction/test_c22_compiled_proxy_contracts.gd.uid
+tests/construction/test_c22_compiled_proxy_graphical.gd
+tests/construction/test_c22_compiled_proxy_graphical.gd.uid
+tests/construction/test_c22_compiled_proxy_integration.gd
+tests/construction/test_c22_compiled_proxy_integration.gd.uid
+tests/construction/test_c22_compiled_proxy_scale_soak.gd
+tests/construction/test_c22_compiled_proxy_scale_soak.gd.uid
+validation/c22-compiled-construct-proxies-hlod-streaming-validation.json

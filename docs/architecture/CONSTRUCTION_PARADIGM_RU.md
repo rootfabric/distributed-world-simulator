@@ -677,3 +677,22 @@ Streaming может удалять только derived state. `DORMANT` не �
 ## Масштабная приёмка
 
 Масштаб не считается доказанным количеством созданных объектов само по себе. C21 принимает систему только при одновременном выполнении authority, replay, identity, material-conservation и budget-инвариантов. Нагрузочный harness не имеет собственного mutation path и наблюдает те же границы C8/C12/C17/C19/C20, что игроки и агенты.
+
+
+## Compiled proxy authority invariant — C22
+
+Крупная станция может содержать тысячи item-backed parts, но количество authoritative частей не должно определять объём каждого network packet или SceneTree клиента. C22 компилирует удаляемые shell/section/interior artifacts из checksum-pinned snapshot.
+
+```text
+10 000 authoritative parts
+≠ 10 000 всегда передаваемых и отображаемых nodes
+
+far interest
+= root identity + transform + summary + one shell artifact
+```
+
+Proxy artifact не является предметом, не получает item identity и не может быть источником damage, inventory или utility state. Manifest закрепляет source checksum и authority epoch. Read-only C17 replica может компилировать и передавать proxy, но не получает write authority.
+
+Дальний shell обязан **заменять** presentation дочерних частей. Одновременное отображение shell поверх полного child runtime нарушает инвариант. При приближении shell заменяется bounded section HLOD, затем локальными/interior proxies и только необходимыми interactive C13 descriptors.
+
+Incremental rebuild следует authoritative изменению: C9 damage меняет snapshot, C22 инвалидирует dirty sections и shell при изменении exposed boundary. Неизменившиеся geometric bytes переиспользуются по content hash, при этом item identities и canonical construct composition остаются неизменными.

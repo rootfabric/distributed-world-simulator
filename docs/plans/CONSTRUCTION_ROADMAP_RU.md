@@ -15,7 +15,7 @@ PlanetSimulator создаёт **конструктор нового уровн�
 
 Наглядная актуальная карта: `docs/plans/CONSTRUCTION_MAP_RU.md`.
 Хронология решений: `docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md`.
-Подробная карта C13–C22: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
+Подробная карта C13–C23: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
 ## Стратегия интеграции
 
@@ -587,7 +587,7 @@ Main-scene CLI
 
 ## После C12
 
-Каноническое подробное описание C13–C22 находится в `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
+Каноническое подробное описание C13–C23 находится в `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
 ## C14 — Structural Integrity and Load Paths
 
@@ -648,7 +648,7 @@ Vertical slice закрепляет single-writer authority, owner routing су�
 9. C17 owner/read-only separation и authority epoch fencing.
 10. Persistence без SceneTree serialization.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 
 ## C19 — Agent Construction and Automation API
@@ -687,3 +687,24 @@ Vertical slice закрепляет single-writer authority, owner routing су�
 ## C21 — Large-Scale Construction Acceptance
 
 C21 не расширяет authority-модель, а доказывает устойчивость C1–C20 под массовой нагрузкой. Focused и extended-soak профили проверяют десятки тысяч constructs, миллионы item-backed parts, тысячи BuildPlan, массовые damage/collapse/repair, agent/economy flows, migration/reconnect faults, streaming budgets, persistence и deterministic replay.
+
+
+## C22 — Compiled Construct Proxies and Hierarchical Detail Streaming
+
+C22 добавляет иерархическое derived presentation крупных item-backed constructs. Один корабль или база остаётся одним authoritative aggregate с тысячами реальных частей, но network/client presentation выбирается по interest:
+
+```text
+DISTANT_SHELL
+→ SECTION_HLOD
+→ LOCAL_EXTERIOR
+→ INTERIOR_CELL + interactive parts
+```
+
+Stable sections, exposed-surface extraction, greedy material batches, content-addressed artifacts и incremental invalidation позволяют не передавать и не создавать все дочерние parts. Acceptance fixture подтверждает far packet из одного shell для 10 000-part construct и постепенную загрузку bounded detail при приближении.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Ветка:** `feature/c22-compiled-construct-proxies-hlod-streaming`.
+
+## C23 — Production Hardening
+
+Production hardening перенесён с прежнего C22 на C23: migrations, backward compatibility, rolling upgrades, observability, security, fuzzing, corruption recovery и release procedures.

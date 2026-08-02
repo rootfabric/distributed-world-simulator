@@ -1076,3 +1076,40 @@ C21 soak:         PASS — 26 assertions
 C21 total:        PASS — 104 assertions
 Expected world:   144/144 tests, 147 steps
 ```
+
+
+## 2026-08-02 — C21: внешняя приёмка
+
+**Решение:** ACCEPTED.
+
+```text
+C21 focused:      PASS — 104 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17–C20:          PASS
+Network N0–M4:    PASS
+World/Main gate:  PASS
+git diff --check: PASS
+Manifest:         39/39
+```
+
+C21 стал принятой базой C22.
+
+## 2026-08-02 — C22: Compiled Construct Proxies and Hierarchical Detail Streaming
+
+**База:** принятый C21.
+**Статус:** IMPLEMENTED CANDIDATE.
+
+Добавлена иерархия shell/section/interior proxies для крупных item-backed constructs. Реальный fixture содержит 10 000 частей, но дальний packet содержит один shell artifact и не раскрывает дочерние item identities.
+
+```text
+C22 contracts:    PASS — 29 assertions
+C22 integration:  PASS — 52 assertions
+C22 graphical:    PASS — 35 assertions
+C22 scale/soak:   PASS — 75 assertions
+C22 total:        PASS — 191 assertions
+```
+
+Проверены 80 stable sections, 56 600 удалённых внутренних граней, greedy meshing, 83 content-addressed artifacts, bounded section/interior streaming, C13 exact descriptors только для interactive parts, incremental damage rebuild, persistence/restart и read-only distributed compilation.
+
+Ожидаемый внешний gate: C2B 258, C9 204, C17–C21, Network N0–M4, world 148/148 тестов и 151 шаг.

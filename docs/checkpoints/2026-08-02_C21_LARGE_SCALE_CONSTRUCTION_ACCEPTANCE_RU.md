@@ -1,6 +1,6 @@
 # C21 — Large-Scale Construction Acceptance
 
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED
 **База:** принятый C20
 **Рекомендуемая ветка:** `feature/c21-large-scale-construction-acceptance`
 
@@ -108,3 +108,19 @@ World regression: PASS — 144/144 tests, 147 steps
 Main-scene CLI:   PASS — 6/6
 git diff --check: PASS
 ```
+
+
+## Внешняя приёмка
+
+```text
+C21 focused:      PASS — 104 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17–C20:          PASS
+Network N0–M4:    PASS
+World/Main gate:  PASS
+git diff --check: PASS
+Manifest:         39/39
+```
+
+**Решение:** ACCEPTED. C21 является базой C22.
