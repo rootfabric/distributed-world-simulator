@@ -1,3 +1,21 @@
+Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (candidate)
+
+MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1:
+- atomic checksummed authority-directory checkpoint with active/previous fallback and cross-process commit lock
+- logical-tick lease renewal, expiry and CAS recovery claim
+- full exact fencing-token validation for every regional write
+- append-only handoff journal with irreversible COMMIT_DECIDED boundary
+- canonical durable MW8 package bytes with internal checksum binding
+- optional RL1 summary manifest carried only as rebuildable cache hint
+- deterministic restart: complete committed decisions, abort undecided transfers
+- fail-closed MW8 runtime gate, adapter and terminal reconciliation
+- focused, real multi-process crash recovery and concurrent expired-claim race profiles
+- no cross-region transaction, consensus cluster or production-world changes
+- config/matter/mw9-durable-handoff-recovery.v1.json
+- RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1 / .sh
+- docs/architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md
+- next: MW10 cross-region Matter transactions
+
 Planetary World v17.10.0-simulation-rl1-matter-summary-pyramid (candidate)
 
 RL1 Matter Summary Pyramid and Dirty Propagation over accepted RL0 fix1:

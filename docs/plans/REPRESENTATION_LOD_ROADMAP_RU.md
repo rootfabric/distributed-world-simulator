@@ -1,7 +1,7 @@
 # Representation LOD Roadmap — интеграция в Mutable Worlds и Construction
 
-**Принятая база:** RL0 unified representation contracts fix1.
-**Текущий этап:** RL1 Matter summary pyramid and dirty propagation.
+**Принятая база:** RL1 Matter summary pyramid and dirty propagation.
+**Текущий этап:** MW9 Durable Distributed Handoff and Crash Recovery.
 **Архитектура:** `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md`.
 
 ## 1. Оптимальный порядок после MW8
@@ -11,9 +11,9 @@ MW8  regional authority handoff — ACCEPTED
  ↓
 RL0  unified representation contracts — ACCEPTED
  ↓
-RL1  Matter summary pyramid and dirty propagation — CURRENT CANDIDATE
+RL1  Matter summary pyramid and dirty propagation — ACCEPTED
  ↓
-MW9  durable distributed handoff and crash recovery
+MW9  durable distributed handoff and crash recovery — CURRENT CANDIDATE
  ↓
 MW10 cross-region matter transactions
  ↓
@@ -109,18 +109,24 @@ Matter RL2 использует SDF/downsample/isosurface/transition cells. Об
 - content-addressed persistence manifests с полным cell binding;
 - focused handoff, rollback, same-revision и capacity tests.
 
-RL1 не строит coarse SDF samples или meshes. После acceptance следующий этап — MW9.
+RL1 не строит coarse SDF samples или meshes. Этап принят; durable lifecycle реализуется в MW9.
 
 ### MW9 — Durable Distributed Handoff
 
-- durable authority directory;
-- lease timeout;
-- fencing token;
-- transfer journal;
-- crash recovery PREPARING/COMMIT;
-- split-brain tests.
+Реализованный candidate:
 
-Representation cache остаётся необязательным и восстанавливаемым.
+- atomic active/previous authority checkpoint;
+- logical-tick lease timeout, renewal и expired claim;
+- exact full-object fencing token;
+- append-only transfer journal;
+- canonical package bytes и internal checksum binding;
+- irreversible durable commit decision;
+- deterministic restart rule: commit decided, otherwise abort;
+- optional RL1 summary manifest как rebuildable cache hint;
+- fail-closed MW8 runtime adapter и terminal reconciliation;
+- split-brain и multi-process crash tests.
+
+Representation cache остаётся необязательным и восстанавливаемым. После acceptance следующий этап — MW10.
 
 ### MW10 — Cross-region Transactions
 

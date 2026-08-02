@@ -124,11 +124,11 @@ mean_density_kg_m3: 2400.0
 ```text
 MW0–MW8  canonical Matter vertical slice — ACCEPTED
    ↓
-RL0       unified representation contracts — CURRENT
+RL0       unified representation contracts — ACCEPTED
    ↓
-RL1       Matter summary pyramid and dirty propagation
+RL1       Matter summary pyramid and dirty propagation — ACCEPTED
    ↓
-MW9       durable distributed handoff and crash recovery
+MW9       durable distributed handoff and crash recovery — CURRENT CANDIDATE
    ↓
 MW10      cross-region matter transactions
    ↓

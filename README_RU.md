@@ -1,3 +1,13 @@
+# PlanetSimulator — MW9 durable handoff candidate
+
+Текущий checkpoint: `v17.11.0-simulation-mw9-durable-handoff-recovery` поверх принятого RL1.
+
+MW9 сохраняет authority lease и append-only handoff journal атомарно, вводит exact fencing token, lease expiry/claim и детерминированное crash recovery. `COMMIT_DECIDED` необратим; transfer без durable decision после restart abort-ится. RL1 summary manifest переносится только как восстанавливаемый cache hint.
+
+Focused runner: `RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1` или `.sh`.
+
+Архитектура: `docs/architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md`.
+
 # PlanetSimulator
 
 Текущий Matter/Representation checkpoint:
