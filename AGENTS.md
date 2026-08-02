@@ -182,11 +182,12 @@ This track is independent from the accepted single-server multiplayer order and 
 ```text
 architecture: Dynamic Matter Fabric
 accepted: v17.6.0-simulation-mw6-matter-network-replication, delivery fix2
-current candidate: v17.7.0-simulation-mw7-matter-interest-replication
-branch: feature/mw7-matter-interest-replication
+accepted: v17.7.0-simulation-mw7-matter-interest-replication
+current candidate: v17.8.0-simulation-mw8-regional-authority-handoff
+branch: feature/mw8-regional-authority-handoff
 production worlds changed: false
 world catalog changed: false
-next after acceptance: MW8 regional persistence scaling, compaction and cross-server handoff preparation
+next after acceptance: MW9 distributed cross-region mutation protocol and durable authority directory
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
@@ -203,3 +204,6 @@ MW6 fix2 is accepted. The final matrix is MW6 `130/130 PASS`, M6 standalone `10/
 
 
 MW7 adds regional interest projections over the accepted global MW6 authority stream. Interest peers remain command-authorized by `MatterAuthoritativeServer` but do not receive its full sparse-store frames. `MatterInterestServer` filters committed persistent brick revisions into independent per-subscription regional sequences and projection hashes. Interest replacement is two-phase: the active view remains until a validated replacement snapshot atomically enters and evicts bricks. Reconnect uses regional replay or regional snapshot fallback. Procedural revision-0 bricks, global journal ownership, production Moon and world catalog remain unchanged. Review fixes must remain on `feature/mw7-matter-interest-replication` until acceptance.
+
+
+MW8 introduces a bounded multi-server matter authority path without changing the accepted A3 production gameplay topology. Every registered cell-region has exactly one directory lease. `MatterAuthoritativeServer` may use an optional `MatterRegionalAuthorityGate`; without that gate all MW6 behavior remains unchanged. Handoff must follow freeze -> prepare -> commit. Source mutation is forbidden while the lease is PREPARING, target mutation is forbidden until directory commit, and every pre-commit failure must compensate target store/receiver/journal before source ownership resumes. Transfer packages contain only persistent region snapshots, fully regional journal records and their material batches through MW5 exact transport, and are fenced by body-definition hash, grid-profile hash, frozen lease revision and transfer fingerprint. Cross-region mutation is rejected until a later distributed transaction checkpoint. Review fixes must remain on `feature/mw8-regional-authority-handoff`.

@@ -4,6 +4,8 @@
 
 - [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7: региональные persistent-brick projections, enter/leave и reconnect.
 - [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7 candidate и acceptance matrix.
+- [`architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — MW8: freeze/prepare/commit, single-owner lease и regional state transfer.
+- [`checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — MW8 candidate и acceptance matrix.
 - [`architecture/DYNAMIC_MATTER_FABRIC_RU.md`](architecture/DYNAMIC_MATTER_FABRIC_RU.md) — целевая парадигма вещества.
 - [`architecture/MW4_MATTER_MUTATIONS_RU.md`](architecture/MW4_MATTER_MUTATIONS_RU.md) — MW4: транзакционное бурение, session-local persistent mutations, fix1 performance boundary и fix2 JSON-safe energy boundary.
 - [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — MW5: durable matter checkpoint, typed recovery и exact canonical bytes.
@@ -243,3 +245,9 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 - [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — per-client cell subscriptions, regional sequence/hash и двухфазный enter/leave.
 - [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — candidate checkpoint и полная regression-матрица.
+
+
+## MW8 regional authority handoff
+
+- [`architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — authority directory, handoff package, rollback и client ticket.
+- [`checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — candidate checkpoint и полная regression-матрица.

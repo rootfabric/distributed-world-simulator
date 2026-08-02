@@ -113,13 +113,26 @@ MW6 подключает транзакции MW4 и durable state MW5 к уже
 
 Принятая матрица: MW6 `130/130 PASS`, M6 standalone `10/10 PASS`, M6 process recovery `128/128 PASS`, A3 — три последовательных PASS. Fix2 является parse-only коррекцией M6 regression-теста поверх функционального fix1.
 
-## MW7 regional matter interest candidate
+## MW7 regional matter interest — ACCEPTED
 
 ```text
 checkpoint: v17.7.0-simulation-mw7-matter-interest-replication
 base: v17.6.0-simulation-mw6-matter-network-replication / fix2 (ACCEPTED)
 branch: feature/mw7-matter-interest-replication
+decision: ACCEPTED
 scope: isolated asteroid matter track; production Moon/world catalog unchanged
 ```
 
 MW7 сохраняет глобальную авторитетную последовательность MW6, но реплицирует клиенту только persistent bricks его checksum-protected cell region. Каждая subscription имеет собственные `interest_revision`, `region_sequence` и `projection_hash`. Нерелевантные мутации не создают кадр. Смена области выполняется replacement snapshot с атомарным enter/leave, а reconnect выбирает regional delta replay или filtered snapshot fallback.
+
+
+## MW8 regional authority handoff candidate
+
+```text
+checkpoint: v17.8.0-simulation-mw8-regional-authority-handoff
+base: v17.7.0-simulation-mw7-matter-interest-replication (ACCEPTED)
+branch: feature/mw8-regional-authority-handoff
+scope: isolated asteroid matter track; production Moon/world catalog unchanged
+```
+
+MW8 добавляет первый ограниченный межсерверный authority handoff. Directory хранит единственный lease каждой непересекающейся cell-region. Source сначала замораживает запись, target импортирует persistent snapshots, релевантный journal и связанные material batches под компенсационным backup, после чего directory атомарно меняет owner и authority epoch. Старый сервер немедленно теряет право записи, новый обслуживает exact replay и продолжает MW6 stream из импортированного journal frontier. Клиент получает checksum-protected handoff ticket и повторно подключает MW7 regional replica к target. Mutation через несколько authority-regions пока отклоняется.

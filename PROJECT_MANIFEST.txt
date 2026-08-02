@@ -1,4 +1,24 @@
-Planetary World v17.7.0-simulation-mw7-matter-interest-replication (candidate)
+Planetary World v17.8.0-simulation-mw8-regional-authority-handoff (candidate)
+
+MW8 cross-server regional authority handoff over accepted MW7:
+- one active authority lease per non-overlapping cell region
+- freeze -> target prepare -> directory commit -> source relinquish
+- exact transfer of persistent snapshots, regional journal records and related material batches
+- package fences for body definition, spatial grid, frozen lease revision and transfer fingerprint
+- compensating target rollback before directory commit
+- source and target command fencing through an optional MW6 authority gate
+- target stream rebase from imported journal frontier
+- exact replay after handoff without second mutation or batch
+- MW7 client reconnect to target through filtered regional snapshot
+- cross-region mutations rejected pending distributed transaction support
+- explicit MW7 interest observer shutdown in the MW8 focused lifecycle
+- production Moon and world catalog unchanged
+- config/matter/mw8-matter-authority-handoff.v1.json
+- RUN_MW8_MATTER_HANDOFF_TESTS.ps1 / .sh
+- docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md
+- docs/checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md
+
+Planetary World v17.7.0-simulation-mw7-matter-interest-replication (accepted)
 
 MW7 regional matter interest replication over accepted MW6 fix2:
 - global MW6 authority stream preserved as canonical order

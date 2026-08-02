@@ -78,6 +78,27 @@ func configure(
 	})
 
 
+func shutdown() -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.success({"replay": true})
+	var observer_result: Dictionary = MatterUtilsScript.success({"replay": true})
+	if _authority != null and _authority.has_method("unregister_replication_observer"):
+		observer_result = _authority.unregister_replication_observer(self)
+	_states_by_client_id.clear()
+	_peer_by_id.clear()
+	_active_peer_by_client_id.clear()
+	_outbound_by_peer_id.clear()
+	_authority = null
+	_service = null
+	_body.clear()
+	_grid_profile.clear()
+	_grid_profile_hash = ""
+	_configured = false
+	if not bool(observer_result.get("success", false)):
+		return observer_result
+	return MatterUtilsScript.success({"replay": false})
+
+
 func connect_peer(peer_id: String, sync_request: Dictionary) -> Dictionary:
 	if not _configured:
 		return MatterUtilsScript.failure("MATTER_INTEREST_SERVER_NOT_CONFIGURED")

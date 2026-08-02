@@ -35,6 +35,7 @@ var _outbound_by_peer_id: Dictionary = {}
 var _frame_serial: int = 0
 var _replication_observers: Array = []
 var _observer_errors: Array[Dictionary] = []
+var _command_authority_gate = null
 
 
 func configure(
@@ -84,12 +85,50 @@ func configure(
 	_state_hash_by_sequence.clear()
 	_replication_observers.clear()
 	_observer_errors.clear()
+	_command_authority_gate = null
 	_state_hash_by_sequence[_stream_sequence] = _compute_state_hash(_stream_sequence)
 	_configured = true
 	return MatterUtilsScript.success({
 		"stream_sequence": _stream_sequence,
 		"state_hash": current_state_hash(),
 	})
+
+
+func set_command_authority_gate(gate) -> Dictionary:
+	if not _configured or gate == null or not gate.has_method("authorize_mutation"):
+		return MatterUtilsScript.failure("INVALID_MATTER_COMMAND_AUTHORITY_GATE")
+	if _command_authority_gate != null and _command_authority_gate != gate:
+		return MatterUtilsScript.failure("MATTER_COMMAND_AUTHORITY_GATE_ALREADY_SET")
+	_command_authority_gate = gate
+	return MatterUtilsScript.success()
+
+
+func rebase_from_service_state() -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.failure("MATTER_AUTHORITY_NOT_CONFIGURED")
+	for peer_value in _peers.values():
+		if bool(Dictionary(peer_value).get("active", false)):
+			return MatterUtilsScript.failure("MATTER_AUTHORITY_REBASE_WITH_ACTIVE_PEERS")
+	_stream_sequence = int(_service.mutation_journal().size())
+	_replay_log.clear()
+	_state_hash_by_sequence.clear()
+	_state_hash_by_sequence[_stream_sequence] = _compute_state_hash(_stream_sequence)
+	return MatterUtilsScript.success({
+		"stream_sequence": _stream_sequence,
+		"state_hash": current_state_hash(),
+	})
+
+
+func authority_owner_id() -> String:
+	return _authority_owner_id
+
+
+func authority_epoch() -> int:
+	return _authority_epoch
+
+
+func excavation_service():
+	return _service
 
 
 func register_gateway(gateway) -> Dictionary:
@@ -200,6 +239,16 @@ func register_replication_observer(observer) -> Dictionary:
 	return MatterUtilsScript.success({"replay": false})
 
 
+func unregister_replication_observer(observer) -> Dictionary:
+	if not _configured or observer == null:
+		return MatterUtilsScript.failure("INVALID_MATTER_REPLICATION_OBSERVER")
+	for index in range(_replication_observers.size()):
+		if _replication_observers[index] == observer:
+			_replication_observers.remove_at(index)
+			return MatterUtilsScript.success({"replay": false})
+	return MatterUtilsScript.success({"replay": true})
+
+
 func replication_observer_errors() -> Array[Dictionary]:
 	return _observer_errors.duplicate(true)
 
@@ -251,6 +300,15 @@ func handle_gateway_command(payload: Dictionary, envelope: Dictionary) -> Dictio
 		return _handler_failure("MATTER_COMMAND_BODY_MISMATCH")
 	if String(request["actor_id"]) != String(peer["actor_id"]):
 		return _handler_failure("MATTER_COMMAND_ACTOR_NOT_OWNED")
+	if _command_authority_gate != null:
+		var authorization_value = _command_authority_gate.authorize_mutation(request)
+		if typeof(authorization_value) != TYPE_DICTIONARY \
+				or not bool(Dictionary(authorization_value).get("success", false)):
+			return _handler_failure(
+				String(Dictionary(authorization_value).get("error_code", "MATTER_COMMAND_NOT_AUTHORIZED")) \
+					if typeof(authorization_value) == TYPE_DICTIONARY \
+					else "MATTER_COMMAND_NOT_AUTHORIZED"
+			)
 	var journal = _service.mutation_journal()
 	var existed_before: bool = journal.has_operation(String(request["operation_id"]))
 	var result: Dictionary = _service.execute(request)
