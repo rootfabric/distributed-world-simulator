@@ -707,4 +707,8 @@ Stable sections, exposed-surface extraction, greedy material batches, content-ad
 
 ## C23 — Production Hardening
 
-Production hardening перенесён с прежнего C22 на C23: migrations, backward compatibility, rolling upgrades, observability, security, fuzzing, corruption recovery и release procedures.
+C23 реализует production boundary без изменения authority-модели: versioned DTO/state envelopes, legacy migration, rolling-upgrade compatibility, terminal replay, bounded metrics, tamper-evident audit, fail-closed permissions, persisted rate limiting, corruption fallback, chaos и deterministic soak.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Ветка:** `feature/c23-production-hardening`.
+**Runbook:** `docs/runbooks/CONSTRUCTION_C23_PRODUCTION_HARDENING_RUNBOOK_RU.md`.

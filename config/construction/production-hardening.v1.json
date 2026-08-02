@@ -1,0 +1,56 @@
+{
+  "schema": "planet_simulator.construction_production_hardening_config.v1",
+  "release_id": "release/c23-1",
+  "state": {
+    "current_version": 2,
+    "compatible_reader_min": 1,
+    "compatible_reader_max": 2,
+    "retained_recovery_slots": 2,
+    "required_rolling_capabilities": [
+      "audit",
+      "exact-replay"
+    ]
+  },
+  "operation": {
+    "current_version": 1,
+    "exact_terminal_replay": true,
+    "reject_operation_id_conflicts": true
+  },
+  "security": {
+    "fail_closed_without_authorizer": true,
+    "audit_payloads": false,
+    "audit_hash_chain": true,
+    "rate_limit": 100,
+    "rate_window_ticks": 60,
+    "max_subject_action_keys": 4096,
+    "sanitize_external_terminal_details": true
+  },
+  "observability": {
+    "bounded_metric_names": true,
+    "arbitrary_labels": false,
+    "counters": [
+      "checkpoints_recovered",
+      "operations_accepted",
+      "operations_denied",
+      "operations_failed",
+      "operations_rate_limited",
+      "operations_replayed"
+    ],
+    "gauges": [
+      "audit_events",
+      "rate_limit_subjects",
+      "replay_entries"
+    ]
+  },
+  "acceptance": {
+    "fuzz_cases_min": 26,
+    "soak_operations": 2000,
+    "checkpoint_interval": 200,
+    "required_failure_points": [
+      "AFTER_EXECUTION_BEFORE_TERMINAL",
+      "AFTER_TERMINAL_BEFORE_RESPONSE",
+      "CORRUPT_LATEST_CHECKPOINT"
+    ],
+    "expected_focused_assertions": 4187
+  }
+}

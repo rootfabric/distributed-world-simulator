@@ -452,6 +452,22 @@ DISTANT_SHELL полностью заменяет presentation дочерних 
 - soak tests;
 - release/runbook documentation.
 
+### Реализованный C23 vertical slice
+
+- `ConstructionProductionOperation`: strict versioned DTO с payload checksum и operation checksum;
+- `ConstructionStateEnvelope`: backward-compatible v1/v2 saves и explicit migration trace;
+- `ConstructionReleasePolicy`: rolling-upgrade negotiation и read-only candidate fencing;
+- `ConstructionReplayStore`: exact terminal replay и operation ID conflict rejection;
+- bounded metrics и payload-free hash-chain audit;
+- fail-closed authorizer и persisted fixed-window rate limiter;
+- deterministic DTO fuzz matrix;
+- two-slot checkpoint recovery с quarantine повреждённого latest slot;
+- crash windows после authoritative execution и после terminal record;
+- deterministic 2 000-operation soak и release/rollback runbook.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c23-production-hardening`.
+
 ## Приоритеты
 
 Критический путь после C12:

@@ -1,0 +1,68 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C23_PRODUCTION_HARDENING",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "accepted_through": "C21",
+    "c22_status": "IMPLEMENTED_CANDIDATE",
+    "c22_documented_focused_assertions": 191
+  },
+  "branch": "feature/c23-production-hardening",
+  "focused": {
+    "editor_parse": "NOT_EXECUTED_IN_CURRENT_ENVIRONMENT",
+    "contracts": {
+      "status": "PENDING_RUNTIME",
+      "expected_assertions": 49
+    },
+    "integration": {
+      "status": "PENDING_RUNTIME",
+      "expected_assertions": 63
+    },
+    "chaos": {
+      "status": "PENDING_RUNTIME",
+      "expected_assertions": 27
+    },
+    "soak": {
+      "status": "PENDING_RUNTIME",
+      "expected_assertions": 4048
+    },
+    "expected_total_assertions": 4187
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "resource_paths": "PASS",
+    "runner_registration": "PASS",
+    "manifest_paths": "PASS",
+    "archive_safety": "PASS"
+  },
+  "coverage": [
+    "SCHEMA_MIGRATION_V1_TO_V2",
+    "BACKWARD_COMPATIBLE_SAVE_ENVELOPE",
+    "ROLLING_UPGRADE_NEGOTIATION",
+    "EXACT_TERMINAL_OPERATION_REPLAY",
+    "OPERATION_ID_CONFLICT_REJECTION",
+    "BOUNDED_METRICS",
+    "PAYLOAD_FREE_HASH_CHAIN_AUDIT",
+    "FAIL_CLOSED_PERMISSION_BOUNDARY",
+    "PERSISTED_FIXED_WINDOW_RATE_LIMIT",
+    "DETERMINISTIC_DTO_FUZZING",
+    "TWO_SLOT_CORRUPTION_RECOVERY",
+    "POST_COMMIT_AND_POST_TERMINAL_CHAOS",
+    "DETERMINISTIC_2000_OPERATION_SOAK",
+    "RELEASE_AND_ROLLBACK_RUNBOOK",
+    "ONE_TIME_SERVICE_INITIALIZATION",
+    "SAFE_JSON_EXTERNAL_RESULT_SANITIZATION",
+    "CROSS_STATE_INVARIANT_VALIDATION",
+    "MONOTONIC_RECOVERY_SLOT_IMPORT",
+    "STATE_CRITICAL_CAPABILITY_NEGOTIATION"
+  ],
+  "delivery": {
+    "manifest": "c23-production-hardening-files.txt",
+    "world_test_entries_added": 4,
+    "expected_world_test_count": 152,
+    "expected_world_steps": 155,
+    "file_count": 43,
+    "manifest_paths_expected": 43
+  },
+  "runtime_limitation": "The connected double-precision Godot archive could not be materialized by the file backend and no system Godot executable exists in the current container. Runtime PASS is intentionally not claimed."
+}

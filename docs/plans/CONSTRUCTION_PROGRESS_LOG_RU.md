@@ -1113,3 +1113,36 @@ C22 total:        PASS — 191 assertions
 Проверены 80 stable sections, 56 600 удалённых внутренних граней, greedy meshing, 83 content-addressed artifacts, bounded section/interior streaming, C13 exact descriptors только для interactive parts, incremental damage rebuild, persistence/restart и read-only distributed compilation.
 
 Ожидаемый внешний gate: C2B 258, C9 204, C17–C21, Network N0–M4, world 148/148 тестов и 151 шаг.
+
+
+## 2026-08-02 — C23: Production Hardening
+
+**База:** C13–C21 ACCEPTED; C22 IMPLEMENTED CANDIDATE с documented focused profile 191 assertions.
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c23-production-hardening`.
+
+Добавлен отдельный production boundary вокруг существующего authoritative executor:
+
+- strict versioned operation DTO;
+- backward-compatible state v1/v2 и migration trace;
+- rolling-upgrade negotiation;
+- exact terminal replay и operation ID conflict fencing;
+- bounded metrics и payload-free hash-chain audit;
+- fail-closed permission authorizer;
+- persisted fixed-window rate limit;
+- deterministic DTO fuzzing;
+- primary/previous checkpoint recovery с quarantine;
+- chaos boundaries до terminal record и до response;
+- два deterministic soak-прогона по 2 000 операций;
+- release/rollback runbook.
+
+```text
+C23 contracts:    49 assertions expected
+C23 integration:  63 assertions expected
+C23 chaos:        27 assertions expected
+C23 soak:       4048 assertions expected
+C23 total:      4187 assertions expected
+Expected world: 152/152 tests, 155 steps
+```
+
+Runtime PASS в текущей среде не заявлен: custom double Godot из Library не materialized, системный Godot отсутствует. Подготовлены Linux/PowerShell runners и validation matrix для независимой приёмки.

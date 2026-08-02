@@ -696,3 +696,21 @@ Proxy artifact не является предметом, не получает i
 Дальний shell обязан **заменять** presentation дочерних частей. Одновременное отображение shell поверх полного child runtime нарушает инвариант. При приближении shell заменяется bounded section HLOD, затем локальными/interior proxies и только необходимыми interactive C13 descriptors.
 
 Incremental rebuild следует authoritative изменению: C9 damage меняет snapshot, C22 инвалидирует dirty sections и shell при изменении exposed boundary. Неизменившиеся geometric bytes переиспользуются по content hash, при этом item identities и canonical construct composition остаются неизменными.
+
+
+## Production hardening invariant — C23
+
+Production hardening не является новой authority-моделью. C23 оборачивает уже существующий C2B/M0/C12/C17 authoritative executor эксплуатационными гарантиями, но не получает права напрямую менять Item Graph или `ConstructAggregate`.
+
+```text
+C23 may validate, fence, replay, observe and recover
+C23 must not invent identity or bypass authoritative transaction commit
+```
+
+Operation ID и checksum образуют immutable idempotency key. Повтор идентичной terminal операции должен вернуть прежний результат, а тот же ID с другим checksum отклоняется. Для crash-window после authoritative commit сам нижележащий executor также обязан поддерживать exact idempotence.
+
+Save compatibility выражается versioned envelope, а не эвристическим чтением частично совпадающих полей. Повреждение любого уровня checksum останавливает загрузку этого slot. Recovery допускает только полный предыдущий валидный checkpoint.
+
+Rolling upgrade negotiation доказывает только wire/state compatibility. Право записи всё равно передаётся через C17 authority migration и epoch fencing; совместимость версий никогда не разрешает multi-writer.
+
+Observability ограничена фиксированными metric names. Audit не содержит payload и связан checksum chain, поэтому эксплуатационная диагностика не превращается во второй источник item state или утечку содержимого операций.

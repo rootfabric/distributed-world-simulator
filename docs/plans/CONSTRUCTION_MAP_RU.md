@@ -24,8 +24,9 @@
 **C19:** ACCEPTED
 **C20:** ACCEPTED
 **C21:** ACCEPTED
-**Рабочая ветка C22:** `feature/c22-compiled-construct-proxies-hlod-streaming`
-**Текущая позиция:** `C22 — Compiled Construct Proxies and Hierarchical Detail Streaming, IMPLEMENTED CANDIDATE`
+**C22:** Compiled Construct Proxies and Hierarchical Detail Streaming, IMPLEMENTED CANDIDATE
+**Рабочая ветка C23:** `feature/c23-production-hardening`
+**Текущая позиция:** `C23 — Production Hardening, IMPLEMENTED CANDIDATE`
 
 Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
@@ -62,8 +63,8 @@ flowchart TD
     C18 --> C19["C19 Agent Automation — ACCEPTED"]
     C19 --> C20["C20 Logistics/Economy — ACCEPTED"]
     C20 --> C21["C21 Scale Acceptance — ACCEPTED"]
-    C21 --> C22["C22 Compiled Proxies/HLOD — CURRENT CANDIDATE"]
-    C22 --> C23["C23 Production Hardening"]
+    C21 --> C22["C22 Compiled Proxies/HLOD — CANDIDATE"]
+    C22 --> C23["C23 Production Hardening — CURRENT CANDIDATE"]
 ```
 
 ```text
@@ -120,7 +121,7 @@ C12 multiplayer construction → C13 federated constructs
 | C20 | logistics, procurement, contractors и economy | supply chain | **ACCEPTED** |
 | C21 | large-scale и soak acceptance | мир проекта | **ACCEPTED** |
 | C22 | compiled shell, section HLOD, interior streaming и proxy cache | станция из 10 000 частей | **IMPLEMENTED CANDIDATE** |
-| C23 | production hardening | release/runtime | PLANNED |
+| C23 | migrations, replay, observability, security, recovery и chaos/soak | release/runtime | **IMPLEMENTED CANDIDATE** |
 
 ## C2A — Item Graph Contracts
 
@@ -704,4 +705,8 @@ C22 проверяет объект из 10 000 item-backed parts. Дальни�
 
 ## C23 — Production Hardening
 
-Schema migrations, backward-compatible saves, rolling upgrades, observability, audit/security, rate limits, DTO fuzzing, corruption recovery, chaos profiles и release runbooks.
+**Статус:** IMPLEMENTED CANDIDATE.
+
+C23 вводит versioned production boundary вокруг существующего authoritative executor: backward-compatible v1→v2 state migration, rolling-upgrade negotiation с обязательными `audit + exact-replay`, exact terminal replay, bounded metrics, payload-free hash-chain audit, fail-closed permissions, persisted fixed-window rate limit, cross-state invariants и two-slot corruption recovery.
+
+Chaos-профиль закрывает потерю terminal record после authoritative commit и потерю ответа после terminal commit. Soak выполняет два детерминированных прогона по 2 000 operations и сравнивает final state checksum и audit tail. Runtime acceptance остаётся обязательным внешним gate.
