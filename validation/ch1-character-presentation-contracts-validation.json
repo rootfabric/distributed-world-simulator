@@ -1,0 +1,13 @@
+{
+  "schema": "planet_simulator.character_stage_validation.v1",
+  "stage": "CH1",
+  "branch": "feature/ch1-character-presentation-contracts",
+  "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+  "editor_import": "PASS",
+  "focused_test": "res://tests/characters/test_ch1_character_contracts_and_registry.gd",
+  "assertions": 30,
+  "failures": 0,
+  "headless_safe": true,
+  "production_runtime_files_changed": 0,
+  "result": "PASS"
+}
