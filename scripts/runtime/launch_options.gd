@@ -1,6 +1,10 @@
 extends RefCounted
 
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
+const NetworkRuntimeIdentityScript = preload("res://scripts/network/observability/network_runtime_identity.gd")
+const NetworkProtocolManifestScript = preload("res://scripts/network/observability/network_protocol_manifest.gd")
+const NetworkConditionProfileScript = preload("res://scripts/network/conditions/network_condition_profile.gd")
+const NetworkConditionProfileStoreScript = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
 
 const SCHEMA: String = "planet_simulator.launch_options.v1"
 
@@ -37,6 +41,12 @@ static func defaults() -> Dictionary:
 		"m7_result_file": "",
 		"network_debug": false,
 		"network_debug_stay_open": false,
+		"network_session_token": NetworkRuntimeIdentityScript.DEFAULT_SESSION_TOKEN,
+		"network_build_id": NetworkRuntimeIdentityScript.BUILD_ID,
+		"network_git_commit": NetworkRuntimeIdentityScript.SOURCE_COMMIT,
+		"network_protocol_hash": NetworkProtocolManifestScript.current_protocol_hash(),
+		"network_condition_profile": "LOCAL",
+		"network_condition_presets_file": NetworkConditionProfileStoreScript.DEFAULT_PRESETS_PATH,
 		"m7_phase": 0,
 		"m7_peer_result_file": "",
 		"m7_control_file": "",
@@ -133,6 +143,18 @@ static func parse(arguments) -> Dictionary:
 				options["m7_peer_result_file"] = value
 			"m7-control-file":
 				options["m7_control_file"] = value
+			"network-session-token":
+				options["network_session_token"] = value.to_lower()
+			"network-build-id":
+				options["network_build_id"] = value.to_lower()
+			"network-git-commit":
+				options["network_git_commit"] = value.to_lower()
+			"network-protocol-hash":
+				options["network_protocol_hash"] = value.to_lower()
+			"network-profile":
+				options["network_condition_profile"] = value.to_upper()
+			"network-presets-file":
+				options["network_condition_presets_file"] = value
 			"user-data-dir":
 				options["user_data_dir"] = value
 			"shutdown-after-ms":
@@ -223,6 +245,26 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 		errors.append("M6 dedicated recovery options require dedicated-server role")
 	if not m6_result_file.is_empty() and m6_persistence_root.is_empty():
 		errors.append("Launch option m6_persistence_root is required for M6 dedicated recovery")
+	var profile_id: String = String(options.get("network_condition_profile", "")).strip_edges().to_upper()
+	if not NetworkConditionProfileScript.is_profile_id(profile_id):
+		errors.append("Launch option network_condition_profile is invalid")
+	else:
+		options["network_condition_profile"] = profile_id
+	if String(options.get("network_condition_presets_file", "")).strip_edges().is_empty():
+		errors.append("Launch option network_condition_presets_file cannot be empty")
+
+	var identity_check: Dictionary = NetworkRuntimeIdentityScript.validate_config({
+		"world_id": String(options.get("world", "")),
+		"playable_sandbox": bool(options.get("network_playground", false)),
+		"network_session_token": String(options.get("network_session_token", "")),
+		"network_build_id": String(options.get("network_build_id", "")),
+		"network_git_commit": String(options.get("network_git_commit", "")),
+		"network_protocol_hash": String(options.get("network_protocol_hash", "")),
+	})
+	if not bool(identity_check.get("success", false)):
+		errors.append("Network runtime identity is invalid: %s" % String(
+			identity_check.get("details", {}).get("cause", {}).get("error_code", "INVALID_NETWORK_RUNTIME_IDENTITY")
+		))
 	var node_id: String = String(options.get("node_id", ""))
 	if role == RuntimeRoleScript.OFFLINE and node_id == "local-listen-host":
 		options["node_id"] = "local-offline"

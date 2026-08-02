@@ -182,17 +182,37 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - M7 manual launch: `PLAY_M7_NETWORKED_PLAYGROUND.ps1/.sh`.
 - Next architecture stage after M7 validation: B1 NATS Core adapter.
 
-## Current NX0 network-experience preparation
+## Current NX1 deterministic network condition simulator
 
 ```text
-base commit: 69bd7fc
-base playable candidate: v16.10.6.1-testing-m7-playable-networked-playground
-current checkpoint: v16.10.7-network-nx0-observability-preparation
-branch: feature/nx0-observability-baseline-preparation
-runtime behavior changed: no
-focused runner: RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1/.sh
+accepted base: v16.10.8-network-nx0-observability-baseline
+current checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator
+branch: feature/nx1-deterministic-network-condition-simulator
+focused runner: RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh
 ```
 
-Product priority is now NX0–NX6 realtime network experience before B1 implementation. B1 remains architecturally valid and adapter-only; this priority change does not alter accepted A3/B0 contracts.
+Every M3/M7 ENet peer must still complete `COMPATIBILITY_HELLO`/ACK before gameplay `JOIN`. Fingerprint mismatch must remain deterministic and must never create a player or mutate `NetworkedGameplayService`. Session binding is public `session-id/...` or a `sha256/...` digest, never a bearer credential.
 
-The preparation checkpoint adds only pure contracts, bounded telemetry primitives, condition-profile presets, documentation and tests. Do not attach a packet-loss wrapper to production ENet until reliable retransmission semantics are explicitly preserved.
+Production transport composition is `NetworkTransportBoundaryV2 → NetworkConditionSimulatorPort → ENetMultiPeerTransportPort`. `LOCAL` must remain exact passthrough. Reliable application frames may be delayed as simulated retransmission but must never be intentionally deleted. Unreliable loss must use gap-tolerant latest-wins sequencing and suppress stale frames. Incoming sequence cursors must remain independent per delivery class and ENet channel group; an unreliable latest-wins cursor must never reject a valid reliable frame. Profiles are endpoint-local; applying the same profile on server and client compounds conditions.
+
+Already queued frames must remain blocked during manual blackout and lag spike. This includes `MESSAGE_RECEIVED` events that have already moved into the simulator ready queue; lifecycle events (`PEER_CONNECTED`, `PEER_DISCONNECTED`, `TRANSPORT_ERROR` and listener lifecycle) must still bypass the block. Held message events must preserve FIFO order. New unreliable frames inside an active blackout are dropped; queued-before-blackout unreliable frames are retained until release. `disconnect_duration_ms` is a transport blackout, not a physical socket close. Physical restart/reconnect remains covered by M7 recovery. NX1 must not suppress movement results, batch snapshots, change ENet channel layout, introduce fixed-tick movement or alter persistence cadence. Those changes belong to NX2/NX3/NX9.
+
+Product priority remains NX0–NX6 before B1 implementation.
+
+
+## Current NX2 realtime traffic separation
+
+```text
+accepted base: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+current checkpoint: v16.12.0-network-nx2-realtime-traffic-separation
+branch: feature/nx2-realtime-traffic-separation
+focused runner: RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh
+```
+
+Production channels are CONTROL=0 reliable, INPUT=1 application-sequenced unreliable, SNAPSHOT=2 application-sequenced unreliable, ITEM=3 reliable, RESYNC=4 reliable and TELEMETRY=5 application-sequenced unreliable. ENet must use raw unreliable for application-sequenced streams; stale/gap/latest-wins semantics belong to the boundary. Outbound queues remain partitioned per peer/delivery/channel stream. Reliable FIFO may never be replaced by realtime coalescing.
+
+M7 clients send compact transition-based `PLAYER_INPUT_BATCH` frames no faster than 33 ms with at most three entries. Repeated idle samples must not displace an unacknowledged movement transition. The server must suppress every successful movement result, per-input delta and per-input full snapshot, while preserving reliable rejection. Compact authoritative snapshots publish no faster than 50 ms and acknowledge `last_input_sequence`.
+
+Item commands remain on ITEM. Join/full Item Graph state and explicit mismatch recovery remain on RESYNC. M7 network persistence must suppress client `item.save` only through an explicit server-authoritative persistence capability; H1 listen-host save commands remain valid. NX2 does not claim fixed tick, prediction, remote interpolation buffer or async persistence. Those belong to NX3/NX4/NX5/NX9.
+
+Physical ENet channel/mode validation is strict. A mismatched frame must be rejected using `PEER_LOCAL_QUARANTINE_V1`: disconnect and fail only the offending peer session, clear only its queues, keep the server boundary `LISTENING`, and preserve healthy peers. Never convert a peer-local protocol violation into a global boundary failure. Both NX2 focused runners must execute the physical two-client process regression and report `9/9`.

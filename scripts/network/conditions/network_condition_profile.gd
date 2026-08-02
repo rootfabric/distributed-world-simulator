@@ -50,7 +50,7 @@ static func validate(profile: Dictionary) -> Dictionary:
 			return check
 	if String(profile["schema"]) != SCHEMA:
 		return UtilsScript.validation_failure("UNSUPPORTED_SCHEMA", "Unexpected network condition profile schema")
-	if not _is_profile_id(String(profile["profile_id"])):
+	if not is_profile_id(String(profile["profile_id"])):
 		return UtilsScript.validation_failure("INVALID_PROFILE_ID", "profile_id must be canonical uppercase")
 	for field in [
 		"outgoing_latency_min_ms", "outgoing_latency_max_ms",
@@ -114,7 +114,28 @@ static func _is_percentage(value) -> bool:
 	return not is_nan(number) and not is_inf(number) and number >= 0.0 and number <= 100.0
 
 
-static func _is_profile_id(value: String) -> bool:
+static func is_passthrough(profile: Dictionary) -> bool:
+	var check: Dictionary = validate(profile)
+	if not bool(check.get("success", false)):
+		return false
+	for field in [
+		"outgoing_latency_min_ms", "outgoing_latency_max_ms",
+		"incoming_latency_min_ms", "incoming_latency_max_ms", "jitter_ms",
+		"burst_loss_duration_ms", "bandwidth_limit_kbps", "queue_limit_bytes",
+		"lag_spike_ms", "disconnect_duration_ms",
+	]:
+		if int(profile.get(field, 0)) != 0:
+			return false
+	for field in [
+		"packet_loss_percent", "burst_loss_probability_percent",
+		"duplicate_percent", "reorder_percent",
+	]:
+		if not is_equal_approx(float(profile.get(field, 0.0)), 0.0):
+			return false
+	return true
+
+
+static func is_profile_id(value: String) -> bool:
 	if value.is_empty() or value != value.strip_edges() or value != value.to_upper() or value.length() > 64:
 		return false
 	for character in value:

@@ -93,9 +93,8 @@ func _run_a() -> void:
 	Input.action_press("move_forward")
 	await _wait_physics_frames(24)
 	Input.action_release("move_forward")
-	await _wait_frames(12)
-	var after: Vector3 = playground.player.get_world_position()
-	_assert(after.distance_to(before) > 0.1, "A moved through InputMap and server simulation")
+	var moved: bool = await _wait_local_movement(before, 0.1, 3000)
+	_assert(moved, "A moved through InputMap and server simulation")
 	playground.set_m7_state_sync_enabled(false)
 	var move_result: Dictionary = await _move_authority_toward(Vector3(1.2, 0.4, -3.4), 2)
 	_assert(bool(move_result.get("success", false)), "A movement intent accepted by server simulation")
@@ -165,9 +164,8 @@ func _run_b() -> void:
 	Input.action_press("move_left")
 	await _wait_physics_frames(24)
 	Input.action_release("move_left")
-	await _wait_frames(12)
-	var after: Vector3 = playground.player.get_world_position()
-	_assert(after.distance_to(before) > 0.1, "B moved through InputMap and server simulation")
+	var moved: bool = await _wait_local_movement(before, 0.1, 3000)
+	_assert(moved, "B moved through InputMap and server simulation")
 	playground.set_m7_state_sync_enabled(false)
 	var move_result: Dictionary = await _move_authority_toward(Vector3(3.0, 0.8, -2.0), 1)
 	_assert(bool(move_result.get("success", false)), "B movement intent accepted by server simulation")
@@ -339,6 +337,7 @@ func _wait_server_player_checksum(timeout_ms: int) -> bool:
 	return false
 
 
+
 func _server_player_checksum() -> String:
 	return String(_read(server_file).get("snapshot", {}).get("checksum", ""))
 
@@ -357,6 +356,15 @@ func _wait_item_checksum(expected: String, timeout_ms: int) -> bool:
 func _wait_frames(count: int) -> void:
 	for _index in range(count):
 		await process_frame
+
+
+func _wait_local_movement(origin: Vector3, minimum_distance: float, timeout_ms: int) -> bool:
+	var started_ms: int = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started_ms <= timeout_ms:
+		if playground.player.get_world_position().distance_to(origin) > minimum_distance:
+			return true
+		await process_frame
+	return false
 
 
 func _wait_physics_frames(count: int) -> void:

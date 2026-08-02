@@ -200,7 +200,11 @@ func _test_condition_profiles() -> void:
 func _test_baseline_and_documentation() -> void:
 	var roadmap: Dictionary = _load_json("res://config/network/network-experience-roadmap.v1.json")
 	var preparation: Dictionary = _load_json("res://config/network/nx0-observability-baseline-preparation.v1.json")
-	_assert(String(roadmap.get("current_stage", "")) == "NX0_PREPARATION", "Network experience roadmap current stage mismatch")
+	var current_stage: String = String(roadmap.get("current_stage", ""))
+	var supported_stages: Array[String] = ["NX0_PREPARATION"]
+	for stage_index in range(10):
+		supported_stages.append("NX%d" % stage_index)
+	_assert(current_stage in supported_stages, "Network experience roadmap current stage mismatch")
 	_assert(String(roadmap.get("base_commit", "")) == "69bd7fc", "Network experience roadmap base commit mismatch")
 	_assert(roadmap.get("phases", []).size() == 10, "NX roadmap does not contain NX0 through NX9")
 	_assert(String(preparation.get("checkpoint", "")) == "v16.10.7-network-nx0-observability-preparation", "NX0 preparation checkpoint mismatch")
@@ -211,15 +215,22 @@ func _test_baseline_and_documentation() -> void:
 	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
 	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 	var enet_source: String = FileAccess.get_file_as_string("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
-	_assert(server_source.contains("var previous_ms := int(_peer_last_input_ms.get(peer_id, now_ms - 50))"), "M7 packet-arrival movement baseline changed without roadmap update")
-	_assert(server_source.contains("authority_intent[\"delta_seconds\"] = clampf(float(now_ms - previous_ms) / 1000.0"), "M7 movement delta baseline probe is missing")
-	_assert(server_source.contains("_send_result(peer_id, operation_id, \"PLAYER_INPUT\", result)"), "M7 successful movement result baseline changed")
-	_assert(server_source.contains("_broadcast_delta(result.get(\"details\", {}).get(\"delta\", {}))"), "M7 movement delta broadcast baseline changed")
-	_assert(server_source.contains("_broadcast_snapshot(\"PLAYER_INPUT_SIMULATED\")"), "M7 per-input full snapshot baseline changed")
+	if current_stage in ["NX0_PREPARATION", "NX0", "NX1"]:
+		_assert(server_source.contains("var previous_ms := int(_peer_last_input_ms.get(peer_id, now_ms - 50))"), "M7 packet-arrival movement baseline changed without roadmap update")
+		_assert(server_source.contains("_send_result(peer_id, operation_id, \"PLAYER_INPUT\", result)"), "M7 successful movement result baseline changed")
+		_assert(server_source.contains("_broadcast_snapshot(\"PLAYER_INPUT_SIMULATED\")"), "M7 per-input full snapshot baseline changed")
+		_assert(enet_source.contains("const MAX_CHANNELS: int = 3"), "ENet channel baseline changed without NX2 update")
+	else:
+		_assert(server_source.contains("func _handle_player_input_batch"), "NX2 input batch handler is missing")
+		_assert(server_source.contains("_movement_results_suppressed += 1"), "NX2 movement result suppression is missing")
+		_assert(server_source.contains("MOVEMENT_NETWORK_TICK"), "NX2 network-tick snapshot publication is missing")
+		_assert(not server_source.contains("_broadcast_snapshot(\"PLAYER_INPUT_SIMULATED\")"), "NX2 retained per-input full snapshot")
+		_assert(client_source.contains("PLAYER_INPUT_BATCH"), "NX2 client does not send input batches")
+		_assert(enet_source.contains("ChannelPolicyScript.ENET_CHANNEL_COUNT"), "NX2 ENet channel policy is not wired")
 	_assert(server_source.contains("const M7_MOVEMENT_CHECKPOINT_INTERVAL_MS := 1500"), "M7 movement persistence interval baseline changed")
-	_assert(client_source.contains("_async_command_results += 1"), "M7 async result baseline probe is missing")
+	_assert(client_source.contains("_async_command_results += 1"), "M7 async rejection/result probe is missing")
 	_assert(client_source.contains("func submit_movement_intent_nonblocking"), "M7 nonblocking movement path is missing")
-	_assert(enet_source.contains("const MAX_CHANNELS: int = 3"), "ENet channel baseline changed without NX2 update")
+
 
 	var roadmap_doc: String = FileAccess.get_file_as_string("res://docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md")
 	var nx0_doc: String = FileAccess.get_file_as_string("res://docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md")

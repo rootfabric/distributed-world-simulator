@@ -1,0 +1,14 @@
+RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1
+RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.sh
+tests/network/test_nx2_physical_channel_processes.gd
+tests/network/test_nx2_physical_channel_processes.gd.uid
+tests/network/test_nx2_realtime_traffic_separation.gd
+docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md
+docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md
+docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX1_RU.md
+scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd
+scripts/network/observability/network_protocol_manifest.gd
+scripts/network/transports/v2/enet_multi_peer_transport_port.gd
+validation/v16.12.0-network-nx2-realtime-traffic-separation-fix1-validation.json
+validation/v16.12.0-network-nx2-realtime-traffic-separation-fix1-files.txt
+NX2_REALTIME_TRAFFIC_SEPARATION_FIX1_PATCH_MANIFEST.json

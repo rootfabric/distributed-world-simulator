@@ -58,21 +58,29 @@ NX0 observability baseline
 → NX9 async persistence hardening
 ```
 
-Текущий подготовительный checkpoint:
+Текущий checkpoint candidate:
 
 ```text
-v16.10.7-network-nx0-observability-preparation
-base commit: 69bd7fc
-branch: feature/nx0-observability-baseline-preparation
-runtime behavior changed: no
+v16.12.0-network-nx2-realtime-traffic-separation
+accepted base: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+base commit: f1abeca
+branch: feature/nx2-realtime-traffic-separation
+runtime behavior changed: channel separation, input batching, movement amplification suppression
+server authority changed: no
+fixed tick/prediction changed: no
 ```
+
+NX0 сохраняет matching fingerprint и bounded telemetry. NX1 добавляет детерминированные endpoint-local network conditions. NX2 разделяет шесть transport streams, подавляет successful movement results/per-input snapshots, отправляет compact transition batches и публикует compact snapshots с cadence 20 Hz. NX3 fixed tick остаётся следующим отдельным этапом.
 
 Документы:
 
 - `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
-- `docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md`;
+- `docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md`;
+- `docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_RU.md`;
 - `config/network/network-experience-roadmap.v1.json`;
-- `config/network/nx0-observability-baseline-preparation.v1.json`;
+- `config/network/nx2-realtime-traffic-separation.v1.json`;
+- `config/network/nx1-deterministic-network-condition-simulator.v1.json`;
 - `config/network/network-condition-presets.v1.json`.
 
 B1 остаётся допустимым server-to-server adapter после A3, но его реализация временно уступает продуктовому приоритету NX0–NX6. Existing B0/B1 contracts не изменяются.

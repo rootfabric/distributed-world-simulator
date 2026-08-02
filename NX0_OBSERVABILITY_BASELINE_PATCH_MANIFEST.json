@@ -1,0 +1,262 @@
+{
+  "schema": "planet_simulator.nx0_observability_baseline_patch_manifest.v1",
+  "checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "build_id": "nx0-observability-baseline",
+  "branch": "feature/nx0-observability-baseline",
+  "base_commit": "69bd7fc",
+  "base_checkpoint": "v16.10.7-network-nx0-observability-preparation",
+  "base_delivery": "fix1",
+  "incremental": true,
+  "apply_over": "accepted preparation plus rebuilt fix1",
+  "file_count": 41,
+  "new_file_count": 20,
+  "modified_file_count": 21,
+  "deleted_file_count": 0,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "506498a5fbc59f7a6656a32323864aa6c467b6ba756773f99ed25a124f67530a",
+      "bytes": 8855
+    },
+    {
+      "path": "NETWORK_ROADMAP_RU.md",
+      "status": "MODIFIED",
+      "sha256": "1efcc343c98a3ccc8f18e51558cd79025a36e18d86f4a7be61c458b5a8c61781",
+      "bytes": 4474
+    },
+    {
+      "path": "NX0_OBSERVABILITY_BASELINE_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PLAY_M7_NETWORKED_PLAYGROUND.ps1",
+      "status": "MODIFIED",
+      "sha256": "93af1ff5aa1dd48a7cc5b7903f19a51701f0ecdd9ef93be520e74a9cea0ee809",
+      "bytes": 7810
+    },
+    {
+      "path": "PLAY_M7_NETWORKED_PLAYGROUND.sh",
+      "status": "MODIFIED",
+      "sha256": "22d39161a63855660875eb3c52baec36d073a9cb7cd37b09daba03b26dacef22",
+      "bytes": 4283
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "2f76842e12343d9fd0352263da047c69fc3be83a08b7f7452b818efddaf7684e",
+      "bytes": 40443
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "26c4ba52ff1983c7177d053a02d8ad888d8ac77813c7ce3343933288f604ae5e",
+      "bytes": 4198
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "8f6e6a605a9ac573557aec72429bf592c5e3679ebcadb6fa78f7dcf90179644c",
+      "bytes": 9719
+    },
+    {
+      "path": "RUN_NX0_OBSERVABILITY_BASELINE_TESTS.ps1",
+      "status": "NEW",
+      "sha256": "ba891380c8902a805327b953cb355a547eb3aa8b644fd2ad2e8cde7e5c2d9478",
+      "bytes": 3427
+    },
+    {
+      "path": "RUN_NX0_OBSERVABILITY_BASELINE_TESTS.sh",
+      "status": "NEW",
+      "sha256": "67cf7fb4322caf9f23cd7e13cae851cd5223b5c1c77e7ee1b38081a091e1f6cc",
+      "bytes": 1588
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "5634f717795b8b33f05de8d6d17240fc355bc77d99e4a7e6059a4155ca21025d",
+      "bytes": 19944
+    },
+    {
+      "path": "START_M7_NETWORK_CLIENT.ps1",
+      "status": "MODIFIED",
+      "sha256": "dd0687a79fdf53d6c055b62811df95b63c3163c33ef76f7b4d355661660804f3",
+      "bytes": 6070
+    },
+    {
+      "path": "START_M7_NETWORK_SERVER.ps1",
+      "status": "MODIFIED",
+      "sha256": "c8fa6177c2be765c160dc1ae2beef7bff55d1a14879503683ecd8adb4ebe8440",
+      "bytes": 4641
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "status": "MODIFIED",
+      "sha256": "244d86c2a416453a4f0613eb9de0f8b7475bc529746f3012c12f93197d5666e3",
+      "bytes": 3931
+    },
+    {
+      "path": "config/network/nx0-observability-baseline-preparation.v1.json",
+      "status": "MODIFIED",
+      "sha256": "9d03316764db4f182055a66168be702af4a96a26dde5d3fdb956bcf8492ec077",
+      "bytes": 3815
+    },
+    {
+      "path": "config/network/nx0-observability-baseline.v1.json",
+      "status": "NEW",
+      "sha256": "cc99a348fb538070a7d7d34a6669e3d8e44bc63cc43ec8dc995b107277c80c27",
+      "bytes": 4391
+    },
+    {
+      "path": "docs/checkpoints/2026-08-01_V16_10_8_NETWORK_NX0_OBSERVABILITY_BASELINE_RU.md",
+      "status": "NEW",
+      "sha256": "49723087de849675413eb398cab213d0338fe25766438e5f03c38158f623b7d1",
+      "bytes": 4006
+    },
+    {
+      "path": "docs/network/NX0_OBSERVABILITY_BASELINE_RU.md",
+      "status": "NEW",
+      "sha256": "97adbb3ed022214a4ba95b949ab89d91f18125404e0543ae65d754630675e212",
+      "bytes": 6728
+    },
+    {
+      "path": "scripts/app/simulator_app.gd",
+      "status": "MODIFIED",
+      "sha256": "a58570b12e246d731fc969b1dda4db8392367bf1610f7e3e58d6ab9d6da6da5a",
+      "bytes": 81638
+    },
+    {
+      "path": "scripts/network/observability/network_compatibility_handshake.gd",
+      "status": "NEW",
+      "sha256": "63e4fefcc9169e7aaddfe6c5edd942109b60a8b2c01a6ed2619d85aa6b0de8a8",
+      "bytes": 8202
+    },
+    {
+      "path": "scripts/network/observability/network_compatibility_handshake.gd.uid",
+      "status": "NEW",
+      "sha256": "c2db1851f2886e0a6bf8cdc464d6305a66f1345d6607f6a0c7f0e6c6302c743a",
+      "bytes": 20
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "NEW",
+      "sha256": "366bfc7b3432fdefbb44a2e4876141d12fa0c45a51e22ac375c1b4b2bb6b1db2",
+      "bytes": 5838
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd.uid",
+      "status": "NEW",
+      "sha256": "19a342977942a90a593ad2d6769b16f743a382717922a4b20c4ff38a1192a68f",
+      "bytes": 20
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd",
+      "status": "NEW",
+      "sha256": "86cd4addf00d3790dbbc004b4fb13ae4cf22f43420e321deae63fc3b59f7670c",
+      "bytes": 1870
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd.uid",
+      "status": "NEW",
+      "sha256": "22e201f4e59f2417092c73b6b6be70efaa203c42a4206abe5b6d357703a3f915",
+      "bytes": 19
+    },
+    {
+      "path": "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+      "status": "MODIFIED",
+      "sha256": "2dd9f8d4c034a843c57ca2c5c088037e3e90a3f5af8cc2d78b606d34463dc67a",
+      "bytes": 13579
+    },
+    {
+      "path": "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "status": "MODIFIED",
+      "sha256": "a4371f9be8ec0ab4a1839b589cff002b17de8d803082d57f80e8dc4f6025f5c0",
+      "bytes": 23538
+    },
+    {
+      "path": "scripts/runtime/launch_options.gd",
+      "status": "MODIFIED",
+      "sha256": "82db32a1acff2e3d537650de6280506e99054d82d65b6186f3bac6180cd5df5d",
+      "bytes": 9785
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "bfe0a6f35f9d646facc07b22adfa134329dae1fedcd7eecb69f37faf8ba0cf54",
+      "bytes": 43434
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "f7f425e408632984ecb07de4c4378e236fef068f82a360e1b92140031d08aefa",
+      "bytes": 32075
+    },
+    {
+      "path": "scripts/runtime/runtime_descriptor.gd",
+      "status": "MODIFIED",
+      "sha256": "90393c32cced3e45aad8bc11d2c4dbc7b5b2dc02c7870960f50c9e906d2fec03",
+      "bytes": 5687
+    },
+    {
+      "path": "tests/network/test_nx0_network_experience_preparation.gd",
+      "status": "MODIFIED",
+      "sha256": "05ec9d57a8c19bae9c14efdd30658832b7717662d8be75d1dbd4813fb708953c",
+      "bytes": 17885
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd",
+      "status": "NEW",
+      "sha256": "54959b8dca5e240d78dce136fee79068caa02f62e935079cbd2fff7a62d496b3",
+      "bytes": 25275
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd.uid",
+      "status": "NEW",
+      "sha256": "ab4d8d2c04b746941427fe7c520b9483213c115b020d83eff8ac06bf40db9c3f",
+      "bytes": 20
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd",
+      "status": "NEW",
+      "sha256": "252af7e3ce92bfeb5bfa861c069f707989a758a66c0fa0565c6f5df6b53cefb9",
+      "bytes": 10115
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd.uid",
+      "status": "NEW",
+      "sha256": "c79fd8766ddf5d5ded77e2571d6f006b898b86f79bd5b715a665248f521838ed",
+      "bytes": 19
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "6cc080a0739000944f0d6cdef233f0455f8becd52677753b57a0c3dbf6d2105d",
+      "bytes": 10433
+    },
+    {
+      "path": "tools/network/nx0_handshake_probe.gd",
+      "status": "NEW",
+      "sha256": "5f8bf27a8eb0fc36ff96d77eef4d280565f5219ecf2f08534c39c8f013a1e173",
+      "bytes": 7705
+    },
+    {
+      "path": "tools/network/nx0_handshake_probe.gd.uid",
+      "status": "NEW",
+      "sha256": "0fd4f433385e9972c2b8e70696a765a03e9f9ddfd8db14ff15d1d75b569e5cd6",
+      "bytes": 20
+    },
+    {
+      "path": "validation/v16.10.8-network-nx0-observability-baseline-files.txt",
+      "status": "NEW",
+      "sha256": "6d39c7d188800aac41d894833b04a2911cfb517310c2fe2f77b1876535150e1b",
+      "bytes": 2371
+    },
+    {
+      "path": "validation/v16.10.8-network-nx0-observability-baseline-validation.json",
+      "status": "NEW",
+      "sha256": "fb42c14b625ee13564ce4659f6393845ceaaeee7af39783c77851a6c4b04529b",
+      "bytes": 5712
+    }
+  ]
+}

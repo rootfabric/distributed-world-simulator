@@ -58,17 +58,27 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 NX0 → NX1 → NX2 → NX3 → NX4 → NX5 → NX6 → NX7 → NX8 → NX9
 ```
 
-Текущий candidate не меняет production behavior и подготавливает NX0:
+Принятые основы и текущий implementation candidate:
 
 ```text
-checkpoint: v16.10.7-network-nx0-observability-preparation
-base commit: 69bd7fc
-branch: feature/nx0-observability-baseline-preparation
+accepted: v16.10.8-network-nx0-observability-baseline
+accepted: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+candidate: v16.12.0-network-nx2-realtime-traffic-separation
+base commit: f1abeca
+branch: feature/nx2-realtime-traffic-separation
 ```
+
+NX2 разделяет CONTROL/INPUT/SNAPSHOT/ITEM/RESYNC/TELEMETRY, переводит realtime-потоки на raw ENet unreliable с application-level latest-wins sequencing, объединяет input в transition-based redundancy batches и подавляет успешные movement results, per-input delta и full snapshot. Строгая физическая привязка channel/mode использует peer-local quarantine: ошибочный клиент отключается без остановки listener и здоровых peers. Authoritative snapshots публикуются compact-пакетами не чаще 20 Hz; item traffic остаётся отдельным reliable FIFO. NX3 fixed tick и NX4 prediction пока не реализованы.
 
 Основные документы:
 
 - `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
-- `docs/network/NX0_OBSERVABILITY_BASELINE_PREPARATION_RU.md`;
+- `docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md`;
+- `docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_RU.md`;
 - `config/network/network-experience-roadmap.v1.json`;
-- `config/network/nx0-observability-baseline-preparation.v1.json`.
+- `config/network/nx2-realtime-traffic-separation.v1.json`;
+- `config/network/nx1-deterministic-network-condition-simulator.v1.json`;
+- `config/network/network-condition-presets.v1.json`;
+- `RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh`;
+- `RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh`.

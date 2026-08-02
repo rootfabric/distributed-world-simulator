@@ -743,6 +743,15 @@ func close_external_container() -> Dictionary:
 
 func save_graph() -> Dictionary:
 	if _uses_network_commands():
+		if (
+			network_command_bridge.has_method("uses_server_authoritative_persistence")
+			and bool(network_command_bridge.call("uses_server_authoritative_persistence"))
+		):
+			return {
+				"success": true,
+				"skipped": true,
+				"reason": "SERVER_AUTHORITATIVE_PERSISTENCE",
+			}
 		return _submit_network_operation("item.save", {}, "save")
 	if not transient_inventory_cursor_ids.is_empty():
 		return {

@@ -1,3 +1,16 @@
+Planetary World v16.10.8-network-nx0-observability-baseline
+
+NX0 observability implementation over accepted v16.10.7 preparation:
+- mandatory build/commit/protocol/world/session fingerprint handshake before gameplay JOIN
+- deterministic rejection codes and idempotent HELLO replay
+- validated protocol manifest in runtime descriptors
+- bounded transport packet/byte, queue, RTT, jitter and loss telemetry
+- M3/M7 server/client age, process, command, item and persistence latency metrics
+- per-run public session binding in M7 launchers
+- real ENet mismatch/acceptance process test with zero pre-handshake joins
+- gameplay authority, movement flow, snapshot amplification, three-channel ENet and 1500 ms persistence cadence preserved
+- RUN_NX0_OBSERVABILITY_BASELINE_TESTS.ps1 / .sh
+
 Planetary World v16.10.7-network-nx0-observability-preparation
 
 NX0 realtime network-experience preparation over M7 commit 69bd7fc:
@@ -739,3 +752,64 @@ M6 checkpoint files:
 - RUN_M6_DEDICATED_RECOVERY_TESTS.ps1/.sh
 - tests/runtime/test_m6_dedicated_recovery_contracts.gd
 - tests/runtime/test_m6_dedicated_recovery_processes.gd
+
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator
+- branch: feature/nx1-deterministic-network-condition-simulator
+- accepted base: v16.10.8-network-nx0-observability-baseline / f1abeca
+- production wrapper: scripts/network/conditions/network_condition_simulator_port.gd
+- deterministic RNG: scripts/network/conditions/deterministic_network_rng.gd
+- preset store: scripts/network/conditions/network_condition_profile_store.gd
+- profile schema/presets: config/network/network-condition-presets.v1.json
+- architecture config: config/network/nx1-deterministic-network-condition-simulator.v1.json
+- documentation: docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md
+- focused tests: RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh
+
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR FIX1
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator / fix1
+- branch: feature/nx1-deterministic-network-condition-simulator
+- sequence isolation: reliable and unreliable cursors split by delivery class and ENet channel group
+- queued blackout policy: frames queued before manual blackout are retained and released after the deadline
+- active blackout policy: newly entering unreliable frames are dropped; reliable frames remain queued
+- queued lag-spike policy: already queued incoming/outgoing frames are deferred until the manual spike deadline
+- protocol manifest fingerprints all sequence policies
+- managed reference counters corrected: M3 56, M7 playable 34
+- validation: validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json
+- incremental files: validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix1-files.txt
+- patch manifest: NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX1_PATCH_MANIFEST.json
+
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR FIX2
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+- branch: feature/nx1-deterministic-network-condition-simulator
+- ready queue policy: ready `MESSAGE_RECEIVED` remains blocked during active incoming blackout or lag spike
+- lifecycle policy: peer/listener lifecycle and transport errors bypass incoming application-message block
+- order policy: held ready message events preserve FIFO order after release
+- regression: two incoming frames, `poll_events(1)`, then blackout/spike with one ready message retained
+- validation: validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json
+- incremental files: validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix2-files.txt
+- patch manifest: NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX2_PATCH_MANIFEST.json
+
+
+NX2 REALTIME TRAFFIC SEPARATION
+- checkpoint: v16.12.0-network-nx2-realtime-traffic-separation
+- branch: feature/nx2-realtime-traffic-separation
+- accepted base: v16.11.0-network-nx1-deterministic-condition-simulator / fix2 / f1abeca
+- channels: CONTROL 0, INPUT 1, SNAPSHOT 2, ITEM 3, RESYNC 4, TELEMETRY 5
+- realtime sequencing: raw ENet unreliable + application-level gap-tolerant latest-wins
+- queues: peer/delivery/channel streams, reliable FIFO, transactional realtime latest-pending replacement
+- movement: compact transition-based input batches, 33 ms send interval, max 3 entries
+- amplification: successful movement result/delta/full snapshot suppressed
+- snapshots: compact authoritative publication interval 50 ms
+- items: strict reliable delta channel, committed-mutation full-resync fallback and explicit resync channel
+- config: config/network/nx2-realtime-traffic-separation.v1.json
+- documentation: docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md
+- focused tests: RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh
+- validation: validation/v16.12.0-network-nx2-realtime-traffic-separation-validation.json
+- incremental files: validation/v16.12.0-network-nx2-realtime-traffic-separation-files.txt
+- patch manifest: NX2_REALTIME_TRAFFIC_SEPARATION_PATCH_MANIFEST.json
+- fix1: NX2_REALTIME_TRAFFIC_SEPARATION_FIX1_PATCH_MANIFEST.json
+- fix2: peer-local physical mismatch quarantine; focused runner 9/9
+- fix2 checkpoint: docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX2_RU.md
+- fix2 validation: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-validation.json
+- fix2 incremental files: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-files.txt
+- fix2 patch manifest: NX2_REALTIME_TRAFFIC_SEPARATION_FIX2_PATCH_MANIFEST.json

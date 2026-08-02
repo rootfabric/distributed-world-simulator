@@ -28,6 +28,10 @@ func setup(runtime, local_player_id: String, selected_item_provider: Callable = 
 	return _success()
 
 
+func uses_server_authoritative_persistence() -> bool:
+	return true
+
+
 func submit_item_command(command_type: String, payload: Dictionary, operation_id: String) -> Dictionary:
 	if _runtime == null or _adapter == null:
 		return _failure("M7_ITEM_BRIDGE_NOT_CONFIGURED")

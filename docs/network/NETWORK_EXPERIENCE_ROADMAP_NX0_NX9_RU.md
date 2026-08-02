@@ -5,6 +5,8 @@
 **Целевая модель:** server authority + client prediction + reconciliation + remote interpolation + optimistic item presentation
 **Машиночитаемый источник:** `config/network/network-experience-roadmap.v1.json`
 
+**Текущий статус (2 августа 2026):** NX0 и NX1 приняты; NX2 находится на delivery `fix2` candidate `v16.12.0-network-nx2-realtime-traffic-separation` в ветке `feature/nx2-realtime-traffic-separation`. Fix2 изолирует физическое channel/mode нарушение на offending peer и сохраняет listener/healthy peers. NX3 fixed-tick simulation остаётся следующим этапом.
+
 ## 1. Зачем появился отдельный NX-roadmap
 
 Принятые A3 и M1–M6 доказали правильность единственного authoritative gameplay path, replay, reconnect и recovery. M7 доказал, что два обычных графических клиента способны играть через dedicated authority. Однако M7 остаётся архитектурным доказательством, а не комфортным realtime-netcode.

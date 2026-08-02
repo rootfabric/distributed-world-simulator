@@ -1,0 +1,149 @@
+{
+  "schema": "planet_simulator.nx2_realtime_traffic_separation_validation.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "build_id": "nx2-realtime-traffic-separation",
+  "branch": "feature/nx2-realtime-traffic-separation",
+  "base_checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "base_delivery": "fix2",
+  "base_commit": "f1abeca",
+  "decision": "CANDIDATE",
+  "implementation_scope": {
+    "production_enet_channel_count": 6,
+    "channel_separation": [
+      "CONTROL",
+      "INPUT",
+      "SNAPSHOT",
+      "ITEM",
+      "RESYNC",
+      "TELEMETRY"
+    ],
+    "raw_enet_unreliable_with_application_sequencing": true,
+    "peer_delivery_channel_stream_partition": true,
+    "reliable_fifo_per_stream": true,
+    "transactional_latest_pending_realtime_replacement": true,
+    "input_transition_batching": true,
+    "input_batch_max_entries": 3,
+    "input_send_interval_ms": 33,
+    "movement_success_results_suppressed": true,
+    "movement_per_input_deltas_suppressed": true,
+    "movement_per_input_full_snapshots_suppressed": true,
+    "movement_snapshot_interval_ms": 50,
+    "compact_realtime_wire_without_unreliable_fragmentation": true,
+    "canonical_item_graph_delta": true,
+    "item_graph_delta_validation_policy": "STRICT_JSON_INTEGER_LOWERCASE_SHA256_V1",
+    "committed_item_mutation_delta_failure_policy": "FULL_RESYNC_WITH_SUCCESS_RESULT",
+    "explicit_item_graph_resync": true,
+    "network_item_save_suppressed_by_capability": true,
+    "fixed_tick_authority": false,
+    "client_prediction": false,
+    "persistence_policy_changed": false
+  },
+  "protocol_semantics": {
+    "unreliable_transport_mapping": "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1",
+    "incoming_sequence_stream_policy": "DELIVERY_CLASS_ENET_CHANNEL_V1",
+    "realtime_coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1",
+    "input_history": "TRANSITION_SEGMENTS_V1",
+    "server_delta_budget": "PACKET_ARRIVAL_BUDGET_WEIGHTED_BY_SEGMENT_V1",
+    "protocol_hash": "ad60b3eab2f1ba01e2ae46659909c059ac596af36d3d480d693555ac01e5bb6f"
+  },
+  "implementation_validation": {
+    "execution_mode": "controlled_direct_shell_process_auxiliary",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "focused_components": {
+      "result": "PASS",
+      "steps": "8/8",
+      "aggregate_runner_exit": "NOT_CLAIMED_DUE_OUTER_TOOL_SESSION_TIMEOUT_AFTER_FINAL_CHILD_COMPLETED",
+      "preparation_assertions": 115,
+      "nx0_baseline_assertions": 150,
+      "nx1_contract_assertions": 282,
+      "nx2_contract_assertions": 116,
+      "compatibility_handshake_assertions": 31,
+      "conditioned_enet_assertions": 27,
+      "m7_realtime_assertions": 43,
+      "failures": 0
+    },
+    "network_non_process": {
+      "result": "PASS",
+      "tests": "50/50"
+    },
+    "enet_process_regression": {
+      "result": "PASS",
+      "tests": "4/4",
+      "t1_multi_peer_assertions": 20,
+      "n1_snapshot_assertions": 28,
+      "n1_remote_item_graph_assertions": 51,
+      "n1_reconnect_replay_assertions": 67
+    },
+    "m7_playable_realtime": {
+      "result": "PASS",
+      "assertions": 43,
+      "failures": 0,
+      "movement_async_results": 0,
+      "clean_client_and_server_shutdown": true
+    },
+    "m7_restart_reconnect_recovery": {
+      "result": "PASS",
+      "assertions": 36,
+      "failures": 0
+    },
+    "m3_graphical_multiplayer": {
+      "managed_result": "PENDING",
+      "auxiliary_assertion_body_before_final_protocol_manifest_hardening": 57,
+      "auxiliary_failures": 0,
+      "auxiliary_parent_exit": "EXTERNAL_TIMEOUT_IN_EXISTING_GRAPHICAL_HARNESS",
+      "clean_exit_claimed": false
+    },
+    "unexpected_exits_in_completed_suites": 0,
+    "remaining_godot_or_xvfb_processes": 0
+  },
+  "static_validation": {
+    "git_diff_check": "PASS",
+    "json_files_valid": 78,
+    "shell_syntax": "PASS",
+    "powershell_parse": "NOT_AVAILABLE_IN_LINUX_ENVIRONMENT",
+    "powershell_home_mutation": false,
+    "gdscript_uid_sidecars_missing": 0,
+    "conflict_markers_in_text_payload": 0,
+    "nul_bytes_in_text_payload": 0,
+    "json_scope": "project excluding .git/.godot/artifacts",
+    "trailing_whitespace_added_by_diff": 0
+  },
+  "acceptance": {
+    "managed_mcp_required": true,
+    "editor_import_required_before_process_suites": true,
+    "independent_managed_mcp_result": "PENDING",
+    "direct_shell_results_are_auxiliary": true,
+    "required_managed_suites": [
+      "NX2 focused 8/8",
+      "network non-process 50/50",
+      "ENet process regression 4/4",
+      "M3 graphical multiplayer",
+      "M7 playable realtime",
+      "M7 restart/reconnect recovery"
+    ]
+  },
+  "archive": {
+    "incremental_over_accepted_nx1_fix2": true,
+    "file_count": 43,
+    "new_file_count": 18,
+    "modified_file_count": 25,
+    "deleted_file_count": 0,
+    "unsafe_paths_expected": 0,
+    "duplicate_paths_expected": 0,
+    "sha256": "RECORDED_IN_DELIVERY_MESSAGE_AFTER_FINAL_PACKAGING",
+    "byte_exact_replay": "43/43 PASS",
+    "focused_archive_replay": "8/8 PASS",
+    "focused_archive_replay_assertions": {
+      "nx0_preparation": 115,
+      "nx0_baseline": 150,
+      "nx1_contracts": 282,
+      "nx2_contracts": 116,
+      "compatibility_handshake": 31,
+      "conditioned_enet": 27,
+      "m7_realtime": 43,
+      "failures": 0
+    },
+    "archive_replay_remaining_godot_or_xvfb_processes": 0
+  }
+}

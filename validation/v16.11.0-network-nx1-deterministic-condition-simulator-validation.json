@@ -1,0 +1,120 @@
+{
+  "schema": "planet_simulator.nx1_deterministic_network_condition_simulator_validation.v1",
+  "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "delivery_iteration": "fix2",
+  "build_id": "nx1-deterministic-network-condition-simulator",
+  "branch": "feature/nx1-deterministic-network-condition-simulator",
+  "base_checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "base_commit": "f1abeca",
+  "apply_over": "NX1 candidate plus fix1",
+  "decision": "CANDIDATE_FIX2",
+  "review_findings": {
+    "shared_reliable_unreliable_sequence_cursor": "FIXED_IN_FIX1",
+    "queued_condition_frames_escape_manual_blackout": "FIXED_IN_FIX1",
+    "queued_condition_frames_escape_manual_lag_spike": "FIXED_IN_FIX1",
+    "ready_events_escape_manual_incoming_blackout": "FIXED",
+    "ready_events_escape_manual_incoming_lag_spike": "FIXED",
+    "lifecycle_events_blocked_by_incoming_conditions": "PREVENTED_AND_TESTED",
+    "held_ready_message_fifo_order": "PRESERVED_AND_TESTED",
+    "managed_m3_assertion_count": 56,
+    "managed_m7_assertion_count": 34
+  },
+  "implementation_scope": {
+    "production_transport_adapter": true,
+    "incoming_sequence_state_split_by_delivery_class_and_enet_channel": true,
+    "manual_conditions_defer_condition_queues": true,
+    "manual_conditions_block_ready_message_events": true,
+    "lifecycle_events_bypass_incoming_message_block": true,
+    "held_ready_message_order_is_fifo": true,
+    "ready_message_telemetry": true,
+    "movement_flow_changed": false,
+    "persistence_policy_changed": false,
+    "wire_payload_changed": false,
+    "protocol_hash_changed_in_fix2": false
+  },
+  "semantics": {
+    "ready_before_blackout_or_spike": "MESSAGE_RECEIVED remains in the ready queue until the active incoming condition deadline",
+    "lifecycle_during_block": "PEER_CONNECTED, PEER_DISCONNECTED, TRANSPORT_ERROR and listener lifecycle remain deliverable",
+    "ready_message_order": "FIFO is preserved across hold and release",
+    "new_unreliable_during_blackout": "dropped",
+    "new_reliable_during_blackout": "queued",
+    "condition_queue_frames_before_trigger": "retained and deferred"
+  },
+  "implementation_validation": {
+    "execution_mode": "controlled_direct_shell_process_auxiliary",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "focused": {
+      "result": "PASS",
+      "tests": "6/6",
+      "preparation_assertions": 115,
+      "nx0_baseline_assertions": 150,
+      "nx1_contract_assertions": 282,
+      "nx1_contract_failures": 0,
+      "compatibility_handshake_assertions": 31,
+      "compatibility_handshake_failures": 0,
+      "conditioned_enet_assertions": 27,
+      "conditioned_enet_failures": 0
+    },
+    "network_non_process": {
+      "result": "PASS",
+      "tests": "49/49"
+    },
+    "enet_process_regression": {
+      "result": "PASS",
+      "tests": "4/4",
+      "t1_multi_peer_assertions": 20,
+      "n1_snapshot_assertions": 28,
+      "n1_remote_item_graph_assertions": 51,
+      "n1_reconnect_replay_assertions": 67
+    },
+    "m3_graphical_multiplayer": {
+      "fix2_managed_result": "PENDING",
+      "previous_fix1_managed_assertions": 56,
+      "previous_fix1_managed_failures": 0,
+      "auxiliary_fix2_attempt": "EXTERNAL_TIMEOUT_IN_EXISTING_GRAPHICAL_PROCESS_HARNESS",
+      "assertion_failure_observed_before_timeout": false
+    },
+    "m7_playable_network": {
+      "fix2_managed_result": "PENDING",
+      "previous_fix1_managed_assertions": 34,
+      "previous_fix1_managed_failures": 0
+    },
+    "m7_restart_reconnect_recovery": {
+      "fix2_managed_result": "PENDING",
+      "previous_fix1_managed_assertions": 36,
+      "previous_fix1_managed_failures": 0
+    },
+    "unexpected_exits_in_completed_suites": 0,
+    "remaining_godot_or_xvfb_processes": 0
+  },
+  "static_validation": {
+    "git_diff_check": "PASS",
+    "json_files_valid": 75,
+    "shell_syntax": "PASS",
+    "powershell_parse": "NOT_AVAILABLE_IN_LINUX_ENVIRONMENT",
+    "gdscript_uid_sidecars_missing": 0,
+    "conflict_markers_in_text_payload": 0,
+    "nul_bytes_in_text_payload": 0,
+    "json_scope": "project excluding .git/.godot/artifacts",
+    "trailing_whitespace_in_text_payload": 0
+  },
+  "acceptance": {
+    "managed_mcp_required": true,
+    "editor_import_required_before_process_suites": true,
+    "independent_managed_mcp_fix2_result": "PENDING",
+    "direct_shell_results_are_auxiliary": true
+  },
+  "archive": {
+    "incremental_over_nx1_fix1": true,
+    "unsafe_paths_expected": 0,
+    "duplicate_paths_expected": 0,
+    "sha256": "RECORDED_IN_DELIVERY_MESSAGE_AFTER_FINAL_PACKAGING",
+    "file_count": 11,
+    "new_file_count": 2,
+    "modified_file_count": 9,
+    "byte_exact_replay": "11/11 PASS",
+    "focused_archive_replay": "6/6 PASS",
+    "focused_archive_replay_nx1_assertions": 282
+  }
+}

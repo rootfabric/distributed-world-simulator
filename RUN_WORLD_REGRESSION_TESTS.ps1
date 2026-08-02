@@ -1,4 +1,6 @@
-﻿$ErrorActionPreference = "Stop"
+﻿# Accepted M7 validation marker: v16.10.6.1-testing-m7-playable-networked-playground
+# Accepted architecture coverage marker: v16.10.6-architecture-a3-single-server-multiplayer
+$ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
@@ -113,6 +115,11 @@ $Tests = @(
     "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
     "res://tests/network/test_t1_multi_peer_transport_processes.gd",
     "res://tests/network/test_nx0_network_experience_preparation.gd",
+    "res://tests/network/test_nx0_observability_baseline.gd",
+    "res://tests/network/test_nx0_observability_handshake_processes.gd",
+    "res://tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+    "res://tests/network/test_nx1_network_condition_processes.gd",
+    "res://tests/network/test_nx2_realtime_traffic_separation.gd",
     "res://tests/network/test_b0_message_bus_contracts.gd",
     "res://tests/network/test_b0_message_bus_integration.gd",
     "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
@@ -169,9 +176,9 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.10.6.1-testing-m7-playable-networked-playground"
-    runtime_base_checkpoint = "v16.10.6-architecture-a3-single-server-multiplayer"
-    build_id = "m7-playable-networked-playground"
+    checkpoint = "v16.12.0-network-nx2-realtime-traffic-separation"
+    runtime_base_checkpoint = "v16.10.8-network-nx0-observability-baseline"
+    build_id = "nx2-realtime-traffic-separation"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -375,7 +382,7 @@ function Invoke-GodotStep {
 
 try {
     Write-Host "Godot: $Godot"
-    Write-Host "Checkpoint: v16.10.6-architecture-a3-single-server-multiplayer (A3 single-server architecture freeze, runtime base M6 v16.10.5-persistence-m6-dedicated-recovery)"
+    Write-Host "Checkpoint: v16.12.0-network-nx2-realtime-traffic-separation (NX2 candidate over accepted NX1 deterministic network condition simulator)"
 
     # Scripts below a directory named `fixtures` are support types loaded by
     # standalone tests. They intentionally keep the `test_*.gd` prefix so
@@ -447,7 +454,7 @@ try {
 
     $Summary.passed = $true
     Save-Summary
-    Write-Host "All world/core regression tests through M7 playable networked playground passed."
+    Write-Host "All world/core regression tests through NX1 deterministic network condition simulator passed."
     Write-Host "Report: $ReportPath"
 }
 catch {

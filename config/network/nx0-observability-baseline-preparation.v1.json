@@ -6,7 +6,7 @@
   "base_commit": "69bd7fc",
   "base_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
   "branch": "feature/nx0-observability-baseline-preparation",
-  "status": "candidate",
+  "status": "accepted",
   "runtime_behavior_changed": false,
   "production_transport_wrapped": false,
   "purpose": "Freeze the current M7 realtime baseline and provide validated build fingerprint, telemetry sample and network-condition profile contracts before modifying ENet or gameplay behavior.",
