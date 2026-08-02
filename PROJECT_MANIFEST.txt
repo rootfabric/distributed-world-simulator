@@ -1,3 +1,21 @@
+Planetary World v17.10.0-simulation-rl1-matter-summary-pyramid (candidate)
+
+RL1 Matter Summary Pyramid and Dirty Propagation over accepted RL0 fix1:
+- region-scoped summary pyramids aligned with MW8 authority regions
+- full RL0 regional source-revision frontier with atomic advancement
+- deterministic leaf summaries from MatterBrickSnapshot channels
+- direct-octree parent aggregation with min/max SDF, occupancy, surface and material summaries
+- immediate dependency hashes and transitive descendant revision hashes
+- mutation dirty propagation only through the changed ancestor chain
+- handoff invalidation of loaded subtree plus missing intermediate ancestors
+- bounded atomic fine-to-coarse rebuild queue with same-cell coalescing
+- content-addressed persistence manifests bound to full cell addresses
+- no Mesh, collision, network wire or canonical Matter state changes
+- config/representation/matter-summary-pyramid.v1.json
+- RUN_RL1_MATTER_SUMMARY_PYRAMID_TESTS.ps1 / .sh
+- docs/architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md
+- next: MW9 durable distributed handoff and crash recovery
+
 Planetary World v17.8.0-simulation-mw8-regional-authority-handoff (candidate)
 
 MW8 cross-server regional authority handoff over accepted MW7:

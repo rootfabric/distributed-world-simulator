@@ -1,7 +1,7 @@
 # Representation LOD Fabric — обобщённые представления Matter и Construction
 
-**Статус:** целевая сквозная архитектура; RL0 implementation candidate.
-**Принятая база Matter:** `v17.8.0-simulation-mw8-regional-authority-handoff`.
+**Статус:** целевая сквозная архитектура; RL0 accepted, RL1 implementation candidate.
+**Принятая база Matter:** `v17.9.0-simulation-rl0-representation-contracts-fix1`.
 **Связанные ветки:** Dynamic Matter Fabric MW0–MW8 и Construction C13/C18.
 **ADR:** `docs/architecture/adr/ADR-018-representation-lod-fabric.md`.
 **Главное правило:** mesh, impostor, collision proxy и summary не являются каноническим состоянием мира.
@@ -87,6 +87,8 @@ Construction:
 Каноническое состояние не заменяется объединённым mesh.
 
 ### 3.2. Summary hierarchy
+
+RL1 реализует эту hierarchy внутри одного MW8 authority-region и хранит полный RL0 `RepresentationSourceRevision` frontier. Межрегиональная parent aggregation остаётся fenced до MW9/MW10. Подробный runtime-контракт: `RL1_MATTER_SUMMARY_PYRAMID_RU.md`.
 
 Каждый summary node описывает область и зависимости:
 

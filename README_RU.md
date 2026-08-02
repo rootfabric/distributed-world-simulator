@@ -1,5 +1,18 @@
 # PlanetSimulator
 
+Текущий Matter/Representation checkpoint:
+
+```text
+v17.10.0-simulation-rl1-matter-summary-pyramid
+build_id: rl1-matter-summary-pyramid-dirty-propagation
+base: accepted RL0 fix1
+branch: feature/rl1-matter-summary-pyramid
+status: candidate for independent review
+next: MW9 durable distributed handoff and crash recovery
+```
+
+RL1 добавляет региональную summary pyramid, descendant dependency hashes, selective dirty propagation и bounded rebuild queue без изменения canonical Matter state, MW8 authority protocol или production worlds.
+
 Текущая принятая архитектурная база: `v16.9.4-architecture-a2-networked-gameplay` (`FROZEN_WITH_GATES`).
 
 Принятый стратегический checkpoint: `v16.9.5-roadmap-single-server-multiplayer-first`.
@@ -39,6 +52,7 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md` — региональные interest projections, enter/leave, replay и snapshot fallback;
 - `docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md` — принятый межсерверный regional authority handoff;
 - `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md` — общий Matter/Construction lifecycle detail, proxy и impostor artifacts;
+- `docs/architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md` — региональные Matter summaries, dirty ancestor propagation и bounded rebuild queue;
 - `docs/architecture/adr/ADR-018-representation-lod-fabric.md` — ADR общего lifecycle и раздельных Matter/Construction builders;
 - `docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md` — RL0–RL6 и оптимальная интеграция с MW9–MW14;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md` — MW5 fix2: единый canonical persistence encoder и checksum-preserving snapshot rehydration;

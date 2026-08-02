@@ -1,7 +1,7 @@
 # Representation LOD Roadmap — интеграция в Mutable Worlds и Construction
 
-**Принятая база:** MW8 regional authority handoff.
-**Текущий этап:** RL0 unified representation contracts.
+**Принятая база:** RL0 unified representation contracts fix1.
+**Текущий этап:** RL1 Matter summary pyramid and dirty propagation.
 **Архитектура:** `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md`.
 
 ## 1. Оптимальный порядок после MW8
@@ -9,9 +9,9 @@
 ```text
 MW8  regional authority handoff — ACCEPTED
  ↓
-RL0  unified representation contracts
+RL0  unified representation contracts — ACCEPTED
  ↓
-RL1  Matter summary pyramid and dirty propagation
+RL1  Matter summary pyramid and dirty propagation — CURRENT CANDIDATE
  ↓
 MW9  durable distributed handoff and crash recovery
  ↓
@@ -96,17 +96,20 @@ Matter RL2 использует SDF/downsample/isosurface/transition cells. Об
 
 ### RL1 — Matter Summary Pyramid
 
-Результат:
+Реализованный candidate:
 
-- parent-child cells;
-- min/max SDF;
-- occupancy и surface presence;
-- material summary;
-- descendant revision hash;
-- dirty ancestor propagation;
-- bounded rebuild queue;
-- persistence manifests summaries;
-- handoff invalidation tests.
+- region-scoped parent-child cells поверх MW8 authority-region;
+- min/max SDF и occupancy range;
+- matter/vacuum/surface presence;
+- deterministic material occupancy summary;
+- immediate dependency hash и transitive descendant revision hash;
+- mutation dirty ancestor propagation только до region root;
+- handoff invalidation loaded subtree с восстановлением missing ancestors;
+- bounded atomic fine-to-coarse rebuild queue;
+- content-addressed persistence manifests с полным cell binding;
+- focused handoff, rollback, same-revision и capacity tests.
+
+RL1 не строит coarse SDF samples или meshes. После acceptance следующий этап — MW9.
 
 ### MW9 — Durable Distributed Handoff
 

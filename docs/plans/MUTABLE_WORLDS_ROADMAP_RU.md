@@ -1,6 +1,7 @@
 # Mutable Worlds Roadmap — изменяемая порода, астероиды, пещеры и добыча
 
-**Accepted implementation base:** `v17.8.0-simulation-mw8-regional-authority-handoff`.
+**Accepted implementation base:** `v17.9.0-simulation-rl0-representation-contracts-fix1`.
+**Current candidate:** `v17.10.0-simulation-rl1-matter-summary-pyramid`.
 **Тип документа:** implementation roadmap, без изменения production runtime.
 **Архитектура:** `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md`.
 **Решение:** `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md`.
@@ -11,8 +12,8 @@
 
 ```text
 MW8 accepted
-→ RL0 unified representation contracts
-→ RL1 Matter summary pyramid and dirty propagation
+→ RL0 unified representation contracts accepted
+→ RL1 Matter summary pyramid, full RL0 source-revision frontier and dirty propagation current candidate
 → MW9 durable distributed handoff and crash recovery
 → MW10 cross-region matter transactions
 → RL2 Matter multiresolution meshing and transitions

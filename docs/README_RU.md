@@ -1,5 +1,11 @@
 # Документация PlanetSimulator
 
+## RL1 Matter Summary Pyramid
+
+- [`architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md`](architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md) — leaf/parent summaries, regional authority boundary, dirty propagation, rebuild queue и persistence manifest.
+- [`checkpoints/2026-08-02_V17_10_0_SIMULATION_RL1_MATTER_SUMMARY_PYRAMID_RU.md`](checkpoints/2026-08-02_V17_10_0_SIMULATION_RL1_MATTER_SUMMARY_PYRAMID_RU.md) — checkpoint и independent acceptance matrix.
+- [`plans/REPRESENTATION_LOD_ROADMAP_RU.md`](plans/REPRESENTATION_LOD_ROADMAP_RU.md) — дальнейший порядок MW9 → MW10 → RL2.
+
 ## Representation LOD Fabric
 
 - [`architecture/REPRESENTATION_LOD_FABRIC_RU.md`](architecture/REPRESENTATION_LOD_FABRIC_RU.md) — общая архитектура Matter/Construction detail, proxy и impostor representations.
