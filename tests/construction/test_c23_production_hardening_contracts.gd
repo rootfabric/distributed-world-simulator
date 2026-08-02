@@ -49,7 +49,7 @@ func _test_backward_compatible_state() -> void:
 	_assert(Array(migrated["migration_trace"]).size() == 1, "migration trace")
 	_assert(migrated["envelope"]["payload"] == payload, "payload preserved exactly")
 	_ok(StateEnvelope.validate(migrated["envelope"]), "migrated envelope validates")
-	var corrupt := migrated["envelope"].duplicate(true)
+	var corrupt: Dictionary = migrated["envelope"].duplicate(true)
 	corrupt["payload"]["generation"] = 13
 	_err(StateEnvelope.validate(corrupt), "CONSTRUCTION_PRODUCTION_STATE_PAYLOAD_CHECKSUM_MISMATCH", "corrupt payload rejected")
 
@@ -96,7 +96,7 @@ func _test_replay_metrics_and_rate_contracts() -> void:
 	_err(metrics.append_audit({}, "DENY", "SAFE_CODE", 3), "INVALID_CONSTRUCTION_AUDIT_EVENT", "malformed audit identity rejected before append")
 	_ok(Observability.validate_state(metrics.export_state()), "observability state")
 	var audit_state := metrics.export_state()
-	_assert(not String(audit_state).contains("part/c23-000002"), "audit excludes payload")
+	_assert(not JSON.stringify(audit_state).contains("part/c23-000002"), "audit excludes payload")
 	var injected_event: Dictionary = audit_state["audit"][0]
 	injected_event["payload"] = {"secret": true}
 	injected_event["checksum"] = H.checksum(injected_event)

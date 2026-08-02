@@ -30,9 +30,9 @@ func _run_profile() -> Dictionary:
 		var result: Dictionary = service.submit(operation)
 		_assert(bool(result.get("success", false)), "soak operation %d" % index)
 		if (index + 1) % CHECKPOINT_INTERVAL == 0:
-			var checkpoint := service.checkpoint(index)
+			var checkpoint: Dictionary = service.checkpoint(index)
 			_assert(bool(checkpoint.get("success", false)), "soak checkpoint %d" % index)
-			var replay := service.submit(operation)
+			var replay: Dictionary = service.submit(operation)
 			_assert(bool(replay.get("success", false)) and bool(replay.get("replay", false)), "checkpoint boundary replay %d" % index)
 	var state: Dictionary = service.export_state()
 	var audit: Array = service.get_observability().get_audit_events()
