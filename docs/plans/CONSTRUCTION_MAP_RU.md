@@ -643,7 +643,7 @@ C19 goals, BOM, reservations и work queue используют C8/C12/C17 и н
 
 ## C20 — Logistics and Construction Economy
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 
 ```text
 C19 PROCURE/FABRICATE demand
@@ -654,3 +654,21 @@ C19 PROCURE/FABRICATE demand
 ```
 
 C20 добавляет landed-cost planning, склады, shipment receipts, подрядчиков, salvage market и производственные цепочки между C8 cells с сохранением item identity.
+
+
+## C21 — Large-Scale Construction Acceptance
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+```text
+20k–30k constructs
++ 1.28M–2.88M item-backed parts modeled
++ 1k–2k BuildPlan
++ mass damage/collapse/repair
++ C8/C19/C20 mass workloads
++ C17 migration/reconnect faults
++ C18 budgets
+→ strict acceptance report
+```
+
+C21 проверяет нулевые duplicate commits, exact replay, stale-epoch fencing, material conservation, item identity, budget limits, persistence/restart и deterministic checksum на focused и extended-soak профилях.

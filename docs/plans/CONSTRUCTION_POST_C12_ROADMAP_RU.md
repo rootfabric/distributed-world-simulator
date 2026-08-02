@@ -347,7 +347,7 @@ PRESENTED — mesh, collision, animation
 - C9 repair по исходным item identities;
 - persistence/restart без повторного fabrication или commit.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c19-agent-construction-automation-api`.
 
 ## C20 — Logistics and Construction Economy
@@ -445,4 +445,23 @@ C14–C16 можно частично вести параллельно. C19–C
 
 ## C20 — реализованный vertical slice
 
+**Статус:** ACCEPTED.
+
 C20 формализует construction economy: procurement, warehouse reservations, routes, escrow, contractors, salvage и C8 production chains. Главная граница остаётся прежней: economy планирует и координирует, но реальные предметы изменяются только через Item Graph/C8/C2B, а agent workflow — через C19.
+
+## C21 — реализованный acceptance vertical slice
+
+- strict scale profile/report/state contracts;
+- 20 000 constructs, 1 280 000 item-backed parts и 1 000 BuildPlan в focused profile;
+- 30 000 constructs, 2 880 000 item-backed parts и 2 000 BuildPlan в extended soak;
+- массовые C9-style damage/collapse/repair event streams;
+- массовые fabrication/procurement/shipment workloads;
+- authority migrations и stale-epoch fencing;
+- reconnect storms и exact replay;
+- material conservation и item identity metrics;
+- C18 presentation/simulation/summary budgets;
+- persistence checkpoint и deterministic resume;
+- checksum rejection повреждённого snapshot.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c21-large-scale-construction-acceptance`.

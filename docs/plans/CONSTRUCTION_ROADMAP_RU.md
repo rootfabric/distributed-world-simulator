@@ -682,3 +682,8 @@ Vertical slice закрепляет single-writer authority, owner routing су�
 
 **Статус:** IMPLEMENTED CANDIDATE.
 **Ветка:** `feature/c20-logistics-construction-economy`.
+
+
+## C21 — Large-Scale Construction Acceptance
+
+C21 не расширяет authority-модель, а доказывает устойчивость C1–C20 под массовой нагрузкой. Focused и extended-soak профили проверяют десятки тысяч constructs, миллионы item-backed parts, тысячи BuildPlan, массовые damage/collapse/repair, agent/economy flows, migration/reconnect faults, streaming budgets, persistence и deterministic replay.

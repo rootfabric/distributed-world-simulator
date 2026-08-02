@@ -1,6 +1,6 @@
 # C20 — Logistics and Construction Economy
 
-**Статус:** IMPLEMENTED CANDIDATE
+**Статус:** ACCEPTED
 **База:** принятый C19
 **Рекомендуемая ветка:** `feature/c20-logistics-construction-economy`
 
@@ -62,4 +62,19 @@ C17/C18/C19:       PASS
 Network N0–M4:     PASS
 World regression:  141/141 tests, 144 steps
 Main-scene CLI:    6/6
+```
+
+
+## Внешняя приёмка
+
+```text
+C20 focused:      PASS — 114 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17–C19:          PASS
+Network N0–M4:    PASS
+World regression: PASS — 141/141 tests, 144 steps
+Main-scene CLI:   PASS — 6/6
+git diff --check: PASS
+Manifest:         50/50
 ```

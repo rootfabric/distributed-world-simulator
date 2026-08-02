@@ -672,3 +672,8 @@ Streaming может удалять только derived state. `DORMANT` не �
 ## Logistics/economy authority invariant — C20
 
 Цена, заказ, маршрут, escrow и contractor contract являются workflow/economic state, но не заменяют Item Graph. Продажа не создаёт новый предмет: shipment переносит тот же `item_instance_id`. Stock reservation и escrow образуют атомарную бизнес-границу; при невозможности закрепить товар деньги возвращаются. Settlement допускается только после фактического transfer result, а C19 BOM line становится fulfilled только после доставки. Production chain pin-ит C8 recipes и output identities, но предмет появляется лишь после authoritative fabrication completion.
+
+
+## Масштабная приёмка
+
+Масштаб не считается доказанным количеством созданных объектов само по себе. C21 принимает систему только при одновременном выполнении authority, replay, identity, material-conservation и budget-инвариантов. Нагрузочный harness не имеет собственного mutation path и наблюдает те же границы C8/C12/C17/C19/C20, что игроки и агенты.

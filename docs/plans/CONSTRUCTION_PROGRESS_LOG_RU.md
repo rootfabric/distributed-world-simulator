@@ -1043,3 +1043,36 @@ C20 integration:  PASS — 76 assertions
 C20 total:        PASS — 114 assertions
 Expected world:   141/141 tests, 144 steps
 ```
+
+
+## 2026-08-02 — C20: внешняя приёмка
+
+**Статус:** ACCEPTED.
+
+```text
+C20 focused:      PASS — 114 assertions
+C2B regression:   PASS — 258 assertions
+C9 regression:    PASS — 204 assertions
+C17–C19:          PASS
+Network N0–M4:    PASS
+World regression: PASS — 141/141 tests, 144 steps
+Main-scene CLI:   PASS — 6/6
+```
+
+C20 стал принятой базой C21.
+
+## 2026-08-02 — C21: Large-Scale Construction Acceptance
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**База:** принятый C20.
+**Рекомендуемая ветка:** `feature/c21-large-scale-construction-acceptance`.
+
+Добавлен масштабный acceptance harness для 20–30 тысяч constructs, 1–2 тысяч BuildPlan, массовых C8/C19/C20 flows, C17 migrations/reconnect storms, C18 budgets и persistence/restart.
+
+```text
+C21 contracts:    PASS — 26 assertions
+C21 integration:  PASS — 52 assertions
+C21 soak:         PASS — 26 assertions
+C21 total:        PASS — 104 assertions
+Expected world:   144/144 tests, 147 steps
+```

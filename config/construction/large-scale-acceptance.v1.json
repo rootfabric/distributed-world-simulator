@@ -1,0 +1,58 @@
+{
+  "schema": "construction.large_scale_acceptance_config.v1",
+  "profiles": {
+    "focused": {
+      "construct_count": 20000,
+      "build_plan_count": 1000,
+      "agent_count": 256,
+      "fabrication_job_count": 3000,
+      "procurement_order_count": 4000,
+      "shipment_count": 4000,
+      "warehouse_count": 32,
+      "server_count": 16,
+      "authority_migration_count": 1000,
+      "reconnect_wave_count": 32,
+      "soak_ticks": 2048,
+      "commands_per_tick": 24,
+      "presentation_budget": 512,
+      "simulation_budget": 4096,
+      "summary_budget": 12000,
+      "expected_min_operations": 50000,
+      "parts_per_construct": 64,
+      "damage_event_count": 2000,
+      "collapse_event_count": 500,
+      "repair_event_count": 1500
+    },
+    "extended_soak": {
+      "construct_count": 30000,
+      "build_plan_count": 2000,
+      "agent_count": 512,
+      "fabrication_job_count": 6000,
+      "procurement_order_count": 8000,
+      "shipment_count": 8000,
+      "warehouse_count": 64,
+      "server_count": 32,
+      "authority_migration_count": 2000,
+      "reconnect_wave_count": 64,
+      "soak_ticks": 8192,
+      "commands_per_tick": 12,
+      "presentation_budget": 1024,
+      "simulation_budget": 8192,
+      "summary_budget": 20000,
+      "expected_min_operations": 100000,
+      "parts_per_construct": 96,
+      "damage_event_count": 5000,
+      "collapse_event_count": 1500,
+      "repair_event_count": 3500
+    }
+  },
+  "acceptance_invariants": {
+    "duplicate_commits": 0,
+    "lost_item_identities": 0,
+    "material_balance_delta": 0,
+    "authority_epoch_rollback": 0,
+    "budget_overrun": 0,
+    "deterministic_replay_required": true,
+    "restart_resume_required": true
+  }
+}
