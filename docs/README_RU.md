@@ -2,6 +2,8 @@
 
 ## Mutable worlds
 
+- [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7: региональные persistent-brick projections, enter/leave и reconnect.
+- [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7 candidate и acceptance matrix.
 - [`architecture/DYNAMIC_MATTER_FABRIC_RU.md`](architecture/DYNAMIC_MATTER_FABRIC_RU.md) — целевая парадигма вещества.
 - [`architecture/MW4_MATTER_MUTATIONS_RU.md`](architecture/MW4_MATTER_MUTATIONS_RU.md) — MW4: транзакционное бурение, session-local persistent mutations, fix1 performance boundary и fix2 JSON-safe energy boundary.
 - [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — MW5: durable matter checkpoint, typed recovery и exact canonical bytes.
@@ -236,3 +238,8 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 - [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md) — candidate checkpoint и acceptance matrix.
 - [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md) — bounded snapshot-resync для A3/M6 и fencing superseded delta.
 - [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md) — parse-only исправление явных Dictionary-типов в новом M6 resync contract.
+
+## MW7 matter regional interest
+
+- [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — per-client cell subscriptions, regional sequence/hash и двухфазный enter/leave.
+- [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — candidate checkpoint и полная regression-матрица.

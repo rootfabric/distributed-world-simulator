@@ -181,12 +181,12 @@ This track is independent from the accepted single-server multiplayer order and 
 
 ```text
 architecture: Dynamic Matter Fabric
-accepted: v17.5.0-simulation-mw5-matter-persistence, delivery fix7
-current candidate: v17.6.0-simulation-mw6-matter-network-replication
-branch: feature/mw6-matter-network-replication
+accepted: v17.6.0-simulation-mw6-matter-network-replication, delivery fix2
+current candidate: v17.7.0-simulation-mw7-matter-interest-replication
+branch: feature/mw7-matter-interest-replication
 production worlds changed: false
 world catalog changed: false
-next after acceptance: MW7 regional storage scaling, compaction and interest streaming
+next after acceptance: MW8 regional persistence scaling, compaction and cross-server handoff preparation
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
@@ -199,4 +199,7 @@ MW5 fix7 is accepted and adds durable matter recovery for the isolated asteroid 
 MW6 adds single-server authority and replica synchronization for matter mutations without creating a second gameplay path. Commands must reuse `NetworkCommandEnvelope` and `NetworkCommandGateway`; replication must reuse `ReplicationEnvelope`. Float-bearing matter DTOs cross the wire only as `planet_simulator.matter_persistence_transport.v1` strings. The server alone executes `MatterExcavationService`; peer/session/actor bindings, authority epoch and brick revisions are mandatory fences. New committed and rejected journal outcomes advance one monotonic replication stream. Reconnect uses contiguous delta replay only when the base state hash matches, otherwise a full persistent-only snapshot is required. Procedural revision-0 bricks must never be replicated. Review fixes remain on `feature/mw6-matter-network-replication` until acceptance.
 
 
-MW6 fix2 is a parse-only correction over fix1. The new M6 resync contract must explicitly type `initial` and `join_b` as `Dictionary` because `_new_service()` is intentionally nullable and therefore returns an untyped Variant to the parser. No gameplay, replica, persistence or matter-network semantics change. Acceptance still requires MW6 focused PASS, M6 standalone PASS and three consecutive full A3 PASS runs on `feature/mw6-matter-network-replication`.
+MW6 fix2 is accepted. The final matrix is MW6 `130/130 PASS`, M6 standalone `10/10 PASS`, M6 process recovery `128/128 PASS` and three consecutive full A3 PASS runs. The fix2 delivery is parse-only over fix1; the accepted semantics remain single-server matter authority, exact wire DTO, persistent-only replication, reconnect replay and snapshot fallback.
+
+
+MW7 adds regional interest projections over the accepted global MW6 authority stream. Interest peers remain command-authorized by `MatterAuthoritativeServer` but do not receive its full sparse-store frames. `MatterInterestServer` filters committed persistent brick revisions into independent per-subscription regional sequences and projection hashes. Interest replacement is two-phase: the active view remains until a validated replacement snapshot atomically enters and evicts bricks. Reconnect uses regional replay or regional snapshot fallback. Procedural revision-0 bricks, global journal ownership, production Moon and world catalog remain unchanged. Review fixes must remain on `feature/mw7-matter-interest-replication` until acceptance.

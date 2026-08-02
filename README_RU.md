@@ -34,7 +34,9 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `docs/architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — принятые иерархические matter cells, sparse bricks, ghost samples и canonical query service;
 - `docs/architecture/MW3_LOCAL_MESHING_RU.md` — принятый local Freudenthal meshing, ghost-gradient normals, collision и camera-local laboratory;
 - `docs/architecture/MW4_MATTER_MUTATIONS_RU.md` — транзакционное swept-бурение, session-local persistent snapshots, mass ledger и Material Batch; MW4 fix2 дополнительно ограничивает integer-valued energy/capacity значения каноническим JSON-пределом `2^53−1`;
-- `docs/architecture/MW5_MATTER_PERSISTENCE_RU.md` — durable checkpoint, атомарный repository, typed JSON rehydration и process-level restart recovery;
+- `docs/architecture/MW5_MATTER_PERSISTENCE_RU.md` — durable checkpoint, атомарный repository, exact binary64 transport и process-level restart recovery;
+- `docs/architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md` — принятый single-server authority и persistent-only matter replication;
+- `docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md` — региональные interest projections, enter/leave, replay и snapshot fallback;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md` — MW5 fix2: единый canonical persistence encoder и checksum-preserving snapshot rehydration;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md` — MW5 fix3: точное равенство опубликованных raw bytes и canonical persistence bytes;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md` — MW5 fix5: exact binary64 transport envelope вместо decimal JSON float roundtrip;
@@ -95,7 +97,7 @@ scope: isolated asteroid matter track; production Moon/world catalog unchanged
 
 MW5 сохраняет изменённые sparse-brick snapshots и revisions, mutation journal и committed Material Batch в атомарный generation-chained checkpoint. Fix5 устраняет drift durable DTO, fix6 закрывает exact binary64 process transport, а fix7 устраняет недоказанную предпосылку о том, что геометрический центр drill capsule обязательно находится в vacuum. После commit focused-профиль сканирует interior lattice изменённых snapshots, детерминированно выбирает положительный SDF witness, подтверждает его через canonical continuous query и только затем сохраняет позицию и SDF через binary64 transport. После restart восстановленный SDF обязан быть побитово равен pre-save значению и оставаться положительным. Durable checkpoint/repository protocol при этом не изменяется.
 
-## MW6 matter network authority candidate
+## MW6 matter network authority fix2 — ACCEPTED
 
 ```text
 checkpoint: v17.6.0-simulation-mw6-matter-network-replication
@@ -107,6 +109,17 @@ scope: isolated asteroid matter track; production Moon/world catalog unchanged
 MW6 подключает транзакции MW4 и durable state MW5 к уже принятому single-server network path. После MW5 recovery authoritative stream начинается с размера восстановленного journal, а клиент получает full snapshot без выдуманного replay-log. Клиент отправляет exact-transport mutation command через `NetworkCommandGateway`, сервер единолично вызывает `MatterExcavationService`, а persistent brick revisions и journal outcomes реплицируются через `ReplicationEnvelope`. Reconnect использует delta replay по sequence/base hash и переходит на full persistent snapshot при gap или вытеснении replay log. Procedural revision-0 bricks по сети не передаются.
 
 
-## MW6 fix2 — parse-only candidate
+## MW6 fix2 — ACCEPTED
 
-`fix1` функционально прошёл MW6 focused (`130 assertions`), но новый M6 contract не компилировался: nullable helper `_new_service()` не даёт GDScript вывести тип результатов `create_snapshot()` и `join()`. В `fix2` обе локальные переменные явно объявлены как `Dictionary`. Производственный replica/client path, matter authority и persistence не изменены. Повторная приёмка требует M6 standalone и трёх последовательных полных A3 PASS.
+Принятая матрица: MW6 `130/130 PASS`, M6 standalone `10/10 PASS`, M6 process recovery `128/128 PASS`, A3 — три последовательных PASS. Fix2 является parse-only коррекцией M6 regression-теста поверх функционального fix1.
+
+## MW7 regional matter interest candidate
+
+```text
+checkpoint: v17.7.0-simulation-mw7-matter-interest-replication
+base: v17.6.0-simulation-mw6-matter-network-replication / fix2 (ACCEPTED)
+branch: feature/mw7-matter-interest-replication
+scope: isolated asteroid matter track; production Moon/world catalog unchanged
+```
+
+MW7 сохраняет глобальную авторитетную последовательность MW6, но реплицирует клиенту только persistent bricks его checksum-protected cell region. Каждая subscription имеет собственные `interest_revision`, `region_sequence` и `projection_hash`. Нерелевантные мутации не создают кадр. Смена области выполняется replacement snapshot с атомарным enter/leave, а reconnect выбирает regional delta replay или filtered snapshot fallback.

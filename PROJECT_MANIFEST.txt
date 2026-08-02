@@ -1,3 +1,20 @@
+Planetary World v17.7.0-simulation-mw7-matter-interest-replication (candidate)
+
+MW7 regional matter interest replication over accepted MW6 fix2:
+- global MW6 authority stream preserved as canonical order
+- per-client checksum-protected cell-cube subscriptions
+- independent regional sequence and projection hash
+- only persistent matter snapshots with revision >= 1 cross the regional wire
+- irrelevant global mutations create no client frame
+- two-phase interest enter/leave through replacement regional snapshot
+- regional delta replay and snapshot fallback after reconnect or replay eviction
+- existing NetworkCommandGateway, ReplicationEnvelope and MW5 binary64 transport reused
+- production Moon and world catalog unchanged
+- config/matter/mw7-matter-interest-replication.v1.json
+- RUN_MW7_MATTER_INTEREST_TESTS.ps1 / .sh
+- docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md
+- docs/checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md
+
 Planetary World v17.0.0-simulation-mw0-matter-contracts fix1 (candidate)
 
 MW0 fix1:

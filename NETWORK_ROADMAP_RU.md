@@ -40,3 +40,9 @@ Authoritative sources:
 - `config/network/networked-gameplay-architecture.v1.json`;
 - `config/network/single-server-multiplayer-roadmap.v1.json`;
 - `config/network/network-roadmap.v1.json`.
+
+## Parallel matter networking track — MW6 accepted, MW7 candidate
+
+MW6 `v17.6.0-simulation-mw6-matter-network-replication` delivery `fix2` принят: один authoritative matter writer, exact binary64 wire DTO, persistent-only global stream, reconnect replay/snapshot fallback.
+
+MW7 `v17.7.0-simulation-mw7-matter-interest-replication` не меняет A3 production gameplay topology. Он добавляет projection-layer над тем же MW6 authority: interest peers используют существующий command gateway, но получают через `ReplicationEnvelope(kind=INTEREST)` только persistent bricks своей cell-region. Cross-server authority, NATS gameplay и production Moon integration остаются за пределами этапа.

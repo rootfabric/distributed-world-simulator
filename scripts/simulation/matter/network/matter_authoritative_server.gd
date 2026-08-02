@@ -33,6 +33,8 @@ var _peers: Dictionary = {}
 var _active_peer_by_client_id: Dictionary = {}
 var _outbound_by_peer_id: Dictionary = {}
 var _frame_serial: int = 0
+var _replication_observers: Array = []
+var _observer_errors: Array[Dictionary] = []
 
 
 func configure(
@@ -80,6 +82,8 @@ func configure(
 	_active_peer_by_client_id.clear()
 	_outbound_by_peer_id.clear()
 	_state_hash_by_sequence.clear()
+	_replication_observers.clear()
+	_observer_errors.clear()
 	_state_hash_by_sequence[_stream_sequence] = _compute_state_hash(_stream_sequence)
 	_configured = true
 	return MatterUtilsScript.success({
@@ -131,6 +135,7 @@ func connect_peer(
 		"transport_sequence": 0,
 		"acknowledged_stream_sequence": -1,
 		"acknowledged_state_hash": "",
+		"replication_mode": "FULL",
 		"active": true,
 	}
 	_active_peer_by_client_id[normalized_client_id] = normalized_peer_id
@@ -144,6 +149,59 @@ func connect_peer(
 		"mode": synchronized["details"].get("mode", ""),
 		"queued_frames": outbound_count(normalized_peer_id),
 	})
+
+
+func connect_interest_peer(
+	peer_id: String,
+	client_id: String,
+	session_id: String,
+	actor_id: String
+) -> Dictionary:
+	if not _configured:
+		return MatterUtilsScript.failure("MATTER_AUTHORITY_NOT_CONFIGURED")
+	for value in [peer_id, client_id, session_id, actor_id]:
+		if not MatterUtilsScript.is_canonical_id(value, 2):
+			return MatterUtilsScript.failure("INVALID_MATTER_AUTHORITY_PEER_ID")
+	var normalized_peer_id: String = peer_id.strip_edges().to_lower()
+	var normalized_client_id: String = client_id.strip_edges().to_lower()
+	var normalized_session_id: String = session_id.strip_edges().to_lower()
+	var normalized_actor_id: String = actor_id.strip_edges().to_lower()
+	if _active_peer_by_client_id.has(normalized_client_id):
+		var old_peer_id: String = String(_active_peer_by_client_id[normalized_client_id])
+		if old_peer_id != normalized_peer_id:
+			_disconnect_peer_internal(old_peer_id)
+	_peers[normalized_peer_id] = {
+		"peer_id": normalized_peer_id,
+		"client_id": normalized_client_id,
+		"session_id": normalized_session_id,
+		"actor_id": normalized_actor_id,
+		"transport_sequence": 0,
+		"acknowledged_stream_sequence": -1,
+		"acknowledged_state_hash": "",
+		"replication_mode": "INTEREST",
+		"active": true,
+	}
+	_active_peer_by_client_id[normalized_client_id] = normalized_peer_id
+	_outbound_by_peer_id[normalized_peer_id] = []
+	return MatterUtilsScript.success({
+		"peer_id": normalized_peer_id,
+		"replication_mode": "INTEREST",
+	})
+
+
+func register_replication_observer(observer) -> Dictionary:
+	if not _configured or observer == null \
+			or not observer.has_method("on_authoritative_matter_delta"):
+		return MatterUtilsScript.failure("INVALID_MATTER_REPLICATION_OBSERVER")
+	for existing in _replication_observers:
+		if existing == observer:
+			return MatterUtilsScript.success({"replay": true})
+	_replication_observers.append(observer)
+	return MatterUtilsScript.success({"replay": false})
+
+
+func replication_observer_errors() -> Array[Dictionary]:
+	return _observer_errors.duplicate(true)
 
 
 func disconnect_peer(peer_id: String) -> Dictionary:
@@ -372,8 +430,10 @@ func _publish_delta(request: Dictionary, result: Dictionary) -> Dictionary:
 	_state_hash_by_sequence[_stream_sequence] = target_state_hash
 	_trim_state_hash_history()
 	for peer_id in _peers.keys():
-		if bool(_peers[peer_id].get("active", false)):
+		if bool(_peers[peer_id].get("active", false)) \
+				and String(_peers[peer_id].get("replication_mode", "FULL")) == "FULL":
 			_queue_delta_frame(String(peer_id), delta)
+	_notify_replication_observers(delta)
 	return MatterUtilsScript.success({
 		"stream_sequence": _stream_sequence,
 		"delta": delta,
@@ -452,6 +512,21 @@ func _queue_frame(peer_id: String, frame_kind: String, payload_schema: String, p
 	var queue: Array = _outbound_by_peer_id.get(peer_id, [])
 	queue.append(frame)
 	_outbound_by_peer_id[peer_id] = queue
+
+
+func _notify_replication_observers(delta: Dictionary) -> void:
+	for observer in _replication_observers:
+		if observer == null or not observer.has_method("on_authoritative_matter_delta"):
+			continue
+		var result_value = observer.on_authoritative_matter_delta(delta.duplicate(true))
+		if typeof(result_value) != TYPE_DICTIONARY \
+				or not bool(Dictionary(result_value).get("success", false)):
+			_observer_errors.append({
+				"stream_sequence": int(delta.get("stream_sequence", -1)),
+				"error_code": String(Dictionary(result_value).get("error_code", "INVALID_OBSERVER_RESULT")) \
+					if typeof(result_value) == TYPE_DICTIONARY else "INVALID_OBSERVER_RESULT",
+			})
+
 
 
 func _compute_state_hash(sequence: int) -> String:
