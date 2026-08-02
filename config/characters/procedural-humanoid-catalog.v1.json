@@ -1,0 +1,36 @@
+{
+  "schema": "planet_simulator.character_catalog.v1",
+  "fallback_character_id": "human/procedural/standard",
+  "definitions": [
+    {
+      "character_id": "human/procedural/standard",
+      "display_name": "Procedural Standard Human",
+      "presentation_scene_path": "res://scenes/labs/character/procedural_humanoid.tscn",
+      "asset_revision": 1,
+      "body_profile": {"body_profile_id": "body/human_standard", "standing_height": 1.8, "crouching_height": 1.15, "capsule_radius": 0.35, "eye_height": 1.62, "step_height": 0.35, "mass": 80.0, "movement_profile_id": "movement/humanoid_standard"},
+      "animation_profile": {"animation_profile_id": "animation/procedural_humanoid", "fallback_semantic": "locomotion/idle", "semantic_map": {"locomotion/idle": "idle", "locomotion/walk": "walk", "locomotion/run": "run", "locomotion/strafe_left": "strafe_left", "locomotion/strafe_right": "strafe_right", "locomotion/jump_start": "jump_start", "locomotion/fall": "fall", "locomotion/land": "land", "action/pickup": "pickup", "action/use": "use"}},
+      "socket_profile": {"socket_profile_id": "socket/procedural_humanoid", "socket_paths": {"head": "VisualRoot/Sockets/Head", "hand_left": "VisualRoot/Sockets/HandLeft", "hand_right": "VisualRoot/Sockets/HandRight", "chest": "VisualRoot/Sockets/Chest", "back": "VisualRoot/Sockets/Back", "hip": "VisualRoot/Sockets/Hip", "flashlight": "VisualRoot/Sockets/HandRight"}},
+      "default_appearance": {"appearance_id": "appearance/standard_blue", "appearance_revision": 1, "parameters": {"body_color": [0.18, 0.45, 0.82, 1.0], "accent_color": [0.08, 0.12, 0.2, 1.0], "skin_color": [0.72, 0.52, 0.38, 1.0]}}
+    },
+    {
+      "character_id": "human/procedural/slim",
+      "display_name": "Procedural Slim Human",
+      "presentation_scene_path": "res://scenes/labs/character/procedural_humanoid.tscn",
+      "asset_revision": 1,
+      "body_profile": {"body_profile_id": "body/human_standard", "standing_height": 1.8, "crouching_height": 1.15, "capsule_radius": 0.35, "eye_height": 1.62, "step_height": 0.35, "mass": 72.0, "movement_profile_id": "movement/humanoid_standard"},
+      "animation_profile": {"animation_profile_id": "animation/procedural_humanoid", "fallback_semantic": "locomotion/idle", "semantic_map": {"locomotion/idle": "idle", "locomotion/walk": "walk", "locomotion/run": "run", "locomotion/strafe_left": "strafe_left", "locomotion/strafe_right": "strafe_right", "locomotion/jump_start": "jump_start", "locomotion/fall": "fall", "locomotion/land": "land", "action/pickup": "pickup", "action/use": "use"}},
+      "socket_profile": {"socket_profile_id": "socket/procedural_humanoid", "socket_paths": {"head": "VisualRoot/Sockets/Head", "hand_left": "VisualRoot/Sockets/HandLeft", "hand_right": "VisualRoot/Sockets/HandRight", "chest": "VisualRoot/Sockets/Chest", "back": "VisualRoot/Sockets/Back", "hip": "VisualRoot/Sockets/Hip", "flashlight": "VisualRoot/Sockets/HandRight"}},
+      "default_appearance": {"appearance_id": "appearance/slim_orange", "appearance_revision": 1, "parameters": {"body_color": [0.9, 0.32, 0.12, 1.0], "accent_color": [0.14, 0.08, 0.05, 1.0], "skin_color": [0.82, 0.62, 0.48, 1.0]}}
+    },
+    {
+      "character_id": "human/test_dummy",
+      "display_name": "Technical Humanoid Dummy",
+      "presentation_scene_path": "res://scenes/labs/character/procedural_humanoid.tscn",
+      "asset_revision": 1,
+      "body_profile": {"body_profile_id": "body/human_standard", "standing_height": 1.8, "crouching_height": 1.15, "capsule_radius": 0.35, "eye_height": 1.62, "step_height": 0.35, "mass": 80.0, "movement_profile_id": "movement/humanoid_standard"},
+      "animation_profile": {"animation_profile_id": "animation/procedural_humanoid", "fallback_semantic": "locomotion/idle", "semantic_map": {"locomotion/idle": "idle", "locomotion/walk": "walk", "locomotion/run": "run", "locomotion/strafe_left": "strafe_left", "locomotion/strafe_right": "strafe_right", "locomotion/jump_start": "jump_start", "locomotion/fall": "fall", "locomotion/land": "land", "action/pickup": "pickup", "action/use": "use"}},
+      "socket_profile": {"socket_profile_id": "socket/procedural_humanoid", "socket_paths": {"head": "VisualRoot/Sockets/Head", "hand_left": "VisualRoot/Sockets/HandLeft", "hand_right": "VisualRoot/Sockets/HandRight", "chest": "VisualRoot/Sockets/Chest", "back": "VisualRoot/Sockets/Back", "hip": "VisualRoot/Sockets/Hip", "flashlight": "VisualRoot/Sockets/HandRight"}},
+      "default_appearance": {"appearance_id": "appearance/dummy_green", "appearance_revision": 1, "parameters": {"body_color": [0.2, 0.75, 0.32, 1.0], "accent_color": [0.05, 0.18, 0.08, 1.0], "skin_color": [0.58, 0.62, 0.6, 1.0]}}
+    }
+  ]
+}
