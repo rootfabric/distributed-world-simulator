@@ -21,6 +21,9 @@ const PlayerInputBatchScript = preload("res://scripts/runtime/networked_gameplay
 const CanonicalItemGraphDeltaScript = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
 const ENetPortScript = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
+const InputSequenceScript = preload("res://scripts/network/simulation/input_sequence.gd")
+const FixedTickSchedulerScript = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
+const FixedTickInputBufferScript = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
 
 const SCHEMA: String = "planet_simulator.network_protocol_manifest.v1"
 const MANIFEST_VERSION: int = 1
@@ -72,6 +75,7 @@ static func contract_versions() -> Dictionary:
 			"max_inputs": PlayerInputBatchScript.MAX_INPUTS,
 			"history_policy": PlayerInputBatchScript.HISTORY_POLICY,
 			"server_delta_policy": PlayerInputBatchScript.SERVER_DELTA_POLICY,
+			"sequence_order_policy": PlayerInputBatchScript.SEQUENCE_ORDER_POLICY,
 		},
 		"player_snapshot": {"schema": PlayerSnapshotScript.SCHEMA},
 		"player_delta": {"schema": PlayerDeltaScript.SCHEMA},
@@ -83,6 +87,25 @@ static func contract_versions() -> Dictionary:
 			"validation_policy": CanonicalItemGraphDeltaScript.VALIDATION_POLICY,
 		},
 		"compact_gameplay_snapshot": {"schema": CompactGameplaySnapshotScript.SCHEMA},
+		"input_sequence": {
+			"schema": InputSequenceScript.SCHEMA,
+			"max_sequence": InputSequenceScript.MAX_SEQUENCE,
+			"half_range": InputSequenceScript.HALF_RANGE,
+		},
+		"fixed_tick_scheduler": {
+			"schema": FixedTickSchedulerScript.SCHEMA,
+			"tick_rate_hz": FixedTickSchedulerScript.DEFAULT_TICK_RATE_HZ,
+			"max_catch_up_ticks": FixedTickSchedulerScript.DEFAULT_MAX_CATCH_UP_TICKS,
+		},
+		"fixed_tick_input_buffer": {
+			"schema": FixedTickInputBufferScript.SCHEMA,
+			"selection_policy": FixedTickInputBufferScript.INPUT_SELECTION_POLICY,
+			"jump_policy": FixedTickInputBufferScript.JUMP_POLICY,
+			"hold_policy": FixedTickInputBufferScript.HOLD_POLICY,
+			"max_pending_inputs": FixedTickInputBufferScript.MAX_PENDING_INPUTS,
+			"max_sequence_ahead": FixedTickInputBufferScript.MAX_SEQUENCE_AHEAD,
+			"max_queue_age_ticks": FixedTickInputBufferScript.MAX_QUEUE_AGE_TICKS,
+		},
 		"compatibility_hello": {"schema": CompatibilityHandshakeScript.HELLO_SCHEMA},
 		"compatibility_ack": {"schema": CompatibilityHandshakeScript.ACK_SCHEMA},
 		"compatibility_rejection": {"schema": CompatibilityHandshakeScript.REJECTION_SCHEMA},

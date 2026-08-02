@@ -343,7 +343,7 @@ func _test_runtime_wiring_and_non_goals() -> void:
 
 	# NX0 instrumentation must survive later roadmap stages without freezing old traffic behavior.
 	_assert(server_source.contains("const M7_MOVEMENT_CHECKPOINT_INTERVAL_MS := 1500"), "Movement persistence cadence changed outside NX9")
-	if RuntimeIdentity.CHECKPOINT.contains("nx2"):
+	if RuntimeIdentity.CHECKPOINT.contains("nx2") or RuntimeIdentity.CHECKPOINT.contains("nx3"):
 		_assert(server_source.contains("_movement_results_suppressed += 1"), "NX2 movement result suppression is missing")
 		_assert(server_source.contains("MOVEMENT_NETWORK_TICK"), "NX2 movement snapshot cadence is missing")
 		_assert(enet_source.contains("ChannelPolicyScript.ENET_CHANNEL_COUNT"), "NX2 channel policy is not wired")

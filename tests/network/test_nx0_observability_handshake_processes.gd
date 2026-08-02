@@ -38,7 +38,7 @@ func _init() -> void:
 	_assert(server_pid > 0, "NX0 dedicated server launched")
 	var ready: Dictionary = _wait_state(server_path, ["READY", "FAILED"], SERVER_TIMEOUT_MS)
 	_assert(String(ready.get("state", "")) == "READY", "NX0 dedicated server ready")
-	_assert(String(ready.get("checkpoint", "")) in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation"], "Server reports current network checkpoint")
+	_assert(String(ready.get("checkpoint", "")) in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation", "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"], "Server reports current network checkpoint")
 	_assert(String(ready.get("network_fingerprint", {}).get("session_token", "")) == SESSION_TOKEN, "Server reports session binding")
 	if String(ready.get("state", "")) != "READY":
 		_finish()

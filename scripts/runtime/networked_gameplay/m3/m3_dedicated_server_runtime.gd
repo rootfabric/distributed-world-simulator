@@ -21,6 +21,8 @@ const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_c
 const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const FixedTickScheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
+const FixedTickInputBuffer = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
 
 const SCHEMA := "planet_simulator.m3_dedicated_server_runtime.v1"
 const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
@@ -29,6 +31,9 @@ const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
 const M7_MOVEMENT_CHECKPOINT_INTERVAL_MS := 1500
 const NX2_MOVEMENT_SNAPSHOT_INTERVAL_MS := 50
+const NX3_FIXED_TICK_RATE_HZ := 60
+const NX3_FIXED_TICK_DELTA_SECONDS := 1.0 / 60.0
+const NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS := 3
 
 var _boundary
 var _service
@@ -71,7 +76,16 @@ var _movement_checkpoints := 0
 var _movement_commands_since_checkpoint := 0
 var _debug_logging := false
 var _last_debug_report_ms := 0
-var _peer_last_input_ms: Dictionary = {}
+var _fixed_tick_scheduler
+var _peer_input_buffers: Dictionary = {}
+var _server_tick := 0
+var _fixed_ticks_simulated := 0
+var _fixed_tick_catch_up_batches := 0
+var _fixed_tick_failures := 0
+var _input_queue_stale_drops := 0
+var _input_hold_expirations := 0
+var _last_fixed_tick_duration_ms := 0.0
+var _last_movement_snapshot_tick := 0
 var _fingerprint: Dictionary = {}
 var _protocol_manifest: Dictionary = {}
 var _telemetry
@@ -85,7 +99,6 @@ var _handshake_rejections := 0
 var _handshake_replays := 0
 var _last_handshake_error_code := ""
 var _movement_snapshot_dirty := false
-var _last_movement_snapshot_ms := 0
 var _movement_batches_received := 0
 var _movement_inputs_received := 0
 var _movement_inputs_applied := 0
@@ -143,6 +156,7 @@ func setup(config: Dictionary) -> Dictionary:
 		"topology_adapter": "ENET",
 		"region_id": "region/m3/single-server",
 		"playable_sandbox": _playable_sandbox,
+		"fixed_tick_authority": true,
 	})
 	if not bool(service_setup.get("success", false)):
 		return service_setup
@@ -152,6 +166,16 @@ func setup(config: Dictionary) -> Dictionary:
 			_service.shutdown()
 			_service = null
 			return recovery_setup
+	_fixed_tick_scheduler = FixedTickScheduler.new()
+	_server_tick = int(_service.get_report().get("server_tick", 0))
+	var fixed_tick_setup: Dictionary = _fixed_tick_scheduler.configure(
+		NX3_FIXED_TICK_RATE_HZ, FixedTickScheduler.DEFAULT_MAX_CATCH_UP_TICKS, _server_tick
+	)
+	if not bool(fixed_tick_setup.get("success", false)):
+		_cleanup_setup_failure()
+		return fixed_tick_setup
+	_peer_input_buffers.clear()
+	_last_movement_snapshot_tick = _server_tick
 	var condition_setup: Dictionary = _setup_network_condition_simulator(config)
 	if not bool(condition_setup.get("success", false)):
 		_cleanup_setup_failure()
@@ -169,7 +193,7 @@ func setup(config: Dictionary) -> Dictionary:
 		return started
 	_configured = true
 	_last_movement_checkpoint_ms = Time.get_ticks_msec()
-	_last_movement_snapshot_ms = _last_movement_checkpoint_ms
+	_last_movement_snapshot_tick = _server_tick
 	_last_debug_report_ms = _last_movement_checkpoint_ms
 	set_process(true)
 	_debug_event("SERVER_READY", {"host":_host,"port":_port,"persistence_root":_persistence_root,"recovered":_recovered})
@@ -177,7 +201,7 @@ func setup(config: Dictionary) -> Dictionary:
 	ready_for_clients.emit(get_report())
 	return _success({"host": _host, "port": _port})
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
@@ -199,12 +223,12 @@ func _process(_delta: float) -> void:
 			_handle_message(peer_id, session_id, event.get("frame", {}).get("payload", {}))
 		elif event_type == "PEER_DISCONNECTED":
 			_handle_disconnect(peer_id, session_id)
+	_advance_fixed_simulation(delta)
 	_maybe_publish_movement_snapshot()
 	_maybe_persist_movement_checkpoint()
 	_update_runtime_telemetry()
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
-	_telemetry.observe("server_tick_duration_ms", process_duration_ms)
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("SERVER_HEALTH", {
@@ -332,7 +356,8 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		return
 	_peer_to_player[peer_id] = logical_id
 	_peer_to_session[peer_id] = session_id
-	_peer_last_input_ms[peer_id] = Time.get_ticks_msec()
+	_peer_input_buffers.erase(peer_id)
+	_ensure_input_buffer(peer_id, logical_id)
 	_debug_event("PLAYER_JOINED", {"peer_id":peer_id,"session_id":session_id,"logical_player_id":logical_id})
 	var replay := _is_replay_result(result)
 	if not replay:
@@ -418,11 +443,11 @@ func _handle_player_input(peer_id: String, session_id: String, payload: Dictiona
 func _handle_player_input_batch(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	_movement_batches_received += 1
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
-		_send_result(peer_id, "operation/nx2/stale/%s" % peer_id.sha256_text().left(12), "PLAYER_INPUT", _failure("STALE_TRANSPORT_SESSION"))
+		_send_result(peer_id, "operation/nx3/stale/%s" % peer_id.sha256_text().left(12), "PLAYER_INPUT", _failure("STALE_TRANSPORT_SESSION"))
 		return
 	var batch_value = payload.get("batch", {})
 	if not batch_value is Dictionary:
-		_send_result(peer_id, "operation/nx2/invalid/%s" % peer_id.sha256_text().left(12), "PLAYER_INPUT", _failure("PLAYER_INPUT_BATCH_REQUIRED"))
+		_send_result(peer_id, "operation/nx3/invalid/%s" % peer_id.sha256_text().left(12), "PLAYER_INPUT", _failure("PLAYER_INPUT_BATCH_REQUIRED"))
 		return
 	var batch: Dictionary = Dictionary(batch_value).duplicate(true)
 	var batch_check: Dictionary = PlayerInputBatch.validate(batch)
@@ -440,6 +465,13 @@ func _handle_player_input_batch(peer_id: String, session_id: String, payload: Di
 		_send_result(peer_id, _latest_batch_operation_id(batch), "PLAYER_INPUT", _failure(_last_movement_rejection_error_code))
 		_movement_inputs_rejected += 1
 		return
+	var player: Dictionary = _service.get_player(logical_id)
+	if int(batch.get("ownership_epoch", 0)) != int(player.get("ownership_epoch", 0)):
+		_last_movement_rejection_error_code = "STALE_PLAYER_OWNERSHIP_EPOCH"
+		_last_movement_rejection_stage = "OWNERSHIP"
+		_send_result(peer_id, _latest_batch_operation_id(batch), "PLAYER_INPUT", _failure(_last_movement_rejection_error_code))
+		_movement_inputs_rejected += 1
+		return
 	var expanded_result: Dictionary = PlayerInputBatch.expand_inputs(batch)
 	if not bool(expanded_result.get("success", false)):
 		_last_movement_rejection_error_code = String(expanded_result.get("error_code", "PLAYER_INPUT_BATCH_EXPAND_FAILED"))
@@ -447,81 +479,131 @@ func _handle_player_input_batch(peer_id: String, session_id: String, payload: Di
 		_send_result(peer_id, _latest_batch_operation_id(batch), "PLAYER_INPUT", expanded_result)
 		_movement_inputs_rejected += 1
 		return
+	var buffer = _ensure_input_buffer(peer_id, logical_id)
+	if buffer == null:
+		_last_movement_rejection_error_code = "NX3_INPUT_BUFFER_SETUP_FAILED"
+		_last_movement_rejection_stage = "INPUT_BUFFER"
+		_send_result(peer_id, _latest_batch_operation_id(batch), "PLAYER_INPUT", _failure(_last_movement_rejection_error_code))
+		_movement_inputs_rejected += 1
+		return
 	var inputs: Array = expanded_result.get("details", {}).get("inputs", [])
 	_movement_inputs_received += inputs.size()
-	var last_applied_sequence: int = _last_processed_input_sequence(logical_id)
-	var fresh_inputs: Array[Dictionary] = []
+	var accepted_any: bool = false
+	var redundant_any: bool = false
 	for input_value in inputs:
-		var input: Dictionary = Dictionary(input_value)
-		if int(input.get("input_sequence", 0)) <= last_applied_sequence:
-			_movement_inputs_redundant += 1
+		var input: Dictionary = Dictionary(input_value).duplicate(true)
+		var queued: Dictionary = buffer.enqueue(input, _server_tick)
+		if bool(queued.get("success", false)):
+			if bool(queued.get("details", {}).get("accepted", false)):
+				accepted_any = true
+			else:
+				redundant_any = true
+				_movement_inputs_redundant += 1
 		else:
-			fresh_inputs.append(input.duplicate(true))
-	if fresh_inputs.is_empty():
-		# Redundant input is an acknowledgement probe. The client keeps retransmitting
-		# until an authoritative snapshot advances last_input_sequence, so losing an
-		# unreliable snapshot must schedule a bounded retry instead of timing out.
+			_movement_inputs_rejected += 1
+			_last_movement_rejection_error_code = String(queued.get("error_code", "NX3_INPUT_QUEUE_REJECTED"))
+			_last_movement_rejection_stage = "INPUT_QUEUE"
+			_send_result(peer_id, String(input.get("operation_id", _latest_batch_operation_id(batch))), "PLAYER_INPUT", queued)
+	if redundant_any and not accepted_any:
 		_movement_snapshot_dirty = true
 		_movement_snapshot_retransmit_requests += 1
+
+func _ensure_input_buffer(peer_id: String, logical_id: String):
+	if _peer_input_buffers.has(peer_id):
+		return _peer_input_buffers[peer_id]
+	var buffer = FixedTickInputBuffer.new()
+	var setup_result: Dictionary = buffer.configure(_last_processed_input_sequence(logical_id))
+	if not bool(setup_result.get("success", false)):
+		return null
+	_peer_input_buffers[peer_id] = buffer
+	return buffer
+
+func _advance_fixed_simulation(frame_delta_seconds: float) -> void:
+	if _fixed_tick_scheduler == null or _service == null:
 		return
-	var now_ms: int = Time.get_ticks_msec()
-	var previous_ms: int = int(_peer_last_input_ms.get(peer_id, now_ms - 50))
-	_peer_last_input_ms[peer_id] = now_ms
-	var server_delta_budget: float = clampf(
-		float(now_ms - previous_ms) / 1000.0,
-		1.0 / 60.0,
-		0.25
-	)
-	var requested_delta_total: float = 0.0
-	for input_value in fresh_inputs:
-		requested_delta_total += clampf(
-			float(Dictionary(input_value).get("intent", {}).get("delta_seconds", 1.0 / 60.0)),
-			0.000001,
-			PlayerInputBatch.MAX_DELTA_SECONDS
-		)
-	for input in fresh_inputs:
-		var operation_id: String = String(input.get("operation_id", ""))
-		var authority_intent: Dictionary = Dictionary(input.get("intent", {})).duplicate(true)
-		# NX2 preserves the packet-arrival authority budget. Client segment durations only
-		# weight that bounded budget so a coalesced state transition survives packet loss.
-		var requested_delta: float = clampf(
-			float(authority_intent.get("delta_seconds", 1.0 / 60.0)),
-			0.000001,
-			PlayerInputBatch.MAX_DELTA_SECONDS
-		)
-		authority_intent["delta_seconds"] = server_delta_budget * requested_delta / maxf(requested_delta_total, 0.000001)
-		var result: Dictionary = _service.submit_movement_intent(
+	var scheduled: Dictionary = _fixed_tick_scheduler.advance(frame_delta_seconds)
+	if not bool(scheduled.get("success", false)):
+		_fixed_tick_failures += 1
+		_last_error_code = String(scheduled.get("error_code", "NX3_FIXED_TICK_SCHEDULER_FAILED"))
+		return
+	var tick_count: int = int(scheduled.get("details", {}).get("tick_count", 0))
+	if tick_count > 1:
+		_fixed_tick_catch_up_batches += 1
+	var first_tick: int = int(scheduled.get("details", {}).get("first_tick", _server_tick))
+	for offset in range(tick_count):
+		_run_fixed_tick(first_tick + offset)
+
+func _run_fixed_tick(server_tick: int) -> void:
+	var started_us: int = Time.get_ticks_usec()
+	var advanced: Dictionary = _service.advance_fixed_server_tick(server_tick)
+	if not bool(advanced.get("success", false)):
+		_fixed_tick_failures += 1
+		_last_error_code = String(advanced.get("error_code", "NX3_SERVER_TICK_ADVANCE_FAILED"))
+		return
+	_server_tick = server_tick
+	_fixed_ticks_simulated += 1
+	var peer_ids: Array[String] = []
+	for peer_id_value in _peer_to_player.keys():
+		peer_ids.append(String(peer_id_value))
+	peer_ids.sort()
+	for peer_id in peer_ids:
+		var logical_id: String = String(_peer_to_player.get(peer_id, ""))
+		var session_id: String = String(_peer_to_session.get(peer_id, ""))
+		if logical_id.is_empty() or session_id.is_empty():
+			continue
+		var buffer = _ensure_input_buffer(peer_id, logical_id)
+		if buffer == null:
+			continue
+		var before_report: Dictionary = buffer.get_report(server_tick)
+		var consumed: Dictionary = buffer.consume_for_tick(server_tick)
+		if not bool(consumed.get("success", false)):
+			_fixed_tick_failures += 1
+			continue
+		var sequence: int = int(consumed.get("details", {}).get("input_sequence", 0))
+		if sequence < 1:
+			continue
+		var intent: Dictionary = Dictionary(consumed.get("details", {}).get("intent", {})).duplicate(true)
+		intent["delta_seconds"] = NX3_FIXED_TICK_DELTA_SECONDS
+		var player: Dictionary = _service.get_player(logical_id)
+		var result: Dictionary = _service.simulate_fixed_movement_tick(
 			logical_id,
 			session_id,
-			int(batch.get("ownership_epoch", 0)),
-			int(input.get("input_sequence", 0)),
-			authority_intent,
-			operation_id
+			int(player.get("ownership_epoch", 0)),
+			sequence,
+			intent,
+			NX3_FIXED_TICK_DELTA_SECONDS
 		)
-		if bool(result.get("success", false)):
-			if not _is_replay_result(result):
-				_moves += 1
-				_movement_inputs_applied += 1
-				_movement_results_suppressed += 1
-				_movement_deltas_suppressed += 1
-				_movement_full_snapshots_suppressed += 1
-				_movement_snapshot_dirty = true
-				_movement_checkpoint_dirty = true
-				_movement_commands_since_checkpoint += 1
-		else:
-			_rejections += 1
-			_movement_inputs_rejected += 1
-			_last_movement_rejection_error_code = String(result.get("error_code", "PLAYER_INPUT_REJECTED"))
-			_last_movement_rejection_stage = "SERVICE_APPLY"
-			_send_result(peer_id, operation_id, "PLAYER_INPUT", result)
-			_debug_event("PLAYER_INPUT_REJECTED", {
-				"peer_id": peer_id,
-				"player": logical_id,
-				"operation_id": operation_id,
-				"error_code": String(result.get("error_code", "")),
-			})
-	_capture_two_connected_checksum()
-
+		var consumed_new: bool = bool(consumed.get("details", {}).get("consumed_new_input", false))
+		if not bool(result.get("success", false)):
+			_fixed_tick_failures += 1
+			if consumed_new:
+				_movement_inputs_rejected += 1
+				_last_movement_rejection_error_code = String(result.get("error_code", "NX3_FIXED_MOVEMENT_REJECTED"))
+				_last_movement_rejection_stage = "FIXED_TICK_SIMULATION"
+				_send_result(peer_id, String(consumed.get("details", {}).get("operation_id", "")), "PLAYER_INPUT", result)
+			continue
+		if consumed_new:
+			_moves += 1
+			_movement_inputs_applied += 1
+			_movement_results_suppressed += 1
+			_movement_deltas_suppressed += 1
+			_movement_full_snapshots_suppressed += 1
+			_movement_commands_since_checkpoint += 1
+			_movement_snapshot_dirty = true
+		if bool(result.get("details", {}).get("changed", false)):
+			_movement_snapshot_dirty = true
+			_movement_checkpoint_dirty = true
+		var after_report: Dictionary = buffer.get_report(server_tick)
+		_input_queue_stale_drops += maxi(
+			int(after_report.get("stale_dropped", 0)) - int(before_report.get("stale_dropped", 0)), 0
+		)
+		_input_hold_expirations += maxi(
+			int(after_report.get("hold_expirations", 0)) - int(before_report.get("hold_expirations", 0)), 0
+		)
+		_telemetry.observe("input_queue_age_ticks", float(consumed.get("details", {}).get("queue_age_ticks", 0)))
+	_last_fixed_tick_duration_ms = float(Time.get_ticks_usec() - started_us) / 1000.0
+	_telemetry.observe("server_tick_duration_ms", _last_fixed_tick_duration_ms)
+	_telemetry.set_gauge("server_tick", float(_server_tick))
 
 func _latest_batch_operation_id(batch: Dictionary) -> String:
 	var operation_id: String = String(batch.get("operation_id", ""))
@@ -542,10 +624,9 @@ func _last_processed_input_sequence(logical_id: String) -> int:
 func _maybe_publish_movement_snapshot() -> void:
 	if not _movement_snapshot_dirty or _service == null:
 		return
-	var now_ms: int = Time.get_ticks_msec()
-	if now_ms - _last_movement_snapshot_ms < NX2_MOVEMENT_SNAPSHOT_INTERVAL_MS:
+	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
-	_last_movement_snapshot_ms = now_ms
+	_last_movement_snapshot_tick = _server_tick
 	var compact_result: Dictionary = CompactGameplaySnapshot.encode(_service.create_snapshot())
 	if not bool(compact_result.get("success", false)):
 		_compact_movement_snapshot_failures += 1
@@ -753,7 +834,7 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 
 
 func _handle_disconnect(peer_id: String, session_id: String) -> void:
-	_peer_last_input_ms.erase(peer_id)
+	_peer_input_buffers.erase(peer_id)
 	_peer_compatibility.erase(peer_id)
 	_debug_event("PEER_DISCONNECTED", {"peer_id":peer_id,"session_id":session_id})
 	var mapped_session := String(_peer_to_session.get(peer_id, ""))
@@ -1119,6 +1200,9 @@ func _update_runtime_telemetry() -> void:
 	_telemetry.set_gauge("compatible_transport_peers", float(_peer_compatibility.size()))
 	_telemetry.set_gauge("handshake_replay_count", float(_handshake_replays))
 	_telemetry.set_gauge("checkpoint_generation", float(_checkpoint_generation))
+	_telemetry.set_gauge("fixed_server_tick", float(_server_tick))
+	_telemetry.set_gauge("pending_input_count", float(_total_pending_input_count()))
+	_telemetry.set_gauge("fixed_tick_failures", float(_fixed_tick_failures))
 	var boundary_snapshot: Dictionary = _boundary.get_snapshot() if _boundary != null else {}
 	var port_runtime: Dictionary = boundary_snapshot.get("port_runtime", {})
 	var peer_statistics: Dictionary = port_runtime.get("peer_statistics", {})
@@ -1129,6 +1213,14 @@ func _update_runtime_telemetry() -> void:
 		_telemetry.observe("peer_rtt_ms", float(stats.get("rtt_ms", 0)))
 		_telemetry.observe("peer_jitter_ms", float(stats.get("rtt_variance_ms", 0)))
 		_telemetry.observe("peer_packet_loss_percent", float(stats.get("packet_loss_percent", 0.0)))
+
+
+func _total_pending_input_count() -> int:
+	var total: int = 0
+	for buffer_value in _peer_input_buffers.values():
+		if buffer_value != null:
+			total += int(buffer_value.get_pending_count())
+	return total
 
 
 func _telemetry_sample() -> Dictionary:
@@ -1209,6 +1301,16 @@ func trigger_network_disconnect_blackout(direction: String = "BOTH", duration_ms
 	return _network_condition_simulator.trigger_disconnect_blackout(direction, duration_ms)
 
 
+func _input_buffer_reports() -> Dictionary:
+	var reports: Dictionary = {}
+	for peer_id_value in _peer_input_buffers.keys():
+		var peer_id: String = String(peer_id_value)
+		var buffer = _peer_input_buffers[peer_id]
+		if buffer != null:
+			reports[peer_id] = buffer.get_report(_server_tick)
+	return reports
+
+
 func get_report() -> Dictionary:
 	return {
 		"schema": SCHEMA,
@@ -1265,6 +1367,8 @@ func get_report() -> Dictionary:
 		"realtime_traffic": {
 			"channel_policy": RealtimeChannelPolicy.canonical_policy(),
 			"movement_snapshot_interval_ms": NX2_MOVEMENT_SNAPSHOT_INTERVAL_MS,
+			"movement_snapshot_interval_ticks": NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS,
+			"movement_snapshot_rate_hz": NX3_FIXED_TICK_RATE_HZ / NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS,
 			"movement_batches_received": _movement_batches_received,
 			"movement_inputs_received": _movement_inputs_received,
 			"movement_inputs_applied": _movement_inputs_applied,
@@ -1284,6 +1388,21 @@ func get_report() -> Dictionary:
 			"movement_snapshot_retransmit_requests": _movement_snapshot_retransmit_requests,
 			"movement_snapshot_enqueue_failures": _movement_snapshot_enqueue_failures,
 			"compact_movement_snapshot_failures": _compact_movement_snapshot_failures,
+		},
+		"fixed_tick_simulation": {
+			"schema": FixedTickScheduler.SCHEMA,
+			"tick_rate_hz": NX3_FIXED_TICK_RATE_HZ,
+			"tick_delta_seconds": NX3_FIXED_TICK_DELTA_SECONDS,
+			"server_tick": _server_tick,
+			"ticks_simulated": _fixed_ticks_simulated,
+			"catch_up_batches": _fixed_tick_catch_up_batches,
+			"failures": _fixed_tick_failures,
+			"last_tick_duration_ms": _last_fixed_tick_duration_ms,
+			"pending_input_count": _total_pending_input_count(),
+			"stale_input_drops": _input_queue_stale_drops,
+			"input_hold_expirations": _input_hold_expirations,
+			"scheduler": _fixed_tick_scheduler.get_report() if _fixed_tick_scheduler != null else {},
+			"input_buffers": _input_buffer_reports(),
 		},
 		"movement_persistence": {
 			"mode":"THROTTLED_WORLD_CHECKPOINT",
@@ -1311,6 +1430,8 @@ func stop() -> Dictionary:
 	_boundary = null
 	_network_condition_simulator = null
 	_service = null
+	_fixed_tick_scheduler = null
+	_peer_input_buffers.clear()
 	_configured = false
 	if _fatal_persistence_failure:
 		return _failure(_last_error_code if not _last_error_code.is_empty() else "M6_DURABLE_COMMIT_FAILED")

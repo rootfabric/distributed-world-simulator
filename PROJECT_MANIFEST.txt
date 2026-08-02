@@ -813,3 +813,23 @@ NX2 REALTIME TRAFFIC SEPARATION
 - fix2 validation: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-validation.json
 - fix2 incremental files: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-files.txt
 - fix2 patch manifest: NX2_REALTIME_TRAFFIC_SEPARATION_FIX2_PATCH_MANIFEST.json
+
+NX3 FIXED-TICK AUTHORITATIVE SIMULATION
+- checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+- branch: feature/nx3-fixed-tick-authoritative-simulation
+- accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2 / f1abeca
+- scheduler: scripts/network/simulation/fixed_tick_scheduler.gd
+- input buffer: scripts/network/simulation/fixed_tick_input_buffer.gd
+- sequence arithmetic: scripts/network/simulation/input_sequence.gd
+- production movement: 60 Hz server tick, exact delta 1/60, no packet-arrival movement budget
+- input redundancy: LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1
+- input safety: bounded queue, stale eviction, sequence window/wrap, jump edge, 250 ms hold fail-safe
+- snapshots: compact authoritative state every 3 fixed ticks / 20 Hz
+- config: config/network/nx3-fixed-tick-authoritative-simulation.v1.json
+- documentation: docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md
+- checkpoint document: docs/checkpoints/2026-08-03_V16_13_0_NETWORK_NX3_FIXED_TICK_RU.md
+- focused tests: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
+- contract test: tests/network/test_nx3_fixed_tick_authoritative_simulation.gd
+- validation: validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-validation.json
+- incremental files: validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-files.txt
+- patch manifest: NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_PATCH_MANIFEST.json

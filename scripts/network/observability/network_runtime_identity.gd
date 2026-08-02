@@ -3,8 +3,8 @@ extends RefCounted
 const FingerprintScript = preload("res://scripts/network/observability/network_build_fingerprint.gd")
 const ProtocolManifestScript = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 
-const CHECKPOINT: String = "v16.12.0-network-nx2-realtime-traffic-separation"
-const BUILD_ID: String = "nx2-realtime-traffic-separation"
+const CHECKPOINT: String = "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"
+const BUILD_ID: String = "nx3-fixed-tick-authoritative-simulation"
 const SOURCE_COMMIT: String = "f1abeca"
 const DEFAULT_SESSION_TOKEN: String = "session-id/local-development"
 

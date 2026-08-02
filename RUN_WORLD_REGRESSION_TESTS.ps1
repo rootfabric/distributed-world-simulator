@@ -120,6 +120,7 @@ $Tests = @(
     "res://tests/network/test_nx1_deterministic_network_condition_simulator.gd",
     "res://tests/network/test_nx1_network_condition_processes.gd",
     "res://tests/network/test_nx2_realtime_traffic_separation.gd",
+    "res://tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
     "res://tests/network/test_b0_message_bus_contracts.gd",
     "res://tests/network/test_b0_message_bus_integration.gd",
     "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
@@ -176,9 +177,9 @@ $Tests = @(
 
 $Summary = [ordered]@{
     schema = "planet_simulator.world_regression_summary.v1"
-    checkpoint = "v16.12.0-network-nx2-realtime-traffic-separation"
+    checkpoint = "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"
     runtime_base_checkpoint = "v16.10.8-network-nx0-observability-baseline"
-    build_id = "nx2-realtime-traffic-separation"
+    build_id = "nx3-fixed-tick-authoritative-simulation"
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     finished_at_utc = $null
     godot = $Godot
@@ -382,7 +383,7 @@ function Invoke-GodotStep {
 
 try {
     Write-Host "Godot: $Godot"
-    Write-Host "Checkpoint: v16.12.0-network-nx2-realtime-traffic-separation (NX2 candidate over accepted NX1 deterministic network condition simulator)"
+    Write-Host "Checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation (NX3 candidate over accepted NX2 realtime traffic separation fix2)"
 
     # Scripts below a directory named `fixtures` are support types loaded by
     # standalone tests. They intentionally keep the `test_*.gd` prefix so

@@ -39,7 +39,7 @@ func _init() -> void:
 	_assert(server_pid > 0, "NX1 dedicated server launched")
 	var ready: Dictionary = _wait_state(server_path, ["READY", "FAILED"], SERVER_TIMEOUT_MS)
 	_assert(String(ready.get("state", "")) == "READY", "NX1 dedicated server ready")
-	_assert(String(ready.get("checkpoint", "")) in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation"], "Server reports NX1 checkpoint")
+	_assert(String(ready.get("checkpoint", "")) in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation", "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"], "Server reports NX1 checkpoint")
 	_assert(String(ready.get("network_conditions", {}).get("profile", {}).get("profile_id", "")) == PROFILE_ID, "Server activates requested profile")
 	_assert(not bool(ready.get("network_conditions", {}).get("passthrough", true)), "Server profile is not passthrough")
 	if String(ready.get("state", "")) != "READY":

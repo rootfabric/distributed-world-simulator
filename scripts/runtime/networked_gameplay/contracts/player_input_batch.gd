@@ -1,12 +1,14 @@
 extends RefCounted
 
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
 
-const SCHEMA: String = "planet_simulator.player_input_batch.v1"
+const SCHEMA: String = "planet_simulator.player_input_batch.v2"
 const MAX_INPUTS: int = 3
 const MAX_DELTA_SECONDS: float = 0.25
-const HISTORY_POLICY: String = "TRANSITION_SEGMENTS_V1"
-const SERVER_DELTA_POLICY: String = "PACKET_ARRIVAL_BUDGET_WEIGHTED_BY_SEGMENT_V1"
+const HISTORY_POLICY: String = "LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1"
+const SERVER_DELTA_POLICY: String = "IGNORED_SERVER_FIXED_TICK_V1"
+const SEQUENCE_ORDER_POLICY: String = "WRAP_AWARE_FORWARD_ORDER_V1"
 const FIELDS: Array[String] = [
 	"schema", "batch_id", "logical_player_id", "ownership_epoch",
 	"operation_id", "latest_sequence", "inputs", "checksum",
@@ -90,9 +92,14 @@ static func validate(value: Dictionary) -> Dictionary:
 		var input: Dictionary = input_value
 		if not bool(Utils.validate_exact_fields(input, WIRE_INPUT_FIELDS).get("success", false)):
 			return _failure("PLAYER_INPUT_ENTRY_FIELD_SET_MISMATCH")
-		if not Utils.is_json_integer(input.get("s")) or int(input.get("s", 0)) <= previous_sequence:
+		if not Utils.is_json_integer(input.get("s")):
 			return _failure("INVALID_PLAYER_INPUT_SEQUENCE_ORDER")
-		previous_sequence = int(input.get("s", 0))
+		var sequence: int = int(input.get("s", 0))
+		if not InputSequence.is_valid(sequence):
+			return _failure("INVALID_PLAYER_INPUT_SEQUENCE_ORDER")
+		if previous_sequence != 0 and not InputSequence.is_newer(sequence, previous_sequence):
+			return _failure("INVALID_PLAYER_INPUT_SEQUENCE_ORDER")
+		previous_sequence = sequence
 		for integer_field in ["t", "m"]:
 			if not Utils.is_json_integer(input.get(integer_field)) or int(input.get(integer_field, -1)) < 0:
 				return _failure("INVALID_PLAYER_INPUT_TIMESTAMP")
@@ -151,22 +158,8 @@ static func append_to_history(history: Array, entry: Dictionary) -> Array:
 	var candidate: Dictionary = entry.duplicate(true)
 	if not result.is_empty() and result.back() is Dictionary:
 		var previous: Dictionary = Dictionary(result.back())
-		if _can_merge_continuous_state(previous, candidate):
-			var previous_intent: Dictionary = Dictionary(previous.get("intent", {})).duplicate(true)
-			var candidate_intent: Dictionary = Dictionary(candidate.get("intent", {}))
-			previous["input_sequence"] = int(candidate.get("input_sequence", 0))
-			previous["operation_id"] = String(candidate.get("operation_id", ""))
-			previous["client_tick"] = int(candidate.get("client_tick", 0))
-			previous["client_sent_at_ms"] = int(candidate.get("client_sent_at_ms", 0))
-			previous_intent["look_yaw"] = float(candidate_intent.get("look_yaw", previous_intent.get("look_yaw", 0.0)))
-			previous_intent["look_pitch"] = float(candidate_intent.get("look_pitch", previous_intent.get("look_pitch", 0.0)))
-			if _has_continuous_motion(candidate_intent):
-				previous_intent["delta_seconds"] = minf(
-					float(previous_intent.get("delta_seconds", 0.0)) + float(candidate_intent.get("delta_seconds", 0.0)),
-					MAX_DELTA_SECONDS
-				)
-			previous["intent"] = previous_intent
-			result[result.size() - 1] = previous
+		if _same_continuous_state(previous, candidate):
+			result[result.size() - 1] = candidate
 			return result
 	result.append(candidate)
 	while result.size() > MAX_INPUTS:
@@ -174,7 +167,7 @@ static func append_to_history(history: Array, entry: Dictionary) -> Array:
 	return result
 
 
-static func _can_merge_continuous_state(previous: Dictionary, candidate: Dictionary) -> bool:
+static func _same_continuous_state(previous: Dictionary, candidate: Dictionary) -> bool:
 	var previous_intent: Dictionary = Dictionary(previous.get("intent", {}))
 	var candidate_intent: Dictionary = Dictionary(candidate.get("intent", {}))
 	if bool(previous_intent.get("jump_pressed", false)) or bool(candidate_intent.get("jump_pressed", false)):
@@ -182,12 +175,6 @@ static func _can_merge_continuous_state(previous: Dictionary, candidate: Diction
 	return is_equal_approx(float(previous_intent.get("move_x", 0.0)), float(candidate_intent.get("move_x", 0.0))) \
 		and is_equal_approx(float(previous_intent.get("move_z", 0.0)), float(candidate_intent.get("move_z", 0.0))) \
 		and bool(previous_intent.get("sprint", false)) == bool(candidate_intent.get("sprint", false))
-
-
-static func _has_continuous_motion(intent: Dictionary) -> bool:
-	return absf(float(intent.get("move_x", 0.0))) > 0.000001 \
-		or absf(float(intent.get("move_z", 0.0))) > 0.000001 \
-		or bool(intent.get("sprint", false))
 
 
 static func _canonical_id(value: String, prefix: String) -> bool:

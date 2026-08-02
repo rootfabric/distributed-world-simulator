@@ -20,6 +20,7 @@ const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_c
 const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
 
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const NX2_INPUT_SEND_INTERVAL_MS := 33
@@ -329,7 +330,7 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	var player: Dictionary = player_value
 	_player_entity_id = String(player.get("player_entity_id", ""))
 	_ownership_epoch = int(player.get("ownership_epoch", 0))
-	_input_sequence = maxi(_input_sequence, int(player.get("last_input_sequence", 0)))
+	_adopt_authoritative_input_sequence(int(player.get("last_input_sequence", 0)))
 	if _player_entity_id != "player/%s" % _logical_player_id or _ownership_epoch < 1:
 		_fail_connection("INVALID_M3_JOIN_IDENTITY", {"player": player}); return
 	var accepted: Dictionary = _replica.accept_snapshot(payload.get("snapshot", {}))
@@ -378,7 +379,7 @@ func _accept_delta(delta: Dictionary) -> void:
 
 func move_nonblocking(delta_x: float, delta_z: float) -> Dictionary:
 	if not is_ready(): return _failure("M3_CLIENT_NOT_READY")
-	_input_sequence += 1
+	_input_sequence = InputSequence.next(_input_sequence)
 	var operation_id := "operation/m3/%s/move/%d/%d" % [_logical_player_id, OS.get_process_id(), _input_sequence]
 	var sent := _send("MOVE", {
 		"logical_player_id": _logical_player_id,
@@ -393,7 +394,7 @@ func move_nonblocking(delta_x: float, delta_z: float) -> Dictionary:
 
 func move_blocking(delta_x: float, delta_z: float) -> Dictionary:
 	if not is_ready(): return _failure("M3_CLIENT_NOT_READY")
-	_input_sequence += 1
+	_input_sequence = InputSequence.next(_input_sequence)
 	var operation_id := "operation/m3/%s/move/%d/%d" % [_logical_player_id, OS.get_process_id(), _input_sequence]
 	_command_results.erase(operation_id)
 	_awaited_command_ids[operation_id] = true
@@ -424,7 +425,7 @@ func move_blocking(delta_x: float, delta_z: float) -> Dictionary:
 func submit_movement_intent_nonblocking(intent: Dictionary) -> Dictionary:
 	if not is_ready():
 		return _failure("M7_CLIENT_NOT_READY")
-	_input_sequence += 1
+	_input_sequence = InputSequence.next(_input_sequence)
 	var operation_id: String = "operation/m7/%s/input/%d/%d" % [
 		_logical_player_id, OS.get_process_id(), _input_sequence
 	]
@@ -439,7 +440,7 @@ func submit_movement_intent_nonblocking(intent: Dictionary) -> Dictionary:
 func submit_movement_intent_blocking(intent: Dictionary) -> Dictionary:
 	if not is_ready():
 		return _failure("M7_CLIENT_NOT_READY")
-	_input_sequence += 1
+	_input_sequence = InputSequence.next(_input_sequence)
 	var target_sequence: int = _input_sequence
 	var operation_id: String = "operation/m7/%s/input/%d/%d" % [
 		_logical_player_id, OS.get_process_id(), target_sequence
@@ -459,7 +460,7 @@ func submit_movement_intent_blocking(intent: Dictionary) -> Dictionary:
 			_awaited_command_ids.erase(operation_id)
 			return _failure(String(result.get("error_code", "M7_PLAYER_INPUT_REJECTED")), result)
 		var player: Dictionary = get_player(_logical_player_id)
-		if int(player.get("last_input_sequence", 0)) >= target_sequence:
+		if _sequence_acknowledges(int(player.get("last_input_sequence", 0)), target_sequence):
 			_awaited_command_ids.erase(operation_id)
 			_movement_acknowledged_by_snapshot += 1
 			return _success({
@@ -507,7 +508,7 @@ func _flush_pending_input_batch(force_send: bool) -> bool:
 		return true
 	var latest_sequence: int = int(_input_history.back().get("input_sequence", 0))
 	var acknowledged_sequence: int = int(get_player(_logical_player_id).get("last_input_sequence", 0))
-	if not _pending_input_batch_dirty and acknowledged_sequence >= latest_sequence:
+	if not _pending_input_batch_dirty and _sequence_acknowledges(acknowledged_sequence, latest_sequence):
 		return true
 	var retransmission: bool = not _pending_input_batch_dirty
 	var now_ms: int = Time.get_ticks_msec()
@@ -542,7 +543,12 @@ func _prune_acknowledged_inputs() -> void:
 	if _input_history.is_empty():
 		return
 	var acknowledged_sequence: int = int(get_player(_logical_player_id).get("last_input_sequence", 0))
-	while not _input_history.is_empty() and int(_input_history.front().get("input_sequence", 0)) <= acknowledged_sequence:
+	while (
+		not _input_history.is_empty()
+		and _sequence_acknowledges(
+			acknowledged_sequence, int(_input_history.front().get("input_sequence", 0))
+		)
+	):
 		_input_history.pop_front()
 		_input_history_pruned += 1
 	if _input_history.is_empty():
@@ -550,6 +556,20 @@ func _prune_acknowledged_inputs() -> void:
 		_pending_input_operation_id = ""
 	else:
 		_pending_input_operation_id = String(_input_history.back().get("operation_id", ""))
+
+
+func _sequence_acknowledges(acknowledged_sequence: int, target_sequence: int) -> bool:
+	if not InputSequence.is_valid(acknowledged_sequence) or not InputSequence.is_valid(target_sequence):
+		return false
+	return acknowledged_sequence == target_sequence \
+		or InputSequence.is_newer(acknowledged_sequence, target_sequence)
+
+
+func _adopt_authoritative_input_sequence(authoritative_sequence: int) -> void:
+	if not InputSequence.is_valid(authoritative_sequence):
+		return
+	if _input_sequence == 0 or InputSequence.is_newer(authoritative_sequence, _input_sequence):
+		_input_sequence = authoritative_sequence
 
 
 func submit_player_state_nonblocking(_player_state: Dictionary, _delta_seconds: float) -> Dictionary:

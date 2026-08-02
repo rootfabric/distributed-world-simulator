@@ -216,3 +216,17 @@ M7 clients send compact transition-based `PLAYER_INPUT_BATCH` frames no faster t
 Item commands remain on ITEM. Join/full Item Graph state and explicit mismatch recovery remain on RESYNC. M7 network persistence must suppress client `item.save` only through an explicit server-authoritative persistence capability; H1 listen-host save commands remain valid. NX2 does not claim fixed tick, prediction, remote interpolation buffer or async persistence. Those belong to NX3/NX4/NX5/NX9.
 
 Physical ENet channel/mode validation is strict. A mismatched frame must be rejected using `PEER_LOCAL_QUARANTINE_V1`: disconnect and fail only the offending peer session, clear only its queues, keep the server boundary `LISTENING`, and preserve healthy peers. Never convert a peer-local protocol violation into a global boundary failure. Both NX2 focused runners must execute the physical two-client process regression and report `9/9`.
+
+
+## Current NX3 fixed-tick authoritative simulation
+
+```text
+accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2
+current checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+branch: feature/nx3-fixed-tick-authoritative-simulation
+focused runner: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
+```
+
+Production M7 movement messages only enqueue validated input state. Position and velocity may change only inside the 60-Hz server scheduler using exact delta `1/60`. Never reintroduce packet-arrival delta or client-provided `delta_seconds` as an authoritative movement budget. Each peer has an independent bounded input buffer with wrap-safe sequence window, stale eviction, jump-edge semantics and a 250-ms fail-safe hold.
+
+Latest-wins INPUT coalescing requires `LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1`: repeated state refreshes sequence without accumulating client time, while `idle → movement → idle` remains recoverable from a final batch. Movement snapshots remain compact at 20 Hz and acknowledge `last_input_sequence`. NX3 does not add prediction or remote interpolation; those belong to NX4/NX5.

@@ -196,10 +196,11 @@ func _test_input_batch() -> void:
 				"delta_seconds": float(sample["delta"]),
 			},
 		})
-	_assert(history.size() == 3, "Input history did not preserve idle/move/idle transitions")
-	_assert(int(history[1].get("input_sequence", 0)) == 3, "Continuous movement segment did not advance to its latest sequence")
-	_assert(is_equal_approx(float(history[1].get("intent", {}).get("delta_seconds", 0.0)), 0.09), "Continuous movement duration was not accumulated")
+	_assert(history.size() == 3, "Input history did not retain idle-movement-idle transitions")
+	_assert(int(history.front().get("input_sequence", 0)) == 1 and int(history.back().get("input_sequence", 0)) == 4, "Transition redundancy window has wrong sequence range")
+	_assert(int(history[1].get("input_sequence", 0)) == 3, "Repeated movement state did not refresh the transition sequence")
 	_assert(float(history[1].get("intent", {}).get("move_z", 0.0)) == 1.0, "Movement transition was lost from redundancy history")
+	_assert(is_equal_approx(float(history[1].get("intent", {}).get("delta_seconds", 0.0)), 0.05), "Client input duration was unexpectedly accumulated")
 	var stable_history: Array = history.duplicate(true)
 	for sequence in range(5, 25):
 		stable_history = InputBatch.append_to_history(stable_history, {
@@ -209,9 +210,9 @@ func _test_input_batch() -> void:
 			"client_sent_at_ms": 2000 + sequence,
 			"intent": {"move_x": 0.0, "move_z": 0.0, "look_yaw": 0.0, "look_pitch": 0.0, "jump_pressed": false, "sprint": false, "delta_seconds": 0.03},
 		})
-	_assert(stable_history.size() == 3, "Repeated idle samples displaced an unacknowledged movement transition")
-	_assert(float(stable_history[1].get("intent", {}).get("move_z", 0.0)) == 1.0, "Movement transition was lost while idle sequence advanced")
-	_assert(int(stable_history.back().get("input_sequence", 0)) == 24, "Idle transition did not advance to the latest sequence")
+	_assert(stable_history.size() == 3, "Transition redundancy history exceeded three states")
+	_assert(int(stable_history.front().get("input_sequence", 0)) == 1, "Earlier idle transition was unexpectedly discarded without a fourth state transition")
+	_assert(int(stable_history.back().get("input_sequence", 0)) == 24, "Latest repeated idle sequence was not retained")
 	var reordered := batch.duplicate(true)
 	reordered["inputs"][1]["s"] = 8
 	reordered["checksum"] = Utils.payload_hash(_without_checksum(reordered))
