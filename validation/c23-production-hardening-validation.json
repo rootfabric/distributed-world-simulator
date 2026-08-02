@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.construction_checkpoint_validation.v1",
   "checkpoint": "C23_PRODUCTION_HARDENING",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "base": {
     "accepted_through": "C21",
     "c22_status": "IMPLEMENTED_CANDIDATE",
@@ -9,24 +9,24 @@
   },
   "branch": "feature/c23-production-hardening",
   "focused": {
-    "editor_parse": "NOT_EXECUTED_IN_CURRENT_ENVIRONMENT",
+    "editor_parse": "PASS",
     "contracts": {
-      "status": "PENDING_RUNTIME",
-      "expected_assertions": 49
+      "status": "PASS",
+      "assertions": 49
     },
     "integration": {
-      "status": "PENDING_RUNTIME",
-      "expected_assertions": 63
+      "status": "PASS",
+      "assertions": 63
     },
     "chaos": {
-      "status": "PENDING_RUNTIME",
-      "expected_assertions": 27
+      "status": "PASS",
+      "assertions": 27
     },
     "soak": {
-      "status": "PENDING_RUNTIME",
-      "expected_assertions": 4048
+      "status": "PASS",
+      "assertions": 4048
     },
-    "expected_total_assertions": 4187
+    "total_assertions": 4187
   },
   "static_validation": {
     "json_parse": "PASS",
@@ -64,5 +64,15 @@
     "file_count": 43,
     "manifest_paths_expected": 43
   },
-  "runtime_limitation": "The connected double-precision Godot archive could not be materialized by the file backend and no system Godot executable exists in the current container. Runtime PASS is intentionally not claimed."
+  "acceptance": {
+    "c22_assertions": 191,
+    "c9_assertions": 204,
+    "c2b_assertions": 258,
+    "network_tests": 54,
+    "network_steps": 55,
+    "world_tests": 152,
+    "world_steps": 155,
+    "main_scene_cli_assertions": 6,
+    "decision": "ACCEPTED"
+  }
 }

@@ -15,7 +15,7 @@ PlanetSimulator создаёт **конструктор нового уровн�
 
 Наглядная актуальная карта: `docs/plans/CONSTRUCTION_MAP_RU.md`.
 Хронология решений: `docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md`.
-Подробная карта C13–C23: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
+Подробная карта C13–C24: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
 ## Стратегия интеграции
 
@@ -709,6 +709,15 @@ Stable sections, exposed-surface extraction, greedy material batches, content-ad
 
 C23 реализует production boundary без изменения authority-модели: versioned DTO/state envelopes, legacy migration, rolling-upgrade compatibility, terminal replay, bounded metrics, tamper-evident audit, fail-closed permissions, persisted rate limiting, corruption fallback, chaos и deterministic soak.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Ветка:** `feature/c23-production-hardening`.
 **Runbook:** `docs/runbooks/CONSTRUCTION_C23_PRODUCTION_HARDENING_RUNBOOK_RU.md`.
+
+
+## C24 — GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance
+
+C24 компилирует C22 greedy quads в реальные `ArrayMesh` resources: position/normal/UV/index buffers, material-separated surfaces и deterministic mesh descriptors. Controller-wide bounded LRU cache переиспользует один content-addressed resource между LOD-переходами и разными клиентами.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Ветка:** `feature/c24-gpu-ready-proxy-mesh-backend`.
+**Runbook:** `docs/runbooks/CONSTRUCTION_C24_PROXY_MESH_BACKEND_RUNBOOK_RU.md`.

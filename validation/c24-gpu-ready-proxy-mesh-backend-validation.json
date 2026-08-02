@@ -1,0 +1,91 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C24_GPU_READY_PROXY_MESH_BACKEND",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C23_PRODUCTION_HARDENING",
+    "status": "ACCEPTED",
+    "base_commit": "f36917f",
+    "fix1_test_files": 4
+  },
+  "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "execution_environment": "Linux headless equivalent harness over exact PowerShell manifests"
+  },
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 80
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 68
+    },
+    "graphical": {
+      "status": "PASS",
+      "assertions": 74
+    },
+    "scale_soak": {
+      "status": "PASS",
+      "assertions": 2300
+    },
+    "total_assertions": 2522
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "resource_paths": "PASS",
+    "gdscript_uid_pairs": "PASS",
+    "runner_registration": "PASS",
+    "world_manifest_coverage": "PASS — 156/156",
+    "manifest_paths": "PASS — 36/36",
+    "archive_safety": "PASS — 0 unsafe paths",
+    "archive_roundtrip_hashes": "PASS — 36/36"
+  },
+  "coverage": [
+    "C22_GRID_AND_FALLBACK_QUAD_TO_ARRAY_MESH",
+    "PACKED_POSITION_NORMAL_UV_INDEX_BUFFERS",
+    "OUTWARD_WINDING_AND_EXPLICIT_NORMALS",
+    "MATERIAL_SEPARATED_ARRAY_MESH_SURFACES",
+    "STRICT_FAIL_CLOSED_QUAD_VALIDATION",
+    "JSON_SAFE_DETERMINISTIC_MESH_DESCRIPTOR",
+    "CONTENT_HASH_SHARED_RESOURCE_CACHE",
+    "CONTROLLER_WIDE_CROSS_CLIENT_RESOURCE_REUSE",
+    "ENTRY_AND_ESTIMATED_GPU_BYTE_BUDGETS",
+    "OVERSIZED_RESOURCE_CACHE_BYPASS",
+    "BOUNDED_MATERIAL_LIBRARY_LRU",
+    "TRANSACTIONAL_RUNTIME_PRESENTATION_REPLACEMENT",
+    "EXACT_INTERACTIVE_PART_PRESERVATION",
+    "TEN_THOUSAND_PART_128_TRANSITION_SCALE_SOAK"
+  ],
+  "scale_soak": {
+    "source_parts": 10000,
+    "detail_transitions": 128,
+    "unique_mesh_resources": 14,
+    "mesh_cache_hits": 882,
+    "active_estimated_gpu_bytes": 4256,
+    "mesh_cache_evictions": 0
+  },
+  "delivery": {
+    "manifest": "c24-gpu-ready-proxy-mesh-backend-files.txt",
+    "world_test_entries_added": 4,
+    "expected_world_test_count": 156,
+    "expected_world_steps": 159,
+    "file_count": 36,
+    "manifest_paths_expected": 36
+  },
+  "acceptance": {
+    "c24_assertions": 2522,
+    "c23_assertions": 4187,
+    "c22_assertions": 191,
+    "c9_assertions": 204,
+    "c2b_assertions": 258,
+    "network_tests": 54,
+    "network_steps": 55,
+    "world_tests": 156,
+    "world_steps": 159,
+    "main_scene_cli_assertions": 6,
+    "decision": "CANDIDATE_FOR_REVIEW"
+  }
+}

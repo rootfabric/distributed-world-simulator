@@ -25,8 +25,9 @@
 **C20:** ACCEPTED
 **C21:** ACCEPTED
 **C22:** Compiled Construct Proxies and Hierarchical Detail Streaming, IMPLEMENTED CANDIDATE
-**Рабочая ветка C23:** `feature/c23-production-hardening`
-**Текущая позиция:** `C23 — Production Hardening, IMPLEMENTED CANDIDATE`
+**C23:** Production Hardening, ACCEPTED
+**Рабочая ветка C24:** `feature/c24-gpu-ready-proxy-mesh-backend`
+**Текущая позиция:** `C24 — GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance, IMPLEMENTED CANDIDATE`
 
 Подробная карта после C12: `docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md`.
 
@@ -64,7 +65,8 @@ flowchart TD
     C19 --> C20["C20 Logistics/Economy — ACCEPTED"]
     C20 --> C21["C21 Scale Acceptance — ACCEPTED"]
     C21 --> C22["C22 Compiled Proxies/HLOD — CANDIDATE"]
-    C22 --> C23["C23 Production Hardening — CURRENT CANDIDATE"]
+    C22 --> C23["C23 Production Hardening — ACCEPTED"]
+    C23 --> C24["C24 GPU-Ready Proxy Mesh Backend — CURRENT CANDIDATE"]
 ```
 
 ```text
@@ -121,7 +123,8 @@ C12 multiplayer construction → C13 federated constructs
 | C20 | logistics, procurement, contractors и economy | supply chain | **ACCEPTED** |
 | C21 | large-scale и soak acceptance | мир проекта | **ACCEPTED** |
 | C22 | compiled shell, section HLOD, interior streaming и proxy cache | станция из 10 000 частей | **IMPLEMENTED CANDIDATE** |
-| C23 | migrations, replay, observability, security, recovery и chaos/soak | release/runtime | **IMPLEMENTED CANDIDATE** |
+| C23 | migrations, replay, observability, security, recovery и chaos/soak | release/runtime | **ACCEPTED** |
+| C24 | real greedy `ArrayMesh`, packed buffers, material surfaces и shared GPU cache | станция из 10 000 частей | **IMPLEMENTED CANDIDATE** |
 
 ## C2A — Item Graph Contracts
 
@@ -710,3 +713,12 @@ C22 проверяет объект из 10 000 item-backed parts. Дальни�
 C23 вводит versioned production boundary вокруг существующего authoritative executor: backward-compatible v1→v2 state migration, rolling-upgrade negotiation с обязательными `audit + exact-replay`, exact terminal replay, bounded metrics, payload-free hash-chain audit, fail-closed permissions, persisted fixed-window rate limit, cross-state invariants и two-slot corruption recovery.
 
 Chaos-профиль закрывает потерю terminal record после authoritative commit и потерю ответа после terminal commit. Soak выполняет два детерминированных прогона по 2 000 operations и сравнивает final state checksum и audit tail. Runtime acceptance остаётся обязательным внешним gate.
+
+
+## C24 — GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance
+
+**Статус:** IMPLEMENTED CANDIDATE.
+
+C24 закрывает documented limitation C22: proxy artifact больше не отображается bounds-based `BoxMesh`. Greedy `GRID_QUAD` и `FALLBACK_QUAD` компилируются в packed position/normal/UV/index buffers и material-separated `ArrayMesh` surfaces.
+
+Controller-wide content-addressed LRU cache разделяет один GPU resource между несколькими client runtime nodes. Failed packet materialization не разрушает предыдущий SceneTree presentation. Authoritative composition, item identity, C9 damage и C17 authority не меняются.

@@ -2,7 +2,7 @@
 
 **Дата:** 2026-08-02
 **База:** C22 Compiled Construct Proxies and Hierarchical Detail Streaming, IMPLEMENTED CANDIDATE с documented focused gate 191 assertions
-**Статус поставки:** IMPLEMENTED CANDIDATE
+**Статус поставки:** ACCEPTED
 **Рекомендуемая ветка:** `feature/c23-production-hardening`
 
 ## Условие старта
@@ -108,7 +108,7 @@ Soak выполняет два независимых детерминирова
 ## Ожидаемый полный gate
 
 ```text
-C23 focused:      4/4 profiles, 4187 assertions
+C23 focused:      PASS — 4/4 profiles, 4187 assertions
 C22 focused:      191 assertions
 C2B regression:   258 assertions
 C9 regression:    204 assertions
@@ -135,3 +135,20 @@ Git diff check:   PASS
 
 - при полном PASS сменить статус C23 на `ACCEPTED`;
 - при любой parser/runtime/regression ошибке выпустить `fix1`, не меняя authority boundary.
+
+
+## Внешняя приёмка fix1
+
+C23 fix1 принят. Production-код не менялся; четыре focused tests получили явные Dictionary-типы для Godot parser.
+
+```text
+C23 focused:       PASS — 4 187 assertions
+C22:               PASS — 191 assertions
+C9:                PASS — 204 assertions
+C2B:               PASS — 258 assertions
+Network N0–M4:     PASS — 54 tests, 55 steps
+World regression:  PASS — 152/152 tests, 155 steps
+Main-scene CLI:    PASS — 6/6
+```
+
+Decision: **ACCEPTED**. ObjectDB warnings при exit имели code 0 и не блокировали приёмку.

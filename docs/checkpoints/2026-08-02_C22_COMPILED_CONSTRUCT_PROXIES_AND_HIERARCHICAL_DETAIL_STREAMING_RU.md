@@ -194,7 +194,7 @@ Scale/soak использует реальный 10 000-part construct и 64 ч�
 
 ## Ограничения vertical slice
 
-- Runtime graphical proof использует bounds-based `BoxMesh` для materialized artifact node. Artifact DTO уже содержит greedy quads/material batches; production `ArrayMesh` backend и GPU-ready packed buffers можно развить внутри C22/C23 без изменения authority contracts.
+- Исходный C22 graphical proof использовал bounds-based `BoxMesh`. Ограничение закрыто этапом C24: greedy quads/material batches материализуются в production `ArrayMesh` backend с packed buffers без изменения authority contracts.
 - LOD simplification backend представлен shell/section hierarchy и greedy topology. Triangle decimation и baked impostor textures являются сменными presentation backends.
 - Interior topology задаётся semantic C7-style cells/portals; автоматическая генерация room graph из arbitrary geometry не входит в этот slice.
 - Network acceptance проверяет packet contracts и suppression. Полный Network N0–M4 остаётся обязательным внешним gate.

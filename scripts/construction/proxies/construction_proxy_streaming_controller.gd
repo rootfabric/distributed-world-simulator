@@ -7,9 +7,11 @@ const Cache = preload("res://scripts/construction/proxies/construction_proxy_cac
 const Planner = preload("res://scripts/construction/proxies/construction_proxy_streaming_planner.gd")
 const Packet = preload("res://scripts/construction/proxies/construction_proxy_network_packet.gd")
 const RuntimeNode = preload("res://scripts/construction/proxies/construction_proxy_runtime_node.gd")
+const MeshCache = preload("res://scripts/construction/proxies/construction_proxy_mesh_cache.gd")
 const Invalidation = preload("res://scripts/construction/proxies/construction_proxy_invalidation_plan.gd")
 
 var _cache = Cache.new()
+var _mesh_cache = MeshCache.new()
 var _compiled: Dictionary = {}
 var _runtimes: Dictionary = {}
 var _generation := 0
@@ -51,7 +53,7 @@ func present(client_id: String, interest: Dictionary) -> Dictionary:
 	if not bool(packet_result.get("success", false)): return packet_result
 	var key := "%s|%s" % [client_id, String(interest["construct_id"])]
 	var runtime = _runtimes.get(key, null)
-	if runtime == null or not is_instance_valid(runtime): runtime = RuntimeNode.new(); add_child(runtime); _runtimes[key] = runtime
+	if runtime == null or not is_instance_valid(runtime): runtime = RuntimeNode.new(_mesh_cache); add_child(runtime); _runtimes[key] = runtime
 	var applied: Dictionary = runtime.apply_packet(packet_result["packet"])
 	if not bool(applied.get("success", false)): return applied
 	return C.success({"runtime": runtime, "packet": packet_result["packet"], "plan": packet_result["plan"], "apply_result": applied})
@@ -86,6 +88,7 @@ func recompile_incremental(request: Dictionary, dirty_part_ids: Array) -> Dictio
 func get_manifest(construct_id: String) -> Dictionary: return Dictionary(_compiled.get(construct_id, {})).get("manifest", {}).duplicate(true)
 func get_topology(construct_id: String) -> Dictionary: return Dictionary(_compiled.get(construct_id, {})).get("topology", {}).duplicate(true)
 func get_cache(): return _cache
+func get_mesh_cache(): return _mesh_cache
 func get_generation() -> int: return _generation
 func get_runtime(client_id: String, construct_id: String): return _runtimes.get("%s|%s" % [client_id, construct_id], null)
 func export_state() -> Dictionary:

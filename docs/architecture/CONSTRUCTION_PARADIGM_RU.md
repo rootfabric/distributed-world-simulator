@@ -714,3 +714,16 @@ Save compatibility выражается versioned envelope, а не эврист
 Rolling upgrade negotiation доказывает только wire/state compatibility. Право записи всё равно передаётся через C17 authority migration и epoch fencing; совместимость версий никогда не разрешает multi-writer.
 
 Observability ограничена фиксированными metric names. Audit не содержит payload и связан checksum chain, поэтому эксплуатационная диагностика не превращается во второй источник item state или утечку содержимого операций.
+
+
+## GPU-ready derived mesh invariant — C24
+
+C24 материализует C22 artifacts как GPU resources, но не расширяет authority. `ArrayMesh`, material, RID и cache entry являются удаляемой presentation-проекцией.
+
+```text
+C22 content hash → C24 shared ArrayMesh resource
+C24 resource loss → lazy rebuild from C22 artifact
+C24 resource must never become Item Graph identity or damage state
+```
+
+Один content hash обязан давать один deterministic mesh signature. Несколько client runtime nodes могут разделять Resource, но не SceneTree node или interest state. Failed materialization сохраняет прежнюю presentation целиком.

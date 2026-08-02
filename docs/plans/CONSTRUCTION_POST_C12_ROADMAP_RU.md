@@ -1,6 +1,6 @@
 # Карта развития строительной системы после C12
 
-**Назначение документа:** каноническая карта этапов C13–C23.
+**Назначение документа:** каноническая карта этапов C13–C24.
 
 **Точка входа:** после принятия `C12 — Multiplayer Construction Acceptance` базовое семантическое ядро строительства считается завершённым. Последующие этапы превращают его в отображаемый, физический, распределённый и масштабируемый runtime.
 
@@ -30,6 +30,8 @@ C21 Large-Scale Construction Acceptance
 C22 Compiled Construct Proxies and Hierarchical Detail Streaming
   ↓
 C23 Production Hardening
+  ↓
+C24 GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance
 ```
 
 ## C13 — Runtime Geometry and Physics Projection
@@ -465,8 +467,29 @@ DISTANT_SHELL полностью заменяет presentation дочерних 
 - crash windows после authoritative execution и после terminal record;
 - deterministic 2 000-operation soak и release/rollback runbook.
 
-**Статус:** IMPLEMENTED CANDIDATE.
+**Статус:** ACCEPTED.
 **Рекомендуемая ветка:** `feature/c23-production-hardening`.
+
+
+## C24 — GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance
+
+### Цель
+
+Материализовать C22 greedy artifact payload как реальную GPU-ready geometry и доказать runtime reuse под многоклиентской нагрузкой.
+
+### Scope
+
+- strict `GRID_QUAD`/`FALLBACK_QUAD` validation;
+- packed vertices, normals, UV и 32-bit indices;
+- one `ArrayMesh` surface per material batch;
+- deterministic JSON-safe mesh descriptor/signature;
+- controller-wide content-addressed LRU cache;
+- cross-client resource sharing;
+- transactional SceneTree replacement;
+- 10 000-part graphical/scale acceptance.
+
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c24-gpu-ready-proxy-mesh-backend`.
 
 ## Приоритеты
 
@@ -480,7 +503,7 @@ C13 presentation/physics
 
 C14–C16 можно частично вести параллельно. C19–C20 следует начинать после устойчивого C17/C18, чтобы агенты и экономика строились сразу поверх распределённой authority.
 
-## Общие инварианты C13–C23
+## Общие инварианты C13–C24
 
 Ни один этап не принимается, если он:
 

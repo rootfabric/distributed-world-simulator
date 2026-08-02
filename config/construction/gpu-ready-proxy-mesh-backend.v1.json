@@ -1,0 +1,21 @@
+{
+  "schema": "planet_simulator.construction_proxy_mesh_backend_config.v1",
+  "backend": "ARRAY_MESH_V1",
+  "vertex_layout": [
+    "POSITION_FLOAT32_GPU",
+    "NORMAL_FLOAT32_GPU",
+    "UV_FLOAT32_GPU"
+  ],
+  "index_format": "INT32",
+  "triangles_per_quad": 2,
+  "vertices_per_quad": 4,
+  "indices_per_quad": 6,
+  "material_strategy": "ONE_SURFACE_PER_MATERIAL_BATCH",
+  "cache_scope": "CONTROLLER_SHARED_ACROSS_CLIENT_RUNTIMES",
+  "max_cache_entries": 256,
+  "max_estimated_gpu_bytes": 134217728,
+  "eviction_policy": "DETERMINISTIC_LRU",
+  "resource_persistence": "EPHEMERAL_REBUILD_FROM_C22_ARTIFACT_CACHE",
+  "authority": "DERIVED_PRESENTATION_ONLY",
+  "max_material_cache_entries": 512
+}

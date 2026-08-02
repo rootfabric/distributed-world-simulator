@@ -862,7 +862,7 @@ C13 стал принятой базой C14.
 
 ```text
 C14 contracts:    PASS — 90 assertions
-C14 integration:  PASS — 78 assertions
+C14 integration:  PASS — 80 assertions
 C14 total:        PASS — 168 assertions
 ```
 
@@ -1146,3 +1146,35 @@ Expected world: 152/152 tests, 155 steps
 ```
 
 Runtime PASS в текущей среде не заявлен: custom double Godot из Library не materialized, системный Godot отсутствует. Подготовлены Linux/PowerShell runners и validation matrix для независимой приёмки.
+
+
+## 2026-08-03 — C23: внешняя приёмка fix1
+
+**Решение:** ACCEPTED.
+
+```text
+C23 focused:       PASS — 4 187 assertions
+C22:               PASS — 191 assertions
+C9:                PASS — 204 assertions
+C2B:               PASS — 258 assertions
+Network N0–M4:     PASS — 54 tests, 55 steps
+World regression:  PASS — 152/152 tests, 155 steps
+Main-scene CLI:    PASS — 6/6
+```
+
+## 2026-08-03 — C24: GPU-Ready Proxy Mesh Backend and Runtime HLOD Acceptance
+
+**База:** принятый C23.
+**Статус:** IMPLEMENTED CANDIDATE.
+**Рекомендуемая ветка:** `feature/c24-gpu-ready-proxy-mesh-backend`.
+
+Реализованы actual greedy `ArrayMesh`, packed buffers, material surfaces, deterministic mesh descriptor, controller-wide content-addressed LRU и transactional runtime replacement.
+
+```text
+C24 contracts:     PASS — 80 assertions
+C24 integration:   PASS — 68 assertions
+C24 graphical:     PASS — 74 assertions
+C24 scale/soak:    PASS — 2 300 assertions
+C24 total:         PASS — 2 522 assertions
+World regression:   PASS — 156/156 tests, 159/159 steps
+```
