@@ -1,5 +1,12 @@
 # Документация PlanetSimulator
 
+## Representation LOD Fabric
+
+- [`architecture/REPRESENTATION_LOD_FABRIC_RU.md`](architecture/REPRESENTATION_LOD_FABRIC_RU.md) — общая архитектура Matter/Construction detail, proxy и impostor representations.
+- [`architecture/adr/ADR-018-representation-lod-fabric.md`](architecture/adr/ADR-018-representation-lod-fabric.md) — решение о едином lifecycle и разных geometry builders.
+- [`plans/REPRESENTATION_LOD_ROADMAP_RU.md`](plans/REPRESENTATION_LOD_ROADMAP_RU.md) — RL0–RL6, MW9/MW10 ordering и integration gates.
+- [`checkpoints/2026-08-02_V17_9_0_SIMULATION_RL0_REPRESENTATION_CONTRACTS_RU.md`](checkpoints/2026-08-02_V17_9_0_SIMULATION_RL0_REPRESENTATION_CONTRACTS_RU.md) — RL0 candidate и focused acceptance.
+
 ## Mutable worlds
 
 - [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7: региональные persistent-brick projections, enter/leave и reconnect.

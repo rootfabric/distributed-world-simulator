@@ -37,6 +37,10 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `docs/architecture/MW5_MATTER_PERSISTENCE_RU.md` — durable checkpoint, атомарный repository, exact binary64 transport и process-level restart recovery;
 - `docs/architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md` — принятый single-server authority и persistent-only matter replication;
 - `docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md` — региональные interest projections, enter/leave, replay и snapshot fallback;
+- `docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md` — принятый межсерверный regional authority handoff;
+- `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md` — общий Matter/Construction lifecycle detail, proxy и impostor artifacts;
+- `docs/architecture/adr/ADR-018-representation-lod-fabric.md` — ADR общего lifecycle и раздельных Matter/Construction builders;
+- `docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md` — RL0–RL6 и оптимальная интеграция с MW9–MW14;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md` — MW5 fix2: единый canonical persistence encoder и checksum-preserving snapshot rehydration;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md` — MW5 fix3: точное равенство опубликованных raw bytes и canonical persistence bytes;
 - `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md` — MW5 fix5: exact binary64 transport envelope вместо decimal JSON float roundtrip;
@@ -126,7 +130,7 @@ scope: isolated asteroid matter track; production Moon/world catalog unchanged
 MW7 сохраняет глобальную авторитетную последовательность MW6, но реплицирует клиенту только persistent bricks его checksum-protected cell region. Каждая subscription имеет собственные `interest_revision`, `region_sequence` и `projection_hash`. Нерелевантные мутации не создают кадр. Смена области выполняется replacement snapshot с атомарным enter/leave, а reconnect выбирает regional delta replay или filtered snapshot fallback.
 
 
-## MW8 regional authority handoff candidate
+## MW8 regional authority handoff — ACCEPTED
 
 ```text
 checkpoint: v17.8.0-simulation-mw8-regional-authority-handoff
@@ -136,3 +140,15 @@ scope: isolated asteroid matter track; production Moon/world catalog unchanged
 ```
 
 MW8 добавляет первый ограниченный межсерверный authority handoff. Directory хранит единственный lease каждой непересекающейся cell-region. Source сначала замораживает запись, target импортирует persistent snapshots, релевантный journal и связанные material batches под компенсационным backup, после чего directory атомарно меняет owner и authority epoch. Старый сервер немедленно теряет право записи, новый обслуживает exact replay и продолжает MW6 stream из импортированного journal frontier. Клиент получает checksum-protected handoff ticket и повторно подключает MW7 regional replica к target. Mutation через несколько authority-regions пока отклоняется.
+
+
+## RL0 unified representation contracts — CANDIDATE
+
+```text
+checkpoint: v17.9.0-simulation-rl0-representation-contracts
+base: v17.8.0-simulation-mw8-regional-authority-handoff (ACCEPTED)
+branch: feature/rl0-representation-contracts
+production Moon/world catalog changed: false
+```
+
+RL0 вводит единый cross-domain lifecycle производных представлений для Matter и Construction: exact source revision, representation key, content-addressed artifact manifest, screen/geometric error interest, deterministic coarsest-acceptable selector, dependency set, invalidation и cache states. Реальный coarse SDF meshing и Construction HLOD относятся к RL2/RL4.

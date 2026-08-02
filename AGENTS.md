@@ -180,14 +180,16 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 This track is independent from the accepted single-server multiplayer order and must not alter the production Moon runtime before its integration gates.
 
 ```text
-architecture: Dynamic Matter Fabric
+architecture: Dynamic Matter Fabric + Representation LOD Fabric
 accepted: v17.6.0-simulation-mw6-matter-network-replication, delivery fix2
 accepted: v17.7.0-simulation-mw7-matter-interest-replication
-current candidate: v17.8.0-simulation-mw8-regional-authority-handoff
-branch: feature/mw8-regional-authority-handoff
+accepted: v17.8.0-simulation-mw8-regional-authority-handoff
+current candidate: v17.9.0-simulation-rl0-representation-contracts
+branch: feature/rl0-representation-contracts
 production worlds changed: false
 world catalog changed: false
-next after acceptance: MW9 distributed cross-region mutation protocol and durable authority directory
+next after acceptance: RL1 matter summary pyramid and dirty propagation
+then: MW9 durable distributed handoff -> MW10 cross-region transactions -> RL2/RL3 multiresolution streaming
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
@@ -207,3 +209,6 @@ MW7 adds regional interest projections over the accepted global MW6 authority st
 
 
 MW8 introduces a bounded multi-server matter authority path without changing the accepted A3 production gameplay topology. Every registered cell-region has exactly one directory lease. `MatterAuthoritativeServer` may use an optional `MatterRegionalAuthorityGate`; without that gate all MW6 behavior remains unchanged. Handoff must follow freeze -> prepare -> commit. Source mutation is forbidden while the lease is PREPARING, target mutation is forbidden until directory commit, and every pre-commit failure must compensate target store/receiver/journal before source ownership resumes. Transfer packages contain only persistent region snapshots, fully regional journal records and their material batches through MW5 exact transport, and are fenced by body-definition hash, grid-profile hash, frozen lease revision and transfer fingerprint. Cross-region mutation is rejected until a later distributed transaction checkpoint. Review fixes must remain on `feature/mw8-regional-authority-handoff`.
+
+
+RL0 creates the shared representation lifecycle for Matter and Construction without merging their geometry builders. Canonical state remains MW bricks or Construction snapshots; detail meshes, simplified meshes, macro proxies and impostors are content-addressed derived artifacts. Every request and artifact is fenced by an exact `RepresentationSourceRevision`. Selection uses geometric error, screen error, capability flags and bandwidth budget, and chooses the coarsest acceptable ready artifact. `RepresentationDependencySet` and `RepresentationInvalidation` prepare RL1 ancestor dirty propagation. RL0 must not change MW8 handoff, MW7 wire frames, C18 code, production Moon or world catalog. Review fixes remain on `feature/rl0-representation-contracts`.

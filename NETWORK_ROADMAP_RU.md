@@ -51,3 +51,8 @@ MW7 `v17.7.0-simulation-mw7-matter-interest-replication` не меняет A3 pr
 ## MW8 regional authority handoff candidate
 
 MW8 остаётся изолированным matter-track и не отменяет single-server A3 gameplay freeze. Для одной зарегистрированной cell-region вводится checksum-protected lease directory и двухфазный handoff между двумя `MatterAuthoritativeServer`: source freeze, exact state package, target prepare с компенсацией, directory commit owner/epoch. MW7 interest client после commit подключается к target и получает filtered regional snapshot. Операция, затрагивающая несколько authority-regions, намеренно запрещена до отдельного distributed transaction этапа. Пакет handoff привязан к body/grid/lease, а focused lifecycle явно отписывает MW7 projection observers.
+
+
+## Representation LOD integration boundary
+
+RL0 не создаёт новый gameplay transport. `RepresentationArtifactManifest` является производным metadata-контрактом и не заменяет MW6/MW7 command/replication envelopes. В RL3 MW7 interest request будет расширен representation budgets, а artifact bytes пойдут через bulk/content-addressed delivery с cancellation и backpressure. Канонические matter mutations по-прежнему проходят единственный authority path. MW8 handoff переносит canonical state; cache warming target является необязательной RL5 оптимизацией.

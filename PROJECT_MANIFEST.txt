@@ -1107,3 +1107,19 @@ MW6 fix2 M6 contract parse correction
 - focused assertion topology changed: no
 - expected M6 process topology: 128 assertions
 - acceptance: MW6 130/130 PASS, M6 standalone 10/10 PASS, A3 full profile PASS three consecutive runs
+
+
+RL0 unified representation contracts
+- checkpoint: v17.9.0-simulation-rl0-representation-contracts
+- build: rl0-unified-representation-contracts
+- branch: feature/rl0-representation-contracts
+- base: accepted v17.8.0-simulation-mw8-regional-authority-handoff
+- source domains: MATTER and CONSTRUCTION
+- artifact kinds: DETAIL, SIMPLIFIED_MESH, MACRO_PROXY, IMPOSTOR, NONE
+- source binding: exact authority epoch, revision, source hash and dependency hash
+- selection: geometric error + screen error + capabilities + bandwidth; coarsest acceptable ready candidate
+- cache states: BUILDING, READY, STALE, EVICTED, FAILED
+- canonical mesh state: forbidden
+- production Moon/world catalog changed: no
+- runner: RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.ps1 / .sh
+- next: RL1 matter summary pyramid and dirty propagation

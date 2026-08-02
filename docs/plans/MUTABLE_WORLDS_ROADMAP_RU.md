@@ -1,9 +1,42 @@
 # Mutable Worlds Roadmap — изменяемая порода, астероиды, пещеры и добыча
 
-**Base checkpoint:** `v16.10.6-architecture-a3-single-server-multiplayer`.
+**Accepted implementation base:** `v17.8.0-simulation-mw8-regional-authority-handoff`.
 **Тип документа:** implementation roadmap, без изменения production runtime.
 **Архитектура:** `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md`.
 **Решение:** `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md`.
+
+## 0. Каноническая ревизия карты после MW8 — 2026-08-02
+
+Прежняя первоначальная нумерация MW6–MW8 ниже сохранена как исторический design draft и больше не определяет порядок реализации. Фактически приняты MW0–MW8: от matter contracts до regional authority handoff. Текущий общий порядок:
+
+```text
+MW8 accepted
+→ RL0 unified representation contracts
+→ RL1 Matter summary pyramid and dirty propagation
+→ MW9 durable distributed handoff and crash recovery
+→ MW10 cross-region matter transactions
+→ RL2 Matter multiresolution meshing and transitions
+→ RL3 representation-aware network streaming
+→ RL4 Construction HLOD backend
+→ RL5 shared cache and background build scheduler
+→ RL6 visual/network/scale acceptance
+→ MW11 deposition and matter-backed construction
+→ MW12 fracture and detached bodies
+→ MW13 industrial regional persistence
+→ MW14 production service transport
+→ MI0–MI4 Moon/planet integration
+→ MP0–MP4 tools, industry, construction and agents
+```
+
+Почему RL разбит таким образом:
+
+- RL0/RL1 выполняются сейчас, чтобы MW9 и persistence знали provenance, dependency и invalidation semantics summaries/artifacts;
+- MW9/MW10 выполняются до proxy meshes, чтобы cross-region artifacts не собирались из несовместимых revisions;
+- RL2/RL3 реализуют дальнюю видимость изменённой породы и progressive network loading;
+- RL4 доводит логические C18 tiers до реального HLOD backend станции;
+- RL5/RL6 объединяют cache/scheduler и проверяют астероид и конструкцию на масштабе.
+
+Authoritative документы: `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md` и `docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md`.
 
 ## 1. Назначение карты
 
@@ -85,53 +118,41 @@ mean_density_kg_m3: 2400.0
 
 Астероид не добавляется в `config/planets/celestial_system.json` на первых этапах. Его body-fixed frame принадлежит isolated runtime.
 
-## 4. Общая карта этапов
+## 4. Общая карта этапов — актуальная
 
 ```text
-MW0  Matter contracts and invariants
- ↓
-MW1  Fixed-seed procedural asteroid sampler
- ↓
-MW2  3D cells, sparse bricks and query service
- ↓
-MW3  Local mesh, collision and streaming laboratory
- ↓
-MW4  Excavation, deposition and Item Graph mass transfer
- ↓
-MW5  Matter persistence, journal and compaction
- ↓
-MW6  Connectivity, fragmentation and terminal destruction
- ↓
-MW7  Geology, mineral deposits and survey
- ↓
-MW8  Cave graph, loose matter and collapse prototype
- ───────────────── isolated laboratory gate ─────────────────
-MI0  Canonical Moon geology sampler and A/B parity
- ↓
-MI1  Local matter overlay bubble on the Moon
- ↓
-MI2  Lunar caves, deposits and deep mining
- ↓
-MI3  Construction, supports, loose regolith and navigation
- ↓
-MI4  Persistent regional streaming and far-surface summaries
- ───────────────── Moon integration gate ────────────────────
-MP0  Canonical network commands and replica projection
- ↓
-MP1  Matter authority shards and cross-cell operations
- ↓
-MP2  Distributed compute and bulk brick delivery
- ↓
-MP3  Dynamic small bodies in celestial space
- ↓
-MP4  Performance hardening and production acceptance
+MW0–MW8  canonical Matter vertical slice — ACCEPTED
+   ↓
+RL0       unified representation contracts — CURRENT
+   ↓
+RL1       Matter summary pyramid and dirty propagation
+   ↓
+MW9       durable distributed handoff and crash recovery
+   ↓
+MW10      cross-region matter transactions
+   ↓
+RL2       Matter multiresolution meshing and transitions
+   ↓
+RL3       representation-aware network streaming
+   ↓
+RL4       Construction HLOD backend
+   ↓
+RL5       shared cache and background build scheduler
+   ↓
+RL6       visual/network/scale acceptance
+   ↓
+MW11–14   deposition, fracture, industrial persistence, production transport
+   ↓
+MI0–MI4   Moon and planetary integration
+   ↓
+MP0–MP4   tools, industry, construction and agents
 ```
 
-Каждый этап закрывается отдельной короткоживущей веткой, focused runner, regression и checkpoint documentation.
+Каждый этап закрывается отдельной короткоживущей веткой, focused runner, regression и checkpoint documentation. Подробная RL-декомпозиция находится в `REPRESENTATION_LOD_ROADMAP_RU.md`. Следующий раздел сохранён как исторический baseline раннего планирования; его старые номера MW4–MW8 не переопределяют уже принятые checkpoints.
 
 ---
 
-# Поток LAB — изолированный астероид
+# Исторический baseline LAB — изолированный астероид (superseded по нумерации после MW3)
 
 ## MW0 — Matter contracts and invariants
 

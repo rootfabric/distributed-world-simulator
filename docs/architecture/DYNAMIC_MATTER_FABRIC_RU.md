@@ -1,23 +1,23 @@
 # Dynamic Matter Fabric — парадигма изменяемых миров PlanetSimulator
 
-**Статус:** целевая архитектура; MW0 принят, MW1 implementation candidate подготовлен.
-**Основание анализа:** `v16.10.6-architecture-a3-single-server-multiplayer`.
+**Статус:** целевая архитектура; MW0–MW8 приняты, RL0 implementation candidate подготовлен.
+**Основание текущей ревизии:** `v17.8.0-simulation-mw8-regional-authority-handoff`.
 **Решение:** текущая планетарная поверхность сохраняется как совместимое дальнее и переходное представление; каноническое изменяемое состояние переносится в отдельный домен вещества.
 **Связанный ADR:** `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md`.
-**План реализации:** `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md`.
-**Принятая contract base:** `docs/architecture/MW0_MATTER_CONTRACTS_RU.md`.
-**Текущий implementation candidate:** `docs/architecture/MW1_FIXED_SEED_ASTEROID_RU.md`.
+**Планы реализации:** `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md` и `docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md`.
+**Принятая distributed base:** `docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`.
+**Текущий implementation candidate:** `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md` (RL0).
 
 
 ## Текущий implementation status
 
 ```text
-MW0: accepted — canonical matter contracts and mass ledger
-MW1: candidate — fixed-seed volumetric asteroid sampler
+MW0–MW8: accepted — contracts, volume, sparse bricks, meshing, mutation, persistence, network, interest and handoff
+RL0: candidate — shared representation identity, artifacts, selection, invalidation and cache lifecycle
 production Moon runtime changed: false
 ```
 
-MW1 создаёт первый канонический procedural base: астероид радиусом 1000 м, seed `2026073101`, stable shape/geology features, natural void и mass integration. Sparse persistent mutations начинаются с MW2/MW4 и не смешиваются с presentation mesh.
+MW8 завершает первый распределённый vertical slice канонического вещества. RL0 не меняет это состояние: он формализует производные detail/simplified/proxy/impostor representations, чтобы крупные изменения были видимы издалека без загрузки всех bricks.
 
 ## 1. Цель
 
@@ -560,6 +560,20 @@ MATERIAL_BATCH_ITEM
 - множество мелких обломков агрегируется как parcel;
 - спокойная сыпучая масса сворачивается в settled field;
 - активная область временно разворачивается в particles или другой local solver.
+
+### 11.1. Иерархические representation levels
+
+Каноническое вещество и его presentation разделены трёхслойно:
+
+```text
+MatterBrickSnapshot / ConstructSnapshot
+        ↓
+summary pyramid + dependency hashes
+        ↓
+DETAIL / SIMPLIFIED_MESH / MACRO_PROXY / IMPOSTOR
+```
+
+Изменение одного brick инвалидирует только его cluster и цепочку parent summaries. Дальний proxy может временно оставаться `STALE`, но close collision и canonical queries обязаны использовать новую revision. Выбор уровня выполняется по geometric/screen error, capability и bandwidth budgets, а не только по фиксированному расстоянию. Полная архитектура описана в `REPRESENTATION_LOD_FABRIC_RU.md`.
 
 ## 12. API поверхности после интеграции
 

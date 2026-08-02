@@ -1,0 +1,115 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.9.0-simulation-rl0-representation-contracts",
+  "build_id": "rl0-unified-representation-contracts",
+  "base": "v17.8.0-simulation-mw8-regional-authority-handoff",
+  "recommended_branch": "feature/rl0-representation-contracts",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "scope": {
+    "changed_file_count": 28,
+    "new_gdscript_files": 11,
+    "production_worlds_changed": false,
+    "world_catalog_changed": false,
+    "mw8_authority_semantics_changed": false,
+    "mw7_wire_protocol_changed": false,
+    "construction_branch_code_changed": false,
+    "canonical_state_contains_presentation_artifacts": false
+  },
+  "implementation": {
+    "source_domains": [
+      "CONSTRUCTION",
+      "MATTER"
+    ],
+    "artifact_kinds": [
+      "DETAIL",
+      "IMPOSTOR",
+      "MACRO_PROXY",
+      "NONE",
+      "SIMPLIFIED_MESH"
+    ],
+    "contracts": [
+      "RepresentationSourceRevision",
+      "RepresentationKey",
+      "RepresentationDescriptor",
+      "RepresentationArtifactManifest",
+      "RepresentationInterestRequest",
+      "RepresentationCandidate",
+      "RepresentationDependencySet",
+      "RepresentationInvalidation",
+      "RepresentationCacheEntry"
+    ],
+    "selector": "coarsest acceptable ready candidate by exact source revision, error, capability and bandwidth fences",
+    "next": "RL1 matter summary pyramid and dirty propagation"
+  },
+  "focused_test": {
+    "runner_ps1": "RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.ps1",
+    "runner_sh": "RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.sh",
+    "script": "tests/representation/test_rl0_representation_contracts.gd",
+    "static_expected_assertions": 92,
+    "runtime_executed": false,
+    "runtime_reason": "Managed Godot runner is unavailable in the delivery environment; direct Godot launch is forbidden by the project contract."
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "preload_target_audit": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "duplicate_functions": 0,
+    "bash_syntax": "PASS",
+    "accidental_uid_files": 0,
+    "runtime_godot": "NOT_RUN",
+    "git_diff_check": "PASS",
+    "forbidden_production_runtime_references": 0,
+    "project_manifest_single_terminal_newline": "PASS",
+    "changed_file_manifest_count": 28,
+    "changed_file_manifest_exact": "PASS"
+  },
+  "required_independent_gate": [
+    "RL0 focused PASS",
+    "MW8 focused 98/98 PASS",
+    "MW7 regression 114/114 PASS",
+    "MW6 regression 130/130 PASS",
+    "MW5 regression 142/142 PASS",
+    "M6 standalone 10/10 PASS and process 128/128 PASS",
+    "A3 full profile PASS three consecutive runs",
+    "git diff --check PASS"
+  ],
+  "changed_files": [
+    "AGENTS.md",
+    "NETWORK_ROADMAP_RU.md",
+    "PROJECT_MANIFEST.txt",
+    "README_RU.md",
+    "RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.ps1",
+    "RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.sh",
+    "config/representation/representation-lod.v1.json",
+    "docs/README_RU.md",
+    "docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md",
+    "docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md",
+    "docs/architecture/adr/ADR-018-representation-lod-fabric.md",
+    "docs/checkpoints/2026-08-02_V17_9_0_SIMULATION_RL0_REPRESENTATION_CONTRACTS_RU.md",
+    "docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md",
+    "docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md",
+    "scripts/simulation/representation/contracts/representation_artifact_manifest.gd",
+    "scripts/simulation/representation/contracts/representation_cache_entry.gd",
+    "scripts/simulation/representation/contracts/representation_candidate.gd",
+    "scripts/simulation/representation/contracts/representation_dependency_set.gd",
+    "scripts/simulation/representation/contracts/representation_descriptor.gd",
+    "scripts/simulation/representation/contracts/representation_interest_request.gd",
+    "scripts/simulation/representation/contracts/representation_invalidation.gd",
+    "scripts/simulation/representation/contracts/representation_key.gd",
+    "scripts/simulation/representation/contracts/representation_source_revision.gd",
+    "scripts/simulation/representation/representation_contract_utils.gd",
+    "scripts/simulation/representation/selection/representation_selector.gd",
+    "tests/representation/test_rl0_representation_contracts.gd",
+    "validation/v17.9.0-simulation-rl0-representation-contracts-files.txt",
+    "validation/v17.9.0-simulation-rl0-representation-contracts-validation.json"
+  ],
+  "archive_validation": {
+    "zip_file_count": 28,
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "overlay_over_accepted_mw8": "BYTE_IDENTICAL_PASS"
+  }
+}
