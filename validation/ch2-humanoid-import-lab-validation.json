@@ -1,0 +1,14 @@
+{
+  "schema": "planet_simulator.ch2_humanoid_import_lab_validation.v1",
+  "branch": "feature/ch2-humanoid-import-lab",
+  "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+  "editor_import": "PASS",
+  "ch1_regression_assertions": 32,
+  "ch2_assertions": 37,
+  "definition_count": 3,
+  "bone_count_per_model": 12,
+  "minimum_animation_count": 11,
+  "semantic_socket_count": 7,
+  "production_runtime_files_changed": 0,
+  "decision": "IMPLEMENTED_AND_LOCALLY_VERIFIED"
+}
