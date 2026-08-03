@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.int0_uid_sidecars_supplemental_manifest.v1",
+  "recorded_at": "2026-08-04T01:43:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "classification": "AUTHORITATIVE_TICK_PROGRESSION_TEST_SIDECAR",
+  "uid_count": 1,
+  "files": [
+    {
+      "path": "tests/persistence/test_authoritative_tick_progression.gd.uid",
+      "uid": "uid://cmxgwi2nqkydu",
+      "bytes": 20,
+      "sha256": "0B07425AD685DA672E6304529A50F3EE221FA4ACB42E8C102A44DA95622B529E"
+    }
+  ]
+}
