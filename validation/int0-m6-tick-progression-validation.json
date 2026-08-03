@@ -1,0 +1,99 @@
+{
+  "schema": "distributed_world_simulator.int0_m6_tick_progression_candidate.v1",
+  "recorded_at": "2026-08-04T01:48:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-mw9-lock-release-retry",
+    "sha": "703ab58521d3cae4563ad8d1e8f3ddd0d85b1cd0",
+    "pull_request": 14
+  },
+  "failed_candidates": [
+    {
+      "sha": "703ab58521d3cae4563ad8d1e8f3ddd0d85b1cd0",
+      "result": "FAIL",
+      "stage": "RUN_NETWORK_CONTRACT_TESTS.ps1/test_m6_dedicated_recovery_processes.gd",
+      "assertions": 128,
+      "failures": 1,
+      "message": "Recovered dedicated server stopped cleanly",
+      "observed_state": "FAILED"
+    },
+    {
+      "sha": "395d0f34b0c8ccb5e3f252fd6a48d6b5b593f0ea",
+      "result": "FAIL",
+      "stage": "RUN_M6_FINAL_CHECKPOINT_RETRY_TESTS.ps1/test_m6_dedicated_recovery_processes.gd",
+      "assertions": 128,
+      "failures": 1,
+      "message": "Recovered dedicated server stopped cleanly",
+      "observed_state": "FAILED",
+      "last_error_code": "M6_CHECKPOINT_PERSIST_FAILED",
+      "persistence_error_code": "SAME_REVISION_AUTHORITATIVE_MUTATION",
+      "persistence_message": "same revision cannot contain a different snapshot"
+    }
+  ],
+  "confirmed_root_cause": {
+    "classification": "CHECKPOINT_REVISION_CLOCK_SEMANTICS",
+    "facts": [
+      "networked_gameplay_service.advance_fixed_server_tick advances server_tick without changing state_revision",
+      "networked_gameplay_service.create_snapshot binds both state_revision and server_tick into the snapshot checksum",
+      "M6 authority adapter also embeds server_tick and a tick-bound durable checksum inside domain_components",
+      "authoritative checkpoint progression previously compared the complete snapshot checksum when state_revision was unchanged",
+      "idle fixed ticks therefore produced a different checksum and were misclassified as a same-revision semantic mutation"
+    ],
+    "not_a_transient_io_failure": true
+  },
+  "superseded_retry_hypothesis": {
+    "status": "REMOVED_FROM_FINAL_DIFF",
+    "coordinator_restored_to_base_blob": "20a84c1aafc5311846306a9bdef784c309d69ca7",
+    "obsolete_retry_test_runner_uid_and_manifest_removed": true
+  },
+  "correction": {
+    "production_file": "scripts/persistence/authoritative_checkpoint.gd",
+    "policy": [
+      "same-revision progression compares a semantic snapshot hash",
+      "clock-derived server_tick and sample_time_s metadata are revision-neutral",
+      "snapshot identifiers and derived checksum fields are revision-neutral",
+      "generation, previous_generation, authority epoch and monotonic server_tick fences remain unchanged",
+      "physics, partition, authority, state revision and domain payload changes remain semantic and are rejected at the same revision"
+    ]
+  },
+  "deterministic_contract": {
+    "path": "tests/persistence/test_authoritative_tick_progression.gd",
+    "expected_marker": "Authoritative tick progression: PASS (12 assertions)",
+    "coverage": [
+      "tick-only same-revision progression accepted",
+      "nested M6-style durable server_tick/checksum refresh accepted",
+      "same-revision domain mutation rejected",
+      "same-revision physics mutation rejected",
+      "server tick rollback rejected",
+      "semantic mutation accepted after revision advancement"
+    ],
+    "execution_status": "PENDING_WINDOWS_CANDIDATE_GATE"
+  },
+  "uid": {
+    "path": "tests/persistence/test_authoritative_tick_progression.gd.uid",
+    "uid": "uid://cmxgwi2nqkydu",
+    "bytes": 20,
+    "sha256": "0B07425AD685DA672E6304529A50F3EE221FA4ACB42E8C102A44DA95622B529E",
+    "generated_by": "Godot 4.7.1.stable.double.custom_build.a13da4feb isolated editor import",
+    "aggregate_manifest_count": 159
+  },
+  "scope_against_stacked_base": {
+    "changed_file_count_before_this_record": 7,
+    "production_file_count": 1,
+    "unrelated_domain_runtime_changes": 0
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159",
+    "editor import clean and project.godot unchanged",
+    "RUN_M6_TICK_PROGRESSION_TESTS.ps1 2/2",
+    "M6 process 128 assertions and 0 failures with STOPPED",
+    "R3 authoritative recovery contracts PASS",
+    "MW9 recovery 3/3",
+    "MW9 race stress 1000/1000",
+    "network contracts PASS",
+    "INT0 full 16/16",
+    "static and process cleanliness PASS"
+  ],
+  "decision": "FIX4_REV1_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
