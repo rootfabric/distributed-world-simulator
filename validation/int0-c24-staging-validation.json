@@ -1,0 +1,100 @@
+{
+  "schema": "distributed_world_simulator.int0_c24_staging_validation.v1",
+  "recorded_at": "2026-08-03T20:54:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stage": "INT0_C24_STAGING",
+  "status": "COMPOSED_CANDIDATE_AWAITING_COMBINED_RUNTIME_GATE",
+  "base": {
+    "integration_branch": "integration/c24-nx6-mw10-rl3",
+    "base_sha": "64770c62574de58fa522dbdf2b4be891fe00442c",
+    "classification": "NX6_RL3_COMPOSED_CANDIDATE_NOT_ACCEPTED"
+  },
+  "source": {
+    "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
+    "frozen_head_sha": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+    "checkpoint": "C24_GPU_READY_PROXY_MESH_BACKEND",
+    "decision": "ACCEPTED"
+  },
+  "staging": {
+    "branch": "merge/int0-c24",
+    "source_pull_request": 9,
+    "merge_commit_sha": "00ae523ac85c575424d84a49b48fa4be37bcbf3a",
+    "merge_method": "merge",
+    "history_preserved": true,
+    "squash_used": false,
+    "rebase_used": false,
+    "force_push_used": false
+  },
+  "diff_audit": {
+    "changed_paths": 863,
+    "new_paths": 862,
+    "modified_existing_paths": 1,
+    "removed_paths": 0,
+    "text_merge_conflicts": 0,
+    "only_modified_existing_path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "world_runner_change": {
+      "kind": "ADDITIVE_TEST_LIST_EXTENSION",
+      "construction_tests_added": 57,
+      "existing_entries_removed": 0
+    },
+    "shared_runtime_paths_changed": [],
+    "shared_aggregate_documents_changed": [],
+    "wholesale_ours_theirs_used": false
+  },
+  "ownership": {
+    "nx6_transport_fixed_tick_prediction_preserved": true,
+    "rl3_matter_representation_stack_preserved": true,
+    "c24_construction_domain_isolated": true,
+    "construction_proxy_is_derived_presentation": true,
+    "generic_rl3_transport_adapter_added": false,
+    "canonical_state_contains_proxy_mesh": false
+  },
+  "source_acceptance_evidence": {
+    "c24_focused_assertions": 2522,
+    "c23_assertions": 4187,
+    "c22_assertions": 191,
+    "c2b_assertions": 258,
+    "c9_assertions": 204,
+    "world_passed": 156,
+    "world_total": 156,
+    "main_scene_passed": 6,
+    "main_scene_total": 6,
+    "editor_import": "PASS_ON_FROZEN_SOURCE",
+    "git_diff_check": "PASS_ON_FROZEN_SOURCE"
+  },
+  "executed_on_composed_staging_tree": {
+    "github_frozen_head_verification": "PASS",
+    "github_mergeability": "PASS",
+    "github_merge": "PASS",
+    "static_changed_path_audit": "PASS",
+    "godot_editor_import": "NOT_RUN",
+    "c24_focused": "NOT_RUN",
+    "construction_regression": "NOT_RUN",
+    "network_regression": "NOT_RUN",
+    "matter_regression": "NOT_RUN",
+    "representation_regression": "NOT_RUN",
+    "world_regression": "NOT_RUN",
+    "main_scene": "NOT_RUN"
+  },
+  "required_before_int0_acceptance": [
+    "Godot 4.7.1 double editor import",
+    "C24 focused 2522 assertions",
+    "C23 4187 assertions",
+    "C22 191 assertions",
+    "C2B 258 assertions",
+    "C9 204 assertions",
+    "NX0-NX6 regression",
+    "M7 graphical and recovery",
+    "MW0-MW10 regression",
+    "MW9 race and recovery",
+    "RL0-RL3 regression",
+    "World regression including 57 construction scripts",
+    "main-scene CLI 6/6",
+    "combined two-client Matter and construction proxy scenario",
+    "git diff --check",
+    "conflict-marker scan",
+    "remaining Godot/Xvfb equals zero"
+  ],
+  "acceptance_decision": "NOT_YET_ELIGIBLE",
+  "main_changed": false
+}
