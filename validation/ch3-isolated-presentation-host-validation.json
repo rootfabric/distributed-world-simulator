@@ -1,0 +1,18 @@
+{
+  "schema": "planet_simulator.ch3_isolated_presentation_host_validation.v1",
+  "branch": "feature/ch3-isolated-character-presentation-host",
+  "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+  "editor_import": "PASS",
+  "ch1_regression_assertions": 32,
+  "ch2_regression_assertions": 37,
+  "ch3_assertions": 56,
+  "graphical_smoke": "PASS",
+  "graphical_backend": "OpenGL compatibility via Xvfb/llvmpipe",
+  "rendered_mesh_count": 19,
+  "viewport": [1280, 720],
+  "visual_lab_scene": "res://scenes/labs/character/character_presentation_lab.tscn",
+  "production_runtime_files_changed": 0,
+  "pre_integration_stop": "CH3_ACCEPTED_CANDIDATE",
+  "next_required_sync": "INT1_RUNTIME_DECOMPOSITION",
+  "decision": "IMPLEMENTED_AND_LOCALLY_VERIFIED"
+}
