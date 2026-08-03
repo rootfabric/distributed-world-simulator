@@ -1,0 +1,111 @@
+{
+  "schema": "planet_simulator.c7_spatial_construct_validation.v1",
+  "checkpoint": "C7_SPATIAL_CONSTRUCT",
+  "status": "ACCEPTED",
+  "base": {
+    "stage": "C6_ACCEPTED",
+    "c5_commit": "29cd8b1",
+    "c6_reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04",
+    "c6_commit": "2837835"
+  },
+  "branch": "feature/c7-spatial-construct",
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_contract_assertions": 105,
+    "c7_integration_assertions": 120,
+    "c7_total_assertions": 225
+  },
+  "contracts": {
+    "construct_snapshot_is_source_of_truth": true,
+    "spatial_profile_is_rebuildable": true,
+    "space_graph_is_not_mesh_derived": true,
+    "sections_reference_concrete_parts_and_bonds": true,
+    "openings_reference_spaces_frames_and_closures": true,
+    "exterior_breach_exposes_space": true,
+    "open_door_degrades_but_preserves_occupancy": true,
+    "utility_failure_is_independent_from_enclosure": true,
+    "utility_dependency_failure_cascades": true,
+    "partial_construct_is_dormant": true,
+    "inactive_profile_has_no_behavior": true,
+    "repair_restores_active_profile": true,
+    "commands_pin_profile_checksum": true,
+    "actor_requirements_enforced": true,
+    "stale_profile_rejected": true,
+    "same_revision_mutation_rejected": true,
+    "transactional_store_load": true,
+    "persistence_roundtrip": true
+  },
+  "prototype": {
+    "kind": "SMALL_HOUSE",
+    "parts": 13,
+    "bonds": 12,
+    "sections": 9,
+    "openings": 2,
+    "spaces": 1,
+    "utilities": 2,
+    "building_states": [
+      "ACTIVE",
+      "DEGRADED",
+      "INACTIVE"
+    ],
+    "activation_levels": [
+      "DORMANT",
+      "SUMMARY",
+      "FUNCTIONAL"
+    ]
+  },
+  "world_manifest": {
+    "declared_tests": 115,
+    "unique_tests": 115,
+    "expected_steps": 118,
+    "c7_tests_present_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: production M0 dependency tree is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 115,
+    "expected_world_steps": 118,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 93 unique UIDs",
+    "manifest": "PASS — 49/49 unique files",
+    "world_runner_manifest": "PASS — 115/115 unique tests, C7 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — 49/49 files"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c7-spatial-construct-files.txt",
+    "changed_files": 49
+  },
+  "external_acceptance": {
+    "focused_c7_assertions": 225,
+    "compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "PASS — 115/115 tests, 118 steps",
+    "main_scene_cli": "PASS — 6/6",
+    "git_diff_check": "PASS",
+    "reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87"
+  }
+}

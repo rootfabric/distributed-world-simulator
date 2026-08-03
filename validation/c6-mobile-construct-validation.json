@@ -1,0 +1,103 @@
+{
+  "schema": "planet_simulator.c6_mobile_construct_validation.v1",
+  "checkpoint": "C6_MOBILE_CONSTRUCT",
+  "status": "ACCEPTED",
+  "base": {
+    "stage": "C5_ACCEPTED",
+    "c5_commit": "29cd8b1"
+  },
+  "branch": "feature/c6-mobile-construct",
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_contract_assertions": 92,
+    "c6_integration_assertions": 126,
+    "c6_total_assertions": 218
+  },
+  "contracts": {
+    "construct_snapshot_is_source_of_truth": true,
+    "profile_is_rebuildable": true,
+    "profile_pins_construct_checksum": true,
+    "subsystems_reference_concrete_parts": true,
+    "subsystems_reference_required_bonds": true,
+    "dependency_cycles_rejected": true,
+    "provider_quorum_enforced": true,
+    "part_condition_drives_health": true,
+    "bond_state_drives_health": true,
+    "dependency_failure_cascades": true,
+    "one_wheel_loss_degrades_not_disables": true,
+    "below_quorum_immobilizes": true,
+    "sensor_loss_preserves_drive": true,
+    "power_loss_disables_dependents": true,
+    "repair_restores_capabilities": true,
+    "commands_pin_profile_checksum": true,
+    "actor_requirements_enforced": true,
+    "stale_profile_rejected": true,
+    "same_revision_mutation_rejected": true,
+    "transactional_store_load": true,
+    "persistence_roundtrip": true
+  },
+  "prototype": {
+    "kind": "WHEELED_ROVER",
+    "parts": 8,
+    "bonds": 7,
+    "subsystems": 4,
+    "states": [
+      "MOBILE",
+      "DEGRADED",
+      "IMMOBILE"
+    ]
+  },
+  "world_manifest": {
+    "declared_tests": 113,
+    "unique_tests": 113,
+    "expected_steps": 116,
+    "c6_tests_present_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: production M0 dependency tree is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 113,
+    "expected_world_steps": 116,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS",
+    "manifest": "PASS — 38/38 unique files",
+    "world_runner_manifest": "PASS — 113/113 unique tests, C6 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — 38/38 files"
+  },
+  "delivery": {
+    "changed_files": 38,
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c6-mobile-construct-files.txt"
+  },
+  "external_acceptance": {
+    "focused_c6": "PASS — 218 assertions",
+    "c1_c2a_c2b_c3_c4_c5_compatibility": "PASS",
+    "network_n0_m4": "PASS",
+    "world_regression": "113/113 tests, 116 steps",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS",
+    "reviewed_sha256": "b24ce4ee4efc891ca8ed4621e8e9a40fb80b82e486e6f98c6b450b1447867c04"
+  }
+}

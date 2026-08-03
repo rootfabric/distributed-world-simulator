@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.compiled_construct_proxy_streaming_config.v1",
+  "stage": "C22",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "authoritative_source": "C2B_CONSTRUCT_AGGREGATE_AND_ITEM_GRAPH",
+  "section_topology": {
+    "section_size_m": 5.0,
+    "stable_spatial_grid": true,
+    "semantic_interior_cells": true,
+    "portal_graph": true
+  },
+  "compilation": {
+    "remove_internal_faces": true,
+    "greedy_meshing": true,
+    "material_batching": true,
+    "content_addressed_cache": true,
+    "read_only_snapshot_compilation": true,
+    "compile_exact_descriptors_only_for_interactive_parts": true
+  },
+  "detail_modes": [
+    "DISTANT_SHELL",
+    "SECTION_HLOD",
+    "LOCAL_EXTERIOR",
+    "INTERIOR_CELL"
+  ],
+  "distance_policy": {
+    "local_distance_m": 80.0,
+    "section_distance_m": 250.0,
+    "shell_distance_m": 1000.0
+  },
+  "streaming_limits": {
+    "maximum_section_artifacts": 12,
+    "maximum_interactive_parts": 64,
+    "packet_bandwidth_budget_bytes": 1048576
+  },
+  "network": {
+    "far_packet_contains_root_identity": true,
+    "far_packet_contains_child_item_identities": false,
+    "far_packet_artifact_count": 1,
+    "authority_epoch_required": true
+  },
+  "incremental_rebuild": {
+    "dirty_section_recompile": true,
+    "shell_recompile_when_exposed_boundary_changes": true,
+    "unchanged_content_hash_reused": true
+  },
+  "acceptance_fixture": {
+    "authoritative_part_count": 10000,
+    "section_count": 80,
+    "interior_cell_count": 2,
+    "interactive_parts_per_cell": 8,
+    "raw_faces": 60000,
+    "expected_exposed_faces": 3400
+  },
+  "invariants": {
+    "large_construct_remains_one_authoritative_aggregate": true,
+    "proxy_never_becomes_item_authority": true,
+    "distant_shell_replaces_child_presentation": true,
+    "scene_tree_is_rebuildable": true,
+    "item_identity_preserved_after_damage": true
+  }
+}

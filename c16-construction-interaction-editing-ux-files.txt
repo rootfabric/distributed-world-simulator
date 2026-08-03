@@ -1,0 +1,45 @@
+Checkpoint: C16 — Construction Interaction and Editing UX
+Status: IMPLEMENTED CANDIDATE
+Base: C15 ACCEPTED
+Recommended branch: feature/c16-construction-interaction-editing-ux
+Changed files: 39
+
+RUN_C16_CONSTRUCTION_INTERACTION_TESTS.ps1
+RUN_C16_CONSTRUCTION_INTERACTION_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c16-construction-interaction-editing-ux-files.txt
+config/construction/construction-interaction-ux.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-01_C15_EXECUTABLE_UTILITIES_AND_MACHINES_RU.md
+docs/checkpoints/2026-08-01_C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/interaction/construction_geometry_gizmo.gd
+scripts/construction/interaction/construction_geometry_gizmo.gd.uid
+scripts/construction/interaction/construction_interaction_command_adapter.gd
+scripts/construction/interaction/construction_interaction_command_adapter.gd.uid
+scripts/construction/interaction/construction_interaction_controller.gd
+scripts/construction/interaction/construction_interaction_controller.gd.uid
+scripts/construction/interaction/construction_interaction_overlay.gd
+scripts/construction/interaction/construction_interaction_overlay.gd.uid
+scripts/construction/interaction/construction_material_overlay_model.gd
+scripts/construction/interaction/construction_material_overlay_model.gd.uid
+scripts/construction/interaction/construction_placement_ghost.gd
+scripts/construction/interaction/construction_placement_ghost.gd.uid
+scripts/construction/interaction/construction_placement_request.gd
+scripts/construction/interaction/construction_placement_request.gd.uid
+scripts/construction/interaction/construction_placement_solution.gd
+scripts/construction/interaction/construction_placement_solution.gd.uid
+scripts/construction/interaction/construction_semantic_snap_resolver.gd
+scripts/construction/interaction/construction_semantic_snap_resolver.gd.uid
+scripts/construction/interaction/construction_snap_target.gd
+scripts/construction/interaction/construction_snap_target.gd.uid
+tests/construction/fixtures/c16_interaction_fixture.gd
+tests/construction/fixtures/c16_interaction_fixture.gd.uid
+tests/construction/test_c16_interaction_ux_contracts.gd
+tests/construction/test_c16_interaction_ux_contracts.gd.uid
+tests/construction/test_c16_interaction_ux_integration.gd
+tests/construction/test_c16_interaction_ux_integration.gd.uid
+validation/c16-construction-interaction-editing-ux-validation.json

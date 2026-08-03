@@ -1,0 +1,117 @@
+{
+  "schema": "planet_simulator.c12_multiplayer_construction_validation.v1",
+  "checkpoint": "C12_MULTIPLAYER_CONSTRUCTION_ACCEPTANCE",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "stage": "C11_IMPLEMENTED_CANDIDATE_OVER_C10_ACCEPTED",
+    "c9_commit": "8d8bf77",
+    "c10_reviewed_sha256": "062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbddf9c",
+    "c11_reviewed_sha256": "a234af8b8967269ce1e71aaac5ed8b985e5dcd3ab495c102c19784ad9f266bf3"
+  },
+  "branch": "feature/c12-multiplayer-construction-acceptance",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_assertions": 225,
+    "c8_assertions": 221,
+    "c9_assertions": 204,
+    "c10_assertions": 239,
+    "c11_assertions": 199,
+    "c12_contract_assertions": 53,
+    "c12_integration_assertions": 71,
+    "c12_total_assertions": 124,
+    "locally_verified_total_assertions": 2299
+  },
+  "command_actions": [
+    "APPLY_DAMAGE",
+    "APPLY_REPAIR",
+    "BUILD_STAGE",
+    "EDIT_GEOMETRY"
+  ],
+  "contracts": {
+    "permissions_are_checksum_pinned_and_epoch_scoped": true,
+    "reconnect_increments_session_epoch": true,
+    "commands_are_ordered_per_session": true,
+    "construct_checksum_and_optional_generation_are_optimistic_preconditions": true,
+    "existing_c3_c9_c11_processes_remain_the_only_domain_mutation_paths": true,
+    "terminal_command_replay_is_idempotent": true,
+    "command_id_conflicts_are_rejected": true,
+    "gateway_crash_after_domain_commit_recovers_from_operation_ledger": true,
+    "successful_events_are_contiguous_and_checksum_pinned": true,
+    "replicas_reject_gaps_rollback_and_tamper": true,
+    "reconnect_returns_missing_events": true,
+    "item_and_construct_state_bundle_checksums_converge": true,
+    "permission_session_and_gateway_persistence_is_transactional": true
+  },
+  "vertical_slices": {
+    "build": "Client A advances C3 foundation through the multiplayer gateway",
+    "contention": "Two clients edit the same C11 member from one snapshot; the second stale command is rejected before mutation",
+    "damage_repair": "Authorized C9 damage and repair produce ordered multiplayer events while an unauthorized client is denied",
+    "gateway_recovery": "Commit before gateway event publication is recovered by domain exact replay without a second authoritative generation",
+    "reconnect": "Client B catches up four missing events and converges to the authoritative bundle checksum",
+    "revocation": "Permission revoke plus epoch advance invalidates stale and reconnected commands"
+  },
+  "roadmap_documentation": {
+    "post_c12_map": "docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md",
+    "stages_documented": [
+      "C13",
+      "C14",
+      "C15",
+      "C16",
+      "C17",
+      "C18",
+      "C19",
+      "C20",
+      "C21",
+      "C22"
+    ]
+  },
+  "world_manifest": {
+    "expected_tests": 125,
+    "expected_steps": 128,
+    "c12_tests_expected_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused integration: complete production item-domain dependency tree is absent from the isolated snapshot",
+    "Network N0-M4 regression: full runtime tree and runner are absent from the isolated snapshot",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "c11_external_acceptance_required": true,
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 125,
+    "expected_world_steps": 128,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 181 unique UIDs in isolated workspace",
+    "manifest": "PASS — 38/38 unique files",
+    "world_runner_manifest": "PASS — 125/125 unique tests, C12 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_archive_replay": "PASS — final archive overlay verified 38/38"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c12-multiplayer-construction-files.txt",
+    "changed_files": 38
+  }
+}

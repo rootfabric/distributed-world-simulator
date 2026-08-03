@@ -1,0 +1,83 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C18_STREAMING_LOD_AND_DORMANT_CONSTRUCTS",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C17_DISTRIBUTED_CONSTRUCTION_AUTHORITY",
+    "decision": "FOCUSED_PASS_FULL_ACCEPTANCE_PENDING",
+    "base_commit": "a4376cd",
+    "note": "C18 is an overlay on the uncommitted C17 candidate; C17 full acceptance remains a prerequisite."
+  },
+  "branch": "feature/c18-streaming-lod-dormant-constructs",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 51
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 84
+    },
+    "total_assertions": 135,
+    "editor_parse": "PASS",
+    "headless_scene_tree": "PASS"
+  },
+  "coverage": [
+    "DORMANT_SUMMARY_SIMULATED_PRESENTED_ACTIVITY_LEVELS",
+    "FULL_SIMPLIFIED_IMPOSTOR_NONE_LOD",
+    "INTEREST_PRIORITY_AND_DISTANCE_HYSTERESIS",
+    "DELAYED_DORMANCY",
+    "SUMMARY_SIMULATION_PRESENTATION_BUDGETS",
+    "PINNED_LEVEL_ATOMIC_REJECTION",
+    "LAZY_C13_PRESENTATION_REBUILD",
+    "RUNTIME_EVICTION_WITHOUT_AUTHORITY_MUTATION",
+    "BOUNDED_DETERMINISTIC_CATCH_UP",
+    "PENDING_JOB_AND_OPERATION_PRESERVATION",
+    "C17_OWNER_ONLY_SIMULATION",
+    "READ_ONLY_REPLICA_PRESENTATION",
+    "AUTHORITY_EPOCH_FENCING",
+    "PERSISTENCE_WITHOUT_SCENE_TREE",
+    "EXACT_RECONCILE_REPLAY"
+  ],
+  "delivery": {
+    "manifest": "c18-streaming-lod-dormant-constructs-files.txt",
+    "world_test_entries": 2,
+    "expected_world_test_count": 137,
+    "expected_world_steps": 140,
+    "file_count": 44
+  },
+  "external_acceptance_required": {
+    "C17": "full C2B/C9/Network/world gate must pass first",
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "network": "N0-M4 PASS",
+    "world_regression": "137/137 tests, 140 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "C1": 66,
+    "C2A": 137,
+    "C3": 194,
+    "C4": 268,
+    "C5": 204,
+    "C6": 218,
+    "C7": 225,
+    "C8": 221,
+    "C10": 239,
+    "C11": 199,
+    "C12": 124,
+    "C13": 124,
+    "C14": 168,
+    "C15": 215,
+    "C16": 71,
+    "C17": 125,
+    "C18": 135,
+    "status": "PASS",
+    "total": 2933
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "planet_simulator.construction_build_plan_manifest.v1",
+  "stage": "C3",
+  "status": "ACCEPTED_FIX1",
+  "base_stage": "C2B",
+  "base_branch": "feature/c2b-authoritative-item-graph-integration",
+  "recommended_branch": "feature/c3-build-plan-and-ghost",
+  "paradigm": {
+    "immutable_execution_plan": true,
+    "weightless_ghost": true,
+    "staged_partial_constructs": true,
+    "facet_compilation_per_stage": true,
+    "capabilities_only_after_commissioning": true,
+    "authoritative_item_changes_via_c2b": true,
+    "recoverable_progress_projection": true
+  },
+  "contracts": [
+    "planet_simulator.construction_build_stage.v1",
+    "planet_simulator.construction_build_plan.v1",
+    "planet_simulator.construction_ghost_state.v1",
+    "planet_simulator.construction_build_plan_store.v1",
+    "planet_simulator.construction_ghost_projection.v1"
+  ],
+  "transaction_command": "ADVANCE_CONSTRUCTION_STAGE",
+  "prototype": "THREE_STAGE_TABLE",
+  "focused_tests": [
+    "res://tests/construction/test_c3_build_plan_contracts.gd",
+    "res://tests/construction/test_c3_build_plan_integration.gd"
+  ],
+  "runtime_ui_integration": false,
+  "network_command_endpoint": false,
+  "next_stage": "C4_COMPOSITE_DEFINITION",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "acceptance": {
+    "c3_assertions": 194,
+    "network_n0_m4": "PASS",
+    "world_regression": "107/107 tests, 110 steps",
+    "reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256"
+  }
+}

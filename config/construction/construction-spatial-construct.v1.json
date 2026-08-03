@@ -1,0 +1,97 @@
+{
+  "schema": "planet_simulator.construction_spatial_construct_manifest.v1",
+  "stage": "C7",
+  "status": "ACCEPTED",
+  "base_stage": "C6_ACCEPTED",
+  "base_c5_commit": "29cd8b1",
+  "recommended_branch": "feature/c7-spatial-construct",
+  "paradigm": {
+    "authoritative_source_is_construct_snapshot": true,
+    "spatial_profile_is_rebuildable_projection": true,
+    "space_graph_is_semantic_not_mesh_derived": true,
+    "enclosure_is_section_and_opening_derived": true,
+    "utilities_are_dependency_graphs": true,
+    "damaged_buildings_retain_only_valid_capabilities": true,
+    "activation_level_is_derived": true,
+    "commands_pin_profile_checksum": true,
+    "runtime_geometry_and_navigation_out_of_scope": true
+  },
+  "contracts": [
+    "planet_simulator.construction_spatial_section_definition.v1",
+    "planet_simulator.construction_spatial_opening_definition.v1",
+    "planet_simulator.construction_spatial_space_definition.v1",
+    "planet_simulator.construction_spatial_utility_definition.v1",
+    "planet_simulator.construction_spatial_section_state.v1",
+    "planet_simulator.construction_spatial_opening_state.v1",
+    "planet_simulator.construction_spatial_space_state.v1",
+    "planet_simulator.construction_spatial_utility_state.v1",
+    "planet_simulator.construction_spatial_profile.v1",
+    "planet_simulator.construction_spatial_profile_store.v1",
+    "planet_simulator.construction_spatial_command.v1"
+  ],
+  "prototype": "SMALL_HOUSE_WITH_SPACE_GRAPH_ENCLOSURE_DOOR_POWER_AND_DATA",
+  "building_states": [
+    "ACTIVE",
+    "DEGRADED",
+    "INACTIVE"
+  ],
+  "activation_levels": [
+    "DORMANT",
+    "SUMMARY",
+    "FUNCTIONAL"
+  ],
+  "space_states": [
+    "HABITABLE",
+    "DEGRADED",
+    "EXPOSED",
+    "INACTIVE"
+  ],
+  "spatial_capabilities": [
+    "ACCESS_CONTROL",
+    "DATA_DISTRIBUTION",
+    "ENCLOSED_SPACE",
+    "POWER_DISTRIBUTION",
+    "SHELTER"
+  ],
+  "spatial_actions": [
+    "CLOSE_DOOR",
+    "INSPECT_SPACE",
+    "OCCUPY_SPACE",
+    "OPEN_DOOR",
+    "TOGGLE_LIGHTING",
+    "TRAVERSE_OPENING",
+    "USE_UTILITY"
+  ],
+  "focused_tests": [
+    "res://tests/construction/test_c7_spatial_construct_contracts.gd",
+    "res://tests/construction/test_c7_spatial_construct_integration.gd"
+  ],
+  "focused_assertions": {
+    "contracts": 105,
+    "integration": 120,
+    "total": 225
+  },
+  "expected_world_profile": {
+    "tests": 115,
+    "steps": 118
+  },
+  "runtime_navigation_mesh": false,
+  "runtime_door_animation": false,
+  "network_command_endpoint": false,
+  "runtime_ui_integration": false,
+  "next_stage": "C8_FABRICATION_CELL",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "delivery": {
+    "changed_files": 49,
+    "manifest": "c7-spatial-construct-files.txt",
+    "overlay_only": true
+  },
+  "base_c6_commit": "2837835",
+  "acceptance": {
+    "reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87",
+    "network": "PASS",
+    "world_tests": 115,
+    "world_steps": 118,
+    "main_scene_cli": "6/6 PASS"
+  }
+}

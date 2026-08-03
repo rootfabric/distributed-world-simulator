@@ -1,0 +1,97 @@
+{
+  "schema": "planet_simulator.construction_delivery_validation.v1",
+  "stage": "C2A",
+  "delivery": "item-graph-contracts",
+  "status": "LOCAL_FOCUSED_PASS_EXTERNAL_REGRESSION_REQUIRED",
+  "date": "2026-07-31",
+  "base_commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
+  "branch": "feature/c1-semantic-construction-kernel",
+  "previous_checkpoint": "C1_FIX1_ACCEPTED",
+  "scope": {
+    "runtime_integration": false,
+    "real_item_graph_mutation": false,
+    "production_store": false,
+    "world_regression_manifest_updated": true,
+    "declared_world_tests_after_patch": 103
+  },
+  "engine": {
+    "version": "4.7.1-stable",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "precision": "double",
+    "platform": "linuxbsd",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "focused_tests": [
+    {
+      "path": "res://tests/construction/test_c2a_item_graph_contracts.gd",
+      "passed": true,
+      "assertions": 46
+    },
+    {
+      "path": "res://tests/construction/test_c2a_item_graph_transactions.gd",
+      "passed": true,
+      "assertions": 91
+    }
+  ],
+  "focused_total": {
+    "passed": true,
+    "tests": 2,
+    "assertions": 137
+  },
+  "foundation_regression": [
+    {
+      "path": "res://tests/construction/test_c1_construction_contracts.gd",
+      "passed": true,
+      "assertions": 26
+    },
+    {
+      "path": "res://tests/construction/test_c1_construct_aggregate.gd",
+      "passed": true,
+      "assertions": 40
+    }
+  ],
+  "validated_contracts": [
+    "planet_simulator.construction_item_projection.v1",
+    "planet_simulator.construction_item_mutation.v1",
+    "planet_simulator.construction_construct_mutation.v1",
+    "planet_simulator.construction_item_transaction_plan.v1",
+    "planet_simulator.c2a_construction_item_graph_state.v1"
+  ],
+  "validated_properties": [
+    "item_instance_v2_projection_roundtrip",
+    "attachment_relation_mapping",
+    "strict_item_and_construct_mutations",
+    "canonical_sorted_transaction_plan",
+    "plan_checksum",
+    "state_checksum",
+    "exact_success_replay",
+    "exact_terminal_rejection_replay",
+    "operation_id_conflict",
+    "stale_precondition_rejection",
+    "retryable_failure_does_not_poison_operation_id",
+    "atomic_no_partial_commit",
+    "persistent_replay_after_json_roundtrip",
+    "table_assembly_preserves_c1_capabilities",
+    "table_deconstruction_returns_parts_without_refunding_consumables"
+  ],
+  "static_checks": {
+    "editor_import_parse": "PASS",
+    "shell_syntax": "PASS",
+    "world_runner_declared_tests": 103,
+    "world_runner_unique_tests": 103,
+    "world_runner_c2a_tests": "2/2",
+    "manifest_files": 30,
+    "manifest_unique_files": 30,
+    "json_validation": "PASS",
+    "uid_validation": "PASS",
+    "trailing_whitespace": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "external_acceptance_required": {
+    "focused_c1": true,
+    "focused_c2a": true,
+    "network_regression": true,
+    "world_regression_expected_tests": 103,
+    "git_diff_check": true
+  }
+}

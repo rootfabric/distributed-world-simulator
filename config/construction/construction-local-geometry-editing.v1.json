@@ -1,0 +1,27 @@
+{
+  "schema": "planet_simulator.construction_local_geometry_editing_config.v1",
+  "checkpoint": "C11_LOCAL_GEOMETRY_EDITING",
+  "metric_precision_decimal_places": 9,
+  "operation_kinds": [
+    "SET_PARAMETER",
+    "MOVE_CONTROL_POINT",
+    "INSERT_CONTROL_POINT",
+    "REMOVE_CONTROL_POINT"
+  ],
+  "constraint_kinds": [
+    "GRID_SNAP",
+    "LOCK_PARAMETER",
+    "LOCK_CONTROL_POINT",
+    "LOCK_AXES",
+    "MIN_SEGMENT_LENGTH",
+    "MAX_TOTAL_LENGTH",
+    "ORTHOGONAL_PATH"
+  ],
+  "authoritative_rules": [
+    "Edits pin member, item and construct preconditions before compilation.",
+    "The C10 parametric compiler remains the source of mass, volume and material usage.",
+    "Item projection, semantic part and construct snapshot change in one C2A/C2B transaction.",
+    "Control-point paths are semantic local geometry; renderer meshes remain derived projections.",
+    "Exact operation replay never repeats the authoritative mutation or increments generation."
+  ]
+}

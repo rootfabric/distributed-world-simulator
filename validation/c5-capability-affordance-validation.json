@@ -1,0 +1,123 @@
+{
+  "schema": "planet_simulator.c5_capability_affordance_validation.v1",
+  "checkpoint": "C5_CAPABILITY_AND_AFFORDANCE_COMPILATION",
+  "status": "ACCEPTED",
+  "base": {
+    "stage": "C4_FIX1_ACCEPTED",
+    "c3_commit": "4917f55",
+    "c4_candidate_sha256": "7301f3f0dead20ffc2a1c0b57d7a54f1df9198b6163abae3cd708695a724c4c8",
+    "c4_fix1_sha256": "d6c03e2a9b2b34c879f45a392741ccddc01cf35fb5822ff8ec1e986bd0a0cb67"
+  },
+  "branch": "feature/c5-capability-affordance-compilation",
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_contract_assertions": 105,
+    "c5_integration_assertions": 99,
+    "c5_total_assertions": 204
+  },
+  "contracts": {
+    "construct_snapshot_is_source_of_truth": true,
+    "profile_is_rebuildable": true,
+    "profile_pins_construct_checksum": true,
+    "semantic_capability_descriptors": true,
+    "concrete_part_provider_binding": true,
+    "concrete_exposed_port_binding": true,
+    "actor_requirement_gates": true,
+    "partial_behavior_suppressed": true,
+    "damaged_behavior_invalidated": true,
+    "stale_profile_rejected": true,
+    "same_revision_mutation_rejected": true,
+    "deterministic_query_order": true,
+    "prefab_name_independence": true,
+    "canonical_numeric_properties": true,
+    "transactional_store_load": true,
+    "persistence_roundtrip": true,
+    "strict_schema_unknown_string_field_returns_unexpected_field": true
+  },
+  "supported_vertical_behaviors": {
+    "support_surface": true,
+    "container": true,
+    "seat": true,
+    "climbable": true,
+    "workstation": true,
+    "mounting_surface": true
+  },
+  "world_manifest": {
+    "declared_tests": 111,
+    "unique_tests": 111,
+    "expected_steps": 114,
+    "c5_tests_present_once": true
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS",
+    "manifest": "PASS — 41/41 unique files",
+    "world_runner_manifest": "PASS — 111/111 unique tests, C5 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — 6/6 fix1 overlay files"
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: production M0 dependency tree is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 111,
+    "expected_world_steps": 114,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "delivery": {
+    "changed_files": 41,
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "fix1_file_count": 6,
+    "fix1_manifest": "c5-capability-affordance-fix1-files.txt"
+  },
+  "external_review": {
+    "original_candidate": "REJECTED",
+    "blocker": "contracts negative-test used property syntax, producing a non-String dictionary key and INVALID_FIELD_NAME before exact-field validation",
+    "reported_contract_assertions_before_fix": 105,
+    "reported_failure_count": 1,
+    "fix1": "insert a valid String unknown field with dictionary indexing and require UNEXPECTED_FIELD",
+    "production_code_changed": false,
+    "local_recheck": {
+      "c5_contract_assertions": 105,
+      "c5_integration_assertions": 99,
+      "c5_total_assertions": 204,
+      "c1_assertions": 66,
+      "c2a_assertions": 137,
+      "c3_assertions": 194,
+      "c4_assertions": 268,
+      "editor_parse": "PASS"
+    },
+    "external_recheck_required": false,
+    "decision": "ACCEPTED",
+    "external_recheck": {
+      "c1_assertions": 66,
+      "c2a_assertions": 137,
+      "c2b_assertions": 258,
+      "c3_assertions": 194,
+      "c4_assertions": 268,
+      "c5_contract_assertions": 105,
+      "c5_integration_assertions": 99,
+      "network_n0_m4": "PASS",
+      "world_tests": 111,
+      "world_steps": 114,
+      "main_scene_cli": "6/6 PASS",
+      "git_diff_check": "PASS"
+    }
+  }
+}

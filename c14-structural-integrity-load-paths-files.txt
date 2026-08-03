@@ -1,0 +1,48 @@
+Checkpoint: C14 — Structural Integrity and Load Paths
+Status: IMPLEMENTED CANDIDATE
+Base: C13 ACCEPTED over C12 @ 1152c94
+Recommended branch: feature/c14-structural-integrity-load-paths
+Changed files: 42
+
+RUN_C14_STRUCTURAL_INTEGRITY_TESTS.ps1
+RUN_C14_STRUCTURAL_INTEGRITY_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c14-structural-integrity-load-paths-files.txt
+config/construction/construction-structural-integrity.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-01_C14_STRUCTURAL_INTEGRITY_AND_LOAD_PATHS_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/structural/construction_structural_bond_state.gd
+scripts/construction/structural/construction_structural_bond_state.gd.uid
+scripts/construction/structural/construction_structural_cascade_plan.gd
+scripts/construction/structural/construction_structural_cascade_plan.gd.uid
+scripts/construction/structural/construction_structural_cascade_planner.gd
+scripts/construction/structural/construction_structural_cascade_planner.gd.uid
+scripts/construction/structural/construction_structural_compiler.gd
+scripts/construction/structural/construction_structural_compiler.gd.uid
+scripts/construction/structural/construction_structural_load_case.gd
+scripts/construction/structural/construction_structural_load_case.gd.uid
+scripts/construction/structural/construction_structural_load_path.gd
+scripts/construction/structural/construction_structural_load_path.gd.uid
+scripts/construction/structural/construction_structural_part_state.gd
+scripts/construction/structural/construction_structural_part_state.gd.uid
+scripts/construction/structural/construction_structural_persistence.gd
+scripts/construction/structural/construction_structural_persistence.gd.uid
+scripts/construction/structural/construction_structural_process.gd
+scripts/construction/structural/construction_structural_process.gd.uid
+scripts/construction/structural/construction_structural_profile.gd
+scripts/construction/structural/construction_structural_profile.gd.uid
+scripts/construction/structural/construction_structural_profile_store.gd
+scripts/construction/structural/construction_structural_profile_store.gd.uid
+scripts/construction/structural/construction_structural_summary.gd
+scripts/construction/structural/construction_structural_summary.gd.uid
+tests/construction/fixtures/c14_structural_integrity_fixture.gd
+tests/construction/fixtures/c14_structural_integrity_fixture.gd.uid
+tests/construction/test_c14_structural_integrity_contracts.gd
+tests/construction/test_c14_structural_integrity_contracts.gd.uid
+tests/construction/test_c14_structural_integrity_integration.gd
+tests/construction/test_c14_structural_integrity_integration.gd.uid
+validation/c14-structural-integrity-load-paths-validation.json

@@ -1,0 +1,25 @@
+{
+  "schema": "planet_simulator.distributed_construction_authority_config.v1",
+  "authority": {
+    "single_writer_per_aggregate": true,
+    "initial_epoch": 1,
+    "default_lease_ticks": 10,
+    "migration_requires_fence": true,
+    "takeover_requires_expired_lease": true
+  },
+  "routing": {
+    "forward_to_owner": true,
+    "cross_epoch_exact_replay": true,
+    "reject_unknown_owner": true
+  },
+  "replication": {
+    "neighbor_mode": "READ_ONLY",
+    "section_projection_mode": "READ_ONLY",
+    "require_checksum": true
+  },
+  "migration": {
+    "transfer_terminal_operations": true,
+    "target_epoch_increment": 1,
+    "allow_split_child_cross_zone": true
+  }
+}

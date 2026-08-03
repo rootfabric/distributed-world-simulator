@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.construction_damage_split_repair_config.v1",
+  "checkpoint": "C9_DAMAGE_SPLIT_REPAIR",
+  "transaction_schema": "planet_simulator.construction_damage_transaction_plan.v1",
+  "request_schema": "planet_simulator.construction_damage_request.v1",
+  "repair_plan_schema": "planet_simulator.construction_repair_plan.v1",
+  "history_schema": "planet_simulator.construction_damage_history.v1",
+  "commands": [
+    "DAMAGE_SPLIT_CONSTRUCT",
+    "REPAIR_SPLIT_CONSTRUCT"
+  ],
+  "item_mutation_purposes": [
+    "APPLY_CONSTRUCTION_DAMAGE",
+    "REBIND_SPLIT_PART",
+    "SALVAGE_CONSTRUCTION_PART",
+    "REPAIR_CONSTRUCTION_PART"
+  ],
+  "required_invariants": [
+    "CONSTRUCT_ROOT_CONSISTENCY",
+    "ITEM_IDENTITY_CONSERVATION",
+    "PART_BINDING_CONSISTENCY",
+    "SPLIT_COMPONENT_DISJOINTNESS"
+  ],
+  "component_outcomes": [
+    "RETAINED",
+    "SPLIT_CONSTRUCT",
+    "SALVAGE"
+  ],
+  "part_conditions": [
+    "INTACT",
+    "DEGRADED",
+    "DESTROYED"
+  ],
+  "focused_gate": {
+    "contracts_assertions": 96,
+    "integration_assertions": 108,
+    "total_assertions": 204
+  },
+  "world_gate": {
+    "tests": 119,
+    "steps": 122
+  }
+}

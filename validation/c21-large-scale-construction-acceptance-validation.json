@@ -1,0 +1,109 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C21_LARGE_SCALE_CONSTRUCTION_ACCEPTANCE",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C20_LOGISTICS_AND_CONSTRUCTION_ECONOMY",
+    "decision": "ACCEPTED",
+    "note": "C20 passed focused, C2B, C9, C17-C19, Network, world and main-scene acceptance; no C20 commit SHA was reported."
+  },
+  "branch": "feature/c21-large-scale-construction-acceptance",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 26
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 52
+    },
+    "soak": {
+      "status": "PASS",
+      "assertions": 26
+    },
+    "total_assertions": 104,
+    "editor_parse": "PASS"
+  },
+  "workloads": {
+    "focused": {
+      "constructs": 20000,
+      "build_plans": 1000,
+      "agents": 256,
+      "fabrication_jobs": 3000,
+      "procurement_orders": 4000,
+      "shipments": 4000,
+      "authority_migrations": 1000,
+      "reconnect_waves": 32,
+      "soak_ticks": 2048,
+      "minimum_operations": 50000,
+      "item_backed_parts": 1280000,
+      "damage_events": 2000,
+      "collapse_events": 500,
+      "repair_events": 1500
+    },
+    "extended_soak": {
+      "constructs": 30000,
+      "build_plans": 2000,
+      "agents": 512,
+      "fabrication_jobs": 6000,
+      "procurement_orders": 8000,
+      "shipments": 8000,
+      "authority_migrations": 2000,
+      "reconnect_waves": 64,
+      "soak_ticks": 8192,
+      "minimum_operations": 100000,
+      "item_backed_parts": 2880000,
+      "damage_events": 5000,
+      "collapse_events": 1500,
+      "repair_events": 3500
+    }
+  },
+  "coverage": [
+    "THOUSANDS_OF_BUILD_PLANS",
+    "TENS_OF_THOUSANDS_OF_CONSTRUCTS",
+    "MILLIONS_OF_ITEM_BACKED_PARTS_MODELED",
+    "MASS_FABRICATION_AND_PROCUREMENT",
+    "MULTI_LEG_SHIPMENT_COMPLETION",
+    "AGENT_SWARM_COMPLETION",
+    "MASS_DAMAGE_COLLAPSE_AND_REPAIR",
+    "AUTHORITY_MIGRATION_FENCING",
+    "RECONNECT_STORM_EXACT_REPLAY",
+    "ZERO_DUPLICATE_COMMITS",
+    "ITEM_IDENTITY_PRESERVATION",
+    "MATERIAL_BALANCE_CONSERVATION",
+    "STREAMING_BUDGET_ENFORCEMENT",
+    "PERSISTENCE_RESTART_DETERMINISM",
+    "CORRUPTED_SNAPSHOT_REJECTION"
+  ],
+  "delivery": {
+    "manifest": "c21-large-scale-construction-acceptance-files.txt",
+    "world_test_entries": 3,
+    "expected_world_test_count": 144,
+    "expected_world_steps": 147,
+    "file_count": 39
+  },
+  "external_acceptance_required": {
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "C17_C18_C19_C20": "PASS",
+    "network": "N0-M4 PASS",
+    "world_regression": "144/144 tests, 147 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "profiles": 41,
+    "status": "PASS",
+    "total_assertions": 3305,
+    "excluded": [
+      "C2B",
+      "C9",
+      "Network N0-M4",
+      "full world/main-scene"
+    ]
+  }
+}

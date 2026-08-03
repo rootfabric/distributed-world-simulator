@@ -1,0 +1,70 @@
+{
+  "schema": "planet_simulator.construction_capability_affordance_manifest.v1",
+  "stage": "C5",
+  "status": "ACCEPTED_FIX1",
+  "base_stage": "C4_FIX1_ACCEPTED",
+  "base_c3_commit": "4917f55",
+  "base_c4_candidate_sha256": "7301f3f0dead20ffc2a1c0b57d7a54f1df9198b6163abae3cd708695a724c4c8",
+  "base_c4_fix1_sha256": "d6c03e2a9b2b34c879f45a392741ccddc01cf35fb5822ff8ec1e986bd0a0cb67",
+  "recommended_branch": "feature/c5-capability-affordance-compilation",
+  "paradigm": {
+    "authoritative_source_is_construct_snapshot": true,
+    "behavior_profile_is_rebuildable_projection": true,
+    "no_prefab_name_dependency": true,
+    "part_and_port_bound_affordances": true,
+    "partial_and_damaged_behavior_suppressed": true,
+    "actor_capability_gates": true,
+    "deterministic_query_resolution": true,
+    "composite_parameters_propagated": true,
+    "definition_provenance_pinned": true,
+    "canonical_numeric_semantics": true
+  },
+  "contracts": [
+    "planet_simulator.construction_capability_descriptor.v1",
+    "planet_simulator.construction_affordance_descriptor.v1",
+    "planet_simulator.construction_behavior_profile.v1",
+    "planet_simulator.construction_behavior_profile_store.v1",
+    "planet_simulator.construction_affordance_query.v1"
+  ],
+  "prototype": "AGENT_USES_UNKNOWN_PARAMETERIZED_TABLE",
+  "supported_capability_kinds": [
+    "CLIMBABLE",
+    "CONTAINER",
+    "MOUNTING_SURFACE",
+    "PLACE_ITEMS",
+    "SEAT",
+    "SUPPORT_SURFACE",
+    "WORKSTATION",
+    "WORK_SURFACE"
+  ],
+  "supported_action_kinds": [
+    "CLIMB",
+    "MOUNT_ITEM",
+    "OPEN_CONTAINER",
+    "PLACE_ITEM",
+    "SIT",
+    "STORE_ITEM",
+    "TAKE_ITEM",
+    "USE_WORKSTATION",
+    "USE_WORK_SURFACE"
+  ],
+  "focused_tests": [
+    "res://tests/construction/test_c5_capability_affordance_contracts.gd",
+    "res://tests/construction/test_c5_capability_affordance_integration.gd"
+  ],
+  "focused_assertions": {
+    "contracts": 105,
+    "integration": 99,
+    "total": 204
+  },
+  "expected_world_profile": {
+    "tests": 111,
+    "steps": 114
+  },
+  "runtime_action_execution": false,
+  "runtime_ui_integration": false,
+  "network_query_endpoint": false,
+  "next_stage": "C6_MOBILE_CONSTRUCT",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "accepted_base_for": "C6_MOBILE_CONSTRUCT"
+}

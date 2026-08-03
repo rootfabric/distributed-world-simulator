@@ -1,0 +1,51 @@
+Checkpoint: C8 — Fabrication Cell
+Status: ACCEPTED
+Base: C7 @ 923bfe1
+Recommended branch: feature/c8-fabrication-cell
+Changed files: 45
+
+RUN_C8_FABRICATION_CELL_TESTS.ps1
+RUN_C8_FABRICATION_CELL_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c7-spatial-construct-files.txt
+c8-fabrication-cell-files.txt
+config/construction/construction-fabrication-cell.v1.json
+config/construction/construction-spatial-construct.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C7_SPATIAL_CONSTRUCT_RU.md
+docs/checkpoints/2026-07-31_C8_FABRICATION_CELL_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/fabrication/construction_fabrication_agent.gd
+scripts/construction/fabrication/construction_fabrication_agent.gd.uid
+scripts/construction/fabrication/construction_fabrication_catalog.gd
+scripts/construction/fabrication/construction_fabrication_catalog.gd.uid
+scripts/construction/fabrication/construction_fabrication_job.gd
+scripts/construction/fabrication/construction_fabrication_job.gd.uid
+scripts/construction/fabrication/construction_fabrication_machine_compiler.gd
+scripts/construction/fabrication/construction_fabrication_machine_compiler.gd.uid
+scripts/construction/fabrication/construction_fabrication_machine_definition.gd
+scripts/construction/fabrication/construction_fabrication_machine_definition.gd.uid
+scripts/construction/fabrication/construction_fabrication_machine_profile.gd
+scripts/construction/fabrication/construction_fabrication_machine_profile.gd.uid
+scripts/construction/fabrication/construction_fabrication_persistence.gd
+scripts/construction/fabrication/construction_fabrication_persistence.gd.uid
+scripts/construction/fabrication/construction_fabrication_process.gd
+scripts/construction/fabrication/construction_fabrication_process.gd.uid
+scripts/construction/fabrication/construction_fabrication_queue_store.gd
+scripts/construction/fabrication/construction_fabrication_queue_store.gd.uid
+scripts/construction/fabrication/construction_fabrication_recipe.gd
+scripts/construction/fabrication/construction_fabrication_recipe.gd.uid
+scripts/construction/fabrication/construction_fabrication_transaction_planner.gd
+scripts/construction/fabrication/construction_fabrication_transaction_planner.gd.uid
+scripts/construction/item_graph/construction_item_mutation.gd
+scripts/construction/item_graph/construction_item_transaction_plan.gd
+tests/construction/fixtures/c8_fabrication_cell_fixture.gd
+tests/construction/fixtures/c8_fabrication_cell_fixture.gd.uid
+tests/construction/test_c8_fabrication_cell_contracts.gd
+tests/construction/test_c8_fabrication_cell_contracts.gd.uid
+tests/construction/test_c8_fabrication_cell_integration.gd
+tests/construction/test_c8_fabrication_cell_integration.gd.uid
+validation/c7-spatial-construct-validation.json
+validation/c8-fabrication-cell-validation.json

@@ -1,0 +1,76 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C17_DISTRIBUTED_CONSTRUCTION_AUTHORITY",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX",
+    "decision": "ACCEPTED",
+    "commit": "a4376cd"
+  },
+  "branch": "feature/c17-distributed-construction-authority",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 59
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 66
+    },
+    "total_assertions": 125,
+    "editor_parse": "PASS"
+  },
+  "coverage": [
+    "SINGLE_WRITER_AUTHORITY_RECORD",
+    "OWNER_SERVER_ROUTING",
+    "AUTHORITY_EPOCH_FENCING",
+    "MIGRATION_FENCE",
+    "STATE_AND_TERMINAL_OPERATION_HANDOFF",
+    "CROSS_EPOCH_EXACT_REPLAY",
+    "READ_ONLY_NEIGHBOR_REPLICAS",
+    "SECTION_COORDINATOR_PROJECTION",
+    "CROSS_ZONE_SPLIT_CHILD",
+    "CROSS_ZONE_ITEM_TRANSFER_AUTHORIZATION",
+    "LEASE_EXPIRY_TAKEOVER",
+    "PERSISTENCE_AND_RESTART_REPLAY"
+  ],
+  "delivery": {
+    "manifest": "c17-distributed-construction-authority-files.txt",
+    "world_test_entries": 2,
+    "expected_world_test_count": 135,
+    "expected_world_steps": 138,
+    "file_count": 43
+  },
+  "external_acceptance_required": {
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "network": "N0-M4 PASS",
+    "world_regression": "135/135 tests, 138 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "C1": 66,
+    "C2A": 137,
+    "C3": 194,
+    "C4": 268,
+    "C5": 204,
+    "C6": 218,
+    "C7": 225,
+    "C8": 221,
+    "C10": 239,
+    "C11": 199,
+    "C12": 124,
+    "C13": 124,
+    "C14": 168,
+    "C15": 215,
+    "C16": 71,
+    "C17": 125,
+    "status": "PASS",
+    "total": 2798
+  }
+}

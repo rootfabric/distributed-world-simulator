@@ -1,0 +1,12 @@
+Checkpoint: C5 — Capability and Affordance Compilation fix1
+Status: BLOCKER FIXED LOCALLY, EXTERNAL RECHECK REQUIRED
+Base: accepted C4 fix1 + original C5 candidate
+Branch: feature/c5-capability-affordance-compilation
+Changed files: 6
+
+c5-capability-affordance-files.txt
+c5-capability-affordance-fix1-files.txt
+docs/checkpoints/2026-07-31_C5_CAPABILITY_AND_AFFORDANCE_COMPILATION_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+tests/construction/test_c5_capability_affordance_contracts.gd
+validation/c5-capability-affordance-validation.json

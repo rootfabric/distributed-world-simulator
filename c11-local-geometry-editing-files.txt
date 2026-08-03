@@ -1,0 +1,50 @@
+Checkpoint: C11 — Local Geometry Editing
+Status: IMPLEMENTED CANDIDATE
+Base: C10 ACCEPTED, C9 @ 8d8bf77
+Recommended branch: feature/c11-local-geometry-editing
+Changed files: 44
+
+RUN_C11_LOCAL_GEOMETRY_EDITING_TESTS.ps1
+RUN_C11_LOCAL_GEOMETRY_EDITING_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+config/construction/construction-local-geometry-editing.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C10_PARAMETRIC_MEMBERS_RU.md
+docs/checkpoints/2026-08-01_C11_LOCAL_GEOMETRY_EDITING_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/geometry_edit/construction_geometry_control_point.gd
+scripts/construction/geometry_edit/construction_geometry_control_point.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_compiler.gd
+scripts/construction/geometry_edit/construction_geometry_edit_compiler.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_constraint.gd
+scripts/construction/geometry_edit/construction_geometry_edit_constraint.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_history_store.gd
+scripts/construction/geometry_edit/construction_geometry_edit_history_store.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_operation.gd
+scripts/construction/geometry_edit/construction_geometry_edit_operation.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_persistence.gd
+scripts/construction/geometry_edit/construction_geometry_edit_persistence.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_process.gd
+scripts/construction/geometry_edit/construction_geometry_edit_process.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_record.gd
+scripts/construction/geometry_edit/construction_geometry_edit_record.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_request.gd
+scripts/construction/geometry_edit/construction_geometry_edit_request.gd.uid
+scripts/construction/geometry_edit/construction_geometry_edit_transaction_planner.gd
+scripts/construction/geometry_edit/construction_geometry_edit_transaction_planner.gd.uid
+scripts/construction/geometry_edit/construction_local_geometry_state.gd
+scripts/construction/geometry_edit/construction_local_geometry_state.gd.uid
+scripts/construction/item_graph/construction_item_mutation.gd
+scripts/construction/item_graph/construction_item_transaction_plan.gd
+scripts/construction/parametric/construction_parametric_capability_compiler.gd
+tests/construction/fixtures/c11_local_geometry_editing_fixture.gd
+tests/construction/fixtures/c11_local_geometry_editing_fixture.gd.uid
+tests/construction/test_c11_local_geometry_editing_contracts.gd
+tests/construction/test_c11_local_geometry_editing_contracts.gd.uid
+tests/construction/test_c11_local_geometry_editing_integration.gd
+tests/construction/test_c11_local_geometry_editing_integration.gd.uid
+validation/c10-parametric-members-validation.json
+validation/c11-local-geometry-editing-validation.json
+c11-local-geometry-editing-files.txt

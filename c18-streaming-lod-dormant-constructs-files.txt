@@ -1,0 +1,50 @@
+Checkpoint: C18 — Streaming, LOD and Dormant Constructs
+Status: IMPLEMENTED CANDIDATE
+Base: C17 FOCUSED PASS / FULL ACCEPTANCE PENDING, over C16 @ a4376cd
+Recommended branch: feature/c18-streaming-lod-dormant-constructs
+Changed files: 44
+
+RUN_C18_STREAMING_LOD_TESTS.ps1
+RUN_C18_STREAMING_LOD_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c18-streaming-lod-dormant-constructs-files.txt
+config/construction/streaming-lod.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-01_C18_STREAMING_LOD_AND_DORMANT_CONSTRUCTS_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/streaming/construction_activity_level.gd
+scripts/construction/streaming/construction_activity_level.gd.uid
+scripts/construction/streaming/construction_activity_record.gd
+scripts/construction/streaming/construction_activity_record.gd.uid
+scripts/construction/streaming/construction_catch_up_plan.gd
+scripts/construction/streaming/construction_catch_up_plan.gd.uid
+scripts/construction/streaming/construction_construct_summary.gd
+scripts/construction/streaming/construction_construct_summary.gd.uid
+scripts/construction/streaming/construction_interest_sample.gd
+scripts/construction/streaming/construction_interest_sample.gd.uid
+scripts/construction/streaming/construction_lod_profile.gd
+scripts/construction/streaming/construction_lod_profile.gd.uid
+scripts/construction/streaming/construction_lod_projection_adapter.gd
+scripts/construction/streaming/construction_lod_projection_adapter.gd.uid
+scripts/construction/streaming/construction_streaming_budget_report.gd
+scripts/construction/streaming/construction_streaming_budget_report.gd.uid
+scripts/construction/streaming/construction_streaming_controller.gd
+scripts/construction/streaming/construction_streaming_controller.gd.uid
+scripts/construction/streaming/construction_streaming_persistence.gd
+scripts/construction/streaming/construction_streaming_persistence.gd.uid
+scripts/construction/streaming/construction_streaming_policy.gd
+scripts/construction/streaming/construction_streaming_policy.gd.uid
+scripts/construction/streaming/construction_streaming_request.gd
+scripts/construction/streaming/construction_streaming_request.gd.uid
+scripts/construction/streaming/construction_streaming_state.gd
+scripts/construction/streaming/construction_streaming_state.gd.uid
+tests/construction/fixtures/c18_streaming_fixture.gd
+tests/construction/fixtures/c18_streaming_fixture.gd.uid
+tests/construction/test_c18_streaming_lod_contracts.gd
+tests/construction/test_c18_streaming_lod_contracts.gd.uid
+tests/construction/test_c18_streaming_lod_integration.gd
+tests/construction/test_c18_streaming_lod_integration.gd.uid
+validation/c18-streaming-lod-dormant-constructs-validation.json

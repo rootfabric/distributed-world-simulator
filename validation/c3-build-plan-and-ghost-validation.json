@@ -1,0 +1,161 @@
+{
+  "schema": "planet_simulator.c3_build_plan_validation.v1",
+  "stage": "C3",
+  "status": "ACCEPTED_FIX1",
+  "delivery": {
+    "file_count": 42,
+    "manifest": "c3-build-plan-and-ghost-files.txt",
+    "archive_root": "lunar-world-double-godot/",
+    "unsafe_paths": 0,
+    "fix1_manifest": "c3-build-plan-and-ghost-fix1-files.txt"
+  },
+  "base": {
+    "stage": "C2B",
+    "branch": "feature/c2b-authoritative-item-graph-integration",
+    "c2a_commit": "68cf8b2",
+    "c2b_reviewed_sha256": "960D14B3D120EFF2BCBAD04BD15FA161E759C07348548E67E147C65B52B7787E",
+    "c2b_commit": "d5c9187"
+  },
+  "recommended_branch": "feature/c3-build-plan-and-ghost",
+  "engine": {
+    "version": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "linux-x86_64"
+  },
+  "scope": {
+    "immutable_build_plan": true,
+    "exact_source_item_projections": true,
+    "ordered_build_stages": true,
+    "weightless_ghost_projection": true,
+    "partial_construct_snapshots": true,
+    "partial_capabilities_suppressed": true,
+    "c2b_compatible_authoritative_execution": true,
+    "exact_stage_replay": true,
+    "post_commit_reconciliation": true,
+    "build_plan_persistence": true,
+    "minimal_builder_agent": true,
+    "gameplay_ui_integration": false,
+    "network_command_endpoint": false,
+    "canonical_precondition_comparison": true,
+    "numeric_variant_type_tolerance": true
+  },
+  "focused_results": {
+    "c1_contracts": {
+      "passed": true,
+      "assertions": 26
+    },
+    "c1_aggregate": {
+      "passed": true,
+      "assertions": 40
+    },
+    "c1_total": {
+      "passed": true,
+      "assertions": 66
+    },
+    "c2a_contracts": {
+      "passed": true,
+      "assertions": 46
+    },
+    "c2a_transactions": {
+      "passed": true,
+      "assertions": 91
+    },
+    "c2a_total": {
+      "passed": true,
+      "assertions": 137
+    },
+    "c3_contracts": {
+      "passed": true,
+      "assertions": 80
+    },
+    "c3_integration": {
+      "passed": true,
+      "assertions": 114
+    },
+    "c3_total": {
+      "passed": true,
+      "assertions": 194
+    },
+    "editor_import_parse": {
+      "passed": true
+    }
+  },
+  "covered_scenarios": [
+    "immutable checksum-protected BuildPlan",
+    "monotonic cumulative stage content",
+    "exact source item projections and material allocations",
+    "weightless non-item ghost before construction",
+    "foundation partial construct",
+    "frame partial construct",
+    "commissioning to operational construct",
+    "partial capability suppression",
+    "required builder capability gate",
+    "deterministic stage transaction checksum",
+    "exact stage replay without duplicate consumption",
+    "changed operation ID rejected for completed stage",
+    "failure after authoritative commit before ghost update",
+    "ghost reconciliation from authoritative ConstructSnapshot",
+    "operation binding after crash recovery",
+    "build plan store checksum and transactional load",
+    "cancel before construction",
+    "divergent construct rejection",
+    "minimal builder agent executing the same BuildPlan",
+    "canonical construct precondition comparison across int/float Variant normalization",
+    "canonical item precondition comparison across int/float revision normalization"
+  ],
+  "world_regression_manifest": {
+    "declared_test_count_expected": 107,
+    "unique_test_count_static": 107,
+    "expected_step_count": 110,
+    "c3_tests_present": 2
+  },
+  "limitations": [
+    "The complete C2B production/M0 dependency tree and full repository were not present in the isolated workspace.",
+    "Focused C3 tests executed the production C3 contracts and process against the accepted C2A atomic adapter, whose apply_plan/get_operation_result interface is shared by C2B.",
+    "External acceptance must rerun C2B, network/runtime, world regression and main-scene CLI in the complete checkout.",
+    "C3 v1 uses fully resolved execution plans; reusable definitions and late material allocation are C4/future work.",
+    "Material allocations cannot exhaust a stack because C2A v1 models consumption as an UPDATE mutation.",
+    "Ghost and BuildPlan are not yet exposed through gameplay UI or a network command endpoint."
+  ],
+  "acceptance_required": [
+    "RUN_C1_CONSTRUCTION_KERNEL_TESTS.ps1",
+    "RUN_C2A_CONSTRUCTION_ITEM_GRAPH_TESTS.ps1",
+    "RUN_C2B_AUTHORITATIVE_ITEM_GRAPH_TESTS.ps1",
+    "RUN_C3_BUILD_PLAN_TESTS.ps1",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "git diff --check"
+  ],
+  "review_iteration": "fix1",
+  "review_status": "ACCEPTED",
+  "review_fix1": {
+    "blocker": "CONSTRUCT_PRECONDITION_MISMATCH after canonical persistence changed numeric Variant types",
+    "root_cause": "The C2A in-memory adapter compared raw Dictionary values for construct and item preconditions.",
+    "resolution": "Compare both construct and item preconditions through NetworkContractUtils.canonical_json().",
+    "regression_test": "test_c3_build_plan_integration.gd::_test_canonical_precondition_comparison",
+    "local_result": {
+      "c3_contracts": 80,
+      "c3_integration": 114,
+      "c3_total": 194,
+      "c1_total": 66,
+      "c2a_total": 137,
+      "editor_import_parse": true
+    },
+    "external_required": [
+      "C2B compatibility",
+      "Network/runtime regression",
+      "World regression",
+      "Main-scene CLI"
+    ]
+  },
+  "external_acceptance": {
+    "c2b_total": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": {
+      "passed": true,
+      "tests": "107/107",
+      "steps": 110
+    },
+    "reviewed_sha256": "2296f48f0f31c8d4feb9290e0973d27dd4b4f85ed9c7f29361f28156b82ac256"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "c1-semantic-construction-kernel",
+  "status": "FOCUSED_PASS",
+  "base": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "commit": "2879fdb7134032f645ffc5c98c0535aecfc09caf",
+    "branch_recommendation": "feature/c1-semantic-construction-kernel"
+  },
+  "scope": {
+    "runtime_integration": false,
+    "canonical_item_graph_mutation": false,
+    "new_construction_domain": true,
+    "documentation": true,
+    "table_vertical_slice": true
+  },
+  "engine": {
+    "version": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "platform": "Linux x86_64"
+  },
+  "tests": {
+    "editor_import_parse": "PASS",
+    "construction_contracts": {
+      "status": "PASS",
+      "assertions": 26
+    },
+    "construct_aggregate": {
+      "status": "PASS",
+      "assertions": 40
+    },
+    "focused_total": {
+      "status": "PASS",
+      "tests": 2,
+      "assertions": 66
+    },
+    "shell_syntax": "PASS",
+    "json_validation": "PASS",
+    "uid_validation": "PASS",
+    "trailing_whitespace": "PASS"
+  },
+  "limitations": [
+    "The GitHub branch was not published because the connector write permission was declined.",
+    "A full repository checkout was unavailable in the execution container, so the existing full regression suite was not run.",
+    "Focused tests used the exact canonical network_contract_utils.gd from base commit 2879fdb and the project double-precision Godot binary."
+  ]
+}

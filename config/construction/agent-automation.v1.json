@@ -1,0 +1,14 @@
+{
+  "schema": "planet_simulator.construction_agent_automation_config.v1",
+  "default_reservation_lease_ticks": 100,
+  "maximum_steps_per_run": 64,
+  "supported_goal_kinds": [
+    "BUILD_COMPOSITE",
+    "REPAIR_CONSTRUCT",
+    "SALVAGE_CONSTRUCT"
+  ],
+  "fabrication_fallback": true,
+  "procurement_fallback": true,
+  "require_distributed_authority_route": true,
+  "preserve_terminal_operation_replay": true
+}

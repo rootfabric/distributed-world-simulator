@@ -1,0 +1,49 @@
+Checkpoint: C4 — CompositeDefinition
+Status: ACCEPTED — fix1
+Base: C3 fix1 ACCEPTED over C2B @ d5c9187
+Recommended branch: feature/c4-composite-definition
+Changed files: 43
+
+RUN_C4_COMPOSITE_DEFINITION_TESTS.ps1
+RUN_C4_COMPOSITE_DEFINITION_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c4-composite-definition-files.txt
+c4-composite-definition-fix1-files.txt
+config/construction/construction-build-plan-and-ghost.v1.json
+config/construction/construction-composite-definition.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C4_COMPOSITE_DEFINITION_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/build/construction_stage_snapshot_builder.gd
+scripts/construction/composites/composite_bond_template.gd
+scripts/construction/composites/composite_bond_template.gd.uid
+scripts/construction/composites/composite_exposed_port.gd
+scripts/construction/composites/composite_exposed_port.gd.uid
+scripts/construction/composites/composite_parameter_definition.gd
+scripts/construction/composites/composite_parameter_definition.gd.uid
+scripts/construction/composites/composite_part_slot.gd
+scripts/construction/composites/composite_part_slot.gd.uid
+scripts/construction/composites/composite_stage_template.gd
+scripts/construction/composites/composite_stage_template.gd.uid
+scripts/construction/composites/construction_composite_build_plan_compiler.gd
+scripts/construction/composites/construction_composite_build_plan_compiler.gd.uid
+scripts/construction/composites/construction_composite_definition.gd
+scripts/construction/composites/construction_composite_definition.gd.uid
+scripts/construction/composites/construction_composite_definition_extractor.gd
+scripts/construction/composites/construction_composite_definition_extractor.gd.uid
+scripts/construction/composites/construction_composite_instantiation.gd
+scripts/construction/composites/construction_composite_instantiation.gd.uid
+scripts/construction/composites/construction_composite_persistence.gd
+scripts/construction/composites/construction_composite_persistence.gd.uid
+scripts/construction/composites/construction_composite_registry.gd
+scripts/construction/composites/construction_composite_registry.gd.uid
+tests/construction/fixtures/c4_reusable_table_fixture.gd
+tests/construction/fixtures/c4_reusable_table_fixture.gd.uid
+tests/construction/test_c4_composite_definition_contracts.gd
+tests/construction/test_c4_composite_definition_contracts.gd.uid
+tests/construction/test_c4_composite_definition_integration.gd
+tests/construction/test_c4_composite_definition_integration.gd.uid
+validation/c3-build-plan-and-ghost-validation.json
+validation/c4-composite-definition-validation.json

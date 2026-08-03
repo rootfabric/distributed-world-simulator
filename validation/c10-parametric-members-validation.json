@@ -1,0 +1,105 @@
+{
+  "schema": "planet_simulator.c10_parametric_members_validation.v1",
+  "checkpoint": "C10_PARAMETRIC_MEMBERS",
+  "status": "ACCEPTED",
+  "base": {
+    "stage": "C9_ACCEPTED",
+    "c9_commit": "8d8bf77",
+    "reviewed_sha256": "062dea4395947c4bb969fe4628621e1d07208c01eb935912a958a98c5cbddf9c"
+  },
+  "branch": "feature/c10-parametric-members",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_assertions": 225,
+    "c8_assertions": 221,
+    "c9_assertions": 204,
+    "c10_contract_assertions": 155,
+    "c10_integration_assertions": 84,
+    "c10_total_assertions": 239,
+    "locally_verified_total_assertions": 1976
+  },
+  "member_kinds": [
+    "BEAM",
+    "CABLE",
+    "LAYERED_WALL",
+    "PANEL",
+    "PIPE"
+  ],
+  "contracts": {
+    "materials_are_versioned_checksum_dtos": true,
+    "definitions_have_exact_parameter_sets_and_limits": true,
+    "instances_pin_definition_version_and_checksum": true,
+    "geometry_mass_and_material_usage_are_deterministic": true,
+    "int_float_parameter_equivalence_is_canonical": true,
+    "layered_material_usage_is_aggregated": true,
+    "item_projection_remains_item_graph_native": true,
+    "fabrication_recipe_uses_calculated_stock_units": true,
+    "fabricated_output_enters_c3_build_plan": true,
+    "c5_capabilities_are_member_kind_driven": true,
+    "c9_split_repair_preserves_parametric_component": true,
+    "segmentation_conserves_mass_volume_and_materials": true,
+    "repair_requires_all_segment_checksums": true,
+    "catalog_and_store_persistence_are_transactional": true
+  },
+  "vertical_slices": {
+    "fabrication": "S355 beam compiled, fabricated through C8, emitted as ItemInstance, then consumed by C3 BuildPlan",
+    "damage_repair": "Parametric bridge arm survives C9 split and repair with the same item and parametric checksums",
+    "segmentation": "8 metre beam segmented into 3+2+3 metres with conservative metrics and deterministic repair"
+  },
+  "world_manifest": {
+    "expected_tests": 121,
+    "expected_steps": 124,
+    "c10_tests_expected_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused integration: complete production item-domain dependency tree is absent from the isolated snapshot",
+    "Network N0-M4 regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 121,
+    "expected_world_steps": 124,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 154 unique UIDs in isolated workspace",
+    "manifest": "PASS — 50/50 unique files",
+    "world_runner_manifest": "PASS — 121/121 unique tests, C10 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — final archive overlay verified 50/50",
+    "byte_exact_archive_replay": "PASS — 50/50"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c10-parametric-members-files.txt",
+    "changed_files": 50
+  },
+  "external_acceptance": {
+    "c2b_assertions": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": "PASS — 121/121 tests, 124 steps",
+    "git_diff_check": "PASS",
+    "manifest": "50/50 unique"
+  }
+}

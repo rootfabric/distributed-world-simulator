@@ -1,0 +1,88 @@
+{
+  "schema": "planet_simulator.construction_fabrication_cell_manifest.v1",
+  "stage": "C8",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base_stage": "C7_ACCEPTED",
+  "base_c6_commit": "2837835",
+  "recommended_branch": "feature/c8-fabrication-cell",
+  "paradigm": {
+    "item_graph_is_authoritative_for_materials_and_products": true,
+    "fabrication_mutations_use_c2a_c2b_boundary": true,
+    "machine_state_is_construct_snapshot_backed": true,
+    "recipe_versions_are_immutable": true,
+    "jobs_pin_recipe_machine_and_item_bindings": true,
+    "reservation_and_completion_are_atomic_plans": true,
+    "progress_operations_are_idempotent": true,
+    "crash_reconcile_prevents_double_output": true,
+    "fabricated_items_reenter_normal_build_plans": true,
+    "runtime_animation_and_physics_are_out_of_scope": true
+  },
+  "contracts": [
+    "planet_simulator.construction_fabrication_recipe.v1",
+    "planet_simulator.construction_fabrication_catalog.v1",
+    "planet_simulator.construction_fabrication_machine_definition.v1",
+    "planet_simulator.construction_fabrication_machine_profile.v1",
+    "planet_simulator.construction_fabrication_job.v1",
+    "planet_simulator.construction_fabrication_queue_store.v1",
+    "planet_simulator.construction_fabrication_state.v1"
+  ],
+  "transaction_commands": [
+    "FABRICATION_RESERVE",
+    "FABRICATION_COMPLETE",
+    "FABRICATION_RELEASE"
+  ],
+  "item_mutation_purposes": [
+    "TRANSFER_FABRICATION_INPUT",
+    "CONSUME_FABRICATION_INPUT",
+    "CREATE_FABRICATED_ITEM"
+  ],
+  "machine_states": [
+    "ONLINE",
+    "DEGRADED",
+    "OFFLINE"
+  ],
+  "job_states": [
+    "QUEUED",
+    "RESERVED",
+    "PROCESSING",
+    "BLOCKED",
+    "COMPLETED",
+    "CANCELLED"
+  ],
+  "machine_capabilities": [
+    "FABRICATION_CELL",
+    "MATERIAL_INPUT",
+    "PRODUCT_OUTPUT"
+  ],
+  "machine_actions": [
+    "QUEUE_FABRICATION_JOB",
+    "START_FABRICATION_JOB",
+    "ADVANCE_FABRICATION_JOB",
+    "COMPLETE_FABRICATION_JOB",
+    "CANCEL_FABRICATION_JOB"
+  ],
+  "prototype": "POWERED_CNC_CELL_PRODUCING_STRUCTURAL_BEAM",
+  "focused_tests": [
+    "res://tests/construction/test_c8_fabrication_cell_contracts.gd",
+    "res://tests/construction/test_c8_fabrication_cell_integration.gd"
+  ],
+  "focused_assertions": {
+    "contracts": 91,
+    "integration": 130,
+    "total": 221
+  },
+  "expected_world_profile": {
+    "tests": 117,
+    "steps": 120
+  },
+  "runtime_machine_animation": false,
+  "runtime_process_simulation": false,
+  "network_command_endpoint": false,
+  "runtime_ui_integration": false,
+  "next_stage": "C9_DAMAGE_SPLIT_REPAIR",
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "delivery": {
+    "manifest": "c8-fabrication-cell-files.txt",
+    "overlay_only": true
+  }
+}

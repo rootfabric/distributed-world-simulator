@@ -1,0 +1,25 @@
+{
+  "schema": "planet_simulator.construction_authoritative_item_graph_manifest.v1",
+  "stage": "C2B",
+  "status": "ACCEPTED",
+  "base_stage": "C2A",
+  "base_commit": "68cf8b2",
+  "recommended_branch": "feature/c2b-authoritative-item-graph-integration",
+  "authority": {
+    "m0_multi_aggregate_transaction": true,
+    "production_item_registry": true,
+    "production_container_registry": true,
+    "shared_item_operation_ledger": true,
+    "m0_first_recovery": true,
+    "separate_construct_authority_revision": true
+  },
+  "runtime_ui_integration": false,
+  "prototype": "AUTHORITATIVE_TABLE_ASSEMBLY_AND_DECONSTRUCTION",
+  "focused_tests": [
+    "res://tests/construction/test_c2b_authoritative_item_graph_contracts.gd",
+    "res://tests/construction/test_c2b_authoritative_item_graph_integration.gd"
+  ],
+  "roadmap": "res://docs/plans/CONSTRUCTION_MAP_RU.md",
+  "next_stage": "C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION_IMPLEMENTED_CANDIDATE",
+  "accepted_delivery_sha256": "960D14B3D120EFF2BCBAD04BD15FA161E759C07348548E67E147C65B52B7787E"
+}

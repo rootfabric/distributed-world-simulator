@@ -1,0 +1,52 @@
+Checkpoint: C19 — Agent Construction and Automation API
+Status: IMPLEMENTED CANDIDATE
+Base: C18 ACCEPTED, over C16 @ a4376cd
+Recommended branch: feature/c19-agent-construction-automation-api
+Changed files: 46
+
+RUN_C19_AGENT_AUTOMATION_TESTS.ps1
+RUN_C19_AGENT_AUTOMATION_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c19-agent-construction-automation-files.txt
+config/construction/agent-automation.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-08-02_C19_AGENT_CONSTRUCTION_AND_AUTOMATION_API_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_POST_C12_ROADMAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/agents/construction_agent_automation_api.gd
+scripts/construction/agents/construction_agent_automation_api.gd.uid
+scripts/construction/agents/construction_agent_bom.gd
+scripts/construction/agents/construction_agent_bom.gd.uid
+scripts/construction/agents/construction_agent_bom_line.gd
+scripts/construction/agents/construction_agent_bom_line.gd.uid
+scripts/construction/agents/construction_agent_command_factory.gd
+scripts/construction/agents/construction_agent_command_factory.gd.uid
+scripts/construction/agents/construction_agent_executor.gd
+scripts/construction/agents/construction_agent_executor.gd.uid
+scripts/construction/agents/construction_agent_goal.gd
+scripts/construction/agents/construction_agent_goal.gd.uid
+scripts/construction/agents/construction_agent_persistence.gd
+scripts/construction/agents/construction_agent_persistence.gd.uid
+scripts/construction/agents/construction_agent_plan.gd
+scripts/construction/agents/construction_agent_plan.gd.uid
+scripts/construction/agents/construction_agent_planner.gd
+scripts/construction/agents/construction_agent_planner.gd.uid
+scripts/construction/agents/construction_agent_reservation.gd
+scripts/construction/agents/construction_agent_reservation.gd.uid
+scripts/construction/agents/construction_agent_reservation_store.gd
+scripts/construction/agents/construction_agent_reservation_store.gd.uid
+scripts/construction/agents/construction_agent_step.gd
+scripts/construction/agents/construction_agent_step.gd.uid
+scripts/construction/agents/construction_agent_work_item.gd
+scripts/construction/agents/construction_agent_work_item.gd.uid
+scripts/construction/agents/construction_agent_work_queue.gd
+scripts/construction/agents/construction_agent_work_queue.gd.uid
+tests/construction/fixtures/c19_agent_automation_fixture.gd
+tests/construction/fixtures/c19_agent_automation_fixture.gd.uid
+tests/construction/test_c19_agent_automation_contracts.gd
+tests/construction/test_c19_agent_automation_contracts.gd.uid
+tests/construction/test_c19_agent_automation_integration.gd
+tests/construction/test_c19_agent_automation_integration.gd.uid
+validation/c19-agent-construction-automation-validation.json

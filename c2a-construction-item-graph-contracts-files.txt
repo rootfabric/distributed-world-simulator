@@ -1,0 +1,37 @@
+PlanetSimulator C2A Item Graph Contracts
+Base commit: 2879fdb7134032f645ffc5c98c0535aecfc09caf
+Branch: feature/c1-semantic-construction-kernel
+Previous checkpoint: C1 fix1 ACCEPTED
+Delivery status: IMPLEMENTED CANDIDATE
+Changed files: 30
+
+RUN_C2A_CONSTRUCTION_ITEM_GRAPH_TESTS.ps1
+RUN_C2A_CONSTRUCTION_ITEM_GRAPH_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c2a-construction-item-graph-contracts-files.txt
+config/construction/construction-item-graph-contracts.v1.json
+config/construction/semantic-construction-kernel.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C2A_ITEM_GRAPH_CONTRACTS_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/item_graph/construction_construct_mutation.gd
+scripts/construction/item_graph/construction_construct_mutation.gd.uid
+scripts/construction/item_graph/construction_item_graph_transaction_port.gd
+scripts/construction/item_graph/construction_item_graph_transaction_port.gd.uid
+scripts/construction/item_graph/construction_item_mutation.gd
+scripts/construction/item_graph/construction_item_mutation.gd.uid
+scripts/construction/item_graph/construction_item_projection.gd
+scripts/construction/item_graph/construction_item_projection.gd.uid
+scripts/construction/item_graph/construction_item_transaction_plan.gd
+scripts/construction/item_graph/construction_item_transaction_plan.gd.uid
+scripts/construction/item_graph/construction_item_transaction_planner.gd
+scripts/construction/item_graph/construction_item_transaction_planner.gd.uid
+scripts/construction/item_graph/in_memory_construction_item_graph_adapter.gd
+scripts/construction/item_graph/in_memory_construction_item_graph_adapter.gd.uid
+tests/construction/test_c2a_item_graph_contracts.gd
+tests/construction/test_c2a_item_graph_contracts.gd.uid
+tests/construction/test_c2a_item_graph_transactions.gd
+tests/construction/test_c2a_item_graph_transactions.gd.uid
+validation/c2a-construction-item-graph-contracts-validation.json

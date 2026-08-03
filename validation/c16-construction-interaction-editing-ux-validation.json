@@ -1,0 +1,72 @@
+{
+  "schema": "planet_simulator.construction_checkpoint_validation.v1",
+  "checkpoint": "C16_CONSTRUCTION_INTERACTION_AND_EDITING_UX",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "base": {
+    "checkpoint": "C15_EXECUTABLE_UTILITIES_AND_MACHINES",
+    "decision": "ACCEPTED"
+  },
+  "branch": "feature/c16-construction-interaction-editing-ux",
+  "focused": {
+    "contracts": {
+      "status": "PASS",
+      "assertions": 39
+    },
+    "integration": {
+      "status": "PASS",
+      "assertions": 32
+    },
+    "total_assertions": 71,
+    "editor_parse": "PASS",
+    "headless_scene_tree": "PASS"
+  },
+  "coverage": [
+    "SEMANTIC_SURFACE_AND_PORT_SNAPPING",
+    "DETERMINISTIC_PRIORITY_DISTANCE_TIEBREAK",
+    "GRID_SNAPPING",
+    "PLACEMENT_GHOST",
+    "C11_CONTROL_POINT_GIZMO",
+    "AXIS_MASK",
+    "BUILD_MATERIAL_OVERLAY",
+    "REPAIR_MATERIAL_OVERLAY",
+    "AUTHORITATIVE_ERROR_DISPLAY",
+    "C12_ONLY_COMMAND_BOUNDARY"
+  ],
+  "delivery": {
+    "manifest": "c16-construction-interaction-editing-ux-files.txt",
+    "world_test_entries": 2,
+    "expected_world_test_count": 133,
+    "expected_world_steps": 136,
+    "file_count": 39
+  },
+  "external_acceptance_required": {
+    "C2B": {
+      "assertions": 258
+    },
+    "C9": {
+      "assertions": 204
+    },
+    "network": "N0-M4 PASS",
+    "world_regression": "133/133 tests, 136 steps",
+    "main_scene_cli": "6/6",
+    "git_diff_check": "PASS"
+  },
+  "compatibility_locally_executed": {
+    "C1": 66,
+    "C2A": 137,
+    "C3": 194,
+    "C4": 268,
+    "C5": 204,
+    "C6": 218,
+    "C7": 225,
+    "C8": 221,
+    "C10": 239,
+    "C11": 199,
+    "C12": 124,
+    "C13": 124,
+    "C14": 168,
+    "C15": 215,
+    "status": "PASS",
+    "total_with_C16": 2673
+  }
+}

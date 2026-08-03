@@ -1,0 +1,113 @@
+{
+  "schema": "planet_simulator.c8_fabrication_cell_validation.v1",
+  "checkpoint": "C8_FABRICATION_CELL",
+  "status": "ACCEPTED",
+  "base": {
+    "stage": "C7_ACCEPTED",
+    "c6_commit": "2837835",
+    "c7_reviewed_sha256": "5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87",
+    "c7_commit": "923bfe1"
+  },
+  "branch": "feature/c8-fabrication-cell",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "focused_profile": {
+    "editor_parse": "PASS",
+    "c1_assertions": 66,
+    "c2a_assertions": 137,
+    "c3_assertions": 194,
+    "c4_assertions": 268,
+    "c5_assertions": 204,
+    "c6_assertions": 218,
+    "c7_assertions": 225,
+    "c8_contract_assertions": 91,
+    "c8_integration_assertions": 130,
+    "c8_total_assertions": 221,
+    "locally_verified_total_assertions": 1533
+  },
+  "contracts": {
+    "recipes_are_versioned_and_immutable": true,
+    "jobs_pin_recipe_machine_and_item_bindings": true,
+    "machine_profile_is_construct_behavior_utility_derived": true,
+    "offline_machine_cannot_mutate_item_graph": true,
+    "reservation_uses_authoritative_item_transfer": true,
+    "completion_consumes_and_creates_atomically": true,
+    "exact_stack_is_deleted": true,
+    "partial_stack_quantity_and_revision_advance": true,
+    "fabricated_output_has_origin_provenance": true,
+    "cancel_restores_original_relations": true,
+    "progress_operations_are_idempotent": true,
+    "recipe_version_pinning_survives_catalog_update": true,
+    "authoritative_completion_reconciles_queue_after_crash": true,
+    "exact_replay_cannot_duplicate_output": true,
+    "fabricated_output_is_valid_c3_build_plan_input": true,
+    "integral_float_item_components_compare_canonically": true,
+    "catalog_and_queue_persistence_are_transactional": true
+  },
+  "prototype": {
+    "kind": "POWERED_CNC_FABRICATION_CELL",
+    "provider_parts": 2,
+    "required_bonds": 2,
+    "required_behavior_capability": "WORKSTATION",
+    "required_utility": "spatial-utility/power",
+    "recipe": "fabrication-recipe/structural-beam@1",
+    "input_requirements": [
+      "coolant x1",
+      "steel_ingot/S355 x3"
+    ],
+    "output_products": [
+      "beam x1"
+    ],
+    "work_units": 10
+  },
+  "world_manifest": {
+    "declared_tests": 117,
+    "unique_tests": 117,
+    "expected_steps": 120,
+    "c8_tests_present_once": true
+  },
+  "not_run_in_isolated_workspace": [
+    "C2B focused profile: production M0 dependency tree is absent from the isolated construction workspace",
+    "network/runtime regression",
+    "full world regression",
+    "main-scene CLI"
+  ],
+  "acceptance_gate": {
+    "expected_c2b_assertions": 258,
+    "expected_world_tests": 117,
+    "expected_world_steps": 120,
+    "expected_main_scene_cli": "6/6 PASS"
+  },
+  "static_checks": {
+    "git_diff_check": "PASS",
+    "json": "PASS",
+    "shell_syntax": "PASS — Bash; PowerShell runner structural validation PASS",
+    "utf8_lf": "PASS",
+    "trailing_whitespace": "PASS",
+    "conflict_markers": "PASS",
+    "nul_bytes": "PASS",
+    "uid_uniqueness": "PASS — 130 unique UIDs in isolated workspace",
+    "manifest": "PASS — 45/45 unique files",
+    "world_runner_manifest": "PASS — 117/117 unique tests, C8 2/2 exactly once",
+    "zip_integrity": "PASS",
+    "unsafe_zip_paths": "PASS — 0",
+    "byte_exact_replay": "PASS — 45/45 files"
+  },
+  "delivery": {
+    "archive_layout": "lunar-world-double-godot/<project paths>",
+    "overlay_only": true,
+    "manifest": "c8-fabrication-cell-files.txt",
+    "changed_files": 45
+  },
+  "external_acceptance": {
+    "reviewed_sha256": "977056921d0da4fe148a9496524b90908afe1aafcd3b2d95f7b1fbe1681f477e",
+    "c2b_assertions": 258,
+    "network_n0_m4": "PASS",
+    "world_regression": "117/117 tests, 120 steps PASS",
+    "main_scene_cli": "6/6 PASS",
+    "git_diff_check": "PASS"
+  }
+}

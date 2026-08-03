@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.construction_executable_utilities_config.v1",
+  "utility_kinds": {
+    "POWER": {"unit": "KWH"},
+    "WATER": {"unit": "L"},
+    "AIR": {"unit": "M3"},
+    "HEAT": {"unit": "MJ"},
+    "DATA": {"unit": "MB"}
+  },
+  "allocation": {
+    "priority_min": 0,
+    "priority_max": 1000,
+    "minimum_delivery_is_atomic": true,
+    "source_order": ["SOURCE", "STORAGE"],
+    "numeric_precision_digits": 9
+  },
+  "storage": {
+    "charge_after_demands": true,
+    "discharge_before_low_priority_shedding": true
+  },
+  "fabrication": {
+    "requires_checksum_pinned_utility_lease": true,
+    "work_units_are_limited_by_delivered_resources": true,
+    "operation_replay_is_idempotent": true
+  },
+  "authority": {
+    "c7_utility_state_is_semantic_only": true,
+    "c15_execution_profile_is_rebuildable": true,
+    "c8_item_graph_transactions_remain_authoritative": true
+  }
+}

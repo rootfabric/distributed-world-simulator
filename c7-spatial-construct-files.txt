@@ -1,0 +1,56 @@
+Checkpoint: C7 — Spatial Construct
+Status: ACCEPTED
+Base: C6 @ 2837835, C5 @ 29cd8b1
+Recommended branch: feature/c7-spatial-construct
+Reviewed SHA-256: 5a4cebb21587ed8c4b54852145b6a018445438866bc1908d5cf9bcc4fe9aee87
+Changed files: 49
+
+RUN_C7_SPATIAL_CONSTRUCT_TESTS.ps1
+RUN_C7_SPATIAL_CONSTRUCT_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c6-mobile-construct-files.txt
+c7-spatial-construct-files.txt
+config/construction/construction-mobile-construct.v1.json
+config/construction/construction-spatial-construct.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C6_MOBILE_CONSTRUCT_RU.md
+docs/checkpoints/2026-07-31_C7_SPATIAL_CONSTRUCT_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/spatial/construction_spatial_command.gd
+scripts/construction/spatial/construction_spatial_command.gd.uid
+scripts/construction/spatial/construction_spatial_command_authorizer.gd
+scripts/construction/spatial/construction_spatial_command_authorizer.gd.uid
+scripts/construction/spatial/construction_spatial_compiler.gd
+scripts/construction/spatial/construction_spatial_compiler.gd.uid
+scripts/construction/spatial/construction_spatial_opening_definition.gd
+scripts/construction/spatial/construction_spatial_opening_definition.gd.uid
+scripts/construction/spatial/construction_spatial_opening_state.gd
+scripts/construction/spatial/construction_spatial_opening_state.gd.uid
+scripts/construction/spatial/construction_spatial_persistence.gd
+scripts/construction/spatial/construction_spatial_persistence.gd.uid
+scripts/construction/spatial/construction_spatial_profile.gd
+scripts/construction/spatial/construction_spatial_profile.gd.uid
+scripts/construction/spatial/construction_spatial_profile_store.gd
+scripts/construction/spatial/construction_spatial_profile_store.gd.uid
+scripts/construction/spatial/construction_spatial_section_definition.gd
+scripts/construction/spatial/construction_spatial_section_definition.gd.uid
+scripts/construction/spatial/construction_spatial_section_state.gd
+scripts/construction/spatial/construction_spatial_section_state.gd.uid
+scripts/construction/spatial/construction_spatial_space_definition.gd
+scripts/construction/spatial/construction_spatial_space_definition.gd.uid
+scripts/construction/spatial/construction_spatial_space_state.gd
+scripts/construction/spatial/construction_spatial_space_state.gd.uid
+scripts/construction/spatial/construction_spatial_utility_definition.gd
+scripts/construction/spatial/construction_spatial_utility_definition.gd.uid
+scripts/construction/spatial/construction_spatial_utility_state.gd
+scripts/construction/spatial/construction_spatial_utility_state.gd.uid
+tests/construction/fixtures/c7_spatial_house_fixture.gd
+tests/construction/fixtures/c7_spatial_house_fixture.gd.uid
+tests/construction/test_c7_spatial_construct_contracts.gd
+tests/construction/test_c7_spatial_construct_contracts.gd.uid
+tests/construction/test_c7_spatial_construct_integration.gd
+tests/construction/test_c7_spatial_construct_integration.gd.uid
+validation/c6-mobile-construct-validation.json
+validation/c7-spatial-construct-validation.json

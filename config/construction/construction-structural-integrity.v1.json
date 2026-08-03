@@ -1,0 +1,30 @@
+{
+  "schema": "planet_simulator.construction_structural_integrity_config.v1",
+  "compiler_id": "construction-structural-integrity-compiler",
+  "compiler_version": 1,
+  "algorithm": "deterministic-shortest-support-path-v1",
+  "default_gravity_m_s2": 9.80665,
+  "default_safety_factor": 1.0,
+  "default_degraded_capacity_factor": 0.5,
+  "default_collapse_utilization": 1.5,
+  "default_maximum_cascade_steps": 16,
+  "supported_profile_states": [
+    "STABLE",
+    "OVERLOADED",
+    "UNSUPPORTED",
+    "FAILED"
+  ],
+  "capacity_sources": {
+    "part": "part.metadata.structural.capacity_n",
+    "part_buckling_limit": "part.metadata.structural.buckling_capacity_n",
+    "bond": "bond.strength_n"
+  },
+  "invariants": {
+    "authoritative_source_is_construct_snapshot": true,
+    "load_profiles_are_rebuildable": true,
+    "all_failure_application_uses_c9": true,
+    "mesh_and_physics_are_not_structural_authority": true,
+    "exact_replay_does_not_repeat_damage_commit": true,
+    "split_item_identity_is_conserved": true
+  }
+}

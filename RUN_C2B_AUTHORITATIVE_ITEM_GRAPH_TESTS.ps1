@@ -1,0 +1,46 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$GodotPath
+)
+
+$ErrorActionPreference = "Stop"
+$ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
+$ReportPath = Join-Path $ReportDirectory "c2b-authoritative-item-graph-summary.json"
+New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
+
+$Tests = @(
+    "res://tests/construction/test_c2b_authoritative_item_graph_contracts.gd",
+    "res://tests/construction/test_c2b_authoritative_item_graph_integration.gd"
+)
+
+$Steps = @()
+$Passed = $false
+try {
+    $Started = [DateTime]::UtcNow
+    & $GodotPath --headless --editor --path $ProjectRoot --quit
+    if ($LASTEXITCODE -ne 0) { throw "C2B editor parse failed" }
+    $Steps += [ordered]@{ name = "editor_import_parse"; passed = $true; duration_seconds = ([DateTime]::UtcNow - $Started).TotalSeconds }
+
+    foreach ($Test in $Tests) {
+        $Started = [DateTime]::UtcNow
+        & $GodotPath --headless --path $ProjectRoot --script $Test
+        if ($LASTEXITCODE -ne 0) { throw "C2B test failed: $Test" }
+        $Steps += [ordered]@{ name = [IO.Path]::GetFileNameWithoutExtension($Test); target = $Test; passed = $true; duration_seconds = ([DateTime]::UtcNow - $Started).TotalSeconds }
+    }
+    $Passed = $true
+}
+finally {
+    [ordered]@{
+        schema = "planet_simulator.c2b_authoritative_item_graph_summary.v1"
+        checkpoint = "C2B_AUTHORITATIVE_ITEM_GRAPH_INTEGRATION"
+        passed = $Passed
+        declared_test_count = $Tests.Count
+        steps = $Steps
+        finished_at_utc = [DateTime]::UtcNow.ToString("o")
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ReportPath -Encoding utf8
+}
+
+if (-not $Passed) { exit 1 }
+Write-Host "C2B authoritative Item Graph profile passed."
+Write-Host "Report: $ReportPath"

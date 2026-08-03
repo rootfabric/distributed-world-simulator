@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.construction_item_graph_contracts_manifest.v1",
+  "stage": "C2A",
+  "status": "ACCEPTED",
+  "base_commit": "c2b9404",
+  "branch": "feature/c2a-item-graph-contracts",
+  "runtime_integration": false,
+  "production_store": false,
+  "item_relation_mapping": {
+    "kind": "ATTACHMENT",
+    "assembly_id": "construct_id",
+    "parent_item_id": "construct_root_item_id",
+    "socket_id": "part_id"
+  },
+  "contracts": [
+    "planet_simulator.construction_item_projection.v1",
+    "planet_simulator.construction_item_mutation.v1",
+    "planet_simulator.construction_construct_mutation.v1",
+    "planet_simulator.construction_item_transaction_plan.v1",
+    "planet_simulator.c2a_construction_item_graph_state.v1"
+  ],
+  "invariants": [
+    "CONSTRUCT_ROOT_CONSISTENCY",
+    "ITEM_IDENTITY_CONSERVATION",
+    "PART_BINDING_CONSISTENCY"
+  ],
+  "prototype": "TABLE_ASSEMBLY_AND_DECONSTRUCTION",
+  "next_stage": "C3_BUILD_PLAN_AND_GHOST_CONSTRUCTION_IMPLEMENTED_CANDIDATE",
+  "next_stage_gate": "C3_EXTERNAL_ACCEPTANCE",
+  "accepted_commit": "68cf8b2"
+}

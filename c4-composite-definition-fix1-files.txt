@@ -1,0 +1,13 @@
+Checkpoint: C4 — CompositeDefinition fix1
+Status: ACCEPTED
+Base: C3 @ 4917f55 + original C4 candidate
+Branch: feature/c4-composite-definition
+Changed files: 7
+
+c4-composite-definition-files.txt
+c4-composite-definition-fix1-files.txt
+docs/checkpoints/2026-07-31_C4_COMPOSITE_DEFINITION_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+tests/construction/test_c4_composite_definition_contracts.gd
+tests/construction/test_c4_composite_definition_integration.gd
+validation/c4-composite-definition-validation.json

@@ -1,0 +1,44 @@
+Checkpoint: C6 — Mobile Construct
+Status: ACCEPTED
+Base: C5 @ 29cd8b1
+Recommended branch: feature/c6-mobile-construct
+Changed files: 38
+
+RUN_C6_MOBILE_CONSTRUCT_TESTS.ps1
+RUN_C6_MOBILE_CONSTRUCT_TESTS.sh
+RUN_WORLD_REGRESSION_TESTS.ps1
+c6-mobile-construct-files.txt
+config/construction/construction-capability-affordance.v1.json
+config/construction/construction-mobile-construct.v1.json
+docs/architecture/CONSTRUCTION_PARADIGM_RU.md
+docs/checkpoints/2026-07-31_C5_CAPABILITY_AND_AFFORDANCE_COMPILATION_RU.md
+docs/checkpoints/2026-07-31_C6_MOBILE_CONSTRUCT_RU.md
+docs/plans/CONSTRUCTION_MAP_RU.md
+docs/plans/CONSTRUCTION_PROGRESS_LOG_RU.md
+docs/plans/CONSTRUCTION_ROADMAP_RU.md
+scripts/construction/mobile/construction_mobile_agent.gd
+scripts/construction/mobile/construction_mobile_agent.gd.uid
+scripts/construction/mobile/construction_mobile_command.gd
+scripts/construction/mobile/construction_mobile_command.gd.uid
+scripts/construction/mobile/construction_mobile_command_authorizer.gd
+scripts/construction/mobile/construction_mobile_command_authorizer.gd.uid
+scripts/construction/mobile/construction_mobile_compiler.gd
+scripts/construction/mobile/construction_mobile_compiler.gd.uid
+scripts/construction/mobile/construction_mobile_persistence.gd
+scripts/construction/mobile/construction_mobile_persistence.gd.uid
+scripts/construction/mobile/construction_mobile_profile.gd
+scripts/construction/mobile/construction_mobile_profile.gd.uid
+scripts/construction/mobile/construction_mobile_profile_store.gd
+scripts/construction/mobile/construction_mobile_profile_store.gd.uid
+scripts/construction/mobile/construction_mobile_subsystem_definition.gd
+scripts/construction/mobile/construction_mobile_subsystem_definition.gd.uid
+scripts/construction/mobile/construction_mobile_subsystem_state.gd
+scripts/construction/mobile/construction_mobile_subsystem_state.gd.uid
+tests/construction/fixtures/c6_mobile_rover_fixture.gd
+tests/construction/fixtures/c6_mobile_rover_fixture.gd.uid
+tests/construction/test_c6_mobile_construct_contracts.gd
+tests/construction/test_c6_mobile_construct_contracts.gd.uid
+tests/construction/test_c6_mobile_construct_integration.gd
+tests/construction/test_c6_mobile_construct_integration.gd.uid
+validation/c5-capability-affordance-validation.json
+validation/c6-mobile-construct-validation.json
