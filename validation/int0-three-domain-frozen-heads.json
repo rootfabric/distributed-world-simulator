@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.int0_frozen_heads.v1",
   "recorded_at": "2026-08-03T19:40:00+10:00",
-  "updated_at": "2026-08-03T20:14:30+10:00",
+  "updated_at": "2026-08-03T20:41:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "INT0_RL3_MW10_STAGING",
-  "status": "IN_PROGRESS_CONFLICT_RESOLUTION_REQUIRED",
+  "stage": "INT0_RL3_MW10_VALIDATION",
+  "status": "COMPOSED_STAGING_CANDIDATE_AWAITING_FULL_GATE",
   "main": {
     "branch": "main",
     "base_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
@@ -16,7 +16,8 @@
     "created_from_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
     "target_checkpoint": "v18.0.0-integration-int0-three-domain-base",
     "network_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
-    "network_stage_close_commit_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff"
+    "network_stage_close_commit_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
+    "current_status_document_commit_sha": "1c66fa71f77bdc1f94b7744f8e5b4a2ae414a359"
   },
   "network": {
     "branch": "feature/nx6-predicted-item-interactions",
@@ -45,15 +46,25 @@
       "RL0"
     ],
     "merge_mw10_separately": false,
-    "int0_stage": "IN_PROGRESS",
+    "int0_stage": "COMPOSED_STAGING_CANDIDATE",
     "staging_branch": "merge/int0-rl3-mw10",
     "staging_base_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
-    "staging_pull_request": 6,
-    "staging_pull_request_state": "OPEN_DRAFT_CONFLICTED",
-    "github_mergeable": false,
-    "reported_commits": 15,
-    "reported_changed_files": 361,
-    "required_action": "SEMANTIC_CONFLICT_RESOLUTION"
+    "superseded_conflicted_pull_request": 6,
+    "resolution_branch": "merge/int0-rl3-mw10-resolved",
+    "resolution_commit_sha": "c2e7c1e91993add2dd7aa9387519a391dfbb91ce",
+    "resolution_pull_request": 7,
+    "staging_merge_commit_sha": "515b179d276c59df1624fe640eb04464410bf974",
+    "composition_commit_sha": "ba1127ab24c4af0493d7445539387b9e9fee219a",
+    "validation_commit_sha": "fcf1a1d121e90afc05f6fd810656a5f8d32868c4",
+    "integration_pull_request": 8,
+    "integration_pull_request_state": "OPEN_DRAFT_MERGEABLE",
+    "github_mergeable": true,
+    "conflict_count": 6,
+    "wholesale_ours_theirs_used": false,
+    "non_conflicting_rl3_files_preserved_byte_exact": true,
+    "isolated_adapter_syntax_fixture": "PASS",
+    "full_staged_tree_gate": "PENDING",
+    "merged_into_integration": false
   },
   "construction_items": {
     "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
@@ -82,12 +93,12 @@
       "NX6"
     ],
     "active_domain": "RL3_WITH_MW10",
+    "active_stage": "FULL_STAGED_TREE_VALIDATION",
     "active_staging_branch": "merge/int0-rl3-mw10",
-    "source_branch": "feature/rl3-representation-aware-network-streaming",
-    "source_head_sha": "89ff51b3ee5f66f6548f8b97e271062daf09b5cf",
-    "staging_pull_request": 6,
+    "active_staging_head_sha": "fcf1a1d121e90afc05f6fd810656a5f8d32868c4",
+    "integration_pull_request": 8,
     "required_gate": "PENDING",
-    "merged_into_staging": false,
+    "merged_into_staging": true,
     "merged_into_integration": false
   },
   "required_rules": {
