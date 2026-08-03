@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.int0_uid_sidecars_fix_candidate_validation.v1",
+  "recorded_at": "2026-08-03T23:21:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base": {
+    "branch": "checkpoint/int0-three-domain-focused-pass-pre-uid",
+    "sha": "64e64a7fd55434389692ca6f4b46a18422ba5147",
+    "focused_status": "PASS"
+  },
+  "candidate": {
+    "branch": "fix/int0-import-uid-sidecars",
+    "sha": "6d45338f4db2a00aaf5a2f5587f1d1933a856adf",
+    "checkpoint_branch": "checkpoint/int0-uid-sidecars-fix-candidate",
+    "commit_message": "fix(integration): track generated Godot UID sidecars"
+  },
+  "scope": {
+    "changed_files": 157,
+    "uid_sidecars": 156,
+    "manifests": 1,
+    "other_files": 0,
+    "project_godot_modified": false,
+    "history_relation": "ONE_COMMIT_AHEAD_OF_BASE"
+  },
+  "delivery": {
+    "changed_only_archive": "int0-import-uid-sidecars-6d45338.zip",
+    "archive_files": 157,
+    "archive_bytes": 57315,
+    "archive_sha256": "7D5FC097FAF16A9D778A8FB24DA797C818C090EBBEBF296C0EFAA44090DF2DE9"
+  },
+  "github_verification": {
+    "commit_resolved": "PASS",
+    "commit_message_matches": "PASS",
+    "base_relation": "PASS",
+    "changed_path_scope": "PASS",
+    "manifest_present": "PASS"
+  },
+  "required_gate": {
+    "fresh_detached_checkout": "PENDING",
+    "editor_import": "PENDING",
+    "new_untracked_uid_count_expected": 0,
+    "project_godot_expected_unchanged": true,
+    "focused_profile": "PENDING",
+    "full_profile": "BLOCKED_UNTIL_GATE_PASS"
+  },
+  "acceptance_decision": "UID_FIX_CANDIDATE_AWAITING_CLEAN_IMPORT_AND_FOCUSED_RETEST",
+  "main_changed": false
+}
