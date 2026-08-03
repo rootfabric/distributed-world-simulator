@@ -1,6 +1,7 @@
 {
   "schema": "distributed_world_simulator.int0_focused_fix1_m5_join_binding_validation.v1",
   "recorded_at": "2026-08-03T21:47:00+10:00",
+  "updated_at": "2026-08-03T22:02:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "base_candidate": {
     "branch": "checkpoint/int0-three-domain-composed-candidate",
@@ -34,6 +35,9 @@
     "branch": "fix/int0-focused-m5-join-binding",
     "runtime_commit": "9c8e4f9d157ebf69756e33c0b51932ceac16f55f",
     "regression_contract_commit": "ee797c15f38365a0e974b3ce9c99993c812ed5fa",
+    "evidence_commit": "9345e52feba88050604c8f35187202d677fed9b2",
+    "pull_request": 12,
+    "staging_merge_commit": "4c594ec7660f0e83da07d8a3cd10914cde674aef",
     "strategy": "The production adapter explicitly computes Support.transport_bound_operation_id(_logical_player_id, join, _transport_session_id) immediately before delegating to the inherited NX6 process. The inherited runtime sends JOIN with the same value.",
     "dead_code_or_comment_only": false,
     "authority_changed": false,
@@ -45,7 +49,15 @@
     "exact_m5_source_fragment_present": "PASS",
     "process_local_tick_join_fragment_absent": "PASS",
     "int0_composition_regression_assertions_added": 3,
-    "godot_4_7_1_double_isolated_adapter_parse": "PASS",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_adapter_parse": "PASS",
+    "isolated_composition_contract": {
+      "assertions": 15,
+      "failures": 0,
+      "result": "PASS"
+    },
+    "github_mergeability": "PASS",
+    "github_merge": "PASS",
     "full_repository_focused_profile": "PENDING_LOCAL_RETEST"
   },
   "import_cleanliness_observation": {
