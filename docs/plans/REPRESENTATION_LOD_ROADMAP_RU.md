@@ -1,7 +1,7 @@
 # Representation LOD Roadmap — интеграция в Mutable Worlds и Construction
 
-**Принятая база:** RL1 Matter summary pyramid and dirty propagation.
-**Текущий этап:** MW9 Durable Distributed Handoff and Crash Recovery.
+**Принятая база:** MW9 Durable Distributed Handoff and Crash Recovery (`fix2`).
+**Текущий этап:** MW10 Cross-region Matter Transactions.
 **Архитектура:** `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md`.
 
 ## 1. Оптимальный порядок после MW8
@@ -13,9 +13,9 @@ RL0  unified representation contracts — ACCEPTED
  ↓
 RL1  Matter summary pyramid and dirty propagation — ACCEPTED
  ↓
-MW9  durable distributed handoff and crash recovery — CURRENT CANDIDATE
+MW9  durable distributed handoff and crash recovery — ACCEPTED (`fix2`)
  ↓
-MW10 cross-region matter transactions
+MW10 cross-region matter transactions — CURRENT CANDIDATE
  ↓
 RL2  Matter multiresolution meshing and cross-level transitions
  ↓
@@ -126,9 +126,12 @@ RL1 не строит coarse SDF samples или meshes. Этап принят; d
 - fail-closed MW8 runtime adapter и terminal reconciliation;
 - split-brain и multi-process crash tests.
 
-Representation cache остаётся необязательным и восстанавливаемым. После acceptance следующий этап — MW10.
+Representation cache остаётся необязательным и восстанавливаемым. MW9 принят с delivery `fix2`.
 
 ### MW10 — Cross-region Transactions
+
+Текущий candidate реализует deterministic participant ordering, atomic region reservations, distributed mass ledger, irreversible global commit decision, crash recovery, MW9 handoff interlock и единый post-commit invalidation batch. После acceptance следующий этап — RL2.
+
 
 - deterministic region ordering;
 - prepare/commit/rollback;

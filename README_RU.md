@@ -1,12 +1,12 @@
-# PlanetSimulator — MW9 durable handoff candidate
+# PlanetSimulator — MW10 cross-region Matter transactions candidate
 
-Текущий checkpoint: `v17.11.0-simulation-mw9-durable-handoff-recovery` поверх принятого RL1.
+Текущий checkpoint: `v17.12.0-simulation-mw10-cross-region-matter-transactions` поверх принятого MW9 `fix2`.
 
-MW9 сохраняет authority lease и append-only handoff journal атомарно, вводит exact fencing token, lease expiry/claim и детерминированное crash recovery. `COMMIT_DECIDED` необратим; transfer без durable decision после restart abort-ится. RL1 summary manifest переносится только как восстанавливаемый cache hint.
+MW10 атомарно резервирует весь набор authority-regions, проверяет распределённый mass ledger, сохраняет append-only prepare/commit/rollback journal и публикует единый RL0 invalidation batch только после глобального commit. До durable decision recovery abort-ит подготовленные regions; после `COMMIT_DECIDED` обязательно завершает commit. MW9 handoff зарезервированного region блокируется interlock.
 
-Focused runner: `RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1` или `.sh`.
+Focused runner: `RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.ps1` или `.sh`.
 
-Архитектура: `docs/architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md`.
+Архитектура: `docs/architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`.
 
 # PlanetSimulator
 

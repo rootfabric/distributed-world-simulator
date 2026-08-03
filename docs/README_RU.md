@@ -1,8 +1,14 @@
+## MW10 cross-region Matter transactions
+
+- [`architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`](architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md) — atomic reservations, distributed mass ledger, durable decision/recovery и global invalidation outbox.
+- [`architecture/adr/ADR-020-cross-region-matter-transactions.md`](architecture/adr/ADR-020-cross-region-matter-transactions.md) — решение о двухфазной multi-region transaction и handoff interlock.
+- [`checkpoints/2026-08-03_V17_12_0_SIMULATION_MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`](checkpoints/2026-08-03_V17_12_0_SIMULATION_MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md) — MW10 candidate и acceptance matrix.
+
 ## MW9 durable authority recovery
 
 - [`architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md`](architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md) — durable lease, fencing, append-only handoff journal и deterministic crash recovery.
 - [`architecture/adr/ADR-019-durable-matter-authority-handoff.md`](architecture/adr/ADR-019-durable-matter-authority-handoff.md) — решение о commit point и recovery rule.
-- [`checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md`](checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md) — MW9 candidate и acceptance matrix.
+- [`checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md`](checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md) — принятый MW9 fix2 и acceptance matrix.
 
 # Документация PlanetSimulator
 

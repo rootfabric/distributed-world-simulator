@@ -1,4 +1,23 @@
-Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (candidate)
+Planetary World v17.12.0-simulation-mw10-cross-region-matter-transactions (candidate)
+
+MW10 Cross-region Matter Transactions over accepted MW9 fix2:
+- deterministic single-body plans spanning two or more authority-regions
+- exact MW9 lease and fencing-token binding with post-reservation reauthorization
+- atomically persisted all-region reservations and MW9 handoff interlock
+- distributed per-material mass ledger with explicit external inputs/outputs
+- append-only PREPARE/COMMIT/ROLLBACK receipts and irreversible COMMIT_DECIDED boundary
+- deterministic crash recovery: complete committed decision or abort undecided transaction
+- exact operation replay without a second canonical mutation
+- one representation invalidation batch only after global terminal commit
+- durable invalidation outbox and idempotent publication recovery
+- active/previous repository, sibling-process lock and concurrent reservation race acceptance
+- no consensus cluster, cross-body transaction, meshing or production-world changes
+- config/matter/mw10-cross-region-transactions.v1.json
+- RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.ps1 / .sh
+- docs/architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md
+- next: RL2 Matter multiresolution meshing and cross-level transitions
+
+Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (accepted fix2)
 
 MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1:
 - atomic checksummed authority-directory checkpoint with active/previous fallback and cross-process commit lock
@@ -16,7 +35,7 @@ MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1:
 - docs/architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md
 - next: MW10 cross-region Matter transactions
 
-Planetary World v17.10.0-simulation-rl1-matter-summary-pyramid (candidate)
+Planetary World v17.10.0-simulation-rl1-matter-summary-pyramid (accepted)
 
 RL1 Matter Summary Pyramid and Dirty Propagation over accepted RL0 fix1:
 - region-scoped summary pyramids aligned with MW8 authority regions

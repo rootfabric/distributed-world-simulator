@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.mw10_cross_region_transactions_config.v1",
+  "checkpoint": "v17.12.0-simulation-mw10-cross-region-matter-transactions",
+  "build_id": "mw10-cross-region-matter-transactions",
+  "accepted_base": "v17.11.0-simulation-mw9-durable-handoff-recovery",
+  "recommended_branch": "feature/mw10-cross-region-matter-transactions",
+  "ordering": {
+    "lexicographic_region_order": true,
+    "prepare_fine_order": "ASCENDING_REGION_ID",
+    "commit_order": "ASCENDING_REGION_ID",
+    "rollback_order": "DESCENDING_REGION_ID"
+  },
+  "durability": {
+    "atomic_active_previous": true,
+    "cross_process_commit_lock": true,
+    "append_only_transaction_journal": true,
+    "region_reservations_persisted": true,
+    "terminal_operation_results_persisted": true,
+    "invalidation_outbox_persisted": true,
+    "reservation_history_immutable": true,
+    "post_reservation_authority_recheck": true,
+    "mw9_handoff_interlock_required": true
+  },
+  "recovery": {
+    "commit_decision_irreversible": true,
+    "commit_decided_completes_after_restart": true,
+    "undecided_transaction_aborts_after_restart": true,
+    "partial_prepare_rolls_back_after_restart": true,
+    "partial_commit_resumes_after_restart": true,
+    "outbox_republishes_idempotently": true,
+    "receipt_parent_and_source_binding": true
+  },
+  "mass": {
+    "distributed_mass_ledger_required": true,
+    "default_tolerance_kg": 1e-09,
+    "external_inputs_outputs_explicit": true,
+    "unbalanced_plan_rejected": true
+  },
+  "representation": {
+    "invalidation_after_global_commit_only": true,
+    "single_atomic_invalidation_batch": true,
+    "rl0_source_revision_fences": true,
+    "rl1_dirty_propagation_triggered_from_outbox": true,
+    "terminal_batch_exact_participant_binding": true
+  },
+  "boundaries": {
+    "consensus_cluster_implemented": false,
+    "production_database_implemented": false,
+    "cross_body_transaction_implemented": false,
+    "item_graph_transaction_implemented": false,
+    "production_worlds_changed": false,
+    "mw8_handoff_wire_changed": false,
+    "mw9_lease_format_changed": false
+  }
+}
