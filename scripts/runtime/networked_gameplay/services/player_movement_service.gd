@@ -1,5 +1,6 @@
 extends RefCounted
 
+const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
 const StateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
 const SCHEMA := "planet_simulator.player_movement_service.v1"
 const MAX_MOVEMENT_DELTA_SECONDS := 0.25
@@ -14,7 +15,7 @@ const PLAYGROUND_GROUND_EPSILON_M := 0.05
 const MAX_LOOK_PITCH_RAD := 1.45
 
 func apply_delta(record: Dictionary, input_sequence: int, delta_x: float, delta_z: float) -> Dictionary:
-	if input_sequence < 1 or input_sequence <= int(record.get("last_input_sequence", 0)):
+	if not _is_new_input_sequence(input_sequence, int(record.get("last_input_sequence", 0))):
 		return _failure("STALE_OR_DUPLICATE_INPUT_SEQUENCE")
 	if is_nan(delta_x) or is_inf(delta_x) or is_nan(delta_z) or is_inf(delta_z) or absf(delta_x) > 10.0 or absf(delta_z) > 10.0:
 		return _failure("INVALID_MOVEMENT_DELTA")
@@ -31,9 +32,33 @@ func apply_delta(record: Dictionary, input_sequence: int, delta_x: float, delta_
 	return _success({"player": next})
 
 func apply_movement_intent(record: Dictionary, input_sequence: int, payload: Dictionary) -> Dictionary:
-	if input_sequence < 1 or input_sequence <= int(record.get("last_input_sequence", 0)):
+	if not _is_new_input_sequence(input_sequence, int(record.get("last_input_sequence", 0))):
 		return _failure("STALE_OR_DUPLICATE_INPUT_SEQUENCE")
-	var delta_seconds := float(payload.get("delta_seconds", 0.0))
+	var delta_seconds: float = float(payload.get("delta_seconds", 0.0))
+	return _apply_movement(record, input_sequence, payload, delta_seconds, true)
+
+func apply_fixed_tick(
+	record: Dictionary,
+	input_sequence: int,
+	payload: Dictionary,
+	fixed_delta_seconds: float
+) -> Dictionary:
+	var last_sequence: int = int(record.get("last_input_sequence", 0))
+	if not InputSequence.is_valid(input_sequence):
+		return _failure("STALE_INPUT_SEQUENCE")
+	if input_sequence != last_sequence and not InputSequence.is_newer(input_sequence, last_sequence):
+		return _failure("STALE_INPUT_SEQUENCE")
+	if not is_equal_approx(fixed_delta_seconds, 1.0 / 60.0):
+		return _failure("INVALID_FIXED_TICK_DELTA")
+	return _apply_movement(record, input_sequence, payload, fixed_delta_seconds, false)
+
+func _apply_movement(
+	record: Dictionary,
+	input_sequence: int,
+	payload: Dictionary,
+	delta_seconds: float,
+	require_new_sequence: bool
+) -> Dictionary:
 	var move_x := float(payload.get("move_x", 0.0))
 	var move_z := float(payload.get("move_z", 0.0))
 	var look_yaw := float(payload.get("look_yaw", 0.0))
@@ -55,6 +80,10 @@ func apply_movement_intent(record: Dictionary, input_sequence: int, payload: Dic
 		return _failure("MOVEMENT_LOOK_OUT_OF_RANGE")
 	if typeof(payload.get("jump_pressed")) != TYPE_BOOL or typeof(payload.get("sprint")) != TYPE_BOOL:
 		return _failure("INVALID_MOVEMENT_INTENT_FLAGS")
+	if require_new_sequence and not _is_new_input_sequence(
+		input_sequence, int(record.get("last_input_sequence", 0))
+	):
+		return _failure("STALE_OR_DUPLICATE_INPUT_SEQUENCE")
 
 	var next := record.duplicate(true)
 	var position_value: Dictionary = Dictionary(next.get("position", {}))
@@ -69,6 +98,10 @@ func apply_movement_intent(record: Dictionary, input_sequence: int, payload: Dic
 		float(velocity_value.get("y", 0.0)),
 		float(velocity_value.get("z", 0.0))
 	)
+	var previous_position: Vector3 = position
+	var previous_velocity: Vector3 = velocity
+	var previous_yaw: float = float(next.get("orientation_yaw", 0.0))
+	var previous_sequence: int = int(next.get("last_input_sequence", 0))
 	var basis := Basis(Vector3.UP, look_yaw)
 	var right := basis.x.normalized()
 	var forward := (-basis.z).normalized()
@@ -93,13 +126,22 @@ func apply_movement_intent(record: Dictionary, input_sequence: int, payload: Dic
 	next["velocity"] = {"x": velocity.x, "y": velocity.y, "z": velocity.z}
 	next["orientation_yaw"] = look_yaw
 	next["last_input_sequence"] = input_sequence
-	next["state_revision"] = int(next.get("state_revision", 0)) + 1
+	var changed: bool = (
+		not position.is_equal_approx(previous_position)
+		or not velocity.is_equal_approx(previous_velocity)
+		or not is_equal_approx(look_yaw, previous_yaw)
+		or int(next.get("last_input_sequence", 0)) != previous_sequence
+	)
+	if changed:
+		next["state_revision"] = int(next.get("state_revision", 0)) + 1
 	return _success({
 		"player": next,
+		"changed": changed,
 		"server_simulation": {
 			"delta_seconds": delta_seconds,
 			"look_pitch": look_pitch,
 			"grounded": position.y <= PLAYGROUND_GROUND_HEIGHT_M + PLAYGROUND_GROUND_EPSILON_M,
+			"fixed_tick": not require_new_sequence,
 		},
 	})
 
@@ -110,7 +152,10 @@ func apply_authoritative_state(previous_state: Dictionary, candidate_state: Dict
 	if not bool(validation.get("success", false)):
 		return _failure(String(validation.get("error_code", "INVALID_PLAYER_STATE")))
 	var candidate := StateCodec.normalize_player_state(candidate_state)
-	if int(candidate.get("last_input_sequence", 0)) <= int(previous_state.get("last_input_sequence", 0)):
+	if not _is_new_input_sequence(
+		int(candidate.get("last_input_sequence", 0)),
+		int(previous_state.get("last_input_sequence", 0))
+	):
 		return _failure("DUPLICATE_INPUT_SEQUENCE")
 	var velocity := StateCodec.player_velocity(candidate)
 	if velocity.length() > MAX_PLAYER_SPEED_MPS:
@@ -131,6 +176,9 @@ func get_report() -> Dictionary:
 		"gravity_mps2": PLAYGROUND_GRAVITY_MPS2,
 		"jump_speed_mps": PLAYGROUND_JUMP_SPEED_MPS,
 	}
+
+func _is_new_input_sequence(candidate: int, reference: int) -> bool:
+	return InputSequence.is_valid(candidate) and InputSequence.is_newer(candidate, reference)
 
 func _finite(value: float) -> bool:
 	return not is_nan(value) and not is_inf(value)

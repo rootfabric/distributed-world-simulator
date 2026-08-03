@@ -1,0 +1,96 @@
+{
+  "schema": "planet_simulator.nx0_observability_baseline_preparation.v1",
+  "document_revision": 2,
+  "checkpoint": "v16.10.7-network-nx0-observability-preparation",
+  "build_id": "nx0-observability-baseline-preparation",
+  "base_commit": "69bd7fc",
+  "base_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "branch": "feature/nx0-observability-baseline-preparation",
+  "status": "accepted",
+  "runtime_behavior_changed": false,
+  "production_transport_wrapped": false,
+  "purpose": "Freeze the current M7 realtime baseline and provide validated build fingerprint, telemetry sample and network-condition profile contracts before modifying ENet or gameplay behavior.",
+  "confirmed_baseline_findings": [
+    "PLAYER_INPUT delta_seconds is derived from packet arrival time in m3_dedicated_server_runtime.gd",
+    "successful PLAYER_INPUT emits COMMAND_RESULT",
+    "successful PLAYER_INPUT broadcasts both GAMEPLAY_DELTA and GAMEPLAY_SNAPSHOT",
+    "movement persistence uses a 1500 ms throttled full checkpoint",
+    "M7 client counts non-awaited movement COMMAND_RESULT as async_command_results",
+    "ENet v2 currently exposes three channels"
+  ],
+  "new_contracts": [
+    "planet_simulator.network_build_fingerprint.v1",
+    "planet_simulator.network_observability_sample.v1",
+    "planet_simulator.network_telemetry_collector.v1",
+    "planet_simulator.network_condition_profile.v1",
+    "planet_simulator.network_condition_presets.v1"
+  ],
+  "nx0_required_metrics": {
+    "identity": [
+      "build_id",
+      "git_commit",
+      "protocol_hash",
+      "world_id",
+      "session_token"
+    ],
+    "transport": [
+      "packets_and_bytes_per_channel",
+      "rtt_ms",
+      "jitter_ms",
+      "packet_loss",
+      "reliable_queue_depth"
+    ],
+    "simulation": [
+      "server_tick",
+      "client_tick",
+      "server_tick_duration_ms",
+      "input_age_ms",
+      "snapshot_age_ms"
+    ],
+    "prediction": [
+      "prediction_error_m",
+      "correction_count",
+      "correction_magnitude_m",
+      "prediction_buffer_size"
+    ],
+    "items_and_persistence": [
+      "pending_operation_count",
+      "item_command_latency_ms",
+      "persistence_duration_ms",
+      "checkpoint_generation"
+    ]
+  },
+  "implementation_order": [
+    "integrate fingerprint into launch descriptors and JOIN handshake",
+    "reject build protocol world and session mismatches before gameplay join",
+    "instrument network_transport_boundary_v2 queue and dispatch events",
+    "instrument ENet packet bytes and channel delivery",
+    "instrument M3 server and client reports without changing canonical state",
+    "publish periodic bounded telemetry samples",
+    "establish baseline under LOCAL through EXTREME profiles",
+    "only then begin NX2 traffic changes"
+  ],
+  "acceptance": [
+    "fingerprint contracts reject every identity mismatch deterministically",
+    "session_token rejects raw credentials and accepts only session-id/<public-id> or sha256/<64-lowercase-hex>",
+    "telemetry collection is bounded and JSON-safe",
+    "telemetry collection does not mutate NetworkedGameplayService state",
+    "all condition presets validate and carry deterministic random seeds",
+    "focused preparation profile passes with Godot 4.7.1 double",
+    "existing M7 focused regression remains green"
+  ],
+  "out_of_scope": [
+    "changing movement packet flow",
+    "changing ENet channel count or transfer modes",
+    "adding packet delay or loss to production traffic",
+    "client prediction or reconciliation",
+    "fixed-tick movement",
+    "persistence decoupling"
+  ],
+  "session_token_policy": {
+    "allowed_public_id_format": "session-id/<public-id>",
+    "allowed_digest_format": "sha256/<64-lowercase-hex>",
+    "reject_all_other_formats": true,
+    "raw_credentials_forbidden": true
+  }
+}

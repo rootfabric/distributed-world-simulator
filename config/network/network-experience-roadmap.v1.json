@@ -1,0 +1,104 @@
+{
+  "schema": "planet_simulator.network_experience_roadmap.v1",
+  "document_revision": 9,
+  "created_at_utc": "2026-08-01T03:00:00Z",
+  "updated_at_utc": "2026-08-03T07:53:00Z",
+  "base_checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation",
+  "status": "active",
+  "strategy": "SERVER_AUTHORITY_WITH_CLIENT_PREDICTION_AND_INTERPOLATED_PRESENTATION",
+  "current_stage": "NX6",
+  "current_checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+  "recommended_branch": "feature/nx6-predicted-item-interactions",
+  "distributed_runtime_note": "B1 remains architecturally valid after A3, but product implementation priority is temporarily moved behind the realtime network-experience chain. No B1 contract is changed by this roadmap.",
+  "authority_profiles": {
+    "local_player": "OWNER_PREDICTED_SERVER_AUTHORITY",
+    "remote_player": "SERVER_SNAPSHOT_INTERPOLATED",
+    "camera": "CLIENT_LOCAL",
+    "inventory": "OPTIMISTIC_UI_SERVER_AUTHORITY",
+    "pickup": "PREDICTED_PRESENTATION_SERVER_AUTHORITY",
+    "drop": "PREDICTED_SPAWN_SERVER_AUTHORITY",
+    "placement": "CLIENT_GHOST_SERVER_CONFIRMED",
+    "valuable_physics": "SERVER_AUTHORITY_OPTIONAL_OWNER_PREDICTION",
+    "cosmetic_objects": "CLIENT_ONLY"
+  },
+  "phases": [
+    {
+      "id": "NX0",
+      "name": "Observability Baseline",
+      "status": "accepted",
+      "goal": "Freeze build identity and measure RTT, jitter, traffic, queues, ages, corrections, tick and persistence latency without changing authority state.",
+      "checkpoint": "v16.10.8-network-nx0-observability-baseline"
+    },
+    {
+      "id": "NX1",
+      "name": "Deterministic Network Condition Simulator",
+      "status": "accepted",
+      "goal": "Inject deterministic latency, jitter, loss, duplication, reorder, bandwidth pressure, lag spikes and disconnects in CI and local runs.",
+      "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator"
+    },
+    {
+      "id": "NX2",
+      "name": "Realtime Traffic Separation",
+      "status": "accepted",
+      "goal": "Separate channels, suppress successful movement results and per-input full snapshots, batch input and cap snapshot publication rate.",
+      "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation"
+    },
+    {
+      "id": "NX3",
+      "name": "Fixed-Tick Authoritative Simulation",
+      "status": "accepted",
+      "goal": "Move server movement to a fixed simulation tick independent of packet arrival timing.",
+      "checkpoint": "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"
+    },
+    {
+      "id": "NX4",
+      "name": "Owner Prediction and Reconciliation",
+      "status": "accepted",
+      "goal": "Predict local movement immediately, reconcile against authoritative acknowledgements and replay unconfirmed inputs.",
+      "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation"
+    },
+    {
+      "id": "NX5",
+      "name": "Remote Interpolation",
+      "status": "accepted",
+      "goal": "Render remote players from a delayed snapshot timeline with bounded extrapolation.",
+      "checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation"
+    },
+    {
+      "id": "NX6",
+      "name": "Predicted Item Interactions",
+      "status": "fix3_implemented_candidate",
+      "goal": "Add optimistic item presentation, authoritative dependent-operation completion and production-safe playground lifecycle cleanup.",
+      "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+      "delivery": "fix3"
+    },
+    {
+      "id": "NX7",
+      "name": "Physics Authority Profiles",
+      "status": "planned",
+      "goal": "Introduce explicit SERVER_ONLY, OWNER_PREDICTED, OWNER_AUTHORITY_VALIDATED, PREDICTED_SPAWN and CLIENT_COSMETIC policies."
+    },
+    {
+      "id": "NX8",
+      "name": "Interest Management and Replication Budget",
+      "status": "planned",
+      "goal": "Replicate only relevant entities under per-client bandwidth and priority budgets."
+    },
+    {
+      "id": "NX9",
+      "name": "Async Persistence and Production Hardening",
+      "status": "planned",
+      "goal": "Remove disk work from the realtime loop while preserving durable inventory and bounded position recovery loss."
+    }
+  ],
+  "first_playable_gate": "NX4_PLUS_NX5",
+  "first_full_gameplay_gate": "NX6",
+  "required_test_layers": [
+    "unit",
+    "property_and_fuzz",
+    "runtime_integration",
+    "multi_process_enet",
+    "soak",
+    "fault_injection"
+  ]
+}

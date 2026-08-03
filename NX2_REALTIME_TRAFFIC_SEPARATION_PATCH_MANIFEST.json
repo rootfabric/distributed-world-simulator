@@ -1,0 +1,285 @@
+{
+  "schema": "planet_simulator.nx2_realtime_traffic_separation_patch_manifest.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "build_id": "nx2-realtime-traffic-separation",
+  "branch": "feature/nx2-realtime-traffic-separation",
+  "base_checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "base_delivery": "fix2",
+  "base_commit": "f1abeca",
+  "incremental": true,
+  "apply_over": "accepted NX1 candidate plus fix1 plus fix2",
+  "file_count": 43,
+  "new_file_count": 18,
+  "modified_file_count": 25,
+  "deleted_file_count": 0,
+  "implementation": {
+    "six_realtime_channels": true,
+    "application_level_unreliable_sequencing": true,
+    "transactional_realtime_coalescing": true,
+    "movement_input_batching": true,
+    "successful_movement_results_suppressed": true,
+    "per_input_delta_and_full_snapshot_suppressed": true,
+    "compact_snapshot_network_tick": true,
+    "item_graph_delta_and_resync_channels": true,
+    "committed_mutation_full_resync_fallback": true
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "851857d68f2d1eb2da4b0db4edb700d85524c51538fe37ad5606a003ca7c5ba2",
+      "bytes": 11544
+    },
+    {
+      "path": "NETWORK_ROADMAP_RU.md",
+      "status": "MODIFIED",
+      "sha256": "f94bce9babb38e06ae8f9536ef8d3512ae4d49382e07931fbb39f57b89be60d5",
+      "bytes": 4908
+    },
+    {
+      "path": "NX2_REALTIME_TRAFFIC_SEPARATION_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "a1fa34450665dd2223b6a41ea1b09a02a29d77ac37370426099da15f5c19497a",
+      "bytes": 44435
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "94de4737a702418e588ab4d59ed82820be816710293517c5f508c663909affcd",
+      "bytes": 4710
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "73d68edcb6b4c1f38cc2f82cfff909d91e13b56ba1532ebf3a1ba59aa2ffa0b8",
+      "bytes": 10164
+    },
+    {
+      "path": "RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1",
+      "status": "NEW",
+      "sha256": "7f4800d7cda3e5aa2f6a6eb58973d84d691982c646729d488ecb79b4d44fb2d6",
+      "bytes": 3838
+    },
+    {
+      "path": "RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.sh",
+      "status": "NEW",
+      "sha256": "3f26ad56254cce5c25a6a93759774e8facf274739607c946a1841f73aeccdb83",
+      "bytes": 2137
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "ca138a4a62c042d4a00b8c15a4692c99c09253b5b702ad3c0ae01624e4ccc2a5",
+      "bytes": 20313
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "status": "MODIFIED",
+      "sha256": "af4b24dd68bb32ea5cf8d7f926f5bbf16318921303439af2da1e4b85581b7d50",
+      "bytes": 4093
+    },
+    {
+      "path": "config/network/nx2-realtime-traffic-separation.v1.json",
+      "status": "NEW",
+      "sha256": "d8384d9cd0c8a576602b44416ba18fb10cf9b4cfa3fac4774117b94d725494df",
+      "bytes": 3344
+    },
+    {
+      "path": "docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_REALTIME_TRAFFIC_SEPARATION_RU.md",
+      "status": "NEW",
+      "sha256": "ca660ab7da9e4dd7147d3da9bec2c1d32b12959b5104e33752b720bfda8ce972",
+      "bytes": 3490
+    },
+    {
+      "path": "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "status": "MODIFIED",
+      "sha256": "394da17aab45c666ee497fba3c857784a1e3c088106ab5a4a5d9fc3cdcc114ea",
+      "bytes": 15981
+    },
+    {
+      "path": "docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md",
+      "status": "NEW",
+      "sha256": "fc9de48a52b0eca65c896569d628305b580e7c1821539927fde7bc0348e291bc",
+      "bytes": 10032
+    },
+    {
+      "path": "scripts/items/presentation/item_gameplay_controller.gd",
+      "status": "MODIFIED",
+      "sha256": "5bbbeaa94ad7b579c58d1bcbaad7a6978f50017717b4aff6c7e19acfd3250373",
+      "bytes": 60491
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_simulator_port.gd",
+      "status": "MODIFIED",
+      "sha256": "6b8e46a0aa90237bee3ed2d25efea9f937633c70d235fe5f9dbbead8cb6ab330",
+      "bytes": 31693
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "MODIFIED",
+      "sha256": "791d9c2384ecacf08e1810bb30a15b1695af84dbc45c75d1c49d8662a2429350",
+      "bytes": 7480
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd",
+      "status": "MODIFIED",
+      "sha256": "abcbf05c2015554d336b556c78d717797c6b2a7e4af02b5ed542a5e4b68e372d",
+      "bytes": 1880
+    },
+    {
+      "path": "scripts/network/realtime/realtime_channel_policy.gd",
+      "status": "NEW",
+      "sha256": "8384fc00f39f5d42572d8428551db5915ad5282c018997bde6851cf495301606",
+      "bytes": 4826
+    },
+    {
+      "path": "scripts/network/realtime/realtime_channel_policy.gd.uid",
+      "status": "NEW",
+      "sha256": "bd36603a02225bd1b29242b4c8fd6ccc1bb26988b320b8cd7c26e518c6002206",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+      "status": "MODIFIED",
+      "sha256": "dfd49afe0471b6ebd775378e05a2266ba9d68bca907089fc70f952f014f6b453",
+      "bytes": 13664
+    },
+    {
+      "path": "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "status": "MODIFIED",
+      "sha256": "e2e1a23d9ff3c94f875722ac5f6f3c50ea8c0daf38a612142ae9d94b8e1bd849",
+      "bytes": 28169
+    },
+    {
+      "path": "scripts/network/transports/v2/protocol_frame_v2.gd",
+      "status": "MODIFIED",
+      "sha256": "c433ee3e631fa945f534b8e15d9d588cdf20d1e1ad7bb9b88dd71f4a7ab7d108",
+      "bytes": 5936
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd",
+      "status": "NEW",
+      "sha256": "e7aa306056af4d123971124a1f5a9939e1cc401f25a1e3c105de8e11d3aa5f2d",
+      "bytes": 13224
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd.uid",
+      "status": "NEW",
+      "sha256": "6e52a063f07dcada7f1acc1441559bd80913118ebcca38d3c5f4e7c3d6a58d44",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd",
+      "status": "NEW",
+      "sha256": "fae3c0910fc4b7e3339135eca2db6ebca00f681e9b9097c5eb857f99bb071e00",
+      "bytes": 7852
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd.uid",
+      "status": "NEW",
+      "sha256": "77fd4262969b9eb31dca321e945d9ff89cb12c65d293c527ae69d0481ee6c433",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/player_input_batch.gd",
+      "status": "NEW",
+      "sha256": "f520890a0ee7e1cd157f65ddd418906d519ff9eefcfefcd7a2ab58d9e1e29580",
+      "bytes": 9517
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/player_input_batch.gd.uid",
+      "status": "NEW",
+      "sha256": "b1b2731957548b7e5f18d704ec67daae2702dbc96c17712a14c61d125c583850",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "fac24418ad640443f97939c7463eaa1305cba230891d87e64009c64864df9ea8",
+      "bytes": 58519
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "071825f66ab6b964e78d70e6ec31e4fcf27878512e5fe078e1e469f4d1e40048",
+      "bytes": 43637
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd",
+      "status": "MODIFIED",
+      "sha256": "d162fceef683a00187f4f19253d1380b698809f9a309c374f6e3b4ab7bc23008",
+      "bytes": 7259
+    },
+    {
+      "path": "tests/network/test_nx0_network_experience_preparation.gd",
+      "status": "MODIFIED",
+      "sha256": "67e18e70cd1d18ee749b8b4196fa588ffb7a16d49d50f123b8f29cf600886093",
+      "bytes": 18487
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd",
+      "status": "MODIFIED",
+      "sha256": "c6d3c40f29b2135a36a2f970649cb50bf19b20010b563d89daf7f26763ebea93",
+      "bytes": 25996
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "714db75d15b95f8ba76dd329db98270dc9cecb8838dc00c240a054c2670539c4",
+      "bytes": 10192
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "MODIFIED",
+      "sha256": "19b745a16ecb14939f53e4f65a05f0ad34dcd5d38fce1fbe2c7af3eb46afab5c",
+      "bytes": 39386
+    },
+    {
+      "path": "tests/network/test_nx1_network_condition_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "964f9c9770930e5284133a392deb90a17f6b4460435c1527dab13fc22c6899ef",
+      "bytes": 9114
+    },
+    {
+      "path": "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "status": "NEW",
+      "sha256": "031db32ff1ce365118ab155fce886f0a6ae13135e23279efd611b04983da29d2",
+      "bytes": 24240
+    },
+    {
+      "path": "tests/network/test_nx2_realtime_traffic_separation.gd.uid",
+      "status": "NEW",
+      "sha256": "3730aada76e5174811c8ebba6ef9d76e80d0cfdd6a32cbb17870a2fa0ffdffa3",
+      "bytes": 21
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "652c689faf0ed35df0f17833d23597390d94d3ad22904180e0c462f686c65453",
+      "bytes": 11910
+    },
+    {
+      "path": "tools/runtime/m7_playable_network_client.gd",
+      "status": "MODIFIED",
+      "sha256": "687558c99ec908baf3cb0a3841d18ca6fd283d085f3c5f67a13c94067a57c5c8",
+      "bytes": 16716
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-files.txt",
+      "status": "NEW",
+      "sha256": "04bd578ff6a9673f49aac141d29109aabc00f3e9e1e9386f72a74f8f2c290483",
+      "bytes": 2680
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-validation.json",
+      "status": "NEW",
+      "sha256": "112712e5901a8f311a692ad0c814d03f0be7f8a76ae3f024ba2f7c71e58ca684",
+      "bytes": 5419
+    }
+  ]
+}

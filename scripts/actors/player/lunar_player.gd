@@ -173,7 +173,7 @@ func get_flashlight_snapshot() -> Dictionary:
 
 
 func _physics_process(delta: float) -> void:
-	if control_enabled and (not network_replica_mode or network_prediction_mode) and controller_host != null:
+	if control_enabled and not network_replica_mode and controller_host != null:
 		controller_host.physics_step(delta)
 
 

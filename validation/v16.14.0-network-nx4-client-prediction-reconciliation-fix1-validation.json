@@ -1,0 +1,90 @@
+{
+  "schema": "planet_simulator.nx4_client_prediction_reconciliation_fix1_validation.v1",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "delivery": "fix1",
+  "branch": "feature/nx4-client-prediction-reconciliation",
+  "apply_over": "v16.14.0 NX4 candidate",
+  "base_source_commit": "ac8ae0afdd47e0f290dbbc8af396add7aba60cda",
+  "decision": "CANDIDATE_FIX1",
+  "issues": {
+    "future_clock_only_origin_baseline": "FIXED",
+    "false_hard_correction_away_from_origin": "FIXED",
+    "matching_snapshot_cancels_active_smoothing": "FIXED"
+  },
+  "reconciliation": {
+    "future_tick_without_history_baseline": "CURRENT_PREDICTED_STATE_V1",
+    "clock_only_snapshot_policy": "FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2",
+    "future_identical_snapshot_error_m": 0.0,
+    "future_identical_snapshot_correction_mode": "NONE",
+    "future_identical_snapshot_hard_correction": false,
+    "gameplay_state_preserved": true,
+    "prediction_clock_advanced": true,
+    "active_smoothing_preserved": true,
+    "correction_telemetry_increment": 0,
+    "hard_correction_telemetry_increment": 0
+  },
+  "protocol": {
+    "protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+    "previous_nx4_candidate_wire_compatible": false
+  },
+  "runtime_auxiliary": {
+    "execution_note": "Controlled direct Godot runs are auxiliary because godot_run_managed is unavailable in this environment. Independent managed-MCP acceptance remains required.",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "focused_components": "13/13 PASS",
+    "focused_execution": "COMPOSED_AFTER_SINGLE_WRAPPER_EXTERNAL_LIMIT_AT_10_OF_13",
+    "nx0_preparation_assertions": 115,
+    "nx0_baseline_assertions": 150,
+    "nx1_contract_assertions": 282,
+    "nx2_contract_assertions": 130,
+    "nx3_contract_assertions": 6188,
+    "nx4_contract_assertions": 706,
+    "compatibility_handshake_assertions": 31,
+    "conditioned_enet_assertions": 27,
+    "physical_enet_two_client_assertions": 66,
+    "m7_playable_local_linux_assertions": 52,
+    "m7_playable_average_broadband_linux_assertions": 54,
+    "m7_recovery_assertions": 36,
+    "m3_graphical_linux_assertions": 57,
+    "failures": 0
+  },
+  "regression": {
+    "network_non_process_custom_superset": "53/53 PASS",
+    "enet_process_regression": "4/4 PASS",
+    "t1_multi_peer_assertions": 20,
+    "n1_snapshots_assertions": 28,
+    "n1_remote_item_graph_assertions": 51,
+    "n1_reconnect_replay_assertions": 67,
+    "remaining_godot_or_xvfb_processes": 0
+  },
+  "static": {
+    "git_diff_check": "PASS",
+    "shell_syntax": "UNCHANGED_FROM_NX4_CANDIDATE",
+    "powershell_parse": "NOT_RUN_NO_PWSH",
+    "powershell_home_mutation": false,
+    "changed_gdscript_files": 2,
+    "missing_uid_sidecars": 0,
+    "conflict_markers": 0,
+    "nul_bytes": 0,
+    "trailing_whitespace_added_by_diff": 0,
+    "json_files_valid": 90
+  },
+  "archive": {
+    "incremental_over_nx4_candidate": true,
+    "file_count": 11,
+    "new_file_count": 4,
+    "modified_file_count": 7,
+    "deleted_file_count": 0,
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "byte_exact_replay": "11/11 PASS",
+    "archive_regression_probe": "NX4 706 assertions PASS",
+    "sha256": "RECORDED_IN_DELIVERY_MESSAGE_AFTER_FINAL_PACKAGING"
+  },
+  "acceptance": {
+    "managed_mcp_required": true,
+    "editor_import_required_before_process_suites": true,
+    "independent_managed_mcp_result": "PENDING",
+    "review_fix_branch": "feature/nx4-client-prediction-reconciliation"
+  }
+}

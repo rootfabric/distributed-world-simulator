@@ -1,0 +1,96 @@
+{
+  "schema": "planet_simulator.nx6_predicted_item_interactions_patch_manifest.v1",
+  "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+  "delivery": "fix3",
+  "branch": "feature/nx6-predicted-item-interactions",
+  "apply_over_commit": "c727b1cf25b4e5916098a057b89b7fa1eb878dc6",
+  "apply_over_candidate_sha256": "2529F0E133EAE53E6F7839254E857C1DAF134E8EADED914BF7A618EDD3697AFB",
+  "apply_over_fix1_sha256": "3ECA168B17219B95BFBF2DC93C6884621F4D71FBFEC06DC7750EF66C77733A34",
+  "apply_over_fix2_sha256": "AB07F0CF8C662D4044581FC3F63CA98CB67410ED4831ACE876A53324EF09FA12",
+  "apply_over": "NX6 candidate, fix1 and fix2 already applied in the same branch; incremental fix3 overlay",
+  "inherited_protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+  "production_change": {
+    "path": "scripts/world/testing/playground_runtime.gd",
+    "base_blob_sha": "3dec7341f23c0b99cdf9d31844435fe5898b3f87",
+    "fix3_blob_sha": "67c38dbf9ff0518eab0713c672099595d598a5ad",
+    "unload_stop_reason": "NX6_PLAYGROUND_UNLOAD"
+  },
+  "removed_files": [
+    "scripts/world/testing/nx6_lifecycle_safe_playground_runtime.gd",
+    "scripts/world/testing/nx6_lifecycle_safe_playground_runtime.gd.uid"
+  ],
+  "removal_action": "Run APPLY_NX6_PREDICTED_ITEM_INTERACTIONS_FIX3.ps1 or .sh after extracting overlay.",
+  "files": [
+    {
+      "path": "APPLY_NX6_PREDICTED_ITEM_INTERACTIONS_FIX3.ps1",
+      "size": 1354,
+      "sha256": "F09EF540CF011022BB83F79AC18FA9AFB9C8FA1961F3388D8AB547BE30A0F0F6"
+    },
+    {
+      "path": "APPLY_NX6_PREDICTED_ITEM_INTERACTIONS_FIX3.sh",
+      "size": 993,
+      "sha256": "4DB554C2A717312868C52388E469B7370AFB968D36C1ADFF13958BE764951058"
+    },
+    {
+      "path": "RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.ps1",
+      "size": 4179,
+      "sha256": "E186C4DE6E4F2BB32D6EE8C23542277799FFFFBF86F32E54D6068C6D32CFAC92"
+    },
+    {
+      "path": "RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.sh",
+      "size": 2626,
+      "sha256": "E8DC64D6EE959A9C060917B55D46C8A204DD52CE840F058D7B02120870D7AE75"
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "size": 4452,
+      "sha256": "E9FBF815BC64E8EE237BF2F9DDDB59C4718926858227674350980EF3C7D4633D"
+    },
+    {
+      "path": "config/network/nx6-predicted-item-interactions.v1.json",
+      "size": 2740,
+      "sha256": "74E2125D2080BE52AA62792B38242407729584A2CA0EEF1E0C0A035262466C88"
+    },
+    {
+      "path": "docs/checkpoints/2026-08-03_V16_16_0_NETWORK_NX6_PREDICTED_ITEM_INTERACTIONS_RU.md",
+      "size": 2736,
+      "sha256": "D5349B272E2CC62285E333FA6DF2B50488CFE5FC456F116072732503E2094726"
+    },
+    {
+      "path": "docs/network/NX6_PREDICTED_ITEM_INTERACTIONS_RU.md",
+      "size": 5217,
+      "sha256": "C2B18F373616FC9D52BC9A272B76459AE1DC210F78685A8FBF43B9E893AC66A0"
+    },
+    {
+      "path": "scripts/world/testing/playground_runtime.gd",
+      "size": 67163,
+      "sha256": "FBCB18CA14F2A7AD22A5F7B0C16839CCFB93C79AF72D47A93377E5532F344424"
+    },
+    {
+      "path": "tests/network/test_nx6_predicted_item_interactions_integration.gd",
+      "size": 18176,
+      "sha256": "3C54C7825C1F57A49A0D77084673113D2595AFDB65F3D603A06BA7CDD8364427"
+    },
+    {
+      "path": "tests/network/test_nx6_predicted_item_interactions_integration.gd.uid",
+      "size": 20,
+      "sha256": "560404F2C334BA41E209287886009A07047BF1A0F283AD6281BA2B873A4A532E"
+    },
+    {
+      "path": "tools/runtime/m7_playable_network_client.gd",
+      "size": 18981,
+      "sha256": "D491B59D2A8AC3019F34CEA76686EB35A3EF6E029A4246503A336F38662FADB5"
+    },
+    {
+      "path": "validation/v16.16.0-network-nx6-predicted-item-interactions-files.txt",
+      "size": 793,
+      "sha256": "98153D19B2ED878E6D5769F6723C3AA122BE71B33FA5CE2DC3B7E9D56BE28B4B"
+    },
+    {
+      "path": "validation/v16.16.0-network-nx6-predicted-item-interactions-validation.json",
+      "size": 4417,
+      "sha256": "88A2C3DA21283901A2202434F90B5BBF6EA1519EDE9B90B55D0737B677C5A9F5"
+    }
+  ],
+  "self_hash_excluded": "NX6_PREDICTED_ITEM_INTERACTIONS_PATCH_MANIFEST.json"
+}

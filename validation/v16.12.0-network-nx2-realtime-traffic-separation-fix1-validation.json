@@ -1,0 +1,30 @@
+{
+  "schema": "planet_simulator.nx2_realtime_traffic_separation_fix1_validation.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "delivery": "fix1",
+  "branch": "feature/nx2-realtime-traffic-separation",
+  "apply_over": "v16.12.0 NX2 candidate",
+  "decision": "CANDIDATE_FIX1",
+  "issues": {
+    "movement_ack_retransmission": "FIXED",
+    "physical_enet_binding": "FIXED",
+    "roadmap_trailing_whitespace": "FIXED"
+  },
+  "runtime": {
+    "editor_import": "PASS",
+    "nx2_contract_assertions": 120,
+    "physical_enet_assertions": 10,
+    "m7_playable_assertions": 43,
+    "m7_recovery_assertions": 36,
+    "failures": 0
+  },
+  "static": {
+    "git_diff_check": "PASS",
+    "trailing_whitespace_added_by_diff": 0,
+    "shell_syntax": "PASS",
+    "gdscript_uid": "PASS"
+  },
+  "notes": [
+    "Direct controlled Godot runs are auxiliary; independent managed-MCP acceptance remains required."
+  ]
+}

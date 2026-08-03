@@ -1,0 +1,11 @@
+AGENTS.md
+NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX2_PATCH_MANIFEST.json
+PROJECT_MANIFEST.txt
+README_RU.md
+config/network/nx1-deterministic-network-condition-simulator.v1.json
+docs/checkpoints/2026-08-01_V16_11_0_NETWORK_NX1_DETERMINISTIC_CONDITION_SIMULATOR_RU.md
+docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md
+scripts/network/conditions/network_condition_simulator_port.gd
+tests/network/test_nx1_deterministic_network_condition_simulator.gd
+validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix2-files.txt
+validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json

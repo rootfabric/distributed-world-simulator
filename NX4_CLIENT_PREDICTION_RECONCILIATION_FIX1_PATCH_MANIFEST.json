@@ -1,0 +1,60 @@
+{
+  "schema": "planet_simulator.nx4_client_prediction_reconciliation_fix1_patch_manifest.v1",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "delivery": "fix1",
+  "apply_over": "v16.14.0 NX4 candidate",
+  "protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "size": 14807,
+      "sha256": "20373DC0BDEDB6DD53FC7E524ED9926721A690B7311371EF58EEFDA917A5BCCF"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "size": 48436,
+      "sha256": "3BC791B425E93851CDBDC351BB33C83021564C7DE097A8F9391DB57031173C7E"
+    },
+    {
+      "path": "README_RU.md",
+      "size": 5634,
+      "sha256": "B9BB4A089F3E4463E4F46BA53574DE5D1BEA84A0E1B2939CE19486B3379D41C2"
+    },
+    {
+      "path": "config/network/nx4-client-prediction-reconciliation.v1.json",
+      "size": 1856,
+      "sha256": "D9C6B986EAABC4FE7059B58A9D39B1CAD60DBF860BCD0D63B90868660C585CBF"
+    },
+    {
+      "path": "docs/checkpoints/2026-08-03_V16_14_0_NETWORK_NX4_FIX1_RU.md",
+      "size": 1456,
+      "sha256": "60B0058461BA302DD14B9AA9BE6D59116C95F0EF2F10504E78063C023DBB923F"
+    },
+    {
+      "path": "docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md",
+      "size": 10383,
+      "sha256": "8BD01952051BCECEF59304097CB3E4A3E13202B75C9BFA3455F1F462417F9695"
+    },
+    {
+      "path": "scripts/network/prediction/client_prediction_reconciler.gd",
+      "size": 15710,
+      "sha256": "1588526286E6AEB2EA79E29F4D52E1C63D6F4DFE1A1ABDDA94E4D7EEFBA46323"
+    },
+    {
+      "path": "tests/network/test_nx4_client_prediction_reconciliation.gd",
+      "size": 22898,
+      "sha256": "996639A7E66907BA0EBE8B6E83F90ED0ACE281B40D14BB7E73D5E094B5723F1D"
+    },
+    {
+      "path": "validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-validation.json",
+      "size": 3575,
+      "sha256": "0B9686B9D34D62B323B62AAE3DA5F2E73B7F5FB095408CFAD1934961E0237241"
+    },
+    {
+      "path": "validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-files.txt",
+      "size": 566,
+      "sha256": "1251C312CBCB0F2CBF8429F1EC5EA3682728B794B71C07409E6180C80C452F24"
+    }
+  ],
+  "self_hash_excluded": "NX4_CLIENT_PREDICTION_RECONCILIATION_FIX1_PATCH_MANIFEST.json"
+}

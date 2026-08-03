@@ -53,6 +53,7 @@ var _playable_backend
 var _operation_ledger: Dictionary = {}
 var _canonical_multiplayer_items
 var _playable_sandbox := false
+var _fixed_tick_authority := false
 
 
 func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 0, config: Dictionary = {}) -> Dictionary:
@@ -68,6 +69,7 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	_topology_adapter = String(config.get("topology_adapter", "UNSPECIFIED")).strip_edges().to_upper()
 	_profile = String(config.get("profile", PROFILE_MULTIPLAYER_CORE)).strip_edges().to_upper()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	_fixed_tick_authority = bool(config.get("fixed_tick_authority", false))
 	if _region_id.is_empty() or _topology_adapter.is_empty() or _profile not in [PROFILE_MULTIPLAYER_CORE, PROFILE_CANONICAL_PLAYABLE]:
 		return _failure("INVALID_NETWORKED_GAMEPLAY_CONFIGURATION")
 	_operation_ledger.clear()
@@ -358,6 +360,50 @@ func move_player(logical_player_id: String, transport_session_id: String, owners
 
 
 
+func advance_fixed_server_tick(server_tick: int) -> Dictionary:
+	if not _configured or not _fixed_tick_authority:
+		return _failure("FIXED_TICK_AUTHORITY_NOT_ENABLED")
+	if server_tick != _tick + 1:
+		return _failure("NON_MONOTONIC_FIXED_SERVER_TICK", {"expected": _tick + 1, "actual": server_tick})
+	_tick = server_tick
+	return _success({"server_tick": _tick})
+
+func simulate_fixed_movement_tick(
+	logical_player_id: String,
+	transport_session_id: String,
+	ownership_epoch: int,
+	input_sequence: int,
+	intent: Dictionary,
+	fixed_delta_seconds: float
+) -> Dictionary:
+	if not _configured or not _fixed_tick_authority:
+		return _failure("FIXED_TICK_AUTHORITY_NOT_ENABLED")
+	if not _playable_sandbox:
+		return _failure("MOVEMENT_INTENT_REQUIRES_PLAYABLE_SANDBOX")
+	var owner_check: Dictionary = _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
+	if not bool(owner_check.get("success", false)):
+		return owner_check
+	var record: Dictionary = _players.get_player(logical_player_id)
+	var movement_result: Dictionary = _movement.apply_fixed_tick(
+		record, input_sequence, intent, fixed_delta_seconds
+	)
+	if not bool(movement_result.get("success", false)):
+		return movement_result
+	var changed: bool = bool(movement_result.get("details", {}).get("changed", false))
+	var next_record: Dictionary = Dictionary(
+		movement_result.get("details", {}).get("player", record)
+	).duplicate(true)
+	if changed:
+		_players.upsert(next_record)
+		_revision += 1
+	return _success({
+		"replay": false,
+		"changed": changed,
+		"player": next_record,
+		"server_tick": _tick,
+		"server_simulation": movement_result.get("details", {}).get("server_simulation", {}),
+	})
+
 func submit_movement_intent(logical_player_id: String, transport_session_id: String, ownership_epoch: int, input_sequence: int, intent: Dictionary, operation_id: String) -> Dictionary:
 	return handle_player_input(InputCommand.create(
 		"message/m7/input/%s" % operation_id.sha256_text().left(12),
@@ -514,6 +560,7 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	return _success({
 		"revision": _revision,
 		"server_tick": _tick,
+		"fixed_tick_authority": _fixed_tick_authority,
 		"player_count": _players.get_players().size(),
 		"item_graph_checksum": String(create_canonical_item_graph_snapshot().get("checksum", "")),
 	})
@@ -799,6 +846,7 @@ func get_report() -> Dictionary:
 		"authority_epoch": _authority_epoch,
 		"revision": _revision,
 		"server_tick": _tick,
+		"fixed_tick_authority": _fixed_tick_authority,
 		"player_count": _players.get_players().size() if _players != null else 0,
 		"connected_count": connected,
 		"operation_count": _operation_ledger.size(),
@@ -900,7 +948,8 @@ func _spawn_position(logical_player_id: String) -> Dictionary:
 
 func _advance() -> void:
 	_revision += 1
-	_tick += 1
+	if not _fixed_tick_authority:
+		_tick += 1
 
 
 func _replay(operation_id: String, fingerprint: String) -> Dictionary:

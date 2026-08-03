@@ -13,6 +13,7 @@ class ServiceBackedClient:
 
 	signal replica_updated(snapshot: Dictionary)
 	signal item_graph_updated(snapshot: Dictionary)
+	signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
 
 	var service
 	var logical_player_id := "a"
@@ -60,8 +61,28 @@ class ServiceBackedClient:
 	func move_nonblocking(delta_x: float, delta_z: float) -> Dictionary:
 		return move_blocking(delta_x, delta_z)
 
-	func submit_movement_intent_nonblocking(intent: Dictionary) -> Dictionary:
+	func submit_movement_intent_nonblocking(intent: Dictionary, _client_tick: int = 0) -> Dictionary:
 		return submit_movement_intent_blocking(intent)
+
+	func advance_local_prediction(intent: Dictionary, _frame_delta_seconds: float) -> Dictionary:
+		var result: Dictionary = submit_movement_intent_blocking(intent)
+		var player: Dictionary = service.get_player(logical_player_id)
+		prediction_updated.emit(player, player, {
+			"configured": true,
+			"reconciliations": 0,
+			"history_size": 1,
+		})
+		return {
+			"success": bool(result.get("success", false)),
+			"error_code": String(result.get("error_code", "")),
+			"details": {
+				"predicted_state": player,
+				"presentation_state": player,
+			},
+		}
+
+	func is_prediction_ready() -> bool:
+		return true
 
 	func submit_movement_intent_blocking(intent: Dictionary) -> Dictionary:
 		input_sequence += 1
@@ -170,8 +191,8 @@ func _run() -> void:
 	await process_frame
 	var report: Dictionary = runtime.create_m3_graphical_client_report()
 	_assert(bool(report.get("network_playground_enabled", false)), "M7 network playground profile enabled")
-	_assert(not bool(report.get("network_prediction_mode", true)), "client-side movement prediction is disabled")
-	_assert(String(report.get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "authoritative replica interpolation is enabled")
+	_assert(bool(report.get("network_prediction_mode", false)), "client-side movement prediction is enabled")
+	_assert(String(report.get("m7_interpolation_mode", "")) == "CLIENT_PREDICTION_RECONCILIATION", "prediction/reconciliation presentation is enabled")
 	_assert(bool(report.get("seven_days_inventory_active", false)), "Seven Days inventory profile active")
 	_assert(runtime.item_gameplay != null, "real ItemGameplayController is attached")
 	_assert(runtime.m5_networked_inventory_shell == null, "legacy M5 inventory shell is not used")

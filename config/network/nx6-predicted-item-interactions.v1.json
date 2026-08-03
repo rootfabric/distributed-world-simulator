@@ -1,0 +1,74 @@
+{
+  "schema": "planet_simulator.nx6_predicted_item_interactions.v1",
+  "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+  "build_id": "nx6-predicted-item-interactions-fix3",
+  "branch": "feature/nx6-predicted-item-interactions",
+  "base_checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation",
+  "base_delivery": "fix1 accepted",
+  "delivery": "fix3",
+  "decision": "FIX3_IMPLEMENTED_CANDIDATE",
+  "base_commit": "c727b1cf25b4e5916098a057b89b7fa1eb878dc6",
+  "apply_over": "NX6 candidate plus fix1 and fix2 in the same branch",
+  "protocol": {
+    "changed": false,
+    "inherited_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+    "prediction_id_binding": "operation_id",
+    "authority": "SERVER_CANONICAL_ITEM_GRAPH",
+    "predicted_identity_is_authoritative": false
+  },
+  "prediction": {
+    "commands": [
+      "item.pickup",
+      "item.drop",
+      "item.place",
+      "item.transfer"
+    ],
+    "max_pending": 32,
+    "timeout_ms": 8000,
+    "temporary_item_prefix": "item/predicted/",
+    "temporary_mount_prefix": "mount/predicted/",
+    "rollback_on_rejection": true,
+    "rollback_on_timeout": true,
+    "rebase_on_authoritative_snapshot": true,
+    "authoritative_snapshot_mutated": false,
+    "persistence_changed": false
+  },
+  "authoritative_completion": {
+    "correlation": "operation_id",
+    "signal": "authoritative_item_command_completed",
+    "poll_api": "poll_authoritative_completion",
+    "wait_api": "wait_for_authoritative_completion",
+    "consume_api": "take_authoritative_completion",
+    "mailbox_limit": 64,
+    "dependent_commands_wait_for_server_identity": true,
+    "m7_placement_mount_identity_source": "canonical server snapshot"
+  },
+  "lifecycle": {
+    "bridge_stop_api": "stop",
+    "pump_stopped": true,
+    "pending_predictions_rolled_back": true,
+    "runtime_mailboxes_cleared": true,
+    "canonical_signal_consumers_restored": true,
+    "m7_client_calls_stop_before_runtime_shutdown": true,
+    "stop_idempotent": true,
+    "production_playground_calls_stop_before_runtime_signal_disconnect": true,
+    "production_playground_stop_reason": "NX6_PLAYGROUND_UNLOAD",
+    "m7_process_client_uses_real_playground_scene": true,
+    "test_only_lifecycle_wrapper_used": false,
+    "obsolete_fix2_wrapper_removed_by_apply_script": true
+  },
+  "transport": {
+    "channel": "ITEM_GRAPH",
+    "delivery": "RELIABLE_ORDERED",
+    "blocking_wait_removed_from_predicted_path": true,
+    "service_backed_fallback": "BLOCKING_SERVER_AUTHORITY",
+    "recursive_runtime_signal_emission": false
+  },
+  "mandatory_gates": [
+    "editor import",
+    "NX6 contracts",
+    "NX6 integration",
+    "M7 playable contracts",
+    "M7 graphical multiprocess"
+  ]
+}

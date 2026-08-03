@@ -3,6 +3,9 @@ extends RefCounted
 const TransportUtilsScript = preload("res://scripts/network/transports/v2/transport_contract_utils.gd")
 
 const SCHEMA: String = "planet_simulator.network_peer_session.v2"
+const UNRELIABLE_SEQUENCE_POLICY: String = "GAP_TOLERANT_LATEST_WINS_V1"
+const INCOMING_SEQUENCE_STREAM_POLICY: String = "DELIVERY_CLASS_ENET_CHANNEL_V1"
+const RELIABLE_SEQUENCE_POLICY: String = "MONOTONIC_PER_STREAM_GLOBAL_GAPS_V1"
 const STATE_CONNECTING := "CONNECTING"
 const STATE_TRANSPORT_CONNECTED := "TRANSPORT_CONNECTED"
 const STATE_HANDSHAKING := "HANDSHAKING"
@@ -30,6 +33,7 @@ var _route_id: String = ""
 var _route_generation: int = 0
 var _outgoing_sequence: int = 0
 var _incoming_sequence: int = 0
+var _incoming_sequences: Dictionary = {}
 var _queued_messages: int = 0
 var _queued_bytes: int = 0
 var _max_pending_messages: int = 128
@@ -97,13 +101,41 @@ func commit_outgoing_sequence(sequence: int) -> Dictionary:
 	return TransportUtilsScript.success()
 
 
-func accept_incoming_sequence(sequence: int) -> Dictionary:
-	if sequence <= _incoming_sequence:
-		return TransportUtilsScript.failure("STALE_OR_DUPLICATE_FRAME", {"last_sequence": _incoming_sequence})
-	if sequence != _incoming_sequence + 1:
-		return TransportUtilsScript.failure("FRAME_SEQUENCE_GAP", {"expected": _incoming_sequence + 1})
-	_incoming_sequence = sequence
-	return TransportUtilsScript.success()
+func accept_incoming_sequence(
+	sequence: int,
+	allow_gap: bool = false,
+	sequence_stream: String = "LEGACY",
+	require_contiguous: bool = true
+) -> Dictionary:
+	var normalized_stream: String = sequence_stream.strip_edges().to_upper()
+	if normalized_stream.is_empty():
+		return TransportUtilsScript.failure("INVALID_SEQUENCE_STREAM")
+	var last_sequence: int = int(_incoming_sequences.get(normalized_stream, 0))
+	if sequence <= last_sequence:
+		if allow_gap:
+			return TransportUtilsScript.success({
+				"accepted": false,
+				"stale": true,
+				"last_sequence": last_sequence,
+				"sequence_stream": normalized_stream,
+			})
+		return TransportUtilsScript.failure("STALE_OR_DUPLICATE_FRAME", {
+			"last_sequence": last_sequence,
+			"sequence_stream": normalized_stream,
+		})
+	if require_contiguous and sequence != last_sequence + 1:
+		return TransportUtilsScript.failure("FRAME_SEQUENCE_GAP", {
+			"expected": last_sequence + 1,
+			"sequence_stream": normalized_stream,
+		})
+	var previous_sequence: int = last_sequence
+	_incoming_sequences[normalized_stream] = sequence
+	_incoming_sequence = maxi(_incoming_sequence, sequence)
+	return TransportUtilsScript.success({
+		"accepted": true,
+		"gap": maxi(sequence - previous_sequence - 1, 0),
+		"sequence_stream": normalized_stream,
+	})
 
 
 func reserve_queue(bytes: int) -> Dictionary:
@@ -133,6 +165,7 @@ func snapshot() -> Dictionary:
 		"route_generation": _route_generation,
 		"outgoing_sequence": _outgoing_sequence,
 		"incoming_sequence": _incoming_sequence,
+		"incoming_sequences": _incoming_sequences.duplicate(true),
 		"queued_messages": _queued_messages,
 		"queued_bytes": _queued_bytes,
 		"max_pending_messages": _max_pending_messages,

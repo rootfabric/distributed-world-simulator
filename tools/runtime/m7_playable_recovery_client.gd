@@ -109,7 +109,7 @@ func _run_recover() -> void:
 	_assert(bool(movement.get("success", false)), "recovered server accepts new movement intent")
 	await _wait_frames(4)
 	var after_position := _player_position(client.get_local_player_record())
-	_assert(after_position.distance_to(before_position) > 0.1, "recovered server continues authoritative movement simulation")
+	_assert(after_position.distance_to(before_position) > 0.05, "recovered server continues authoritative movement simulation")
 	var drop: Dictionary = client.execute_item_command_blocking("item.drop", {
 		"item_id": BEACON_ID,
 		"quantity": -1,

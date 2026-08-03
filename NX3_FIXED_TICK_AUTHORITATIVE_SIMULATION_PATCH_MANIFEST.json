@@ -1,0 +1,259 @@
+{
+  "schema": "planet_simulator.nx3_fixed_tick_authoritative_simulation_patch_manifest.v1",
+  "checkpoint": "v16.13.0-network-nx3-fixed-tick-authoritative-simulation",
+  "build_id": "nx3-fixed-tick-authoritative-simulation",
+  "branch": "feature/nx3-fixed-tick-authoritative-simulation",
+  "base_checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "base_delivery": "fix2",
+  "base_source_commit": "f1abeca",
+  "base_overlay_commit": "9aa11562bc661b1cb20b3f43cb7a9ac018cd47bf",
+  "incremental": true,
+  "apply_over": "accepted NX2 candidate plus fix1 plus fix2",
+  "file_count": 38,
+  "new_file_count": 16,
+  "modified_file_count": 22,
+  "deleted_file_count": 0,
+  "implementation": {
+    "fixed_tick_rate_hz": 60,
+    "fixed_delta_seconds": 0.016666666666666666,
+    "per_peer_input_buffer": true,
+    "packet_arrival_delta_removed": true,
+    "bounded_catch_up": true,
+    "bounded_input_hold": true,
+    "jump_edge": true,
+    "wrap_aware_sequence_end_to_end": true,
+    "transition_history_redundancy": true,
+    "snapshot_rate_hz": 20,
+    "last_processed_input_sequence_ack": true
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "bf85eb0552042b282286b88809870967e4842922415a16c362eb87c79d5a4241",
+      "bytes": 13140
+    },
+    {
+      "path": "NETWORK_ROADMAP_RU.md",
+      "status": "MODIFIED",
+      "sha256": "f44ac9f924b800e6bb4b00185c5e8eb0078e42b13e42e65fd408479845066df2",
+      "bytes": 5114
+    },
+    {
+      "path": "NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "6fafaeae5e661547e1ea9997b909419b090319d4b91416dcd9005770be3315a4",
+      "bytes": 46378
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "6e9fa33c3bec79d07e0b096c44718d1117bc82d5decf5071e0bbc5ea927fc590",
+      "bytes": 4973
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "e11d20718433f2d100b67573eadea5afac9a7d087f8f49f1cbf34d94b883ffe9",
+      "bytes": 10254
+    },
+    {
+      "path": "RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1",
+      "status": "NEW",
+      "sha256": "0ad71115918d6ebb7d64d308a7d2188a36a38bbe65c2c6ebc014658d442bf4fd",
+      "bytes": 4305
+    },
+    {
+      "path": "RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.sh",
+      "status": "NEW",
+      "sha256": "dcfac861fe337dbd59e9cd771d0ac9508809c8bbdfbf533bf121cd6864f0897d",
+      "bytes": 2535
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "f6fa278b2021baf4cbfc882a76e19c1f2821ab734fec6dca270c1195194e1d13",
+      "bytes": 20403
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "status": "MODIFIED",
+      "sha256": "8310751a95756b9fe6022470ab9ab0a6d32c3ab586ab9b35867d9d7006788425",
+      "bytes": 4190
+    },
+    {
+      "path": "config/network/nx3-fixed-tick-authoritative-simulation.v1.json",
+      "status": "NEW",
+      "sha256": "e7b8983041acac2486737dd5e5c3a8949fa80d619e9af3a0a8c3f12e911732f8",
+      "bytes": 1335
+    },
+    {
+      "path": "docs/checkpoints/2026-08-03_V16_13_0_NETWORK_NX3_FIXED_TICK_RU.md",
+      "status": "NEW",
+      "sha256": "409ae1b6c1c3ad045845b5314fb04d401d76b6fa030d5eb0eefea4ca2d8e0bd2",
+      "bytes": 1450
+    },
+    {
+      "path": "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "status": "MODIFIED",
+      "sha256": "b2de04937466606b404156ab939cbac42a59dbd7a07297c3cc9763b477970db6",
+      "bytes": 16143
+    },
+    {
+      "path": "docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md",
+      "status": "NEW",
+      "sha256": "ab2c0fc601dc6f03275ced9a9167ad7e7eb72e4254b7f87748800e74936cf94c",
+      "bytes": 8513
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "MODIFIED",
+      "sha256": "902479dd619a12244641d344e16b9e7c40d3566ad68aa6b9f111a229dc028c87",
+      "bytes": 9039
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd",
+      "status": "MODIFIED",
+      "sha256": "6c53e38ced70a0e0f64d00198297fb68e19050b29740c237e153722d884553e5",
+      "bytes": 1896
+    },
+    {
+      "path": "scripts/network/simulation/fixed_tick_input_buffer.gd",
+      "status": "NEW",
+      "sha256": "249a5151b3df0000f8e0518231326493c1e9f241130ee875fd8e5ee3d2c0b4f8",
+      "bytes": 7035
+    },
+    {
+      "path": "scripts/network/simulation/fixed_tick_input_buffer.gd.uid",
+      "status": "NEW",
+      "sha256": "6ef9408359e02d720ae5c8d47388cd463033fbb7ccbcd25f47a8ea3f6096102c",
+      "bytes": 20
+    },
+    {
+      "path": "scripts/network/simulation/fixed_tick_scheduler.gd",
+      "status": "NEW",
+      "sha256": "42a510e83d9250a2bae4d75aa56efaaf578a614b0df4ff6d42cf20fdd12ca42b",
+      "bytes": 3802
+    },
+    {
+      "path": "scripts/network/simulation/fixed_tick_scheduler.gd.uid",
+      "status": "NEW",
+      "sha256": "5e29c037e2fa442a96de498ea6e45d9afdfad16a6f2b4037651d74f198c63c7f",
+      "bytes": 19
+    },
+    {
+      "path": "scripts/network/simulation/input_sequence.gd",
+      "status": "NEW",
+      "sha256": "278b1cd99838728f89f95d1a1861d28782f9109d45b6a81e63941e14f9696c93",
+      "bytes": 1021
+    },
+    {
+      "path": "scripts/network/simulation/input_sequence.gd.uid",
+      "status": "NEW",
+      "sha256": "f5327e7b6dd8fda1636d68c92e053a424ccc6c4b8e03a3db4fe00f3d69bd6b5c",
+      "bytes": 20
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/contracts/player_input_batch.gd",
+      "status": "MODIFIED",
+      "sha256": "9434fecc0655ae32450145755622d8a432b923671da9986f48357a8427d9f104",
+      "bytes": 8719
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "25728d65611dd212f9c6161cf7f1089df73dc8e518f1268371756b372a467d73",
+      "bytes": 64953
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "78af495a36b6e146fb3177a736b60c6ff54b90cd27e4b8adfcfbe7ca65ad8e2a",
+      "bytes": 44538
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+      "status": "MODIFIED",
+      "sha256": "7ca278ffcfb54608a0301ffba0432db0366b1cf32058f10f9a51dfec94f73226",
+      "bytes": 50896
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+      "status": "MODIFIED",
+      "sha256": "a7e4e0edef4b0ea4a2f4800945eb3b5ec06c616e2169aee89fbe46027290484b",
+      "bytes": 8490
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd",
+      "status": "MODIFIED",
+      "sha256": "61c6555ebe4ec685e11eb898e81bf1a5bcdf20e04778672f3ea3a97b93296f45",
+      "bytes": 26042
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "f6f34246a4b4125327812242c0e9148d63e3dad944fcecf1000ca6a5c8a6ca1b",
+      "bytes": 10252
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "MODIFIED",
+      "sha256": "e69aa05d10c7cbbfda4cd30cdfed4b67bd7a1c3178983681b9e7ba0b0dccc95d",
+      "bytes": 39446
+    },
+    {
+      "path": "tests/network/test_nx1_network_condition_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "22a9201447ce59af8c4b159b712393fe53a51bddd8bc77a7041197d62b2b3119",
+      "bytes": 9174
+    },
+    {
+      "path": "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "status": "MODIFIED",
+      "sha256": "7864d0a5dade84ef96c39a405f2c1516b8f1f9af9e3e52a36246792d854a7df0",
+      "bytes": 26700
+    },
+    {
+      "path": "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+      "status": "NEW",
+      "sha256": "490460f87462d2b4ccc909c20359c0c09d8dd21e3f803d91d9a878b835da3a93",
+      "bytes": 21689
+    },
+    {
+      "path": "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd.uid",
+      "status": "NEW",
+      "sha256": "6507004fa20d6cc93e0b6bef665ae91172f89a1ee38a983b2fc5cffc676958da",
+      "bytes": 20
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "68ba121f3fce1b48271ac2f640f0a8df48d2ca3bea3fbc1b1e3203d62249346f",
+      "bytes": 12299
+    },
+    {
+      "path": "tools/runtime/m7_playable_network_client.gd",
+      "status": "MODIFIED",
+      "sha256": "489dd24b288063c358c35bdab6be7dfa042fe63ff8d77dd664757eff883cd597",
+      "bytes": 16718
+    },
+    {
+      "path": "validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-files.txt",
+      "status": "NEW",
+      "sha256": "2e807de5adee886fc12e2635f4354b576b843567e095f0c1137f285875944dda",
+      "bytes": 2292
+    },
+    {
+      "path": "validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-validation.json",
+      "status": "NEW",
+      "sha256": "528684a660d7c1ff2cd1bc2effde244f810d92360c7263745ebff95897d5747c",
+      "bytes": 5170
+    }
+  ],
+  "self_hash_excluded": "NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_PATCH_MANIFEST.json"
+}

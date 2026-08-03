@@ -1,0 +1,84 @@
+{
+  "schema": "planet_simulator.nx2_fix2_patch_manifest.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "delivery": "fix2",
+  "apply_over": "v16.12.0 NX2 candidate + fix1",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "size": 11983,
+      "sha256": "1CFFC7F49257F17136829EC71B7CA414C2016C9B6AB544999F60F1B1AD8B9274"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "size": 44928,
+      "sha256": "49C029F6686A47E019EB129992924927E438E7904A2CD4C6EF8F12425D8F8794"
+    },
+    {
+      "path": "README_RU.md",
+      "size": 4937,
+      "sha256": "283A91736D8E43F0A6A1106E15254E85EEA1960CB14A1D8C98DCC682134597D6"
+    },
+    {
+      "path": "RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1",
+      "size": 3991,
+      "sha256": "5D0D26875E170BE1D4BE34CC4F816D0DF4F8ABB4650A8CA1614057E6989BBC04"
+    },
+    {
+      "path": "config/network/nx2-realtime-traffic-separation.v1.json",
+      "size": 3548,
+      "sha256": "F5C3540882FB8EC76C15B81B67A3EF9CEC2D9896E7D5D2521B4BC428BA9043EB"
+    },
+    {
+      "path": "docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX2_RU.md",
+      "size": 1321,
+      "sha256": "7CEC1DCA1574311537FF656C358FA501DF3F2271291D5CFF5D14C6E5071DE5D0"
+    },
+    {
+      "path": "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "size": 16130,
+      "sha256": "91B345CF413A4A5F6774B477A61E8F7C8F23A808DA4D9594E67733993121A1CA"
+    },
+    {
+      "path": "docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md",
+      "size": 13769,
+      "sha256": "7A8395808F3AAD254C3C49EC92D1AFC7B22AED4548F10BAE90599432A26C1E3F"
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "size": 7783,
+      "sha256": "6EBE3C657F651DD7B3597138E81DC2CF09D2E9B99ADEE321DD8439C00937E449"
+    },
+    {
+      "path": "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+      "size": 15566,
+      "sha256": "6F3E0228E7020C43D3D47EB047FC985A52FA788F03276D172893D52E2CD90788"
+    },
+    {
+      "path": "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "size": 28532,
+      "sha256": "5D77E392A4880A21D8C38B99FE2B6C94246EC6FD0171C3D434D08D13EA7ACA23"
+    },
+    {
+      "path": "tests/network/test_nx2_physical_channel_processes.gd",
+      "size": 9714,
+      "sha256": "20E79459B18EFF8356B3FCBA2223C59DE42C38A8279A3DA22A390473A7236FE1"
+    },
+    {
+      "path": "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "size": 26537,
+      "sha256": "C419052999E0A82785E106FA6F6F514CB5A081EF12D11B9B61723BC0B38C694F"
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-validation.json",
+      "size": 2302,
+      "sha256": "D858D0A633C76F114A9EDBB462067549B5686F1C3DBA091997C56A89EB8C0C18"
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-files.txt",
+      "size": 816,
+      "sha256": "35FB20C6537ED9BEB363F36FE7C6319DA343C6E7E8DEC1C42C8CAF71F49A9E6E"
+    }
+  ],
+  "self_hash_excluded": "NX2_REALTIME_TRAFFIC_SEPARATION_FIX2_PATCH_MANIFEST.json"
+}

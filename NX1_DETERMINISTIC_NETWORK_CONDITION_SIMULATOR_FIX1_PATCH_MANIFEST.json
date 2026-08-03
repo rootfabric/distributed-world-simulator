@@ -1,0 +1,112 @@
+{
+  "schema": "planet_simulator.nx1_deterministic_network_condition_simulator_fix1_patch_manifest.v1",
+  "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "delivery_iteration": "fix1",
+  "build_id": "nx1-deterministic-network-condition-simulator",
+  "branch": "feature/nx1-deterministic-network-condition-simulator",
+  "base_checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator-candidate",
+  "base_commit": "f1abeca",
+  "incremental": true,
+  "apply_over": "NX1 candidate archive SHA-256 1CE0284F0E79A63BEFA64BA4FEE81C5D4E3FBA47EE049E5543D7C9B0A6527BE6",
+  "file_count": 16,
+  "new_file_count": 2,
+  "modified_file_count": 14,
+  "deleted_file_count": 0,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "32517222a5b4f73620388ae736b6b2ac2c94804f5d6c64d25c8dcfabb344049a",
+      "bytes": 9649
+    },
+    {
+      "path": "NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX1_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "42bd366f4ebe2ef9db94076b4a0a3092a611239e5dcc576557a46fddab3b6cb0",
+      "bytes": 42273
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "b988d0abcbb620f62f235f60cd108b8a7b3b230d9f85fddc48755743eb51a029",
+      "bytes": 4537
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "e6686fd53ebca96ae32441377ef36af3d19dca7937744302ed9c7d1f4c3fdca0",
+      "bytes": 10118
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "5d6ad176f0ab5be78deb3e91401b3e526e0cd465237484e635b592109f84509a",
+      "bytes": 20253
+    },
+    {
+      "path": "config/network/nx1-deterministic-network-condition-simulator.v1.json",
+      "status": "MODIFIED",
+      "sha256": "7cf5e3870409ae8b7a4ac7447762d9fb9344c4909967bddae26c46f239ff02ec",
+      "bytes": 4116
+    },
+    {
+      "path": "docs/checkpoints/2026-08-01_V16_11_0_NETWORK_NX1_DETERMINISTIC_CONDITION_SIMULATOR_RU.md",
+      "status": "MODIFIED",
+      "sha256": "33ca6c4518f04fe34edacdd2adb53cca9cb0c667da67b49dcd14c81ea31104cc",
+      "bytes": 3751
+    },
+    {
+      "path": "docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md",
+      "status": "MODIFIED",
+      "sha256": "1695ec8a2242c3b9405593e836017370453756c976fe0fa10f36d33f535bac18",
+      "bytes": 12189
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_simulator_port.gd",
+      "status": "MODIFIED",
+      "sha256": "6d8d282a0ba997cf18190037354209772c32187187fcf970714ef83ce88cf3b6",
+      "bytes": 30661
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "MODIFIED",
+      "sha256": "fb1e6da6a8e68bcc07c1ec823d9acdff9bcc99324924eb9c1c7708f8a9186b1d",
+      "bytes": 6509
+    },
+    {
+      "path": "scripts/network/transports/v2/network_peer_session.gd",
+      "status": "MODIFIED",
+      "sha256": "f8682d4c1d3418b11b74268de6307676bc80a462678862f648443dc0e36f9273",
+      "bytes": 6895
+    },
+    {
+      "path": "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "status": "MODIFIED",
+      "sha256": "a4587c9a0df1edd7cfe259a4056e20564b5d306a9476497557ff857dc8a2fc6e",
+      "bytes": 24786
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "MODIFIED",
+      "sha256": "75b116540de455e695980fd5aadb13d9f0a4e06cea34a64e4ea5c73bab2009e6",
+      "bytes": 33870
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix1-files.txt",
+      "status": "NEW",
+      "sha256": "ab3bc5d645ea517b5dbe76600dee33616948ea8422faff5c3520186c433f0c80",
+      "bytes": 870
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json",
+      "status": "MODIFIED",
+      "sha256": "5dc8a2e28f5bb3c95fe423b7eb57ca8d618ae04eefab02a9e0e2a42cf461564c",
+      "bytes": 4753
+    }
+  ]
+}

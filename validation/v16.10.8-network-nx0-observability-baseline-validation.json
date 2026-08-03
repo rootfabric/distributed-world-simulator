@@ -1,0 +1,170 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "build_id": "nx0-observability-baseline",
+  "branch": "feature/nx0-observability-baseline",
+  "status": "CANDIDATE",
+  "base": {
+    "commit": "69bd7fc",
+    "checkpoint": "v16.10.7-network-nx0-observability-preparation",
+    "delivery": "fix1",
+    "accepted_fix1_sha256": "B2F5F8EB9C1E81D13B18B34090FB5DA46C1A73FB06A58000079F236A0A81536A"
+  },
+  "scope": {
+    "runtime_behavior_changed": true,
+    "gameplay_semantics_changed": false,
+    "files_in_incremental_patch": 41,
+    "new_files": 20,
+    "modified_files": 21,
+    "deleted_files": 0,
+    "production_paths_changed": [
+      "scripts/app/simulator_app.gd",
+      "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+      "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "scripts/runtime/launch_options.gd",
+      "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "scripts/runtime/runtime_descriptor.gd"
+    ],
+    "preserved_baseline": [
+      "packet-arrival movement delta",
+      "successful movement COMMAND_RESULT",
+      "movement delta plus full snapshot amplification",
+      "three ENet channels",
+      "1500 ms movement persistence cadence"
+    ]
+  },
+  "implemented": [
+    "mandatory fingerprint handshake before gameplay JOIN",
+    "deterministic build/commit/protocol/world/session mismatch rejection",
+    "idempotent matching HELLO replay",
+    "validated protocol manifest and protocol hash",
+    "bounded JSON-safe transport/runtime telemetry",
+    "actual ENet packet bytes/channel/mode and peer RTT/jitter/loss statistics",
+    "server/client command age, latency, queue and persistence metrics",
+    "per-run public session binding in M7 launchers"
+  ],
+  "engine": {
+    "version": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "executable_sha256": "BFA7CE632D8D4B1DCC96F64F5405EE52B57C4E25D15C3E0478ACC26E08D517D7",
+    "source": "project-provided archive",
+    "execution_mode": "controlled direct shell process",
+    "godot_run_managed_available": false
+  },
+  "tests": {
+    "focused": {
+      "result": "PASS",
+      "steps": "4/4",
+      "preparation_assertions": 115,
+      "baseline_assertions": 150,
+      "handshake_process_assertions": 31,
+      "handshake_process_failures": 0
+    },
+    "network_non_process": {
+      "result": "PASS",
+      "tests": "48/48"
+    },
+    "enet_process_regression": {
+      "result": "PASS",
+      "tests": "4/4",
+      "profiles": [
+        {
+          "name": "T1 multi-peer transport",
+          "assertions": 20
+        },
+        {
+          "name": "N1 ENet snapshot",
+          "assertions": 28
+        },
+        {
+          "name": "N1 remote Item Graph command",
+          "assertions": 51
+        },
+        {
+          "name": "N1 reconnect/replay",
+          "assertions": 67
+        }
+      ]
+    },
+    "m3_graphical_multiplayer": {
+      "result": "PASS",
+      "assertions": 56,
+      "failures": 0
+    },
+    "m7_playable_network": {
+      "result": "PASS",
+      "assertions": 34,
+      "failures": 0
+    },
+    "m7_restart_reconnect_recovery": {
+      "result": "PASS",
+      "assertions": 36,
+      "failures": 0
+    },
+    "powershell_focused_runner": {
+      "runtime_result": "NOT_RUN",
+      "reason": "pwsh/powershell unavailable in Linux environment",
+      "static_home_mutation_check": "PASS"
+    }
+  },
+  "logs": [
+    {
+      "path": "/mnt/data/v16.10.8-network-nx0-observability-baseline-focused.log",
+      "sha256": "7f45052dd4694162163dfa717f80381bdf1465c408b0b405edade73ee7873485",
+      "bytes": 2988,
+      "result": "4/4 PASS"
+    },
+    {
+      "path": "/mnt/data/nx0-m3-process-session.log",
+      "sha256": "a899c0c89cf742ebed9d706bd67209f3b7c46c02e870a0ea3d9cacc13a64c769",
+      "bytes": 71372,
+      "result": "56 assertions, 0 failures"
+    },
+    {
+      "path": "/mnt/data/nx0-m7-process.log",
+      "sha256": "e54025c3319f8eed3971af9c82e1c29d818f8a78a192ba2c59bb685d8ab00ba2",
+      "bytes": 22492,
+      "result": "34 assertions, 0 failures"
+    },
+    {
+      "path": "/mnt/data/nx0-m7-recovery.log",
+      "sha256": "4f573c705784916d1784d566a59e9936be8d3d0099012ca709dfbb31b7896bdf",
+      "bytes": 32102,
+      "result": "36 assertions, 0 failures"
+    }
+  ],
+  "static_validation": {
+    "git_diff_check": "PASS",
+    "json_parse": "PASS (70 project JSON files)",
+    "shell_syntax": "PASS (3/3 changed shell runners)",
+    "zip_safety": "PASS (41 unique paths, unsafe 0, duplicates 0)",
+    "byte_exact_replay": "PASS (41/41 preliminary delivery files)",
+    "focused_archive_replay": "PASS (4/4; 115 + 150 + 31 assertions)",
+    "utf8_nul_conflict_trailing_whitespace": "PASS (41/41 patch files)",
+    "gdscript_uid_sidecars": "PASS",
+    "powershell_home_mutation": "PASS (0 occurrences in focused runner)"
+  },
+  "known_non_blocking_harness_warnings": [
+    "breakpoint_mcp runtime port 9081 can already be occupied by another graphical client",
+    "X11 may report NO GRAB in isolated graphical profiles",
+    "root execution warning in container"
+  ],
+  "limitations": [
+    "NX0 measures current variable process callback duration; fixed simulation tick metrics begin in NX3",
+    "prediction and interpolation metrics remain unavailable until NX4/NX5",
+    "no network condition injection or traffic flow change is included"
+  ],
+  "archive": {
+    "filename": "v16.10.8-network-nx0-observability-baseline-patch.zip",
+    "sha256": "EXTERNAL_DELIVERY_HASH",
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "byte_exact_files": "41/41"
+  },
+  "independent_acceptance_correction": {
+    "source": "managed MCP acceptance",
+    "m3_graphical_assertions": 56,
+    "m7_playable_assertions": 34,
+    "note": "Original report overstated each suite by one assertion; all executed assertions passed."
+  }
+}

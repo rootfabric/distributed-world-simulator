@@ -1,0 +1,104 @@
+{
+  "schema": "planet_simulator.nx2_realtime_traffic_separation.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "build_id": "nx2-realtime-traffic-separation",
+  "branch": "feature/nx2-realtime-traffic-separation",
+  "base_checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "base_commit": "f1abeca",
+  "status": "implementation_candidate",
+  "channel_policy": {
+    "control": {
+      "index": 0,
+      "delivery": "RELIABLE_ORDERED"
+    },
+    "input": {
+      "index": 1,
+      "delivery": "UNRELIABLE_SEQUENCED",
+      "enet_mapping": "RAW_UNRELIABLE",
+      "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
+    },
+    "snapshot": {
+      "index": 2,
+      "delivery": "UNRELIABLE_SEQUENCED",
+      "enet_mapping": "RAW_UNRELIABLE",
+      "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
+    },
+    "item": {
+      "index": 3,
+      "delivery": "RELIABLE_ORDERED"
+    },
+    "resync": {
+      "index": 4,
+      "delivery": "RELIABLE_ORDERED"
+    },
+    "telemetry": {
+      "index": 5,
+      "delivery": "UNRELIABLE_SEQUENCED",
+      "enet_mapping": "RAW_UNRELIABLE",
+      "coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM"
+    }
+  },
+  "transport_queue_policy": {
+    "partition": "PEER_DELIVERY_CHANNEL_STREAM_V1",
+    "reliable_ordering": "FIFO_PER_STREAM_V1",
+    "realtime_coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1",
+    "flush_fairness": "PRIORITY_ROUND_ROBIN_V1",
+    "application_sequencing": "DELIVERY_CLASS_ENET_CHANNEL_V1"
+  },
+  "movement": {
+    "input_sample_hz": 60,
+    "input_send_interval_ms": 33,
+    "input_batch_max_entries": 3,
+    "input_history_policy": "TRANSITION_SEGMENTS_V1",
+    "successful_command_result": false,
+    "per_input_delta": false,
+    "per_input_full_snapshot": false,
+    "snapshot_interval_ms": 50,
+    "snapshot_wire": "COMPACT_GAMEPLAY_SNAPSHOT_V1",
+    "server_delta_policy": "PACKET_ARRIVAL_BUDGET_WEIGHTED_BY_SEGMENT_V1",
+    "fixed_tick_authority": false
+  },
+  "items": {
+    "command_channel": "ITEM",
+    "command_delivery": "RELIABLE_ORDERED",
+    "mutation_replication": "CANONICAL_ITEM_GRAPH_DELTA_V1",
+    "full_snapshot_channel": "RESYNC",
+    "full_snapshot_reasons": [
+      "JOIN",
+      "EXPLICIT_RESYNC",
+      "CHECKSUM_OR_BASE_REVISION_MISMATCH"
+    ],
+    "network_item_save": "SUPPRESSED_WHEN_BRIDGE_DECLARES_SERVER_AUTHORITATIVE_PERSISTENCE",
+    "delta_validation": "STRICT_JSON_INTEGER_LOWERCASE_SHA256_V1",
+    "committed_mutation_delta_failure": "FULL_RESYNC_WITH_SUCCESS_RESULT"
+  },
+  "wire_budget": {
+    "realtime_packet_target_max_bytes": 1200,
+    "unreliable_fragmentation": false,
+    "compact_input_batch": true,
+    "compact_gameplay_snapshot": true
+  },
+  "preserved_baseline": {
+    "server_authority": true,
+    "movement_uses_packet_arrival_budget": true,
+    "movement_checkpoint_interval_ms": 1500,
+    "client_prediction": false,
+    "remote_snapshot_buffer_interpolation": false,
+    "async_persistence": false
+  },
+  "acceptance": {
+    "movement_success_results": 0,
+    "movement_per_input_deltas": 0,
+    "movement_per_input_full_snapshots": 0,
+    "item_commands_blocked_by_realtime_stream": false,
+    "network_non_process_tests": 50,
+    "focused_steps": 9,
+    "managed_mcp_required_for_acceptance": true
+  },
+  "physical_binding": {
+    "validation": "STRICT_CHANNEL_AND_TRANSFER_MODE_V1",
+    "violation_scope": "PEER_LOCAL_QUARANTINE_V1",
+    "listener_failure": false,
+    "healthy_peers_preserved": true
+  }
+}

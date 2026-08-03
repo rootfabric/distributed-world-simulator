@@ -1,0 +1,16 @@
+AGENTS.md
+PROJECT_MANIFEST.txt
+README_RU.md
+RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1
+config/network/nx2-realtime-traffic-separation.v1.json
+docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX2_RU.md
+docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md
+docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md
+scripts/network/observability/network_protocol_manifest.gd
+scripts/network/transports/v2/enet_multi_peer_transport_port.gd
+scripts/network/transports/v2/network_transport_boundary_v2.gd
+tests/network/test_nx2_physical_channel_processes.gd
+tests/network/test_nx2_realtime_traffic_separation.gd
+validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-validation.json
+validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-files.txt
+NX2_REALTIME_TRAFFIC_SEPARATION_FIX2_PATCH_MANIFEST.json
