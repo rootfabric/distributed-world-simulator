@@ -1,0 +1,790 @@
+{
+    "schema":  "distributed_world_simulator.int0_uid_sidecars_manifest.v1",
+    "base_checkpoint":  "checkpoint/int0-three-domain-focused-pass-pre-uid",
+    "base_sha":  "64e64a7fd55434389692ca6f4b46a18422ba5147",
+    "generated_by":  "Godot 4.7.1 double editor import",
+    "project_godot_modified":  false,
+    "uid_count":  156,
+    "files":  [
+                  {
+                      "path":  "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "771A73ED33DD051FE4C43886469ECB18A898DAEEE8E5D73972890B6C98B599C7"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/analysis/matter_body_mass_integrator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F2B664BD17245D00E8ED7F89A44446D799984E8B94A679E033275C21EC74F201"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/contracts/matter_body_mass_estimate.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2209DC6A7C2C045B333BE43479D2D415E45B6D215873BDC849DA3AE03562EE78"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/contracts/matter_material_batch.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2D5477A5C52DA06BAA35F77C61B725E360634D5E1D616F3A75C93430F6C40187"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/generation/asteroid_feature_catalog.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "86593979CE61D332C7A9F41E23DC178D6D12ECE35B378B193C38862DFE8E56FC"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/generation/deterministic_field_3d.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "4E924CFC20B25F0EE84A4E222644FF535BCC2D3E407B179CF33772D4A3842EA7"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/generation/fixed_seed_asteroid_generator.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "4EAECDCF9622870A545A607CA8B7C01769E7B75602DFB1BF00BD30F8DD34964D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/generation/fixed_seed_asteroid_profile.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "9534EA46A0D8A56EA8DD49A3C5020AF55697D8F5882D4F4969B802B0B5F31968"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_authority_fencing_token.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D62057A9E896E5F56EA93514A376056388842CFE2A3442CC428CCCCBF89B6A3F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_authority_lease.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "AC0B64AB4BA57113D7A7280AEBA0AB0638BAB6ED61A76B923ACDBC1F9346A428"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_handoff_checkpoint.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D6514D85A4251589180A919D42202F6B74A6782899B05409D79F97FE5CDE3C9F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_handoff_coordinator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FB0E551231E24B4BAE67ADE218E0ABC26087CDDF0C078DD35AD34454F24FAF4D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_handoff_recovery_service.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D0F7AF51C711D0E3C354BCA76A8BBD5AE2BAEE8DE2444317B51966D5EEDAEC18"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F1F6944FBFC34B795FDF785AE9D9C89E7E488C0DBB298D8796D52A7B22B5636E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_handoff_runtime_projector.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "5D62EFF68074D1D67137F4630D640B74BB524FE8095BEDFC059C3CEB3FD16A06"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_durable_regional_authority_gate.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "99970B674A9124EEABD858BC5EF00CC3D5870612DFB963656A6522B70789CA68"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_handoff_journal_record.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "58A1F1FDA587A612C1A83A67C97756704DC6B5EB819E4C4B1B8C7D53226388F0"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/durable/matter_mw8_durable_runtime_adapter.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2BE0FB28F87D2ADAB44F1D4077D9C7902D7C21009268189B1A982AEC21E1A654"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_authority_directory.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "0A3BD959B175BA23A278FAA502B2D6F56EC727481174EFD84D8FE1F6C29C4F5D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_authority_lease.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "5F19B26BACCCD60683C5874A8B56CE866751A7B398CC85A1E05F242C2348B202"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_authority_region.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "FD53800E315A06504C2291C0BD5ABB4B48166B080EFD9353EFE508A5D7D4FD8E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_client_handoff_ticket.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "0A1485AA4362E73037D4D4E3C18F9A61F368B09E2EBD2A5B22888FB24583CFE9"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_handoff_coordinator.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "23F070F80E02F02B9EC974C5B6916FC6DFC930010AC053C84E304F58FB0C8E21"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_handoff_endpoint.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "6D9A0672D66876522A2DAA99FBB6ACD1BCF16825D2EB9CFA61B569C38A6BE6D5"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_handoff_package.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "754ADAE5E1DFC82113154B1ACCBAFB2CAE8E274B093F0C10EF9C8E1BE7412A62"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/handoff/matter_regional_authority_gate.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "3224C6842DB9335096EF060AA1529B2E0D5610F958BCBC118C034E605DA8A8C2"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_ack.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "166024606EA0387DFC4F5EB0F96988F405C7E2014DF73DAE7E71B9601DB56F3E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_delta.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "BECDF7DB6619BBA96D23C9C11F9C67BA5F43BC343B39A045DA837308C3768F6E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_frame.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "4F743CE582D2090EEF55EE2C85C98897BB416A300547FF4F086747F8639A14D0"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_region.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "8217230A06023F7305A91A89F684BCA0BAFF9912BF3C20AA208330F4D1FC8CF3"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_replica_client.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "78BAABC308D60B8842B5F6AEF7F550CF964780FDC689A171C58974C3F73C9A52"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_server.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "703BE2AAFD85FCA2CD50425152E74501EABFB179F4A1A04BAF75CB473345E6A6"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_snapshot.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "73C1078FF03104AC7602E9201EEDF2A3095EEEB18194B224919E75D6C243A8DA"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_subscription.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "B75631079BE8B833C42F59DBFAB016E74E2248AB4D74EA81CFF7327CD4A11067"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/interest/matter_interest_sync_request.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "C7689A4B6AC79317F47375FA4173D7B1D0C326D1C6A6D1D22DCCF6CC466DA396"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/mutation/matter_excavation_kernel.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F6EB029C1C933A491DB457484B8C9187F2640BC8826EE78A381147864E31CE6D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/mutation/matter_excavation_service.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "03005A1A09D24A589A5E6314A9D749BD840C515374444BDC0EB4631068A40091"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/mutation/matter_material_receiver.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "FBB234B58506E67D525513E77642ED3A6ACC721AD0C836A951B1058D21F244F0"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/mutation/matter_mutation_journal.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "5CE1E93506FA07098B65C34AF2C1AEC6A52DD60D1A25BA787422DEF928B8A2B4"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/mutation/matter_swept_shape.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D8D13D58740A4929BCCE080AE2A2026A0465FF27604C44686E947F51436462FB"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_authoritative_server.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2DB8DD70392553DFAD8D92ADB6892A94EE16FFA81D598D2ECD7D0D6712DF1C2C"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replica_client.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "385E8BD89C9E4C393AF4691F18986B8F0C81FB7A293D7C6E82A485CEED14E6D1"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replication_ack.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "B7567B09BE37000F7E00A14CD99E37013ADAE41837C91D5675D74CD79AF1119D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replication_delta.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "B168C65E2FB4F04DAD5CD5F2B2874F92861CD98C87B921A615DBCAE20E89C92F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replication_frame.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F45A7C82931A49C267D1FF1B506835368AD7DC806607382AE97B355EB3221796"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replication_snapshot.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "C16BAD3956F2962F212BDD879423C626B845C6B0213FB5038E620BC590816530"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/network/matter_replication_sync_request.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "66A90B8726BA9E7B2ACD43AB424F45ED83115A02C7E7EFE8FBC9A696AE802D75"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/persistence/matter_persistence_checkpoint.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "1F227821651F15FC4484063759BE55E7C0662AA36C0CAEBEB9C20FCDB01764BB"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/persistence/matter_persistence_codec.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "6875FFD96931F9FB49AC008F9A2825C255A782FC20271C505761EFBF31136B2E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/persistence/matter_state_coordinator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "ACD030FDD3C6796EED35C7BA46986788356D3F855D72A628A6B1D5A4FE537653"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/persistence/matter_state_repository.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "50421E246B2E3A959B50AD5435A96160DCFCFD89C7E8F1FC0FADDB3CD006B22F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/query/matter_continuous_query_service.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "37C7D470085121DBA09F3AF1301AAC8B33A50D28AB00F6B76A3A311BCFFBD452"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/query/matter_query_result.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "6EB92E3163A41FC5020B0D63F63EC1869CB1687653987AFFE6433EBD0F0FF0A3"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/query/matter_query_service.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2C35F3B71D2D47EA23A1057F00C5938CACEC2C08020E5215EC8AACEC12139770"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/query/matter_snapshot_sampler.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "17C8CDBE85C12D40BA76C7A7224A02E8A8956C999EBAB69D7FC71184E4297102"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/spatial/matter_brick_layout.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "E9A2042B0FB47F5ED8C7C4CBA8A160E5207DA2C71456ABF9BA3E9105CBE3FD94"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/spatial/matter_cell_grid.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "DF699C53B680D32B3ED7B542E98859972C60F19812D0F90DA064BCA0EC6505AD"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/spatial/matter_spatial_grid_profile.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FB94A087A823C80C95406700107B8FEAD6F6C0B8CB9C4050B208736FFE0CA005"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/storage/matter_brick_materializer.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "72F4EFF3E90A4946AD7758795DA7A48D1704FACFEEF3D9D64DD447AC4855C5EA"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/storage/matter_sparse_brick_store.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "295CC27F47435B0CB459A749F8DF8B73FDFA4B28B47D67BFB61FB98232B3F85D"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_authority_gate.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "29D472EED060076BDBFDDD05B5DF2A9135BBC26F50244C66454AA5327980921E"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_handoff_interlock.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "F2D95566B194B4872F0FA1BE2000DCFF541C40A0A1940FB77E5D0B52E12E1923"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_invalidation_batch.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "A86B281B470C34EFF2080A9B5D60B962F1CA1D7DB3121BCFF7C995CDB4145343"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_invalidation_outbox_record.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "E7E96252C96E1B2F8E5F5B31A737A2DB276B0A1A33A7F6CD58A4630075FF334F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_operation_result.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "69AEAC7D3A3A2B3C0AB2FD369FB6E8195EC01145F83C88F5E90198C1984237BD"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_participant.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2603802CF46D1875D7DEBBA463B1F432E2AE5D912FE0EC7DCF08F0092A8CD6F0"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_receipt.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "CAF46EB31194828A5D409152E3514BACFCC6DF822BC45CCA838CDC48FAE50C6F"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_reservation.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "58893BF149F428DD2125E12C5118288E5A44B3BBCF125EC711A6217886058B4C"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_runtime_adapter.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FE8818029827868E16C1B8A12B14B34C240119EE7EFD5C743932B2054BDB6524"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_checkpoint.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "9A6048847D5ED64A5832BE029FDBC3DAA7B78A75512DFDC652D859FB979207C3"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "C9854FF0444FEA3141C43AEDCDE45BC3206B3BDD11F728E509EBC362FDE96FEA"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_plan.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2E06C7044DFA729CCD234FA1BA6028C4819B4E5BD24EE14C144ABC3083CED7C9"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_record.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "359ED70850DE635B4E3B651A0220ECCEA2130F2A1940AEE8B6982B5BBF7371FA"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "AE47F89D1FBBAB23AC5C3B2566CD4A5FDE1E362BE0C5151C0B538E37A0A75EDF"
+                  },
+                  {
+                      "path":  "scripts/simulation/matter/transactions/distributed/matter_distributed_mass_ledger.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "D627ED007C87DC3D3F42BB95DE245C97044BB4268B4171053BA2EB0FA8DEEB7C"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_artifact_manifest.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "1D99C67AF8941C043A3E2AD7430CDDCDC264DE790639F129E9DAAE0A431AE6CA"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_cache_entry.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "75F3780270842D860D8B5D8B994319C8CE42934889FFF385BFBDA027B9DC4260"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_candidate.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "949955DAB9C71FFF6BF461095E3B02F87D3B0B7995E61CC210AAC52C4619B92F"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_dependency_set.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "3CFC7B8FAF2667603EAEE8D15B33764C57A81E4E8EB6442F2DCC9F43CFB215D4"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_descriptor.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "ED3E1F8469A8970CA72A8B35760691858580F238EEB0B0DF7E0C89885153A9BC"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_interest_request.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "4DFA96732EC11ED52C9F46229F60649F54B601139ADD8F05062991AD74614E56"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_invalidation.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "472E0B27BB6578AC02C47D45FC9C52E3FE92B54DB28D6A7730A47EAAC9AEF999"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_key.gd.uid",
+                      "bytes":  18,
+                      "sha256":  "A4FA022205E46DC578F24B6D3B6C787C325B53ACAFC247AD7263E7027A7067D7"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/contracts/representation_source_revision.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "BD7FA530E3367EA7E7DCC6F6D445B545E31BCFD774567D7F03A60A0E2DC70215"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/contracts/matter_summary_node.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "43A67DC6003B20C99F12F59BFD2AB45FCE759A990AEF38E68E10F9CB3D4ED11D"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/contracts/matter_summary_persistence_manifest.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "EA97C4264FD96C8D4D1DCE61C5309A271C398A6CA53B428D258B7DD7A79F9A4B"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/contracts/matter_summary_rebuild_task.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "EA64529BA7C7D235CFBD722817E2B2FA8D86621B0830EDB8494031B26F09D1DE"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/matter_summary_builder.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "520862F2090CFD3AE8C12BA90B59506C7EDA4C4B09DA54ED56E75E70B4338030"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/matter_summary_dirty_propagator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "C0A498462BB75D6AB65F21A490F5836550139671D8DDE8909876E943C72E9CCC"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/matter_summary_pyramid.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "EFFD237A1DD06F1C1812B8CCB86C0B396BC5395E138472414B8426FFDC5E7B2B"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/matter_summary_rebuild_queue.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "A5513582E15B0C5370F7E102ABCA7E63C71ED463BDB2BBE5C46F5960B25C3FCA"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/contracts/matter_cross_level_transition.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "BED37F2AAC6333E257F7C1A3D9CA3CAE252504E0586376D0F4069FEEC14AEABE"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/contracts/matter_meshing_source_set.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "1F75AB76C815DB151EB32C9A37C8BEFBCEEA3BF5F9DB25B1B5DE08A42CBC6996"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/contracts/matter_multiresolution_field.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F81D5AE1CEC2A3D27C1EFAEC67F72EA24A04173DAD9A78E4740C8D2EADE0B501"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/contracts/matter_multiresolution_mesh_data.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "071EFC13848F5DAC89C5719477C8381B6A484F296CBBFFEC08FC1D7784C9F9A3"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_cross_level_transition_builder.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D5CD6E817073B76A05C74317AFBF82F0F961093CFA21064840170B9D306AEBCD"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_cross_level_transition_validator.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FC4294F061C331D1936FB7DAAD99CD17EAEDD5A44BF7234F4AF7C5106DE950C3"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_lod_neighborhood_balancer.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "E3091E652320683CB679228A14B8363F70BD721AE0128D78E9BB492E7AEB2BD1"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_mesh_boundary.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "F30E9D017F5970BBF5673451EAE594F32EB9F625EC117536C0DBE9ADA2C57DAA"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_meshing_invalidation_resolver.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "9D68EB01E8FFD6E0AA9E34EAA20BAEDEB9D744BED18CE33D0121DF06AEC6E1C9"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_multiresolution_field_builder.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "51783534046E779D705E2D5472FFFC76A889AC50C04FE31248A9F8CE42B2306D"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/matter/meshing/matter_multiresolution_mesher.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "0BFBCDD79977A1E18421BCB6BABA0D254355D7E389CB2ECC8BE5DD05EFD85734"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_ack.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "9023244838137C5E992F653E03AFFD396127833E7C6EA1AB068FF2E8B795C213"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_cancellation.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D3B55319599E71E25E00CB3029A5D7BD8E5D2819C97DACB5B73554C34A3D152D"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_chunk.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "076F09CF8D2ACB447F232E94F06F86580325346F366AB91FECF4993756F30E3C"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_plan.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FDADAF1E41A674607A7EF7F339F023A0F7F848AA81F81556AEECDBD87C12D136"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_request.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "EEB57E25146BA796BB67FA35376927148EF5F06D73A99B24A4EA09CEF8E65212"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_scope_binding.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D0CE03285338DC68017F3B3D3254EA3BF36BA374E75B4AEBA76DA7975FEFEE1D"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/contracts/representation_stream_stage.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "974D760B6D709C2607016471270032BFFE3189670E2178B484DDED2F493D6153"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/matter_representation_interest_adapter.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "E2F5725D2CA4BDF6224C0942E433A39EB9AF72F5A6F528A7E2B7D2053F369564"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/representation_artifact_store.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "9A6599DFD7D94A5720EC5207E5F15DFFA3DA0B65A14C95EA22CA21DDCE396822"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/representation_stream_client.gd.uid",
+                      "bytes":  18,
+                      "sha256":  "A7E2882F8BF5A3F42C4C346504B99B79205138C7BC85AEFBFD8D0419DCB16165"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/representation_stream_planner.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "BD0F46D1BF0C3C2E0DE871A1E72686EB5FA36FE30D6D4DE6E1800204E2CE7FEB"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/network/representation_stream_server.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FB89B2E9FA55233DAE1D8D0620964427672827E8C8DFA37489AC9A5C78B1E301"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/representation_contract_utils.gd.uid",
+                      "bytes":  18,
+                      "sha256":  "862AF7E99B49B86B8A3558E4F67EC11A2E78070D2250EC6DEAB2B0012F4396A3"
+                  },
+                  {
+                      "path":  "scripts/simulation/representation/selection/representation_selector.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "0207F5FB216FFBB6000727094AE25CF0EC267F056B0842CC2376B16B54C10447"
+                  },
+                  {
+                      "path":  "scripts/world/matter/lab/matter_asteroid_excavation_lab.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "C38B2F40514575790839A07BD3CACC4108DB3EE066C07691E30933C04CC96557"
+                  },
+                  {
+                      "path":  "scripts/world/matter/lab/matter_asteroid_meshing_lab.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2CC1C6C61DAB27B0C2094BD623A90642A26DD058DC8C3E3CFB48961E441B2729"
+                  },
+                  {
+                      "path":  "scripts/world/matter/lab/matter_lab_fly_camera.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "B1BF7D8E6288AA6544D9CB3E038D5E51A85AB546E7E4E195E826EB5712396E70"
+                  },
+                  {
+                      "path":  "scripts/world/matter/lab/matter_local_mesh_streamer.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "8F9381DBBF59BF6CABD1F71931921D4943B08DD79FFDEEAF2EAA9D77C155F179"
+                  },
+                  {
+                      "path":  "scripts/world/matter/meshing/matter_brick_mesh_data.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "FA9D517550F4671D29C650642A18803EFB6A3212BAED404678712FDEFF856E0C"
+                  },
+                  {
+                      "path":  "scripts/world/matter/meshing/matter_mesh_resource_factory.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "667BF57049728A80A29EC07F546770CC700D33AFFDC13A11A61D3116169F978C"
+                  },
+                  {
+                      "path":  "scripts/world/matter/meshing/matter_mesh_seam_validator.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2FDA2583FC05F60CDDBC5E4593CC3DA13DA75207AF72C6CA0A18A081BE6979C1"
+                  },
+                  {
+                      "path":  "scripts/world/matter/meshing/matter_tetrahedral_mesher.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "058BEC0DD329ECE29CA89086BE3222D9AB49A723CB4DAAE65E44F756536D2DA7"
+                  },
+                  {
+                      "path":  "scripts/world/matter/representation/matter_representation_mesh_resource_factory.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2D58B4C0B9B6C39319181349421A201191794D88CD130B3A282F4E8924DDAF5F"
+                  },
+                  {
+                      "path":  "tests/matter/generation/test_mw1_fixed_seed_asteroid.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "7210E423D4C0932F1B98EF524CC8F688B6CD05ABEB053664591A1C9339A87769"
+                  },
+                  {
+                      "path":  "tests/matter/handoff/mw8_test_fixture.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "EA2A493CDDE29D090D292623D0412C87ECFB025BC5DF40F686E543C60E10A982"
+                  },
+                  {
+                      "path":  "tests/matter/handoff/mw9_test_fixture.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "7F519BA59FAA474EEDBF98814DB732032F2AFC4643628F7F268DCAA0998C8F3A"
+                  },
+                  {
+                      "path":  "tests/matter/handoff/test_mw8_regional_authority_handoff.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "553732C617C7252FDCC90D29F7350F3DA9E396FCA243D2139B324FF4C441E55C"
+                  },
+                  {
+                      "path":  "tests/matter/handoff/test_mw9_durable_handoff_processes.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "65A460301C75C68FDDEFC272CB47F80970F1AD3078067821B37D60A226134182"
+                  },
+                  {
+                      "path":  "tests/matter/handoff/test_mw9_durable_handoff_recovery.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "5925AB2303BD8FB873ADE55C74138DFCFBB1EE981A570A5388B04BBB64CF0393"
+                  },
+                  {
+                      "path":  "tests/matter/interest/mw7_test_fixture.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "854D5C59ADD9D9EDE0C576ED2A0D25D9B4E9B8F022A41A022B041358B2AF5152"
+                  },
+                  {
+                      "path":  "tests/matter/interest/test_mw7_matter_interest_replication.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "734AC6321A33C146CECB200D84B49B24A7BE862ED78980F5F4CC5478646DEC47"
+                  },
+                  {
+                      "path":  "tests/matter/mutation/failing_matter_mutation_journal.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "369B7B2478B7F11C993A714101373CCB9BC0244C50E46795A807E0136E9E4291"
+                  },
+                  {
+                      "path":  "tests/matter/mutation/test_mw4_matter_mutations.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "2A5EE111150083FD91EB151A29CDDF6A17729E742B3A430FAE5B33E4424521A8"
+                  },
+                  {
+                      "path":  "tests/matter/network/mw6_test_fixture.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "FE4ADF404A33190D46A85B23AD0DA01521C01F95ECC379FF4129C4A0DD16EAFB"
+                  },
+                  {
+                      "path":  "tests/matter/network/test_mw6_matter_network_replication.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "30EBAAACCAADFDC02B1A62D6C41C00096C37994344AA8012441151D5FBC6D4C3"
+                  },
+                  {
+                      "path":  "tests/matter/persistence/mw5_test_fixture.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "80E80AC9D484D429B507CEDD2AC175FAC5AE4A574CECCDFD057AFC32F69E5096"
+                  },
+                  {
+                      "path":  "tests/matter/persistence/test_mw5_matter_persistence.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "BE56BCF4C0D904AE4AA4945159818576AA5568B9670B5B18AF5A6C922B02EB72"
+                  },
+                  {
+                      "path":  "tests/matter/presentation/test_mw3_local_meshing.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "9E90F3A4C815C4DE3C76C54E2CBD96EDBAEA8E2170B6833846038528843ECA62"
+                  },
+                  {
+                      "path":  "tests/matter/spatial/test_mw2_sparse_bricks_and_query.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "064E28529B622CB6FFE54D26231AE9C6880255909F625DB2AD1FD9B4F76232C3"
+                  },
+                  {
+                      "path":  "tests/matter/transactions/mw10_test_fixture.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "91A6335638F7B50C53BE4B255D5AC1F5AC2658E3BACC7403C410E75E869C48FC"
+                  },
+                  {
+                      "path":  "tests/matter/transactions/test_mw10_cross_region_processes.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "E478F143514630F444F2ABF4939158609F003B255143A7EF5DAC8DC90D355EAE"
+                  },
+                  {
+                      "path":  "tests/matter/transactions/test_mw10_cross_region_transactions.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "486B698701614FE085E3112FFDB4965A7AEF7DD92A49B53C0FA88C69ED2544AA"
+                  },
+                  {
+                      "path":  "tests/representation/rl3_streaming_test_fixture.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "D46590193F104313EBC3A2F1BAE89A50AD74D0C66CD587DDE09941DA5BA33AAF"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl0_representation_contracts.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "9DE9E219221B99361440C8A594CA3FB2A5F511A7761E794283C2B65202D8FE39"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl1_matter_summary_pyramid.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "29AC154FF962B55F2BF4629B29C163B8E1AEC77855932BB9273A05652265A002"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl2_matter_multiresolution_meshing.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "6ABFD70AD133D1513BA977AC61422242A19A8D1A0F57D870ACF9F6AB16391331"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl2_real_asteroid_multiresolution.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "2DCED04D838D274733C9B46B7800803413EF879953027AADE1E4A403A194C6BF"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl3_representation_aware_network_streaming.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "44A7B01ED32BCD66FE7674FF1E7C36946B4D236A665161CCC382FB2362E8193F"
+                  },
+                  {
+                      "path":  "tests/representation/test_rl3_representation_streaming_processes.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "67CB110F4DF2EF9B3FAD662534B719E8438A380173B5A0413D8ED09B3A41A3B4"
+                  },
+                  {
+                      "path":  "tests/runtime/test_int0_m3_replica_resync_composition.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D2A5E86989D9215A3B945D357B6F8082DC8978B8FB9CF13D900C32E7A880AF0C"
+                  },
+                  {
+                      "path":  "tools/matter/mw10_cross_region_transaction_worker.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "CFA4C246FFFE65DE97D4981F7E9EC6ADFD42BF8F795DB396053EAF6E7DA6C6F1"
+                  },
+                  {
+                      "path":  "tools/matter/mw5_persistence_worker.gd.uid",
+                      "bytes":  19,
+                      "sha256":  "536D40BE64E2B9A98B2D98C3D1BEB371D20F84F75E436DBB81B415927AF0E5D2"
+                  },
+                  {
+                      "path":  "tools/matter/mw9_handoff_recovery_worker.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "D3C51708D5E8AFEEA25ADB3F37FE5DD34A72DB43790604157E6D17A851A54F2F"
+                  },
+                  {
+                      "path":  "tools/representation/rl3_streaming_worker.gd.uid",
+                      "bytes":  20,
+                      "sha256":  "01939016F8598E30254B5BADD60E17466088F92993EF143A048E6EB2B9DEB155"
+                  }
+              ]
+}
