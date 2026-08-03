@@ -53,13 +53,22 @@ func _claim(repository_root: String, report_path: String, owner_id: String, read
 	if not bool(restored.get("success", false)):
 		return 32
 	var source: Dictionary = coordinator.lease(Fixture.REGION_ID)
-	if not _write_report(ready_file, {"ready": true, "owner_id": owner_id}):
+	var source_generation: int = int(coordinator.checkpoint().get("generation", 0))
+	if not _write_report(ready_file, {
+		"ready": true,
+		"owner_id": owner_id,
+		"process_id": OS.get_process_id(),
+		"expected_lease_checksum": String(source.get("checksum", "")),
+		"checkpoint_generation": source_generation,
+	}):
 		return 33
-	var started: int = Time.get_ticks_msec()
+	var barrier_started: int = Time.get_ticks_msec()
 	while not FileAccess.file_exists(go_file):
-		if Time.get_ticks_msec() - started > 15000:
+		if Time.get_ticks_msec() - barrier_started > 15000:
 			return 34
 		OS.delay_msec(10)
+	var claim_started_unix_ms: int = int(Time.get_unix_time_from_system() * 1000.0)
+	var claim_started_ticks_usec: int = Time.get_ticks_usec()
 	var result: Dictionary = coordinator.claim_expired_lease(
 		Fixture.REGION_ID, owner_id, String(source["checksum"]),
 		"transition/process-claim-%s" % owner_id.get_file(), 130
@@ -67,13 +76,23 @@ func _claim(repository_root: String, report_path: String, owner_id: String, read
 	var success: bool = bool(result.get("success", false))
 	var lease: Dictionary = Dictionary(result.get("details", {}).get("lease", {})) if success else {}
 	var report: Dictionary = {
-		"schema": "planet_simulator.mw9_claim_race_report.v1",
+		"schema": "planet_simulator.mw9_claim_race_report.v2",
+		"process_id": OS.get_process_id(),
 		"claim_success": success,
 		"error": String(result.get("error_code", "")),
+		"error_details": Dictionary(result.get("details", {})).duplicate(true) if not success else {},
 		"owner_id": String(lease.get("owner_id", owner_id)),
 		"authority_epoch": int(lease.get("authority_epoch", 0)),
 		"lease_revision": int(lease.get("lease_revision", 0)),
+		"expected_lease_checksum": String(source.get("checksum", "")),
+		"source_lease_revision": int(source.get("lease_revision", 0)),
+		"source_checkpoint_generation": source_generation,
 		"checkpoint_generation": int(coordinator.checkpoint().get("generation", 0)),
+		"claim_started_unix_ms": claim_started_unix_ms,
+		"claim_duration_usec": Time.get_ticks_usec() - claim_started_ticks_usec,
+		"lock_exists_after": DirAccess.dir_exists_absolute(
+			repository_root.path_join(".matter-handoff-state.lock")
+		),
 	}
 	return 0 if _write_report(report_path, report) else 35
 

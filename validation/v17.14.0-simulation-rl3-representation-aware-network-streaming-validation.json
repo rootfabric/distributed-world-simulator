@@ -1,0 +1,139 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.14.0-simulation-rl3-representation-aware-network-streaming",
+  "build_id": "rl3-representation-aware-network-streaming",
+  "base": "v17.13.0-simulation-rl2-matter-multiresolution-meshing plus accepted MW9 fix3",
+  "recommended_branch": "feature/rl3-representation-aware-network-streaming",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "scope": {
+    "changed_file_count": 28,
+    "changed_gdscript_files": 16,
+    "production_worlds_changed": false,
+    "world_catalog_changed": false,
+    "canonical_matter_changed": false,
+    "mw10_transaction_semantics_changed": false,
+    "mw9_recovery_semantics_changed": false,
+    "mw8_authority_semantics_changed": false,
+    "mw7_canonical_replication_changed": false,
+    "artifact_generation_added": false,
+    "network_streaming_added": true,
+    "shared_disk_cache_added": false,
+    "background_scheduler_added": false,
+    "construction_hlod_added": false
+  },
+  "implementation": {
+    "interest_projection": "MW7 subscription to exact RL0 representation stream request",
+    "spatial_fence": "ordered LOD-to-exact-scope chain",
+    "planning": "deterministic coarse-to-fine immutable stages",
+    "delivery_modes": [
+      "CACHE_HIT",
+      "TRANSFER"
+    ],
+    "integrity": [
+      "manifest checksum",
+      "per-chunk SHA-256",
+      "full artifact content hash"
+    ],
+    "flow_control": [
+      "chunk byte limit",
+      "maximum in-flight bytes",
+      "client memory budget",
+      "request bandwidth budget"
+    ],
+    "state_fences": [
+      "request revision",
+      "cancellation generation",
+      "sequential stage ACK",
+      "RL0 invalidation"
+    ],
+    "reconnect": "exact content-addressed cache reuse with zero payload transfer",
+    "next": "RL4 Construction HLOD backend"
+  },
+  "focused_tests": {
+    "runner_ps1": "RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.ps1",
+    "runner_sh": "RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.sh",
+    "contracts_script": "tests/representation/test_rl3_representation_aware_network_streaming.gd",
+    "process_script": "tests/representation/test_rl3_representation_streaming_processes.gd",
+    "contracts_assertions": 175,
+    "process_assertions": 37,
+    "combined_assertions": 212,
+    "consecutive_runs": 3,
+    "result": "PASS",
+    "runner_rejects_godot_script_errors": true
+  },
+  "runtime_validation": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "rl3": "212/212 PASS x3",
+    "rl2": "197/197 PASS",
+    "mw10": "235/235 PASS",
+    "mw9_fix3": "428/428 PASS",
+    "rl1": "245/245 PASS",
+    "rl0": "92/92 PASS",
+    "mw8": "NOT_AVAILABLE_IN_RECONSTRUCTED_AUTHORING_BASE; independent 98/98 gate required",
+    "mw7": "114/114 PASS with known 25 ObjectDB and 6 resource shutdown warnings",
+    "godot_editor_import": "PASS with known scan-thread-aborted shutdown warning only",
+    "isolated_user_data": "used to avoid concurrent user:// log filename collisions"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "preload_target_audit": "PASS",
+    "duplicate_functions": 0,
+    "bash_syntax": "PASS",
+    "powershell_runner_static_audit": "PASS",
+    "accidental_uid_files": 0,
+    "forbidden_simulation_runtime_references": 0,
+    "git_diff_check": "PASS",
+    "changed_file_manifest_count": 28,
+    "changed_file_manifest_exact": "PASS"
+  },
+  "required_independent_gate": [
+    "RL3 combined runner 212/212 PASS",
+    "RL2 combined runner 197/197 PASS",
+    "MW10 combined runner 235/235 PASS",
+    "MW9 fix3 combined runner 428/428 PASS",
+    "MW8 focused 98/98 PASS",
+    "MW7 focused 114/114 PASS",
+    "git diff --check PASS"
+  ],
+  "changed_files": [
+    "AGENTS.md",
+    "PROJECT_MANIFEST.txt",
+    "RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.ps1",
+    "RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.sh",
+    "config/representation/representation-aware-network-streaming.v1.json",
+    "docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md",
+    "docs/architecture/RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_RU.md",
+    "docs/checkpoints/2026-08-03_V17_14_0_SIMULATION_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_RU.md",
+    "docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md",
+    "docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md",
+    "scripts/simulation/representation/network/contracts/representation_stream_ack.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_cancellation.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_chunk.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_plan.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_request.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_scope_binding.gd",
+    "scripts/simulation/representation/network/contracts/representation_stream_stage.gd",
+    "scripts/simulation/representation/network/matter_representation_interest_adapter.gd",
+    "scripts/simulation/representation/network/representation_artifact_store.gd",
+    "scripts/simulation/representation/network/representation_stream_client.gd",
+    "scripts/simulation/representation/network/representation_stream_planner.gd",
+    "scripts/simulation/representation/network/representation_stream_server.gd",
+    "tests/representation/rl3_streaming_test_fixture.gd",
+    "tests/representation/test_rl3_representation_aware_network_streaming.gd",
+    "tests/representation/test_rl3_representation_streaming_processes.gd",
+    "tools/representation/rl3_streaming_worker.gd",
+    "validation/v17.14.0-simulation-rl3-representation-aware-network-streaming-files.txt",
+    "validation/v17.14.0-simulation-rl3-representation-aware-network-streaming-validation.json"
+  ],
+  "archive_validation": {
+    "zip_file_count": 28,
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "accidental_uid_files": 0,
+    "extracted_byte_identity": "PASS",
+    "overlay_changed_files_identity": "PASS"
+  }
+}

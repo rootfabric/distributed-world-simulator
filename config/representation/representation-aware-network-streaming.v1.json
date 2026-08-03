@@ -1,0 +1,17 @@
+{
+  "schema": "planet_simulator.representation_aware_network_streaming_config.v1",
+  "checkpoint": "v17.14.0-simulation-rl3-representation-aware-network-streaming",
+  "build_id": "rl3-representation-aware-network-artifact-streaming",
+  "progressive_coarse_first": true,
+  "content_addressed_transfer": true,
+  "cache_hash_advertisement": true,
+  "cancellation_supported": true,
+  "source_revision_fencing": true,
+  "maximum_plan_stages": 8,
+  "maximum_chunk_bytes": 1048576,
+  "maximum_in_flight_bytes": 67108864,
+  "canonical_matter_changed": false,
+  "production_transport_added": false,
+  "disk_cache_added": false,
+  "background_scheduler_added": false
+}

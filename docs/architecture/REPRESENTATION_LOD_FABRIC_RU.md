@@ -1,7 +1,7 @@
 # Representation LOD Fabric — обобщённые представления Matter и Construction
 
-**Статус:** целевая сквозная архитектура; RL0 accepted, RL1 implementation candidate.
-**Принятая база Matter:** `v17.9.0-simulation-rl0-representation-contracts-fix1`.
+**Статус:** целевая сквозная архитектура; RL0–RL2, MW9 fix3 и MW10 accepted; RL3 implementation candidate.
+**Принятая база Matter:** `v17.13.0-simulation-rl2-matter-multiresolution-meshing`.
 **Связанные ветки:** Dynamic Matter Fabric MW0–MW8 и Construction C13/C18.
 **ADR:** `docs/architecture/adr/ADR-018-representation-lod-fabric.md`.
 **Главное правило:** mesh, impostor, collision proxy и summary не являются каноническим состоянием мира.
@@ -37,14 +37,11 @@
 
 MW3 уже отделяет канонический `MatterBrickSnapshot` от производных `ArrayMesh`, collision и `Node3D`. Локальный streamer строит и удаляет meshes без изменения world state. MW7 доставляет только persistent bricks области интереса, а MW8 переносит authority между региональными серверами.
 
-Пока отсутствуют:
+Реализованы RL1 summary pyramid, принятый RL2 с coarse SDF fields, LOD0–LOD2 meshes, content-addressed artifacts и cross-level skirt transitions, а также текущий RL3 candidate с representation-aware progressive network streaming. Пока отсутствуют:
 
-- summary pyramid над bricks;
-- coarse SDF levels;
-- meshes между разными spatial levels;
-- content-addressed proxy artifacts;
-- representation-aware interest;
-- дальнее отображение persistent mutations.
+- body-scale impostors;
+- shared cache/background scheduler;
+- production-world integration.
 
 ### Construction
 
@@ -179,11 +176,15 @@ impostor
 
 ### Межуровневые границы
 
-MW3 гарантирует seams только между bricks одного уровня. RL2 должен добавить transition representation:
+MW3 гарантирует seams только между bricks одного уровня. RL2 добавляет versioned transition representation `FINE_BOUNDARY_SKIRT_V1`:
 
-- временно overlap/skirt;
-- затем deterministic transition cells или Transvoxel-подобный backend;
-- collision переключается после готовности согласованной пары уровней.
+- соседние requests балансируются до разницы не более одного LOD;
+- fine boundary segments канонизируются и экструдируются в coarse scope;
+- transition является отдельным content-addressed artifact;
+- transition не участвует в collision;
+- будущий Transvoxel-подобный backend может быть добавлен новым variant без изменения canonical Matter.
+
+Подробный runtime-контракт: `RL2_MATTER_MULTIRESOLUTION_MESHING_RU.md`.
 
 ## 7. Construction HLOD pipeline
 
@@ -213,28 +214,33 @@ Matter и Construction не используют один mesher. Они исп�
 
 ## 8. Network integration
 
-MW7 interest должен в RL3 стать representation-aware. Вместо обязательной доставки detail bricks клиент запрашивает:
+RL3 делает MW7 interest representation-aware, не меняя канонический MW7 replication stream. Adapter создаёт stream request с:
 
-- требуемую source revision;
-- error budgets;
+- точным `RepresentationSourceRevision`;
+- ordered `LOD -> exact scope_id` chain;
+- screen/geometric error budgets;
 - collision/interior flags;
-- bandwidth budget;
-- preferred artifact kinds.
+- client cache hashes и supported encodings;
+- bandwidth, chunk, in-flight и memory budgets;
+- request revision и cancellation generation.
 
-Сервер отвечает manifest, а не обязательно самими bytes:
+Сервер сначала формирует immutable coarse-to-fine plan:
 
 ```text
-representation key
-artifact hash
-byte size
-encoding/media type
-geometric error
-bounds
-capabilities
-build generation
+manifest-only negotiation
+        ↓
+CACHE_HIT или TRANSFER на каждом stage
+        ↓
+content-addressed ordered chunks
+        ↓
+client verification and ACK
+        ↓
+progressive presentation
 ```
 
-Artifact загружается по content hash. Повторная доставка не нужна, если cache уже содержит тот же hash.
+Cache advertisement не считается доказательством наличия bytes: stage активируется только после точного client ACK. Для transfer клиент проверяет chunk hash, порядок/offset, полный artifact hash и checksum manifest. Replacement request отменяет предыдущий stream того же observer, а RL0 invalidation немедленно снимает stale presentation. Cache bytes сохраняются как переиспользуемые производные данные.
+
+RL3 не сохраняет presentation state, не делает artifact частью canonical Matter, не создаёт shared disk cache и не строит meshes.
 
 Progressive loading:
 

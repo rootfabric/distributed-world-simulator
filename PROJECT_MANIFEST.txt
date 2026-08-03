@@ -1,4 +1,42 @@
-Planetary World v17.12.0-simulation-mw10-cross-region-matter-transactions (candidate)
+Planetary World v17.14.0-simulation-rl3-representation-aware-network-streaming (candidate)
+
+RL3 Representation-aware Network Streaming over accepted RL2 and MW9 fix3:
+- exact RL0 source revision and ordered LOD-to-scope spatial chain
+- MW7 subscription projection without changing canonical regional replication
+- deterministic coarse-to-fine immutable stream plans
+- explicit CACHE_HIT and TRANSFER stages with manifest-first negotiation
+- content-addressed ordered chunks with chunk and full-artifact hash verification
+- per-client memory, bandwidth, chunk and in-flight backpressure budgets
+- exact sequential ACK state machine and progressive presentation
+- observer request replacement, cancellation generation and RL0 invalidation fencing
+- reconnect cache reuse with zero payload transfer for exact cached artifacts
+- independent server/client/reconnect multi-process acceptance
+- no artifact generation, shared disk cache, scheduler, Construction HLOD or production-world changes
+- config/representation/representation-aware-network-streaming.v1.json
+- RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.ps1 / .sh
+- docs/architecture/RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_RU.md
+- next: RL4 Construction HLOD backend
+
+Planetary World v17.13.0-simulation-rl2-matter-multiresolution-meshing (accepted)
+
+RL2 Matter Multiresolution Meshing and Cross-level Transitions over accepted MW10:
+- exact RL1 summary and canonical MatterBrickSnapshot source binding
+- LOD0/LOD1/LOD2 built from 1/8/64 max-level snapshots over increasing octree scopes
+- deterministic fixed-resolution coarse SDF fields and Freudenthal marching-tetrahedra meshes
+- content-addressed DETAIL, SIMPLIFIED_MESH and MACRO_PROXY artifacts
+- exact same-level boundary segment hashes
+- deterministic FINE_BOUNDARY_SKIRT_V1 cross-level transition artifacts
+- face-neighbor balancing with maximum LOD delta 1
+- exact RL0 invalidation projection and bounded local ancestor rebuild scope
+- Godot ArrayMesh, collision and presenter materialization outside canonical contracts
+- synthetic nonlinear and real fixed-seed asteroid focused profiles
+- no network streaming, background scheduler, Construction HLOD or production-world changes
+- config/representation/matter-multiresolution-meshing.v1.json
+- RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.ps1 / .sh
+- docs/architecture/RL2_MATTER_MULTIRESOLUTION_MESHING_RU.md
+- next: RL3 representation-aware network streaming
+
+Planetary World v17.12.0-simulation-mw10-cross-region-matter-transactions (accepted)
 
 MW10 Cross-region Matter Transactions over accepted MW9 fix2:
 - deterministic single-body plans spanning two or more authority-regions
@@ -17,9 +55,9 @@ MW10 Cross-region Matter Transactions over accepted MW9 fix2:
 - docs/architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md
 - next: RL2 Matter multiresolution meshing and cross-level transitions
 
-Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (accepted fix2)
+Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (accepted fix3)
 
-MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1:
+MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1 (delivery fix3):
 - atomic checksummed authority-directory checkpoint with active/previous fallback and cross-process commit lock
 - logical-tick lease renewal, expiry and CAS recovery claim
 - full exact fencing-token validation for every regional write

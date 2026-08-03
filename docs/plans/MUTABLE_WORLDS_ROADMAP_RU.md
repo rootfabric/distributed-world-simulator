@@ -1,7 +1,7 @@
 # Mutable Worlds Roadmap — изменяемая порода, астероиды, пещеры и добыча
 
-**Accepted implementation base:** `v17.11.0-simulation-mw9-durable-handoff-recovery` (`fix2`).
-**Current candidate:** `v17.12.0-simulation-mw10-cross-region-matter-transactions`.
+**Accepted implementation base:** `v17.13.0-simulation-rl2-matter-multiresolution-meshing`.
+**Current candidate:** `v17.14.0-simulation-rl3-representation-aware-network-streaming`.
 **Тип документа:** implementation roadmap, без изменения production runtime.
 **Архитектура:** `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md`.
 **Решение:** `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md`.
@@ -14,10 +14,10 @@
 MW8 accepted
 → RL0 unified representation contracts accepted
 → RL1 Matter summary pyramid, full RL0 source-revision frontier and dirty propagation accepted
-→ MW9 durable distributed handoff and crash recovery accepted (`fix2`)
-→ MW10 cross-region matter transactions current candidate
-→ RL2 Matter multiresolution meshing and transitions
-→ RL3 representation-aware network streaming
+→ MW9 durable distributed handoff and crash recovery accepted (`fix3`)
+→ MW10 cross-region matter transactions accepted
+→ RL2 Matter multiresolution meshing and transitions accepted
+→ RL3 representation-aware network streaming current candidate
 → RL4 Construction HLOD backend
 → RL5 shared cache and background build scheduler
 → RL6 visual/network/scale acceptance
@@ -128,13 +128,13 @@ RL0       unified representation contracts — ACCEPTED
    ↓
 RL1       Matter summary pyramid and dirty propagation — ACCEPTED
    ↓
-MW9       durable distributed handoff and crash recovery — ACCEPTED (`fix2`)
+MW9       durable distributed handoff and crash recovery — ACCEPTED (`fix3`)
    ↓
-MW10      cross-region matter transactions — CURRENT CANDIDATE
+MW10      cross-region matter transactions — ACCEPTED
    ↓
-RL2       Matter multiresolution meshing and transitions
+RL2       Matter multiresolution meshing and transitions — ACCEPTED
    ↓
-RL3       representation-aware network streaming
+RL3       representation-aware network streaming — CURRENT CANDIDATE
    ↓
 RL4       Construction HLOD backend
    ↓

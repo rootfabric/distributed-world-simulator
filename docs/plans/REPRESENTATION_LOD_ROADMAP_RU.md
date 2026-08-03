@@ -1,7 +1,7 @@
 # Representation LOD Roadmap — интеграция в Mutable Worlds и Construction
 
-**Принятая база:** MW9 Durable Distributed Handoff and Crash Recovery (`fix2`).
-**Текущий этап:** MW10 Cross-region Matter Transactions.
+**Принятая база:** RL2 Matter Multiresolution Meshing and Cross-level Transitions.
+**Текущий этап:** RL3 Representation-aware Network Streaming.
 **Архитектура:** `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md`.
 
 ## 1. Оптимальный порядок после MW8
@@ -13,13 +13,13 @@ RL0  unified representation contracts — ACCEPTED
  ↓
 RL1  Matter summary pyramid and dirty propagation — ACCEPTED
  ↓
-MW9  durable distributed handoff and crash recovery — ACCEPTED (`fix2`)
+MW9  durable distributed handoff and crash recovery — ACCEPTED (`fix3`)
  ↓
-MW10 cross-region matter transactions — CURRENT CANDIDATE
+MW10 cross-region matter transactions — ACCEPTED
  ↓
-RL2  Matter multiresolution meshing and cross-level transitions
+RL2  Matter multiresolution meshing and cross-level transitions — ACCEPTED
  ↓
-RL3  representation-aware interest and network artifact streaming
+RL3  representation-aware interest and network artifact streaming — CURRENT CANDIDATE
  ↓
 RL4  Construction C18 HLOD backend
  ↓
@@ -126,37 +126,46 @@ RL1 не строит coarse SDF samples или meshes. Этап принят; d
 - fail-closed MW8 runtime adapter и terminal reconciliation;
 - split-brain и multi-process crash tests.
 
-Representation cache остаётся необязательным и восстанавливаемым. MW9 принят с delivery `fix2`.
+Representation cache остаётся необязательным и восстанавливаемым. MW9 принят с delivery `fix3`; atomic lock-directory rename и grace fence стабилизировали concurrent expired-lease claim.
 
 ### MW10 — Cross-region Transactions
 
-Текущий candidate реализует deterministic participant ordering, atomic region reservations, distributed mass ledger, irreversible global commit decision, crash recovery, MW9 handoff interlock и единый post-commit invalidation batch. После acceptance следующий этап — RL2.
-
-
-- deterministic region ordering;
-- prepare/commit/rollback;
-- distributed mass ledger;
-- exact replay;
-- invalidation emitted only after global commit.
+Принятый этап реализует deterministic participant ordering, atomic region reservations, distributed mass ledger, irreversible global commit decision, crash recovery, MW9 handoff interlock и единый post-commit invalidation batch.
 
 ### RL2 — Matter Multiresolution Meshing
 
-- coarse SDF levels;
-- regional/macro meshes;
-- large-mutation visibility;
-- transition meshes;
-- collision promotion;
-- local ancestor rebuild.
+Принятый этап реализует:
+
+- exact RL1 summary и 1/8/64 leaf-snapshot source sets;
+- coarse SDF fields на увеличивающихся octree scopes;
+- regional/macro meshes через Freudenthal marching tetrahedra;
+- content-addressed DETAIL/SIMPLIFIED_MESH/MACRO_PROXY artifacts;
+- same-level boundary verification;
+- `FINE_BOUNDARY_SKIRT_V1` transition artifacts;
+- maximum neighbor LOD delta 1;
+- exact invalidation projection и local ancestor rebuild scope;
+- Godot resource materialization вне canonical contracts.
+
+RL2 не добавляет network delivery, background scheduler, disk cache, Transvoxel или Construction HLOD.
 
 ### RL3 — Network Artifact Streaming
 
-- representation-aware MW7 subscription;
-- artifact manifests;
-- content-addressed transfer;
-- progressive coarse-first loading;
-- cancellation;
-- per-client memory/bandwidth budgets;
-- reconnect and cache reuse.
+Текущий candidate реализует:
+
+- projection MW7 subscription в точный RL0 `RepresentationInterestRequest`;
+- ordered `LOD -> exact scope_id` chain, исключающий смешивание соседних regions;
+- deterministic coarse-to-fine stream plans;
+- отдельные `CACHE_HIT` и `TRANSFER` stages;
+- manifest-first negotiation и content-addressed chunks;
+- per-chunk SHA-256, full artifact hash и manifest checksum verification;
+- последовательные ACK, stage barriers и bounded in-flight window;
+- progressive presentation с переходом от coarse к final artifact;
+- replacement, cancellation generation и RL0 invalidation fencing;
+- client memory budget и server bandwidth/chunk budgets;
+- reconnect cache reuse без повторной payload delivery;
+- независимый server/client/reconnect multi-process profile.
+
+RL3 не строит meshes, не изменяет MW7 canonical replication, не добавляет shared disk cache/background scheduler и не сохраняет presentation как world state.
 
 ### RL4 — Construction HLOD Backend
 

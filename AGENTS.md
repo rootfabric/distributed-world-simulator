@@ -184,12 +184,17 @@ architecture: Dynamic Matter Fabric + Representation LOD Fabric
 accepted: v17.6.0-simulation-mw6-matter-network-replication, delivery fix2
 accepted: v17.7.0-simulation-mw7-matter-interest-replication
 accepted: v17.8.0-simulation-mw8-regional-authority-handoff
-current candidate: v17.9.0-simulation-rl0-representation-contracts
-branch: feature/rl0-representation-contracts
+accepted: v17.9.0-simulation-rl0-representation-contracts, delivery fix1
+accepted: v17.10.0-simulation-rl1-matter-summary-pyramid
+accepted: v17.11.0-simulation-mw9-durable-handoff-recovery, delivery fix3
+accepted: v17.12.0-simulation-mw10-cross-region-matter-transactions
+accepted: v17.13.0-simulation-rl2-matter-multiresolution-meshing
+current candidate: v17.14.0-simulation-rl3-representation-aware-network-streaming
+branch: feature/rl3-representation-aware-network-streaming
 production worlds changed: false
 world catalog changed: false
-next after acceptance: RL1 matter summary pyramid and dirty propagation
-then: MW9 durable distributed handoff -> MW10 cross-region transactions -> RL2/RL3 multiresolution streaming
+next after acceptance: RL4 Construction HLOD backend
+then: RL5 cache/scheduler -> RL6 acceptance
 fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
 ```
 
@@ -212,3 +217,9 @@ MW8 introduces a bounded multi-server matter authority path without changing the
 
 
 RL0 creates the shared representation lifecycle for Matter and Construction without merging their geometry builders. Canonical state remains MW bricks or Construction snapshots; detail meshes, simplified meshes, macro proxies and impostors are content-addressed derived artifacts. Every request and artifact is fenced by an exact `RepresentationSourceRevision`. Selection uses geometric error, screen error, capability flags and bandwidth budget, and chooses the coarsest acceptable ready artifact. `RepresentationDependencySet` and `RepresentationInvalidation` prepare RL1 ancestor dirty propagation. RL0 must not change MW8 handoff, MW7 wire frames, C18 code, production Moon or world catalog. Review fixes remain on `feature/rl0-representation-contracts`.
+
+
+RL2 builds versioned derived Matter representations from exact RL1 summaries and canonical leaf snapshots. LOD0/LOD1/LOD2 use one/eight/sixty-four max-level snapshots over increasing octree scopes while keeping a fixed lattice resolution. Same-level seams must share canonical boundary segments. Cross-level gaps use `FINE_BOUNDARY_SKIRT_V1` only after deterministic neighbor balancing to a maximum LOD delta of one. Simulation contracts remain JSON-safe and may not contain Godot runtime resources; `ArrayMesh`, collision and presenter creation belongs to `scripts/world/matter/representation/`. RL2 does not add network streaming, background scheduling, disk cache, Construction HLOD or production-world changes. Review fixes remain on `feature/rl2-matter-multiresolution-meshing`.
+
+
+RL3 streams exact RL0/RL2 representation artifacts without making network delivery canonical world state. Every request carries one exact `RepresentationSourceRevision`, an ordered `LOD -> scope_id` chain, client cache hashes, supported encodings and explicit bandwidth, chunk, in-flight and memory budgets. Plans are coarse-to-fine and each stage is exactly `CACHE_HIT` or `TRANSFER`. The server must not trust a cache advertisement until the client acknowledges the exact artifact stage. Chunks are content-addressed and ordered; the client verifies chunk hashes, full artifact hash and manifest checksum before presentation. Replacement requests, cancellation generations and RL0 invalidation fence every active stream. RL3 does not build artifacts, alter MW7 canonical replication, persist presentation state, add shared disk cache or change production worlds. Review fixes remain on `feature/rl3-representation-aware-network-streaming`.

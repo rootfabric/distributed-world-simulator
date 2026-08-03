@@ -33,12 +33,12 @@ $Suites = @(
     [pscustomobject]@{
         Name = "contracts/runtime"
         Script = "res://tests/matter/handoff/test_mw9_durable_handoff_recovery.gd"
-        Marker = "MW9 durable handoff recovery: PASS (195 assertions)"
+        Marker = "MW9 durable handoff recovery: PASS (203 assertions)"
     },
     [pscustomobject]@{
         Name = "multi-process"
         Script = "res://tests/matter/handoff/test_mw9_durable_handoff_processes.gd"
-        Marker = "MW9 durable handoff processes: PASS (45 assertions)"
+        Marker = "MW9 durable handoff processes: PASS (225 assertions)"
     }
 )
 
