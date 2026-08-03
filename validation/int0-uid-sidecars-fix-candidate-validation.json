@@ -60,7 +60,7 @@
     "powershell_composition_commit": "97baeb697635fd273c9a64c211479446f04f5bda",
     "bash_composition_commit": "863919108f9a0e25d51a7e3568f62379d48ce279",
     "powershell_cleanliness_guard_commit": "b90667bcd7822e033f7463dbcf00d37c9808ec57",
-    "bash_cleanliness_guard_commit": "93a4103ad04695281ccec2696ef4534b3dbcfb52",
+    "bash_cleanliness_guard_commit": "93a4103ad04695281ccec2696ef4534b3dbcf52",
     "contract_sidecar_commit": "8c982d327fff6612f3f971e80543c73662df9a66",
     "supplemental_manifest_commit": "aa8161faac964e98aec5cbb1215d843f0dd3be10",
     "manifest_index_initial_commit": "cf8c6a83aad89df562c9b27791fef1226c44cead",
@@ -90,6 +90,18 @@
     "authority_files": 0,
     "network_protocol_files": 0,
     "project_godot_modified_since_candidate": false
+  },
+  "available_validation": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_project_uid_contract": {
+      "result": "PASS",
+      "assertions": 8,
+      "failures": 0,
+      "autoload_uid_resolved": true,
+      "self_uid_resolved": true
+    },
+    "repeated_editor_import_project_hash_stable": true,
+    "fresh_windows_repository_gate": "PENDING_INDEPENDENT_RETEST"
   },
   "required_gate": {
     "candidate_checkpoint": "checkpoint/int0-uid-sidecars-fix2-rev1-gate-candidate",
