@@ -290,7 +290,9 @@ func _test_runtime_wiring() -> void:
 	_assert(powershell_runner.contains("res://tests/network/test_nx2_physical_channel_processes.gd"), "PowerShell focused runner omits physical channel regression")
 	_assert(powershell_runner.contains("PASS (9/9)"), "PowerShell focused runner step count is not 9/9")
 	var server := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
-	var client := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var client := _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	var controller := FileAccess.get_file_as_string("res://scripts/items/presentation/item_gameplay_controller.gd")
 	var m7_bridge := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd")
 	var enet := FileAccess.get_file_as_string("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
@@ -312,6 +314,23 @@ func _test_runtime_wiring() -> void:
 	_assert(server.contains("_movement_snapshot_dirty = target_count > 0 and not all_enqueued"), "Movement snapshot dirty state is cleared before all target queues accept the acknowledgement")
 	_assert(enet.contains("PHYSICAL_CHANNEL_MISMATCH"), "Physical ENet channel mismatch is not rejected")
 	_assert(enet.contains("PHYSICAL_DELIVERY_MODE_MISMATCH"), "Physical ENet transfer mode mismatch is not rejected")
+
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
 
 
 func _gameplay_snapshot() -> Dictionary:
