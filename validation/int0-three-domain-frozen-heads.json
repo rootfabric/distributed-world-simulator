@@ -1,17 +1,20 @@
 {
   "schema": "distributed_world_simulator.int0_frozen_heads.v1",
   "recorded_at": "2026-08-03T19:40:00+10:00",
+  "updated_at": "2026-08-03T19:44:25+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "PRE3_DOCUMENTATION",
+  "stage": "INT0_NX6_STAGING",
   "status": "IN_PROGRESS",
   "main": {
     "branch": "main",
     "base_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
-    "backup_branch": "backup/main-before-int0-20260803"
+    "backup_branch": "backup/main-before-int0-20260803",
+    "unchanged": true
   },
   "integration": {
     "branch": "integration/c24-nx6-mw10-rl3",
     "created_from_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
+    "documentation_head_sha_before_stage_status": "488aa64187c538227bbdaa546fe5f56a81ba9f05",
     "target_checkpoint": "v18.0.0-integration-int0-three-domain-base"
   },
   "network": {
@@ -54,6 +57,19 @@
     "network": "merge/int0-nx6",
     "matter_surface": "merge/int0-rl3-mw10",
     "construction_items": "merge/int0-c24"
+  },
+  "current_execution": {
+    "preparation": "DONE",
+    "active_domain": "NX6",
+    "staging_branch": "merge/int0-nx6",
+    "source_branch": "feature/nx6-predicted-item-interactions",
+    "source_head_sha": "144adf35cd2151ce5f8572dbbb8ed1b58ccd9778",
+    "staging_pull_request": 4,
+    "staging_pull_request_state": "OPEN_DRAFT",
+    "github_mergeable": true,
+    "required_gate": "PENDING",
+    "merged_into_staging": false,
+    "merged_into_integration": false
   },
   "required_rules": {
     "domain_merge_method": "merge_commit",
