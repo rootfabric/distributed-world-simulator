@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.int0_nx0_composed_source_contracts_candidate.v1",
+  "recorded_at": "2026-08-04T09:15:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-m6-final-checkpoint-retry",
+    "sha": "97f07470132f02db738cec5e1e1d773edf653185",
+    "pull_request": 15
+  },
+  "failed_gate": {
+    "result": "FAIL",
+    "failed_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "failed_test": "tests/network/test_nx0_network_experience_preparation.gd",
+    "assertions": 115,
+    "failures": 4,
+    "messages": [
+      "Network experience roadmap base commit mismatch",
+      "NX2 client does not send input batches",
+      "M7 async rejection/result probe is missing",
+      "M7 nonblocking movement path is missing"
+    ],
+    "full_int0_executed": false
+  },
+  "confirmed_analysis": {
+    "classification": "STALE_SOURCE_CONTRACT_TEST",
+    "facts": [
+      "network-experience-roadmap.v1.json is at current_stage NX6 and records base_checkpoint NX5 rather than the obsolete base_commit field",
+      "m3_graphical_client_runtime.gd is an INT0 adapter extending m3_graphical_client_runtime_nx6.gd",
+      "the inherited NX6 implementation contains PLAYER_INPUT_BATCH transmission",
+      "the inherited NX6 implementation contains _async_command_results increment handling",
+      "the inherited NX6 implementation contains submit_movement_intent_nonblocking"
+    ],
+    "production_runtime_regression_found": false
+  },
+  "correction": {
+    "changed_test": "tests/network/test_nx0_network_experience_preparation.gd",
+    "policy": [
+      "validate current checkpoint against the current roadmap phase",
+      "validate base_checkpoint against the immediately preceding roadmap phase",
+      "read composed GDScript source through literal extends chains",
+      "keep all existing NX2 and M7 runtime marker assertions",
+      "do not add marker comments or duplicate runtime methods merely to satisfy source inspection"
+    ],
+    "production_files_changed": 0,
+    "roadmap_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159
+  },
+  "available_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_helper_fixture": "PASS",
+    "helper_coverage": [
+      "roadmap NX6 to NX5 lineage",
+      "literal extends source-chain traversal",
+      "inherited runtime marker visibility"
+    ],
+    "repository_nx0_execution": "PENDING_WINDOWS_CANDIDATE_GATE"
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159",
+    "editor import clean and project.godot unchanged",
+    "RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1 PASS with 115 assertions",
+    "RUN_M6_TICK_PROGRESSION_TESTS.ps1 2/2 PASS",
+    "R3 authoritative recovery contracts PASS",
+    "MW9 recovery 3/3 PASS",
+    "MW9 race stress 1000/1000 PASS",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1 PASS",
+    "INT0 full 16/16 PASS",
+    "static repository and Godot process cleanliness PASS"
+  ],
+  "decision": "NX0_COMPOSED_SOURCE_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
