@@ -23,6 +23,14 @@ const FIELDS: Array[String] = [
 	"checksum",
 ]
 
+const REVISION_NEUTRAL_FIELDS: Array[String] = [
+	"checksum",
+	"snapshot_id",
+	"server_tick",
+	"committed_at_tick",
+	"sample_time_s",
+]
+
 
 static func create(
 	checkpoint_id: String,
@@ -64,7 +72,7 @@ static func compute_checksum(value: Dictionary) -> String:
 static func validate(value: Dictionary) -> Dictionary:
 	var exact: Dictionary = UtilsScript.validate_exact_fields(value, FIELDS)
 	if not bool(exact.get("success", false)):
-		return _failure(String(exact.get("error_code", "INVALID_CHECKPOINT_FIELDS")), String(exact.get("message", "Invalid checkpoint fields")))
+		return exact
 	if typeof(value["schema"]) != TYPE_STRING or String(value["schema"]) != SCHEMA:
 		return _failure("UNSUPPORTED_AUTHORITATIVE_CHECKPOINT_SCHEMA", "Unsupported authoritative checkpoint schema")
 	if not UtilsScript.is_json_integer(value["schema_version"]) or int(value["schema_version"]) != SCHEMA_VERSION:
@@ -139,13 +147,36 @@ static func validate_progression(candidate: Dictionary, current: Dictionary) -> 
 		return _failure("AUTHORITATIVE_REVISION_ROLLBACK", "state revision cannot decrease")
 	if int(candidate["server_tick"]) < int(current["server_tick"]):
 		return _failure("AUTHORITATIVE_TICK_ROLLBACK", "server tick cannot decrease")
-	if (
-		int(candidate["state_revision"]) == int(current["state_revision"])
-		and String(candidate["authority_state"].get("current_snapshot", {}).get("checksum", ""))
-		!= String(current["authority_state"].get("current_snapshot", {}).get("checksum", ""))
-	):
-		return _failure("SAME_REVISION_AUTHORITATIVE_MUTATION", "same revision cannot contain a different snapshot")
+	if int(candidate["state_revision"]) == int(current["state_revision"]):
+		var candidate_snapshot: Dictionary = candidate["authority_state"].get("current_snapshot", {})
+		var current_snapshot: Dictionary = current["authority_state"].get("current_snapshot", {})
+		if _revision_semantic_hash(candidate_snapshot) != _revision_semantic_hash(current_snapshot):
+			return _failure(
+				"SAME_REVISION_AUTHORITATIVE_MUTATION",
+				"same revision cannot contain a different semantic snapshot"
+			)
 	return {"success": true, "error_code": "", "message": ""}
+
+
+static func _revision_semantic_hash(snapshot: Dictionary) -> String:
+	return UtilsScript.payload_hash(_strip_revision_neutral_metadata(snapshot))
+
+
+static func _strip_revision_neutral_metadata(value):
+	if value is Dictionary:
+		var result: Dictionary = {}
+		for key_value in value.keys():
+			var key: String = String(key_value)
+			if key in REVISION_NEUTRAL_FIELDS or key.ends_with("_checksum"):
+				continue
+			result[key] = _strip_revision_neutral_metadata(value[key_value])
+		return result
+	if value is Array:
+		var result_array: Array = []
+		for entry in value:
+			result_array.append(_strip_revision_neutral_metadata(entry))
+		return result_array
+	return value
 
 
 static func _is_canonical_id(value: String) -> bool:
