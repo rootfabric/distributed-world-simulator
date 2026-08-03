@@ -1,7 +1,7 @@
 {
-  "schema": "distributed_world_simulator.int0_uid_sidecars_fix_candidate_validation.v2",
+  "schema": "distributed_world_simulator.int0_uid_sidecars_fix_candidate_validation.v3",
   "recorded_at": "2026-08-03T23:21:00+10:00",
-  "updated_at": "2026-08-03T23:29:00+10:00",
+  "updated_at": "2026-08-03T23:44:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "base": {
     "branch": "checkpoint/int0-three-domain-focused-pass-pre-uid",
@@ -9,81 +9,101 @@
     "focused_status": "PASS"
   },
   "uid_sidecar_delivery": {
-    "commit": "6d45338f4db2a00aaf5a2f5587f1d1933a856adf",
-    "commit_message": "fix(integration): track generated Godot UID sidecars",
-    "uid_sidecars": 156,
-    "sha256_manifest": "validation/int0-import-uid-sidecars-manifest.json",
-    "changed_only_archive": "int0-import-uid-sidecars-6d45338.zip",
-    "archive_files": 157,
-    "archive_bytes": 57315,
-    "archive_sha256": "7D5FC097FAF16A9D778A8FB24DA797C818C090EBBEBF296C0EFAA44090DF2DE9"
+    "initial_commit": "6d45338f4db2a00aaf5a2f5587f1d1933a856adf",
+    "initial_uid_sidecars": 156,
+    "primary_sha256_manifest": "validation/int0-import-uid-sidecars-manifest.json",
+    "contract_sidecar_commit": "8c982d327fff6612f3f971e80543c73662df9a66",
+    "contract_sidecar": "tests/runtime/test_int0_project_uid_contracts.gd.uid",
+    "contract_sidecar_uid": "uid://ciuuux044fklg",
+    "contract_sidecar_sha256": "486F82652D0FD7E38F44F08C96C073D7A36F9BF8201E790015FD9BBA5AA8DF6E",
+    "supplemental_sha256_manifest": "validation/int0-project-uid-contract-sidecar-manifest.json",
+    "manifest_index": "validation/int0-uid-sidecars-manifest-index.json",
+    "aggregate_uid_sidecars": 157
   },
-  "failed_gate": {
-    "candidate_sha": "eff9c5f1dc571e8ebae9320a7187fc46ee5a4580",
-    "result": "FAIL",
-    "manifest_files_and_hashes": "PASS_156_OF_156",
-    "fresh_checkout_untracked_uid_count": 0,
-    "editor_import_exit_code": 0,
-    "new_uid_after_import": 0,
-    "committed_uid_hashes_unchanged": true,
-    "git_diff_check": "PASS",
-    "conflict_markers": 0,
-    "remaining_godot_processes": 0,
-    "focused_profile": "NOT_RUN_PREREQUISITE_FAILED",
-    "full_profile": "NOT_RUN",
-    "blocking_diff": {
-      "path": "project.godot",
-      "before": "BreakpointRuntimeBridge=\"*res://addons/breakpoint_mcp/runtime_bridge.gd\"",
-      "after": "BreakpointRuntimeBridge=\"*uid://cpjc0o64cgs1\""
+  "failed_gates": [
+    {
+      "candidate_sha": "eff9c5f1dc571e8ebae9320a7187fc46ee5a4580",
+      "result": "FAIL",
+      "blocking_defect": "PROJECT_GODOT_AUTOLOAD_CANONICALIZATION",
+      "manifest": "PASS_156_OF_156",
+      "editor_import": "PASS",
+      "new_untracked_uid_count": 0,
+      "project_godot_unchanged": false,
+      "focused_profile": "NOT_RUN_PREREQUISITE_FAILED",
+      "full_profile": "NOT_RUN"
+    },
+    {
+      "candidate_sha": "82e02a8692774662c470b9d682635794582d02fa",
+      "result": "FAIL",
+      "blocking_defect": "NEW_CONTRACT_MISSING_OWN_UID_SIDECAR",
+      "primary_manifest": "PASS_156_OF_156",
+      "editor_import": "PASS",
+      "project_godot_unchanged": true,
+      "new_untracked_uid_count": 1,
+      "generated_path": "tests/runtime/test_int0_project_uid_contracts.gd.uid",
+      "generated_uid": "uid://ciuuux044fklg",
+      "cleanliness_guard": "PASS_DETECTED_AND_STOPPED_BEFORE_FOCUSED",
+      "git_diff_check": "PASS",
+      "conflict_markers": 0,
+      "remaining_godot_processes": 0,
+      "focused_profile": "NOT_RUN_PREREQUISITE_FAILED",
+      "full_profile": "NOT_RUN"
     }
+  ],
+  "root_causes": {
+    "autoload_rewrite": "The tracked runtime_bridge.gd.uid already contained uid://cpjc0o64cgs1 while project.godot used a noncanonical res:// autoload reference.",
+    "contract_sidecar_omission": "The new test_int0_project_uid_contracts.gd source was added after the initial 156-file import batch and its generated UID sidecar was not included in the fix2 candidate."
   },
-  "root_cause": {
-    "kind": "NON_CANONICAL_PROJECT_AUTOLOAD_REFERENCE",
-    "details": "The tracked runtime_bridge.gd.uid already contains uid://cpjc0o64cgs1. Godot editor import therefore canonicalizes the project.godot autoload from the res:// path form to the stable tracked UID form.",
-    "new_uid_generated": false,
-    "uid_sidecar_incorrect": false,
-    "project_setting_noncanonical": true
-  },
-  "fix2": {
-    "branch": "fix/int0-import-uid-sidecars",
+  "fix2_corrections": {
     "project_canonicalization_commit": "392da0760d38f87be3a196020454318787c7990d",
-    "uid_contract_commit": "0203471129cc8ab1d202efee99e49181a09a84fd",
+    "uid_contract_initial_commit": "0203471129cc8ab1d202efee99e49181a09a84fd",
     "powershell_composition_commit": "97baeb697635fd273c9a64c211479446f04f5bda",
     "bash_composition_commit": "863919108f9a0e25d51a7e3568f62379d48ce279",
-    "powershell_gate_cleanliness_commit": "b90667bcd7822e033f7463dbcf00d37c9808ec57",
-    "bash_gate_cleanliness_commit": "93a4103ad04695281ccec2696ef4534b3dbcfb52",
+    "powershell_cleanliness_guard_commit": "b90667bcd7822e033f7463dbcf00d37c9808ec57",
+    "bash_cleanliness_guard_commit": "93a4103ad04695281ccec2696ef4534b3dbcfb52",
+    "contract_sidecar_commit": "8c982d327fff6612f3f971e80543c73662df9a66",
+    "supplemental_manifest_commit": "aa8161faac964e98aec5cbb1215d843f0dd3be10",
+    "manifest_index_initial_commit": "cf8c6a83aad89df562c9b27791fef1226c44cead",
+    "self_binding_contract_commit": "746000c993f1655dcce6050ea40fde0cf80862d9",
+    "manifest_index_normalization_commit": "8863e7b463a70c8e20d8e4f6e5ff122eba205867",
+    "implementation_head": "8863e7b463a70c8e20d8e4f6e5ff122eba205867",
     "project_godot_autoload": "*uid://cpjc0o64cgs1",
-    "matching_sidecar": "addons/breakpoint_mcp/runtime_bridge.gd.uid",
-    "matching_sidecar_value": "uid://cpjc0o64cgs1",
+    "project_uid_contract_sidecar": "uid://ciuuux044fklg",
+    "project_uid_contract_assertions_expected": 8,
     "unified_runner_guard": {
       "project_godot_hash_stable": true,
       "new_untracked_uid_files_forbidden": true,
       "fails_before_suite_execution": true
     }
   },
-  "scope_after_failed_gate": {
-    "commits": 6,
-    "changed_files": 6,
-    "project_files": 1,
-    "new_tests": 1,
-    "runner_files": 4,
+  "manifest_policy": {
+    "primary_manifest_immutable": true,
+    "reason": "Preserve the byte-exact evidence for the original deterministic 156-file editor-import batch.",
+    "supplemental_manifest_required": true,
+    "aggregate_count_from_index": 157
+  },
+  "scope_since_failed_fix2_gate": {
+    "new_uid_sidecars": 1,
+    "new_manifests": 2,
+    "modified_tests": 1,
     "runtime_behavior_files": 0,
     "authority_files": 0,
-    "network_protocol_files": 0
+    "network_protocol_files": 0,
+    "project_godot_modified_since_candidate": false
   },
-  "available_validation": {
-    "github_history_relation": "SIX_COMMITS_AHEAD_OF_FAILED_GATE_NO_DIVERGENCE",
-    "github_changed_scope": "PASS",
-    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "isolated_project_uid_contract": {
-      "result": "PASS",
-      "assertions": 5,
-      "failures": 0
-    },
-    "full_windows_clean_import_gate": "PENDING_INDEPENDENT_RETEST",
-    "focused_profile": "PENDING_INDEPENDENT_RETEST",
+  "required_gate": {
+    "candidate_checkpoint": "checkpoint/int0-uid-sidecars-fix2-rev1-gate-candidate",
+    "fresh_detached_checkout": "PENDING",
+    "primary_manifest_expected": "PASS_156_OF_156",
+    "supplemental_manifest_expected": "PASS_1_OF_1",
+    "aggregate_uid_expected": 157,
+    "editor_import": "PENDING",
+    "new_untracked_uid_count_expected": 0,
+    "project_godot_expected_unchanged": true,
+    "project_uid_contract_expected": "PASS_8_ASSERTIONS",
+    "focused_profile": "PENDING",
     "full_profile": "BLOCKED_UNTIL_CLEAN_IMPORT_AND_FOCUSED_PASS"
   },
-  "acceptance_decision": "FIX2_GATE_CANDIDATE_AWAITING_CLEAN_IMPORT_AND_FOCUSED_RETEST",
+  "acceptance_decision": "FIX2_REV1_GATE_CANDIDATE_AWAITING_CLEAN_IMPORT_AND_FOCUSED_RETEST",
   "main_changed": false
 }
