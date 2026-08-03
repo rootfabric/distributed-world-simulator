@@ -1,0 +1,83 @@
+{
+  "schema": "distributed_world_simulator.int0_mw9_lock_release_retry_candidate.v1",
+  "recorded_at": "2026-08-04T00:32:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base": {
+    "branch": "checkpoint/int0-post-uid-full-gate-candidate",
+    "sha": "0b466326eb578c262f72da4de89da8be3552f82d"
+  },
+  "failed_full_gate": {
+    "result": "FAIL",
+    "failed_suite": "RUN_MW9_RACE_STRESS_TESTS.ps1",
+    "batch": 5,
+    "round": 5,
+    "contender_errors": [
+      "MATTER_DURABLE_HANDOFF_LOCK_RELEASE_FAILED",
+      "MATTER_DURABLE_HANDOFF_LOCK_TIMEOUT"
+    ],
+    "lock_residue": ".matter-handoff-state.lock",
+    "editor_import": "PASS",
+    "completed_suites_before_failure": 5,
+    "remaining_full_suites": "NOT_RUN_AFTER_FAIL_FAST",
+    "standalone_recheck": "PASS_100_OF_100_ROUNDS_13_OF_13_BATCHES_NON_ACCEPTANCE_EVIDENCE"
+  },
+  "root_cause": {
+    "classification": "TRANSIENT_WINDOWS_DIRECTORY_RENAME_DURING_LOCK_RELEASE",
+    "mechanism": "The durable checkpoint commit can succeed, but the previous implementation attempted the atomic canonical-lock to released-path rename only once. A transient Windows rename error converted the committed contender into a reported failure. The canonical lock then remained valid for the 30000 ms stale grace while the other contender waited only approximately 5000 ms, producing a timeout and zero reported winners.",
+    "ownerless_window_reintroduced": false,
+    "durable_commit_corruption_observed": false
+  },
+  "candidate": {
+    "branch": "fix/int0-mw9-lock-release-retry",
+    "runtime_commit": "d1b4993812fde8e8aeef86c508530df92ea41648",
+    "fault_injection_test_commit": "fa59f8cb6bad0bd4266f4caa88e1c40dbbe5f187",
+    "test_uid_commit": "b67c47dae8a06ff916ba65963e7fd56efd16559a",
+    "windows_runner_commit": "cd60e031cddc7d4517a08051f587dc624006ed84",
+    "linux_runner_commit": "0b016a36baa44958e96f56b682a1f90327e21fb6",
+    "uid_manifest_commit": "ebc05a09b132e62ff29b465f30dd6726dafeac77",
+    "uid_index_commit": "8ac0ad564f7227ac018ed3226e35918bf1fbdc74"
+  },
+  "runtime_policy": {
+    "atomic_release_rename_preserved": true,
+    "owner_json_removed_in_canonical_path": false,
+    "max_release_attempts": 200,
+    "retry_delay_ms": 5,
+    "maximum_retry_window_ms": 1000,
+    "token_bound_reported_error_verification": true,
+    "newer_lock_removal_forbidden": true
+  },
+  "test_coverage": {
+    "new_test": "tests/matter/handoff/test_mw9_lock_release_retry.gd",
+    "transient_failures_injected_before_success": 3,
+    "assertions_per_run": 12,
+    "isolated_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_single_run": "PASS_12_OF_12",
+    "isolated_repeated_runs": "PASS_100_OF_100",
+    "editor_import_repeated": "PASS",
+    "project_godot_hash_stable": true,
+    "generated_uid": "uid://bkjctpphq0al1",
+    "generated_uid_sha256": "3DF8CD0A232B4559461C77733D4E91F29CC3B4916498180C230E8A527E794458"
+  },
+  "uid_completeness": {
+    "previous_aggregate": 157,
+    "new_sidecars": 1,
+    "current_aggregate": 158,
+    "manifest": "validation/int0-mw9-lock-release-retry-sidecar-manifest.json",
+    "index": "validation/int0-uid-sidecars-manifest-index.json"
+  },
+  "required_candidate_gate": {
+    "fresh_detached_checkout": "PENDING",
+    "editor_import_cleanliness": "PENDING",
+    "uid_manifests_expected": "156_PLUS_1_PLUS_1_EQUALS_158",
+    "mw9_recovery_runner_expected": "PASS_3_OF_3_SUITES",
+    "mw9_lock_release_retry_expected": "PASS_12_ASSERTIONS",
+    "mw9_race_stress_expected": "PASS_1000_OF_1000_ROUNDS",
+    "int0_full_expected": "PASS_16_OF_16_SUITES",
+    "git_diff_check": "PENDING",
+    "conflict_markers": "PENDING",
+    "remaining_godot_processes": "PENDING",
+    "worktree_clean": "PENDING"
+  },
+  "acceptance_decision": "MW9_LOCK_RELEASE_RETRY_CANDIDATE_AWAITING_WINDOWS_STRESS_AND_FULL_GATE",
+  "main_changed": false
+}
