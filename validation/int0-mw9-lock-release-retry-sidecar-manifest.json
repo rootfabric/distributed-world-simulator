@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.int0_mw9_lock_release_retry_sidecar_manifest.v1",
+  "recorded_at": "2026-08-04T00:27:00+10:00",
+  "generated_by": "Godot 4.7.1.stable.double.custom_build.a13da4feb editor import",
+  "uid_count": 1,
+  "files": [
+    {
+      "path": "tests/matter/handoff/test_mw9_lock_release_retry.gd.uid",
+      "uid": "uid://bkjctpphq0al1",
+      "bytes": 20,
+      "sha256": "3DF8CD0A232B4559461C77733D4E91F29CC3B4916498180C230E8A527E794458"
+    }
+  ]
+}
