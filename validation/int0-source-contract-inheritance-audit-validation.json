@@ -1,0 +1,103 @@
+{
+  "schema": "distributed_world_simulator.int0_source_contract_inheritance_audit_candidate.v1",
+  "recorded_at": "2026-08-04T09:58:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-nx0-composed-source-contracts",
+    "sha": "d66bf147b7fbf1ef5a09ba941d683f8036e06438",
+    "pull_request": 16
+  },
+  "failed_gate": {
+    "result": "FAIL",
+    "failed_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "failed_test": "tests/network/test_nx0_observability_baseline.gd",
+    "assertions": 150,
+    "failures": 5,
+    "messages": [
+      "Client does not send compatibility hello",
+      "Client does not consume compatibility ACK",
+      "Client operation timer bound is not observable",
+      "Client item command latency is not observable",
+      "Client snapshot age is not observable"
+    ],
+    "full_int0_executed": false
+  },
+  "confirmed_analysis": {
+    "classification": "STALE_SOURCE_CONTRACT_INHERITANCE_INSPECTION",
+    "facts": [
+      "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd is a thin INT0 adapter extending m3_graphical_client_runtime_nx6.gd",
+      "the inherited NX6 runtime contains COMPATIBILITY_HELLO transmission",
+      "the inherited NX6 runtime consumes COMPATIBILITY_ACK",
+      "the inherited NX6 runtime exposes pending_operation_timers",
+      "the inherited NX6 runtime observes item_command_latency_ms",
+      "the inherited NX6 runtime observes snapshot_age_ms"
+    ],
+    "production_runtime_regression_found": false
+  },
+  "proactive_downstream_audit": {
+    "tests_reviewed": [
+      "tests/network/test_nx0_observability_baseline.gd",
+      "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+      "tests/network/test_nx4_client_prediction_reconciliation.gd"
+    ],
+    "additional_stale_source_contracts_found": [
+      {
+        "path": "tests/network/test_nx2_realtime_traffic_separation.gd",
+        "reason": "direct client adapter source read hides inherited NX2/NX6 batching, channel and resync wiring"
+      },
+      {
+        "path": "tests/network/test_nx4_client_prediction_reconciliation.gd",
+        "reason": "direct client adapter source read hides inherited prediction and reconciliation APIs"
+      }
+    ],
+    "nx1_direct_client_adapter_read_found": false,
+    "nx3_source_text_blocker_found": false
+  },
+  "correction": {
+    "changed_tests": [
+      "tests/network/test_nx0_observability_baseline.gd",
+      "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "tests/network/test_nx4_client_prediction_reconciliation.gd"
+    ],
+    "policy": [
+      "follow literal GDScript extends chains when source-contract tests inspect composed runtimes",
+      "protect traversal against inheritance cycles",
+      "preserve every existing runtime marker assertion",
+      "do not add marker comments or duplicate methods to production adapters"
+    ],
+    "production_files_changed": 0,
+    "config_files_changed": 0,
+    "documentation_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159
+  },
+  "confirmed_stacked_results": {
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "nx0_preparation": "115/115 PASS",
+    "m6_tick_progression": "12/12 PASS",
+    "m6_dedicated_recovery": "128/128 PASS STOPPED",
+    "r3": "67/67 PASS",
+    "mw9_recovery": "3/3 PASS",
+    "mw9_race": "1000/1000 rounds 125/125 batches PASS"
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159",
+    "editor import clean and project.godot unchanged",
+    "NX0 preparation 115 assertions PASS",
+    "NX0 observability baseline 150 assertions PASS",
+    "NX2 realtime traffic separation PASS",
+    "NX4 client prediction reconciliation PASS",
+    "M6 tick progression focused 2/2 PASS",
+    "R3 authoritative recovery PASS",
+    "MW9 recovery 3/3 PASS",
+    "MW9 race stress 1000/1000 PASS",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1 PASS",
+    "INT0 full 16/16 PASS",
+    "static repository and Godot process cleanliness PASS"
+  ],
+  "decision": "FIX6_SOURCE_CONTRACT_AUDIT_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
