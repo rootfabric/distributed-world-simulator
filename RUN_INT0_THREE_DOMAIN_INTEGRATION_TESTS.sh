@@ -76,6 +76,49 @@ run_command_step() {
   return "$code"
 }
 
+run_editor_import_step() {
+  local started finished code duration
+  local project_hash_before project_hash_after
+  local untracked_uid_before untracked_uid_after new_uid_files
+  local error_message=""
+
+  project_hash_before="$(git -C "$PROJECT_ROOT" hash-object project.godot)"
+  untracked_uid_before="$(git -C "$PROJECT_ROOT" ls-files --others --exclude-standard -- ':(glob)**/*.uid')"
+
+  started="$(date +%s)"
+  echo "INT0 runner: res://"
+  "$GODOT_PATH" --headless --editor --path "$PROJECT_ROOT" --quit
+  code=$?
+  finished="$(date +%s)"
+  duration=$((finished - started))
+
+  project_hash_after="$(git -C "$PROJECT_ROOT" hash-object project.godot)"
+  untracked_uid_after="$(git -C "$PROJECT_ROOT" ls-files --others --exclude-standard -- ':(glob)**/*.uid')"
+  new_uid_files="$(comm -13 \
+    <(printf '%s\n' "$untracked_uid_before" | sed '/^$/d' | sort) \
+    <(printf '%s\n' "$untracked_uid_after" | sed '/^$/d' | sort))"
+
+  if [[ $code -ne 0 ]]; then
+    error_message="Godot exit code $code"
+  fi
+  if [[ "$project_hash_before" != "$project_hash_after" ]]; then
+    error_message="${error_message:+$error_message; }project.godot changed during editor import"
+  fi
+  if [[ -n "$new_uid_files" ]]; then
+    error_message="${error_message:+$error_message; }new untracked UID files: $new_uid_files"
+  fi
+
+  if [[ $code -eq 0 && "$project_hash_before" == "$project_hash_after" && -z "$new_uid_files" ]]; then
+    record_step editor_import res:// true "$duration" 0
+    return 0
+  fi
+
+  record_step editor_import res:// false "$duration" 1 "$error_message"
+  FAILURE="INT0 editor import cleanliness failed: $error_message"
+  PASSED=false
+  return 1
+}
+
 run_suite() {
   local script_name="$1"
   local script_path="$PROJECT_ROOT/$script_name"
@@ -123,7 +166,7 @@ fi
 echo "INT0 three-domain integration gate [$PROFILE]"
 echo "Godot: $GODOT_PATH"
 
-run_command_step editor_import res:// "$GODOT_PATH" --headless --editor --path "$PROJECT_ROOT" --quit || true
+run_editor_import_step || true
 
 if [[ "$PASSED" == true ]]; then
   for suite in "${SELECTED_SUITES[@]}"; do

@@ -11,6 +11,8 @@ fi
 
 "$GODOT_PATH" --headless --editor --path "$PROJECT_ROOT" --quit
 "$GODOT_PATH" --headless --path "$PROJECT_ROOT" \
+  --script res://tests/runtime/test_int0_project_uid_contracts.gd
+"$GODOT_PATH" --headless --path "$PROJECT_ROOT" \
   --script res://tests/runtime/test_int0_m3_replica_resync_composition.gd
 
 echo "INT0 RL3/MW10 composition focused gate: PASS"

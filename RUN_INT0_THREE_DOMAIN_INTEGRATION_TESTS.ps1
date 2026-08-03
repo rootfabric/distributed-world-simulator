@@ -89,13 +89,49 @@ function Add-StepResult {
 }
 
 function Invoke-GodotEditorImport {
+    $GitCommand = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $GitCommand) {
+        throw "git is required for INT0 editor import cleanliness checks."
+    }
+
+    $ProjectGodotPath = Join-Path $ProjectRoot "project.godot"
+    $ProjectHashBefore = (Get-FileHash -LiteralPath $ProjectGodotPath -Algorithm SHA256).Hash
+    $UntrackedUidBefore = @(
+        & $GitCommand.Source -C $ProjectRoot ls-files --others --exclude-standard -- ':(glob)**/*.uid'
+    )
+
     $Started = [DateTime]::UtcNow
     & $GodotExecutable --headless --editor --path $ProjectRoot --quit
     $Code = $LASTEXITCODE
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
-    Add-StepResult -Name "editor_import" -Target "res://" -Succeeded ($Code -eq 0) -DurationSeconds $Duration -ExitCode $Code
+
+    $ProjectHashAfter = (Get-FileHash -LiteralPath $ProjectGodotPath -Algorithm SHA256).Hash
+    $UntrackedUidAfter = @(
+        & $GitCommand.Source -C $ProjectRoot ls-files --others --exclude-standard -- ':(glob)**/*.uid'
+    )
+    $NewUidFiles = @(
+        $UntrackedUidAfter | Where-Object { $_ -notin $UntrackedUidBefore }
+    )
+    $ProjectChanged = $ProjectHashBefore -ne $ProjectHashAfter
+    $ImportPassed = $Code -eq 0 -and -not $ProjectChanged -and $NewUidFiles.Count -eq 0
+    $ImportError = @(
+        if ($Code -ne 0) { "Godot exit code $Code" }
+        if ($ProjectChanged) { "project.godot changed during editor import" }
+        if ($NewUidFiles.Count -ne 0) {
+            "new untracked UID files: $($NewUidFiles -join ', ')"
+        }
+    ) -join "; "
+
+    Add-StepResult -Name "editor_import" -Target "res://" -Succeeded $ImportPassed -DurationSeconds $Duration -ExitCode ($(if ($ImportPassed) { 0 } else { 1 })) -ErrorMessage $ImportError
+
     if ($Code -ne 0) {
         throw "INT0 editor import failed with exit code $Code."
+    }
+    if ($ProjectChanged) {
+        throw "INT0 editor import changed project.godot. Commit the canonical Godot representation before continuing."
+    }
+    if ($NewUidFiles.Count -ne 0) {
+        throw "INT0 editor import generated new untracked UID files: $($NewUidFiles -join ', ')"
     }
 }
 
