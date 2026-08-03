@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.int0_project_uid_contract_sidecar_manifest.v1",
+  "recorded_at": "2026-08-03T23:44:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "source_gate_candidate": "82e02a8692774662c470b9d682635794582d02fa",
+  "generated_by": "Godot 4.7.1 double editor import",
+  "uid_count": 1,
+  "files": [
+    {
+      "path": "tests/runtime/test_int0_project_uid_contracts.gd.uid",
+      "bytes": 20,
+      "uid": "uid://ciuuux044fklg",
+      "sha256": "486F82652D0FD7E38F44F08C96C073D7A36F9BF8201E790015FD9BBA5AA8DF6E"
+    }
+  ]
+}
