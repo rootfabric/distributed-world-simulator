@@ -303,7 +303,9 @@ func _test_transport_telemetry_integration() -> void:
 
 func _test_runtime_wiring_and_non_goals() -> void:
 	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
-	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var client_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	var boundary_source: String = FileAccess.get_file_as_string("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 	var enet_source: String = FileAccess.get_file_as_string("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 	var app_source: String = FileAccess.get_file_as_string("res://scripts/app/simulator_app.gd")
@@ -351,6 +353,23 @@ func _test_runtime_wiring_and_non_goals() -> void:
 		_assert(server_source.contains("_send_result(peer_id, operation_id, \"PLAYER_INPUT\", result)"), "NX0 movement result baseline changed unexpectedly")
 		_assert(server_source.contains("_broadcast_snapshot(\"PLAYER_INPUT_SIMULATED\")"), "NX0 per-input snapshot baseline changed unexpectedly")
 		_assert(enet_source.contains("const MAX_CHANNELS: int = 3"), "NX0 ENet channel baseline changed unexpectedly")
+
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
 
 
 func _handshake_checksum(value: Dictionary) -> String:
