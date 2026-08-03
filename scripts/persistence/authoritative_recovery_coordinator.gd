@@ -2,21 +2,9 @@ extends RefCounted
 
 const CheckpointScript = preload("res://scripts/persistence/authoritative_checkpoint.gd")
 
-const DEFAULT_PERSIST_RETRY_ATTEMPTS := 20
-const DEFAULT_PERSIST_RETRY_DELAY_MS := 10
-const RETRYABLE_SAVE_ERRORS: Array[String] = [
-	"AUTHORITATIVE_ATOMIC_REPLACE_FAILED",
-	"AUTHORITATIVE_PENDING_OPEN_FAILED",
-	"AUTHORITATIVE_PENDING_WRITE_FAILED",
-	"AUTHORITATIVE_PENDING_VERIFY_FAILED",
-	"AUTHORITATIVE_COMMIT_VERIFY_FAILED",
-]
-
 var repository
 var authority
 var replay_service
-var _persist_retry_attempts := DEFAULT_PERSIST_RETRY_ATTEMPTS
-var _persist_retry_delay_ms := DEFAULT_PERSIST_RETRY_DELAY_MS
 
 
 func configure(repository_reference, authority_reference, replay_service_reference) -> Dictionary:
@@ -69,41 +57,10 @@ func persist_checkpoint(
 	if not bool(created.get("success", false)):
 		return created
 	var checkpoint: Dictionary = created["details"]["checkpoint"]
-	var attempts: int = maxi(_persist_retry_attempts, 1)
-	var last_saved: Dictionary = {}
-	for attempt in range(attempts):
-		var saved: Dictionary = repository.save_atomic(checkpoint)
-		if bool(saved.get("success", false)):
-			return _success({
-				"checkpoint": checkpoint,
-				"repository": saved["details"],
-				"save_attempts": attempt + 1,
-				"committed_after_reported_error": false,
-			})
-		last_saved = saved.duplicate(true)
-		var observed: Dictionary = _observe_committed_checkpoint(checkpoint)
-		if bool(observed.get("success", false)):
-			_cleanup_pending_files()
-			return _success({
-				"checkpoint": checkpoint,
-				"repository": observed.get("details", {}).get("repository", {}),
-				"save_attempts": attempt + 1,
-				"committed_after_reported_error": true,
-				"reported_save_error": saved.duplicate(true),
-			})
-		if not _is_retryable_save_failure(saved):
-			return saved
-		_cleanup_pending_files()
-		if attempt + 1 < attempts and _persist_retry_delay_ms > 0:
-			OS.delay_msec(_persist_retry_delay_ms)
-	if last_saved.is_empty():
-		return _failure("AUTHORITATIVE_CHECKPOINT_PERSIST_FAILED")
-	var exhausted: Dictionary = last_saved.duplicate(true)
-	var exhausted_details: Dictionary = Dictionary(exhausted.get("details", {})).duplicate(true)
-	exhausted_details["retry_attempts"] = attempts
-	exhausted_details["retry_exhausted"] = true
-	exhausted["details"] = exhausted_details
-	return exhausted
+	var saved: Dictionary = repository.save_atomic(checkpoint)
+	if not bool(saved.get("success", false)):
+		return saved
+	return _success({"checkpoint": checkpoint, "repository": saved["details"]})
 
 
 func recover_latest() -> Dictionary:
@@ -129,34 +86,6 @@ func recover_latest() -> Dictionary:
 		"authority": authority_result["details"],
 		"replay": replay_result["details"],
 	})
-
-
-func _observe_committed_checkpoint(candidate: Dictionary) -> Dictionary:
-	var loaded: Dictionary = repository.load_committed()
-	if not bool(loaded.get("success", false)):
-		return _failure("AUTHORITATIVE_COMMIT_NOT_OBSERVED", {"cause": loaded})
-	var observed_value = loaded.get("details", {}).get("checkpoint", {})
-	if not observed_value is Dictionary:
-		return _failure("AUTHORITATIVE_COMMIT_NOT_OBSERVED")
-	var observed: Dictionary = observed_value
-	if String(observed.get("checksum", "")) != String(candidate.get("checksum", "")):
-		return _failure("AUTHORITATIVE_COMMIT_CHECKSUM_NOT_OBSERVED", {
-			"expected_checksum": String(candidate.get("checksum", "")),
-			"observed_checksum": String(observed.get("checksum", "")),
-		})
-	return _success({
-		"checkpoint": observed.duplicate(true),
-		"repository": Dictionary(loaded.get("details", {})).duplicate(true),
-	})
-
-
-func _is_retryable_save_failure(saved: Dictionary) -> bool:
-	return String(saved.get("error_code", "")) in RETRYABLE_SAVE_ERRORS
-
-
-func _cleanup_pending_files() -> void:
-	if repository != null and repository.has_method("cleanup_pending_files"):
-		repository.cleanup_pending_files()
 
 
 func _success(details: Dictionary = {}) -> Dictionary:
