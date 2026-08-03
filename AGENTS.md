@@ -1,5 +1,17 @@
 # PlanetSimulator agent development rules
 
+## Current network review context
+
+```text
+checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation
+delivery: fix1
+branch: feature/nx4-client-prediction-reconciliation
+apply over: NX4 candidate
+status: CANDIDATE_FIX1
+```
+
+NX4 fix1 corrects future clock-only reconciliation away from the world origin and preserves an already active visual smoothing offset when an identical clock-only or duplicate snapshot arrives. Review corrections remain on the same NX4 feature branch.
+
 ## Language and delivery
 
 - Project documentation and user-facing development reports are written in Russian.

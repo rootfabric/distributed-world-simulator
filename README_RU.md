@@ -65,12 +65,12 @@ accepted: v16.10.8-network-nx0-observability-baseline
 accepted: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
 accepted: v16.12.0-network-nx2-realtime-traffic-separation / fix2
 accepted: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
-candidate: v16.14.0-network-nx4-client-prediction-reconciliation
+candidate: v16.14.0-network-nx4-client-prediction-reconciliation / fix1
 base commit: ac8ae0afdd47e0f290dbbc8af396add7aba60cda
 branch: feature/nx4-client-prediction-reconciliation
 ```
 
-NX2 разделяет transport streams и подавляет movement amplification. NX3 переводит production M7 movement на server scheduler 60 Hz: input arrival только наполняет per-player buffer, а authoritative displacement рассчитывается fixed delta `1/60`, независимо от client FPS, batching и jitter. Transition-history сохраняет короткий ввод при latest-wins coalescing; snapshot cadence остаётся 20 Hz. NX4 добавляет мгновенный owner prediction, bounded history, authoritative replay и correction smoothing. NX5 remote interpolation остаётся следующим этапом.
+NX2 разделяет transport streams и подавляет movement amplification. NX3 переводит production M7 movement на server scheduler 60 Hz: input arrival только наполняет per-player buffer, а authoritative displacement рассчитывается fixed delta `1/60`, независимо от client FPS, batching и jitter. Transition-history сохраняет короткий ввод при latest-wins coalescing; snapshot cadence остаётся 20 Hz. NX4 добавляет мгновенный owner prediction, bounded history, authoritative replay и correction smoothing. Fix1 устраняет ложную hard correction для future clock-only snapshot вне начала координат и не обрывает уже активное smoothing при совпадающем snapshot. NX5 remote interpolation остаётся следующим этапом.
 
 Основные документы:
 

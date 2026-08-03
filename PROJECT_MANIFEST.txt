@@ -850,3 +850,15 @@ NX4 Client Prediction and Reconciliation candidate
 - validation: validation/v16.14.0-network-nx4-client-prediction-reconciliation-validation.json
 - incremental files: validation/v16.14.0-network-nx4-client-prediction-reconciliation-files.txt
 - patch manifest: NX4_CLIENT_PREDICTION_RECONCILIATION_PATCH_MANIFEST.json
+
+NX4 CLIENT PREDICTION AND RECONCILIATION FIX1
+- checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation / fix1
+- branch: feature/nx4-client-prediction-reconciliation
+- future clock baseline: CURRENT_PREDICTED_STATE_V1
+- clock-only policy: FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2
+- matching snapshots do not cancel an active visual correction
+- regression: non-origin future tick, zero error, no hard correction, clock advance, smoothing preservation
+- checkpoint document: docs/checkpoints/2026-08-03_V16_14_0_NETWORK_NX4_FIX1_RU.md
+- validation: validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-validation.json
+- incremental files: validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-files.txt
+- patch manifest: NX4_CLIENT_PREDICTION_RECONCILIATION_FIX1_PATCH_MANIFEST.json

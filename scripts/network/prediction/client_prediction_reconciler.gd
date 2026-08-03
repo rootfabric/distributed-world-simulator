@@ -18,7 +18,7 @@ const VERY_FAST_DURATION_SECONDS: float = 0.05
 const HISTORY_POLICY: String = "SERVER_TICK_KEYED_RING_BUFFER_V1"
 const REPLAY_POLICY: String = "AUTHORITATIVE_BASELINE_REPLAY_UNACKNOWLEDGED_TICKS_V1"
 const CORRECTION_POLICY: String = "VISUAL_OFFSET_DECAY_THRESHOLDS_V1"
-const CLOCK_ONLY_SNAPSHOT_POLICY: String = "SAME_REVISION_IDENTICAL_STATE_ADVANCES_PREDICTION_CLOCK_V1"
+const CLOCK_ONLY_SNAPSHOT_POLICY: String = "FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2"
 const HISTORY_MISS_POLICY: String = "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1"
 
 var _movement = MovementService.new()
@@ -139,6 +139,13 @@ func reconcile(authoritative_player: Dictionary, server_tick: int) -> Dictionary
 				break
 	if server_tick < _prediction_tick and not exact_tick_available:
 		return _reset_after_history_miss(authoritative_player, server_tick, authoritative_sequence)
+	if server_tick > _prediction_tick and not exact_tick_available:
+		# A future clock-only snapshot has no local history record yet. Compare it
+		# against the current prediction instead of treating an empty Dictionary
+		# as the origin. This also gives future authoritative corrections a real
+		# local baseline rather than a synthetic (0, 0, 0) error.
+		predicted_at_tick = _predicted_state
+		exact_tick_available = true
 	var prediction_error: float = _position(predicted_at_tick).distance_to(_position(authoritative_player))
 	_last_error_m = prediction_error
 	_maximum_error_m = maxf(_maximum_error_m, prediction_error)
@@ -339,10 +346,12 @@ func _simulate_tick(
 
 func _apply_correction(presentation_offset: Vector3, error_m: float) -> void:
 	_last_correction_mode = "NONE"
+	if error_m < IGNORE_THRESHOLD_M:
+		# Matching clock-only and duplicate snapshots must not cancel a visual
+		# correction that is still decaying from an earlier authoritative update.
+		return
 	_visual_offset = Vector3.ZERO
 	_visual_decay_seconds = 0.0
-	if error_m < IGNORE_THRESHOLD_M:
-		return
 	_corrections += 1
 	if error_m > HARD_CORRECTION_THRESHOLD_M:
 		_hard_corrections += 1

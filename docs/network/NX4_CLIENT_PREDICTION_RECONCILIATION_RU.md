@@ -8,7 +8,8 @@ build_id: nx4-client-prediction-reconciliation
 base checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
 base commit: ac8ae0afdd47e0f290dbbc8af396add7aba60cda
 branch: feature/nx4-client-prediction-reconciliation
-status: implementation candidate
+delivery: fix1
+status: CANDIDATE_FIX1
 ```
 
 Машиночитаемый контракт: `config/network/nx4-client-prediction-reconciliation.v1.json`.
@@ -104,8 +105,31 @@ Authoritative `last_input_sequence` продвигает локальный sequ
 Старый snapshot не откатывает prediction timeline. Compact snapshot с той же revision, но более новым server tick, принимается только если всё состояние кроме `server_tick/checksum` побайтно эквивалентно текущей replica. В таком случае replica revision не мутирует, но prediction clock и reconciliation продвигаются по политике:
 
 ```text
-SAME_REVISION_IDENTICAL_STATE_ADVANCES_PREDICTION_CLOCK_V1
+FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2
 ```
+
+## Review fix1: future clock-only snapshot
+
+Первоначальный NX4 candidate вычислял ошибку future snapshot относительно пустого prediction record, если `server_tick` опережал локальный `prediction_tick`. Пустой state неявно превращался в `(0, 0, 0)`, поэтому игрок вдали от начала координат получал ложную hard correction.
+
+Fix1 использует текущий predicted state как локальный baseline, когда future authoritative tick ещё отсутствует в history:
+
+```text
+local prediction tick: 101
+authoritative tick:    103
+state identical
+→ prediction error:    0
+→ correction mode:     NONE
+→ prediction tick:     103
+```
+
+Дополнительно совпадающий clock-only или duplicate snapshot с ошибкой меньше `3 cm` больше не очищает `_visual_offset` и `_visual_decay_seconds`. Уже начатое smoothing продолжается до естественного затухания. Новая семантика включена в protocol fingerprint:
+
+```text
+FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2
+```
+
+Regression выполняется на ненулевой позиции и проверяет отсутствие роста `corrections`/`hard_corrections`, неизменность gameplay state, продвижение prediction clock и сохранение активного visual offset.
 
 ## Correction policy
 

@@ -17,8 +17,9 @@
     "sequence_wrap": true,
     "stale_snapshots_ignored": true,
     "replay_failure_is_error": true,
-    "clock_only_snapshot_policy": "SAME_REVISION_IDENTICAL_STATE_ADVANCES_PREDICTION_CLOCK_V1",
-    "history_miss_policy": "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1"
+    "clock_only_snapshot_policy": "FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2",
+    "history_miss_policy": "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1",
+    "future_clock_without_history_baseline": "CURRENT_PREDICTED_STATE_V1"
   },
   "correction": {
     "policy": "VISUAL_OFFSET_DECAY_THRESHOLDS_V1",
@@ -30,7 +31,8 @@
     "very_fast_up_to_m": 2.0,
     "very_fast_duration_seconds": 0.05,
     "hard_above_m": 2.0,
-    "camera_follows_presentation": true
+    "camera_follows_presentation": true,
+    "matching_snapshot_preserves_active_smoothing": true
   },
   "acceptance": {
     "client_fps_profiles": [
@@ -43,6 +45,9 @@
     "conditioned_snapshot_loss": true,
     "history_bounded": true,
     "duplicate_item_count": 0,
-    "prediction_replay_failures": 0
-  }
+    "prediction_replay_failures": 0,
+    "future_clock_only_non_origin": true,
+    "clock_only_preserves_active_smoothing": true
+  },
+  "delivery": "fix1"
 }

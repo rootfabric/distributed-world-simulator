@@ -16,6 +16,8 @@ func _run() -> void:
 	_test_immediate_prediction()
 	_test_replay_matches_shared_kernel()
 	_test_visual_correction_policy()
+	_test_future_clock_only_snapshot()
+	_test_clock_only_snapshot_preserves_active_smoothing()
 	_test_rejection_and_hard_correction()
 	_test_bounded_history()
 	_test_history_miss_authoritative_reset()
@@ -76,6 +78,64 @@ func _test_visual_correction_policy() -> void:
 	for _index in range(20):
 		reconciler.sample_presentation(1.0 / 60.0)
 	_assert(float(reconciler.get_report().get("visual_offset_m", 1.0)) < 0.001, "visual correction decays to authoritative state")
+
+func _test_future_clock_only_snapshot() -> void:
+	var reconciler = Reconciler.new()
+	var initial: Dictionary = _player()
+	initial["position"] = {"x": 10.0, "y": 2.0, "z": -3.5}
+	_assert(bool(reconciler.configure(initial, 101).get("success", false)), "future clock-only reconciler configured away from origin")
+	var before_state: Dictionary = reconciler.get_predicted_state()
+	var before_report: Dictionary = reconciler.get_report()
+	var result: Dictionary = reconciler.reconcile(before_state.duplicate(true), 103)
+	_assert(bool(result.get("success", false)), "identical future clock-only snapshot reconciles")
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	_assert(float(details.get("prediction_error_m", -1.0)) < 0.000001, "future clock-only snapshot has zero prediction error away from origin")
+	_assert(String(details.get("correction_mode", "")) == "NONE", "future clock-only snapshot does not create a correction")
+	_assert(not bool(details.get("hard_correction", true)), "future clock-only snapshot does not hard-correct")
+	_assert(int(details.get("prediction_tick", -1)) == 103, "future clock-only snapshot advances prediction clock")
+	_assert(reconciler.get_predicted_state() == before_state, "future clock-only snapshot preserves gameplay state")
+	var after_report: Dictionary = reconciler.get_report()
+	_assert(int(after_report.get("corrections", -1)) == int(before_report.get("corrections", -2)), "future clock-only snapshot does not increment correction telemetry")
+	_assert(int(after_report.get("hard_corrections", -1)) == int(before_report.get("hard_corrections", -2)), "future clock-only snapshot does not increment hard-correction telemetry")
+	_assert(float(after_report.get("last_error_m", -1.0)) < 0.000001, "future clock-only telemetry records zero error")
+
+
+func _test_clock_only_snapshot_preserves_active_smoothing() -> void:
+	var reconciler = Reconciler.new()
+	var initial: Dictionary = _player()
+	initial["position"] = {"x": 10.0, "y": 0.0, "z": -4.0}
+	_assert(bool(reconciler.configure(initial, 100).get("success", false)), "smoothing-preservation reconciler configured")
+	_assert(bool(reconciler.set_input(1, _intent(1.0, 0.0)).get("success", false)), "smoothing-preservation input accepted")
+	for _index in range(6):
+		_assert(bool(reconciler.advance_frame(1.0 / 60.0).get("success", false)), "smoothing-preservation prediction advances")
+	var authority: Dictionary = reconciler.get_predicted_state()
+	var authority_position: Dictionary = Dictionary(authority.get("position", {}))
+	authority_position["x"] = float(authority_position.get("x", 0.0)) - 0.10
+	authority["position"] = authority_position
+	var correction: Dictionary = reconciler.reconcile(authority, reconciler.get_prediction_tick())
+	_assert(String(correction.get("details", {}).get("correction_mode", "")) == "SMOOTH", "precondition creates active smoothing")
+	var report_before_clock: Dictionary = reconciler.get_report()
+	var offset_before: float = float(report_before_clock.get("visual_offset_m", 0.0))
+	var corrections_before: int = int(report_before_clock.get("corrections", 0))
+	var hard_before: int = int(report_before_clock.get("hard_corrections", 0))
+	_assert(offset_before > 0.09, "precondition retains a visible smoothing offset")
+	var clock_state: Dictionary = reconciler.get_predicted_state()
+	var future: Dictionary = reconciler.reconcile(clock_state.duplicate(true), 108)
+	_assert(bool(future.get("success", false)), "future clock-only snapshot accepted during smoothing")
+	_assert(float(future.get("details", {}).get("prediction_error_m", -1.0)) < 0.000001, "future clock-only snapshot remains exact during smoothing")
+	_assert(int(future.get("details", {}).get("prediction_tick", -1)) == 108, "future clock-only snapshot advances clock during smoothing")
+	var report_after_future: Dictionary = reconciler.get_report()
+	_assert(absf(float(report_after_future.get("visual_offset_m", 0.0)) - offset_before) < 0.000001, "future clock-only snapshot preserves active smoothing offset")
+	_assert(int(report_after_future.get("corrections", -1)) == corrections_before, "future clock-only snapshot does not add correction telemetry during smoothing")
+	_assert(int(report_after_future.get("hard_corrections", -1)) == hard_before, "future clock-only snapshot does not add hard-correction telemetry during smoothing")
+	_assert(reconciler.get_predicted_state() == clock_state, "future clock-only snapshot preserves corrected gameplay state")
+	var duplicate: Dictionary = reconciler.reconcile(clock_state.duplicate(true), 108)
+	_assert(bool(duplicate.get("success", false)), "duplicate matching snapshot accepted during smoothing")
+	var report_after_duplicate: Dictionary = reconciler.get_report()
+	_assert(absf(float(report_after_duplicate.get("visual_offset_m", 0.0)) - offset_before) < 0.000001, "duplicate snapshot does not cancel active smoothing")
+	_assert(int(report_after_duplicate.get("corrections", -1)) == corrections_before, "duplicate snapshot does not add correction telemetry")
+	_assert(int(report_after_duplicate.get("hard_corrections", -1)) == hard_before, "duplicate snapshot does not add hard-correction telemetry")
+
 
 func _test_rejection_and_hard_correction() -> void:
 	var reconciler = Reconciler.new()
