@@ -152,13 +152,13 @@ fi
 
 if [[ "$PASSED" == true ]]; then
   started="$(date +%s)"
-  remaining="$(pgrep -a -f 'godot([^a-zA-Z0-9]|$)' 2>/dev/null || true)"
+  remaining="$(ps -eo pid=,comm=,args= | awk '$2 ~ /^godot/ {print}')"
   finished="$(date +%s)"
   duration=$((finished - started))
   if [[ -z "$remaining" ]]; then
-    record_step remaining_godot_processes "pgrep godot" true "$duration" 0
+    record_step remaining_godot_processes "ps process-name scan" true "$duration" 0
   else
-    record_step remaining_godot_processes "pgrep godot" false "$duration" 1 "$remaining"
+    record_step remaining_godot_processes "ps process-name scan" false "$duration" 1 "$remaining"
     FAILURE="Godot processes remain after INT0 runner."
     PASSED=false
   fi
