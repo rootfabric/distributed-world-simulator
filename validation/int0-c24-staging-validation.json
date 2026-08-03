@@ -1,9 +1,10 @@
 {
   "schema": "distributed_world_simulator.int0_c24_staging_validation.v1",
   "recorded_at": "2026-08-03T20:54:00+10:00",
+  "updated_at": "2026-08-03T20:58:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "INT0_C24_STAGING",
-  "status": "COMPOSED_CANDIDATE_AWAITING_COMBINED_RUNTIME_GATE",
+  "stage": "INT0_THREE_DOMAIN_COMPOSED_CANDIDATE",
+  "status": "AWAITING_COMBINED_RUNTIME_GATE",
   "base": {
     "integration_branch": "integration/c24-nx6-mw10-rl3",
     "base_sha": "64770c62574de58fa522dbdf2b4be891fe00442c",
@@ -19,6 +20,12 @@
     "branch": "merge/int0-c24",
     "source_pull_request": 9,
     "merge_commit_sha": "00ae523ac85c575424d84a49b48fa4be37bcbf3a",
+    "composition_document_commit_sha": "007dcc70645519a85ba0f12e4c7073584b7b4907",
+    "initial_validation_commit_sha": "989cd87a53d10b307f1cd9a3a22bae207995637e",
+    "powershell_runner_commit_sha": "d0852709f9ef01ded716b07e4d8c3d2a28bf55e9",
+    "bash_runner_commit_sha": "dca92bce77c9367b7f0ebbf1b500d7abc18c804e",
+    "integration_pull_request": 10,
+    "integration_pull_request_state": "OPEN_DRAFT_MERGEABLE",
     "merge_method": "merge",
     "history_preserved": true,
     "squash_used": false,
@@ -26,10 +33,10 @@
     "force_push_used": false
   },
   "diff_audit": {
-    "changed_paths": 863,
-    "new_paths": 862,
-    "modified_existing_paths": 1,
-    "removed_paths": 0,
+    "c24_changed_paths": 863,
+    "c24_new_paths": 862,
+    "c24_modified_existing_paths": 1,
+    "c24_removed_paths": 0,
     "text_merge_conflicts": 0,
     "only_modified_existing_path": "RUN_WORLD_REGRESSION_TESTS.ps1",
     "world_runner_change": {
@@ -49,6 +56,22 @@
     "generic_rl3_transport_adapter_added": false,
     "canonical_state_contains_proxy_mesh": false
   },
+  "unified_runner": {
+    "powershell": "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1",
+    "bash": "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.sh",
+    "profiles": [
+      "focused",
+      "full"
+    ],
+    "focused_suites": 5,
+    "full_suites": 16,
+    "report": "artifacts/test-results/int0-three-domain-integration-summary.json",
+    "includes_editor_import": true,
+    "includes_git_diff_check": true,
+    "includes_conflict_marker_scan": true,
+    "includes_remaining_process_check": true,
+    "runtime_executed": false
+  },
   "source_acceptance_evidence": {
     "c24_focused_assertions": 2522,
     "c23_assertions": 4187,
@@ -67,6 +90,8 @@
     "github_mergeability": "PASS",
     "github_merge": "PASS",
     "static_changed_path_audit": "PASS",
+    "unified_runner_files_created": "PASS",
+    "unified_runner_execution": "NOT_RUN",
     "godot_editor_import": "NOT_RUN",
     "c24_focused": "NOT_RUN",
     "construction_regression": "NOT_RUN",
@@ -77,6 +102,7 @@
     "main_scene": "NOT_RUN"
   },
   "required_before_int0_acceptance": [
+    "Run RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile full or the bash equivalent",
     "Godot 4.7.1 double editor import",
     "C24 focused 2522 assertions",
     "C23 4187 assertions",
