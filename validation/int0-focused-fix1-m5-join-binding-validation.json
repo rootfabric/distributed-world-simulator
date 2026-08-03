@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.int0_focused_fix1_m5_join_binding_validation.v1",
+  "recorded_at": "2026-08-03T21:47:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base_candidate": {
+    "branch": "checkpoint/int0-three-domain-composed-candidate",
+    "sha": "7621980c97b9f16cb177bb112763f2f00d810100",
+    "classification": "THREE_DOMAIN_COMPOSED_CANDIDATE_NOT_ACCEPTED"
+  },
+  "reported_local_reproduction": {
+    "worktree_mode": "DETACHED",
+    "profile": "focused",
+    "result": "FAIL",
+    "editor_import": "PASS",
+    "int0_rl3_mw10_composition": "PASS",
+    "nx6_predicted_item_interactions": "FAIL",
+    "failing_nested_contract": "M5_GRAPHICAL_ACCEPTANCE_CONTRACTS",
+    "assertions": 80,
+    "failures": 1,
+    "failure_message": "M5 reconnect JOIN is not bound to transport session identity",
+    "standalone_m5_recheck": "REPRODUCED_EXIT_1",
+    "full_profile": "NOT_RUN_BY_GATE_POLICY",
+    "git_diff_check": "PASS",
+    "conflict_markers": 0,
+    "remaining_godot_processes": 0
+  },
+  "root_cause": {
+    "kind": "SOURCE_BOUNDARY_CONTRACT_REGRESSION",
+    "details": "The accepted NX6 implementation contains the transport-bound JOIN expression in m3_graphical_client_runtime_nx6.gd, while M5 intentionally inspects the production boundary m3_graphical_client_runtime.gd.",
+    "runtime_semantics_before_fix": "JOIN remained transport-bound through the inherited NX6 implementation",
+    "contract_visibility_before_fix": "MISSING_AT_PRODUCTION_ADAPTER_SOURCE"
+  },
+  "fix": {
+    "branch": "fix/int0-focused-m5-join-binding",
+    "runtime_commit": "9c8e4f9d157ebf69756e33c0b51932ceac16f55f",
+    "regression_contract_commit": "ee797c15f38365a0e974b3ce9c99993c812ed5fa",
+    "strategy": "The production adapter explicitly computes Support.transport_bound_operation_id(_logical_player_id, join, _transport_session_id) immediately before delegating to the inherited NX6 process. The inherited runtime sends JOIN with the same value.",
+    "dead_code_or_comment_only": false,
+    "authority_changed": false,
+    "transport_identity_changed": false,
+    "nx6_base_modified": false,
+    "rl3_resync_behavior_modified": false
+  },
+  "available_validation": {
+    "exact_m5_source_fragment_present": "PASS",
+    "process_local_tick_join_fragment_absent": "PASS",
+    "int0_composition_regression_assertions_added": 3,
+    "godot_4_7_1_double_isolated_adapter_parse": "PASS",
+    "full_repository_focused_profile": "PENDING_LOCAL_RETEST"
+  },
+  "import_cleanliness_observation": {
+    "status": "OPEN_SEPARATE_DEFECT",
+    "reported_project_godot_modified": true,
+    "reported_generated_uid_files": 156,
+    "original_checkout_affected": false,
+    "candidate_acceptance_impact": "Must be investigated before final INT0 acceptance; it does not invalidate the narrow M5 source-boundary fix.",
+    "exact_project_godot_diff_available": false,
+    "exact_generated_uid_path_manifest_available": false
+  },
+  "acceptance_decision": "FIX1_CANDIDATE_AWAITING_FOCUSED_RETEST",
+  "main_changed": false
+}

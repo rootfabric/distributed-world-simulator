@@ -18,6 +18,18 @@ func _init() -> void:
 		"INT0 client runtime inherits the accepted NX6 implementation"
 	)
 	_assert(
+		wrapper.contains('Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)'),
+		"INT0 production adapter preserves the M5 transport-bound JOIN source contract"
+	)
+	_assert(
+		wrapper.contains("super._process(delta)"),
+		"INT0 adapter delegates JOIN transmission to the accepted NX6 process"
+	)
+	_assert(
+		not wrapper.contains("operation/m3/%s/join/%d"),
+		"INT0 adapter does not restore process-local JOIN identity"
+	)
+	_assert(
 		wrapper.contains('error_code == "MULTIPLAYER_DELTA_BASE_MISMATCH"'),
 		"INT0 client handles only the bounded delta-base mismatch"
 	)
