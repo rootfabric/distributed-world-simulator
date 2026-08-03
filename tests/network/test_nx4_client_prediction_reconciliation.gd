@@ -294,7 +294,9 @@ func _test_source_contracts() -> void:
 		_assert(int(config.get("prediction", {}).get("tick_rate_hz", 0)) == Reconciler.TICK_RATE_HZ, "NX4 config tick rate matches reconciler")
 		_assert(int(config.get("prediction", {}).get("max_history_ticks", 0)) == Reconciler.MAX_HISTORY_TICKS, "NX4 config history bound matches reconciler")
 		_assert(String(config.get("reconciliation", {}).get("policy", "")) == Reconciler.REPLAY_POLICY, "NX4 config replay policy matches reconciler")
-	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var client_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	var playground_source: String = FileAccess.get_file_as_string("res://scripts/world/testing/playground_runtime.gd")
 	var player_source: String = FileAccess.get_file_as_string("res://scripts/actors/player/lunar_player.gd")
 	_assert(client_source.contains("advance_local_prediction"), "client runtime exposes prediction frame API")
@@ -306,6 +308,24 @@ func _test_source_contracts() -> void:
 	_assert(player_source.contains("not network_replica_mode"), "CharacterBody physics cannot double-simulate network prediction")
 	var recovery_source: String = FileAccess.get_file_as_string("res://tools/runtime/m7_playable_recovery_client.gd")
 	_assert(recovery_source.contains("distance_to(before_position) > 0.05"), "recovery smoke accepts one canonical 0.1 m fixed tick")
+
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
+
 
 func _player() -> Dictionary:
 	return {
