@@ -1,7 +1,7 @@
 {
-  "schema": "distributed_world_simulator.int0_uid_sidecars_fix_candidate_validation.v3",
+  "schema": "distributed_world_simulator.int0_uid_sidecars_fix_candidate_validation.v4",
   "recorded_at": "2026-08-03T23:21:00+10:00",
-  "updated_at": "2026-08-03T23:44:00+10:00",
+  "updated_at": "2026-08-04T00:01:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "base": {
     "branch": "checkpoint/int0-three-domain-focused-pass-pre-uid",
@@ -91,6 +91,40 @@
     "network_protocol_files": 0,
     "project_godot_modified_since_candidate": false
   },
+  "successful_fix2_rev1_gate": {
+    "candidate_checkpoint": "checkpoint/int0-uid-sidecars-fix2-rev1-gate-candidate",
+    "candidate_sha": "c48b8e9808865c06d12be9b5cff195cc8be3cba6",
+    "result": "PASS",
+    "primary_manifest": "PASS_156_OF_156",
+    "supplemental_manifest": "PASS_1_OF_1",
+    "aggregate_uid_count": 157,
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "new_untracked_uid_count": 0,
+    "project_uid_contract": {
+      "result": "PASS",
+      "assertions": 8,
+      "failures": 0
+    },
+    "focused_profile": {
+      "result": "PASS",
+      "suite_count": 5,
+      "exit_code": 0
+    },
+    "git_diff_check": "PASS",
+    "conflict_markers": 0,
+    "remaining_godot_processes": 0,
+    "worktree_clean": true,
+    "full_profile": "NOT_RUN_BY_GATE_POLICY"
+  },
+  "integration_merge": {
+    "pull_request": 13,
+    "source_branch": "fix/int0-import-uid-sidecars",
+    "target_branch": "merge/int0-c24",
+    "source_head": "c48b8e9808865c06d12be9b5cff195cc8be3cba6",
+    "merge_commit": "5d1553df2a0cf7e455730d0556e4538fcc32fc20",
+    "result": "MERGED"
+  },
   "available_validation": {
     "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
     "isolated_project_uid_contract": {
@@ -101,21 +135,10 @@
       "self_uid_resolved": true
     },
     "repeated_editor_import_project_hash_stable": true,
-    "fresh_windows_repository_gate": "PENDING_INDEPENDENT_RETEST"
+    "fresh_windows_repository_gate": "PASS",
+    "focused_profile": "PASS_5_OF_5",
+    "full_profile": "PENDING_POST_MERGE_GATE"
   },
-  "required_gate": {
-    "candidate_checkpoint": "checkpoint/int0-uid-sidecars-fix2-rev1-gate-candidate",
-    "fresh_detached_checkout": "PENDING",
-    "primary_manifest_expected": "PASS_156_OF_156",
-    "supplemental_manifest_expected": "PASS_1_OF_1",
-    "aggregate_uid_expected": 157,
-    "editor_import": "PENDING",
-    "new_untracked_uid_count_expected": 0,
-    "project_godot_expected_unchanged": true,
-    "project_uid_contract_expected": "PASS_8_ASSERTIONS",
-    "focused_profile": "PENDING",
-    "full_profile": "BLOCKED_UNTIL_CLEAN_IMPORT_AND_FOCUSED_PASS"
-  },
-  "acceptance_decision": "FIX2_REV1_GATE_CANDIDATE_AWAITING_CLEAN_IMPORT_AND_FOCUSED_RETEST",
+  "acceptance_decision": "UID_FIX_ACCEPTED_FOCUSED_AND_IMPORT_CLEANLINESS_PASS_FULL_INT0_PENDING",
   "main_changed": false
 }
