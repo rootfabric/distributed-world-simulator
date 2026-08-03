@@ -1,6 +1,7 @@
 {
   "schema": "distributed_world_simulator.int0_m6_tick_progression_candidate.v1",
   "recorded_at": "2026-08-04T01:48:00+10:00",
+  "updated_at": "2026-08-04T01:55:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "stacked_base": {
     "branch": "fix/int0-mw9-lock-release-retry",
@@ -50,10 +51,12 @@
     "production_file": "scripts/persistence/authoritative_checkpoint.gd",
     "policy": [
       "same-revision progression compares a semantic snapshot hash",
-      "clock-derived server_tick and sample_time_s metadata are revision-neutral",
-      "snapshot identifiers and derived checksum fields are revision-neutral",
+      "top-level snapshot_id, server_tick, checksum and spatial_ref.sample_time_s are revision-neutral metadata",
+      "inside M6 networked_gameplay_state only server_tick and its derived checksum are revision-neutral",
+      "the sibling M6 durable_state_checksum is revision-neutral because it is derived from that tick-bound state",
+      "no recursive wildcard removal of nested snapshot identifiers or checksum references is used",
       "generation, previous_generation, authority epoch and monotonic server_tick fences remain unchanged",
-      "physics, partition, authority, state revision and domain payload changes remain semantic and are rejected at the same revision"
+      "physics, partition, authority, state revision and all non-clock domain payload changes remain semantic and are rejected at the same revision"
     ]
   },
   "deterministic_contract": {
