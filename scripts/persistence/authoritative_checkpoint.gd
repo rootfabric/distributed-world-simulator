@@ -23,14 +23,6 @@ const FIELDS: Array[String] = [
 	"checksum",
 ]
 
-const REVISION_NEUTRAL_FIELDS: Array[String] = [
-	"checksum",
-	"snapshot_id",
-	"server_tick",
-	"committed_at_tick",
-	"sample_time_s",
-]
-
 
 static func create(
 	checkpoint_id: String,
@@ -159,24 +151,27 @@ static func validate_progression(candidate: Dictionary, current: Dictionary) -> 
 
 
 static func _revision_semantic_hash(snapshot: Dictionary) -> String:
-	return UtilsScript.payload_hash(_strip_revision_neutral_metadata(snapshot))
-
-
-static func _strip_revision_neutral_metadata(value):
-	if value is Dictionary:
-		var result: Dictionary = {}
-		for key_value in value.keys():
-			var key: String = String(key_value)
-			if key in REVISION_NEUTRAL_FIELDS or key.ends_with("_checksum"):
-				continue
-			result[key] = _strip_revision_neutral_metadata(value[key_value])
-		return result
-	if value is Array:
-		var result_array: Array = []
-		for entry in value:
-			result_array.append(_strip_revision_neutral_metadata(entry))
-		return result_array
-	return value
+	var semantic: Dictionary = snapshot.duplicate(true)
+	semantic.erase("checksum")
+	semantic.erase("snapshot_id")
+	semantic.erase("server_tick")
+	var spatial_ref_value = semantic.get("spatial_ref", {})
+	if spatial_ref_value is Dictionary:
+		var spatial_ref: Dictionary = Dictionary(spatial_ref_value).duplicate(true)
+		spatial_ref.erase("sample_time_s")
+		semantic["spatial_ref"] = spatial_ref
+	var components_value = semantic.get("domain_components", {})
+	if components_value is Dictionary:
+		var components: Dictionary = Dictionary(components_value).duplicate(true)
+		var gameplay_value = components.get("networked_gameplay_state", {})
+		if gameplay_value is Dictionary:
+			var gameplay: Dictionary = Dictionary(gameplay_value).duplicate(true)
+			gameplay.erase("server_tick")
+			gameplay.erase("checksum")
+			components["networked_gameplay_state"] = gameplay
+		components.erase("durable_state_checksum")
+		semantic["domain_components"] = components
+	return UtilsScript.payload_hash(semantic)
 
 
 static func _is_canonical_id(value: String) -> bool:
