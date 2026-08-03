@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.int0_frozen_heads.v1",
   "recorded_at": "2026-08-03T19:40:00+10:00",
-  "updated_at": "2026-08-03T19:44:25+10:00",
+  "updated_at": "2026-08-03T20:14:30+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "INT0_NX6_STAGING",
-  "status": "IN_PROGRESS",
+  "stage": "INT0_RL3_MW10_STAGING",
+  "status": "IN_PROGRESS_CONFLICT_RESOLUTION_REQUIRED",
   "main": {
     "branch": "main",
     "base_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
@@ -14,15 +14,23 @@
   "integration": {
     "branch": "integration/c24-nx6-mw10-rl3",
     "created_from_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
-    "documentation_head_sha_before_stage_status": "488aa64187c538227bbdaa546fe5f56a81ba9f05",
-    "target_checkpoint": "v18.0.0-integration-int0-three-domain-base"
+    "target_checkpoint": "v18.0.0-integration-int0-three-domain-base",
+    "network_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
+    "network_stage_close_commit_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff"
   },
   "network": {
     "branch": "feature/nx6-predicted-item-interactions",
     "head_sha": "144adf35cd2151ce5f8572dbbb8ed1b58ccd9778",
     "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
     "delivery": "fix3",
-    "decision": "ACCEPTED"
+    "decision": "ACCEPTED",
+    "int0_stage": "DONE",
+    "staging_pull_request": 4,
+    "staging_merge_commit_sha": "ba485ffafda35579f43ed1bd3e980d7765a784d9",
+    "validation_commit_sha": "02c893d4bb79a2083c83107612083441fde07021",
+    "integration_pull_request": 5,
+    "integration_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
+    "runtime_rerun_in_connector_environment": false
   },
   "matter_surface": {
     "branch": "feature/rl3-representation-aware-network-streaming",
@@ -36,13 +44,23 @@
       "RL1",
       "RL0"
     ],
-    "merge_mw10_separately": false
+    "merge_mw10_separately": false,
+    "int0_stage": "IN_PROGRESS",
+    "staging_branch": "merge/int0-rl3-mw10",
+    "staging_base_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
+    "staging_pull_request": 6,
+    "staging_pull_request_state": "OPEN_DRAFT_CONFLICTED",
+    "github_mergeable": false,
+    "reported_commits": 15,
+    "reported_changed_files": 361,
+    "required_action": "SEMANTIC_CONFLICT_RESOLUTION"
   },
   "construction_items": {
     "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
     "head_sha": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
     "checkpoint": "C24_GPU_READY_PROXY_MESH_BACKEND",
-    "decision": "ACCEPTED"
+    "decision": "ACCEPTED",
+    "int0_stage": "NOT_STARTED"
   },
   "merge_order": [
     "NX6",
@@ -60,13 +78,14 @@
   },
   "current_execution": {
     "preparation": "DONE",
-    "active_domain": "NX6",
-    "staging_branch": "merge/int0-nx6",
-    "source_branch": "feature/nx6-predicted-item-interactions",
-    "source_head_sha": "144adf35cd2151ce5f8572dbbb8ed1b58ccd9778",
-    "staging_pull_request": 4,
-    "staging_pull_request_state": "OPEN_DRAFT",
-    "github_mergeable": true,
+    "completed_domains": [
+      "NX6"
+    ],
+    "active_domain": "RL3_WITH_MW10",
+    "active_staging_branch": "merge/int0-rl3-mw10",
+    "source_branch": "feature/rl3-representation-aware-network-streaming",
+    "source_head_sha": "89ff51b3ee5f66f6548f8b97e271062daf09b5cf",
+    "staging_pull_request": 6,
     "required_gate": "PENDING",
     "merged_into_staging": false,
     "merged_into_integration": false
@@ -78,6 +97,7 @@
     "allow_rebase": false,
     "allow_force_push": false,
     "allow_wholesale_ours_theirs_for_shared_runtime": false,
-    "main_may_change_before_int0_acceptance": false
+    "main_may_change_before_int0_acceptance": false,
+    "final_int0_runtime_rerun_required": true
   }
 }
