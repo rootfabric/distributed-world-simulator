@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.int0_uid_sidecars_manifest_index.v1",
   "recorded_at": "2026-08-03T23:44:00+10:00",
-  "updated_at": "2026-08-04T01:08:00+10:00",
+  "updated_at": "2026-08-04T01:43:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "total_uid_sidecars": 159,
   "manifests": [
@@ -24,9 +24,9 @@
       "immutable": true
     },
     {
-      "path": "validation/int0-m6-final-checkpoint-retry-sidecar-manifest.json",
+      "path": "validation/int0-authoritative-tick-progression-sidecar-manifest.json",
       "uid_count": 1,
-      "classification": "M6_FINAL_CHECKPOINT_RETRY_TEST_SIDECAR",
+      "classification": "AUTHORITATIVE_TICK_PROGRESSION_TEST_SIDECAR",
       "immutable": true
     }
   ],
