@@ -1,159 +1,26 @@
-Planetary World v17.14.0-simulation-rl3-representation-aware-network-streaming (candidate)
+Planetary World v16.10.8-network-nx0-observability-baseline
 
-RL3 Representation-aware Network Streaming over accepted RL2 and MW9 fix3:
-- exact RL0 source revision and ordered LOD-to-scope spatial chain
-- MW7 subscription projection without changing canonical regional replication
-- deterministic coarse-to-fine immutable stream plans
-- explicit CACHE_HIT and TRANSFER stages with manifest-first negotiation
-- content-addressed ordered chunks with chunk and full-artifact hash verification
-- per-client memory, bandwidth, chunk and in-flight backpressure budgets
-- exact sequential ACK state machine and progressive presentation
-- observer request replacement, cancellation generation and RL0 invalidation fencing
-- reconnect cache reuse with zero payload transfer for exact cached artifacts
-- independent server/client/reconnect multi-process acceptance
-- no artifact generation, shared disk cache, scheduler, Construction HLOD or production-world changes
-- config/representation/representation-aware-network-streaming.v1.json
-- RUN_RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_TESTS.ps1 / .sh
-- docs/architecture/RL3_REPRESENTATION_AWARE_NETWORK_STREAMING_RU.md
-- next: RL4 Construction HLOD backend
+NX0 observability implementation over accepted v16.10.7 preparation:
+- mandatory build/commit/protocol/world/session fingerprint handshake before gameplay JOIN
+- deterministic rejection codes and idempotent HELLO replay
+- validated protocol manifest in runtime descriptors
+- bounded transport packet/byte, queue, RTT, jitter and loss telemetry
+- M3/M7 server/client age, process, command, item and persistence latency metrics
+- per-run public session binding in M7 launchers
+- real ENet mismatch/acceptance process test with zero pre-handshake joins
+- gameplay authority, movement flow, snapshot amplification, three-channel ENet and 1500 ms persistence cadence preserved
+- RUN_NX0_OBSERVABILITY_BASELINE_TESTS.ps1 / .sh
 
-Planetary World v17.13.0-simulation-rl2-matter-multiresolution-meshing (accepted)
+Planetary World v16.10.7-network-nx0-observability-preparation
 
-RL2 Matter Multiresolution Meshing and Cross-level Transitions over accepted MW10:
-- exact RL1 summary and canonical MatterBrickSnapshot source binding
-- LOD0/LOD1/LOD2 built from 1/8/64 max-level snapshots over increasing octree scopes
-- deterministic fixed-resolution coarse SDF fields and Freudenthal marching-tetrahedra meshes
-- content-addressed DETAIL, SIMPLIFIED_MESH and MACRO_PROXY artifacts
-- exact same-level boundary segment hashes
-- deterministic FINE_BOUNDARY_SKIRT_V1 cross-level transition artifacts
-- face-neighbor balancing with maximum LOD delta 1
-- exact RL0 invalidation projection and bounded local ancestor rebuild scope
-- Godot ArrayMesh, collision and presenter materialization outside canonical contracts
-- synthetic nonlinear and real fixed-seed asteroid focused profiles
-- no network streaming, background scheduler, Construction HLOD or production-world changes
-- config/representation/matter-multiresolution-meshing.v1.json
-- RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.ps1 / .sh
-- docs/architecture/RL2_MATTER_MULTIRESOLUTION_MESHING_RU.md
-- next: RL3 representation-aware network streaming
-
-Planetary World v17.12.0-simulation-mw10-cross-region-matter-transactions (accepted)
-
-MW10 Cross-region Matter Transactions over accepted MW9 fix2:
-- deterministic single-body plans spanning two or more authority-regions
-- exact MW9 lease and fencing-token binding with post-reservation reauthorization
-- atomically persisted all-region reservations and MW9 handoff interlock
-- distributed per-material mass ledger with explicit external inputs/outputs
-- append-only PREPARE/COMMIT/ROLLBACK receipts and irreversible COMMIT_DECIDED boundary
-- deterministic crash recovery: complete committed decision or abort undecided transaction
-- exact operation replay without a second canonical mutation
-- one representation invalidation batch only after global terminal commit
-- durable invalidation outbox and idempotent publication recovery
-- active/previous repository, sibling-process lock and concurrent reservation race acceptance
-- no consensus cluster, cross-body transaction, meshing or production-world changes
-- config/matter/mw10-cross-region-transactions.v1.json
-- RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.ps1 / .sh
-- docs/architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md
-- next: RL2 Matter multiresolution meshing and cross-level transitions
-
-Planetary World v17.11.0-simulation-mw9-durable-handoff-recovery (accepted fix3)
-
-MW9 Durable Distributed Handoff and Crash Recovery over accepted RL1 (delivery fix3):
-- atomic checksummed authority-directory checkpoint with active/previous fallback and cross-process commit lock
-- logical-tick lease renewal, expiry and CAS recovery claim
-- full exact fencing-token validation for every regional write
-- append-only handoff journal with irreversible COMMIT_DECIDED boundary
-- canonical durable MW8 package bytes with internal checksum binding
-- optional RL1 summary manifest carried only as rebuildable cache hint
-- deterministic restart: complete committed decisions, abort undecided transfers
-- fail-closed MW8 runtime gate, adapter and terminal reconciliation
-- focused, real multi-process crash recovery and concurrent expired-claim race profiles
-- no cross-region transaction, consensus cluster or production-world changes
-- config/matter/mw9-durable-handoff-recovery.v1.json
-- RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1 / .sh
-- docs/architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md
-- next: MW10 cross-region Matter transactions
-
-Planetary World v17.10.0-simulation-rl1-matter-summary-pyramid (accepted)
-
-RL1 Matter Summary Pyramid and Dirty Propagation over accepted RL0 fix1:
-- region-scoped summary pyramids aligned with MW8 authority regions
-- full RL0 regional source-revision frontier with atomic advancement
-- deterministic leaf summaries from MatterBrickSnapshot channels
-- direct-octree parent aggregation with min/max SDF, occupancy, surface and material summaries
-- immediate dependency hashes and transitive descendant revision hashes
-- mutation dirty propagation only through the changed ancestor chain
-- handoff invalidation of loaded subtree plus missing intermediate ancestors
-- bounded atomic fine-to-coarse rebuild queue with same-cell coalescing
-- content-addressed persistence manifests bound to full cell addresses
-- no Mesh, collision, network wire or canonical Matter state changes
-- config/representation/matter-summary-pyramid.v1.json
-- RUN_RL1_MATTER_SUMMARY_PYRAMID_TESTS.ps1 / .sh
-- docs/architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md
-- next: MW9 durable distributed handoff and crash recovery
-
-Planetary World v17.8.0-simulation-mw8-regional-authority-handoff (candidate)
-
-MW8 cross-server regional authority handoff over accepted MW7:
-- one active authority lease per non-overlapping cell region
-- freeze -> target prepare -> directory commit -> source relinquish
-- exact transfer of persistent snapshots, regional journal records and related material batches
-- package fences for body definition, spatial grid, frozen lease revision and transfer fingerprint
-- compensating target rollback before directory commit
-- source and target command fencing through an optional MW6 authority gate
-- target stream rebase from imported journal frontier
-- exact replay after handoff without second mutation or batch
-- MW7 client reconnect to target through filtered regional snapshot
-- cross-region mutations rejected pending distributed transaction support
-- explicit MW7 interest observer shutdown in the MW8 focused lifecycle
-- production Moon and world catalog unchanged
-- config/matter/mw8-matter-authority-handoff.v1.json
-- RUN_MW8_MATTER_HANDOFF_TESTS.ps1 / .sh
-- docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md
-- docs/checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md
-
-Planetary World v17.7.0-simulation-mw7-matter-interest-replication (accepted)
-
-MW7 regional matter interest replication over accepted MW6 fix2:
-- global MW6 authority stream preserved as canonical order
-- per-client checksum-protected cell-cube subscriptions
-- independent regional sequence and projection hash
-- only persistent matter snapshots with revision >= 1 cross the regional wire
-- irrelevant global mutations create no client frame
-- two-phase interest enter/leave through replacement regional snapshot
-- regional delta replay and snapshot fallback after reconnect or replay eviction
-- existing NetworkCommandGateway, ReplicationEnvelope and MW5 binary64 transport reused
-- production Moon and world catalog unchanged
-- config/matter/mw7-matter-interest-replication.v1.json
-- RUN_MW7_MATTER_INTEREST_TESTS.ps1 / .sh
-- docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md
-- docs/checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md
-
-Planetary World v17.0.0-simulation-mw0-matter-contracts fix1 (candidate)
-
-MW0 fix1:
-- preserves declared numeric Variant types during in-memory contract normalization
-- removes lossy JSON decode from MatterContractUtils.normalize()
-- keeps canonical JSON and payload hashes unchanged
-- fixes composition mass_fraction=1.0 and body reference_radius_m=1000.0 normalization
-- focused assertion count remains 2011
-- docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md
-
-Planetary World v17.0.0-simulation-mw0-matter-contracts (candidate)
-
-MW0 Dynamic Matter Fabric contracts over v16.10.6 architecture snapshot:
-- pure JSON-safe matter domain without SceneTree/Node/Mesh dependencies
-- material definitions and deterministic seven-material core catalog
-- normalized compositions and occupied/vacuum MatterSample invariants
-- MatterBodyDefinition with fixed MW1 asteroid fixture identity
-- MatterBrickAddress reusing S0 SimulationCellAddress
-- separate geometry, composition and property snapshot channels
-- revision-fenced mutation request/result contracts
-- closed per-material MatterMassLedger required for commit
-- fixed laboratory fixture: radius 1000 m, seed 2026073101
-- config/matter/mw0-matter-contracts.v1.json
-- RUN_MW0_MATTER_CONTRACTS_TESTS.ps1 / .sh
-- docs/architecture/MW0_MATTER_CONTRACTS_RU.md
-- docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md
+NX0 realtime network-experience preparation over M7 commit 69bd7fc:
+- full NX0-NX9 client network experience roadmap
+- validated build fingerprint contract
+- bounded JSON-safe telemetry sample and collector contracts
+- deterministic network-condition profile schema and eight presets
+- source-bound baseline probes for packet-arrival movement delta, result/snapshot amplification, 1500 ms movement persistence and three-channel ENet
+- production M3/M7 runtime, ENet adapter, Item Graph and persistence behavior unchanged
+- RUN_NX0_NETWORK_EXPERIENCE_PREPARATION_TESTS.ps1 / .sh
 
 Planetary World v16.10.6-architecture-a3-single-server-multiplayer
 
@@ -886,333 +753,112 @@ M6 checkpoint files:
 - tests/runtime/test_m6_dedicated_recovery_contracts.gd
 - tests/runtime/test_m6_dedicated_recovery_processes.gd
 
-MW0 mutable matter contracts
-- checkpoint: v17.0.0-simulation-mw0-matter-contracts
-- delivery: fix1
-- branch: feature/mw0-matter-contracts
-- status: accepted
-- focused: 2011/2011 assertions PASS
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator
+- branch: feature/nx1-deterministic-network-condition-simulator
+- accepted base: v16.10.8-network-nx0-observability-baseline / f1abeca
+- production wrapper: scripts/network/conditions/network_condition_simulator_port.gd
+- deterministic RNG: scripts/network/conditions/deterministic_network_rng.gd
+- preset store: scripts/network/conditions/network_condition_profile_store.gd
+- profile schema/presets: config/network/network-condition-presets.v1.json
+- architecture config: config/network/nx1-deterministic-network-condition-simulator.v1.json
+- documentation: docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md
+- focused tests: RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh
 
-MW1 fixed-seed volumetric asteroid
-- checkpoint: v17.1.0-simulation-mw1-fixed-seed-asteroid
-- build: mw1-fixed-seed-asteroid
-- branch: feature/mw1-fixed-seed-asteroid
-- base: accepted MW0 delivery fix1
-- fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
-- generator: reference ellipsoid + deterministic deformation + stable CSG features
-- geology: regolith/fractured shells, basalt interior, iron-nickel lens, water-ice pocket
-- topology: two additive lobes, two craters, one enclosed natural void
-- analysis: deterministic midpoint volume/mass/material integration
-- golden: 128 control points, quantized canonical SHA-256
-- runtime worlds changed: no
-- mesh/collision: not included
-- runner: RUN_MW1_FIXED_SEED_ASTEROID_TESTS.ps1 / .sh
-- next: MW2 sparse matter cells, bricks and query service
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR FIX1
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator / fix1
+- branch: feature/nx1-deterministic-network-condition-simulator
+- sequence isolation: reliable and unreliable cursors split by delivery class and ENet channel group
+- queued blackout policy: frames queued before manual blackout are retained and released after the deadline
+- active blackout policy: newly entering unreliable frames are dropped; reliable frames remain queued
+- queued lag-spike policy: already queued incoming/outgoing frames are deferred until the manual spike deadline
+- protocol manifest fingerprints all sequence policies
+- managed reference counters corrected: M3 56, M7 playable 34
+- validation: validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json
+- incremental files: validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix1-files.txt
+- patch manifest: NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX1_PATCH_MANIFEST.json
 
-MW2 hierarchical matter cells and sparse bricks
-- checkpoint: v17.2.0-simulation-mw2-sparse-bricks
-- delivery: fix1
-- build: mw2-sparse-bricks-fix1
-- branch: feature/mw2-sparse-bricks
-- base: accepted MW1 v17.1.0
-- root bounds: feature-aware validation for axis/noise/lobes
-- spatial: body-fixed octree over SimulationCellAddress
-- grid: root half extent 1450 m, max level 5
-- brick: one per cell, 8 interior cells/axis, 11 samples/axis, ghost border 1
-- storage: in-memory sparse store with revision/idempotency/conflict fences
-- storage read API: get_snapshot(address), avoiding Object.get() preload-member conflict
-- query: procedural fallback and exact materialized-lattice precedence
-- runtime worlds changed: no
-- mesh/collision: not included
-- runner: RUN_MW2_SPARSE_BRICKS_TESTS.ps1 / .sh
-- next: MW3 local mesh, collision and streaming laboratory
-
-MW3 local meshing, collision and camera-local laboratory
-- checkpoint: v17.3.0-simulation-mw3-local-meshing
-- branch: feature/mw3-local-meshing
-- base: accepted MW2 v17.2.0 delivery fix1
-- mesher: Freudenthal marching tetrahedra, 6 tetrahedra per cell
-- iso surface: signed_distance_m = 0
-- normals: central SDF gradients from MW2 ghost samples
-- winding: Godot-clockwise faces aligned against outward gradient cross product
-- seam validation: boundary vertices, boundary normals and boundary segments
-- mesh coordinates: cell-center-relative with body-fixed origin
-- collision: static two-sided ConcavePolygonShape3D from render triangles
-- streamer: camera-local desired cells, generation fence, bounded builds per frame, failed-build diagnostics
-- laboratory: scenes/labs/matter_asteroid_meshing_lab.tscn
-- production Moon/world catalog changed: no
-- runner: RUN_MW3_LOCAL_MESHING_TESTS.ps1 / .sh
-- next: MW4 authoritative excavation/deposition and Item Graph mass transfer
-
-MW3 local meshing fix1
-- checkpoint: v17.3.0-simulation-mw3-local-meshing
-- delivery: fix1
-- branch: feature/mw3-local-meshing
-- streamer: configure/refresh derive body-local observer position from local Transform3D parent chains; no global_position before Node ready
-- seam result: counts read from MatterContractUtils success.details
-- seam validation: empty vertex/normal/segment signatures reject with MATTER_MESH_SEAM_INTERSECTION_MISSING
-- focused expected topology: 7519 assertions
-- canonical matter changed: no
-- production Moon/world catalog changed: no
-
-MW3 local meshing fix2
-- checkpoint: v17.3.0-simulation-mw3-local-meshing
-- delivery: fix2
-- branch: feature/mw3-local-meshing
-- streamer cell identity: SimulationCellAddress.cell_id
-- queue key name: address_id retained internally, value sourced from cell_id
-- stale SimulationCellAddress.address_id reads: none
-- focused expected topology: 7519 assertions
-- canonical matter changed: no
-- production Moon/world catalog changed: no
+NX1 DETERMINISTIC NETWORK CONDITION SIMULATOR FIX2
+- checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+- branch: feature/nx1-deterministic-network-condition-simulator
+- ready queue policy: ready `MESSAGE_RECEIVED` remains blocked during active incoming blackout or lag spike
+- lifecycle policy: peer/listener lifecycle and transport errors bypass incoming application-message block
+- order policy: held ready message events preserve FIFO order after release
+- regression: two incoming frames, `poll_events(1)`, then blackout/spike with one ready message retained
+- validation: validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json
+- incremental files: validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix2-files.txt
+- patch manifest: NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX2_PATCH_MANIFEST.json
 
 
-MW4 transactional excavation and session-local persistent mutations
-- checkpoint: v17.4.0-simulation-mw4-matter-mutations
-- build: mw4-matter-mutations
-- branch: feature/mw4-matter-mutations
-- base: accepted MW3 v17.3.0 delivery fix2
-- operation: EXCAVATE with deterministic swept capsule and SDF difference
-- fences: exact affected-brick set, expected revisions, energy, receiver capacity and stable operation fingerprint
-- storage: atomic multi-brick revision+1 commit with compensating rollback
-- output: checksum-protected MatterMaterialBatch and closed per-material MatterMassLedger
-- persistence scope: active world session; disk checkpoint/recovery deferred to MW5
-- query: trilinear stored-snapshot sampling and SDF raycast with procedural fallback
-- presentation: selective MW3 mesh/collision invalidation from changed brick addresses
-- laboratory: scenes/labs/matter_asteroid_excavation_lab.tscn
-- production Moon/world catalog changed: no
-- runner: RUN_MW4_MATTER_MUTATIONS_TESTS.ps1 / .sh
-- next: MW5 disk persistence, journal and compaction
+NX2 REALTIME TRAFFIC SEPARATION
+- checkpoint: v16.12.0-network-nx2-realtime-traffic-separation
+- branch: feature/nx2-realtime-traffic-separation
+- accepted base: v16.11.0-network-nx1-deterministic-condition-simulator / fix2 / f1abeca
+- channels: CONTROL 0, INPUT 1, SNAPSHOT 2, ITEM 3, RESYNC 4, TELEMETRY 5
+- realtime sequencing: raw ENet unreliable + application-level gap-tolerant latest-wins
+- queues: peer/delivery/channel streams, reliable FIFO, transactional realtime latest-pending replacement
+- movement: compact transition-based input batches, 33 ms send interval, max 3 entries
+- amplification: successful movement result/delta/full snapshot suppressed
+- snapshots: compact authoritative publication interval 50 ms
+- items: strict reliable delta channel, committed-mutation full-resync fallback and explicit resync channel
+- config: config/network/nx2-realtime-traffic-separation.v1.json
+- documentation: docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md
+- focused tests: RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh
+- validation: validation/v16.12.0-network-nx2-realtime-traffic-separation-validation.json
+- incremental files: validation/v16.12.0-network-nx2-realtime-traffic-separation-files.txt
+- patch manifest: NX2_REALTIME_TRAFFIC_SEPARATION_PATCH_MANIFEST.json
+- fix1: NX2_REALTIME_TRAFFIC_SEPARATION_FIX1_PATCH_MANIFEST.json
+- fix2: peer-local physical mismatch quarantine; focused runner 9/9
+- fix2 checkpoint: docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX2_RU.md
+- fix2 validation: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-validation.json
+- fix2 incremental files: validation/v16.12.0-network-nx2-realtime-traffic-separation-fix2-files.txt
+- fix2 patch manifest: NX2_REALTIME_TRAFFIC_SEPARATION_FIX2_PATCH_MANIFEST.json
 
+NX3 FIXED-TICK AUTHORITATIVE SIMULATION
+- checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+- branch: feature/nx3-fixed-tick-authoritative-simulation
+- accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2 / f1abeca
+- scheduler: scripts/network/simulation/fixed_tick_scheduler.gd
+- input buffer: scripts/network/simulation/fixed_tick_input_buffer.gd
+- sequence arithmetic: scripts/network/simulation/input_sequence.gd
+- production movement: 60 Hz server tick, exact delta 1/60, no packet-arrival movement budget
+- input redundancy: LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1
+- input safety: bounded queue, stale eviction, sequence window/wrap, jump edge, 250 ms hold fail-safe
+- snapshots: compact authoritative state every 3 fixed ticks / 20 Hz
+- config: config/network/nx3-fixed-tick-authoritative-simulation.v1.json
+- documentation: docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md
+- checkpoint document: docs/checkpoints/2026-08-03_V16_13_0_NETWORK_NX3_FIXED_TICK_RU.md
+- focused tests: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
+- contract test: tests/network/test_nx3_fixed_tick_authoritative_simulation.gd
+- validation: validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-validation.json
+- incremental files: validation/v16.13.0-network-nx3-fixed-tick-authoritative-simulation-files.txt
+- patch manifest: NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_PATCH_MANIFEST.json
 
-MW4 matter mutations fix1
-- checkpoint: v17.4.0-simulation-mw4-matter-mutations
-- delivery: fix1
-- build: mw4-matter-mutations-fix1
-- branch: feature/mw4-matter-mutations
-- blocker: focused runner exceeded 600 seconds without completion
-- root cause: full 1331-sample snapshot validation repeated for each lattice/corner read
-- performance boundary: one full snapshot validation followed by validated hot-loop accessors
-- raycast: per-operation stored-snapshot validation cache
-- focused fixture: deterministic four-target cross-brick tunnel; prior committed tunnel reused by streamer test
-- diagnostics: per-stage timings and immediate START marker
-- runner watchdog: 300 seconds default, timeout exit code 124
-- scope: no change to transaction, mass, revision or persistence semantics
+NX4 Client Prediction and Reconciliation candidate
+- checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation
+- branch: feature/nx4-client-prediction-reconciliation
+- base: accepted v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+- shared movement kernel: scripts/runtime/networked_gameplay/services/player_movement_service.gd
+- client reconciler: scripts/network/prediction/client_prediction_reconciler.gd
+- client runtime: scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd
+- local presentation integration: scripts/world/testing/playground_runtime.gd
+- player physics isolation: scripts/actors/player/lunar_player.gd
+- config: config/network/nx4-client-prediction-reconciliation.v1.json
+- contracts: tests/network/test_nx4_client_prediction_reconciliation.gd
+- focused runners: RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.ps1/.sh
+- documentation: docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md
+- validation: validation/v16.14.0-network-nx4-client-prediction-reconciliation-validation.json
+- incremental files: validation/v16.14.0-network-nx4-client-prediction-reconciliation-files.txt
+- patch manifest: NX4_CLIENT_PREDICTION_RECONCILIATION_PATCH_MANIFEST.json
 
-MW4 matter mutations fix2
-- checkpoint: v17.4.0-simulation-mw4-matter-mutations
-- delivery: fix2
-- build: mw4-matter-mutations-fix2
-- branch: feature/mw4-matter-mutations
-- blocker: fix1 completed in 2.561 seconds but rejected integer-valued energy budgets 1e18/1e19 as non-canonical JSON
-- canonical limit: integer-valued floats must not exceed 9007199254740991 (2^53 - 1)
-- focused energy budget: 9000000000000000 J
-- laboratory drill energy budget: 9000000000000000 J
-- laboratory receiver maximum mass: 9000000000000000 kg to preserve canonical receiver hashing
-- negative contract test: 9007199254740992 J rejects with NON_CANONICAL_JSON_VALUE and exact field path
-- focused expected topology: 187 assertions
-- scope: no transaction, mass, revision, persistence or performance semantic changes
-
-MW4 matter mutations fix3
-- checkpoint: v17.4.0-simulation-mw4-matter-mutations
-- delivery: fix3
-- build: mw4-matter-mutations-fix3
-- branch: feature/mw4-matter-mutations
-- scope: metadata-only correction; production code and focused test logic unchanged
-- independent focused result: 187 assertions PASS in 10.843 seconds
-- corrected topology: prior recorded value 103 -> verified value 187 assertions
-- regressions: MW3 7519 PASS; MW2 7470 PASS; MW1 3685 PASS; MW0 2011 PASS; A3 PASS; M6 10/10 PASS
-- git diff --check: PASS
-- next after acceptance: MW5 disk persistence, journal and compaction
-
-
-MW5 durable matter persistence and process restart recovery
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- build: mw5-matter-persistence-fix7
-- delivery: fix7
-- branch: feature/mw5-matter-persistence
-- base: accepted MW4 v17.4.0 delivery fix3
-- checkpoint: sparse snapshots/revisions + mutation journal + committed material batches
-- type recovery: raw structure -> canonical typed reconstruction -> strict typed validation -> reconstructed checksum equals persisted checksum
-- repository: matter-state.json, matter-state.previous.json and unique pending files
-- publication: validate pending -> active to previous -> pending to active -> verify active
-- recovery: active first, previous fallback repairs authoritative active, pending never authoritative
-- generation: strict +1 chain with previous checkpoint checksum and monotonic server tick
-- identity fences: body checksum, generator version/seed, grid checksum, cell level and container
-- replay: restored journal returns exact prior result without duplicate snapshots or batches
-- component restore: prevalidate + compensating rollback on unexpected apply failure
-- laboratory: restore before streamer, autosave generation after every committed drill
-- process acceptance: seed/save and recover/replay run in separate Godot processes with a proven positive SDF witness
-- production Moon/world catalog changed: no
-- runner: RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / .sh
-- next: MW6 storage scaling, compaction and regional streaming
-
-MW5 fix1 typed JSON rehydration correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix1
-- build: mw5-matter-persistence-fix1
-- branch: feature/mw5-matter-persistence
-- independent initial result: FAIL, 13 failures / 48 assertions / 9.914 s
-- initial blocker: MATTER_PENDING_VERIFY_FAILED during first checkpoint publication
-- cause: strict DTO validate(raw) ran before JSON-decoded integer-valued floats were reconstructed
-- corrected order attempted in fix1: raw structural checks -> typed constructors -> strict typed validation; raw checksum validation remained incorrect until fix4
-- nested cell and brick addresses are reconstructed and ID-verified
-- focused regression covers JSON-decoded composition, snapshot, request, ledger, result and batch
-- stale-checksum corruption is explicitly rejected
-- repository protocol and persistence schemas changed: no
-- production Moon/world catalog changed: no
-- exact assertion topology: to be fixed by first independent successful fix1 run
-
-MW5 fix2 canonical persistence serialization correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix2
-- branch: feature/mw5-matter-persistence
-- repository serialization: MatterPersistenceCodec.encode_persistence_json()
-- checksum domain: identical canonical JSON for disk bytes and DTO hashes
-- snapshot rehydration: preserves persisted columnar channels and palette order
-- focused JSON roundtrip: shared canonical persistence encoder
-- snapshot regression: persisted checksum retention, typed checksum validation and canonical representation equality
-- runtime code outside MW5 persistence changed: no
-- exact assertion topology: to be fixed by first independent successful fix2 run
-
-MW5 fix3 exact canonical persistence bytes correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix3
-- build: mw5-matter-persistence-fix3
-- branch: feature/mw5-matter-persistence
-- independent review blocker: repository appended one LF byte after canonical JSON and focused test hid it through strip_edges()
-- publication bytes: exactly MatterPersistenceCodec.encode_persistence_json(checkpoint).to_utf8_buffer()
-- terminal newline in matter-state.json: forbidden
-- focused byte assertion: FileAccess.get_buffer(get_length()) compared directly with canonical PackedByteArray
-- persistence schema/checksum/rehydration protocol changed: no
-- runtime code outside MatterStateRepository changed: no
-- exact assertion topology: to be fixed by first independent successful fix3 run
-
-MW5 fix4 typed checksum-domain correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix4
-- build: mw5-matter-persistence-fix4
-- branch: feature/mw5-matter-persistence
-- independent fix2+fix3 result: FAIL, 18 failures / 59 assertions / 10.682 seconds
-- blocker: _finish_rehydration() validated checksum on raw JSON-decoded DTO after integer-valued floats lost TYPE_FLOAT
-- corrected checksum order: raw structural checks -> typed reconstruction -> strict typed validation -> compute typed checksum -> compare with persisted checksum
-- forbidden path: MatterContractUtils.validate_checksum(raw) for float-bearing persisted DTOs
-- focused coverage: reconstructed snapshot, ledger and result pass their strict contract validators; stale persisted checksum remains rejected
-- repository exact-byte publication from fix3 preserved
-- runtime code outside MatterPersistenceCodec changed: no
-- exact assertion topology: to be fixed by first independent successful fix4 run
-
-MW5 fix5 exact binary64 persistence transport
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix5
-- build: mw5-matter-persistence-fix5
-- branch: feature/mw5-matter-persistence
-- independent fix4 result: FAIL, 20 failures / 62 assertions / 30.538 seconds
-- blocker: Godot JSON decimal roundtrip changed binary64 values, including 2026174.8885708766 -> 2026174.8885708768
-- transport schema: planet_simulator.matter_persistence_transport.v1
-- float encoding: ieee754-binary64-le-hex; scalar floats use 16 lower-case hex digits, homogeneous float arrays use a counted packed hex tag
-- integer-valued float preservation: 1.0 remains TYPE_FLOAT
-- integrity: envelope checksum before decode + original typed checksum after exact decode
-- forbidden: untagged fractional JSON numbers inside persistence payload
-- repository reader: MatterPersistenceCodec.decode_persistence_json()
-- process worker replay request: same exact transport codec
-- checksum-domain MW0-MW4 changed: no
-- production Moon/world catalog changed: no
-- exact assertion topology: to be fixed by first independent successful fix5 run
-
-MW5 fix6 process-context binary64 correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix6
-- build: mw5-matter-persistence-fix6
-- branch: feature/mw5-matter-persistence
-- independent fix5 result: FAIL, 6 failures / 128 assertions / 61.724 seconds
-- corrected probe LE hex: 886179e3beea3e41
-- corrected packed probe LE hex: 886179e3beea3e41000000000000f03f
-- process context: center_m is encoded in checksummed planet_simulator.mw5_process_context.v1 transport
-- AtomicJson payload: center_transport String; decimal center_m field forbidden
-- durable checkpoint/repository/checksum protocol changed: no
-- exact assertion topology: to be fixed by first independent successful fix6 run
-
-MW5 fix7 deterministic tunnel witness correction
-- checkpoint: v17.5.0-simulation-mw5-matter-persistence
-- delivery: fix7
-- build: mw5-matter-persistence-fix7
-- branch: feature/mw5-matter-persistence
-- independent fix6 result: FAIL, 4 failures / 136 assertions / 55.549 seconds
-- persistence state before/after restore: exact; prior fixture center remained signed_distance_m -0.28383418702205
-- blocker: test assumed geometric capsule center was vacuum without proving that mutation produced positive SDF there
-- witness selection: scan changed snapshot interior lattice, prefer maximum boundary margin, then maximum positive SDF, then stable address/index tie-break
-- witness proof: canonical continuous query must return occupancy_ratio 0 and signed_distance_m > 0 immediately after mutation
-- process context: exact binary64 witness position and pre-save SDF in planet_simulator.mw5_process_witness.v1
-- recovery acceptance: restored witness SDF must equal pre-save SDF exactly before tunnel survival is accepted
-- durable checkpoint, repository and binary64 transport protocol changed: no
-- independent accepted topology: 142 assertions PASS in 58.108 seconds
-
-MW6 matter network authority and replication
-- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
-- build: mw6-matter-network-replication
-- branch: feature/mw6-matter-network-replication
-- base: accepted MW5 v17.5.0 delivery fix7
-- command path: existing NetworkCommandEnvelope + NetworkCommandGateway
-- replication path: existing ReplicationEnvelope + ReplicationTransportPort adapters
-- authority: one server-owned MatterExcavationService; clients are command producers and replica presenters
-- binding fences: peer/client/session/actor plus authority epoch and MW4 brick revisions
-- wire precision: exact MW5 ieee754-binary64-le-hex transport strings
-- stream bootstrap: initial sequence equals restored MW5 mutation journal size; restart replay log starts empty
-- stream: every new committed or rejected mutation journal record advances sequence once
-- reconnect: contiguous delta replay by sequence/base hash; full snapshot fallback on gap, eviction or mismatch
-- snapshots: persistent state_revision >= 1 only; procedural revision-0 bricks are not replicated
-- client apply: atomic store+journal update with compensating restore on failure
-- presentation: selective invalidation of changed MW3 brick presenters
-- production Moon/world catalog changed: no
-- runner: RUN_MW6_MATTER_NETWORK_TESTS.ps1 / .sh
-- exact focused assertion topology: to be fixed by first independent successful run
-- next after acceptance: MW7 regional storage scaling, compaction and interest streaming
-
-MW6 fix1 A3/M6 replica ordering stabilization
-- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
-- delivery: fix1
-- build: mw6-matter-network-replication-fix1
-- branch: feature/mw6-matter-network-replication
-- independent initial MW6 focused: 130 assertions PASS in 34.415 seconds
-- independent initial regression: MW5 142, MW4 187, MW3 7519, MW2 7470, MW1 3685, MW0 2011 PASS; M6 standalone 10/10 PASS
-- blocker: A3 failed twice inside test_m6_dedicated_recovery_processes with MULTIPLAYER_DELTA_BASE_MISMATCH
-- superseded delta rule: target_revision below current authoritative snapshot revision is replay-fenced without mutation
-- true delta gap rule: graphical client enters bounded pending snapshot resync; generic replica still fails closed
-- successful authoritative snapshot clears pending resync and transient error state
-- same-revision checksum divergence remains MULTIPLAYER_SAME_REVISION_MUTATION
-- process assertions added: both recovered clients finish with no sticky base mismatch and no pending resync
-- MW6 focused assertion topology: 130 assertions, unchanged
-- expected M6 process topology after fix1: 128 assertions
-- acceptance stability gate: A3 full profile PASS three consecutive runs plus M6 standalone 10/10 PASS
-- matter authority/replication production code changed: no
-- production Moon/world catalog changed: no
-
-MW6 fix2 M6 contract parse correction
-- checkpoint: v17.6.0-simulation-mw6-matter-network-replication
-- delivery: fix2
-- build: mw6-matter-network-replication-fix2
-- branch: feature/mw6-matter-network-replication
-- independent fix1 result: MW6 focused 130 assertions PASS in 17.900 seconds; M6 standalone blocked by GDScript parse error
-- parse blocker: test_m6_dedicated_recovery_contracts.gd could not infer `initial` and `join_b` from calls through nullable `_new_service()` result
-- correction: explicit `Dictionary` annotations on both variables
-- production/runtime semantics changed: no
-- focused assertion topology changed: no
-- expected M6 process topology: 128 assertions
-- acceptance: MW6 130/130 PASS, M6 standalone 10/10 PASS, A3 full profile PASS three consecutive runs
-
-
-RL0 unified representation contracts
-- checkpoint: v17.9.0-simulation-rl0-representation-contracts
-- build: rl0-unified-representation-contracts
-- branch: feature/rl0-representation-contracts
-- base: accepted v17.8.0-simulation-mw8-regional-authority-handoff
-- source domains: MATTER and CONSTRUCTION
-- artifact kinds: DETAIL, SIMPLIFIED_MESH, MACRO_PROXY, IMPOSTOR, NONE
-- source binding: exact authority epoch, revision, source hash and dependency hash
-- selection: geometric error + screen error + capabilities + bandwidth; coarsest acceptable ready candidate
-- cache states: BUILDING, READY, STALE, EVICTED, FAILED
-- canonical mesh state: forbidden
-- production Moon/world catalog changed: no
-- runner: RUN_RL0_REPRESENTATION_CONTRACTS_TESTS.ps1 / .sh
-- next: RL1 matter summary pyramid and dirty propagation
+NX4 CLIENT PREDICTION AND RECONCILIATION FIX1
+- checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation / fix1
+- branch: feature/nx4-client-prediction-reconciliation
+- future clock baseline: CURRENT_PREDICTED_STATE_V1
+- clock-only policy: FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2
+- matching snapshots do not cancel an active visual correction
+- regression: non-origin future tick, zero error, no hard correction, clock advance, smoothing preservation
+- checkpoint document: docs/checkpoints/2026-08-03_V16_14_0_NETWORK_NX4_FIX1_RU.md
+- validation: validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-validation.json
+- incremental files: validation/v16.14.0-network-nx4-client-prediction-reconciliation-fix1-files.txt
+- patch manifest: NX4_CLIENT_PREDICTION_RECONCILIATION_FIX1_PATCH_MANIFEST.json

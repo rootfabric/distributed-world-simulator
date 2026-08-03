@@ -1,5 +1,17 @@
 # PlanetSimulator agent development rules
 
+## Current network review context
+
+```text
+checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation
+delivery: fix1
+branch: feature/nx4-client-prediction-reconciliation
+apply over: NX4 candidate
+status: CANDIDATE_FIX1
+```
+
+NX4 fix1 corrects future clock-only reconciliation away from the world origin and preserves an already active visual smoothing offset when an identical clock-only or duplicate snapshot arrives. Review corrections remain on the same NX4 feature branch.
+
 ## Language and delivery
 
 - Project documentation and user-facing development reports are written in Russian.
@@ -125,10 +137,12 @@ A task is complete only when it includes:
 architecture base accepted: v16.9.4-architecture-a2-networked-gameplay
 roadmap checkpoint accepted: v16.9.5-roadmap-single-server-multiplayer-first
 runtime checkpoint accepted: v16.10.5-persistence-m6-dedicated-recovery (delivery fix1)
-current architecture candidate: v16.10.6-architecture-a3-single-server-multiplayer
+architecture checkpoint accepted: v16.10.6-architecture-a3-single-server-multiplayer (delivery review-fix1)
+current playable validation candidate: v16.10.6.1-testing-m7-playable-networked-playground
 architecture manifest: config/network/single-server-multiplayer-architecture.v1.json
+playable validation manifest: config/network/playable-networked-playground.v1.json
 strategy: FULL_SINGLE_SERVER_MULTIPLAYER_FIRST
-next after acceptance: feature/b1-nats-core-adapter
+next architecture stage after M7 validation: feature/b1-nats-core-adapter
 ```
 
 Accepted foundation order:
@@ -162,64 +176,83 @@ Spatial identity never implies authority ownership. Cell/shard/address contracts
 - подтверждать эффект вводов состоянием, assertions, кадром и новыми логами;
 - перед передачей управления человеку отпускать все удерживаемые actions.
 
-## Current A3 checkpoint
+## Current A3/M7 checkpoint
 
 - Accepted runtime base: `v16.10.5-persistence-m6-dedicated-recovery`, delivery `fix1`.
-- Candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
-- Branch: `feature/a3-single-server-multiplayer-architecture`.
+- Accepted architecture: `v16.10.6-architecture-a3-single-server-multiplayer`, delivery `review-fix1`.
+- Current playable validation candidate: `v16.10.6.1-testing-m7-playable-networked-playground`.
+- Branch: `feature/m7-playable-networked-playground`.
 - One `NetworkedGameplayService` remains the only production gameplay authority.
 - LOOPBACK and ENet are adapters over the same canonical command/state path.
 - Graphical clients are command producers and replica presenters, never authority owners.
+- M7 graphical clients send `MOVEMENT_INTENT` only; canonical position, velocity and interaction origin are calculated by the dedicated server.
+- M7 pickup/drop/place are spatially validated against authoritative player state; client transforms and client-authored `PLAYER_STATE` are rejected.
+- M7 durable restore must detect `playable_sandbox` before Item Graph validation so the ten-slot Seven Days hotbar survives restart/reconnect.
 - B1 may add only server-to-server messaging through existing ports; it must not replace ENet or fork gameplay.
-- Focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
-- Next after acceptance: B1 NATS Core adapter.
+- A3 focused runner: `RUN_A3_SINGLE_SERVER_MULTIPLAYER_TESTS.ps1/.sh`.
+- M7 focused runner: `RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1/.sh`.
+- M7 manual launch: `PLAY_M7_NETWORKED_PLAYGROUND.ps1/.sh`.
+- Next architecture stage after M7 validation: B1 NATS Core adapter.
 
-
-## Parallel mutable-worlds simulation track
-
-This track is independent from the accepted single-server multiplayer order and must not alter the production Moon runtime before its integration gates.
+## Current NX1 deterministic network condition simulator
 
 ```text
-architecture: Dynamic Matter Fabric + Representation LOD Fabric
-accepted: v17.6.0-simulation-mw6-matter-network-replication, delivery fix2
-accepted: v17.7.0-simulation-mw7-matter-interest-replication
-accepted: v17.8.0-simulation-mw8-regional-authority-handoff
-accepted: v17.9.0-simulation-rl0-representation-contracts, delivery fix1
-accepted: v17.10.0-simulation-rl1-matter-summary-pyramid
-accepted: v17.11.0-simulation-mw9-durable-handoff-recovery, delivery fix3
-accepted: v17.12.0-simulation-mw10-cross-region-matter-transactions
-accepted: v17.13.0-simulation-rl2-matter-multiresolution-meshing
-current candidate: v17.14.0-simulation-rl3-representation-aware-network-streaming
-branch: feature/rl3-representation-aware-network-streaming
-production worlds changed: false
-world catalog changed: false
-next after acceptance: RL4 Construction HLOD backend
-then: RL5 cache/scheduler -> RL6 acceptance
-fixture: body/asteroid-mw0, radius 1000 m, seed 2026073101
+accepted base: v16.10.8-network-nx0-observability-baseline
+current checkpoint: v16.11.0-network-nx1-deterministic-condition-simulator
+branch: feature/nx1-deterministic-network-condition-simulator
+focused runner: RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh
 ```
 
-MW4 fix3 is accepted as a metadata-only correction over the functionally passing fix2 delivery: the verified focused topology is 187 assertions, not 103. Fix2 keeps the fix1 linear validated-access and bounded runner, and additionally enforces JSON-safe high-value energy budgets and laboratory receiver limits below `2^53`. MW4 adds authoritative session-local excavation over canonical MW2 snapshots: swept-capsule commands, revision fences, atomic multi-brick commit, exact replay, mass/energy/capacity accounting, extracted `MatterMaterialBatch`, continuous queries and selective MW3 presenter rebuilds. It must not alter Moon runtime, production world catalog, network authority or disk persistence. The Item Graph production adapter, deposition and compaction remain outside this checkpoint. Review fixes remain on `feature/mw4-matter-mutations` until acceptance.
+Every M3/M7 ENet peer must still complete `COMPATIBILITY_HELLO`/ACK before gameplay `JOIN`. Fingerprint mismatch must remain deterministic and must never create a player or mutate `NetworkedGameplayService`. Session binding is public `session-id/...` or a `sha256/...` digest, never a bearer credential.
+
+Production transport composition is `NetworkTransportBoundaryV2 → NetworkConditionSimulatorPort → ENetMultiPeerTransportPort`. `LOCAL` must remain exact passthrough. Reliable application frames may be delayed as simulated retransmission but must never be intentionally deleted. Unreliable loss must use gap-tolerant latest-wins sequencing and suppress stale frames. Incoming sequence cursors must remain independent per delivery class and ENet channel group; an unreliable latest-wins cursor must never reject a valid reliable frame. Profiles are endpoint-local; applying the same profile on server and client compounds conditions.
+
+Already queued frames must remain blocked during manual blackout and lag spike. This includes `MESSAGE_RECEIVED` events that have already moved into the simulator ready queue; lifecycle events (`PEER_CONNECTED`, `PEER_DISCONNECTED`, `TRANSPORT_ERROR` and listener lifecycle) must still bypass the block. Held message events must preserve FIFO order. New unreliable frames inside an active blackout are dropped; queued-before-blackout unreliable frames are retained until release. `disconnect_duration_ms` is a transport blackout, not a physical socket close. Physical restart/reconnect remains covered by M7 recovery. NX1 must not suppress movement results, batch snapshots, change ENet channel layout, introduce fixed-tick movement or alter persistence cadence. Those changes belong to NX2/NX3/NX9.
+
+Product priority remains NX0–NX6 before B1 implementation.
 
 
-MW5 fix7 is accepted and adds durable matter recovery for the isolated asteroid laboratory. Persistence bytes use `planet_simulator.matter_persistence_transport.v1`: every `TYPE_FLOAT` is encoded as exact IEEE-754 binary64 little-endian hex; contiguous float arrays use one length-delimited packed hex tag, while scalar and mixed-array floats use individual tags. Integer-valued floats such as `1.0` remain `TYPE_FLOAT`. The transport envelope has its own checksum; after exact decode the original typed DTO/checkpoint checksum is recomputed and compared. Untagged fractional JSON numbers are forbidden. Repository publication bytes must be exactly `MatterPersistenceCodec.encode_persistence_json(checkpoint).to_utf8_buffer()` with no terminal newline or normalization. Recovery must reject body/generator/grid incompatibility, ignore uncommitted pending files, fall back to a valid previous checkpoint when active is corrupted, repair that fallback as authoritative active, compensate unexpected component-restore failure, and serve exact replay without changing store/receiver/journal hashes. Process-level acceptance must not assume the capsule midpoint is vacuum: after commit it selects a deterministic positive-SDF lattice witness from changed snapshots, confirms it through the canonical continuous query, transports the witness position and pre-save SDF through exact binary64 encoding, and requires exact SDF equality after recovery in a fresh Godot process. Review fixes remain on `feature/mw5-matter-persistence` until acceptance.
+## Current NX2 realtime traffic separation
+
+```text
+accepted base: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+current checkpoint: v16.12.0-network-nx2-realtime-traffic-separation
+branch: feature/nx2-realtime-traffic-separation
+focused runner: RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh
+```
+
+Production channels are CONTROL=0 reliable, INPUT=1 application-sequenced unreliable, SNAPSHOT=2 application-sequenced unreliable, ITEM=3 reliable, RESYNC=4 reliable and TELEMETRY=5 application-sequenced unreliable. ENet must use raw unreliable for application-sequenced streams; stale/gap/latest-wins semantics belong to the boundary. Outbound queues remain partitioned per peer/delivery/channel stream. Reliable FIFO may never be replaced by realtime coalescing.
+
+M7 clients send compact transition-based `PLAYER_INPUT_BATCH` frames no faster than 33 ms with at most three entries. Repeated idle samples must not displace an unacknowledged movement transition. The server must suppress every successful movement result, per-input delta and per-input full snapshot, while preserving reliable rejection. Compact authoritative snapshots publish no faster than 50 ms and acknowledge `last_input_sequence`.
+
+Item commands remain on ITEM. Join/full Item Graph state and explicit mismatch recovery remain on RESYNC. M7 network persistence must suppress client `item.save` only through an explicit server-authoritative persistence capability; H1 listen-host save commands remain valid. NX2 does not claim fixed tick, prediction, remote interpolation buffer or async persistence. Those belong to NX3/NX4/NX5/NX9.
+
+Physical ENet channel/mode validation is strict. A mismatched frame must be rejected using `PEER_LOCAL_QUARANTINE_V1`: disconnect and fail only the offending peer session, clear only its queues, keep the server boundary `LISTENING`, and preserve healthy peers. Never convert a peer-local protocol violation into a global boundary failure. Both NX2 focused runners must execute the physical two-client process regression and report `9/9`.
 
 
-MW6 adds single-server authority and replica synchronization for matter mutations without creating a second gameplay path. Commands must reuse `NetworkCommandEnvelope` and `NetworkCommandGateway`; replication must reuse `ReplicationEnvelope`. Float-bearing matter DTOs cross the wire only as `planet_simulator.matter_persistence_transport.v1` strings. The server alone executes `MatterExcavationService`; peer/session/actor bindings, authority epoch and brick revisions are mandatory fences. New committed and rejected journal outcomes advance one monotonic replication stream. Reconnect uses contiguous delta replay only when the base state hash matches, otherwise a full persistent-only snapshot is required. Procedural revision-0 bricks must never be replicated. Review fixes remain on `feature/mw6-matter-network-replication` until acceptance.
+## Current NX3 fixed-tick authoritative simulation
+
+```text
+accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2
+accepted checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+branch: feature/nx3-fixed-tick-authoritative-simulation
+focused runner: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
+```
+
+Production M7 movement messages only enqueue validated input state. Position and velocity may change only inside the 60-Hz server scheduler using exact delta `1/60`. Never reintroduce packet-arrival delta or client-provided `delta_seconds` as an authoritative movement budget. Each peer has an independent bounded input buffer with wrap-safe sequence window, stale eviction, jump-edge semantics and a 250-ms fail-safe hold.
+
+Latest-wins INPUT coalescing requires `LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1`: repeated state refreshes sequence without accumulating client time, while `idle → movement → idle` remains recoverable from a final batch. Movement snapshots remain compact at 20 Hz and acknowledge `last_input_sequence`. NX3 does not add prediction or remote interpolation; those belong to NX4/NX5.
 
 
-MW6 fix2 is accepted. The final matrix is MW6 `130/130 PASS`, M6 standalone `10/10 PASS`, M6 process recovery `128/128 PASS` and three consecutive full A3 PASS runs. The fix2 delivery is parse-only over fix1; the accepted semantics remain single-server matter authority, exact wire DTO, persistent-only replication, reconnect replay and snapshot fallback.
+## Current NX4 client prediction and reconciliation
 
+```text
+accepted base: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+current checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation
+branch: feature/nx4-client-prediction-reconciliation
+focused runner: RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.ps1/.sh
+```
 
-MW7 adds regional interest projections over the accepted global MW6 authority stream. Interest peers remain command-authorized by `MatterAuthoritativeServer` but do not receive its full sparse-store frames. `MatterInterestServer` filters committed persistent brick revisions into independent per-subscription regional sequences and projection hashes. Interest replacement is two-phase: the active view remains until a validated replacement snapshot atomically enters and evicts bricks. Reconnect uses regional replay or regional snapshot fallback. Procedural revision-0 bricks, global journal ownership, production Moon and world catalog remain unchanged. Review fixes must remain on `feature/mw7-matter-interest-replication` until acceptance.
+The local owner player is predicted with `ClientPredictionReconciler` and the same `PlayerMovementService.apply_fixed_tick()` used by NX3 authority. Keep the prediction ring buffer bounded at 256 ticks, use wrap-aware sequence arithmetic, and reconcile from authoritative `server_tick + last_input_sequence` before replaying later ticks. If the authoritative tick is outside the retained ring, reset to authority and never perform a partial replay. Never accept client transform authority.
 
-
-MW8 introduces a bounded multi-server matter authority path without changing the accepted A3 production gameplay topology. Every registered cell-region has exactly one directory lease. `MatterAuthoritativeServer` may use an optional `MatterRegionalAuthorityGate`; without that gate all MW6 behavior remains unchanged. Handoff must follow freeze -> prepare -> commit. Source mutation is forbidden while the lease is PREPARING, target mutation is forbidden until directory commit, and every pre-commit failure must compensate target store/receiver/journal before source ownership resumes. Transfer packages contain only persistent region snapshots, fully regional journal records and their material batches through MW5 exact transport, and are fenced by body-definition hash, grid-profile hash, frozen lease revision and transfer fingerprint. Cross-region mutation is rejected until a later distributed transaction checkpoint. Review fixes must remain on `feature/mw8-regional-authority-handoff`.
-
-
-RL0 creates the shared representation lifecycle for Matter and Construction without merging their geometry builders. Canonical state remains MW bricks or Construction snapshots; detail meshes, simplified meshes, macro proxies and impostors are content-addressed derived artifacts. Every request and artifact is fenced by an exact `RepresentationSourceRevision`. Selection uses geometric error, screen error, capability flags and bandwidth budget, and chooses the coarsest acceptable ready artifact. `RepresentationDependencySet` and `RepresentationInvalidation` prepare RL1 ancestor dirty propagation. RL0 must not change MW8 handoff, MW7 wire frames, C18 code, production Moon or world catalog. Review fixes remain on `feature/rl0-representation-contracts`.
-
-
-RL2 builds versioned derived Matter representations from exact RL1 summaries and canonical leaf snapshots. LOD0/LOD1/LOD2 use one/eight/sixty-four max-level snapshots over increasing octree scopes while keeping a fixed lattice resolution. Same-level seams must share canonical boundary segments. Cross-level gaps use `FINE_BOUNDARY_SKIRT_V1` only after deterministic neighbor balancing to a maximum LOD delta of one. Simulation contracts remain JSON-safe and may not contain Godot runtime resources; `ArrayMesh`, collision and presenter creation belongs to `scripts/world/matter/representation/`. RL2 does not add network streaming, background scheduling, disk cache, Construction HLOD or production-world changes. Review fixes remain on `feature/rl2-matter-multiresolution-meshing`.
-
-
-RL3 streams exact RL0/RL2 representation artifacts without making network delivery canonical world state. Every request carries one exact `RepresentationSourceRevision`, an ordered `LOD -> scope_id` chain, client cache hashes, supported encodings and explicit bandwidth, chunk, in-flight and memory budgets. Plans are coarse-to-fine and each stage is exactly `CACHE_HIT` or `TRANSFER`. The server must not trust a cache advertisement until the client acknowledges the exact artifact stage. Chunks are content-addressed and ordered; the client verifies chunk hashes, full artifact hash and manifest checksum before presentation. Replacement requests, cancellation generations and RL0 invalidation fence every active stream. RL3 does not build artifacts, alter MW7 canonical replication, persist presentation state, add shared disk cache or change production worlds. Review fixes remain on `feature/rl3-representation-aware-network-streaming`.
+Local `LunarPlayer` physics must remain disabled in prediction mode so CharacterBody movement cannot run in parallel with the shared kernel. Camera and local presentation follow the predicted presentation state; small corrections decay through visual offset, while errors above 2 m hard-correct. Remote interpolation is not part of NX4 and remains NX5.

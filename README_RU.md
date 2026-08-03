@@ -1,27 +1,4 @@
-# PlanetSimulator — MW10 cross-region Matter transactions candidate
-
-Текущий checkpoint: `v17.12.0-simulation-mw10-cross-region-matter-transactions` поверх принятого MW9 `fix2`.
-
-MW10 атомарно резервирует весь набор authority-regions, проверяет распределённый mass ledger, сохраняет append-only prepare/commit/rollback journal и публикует единый RL0 invalidation batch только после глобального commit. До durable decision recovery abort-ит подготовленные regions; после `COMMIT_DECIDED` обязательно завершает commit. MW9 handoff зарезервированного region блокируется interlock.
-
-Focused runner: `RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.ps1` или `.sh`.
-
-Архитектура: `docs/architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`.
-
 # PlanetSimulator
-
-Текущий Matter/Representation checkpoint:
-
-```text
-v17.10.0-simulation-rl1-matter-summary-pyramid
-build_id: rl1-matter-summary-pyramid-dirty-propagation
-base: accepted RL0 fix1
-branch: feature/rl1-matter-summary-pyramid
-status: candidate for independent review
-next: MW9 durable distributed handoff and crash recovery
-```
-
-RL1 добавляет региональную summary pyramid, descendant dependency hashes, selective dirty propagation и bounded rebuild queue без изменения canonical Matter state, MW8 authority protocol или production worlds.
 
 Текущая принятая архитектурная база: `v16.9.4-architecture-a2-networked-gameplay` (`FROZEN_WITH_GATES`).
 
@@ -51,45 +28,6 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 
 Основные документы:
 
-- `docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая парадигма изменяемого вещества, астероидов, пещер и добычи;
-- `docs/architecture/MW0_MATTER_CONTRACTS_RU.md` — принятая граница canonical matter contracts;
-- `docs/architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — принятое детерминированное объёмное тело астероида, stable features и mass integration;
-- `docs/architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — принятые иерархические matter cells, sparse bricks, ghost samples и canonical query service;
-- `docs/architecture/MW3_LOCAL_MESHING_RU.md` — принятый local Freudenthal meshing, ghost-gradient normals, collision и camera-local laboratory;
-- `docs/architecture/MW4_MATTER_MUTATIONS_RU.md` — транзакционное swept-бурение, session-local persistent snapshots, mass ledger и Material Batch; MW4 fix2 дополнительно ограничивает integer-valued energy/capacity значения каноническим JSON-пределом `2^53−1`;
-- `docs/architecture/MW5_MATTER_PERSISTENCE_RU.md` — durable checkpoint, атомарный repository, exact binary64 transport и process-level restart recovery;
-- `docs/architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md` — принятый single-server authority и persistent-only matter replication;
-- `docs/architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md` — региональные interest projections, enter/leave, replay и snapshot fallback;
-- `docs/architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md` — принятый межсерверный regional authority handoff;
-- `docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md` — общий Matter/Construction lifecycle detail, proxy и impostor artifacts;
-- `docs/architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md` — региональные Matter summaries, dirty ancestor propagation и bounded rebuild queue;
-- `docs/architecture/adr/ADR-018-representation-lod-fabric.md` — ADR общего lifecycle и раздельных Matter/Construction builders;
-- `docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md` — RL0–RL6 и оптимальная интеграция с MW9–MW14;
-- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md` — MW5 fix2: единый canonical persistence encoder и checksum-preserving snapshot rehydration;
-- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md` — MW5 fix3: точное равенство опубликованных raw bytes и canonical persistence bytes;
-- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md` — MW5 fix5: exact binary64 transport envelope вместо decimal JSON float roundtrip;
-- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md` — MW5 fix6: corrected Godot binary64 probe and process-context center transport;
-- `docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md` — MW5 fix7: детерминированный положительный tunnel witness и exact SDF comparison после restart;
-- `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md`;
-- `docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятый typed normalization fix1;
-- `docs/checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — принятый MW1;
-- `docs/checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_RU.md` — исходный MW2 candidate;
-- `docs/checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_FIX1_RU.md` — принятый MW2 fix1;
-- `docs/checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_RU.md` — исходный MW3 candidate;
-- `docs/checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX1_RU.md` — MW3 fix1: lifecycle-safe streamer и non-empty seam validation;
-- `docs/checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX2_RU.md` — принятый MW3 fix2;
-- `docs/checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md` — исходный MW4 candidate;
-- `docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md` — текущий MW4 fix1 candidate: bounded focused runner и устранение квадратичной snapshot-валидации;
-- `docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md` — функционально прошедший MW4 fix2: JSON-safe energy budgets и отрицательный boundary-тест; фактическая topology — `187 assertions`;
-- `docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md` — текущий metadata-only fix3: исправление зафиксированной topology `103 → 187 assertions`;
-- `config/matter/mw1-fixed-seed-asteroid.v1.json`;
-- `config/matter/mw2-sparse-bricks-and-query.v1.json`;
-- `config/matter/mw3-local-meshing.v1.json`;
-- `config/matter/mw4-matter-mutations.v1.json`;
-- `scenes/labs/matter_asteroid_meshing_lab.tscn` — принятая MW3 laboratory;
-- `scenes/labs/matter_asteroid_excavation_lab.tscn` — MW4 laboratory с canonical raycast и транзакционным буром;
-- `docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md` — отдельный asteroid lab track и последующая интеграция в Луну;
-- `docs/architecture/adr/ADR-017-dynamic-matter-fabric.md` — решение procedural volume + sparse persistent mutations;
 - `docs/architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md`;
 - `config/network/single-server-multiplayer-architecture.v1.json`;
 - `docs/checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;
@@ -112,67 +50,43 @@ A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3 → N4 
 - `docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`;
 - `NETWORK_ROADMAP_RU.md`.
 
+## Текущий realtime-netcode roadmap
 
-## MW5 matter persistence fix7 — ACCEPTED
-
-```text
-checkpoint: v17.5.0-simulation-mw5-matter-persistence
-delivery: fix7
-base: v17.4.0-simulation-mw4-matter-mutations / fix3 (ACCEPTED)
-branch: feature/mw5-matter-persistence
-scope: isolated asteroid matter track; production Moon/world catalog unchanged
-```
-
-MW5 сохраняет изменённые sparse-brick snapshots и revisions, mutation journal и committed Material Batch в атомарный generation-chained checkpoint. Fix5 устраняет drift durable DTO, fix6 закрывает exact binary64 process transport, а fix7 устраняет недоказанную предпосылку о том, что геометрический центр drill capsule обязательно находится в vacuum. После commit focused-профиль сканирует interior lattice изменённых snapshots, детерминированно выбирает положительный SDF witness, подтверждает его через canonical continuous query и только затем сохраняет позицию и SDF через binary64 transport. После restart восстановленный SDF обязан быть побитово равен pre-save значению и оставаться положительным. Durable checkpoint/repository protocol при этом не изменяется.
-
-## MW6 matter network authority fix2 — ACCEPTED
+Новый рабочий приоритет — комфортное сетевое взаимодействие поверх принятого single-server authority path:
 
 ```text
-checkpoint: v17.6.0-simulation-mw6-matter-network-replication
-base: v17.5.0-simulation-mw5-matter-persistence / fix7 (ACCEPTED)
-branch: feature/mw6-matter-network-replication
-scope: isolated asteroid matter track; production Moon/world catalog unchanged
+NX0 → NX1 → NX2 → NX3 → NX4 → NX5 → NX6 → NX7 → NX8 → NX9
 ```
 
-MW6 подключает транзакции MW4 и durable state MW5 к уже принятому single-server network path. После MW5 recovery authoritative stream начинается с размера восстановленного journal, а клиент получает full snapshot без выдуманного replay-log. Клиент отправляет exact-transport mutation command через `NetworkCommandGateway`, сервер единолично вызывает `MatterExcavationService`, а persistent brick revisions и journal outcomes реплицируются через `ReplicationEnvelope`. Reconnect использует delta replay по sequence/base hash и переходит на full persistent snapshot при gap или вытеснении replay log. Procedural revision-0 bricks по сети не передаются.
-
-
-## MW6 fix2 — ACCEPTED
-
-Принятая матрица: MW6 `130/130 PASS`, M6 standalone `10/10 PASS`, M6 process recovery `128/128 PASS`, A3 — три последовательных PASS. Fix2 является parse-only коррекцией M6 regression-теста поверх функционального fix1.
-
-## MW7 regional matter interest — ACCEPTED
+Принятые основы и текущий implementation candidate:
 
 ```text
-checkpoint: v17.7.0-simulation-mw7-matter-interest-replication
-base: v17.6.0-simulation-mw6-matter-network-replication / fix2 (ACCEPTED)
-branch: feature/mw7-matter-interest-replication
-decision: ACCEPTED
-scope: isolated asteroid matter track; production Moon/world catalog unchanged
+accepted: v16.10.8-network-nx0-observability-baseline
+accepted: v16.11.0-network-nx1-deterministic-condition-simulator / fix2
+accepted: v16.12.0-network-nx2-realtime-traffic-separation / fix2
+accepted: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+candidate: v16.14.0-network-nx4-client-prediction-reconciliation / fix1
+base commit: ac8ae0afdd47e0f290dbbc8af396add7aba60cda
+branch: feature/nx4-client-prediction-reconciliation
 ```
 
-MW7 сохраняет глобальную авторитетную последовательность MW6, но реплицирует клиенту только persistent bricks его checksum-protected cell region. Каждая subscription имеет собственные `interest_revision`, `region_sequence` и `projection_hash`. Нерелевантные мутации не создают кадр. Смена области выполняется replacement snapshot с атомарным enter/leave, а reconnect выбирает regional delta replay или filtered snapshot fallback.
+NX2 разделяет transport streams и подавляет movement amplification. NX3 переводит production M7 movement на server scheduler 60 Hz: input arrival только наполняет per-player buffer, а authoritative displacement рассчитывается fixed delta `1/60`, независимо от client FPS, batching и jitter. Transition-history сохраняет короткий ввод при latest-wins coalescing; snapshot cadence остаётся 20 Hz. NX4 добавляет мгновенный owner prediction, bounded history, authoritative replay и correction smoothing. Fix1 устраняет ложную hard correction для future clock-only snapshot вне начала координат и не обрывает уже активное smoothing при совпадающем snapshot. NX5 remote interpolation остаётся следующим этапом.
 
+Основные документы:
 
-## MW8 regional authority handoff — ACCEPTED
-
-```text
-checkpoint: v17.8.0-simulation-mw8-regional-authority-handoff
-base: v17.7.0-simulation-mw7-matter-interest-replication (ACCEPTED)
-branch: feature/mw8-regional-authority-handoff
-scope: isolated asteroid matter track; production Moon/world catalog unchanged
-```
-
-MW8 добавляет первый ограниченный межсерверный authority handoff. Directory хранит единственный lease каждой непересекающейся cell-region. Source сначала замораживает запись, target импортирует persistent snapshots, релевантный journal и связанные material batches под компенсационным backup, после чего directory атомарно меняет owner и authority epoch. Старый сервер немедленно теряет право записи, новый обслуживает exact replay и продолжает MW6 stream из импортированного journal frontier. Клиент получает checksum-protected handoff ticket и повторно подключает MW7 regional replica к target. Mutation через несколько authority-regions пока отклоняется.
-
-
-## RL0 unified representation contracts — CANDIDATE
-
-```text
-checkpoint: v17.9.0-simulation-rl0-representation-contracts
-base: v17.8.0-simulation-mw8-regional-authority-handoff (ACCEPTED)
-branch: feature/rl0-representation-contracts
-production Moon/world catalog changed: false
-```
-
-RL0 вводит единый cross-domain lifecycle производных представлений для Matter и Construction: exact source revision, representation key, content-addressed artifact manifest, screen/geometric error interest, deterministic coarsest-acceptable selector, dependency set, invalidation и cache states. Реальный coarse SDF meshing и Construction HLOD относятся к RL2/RL4.
+- `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
+- `docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md`;
+- `docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md`;
+- `docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md`;
+- `docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_RU.md`;
+- `config/network/network-experience-roadmap.v1.json`;
+- `config/network/nx4-client-prediction-reconciliation.v1.json`;
+- `config/network/nx3-fixed-tick-authoritative-simulation.v1.json`;
+- `config/network/nx2-realtime-traffic-separation.v1.json`;
+- `config/network/nx1-deterministic-network-condition-simulator.v1.json`;
+- `config/network/network-condition-presets.v1.json`;
+- `RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.ps1/.sh`;
+- `RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh`;
+- `RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh`;
+- `RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh`.

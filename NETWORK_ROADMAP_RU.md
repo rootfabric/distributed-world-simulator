@@ -41,18 +41,51 @@ Authoritative sources:
 - `config/network/single-server-multiplayer-roadmap.v1.json`;
 - `config/network/network-roadmap.v1.json`.
 
-## Parallel matter networking track — MW7 accepted, MW8 candidate
+## Network Experience NX0–NX9
 
-MW6 `v17.6.0-simulation-mw6-matter-network-replication` delivery `fix2` принят: один authoritative matter writer, exact binary64 wire DTO, persistent-only global stream, reconnect replay/snapshot fallback.
+С 1 августа 2026 года поверх принятой A3 single-server architecture открыт отдельный realtime-netcode roadmap:
 
-MW7 `v17.7.0-simulation-mw7-matter-interest-replication` не меняет A3 production gameplay topology. Он добавляет projection-layer над тем же MW6 authority: interest peers используют существующий command gateway, но получают через `ReplicationEnvelope(kind=INTEREST)` только persistent bricks своей cell-region. Cross-server authority, NATS gameplay и production Moon integration остаются за пределами этапа.
+```text
+NX0 observability baseline
+→ NX1 deterministic network condition simulator
+→ NX2 traffic separation
+→ NX3 fixed-tick authority
+→ NX4 local prediction/reconciliation
+→ NX5 remote interpolation
+→ NX6 predicted item interactions
+→ NX7 physics authority profiles
+→ NX8 interest management
+→ NX9 async persistence hardening
+```
 
+Текущий checkpoint candidate:
 
-## MW8 regional authority handoff candidate
+```text
+v16.14.0-network-nx4-client-prediction-reconciliation
+accepted base: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+base commit: ac8ae0afdd47e0f290dbbc8af396add7aba60cda
+branch: feature/nx4-client-prediction-reconciliation
+runtime behavior changed: local owner prediction and reconciliation
+server authority changed: no
+fixed tick changed: no
+prediction changed: yes
+```
 
-MW8 остаётся изолированным matter-track и не отменяет single-server A3 gameplay freeze. Для одной зарегистрированной cell-region вводится checksum-protected lease directory и двухфазный handoff между двумя `MatterAuthoritativeServer`: source freeze, exact state package, target prepare с компенсацией, directory commit owner/epoch. MW7 interest client после commit подключается к target и получает filtered regional snapshot. Операция, затрагивающая несколько authority-regions, намеренно запрещена до отдельного distributed transaction этапа. Пакет handoff привязан к body/grid/lease, а focused lifecycle явно отписывает MW7 projection observers.
+NX0 сохраняет matching fingerprint и bounded telemetry. NX1 добавляет детерминированные endpoint-local network conditions. NX2 разделяет шесть transport streams и подавляет movement amplification. NX3 выполняет movement только server fixed tick 60 Hz, независимо от packet arrival, client FPS и client `delta_seconds`; compact snapshots остаются на cadence 20 Hz. NX4 выполняет локальное movement prediction тем же 60-Hz kernel, replay после authoritative snapshot и presentation correction smoothing. NX5 remote interpolation остаётся следующим отдельным этапом.
 
+Документы:
 
-## Representation LOD integration boundary
+- `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
+- `docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md`;
+- `docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md`;
+- `docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md`;
+- `docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md`;
+- `docs/network/NX0_OBSERVABILITY_BASELINE_RU.md`;
+- `config/network/network-experience-roadmap.v1.json`;
+- `config/network/nx4-client-prediction-reconciliation.v1.json`;
+- `config/network/nx3-fixed-tick-authoritative-simulation.v1.json`;
+- `config/network/nx2-realtime-traffic-separation.v1.json`;
+- `config/network/nx1-deterministic-network-condition-simulator.v1.json`;
+- `config/network/network-condition-presets.v1.json`.
 
-RL0 не создаёт новый gameplay transport. `RepresentationArtifactManifest` является производным metadata-контрактом и не заменяет MW6/MW7 command/replication envelopes. В RL3 MW7 interest request будет расширен representation budgets, а artifact bytes пойдут через bulk/content-addressed delivery с cancellation и backpressure. Канонические matter mutations по-прежнему проходят единственный authority path. MW8 handoff переносит canonical state; cache warming target является необязательной RL5 оптимизацией.
+B1 остаётся допустимым server-to-server adapter после A3, но его реализация временно уступает продуктовому приоритету NX0–NX6. Existing B0/B1 contracts не изменяются.

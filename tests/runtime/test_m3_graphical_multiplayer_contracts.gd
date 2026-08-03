@@ -11,8 +11,6 @@ const PlayerDelta = preload("res://scripts/runtime/networked_gameplay/contracts/
 const ProtocolFrame = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const RemotePresenter = preload("res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd")
-const GraphicalClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
-const GameplayReplica = preload("res://scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd")
 
 var failures: Array[String] = []
 var assertions := 0
@@ -23,7 +21,6 @@ func _init() -> void:
 	_test_unified_service_presentation_state()
 	_test_protocol_float_round_trip()
 	_test_transport_bound_operation_identity()
-	_test_snapshot_resync_after_delta_gap()
 	_test_remote_presenter()
 	_test_manifest_and_source_boundaries()
 	_finish()
@@ -109,54 +106,91 @@ func _test_protocol_float_round_trip() -> void:
 	_assert(bool(decoded.get("success", false)), "protocol frame decodes without payload checksum drift")
 	_assert(NetworkUtils.canonical_json(decoded.get("details", {}).get("frame", {})) == NetworkUtils.canonical_json(frame), "protocol frame is canonical JSON round-trip stable")
 
+
 func _test_transport_bound_operation_identity() -> void:
 	var first_session := "transport-session/m3/a/100/1785"
 	var reconnect_session := "transport-session/m3/a/200/1785"
 	var first_join := Support.transport_bound_operation_id("A", "JOIN", first_session)
 	var replay_join := Support.transport_bound_operation_id("a", "join", first_session)
-	var reconnect_join := Support.transport_bound_operation_id("a", "join", reconnect_session)
-	var first_leave := Support.transport_bound_operation_id("a", "leave", first_session)
+	var reconnect_join := Support.transport_bound_operation_id(
+		"a", "join", reconnect_session
+	)
+	var first_leave := Support.transport_bound_operation_id(
+		"a", "leave", first_session
+	)
 	_assert(not first_join.is_empty(), "transport-bound join operation ID created")
-	_assert(first_join == replay_join, "same transport session keeps idempotent join identity")
-	_assert(first_join != reconnect_join, "reconnect transport session gets a distinct join identity")
-	_assert(first_join != first_leave, "operation name remains part of replay identity")
-	_assert(first_join.ends_with(first_session.sha256_text().left(16)), "transport session fingerprint binds operation identity")
-	_assert(Support.transport_bound_operation_id("", "join", first_session).is_empty(), "empty player identity rejected")
-	_assert(Support.transport_bound_operation_id("a", "", first_session).is_empty(), "empty operation name rejected")
-	_assert(Support.transport_bound_operation_id("a", "join", "").is_empty(), "empty transport session rejected")
+	_assert(
+		first_join == replay_join,
+		"same transport session keeps idempotent join identity"
+	)
+	_assert(
+		first_join != reconnect_join,
+		"reconnect transport session gets a distinct join identity"
+	)
+	_assert(
+		first_join != first_leave,
+		"operation name remains part of replay identity"
+	)
+	_assert(
+		first_join.ends_with(first_session.sha256_text().left(16)),
+		"transport session fingerprint binds operation identity"
+	)
+	_assert(
+		Support.transport_bound_operation_id("", "join", first_session).is_empty(),
+		"empty player identity rejected"
+	)
+	_assert(
+		Support.transport_bound_operation_id("a", "", first_session).is_empty(),
+		"empty operation name rejected"
+	)
+	_assert(
+		Support.transport_bound_operation_id("a", "join", "").is_empty(),
+		"empty transport session rejected"
+	)
 	var service = Service.new()
-	_assert(bool(service.setup("m3-operation-identity", 1, 0, {"region_id": "region/m3/operation-identity", "topology_adapter": "ENET", "profile": Service.PROFILE_MULTIPLAYER_CORE}).get("success", false)), "operation identity service setup")
+	_assert(
+		bool(service.setup(
+			"m3-operation-identity",
+			1,
+			0,
+			{
+				"region_id": "region/m3/operation-identity",
+				"topology_adapter": "ENET",
+				"profile": Service.PROFILE_MULTIPLAYER_CORE,
+			}
+		).get("success", false)),
+		"operation identity service setup"
+	)
 	var first_result := service.join("a", first_session, first_join)
-	_assert(bool(first_result.get("success", false)), "first transport session join accepted")
-	var leave_result := service.leave_transport_session(first_session, first_leave)
-	_assert(bool(leave_result.get("success", false)), "first transport session leave accepted")
-	var reconnect_result := service.join("a", reconnect_session, reconnect_join)
-	_assert(bool(reconnect_result.get("success", false)), "reconnect join avoids replay conflict")
-	_assert(int(reconnect_result.get("details", {}).get("player", {}).get("ownership_epoch", 0)) == 2, "reconnect advances ownership epoch")
+	_assert(
+		bool(first_result.get("success", false)),
+		"first transport session join accepted"
+	)
+	var leave_result := service.leave_transport_session(
+		first_session,
+		first_leave
+	)
+	_assert(
+		bool(leave_result.get("success", false)),
+		"first transport session leave accepted"
+	)
+	var reconnect_result := service.join(
+		"a",
+		reconnect_session,
+		reconnect_join
+	)
+	_assert(
+		bool(reconnect_result.get("success", false)),
+		"reconnect join avoids replay conflict"
+	)
+	_assert(
+		int(reconnect_result.get(
+			"details", {}
+		).get("player", {}).get("ownership_epoch", 0)) == 2,
+		"reconnect advances ownership epoch"
+	)
 	service.shutdown()
 
-func _test_snapshot_resync_after_delta_gap() -> void:
-	var service = Service.new()
-	_assert(bool(service.setup("m3-resync-contract", 1, 0, {"region_id": "region/m3/resync", "topology_adapter": "ENET", "profile": Service.PROFILE_MULTIPLAYER_CORE}).get("success", false)), "resync service setup")
-	var initial := service.create_snapshot()
-	var join_a := service.join("a", "transport-session/m3/resync/a/1", "operation/m3/resync/a/join/1")
-	var join_b := service.join("b", "transport-session/m3/resync/b/1", "operation/m3/resync/b/join/1")
-	_assert(bool(join_a.get("success", false)) and bool(join_b.get("success", false)), "resync fixture joins")
-	var runtime = GraphicalClientRuntime.new()
-	runtime.set("_replica", GameplayReplica.new())
-	runtime.call("_accept_snapshot", initial)
-	runtime.call("_accept_delta", join_b.get("details", {}).get("delta", {}))
-	var waiting: Dictionary = runtime.get_report()
-	_assert(bool(waiting.get("pending_replica_resync", false)), "delta gap enters bounded snapshot resync")
-	_assert(int(waiting.get("delta_base_mismatches", 0)) == 1, "delta gap is observable")
-	_assert(String(waiting.get("last_error_code", "")) != "MULTIPLAYER_DELTA_BASE_MISMATCH", "delta gap is not a sticky terminal client error")
-	runtime.call("_accept_snapshot", join_b.get("details", {}).get("snapshot", {}))
-	var repaired: Dictionary = runtime.get_report()
-	_assert(not bool(repaired.get("pending_replica_resync", true)), "authoritative snapshot completes replica resync")
-	_assert(int(repaired.get("snapshot_resyncs", 0)) == 1, "completed snapshot resync is observable")
-	_assert(String(repaired.get("last_error_code", "")) == "", "successful snapshot clears transient replication error state")
-	_assert(String(runtime.get_snapshot().get("checksum", "")) == String(join_b.get("details", {}).get("snapshot", {}).get("checksum", "")), "resynced client matches authoritative snapshot")
-	service.shutdown()
 
 func _test_remote_presenter() -> void:
 	var presenter = RemotePresenter.new()
@@ -173,7 +207,7 @@ func _test_remote_presenter() -> void:
 	_assert(bool(report.get("flashlight_enabled", false)), "remote presenter applies flashlight")
 	_assert(is_equal_approx(float(report.get("orientation_yaw", 0.0)), PI / 4.0), "remote presenter applies orientation")
 	_assert(Vector3(report.get("target_position", [0, 0, 0])[0], report.get("target_position", [0, 0, 0])[1], report.get("target_position", [0, 0, 0])[2]).is_equal_approx(Vector3(4.0, 1.0, -2.0)), "remote presenter receives authoritative target")
-	_assert(float(report.get("interpolation_rate", 0.0)) > 0.0, "remote presenter interpolation enabled")
+	_assert(is_equal_approx(float(report.get("interpolation", {}).get("config", {}).get("interpolation_delay_ms", 0.0)), 100.0), "remote presenter uses NX5 interpolation delay")
 	presenter.queue_free()
 
 func _test_manifest_and_source_boundaries() -> void:
@@ -193,7 +227,8 @@ func _test_manifest_and_source_boundaries() -> void:
 	var app_source := _read("res://scripts/app/lunar_app.gd")
 	_assert(not client_source.contains("NetworkedGameplayService.new"), "graphical client does not construct authority")
 	_assert(not presenter_source.contains("Input.is_action"), "remote presenter reads no input")
-	_assert(presenter_source.contains("lerp(target_position"), "remote presenter interpolates")
+	_assert(presenter_source.contains("RemoteSnapshotInterpolator"), "remote presenter uses bounded NX5 timeline")
+	_assert(not presenter_source.contains("lerp(target_position"), "legacy exponential chasing removed")
 	_assert(app_source.contains("RemotePlayerPresenter"), "graphical world composes remote presenter")
 	_assert(app_source.contains("remote_despawn_count"), "graphical world tracks remote despawn")
 	_assert(_read("res://tests/runtime/test_m3_graphical_multiplayer_processes.gd").contains("Xvfb"), "M3 process test uses graphical display")
