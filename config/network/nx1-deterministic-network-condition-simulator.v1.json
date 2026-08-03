@@ -1,0 +1,74 @@
+{
+  "schema": "planet_simulator.nx1_deterministic_network_condition_simulator.v1",
+  "document_revision": 3,
+  "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "build_id": "nx1-deterministic-network-condition-simulator",
+  "base_checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "base_commit": "f1abeca",
+  "branch": "feature/nx1-deterministic-network-condition-simulator",
+  "status": "implementation_candidate_fix2",
+  "production_default_profile": "LOCAL",
+  "presets_file": "res://config/network/network-condition-presets.v1.json",
+  "transport_composition": "NetworkTransportBoundaryV2 -> NetworkConditionSimulatorPort -> ENetMultiPeerTransportPort",
+  "clock_modes": [
+    "REAL",
+    "MANUAL"
+  ],
+  "supported_conditions": [
+    "outgoing_latency_range",
+    "incoming_latency_range",
+    "signed_jitter",
+    "unreliable_packet_loss",
+    "reliable_retransmission_delay",
+    "burst_loss",
+    "unreliable_duplication",
+    "unreliable_reorder",
+    "bandwidth_serialization",
+    "bounded_queues",
+    "periodic_lag_spike",
+    "manual_lag_spike",
+    "periodic_transport_blackout",
+    "manual_transport_blackout",
+    "runtime_profile_switch"
+  ],
+  "semantics": {
+    "determinism": "All random decisions use independent seeded streams derived from random_seed, direction, channel and effect.",
+    "reliable_loss": "A selected reliable application frame is delayed by a deterministic retransmission penalty and is never intentionally deleted by the simulator.",
+    "unreliable_loss": "A selected unreliable frame is intentionally dropped before delegate delivery.",
+    "unreliable_ordering": "UNRELIABLE_SEQUENCED accepts sequence gaps and suppresses stale or duplicate frames with latest-wins semantics.",
+    "queue_limit": "Reliable outgoing overflow returns explicit backpressure; unreliable overflow is counted and dropped. Incoming reliable messages bypass the artificial limit rather than violating reliable delivery.",
+    "disconnect_duration_ms": "Represents a deterministic directional transport blackout. Already queued reliable and unreliable frames are retained until the blackout ends; new unreliable frames entering an active blackout are dropped, while new reliable frames remain queued. It does not close the physical ENet socket.",
+    "endpoint_scope": "A profile affects one endpoint. Applying a profile on both client and server compounds the path conditions.",
+    "runtime_switch": "Already queued packets retain their assigned due time. New packets use the new profile and reset deterministic effect streams.",
+    "incoming_sequence_streams": "Incoming replay/order cursors are independent per delivery class and ENet channel group. Reliable streams accept global sequence gaps caused by other streams while rejecting stale or duplicate frames inside their own stream.",
+    "manual_lag_spike": "A manual lag spike defers frames that were already queued as well as frames scheduled while the spike is active.",
+    "ready_event_blocking": "MESSAGE_RECEIVED events already present in the ready queue remain blocked during active incoming blackout or manual lag spike. Lifecycle events bypass the block, and held message events preserve FIFO order."
+  },
+  "production_guards": [
+    "LOCAL is exact passthrough unless a manual spike or blackout is active",
+    "connection lifecycle events are not delayed or dropped, including when ready MESSAGE_RECEIVED events are blocked",
+    "gameplay authority and wire payloads are unchanged",
+    "NX0 compatibility handshake remains mandatory before JOIN",
+    "NX2 traffic amplification and channel separation are not implemented here"
+  ],
+  "cli": {
+    "profile": "--network-profile=<PROFILE_ID>",
+    "presets_file": "--network-presets-file=<res-or-absolute-path>"
+  },
+  "focused_runner": {
+    "linux": "RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.sh",
+    "windows": "RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1"
+  },
+  "acceptance": {
+    "editor_import_required": true,
+    "unit_and_contracts": "PASS_REQUIRED",
+    "conditioned_real_enet": "PASS_REQUIRED",
+    "nx0_regression": "PASS_REQUIRED",
+    "enet_process_regression": "PASS_REQUIRED",
+    "m3_graphical_regression": "PASS_REQUIRED",
+    "m7_playable_regression": "PASS_REQUIRED",
+    "m7_restart_reconnect_regression": "PASS_REQUIRED",
+    "unexpected_process_exits": 0,
+    "remaining_godot_processes": 0
+  }
+}

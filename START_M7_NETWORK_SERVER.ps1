@@ -3,6 +3,8 @@ param(
     [string]$SessionId = "manual",
     [string]$ServerAddress = "127.0.0.1",
     [ValidateRange(1, 65535)][int]$Port = 24580,
+    [ValidateSet("LOCAL","GOOD_BROADBAND","AVERAGE_BROADBAND","MOBILE","BAD_MOBILE","EXTREME","LAG_SPIKE","ASYMMETRIC")][string]$NetworkProfile = "LOCAL",
+    [string]$NetworkPresetsFile = "res://config/network/network-condition-presets.v1.json",
     [string]$PersistenceRoot = "",
     [switch]$ResetPersistence
 )
@@ -10,6 +12,9 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Godot = (Resolve-Path $GodotPath).Path
+$NetworkSessionId = ($SessionId.ToLowerInvariant() -replace '[^a-z0-9._-]', '-').Trim('-')
+if ([string]::IsNullOrWhiteSpace($NetworkSessionId)) { $NetworkSessionId = 'manual' }
+$NetworkSessionToken = "session-id/m7-debug-$NetworkSessionId"
 $RunRoot = Join-Path $ProjectRoot "artifacts/runtime/m7-network-debug/$SessionId"
 $RoleRoot = Join-Path $RunRoot "server"
 $ProfileRoot = Join-Path $RoleRoot "profile"
@@ -58,8 +63,10 @@ function Start-IsolatedProcess {
 $Arguments = @(
     "--headless","--path",$ProjectRoot,"--log-file",$LogPath,"--",
     "--role=dedicated-server","--network-playground","--network-debug","--world=playground",
+    "--network-session-token=$NetworkSessionToken",
     "--node-id=m7-debug-server","--instance-id=m7-debug-$SessionId",
     "--server-address=$ServerAddress","--server-port=$Port",
+    "--network-profile=$NetworkProfile","--network-presets-file=$NetworkPresetsFile",
     "--m7-result-file=$ResultPath","--m6-persistence-root=$PersistenceRoot",
     "--print-runtime-descriptor"
 )
@@ -70,12 +77,14 @@ Write-Host "Endpoint:    $ServerAddress`:$Port"
 Write-Host "Log:         $LogPath"
 Write-Host "State:       $ResultPath"
 Write-Host "Persistence: $PersistenceRoot"
+Write-Host "Net profile: $NetworkProfile (server endpoint only)"
 Write-Host "Stop with Ctrl+C or .\STOP_M7_NETWORK_DEBUG.ps1 -SessionId $SessionId" -ForegroundColor Yellow
 
 $Process = Start-IsolatedProcess -Executable $Godot -Arguments $Arguments -Profile $ProfileRoot
 $Descriptor = [ordered]@{
     schema = "planet_simulator.m7_network_debug_process.v1"
     session_id = $SessionId
+    network_session_token = $NetworkSessionToken
     role = "server"
     pid = $Process.Id
     started_at_utc = [DateTime]::UtcNow.ToString("o")
@@ -83,6 +92,8 @@ $Descriptor = [ordered]@{
     result_path = $ResultPath
     persistence_root = $PersistenceRoot
     endpoint = "$ServerAddress`:$Port"
+    network_profile = $NetworkProfile
+    network_presets_file = $NetworkPresetsFile
     godot_path = $Godot
 }
 $Descriptor | ConvertTo-Json -Depth 5 | Set-Content -Path $ProcessPath -Encoding UTF8

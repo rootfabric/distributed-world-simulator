@@ -1,0 +1,237 @@
+{
+  "schema": "planet_simulator.nx4_client_prediction_reconciliation_patch_manifest.v1",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "build_id": "nx4-client-prediction-reconciliation",
+  "branch": "feature/nx4-client-prediction-reconciliation",
+  "base_checkpoint": "v16.13.0-network-nx3-fixed-tick-authoritative-simulation",
+  "base_source_commit": "ac8ae0afdd47e0f290dbbc8af396add7aba60cda",
+  "base_overlay_commit": "85805e0f83952b00e193af881533f71eab04d18e",
+  "incremental": true,
+  "apply_over": "accepted NX3 fixed-tick authoritative simulation",
+  "file_count": 34,
+  "new_file_count": 12,
+  "modified_file_count": 22,
+  "deleted_file_count": 0,
+  "implementation": {
+    "owner_prediction": true,
+    "server_authority_preserved": true,
+    "shared_movement_kernel": "PlayerMovementService.apply_fixed_tick",
+    "prediction_tick_rate_hz": 60,
+    "max_history_ticks": 256,
+    "history_policy": "SERVER_TICK_KEYED_RING_BUFFER_V1",
+    "replay_policy": "AUTHORITATIVE_BASELINE_REPLAY_UNACKNOWLEDGED_TICKS_V1",
+    "history_miss_policy": "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1",
+    "clock_only_snapshot_policy": "SAME_REVISION_IDENTICAL_STATE_ADVANCES_PREDICTION_CLOCK_V1",
+    "correction_policy": "VISUAL_OFFSET_DECAY_THRESHOLDS_V1",
+    "hard_correction_threshold_m": 2.0,
+    "client_transform_authority": false,
+    "remote_interpolation": false
+  },
+  "protocol_hash": "7ca2b16b3c717990b6434ad7d3e98e07b09554cbe29c07049c0751f9abef0434",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "b791058df89fbe945756fd8857ce78d1770cb912f3e2e8d0bf90f08bc14d7fb1",
+      "bytes": 14323
+    },
+    {
+      "path": "NETWORK_ROADMAP_RU.md",
+      "status": "MODIFIED",
+      "sha256": "b75025166e5f010b3d2bf4de01cfdd1e39ebdfdb013c7698a0c2041eee9a986e",
+      "bytes": 5441
+    },
+    {
+      "path": "NX4_CLIENT_PREDICTION_RECONCILIATION_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "e74705a473b4f6969c8c2ae25988d2a7312a15a506be513b2ef732b9f16689ea",
+      "bytes": 47590
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "d13af82c097150973c54d14922352b32aadb0b7875a32792697d208da6f5f8dd",
+      "bytes": 5402
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "b64862d9032ebf2d95d9e4b37b7d63589f56fbe6b9a556e8b09468655f1795e4",
+      "bytes": 10329
+    },
+    {
+      "path": "RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.ps1",
+      "status": "NEW",
+      "sha256": "52978fa189d7cb8fba16e3d1cffb637c493700d8315bd8c4f1f5c61bdd6dd1f4",
+      "bytes": 4788
+    },
+    {
+      "path": "RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.sh",
+      "status": "NEW",
+      "sha256": "ce1cd586903f684a8998c3bd96edddaac326a1fdb9de050a9c1bc425fab84b55",
+      "bytes": 2845
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "ed8d587ee59e6eebc8b62bdb6aed2324bd2a2b16cc59e2899654acf86e361a56",
+      "bytes": 20464
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "status": "MODIFIED",
+      "sha256": "25d27695b1e9b4c7c5d7760f5f27b0fb011eb31cda613b4ba97fa11f2cd7ff7f",
+      "bytes": 4184
+    },
+    {
+      "path": "config/network/nx4-client-prediction-reconciliation.v1.json",
+      "status": "NEW",
+      "sha256": "3f041cb1e1a6537054d980476d9a2520be1e43daf705807eaab92d4d93537a7d",
+      "bytes": 1606
+    },
+    {
+      "path": "docs/checkpoints/2026-08-03_V16_14_0_NETWORK_NX4_PREDICTION_RU.md",
+      "status": "NEW",
+      "sha256": "3f246c75245e832c42716d472e9a545d1021084139325b7edaba24c383c1401b",
+      "bytes": 1497
+    },
+    {
+      "path": "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "status": "MODIFIED",
+      "sha256": "7bc7a919c435809257571cd66cfd141fb71943452df095e3ed2aec32e7a2064b",
+      "bytes": 16174
+    },
+    {
+      "path": "docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md",
+      "status": "NEW",
+      "sha256": "4ee06995b473cefcd1d711dbb5acf9a150bf74f71d893583a1f1a1998fd88e30",
+      "bytes": 8813
+    },
+    {
+      "path": "scripts/actors/player/lunar_player.gd",
+      "status": "MODIFIED",
+      "sha256": "8a4ce9b2e58008fdeb305b6612fa97fd8396fb4246dd6869b956e1f2cb01c915",
+      "bytes": 15464
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "MODIFIED",
+      "sha256": "0fa764dd1522c74ca59b97ece68c4c00070be24e75df3eb66fcef817364fc0f0",
+      "bytes": 9877
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd",
+      "status": "MODIFIED",
+      "sha256": "51720b9be7781cfa97ee83b718dad31e635eee0620a2f20bf29dbb9dac5e63af",
+      "bytes": 1923
+    },
+    {
+      "path": "scripts/network/prediction/client_prediction_reconciler.gd",
+      "status": "NEW",
+      "sha256": "8a626ac56d2ba84e936c0ffcce682bb35c4c6c405965d18881678d43c6943d45",
+      "bytes": 15138
+    },
+    {
+      "path": "scripts/network/prediction/client_prediction_reconciler.gd.uid",
+      "status": "NEW",
+      "sha256": "bfb55ecf3759a303f01c8f1420f74e782dd5083ded065e9778e3ea8084a6ba1f",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "9d5361c18696a15da180acc3229765fb9d4f526f6b984529fdb1dc037b378811",
+      "bytes": 54966
+    },
+    {
+      "path": "scripts/world/testing/playground_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "5d30f9b442b470ec833354b237e461750c27082d74fdf293e16facf249feb608",
+      "bytes": 67086
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd",
+      "status": "MODIFIED",
+      "sha256": "e48f9233908fb47968c5c556ff9cd07feb2a79bb4f46f5bf1f19380f3ba4c06c",
+      "bytes": 26088
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "673d3d712d008fb55734af545e497b1cc8ff0e0eb825af96a24461b2cae5ca38",
+      "bytes": 10309
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "MODIFIED",
+      "sha256": "5cf1371e7db1dd0ad0463c2bc880365b7252c0afda6c79f1c14a06fd594deea6",
+      "bytes": 39503
+    },
+    {
+      "path": "tests/network/test_nx1_network_condition_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "9469c1c38f0302d1314eaf08794117d1156c394d2752117bdc08c2f87a8335a0",
+      "bytes": 9231
+    },
+    {
+      "path": "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+      "status": "MODIFIED",
+      "sha256": "b145baa7367d663cda953d0bed2ba1dc3bd7c8d53482a6919e4ae8fd3e5da551",
+      "bytes": 21857
+    },
+    {
+      "path": "tests/network/test_nx4_client_prediction_reconciliation.gd",
+      "status": "NEW",
+      "sha256": "5a0b2bbab911543a9e2e8da90e3d1545cb6962596631ac13bcf285234c0e0926",
+      "bytes": 17660
+    },
+    {
+      "path": "tests/network/test_nx4_client_prediction_reconciliation.gd.uid",
+      "status": "NEW",
+      "sha256": "ea0e85640e0d6c907aab1945ae1165eab88924289c5e50cb6fe87ec452d047e3",
+      "bytes": 22
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_playground.gd",
+      "status": "MODIFIED",
+      "sha256": "f24aebbb81a6d4242a63c564768080b9c47da66bd2690f620151e0c2bc7720d7",
+      "bytes": 18497
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "f7e13c2b4b81fac53cb71555b3b5da0c618900fa15cc748ae9304a68798ce101",
+      "bytes": 14249
+    },
+    {
+      "path": "tools/runtime/m7_playable_network_client.gd",
+      "status": "MODIFIED",
+      "sha256": "2af626c3f3765c103093e3d5c1f8841671885c57fb64e05e580fb0b1e2300cef",
+      "bytes": 16990
+    },
+    {
+      "path": "tools/runtime/m7_playable_recovery_client.gd",
+      "status": "MODIFIED",
+      "sha256": "700a56dbc6ef3885784265d8b1a9bf0e3f720569f672e8046703da576ea06407",
+      "bytes": 10180
+    },
+    {
+      "path": "validation/v16.14.0-network-nx4-client-prediction-reconciliation-files.txt",
+      "status": "NEW",
+      "sha256": "79c63bf3820321253c0e6c19bbe7ea9b06d71f91eefdaadcc012263e26d9fed9",
+      "bytes": 1977
+    },
+    {
+      "path": "validation/v16.14.0-network-nx4-client-prediction-reconciliation-validation.json",
+      "status": "NEW",
+      "sha256": "3689e2e39b16620022dc860eb710cb3031c06a812fe96b8d7014d4d3b979f681",
+      "bytes": 5290
+    }
+  ],
+  "self_hash_excluded": "NX4_CLIENT_PREDICTION_RECONCILIATION_PATCH_MANIFEST.json"
+}

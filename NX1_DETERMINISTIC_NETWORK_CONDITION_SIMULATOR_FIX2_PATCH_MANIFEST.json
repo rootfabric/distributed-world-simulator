@@ -1,0 +1,88 @@
+{
+  "schema": "planet_simulator.nx1_deterministic_network_condition_simulator_fix2_patch_manifest.v1",
+  "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "delivery_iteration": "fix2",
+  "build_id": "nx1-deterministic-network-condition-simulator",
+  "branch": "feature/nx1-deterministic-network-condition-simulator",
+  "base_checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator-fix1",
+  "base_commit": "f1abeca",
+  "incremental": true,
+  "apply_over": "NX1 candidate SHA-256 1CE0284F0E79A63BEFA64BA4FEE81C5D4E3FBA47EE049E5543D7C9B0A6527BE6 plus fix1 SHA-256 22917599CBB6F2E85C7E8F0BCBE49CAB1AAE1D0C70E75CF78D5B4717525566EF",
+  "file_count": 11,
+  "new_file_count": 2,
+  "modified_file_count": 9,
+  "deleted_file_count": 0,
+  "review_fix": {
+    "ready_message_events_blocked_during_incoming_blackout": true,
+    "ready_message_events_blocked_during_incoming_lag_spike": true,
+    "lifecycle_events_bypass_incoming_block": true,
+    "held_message_fifo_preserved": true
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "828db6d5579d43451bc5c68ca769091b7503c28adf7c6f6177a5cf454ae12a46",
+      "bytes": 9919
+    },
+    {
+      "path": "NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_FIX2_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "bfbf4ff1f1e12fe5a27e990dccb1469cb8645314eaced98eafb3888c233cdce2",
+      "bytes": 43148
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "c831a34df83381a0c264b4ca1f67ac54d21bf4d7010ca1b85acc5c364c37b367",
+      "bytes": 4632
+    },
+    {
+      "path": "config/network/nx1-deterministic-network-condition-simulator.v1.json",
+      "status": "MODIFIED",
+      "sha256": "d5ea265e5e4538bce2d6f59a58a779c76b5f75559330b72176a32dc1db6f34f7",
+      "bytes": 4412
+    },
+    {
+      "path": "docs/checkpoints/2026-08-01_V16_11_0_NETWORK_NX1_DETERMINISTIC_CONDITION_SIMULATOR_RU.md",
+      "status": "MODIFIED",
+      "sha256": "aa0f04d0ed7efc15c81f76e121fe6afc2fd132e07c6b05ce20d55c789c5630d0",
+      "bytes": 4362
+    },
+    {
+      "path": "docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md",
+      "status": "MODIFIED",
+      "sha256": "da2f15a1d7f5e84411bfe05732fa5b4ad751cfef743f9fd42c5a904b7ecea22b",
+      "bytes": 12919
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_simulator_port.gd",
+      "status": "MODIFIED",
+      "sha256": "c8578703425ecf93faf234bdbac282a51e767269bf9f6319dd46487c93e95ae5",
+      "bytes": 31970
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "MODIFIED",
+      "sha256": "ec3b41b861b4fcb3864aff9601125653a744da90778f561c1162646c1025f866",
+      "bytes": 39312
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-fix2-files.txt",
+      "status": "NEW",
+      "sha256": "08ef5627500b52c3b7c6e462bd950f816310eb0cdabc0aa4ed44b38672cd2411",
+      "bytes": 632
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json",
+      "status": "MODIFIED",
+      "sha256": "6053825d06868eca2b32dca011c4550ab389c0b44ab5b5c48cc534810b97dadb",
+      "bytes": 4834
+    }
+  ]
+}

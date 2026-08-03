@@ -1,0 +1,94 @@
+{
+  "schema": "planet_simulator.nx6_predicted_item_interactions_validation.v1",
+  "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+  "delivery": "fix3",
+  "branch": "feature/nx6-predicted-item-interactions",
+  "base_commit": "c727b1cf25b4e5916098a057b89b7fa1eb878dc6",
+  "apply_over": "NX6 candidate, fix1 and fix2 in the same branch",
+  "apply_over_candidate_sha256": "2529F0E133EAE53E6F7839254E857C1DAF134E8EADED914BF7A618EDD3697AFB",
+  "apply_over_fix1_sha256": "3ECA168B17219B95BFBF2DC93C6884621F4D71FBFEC06DC7750EF66C77733A34",
+  "apply_over_fix2_sha256": "AB07F0CF8C662D4044581FC3F63CA98CB67410ED4831ACE876A53324EF09FA12",
+  "decision": "FIX3_IMPLEMENTED_CANDIDATE",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+  "protocol_changed": false,
+  "p1_resolution": {
+    "production_playground_unload_cleanup": "IMPLEMENTED_IN_BASE_PLAYGROUND_RUNTIME",
+    "stop_call": "_m7_item_bridge.stop(\"NX6_PLAYGROUND_UNLOAD\")",
+    "stop_before_runtime_signal_disconnect": true,
+    "stop_before_bridge_release": true,
+    "real_scene_path": "res://scenes/testing/playground.tscn",
+    "real_scene_runtime": "res://scripts/world/testing/playground_runtime.gd",
+    "m7_process_uses_real_scene": true,
+    "test_only_wrapper_used": false,
+    "obsolete_fix2_wrapper_removed_files": [
+      "scripts/world/testing/nx6_lifecycle_safe_playground_runtime.gd",
+      "scripts/world/testing/nx6_lifecycle_safe_playground_runtime.gd.uid"
+    ]
+  },
+  "source_integrity": {
+    "base_git_blob_sha": "3dec7341f23c0b99cdf9d31844435fe5898b3f87",
+    "reconstructed_base_blob_sha": "3dec7341f23c0b99cdf9d31844435fe5898b3f87",
+    "fix3_blob_sha": "67c38dbf9ff0518eab0713c672099595d598a5ad",
+    "only_intended_production_change": "bridge.stop insertion in prepare_for_unload"
+  },
+  "author_validation": {
+    "editor_import_isolated": "PASS",
+    "nx6_contracts": {
+      "assertions": 940,
+      "failures": 0,
+      "status": "PASS"
+    },
+    "nx6_integration_fix3": {
+      "assertions": 66,
+      "failures": 0,
+      "status": "PASS"
+    },
+    "integration_coverage_added": [
+      "M7 process client preloads real playground.tscn",
+      "M7 process client does not reference lifecycle wrapper",
+      "production runtime contains direct NX6_PLAYGROUND_UNLOAD stop",
+      "production stop precedes runtime signal disconnect and bridge null",
+      "real playground scene binds production playground_runtime.gd",
+      "real scene production prepare_for_unload invokes stop exactly once",
+      "production unload releases bridge after stop"
+    ],
+    "bash_syntax": "PASS",
+    "powershell_parse": "NOT_RUN_PWSH_UNAVAILABLE",
+    "json_parse": "PASS",
+    "production_source_parse_with_dependency_stubs": "PASS",
+    "m7_playable_contracts": "NOT_RUN_FULL_TREE_UNAVAILABLE",
+    "m7_graphical_multiprocess": "NOT_RUN_FULL_TREE_UNAVAILABLE",
+    "m7_recovery": "NOT_RUN_FULL_TREE_UNAVAILABLE"
+  },
+  "independent_fix2_review_input": {
+    "nx6_contracts": "940 PASS",
+    "nx6_integration_fix2": "55 PASS",
+    "m7_playable_contracts": "63/0 PASS",
+    "m7_graphical_multiprocess": "51/0 PASS",
+    "m7_recovery": "36/0 PASS",
+    "nx5_contracts": "6104 PASS",
+    "nx5_integration": "49 PASS",
+    "m3_contracts": "77 PASS",
+    "m4_playground": "23 PASS",
+    "conditioned_enet": "27 PASS",
+    "nx2_physical_enet": "66 PASS",
+    "remaining_processes": 0,
+    "note": "Reported by independent reviewer for fix2; not re-claimed as fix3 author runs."
+  },
+  "materialization": {
+    "full_accepted_tree_available": false,
+    "isolated_fixture": true,
+    "production_file_under_parse": "scripts/world/testing/playground_runtime.gd",
+    "real_scene_fixture_path": "scenes/testing/playground.tscn",
+    "external_dependencies_stubbed_for_author_parse": true
+  },
+  "required_independent_acceptance": [
+    "Apply NX6 candidate, fix1, fix2 and fix3 over base c727b1cf25b4e5916098a057b89b7fa1eb878dc6 in the same branch",
+    "Run APPLY_NX6_PREDICTED_ITEM_INTERACTIONS_FIX3 to remove the obsolete fix2 wrapper",
+    "Run NX6 mandatory runner 5/5",
+    "Confirm real playground.tscn unload invokes bridge.stop before runtime shutdown",
+    "Run M7 recovery, NX5 accepted regression, Network and World regressions",
+    "Verify zero remaining Godot/Xvfb processes and no persistent user:// mutation"
+  ]
+}

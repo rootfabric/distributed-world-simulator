@@ -3,6 +3,9 @@ param(
     [string]$ServerAddress = "127.0.0.1",
     [ValidateRange(1, 65535)][int]$Port = 24580,
     [ValidateRange(1, 8)][int]$ClientCount = 2,
+    [ValidateSet("LOCAL","GOOD_BROADBAND","AVERAGE_BROADBAND","MOBILE","BAD_MOBILE","EXTREME","LAG_SPIKE","ASYMMETRIC")][string]$ServerNetworkProfile = "LOCAL",
+    [ValidateSet("LOCAL","GOOD_BROADBAND","AVERAGE_BROADBAND","MOBILE","BAD_MOBILE","EXTREME","LAG_SPIKE","ASYMMETRIC")][string]$ClientNetworkProfile = "LOCAL",
+    [string]$NetworkPresetsFile = "res://config/network/network-condition-presets.v1.json",
     [string]$PersistenceRoot = "",
     [switch]$ResetPersistence
 )
@@ -90,6 +93,7 @@ if (Test-Path $ActiveSessionPath) {
 
 $Godot = Resolve-GodotExecutable -RequestedPath $GodotPath
 $RunId = [DateTime]::UtcNow.ToString("yyyyMMdd-HHmmss")
+$NetworkSessionToken = if ([string]::IsNullOrWhiteSpace($env:NX0_NETWORK_SESSION_TOKEN)) { "session-id/m7-$($RunId.ToLowerInvariant())" } else { $env:NX0_NETWORK_SESSION_TOKEN.ToLowerInvariant() }
 $RunRoot = Join-Path $Root "artifacts/runtime/m7-network-playground/$RunId"
 $Profiles = Join-Path $RunRoot "profiles"
 New-Item -ItemType Directory -Force -Path $RunRoot,$Profiles | Out-Null
@@ -104,8 +108,10 @@ $ServerLog = Join-Path $RunRoot "server.log"
 $ServerArgs = @(
     "--headless","--path",$Root,"--log-file",$ServerLog,"--",
     "--role=dedicated-server","--network-playground","--network-debug","--world=playground",
+    "--network-session-token=$NetworkSessionToken",
     "--node-id=m7-playground-server","--instance-id=m7-playground",
     "--server-address=$ServerAddress","--server-port=$Port",
+    "--network-profile=$ServerNetworkProfile","--network-presets-file=$NetworkPresetsFile",
     "--m7-result-file=$ServerResult","--m6-persistence-root=$PersistenceRoot",
     "--print-runtime-descriptor"
 )
@@ -134,8 +140,10 @@ for ($Index = 0; $Index -lt $ClientCount; $Index++) {
     $ClientArgs = @(
         "--path",$Root,"--rendering-method","gl_compatibility","--log-file",$ClientLog,"--",
         "--role=game-client","--network-playground","--network-debug","--network-debug-stay-open","--world=playground",
+        "--network-session-token=$NetworkSessionToken",
         "--node-id=m7-client-$Id","--instance-id=m7-client-$Id",
         "--player-identity=$Id","--server-address=$ServerAddress","--server-port=$Port",
+        "--network-profile=$ClientNetworkProfile","--network-presets-file=$NetworkPresetsFile",
         "--print-runtime-descriptor"
     )
     $Client = Start-IsolatedGodot -Executable $Godot -Arguments $ClientArgs -ProfileRoot (Join-Path $Profiles "client-$Id")
@@ -145,7 +153,7 @@ for ($Index = 0; $Index -lt $ClientCount; $Index++) {
 
 $Session = [ordered]@{
     schema = "planet_simulator.m7_playable_networked_playground_session.v1"
-    checkpoint = "v16.10.6.1-testing-m7-playable-networked-playground"
+    checkpoint = "v16.11.0-network-nx1-deterministic-condition-simulator"
     run_id = $RunId
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     project_root = $Root
@@ -157,6 +165,10 @@ $Session = [ordered]@{
     client_count = $ClientCount
     run_root = $RunRoot
     persistence_root = $PersistenceRoot
+    network_session_token = $NetworkSessionToken
+    server_network_profile = $ServerNetworkProfile
+    client_network_profile = $ClientNetworkProfile
+    network_presets_file = $NetworkPresetsFile
 }
 $Session | ConvertTo-Json -Depth 6 | Set-Content -Path $ActiveSessionPath -Encoding UTF8
 $Session | ConvertTo-Json -Depth 6 | Set-Content -Path (Join-Path $RunRoot "session.json") -Encoding UTF8
@@ -166,6 +178,10 @@ Write-Host "M7 network playground started." -ForegroundColor Green
 Write-Host "Server: $ServerAddress`:$Port (PID $($Server.Id))"
 Write-Host "Clients: $($ClientPids -join ', ')"
 Write-Host "Logs: $RunRoot"
+Write-Host "Network profiles: server=$ServerNetworkProfile client=$ClientNetworkProfile"
+if ($ServerNetworkProfile -ne "LOCAL" -and $ClientNetworkProfile -ne "LOCAL") {
+    Write-Host "Endpoint profiles are additive; applying the same preset at both ends roughly doubles path impairment." -ForegroundColor Yellow
+}
 Write-Host ""
 Write-Host "Controls: click viewport to capture mouse; WASD move; Shift run; Space jump; Tab inventory; E interact/pick up/install; G drop; F flashlight; 1-0 hotbar; Esc menu."
 Write-Host "Stop: .\STOP_M7_NETWORKED_PLAYGROUND.ps1"

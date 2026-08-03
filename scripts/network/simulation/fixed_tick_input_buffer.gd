@@ -1,0 +1,195 @@
+extends RefCounted
+
+const Sequence = preload("res://scripts/network/simulation/input_sequence.gd")
+
+const SCHEMA: String = "planet_simulator.fixed_tick_input_buffer.v1"
+const MAX_PENDING_INPUTS: int = 64
+const MAX_SEQUENCE_AHEAD: int = 2048
+const MAX_QUEUE_AGE_TICKS: int = 120
+const MAX_INPUT_HOLD_TICKS: int = 15
+const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
+const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
+const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
+
+var _pending: Array[Dictionary] = []
+var _last_processed_sequence: int = 0
+var _last_received_sequence: int = 0
+var _current_intent: Dictionary = {}
+var _current_operation_id: String = ""
+var _hold_until_tick: int = 0
+var _accepted: int = 0
+var _redundant: int = 0
+var _rejected: int = 0
+var _stale_dropped: int = 0
+var _window_rejected: int = 0
+var _queue_full_rejected: int = 0
+var _hold_expirations: int = 0
+var _jump_edges: int = 0
+
+func configure(last_processed_sequence: int = 0) -> Dictionary:
+	if last_processed_sequence != 0 and not Sequence.is_valid(last_processed_sequence):
+		return _failure("INVALID_LAST_PROCESSED_INPUT_SEQUENCE")
+	_pending.clear()
+	_last_processed_sequence = last_processed_sequence
+	_last_received_sequence = last_processed_sequence
+	_current_intent.clear()
+	_current_operation_id = ""
+	_hold_until_tick = 0
+	_accepted = 0
+	_redundant = 0
+	_rejected = 0
+	_stale_dropped = 0
+	_window_rejected = 0
+	_queue_full_rejected = 0
+	_hold_expirations = 0
+	_jump_edges = 0
+	return _success()
+
+func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
+	if received_server_tick < 0:
+		return _reject("INVALID_INPUT_RECEIVED_TICK")
+	var sequence: int = int(input.get("input_sequence", 0))
+	if not Sequence.is_valid(sequence):
+		return _reject("INVALID_INPUT_SEQUENCE")
+	if not Sequence.is_newer(sequence, _last_processed_sequence):
+		_redundant += 1
+		return _success({"accepted": false, "redundant": true})
+	var distance: int = Sequence.forward_distance(_last_processed_sequence, sequence)
+	if distance < 1 or distance > MAX_SEQUENCE_AHEAD:
+		_window_rejected += 1
+		return _reject("INPUT_SEQUENCE_WINDOW_EXCEEDED")
+	for queued in _pending:
+		if int(queued.get("input_sequence", 0)) == sequence:
+			_redundant += 1
+			return _success({"accepted": false, "redundant": true})
+	if _pending.size() >= MAX_PENDING_INPUTS:
+		_queue_full_rejected += 1
+		return _reject("INPUT_QUEUE_FULL")
+	var intent_value = input.get("intent", {})
+	if not intent_value is Dictionary:
+		return _reject("MOVEMENT_INTENT_REQUIRED")
+	var queued_input: Dictionary = input.duplicate(true)
+	queued_input["received_server_tick"] = received_server_tick
+	_insert_in_sequence_order(queued_input)
+	if Sequence.is_newer(sequence, _last_received_sequence):
+		_last_received_sequence = sequence
+	_accepted += 1
+	return _success({"accepted": true, "redundant": false, "pending": _pending.size()})
+
+func consume_for_tick(server_tick: int) -> Dictionary:
+	if server_tick < 1:
+		return _failure("INVALID_FIXED_SERVER_TICK")
+	_drop_stale(server_tick)
+	var consumed_new_input: bool = false
+	var operation_id: String = _current_operation_id
+	var jump_edge: bool = false
+	if not _pending.is_empty():
+		var next_input: Dictionary = _pending.pop_front()
+		_last_processed_sequence = int(next_input.get("input_sequence", 0))
+		_current_intent = Dictionary(next_input.get("intent", {})).duplicate(true)
+		_current_operation_id = String(next_input.get("operation_id", ""))
+		operation_id = _current_operation_id
+		_hold_until_tick = server_tick + MAX_INPUT_HOLD_TICKS - 1
+		jump_edge = bool(_current_intent.get("jump_pressed", false))
+		if jump_edge:
+			_jump_edges += 1
+		consumed_new_input = true
+	elif not _current_intent.is_empty() and server_tick > _hold_until_tick:
+		if _has_active_motion(_current_intent):
+			_hold_expirations += 1
+		_current_intent["move_x"] = 0.0
+		_current_intent["move_z"] = 0.0
+		_current_intent["sprint"] = false
+		_current_intent["jump_pressed"] = false
+	var intent: Dictionary = _current_intent.duplicate(true)
+	if intent.is_empty():
+		intent = _idle_intent()
+	intent["jump_pressed"] = jump_edge
+	return _success({
+		"input_sequence": _last_processed_sequence,
+		"operation_id": operation_id,
+		"intent": intent,
+		"consumed_new_input": consumed_new_input,
+		"jump_edge": jump_edge,
+		"pending": _pending.size(),
+		"queue_age_ticks": _oldest_queue_age(server_tick),
+	})
+
+func get_last_processed_sequence() -> int:
+	return _last_processed_sequence
+
+func get_pending_count() -> int:
+	return _pending.size()
+
+func get_report(server_tick: int = 0) -> Dictionary:
+	return {
+		"schema": SCHEMA,
+		"selection_policy": INPUT_SELECTION_POLICY,
+		"jump_policy": JUMP_POLICY,
+		"hold_policy": HOLD_POLICY,
+		"last_processed_sequence": _last_processed_sequence,
+		"last_received_sequence": _last_received_sequence,
+		"pending": _pending.size(),
+		"oldest_queue_age_ticks": _oldest_queue_age(server_tick),
+		"hold_until_tick": _hold_until_tick,
+		"accepted": _accepted,
+		"redundant": _redundant,
+		"rejected": _rejected,
+		"stale_dropped": _stale_dropped,
+		"window_rejected": _window_rejected,
+		"queue_full_rejected": _queue_full_rejected,
+		"hold_expirations": _hold_expirations,
+		"jump_edges": _jump_edges,
+	}
+
+func _insert_in_sequence_order(input: Dictionary) -> void:
+	var sequence: int = int(input.get("input_sequence", 0))
+	var distance: int = Sequence.forward_distance(_last_processed_sequence, sequence)
+	var index: int = 0
+	while index < _pending.size():
+		var queued_sequence: int = int(_pending[index].get("input_sequence", 0))
+		var queued_distance: int = Sequence.forward_distance(_last_processed_sequence, queued_sequence)
+		if distance < queued_distance:
+			break
+		index += 1
+	_pending.insert(index, input)
+
+func _drop_stale(server_tick: int) -> void:
+	while not _pending.is_empty():
+		var received_tick: int = int(_pending.front().get("received_server_tick", server_tick))
+		if server_tick - received_tick <= MAX_QUEUE_AGE_TICKS:
+			break
+		_pending.pop_front()
+		_stale_dropped += 1
+
+func _oldest_queue_age(server_tick: int) -> int:
+	if server_tick < 1 or _pending.is_empty():
+		return 0
+	return maxi(server_tick - int(_pending.front().get("received_server_tick", server_tick)), 0)
+
+func _has_active_motion(intent: Dictionary) -> bool:
+	return absf(float(intent.get("move_x", 0.0))) > 0.000001 \
+		or absf(float(intent.get("move_z", 0.0))) > 0.000001 \
+		or bool(intent.get("sprint", false)) \
+		or bool(intent.get("jump_pressed", false))
+
+func _idle_intent() -> Dictionary:
+	return {
+		"move_x": 0.0,
+		"move_z": 0.0,
+		"look_yaw": 0.0,
+		"look_pitch": 0.0,
+		"jump_pressed": false,
+		"sprint": false,
+		"delta_seconds": 1.0 / 60.0,
+	}
+
+func _reject(error_code: String) -> Dictionary:
+	_rejected += 1
+	return _failure(error_code)
+
+func _success(details: Dictionary = {}) -> Dictionary:
+	return {"success": true, "error_code": "", "details": details.duplicate(true)}
+
+func _failure(error_code: String) -> Dictionary:
+	return {"success": false, "error_code": error_code, "details": {}}

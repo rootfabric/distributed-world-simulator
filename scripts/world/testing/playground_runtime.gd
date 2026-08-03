@@ -31,6 +31,7 @@ const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
 const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
 const M7_INPUT_SEND_INTERVAL_SECONDS: float = 1.0 / 30.0
 const M7_AUTHORITATIVE_INTERPOLATION_RATE: float = 18.0
+const M7_PREDICTION_MODE: String = "CLIENT_PREDICTION_RECONCILIATION"
 const M7_AUTHORITATIVE_TELEPORT_DISTANCE_M: float = 6.0
 const M7_INTERACTION_RANGE_M: float = 5.0
 
@@ -97,6 +98,8 @@ var _m7_authoritative_target_valid: bool = false
 var _m7_interpolation_updates: int = 0
 var _m7_hard_snaps: int = 0
 var _m7_network_error: String = ""
+var _m7_prediction_updates: int = 0
+var _m7_prediction_report: Dictionary = {}
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -232,6 +235,8 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	]
 	if _network_playground_enabled:
 		required_methods.append("submit_movement_intent_nonblocking")
+		required_methods.append("advance_local_prediction")
+		required_methods.append("is_prediction_ready")
 	for method_name in required_methods:
 		if not runtime.has_method(method_name):
 			return {
@@ -246,11 +251,13 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		runtime.replica_updated.connect(_on_m3_replica_updated)
 	if not runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
 		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
+	if runtime.has_signal("prediction_updated") and not runtime.prediction_updated.is_connected(_on_m3_prediction_updated):
+		runtime.prediction_updated.connect(_on_m3_prediction_updated)
 	_m3_attached = true
 	player.set_network_replica_mode(true)
 	if _network_playground_enabled:
-		# Client sends input intent only; dedicated server owns movement simulation.
-		player.set_network_prediction_mode(false)
+		# The shared movement kernel predicts locally; dedicated server remains authoritative.
+		player.set_network_prediction_mode(true)
 		var m7_setup := _setup_m7_networked_item_gameplay(runtime)
 		if not bool(m7_setup.get("success", false)):
 			_m3_attached = false
@@ -404,19 +411,51 @@ func _sync_m7_predicted_player_state(delta: float) -> void:
 		or not local_input_enabled
 	):
 		return
-	_m7_state_accumulator += delta
-	if _m7_state_accumulator < M7_INPUT_SEND_INTERVAL_SECONDS:
-		return
-	var step := clampf(_m7_state_accumulator, 0.000001, 0.25)
-	_m7_state_accumulator = 0.0
-	var result: Dictionary = m3_multiplayer_client_runtime.submit_movement_intent_nonblocking(
-		_create_m7_movement_intent(step)
+	var result: Dictionary = m3_multiplayer_client_runtime.advance_local_prediction(
+		_create_m7_movement_intent(delta),
+		delta
 	)
-	if bool(result.get("success", false)):
+	if not bool(result.get("success", false)):
+		_m7_last_sync_error = String(result.get("error_code", "NX4_CLIENT_PREDICTION_FAILED"))
+		return
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	if not bool(details.get("submission_attempted", false)):
+		return
+	var submission: Dictionary = Dictionary(details.get("submission", {}))
+	if bool(submission.get("success", false)):
 		_m7_state_submissions += 1
 		_m7_last_sync_error = ""
 	else:
-		_m7_last_sync_error = String(result.get("error_code", "M7_PLAYER_INPUT_SEND_FAILED"))
+		_m7_last_sync_error = String(submission.get("error_code", "M7_PLAYER_INPUT_SEND_FAILED"))
+
+func _on_m3_prediction_updated(
+	_predicted_state: Dictionary,
+	presentation_state: Dictionary,
+	prediction_report: Dictionary
+) -> void:
+	if not _network_playground_enabled or player == null:
+		return
+	_m7_prediction_updates += 1
+	_m7_prediction_report = prediction_report.duplicate(true)
+	_apply_m7_prediction_presentation(presentation_state)
+
+func _apply_m7_prediction_presentation(state: Dictionary) -> void:
+	if state.is_empty() or player == null:
+		return
+	var position: Dictionary = Dictionary(state.get("position", {}))
+	var velocity: Dictionary = Dictionary(state.get("velocity", {}))
+	player.set_world_position(Vector3(
+		float(position.get("x", 0.0)),
+		float(position.get("y", 0.0)),
+		float(position.get("z", 0.0))
+	))
+	player.velocity = Vector3(
+		float(velocity.get("x", 0.0)),
+		float(velocity.get("y", 0.0)),
+		float(velocity.get("z", 0.0))
+	)
+	var yaw: float = float(state.get("orientation_yaw", player.rotation.y))
+	player.rotation.y = yaw
 
 
 func _on_m3_replica_updated(snapshot: Dictionary) -> void:
@@ -591,6 +630,7 @@ func _apply_m7_authoritative_interpolation(delta: float) -> void:
 		not _network_playground_enabled
 		or not _m7_authoritative_target_valid
 		or player == null
+		or player.is_network_prediction_mode()
 	):
 		return
 	var current: Vector3 = player.get_world_position()
@@ -662,8 +702,10 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"m7_state_submissions": _m7_state_submissions,
 		"m7_state_sync_enabled": _m7_state_sync_enabled,
 		"m7_reconciliations": _m7_reconciliations,
+		"m7_prediction_updates": _m7_prediction_updates,
+		"m7_prediction_report": _m7_prediction_report.duplicate(true),
 		"m7_last_sync_error": _m7_last_sync_error,
-		"m7_interpolation_mode": "AUTHORITATIVE_TARGET_SMOOTHING",
+		"m7_interpolation_mode": M7_PREDICTION_MODE,
 		"m7_interpolation_updates": _m7_interpolation_updates,
 		"m7_hard_snaps": _m7_hard_snaps,
 		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,
@@ -700,7 +742,6 @@ func _process(delta: float) -> void:
 		return
 	if _m3_attached:
 		if _network_playground_enabled:
-			_apply_m7_authoritative_interpolation(delta)
 			_sync_m7_predicted_player_state(delta)
 		else:
 			_apply_m3_network_input(delta)
@@ -832,6 +873,8 @@ func prepare_for_unload() -> void:
 		m5_networked_inventory_shell = null
 	if item_gameplay != null:
 		item_gameplay.save_graph()
+	if _m7_item_bridge != null:
+		_m7_item_bridge.stop("NX6_PLAYGROUND_UNLOAD")
 	if m3_multiplayer_client_runtime != null:
 		if m3_multiplayer_client_runtime.replica_updated.is_connected(_on_m3_replica_updated):
 			m3_multiplayer_client_runtime.replica_updated.disconnect(_on_m3_replica_updated)
@@ -1614,8 +1657,10 @@ func create_m2_graphical_client_report() -> Dictionary:
 		"m7_state_submissions": _m7_state_submissions,
 		"m7_state_sync_enabled": _m7_state_sync_enabled,
 		"m7_reconciliations": _m7_reconciliations,
+		"m7_prediction_updates": _m7_prediction_updates,
+		"m7_prediction_report": _m7_prediction_report.duplicate(true),
 		"m7_last_sync_error": _m7_last_sync_error,
-		"m7_interpolation_mode": "AUTHORITATIVE_TARGET_SMOOTHING",
+		"m7_interpolation_mode": M7_PREDICTION_MODE,
 		"m7_interpolation_updates": _m7_interpolation_updates,
 		"m7_hard_snaps": _m7_hard_snaps,
 		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,

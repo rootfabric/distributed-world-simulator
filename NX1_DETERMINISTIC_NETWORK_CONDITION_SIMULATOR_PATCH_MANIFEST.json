@@ -1,0 +1,309 @@
+{
+  "schema": "planet_simulator.nx1_deterministic_network_condition_simulator_patch_manifest.v1",
+  "checkpoint": "v16.11.0-network-nx1-deterministic-condition-simulator",
+  "build_id": "nx1-deterministic-network-condition-simulator",
+  "branch": "feature/nx1-deterministic-network-condition-simulator",
+  "base_checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "base_commit": "f1abeca",
+  "incremental": true,
+  "apply_over": "accepted NX0 Observability Baseline",
+  "file_count": 49,
+  "new_file_count": 18,
+  "modified_file_count": 31,
+  "deleted_file_count": 0,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "MODIFIED",
+      "sha256": "6c06c8189c4cd67a3b85a7decb0a48fde055cb8a1b1ddf8939fa3ac2e3bcf4b4",
+      "bytes": 9271
+    },
+    {
+      "path": "NETWORK_ROADMAP_RU.md",
+      "status": "MODIFIED",
+      "sha256": "834e7ba41767b501b41aa8a819481a6c83b69a46db751fab035428a997179d4c",
+      "bytes": 4738
+    },
+    {
+      "path": "NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_PATCH_MANIFEST.json",
+      "status": "NEW",
+      "sha256": "SELF_HASH_OMITTED"
+    },
+    {
+      "path": "PLAY_M7_NETWORKED_PLAYGROUND.ps1",
+      "status": "MODIFIED",
+      "sha256": "1c6cfe31d446fd29fc832188ec0990d232fc3356cf9708c645ccbe304a5c20d6",
+      "bytes": 8879
+    },
+    {
+      "path": "PLAY_M7_NETWORKED_PLAYGROUND.sh",
+      "status": "MODIFIED",
+      "sha256": "6e6b53c1ca7e9da14d1eacb9827c2e916a30caaec2b52c048d9c3d32e4a0d27f",
+      "bytes": 5237
+    },
+    {
+      "path": "PROJECT_MANIFEST.txt",
+      "status": "MODIFIED",
+      "sha256": "5f4ec5a474690d4002fc48ffda22c31235c44abe2536fe6acbfae3f4d892d0c7",
+      "bytes": 41254
+    },
+    {
+      "path": "README_RU.md",
+      "status": "MODIFIED",
+      "sha256": "39ee03121da7fc80cb41eaac24b5d3947f4cc57a83c701b186f2412ad58871a4",
+      "bytes": 4381
+    },
+    {
+      "path": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "4c20e6b904a4419f548bf657d4d35c839f945a895275fe94c033ccf9306bc964",
+      "bytes": 9884
+    },
+    {
+      "path": "RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1",
+      "status": "NEW",
+      "sha256": "8bba430d2873b7073f5fc5402d4ac271b48660b82e8cc6c19048a86db80da2da",
+      "bytes": 3851
+    },
+    {
+      "path": "RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.sh",
+      "status": "NEW",
+      "sha256": "2dcef028221754356e222cd96eb539cefde9450bf05162100ac3705c18474f33",
+      "bytes": 1910
+    },
+    {
+      "path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "status": "MODIFIED",
+      "sha256": "ec308f95d326a75b22cabb8997997da7be047c002f3ecf0ce200b6f315355a8a",
+      "bytes": 20076
+    },
+    {
+      "path": "START_M7_NETWORK_CLIENT.ps1",
+      "status": "MODIFIED",
+      "sha256": "08818c5340db259b7d79b4c6f335e63732ee0484127508629869d7890509ebca",
+      "bytes": 6553
+    },
+    {
+      "path": "START_M7_NETWORK_SERVER.ps1",
+      "status": "MODIFIED",
+      "sha256": "4d78998d270308e2a065795d8aaefc84f55f97f9124a17c7001f2d29a641230f",
+      "bytes": 5124
+    },
+    {
+      "path": "config/network/network-experience-roadmap.v1.json",
+      "status": "MODIFIED",
+      "sha256": "fe9376b0ac1c05bee8a02c9361251d3aefc7a692884af24bb4c148b6e49d3dd2",
+      "bytes": 4040
+    },
+    {
+      "path": "config/network/nx0-observability-baseline.v1.json",
+      "status": "MODIFIED",
+      "sha256": "1e88c9b724638bb7be32b139814d822f43769a532cc668368e321660000598a0",
+      "bytes": 4453
+    },
+    {
+      "path": "config/network/nx1-deterministic-network-condition-simulator.v1.json",
+      "status": "NEW",
+      "sha256": "4aa0576daa00dc81da2db785cb8c22e62cce7c1793b9c542047659a47fe54804",
+      "bytes": 3604
+    },
+    {
+      "path": "docs/checkpoints/2026-08-01_V16_10_8_NETWORK_NX0_OBSERVABILITY_BASELINE_RU.md",
+      "status": "MODIFIED",
+      "sha256": "d55709cee82e85fa9d2caab908491fa6c28fe3b2a6ffd9e81dece277107d7ce5",
+      "bytes": 4006
+    },
+    {
+      "path": "docs/checkpoints/2026-08-01_V16_11_0_NETWORK_NX1_DETERMINISTIC_CONDITION_SIMULATOR_RU.md",
+      "status": "NEW",
+      "sha256": "fb10d2e48fe58934b623d1f9b589c5eaadb239eb2cd5075af3ef2526ea3b1b4d",
+      "bytes": 3291
+    },
+    {
+      "path": "docs/network/NX0_OBSERVABILITY_BASELINE_RU.md",
+      "status": "MODIFIED",
+      "sha256": "f7af8fae831788baf65bebe76a5933a648cbbc13ed0e6577213f8c3c55beba23",
+      "bytes": 6693
+    },
+    {
+      "path": "docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md",
+      "status": "NEW",
+      "sha256": "27f7a53ba7eb10e485b3d2c3f2d3b1af5eaa65720a69c29f8e27d7032708e492",
+      "bytes": 11440
+    },
+    {
+      "path": "scripts/app/simulator_app.gd",
+      "status": "MODIFIED",
+      "sha256": "001c17e65529fcfff89078ced1c244760921287809b2cca2f1e27b2c837a5f32",
+      "bytes": 82148
+    },
+    {
+      "path": "scripts/network/conditions/deterministic_network_rng.gd",
+      "status": "NEW",
+      "sha256": "bcbd67201237223bd1df728a435c9e54ea92cc7091d94dfac323f5923c1ba388",
+      "bytes": 1347
+    },
+    {
+      "path": "scripts/network/conditions/deterministic_network_rng.gd.uid",
+      "status": "NEW",
+      "sha256": "a54eafdf0811ba45df4ed31229d8034c8189ae46abb8aca24d8efc1b4bcec0a4",
+      "bytes": 20
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_profile.gd",
+      "status": "MODIFIED",
+      "sha256": "2fb8a0015b625d1ba27d537369d76428bf04098895d1b1351780795ae86426e6",
+      "bytes": 7141
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_profile_store.gd",
+      "status": "NEW",
+      "sha256": "b554ddf218405b5ceddb7b5a2f7161f7581eb367ec704edfa802b714c467c4cd",
+      "bytes": 2958
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_profile_store.gd.uid",
+      "status": "NEW",
+      "sha256": "722966c3ebccd0b0e76258459486cd2dae4257ddb66fc0a5f13df49f1ddb09d5",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_simulator_port.gd",
+      "status": "NEW",
+      "sha256": "a4ddfe80ca53f166053ae197e68f56441bb88d9a18ee194f2a551c71d5c32cff",
+      "bytes": 28914
+    },
+    {
+      "path": "scripts/network/conditions/network_condition_simulator_port.gd.uid",
+      "status": "NEW",
+      "sha256": "a9c24114e4fc4f28e484d2d25d7bd746fd530e4da937e652d0ec4ffd76a5bae3",
+      "bytes": 21
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "status": "MODIFIED",
+      "sha256": "8fd0c74a87d1d8fb7b3a01e4638eb126f67e476d2b58431331a35b91eb3173a3",
+      "bytes": 6345
+    },
+    {
+      "path": "scripts/network/observability/network_runtime_identity.gd",
+      "status": "MODIFIED",
+      "sha256": "59e60cacd1987775136e0ece1a8a9f136c87f0e4054d48f09636c662a4716cbd",
+      "bytes": 1900
+    },
+    {
+      "path": "scripts/network/transports/v2/network_peer_session.gd",
+      "status": "MODIFIED",
+      "sha256": "264a0d756fe3208a4966434597b2a692cead9386261031ac7a45ff8d7a53a7fa",
+      "bytes": 6076
+    },
+    {
+      "path": "scripts/network/transports/v2/network_transport_boundary_v2.gd",
+      "status": "MODIFIED",
+      "sha256": "0a18ee9c97a7de72fd4bda0032c6a9cf6d83059a1ffe2bbd008ab1f267617719",
+      "bytes": 24142
+    },
+    {
+      "path": "scripts/runtime/launch_options.gd",
+      "status": "MODIFIED",
+      "sha256": "d866ffed105c6cdd700de2573a51760576f06cbc576b418eb24234223e4b997b",
+      "bytes": 10781
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "96803e4338e6d1f967abd39fea021aaaebfe71a0453e8c73999225cc54e9b50d",
+      "bytes": 46457
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "status": "MODIFIED",
+      "sha256": "558d6dd3f7bb57f6603008efa6fe1621119aa62c8614ca14c7472bc05b7a03bd",
+      "bytes": 35058
+    },
+    {
+      "path": "scripts/runtime/runtime_descriptor.gd",
+      "status": "MODIFIED",
+      "sha256": "52ab6ea8d1bbdf6b826bdca8ef70bd479c7e6bacf207196a59faa7d786ecec06",
+      "bytes": 6378
+    },
+    {
+      "path": "tests/network/test_nx0_network_experience_preparation.gd",
+      "status": "MODIFIED",
+      "sha256": "10aeeef2100001f253f1f17efd2d8b6a50279a4c7cea08a89aa40113aa8eea05",
+      "bytes": 18056
+    },
+    {
+      "path": "tests/network/test_nx0_observability_baseline.gd",
+      "status": "MODIFIED",
+      "sha256": "9fddd50feb7845afbc5bef53fc152a910a846243f246f3ebed15c3e35d249f7a",
+      "bytes": 25305
+    },
+    {
+      "path": "tests/network/test_nx0_observability_handshake_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "2727a9824c4df304684dfb567bd3ad240f15cabd165b17c042ec978f272826ef",
+      "bytes": 10138
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "status": "NEW",
+      "sha256": "bd8393c282ebb80e77698a07cf2ceab941a4c85b9d1578c3e22d0608c35fc7de",
+      "bytes": 27956
+    },
+    {
+      "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd.uid",
+      "status": "NEW",
+      "sha256": "c478368f5d362f41d25be4e4d66ff0be87319b09b6abdc6faf67eecb0333fb4f",
+      "bytes": 21
+    },
+    {
+      "path": "tests/network/test_nx1_network_condition_processes.gd",
+      "status": "NEW",
+      "sha256": "a7dda71833b78ebd2ecf0224028ff7964988b6377152598afbdbc0900ec0d74b",
+      "bytes": 9060
+    },
+    {
+      "path": "tests/network/test_nx1_network_condition_processes.gd.uid",
+      "status": "NEW",
+      "sha256": "5df8cbe7aa4eee628f1e97e67301acaf3697e8fb39e29ab512469660f4fc60ea",
+      "bytes": 21
+    },
+    {
+      "path": "tests/runtime/test_launch_options.gd",
+      "status": "MODIFIED",
+      "sha256": "e1aac699d3b3018b3e2019b61392703b0301a844b53ee49007b883a6ab6ba938",
+      "bytes": 11225
+    },
+    {
+      "path": "tests/runtime/test_m7_playable_networked_processes.gd",
+      "status": "MODIFIED",
+      "sha256": "ec615abcb57ded7b092389f207869f451773dbc24b9ead022978169eab07a768",
+      "bytes": 10466
+    },
+    {
+      "path": "tools/network/nx0_handshake_probe.gd",
+      "status": "MODIFIED",
+      "sha256": "e7e9c056bde5973150508cad38f08695d4c0df8a2de4d89bb2b5b0f3b0670d1f",
+      "bytes": 9162
+    },
+    {
+      "path": "validation/v16.10.8-network-nx0-observability-baseline-validation.json",
+      "status": "MODIFIED",
+      "sha256": "3060fbba4faed3bdd7631e63c7583c5afc1233db1aafae68b515a7caeca421af",
+      "bytes": 5969
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-files.txt",
+      "status": "NEW",
+      "sha256": "35c9bfcd73ad15e1521c3dcff54c20c52ad905828a3376ac1799af7e5b7c28d6",
+      "bytes": 2539
+    },
+    {
+      "path": "validation/v16.11.0-network-nx1-deterministic-condition-simulator-validation.json",
+      "status": "NEW",
+      "sha256": "03c18ae745ad8a87f0c00f944e00ebe4838e3e5cab7332e48288fff4c87a8efb",
+      "bytes": 3469
+    }
+  ]
+}

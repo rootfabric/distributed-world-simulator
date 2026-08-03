@@ -4,12 +4,17 @@ param(
     [string]$SessionId = "manual",
     [string]$ServerAddress = "127.0.0.1",
     [ValidateRange(1, 65535)][int]$Port = 24580,
+    [ValidateSet("LOCAL","GOOD_BROADBAND","AVERAGE_BROADBAND","MOBILE","BAD_MOBILE","EXTREME","LAG_SPIKE","ASYMMETRIC")][string]$NetworkProfile = "LOCAL",
+    [string]$NetworkPresetsFile = "res://config/network/network-condition-presets.v1.json",
     [ValidateRange(1, 120)][int]$ServerReadyTimeoutSeconds = 40
 )
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Godot = (Resolve-Path $GodotPath).Path
+$NetworkSessionId = ($SessionId.ToLowerInvariant() -replace '[^a-z0-9._-]', '-').Trim('-')
+if ([string]::IsNullOrWhiteSpace($NetworkSessionId)) { $NetworkSessionId = 'manual' }
+$NetworkSessionToken = "session-id/m7-debug-$NetworkSessionId"
 $RunRoot = Join-Path $ProjectRoot "artifacts/runtime/m7-network-debug/$SessionId"
 $ServerStatePath = Join-Path $RunRoot "server/server-state.json"
 $ServerProcessPath = Join-Path $RunRoot "server/process.json"
@@ -91,8 +96,10 @@ function Start-IsolatedProcess {
 $Arguments = @(
     "--path",$ProjectRoot,"--rendering-method","gl_compatibility","--log-file",$LogPath,"--",
     "--role=game-client","--network-playground","--network-debug","--network-debug-stay-open","--world=playground",
+    "--network-session-token=$NetworkSessionToken",
     "--node-id=m7-debug-client-$PlayerId","--instance-id=m7-debug-$SessionId-$PlayerId",
     "--player-identity=$PlayerId","--server-address=$ServerAddress","--server-port=$Port",
+    "--network-profile=$NetworkProfile","--network-presets-file=$NetworkPresetsFile",
     "--print-runtime-descriptor"
 )
 
@@ -100,18 +107,22 @@ Write-Host "M7 graphical client $PlayerId" -ForegroundColor Cyan
 Write-Host "Session:  $SessionId"
 Write-Host "Server:   $ServerAddress`:$Port"
 Write-Host "Log:      $LogPath"
+Write-Host "Net profile: $NetworkProfile (client endpoint only)"
 Write-Host "The window remains open after network failure; the error is printed here and in the log." -ForegroundColor Yellow
 
 $Process = Start-IsolatedProcess -Executable $Godot -Arguments $Arguments -Profile $ProfileRoot
 $Descriptor = [ordered]@{
     schema = "planet_simulator.m7_network_debug_process.v1"
     session_id = $SessionId
+    network_session_token = $NetworkSessionToken
     role = $RoleName
     player_id = $PlayerId
     pid = $Process.Id
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     log_path = $LogPath
     endpoint = "$ServerAddress`:$Port"
+    network_profile = $NetworkProfile
+    network_presets_file = $NetworkPresetsFile
     godot_path = $Godot
     server_pid = $ServerPid
 }

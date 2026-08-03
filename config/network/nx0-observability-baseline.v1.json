@@ -1,0 +1,134 @@
+{
+  "schema": "planet_simulator.nx0_observability_baseline.v1",
+  "document_revision": 1,
+  "checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "build_id": "nx0-observability-baseline",
+  "base_commit": "69bd7fc",
+  "base_checkpoint": "v16.10.7-network-nx0-observability-preparation",
+  "branch": "feature/nx0-observability-baseline",
+  "status": "accepted",
+  "runtime_behavior_changed": true,
+  "gameplay_semantics_changed": false,
+  "purpose": "Attach mandatory build/protocol/world/session compatibility verification and bounded transport/runtime telemetry to the production M3/M7 ENet path before any NX2 traffic changes.",
+  "compatibility_gate": {
+    "position": "after ENet transport connection and before JOIN",
+    "client_message": "COMPATIBILITY_HELLO",
+    "server_accept": "COMPATIBILITY_ACK",
+    "server_reject": "COMPATIBILITY_REJECTED",
+    "required_matches": [
+      "build_id",
+      "git_commit",
+      "protocol_hash",
+      "world_id",
+      "session_token"
+    ],
+    "deterministic_errors": [
+      "BUILD_ID_MISMATCH",
+      "GIT_COMMIT_MISMATCH",
+      "PROTOCOL_HASH_MISMATCH",
+      "WORLD_ID_MISMATCH",
+      "SESSION_TOKEN_MISMATCH",
+      "FINGERPRINT_REQUIRED"
+    ],
+    "replay_policy": "Matching HELLO replay is idempotently ACKed and counted without a second gameplay join."
+  },
+  "session_token_policy": {
+    "allowed_public_id_format": "session-id/<public-id>",
+    "allowed_digest_format": "sha256/<64-lowercase-hex>",
+    "raw_credentials_forbidden": true
+  },
+  "telemetry": {
+    "transport": [
+      "packets_and_bytes_per_frame_channel",
+      "outbound_pending_messages",
+      "outbound_pending_bytes",
+      "reliable_queue_depth_messages",
+      "reliable_queue_depth_bytes",
+      "transport_poll_duration_ms",
+      "rtt_ms",
+      "jitter_ms",
+      "packet_loss_percent"
+    ],
+    "server": [
+      "server_process_iterations",
+      "server_process_duration_ms",
+      "server_tick_duration_ms",
+      "server_message_processing_ms",
+      "input_age_ms",
+      "connected_gameplay_peers",
+      "compatible_transport_peers",
+      "handshake_attempts",
+      "handshake_accepts",
+      "handshake_rejections",
+      "handshake_replays",
+      "checkpoint_generation",
+      "persistence_duration_ms"
+    ],
+    "client": [
+      "client_process_iterations",
+      "client_process_duration_ms",
+      "client_tick_duration_ms",
+      "server_message_age_ms",
+      "snapshot_age_ms",
+      "delta_age_ms",
+      "item_snapshot_age_ms",
+      "command_latency_ms",
+      "item_command_latency_ms",
+      "movement_command_latency_ms",
+      "presentation_command_latency_ms",
+      "join_latency_ms",
+      "leave_latency_ms",
+      "pending_operation_timers",
+      "handshake_rtt_ms"
+    ],
+    "bounded_distribution_window": 512,
+    "json_safe": true,
+    "authoritative_state_mutation": false
+  },
+  "unavailable_until_later_phases": {
+    "NX3": [
+      "fixed_server_tick",
+      "fixed_client_input_tick"
+    ],
+    "NX4": [
+      "prediction_error_m",
+      "correction_count",
+      "correction_magnitude_m",
+      "prediction_buffer_size"
+    ],
+    "NX5": [
+      "interpolation_buffer_fill",
+      "remote_snapshot_render_age_ms"
+    ],
+    "NX6": [
+      "predicted_item_operation_state"
+    ]
+  },
+  "preserved_m7_baseline": [
+    "PLAYER_INPUT still derives delta_seconds from packet arrival timing",
+    "successful PLAYER_INPUT still emits COMMAND_RESULT",
+    "successful PLAYER_INPUT still broadcasts delta and full snapshot",
+    "movement persistence interval remains 1500 ms",
+    "ENet channel count remains three"
+  ],
+  "acceptance": [
+    "focused runner passes editor import, preparation contracts, NX0 contracts and real ENet compatibility processes",
+    "mismatched client is rejected before JOIN and server joins remains zero",
+    "matching fingerprint is ACKed and handshake alone creates no gameplay player",
+    "runtime descriptor contains validated fingerprint and protocol manifest",
+    "transport telemetry records actual packet bytes and bounded queue depth",
+    "existing network and M7 regressions remain green"
+  ],
+  "out_of_scope": [
+    "network condition injection",
+    "movement result suppression",
+    "snapshot batching",
+    "fixed-tick movement",
+    "client prediction",
+    "remote interpolation",
+    "optimistic Item Graph",
+    "persistence decoupling"
+  ],
+  "decision": "ACCEPTED",
+  "accepted_base_commit": "f1abeca"
+}

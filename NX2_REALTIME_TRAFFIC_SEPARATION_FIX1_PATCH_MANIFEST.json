@@ -1,0 +1,73 @@
+{
+  "schema": "planet_simulator.nx2_fix1_patch_manifest.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "delivery": "fix1",
+  "files": [
+    {
+      "path": "RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1",
+      "size": 3838,
+      "sha256": "F4F13571D3E36FB4837C9C6B21801A9E8BE4BE2C5D42858A4120FB8F3A44F3EB"
+    },
+    {
+      "path": "RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.sh",
+      "size": 2267,
+      "sha256": "E32BE27BB2CD3CF3F9B7A2038D7818D16EB0EE6D4D3C8E25AA7A56E628EDD5F0"
+    },
+    {
+      "path": "tests/network/test_nx2_physical_channel_processes.gd",
+      "size": 3456,
+      "sha256": "23C9CD1879B24353CA6B19CA72E9B51B4FD9663D5E1ED43B67DDD144EE24C478"
+    },
+    {
+      "path": "tests/network/test_nx2_physical_channel_processes.gd.uid",
+      "size": 21,
+      "sha256": "720708E2D23A5F21ECC1D7F61EE929B5FB1697EA1C7A25FEA35CFF0E240EE5C6"
+    },
+    {
+      "path": "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "size": 24805,
+      "sha256": "2F3E22F076FD6F7B46E4CE09F5A40ADFCE5354A01FCDC8B497639B5D6325A954"
+    },
+    {
+      "path": "docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md",
+      "size": 15975,
+      "sha256": "C575DDFF7462F64310493EFADBD24829060DD5ADE671F6B67FD325D344F9FD77"
+    },
+    {
+      "path": "docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md",
+      "size": 11535,
+      "sha256": "42B0164465CE011C38A1EE4480906062B72F1140B1790204DD7681E1EBA1EBDA"
+    },
+    {
+      "path": "docs/checkpoints/2026-08-02_V16_12_0_NETWORK_NX2_FIX1_RU.md",
+      "size": 864,
+      "sha256": "CD83F0B0563E671561D1BE1B2920694FC9FD48C22FDB30427C6A403506A0F875"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+      "size": 59308,
+      "sha256": "E4AD539BC9BC83F8C59852A9FCFABC8FCB34E6ED9658DB4582A6FF09E0DCDAE9"
+    },
+    {
+      "path": "scripts/network/observability/network_protocol_manifest.gd",
+      "size": 7685,
+      "sha256": "7385289B077F81921079BF03565FCE0338EDAE1A512615BD17271A016A24323C"
+    },
+    {
+      "path": "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+      "size": 14577,
+      "sha256": "06E6CBF40C1AF74DC0EC3433F03C1130AA38B9CD3ED1E168B4F55D0B27BF1D77"
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-fix1-validation.json",
+      "size": 925,
+      "sha256": "26BE56EA002A5EAC781B13586FDB6AD92BC5F3441198083330C31830ABBF065B"
+    },
+    {
+      "path": "validation/v16.12.0-network-nx2-realtime-traffic-separation-fix1-files.txt",
+      "size": 825,
+      "sha256": "739C21A42F4EBF871B1A5319D9AE4A3238C058B164D64330795673934F358A99"
+    }
+  ],
+  "self_hash_excluded": "NX2_REALTIME_TRAFFIC_SEPARATION_FIX1_PATCH_MANIFEST.json"
+}

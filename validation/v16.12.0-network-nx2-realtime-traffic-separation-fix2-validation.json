@@ -1,0 +1,63 @@
+{
+  "schema": "planet_simulator.nx2_realtime_traffic_separation_fix2_validation.v1",
+  "checkpoint": "v16.12.0-network-nx2-realtime-traffic-separation",
+  "delivery": "fix2",
+  "branch": "feature/nx2-realtime-traffic-separation",
+  "apply_over": "v16.12.0 NX2 candidate + fix1",
+  "decision": "CANDIDATE_FIX2",
+  "issues": {
+    "peer_local_physical_mismatch_quarantine": "FIXED",
+    "healthy_peer_continuity_after_violation": "FIXED",
+    "powershell_physical_regression_step": "FIXED"
+  },
+  "protocol": {
+    "physical_frame_binding_policy": "STRICT_CHANNEL_AND_TRANSFER_MODE_V1",
+    "physical_mismatch_handling_policy": "PEER_LOCAL_QUARANTINE_V1",
+    "global_listener_failure_on_peer_violation": false,
+    "offending_session_state": "FAILED",
+    "healthy_peers_preserved": true
+  },
+  "runtime_auxiliary": {
+    "execution_note": "Controlled direct Godot runs are auxiliary because godot_run_managed is unavailable in this environment. Independent managed-MCP acceptance remains required.",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "nx0_preparation_assertions": 115,
+    "nx0_baseline_assertions": 150,
+    "nx1_contract_assertions": 282,
+    "nx2_contract_assertions": 129,
+    "compatibility_handshake_assertions": 31,
+    "conditioned_enet_assertions": 27,
+    "physical_enet_two_client_assertions": 66,
+    "m7_playable_assertions_linux": 43,
+    "m7_recovery_assertions": 36,
+    "m3_graphical_assertions_linux": 57,
+    "failures": 0,
+    "focused_runner": "9/9 PASS"
+  },
+  "regression": {
+    "network_non_process": "50/50 PASS",
+    "enet_process_regression": "4/4 PASS",
+    "t1_multi_peer_assertions": 20,
+    "n1_snapshots_assertions": 28,
+    "n1_remote_item_graph_assertions": 51,
+    "n1_reconnect_replay_assertions": 67
+  },
+  "static": {
+    "git_diff_check": "PASS",
+    "trailing_whitespace_added_by_diff": 0,
+    "shell_syntax": "PASS",
+    "powershell_runner_source_has_physical_step": true,
+    "powershell_runtime_parse": "NOT_RUN_NO_PWSH",
+    "gdscript_uid": "PASS",
+    "json": "PASS",
+    "conflict_markers": 0,
+    "nul_bytes": 0
+  },
+  "archive": {
+    "incremental_files": 16,
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "byte_exact_replay": "16/16 PASS",
+    "archive_focused_replay": "9/9 PASS"
+  }
+}

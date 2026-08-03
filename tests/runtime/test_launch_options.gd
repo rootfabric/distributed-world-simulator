@@ -22,6 +22,8 @@ func _init() -> void:
 		"--shutdown-after-ms=1500",
 		"--shutdown-timeout-ms=45000",
 		"--user-data-dir=/tmp/planet-sim-test",
+		"--network-profile=mobile",
+		"--network-presets-file=res://config/network/network-condition-presets.v1.json",
 		"--print-runtime-descriptor",
 	]))
 	_assert(bool(parsed.get("success", false)), "Valid launch options were rejected")
@@ -32,6 +34,8 @@ func _init() -> void:
 	_assert(String(options.get("instance_id", "")) == "network-test-001", "Instance id was not parsed")
 	_assert(String(options.get("space_id", "")) == "moon", "Space id was not parsed")
 	_assert(bool(options.get("print_runtime_descriptor", false)), "Descriptor flag was not parsed")
+	_assert(String(options.get("network_condition_profile", "")) == "MOBILE", "Network profile was not normalized")
+	_assert(String(options.get("network_condition_presets_file", "")) == "res://config/network/network-condition-presets.v1.json", "Network preset path was not parsed")
 	_assert(int(options.get("shutdown_after_ms", -1)) == 1500, "Shutdown delay was not parsed")
 	_assert(int(options.get("shutdown_timeout_ms", -1)) == 45000, "Shutdown timeout was not parsed")
 	_assert(not RuntimeRoleScript.presentation_enabled(String(options.get("role", ""))), "Simulation server unexpectedly enables presentation")
@@ -48,6 +52,11 @@ func _init() -> void:
 	_assert(int(descriptor.get("process_id", 0)) > 0, "Runtime descriptor has no process id")
 	_assert(String(descriptor.get("requested_user_data_dir", "")) == "/tmp/planet-sim-test", "Requested user data dir was lost")
 	_assert(not String(descriptor.get("resolved_user_data_dir", "")).is_empty(), "Resolved user data dir is missing")
+	_assert(String(descriptor.get("network_condition_profile", "")) == "MOBILE", "Runtime descriptor lost network profile")
+	_assert(String(descriptor.get("network_condition_presets_file", "")) == "res://config/network/network-condition-presets.v1.json", "Runtime descriptor lost preset path")
+	var invalid_profile_descriptor: Dictionary = descriptor.duplicate(true)
+	invalid_profile_descriptor["network_condition_profile"] = "BAD PROFILE"
+	_assert(String(RuntimeDescriptorScript.validate(invalid_profile_descriptor).get("error_code", "")) == "INVALID_NETWORK_CONDITION_PROFILE", "Runtime descriptor accepted malformed network profile")
 
 	var default_parse: Dictionary = LaunchOptionsScript.parse(PackedStringArray())
 	_assert(bool(default_parse.get("success", false)), "Default launch options are invalid")
@@ -84,6 +93,10 @@ func _init() -> void:
 	_assert(not bool(negative_delay.get("success", true)), "Negative shutdown delay was accepted")
 	var zero_timeout: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--shutdown-timeout-ms=0"]))
 	_assert(not bool(zero_timeout.get("success", true)), "Zero shutdown timeout was accepted")
+	var invalid_network_profile: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--network-profile=bad profile"]))
+	_assert(not bool(invalid_network_profile.get("success", true)), "Malformed network condition profile was accepted")
+	var empty_presets_path: Dictionary = LaunchOptionsScript.parse(PackedStringArray(["--network-presets-file="]))
+	_assert(not bool(empty_presets_path.get("success", true)), "Empty network presets path was accepted")
 
 	var m6_dedicated: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=dedicated-server",

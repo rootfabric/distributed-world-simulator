@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.int0_nx6_staging_validation.v1",
+  "recorded_at": "2026-08-03T20:10:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stage": "INT0_NX6_STAGING",
+  "status": "MERGED_TO_STAGING_AWAITING_INTEGRATION_GATE",
+  "base": {
+    "integration_branch": "integration/c24-nx6-mw10-rl3",
+    "integration_head_at_staging_creation": "488aa64187c538227bbdaa546fe5f56a81ba9f05"
+  },
+  "source": {
+    "branch": "feature/nx6-predicted-item-interactions",
+    "frozen_head_sha": "144adf35cd2151ce5f8572dbbb8ed1b58ccd9778",
+    "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+    "delivery": "fix3",
+    "decision": "ACCEPTED"
+  },
+  "staging": {
+    "branch": "merge/int0-nx6",
+    "source_pull_request": 4,
+    "merge_commit_sha": "ba485ffafda35579f43ed1bd3e980d7765a784d9",
+    "merge_method": "merge",
+    "history_preserved": true,
+    "github_mergeable": true,
+    "merge_conflicts": 0
+  },
+  "evidence": {
+    "inherited_independent_acceptance": {
+      "nx6_contracts_assertions": 940,
+      "nx6_integration_fix3_assertions": 66,
+      "m7_playable_contracts_assertions": 63,
+      "m7_graphical_multiprocess_assertions": 51,
+      "m7_recovery_assertions": 36,
+      "nx5_contracts_assertions": 6104,
+      "nx5_integration_assertions": 49,
+      "m3_contracts_assertions": 77,
+      "m4_playground_assertions": 23,
+      "conditioned_enet_assertions": 27,
+      "nx2_physical_enet_assertions": 66,
+      "editor_import": "PASS",
+      "git_diff_check": "PASS",
+      "conflict_markers": 0,
+      "remaining_godot_xvfb": 0
+    },
+    "executed_during_staging_merge": {
+      "frozen_head_verified": true,
+      "github_three_way_merge": "PASS",
+      "github_merge_conflicts": 0,
+      "github_actions_runs": 0,
+      "godot_runtime_rerun": false,
+      "world_regression_rerun": false,
+      "main_scene_rerun": false
+    }
+  },
+  "integration_pull_request": 5,
+  "integration_gate": {
+    "required_before_merge": [
+      "review staged diff",
+      "editor import on staged tree",
+      "NX0-NX6 regression",
+      "M7 playable contracts",
+      "M7 graphical multiprocess",
+      "M7 recovery",
+      "World regression",
+      "main-scene CLI",
+      "git diff --check",
+      "conflict-marker scan",
+      "remaining Godot/Xvfb = 0"
+    ],
+    "decision": "PENDING"
+  },
+  "main_changed": false
+}

@@ -11,6 +11,7 @@ const SimulationClockScript = preload(
 const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
 const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
+const NetworkRuntimeIdentityScript = preload("res://scripts/network/observability/network_runtime_identity.gd")
 const LifecycleCoordinatorScript = preload("res://scripts/runtime/lifecycle_coordinator.gd")
 const SimulationKernelScript = preload("res://scripts/runtime/simulation_kernel.gd")
 const PresentationHostScript = preload("res://scripts/runtime/presentation_host.gd")
@@ -141,6 +142,10 @@ func _ready() -> void:
 	if not catalog_loaded:
 		for error_message in world_catalog.get_validation_errors():
 			push_error(String(error_message))
+	var requested_world: String = String(launch_options.get("world", ""))
+	if requested_world.is_empty():
+		requested_world = world_catalog.get_default_world_id()
+	launch_options["world"] = requested_world
 
 	simulation_kernel = SimulationKernelScript.new()
 	var kernel_result: Dictionary = simulation_kernel.setup({
@@ -206,6 +211,13 @@ func _ready() -> void:
 			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
 			"playable_sandbox": _m7_mode,
 			"debug_logging": bool(launch_options.get("network_debug", false)),
+			"world_id": requested_world,
+			"network_session_token": String(launch_options.get("network_session_token", "")),
+			"network_build_id": String(launch_options.get("network_build_id", "")),
+			"network_git_commit": String(launch_options.get("network_git_commit", "")),
+			"network_protocol_hash": String(launch_options.get("network_protocol_hash", "")),
+			"network_condition_profile": String(launch_options.get("network_condition_profile", "LOCAL")),
+			"network_condition_presets_file": String(launch_options.get("network_condition_presets_file", "res://config/network/network-condition-presets.v1.json")),
 		}
 		dedicated_gameplay_server_setup = dedicated_gameplay_server_runtime.setup(dedicated_config)
 		if not bool(dedicated_gameplay_server_setup.get("success", false)):
@@ -232,6 +244,13 @@ func _ready() -> void:
 			"command_timeout_ms": int(launch_options.get("command_timeout_ms", 5000)),
 			"playable_sandbox": _m7_mode,
 			"debug_logging": bool(launch_options.get("network_debug", false)),
+			"world_id": requested_world,
+			"network_session_token": String(launch_options.get("network_session_token", "")),
+			"network_build_id": String(launch_options.get("network_build_id", "")),
+			"network_git_commit": String(launch_options.get("network_git_commit", "")),
+			"network_protocol_hash": String(launch_options.get("network_protocol_hash", "")),
+			"network_condition_profile": String(launch_options.get("network_condition_profile", "LOCAL")),
+			"network_condition_presets_file": String(launch_options.get("network_condition_presets_file", "res://config/network/network-condition-presets.v1.json")),
 			"automated_acceptance": (
 				(_m7_mode and int(launch_options.get("m7_phase", 0)) > 0)
 				or (_m5_mode and int(launch_options.get("m5_phase", 0)) > 0)
@@ -269,13 +288,9 @@ func _ready() -> void:
 		system_menu.menu_visibility_changed.connect(_on_system_menu_visibility_changed)
 
 	_cli_test_scope = String(launch_options.get("run_tests", ""))
-	var requested_world: String = String(launch_options.get("world", ""))
-	if requested_world.is_empty():
-		requested_world = world_catalog.get_default_world_id()
-	launch_options["world"] = requested_world
 	runtime_descriptor = RuntimeDescriptorScript.create(launch_options, {
-		"checkpoint": M7_CHECKPOINT if _m7_mode else FOUNDATION_CHECKPOINT,
-		"build_id": M7_BUILD_ID if _m7_mode else FOUNDATION_BUILD_ID,
+		"checkpoint": NetworkRuntimeIdentityScript.CHECKPOINT if _m3_mode else FOUNDATION_CHECKPOINT,
+		"build_id": NetworkRuntimeIdentityScript.BUILD_ID if _m3_mode else FOUNDATION_BUILD_ID,
 	})
 	var load_result: Dictionary = load_world(requested_world, false)
 	if not bool(load_result.get("success", false)):

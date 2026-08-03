@@ -1,0 +1,78 @@
+{
+  "schema": "planet_simulator.nx5_remote_snapshot_interpolation_fix1_manifest.v1",
+  "checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation",
+  "delivery": "fix1",
+  "build_id": "nx5-remote-snapshot-interpolation-fix1",
+  "branch": "feature/nx5-remote-snapshot-interpolation",
+  "candidate_parent_commit": "4efb873d1d0fc20e99f684fd3d4d0ba423423d7f",
+  "inherited_protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
+  "changed_files_relative_to_candidate": 14,
+  "files": [
+    {
+      "path": "RUN_NX5_REMOTE_SNAPSHOT_INTERPOLATION_TESTS.ps1",
+      "size": 4818,
+      "sha256": "E9AE75FFD5C671A2EB6196D2725DCB7B78BF98E51C3ACC90D7E3A703F60BD0BC"
+    },
+    {
+      "path": "RUN_NX5_REMOTE_SNAPSHOT_INTERPOLATION_TESTS.sh",
+      "size": 3199,
+      "sha256": "91D12F89A765083FA34A2CC1AB6B8DA3A44F0034150EBD16016EB94513AC729B"
+    },
+    {
+      "path": "config/network/nx5-remote-snapshot-interpolation.v1.json",
+      "size": 3366,
+      "sha256": "F2BB89191647CF3815A4C0217F1E6DEB4A2DC9B8F91937EFFF8AD279D14DF2B2"
+    },
+    {
+      "path": "docs/checkpoints/2026-08-03_V16_15_0_NETWORK_NX5_REMOTE_SNAPSHOT_INTERPOLATION_RU.md",
+      "size": 2494,
+      "sha256": "D1F098BC3161F383F4A256CA05C8468D4E4A50CB49B726CD72A87FCEDDBFE136"
+    },
+    {
+      "path": "docs/network/NX5_REMOTE_SNAPSHOT_INTERPOLATION_RU.md",
+      "size": 4838,
+      "sha256": "FED7CC27E28D2CADC38AC0B94DA96A5AA56446D31CED90F8C647510F504F18DC"
+    },
+    {
+      "path": "scripts/network/interpolation/remote_snapshot_interpolator.gd",
+      "size": 19296,
+      "sha256": "04B2591425C2F426992C04C6144D3263199C94AB92E2DAEA986777258A54B71E"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd",
+      "size": 9156,
+      "sha256": "A688C4150CF03392B80E5535E1616A3819200DD834CC945E028D23C80B411570"
+    },
+    {
+      "path": "tests/network/test_nx5_remote_snapshot_interpolation.gd",
+      "size": 21658,
+      "sha256": "9868785970EEF926ED0160BD83A53F078393B43D1704C5E688ED4B9D1152D72B"
+    },
+    {
+      "path": "tests/network/test_nx5_remote_snapshot_interpolation_integration.gd",
+      "size": 11052,
+      "sha256": "679765605EBDDAA6575D280E9F387096776A12E340EC4458D7736490BDED61D8"
+    },
+    {
+      "path": "tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
+      "size": 16019,
+      "sha256": "132F6F27AF65FE15D61C09B146B602DFF7A501862E2E03FEB0C5C952D18F63CA"
+    },
+    {
+      "path": "tests/runtime/test_m4_networked_playground_extension.gd",
+      "size": 9791,
+      "sha256": "839BB26FFB81453A9C64585148B2FDD76CD7F17592FE378B0144B8C66FDA027B"
+    },
+    {
+      "path": "validation/v16.15.0-network-nx5-remote-snapshot-interpolation-files.txt",
+      "size": 858,
+      "sha256": "6CB70EEC6CA82790C0119E72516806C3B717CF6A8D9C17F9BE646F2352DBB9F0"
+    },
+    {
+      "path": "validation/v16.15.0-network-nx5-remote-snapshot-interpolation-validation.json",
+      "size": 6480,
+      "sha256": "C0A1DCB21610571AB00D6B2DF6D0024B1C8AAE3E245EFFC0F3F67B084FB83AD8"
+    }
+  ],
+  "self_hash_excluded": "NX5_REMOTE_SNAPSHOT_INTERPOLATION_PATCH_MANIFEST.json"
+}

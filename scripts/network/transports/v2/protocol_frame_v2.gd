@@ -2,6 +2,7 @@ extends RefCounted
 
 const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const TransportUtilsScript = preload("res://scripts/network/transports/v2/transport_contract_utils.gd")
+const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const SCHEMA: String = "planet_simulator.protocol_frame.v2"
 const PROTOCOL_VERSION: int = 2
@@ -9,7 +10,7 @@ const FIELDS: Array[String] = [
 	"schema", "protocol_version", "frame_id", "session_id", "sequence", "channel",
 	"delivery_mode", "payload_schema", "payload", "payload_checksum",
 ]
-const CHANNELS: Array[String] = ["CONTROL", "COMMAND", "STATE", "EVENT", "JOB", "BULK"]
+const CHANNELS: Array[String] = ChannelPolicyScript.ALL_CHANNELS
 const DELIVERY_MODES: Array[String] = ["RELIABLE_ORDERED", "RELIABLE_UNORDERED", "UNRELIABLE_SEQUENCED"]
 
 
@@ -62,6 +63,14 @@ static func validate(value: Dictionary) -> Dictionary:
 		return UtilsScript.validation_failure("INVALID_CHANNEL", "Unsupported protocol channel")
 	if not DELIVERY_MODES.has(String(value["delivery_mode"])):
 		return UtilsScript.validation_failure("INVALID_DELIVERY_MODE", "Unsupported delivery mode")
+	var delivery_check: Dictionary = ChannelPolicyScript.validate_delivery(
+		String(value["channel"]), String(value["delivery_mode"])
+	)
+	if not bool(delivery_check.get("success", false)):
+		return UtilsScript.validation_failure(
+			String(delivery_check.get("error_code", "CHANNEL_DELIVERY_MISMATCH")),
+			"Channel delivery policy mismatch"
+		)
 	if not String(value["payload_schema"]).begins_with("planet_simulator."):
 		return UtilsScript.validation_failure("INVALID_PAYLOAD_SCHEMA", "Payload schema must be namespaced")
 	check = UtilsScript.require_dictionary(value, "payload")
