@@ -12,6 +12,15 @@ var _delta_base_mismatches := 0
 var _snapshot_resyncs := 0
 
 
+func _process(delta: float) -> void:
+	# M5 keeps this transport-session binding visible at the production source
+	# boundary. The inherited NX6 process sends JOIN with the same value; this
+	# assignment makes the composed adapter explicitly preserve that contract.
+	if _handshake_verified and not _join_sent and not _transport_session_id.is_empty():
+		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
+	super._process(delta)
+
+
 func _handle_join_ack(payload: Dictionary) -> void:
 	super._handle_join_ack(payload)
 	if _joined:
