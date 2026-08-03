@@ -36,6 +36,11 @@ $Suites = @(
         Marker = "MW9 durable handoff recovery: PASS (203 assertions)"
     },
     [pscustomobject]@{
+        Name = "lock-release-retry"
+        Script = "res://tests/matter/handoff/test_mw9_lock_release_retry.gd"
+        Marker = "MW9 lock release retry: PASS (12 assertions)"
+    },
+    [pscustomobject]@{
         Name = "multi-process"
         Script = "res://tests/matter/handoff/test_mw9_durable_handoff_processes.gd"
         Marker = "MW9 durable handoff processes: PASS (225 assertions)"
