@@ -10,6 +10,7 @@ const LOCK_DIRECTORY_NAME := ".matter-handoff-state.lock"
 const LOCK_OWNER_FILE_NAME := "owner.json"
 const MAX_REPLACE_ATTEMPTS := 20
 const MAX_LOCK_ATTEMPTS := 1000
+const MAX_LOCK_RELEASE_ATTEMPTS := 200
 const RETRY_DELAY_MS := 5
 const LOCK_STALE_AFTER_MS := 30000
 const LOCK_UNKNOWN_LIVENESS_STALE_AFTER_MS := 120000
@@ -19,6 +20,7 @@ var _root_path := ""
 var _active_path := ""
 var _previous_path := ""
 var _lock_path := ""
+var _lock_release_rename_override: Callable = Callable()
 
 
 func configure(root_path: String) -> Dictionary:
@@ -324,24 +326,51 @@ func _release_lock(token: String) -> Dictionary:
 			"expected_token": token,
 			"observed_owner": owner,
 		})
-	# Release is a single namespace operation. Removing owner.json first creates an
-	# ownerless-directory window in which a contender can misclassify a live lock
-	# as stale and make the durable winner report failure after commit.
+	# Release remains a single namespace operation. Windows can transiently reject
+	# a directory rename immediately after owner.json is closed (for example while
+	# an indexer or antivirus scanner still observes the directory). Retry the same
+	# atomic rename without removing owner.json in place, so there is never an
+	# ownerless canonical-lock window and a committed winner is not reported lost.
 	var released_path: String = _root_path.path_join(
 		".matter-handoff-state.lock.%s.released" % token
 	)
 	_remove_directory(released_path)
-	var rename_error: int = DirAccess.rename_absolute(_lock_path, released_path)
-	if rename_error != OK:
-		return MatterUtils.failure("MATTER_DURABLE_HANDOFF_LOCK_RELEASE_FAILED", {
-			"godot_error": rename_error,
-			"observed_owner": _read_lock_owner(),
-		})
-	var cleaned: bool = _remove_directory(released_path)
-	return MatterUtils.success({
-		"released_atomically": true,
-		"cleanup_deferred": not cleaned,
-		"cleanup_path": released_path if not cleaned else "",
+	var started_msec: int = Time.get_ticks_msec()
+	var last_error: int = OK
+	for attempt in range(MAX_LOCK_RELEASE_ATTEMPTS):
+		last_error = _rename_lock_for_release(_lock_path, released_path)
+		if last_error == OK:
+			var cleaned: bool = _remove_directory(released_path)
+			return MatterUtils.success({
+				"released_atomically": true,
+				"attempts": attempt + 1,
+				"waited_ms": Time.get_ticks_msec() - started_msec,
+				"cleanup_deferred": not cleaned,
+				"cleanup_path": released_path if not cleaned else "",
+			})
+		# If the platform reported an error after moving the directory, accept only
+		# the token-bound released path. This preserves ownership and avoids touching
+		# any newer canonical lock.
+		if not DirAccess.dir_exists_absolute(_lock_path) \
+			and DirAccess.dir_exists_absolute(released_path):
+			var released_owner: Dictionary = _read_lock_owner_at(released_path)
+			if int(released_owner.get("pid", -1)) == OS.get_process_id() \
+				and String(released_owner.get("token", "")) == token:
+				var cleaned_after_reported_error: bool = _remove_directory(released_path)
+				return MatterUtils.success({
+					"released_atomically": true,
+					"reported_rename_error": last_error,
+					"attempts": attempt + 1,
+					"waited_ms": Time.get_ticks_msec() - started_msec,
+					"cleanup_deferred": not cleaned_after_reported_error,
+					"cleanup_path": released_path if not cleaned_after_reported_error else "",
+				})
+		OS.delay_msec(RETRY_DELAY_MS)
+	return MatterUtils.failure("MATTER_DURABLE_HANDOFF_LOCK_RELEASE_FAILED", {
+		"godot_error": last_error,
+		"attempts": MAX_LOCK_RELEASE_ATTEMPTS,
+		"waited_ms": Time.get_ticks_msec() - started_msec,
+		"observed_owner": _read_lock_owner(),
 	})
 
 
@@ -486,6 +515,12 @@ func _pending_owner_pid(file_name: String) -> int:
 	var middle: String = file_name.substr(prefix.length(), file_name.length() - prefix.length() - suffix.length())
 	var parts: PackedStringArray = middle.split(".", false, 1)
 	return int(parts[0]) if parts.size() == 2 and parts[0].is_valid_int() else -1
+
+
+func _rename_lock_for_release(source_path: String, destination_path: String) -> int:
+	if _lock_release_rename_override.is_valid():
+		return int(_lock_release_rename_override.call(source_path, destination_path))
+	return DirAccess.rename_absolute(source_path, destination_path)
 
 
 func _remove_file(path: String) -> bool:
