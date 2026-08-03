@@ -32,6 +32,7 @@ var _action_until_ms := 0
 var _last_grounded := true
 
 func _ready() -> void:
+	_ensure_input_actions()
 	name = "CharacterLabPlayer"
 	_build_collision()
 	_build_camera()
@@ -51,6 +52,26 @@ func _ready() -> void:
 		set_physics_process(false)
 		return
 	select_character_by_index(0)
+
+func _ensure_input_actions() -> void:
+	_ensure_key_action("move_forward", KEY_W)
+	_ensure_key_action("move_back", KEY_S)
+	_ensure_key_action("move_left", KEY_A)
+	_ensure_key_action("move_right", KEY_D)
+	_ensure_key_action("run", KEY_SHIFT)
+	_ensure_key_action("jump", KEY_SPACE)
+	_ensure_key_action("character_action", KEY_E)
+	_ensure_key_action("character_cycle", KEY_TAB)
+	_ensure_key_action("first_person_toggle", KEY_F)
+
+func _ensure_key_action(action_name: StringName, physical_keycode: Key) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name, 0.2)
+	if not InputMap.action_get_events(action_name).is_empty():
+		return
+	var event := InputEventKey.new()
+	event.physical_keycode = physical_keycode
+	InputMap.action_add_event(action_name, event)
 
 func _build_collision() -> void:
 	var shape := CollisionShape3D.new()
