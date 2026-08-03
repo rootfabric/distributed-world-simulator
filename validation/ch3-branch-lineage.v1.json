@@ -1,0 +1,6 @@
+{
+  "schema": "planet_simulator.ch3_branch_lineage.v1",
+  "ch2_head": "0789ed831c88be5dd7d7a8f6ad405c182f899ecd",
+  "relationship": "MERGE_PARENT_REQUIRED",
+  "reason": "preserve independent CH2 acceptance ancestry before CH3 freeze"
+}
