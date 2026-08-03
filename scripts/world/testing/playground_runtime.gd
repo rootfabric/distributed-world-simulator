@@ -873,6 +873,8 @@ func prepare_for_unload() -> void:
 		m5_networked_inventory_shell = null
 	if item_gameplay != null:
 		item_gameplay.save_graph()
+	if _m7_item_bridge != null:
+		_m7_item_bridge.stop("NX6_PLAYGROUND_UNLOAD")
 	if m3_multiplayer_client_runtime != null:
 		if m3_multiplayer_client_runtime.replica_updated.is_connected(_on_m3_replica_updated):
 			m3_multiplayer_client_runtime.replica_updated.disconnect(_on_m3_replica_updated)
