@@ -72,7 +72,7 @@ static func compute_checksum(value: Dictionary) -> String:
 static func validate(value: Dictionary) -> Dictionary:
 	var exact: Dictionary = UtilsScript.validate_exact_fields(value, FIELDS)
 	if not bool(exact.get("success", false)):
-		return exact
+		return _failure(String(exact.get("error_code", "INVALID_CHECKPOINT_FIELDS")), String(exact.get("message", "Invalid checkpoint fields")))
 	if typeof(value["schema"]) != TYPE_STRING or String(value["schema"]) != SCHEMA:
 		return _failure("UNSUPPORTED_AUTHORITATIVE_CHECKPOINT_SCHEMA", "Unsupported authoritative checkpoint schema")
 	if not UtilsScript.is_json_integer(value["schema_version"]) or int(value["schema_version"]) != SCHEMA_VERSION:
