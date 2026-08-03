@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.int0_frozen_heads.v1",
   "recorded_at": "2026-08-03T19:40:00+10:00",
-  "updated_at": "2026-08-03T20:51:00+10:00",
+  "updated_at": "2026-08-03T21:01:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "INT0_C24_STAGING",
-  "status": "NX6_RL3_COMPOSED_CANDIDATE_C24_IN_PROGRESS",
+  "stage": "INT0_COMBINED_RUNTIME_GATE",
+  "status": "THREE_DOMAIN_COMPOSED_CANDIDATE_NOT_ACCEPTED",
   "main": {
     "branch": "main",
     "base_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
@@ -16,10 +16,11 @@
     "created_from_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
     "target_checkpoint": "v18.0.0-integration-int0-three-domain-base",
     "network_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
-    "network_stage_close_commit_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
     "rl3_mw10_merge_commit_sha": "60feb1cbc07a6617e498d65efcc9f747f68eaff7",
-    "pre_rl3_backup_branch": "backup/int0-before-rl3-integration-20260803",
-    "pre_rl3_backup_sha": "218e44fcdb5b0574a7931003dbc1952bed7aadff",
+    "current_status_commit_sha": "b00a8c673a82ea0cbb7ad680711b2dc29b146d68",
+    "c24_integration_pull_request": 10,
+    "c24_integration_pull_request_state": "OPEN_DRAFT_MERGEABLE",
+    "c24_merged": false,
     "acceptance_status": "NOT_ACCEPTED",
     "combined_runtime_gate": "PENDING"
   },
@@ -29,13 +30,12 @@
     "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
     "delivery": "fix3",
     "decision": "ACCEPTED",
-    "int0_stage": "DONE",
+    "int0_stage": "MERGED_CANDIDATE",
     "staging_pull_request": 4,
     "staging_merge_commit_sha": "ba485ffafda35579f43ed1bd3e980d7765a784d9",
     "validation_commit_sha": "02c893d4bb79a2083c83107612083441fde07021",
     "integration_pull_request": 5,
-    "integration_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
-    "runtime_rerun_in_connector_environment": false
+    "integration_merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854"
   },
   "matter_surface": {
     "branch": "feature/rl3-representation-aware-network-streaming",
@@ -51,64 +51,76 @@
     ],
     "merge_mw10_separately": false,
     "int0_stage": "MERGED_COMPOSED_CANDIDATE",
-    "staging_branch": "merge/int0-rl3-mw10",
-    "staging_base_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
-    "superseded_conflicted_pull_request": 6,
-    "resolution_branch": "merge/int0-rl3-mw10-resolved",
     "resolution_commit_sha": "c2e7c1e91993add2dd7aa9387519a391dfbb91ce",
-    "resolution_pull_request": 7,
     "staging_merge_commit_sha": "515b179d276c59df1624fe640eb04464410bf974",
     "composition_commit_sha": "ba1127ab24c4af0493d7445539387b9e9fee219a",
-    "validation_commit_sha": "fcf1a1d121e90afc05f6fd810656a5f8d32868c4",
-    "checkpoint_branch": "checkpoint/int0-rl3-mw10-composed-candidate",
+    "staging_validation_commit_sha": "fcf1a1d121e90afc05f6fd810656a5f8d32868c4",
     "integration_pull_request": 8,
     "integration_merge_commit_sha": "60feb1cbc07a6617e498d65efcc9f747f68eaff7",
-    "conflict_count": 6,
-    "wholesale_ours_theirs_used": false,
-    "non_conflicting_rl3_files_preserved_byte_exact": true,
-    "isolated_adapter_syntax_fixture": "PASS",
-    "full_combined_gate": "PENDING",
     "classification": "COMPOSED_CANDIDATE_NOT_ACCEPTED",
-    "merged_into_integration": true
+    "full_combined_gate": "PENDING"
   },
   "construction_items": {
     "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
     "head_sha": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
     "checkpoint": "C24_GPU_READY_PROXY_MESH_BACKEND",
     "decision": "ACCEPTED",
-    "int0_stage": "IN_PROGRESS",
+    "int0_stage": "STAGED_COMPOSED_CANDIDATE",
     "staging_branch": "merge/int0-c24",
-    "staging_pull_request": null,
-    "merged_into_staging": false,
+    "staging_base_sha": "64770c62574de58fa522dbdf2b4be891fe00442c",
+    "source_pull_request": 9,
+    "staging_merge_commit_sha": "00ae523ac85c575424d84a49b48fa4be37bcbf3a",
+    "composition_document_commit_sha": "007dcc70645519a85ba0f12e4c7073584b7b4907",
+    "initial_validation_commit_sha": "989cd87a53d10b307f1cd9a3a22bae207995637e",
+    "powershell_runner_commit_sha": "d0852709f9ef01ded716b07e4d8c3d2a28bf55e9",
+    "bash_runner_commit_sha": "dca92bce77c9367b7f0ebbf1b500d7abc18c804e",
+    "final_validation_plan_commit_sha": "374f79168749278c51814bccded81eb70787d767",
+    "checkpoint_branch": "checkpoint/int0-three-domain-composed-candidate",
+    "integration_pull_request": 10,
+    "integration_pull_request_state": "OPEN_DRAFT_MERGEABLE",
+    "c24_changed_paths": 863,
+    "c24_new_paths": 862,
+    "c24_modified_existing_paths": 1,
+    "only_modified_existing_path": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "construction_tests_added_to_world_runner": 57,
+    "shared_runtime_paths_changed": [],
     "merged_into_integration": false
+  },
+  "unified_runner": {
+    "powershell": "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1",
+    "bash": "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.sh",
+    "staging_branch": "merge/int0-c24",
+    "staging_head_sha": "374f79168749278c51814bccded81eb70787d767",
+    "focused_profile": "PENDING",
+    "full_profile": "PENDING",
+    "report": "artifacts/test-results/int0-three-domain-integration-summary.json"
+  },
+  "checkpoint_branches": {
+    "pre_rl3_integration": "backup/int0-before-rl3-integration-20260803",
+    "rl3_staging": "checkpoint/int0-rl3-mw10-composed-candidate",
+    "nx6_rl3_integration": "checkpoint/int0-nx6-rl3-composed-candidate",
+    "c24_staging_initial": "checkpoint/int0-c24-staged-candidate",
+    "three_domain_candidate": "checkpoint/int0-three-domain-composed-candidate"
   },
   "merge_order": [
     "NX6",
     "RL3_WITH_MW10",
     "C24",
-    "RUNTIME_COMPOSITION",
     "INT0_COMBINED_VALIDATION",
     "INT0_INDEPENDENT_ACCEPTANCE",
     "MAIN"
   ],
-  "staging_branches": {
-    "network": "merge/int0-nx6",
-    "matter_surface": "merge/int0-rl3-mw10",
-    "construction_items": "merge/int0-c24"
-  },
   "current_execution": {
-    "preparation": "DONE",
     "completed_domain_candidates": [
       "NX6",
-      "RL3_WITH_MW10"
+      "RL3_WITH_MW10",
+      "C24_STAGED"
     ],
-    "active_domain": "C24",
-    "active_stage": "STAGING_AND_CONFLICT_ANALYSIS",
-    "active_staging_branch": "merge/int0-c24",
-    "source_branch": "feature/c24-gpu-ready-proxy-mesh-backend",
-    "source_head_sha": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+    "active_stage": "INT0_COMBINED_RUNTIME_GATE",
+    "active_branch": "merge/int0-c24",
+    "active_head_sha": "374f79168749278c51814bccded81eb70787d767",
+    "integration_pull_request": 10,
     "required_gate": "PENDING",
-    "merged_into_staging": false,
     "merged_into_integration": false
   },
   "required_rules": {
@@ -120,6 +132,6 @@
     "allow_wholesale_ours_theirs_for_shared_runtime": false,
     "main_may_change_before_int0_acceptance": false,
     "candidate_merge_is_acceptance": false,
-    "final_int0_runtime_rerun_required": true
+    "full_combined_runtime_gate_required": true
   }
 }
