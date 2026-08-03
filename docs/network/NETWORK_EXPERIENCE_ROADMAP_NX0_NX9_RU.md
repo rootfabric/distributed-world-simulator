@@ -5,7 +5,7 @@
 **Целевая модель:** server authority + client prediction + reconciliation + remote interpolation + optimistic item presentation
 **Машиночитаемый источник:** `config/network/network-experience-roadmap.v1.json`
 
-**Текущий статус (3 августа 2026):** NX0, NX1 и NX2 fix2 приняты. NX3 implementation candidate `v16.13.0-network-nx3-fixed-tick-authoritative-simulation` находится в ветке `feature/nx3-fixed-tick-authoritative-simulation`: production M7 movement переведён на 60-Hz fixed server tick с per-player input buffers, wrap-safe sequence, jump edge и bounded hold. NX4 prediction остаётся следующим этапом.
+**Текущий статус (3 августа 2026):** NX0–NX3 приняты. NX4 implementation candidate `v16.14.0-network-nx4-client-prediction-reconciliation` находится в ветке `feature/nx4-client-prediction-reconciliation`: локальный owner player предсказывается общим fixed-tick movement kernel, authoritative snapshots запускают bounded replay и correction smoothing. NX5 remote interpolation остаётся следующим этапом.
 
 ## 1. Зачем появился отдельный NX-roadmap
 

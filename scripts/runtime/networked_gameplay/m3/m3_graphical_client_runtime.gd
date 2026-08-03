@@ -5,6 +5,7 @@ signal replica_updated(snapshot: Dictionary)
 signal item_graph_updated(snapshot: Dictionary)
 signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
+signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
 
 const Boundary = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
@@ -21,9 +22,11 @@ const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contr
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
 const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
+const ClientPredictionReconciler = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
 
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const NX2_INPUT_SEND_INTERVAL_MS := 33
+const NX4_INPUT_SEND_INTERVAL_SECONDS := 1.0 / 30.0
 const SERVER_PEER_ID := "peer/enet/m3-dedicated-server"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
@@ -94,6 +97,15 @@ var _item_resync_requests_sent := 0
 var _item_resync_pending := false
 var _compact_snapshot_updates := 0
 var _compact_snapshot_rejections := 0
+var _compact_snapshot_clock_updates := 0
+var _prediction_reconciler
+var _prediction_input_accumulator: float = 0.0
+var _prediction_last_network_intent: Dictionary = {}
+var _prediction_frames: int = 0
+var _prediction_submit_failures: int = 0
+var _prediction_advance_failures: int = 0
+var _prediction_reconcile_failures: int = 0
+var _prediction_updates_emitted: int = 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -132,6 +144,15 @@ func setup(config: Dictionary) -> Dictionary:
 	_item_resync_pending = false
 	_compact_snapshot_updates = 0
 	_compact_snapshot_rejections = 0
+	_compact_snapshot_clock_updates = 0
+	_prediction_reconciler = ClientPredictionReconciler.new()
+	_prediction_input_accumulator = 0.0
+	_prediction_last_network_intent.clear()
+	_prediction_frames = 0
+	_prediction_submit_failures = 0
+	_prediction_advance_failures = 0
+	_prediction_reconcile_failures = 0
+	_prediction_updates_emitted = 0
 	if _host.is_empty() or _port < 1 or _port > 65535 or _logical_player_id.is_empty():
 		return _failure("INVALID_M3_CLIENT_CONFIGURATION")
 	var identity_result: Dictionary = RuntimeIdentity.validate_config(config)
@@ -338,6 +359,7 @@ func _handle_join_ack(payload: Dictionary) -> void:
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
 	_snapshot_updates += 1
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
+	_initialize_prediction_from_snapshot(_replica.get_snapshot())
 	_joined = true; _last_error_code = ""; _write_report("READY", false)
 	_debug_event("CLIENT_READY", {"player_entity_id":_player_entity_id,"ownership_epoch":_ownership_epoch})
 	replica_updated.emit(_replica.get_snapshot()); session_ready.emit(self)
@@ -347,6 +369,7 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	if not bool(accepted.get("success", false)):
 		_last_error_code = String(accepted.get("error_code", "M3_SNAPSHOT_REJECTED")); return
 	if not bool(accepted.get("details", {}).get("replay", false)): _snapshot_updates += 1
+	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
 	_prune_acknowledged_inputs()
 	replica_updated.emit(_replica.get_snapshot())
 
@@ -356,18 +379,43 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 		_compact_snapshot_rejections += 1
 		_last_error_code = String(decoded.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_REJECTED"))
 		return
-	var accepted: Dictionary = _replica.accept_snapshot(
-		Dictionary(decoded.get("details", {}).get("snapshot", {}))
-	)
+	var decoded_snapshot: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
+	var accepted: Dictionary = _replica.accept_snapshot(decoded_snapshot)
 	if not bool(accepted.get("success", false)):
+		var error_code: String = String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
+		if (
+			error_code == "MULTIPLAYER_SAME_REVISION_MUTATION"
+			and _same_snapshot_state_except_clock(_replica.get_snapshot(), decoded_snapshot)
+		):
+			_compact_snapshot_clock_updates += 1
+			_reconcile_prediction_from_snapshot(decoded_snapshot)
+			if _last_error_code == "MULTIPLAYER_SAME_REVISION_MUTATION":
+				_last_error_code = ""
+			return
 		_compact_snapshot_rejections += 1
-		_last_error_code = String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
+		_last_error_code = error_code
 		return
 	if not bool(accepted.get("details", {}).get("replay", false)):
 		_snapshot_updates += 1
 		_compact_snapshot_updates += 1
+	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
 	_prune_acknowledged_inputs()
 	replica_updated.emit(_replica.get_snapshot())
+
+
+func _same_snapshot_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool:
+	if current.is_empty() or incoming.is_empty():
+		return false
+	if int(incoming.get("revision", -1)) != int(current.get("revision", -2)):
+		return false
+	if int(incoming.get("server_tick", -1)) <= int(current.get("server_tick", -1)):
+		return false
+	var current_state: Dictionary = current.duplicate(true)
+	var incoming_state: Dictionary = incoming.duplicate(true)
+	for key in ["server_tick", "checksum"]:
+		current_state.erase(key)
+		incoming_state.erase(key)
+	return current_state == incoming_state
 
 
 func _accept_delta(delta: Dictionary) -> void:
@@ -422,14 +470,26 @@ func move_blocking(delta_x: float, delta_z: float) -> Dictionary:
 	return _failure("M3_MOVE_TIMEOUT")
 
 
-func submit_movement_intent_nonblocking(intent: Dictionary) -> Dictionary:
+func submit_movement_intent_nonblocking(intent: Dictionary, client_tick: int = 0) -> Dictionary:
 	if not is_ready():
 		return _failure("M7_CLIENT_NOT_READY")
 	_input_sequence = InputSequence.next(_input_sequence)
 	var operation_id: String = "operation/m7/%s/input/%d/%d" % [
 		_logical_player_id, OS.get_process_id(), _input_sequence
 	]
-	var sent: bool = _queue_input_batch(intent, operation_id, _input_sequence, false)
+	var resolved_client_tick: int = client_tick
+	if resolved_client_tick < 1 and _prediction_reconciler != null and _prediction_reconciler.is_configured():
+		resolved_client_tick = _prediction_reconciler.get_prediction_tick() + 1
+	if resolved_client_tick < 1:
+		resolved_client_tick = _input_sequence
+	if _prediction_reconciler != null and _prediction_reconciler.is_configured():
+		var prediction_input: Dictionary = _prediction_reconciler.set_input(_input_sequence, intent)
+		if not bool(prediction_input.get("success", false)):
+			_prediction_submit_failures += 1
+			return prediction_input
+	var sent: bool = _queue_input_batch(intent, operation_id, _input_sequence, false, resolved_client_tick)
+	if not sent:
+		_prediction_submit_failures += 1
 	return _success({
 		"operation_id": operation_id,
 		"input_sequence": _input_sequence,
@@ -447,7 +507,19 @@ func submit_movement_intent_blocking(intent: Dictionary) -> Dictionary:
 	]
 	_command_results.erase(operation_id)
 	_awaited_command_ids[operation_id] = true
-	if not _queue_input_batch(intent, operation_id, target_sequence, true):
+	var prediction_tick: int = (
+		_prediction_reconciler.get_prediction_tick() + 1
+		if _prediction_reconciler != null and _prediction_reconciler.is_configured()
+		else target_sequence
+	)
+	if _prediction_reconciler != null and _prediction_reconciler.is_configured():
+		var prediction_input: Dictionary = _prediction_reconciler.set_input(target_sequence, intent)
+		if not bool(prediction_input.get("success", false)):
+			_prediction_submit_failures += 1
+			_awaited_command_ids.erase(operation_id)
+			return prediction_input
+	if not _queue_input_batch(intent, operation_id, target_sequence, true, prediction_tick):
+		_prediction_submit_failures += 1
 		_awaited_command_ids.erase(operation_id)
 		return _failure("M7_PLAYER_INPUT_SEND_FAILED")
 	var started: int = Time.get_ticks_msec()
@@ -477,7 +549,8 @@ func _queue_input_batch(
 	intent: Dictionary,
 	operation_id: String,
 	input_sequence: int,
-	force_send: bool
+	force_send: bool,
+	client_tick: int = 0
 ) -> bool:
 	var canonical_intent: Dictionary = {
 		"move_x": float(intent.get("move_x", 0.0)),
@@ -491,7 +564,7 @@ func _queue_input_batch(
 	var entry: Dictionary = {
 		"input_sequence": input_sequence,
 		"operation_id": operation_id,
-		"client_tick": input_sequence,
+		"client_tick": client_tick if client_tick > 0 else input_sequence,
 		"client_sent_at_ms": Time.get_ticks_msec(),
 		"intent": canonical_intent,
 	}
@@ -571,6 +644,144 @@ func _adopt_authoritative_input_sequence(authoritative_sequence: int) -> void:
 	if _input_sequence == 0 or InputSequence.is_newer(authoritative_sequence, _input_sequence):
 		_input_sequence = authoritative_sequence
 
+
+func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
+	if not is_ready():
+		return _failure("M7_CLIENT_NOT_READY")
+	if _prediction_reconciler == null or not _prediction_reconciler.is_configured():
+		_initialize_prediction_from_snapshot(get_snapshot())
+	if _prediction_reconciler == null or not _prediction_reconciler.is_configured():
+		return _failure("NX4_PREDICTION_NOT_READY")
+	var canonical: Dictionary = _canonical_prediction_intent(intent)
+	_prediction_input_accumulator += maxf(frame_delta_seconds, 0.0)
+	var changed: bool = not _same_prediction_intent(_prediction_last_network_intent, canonical)
+	var should_submit: bool = (
+		_prediction_last_network_intent.is_empty()
+		or changed
+		or _prediction_input_accumulator >= NX4_INPUT_SEND_INTERVAL_SECONDS
+	)
+	var submission: Dictionary = _success()
+	var submission_attempted: bool = false
+	if should_submit:
+		submission_attempted = true
+		submission = submit_movement_intent_nonblocking(
+			canonical,
+			_prediction_reconciler.get_prediction_tick() + 1
+		)
+		if bool(submission.get("success", false)):
+			_prediction_input_accumulator = 0.0
+			_prediction_last_network_intent = canonical.duplicate(true)
+		elif String(submission.get("error_code", "")) != "M7_PLAYER_INPUT_SEND_FAILED":
+			return submission
+	var advanced: Dictionary = _prediction_reconciler.advance_frame(frame_delta_seconds)
+	if not bool(advanced.get("success", false)):
+		_prediction_advance_failures += 1
+		return advanced
+	_prediction_frames += 1
+	var predicted_state: Dictionary = _prediction_reconciler.get_predicted_state()
+	var presentation_state: Dictionary = _prediction_reconciler.sample_presentation(frame_delta_seconds)
+	_prediction_updates_emitted += 1
+	prediction_updated.emit(
+		predicted_state.duplicate(true),
+		presentation_state.duplicate(true),
+		_prediction_reconciler.get_report()
+	)
+	return _success({
+		"submission_attempted": submission_attempted,
+		"submission": submission,
+		"predicted_state": predicted_state,
+		"presentation_state": presentation_state,
+		"prediction": _prediction_reconciler.get_report(),
+	})
+
+func get_predicted_local_player() -> Dictionary:
+	return (
+		_prediction_reconciler.get_predicted_state()
+		if _prediction_reconciler != null and _prediction_reconciler.is_configured()
+		else get_local_player_record()
+	)
+
+func get_prediction_presentation_player(frame_delta_seconds: float = 0.0) -> Dictionary:
+	return (
+		_prediction_reconciler.sample_presentation(frame_delta_seconds)
+		if _prediction_reconciler != null and _prediction_reconciler.is_configured()
+		else get_local_player_record()
+	)
+
+func is_prediction_ready() -> bool:
+	return _prediction_reconciler != null and _prediction_reconciler.is_configured()
+
+func _initialize_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	if _prediction_reconciler == null or snapshot.is_empty():
+		return
+	var local_player: Dictionary = _player_from_snapshot(snapshot, _logical_player_id)
+	if local_player.is_empty():
+		return
+	var configured: Dictionary = _prediction_reconciler.configure(
+		local_player,
+		int(snapshot.get("server_tick", 0))
+	)
+	if not bool(configured.get("success", false)):
+		_prediction_reconcile_failures += 1
+
+func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	if _prediction_reconciler == null:
+		return
+	if not _prediction_reconciler.is_configured():
+		_initialize_prediction_from_snapshot(snapshot)
+		return
+	var local_player: Dictionary = _player_from_snapshot(snapshot, _logical_player_id)
+	if local_player.is_empty():
+		return
+	var reconciled: Dictionary = _prediction_reconciler.reconcile(
+		local_player,
+		int(snapshot.get("server_tick", 0))
+	)
+	if not bool(reconciled.get("success", false)):
+		_prediction_reconcile_failures += 1
+		return
+	var details: Dictionary = Dictionary(reconciled.get("details", {}))
+	_telemetry.observe("prediction_error_m", float(details.get("prediction_error_m", 0.0)))
+	_telemetry.observe("prediction_replayed_ticks", float(details.get("replayed_ticks", 0)))
+	if String(details.get("correction_mode", "NONE")) != "NONE":
+		_telemetry.increment("prediction_corrections")
+	if bool(details.get("hard_correction", false)):
+		_telemetry.increment("prediction_hard_corrections")
+	var predicted_state: Dictionary = _prediction_reconciler.get_predicted_state()
+	var presentation_state: Dictionary = _prediction_reconciler.sample_presentation(0.0)
+	prediction_updated.emit(
+		predicted_state.duplicate(true),
+		presentation_state.duplicate(true),
+		_prediction_reconciler.get_report()
+	)
+
+func _player_from_snapshot(snapshot: Dictionary, logical_player_id: String) -> Dictionary:
+	for player_value in snapshot.get("players", []):
+		if player_value is Dictionary and String(player_value.get("logical_player_id", "")) == logical_player_id:
+			return Dictionary(player_value).duplicate(true)
+	return {}
+
+func _canonical_prediction_intent(intent: Dictionary) -> Dictionary:
+	return {
+		"move_x": float(intent.get("move_x", 0.0)),
+		"move_z": float(intent.get("move_z", 0.0)),
+		"look_yaw": float(intent.get("look_yaw", 0.0)),
+		"look_pitch": float(intent.get("look_pitch", 0.0)),
+		"jump_pressed": bool(intent.get("jump_pressed", false)),
+		"sprint": bool(intent.get("sprint", false)),
+		"delta_seconds": 1.0 / 60.0,
+	}
+
+func _same_prediction_intent(left: Dictionary, right: Dictionary) -> bool:
+	if left.is_empty() or right.is_empty():
+		return false
+	if bool(left.get("jump_pressed", false)) or bool(right.get("jump_pressed", false)):
+		return false
+	return is_equal_approx(float(left.get("move_x", 0.0)), float(right.get("move_x", 0.0))) \
+		and is_equal_approx(float(left.get("move_z", 0.0)), float(right.get("move_z", 0.0))) \
+		and is_equal_approx(float(left.get("look_yaw", 0.0)), float(right.get("look_yaw", 0.0))) \
+		and is_equal_approx(float(left.get("look_pitch", 0.0)), float(right.get("look_pitch", 0.0))) \
+		and bool(left.get("sprint", false)) == bool(right.get("sprint", false))
 
 func submit_player_state_nonblocking(_player_state: Dictionary, _delta_seconds: float) -> Dictionary:
 	return _failure("M7_CLIENT_AUTHORITATIVE_STATE_FORBIDDEN")
@@ -824,6 +1035,11 @@ func _update_runtime_telemetry() -> void:
 	_telemetry.set_gauge("buffered_command_results", float(_command_results.size()))
 	_telemetry.set_gauge("pending_operation_timers", float(_operation_started_ms.size()))
 	_telemetry.set_gauge("handshake_verified", 1.0 if _handshake_verified else 0.0)
+	if _prediction_reconciler != null and _prediction_reconciler.is_configured():
+		var prediction_report: Dictionary = _prediction_reconciler.get_report()
+		_telemetry.set_gauge("prediction_buffer_size", float(prediction_report.get("history_size", 0)))
+		_telemetry.set_gauge("prediction_visual_offset_m", float(prediction_report.get("visual_offset_m", 0.0)))
+		_telemetry.set_gauge("prediction_tick", float(prediction_report.get("prediction_tick", 0)))
 	var boundary_snapshot: Dictionary = _boundary.get_snapshot() if _boundary != null else {}
 	var port_runtime: Dictionary = boundary_snapshot.get("port_runtime", {})
 	var peer_statistics: Dictionary = port_runtime.get("peer_statistics", {})
@@ -945,6 +1161,19 @@ func get_report() -> Dictionary:
 			"item_resync_pending": _item_resync_pending,
 			"compact_snapshot_updates": _compact_snapshot_updates,
 			"compact_snapshot_rejections": _compact_snapshot_rejections,
+			"compact_snapshot_clock_updates": _compact_snapshot_clock_updates,
+		},
+		"client_prediction": {
+			"enabled": _prediction_reconciler != null and _prediction_reconciler.is_configured(),
+			"frames": _prediction_frames,
+			"submit_failures": _prediction_submit_failures,
+			"advance_failures": _prediction_advance_failures,
+			"reconcile_failures": _prediction_reconcile_failures,
+			"updates_emitted": _prediction_updates_emitted,
+			"runtime": (
+				_prediction_reconciler.get_report()
+				if _prediction_reconciler != null else {}
+			),
 		},
 		"direct_authority_references": 0, "direct_domain_references": 0,
 		"resolved_user_data_dir": OS.get_user_data_dir(),

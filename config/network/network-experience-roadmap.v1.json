@@ -6,9 +6,9 @@
   "base_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
   "status": "active",
   "strategy": "SERVER_AUTHORITY_WITH_CLIENT_PREDICTION_AND_INTERPOLATED_PRESENTATION",
-  "current_stage": "NX3",
-  "current_checkpoint": "v16.13.0-network-nx3-fixed-tick-authoritative-simulation",
-  "recommended_branch": "feature/nx3-fixed-tick-authoritative-simulation",
+  "current_stage": "NX4",
+  "current_checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "recommended_branch": "feature/nx4-client-prediction-reconciliation",
   "distributed_runtime_note": "B1 remains architecturally valid after A3, but product implementation priority is temporarily moved behind the realtime network-experience chain. No B1 contract is changed by this roadmap.",
   "authority_profiles": {
     "local_player": "OWNER_PREDICTED_SERVER_AUTHORITY",

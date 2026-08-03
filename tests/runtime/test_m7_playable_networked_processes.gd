@@ -5,9 +5,13 @@ var failures: Array[String] = []
 var assertions := 0
 var pids: Array[int] = []
 var xvfb_pid := -1
+var client_network_profile := "LOCAL"
 
 
 func _init() -> void:
+	client_network_profile = OS.get_environment("NX4_TEST_CLIENT_NETWORK_PROFILE").strip_edges().to_upper()
+	if client_network_profile.is_empty():
+		client_network_profile = "LOCAL"
 	var port := _find_port()
 	_assert(port > 0, "M7 port allocated")
 	if port <= 0:
@@ -57,9 +61,9 @@ func _init() -> void:
 	_wait_exit(a, 10000)
 	_wait_exit(b, 10000)
 	var final_server := _read(server_file)
-	_assert(String(final_server.get("checkpoint", "")) == "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "M7 server reports NX3 runtime checkpoint")
-	_assert(String(ar.get("runtime_report", {}).get("checkpoint", "")) == "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "M7 client A reports NX3 runtime checkpoint")
-	_assert(String(br.get("runtime_report", {}).get("checkpoint", "")) == "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "M7 client B reports NX3 runtime checkpoint")
+	_assert(String(final_server.get("checkpoint", "")) == "v16.14.0-network-nx4-client-prediction-reconciliation", "M7 server reports NX4 runtime checkpoint")
+	_assert(String(ar.get("runtime_report", {}).get("checkpoint", "")) == "v16.14.0-network-nx4-client-prediction-reconciliation", "M7 client A reports NX4 runtime checkpoint")
+	_assert(String(br.get("runtime_report", {}).get("checkpoint", "")) == "v16.14.0-network-nx4-client-prediction-reconciliation", "M7 client B reports NX4 runtime checkpoint")
 	_assert(String(final_server.get("gameplay_checkpoint", "")) == "v16.10.6.1-testing-m7-playable-networked-playground", "M7 server preserves gameplay checkpoint")
 	_assert(String(ar.get("runtime_report", {}).get("gameplay_checkpoint", "")) == "v16.10.6.1-testing-m7-playable-networked-playground", "M7 client A preserves gameplay checkpoint")
 	_assert(String(br.get("runtime_report", {}).get("gameplay_checkpoint", "")) == "v16.10.6.1-testing-m7-playable-networked-playground", "M7 client B preserves gameplay checkpoint")
@@ -67,10 +71,21 @@ func _init() -> void:
 	_assert(String(br.get("display_server", "")).to_lower() not in ["", "headless", "dummy"], "M7 B is graphical")
 	_assert(bool(ar.get("world_report", {}).get("seven_days_inventory_active", false)), "M7 A uses Seven Days UI")
 	_assert(bool(br.get("world_report", {}).get("seven_days_inventory_active", false)), "M7 B uses Seven Days UI")
-	_assert(not bool(ar.get("world_report", {}).get("network_prediction_mode", true)), "M7 A uses server-authoritative movement")
-	_assert(not bool(br.get("world_report", {}).get("network_prediction_mode", true)), "M7 B uses server-authoritative movement")
-	_assert(String(ar.get("world_report", {}).get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "M7 A smooths authoritative replicas")
-	_assert(String(br.get("world_report", {}).get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "M7 B smooths authoritative replicas")
+	_assert(bool(ar.get("world_report", {}).get("network_prediction_mode", false)), "M7 A uses client-side prediction")
+	_assert(bool(br.get("world_report", {}).get("network_prediction_mode", false)), "M7 B uses client-side prediction")
+	_assert(String(ar.get("world_report", {}).get("m7_interpolation_mode", "")) == "CLIENT_PREDICTION_RECONCILIATION", "M7 A uses prediction/reconciliation presentation")
+	_assert(String(br.get("world_report", {}).get("m7_interpolation_mode", "")) == "CLIENT_PREDICTION_RECONCILIATION", "M7 B uses prediction/reconciliation presentation")
+	_assert(int(ar.get("runtime_report", {}).get("client_prediction", {}).get("runtime", {}).get("ticks_predicted", 0)) > 0, "M7 A predicts local movement ticks")
+	_assert(int(br.get("runtime_report", {}).get("client_prediction", {}).get("runtime", {}).get("ticks_predicted", 0)) > 0, "M7 B predicts local movement ticks")
+	_assert(int(ar.get("runtime_report", {}).get("client_prediction", {}).get("reconcile_failures", -1)) == 0, "M7 A has no prediction reconcile failures")
+	_assert(int(br.get("runtime_report", {}).get("client_prediction", {}).get("reconcile_failures", -1)) == 0, "M7 B has no prediction reconcile failures")
+	_assert(int(ar.get("runtime_report", {}).get("client_prediction", {}).get("runtime", {}).get("history_size", 999)) <= 256, "M7 A prediction history is bounded")
+	_assert(int(br.get("runtime_report", {}).get("client_prediction", {}).get("runtime", {}).get("history_size", 999)) <= 256, "M7 B prediction history is bounded")
+	_assert(String(ar.get("runtime_report", {}).get("network_conditions", {}).get("profile", {}).get("profile_id", "")) == client_network_profile, "M7 A uses requested network profile")
+	_assert(String(br.get("runtime_report", {}).get("network_conditions", {}).get("profile", {}).get("profile_id", "")) == client_network_profile, "M7 B uses requested network profile")
+	if client_network_profile != "LOCAL":
+		_assert(String(ar.get("runtime_report", {}).get("last_error_code", "")) != "MULTIPLAYER_SAME_REVISION_MUTATION", "M7 A accepts clock-only conditioned snapshots")
+		_assert(String(br.get("runtime_report", {}).get("last_error_code", "")) != "MULTIPLAYER_SAME_REVISION_MUTATION", "M7 B accepts clock-only conditioned snapshots")
 	_assert(int(ar.get("runtime_report", {}).get("pending_blocking_command_count", -1)) == 0 and int(br.get("runtime_report", {}).get("pending_blocking_command_count", -1)) == 0, "M7 clients leave no pending blocking commands")
 	_assert(int(ar.get("runtime_report", {}).get("buffered_command_result_count", -1)) == 0 and int(br.get("runtime_report", {}).get("buffered_command_result_count", -1)) == 0, "M7 clients do not accumulate movement command results")
 	var realtime: Dictionary = Dictionary(final_server.get("realtime_traffic", {}))
@@ -112,7 +127,7 @@ func _spawn_worker(exe: String, root_path: String, port: int, id: String, phase:
 		"--script", "res://tools/runtime/m7_playable_network_client.gd", "--",
 		"--host=127.0.0.1", "--port=%d" % port, "--client-id=%s" % id,
 		"--phase=%d" % phase, "--result-file=%s" % result, "--peer-file=%s" % peer,
-		"--server-file=%s" % server_file,
+		"--server-file=%s" % server_file, "--network-profile=%s" % client_network_profile,
 	], user, display)
 
 

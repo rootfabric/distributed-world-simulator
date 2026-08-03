@@ -24,6 +24,7 @@ const ENetPortScript = preload("res://scripts/network/transports/v2/enet_multi_p
 const InputSequenceScript = preload("res://scripts/network/simulation/input_sequence.gd")
 const FixedTickSchedulerScript = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const FixedTickInputBufferScript = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
+const ClientPredictionReconcilerScript = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
 
 const SCHEMA: String = "planet_simulator.network_protocol_manifest.v1"
 const MANIFEST_VERSION: int = 1
@@ -105,6 +106,17 @@ static func contract_versions() -> Dictionary:
 			"max_pending_inputs": FixedTickInputBufferScript.MAX_PENDING_INPUTS,
 			"max_sequence_ahead": FixedTickInputBufferScript.MAX_SEQUENCE_AHEAD,
 			"max_queue_age_ticks": FixedTickInputBufferScript.MAX_QUEUE_AGE_TICKS,
+		},
+		"client_prediction_reconciler": {
+			"schema": ClientPredictionReconcilerScript.SCHEMA,
+			"tick_rate_hz": ClientPredictionReconcilerScript.TICK_RATE_HZ,
+			"max_history_ticks": ClientPredictionReconcilerScript.MAX_HISTORY_TICKS,
+			"history_policy": ClientPredictionReconcilerScript.HISTORY_POLICY,
+			"replay_policy": ClientPredictionReconcilerScript.REPLAY_POLICY,
+			"correction_policy": ClientPredictionReconcilerScript.CORRECTION_POLICY,
+			"clock_only_snapshot_policy": ClientPredictionReconcilerScript.CLOCK_ONLY_SNAPSHOT_POLICY,
+			"history_miss_policy": ClientPredictionReconcilerScript.HISTORY_MISS_POLICY,
+			"hard_correction_threshold_m": ClientPredictionReconcilerScript.HARD_CORRECTION_THRESHOLD_M,
 		},
 		"compatibility_hello": {"schema": CompatibilityHandshakeScript.HELLO_SCHEMA},
 		"compatibility_ack": {"schema": CompatibilityHandshakeScript.ACK_SCHEMA},

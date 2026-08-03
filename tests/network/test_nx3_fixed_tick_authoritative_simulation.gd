@@ -273,8 +273,8 @@ func _simulate_continuous_input(jitter_pattern: Array) -> Dictionary:
 
 func _test_protocol_and_runtime_wiring() -> void:
 	var manifest: Dictionary = ProtocolManifest.create()
-	_assert(RuntimeIdentity.CHECKPOINT == "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "Runtime checkpoint was not advanced to NX3")
-	_assert(RuntimeIdentity.BUILD_ID == "nx3-fixed-tick-authoritative-simulation", "Runtime build ID was not advanced to NX3")
+	_assert(RuntimeIdentity.CHECKPOINT in ["v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "v16.14.0-network-nx4-client-prediction-reconciliation"], "Runtime identity no longer includes accepted NX3 capability")
+	_assert(RuntimeIdentity.BUILD_ID in ["nx3-fixed-tick-authoritative-simulation", "nx4-client-prediction-reconciliation"], "Runtime build ID no longer includes accepted NX3 capability")
 	var contracts: Dictionary = manifest.get("contract_versions", {})
 	_assert(String(contracts.get("fixed_tick_scheduler", {}).get("schema", "")) == Scheduler.SCHEMA, "Protocol manifest omitted fixed scheduler")
 	_assert(String(contracts.get("fixed_tick_input_buffer", {}).get("schema", "")) == InputBuffer.SCHEMA, "Protocol manifest omitted input buffer")
@@ -295,7 +295,7 @@ func _test_protocol_and_runtime_wiring() -> void:
 	var config = JSON.parse_string(config_text)
 	_assert(config is Dictionary, "NX3 config is not valid JSON")
 	if config is Dictionary:
-		_assert(String(config.get("checkpoint", "")) == RuntimeIdentity.CHECKPOINT, "NX3 config checkpoint mismatch")
+		_assert(String(config.get("checkpoint", "")) == "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "NX3 config checkpoint drifted")
 		_assert(int(config.get("simulation", {}).get("tick_rate_hz", 0)) == 60, "NX3 config tick rate mismatch")
 		_assert(String(config.get("input", {}).get("selection_policy", "")) == InputBuffer.INPUT_SELECTION_POLICY, "NX3 config input policy mismatch")
 		_assert(String(config.get("input", {}).get("sequence_order_policy", "")) == InputBatch.SEQUENCE_ORDER_POLICY, "NX3 config sequence policy mismatch")

@@ -524,7 +524,7 @@ func _test_telemetry_and_runtime_wiring() -> void:
 	_assert(server_source.contains("ConditionSimulatorPort.new()") and client_source.contains("ConditionSimulatorPort.new()"), "M3 server and client wrap production ENet in NX1 simulator")
 	_assert(server_source.contains("set_network_condition_profile") and client_source.contains("set_network_condition_profile"), "Runtime profile switching is exposed on both endpoints")
 	_assert(app_source.count("network_condition_profile") >= 2, "SimulatorApp forwards network profile to server and client")
-	_assert(RuntimeIdentity.CHECKPOINT in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation", "v16.13.0-network-nx3-fixed-tick-authoritative-simulation"], "Runtime identity no longer includes accepted NX1 capability")
+	_assert(RuntimeIdentity.CHECKPOINT in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation", "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "v16.14.0-network-nx4-client-prediction-reconciliation"], "Runtime identity no longer includes accepted NX1 capability")
 	_assert(_ok(simulator.stop()), "Telemetry simulator stops")
 
 

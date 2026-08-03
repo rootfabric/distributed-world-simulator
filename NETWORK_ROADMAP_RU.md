@@ -61,26 +61,28 @@ NX0 observability baseline
 Текущий checkpoint candidate:
 
 ```text
-v16.13.0-network-nx3-fixed-tick-authoritative-simulation
-accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2
-base commit: f1abeca
-branch: feature/nx3-fixed-tick-authoritative-simulation
-runtime behavior changed: fixed 60-Hz authoritative movement simulation
+v16.14.0-network-nx4-client-prediction-reconciliation
+accepted base: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+base commit: ac8ae0afdd47e0f290dbbc8af396add7aba60cda
+branch: feature/nx4-client-prediction-reconciliation
+runtime behavior changed: local owner prediction and reconciliation
 server authority changed: no
-fixed tick changed: yes
-prediction changed: no
+fixed tick changed: no
+prediction changed: yes
 ```
 
-NX0 сохраняет matching fingerprint и bounded telemetry. NX1 добавляет детерминированные endpoint-local network conditions. NX2 разделяет шесть transport streams и подавляет movement amplification. NX3 выполняет movement только server fixed tick 60 Hz, независимо от packet arrival, client FPS и client `delta_seconds`; compact snapshots остаются на cadence 20 Hz. NX4 prediction остаётся следующим отдельным этапом.
+NX0 сохраняет matching fingerprint и bounded telemetry. NX1 добавляет детерминированные endpoint-local network conditions. NX2 разделяет шесть transport streams и подавляет movement amplification. NX3 выполняет movement только server fixed tick 60 Hz, независимо от packet arrival, client FPS и client `delta_seconds`; compact snapshots остаются на cadence 20 Hz. NX4 выполняет локальное movement prediction тем же 60-Hz kernel, replay после authoritative snapshot и presentation correction smoothing. NX5 remote interpolation остаётся следующим отдельным этапом.
 
 Документы:
 
 - `docs/network/NETWORK_EXPERIENCE_ROADMAP_NX0_NX9_RU.md`;
+- `docs/network/NX4_CLIENT_PREDICTION_RECONCILIATION_RU.md`;
 - `docs/network/NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_RU.md`;
 - `docs/network/NX2_REALTIME_TRAFFIC_SEPARATION_RU.md`;
 - `docs/network/NX1_DETERMINISTIC_NETWORK_CONDITION_SIMULATOR_RU.md`;
 - `docs/network/NX0_OBSERVABILITY_BASELINE_RU.md`;
 - `config/network/network-experience-roadmap.v1.json`;
+- `config/network/nx4-client-prediction-reconciliation.v1.json`;
 - `config/network/nx3-fixed-tick-authoritative-simulation.v1.json`;
 - `config/network/nx2-realtime-traffic-separation.v1.json`;
 - `config/network/nx1-deterministic-network-condition-simulator.v1.json`;

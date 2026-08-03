@@ -1,0 +1,48 @@
+{
+  "schema": "planet_simulator.nx4_client_prediction_reconciliation.v1",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "base_checkpoint": "v16.13.0-network-nx3-fixed-tick-authoritative-simulation",
+  "prediction": {
+    "owner_only": true,
+    "tick_rate_hz": 60,
+    "fixed_delta_seconds": 0.016666666666666666,
+    "same_render_frame_response": true,
+    "shared_movement_kernel": "PlayerMovementService",
+    "max_history_ticks": 256,
+    "history_policy": "SERVER_TICK_KEYED_RING_BUFFER_V1"
+  },
+  "reconciliation": {
+    "policy": "AUTHORITATIVE_BASELINE_REPLAY_UNACKNOWLEDGED_TICKS_V1",
+    "ack_field": "last_input_sequence",
+    "sequence_wrap": true,
+    "stale_snapshots_ignored": true,
+    "replay_failure_is_error": true,
+    "clock_only_snapshot_policy": "SAME_REVISION_IDENTICAL_STATE_ADVANCES_PREDICTION_CLOCK_V1",
+    "history_miss_policy": "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1"
+  },
+  "correction": {
+    "policy": "VISUAL_OFFSET_DECAY_THRESHOLDS_V1",
+    "ignore_below_m": 0.03,
+    "smooth_up_to_m": 0.15,
+    "smooth_duration_seconds": 0.15,
+    "fast_up_to_m": 0.5,
+    "fast_duration_seconds": 0.08,
+    "very_fast_up_to_m": 2.0,
+    "very_fast_duration_seconds": 0.05,
+    "hard_above_m": 2.0,
+    "camera_follows_presentation": true
+  },
+  "acceptance": {
+    "client_fps_profiles": [
+      30,
+      60,
+      144
+    ],
+    "conditioned_latency_ms": 100,
+    "conditioned_jitter_ticks": 2,
+    "conditioned_snapshot_loss": true,
+    "history_bounded": true,
+    "duplicate_item_count": 0,
+    "prediction_replay_failures": 0
+  }
+}

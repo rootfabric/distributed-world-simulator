@@ -222,7 +222,7 @@ Physical ENet channel/mode validation is strict. A mismatched frame must be reje
 
 ```text
 accepted base: v16.12.0-network-nx2-realtime-traffic-separation / fix2
-current checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+accepted checkpoint: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
 branch: feature/nx3-fixed-tick-authoritative-simulation
 focused runner: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
 ```
@@ -230,3 +230,17 @@ focused runner: RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh
 Production M7 movement messages only enqueue validated input state. Position and velocity may change only inside the 60-Hz server scheduler using exact delta `1/60`. Never reintroduce packet-arrival delta or client-provided `delta_seconds` as an authoritative movement budget. Each peer has an independent bounded input buffer with wrap-safe sequence window, stale eviction, jump-edge semantics and a 250-ms fail-safe hold.
 
 Latest-wins INPUT coalescing requires `LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1`: repeated state refreshes sequence without accumulating client time, while `idle → movement → idle` remains recoverable from a final batch. Movement snapshots remain compact at 20 Hz and acknowledge `last_input_sequence`. NX3 does not add prediction or remote interpolation; those belong to NX4/NX5.
+
+
+## Current NX4 client prediction and reconciliation
+
+```text
+accepted base: v16.13.0-network-nx3-fixed-tick-authoritative-simulation
+current checkpoint: v16.14.0-network-nx4-client-prediction-reconciliation
+branch: feature/nx4-client-prediction-reconciliation
+focused runner: RUN_NX4_CLIENT_PREDICTION_RECONCILIATION_TESTS.ps1/.sh
+```
+
+The local owner player is predicted with `ClientPredictionReconciler` and the same `PlayerMovementService.apply_fixed_tick()` used by NX3 authority. Keep the prediction ring buffer bounded at 256 ticks, use wrap-aware sequence arithmetic, and reconcile from authoritative `server_tick + last_input_sequence` before replaying later ticks. If the authoritative tick is outside the retained ring, reset to authority and never perform a partial replay. Never accept client transform authority.
+
+Local `LunarPlayer` physics must remain disabled in prediction mode so CharacterBody movement cannot run in parallel with the shared kernel. Camera and local presentation follow the predicted presentation state; small corrections decay through visual offset, while errors above 2 m hard-correct. Remote interpolation is not part of NX4 and remains NX5.

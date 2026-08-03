@@ -13,6 +13,7 @@ var phase := 1
 var result_file := ""
 var peer_file := ""
 var server_file := ""
+var network_profile := "LOCAL"
 var client
 var playground
 var started_ms := 0
@@ -53,6 +54,7 @@ func _start() -> void:
 		"command_timeout_ms": 10000,
 		"automated_acceptance": true,
 		"playable_sandbox": true,
+		"network_condition_profile": network_profile,
 	})
 	_assert(bool(setup.get("success", false)), "client runtime configured")
 	if not bool(setup.get("success", false)):
@@ -77,8 +79,9 @@ func _run_phase() -> void:
 	await process_frame
 	var report: Dictionary = playground.create_m3_graphical_client_report()
 	_assert(bool(report.get("network_playground_enabled", false)), "network playground mode active")
-	_assert(not bool(report.get("network_prediction_mode", true)), "client-side movement prediction disabled")
-	_assert(String(report.get("m7_interpolation_mode", "")) == "AUTHORITATIVE_TARGET_SMOOTHING", "authoritative movement interpolation active")
+	_assert(bool(report.get("network_prediction_mode", false)), "client-side movement prediction active")
+	_assert(String(report.get("m7_interpolation_mode", "")) == "CLIENT_PREDICTION_RECONCILIATION", "prediction/reconciliation presentation active")
+	_assert(int(report.get("m7_prediction_report", {}).get("ticks_predicted", 0)) > 0, "local prediction advances fixed ticks")
 	_assert(bool(report.get("seven_days_inventory_active", false)), "Seven Days inventory profile active")
 	_assert(playground.item_gameplay != null, "real ItemGameplayController active")
 	_assert(playground.m5_networked_inventory_shell == null, "M5 shell remains separate")
@@ -414,3 +417,4 @@ func _parse_args() -> void:
 			"result-file": result_file = raw
 			"peer-file": peer_file = raw
 			"server-file": server_file = raw
+			"network-profile": network_profile = raw.strip_edges().to_upper()
