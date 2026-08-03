@@ -15,10 +15,16 @@ if ($LASTEXITCODE -ne 0) {
     throw "INT0 RL3/MW10 editor import failed: $LASTEXITCODE"
 }
 
-& $GodotPath --headless --path $ProjectRoot --script `
-    res://tests/runtime/test_int0_m3_replica_resync_composition.gd
-if ($LASTEXITCODE -ne 0) {
-    throw "INT0 RL3/MW10 M3 composition contracts failed: $LASTEXITCODE"
+$Tests = @(
+    "res://tests/runtime/test_int0_project_uid_contracts.gd",
+    "res://tests/runtime/test_int0_m3_replica_resync_composition.gd"
+)
+
+foreach ($Test in $Tests) {
+    & $GodotPath --headless --path $ProjectRoot --script $Test
+    if ($LASTEXITCODE -ne 0) {
+        throw "INT0 RL3/MW10 composition contract failed: $Test ($LASTEXITCODE)"
+    }
 }
 
 Write-Host "INT0 RL3/MW10 composition focused gate: PASS" -ForegroundColor Green
