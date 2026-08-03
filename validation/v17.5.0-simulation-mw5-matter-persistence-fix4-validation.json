@@ -1,0 +1,78 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "delivery": "fix4",
+  "build_id": "mw5-matter-persistence-fix4",
+  "base_checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "base_delivery": "fix3",
+  "incremental_base": "MW5 fix3",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "review_input": {
+    "fix2_archive_sha256": "532E1E16063A12BCEA3F05461EFBF5F624825B601792278EA2BDD543D4F2025C",
+    "fix3_archive_sha256": "764A26A26CB61B9DBE495BF12BEE7A952A738AF46A07C9BC53C3B23338C54D1A",
+    "focused_result": "FAIL (18 failures / 59 assertions / 10.682 s)",
+    "confirmed_blocker": "MatterPersistenceCodec._finish_rehydration validated checksum on raw JSON-decoded DTO after integer-valued floats lost TYPE_FLOAT."
+  },
+  "scope": {
+    "changed_files": 10,
+    "production_code_files": 1,
+    "focused_test_files": 1,
+    "persistence_schema_changed": false,
+    "repository_bytes_changed": false,
+    "repository_generation_protocol_changed": false,
+    "world_catalog_changed": false
+  },
+  "implemented": {
+    "raw_transport_structural_checks_preserved": true,
+    "validate_checksum_raw_removed": true,
+    "typed_reconstruction_before_checksum": true,
+    "strict_typed_validation_required": true,
+    "typed_checksum_recomputed": true,
+    "typed_checksum_compared_with_persisted_checksum": true,
+    "stale_persisted_checksum_rejected": true,
+    "snapshot_strict_validation_assertion_added": true,
+    "ledger_strict_validation_assertion_added": true,
+    "result_strict_validation_assertion_added": true,
+    "fix3_exact_byte_publication_preserved": true
+  },
+  "focused_acceptance": {
+    "runner": "RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / RUN_MW5_MATTER_PERSISTENCE_TESTS.sh",
+    "test": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+    "watchdog_seconds": 300,
+    "assertion_count": "TO_BE_FIXED_BY_FIRST_INDEPENDENT_SUCCESSFUL_FIX4_RUN",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT",
+    "required_roundtrips": [
+      "matter brick snapshot",
+      "matter mass ledger",
+      "matter mutation result"
+    ]
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "validate_checksum_raw_occurrences_in_codec": 0,
+    "typed_compute_checksum_comparison": "PRESENT",
+    "typed_snapshot_contract_validation": "PRESENT",
+    "typed_ledger_contract_validation": "PRESENT",
+    "typed_result_contract_validation": "PRESENT",
+    "preload_targets": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "changed_file_manifest": "PASS",
+    "zip_path_safety": "PASS",
+    "overlay_byte_identity": "PASS",
+    "git_diff_check_equivalent": "PASS"
+  },
+  "required_regression_after_focused_pass": {
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "a3": "PASS",
+    "m6": "10/10 PASS",
+    "git_diff_check": "PASS"
+  }
+}

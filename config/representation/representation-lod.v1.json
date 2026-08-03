@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.representation_lod_config.v1",
+  "checkpoint": "v17.9.0-simulation-rl0-representation-contracts",
+  "build_id": "rl0-unified-representation-contracts",
+  "accepted_base": "v17.8.0-simulation-mw8-regional-authority-handoff",
+  "recommended_branch": "feature/rl0-representation-contracts",
+  "source_domains": [
+    "CONSTRUCTION",
+    "MATTER"
+  ],
+  "artifact_kinds": [
+    "DETAIL",
+    "IMPOSTOR",
+    "MACRO_PROXY",
+    "NONE",
+    "SIMPLIFIED_MESH"
+  ],
+  "lod_level_convention": {
+    "finest_level": 0,
+    "coarser_levels_increase": true,
+    "maximum_level": 32
+  },
+  "selection": {
+    "uses_screen_error": true,
+    "uses_geometric_error": true,
+    "uses_capability_fences": true,
+    "uses_bandwidth_budget": true,
+    "selects_coarsest_acceptable_candidate": true,
+    "requires_exact_source_revision_binding": true
+  },
+  "cache": {
+    "content_addressed": true,
+    "artifact_hash": "sha256",
+    "states": [
+      "BUILDING",
+      "EVICTED",
+      "FAILED",
+      "READY",
+      "STALE"
+    ]
+  },
+  "boundaries": {
+    "canonical_state_contains_mesh": false,
+    "artifact_is_authoritative": false,
+    "matter_and_construction_share_mesher": false,
+    "matter_and_construction_share_lifecycle_contracts": true,
+    "production_worlds_changed": false,
+    "world_catalog_changed": false
+  },
+  "next": "RL1 matter summary pyramid and dirty propagation"
+}

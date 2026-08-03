@@ -1,0 +1,9 @@
+AGENTS.md
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md
+docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md
+validation/v17.4.0-simulation-mw4-matter-mutations-fix2-validation.json
+validation/v17.4.0-simulation-mw4-matter-mutations-fix3-files.txt
+validation/v17.4.0-simulation-mw4-matter-mutations-fix3-validation.json

@@ -1,0 +1,75 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "delivery": "fix7",
+  "build_id": "mw5-matter-persistence-fix7",
+  "incremental_base": "MW5 fix6",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "review_input": {
+    "fix6_sha256": "5F207BDC9B22B0BB93EDBDED866A22126E902B35DCA28352F18BF524FBAB0BA9",
+    "focused_result": "FAIL, 4 failures / 136 assertions / 55.549 s",
+    "confirmed_persistence_state": "signed_distance_m -0.28383418702205 before and after restore at the old fixture center",
+    "confirmed_blocker": "the old fixture center was never proven to be inside the excavated vacuum"
+  },
+  "implemented": {
+    "witness_schema": "planet_simulator.mw5_process_witness.v1",
+    "witness_selection_source": "changed snapshot interior lattice",
+    "witness_requires_zero_occupancy": true,
+    "witness_requires_positive_sdf": true,
+    "witness_selection_order": [
+      "maximum boundary margin",
+      "maximum positive signed distance",
+      "stable address and sample index"
+    ],
+    "witness_confirmed_by_continuous_query_before_save": true,
+    "process_context_field": "witness_transport",
+    "process_context_forbids_center_transport": true,
+    "process_context_uses_exact_binary64_transport": true,
+    "recovery_requires_exact_sdf_equality": true,
+    "recovery_requires_positive_sdf_after_equality": true,
+    "durable_checkpoint_protocol_changed": false,
+    "persistence_transport_schema_changed": false,
+    "production_runtime_changed": false
+  },
+  "focused_acceptance": {
+    "runner": "RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / RUN_MW5_MATTER_PERSISTENCE_TESTS.sh",
+    "watchdog_seconds": 300,
+    "assertion_count": "TO_BE_FIXED_BY_FIRST_INDEPENDENT_SUCCESSFUL_FIX7_RUN",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT",
+    "required": [
+      "post-mutation positive witness exists",
+      "same-process restored witness SDF exactly equals pre-save SDF",
+      "witness remains positive after restore",
+      "process context contains witness_transport and no center_transport",
+      "fresh recovery process compares witness SDF exactly",
+      "exact replay remains idempotent"
+    ]
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "gdscript_delimiter_scan": "PASS",
+    "duplicate_functions": 0,
+    "old_worker_center_transport_field": 0,
+    "worker_witness_transport": "PRESENT",
+    "same_process_exact_witness_comparison": "PRESENT",
+    "cross_process_exact_witness_comparison": "PRESENT",
+    "changed_file_manifest": "PASS",
+    "git_diff_check_equivalent": "PASS",
+    "zip_path_safety": "PASS",
+    "overlay_byte_identity": "PASS"
+  },
+  "required_regression_after_focused_pass": {
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "a3": "PASS",
+    "m6": "10/10 PASS",
+    "git_diff_check": "PASS"
+  }
+}

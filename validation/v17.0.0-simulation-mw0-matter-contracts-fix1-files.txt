@@ -1,0 +1,8 @@
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md
+scripts/simulation/matter/matter_contract_utils.gd
+tests/matter/contracts/test_mw0_matter_contracts.gd
+validation/v17.0.0-simulation-mw0-matter-contracts-fix1-files.txt
+validation/v17.0.0-simulation-mw0-matter-contracts-fix1-validation.json

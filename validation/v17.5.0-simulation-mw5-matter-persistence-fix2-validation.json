@@ -1,0 +1,76 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "delivery": "fix2",
+  "build_id": "mw5-matter-persistence-fix2",
+  "base_checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "base_delivery": "fix3",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "review_input": {
+    "fix1_archive_sha256": "AF0644DE53C92DCB66C64256C50849544C14B7D3AA0FF3BFB38176822FD41410",
+    "fix1_focused_result": "FAIL (19 failures / 55 assertions / 19.746 s)",
+    "primary_error_chain": "INVALID_PERSISTED_MATTER_SNAPSHOT -> MATTER_PENDING_VERIFY_FAILED",
+    "confirmed_causes": [
+      "Focused helper used JSON.stringify(value) without full precision.",
+      "Repository file serialization and checksum canonicalization used separate JSON paths.",
+      "Snapshot rehydration rebuilt samples/palette instead of preserving persisted columnar channels.",
+      "PROJECT_MANIFEST.txt had an extra terminal blank line."
+    ]
+  },
+  "scope": {
+    "changed_files": 10,
+    "production_code_files": 2,
+    "focused_test_files": 1,
+    "persistence_schema_changed": false,
+    "repository_protocol_changed": false,
+    "runtime_world_catalog_changed": false,
+    "moon_runtime_changed": false,
+    "network_authority_added": false
+  },
+  "implemented": {
+    "shared_canonical_persistence_encoder": true,
+    "repository_uses_canonical_persistence_encoder": true,
+    "focused_roundtrip_uses_canonical_persistence_encoder": true,
+    "ordinary_json_stringify_in_mw5_roundtrip_remaining": 0,
+    "snapshot_columnar_representation_preserved": true,
+    "snapshot_palette_order_preserved": true,
+    "raw_snapshot_checksum_required": true,
+    "typed_snapshot_checksum_required": true,
+    "snapshot_canonical_representation_equality_required": true,
+    "stale_checksum_corruption_regression_preserved": true,
+    "project_manifest_single_terminal_newline": true,
+    "repository_canonical_bytes_regression": true
+  },
+  "focused_acceptance": {
+    "runner": "RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / RUN_MW5_MATTER_PERSISTENCE_TESTS.sh",
+    "test": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+    "process_worker": "res://tools/matter/mw5_persistence_worker.gd",
+    "watchdog_seconds": 300,
+    "assertion_count": "TO_BE_FIXED_BY_FIRST_INDEPENDENT_SUCCESSFUL_FIX2_RUN",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "preload_targets": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "canonical_encoder_usage_scan": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "changed_file_manifest": "PASS",
+    "zip_path_safety": "PASS",
+    "overlay_byte_identity": "PASS",
+    "git_diff_check_equivalent": "PASS"
+  },
+  "required_regression_after_focused_pass": {
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "a3": "PASS",
+    "m6": "10/10 PASS",
+    "git_diff_check": "PASS"
+  }
+}

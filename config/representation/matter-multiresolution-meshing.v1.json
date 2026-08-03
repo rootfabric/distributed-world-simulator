@@ -1,0 +1,28 @@
+{
+  "schema": "planet_simulator.matter_multiresolution_meshing_config.v1",
+  "checkpoint": "v17.13.0-simulation-rl2-matter-multiresolution-meshing",
+  "build_id": "rl2-matter-multiresolution-meshing-transitions",
+  "accepted_base": "v17.12.0-simulation-mw10-cross-region-matter-transactions",
+  "recommended_branch": "feature/rl2-matter-multiresolution-meshing",
+  "maximum_lod_level": 2,
+  "lattice_resolution_per_scope": "GRID_PROFILE_BRICK_INTERIOR_RESOLUTION",
+  "lod_scope_mapping": {
+    "0": "one max-level MatterBrickSnapshot",
+    "1": "eight max-level MatterBrickSnapshots under one parent scope",
+    "2": "sixty-four max-level MatterBrickSnapshots under one grandparent scope"
+  },
+  "mesher": "FREUDENTHAL_MARCHING_TETRAHEDRA",
+  "transition_strategy": "FINE_BOUNDARY_SKIRT_V1",
+  "maximum_neighbor_lod_delta": 1,
+  "transition_depth_rule": "max(coarse sample spacing, coarse geometric error)",
+  "content_addressed_artifacts": true,
+  "exact_rl1_summary_source_binding": true,
+  "shared_sample_consistency_required": true,
+  "canonical_matter_changed": false,
+  "network_streaming_added": false,
+  "background_scheduler_added": false,
+  "disk_cache_added": false,
+  "production_worlds_changed": false,
+  "world_catalog_changed": false,
+  "next": "RL3 representation-aware network streaming"
+}

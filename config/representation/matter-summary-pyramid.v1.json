@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.matter_summary_pyramid_config.v1",
+  "checkpoint": "v17.10.0-simulation-rl1-matter-summary-pyramid",
+  "build_id": "rl1-matter-summary-pyramid-dirty-propagation",
+  "accepted_base": "v17.9.0-simulation-rl0-representation-contracts-fix1",
+  "recommended_branch": "feature/rl1-matter-summary-pyramid",
+  "summary": {
+    "regional_authority_scoped": true,
+    "parent_child_branching": 8,
+    "contains_min_max_sdf": true,
+    "contains_occupancy_range": true,
+    "contains_surface_presence": true,
+    "contains_material_occupancy_weights": true,
+    "contains_descendant_revision_hash": true,
+    "content_addressed_persistence_entries": true,
+    "persistence_manifest_binds_source_revision": true,
+    "full_rl0_source_revision_frontier": true
+  },
+  "dirty_propagation": {
+    "mutation_marks_changed_cell_and_ancestors": true,
+    "mutation_stops_at_authority_region_root": true,
+    "handoff_marks_loaded_region_subtree": true,
+    "queue_is_bounded": true,
+    "queue_updates_are_atomic": true,
+    "rebuild_order_is_fine_to_coarse": true,
+    "same_cell_events_are_coalesced": true,
+    "previous_frontier_must_match_exactly": true
+  },
+  "boundaries": {
+    "canonical_matter_state_changed": false,
+    "mw8_authority_protocol_changed": false,
+    "mw7_wire_protocol_changed": false,
+    "mesh_or_collision_generated": false,
+    "production_worlds_changed": false,
+    "world_catalog_changed": false
+  },
+  "next": "MW9 durable distributed handoff and crash recovery"
+}

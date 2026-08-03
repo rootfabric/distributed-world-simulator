@@ -1,12 +1,84 @@
+## MW10 cross-region Matter transactions
+
+- [`architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`](architecture/MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md) — atomic reservations, distributed mass ledger, durable decision/recovery и global invalidation outbox.
+- [`architecture/adr/ADR-020-cross-region-matter-transactions.md`](architecture/adr/ADR-020-cross-region-matter-transactions.md) — решение о двухфазной multi-region transaction и handoff interlock.
+- [`checkpoints/2026-08-03_V17_12_0_SIMULATION_MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md`](checkpoints/2026-08-03_V17_12_0_SIMULATION_MW10_CROSS_REGION_MATTER_TRANSACTIONS_RU.md) — MW10 candidate и acceptance matrix.
+
+## MW9 durable authority recovery
+
+- [`architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md`](architecture/MW9_DURABLE_DISTRIBUTED_HANDOFF_RECOVERY_RU.md) — durable lease, fencing, append-only handoff journal и deterministic crash recovery.
+- [`architecture/adr/ADR-019-durable-matter-authority-handoff.md`](architecture/adr/ADR-019-durable-matter-authority-handoff.md) — решение о commit point и recovery rule.
+- [`checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md`](checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_RU.md) — принятый MW9 fix2 и acceptance matrix.
+
 # Документация PlanetSimulator
 
-Принятый runtime checkpoint: `v16.10.3-domain-m4-canonical-shared-gameplay`.
-Текущий этап: `v16.10.3-pre-m5-graphical-acceptance-preparation` (`candidate`).
+## RL1 Matter Summary Pyramid
 
-M4 принят; подготовка M5 добавляет read-only Item Graph UI projection, command adapter, transient cursor state, networked inventory shell и изолированные process profiles. Полный UI-driven two-client acceptance ещё не заявлен.
+- [`architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md`](architecture/RL1_MATTER_SUMMARY_PYRAMID_RU.md) — leaf/parent summaries, regional authority boundary, dirty propagation, rebuild queue и persistence manifest.
+- [`checkpoints/2026-08-02_V17_10_0_SIMULATION_RL1_MATTER_SUMMARY_PYRAMID_RU.md`](checkpoints/2026-08-02_V17_10_0_SIMULATION_RL1_MATTER_SUMMARY_PYRAMID_RU.md) — checkpoint и independent acceptance matrix.
+- [`plans/REPRESENTATION_LOD_ROADMAP_RU.md`](plans/REPRESENTATION_LOD_ROADMAP_RU.md) — дальнейший порядок MW9 → MW10 → RL2.
+
+## Representation LOD Fabric
+
+- [`architecture/REPRESENTATION_LOD_FABRIC_RU.md`](architecture/REPRESENTATION_LOD_FABRIC_RU.md) — общая архитектура Matter/Construction detail, proxy и impostor representations.
+- [`architecture/adr/ADR-018-representation-lod-fabric.md`](architecture/adr/ADR-018-representation-lod-fabric.md) — решение о едином lifecycle и разных geometry builders.
+- [`plans/REPRESENTATION_LOD_ROADMAP_RU.md`](plans/REPRESENTATION_LOD_ROADMAP_RU.md) — RL0–RL6, MW9/MW10 ordering и integration gates.
+- [`checkpoints/2026-08-02_V17_9_0_SIMULATION_RL0_REPRESENTATION_CONTRACTS_RU.md`](checkpoints/2026-08-02_V17_9_0_SIMULATION_RL0_REPRESENTATION_CONTRACTS_RU.md) — RL0 candidate и focused acceptance.
+
+## Mutable worlds
+
+- [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7: региональные persistent-brick projections, enter/leave и reconnect.
+- [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — MW7 candidate и acceptance matrix.
+- [`architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — MW8: freeze/prepare/commit, single-owner lease и regional state transfer.
+- [`checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — MW8 candidate и acceptance matrix.
+- [`architecture/DYNAMIC_MATTER_FABRIC_RU.md`](architecture/DYNAMIC_MATTER_FABRIC_RU.md) — целевая парадигма вещества.
+- [`architecture/MW4_MATTER_MUTATIONS_RU.md`](architecture/MW4_MATTER_MUTATIONS_RU.md) — MW4: транзакционное бурение, session-local persistent mutations, fix1 performance boundary и fix2 JSON-safe energy boundary.
+- [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — MW5: durable matter checkpoint, typed recovery и exact canonical bytes.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md) — MW5 fix4: checksum проверяется на восстановленном typed DTO, а не на JSON-decoded raw payload.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md) — MW5 fix5: exact IEEE-754 binary64 float tags и versioned transport envelope.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX6_RU.md) — MW5 fix6: фактический Godot binary64 hex и exact `center_m` transport между процессами.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX7_RU.md) — MW5 fix7: доказанный positive-SDF witness и exact comparison после restart.
+- [`checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md`](checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md) — исходный checkpoint MW4.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md) — MW4 fix1: linear validated access, reduced focused fixture и bounded runner.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md) — функционально прошедший MW4 fix2; verified topology `187 assertions`.
+- [`checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md`](checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md) — metadata-only fix3: topology correction `103 → 187`.
+- [`plans/MUTABLE_WORLDS_ROADMAP_RU.md`](plans/MUTABLE_WORLDS_ROADMAP_RU.md) — roadmap MW0–MW8 и интеграция Луны.
+
+
+## Изменяемые миры и динамическое вещество
+
+- `architecture/DYNAMIC_MATTER_FABRIC_RU.md` — целевая модель: процедурный объём, sparse persistent mutations, сохранение массы и переходы field/fragment/item/construct;
+- `architecture/adr/ADR-017-dynamic-matter-fabric.md` — ADR, заменяющий прежнее общее решение heightfield + voxel;
+- `plans/MUTABLE_WORLDS_ROADMAP_RU.md` — MW0–MW8 изолированного астероида, MI0–MI4 интеграции Луны и MP0–MP4 production track;
+- `checkpoints/2026-07-31_MUTABLE_WORLDS_ARCHITECTURE_ROADMAP_RU.md` — документационный checkpoint анализа текущего среза.
+- `architecture/MW0_MATTER_CONTRACTS_RU.md` — принятая граница контрактов вещества, snapshot channels, mutations и mass ledger;
+- `architecture/MW1_FIXED_SEED_ASTEROID_RU.md` — accepted fixed-seed volumetric asteroid, stable features, geology и mass integration;
+- `architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md` — octree cells, sparse materialization, ghost seams и canonical query service;
+- `architecture/MW3_LOCAL_MESHING_RU.md` — Freudenthal local meshing, ghost-gradient normals, static collision и camera-local streamer;
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_RU.md` — первый code checkpoint geological track.
+- `checkpoints/2026-07-31_V17_0_0_SIMULATION_MW0_MATTER_CONTRACTS_FIX1_RU.md` — принятое исправление typed normalization MW0.
+- `checkpoints/2026-07-31_V17_1_0_SIMULATION_MW1_FIXED_SEED_ASTEROID_RU.md` — принятый MW1.
+- `checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_RU.md` — исходный MW2 candidate.
+- `checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_FIX1_RU.md` — принятый MW2 fix1: `get_snapshot()` вместо конфликтующего `get()`.
+- `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_RU.md` — исходный MW3 local meshing candidate.
+- `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX1_RU.md` — MW3 fix1: безопасная transform-композиция streamer и обязательный non-empty seam.
+- `checkpoints/2026-07-31_V17_3_0_SIMULATION_MW3_LOCAL_MESHING_FIX2_RU.md` — текущий MW3 fix2 candidate: streamer использует `SimulationCellAddress.cell_id`.
+- `checkpoints/2026-07-31_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_RU.md` — исходный MW4 candidate.
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX1_RU.md` — текущий MW4 fix1 performance candidate.
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md` — функционально прошедший MW4 fix2 (`187 assertions`).
+- `checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX3_RU.md` — текущий metadata-only fix3.
+
+Принятый runtime checkpoint: `v16.10.5-persistence-m6-dedicated-recovery` (`ACCEPTED`, delivery `fix1`).
+Текущий architecture candidate: `v16.10.6-architecture-a3-single-server-multiplayer`.
+
+M1–M6 сформировали единый production gameplay path с graphical multiplayer, canonical Item Graph, reconnect/replay и durable recovery. A3 фиксирует эту архитектуру перед B1 NATS Core adapter.
 
 Ключевые документы:
 
+- `architecture/A3_SINGLE_SERVER_MULTIPLAYER_ARCHITECTURE_RU.md` — freeze единственного production single-server gameplay path;
+- `checkpoints/2026-07-31_V16_10_6_ARCHITECTURE_A3_SINGLE_SERVER_MULTIPLAYER_RU.md`;
+- `architecture/M6_DEDICATED_PERSISTENCE_RECOVERY_RU.md`;
+- `checkpoints/2026-07-31_V16_10_5_PERSISTENCE_M6_DEDICATED_RECOVERY_RU.md`;
 - `MCP_GODOT.md` — контракт автономного управления double Godot через MCP:
   managed processes, runtime input, viewport screenshots, assertions, логи и
   корректное завершение процесса;
@@ -175,3 +247,32 @@ Checkpoint: `checkpoints/2026-07-27_V16_3_2_FOUNDATION_LIFECYCLE_PART2_RU.md`.
 
 - [`architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](architecture/M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
 - [`checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md`](checkpoints/2026-07-31_V16_10_4_TESTING_M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE_RU.md)
+
+
+## MW5 matter persistence
+
+- [`architecture/MW5_MATTER_PERSISTENCE_RU.md`](architecture/MW5_MATTER_PERSISTENCE_RU.md) — формат checkpoint, typed rehydration, atomic repository и recovery semantics.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_RU.md) — исходный candidate checkpoint и acceptance matrix.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX1_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX1_RU.md) — исправление typed JSON rehydration до strict validation.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md) — единый canonical encoder для файла и checksum-domain, плюс snapshot channel-preserving rehydration.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md) — raw bytes опубликованного checkpoint строго равны canonical persistence bytes.
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX4_RU.md) — typed checksum-domain после JSON transport и запрет validate_checksum(raw).
+- [`checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md`](checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX5_RU.md) — round-trip-safe binary64 transport, envelope checksum и exact typed checksum restore.
+
+## MW6 matter network authority
+
+- [`architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md`](architecture/MW6_MATTER_NETWORK_AUTHORITY_RU.md) — single-server authority, exact wire DTO, delta replay и snapshot fallback.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_RU.md) — candidate checkpoint и acceptance matrix.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX1_RU.md) — bounded snapshot-resync для A3/M6 и fencing superseded delta.
+- [`checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md`](checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md) — parse-only исправление явных Dictionary-типов в новом M6 resync contract.
+
+## MW7 matter regional interest
+
+- [`architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md`](architecture/MW7_MATTER_INTEREST_REPLICATION_RU.md) — per-client cell subscriptions, regional sequence/hash и двухфазный enter/leave.
+- [`checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md`](checkpoints/2026-08-02_V17_7_0_SIMULATION_MW7_MATTER_INTEREST_REPLICATION_RU.md) — candidate checkpoint и полная regression-матрица.
+
+
+## MW8 regional authority handoff
+
+- [`architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](architecture/MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — authority directory, handoff package, rollback и client ticket.
+- [`checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md`](checkpoints/2026-08-02_V17_8_0_SIMULATION_MW8_REGIONAL_AUTHORITY_HANDOFF_RU.md) — candidate checkpoint и полная regression-матрица.

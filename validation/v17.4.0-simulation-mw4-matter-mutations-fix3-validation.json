@@ -1,0 +1,67 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "delivery": "fix3",
+  "build_id": "mw4-matter-mutations-fix3",
+  "status": "CANDIDATE_FOR_METADATA_REVIEW",
+  "base_checkpoint": "v17.3.0-simulation-mw3-local-meshing",
+  "base_delivery": "fix2-accepted-plus-mw4-initial-plus-fix1-plus-fix2",
+  "recommended_branch": "feature/mw4-matter-mutations",
+  "scope": {
+    "changed_file_count": 9,
+    "metadata_only": true,
+    "production_code_changed": false,
+    "test_logic_changed": false,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "world_catalog_changed": false,
+    "network_runtime_changed": false,
+    "transaction_semantics_changed": false,
+    "mass_semantics_changed": false,
+    "performance_boundary_changed": false
+  },
+  "review_input": {
+    "fix2_patch_sha256": "00872874C709A65EEE7E6FD11D062F0BBC81FCE5E3F5E55C8C245277D4135EC2",
+    "mw4_focused": "187 ASSERTIONS PASS",
+    "mw4_duration_seconds": 10.843,
+    "mw3_regression": "7519 ASSERTIONS PASS",
+    "mw2_regression": "7470 ASSERTIONS PASS",
+    "mw1_regression": "3685 ASSERTIONS PASS",
+    "mw0_regression": "2011 ASSERTIONS PASS",
+    "a3_regression": "PASS",
+    "m6_regression": "10/10 PASS",
+    "git_diff_check": "PASS"
+  },
+  "root_cause": {
+    "incorrect_recorded_assertions": 103,
+    "actual_successful_assertions": 187,
+    "explanation": "The prior 100 count came from an aborted partial fix1 run and was not the complete successful focused topology."
+  },
+  "implementation": {
+    "expected_focused_assertions": 187,
+    "fix2_checkpoint_corrected": true,
+    "fix2_validation_corrected": true,
+    "manifest_corrected": true,
+    "production_code_unchanged": true,
+    "focused_test_logic_unchanged": true
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "utf8_decode": "PASS",
+    "stale_103_assertions_scan": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "archive_duplicate_paths": "PASS",
+    "changed_file_manifest": "PASS",
+    "code_files_in_delivery": "NONE"
+  },
+  "acceptance_required": [
+    "All current MW4 topology metadata reports 187 assertions",
+    "No stale topology claims using the prior value remain",
+    "Production code and focused test logic are absent from the delivery",
+    "JSON validation PASS",
+    "git diff --check PASS"
+  ]
+}

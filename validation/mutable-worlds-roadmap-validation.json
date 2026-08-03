@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.mutable_worlds_roadmap_validation.v1",
+  "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "delivery_kind": "documentation-only-planning-patch",
+  "source_archive": {
+    "name": "lunar-world-double-godot-20260731-154400.zip",
+    "sha256": "5E1359C22FE4B16AFD03FBA75526EC0195D6B4C2E54AD4E89DB2D2046FCB5E89",
+    "entries": 1233,
+    "unsafe_paths": 0
+  },
+  "decision": "DYNAMIC_MATTER_FABRIC_WITH_ISOLATED_ASTEROID_LAB_FIRST",
+  "asteroid_lab_target": {
+    "world_id": "asteroid_matter_lab",
+    "body_id": "asteroid-lab-001",
+    "radius_m": 1000.0,
+    "seed": 2026073101,
+    "frame_id": "body/asteroid-lab-001/fixed",
+    "grid_id": "body-cartesian-octree",
+    "grid_revision": 1,
+    "root_half_extent_m": 1024.0
+  },
+  "project_findings": [
+    "Current Moon terrain is a radial heightfield with GLOBAL/REGIONAL/LOCAL/ULTRA presentation layers.",
+    "Current near-surface sampling contains observer-window-dependent micro detail and cannot be used unchanged as canonical persistent geology.",
+    "CubeSphereGrid remains suitable for surface identity and interest but not for volumetric depth addressing.",
+    "S0 hierarchical simulation cells, A1 generic aggregates, M0 atomic transactions and S1 compute separation are reusable foundations.",
+    "The world catalog supports an isolated asteroid laboratory without changing moon, earth or earth_moon runtimes."
+  ],
+  "roadmap_tracks": {
+    "laboratory": "MW0-MW8",
+    "moon_integration": "MI0-MI4",
+    "production": "MP0-MP4"
+  },
+  "checks": {
+    "runtime_code_changed": false,
+    "config_changed": false,
+    "markdown_local_links": "PASS",
+    "markdown_code_fences": "PASS",
+    "trailing_whitespace": "PASS",
+    "changed_file_scope": "PASS",
+    "godot_runtime_tests": "NOT_RUN_DOCUMENTATION_ONLY",
+    "git_diff_check_equivalent": "PASS_NO_WHITESPACE_ERRORS"
+  },
+  "next_recommended_stage": {
+    "logical_stage": "MW0",
+    "branch": "feature/mw0-matter-contracts",
+    "scope": "pure matter contracts, material catalog, invariants and property tests",
+    "production_worlds_changed": false
+  },
+  "changed_files_manifest": "validation/mutable-worlds-roadmap-files.txt"
+}

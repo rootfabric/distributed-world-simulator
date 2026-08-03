@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.mw7_matter_interest_manifest.v1",
+  "checkpoint": "v17.7.0-simulation-mw7-matter-interest-replication",
+  "base_checkpoint": "v17.6.0-simulation-mw6-matter-network-replication",
+  "base_delivery": "fix2",
+  "recommended_branch": "feature/mw7-matter-interest-replication",
+  "fixture_body_id": "body/asteroid-mw0",
+  "regional_interest": true,
+  "interest_shape": "CELL_CUBE",
+  "maximum_radius_cells": 8,
+  "persistent_bricks_only": true,
+  "procedural_revision_zero_replicated": false,
+  "full_body_sparse_store_sent": false,
+  "interest_enter_leave": true,
+  "regional_delta_replay": true,
+  "regional_snapshot_fallback": true,
+  "exact_binary64_wire_payload": true,
+  "network_command_gateway_reused": true,
+  "replication_envelope_reused": true,
+  "global_authority_stream_preserved": true,
+  "per_subscription_region_sequence": true,
+  "production_moon_changed": false,
+  "world_catalog_changed": false,
+  "cross_server_interest_handoff": false,
+  "network_transport": {
+    "command": "planet_simulator.network_command.v1",
+    "replication_envelope": "planet_simulator.replication_envelope.v1",
+    "interest_frame": "planet_simulator.matter_interest_frame.v1",
+    "exact_payload_transport": "planet_simulator.matter_persistence_transport.v1"
+  },
+  "subscription": {
+    "center": "simulation_cell_address",
+    "metric": "chebyshev_cell_distance",
+    "revision_fence": true,
+    "same_revision_conflict_rejected": true
+  },
+  "reconnect": {
+    "contiguous_region_delta_replay": true,
+    "projection_hash_fence": true,
+    "regional_snapshot_on_gap_or_eviction": true,
+    "sequence_gap_requires_resync": true
+  }
+}

@@ -1,0 +1,10 @@
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/architecture/MW2_SPARSE_BRICKS_AND_QUERY_RU.md
+docs/checkpoints/2026-07-31_V17_2_0_SIMULATION_MW2_SPARSE_BRICKS_FIX1_RU.md
+scripts/simulation/matter/query/matter_query_service.gd
+scripts/simulation/matter/storage/matter_sparse_brick_store.gd
+tests/matter/spatial/test_mw2_sparse_bricks_and_query.gd
+validation/v17.2.0-simulation-mw2-sparse-bricks-fix1-files.txt
+validation/v17.2.0-simulation-mw2-sparse-bricks-fix1-validation.json

@@ -1,0 +1,107 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "delivery": "initial",
+  "build_id": "mw2-sparse-bricks",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v17.1.0-simulation-mw1-fixed-seed-asteroid",
+  "base_delivery": "initial-accepted",
+  "recommended_branch": "feature/mw2-sparse-bricks",
+  "scope": {
+    "changed_file_count": 24,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "network_runtime_changed": false,
+    "item_graph_changed": false,
+    "mesh_or_collision_added": false,
+    "persistence_added": false,
+    "sparse_in_memory_storage_added": true
+  },
+  "fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_version": "1.0.0",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0,
+    "root_half_extent_m": 1450.0,
+    "grid_id": "matter-grid-mw2",
+    "grid_revision": 1,
+    "max_cell_level": 5,
+    "brick_interior_resolution": 8,
+    "ghost_border_samples": 1,
+    "sample_axis_count": 11,
+    "sample_count": 1331
+  },
+  "root_bounds_hardening": {
+    "profile_required_formula": "reference_radius * max(axis_scale) + sum(surface_noise_amplitudes) + margin",
+    "default_profile_required_radius_m": 1218.0,
+    "feature_required_formula": "max(profile_required, length(lobe_center) + max(lobe_radii) + margin)",
+    "shifted_grid_containment_checked": true
+  },
+  "shadow_spatial_checks": {
+    "status": "PASS",
+    "model": "independent Python translation of octree bounds, position ownership and lattice coordinates",
+    "random_position_count": 60000,
+    "levels_checked": 6,
+    "center_tie_break_path_level_3": [
+      7,
+      0,
+      0
+    ],
+    "nested_sibling_seam_sets_checked": 5,
+    "shared_face_coordinates": "BIT_IDENTICAL",
+    "positive_ghost_overlap_coordinates": "BIT_IDENTICAL",
+    "negative_ghost_overlap_coordinates": "BIT_IDENTICAL",
+    "sample_count_identity": "11^3=1331",
+    "lattice_position_round_trips": 3993
+  },
+  "focused_test_topology": {
+    "static_expected_assertions": 7470,
+    "hierarchy_random_iterations_per_level": 64,
+    "full_lattice_round_trip_count": 1331,
+    "shared_face_samples_compared": 121,
+    "ghost_overlap_bands_compared": 2,
+    "same_checksum_typed_variant_conflict_covered": true,
+    "wrong_layout_snapshot_covered": true,
+    "stale_revision_covered": true,
+    "off_lattice_no_snap_covered": true,
+    "nested_sibling_pairs_checked": 5,
+    "nested_sibling_levels_checked": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "invalid_body_definition_store_fence_covered": true
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "bash_runner_syntax": "PASS",
+    "powershell_runner_syntax": "NOT_RUN",
+    "preload_target_check": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "domain_presentation_dependency_audit": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "changed_file_manifest": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "mw1_regression": "NOT_RUN",
+    "mw0_regression": "NOT_RUN",
+    "a3_regression": "NOT_RUN",
+    "m6_regression": "NOT_RUN",
+    "overlay_equivalence": "PASS",
+    "archive_duplicate_paths": "PASS"
+  },
+  "not_run_reason": "Godot 4.7.1 double-precision executable and PowerShell are not available in the execution container.",
+  "independent_acceptance_required": [
+    "MW2 focused runner PASS with no parser/preload errors",
+    "MW1 3685 assertions PASS",
+    "MW0 2011 assertions PASS",
+    "A3 12/12 PASS",
+    "M6 10/10 PASS",
+    "git diff --check PASS"
+  ]
+}

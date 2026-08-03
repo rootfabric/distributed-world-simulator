@@ -1,0 +1,102 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.3.0-simulation-mw3-local-meshing",
+  "delivery": "initial",
+  "build_id": "mw3-local-meshing",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "base_delivery": "fix1-accepted",
+  "recommended_branch": "feature/mw3-local-meshing",
+  "scope": {
+    "changed_file_count": 21,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "world_catalog_changed": false,
+    "network_runtime_changed": false,
+    "item_graph_changed": false,
+    "canonical_matter_changed": false,
+    "local_mesh_added": true,
+    "local_static_collision_added": true,
+    "laboratory_scene_added": true,
+    "persistence_added": false,
+    "matter_mutations_added": false
+  },
+  "implementation": {
+    "algorithm": "FREUDENTHAL_MARCHING_TETRAHEDRA",
+    "tetrahedra_per_cell": 6,
+    "iso_level_m": 0.0,
+    "normal_source": "CENTRAL_SDF_GRADIENT_FROM_MW2_GHOST_SAMPLES",
+    "triangle_winding": "GODOT_CLOCKWISE_ALIGNED_TO_OUTWARD_GRADIENT",
+    "mesh_coordinate_space": "CELL_CENTER_RELATIVE_BODY_FIXED",
+    "seam_contract": [
+      "BOUNDARY_VERTEX_EQUALITY",
+      "BOUNDARY_NORMAL_EQUALITY",
+      "BOUNDARY_SEGMENT_EQUALITY"
+    ],
+    "collision_shape": "STATIC_TWO_SIDED_CONCAVE_POLYGON",
+    "streaming": "CAMERA_LOCAL_MAIN_THREAD_BOUNDED_QUEUE",
+    "focused_static_expected_assertions": 7518
+  },
+  "independent_spatial_model": {
+    "status": "PASS",
+    "level_5_cell_edge_m": 90.625,
+    "level_5_sample_spacing_m": 11.328125,
+    "synthetic_plane": {
+      "left_vertices": 289,
+      "right_vertices": 289,
+      "triangles_per_side": 512,
+      "shared_boundary_vertices": 17,
+      "shared_boundary_normals": 17,
+      "shared_boundary_segments": 16,
+      "seam_equal": true,
+      "clockwise_winding": true
+    },
+    "fixed_seed_asteroid": {
+      "positive_x_surface_radius_m": 1142.9147431283163,
+      "positive_y_sibling_vertices": 289,
+      "negative_y_sibling_vertices": 291,
+      "positive_y_sibling_triangles": 512,
+      "negative_y_sibling_triangles": 514,
+      "shared_boundary_vertices": 17,
+      "shared_boundary_normals": 17,
+      "shared_boundary_segments": 16,
+      "seam_equal": true
+    }
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "utf8_decode": "PASS",
+    "preload_and_scene_target_audit": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "reserved_object_api_scan": "PASS",
+    "canonical_matter_byte_identity": "PASS",
+    "presentation_dependency_boundary": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "bash_runner_syntax": "PASS",
+    "powershell_runner_structure": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "archive_duplicate_paths": "PASS",
+    "changed_file_manifest": "PASS",
+    "overlay_byte_equivalence": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "mw2_regression": "NOT_RUN",
+    "mw1_regression": "NOT_RUN",
+    "mw0_regression": "NOT_RUN",
+    "a3_regression": "NOT_RUN",
+    "m6_regression": "NOT_RUN"
+  },
+  "not_run_reason": "Godot 4.7.1 double-precision executable and PowerShell are not available in the execution container. No ordinary Godot executable could be materialized or downloaded into the isolated runtime.",
+  "independent_acceptance_required": [
+    "MW3 focused runner PASS with 7518 assertions and no parser/preload errors",
+    "Open res://scenes/labs/matter_asteroid_meshing_lab.tscn and confirm visible local asteroid surface without seam cracks",
+    "Confirm static collision exists on loaded surface bricks",
+    "MW2 7470 assertions PASS",
+    "MW1 3685 assertions PASS",
+    "MW0 2011 assertions PASS",
+    "A3 12/12 PASS",
+    "M6 10/10 PASS",
+    "git diff --check PASS"
+  ]
+}

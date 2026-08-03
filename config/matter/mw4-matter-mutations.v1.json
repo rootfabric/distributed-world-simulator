@@ -1,0 +1,49 @@
+{
+  "schema": "planet_simulator.mw4_matter_mutations_manifest.v1",
+  "checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "build_id": "mw4-matter-mutations",
+  "base_checkpoint": "v17.3.0-simulation-mw3-local-meshing",
+  "base_delivery": "fix2",
+  "recommended_branch": "feature/mw4-matter-mutations",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "world_catalog_changed": false,
+  "canonical_matter_changed": true,
+  "transactional_excavation_added": true,
+  "local_persistent_mutations_added": true,
+  "disk_persistence_added": false,
+  "network_authority_added": false,
+  "mutation": {
+    "operation_type": "EXCAVATE",
+    "shape": "SWEPT_CAPSULE",
+    "boolean_operation": "SDF_DIFFERENCE_MAX_A_NEGATIVE_B",
+    "target_policy": "EXACT_AFFECTED_BRICK_SET_WITH_MUTATION_BAND_AND_GHOST_EXPANSION",
+    "revision_policy": "EXPECTED_REVISION_PLUS_ONE",
+    "acceptance_policy": "FULL_OR_REJECT",
+    "replay_policy": "EXACT_REQUEST_REPLAY_OR_FINGERPRINT_CONFLICT",
+    "mass_policy": "PER_MATERIAL_CLOSED_LEDGER",
+    "energy_policy": "CATALOG_MINING_ENERGY_PER_KILOGRAM",
+    "sdf_storage_policy": "ONE_SAMPLE_NARROW_BAND_AROUND_TOOL_BOUNDARY"
+  },
+  "storage": {
+    "scope": "IN_MEMORY_WORLD_SESSION",
+    "atomic_multi_brick_commit": true,
+    "rollback_on_receiver_or_journal_failure": true,
+    "generated_mesh_is_persistent": false
+  },
+  "material_receiver": {
+    "output": "MATTER_MATERIAL_BATCH_V1",
+    "capacity_dimensions": [
+      "MASS_KG",
+      "BULK_VOLUME_M3"
+    ],
+    "partial_acceptance": false
+  },
+  "continuous_query": {
+    "stored_snapshot_interpolation": "TRILINEAR",
+    "procedural_fallback": true,
+    "raycast": "SIGNED_DISTANCE_SPHERE_TRACE_WITH_BISECTION"
+  },
+  "lab_scene": "res://scenes/labs/matter_asteroid_excavation_lab.tscn",
+  "focused_test": "res://tests/matter/mutation/test_mw4_matter_mutations.gd"
+}

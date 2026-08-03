@@ -1,0 +1,68 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.3.0-simulation-mw3-local-meshing",
+  "delivery": "fix2",
+  "build_id": "mw3-local-meshing-fix2",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "base_delivery": "fix1-accepted",
+  "recommended_branch": "feature/mw3-local-meshing",
+  "scope": {
+    "changed_file_count": 8,
+    "canonical_matter_changed": false,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "world_catalog_changed": false,
+    "network_runtime_changed": false,
+    "item_graph_changed": false
+  },
+  "review_blockers_closed": {
+    "streamer_global_position_before_ready": true,
+    "empty_seam_false_positive": true,
+    "seam_success_details_envelope": true,
+    "streamer_simulation_cell_identifier": true
+  },
+  "implementation": {
+    "simulation_cell_identity_field": "cell_id",
+    "streamer_internal_queue_key": "address_id",
+    "streamer_internal_queue_value_source": "SimulationCellAddress.cell_id",
+    "stale_spatial_address_id_reads": 0,
+    "focused_static_expected_assertions": 7519
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "utf8_decode": "PASS",
+    "preload_target_audit": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "stale_streamer_address_id_scan": "PASS",
+    "streamer_cell_id_scan": "PASS",
+    "canonical_matter_byte_identity": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "archive_duplicate_paths": "PASS",
+    "changed_file_manifest": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "mw2_regression": "NOT_RUN",
+    "mw1_regression": "NOT_RUN",
+    "mw0_regression": "NOT_RUN",
+    "a3_regression": "NOT_RUN",
+    "m6_regression": "NOT_RUN"
+  },
+  "not_run_reason": "Godot 4.7.1 double-precision executable is not available in the execution container.",
+  "independent_acceptance_required": [
+    "MW3 focused runner PASS with 7519 assertions and no parser/preload errors",
+    "Streamer desired neighborhood contains 27 cells for radius 1",
+    "Streamer first pending brick is classified without failed state",
+    "Observer movement changes desired cell IDs and advances generation",
+    "Observer outside root is rejected",
+    "Synthetic and real seam validations remain non-empty and PASS",
+    "MW2 7470 assertions PASS",
+    "MW1 3685 assertions PASS",
+    "MW0 2011 assertions PASS",
+    "A3 12/12 PASS",
+    "M6 10/10 PASS",
+    "git diff --check PASS"
+  ]
+}

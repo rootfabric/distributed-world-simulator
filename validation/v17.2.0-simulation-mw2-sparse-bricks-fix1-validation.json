@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "delivery": "fix1",
+  "build_id": "mw2-sparse-bricks-fix1",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v17.1.0-simulation-mw1-fixed-seed-asteroid",
+  "base_delivery": "initial-accepted",
+  "recommended_branch": "feature/mw2-sparse-bricks",
+  "scope": {
+    "changed_file_count": 10,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "network_runtime_changed": false,
+    "item_graph_changed": false,
+    "mesh_or_collision_added": false,
+    "persistence_added": false,
+    "sparse_store_semantics_changed": false
+  },
+  "initial_review_blocker": {
+    "status": "CONFIRMED",
+    "engine": "Godot 4.7.1 double-precision",
+    "error": "Could not resolve external class member get",
+    "affected_production_file": "scripts/simulation/matter/query/matter_query_service.gd",
+    "affected_test_file": "tests/matter/spatial/test_mw2_sparse_bricks_and_query.gd",
+    "root_cause": "MatterSparseBrickStore.get conflicts with inherited Object.get during preload-instance static member resolution"
+  },
+  "fix": {
+    "old_api": "get(address)",
+    "new_api": "get_snapshot(address)",
+    "production_call_sites_updated": 2,
+    "focused_test_call_sites_updated": 2,
+    "focused_assertion_count_unchanged": 7470
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "preload_target_check": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "reserved_get_declaration_scan": "PASS",
+    "stale_store_get_call_scan": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "changed_file_manifest": "PASS",
+    "archive_duplicate_paths": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "mw1_regression": "NOT_RUN",
+    "mw0_regression": "NOT_RUN",
+    "a3_regression": "NOT_RUN",
+    "m6_regression": "NOT_RUN"
+  },
+  "not_run_reason": "Godot 4.7.1 double-precision executable and PowerShell are not available in the execution container.",
+  "independent_acceptance_required": [
+    "MW2 focused runner PASS with 7470 assertions and no parser/preload errors",
+    "MW1 3685 assertions PASS",
+    "MW0 2011 assertions PASS",
+    "A3 12/12 PASS",
+    "M6 10/10 PASS",
+    "git diff --check PASS"
+  ]
+}

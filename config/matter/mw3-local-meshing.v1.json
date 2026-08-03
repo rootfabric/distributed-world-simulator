@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.mw3_local_meshing_manifest.v1",
+  "checkpoint": "v17.3.0-simulation-mw3-local-meshing",
+  "build_id": "mw3-local-meshing",
+  "base_checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "base_delivery": "fix1",
+  "recommended_branch": "feature/mw3-local-meshing",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "world_catalog_changed": false,
+  "local_mesh_added": true,
+  "local_collision_added": true,
+  "canonical_matter_changed": false,
+  "asteroid_fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0,
+    "root_half_extent_m": 1450.0
+  },
+  "mesher": {
+    "algorithm": "FREUDENTHAL_MARCHING_TETRAHEDRA",
+    "tetrahedra_per_cell": 6,
+    "iso_level_m": 0.0,
+    "normal_source": "CENTRAL_SDF_GRADIENT_FROM_GHOST_SAMPLES",
+    "triangle_winding": "GODOT_CLOCKWISE_ALIGNED_TO_OUTWARD_GRADIENT",
+    "vertex_deduplication": "LATTICE_EDGE_WITHIN_BRICK",
+    "mesh_coordinate_space": "CELL_CENTER_RELATIVE_BODY_FIXED"
+  },
+  "collision": {
+    "shape": "CONCAVE_POLYGON",
+    "source": "SAME_INDEXED_TRIANGLES_AS_RENDER_MESH",
+    "static_only": true,
+    "backface_collision": true
+  },
+  "lab_scene": "res://scenes/labs/matter_asteroid_meshing_lab.tscn",
+  "focused_test": "res://tests/matter/presentation/test_mw3_local_meshing.gd"
+}

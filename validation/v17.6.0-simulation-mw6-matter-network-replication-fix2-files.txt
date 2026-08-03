@@ -1,0 +1,8 @@
+AGENTS.md
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/checkpoints/2026-08-02_V17_6_0_SIMULATION_MW6_MATTER_NETWORK_REPLICATION_FIX2_RU.md
+tests/runtime/test_m6_dedicated_recovery_contracts.gd
+validation/v17.6.0-simulation-mw6-matter-network-replication-fix2-files.txt
+validation/v17.6.0-simulation-mw6-matter-network-replication-fix2-validation.json

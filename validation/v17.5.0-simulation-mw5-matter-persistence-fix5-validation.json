@@ -1,0 +1,115 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.5.0-simulation-mw5-matter-persistence",
+  "delivery": "fix5",
+  "build_id": "mw5-matter-persistence-fix5",
+  "base_checkpoint": "v17.4.0-simulation-mw4-matter-mutations",
+  "base_delivery": "fix3",
+  "incremental_base": "MW5 fix4",
+  "recommended_branch": "feature/mw5-matter-persistence",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "review_input": {
+    "fix4_archive_sha256": "67E109DC6D753A18BBA116ACB6272816445B286722466CB0183B20356190B02E",
+    "focused_result": "FAIL (20 failures / 62 assertions / 30.538 s)",
+    "confirmed_blocker": "Godot decimal JSON roundtrip changed valid binary64 values, including 2026174.8885708766 to 2026174.8885708768, so typed DTO checksums could not survive persistence."
+  },
+  "scope": {
+    "changed_files": 13,
+    "production_code_files": 2,
+    "focused_test_files": 1,
+    "process_worker_files": 1,
+    "persistence_checkpoint_schema_changed": false,
+    "persistence_transport_schema_added": true,
+    "repository_generation_protocol_changed": false,
+    "world_catalog_changed": false,
+    "moon_runtime_changed": false
+  },
+  "transport": {
+    "schema": "planet_simulator.matter_persistence_transport.v1",
+    "float_encoding": "ieee754-binary64-le-hex",
+    "scalar_float_tag": "$matter_f64",
+    "packed_float_array_tag": "$matter_f64_array",
+    "packed_float_array_counted": true,
+    "exact_binary64_roundtrip": true,
+    "integer_valued_float_type_preserved": true,
+    "untagged_fractional_numbers_rejected": true,
+    "transport_envelope_checksum": true,
+    "typed_checksum_recomputed_after_decode": true,
+    "mw0_mw4_checksum_domain_changed": false,
+    "legacy_untagged_mw5_candidate_files": "FAIL_CLOSED",
+    "binary64_probe_little_endian_hex": "886179e3beea3e41",
+    "packed_probe_little_endian_hex": "886179e3beea3e41000000000000f03f"
+  },
+  "implemented": {
+    "repository_writes_transport_envelope": true,
+    "repository_reads_transport_envelope": true,
+    "repository_raw_bytes_equal_encoder_output": true,
+    "process_worker_request_uses_transport": true,
+    "snapshot_float_channels_use_packed_tags": true,
+    "scalar_and_mixed_array_floats_use_scalar_tags": true,
+    "binary64_probe_value": "2026174.8885708766",
+    "binary64_probe_little_endian_hex": "886179e3beea3e41",
+    "integer_valued_float_probe": "1.0",
+    "integer_valued_float_little_endian_hex": "000000000000f03f",
+    "stale_envelope_checksum_rejected": true,
+    "modified_bits_with_repaired_envelope_rejected_by_typed_checksum": true
+  },
+  "focused_acceptance": {
+    "runner": "RUN_MW5_MATTER_PERSISTENCE_TESTS.ps1 / RUN_MW5_MATTER_PERSISTENCE_TESTS.sh",
+    "test": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+    "watchdog_seconds": 300,
+    "assertion_count": "TO_BE_FIXED_BY_FIRST_INDEPENDENT_SUCCESSFUL_FIX5_RUN",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT",
+    "required_roundtrips": [
+      "exact scalar binary64",
+      "integer-valued TYPE_FLOAT",
+      "packed float array",
+      "matter brick snapshot",
+      "matter mass ledger",
+      "matter mutation result",
+      "matter material batch",
+      "durable checkpoint",
+      "process restart replay"
+    ]
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "transport_encoder_present": true,
+    "transport_decoder_present": true,
+    "direct_decimal_checkpoint_json_stringify": 0,
+    "repository_transport_decode": "PRESENT",
+    "process_worker_transport": "PRESENT",
+    "exact_probe_hex_model": "PASS",
+    "preload_targets": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "duplicate_function_names": 0,
+    "documentation_links_and_fences": "PASS",
+    "changed_file_manifest": "PASS",
+    "world_catalog_byte_identity": "PASS",
+    "git_diff_check_equivalent": "PASS",
+    "zip_path_safety": "PASS",
+    "overlay_byte_identity": "PASS"
+  },
+  "required_regression_after_focused_pass": {
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "a3": "PASS",
+    "m6": "10/10 PASS",
+    "git_diff_check": "PASS"
+  },
+  "independent_review_after_fix5": {
+    "status": "FAIL",
+    "assertions": "128 total / 6 failures",
+    "duration_seconds": 61.724,
+    "remaining_defects": [
+      "expected probe hex used 87... but Godot produced 88...",
+      "process context center_m used decimal AtomicJson"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "planet_simulator.checkpoint_validation.v1",
+  "checkpoint": "v17.10.0-simulation-rl1-matter-summary-pyramid",
+  "build_id": "rl1-matter-summary-pyramid-dirty-propagation",
+  "base": "v17.9.0-simulation-rl0-representation-contracts-fix1",
+  "branch": "feature/rl1-matter-summary-pyramid",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "assertions": 245,
+      "runs": 3,
+      "result": "PASS"
+    },
+    "regression": {
+      "rl0": "92/92 PASS",
+      "mw6": "130/130 PASS",
+      "mw5": "142/142 PASS",
+      "mw4": "187/187 PASS",
+      "mw3": "7519/7519 PASS",
+      "mw2": "7470/7470 PASS",
+      "mw1": "3685/3685 PASS",
+      "mw0": "2011/2011 PASS",
+      "m6_full_profile": "10/10 PASS",
+      "a3_full_profile": "12/12 PASS x3"
+    },
+    "not_reproduced_in_authoring_base": {
+      "mw8": "runner/runtime files absent from supplied full archive; independent run required on accepted MW8 composition",
+      "mw7": "authoring archive did not reproduce the accepted MW8-composed lifecycle environment; independent run required"
+    }
+  },
+  "implemented": {
+    "regional_summary_pyramid": true,
+    "leaf_summary_from_matter_brick_snapshot": true,
+    "direct_octree_parent_aggregation": true,
+    "full_rl0_source_revision_frontier": true,
+    "selective_dirty_ancestor_propagation": true,
+    "handoff_loaded_subtree_invalidation": true,
+    "bounded_atomic_rebuild_queue": true,
+    "same_cell_coalescing": true,
+    "content_addressed_persistence_manifest": true,
+    "manifest_binds_full_source_revision": true,
+    "rl0_invalidation_projection": true
+  },
+  "boundaries": {
+    "canonical_matter_state_changed": false,
+    "mw8_authority_protocol_changed": false,
+    "mw7_wire_protocol_changed": false,
+    "mesh_or_collision_generated": false,
+    "production_worlds_changed": false,
+    "world_catalog_changed": false
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "preload_target_audit": "PASS",
+    "duplicate_functions": 0,
+    "forbidden_runtime_references": 0,
+    "bash_runner_syntax": "PASS",
+    "powershell_runner_runtime": "NOT_AVAILABLE_IN_AUTHORING_ENVIRONMENT",
+    "powershell_runner_structure": "PASS",
+    "git_diff_check": "PASS",
+    "accidental_uid_files": 0,
+    "zip_path_safety": "PASS",
+    "overlay_byte_identity": "PASS"
+  },
+  "changed_file_count": 21,
+  "changed_files_manifest": "docs/checkpoints/v17.10.0-simulation-rl1-matter-summary-pyramid-files.txt"
+}

@@ -1,0 +1,10 @@
+README_RU.md
+docs/README_RU.md
+docs/architecture/DYNAMIC_MATTER_FABRIC_RU.md
+docs/architecture/adr/ADR-004-heightfield-plus-voxel.md
+docs/architecture/adr/ADR-017-dynamic-matter-fabric.md
+docs/checkpoints/2026-07-31_MUTABLE_WORLDS_ARCHITECTURE_ROADMAP_RU.md
+docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md
+docs/plans/ROADMAP_RU.md
+validation/mutable-worlds-roadmap-files.txt
+validation/mutable-worlds-roadmap-validation.json

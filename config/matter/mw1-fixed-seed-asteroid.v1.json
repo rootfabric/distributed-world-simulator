@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.mw1_fixed_seed_asteroid_manifest.v1",
+  "checkpoint": "v17.1.0-simulation-mw1-fixed-seed-asteroid",
+  "build_id": "mw1-fixed-seed-asteroid",
+  "status": "CANDIDATE",
+  "base_checkpoint": "v17.0.0-simulation-mw0-matter-contracts",
+  "base_delivery": "fix1",
+  "recommended_branch": "feature/mw1-fixed-seed-asteroid",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "mesh_or_collision_added": false,
+  "asteroid_fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_id": "matter-generator/fixed-seed-asteroid",
+    "generator_version": "1.0.0",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0,
+    "root_bounds_radius_m": 1450.0
+  },
+  "stable_feature_ids": [
+    "matter-feature/asteroid-mw1/crater-a",
+    "matter-feature/asteroid-mw1/crater-b",
+    "matter-feature/asteroid-mw1/ice-pocket-a",
+    "matter-feature/asteroid-mw1/lobe-a",
+    "matter-feature/asteroid-mw1/lobe-b",
+    "matter-feature/asteroid-mw1/natural-void-a",
+    "matter-feature/asteroid-mw1/ore-lens-a"
+  ],
+  "control_point_count": 128,
+  "control_fixture_hash": "d5d4b6cde3b4685757bef65bd86dbfb36cc7c08416a802f4d5f4bf8fd5de5f57",
+  "mass_acceptance": {
+    "coarse_resolution": 16,
+    "fine_resolution": 20,
+    "maximum_relative_mass_difference": 0.1,
+    "minimum_estimated_mass_kg": 5000000000000.0,
+    "maximum_estimated_mass_kg": 20000000000000.0,
+    "maximum_center_of_mass_offset_m": 250.0
+  },
+  "focused_runner_windows": "RUN_MW1_FIXED_SEED_ASTEROID_TESTS.ps1",
+  "focused_runner_linux": "RUN_MW1_FIXED_SEED_ASTEROID_TESTS.sh",
+  "next_stage": "MW2 sparse matter cells, bricks and query service"
+}

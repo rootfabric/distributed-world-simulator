@@ -10,6 +10,7 @@ var _snapshot: Dictionary = {}
 var _snapshot_deliveries := 0
 var _delta_deliveries := 0
 var _replays := 0
+var _superseded_deltas := 0
 
 
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
@@ -46,11 +47,26 @@ func accept_delta(delta: Dictionary) -> Dictionary:
 	var current_revision := int(_snapshot.get("revision", 0))
 	var base_revision := int(delta.get("base_revision", -1))
 	var target_revision := int(delta.get("target_revision", -1))
-	if target_revision == current_revision and String(delta.get("target_checksum", "")) == String(_snapshot.get("checksum", "")):
+	if target_revision == current_revision:
+		if String(delta.get("target_checksum", "")) != String(_snapshot.get("checksum", "")):
+			return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
 		_replays += 1
-		return _success({"replay": true})
+		return _success({"replay": true, "superseded": false})
+	if target_revision < current_revision:
+		_replays += 1
+		_superseded_deltas += 1
+		return _success({
+			"replay": true,
+			"superseded": true,
+			"current_revision": current_revision,
+			"target_revision": target_revision,
+		})
 	if base_revision != current_revision:
-		return _failure("MULTIPLAYER_DELTA_BASE_MISMATCH")
+		return _failure("MULTIPLAYER_DELTA_BASE_MISMATCH", {
+			"current_revision": current_revision,
+			"base_revision": base_revision,
+			"target_revision": target_revision,
+		})
 	var next_snapshot := _snapshot.duplicate(true)
 	var player: Dictionary = delta.get("player", {})
 	if not player.is_empty():
@@ -101,6 +117,7 @@ func get_report() -> Dictionary:
 		"snapshot_deliveries": _snapshot_deliveries,
 		"delta_deliveries": _delta_deliveries,
 		"replays": _replays,
+		"superseded_deltas": _superseded_deltas,
 		"direct_authority_references": 0,
 		"direct_domain_references": 0,
 	}
@@ -110,5 +127,5 @@ func _success(details: Dictionary = {}) -> Dictionary:
 	return {"success": true, "error_code": "", "details": details.duplicate(true)}
 
 
-func _failure(error_code: String) -> Dictionary:
-	return {"success": false, "error_code": error_code, "details": {}}
+func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
+	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
