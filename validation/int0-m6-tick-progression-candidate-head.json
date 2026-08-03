@@ -1,0 +1,9 @@
+{
+  "schema": "distributed_world_simulator.int0_candidate_head.v1",
+  "repository": "rootfabric/distributed-world-simulator",
+  "branch": "fix/int0-m6-final-checkpoint-retry",
+  "purpose": "M6 same-revision idle-tick checkpoint progression",
+  "base_sha": "703ab58521d3cae4563ad8d1e8f3ddd0d85b1cd0",
+  "candidate_parent_sha": "e9be8fc30143470fb258cc4172b755fb7fd48544",
+  "note": "This file intentionally makes the candidate head immutable only after its own commit SHA is known through the checkpoint ref."
+}
