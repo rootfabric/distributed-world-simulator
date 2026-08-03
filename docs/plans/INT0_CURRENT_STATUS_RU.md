@@ -1,99 +1,99 @@
 # INT0 — текущий статус интеграции
 
-**Обновлено:** 2026-08-03 20:50 UTC+10  
+**Обновлено:** 2026-08-03 21:00 UTC+10  
 **Основной план:** `docs/plans/THREE_DOMAIN_INTEGRATION_MERGE_PLAN_RU.md`  
 **Machine-readable manifest:** `validation/int0-three-domain-frozen-heads.json`
 
 ## Где мы сейчас
 
 ```text
-Completed domain candidate: NX6
-Completed composed candidate: RL3/MW10
-Active stage: INT0-C24 STAGING
-Status: IN PROGRESS
+NX6 candidate in integration: YES
+RL3/MW10 composed candidate in integration: YES
+C24 staged candidate: YES
+C24 merged into integration: NO
+Active stage: INT0 COMBINED RUNTIME GATE
+Status: THREE-DOMAIN COMPOSED CANDIDATE, NOT ACCEPTED
 Main changed: NO
-NX6 merged into integration: YES
-RL3/MW10 merged into integration: YES — COMPOSED CANDIDATE, NOT ACCEPTED
-C24 merged into staging: NO
-Combined INT0 runtime gate: PENDING
 ```
 
-## Защитные точки
+## Сохранённые точки
 
 ```text
-main backup:
 backup/main-before-int0-20260803
+→ 69bd7fc7fde2bc0824b0d608451ecd310397b8d2
 
-integration before RL3:
 backup/int0-before-rl3-integration-20260803
 → 218e44fcdb5b0574a7931003dbc1952bed7aadff
 
-RL3/MW10 staged candidate:
 checkpoint/int0-rl3-mw10-composed-candidate
 → fcf1a1d121e90afc05f6fd810656a5f8d32868c4
+
+checkpoint/int0-nx6-rl3-composed-candidate
+→ 64770c62574de58fa522dbdf2b4be891fe00442c
+
+checkpoint/int0-c24-staged-candidate
+→ 989cd87a53d10b307f1cd9a3a22bae207995637e
+
+checkpoint/int0-three-domain-composed-candidate
+→ 374f79168749278c51814bccded81eb70787d767
 ```
 
-## NX6
+## Доменная история
+
+### NX6
 
 ```text
-frozen head:              144adf35cd2151ce5f8572dbbb8ed1b58ccd9778
-source → staging PR:      #4
-staging merge:            ba485ffafda35579f43ed1bd3e980d7765a784d9
-staging validation:       02c893d4bb79a2083c83107612083441fde07021
-staging → integration PR: #5
-integration merge:        312a0b12e5ddb78a2e67ada0b36385c84ed10854
-stage close:              796f0b3708ce6f36ca3692145d4fe718a02d01ff
-status:                   DONE
+frozen head:       144adf35cd2151ce5f8572dbbb8ed1b58ccd9778
+staging PR:        #4
+integration PR:    #5
+integration merge: 312a0b12e5ddb78a2e67ada0b36385c84ed10854
+status:            DONE CANDIDATE
 ```
 
-## RL3/MW10
+### RL3/MW10
 
 ```text
-accepted frozen head:     89ff51b3ee5f66f6548f8b97e271062daf09b5cf
-includes:                 MW10 + MW9 fix3 + RL2 + RL1 + RL0
-superseded conflicted PR: #6
-resolution commit:        c2e7c1e91993add2dd7aa9387519a391dfbb91ce
-resolution PR:            #7
-staging merge:            515b179d276c59df1624fe640eb04464410bf974
-runtime composition:      ba1127ab24c4af0493d7445539387b9e9fee219a
-staging validation head:  fcf1a1d121e90afc05f6fd810656a5f8d32868c4
-staging → integration PR: #8
-integration merge:        60feb1cbc07a6617e498d65efcc9f747f68eaff7
-classification:           COMPOSED CANDIDATE, NOT ACCEPTED
+frozen head:       89ff51b3ee5f66f6548f8b97e271062daf09b5cf
+resolution PR:     #7
+staging merge:     515b179d276c59df1624fe640eb04464410bf974
+composition:       ba1127ab24c4af0493d7445539387b9e9fee219a
+integration PR:    #8
+integration merge: 60feb1cbc07a6617e498d65efcc9f747f68eaff7
+status:            COMPOSED CANDIDATE, NOT ACCEPTED
 ```
 
-Трёхсторонний анализ выявил шесть пересечений. Все остальные Matter/Representation blobs сохранены byte-exact. Wholesale `ours`/`theirs`, squash, rebase и force-push не применялись.
-
-Production `m3_graphical_client_runtime.gd` остаётся узким adapter поверх точной NX6-реализации `m3_graphical_client_runtime_nx6.gd`. Добавлен только bounded resync после `MULTIPLAYER_DELTA_BASE_MISMATCH`; authority, fixed tick, prediction, Item Graph и checksum/revision fences не изменены.
-
-Доступная проверка:
+### C24
 
 ```text
-GitHub conflict resolution: PASS
-remaining merge conflicts: 0
-isolated Godot 4.7.1 double syntax fixture: PASS
-full integration runtime gate: NOT RUN / PENDING
+frozen head:       c18b3afaf0f2f078899be20d0529fa94d53adf90
+source PR:         #9
+staging merge:     00ae523ac85c575424d84a49b48fa4be37bcbf3a
+composition docs:  007dcc70645519a85ba0f12e4c7073584b7b4907
+validation plan:   374f79168749278c51814bccded81eb70787d767
+integration PR:    #10 — OPEN / DRAFT / MERGEABLE
+status:            STAGED CANDIDATE
 ```
 
-Перенос в integration не является решением ACCEPTED. Полный совместный gate обязателен до INT0 checkpoint и до любого merge в `main`.
+## C24 merge-аудит
 
-## Активный этап C24
+C24 добавляет 863 пути относительно NX6+RL3 integration-базы:
 
 ```text
-source branch:
-feature/c24-gpu-ready-proxy-mesh-backend
-
-frozen accepted head:
-c18b3afaf0f2f078899be20d0529fa94d53adf90
-
-staging branch:
-merge/int0-c24
-
-base:
-текущая integration/c24-nx6-mw10-rl3 после merge commit 60feb1cbc07a6617e498d65efcc9f747f68eaff7 и status commits
+new paths:      862
+modified paths: 1
+removed paths:  0
+text conflicts: 0
 ```
 
-C24 должен добавляться поверх уже скомпонованных NX6 + RL3/MW10. Особое внимание:
+Единственный изменённый существующий файл:
+
+```text
+RUN_WORLD_REGRESSION_TESTS.ps1
+```
+
+В него аддитивно добавлены 57 C1–C24 тестов. Существующие Network, Matter, Representation, World и runtime entries не удалены.
+
+C24 не изменяет:
 
 ```text
 scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd
@@ -102,50 +102,120 @@ scripts/items/presentation/item_gameplay_controller.gd
 scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd
 scripts/app/simulator_app.gd
 scripts/world/testing/playground_runtime.gd
-RUN_WORLD_REGRESSION_TESTS.ps1
+AGENTS.md
 PROJECT_MANIFEST.txt
 README_RU.md
-AGENTS.md
 ```
 
-## Правила C24-композиции
+Следовательно, C24 не перезаписывает NX6/RL3 runtime-композицию. Construction proxy meshes остаются derived presentation artifacts.
+
+## Единый INT0 runner
+
+В `merge/int0-c24` добавлены:
 
 ```text
-NX6 owns:
-transport, fixed tick, prediction/reconciliation, remote interpolation,
-predicted item interaction presentation.
-
-RL3/MW10 owns:
-Matter canonical domain, representation manifests/artifacts,
-cache/invalidation and bounded representation delivery.
-
-C24 owns:
-authoritative Item Graph/Construction state,
-construction operations and GPU-ready proxy mesh materialization.
+RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1
+RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.sh
 ```
 
-C24 не должен обходить NX6 command bridge и не должен превращать proxy mesh в canonical state. Унификация C24 proxy backend с RL3 generic artifact transport выполняется только через явные adapters.
-
-## Следующие действия
+Профили:
 
 ```text
-1. Создать merge/int0-c24 от текущей integration-головы.
-2. Открыть frozen C24 → staging draft PR.
-3. Получить точный список конфликтов.
-4. Перенести все неконфликтующие C24 blobs без изменения.
-5. Скомпоновать общие runtime/Item Graph/manifest файлы отдельными commits.
-6. Добавить C24 staging validation record.
-7. Перенести C24 candidate в integration отдельным merge commit.
-8. Запустить единый INT0 gate: NX0–NX6 + MW0–MW10 + RL0–RL3 + C1–C24 + World + main scene.
-9. Только после полного PASS оформлять INT0 acceptance и PR в main.
+focused:
+editor import
+INT0 RL3 composition
+NX6
+MW10
+RL3
+C24
+static checks
+
+full:
+focused + M7 + MW8 + MW9 recovery/race + RL2 +
+C2B + C9 + C22 + C23 + Network full + World full
 ```
 
-## Что запрещено
+Итоговый machine-readable отчёт:
+
+```text
+artifacts/test-results/int0-three-domain-integration-summary.json
+```
+
+Runner также выполняет:
+
+- `git diff --check`;
+- conflict-marker scan;
+- проверку отсутствия оставшихся Godot процессов.
+
+## Что уже доказано
+
+```text
+all frozen heads unchanged: PASS
+NX6 merge chain: PASS
+RL3 conflict resolution: PASS
+RL3 isolated Godot syntax fixture: PASS
+C24 GitHub merge: PASS
+C24 text conflicts: 0
+C24 shared runtime changes: 0
+unified runner files created: PASS
+```
+
+## Что ещё не запускалось на полном composed tree
+
+```text
+unified focused profile
+unified full profile
+Godot editor import
+NX0–NX6 + M7
+MW0–MW10 + RL0–RL3
+C1–C24
+World regression with 57 construction tests
+main scene CLI
+combined two-client Matter + construction proxy scenario
+```
+
+Поэтому текущий checkpoint — только `COMPOSED CANDIDATE`, не `ACCEPTED`.
+
+## Следующая операция
+
+На полном checkout ветки:
+
+```text
+merge/int0-c24
+```
+
+запустить:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile focused
+.\RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile full
+```
+
+или Linux:
+
+```bash
+./RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.sh /path/to/godot.linuxbsd.editor.double.x86_64 focused
+./RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.sh /path/to/godot.linuxbsd.editor.double.x86_64 full
+```
+
+После полного PASS:
+
+```text
+1. записать фактические результаты в validation;
+2. перевести PR #10 из draft;
+3. merge PR #10 методом merge commit;
+4. выполнить финальный combined smoke на integration head;
+5. оформить v18.0.0 INT0 candidate checkpoint;
+6. провести независимую приёмку;
+7. только после ACCEPTED открыть integration → main.
+```
+
+## Запрещено
 
 - не менять `main` до независимого INT0 acceptance;
-- не утверждать, что RL3/MW10 или C24 integration accepted без полного общего gate;
-- не вливать MW10 отдельно;
-- не менять frozen C24 head;
+- не сливать PR №10 без полного общего gate;
+- не утверждать ACCEPTED по исходным доменным тестам;
 - не выполнять squash/rebase/force-push;
-- не разрешать общие runtime-файлы wholesale одной стороной;
+- не превращать construction или representation artifacts в canonical state;
 - не скрывать отсутствующие runtime-прогоны.
