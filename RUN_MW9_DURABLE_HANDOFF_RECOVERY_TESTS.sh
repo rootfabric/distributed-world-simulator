@@ -35,4 +35,5 @@ run_test() {
 }
 
 run_test res://tests/matter/handoff/test_mw9_durable_handoff_recovery.gd
+run_test res://tests/matter/handoff/test_mw9_lock_release_retry.gd
 run_test res://tests/matter/handoff/test_mw9_durable_handoff_processes.gd
