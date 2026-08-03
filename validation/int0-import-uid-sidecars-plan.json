@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.int0_import_uid_sidecars_plan.v1",
+  "recorded_at": "2026-08-03T22:57:00+10:00",
+  "candidate_sha": "8105903c4eb1fbd0d40ed43d560b99cff1543a76",
+  "focused_gate": "PASS",
+  "observed_untracked_uid_files": 156,
+  "project_godot_modified": false,
+  "reproduction_count": 2,
+  "path_manifest_reproducible": true,
+  "required_fix_branch": "fix/int0-import-uid-sidecars",
+  "allowed_changes": [
+    "exactly 156 generated *.uid sidecar files",
+    "validation manifest containing path, byte length and SHA-256 for every sidecar"
+  ],
+  "forbidden_changes": [
+    "project.godot",
+    "*.gd",
+    "*.tscn",
+    "*.tres",
+    "runtime behavior",
+    "test expectations",
+    "main"
+  ],
+  "required_validation": [
+    "all 156 paths match the independently reproduced manifest",
+    "each UID file is non-empty and contains one uid:// identifier",
+    "fresh editor import creates zero untracked UID files",
+    "project.godot remains unchanged",
+    "focused profile remains PASS",
+    "git diff --check PASS",
+    "conflict markers 0",
+    "remaining Godot processes 0"
+  ],
+  "full_profile_policy": "Run only after the UID sidecar fix passes a fresh import-cleanliness check.",
+  "status": "AWAITING_UID_SIDECAR_CONTENT_COMMIT"
+}
