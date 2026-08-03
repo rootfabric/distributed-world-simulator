@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.int0_frozen_heads.v1",
+  "recorded_at": "2026-08-03T19:40:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stage": "PRE3_DOCUMENTATION",
+  "status": "IN_PROGRESS",
+  "main": {
+    "branch": "main",
+    "base_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
+    "backup_branch": "backup/main-before-int0-20260803"
+  },
+  "integration": {
+    "branch": "integration/c24-nx6-mw10-rl3",
+    "created_from_sha": "69bd7fc7fde2bc0824b0d608451ecd310397b8d2",
+    "target_checkpoint": "v18.0.0-integration-int0-three-domain-base"
+  },
+  "network": {
+    "branch": "feature/nx6-predicted-item-interactions",
+    "head_sha": "144adf35cd2151ce5f8572dbbb8ed1b58ccd9778",
+    "checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
+    "delivery": "fix3",
+    "decision": "ACCEPTED"
+  },
+  "matter_surface": {
+    "branch": "feature/rl3-representation-aware-network-streaming",
+    "head_sha": "89ff51b3ee5f66f6548f8b97e271062daf09b5cf",
+    "checkpoint": "v17.14.0-simulation-rl3-representation-aware-network-streaming",
+    "decision": "ACCEPTED",
+    "includes": [
+      "MW10",
+      "MW9 fix3",
+      "RL2",
+      "RL1",
+      "RL0"
+    ],
+    "merge_mw10_separately": false
+  },
+  "construction_items": {
+    "branch": "feature/c24-gpu-ready-proxy-mesh-backend",
+    "head_sha": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+    "checkpoint": "C24_GPU_READY_PROXY_MESH_BACKEND",
+    "decision": "ACCEPTED"
+  },
+  "merge_order": [
+    "NX6",
+    "RL3_WITH_MW10",
+    "C24",
+    "RUNTIME_COMPOSITION",
+    "INT0_COMBINED_VALIDATION",
+    "INT0_INDEPENDENT_ACCEPTANCE",
+    "MAIN"
+  ],
+  "staging_branches": {
+    "network": "merge/int0-nx6",
+    "matter_surface": "merge/int0-rl3-mw10",
+    "construction_items": "merge/int0-c24"
+  },
+  "required_rules": {
+    "domain_merge_method": "merge_commit",
+    "final_merge_method": "merge_commit",
+    "allow_squash": false,
+    "allow_rebase": false,
+    "allow_force_push": false,
+    "allow_wholesale_ours_theirs_for_shared_runtime": false,
+    "main_may_change_before_int0_acceptance": false
+  }
+}
