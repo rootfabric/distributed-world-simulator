@@ -1,0 +1,10 @@
+AGENTS.md
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/architecture/MW4_MATTER_MUTATIONS_RU.md
+docs/checkpoints/2026-08-01_V17_4_0_SIMULATION_MW4_MATTER_MUTATIONS_FIX2_RU.md
+scripts/world/matter/lab/matter_asteroid_excavation_lab.gd
+tests/matter/mutation/test_mw4_matter_mutations.gd
+validation/v17.4.0-simulation-mw4-matter-mutations-fix2-files.txt
+validation/v17.4.0-simulation-mw4-matter-mutations-fix2-validation.json

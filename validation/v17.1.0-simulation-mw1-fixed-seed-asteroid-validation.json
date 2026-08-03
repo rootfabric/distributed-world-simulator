@@ -1,0 +1,82 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.1.0-simulation-mw1-fixed-seed-asteroid",
+  "delivery": "initial",
+  "build_id": "mw1-fixed-seed-asteroid",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v17.0.0-simulation-mw0-matter-contracts",
+  "base_delivery": "fix1",
+  "recommended_branch": "feature/mw1-fixed-seed-asteroid",
+  "scope": {
+    "changed_file_count": 23,
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "network_runtime_changed": false,
+    "item_graph_changed": false,
+    "mesh_or_collision_added": false,
+    "sparse_storage_added": false
+  },
+  "fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_id": "matter-generator/fixed-seed-asteroid",
+    "generator_version": "1.0.0",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0,
+    "root_bounds_radius_m": 1450.0,
+    "stable_feature_count": 7,
+    "control_point_count": 128,
+    "control_fixture_hash": "d5d4b6cde3b4685757bef65bd86dbfb36cc7c08416a802f4d5f4bf8fd5de5f57"
+  },
+  "shadow_numeric_checks": {
+    "status": "PASS",
+    "model": "independent Python translation of MW1 field, geology and midpoint integration",
+    "center_occupied": true,
+    "natural_void_vacuum": true,
+    "natural_void_wall_retains_interior_geology": true,
+    "random_surface_direction_count": 96,
+    "random_sample_count": 600,
+    "random_occupied_count": 98,
+    "random_vacuum_count": 502,
+    "coarse_resolution": 16,
+    "coarse_estimated_mass_kg": 11663502603056.426,
+    "coarse_center_of_mass_m": [
+      32.44553387522763,
+      -3.9010908399139574,
+      -4.909321022693791
+    ],
+    "fine_resolution": 20,
+    "fine_estimated_mass_kg": 11745644330684.455,
+    "relative_mass_difference": 0.006993377742031683,
+    "required_materials_present": true,
+    "material_mass_balance": "PASS"
+  },
+  "local_checks": {
+    "json_parse": "PASS",
+    "bash_runner_syntax": "PASS",
+    "powershell_runner_syntax": "NOT_RUN",
+    "preload_target_check": "PASS",
+    "gdscript_delimiter_scan": "PASS",
+    "domain_presentation_dependency_audit": "PASS",
+    "documentation_links_and_fences": "PASS",
+    "whitespace_check": "PASS",
+    "git_diff_check": "PASS",
+    "archive_path_safety": "PASS",
+    "changed_file_manifest": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "mw0_regression": "NOT_RUN",
+    "a3_regression": "NOT_RUN",
+    "m6_regression": "NOT_RUN",
+    "overlay_equivalence": "PASS",
+    "archive_duplicate_paths": "PASS"
+  },
+  "not_run_reason": "Godot 4.7.1 double-precision executable and PowerShell are not available in the execution container.",
+  "independent_acceptance_required": [
+    "MW1 focused runner PASS with no parser/preload errors",
+    "golden control fixture hash matches manifest",
+    "MW0 2011/2011 PASS",
+    "A3 12/12 PASS",
+    "M6 10/10 PASS",
+    "git diff --check PASS"
+  ]
+}

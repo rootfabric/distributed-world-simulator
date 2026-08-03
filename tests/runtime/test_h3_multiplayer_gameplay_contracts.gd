@@ -139,6 +139,23 @@ func _test_replica_projection() -> void:
 	_assert(_error(rollback_result) == "MULTIPLAYER_REVISION_ROLLBACK", "replica rejects snapshot rollback")
 	_assert(int(replica.get_report().direct_authority_references) == 0, "replica holds no authority references")
 
+	var race_authority = Authority.new()
+	_assert(_ok(race_authority.setup("simulation/h3/replica-race", 6, 700)), "replica race authority setup")
+	var race_initial := race_authority.create_snapshot()
+	var race_join_a := race_authority.join("a", "transport-session/h3/race/a/1", "operation/h3/race/a/join/1")
+	var race_join_b := race_authority.join("b", "transport-session/h3/race/b/1", "operation/h3/race/b/join/1")
+	_assert(_ok(race_join_a) and _ok(race_join_b), "replica race joins")
+	var race_replica = Replica.new()
+	_assert(_ok(race_replica.accept_snapshot(race_join_b.details.snapshot)), "newer authoritative snapshot accepted before delayed delta")
+	var race_checksum := String(race_replica.get_snapshot().get("checksum", ""))
+	var superseded := race_replica.accept_delta(race_join_a.details.delta)
+	_assert(_ok(superseded) and bool(superseded.details.replay) and bool(superseded.details.superseded), "delta fully covered by newer snapshot is fenced as superseded")
+	_assert(String(race_replica.get_snapshot().get("checksum", "")) == race_checksum, "superseded delta does not mutate newer replica state")
+	_assert(int(race_replica.get_report().get("superseded_deltas", 0)) == 1, "superseded delta is observable")
+	var gap_replica = Replica.new()
+	_assert(_ok(gap_replica.accept_snapshot(race_initial)), "gap replica initial snapshot")
+	_assert(_error(gap_replica.accept_delta(race_join_b.details.delta)) == "MULTIPLAYER_DELTA_BASE_MISMATCH", "future delta gap still requires snapshot resync")
+
 
 func _ok(value: Dictionary) -> bool:
 	return bool(value.get("success", false))

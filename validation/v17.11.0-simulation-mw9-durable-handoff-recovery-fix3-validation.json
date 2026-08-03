@@ -1,0 +1,80 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.11.0-simulation-mw9-durable-handoff-recovery",
+  "build_id": "mw9-durable-distributed-handoff-recovery",
+  "delivery": "fix3",
+  "base": "v17.11.0-simulation-mw9-durable-handoff-recovery-fix2",
+  "recommended_branch": "feature/mw9-durable-handoff-recovery",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "scope": {
+    "changed_file_count": 10,
+    "production_gdscript_files": 1,
+    "test_gdscript_files": 2,
+    "tool_gdscript_files": 1,
+    "runner_files": 3,
+    "documentation_files": 1,
+    "validation_files": 2,
+    "mw9_checkpoint_schema_changed": false,
+    "authority_lease_schema_changed": false,
+    "handoff_journal_schema_changed": false,
+    "canonical_matter_state_changed": false,
+    "mw10_transaction_protocol_changed": false,
+    "rl2_meshing_changed": false
+  },
+  "root_cause": {
+    "class": "lock_release_ownerless_window",
+    "old_sequence": [
+      "remove owner.json",
+      "remove canonical lock directory"
+    ],
+    "failure": "a contender could reclaim the ownerless directory as stale after durable commit but before release returned",
+    "observable_result": "canonical checkpoint had one winner while both worker reports could contain claim_success=false"
+  },
+  "implementation": {
+    "atomic_directory_rename_release": true,
+    "ownerless_lock_mtime_grace": true,
+    "stale_lock_quarantine": true,
+    "owner_identity_recheck_after_quarantine": true,
+    "linux_proc_liveness": true,
+    "windows_tasklist_liveness": true,
+    "macos_bsd_kill_zero_liveness": true,
+    "unknown_liveness_conservative_threshold_ms": 120000,
+    "lock_timeout_diagnostics": true,
+    "claim_worker_diagnostics_v2": true,
+    "standard_claim_race_rounds": 8,
+    "batched_stress_runner": true,
+    "default_stress_rounds": 100,
+    "default_stress_batch_size": 8
+  },
+  "authoring_runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "mw9_contract_runtime": "203/203 PASS x3",
+    "mw9_multi_process": "225/225 PASS x3",
+    "mw9_combined": "428/428 PASS x3",
+    "mw9_claim_race_stress": "100/100 rounds PASS",
+    "mw9_claim_race_assertions": "2500/2500 PASS",
+    "mw10_regression": "235/235 PASS",
+    "rl2_regression": "197/197 PASS",
+    "windows_powershell_stress_runner": "NOT_RUN: PowerShell unavailable in authoring environment"
+  },
+  "required_independent_gate": [
+    "RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1 prints 203/203 and 225/225 PASS and exits 0",
+    "RUN_MW9_RACE_STRESS_TESTS.ps1 -Iterations 100 prints PASS (100 rounds in 13 batches) and exits 0",
+    "MW10 regression 235/235 PASS",
+    "MW8 regression 98/98 PASS",
+    "RL2 focused 197/197 PASS",
+    "git diff --check PASS"
+  ],
+  "changed_files": [
+    "RUN_MW9_DURABLE_HANDOFF_RECOVERY_TESTS.ps1",
+    "RUN_MW9_RACE_STRESS_TESTS.ps1",
+    "RUN_MW9_RACE_STRESS_TESTS.sh",
+    "docs/checkpoints/2026-08-03_V17_11_0_SIMULATION_MW9_DURABLE_HANDOFF_RECOVERY_FIX3_RU.md",
+    "scripts/simulation/matter/handoff/durable/matter_durable_handoff_repository.gd",
+    "tests/matter/handoff/test_mw9_durable_handoff_processes.gd",
+    "tests/matter/handoff/test_mw9_durable_handoff_recovery.gd",
+    "tools/matter/mw9_handoff_recovery_worker.gd",
+    "validation/v17.11.0-simulation-mw9-durable-handoff-recovery-fix3-files.txt",
+    "validation/v17.11.0-simulation-mw9-durable-handoff-recovery-fix3-validation.json"
+  ]
+}

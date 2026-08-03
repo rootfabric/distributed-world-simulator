@@ -1,0 +1,40 @@
+{
+  "schema": "planet_simulator.mw2_sparse_bricks_manifest.v1",
+  "checkpoint": "v17.2.0-simulation-mw2-sparse-bricks",
+  "build_id": "mw2-sparse-bricks",
+  "base_checkpoint": "v17.1.0-simulation-mw1-fixed-seed-asteroid",
+  "base_delivery": "initial",
+  "recommended_branch": "feature/mw2-sparse-bricks",
+  "runtime_worlds_changed": false,
+  "moon_runtime_changed": false,
+  "mesh_or_collision_added": false,
+  "asteroid_fixture": {
+    "body_id": "body/asteroid-mw0",
+    "body_frame_id": "body/asteroid-mw0/fixed",
+    "generator_seed": 2026073101,
+    "reference_radius_m": 1000.0,
+    "root_half_extent_m": 1450.0
+  },
+  "grid": {
+    "universe_id": "planet-simulator",
+    "instance_id": "matter-lab",
+    "space_id": "asteroid-mw0",
+    "grid_id": "matter-grid-mw2",
+    "grid_revision": 1,
+    "root_id": "asteroid-mw0-root",
+    "branching": "OCTREE_2X2X2",
+    "max_level": 5
+  },
+  "brick_layout": {
+    "interior_resolution": 8,
+    "ghost_border_samples": 1,
+    "sample_axis_count": 11,
+    "sample_count": 1331,
+    "sample_order": "X_FASTEST_Y_THEN_Z",
+    "one_brick_per_cell": true
+  },
+  "query_sources": [
+    "MATERIALIZED_BRICK",
+    "PROCEDURAL_BASE"
+  ]
+}

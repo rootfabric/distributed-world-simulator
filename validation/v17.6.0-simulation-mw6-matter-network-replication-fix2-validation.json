@@ -1,0 +1,49 @@
+{
+  "schema": "planet_simulator.validation_report.v1",
+  "checkpoint": "v17.6.0-simulation-mw6-matter-network-replication",
+  "delivery": "fix2",
+  "build_id": "mw6-matter-network-replication-fix2",
+  "base_delivery": "MW6 fix1",
+  "recommended_branch": "feature/mw6-matter-network-replication",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "independent_fix1_result": {
+    "mw6_focused": "130 assertions PASS, 17.900 s",
+    "m6_standalone": "BLOCKED_BY_GDSCRIPT_PARSE_ERROR",
+    "errors": [
+      "Cannot infer the type of initial variable",
+      "Cannot infer the type of join_b variable"
+    ]
+  },
+  "fix": {
+    "initial_explicit_type": "Dictionary",
+    "join_b_explicit_type": "Dictionary",
+    "production_code_changed": false,
+    "test_semantics_changed": false,
+    "assertion_topology_changed": false,
+    "matter_network_runtime_changed": false
+  },
+  "required_acceptance": {
+    "mw6_focused": "130/130 PASS",
+    "m6_standalone": "10/10 PASS",
+    "m6_process": "128 assertions PASS",
+    "a3_full_profile": "PASS three consecutive runs",
+    "mw5": "142/142 PASS",
+    "mw4": "187/187 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw2": "7470/7470 PASS",
+    "mw1": "3685/3685 PASS",
+    "mw0": "2011/2011 PASS",
+    "git_diff_check": "PASS"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "explicit_dictionary_annotations": 2,
+    "stale_target_inference_forms": 0,
+    "production_code_files_changed": 0,
+    "changed_file_manifest": "PASS",
+    "runtime_status": "NOT_RUN_IN_AUTHORING_ENVIRONMENT"
+  }
+}

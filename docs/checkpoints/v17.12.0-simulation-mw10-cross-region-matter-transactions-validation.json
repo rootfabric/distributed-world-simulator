@@ -1,0 +1,82 @@
+{
+  "schema": "planet_simulator.checkpoint_validation.v1",
+  "checkpoint": "v17.12.0-simulation-mw10-cross-region-matter-transactions",
+  "build_id": "mw10-cross-region-matter-transactions",
+  "base": "v17.11.0-simulation-mw9-durable-handoff-recovery-fix2",
+  "branch": "feature/mw10-cross-region-matter-transactions",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "runtime": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "contracts_runtime": "184/184 PASS x3",
+      "multi_process": "51/51 PASS x3",
+      "combined": "235/235 PASS x3",
+      "runner": "PASS (2/2 suites) x3"
+    },
+    "regression": {
+      "mw9": "240/240 PASS",
+      "rl1": "245/245 PASS",
+      "rl0": "92/92 PASS",
+      "mw7": "114/114 PASS (93.823 s)",
+      "godot_editor_import": "PASS"
+    },
+    "not_reproduced_in_authoring_base": {
+      "mw8": "accepted MW8 patch and RUN_MW8_MATTER_HANDOFF_TESTS.* absent; independent 98/98 gate required on full accepted composition"
+    }
+  },
+  "implemented": {
+    "deterministic_multi_region_plan": true,
+    "exact_mw9_authority_and_fencing_binding": true,
+    "atomic_all_region_reservations": true,
+    "post_reservation_authority_recheck": true,
+    "mw9_handoff_interlock": true,
+    "distributed_per_material_mass_ledger": true,
+    "append_only_prepare_commit_rollback_journal": true,
+    "irreversible_commit_decision": true,
+    "exact_receipt_parent_and_source_binding": true,
+    "active_previous_atomic_repository": true,
+    "cross_process_repository_lock": true,
+    "deterministic_crash_recovery": true,
+    "exact_operation_replay": true,
+    "terminal_global_invalidation_batch": true,
+    "durable_invalidation_outbox": true,
+    "concurrent_reservation_race_acceptance": true
+  },
+  "recovery_invariants": {
+    "commit_decided_completes_after_restart": true,
+    "undecided_aborts_after_restart": true,
+    "prepared_regions_roll_back_in_reverse_order": true,
+    "partial_commit_resumes_without_duplicate_mutation": true,
+    "invalidation_published_only_after_global_commit": true,
+    "outbox_publication_is_idempotent": true
+  },
+  "boundaries": {
+    "consensus_cluster_implemented": false,
+    "cross_body_transaction_implemented": false,
+    "production_database_implemented": false,
+    "canonical_matter_contract_replaced": false,
+    "mw8_wire_format_changed": false,
+    "mw9_lease_format_changed": false,
+    "mesh_or_collision_generated": false,
+    "production_worlds_changed": false
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "preload_target_audit": "PASS",
+    "duplicate_functions": 0,
+    "forbidden_runtime_references": 0,
+    "bash_runner_syntax": "PASS",
+    "powershell_runner_runtime": "NOT_AVAILABLE_IN_AUTHORING_ENVIRONMENT",
+    "powershell_runner_structure": "PASS",
+    "git_diff_check": "PASS",
+    "accidental_uid_files": 0,
+    "zip_path_safety": "PASS",
+    "zip_duplicate_paths": 0,
+    "overlay_byte_identity": "PASS"
+  },
+  "changed_file_count": 32,
+  "changed_files_manifest": "docs/checkpoints/v17.12.0-simulation-mw10-cross-region-matter-transactions-files.txt"
+}

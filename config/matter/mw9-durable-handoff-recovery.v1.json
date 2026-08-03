@@ -1,0 +1,40 @@
+{
+  "schema": "planet_simulator.mw9_durable_handoff_recovery_config.v1",
+  "checkpoint": "v17.11.0-simulation-mw9-durable-handoff-recovery",
+  "build_id": "mw9-durable-distributed-handoff-recovery",
+  "accepted_base": "v17.10.0-simulation-rl1-matter-summary-pyramid",
+  "recommended_branch": "feature/mw9-durable-handoff-recovery",
+  "durability": {
+    "atomic_active_previous": true,
+    "append_only_handoff_journal": true,
+    "package_transport_persisted_before_prepare": true,
+    "target_proof_persisted_before_decision": true,
+    "rl1_summary_manifest_optional": true,
+    "cross_process_commit_lock": true,
+    "stale_lock_timeout_ms": 30000
+  },
+  "recovery": {
+    "commit_decision_irreversible": true,
+    "commit_decided_completes_after_restart": true,
+    "undecided_transfer_aborts_after_restart": true,
+    "package_less_begin_abort_supported": true,
+    "corrupt_active_falls_back_to_previous": true,
+    "orphan_pending_files_never_become_committed": true,
+    "concurrent_claim_single_winner": true
+  },
+  "fencing": {
+    "exact_token_required": true,
+    "lease_timeout_enabled": true,
+    "expired_claim_increments_epoch": true,
+    "owner_change_requires_epoch_increment": true,
+    "preparing_freezes_source_and_target": true
+  },
+  "boundaries": {
+    "mw8_wire_format_changed": false,
+    "mw7_replication_changed": false,
+    "canonical_matter_state_changed": false,
+    "production_worlds_changed": false,
+    "cross_region_transactions_implemented": false,
+    "representation_artifacts_authoritative": false
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "schema": "distributed_world_simulator.int0_rl3_mw10_staging_validation.v1",
+  "recorded_at": "2026-08-03T20:32:00+10:00",
+  "updated_at": "2026-08-03T20:38:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stage": "INT0_RL3_MW10_COMPOSITION",
+  "status": "COMPOSED_CANDIDATE_AWAITING_FULL_RUNTIME_GATE",
+  "base": {
+    "integration_branch": "integration/c24-nx6-mw10-rl3",
+    "nx6_stage_close_sha": "796f0b3708ce6f36ca3692145d4fe718a02d01ff",
+    "common_ancestor_sha": "e12e8a1c8bc949180ab9041fa4db308baf3dd11e"
+  },
+  "source": {
+    "branch": "feature/rl3-representation-aware-network-streaming",
+    "frozen_head_sha": "89ff51b3ee5f66f6548f8b97e271062daf09b5cf",
+    "checkpoint": "v17.14.0-simulation-rl3-representation-aware-network-streaming",
+    "decision": "ACCEPTED",
+    "includes": [
+      "MW10",
+      "MW9 fix3",
+      "RL2",
+      "RL1",
+      "RL0"
+    ]
+  },
+  "staging": {
+    "branch": "merge/int0-rl3-mw10",
+    "superseded_conflicted_pull_request": 6,
+    "resolution_branch": "merge/int0-rl3-mw10-resolved",
+    "resolution_commit_sha": "c2e7c1e91993add2dd7aa9387519a391dfbb91ce",
+    "resolution_pull_request": 7,
+    "merge_commit_sha": "515b179d276c59df1624fe640eb04464410bf974",
+    "composition_commit_sha": "ba1127ab24c4af0493d7445539387b9e9fee219a",
+    "merge_method": "merge",
+    "history_preserved": true
+  },
+  "conflicts": {
+    "detected_count": 6,
+    "strategy": "NEUTRALIZE_THEN_EXPLICITLY_COMPOSE",
+    "wholesale_ours_theirs_used": false,
+    "files": [
+      "AGENTS.md",
+      "NETWORK_ROADMAP_RU.md",
+      "PROJECT_MANIFEST.txt",
+      "README_RU.md",
+      "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "tests/runtime/test_m3_graphical_multiplayer_contracts.gd"
+    ],
+    "non_conflicting_rl3_files_preserved_byte_exact": true
+  },
+  "runtime_composition": {
+    "nx6_base_path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    "production_adapter_path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+    "authority_changed": false,
+    "transport_changed": false,
+    "prediction_changed": false,
+    "predicted_item_interactions_changed": false,
+    "added_behavior": "BOUNDED_GAMEPLAY_DELTA_BASE_MISMATCH_RESYNC",
+    "telemetry": [
+      "pending_replica_resync",
+      "delta_base_mismatches",
+      "snapshot_resyncs"
+    ]
+  },
+  "focused_test": {
+    "script": "tests/runtime/test_int0_m3_replica_resync_composition.gd",
+    "expected_assertions": 12,
+    "powershell_runner": "RUN_INT0_RL3_MW10_COMPOSITION_TESTS.ps1",
+    "bash_runner": "RUN_INT0_RL3_MW10_COMPOSITION_TESTS.sh",
+    "executed_on_full_staging_tree": false
+  },
+  "documentation": {
+    "composition_record": "docs/plans/INT0_RL3_MW10_COMPOSITION_RU.md",
+    "aggregate_docs_deferred_to_int0_consolidation": true,
+    "reason": "Avoid wholesale replacement before C24 is composed"
+  },
+  "executed_in_connector_environment": {
+    "frozen_head_verified": true,
+    "github_merge_conflicts_after_resolution": 0,
+    "github_resolution_merge": "PASS",
+    "isolated_adapter_syntax_fixture": {
+      "result": "PASS",
+      "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "parse_error_count": 0,
+      "script_error_count": 0,
+      "scope": "production adapter syntax against an API-compatible NX6 stub",
+      "full_repository_import": false
+    },
+    "godot_editor_import_full_tree": false,
+    "focused_contract_full_tree": false,
+    "network_regression": false,
+    "matter_regression": false,
+    "representation_regression": false,
+    "world_regression": false,
+    "main_scene": false
+  },
+  "required_before_integration_merge": [
+    "Godot editor import on full staging tree",
+    "INT0 focused composition contract on full staging tree",
+    "NX0-NX6 regression",
+    "M7 playable graphical and recovery",
+    "MW0-MW10 regression",
+    "MW9 race and recovery",
+    "MW8 98/98",
+    "RL0-RL3 regression",
+    "dedicated server plus two clients",
+    "reconnect and full resync",
+    "network condition profiles",
+    "World regression",
+    "main-scene CLI",
+    "git diff --check",
+    "conflict-marker scan",
+    "remaining Godot/Xvfb equals zero"
+  ],
+  "main_changed": false
+}

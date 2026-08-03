@@ -12,6 +12,10 @@ B1/B2 deferred until A3 acceptance; N3–N6 blocked until A3 and B2
 
 M1–M6 закрыли `A2-D01…D04`: один `NetworkedGameplayService` обслуживает graphical multiplayer, canonical Item Graph, reconnect/replay и durable crash recovery. A3 фиксирует эту реализацию как единственный production single-server path и не добавляет новый authority runtime. H1/H2/H3 остаются adapters/acceptance harnesses, а не независимыми gameplay implementations.
 
+## Параллельный simulation track: изменяемые миры
+
+Архитектурная карта изменяемой породы вынесена в отдельный документ: [`MUTABLE_WORLDS_ROADMAP_RU.md`](MUTABLE_WORLDS_ROADMAP_RU.md). Первый путь идёт через изолированный `asteroid_matter_lab` радиусом 1000 м с фиксированным seed `2026073101`. До прохождения лабораторных MW0–MW8 рабочие `moon`, `earth` и `earth_moon` не меняют канонический terrain runtime. Интеграция Луны начинается с observer-independent geology sampler и локального volumetric overlay, а не с полной переписи поверхности.
+
 # Дорожная карта к лунному симулятору мечты
 
 ## Видение финальной системы
@@ -318,27 +322,36 @@ M1–M6 закрыли `A2-D01…D04`: один `NetworkedGameplayService` об�
 - упрощённый локальный RMF слой;
 - разные уровни fidelity.
 
-## Этап 6 — изменяемая поверхность
+## Этап 6 — Dynamic Matter Fabric
 
-- terrain delta per chunk;
-- траншеи и насыпи;
-- добыча материала;
-- уплотнение грунта;
-- масса и объём реголита;
-- сохранение ревизий.
+Полная реализация разбита на лабораторные MW0–MW8 и интеграционные MI0–MI4 checkpoints. Подробности: [`MUTABLE_WORLDS_ROADMAP_RU.md`](MUTABLE_WORLDS_ROADMAP_RU.md).
+
+Основные решения:
+
+- procedural volumetric base вместо сохранения полной планеты;
+- sparse persistent matter bricks в body-fixed 3D cells;
+- раздельные render/storage/simulation/causal LOD;
+- excavation/deposition как mass-conserving aggregate transactions;
+- отдельный `asteroid_matter_lab` до изменения production Moon runtime;
+- текущие GLOBAL/REGIONAL surface meshes сохраняются как derived representations.
+
+Критерий первого полного лабораторного цикла:
+
+> Астероид радиусом 1000 м можно пробурить, расколоть, сохранить и полностью переработать без потери или создания массы.
+
+## Этап 7 — лунные пещеры, месторождения и подземная стройка
+
+- observer-independent canonical Moon geology sampler;
+- локальный volumetric overlay внутри текущего surface LOD;
+- Cave Graph → volume features → SDF subtraction;
+- слои реголита, базальта, трещиноватой породы, льда и рудных deposits;
+- survey, глубокая добыча и истощение месторождений;
+- supports, loose matter, collapse и derived traversability fields;
+- persistent regional streaming без материализации всей Луны.
 
 Критерий:
 
-> Робот выкапывает траншею, а изменение сохраняется и влияет на проходимость.
-
-## Этап 7 — тоннели и пещеры
-
-- sparse voxel/SDF chunks;
-- Marching Cubes или Dual Contouring;
-- подземная локализация;
-- lidar и карта неизвестности;
-- опоры и риск обрушения;
-- подземные коммуникации.
+> Игрок или робот находит месторождение, проходит через сгенерированную пещеру, добывает материал и после restart видит тот же тоннель, истощённую залежь и сохранённые опоры.
 
 ## Этап 8 — развитая база
 

@@ -1,0 +1,37 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.0.0-simulation-mw0-matter-contracts",
+  "build_id": "mw0-matter-contracts",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "base_checkpoint": "v16.10.6-architecture-a3-single-server-multiplayer",
+  "recommended_branch": "feature/mw0-matter-contracts",
+  "scope": {
+    "runtime_worlds_changed": false,
+    "moon_runtime_changed": false,
+    "existing_runtime_files_modified": false,
+    "includes_previous_mutable_worlds_documentation": true,
+    "changed_file_count": 31
+  },
+  "fixture": {
+    "body_id": "body/asteroid-mw0",
+    "reference_radius_m": 1000.0,
+    "generator_seed": 2026073101
+  },
+  "checks": {
+    "input_zip_safety": "PASS",
+    "json_parse": "PASS",
+    "mw0_manifest_consistency": "PASS",
+    "linux_runner_bash_syntax": "PASS",
+    "gdscript_static_delimiter_check": "PASS",
+    "gdscript_preload_target_check": "PASS",
+    "domain_presentation_dependency_audit": "PASS",
+    "documentation_link_and_fence_check": "PASS",
+    "git_diff_check": "PASS",
+    "focused_godot_runner": "NOT_RUN",
+    "full_godot_regression": "NOT_RUN"
+  },
+  "not_run_reason": "The required Godot 4.7.1 double-precision executable was not available in the execution container. Focused runners are included for independent execution.",
+  "focused_runner_windows": "RUN_MW0_MATTER_CONTRACTS_TESTS.ps1",
+  "focused_runner_linux": "RUN_MW0_MATTER_CONTRACTS_TESTS.sh",
+  "next_stage_after_acceptance": "MW1 fixed-seed procedural asteroid sampler"
+}

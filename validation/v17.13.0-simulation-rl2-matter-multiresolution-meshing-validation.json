@@ -1,0 +1,122 @@
+{
+  "schema": "planet_simulator.delivery_validation.v1",
+  "checkpoint": "v17.13.0-simulation-rl2-matter-multiresolution-meshing",
+  "build_id": "rl2-matter-multiresolution-meshing-transitions",
+  "base": "v17.12.0-simulation-mw10-cross-region-matter-transactions",
+  "recommended_branch": "feature/rl2-matter-multiresolution-meshing",
+  "status": "CANDIDATE_FOR_INDEPENDENT_REVIEW",
+  "scope": {
+    "changed_file_count": 26,
+    "changed_gdscript_files": 14,
+    "production_worlds_changed": false,
+    "canonical_matter_changed": false,
+    "mw10_transaction_semantics_changed": false,
+    "mw9_recovery_semantics_changed": false,
+    "mw8_authority_semantics_changed": false,
+    "network_streaming_added": false,
+    "background_scheduler_added": false,
+    "construction_hlod_added": false
+  },
+  "implementation": {
+    "maximum_lod_level": 2,
+    "source_topology": {
+      "lod0_leaf_snapshots": 1,
+      "lod1_leaf_snapshots": 8,
+      "lod2_leaf_snapshots": 64
+    },
+    "field_resolution": "fixed canonical lattice per represented spatial scope",
+    "mesher": "deterministic Freudenthal marching tetrahedra",
+    "same_level_seams": "canonical shared-boundary segment witness",
+    "cross_level_transition": "fine-side FINE_BOUNDARY_SKIRT_V1 content-addressed artifact",
+    "maximum_neighbor_lod_delta": 1,
+    "capability_fences": [
+      "collision only for DETAIL",
+      "no interiors for MACRO_PROXY",
+      "transition has no collision or interior capability"
+    ],
+    "unknown_material_color": "SHA-256-derived canonical material presentation color",
+    "next": "RL3 representation-aware network streaming"
+  },
+  "focused_tests": {
+    "runner_ps1": "RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.ps1",
+    "runner_sh": "RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.sh",
+    "synthetic_script": "tests/representation/test_rl2_matter_multiresolution_meshing.gd",
+    "real_asteroid_script": "tests/representation/test_rl2_real_asteroid_multiresolution.gd",
+    "synthetic_assertions": 153,
+    "real_asteroid_assertions": 44,
+    "combined_assertions": 197,
+    "consecutive_runs": 3,
+    "result": "PASS",
+    "runner_rejects_godot_script_errors": true
+  },
+  "runtime_validation": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "rl2": "197/197 PASS x3",
+    "mw10": "235/235 PASS",
+    "mw9": "240/240 PASS",
+    "rl1": "245/245 PASS",
+    "rl0": "92/92 PASS",
+    "mw3": "7519/7519 PASS",
+    "mw8": "NOT_AVAILABLE_IN_RECONSTRUCTED_AUTHORING_BASE; independent 98/98 gate required",
+    "mw7": "NOT_COMPLETED; reconnect runner hang reproduced on untouched reconstructed baseline 8b23d85 and not attributed to RL2"
+  },
+  "static_validation": {
+    "json_parse": "PASS",
+    "utf8": "PASS",
+    "trailing_whitespace": 0,
+    "conflict_markers": 0,
+    "preload_target_audit": "PASS",
+    "duplicate_functions": 0,
+    "bash_syntax": "PASS",
+    "powershell_runner_static_audit": "PASS",
+    "accidental_uid_files": 0,
+    "forbidden_simulation_runtime_references": 0,
+    "git_diff_check": "PASS",
+    "changed_file_manifest_count": 26,
+    "changed_file_manifest_exact": "PASS"
+  },
+  "required_independent_gate": [
+    "RL2 combined runner 197/197 PASS",
+    "MW10 combined runner 235/235 PASS",
+    "MW9 combined runner 240/240 PASS",
+    "MW8 focused 98/98 PASS",
+    "MW7 focused 114/114 PASS",
+    "git diff --check PASS"
+  ],
+  "changed_files": [
+    "AGENTS.md",
+    "PROJECT_MANIFEST.txt",
+    "RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.ps1",
+    "RUN_RL2_MATTER_MULTIRESOLUTION_MESHING_TESTS.sh",
+    "config/representation/matter-multiresolution-meshing.v1.json",
+    "docs/architecture/REPRESENTATION_LOD_FABRIC_RU.md",
+    "docs/architecture/RL2_MATTER_MULTIRESOLUTION_MESHING_RU.md",
+    "docs/checkpoints/2026-08-03_V17_13_0_SIMULATION_RL2_MATTER_MULTIRESOLUTION_MESHING_RU.md",
+    "docs/plans/MUTABLE_WORLDS_ROADMAP_RU.md",
+    "docs/plans/REPRESENTATION_LOD_ROADMAP_RU.md",
+    "scripts/simulation/representation/matter/meshing/contracts/matter_cross_level_transition.gd",
+    "scripts/simulation/representation/matter/meshing/contracts/matter_meshing_source_set.gd",
+    "scripts/simulation/representation/matter/meshing/contracts/matter_multiresolution_field.gd",
+    "scripts/simulation/representation/matter/meshing/contracts/matter_multiresolution_mesh_data.gd",
+    "scripts/simulation/representation/matter/meshing/matter_cross_level_transition_builder.gd",
+    "scripts/simulation/representation/matter/meshing/matter_cross_level_transition_validator.gd",
+    "scripts/simulation/representation/matter/meshing/matter_lod_neighborhood_balancer.gd",
+    "scripts/simulation/representation/matter/meshing/matter_mesh_boundary.gd",
+    "scripts/simulation/representation/matter/meshing/matter_meshing_invalidation_resolver.gd",
+    "scripts/simulation/representation/matter/meshing/matter_multiresolution_field_builder.gd",
+    "scripts/simulation/representation/matter/meshing/matter_multiresolution_mesher.gd",
+    "scripts/world/matter/representation/matter_representation_mesh_resource_factory.gd",
+    "tests/representation/test_rl2_matter_multiresolution_meshing.gd",
+    "tests/representation/test_rl2_real_asteroid_multiresolution.gd",
+    "validation/v17.13.0-simulation-rl2-matter-multiresolution-meshing-files.txt",
+    "validation/v17.13.0-simulation-rl2-matter-multiresolution-meshing-validation.json"
+  ],
+  "archive_validation": {
+    "zip_file_count": 26,
+    "unsafe_paths": 0,
+    "duplicate_paths": 0,
+    "accidental_uid_files": 0,
+    "extracted_byte_identity": "PASS",
+    "overlay_changed_files_identity": "PASS"
+  }
+}

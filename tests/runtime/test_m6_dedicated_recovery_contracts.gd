@@ -7,6 +7,8 @@ const Repository = preload("res://scripts/persistence/authoritative_recovery_rep
 const Coordinator = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
 const AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 const ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
+const GraphicalClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+const GameplayReplica = preload("res://scripts/runtime/host_client/multiplayer_gameplay_replica_store.gd")
 
 const AUTHORITY_OWNER_ID := "simulation/m6/contracts"
 const AUTHORITY_EPOCH := 1
@@ -24,6 +26,7 @@ var root_path := ""
 
 func _init() -> void:
 	_test_recovery_wire_snapshot_sessions()
+	_test_recovery_client_snapshot_resync()
 	root_path = ProjectSettings.globalize_path(
 		"user://m6-dedicated-recovery-contracts-%d" % Time.get_ticks_usec()
 	)
@@ -59,6 +62,28 @@ func _test_recovery_wire_snapshot_sessions() -> void:
 	var disconnected_invalid_session := disconnected.duplicate(true)
 	disconnected_invalid_session["transport_session_id"] = "stale-session"
 	_assert_error(PlayerSnapshot.validate_player_record(disconnected_invalid_session), "INVALID_MULTIPLAYER_TRANSPORT_SESSION", "Disconnected player rejects malformed non-empty transport session")
+
+func _test_recovery_client_snapshot_resync() -> void:
+	var service = _new_service()
+	if service == null:
+		return
+	var initial: Dictionary = service.create_snapshot()
+	_assert_ok(service.join("a", "transport-session/m6/resync/a/1", "operation/m6/resync/a/join/1"), "M6 resync A join")
+	var join_b: Dictionary = service.join("b", "transport-session/m6/resync/b/1", "operation/m6/resync/b/join/1")
+	_assert_ok(join_b, "M6 resync B join")
+	var runtime = GraphicalClientRuntime.new()
+	runtime.set("_replica", GameplayReplica.new())
+	runtime.call("_accept_snapshot", initial)
+	runtime.call("_accept_delta", join_b.get("details", {}).get("delta", {}))
+	var waiting: Dictionary = runtime.get_report()
+	_assert(bool(waiting.get("pending_replica_resync", false)), "M6 client waits for authoritative snapshot after delta gap")
+	_assert(String(waiting.get("last_error_code", "")) != "MULTIPLAYER_DELTA_BASE_MISMATCH", "M6 delta gap is transient rather than terminal")
+	runtime.call("_accept_snapshot", join_b.get("details", {}).get("snapshot", {}))
+	var repaired: Dictionary = runtime.get_report()
+	_assert(not bool(repaired.get("pending_replica_resync", true)), "M6 authoritative snapshot completes resync")
+	_assert(int(repaired.get("snapshot_resyncs", 0)) == 1, "M6 snapshot resync is counted")
+	_assert(String(runtime.get_snapshot().get("checksum", "")) == String(join_b.get("details", {}).get("snapshot", {}).get("checksum", "")), "M6 resynced replica matches authority")
+	service.shutdown()
 
 func _test_dedicated_checkpoint_recovery() -> void:
 	var service = _new_service()

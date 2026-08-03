@@ -1,0 +1,11 @@
+AGENTS.md
+PROJECT_MANIFEST.txt
+README_RU.md
+docs/README_RU.md
+docs/architecture/MW5_MATTER_PERSISTENCE_RU.md
+docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX2_RU.md
+docs/checkpoints/2026-08-01_V17_5_0_SIMULATION_MW5_MATTER_PERSISTENCE_FIX3_RU.md
+scripts/simulation/matter/persistence/matter_state_repository.gd
+tests/matter/persistence/test_mw5_matter_persistence.gd
+validation/v17.5.0-simulation-mw5-matter-persistence-fix3-files.txt
+validation/v17.5.0-simulation-mw5-matter-persistence-fix3-validation.json
