@@ -6,7 +6,7 @@ base: feature/ch1-character-presentation-contracts
 status: IMPLEMENTED AND LOCALLY VERIFIED
 engine: Godot 4.7.1 stable double custom a13da4feb
 editor import: PASS
-CH1 regression: 32/32 PASS
+CH1 regression: 30/30 PASS
 CH2 focused: 37/37 PASS
 production runtime files changed: 0
 ```
