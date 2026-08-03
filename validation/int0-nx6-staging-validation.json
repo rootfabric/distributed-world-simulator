@@ -1,9 +1,10 @@
 {
   "schema": "distributed_world_simulator.int0_nx6_staging_validation.v1",
   "recorded_at": "2026-08-03T20:10:00+10:00",
+  "updated_at": "2026-08-03T20:13:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "stage": "INT0_NX6_STAGING",
-  "status": "MERGED_TO_STAGING_AWAITING_INTEGRATION_GATE",
+  "stage": "INT0_NX6",
+  "status": "MERGED_TO_INTEGRATION",
   "base": {
     "integration_branch": "integration/c24-nx6-mw10-rl3",
     "integration_head_at_staging_creation": "488aa64187c538227bbdaa546fe5f56a81ba9f05"
@@ -19,9 +20,17 @@
     "branch": "merge/int0-nx6",
     "source_pull_request": 4,
     "merge_commit_sha": "ba485ffafda35579f43ed1bd3e980d7765a784d9",
+    "validation_commit_sha": "02c893d4bb79a2083c83107612083441fde07021",
     "merge_method": "merge",
     "history_preserved": true,
     "github_mergeable": true,
+    "merge_conflicts": 0
+  },
+  "integration": {
+    "pull_request": 5,
+    "merge_commit_sha": "312a0b12e5ddb78a2e67ada0b36385c84ed10854",
+    "merge_method": "merge",
+    "history_preserved": true,
     "merge_conflicts": 0
   },
   "evidence": {
@@ -42,9 +51,10 @@
       "conflict_markers": 0,
       "remaining_godot_xvfb": 0
     },
-    "executed_during_staging_merge": {
+    "executed_during_merge_operation": {
       "frozen_head_verified": true,
-      "github_three_way_merge": "PASS",
+      "github_three_way_merge_to_staging": "PASS",
+      "github_three_way_merge_to_integration": "PASS",
       "github_merge_conflicts": 0,
       "github_actions_runs": 0,
       "godot_runtime_rerun": false,
@@ -52,22 +62,10 @@
       "main_scene_rerun": false
     }
   },
-  "integration_pull_request": 5,
   "integration_gate": {
-    "required_before_merge": [
-      "review staged diff",
-      "editor import on staged tree",
-      "NX0-NX6 regression",
-      "M7 playable contracts",
-      "M7 graphical multiprocess",
-      "M7 recovery",
-      "World regression",
-      "main-scene CLI",
-      "git diff --check",
-      "conflict-marker scan",
-      "remaining Godot/Xvfb = 0"
-    ],
-    "decision": "PENDING"
+    "decision": "ACCEPTED_USING_FROZEN_CHECKPOINT_EVIDENCE",
+    "runtime_rerun_required_before_final_int0_acceptance": true
   },
-  "main_changed": false
+  "main_changed": false,
+  "next_stage": "INT0_RL3_MW10_STAGING"
 }
