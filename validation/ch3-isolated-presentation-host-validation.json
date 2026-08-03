@@ -3,7 +3,7 @@
   "branch": "feature/ch3-isolated-character-presentation-host",
   "engine": "4.7.1.stable.double.custom_build.a13da4feb",
   "editor_import": "PASS",
-  "ch1_regression_assertions": 32,
+  "ch1_regression_assertions": 30,
   "ch2_regression_assertions": 37,
   "ch3_assertions": 56,
   "graphical_smoke": "PASS",
