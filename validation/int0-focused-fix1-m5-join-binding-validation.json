@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.int0_focused_fix1_m5_join_binding_validation.v1",
   "recorded_at": "2026-08-03T21:47:00+10:00",
-  "updated_at": "2026-08-03T22:02:00+10:00",
+  "updated_at": "2026-08-03T22:57:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "base_candidate": {
     "branch": "checkpoint/int0-three-domain-composed-candidate",
@@ -57,18 +57,43 @@
       "result": "PASS"
     },
     "github_mergeability": "PASS",
-    "github_merge": "PASS",
-    "full_repository_focused_profile": "PENDING_LOCAL_RETEST"
+    "github_merge": "PASS"
+  },
+  "independent_fix1_retest": {
+    "candidate_branch": "checkpoint/int0-three-domain-focused-fix1-candidate",
+    "candidate_sha": "15a27615722fb1ab2f3953eb0ea3c35e4803784d",
+    "worktree_mode": "DETACHED",
+    "run_count": 2,
+    "m5_standalone": {
+      "result": "PASS",
+      "assertions": 80,
+      "failures": 0
+    },
+    "focused_profile": {
+      "result": "PASS",
+      "suite_count": 5,
+      "all_suites_passed": true
+    },
+    "git_diff_check": "PASS",
+    "conflict_markers": 0,
+    "remaining_godot_processes": 0,
+    "full_profile": "NOT_RUN_BY_GATE_POLICY",
+    "first_run_artifacts_saved_at": "C:/Godot/int0-artifacts-candidate-15a2761-run1",
+    "second_run_artifacts_root": "C:/Godot/distributed-world-simulator-int0/artifacts/test-results"
   },
   "import_cleanliness_observation": {
-    "status": "OPEN_SEPARATE_DEFECT",
-    "reported_project_godot_modified": true,
-    "reported_generated_uid_files": 156,
+    "status": "REPRODUCIBLE_MISSING_UID_SIDECARS",
+    "project_godot_modified": false,
+    "generated_untracked_uid_files": 156,
+    "reproduction_count": 2,
+    "uid_path_list_byte_identical_between_runs": true,
+    "worktree_status_byte_identical_between_runs": true,
     "original_checkout_affected": false,
-    "candidate_acceptance_impact": "Must be investigated before final INT0 acceptance; it does not invalidate the narrow M5 source-boundary fix.",
-    "exact_project_godot_diff_available": false,
-    "exact_generated_uid_path_manifest_available": false
+    "scope": "UNTRACKED_UID_FILES_ONLY",
+    "candidate_acceptance_impact": "Commit and independently verify the 156 generated UID sidecars before running the full INT0 profile.",
+    "local_uid_manifest": "C:/Godot/distributed-world-simulator-int0/artifacts/test-results/int0-import-generated-uids.txt",
+    "local_worktree_status": "C:/Godot/distributed-world-simulator-int0/artifacts/test-results/int0-import-worktree-status.txt"
   },
-  "acceptance_decision": "FIX1_CANDIDATE_AWAITING_FOCUSED_RETEST",
+  "acceptance_decision": "FOCUSED_PASS_UID_SIDECAR_FIX_REQUIRED_BEFORE_FULL",
   "main_changed": false
 }
