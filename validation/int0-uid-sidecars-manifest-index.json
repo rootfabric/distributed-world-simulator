@@ -13,7 +13,7 @@
     {
       "path": "validation/int0-project-uid-contract-sidecar-manifest.json",
       "uid_count": 1,
-      "classification": "FIX2_CONTRACT_SIDEcar",
+      "classification": "FIX2_CONTRACT_SIDECAR",
       "immutable": true
     }
   ],
