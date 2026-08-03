@@ -205,15 +205,19 @@ func _test_baseline_and_documentation() -> void:
 	for stage_index in range(10):
 		supported_stages.append("NX%d" % stage_index)
 	_assert(current_stage in supported_stages, "Network experience roadmap current stage mismatch")
-	_assert(String(roadmap.get("base_commit", "")) == "69bd7fc", "Network experience roadmap base commit mismatch")
+	_assert(_roadmap_lineage_is_consistent(roadmap), "Network experience roadmap checkpoint lineage mismatch")
 	_assert(roadmap.get("phases", []).size() == 10, "NX roadmap does not contain NX0 through NX9")
 	_assert(String(preparation.get("checkpoint", "")) == "v16.10.7-network-nx0-observability-preparation", "NX0 preparation checkpoint mismatch")
 	_assert(not bool(preparation.get("runtime_behavior_changed", true)), "Preparation claims production behavior changed")
 	_assert(not bool(preparation.get("production_transport_wrapped", true)), "Preparation claims simulator is attached to ENet")
 	_assert(preparation.get("confirmed_baseline_findings", []).size() >= 6, "Preparation manifest omits baseline findings")
 
-	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
-	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var server_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
+	var client_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	var enet_source: String = FileAccess.get_file_as_string("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 	if current_stage in ["NX0_PREPARATION", "NX0", "NX1"]:
 		_assert(server_source.contains("var previous_ms := int(_peer_last_input_ms.get(peer_id, now_ms - 50))"), "M7 packet-arrival movement baseline changed without roadmap update")
@@ -253,6 +257,50 @@ func _test_baseline_and_documentation() -> void:
 	_assert(not focused_ps1.contains("@(\"HOME\","), "PowerShell focused runner snapshots HOME for mutation")
 	_assert(network_runner.contains("test_nx0_network_experience_preparation.gd"), "Network regression omits NX0 preparation test")
 	_assert(world_runner.contains("test_nx0_network_experience_preparation.gd"), "World regression omits NX0 preparation test")
+
+
+func _roadmap_lineage_is_consistent(roadmap: Dictionary) -> bool:
+	var phases_value = roadmap.get("phases", [])
+	if not phases_value is Array:
+		return false
+	var phases: Array = phases_value
+	var current_stage: String = String(roadmap.get("current_stage", ""))
+	var current_checkpoint: String = String(roadmap.get("current_checkpoint", ""))
+	for index in range(phases.size()):
+		var phase_value = phases[index]
+		if not phase_value is Dictionary:
+			continue
+		var phase: Dictionary = phase_value
+		if String(phase.get("id", "")) != current_stage:
+			continue
+		if String(phase.get("checkpoint", "")) != current_checkpoint:
+			return false
+		if index == 0:
+			return true
+		var previous_value = phases[index - 1]
+		return (
+			previous_value is Dictionary
+			and String(Dictionary(previous_value).get("checkpoint", ""))
+			== String(roadmap.get("base_checkpoint", ""))
+		)
+	return false
+
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
 
 
 func _mismatch(expected: Dictionary, field: String, replacement: String) -> String:
