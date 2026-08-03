@@ -1,13 +1,15 @@
 {
   "schema": "distributed_world_simulator.int0_c24_staging_validation.v1",
   "recorded_at": "2026-08-03T20:54:00+10:00",
-  "updated_at": "2026-08-03T20:58:00+10:00",
+  "updated_at": "2026-08-03T21:05:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
   "stage": "INT0_THREE_DOMAIN_COMPOSED_CANDIDATE",
   "status": "AWAITING_COMBINED_RUNTIME_GATE",
   "base": {
     "integration_branch": "integration/c24-nx6-mw10-rl3",
-    "base_sha": "64770c62574de58fa522dbdf2b4be891fe00442c",
+    "base_sha": "9bdda885f6015388424a3db9746d54f1b33fe08e",
+    "base_sync_pull_request": 11,
+    "base_sync_merge_commit_sha": "119c2b7a7e350b7b0b489941945f5baccb8a7c38",
     "classification": "NX6_RL3_COMPOSED_CANDIDATE_NOT_ACCEPTED"
   },
   "source": {
@@ -24,8 +26,11 @@
     "initial_validation_commit_sha": "989cd87a53d10b307f1cd9a3a22bae207995637e",
     "powershell_runner_commit_sha": "d0852709f9ef01ded716b07e4d8c3d2a28bf55e9",
     "bash_runner_commit_sha": "dca92bce77c9367b7f0ebbf1b500d7abc18c804e",
+    "bash_process_scan_fix_commit_sha": "3fc37656e233d38a699705eab3053f9042c681fc",
     "integration_pull_request": 10,
-    "integration_pull_request_state": "OPEN_DRAFT_MERGEABLE",
+    "integration_pull_request_state": "OPEN_DRAFT",
+    "branch_relation_to_integration": "AHEAD_34_BEHIND_0",
+    "merge_base_is_current_integration_head": true,
     "merge_method": "merge",
     "history_preserved": true,
     "squash_used": false,
@@ -70,6 +75,9 @@
     "includes_git_diff_check": true,
     "includes_conflict_marker_scan": true,
     "includes_remaining_process_check": true,
+    "bash_syntax_check": "PASS",
+    "bash_process_scan_smoke": "PASS_EMPTY_WITHOUT_SELF_MATCH",
+    "powershell_syntax_check": "NOT_RUN_PWSH_UNAVAILABLE",
     "runtime_executed": false
   },
   "source_acceptance_evidence": {
@@ -87,10 +95,12 @@
   },
   "executed_on_composed_staging_tree": {
     "github_frozen_head_verification": "PASS",
-    "github_mergeability": "PASS",
+    "github_mergeability": "PASS_AT_SOURCE_AND_CLEAN_AHEAD_RELATION",
     "github_merge": "PASS",
     "static_changed_path_audit": "PASS",
     "unified_runner_files_created": "PASS",
+    "bash_runner_syntax_and_process_scan_smoke": "PASS",
+    "powershell_runner_syntax": "NOT_RUN",
     "unified_runner_execution": "NOT_RUN",
     "godot_editor_import": "NOT_RUN",
     "c24_focused": "NOT_RUN",
