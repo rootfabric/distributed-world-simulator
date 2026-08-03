@@ -3,7 +3,6 @@ extends SceneTree
 const PlaygroundRuntime = preload(
 	"res://scripts/world/testing/playground_runtime.gd"
 )
-const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 var failures: Array[String] = []
 var assertions := 0
@@ -16,27 +15,46 @@ class FakeM4ClientRuntime:
 	signal item_graph_updated(snapshot: Dictionary)
 
 	var gameplay_snapshot: Dictionary = {
+		"authority_epoch": 1,
+		"revision": 1,
+		"server_tick": 1,
 		"checksum": "gameplay-checksum-initial",
 		"players": [
 			{
 				"logical_player_id": "a",
 				"player_entity_id": "player/a",
+				"transport_session_id": "transport-session/m3/a/test",
+				"ownership_epoch": 1,
 				"connected": true,
 				"position": {"x": -2.0, "y": 0.0, "z": 0.0},
 				"velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+				"inventory": [],
+				"last_input_sequence": 0,
 				"state_revision": 1,
+				"orientation_yaw": 0.0,
+				"flashlight_enabled": false,
 			},
 			{
 				"logical_player_id": "b",
 				"player_entity_id": "player/b",
+				"transport_session_id": "transport-session/m3/b/test",
+				"ownership_epoch": 1,
 				"connected": true,
 				"position": {"x": 2.0, "y": 0.0, "z": 0.0},
 				"velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+				"inventory": [],
+				"last_input_sequence": 0,
 				"state_revision": 1,
+				"orientation_yaw": 0.0,
+				"flashlight_enabled": false,
 			},
 		],
 	}
-	var item_snapshot: Dictionary = {}
+	var item_snapshot: Dictionary = {
+		"schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+		"revision": 0,
+		"checksum": "item-checksum-initial",
+	}
 	var commands: Array[Dictionary] = []
 	var movement_deltas: Array[Vector2] = []
 	var automated_acceptance := true
@@ -72,10 +90,7 @@ class FakeM4ClientRuntime:
 			"operation_id": operation_id,
 		})
 		item_snapshot["revision"] = int(item_snapshot.get("revision", 0)) + 1
-		item_snapshot["tick"] = int(item_snapshot.get("tick", 0)) + 1
-		var body := item_snapshot.duplicate(true)
-		body.erase("checksum")
-		item_snapshot["checksum"] = NetworkUtils.payload_hash(body)
+		item_snapshot["checksum"] = "item-checksum-%d" % int(item_snapshot["revision"])
 		item_graph_updated.emit(item_snapshot.duplicate(true))
 		return {"success": true, "error_code": ""}
 
@@ -113,8 +128,6 @@ func _run() -> void:
 	)
 
 	var client := FakeM4ClientRuntime.new()
-	client.item_snapshot = _create_item_snapshot()
-	var initial_item_checksum := String(client.item_snapshot.get("checksum", ""))
 	var attached: Dictionary = runtime.attach_m3_multiplayer_client(client)
 	_assert(bool(attached.get("success", false)), "M4 playground client attached")
 	var initial: Dictionary = runtime.create_m3_graphical_client_report()
@@ -122,7 +135,7 @@ func _run() -> void:
 	_assert(bool(initial.get("network_replica_mode", false)), "local player is replica-driven")
 	_assert(int(initial.get("remote_presenter_count", 0)) == 1, "remote player presenter spawned")
 	_assert(
-		String(initial.get("m4_item_graph_checksum", "")) == initial_item_checksum,
+		String(initial.get("m4_item_graph_checksum", "")) == "item-checksum-initial",
 		"initial M4 Item Graph replica applied"
 	)
 	client.automated_acceptance = false
@@ -159,11 +172,13 @@ func _run() -> void:
 	var after_item: Dictionary = runtime.create_m3_graphical_client_report()
 	_assert(int(after_item.get("m4_item_graph_revision", 0)) == 1, "M4 revision updated")
 	_assert(
-		String(after_item.get("m4_item_graph_checksum", "")) == String(client.item_snapshot.get("checksum", "")),
+		String(after_item.get("m4_item_graph_checksum", "")) == "item-checksum-1",
 		"M4 checksum updated"
 	)
 
 	client.gameplay_snapshot["players"] = [client.gameplay_snapshot["players"][0]]
+	client.gameplay_snapshot["revision"] = 2
+	client.gameplay_snapshot["server_tick"] = 2
 	client.gameplay_snapshot["checksum"] = "gameplay-checksum-after-leave"
 	client.replica_updated.emit(client.gameplay_snapshot.duplicate(true))
 	await process_frame
@@ -175,26 +190,6 @@ func _run() -> void:
 	runtime.queue_free()
 	await process_frame
 	_finish()
-
-
-func _create_item_snapshot() -> Dictionary:
-	var snapshot := {
-		"schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
-		"authority_owner_id": "authority/test/playground",
-		"authority_epoch": 1,
-		"revision": 0,
-		"tick": 0,
-		"items": [],
-		"inventories": {
-			"a": {"inventory": [], "hotbar": [], "selected_hotbar_index": 0},
-			"b": {"inventory": [], "hotbar": [], "selected_hotbar_index": 0},
-		},
-		"containers": [],
-		"mounts": [],
-		"open_containers": {},
-	}
-	snapshot["checksum"] = NetworkUtils.payload_hash(snapshot)
-	return snapshot
 
 
 func _assert(condition: bool, message: String) -> void:
