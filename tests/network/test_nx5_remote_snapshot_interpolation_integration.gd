@@ -65,6 +65,74 @@ func _test_parent_snapshot_clock_and_render_delay() -> void:
 	_assert(bool(duplicate.get("success", false)), "duplicate snapshot is nonfatal")
 	_assert(bool(duplicate.get("details", {}).get("duplicate", false)), "duplicate surfaced to presentation caller")
 	_assert(int(presenter.get_report().get("interpolation", {}).get("duplicates_suppressed", 0)) == 1, "duplicate telemetry visible")
+
+	var presentation_revision := second.duplicate(true)
+	presentation_revision["state_revision"] = 3
+	presentation_revision["orientation_yaw"] = PI / 3.0
+	presentation_revision["flashlight_enabled"] = true
+	runtime.snapshot = _snapshot(106, 12, 1, [presentation_revision])
+	var same_tick_update: Dictionary = presenter.apply_replica(
+		presentation_revision
+	)
+	_assert(
+		bool(same_tick_update.get("success", false)),
+		"newer outer revision inside the same server tick is accepted"
+	)
+	_assert(
+		bool(same_tick_update.get("details", {}).get(
+			"same_tick_replacement", false
+		)),
+		"same-tick replacement is surfaced to presentation caller"
+	)
+	var same_tick_report: Dictionary = presenter.get_report()
+	_assert(
+		bool(same_tick_report.get("flashlight_enabled", false)),
+		"same-tick presentation revision updates flashlight target"
+	)
+	_assert(
+		is_equal_approx(
+			float(same_tick_report.get("orientation_yaw", 0.0)),
+			PI / 3.0
+		),
+		"same-tick presentation revision updates orientation target"
+	)
+	_assert(
+		int(same_tick_report.get(
+			"interpolation", {}
+		).get("same_tick_replacements", 0)) == 1,
+		"same-tick replacement telemetry visible"
+	)
+
+	var stale_presentation := presentation_revision.duplicate(true)
+	stale_presentation["flashlight_enabled"] = false
+	runtime.snapshot = _snapshot(106, 11, 1, [stale_presentation])
+	var stale_same_tick: Dictionary = presenter.apply_replica(stale_presentation)
+	_assert(
+		bool(stale_same_tick.get("success", false))
+		and bool(stale_same_tick.get("details", {}).get("stale", false)),
+		"older same-tick presentation revision is ignored nonfatally"
+	)
+	_assert(
+		bool(presenter.get_report().get("flashlight_enabled", false)),
+		"stale same-tick revision cannot roll back flashlight target"
+	)
+
+	var conflicting_revision := presentation_revision.duplicate(true)
+	conflicting_revision["position"] = {"x": 9.0, "y": 0.0, "z": 0.0}
+	runtime.snapshot = _snapshot(106, 12, 1, [conflicting_revision])
+	var conflict_result: Dictionary = presenter.apply_replica(
+		conflicting_revision
+	)
+	_assert(
+		String(conflict_result.get("error_code", ""))
+		== "CONFLICTING_REMOTE_SNAPSHOT_TICK",
+		"conflicting state for the exact same clock tuple is rejected"
+	)
+	_assert(
+		String(presenter.get_report().get("last_apply_error_code", ""))
+		== "CONFLICTING_REMOTE_SNAPSHOT_TICK",
+		"ignored apply failure remains observable in presenter report"
+	)
 	presenter.queue_free()
 
 

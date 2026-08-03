@@ -1,10 +1,10 @@
 {
   "schema": "planet_simulator.nx5_remote_snapshot_interpolation.v1",
   "checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation",
-  "build_id": "nx5-remote-snapshot-interpolation",
+  "build_id": "nx5-remote-snapshot-interpolation-fix1",
   "branch": "feature/nx5-remote-snapshot-interpolation",
   "base_checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
-  "base_delivery": "fix1",
+  "base_delivery": "nx5 candidate commit 4efb873d1d0fc20e99f684fd3d4d0ba423423d7f",
   "wire_compatibility": {
     "changed": false,
     "inherited_protocol_hash": "712f3bdd99c7e6391cf4dd9f188f2a29dedd6f490eb94d8dce81568777a2f17b",
@@ -20,9 +20,11 @@
   },
   "buffer": {
     "maximum_snapshots_per_remote_player": 32,
-    "ordering": "SERVER_TICK_SORTED_BOUNDED_TIMELINE_V1",
-    "duplicate_policy": "SAME_TICK_IDENTICAL_PLAYER_STATE_COALESCES_OUTER_REVISION_V1",
-    "stale_policy": "DROP_OLDER_THAN_BOUNDED_WINDOW_V1"
+    "ordering": "SERVER_TICK_THEN_OUTER_SNAPSHOT_REVISION_V2",
+    "duplicate_policy": "EXACT_TUPLE_IDENTICAL_STATE_SUPPRESSED_AND_NEWER_IDENTICAL_OUTER_REVISION_COALESCED_V2",
+    "same_tick_replacement_policy": "NEWER_OUTER_REVISION_REPLACES_AUTHORITATIVE_STATE_AT_EXISTING_SERVER_TICK_V1",
+    "same_tick_conflict_policy": "EQUAL_OUTER_REVISION_WITH_CHANGED_STATE_REJECTED_V1",
+    "stale_policy": "DROP_OLDER_SAME_TICK_OUTER_REVISION_AND_OLDER_THAN_BOUNDED_WINDOW_V2"
   },
   "rendering": {
     "position": "LINEAR_BETWEEN_AUTHORITATIVE_SNAPSHOTS_V1",
@@ -44,6 +46,8 @@
     "oldest_server_tick",
     "latest_server_tick",
     "duplicates_suppressed",
+    "same_tick_replacements",
+    "same_tick_stale_dropped",
     "stale_dropped",
     "conflicts_rejected",
     "identity_resets",
@@ -62,6 +66,7 @@
     "required_network_regression": "RUN_NETWORK_CONTRACT_TESTS",
     "required_world_regression": "RUN_WORLD_REGRESSION_TESTS",
     "legacy_playground_regression": "res://tests/runtime/test_m4_networked_playground_extension.gd",
-    "graphical_process_test": "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd"
+    "graphical_process_test": "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
+    "fix1_same_tick_regression": "M3/M4 same-server-tick presentation revision coverage"
   }
 }

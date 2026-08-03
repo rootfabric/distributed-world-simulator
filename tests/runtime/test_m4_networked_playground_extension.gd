@@ -3,6 +3,9 @@ extends SceneTree
 const PlaygroundRuntime = preload(
 	"res://scripts/world/testing/playground_runtime.gd"
 )
+const NetworkUtils = preload(
+	"res://scripts/network/contracts/network_contract_utils.gd"
+)
 
 var failures: Array[String] = []
 var assertions := 0
@@ -50,11 +53,7 @@ class FakeM4ClientRuntime:
 			},
 		],
 	}
-	var item_snapshot: Dictionary = {
-		"schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
-		"revision": 0,
-		"checksum": "item-checksum-initial",
-	}
+	var item_snapshot: Dictionary = {}
 	var commands: Array[Dictionary] = []
 	var movement_deltas: Array[Vector2] = []
 	var automated_acceptance := true
@@ -90,7 +89,10 @@ class FakeM4ClientRuntime:
 			"operation_id": operation_id,
 		})
 		item_snapshot["revision"] = int(item_snapshot.get("revision", 0)) + 1
-		item_snapshot["checksum"] = "item-checksum-%d" % int(item_snapshot["revision"])
+		item_snapshot["tick"] = int(item_snapshot.get("tick", 0)) + 1
+		var body := item_snapshot.duplicate(true)
+		body.erase("checksum")
+		item_snapshot["checksum"] = NetworkUtils.payload_hash(body)
 		item_graph_updated.emit(item_snapshot.duplicate(true))
 		return {"success": true, "error_code": ""}
 
@@ -128,6 +130,7 @@ func _run() -> void:
 	)
 
 	var client := FakeM4ClientRuntime.new()
+	client.item_snapshot = _canonical_item_snapshot()
 	var attached: Dictionary = runtime.attach_m3_multiplayer_client(client)
 	_assert(bool(attached.get("success", false)), "M4 playground client attached")
 	var initial: Dictionary = runtime.create_m3_graphical_client_report()
@@ -135,9 +138,70 @@ func _run() -> void:
 	_assert(bool(initial.get("network_replica_mode", false)), "local player is replica-driven")
 	_assert(int(initial.get("remote_presenter_count", 0)) == 1, "remote player presenter spawned")
 	_assert(
-		String(initial.get("m4_item_graph_checksum", "")) == "item-checksum-initial",
-		"initial M4 Item Graph replica applied"
+		String(initial.get("m4_item_graph_checksum", ""))
+		== String(client.item_snapshot.get("checksum", "")),
+		"initial canonical M4 Item Graph replica applied"
 	)
+
+	var same_tick_remote: Dictionary = Dictionary(
+		client.gameplay_snapshot["players"][1]
+	).duplicate(true)
+	same_tick_remote["state_revision"] = 2
+	same_tick_remote["orientation_yaw"] = PI / 3.0
+	same_tick_remote["flashlight_enabled"] = true
+	client.gameplay_snapshot["players"][1] = same_tick_remote
+	client.gameplay_snapshot["revision"] = 2
+	client.gameplay_snapshot["checksum"] = "gameplay-checksum-same-tick-presentation"
+	client.replica_updated.emit(client.gameplay_snapshot.duplicate(true))
+	await process_frame
+	var after_same_tick: Dictionary = runtime.create_m3_graphical_client_report()
+	var remote_report: Dictionary = Dictionary(
+		after_same_tick.get("remote_presenters", {}).get("b", {})
+	)
+	_assert(
+		bool(remote_report.get("flashlight_enabled", false)),
+		"same-tick outer revision reaches remote flashlight presentation"
+	)
+	_assert(
+		is_equal_approx(
+			float(remote_report.get("orientation_yaw", 0.0)),
+			PI / 3.0
+		),
+		"same-tick outer revision reaches remote orientation presentation"
+	)
+	_assert(
+		int(remote_report.get(
+			"interpolation", {}
+		).get("same_tick_replacements", 0)) == 1,
+		"playground exposes same-tick replacement telemetry"
+	)
+	_assert(
+		int(remote_report.get("interpolation_failures", -1)) == 0,
+		"valid same-tick presentation update has no apply failure"
+	)
+
+	var conflicting_remote := same_tick_remote.duplicate(true)
+	conflicting_remote["position"] = {"x": 9.0, "y": 0.0, "z": 0.0}
+	client.gameplay_snapshot["players"][1] = conflicting_remote
+	client.gameplay_snapshot["checksum"] = "gameplay-checksum-conflicting-tuple"
+	client.replica_updated.emit(client.gameplay_snapshot.duplicate(true))
+	await process_frame
+	var after_conflict: Dictionary = runtime.create_m3_graphical_client_report()
+	var conflicted_report: Dictionary = Dictionary(
+		after_conflict.get("remote_presenters", {}).get("b", {})
+	)
+	_assert(
+		String(conflicted_report.get("last_apply_error_code", ""))
+		== "CONFLICTING_REMOTE_SNAPSHOT_TICK",
+		"ignored playground apply result remains observable in runtime report"
+	)
+
+	client.gameplay_snapshot["revision"] = 3
+	client.gameplay_snapshot["server_tick"] = 2
+	client.gameplay_snapshot["players"][1] = same_tick_remote
+	client.gameplay_snapshot["checksum"] = "gameplay-checksum-after-conflict"
+	client.replica_updated.emit(client.gameplay_snapshot.duplicate(true))
+	await process_frame
 	client.automated_acceptance = false
 	var camera_yaw := runtime.player.get_node_or_null("CameraAnchor/CameraYaw") as Node3D
 	_assert(camera_yaw != null, "playground camera yaw node is available")
@@ -172,13 +236,14 @@ func _run() -> void:
 	var after_item: Dictionary = runtime.create_m3_graphical_client_report()
 	_assert(int(after_item.get("m4_item_graph_revision", 0)) == 1, "M4 revision updated")
 	_assert(
-		String(after_item.get("m4_item_graph_checksum", "")) == "item-checksum-1",
-		"M4 checksum updated"
+		String(after_item.get("m4_item_graph_checksum", ""))
+		== String(client.item_snapshot.get("checksum", "")),
+		"M4 canonical checksum updated"
 	)
 
 	client.gameplay_snapshot["players"] = [client.gameplay_snapshot["players"][0]]
-	client.gameplay_snapshot["revision"] = 2
-	client.gameplay_snapshot["server_tick"] = 2
+	client.gameplay_snapshot["revision"] = 4
+	client.gameplay_snapshot["server_tick"] = 3
 	client.gameplay_snapshot["checksum"] = "gameplay-checksum-after-leave"
 	client.replica_updated.emit(client.gameplay_snapshot.duplicate(true))
 	await process_frame
@@ -190,6 +255,25 @@ func _run() -> void:
 	runtime.queue_free()
 	await process_frame
 	_finish()
+
+
+func _canonical_item_snapshot() -> Dictionary:
+	var body := {
+		"schema": (
+			"planet_simulator.canonical_multiplayer_item_graph_snapshot.v1"
+		),
+		"authority_owner_id": "m4-playground-fixture",
+		"authority_epoch": 1,
+		"revision": 0,
+		"tick": 0,
+		"items": [],
+		"inventories": {},
+		"containers": [],
+		"mounts": [],
+		"open_containers": {},
+	}
+	body["checksum"] = NetworkUtils.payload_hash(body)
+	return body
 
 
 func _assert(condition: bool, message: String) -> void:

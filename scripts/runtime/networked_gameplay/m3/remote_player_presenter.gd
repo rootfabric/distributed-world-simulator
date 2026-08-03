@@ -18,6 +18,7 @@ var interpolation_rate := 0.0
 var replica_revision := 0
 var updates := 0
 var interpolation_failures := 0
+var last_apply_error_code := ""
 var _visual: MeshInstance3D
 var _flashlight: SpotLight3D
 var _interpolator
@@ -63,9 +64,9 @@ func apply_replica(
 	snapshot_context: Dictionary = {}
 ) -> Dictionary:
 	if String(record.get("player_entity_id", "")) != player_entity_id:
-		return _failure("REMOTE_PLAYER_IDENTITY_MISMATCH")
+		return _apply_failure("REMOTE_PLAYER_IDENTITY_MISMATCH")
 	if _interpolator == null:
-		return _failure("REMOTE_INTERPOLATOR_NOT_READY")
+		return _apply_failure("REMOTE_INTERPOLATOR_NOT_READY")
 	var context := _resolve_snapshot_context(record, snapshot_context)
 	var server_tick := int(context.get("server_tick", -1))
 	var snapshot_revision := int(context.get("snapshot_revision", -1))
@@ -77,8 +78,24 @@ func apply_replica(
 		authority_epoch
 	)
 	if not bool(pushed.get("success", false)):
-		interpolation_failures += 1
-		return pushed
+		return _apply_failure(
+			String(pushed.get("error_code", "REMOTE_SNAPSHOT_PUSH_FAILED")),
+			Dictionary(pushed.get("details", {}))
+		)
+	var push_details: Dictionary = pushed.get("details", {})
+	if bool(push_details.get("stale", false)):
+		last_apply_error_code = ""
+		return _success({
+			"server_tick": server_tick,
+			"snapshot_revision": snapshot_revision,
+			"authority_epoch": authority_epoch,
+			"accepted": false,
+			"duplicate": false,
+			"stale": true,
+			"same_tick": bool(push_details.get("same_tick", false)),
+			"reset_reason": String(push_details.get("reset_reason", "")),
+		})
+	last_apply_error_code = ""
 	var position_data: Dictionary = record.get("position", {})
 	var velocity_data: Dictionary = record.get("velocity", {})
 	target_position = Vector3(
@@ -100,7 +117,7 @@ func apply_replica(
 	target_flashlight = bool(record.get("flashlight_enabled", false))
 	replica_revision = int(record.get("state_revision", replica_revision))
 	updates += 1
-	var reset_reason := String(pushed.get("details", {}).get("reset_reason", ""))
+	var reset_reason := String(push_details.get("reset_reason", ""))
 	if snap or reset_reason in ["INITIAL", "AUTHORITY_OR_SESSION_CHANGED"]:
 		var baseline: Dictionary = _interpolator.sample_at_render_tick(float(server_tick))
 		if bool(baseline.get("success", false)):
@@ -109,7 +126,13 @@ func apply_replica(
 		"server_tick": server_tick,
 		"snapshot_revision": snapshot_revision,
 		"authority_epoch": authority_epoch,
-		"duplicate": bool(pushed.get("details", {}).get("duplicate", false)),
+		"accepted": bool(push_details.get("accepted", false)),
+		"duplicate": bool(push_details.get("duplicate", false)),
+		"stale": false,
+		"same_tick": bool(push_details.get("same_tick", false)),
+		"same_tick_replacement": bool(
+			push_details.get("same_tick_replacement", false)
+		),
 		"reset_reason": reset_reason,
 	})
 
@@ -240,8 +263,19 @@ func get_report() -> Dictionary:
 		"interpolation_mode": _last_mode,
 		"render_tick": _last_render_tick,
 		"interpolation_failures": interpolation_failures,
+		"last_apply_error_code": last_apply_error_code,
 		"interpolation": get_interpolation_report(),
 	}
+
+
+func _apply_failure(error_code: String, details: Dictionary = {}) -> Dictionary:
+	interpolation_failures += 1
+	last_apply_error_code = error_code
+	push_warning(
+		"[remote_player_presenter:%s] apply_replica failed: %s"
+		% [logical_player_id, error_code]
+	)
+	return _failure(error_code, details)
 
 
 func _success(details: Dictionary = {}) -> Dictionary:

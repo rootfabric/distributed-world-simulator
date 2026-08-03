@@ -31,6 +31,8 @@ var _timeline: Array[Dictionary] = []
 var _snapshots_received := 0
 var _snapshots_inserted := 0
 var _duplicates_suppressed := 0
+var _same_tick_replacements := 0
+var _same_tick_stale_dropped := 0
 var _stale_dropped := 0
 var _conflicts_rejected := 0
 var _identity_resets := 0
@@ -143,20 +145,76 @@ func push_snapshot(
 
 	var sample := _make_sample(record, server_tick, snapshot_revision, authority_epoch)
 	var insertion_index := _find_insertion_index(server_tick)
-	if insertion_index < _timeline.size() and int(_timeline[insertion_index].get("server_tick", -1)) == server_tick:
-		if _samples_equal(_timeline[insertion_index], sample):
-			var existing: Dictionary = _timeline[insertion_index]
-			existing["snapshot_revision"] = maxi(
-				int(existing.get("snapshot_revision", 0)),
-				snapshot_revision
-			)
+	if (
+		insertion_index < _timeline.size()
+		and int(_timeline[insertion_index].get("server_tick", -1)) == server_tick
+	):
+		var existing: Dictionary = _timeline[insertion_index]
+		var existing_revision := int(existing.get("snapshot_revision", -1))
+		if snapshot_revision < existing_revision:
+			_same_tick_stale_dropped += 1
+			_stale_dropped += 1
+			return _success({
+				"accepted": false,
+				"duplicate": false,
+				"stale": true,
+				"same_tick": true,
+				"reset_reason": reset_reason,
+			})
+		if snapshot_revision == existing_revision:
+			if _samples_equal(existing, sample):
+				_duplicates_suppressed += 1
+				_latest_server_tick = maxi(_latest_server_tick, server_tick)
+				_estimated_server_tick = maxf(
+					_estimated_server_tick,
+					float(server_tick)
+				)
+				return _success({
+					"accepted": false,
+					"duplicate": true,
+					"stale": false,
+					"same_tick": true,
+					"reset_reason": reset_reason,
+				})
+			_conflicts_rejected += 1
+			return _failure("CONFLICTING_REMOTE_SNAPSHOT_TICK")
+		if _samples_equal(existing, sample):
+			existing["snapshot_revision"] = snapshot_revision
 			_timeline[insertion_index] = existing
 			_duplicates_suppressed += 1
 			_latest_server_tick = maxi(_latest_server_tick, server_tick)
-			_estimated_server_tick = maxf(_estimated_server_tick, float(server_tick))
-			return _success({"accepted": false, "duplicate": true, "reset_reason": reset_reason})
-		_conflicts_rejected += 1
-		return _failure("CONFLICTING_REMOTE_SNAPSHOT_TICK")
+			_estimated_server_tick = maxf(
+				_estimated_server_tick,
+				float(server_tick)
+			)
+			return _success({
+				"accepted": false,
+				"duplicate": true,
+				"stale": false,
+				"same_tick": true,
+				"outer_revision_advanced": true,
+				"reset_reason": reset_reason,
+			})
+		sample["discontinuous_from_previous"] = bool(
+			existing.get("discontinuous_from_previous", false)
+		)
+		_timeline[insertion_index] = sample
+		_same_tick_replacements += 1
+		_latest_server_tick = maxi(_latest_server_tick, server_tick)
+		_estimated_server_tick = maxf(_estimated_server_tick, float(server_tick))
+		_rebuild_discontinuities(
+			maxi(0, insertion_index - 1),
+			mini(_timeline.size() - 1, insertion_index + 1)
+		)
+		return _success({
+			"accepted": true,
+			"duplicate": false,
+			"stale": false,
+			"same_tick": true,
+			"same_tick_replacement": true,
+			"reset_reason": reset_reason,
+			"buffer_size": _timeline.size(),
+		})
 
 	_timeline.insert(insertion_index, sample)
 	_snapshots_inserted += 1
@@ -273,6 +331,8 @@ func get_report() -> Dictionary:
 		"snapshots_received": _snapshots_received,
 		"snapshots_inserted": _snapshots_inserted,
 		"duplicates_suppressed": _duplicates_suppressed,
+		"same_tick_replacements": _same_tick_replacements,
+		"same_tick_stale_dropped": _same_tick_stale_dropped,
 		"stale_dropped": _stale_dropped,
 		"conflicts_rejected": _conflicts_rejected,
 		"identity_resets": _identity_resets,

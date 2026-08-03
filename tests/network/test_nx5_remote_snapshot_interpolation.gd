@@ -102,9 +102,74 @@ func _test_duplicate_conflict_and_out_of_order() -> void:
 	_assert(bool(outer_revision_duplicate.get("success", false)), "same player state with newer outer revision is nonfatal")
 	_assert(bool(outer_revision_duplicate.get("details", {}).get("duplicate", false)), "outer-only revision update is duplicate")
 	_assert(int(interpolator.get_timeline_for_testing()[1].get("snapshot_revision", 0)) == 99, "duplicate retains newest outer revision")
-	var conflict := tick_11.duplicate(true)
+	var replacement := tick_11.duplicate(true)
+	replacement["position"] = {"x": 1.15, "y": 0.0, "z": 0.0}
+	replacement["orientation_yaw"] = 0.25
+	replacement["flashlight_enabled"] = true
+	replacement["state_revision"] = 3
+	var replacement_result: Dictionary = interpolator.push_snapshot(
+		replacement,
+		11,
+		100,
+		1
+	)
+	_assert(
+		bool(replacement_result.get("success", false)),
+		"newer same-tick authoritative revision replaces state"
+	)
+	_assert(
+		bool(replacement_result.get("details", {}).get(
+			"same_tick_replacement", false
+		)),
+		"same-tick replacement reported"
+	)
+	var replaced_timeline: Array[Dictionary] = (
+		interpolator.get_timeline_for_testing()
+	)
+	_assert(
+		int(replaced_timeline[1].get("snapshot_revision", 0)) == 100,
+		"replacement stores newest outer revision"
+	)
+	_assert(
+		(replaced_timeline[1].get(
+			"position", Vector3.ZERO
+		) as Vector3).is_equal_approx(Vector3(1.15, 0.0, 0.0)),
+		"replacement stores changed authoritative position"
+	)
+	_assert(
+		bool(replaced_timeline[1].get("flashlight_enabled", false)),
+		"replacement stores same-tick presentation state"
+	)
+	var conflict := replacement.duplicate(true)
 	conflict["position"] = {"x": 9.0, "y": 0.0, "z": 0.0}
-	_assert(String(interpolator.push_snapshot(conflict, 11, 11, 1).get("error_code", "")) == "CONFLICTING_REMOTE_SNAPSHOT_TICK", "same-tick conflict rejected")
+	_assert(
+		String(interpolator.push_snapshot(
+			conflict, 11, 100, 1
+		).get("error_code", "")) == "CONFLICTING_REMOTE_SNAPSHOT_TICK",
+		"same tuple with conflicting state rejected"
+	)
+	var stale_same_tick := replacement.duplicate(true)
+	stale_same_tick["position"] = {"x": -9.0, "y": 0.0, "z": 0.0}
+	var stale_same_tick_result: Dictionary = interpolator.push_snapshot(
+		stale_same_tick,
+		11,
+		99,
+		1
+	)
+	_assert(
+		bool(stale_same_tick_result.get("success", false)),
+		"older same-tick outer revision is a nonfatal stale packet"
+	)
+	_assert(
+		bool(stale_same_tick_result.get("details", {}).get("stale", false)),
+		"older same-tick outer revision reported stale"
+	)
+	_assert(
+		(interpolator.get_timeline_for_testing()[1].get(
+			"position", Vector3.ZERO
+		) as Vector3).is_equal_approx(Vector3(1.15, 0.0, 0.0)),
+		"stale same-tick packet cannot replace authoritative state"
+	)
 	var foreign := tick_11.duplicate(true)
 	foreign["logical_player_id"] = "c"
 	foreign["player_entity_id"] = "player/c"
@@ -121,8 +186,10 @@ func _test_duplicate_conflict_and_out_of_order() -> void:
 	_assert(String(interpolator.push_snapshot(stale_epoch, 21, 21, 1).get("error_code", "")) == "STALE_REMOTE_AUTHORITY_EPOCH", "stale epoch rejected")
 	var report: Dictionary = interpolator.get_report()
 	_assert(int(report.get("duplicates_suppressed", 0)) == 2, "duplicate telemetry")
+	_assert(int(report.get("same_tick_replacements", 0)) == 1, "same-tick replacement telemetry")
+	_assert(int(report.get("same_tick_stale_dropped", 0)) == 1, "same-tick stale telemetry")
 	_assert(int(report.get("conflicts_rejected", 0)) == 3, "conflict telemetry")
-	_assert(int(report.get("stale_dropped", 0)) == 1, "stale telemetry")
+	_assert(int(report.get("stale_dropped", 0)) == 2, "stale telemetry")
 	_assert(int(report.get("identity_resets", 0)) == 1, "identity reset telemetry")
 
 
