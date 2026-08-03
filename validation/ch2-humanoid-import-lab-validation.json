@@ -3,7 +3,7 @@
   "branch": "feature/ch2-humanoid-import-lab",
   "engine": "4.7.1.stable.double.custom_build.a13da4feb",
   "editor_import": "PASS",
-  "ch1_regression_assertions": 32,
+  "ch1_regression_assertions": 30,
   "ch2_assertions": 37,
   "definition_count": 3,
   "bone_count_per_model": 12,
