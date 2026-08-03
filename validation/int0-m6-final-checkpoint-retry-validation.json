@@ -1,0 +1,105 @@
+{
+  "schema": "distributed_world_simulator.int0_m6_final_checkpoint_retry_candidate.v1",
+  "recorded_at": "2026-08-04T01:10:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-mw9-lock-release-retry",
+    "sha": "703ab58521d3cae4563ad8d1e8f3ddd0d85b1cd0",
+    "pull_request": 14
+  },
+  "failed_candidate_gate": {
+    "result": "FAIL",
+    "candidate_sha": "703ab58521d3cae4563ad8d1e8f3ddd0d85b1cd0",
+    "uid_manifests": "PASS_158_OF_158",
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "new_untracked_uid_count": 0,
+    "mw9_recovery": "PASS_3_OF_3",
+    "mw9_race_stress": "PASS_1000_OF_1000",
+    "full_gate_progress": "PASS_THROUGH_PRE_NETWORK_SUITES",
+    "failed_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "failed_test": "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",
+    "assertions": 128,
+    "failures": 1,
+    "failure_message": "Recovered dedicated server stopped cleanly",
+    "observed_final_state": "FAILED",
+    "expected_final_state": "STOPPED",
+    "server_process_exited": true,
+    "logs_clean": true,
+    "isolated_recheck": "REPRODUCED_SAME_SINGLE_FAILURE",
+    "worktree_clean": true,
+    "full_gate": "FAIL"
+  },
+  "code_path_analysis": {
+    "confirmed": [
+      "The M6 worker maps runtime.stop().success to STOPPED and runtime.stop().failure to FAILED.",
+      "The dedicated runtime stop path performs a final persistence checkpoint before transport and service shutdown.",
+      "The runtime enters fatal persistence failure when that final checkpoint returns failure.",
+      "The authoritative checkpoint progression contract permits an unchanged snapshot with an increased generation."
+    ],
+    "inference": "Because persistence failures were zero before shutdown, the process exited, logs were clean, and the final state alone became FAILED, the blocking path is inferred to be a failure returned by the final persistence checkpoint. The exact nested repository error was not available in the supplied report text.",
+    "likely_instability_class": "TRANSIENT_WINDOWS_PERSISTENCE_IO_OR_ATOMIC_REPLACE",
+    "certainty": "CODE_PATH_CONFIRMED_ERROR_CLASS_INFERRED"
+  },
+  "correction": {
+    "branch": "fix/int0-m6-final-checkpoint-retry",
+    "coordinator_retry_commit": "c2d373b069444a8a16be05b33d66045527a95051",
+    "retry_attempts": 20,
+    "retry_delay_ms": 10,
+    "maximum_retry_window_ms": 190,
+    "retryable_error_codes": [
+      "AUTHORITATIVE_ATOMIC_REPLACE_FAILED",
+      "AUTHORITATIVE_PENDING_OPEN_FAILED",
+      "AUTHORITATIVE_PENDING_WRITE_FAILED",
+      "AUTHORITATIVE_PENDING_VERIFY_FAILED",
+      "AUTHORITATIVE_COMMIT_VERIFY_FAILED"
+    ],
+    "semantic_rejections_retried": false,
+    "post_error_commit_observation": {
+      "enabled": true,
+      "acceptance_rule": "The active committed checkpoint must have the exact candidate checksum.",
+      "duplicate_write_avoided": true
+    },
+    "pending_cleanup_between_retries": true,
+    "retry_exhaustion_preserves_original_error": true
+  },
+  "deterministic_coverage": {
+    "test": "tests/persistence/test_m6_final_checkpoint_retry.gd",
+    "assertions": 22,
+    "isolated_result": "PASS",
+    "scenarios": [
+      "transient failures recover within the bounded retry budget",
+      "reported save failure after an actual commit is accepted by exact checksum observation",
+      "semantic progression rejection is not retried",
+      "permanent I/O failure exhausts the bounded budget with diagnostics"
+    ],
+    "focused_windows_runner": "RUN_M6_FINAL_CHECKPOINT_RETRY_TESTS.ps1",
+    "focused_bash_runner": "RUN_M6_FINAL_CHECKPOINT_RETRY_TESTS.sh"
+  },
+  "uid_sidecar": {
+    "path": "tests/persistence/test_m6_final_checkpoint_retry.gd.uid",
+    "uid": "uid://ck86stfc2wwab",
+    "bytes": 20,
+    "sha256": "530CF0148BCC2C16E323751FAC23EDCD73A9703BC7A713323B695D59405061E2",
+    "manifest": "validation/int0-m6-final-checkpoint-retry-sidecar-manifest.json",
+    "aggregate_uid_sidecars": 159
+  },
+  "required_gate": {
+    "fresh_detached_checkout": true,
+    "uid_manifests_expected": "PASS_156_PLUS_1_PLUS_1_PLUS_1_EQUALS_159",
+    "editor_import_clean": true,
+    "m6_final_checkpoint_runner": "PASS_2_OF_2",
+    "m6_dedicated_recovery_processes": "PASS_128_ASSERTIONS_0_FAILURES",
+    "mw9_recovery": "PASS_3_OF_3",
+    "mw9_race_stress": "PASS_1000_OF_1000",
+    "network_contracts": "PASS",
+    "int0_full": "PASS_16_OF_16",
+    "static_cleanliness": "PASS"
+  },
+  "merge_policy": {
+    "stacked_pull_request_merge": "BLOCKED_UNTIL_GATE_PASS",
+    "pull_request_14_merge": "BLOCKED_UNTIL_UPDATED_HEAD_FULL_GATE_PASS",
+    "pull_request_10_merge": "BLOCKED_UNTIL_FINAL_INT0_ACCEPTANCE"
+  },
+  "main_changed": false
+}
