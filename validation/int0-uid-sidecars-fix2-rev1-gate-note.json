@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.int0_uid_sidecars_fix2_rev1_gate_note.v1",
+  "recorded_at": "2026-08-03T23:44:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "previous_failed_candidate": "82e02a8692774662c470b9d682635794582d02fa",
+  "implementation_head": "8863e7b463a70c8e20d8e4f6e5ff122eba205867",
+  "validation_head_before_note": "9ef2161488b4bc97f0881766db7a0bc71a3c4a8b",
+  "correction": {
+    "path": "tests/runtime/test_int0_project_uid_contracts.gd.uid",
+    "uid": "uid://ciuuux044fklg",
+    "bytes": 20,
+    "sha256": "486F82652D0FD7E38F44F08C96C073D7A36F9BF8201E790015FD9BBA5AA8DF6E"
+  },
+  "manifest_set": {
+    "primary_count": 156,
+    "supplemental_count": 1,
+    "aggregate_count": 157,
+    "index": "validation/int0-uid-sidecars-manifest-index.json"
+  },
+  "isolated_godot_validation": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "contract_result": "PASS",
+    "assertions": 8,
+    "failures": 0,
+    "repeated_editor_import_project_godot_unchanged": true
+  },
+  "decision": "AWAITING_FRESH_WINDOWS_CLEAN_IMPORT_AND_FOCUSED_GATE",
+  "main_changed": false
+}
