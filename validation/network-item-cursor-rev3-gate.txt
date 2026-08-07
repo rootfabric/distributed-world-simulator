@@ -1,0 +1,15 @@
+NETWORK ITEM CURSOR REV3 MANUAL GATE
+
+Exact candidate is the commit containing this record.
+
+Focused Windows gate:
+1. Persistence disabled M7 server.
+2. One client, Seven Days inventory profile.
+3. Carry half a server-backed stack with RMB.
+4. Drop one item; drop the rest.
+5. Carry half again and transfer to another slot/hotbar.
+6. No ITEM_NOT_FOUND for the carried source item.
+7. No visible client freeze.
+8. PREDICTION_HEALTH lead remains bounded (expected near 0-2 on LOCAL; must not jump to tens of ticks because of item action).
+
+If ITEM_NOT_FOUND is gone but an item action still causes a large lead spike, the next blocker is eager projected ItemGraph conversion/application on the client main thread and must be optimized separately.
