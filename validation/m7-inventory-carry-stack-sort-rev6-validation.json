@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v1",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v2",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -10,10 +10,18 @@
     "pickup_auto_stack": "successful pickup completion consolidates compatible player-inventory stacks using existing predicted item.transfer commands and definition max_stack",
     "sort_player_inventory": "button merges compatible stacks then orders by display name and compacts authoritative slots using rev5 slot-aware item.transfer",
     "sort_external_container": "same behavior for the currently open external slot container",
-    "prediction_window": 64
+    "prediction_window": 64,
+    "enhancer_layout": "standalone fix2 implementation with compatibility alias at the original rev6 path"
   },
   "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
+  "regression_fix": {
+    "observed_on_commit": "c743feb5809c39eda2a92492e144d3dc29b4e368",
+    "observed_failure": "Godot could not resolve inventory_network_rev6_enhancer.gd while compiling the fix1 child script",
+    "false_green": true,
+    "false_green_cause": "Godot emitted SCRIPT ERROR / Parse Error / Compile Error but exited the test process with code 0; the test then attempted new() on an invalid GDScript and still had an empty failures array",
+    "fix": "remove the fragile implementation inheritance chain, make fix1 a standalone enhancer, turn the original path into a compatibility alias, load scripts dynamically in the focused test and assert Script.can_instantiate(), and make the PowerShell runner reject fatal Godot script diagnostics even when exit code is zero"
+  },
   "static_review": {
     "branch_isolation": "PASS",
     "base_preserved": true,
@@ -34,5 +42,5 @@
     "NX6 predicted item interactions",
     "manual graphical M7 inventory acceptance"
   ],
-  "decision": "IMPLEMENTED CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
+  "decision": "FIX2 CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
 }
