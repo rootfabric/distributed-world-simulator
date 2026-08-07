@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Projection = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd")
+const CarryProjectionScript = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd")
 const EnhancerFix7 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix7.gd")
 const RuntimeFix7 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix7.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
@@ -53,7 +53,7 @@ func _run() -> void:
 
 
 func _test_projection_override_survives_refresh() -> void:
-	var projection = Projection.new()
+	var projection = CarryProjectionScript.new()
 	projection.enabled = true
 	projection.slot_columns = 4
 	var physical := _model([
@@ -81,7 +81,7 @@ func _test_projection_override_survives_refresh() -> void:
 
 func _test_fix7_builds_final_sorted_merge_preview() -> void:
 	var enhancer = EnhancerFix7.new()
-	var projection = Projection.new()
+	var projection = CarryProjectionScript.new()
 	projection.enabled = true
 	projection.slot_columns = 4
 	var controller := FakeController.new()
