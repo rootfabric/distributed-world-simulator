@@ -40,6 +40,12 @@ func setup(controller, network_bridge) -> Dictionary:
 	return result
 
 
+func _create_sort_button(node_name: String, caption: String, hint: String) -> Button:
+	var button: Button = super._create_sort_button(node_name, caption, hint)
+	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	return button
+
+
 func _setup_sort_buttons() -> void:
 	if player_sort_button == null:
 		player_sort_button = _create_sort_button(
@@ -47,7 +53,6 @@ func _setup_sort_buttons() -> void:
 			"Сортировать",
 			"Объединить стаки и отсортировать рюкзак по названию"
 		)
-		player_sort_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		screen.add_child(player_sort_button)
 		player_sort_button.pressed.connect(_on_player_sort_pressed)
 		_wire_sort_button_input(player_sort_button)
@@ -57,7 +62,6 @@ func _setup_sort_buttons() -> void:
 			"Сортировать",
 			"Объединить стаки и отсортировать контейнер по названию"
 		)
-		external_sort_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		screen.add_child(external_sort_button)
 		external_sort_button.pressed.connect(_on_external_sort_pressed)
 		_wire_sort_button_input(external_sort_button)
