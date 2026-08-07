@@ -112,12 +112,17 @@ func _prediction_satisfied(snapshot: Dictionary, entry: Dictionary) -> bool:
 	if source.is_empty() or int(source.get("quantity", 0)) != source_before - amount:
 		return false
 	var source_definition_id := String(precondition.get("source_definition_id", ""))
+	var authoritative_child_prefix := "%s/transfer/" % source_id
 	for item_value in snapshot.get("items", []):
 		if not item_value is Dictionary:
 			continue
 		var candidate: Dictionary = item_value
 		var candidate_id := String(candidate.get("item_id", ""))
-		if candidate_id.is_empty() or candidate_id == source_id:
+		if (
+			candidate_id.is_empty()
+			or candidate_id == source_id
+			or not candidate_id.begins_with(authoritative_child_prefix)
+		):
 			continue
 		if String(candidate.get("definition_id", "")) != source_definition_id:
 			continue
@@ -171,8 +176,8 @@ func _location_matches_transfer_target(
 		var hotbar: Array = Array(_player_inventory(snapshot).get("hotbar", []))
 		if target_slot_index >= 0:
 			return (
-			target_slot_index < hotbar.size()
-			and String(hotbar[target_slot_index]) == item_id
+				target_slot_index < hotbar.size()
+				and String(hotbar[target_slot_index]) == item_id
 			)
 		return item_id in hotbar
 
