@@ -11,7 +11,8 @@
     "dedicated_rendering": false
   },
   "input": {
-    "selection_policy": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1",
+    "selection_policy": "FIFO_STATE_TRANSITIONS_LATEST_REFRESH_COALESCING_V2",
+    "coalescing_policy": "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1",
     "jump_policy": "EDGE_ON_CONSUMED_INPUT_V1",
     "hold_policy": "LAST_INPUT_WITH_250MS_FAILSAFE_V1",
     "max_pending_inputs": 64,
@@ -37,6 +38,8 @@
     "jitter_changes_movement_speed": false,
     "batching_changes_distance": false,
     "jump_repeats_while_held": false,
-    "wrap_spanning_batch": true
+    "wrap_spanning_batch": true,
+    "continuous_refresh_queue_bounded": true,
+    "queue_full_rejected_under_continuous_refresh": 0
   }
 }
