@@ -4,14 +4,15 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 # materializes the canonical sandbox inventory before JOIN_ACK captures the Item
 # Graph. READY diagnostic reports are coalesced and written on a worker thread so
 # filesystem latency can never block the 60 Hz authority loop. Canonical Item
-# Graph mutations replicate only through ITEM/RESYNC contracts; they no longer
-# publish a redundant gameplay snapshot at an unchanged gameplay revision.
+# Graph payloads replicate through ITEM/RESYNC contracts; the lightweight gameplay
+# snapshot is retained only to publish the gameplay revision advanced by the
+# canonical item command itself.
 
 const M7_NETWORK_EVENT_BUDGET_PER_FRAME: int = 64
 const M7_READY_REPORT_MIN_INTERVAL_MS: int = 250
 const M7_REPORT_POLICY: String = "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1"
 const M7_EVENT_LOOP_POLICY: String = "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1"
-const M7_ITEM_REPLICATION_POLICY: String = "ITEM_GRAPH_DELTA_NO_REDUNDANT_GAMEPLAY_SNAPSHOT_V1"
+const M7_ITEM_REPLICATION_POLICY: String = "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2"
 
 var _join_item_materializations: int = 0
 var _join_item_materialization_failures: int = 0
@@ -30,7 +31,7 @@ var _report_write_failures: int = 0
 var _report_snapshot_build_duration_ms: float = 0.0
 var _report_last_write_duration_ms: float = 0.0
 var _report_max_write_duration_ms: float = 0.0
-var _item_gameplay_snapshots_suppressed: int = 0
+var _item_gameplay_revision_snapshots_published: int = 0
 var _max_pending_input_count_observed: int = 0
 
 
@@ -197,10 +198,12 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 				_broadcast_item_snapshot("ITEM_GRAPH_DELTA_BUILD_FALLBACK")
 			else:
 				_broadcast_item_delta(item_delta, peer_id, command_type)
-			# Item Graph has its own authoritative revision and transport stream. A
-			# gameplay snapshot here used to mutate state at the same gameplay
-			# revision on multi-client sessions and triggered replica rollback.
-			_item_gameplay_snapshots_suppressed += 1
+			# Canonical item execution currently advances NetworkedGameplayService's
+			# gameplay revision even though Item Graph state has its own revision. The
+			# ITEM delta carries the item payload; this small reliable gameplay snapshot
+			# carries the new gameplay revision so every player replica can converge.
+			_broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
+			_item_gameplay_revision_snapshots_published += 1
 			_capture_two_connected_checksum()
 	else:
 		_rejections += 1
@@ -356,7 +359,7 @@ func get_report() -> Dictionary:
 		"report_snapshot_build_duration_ms": _report_snapshot_build_duration_ms,
 		"report_last_write_duration_ms": _report_last_write_duration_ms,
 		"report_max_write_duration_ms": _report_max_write_duration_ms,
-		"item_gameplay_snapshots_suppressed": _item_gameplay_snapshots_suppressed,
+		"item_gameplay_revision_snapshots_published": _item_gameplay_revision_snapshots_published,
 		"max_pending_input_count_observed": _max_pending_input_count_observed,
 	}
 	report["join_item_materialization"] = get_join_item_materialization_report()
