@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v7",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v8",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -32,6 +32,13 @@
       "graphical_result": "USER-REPORTED: sorting commits correctly, but the sorted result is not visible until another inventory action or reopen refreshes the panel",
       "diagnosis": "authority path is working; user-facing sort needs an optimistic final-layout presentation that is independent of replica/render timing",
       "correction": "fix7 presentation override renders the expected final sort immediately and reconciles to the physical replica later"
+    },
+    {
+      "observed_on_commit": "f2f371a0c30de3651b2edece30299550f5d3b606",
+      "automated_gate": "USER-REPORTED FAIL at M7 inventory rev6 fix7 reactive presentation",
+      "failure": "Godot 4.7.1 rejected test constant `Projection` because it collides with a builtin type name; subsequent Projection.new() calls therefore failed during parse",
+      "scope": "test harness only; the preceding editor import, M7 join, slot-aware transfers, fix7 enhancer parse, rev6 regression and fix6 activation all passed",
+      "correction": "rename the preload constant to CarryProjectionScript and keep the same fix7 behavioral assertions"
     }
   ],
   "focused_tests": [
@@ -61,5 +68,5 @@
     "manual sort: presentation must remain stable while authority commits and must not flicker back to the old layout",
     "manual sort: on success preview must reconcile to replica; on rejection it must roll back"
   ],
-  "decision": "FIX7 CANDIDATE - WINDOWS GATE + GRAPHICAL IMMEDIATE-SORT PRESENTATION CHECK REQUIRED"
+  "decision": "FIX7 TEST-HARNESS FIX1 CANDIDATE - WINDOWS GATE + GRAPHICAL IMMEDIATE-SORT PRESENTATION CHECK REQUIRED"
 }
