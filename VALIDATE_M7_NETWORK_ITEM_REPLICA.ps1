@@ -14,10 +14,30 @@ function Invoke-GodotCheck {
     param([string]$Name, [string[]]$Arguments)
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
-    & $Godot @Arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Name failed with exit code $LASTEXITCODE"
+
+    $Output = @(& $Godot @Arguments 2>&1)
+    $ExitCode = $LASTEXITCODE
+    foreach ($Line in $Output) {
+        Write-Host $Line
     }
+
+    if ($ExitCode -ne 0) {
+        throw "$Name failed with exit code $ExitCode"
+    }
+
+    $Text = ($Output | ForEach-Object { $_.ToString() }) -join "`n"
+    $FatalScriptPatterns = @(
+        "SCRIPT ERROR:",
+        "Parse Error:",
+        "Compile Error:",
+        "Failed to load script"
+    )
+    foreach ($Pattern in $FatalScriptPatterns) {
+        if ($Text.Contains($Pattern)) {
+            throw "$Name emitted fatal Godot script diagnostics: $Pattern"
+        }
+    }
+
     Write-Host "${Name}: PASS" -ForegroundColor Green
 }
 
