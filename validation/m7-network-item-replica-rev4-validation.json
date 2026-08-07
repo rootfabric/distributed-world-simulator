@@ -1,0 +1,41 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "candidate": "m7-network-item-replica-rev4",
+  "base_candidate_sha": "b2e5d204bf9a947c17cf75db75761b91ecd4a56c",
+  "observed_manual_blockers": [
+    "Initial JOIN_ACK ItemGraph had inventories:{}; starter items appeared only after first item command.",
+    "Valid-looking inventory/container interaction later produced SOURCE_CONTAINER_ACCESS_DENIED after authority/presentation diverged.",
+    "Client health reported MULTIPLAYER_SAME_REVISION_MUTATION during fixed-tick snapshot traffic.",
+    "Prediction history_miss_resets increased after the item/snapshot divergence."
+  ],
+  "root_causes": [
+    "Canonical sandbox player inventory was materialized lazily by the first item command instead of before JOIN_ACK.",
+    "Player materialization mutated canonical ItemGraph content without advancing ItemGraph revision/tick.",
+    "Full and compact gameplay snapshots on independent channels could carry the same semantic revision at different server ticks; strict checksum-only same-revision handling misclassified clock reordering as mutation.",
+    "M7 playground presentation deduped ItemGraph updates only by canonical revision, so an NX6 optimistic projection and its rollback/rebase at the same revision could not both reach ItemGameplayController."
+  ],
+  "changes": [
+    "Dedicated M7 server materializes canonical player item inventory after successful gameplay JOIN and before durable commit/JOIN_ACK.",
+    "Canonical player materialization advances ItemGraph revision/tick exactly once and is idempotent on replay.",
+    "Graphical client treats same-revision snapshots as clock-only only when owner, epoch, revision, players and shared state are semantically identical; newer clock reconciles, older clock is superseded replay.",
+    "M7 playground applies item presentation changes by full projection hash rather than revision alone, preserving same-revision prediction rollback/rebase.",
+    "Focused Windows runner validates editor parse, join materialization semantics, bidirectional clock-only comparison and the existing NX6 predicted-item suite."
+  ],
+  "unchanged_contracts": [
+    "No network protocol schema change.",
+    "No project.godot change.",
+    "No weakening of true same-revision semantic mutation rejection.",
+    "No client-side invention of authoritative starter items.",
+    "No persistence requirement for the realtime debug server."
+  ],
+  "expected_uid_count": 162,
+  "validation_status": "REQUIRES_WINDOWS_GODOT_GATE",
+  "required_focused_gate": [
+    "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 must PASS on the exact candidate.",
+    "Initial inventory must show starter battery/beacons/mount-bases before any pickup.",
+    "Open container, transfer battery inventory->container and container->inventory repeatedly.",
+    "No SOURCE_CONTAINER_ACCESS_DENIED for a valid currently-open source/target container path.",
+    "No MULTIPLAYER_SAME_REVISION_MUTATION for clock-only snapshot reordering.",
+    "No visible freeze; prediction lead/history must recover without history_miss_resets growth attributable to item interaction."
+  ]
+}
