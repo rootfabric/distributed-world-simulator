@@ -1,11 +1,8 @@
 extends SceneTree
 
-const CarryAwareProjection = preload(
-	"res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
-)
-const InventoryRev6Enhancer = preload(
-	"res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
-)
+const CARRY_PROJECTION_PATH := "res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
+const ENHANCER_PATH := "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
+const COMPAT_ENHANCER_PATH := "res://scripts/ui/inventory/inventory_network_rev6_enhancer.gd"
 
 var failures: Array[String] = []
 var assertions := 0
@@ -17,7 +14,7 @@ func _init() -> void:
 
 func _run() -> void:
 	_test_carry_suppression_survives_slot_projection_refresh()
-	_test_rev6_enhancer_loads()
+	_test_rev6_enhancer_loads_and_instantiates()
 	if failures.is_empty():
 		print("Inventory network rev6: PASS (%d assertions)" % assertions)
 		quit(0)
@@ -29,9 +26,15 @@ func _run() -> void:
 
 
 func _test_carry_suppression_survives_slot_projection_refresh() -> void:
-	var projection = CarryAwareProjection.new()
-	projection.enabled = true
-	projection.slot_columns = 4
+	var projection_script = _load_instantiable_script(CARRY_PROJECTION_PATH, "carry-aware projection")
+	if projection_script == null:
+		return
+	var projection = projection_script.new()
+	_assert(projection != null, "carry-aware projection instantiates")
+	if projection == null:
+		return
+	projection.set("enabled", true)
+	projection.set("slot_columns", 4)
 	var model := {
 		"container_id": "player_inventory",
 		"is_slot_container": true,
@@ -61,13 +64,42 @@ func _test_carry_suppression_survives_slot_projection_refresh() -> void:
 	_assert(not projection.is_suppressed("player_inventory", "item/test/rock"), "reveal clears suppression state")
 
 
-func _test_rev6_enhancer_loads() -> void:
-	var enhancer = InventoryRev6Enhancer.new()
-	get_root().add_child(enhancer)
-	var report: Dictionary = enhancer.get_report()
-	_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix1.v1", "rev6 fix1 enhancer parses and exposes report schema")
-	_assert(String(report.get("pickup_stack_mode", "")) == "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION", "pickup stack mode is authoritative-completion driven")
-	enhancer.queue_free()
+func _test_rev6_enhancer_loads_and_instantiates() -> void:
+	var enhancer_script = _load_instantiable_script(ENHANCER_PATH, "rev6 standalone enhancer")
+	if enhancer_script != null:
+		var enhancer = enhancer_script.new()
+		_assert(enhancer != null, "rev6 standalone enhancer instantiates")
+		if enhancer != null:
+			get_root().add_child(enhancer)
+			var report: Dictionary = enhancer.get_report()
+			_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix2.v1", "rev6 fix2 enhancer exposes expected schema")
+			_assert(String(report.get("pickup_stack_mode", "")) == "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION", "pickup stack mode is authoritative-completion driven")
+			enhancer.queue_free()
+
+	var compat_script = _load_instantiable_script(COMPAT_ENHANCER_PATH, "rev6 compatibility enhancer")
+	if compat_script != null:
+		var compat = compat_script.new()
+		_assert(compat != null, "rev6 compatibility enhancer instantiates")
+		if compat != null:
+			get_root().add_child(compat)
+			var compat_report: Dictionary = compat.get_report()
+			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix2.v1", "compatibility path resolves to standalone fix2 implementation")
+			compat.queue_free()
+
+
+func _load_instantiable_script(path: String, label: String):
+	var resource = ResourceLoader.load(path, "Script", ResourceLoader.CACHE_MODE_IGNORE)
+	_assert(resource != null, "%s loads" % label)
+	if resource == null:
+		return null
+	_assert(resource is Script, "%s is a Script resource" % label)
+	if not resource is Script:
+		return null
+	var script := resource as Script
+	_assert(script.can_instantiate(), "%s can instantiate" % label)
+	if not script.can_instantiate():
+		return null
+	return script
 
 
 func _item_cell(container_id: String, slot_index: int, item_id: String) -> Dictionary:
