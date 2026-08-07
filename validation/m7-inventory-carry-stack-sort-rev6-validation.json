@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v1",
+  "stage": "M7 inventory carry / pickup stack / sort rev6",
+  "branch": "agent/inventory-carry-stack-sort-rev6",
+  "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
+  "base_commit": "3b590b392a536d843f28f3ede833c00fd41466af",
+  "implementation": {
+    "carry_origin_projection": "whole network-virtual carry suppresses the source slot only in presentation; cancel/close reveals authority state",
+    "drop_pointer": "inventory-visible process guard restores MOUSE_MODE_VISIBLE and inactive carry preview is forcibly hidden",
+    "pickup_auto_stack": "successful pickup completion consolidates compatible player-inventory stacks using existing predicted item.transfer commands and definition max_stack",
+    "sort_player_inventory": "button merges compatible stacks then orders by display name and compacts authoritative slots using rev5 slot-aware item.transfer",
+    "sort_external_container": "same behavior for the currently open external slot container",
+    "prediction_window": 64
+  },
+  "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
+  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
+  "static_review": {
+    "branch_isolation": "PASS",
+    "base_preserved": true,
+    "authority_path": "existing M7 item.transfer only",
+    "new_server_command": false
+  },
+  "assistant_environment": {
+    "full_repository_checkout": false,
+    "reason": "container DNS cannot resolve github.com; connected GitHub API was used for exact branch reads/writes",
+    "godot_binary_available": "4.7.1.stable.double.custom_build.a13da4feb",
+    "full_project_gate_executed": false
+  },
+  "required_acceptance": [
+    "Editor import / composition parse",
+    "M7 item join and snapshot semantics",
+    "M7 slot-aware item transfers",
+    "M7 inventory carry / stack / sort rev6",
+    "NX6 predicted item interactions",
+    "manual graphical M7 inventory acceptance"
+  ],
+  "decision": "IMPLEMENTED CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
+}
