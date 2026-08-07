@@ -1,0 +1,65 @@
+{
+  "schema": "planet_simulator.int0_inventory_profile_baseline_isolation_validation.v1",
+  "candidate": {
+    "delivery": "fix6-rev6",
+    "branch": "fix/int0-source-contract-inheritance-audit",
+    "base_exact_sha": "f5207952a6c738bbd91a204a13d23108856deaa3",
+    "decision": "REV6_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+  },
+  "rev5_gate": {
+    "overall": "FAIL",
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "stack_transfers": "74/74 PASS",
+    "world_coverage": "201/201 PASS",
+    "first_blocker": {
+      "test": "tests/items/test_item_placement_and_admin.gd",
+      "assertions": 54,
+      "failures": 2,
+      "error_code": "ITEM_SLOT_ASSIGNMENT_MISMATCH"
+    },
+    "diagnostic_reproduction": {
+      "seven_days_like": "FAIL 2/54",
+      "planet_default": "PASS 54/54"
+    },
+    "main_scene_cli_all_reached": false,
+    "mw9_recovery_run": false,
+    "mw9_race_run": false,
+    "int0_full_run": false,
+    "cleanliness": "PASS"
+  },
+  "root_cause": {
+    "classification": "INHERITED_INVENTORY_PROFILE_TEST_HARNESS_LEAKAGE",
+    "summary": "Baseline world/item/UI contracts inherit PLANET_SIMULATOR_INVENTORY_PROFILE from the parent process. seven_days_like intentionally performs a one-way BULK-to-SLOTS migration, so tests that verify default BULK or default interaction semantics can be changed before their first assertion.",
+    "confirmed_next_risk_examples": [
+      "tests/ui/test_inventory_ui_i0_architecture.gd explicitly requires player BULK projection",
+      "tests/ui/test_inventory_ui_i1_interactions.gd verifies default drag/RMB/context semantics",
+      "tests/ui/test_inventory_ui_i2_large_storage.gd verifies BULK projection and virtualization"
+    ],
+    "production_runtime_defect_found": false
+  },
+  "rev6_changes": {
+    "RUN_WORLD_REGRESSION_TESTS.ps1": "Set PLANET_SIMULATOR_INVENTORY_PROFILE=planet_default after isolated user-profile environment setup, before editor import and all child Godot processes.",
+    "tests/items/test_item_placement_and_admin.gd": "Pin PLANET_SIMULATOR_INVENTORY_PROFILE=planet_default before creating the first gameplay/UI runtime so the standalone contract is deterministic.",
+    "production_files_changed": 0,
+    "runtime_files_changed": 0,
+    "config_files_changed": 0,
+    "uid_files_changed": 0,
+    "assertions_removed_or_weakened": 0
+  },
+  "scope_vs_rev5_before_validation_record": {
+    "RUN_WORLD_REGRESSION_TESTS.ps1": "+3/-0",
+    "tests/items/test_item_placement_and_admin.gd": "+4/-0"
+  },
+  "required_gate": [
+    "exact candidate SHA and immutable checkpoint identity",
+    "UID manifests 159/159",
+    "clean editor import and project.godot unchanged",
+    "with parent PLANET_SIMULATOR_INVENTORY_PROFILE=seven_days_like: direct test_item_placement_and_admin PASS 54/54",
+    "RUN_WORLD_REGRESSION_TESTS.ps1 coverage 201/201 and complete PASS including main_scene_cli_all",
+    "only after world PASS: MW9 recovery 3/3",
+    "MW9 race 1000/1000 and 125/125 batches without dual winners, zero winners or residue",
+    "INT0 full 16/16",
+    "git diff --check, UID cleanliness, conflict-marker cleanliness, no remaining Godot processes and clean worktree"
+  ]
+}
