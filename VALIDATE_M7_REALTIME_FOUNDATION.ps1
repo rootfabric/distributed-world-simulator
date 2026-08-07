@@ -36,6 +36,21 @@ function Invoke-GodotCheck {
 Write-Host "[Accepted inventory regression]" -ForegroundColor Cyan
 & (Join-Path $ProjectRoot "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1") -GodotPath $Godot
 
+Invoke-GodotCheck -Name "Accepted inventory fix8 direct regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/ui/test_inventory_network_rev6_fix8.gd"
+)
+
+Invoke-GodotCheck -Name "NX3 fixed-tick regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_nx3_fixed_tick_authoritative_simulation.gd"
+)
+
+Invoke-GodotCheck -Name "NX4 prediction regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_nx4_client_prediction_reconciliation.gd"
+)
+
 Invoke-GodotCheck -Name "M7 realtime backpressure contracts" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_realtime_backpressure_foundation.gd"
