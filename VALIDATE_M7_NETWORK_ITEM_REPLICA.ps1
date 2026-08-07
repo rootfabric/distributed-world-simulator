@@ -156,12 +156,17 @@ try {
     Invoke-GodotCheck -Name "M7 inventory rev6 enhancer parse" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--check-only",
-        "--script", "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
+        "--script", "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix6.gd"
     )
 
     Invoke-GodotCheck -Name "M7 inventory carry / stack / sort rev6" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--script", "res://tests/ui/test_inventory_network_rev6.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 inventory rev6 fix6 activation" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6_fix6.gd"
     )
 
     Invoke-GodotCheck -Name "NX6 predicted item interactions" -Arguments @(
