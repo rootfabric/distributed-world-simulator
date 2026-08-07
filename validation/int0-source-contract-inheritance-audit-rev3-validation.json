@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.int0_source_contract_inheritance_audit_rev3_candidate.v1",
+  "recorded_at": "2026-08-07T15:51:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-nx0-composed-source-contracts",
+    "sha": "d66bf147b7fbf1ef5a09ba941d683f8036e06438",
+    "pull_request": 16
+  },
+  "superseded_candidate": {
+    "sha": "8962051d4f50fd0395b32584813936faff064241",
+    "result": "FAIL",
+    "failed_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "failed_test": "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+    "assertions": 6188,
+    "failures": 2,
+    "messages": [
+      "Client input sequence does not wrap safely",
+      "Client acknowledgement path is not wrap-aware"
+    ]
+  },
+  "confirmed_on_superseded_candidate": {
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "nx1_discovery": "282/282 PASS",
+    "nx1_inside_network_runner": "282/282 PASS",
+    "nx2_inside_network_runner": "130/130 PASS",
+    "m6_recovery_inside_network_runner": "128/128 PASS",
+    "repository_cleanliness": "PASS"
+  },
+  "confirmed_analysis": {
+    "classification": "STALE_SOURCE_CONTRACT_INHERITANCE_INSPECTION",
+    "facts": [
+      "test_nx3_fixed_tick_authoritative_simulation.gd preloads and executes the composed ClientRuntime successfully in its end-to-end wrap test",
+      "the same NX3 test separately read only scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd for static source markers",
+      "the thin client adapter inherits m3_graphical_client_runtime_nx6.gd",
+      "the inherited implementation contains InputSequence.next in movement submission paths",
+      "the inherited implementation defines _sequence_acknowledges using InputSequence.is_newer",
+      "the composed client runtime does not contain acknowledged_sequence >= latest_sequence",
+      "the previous rev2 audit incorrectly stated that NX3 had no source-text blocker; this rev3 record corrects that audit conclusion"
+    ],
+    "production_runtime_regression_found": false
+  },
+  "correction": {
+    "path": "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+    "policy": "inspect the composed client runtime source through literal GDScript extends chains with cycle protection",
+    "assertions_removed": 0,
+    "assertion_count_changed": false,
+    "expected_assertions": 6188,
+    "production_files_changed": 0,
+    "config_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159,
+    "whitespace_note": "one pre-existing blank line between adjacent test functions was removed during the full-file contents update; this is formatting-only and does not change behavior"
+  },
+  "source_contract_false_negative_class": {
+    "network_experience_tests_corrected": [
+      "tests/network/test_nx0_network_experience_preparation.gd",
+      "tests/network/test_nx0_observability_baseline.gd",
+      "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+      "tests/network/test_nx4_client_prediction_reconciliation.gd"
+    ],
+    "nx0_through_nx4_stage_coverage_complete": true,
+    "known_direct_thin_client_adapter_source_reads_in_stage_contracts_remaining": 0,
+    "note": "NX4 also carries the separate historical roadmap progression correction from rev1"
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159 and clean editor import",
+    "NX3 fixed tick authoritative simulation 6188/6188 PASS",
+    "full RUN_NETWORK_CONTRACT_TESTS.ps1 PASS",
+    "MW9 durable handoff recovery 3/3 PASS",
+    "MW9 race stress 1000/1000 PASS",
+    "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile full PASS 16/16",
+    "repository and Godot-process cleanliness PASS"
+  ],
+  "decision": "FIX6_REV3_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
