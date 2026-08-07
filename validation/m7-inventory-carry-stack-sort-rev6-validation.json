@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v5",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v6",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -9,12 +9,13 @@
     "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the same quantity-aware carry overlay",
     "drop_pointer": "inventory-visible process guard restores MOUSE_MODE_VISIBLE and inactive carry preview is hidden",
     "pickup_auto_stack": "pickup consolidation uses serialized predicted item.transfer commands and definition max_stack",
-    "sort_player_inventory": "merge + alphabetical compaction sends one predicted item.transfer at a time and waits for authoritative completion before continuing",
-    "sort_external_container": "same authoritative-serial behavior for the currently open external slot container",
+    "sort_player_inventory": "fix5 authoritative-serial merge + alphabetical compaction remains unchanged",
+    "sort_external_container": "fix5 authoritative-serial behavior remains unchanged for the currently open external slot container",
+    "sort_activation_fix6": "sort overlay uses ACTION_MODE_BUTTON_PRESS plus InventoryScreen rectangle fallback and 120 ms debounce so a visible button cannot lose its press to SimulatorApp input.mouse.capture",
+    "sort_observability_fix6": "client emits [inventory_sort] SORT_REQUESTED, SORT_STARTED, SORT_PLAN, SORT_COMPLETED or SORT_FAILED records",
+    "playground_composition_fix6": "playground.tscn selects a thin runtime composition that replaces only the fix5 inventory enhancer with fix6 after M7/NX6 setup",
     "prediction_window": 64,
-    "enhancer_layout": "standalone fix5 implementation with compatibility alias at the original rev6 path",
     "sort_button_layout": "top-level 112x30 overlay controls anchored to their panels",
-    "sort_click_input_guard": "left-button GUI press/release is marked handled before global playground mouse capture can receive it",
     "interaction_hint_layout": "world interaction hint stays at center-bottom y=-170 above persistent hotbar"
   },
   "regression_history": [
@@ -40,26 +41,44 @@
         "whole carry from persistent hotbar left source item visible"
       ],
       "correction": "fix5 consumes sort-button input, serializes each predicted transfer against authoritative completion, and applies quantity-aware carry presentation to inventory and hotbar"
+    },
+    {
+      "observed_on_commit": "293e75476cc88ae63e121a500e47660898e0dbf6",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfer 67 assertions, rev6 43 assertions, NX6 957 assertions",
+      "graphical_results": {
+        "item_carry": "USER-REPORTED WORKING",
+        "sorting": "NOT ACTIVATED"
+      },
+      "evidence": [
+        "two graphical LMB attempts emitted [command] input.mouse.capture while item_updates remained unchanged",
+        "there was no [inventory_sort] instrumentation in fix5, so button dispatch could not be distinguished from later manual item operations"
+      ],
+      "correction": "fix6 moves sort action to mouse press, adds InventoryScreen geometry fallback and emits explicit sort lifecycle logs"
     }
   ],
-  "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
+  "focused_tests": [
+    "res://tests/ui/test_inventory_network_rev6.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix6.gd"
+  ],
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
-  "focused_fix5_assertions": [
-    "partial carry renders authoritative quantity minus cursor quantity",
-    "whole carry renders source slot empty",
-    "same carry overlay works for player_hotbar",
-    "fix5 reports AUTHORITATIVE_SERIAL_TRANSFER sort mode",
-    "fake predicted transfer waits for and consumes authoritative completion before returning"
+  "focused_fix6_assertions": [
+    "fix6 enhancer script parses through the focused runner",
+    "sort button factory uses BaseButton.ACTION_MODE_BUTTON_PRESS",
+    "sort button keeps Control.MOUSE_FILTER_STOP",
+    "fix6 reports BUTTON_PRESS_WITH_SCREEN_FALLBACK activation",
+    "fix6 playground runtime composition instantiates"
   ],
   "required_acceptance": [
     "Editor import / composition parse",
     "M7 item join and snapshot semantics",
     "M7 slot-aware item transfers",
-    "M7 inventory rev6 enhancer parse",
+    "M7 inventory rev6 fix6 enhancer parse",
     "M7 inventory carry / stack / sort rev6",
+    "M7 inventory rev6 fix6 activation",
     "NX6 predicted item interactions",
-    "manual sort: pointer stays visible and items finish alphabetically compacted without TARGET_SLOT_OCCUPIED or MULTIPLAYER_SAME_REVISION_MUTATION",
-    "manual carry: whole hotbar stack disappears from source; partial carry leaves exact remainder"
+    "manual sort click must emit [inventory_sort] SORT_REQUESTED and must not emit input.mouse.capture for the same click",
+    "manual sort must reach SORT_COMPLETED or produce a precise SORT_FAILED stage/error",
+    "manual carry behavior from fix5 must remain unchanged"
   ],
-  "decision": "FIX5 CANDIDATE - WINDOWS GATE + GRAPHICAL RECHECK REQUIRED"
+  "decision": "FIX6 CANDIDATE - WINDOWS GATE + GRAPHICAL SORT ACTIVATION RECHECK REQUIRED"
 }
