@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.int0_item_stack_profile_isolation_fix6_rev5_candidate.v1",
+  "recorded_at": "2026-08-07T17:46:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "candidate_sha": "976168a0710722364683b1ee2c57033df0e641d4",
+    "checkpoint": "checkpoint/int0-world-regression-coverage-fix6-rev4-candidate",
+    "pull_request": 17
+  },
+  "superseded_candidate_gate": {
+    "result": "FAIL",
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "world_coverage": "201 declared / 201 discovered; missing-from-runner 0; missing-from-project 0",
+    "failed_test": "res://tests/items/test_item_stack_transfers.gd",
+    "assertions": 74,
+    "failures": 16,
+    "observed_error_code": "ITEM_SLOT_ASSIGNMENT_MISMATCH",
+    "main_scene_cli_all_reached": false,
+    "mw9_and_int0_after_world_reached": false,
+    "cleanliness": "PASS"
+  },
+  "confirmed_root_cause": {
+    "classification": "BASELINE_TEST_INVENTORY_PROFILE_ENVIRONMENT_LEAKAGE",
+    "facts": [
+      "item_gameplay_controller._seed_default_graph creates player_inventory as STORAGE_BULK and player_hotbar as STORAGE_SLOTS",
+      "InventoryInteractionProfileLoader reads PLANET_SIMULATOR_INVENTORY_PROFILE before falling back to persisted preferences or the configured planet_default profile",
+      "seven_days_like intentionally invokes InventorySlotModeAdapter.ensure_container_slots for player_inventory",
+      "InventorySlotModeAdapter performs a one-way BULK to SLOTS domain migration and rewrites member relations to exact slot indexes",
+      "test_item_stack_transfers explicitly requires baseline BULK backpack semantics and later directly constructs BULK relation fixtures with slot_index -1",
+      "if the inherited process environment selects seven_days_like, those fixtures execute against a SLOTS backpack and produce ITEM_SLOT_ASSIGNMENT_MISMATCH; final graph validation then also causes otherwise independent atomic-swap checks to roll back",
+      "test_item_stack_transfers, item_transfer_service and container_state are byte-identical to their versions in commit 2fc77f6f074349fdfda28100a8a38ae20b500757, which introduced the 7 Days slot-based profile",
+      "there is no evidence that the INT0 composition changed the stack/swap kernel itself"
+    ]
+  },
+  "correction": {
+    "path": "tests/items/test_item_stack_transfers.gd",
+    "policy": "pin the baseline contract to planet_default before creating ItemGameplayController",
+    "statement": "OS.set_environment(\"PLANET_SIMULATOR_INVENTORY_PROFILE\", \"planet_default\")",
+    "assertion_count_changed": false,
+    "expected_assertion_count": 74,
+    "production_files_changed": 0,
+    "runtime_files_changed": 0,
+    "config_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159,
+    "seven_days_contract_weakened": false,
+    "note": "The dedicated Seven Days tests explicitly activate seven_days_like inside their own process and therefore remain independent of this baseline pin."
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159 and clean editor import",
+    "direct res://tests/items/test_item_stack_transfers.gd PASS with 74 assertions even when the parent shell previously selected seven_days_like",
+    "RUN_WORLD_REGRESSION_TESTS.ps1 coverage remains 201/201 and executes all declared tests plus main_scene_cli_all",
+    "if world regression passes, MW9 recovery 3/3 PASS",
+    "if world regression passes, MW9 race stress 1000/1000 rounds and 125/125 batches PASS",
+    "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile full PASS 16/16",
+    "repository and Godot-process cleanliness PASS"
+  ],
+  "decision": "FIX6_REV5_ITEM_STACK_PROFILE_ISOLATION_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
