@@ -4,6 +4,39 @@ const CARRY_PROJECTION_PATH := "res://scripts/ui/inventory/interactions/inventor
 const ENHANCER_PATH := "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
 const COMPAT_ENHANCER_PATH := "res://scripts/ui/inventory/inventory_network_rev6_enhancer.gd"
 
+class FakeCommandFacade:
+	extends RefCounted
+	var calls: int = 0
+	func transfer_quantity(
+		_item_id: String,
+		_quantity: int,
+		_target_container_id: String,
+		_target_slot_index: int,
+		_target_item_id: String
+	) -> Dictionary:
+		calls += 1
+		return {
+			"success": true,
+			"pending": true,
+			"predicted": true,
+			"operation_id": "fake-sort-%d" % calls,
+			"prediction_id": "fake-sort-%d" % calls,
+		}
+
+class FakeAuthoritativeBridge:
+	extends RefCounted
+	var waits: Array[String] = []
+	var takes: Array[String] = []
+	func wait_for_authoritative_completion(operation_id: String, _timeout_ms: int) -> Dictionary:
+		waits.append(operation_id)
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree != null:
+			await tree.process_frame
+		return {"success": true, "pending": false, "operation_id": operation_id}
+	func take_authoritative_completion(operation_id: String) -> Dictionary:
+		takes.append(operation_id)
+		return {"success": true, "operation_id": operation_id}
+
 var failures: Array[String] = []
 var assertions := 0
 
@@ -15,6 +48,7 @@ func _init() -> void:
 func _run() -> void:
 	_test_carry_projection_whole_partial_and_hotbar()
 	_test_rev6_enhancer_loads_and_instantiates()
+	await _test_authoritative_transfer_wait()
 	if failures.is_empty():
 		print("Inventory network rev6: PASS (%d assertions)" % assertions)
 		quit(0)
@@ -99,6 +133,33 @@ func _test_rev6_enhancer_loads_and_instantiates() -> void:
 			var compat_report: Dictionary = compat.get_report()
 			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix5.v1", "compatibility path resolves to standalone fix5 implementation")
 			compat.queue_free()
+
+
+func _test_authoritative_transfer_wait() -> void:
+	var enhancer_script = _load_instantiable_script(ENHANCER_PATH, "rev6 sort wait enhancer")
+	if enhancer_script == null:
+		return
+	var enhancer = enhancer_script.new()
+	get_root().add_child(enhancer)
+	var facade := FakeCommandFacade.new()
+	var authoritative_bridge := FakeAuthoritativeBridge.new()
+	enhancer.set("command_facade", facade)
+	enhancer.set("bridge", authoritative_bridge)
+	var result: Dictionary = await enhancer._submit_transfer_and_wait(
+		"item/test/rock",
+		-1,
+		"player_inventory",
+		2,
+		""
+	)
+	_assert(bool(result.get("success", false)), "serialized transfer returns authoritative success")
+	_assert(facade.calls == 1, "serialized transfer submits exactly one predicted command")
+	_assert(authoritative_bridge.waits == ["fake-sort-1"], "serialized transfer waits for its authoritative operation id")
+	_assert(authoritative_bridge.takes == ["fake-sort-1"], "serialized transfer consumes stored authoritative completion")
+	var report: Dictionary = enhancer.get_report()
+	_assert(int(report.get("authoritative_sort_waits", 0)) == 1, "serialized transfer records one authority wait")
+	_assert(int(report.get("authoritative_sort_failures", 0)) == 0, "successful serialized transfer records no authority failure")
+	enhancer.queue_free()
 
 
 func _load_instantiable_script(path: String, label: String):
