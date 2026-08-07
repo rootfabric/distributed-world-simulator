@@ -124,7 +124,7 @@ func _spawn_worker(exe: String, root_path: String, port: int, id: String, phase:
 	return _spawn(exe, [
 		"--quiet", "--path", root_path, "--rendering-method", "gl_compatibility",
 		"--audio-driver", "Dummy", "--log-file", log,
-		"--script", "res://tools/runtime/m7_playable_network_client.gd", "--",
+		"--script", "res://tools/runtime/m7_playable_network_client_camera_sync_fix.gd", "--",
 		"--host=127.0.0.1", "--port=%d" % port, "--client-id=%s" % id,
 		"--phase=%d" % phase, "--result-file=%s" % result, "--peer-file=%s" % peer,
 		"--server-file=%s" % server_file, "--network-profile=%s" % client_network_profile,
