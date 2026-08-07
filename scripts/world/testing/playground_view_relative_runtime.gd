@@ -1,6 +1,15 @@
 extends "res://scripts/world/testing/playground_runtime.gd"
 
 const ProjectionHashUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const SlotAwareM7ItemGraphReplicaAdapterScript = preload(
+	"res://scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter_slot_aware.gd"
+)
+const SlotAwarePredictionJournalScript = preload(
+	"res://scripts/network/prediction/predicted_item_interaction_journal_slot_aware.gd"
+)
+
+const SLOT_AWARE_PREDICTION_TIMEOUT_MS := 8000
+const SLOT_AWARE_PREDICTION_MAX_PENDING := 32
 
 # Network-playground specialization that keeps local camera input independent
 # from the authoritative avatar-facing yaw and keeps client prediction on the
@@ -43,6 +52,40 @@ func _physics_process(delta: float) -> void:
 	_sync_m7_predicted_player_state(delta)
 	_flush_pending_prediction_presentation()
 	_physics_prediction_steps += 1
+
+
+func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
+	var setup_result: Dictionary = super._setup_m7_networked_item_gameplay(runtime)
+	if not bool(setup_result.get("success", false)):
+		return setup_result
+	if _m7_item_bridge == null:
+		return {"success": false, "error_code": "M7_ITEM_BRIDGE_NOT_CONFIGURED", "details": {}}
+
+	var adapter = SlotAwareM7ItemGraphReplicaAdapterScript.new()
+	var adapter_setup: Dictionary = adapter.setup(runtime.get_local_player_id())
+	if not bool(adapter_setup.get("success", false)):
+		return adapter_setup
+
+	var journal = SlotAwarePredictionJournalScript.new()
+	var journal_setup: Dictionary = journal.setup(runtime.get_local_player_id(), {
+		"timeout_ms": SLOT_AWARE_PREDICTION_TIMEOUT_MS,
+		"max_pending": SLOT_AWARE_PREDICTION_MAX_PENDING,
+	})
+	if not bool(journal_setup.get("success", false)):
+		return journal_setup
+	var canonical: Dictionary = runtime.get_item_graph_snapshot()
+	if not canonical.is_empty():
+		var adopted: Dictionary = journal.adopt_authoritative(canonical)
+		if not bool(adopted.get("success", false)):
+			return adopted
+
+	# Keep the already-configured bridge/pump/signals, but replace the two
+	# projection components before attach_m3_multiplayer_client performs its
+	# first authoritative item_graph_updated application.
+	_m7_item_adapter = adapter
+	_m7_item_bridge._adapter = adapter
+	_m7_item_bridge._prediction_journal = journal
+	return setup_result
 
 
 func _create_m7_movement_intent(

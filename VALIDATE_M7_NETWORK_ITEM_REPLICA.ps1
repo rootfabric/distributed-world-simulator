@@ -54,6 +54,12 @@ func _run() -> void:
     _assert("item/player/player-a/mount-bases" in inventory_ids, "starter mount bases exist before first item command")
     _assert("item/player/player-a/battery" in inventory_ids, "starter battery exists before first item command")
     _assert(Array(inventory.get("hotbar", [])).size() == 10, "starter hotbar exists before first item command")
+    var battery_location: Dictionary = {}
+    for item_value in after.get("items", []):
+        if item_value is Dictionary and String(item_value.get("item_id", "")) == "item/player/player-a/battery":
+            battery_location = Dictionary(item_value.get("location", {}))
+            break
+    _assert(int(battery_location.get("slot_index", -1)) == 2, "starter non-hotbar inventory item has authoritative slot identity")
     var seeded_again: Dictionary = graph.ensure_player_for_join("player-a")
     _assert(bool(seeded_again.get("success", false)), "replayed player materialization succeeds")
     _assert(not bool(seeded_again.get("details", {}).get("created", true)), "replayed player materialization is idempotent")
@@ -107,6 +113,11 @@ try {
     Invoke-GodotCheck -Name "M7 item join and snapshot semantics" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--script", "res://artifacts/runtime/m7-item-replica-validation/probe.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 slot-aware item transfers" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/network/test_m7_slot_aware_item_transfers.gd"
     )
 
     Invoke-GodotCheck -Name "NX6 predicted item interactions" -Arguments @(
