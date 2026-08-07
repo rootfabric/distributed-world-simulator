@@ -2,12 +2,12 @@ extends RefCounted
 
 const Sequence = preload("res://scripts/network/simulation/input_sequence.gd")
 
-const SCHEMA: String = "planet_simulator.fixed_tick_input_buffer.v2"
+const SCHEMA: String = "planet_simulator.fixed_tick_input_buffer.v1"
 const MAX_PENDING_INPUTS: int = 64
 const MAX_SEQUENCE_AHEAD: int = 2048
 const MAX_QUEUE_AGE_TICKS: int = 120
 const MAX_INPUT_HOLD_TICKS: int = 15
-const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_LATEST_REFRESH_COALESCING_V2"
+const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
 const INPUT_COALESCING_POLICY: String = "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1"
 const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
 const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
