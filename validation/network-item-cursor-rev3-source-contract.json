@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.network_item_cursor_rev3_source_contract.v1",
+  "candidate_parent": "fb347c919d592921b7927a88d61fbec1f26d231c",
+  "checks": [
+    "network replica carry does not call begin_inventory_cursor_carry before entering virtual mode",
+    "network virtual drop uses session.item_id through command_facade.drop_quantity",
+    "network virtual placement uses session.item_id through command_facade.transfer_quantity",
+    "network cancel clears virtual session without transient cursor finalization",
+    "offline path still calls begin_inventory_cursor_carry"
+  ],
+  "runtime_file": "scripts/ui/inventory/interactions/inventory_cursor_controller.gd"
+}
