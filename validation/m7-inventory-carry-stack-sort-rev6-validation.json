@@ -1,0 +1,83 @@
+{
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v10",
+  "stage": "M7 inventory carry / pickup stack / sort rev6",
+  "branch": "agent/inventory-carry-stack-sort-rev6",
+  "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
+  "base_commit": "3b590b392a536d843f28f3ede833c00fd41466af",
+  "accepted_candidate_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
+  "implementation": {
+    "carry_origin_projection": "network-virtual carry subtracts cursor quantity from source presentation; whole carry shows empty source slot, partial carry leaves exact remainder",
+    "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the same quantity-aware carry overlay",
+    "pickup_auto_stack": "pickup consolidation uses serialized predicted item.transfer commands and definition max_stack",
+    "sort_authority": "fix5 authoritative-serial merge + alphabetical compaction remains the canonical mutation path",
+    "sort_activation_fix6": "ACTION_MODE_BUTTON_PRESS plus InventoryScreen geometry fallback and 120 ms debounce",
+    "sort_presentation_fix7": "on a valid sort click, build the final merged/alphabetical slot model before the first transfer and install it as a presentation-only container override immediately",
+    "sort_activation_fix8": "root Node _input sees LMB before GUI dispatch, hit-tests visible sort button rectangles and routes the press through the existing debounced fix6/fix7 dispatch path",
+    "sort_preview_stability": "normal InventoryScreen refreshes continue to render the optimistic final layout while the authoritative transfer sequence is pending",
+    "sort_preview_reconciliation": "after authority success the override remains until the physical replica slot+quantity signature matches, then it is removed without flicker",
+    "sort_preview_failure": "authority failure clears the preview immediately; a 5000 ms bounded reconciliation timeout prevents stale presentation from being held forever",
+    "projection_schema": "planet_simulator.inventory_slot_projection.carry_aware.v3",
+    "enhancer_schema": "planet_simulator.inventory_network_rev6_enhancer.fix8.v1",
+    "playground_composition": "playground.tscn selects playground_view_relative_runtime_fix8.gd; fix8 replaces only the inventory enhancer after the existing fix7/fix6/M7/NX6 setup",
+    "prediction_window": 64
+  },
+  "regression_history": [
+    {
+      "observed_on_commit": "293e75476cc88ae63e121a500e47660898e0dbf6",
+      "automated_gate": "USER-REPORTED PASS",
+      "finding": "sort button did not reliably activate",
+      "correction": "fix6 press-driven activation and geometry fallback"
+    },
+    {
+      "observed_on_commit": "cacc0029bf915916305042ec48ef4e7c59ef4b7c",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfer 67 assertions, rev6 43 assertions, fix6 8 assertions, NX6 957 assertions",
+      "graphical_result": "USER-REPORTED: sorting commits correctly, but the sorted result is not visible until another inventory action or reopen refreshes the panel",
+      "diagnosis": "authority path is working; user-facing sort needs an optimistic final-layout presentation that is independent of replica/render timing",
+      "correction": "fix7 presentation override renders the expected final sort immediately and reconciles to the physical replica later"
+    },
+    {
+      "observed_on_commit": "f2f371a0c30de3651b2edece30299550f5d3b606",
+      "automated_gate": "USER-REPORTED FAIL at M7 inventory rev6 fix7 reactive presentation",
+      "failure": "Godot 4.7.1 rejected test constant Projection because it collides with a builtin type name",
+      "scope": "test harness only",
+      "correction": "rename the preload constant to CarryProjectionScript"
+    },
+    {
+      "observed_on_commit": "616e583bbe70c31858905a9dad5ae5f3471ca755",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfers 67 assertions, fix7 enhancer parse, rev6 43 assertions, fix6 8 assertions, fix7 16 assertions, NX6 957 assertions",
+      "graphical_result": "USER-REPORTED FAIL: pressing the visible sort button does not sort the container",
+      "runtime_evidence": "client log contains no SORT_REQUESTED, SORT_STARTED, SORT_PLAN or SORT_PRESENTATION_APPLIED events during the graphical attempt; server rejections remain zero",
+      "diagnosis": "the failure is before authority and before optimistic presentation: the visible button press is not reaching either BaseButton.pressed or the InventoryScreen.gui_input geometry fallback in the real M7 composition",
+      "correction": "fix8 adds a root _input mouse-down hit-test fallback that runs before GUI dispatch and feeds the same debounced sort request path"
+    },
+    {
+      "observed_on_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfers 67 assertions, fix7 enhancer parse, rev6 43 assertions, fix6 8 assertions, fix7 20 assertions, NX6 957 assertions; direct fix8 9 assertions",
+      "graphical_result": "USER-REPORTED PASS: sorting works correctly in the graphical inventory/container flow",
+      "decision": "ACCEPTED"
+    }
+  ],
+  "focused_tests": [
+    "res://tests/ui/test_inventory_network_rev6.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix6.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix7.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix8.gd"
+  ],
+  "focused_fix8_assertions": [
+    "global input geometry recognizes the player sort button",
+    "global input geometry recognizes the external sort button",
+    "unrelated inventory clicks do not activate sorting",
+    "hidden sort controls cannot activate the fallback",
+    "fix8 reports BUTTON_PRESS_SCREEN_FALLBACK_GLOBAL_INPUT",
+    "playground scene selects fix8 composition"
+  ],
+  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 plus direct res://tests/ui/test_inventory_network_rev6_fix8.gd",
+  "acceptance": {
+    "windows_focused_gate": "PASS",
+    "direct_fix8_test": "PASS (9 assertions)",
+    "graphical_sort": "PASS",
+    "accepted_on_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b"
+  },
+  "follow_up_not_blocking_rev6_acceptance": "Two-client item drop/pickup stress exposed server realtime backpressure (INPUT_QUEUE_FULL after multi-second server stalls) and a same-revision gameplay snapshot consistency warning. Track and fix in a separate networking hardening change; it is not a sorting activation regression.",
+  "decision": "ACCEPTED"
+}

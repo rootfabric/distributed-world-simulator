@@ -14,10 +14,43 @@ function Invoke-GodotCheck {
     param([string]$Name, [string[]]$Arguments)
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
-    & $Godot @Arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Name failed with exit code $LASTEXITCODE"
+
+    # Windows PowerShell converts native stderr records into ErrorRecord objects.
+    # With the global Stop policy that can abort here before we can inspect the
+    # Godot diagnostics. Temporarily allow the native process to complete, then
+    # fail explicitly from exit code or fatal script diagnostics below.
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $Output = @(& $Godot @Arguments 2>&1)
+        $ExitCode = $LASTEXITCODE
     }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+    }
+
+    foreach ($Line in $Output) {
+        Write-Host $Line
+    }
+
+    $Text = ($Output | ForEach-Object { $_.ToString() }) -join "`n"
+    $FatalScriptPatterns = @(
+        "SCRIPT ERROR:",
+        "Parse Error:",
+        "Compile Error:",
+        "Failed to load script"
+    )
+
+    foreach ($Pattern in $FatalScriptPatterns) {
+        if ($Text.Contains($Pattern)) {
+            throw "$Name emitted fatal Godot script diagnostics: $Pattern"
+        }
+    }
+
+    if ($ExitCode -ne 0) {
+        throw "$Name failed with exit code $ExitCode"
+    }
+
     Write-Host "${Name}: PASS" -ForegroundColor Green
 }
 
@@ -118,6 +151,27 @@ try {
     Invoke-GodotCheck -Name "M7 slot-aware item transfers" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--script", "res://tests/network/test_m7_slot_aware_item_transfers.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 inventory rev6 fix7 enhancer parse" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--check-only",
+        "--script", "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix7.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 inventory carry / stack / sort rev6" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 inventory rev6 fix6 activation" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6_fix6.gd"
+    )
+
+    Invoke-GodotCheck -Name "M7 inventory rev6 fix7 reactive presentation" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6_fix7.gd"
     )
 
     Invoke-GodotCheck -Name "NX6 predicted item interactions" -Arguments @(

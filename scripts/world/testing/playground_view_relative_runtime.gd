@@ -7,9 +7,14 @@ const SlotAwareM7ItemGraphReplicaAdapterScript = preload(
 const SlotAwarePredictionJournalScript = preload(
 	"res://scripts/network/prediction/predicted_item_interaction_journal_slot_aware.gd"
 )
+const InventoryRev6EnhancerScript = preload(
+	"res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
+)
 
 const SLOT_AWARE_PREDICTION_TIMEOUT_MS := 8000
-const SLOT_AWARE_PREDICTION_MAX_PENDING := 32
+# Sorting can require a short burst of ordered item.transfer predictions when a
+# nearly-full 18-slot inventory must be permuted through one temporary slot.
+const SLOT_AWARE_PREDICTION_MAX_PENDING := 64
 
 # Network-playground specialization that keeps local camera input independent
 # from the authoritative avatar-facing yaw and keeps client prediction on the
@@ -23,6 +28,7 @@ var _physics_prediction_steps: int = 0
 var _render_prediction_steps_suppressed: int = 0
 var _m7_last_item_projection_hash: String = ""
 var _m7_same_revision_projection_updates: int = 0
+var _inventory_rev6_enhancer
 
 
 func _process(delta: float) -> void:
@@ -85,6 +91,21 @@ func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
 	_m7_item_adapter = adapter
 	_m7_item_bridge._adapter = adapter
 	_m7_item_bridge._prediction_journal = journal
+
+	# Rev6 UI hardening remains a presentation/composition layer. All actual
+	# item mutations still travel through the existing M7 bridge and rev5
+	# slot-aware authority, including automatic pickup stacking and sorting.
+	if _inventory_rev6_enhancer != null and is_instance_valid(_inventory_rev6_enhancer):
+		_inventory_rev6_enhancer.queue_free()
+	_inventory_rev6_enhancer = InventoryRev6EnhancerScript.new()
+	_inventory_rev6_enhancer.name = "InventoryNetworkRev6Enhancer"
+	add_child(_inventory_rev6_enhancer)
+	var enhancer_setup: Dictionary = _inventory_rev6_enhancer.setup(
+		item_gameplay,
+		_m7_item_bridge
+	)
+	if not bool(enhancer_setup.get("success", false)):
+		return enhancer_setup
 	return setup_result
 
 
@@ -210,4 +231,9 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"last_projection_hash": _m7_last_item_projection_hash,
 		"same_revision_projection_updates": _m7_same_revision_projection_updates,
 	}
+	report["inventory_rev6"] = (
+		_inventory_rev6_enhancer.get_report()
+		if _inventory_rev6_enhancer != null and is_instance_valid(_inventory_rev6_enhancer)
+		else {}
+	)
 	return report
