@@ -1,11 +1,9 @@
 extends Node
 
-# Standalone rev6 inventory hardening for the networked 7-Days-like profile.
-# All authoritative mutations continue to use the existing command facade and
-# therefore the M7/NX6 item.transfer path. Presentation-only cursor suppression
-# never mutates the canonical Item Graph.
+# Networked 7-Days-like inventory hardening. All canonical mutations still go
+# through the existing M7/NX6 command path. Carry visuals are presentation-only.
 
-const FIX_SCHEMA: String = "planet_simulator.inventory_network_rev6_enhancer.fix4.v1"
+const FIX_SCHEMA: String = "planet_simulator.inventory_network_rev6_enhancer.fix5.v1"
 const CarryAwareProjection = preload(
 	"res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
 )
@@ -14,6 +12,7 @@ const SORT_BUTTON_SIZE := Vector2(112.0, 30.0)
 const SORT_BUTTON_MARGIN := Vector2(8.0, 6.0)
 const INTERACTION_HINT_POSITION := Vector2(-300.0, -170.0)
 const INTERACTION_HINT_SIZE := Vector2(600.0, 72.0)
+const AUTHORITATIVE_TRANSFER_TIMEOUT_MS: int = 12000
 
 var gameplay_controller
 var inventory_ui
@@ -27,7 +26,9 @@ var external_sort_button: Button
 var _last_carry_active: bool = false
 var _suppressed_container_id: String = ""
 var _suppressed_item_id: String = ""
+var _carry_overlay_quantity: int = 0
 var _pickup_queue: Array = []
+var _pickup_merge_in_progress: bool = false
 var _sort_in_progress: bool = false
 var _pickup_stack_operations: int = 0
 var _sort_operations: int = 0
@@ -35,6 +36,10 @@ var _pointer_repairs: int = 0
 var _carry_suppressions: int = 0
 var _sort_layout_updates: int = 0
 var _interaction_hint_layout_updates: int = 0
+var _authoritative_sort_waits: int = 0
+var _authoritative_sort_failures: int = 0
+var _hotbar_overlay_renders: int = 0
+var _sort_click_guards: int = 0
 
 
 func setup(controller, network_bridge) -> Dictionary:
@@ -69,6 +74,10 @@ func setup(controller, network_bridge) -> Dictionary:
 		var completion_callback: Callable = Callable(self, "_on_authoritative_item_command_completed")
 		if not bridge.is_connected("authoritative_item_command_completed", completion_callback):
 			bridge.connect("authoritative_item_command_completed", completion_callback)
+	if gameplay_controller.has_signal("gameplay_state_changed"):
+		var state_callback: Callable = Callable(self, "_on_gameplay_state_changed")
+		if not gameplay_controller.is_connected("gameplay_state_changed", state_callback):
+			gameplay_controller.connect("gameplay_state_changed", state_callback)
 
 	set_process(true)
 	call_deferred("_refresh_screen")
@@ -80,8 +89,11 @@ func setup(controller, network_bridge) -> Dictionary:
 		"details": {
 			"schema": FIX_SCHEMA,
 			"carry_aware_projection": true,
+			"carry_partial_remainder": true,
+			"carry_hotbar_overlay": true,
 			"sort_buttons": true,
 			"sort_buttons_overlay": true,
+			"sort_authoritative_serial": true,
 			"interaction_hint_above_hotbar": true,
 			"pickup_auto_stack": true,
 			"pickup_stack_mode": "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION",
@@ -105,9 +117,9 @@ func _process(_delta: float) -> void:
 
 	var transfer_session = screen.get("transfer_session")
 	var carry_active: bool = _session_is_active(transfer_session)
-	if carry_active and not _last_carry_active:
-		_apply_origin_suppression()
-	elif not carry_active and _last_carry_active:
+	if carry_active:
+		_sync_origin_carry_overlay(false)
+	elif _last_carry_active:
 		_clear_origin_suppression(true)
 
 	if not carry_active:
@@ -129,10 +141,6 @@ func _session_is_active(transfer_session) -> bool:
 
 
 func _setup_sort_buttons() -> void:
-	# Container children are laid out by their parent Container. In the previous
-	# revision this caused the sort Button itself to be stretched across most of
-	# the inventory panel. Keep the buttons as top-level overlay controls owned by
-	# InventoryScreen and position them relative to the actual panel rectangles.
 	if player_sort_button == null:
 		player_sort_button = _create_sort_button(
 			"PlayerInventorySort",
@@ -141,6 +149,7 @@ func _setup_sort_buttons() -> void:
 		)
 		screen.add_child(player_sort_button)
 		player_sort_button.pressed.connect(_on_player_sort_pressed)
+		_wire_sort_button_input(player_sort_button)
 	if external_sort_button == null:
 		external_sort_button = _create_sort_button(
 			"ExternalInventorySort",
@@ -149,6 +158,7 @@ func _setup_sort_buttons() -> void:
 		)
 		screen.add_child(external_sort_button)
 		external_sort_button.pressed.connect(_on_external_sort_pressed)
+		_wire_sort_button_input(external_sort_button)
 	_layout_sort_buttons()
 
 
@@ -165,6 +175,37 @@ func _create_sort_button(node_name: String, caption: String, hint: String) -> Bu
 	button.z_as_relative = false
 	button.z_index = 3000
 	return button
+
+
+func _wire_sort_button_input(button: Button) -> void:
+	if button == null or bool(button.get_meta("rev6_sort_input_guard", false)):
+		return
+	button.set_meta("rev6_sort_input_guard", true)
+	button.gui_input.connect(Callable(self, "_on_sort_button_gui_input").bind(button))
+
+
+func _on_sort_button_gui_input(event: InputEvent, button: Button) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	# Prevent the click/release from falling through to the playground global
+	# mouse-capture shortcut. Capturing the mouse recenters it on Windows.
+	var viewport := button.get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()
+	if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_sort_click_guards += 1
+
+
+func _keep_inventory_pointer_visible() -> void:
+	if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		_pointer_repairs += 1
+	if screen != null and screen.get_viewport() != null:
+		screen.get_viewport().set_input_as_handled()
 
 
 func _layout_sort_buttons() -> void:
@@ -192,9 +233,6 @@ func _layout_sort_button_for_panel(button: Button, panel) -> void:
 
 
 func _layout_interaction_hint() -> void:
-	# PlaygroundRuntime owns the world-interaction hint. It used to occupy the
-	# same vertical band as the persistent hotbar, causing object names/actions to
-	# be rendered directly over item slots. Move it to a dedicated band above it.
 	var runtime = get_parent()
 	if runtime == null:
 		return
@@ -212,23 +250,26 @@ func _update_sort_button_visibility(inventory_visible: bool, carry_active: bool)
 	var profile = screen.get("active_interaction_profile")
 	if profile != null:
 		seven_days = String(profile.get("profile_id")) == "seven_days_like"
+	var allow_sort: bool = inventory_visible and seven_days and not carry_active and not _sort_in_progress
 	if player_sort_button != null:
-		player_sort_button.visible = inventory_visible and seven_days and not carry_active
+		player_sort_button.visible = allow_sort
 	if external_sort_button != null:
 		external_sort_button.visible = (
-			inventory_visible
-			and seven_days
-			and not carry_active
+			allow_sort
 			and not String(screen.get("external_container_id")).is_empty()
 		)
 
 
 func _apply_origin_suppression() -> void:
-	if projection == null:
+	_sync_origin_carry_overlay(true)
+
+
+func _sync_origin_carry_overlay(force_refresh: bool) -> void:
+	if projection == null or screen == null:
 		return
 	var transfer_session = screen.get("transfer_session")
 	var cursor_controller = screen.get("cursor_controller")
-	if transfer_session == null or cursor_controller == null:
+	if not _session_is_active(transfer_session) or cursor_controller == null:
 		return
 	if not cursor_controller.has_method("debug_snapshot"):
 		return
@@ -238,29 +279,85 @@ func _apply_origin_suppression() -> void:
 
 	var origin_item_id: String = String(transfer_session.get("origin_item_id"))
 	var origin_container_id: String = String(transfer_session.get("source_container_id"))
-	if origin_item_id.is_empty() or origin_container_id.is_empty():
-		return
-	var source = gameplay_controller.get_item(origin_item_id)
-	if source == null:
-		return
-	var requested_quantity: int = int(transfer_session.get("requested_quantity"))
-	if requested_quantity < int(source.get("quantity")):
+	var cursor_quantity: int = maxi(0, int(transfer_session.get("remaining_quantity")))
+	if origin_item_id.is_empty() or origin_container_id.is_empty() or cursor_quantity <= 0:
 		return
 
+	var changed_origin: bool = (
+		origin_item_id != _suppressed_item_id
+		or origin_container_id != _suppressed_container_id
+	)
+	var changed_quantity: bool = cursor_quantity != _carry_overlay_quantity
+	if not force_refresh and not changed_origin and not changed_quantity:
+		return
+
+	if changed_origin and not _suppressed_item_id.is_empty() and not _suppressed_container_id.is_empty():
+		projection.reveal_item(_suppressed_container_id, _suppressed_item_id)
+
+	if changed_origin:
+		_carry_suppressions += 1
 	_suppressed_container_id = origin_container_id
 	_suppressed_item_id = origin_item_id
-	projection.suppress_item(_suppressed_container_id, _suppressed_item_id)
-	_carry_suppressions += 1
+	_carry_overlay_quantity = cursor_quantity
+	projection.set_carried_quantity(origin_container_id, origin_item_id, cursor_quantity)
 	call_deferred("_refresh_screen")
+	call_deferred("_refresh_persistent_hotbar_overlay")
 
 
 func _clear_origin_suppression(refresh_after: bool) -> void:
+	var source_was_hotbar: bool = _suppressed_container_id == String(gameplay_controller.player_hotbar_id)
 	if projection != null and not _suppressed_container_id.is_empty() and not _suppressed_item_id.is_empty():
 		projection.reveal_item(_suppressed_container_id, _suppressed_item_id)
 	_suppressed_container_id = ""
 	_suppressed_item_id = ""
+	_carry_overlay_quantity = 0
 	if refresh_after:
 		call_deferred("_refresh_screen")
+	if source_was_hotbar:
+		call_deferred("_refresh_persistent_hotbar_normal")
+
+
+func _refresh_persistent_hotbar_overlay() -> void:
+	if (
+		inventory_ui == null
+		or projection == null
+		or _suppressed_container_id != String(gameplay_controller.player_hotbar_id)
+	):
+		return
+	var persistent_hotbar = inventory_ui.get("persistent_hotbar")
+	var view_model = screen.get("view_model")
+	if persistent_hotbar == null or view_model == null:
+		return
+	if not persistent_hotbar.has_method("render_hotbar") or not view_model.has_method("build_container"):
+		return
+	var model_value = view_model.call(
+		"build_container",
+		gameplay_controller.player_hotbar_id,
+		int(gameplay_controller.selected_hotbar_index)
+	)
+	if not model_value is Dictionary:
+		return
+	var model: Dictionary = projection.apply_carry_overlay(Dictionary(model_value))
+	var profile = screen.get("active_interaction_profile")
+	if profile != null and persistent_hotbar.has_method("set_interaction_profile"):
+		persistent_hotbar.call("set_interaction_profile", profile)
+	persistent_hotbar.call(
+		"render_hotbar",
+		model,
+		Callable(screen, "_icon_for_cell"),
+		Callable(command_facade, "preview_transfer")
+	)
+	_hotbar_overlay_renders += 1
+
+
+func _refresh_persistent_hotbar_normal() -> void:
+	if inventory_ui != null and inventory_ui.has_method("_refresh_persistent_hotbar"):
+		inventory_ui.call("_refresh_persistent_hotbar")
+
+
+func _on_gameplay_state_changed() -> void:
+	if not _suppressed_container_id.is_empty():
+		call_deferred("_refresh_persistent_hotbar_overlay")
 
 
 func _on_authoritative_item_command_completed(
@@ -276,7 +373,7 @@ func _on_authoritative_item_command_completed(
 
 
 func _process_pickup_queue() -> void:
-	if _pickup_queue.is_empty() or _sort_in_progress:
+	if _pickup_queue.is_empty() or _sort_in_progress or _pickup_merge_in_progress:
 		return
 	var inventory = gameplay_controller.get_container(gameplay_controller.player_inventory_id)
 	if inventory == null:
@@ -289,46 +386,64 @@ func _process_pickup_queue() -> void:
 		return
 
 	_pickup_queue.pop_front()
-	_sort_in_progress = true
-	var merged: bool = _merge_container_stacks(String(gameplay_controller.player_inventory_id))
-	_sort_in_progress = false
-	if merged:
+	_pickup_merge_in_progress = true
+	_run_pickup_merge()
+
+
+func _run_pickup_merge() -> void:
+	var result: Dictionary = await _merge_container_stacks_serial(
+		String(gameplay_controller.player_inventory_id)
+	)
+	_pickup_merge_in_progress = false
+	if bool(result.get("success", false)):
 		_pickup_stack_operations += 1
 		call_deferred("_refresh_screen")
 
 
 func _on_player_sort_pressed() -> void:
+	_keep_inventory_pointer_visible()
 	_sort_container(String(gameplay_controller.player_inventory_id), true)
 
 
 func _on_external_sort_pressed() -> void:
+	_keep_inventory_pointer_visible()
 	var container_id: String = String(screen.get("external_container_id"))
 	if not container_id.is_empty():
 		_sort_container(container_id, false)
 
 
 func _sort_container(container_id: String, player_inventory: bool) -> void:
-	if _sort_in_progress or container_id.is_empty():
+	if _sort_in_progress or _pickup_merge_in_progress or container_id.is_empty():
 		return
 	var transfer_session = screen.get("transfer_session")
 	if _session_is_active(transfer_session):
 		_show_error("Сначала завершите перенос предмета")
 		return
-
 	_sort_in_progress = true
-	if not _merge_container_stacks(container_id):
+	_update_sort_button_visibility(true, false)
+	_show_status("Сортировка…")
+	_run_sort_container(container_id, player_inventory)
+
+
+func _run_sort_container(container_id: String, player_inventory: bool) -> void:
+	var merge_result: Dictionary = await _merge_container_stacks_serial(container_id)
+	if not bool(merge_result.get("success", false)):
 		_sort_in_progress = false
+		_show_error("Не удалось объединить стаки: %s" % String(merge_result.get("error_code", "UNKNOWN")))
 		return
 	_refresh_screen()
-	var sorted: bool = _sort_container_slots(container_id, player_inventory)
+	var sort_result: Dictionary = await _sort_container_slots_serial(container_id, player_inventory)
 	_sort_in_progress = false
 	_refresh_screen()
-	if sorted:
+	_keep_inventory_pointer_visible()
+	if bool(sort_result.get("success", false)):
 		_sort_operations += 1
 		_show_success("Стаки объединены, предметы отсортированы по названию")
+	else:
+		_show_error(String(sort_result.get("message", "Сортировка не завершена: %s" % String(sort_result.get("error_code", "UNKNOWN")))))
 
 
-func _merge_container_stacks(container_id: String) -> bool:
+func _merge_container_stacks_serial(container_id: String) -> Dictionary:
 	var ids: Array = _container_item_ids_by_slot(container_id)
 	for target_index in range(ids.size()):
 		var target_id: String = String(ids[target_index])
@@ -353,8 +468,10 @@ func _merge_container_stacks(container_id: String) -> bool:
 			if headroom <= 0:
 				break
 			var amount: int = mini(headroom, int(source.get("quantity")))
+			if amount <= 0:
+				continue
 			var target_relation: Dictionary = Dictionary(target.get("relation"))
-			var merge_result: Dictionary = command_facade.transfer_quantity(
+			var merge_result: Dictionary = await _submit_transfer_and_wait(
 				source_id,
 				amount,
 				container_id,
@@ -362,21 +479,19 @@ func _merge_container_stacks(container_id: String) -> bool:
 				target_id
 			)
 			if not bool(merge_result.get("success", false)):
-				_show_error("Не удалось объединить стаки: %s" % String(merge_result.get("error_code", "UNKNOWN")))
-				return false
-	return true
+				return merge_result
+	return _success()
 
 
-func _sort_container_slots(container_id: String, player_inventory: bool) -> bool:
+func _sort_container_slots_serial(container_id: String, player_inventory: bool) -> Dictionary:
 	var container = gameplay_controller.get_container(container_id)
 	if container == null or not bool(container.call("is_slot_container")):
-		_show_error("Сортировка требует слот-контейнер")
-		return false
+		return _failure("SORT_REQUIRES_SLOT_CONTAINER", "Сортировка требует слот-контейнер")
 
 	var capacity: int = int(container.get("slot_count"))
 	var desired: Array = _container_item_ids_by_name(container_id)
 	if desired.is_empty():
-		return true
+		return _success()
 	var slots: Array = _slot_map(container_id, capacity)
 	var empty_slot: int = _first_empty_slot(slots)
 	var temporary_item_id: String = ""
@@ -385,28 +500,30 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 		temporary_item_id = String(desired[desired.size() - 1])
 		var temporary_source_slot: int = slots.find(temporary_item_id)
 		if temporary_source_slot < 0:
-			_show_error("Сортировка не нашла временный предмет")
-			return false
+			return _failure("SORT_TEMP_ITEM_NOT_FOUND", "Сортировка не нашла временный предмет")
 
 		var moved_to_buffer: bool = false
 		if player_inventory:
 			var hotbar = gameplay_controller.get_container(gameplay_controller.player_hotbar_id)
 			if hotbar != null:
 				for hotbar_index in range(int(hotbar.get("slot_count"))):
-					if String(hotbar.call("get_item_at_slot", hotbar_index)).is_empty():
-						var hotbar_result: Dictionary = command_facade.transfer_quantity(
-							temporary_item_id,
-							-1,
-							gameplay_controller.player_hotbar_id,
-							hotbar_index,
-							""
-						)
-						moved_to_buffer = bool(hotbar_result.get("success", false))
-						break
+					if not String(hotbar.call("get_item_at_slot", hotbar_index)).is_empty():
+						continue
+					var hotbar_result: Dictionary = await _submit_transfer_and_wait(
+						temporary_item_id,
+						-1,
+						gameplay_controller.player_hotbar_id,
+						hotbar_index,
+						""
+					)
+					moved_to_buffer = bool(hotbar_result.get("success", false))
+					if not moved_to_buffer:
+						return hotbar_result
+					break
 		else:
 			var player_free: int = _first_free_slot_for_container(String(gameplay_controller.player_inventory_id))
 			if player_free >= 0:
-				var inventory_result: Dictionary = command_facade.transfer_quantity(
+				var inventory_result: Dictionary = await _submit_transfer_and_wait(
 					temporary_item_id,
 					-1,
 					gameplay_controller.player_inventory_id,
@@ -414,10 +531,11 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 					""
 				)
 				moved_to_buffer = bool(inventory_result.get("success", false))
+				if not moved_to_buffer:
+					return inventory_result
 
 		if not moved_to_buffer:
-			_show_error("Для полной сортировки нужен один свободный слот")
-			return false
+			return _failure("SORT_TEMP_SLOT_REQUIRED", "Для полной сортировки нужен один свободный слот")
 		slots[temporary_source_slot] = ""
 		empty_slot = temporary_source_slot
 
@@ -429,31 +547,42 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 		var desired_source_slot: int = slots.find(desired_id)
 		if desired_source_slot < 0:
 			if desired_id != temporary_item_id:
-				_show_error("Сортировка потеряла позицию предмета")
-				return false
+				return _failure("SORT_ITEM_POSITION_LOST", "Сортировка потеряла позицию предмета")
 			if not String(slots[target_slot]).is_empty():
 				var buffered_occupant: String = String(slots[target_slot])
-				if not _move_whole_stack(buffered_occupant, container_id, empty_slot):
-					return false
+				var buffered_result: Dictionary = await _move_whole_stack_serial(
+					buffered_occupant, container_id, empty_slot
+				)
+				if not bool(buffered_result.get("success", false)):
+					return buffered_result
 				slots[empty_slot] = buffered_occupant
 				slots[target_slot] = ""
 				empty_slot = target_slot
-			if not _move_whole_stack(temporary_item_id, container_id, target_slot):
-				return false
+			var temp_place_result: Dictionary = await _move_whole_stack_serial(
+				temporary_item_id, container_id, target_slot
+			)
+			if not bool(temp_place_result.get("success", false)):
+				return temp_place_result
 			slots[target_slot] = temporary_item_id
 			temporary_item_id = ""
 			continue
 
 		if not String(slots[target_slot]).is_empty():
 			var displaced_id: String = String(slots[target_slot])
-			if not _move_whole_stack(displaced_id, container_id, empty_slot):
-				return false
+			var displaced_result: Dictionary = await _move_whole_stack_serial(
+				displaced_id, container_id, empty_slot
+			)
+			if not bool(displaced_result.get("success", false)):
+				return displaced_result
 			slots[empty_slot] = displaced_id
 			slots[target_slot] = ""
 			empty_slot = target_slot
 
-		if not _move_whole_stack(desired_id, container_id, target_slot):
-			return false
+		var desired_result: Dictionary = await _move_whole_stack_serial(
+			desired_id, container_id, target_slot
+		)
+		if not bool(desired_result.get("success", false)):
+			return desired_result
 		slots[desired_source_slot] = ""
 		slots[target_slot] = desired_id
 		empty_slot = desired_source_slot
@@ -461,33 +590,86 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 	if not temporary_item_id.is_empty():
 		var final_slot: int = desired.find(temporary_item_id)
 		if final_slot < 0:
-			_show_error("Временный предмет отсутствует в плане сортировки")
-			return false
+			return _failure("SORT_TEMP_PLAN_MISSING", "Временный предмет отсутствует в плане сортировки")
 		if not String(slots[final_slot]).is_empty():
 			var final_displaced_id: String = String(slots[final_slot])
-			if not _move_whole_stack(final_displaced_id, container_id, empty_slot):
-				return false
+			var final_displaced_result: Dictionary = await _move_whole_stack_serial(
+				final_displaced_id, container_id, empty_slot
+			)
+			if not bool(final_displaced_result.get("success", false)):
+				return final_displaced_result
 			slots[empty_slot] = final_displaced_id
 			slots[final_slot] = ""
-		if not _move_whole_stack(temporary_item_id, container_id, final_slot):
-			return false
-	return true
+		var final_result: Dictionary = await _move_whole_stack_serial(
+			temporary_item_id, container_id, final_slot
+		)
+		if not bool(final_result.get("success", false)):
+			return final_result
+	return _success()
 
 
-func _move_whole_stack(item_id: String, container_id: String, target_slot: int) -> bool:
+func _move_whole_stack_serial(item_id: String, container_id: String, target_slot: int) -> Dictionary:
 	if item_id.is_empty() or target_slot < 0:
-		return false
-	var move_result: Dictionary = command_facade.transfer_quantity(
+		return _failure("SORT_MOVE_INVALID")
+	return await _submit_transfer_and_wait(
 		item_id,
 		-1,
 		container_id,
 		target_slot,
 		""
 	)
-	if not bool(move_result.get("success", false)):
-		_show_error("Не удалось переместить предмет при сортировке: %s" % String(move_result.get("error_code", "UNKNOWN")))
-		return false
-	return true
+
+
+func _submit_transfer_and_wait(
+	item_id: String,
+	quantity: int,
+	target_container_id: String,
+	target_slot_index: int,
+	target_item_id: String
+) -> Dictionary:
+	var submit_result: Dictionary = command_facade.transfer_quantity(
+		item_id,
+		quantity,
+		target_container_id,
+		target_slot_index,
+		target_item_id
+	)
+	if not bool(submit_result.get("success", false)):
+		_authoritative_sort_failures += 1
+		return submit_result
+	if not bool(submit_result.get("pending", false)):
+		return submit_result
+
+	var operation_id: String = String(submit_result.get(
+		"operation_id",
+		submit_result.get("prediction_id", "")
+	))
+	if operation_id.is_empty():
+		_authoritative_sort_failures += 1
+		return _failure("SORT_PENDING_OPERATION_ID_MISSING")
+	if bridge == null or not bridge.has_method("wait_for_authoritative_completion"):
+		_authoritative_sort_failures += 1
+		return _failure("SORT_AUTHORITATIVE_WAIT_UNAVAILABLE")
+
+	_authoritative_sort_waits += 1
+	var completion_value = await bridge.call(
+		"wait_for_authoritative_completion",
+		operation_id,
+		AUTHORITATIVE_TRANSFER_TIMEOUT_MS
+	)
+	if not completion_value is Dictionary:
+		_authoritative_sort_failures += 1
+		return _failure("SORT_AUTHORITATIVE_RESULT_INVALID")
+	var completion: Dictionary = Dictionary(completion_value).duplicate(true)
+	if bridge.has_method("take_authoritative_completion"):
+		bridge.call("take_authoritative_completion", operation_id)
+	if not bool(completion.get("success", false)):
+		_authoritative_sort_failures += 1
+		return completion
+	var tree := get_tree()
+	if tree != null:
+		await tree.process_frame
+	return completion
 
 
 func _container_item_ids_by_slot(container_id: String) -> Array:
@@ -585,25 +767,31 @@ func _first_free_slot_for_container(container_id: String) -> int:
 func _refresh_screen() -> void:
 	if screen != null and is_instance_valid(screen) and screen.has_method("refresh"):
 		screen.call("refresh")
+	if not _suppressed_container_id.is_empty():
+		call_deferred("_refresh_persistent_hotbar_overlay")
 
 
-func _show_success(message: String) -> void:
+func _show_status(message: String) -> void:
 	if screen == null:
 		return
 	var status_label = screen.get("status_label")
 	if status_label != null:
 		status_label.set("text", message)
+
+
+func _show_success(message: String) -> void:
+	_show_status(message)
+	if screen == null:
+		return
 	var toast_layer = screen.get("toast_layer")
 	if toast_layer != null and toast_layer.has_method("show_success"):
 		toast_layer.call("show_success", message)
 
 
 func _show_error(message: String) -> void:
+	_show_status(message)
 	if screen == null:
 		return
-	var status_label = screen.get("status_label")
-	if status_label != null:
-		status_label.set("text", message)
 	var toast_layer = screen.get("toast_layer")
 	if toast_layer != null and toast_layer.has_method("show_error"):
 		toast_layer.call("show_error", message)
@@ -613,13 +801,21 @@ func get_report() -> Dictionary:
 	return {
 		"schema": FIX_SCHEMA,
 		"pickup_stack_mode": "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION",
+		"sort_mode": "AUTHORITATIVE_SERIAL_TRANSFER",
 		"pickup_queue": _pickup_queue.size(),
+		"pickup_merge_in_progress": _pickup_merge_in_progress,
 		"pickup_stack_operations": _pickup_stack_operations,
 		"sort_operations": _sort_operations,
 		"sort_in_progress": _sort_in_progress,
+		"authoritative_sort_waits": _authoritative_sort_waits,
+		"authoritative_sort_failures": _authoritative_sort_failures,
 		"pointer_repairs": _pointer_repairs,
+		"sort_click_guards": _sort_click_guards,
 		"carry_suppressions": _carry_suppressions,
+		"suppressed_container_id": _suppressed_container_id,
 		"suppressed_item_id": _suppressed_item_id,
+		"carry_overlay_quantity": _carry_overlay_quantity,
+		"hotbar_overlay_renders": _hotbar_overlay_renders,
 		"sort_layout_updates": _sort_layout_updates,
 		"interaction_hint_layout_updates": _interaction_hint_layout_updates,
 		"sort_button_size": SORT_BUTTON_SIZE,
@@ -628,5 +824,12 @@ func get_report() -> Dictionary:
 	}
 
 
-func _failure(error_code: String) -> Dictionary:
-	return {"success": false, "error_code": error_code, "details": {}}
+func _success(details: Dictionary = {}) -> Dictionary:
+	return {"success": true, "error_code": "", "details": details.duplicate(true)}
+
+
+func _failure(error_code: String, message: String = "") -> Dictionary:
+	var result := {"success": false, "error_code": error_code, "details": {}}
+	if not message.is_empty():
+		result["message"] = message
+	return result
