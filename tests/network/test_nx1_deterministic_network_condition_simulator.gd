@@ -519,13 +519,32 @@ func _test_telemetry_and_runtime_wiring() -> void:
 	]))
 	_assert(not bool(invalid.get("success", true)), "CLI rejects invalid network profile ID")
 	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
-	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var client_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	var app_source: String = FileAccess.get_file_as_string("res://scripts/app/simulator_app.gd")
 	_assert(server_source.contains("ConditionSimulatorPort.new()") and client_source.contains("ConditionSimulatorPort.new()"), "M3 server and client wrap production ENet in NX1 simulator")
 	_assert(server_source.contains("set_network_condition_profile") and client_source.contains("set_network_condition_profile"), "Runtime profile switching is exposed on both endpoints")
 	_assert(app_source.count("network_condition_profile") >= 2, "SimulatorApp forwards network profile to server and client")
 	_assert(RuntimeIdentity.CHECKPOINT in ["v16.11.0-network-nx1-deterministic-condition-simulator", "v16.12.0-network-nx2-realtime-traffic-separation", "v16.13.0-network-nx3-fixed-tick-authoritative-simulation", "v16.14.0-network-nx4-client-prediction-reconciliation"], "Runtime identity no longer includes accepted NX1 capability")
 	_assert(_ok(simulator.stop()), "Telemetry simulator stops")
+
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
 
 
 func _simulator(profile: Dictionary, initial_time_ms: int) -> Dictionary:
