@@ -17,6 +17,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	# This contract exercises the baseline inventory/placement runtime. Alternate
+	# interaction profiles may intentionally migrate container storage semantics,
+	# so inherited process configuration must not change this fixture.
+	OS.set_environment("PLANET_SIMULATOR_INVENTORY_PROFILE", "planet_default")
 	var raised_transform := PlacementContract.build_surface_transform(
 		Vector3(2.0, 3.0, 4.0), Vector3.UP, Vector3.FORWARD, null, 0.17
 	)
