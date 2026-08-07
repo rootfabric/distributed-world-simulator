@@ -10,6 +10,7 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 var _pending_replica_resync := false
 var _delta_base_mismatches := 0
 var _snapshot_resyncs := 0
+var _last_prediction_health_ms := 0
 
 
 func _process(delta: float) -> void:
@@ -19,6 +20,39 @@ func _process(delta: float) -> void:
 	if _handshake_verified and not _join_sent and not _transport_session_id.is_empty():
 		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
 	super._process(delta)
+	_emit_prediction_health_if_due()
+
+
+func _emit_prediction_health_if_due() -> void:
+	if (
+		not _debug_logging
+		or not _joined
+		or _prediction_reconciler == null
+		or not _prediction_reconciler.is_configured()
+	):
+		return
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms - _last_prediction_health_ms < 2000:
+		return
+	_last_prediction_health_ms = now_ms
+	var prediction: Dictionary = _prediction_reconciler.get_report()
+	var prediction_tick: int = int(prediction.get("prediction_tick", 0))
+	var authoritative_tick: int = int(prediction.get("last_authoritative_tick", 0))
+	_debug_event("PREDICTION_HEALTH", {
+		"prediction_tick": prediction_tick,
+		"authoritative_tick": authoritative_tick,
+		"lead_ticks": maxi(prediction_tick - authoritative_tick, 0),
+		"current_input_sequence": int(prediction.get("current_input_sequence", 0)),
+		"authoritative_input_sequence": int(prediction.get("last_authoritative_sequence", 0)),
+		"history_size": int(prediction.get("history_size", 0)),
+		"history_overflows": int(prediction.get("history_overflows", 0)),
+		"history_miss_resets": int(prediction.get("history_miss_resets", 0)),
+		"corrections": int(prediction.get("corrections", 0)),
+		"hard_corrections": int(prediction.get("hard_corrections", 0)),
+		"last_error_m": float(prediction.get("last_error_m", 0.0)),
+		"maximum_error_m": float(prediction.get("maximum_error_m", 0.0)),
+		"visual_offset_m": float(prediction.get("visual_offset_m", 0.0)),
+	})
 
 
 func _handle_join_ack(payload: Dictionary) -> void:
