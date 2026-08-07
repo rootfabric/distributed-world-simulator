@@ -8,7 +8,7 @@ const MAX_SEQUENCE_AHEAD: int = 2048
 const MAX_QUEUE_AGE_TICKS: int = 120
 const MAX_INPUT_HOLD_TICKS: int = 15
 const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
-const INPUT_COALESCING_POLICY: String = "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1"
+const INPUT_COALESCING_POLICY: String = "FULL_QUEUE_EXACT_CONTINUOUS_STATE_REFRESH_V2"
 const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
 const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
 
@@ -75,13 +75,17 @@ func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
 	var queued_input: Dictionary = input.duplicate(true)
 	queued_input["received_server_tick"] = received_server_tick
 	var queue_was_full: bool = _pending.size() >= MAX_PENDING_INPUTS
-	if _try_coalesce_latest_refresh(queued_input):
+	# Preserve the accepted NX3 FIFO semantics during normal operation. Coalescing
+	# is only a last-resort backpressure recovery once the hard queue bound has
+	# actually been reached. Doing it eagerly changes how many fixed ticks a
+	# movement state survives and makes ordinary movement distance dependent on
+	# packet batching.
+	if queue_was_full and _try_coalesce_latest_refresh(queued_input):
 		if Sequence.is_newer(sequence, _last_received_sequence):
 			_last_received_sequence = sequence
 		_accepted += 1
 		_coalesced_refreshes += 1
-		if queue_was_full:
-			_queue_pressure_recoveries += 1
+		_queue_pressure_recoveries += 1
 		return _success({
 			"accepted": true,
 			"redundant": false,
@@ -194,9 +198,14 @@ func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
 	return true
 
 func _same_continuous_motion_state(left: Dictionary, right: Dictionary) -> bool:
+	# Yaw is part of the movement kernel: the same move vector under another yaw
+	# produces another trajectory. Pitch is retained as part of the input contract
+	# as well, so pressure recovery never silently rewrites a look transition.
 	return (
 		is_equal_approx(float(left.get("move_x", 0.0)), float(right.get("move_x", 0.0)))
 		and is_equal_approx(float(left.get("move_z", 0.0)), float(right.get("move_z", 0.0)))
+		and is_equal_approx(float(left.get("look_yaw", 0.0)), float(right.get("look_yaw", 0.0)))
+		and is_equal_approx(float(left.get("look_pitch", 0.0)), float(right.get("look_pitch", 0.0)))
 		and bool(left.get("sprint", false)) == bool(right.get("sprint", false))
 	)
 
