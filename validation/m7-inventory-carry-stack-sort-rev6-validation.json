@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v6",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v7",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -7,78 +7,59 @@
   "implementation": {
     "carry_origin_projection": "network-virtual carry subtracts cursor quantity from source presentation; whole carry shows empty source slot, partial carry leaves exact remainder",
     "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the same quantity-aware carry overlay",
-    "drop_pointer": "inventory-visible process guard restores MOUSE_MODE_VISIBLE and inactive carry preview is hidden",
     "pickup_auto_stack": "pickup consolidation uses serialized predicted item.transfer commands and definition max_stack",
-    "sort_player_inventory": "fix5 authoritative-serial merge + alphabetical compaction remains unchanged",
-    "sort_external_container": "fix5 authoritative-serial behavior remains unchanged for the currently open external slot container",
-    "sort_activation_fix6": "sort overlay uses ACTION_MODE_BUTTON_PRESS plus InventoryScreen rectangle fallback and 120 ms debounce so a visible button cannot lose its press to SimulatorApp input.mouse.capture",
-    "sort_observability_fix6": "client emits [inventory_sort] SORT_REQUESTED, SORT_STARTED, SORT_PLAN, SORT_COMPLETED or SORT_FAILED records",
-    "playground_composition_fix6": "playground.tscn selects a thin runtime composition that replaces only the fix5 inventory enhancer with fix6 after M7/NX6 setup",
-    "prediction_window": 64,
-    "sort_button_layout": "top-level 112x30 overlay controls anchored to their panels",
-    "interaction_hint_layout": "world interaction hint stays at center-bottom y=-170 above persistent hotbar"
+    "sort_authority": "fix5 authoritative-serial merge + alphabetical compaction remains the canonical mutation path",
+    "sort_activation_fix6": "ACTION_MODE_BUTTON_PRESS plus InventoryScreen geometry fallback and 120 ms debounce",
+    "sort_presentation_fix7": "on a valid sort click, build the final merged/alphabetical slot model before the first transfer and install it as a presentation-only container override immediately",
+    "sort_preview_stability": "normal InventoryScreen refreshes continue to render the optimistic final layout while the authoritative transfer sequence is pending",
+    "sort_preview_reconciliation": "after authority success the override remains until the physical replica slot+quantity signature matches, then it is removed without flicker",
+    "sort_preview_failure": "authority failure clears the preview immediately; a 5000 ms bounded reconciliation timeout prevents stale presentation from being held forever",
+    "projection_schema": "planet_simulator.inventory_slot_projection.carry_aware.v3",
+    "enhancer_schema": "planet_simulator.inventory_network_rev6_enhancer.fix7.v1",
+    "playground_composition": "playground.tscn selects playground_view_relative_runtime_fix7.gd, which replaces only the inventory presentation enhancer after the existing fix6/M7/NX6 setup",
+    "prediction_window": 64
   },
   "regression_history": [
     {
-      "observed_on_commit": "c743feb5809c39eda2a92492e144d3dc29b4e368",
-      "failure": "enhancer inheritance compile failure plus false-green test"
-    },
-    {
-      "observed_on_commit": "6b352dd87137e5f69360dce174c43aa7f618799c",
-      "failure": "Godot 4.7.1 could not infer dynamic carry_active type"
-    },
-    {
-      "observed_on_commit": "c2077d20c5abd25b2104e92c10e6d7b479ca99cb",
-      "automated_gate": "USER-REPORTED PASS",
-      "graphical_findings": ["sort button stretched across menu", "world interaction hint overlapped hotbar"]
-    },
-    {
-      "observed_on_commit": "6f620f92839dcdfe14099089a134c73de95ff202",
-      "graphical_layout": "USER-REPORTED WORKING",
-      "findings": [
-        "sort click captured mouse and recentered pointer",
-        "sort burst produced TARGET_SLOT_OCCUPIED and MULTIPLAYER_SAME_REVISION_MUTATION",
-        "whole carry from persistent hotbar left source item visible"
-      ],
-      "correction": "fix5 consumes sort-button input, serializes each predicted transfer against authoritative completion, and applies quantity-aware carry presentation to inventory and hotbar"
-    },
-    {
       "observed_on_commit": "293e75476cc88ae63e121a500e47660898e0dbf6",
-      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfer 67 assertions, rev6 43 assertions, NX6 957 assertions",
-      "graphical_results": {
-        "item_carry": "USER-REPORTED WORKING",
-        "sorting": "NOT ACTIVATED"
-      },
-      "evidence": [
-        "two graphical LMB attempts emitted [command] input.mouse.capture while item_updates remained unchanged",
-        "there was no [inventory_sort] instrumentation in fix5, so button dispatch could not be distinguished from later manual item operations"
-      ],
-      "correction": "fix6 moves sort action to mouse press, adds InventoryScreen geometry fallback and emits explicit sort lifecycle logs"
+      "automated_gate": "USER-REPORTED PASS",
+      "finding": "sort button did not reliably activate",
+      "correction": "fix6 press-driven activation and geometry fallback"
+    },
+    {
+      "observed_on_commit": "cacc0029bf915916305042ec48ef4e7c59ef4b7c",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfer 67 assertions, rev6 43 assertions, fix6 8 assertions, NX6 957 assertions",
+      "graphical_result": "USER-REPORTED: sorting commits correctly, but the sorted result is not visible until another inventory action or reopen refreshes the panel",
+      "diagnosis": "authority path is working; user-facing sort needs an optimistic final-layout presentation that is independent of replica/render timing",
+      "correction": "fix7 presentation override renders the expected final sort immediately and reconciles to the physical replica later"
     }
   ],
   "focused_tests": [
     "res://tests/ui/test_inventory_network_rev6.gd",
-    "res://tests/ui/test_inventory_network_rev6_fix6.gd"
+    "res://tests/ui/test_inventory_network_rev6_fix6.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix7.gd"
+  ],
+  "focused_fix7_assertions": [
+    "container presentation override survives repeated projection refreshes",
+    "clearing the override restores physical replica order",
+    "optimistic sort preview merges compatible stacks respecting max_stack",
+    "optimistic sort preview sorts survivors alphabetically and compacts them into first slots",
+    "fix7 reports OPTIMISTIC_FINAL_LAYOUT_UNTIL_REPLICA_MATCH",
+    "playground scene selects fix7 composition"
   ],
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
-  "focused_fix6_assertions": [
-    "fix6 enhancer script parses through the focused runner",
-    "sort button factory uses BaseButton.ACTION_MODE_BUTTON_PRESS",
-    "sort button keeps Control.MOUSE_FILTER_STOP",
-    "fix6 reports BUTTON_PRESS_WITH_SCREEN_FALLBACK activation",
-    "fix6 playground runtime composition instantiates"
-  ],
   "required_acceptance": [
     "Editor import / composition parse",
     "M7 item join and snapshot semantics",
     "M7 slot-aware item transfers",
-    "M7 inventory rev6 fix6 enhancer parse",
+    "M7 inventory rev6 enhancer parse",
     "M7 inventory carry / stack / sort rev6",
     "M7 inventory rev6 fix6 activation",
+    "M7 inventory rev6 fix7 reactive presentation",
     "NX6 predicted item interactions",
-    "manual sort click must emit [inventory_sort] SORT_REQUESTED and must not emit input.mouse.capture for the same click",
-    "manual sort must reach SORT_COMPLETED or produce a precise SORT_FAILED stage/error",
-    "manual carry behavior from fix5 must remain unchanged"
+    "manual sort: final merged/alphabetical layout must appear on the click without close/reopen or another item action",
+    "manual sort: presentation must remain stable while authority commits and must not flicker back to the old layout",
+    "manual sort: on success preview must reconcile to replica; on rejection it must roll back"
   ],
-  "decision": "FIX6 CANDIDATE - WINDOWS GATE + GRAPHICAL SORT ACTIVATION RECHECK REQUIRED"
+  "decision": "FIX7 CANDIDATE - WINDOWS GATE + GRAPHICAL IMMEDIATE-SORT PRESENTATION CHECK REQUIRED"
 }
