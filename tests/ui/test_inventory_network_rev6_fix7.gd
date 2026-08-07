@@ -2,6 +2,7 @@ extends SceneTree
 
 const CarryProjectionScript = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd")
 const EnhancerFix7 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix7.gd")
+const EnhancerFix8 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix8.gd")
 const RuntimeFix8 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix8.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
 
@@ -41,6 +42,7 @@ func _run() -> void:
 	_test_projection_override_survives_refresh()
 	_test_fix7_builds_final_sorted_merge_preview()
 	_test_fix7_report_contract()
+	_test_fix8_global_hit_contract()
 	_test_playground_composition_retains_fix7_via_fix8()
 	if failures.is_empty():
 		print("Inventory network rev6 fix7: PASS (%d assertions)" % assertions)
@@ -120,6 +122,31 @@ func _test_fix7_report_contract() -> void:
 	_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix7.v1", "fix7 enhancer report schema is active")
 	_assert(String(report.get("sort_presentation", "")) == "OPTIMISTIC_FINAL_LAYOUT_UNTIL_REPLICA_MATCH", "fix7 reports optimistic final-layout policy")
 	_assert(int(report.get("sort_preview_reconcile_timeout_ms", 0)) == 5000, "fix7 reconciliation timeout is bounded")
+	enhancer.free()
+
+
+func _test_fix8_global_hit_contract() -> void:
+	var enhancer = EnhancerFix8.new()
+	var screen := Control.new()
+	screen.size = Vector2(800.0, 600.0)
+	get_root().add_child(screen)
+	var player_button: Button = enhancer._create_sort_button("PlayerProbe", "Sort", "")
+	var external_button: Button = enhancer._create_sort_button("ExternalProbe", "Sort", "")
+	screen.add_child(player_button)
+	screen.add_child(external_button)
+	player_button.global_position = Vector2(100.0, 100.0)
+	external_button.global_position = Vector2(300.0, 100.0)
+	player_button.visible = true
+	external_button.visible = true
+	enhancer.screen = screen
+	enhancer.player_sort_button = player_button
+	enhancer.external_sort_button = external_button
+	_assert(enhancer._sort_target_at_point(Vector2(110.0, 110.0)) == 0, "fix8 global fallback recognizes player sort")
+	_assert(enhancer._sort_target_at_point(Vector2(310.0, 110.0)) == 1, "fix8 global fallback recognizes external sort")
+	_assert(enhancer._sort_target_at_point(Vector2(10.0, 10.0)) == -1, "fix8 global fallback ignores unrelated clicks")
+	var report: Dictionary = enhancer.get_report()
+	_assert(String(report.get("sort_activation_mode", "")) == "BUTTON_PRESS_SCREEN_FALLBACK_GLOBAL_INPUT", "fix8 three-layer activation policy is active")
+	screen.free()
 	enhancer.free()
 
 
