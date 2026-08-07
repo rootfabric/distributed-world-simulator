@@ -176,6 +176,10 @@ func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
 	var tail_sequence: int = int(tail.get("input_sequence", 0))
 	if not Sequence.is_newer(sequence, tail_sequence):
 		return false
+	# Keep the existing wrap-spanning FIFO contract exact. Sequence wrap is rare
+	# and preserving both sides of the boundary is safer than collapsing it.
+	if sequence <= tail_sequence:
+		return false
 	var incoming_intent_value = input.get("intent", {})
 	var tail_intent_value = tail.get("intent", {})
 	if not incoming_intent_value is Dictionary or not tail_intent_value is Dictionary:
