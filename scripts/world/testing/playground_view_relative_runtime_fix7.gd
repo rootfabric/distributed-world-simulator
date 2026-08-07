@@ -1,80 +1,34 @@
 extends "res://scripts/world/testing/playground_view_relative_runtime_fix6.gd"
 
-# Fix7 makes the visible inventory reactive to authoritative M7 Item Graph
-# replication. The replica domain was already updated by the parent runtime,
-# but an open InventoryScreen kept rendering its previous current_model until
-# another UI action (close/reopen, carry/drop, etc.) called refresh().
-#
-# Refresh presentation immediately after a newly applied authoritative item
-# projection. This is intentionally a presentation reaction only: authority,
-# prediction, sort ordering and canonical item state remain unchanged.
+# Composition-only switch for inventory rev6 fix7. Fix6 already owns the robust
+# press-driven button activation. Fix7 replaces only the inventory enhancer so
+# sort gets an optimistic final-layout presentation while the existing
+# authoritative serial item.transfer sequence commits in the background.
 
-const FIX7_PRESENTATION_SCHEMA := "planet_simulator.m7_item_replica_presentation.fix7.v1"
-
-var _m7_inventory_screen_refreshes: int = 0
-var _m7_persistent_hotbar_refreshes: int = 0
-var _m7_item_projection_refresh_triggers: int = 0
+const InventoryRev6EnhancerFix7Script = preload(
+	"res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix7.gd"
+)
 
 
-func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
-	var before_revision: int = _m7_last_item_revision
-	var before_projection_hash: String = _m7_last_item_projection_hash
+func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
+	var setup_result: Dictionary = super._setup_m7_networked_item_gameplay(runtime)
+	if not bool(setup_result.get("success", false)):
+		return setup_result
 
-	super._on_m4_item_graph_updated(snapshot)
+	# The fix6 parent installs its enhancer. Remove its screen-owned buttons and
+	# replace that presentation layer only; M7 adapter, prediction journal,
+	# command bridge and authority paths remain untouched.
+	_cleanup_inventory_enhancer_overlay(_inventory_rev6_enhancer)
+	if _inventory_rev6_enhancer != null and is_instance_valid(_inventory_rev6_enhancer):
+		_inventory_rev6_enhancer.free()
 
-	# The parent changes one or both markers only after conversion and
-	# item_gameplay.apply_network_graph_snapshot() succeeded. Do not repaint for
-	# duplicates, rejected projections or snapshots that were not applied.
-	var projection_applied: bool = (
-		_m7_last_sync_error.is_empty()
-		and (
-			_m7_last_item_revision != before_revision
-			or _m7_last_item_projection_hash != before_projection_hash
-		)
+	_inventory_rev6_enhancer = InventoryRev6EnhancerFix7Script.new()
+	_inventory_rev6_enhancer.name = "InventoryNetworkRev6EnhancerFix7"
+	add_child(_inventory_rev6_enhancer)
+	var enhancer_setup: Dictionary = _inventory_rev6_enhancer.setup(
+		item_gameplay,
+		_m7_item_bridge
 	)
-	if not projection_applied:
-		return
-
-	_m7_item_projection_refresh_triggers += 1
-	_refresh_m7_item_replica_presentation()
-
-
-func _refresh_m7_item_replica_presentation() -> void:
-	if item_gameplay == null:
-		return
-	var inventory_ui = item_gameplay.get("inventory_ui")
-	if inventory_ui == null:
-		return
-
-	var active_screen = inventory_ui.get("active_screen")
-	if active_screen != null and is_instance_valid(active_screen):
-		var inventory_visible: bool = bool(active_screen.get("visible"))
-		if active_screen.has_method("is_inventory_visible"):
-			inventory_visible = bool(active_screen.call("is_inventory_visible"))
-		if inventory_visible and active_screen.has_method("refresh"):
-			# apply_network_graph_snapshot() has already completed synchronously, so
-			# refresh() now builds from the new replica state in the same frame.
-			active_screen.call("refresh")
-			_m7_inventory_screen_refreshes += 1
-
-	# The persistent hotbar is outside InventoryScreen and needs its own render.
-	# Keep it reactive even while the main inventory window is closed.
-	if inventory_ui.has_method("_refresh_persistent_hotbar"):
-		inventory_ui.call("_refresh_persistent_hotbar")
-		_m7_persistent_hotbar_refreshes += 1
-
-
-func get_m7_item_replica_presentation_report() -> Dictionary:
-	return {
-		"schema": FIX7_PRESENTATION_SCHEMA,
-		"projection_refresh_triggers": _m7_item_projection_refresh_triggers,
-		"inventory_screen_refreshes": _m7_inventory_screen_refreshes,
-		"persistent_hotbar_refreshes": _m7_persistent_hotbar_refreshes,
-		"policy": "REFRESH_VISIBLE_INVENTORY_AFTER_APPLIED_ITEM_PROJECTION",
-	}
-
-
-func create_m3_graphical_client_report() -> Dictionary:
-	var report: Dictionary = super.create_m3_graphical_client_report()
-	report["item_replica_presentation"] = get_m7_item_replica_presentation_report()
-	return report
+	if not bool(enhancer_setup.get("success", false)):
+		return enhancer_setup
+	return setup_result
