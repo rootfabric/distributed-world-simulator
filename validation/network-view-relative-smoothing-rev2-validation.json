@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.network_view_relative_smoothing_rev2_validation.v1",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base_main_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
+  "supersedes_candidate_sha": "694fb48b83a08e33ca20c6fbecc12c3480ff1e2a",
+  "observed_manual_result": {
+    "view_relative_orientation": "PASS",
+    "movement_smoothness": "FAIL",
+    "symptoms": [
+      "client micro-stutter during continuous movement",
+      "visible backward reconciliation while moving forward",
+      "Godot physics interpolation warning for Camera3D",
+      "movement durable checkpoints committed repeatedly during active movement"
+    ],
+    "network_health": {
+      "joined": true,
+      "connected_peers": 2,
+      "movement_rejections": 0,
+      "async_rejections": 0
+    }
+  },
+  "root_cause_corrections": [
+    {
+      "class": "RENDER_PHYSICS_CLOCK_MIX",
+      "correction": "network-playground prediction advances only from physics_process and presentation transforms are queued until the next physics tick"
+    },
+    {
+      "class": "DEBUG_PERSISTENCE_MAIN_LOOP_IO",
+      "correction": "START_M7_NETWORK_SERVER.ps1 defaults realtime debug runs to persistence disabled; persistence remains explicit via EnablePersistence, ResetPersistence, or PersistenceRoot"
+    },
+    {
+      "class": "INSUFFICIENT_PREDICTION_DIAGNOSTICS",
+      "correction": "composed graphical client runtime emits PREDICTION_HEALTH with prediction/auth tick lead, history, corrections and error metrics"
+    }
+  ],
+  "changed_behavior_scope": {
+    "shared_movement_kernel": false,
+    "server_authority_model": false,
+    "network_protocol": false,
+    "item_graph": false,
+    "project_godot": false,
+    "new_uid": 0
+  },
+  "required_manual_gate": [
+    "run exact candidate on Windows double Godot",
+    "start M7 debug server without EnablePersistence and without ResetPersistence",
+    "start two clients with the same SessionId",
+    "verify continuous W movement has no periodic freeze/backward snap",
+    "verify W/S/A/D remain relative to view through 360 degree rotations",
+    "verify Camera3D outside-physics warning is absent or materially reduced",
+    "capture PREDICTION_HEALTH and require bounded lead/history without repeated history-miss resets",
+    "then repeat with EnablePersistence separately to quantify remaining synchronous persistence cost"
+  ]
+}
