@@ -5,10 +5,15 @@ extends Node
 # therefore the M7/NX6 item.transfer path. Presentation-only cursor suppression
 # never mutates the canonical Item Graph.
 
-const FIX_SCHEMA: String = "planet_simulator.inventory_network_rev6_enhancer.fix3.v1"
+const FIX_SCHEMA: String = "planet_simulator.inventory_network_rev6_enhancer.fix4.v1"
 const CarryAwareProjection = preload(
 	"res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
 )
+
+const SORT_BUTTON_SIZE := Vector2(112.0, 30.0)
+const SORT_BUTTON_MARGIN := Vector2(8.0, 6.0)
+const INTERACTION_HINT_POSITION := Vector2(-300.0, -170.0)
+const INTERACTION_HINT_SIZE := Vector2(600.0, 72.0)
 
 var gameplay_controller
 var inventory_ui
@@ -28,6 +33,8 @@ var _pickup_stack_operations: int = 0
 var _sort_operations: int = 0
 var _pointer_repairs: int = 0
 var _carry_suppressions: int = 0
+var _sort_layout_updates: int = 0
+var _interaction_hint_layout_updates: int = 0
 
 
 func setup(controller, network_bridge) -> Dictionary:
@@ -65,6 +72,8 @@ func setup(controller, network_bridge) -> Dictionary:
 
 	set_process(true)
 	call_deferred("_refresh_screen")
+	call_deferred("_layout_sort_buttons")
+	call_deferred("_layout_interaction_hint")
 	return {
 		"success": true,
 		"error_code": "",
@@ -72,6 +81,8 @@ func setup(controller, network_bridge) -> Dictionary:
 			"schema": FIX_SCHEMA,
 			"carry_aware_projection": true,
 			"sort_buttons": true,
+			"sort_buttons_overlay": true,
+			"interaction_hint_above_hotbar": true,
 			"pickup_auto_stack": true,
 			"pickup_stack_mode": "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION",
 		},
@@ -106,6 +117,8 @@ func _process(_delta: float) -> void:
 
 	_last_carry_active = carry_active
 	_update_sort_button_visibility(inventory_visible, carry_active)
+	_layout_sort_buttons()
+	_layout_interaction_hint()
 	_process_pickup_queue()
 
 
@@ -116,26 +129,27 @@ func _session_is_active(transfer_session) -> bool:
 
 
 func _setup_sort_buttons() -> void:
-	var player_panel = screen.get("player_panel")
-	var external_panel = screen.get("external_panel")
-	if player_panel != null:
+	# Container children are laid out by their parent Container. In the previous
+	# revision this caused the sort Button itself to be stretched across most of
+	# the inventory panel. Keep the buttons as top-level overlay controls owned by
+	# InventoryScreen and position them relative to the actual panel rectangles.
+	if player_sort_button == null:
 		player_sort_button = _create_sort_button(
 			"PlayerInventorySort",
 			"Сортировать",
 			"Объединить стаки и отсортировать рюкзак по названию"
 		)
-		player_panel.add_child(player_sort_button)
-		_anchor_sort_button(player_sort_button)
+		screen.add_child(player_sort_button)
 		player_sort_button.pressed.connect(_on_player_sort_pressed)
-	if external_panel != null:
+	if external_sort_button == null:
 		external_sort_button = _create_sort_button(
 			"ExternalInventorySort",
 			"Сортировать",
 			"Объединить стаки и отсортировать контейнер по названию"
 		)
-		external_panel.add_child(external_sort_button)
-		_anchor_sort_button(external_sort_button)
+		screen.add_child(external_sort_button)
 		external_sort_button.pressed.connect(_on_external_sort_pressed)
+	_layout_sort_buttons()
 
 
 func _create_sort_button(node_name: String, caption: String, hint: String) -> Button:
@@ -145,18 +159,52 @@ func _create_sort_button(node_name: String, caption: String, hint: String) -> Bu
 	button.tooltip_text = hint
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
-	button.custom_minimum_size = Vector2(112.0, 30.0)
+	button.custom_minimum_size = SORT_BUTTON_SIZE
+	button.size = SORT_BUTTON_SIZE
+	button.top_level = true
 	button.z_as_relative = false
 	button.z_index = 3000
 	return button
 
 
-func _anchor_sort_button(button: Button) -> void:
-	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	button.offset_left = -124.0
-	button.offset_top = 6.0
-	button.offset_right = -8.0
-	button.offset_bottom = 36.0
+func _layout_sort_buttons() -> void:
+	if screen == null or not is_instance_valid(screen):
+		return
+	var player_panel = screen.get("player_panel")
+	var external_panel = screen.get("external_panel")
+	_layout_sort_button_for_panel(player_sort_button, player_panel)
+	_layout_sort_button_for_panel(external_sort_button, external_panel)
+	_sort_layout_updates += 1
+
+
+func _layout_sort_button_for_panel(button: Button, panel) -> void:
+	if button == null or panel == null or not is_instance_valid(panel):
+		return
+	if not panel is Control:
+		return
+	var panel_control := panel as Control
+	var panel_rect: Rect2 = panel_control.get_global_rect()
+	button.size = SORT_BUTTON_SIZE
+	button.global_position = Vector2(
+		panel_rect.end.x - SORT_BUTTON_SIZE.x - SORT_BUTTON_MARGIN.x,
+		panel_rect.position.y + SORT_BUTTON_MARGIN.y
+	)
+
+
+func _layout_interaction_hint() -> void:
+	# PlaygroundRuntime owns the world-interaction hint. It used to occupy the
+	# same vertical band as the persistent hotbar, causing object names/actions to
+	# be rendered directly over item slots. Move it to a dedicated band above it.
+	var runtime = get_parent()
+	if runtime == null:
+		return
+	var hint = runtime.get("interaction_label")
+	if hint == null or not is_instance_valid(hint) or not hint is Control:
+		return
+	var hint_control := hint as Control
+	hint_control.position = INTERACTION_HINT_POSITION
+	hint_control.size = INTERACTION_HINT_SIZE
+	_interaction_hint_layout_updates += 1
 
 
 func _update_sort_button_visibility(inventory_visible: bool, carry_active: bool) -> void:
@@ -572,6 +620,10 @@ func get_report() -> Dictionary:
 		"pointer_repairs": _pointer_repairs,
 		"carry_suppressions": _carry_suppressions,
 		"suppressed_item_id": _suppressed_item_id,
+		"sort_layout_updates": _sort_layout_updates,
+		"interaction_hint_layout_updates": _interaction_hint_layout_updates,
+		"sort_button_size": SORT_BUTTON_SIZE,
+		"interaction_hint_position": INTERACTION_HINT_POSITION,
 		"projection": projection.debug_snapshot() if projection != null else {},
 	}
 
