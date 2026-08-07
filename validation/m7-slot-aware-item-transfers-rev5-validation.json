@@ -10,7 +10,7 @@
     "Partial same-inventory and same-container transfer could not persist the new stack slot authoritatively.",
     "Canonical player inventory exposed compact membership order while the M7 replica exposed 18 real slots.",
     "Container item locations omitted slot_index even when the canonical container slots array accepted a requested target slot.",
-    "NX6 transfer prediction treated broad INVENTORY/CONTAINER location matches as confirmation and could replay a partial transfer over an already-authoritative split."
+    "NX6 transfer prediction treated broad INVENTORY/CONTAINER location matches as confirmation and could replay a partial split over an already-authoritative split."
   ],
   "corrections": [
     "Preserve compact inventory/container membership arrays for durable compatibility and store authoritative slot identity in item.location.slot_index.",
@@ -44,6 +44,18 @@
     "M7 slot-aware item transfer regression suite",
     "existing NX6 predicted item interaction suite"
   ],
+  "local_parse_harness": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "status": "PASS",
+    "scope": "GDScript syntax/inheritance parse against minimal compatible stubs; this is not a full-project regression run.",
+    "checked": [
+      "canonical slot-aware authority service logic",
+      "M7 slot-aware replica adapter",
+      "NX6 slot-aware prediction journal",
+      "playground view-relative runtime wiring",
+      "focused slot-aware transfer test script"
+    ]
+  },
   "automation_status": "NO_GITHUB_ACTION_WORKFLOW_RUNS_FOR_BRANCH_HEAD",
   "local_execution_status": "REQUIRES_WINDOWS_GODOT_GATE",
   "required_manual_acceptance": [
