@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v1",
+  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v2",
   "stage": "M7 realtime backpressure foundation",
   "branch": "feature/m7-realtime-backpressure-foundation-fix1",
   "base_branch": "agent/inventory-carry-stack-sort-rev6",
@@ -79,9 +79,29 @@
     "M7 runtime source prioritizes fixed tick before bounded network drain",
     "M7 runtime executes the async diagnostic writer and verifies report coalescing/write completion"
   ],
+  "windows_gate_history": [
+    {
+      "candidate": "9a62fce2520802469d31eb01ea395c1d0985556a",
+      "result": "PARTIAL PASS",
+      "passed": [
+        "editor import / composition",
+        "M7 item join 18 assertions",
+        "M7 slot-aware transfers 67 assertions",
+        "inventory rev6 43 assertions",
+        "fix6 8 assertions",
+        "fix7 20 assertions",
+        "NX6 957 assertions",
+        "fix8 9 assertions"
+      ],
+      "blocked_at": "NX3 fixed-tick regression: 6188 assertions, 4 wiring-source failures",
+      "diagnosis": "test inspected only m3_dedicated_server_runtime.gd leaf source while accepted runtime composition keeps NX3 fixed-tick implementation in m3_dedicated_server_runtime_base.gd; runtime behavior was inherited but the source-level assertion did not follow extends",
+      "correction": "NX3 server wiring regression now uses the same recursive extends source-chain loader already used for the graphical client"
+    }
+  ],
   "runner": "VALIDATE_M7_REALTIME_FOUNDATION.ps1",
   "required_acceptance": [
     "accepted inventory regression gate remains PASS",
+    "NX3 and NX4 regressions PASS",
     "focused realtime backpressure contract test PASS",
     "existing two-client graphical M7 process regression PASS",
     "manual LOCAL two-client repeated drop/pickup stress has no INPUT_QUEUE_FULL",
@@ -90,5 +110,5 @@
     "realtime_foundation.report_write_failures remains 0",
     "prediction lead does not grow into sustained tens of ticks and no visible rollback occurs"
   ],
-  "decision": "IMPLEMENTED CANDIDATE - WINDOWS FOCUSED + TWO-CLIENT STRESS GATE REQUIRED"
+  "decision": "FIXED CANDIDATE - WINDOWS GATE MUST BE RERUN FROM NEW HEAD"
 }
