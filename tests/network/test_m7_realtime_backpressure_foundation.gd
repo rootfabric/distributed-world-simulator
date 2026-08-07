@@ -117,8 +117,9 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	var foundation: Dictionary = Dictionary(report.get("realtime_foundation", {}))
 	_assert(String(foundation.get("report_policy", "")) == "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1", "async report policy missing")
 	_assert(String(foundation.get("event_loop_policy", "")) == "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1", "fixed-tick priority policy missing")
-	_assert(String(foundation.get("item_replication_policy", "")) == "ITEM_GRAPH_DELTA_NO_REDUNDANT_GAMEPLAY_SNAPSHOT_V1", "item replication policy missing")
+	_assert(String(foundation.get("item_replication_policy", "")) == "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2", "item/gameplay revision sync policy missing")
 	_assert(int(foundation.get("network_event_budget_per_frame", 0)) <= 64, "network event drain is not bounded")
+	_assert(int(foundation.get("item_gameplay_revision_snapshots_published", -1)) == 0, "fresh runtime has invalid item gameplay sync counter")
 
 	var result_dir: String = ProjectSettings.globalize_path("res://artifacts/test-results")
 	DirAccess.make_dir_recursive_absolute(result_dir)
@@ -153,7 +154,8 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	_assert(fixed_tick_pos >= 0 and poll_pos > fixed_tick_pos, "network drain still runs before fixed simulation")
 	_assert(source.contains("Thread.new()"), "READY diagnostic writes are not moved off the authority thread")
 	_assert(source.contains("_report_requests_coalesced"), "report coalescing is not observable")
-	_assert(not source.contains("_broadcast_snapshot(\"ITEM_GRAPH_UPDATED\""), "canonical item command still emits redundant gameplay snapshot")
+	_assert(source.contains("_broadcast_snapshot(\"ITEM_GRAPH_UPDATED\", RealtimeChannelPolicy.RESYNC, \"RELIABLE_ORDERED\")"), "canonical item mutation does not publish its gameplay revision")
+	_assert(source.contains("_broadcast_item_delta(item_delta, peer_id, command_type)"), "canonical item payload no longer uses ITEM delta stream")
 	_assert(InputBuffer.SCHEMA == "planet_simulator.fixed_tick_input_buffer.v1", "internal hardening changed NX3 wire identity")
 	_assert(InputBuffer.INPUT_SELECTION_POLICY == "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1", "internal hardening changed accepted NX3 selection contract")
 
