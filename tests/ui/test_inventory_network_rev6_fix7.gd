@@ -2,7 +2,7 @@ extends SceneTree
 
 const CarryProjectionScript = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd")
 const EnhancerFix7 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix7.gd")
-const RuntimeFix7 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix7.gd")
+const RuntimeFix8 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix8.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
 
 class FakeItem:
@@ -41,7 +41,7 @@ func _run() -> void:
 	_test_projection_override_survives_refresh()
 	_test_fix7_builds_final_sorted_merge_preview()
 	_test_fix7_report_contract()
-	_test_playground_composition_uses_fix7()
+	_test_playground_composition_retains_fix7_via_fix8()
 	if failures.is_empty():
 		print("Inventory network rev6 fix7: PASS (%d assertions)" % assertions)
 		quit(0)
@@ -123,11 +123,11 @@ func _test_fix7_report_contract() -> void:
 	enhancer.free()
 
 
-func _test_playground_composition_uses_fix7() -> void:
+func _test_playground_composition_retains_fix7_via_fix8() -> void:
 	var instance = PlaygroundScene.instantiate()
 	_assert(instance != null, "playground scene instantiates")
 	if instance != null:
-		_assert(instance.get_script() == RuntimeFix7, "playground scene selects fix7 optimistic-sort composition")
+		_assert(instance.get_script() == RuntimeFix8, "playground scene selects fix8, which extends fix7 optimistic-sort composition")
 		instance.free()
 
 
