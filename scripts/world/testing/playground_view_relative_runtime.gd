@@ -1,9 +1,44 @@
 extends "res://scripts/world/testing/playground_runtime.gd"
 
 # Network-playground specialization that keeps local camera input independent
-# from the authoritative avatar-facing yaw. The shared movement kernel consumes
-# an absolute world-space yaw, so derive it from the active camera's real view
-# basis instead of reusing an accumulated local camera_yaw value.
+# from the authoritative avatar-facing yaw and keeps client prediction on the
+# physics clock. The shared movement kernel consumes an absolute world-space
+# yaw, so derive it from the active camera's real view basis instead of reusing
+# an accumulated local camera_yaw value.
+
+var _pending_prediction_presentation: Dictionary = {}
+var _pending_prediction_presentation_dirty: bool = false
+var _physics_prediction_steps: int = 0
+var _render_prediction_steps_suppressed: int = 0
+
+
+func _process(delta: float) -> void:
+	if runtime_role != "game-client":
+		return
+	if _m3_attached:
+		if _network_playground_enabled:
+			# Prediction owns a 60 Hz fixed physics clock. Advancing it from render
+			# frames makes the CharacterBody and interpolated Camera3D fight the
+			# physics interpolation path and produces visible micro-stutter.
+			_render_prediction_steps_suppressed += 1
+			return
+		_apply_m3_network_input(delta)
+	elif _m2_attached:
+		_apply_m2_flat_input(delta)
+		_sync_m2_player_state(delta)
+
+
+func _physics_process(delta: float) -> void:
+	if (
+		runtime_role != "game-client"
+		or not _m3_attached
+		or not _network_playground_enabled
+	):
+		_flush_pending_prediction_presentation()
+		return
+	_sync_m7_predicted_player_state(delta)
+	_flush_pending_prediction_presentation()
+	_physics_prediction_steps += 1
 
 
 func _create_m7_movement_intent(
@@ -48,6 +83,20 @@ func _network_view_yaw() -> float:
 func _apply_m7_prediction_presentation(state: Dictionary) -> void:
 	if state.is_empty() or player == null:
 		return
+	# Reconciliation arrives from the transport/render process, while local
+	# prediction is advanced from the physics process. Never mutate the
+	# CharacterBody transform directly from the transport callback: queue the
+	# newest presentation and apply it once on the next physics tick.
+	_pending_prediction_presentation = state.duplicate(true)
+	_pending_prediction_presentation_dirty = true
+
+
+func _flush_pending_prediction_presentation() -> void:
+	if not _pending_prediction_presentation_dirty or player == null:
+		return
+	var state: Dictionary = _pending_prediction_presentation
+	_pending_prediction_presentation = {}
+	_pending_prediction_presentation_dirty = false
 	var position: Dictionary = Dictionary(state.get("position", {}))
 	var velocity: Dictionary = Dictionary(state.get("velocity", {}))
 	player.set_world_position(Vector3(
@@ -65,3 +114,14 @@ func _apply_m7_prediction_presentation(state: Dictionary) -> void:
 	# rotate CameraAnchor as well and apply yaw twice for the local player.
 	if player.visual_root != null:
 		player.visual_root.rotation.y = yaw
+
+
+func create_m3_graphical_client_report() -> Dictionary:
+	var report: Dictionary = super.create_m3_graphical_client_report()
+	report["view_relative_prediction"] = {
+		"clock": "PHYSICS_60HZ",
+		"physics_prediction_steps": _physics_prediction_steps,
+		"render_prediction_steps_suppressed": _render_prediction_steps_suppressed,
+		"presentation_pending": _pending_prediction_presentation_dirty,
+	}
+	return report
