@@ -1,0 +1,78 @@
+{
+  "schema": "distributed_world_simulator.int0_source_contract_inheritance_audit_rev2_candidate.v1",
+  "recorded_at": "2026-08-07T15:32:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-nx0-composed-source-contracts",
+    "sha": "d66bf147b7fbf1ef5a09ba941d683f8036e06438",
+    "pull_request": 16
+  },
+  "superseded_candidate": {
+    "sha": "f6d328e6f17c9208778944980d86690437787653",
+    "result": "FAIL",
+    "failed_runner": "RUN_NETWORK_CONTRACT_TESTS.ps1",
+    "failed_test": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+    "assertions": 282,
+    "failures": 2,
+    "messages": [
+      "M3 server and client wrap production ENet in NX1 simulator",
+      "Runtime profile switching is exposed on both endpoints"
+    ]
+  },
+  "confirmed_on_superseded_candidate": {
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "nx4_prediction": "706/706 PASS",
+    "m6_recovery_inside_network_runner": "128/128 PASS",
+    "nx0_preparation": "115/115 PASS",
+    "nx0_observability": "150/150 PASS",
+    "repository_cleanliness": "PASS"
+  },
+  "confirmed_analysis": {
+    "classification": "STALE_SOURCE_CONTRACT_INHERITANCE_INSPECTION",
+    "facts": [
+      "test_nx1_deterministic_network_condition_simulator.gd read only scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd",
+      "the thin client adapter inherits m3_graphical_client_runtime_nx6.gd",
+      "the inherited implementation contains ConditionSimulatorPort.new()",
+      "the inherited implementation contains set_network_condition_profile",
+      "server-side markers remain in the direct dedicated-server runtime source",
+      "test_nx1_network_condition_processes.gd performs real process acceptance and does not inspect client runtime source"
+    ],
+    "production_runtime_regression_found": false
+  },
+  "correction": {
+    "path": "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+    "policy": "inspect the composed client runtime source through literal GDScript extends chains with cycle protection",
+    "assertions_removed": 0,
+    "assertion_count_changed": false,
+    "expected_assertions": 282,
+    "production_files_changed": 0,
+    "config_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159
+  },
+  "inheritance_false_negative_audit": {
+    "corrected_tests": [
+      "tests/network/test_nx0_network_experience_preparation.gd",
+      "tests/network/test_nx0_observability_baseline.gd",
+      "tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "tests/network/test_nx2_realtime_traffic_separation.gd",
+      "tests/network/test_nx4_client_prediction_reconciliation.gd"
+    ],
+    "nx1_process_test_source_inspection": false,
+    "nx3_runtime_source_text_blocker_found": false,
+    "known_direct_client_adapter_false_negative_class_closed": true
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159 and clean editor import",
+    "NX1 deterministic network condition simulator 282/282 PASS",
+    "full RUN_NETWORK_CONTRACT_TESTS.ps1 PASS",
+    "MW9 durable handoff recovery 3/3 PASS",
+    "MW9 race stress 1000/1000 PASS",
+    "RUN_INT0_THREE_DOMAIN_INTEGRATION_TESTS.ps1 -Profile full PASS 16/16",
+    "repository and Godot-process cleanliness PASS"
+  ],
+  "decision": "FIX6_REV2_GATE_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
