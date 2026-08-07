@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.ch4_quaternius_animated_character_validation.v1",
+  "branch": "feature/ch4-quaternius-animated-character",
+  "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
+  "decision": "IMPLEMENTED_CANDIDATE_WITH_OFFICIAL_ASSET_GATE",
+  "scope": {
+    "production_files_changed": 0,
+    "existing_files_changed": 0,
+    "integration_mode": "isolated_walkable_character_lab",
+    "root_motion_authority": false
+  },
+  "local_engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "source_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz"
+  },
+  "local_validation": {
+    "editor_import": "PASS",
+    "fallback_presenter": "13/13 PASS",
+    "walkable_lab": "7/7 PASS",
+    "synthetic_same_rig_external_mode": "18/18 PASS",
+    "synthetic_matched_bones": 12,
+    "presentation_owns_character_body": false,
+    "presentation_owns_collision": false,
+    "presentation_reads_input": false,
+    "presentation_calls_move_and_slide": false,
+    "presentation_has_network_dependency": false,
+    "root_motion_applied": false
+  },
+  "official_asset_gate": {
+    "status": "PENDING_USER_SIDE_BINARY_VALIDATION",
+    "reason": "Official itch.io Standard ZIP download requires an interactive download form that is not accessible from the validation container.",
+    "required_files": [
+      "Universal Base Characters[Standard].zip",
+      "Universal Animation Library[Standard].zip"
+    ],
+    "runner_behavior": "When both packages are installed, RUN_CH4_QUATERNIUS_CHARACTER_TESTS.ps1 automatically requires QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED mode, a target skeleton, and resolvable Idle/Walk/Run animations."
+  }
+}
