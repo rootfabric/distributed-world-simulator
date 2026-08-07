@@ -177,7 +177,6 @@ func _test_fixed_movement_ignores_client_delta() -> void:
 	var second_position: Dictionary = second.get("details", {}).get("player", {}).get("position", {})
 	_assert(is_equal_approx(float(first_position.get("z", 0.0)), float(second_position.get("z", 1.0))), "Client delta changed fixed-tick displacement")
 	_assert(_error(movement.apply_fixed_tick(record, 1, small_delta_intent, 1.0 / 30.0)) == "INVALID_FIXED_TICK_DELTA", "Non-60Hz authoritative delta was accepted")
-
 func _test_fixed_service_distance_is_deterministic() -> void:
 	var distances: Array[float] = []
 	for fps in [30, 60, 144]:
@@ -287,7 +286,9 @@ func _test_protocol_and_runtime_wiring() -> void:
 	_assert(server_source.contains("NX3_FIXED_TICK_DELTA_SECONDS"), "M3 server has no canonical fixed delta")
 	_assert(not server_source.contains("server_delta_budget"), "M3 server still derives movement from packet arrival")
 	_assert(server_source.contains("INPUT_QUEUE"), "M3 server does not expose input queue rejection stage")
-	var client_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+	var client_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
+	)
 	_assert(client_source.contains("InputSequence.next"), "Client input sequence does not wrap safely")
 	_assert(client_source.contains("_sequence_acknowledges"), "Client acknowledgement path is not wrap-aware")
 	_assert(not client_source.contains("acknowledged_sequence >= latest_sequence"), "Client still compares acknowledgement sequences numerically")
@@ -300,6 +301,22 @@ func _test_protocol_and_runtime_wiring() -> void:
 		_assert(String(config.get("input", {}).get("selection_policy", "")) == InputBuffer.INPUT_SELECTION_POLICY, "NX3 config input policy mismatch")
 		_assert(String(config.get("input", {}).get("sequence_order_policy", "")) == InputBatch.SEQUENCE_ORDER_POLICY, "NX3 config sequence policy mismatch")
 		_assert(not bool(config.get("simulation", {}).get("packet_arrival_delta", true)), "NX3 config still allows packet-arrival delta")
+
+func _load_script_source_chain(path: String, visited: Dictionary) -> String:
+	if path.is_empty() or visited.has(path):
+		return ""
+	visited[path] = true
+	var source: String = FileAccess.get_file_as_string(path)
+	if source.is_empty():
+		return source
+	var line_end: int = source.find("\n")
+	var first_line: String = source.substr(
+		0, line_end if line_end >= 0 else source.length()
+	).strip_edges()
+	if first_line.begins_with("extends \"") and first_line.ends_with("\""):
+		var base_path: String = first_line.substr(9, first_line.length() - 10)
+		return source + "\n" + _load_script_source_chain(base_path, visited)
+	return source
 
 func _service():
 	var service = Service.new()
