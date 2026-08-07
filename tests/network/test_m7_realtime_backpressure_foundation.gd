@@ -80,8 +80,13 @@ func _test_full_queue_can_absorb_equivalent_refresh() -> void:
 
 
 func _test_runtime_wiring_is_realtime_safe() -> void:
-	_assert(ServerRuntime.can_instantiate(), "M7 dedicated server runtime no longer instantiates")
-	var runtime = ServerRuntime.new()
+	# `preload()` exposes the script as a class-like constant in GDScript 4.7;
+	# calling Script.can_instantiate() through that constant is parsed as an
+	# invalid static call. Cast the resource to Script first so this assertion
+	# exercises the actual script resource API instead of the class syntax.
+	var runtime_script: Script = ServerRuntime
+	_assert(runtime_script.can_instantiate(), "M7 dedicated server runtime no longer instantiates")
+	var runtime = runtime_script.new()
 	var report: Dictionary = runtime.get_report()
 	var foundation: Dictionary = Dictionary(report.get("realtime_foundation", {}))
 	_assert(String(foundation.get("report_policy", "")) == "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1", "async report policy missing")
