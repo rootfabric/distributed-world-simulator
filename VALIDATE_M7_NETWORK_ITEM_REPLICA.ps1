@@ -120,6 +120,11 @@ try {
         "--script", "res://tests/network/test_m7_slot_aware_item_transfers.gd"
     )
 
+    Invoke-GodotCheck -Name "M7 inventory carry / stack / sort rev6" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6.gd"
+    )
+
     Invoke-GodotCheck -Name "NX6 predicted item interactions" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--script", "res://tests/network/test_nx6_predicted_item_interactions.gd"
