@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.int0_source_contract_inheritance_audit_rev1_candidate.v1",
+  "recorded_at": "2026-08-07T15:03:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "stacked_base": {
+    "branch": "fix/int0-nx0-composed-source-contracts",
+    "sha": "d66bf147b7fbf1ef5a09ba941d683f8036e06438",
+    "pull_request": 16
+  },
+  "superseded_candidate": {
+    "sha": "db8397d7304afffc06e29b56b885b54734a5a112",
+    "result": "FAIL",
+    "stop_point": "tests/network/test_nx4_client_prediction_reconciliation.gd",
+    "assertions": 706,
+    "failures": 1,
+    "failure": "network roadmap current stage is NX4"
+  },
+  "confirmed_on_superseded_candidate": {
+    "uid_manifests": "159/159 PASS",
+    "editor_import": "PASS",
+    "project_godot_unchanged": true,
+    "nx0_observability_baseline": "150/150 PASS",
+    "nx2_realtime_traffic_separation": "130/130 PASS",
+    "repository_cleanliness": "PASS"
+  },
+  "confirmed_analysis": {
+    "classification": "STALE_HISTORICAL_ROADMAP_STAGE_ASSERTION",
+    "facts": [
+      "network-experience-roadmap.v1.json current_stage is NX6",
+      "roadmap current_checkpoint is v16.16.0-network-nx6-predicted-item-interactions",
+      "roadmap base_checkpoint is v16.15.0-network-nx5-remote-snapshot-interpolation",
+      "the roadmap phases retain NX4 as accepted with checkpoint v16.14.0-network-nx4-client-prediction-reconciliation",
+      "the NX4 runtime/config checkpoint assertions remain strict and unchanged",
+      "the inheritance-aware client source inspection passes; the only reported failure was the historical current_stage == NX4 assertion"
+    ],
+    "production_runtime_regression_found": false
+  },
+  "correction": {
+    "path": "tests/network/test_nx4_client_prediction_reconciliation.gd",
+    "old_contract": "roadmap.current_stage must equal NX4",
+    "new_contract": "roadmap.current_stage must be NX4 or a later roadmap stage through NX9",
+    "assertion_count_changed": false,
+    "expected_assertions": 706,
+    "production_files_changed": 0,
+    "config_files_changed": 0,
+    "uid_count_changed": false,
+    "aggregate_uid_count": 159
+  },
+  "required_gate": [
+    "fresh detached exact candidate checkout",
+    "UID manifests 159/159",
+    "clean editor import with project.godot unchanged",
+    "NX0 observability baseline 150/150 PASS",
+    "NX2 realtime traffic separation 130/130 PASS",
+    "NX4 client prediction and reconciliation 706/706 PASS",
+    "M6 focused and R3 PASS",
+    "MW9 recovery 3/3 PASS",
+    "MW9 race stress 1000/1000 PASS",
+    "RUN_NETWORK_CONTRACT_TESTS.ps1 PASS",
+    "INT0 full 16/16 PASS",
+    "repository and process cleanliness PASS"
+  ],
+  "decision": "FIX6_REV1_CANDIDATE_ONLY_NOT_ACCEPTED"
+}
