@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v2",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v3",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -11,16 +11,32 @@
     "sort_player_inventory": "button merges compatible stacks then orders by display name and compacts authoritative slots using rev5 slot-aware item.transfer",
     "sort_external_container": "same behavior for the currently open external slot container",
     "prediction_window": 64,
-    "enhancer_layout": "standalone fix2 implementation with compatibility alias at the original rev6 path"
+    "enhancer_layout": "standalone fix3 implementation with compatibility alias at the original rev6 path",
+    "godot_4_7_variant_typing": "dynamic Object/Variant-derived booleans, indices and names are explicitly typed before use"
   },
   "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
-  "regression_fix": {
-    "observed_on_commit": "c743feb5809c39eda2a92492e144d3dc29b4e368",
-    "observed_failure": "Godot could not resolve inventory_network_rev6_enhancer.gd while compiling the fix1 child script",
-    "false_green": true,
-    "false_green_cause": "Godot emitted SCRIPT ERROR / Parse Error / Compile Error but exited the test process with code 0; the test then attempted new() on an invalid GDScript and still had an empty failures array",
-    "fix": "remove the fragile implementation inheritance chain, make fix1 a standalone enhancer, turn the original path into a compatibility alias, load scripts dynamically in the focused test and assert Script.can_instantiate(), and make the PowerShell runner reject fatal Godot script diagnostics even when exit code is zero"
+  "regression_history": [
+    {
+      "observed_on_commit": "c743feb5809c39eda2a92492e144d3dc29b4e368",
+      "failure": "fragile enhancer inheritance chain did not compile; test falsely reported PASS because Godot returned exit code 0 after SCRIPT ERROR",
+      "correction": "standalone enhancer, runtime Script.can_instantiate checks, fatal diagnostic scanning"
+    },
+    {
+      "observed_on_commit": "6b352dd87137e5f69360dce174c43aa7f618799c",
+      "failure": "Parse Error: Cannot infer the type of carry_active because transfer_session is dynamically typed",
+      "correction": "replace dynamic inferred carry state with explicitly typed bool via _session_is_active and explicitly type other dynamic sort/pickup intermediates"
+    }
+  ],
+  "runner_hardening": {
+    "fatal_patterns": [
+      "SCRIPT ERROR:",
+      "Parse Error:",
+      "Compile Error:",
+      "Failed to load script"
+    ],
+    "windows_powershell_native_stderr": "temporarily uses Continue while invoking Godot so stderr can be captured and classified before throwing",
+    "dedicated_enhancer_check_only": true
   },
   "static_review": {
     "branch_isolation": "PASS",
@@ -38,9 +54,10 @@
     "Editor import / composition parse",
     "M7 item join and snapshot semantics",
     "M7 slot-aware item transfers",
+    "M7 inventory rev6 enhancer parse",
     "M7 inventory carry / stack / sort rev6",
     "NX6 predicted item interactions",
     "manual graphical M7 inventory acceptance"
   ],
-  "decision": "FIX2 CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
+  "decision": "FIX3 CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
 }
