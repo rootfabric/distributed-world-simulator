@@ -169,6 +169,11 @@ try {
         "--script", "res://tests/ui/test_inventory_network_rev6_fix6.gd"
     )
 
+    Invoke-GodotCheck -Name "M7 inventory rev6 fix7 reactive presentation" -Arguments @(
+        "--headless", "--path", $ProjectRoot,
+        "--script", "res://tests/ui/test_inventory_network_rev6_fix7.gd"
+    )
+
     Invoke-GodotCheck -Name "NX6 predicted item interactions" -Arguments @(
         "--headless", "--path", $ProjectRoot,
         "--script", "res://tests/network/test_nx6_predicted_item_interactions.gd"
