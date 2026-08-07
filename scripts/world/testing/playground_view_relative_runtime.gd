@@ -1,5 +1,7 @@
 extends "res://scripts/world/testing/playground_runtime.gd"
 
+const ProjectionHashUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+
 # Network-playground specialization that keeps local camera input independent
 # from the authoritative avatar-facing yaw and keeps client prediction on the
 # physics clock. The shared movement kernel consumes an absolute world-space
@@ -10,6 +12,8 @@ var _pending_prediction_presentation: Dictionary = {}
 var _pending_prediction_presentation_dirty: bool = false
 var _physics_prediction_steps: int = 0
 var _render_prediction_steps_suppressed: int = 0
+var _m7_last_item_projection_hash: String = ""
+var _m7_same_revision_projection_updates: int = 0
 
 
 func _process(delta: float) -> void:
@@ -116,6 +120,41 @@ func _flush_pending_prediction_presentation() -> void:
 		player.visual_root.rotation.y = yaw
 
 
+func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	_m4_item_graph_snapshot = snapshot.duplicate(true)
+	_m4_item_snapshot_updates += 1
+	if not _network_playground_enabled or item_gameplay == null or _m7_item_adapter == null:
+		return
+	# NX6 prediction can produce two different presentation snapshots at the
+	# same canonical revision: optimistic state and rollback/rebase. Revision-
+	# only dedupe loses the rollback and leaves the UI ahead of authority.
+	var projection_hash := ProjectionHashUtils.payload_hash(snapshot)
+	if not projection_hash.is_empty() and projection_hash == _m7_last_item_projection_hash:
+		return
+	var revision := int(snapshot.get("revision", -1))
+	var previous_revision := _m7_last_item_revision
+	var converted: Dictionary = _m7_item_adapter.convert(snapshot)
+	if not bool(converted.get("success", false)):
+		_m7_last_sync_error = String(converted.get("error_code", "M7_ITEM_REPLICA_CONVERSION_FAILED"))
+		return
+	var details: Dictionary = Dictionary(converted.get("details", {}))
+	var apply_result: Dictionary = item_gameplay.apply_network_graph_snapshot(
+		Dictionary(details.get("graph_snapshot", {})),
+		revision,
+		String(snapshot.get("checksum", ""))
+	)
+	if bool(apply_result.get("success", false)):
+		if revision == previous_revision and not _m7_last_item_projection_hash.is_empty():
+			_m7_same_revision_projection_updates += 1
+		_m7_last_item_revision = revision
+		_m7_last_item_projection_hash = projection_hash
+		_m7_last_sync_error = ""
+	else:
+		_m7_last_sync_error = String(apply_result.get("error_code", "M7_ITEM_REPLICA_APPLY_FAILED"))
+
+
 func create_m3_graphical_client_report() -> Dictionary:
 	var report: Dictionary = super.create_m3_graphical_client_report()
 	report["view_relative_prediction"] = {
@@ -123,5 +162,9 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"physics_prediction_steps": _physics_prediction_steps,
 		"render_prediction_steps_suppressed": _render_prediction_steps_suppressed,
 		"presentation_pending": _pending_prediction_presentation_dirty,
+	}
+	report["item_projection"] = {
+		"last_projection_hash": _m7_last_item_projection_hash,
+		"same_revision_projection_updates": _m7_same_revision_projection_updates,
 	}
 	return report
