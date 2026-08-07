@@ -2,12 +2,13 @@ extends RefCounted
 
 const Sequence = preload("res://scripts/network/simulation/input_sequence.gd")
 
-const SCHEMA: String = "planet_simulator.fixed_tick_input_buffer.v1"
+const SCHEMA: String = "planet_simulator.fixed_tick_input_buffer.v2"
 const MAX_PENDING_INPUTS: int = 64
 const MAX_SEQUENCE_AHEAD: int = 2048
 const MAX_QUEUE_AGE_TICKS: int = 120
 const MAX_INPUT_HOLD_TICKS: int = 15
-const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
+const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_LATEST_REFRESH_COALESCING_V2"
+const INPUT_COALESCING_POLICY: String = "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1"
 const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
 const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
 
@@ -25,6 +26,9 @@ var _window_rejected: int = 0
 var _queue_full_rejected: int = 0
 var _hold_expirations: int = 0
 var _jump_edges: int = 0
+var _coalesced_refreshes: int = 0
+var _queue_pressure_recoveries: int = 0
+var _peak_pending: int = 0
 
 func configure(last_processed_sequence: int = 0) -> Dictionary:
 	if last_processed_sequence != 0 and not Sequence.is_valid(last_processed_sequence):
@@ -43,6 +47,9 @@ func configure(last_processed_sequence: int = 0) -> Dictionary:
 	_queue_full_rejected = 0
 	_hold_expirations = 0
 	_jump_edges = 0
+	_coalesced_refreshes = 0
+	_queue_pressure_recoveries = 0
+	_peak_pending = 0
 	return _success()
 
 func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
@@ -62,19 +69,34 @@ func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
 		if int(queued.get("input_sequence", 0)) == sequence:
 			_redundant += 1
 			return _success({"accepted": false, "redundant": true})
-	if _pending.size() >= MAX_PENDING_INPUTS:
-		_queue_full_rejected += 1
-		return _reject("INPUT_QUEUE_FULL")
 	var intent_value = input.get("intent", {})
 	if not intent_value is Dictionary:
 		return _reject("MOVEMENT_INTENT_REQUIRED")
 	var queued_input: Dictionary = input.duplicate(true)
 	queued_input["received_server_tick"] = received_server_tick
+	var queue_was_full: bool = _pending.size() >= MAX_PENDING_INPUTS
+	if _try_coalesce_latest_refresh(queued_input):
+		if Sequence.is_newer(sequence, _last_received_sequence):
+			_last_received_sequence = sequence
+		_accepted += 1
+		_coalesced_refreshes += 1
+		if queue_was_full:
+			_queue_pressure_recoveries += 1
+		return _success({
+			"accepted": true,
+			"redundant": false,
+			"coalesced": true,
+			"pending": _pending.size(),
+		})
+	if _pending.size() >= MAX_PENDING_INPUTS:
+		_queue_full_rejected += 1
+		return _reject("INPUT_QUEUE_FULL")
 	_insert_in_sequence_order(queued_input)
+	_peak_pending = maxi(_peak_pending, _pending.size())
 	if Sequence.is_newer(sequence, _last_received_sequence):
 		_last_received_sequence = sequence
 	_accepted += 1
-	return _success({"accepted": true, "redundant": false, "pending": _pending.size()})
+	return _success({"accepted": true, "redundant": false, "coalesced": false, "pending": _pending.size()})
 
 func consume_for_tick(server_tick: int) -> Dictionary:
 	if server_tick < 1:
@@ -125,11 +147,13 @@ func get_report(server_tick: int = 0) -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"selection_policy": INPUT_SELECTION_POLICY,
+		"coalescing_policy": INPUT_COALESCING_POLICY,
 		"jump_policy": JUMP_POLICY,
 		"hold_policy": HOLD_POLICY,
 		"last_processed_sequence": _last_processed_sequence,
 		"last_received_sequence": _last_received_sequence,
 		"pending": _pending.size(),
+		"peak_pending": _peak_pending,
 		"oldest_queue_age_ticks": _oldest_queue_age(server_tick),
 		"hold_until_tick": _hold_until_tick,
 		"accepted": _accepted,
@@ -138,9 +162,39 @@ func get_report(server_tick: int = 0) -> Dictionary:
 		"stale_dropped": _stale_dropped,
 		"window_rejected": _window_rejected,
 		"queue_full_rejected": _queue_full_rejected,
+		"coalesced_refreshes": _coalesced_refreshes,
+		"queue_pressure_recoveries": _queue_pressure_recoveries,
 		"hold_expirations": _hold_expirations,
 		"jump_edges": _jump_edges,
 	}
+
+func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
+	if _pending.is_empty():
+		return false
+	var tail: Dictionary = _pending.back()
+	var sequence: int = int(input.get("input_sequence", 0))
+	var tail_sequence: int = int(tail.get("input_sequence", 0))
+	if not Sequence.is_newer(sequence, tail_sequence):
+		return false
+	var incoming_intent_value = input.get("intent", {})
+	var tail_intent_value = tail.get("intent", {})
+	if not incoming_intent_value is Dictionary or not tail_intent_value is Dictionary:
+		return false
+	var incoming_intent: Dictionary = incoming_intent_value
+	var tail_intent: Dictionary = tail_intent_value
+	if bool(incoming_intent.get("jump_pressed", false)) or bool(tail_intent.get("jump_pressed", false)):
+		return false
+	if not _same_continuous_motion_state(incoming_intent, tail_intent):
+		return false
+	_pending[_pending.size() - 1] = input.duplicate(true)
+	return true
+
+func _same_continuous_motion_state(left: Dictionary, right: Dictionary) -> bool:
+	return (
+		is_equal_approx(float(left.get("move_x", 0.0)), float(right.get("move_x", 0.0)))
+		and is_equal_approx(float(left.get("move_z", 0.0)), float(right.get("move_z", 0.0)))
+		and bool(left.get("sprint", false)) == bool(right.get("sprint", false))
+	)
 
 func _insert_in_sequence_order(input: Dictionary) -> void:
 	var sequence: int = int(input.get("input_sequence", 0))
