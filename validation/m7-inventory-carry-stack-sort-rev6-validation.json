@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v8",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v9",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -11,12 +11,13 @@
     "sort_authority": "fix5 authoritative-serial merge + alphabetical compaction remains the canonical mutation path",
     "sort_activation_fix6": "ACTION_MODE_BUTTON_PRESS plus InventoryScreen geometry fallback and 120 ms debounce",
     "sort_presentation_fix7": "on a valid sort click, build the final merged/alphabetical slot model before the first transfer and install it as a presentation-only container override immediately",
+    "sort_activation_fix8": "root Node _input sees LMB before GUI dispatch, hit-tests visible sort button rectangles and routes the press through the existing debounced fix6/fix7 dispatch path",
     "sort_preview_stability": "normal InventoryScreen refreshes continue to render the optimistic final layout while the authoritative transfer sequence is pending",
     "sort_preview_reconciliation": "after authority success the override remains until the physical replica slot+quantity signature matches, then it is removed without flicker",
     "sort_preview_failure": "authority failure clears the preview immediately; a 5000 ms bounded reconciliation timeout prevents stale presentation from being held forever",
     "projection_schema": "planet_simulator.inventory_slot_projection.carry_aware.v3",
-    "enhancer_schema": "planet_simulator.inventory_network_rev6_enhancer.fix7.v1",
-    "playground_composition": "playground.tscn selects playground_view_relative_runtime_fix7.gd, which replaces only the inventory presentation enhancer after the existing fix6/M7/NX6 setup",
+    "enhancer_schema": "planet_simulator.inventory_network_rev6_enhancer.fix8.v1",
+    "playground_composition": "playground.tscn selects playground_view_relative_runtime_fix8.gd; fix8 replaces only the inventory enhancer after the existing fix7/fix6/M7/NX6 setup",
     "prediction_window": 64
   },
   "regression_history": [
@@ -36,37 +37,42 @@
     {
       "observed_on_commit": "f2f371a0c30de3651b2edece30299550f5d3b606",
       "automated_gate": "USER-REPORTED FAIL at M7 inventory rev6 fix7 reactive presentation",
-      "failure": "Godot 4.7.1 rejected test constant `Projection` because it collides with a builtin type name; subsequent Projection.new() calls therefore failed during parse",
-      "scope": "test harness only; the preceding editor import, M7 join, slot-aware transfers, fix7 enhancer parse, rev6 regression and fix6 activation all passed",
-      "correction": "rename the preload constant to CarryProjectionScript and keep the same fix7 behavioral assertions"
+      "failure": "Godot 4.7.1 rejected test constant Projection because it collides with a builtin type name",
+      "scope": "test harness only",
+      "correction": "rename the preload constant to CarryProjectionScript"
+    },
+    {
+      "observed_on_commit": "616e583bbe70c31858905a9dad5ae5f3471ca755",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfers 67 assertions, fix7 enhancer parse, rev6 43 assertions, fix6 8 assertions, fix7 16 assertions, NX6 957 assertions",
+      "graphical_result": "USER-REPORTED FAIL: pressing the visible sort button does not sort the container",
+      "runtime_evidence": "client log contains no SORT_REQUESTED, SORT_STARTED, SORT_PLAN or SORT_PRESENTATION_APPLIED events during the graphical attempt; server rejections remain zero",
+      "diagnosis": "the failure is before authority and before optimistic presentation: the visible button press is not reaching either BaseButton.pressed or the InventoryScreen.gui_input geometry fallback in the real M7 composition",
+      "correction": "fix8 adds a root _input mouse-down hit-test fallback that runs before GUI dispatch and feeds the same debounced sort request path"
     }
   ],
   "focused_tests": [
     "res://tests/ui/test_inventory_network_rev6.gd",
     "res://tests/ui/test_inventory_network_rev6_fix6.gd",
-    "res://tests/ui/test_inventory_network_rev6_fix7.gd"
+    "res://tests/ui/test_inventory_network_rev6_fix7.gd",
+    "res://tests/ui/test_inventory_network_rev6_fix8.gd"
   ],
-  "focused_fix7_assertions": [
-    "container presentation override survives repeated projection refreshes",
-    "clearing the override restores physical replica order",
-    "optimistic sort preview merges compatible stacks respecting max_stack",
-    "optimistic sort preview sorts survivors alphabetically and compacts them into first slots",
-    "fix7 reports OPTIMISTIC_FINAL_LAYOUT_UNTIL_REPLICA_MATCH",
-    "playground scene selects fix7 composition"
+  "focused_fix8_assertions": [
+    "global input geometry recognizes the player sort button",
+    "global input geometry recognizes the external sort button",
+    "unrelated inventory clicks do not activate sorting",
+    "hidden sort controls cannot activate the fallback",
+    "fix8 reports BUTTON_PRESS_SCREEN_FALLBACK_GLOBAL_INPUT",
+    "playground scene selects fix8 composition"
   ],
-  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
+  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 plus direct fix8 test until the runner is folded into the next accepted checkpoint",
   "required_acceptance": [
     "Editor import / composition parse",
-    "M7 item join and snapshot semantics",
-    "M7 slot-aware item transfers",
-    "M7 inventory rev6 enhancer parse",
-    "M7 inventory carry / stack / sort rev6",
-    "M7 inventory rev6 fix6 activation",
-    "M7 inventory rev6 fix7 reactive presentation",
-    "NX6 predicted item interactions",
-    "manual sort: final merged/alphabetical layout must appear on the click without close/reopen or another item action",
-    "manual sort: presentation must remain stable while authority commits and must not flicker back to the old layout",
-    "manual sort: on success preview must reconcile to replica; on rejection it must roll back"
+    "existing VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 full focused gate",
+    "direct res://tests/ui/test_inventory_network_rev6_fix8.gd",
+    "manual player inventory sort emits SORT_GLOBAL_INPUT_HIT then SORT_REQUESTED and starts sorting",
+    "manual external container sort emits SORT_GLOBAL_INPUT_HIT then SORT_REQUESTED and starts sorting",
+    "manual sort final merged/alphabetical layout appears on the click without close/reopen or another item action",
+    "successful sort reconciles without flicker; authority rejection rolls the preview back"
   ],
-  "decision": "FIX7 TEST-HARNESS FIX1 CANDIDATE - WINDOWS GATE + GRAPHICAL IMMEDIATE-SORT PRESENTATION CHECK REQUIRED"
+  "decision": "FIX8 CANDIDATE - WINDOWS GATE + GRAPHICAL SORT ACTIVATION CHECK REQUIRED"
 }
