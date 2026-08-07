@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v3",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v4",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
@@ -11,8 +11,10 @@
     "sort_player_inventory": "button merges compatible stacks then orders by display name and compacts authoritative slots using rev5 slot-aware item.transfer",
     "sort_external_container": "same behavior for the currently open external slot container",
     "prediction_window": 64,
-    "enhancer_layout": "standalone fix3 implementation with compatibility alias at the original rev6 path",
-    "godot_4_7_variant_typing": "dynamic Object/Variant-derived booleans, indices and names are explicitly typed before use"
+    "enhancer_layout": "standalone fix4 implementation with compatibility alias at the original rev6 path",
+    "godot_4_7_variant_typing": "dynamic Object/Variant-derived booleans, indices and names are explicitly typed before use",
+    "sort_button_layout": "sort buttons are top-level 112x30 overlay controls positioned against the top-right of their inventory/container panels instead of Container-managed children",
+    "interaction_hint_layout": "world interaction hint is moved from center-bottom y=-105 to y=-170 so object name/action text sits in a dedicated band above the persistent hotbar"
   },
   "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
@@ -26,6 +28,15 @@
       "observed_on_commit": "6b352dd87137e5f69360dce174c43aa7f618799c",
       "failure": "Parse Error: Cannot infer the type of carry_active because transfer_session is dynamically typed",
       "correction": "replace dynamic inferred carry state with explicitly typed bool via _session_is_active and explicitly type other dynamic sort/pickup intermediates"
+    },
+    {
+      "observed_on_commit": "c2077d20c5abd25b2104e92c10e6d7b479ca99cb",
+      "automated_gate": "USER-REPORTED PASS",
+      "graphical_findings": [
+        "sort button stretched across the inventory menu because it was added as a child of a Container-managed panel",
+        "world interaction hint overlapped the persistent hotbar slots"
+      ],
+      "correction": "fix4 moves sort buttons to top-level overlay geometry and raises the interaction hint above the hotbar"
     }
   ],
   "runner_hardening": {
@@ -57,7 +68,7 @@
     "M7 inventory rev6 enhancer parse",
     "M7 inventory carry / stack / sort rev6",
     "NX6 predicted item interactions",
-    "manual graphical M7 inventory acceptance"
+    "manual graphical M7 inventory acceptance: compact sort buttons and interaction hint above hotbar"
   ],
-  "decision": "FIX3 CANDIDATE - FULL WINDOWS PROJECT GATE REQUIRED"
+  "decision": "FIX4 CANDIDATE - WINDOWS GATE + GRAPHICAL RECHECK REQUIRED"
 }
