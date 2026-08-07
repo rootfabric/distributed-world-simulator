@@ -4,7 +4,7 @@ const CarryAwareProjection = preload(
 	"res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
 )
 const InventoryRev6Enhancer = preload(
-	"res://scripts/ui/inventory/inventory_network_rev6_enhancer.gd"
+	"res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
 )
 
 var failures: Array[String] = []
@@ -65,7 +65,8 @@ func _test_rev6_enhancer_loads() -> void:
 	var enhancer = InventoryRev6Enhancer.new()
 	get_root().add_child(enhancer)
 	var report: Dictionary = enhancer.get_report()
-	_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.v1", "rev6 enhancer parses and exposes report schema")
+	_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix1.v1", "rev6 fix1 enhancer parses and exposes report schema")
+	_assert(String(report.get("pickup_stack_mode", "")) == "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION", "pickup stack mode is authoritative-completion driven")
 	enhancer.queue_free()
 
 
