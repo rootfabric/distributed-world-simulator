@@ -72,8 +72,10 @@ func _test_rev6_enhancer_loads_and_instantiates() -> void:
 		if enhancer != null:
 			get_root().add_child(enhancer)
 			var report: Dictionary = enhancer.get_report()
-			_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix3.v1", "rev6 fix3 enhancer exposes expected schema")
+			_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix4.v1", "rev6 fix4 enhancer exposes expected schema")
 			_assert(String(report.get("pickup_stack_mode", "")) == "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION", "pickup stack mode is authoritative-completion driven")
+			_assert(Vector2(report.get("sort_button_size", Vector2.ZERO)) == Vector2(112.0, 30.0), "sort button has compact fixed geometry")
+			_assert(Vector2(report.get("interaction_hint_position", Vector2.ZERO)) == Vector2(-300.0, -170.0), "interaction hint is raised above persistent hotbar")
 			enhancer.queue_free()
 
 	var compat_script = _load_instantiable_script(COMPAT_ENHANCER_PATH, "rev6 compatibility enhancer")
@@ -83,7 +85,7 @@ func _test_rev6_enhancer_loads_and_instantiates() -> void:
 		if compat != null:
 			get_root().add_child(compat)
 			var compat_report: Dictionary = compat.get_report()
-			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix3.v1", "compatibility path resolves to standalone fix3 implementation")
+			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix4.v1", "compatibility path resolves to standalone fix4 implementation")
 			compat.queue_free()
 
 
