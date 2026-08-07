@@ -19,6 +19,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	# This contract verifies the baseline BULK inventory semantics. The 7 Days
+	# profile intentionally performs a one-way BULK -> SLOTS domain migration,
+	# so an inherited process environment must not silently change this fixture.
+	OS.set_environment("PLANET_SIMULATOR_INVENTORY_PROFILE", "planet_default")
 	var store = Factory.create_json_state_store(STORE_ROOT)
 	store.delete_state(STATE_KEY)
 	var fixture := await _create_controller()
