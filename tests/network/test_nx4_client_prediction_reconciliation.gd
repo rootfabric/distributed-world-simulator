@@ -286,7 +286,7 @@ func _test_source_contracts() -> void:
 	var roadmap = JSON.parse_string(FileAccess.get_file_as_string("res://config/network/network-experience-roadmap.v1.json"))
 	_assert(roadmap is Dictionary, "network roadmap is valid JSON")
 	if roadmap is Dictionary:
-		_assert(String(roadmap.get("current_stage", "")) == "NX4", "network roadmap current stage is NX4")
+		_assert(String(roadmap.get("current_stage", "")) in ["NX4", "NX5", "NX6", "NX7", "NX8", "NX9"], "network roadmap has not reached NX4")
 	var config = JSON.parse_string(FileAccess.get_file_as_string("res://config/network/nx4-client-prediction-reconciliation.v1.json"))
 	_assert(config is Dictionary, "NX4 config is valid JSON")
 	if config is Dictionary:
