@@ -1,0 +1,94 @@
+{
+  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v1",
+  "stage": "M7 realtime backpressure foundation",
+  "branch": "feature/m7-realtime-backpressure-foundation-fix1",
+  "base_branch": "agent/inventory-carry-stack-sort-rev6",
+  "base_commit": "535eebd670473f7ab6557492a356bd47a03db763",
+  "accepted_inventory_candidate": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
+  "incident": {
+    "profile": "LOCAL",
+    "clients": 2,
+    "trigger": "item drop/pickup while two graphical clients are connected",
+    "observed": [
+      "dedicated server health cadence develops approximately 3-4 second gaps around item activity",
+      "client prediction lead grows into tens of ticks/sequences",
+      "PLAYER_INPUT command results are rejected with INPUT_QUEUE_FULL",
+      "history_miss_resets and corrections rise and the player visibly rolls back",
+      "MULTIPLAYER_SAME_REVISION_MUTATION appears around multi-client item updates"
+    ],
+    "not_root_causes": [
+      "ITEM_ALREADY_CLAIMED is an expected server-authoritative race when both clients attempt the same pickup",
+      "the Camera3D physics interpolation warning does not explain simultaneous server stalls"
+    ]
+  },
+  "implementation": {
+    "diagnostic_io": {
+      "policy": "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1",
+      "ready_report_min_interval_ms": 250,
+      "first_readiness_report": "synchronous so process harness readiness remains deterministic",
+      "steady_state_ready_reports": "coalesced and written by a worker Thread",
+      "terminal_reports": "writer is drained and FAILED/STOPPED report is written synchronously",
+      "observability": [
+        "report_requests",
+        "report_requests_coalesced",
+        "report_writes_started",
+        "report_writes_completed",
+        "report_write_failures",
+        "report_snapshot_build_duration_ms",
+        "report_last_write_duration_ms",
+        "report_max_write_duration_ms"
+      ]
+    },
+    "server_loop": {
+      "policy": "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1",
+      "network_event_budget_per_frame": 64,
+      "reason": "fixed authority receives frame budget before inbound backlog processing"
+    },
+    "input_backpressure": {
+      "wire_schema_unchanged": "planet_simulator.fixed_tick_input_buffer.v1",
+      "accepted_selection_policy_unchanged": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1",
+      "internal_coalescing_policy": "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1",
+      "behavior": "newer equivalent continuous move/sprint state replaces the pending tail while preserving latest look/sequence/timestamp",
+      "preserved_edges": [
+        "idle/movement transitions",
+        "sprint transitions",
+        "jump edges",
+        "sequence wrap",
+        "hard MAX_PENDING_INPUTS bound"
+      ],
+      "observability": [
+        "coalesced_refreshes",
+        "queue_pressure_recoveries",
+        "peak_pending",
+        "queue_full_rejected"
+      ]
+    },
+    "item_replication": {
+      "policy": "ITEM_GRAPH_DELTA_NO_REDUNDANT_GAMEPLAY_SNAPSHOT_V1",
+      "behavior": "successful canonical item mutations use ITEM delta/full-resync paths only; redundant ITEM_GRAPH_UPDATED gameplay snapshot at unchanged gameplay revision is suppressed",
+      "goal": "remove same-revision semantic mutation on non-initiating clients without weakening canonical Item Graph authority"
+    },
+    "protocol_hash_change_expected": false
+  },
+  "focused_tests": [
+    "500 equivalent continuous refreshes remain one pending state and retain latest sequence/look",
+    "idle -> movement -> sprint -> jump -> idle transitions remain ordered and jump emits exactly one edge",
+    "an equivalent refresh is absorbed even when the queue is already at MAX_PENDING_INPUTS",
+    "a true new state transition still receives INPUT_QUEUE_FULL when the hard queue bound is genuinely exhausted",
+    "accepted NX3 InputBuffer schema and selection policy remain unchanged",
+    "M7 runtime source prioritizes fixed tick before bounded network drain",
+    "M7 runtime executes the async diagnostic writer and verifies report coalescing/write completion"
+  ],
+  "runner": "VALIDATE_M7_REALTIME_FOUNDATION.ps1",
+  "required_acceptance": [
+    "accepted inventory regression gate remains PASS",
+    "focused realtime backpressure contract test PASS",
+    "existing two-client graphical M7 process regression PASS",
+    "manual LOCAL two-client repeated drop/pickup stress has no INPUT_QUEUE_FULL",
+    "manual LOCAL two-client item activity has no MULTIPLAYER_SAME_REVISION_MUTATION",
+    "fixed_tick_simulation.failures remains 0",
+    "realtime_foundation.report_write_failures remains 0",
+    "prediction lead does not grow into sustained tens of ticks and no visible rollback occurs"
+  ],
+  "decision": "IMPLEMENTED CANDIDATE - WINDOWS FOCUSED + TWO-CLIENT STRESS GATE REQUIRED"
+}
