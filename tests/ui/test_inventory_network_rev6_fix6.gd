@@ -31,8 +31,7 @@ func _test_enhancer_activation_contract() -> void:
 		return
 	get_root().add_child(enhancer)
 	var button = enhancer._create_sort_button("ProbeSort", "Sort", "")
-	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	_assert(button.action_mode == BaseButton.ACTION_MODE_BUTTON_PRESS, "sort action fires on mouse press instead of release")
+	_assert(button.action_mode == BaseButton.ACTION_MODE_BUTTON_PRESS, "sort button factory emits action on mouse press")
 	_assert(button.mouse_filter == Control.MOUSE_FILTER_STOP, "sort control stops GUI mouse propagation")
 	button.free()
 	var report: Dictionary = enhancer.get_report()
