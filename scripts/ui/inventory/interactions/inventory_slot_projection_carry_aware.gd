@@ -1,15 +1,15 @@
 class_name InventorySlotProjectionCarryAware
 extends "res://scripts/ui/inventory/interactions/inventory_slot_projection.gd"
 
-# Presentation-only carry overlay for the 7 Days cursor profile. Network
-# authority intentionally keeps the source stack in its real container until
-# placement commands are confirmed, while the UI must look as if the carried
-# quantity has already left the source slot. This layer never mutates Item Graph.
+# Presentation-only overlays for the 7 Days cursor profile. Network authority
+# intentionally keeps canonical state on the server. Carry and optimistic sort
+# overlays affect only the rendered container model and never mutate Item Graph.
 
-const SCHEMA_CARRY_AWARE: String = "planet_simulator.inventory_slot_projection.carry_aware.v2"
+const SCHEMA_CARRY_AWARE: String = "planet_simulator.inventory_slot_projection.carry_aware.v3"
 
 var suppressed_items: Dictionary = {}
 var carried_quantities: Dictionary = {}
+var container_presentation_overrides: Dictionary = {}
 
 
 func suppress_item(container_id: String, item_id: String) -> void:
@@ -67,12 +67,38 @@ func reveal_item(container_id: String, item_id: String) -> void:
 func reveal_all() -> void:
 	suppressed_items.clear()
 	carried_quantities.clear()
+	container_presentation_overrides.clear()
 
 
 func is_suppressed(container_id: String, item_id: String) -> bool:
 	if not suppressed_items.has(container_id):
 		return false
 	return bool(Dictionary(suppressed_items[container_id]).get(item_id, false))
+
+
+func set_container_presentation_override(container_id: String, model: Dictionary) -> void:
+	var normalized_container := container_id.strip_edges()
+	if normalized_container.is_empty() or model.is_empty():
+		return
+	var override_model: Dictionary = model.duplicate(true)
+	override_model["container_id"] = normalized_container
+	override_model["presentation_override"] = true
+	container_presentation_overrides[normalized_container] = override_model
+
+
+func clear_container_presentation_override(container_id: String) -> void:
+	container_presentation_overrides.erase(container_id.strip_edges())
+
+
+func has_container_presentation_override(container_id: String) -> bool:
+	return container_presentation_overrides.has(container_id.strip_edges())
+
+
+func get_container_presentation_override(container_id: String) -> Dictionary:
+	var normalized_container := container_id.strip_edges()
+	if not container_presentation_overrides.has(normalized_container):
+		return {}
+	return Dictionary(container_presentation_overrides[normalized_container]).duplicate(true)
 
 
 func apply_carry_overlay(model: Dictionary) -> Dictionary:
@@ -128,7 +154,13 @@ func apply_carry_overlay(model: Dictionary) -> Dictionary:
 
 
 func project_container(model: Dictionary) -> Dictionary:
-	return super.project_container(apply_carry_overlay(model))
+	var carried_model: Dictionary = apply_carry_overlay(model)
+	var container_id := String(carried_model.get("container_id", ""))
+	if not container_id.is_empty() and container_presentation_overrides.has(container_id):
+		# The override was built from an already projected slot model. Returning it
+		# directly keeps every subsequent refresh stable while authority catches up.
+		return Dictionary(container_presentation_overrides[container_id]).duplicate(true)
+	return super.project_container(carried_model)
 
 
 func debug_snapshot() -> Dictionary:
@@ -143,9 +175,12 @@ func debug_snapshot() -> Dictionary:
 	for container_id_value in carried_quantities.keys():
 		var container_id := String(container_id_value)
 		serialized_carried[container_id] = Dictionary(carried_quantities[container_id]).duplicate(true)
+	var override_ids: Array = Array(container_presentation_overrides.keys())
+	override_ids.sort()
 	result["carry_aware_schema"] = SCHEMA_CARRY_AWARE
 	result["suppressed_items"] = serialized_hidden
 	result["carried_quantities"] = serialized_carried
+	result["presentation_override_container_ids"] = override_ids
 	return result
 
 
