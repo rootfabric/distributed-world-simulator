@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v3",
+  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v4",
   "stage": "M7 realtime backpressure foundation",
   "branch": "feature/m7-realtime-backpressure-foundation-fix1",
   "base_branch": "agent/inventory-carry-stack-sort-rev6",
@@ -47,9 +47,18 @@
     "input_backpressure": {
       "wire_schema_unchanged": "planet_simulator.fixed_tick_input_buffer.v1",
       "accepted_selection_policy_unchanged": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1",
-      "internal_coalescing_policy": "LATEST_EQUIVALENT_CONTINUOUS_STATE_REFRESH_V1",
-      "behavior": "newer equivalent continuous move/sprint state replaces the pending tail while preserving latest look/sequence/timestamp",
+      "internal_coalescing_policy": "FULL_QUEUE_EXACT_CONTINUOUS_STATE_REFRESH_V2",
+      "behavior": "ordinary input preserves the accepted FIFO exactly; only when MAX_PENDING_INPUTS is already reached may a newer exact continuous-state refresh replace the pending tail",
+      "exact_refresh_fields": [
+        "move_x",
+        "move_z",
+        "look_yaw",
+        "look_pitch",
+        "sprint"
+      ],
       "preserved_edges": [
+        "ordinary per-tick FIFO duration",
+        "look/yaw trajectory changes",
         "idle/movement transitions",
         "sprint transitions",
         "jump edges",
@@ -64,20 +73,22 @@
       ]
     },
     "item_replication": {
-      "policy": "ITEM_GRAPH_DELTA_NO_REDUNDANT_GAMEPLAY_SNAPSHOT_V1",
-      "behavior": "successful canonical item mutations use ITEM delta/full-resync paths only; redundant ITEM_GRAPH_UPDATED gameplay snapshot at unchanged gameplay revision is suppressed",
-      "goal": "remove same-revision semantic mutation on non-initiating clients without weakening canonical Item Graph authority"
+      "policy": "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2",
+      "behavior": "canonical Item Graph payloads use ITEM delta/full-resync; because NetworkedGameplayService currently also advances its gameplay revision for a successful canonical item command, one lightweight reliable gameplay snapshot publishes that revision to every client",
+      "why_not_suppress": "the prior suppression left the server gameplay revision/checksum ahead of clients after the final item command, so a client could never converge when no later movement snapshot advanced it",
+      "payload_duplication": "the gameplay snapshot does not carry the canonical Item Graph; Item Graph data remains on the dedicated ITEM stream"
     },
     "protocol_hash_change_expected": false
   },
   "focused_tests": [
-    "500 equivalent continuous refreshes remain one pending state and retain latest sequence/look",
-    "idle -> movement -> sprint -> jump -> idle transitions remain ordered and jump emits exactly one edge",
-    "an equivalent refresh is absorbed even when the queue is already at MAX_PENDING_INPUTS",
-    "a true new state transition still receives INPUT_QUEUE_FULL when the hard queue bound is genuinely exhausted",
+    "ordinary continuous input remains FIFO and retains per-sequence look yaw before queue pressure",
+    "idle/movement/sprint/jump/idle transitions remain ordered and jump emits exactly one edge",
+    "an exact continuous refresh is absorbed only when the queue is already at MAX_PENDING_INPUTS",
+    "yaw-changing or true movement transitions still receive INPUT_QUEUE_FULL when the hard queue is genuinely exhausted",
     "accepted NX3 InputBuffer schema and selection policy remain unchanged",
     "M7 runtime source prioritizes fixed tick before bounded network drain",
-    "M7 runtime executes the async diagnostic writer and verifies report coalescing/write completion"
+    "M7 runtime executes the async diagnostic writer and verifies report coalescing/write completion",
+    "canonical item mutation keeps Item Graph payload on ITEM delta and publishes the advanced gameplay revision through reliable RESYNC"
   ],
   "windows_gate_history": [
     {
@@ -115,13 +126,45 @@
       "blocked_at": "M7 realtime backpressure contracts parse error at ServerRuntime.can_instantiate()",
       "diagnosis": "Godot 4.7 parses preload script constants as class-like values for direct calls, so Script.can_instantiate() cannot be invoked as ServerRuntime.can_instantiate()",
       "correction": "cast the preloaded resource to Script, call runtime_script.can_instantiate(), then instantiate through runtime_script.new()"
+    },
+    {
+      "candidate": "33c4a95f3be5986f972a3a01886f68465850589c",
+      "result": "PARTIAL PASS - REAL TWO-CLIENT REGRESSION EXPOSED",
+      "passed": [
+        "editor import / composition",
+        "M7 item join 18 assertions",
+        "M7 slot-aware transfers 67 assertions",
+        "inventory rev6 43 assertions",
+        "fix6 8 assertions",
+        "fix7 20 assertions",
+        "NX6 957 assertions",
+        "fix8 9 assertions",
+        "NX3 fixed-tick 6188 assertions 0 failures",
+        "NX4 client prediction 706 assertions",
+        "M7 realtime backpressure 701 assertions 0 failures"
+      ],
+      "blocked_at": "M7 two-client graphical process regression",
+      "failures": [
+        "A pickup confirmed by server",
+        "B opened shared 3D crate",
+        "B sees shared container slots",
+        "A converged to authoritative player checksum"
+      ],
+      "diagnosis": [
+        "eager coalescing was active during ordinary input, not only queue pressure; this changed the number of fixed ticks represented by movement samples and could erase look_yaw transitions even though yaw changes the authoritative movement trajectory",
+        "the item gameplay snapshot was suppressed while handle_canonical_item_command still advances the gameplay revision; after the final item command clients could remain one gameplay revision/checksum behind the server forever"
+      ],
+      "correction": [
+        "restore exact NX3 FIFO during normal operation and allow coalescing only at full-queue pressure for an exact motion/look state",
+        "retain Item Graph delta transport but restore a lightweight reliable gameplay revision snapshot after successful canonical item mutation"
+      ]
     }
   ],
   "assistant_local_validation": {
     "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
     "script_api_reproduction": "original ServerRuntime.can_instantiate() pattern reproduced the same Godot 4.7 parse error locally; Script-typed resource pattern parsed and executed successfully",
-    "input_backpressure_probe": "PASS: 684 assertions, 0 failures using the production fixed_tick_input_buffer.gd and input_sequence.gd logic",
-    "runtime_test_harness_probe": "PASS: 15 assertions, 0 failures covering Script.can_instantiate/new, report file creation, worker Thread start/drain, report coalescing counters and source-order assertions",
+    "conservative_input_backpressure_probe": "PASS: 265 assertions, 0 failures on the exact Godot build; verifies ordinary FIFO, full-queue-only exact refresh recovery, yaw-sensitive rejection and hard capacity",
+    "runtime_test_harness_probe": "PASS: 16 assertions, 0 failures on the exact Godot build; covers Script instantiation, report worker thread/coalescing, fixed-before-poll source order and item/gameplay revision-sync policy tokens",
     "full_repository_execution": "not available in assistant container because repository source is not mounted and raw github.com git access is DNS-blocked; production source inspection is performed through the GitHub connector"
   },
   "runner": "VALIDATE_M7_REALTIME_FOUNDATION.ps1",
@@ -136,5 +179,5 @@
     "realtime_foundation.report_write_failures remains 0",
     "prediction lead does not grow into sustained tens of ticks and no visible rollback occurs"
   ],
-  "decision": "FIX2 CANDIDATE - LOCAL GODOT PROBES PASS; FULL WINDOWS GATE REQUIRED FROM CURRENT HEAD"
+  "decision": "FIX3 CANDIDATE - TWO-CLIENT FAILURE DIAGNOSED; WINDOWS FULL GATE REQUIRED FROM CURRENT HEAD"
 }
