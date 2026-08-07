@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.network_view_relative_movement_validation.v1",
+  "recorded_at": "2026-08-07T20:45:00+10:00",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base_branch": "main",
+  "base_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
+  "branch": "agent/network-view-relative-movement",
+  "problem": {
+    "symptom": "WASD movement diverges from the direction the local player camera is looking; backward can appear sideways after turning",
+    "root_causes": [
+      "network movement intent used accumulated local camera_yaw instead of the active camera global view basis",
+      "local NX4 prediction presentation applied authoritative orientation_yaw to the CharacterBody root, rotating CameraAnchor a second time while camera_yaw remained applied locally",
+      "the previous intent path clamped camera_yaw to [-PI, PI], so accumulated yaw beyond 180 degrees could stick at the boundary instead of wrapping"
+    ]
+  },
+  "correction": {
+    "runtime": "scripts/world/testing/playground_view_relative_runtime.gd",
+    "scene": "scenes/testing/playground.tscn",
+    "behavior": [
+      "derive absolute network look_yaw from player.get_view_basis() projected onto the gameplay XZ plane",
+      "use atan2(-forward.x, -forward.z) so the shared movement kernel reconstructs the same camera-forward vector",
+      "fallback to wrapf(camera_yaw, -PI, PI) only for a degenerate projected camera forward",
+      "apply authoritative orientation_yaw to visual_root only for the local predicted avatar, leaving CharacterBody/CameraAnchor orientation unchanged"
+    ]
+  },
+  "uid": {
+    "sidecar": "scripts/world/testing/playground_view_relative_runtime.gd.uid",
+    "uid": "uid://gpwr3hqwqk32",
+    "aggregate_uid_count": 160,
+    "manifest": "validation/network-view-relative-runtime-sidecar-manifest.json"
+  },
+  "isolated_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_parse": "PASS",
+    "view_yaw_cases_deg": [0, 90, 180, 270, 360, -270],
+    "checks": 8,
+    "failures": 0,
+    "result": "PASS",
+    "notes": "Isolated fixture verifies reconstructed network forward equals actual camera forward for all yaw cases, player root yaw remains unchanged during predicted presentation, and visual avatar yaw receives authoritative orientation. This is not a substitute for the repository multiplayer gate."
+  },
+  "required_gate": [
+    "editor import clean with 160/160 tracked UID sidecars and no new UID",
+    "manual dedicated-server plus two game-client playground run",
+    "after rotating each client through multiple headings, W/S remain forward/backward relative to camera and A/D remain left/right",
+    "M7 playable network process suite PASS",
+    "NX4 prediction/reconciliation suite PASS",
+    "network contracts PASS",
+    "world regression PASS",
+    "git diff --check and worktree cleanliness PASS"
+  ]
+}
