@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v2",
+  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v3",
   "stage": "M7 realtime backpressure foundation",
   "branch": "feature/m7-realtime-backpressure-foundation-fix1",
   "base_branch": "agent/inventory-carry-stack-sort-rev6",
@@ -94,10 +94,36 @@
         "fix8 9 assertions"
       ],
       "blocked_at": "NX3 fixed-tick regression: 6188 assertions, 4 wiring-source failures",
-      "diagnosis": "test inspected only m3_dedicated_server_runtime.gd leaf source while accepted runtime composition keeps NX3 fixed-tick implementation in m3_dedicated_server_runtime_base.gd; runtime behavior was inherited but the source-level assertion did not follow extends",
+      "diagnosis": "test inspected only m3_dedicated_server_runtime.gd leaf source while accepted runtime composition keeps NX3 fixed-tick implementation in m3_dedicated_server_runtime_base.gd through extends",
       "correction": "NX3 server wiring regression now uses the same recursive extends source-chain loader already used for the graphical client"
+    },
+    {
+      "candidate": "45e61c591e4a6ed5074a58ec6ddf34174f0c5ad9",
+      "result": "PARTIAL PASS",
+      "passed": [
+        "editor import / composition",
+        "M7 item join 18 assertions",
+        "M7 slot-aware transfers 67 assertions",
+        "inventory rev6 43 assertions",
+        "fix6 8 assertions",
+        "fix7 20 assertions",
+        "NX6 957 assertions",
+        "fix8 9 assertions",
+        "NX3 fixed-tick 6188 assertions 0 failures",
+        "NX4 client prediction 706 assertions"
+      ],
+      "blocked_at": "M7 realtime backpressure contracts parse error at ServerRuntime.can_instantiate()",
+      "diagnosis": "Godot 4.7 parses preload script constants as class-like values for direct calls, so Script.can_instantiate() cannot be invoked as ServerRuntime.can_instantiate()",
+      "correction": "cast the preloaded resource to Script, call runtime_script.can_instantiate(), then instantiate through runtime_script.new()"
     }
   ],
+  "assistant_local_validation": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "script_api_reproduction": "original ServerRuntime.can_instantiate() pattern reproduced the same Godot 4.7 parse error locally; Script-typed resource pattern parsed and executed successfully",
+    "input_backpressure_probe": "PASS: 684 assertions, 0 failures using the production fixed_tick_input_buffer.gd and input_sequence.gd logic",
+    "runtime_test_harness_probe": "PASS: 15 assertions, 0 failures covering Script.can_instantiate/new, report file creation, worker Thread start/drain, report coalescing counters and source-order assertions",
+    "full_repository_execution": "not available in assistant container because repository source is not mounted and raw github.com git access is DNS-blocked; production source inspection is performed through the GitHub connector"
+  },
   "runner": "VALIDATE_M7_REALTIME_FOUNDATION.ps1",
   "required_acceptance": [
     "accepted inventory regression gate remains PASS",
@@ -110,5 +136,5 @@
     "realtime_foundation.report_write_failures remains 0",
     "prediction lead does not grow into sustained tens of ticks and no visible rollback occurs"
   ],
-  "decision": "FIXED CANDIDATE - WINDOWS GATE MUST BE RERUN FROM NEW HEAD"
+  "decision": "FIX2 CANDIDATE - LOCAL GODOT PROBES PASS; FULL WINDOWS GATE REQUIRED FROM CURRENT HEAD"
 }
