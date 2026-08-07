@@ -88,7 +88,33 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	_assert(String(foundation.get("event_loop_policy", "")) == "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1", "fixed-tick priority policy missing")
 	_assert(String(foundation.get("item_replication_policy", "")) == "ITEM_GRAPH_DELTA_NO_REDUNDANT_GAMEPLAY_SNAPSHOT_V1", "item replication policy missing")
 	_assert(int(foundation.get("network_event_budget_per_frame", 0)) <= 64, "network event drain is not bounded")
-	runtime.queue_free()
+
+	var result_dir: String = ProjectSettings.globalize_path("res://artifacts/test-results")
+	DirAccess.make_dir_recursive_absolute(result_dir)
+	var result_path: String = result_dir.path_join(
+		"m7-realtime-backpressure-%d.json" % OS.get_process_id()
+	)
+	if FileAccess.file_exists(result_path):
+		DirAccess.remove_absolute(result_path)
+	runtime.set("_result_file", result_path)
+	runtime.call("_write_report", "READY", false)
+	_assert(FileAccess.file_exists(result_path), "initial synchronous readiness report was not written")
+	for _index in range(8):
+		runtime.call("_write_report", "READY", false)
+	runtime.set("_last_report_dispatch_ms", Time.get_ticks_msec() - 1000)
+	runtime.call("_dispatch_deferred_report")
+	_assert(runtime.get("_report_thread") != null, "deferred READY report did not start a writer thread")
+	runtime.call("_write_report", "READY", false)
+	runtime.call("_drain_report_thread")
+	var after_write: Dictionary = runtime.get_report()
+	var after_foundation: Dictionary = Dictionary(after_write.get("realtime_foundation", {}))
+	_assert(int(after_foundation.get("report_writes_completed", 0)) >= 2, "async report worker did not complete")
+	_assert(int(after_foundation.get("report_requests_coalesced", 0)) >= 1, "READY report requests were not coalesced")
+	_assert(int(after_foundation.get("report_write_failures", -1)) == 0, "diagnostic report worker failed")
+	_assert(float(after_foundation.get("report_last_write_duration_ms", -1.0)) >= 0.0, "report write latency is not observable")
+	runtime.free()
+	if FileAccess.file_exists(result_path):
+		DirAccess.remove_absolute(result_path)
 
 	var source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
 	var fixed_tick_pos: int = source.find("_advance_fixed_simulation(delta)")
