@@ -1,9 +1,10 @@
 {
-  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v9",
+  "schema": "planet_simulator.validation.m7_inventory_carry_stack_sort_rev6.v10",
   "stage": "M7 inventory carry / pickup stack / sort rev6",
   "branch": "agent/inventory-carry-stack-sort-rev6",
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
   "base_commit": "3b590b392a536d843f28f3ede833c00fd41466af",
+  "accepted_candidate_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
   "implementation": {
     "carry_origin_projection": "network-virtual carry subtracts cursor quantity from source presentation; whole carry shows empty source slot, partial carry leaves exact remainder",
     "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the same quantity-aware carry overlay",
@@ -48,6 +49,12 @@
       "runtime_evidence": "client log contains no SORT_REQUESTED, SORT_STARTED, SORT_PLAN or SORT_PRESENTATION_APPLIED events during the graphical attempt; server rejections remain zero",
       "diagnosis": "the failure is before authority and before optimistic presentation: the visible button press is not reaching either BaseButton.pressed or the InventoryScreen.gui_input geometry fallback in the real M7 composition",
       "correction": "fix8 adds a root _input mouse-down hit-test fallback that runs before GUI dispatch and feeds the same debounced sort request path"
+    },
+    {
+      "observed_on_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
+      "automated_gate": "USER-REPORTED PASS: editor import, M7 join 18 assertions, slot-aware transfers 67 assertions, fix7 enhancer parse, rev6 43 assertions, fix6 8 assertions, fix7 20 assertions, NX6 957 assertions; direct fix8 9 assertions",
+      "graphical_result": "USER-REPORTED PASS: sorting works correctly in the graphical inventory/container flow",
+      "decision": "ACCEPTED"
     }
   ],
   "focused_tests": [
@@ -64,15 +71,13 @@
     "fix8 reports BUTTON_PRESS_SCREEN_FALLBACK_GLOBAL_INPUT",
     "playground scene selects fix8 composition"
   ],
-  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 plus direct fix8 test until the runner is folded into the next accepted checkpoint",
-  "required_acceptance": [
-    "Editor import / composition parse",
-    "existing VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 full focused gate",
-    "direct res://tests/ui/test_inventory_network_rev6_fix8.gd",
-    "manual player inventory sort emits SORT_GLOBAL_INPUT_HIT then SORT_REQUESTED and starts sorting",
-    "manual external container sort emits SORT_GLOBAL_INPUT_HIT then SORT_REQUESTED and starts sorting",
-    "manual sort final merged/alphabetical layout appears on the click without close/reopen or another item action",
-    "successful sort reconciles without flicker; authority rejection rolls the preview back"
-  ],
-  "decision": "FIX8 CANDIDATE - WINDOWS GATE + GRAPHICAL SORT ACTIVATION CHECK REQUIRED"
+  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 plus direct res://tests/ui/test_inventory_network_rev6_fix8.gd",
+  "acceptance": {
+    "windows_focused_gate": "PASS",
+    "direct_fix8_test": "PASS (9 assertions)",
+    "graphical_sort": "PASS",
+    "accepted_on_commit": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b"
+  },
+  "follow_up_not_blocking_rev6_acceptance": "Two-client item drop/pickup stress exposed server realtime backpressure (INPUT_QUEUE_FULL after multi-second server stalls) and a same-revision gameplay snapshot consistency warning. Track and fix in a separate networking hardening change; it is not a sorting activation regression.",
+  "decision": "ACCEPTED"
 }
