@@ -280,7 +280,9 @@ func _test_protocol_and_runtime_wiring() -> void:
 	_assert(String(contracts.get("input_sequence", {}).get("schema", "")) == Sequence.SCHEMA, "Protocol manifest omitted sequence wrap")
 	_assert(String(contracts.get("player_input_batch", {}).get("server_delta_policy", "")) == "IGNORED_SERVER_FIXED_TICK_V1", "Protocol manifest still trusts packet arrival/client delta")
 	_assert(String(contracts.get("player_input_batch", {}).get("sequence_order_policy", "")) == InputBatch.SEQUENCE_ORDER_POLICY, "Protocol manifest omitted wrap-aware batch ordering")
-	var server_source: String = FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+	var server_source: String = _load_script_source_chain(
+		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd", {}
+	)
 	_assert(server_source.contains("FixedTickScheduler"), "M3 server does not use fixed scheduler")
 	_assert(server_source.contains("simulate_fixed_movement_tick"), "M3 server does not execute fixed movement ticks")
 	_assert(server_source.contains("NX3_FIXED_TICK_DELTA_SECONDS"), "M3 server has no canonical fixed delta")
