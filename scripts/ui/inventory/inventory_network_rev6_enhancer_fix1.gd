@@ -5,7 +5,7 @@ extends Node
 # therefore the M7/NX6 item.transfer path. Presentation-only cursor suppression
 # never mutates the canonical Item Graph.
 
-const FIX_SCHEMA := "planet_simulator.inventory_network_rev6_enhancer.fix2.v1"
+const FIX_SCHEMA: String = "planet_simulator.inventory_network_rev6_enhancer.fix3.v1"
 const CarryAwareProjection = preload(
 	"res://scripts/ui/inventory/interactions/inventory_slot_projection_carry_aware.gd"
 )
@@ -19,15 +19,15 @@ var projection
 var player_sort_button: Button
 var external_sort_button: Button
 
-var _last_carry_active := false
-var _suppressed_container_id := ""
-var _suppressed_item_id := ""
+var _last_carry_active: bool = false
+var _suppressed_container_id: String = ""
+var _suppressed_item_id: String = ""
 var _pickup_queue: Array = []
-var _sort_in_progress := false
-var _pickup_stack_operations := 0
-var _sort_operations := 0
-var _pointer_repairs := 0
-var _carry_suppressions := 0
+var _sort_in_progress: bool = false
+var _pickup_stack_operations: int = 0
+var _sort_operations: int = 0
+var _pointer_repairs: int = 0
+var _carry_suppressions: int = 0
 
 
 func setup(controller, network_bridge) -> Dictionary:
@@ -51,7 +51,7 @@ func setup(controller, network_bridge) -> Dictionary:
 	projection.configure(active_profile)
 	var old_projection = screen.get("slot_projection")
 	if old_projection != null and old_projection.has_method("export_layouts"):
-		projection.import_layouts(old_projection.export_layouts())
+		projection.import_layouts(old_projection.call("export_layouts"))
 	screen.set("slot_projection", projection)
 	var cursor_controller = screen.get("cursor_controller")
 	if cursor_controller != null:
@@ -59,7 +59,7 @@ func setup(controller, network_bridge) -> Dictionary:
 
 	_setup_sort_buttons()
 	if bridge != null and bridge.has_signal("authoritative_item_command_completed"):
-		var completion_callback := Callable(self, "_on_authoritative_item_command_completed")
+		var completion_callback: Callable = Callable(self, "_on_authoritative_item_command_completed")
 		if not bridge.is_connected("authoritative_item_command_completed", completion_callback):
 			bridge.connect("authoritative_item_command_completed", completion_callback)
 
@@ -81,7 +81,8 @@ func setup(controller, network_bridge) -> Dictionary:
 func _process(_delta: float) -> void:
 	if screen == null or not is_instance_valid(screen):
 		return
-	var inventory_visible := false
+
+	var inventory_visible: bool = false
 	if screen.has_method("is_inventory_visible"):
 		inventory_visible = bool(screen.call("is_inventory_visible"))
 	else:
@@ -92,7 +93,7 @@ func _process(_delta: float) -> void:
 		_pointer_repairs += 1
 
 	var transfer_session = screen.get("transfer_session")
-	var carry_active := transfer_session != null and transfer_session.is_active()
+	var carry_active: bool = _session_is_active(transfer_session)
 	if carry_active and not _last_carry_active:
 		_apply_origin_suppression()
 	elif not carry_active and _last_carry_active:
@@ -106,6 +107,12 @@ func _process(_delta: float) -> void:
 	_last_carry_active = carry_active
 	_update_sort_button_visibility(inventory_visible, carry_active)
 	_process_pickup_queue()
+
+
+func _session_is_active(transfer_session) -> bool:
+	if transfer_session == null or not transfer_session.has_method("is_active"):
+		return false
+	return bool(transfer_session.call("is_active"))
 
 
 func _setup_sort_buttons() -> void:
@@ -132,7 +139,7 @@ func _setup_sort_buttons() -> void:
 
 
 func _create_sort_button(node_name: String, caption: String, hint: String) -> Button:
-	var button := Button.new()
+	var button: Button = Button.new()
 	button.name = node_name
 	button.text = caption
 	button.tooltip_text = hint
@@ -153,7 +160,7 @@ func _anchor_sort_button(button: Button) -> void:
 
 
 func _update_sort_button_visibility(inventory_visible: bool, carry_active: bool) -> void:
-	var seven_days := false
+	var seven_days: bool = false
 	var profile = screen.get("active_interaction_profile")
 	if profile != null:
 		seven_days = String(profile.get("profile_id")) == "seven_days_like"
@@ -177,18 +184,18 @@ func _apply_origin_suppression() -> void:
 		return
 	if not cursor_controller.has_method("debug_snapshot"):
 		return
-	var cursor_debug: Dictionary = cursor_controller.debug_snapshot()
+	var cursor_debug: Dictionary = Dictionary(cursor_controller.call("debug_snapshot"))
 	if not bool(cursor_debug.get("network_virtual", false)):
 		return
 
-	var origin_item_id := String(transfer_session.get("origin_item_id"))
-	var origin_container_id := String(transfer_session.get("source_container_id"))
+	var origin_item_id: String = String(transfer_session.get("origin_item_id"))
+	var origin_container_id: String = String(transfer_session.get("source_container_id"))
 	if origin_item_id.is_empty() or origin_container_id.is_empty():
 		return
 	var source = gameplay_controller.get_item(origin_item_id)
 	if source == null:
 		return
-	var requested_quantity := int(transfer_session.get("requested_quantity"))
+	var requested_quantity: int = int(transfer_session.get("requested_quantity"))
 	if requested_quantity < int(source.get("quantity")):
 		return
 
@@ -235,7 +242,7 @@ func _process_pickup_queue() -> void:
 
 	_pickup_queue.pop_front()
 	_sort_in_progress = true
-	var merged := _merge_container_stacks(String(gameplay_controller.player_inventory_id))
+	var merged: bool = _merge_container_stacks(String(gameplay_controller.player_inventory_id))
 	_sort_in_progress = false
 	if merged:
 		_pickup_stack_operations += 1
@@ -247,7 +254,7 @@ func _on_player_sort_pressed() -> void:
 
 
 func _on_external_sort_pressed() -> void:
-	var container_id := String(screen.get("external_container_id"))
+	var container_id: String = String(screen.get("external_container_id"))
 	if not container_id.is_empty():
 		_sort_container(container_id, false)
 
@@ -256,7 +263,7 @@ func _sort_container(container_id: String, player_inventory: bool) -> void:
 	if _sort_in_progress or container_id.is_empty():
 		return
 	var transfer_session = screen.get("transfer_session")
-	if transfer_session != null and transfer_session.is_active():
+	if _session_is_active(transfer_session):
 		_show_error("Сначала завершите перенос предмета")
 		return
 
@@ -265,7 +272,7 @@ func _sort_container(container_id: String, player_inventory: bool) -> void:
 		_sort_in_progress = false
 		return
 	_refresh_screen()
-	var sorted := _sort_container_slots(container_id, player_inventory)
+	var sorted: bool = _sort_container_slots(container_id, player_inventory)
 	_sort_in_progress = false
 	_refresh_screen()
 	if sorted:
@@ -276,7 +283,7 @@ func _sort_container(container_id: String, player_inventory: bool) -> void:
 func _merge_container_stacks(container_id: String) -> bool:
 	var ids: Array = _container_item_ids_by_slot(container_id)
 	for target_index in range(ids.size()):
-		var target_id := String(ids[target_index])
+		var target_id: String = String(ids[target_index])
 		var target = gameplay_controller.get_item(target_id)
 		if target == null:
 			continue
@@ -285,19 +292,19 @@ func _merge_container_stacks(container_id: String) -> bool:
 			continue
 
 		for source_index in range(target_index + 1, ids.size()):
-			var source_id := String(ids[source_index])
+			var source_id: String = String(ids[source_index])
 			if source_id.is_empty() or source_id == target_id:
 				continue
 			target = gameplay_controller.get_item(target_id)
 			var source = gameplay_controller.get_item(source_id)
 			if target == null or source == null:
 				continue
-			if not source.is_stack_compatible(target):
+			if not bool(source.call("is_stack_compatible", target)):
 				continue
-			var headroom := maxi(0, int(definition.get("max_stack")) - int(target.get("quantity")))
+			var headroom: int = maxi(0, int(definition.get("max_stack")) - int(target.get("quantity")))
 			if headroom <= 0:
 				break
-			var amount := mini(headroom, int(source.get("quantity")))
+			var amount: int = mini(headroom, int(source.get("quantity")))
 			var target_relation: Dictionary = Dictionary(target.get("relation"))
 			var merge_result: Dictionary = command_facade.transfer_quantity(
 				source_id,
@@ -314,31 +321,31 @@ func _merge_container_stacks(container_id: String) -> bool:
 
 func _sort_container_slots(container_id: String, player_inventory: bool) -> bool:
 	var container = gameplay_controller.get_container(container_id)
-	if container == null or not container.is_slot_container():
+	if container == null or not bool(container.call("is_slot_container")):
 		_show_error("Сортировка требует слот-контейнер")
 		return false
 
-	var capacity := int(container.get("slot_count"))
+	var capacity: int = int(container.get("slot_count"))
 	var desired: Array = _container_item_ids_by_name(container_id)
 	if desired.is_empty():
 		return true
 	var slots: Array = _slot_map(container_id, capacity)
-	var empty_slot := _first_empty_slot(slots)
-	var temporary_item_id := ""
+	var empty_slot: int = _first_empty_slot(slots)
+	var temporary_item_id: String = ""
 
 	if empty_slot < 0:
 		temporary_item_id = String(desired[desired.size() - 1])
-		var temporary_source_slot := slots.find(temporary_item_id)
+		var temporary_source_slot: int = slots.find(temporary_item_id)
 		if temporary_source_slot < 0:
 			_show_error("Сортировка не нашла временный предмет")
 			return false
 
-		var moved_to_buffer := false
+		var moved_to_buffer: bool = false
 		if player_inventory:
 			var hotbar = gameplay_controller.get_container(gameplay_controller.player_hotbar_id)
 			if hotbar != null:
 				for hotbar_index in range(int(hotbar.get("slot_count"))):
-					if String(hotbar.get_item_at_slot(hotbar_index)).is_empty():
+					if String(hotbar.call("get_item_at_slot", hotbar_index)).is_empty():
 						var hotbar_result: Dictionary = command_facade.transfer_quantity(
 							temporary_item_id,
 							-1,
@@ -349,7 +356,7 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 						moved_to_buffer = bool(hotbar_result.get("success", false))
 						break
 		else:
-			var player_free := _first_free_slot_for_container(String(gameplay_controller.player_inventory_id))
+			var player_free: int = _first_free_slot_for_container(String(gameplay_controller.player_inventory_id))
 			if player_free >= 0:
 				var inventory_result: Dictionary = command_facade.transfer_quantity(
 					temporary_item_id,
@@ -367,17 +374,17 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 		empty_slot = temporary_source_slot
 
 	for target_slot in range(desired.size()):
-		var desired_id := String(desired[target_slot])
+		var desired_id: String = String(desired[target_slot])
 		if String(slots[target_slot]) == desired_id:
 			continue
 
-		var desired_source_slot := slots.find(desired_id)
+		var desired_source_slot: int = slots.find(desired_id)
 		if desired_source_slot < 0:
 			if desired_id != temporary_item_id:
 				_show_error("Сортировка потеряла позицию предмета")
 				return false
 			if not String(slots[target_slot]).is_empty():
-				var buffered_occupant := String(slots[target_slot])
+				var buffered_occupant: String = String(slots[target_slot])
 				if not _move_whole_stack(buffered_occupant, container_id, empty_slot):
 					return false
 				slots[empty_slot] = buffered_occupant
@@ -390,7 +397,7 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 			continue
 
 		if not String(slots[target_slot]).is_empty():
-			var displaced_id := String(slots[target_slot])
+			var displaced_id: String = String(slots[target_slot])
 			if not _move_whole_stack(displaced_id, container_id, empty_slot):
 				return false
 			slots[empty_slot] = displaced_id
@@ -404,12 +411,12 @@ func _sort_container_slots(container_id: String, player_inventory: bool) -> bool
 		empty_slot = desired_source_slot
 
 	if not temporary_item_id.is_empty():
-		var final_slot := desired.find(temporary_item_id)
+		var final_slot: int = desired.find(temporary_item_id)
 		if final_slot < 0:
 			_show_error("Временный предмет отсутствует в плане сортировки")
 			return false
 		if not String(slots[final_slot]).is_empty():
-			var final_displaced_id := String(slots[final_slot])
+			var final_displaced_id: String = String(slots[final_slot])
 			if not _move_whole_stack(final_displaced_id, container_id, empty_slot):
 				return false
 			slots[empty_slot] = final_displaced_id
@@ -440,8 +447,8 @@ func _container_item_ids_by_slot(container_id: String) -> Array:
 	var container = gameplay_controller.get_container(container_id)
 	if container == null:
 		return []
-	for item_id_value in container.get("item_ids"):
-		var item_id := String(item_id_value)
+	for item_id_value in Array(container.get("item_ids")):
+		var item_id: String = String(item_id_value)
 		var item = gameplay_controller.get_item(item_id)
 		if item == null:
 			continue
@@ -469,25 +476,25 @@ func _container_item_ids_by_name(container_id: String) -> Array:
 
 
 func _compare_item_ids_by_name(a, b) -> bool:
-	var id_a := String(a)
-	var id_b := String(b)
+	var id_a: String = String(a)
+	var id_b: String = String(b)
 	var item_a = gameplay_controller.get_item(id_a)
 	var item_b = gameplay_controller.get_item(id_b)
 	if item_a == null or item_b == null:
 		return id_a < id_b
 	var definition_a = gameplay_controller.get_definition(item_a.get("definition_id"))
 	var definition_b = gameplay_controller.get_definition(item_b.get("definition_id"))
-	var name_a := String(item_a.get("display_name"))
-	var name_b := String(item_b.get("display_name"))
+	var name_a: String = String(item_a.get("display_name"))
+	var name_b: String = String(item_b.get("display_name"))
 	if name_a.is_empty() and definition_a != null:
 		name_a = String(definition_a.get("display_name"))
 	if name_b.is_empty() and definition_b != null:
 		name_b = String(definition_b.get("display_name"))
-	var name_compare := name_a.naturalnocasecmp_to(name_b)
+	var name_compare: int = name_a.naturalnocasecmp_to(name_b)
 	if name_compare != 0:
 		return name_compare < 0
-	var definition_id_a := String(item_a.get("definition_id"))
-	var definition_id_b := String(item_b.get("definition_id"))
+	var definition_id_a: String = String(item_a.get("definition_id"))
+	var definition_id_b: String = String(item_b.get("definition_id"))
 	if definition_id_a != definition_id_b:
 		return definition_id_a < definition_id_b
 	return id_a < id_b
@@ -501,13 +508,13 @@ func _slot_map(container_id: String, capacity: int) -> Array:
 	var container = gameplay_controller.get_container(container_id)
 	if container == null:
 		return slots
-	for item_id_value in container.get("item_ids"):
-		var item_id := String(item_id_value)
+	for item_id_value in Array(container.get("item_ids")):
+		var item_id: String = String(item_id_value)
 		var item = gameplay_controller.get_item(item_id)
 		if item == null:
 			continue
 		var relation: Dictionary = Dictionary(item.get("relation"))
-		var slot_index := int(relation.get("slot_index", -1))
+		var slot_index: int = int(relation.get("slot_index", -1))
 		if slot_index >= 0 and slot_index < capacity:
 			slots[slot_index] = item_id
 	return slots
@@ -522,14 +529,14 @@ func _first_empty_slot(slots: Array) -> int:
 
 func _first_free_slot_for_container(container_id: String) -> int:
 	var container = gameplay_controller.get_container(container_id)
-	if container == null or not container.is_slot_container():
+	if container == null or not bool(container.call("is_slot_container")):
 		return -1
 	return _first_empty_slot(_slot_map(container_id, int(container.get("slot_count"))))
 
 
 func _refresh_screen() -> void:
 	if screen != null and is_instance_valid(screen) and screen.has_method("refresh"):
-		screen.refresh()
+		screen.call("refresh")
 
 
 func _show_success(message: String) -> void:
@@ -540,7 +547,7 @@ func _show_success(message: String) -> void:
 		status_label.set("text", message)
 	var toast_layer = screen.get("toast_layer")
 	if toast_layer != null and toast_layer.has_method("show_success"):
-		toast_layer.show_success(message)
+		toast_layer.call("show_success", message)
 
 
 func _show_error(message: String) -> void:
@@ -551,7 +558,7 @@ func _show_error(message: String) -> void:
 		status_label.set("text", message)
 	var toast_layer = screen.get("toast_layer")
 	if toast_layer != null and toast_layer.has_method("show_error"):
-		toast_layer.show_error(message)
+		toast_layer.call("show_error", message)
 
 
 func get_report() -> Dictionary:
