@@ -72,7 +72,7 @@ func _test_rev6_enhancer_loads_and_instantiates() -> void:
 		if enhancer != null:
 			get_root().add_child(enhancer)
 			var report: Dictionary = enhancer.get_report()
-			_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix2.v1", "rev6 fix2 enhancer exposes expected schema")
+			_assert(String(report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix3.v1", "rev6 fix3 enhancer exposes expected schema")
 			_assert(String(report.get("pickup_stack_mode", "")) == "CONSOLIDATE_COMPATIBLE_ON_PICKUP_COMPLETION", "pickup stack mode is authoritative-completion driven")
 			enhancer.queue_free()
 
@@ -83,7 +83,7 @@ func _test_rev6_enhancer_loads_and_instantiates() -> void:
 		if compat != null:
 			get_root().add_child(compat)
 			var compat_report: Dictionary = compat.get_report()
-			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix2.v1", "compatibility path resolves to standalone fix2 implementation")
+			_assert(String(compat_report.get("schema", "")) == "planet_simulator.inventory_network_rev6_enhancer.fix3.v1", "compatibility path resolves to standalone fix3 implementation")
 			compat.queue_free()
 
 
