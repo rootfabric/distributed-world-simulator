@@ -23,6 +23,9 @@ $env:HOME = $IsolatedProfileRoot
 $env:XDG_DATA_HOME = $IsolatedDataRoot
 $env:XDG_CONFIG_HOME = $IsolatedConfigRoot
 $env:XDG_CACHE_HOME = $IsolatedCacheRoot
+# World regression is a deterministic baseline suite. Dedicated inventory
+# profile contracts switch to Rust/7DTD explicitly inside their own process.
+$env:PLANET_SIMULATOR_INVENTORY_PROFILE = "planet_default"
 
 $Candidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:GODOT_BIN)) {
