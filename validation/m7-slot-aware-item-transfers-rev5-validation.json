@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "candidate": "m7-slot-aware-item-transfers-rev5",
+  "base_candidate_sha": "6443855173e7dfbd170f76d9a56cc6533f7b5942",
+  "branch": "agent/m7-slot-aware-item-transfers-rev5",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "observed_blockers": [
+    "Same-inventory transfer to another slot returned success/no_op and lost target_slot_index.",
+    "Same-container transfer to another slot returned success/no_op.",
+    "Partial same-inventory and same-container transfer could not persist the new stack slot authoritatively.",
+    "Canonical player inventory exposed compact membership order while the M7 replica exposed 18 real slots.",
+    "Container item locations omitted slot_index even when the canonical container slots array accepted a requested target slot.",
+    "NX6 transfer prediction treated broad INVENTORY/CONTAINER location matches as confirmation and could replay a partial transfer over an already-authoritative split."
+  ],
+  "corrections": [
+    "Preserve compact inventory/container membership arrays for durable compatibility and store authoritative slot identity in item.location.slot_index.",
+    "Make same-inventory whole-stack transfer a real slot reorder and partial transfer an authoritative split into the requested empty slot.",
+    "Make same-container whole-stack transfer a real slot reorder and partial transfer an authoritative split into the requested empty slot.",
+    "Use slot occupancy rather than compact array insertion position for sparse external-container targets.",
+    "Reject occupied empty-target transfers with TARGET_SLOT_OCCUPIED instead of overwriting an item.",
+    "Normalize legacy inventory/container rows without slot_index deterministically before snapshots are exposed.",
+    "Make the M7 replica prefer canonical location.slot_index for local inventory presentation.",
+    "Make NX6 prediction assign requested slots and confirm partial transfer only after the source quantity changed and the matching authoritative source-derived transfer child exists at the requested target slot.",
+    "Keep the rev4 projection-hash same-revision rollback/rebase correction unchanged."
+  ],
+  "focused_test": "res://tests/network/test_m7_slot_aware_item_transfers.gd",
+  "focused_scenarios": [
+    "same-inventory whole-stack reorder",
+    "same-inventory partial split into an empty slot",
+    "inventory to sparse external-container slot",
+    "same-container whole-stack reorder",
+    "same-container partial split into an empty slot",
+    "external-container to sparse inventory slot",
+    "occupied target rejection without source mutation",
+    "last sparse external-container slot capacity",
+    "M7 replica canonical slot identity",
+    "NX6 partial transfer authoritative confirmation without temporary duplicate",
+    "NX6 same-inventory reorder survives unrelated authority revision and confirms only on the requested slot"
+  ],
+  "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
+  "runner_steps": [
+    "Godot editor import/composition parse",
+    "M7 join and snapshot semantics probe",
+    "M7 slot-aware item transfer regression suite",
+    "existing NX6 predicted item interaction suite"
+  ],
+  "automation_status": "NO_GITHUB_ACTION_WORKFLOW_RUNS_FOR_BRANCH_HEAD",
+  "local_execution_status": "REQUIRES_WINDOWS_GODOT_GATE",
+  "required_manual_acceptance": [
+    "Run VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1 with the Godot 4.7.1 double console binary.",
+    "Open the crate and repeatedly move multiple stacks inventory-to-crate and crate-to-inventory into non-adjacent empty slots.",
+    "Split a stack inside the player inventory and inside the crate; both source and child must remain in distinct requested slots after authoritative updates.",
+    "Verify no temporary duplicate survives command completion and no valid transfer produces SOURCE_CONTAINER_ACCESS_DENIED or MULTIPLAYER_SAME_REVISION_MUTATION."
+  ]
+}
