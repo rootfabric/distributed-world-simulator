@@ -14,6 +14,7 @@ var _snapshot_resyncs := 0
 var _last_prediction_health_ms := 0
 var _full_snapshot_clock_updates := 0
 var _full_snapshot_clock_replays := 0
+var _compact_snapshot_clock_replays := 0
 
 
 func _process(delta: float) -> void:
@@ -100,6 +101,42 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	replica_updated.emit(_replica.get_snapshot())
 
 
+func _accept_compact_snapshot(snapshot: Dictionary) -> void:
+	var decoded: Dictionary = CompactGameplaySnapshot.decode(snapshot)
+	if not bool(decoded.get("success", false)):
+		_compact_snapshot_rejections += 1
+		_last_error_code = String(decoded.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_REJECTED"))
+		return
+	var decoded_snapshot: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
+	var accepted: Dictionary = _replica.accept_snapshot(decoded_snapshot)
+	if not bool(accepted.get("success", false)):
+		var error_code := String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
+		if (
+			error_code == "MULTIPLAYER_SAME_REVISION_MUTATION"
+			and _same_snapshot_semantics_except_clock(_replica.get_snapshot(), decoded_snapshot)
+		):
+			var current_tick := int(_replica.get_snapshot().get("server_tick", -1))
+			var incoming_tick := int(decoded_snapshot.get("server_tick", -1))
+			if incoming_tick > current_tick:
+				_compact_snapshot_clock_updates += 1
+				_reconcile_prediction_from_snapshot(decoded_snapshot)
+				_prune_acknowledged_inputs()
+			else:
+				_compact_snapshot_clock_replays += 1
+			if _last_error_code == "MULTIPLAYER_SAME_REVISION_MUTATION":
+				_last_error_code = ""
+			return
+		_compact_snapshot_rejections += 1
+		_last_error_code = error_code
+		return
+	if not bool(accepted.get("details", {}).get("replay", false)):
+		_snapshot_updates += 1
+		_compact_snapshot_updates += 1
+	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
+	_prune_acknowledged_inputs()
+	replica_updated.emit(_replica.get_snapshot())
+
+
 func _same_snapshot_semantics_except_clock(current: Dictionary, incoming: Dictionary) -> bool:
 	if current.is_empty() or incoming.is_empty():
 		return false
@@ -143,4 +180,5 @@ func get_report() -> Dictionary:
 	report["snapshot_resyncs"] = _snapshot_resyncs
 	report["full_snapshot_clock_updates"] = _full_snapshot_clock_updates
 	report["full_snapshot_clock_replays"] = _full_snapshot_clock_replays
+	report["compact_snapshot_clock_replays"] = _compact_snapshot_clock_replays
 	return report
