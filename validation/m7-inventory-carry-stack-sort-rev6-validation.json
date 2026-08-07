@@ -5,81 +5,55 @@
   "base_branch": "agent/m7-slot-aware-item-transfers-rev5",
   "base_commit": "3b590b392a536d843f28f3ede833c00fd41466af",
   "implementation": {
-    "carry_origin_projection": "network-virtual carry subtracts the cursor quantity from the source presentation; whole carry shows an empty source slot, partial carry leaves the exact remainder",
-    "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the carry overlay so full/partial carry matches the main inventory behavior",
-    "drop_pointer": "inventory-visible process guard restores MOUSE_MODE_VISIBLE and inactive carry preview is forcibly hidden",
-    "pickup_auto_stack": "successful pickup completion consolidates compatible player-inventory stacks through serialized predicted item.transfer commands and definition max_stack",
-    "sort_player_inventory": "merge + alphabetical compaction uses one predicted item.transfer at a time and waits for its authoritative completion before the next operation",
+    "carry_origin_projection": "network-virtual carry subtracts cursor quantity from source presentation; whole carry shows empty source slot, partial carry leaves exact remainder",
+    "carry_hotbar_projection": "persistent hotbar is explicitly re-rendered through the same carry overlay",
+    "drop_pointer": "inventory-visible process guard restores MOUSE_MODE_VISIBLE and inactive carry preview is hidden",
+    "pickup_auto_stack": "pickup consolidation uses serialized predicted item.transfer commands and definition max_stack",
+    "sort_player_inventory": "merge + alphabetical compaction sends one predicted item.transfer at a time and waits for authoritative completion before continuing",
     "sort_external_container": "same authoritative-serial behavior for the currently open external slot container",
     "prediction_window": 64,
     "enhancer_layout": "standalone fix5 implementation with compatibility alias at the original rev6 path",
-    "godot_4_7_variant_typing": "dynamic Object/Variant-derived booleans, indices and names are explicitly typed before use",
-    "sort_button_layout": "sort buttons are top-level 112x30 overlay controls positioned against the top-right of their panels",
-    "sort_click_input_guard": "left-button GUI press/release is marked handled before the playground global mouse-capture shortcut can receive it",
-    "interaction_hint_layout": "world interaction hint remains at center-bottom y=-170 above the persistent hotbar"
+    "sort_button_layout": "top-level 112x30 overlay controls anchored to their panels",
+    "sort_click_input_guard": "left-button GUI press/release is marked handled before global playground mouse capture can receive it",
+    "interaction_hint_layout": "world interaction hint stays at center-bottom y=-170 above persistent hotbar"
   },
   "focused_test": "res://tests/ui/test_inventory_network_rev6.gd",
   "focused_runner": "VALIDATE_M7_NETWORK_ITEM_REPLICA.ps1",
   "regression_history": [
     {
       "observed_on_commit": "c743feb5809c39eda2a92492e144d3dc29b4e368",
-      "failure": "fragile enhancer inheritance chain did not compile; test falsely reported PASS because Godot returned exit code 0 after SCRIPT ERROR",
-      "correction": "standalone enhancer, runtime Script.can_instantiate checks, fatal diagnostic scanning"
+      "failure": "enhancer inheritance compile failure plus false-green test",
+      "correction": "standalone enhancer, Script.can_instantiate checks, fatal diagnostic scanning"
     },
     {
       "observed_on_commit": "6b352dd87137e5f69360dce174c43aa7f618799c",
-      "failure": "Parse Error: Cannot infer the type of carry_active because transfer_session is dynamically typed",
-      "correction": "explicitly type dynamic carry/sort intermediates"
+      "failure": "Godot 4.7.1 could not infer dynamic carry_active type",
+      "correction": "explicit dynamic typing"
     },
     {
       "observed_on_commit": "c2077d20c5abd25b2104e92c10e6d7b479ca99cb",
       "automated_gate": "USER-REPORTED PASS",
-      "graphical_findings": [
-        "sort button stretched across the inventory menu",
-        "world interaction hint overlapped persistent hotbar slots"
-      ],
-      "correction": "fix4 moves sort buttons to compact top-level overlay geometry and raises interaction hint"
+      "graphical_findings": ["sort button stretched across menu", "world interaction hint overlapped hotbar"],
+      "correction": "fix4 compact overlay buttons + raised interaction hint"
     },
     {
       "observed_on_commit": "6f620f92839dcdfe14099089a134c73de95ff202",
       "graphical_layout": "USER-REPORTED WORKING",
       "findings": [
-        "sort click captured the mouse and recentered the pointer",
-        "sort burst produced server TARGET_SLOT_OCCUPIED and client MULTIPLAYER_SAME_REVISION_MUTATION instead of completing",
-        "whole carry from persistent hotbar left the source item visible"
+        "sort click captured mouse and recentered pointer",
+        "sort burst produced TARGET_SLOT_OCCUPIED and MULTIPLAYER_SAME_REVISION_MUTATION",
+        "whole carry from persistent hotbar left source item visible"
       ],
-      "correction": "fix5 consumes sort-button mouse input, serializes each predicted transfer against authoritative completion, and applies quantity-aware carry presentation to both inventory and persistent hotbar"
+      "correction": "fix5 consumes sort-button input, serializes each predicted transfer against authoritative completion, and applies quantity-aware carry presentation to inventory and hotbar"
     }
   ],
-  "runner_hardening": {
-    "fatal_patterns": [
-      "SCRIPT ERROR:",
-      "Parse Error:",
-      "Compile Error:",
-      "Failed to load script"
-    ],
-    "windows_powershell_native_stderr": "temporarily uses Continue while invoking Godot so stderr can be captured and classified before throwing",
-    "dedicated_enhancer_check_only": true
-  },
   "focused_fix5_assertions": [
     "partial carry renders authoritative quantity minus cursor quantity",
     "whole carry renders source slot empty",
     "same carry overlay works for player_hotbar",
     "fix5 reports AUTHORITATIVE_SERIAL_TRANSFER sort mode",
-    "fake predicted transfer waits for and consumes its authoritative completion before returning"
+    "fake predicted transfer waits for and consumes authoritative completion before returning"
   ],
-  "static_review": {
-    "branch_isolation": "PASS",
-    "base_preserved": true,
-    "authority_path": "existing M7 item.transfer only",
-    "new_server_command": false
-  },
-  "assistant_environment": {
-    "full_repository_checkout": false,
-    "reason": "container DNS cannot resolve github.com; connected GitHub API was used for exact branch reads/writes",
-    "godot_binary_available": "4.7.1.stable.double.custom_build.a13da4feb",
-    "full_project_gate_executed": false
-  },
   "required_acceptance": [
     "Editor import / composition parse",
     "M7 item join and snapshot semantics",
@@ -87,7 +61,7 @@
     "M7 inventory rev6 enhancer parse",
     "M7 inventory carry / stack / sort rev6",
     "NX6 predicted item interactions",
-    "manual sort: pointer remains visible and items finish alphabetically compacted without TARGET_SLOT_OCCUPIED",
+    "manual sort: pointer stays visible and items finish alphabetically compacted without TARGET_SLOT_OCCUPIED",
     "manual carry: whole hotbar stack disappears from source; partial carry leaves exact remainder"
   ],
   "decision": "FIX5 CANDIDATE - WINDOWS GATE + GRAPHICAL RECHECK REQUIRED"
