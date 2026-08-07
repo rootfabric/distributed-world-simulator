@@ -8,11 +8,13 @@ const SlotAwarePredictionJournalScript = preload(
 	"res://scripts/network/prediction/predicted_item_interaction_journal_slot_aware.gd"
 )
 const InventoryRev6EnhancerScript = preload(
-	"res://scripts/ui/inventory/inventory_network_rev6_enhancer.gd"
+	"res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix1.gd"
 )
 
 const SLOT_AWARE_PREDICTION_TIMEOUT_MS := 8000
-const SLOT_AWARE_PREDICTION_MAX_PENDING := 32
+# Sorting can require a short burst of ordered item.transfer predictions when a
+# nearly-full 18-slot inventory must be permuted through one temporary slot.
+const SLOT_AWARE_PREDICTION_MAX_PENDING := 64
 
 # Network-playground specialization that keeps local camera input independent
 # from the authoritative avatar-facing yaw and keeps client prediction on the
