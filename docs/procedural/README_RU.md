@@ -3,7 +3,7 @@
 Current implementation:
 
 ```text
-feature/g5-world-feature-graph
+feature/g6-hydrology-fluid-surface-v0
 ```
 
 Current state:
@@ -12,19 +12,21 @@ Current state:
 G3 ACCEPTED
 G4 ACCEPTED — Architecture Review A PASS
 G5 ACCEPTED
-G6 NEXT — UNBLOCKED
+G6.0 IMPLEMENTED CANDIDATE
+G6.1 NEXT — after focused G6.0 acceptance
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-3. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
-4. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
-5. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-6. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
-7. `docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md`
-8. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
+2. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
+3. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
+4. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
+5. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
+6. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
+7. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
+8. `docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md`
+9. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
 
 ## Current architecture
 
@@ -41,7 +43,15 @@ G4 recipe-driven provider composition
         ↓
 G5 canonical World Feature Graph
         ↓
-G6 hydrology / fluid geography
+G6.0 canonical fluid contracts
+        ↓
+G6.1 river provider
+        ↓
+G6.2 cross-cell/cross-LOD continuity
+        ↓
+G6.3 runtime fluid surface query
+        ↓
+G6.4 casual visual river
 ```
 
 G4 established:
@@ -50,27 +60,24 @@ G4 established:
 world semantics = recipe-driven provider graph
 ```
 
-G5 establishes spatial semantic identity above representation cells:
+G5 established spatial semantic identity above representation cells. Its accepted seam gate proves that a canonical feature keeps one identity while its representation spans different cube-sphere cells and LODs.
+
+G6.0 adds the canonical fluid vocabulary:
 
 ```text
-WorldFeature
-  feature_id
-  feature_type
-  bounds
-  anchors
-  parent
-  relations
-        ↓
-FeatureGraph
-        ↓
-FeatureQuery
+FluidType
+FluidRegionId
+FluidSurfaceDescriptor
+RiverSpline
+RiverChannelProfile
+WaterSurfaceQuery
 ```
 
-Canonical FeatureId depends on:
+`FluidRegionId` depends only on:
 
 ```text
 body_id
-feature_type
+fluid_type_id
 seed
 generator_version
 stable_key
@@ -86,27 +93,18 @@ renderer
 streaming state
 ```
 
-The accepted G5 seam gate proves that one fault crosses multiple cube-sphere cells and the PX/PZ face boundary at LOD 2/4/8/12 while keeping one FeatureId and one graph manifest.
+`FluidSurfaceDescriptor` can optionally reference a G5 `FeatureId`, so rivers may be derived from stable feature semantics while lakes, oceans, lava seas or other fluid regions remain first-class generic fluid geography.
 
-G5 is not surface-only. Acceptance also covers a subsurface cave system and a free-space floating island.
+Focused validation:
 
-Acceptance evidence:
-
-```text
-G5 World Feature Graph: PASS (249 assertions)
-G5 feature/cell identity: PASS (94 assertions)
-full world/core regression: PASS
-Breakpoint :9081 collision noise: 0
-G5 full acceptance gate: PASS
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_FLUID_CONTRACT_TESTS.ps1
 ```
 
-Visual lab:
+The focused runner rechecks both accepted G5 contract suites before the new G6.0 contract suite.
 
-```text
-res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
-```
-
-Blocking GEO track is now `G6 — Hydrology / Fluid Surface v0`. G6 must build river/fluid geography on stable G5 feature identity rather than chunk-local identities.
+Blocking GEO track after that focused acceptance is `G6.1 — CasualRiverProviderV1`.
 
 ## Detail / asset research doctrine
 
@@ -117,20 +115,7 @@ BASE FIRST
 BEAUTY SECOND
 ```
 
-Until the universal generation fabric, fields, volume queries, scheduler/streaming and detail contracts are stable, environments may use deliberately simple casual representations:
-
-```text
-simple river strip
-simple ocean envelope
-primitive trees/rocks
-simple snow coverage
-simple swamp water/reeds
-simple dune forms
-simple lava strip
-simple cloud proxies
-simple SDF caves
-simple reef scatter
-```
+Until the universal generation fabric, fields, volume queries, scheduler/streaming and detail contracts are stable, environments may use deliberately simple casual representations.
 
 The important early acceptance targets are:
 
@@ -146,7 +131,7 @@ network derivation
 mutation compatibility
 ```
 
-Only after that baseline is accepted should the project spend significant effort adapting high-quality ideas from the accumulated reference mosaic: Procedural Forest Demo, Waterways, ocean renderers, deformable snow/activity maps, procedural branching/path geometry, Terrain3D/Infinigen-style techniques and other environment references.
+Only after that baseline is accepted should the project spend significant effort adapting high-quality ideas from the accumulated reference mosaic.
 
 See:
 
