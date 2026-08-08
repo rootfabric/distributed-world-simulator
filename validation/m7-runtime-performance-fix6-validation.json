@@ -11,7 +11,7 @@
     "scheduler_backlog_ticks_at_health_samples": 0,
     "client_prediction_lead_ticks_observed_up_to": 157,
     "visible_symptom": "multi-second movement/network freeze while item actions were occurring",
-    "diagnosis": "realtime observability remained allocation-heavy: telemetry observe duplicated/shifted bounded arrays on every sample, peer transport statistics rebuilt a full boundary snapshot every authority frame, and dirty READY reports could materialize a full runtime report as often as every 250 ms"
+    "diagnosis": "realtime observability remained allocation-heavy: telemetry observe duplicated/shifted bounded arrays on every sample, transport telemetry allocated default channel dictionaries on every packet, peer transport statistics rebuilt a full boundary snapshot every authority frame, and dirty READY reports could materialize a full runtime report as often as every 250 ms"
   },
   "policies": {
     "telemetry_sample_storage": "BOUNDED_RING_OVERWRITE_V2",
@@ -23,6 +23,7 @@
   },
   "production_changes": [
     "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or pop_front()s on the realtime path",
+    "steady-state telemetry lookups avoid eager default Array/Dictionary allocation for existing distributions and transport channels",
     "M7 server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
     "M7 READY diagnostic report materialization is coalesced to at most 1 Hz while initial READY and terminal reports remain synchronous",
     "SERVER_HEALTH and realtime_foundation expose current/peak server process duration, slow-frame count, report snapshot build current/peak duration, and peer telemetry sampling current/peak duration"
@@ -38,6 +39,7 @@
   ],
   "focused_test": "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
   "runner": "VALIDATE_M7_RUNTIME_PERFORMANCE_FIX6.ps1",
+  "stress_analyzer": "ANALYZE_M7_FIX6_STRESS.ps1",
   "assistant_exact_godot_probe": {
     "engine": "4.7.1.stable.double.custom_build.a13da4feb",
     "telemetry_ring_semantics": "PASS",
@@ -78,7 +80,8 @@
       "prediction lead returns to the normal low-single-digit range instead of remaining in tens/hundreds of ticks",
       "no hard multi-metre reconciliation correction and no visible backwards pull",
       "item/player checksums still converge",
-      "SERVER_HEALTH report_snapshot_build_duration_ms and peer_telemetry_last_duration_ms make any remaining slow-frame source attributable"
+      "SERVER_HEALTH report_snapshot_build_duration_ms and peer_telemetry_last_duration_ms make any remaining slow-frame source attributable",
+      "ANALYZE_M7_FIX6_STRESS.ps1 returns PASS under the chosen acceptance thresholds"
     ]
   },
   "assistant_execution": {
