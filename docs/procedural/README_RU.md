@@ -3,7 +3,7 @@
 Current implementation:
 
 ```text
-feature/g5-world-feature-graph
+feature/g6-hydrology-fluid-surface
 ```
 
 Current state:
@@ -12,19 +12,21 @@ Current state:
 G3 ACCEPTED
 G4 ACCEPTED — Architecture Review A PASS
 G5 ACCEPTED
-G6 NEXT — UNBLOCKED
+G6 IMPLEMENTED CANDIDATE
+G7 BLOCKED BY G6 ACCEPTANCE
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-3. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
-4. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
-5. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-6. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
-7. `docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md`
-8. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
+2. `docs/checkpoints/G6_HYDROLOGY_FLUID_SURFACE_CANDIDATE_RU.md`
+3. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
+4. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
+5. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
+6. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
+7. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
+8. `docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md`
+9. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
 
 ## Current architecture
 
@@ -41,7 +43,9 @@ G4 recipe-driven provider composition
         ↓
 G5 canonical World Feature Graph
         ↓
-G6 hydrology / fluid geography
+G6 canonical hydrology / fluid geography
+        ↓
+G7 semantic field fabric
 ```
 
 G4 established:
@@ -50,7 +54,7 @@ G4 established:
 world semantics = recipe-driven provider graph
 ```
 
-G5 establishes spatial semantic identity above representation cells:
+G5 established stable spatial feature identity above representation cells:
 
 ```text
 WorldFeature
@@ -66,51 +70,123 @@ FeatureGraph
 FeatureQuery
 ```
 
-Canonical FeatureId depends on:
+Canonical `FeatureId` is independent of cell/LOD/camera/renderer/streaming state.
+
+G6 builds fluid geography on that identity rather than inventing chunk-local rivers.
+
+## G6 canonical hydrology
+
+New vocabulary:
 
 ```text
-body_id
-feature_type
-seed
-generator_version
-stable_key
+FluidRegionId
+FluidSurfaceDescriptor
+RiverSpline
+RiverChannelProfile
+WaterSurfaceQuery
+WaterSurfaceSample
+RiverFeature
+CasualRiverProviderV1
 ```
 
-and deliberately does not depend on:
+The core relationship is:
 
 ```text
-SurfaceCellKey
-LOD
-camera
-renderer
-streaming state
+G5 RiverFeature
+     +
+RiverSpline
+     +
+RiverChannelProfile
+     +
+FluidSurfaceDescriptor
+     ↓
+CasualRiverProviderV1
+     ↓
+WaterSurfaceQuery -> WaterSurfaceSample
 ```
 
-The accepted G5 seam gate proves that one fault crosses multiple cube-sphere cells and the PX/PZ face boundary at LOD 2/4/8/12 while keeping one FeatureId and one graph manifest.
-
-G5 is not surface-only. Acceptance also covers a subsurface cave system and a free-space floating island.
-
-Acceptance evidence:
+Important boundaries:
 
 ```text
-G5 World Feature Graph: PASS (249 assertions)
-G5 feature/cell identity: PASS (94 assertions)
-full world/core regression: PASS
-Breakpoint :9081 collision noise: 0
-G5 full acceptance gate: PASS
+River != SurfaceCellKey
+River != LOD
+FluidRegion != renderer artifact
+WaterSurfaceQuery does not receive cell/LOD
+G6 != CFD
+G6 != G7 Semantic Field Fabric
+```
+
+A generic fluid descriptor is already able to express non-water fluid identity and multiple surface modes. This is the foundation for future river/lake/ocean/lava-lake/methane-sea/subsurface-fluid implementations without adding world-type switches to core.
+
+## G6 seam / LOD proof
+
+The Mega Casual River fixture is planetary-scale and deliberately crosses the G2 cube-sphere `PX/PZ` seam.
+
+It is addressed at:
+
+```text
+LOD 2
+LOD 4
+LOD 8
+LOD 12
+```
+
+The representation cell set changes, while all of the following remain stable:
+
+```text
+River FeatureId
+FluidRegionId
+provider manifest
+canonical water query result identity
+```
+
+Candidate evidence:
+
+```text
+G6 hydrology/fluid surface          PASS — 161 assertions
+G6 river/cell LOD identity          PASS — 72 assertions
+G6 visual lab headless              PASS
+G5 graph regression                 PASS — 249 assertions
+G5 cell identity regression         PASS — 94 assertions
+G6 focused Linux wrapper            PASS
+```
+
+Implementation candidate:
+
+```text
+68dc5158347989c6d16564993144106d2a294516
+```
+
+Full Windows gate still required:
+
+```powershell
+.\RUN_G6_FULL_ACCEPTANCE.ps1
 ```
 
 Visual lab:
 
 ```text
-res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
+res://scenes/labs/procedural/g6_hydrology_fluid_surface_lab.tscn
 ```
 
-Blocking GEO track is now `G6 — Hydrology / Fluid Surface v0`. G6 must build river/fluid geography on stable G5 feature identity rather than chunk-local identities.
+The blue river ribbon is intentionally width-exaggerated for visibility. It is presentation-only; canonical channel width remains 60→180 m.
+
+## What G7 will add
+
+After G6 acceptance, G7 should expose provider-independent semantic fields such as:
+
+```text
+hydro/river-distance-m
+hydro/water-level-m
+hydro/moisture
+hydro/drainage
+```
+
+Consumers then ask for a semantic field and do not know whether its source was a river provider, lake model, terrain analysis or another composition backend.
 
 ## Detail / asset research doctrine
 
-The 2026-08-08 asset research is intentionally **reference-only during the base generation program**.
+The 2026-08-08 asset research remains intentionally **reference-only during the base generation program**.
 
 ```text
 BASE FIRST
