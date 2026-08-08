@@ -8,47 +8,45 @@ CH8B proved that `Male_Peasant.gltf` can be presented as three independent canon
 - lower: `Male_Peasant_Legs`;
 - feet: `Male_Peasant_Feet`.
 
-The accepted base character is different: `SuperHero_Male` contains head, torso, arms, legs and feet in one skinned `MeshInstance3D` and one material surface. The CH7.8 whole-body head clip is correct for a closed full outfit, but is too coarse for open layered garments.
+The accepted base character is different: `SuperHero_Male` contains head, torso, arms, legs and feet in one skinned `MeshInstance3D` and one material surface. A full-body head clip works for a closed outfit, but open modular garments require finer coverage.
 
-The first CH8C graphical observation exposed exactly this problem:
+The graphical tuning history established two opposite failure modes:
 
-- equipping the upper garment removed the visible underwear/pelvis area;
-- equipping the lower garment removed the knee band;
-- the coarse mask therefore created holes at garment boundaries even though the garment meshes themselves were correct.
+1. coarse coverage removed underwear/pelvis and knees;
+2. the first protected-overlay policy preserved those boundaries, but left base shins/feet visibly poking through trousers and boots.
 
-## Policy: suppress cores, preserve open boundaries
+CH8C fix5 keeps the protected-boundary idea and adds fine lower-leg/foot cores instead of returning to coarse whole-leg suppression.
 
-CH8C fix4 uses a hybrid presentation rule.
-
-We do **not** disable body suppression globally: an inner body surface can still poke through tight garments during animation. Instead, layered garments suppress only the body volume safely inside the garment and leave open boundaries rendered underneath.
-
-For the current Peasant parts:
+## Current Peasant coverage policy
 
 ```text
 upper
     canonical channels: body.torso.outer + body.arms.outer
     garment meshes: Body + Arms
-    body suppression: body.region.torso.core only
-    preserved base: arms, pelvis/underwear, legs, feet
+    body suppression: body.region.torso.core
+    preserved: base arms, pelvis/underwear, legs, feet
 
 lower
     canonical channel: body.legs.outer
     garment mesh: Legs
-    body suppression: body.region.thighs.core only
-    preserved base: pelvis/underwear, knees, lower legs, feet
+    body suppression:
+        body.region.thighs.core
+        body.region.shins.core
+    preserved: pelvis/underwear and an explicit knee band
 
 feet
     canonical channel: body.feet
     garment mesh: Feet
-    body suppression: none (overlay-only)
-    preserved base: complete foot/ankle extremity
+    body suppression:
+        body.region.feet.core
+    preserved: coarse body semantics; only the enclosed ankle/foot core is removed
 ```
 
-This distinction is presentation-only. Canonical occupancy remains `torso.outer / arms.outer / legs.outer / feet`; it does not learn about `torso.core`, `thighs.core`, shaders or Quaternius geometry.
+This is presentation metadata only. Canonical equipment still knows only item/profile/channel semantics; it does not know Quaternius mesh names, shader thresholds or fine clip regions.
 
-## Coarse vs fine coverage regions
+## Coarse and fine body regions
 
-The original coarse semantic regions remain available:
+Coarse regions remain available for closed garments such as EVA/full-body suits:
 
 ```text
 body.region.torso
@@ -57,53 +55,43 @@ body.region.legs
 body.region.feet
 ```
 
-They are still useful for closed/full-body garments such as an EVA suit.
-
-Layered Quaternius presentation adds two finer regions:
+The layered Quaternius adapter adds fine regions:
 
 ```text
 body.region.torso.core
 body.region.thighs.core
+body.region.shins.core
+body.region.feet.core
 ```
 
-`QuaterniusLayeredBodySuppressionAdapter` supports both sets. This avoids weakening the meaning of the old coarse regions.
+The old meanings are not weakened. A different wearable can choose coarse or fine coverage independently through `WearableBodyCoverageCatalog`.
 
-## Separation of responsibilities
+## Aggregate architecture
 
 ```text
 canonical equipment snapshot
         |
         +--> CharacterEquipmentPresenter
-        |       -> upper/lower/feet skinned garment visuals
+        |       -> independent skinned garment visuals
         |
         +--> WearableBodyCoverageCatalog
-                -> presentation-only coverage metadata
+                -> rig-specific presentation coverage
                 |
                 v
         LayeredBodySuppressionCoordinator
-                -> union fine/coarse coverage
-                -> one composite material
+                -> union/sort coverage
+                -> one composite base-body material
 ```
 
-The canonical domain still contains only item IDs, profiles, anchors and occupied equipment channels. It does not contain mesh names, clip thresholds, shaders or Quaternius knowledge.
+The coordinator is snapshot-driven. Atomic canonical replacement therefore yields one final aggregate material rather than a sequence of intermediate masks.
 
-## Aggregate coordinator
+When no equipped item contributes body coverage, the exact original `material_override` is restored.
 
-`LayeredBodySuppressionCoordinator` consumes the complete equipment snapshot, gathers all registered presentation coverage, sorts/deduplicates the semantic regions and asks the rig for one composite suppression result.
+## Quaternius fine-region material
 
-It is snapshot-driven rather than event/ref-count driven. Therefore an atomic canonical replacement goes directly from the old aggregate region set to the new aggregate region set without intermediate partial presentation states.
+`QuaterniusRegionClip` uses rest/model coordinates from the fused base mesh and opaque fragment `discard`. It does not write alpha, modify vertices/triangles, collision, gameplay body or imported asset bytes.
 
-Unrelated items such as a helmet do not rebuild the material when the aggregate coverage set is unchanged.
-
-An overlay-only garment is allowed to have an empty coverage set. Equipping such an item changes canonical/presentation state but does not modify the base-body material.
-
-When no equipped garment contributes body coverage, the exact original `material_override` is restored even if overlay-only garments remain equipped.
-
-## Quaternius protected material
-
-`QuaterniusRegionClip` keeps the existing coarse masks for closed garments and adds protected fine masks for layered garments.
-
-For the current `SuperHero_Male` AABB, the fine thresholds are derived from the body dimensions:
+For the current base-body AABB, fix5 uses:
 
 ```text
 torso.core min      = min_y + height * 0.56
@@ -113,61 +101,73 @@ torso.core half-x   = width  * 0.20
 thighs.core min     = min_y + height * 0.39
 thighs.core max     = min_y + height * 0.56
 thighs.core half-x  = width  * 0.16
+
+shins.core min      = min_y + height * 0.24
+shins.core max      = min_y + height * 0.33
+shins.core half-x   = width  * 0.14
+
+feet.core max       = min_y + height * 0.25
+feet.core half-x    = width  * 0.14
 ```
 
-With the observed real asset this is roughly:
+The real modular-part probe measured approximately:
 
 ```text
-torso core  ~1.01 .. 1.55 m
-thigh core  ~0.70 .. 1.01 m
+Male_Peasant_Legs  y = 0.403 .. 1.054 m
+Male_Peasant_Feet  y = -0.004 .. 0.448 m
 ```
 
-The intent is explicit:
+So the fine cuts intentionally follow the actual garment overlap.
 
-- below the torso core remains the underwear/pelvis boundary;
-- below the thigh core remains the knee/lower-leg boundary;
-- base arms are not removed for the Peasant upper;
-- base feet are not removed for the current Peasant feet item.
+### Protected knee band
 
-The shader still uses opaque fragment `discard`; it does not write alpha and does not modify vertices/triangles or imported asset bytes.
+The knee remains visible because there is an explicit gap between:
+
+```text
+shins.core max
+        < knee band <
+thighs.core min
+```
+
+For the current base proportions that gap is roughly 0.59 .. 0.70 m. This avoids the earlier failure where a coarse `legs` clip removed the knee completely.
+
+### Boot/shin seam
+
+`feet.core` reaches slightly into the lower boundary of `shins.core`. This overlap is intentional: it prevents a narrow strip of base geometry from leaking through between trousers and the foot/boot mesh.
 
 ## Compatibility
 
-CH7.8 full-outfit `MATERIAL_OVERRIDE` head-clip path remains unchanged.
+CH7.8 full-outfit head-clip behavior remains unchanged.
 
-CH8C does not modify the accepted `CharacterEquipmentPresenter`, `WearablePresentationCatalog` or `SkinnedGarmentPoseBridge` contracts. The aggregate coordinator runs beside the presenter.
+CH8C fix5 does not modify accepted `CharacterEquipmentPresenter`, `WearablePresentationCatalog` or `SkinnedGarmentPoseBridge` contracts. It does not alter canonical equipment, Item Graph, collision or network protocol.
 
-The CH6 shadow proxy continues to synchronize source `material_override` through the existing path.
+The CH6 first-person shadow proxy continues to synchronize the source `material_override` through the existing path.
 
-## CH8C fix4 acceptance gates
+## CH8C fix5 acceptance gates
 
 Automated:
 
-- upper enables `torso.core` only;
-- upper does not enable coarse torso/arms/legs/feet suppression;
-- torso-core lower boundary preserves a pelvis/underwear band;
-- unrelated helmet leaves aggregate material identity unchanged;
-- lower adds `thighs.core` only;
-- thigh-core lower boundary preserves knee/lower-leg geometry;
-- feet is overlay-only and does not rebuild the aggregate body material;
-- upper+lower+feet produces exactly two active fine coverage regions;
-- removing upper+lower restores the exact original material even while feet remains equipped;
-- Eyes and Eyebrows remain visible;
+- `upper` uses `torso.core` and never coarse arm/leg/feet suppression;
+- `lower` uses exactly `thighs.core + shins.core`;
+- the knee band between shin and thigh cuts remains non-zero;
+- `feet` contributes `feet.core` rather than coarse `feet`;
+- foot and shin cores overlap enough to avoid a vertical seam;
+- removing lower leaves only foot coverage when boots remain;
+- removing the final covered item restores the exact original material;
+- graphical lab reports four fine regions for U+L+K;
 - gameplay `CharacterBody3D` and capsule remain unchanged;
-- graphical lab U/L/K lifecycle passes headlessly with no Godot `ERROR:` lines;
-- accepted CH7.8, CH8A and CH8B regression remains green.
+- the full runner rejects any Godot `ERROR:` line;
+- accepted CH7.8, CH8A and CH8B regressions remain green.
 
 Graphical:
 
-- U: shirt appears without removing underwear/pelvis or arms;
-- L: lower garment appears without removing knees/lower legs;
-- K: feet part layers without removing the base extremity;
-- U+L+K has no unacceptable body poke-through through the central garment surfaces;
-- head remains visible;
-- movement, jump, crouch, FP/TP, helmet/backpack and shadow remain coherent.
+- underwear/pelvis remains visible where the upper/lower garments are open;
+- the deliberate knee opening remains visible;
+- base shin geometry no longer pokes through the trousers;
+- base ankle/foot geometry no longer pokes through the foot/boot mesh;
+- U+L+K remains coherent in idle/walk/run/jump/crouch;
+- helmet/backpack, FP/TP and shadow remain coherent.
 
 ## Future refinement
 
-Fine geometric cores are still a prototype fit strategy. Different garments may require different coverage metadata.
-
-If body poke-through remains visible after protected cores, the next refinement should be authored vertex/UV masks or per-garment coverage volumes. That refinement remains presentation metadata and must not change canonical equipment semantics, Item Graph or network protocol.
+These rest-coordinate cores are still prototype fit metadata. If a garment needs holes or silhouettes that cannot be represented by a few geometric bands, the next step is authored vertex/UV coverage masks or per-garment generated coverage data. That remains presentation-only and must not leak into canonical Item Graph or networking semantics.
