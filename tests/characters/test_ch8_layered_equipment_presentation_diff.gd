@@ -27,7 +27,7 @@ func _run() -> void:
 	_assert(bool(rig_setup.get("success", false)), "Layered presentation rig setup failed")
 
 	var layout := _layout()
-	var profiles: Array[Domain.Profile] = [
+	var profiles: Array = [
 		_profile("equipment.layer.undersuit", "wearable.layer.undersuit", ["body.torso.inner", "body.arms.inner", "body.legs.inner"]),
 		_profile("equipment.layer.jacket", "wearable.layer.jacket", ["body.torso.outer", "body.arms.outer"]),
 		_profile("equipment.layer.trousers", "wearable.layer.trousers", ["body.legs.outer"]),
