@@ -10,8 +10,8 @@ var presentation_catalog: WearablePresentationCatalog
 var _visuals_by_item: Dictionary = {}
 var _entry_lines_by_item: Dictionary = {}
 var _strategies_by_item: Dictionary = {}
-var _hidden_visuals_by_item: Dictionary = {}
-var _body_hide_state_by_instance: Dictionary = {}
+var _suppression_keys_by_item: Dictionary = {}
+var _body_suppression_state_by_key: Dictionary = {}
 var _body_replacement_nodes_by_item: Dictionary = {}
 var _last_snapshot_fingerprint := ""
 
@@ -96,7 +96,8 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 				return _result(false, "SKINNED_PRESENTATION_PARENT_UNAVAILABLE", {"item_id": item_id})
 
 			var hidden_regions: Array = resolved_details.get("hide_body_regions", [])
-			var hidden_visuals: Array = []
+			var suppression_targets: Array[Dictionary] = []
+			var seen_suppression_keys: Dictionary = {}
 			for raw_region in hidden_regions:
 				var region_id := String(raw_region)
 				if not rig_adapter.supports_body_region(region_id):
@@ -105,16 +106,43 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 						"body_region": region_id,
 						"rig_profile_id": rig_adapter.rig_profile_id,
 					})
-				var region_visuals: Array = rig_adapter.resolve_body_region_visuals(character_visual_root, region_id)
-				if region_visuals.is_empty():
-					return _result(false, "BODY_REGION_HAS_NO_VISUALS", {
+				var targets: Array[Dictionary] = rig_adapter.resolve_body_region_suppression_targets(
+					character_visual_root,
+					region_id
+				)
+				if targets.is_empty():
+					return _result(false, "BODY_REGION_HAS_NO_SUPPRESSION_TARGETS", {
 						"item_id": item_id,
 						"body_region": region_id,
 						"rig_profile_id": rig_adapter.rig_profile_id,
 					})
-				for raw_visual in region_visuals:
-					if raw_visual is GeometryInstance3D and raw_visual not in hidden_visuals:
-						hidden_visuals.append(raw_visual)
+				for target in targets:
+					var target_key := String(target.get("key", ""))
+					var target_mode := String(target.get("mode", ""))
+					var target_node = target.get("node")
+					if target_key.is_empty() or not target_node is GeometryInstance3D:
+						return _result(false, "INVALID_BODY_SUPPRESSION_TARGET", {
+							"item_id": item_id,
+							"body_region": region_id,
+						})
+					if target_mode not in [
+						CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY,
+						CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE,
+					]:
+						return _result(false, "UNSUPPORTED_BODY_SUPPRESSION_MODE", {
+							"item_id": item_id,
+							"mode": target_mode,
+						})
+					if target_mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+						var target_material = target.get("material_override")
+						if not target_material is Material:
+							return _result(false, "BODY_SUPPRESSION_MATERIAL_MISSING", {
+								"item_id": item_id,
+								"body_region": region_id,
+							})
+					if not seen_suppression_keys.has(target_key):
+						seen_suppression_keys[target_key] = true
+						suppression_targets.append(target.duplicate())
 
 			var replacement_scene = resolved_details.get("body_replacement_scene")
 			if replacement_scene != null and not replacement_scene is PackedScene:
@@ -127,7 +155,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 				"source_skeleton": source_skeleton,
 				"scene": scene,
 				"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
-				"hidden_visuals": hidden_visuals,
+				"suppression_targets": suppression_targets,
 				"body_replacement_scene": replacement_scene,
 				"body_replacement_transform": resolved_details.get("body_replacement_transform", Transform3D.IDENTITY),
 			}
@@ -201,7 +229,12 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 					})
 				_body_replacement_nodes_by_item[item_id] = replacement_bridge
 
-			_hide_body_visuals(item_id, plan.get("hidden_visuals", []))
+			var suppression_result := _apply_body_suppression(item_id, plan.get("suppression_targets", []))
+			if not bool(suppression_result.get("success", false)):
+				_body_replacement_nodes_by_item.erase(item_id)
+				parent.remove_child(bridge)
+				bridge.queue_free()
+				return suppression_result
 			visual = bridge
 		else:
 			return _result(false, "PRESENTATION_STRATEGY_NOT_IMPLEMENTED", {"item_id": item_id, "strategy": strategy})
@@ -248,6 +281,16 @@ func create_report() -> Dictionary:
 				replacement_item_ids.append(item_id)
 	item_ids.sort()
 	replacement_item_ids.sort()
+	var hidden_count := 0
+	var material_clip_count := 0
+	for state_value in _body_suppression_state_by_key.values():
+		if not state_value is Dictionary:
+			continue
+		var mode := String((state_value as Dictionary).get("mode", ""))
+		if mode == CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY:
+			hidden_count += 1
+		elif mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+			material_clip_count += 1
 	return {
 		"schema": "planet_simulator.character_equipment_presenter.v2",
 		"rig_profile_id": rig_adapter.rig_profile_id if rig_adapter != null else "",
@@ -255,7 +298,9 @@ func create_report() -> Dictionary:
 		"visual_item_ids": item_ids,
 		"visual_strategies": strategies,
 		"visual_count": item_ids.size(),
-		"hidden_body_visual_count": _body_hide_state_by_instance.size(),
+		"hidden_body_visual_count": hidden_count,
+		"material_clipped_body_visual_count": material_clip_count,
+		"suppressed_body_target_count": _body_suppression_state_by_key.size(),
 		"body_replacement_item_ids": replacement_item_ids,
 		"body_replacement_item_count": replacement_item_ids.size(),
 		"moves_gameplay_body": false,
@@ -270,6 +315,8 @@ func _presentation_is_intact() -> bool:
 		if not _has_live_visual(item_id):
 			return false
 		if _body_replacement_nodes_by_item.has(item_id) and not _has_live_body_replacement(item_id):
+			return false
+		if not _body_suppression_is_intact(item_id):
 			return false
 	return true
 
@@ -288,53 +335,106 @@ func _has_live_body_replacement(item_id: String) -> bool:
 	return replacement is Node3D and is_instance_valid(replacement) and not replacement.is_queued_for_deletion()
 
 
-func _hide_body_visuals(item_id: String, visuals: Array) -> void:
-	var unique: Array = []
-	for raw_visual in visuals:
-		if not raw_visual is GeometryInstance3D or not is_instance_valid(raw_visual):
-			continue
-		var body_visual := raw_visual as GeometryInstance3D
-		if body_visual in unique:
-			continue
-		unique.append(body_visual)
-		var instance_id := body_visual.get_instance_id()
-		var state: Dictionary = _body_hide_state_by_instance.get(instance_id, {})
+func _apply_body_suppression(item_id: String, targets: Array) -> Dictionary:
+	var item_keys: Array[String] = []
+	for raw_target in targets:
+		if not raw_target is Dictionary:
+			return _result(false, "INVALID_BODY_SUPPRESSION_TARGET", {"item_id": item_id})
+		var target: Dictionary = raw_target
+		var key := String(target.get("key", ""))
+		var mode := String(target.get("mode", ""))
+		var node = target.get("node")
+		if key.is_empty() or not node is GeometryInstance3D:
+			return _result(false, "INVALID_BODY_SUPPRESSION_TARGET", {"item_id": item_id})
+		var geometry := node as GeometryInstance3D
+		var state: Dictionary = _body_suppression_state_by_key.get(key, {})
 		if state.is_empty():
 			state = {
-				"node": body_visual,
-				"original_visible": body_visual.visible,
+				"node": geometry,
+				"mode": mode,
 				"ref_count": 0,
 			}
+			if mode == CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY:
+				state["original_visible"] = geometry.visible
+			elif mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+				var applied_material = target.get("material_override")
+				if not applied_material is Material:
+					return _result(false, "BODY_SUPPRESSION_MATERIAL_MISSING", {"item_id": item_id})
+				state["original_material_override"] = geometry.material_override
+				state["applied_material"] = applied_material
+			else:
+				return _result(false, "UNSUPPORTED_BODY_SUPPRESSION_MODE", {
+					"item_id": item_id,
+					"mode": mode,
+				})
+		else:
+			if String(state.get("mode", "")) != mode:
+				return _result(false, "BODY_SUPPRESSION_MODE_CONFLICT", {"item_id": item_id, "key": key})
+			if mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+				var existing_material = state.get("applied_material")
+				var requested_material = target.get("material_override")
+				if existing_material != requested_material:
+					return _result(false, "BODY_SUPPRESSION_MATERIAL_CONFLICT", {"item_id": item_id, "key": key})
+
 		state["ref_count"] = int(state.get("ref_count", 0)) + 1
-		_body_hide_state_by_instance[instance_id] = state
-		body_visual.visible = false
-	_hidden_visuals_by_item[item_id] = unique
+		_body_suppression_state_by_key[key] = state
+		if mode == CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY:
+			geometry.visible = false
+		else:
+			geometry.material_override = state.get("applied_material") as Material
+		item_keys.append(key)
+	_suppression_keys_by_item[item_id] = item_keys
+	return _result(true, CharacterEquipmentDomain.RESULT_OK, {"target_count": item_keys.size()})
 
 
-func _restore_body_visuals(item_id: String) -> void:
-	var visuals: Array = _hidden_visuals_by_item.get(item_id, [])
-	for raw_visual in visuals:
-		if not raw_visual is GeometryInstance3D:
+func _restore_body_suppression(item_id: String) -> void:
+	var keys: Array = _suppression_keys_by_item.get(item_id, [])
+	for raw_key in keys:
+		var key := String(raw_key)
+		if not _body_suppression_state_by_key.has(key):
 			continue
-		var body_visual := raw_visual as GeometryInstance3D
-		var instance_id := body_visual.get_instance_id()
-		if not _body_hide_state_by_instance.has(instance_id):
-			continue
-		var state: Dictionary = _body_hide_state_by_instance[instance_id]
+		var state: Dictionary = _body_suppression_state_by_key[key]
 		var ref_count := int(state.get("ref_count", 0)) - 1
 		if ref_count <= 0:
 			var node = state.get("node")
 			if node is GeometryInstance3D and is_instance_valid(node):
-				(node as GeometryInstance3D).visible = bool(state.get("original_visible", true))
-			_body_hide_state_by_instance.erase(instance_id)
+				var geometry := node as GeometryInstance3D
+				var mode := String(state.get("mode", ""))
+				if mode == CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY:
+					geometry.visible = bool(state.get("original_visible", true))
+				elif mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+					geometry.material_override = state.get("original_material_override") as Material
+			_body_suppression_state_by_key.erase(key)
 		else:
 			state["ref_count"] = ref_count
-			_body_hide_state_by_instance[instance_id] = state
-	_hidden_visuals_by_item.erase(item_id)
+			_body_suppression_state_by_key[key] = state
+	_suppression_keys_by_item.erase(item_id)
+
+
+func _body_suppression_is_intact(item_id: String) -> bool:
+	if not _suppression_keys_by_item.has(item_id):
+		return true
+	var keys: Array = _suppression_keys_by_item[item_id]
+	for raw_key in keys:
+		var key := String(raw_key)
+		if not _body_suppression_state_by_key.has(key):
+			return false
+		var state: Dictionary = _body_suppression_state_by_key[key]
+		var node = state.get("node")
+		if not node is GeometryInstance3D or not is_instance_valid(node):
+			return false
+		var geometry := node as GeometryInstance3D
+		var mode := String(state.get("mode", ""))
+		if mode == CharacterRigAdapter.BODY_SUPPRESSION_VISIBILITY and geometry.visible:
+			return false
+		if mode == CharacterRigAdapter.BODY_SUPPRESSION_MATERIAL_OVERRIDE:
+			if geometry.material_override != state.get("applied_material"):
+				return false
+	return true
 
 
 func _remove_visual(item_id: String) -> void:
-	_restore_body_visuals(item_id)
+	_restore_body_suppression(item_id)
 	_body_replacement_nodes_by_item.erase(item_id)
 	if _visuals_by_item.has(item_id):
 		var visual = _visuals_by_item[item_id]
