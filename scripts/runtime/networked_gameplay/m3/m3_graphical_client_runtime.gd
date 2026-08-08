@@ -82,7 +82,32 @@ func _update_runtime_telemetry() -> void:
 
 
 func _emit_prediction_health_if_due() -> void:
+	var previous_health_ms: int = _last_prediction_health_ms
 	super._emit_prediction_health_if_due()
+	if _last_prediction_health_ms == previous_health_ms:
+		return
+	if _prediction_reconciler == null or not _prediction_reconciler.is_configured():
+		return
+	var prediction: Dictionary = _prediction_reconciler.get_report()
+	_debug_event("FIX10_PREDICTION_HEALTH", {
+		"prediction_tick": int(prediction.get("prediction_tick", 0)),
+		"authoritative_tick": int(prediction.get("last_authoritative_tick", 0)),
+		"current_input_sequence": int(prediction.get("current_input_sequence", 0)),
+		"authoritative_input_sequence": int(prediction.get("last_authoritative_sequence", 0)),
+		"corrections": int(prediction.get("corrections", 0)),
+		"corrections_per_1000_prediction_ticks": float(prediction.get("fix10_corrections_per_1000_prediction_ticks", 0.0)),
+		"ack_reconciliations": int(prediction.get("fix10_ack_reconciliations", 0)),
+		"ack_replays": int(prediction.get("fix10_ack_replays", 0)),
+		"ack_replayed_ticks": int(prediction.get("fix10_ack_replayed_ticks", 0)),
+		"ack_history_misses": int(prediction.get("fix10_ack_history_misses", 0)),
+		"ack_mismatches": int(prediction.get("fix10_ack_mismatches", 0)),
+		"max_ack_baseline_error_m": float(prediction.get("fix10_max_ack_baseline_error_m", 0.0)),
+		"max_present_replay_error_m": float(prediction.get("fix10_max_present_replay_error_m", 0.0)),
+		"last_reconciliation_mode": String(prediction.get("fix10_last_reconciliation_mode", "NONE")),
+		"sidecars_received": _fix10_ack_sidecars_received,
+		"sidecars_registered": _fix10_ack_sidecars_registered,
+		"sidecars_rejected": _fix10_ack_sidecars_rejected,
+	})
 
 
 func _fix10_extract_prediction_ack(
