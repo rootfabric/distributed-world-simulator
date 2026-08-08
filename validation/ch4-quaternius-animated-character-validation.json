@@ -2,23 +2,35 @@
   "schema": "planet_simulator.ch4_quaternius_animated_character_validation.v1",
   "branch": "feature/ch4-quaternius-animated-character",
   "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
-  "decision": "IMPLEMENTED_CANDIDATE_WITH_OFFICIAL_ASSET_GATE",
+  "delivery": "fix1",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE_PENDING_REAL_QUATERNIUS_RERUN",
   "scope": {
     "production_files_changed": 0,
-    "existing_files_changed": 0,
     "integration_mode": "isolated_walkable_character_lab",
     "root_motion_authority": false
+  },
+  "user_observed_blocker": {
+    "platform": "Windows PowerShell 5.1",
+    "editor_import": "ABORTED_BY_NATIVE_STDERR_WARNING",
+    "warning": "glTF URI requested textures path with case different from extracted Textures directory",
+    "runtime_result": "FALLBACK",
+    "runtime_error": "No loader found for selected raw .gltf because editor import did not finish"
+  },
+  "fix1": {
+    "powershell_native_stderr": "Godot warnings no longer become terminating NativeCommandError; runner decides by process exit code and explicit failure markers",
+    "asset_preflight": "Before editor import, local glTF relative URI path case is normalized against the real filesystem without rewriting numeric glTF content",
+    "play_self_sufficient": "PLAY performs preflight and editor import before graphical scene launch",
+    "strict_external_lab_gate": "When both Quaternius packages are installed, both presenter and walkable lab must use QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED instead of fallback"
   },
   "local_engine": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
     "source_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz"
   },
-  "local_validation": {
+  "local_fix1_validation": {
     "editor_import": "PASS",
-    "fallback_presenter": "13/13 PASS",
-    "walkable_lab": "7/7 PASS",
-    "synthetic_same_rig_external_mode": "18/18 PASS",
-    "synthetic_matched_bones": 12,
+    "case_mismatch_fixture": "PASS: textures/T_Hair.png and mesh.bin normalized to real Textures/T_Hair.png and Mesh.bin while integer JSON fields remained byte-for-byte numeric integers",
+    "synthetic_same_rig_external_presenter": "18/18 PASS",
+    "synthetic_walkable_lab_strict_external": "9/9 PASS",
     "presentation_owns_character_body": false,
     "presentation_owns_collision": false,
     "presentation_reads_input": false,
@@ -26,13 +38,15 @@
     "presentation_has_network_dependency": false,
     "root_motion_applied": false
   },
-  "official_asset_gate": {
-    "status": "PENDING_USER_SIDE_BINARY_VALIDATION",
-    "reason": "Official itch.io Standard ZIP download requires an interactive download form that is not accessible from the validation container.",
-    "required_files": [
-      "Universal Base Characters[Standard].zip",
-      "Universal Animation Library[Standard].zip"
-    ],
-    "runner_behavior": "When both packages are installed, RUN_CH4_QUATERNIUS_CHARACTER_TESTS.ps1 automatically requires QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED mode, a target skeleton, and resolvable Idle/Walk/Run animations."
+  "real_asset_acceptance_gate": {
+    "status": "PENDING_USER_RERUN_AFTER_GIT_PULL",
+    "required": [
+      "asset_preflight PASS with the installed official Standard packages",
+      "editor_import completes despite non-fatal Godot warnings",
+      "avatar_presenter strict external PASS",
+      "character_lab strict external PASS",
+      "graphical HUD asset mode is QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED",
+      "Idle/Walk/Run visibly animate the real Base Character"
+    ]
   }
 }
