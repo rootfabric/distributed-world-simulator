@@ -56,7 +56,9 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, clip_local_y: float)
 			"surface_count": mesh_instance.mesh.get_surface_count(),
 		})
 
-	var source_material: Material = mesh_instance.get_surface_override_material(0)
+	var source_material: Material = mesh_instance.material_override
+	if source_material == null:
+		source_material = mesh_instance.get_surface_override_material(0)
 	if source_material == null:
 		source_material = mesh_instance.mesh.surface_get_material(0)
 	if not source_material is BaseMaterial3D:
