@@ -4,6 +4,7 @@
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Local role:** hydrology/fluid semantic, query and derived-presentation layer above G5 World Feature Graph
 **Current stage:** `G6.4 Casual Visual River Lab — FIX2 IMPLEMENTED CANDIDATE`
+**Fix2 functional head:** `353a73f08f6d07840145e61f79b197e5773a73a2`
 **Next after acceptance:** `G6 FULL ACCEPTANCE`
 
 ## Canonical boundary
@@ -76,7 +77,7 @@ global_revision = GLOBAL-P0-2026-08-08-R1
 
 G6 carries the same global revision/config. The branch does not edit the canonical global plan locally.
 
-PR #43 carries the independently validated MW10 atomic-lock fix onto the shared G5 baseline. G6.4 does not depend on Matter and is not blocked by it. Before full G6 acceptance, G5/main/shared baseline must be checked again and G6 synchronized if that fix or a newer global revision has landed.
+G6 is currently not behind `feature/g5-world-feature-graph`. Before full G6 acceptance, G5/main/shared baseline must be checked again and G6 synchronized if the MW10 integration or a newer global revision has landed.
 
 ## P0-2 Spatial Domain Fabric
 
