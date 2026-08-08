@@ -27,7 +27,10 @@ func _test_manifest() -> void:
 		_check(String(parsed.get("checkpoint", "")) == "g6.2-cross-cell-cross-lod-continuity", "G6.2 checkpoint")
 		_check(String(parsed.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G6.2 candidate status")
 		_check(String(parsed.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-08-R1", "G6.2 P0 revision")
-		_check(parsed.get("lod_levels", []) == LODS, "G6.2 LOD proof levels pinned")
+		var parsed_lods: Array[int] = []
+		for lod_value in parsed.get("lod_levels", []):
+			parsed_lods.append(int(lod_value))
+		_check(parsed_lods == LODS, "G6.2 LOD proof levels pinned")
 		var boundaries: Dictionary = parsed.get("architecture_boundaries", {})
 		_check(not bool(boundaries.get("surface_cell_is_hydrology_identity", true)), "surface cell excluded from hydrology identity")
 		_check(not bool(boundaries.get("lod_is_hydrology_identity", true)), "LOD excluded from hydrology identity")
