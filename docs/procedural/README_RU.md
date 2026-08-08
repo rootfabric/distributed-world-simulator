@@ -13,26 +13,40 @@ G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
-G6.4 FIX4 MANUAL GRAPHICAL PASS
-G6 FULL ACCEPTANCE IMPLEMENTED CANDIDATE
+G6.4 ACCEPTED
+G6 FULL ACCEPTANCE — BLOCKED BY SHARED MW10 BASELINE
 ```
 
-G6 Full Acceptance is currently blocked by the shared MW10 baseline, not by the hydrology code. PR #43 must first land in `feature/g5-world-feature-graph`; G6 must then be resynchronized and `RUN_G6_FULL_ACCEPTANCE.ps1` rerun.
+G6.4 Fix4 is accepted from Windows Godot 4.7.1 double automated evidence, manual graphical observation and a clean post-cleanup `git diff --check`.
 
-Project-provided Linux double Godot has been independently verified in the assistant runtime:
+Accepted evidence:
 
 ```text
-4.7.1.stable.double.custom_build.a13da4feb
-headless GDScript smoke: PASS
+G6.4 contracts       PASS — 158 assertions
+far_lod -> near_lod  1 -> 9
+far_triangles        120 -> 4176
+octaves              8
+min_signal_km        4.688
+manual observation   PASS_BY_USER_OBSERVATION
+post-cleanup hygiene PASS
 ```
 
-The assistant container still lacks a full repository checkout, so project-level Godot suites were not run there. Windows remains the final G6 full-acceptance runtime environment after the shared-baseline resync.
+The lab remains derived presentation over accepted G2/G3/G6 semantics. LOD, SurfaceCellKey and renderer state do not own river identity. River valley carving remains deferred to G8 Geomorphology; layered geology remains G9.
 
-Run locally:
+Next gate:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G6_FULL_ACCEPTANCE.ps1
+```
+
+The full gate is currently blocked by the shared G5 baseline. PR #43 must integrate the accepted MW10 atomic-lock release fix into `feature/g5-world-feature-graph`, then G6 must be resynchronized and the same full gate rerun.
+
+After a green full gate:
+
+```text
+G6 SOURCE_ACCEPTED
+        -> G7 Semantic Field Fabric
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
