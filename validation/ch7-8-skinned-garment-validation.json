@@ -1,0 +1,54 @@
+{
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v1",
+  "branch": "feature/ch7-8-skinned-garment",
+  "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
+  "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
+  "decision": "ASSET_PROBE_READY_PENDING_EXTERNAL_ASSET",
+  "goal": "Prove one Quaternius-compatible skinned outfit with minimum complexity before widening the garment system.",
+  "selected_asset_family": {
+    "name": "Quaternius Modular Character Outfits - Fantasy",
+    "preferred_package": "Standard",
+    "preferred_first_candidate": "Peasant_Male",
+    "external_root": "res://assets/external/quaternius/modular_outfits_fantasy",
+    "asset_bytes_committed_to_branch": false
+  },
+  "minimal_scope": {
+    "one_skinned_outfit": true,
+    "coarse_body_region_replacement": true,
+    "same_semantic_equipment_domain": true,
+    "cloth_physics": false,
+    "arbitrary_external_rig_retargeting": false,
+    "body_morphing": false,
+    "runtime_mesh_surgery": false,
+    "production_item_graph_bridge": false,
+    "network_changes": false,
+    "collision_changes": false
+  },
+  "prepared": {
+    "implementation_plan": "docs/characters/ch7-8-skinned-garment.md",
+    "asset_probe": "tests/characters/probe_ch7_8_quaternius_outfit_assets.gd",
+    "windows_probe_launcher": "PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1",
+    "recursive_archive_layout_scan": true,
+    "base_to_garment_normalized_bone_overlap_report": true,
+    "skinned_mesh_count_report": true,
+    "peasant_male_preference_is_only_probe_scoring": true
+  },
+  "next_gate": {
+    "command": ".\\PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1 -GodotPath $Godot",
+    "required": [
+      "Standard outfit asset root exists",
+      "Godot editor import succeeds",
+      "at least one rigged outfit scene is discovered",
+      "recommended candidate has base-rig overlap >= 0.60",
+      "probe prints exact recommended resource path and bone overlap"
+    ]
+  },
+  "after_probe": [
+    "lock the exact outfit resource path selected by real asset inspection",
+    "implement SKINNED_GARMENT presentation strategy",
+    "map avatar pose to the garment Skeleton3D using normalized bone names",
+    "replace/hide coarse torso/arms/legs body presentation for the one outfit",
+    "compose with accepted CH6 FP/TP/shadow handling",
+    "add lifecycle tests before attempting a second garment"
+  ]
+}
