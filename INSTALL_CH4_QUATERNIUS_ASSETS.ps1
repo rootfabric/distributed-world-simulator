@@ -11,6 +11,48 @@ if (-not (Test-Path $DownloadsPath)) {
     throw "Downloads folder not found: $DownloadsPath"
 }
 
+function Normalize-DirectoryCase([string]$SearchRoot, [string]$CanonicalName) {
+    if (-not (Test-Path $SearchRoot)) {
+        return 0
+    }
+
+    $Candidates = @(
+        Get-ChildItem -LiteralPath $SearchRoot -Recurse -Directory -ErrorAction Stop |
+            Where-Object {
+                $_.Name -ieq $CanonicalName -and $_.Name -cne $CanonicalName
+            } |
+            Sort-Object { $_.FullName.Length } -Descending
+    )
+
+    $Normalized = 0
+    foreach ($Directory in $Candidates) {
+        if (-not (Test-Path -LiteralPath $Directory.FullName)) {
+            continue
+        }
+
+        $Parent = $Directory.Parent.FullName
+        $TemporaryName = "__ch4_case_tmp_$CanonicalName"
+        $TemporaryPath = Join-Path $Parent $TemporaryName
+        $Suffix = 0
+        while (Test-Path -LiteralPath $TemporaryPath) {
+            $Suffix += 1
+            $TemporaryName = "__ch4_case_tmp_${CanonicalName}_$Suffix"
+            $TemporaryPath = Join-Path $Parent $TemporaryName
+        }
+
+        Rename-Item -LiteralPath $Directory.FullName -NewName $TemporaryName -ErrorAction Stop
+        $CanonicalPath = Join-Path $Parent $CanonicalName
+        if (Test-Path -LiteralPath $CanonicalPath) {
+            Rename-Item -LiteralPath $TemporaryPath -NewName $Directory.Name -ErrorAction SilentlyContinue
+            throw "Directory case collision: both '$($Directory.Name)' and '$CanonicalName' exist under $Parent"
+        }
+        Rename-Item -LiteralPath $TemporaryPath -NewName $CanonicalName -ErrorAction Stop
+        $Normalized += 1
+    }
+
+    return $Normalized
+}
+
 $ZipFiles = Get-ChildItem -Path $DownloadsPath -File -Filter "*.zip"
 $BaseZip = $ZipFiles |
     Where-Object { $_.Name -like "Universal Base Characters*Standard*.zip" } |
@@ -45,6 +87,10 @@ Write-Host "Animations:      $($AnimationZip.FullName)"
 Expand-Archive -LiteralPath $BaseZip.FullName -DestinationPath $BaseTarget -Force
 Expand-Archive -LiteralPath $AnimationZip.FullName -DestinationPath $AnimationTarget -Force
 
+$CaseNormalizations = 0
+$CaseNormalizations += Normalize-DirectoryCase $BaseTarget "textures"
+$CaseNormalizations += Normalize-DirectoryCase $AnimationTarget "textures"
+
 $BaseScenes = Get-ChildItem -Path $BaseTarget -Recurse -File |
     Where-Object { $_.Extension.ToLowerInvariant() -in @(".glb", ".gltf", ".fbx") }
 $AnimationScenes = Get-ChildItem -Path $AnimationTarget -Recurse -File |
@@ -75,5 +121,6 @@ Write-Host ""
 Write-Host "Quaternius assets installed." -ForegroundColor Green
 Write-Host "Character source files: $($BaseScenes.Count)"
 Write-Host "Animation source files: $($AnimationScenes.Count)"
+Write-Host "Directory case normalizations: $CaseNormalizations"
 Write-Host "The assets stay local and are excluded through .git/info/exclude."
 Write-Host "Run .\RUN_CH4_QUATERNIUS_CHARACTER_TESTS.ps1 next."
