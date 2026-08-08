@@ -443,7 +443,7 @@ func _validate_graphical_world(world: Dictionary, shell) -> void:
 	if int(shell.get_report().get("authority_references", 1)) != 0:
 		_failures.append("UI shell has authority reference")
 	if int(shell.get_report().get("domain_references", 1)) != 0:
-		_failures.append("UI shell has no domain reference")
+		_failures.append("UI shell has domain reference")
 
 
 func _runtime():
