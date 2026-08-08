@@ -1,0 +1,20 @@
+{
+  "checkpoint": "g3-casual-macro-surface-v0",
+  "status": "CANDIDATE",
+  "implementation_branch": "feature/g3-casual-macro-surface",
+  "base_branch": "feature/g2-planetary-cells-lod",
+  "base_commit": "6319e1e312c7c663d5d05c0806f5a42cf68ad441",
+  "runtime_worlds_changed": false,
+  "production_terrain_changed": false,
+  "provider_id": "geo-provider/casual-macro-terrain-v1",
+  "field": "geo/surface-height-m",
+  "domain": "body-fixed-unit-direction-v1",
+  "default_seed": 2026080801,
+  "default_nominal_radius_m": 6000000.0,
+  "default_amplitude_m": 900.0,
+  "default_base_wavelength_m": 600000.0,
+  "default_octaves": 4,
+  "default_persistence": 0.5,
+  "canonical_world_semantics_depend_on_lod": false,
+  "next_stage": "G4 — Provider Composition / Replacement"
+}
