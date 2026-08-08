@@ -1,21 +1,56 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v1",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v2",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "ASSET_PROBE_READY_PENDING_EXTERNAL_ASSET",
-  "goal": "Prove one Quaternius-compatible skinned outfit with minimum complexity before widening the garment system.",
-  "selected_asset_family": {
-    "name": "Quaternius Modular Character Outfits - Fantasy",
-    "preferred_package": "Standard",
-    "preferred_first_candidate": "Peasant_Male",
-    "external_root": "res://assets/external/quaternius/modular_outfits_fantasy",
+  "decision": "CH7_8A_POSE_COMPOSITION_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "goal": "Prove one exact-rig Quaternius skinned outfit with minimum complexity before body-region replacement and wider garment support.",
+  "selected_asset": {
+    "family": "Quaternius Modular Character Outfits - Fantasy",
+    "package": "Standard",
+    "resource": "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf",
+    "base_resource": "res://assets/external/quaternius/base_characters/Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Male_FullBody.gltf",
     "asset_bytes_committed_to_branch": false
+  },
+  "windows_asset_probe": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "discovered_scene_files": 24,
+    "recommended": "Male_Peasant.gltf",
+    "base_bones": 65,
+    "garment_bones": 65,
+    "matched_bones": 65,
+    "base_overlap": 1.0,
+    "garment_overlap": 1.0,
+    "mesh_count": 4,
+    "skinned_mesh_count": 4,
+    "probe_decision": "PASS",
+    "important_conclusion": "The first garment uses the same 65-bone rig as the current Universal Base Character. Arbitrary retargeting is not required for CH7.8A."
+  },
+  "import_observation": {
+    "godot_unreal_gltf": "PASS",
+    "unity_fbx": "imports with missing relative-texture noise and is not used by CH7.8",
+    "mitigation": "Probe and CH7.8 runner create a local .gdignore under FBX (Unity), leaving the authoritative glTF (Godot-Unreal) subtree visible to Godot."
+  },
+  "ch7_8a_implemented": {
+    "generic_skinned_pose_bridge": true,
+    "normalized_bone_map": true,
+    "minimum_overlap_guard": 0.6,
+    "pose_position_rotation_scale_copy": true,
+    "late_process_priority": 100,
+    "equipment_presenter_skinned_strategy": true,
+    "quaternius_pose_skeleton_hook": true,
+    "quaternius_avatar_yaw_root_parent": true,
+    "male_peasant_lab_profile": true,
+    "same_canonical_equipment_source": true,
+    "rigid_and_skinned_composition": true,
+    "ch6_first_person_refresh_path_reused": true,
+    "ch6_world_proxy_shadow_path_reused": true,
+    "graphical_launcher": "PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1",
+    "acceptance_runner": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
   },
   "minimal_scope": {
     "one_skinned_outfit": true,
-    "coarse_body_region_replacement": true,
-    "same_semantic_equipment_domain": true,
+    "one_item_occupies_torso_arms_legs_feet_channels": true,
     "cloth_physics": false,
     "arbitrary_external_rig_retargeting": false,
     "body_morphing": false,
@@ -24,31 +59,30 @@
     "network_changes": false,
     "collision_changes": false
   },
-  "prepared": {
-    "implementation_plan": "docs/characters/ch7-8-skinned-garment.md",
-    "asset_probe": "tests/characters/probe_ch7_8_quaternius_outfit_assets.gd",
-    "windows_probe_launcher": "PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1",
-    "recursive_archive_layout_scan": true,
-    "base_to_garment_normalized_bone_overlap_report": true,
-    "skinned_mesh_count_report": true,
-    "peasant_male_preference_is_only_probe_scoring": true
+  "deferred_to_ch7_8b": {
+    "coarse_body_region_replacement_or_hiding": true,
+    "reason": "First prove exact-rig pose composition. Then choose the smallest hiding/replacement mechanism based on actual graphical clipping of Male_Peasant over the accepted base character."
   },
-  "next_gate": {
-    "command": ".\\PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1 -GodotPath $Godot",
+  "windows_gate": {
+    "command": ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot",
     "required": [
-      "Standard outfit asset root exists",
-      "Godot editor import succeeds",
-      "at least one rigged outfit scene is discovered",
-      "recommended candidate has base-rig overlap >= 0.60",
-      "probe prints exact recommended resource path and bone overlap"
+      "complete accepted CH7 runner PASS",
+      "synthetic skinned pose bridge PASS",
+      "real Male_Peasant bridge reports 65 matched bones and 4 skinned meshes",
+      "CH7.8 real lab enters CH6 world visual and shadow composition",
+      "rigid helmet/backpack coexist with skinned outfit",
+      "equip/unequip does not move CharacterBody3D or alter gameplay capsule"
     ]
   },
-  "after_probe": [
-    "lock the exact outfit resource path selected by real asset inspection",
-    "implement SKINNED_GARMENT presentation strategy",
-    "map avatar pose to the garment Skeleton3D using normalized bone names",
-    "replace/hide coarse torso/arms/legs body presentation for the one outfit",
-    "compose with accepted CH6 FP/TP/shadow handling",
-    "add lifecycle tests before attempting a second garment"
-  ]
+  "graphical_gate_after_automated_pass": {
+    "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
+    "controls": "O outfit | H helmet | B backpack | C FP/TP | Ctrl crouch | Space jump",
+    "inspect": [
+      "Male Peasant follows idle/walk/run/jump/crouch without lag or exploding skin",
+      "FP hides own garment visuals while garment shadow remains",
+      "TP shows garment normally",
+      "helmet and backpack continue to compose",
+      "note any clipping or z-fighting from the still-visible base body"
+    ]
+  }
 }
