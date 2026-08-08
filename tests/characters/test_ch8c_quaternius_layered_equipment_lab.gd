@@ -8,9 +8,6 @@ const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 const REGION_TORSO_CORE := "body.region.torso.core"
-const REGION_THIGHS_CORE := "body.region.thighs.core"
-const REGION_SHINS_CORE := "body.region.shins.core"
-const REGION_FEET_CORE := "body.region.feet.core"
 
 var failures: Array[String] = []
 var assertions := 0
@@ -31,6 +28,7 @@ func _run() -> void:
 	_assert(lab.body_suppression_coordinator != null, "CH8C graphical lab coordinator missing")
 	_assert(bool(lab.layered_setup_result.get("success", false)), "CH8C graphical lab setup failed: %s" % JSON.stringify(lab.layered_setup_result))
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("CH8C — Layered Garments"), "CH8C graphical lab status extension failed")
+	_assert(lab.status_label != null and String(lab.status_label.text).contains("surface fit: lower 0.010 m | feet 0.008 m"), "CH8C graphical lab surface-fit status missing")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
@@ -53,21 +51,26 @@ func _run() -> void:
 	_assert(String(lab.status_label.text).contains("upper: ON | lower: ON | feet: ON"), "CH8C graphical lab status did not reflect equipped layers")
 	var peak_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	var active_regions: Array = peak_report.get("active_regions", [])
-	_assert(active_regions.size() == 4, "CH8C graphical lab expected four fine body regions")
-	_assert(REGION_TORSO_CORE in active_regions, "CH8C graphical lab lost protected torso core")
-	_assert(REGION_THIGHS_CORE in active_regions, "CH8C graphical lab lost thigh core")
-	_assert(REGION_SHINS_CORE in active_regions, "CH8C graphical lab lost shin core")
-	_assert(REGION_FEET_CORE in active_regions, "CH8C graphical lab lost boot/foot core")
-	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply protected aggregate material")
+	_assert(active_regions.size() == 1, "CH8C surface-fit lab expected torso-only body suppression")
+	_assert(REGION_TORSO_CORE in active_regions, "CH8C surface-fit lab lost protected torso core")
+	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply torso-core material")
 
-	for pair in [
-		[LOWER_ITEM_ID, LOWER_PROFILE_ID],
-		[UPPER_ITEM_ID, UPPER_PROFILE_ID],
-		[FEET_ITEM_ID, FEET_PROFILE_ID],
-	]:
-		var off_result: Dictionary = lab.call("_toggle_layer", String(pair[0]), String(pair[1]))
-		_assert(bool(off_result.get("success", false)), "CH8C graphical lab layer toggle-off failed")
-		await process_frame
+	# Lower/feet are presentation-shell fits and must not add body suppression.
+	var lower_off: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
+	_assert(bool(lower_off.get("success", false)), "CH8C graphical lab lower toggle-off failed")
+	await process_frame
+	var after_lower: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
+	_assert(after_lower.size() == 1 and REGION_TORSO_CORE in after_lower, "CH8C lower toggle changed body coverage")
+
+	var feet_off: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
+	_assert(bool(feet_off.get("success", false)), "CH8C graphical lab feet toggle-off failed")
+	await process_frame
+	var after_feet: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
+	_assert(after_feet.size() == 1 and REGION_TORSO_CORE in after_feet, "CH8C feet toggle changed body coverage")
+
+	var upper_off: Dictionary = lab.call("_toggle_layer", UPPER_ITEM_ID, UPPER_PROFILE_ID)
+	_assert(bool(upper_off.get("success", false)), "CH8C graphical lab upper toggle-off failed")
+	await process_frame
 
 	_assert(not lab.equipment_source.has_item(UPPER_ITEM_ID), "CH8C graphical lab upper remained equipped")
 	_assert(not lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower remained equipped")
@@ -91,10 +94,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius lower-leg layered equipment lab: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius surface-fit layered equipment lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius lower-leg layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius surface-fit layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
