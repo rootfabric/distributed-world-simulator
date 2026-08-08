@@ -34,6 +34,14 @@ func _run() -> void:
 		_finish()
 		return
 
+	var persistence = old_runtime.get("persistence")
+	_assert(persistence != null, "The initial planetary runtime has no persistence repository.")
+	if persistence != null:
+		_assert(
+			bool(persistence.get("initialized")),
+			"The initial planetary persistence repository failed to initialize."
+		)
+
 	var moon_world = old_runtime.get("moon_world")
 	_assert(moon_world != null, "The planetary runtime has no Moon world.")
 	if moon_world == null:
