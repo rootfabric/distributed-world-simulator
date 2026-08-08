@@ -3,6 +3,7 @@ extends "res://scripts/characters/lab/quaternius_equipment_lab.gd"
 
 const LayerDomain = preload("res://scripts/characters/equipment/character_equipment_domain.gd")
 const SelectiveFactory = preload("res://scripts/characters/equipment/selective_garment_scene_factory.gd")
+const SurfaceFitFactory = preload("res://scripts/characters/equipment/garment_surface_fit_scene_factory.gd")
 const PresentationCatalog = preload("res://scripts/characters/equipment/wearable_presentation_catalog.gd")
 const CoverageCatalogType = preload("res://scripts/characters/equipment/wearable_body_coverage_catalog.gd")
 const SuppressionCoordinatorType = preload("res://scripts/characters/equipment/layered_body_suppression_coordinator.gd")
@@ -17,9 +18,8 @@ const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 
 const REGION_TORSO_CORE := "body.region.torso.core"
-const REGION_THIGHS_CORE := "body.region.thighs.core"
-const REGION_SHINS_CORE := "body.region.shins.core"
-const REGION_FEET_CORE := "body.region.feet.core"
+const LOWER_SURFACE_GROW_M := 0.010
+const FEET_SURFACE_GROW_M := 0.008
 
 var layered_rig_adapter
 var body_coverage_catalog
@@ -70,28 +70,28 @@ func _setup_layered_equipment() -> void:
 			"presentation": "wearable.layer.upper.peasant",
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-			# Preserve underwear/pelvis and complete base arms. Only the central
-			# torso volume safely enclosed by the shirt is clipped.
-			"regions": [REGION_TORSO_CORE]
+			"regions": [REGION_TORSO_CORE],
+			"grow_m": 0.0,
 		},
 		{
 			"profile": LOWER_PROFILE_ID,
 			"presentation": "wearable.layer.lower.peasant",
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
-			# Suppress the enclosed thigh and shin volumes, but deliberately leave
-			# a knee band between them for the open/torn knee presentation.
-			"regions": [REGION_THIGHS_CORE, REGION_SHINS_CORE]
+			# Open/torn trousers must keep the base leg available through holes and
+			# below the cuff. Fit the garment shell outward instead of clipping skin.
+			"regions": [],
+			"grow_m": LOWER_SURFACE_GROW_M,
 		},
 		{
 			"profile": FEET_PROFILE_ID,
 			"presentation": "wearable.layer.feet.peasant",
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
-			# The real Peasant foot mesh encloses the ankle/foot volume up to about
-			# 0.45 m, so suppress only that fine core rather than the coarse feet
-			# region used by closed/full-body presentations.
-			"regions": [REGION_FEET_CORE]
+			# Same rule for open footwear: preserve the complete base extremity and
+			# move only the wearable presentation shell slightly outward.
+			"regions": [],
+			"grow_m": FEET_SURFACE_GROW_M,
 		}
 	]
 
@@ -107,6 +107,7 @@ func _setup_layered_equipment() -> void:
 		if not bool(layered_setup_result.get("success", false)):
 			push_error("CH8C layered profile registration failed: %s" % JSON.stringify(layered_setup_result))
 			return
+
 		var selected: Dictionary = SelectiveFactory.create(source_scene, definition["meshes"])
 		if not bool(selected.get("success", false)):
 			layered_setup_result = selected
@@ -116,11 +117,26 @@ func _setup_layered_equipment() -> void:
 		if not selected_scene is PackedScene:
 			layered_setup_result = {"success": false, "code": "SELECTED_SCENE_NOT_PACKED", "details": {}}
 			return
+
+		var presentation_scene := selected_scene as PackedScene
+		var grow_m := float(definition.get("grow_m", 0.0))
+		if grow_m > 0.0:
+			var fitted: Dictionary = SurfaceFitFactory.create(presentation_scene, grow_m)
+			if not bool(fitted.get("success", false)):
+				layered_setup_result = fitted
+				push_error("CH8C garment surface fit failed: %s" % JSON.stringify(fitted))
+				return
+			var fitted_scene = fitted.get("details", {}).get("scene")
+			if not fitted_scene is PackedScene:
+				layered_setup_result = {"success": false, "code": "FITTED_SCENE_NOT_PACKED", "details": {}}
+				return
+			presentation_scene = fitted_scene as PackedScene
+
 		layered_setup_result = wearable_catalog.register_scene(
 			String(definition["presentation"]),
 			equipment_rig_adapter.rig_profile_id,
 			PresentationCatalog.STRATEGY_SKINNED_GARMENT,
-			selected_scene as PackedScene
+			presentation_scene
 		)
 		if not bool(layered_setup_result.get("success", false)):
 			push_error("CH8C layered presentation registration failed: %s" % JSON.stringify(layered_setup_result))
@@ -170,6 +186,14 @@ func _refresh_status() -> void:
 		"\n\nCH8C — Layered Garments\n"
 		+ "U — upper | L — lower | K — feet\n"
 		+ "upper: %s | lower: %s | feet: %s\n"
-		+ "suppressed: %s"
+		+ "suppressed: %s\n"
+		+ "surface fit: lower %.3f m | feet %.3f m"
 	)
-	status_label.text += layered_status % [upper_state, lower_state, feet_state, ", ".join(regions)]
+	status_label.text += layered_status % [
+		upper_state,
+		lower_state,
+		feet_state,
+		", ".join(regions),
+		LOWER_SURFACE_GROW_M,
+		FEET_SURFACE_GROW_M,
+	]
