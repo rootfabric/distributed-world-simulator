@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd" id="1_g64"]
+[ext_resource type="Script" path="res://scripts/labs/procedural/g6_4_adaptive_macro_surface_presenter.gd" id="2_macro"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_planet"]
 radius = 8.0
@@ -12,7 +13,11 @@ rings = 32
 script = ExtResource("1_g64")
 
 [node name="Planet" type="MeshInstance3D" parent="."]
+visible = false
 mesh = SubResource("SphereMesh_planet")
+
+[node name="AdaptiveMacroSurface" type="MeshInstance3D" parent="."]
+script = ExtResource("2_macro")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-35, -35, 0)
@@ -44,4 +49,4 @@ theme_override_constants/margin_bottom = 12
 
 [node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
 theme_override_font_sizes/font_size = 16
-text = "G6.4 — Casual Visual River Lab + G2 adaptive LOD"
+text = "G6.4 — Casual Visual River Lab + G2 LOD + G3 adaptive macro surface"
