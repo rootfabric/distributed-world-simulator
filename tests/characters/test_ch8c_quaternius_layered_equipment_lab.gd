@@ -7,6 +7,7 @@ const FEET_ITEM_ID := "lab.item.layer.feet.001"
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
+const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 const REGION_TORSO_CORE := "body.region.torso.core"
 
 var failures: Array[String] = []
@@ -30,6 +31,7 @@ func _run() -> void:
 	_assert(bool(lab.layered_setup_result.get("success", false)), "CH8C graphical lab setup failed: %s" % JSON.stringify(lab.layered_setup_result))
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("CH8C — Layered Garments"), "CH8C graphical lab status extension failed")
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("topology:"), "CH8C graphical lab topology status missing")
+	_assert(lab.status_label != null and String(lab.status_label.text).contains("feet topology: HIGH_BOOT"), "CH8C graphical lab high-boot status missing")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
@@ -61,6 +63,11 @@ func _run() -> void:
 	_assert(bool(topology_report.get("mesh_applied", false)), "CH8C graphical lab did not apply topology body mesh")
 	_assert((topology_report.get("active_presentations", []) as Array).size() == 2, "CH8C graphical lab expected lower+feet topology presentations")
 	_assert(int(topology_report.get("removed_triangles", 0)) > 0, "CH8C graphical lab topology removed no body triangles")
+	var feet_descriptor := _find_descriptor(topology_report, FEET_PRESENTATION_ID)
+	_assert(not feet_descriptor.is_empty(), "CH8C graphical lab feet descriptor report missing")
+	_assert(String(feet_descriptor.get("coverage_mode", "")) == "HIGH_BOOT", "CH8C graphical lab lost HIGH_BOOT footwear mode")
+	_assert(is_equal_approx(float(feet_descriptor.get("threshold_m", 0.0)), 0.045), "CH8C graphical lab high-boot threshold mismatch")
+	_assert(is_equal_approx(float(feet_descriptor.get("upper_y_pad_m", 0.0)), 0.012), "CH8C graphical lab high-boot upper pad mismatch")
 
 	# Removing lower must keep the feet topology mask while leaving upper material
 	# suppression unchanged.
@@ -72,6 +79,7 @@ func _run() -> void:
 	var after_lower_topology: Dictionary = lab.body_topology_coordinator.create_report()
 	_assert((after_lower_topology.get("active_presentations", []) as Array).size() == 1, "CH8C lower toggle did not leave feet topology")
 	_assert(int(after_lower_topology.get("removed_triangles", 0)) > 0, "CH8C feet topology removed no body triangles")
+	_assert(String(_find_descriptor(after_lower_topology, FEET_PRESENTATION_ID).get("coverage_mode", "")) == "HIGH_BOOT", "CH8C feet-only topology lost HIGH_BOOT mode")
 
 	# Removing feet must restore the exact unmasked base mesh while upper remains.
 	var feet_off: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
@@ -102,6 +110,15 @@ func _run() -> void:
 
 	lab.queue_free()
 	_finish()
+
+
+func _find_descriptor(report: Dictionary, presentation_id: String) -> Dictionary:
+	for raw_descriptor in report.get("descriptor_reports", []):
+		if raw_descriptor is Dictionary:
+			var descriptor := raw_descriptor as Dictionary
+			if String(descriptor.get("presentation_id", "")) == presentation_id:
+				return descriptor
+	return {}
 
 
 func _assert(condition: bool, message: String) -> void:
