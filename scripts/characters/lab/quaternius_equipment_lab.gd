@@ -13,6 +13,7 @@ const HELMET_ITEM_ID := "lab.item.helmet.001"
 const BACKPACK_ITEM_ID := "lab.item.backpack.001"
 const HELMET_PROFILE_ID := "equipment.helmet.mk1"
 const BACKPACK_PROFILE_ID := "equipment.backpack.mk1"
+const QUATERNIUS_BACKPACK_FIT_OFFSET := Vector3(0.0, 0.02, -0.22)
 
 var equipment_layout: CharacterEquipmentDomain.Layout
 var equipment_source
@@ -143,7 +144,7 @@ func _setup_equipment() -> void:
 		WearableCatalog.STRATEGY_RIGID_ATTACHMENT,
 		backpack_scene,
 		[],
-		Transform3D(Basis.IDENTITY, Vector3(0.0, 0.02, 0.22))
+		Transform3D(Basis.IDENTITY, QUATERNIUS_BACKPACK_FIT_OFFSET)
 	)
 
 	equipment_presenter = EquipmentPresenter.new()
