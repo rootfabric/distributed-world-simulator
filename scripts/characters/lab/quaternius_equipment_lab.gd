@@ -15,7 +15,7 @@ const HELMET_PROFILE_ID := "equipment.helmet.mk1"
 const BACKPACK_PROFILE_ID := "equipment.backpack.mk1"
 
 var equipment_layout: CharacterEquipmentDomain.Layout
-auto var equipment_source
+var equipment_source
 var equipment_presenter
 var equipment_rig_adapter
 var wearable_catalog
