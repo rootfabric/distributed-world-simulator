@@ -1,7 +1,7 @@
 # Procedural Planetary Generation — status ledger
 
 **Program branch:** `feature/g0-procedural-planetary-generation-lab`
-**Current implementation branch:** `feature/g1-geodesy-body-shape`
+**Current implementation branch:** `feature/g2-planetary-cells-lod`
 **Purpose:** единая точка фиксации прогресса программы.
 
 ---
@@ -11,81 +11,42 @@
 ```text
 PROGRAM: Procedural Planetary Generation Fabric
 G0: ACCEPTED
-G1: IMPLEMENTED CANDIDATE
-G1 ISOLATED EXACT-ENGINE SMOKE: PASS — 76 assertions
+G1: IMPLEMENTED CANDIDATE — full-checkout gate still pending
+G2: IMPLEMENTED CANDIDATE
+G2 EXACT-ENGINE FOCUSED: PASS
 PRODUCTION RUNTIME CHANGED: NO
 PRODUCTION TERRAIN CHANGED: NO
-CURRENT GATE: G1 full-checkout acceptance
-NEXT AFTER G1 ACCEPTED: G2 — Planetary Surface Cells + LOD
+CURRENT GATE: G2 full-checkout acceptance including G1 dependency checks
+NEXT AFTER G2 ACCEPTED: G3 — Mega Casual Macro Surface
 ```
 
-G1 добавляет только canonical body/geodetic coordinates, сменный body-shape provider и geodesy service. Planetary LOD, terrain generation, mountains, rivers, caves и production-world integration намеренно отсутствуют.
+G2 is intentionally stacked on the current G1 candidate at the user's request. This does not retroactively mark G1 accepted; the full G2 wrapper includes the G1 focused dependency suite plus the complete world/core regression.
 
 ---
 
 ## G0 — accepted foundation
 
 ```text
-stage:                  G0 — Contracts freeze v0
-branch:                 feature/g0-geo-contracts
-accepted head:          7632ed576a3c0d9007c0ff1296d1d89cd43756d7
-program base branch:    feature/g0-procedural-planetary-generation-lab
-decision:               ACCEPTED
-production worlds:      unchanged
-production terrain:     unchanged
-renderer dependency:    none
-SceneTree dependency:   none in Geo core
-network dependency:     none in Geo semantics
+branch:         feature/g0-geo-contracts
+accepted head: 7632ed576a3c0d9007c0ff1296d1d89cd43756d7
+decision:       ACCEPTED
 ```
 
-G0 provides:
-
-```text
-PlanetDefinition
-PlanetEnvironment
-PlanetRecipe
-GeoProviderDescriptor
-GeoGenerationContext
-GeoSurfaceQuery
-GeoVolumeQuery
-GeoFieldBundle
-GeoSample
-GeoProvider
-FlatSurfaceProvider
-GeoKernel
-```
-
-Acceptance evidence:
-
-```text
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-G0 focused:                       PASS — 209 assertions
-world/core regression:            PASS
-201 / 201 discovered tests:       PASS
-204 / 204 steps:                  PASS
-Breakpoint :9081 collision noise: 0
-```
+G0 froze canonical Geo contracts, deterministic provider composition and renderer-independent `GeoKernel` semantics.
 
 ---
 
-## G1 — implementation record
+## G1 — dependency status
 
 ```text
-stage:                  G1 — Geodesy + Body Shape
-branch:                 feature/g1-geodesy-body-shape
-base:                   feature/g0-geo-contracts
-base commit:            7632ed576a3c0d9007c0ff1296d1d89cd43756d7
-decision:               IMPLEMENTED CANDIDATE
-production worlds:      unchanged
-production terrain:     unchanged
-renderer dependency:    none
-SceneTree dependency:   none in production G1 code
-network dependency:     none in geodesy semantics
-nominal lab radius:     6_000_000 m
-body shape:             body-shape/sphere-v1
+stage:       G1 — Geodesy + Body Shape
+branch:      feature/g1-geodesy-body-shape
+base:        feature/g0-geo-contracts
+head:        b30b1cad64a7176f2e3155fbe5cea2ec811c2e7a
+decision:    IMPLEMENTED CANDIDATE
 ```
 
-Implemented contracts/services:
+Implemented:
 
 ```text
 BodyFixedPosition
@@ -96,133 +57,166 @@ SphereBodyShapeProvider
 GeodesyService
 ```
 
-Operations:
+Exact-engine isolated evidence already recorded:
 
 ```text
-body_to_geodetic()
-geodetic_to_body()
-surface_normal()
-altitude()
-local_tangent_frame()
+G1 deep geodesy smoke:          PASS — 76 assertions
+G1 fly-in geodesy continuity:   PASS — 117 assertions
 ```
 
-Coordinate convention:
-
-```text
-+Y              north pole
-longitude 0°    +X
-longitude +90°  +Z
-latitude         [-90°, +90°]
-longitude        [-180°, +180°)
-exact poles      longitude canonicalized to 0°
-```
-
-Local tangent semantics:
-
-```text
-Up      = body-shape surface normal
-East    = increasing longitude tangent
-North   = East × Up
-```
-
-`LocalTangentFrame` validates unit axes, orthogonality and `E × U = N` handedness.
+G1 full checkout regression was still pending when G2 implementation started.
 
 ---
 
-## G1 architectural decisions
-
-`GeodesyService` is provider-neutral. It does not own sphere radius math and does not know renderer, LOD, network or SceneTree state.
-
-`SphereBodyShapeProvider` is the first concrete shape provider. Binding is explicit through:
+## G2 — implementation record
 
 ```text
-PlanetDefinition.body_shape_id
-provider shape_id
-provider contract_version
-provider generator_version
-PlanetDefinition.checksum
+stage:                  G2 — Planetary Surface Cells + LOD
+branch:                 feature/g2-planetary-cells-lod
+base branch:            feature/g1-geodesy-body-shape
+base commit:            b30b1cad64a7176f2e3155fbe5cea2ec811c2e7a
+decision:               IMPLEMENTED CANDIDATE
+production worlds:      unchanged
+production terrain:     unchanged
+GeoKernel semantics:    unchanged
+renderer dependency:    none in G2 core
+network dependency:     none
 ```
 
-These values form `body_shape_manifest_hash`, so changing shape implementation/version or planet definition cannot silently reuse the same provenance.
+Implemented core:
 
-Canonical serialized DTOs remain JSON-safe arrays/numbers. Internal math uses double-precision `Vector3` from the custom Godot double build.
+```text
+SurfaceCellKey
+SurfaceLodPolicy
+CubeSphereAddressing
+SurfaceLodSelector
+SurfaceCellLifecycle
+```
 
-G1 intentionally does not modify `GeoKernel`; body shape/geodesy is a lower coordinate foundation that future G2 surface addressing consumes.
+Address shape:
+
+```text
+{ body_id, face, lod, x, y }
+faces = PX NX PY NY PZ NZ
+```
+
+Core operations:
+
+```text
+direction/body-position → cell
+face UV ↔ body direction
+cell UV bounds / center / corners
+quadtree parent / children
+same-level cross-face neighbors
+LOD refinement + hysteresis
+bounded deterministic leaf selection
+REQUESTED → BUILDING → ACTIVE → RETIRING lifecycle
+```
 
 ---
 
-## G1 isolated validation evidence
-
-A minimal headless harness was assembled from the production G1 scripts plus the accepted G0 contract dependencies and run on the exact engine binary:
+## G2 architecture invariants
 
 ```text
-Godot Engine v4.7.1.stable.double.custom_build.a13da4feb
-cold editor import:       PASS
-G1 deep geodesy smoke:    PASS — 76 assertions
+LOD != World State
+SurfaceCellKey != terrain content
+cell boundary != feature boundary
+selection is observer-dependent presentation policy
+GeoSample remains observer/LOD independent
+core has no Node/Mesh/Camera/RenderingServer dependency
 ```
 
-Verified in the isolated run:
-
-```text
-equator roundtrip
-north/south pole roundtrip
-arbitrary lat/lon/alt roundtrips
-negative and positive altitude
-sub-meter double precision
-unit surface normal
-stable tangent basis
-orthogonality
-E × U = N handedness
-NaN/INF rejection
-center-of-body rejection
-```
-
-The first isolated compile found and fixed one real GDScript issue before handoff: duplicate inherited `GeoUtilsScript` declaration in `SphereBodyShapeProvider`.
-
-This evidence validates the new production code in isolation, but does not replace the full project regression.
+Same semantic point can be addressed at many LODs; the underlying G0 GeoSample remains identical.
 
 ---
 
-## G1 full acceptance gate
+## G2 exact-engine evidence
+
+Engine:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+```
+
+Focused:
+
+```text
+cold editor import:                    PASS
+G2 core/addressing/LOD:                PASS — 16,190 assertions
+G2 fly-in/out continuity:              PASS — 2,412 assertions
+debug lab headless launch:             PASS
+focused Linux wrapper:                 PASS (~16 s in isolated harness)
+```
+
+Seam validation:
+
+```text
+all cells exhaustive through LOD3
+all six cube-face boundaries sampled at LOD4 / LOD8 / LOD12
+neighbor same-level identity PASS
+cross-face reciprocal adjacency PASS
+shared edge-corner agreement PASS
+```
+
+Fly-in/out validation:
+
+```text
+50,000 km → surface → 50,000 km
+leaf budget bounded
+leaf cover has no ancestor overlap
+hysteresis stable
+safe incoming-active-before-retiring-release handoff
+retired records reclaimed
+```
+
+A performance issue discovered during validation was fixed before handoff: previous-split hysteresis lookup no longer scans every previous leaf per candidate; it uses a precomputed ancestor identity index and fast validated cell identity tokens.
+
+---
+
+## G2 debug lab
+
+```text
+res://scenes/labs/procedural/g2_planetary_cells_lab.tscn
+```
+
+Controls:
+
+```text
+W/S altitude
+A/D longitude
+Q/E latitude
+```
+
+The lab visualizes the selected cube-sphere cell grid with LOD colors and HUD counters. Renderer code is isolated from the core.
+
+---
+
+## G2 acceptance gate
 
 Focused runners:
 
 ```text
-RUN_G1_GEODESY_TESTS.ps1
-RUN_G1_GEODESY_TESTS.sh
+RUN_G2_PLANETARY_CELLS_TESTS.ps1
+RUN_G2_PLANETARY_CELLS_TESTS.sh
 ```
 
-Full Windows gate:
+Full checkout:
 
-```text
-RUN_G1_FULL_ACCEPTANCE.ps1
+```powershell
+.\RUN_G2_FULL_ACCEPTANCE.ps1
 ```
 
 Required final evidence:
 
 ```text
-headless editor import:                 PASS
-G1 focused acceptance:                 PASS
-existing world/core regression:        PASS
-Breakpoint runtime :9081 collision:    0
-git diff --check vs G0:                PASS
+G1 focused dependency suite:          PASS
+G2 focused suite:                     PASS
+full world/core regression:           PASS
+Breakpoint runtime :9081 collisions:  0
+git diff --check vs G1:               PASS
 ```
 
-Until this full-checkout run completes, G1 remains `IMPLEMENTED CANDIDATE`.
-
----
-
-## Expected existing regression noise
-
-As established during G0, some existing logs intentionally exercise error paths:
-
-```text
-World manifest identity mismatch (...)
-CONFLICTING_REMOTE_SNAPSHOT_TICK
-STALE_REMOTE_AUTHORITY_EPOCH
-```
-
-Those messages are not G1 failures when their suites finish PASS. MW7 ObjectDB/ResourceCache exit warnings also remain separate cleanup debt.
+Until that real-checkout wrapper is green, G2 remains `IMPLEMENTED CANDIDATE`.
 
 ---
 
@@ -231,8 +225,8 @@ Those messages are not G1 failures when their suites finish PASS. MW7 ObjectDB/R
 ```text
 G0  Contracts freeze v0                     ACCEPTED
 G1  Geodesy + Body Shape                     IMPLEMENTED CANDIDATE
-G2  Planetary Surface Cells + LOD            BLOCKED BY G1 ACCEPTANCE
-G3  Mega Casual Macro Surface                BLOCKED BY G2
+G2  Planetary Surface Cells + LOD            IMPLEMENTED CANDIDATE
+G3  Mega Casual Macro Surface                NEXT AFTER G2 ACCEPTED
 G4  Provider Composition / Replacement       BLOCKED BY G3
 G5  WorldFeature + FeatureGraph              BLOCKED BY G4
 G6  Mega Casual River                        BLOCKED BY G5
@@ -248,82 +242,34 @@ G15 Multiple PlanetRecipe Acceptance         BLOCKED BY G14
 G16 Generator Substitution Acceptance        BLOCKED BY G15
 ```
 
-After `G13 ACCEPTED` the parallel high-resolution track opens:
-
-```text
-GH0 Contract + Fixture Harness
-→ GH1 Structural 100 m Patch
-→ GH2 Decimeter Physical Detail
-→ GH3 Material Micro Detail
-→ GH4 Volumetric Refinement Adapter
-→ GH5 Performance Budgets
-→ GH6 Main Geo Composition
-```
-
-Future integration:
-
-```text
-G17 Matter Bridge
-G18 Representation LOD Integration
-G19 Network Manifest Integration
-```
+After `G13 ACCEPTED` the parallel GH0→GH6 high-resolution track opens. Future integration remains G17 Matter Bridge, G18 Representation LOD Integration, G19 Network Manifest Integration.
 
 ---
 
 ## Следующее действие
 
-On a full Windows checkout of `feature/g1-geodesy-body-shape`:
+On the full Windows checkout of `feature/g2-planetary-cells-lod`:
 
 ```powershell
-.\RUN_G1_FULL_ACCEPTANCE.ps1
+.\RUN_G2_FULL_ACCEPTANCE.ps1
 ```
 
-If it passes, record `G1 ACCEPTED` and create:
+After PASS record G1/G2 dependency evidence precisely, mark G2 accepted, then open:
 
 ```text
-feature/g2-planetary-cells-lod
+feature/g3-casual-macro-surface
 ```
 
-G2 must add addressing/quadtree/LOD lifecycle without changing the canonical geodesy semantics frozen in G1.
+G3 must use the G2 cells only as sampling/representation scopes. Terrain geography itself must remain continuous and independent from cell boundaries.
 
 ---
 
-## Архитектурные инварианты
-
-Without a separate ADR it is forbidden to violate:
-
-```text
-Generator != Renderer
-LOD != World State
-Feature != Chunk
-GeoKernel != planet-specific monolith
-High-resolution detail != canonical topology
-procedural baseline != persistent delta
-renderer/cache artifact != canonical world state
-network transport != generation semantics
-provider parameters must be part of provenance
-providers may consume only declared semantic dependencies
-body-shape identity/version must participate in geodesy provenance
-```
-
----
-
-## Документы программы
+## Документы
 
 ```text
 docs/procedural/README_RU.md
 docs/procedural/STATUS_RU.md
-
-docs/architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md
-docs/architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md
-docs/architecture/adr/ADR-019-procedural-planetary-generation-fabric.md
-
-docs/plans/PROCEDURAL_PLANETARY_GENERATION_ROADMAP_RU.md
-docs/plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md
-
-docs/validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md
-
-docs/checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md
-docs/checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md
 docs/checkpoints/G1_GEODESY_BODY_SHAPE_CANDIDATE_RU.md
+docs/checkpoints/G1_FLY_IN_CONTINUITY_EVIDENCE_RU.md
+docs/checkpoints/G2_PLANETARY_CELLS_LOD_CANDIDATE_RU.md
 ```
