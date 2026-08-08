@@ -1,15 +1,14 @@
-# Текущий план разработки: Network Minimum → T0 → параллельные Construction / Matter labs
+# Текущий план разработки: Network Minimum → T0 → T1A/T1B + T3/T4 → T2 → T5–T7
 
-**Дата фиксации:** 2026-08-08
+**Дата первоначальной фиксации:** 2026-08-08
+**Обновление:** 2026-08-08 — добавлен Complex Construct Demo Lab и разделение Construction на T1A/T1B перед T2.
 **Репозиторий:** `rootfabric/distributed-world-simulator`
-**База на момент решения:** `main @ 25a156638aaf74d136ecf299ebe0d96c0f30897a`
-**Назначение:** зафиксировать, когда сеть перестаёт быть блокирующей стадией и становится параллельно развиваемой инфраструктурой для Item, Construction и Matter.
-
----
+**База решения:** актуальный `main`, включающий интегрированный C24 construction stack.
+**Детальный план T1:** `docs/plans/T1_COMPLEX_CONSTRUCT_DEMO_LAB_RU.md`.
 
 ## 1. Текущее состояние сети
 
-Актуальный `config/network/network-experience-roadmap.v1.json` на `main` фиксирует:
+Актуальный `config/network/network-experience-roadmap.v1.json` фиксирует:
 
 ```text
 NX0 Observability Baseline                  accepted
@@ -32,13 +31,11 @@ first_full_gameplay_gate = NX6
 current_stage            = NX6
 ```
 
-Следствие: архитектурный минимум для начала gameplay-validation уже достигнут по сетевому roadmap. Текущая задача — не ждать идеальной плавности и не ждать NX7–NX9, а формально подтвердить `Network Minimum ACCEPTED` на текущей композиции и открыть T0.
-
----
+Следствие: архитектурный минимум для начала gameplay-validation уже достигнут. Не требуется ждать идеальной плавности, NX7–NX9 или полного network tuning до начала Item/Construction/Matter labs.
 
 ## 2. Основное решение
 
-С этого момента необходимо разделять два понятия:
+Разделяются два понятия:
 
 ```text
 NETWORK CORRECTNESS / CONTRACTS
@@ -46,25 +43,21 @@ NETWORK CORRECTNESS / CONTRACTS
 NETWORK FEEL / TUNING
 ```
 
-`Network Minimum ACCEPTED` означает, что сеть достаточно корректна архитектурно, чтобы Item, Construction и Matter могли развиваться независимо от дальнейшего тюнинга сети.
+`Network Minimum ACCEPTED` означает, что сеть достаточно корректна архитектурно, чтобы gameplay-домены развивались независимо от дальнейшего тюнинга.
 
-Это НЕ означает, что multiplayer уже обязан быть идеально плавным.
+Это не означает, что multiplayer уже обязан быть идеально плавным.
 
-После прохождения minimum gate сеть становится горизонтальным инфраструктурным потоком:
+После minimum gate сеть становится горизонтальным инфраструктурным потоком:
 
 ```text
 NETWORK: NX6 → NX7 → NX8 → NX9 → дальнейший tuning
                     │
-                    ├──────────── развивается параллельно
+                    ├──────────────── развивается параллельно
                     │
-GAMEPLAY:      T0 → T1/T3 → T2/T4 → T5 → T6 → T7
+GAMEPLAY:      T0 → T1A/T1B + T3/T4 → T2 → T5 → T6 → T7
 ```
 
----
-
-## 3. Последовательность развития проекта
-
-Зафиксированная последовательность:
+## 3. Актуальная последовательность развития проекта
 
 ```text
 ТЕКУЩАЯ СЕТЕВАЯ ЗАДАЧА
@@ -73,38 +66,50 @@ Network Minimum ACCEPTED
         ▼
 T0 — Item / Playground Acceptance
         │
-        ├────────────────────────┐
-        │                        │
-        ▼                        ▼
-T1 Construction Lab       T3 Matter Excavation Lab
-        │                        │
-        ▼                        ▼
-T2 Construction Scale     T4 Matter Streaming
-        │                        │
-        └──────────┬─────────────┘
-                   ▼
+        ├─────────────────────────────────────┐
+        │                                     │
+        ▼                                     ▼
+T1A Complex Construct Demo             T3 Matter Excavation Lab
+        │                                     │
+        ▼                                     ▼
+T1B Construct Composition              T4 Matter Streaming
+        │                                     │
+        ▼                                     │
+T2 Construction Scale                         │
+        │                                     │
+        └──────────────────┬──────────────────┘
+                           ▼
 T5 Matter + Construction Composition
-                   │
-                   ▼
+                           │
+                           ▼
 T6 Recovery / Reconnect Composition
-                   │
-                   ▼
+                           │
+                           ▼
 T7 Asteroid Surface Lab
-                   │
-                   ▼
+                           │
+                           ▼
 VALIDATION LABS ACCEPTED
-                   │
-                   ▼
+                           │
+                           ▼
 SEAMLESSNESS / HANDOFF / LARGE WORLD
 ```
 
-Это является текущей управляющей последовательностью для дальнейшей разработки gameplay-веток.
+### Важное уточнение для T1
 
----
+Экспериментальную разработку `T1A/T1B` разрешено начинать **до формального T0 acceptance**, потому что Construction C1–C24 и playable network foundation уже позволяют искать composition defects.
+
+Но gate остаётся строгим:
+
+```text
+T1A/T1B implementation may start before T0;
+T1 cannot be declared ACCEPTED before T0 ACCEPTED.
+```
+
+Это позволяет не простаивать и одновременно сохраняет правильный порядок formal acceptance.
 
 ## 4. Network Minimum Acceptance Gate
 
-Перед формальным `Network Minimum ACCEPTED` необходимо подтвердить не визуальную идеальность, а следующие инварианты:
+Перед формальным `Network Minimum ACCEPTED` подтверждаются не визуальные ощущения, а инварианты:
 
 ```text
 [PASS] server authority сохранён
@@ -115,13 +120,13 @@ SEAMLESSNESS / HANDOFF / LARGE WORLD
 [PASS] stale state можно отличить от нового
 [PASS] domain revisions сходятся
 [PASS] explicit accept / reject semantics работают
-[PASS] reconnect не создаёт новую конфликтующую identity
+[PASS] reconnect не создаёт конфликтующую identity
 [PASS] gameplay domain не зависит от packet-arrival timing
-[PASS] gameplay domain не зависит напрямую от конкретного transport/RPC
-[PASS] предыдущие accepted network contracts не регрессировали в композиции
+[PASS] gameplay domain не зависит напрямую от transport/RPC
+[PASS] accepted network contracts не регрессировали в композиции
 ```
 
-Минимальный проверочный профиль должен включать:
+Минимальный профиль:
 
 ```text
 LOCAL
@@ -135,34 +140,28 @@ reorder
 disconnect / reconnect
 ```
 
-Если эти инварианты проходят, `Network Minimum` принимается даже при наличии заметного визуального tuning debt.
+## 5. Что не блокирует gameplay labs
 
----
-
-## 5. Что НЕ блокирует T0
-
-Следующие проблемы после Network Minimum считаются tuning / quality debt и могут исправляться параллельно:
+После Network Minimum следующие проблемы считаются tuning / quality debt:
 
 - небольшое дёрганье remote player;
-- заметные, но корректные reconciliation corrections;
+- reconciliation corrections при сохранённой correctness;
 - неидеальный interpolation delay;
-- snapshot rate, требующий настройки;
-- input send rate, требующий настройки;
-- jitter-buffer tuning;
-- extrapolation tuning;
-- quantization и delta compression;
+- snapshot/input send-rate tuning;
+- jitter/extrapolation tuning;
+- quantization/delta compression;
 - bandwidth optimization;
-- priority / replication-budget tuning;
-- отсутствие максимально быстрого optimistic presentation;
-- задержка UI на время server confirmation, если состояние остаётся корректным.
+- replication priority tuning;
+- задержка UI на server confirmation;
+- HLOD pop;
+- asset/material polish;
+- draw-call optimization debt, если canonical state корректен.
 
-Такие дефекты не должны автоматически возвращать проект в режим «занимаемся только сетью».
-
----
+Они не должны автоматически возвращать проект в режим «занимаемся только сетью».
 
 ## 6. Что остаётся блокером
 
-Следующие дефекты являются основанием остановить gameplay-ветку и исправлять network/domain contract:
+Следующие дефекты останавливают gameplay-ветку и возвращаются в network/domain layer:
 
 - потеря предмета;
 - дублирование предмета;
@@ -171,11 +170,11 @@ disconnect / reconnect
 - неверный ownership / authority;
 - потеря durable state после reconnect;
 - невозможность определить stale revision;
-- зависание lifecycle/ready state, из-за которого peer не входит в валидную сессию;
+- lifecycle/ready deadlock;
 - protocol/source-contract regression;
 - бизнес-логика, зависящая от порядка прихода пакетов;
 - gameplay-код, напрямую завязанный на ENet/RPC вместо domain command;
-- невозможность воспроизвести операцию через offline/test/server path без сетевого транспорта.
+- невозможность воспроизвести операцию через offline/test/server path без транспорта.
 
 Главный критерий:
 
@@ -184,13 +183,9 @@ disconnect / reconnect
 расхождение канонического состояния — нет.
 ```
 
----
-
 ## 7. T0 — Item / Playground Acceptance
 
-T0 является следующим gameplay checkpoint после Network Minimum.
-
-Цель T0 — доказать, что предметная система живёт поверх сетевого фундамента без зависимости от дальнейшего сетевого тюнинга.
+T0 доказывает, что Item Domain живёт поверх сетевого фундамента без зависимости от дальнейшего network tuning.
 
 ### Минимальный Playground
 
@@ -221,13 +216,13 @@ reconnect and restore authoritative state
 ### Обязательные multiplayer scenarios
 
 1. A подбирает предмет → B видит тот же authoritative result.
-2. A кладёт предмет в контейнер → оба клиента видят одинаковую container revision.
+2. A кладёт предмет в контейнер → оба клиента видят одинаковую revision.
 3. A переносит stack → операция применяется ровно один раз.
-4. Duplicate/reorder transport не дублирует действие.
-5. A disconnect → authoritative item state остаётся корректным.
-6. A reconnect → получает тот же Item Graph / revisions.
+4. Duplicate/reorder не дублирует действие.
+5. Disconnect не меняет authoritative item state.
+6. Reconnect возвращает тот же Item Graph/revisions.
 7. Offline/local execution использует тот же domain operation path.
-8. Reject операции не оставляет predicted/visual ghost как canonical state.
+8. Reject не оставляет predicted/visual ghost как canonical state.
 
 ### T0 acceptance
 
@@ -239,7 +234,7 @@ reconnect and restore authoritative state
 [PASS] idempotent operations
 [PASS] revisions converge
 [PASS] reconnect restores state
-[PASS] two clients converge on the same result
+[PASS] two clients converge
 [PASS] offline path uses the same domain rules
 ```
 
@@ -250,54 +245,182 @@ reconnect and restore authoritative state
 [WARN] lack of perfect optimistic prediction
 [WARN] animation delay
 [WARN] remote interpolation polish
-[WARN] snapshot/bandwidth tuning debt
+[WARN] bandwidth tuning debt
 ```
-
----
 
 ## 8. Роль NX6
 
-NX6 `Predicted Item Interactions` остаётся важным текущим сетевым этапом, но его роль после достижения Network Minimum уточняется.
-
-NX6 должен улучшать:
-
-- optimistic item presentation;
-- predicted pickup/drop/transfer presentation;
-- dependent-operation completion;
-- authoritative rejection rollback;
-- playground lifecycle cleanup;
-- perceived item interaction latency.
-
-Но Item Domain не должен требовать NX6 для своей базовой корректности.
-
-Правило:
+NX6 улучшает optimistic presentation и perceived item latency, но Item Domain не должен требовать NX6 для базовой correctness.
 
 ```text
 Network Minimum подтверждает возможность начать T0.
-NX6 может приниматься параллельно с T0.
+NX6 acceptance может идти параллельно с T0 и T1A preparation.
 T0 не должен зависеть от идеальности prediction UX.
 ```
 
-Если NX6 выявляет нарушение canonical correctness, это блокер.
-Если NX6 выявляет только плохой feel/presentation, это tuning debt.
+Если NX6 выявляет canonical correctness defect — это блокер.
+Если только presentation/feel defect — это tuning debt.
 
----
+## 9. T1A — Complex Construct Demo
 
-## 9. После T0 — обязательное распараллеливание
+После достижения playable network foundation и принятого Construction stack больше нет смысла проверять только отдельные столы/роботы/дома. Нужен первый сложный объект, объединяющий подсистемы.
 
-После `T0 ACCEPTED` разработка разделяется минимум на два независимых gameplay-потока.
-
-### T1 → T2: Construction
+Контрольный объект:
 
 ```text
-T1 Construction Lab
-    ↓
-T2 Construction Scale
+Lunar Engineering Outpost
+├── habitat
+├── airlock
+├── workshop
+├── storage
+├── utility room
+└── exterior cargo/rover area
 ```
 
-Construction должен использовать domain operations и authoritative state, но не знать snapshot/interpolation details.
+T1A доказывает одновременно:
 
-### T3 → T4: Matter
+```text
+Item Graph
+Construction semantics
+rooms/openings
+utilities
+machines
+runtime geometry/physics
+multiplayer authority
+streaming/HLOD
+```
+
+Масштаб:
+
+```text
+D0  50–100 parts     composition skeleton
+D1  300–500 parts    playable outpost
+```
+
+Обязательные пункты T1A:
+
+- deterministic fixture/CompositeDefinition/BuildPlan;
+- PartVisualProfile presentation boundary;
+- structural shell;
+- door/window/room semantics;
+- real containers/items;
+- generator/battery/lights/console/fabricator utility chain;
+- two-client experimental multiplayer;
+- reconnect;
+- runtime purge/rebuild;
+- near/mid/far representation;
+- inspector/telemetry.
+
+Подробный execution plan: `docs/plans/T1_COMPLEX_CONSTRUCT_DEMO_LAB_RU.md`.
+
+## 10. T1B — Construct Composition / Failure Demo
+
+T1B проверяет причинные цепочки между независимыми facets.
+
+Обязательные сценарии:
+
+### Utility break
+
+```text
+remove cable
+→ authoritative construction mutation
+→ utility graph rebuild
+→ lamp/fabricator OFF
+→ room identity SAME
+→ unrelated structural state SAME
+```
+
+### Structural damage
+
+```text
+damage/remove support
+→ C9 topology change
+→ C14 load recompute
+→ deterministic degraded/broken result
+→ optional split/salvage
+→ runtime/proxy update
+→ clients converge
+```
+
+### Space/opening
+
+```text
+open/close door
+remove wall/window bond
+→ C7 enclosure/space state changes
+→ unrelated facets remain valid
+→ repair restores original item identities
+```
+
+### HLOD round trip
+
+```text
+FULL near
+→ DISTANT_SHELL far
+→ authoritative mutation
+→ return near
+→ rebuild latest revision
+```
+
+### Recovery
+
+```text
+disconnect after authoritative commit
+→ reconnect
+→ same item/construct state
+→ no duplicate operation
+```
+
+T1 acceptance требует formal T0 acceptance.
+
+## 11. Hybrid Representation research line
+
+T1A/T1B должны вскрыть реальные presentation limits C24, но это не причина откладывать D0.
+
+Параллельно после D0 разрешается исследовать:
+
+```text
+Representation Router
+├── StructuralGreedyBackend   # существующий C22/C24
+├── ArbitraryMeshBackend      # сложные static meshes
+├── InstanceBatchBackend      # повторяющиеся детали
+└── InteractiveBackend        # stateful/interactive parts
+```
+
+Правила:
+
+- Merging Meshes-подобные решения используются только как algorithmic reference;
+- imported Node3D не становится authoritative source;
+- visual catalog не меняет Construct/Item checksum;
+- headless сервер не обязан загружать art assets;
+- Quaternius/другой Sci-Fi pack подключается через PartVisualProfile, а не напрямую в domain.
+
+## 12. T2 — Construction Scale
+
+После принятия композиции объект масштабируется:
+
+```text
+D2  1 000–2 000 semantic parts
+D3  10 000+ semantic parts
+optional 100 000 stress
+```
+
+T2 должен проверять масштаб, а не заново чинить semantics.
+
+Основные цели:
+
+- dirty-section incremental rebuild;
+- HLOD performance;
+- content-addressed proxy reuse;
+- instance batching;
+- arbitrary static mesh batching;
+- bounded SceneTree/resources;
+- network interest/child identity suppression;
+- reconnect/soak на реальной сложной базе.
+
+## 13. T3 → T4: Matter
+
+Matter развивается параллельно Construction после T0.
 
 ```text
 T3 Matter Excavation Lab
@@ -305,9 +428,9 @@ T3 Matter Excavation Lab
 T4 Matter Streaming
 ```
 
-Matter excavation должна быть транзакционной операцией мира, а не прямым RPC типа `remove_voxel(x,y,z)`.
+Matter excavation является транзакционной domain operation, а не прямым RPC `remove_voxel(x,y,z)`.
 
-Рекомендуемый логический контракт:
+Рекомендуемый logical contract:
 
 ```text
 MiningOperation
@@ -328,18 +451,14 @@ MiningResult
 - new_revision
 - canonical matter delta reference
 - produced item operations
-- reject reason when rejected
+- reject reason
 ```
 
-Конкретная wire serialization может изменяться независимо от этого domain contract.
+Wire serialization может изменяться независимо от domain contract.
 
----
+## 14. Simulation Operation Protocol
 
-## 10. Simulation Operation Protocol как архитектурное правило
-
-Новые gameplay-системы должны стремиться к общей модели world/domain operations, а не к RPC-driven domain logic.
-
-Пример семейства операций:
+Новые gameplay-системы используют world/domain operations, а не RPC-driven business logic.
 
 ```text
 WorldOperation
@@ -367,7 +486,7 @@ result revision
 server ordering/tick metadata
 ```
 
-Одна и та же операция должна быть пригодна для вызова из:
+Одна semantics должна вызываться из:
 
 ```text
 player input
@@ -381,17 +500,15 @@ automated test
 
 Transport доставляет операцию, но не определяет её бизнес-смысл.
 
----
-
-## 11. T5–T7
+## 15. T5–T7
 
 ### T5 — Matter + Construction Composition
 
-Проверяет совместное изменение Matter и Construction без расхождения ownership, revisions, physics/projection и persistence.
+Совместное изменение Matter и Construction без расхождения ownership, revisions, physics/projection и persistence.
 
 ### T6 — Recovery / Reconnect Composition
 
-Проверяет recovery уже не одной subsystem, а композиции:
+Проверяет recovery композиции:
 
 ```text
 player
@@ -401,13 +518,13 @@ construction
 matter
 ```
 
-После reconnect каноническое состояние должно сходиться без duplication и без потери принятых durable operations.
+После reconnect состояние сходится без duplication и потери accepted durable operations.
 
 ### T7 — Asteroid Surface Lab
 
 Объединяет:
 
-- локомоцию;
+- locomotion;
 - item interactions;
 - excavation;
 - construction;
@@ -416,62 +533,63 @@ matter
 - reconnect;
 - multiplayer observation.
 
-T7 должен быть gameplay/validation lab перед переходом к полноценным seamlessness, handoff и large-world сценариям.
+T7 является gameplay/validation lab перед seamlessness/handoff/large-world.
 
----
+## 16. Gate перед Seamlessness / Handoff / Large World
 
-## 12. Правило перехода к Seamlessness / Handoff / Large World
-
-К большой распределённой композиции не следует переходить только потому, что отдельные subsystem tests зелёные.
-
-До этого должны быть приняты validation labs:
+До большой распределённой композиции должны быть приняты:
 
 ```text
 T0 Item / Playground
-T1 Construction Lab
+T1A Complex Construct Demo
+T1B Construct Composition
 T2 Construction Scale
-T3 Matter Excavation Lab
+T3 Matter Excavation
 T4 Matter Streaming
 T5 Matter + Construction Composition
 T6 Recovery / Reconnect Composition
 T7 Asteroid Surface Lab
 ```
 
-После этого seamlessness/handoff решают уже задачу распределения работающей симуляции, а не пытаются одновременно исправлять базовые semantics предметов, строительства и Matter.
+Только после этого seamlessness/handoff распределяют уже работающую симуляцию, а не одновременно исправляют базовые semantics.
 
----
-
-## 13. Текущий порядок действий
-
-На момент этой фиксации порядок следующий:
+## 17. Текущий порядок действий
 
 ```text
-1. Формально подтвердить Network Minimum на текущей main-композиции.
-   - опираться на уже accepted NX0–NX5;
-   - проверить correctness/reconnect/composition invariants;
-   - не требовать идеальной плавности.
+1. Формально подтвердить Network Minimum на актуальной main-композиции.
 
-2. Не ждать NX7–NX9 перед T0.
+2. Продолжать T0 Item/Playground acceptance.
 
-3. Вести NX6 fix3 acceptance параллельно с подготовкой/прогоном T0.
+3. Не ждать NX7–NX9.
 
-4. Принять T0 по canonical item correctness, а не по идеальности UX latency.
+4. Вести NX6 acceptance/tuning параллельно.
 
-5. После T0 открыть две параллельные ветки:
-   T1 Construction Lab
-   T3 Matter Excavation Lab
+5. Уже сейчас вести feature/t1-complex-construct-demo-lab:
+   - T1A.0 baseline/fixtures;
+   - T1A.1 PartVisualProfile boundary;
+   - T1A.2 D0 outpost;
+   - T1A.3 item integration;
+   - T1A.4 utilities/machines;
+   - T1A.5 two-client experimental profile;
+   - T1A.6 inspector/telemetry.
 
-6. Продолжать network tuning горизонтально, не меняя domain contracts.
+6. После D0/D1 перейти к T1B controlled failures/recovery.
 
-7. Любой новый gameplay network integration строить через domain operations/revisions/authority, а не через transport-specific RPC semantics.
+7. Формально принять T1 только после T0 ACCEPTED.
+
+8. После T1 перейти к T2 D2/D3 real-base scale.
+
+9. Параллельно после T0 вести T3/T4 Matter.
+
+10. Network tuning остаётся горизонтальным потоком и не меняет domain contracts.
 ```
 
----
-
-## 14. Неизменяемое решение
+## 18. Неизменяемое решение
 
 Пока не обнаружен новый correctness blocker, стратегия проекта следующая:
 
 > Сеть больше не должна доводиться до визуального идеала до начала предметов, строительства и копания. После подтверждения Network Minimum дальнейший сетевой тюнинг идёт параллельно gameplay-разработке. Блокируют развитие только нарушения authority, identity, idempotency, revisions, persistence/reconnect, protocol contracts и convergence канонического состояния.
 
-Это правило следует использовать при выборе следующей задачи и при acceptance review будущих T0–T7 этапов.
+Для Construction добавляется второе правило:
+
+> После принятия строительного фундамента новые фундаментальные слои не должны добавляться только ради теории. Сложный demo-object используется как архитектурный экзамен: найденные composition defects исправляются в исходном domain, а performance/visual debt развивается параллельно.
