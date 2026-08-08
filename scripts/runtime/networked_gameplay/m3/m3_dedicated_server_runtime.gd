@@ -11,7 +11,22 @@ const FixedTickInputBufferFix10 = preload(
 # that input. This gives reconciliation a command-stream baseline rather than a
 # wall-clock phase comparison.
 #
-# Accepted FIX7 source-contract compatibility anchors:
+# Accepted FIX7/FIX6 source-contract compatibility anchors. The actual behavior
+# remains inherited; keep the fixed-simulation anchor before the network-drain
+# anchor because the accepted regression verifies that source ordering:
+# _advance_fixed_simulation(delta)
+# _boundary.poll_events(M7_NETWORK_EVENT_BUDGET_PER_FRAME)
+# M7_FIXED_TICK_MAX_CATCH_UP_TICKS
+# M7_STALL_SNAPSHOT_GUARD_SECONDS
+# _movement_snapshot_recovery_suppressions
+# M7_PEER_TELEMETRY_INTERVAL_MS
+# _peer_telemetry_skips
+# server_process_max_duration_ms
+# report_max_snapshot_build_duration_ms
+# Thread.new()
+# _report_requests_coalesced
+# _broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
+# _broadcast_item_delta(item_delta, peer_id, command_type)
 # LIGHTWEIGHT_READY_FULL_TERMINAL_V1
 # res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_fix6.gd
 
