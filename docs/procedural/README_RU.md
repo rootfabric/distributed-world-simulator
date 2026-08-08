@@ -15,8 +15,9 @@ G5 ACCEPTED
 G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
-G6.3 ACCEPTED — runtime WaterSurfaceQuery resolver
-G6.4 NEXT — Casual Visual River Lab
+G6.3 ACCEPTED
+G6.4 IMPLEMENTED CANDIDATE — Casual Visual River Lab
+G6 FULL ACCEPTANCE NEXT after G6.4
 ```
 
 Global revision:
@@ -28,14 +29,15 @@ GLOBAL-P0-2026-08-08-R1
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G6_3_RUNTIME_WATER_SURFACE_QUERY_ACCEPTED_RU.md`
-3. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md`
-4. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
-5. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
-6. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-7. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
-8. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-9. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
+2. `docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_CANDIDATE_RU.md`
+3. `docs/checkpoints/G6_3_RUNTIME_WATER_SURFACE_QUERY_ACCEPTED_RU.md`
+4. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md`
+5. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
+6. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
+7. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
+8. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
+9. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
+10. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
 
 ## Current architecture
 
@@ -60,87 +62,66 @@ G6.2 cross-cell/cross-LOD continuity — ACCEPTED
         ↓
 G6.3 runtime WaterSurfaceQuery — ACCEPTED
         ↓
-G6.4 casual visual river lab — NEXT
+G6.4 replaceable visual river lab — CANDIDATE
+        ↓
+G6 full acceptance
+        ↓
+G7 Semantic Field Fabric
 ```
 
-Accepted hydrology rule:
+Accepted rule:
 
 ```text
 G5 FeatureId = semantic river owner
-G6.1 provider = deterministic canonical geography compiler
+G6.1 provider = canonical geography compiler
 G6.2 cell/LOD = representation addressing only
 G6.3 query resolver = read-only derived world service
-G6.4 renderer/lab = derived presentation only
+G6.4 mesh/debug lab = replaceable presentation only
 ```
 
-## Accepted G6.3 runtime query
+## G6.4 manual visual checkpoint
 
-Windows-tested head:
+Scene:
 
 ```text
-974fc6682abac058ea158cf11efbf44501805817
+res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
 ```
 
-Accepted chain:
+Automated gate:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
+```
+
+Manual launch after automated PASS:
+
+```powershell
+.\START_G6_4_VISUAL_RIVER_LAB.ps1
+```
+
+Controls:
 
 ```text
-G5 World Feature Graph                 PASS — 249
-G5 feature/cell identity               PASS — 94
-G6.0 fluid contracts                   PASS — 169
-G6.1 CasualRiverProviderV1             PASS — 74
-G6.2 cross-cell/cross-LOD continuity   PASS — 86
-G6.3 runtime WaterSurfaceQuery         PASS — 79
-git diff --check                       PASS
-working tree                           clean
+A/D orbit     Q/E pitch     W/S zoom
+Space auto-orbit            R reset
+1 water       2 centerline  3 banks
+4 probes      5 seam
 ```
 
-Runtime flow:
+The scene displays a planet-scale derived water ribbon, canonical centerline, bank guides, G6.3 query normal/flow probes and the `PX/PZ` cube-face transition marker. Water/bank width is deliberately exaggerated only in display space.
 
-```text
-body/frame position + max distance + fluid filter
-        ↓
-WaterSurfaceQuery
-        ↓
-WaterSurfaceResolverV1
-        ↓
-WaterSurfaceSample
-```
+G6.4 is not accepted until both automated Windows validation and graphical manual observation pass.
 
-The caller receives canonical fluid/feature identity and derived surface information without knowing a surface cell, cube face, LOD, renderer patch, interest region or server owner.
+## Synchronization note
 
-Multiple eligible fluids are resolved deterministically by distance and then lexical `FluidRegionId`.
+`GLOBAL-P0-2026-08-08-R1` still matches main at implementation start. A fresh G5 shared-baseline PR #43 exists for the MW10 atomic-lock fix and is still open. G6.4 is presentation-only and does not depend on Matter, but full G6 acceptance must synchronize with the shared baseline if that fix lands before the final gate.
 
-## Next visual milestone — G6.4
-
-`G6.4 Casual Visual River Lab` is now unblocked. It is the first manual visual hydrology checkpoint.
-
-The lab should provide deliberately simple, replaceable presentation:
-
-```text
-water ribbon from accepted RiverSpline
-channel width/bank visualization
-canonical centerline debug
-WaterSurfaceQuery probe markers
-manual camera/player observation
-PX/PZ seam continuity inspection
-```
-
-The visual layer must consume accepted G6.1/G6.3 data rather than creating a second river model.
-
-After G6.4:
-
-```text
-G6 full acceptance
-  -> fresh main/GLOBAL-P0 sync check
-  -> full world/core regression
-  -> G7 Semantic Field Fabric
-```
-
-## Detail / asset research doctrine
+## Detail / asset doctrine
 
 ```text
 BASE FIRST
 BEAUTY SECOND
 ```
 
-Photoreal water, foam, FFT waves and production shoreline remain deferred. Early checkpoints optimize for canonical identity, deterministic composition, query correctness, LOD independence and replaceable presentation.
+Photoreal water, foam, FFT waves and production shoreline remain deferred. The current visual lab exists to prove replaceable presentation over stable canonical/query contracts.
