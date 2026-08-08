@@ -53,7 +53,7 @@ static func plan_equip(
 			return String(left.get("occupied_by_item_id", "")) < String(right.get("occupied_by_item_id", ""))
 		return left_channel < right_channel
 	)
-	var conflicting_item_ids := CharacterEquipmentDomain._sorted_keys(conflict_items)
+	var conflicting_item_ids := _sorted_keys(conflict_items)
 	return _result(true, RESULT_CONFLICT_PLAN, {
 		"item_id": item_id,
 		"profile_id": profile.profile_id,
@@ -70,6 +70,14 @@ static func conflicting_item_ids(plan: Dictionary) -> Array[String]:
 	var details: Dictionary = plan.get("details", {})
 	for raw_id in details.get("conflicting_item_ids", []):
 		result.append(String(raw_id))
+	result.sort()
+	return result
+
+
+static func _sorted_keys(values: Dictionary) -> Array[String]:
+	var result: Array[String] = []
+	for raw_key in values.keys():
+		result.append(String(raw_key))
 	result.sort()
 	return result
 
