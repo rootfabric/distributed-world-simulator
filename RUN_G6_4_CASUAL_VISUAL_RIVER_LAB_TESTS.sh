@@ -72,4 +72,4 @@ fi
 printf '%s\n' 'G6.4 Casual Visual River Lab fix4 automated gate passed.'
 printf '%s\n' 'Headless proof covers G2 selection, river sampling, G3 triangle refinement, and the 8-octave diagnostic detail recipe.'
 printf '%s\n' 'BreakpointRuntimeBridge is disabled for this standalone gate.'
-printf '%s\n' 'Manual graphical detail observation is still required before G6.4 acceptance.'
+printf '%s\n' 'G6.4 manual graphical acceptance is already recorded; this rerun verifies automated evidence.'
