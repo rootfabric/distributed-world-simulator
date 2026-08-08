@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.int0_uid_sidecars_manifest_index.v1",
   "recorded_at": "2026-08-03T23:44:00+10:00",
-  "updated_at": "2026-08-04T01:43:00+10:00",
+  "updated_at": "2026-08-07T20:45:00+10:00",
   "repository": "rootfabric/distributed-world-simulator",
-  "total_uid_sidecars": 159,
+  "total_uid_sidecars": 160,
   "manifests": [
     {
       "path": "validation/int0-import-uid-sidecars-manifest.json",
@@ -28,12 +28,18 @@
       "uid_count": 1,
       "classification": "AUTHORITATIVE_TICK_PROGRESSION_TEST_SIDECAR",
       "immutable": true
+    },
+    {
+      "path": "validation/network-view-relative-runtime-sidecar-manifest.json",
+      "uid_count": 1,
+      "classification": "NETWORK_VIEW_RELATIVE_RUNTIME_SIDECAR",
+      "immutable": true
     }
   ],
   "completeness": {
     "primary_manifest_count": 156,
-    "supplemental_manifest_count": 3,
-    "aggregate_count": 159,
+    "supplemental_manifest_count": 4,
+    "aggregate_count": 160,
     "project_godot_expected_unchanged_after_import": true,
     "new_untracked_uid_expected": 0
   }

@@ -9,6 +9,7 @@ var session: InventoryTransferSession
 var slot_projection: InventorySlotProjection
 var icon_provider: Callable
 var cursor_container_id: String = ""
+var _network_virtual: bool = false
 
 
 func setup(
@@ -24,6 +25,7 @@ func setup(
 	slot_projection = projection
 	icon_provider = icons
 	cursor_container_id = "ui_cursor/%s/seven_days" % String(controller.profile_id)
+	_network_virtual = false
 
 
 func begin(origin_payload: Dictionary, requested_quantity: int) -> Dictionary:
@@ -36,6 +38,38 @@ func begin(origin_payload: Dictionary, requested_quantity: int) -> Dictionary:
 	if source_item_id.is_empty() or available_quantity <= 0:
 		return _fail("CARRY_SOURCE_EMPTY")
 	var quantity := clampi(requested_quantity, 1, available_quantity)
+	var source_item = gameplay_controller.get_item(source_item_id)
+	if source_item == null:
+		return _fail("CURSOR_ITEM_NOT_FOUND")
+	var texture := _icon_for_payload(origin_payload)
+
+	# A network replica must never manufacture authoritative-looking item IDs by
+	# splitting/moving its local replica domain into a transient cursor container.
+	# Keep the 7DTD carry as presentation state only; place/drop later use the
+	# original replica ID, which the M7 adapter can map back to the canonical ID.
+	if _uses_network_replica_commands():
+		_network_virtual = true
+		var started := session.begin_domain_backed(
+			origin_payload,
+			source_item_id,
+			quantity,
+			texture,
+			int(source_item.revision),
+			cursor_container_id
+		)
+		if not bool(started.get("success", false)):
+			_network_virtual = false
+			return started
+		return {
+			"success": true,
+			"network_virtual": true,
+			"carried_item_id": source_item_id,
+			"cursor_container_id": cursor_container_id,
+			"moved_quantity": quantity,
+			"session": session.snapshot(),
+		}
+
+	_network_virtual = false
 	var result: Dictionary = gameplay_controller.begin_inventory_cursor_carry(
 		source_item_id,
 		quantity,
@@ -47,7 +81,6 @@ func begin(origin_payload: Dictionary, requested_quantity: int) -> Dictionary:
 	var carried = gameplay_controller.get_item(carried_item_id)
 	if carried == null:
 		return _fail("CURSOR_ITEM_NOT_FOUND")
-	var texture := _icon_for_payload(origin_payload)
 	var started := session.begin_domain_backed(
 		origin_payload,
 		carried_item_id,
@@ -70,6 +103,8 @@ func begin(origin_payload: Dictionary, requested_quantity: int) -> Dictionary:
 func place(target_payload: Dictionary, requested_quantity: int) -> Dictionary:
 	if not session.is_active() or not session.domain_backed:
 		return _fail("CURSOR_NOT_ACTIVE")
+	if _network_virtual:
+		return _place_network_virtual(target_payload, requested_quantity)
 	var carried_item_id := session.item_id
 	var carried = gameplay_controller.get_item(carried_item_id)
 	if carried == null:
@@ -115,6 +150,19 @@ func place(target_payload: Dictionary, requested_quantity: int) -> Dictionary:
 func drop_to_world(requested_quantity: int) -> Dictionary:
 	if not session.is_active() or not session.domain_backed:
 		return _fail("CURSOR_NOT_ACTIVE")
+	if _network_virtual:
+		var quantity := clampi(requested_quantity, 1, session.remaining_quantity)
+		var network_result := command_facade.drop_quantity(session.item_id, quantity)
+		if not bool(network_result.get("success", false)):
+			return network_result
+		var consumed := session.consume(quantity)
+		if not session.is_active():
+			_network_virtual = false
+		network_result["dropped_quantity"] = consumed
+		network_result["network_virtual"] = true
+		network_result["session_active"] = session.is_active()
+		network_result["session"] = session.snapshot()
+		return network_result
 	var carried = gameplay_controller.get_item(session.item_id)
 	if carried == null:
 		return _fail("CURSOR_ITEM_NOT_FOUND")
@@ -131,7 +179,12 @@ func drop_to_world(requested_quantity: int) -> Dictionary:
 
 func cancel() -> Dictionary:
 	if not session.is_active():
+		_network_virtual = false
 		return {"success": true, "no_change": true}
+	if _network_virtual:
+		session.clear()
+		_network_virtual = false
+		return {"success": true, "network_virtual": true, "virtual_only": true}
 	if not session.domain_backed:
 		session.clear()
 		return {"success": true, "virtual_only": true}
@@ -177,6 +230,49 @@ func cancel() -> Dictionary:
 	result["cancelled"] = true
 	result["restored_item_id"] = restored_item_id
 	return result
+
+
+func _place_network_virtual(target_payload: Dictionary, requested_quantity: int) -> Dictionary:
+	var target_container_id := String(target_payload.get("target_container_id", target_payload.get("source_container_id", "")))
+	var target_slot_index := int(target_payload.get("target_slot_index", target_payload.get("source_slot_index", -1)))
+	var target_item_id := String(target_payload.get("target_item_id", target_payload.get("item_id", "")))
+	if target_container_id.is_empty():
+		return _fail("TARGET_CONTAINER_REQUIRED")
+	if (
+		target_item_id == session.origin_item_id
+		and target_container_id == session.source_container_id
+		and target_slot_index == session.source_slot_index
+	):
+		session.clear()
+		_network_virtual = false
+		return {"success": true, "no_change": true, "cancelled": true, "network_virtual": true}
+	var quantity := clampi(requested_quantity, 1, session.remaining_quantity)
+	var result := command_facade.transfer_quantity(
+		session.item_id,
+		quantity,
+		target_container_id,
+		target_slot_index,
+		target_item_id
+	)
+	if not bool(result.get("success", false)):
+		return result
+	var consumed := session.consume(quantity)
+	if not session.is_active():
+		_network_virtual = false
+	result["moved_quantity"] = int(result.get("moved_quantity", consumed))
+	result["network_virtual"] = true
+	result["session_active"] = session.is_active()
+	result["session"] = session.snapshot()
+	return result
+
+
+func _uses_network_replica_commands() -> bool:
+	if gameplay_controller == null:
+		return false
+	return (
+		String(gameplay_controller.get("runtime_mode")) == "replica"
+		and gameplay_controller.get("network_command_bridge") != null
+	)
 
 
 func _unwind_swaps() -> Dictionary:
@@ -229,6 +325,7 @@ func debug_snapshot() -> Dictionary:
 	return {
 		"schema": SCHEMA,
 		"cursor_container_id": cursor_container_id,
+		"network_virtual": _network_virtual,
 		"session": session.snapshot() if session != null else {},
 		"projection": slot_projection.debug_snapshot() if slot_projection != null else {},
 	}
@@ -261,6 +358,10 @@ func _swap_with_target(target_payload: Dictionary, carried, target) -> Dictionar
 
 
 func _sync_or_finalize() -> void:
+	if _network_virtual:
+		if not session.is_active():
+			_network_virtual = false
+		return
 	var carried = gameplay_controller.get_item(session.item_id)
 	if carried != null and String(carried.relation.get("container_id", "")) == cursor_container_id:
 		session.sync_domain_item(carried)
@@ -270,6 +371,8 @@ func _sync_or_finalize() -> void:
 
 
 func _finalize_cursor() -> Dictionary:
+	if _network_virtual:
+		return {"success": true, "network_virtual": true, "skipped": true}
 	return gameplay_controller.finalize_inventory_cursor(cursor_container_id)
 
 

@@ -6,6 +6,7 @@ param(
     [ValidateSet("LOCAL","GOOD_BROADBAND","AVERAGE_BROADBAND","MOBILE","BAD_MOBILE","EXTREME","LAG_SPIKE","ASYMMETRIC")][string]$NetworkProfile = "LOCAL",
     [string]$NetworkPresetsFile = "res://config/network/network-condition-presets.v1.json",
     [string]$PersistenceRoot = "",
+    [switch]$EnablePersistence,
     [switch]$ResetPersistence
 )
 
@@ -21,13 +22,17 @@ $ProfileRoot = Join-Path $RoleRoot "profile"
 $LogPath = Join-Path $RoleRoot "godot.log"
 $ResultPath = Join-Path $RoleRoot "server-state.json"
 $ProcessPath = Join-Path $RoleRoot "process.json"
-if ([string]::IsNullOrWhiteSpace($PersistenceRoot)) {
+$PersistenceEnabled = $EnablePersistence -or $ResetPersistence -or -not [string]::IsNullOrWhiteSpace($PersistenceRoot)
+if ($PersistenceEnabled -and [string]::IsNullOrWhiteSpace($PersistenceRoot)) {
     $PersistenceRoot = Join-Path $ProjectRoot "artifacts/runtime/m7-network-debug-persistence/$SessionId"
 }
-if ($ResetPersistence -and (Test-Path $PersistenceRoot)) {
+if ($PersistenceEnabled -and $ResetPersistence -and (Test-Path $PersistenceRoot)) {
     Remove-Item $PersistenceRoot -Recurse -Force
 }
-New-Item -ItemType Directory -Force -Path $RoleRoot,$ProfileRoot,$PersistenceRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $RoleRoot,$ProfileRoot | Out-Null
+if ($PersistenceEnabled) {
+    New-Item -ItemType Directory -Force -Path $PersistenceRoot | Out-Null
+}
 Remove-Item $LogPath,$ResultPath,$ProcessPath -Force -ErrorAction SilentlyContinue
 
 function Start-IsolatedProcess {
@@ -67,16 +72,19 @@ $Arguments = @(
     "--node-id=m7-debug-server","--instance-id=m7-debug-$SessionId",
     "--server-address=$ServerAddress","--server-port=$Port",
     "--network-profile=$NetworkProfile","--network-presets-file=$NetworkPresetsFile",
-    "--m7-result-file=$ResultPath","--m6-persistence-root=$PersistenceRoot",
+    "--m7-result-file=$ResultPath",
     "--print-runtime-descriptor"
 )
+if ($PersistenceEnabled) {
+    $Arguments += "--m6-persistence-root=$PersistenceRoot"
+}
 
 Write-Host "M7 dedicated server" -ForegroundColor Cyan
 Write-Host "Session:     $SessionId"
 Write-Host "Endpoint:    $ServerAddress`:$Port"
 Write-Host "Log:         $LogPath"
 Write-Host "State:       $ResultPath"
-Write-Host "Persistence: $PersistenceRoot"
+Write-Host "Persistence: $(if ($PersistenceEnabled) { $PersistenceRoot } else { 'DISABLED (realtime debug default)' })"
 Write-Host "Net profile: $NetworkProfile (server endpoint only)"
 Write-Host "Stop with Ctrl+C or .\STOP_M7_NETWORK_DEBUG.ps1 -SessionId $SessionId" -ForegroundColor Yellow
 
@@ -90,7 +98,8 @@ $Descriptor = [ordered]@{
     started_at_utc = [DateTime]::UtcNow.ToString("o")
     log_path = $LogPath
     result_path = $ResultPath
-    persistence_root = $PersistenceRoot
+    persistence_enabled = $PersistenceEnabled
+    persistence_root = $(if ($PersistenceEnabled) { $PersistenceRoot } else { "" })
     endpoint = "$ServerAddress`:$Port"
     network_profile = $NetworkProfile
     network_presets_file = $NetworkPresetsFile

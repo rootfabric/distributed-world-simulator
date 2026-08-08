@@ -1,6 +1,72 @@
 extends SceneTree
 
 const Journal = preload("res://scripts/network/prediction/predicted_item_interaction_journal.gd")
+const CursorController = preload("res://scripts/ui/inventory/interactions/inventory_cursor_controller.gd")
+const TransferSession = preload("res://scripts/ui/inventory/interactions/inventory_transfer_session.gd")
+const SlotProjection = preload("res://scripts/ui/inventory/interactions/inventory_slot_projection.gd")
+const CommandFacade = preload("res://scripts/ui/inventory/inventory_command_facade.gd")
+
+class FakeReplicaItem:
+	extends RefCounted
+	var instance_id: String
+	var quantity: int
+	var revision: int
+
+	func _init(configured_id: String, configured_quantity: int, configured_revision: int) -> void:
+		instance_id = configured_id
+		quantity = configured_quantity
+		revision = configured_revision
+
+
+class FakeReplicaController:
+	extends RefCounted
+	var profile_id: String = "playground"
+	var runtime_mode: String = "replica"
+	var network_command_bridge = RefCounted.new()
+	var item
+	var cursor_carry_calls: int = 0
+	var drop_calls: Array[Dictionary] = []
+	var transfer_calls: Array[Dictionary] = []
+
+	func _init(item_id: String) -> void:
+		item = FakeReplicaItem.new(item_id, 4, 7)
+
+	func get_item(item_id: String):
+		return item if item != null and String(item.instance_id) == item_id else null
+
+	func begin_inventory_cursor_carry(
+		_item_id: String,
+		_requested_quantity: int,
+		_cursor_container_id: String
+	) -> Dictionary:
+		cursor_carry_calls += 1
+		return {"success": false, "error_code": "LOCAL_CURSOR_MUTATION_MUST_NOT_RUN"}
+
+	func drop_item_quantity(
+		item_id: String,
+		quantity: int,
+		_override_transform: Transform3D = Transform3D.IDENTITY
+	) -> Dictionary:
+		drop_calls.append({"item_id": item_id, "quantity": quantity})
+		return {"success": true, "item_id": item_id, "moved_quantity": quantity}
+
+	func move_item_quantity_to_container(
+		item_id: String,
+		quantity: int,
+		target_container_id: String,
+		target_slot_index: int = -1,
+		target_item_id: String = ""
+	) -> Dictionary:
+		transfer_calls.append({
+			"item_id": item_id,
+			"quantity": quantity,
+			"target_container_id": target_container_id,
+			"target_slot_index": target_slot_index,
+			"target_item_id": target_item_id,
+		})
+		return {"success": true, "item_id": item_id, "moved_quantity": quantity}
+
+
 var failures: Array[String] = []
 var assertions := 0
 
@@ -10,6 +76,7 @@ func _init() -> void:
 	_test_drop_place_transfer()
 	_test_concurrent_rebase()
 	_test_clocks_and_timeout()
+	_test_network_replica_cursor_identity()
 	_property_sequence()
 	_finish()
 
@@ -113,6 +180,49 @@ func _test_clocks_and_timeout() -> void:
 	_assert(bool(expired.get("success", false)), "expiration succeeds")
 	_assert(journal.get_pending_predictions().is_empty(), "expired prediction removed")
 	_assert(_location(journal.get_presentation_snapshot(), "item/world/ore") == "WORLD", "timeout rolls back presentation")
+
+func _test_network_replica_cursor_identity() -> void:
+	var source_id := "item/replica/server-backed"
+	var controller = FakeReplicaController.new(source_id)
+	var facade = CommandFacade.new()
+	facade.setup(controller)
+	var session = TransferSession.new()
+	var projection = SlotProjection.new()
+	var cursor = CursorController.new()
+	cursor.setup(controller, facade, session, projection, Callable())
+	var payload := {
+		"item_id": source_id,
+		"quantity": 4,
+		"revision": 7,
+		"display_name": "Server backed stack",
+		"definition_id": "survey_beacon",
+		"source_container_id": "player_inventory",
+		"source_slot_index": 2,
+	}
+	var begun: Dictionary = cursor.begin(payload, 2)
+	_assert(bool(begun.get("success", false)), "network replica half-carry begins")
+	_assert(bool(begun.get("network_virtual", false)), "network replica carry is virtual")
+	_assert(controller.cursor_carry_calls == 0, "network replica carry must not mutate local cursor domain")
+	_assert(session.item_id == source_id, "network replica carry preserves server-backed replica id")
+	_assert(session.remaining_quantity == 2, "network replica virtual carry tracks requested quantity")
+	_assert(int(controller.item.quantity) == 4, "network replica carry leaves local source quantity unchanged")
+	var dropped: Dictionary = cursor.drop_to_world(1)
+	_assert(bool(dropped.get("success", false)), "network replica virtual drop succeeds")
+	_assert(controller.drop_calls.size() == 1, "network replica virtual drop reaches command facade once")
+	_assert(String(controller.drop_calls[0].get("item_id", "")) == source_id, "network replica drop uses original server-backed id")
+	_assert(int(controller.drop_calls[0].get("quantity", 0)) == 1, "network replica drop preserves requested quantity")
+	_assert(session.is_active() and session.remaining_quantity == 1, "partial network drop keeps one virtual item on cursor")
+	var placed: Dictionary = cursor.place({
+		"target_container_id": "player_hotbar",
+		"target_slot_index": 4,
+		"target_item_id": "",
+	}, 1)
+	_assert(bool(placed.get("success", false)), "network replica virtual transfer succeeds")
+	_assert(controller.transfer_calls.size() == 1, "network replica virtual transfer reaches command facade once")
+	_assert(String(controller.transfer_calls[0].get("item_id", "")) == source_id, "network replica transfer uses original server-backed id")
+	_assert(not session.is_active(), "network replica cursor clears after final virtual quantity")
+	_assert(not bool(cursor.debug_snapshot().get("network_virtual", true)), "network virtual mode clears after completion")
+	_assert(controller.cursor_carry_calls == 0, "network replica path never creates local split item id")
 
 func _property_sequence() -> void:
 	for seed in range(128):

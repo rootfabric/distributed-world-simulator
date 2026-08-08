@@ -1,0 +1,78 @@
+{
+  "schema": "distributed_world_simulator.network_item_cursor_rev3_validation.v1",
+  "repository": "rootfabric/distributed-world-simulator",
+  "base_main_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
+  "supersedes_candidate_sha": "a219103fcfeba3d3f0ce02f1d0c1fbe965a1e1f2",
+  "observed_manual_result": {
+    "view_relative_orientation": "PASS",
+    "movement_prediction_before_item_action": "HEALTHY",
+    "item_action": "FAIL",
+    "symptom": "single client visibly stalls while dropping/transferring a carried inventory item",
+    "item_errors": [
+      "item.drop -> ITEM_NOT_FOUND",
+      "item.transfer -> ITEM_NOT_FOUND"
+    ],
+    "prediction_before_stall": {
+      "lead_ticks_min": 0,
+      "lead_ticks_max_typical": 2,
+      "history_miss_resets": 0,
+      "history_overflows": 0,
+      "last_error_m": 0.0,
+      "hard_corrections": 0
+    },
+    "prediction_at_stall": {
+      "authoritative_tick": 3017,
+      "prediction_tick": 3056,
+      "lead_ticks": 39,
+      "history_size": 39,
+      "approximate_stall_ms_at_60_hz": 650
+    },
+    "server": {
+      "connected_peers": 1,
+      "persistence_enabled": false,
+      "checkpoint_generation": 0,
+      "rejections": 0,
+      "health_progressing": true
+    }
+  },
+  "root_cause": {
+    "class": "NETWORK_REPLICA_CURSOR_CREATED_LOCAL_ITEM_ID",
+    "path": "InventoryCursorController.begin -> ItemGameplayController.begin_inventory_cursor_carry -> split_and_move",
+    "details": [
+      "Seven Days cursor carry was domain-backed even in network replica mode",
+      "partial carry could create a new local item UUID in the replica domain",
+      "M7ItemGraphReplicaAdapter only maps IDs originating from the canonical server graph",
+      "the new local split UUID therefore passed through to item.drop/item.transfer unchanged",
+      "the authoritative server correctly rejected that unknown ID as ITEM_NOT_FOUND",
+      "local cursor mutation and subsequent graph synchronization also execute on the client main thread"
+    ]
+  },
+  "correction": {
+    "file": "scripts/ui/inventory/interactions/inventory_cursor_controller.gd",
+    "behavior": [
+      "network replica Seven Days carry is presentation-only and does not mutate/split the local replica domain",
+      "the carry session retains the original server-backed replica item ID",
+      "drop and transfer use that original ID through InventoryCommandFacade and M7NetworkItemCommandBridge",
+      "network cancel clears only virtual cursor state",
+      "offline/legacy Seven Days domain-backed cursor behavior remains unchanged"
+    ],
+    "protocol_changed": false,
+    "server_authority_changed": false,
+    "new_uid": 0
+  },
+  "remaining_performance_watch": {
+    "risk": "predicted item commands can still convert and apply a full projected ItemGraph on the client main thread",
+    "decision": "do not change this second layer without a post-rev3 measurement; if a stall remains with ITEM_NOT_FOUND gone, optimize eager projected graph application separately"
+  },
+  "required_manual_gate": [
+    "run exact rev3 candidate on Windows double Godot with persistence disabled",
+    "one client is sufficient for the first focused gate",
+    "pick up a stack with RMB/half-carry in Seven Days profile",
+    "drop one item, then drop the remaining carried amount",
+    "repeat transfer from carried stack to another inventory/hotbar slot",
+    "require no ITEM_NOT_FOUND for the carried source item",
+    "require PREDICTION_HEALTH lead to remain bounded instead of jumping to tens of ticks",
+    "require no visible client freeze during item action",
+    "then repeat with two clients and run repository regression gates before merge"
+  ]
+}
