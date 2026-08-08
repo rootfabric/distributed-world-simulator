@@ -42,10 +42,12 @@ func _print_node(root_node: Node, node: Node, depth: int) -> void:
 		var surfaces := mesh.get_surface_count() if mesh != null else 0
 		surface_count += surfaces
 		var aabb := mesh_instance.get_aabb()
-		print("%sNODE MeshInstance3D name=%s path=%s visible=%s skin=%s skeleton=%s surfaces=%d aabb_pos=%s aabb_size=%s" % [
+		var mesh_resource_name := String(mesh.resource_name) if mesh != null else ""
+		print("%sNODE MeshInstance3D name=%s path=%s mesh_resource=%s visible=%s skin=%s skeleton=%s surfaces=%d aabb_pos=%s aabb_size=%s" % [
 			indent,
 			node.name,
 			root_node.get_path_to(node),
+			mesh_resource_name,
 			mesh_instance.visible,
 			mesh_instance.skin != null,
 			String(mesh_instance.skeleton),
@@ -60,15 +62,21 @@ func _print_node(root_node: Node, node: Node, depth: int) -> void:
 					material = mesh.surface_get_material(surface_index)
 				var material_name := ""
 				var material_class := ""
+				var albedo_texture_path := ""
 				if material != null:
 					material_name = String(material.resource_name)
 					material_class = material.get_class()
-				print("%s  SURFACE index=%d name=%s material=%s class=%s" % [
+					if material is BaseMaterial3D:
+						var texture := (material as BaseMaterial3D).albedo_texture
+						if texture != null:
+							albedo_texture_path = String(texture.resource_path)
+				print("%s  SURFACE index=%d name=%s material=%s class=%s albedo=%s" % [
 					indent,
 					surface_index,
 					mesh.surface_get_name(surface_index),
 					material_name,
 					material_class,
+					albedo_texture_path,
 				])
 	else:
 		print("%sNODE %s name=%s path=%s" % [indent, node.get_class(), node.name, root_node.get_path_to(node)])
