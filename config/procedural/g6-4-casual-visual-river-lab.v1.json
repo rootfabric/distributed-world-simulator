@@ -1,11 +1,12 @@
 {
   "schema": "planet_simulator.g6_4_casual_visual_river_lab.v1",
   "checkpoint": "g6.4-casual-visual-river-lab",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "FIX2_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
   "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
   "dependencies": {
+    "g2_surface_lod_selector": "ACCEPTED",
     "g6_1_canonical_geography": "ACCEPTED",
     "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
     "g6_3_runtime_water_surface_query": "ACCEPTED"
@@ -14,24 +15,33 @@
     "display_radius": 8.0,
     "water_width_exaggeration": 5200.0,
     "bank_width_exaggeration": 3600.0,
-    "samples_per_canonical_segment": 16,
     "water_ribbon": true,
     "canonical_centerline": true,
     "bank_guides": true,
     "query_probes": true,
-    "cube_face_seam_marker": true
+    "cube_face_seam_marker": true,
+    "adaptive_surface_lod_grid": true,
+    "adaptive_river_sampling": true,
+    "lod_min": 0,
+    "lod_max": 12,
+    "lod_leaf_budget": 1536,
+    "lod_refine_ratio": 0.45,
+    "lod_coarsen_ratio": 0.30,
+    "lod_update_interval_s": 0.16,
+    "river_subdivision_policy": "1 << clamp(floor(representation_lod / 2), 0, 5)"
   },
   "manual_controls": {
     "orbit_left_right": "A/D",
     "pitch_up_down": "Q/E",
-    "zoom_in_out": "W/S",
+    "zoom_in_out_refine_coarsen": "W/S",
     "auto_orbit": "SPACE",
     "reset_camera": "R",
     "toggle_water": "1",
     "toggle_centerline": "2",
     "toggle_bank_guides": "3",
     "toggle_query_probes": "4",
-    "toggle_seam_markers": "5"
+    "toggle_seam_markers": "5",
+    "toggle_lod_grid": "6"
   },
   "architecture_boundaries": {
     "renderer_is_canonical_truth": false,
@@ -43,14 +53,22 @@
     "visual_lab_owns_authority": false,
     "visual_lab_mutates_world_state": false,
     "visual_lab_owns_persistence": false,
-    "visual_lab_owns_network_transport": false
+    "visual_lab_owns_network_transport": false,
+    "lod_selector_changes_canonical_geography": false,
+    "lod_selector_changes_fluid_region_id": false,
+    "lod_selector_changes_feature_id": false
   },
   "acceptance": {
     "headless_scene_smoke": "REQUIRED",
     "focused_source_contract": "REQUIRED",
+    "far_near_lod_selection_changes": "REQUIRED",
+    "near_max_lod_greater_than_far": "REQUIRED",
+    "near_river_sample_count_greater_than_far": "REQUIRED",
     "windows_graphical_manual_observation": "REQUIRED",
     "px_pz_seam_visible": "REQUIRED",
     "query_probes_visible": "REQUIRED",
+    "lod_grid_visible": "REQUIRED",
+    "zoom_refines_and_coarsens": "REQUIRED",
     "canonical_ids_unchanged": "REQUIRED"
   },
   "next_if_accepted": "G6_FULL_ACCEPTANCE"
