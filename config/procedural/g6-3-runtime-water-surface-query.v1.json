@@ -1,0 +1,48 @@
+{
+  "schema": "planet_simulator.g6_3_runtime_water_surface_query_manifest.v1",
+  "checkpoint": "g6.3-runtime-water-surface-query-resolver",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "depends_on": {
+    "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC",
+    "g6_1_casual_river_provider": "ACCEPTED",
+    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED"
+  },
+  "runtime_service": {
+    "id": "hydro-resolver/water-surface-v1",
+    "version": "1.0.0",
+    "source": "res://scripts/simulation/procedural/hydrology/water_surface_resolver_v1.gd",
+    "query_contract": "WaterSurfaceQuery",
+    "sample_contract": "WaterSurfaceSample",
+    "curve_subdivisions_per_segment": 16
+  },
+  "query_semantics": {
+    "input": ["body_id", "frame_id", "position_m", "max_distance_m", "fluid_type_ids"],
+    "deterministic_winner": ["distance_to_surface_m", "fluid_region_id_lexical"],
+    "no_match_is_success": true,
+    "supports_multiple_compiled_fluid_geographies": true,
+    "supports_non_water_fluid_filtering": true
+  },
+  "architecture_boundaries": {
+    "surface_cell_is_query_input": false,
+    "lod_is_query_input": false,
+    "cube_face_is_query_input": false,
+    "interest_region_is_query_input": false,
+    "server_id_is_query_input": false,
+    "renderer_is_query_input": false,
+    "query_cache_is_canonical_identity": false,
+    "resolver_owns_authority": false,
+    "resolver_owns_persistence": false,
+    "resolver_mutates_world_state": false,
+    "modifies_g6_1_provider": false,
+    "modifies_g6_0_contracts": false
+  },
+  "deferred": {
+    "spatial_index_or_bvh": "derived_acceleration_only",
+    "visual_river_lab": "G6.4",
+    "fluid_mutation": "P0_CROSS_DOMAIN_WORLD_TRANSACTION_MODEL",
+    "material_projection": "P0_UNIFIED_MATERIAL_ONTOLOGY"
+  },
+  "next_if_accepted": "G6.4_CASUAL_VISUAL_RIVER_LAB"
+}
