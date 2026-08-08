@@ -8,6 +8,16 @@ extends "res://scripts/network/prediction/client_prediction_reconciler_fix8.gd"
 # deterministic movement stream even when transport delay makes the server apply
 # it several wall-clock ticks later.
 #
+# FIX10 fix4 additionally treats the snapshot clock that transported an ACK as
+# provenance, not semantic identity. Standalone ACKs travel on a different ENet
+# channel and can legitimately arrive before/after a later movement snapshot.
+# Reconciliation therefore keys the baseline by client_tick/input_sequence and
+# only requires the carrying snapshot clock to be <= the snapshot currently being
+# reconciled. A newer authoritative snapshot may already acknowledge a later input
+# sequence; that is normal and no longer counted as an ACK mismatch. Newest
+# pending client-tick baseline wins so cross-channel reordering cannot replace it
+# with older metadata.
+#
 # Compatibility anchors retained for the accepted FIX8 source contracts:
 # SEQUENCE_MATCHED_FUTURE_TICK_PREALIGN_V1
 # authoritative_sequence == _current_sequence
@@ -20,6 +30,7 @@ const Fix10InputSequence = preload("res://scripts/network/simulation/input_seque
 const FIX10_PREDICTION_ACK_POLICY: String = "SERVER_ECHOED_POST_INPUT_BASELINE_V1"
 const FIX10_RECONCILIATION_POLICY: String = "ACK_BASELINE_REPLAY_LOCAL_TIMELINE_V1"
 const FIX10_TIMELINE_POLICY: String = "BOUNDED_CLIENT_TICK_INPUT_TIMELINE_V1"
+const FIX10_FIX4_ACK_TRANSPORT_POLICY: String = "SEMANTIC_ACK_BASELINE_DECOUPLED_FROM_TRANSPORT_SNAPSHOT_V1"
 const FIX10_MAX_TIMELINE_TICKS: int = 512
 
 var _fix10_pending_ack: Dictionary = {}
@@ -37,6 +48,13 @@ var _fix10_last_ack_sequence: int = 0
 var _fix10_last_ack_client_tick: int = 0
 var _fix10_last_ack_applied_server_tick: int = 0
 var _fix10_last_reconciliation_mode: String = "NONE"
+
+var _fix10_fix4_transport_tick_lagged: int = 0
+var _fix10_fix4_authority_sequence_ahead: int = 0
+var _fix10_fix4_future_ack_deferrals: int = 0
+var _fix10_fix4_stale_ack_registrations: int = 0
+var _fix10_fix4_pending_ack_superseded: int = 0
+var _fix10_fix4_last_ack_transport_snapshot_tick: int = -1
 
 
 func configure(authoritative_player: Dictionary, server_tick: int) -> Dictionary:
@@ -70,6 +88,54 @@ func set_authoritative_input_ack(ack_value: Dictionary, snapshot_server_tick: in
 	if is_nan(yaw) or is_inf(yaw):
 		_fix10_ack_registration_rejections += 1
 		return _failure("FIX10_INVALID_ACK_ORIENTATION")
+
+	# A different sequence for an already accepted exact client tick is a semantic
+	# contradiction. An older client tick, in contrast, is just cross-channel
+	# reordering and must not displace newer pending/accepted metadata.
+	if client_tick == _fix10_last_ack_client_tick and _fix10_last_ack_client_tick > 0:
+		if sequence != _fix10_last_ack_sequence:
+			_fix10_ack_mismatches += 1
+			return _failure("FIX10_ACK_SEQUENCE_CONFLICT_AT_CLIENT_TICK")
+	elif client_tick < _fix10_last_ack_client_tick:
+		_fix10_fix4_stale_ack_registrations += 1
+		return _success({
+			"input_sequence": sequence,
+			"client_tick": client_tick,
+			"applied_server_tick": applied_server_tick,
+			"snapshot_server_tick": snapshot_server_tick,
+			"ignored_stale": true,
+		})
+
+	if not _fix10_pending_ack.is_empty():
+		var pending_client_tick: int = int(_fix10_pending_ack.get("client_tick", 0))
+		var pending_sequence: int = int(_fix10_pending_ack.get("input_sequence", 0))
+		if client_tick < pending_client_tick:
+			_fix10_fix4_stale_ack_registrations += 1
+			return _success({
+				"input_sequence": sequence,
+				"client_tick": client_tick,
+				"applied_server_tick": applied_server_tick,
+				"snapshot_server_tick": snapshot_server_tick,
+				"ignored_stale": true,
+			})
+		if client_tick == pending_client_tick and sequence != pending_sequence:
+			_fix10_ack_mismatches += 1
+			return _failure("FIX10_PENDING_ACK_SEQUENCE_CONFLICT")
+		if client_tick > pending_client_tick:
+			_fix10_fix4_pending_ack_superseded += 1
+		elif client_tick == pending_client_tick and snapshot_server_tick < int(
+			_fix10_pending_ack.get("snapshot_server_tick", -1)
+		):
+			# Same semantic ACK delivered later through an older carrying snapshot.
+			_fix10_fix4_stale_ack_registrations += 1
+			return _success({
+				"input_sequence": sequence,
+				"client_tick": client_tick,
+				"applied_server_tick": applied_server_tick,
+				"snapshot_server_tick": snapshot_server_tick,
+				"ignored_stale": true,
+			})
+
 	ack["snapshot_server_tick"] = snapshot_server_tick
 	_fix10_pending_ack = ack
 	return _success({
@@ -77,6 +143,7 @@ func set_authoritative_input_ack(ack_value: Dictionary, snapshot_server_tick: in
 		"client_tick": client_tick,
 		"applied_server_tick": applied_server_tick,
 		"snapshot_server_tick": snapshot_server_tick,
+		"ignored_stale": false,
 	})
 
 
@@ -90,7 +157,9 @@ func reconcile(authoritative_player: Dictionary, server_tick: int) -> Dictionary
 			server_tick,
 			ack
 		)
-		if bool(attempt.get("handled", false)):
+		if bool(attempt.get("defer", false)):
+			_fix10_pending_ack = ack
+		elif bool(attempt.get("handled", false)):
 			return Dictionary(attempt.get("result", {}))
 	return super.reconcile(authoritative_player, server_tick)
 
@@ -117,17 +186,26 @@ func _fix10_reconcile_from_ack(
 	if server_tick < _last_authoritative_tick:
 		_fix10_ack_replays += 1
 		return {"handled": false}
-	if int(ack.get("snapshot_server_tick", -1)) != server_tick:
-		_fix10_ack_mismatches += 1
-		return {"handled": false}
+
+	var transport_snapshot_tick: int = int(ack.get("snapshot_server_tick", -1))
+	if transport_snapshot_tick > server_tick:
+		_fix10_fix4_future_ack_deferrals += 1
+		return {"handled": false, "defer": true}
+	if transport_snapshot_tick < server_tick:
+		_fix10_fix4_transport_tick_lagged += 1
+	_fix10_fix4_last_ack_transport_snapshot_tick = transport_snapshot_tick
 
 	var sequence: int = int(ack.get("input_sequence", 0))
 	var client_tick: int = int(ack.get("client_tick", 0))
 	var applied_server_tick: int = int(ack.get("applied_server_tick", 0))
 	var authoritative_sequence: int = int(authoritative_player.get("last_input_sequence", 0))
-	if sequence != authoritative_sequence:
+	if sequence > authoritative_sequence:
+		# A carrying snapshot at/before this authoritative snapshot cannot truthfully
+		# acknowledge an input newer than the player's current authority sequence.
 		_fix10_ack_mismatches += 1
 		return {"handled": false}
+	if sequence < authoritative_sequence:
+		_fix10_fix4_authority_sequence_ahead += 1
 	if client_tick > _prediction_tick:
 		_fix10_ack_history_misses += 1
 		return {"handled": false}
@@ -138,7 +216,7 @@ func _fix10_reconcile_from_ack(
 	# observability only and keep the already reconstructed local prediction.
 	if sequence == _fix10_last_ack_sequence and client_tick == _fix10_last_ack_client_tick:
 		_last_authoritative_tick = server_tick
-		_last_authoritative_sequence = sequence
+		_last_authoritative_sequence = authoritative_sequence
 		_last_error_m = 0.0
 		_reconciliations += 1
 		_fix10_ack_replays += 1
@@ -155,6 +233,7 @@ func _fix10_reconcile_from_ack(
 			"fix10_ack_sequence": sequence,
 			"fix10_ack_client_tick": client_tick,
 			"fix10_ack_applied_server_tick": applied_server_tick,
+			"fix10_ack_transport_snapshot_tick": transport_snapshot_tick,
 		})}
 
 	var baseline_record: Dictionary = _fix10_timeline_record(client_tick)
@@ -249,7 +328,7 @@ func _fix10_reconcile_from_ack(
 			Dictionary(rebuilt.get("state", {}))
 		)
 	_last_authoritative_tick = server_tick
-	_last_authoritative_sequence = sequence
+	_last_authoritative_sequence = authoritative_sequence
 	_last_error_m = present_error_m
 	_maximum_error_m = maxf(_maximum_error_m, present_error_m)
 	_reconciliations += 1
@@ -274,6 +353,7 @@ func _fix10_reconcile_from_ack(
 		"fix10_ack_sequence": sequence,
 		"fix10_ack_client_tick": client_tick,
 		"fix10_ack_applied_server_tick": applied_server_tick,
+		"fix10_ack_transport_snapshot_tick": transport_snapshot_tick,
 		"fix10_ack_baseline_error_m": baseline_error_m,
 		"fix10_present_replay_error_m": present_error_m,
 		"fix10_ack_replayed_ticks": rebuilt_history.size(),
@@ -331,6 +411,12 @@ func _fix10_reset_state() -> void:
 	_fix10_last_ack_client_tick = 0
 	_fix10_last_ack_applied_server_tick = 0
 	_fix10_last_reconciliation_mode = "NONE"
+	_fix10_fix4_transport_tick_lagged = 0
+	_fix10_fix4_authority_sequence_ahead = 0
+	_fix10_fix4_future_ack_deferrals = 0
+	_fix10_fix4_stale_ack_registrations = 0
+	_fix10_fix4_pending_ack_superseded = 0
+	_fix10_fix4_last_ack_transport_snapshot_tick = -1
 
 
 func get_report() -> Dictionary:
@@ -338,6 +424,7 @@ func get_report() -> Dictionary:
 	report["fix10_prediction_ack_policy"] = FIX10_PREDICTION_ACK_POLICY
 	report["fix10_reconciliation_policy"] = FIX10_RECONCILIATION_POLICY
 	report["fix10_timeline_policy"] = FIX10_TIMELINE_POLICY
+	report["fix10_fix4_ack_transport_policy"] = FIX10_FIX4_ACK_TRANSPORT_POLICY
 	report["fix10_timeline_size"] = _fix10_timeline_ticks.size()
 	report["fix10_max_timeline_ticks"] = FIX10_MAX_TIMELINE_TICKS
 	report["fix10_ack_reconciliations"] = _fix10_ack_reconciliations
@@ -352,6 +439,12 @@ func get_report() -> Dictionary:
 	report["fix10_last_ack_client_tick"] = _fix10_last_ack_client_tick
 	report["fix10_last_ack_applied_server_tick"] = _fix10_last_ack_applied_server_tick
 	report["fix10_last_reconciliation_mode"] = _fix10_last_reconciliation_mode
+	report["fix10_fix4_transport_tick_lagged"] = _fix10_fix4_transport_tick_lagged
+	report["fix10_fix4_authority_sequence_ahead"] = _fix10_fix4_authority_sequence_ahead
+	report["fix10_fix4_future_ack_deferrals"] = _fix10_fix4_future_ack_deferrals
+	report["fix10_fix4_stale_ack_registrations"] = _fix10_fix4_stale_ack_registrations
+	report["fix10_fix4_pending_ack_superseded"] = _fix10_fix4_pending_ack_superseded
+	report["fix10_fix4_last_ack_transport_snapshot_tick"] = _fix10_fix4_last_ack_transport_snapshot_tick
 	report["fix10_corrections_per_1000_prediction_ticks"] = (
 		1000.0 * float(_corrections) / float(_ticks_predicted)
 		if _ticks_predicted > 0
