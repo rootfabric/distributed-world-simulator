@@ -90,3 +90,38 @@ NX2 разделяет transport streams и подавляет movement amplific
 - `RUN_NX3_FIXED_TICK_AUTHORITATIVE_SIMULATION_TESTS.ps1/.sh`;
 - `RUN_NX2_REALTIME_TRAFFIC_SEPARATION_TESTS.ps1/.sh`;
 - `RUN_NX1_DETERMINISTIC_NETWORK_CONDITION_TESTS.ps1/.sh`.
+
+## Обязательный post-merge validation bridge перед бесшовностью
+
+После завершения и приёмки текущего сетевого базового минимума проект проходит отдельный цикл простых graphical/integration лабораторий. Он нужен не для добавления новых игровых механик, а для проверки уже замерженных Network + Items + Construction + Matter/Representation + persistence в реальном runtime.
+
+Authoritative plan:
+
+- `docs/plans/POST_MERGE_VALIDATION_LABS_ROADMAP_RU.md`.
+
+Краткая траектория:
+
+```text
+T0 Item / Playground Acceptance
+   |
+   +--> T1 Construction Functional -> T2 Construction Scale
+   |
+   +--> T3 Matter Excavation -> T4 Matter Streaming
+                         |
+                         v
+T5 Matter + Construction Composition
+                         |
+                         v
+T6 Recovery / Reconnect Composition
+                         |
+                         v
+T7 Asteroid Surface Lab
+                         |
+                         v
+VALIDATION LABS ACCEPTED
+                         |
+                         v
+SEAMLESSNESS / HANDOFF / LARGE-WORLD STAGES
+```
+
+Construction track (`T1 -> T2`) и Matter track (`T3 -> T4`) разрешено разрабатывать параллельно от одного frozen post-network baseline. `T5` начинается только после принятия обоих tracks. До общего `VALIDATION LABS ACCEPTED` не начинать крупную production-интеграцию бесшовного server-to-server handoff, multi-body traversal и orbital ship vertical slice.
