@@ -38,10 +38,10 @@ func _run() -> void:
 	_assert(adapter.supports_anchor("hand.left"), "Quaternius semantic left hand anchor missing")
 	_assert(adapter.supports_anchor("hand.right"), "Quaternius semantic right hand anchor missing")
 
-	var head_anchor := adapter.resolve_anchor(presenter, "body.head")
-	var back_anchor := adapter.resolve_anchor(presenter, "gear.back")
-	var left_hand_anchor := adapter.resolve_anchor(presenter, "hand.left")
-	var right_hand_anchor := adapter.resolve_anchor(presenter, "hand.right")
+	var head_anchor: Node3D = adapter.resolve_anchor(presenter, "body.head")
+	var back_anchor: Node3D = adapter.resolve_anchor(presenter, "gear.back")
+	var left_hand_anchor: Node3D = adapter.resolve_anchor(presenter, "hand.left")
+	var right_hand_anchor: Node3D = adapter.resolve_anchor(presenter, "hand.right")
 	_assert(head_anchor is BoneAttachment3D, "Skeleton head anchor is not BoneAttachment3D")
 	_assert(back_anchor is BoneAttachment3D, "Skeleton back anchor is not BoneAttachment3D")
 	_assert(left_hand_anchor is BoneAttachment3D, "Skeleton left hand anchor is not BoneAttachment3D")
@@ -53,9 +53,9 @@ func _run() -> void:
 	_assert(adapter.resolve_anchor(presenter, "body.head") == head_anchor, "Repeated head anchor resolution created a duplicate attachment")
 	_assert(int(adapter.create_report().get("attachment_count", 0)) == 4, "Unexpected BoneAttachment3D cache size")
 
-	var yaw_root := presenter.get_node_or_null("AvatarYawRoot") as Node3D
+	var yaw_root: Node3D = presenter.get_node_or_null("AvatarYawRoot") as Node3D
 	_assert(yaw_root != null, "AvatarYawRoot missing")
-	var standing_y := yaw_root.position.y
+	var standing_y: float = yaw_root.position.y
 	presenter.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": true})
 	presenter.call("_update_ground_compensation", 1.0)
 	_assert(is_equal_approx(yaw_root.position.y, -0.35), "Quaternius crouch presentation root did not reach -0.35 m")
@@ -76,13 +76,13 @@ func _run() -> void:
 	_assert(bool(fallback_adapter.bind_presenter(fallback_presenter).get("success", false)), "Fallback equipment rig adapter bind failed")
 	var fallback_report: Dictionary = fallback_adapter.create_report()
 	_assert(String(fallback_report.get("mode", "")) == "FALLBACK", "Fallback equipment adapter did not select fallback mode")
-	var fallback_head := fallback_adapter.resolve_anchor(fallback_presenter, "body.head")
-	var fallback_back := fallback_adapter.resolve_anchor(fallback_presenter, "gear.back")
+	var fallback_head: Node3D = fallback_adapter.resolve_anchor(fallback_presenter, "body.head")
+	var fallback_back: Node3D = fallback_adapter.resolve_anchor(fallback_presenter, "gear.back")
 	_assert(fallback_head is Node3D and String(fallback_head.name) == "Head", "Fallback head semantic did not resolve to Head pivot")
 	_assert(fallback_back is Node3D and String(fallback_back.name) == "Torso", "Fallback back semantic did not resolve to Torso pivot")
 	_assert(not (fallback_head is BoneAttachment3D), "Fallback path unexpectedly created a bone attachment")
 
-	var source := FileAccess.get_file_as_string("res://scripts/characters/equipment/quaternius_equipment_rig_adapter.gd")
+	var source: String = FileAccess.get_file_as_string("res://scripts/characters/equipment/quaternius_equipment_rig_adapter.gd")
 	for forbidden in ["CharacterBody3D", "Input.", "multiplayer", "@rpc", "rpc(", "ItemGraph"]:
 		_assert(not source.contains(forbidden), "Quaternius equipment adapter gained forbidden gameplay/runtime dependency: %s" % forbidden)
 
@@ -92,7 +92,7 @@ func _run() -> void:
 
 
 func _has_ancestor(node: Node, expected_ancestor: Node) -> bool:
-	var current := node
+	var current: Node = node
 	while current != null:
 		if current == expected_ancestor:
 			return true
