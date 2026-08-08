@@ -61,17 +61,21 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
     $PreviousErrorActionPreference = $ErrorActionPreference
     $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
-    $Output = @()
+    $Output = [System.Collections.Generic.List[string]]::new()
     $ExitCode = 1
     try {
         $ErrorActionPreference = "Continue"
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
         }
-        $Output = & $Godot @(
+        & $Godot @(
             "--headless", "--path", $Root,
             "--script", $ScriptPath
-        ) 2>&1
+        ) 2>&1 | ForEach-Object {
+            $Line = [string]$_
+            $Output.Add($Line)
+            Write-Host $Line
+        }
         $ExitCode = $LASTEXITCODE
     }
     finally {
@@ -81,7 +85,6 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
         }
     }
 
-    $Output | ForEach-Object { Write-Host $_ }
     $Text = $Output -join "`n"
     $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     if ($ExitCode -ne 0 -or $HasFailureMarker) {
