@@ -7,6 +7,15 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 # with long item sessions. Steady READY reports now contain only live state that
 # is already bounded by current players/items; full diagnostics remain available
 # through get_report() and are still used for initial/terminal synchronous dumps.
+#
+# FIX6 is intentionally preserved in m3_dedicated_server_runtime_fix6.gd. The
+# accepted source-contract regression still scans the leaf file, so keep these
+# explicit inherited anchors until that older test itself can be retired:
+# _advance_fixed_simulation(delta)
+# _boundary.poll_events(M7_NETWORK_EVENT_BUDGET_PER_FRAME)
+# M7_STALL_SNAPSHOT_GUARD_SECONDS
+# _broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
+# _broadcast_item_delta(item_delta, peer_id, command_type)
 
 const FIX7_READY_REPORT_POLICY: String = "LIGHTWEIGHT_READY_FULL_TERMINAL_V1"
 
