@@ -1,123 +1,120 @@
 {
-  "schema": "planet_simulator.ch6_controllable_entity_presentation_validation.v2",
+  "schema": "planet_simulator.ch6_controllable_entity_presentation_validation.v3",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
-  "delivery": "CH6 fix1 / Shadow Preservation",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_SHADOW_ACCEPTANCE",
+  "delivery": "CH6 fix2 / Jump Crouch Presentation Polish",
+  "decision": "FIX2_IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_ACCEPTANCE",
+  "accepted_previous_stage": {
+    "stage": "CH6 fix1 / Shadow Preservation",
+    "graphical_result": "PASS_BY_USER_OBSERVATION",
+    "confirmed": [
+      "first-person own body hidden",
+      "first-person animated body shadow preserved",
+      "third-person full body preserved"
+    ]
+  },
   "trigger": {
-    "ch5_fix1_graphical_body_suppression": "PASS by user observation",
-    "new_observation": "First-person body is hidden correctly but its world shadow is missing",
-    "goal": "Keep the local controlled entity invisible to the first-person camera while preserving an animated world shadow"
+    "problem_1": "Technical V yaw toggle rotates both world body and first-person shadow by 180 degrees and makes locomotion appear backwards",
+    "problem_2": "Current lab has jump physics but does not select a jump animation",
+    "problem_3": "Current lab has no crouch controller or crouch animation state",
+    "goal": "Remove user-facing technical yaw control and exercise UAL1 jump/crouch clips without integrating into production LunarPlayer/network branches"
   },
   "scope": {
     "production_lunar_player_changed": false,
     "network_runtime_changed": false,
     "inventory_changed": false,
     "prediction_reconciliation_changed": false,
-    "collision_contract_changed": false,
+    "production_collision_contract_changed": false,
     "root_motion_authority_changed": false,
-    "integration_mode": "isolated_character_lab_and_generic_presentation_contract"
+    "integration_mode": "isolated_character_lab_and_quaternius_presenter_semantics"
   },
-  "architecture": {
-    "profile": "ControllablePresentationProfile v2",
-    "generic_adapter": "ControllableViewAdapter v2",
-    "shadow_component": "ControllableShadowProxy v1",
-    "compatibility_adapter": "FullBodyFirstPersonAdapter v2",
-    "first_person_policies": [
-      "HIDE_WORLD_MODEL",
-      "SHOW_WORLD_MODEL",
-      "LEGACY_HEAD_MASK",
-      "VIEWMODEL"
+  "technical_yaw_fix": {
+    "lab_key_v_removed": true,
+    "hud_v_hint_removed": true,
+    "presenter_model_yaw_offset_retained": true,
+    "presenter_model_yaw_offset_role": "asset import/alignment configuration only"
+  },
+  "ual1_animation_capabilities": {
+    "target_library": "UAL1_Standard",
+    "clips_researched": [
+      "Jump_Start",
+      "Jump",
+      "Jump_Land",
+      "Crouch_Idle",
+      "Crouch_Fwd"
     ],
-    "first_person_shadow_policies": [
-      "NONE",
-      "WORLD_PROXY",
-      "CUSTOM_PROXY"
+    "active_in_fix2": {
+      "airborne": "Jump",
+      "crouch_idle": "Crouch_Idle",
+      "crouch_move": "Crouch_Fwd"
+    },
+    "recognized_but_deferred_transition_clips": [
+      "Jump_Start",
+      "Jump_Land"
     ],
-    "presenter_contract": [
-      "optional create_presentation_profile()",
-      "optional get_world_visual_root()",
-      "optional get_first_person_viewmodel_root()",
-      "optional get_first_person_shadow_proxy_root() for CUSTOM_PROXY"
+    "strict_real_asset_gate": true
+  },
+  "presenter_contract": {
+    "class": "QuaterniusAvatarPresenter v2",
+    "apply_motion_optional_state": [
+      "grounded",
+      "crouching"
     ],
-    "supported_entity_kind_model": "open string metadata; humanoid/drone/animal/cyborg are examples, not an enum gate",
-    "movement_presentation_separation": true
-  },
-  "shadow_preservation": {
-    "default_policy": "WORLD_PROXY",
-    "mechanism": "Generate SHADOWS_ONLY MeshInstance3D proxies from the controlled world presentation and activate them only for a local first-person policy that hides the world body",
-    "mesh_resource_copy": false,
-    "mesh_resource_shared_with_source": true,
-    "skin_resource_shared_with_source": true,
-    "skeleton_reused_when_source_is_skinned": true,
-    "source_global_transform_followed": true,
-    "second_animation_graph_created": false,
-    "second_physics_body_created": false,
-    "gameplay_authority_changed": false,
-    "custom_proxy_escape_hatch": true
-  },
-  "render_layers": {
-    "default_world_model_layer_index": 20,
-    "default_first_person_viewmodel_layer_index": 19,
-    "default_first_person_shadow_layer_index": 18,
-    "layers_must_be_distinct": true,
-    "configurable_per_profile": true,
-    "original_visual_layers_restored_on_unbind": true,
-    "original_camera_cull_masks_restored_on_unbind": true,
-    "custom_proxy_state_restored_on_unbind": true
-  },
-  "non_humanoid_proof": {
-    "fixture": "tests/fixtures/ch6_test_drone_presenter.gd",
-    "skeleton_required": false,
-    "head_bone_required": false,
-    "quaternius_required": false,
-    "visuals": "one drone body plus four rotor meshes",
-    "expected_world_proxy_count": 5,
-    "expected_mesh_resource_reuse_count": 5,
-    "test": "tests/characters/test_ch6_controllable_view_adapter.gd"
-  },
-  "shadow_contract_test": {
-    "test": "tests/characters/test_ch6_shadow_proxy_contract.gd",
-    "local_result": "21/21 PASS",
-    "covers": [
-      "skinned WORLD_PROXY",
-      "same Mesh resource",
-      "same Skin resource",
-      "Skeleton3D NodePath reuse",
-      "SHADOWS_ONLY mode",
-      "dedicated shadow layer",
-      "CUSTOM_PROXY activation",
-      "CUSTOM_PROXY visibility/layer/cast_shadow restore"
+    "presentation_reads_input": false,
+    "presentation_moves_character_body": false,
+    "root_motion_applied": false,
+    "missing_optional_animation_falls_back_to_base_locomotion": true,
+    "capability_report_fields": [
+      "animation_capabilities",
+      "supports_jump",
+      "supports_crouch"
     ]
   },
-  "real_quaternius_gate": {
-    "test": "tests/characters/test_ch5_full_body_first_person_lab.gd",
-    "requires_external_assets": true,
-    "requires_animated_asset_mode": true,
-    "requires_shadow_proxy_count_gt_zero": true,
-    "requires_skinned_proxy_count_gt_zero": true,
-    "requires_skeleton_bound_proxy_count_gt_zero": true,
-    "requires_root_motion_disabled": true
+  "isolated_lab_crouch": {
+    "input": "Ctrl hold",
+    "standing_capsule_height_m": 1.85,
+    "crouch_capsule_height_m": 1.15,
+    "standing_eye_height_m": 1.62,
+    "crouch_eye_height_m": 1.02,
+    "crouch_speed_mps": 1.8,
+    "jump_while_crouching": "blocked",
+    "production_ready": false,
+    "deferred_for_production": [
+      "stand-up head clearance test",
+      "network crouch state",
+      "authoritative collision reconciliation"
+    ]
+  },
+  "shadow_preservation": {
+    "stage": "CH6 fix1 retained",
+    "policy": "WORLD_PROXY",
+    "jump_shadow_expected": true,
+    "crouch_shadow_expected": true,
+    "mesh_resource_copy": false,
+    "skin_resource_shared_with_source": true,
+    "skeleton_reused_when_source_is_skinned": true,
+    "second_animation_graph_created": false
+  },
+  "tests": {
+    "avatar_presenter": "tests/characters/test_ch4_quaternius_avatar_presenter.gd",
+    "character_lab": "tests/characters/test_ch4_quaternius_character_lab.gd",
+    "first_person_lab": "tests/characters/test_ch5_full_body_first_person_lab.gd",
+    "generic_adapter": "tests/characters/test_ch6_controllable_view_adapter.gd",
+    "shadow_contract": "tests/characters/test_ch6_shadow_proxy_contract.gd",
+    "synthetic_animation_fixture": "tests/fixtures/ch5_synthetic_quaternius_animation.gd"
   },
   "local_authoring_validation": {
-    "status": "FOCUSED_AND_SYNTHETIC_GRAPHICAL_PASS",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb linuxbsd editor double x86_64",
-    "generic_world_proxy": "PASS, 33 assertions in focused mini-project",
-    "shadow_proxy_contract": "21/21 PASS",
-    "custom_proxy": "PASS, SHADOWS_ONLY activation and original state restoration",
-    "api_check": "GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY and MeshInstance3D skeleton/surface APIs parsed and executed",
-    "synthetic_graphical_render": {
-      "renderer": "Godot Compatibility OpenGL 4.5 under Xvfb/llvmpipe",
-      "camera_world_layer_hidden": true,
-      "shadow_proxy_layer_visible_to_camera": true,
-      "source_body_visible_in_image": false,
-      "shadow_visible_with_proxy": true,
-      "no_proxy_vs_with_proxy_pixel_difference": true,
-      "no_proxy_vs_after_proxy_pixel_difference": false,
-      "result": "PASS; shadow-only proxy changes only the rendered shadow contribution while the source body remains excluded"
+    "synthetic_jump_crouch_semantics": "PASS",
+    "synthetic_exact_clip_resolution": {
+      "jump": "Jump",
+      "crouch_idle": "Crouch_Idle",
+      "crouch_walk": "Crouch_Fwd"
     },
-    "full_repository_suite": "pending Windows rerun because full repository checkout is not present in the local validation container"
+    "matched_bones": 12,
+    "root_motion": "disabled",
+    "full_repository_suite": "pending Windows rerun with real Quaternius assets"
   },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
@@ -125,24 +122,23 @@
     "required": [
       "asset_preflight PASS",
       "editor_import PASS with no Parse Error or Compile Error",
-      "CH4 avatar presenter regression PASS",
-      "CH4 character lab regression PASS",
-      "CH5 legacy adapter compatibility PASS",
-      "CH5/CH6 first-person lab PASS including real skinned Quaternius shadow proxy",
-      "CH6 non-humanoid controllable adapter + shadow preservation PASS",
-      "CH6 shadow proxy contract PASS",
-      "first-person view contains no own head/neck/chest/shoulder geometry",
-      "first-person floor/world receives the animated controlled-body shadow",
-      "third-person view shows the full animated body and normal shadow",
-      "repeated C toggles do not create duplicate shadows or visible shadow-only geometry",
-      "walk, run and jump remain functional",
-      "root motion remains disabled"
+      "real UAL1 Jump, Jump_Start and Jump_Land capabilities resolve",
+      "real UAL1 Crouch_Idle and Crouch_Fwd capabilities resolve",
+      "Space produces Jump semantic while airborne",
+      "Ctrl produces Crouch_Idle while stationary and Crouch_Fwd while moving",
+      "crouch lowers isolated lab capsule and camera",
+      "first-person body remains hidden during jump and crouch",
+      "first-person shadow follows jump and crouch animation",
+      "third-person full body remains correct",
+      "V no longer rotates the model or shadow",
+      "root motion remains disabled",
+      "CH6 fix1 shadow tests remain PASS"
     ]
   },
   "known_next_stage": {
-    "production_integration": "Bind the accepted profile/adapter/shadow contract into LunarPlayer as an optional presentation component in a separate branch",
-    "viewmodel": "Add dedicated hands/tools/weapons or vehicle-specific first-person geometry only when gameplay needs it",
-    "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles",
-    "shadow_lod": "Only consider simplified shadow geometry later if profiling shows a real need"
+    "production_integration": "Do not integrate yet; accept fix2 graphically first",
+    "jump_polish": "Optionally add Jump_Start/Jump_Land transitions later without changing the motion_state contract",
+    "production_crouch": "Implement clearance/network/authority rules in the future controller integration stage",
+    "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles"
   }
 }
