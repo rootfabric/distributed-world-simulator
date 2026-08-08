@@ -6,6 +6,7 @@
   "base_commit": "950d456278c9f8c8dd14a48e6b45d4995304ad33",
   "implementation_head_before_validation_record": "5611816faa079596f1c48202669e77d8c0cf3eef",
   "fix1_tested_head": "6037c2607a3980432e231b03f77a5499bb85c529",
+  "analyzer_policy_head": "83ff1168a4e9b5644a1d6445f7411bf91000174d",
   "decision": "AUTOMATED_WINDOWS_GATE_PASS_MANUAL_STRESS_REQUIRED",
   "trigger_evidence": {
     "fix8_automated_analysis": "PASS",
@@ -130,6 +131,14 @@
       "the current control_message bucket combines several message types, so the short run does not yet identify which exact control message caused the startup-scale peak"
     ]
   },
+  "analyzer_policy": {
+    "commit": "83ff1168a4e9b5644a1d6445f7411bf91000174d",
+    "reason": "the first successful exact-Windows run proved that lifetime message_dispatch/control_message maxima contain compatibility/JOIN/bootstrap work and would deterministically false-fail the long-stress analyzer even when steady p99 is low",
+    "absolute_phase_gate": "still applies to snapshot_message, item_message, prediction_reconcile, input_flush, telemetry_update, local_prediction and all non-unattributed world phases",
+    "startup_dispatch_gate": "message_dispatch and control_message lifetime maxima are diagnostic only; repeated severe dispatch stalls are rejected through the existing total >=50 ms client process slow-frame count",
+    "max_client_slow_process_frames": 2,
+    "gameplay_semantics_changed": false
+  },
   "composition": {
     "playground_scene_identity": "res://scripts/world/testing/playground_view_relative_runtime_fix8.gd",
     "reason": "preserve accepted tests that assert exact FIX8 script identity",
@@ -154,7 +163,7 @@
     "profile": "LOCAL",
     "actions": "both clients continuously move/turn/start/stop while repeatedly exercising drop, pickup, transfer and inventory presentation",
     "analysis": "run ANALYZE_M7_FIX9_RESULTS.ps1 on server.json/a.json/b.json and inspect dominant network/world phases",
-    "notes": "the automated short run passes composition/regression but exposes isolated control-message dispatch peaks; long stress is required to distinguish startup-only work from sustained gameplay stutter"
+    "notes": "the automated short run passes composition/regression but exposes isolated lifecycle control-message dispatch peaks; the analyzer now uses process slow-frame count for those peaks while retaining strict gameplay-phase limits"
   },
-  "status": "Automated Windows exact-engine gate PASS on tested runtime/test head 6037c2607a3980432e231b03f77a5499bb85c529. Long two-client LOCAL movement/item stress and FIX9 analyzer review remain required before final acceptance."
+  "status": "Automated Windows exact-engine gate PASS on tested runtime/test head 6037c2607a3980432e231b03f77a5499bb85c529. Analyzer startup-dispatch policy updated at 83ff1168a4e9b5644a1d6445f7411bf91000174d without gameplay runtime changes. Long two-client LOCAL movement/item stress and FIX9 analyzer review remain required before final acceptance."
 }
