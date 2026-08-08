@@ -72,7 +72,9 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
 $Godot = Resolve-Godot $GodotPath
 Invoke-Godot-Test "ch7_character_equipment_domain" "res://tests/characters/test_ch7_character_equipment_domain.gd"
 Invoke-Godot-Test "ch7_character_equipment_presenter" "res://tests/characters/test_ch7_character_equipment_presenter.gd"
+Invoke-Godot-Test "ch7_quaternius_equipment_rig_adapter" "res://tests/characters/test_ch7_quaternius_equipment_rig_adapter.gd"
+Invoke-Godot-Test "ch7_quaternius_equipment_lab" "res://tests/characters/test_ch7_quaternius_equipment_lab.gd"
 
 Write-Host ""
-Write-Host "CH7 Universal Character Equipment CH7.0-CH7.3 runner: PASS" -ForegroundColor Green
+Write-Host "CH7 Universal Character Equipment rigid-equipment candidate runner: PASS" -ForegroundColor Green
 exit 0
