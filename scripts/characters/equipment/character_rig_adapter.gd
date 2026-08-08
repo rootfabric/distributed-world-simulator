@@ -50,6 +50,21 @@ func resolve_body_region(character_visual_root: Node, region_id: String) -> Node
 	return character_visual_root.get_node_or_null(_body_region_paths[region_id])
 
 
+# Resolve the rendered geometry controlled by one semantic body region. The
+# default implementation expands the configured region node recursively. A
+# concrete rig may override this when its imported mesh is coarser than the
+# semantic regions (for example, one full-body skinned mesh).
+func resolve_body_region_visuals(
+	character_visual_root: Node,
+	region_id: String
+) -> Array[GeometryInstance3D]:
+	var result: Array[GeometryInstance3D] = []
+	var region_root := resolve_body_region(character_visual_root, region_id)
+	if region_root != null:
+		_collect_geometry_instances(region_root, result)
+	return result
+
+
 # Optional presentation hook for SKINNED_GARMENT. Rigid-only rigs can leave
 # this unresolved and the equipment presenter will reject the strategy without
 # mutating canonical equipment state.
@@ -90,6 +105,18 @@ func _find_first_skeleton(root: Node) -> Skeleton3D:
 		if found != null:
 			return found
 	return null
+
+
+func _collect_geometry_instances(
+	root: Node,
+	output: Array[GeometryInstance3D]
+) -> void:
+	if root == null:
+		return
+	if root is GeometryInstance3D:
+		output.append(root as GeometryInstance3D)
+	for child in root.get_children():
+		_collect_geometry_instances(child, output)
 
 
 func _sorted_keys(values: Dictionary) -> Array[String]:
