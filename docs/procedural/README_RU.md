@@ -16,6 +16,12 @@ G6.3 ACCEPTED
 G6.4 FIX3 IMPLEMENTED CANDIDATE
 ```
 
+Fix3 candidate head:
+
+```text
+77e99819c319e8ad924485414c56f3dc14748844
+```
+
 G6.4 now proves three separate representation layers without moving canonical truth into rendering:
 
 ```text
