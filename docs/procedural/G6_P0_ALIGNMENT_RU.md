@@ -3,8 +3,8 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Local role:** hydrology/fluid semantic layer above G5 World Feature Graph
-**Current stage:** `G6.1 CasualRiverProviderV1 — IMPLEMENTED CANDIDATE`
-**Next stage after acceptance:** `G6.2 cross-cell / cross-LOD continuity`
+**Current stage:** `G6.1 CasualRiverProviderV1 — ACCEPTED`
+**Next stage:** `G6.2 cross-cell / cross-LOD continuity`
 
 ## Canonical boundary
 
@@ -58,9 +58,9 @@ fluid mutation
 
 G6 не создаёт authority registry. NX8 может выбирать fluid representation по interest/budget, но `interest region / LOD / ribbon / mesh patch != FluidRegionId`. NX9 может менять I/O scheduling/cache, но не canonical fluid semantics.
 
-## G6.1 implementation boundary
+## G6.1 accepted boundary
 
-`CasualRiverProviderV1` реализован как deterministic compiler из stable G5 river/valley semantics в принятые G6.0 data contracts.
+`CasualRiverProviderV1` принят как deterministic compiler из stable G5 river/valley semantics в принятые G6.0 data contracts.
 
 Зафиксировано:
 
@@ -73,13 +73,37 @@ G6 не создаёт authority registry. NX8 может выбирать fluid
 - provider не владеет persistence/authority/network transport;
 - renderer/SceneTree/runtime random не требуются.
 
-До Windows focused acceptance G6.1 остаётся `IMPLEMENTED CANDIDATE`.
+Windows focused acceptance на tested head `b8f36d17dc8ba138e6b215968aa0e651eec9ccd1`:
+
+```text
+G5 World Feature Graph: PASS (249 assertions)
+G5 feature/cell identity: PASS (94 assertions)
+G6.0 fluid contracts: PASS (169 assertions)
+G6.1 CasualRiverProviderV1: PASS (74 assertions)
+git diff --check: PASS
+working tree: clean
+```
+
+Canonical acceptance record: `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`.
 
 ## G6.2 boundary
 
-Следующий checkpoint должен доказать, что одна canonical river geography адресуется через меняющиеся G2 representation cells/LOD без изменения `FeatureId`, `FluidRegionId`, `spline_id` и canonical provider result.
+Следующий checkpoint должен доказать, что одна canonical river geography адресуется через меняющиеся G2 representation cells/LOD без изменения `FeatureId`, `FluidRegionId`, `spline_id`, `profile_id` и canonical provider result identity.
 
-G6.2 разрешено использовать `SurfaceCellKey` только как representation addressing для continuity proof.
+G6.2 разрешено использовать `SurfaceCellKey` и `CubeSphereAddressing` только как representation addressing для continuity proof. Они не входят в canonical river/fluid identity и не должны менять provider output.
+
+Минимальный continuity matrix:
+
+```text
+cube-sphere faces: crossing at least one face seam
+LOD: 2 / 4 / 8 / 12
+representation cell sets: expected to change
+FeatureId: stable
+FluidRegionId: stable
+RiverSpline.spline_id: stable
+RiverChannelProfile.profile_id: stable
+provider output checksum/manifest for same canonical source: stable
+```
 
 ## Stop conditions
 
@@ -102,8 +126,9 @@ G6.2 разрешено использовать `SurfaceCellKey` только �
 [PASS] Feature != SurfaceCell
 [PASS] FluidRegion != SurfaceCell / AuthorityRegion / InterestRegion
 [PASS] renderer remains derived presentation
-[PASS] G6.0 post-P0 focused regression is inherited by G6.1 runner
-[PENDING] G6.1 Windows focused acceptance
+[PASS] G6.0 post-P0 dependency regression
+[PASS] G6.1 Windows focused acceptance — 74 assertions
+[NEXT] G6.2 cross-cell / cross-LOD continuity
 ```
 
 Канонический общий план: `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
