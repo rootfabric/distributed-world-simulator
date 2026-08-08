@@ -80,10 +80,10 @@ func _run() -> void:
 	var fallback_back := fallback_adapter.resolve_anchor(fallback_presenter, "gear.back")
 	_assert(fallback_head is Node3D and String(fallback_head.name) == "Head", "Fallback head semantic did not resolve to Head pivot")
 	_assert(fallback_back is Node3D and String(fallback_back.name) == "Torso", "Fallback back semantic did not resolve to Torso pivot")
-	_assert(not fallback_head is BoneAttachment3D, "Fallback path unexpectedly created a bone attachment")
+	_assert(not (fallback_head is BoneAttachment3D), "Fallback path unexpectedly created a bone attachment")
 
 	var source := FileAccess.get_file_as_string("res://scripts/characters/equipment/quaternius_equipment_rig_adapter.gd")
-	for forbidden in ["CharacterBody3D", "Input.", "multiplayer", "network", "ItemGraph"]:
+	for forbidden in ["CharacterBody3D", "Input.", "multiplayer", "@rpc", "rpc(", "ItemGraph"]:
 		_assert(not source.contains(forbidden), "Quaternius equipment adapter gained forbidden gameplay/runtime dependency: %s" % forbidden)
 
 	host.queue_free()
