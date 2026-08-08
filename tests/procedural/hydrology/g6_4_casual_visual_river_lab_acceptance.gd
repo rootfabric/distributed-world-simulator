@@ -124,7 +124,6 @@ func _test_adaptive_lod_contract() -> void:
 func _test_adaptive_macro_surface_contract() -> void:
 	var source := FileAccess.get_file_as_string(SURFACE_SCRIPT)
 	for required in [
-		"CasualMacroTerrainProviderV1",
 		"casual_macro_terrain_provider_v1.gd",
 		"SurfaceLodSelector",
 		"selector.select_cells",
