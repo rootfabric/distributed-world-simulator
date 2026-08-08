@@ -42,11 +42,32 @@ $env:PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS = if ($HasBase -and $HasAnimatio
 function Invoke-Godot([string]$Name, [string[]]$Arguments) {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
-    $Output = & $Godot @Arguments 2>&1
-    $ExitCode = $LASTEXITCODE
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
+    $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    $Output = @()
+    $ExitCode = 1
+    try {
+        # Windows PowerShell 5.1 wraps native stderr as NativeCommandError.
+        # Godot writes warnings to stderr even on a successful import, so do
+        # not let those warning records terminate the test runner.
+        $ErrorActionPreference = "Continue"
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+        }
+        $Output = & $Godot @Arguments 2>&1
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
+        }
+    }
     $Output | ForEach-Object { Write-Host $_ }
     $Text = $Output -join "`n"
-    if ($ExitCode -ne 0 -or $Text -match "(: FAIL|SCRIPT ERROR:|Parse Error:|Compile Error:)") {
+    $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
+    if ($ExitCode -ne 0 -or $HasFailureMarker) {
         throw "$Name failed with exit code $ExitCode"
     }
 }
@@ -54,9 +75,19 @@ function Invoke-Godot([string]$Name, [string[]]$Arguments) {
 try {
     Write-Host "Godot: $Godot"
     Write-Host "Quaternius external assets required: $($env:PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS)"
+    Invoke-Godot "asset_preflight" @(
+        "--headless", "--path", $Root,
+        "--script", "res://scripts/characters/importing/quaternius_asset_preflight.gd"
+    )
     Invoke-Godot "editor_import" @("--headless", "--editor", "--path", $Root, "--quit")
-    Invoke-Godot "avatar_presenter" @("--headless", "--path", $Root, "--script", "res://tests/characters/test_ch4_quaternius_avatar_presenter.gd")
-    Invoke-Godot "character_lab" @("--headless", "--path", $Root, "--script", "res://tests/characters/test_ch4_quaternius_character_lab.gd")
+    Invoke-Godot "avatar_presenter" @(
+        "--headless", "--path", $Root,
+        "--script", "res://tests/characters/test_ch4_quaternius_avatar_presenter.gd"
+    )
+    Invoke-Godot "character_lab" @(
+        "--headless", "--path", $Root,
+        "--script", "res://tests/characters/test_ch4_quaternius_character_lab.gd"
+    )
     Write-Host ""
     Write-Host "CH4 Quaternius character tests: PASS" -ForegroundColor Green
 }
