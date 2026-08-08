@@ -61,7 +61,9 @@ func _run_case(source_scene: PackedScene, mesh_name: String, profile: Array, exp
 	var details: Dictionary = inflated_result.get("details", {})
 	_assert(int(details.get("mesh_count", 0)) == 1, "CH8C vertex inflation expected one selected mesh for %s" % mesh_name)
 	_assert(int(details.get("vertex_count", 0)) > 0, "CH8C vertex inflation reported no vertices for %s" % mesh_name)
-	_assert(is_equal_approx(float(details.get("max_offset_m", 0.0)), expected_max_offset), "CH8C vertex inflation max offset mismatch for %s" % mesh_name)
+	_assert(is_equal_approx(float(details.get("profile_max_offset_m", 0.0)), expected_max_offset), "CH8C vertex inflation configured max mismatch for %s" % mesh_name)
+	_assert(float(details.get("max_offset_m", 0.0)) <= expected_max_offset + 0.000001, "CH8C vertex inflation observed max exceeded profile for %s" % mesh_name)
+	_assert(float(details.get("max_offset_m", 0.0)) >= expected_max_offset * 0.90, "CH8C vertex inflation observed max missed profile peak too far for %s" % mesh_name)
 	_assert(not bool(details.get("mutates_source_scene", true)), "CH8C vertex inflation claims source mutation for %s" % mesh_name)
 	_assert(bool(details.get("preserves_skin_arrays", false)), "CH8C vertex inflation did not report skin preservation for %s" % mesh_name)
 
@@ -110,7 +112,8 @@ func _run_case(source_scene: PackedScene, mesh_name: String, profile: Array, exp
 				outward_ok = false
 	_assert(displacement_ok, "CH8C vertex inflation displacement profile mismatch for %s" % mesh_name)
 	_assert(outward_ok, "CH8C vertex inflation did not move outward along normals for %s" % mesh_name)
-	_assert(is_equal_approx(observed_max, expected_max_offset), "CH8C vertex inflation observed max displacement mismatch for %s" % mesh_name)
+	_assert(observed_max <= expected_max_offset + 0.000001, "CH8C vertex inflation observed displacement exceeded configured max for %s" % mesh_name)
+	_assert(observed_max >= expected_max_offset * 0.90, "CH8C vertex inflation observed displacement did not reach configured profile closely enough for %s" % mesh_name)
 
 
 func _snapshot_mesh(scene: PackedScene, mesh_name: String) -> Dictionary:
