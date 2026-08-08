@@ -7,7 +7,7 @@
   "fix3_windows_tested_head": "3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298",
   "fix4_functional_head": "1beb592d421b8919d637b9bb0e156762ee11d970",
   "fix4_windows_automated_tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
-  "decision": "FIX4_RUNTIME_AND_MANUAL_PASS_HYGIENE_RERUN_ONLY",
+  "decision": "ACCEPTED",
   "fix4_manual_evidence": {
     "observer_far_virtual_altitude_km": 812.7,
     "observer_far_max_lod": 6,
@@ -44,14 +44,9 @@
   },
   "repo_hygiene": {
     "git_diff_check_on_tested_head": "FAIL_OLD_MARKDOWN_TRAILING_WHITESPACE",
-    "reported_files": [
-      "docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md",
-      "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md",
-      "docs/procedural/STATUS_RU.md"
-    ],
     "cleanup_applied_after_runtime_test": true,
     "runtime_code_changed_by_cleanup": false,
-    "rerun_required": "GIT_DIFF_CHECK_ONLY"
+    "post_cleanup_git_diff_check": "PASS"
   },
   "fix4_recipe": {
     "accepted_g3_provider_code_changed": false,
@@ -66,6 +61,6 @@
     "terrain_bank_coupling": "G8_GEOMORPHOLOGY",
     "layered_geology": "G9_LAYERED_GEOLOGY"
   },
-  "next_checkpoint_started": "G6_FULL_ACCEPTANCE",
-  "note": "Runtime and manual evidence are complete. Only a post-cleanup git diff --check rerun remains before recording G6.4 ACCEPTED; no Godot rerun is required because cleanup changed documentation only."
+  "next_checkpoint": "G6_FULL_ACCEPTANCE",
+  "note": "G6.4 is accepted. Runtime, manual graphical evidence, clean worktree and post-cleanup git diff --check are complete. Full G6 remains independently blocked by the shared MW10 baseline until PR #43 is integrated into G5 and G6 is resynchronized."
 }
