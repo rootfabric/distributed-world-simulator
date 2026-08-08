@@ -34,40 +34,45 @@ function Resolve-Godot([string]$Requested) {
     throw "Godot 4.7.1 double was not found. Pass -GodotPath or set GODOT_BIN."
 }
 
+function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
+    Write-Host ""
+    Write-Host "[$Name]" -ForegroundColor Cyan
+
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
+    $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    $Output = @()
+    $ExitCode = 1
+    try {
+        $ErrorActionPreference = "Continue"
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+        }
+        $Output = & $Godot @(
+            "--headless", "--path", $Root,
+            "--script", $ScriptPath
+        ) 2>&1
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
+        }
+    }
+
+    $Output | ForEach-Object { Write-Host $_ }
+    $Text = $Output -join "`n"
+    $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
+    if ($ExitCode -ne 0 -or $HasFailureMarker) {
+        throw "$Name failed with exit code $ExitCode"
+    }
+}
+
 $Godot = Resolve-Godot $GodotPath
-Write-Host ""
-Write-Host "[ch7_character_equipment_domain]" -ForegroundColor Cyan
-
-$PreviousErrorActionPreference = $ErrorActionPreference
-$NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
-$PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
-$Output = @()
-$ExitCode = 1
-try {
-    $ErrorActionPreference = "Continue"
-    if ($null -ne $NativePreference) {
-        Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
-    }
-    $Output = & $Godot @(
-        "--headless", "--path", $Root,
-        "--script", "res://tests/characters/test_ch7_character_equipment_domain.gd"
-    ) 2>&1
-    $ExitCode = $LASTEXITCODE
-}
-finally {
-    $ErrorActionPreference = $PreviousErrorActionPreference
-    if ($null -ne $NativePreference) {
-        Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
-    }
-}
-
-$Output | ForEach-Object { Write-Host $_ }
-$Text = $Output -join "`n"
-$HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
-if ($ExitCode -ne 0 -or $HasFailureMarker) {
-    throw "CH7 character equipment domain failed with exit code $ExitCode"
-}
+Invoke-Godot-Test "ch7_character_equipment_domain" "res://tests/characters/test_ch7_character_equipment_domain.gd"
+Invoke-Godot-Test "ch7_character_equipment_presenter" "res://tests/characters/test_ch7_character_equipment_presenter.gd"
 
 Write-Host ""
-Write-Host "CH7 Universal Character Equipment domain runner: PASS" -ForegroundColor Green
+Write-Host "CH7 Universal Character Equipment CH7.0-CH7.3 runner: PASS" -ForegroundColor Green
 exit 0
