@@ -1,0 +1,59 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "checkpoint": "G6.3_RUNTIME_WATER_SURFACE_QUERY_RESOLVER",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "implementation_candidate": "22059af7b91c65245f7992936f1612d4503d8782",
+  "accepted_tested_head": "974fc6682abac058ea158cf11efbf44501805817",
+  "decision": "ACCEPTED",
+  "runtime_validation": "WINDOWS_GODOT_4_7_1_DOUBLE_PASS",
+  "environment": {
+    "platform": "Windows",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "dependencies": {
+    "g5_world_feature_graph": "ACCEPTED",
+    "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC",
+    "g6_1_casual_river_provider": "ACCEPTED",
+    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
+    "g6_2_tested_head": "444811c0ac98a133844cd7ec0869a6cf0a261f11"
+  },
+  "acceptance_evidence": {
+    "runner": "RUN_G6_3_RUNTIME_WATER_QUERY_TESTS.ps1",
+    "g5_world_feature_graph": "PASS_249",
+    "g5_feature_cell_identity": "PASS_94",
+    "g6_0_fluid_contracts": "PASS_169",
+    "g6_1_casual_river_provider": "PASS_74",
+    "g6_2_cross_cell_cross_lod_continuity": "PASS_86",
+    "g6_3_runtime_water_surface_query": "PASS_79",
+    "git_diff_check": "PASS",
+    "working_tree": "CLEAN"
+  },
+  "runtime_contracts": {
+    "query": "scripts/simulation/procedural/contracts/water_surface_query.gd",
+    "sample": "scripts/simulation/procedural/contracts/water_surface_sample.gd",
+    "resolver": "scripts/simulation/procedural/hydrology/water_surface_resolver_v1.gd",
+    "deterministic_tie_break": "DISTANCE_THEN_FLUID_REGION_ID_LEXICAL",
+    "curve_subdivisions_per_segment": 16
+  },
+  "scope": {
+    "accepted_g6_1_provider_modified": false,
+    "accepted_g6_0_contracts_modified": false,
+    "g6_2_continuity_semantics_modified": false,
+    "new_water_surface_sample_contract": true,
+    "new_runtime_query_resolver": true,
+    "new_renderer": false,
+    "new_surface_cell_identity": false,
+    "new_river_chunk_identity": false,
+    "new_authority": false,
+    "new_persistence": false,
+    "new_network_transport": false,
+    "mutates_world_state": false
+  },
+  "global_sync": {
+    "main_revision_at_implementation": "GLOBAL-P0-2026-08-08-R1",
+    "global_revision_match": true,
+    "full_g6_acceptance_requires_fresh_main_sync_check": true
+  },
+  "next_checkpoint": "G6.4_CASUAL_VISUAL_RIVER_LAB"
+}

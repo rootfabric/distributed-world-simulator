@@ -1,0 +1,44 @@
+{
+  "schema": "planet_simulator.g6_2_cross_cell_cross_lod_continuity_manifest.v1",
+  "checkpoint": "g6.2-cross-cell-cross-lod-continuity",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "depends_on": {
+    "g5_world_feature_graph": "ACCEPTED",
+    "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC",
+    "g6_1_casual_river_provider": "ACCEPTED"
+  },
+  "fixture": {
+    "body_id": "body/procedural-g6-continuity",
+    "frame_id": "body/procedural-g6-continuity/fixed",
+    "radius_m": 6000000.0,
+    "source_longitude_deg": 34.0,
+    "mouth_longitude_deg": 58.0,
+    "expected_cube_faces": ["PX", "PZ"],
+    "provider_id": "hydro-provider/casual-river-v1"
+  },
+  "lod_levels": [2, 4, 8, 12],
+  "canonical_identity_must_remain_stable": [
+    "FeatureId",
+    "FluidRegionId",
+    "RiverSpline.spline_id",
+    "RiverChannelProfile.profile_id",
+    "provider_manifest_hash"
+  ],
+  "representation_must_change": [
+    "SurfaceCellKey set",
+    "cell count/distribution with LOD"
+  ],
+  "architecture_boundaries": {
+    "surface_cell_is_hydrology_identity": false,
+    "lod_is_hydrology_identity": false,
+    "creates_river_chunk_identity": false,
+    "creates_new_authority": false,
+    "creates_new_persistence": false,
+    "creates_runtime_query_resolver": false,
+    "creates_renderer": false,
+    "modifies_g6_1_provider": false
+  },
+  "next_if_accepted": "G6.3_RUNTIME_WATER_SURFACE_QUERY_RESOLVER"
+}

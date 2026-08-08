@@ -1,0 +1,33 @@
+{
+  "schema": "planet_simulator.g6_0_fluid_contracts_validation.v1",
+  "checkpoint": "g6.0-fluid-contracts",
+  "decision": "ACCEPTED",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "base_commit": "e7b10c09a6be879b25cd5c7ec8407832fd758ac2",
+  "accepted_candidate_head": "5deb455113a62a201b2c5441509917fd9ac6ca9e",
+  "runtime": {
+    "environment": "Windows / Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "evidence_date": "2026-08-08",
+    "runs": 2,
+    "editor_import": "PASS",
+    "g5_world_feature_graph": "PASS (249 assertions)",
+    "g5_feature_cell_identity": "PASS (94 assertions)",
+    "g6_0_fluid_contracts": "PASS (169 assertions)",
+    "focused_gate": "PASS",
+    "repeatability": "PASS_IDENTICAL_ASSERTION_COUNTS"
+  },
+  "static": {
+    "candidate_relation_from_dcab240": "AHEAD_2_BEHIND_0_DOCS_VALIDATION_ONLY",
+    "changed_files_from_g5_base": 21,
+    "identity_excludes_representation_state": "PASS_BY_CONTRACT_DESIGN",
+    "fluid_descriptor_revalidates_region_identity": true,
+    "renderer_dependency_added": false,
+    "network_transport_dependency_added": false,
+    "geo_kernel_changed": false,
+    "g5_contracts_changed": false
+  },
+  "focused_runner": "RUN_G6_FLUID_CONTRACT_TESTS.ps1",
+  "acceptance_requires_windows_godot_4_7_1_double": true,
+  "acceptance_gate_satisfied": true,
+  "next_stage": "G6.1_CASUAL_RIVER_PROVIDER_V1"
+}

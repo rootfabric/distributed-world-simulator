@@ -1,215 +1,40 @@
 # Universal World Generation Fabric — status ledger
 
-**Program foundation:** G0–G3 Procedural Planetary Generation
-**Post-G3 roadmap:** `docs/universal-world-generation-roadmap-post-g3`
-**Current implementation branch:** `feature/g5-world-feature-graph`
-
-## Current state
+**Current branch:** `feature/g6-hydrology-fluid-surface-v0`  
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
-G0 Contracts Freeze                    ACCEPTED
-G1 Geodesy + Body Shape                BASELINE
-G2 Planetary Surface Cells + LOD       ACCEPTED
-G3 Mega Casual Macro Surface           ACCEPTED
-G4 Provider Composition / Replacement  ACCEPTED
-G5 World Feature Graph                 ACCEPTED
-G6 Hydrology / Fluid Surface v0        NEXT — UNBLOCKED
+G6.0 Fluid Contracts                   ACCEPTED
+G6.1 CasualRiverProviderV1             ACCEPTED
+G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
+G6.3 Runtime WaterSurfaceQuery         ACCEPTED
+G6.4 Casual Visual River Lab           FIX4 MANUAL PASS / AUTOMATED RERUN IN FULL GATE
+G6 Full Acceptance                     IMPLEMENTED CANDIDATE — BLOCKED BY SHARED MW10 BASELINE
 ```
 
-G5 base:
+G6.4 Fix4 manual evidence is recorded: observer refinement from about `LOD 6 @ 812.7 km` to `LOD 10 @ 42.2 km`, with subtle higher-frequency macro irregularities becoming visible while the river and canonical IDs remain stable. The remaining Fix4 automated rerun is intentionally folded into `RUN_G6_FULL_ACCEPTANCE.ps1`.
+
+Full gate:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_FULL_ACCEPTANCE.ps1
+```
+
+The full gate requires:
 
 ```text
-feature/g4-provider-composition-replacement
-4d1fed8e4367e6c4ea276fcf6b9b57159de72014
+GLOBAL config == main == G5
+current G5 is ancestor of G6
+accepted MW10 atomic-lock blobs exist in G5 and G6
+G6.0-G6.4 focused chain PASS
+MW10 lock-release retry PASS
+RUN_WORLD_REGRESSION_TESTS.ps1 PASS
+clean worktree + git diff --check
 ```
 
-Accepted G5 candidate head:
+Current blocker: PR #43 (`MW10: integrate atomic lock release into shared G5 baseline`) is still open and not merged. By design G6 does not privately copy that fix. After #43 lands in G5, resynchronize G6 and rerun the same full gate.
 
-```text
-34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4
-```
+Assistant-side runtime execution was attempted, but the available container has neither a Godot binary nor a local repository checkout, and network clone/download is unavailable. No assistant-side Godot PASS is claimed.
 
-Canonical acceptance records:
-
-```text
-docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
-docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md
-```
-
-## Universal architecture
-
-```text
-new world
-  != new engine special-case
-
-new world
-  = recipe + providers + features + environment + detail backends
-```
-
-Canonical post-G3 documents:
-
-```text
-docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md
-docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md
-docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md
-```
-
-## G4 accepted composition foundation
-
-```text
-PlanetRecipe
-  -> GeoRecipeComposer
-  -> GeoProviderRegistry
-  -> GeoKernel
-```
-
-Replacement remains recipe-driven and the final semantic surface caller remains:
-
-```text
-geo/surface-height-m
-```
-
-G4 Architecture Review A: `PASS`.
-
-## G5 accepted World Feature Graph
-
-Canonical feature vocabulary:
-
-```text
-FeatureType
-FeatureId
-FeatureBounds
-FeatureAnchor
-FeatureRelation
-FeatureQuery
-WorldFeature
-FeatureGraph
-```
-
-Identity:
-
-```text
-FeatureId = hash(
-  body_id,
-  feature_type,
-  seed,
-  generator_version,
-  stable_key
-)
-```
-
-Representation state is deliberately excluded:
-
-```text
-NO SurfaceCellKey
-NO LOD
-NO face/x/y
-NO camera
-NO renderer
-NO query-order dependency
-```
-
-Feature graph supports surface, subsurface and free-space semantics. Acceptance fixtures include:
-
-```text
-fault
-valley
-river
-cave system
-floating island
-```
-
-Spatial query v0 uses correctness-first broad phase:
-
-```text
-SPHERE
-AABB
-```
-
-The current graph scan is O(N). A future BVH/octree/spatial index may optimize lookup without changing canonical feature identity or query semantics.
-
-## Critical G5 gate
-
-The seam fault crosses the G2 cube-sphere `PX/PZ` boundary and is addressed at:
-
-```text
-LOD 2
-LOD 4
-LOD 8
-LOD 12
-```
-
-At every LOD:
-
-```text
-multiple SurfaceCellKey addresses  PASS
-both PX and PZ faces               PASS
-representation cell set changes    PASS
-canonical FeatureId unchanged      PASS
-graph manifest unchanged           PASS
-```
-
-Therefore:
-
-```text
-Feature != Cell
-LOD != Feature Identity
-```
-
-## Acceptance evidence
-
-```text
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-cold editor import                 PASS
-G5 World Feature Graph             PASS — 249 assertions
-G5 feature/cell identity           PASS — 94 assertions
-G5 visual lab headless             PASS — 4 features
-full world/core regression         PASS
-Breakpoint :9081 collision noise   0
-git diff hygiene/freeze            PASS
-G5 full acceptance gate            PASS
-```
-
-Expected/known regression output did not block acceptance:
-
-```text
-manifest identity mismatch negative paths   suites PASS
-NX5 rejection warnings                      suite PASS
-MW7 ObjectDB/ResourceCache exit warnings    existing debt
-```
-
-Lab:
-
-```text
-res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
-```
-
-## Next
-
-Blocking main track:
-
-```text
-G6 — Hydrology / Fluid Surface v0
-```
-
-G6 must express rivers/fluid geography through G5 feature identity instead of chunk-local identities.
-
-Parallel tracks remain available under the post-G3 roadmap:
-
-```text
-GR0 — Surface Representation Lab
-GE0 — Environment Field Contracts
-```
-
-## Invariants
-
-```text
-Generator != Renderer
-LOD != World State
-Feature != Chunk
-Feature != SurfaceCell
-recipe != planet class
-provider graph != world-type switch
-canonical truth != representation
-procedural baseline + sparse authoritative mutations = current world truth
-```
+After G6 Full Acceptance: `G7 Semantic Field Fabric`.
