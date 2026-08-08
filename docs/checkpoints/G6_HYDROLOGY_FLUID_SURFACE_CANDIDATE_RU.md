@@ -1,9 +1,9 @@
 # G6 — Hydrology / Fluid Surface v0 — IMPLEMENTED CANDIDATE
 
-**Дата:** 2026-08-08  
-**Ветка:** `feature/g6-hydrology-fluid-surface`  
-**Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`  
-**Implementation candidate:** `68dc5158347989c6d16564993144106d2a294516`  
+**Дата:** 2026-08-08
+**Ветка:** `feature/g6-hydrology-fluid-surface`
+**Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`
+**Implementation candidate:** `68dc5158347989c6d16564993144106d2a294516`
 **Решение:** `IMPLEMENTED CANDIDATE — WINDOWS FULL ACCEPTANCE REQUIRED`
 
 ## Цель
