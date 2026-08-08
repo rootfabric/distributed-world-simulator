@@ -104,6 +104,9 @@ func _test_registry_and_recipe_driven_composition() -> void:
 				if absf(ch - ah) > 1.0:
 					changed_points += 1
 	_check(changed_points >= 35, "recipe-only macro replacement visibly changes world")
+
+	# The call surface remains exactly the same: same body definition, same composer,
+	# same GeoKernel method, same query field. Only the recipe value changes.
 	_check(FINAL_FIELD == ValleyModifier.FIELD_SURFACE_HEIGHT_M, "renderer/downstream final field contract unchanged")
 
 
@@ -186,6 +189,8 @@ func _test_base_surface_composes_without_caller_change() -> void:
 func _test_invalid_graphs_rejected() -> void:
 	var definition := _definition()
 	var composer = Composer.new()
+
+	# Missing dependency/capability.
 	var missing_desc := ProviderDescriptor.create("geo-provider/g4-missing-stub", "1.0.0", "1.0.0", ["geo/missing-capability"], ["geo/output-a"], true, {})
 	var missing_recipe := PlanetRecipe.create(RECIPE_ID, "3.0.0", _environment(), [missing_desc])
 	var missing_registry = Registry.new()
@@ -194,6 +199,7 @@ func _test_invalid_graphs_rejected() -> void:
 	_check(not _success(missing_result), "missing capability graph rejected")
 	_check(_composition_cause(missing_result) == "MISSING_GEO_PROVIDER_DEPENDENCY", "missing capability precise cause")
 
+	# Dependency cycle.
 	var cycle_a := ProviderDescriptor.create("geo-provider/g4-cycle-a", "1.0.0", "1.0.0", ["geo/cycle-b"], ["geo/cycle-a"], true, {})
 	var cycle_b := ProviderDescriptor.create("geo-provider/g4-cycle-b", "1.0.0", "1.0.0", ["geo/cycle-a"], ["geo/cycle-b"], true, {})
 	var cycle_recipe := PlanetRecipe.create(RECIPE_ID, "3.1.0", _environment(), [cycle_b, cycle_a])
@@ -204,6 +210,7 @@ func _test_invalid_graphs_rejected() -> void:
 	_check(not _success(cycle_result), "cycle rejected")
 	_check(_composition_cause(cycle_result) == "GEO_PROVIDER_DEPENDENCY_CYCLE", "cycle precise cause")
 
+	# Duplicate incompatible output ownership.
 	var dup_a := ProviderDescriptor.create("geo-provider/g4-dup-a", "1.0.0", "1.0.0", [], ["geo/duplicate-output"], true, {})
 	var dup_b := ProviderDescriptor.create("geo-provider/g4-dup-b", "1.0.0", "1.0.0", [], ["geo/duplicate-output"], true, {})
 	var dup_recipe := PlanetRecipe.create(RECIPE_ID, "3.2.0", _environment(), [dup_b, dup_a])
@@ -214,6 +221,7 @@ func _test_invalid_graphs_rejected() -> void:
 	_check(not _success(dup_result), "duplicate output graph rejected")
 	_check(_composition_cause(dup_result) == "DUPLICATE_GEO_PROVIDER_OUTPUT", "duplicate output precise cause")
 
+	# Recipe names a provider that the runtime catalog does not know.
 	var unknown_desc := ProviderDescriptor.create("geo-provider/g4-unregistered", "1.0.0", "1.0.0", [], ["geo/unregistered-output"], true, {})
 	var unknown_recipe := PlanetRecipe.create(RECIPE_ID, "3.3.0", _environment(), [unknown_desc])
 	var unknown_result: Dictionary = composer.configure_kernel(GeoKernel.new(), definition, unknown_recipe, Registry.new())
@@ -221,6 +229,7 @@ func _test_invalid_graphs_rejected() -> void:
 	_check(String(unknown_result.get("error_code", "")) == "GEO_RECIPE_PROVIDER_INSTANTIATION_FAILED", "unregistered provider rejected before kernel")
 	_check(String(unknown_result.get("details", {}).get("cause", "")) == "UNREGISTERED_GEO_PROVIDER_FACTORY", "unregistered provider precise cause")
 
+	# Factory cannot silently instantiate a provider with a different descriptor.
 	var mismatch_registry = Registry.new()
 	_ok(mismatch_registry.register_factory("geo-provider/g4-unregistered", func(_d): return StubProvider.new(ProviderDescriptor.create("geo-provider/g4-unregistered", "1.0.0", "1.0.1", [], ["geo/unregistered-output"], true, {}), {"geo/unregistered-output": 1.0})), "register mismatching factory")
 	var mismatch_result: Dictionary = composer.configure_kernel(GeoKernel.new(), definition, unknown_recipe, mismatch_registry)
