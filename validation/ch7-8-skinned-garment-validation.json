@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v5",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v6",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8A_FIX3_INHERITED_CONSTANT_PARSE_FIX_PENDING_WINDOWS_FOCUSED_RERUN",
-  "goal": "Prove one exact-rig Quaternius skinned outfit with minimum complexity before body-region replacement and wider garment support.",
+  "decision": "CH7_8C_BODY_REPLACEMENT_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "goal": "Prove one exact-rig Quaternius skinned outfit with coarse body replacement and no cloth, mesh surgery, gameplay-body or network complexity.",
   "selected_asset": {
     "family": "Quaternius Modular Character Outfits - Fantasy",
     "package": "Standard",
@@ -23,86 +23,62 @@
     "garment_overlap": 1.0,
     "mesh_count": 4,
     "skinned_mesh_count": 4,
-    "probe_decision": "PASS",
-    "important_conclusion": "The first garment uses the same 65-bone rig as the current Universal Base Character. Arbitrary retargeting is not required for CH7.8A."
+    "probe_decision": "PASS"
   },
-  "import_observation": {
-    "godot_unreal_gltf": "PASS",
-    "unity_fbx": "imports with missing relative-texture noise and is not used by CH7.8",
-    "mitigation": "Probe and CH7.8 runner create a local .gdignore under FBX (Unity), leaving the authoritative glTF (Godot-Unreal) subtree visible to Godot."
-  },
-  "ch7_8a_implemented": {
-    "generic_skinned_pose_bridge": true,
-    "normalized_bone_map": true,
-    "minimum_overlap_guard": 0.6,
-    "pose_position_rotation_scale_copy": true,
-    "late_process_priority": 100,
-    "equipment_presenter_skinned_strategy": true,
-    "quaternius_pose_skeleton_hook": true,
-    "quaternius_avatar_yaw_root_parent": true,
-    "male_peasant_lab_profile": true,
-    "same_canonical_equipment_source": true,
-    "rigid_and_skinned_composition": true,
-    "ch6_first_person_refresh_path_reused": true,
-    "ch6_world_proxy_shadow_path_reused": true,
-    "graphical_launcher": "PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1",
-    "acceptance_runner": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
-  },
-  "windows_fix1_rerun": {
+  "confirmed_pre_body_replacement": {
     "focused_quaternius_rig_adapter": "PASS 45 assertions",
-    "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
-    "editor_import": "PASS",
-    "ch6_avatar_presenter": "PASS 43 assertions",
-    "ch6_character_lab": "PASS 11 assertions",
-    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
-    "ch6_first_person_jump_crouch_lab": "PASS 76 assertions",
-    "ch6_controllable_view_adapter_shadow": "PASS 66 assertions",
-    "ch6_shadow_proxy_contract": "PASS 21 assertions",
-    "ch6_acceptance_runner": "PASS",
-    "ch7_character_equipment_domain": "PASS 54 assertions",
-    "ch7_character_equipment_presenter": "PASS 447 assertions",
-    "ch7_quaternius_equipment_rig_adapter": "PASS 45 assertions",
-    "ch7_quaternius_equipment_lab": "PASS 64 assertions",
     "ch7_runner": "PASS",
     "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
-    "ch7_8_real_lab": "STALLED_OR_LONG_RUNNING_AFTER_RUNNER_STAGE_HEADER",
-    "last_visible_line": "[ch7_8_quaternius_skinned_garment_lab]",
-    "important_runner_observation": "The CH7.8 runner buffered native Godot stdout until process exit, so the existing GDScript phase prints were hidden while the process was running."
-  },
-  "fix1": {
-    "commit": "ea846e78f957ca45a91aa063aa65efc56a7ae5a4",
-    "change": "Restore the accepted planet_simulator.quaternius_equipment_rig_adapter.v2 report schema while keeping CH7.8 skinned_parent_ready as an additive optional field.",
-    "result": "CONFIRMED_BY_WINDOWS_FOCUSED_AND_FULL_CH7_RERUN"
-  },
-  "fix2_diagnostics": {
-    "streaming_runner_commit": "9d40b003e09dc6ab889de4124e967a0063828e6e",
-    "fine_grained_test_phase_commit": "1444896ee117ef975ea60e62822c4516cc330d32",
-    "runtime_setup_phase_commit": "8f9e1e1ed721ba028128a39f8bc19f964d170d3d",
-    "runner_streams_native_output_live": true,
-    "production_behavior_changed": false
-  },
-  "windows_fix2_focused_observation": {
-    "script": "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
-    "result": "PARSE_ERROR",
-    "primary_errors": [
-      "The member EquipmentDomain already exists in parent class QuaterniusEquipmentLab.",
-      "The member WearableCatalog already exists in parent class QuaterniusEquipmentLab."
+    "real_quaternius_garment_lab_after_fix3": "PASS 37 assertions",
+    "real_lab_phases_completed": [
+      "instantiate",
+      "ready",
+      "enter_first_person",
+      "equip_call",
+      "after_equip_frame1",
+      "after_equip_frame2",
+      "motion",
+      "rigid_composition",
+      "unequip",
+      "finish"
     ],
-    "secondary_error": "Invalid access to property or key player on a base object of type Node3D.",
-    "classification": "CHILD_CLASS_REDECLARED_INHERITED_CONSTANTS",
-    "interpretation": "The scene script failed to load, so the instantiated root became a plain Node3D. The missing player property is a cascade, not a separate runtime failure.",
-    "real_garment_runtime_reached": false
+    "real_equip_result": "OK, created=1, visual_count=1, canonical revision=1",
+    "real_unequip_result": "OK, removed=1, rigid visuals preserved=2, canonical revision=4",
+    "important_conclusion": "The exact Male_Peasant asset loads, instantiates, follows the 65-bone presentation pose, composes with accepted rigid equipment and survives equip/unequip lifecycle. The earlier stall was diagnostic buffering plus parser issues, not a garment-runtime hang."
   },
-  "fix3": {
-    "commit": "d796797cad50661004918494453211855011c497",
-    "change": "Remove EquipmentDomain and WearableCatalog redeclarations from QuaterniusSkinnedGarmentLab and use the already inherited parent-class constants.",
-    "parent_contract_confirmed": "QuaterniusEquipmentLab already declares both constants.",
-    "production_movement_changed": false,
-    "network_changed": false,
-    "collision_changed": false,
-    "equipment_domain_changed": false,
-    "pose_copy_changed": false,
-    "shadow_policy_changed": false
+  "body_replacement_candidate": {
+    "catalog_optional_body_replacement_scene": true,
+    "semantic_body_region_visual_hook": true,
+    "quaternius_coarse_regions": [
+      "body.region.torso",
+      "body.region.arms",
+      "body.region.legs",
+      "body.region.feet"
+    ],
+    "quaternius_regions_resolve_to_coarse_full_body_geometry": true,
+    "hide_mesh_nodes_not_quaternius_model_root": true,
+    "skeleton_remains_alive": true,
+    "rigid_bone_attachments_remain_alive": true,
+    "ref_counted_body_hide_state": true,
+    "duplicate_region_visuals_deduplicated": true,
+    "original_visibility_restored_exactly": true,
+    "head_scene_resolution": "direct *_FullBody -> *_Head sibling first; scored Base Character head fallback second",
+    "head_pose_bridge_uses_same_overlap_guard": true,
+    "synthetic_test": "tests/characters/test_ch7_8_body_region_replacement.gd",
+    "real_test_extended": "tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
+    "runner_extended": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
+  },
+  "implementation_commits": {
+    "catalog_body_replacement": "75481ac49eaf3b700f20aa015595cc86611f7693",
+    "generic_body_region_visuals": "1132b0d882534b424c86808b5f76ada93f0d281d",
+    "quaternius_coarse_regions": "194668e4ea13a714b828b93d4fdef12b6c7ee1d7",
+    "presenter_hide_restore": "47d575e3227008939ef73584ec2c738295a64bc4",
+    "quaternius_head_plus_outfit_lab": "e25fff27ac9154e75df94ee8fbe33e2df6f41bca",
+    "synthetic_body_replacement_test": "b6b35cbfec211911b229bf2ffddeb82b4b2a1563",
+    "synthetic_scene_ownership_fix": "16983ae592bdc7e5fc6bff86da4329dfa2a76f4a",
+    "real_body_replacement_test": "40359b44d1289fb6d36be5e659bc583de7bad121",
+    "runner_gate": "9d7e0777e53254fa22b5d1b2883791c379bf4c5b",
+    "documentation": "cec19326e886714895b111c470ebb061d9b7e99f"
   },
   "minimal_scope": {
     "one_skinned_outfit": true,
@@ -110,24 +86,38 @@
     "cloth_physics": false,
     "arbitrary_external_rig_retargeting": false,
     "body_morphing": false,
+    "shader_cut_masks": false,
     "runtime_mesh_surgery": false,
     "production_item_graph_bridge": false,
     "network_changes": false,
-    "collision_changes": false
-  },
-  "deferred_to_ch7_8b": {
-    "coarse_body_region_replacement_or_hiding": true,
-    "reason": "First prove exact-rig pose composition. Then choose the smallest hiding/replacement mechanism based on actual graphical clipping of Male_Peasant over the accepted base character."
+    "collision_changes": false,
+    "gameplay_body_changes": false
   },
   "next_gate": {
-    "focused_command": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
-    "expected_first_runtime_phases": [
-      "instantiate",
-      "add_child",
-      "super_ready_begin",
-      "super_ready_end",
-      "outfit_setup_begin"
-    ],
-    "purpose": "Confirm parser recovery and continue live localization into the real Male_Peasant runtime path."
+    "focused_synthetic": "godot --headless --path . --script res://tests/characters/test_ch7_8_body_region_replacement.gd",
+    "focused_real": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
+    "full": ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot",
+    "required": [
+      "synthetic body-region replacement PASS",
+      "real lab finds compatible Base Character head scene",
+      "head replacement reports exact 65-bone overlap",
+      "base full-body geometry is hidden while outfit is equipped",
+      "helmet and backpack remain composed while base body meshes are hidden",
+      "base geometry visibility is restored exactly on unequip",
+      "CH6 first-person world/shadow composition remains active",
+      "CharacterBody3D position and gameplay capsule remain unchanged",
+      "complete accepted CH7 runner remains PASS"
+    ]
+  },
+  "graphical_gate_after_automated_pass": {
+    "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
+    "controls": "O outfit | H helmet | B backpack | C FP/TP | Ctrl crouch | Space jump",
+    "inspect": [
+      "O shows head + Peasant outfit without the old full-body mesh fighting through it",
+      "idle/walk/run/jump/crouch remain visually coherent",
+      "helmet and backpack remain attached",
+      "first person does not show floating own garment/head while shadows remain",
+      "third person shows the composed character normally"
+    ]
   }
 }
