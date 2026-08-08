@@ -1,0 +1,71 @@
+{
+  "stage": "M7 FIX6 runtime performance hardening",
+  "branch": "feature/m7-runtime-performance-fix6",
+  "base": "10af3625122e5ebdf7d40e982492d2a488b7ccde",
+  "base_stage": "M7 FIX5 automated Windows gate pass candidate",
+  "decision": "IMPLEMENTED CANDIDATE - WINDOWS GATE AND LONG TWO-CLIENT STRESS REQUIRED",
+  "problem_evidence": {
+    "manual_session": "two-client LOCAL item pickup/drop stress",
+    "server_transient_stall_frames_observed": 71,
+    "server_max_pending_inputs_observed": 16,
+    "scheduler_backlog_ticks_at_health_samples": 0,
+    "client_prediction_lead_ticks_observed_up_to": 157,
+    "visible_symptom": "multi-second movement/network freeze while item actions were occurring",
+    "diagnosis": "realtime observability remained allocation-heavy: telemetry observe duplicated/shifted bounded arrays on every sample, peer transport statistics rebuilt a full boundary snapshot every authority frame, and dirty READY reports could materialize a full runtime report as often as every 250 ms"
+  },
+  "policies": {
+    "telemetry_sample_storage": "BOUNDED_RING_OVERWRITE_V2",
+    "m7_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
+    "peer_transport_statistics_interval_ms": 250,
+    "ready_report_min_interval_ms": 1000,
+    "report_write_policy": "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1",
+    "slow_process_frame_threshold_ms": 50.0
+  },
+  "production_changes": [
+    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or pop_front()s on the realtime path",
+    "M7 server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
+    "M7 READY diagnostic report materialization is coalesced to at most 1 Hz while initial READY and terminal reports remain synchronous",
+    "SERVER_HEALTH and realtime_foundation expose current/peak server process duration, slow-frame count, report snapshot build current/peak duration, and peer telemetry sampling current/peak duration"
+  ],
+  "correctness_invariants": [
+    "60 Hz authoritative fixed tick unchanged",
+    "FIX4 retained transient authority time unchanged",
+    "movement snapshot recovery suppression unchanged",
+    "32-event per-frame network drain unchanged",
+    "NX3 input wire schema and pressure compaction unchanged",
+    "Item Graph delta plus reliable gameplay revision synchronization unchanged",
+    "FIX5 server-authoritative frozen WORLD replica policy unchanged"
+  ],
+  "focused_test": "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
+  "runner": "VALIDATE_M7_RUNTIME_PERFORMANCE_FIX6.ps1",
+  "required_windows_gate": [
+    "FIX6 editor import/composition PASS on Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "FIX6 realtime hot-path regression PASS",
+    "FIX5 world-item consistency PASS",
+    "NX6 predicted item regression PASS",
+    "accepted inventory regression PASS",
+    "NX3 fixed tick PASS",
+    "NX4 prediction/reconciliation PASS",
+    "M7 two-client graphical process PASS"
+  ],
+  "long_manual_acceptance": {
+    "duration_minutes_min": 5,
+    "clients": 2,
+    "network_profile": "LOCAL",
+    "actions": "continuously move/turn while repeatedly dropping, picking up, splitting, stacking and transferring items from both clients",
+    "requirements": [
+      "zero INPUT_QUEUE_FULL",
+      "no sustained pending input growth into the dozens",
+      "scheduler backlog may rise transiently but returns to zero and dropped_time_seconds remains zero for stalls below the configured one-second retention window",
+      "prediction lead returns to the normal low-single-digit range instead of remaining in tens/hundreds of ticks",
+      "no hard multi-metre reconciliation correction and no visible backwards pull",
+      "item/player checksums still converge",
+      "SERVER_HEALTH report_snapshot_build_duration_ms and peer_telemetry_last_duration_ms make any remaining slow-frame source attributable"
+    ]
+  },
+  "assistant_execution": {
+    "full_repository_available": false,
+    "windows_gate_executed": false,
+    "note": "Full project execution remains authoritative on the user's Windows checkout."
+  }
+}
