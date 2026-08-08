@@ -2,7 +2,7 @@ extends SceneTree
 
 const ClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const InventoryFix9 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix9.gd")
-const RuntimeFix9 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix9.gd")
+const RuntimeFix8 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix8.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
 
 class FakeProfile:
@@ -71,7 +71,7 @@ func _test_fix9_source_contracts() -> void:
 	_assert(client_source.contains("process_unattributed"), "FIX9 cannot attribute residual client process time")
 
 	var world_source: String = FileAccess.get_file_as_string(
-		"res://scripts/world/testing/playground_view_relative_runtime_fix9.gd"
+		"res://scripts/world/testing/playground_view_relative_runtime_fix8.gd"
 	)
 	for token in [
 		"prediction_sync",
@@ -137,7 +137,12 @@ func _test_playground_composition_uses_fix9() -> void:
 	var instance = PlaygroundScene.instantiate()
 	_assert(instance != null, "FIX9 playground scene instantiates")
 	if instance != null:
-		_assert(instance.get_script() == RuntimeFix9, "playground scene does not select FIX9 frame-budget composition")
+		_assert(instance.get_script() == RuntimeFix8, "FIX9 must preserve accepted FIX8 playground script identity")
+		var source: String = FileAccess.get_file_as_string(
+			"res://scripts/world/testing/playground_view_relative_runtime_fix8.gd"
+		)
+		_assert(source.contains("InventoryRev6EnhancerFix9Script"), "accepted playground composition does not activate FIX9 inventory enhancer")
+		_assert(source.contains("FIX9_PRESENTATION_BUDGET_POLICY"), "accepted playground composition does not expose FIX9 presentation budget")
 		instance.free()
 
 
