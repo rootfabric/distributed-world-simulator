@@ -1,9 +1,10 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v13",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v14",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8_AUTOMATED_ACCEPTED_GRAPHICAL_OBSERVATION_PENDING",
+  "decision": "ACCEPTED",
+  "accepted_checkpoint": "CH7.8 skinned garment + fused-body head clip",
   "goal": "Prove one exact-rig Quaternius skinned outfit with presentation-only fused-body suppression and no cloth, gameplay-body or network complexity.",
   "selected_asset": {
     "outfit": "Male_Peasant.gltf",
@@ -97,22 +98,16 @@
     "combined_runner_marker": "CH7.8 Skinned Garment + fused-body head clip candidate runner: PASS",
     "important_conclusion": "All automated CH6, CH7 and CH7.8 gates passed with the real Male_Peasant garment, fused-body material suppression, rigid equipment composition, first-person/shadow composition, exact material restoration and unchanged gameplay body/capsule."
   },
-  "graphical_launch": {
+  "graphical_acceptance": {
     "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
     "startup": "PASS",
     "renderer": "OpenGL 3.3 Compatibility / NVIDIA GeForce RTX 4060",
     "runtime_setup": "PASS outfit_available=true suppression=true mode=MATERIAL_OVERRIDE clip_y=1.4836 mesh=SuperHero_Male",
     "observed_warning": "[Physics interpolation] Interpolated Camera3D triggered from outside physics process: FirstPersonCamera (possibly benign).",
-    "warning_classification": "NON_BLOCKING_FOR_CH7_8_UNLESS_VISIBLE_CAMERA_JITTER_IS_OBSERVED",
-    "visual_acceptance": "PENDING_USER_OBSERVATION",
-    "required_observation": [
-      "O leaves head, eyes and eyebrows visible while old body below the neck is clipped away",
-      "Peasant outfit covers the neck seam without obvious old-body clipping",
-      "idle/walk/run/jump/crouch remain coherent",
-      "helmet and backpack remain attached regardless of equip order",
-      "first-person presentation and shadows remain coherent",
-      "third-person presentation remains coherent"
-    ]
+    "warning_classification": "NON_BLOCKING_FOR_CH7_8",
+    "visual_acceptance": "PASS_BY_USER_OBSERVATION",
+    "user_observation": "все нормально",
+    "reported_visual_defects": []
   },
   "scope_guards": {
     "cloth_physics": false,
@@ -124,10 +119,6 @@
     "collision_changes": false,
     "gameplay_body_changes": false
   },
-  "next_gate": {
-    "type": "GRAPHICAL_USER_OBSERVATION_ONLY",
-    "no_automated_rerun_required_if_code_unchanged": true,
-    "on_visual_pass": "Mark CH7.8 ACCEPTED and keep clip_y=1.4836 unless seam tuning is visually needed.",
-    "on_visual_issue": "Tune presentation-only clip plane or material copy without changing equipment domain, gameplay body, collision or network contracts."
-  }
+  "final_conclusion": "CH7.8 is ACCEPTED. One real skinned outfit is proven end-to-end on the semantic equipment architecture with exact-rig pose composition, presentation-only fused-body suppression, accepted CH6 first-person/shadow composition, rigid helmet/backpack coexistence and no gameplay/network authority leakage.",
+  "next_expansion": "Widen the accepted mechanism to layered garments or a second outfit while preserving semantic channels, rig-specific presentation suppression and Item Graph separation."
 }
