@@ -2,19 +2,30 @@ class_name QuaterniusCharacterLab
 extends Node3D
 
 const AvatarPresenter = preload("res://scripts/characters/presentation/quaternius_avatar_presenter.gd")
+const FirstPersonAdapter = preload("res://scripts/characters/presentation/full_body_first_person_adapter.gd")
 
 const WALK_SPEED := 3.5
 const RUN_SPEED := 7.5
 const ACCELERATION := 24.0
 const GRAVITY := 18.0
 const JUMP_SPEED := 6.0
+const FIRST_PERSON_EYE_HEIGHT := 1.62
+const CAMERA_PITCH_MIN := -1.25
+const CAMERA_PITCH_MAX := 1.15
 
 var player: CharacterBody3D
 var avatar
+var first_person_adapter
 var camera_pivot: Node3D
+var camera_yaw: Node3D
+var camera_pitch: Node3D
 var camera: Camera3D
+var first_person_camera: Camera3D
+var third_person_arm: SpringArm3D
+var third_person_camera: Camera3D
 var status_label: Label
 var yaw_offset_deg := 0.0
+var first_person_mode := false
 
 
 func _ready() -> void:
@@ -26,8 +37,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var input_vector := Input.get_vector("ch4_left", "ch4_right", "ch4_forward", "ch4_back")
-	var forward := -camera_pivot.global_transform.basis.z
-	var right := camera_pivot.global_transform.basis.x
+	var forward := -camera_yaw.global_transform.basis.z
+	var right := camera_yaw.global_transform.basis.x
 	forward.y = 0.0
 	right.y = 0.0
 	forward = forward.normalized()
@@ -47,22 +58,44 @@ func _physics_process(delta: float) -> void:
 	else:
 		player.velocity.y -= GRAVITY * delta
 	player.move_and_slide()
-	avatar.apply_motion(player.velocity, Vector3.UP, desired)
+
+	var avatar_facing := desired
+	if first_person_mode:
+		avatar_facing = forward
+	avatar.apply_motion(player.velocity, Vector3.UP, avatar_facing)
 	_refresh_status()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		camera_pivot.rotation.y -= event.relative.x * 0.0025
-		camera_pivot.rotation.x = clampf(camera_pivot.rotation.x - event.relative.y * 0.0025, -0.55, 0.35)
+		camera_yaw.rotation.y -= event.relative.x * 0.0025
+		camera_pitch.rotation.x = clampf(
+			camera_pitch.rotation.x - event.relative.y * 0.0025,
+			CAMERA_PITCH_MIN,
+			CAMERA_PITCH_MAX
+		)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		elif event.keycode == KEY_V:
 			yaw_offset_deg = 180.0 if is_zero_approx(yaw_offset_deg) else 0.0
 			avatar.set_model_yaw_offset_degrees(yaw_offset_deg)
+		elif event.keycode == KEY_C:
+			set_first_person_mode(not first_person_mode)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func set_first_person_mode(enabled: bool) -> void:
+	first_person_mode = enabled
+	if first_person_camera != null:
+		first_person_camera.current = first_person_mode
+	if third_person_camera != null:
+		third_person_camera.current = not first_person_mode
+	camera = first_person_camera if first_person_mode else third_person_camera
+	if first_person_adapter != null:
+		first_person_adapter.set_first_person_enabled(first_person_mode)
+	_refresh_status()
 
 
 func _build_environment() -> void:
@@ -104,10 +137,11 @@ func _build_environment() -> void:
 
 func _build_player() -> void:
 	player = CharacterBody3D.new()
-	player.name = "CH4CharacterBody"
+	player.name = "CH5CharacterBody"
 	player.position = Vector3(0.0, 0.05, 0.0)
 	player.floor_snap_length = 0.35
 	add_child(player)
+
 	var collision := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.42
@@ -115,6 +149,7 @@ func _build_player() -> void:
 	collision.shape = capsule
 	collision.position.y = 0.93
 	player.add_child(collision)
+
 	avatar = AvatarPresenter.new()
 	avatar.name = "AvatarPresentation"
 	player.add_child(avatar)
@@ -122,19 +157,42 @@ func _build_player() -> void:
 		"run_threshold_mps": (WALK_SPEED + RUN_SPEED) * 0.5,
 		"model_yaw_offset_deg": yaw_offset_deg,
 	})
-	camera_pivot = Node3D.new()
-	camera_pivot.name = "CameraPivot"
-	camera_pivot.position = Vector3(0.0, 1.45, 0.0)
-	player.add_child(camera_pivot)
-	var arm := SpringArm3D.new()
-	arm.spring_length = 5.0
-	arm.margin = 0.2
-	camera_pivot.add_child(arm)
-	arm.add_excluded_object(player.get_rid())
-	camera = Camera3D.new()
-	camera.current = true
-	camera.fov = 70.0
-	arm.add_child(camera)
+
+	first_person_adapter = FirstPersonAdapter.new()
+	first_person_adapter.name = "FullBodyFirstPersonAdapter"
+	player.add_child(first_person_adapter)
+	first_person_adapter.bind_avatar(avatar)
+
+	camera_yaw = Node3D.new()
+	camera_yaw.name = "CameraYaw"
+	camera_yaw.position = Vector3(0.0, FIRST_PERSON_EYE_HEIGHT, 0.0)
+	player.add_child(camera_yaw)
+	camera_pivot = camera_yaw
+
+	camera_pitch = Node3D.new()
+	camera_pitch.name = "CameraPitch"
+	camera_yaw.add_child(camera_pitch)
+
+	first_person_camera = Camera3D.new()
+	first_person_camera.name = "FirstPersonCamera"
+	first_person_camera.near = 0.03
+	first_person_camera.fov = 75.0
+	camera_pitch.add_child(first_person_camera)
+
+	third_person_arm = SpringArm3D.new()
+	third_person_arm.name = "ThirdPersonSpringArm"
+	third_person_arm.spring_length = 5.0
+	third_person_arm.margin = 0.2
+	camera_pitch.add_child(third_person_arm)
+	third_person_arm.add_excluded_object(player.get_rid())
+
+	third_person_camera = Camera3D.new()
+	third_person_camera.name = "ThirdPersonCamera"
+	third_person_camera.near = 0.12
+	third_person_camera.fov = 70.0
+	third_person_arm.add_child(third_person_camera)
+
+	set_first_person_mode(false)
 
 
 func _build_ui() -> void:
@@ -151,14 +209,18 @@ func _refresh_status() -> void:
 	if status_label == null or avatar == null:
 		return
 	var report: Dictionary = avatar.create_report()
+	var fp_report: Dictionary = first_person_adapter.create_report() if first_person_adapter != null else {}
 	status_label.text = (
-		"CH4 Quaternius Character Lab\n"
-		+ "WASD — ходьба | Shift — бег | Space — прыжок | мышь — камера | V — развернуть модель\n"
-		+ "asset: %s\nsemantic: %s\nanimation: %s\nmodel: %s\nmatched bones: %d"
+		"CH5 Full-Body First-Person Lab\n"
+		+ "WASD — ходьба | Shift — бег | Space — прыжок | мышь — камера | C — 1/3 лицо | V — развернуть модель\n"
+		+ "view: %s\nasset: %s\nsemantic: %s\nanimation: %s\nhead mask: %s (%s)\nmodel: %s\nmatched bones: %d"
 		% [
+			"FIRST_PERSON" if first_person_mode else "THIRD_PERSON",
 			String(report.get("asset_mode", "")),
 			String(report.get("current_semantic", "")),
 			String(report.get("current_animation", "")),
+			"ON" if bool(fp_report.get("mask_applied", false)) else "OFF",
+			String(fp_report.get("mask_mode", "")),
 			String(report.get("model_path", "")),
 			int(report.get("matched_bones", 0)),
 		]
