@@ -60,7 +60,7 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
         }
     }
     $Text = $Output -join "`n"
-    $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
+    $HasFailureMarker = $Text -match '(?m)(^ERROR:|: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     if ($ExitCode -ne 0 -or $HasFailureMarker) {
         throw "$Name failed with exit code $ExitCode"
     }
