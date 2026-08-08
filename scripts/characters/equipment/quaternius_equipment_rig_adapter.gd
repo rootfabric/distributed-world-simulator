@@ -3,6 +3,12 @@ extends CharacterRigAdapter
 
 const RIG_PROFILE_ID := "quaternius.ual1.humanoid"
 const REQUIRED_ANCHORS := ["body.head", "gear.back"]
+const COARSE_BODY_REGIONS := [
+	"body.region.torso",
+	"body.region.arms",
+	"body.region.legs",
+	"body.region.feet",
+]
 const SEMANTIC_BONE_CANDIDATES := {
 	"body.root": ["root", "hips", "pelvis"],
 	"body.head": ["head"],
@@ -89,6 +95,26 @@ func resolve_anchor(_character_visual_root: Node, anchor_id: String) -> Node3D:
 	return attachment
 
 
+func supports_body_region(region_id: String) -> bool:
+	return region_id in COARSE_BODY_REGIONS
+
+
+func resolve_body_region_visuals(
+	_character_visual_root: Node,
+	region_id: String
+) -> Array[GeometryInstance3D]:
+	var result: Array[GeometryInstance3D] = []
+	if region_id not in COARSE_BODY_REGIONS or _presenter == null:
+		return result
+	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
+	if model_root != null:
+		# Universal Base Characters can expose the visible body as one coarse
+		# skinned mesh. Hiding the mesh nodes (not the model root) deliberately
+		# keeps Skeleton3D/BoneAttachment3D alive for animation, helmet and pack.
+		_collect_geometry_instances(model_root, result)
+	return result
+
+
 func resolve_pose_skeleton(_character_visual_root: Node) -> Skeleton3D:
 	return _target_skeleton if _target_skeleton != null and is_instance_valid(_target_skeleton) else null
 
@@ -120,6 +146,7 @@ func create_report() -> Dictionary:
 		"target_skeleton": _target_skeleton != null,
 		"bone_count": _target_skeleton.get_bone_count() if _target_skeleton != null else 0,
 		"skinned_parent_ready": resolve_skinned_parent(_presenter) != null,
+		"coarse_body_regions": COARSE_BODY_REGIONS.duplicate(),
 		"attachment_count": _attachments.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
