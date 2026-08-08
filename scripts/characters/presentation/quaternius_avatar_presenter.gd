@@ -38,6 +38,8 @@ var _target_skeleton: Skeleton3D
 var _source_skeleton: Skeleton3D
 var _animation_player: AnimationPlayer
 var _bone_map: Array[Vector2i] = []
+var _source_anchor_positions: Dictionary = {}
+var _target_anchor_positions: Dictionary = {}
 var _fallback_parts: Dictionary = {}
 
 
@@ -260,6 +262,8 @@ func _find_animation_for_semantic(semantic: String) -> String:
 
 func _build_bone_map() -> void:
 	_bone_map.clear()
+	_source_anchor_positions.clear()
+	_target_anchor_positions.clear()
 	matched_bones = 0
 	if _source_skeleton == null or _target_skeleton == null:
 		return
@@ -269,11 +273,16 @@ func _build_bone_map() -> void:
 	for source_index in range(_source_skeleton.get_bone_count()):
 		var key := _normalized_bone_name(_source_skeleton.get_bone_name(source_index))
 		if target_by_name.has(key):
-			_bone_map.append(Vector2i(source_index, int(target_by_name[key])))
+			var target_index := int(target_by_name[key])
+			_bone_map.append(Vector2i(source_index, target_index))
+			if key in ["root", "hips", "pelvis"]:
+				_source_anchor_positions[source_index] = _source_skeleton.get_bone_pose_position(source_index)
+				_target_anchor_positions[target_index] = _target_skeleton.get_bone_pose_position(target_index)
 	matched_bones = _bone_map.size()
 
 
 func _copy_animation_pose() -> void:
+	var preserve_crouch_pelvis_height := current_semantic in ["crouch_idle", "crouch_walk"]
 	for pair in _bone_map:
 		var source_index := pair.x
 		var target_index := pair.y
@@ -282,11 +291,31 @@ func _copy_animation_pose() -> void:
 			_source_skeleton.get_bone_pose_rotation(source_index)
 		)
 		var normalized := _normalized_bone_name(_source_skeleton.get_bone_name(source_index))
-		if normalized not in ["root", "hips", "pelvis"]:
-			_target_skeleton.set_bone_pose_position(
+		if normalized == "root":
+			if _target_anchor_positions.has(target_index):
+				_target_skeleton.set_bone_pose_position(
+					target_index,
+					_target_anchor_positions[target_index] as Vector3
+				)
+			continue
+		if normalized in ["hips", "pelvis"]:
+			var target_anchor: Vector3 = _target_anchor_positions.get(
 				target_index,
-				_source_skeleton.get_bone_pose_position(source_index)
+				_target_skeleton.get_bone_pose_position(target_index)
 			)
+			if preserve_crouch_pelvis_height:
+				var source_anchor: Vector3 = _source_anchor_positions.get(
+					source_index,
+					_source_skeleton.get_bone_pose_position(source_index)
+				)
+				var source_position := _source_skeleton.get_bone_pose_position(source_index)
+				target_anchor.y += source_position.y - source_anchor.y
+			_target_skeleton.set_bone_pose_position(target_index, target_anchor)
+			continue
+		_target_skeleton.set_bone_pose_position(
+			target_index,
+			_source_skeleton.get_bone_pose_position(source_index)
+		)
 	root_motion_applied = false
 
 
