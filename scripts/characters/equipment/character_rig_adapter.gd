@@ -1,6 +1,9 @@
 class_name CharacterRigAdapter
 extends RefCounted
 
+const BODY_SUPPRESSION_VISIBILITY := "VISIBILITY"
+const BODY_SUPPRESSION_MATERIAL_OVERRIDE := "MATERIAL_OVERRIDE"
+
 var rig_profile_id := ""
 var _anchor_paths: Dictionary = {}
 var _body_region_paths: Dictionary = {}
@@ -62,6 +65,24 @@ func resolve_body_region_visuals(
 	var region_root := resolve_body_region(character_visual_root, region_id)
 	if region_root != null:
 		_collect_geometry_instances(region_root, result)
+	return result
+
+
+# Convert a semantic body region into one or more suppression targets. Generic
+# rigs hide geometry nodes. Concrete rigs can override this to use another
+# presentation-only mechanism (for example a material clip on a fused mesh)
+# without changing the equipment domain or canonical body state.
+func resolve_body_region_suppression_targets(
+	character_visual_root: Node,
+	region_id: String
+) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for visual in resolve_body_region_visuals(character_visual_root, region_id):
+		result.append({
+			"key": "visibility:%d" % visual.get_instance_id(),
+			"mode": BODY_SUPPRESSION_VISIBILITY,
+			"node": visual,
+		})
 	return result
 
 
