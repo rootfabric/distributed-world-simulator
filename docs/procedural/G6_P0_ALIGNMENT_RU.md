@@ -3,8 +3,8 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Local role:** hydrology/fluid semantic, query and derived-presentation layer above G5 World Feature Graph
-**Current stage:** `G6.3 Runtime WaterSurfaceQuery Resolver — ACCEPTED`
-**Next stage:** `G6.4 Casual Visual River Lab`
+**Current stage:** `G6.4 Casual Visual River Lab — IMPLEMENTED CANDIDATE`
+**Next after acceptance:** `G6 FULL ACCEPTANCE`
 
 ## Canonical boundary
 
@@ -19,10 +19,10 @@ G6.3 read-only query resolver
         ↓
 WaterSurfaceSample
         ↓
-G6.4 derived presentation
+G6.4 replaceable derived presentation
 ```
 
-Обязательные инварианты:
+Required invariants:
 
 ```text
 FluidRegion != SurfaceCell
@@ -31,83 +31,66 @@ FluidRegion != InterestRegion
 FluidRegion != renderer object
 Fluid identity != LOD / quality / observer state
 query/index/cache != canonical identity
+visual width != canonical channel width
 G5 River FeatureId remains semantic owner
 ```
 
 ## GLOBAL-P0 synchronization
 
-Перед G6.3 `main` был повторно проверен:
+At G6.4 implementation start `main` still reports:
 
 ```text
 global_revision = GLOBAL-P0-2026-08-08-R1
 ```
 
-G6 использует byte-equivalent global program/network config этой revision. Локальная G6-ветка не редактирует global plan самостоятельно.
+G6 carries the same global revision/config. The branch does not edit the canonical global plan locally.
 
-Канонический global ledger был создан до появления активной G6-линии и его `active_sync_branches` пока не перечисляет G6. Это не блокирует source development при совпадающей revision. Перед full G6 acceptance требуется fresh `main` check; если global revision изменится, новая revision сначала фиксируется в `main`, затем синхронно переносится в G6.
+The global ledger was created before the active G6 line and still does not enumerate G6 in `active_sync_branches`. This does not block isolated source development while byte/revision alignment remains valid, but full G6 acceptance requires a fresh main/global check.
+
+A second fresh shared-baseline condition is now explicit: PR #43 carries the independently validated MW10 atomic-lock fix onto the shared G5 baseline. At G6.4 implementation time it is still open. G6.4 is presentation-only and does not depend on Matter, so it may proceed; **full G6 acceptance must re-check G5 and synchronize G6 if that shared-baseline fix (or its equivalent) lands.**
 
 ## P0-2 Spatial Domain Fabric
 
-G6.2 доказал, что canonical river geography переживает `PX/PZ` seam и LOD `2 / 4 / 8 / 12` без identity reroll.
+G6.2 already proved canonical river continuity through `PX/PZ` and LOD `2 / 4 / 8 / 12`.
 
-G6.3 принят с query contract:
-
-```text
-body_id
-frame_id
-position_m
-max_distance_m
-fluid_type_ids
-```
-
-без:
+G6.4 is allowed to call `CubeSphereAddressing` only to display/debug the seam. It must not convert cube face/cell into river/fluid identity.
 
 ```text
-SurfaceCellKey
-cube face
-LOD
-InterestRegionId
-AuthorityRegionId
-server id
+canonical river
+        ↓
+G2 addressing for debug presentation
+
+NOT:
+SurfaceCellKey / cube face -> FluidRegionId
 ```
 
-Будущий `WorldAddress`/Spatial Domain Fabric сможет ускорить выбор fluid candidates, но mapping/index не заменяет `FeatureId` или `FluidRegionId`.
+Future `WorldAddress` can accelerate candidate discovery without replacing `FeatureId` or `FluidRegionId`.
 
 ## P0-3 Unified Material Ontology
 
-G6 `FluidType` остаётся baseline semantic vocabulary для query/filtering:
-
-```text
-fluid-type/water
-fluid-type/methane
-...
-```
-
-Это не конкурирующая material ontology. Future `MaterialDefinitionId` должен проецироваться в fluid domain отдельно. Rendering shader/material name никогда не становится canonical fluid identity.
+G6 still uses `FluidType` as baseline fluid vocabulary. G6.4 may create Godot `StandardMaterial3D` presentation resources, but shader/material resource identity is not `MaterialDefinitionId` and is never canonical fluid identity.
 
 ## P0-4 Cross-Domain World Transaction Model
 
-`WaterSurfaceResolverV1` принят как read-only service:
+G6.4 is read-only presentation:
 
 ```text
-query -> derived sample
+canonical/query truth -> mesh/debug presentation
 ```
 
-Он не commit-ит fluid/Matter/Item/Construction mutation. Будущая выемка, замерзание, перекачка и затопление должны идти через общий durable world-operation path, а не через query service или best-effort RPC chain.
+It does not commit fluid, Matter, Item or Construction mutations. Future pumping/freezing/flooding/excavation must use the common durable world-operation path.
 
 ## P0-5 NX7 / NX8 / NX9
 
-G6 не создаёт authority registry.
+G6.4 creates no authority registry, network transport or persistence layer.
 
-NX8 позже может выбирать, какие fluid regions/query results/visual segments интересны клиенту и какой replication budget им дать, но:
+NX8 may later select which river visual segments/query results are worth sending/rendering, but:
 
 ```text
 interest region != FluidRegionId
-query cache != FluidRegionId
 LOD/ribbon/mesh patch != FluidRegionId
+client visibility != river existence
 ```
-
-NX9 может менять I/O/cache scheduling, но не canonical fluid/query semantics.
 
 ## Accepted G6 foundation
 
@@ -123,66 +106,62 @@ G6.3 accepted tested head:
 974fc6682abac058ea158cf11efbf44501805817
 ```
 
-Accepted runtime query semantics:
+## G6.4 implemented boundary
+
+Scene:
 
 ```text
-minimum distance_to_surface_m
-        ↓ tie
-lexical FluidRegionId
+res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
 ```
 
-Candidate registration order does not affect the winner. Fixed spline subdivisions are compute-detail only; future BVH/grid/index/cache remains a derived acceleration layer and cannot become canonical identity or authority.
-
-## G6.4 boundary
-
-G6.4 may add Godot presentation/runtime-lab code, but it must consume accepted canonical geography/query contracts.
-
-Allowed:
+Presentation consumes accepted data through:
 
 ```text
-simple water ribbon mesh
-debug centerline
-width/bank guides
-query probe markers
-camera/player lab
-LOD/cell debug overlay
+CasualRiverProviderV1.compile(...)
+WaterSurfaceQuery.create(...)
+WaterSurfaceResolverV1.resolve(...)
+WaterSurfaceSample
 ```
 
-Forbidden:
+Visual layers:
 
 ```text
-mesh instance = river identity
-renderer patch = FluidRegionId
-camera position changes canonical river
-visual LOD changes canonical query result
-lab owns authority/persistence
-new river truth recomputed only inside renderer
+water ribbon
+canonical centerline
+bank guides
+query normal/flow probes
+PX/PZ seam marker
+planet globe
 ```
 
-G6.4 is a presentation proof, not a second hydrology implementation.
+Presentation width is explicitly exaggerated for visibility on the globe. Exaggeration factors are display configuration only and must never feed canonical contracts/query results.
+
+G6.4 must not derive a new `FeatureId`, `FluidRegionId`, `SurfaceCellKey` ownership model or renderer-local river truth.
 
 ## Stop conditions
 
-Нужен global architecture review, если G6 понадобится:
+Global architecture review is required if G6 needs any of:
 
-- permanent river identity из SurfaceCellKey;
+- permanent river identity from `SurfaceCellKey`;
 - private fluid authority registry;
 - private global material ontology;
-- query cache/index как canonical state;
+- query cache/index as canonical state;
 - visual mesh as canonical truth;
-- durable mutation только в procedural cache;
-- identity, зависящая от camera/LOD/query order;
-- cross-domain mutation через best-effort RPC chain.
+- camera/LOD-dependent canonical identity;
+- durable mutation in procedural cache only;
+- cross-domain mutation through best-effort RPC chains.
 
 ## Merge / composition gate
 
 ```text
-[PASS] GLOBAL-P0-2026-08-08-R1 matched main at G6.3 implementation start
+[PASS] GLOBAL-P0-2026-08-08-R1 matched main at G6.4 implementation start
 [PASS] Feature != SurfaceCell
 [PASS] FluidRegion != SurfaceCell / AuthorityRegion / InterestRegion
 [PASS] G6.1 Windows acceptance — 74 assertions
 [PASS] G6.2 Windows continuity acceptance — 86 assertions
 [PASS] G6.3 Windows runtime query acceptance — 79 assertions
-[NEXT] G6.4 Casual Visual River Lab
-[PENDING FULL G6] fresh main/global revision check + full regression/composition gate
+[PASS] G6.4 does not modify accepted G6.0–G6.3 production semantics
+[PENDING WINDOWS] G6.4 automated headless/source gate
+[PENDING MANUAL] G6.4 graphical observation
+[PENDING FULL G6] fresh main + G5/shared-baseline sync check, then full world/core regression
 ```
