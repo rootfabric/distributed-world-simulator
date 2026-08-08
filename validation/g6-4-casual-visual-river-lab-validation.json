@@ -1,0 +1,70 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "checkpoint": "G6.4_CASUAL_VISUAL_RIVER_LAB",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "runtime_validation": "PENDING_WINDOWS_AUTOMATED_AND_GRAPHICAL",
+  "dependencies": {
+    "g6_1_casual_river_provider": "ACCEPTED",
+    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
+    "g6_3_runtime_water_surface_query": "ACCEPTED",
+    "g6_3_tested_head": "974fc6682abac058ea158cf11efbf44501805817"
+  },
+  "implementation": {
+    "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
+    "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
+    "manifest": "config/procedural/g6-4-casual-visual-river-lab.v1.json",
+    "contract_test": "tests/procedural/hydrology/g6_4_casual_visual_river_lab_acceptance.gd",
+    "automated_runner": "RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1",
+    "manual_launcher": "START_G6_4_VISUAL_RIVER_LAB.ps1"
+  },
+  "presentation_scope": {
+    "water_ribbon": true,
+    "canonical_centerline_debug": true,
+    "bank_guides": true,
+    "water_surface_query_probes": true,
+    "px_pz_seam_marker": true,
+    "planet_globe": true,
+    "water_width_exaggeration": 5200.0,
+    "bank_width_exaggeration": 3600.0
+  },
+  "architecture": {
+    "uses_g6_1_canonical_geography": true,
+    "uses_g6_3_water_surface_query": true,
+    "uses_g6_3_water_surface_sample": true,
+    "cube_sphere_addressing_debug_only": true,
+    "renderer_is_canonical_truth": false,
+    "visual_width_is_canonical_width": false,
+    "new_river_identity": false,
+    "new_fluid_identity": false,
+    "new_authority": false,
+    "new_persistence": false,
+    "new_network_transport": false,
+    "mutates_world_state": false
+  },
+  "required_automated_evidence": {
+    "accepted_dependency_chain_through_g6_3": "PASS_REQUIRED",
+    "g6_4_source_p0_contracts": "PASS_REQUIRED",
+    "g6_4_headless_scene_smoke": "PASS_REQUIRED",
+    "git_diff_check": "PASS_REQUIRED",
+    "working_tree": "CLEAN_REQUIRED"
+  },
+  "required_manual_evidence": {
+    "water_ribbon_visible": "PASS_REQUIRED",
+    "px_pz_seam_continuous": "PASS_REQUIRED",
+    "centerline_inside_ribbon": "PASS_REQUIRED",
+    "bank_guides_continuous": "PASS_REQUIRED",
+    "query_probe_normals_valid": "PASS_REQUIRED",
+    "flow_arrows_downstream": "PASS_REQUIRED",
+    "debug_toggles_work": "PASS_REQUIRED",
+    "camera_controls_work": "PASS_REQUIRED"
+  },
+  "shared_baseline_sync": {
+    "main_global_revision_at_implementation": "GLOBAL-P0-2026-08-08-R1",
+    "mw10_shared_baseline_pr_43_observed_open": true,
+    "g6_4_blocked_by_mw10_pr_43": false,
+    "full_g6_acceptance_requires_fresh_g5_main_sync_check": true
+  },
+  "next_if_accepted": "G6_FULL_ACCEPTANCE"
+}
