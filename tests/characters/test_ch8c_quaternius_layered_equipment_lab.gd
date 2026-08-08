@@ -37,9 +37,9 @@ func _run() -> void:
 	_assert(lab.inflation_reports.has(LOWER_PRESENTATION_ID), "CH8C graphical lab lower inflation report missing")
 	_assert(lab.inflation_reports.has(FEET_PRESENTATION_ID), "CH8C graphical lab feet inflation report missing")
 	if lab.inflation_reports.has(LOWER_PRESENTATION_ID):
-		_assert(is_equal_approx(float((lab.inflation_reports[LOWER_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0)), 0.006), "CH8C graphical lab lower inflation max mismatch")
+		_assert(is_equal_approx(float((lab.inflation_reports[LOWER_PRESENTATION_ID] as Dictionary).get("profile_max_offset_m", 0.0)), 0.006), "CH8C graphical lab lower configured inflation max mismatch")
 	if lab.inflation_reports.has(FEET_PRESENTATION_ID):
-		_assert(is_equal_approx(float((lab.inflation_reports[FEET_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0)), 0.007), "CH8C graphical lab feet inflation max mismatch")
+		_assert(is_equal_approx(float((lab.inflation_reports[FEET_PRESENTATION_ID] as Dictionary).get("profile_max_offset_m", 0.0)), 0.007), "CH8C graphical lab feet configured inflation max mismatch")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
