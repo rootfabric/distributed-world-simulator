@@ -7,12 +7,26 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 # Graph payloads replicate through ITEM/RESYNC contracts; the lightweight gameplay
 # snapshot is retained only to publish the gameplay revision advanced by the
 # canonical item command itself.
+#
+# FIX4 also makes transient authority stalls lossless. The default NX3 scheduler
+# deliberately drops excess wall-clock time after a catch-up cap, which is safe
+# for generic bounded simulation but wrong for a predicted player: a 300-400 ms
+# item/diagnostic stall makes the server simulate less travelled distance than the
+# client and the next snapshot pulls the character backwards. M7 therefore keeps
+# up to one second of transient fixed-tick debt, drains it in bounded batches and
+# suppresses movement snapshots while that debt is being recovered.
 
-const M7_NETWORK_EVENT_BUDGET_PER_FRAME: int = 64
+const M7_NETWORK_EVENT_BUDGET_PER_FRAME: int = 32
 const M7_READY_REPORT_MIN_INTERVAL_MS: int = 250
 const M7_REPORT_POLICY: String = "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1"
 const M7_EVENT_LOOP_POLICY: String = "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1"
 const M7_ITEM_REPLICATION_POLICY: String = "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2"
+const M7_FIXED_TICK_MAX_CATCH_UP_TICKS: int = 16
+const M7_FIXED_TICK_MAX_FRAME_DELTA_SECONDS: float = 1.0
+const M7_FIXED_TICK_BACKLOG_POLICY: String = "RETAIN_TRANSIENT_STALL_TIME_V1"
+const M7_STALL_SNAPSHOT_GUARD_SECONDS: float = 0.05
+const M7_INPUT_SNAPSHOT_BACKLOG_GUARD: int = 8
+const M7_MOVEMENT_SNAPSHOT_RECOVERY_POLICY: String = "SUPPRESS_WHILE_STALL_OR_AUTHORITY_BACKLOG_V1"
 
 var _join_item_materializations: int = 0
 var _join_item_materialization_failures: int = 0
@@ -33,6 +47,31 @@ var _report_last_write_duration_ms: float = 0.0
 var _report_max_write_duration_ms: float = 0.0
 var _item_gameplay_revision_snapshots_published: int = 0
 var _max_pending_input_count_observed: int = 0
+var _movement_snapshot_recovery_suppressions: int = 0
+var _transient_stall_frames: int = 0
+var _max_scheduler_backlog_ticks_observed: int = 0
+
+
+func setup(config: Dictionary) -> Dictionary:
+	var result: Dictionary = super.setup(config)
+	if not bool(result.get("success", false)):
+		return result
+	if _fixed_tick_scheduler == null:
+		return _failure("M7_FIXED_TICK_SCHEDULER_MISSING")
+	var scheduler_setup: Dictionary = _fixed_tick_scheduler.configure(
+		NX3_FIXED_TICK_RATE_HZ,
+		M7_FIXED_TICK_MAX_CATCH_UP_TICKS,
+		_server_tick,
+		M7_FIXED_TICK_MAX_FRAME_DELTA_SECONDS,
+		true
+	)
+	if not bool(scheduler_setup.get("success", false)):
+		_last_error_code = String(scheduler_setup.get("error_code", "M7_FIXED_TICK_RECOVERY_SETUP_FAILED"))
+		return scheduler_setup
+	# Base setup already emitted the deterministic initial READY report. Queue one
+	# refreshed report so diagnostics expose the runtime-specific scheduler policy.
+	_write_report("READY", false)
+	return result
 
 
 func _process(delta: float) -> void:
@@ -46,8 +85,29 @@ func _process(delta: float) -> void:
 	# inbound packets may wait one frame; fixed simulation must never wait behind
 	# diagnostic I/O or a large network drain.
 	_advance_fixed_simulation(delta)
-	_maybe_publish_movement_snapshot()
+	var scheduler_backlog_ticks: int = _scheduler_pending_catch_up_ticks()
+	_max_scheduler_backlog_ticks_observed = maxi(
+		_max_scheduler_backlog_ticks_observed, scheduler_backlog_ticks
+	)
+	var input_backlog_before_drain: int = _total_pending_input_count()
+	var transient_stall: bool = delta > M7_STALL_SNAPSHOT_GUARD_SECONDS
+	if transient_stall:
+		_transient_stall_frames += 1
+	if (
+		transient_stall
+		or scheduler_backlog_ticks > 0
+		or input_backlog_before_drain > M7_INPUT_SNAPSHOT_BACKLOG_GUARD
+	):
+		# Publishing a snapshot in the middle of catch-up would make a locally
+		# predicted player reconcile against a deliberately incomplete authority
+		# state and visibly snap backwards. Keep the dirty flag and publish once the
+		# server has caught up.
+		_movement_snapshot_recovery_suppressions += 1
+	else:
+		_maybe_publish_movement_snapshot()
 
+	# 32 events/frame is still >15x the sustained two-client LOCAL traffic seen in
+	# acceptance, while halving the amount of work a post-stall frame can inherit.
 	var polled: Dictionary = _boundary.poll_events(M7_NETWORK_EVENT_BUDGET_PER_FRAME)
 	if not bool(polled.get("success", false)):
 		_last_error_code = String(polled.get("error_code", "M3_SERVER_POLL_FAILED"))
@@ -88,11 +148,24 @@ func _process(delta: float) -> void:
 			"movement_commands_since_checkpoint": _movement_commands_since_checkpoint,
 			"pending_inputs": _total_pending_input_count(),
 			"max_pending_inputs": _max_pending_input_count_observed,
+			"scheduler_backlog_ticks": scheduler_backlog_ticks,
+			"max_scheduler_backlog_ticks": _max_scheduler_backlog_ticks_observed,
+			"movement_snapshot_recovery_suppressions": _movement_snapshot_recovery_suppressions,
+			"transient_stall_frames": _transient_stall_frames,
 			"report_thread_active": _report_thread != null,
 			"report_requests_coalesced": _report_requests_coalesced,
 			"report_last_write_duration_ms": _report_last_write_duration_ms,
 			"last_error_code": _last_error_code,
 		})
+
+
+func _scheduler_pending_catch_up_ticks() -> int:
+	if _fixed_tick_scheduler == null:
+		return 0
+	if _fixed_tick_scheduler.has_method("get_pending_catch_up_ticks"):
+		return int(_fixed_tick_scheduler.call("get_pending_catch_up_ticks"))
+	var scheduler_report: Dictionary = _fixed_tick_scheduler.get_report()
+	return int(scheduler_report.get("pending_catch_up_ticks", 0))
 
 
 func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -343,12 +416,26 @@ func get_join_item_materialization_report() -> Dictionary:
 
 func get_report() -> Dictionary:
 	var report: Dictionary = super.get_report()
+	var scheduler_report: Dictionary = {}
+	if _fixed_tick_scheduler != null:
+		scheduler_report = _fixed_tick_scheduler.get_report()
 	report["realtime_foundation"] = {
 		"report_policy": M7_REPORT_POLICY,
 		"event_loop_policy": M7_EVENT_LOOP_POLICY,
 		"item_replication_policy": M7_ITEM_REPLICATION_POLICY,
 		"network_event_budget_per_frame": M7_NETWORK_EVENT_BUDGET_PER_FRAME,
 		"ready_report_min_interval_ms": M7_READY_REPORT_MIN_INTERVAL_MS,
+		"fixed_tick_backlog_policy": M7_FIXED_TICK_BACKLOG_POLICY,
+		"fixed_tick_max_catch_up_ticks": M7_FIXED_TICK_MAX_CATCH_UP_TICKS,
+		"fixed_tick_max_frame_delta_seconds": M7_FIXED_TICK_MAX_FRAME_DELTA_SECONDS,
+		"scheduler_backlog_policy": String(scheduler_report.get("backlog_policy", "")),
+		"scheduler_pending_catch_up_ticks": int(scheduler_report.get("pending_catch_up_ticks", 0)),
+		"scheduler_retained_backlog_peak_ticks": int(scheduler_report.get("retained_backlog_peak_ticks", 0)),
+		"scheduler_dropped_time_seconds": float(scheduler_report.get("dropped_time_seconds", 0.0)),
+		"movement_snapshot_recovery_policy": M7_MOVEMENT_SNAPSHOT_RECOVERY_POLICY,
+		"movement_snapshot_recovery_suppressions": _movement_snapshot_recovery_suppressions,
+		"transient_stall_frames": _transient_stall_frames,
+		"max_scheduler_backlog_ticks_observed": _max_scheduler_backlog_ticks_observed,
 		"report_requests": _report_requests,
 		"report_requests_coalesced": _report_requests_coalesced,
 		"report_dirty": _report_dirty,
