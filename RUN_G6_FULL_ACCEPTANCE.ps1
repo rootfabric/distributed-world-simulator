@@ -101,9 +101,9 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "=== G6 FULL ACCEPTANCE: shared MW10 baseline ==="
 $G5Mw10RepositoryBlob = Invoke-GitText @("rev-parse", "$G5Ref`:$Mw10RepositoryPath")
-Assert-Equal $G5Mw10RepositoryBlob $ExpectedMw10RepositoryBlob "G5 does not yet contain the independently accepted MW10 atomic-lock repository blob. Integrate PR #43 into G5 first."
+Assert-Equal $G5Mw10RepositoryBlob $ExpectedMw10RepositoryBlob "G5 does not contain the accepted MW10 atomic-lock repository blob"
 $G5Mw10RetryBlob = Invoke-GitText @("rev-parse", "$G5Ref`:$Mw10RetryTestPath")
-Assert-Equal $G5Mw10RetryBlob $ExpectedMw10RetryTestBlob "G5 does not yet contain the independently accepted MW10 lock-release retry test blob. Integrate PR #43 into G5 first."
+Assert-Equal $G5Mw10RetryBlob $ExpectedMw10RetryTestBlob "G5 does not contain the accepted MW10 lock-release retry test blob"
 
 $LocalMw10RepositoryBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $Mw10RepositoryPath))
 $LocalMw10RetryBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $Mw10RetryTestPath))
@@ -116,10 +116,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "git diff --check failed for G5...G6"
 }
 
-$ManualRecordPath = Join-Path $RootDir "validation/g6-4-casual-visual-river-lab-validation.json"
-$ManualRecord = Get-Content -LiteralPath $ManualRecordPath -Raw | ConvertFrom-Json
-if ([string]$ManualRecord.decision -ne "FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED") {
-    throw "G6.4 Fix4 manual graphical PASS record is missing or stale"
+$G64RecordPath = Join-Path $RootDir "validation/g6-4-casual-visual-river-lab-validation.json"
+$G64Record = Get-Content -LiteralPath $G64RecordPath -Raw | ConvertFrom-Json
+if ([string]$G64Record.decision -ne "ACCEPTED") {
+    throw "G6.4 acceptance record is missing or stale"
 }
 
 $HadGodotBin = Test-Path Env:\GODOT_BIN
@@ -130,7 +130,7 @@ try {
     $env:GODOT_BIN = $GodotPath
     $env:BREAKPOINT_RUNTIME_DISABLED = "1"
 
-    Write-Host "=== G6 FULL ACCEPTANCE: G6.4 Fix4 closes G6.0-G6.4 chain ==="
+    Write-Host "=== G6 FULL ACCEPTANCE: rerun accepted G6.0-G6.4 chain ==="
     Invoke-PowerShellChild (Join-Path $RootDir "RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1") @("-GodotPath", $GodotPath)
 
     Write-Host "=== G6 FULL ACCEPTANCE: MW10 atomic-lock fault injection ==="
