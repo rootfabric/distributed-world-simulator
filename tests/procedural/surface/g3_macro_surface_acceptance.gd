@@ -114,6 +114,8 @@ func _test_height_bounds_and_macro_variation() -> void:
 
 
 func _test_local_continuity() -> void:
+	# Probe multiple places with arc-scale offsets. G3 does not promise slope or
+	# erosion semantics yet, only that its kilometer-scale macro field is smooth.
 	for latitude_deg in [-60.0, -25.0, 0.0, 30.0, 65.0]:
 		for longitude_deg in [-145.0, -70.0, 0.0, 77.0, 149.0]:
 			var base := _direction_from_lat_lon(latitude_deg, longitude_deg)
@@ -127,6 +129,8 @@ func _test_local_continuity() -> void:
 
 
 func _test_cube_face_seam_continuity() -> void:
+	# Every same-level seam through LOD3 must agree at the two shared geometric
+	# edge corners. The provider never sees cell identity, only the shared 3D point.
 	for lod in range(0, 4):
 		var side: int = 1 << lod
 		for face in SurfaceCellKey.FACES:
@@ -186,17 +190,31 @@ func _test_coarse_fine_shared_vertices() -> void:
 				for cc in child_corners:
 					if _vector(Array(pc)).distance_to(_vector(Array(cc))) <= 0.00000001:
 						matched = true
-						_check(_approx(_height(provider, _vector(Array(pc)) * RADIUS_M), _height(provider, _vector(Array(cc)) * RADIUS_M), 0.000001), "coarse/fine shared vertex height stable")
+						_check(_approx(
+							_height(provider, _vector(Array(pc)) * RADIUS_M),
+							_height(provider, _vector(Array(cc)) * RADIUS_M),
+							0.000001
+						), "coarse/fine shared vertex height stable")
 						break
 				_check(matched, "parent corner survives refinement")
 
 
 func _test_geo_kernel_and_lod_invariance() -> void:
-	var environment := PlanetEnvironment.create("planet-environment/g3-neutral", "gravity-model/unspecified", "atmosphere-model/unspecified", "temperature-model/unspecified", "fluid-catalog/none", "weathering-model/none", "material-catalog/unspecified", {})
+	var environment := PlanetEnvironment.create(
+		"planet-environment/g3-neutral",
+		"gravity-model/unspecified",
+		"atmosphere-model/unspecified",
+		"temperature-model/unspecified",
+		"fluid-catalog/none",
+		"weathering-model/none",
+		"material-catalog/unspecified",
+		{}
+	)
 	var recipe := PlanetRecipe.create(RECIPE_ID, "1.0.0", environment, [provider.get_descriptor()])
 	var definition := PlanetDefinition.create(BODY_ID, SEED, RECIPE_ID, SHAPE_ID, RADIUS_M, MANIFEST_VERSION)
 	var kernel = GeoKernel.new()
 	_ok(kernel.configure(definition, recipe, [provider]), "GeoKernel with casual macro provider")
+
 	var direction := _direction_from_lat_lon(37.25, -122.5)
 	var position := direction * RADIUS_M
 	var query := SurfaceQuery.create(BODY_ID, [position.x, position.y, position.z], [HEIGHT_FIELD])
@@ -237,7 +255,11 @@ func _test_provider_source_boundary() -> void:
 	var path := "res://scripts/simulation/procedural/providers/casual_macro_terrain_provider_v1.gd"
 	var source := FileAccess.get_file_as_string(path)
 	_check(not source.is_empty(), "macro provider source exists")
-	for forbidden in ["extends Node", "extends SceneTree", "MeshInstance3D", "ArrayMesh", "ImmediateMesh", "RenderingServer", "Terrain3D", "VoxelLodTerrain", "Camera3D", "SurfaceCellKey", "CubeSphereAddressing", "face_uv", "cell_uv", "RandomNumberGenerator", "randf(", "randi("]:
+	for forbidden in [
+		"extends Node", "extends SceneTree", "MeshInstance3D", "ArrayMesh", "ImmediateMesh",
+		"RenderingServer", "Terrain3D", "VoxelLodTerrain", "Camera3D", "SurfaceCellKey",
+		"CubeSphereAddressing", "face_uv", "cell_uv", "RandomNumberGenerator", "randf(", "randi(",
+	]:
 		_check(not source.contains(forbidden), "provider has no forbidden coupling: %s" % forbidden)
 	_check(source.contains("body-fixed-unit-direction-v1"), "provider declares global body-fixed domain")
 
