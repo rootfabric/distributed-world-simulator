@@ -50,6 +50,19 @@ func resolve_body_region(character_visual_root: Node, region_id: String) -> Node
 	return character_visual_root.get_node_or_null(_body_region_paths[region_id])
 
 
+# Optional presentation hook for SKINNED_GARMENT. Rigid-only rigs can leave
+# this unresolved and the equipment presenter will reject the strategy without
+# mutating canonical equipment state.
+func resolve_pose_skeleton(character_visual_root: Node) -> Skeleton3D:
+	return _find_first_skeleton(character_visual_root)
+
+
+# Parent under which a skinned garment should be instantiated. Generic rigs use
+# their visual root; concrete rigs may return a compensated/yaw presentation root.
+func resolve_skinned_parent(character_visual_root: Node) -> Node3D:
+	return character_visual_root as Node3D if character_visual_root is Node3D else null
+
+
 func anchor_ids() -> Array[String]:
 	return _sorted_keys(_anchor_paths)
 
@@ -60,11 +73,23 @@ func body_region_ids() -> Array[String]:
 
 func create_report() -> Dictionary:
 	return {
-		"schema": "planet_simulator.character_rig_adapter.v1",
+		"schema": "planet_simulator.character_rig_adapter.v2",
 		"rig_profile_id": rig_profile_id,
 		"anchors": anchor_ids(),
 		"body_regions": body_region_ids(),
 	}
+
+
+func _find_first_skeleton(root: Node) -> Skeleton3D:
+	if root == null:
+		return null
+	if root is Skeleton3D:
+		return root as Skeleton3D
+	for child in root.get_children():
+		var found := _find_first_skeleton(child)
+		if found != null:
+			return found
+	return null
 
 
 func _sorted_keys(values: Dictionary) -> Array[String]:
