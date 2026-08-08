@@ -63,6 +63,16 @@ CH4 сначала ищет анимации, встроенные в выбра
 
 Без внешних файлов runner проверяет presentation contract на процедурном fallback. Fallback существует только как fail-safe и unit-test fixture.
 
+### Fix1 — Windows PowerShell и регистр glTF URI
+
+Официальный Standard ZIP может содержать относительные glTF URI, регистр которых отличается от реального имени каталога, например `textures/...` при каталоге `Textures/...`. Windows открывает такой путь, но Godot предупреждает, что экспорт на case-sensitive платформы будет сломан.
+
+Перед editor import runner и PLAY теперь запускают `quaternius_asset_preflight.gd`. Он проходит только локальные `.gltf`, находит относительные `uri` и исправляет только регистр сегментов по реальному filesystem. Геометрия, числовые поля glTF, `.bin` и текстуры не переписываются.
+
+Windows PowerShell 5.1 также представляет native stderr как `NativeCommandError`. Godot пишет обычные warnings в stderr даже при exit code 0, поэтому CH4 runner временно переводит native invocation в non-terminating режим, после чего принимает решение по реальному exit code и маркерам `FAIL`, `SCRIPT ERROR`, `Parse Error`, `Compile Error`.
+
+`PLAY_CH4_QUATERNIUS_CHARACTER_LAB.ps1` теперь сам выполняет preflight и полный editor import. Поэтому запуск lab больше не зависит от того, был ли до него вручную успешно завершён focused runner.
+
 Управление lab:
 
 - `WASD` — ходьба;
