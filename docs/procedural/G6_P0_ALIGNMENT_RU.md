@@ -3,8 +3,8 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Local role:** hydrology/fluid semantic layer above G5 World Feature Graph
-**Current stage:** `G6.2 cross-cell / cross-LOD continuity — IMPLEMENTED CANDIDATE`
-**Next after acceptance:** `G6.3 runtime WaterSurfaceQuery resolver`
+**Current stage:** `G6.2 cross-cell / cross-LOD continuity — ACCEPTED`
+**Next stage:** `G6.3 runtime WaterSurfaceQuery resolver`
 
 ## Canonical boundary
 
@@ -36,9 +36,19 @@ G5 River FeatureId remains semantic owner
 
 До появления общего `WorldAddress` G6 использует G5 body/reference-frame/feature semantics. Одна река может пересекать много generation/representation cells; cell/LOD являются производным addressing, а не identity.
 
-Будущая интеграция должна маппировать canonical fluid bounds/anchors в Spatial Domain Fabric, а не вводить `RiverChunkId`.
+G6.2 теперь это доказал на seam-river через `PX/PZ` и LOD `2 / 4 / 8 / 12`:
 
-G6.2 теперь формально проверяет эту границу на seam-river, проходящей через `PX/PZ` и LOD `2 / 4 / 8 / 12`.
+```text
+representation cell set changes
+FeatureId stays stable
+FluidRegionId stays stable
+RiverSpline.spline_id stays stable
+RiverChannelProfile.profile_id stays stable
+provider manifest stays stable
+canonical spline/surface checksums stay stable
+```
+
+Будущая Spatial Domain Fabric должна маппировать canonical fluid bounds/query scope в `WorldAddress`, не заменяя river/fluid identity собственным region/chunk identity.
 
 ## P0-3 Unified Material Ontology
 
@@ -58,15 +68,21 @@ fluid mutation
 
 ## P0-5 NX7 / NX8 / NX9
 
-G6 не создаёт authority registry. NX8 может выбирать fluid representation по interest/budget, но `interest region / LOD / ribbon / mesh patch != FluidRegionId`. NX9 может менять I/O scheduling/cache, но не canonical fluid semantics.
+G6 не создаёт authority registry. NX8 может выбирать fluid representation/query workload по interest/budget, но:
+
+```text
+interest region / LOD / ribbon / mesh patch != FluidRegionId
+```
+
+NX9 может менять I/O scheduling/cache, но не canonical fluid semantics.
 
 ## G6.1 accepted boundary
 
-`CasualRiverProviderV1` принят как deterministic compiler из stable G5 river/valley semantics в принятые G6.0 data contracts.
+`CasualRiverProviderV1` принят как deterministic compiler из stable G5 river/valley semantics в G6.0 data contracts.
 
 Зафиксировано:
 
-- G5 `River FeatureId` остаётся semantic owner; provider не создаёт второй `WorldFeature`;
+- G5 `River FeatureId` остаётся semantic owner;
 - `FluidRegionId` и `RiverSpline.spline_id` не зависят от cell/LOD/camera/query order;
 - channel profile deterministic и versioned;
 - geometry revision может менять checksums без reroll canonical identities;
@@ -75,58 +91,64 @@ G6 не создаёт authority registry. NX8 может выбирать fluid
 - provider не владеет persistence/authority/network transport;
 - renderer/SceneTree/runtime random не требуются.
 
-Windows focused acceptance на tested head `b8f36d17dc8ba138e6b215968aa0e651eec9ccd1`:
+Accepted G6.1 Windows evidence:
 
 ```text
 G5 World Feature Graph: PASS (249 assertions)
 G5 feature/cell identity: PASS (94 assertions)
 G6.0 fluid contracts: PASS (169 assertions)
 G6.1 CasualRiverProviderV1: PASS (74 assertions)
+```
+
+## G6.2 accepted boundary
+
+Accepted tested head:
+
+```text
+444811c0ac98a133844cd7ec0869a6cf0a261f11
+```
+
+Windows Fix1 acceptance:
+
+```text
+G6.2 cross-cell/cross-LOD continuity: PASS (86 assertions)
 git diff --check: PASS
 working tree: clean
 ```
 
-Canonical acceptance record: `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`.
+`SurfaceCellKey` и `CubeSphereAddressing` использовались только как representation addressing. G6.2 не создал `RiverChunkId`, runtime query resolver, renderer, authority или persistence.
 
-## G6.2 implemented boundary
-
-G6.2 добавляет только deterministic fixture + acceptance proof. Принятый G6.1 provider и G6.0 contracts не изменяются.
-
-Proof matrix:
+Canonical record:
 
 ```text
-source longitude: 34°
-mouth longitude:  58°
-cube faces:        PX / PZ
-LOD:               2 / 4 / 8 / 12
+docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md
 ```
 
-Для одной canonical river geography проверяется:
+## G6.3 boundary
+
+Следующий checkpoint вводит runtime `WaterSurfaceQuery` resolver поверх уже принятой canonical geography.
+
+Разрешённое направление:
 
 ```text
-representation cell set changes
-FeatureId stays stable
-FluidRegionId stays stable
-RiverSpline.spline_id stays stable
-RiverChannelProfile.profile_id stays stable
-provider manifest stays stable
-canonical spline/surface checksums stay stable
+body/frame position + query parameters
+        ↓
+G6.3 resolver
+        ↓
+canonical FluidRegion / river surface sample
 ```
 
-`SurfaceCellKey` и `CubeSphereAddressing` используются только как representation addressing. G6.2 не создаёт `RiverChunkId`, runtime query resolver, renderer, authority или persistence.
-
-Focused Windows gate:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1
-```
-
-До этого прогона:
+Caller не обязан знать:
 
 ```text
-G6.2 = IMPLEMENTED CANDIDATE
+SurfaceCellKey
+cube face
+LOD
+renderer mesh patch
+server interest region
 ```
+
+G6.3 не должен превращать query cache/index в canonical authority или identity. Spatial index/cache допускаются только как derived acceleration layer.
 
 ## Stop conditions
 
@@ -151,7 +173,8 @@ G6.2 = IMPLEMENTED CANDIDATE
 [PASS] renderer remains derived presentation
 [PASS] G6.0 post-P0 dependency regression
 [PASS] G6.1 Windows focused acceptance — 74 assertions
-[PENDING WINDOWS] G6.2 cross-cell / cross-LOD continuity
+[PASS] G6.2 Windows continuity acceptance — 86 assertions
+[NEXT] G6.3 runtime WaterSurfaceQuery resolver
 ```
 
 Канонический общий план: `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
