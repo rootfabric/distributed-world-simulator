@@ -13,43 +13,35 @@ G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
-G6.4 FIX4 IMPLEMENTED CANDIDATE
+G6.4 FIX4 MANUAL GRAPHICAL PASS / AUTOMATED RERUN FOLDED INTO FULL GATE
+G6 FULL ACCEPTANCE IMPLEMENTED CANDIDATE — SHARED BASELINE BLOCKED
 ```
 
-Fix3 Windows automated gate passed on `3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298`, but the manual close-up remained visually inconclusive because the visual G3 recipe contained only four octaves and therefore no source frequencies below roughly 75 km.
+G6.4 manual observation confirmed observer-driven refinement to LOD 10 with subtle higher-frequency diagnostic G3 detail while the river presentation and canonical IDs remain stable.
 
-Fix4 keeps accepted G3 provider code unchanged and changes only the debug recipe:
-
-```text
-600 km base wavelength
-8 octaves
-0.58 persistence
-~4.7 km minimum source wavelength
-```
-
-The lab still composes three independent representation layers:
-
-```text
-G2 SurfaceLodSelector
-        -> adaptive SurfaceCellKey cover
-
-accepted G3 CasualMacroTerrainProviderV1
-        -> adaptive macro terrain mesh + higher-frequency lab recipe
-
-accepted G6 canonical river + WaterSurfaceQuery
-        -> adaptive derived water ribbon
-```
-
-Standalone G6.4 runs temporarily set `BREAKPOINT_RUNTIME_DISABLED=1`, so the unrelated MCP runtime bridge cannot fail the visual lab because port `127.0.0.1:9081` is occupied.
-
-Run:
+The next executable checkpoint is now:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
-.\START_G6_4_VISUAL_RIVER_LAB.ps1
+.\RUN_G6_FULL_ACCEPTANCE.ps1
 ```
 
-Manual expectation: `W` shrinks the LOD grid and must reveal genuinely new macro-height structure; `S` coarsens it. FeatureId and FluidRegionId must stay stable. River valley carving is not part of G6.4 and remains scheduled for G8 Geomorphology.
+The runner first performs repository/synchronization checks, then reruns G6.4 Fix4 (which includes G6.0-G6.3), executes the MW10 atomic-lock retry fault injection, and finally runs the full world/core regression.
+
+Current intentional blocker: PR #43 with the independently accepted MW10 atomic-lock fix has not yet been integrated into `feature/g5-world-feature-graph`. Full acceptance therefore requires this order:
+
+```text
+PR #43 -> G5 shared baseline
+        ↓
+resync G6 on updated G5
+        ↓
+RUN_G6_FULL_ACCEPTANCE.ps1
+        ↓
+G6 SOURCE_ACCEPTED
+        ↓
+G7 Semantic Field Fabric
+```
+
+Do not copy the MW10 fix privately into G6; shared baseline ownership stays with G5/integration.
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
