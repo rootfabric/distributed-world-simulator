@@ -6,6 +6,15 @@ Prove one real rigged outfit on the accepted CH7 semantic equipment architecture
 
 This stage is intentionally **not** a full wardrobe system and **not** cloth simulation.
 
+## Final status
+
+```text
+checkpoint: CH7.8 skinned garment + fused-body head clip
+decision:   ACCEPTED
+```
+
+Automated Windows acceptance passed the complete CH6, CH7 and CH7.8 composition, including the real Quaternius `Male_Peasant.gltf` asset. The graphical lab was then accepted by user observation with no reported visual defects.
+
 ## Selected asset
 
 The real Windows asset probe selected:
@@ -62,9 +71,9 @@ The current Standard archive was inspected on Windows after URI normalization an
 `Superhero_Male_FullBody.gltf` resolves to:
 
 ```text
-Skeleton3D                         65 bones
-├─ Eyebrows      skinned, 1 surface
-├─ Eyes          skinned, 1 surface
+Skeleton3D                          65 bones
+├─ Eyebrows       skinned, 1 surface
+├─ Eyes           skinned, 1 surface
 └─ SuperHero_Male skinned, 1 surface
 ```
 
@@ -78,11 +87,11 @@ SuperHero_Male -> T_Superhero_Male_Dark.png
 
 Important consequence: the face/head and body are fused into the single `SuperHero_Male` mesh and its single material surface. Mesh-level or surface-level hiding cannot preserve the face.
 
-The current Standard archive also did not expose a standalone Head/Upperbody character glTF in the inspected export. CH7.8 therefore does not depend on a separate head scene.
+The inspected current Standard archive also did not expose a standalone Head/Upperbody character glTF. CH7.8 therefore does not depend on a separate head scene.
 
 ## CH7.8C fused-body suppression
 
-The chosen minimal solution is a presentation-only **head clip material**.
+The accepted minimal solution is a presentation-only **head clip material**.
 
 While the outfit is equipped:
 
@@ -111,7 +120,7 @@ Primary rule:
 clip_local_y = Eyes AABB min Y - 0.20 m
 ```
 
-For the inspected asset:
+For the accepted asset:
 
 ```text
 Eyes min Y ~= 1.6836 m
@@ -161,16 +170,57 @@ The presenter reference-counts both target modes and restores the exact original
 
 ## CH6 first-person and shadow composition
 
-The accepted CH6 `WORLD_PROXY` shadow implementation shares the source Mesh/Skin and copies `material_override` from the source, including during proxy synchronization. Therefore the same head clip presentation is expected to apply to the first-person shadow proxy without creating a second shadow-specific mask path.
+The accepted CH6 `WORLD_PROXY` shadow implementation shares the source Mesh/Skin and copies `material_override` from the source, including during proxy synchronization. The same head clip therefore propagates through the accepted first-person shadow path without a second shadow-specific mask system.
 
-The CH7.8 real lab continues to assert:
+The accepted real lab proves:
 
 - garment meshes are recaptured into CH6 world presentation;
 - garment meshes are recaptured into CH6 shadow proxy;
 - first-person shadow proxy remains active;
 - crouch keeps the accepted presentation-only `-0.35 m` ground compensation;
 - gameplay `CharacterBody3D` position and capsule remain unchanged;
-- helmet/backpack compose before or after outfit equip.
+- helmet/backpack compose before or after outfit equip;
+- material suppression restores exactly on outfit removal.
+
+## Acceptance evidence
+
+### CH7.8-A — Asset probe — PASS
+
+`Male_Peasant.gltf` selected with exact 65/65 bone overlap and four skinned meshes.
+
+### CH7.8-B — One skinned outfit — PASS
+
+Real Windows lab completed equip, motion, crouch, rigid composition and unequip with 37 assertions before fused-body suppression was added.
+
+### CH7.8-C1 — Generic body suppression — PASS
+
+Synthetic body-region replacement/hide lifecycle passed 65 assertions.
+
+### CH7.8-C2 — FullBody structure probe — PASS
+
+Real Windows probe proved the 3-mesh / 3-surface layout and fused `SuperHero_Male` head+body surface.
+
+### CH7.8-C3 — Fused-body head clip — PASS
+
+Focused material contract passed 19 assertions. Real rigid-first suppression order passed 49 assertions.
+
+### CH7.8-D — CH6 composition — PASS
+
+Accepted CH6 regression remained green and the real garment lab passed with first-person/world-shadow composition active.
+
+### CH7.8-E — Lifecycle — PASS
+
+The final real Quaternius garment laboratory passed 67 assertions including equip, pose composition, crouch, rigid equipment coexistence, fused-body suppression, exact restore and unchanged gameplay body/capsule.
+
+### Combined runner — PASS
+
+```text
+CH7.8 Skinned Garment + fused-body head clip candidate runner: PASS
+```
+
+### Graphical observation — PASS_BY_USER_OBSERVATION
+
+The graphical laboratory launched successfully with `MATERIAL_OVERRIDE`, `clip_y=1.4836`, and the user reported that everything looked normal. No graphical defect was reported.
 
 ## Explicitly deferred
 
@@ -184,39 +234,13 @@ The CH7.8 real lab continues to assert:
 - network/persistence integration;
 - high-volume optimization for hundreds of clipped characters.
 
-For a high population of characters, a pre-generated head-only asset may later be preferable to fragment `discard`. CH7.8 first proves the semantic/presentation composition with one character before optimizing that representation.
+For a high population of characters, a pre-generated head-only asset may later be preferable to fragment `discard`. CH7.8 proves the semantic/presentation composition first; representation optimization can remain rig-specific.
 
-## Acceptance ladder
+## Next expansion
 
-### CH7.8-A — Asset probe — PASS
+The accepted mechanism can now widen without changing the equipment domain:
 
-`Male_Peasant.gltf` selected with exact 65/65 bone overlap and four skinned meshes.
-
-### CH7.8-B — One skinned outfit — PASS
-
-Real Windows lab completed equip, motion, crouch, rigid composition and unequip with 37 assertions before body suppression was added.
-
-### CH7.8-C1 — Generic body suppression — PASS
-
-Synthetic body-region replacement/hide lifecycle passed 65 assertions.
-
-### CH7.8-C2 — FullBody structure probe — PASS
-
-Real Windows probe proved the 3-mesh / 3-surface layout and the fused `SuperHero_Male` head+body surface.
-
-### CH7.8-C3 — Fused-body head clip — IMPLEMENTED, Windows rerun required
-
-Pending gates prove:
-
-- synthetic clip material contract;
-- Quaternius semantic regions resolve only to the fused body mesh;
-- one material suppression target is deduplicated across torso/arms/legs/feet;
-- Eyes/Eyebrows remain visible;
-- head clip survives motion, crouch and rigid-equipment composition;
-- original material override is restored exactly on unequip.
-
-### CH7.8-D — CH6 composition — rerun required with head clip
-
-### CH7.8-E — lifecycle — rerun required with head clip
-
-Only after the combined runner and graphical observation pass should the system widen to a second outfit or more granular layered clothing.
+1. add a second real outfit to prove the strategy is not asset-specific;
+2. split presentation into layered upper/lower/feet garments using existing semantic channels;
+3. add armor/EVA presentation profiles on the same slots and conflict rules;
+4. only after the presentation layer is stable, connect the already planned production `ItemGraphEquipmentSource` and network/persistence bridge.
