@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v4",
+  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v5",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "5d408029969ba8953011c559fc1376af357bca58",
   "base_checkpoint": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation — ACCEPTED",
-  "delivery": "CH7 rigid equipment candidate fix3 / production Quaternius semantic anchor resolution",
-  "decision": "FIX3_PENDING_WINDOWS_GODOT_RERUN",
+  "delivery": "CH7 rigid equipment fix3 / universal semantic equipment + production Quaternius composition",
+  "decision": "AUTOMATED_ACCEPTANCE_PASS_PENDING_GRAPHICAL_USER_OBSERVATION",
   "scope": {
     "production_lunar_player_changed": false,
     "network_runtime_changed": false,
@@ -26,65 +26,69 @@
     "ch7_8_skinned_garment": false,
     "ch7_9_full_lifecycle_acceptance": false
   },
-  "windows_rerun_after_fix2": {
+  "fix3": {
+    "production_quaternius_anchor_resolution": "PASS",
+    "semantic_back_resolution": "exact aliases first, then nearest spine/chest/torso ancestor from resolved head",
+    "semantic_root_resolution": "exact aliases first, then deterministic root ancestor",
+    "diagnostic_on_bind_failure": "missing_required_anchors + available_bones",
+    "secondary_nil_failure_removed": true
+  },
+  "windows_fix3_validation": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "focused_quaternius_rig_adapter": "PASS 45 assertions",
+    "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
+    "editor_import": "PASS",
+    "ch6_avatar_presenter": "PASS 43 assertions",
+    "ch6_character_lab": "PASS 11 assertions",
+    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
+    "ch6_first_person_jump_crouch_lab": "PASS 76 assertions",
+    "ch6_controllable_view_adapter_shadow": "PASS 66 assertions",
+    "ch6_shadow_proxy_contract": "PASS 21 assertions",
     "ch6_acceptance_runner": "PASS",
     "ch7_character_equipment_domain": "PASS 54 assertions",
-    "ch7_character_equipment_presenter": "PASS 44 assertions",
-    "ch7_quaternius_equipment_rig_adapter": "PASS 40 assertions",
-    "ch7_quaternius_equipment_lab": "FAIL DURING REAL ASSET SETUP",
-    "observed_primary_error": "MISSING_REQUIRED_EQUIPMENT_ANCHOR",
-    "observed_secondary_error": "equipment presenter remained null and the test attempted get_visual on Nil",
-    "interpretation": "The synthetic rig contract was valid, but the real imported Quaternius skeleton used bone naming not covered by the initial exact candidate table. This is a rig-adapter compatibility issue, not an equipment-domain or CH6 regression."
+    "ch7_character_equipment_presenter": "PASS 447 assertions",
+    "ch7_quaternius_equipment_rig_adapter": "PASS 45 assertions",
+    "ch7_quaternius_equipment_lab": "PASS 62 assertions",
+    "ch7_runner": "PASS",
+    "graphical_lifecycle_cycles": "PASS 3/3",
+    "generic_presenter_lifecycle_stress_cycles": 100
   },
-  "fix3": {
-    "changes": [
-      "Quaternius rig adapter expands spine naming compatibility for spine01/spine02/spine03 and Blender-style normalized spine001/spine002/spine003 variants.",
-      "If gear.back is not found by name, the adapter walks the actual Skeleton3D parent chain upward from the resolved head and chooses the nearest ancestor whose normalized name contains spine, chest, upperchest or torso.",
-      "body.root can be derived deterministically from the root ancestor of the resolved head when exact root/hips/pelvis naming is unavailable.",
-      "Rig bind failure now reports missing_required_anchors and the complete available_bones list before clearing temporary adapter state.",
-      "Quaternius rig test adds an independent hierarchy-based skeleton whose back bone is named BackSpineJoint, proving semantic parent-chain resolution rather than exact-name dependence.",
-      "Graphical equipment test now fails fast after setup failure and prints equipment_last_result instead of cascading into a secondary Nil.get_visual error."
-    ],
-    "commits": [
-      "512844dc4a5abbb4872e7ffe43b947d8adf5eede",
-      "518a682800899bd9ad3330de39b589b8d5ac7d94",
-      "c1a4c08982cdc6bcc1093e38ee5201b4fe9f9830"
-    ]
-  },
-  "lifecycle_safety": {
-    "generic_presenter_stress_cycles": 100,
-    "real_asset_graphical_cycles": 3,
-    "real_asset_cycle_yields_process_frame": true,
+  "invariants_confirmed_by_automated_tests": {
+    "canonical_equipment_snapshot_semantics": true,
+    "multi_channel_single_item_supported": true,
+    "same_semantic_equipment_across_independent_rigs": true,
+    "production_quaternius_skeleton_anchor_mapping": true,
+    "fallback_rig_anchor_mapping": true,
+    "dynamic_equipment_enters_ch6_world_render_layer": true,
+    "dynamic_equipment_enters_first_person_shadow_proxy": true,
+    "equipment_changes_do_not_move_character_body": true,
+    "equipment_changes_do_not_modify_gameplay_capsule": true,
     "snapshot_reapply_idempotent": true,
-    "removed_visual_detached_before_queue_free": true
+    "equip_unequip_lifecycle_no_duplicate_visuals": true
   },
-  "tests": {
-    "ch6_regression_runner": "RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1",
-    "ch7_runner": "RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1",
-    "domain": "tests/characters/test_ch7_character_equipment_domain.gd",
-    "generic_presenter": "tests/characters/test_ch7_character_equipment_presenter.gd",
-    "quaternius_rig_adapter": "tests/characters/test_ch7_quaternius_equipment_rig_adapter.gd",
-    "quaternius_equipment_lab": "tests/characters/test_ch7_quaternius_equipment_lab.gd",
-    "graphical_lab": "scenes/labs/character/quaternius_equipment_lab.tscn",
-    "graphical_launcher": "PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1"
-  },
-  "windows_acceptance_gate": {
-    "focused_rig_command": "& $Godot --headless --path . --script res://tests/characters/test_ch7_quaternius_equipment_rig_adapter.gd",
-    "focused_lab_command": "& $Godot --headless --path . --script res://tests/characters/test_ch7_quaternius_equipment_lab.gd",
-    "full_test_command": ".\\RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "play_command": ".\\PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
-    "required_automated": [
-      "complete CH6 acceptance runner PASS",
-      "CH7 equipment domain PASS",
-      "CH7 generic presenter 100-cycle lifecycle + second rig PASS",
-      "CH7 Quaternius synthetic + hierarchy + fallback rig mapping PASS",
-      "CH7 real Quaternius FP/TP/shadow graphical composition PASS"
+  "manual_graphical_gate": {
+    "launcher": ".\\PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
+    "controls": {
+      "helmet_toggle": "H",
+      "backpack_toggle": "B",
+      "first_third_person_toggle": "C",
+      "crouch": "Ctrl",
+      "jump": "Space"
+    },
+    "required_observations": [
+      "H equips and unequips helmet on the character head",
+      "B equips and unequips backpack on the character back",
+      "helmet and backpack follow idle/walk/run/jump/crouch presentation",
+      "first-person own helmet/backpack do not float visibly in camera",
+      "first-person character and equipped-item shadows remain visible",
+      "third-person body and equipment remain visible",
+      "crouch keeps gameplay capsule foot plane unchanged and equipment follows the same presentation grounding correction"
     ],
-    "diagnostic_on_remaining_bind_failure": "Copy the phase=setup_failed JSON. fix3 includes missing_required_anchors and available_bones so the exact production skeleton mapping can be completed without guesswork."
+    "status": "PENDING_USER_OBSERVATION"
   },
   "deferred": {
-    "ch7_8": "one skinned garment + body-region hiding",
-    "production_item_graph_bridge": "ItemGraphEquipmentSource after synchronization with production Item Graph line"
+    "ch7_8": "one skinned garment + semantic body-region hiding",
+    "production_item_graph_bridge": "ItemGraphEquipmentSource after synchronization with production Item Graph line",
+    "atomic_equipment_replace": "future authoritative Item Graph transaction"
   }
 }
