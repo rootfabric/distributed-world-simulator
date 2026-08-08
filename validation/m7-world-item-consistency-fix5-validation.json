@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.validation.m7_world_item_consistency_fix5.v1",
+  "schema": "planet_simulator.validation.m7_world_item_consistency_fix5.v2",
   "stage": "M7 FIX5 - authoritative world-item consistency",
   "branch": "feature/m7-world-item-consistency-fix5",
   "base_commit": "cda01de1f112d999dd477bc53dae38eb7f6fd2b0",
@@ -43,6 +43,32 @@
       "existing accepted inventory/FIX4 baseline and optional multi-process regression remain in the full runner"
     ]
   },
+  "windows_gate": {
+    "tested_head": "e829137f1604742aaf37aced2bd16485b8fe0475",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "editor_import": "PASS",
+      "fix5_world_item_consistency": "PASS - 49 assertions, 0 failures",
+      "nx6_predicted_item_interactions": "PASS - 957 assertions"
+    },
+    "full_gate_before_test_fix": {
+      "accepted_inventory_regression": "PASS",
+      "fix8_direct_regression": "PASS - 9 assertions",
+      "nx3_fixed_tick": "PASS - 6188 assertions, 0 failures",
+      "nx4_prediction": "FAIL - 706 assertions, 2 source-contract failures",
+      "nx4_failures": [
+        "playground enables local prediction",
+        "playground reports NX4 presentation mode"
+      ],
+      "diagnosis": "FIX5 moved the legacy playground implementation into playground_runtime_base.gd and kept playground_runtime.gd as a thin derived layer. NX4 already had _load_script_source_chain for inherited client runtime checks, but still read only the playground leaf file. Both asserted NX4 strings remain present in the inherited base, so this was a test-composition false negative, not a production prediction regression."
+    },
+    "test_fix": {
+      "commit": "665d3806baf293be73fa360bc40221d3b2d50b32",
+      "change": "NX4 playground source-contract inspection now uses _load_script_source_chain exactly like the inherited graphical client runtime inspection.",
+      "production_files_changed": false,
+      "rerun_required": true
+    }
+  },
   "assistant_side_validation": {
     "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
     "checks": [
@@ -65,5 +91,5 @@
       "no SCRIPT ERROR, Parse Error, Compile Error or Failed to load script diagnostics"
     ]
   },
-  "decision": "FIX5 CANDIDATE - WINDOWS FULL GATE AND MANUAL TWO-CLIENT GRAPHICAL ACCEPTANCE REQUIRED"
+  "decision": "FIX5 CANDIDATE - FOCUSED WINDOWS GATE PASS; NX4 SOURCE-CONTRACT FALSE NEGATIVE CORRECTED; RERUN FULL GATE AND MANUAL TWO-CLIENT GRAPHICAL ACCEPTANCE REQUIRED"
 }
