@@ -9,30 +9,11 @@
 
 ## Почему понадобился fix2
 
-Первый graphical run подтвердил, что lab реально показывает:
-
-```text
-water ribbon
-canonical centerline
-bank guides
-query probes
-PX/PZ seam
-```
-
-Наблюдалось:
-
-```text
-samples: 97
-query probes: 7
-seam transitions: 1
-faces: PX / PZ
-```
+Первый graphical run подтвердил, что lab реально показывает water ribbon, canonical centerline, bank guides, query probes и `PX/PZ` seam. Наблюдалось `97 samples`, `7 query probes`, `1 seam transition`, `PX / PZ`.
 
 Но визуальная река была статической полосой: observer distance не менял representation density, не было активного LOD cover. Поэтому G6.4 не принят.
 
 ## Fix2
-
-Fix2 использует уже принятый G2 LOD pipeline:
 
 ```text
 canonical G6 river
@@ -48,8 +29,6 @@ representation LOD per river segment
 adaptive ribbon sample density
 ```
 
-Это именно representation LOD, а не новый river generator.
-
 Canonical invariants:
 
 ```text
@@ -59,15 +38,13 @@ RiverSpline     unchanged by LOD
 query semantics unchanged by LOD
 ```
 
-## Visual additions
-
 Scene:
 
 ```text
 res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
 ```
 
-Теперь показывает:
+Visual layers:
 
 ```text
 blue ribbon       derived water representation
@@ -90,8 +67,6 @@ FeatureId
 FluidRegionId
 ```
 
-При `W` observer приближается к поверхности: G2 leaf cover refine-ится, `Max LOD` и river sample density должны расти. При `S` representation coarsen-ится.
-
 Controls:
 
 ```text
@@ -110,24 +85,12 @@ R          reset
 
 ## Automated proof
 
-Runner:
-
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
 ```
 
-Fix2 source gate требует использование:
-
-```text
-SurfaceLodPolicy
-SurfaceLodSelector
-BodyFixedPosition
-adaptive river representation_lod
-SurfaceLodGrid
-```
-
-Headless scene smoke дополнительно вычисляет far и near profiles и обязан доказать:
+Headless scene smoke must prove:
 
 ```text
 near.max_lod > far.max_lod
@@ -135,35 +98,35 @@ near.planned_river_samples > far.planned_river_samples
 near.selection_hash != far.selection_hash
 ```
 
-Runner требует явный runtime marker:
+Runner requires explicit marker:
 
 ```text
 G6.4 Casual Visual River Lab: PASS (... max_lod=... river_lod=.....)
 ```
 
-Parse/load error не может считаться PASS.
+Parse/load error cannot count as PASS.
 
 ## Manual graphical acceptance
 
-После automated PASS:
+After automated PASS:
 
 ```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-Нужно проверить:
+Verify:
 
 ```text
-LOD grid виден
-W -> клетки около observer дробятся
-W -> Max LOD растёт
-W -> River samples растёт
-S -> клетки coarsen-ятся
-S -> River samples уменьшается
-FeatureId не меняется
-FluidRegionId не меняется
-river остаётся непрерывной на PX/PZ
-centerline/banks/probes остаются согласованными
+LOD grid visible
+W -> nearby cells refine
+W -> Max LOD grows
+W -> River samples grows
+S -> cells coarsen
+S -> River samples shrinks
+FeatureId stable
+FluidRegionId stable
+river continuous across PX/PZ
+centerline/banks/probes remain aligned
 ```
 
 ## Architecture boundary
@@ -187,17 +150,15 @@ renderer mesh -> canonical fluid truth
 
 ## Decision
 
-До повторного automated + graphical LOD evidence:
-
 ```text
 G6.4 = FIX2 IMPLEMENTED CANDIDATE
 ```
 
-После green gate:
+After green automated + graphical gate:
 
 ```text
 G6.4 = ACCEPTED
 next = G6 FULL ACCEPTANCE
 ```
 
-Перед full G6 acceptance остаётся обязательным fresh main/G5/GLOBAL-P0/shared-baseline sync check.
+Before full G6 acceptance a fresh main/G5/GLOBAL-P0/shared-baseline sync check remains mandatory.
