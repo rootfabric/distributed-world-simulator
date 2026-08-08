@@ -154,10 +154,10 @@ func _refresh_status() -> void:
 	var regions: Array = []
 	if body_suppression_coordinator != null:
 		regions = body_suppression_coordinator.create_report().get("active_regions", [])
-	status_label.text += (
+	var layered_status := (
 		"\n\nCH8C — Layered Garments\n"
 		+ "U — upper | L — lower | K — feet\n"
 		+ "upper: %s | lower: %s | feet: %s\n"
 		+ "suppressed: %s"
-		% [upper_state, lower_state, feet_state, ", ".join(regions)]
 	)
+	status_label.text += layered_status % [upper_state, lower_state, feet_state, ", ".join(regions)]
