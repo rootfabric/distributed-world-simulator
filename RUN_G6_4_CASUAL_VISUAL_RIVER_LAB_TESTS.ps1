@@ -68,7 +68,7 @@ try {
     Write-Host "G6.4 Casual Visual River Lab fix4 automated gate passed."
     Write-Host "Headless proof covers adaptive G2 selection, river sampling, real G3 triangle refinement, and an 8-octave diagnostic detail recipe."
     Write-Host "BreakpointRuntimeBridge is disabled for this standalone gate to avoid port 9081 collisions."
-    Write-Host "Manual graphical detail observation is still required before G6.4 acceptance."
+    Write-Host "G6.4 manual graphical acceptance is already recorded; this rerun verifies automated evidence."
 }
 finally {
     if ($HadGodotBin) { $env:GODOT_BIN = $PreviousGodotBin }
