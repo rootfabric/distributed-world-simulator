@@ -12,6 +12,12 @@ static func create(source_scene: PackedScene, height_profile: Array) -> Dictiona
 	if not bool(profile_result.get("success", false)):
 		return profile_result
 	var profile: Array = profile_result.get("details", {}).get("profile", [])
+	var profile_min_offset := INF
+	var profile_max_offset := -INF
+	for point in profile:
+		var configured_offset := float((point as Dictionary).get("offset_m", 0.0))
+		profile_min_offset = minf(profile_min_offset, configured_offset)
+		profile_max_offset = maxf(profile_max_offset, configured_offset)
 
 	var instance = source_scene.instantiate()
 	if not instance is Node3D:
@@ -49,6 +55,8 @@ static func create(source_scene: PackedScene, height_profile: Array) -> Dictiona
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
 		"scene": packed,
 		"profile": profile.duplicate(true),
+		"profile_min_offset_m": 0.0 if profile_min_offset == INF else profile_min_offset,
+		"profile_max_offset_m": 0.0 if profile_max_offset == -INF else profile_max_offset,
 		"mesh_count": inflated_meshes,
 		"vertex_count": inflated_vertices,
 		"min_offset_m": 0.0 if observed_min_offset == INF else observed_min_offset,
