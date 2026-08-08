@@ -23,7 +23,7 @@ shadow_enabled = true
 position = Vector3(12.5, 5.8, 13.8)
 current = true
 fov = 52.0
-near = 0.05
+near = 0.001
 far = 100.0
 
 [node name="HUD" type="CanvasLayer" parent="."]
@@ -31,8 +31,8 @@ far = 100.0
 [node name="Panel" type="PanelContainer" parent="HUD"]
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 720.0
-offset_bottom = 330.0
+offset_right = 830.0
+offset_bottom = 390.0
 
 [node name="Margin" type="MarginContainer" parent="HUD/Panel"]
 theme_override_constants/margin_left = 14
@@ -44,4 +44,4 @@ theme_override_constants/margin_bottom = 12
 
 [node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
 theme_override_font_sizes/font_size = 16
-text = "G6.4 — Casual Visual River Lab"
+text = "G6.4 — Casual Visual River Lab + G2 adaptive LOD"
