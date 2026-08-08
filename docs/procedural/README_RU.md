@@ -20,6 +20,12 @@ G6.4 FIX2 IMPLEMENTED CANDIDATE — adaptive visual river LOD
 G6 FULL ACCEPTANCE NEXT after G6.4
 ```
 
+G6.4 fix2 functional head:
+
+```text
+353a73f08f6d07840145e61f79b197e5773a73a2
+```
+
 Global revision:
 
 ```text
