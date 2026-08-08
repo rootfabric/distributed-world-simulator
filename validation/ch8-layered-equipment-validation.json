@@ -1,14 +1,17 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v12",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v13",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX7_TOPOLOGY_AWARE_OCCLUSION_PENDING_WINDOWS_RERUN",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX7_FIX1_PENDING_WINDOWS_RERUN",
   "goal": "Remove base-body penetration through open/torn trousers and footwear while preserving skin through real garment holes and below actual cuffs.",
   "windows_acceptance_so_far": {
     "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
     "ch8b": "ACCEPTED — selective real parts 39 assertions, real presenter 46 assertions, combined regression PASS",
     "ch8c_core_before_visual_tuning": "PASS 69 assertions",
+    "fix6_surface_fit_factory": "PASS 18 assertions",
+    "fix6_surface_fit_overlay": "PASS 37 assertions",
+    "fix6_graphical_lab_smoke": "PASS 30 assertions",
     "runtime_error_gate": "ENABLED — full CH8 runner rejects any Godot ERROR line"
   },
   "graphical_tuning_history": {
@@ -27,9 +30,25 @@
       "decision": "REJECTED_VISUALLY"
     },
     "fix6_surface_fit": {
+      "automated": "PASS 18 / 37 / 30 assertions",
       "observation": "Outward material grow preserves the full leg, but the more voluminous base body still penetrates the trousers in several visible areas.",
       "classification": "FIXED_NORMAL_OFFSET_CANNOT_GUARANTEE_SEPARATION_ACROSS_BODY_AND_GARMENT_SHAPES",
       "decision": "REJECTED_VISUALLY_FIX7_REQUIRED"
+    }
+  },
+  "fix7_windows_history": {
+    "attempt1": {
+      "result": "PARSE_FAIL",
+      "script": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
+      "error": "Cannot infer the type of snapshot variable because the value does not have a set type.",
+      "location": "res://scripts/characters/lab/quaternius_layered_equipment_lab.gd:181",
+      "classification": "HEADLESS_GDSCRIPT_DYNAMIC_COLLABORATOR_TYPE_INFERENCE",
+      "topology_algorithm_executed": false
+    },
+    "fix1": {
+      "commit": "14bbc494c20293c9a894d84bb1cc094085a0fda1",
+      "change": "Replace var snapshot := equipment_source.get_snapshot() with a dynamic local var snapshot = ...; preserve topology and canonical semantics.",
+      "status": "PENDING_WINDOWS_RERUN"
     }
   },
   "canonical_contract": {
@@ -71,7 +90,7 @@
       "builder": "GarmentTopologyOcclusionBuilder",
       "sampling": "garment triangle vertices + edge midpoints + centroids in rig/model space",
       "spatial_acceleration": "uniform proximity grid",
-      "base_mesh_strategy": "preserve all source vertex/bone/weight arrays and filter only triangle indices",
+      "base_mesh_strategy": "preserve source vertex/bone/weight arrays and filter only triangle indices",
       "recomposition": "always rebuild from exact original body mesh for the current aggregate garment topology set",
       "source_asset_mutation": false,
       "shared_material_mutation": false,
@@ -80,24 +99,11 @@
       "accepted_pose_bridge_changed": false,
       "ch7_8_full_outfit_path_changed": false
     },
-    "topology_boundary_rule": "A body sample outside the real garment AABB plus a 6 mm pad cannot be removed, preserving skin below the actual cuff. Garment holes have no nearby triangle samples in their interior and therefore can retain body triangles.",
     "presentation_only": true,
     "item_graph_changes": false,
     "network_changes": false,
     "gameplay_body_changes": false,
     "collision_changes": false
-  },
-  "fix7_commits": {
-    "topology_builder": "53d9cd49eb5e3ef9ff5f6192b19c19a6e328991e",
-    "topology_builder_original_mesh_recompose": "e2a977cbb68b6b0d477a24440106ac282487c6e4",
-    "topology_catalog": "845a95ce460220ab73231f345a9256ed334b5d96",
-    "rig_target_contract": "748f2078975cfa170a5ad49bc84141264b5283e5",
-    "topology_coordinator": "596033c3048e32008570a2f662558217e64ca315",
-    "lab_integration": "3b3fad15113dde737d090d7d009edb4dafa79f28",
-    "focused_real_gate": "efa23bae40419949c5bed7cc00f2bc581076fc90",
-    "graphical_lab_gate": "c7829e5532bb1f038ad041005df3761774ef16fd",
-    "runner": "c6b28fb943a6508aa9112d298bf97b5e9f89d9f0",
-    "design_doc": "75ef0db54a3f5390a3bf0b9b7d87d12ca2f4b238"
   },
   "pending_windows_gates": {
     "focused_topology_occlusion": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
