@@ -3,6 +3,7 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 const FixedTickInputBufferFix10 = preload(
 	"res://scripts/network/simulation/fixed_tick_input_buffer_fix10.gd"
 )
+const NetworkUtilsFix10 = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 # FIX10 keeps FIX7/FIX6 authority timing, backpressure, persistence and item
 # replication unchanged. It adds one bounded movement acknowledgement sidecar to
@@ -11,13 +12,15 @@ const FixedTickInputBufferFix10 = preload(
 # that input. This gives reconciliation a command-stream baseline rather than a
 # wall-clock phase comparison.
 #
-# The sidecar is deliberately compact on the wire. A verbose dictionary pushed
-# the compact unreliable movement frame above Godot ENet's 1392-byte MTU in the
-# exact Windows two-client process test (1418 bytes). Godot then had to use an
-# unreliable fragment, which is incompatible with the strict physical transfer
-# binding used by the project and could quarantine the peer. The canonical
-# gameplay snapshot itself is unchanged; only the non-canonical peer-local ACK
-# sidecar uses a fixed positional array.
+# Fix1 compacted the ACK sidecar because a verbose dictionary pushed one exact
+# Windows two-client movement frame to 1418 bytes, above Godot ENet's reported
+# 1392-byte unreliable MTU. Fix2 adds a hard preflight invariant on top of that:
+# the exact canonical ProtocolFrame bytes are measured before transport queue
+# commit. Oversized realtime snapshots first retry without the optional ACK; if
+# the no-ACK compact frame is still over the conservative budget, that realtime
+# snapshot is skipped rather than fragmented. The accepted strict physical
+# channel/transfer-mode binding remains unchanged, as do reliable full/resync
+# snapshots and canonical gameplay snapshot checksums.
 #
 # Accepted FIX7/FIX6 source-contract compatibility anchors. The actual behavior
 # remains inherited; keep the fixed-simulation anchor before the network-drain
@@ -40,12 +43,23 @@ const FixedTickInputBufferFix10 = preload(
 
 const FIX10_PREDICTION_ACK_POLICY: String = "SERVER_ECHOED_POST_INPUT_BASELINE_V1"
 const FIX10_PREDICTION_ACK_WIRE_POLICY: String = "COMPACT_ARRAY_V1"
+const FIX10_UNRELIABLE_MTU_POLICY: String = "OPTIONAL_ACK_OMISSION_THEN_DROP_OVERSIZE_V1"
+const FIX10_UNRELIABLE_SAFE_PACKET_BYTES: int = 1350
+const FIX10_UNRELIABLE_DECISION_SEND: String = "SEND"
+const FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK: String = "RETRY_WITHOUT_ACK"
+const FIX10_UNRELIABLE_DECISION_DROP: String = "DROP"
 
 var _fix10_prediction_acks: Dictionary = {}
 var _fix10_ack_captures: int = 0
 var _fix10_ack_capture_mismatches: int = 0
 var _fix10_snapshots_with_ack: int = 0
 var _fix10_max_input_apply_lag_ticks: int = 0
+var _fix10_ack_omitted_for_mtu: int = 0
+var _fix10_oversized_unreliable_frames_prevented: int = 0
+var _fix10_movement_snapshots_dropped_for_mtu: int = 0
+var _fix10_max_unreliable_candidate_bytes: int = 0
+var _fix10_max_unreliable_sent_bytes: int = 0
+var _fix10_max_without_ack_bytes: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -54,6 +68,12 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_ack_capture_mismatches = 0
 	_fix10_snapshots_with_ack = 0
 	_fix10_max_input_apply_lag_ticks = 0
+	_fix10_ack_omitted_for_mtu = 0
+	_fix10_oversized_unreliable_frames_prevented = 0
+	_fix10_movement_snapshots_dropped_for_mtu = 0
+	_fix10_max_unreliable_candidate_bytes = 0
+	_fix10_max_unreliable_sent_bytes = 0
+	_fix10_max_without_ack_bytes = 0
 	return super.setup(config)
 
 
@@ -132,22 +152,108 @@ func _maybe_publish_movement_snapshot() -> void:
 		var ack_wire: Array = _fix10_ack_wire_for_peer(peer_id)
 		if not ack_wire.is_empty():
 			data["prediction_ack"] = ack_wire
-			_fix10_snapshots_with_ack += 1
-		if _send_on_channel(
-			peer_id,
-			"COMPACT_GAMEPLAY_SNAPSHOT",
-			data,
-			RealtimeChannelPolicy.SNAPSHOT,
-			"UNRELIABLE_SEQUENCED"
-		):
+		var sent: Dictionary = _fix10_send_mtu_safe_movement_snapshot(peer_id, data)
+		if bool(sent.get("success", false)):
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
+			if bool(sent.get("included_prediction_ack", false)):
+				_fix10_snapshots_with_ack += 1
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
 	_movement_snapshot_dirty = target_count > 0 and not all_enqueued
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
+
+
+func _fix10_send_mtu_safe_movement_snapshot(peer_id: String, data: Dictionary) -> Dictionary:
+	if _boundary == null or peer_id.is_empty():
+		return {"success": false, "error_code": "FIX10_BOUNDARY_NOT_READY"}
+	if not _ensure_peer_ready(peer_id):
+		return {"success": false, "error_code": "FIX10_PEER_NOT_READY"}
+	var payload: Dictionary = data.duplicate(true)
+	payload["type"] = "COMPACT_GAMEPLAY_SNAPSHOT"
+	payload["server_sent_at_ms"] = Time.get_ticks_msec()
+	var candidate: Dictionary = _fix10_build_unreliable_frame(peer_id, payload)
+	if not bool(candidate.get("success", false)):
+		_last_error_code = String(candidate.get("error_code", "FRAME_CREATE_FAILED"))
+		return candidate
+	var frame: Dictionary = Dictionary(candidate.get("frame", {})).duplicate(true)
+	var packet_bytes: int = int(candidate.get("packet_bytes", 0))
+	_fix10_max_unreliable_candidate_bytes = maxi(_fix10_max_unreliable_candidate_bytes, packet_bytes)
+	var included_ack: bool = payload.has("prediction_ack")
+	var decision: String = _fix10_unreliable_budget_decision(packet_bytes, included_ack)
+	if decision == FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK:
+		_fix10_oversized_unreliable_frames_prevented += 1
+		_fix10_ack_omitted_for_mtu += 1
+		payload.erase("prediction_ack")
+		candidate = _fix10_build_unreliable_frame(peer_id, payload)
+		if not bool(candidate.get("success", false)):
+			_last_error_code = String(candidate.get("error_code", "FRAME_CREATE_FAILED"))
+			return candidate
+		frame = Dictionary(candidate.get("frame", {})).duplicate(true)
+		packet_bytes = int(candidate.get("packet_bytes", 0))
+		_fix10_max_without_ack_bytes = maxi(_fix10_max_without_ack_bytes, packet_bytes)
+		included_ack = false
+		decision = _fix10_unreliable_budget_decision(packet_bytes, false)
+	if decision == FIX10_UNRELIABLE_DECISION_DROP:
+		_fix10_oversized_unreliable_frames_prevented += 1
+		_fix10_movement_snapshots_dropped_for_mtu += 1
+		return {
+			"success": false,
+			"error_code": "FIX10_UNRELIABLE_FRAME_EXCEEDS_SAFE_MTU",
+			"packet_bytes": packet_bytes,
+			"safe_packet_bytes": FIX10_UNRELIABLE_SAFE_PACKET_BYTES,
+		}
+	var queued: Dictionary = _boundary.send_to_peer(peer_id, frame)
+	if not bool(queued.get("success", false)):
+		_last_error_code = String(queued.get("error_code", "SEND_FAILED"))
+		return queued
+	var flushed: Dictionary = _boundary.flush_outbound(32, peer_id)
+	if not bool(flushed.get("success", false)):
+		_last_error_code = String(flushed.get("error_code", "FLUSH_FAILED"))
+		return flushed
+	_messages_sent += 1
+	_fix10_max_unreliable_sent_bytes = maxi(_fix10_max_unreliable_sent_bytes, packet_bytes)
+	return {
+		"success": true,
+		"included_prediction_ack": included_ack,
+		"packet_bytes": packet_bytes,
+	}
+
+
+func _fix10_build_unreliable_frame(peer_id: String, payload: Dictionary) -> Dictionary:
+	var frame_result: Dictionary = _boundary.create_frame_for_peer(
+		peer_id,
+		RealtimeChannelPolicy.SNAPSHOT,
+		Support.MESSAGE_SCHEMA,
+		payload,
+		"UNRELIABLE_SEQUENCED"
+	)
+	if not bool(frame_result.get("success", false)):
+		return {
+			"success": false,
+			"error_code": String(frame_result.get("error_code", "FRAME_CREATE_FAILED")),
+		}
+	var frame: Dictionary = Dictionary(
+		frame_result.get("details", {}).get("frame", {})
+	).duplicate(true)
+	var encoded: String = NetworkUtilsFix10.canonical_json(frame)
+	if encoded.is_empty():
+		return {"success": false, "error_code": "FIX10_FRAME_SERIALIZATION_FAILED"}
+	return {
+		"success": true,
+		"frame": frame,
+		"packet_bytes": encoded.to_utf8_buffer().size(),
+	}
+
+
+func _fix10_unreliable_budget_decision(packet_bytes: int, has_prediction_ack: bool) -> String:
+	if packet_bytes <= FIX10_UNRELIABLE_SAFE_PACKET_BYTES:
+		return FIX10_UNRELIABLE_DECISION_SEND
+	if has_prediction_ack:
+		return FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK
+	return FIX10_UNRELIABLE_DECISION_DROP
 
 
 func _broadcast_snapshot(
@@ -219,6 +325,14 @@ func _build_fix7_ready_report() -> Dictionary:
 	foundation["fix10_snapshots_with_prediction_ack"] = _fix10_snapshots_with_ack
 	foundation["fix10_connected_ack_count"] = _fix10_prediction_acks.size()
 	foundation["fix10_max_input_apply_lag_ticks"] = _fix10_max_input_apply_lag_ticks
+	foundation["fix10_unreliable_mtu_policy"] = FIX10_UNRELIABLE_MTU_POLICY
+	foundation["fix10_unreliable_safe_packet_bytes"] = FIX10_UNRELIABLE_SAFE_PACKET_BYTES
+	foundation["fix10_ack_omitted_for_mtu"] = _fix10_ack_omitted_for_mtu
+	foundation["fix10_oversized_unreliable_frames_prevented"] = _fix10_oversized_unreliable_frames_prevented
+	foundation["fix10_movement_snapshots_dropped_for_mtu"] = _fix10_movement_snapshots_dropped_for_mtu
+	foundation["fix10_max_unreliable_candidate_bytes"] = _fix10_max_unreliable_candidate_bytes
+	foundation["fix10_max_unreliable_sent_bytes"] = _fix10_max_unreliable_sent_bytes
+	foundation["fix10_max_without_ack_bytes"] = _fix10_max_without_ack_bytes
 	report["realtime_foundation"] = foundation
 	return report
 
@@ -227,6 +341,8 @@ func get_fix7_ready_report_policy() -> Dictionary:
 	var report: Dictionary = super.get_fix7_ready_report_policy()
 	report["fix10_prediction_ack_policy"] = FIX10_PREDICTION_ACK_POLICY
 	report["fix10_prediction_ack_wire_policy"] = FIX10_PREDICTION_ACK_WIRE_POLICY
+	report["fix10_unreliable_mtu_policy"] = FIX10_UNRELIABLE_MTU_POLICY
+	report["fix10_unreliable_safe_packet_bytes"] = FIX10_UNRELIABLE_SAFE_PACKET_BYTES
 	return report
 
 
@@ -240,5 +356,13 @@ func get_report() -> Dictionary:
 		"snapshots_with_ack": _fix10_snapshots_with_ack,
 		"connected_ack_count": _fix10_prediction_acks.size(),
 		"max_input_apply_lag_ticks": _fix10_max_input_apply_lag_ticks,
+		"unreliable_mtu_policy": FIX10_UNRELIABLE_MTU_POLICY,
+		"unreliable_safe_packet_bytes": FIX10_UNRELIABLE_SAFE_PACKET_BYTES,
+		"ack_omitted_for_mtu": _fix10_ack_omitted_for_mtu,
+		"oversized_unreliable_frames_prevented": _fix10_oversized_unreliable_frames_prevented,
+		"movement_snapshots_dropped_for_mtu": _fix10_movement_snapshots_dropped_for_mtu,
+		"max_unreliable_candidate_bytes": _fix10_max_unreliable_candidate_bytes,
+		"max_unreliable_sent_bytes": _fix10_max_unreliable_sent_bytes,
+		"max_without_ack_bytes": _fix10_max_without_ack_bytes,
 	}
 	return report
