@@ -2,13 +2,20 @@ class_name QuaterniusEquipmentRigAdapter
 extends CharacterRigAdapter
 
 const RIG_PROFILE_ID := "quaternius.ual1.humanoid"
+const REQUIRED_ANCHORS := ["body.head", "gear.back"]
 const SEMANTIC_BONE_CANDIDATES := {
 	"body.root": ["root", "hips", "pelvis"],
 	"body.head": ["head"],
-	"gear.back": ["spine2", "spine1", "spine", "chest", "upperchest"],
-	"hand.left": ["hand_l", "lefthand", "handleft"],
-	"hand.right": ["hand_r", "righthand", "handright"],
+	"gear.back": [
+		"spine3", "spine03", "spine003",
+		"spine2", "spine02", "spine002",
+		"spine1", "spine01", "spine001",
+		"spine", "upperchest", "chest", "torso"
+	],
+	"hand.left": ["hand_l", "lefthand", "handleft", "lhand"],
+	"hand.right": ["hand_r", "righthand", "handright", "rhand"],
 }
+const BACK_BONE_TOKENS := ["spine", "upperchest", "chest", "torso"]
 
 var _presenter: Node
 var _target_skeleton: Skeleton3D
@@ -25,7 +32,7 @@ func bind_presenter(presenter: Node) -> Dictionary:
 	if _presenter == null:
 		return _result(false, "MISSING_PRESENTER")
 
-	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
+	var model_root: Node = _find_descendant_named(_presenter, "QuaterniusModel")
 	if model_root != null:
 		_target_skeleton = _find_first_skeleton(model_root)
 	if _target_skeleton != null:
@@ -36,9 +43,13 @@ func bind_presenter(presenter: Node) -> Dictionary:
 	else:
 		return _result(false, "UNSUPPORTED_QUATERNIUS_RIG")
 
-	if not supports_anchor("body.head") or not supports_anchor("gear.back"):
+	var missing: Array[String] = _missing_required_anchors()
+	if not missing.is_empty():
+		var failure_details: Dictionary = create_report()
+		failure_details["missing_required_anchors"] = missing
+		failure_details["available_bones"] = _available_bone_names()
 		clear()
-		return _result(false, "MISSING_REQUIRED_EQUIPMENT_ANCHOR")
+		return _result(false, "MISSING_REQUIRED_EQUIPMENT_ANCHOR", failure_details)
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, create_report())
 
 
@@ -87,11 +98,12 @@ func create_report() -> Dictionary:
 			var node = _fallback_anchors[anchor_id]
 			resolved[anchor_id] = String(node.name) if node is Node else ""
 	return {
-		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v1",
+		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v2",
 		"rig_profile_id": rig_profile_id,
 		"mode": _mode,
 		"resolved_anchors": resolved,
 		"target_skeleton": _target_skeleton != null,
+		"bone_count": _target_skeleton.get_bone_count() if _target_skeleton != null else 0,
 		"attachment_count": _attachments.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
@@ -100,17 +112,93 @@ func create_report() -> Dictionary:
 
 
 func _resolve_skeleton_bones() -> void:
-	var bone_by_normalized_name: Dictionary = {}
+	var normalized_to_index: Dictionary = {}
 	for index in range(_target_skeleton.get_bone_count()):
 		var bone_name := String(_target_skeleton.get_bone_name(index))
-		bone_by_normalized_name[_normalized_bone_name(bone_name)] = bone_name
+		var normalized := _normalized_bone_name(bone_name)
+		if not normalized_to_index.has(normalized):
+			normalized_to_index[normalized] = index
+
 	for raw_anchor_id in SEMANTIC_BONE_CANDIDATES.keys():
 		var anchor_id := String(raw_anchor_id)
-		for raw_candidate in SEMANTIC_BONE_CANDIDATES[anchor_id]:
-			var candidate := _normalized_bone_name(String(raw_candidate))
-			if bone_by_normalized_name.has(candidate):
-				_resolved_bones[anchor_id] = String(bone_by_normalized_name[candidate])
-				break
+		var resolved_index := _find_bone_by_candidates(normalized_to_index, SEMANTIC_BONE_CANDIDATES[anchor_id])
+		if resolved_index >= 0:
+			_resolved_bones[anchor_id] = String(_target_skeleton.get_bone_name(resolved_index))
+
+	var head_index := _resolved_bone_index("body.head")
+	if not _resolved_bones.has("gear.back") and head_index >= 0:
+		var back_index := _find_back_bone_from_head(head_index)
+		if back_index >= 0:
+			_resolved_bones["gear.back"] = String(_target_skeleton.get_bone_name(back_index))
+
+	if not _resolved_bones.has("body.root"):
+		var root_index := _find_root_bone(head_index)
+		if root_index >= 0:
+			_resolved_bones["body.root"] = String(_target_skeleton.get_bone_name(root_index))
+
+
+func _find_bone_by_candidates(normalized_to_index: Dictionary, candidates: Array) -> int:
+	for raw_candidate in candidates:
+		var candidate := _normalized_bone_name(String(raw_candidate))
+		if normalized_to_index.has(candidate):
+			return int(normalized_to_index[candidate])
+
+	for raw_candidate in candidates:
+		var candidate := _normalized_bone_name(String(raw_candidate))
+		for raw_normalized in normalized_to_index.keys():
+			var normalized := String(raw_normalized)
+			if normalized.ends_with(candidate):
+				return int(normalized_to_index[raw_normalized])
+	return -1
+
+
+func _find_back_bone_from_head(head_index: int) -> int:
+	var current := _target_skeleton.get_bone_parent(head_index)
+	while current >= 0:
+		var normalized := _normalized_bone_name(String(_target_skeleton.get_bone_name(current)))
+		for token in BACK_BONE_TOKENS:
+			if normalized.contains(String(token)):
+				return current
+		current = _target_skeleton.get_bone_parent(current)
+	return -1
+
+
+func _find_root_bone(start_index: int) -> int:
+	if _target_skeleton == null or _target_skeleton.get_bone_count() == 0:
+		return -1
+	if start_index >= 0:
+		var current := start_index
+		while _target_skeleton.get_bone_parent(current) >= 0:
+			current = _target_skeleton.get_bone_parent(current)
+		return current
+	for index in range(_target_skeleton.get_bone_count()):
+		if _target_skeleton.get_bone_parent(index) < 0:
+			return index
+	return 0
+
+
+func _resolved_bone_index(anchor_id: String) -> int:
+	if _target_skeleton == null or not _resolved_bones.has(anchor_id):
+		return -1
+	return _target_skeleton.find_bone(StringName(_resolved_bones[anchor_id]))
+
+
+func _missing_required_anchors() -> Array[String]:
+	var result: Array[String] = []
+	for raw_anchor in REQUIRED_ANCHORS:
+		var anchor_id := String(raw_anchor)
+		if not supports_anchor(anchor_id):
+			result.append(anchor_id)
+	return result
+
+
+func _available_bone_names() -> Array[String]:
+	var result: Array[String] = []
+	if _target_skeleton == null:
+		return result
+	for index in range(_target_skeleton.get_bone_count()):
+		result.append(String(_target_skeleton.get_bone_name(index)))
+	return result
 
 
 func _bind_fallback_anchors() -> bool:
@@ -157,7 +245,7 @@ func _find_first_skeleton(root: Node) -> Skeleton3D:
 
 func _normalized_bone_name(value: String) -> String:
 	var normalized := value.to_lower()
-	for token in ["_", "-", " ", "/", ".", ":"]:
+	for token in ["_", "-", " ", "/", ".", ":", "|"]:
 		normalized = normalized.replace(token, "")
 	for prefix in ["mixamorig", "def", "org", "armature"]:
 		if normalized.begins_with(prefix):
