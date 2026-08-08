@@ -26,6 +26,7 @@ func _run() -> void:
 	_assert(lab.equipment_presenter != null, "CH8C graphical lab presenter missing")
 	_assert(lab.body_suppression_coordinator != null, "CH8C graphical lab coordinator missing")
 	_assert(bool(lab.layered_setup_result.get("success", false)), "CH8C graphical lab setup failed: %s" % JSON.stringify(lab.layered_setup_result))
+	_assert(lab.status_label != null and String(lab.status_label.text).contains("CH8C — Layered Garments"), "CH8C graphical lab status extension failed")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
@@ -45,6 +46,7 @@ func _run() -> void:
 	_assert(lab.equipment_source.has_item(UPPER_ITEM_ID), "CH8C graphical lab upper missing")
 	_assert(lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower missing")
 	_assert(lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet missing")
+	_assert(String(lab.status_label.text).contains("upper: ON | lower: ON | feet: ON"), "CH8C graphical lab status did not reflect equipped layers")
 	var peak_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	_assert((peak_report.get("active_regions", []) as Array).size() == 4, "CH8C graphical lab did not aggregate four body regions")
 	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply aggregate material")
@@ -61,6 +63,7 @@ func _run() -> void:
 	_assert(not lab.equipment_source.has_item(UPPER_ITEM_ID), "CH8C graphical lab upper remained equipped")
 	_assert(not lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower remained equipped")
 	_assert(not lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet remained equipped")
+	_assert(String(lab.status_label.text).contains("upper: OFF | lower: OFF | feet: OFF"), "CH8C graphical lab status did not reflect cleared layers")
 	var final_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	_assert((final_report.get("active_regions", []) as Array).is_empty(), "CH8C graphical lab retained body regions after clear")
 	_assert(not bool(final_report.get("material_applied", true)), "CH8C graphical lab retained suppression material after clear")
