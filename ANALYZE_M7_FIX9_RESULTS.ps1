@@ -109,6 +109,10 @@ function Add-PhaseFailures {
         [double]$ThresholdMs
     )
     foreach ($Key in $Phases.Keys) {
+        # Unattributed time has its own count-based gate below. A single startup
+        # or OS scheduling hitch may have a large absolute max without implying
+        # sustained gameplay stutter, so do not reject it twice here.
+        if ([string]$Key -like "*unattributed*") { continue }
         $MaxMs = [double]$Phases[$Key].max_ms
         if ($MaxMs -gt $ThresholdMs) {
             [void]$Failures.Add("$Label phase '$Key' exceeded ${ThresholdMs} ms ($MaxMs)")
