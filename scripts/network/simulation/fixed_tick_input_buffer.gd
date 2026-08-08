@@ -7,8 +7,9 @@ const MAX_PENDING_INPUTS: int = 64
 const MAX_SEQUENCE_AHEAD: int = 2048
 const MAX_QUEUE_AGE_TICKS: int = 120
 const MAX_INPUT_HOLD_TICKS: int = 15
+const PRESSURE_COMPACTION_THRESHOLD: int = 8
 const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
-const INPUT_COALESCING_POLICY: String = "FULL_QUEUE_EXACT_CONTINUOUS_STATE_REFRESH_V2"
+const INPUT_COALESCING_POLICY: String = "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V3"
 const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
 const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
 
@@ -28,6 +29,8 @@ var _hold_expirations: int = 0
 var _jump_edges: int = 0
 var _coalesced_refreshes: int = 0
 var _queue_pressure_recoveries: int = 0
+var _pressure_compactions: int = 0
+var _pressure_dropped_inputs: int = 0
 var _peak_pending: int = 0
 
 func configure(last_processed_sequence: int = 0) -> Dictionary:
@@ -49,6 +52,8 @@ func configure(last_processed_sequence: int = 0) -> Dictionary:
 	_jump_edges = 0
 	_coalesced_refreshes = 0
 	_queue_pressure_recoveries = 0
+	_pressure_compactions = 0
+	_pressure_dropped_inputs = 0
 	_peak_pending = 0
 	return _success()
 
@@ -74,12 +79,16 @@ func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
 		return _reject("MOVEMENT_INTENT_REQUIRED")
 	var queued_input: Dictionary = input.duplicate(true)
 	queued_input["received_server_tick"] = received_server_tick
+
+	# A realtime input queue is a stream of state samples, not a command ledger.
+	# Once it develops visible latency, replaying every historical look/movement
+	# sample one-per-server-tick makes the authority walk through stale states and
+	# eventually pulls the predicted player backwards. Under pressure, retain every
+	# jump edge but collapse superseded continuous samples to the newest state.
+	# Normal shallow queues still keep the accepted NX3 FIFO behavior exactly.
+	if _pending.size() >= MAX_PENDING_INPUTS:
+		_compact_pressure_backlog()
 	var queue_was_full: bool = _pending.size() >= MAX_PENDING_INPUTS
-	# Preserve the accepted NX3 FIFO semantics during normal operation. Coalescing
-	# is only a last-resort backpressure recovery once the hard queue bound has
-	# actually been reached. Doing it eagerly changes how many fixed ticks a
-	# movement state survives and makes ordinary movement distance dependent on
-	# packet batching.
 	if queue_was_full and _try_coalesce_latest_refresh(queued_input):
 		if Sequence.is_newer(sequence, _last_received_sequence):
 			_last_received_sequence = sequence
@@ -90,17 +99,29 @@ func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
 			"accepted": true,
 			"redundant": false,
 			"coalesced": true,
+			"pressure_compacted": false,
 			"pending": _pending.size(),
 		})
 	if _pending.size() >= MAX_PENDING_INPUTS:
 		_queue_full_rejected += 1
 		return _reject("INPUT_QUEUE_FULL")
+
 	_insert_in_sequence_order(queued_input)
 	_peak_pending = maxi(_peak_pending, _pending.size())
 	if Sequence.is_newer(sequence, _last_received_sequence):
 		_last_received_sequence = sequence
 	_accepted += 1
-	return _success({"accepted": true, "redundant": false, "coalesced": false, "pending": _pending.size()})
+	var dropped_by_pressure: int = 0
+	if _pending.size() > PRESSURE_COMPACTION_THRESHOLD:
+		dropped_by_pressure = _compact_pressure_backlog()
+	return _success({
+		"accepted": true,
+		"redundant": false,
+		"coalesced": false,
+		"pressure_compacted": dropped_by_pressure > 0,
+		"pressure_dropped": dropped_by_pressure,
+		"pending": _pending.size(),
+	})
 
 func consume_for_tick(server_tick: int) -> Dictionary:
 	if server_tick < 1:
@@ -154,6 +175,7 @@ func get_report(server_tick: int = 0) -> Dictionary:
 		"coalescing_policy": INPUT_COALESCING_POLICY,
 		"jump_policy": JUMP_POLICY,
 		"hold_policy": HOLD_POLICY,
+		"pressure_compaction_threshold": PRESSURE_COMPACTION_THRESHOLD,
 		"last_processed_sequence": _last_processed_sequence,
 		"last_received_sequence": _last_received_sequence,
 		"pending": _pending.size(),
@@ -168,9 +190,46 @@ func get_report(server_tick: int = 0) -> Dictionary:
 		"queue_full_rejected": _queue_full_rejected,
 		"coalesced_refreshes": _coalesced_refreshes,
 		"queue_pressure_recoveries": _queue_pressure_recoveries,
+		"pressure_compactions": _pressure_compactions,
+		"pressure_dropped_inputs": _pressure_dropped_inputs,
 		"hold_expirations": _hold_expirations,
 		"jump_edges": _jump_edges,
 	}
+
+func _compact_pressure_backlog() -> int:
+	if _pending.size() <= PRESSURE_COMPACTION_THRESHOLD:
+		return 0
+	var compacted: Array[Dictionary] = []
+	var latest_non_jump: Dictionary = {}
+	for queued_value in _pending:
+		var queued: Dictionary = Dictionary(queued_value)
+		var intent_value = queued.get("intent", {})
+		var is_jump: bool = intent_value is Dictionary and bool(intent_value.get("jump_pressed", false))
+		if is_jump:
+			compacted.append(queued.duplicate(true))
+		else:
+			latest_non_jump = queued.duplicate(true)
+	if not latest_non_jump.is_empty():
+		# `_pending` is sequence ordered. Insert the retained newest continuous
+		# sample at its original sequence position relative to any preserved jumps.
+		var latest_sequence: int = int(latest_non_jump.get("input_sequence", 0))
+		var inserted: bool = false
+		for index in range(compacted.size()):
+			var jump_sequence: int = int(compacted[index].get("input_sequence", 0))
+			if Sequence.forward_distance(_last_processed_sequence, latest_sequence) < Sequence.forward_distance(_last_processed_sequence, jump_sequence):
+				compacted.insert(index, latest_non_jump)
+				inserted = true
+				break
+		if not inserted:
+			compacted.append(latest_non_jump)
+	var dropped: int = _pending.size() - compacted.size()
+	if dropped <= 0:
+		return 0
+	_pending = compacted
+	_pressure_compactions += 1
+	_pressure_dropped_inputs += dropped
+	_queue_pressure_recoveries += 1
+	return dropped
 
 func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
 	if _pending.is_empty():
@@ -198,9 +257,6 @@ func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
 	return true
 
 func _same_continuous_motion_state(left: Dictionary, right: Dictionary) -> bool:
-	# Yaw is part of the movement kernel: the same move vector under another yaw
-	# produces another trajectory. Pitch is retained as part of the input contract
-	# as well, so pressure recovery never silently rewrites a look transition.
 	return (
 		is_equal_approx(float(left.get("move_x", 0.0)), float(right.get("move_x", 0.0)))
 		and is_equal_approx(float(left.get("move_z", 0.0)), float(right.get("move_z", 0.0)))
