@@ -4,8 +4,13 @@
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "implementation_candidate": "22059af7b91c65245f7992936f1612d4503d8782",
-  "decision": "IMPLEMENTED_CANDIDATE",
-  "runtime_validation": "PENDING_WINDOWS_GODOT_4_7_1_DOUBLE",
+  "accepted_tested_head": "974fc6682abac058ea158cf11efbf44501805817",
+  "decision": "ACCEPTED",
+  "runtime_validation": "WINDOWS_GODOT_4_7_1_DOUBLE_PASS",
+  "environment": {
+    "platform": "Windows",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
   "dependencies": {
     "g5_world_feature_graph": "ACCEPTED",
     "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC",
@@ -13,15 +18,16 @@
     "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
     "g6_2_tested_head": "444811c0ac98a133844cd7ec0869a6cf0a261f11"
   },
-  "expected_gate": {
+  "acceptance_evidence": {
     "runner": "RUN_G6_3_RUNTIME_WATER_QUERY_TESTS.ps1",
     "g5_world_feature_graph": "PASS_249",
     "g5_feature_cell_identity": "PASS_94",
     "g6_0_fluid_contracts": "PASS_169",
     "g6_1_casual_river_provider": "PASS_74",
     "g6_2_cross_cell_cross_lod_continuity": "PASS_86",
-    "g6_3_runtime_water_surface_query": "PASS_REQUIRED",
-    "git_diff_check": "PASS_REQUIRED"
+    "g6_3_runtime_water_surface_query": "PASS_79",
+    "git_diff_check": "PASS",
+    "working_tree": "CLEAN"
   },
   "runtime_contracts": {
     "query": "scripts/simulation/procedural/contracts/water_surface_query.gd",
@@ -49,5 +55,5 @@
     "global_revision_match": true,
     "full_g6_acceptance_requires_fresh_main_sync_check": true
   },
-  "next_if_accepted": "G6.4_CASUAL_VISUAL_RIVER_LAB"
+  "next_checkpoint": "G6.4_CASUAL_VISUAL_RIVER_LAB"
 }
