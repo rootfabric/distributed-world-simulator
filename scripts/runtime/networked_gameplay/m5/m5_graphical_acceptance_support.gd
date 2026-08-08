@@ -15,7 +15,6 @@ static func write(path: String, value: Dictionary) -> bool:
 
 
 static func read(path: String) -> Dictionary:
-	if path.strip_edges().is_empty() or not FileAccess.file_exists(path):
+	if path.strip_edges().is_empty():
 		return {}
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return Dictionary(parsed) if parsed is Dictionary else {}
+	return AtomicJson.read_value(path)
