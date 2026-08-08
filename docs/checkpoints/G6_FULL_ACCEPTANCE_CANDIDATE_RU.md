@@ -1,55 +1,22 @@
-# G6 Full Acceptance — IMPLEMENTED CANDIDATE
+# G6 Full Acceptance — READY FOR FULL WINDOWS GATE
 
 **Дата:** 2026-08-09
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
-G6.4 Fix4 получил ручной graphical PASS: при приближении наблюдается refine сетки до LOD 10 и появляются дополнительные высокочастотные неровности diagnostic G3 surface. Остался автоматический Fix4 rerun, который теперь встроен в полный G6 gate.
+Все внутренние checkpoint G6.0–G6.4 приняты. Shared MW10 blocker, ранее найденный full-gate, устранён через общий G5 baseline, а не приватную копию в G6.
 
-## Новый gate
+## Shared G5 baseline
 
-Windows entrypoint:
+PR #43 интегрирован в `feature/g5-world-feature-graph`.
 
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FULL_ACCEPTANCE.ps1
-```
-
-Он выполняет:
+Текущий принятый G5 shared-baseline head:
 
 ```text
-clean worktree
-  ↓
-GLOBAL config == main == G5
-  ↓
-current G5 is ancestor of G6
-  ↓
-accepted MW10 atomic-lock blobs exist in G5
-  ↓
-same blobs exist in resynchronized G6
-  ↓
-git diff --check G5...G6
-  ↓
-G6.4 Fix4 automated gate
-  └─ G5 graph / feature-cell
-  └─ G6.0 contracts
-  └─ G6.1 provider
-  └─ G6.2 continuity
-  └─ G6.3 runtime query
-  └─ G6.4 adaptive representation
-  ↓
-MW10 lock-release retry fault injection
-  ↓
-RUN_WORLD_REGRESSION_TESTS.ps1
-  ↓
-final clean worktree + diff check
+6e83824956f4bb9337ba0e22be6c40ccfca8bd43
 ```
 
-## Текущий блокер
-
-PR #43 `MW10: integrate atomic lock release into shared G5 baseline` на момент создания checkpoint открыт и не влит.
-
-Требуемые принятые blobs:
+Accepted MW10 blobs:
 
 ```text
 matter_cross_region_transaction_repository.gd
@@ -59,36 +26,87 @@ test_mw10_lock_release_retry.gd
 afab0c98de45c34dcf6c923d622c84835d428fa5
 ```
 
-По архитектурной политике мы **не копируем этот fix приватно в G6**. Сначала он должен стать частью G5 shared baseline, после чего G6 синхронизируется поверх обновлённого G5.
+G6 синхронизирован lineage-preserving merges:
 
-Поэтому ожидаемый результат полного gate на текущем baseline — детерминированная остановка на `shared MW10 baseline`, до запуска project-level Godot runtime. Это корректный blocker, а не regression G6.
+```text
+PR #47 runtime sync     d5879f7a5263ad98eb8ae575194e34d69a74e56c
+PR #48 metadata sync    854d79cbde7daf4ce72d2b89dd3d8900401fbcd0
+```
 
-## Assistant-side Godot verification
+Current G5 является реальным ancestor G6; compare показывает `behind G5 = 0`.
 
-Project upload содержит рабочую Linux double-сборку:
+## Assistant-side Linux double verification
+
+Использован project-provided:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
-binary: tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64
-binary SHA-256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-archive SHA-256: d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92
+linuxbsd-x86_64-double
 ```
 
-Движок реально запущен headless и выполнил GDScript smoke:
+После интеграции повторно пройдены focused checks:
 
 ```text
-GODOT_PROJECT_SMOKE: PASS
-VECTOR3_SAMPLE: (0.12345678901234, 2.0, 3.0)
+MW10 lock release retry          PASS — 12 assertions
+MW10 acquire/release stress      PASS — 501 assertions / 100 cycles
+G6 production contract smoke     PASS — 115 assertions
 ```
 
-В assistant execution-container всё ещё нет полного checkout проекта, поэтому project-level G6 runtime gate здесь пока не запускался. Это ограничение checkout, а не Godot.
+G6 focused smoke исполняет exact current production `FluidType`, `FluidRegionId` и `WaterSurfaceQuery`; generic hashing/spatial dependencies изолированы, поэтому этот smoke является дополнительным evidence, но не заменяет full-tree regression.
 
-## После PASS
+## Full runner correction
+
+После принятия G6.4 обнаружен stale orchestration contract: full-runner всё ещё ожидал промежуточный status `FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED`.
+
+Исправлено:
 
 ```text
-G6.4 -> ACCEPTED
-G6 Full -> ACCEPTED / SOURCE_ACCEPTED
-next -> G7 Semantic Field Fabric
+RUN_G6_FULL_ACCEPTANCE.ps1  183c96a8541a177606a31a74ea83bd86a4a3fad2
+RUN_G6_FULL_ACCEPTANCE.sh   96cdb7f672b802852a4388508edb99ea884977f5
 ```
+
+Теперь full gate требует окончательный `G6.4 decision = ACCEPTED`.
+
+## Финальный Windows gate
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_FULL_ACCEPTANCE.ps1
+```
+
+Gate выполняет:
+
+```text
+clean worktree
+  ↓
+GLOBAL config == main == G5
+  ↓
+current G5 is ancestor of G6
+  ↓
+exact accepted MW10 blobs in G5 and G6
+  ↓
+git diff --check G5...G6
+  ↓
+accepted G6.0-G6.4 focused chain rerun
+  ↓
+MW10 lock-release retry fault injection
+  ↓
+RUN_WORLD_REGRESSION_TESTS.ps1
+  ↓
+final clean worktree + diff check
+```
+
+## Статус
+
+```text
+G6.0-G6.4            ACCEPTED
+G5 + MW10 baseline   ACCEPTED
+G6 resync             PASS
+assistant focused     PASS
+full world regression PENDING WINDOWS FULL TREE
+G6 Full               READY FOR FULL WINDOWS GATE
+```
+
+`G6 SOURCE_ACCEPTED` фиксируется только после полного зелёного `RUN_G6_FULL_ACCEPTANCE.ps1`. После этого следующий procedural checkpoint — `G7 Semantic Field Fabric`.
 
 `MAIN_INTEGRATED`, `COMPOSITION_VERIFIED` и `PRODUCTION_READY` остаются отдельными статусами согласно GLOBAL-P0.
