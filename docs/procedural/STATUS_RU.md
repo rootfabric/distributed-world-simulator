@@ -1,7 +1,7 @@
 # Procedural Planetary Generation — status ledger
 
-**Program branch:** `feature/g0-procedural-planetary-generation-lab`  
-**Current implementation branch:** `feature/g0-geo-contracts`  
+**Program branch:** `feature/g0-procedural-planetary-generation-lab`
+**Current implementation branch:** `feature/g0-geo-contracts`
 **Purpose:** единая точка фиксации прогресса программы.
 
 ---
@@ -10,11 +10,11 @@
 
 ```text
 PROGRAM: Procedural Planetary Generation Fabric
-G0 CORE: ACCEPTED BY FULL REGRESSION EVIDENCE
-G0 CLEANUP1: CANDIDATE — CLEAN FULL-WRAPPER RERUN REQUIRED
+G0 CORE: ACCEPTED
+G0 CLEANUP1: ACCEPTED
 PRODUCTION RUNTIME CHANGED: NO
 PRODUCTION TERRAIN CHANGED: NO
-NEXT GATE AFTER CLEANUP1 PASS: G1 — Geodesy + Body Shape
+NEXT GATE: G1 — Geodesy + Body Shape
 ```
 
 G0 реализован как data-only/headless foundation. На этом этапе намеренно отсутствуют sphere mesh, geodesy, LOD, mountains, rivers, caves и production-world integration.
@@ -28,9 +28,9 @@ stage:                  G0 — Contracts freeze v0
 branch:                 feature/g0-geo-contracts
 program base branch:    feature/g0-procedural-planetary-generation-lab
 core candidate head:    6bc49940fa6d762690d0e5a4ea4261a72c24310b
-cleanup1 head:          ae58d9116d5d037262a6c50f326734c179bed77d + docs
-core decision:          ACCEPTED BY FULL REGRESSION EVIDENCE
-cleanup1 decision:      CANDIDATE
+clean-wrapper evidence: 388c680085d4cb30c75020906790c9c0d642fb0a
+core decision:          ACCEPTED
+cleanup1 decision:      ACCEPTED
 production worlds:      unchanged
 production terrain:     unchanged
 renderer dependency:    none
@@ -87,16 +87,16 @@ Godot 4.7.1.stable.double.custom_build.a13da4feb
 Focused evidence:
 
 ```text
-headless editor import:       PASS
-focused G0:                  PASS — 209 assertions
-source hygiene:              PASS — 15 GDScript files
-query order independence:    PASS
-provider replacement:        PASS
-provider parameter provenance: PASS
-surface/volume boundary:     enforced
+headless editor import:          PASS
+focused G0:                     PASS — 209 assertions
+source hygiene:                 PASS — 15 GDScript files
+query order independence:       PASS
+provider replacement:           PASS
+provider parameter provenance:  PASS
+surface/volume boundary:        enforced
 ```
 
-Внешний полный Windows regression на реальном checkout, подтверждённый `test-results.zip`:
+Полный Windows regression на реальном checkout:
 
 ```text
 world-regression-summary.json
@@ -107,20 +107,28 @@ steps:                  204
 failed steps:           0
 ```
 
-Следовательно G0 core больше не блокируется отсутствием full regression evidence.
+Clean-wrapper rerun подтвердил:
+
+```text
+world/core regression:                 PASS
+Breakpoint runtime :9081 collision:    0
+functional regression failures:        0
+```
+
+Первый `git diff --check` после clean-wrapper обнаружил только trailing whitespace в четырёх Markdown-файлах. Он исправлен documentation-only patch; runtime/code после успешного regression не менялся.
 
 ---
 
 ## G0 cleanup1 — acceptance output hygiene
 
-При анализе полного regression обнаружено:
+Причина исходного шума:
 
 ```text
 17 x
 ERROR: [breakpoint_runtime] could not listen on 127.0.0.1:9081 (error 22)
 ```
 
-Это не gameplay/G0 failure. Multi-process child Godot instances одновременно пытались поднять `BreakpointRuntimeBridge` на одном fixed loopback port.
+Multi-process child Godot instances одновременно пытались поднять `BreakpointRuntimeBridge` на одном fixed loopback port.
 
 Сам addon уже имеет штатный switch:
 
@@ -155,33 +163,29 @@ Cleanup checkpoint:
 docs/checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md
 ```
 
-### Cleanup1 acceptance command
+---
 
-На текущем Windows worktree:
+## Expected negative-path output
 
-```powershell
-git fetch origin --prune
-git pull --ff-only
-.\RUN_G0_FULL_ACCEPTANCE.ps1
-```
-
-Обязательный финал:
+Некоторые ERROR/WARNING строки в полном output являются частью намеренно проверяемых failure paths. Например:
 
 ```text
-G0 Geo contracts: PASS (209 assertions)
-Breakpoint runtime :9081 collision noise: 0
-G0 full acceptance gate: PASS
+World manifest identity mismatch (...)
+CONFLICTING_REMOTE_SNAPSHOT_TICK
+STALE_REMOTE_AUTHORITY_EPOCH
 ```
 
-После этого cleanup1 получает `ACCEPTED`, а его exact head становится рекомендуемой базой G1.
+Соответствующие suites завершились `PASS`.
+
+MW7 также печатает существующие ObjectDB/ResourceCache exit warnings. Это отдельный технический долг и не является G0 regression failure.
 
 ---
 
 ## Канонический порядок программы
 
 ```text
-G0  Contracts freeze v0                     CORE ACCEPTED / CLEANUP1 CANDIDATE
-G1  Geodesy + Body Shape                     NEXT AFTER CLEANUP1 PASS
+G0  Contracts freeze v0                     ACCEPTED
+G1  Geodesy + Body Shape                     NEXT
 G2  Planetary Surface Cells + LOD            BLOCKED BY G1
 G3  Mega Casual Macro Surface                BLOCKED BY G2
 G4  Provider Composition / Replacement       BLOCKED BY G3
@@ -222,8 +226,6 @@ G19 Network Manifest Integration
 ---
 
 ## Следующая ветка
-
-После cleanup1 PASS:
 
 ```text
 feature/g1-geodesy-body-shape
