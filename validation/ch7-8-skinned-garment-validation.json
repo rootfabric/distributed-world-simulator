@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v11",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v12",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
@@ -97,6 +97,7 @@
     "material_source_hardening": "d1ac6a0e605a7d020d338e66638f50f24c7eb5b6",
     "lab_type_hardening": "882b17c396751298d29b886ed1603864f8ffde0f",
     "head_clip_contract_test": "4f923b431e0c96cb87243de4da2e9150148ec0b0",
+    "head_clip_contract_type_hardening": "41eb25553b7cc721f11f47be5de3488e631788a0",
     "runner": "94655ffa605cc2af7ce8caeeabee844f9fc0e3cd",
     "documentation": "f0ef55d26bcf117e2bb6eba41d11321705b04b2c"
   },
