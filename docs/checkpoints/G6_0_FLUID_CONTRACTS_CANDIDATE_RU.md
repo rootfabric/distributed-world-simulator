@@ -4,6 +4,7 @@
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
 **Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`  
 **G5 accepted candidate:** `34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4`  
+**Candidate head:** `dcab2405051c537e170548fb399b98c4913b0a0f`  
 **Решение:** `IMPLEMENTED_CANDIDATE`
 
 ## Цель
@@ -50,6 +51,9 @@ Descriptor связывает canonical fluid region с:
 ```text
 body_id
 fluid_type_id
+seed
+generator_version
+stable_key
 frame_id
 optional source_feature_id
 FeatureBounds-compatible bounds
@@ -57,6 +61,8 @@ surface_mode
 reference_level_m
 attributes
 ```
+
+Descriptor не доверяет opaque `fluid_region_id`: validation повторно выводит `FluidRegionId` из canonical identity fields и отклоняет mismatch. Это исключает состояние, где ID относится, например, к lava-region, а DTO объявляет water-region.
 
 `source_feature_id` использует G5 `FeatureId` и остаётся optional, поэтому тот же generic fluid layer пригоден не только для рек.
 
@@ -119,6 +125,20 @@ cross-cell/cross-quality proof -> G6.2
 runtime surface resolver       -> G6.3
 visual river ribbon            -> G6.4
 CFD / Navier-Stokes            -> post-baseline research
+```
+
+## Static scope check
+
+Candidate compare against exact G5 base:
+
+```text
+status        ahead
+behind        0
+changed files 21
+GeoKernel     unchanged
+G5 contracts  unchanged
+renderer deps none
+network deps  none
 ```
 
 ## Focused gate
