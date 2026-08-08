@@ -514,7 +514,9 @@ function Invoke-GodotStep {
     $OutputText = ($Captured | Out-String)
     # Keep failure-marker detection case-sensitive: successful assertion text
     # may legitimately contain phrases such as "PASS: Failed durable restore...".
-    $HasFailureMarker = $OutputText -cmatch '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
+    # Engine leak diagnostics and MCP loopback collisions are never expected
+    # negative-path behavior, so they fail every regression step.
+    $HasFailureMarker = $OutputText -cmatch '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:|^ERROR: \[breakpoint_runtime\] could not listen|^WARNING: \d+ ObjectDB instances were leaked at exit|^ERROR: \d+ resources still in use at exit)'
     # Negative-path suites intentionally exercise push_error(). Normal boot and
     # CLI smoke steps do not; any ERROR line there is an acceptance failure.
     $HasUnexpectedRuntimeError = (
