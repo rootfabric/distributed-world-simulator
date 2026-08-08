@@ -49,6 +49,11 @@ Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
 )
 
+Invoke-GodotCheck -Name "FIX10 fix3 remote continuity + ACK fallback" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix3.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 fix2 MTU preflight contracts" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix2.gd"
@@ -92,9 +97,10 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates FIX10 fix2 MTU preflight, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly validates FIX10 fix3 remote continuity/standalone ACK, fix2 MTU preflight, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
-Write-Host "Final FIX10 acceptance requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS, with subjective spring/back-pull review." -ForegroundColor Yellow
+Write-Host "Final FIX10 acceptance requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS." -ForegroundColor Yellow
+Write-Host "During manual stress, specifically keep B moving while A starts/stops movement; [fix10_fix3_remote] must keep advancing without moving HOLD/underrun growth or catch-up teleport." -ForegroundColor Yellow
