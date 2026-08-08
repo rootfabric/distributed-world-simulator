@@ -9,7 +9,7 @@ const MAX_QUEUE_AGE_TICKS: int = 120
 const MAX_INPUT_HOLD_TICKS: int = 15
 const PRESSURE_COMPACTION_THRESHOLD: int = 8
 const INPUT_SELECTION_POLICY: String = "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
-const INPUT_COALESCING_POLICY: String = "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V3"
+const INPUT_COALESCING_POLICY: String = "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V4"
 const JUMP_POLICY: String = "EDGE_ON_CONSUMED_INPUT_V1"
 const HOLD_POLICY: String = "LAST_INPUT_WITH_250MS_FAILSAFE_V1"
 
@@ -31,12 +31,15 @@ var _coalesced_refreshes: int = 0
 var _queue_pressure_recoveries: int = 0
 var _pressure_compactions: int = 0
 var _pressure_dropped_inputs: int = 0
+var _pressure_retransmits_suppressed: int = 0
+var _pressure_discarded_sequences: Dictionary = {}
 var _peak_pending: int = 0
 
 func configure(last_processed_sequence: int = 0) -> Dictionary:
 	if last_processed_sequence != 0 and not Sequence.is_valid(last_processed_sequence):
 		return _failure("INVALID_LAST_PROCESSED_INPUT_SEQUENCE")
 	_pending.clear()
+	_pressure_discarded_sequences.clear()
 	_last_processed_sequence = last_processed_sequence
 	_last_received_sequence = last_processed_sequence
 	_current_intent.clear()
@@ -54,6 +57,7 @@ func configure(last_processed_sequence: int = 0) -> Dictionary:
 	_queue_pressure_recoveries = 0
 	_pressure_compactions = 0
 	_pressure_dropped_inputs = 0
+	_pressure_retransmits_suppressed = 0
 	_peak_pending = 0
 	return _success()
 
@@ -66,6 +70,19 @@ func enqueue(input: Dictionary, received_server_tick: int) -> Dictionary:
 	if not Sequence.is_newer(sequence, _last_processed_sequence):
 		_redundant += 1
 		return _success({"accepted": false, "redundant": true})
+	# NX2 input batching retransmits recent history. Once pressure recovery has
+	# intentionally discarded a superseded continuous sample, accepting that same
+	# sequence again would resurrect stale movement between preserved jump edges and
+	# the newest retained state. Keep a bounded tombstone until the authoritative
+	# processed sequence advances past it.
+	if _pressure_discarded_sequences.has(sequence):
+		_redundant += 1
+		_pressure_retransmits_suppressed += 1
+		return _success({
+			"accepted": false,
+			"redundant": true,
+			"pressure_discarded": true,
+		})
 	var distance: int = Sequence.forward_distance(_last_processed_sequence, sequence)
 	if distance < 1 or distance > MAX_SEQUENCE_AHEAD:
 		_window_rejected += 1
@@ -133,6 +150,7 @@ func consume_for_tick(server_tick: int) -> Dictionary:
 	if not _pending.is_empty():
 		var next_input: Dictionary = _pending.pop_front()
 		_last_processed_sequence = int(next_input.get("input_sequence", 0))
+		_prune_pressure_discarded_sequences()
 		_current_intent = Dictionary(next_input.get("intent", {})).duplicate(true)
 		_current_operation_id = String(next_input.get("operation_id", ""))
 		operation_id = _current_operation_id
@@ -192,6 +210,8 @@ func get_report(server_tick: int = 0) -> Dictionary:
 		"queue_pressure_recoveries": _queue_pressure_recoveries,
 		"pressure_compactions": _pressure_compactions,
 		"pressure_dropped_inputs": _pressure_dropped_inputs,
+		"pressure_discarded_sequence_count": _pressure_discarded_sequences.size(),
+		"pressure_retransmits_suppressed": _pressure_retransmits_suppressed,
 		"hold_expirations": _hold_expirations,
 		"jump_edges": _jump_edges,
 	}
@@ -225,11 +245,29 @@ func _compact_pressure_backlog() -> int:
 	var dropped: int = _pending.size() - compacted.size()
 	if dropped <= 0:
 		return 0
+	var retained_sequences: Dictionary = {}
+	for retained_value in compacted:
+		retained_sequences[int(retained_value.get("input_sequence", 0))] = true
+	for old_value in _pending:
+		var old_sequence: int = int(old_value.get("input_sequence", 0))
+		if old_sequence > 0 and not retained_sequences.has(old_sequence):
+			_pressure_discarded_sequences[old_sequence] = true
 	_pending = compacted
 	_pressure_compactions += 1
 	_pressure_dropped_inputs += dropped
 	_queue_pressure_recoveries += 1
 	return dropped
+
+func _prune_pressure_discarded_sequences() -> void:
+	if _pressure_discarded_sequences.is_empty():
+		return
+	var to_erase: Array = []
+	for sequence_value in _pressure_discarded_sequences.keys():
+		var sequence: int = int(sequence_value)
+		if not Sequence.is_newer(sequence, _last_processed_sequence):
+			to_erase.append(sequence_value)
+	for sequence_value in to_erase:
+		_pressure_discarded_sequences.erase(sequence_value)
 
 func _try_coalesce_latest_refresh(input: Dictionary) -> bool:
 	if _pending.is_empty():
@@ -282,7 +320,10 @@ func _drop_stale(server_tick: int) -> void:
 		var received_tick: int = int(_pending.front().get("received_server_tick", server_tick))
 		if server_tick - received_tick <= MAX_QUEUE_AGE_TICKS:
 			break
-		_pending.pop_front()
+		var stale_input: Dictionary = _pending.pop_front()
+		var stale_sequence: int = int(stale_input.get("input_sequence", 0))
+		if stale_sequence > 0:
+			_pressure_discarded_sequences[stale_sequence] = true
 		_stale_dropped += 1
 
 func _oldest_queue_age(server_tick: int) -> int:
