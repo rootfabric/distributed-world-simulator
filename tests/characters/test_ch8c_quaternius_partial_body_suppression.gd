@@ -9,6 +9,9 @@ const Coordinator = preload("res://scripts/characters/equipment/layered_body_sup
 const LayeredRigAdapter = preload("res://scripts/characters/equipment/quaternius_layered_body_suppression_adapter.gd")
 const MALE_PEASANT_PATH := "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf"
 
+const REGION_TORSO_CORE := "body.region.torso.core"
+const REGION_THIGHS_CORE := "body.region.thighs.core"
+
 var failures: Array[String] = []
 var assertions := 0
 
@@ -45,7 +48,7 @@ func _run() -> void:
 			"presentation": "wearable.layer.upper.peasant",
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-			"regions": ["body.region.torso", "body.region.arms"]
+			"regions": [REGION_TORSO_CORE]
 		},
 		{
 			"item": "lab.item.layer.lower.001",
@@ -53,7 +56,7 @@ func _run() -> void:
 			"presentation": "wearable.layer.lower.peasant",
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
-			"regions": ["body.region.legs"]
+			"regions": [REGION_THIGHS_CORE]
 		},
 		{
 			"item": "lab.item.layer.feet.001",
@@ -61,13 +64,15 @@ func _run() -> void:
 			"presentation": "wearable.layer.feet.peasant",
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
-			"regions": ["body.region.feet"]
+			"regions": []
 		}
 	]
 
 	var layered_adapter = LayeredRigAdapter.new()
 	var bind_result: Dictionary = layered_adapter.bind_presenter(lab.avatar)
 	_assert(bool(bind_result.get("success", false)), "CH8C layered Quaternius adapter bind failed")
+	_assert(layered_adapter.supports_body_region(REGION_TORSO_CORE), "CH8C layered adapter lacks torso core region")
+	_assert(layered_adapter.supports_body_region(REGION_THIGHS_CORE), "CH8C layered adapter lacks thighs core region")
 	var coverage = CoverageCatalog.new()
 	var coordinator = Coordinator.new()
 	var coordinator_setup: Dictionary = coordinator.setup(lab.avatar, layered_adapter, coverage)
@@ -116,6 +121,7 @@ func _run() -> void:
 		_finish()
 		return
 	var original_material: Material = body_mesh.material_override
+	var body_aabb := body_mesh.get_aabb()
 	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before := float(lab.player_capsule.height)
 
@@ -127,12 +133,17 @@ func _run() -> void:
 	var upper_suppression: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
 	_assert(bool(upper_suppression.get("success", false)), "CH8C upper suppression failed")
 	await process_frame
-	_assert(_shader_bool(body_mesh, "hide_torso"), "CH8C upper did not suppress torso")
-	_assert(_shader_bool(body_mesh, "hide_arms"), "CH8C upper did not suppress arms")
-	_assert(not _shader_bool(body_mesh, "hide_legs"), "CH8C upper unexpectedly suppressed legs")
-	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C upper unexpectedly suppressed feet")
+	_assert(_shader_bool(body_mesh, "hide_torso_core"), "CH8C upper did not suppress torso core")
+	_assert(not _shader_bool(body_mesh, "hide_thighs_core"), "CH8C upper unexpectedly suppressed thigh core")
+	_assert(not _shader_bool(body_mesh, "hide_torso"), "CH8C upper unexpectedly used coarse torso suppression")
+	_assert(not _shader_bool(body_mesh, "hide_arms"), "CH8C upper unexpectedly removed base arms")
+	_assert(not _shader_bool(body_mesh, "hide_legs"), "CH8C upper unexpectedly removed base legs")
+	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C upper unexpectedly removed base feet")
+	var torso_core_min_y := _shader_float(body_mesh, "torso_core_min_y")
+	_assert(torso_core_min_y >= body_aabb.position.y + body_aabb.size.y * 0.54, "CH8C torso core cuts too low into underwear/pelvis band")
+	_assert(torso_core_min_y <= body_aabb.position.y + body_aabb.size.y * 0.60, "CH8C torso core protected band is unexpectedly large")
 	var upper_material: Material = body_mesh.material_override
-	_assert(upper_material is ShaderMaterial, "CH8C upper did not install region clip material")
+	_assert(upper_material is ShaderMaterial, "CH8C upper did not install protected region clip material")
 
 	var helmet: Dictionary = lab.set_helmet_equipped(true)
 	_assert(bool(helmet.get("success", false)), "CH8C unrelated helmet equip failed")
@@ -146,20 +157,30 @@ func _run() -> void:
 	var upper_lower: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
 	_assert(bool(upper_lower.get("success", false)), "CH8C upper+lower suppression failed")
 	await process_frame
-	_assert(_shader_bool(body_mesh, "hide_torso"), "CH8C upper+lower lost torso suppression")
-	_assert(_shader_bool(body_mesh, "hide_arms"), "CH8C upper+lower lost arm suppression")
-	_assert(_shader_bool(body_mesh, "hide_legs"), "CH8C lower did not add leg suppression")
-	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C lower unexpectedly suppressed feet")
+	_assert(_shader_bool(body_mesh, "hide_torso_core"), "CH8C upper+lower lost torso core suppression")
+	_assert(_shader_bool(body_mesh, "hide_thighs_core"), "CH8C lower did not add thigh core suppression")
+	_assert(not _shader_bool(body_mesh, "hide_arms"), "CH8C lower composition removed base arms")
+	_assert(not _shader_bool(body_mesh, "hide_legs"), "CH8C lower unexpectedly used coarse leg suppression")
+	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C lower unexpectedly removed base feet")
+	var thighs_core_min_y := _shader_float(body_mesh, "thighs_core_min_y")
+	var thighs_core_max_y := _shader_float(body_mesh, "thighs_core_max_y")
+	_assert(thighs_core_min_y >= body_aabb.position.y + body_aabb.size.y * 0.37, "CH8C thigh core cuts into protected knee/lower-leg band")
+	_assert(thighs_core_max_y <= body_aabb.position.y + body_aabb.size.y * 0.58, "CH8C thigh core cuts too high into pelvis/underwear band")
+	var upper_lower_material: Material = body_mesh.material_override
 
 	var feet_result: Dictionary = lab.call("_set_item_equipped", "lab.item.layer.feet.001", "equipment.layer.feet.peasant", true)
 	_assert(bool(feet_result.get("success", false)), "CH8C feet equip failed")
-	var all_regions: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
-	_assert(bool(all_regions.get("success", false)), "CH8C all-region suppression failed")
-	await process_frame
-	for parameter in ["hide_torso", "hide_arms", "hide_legs", "hide_feet"]:
-		_assert(_shader_bool(body_mesh, String(parameter)), "CH8C aggregate region missing: %s" % String(parameter))
+	var feet_overlay: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
+	_assert(bool(feet_overlay.get("success", false)), "CH8C feet overlay recomposition failed")
+	_assert(not bool(feet_overlay.get("details", {}).get("changed", true)), "CH8C overlay-only feet unexpectedly rebuilt body mask")
+	_assert(body_mesh.material_override == upper_lower_material, "CH8C overlay-only feet replaced aggregate material")
+	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C overlay-only feet removed base extremity")
+
 	var coordinator_report: Dictionary = coordinator.create_report()
-	_assert((coordinator_report.get("active_regions", []) as Array).size() == 4, "CH8C aggregate report expected four regions")
+	var active_regions: Array = coordinator_report.get("active_regions", [])
+	_assert(active_regions.size() == 2, "CH8C protected aggregate expected exactly two fine regions")
+	_assert(REGION_TORSO_CORE in active_regions, "CH8C aggregate report lost torso core")
+	_assert(REGION_THIGHS_CORE in active_regions, "CH8C aggregate report lost thighs core")
 	_assert(String(coordinator_report.get("target_name", "")) == "SuperHero_Male", "CH8C aggregate target is not fused body mesh")
 	_assert(not bool(coordinator_report.get("moves_gameplay_body", true)), "CH8C coordinator claims gameplay body authority")
 	_assert(not bool(coordinator_report.get("owns_network_state", true)), "CH8C coordinator claims network authority")
@@ -171,19 +192,25 @@ func _run() -> void:
 	var without_lower: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
 	_assert(bool(without_lower.get("success", false)), "CH8C suppression recomposition after lower unequip failed")
 	await process_frame
-	_assert(_shader_bool(body_mesh, "hide_torso"), "CH8C removing lower damaged torso suppression")
-	_assert(_shader_bool(body_mesh, "hide_arms"), "CH8C removing lower damaged arm suppression")
-	_assert(not _shader_bool(body_mesh, "hide_legs"), "CH8C leg suppression remained after lower unequip")
-	_assert(_shader_bool(body_mesh, "hide_feet"), "CH8C removing lower damaged feet suppression")
+	_assert(_shader_bool(body_mesh, "hide_torso_core"), "CH8C removing lower damaged torso core suppression")
+	_assert(not _shader_bool(body_mesh, "hide_thighs_core"), "CH8C thigh core remained after lower unequip")
+	_assert(not _shader_bool(body_mesh, "hide_arms"), "CH8C removing lower removed base arms")
+	_assert(not _shader_bool(body_mesh, "hide_legs"), "CH8C removing lower enabled coarse legs")
+	_assert(not _shader_bool(body_mesh, "hide_feet"), "CH8C removing lower removed base feet")
 
-	for definition in [definitions[0], definitions[2]]:
-		var off_result: Dictionary = lab.call("_set_item_equipped", String(definition["item"]), String(definition["profile"]), false)
-		_assert(bool(off_result.get("success", false)), "CH8C garment unequip failed")
-		var recompose: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
-		_assert(bool(recompose.get("success", false)), "CH8C garment removal recomposition failed")
-		await process_frame
-	_assert(body_mesh.material_override == original_material, "CH8C last garment removal did not restore original material_override")
-	_assert((coordinator.create_report().get("active_regions", []) as Array).is_empty(), "CH8C coordinator retained regions after garments cleared")
+	var upper_off: Dictionary = lab.call("_set_item_equipped", "lab.item.layer.upper.001", "equipment.layer.upper.peasant", false)
+	_assert(bool(upper_off.get("success", false)), "CH8C upper unequip failed")
+	var feet_only_recompose: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
+	_assert(bool(feet_only_recompose.get("success", false)), "CH8C feet-only body coverage apply failed")
+	await process_frame
+	_assert(body_mesh.material_override == original_material, "CH8C feet-only overlay did not restore exact original material_override")
+	_assert((coordinator.create_report().get("active_regions", []) as Array).is_empty(), "CH8C feet-only overlay retained body suppression regions")
+
+	var feet_off: Dictionary = lab.call("_set_item_equipped", "lab.item.layer.feet.001", "equipment.layer.feet.peasant", false)
+	_assert(bool(feet_off.get("success", false)), "CH8C feet cleanup failed")
+	var empty_recompose: Dictionary = coordinator.apply_snapshot(lab.equipment_source.get_snapshot())
+	_assert(bool(empty_recompose.get("success", false)), "CH8C final empty recomposition failed")
+	_assert(body_mesh.material_override == original_material, "CH8C final cleanup changed original material_override")
 
 	var fp_report: Dictionary = lab.first_person_adapter.create_report()
 	_assert(bool(fp_report.get("shadow_proxy_active", false)), "CH8C disabled first-person shadow proxy")
@@ -214,6 +241,12 @@ func _shader_bool(mesh: MeshInstance3D, parameter: String) -> bool:
 	return bool((mesh.material_override as ShaderMaterial).get_shader_parameter(parameter))
 
 
+func _shader_float(mesh: MeshInstance3D, parameter: String) -> float:
+	if mesh == null or not mesh.material_override is ShaderMaterial:
+		return NAN
+	return float((mesh.material_override as ShaderMaterial).get_shader_parameter(parameter))
+
+
 func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
@@ -222,10 +255,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius partial body suppression: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius protected layered body suppression: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius partial body suppression: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius protected layered body suppression: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
