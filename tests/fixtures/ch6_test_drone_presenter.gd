@@ -38,13 +38,19 @@ func get_first_person_viewmodel_root() -> Node:
 	return null
 
 
+func get_first_person_shadow_proxy_root() -> Node:
+	return null
+
+
 func create_presentation_profile() -> Resource:
 	var result = PresentationProfile.new()
 	result.profile_id = &"test_drone"
 	result.entity_kind = &"drone"
 	result.first_person_policy = PresentationProfile.FirstPersonPolicy.HIDE_WORLD_MODEL
+	result.first_person_shadow_policy = PresentationProfile.FirstPersonShadowPolicy.WORLD_PROXY
 	result.world_render_layer_index = 20
 	result.viewmodel_render_layer_index = 19
+	result.shadow_render_layer_index = 18
 	result.keep_world_animation_active = true
 	result.allow_shadow_from_hidden_world_model = true
 	return result
