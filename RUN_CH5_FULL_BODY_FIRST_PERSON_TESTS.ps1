@@ -91,17 +91,21 @@ try {
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch5_full_body_first_person_adapter.gd"
     )
-    Invoke-Godot "ch5_fix1_first_person_lab" @(
+    Invoke-Godot "ch5_fix1_ch6_fix1_first_person_lab" @(
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch5_full_body_first_person_lab.gd"
     )
-    Invoke-Godot "ch6_controllable_view_adapter" @(
+    Invoke-Godot "ch6_controllable_view_adapter_shadow_preservation" @(
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch6_controllable_view_adapter.gd"
     )
+    Invoke-Godot "ch6_shadow_proxy_contract" @(
+        "--headless", "--path", $Root,
+        "--script", "res://tests/characters/test_ch6_shadow_proxy_contract.gd"
+    )
 
     Write-Host ""
-    Write-Host "CH5 fix1 / CH6 controllable presentation tests: PASS" -ForegroundColor Green
+    Write-Host "CH6 fix1 Shadow Preservation tests: PASS" -ForegroundColor Green
 }
 finally {
     if ($null -eq $OriginalRequire) {
