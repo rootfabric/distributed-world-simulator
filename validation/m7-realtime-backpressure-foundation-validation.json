@@ -1,24 +1,31 @@
 {
-  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v4",
+  "schema": "planet_simulator.validation.m7_realtime_backpressure_foundation.v5",
   "stage": "M7 realtime backpressure foundation",
   "branch": "feature/m7-realtime-backpressure-foundation-fix1",
   "base_branch": "agent/inventory-carry-stack-sort-rev6",
   "base_commit": "535eebd670473f7ab6557492a356bd47a03db763",
   "accepted_inventory_candidate": "d2e365633856fcd77f8f8b644ac2edcaa4d6562b",
+  "manual_failure_source_candidate": "e2eda5db667229118f82e19ce40c4e4906697533",
   "incident": {
     "profile": "LOCAL",
     "clients": 2,
-    "trigger": "item drop/pickup while two graphical clients are connected",
+    "trigger": "longer graphical session with repeated item drop/pickup while players continue moving",
+    "short_gate_at_source_candidate": "PASS: M7 playable network processes 51 assertions, 0 failures",
+    "manual_failure": true,
     "observed": [
-      "dedicated server health cadence develops approximately 3-4 second gaps around item activity",
-      "client prediction lead grows into tens of ticks/sequences",
-      "PLAYER_INPUT command results are rejected with INPUT_QUEUE_FULL",
-      "history_miss_resets and corrections rise and the player visibly rolls back",
-      "MULTIPLAYER_SAME_REVISION_MUTATION appears around multi-client item updates"
+      "server total pending movement inputs grew through 10, 16, 23, 43, 85 and finally 128, matching two per-peer 64-entry hard bounds",
+      "client prediction lead repeatedly grew into tens of ticks, including approximately 30-32 ticks on player-a and 49 ticks on player-a1",
+      "player-a received a burst of 13 PLAYER_INPUT command rejections with INPUT_QUEUE_FULL",
+      "history_miss_resets and prediction corrections rose sharply after the backlog formed",
+      "player-a reached one hard correction and maximum prediction error approximately 2.37087 metres",
+      "visible symptom was a backwards pull / rollback of the local character after item interaction",
+      "MULTIPLAYER_SAME_REVISION_MUTATION appeared intermittently but did not account for the movement queue saturation",
+      "one ITEM_NOT_VISIBLE_TO_PLAYER pickup rejection was spatial authority behavior and did not account for movement rollback"
     ],
-    "not_root_causes": [
-      "ITEM_ALREADY_CLAIMED is an expected server-authoritative race when both clients attempt the same pickup",
-      "the Camera3D physics interpolation warning does not explain simultaneous server stalls"
+    "root_cause": [
+      "the default fixed-tick scheduler emitted at most 8 catch-up ticks and discarded excess accumulated authority time; a transient 250-400ms server stall therefore made authoritative movement cover less wall-clock time than client prediction",
+      "movement snapshots could be published while the authority was still behind, forcing the predicted client to reconcile against a deliberately incomplete server trajectory",
+      "the input buffer treated all continuous move/look samples as FIFO commands until the 64-entry hard limit, so stale movement states accumulated faster than they could be consumed during and after stalls"
     ]
   },
   "implementation": {
@@ -27,46 +34,43 @@
       "ready_report_min_interval_ms": 250,
       "first_readiness_report": "synchronous so process harness readiness remains deterministic",
       "steady_state_ready_reports": "coalesced and written by a worker Thread",
-      "terminal_reports": "writer is drained and FAILED/STOPPED report is written synchronously",
-      "observability": [
-        "report_requests",
-        "report_requests_coalesced",
-        "report_writes_started",
-        "report_writes_completed",
-        "report_write_failures",
-        "report_snapshot_build_duration_ms",
-        "report_last_write_duration_ms",
-        "report_max_write_duration_ms"
-      ]
+      "terminal_reports": "writer is drained and FAILED/STOPPED report is written synchronously"
     },
     "server_loop": {
       "policy": "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1",
-      "network_event_budget_per_frame": 64,
-      "reason": "fixed authority receives frame budget before inbound backlog processing"
+      "network_event_budget_per_frame": 32,
+      "reason": "authority receives frame budget first and post-stall network work is additionally bounded"
+    },
+    "fixed_tick_recovery": {
+      "runtime_policy": "RETAIN_TRANSIENT_STALL_TIME_V1",
+      "scheduler_policy": "RETAIN_EXCESS_V1",
+      "m7_max_catch_up_ticks_per_frame": 16,
+      "m7_max_frame_delta_seconds": 1.0,
+      "behavior": "M7 retains transient fixed-tick debt in the scheduler accumulator instead of discarding it, then drains the debt in bounded batches; the generic scheduler default remains DROP_EXCESS_V1 for unchanged callers",
+      "snapshot_policy": "SUPPRESS_WHILE_STALL_OR_AUTHORITY_BACKLOG_V1",
+      "snapshot_stall_guard_seconds": 0.05,
+      "snapshot_input_backlog_guard": 8,
+      "reason": "do not reconcile a predicted player against a server snapshot captured in the middle of authority catch-up",
+      "observability": [
+        "scheduler_pending_catch_up_ticks",
+        "scheduler_retained_backlog_peak_ticks",
+        "scheduler_dropped_time_seconds",
+        "movement_snapshot_recovery_suppressions",
+        "transient_stall_frames",
+        "max_scheduler_backlog_ticks_observed"
+      ]
     },
     "input_backpressure": {
       "wire_schema_unchanged": "planet_simulator.fixed_tick_input_buffer.v1",
-      "accepted_selection_policy_unchanged": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1",
-      "internal_coalescing_policy": "FULL_QUEUE_EXACT_CONTINUOUS_STATE_REFRESH_V2",
-      "behavior": "ordinary input preserves the accepted FIFO exactly; only when MAX_PENDING_INPUTS is already reached may a newer exact continuous-state refresh replace the pending tail",
-      "exact_refresh_fields": [
-        "move_x",
-        "move_z",
-        "look_yaw",
-        "look_pitch",
-        "sprint"
-      ],
-      "preserved_edges": [
-        "ordinary per-tick FIFO duration",
-        "look/yaw trajectory changes",
-        "idle/movement transitions",
-        "sprint transitions",
-        "jump edges",
-        "sequence wrap",
-        "hard MAX_PENDING_INPUTS bound"
-      ],
+      "shallow_selection_policy_unchanged": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1",
+      "internal_coalescing_policy": "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V3",
+      "pressure_compaction_threshold": 8,
+      "behavior": "queues at or below eight entries preserve ordinary NX3 FIFO exactly; above that latency threshold all superseded continuous movement/look/sprint samples collapse to the newest state while every queued jump edge is preserved",
+      "reason": "movement input is a sampled state stream; replaying dozens of stale continuous states after a stall creates latency and backwards reconciliation rather than useful authoritative history",
+      "hard_bound": 64,
       "observability": [
-        "coalesced_refreshes",
+        "pressure_compactions",
+        "pressure_dropped_inputs",
         "queue_pressure_recoveries",
         "peak_pending",
         "queue_full_rejected"
@@ -74,110 +78,57 @@
     },
     "item_replication": {
       "policy": "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2",
-      "behavior": "canonical Item Graph payloads use ITEM delta/full-resync; because NetworkedGameplayService currently also advances its gameplay revision for a successful canonical item command, one lightweight reliable gameplay snapshot publishes that revision to every client",
-      "why_not_suppress": "the prior suppression left the server gameplay revision/checksum ahead of clients after the final item command, so a client could never converge when no later movement snapshot advanced it",
-      "payload_duplication": "the gameplay snapshot does not carry the canonical Item Graph; Item Graph data remains on the dedicated ITEM stream"
+      "behavior": "canonical Item Graph payloads remain on ITEM delta/full-resync while a lightweight reliable gameplay snapshot publishes the gameplay revision advanced by successful canonical item commands"
     },
     "protocol_hash_change_expected": false
   },
   "focused_tests": [
-    "ordinary continuous input remains FIFO and retains per-sequence look yaw before queue pressure",
-    "idle/movement/sprint/jump/idle transitions remain ordered and jump emits exactly one edge",
-    "an exact continuous refresh is absorbed only when the queue is already at MAX_PENDING_INPUTS",
-    "yaw-changing or true movement transitions still receive INPUT_QUEUE_FULL when the hard queue is genuinely exhausted",
-    "accepted NX3 InputBuffer schema and selection policy remain unchanged",
-    "M7 runtime source prioritizes fixed tick before bounded network drain",
-    "M7 runtime executes the async diagnostic writer and verifies report coalescing/write completion",
-    "canonical item mutation keeps Item Graph payload on ITEM delta and publishes the advanced gameplay revision through reliable RESYNC"
+    "shallow queues through the pressure threshold preserve exact FIFO order and per-sequence look yaw",
+    "shallow idle/movement/sprint/jump/idle transitions remain ordered and jump emits exactly one edge",
+    "forty changing movement/look samples under pressure remain accepted, compact to at most eight pending entries, preserve both jump edges and converge to the newest sequence",
+    "pressure compaction does not reach INPUT_QUEUE_FULL for continuous movement/look traffic",
+    "lossless scheduler mode retains all 250ms transient authority time under a 4-tick per-frame catch-up bound and drains all 15 expected fixed ticks",
+    "M7 runtime advertises transient-stall retention and stale-snapshot suppression",
+    "M7 network drain is bounded to at most 32 events per frame",
+    "accepted InputBuffer wire schema remains unchanged",
+    "canonical item mutation keeps Item Graph payload on ITEM delta and publishes gameplay revision through reliable RESYNC"
   ],
   "windows_gate_history": [
     {
-      "candidate": "9a62fce2520802469d31eb01ea395c1d0985556a",
-      "result": "PARTIAL PASS",
-      "passed": [
-        "editor import / composition",
-        "M7 item join 18 assertions",
-        "M7 slot-aware transfers 67 assertions",
-        "inventory rev6 43 assertions",
-        "fix6 8 assertions",
-        "fix7 20 assertions",
-        "NX6 957 assertions",
-        "fix8 9 assertions"
-      ],
-      "blocked_at": "NX3 fixed-tick regression: 6188 assertions, 4 wiring-source failures",
-      "diagnosis": "test inspected only m3_dedicated_server_runtime.gd leaf source while accepted runtime composition keeps NX3 fixed-tick implementation in m3_dedicated_server_runtime_base.gd through extends",
-      "correction": "NX3 server wiring regression now uses the same recursive extends source-chain loader already used for the graphical client"
-    },
-    {
-      "candidate": "45e61c591e4a6ed5074a58ec6ddf34174f0c5ad9",
-      "result": "PARTIAL PASS",
-      "passed": [
-        "editor import / composition",
-        "M7 item join 18 assertions",
-        "M7 slot-aware transfers 67 assertions",
-        "inventory rev6 43 assertions",
-        "fix6 8 assertions",
-        "fix7 20 assertions",
-        "NX6 957 assertions",
-        "fix8 9 assertions",
-        "NX3 fixed-tick 6188 assertions 0 failures",
-        "NX4 client prediction 706 assertions"
-      ],
-      "blocked_at": "M7 realtime backpressure contracts parse error at ServerRuntime.can_instantiate()",
-      "diagnosis": "Godot 4.7 parses preload script constants as class-like values for direct calls, so Script.can_instantiate() cannot be invoked as ServerRuntime.can_instantiate()",
-      "correction": "cast the preloaded resource to Script, call runtime_script.can_instantiate(), then instantiate through runtime_script.new()"
-    },
-    {
-      "candidate": "33c4a95f3be5986f972a3a01886f68465850589c",
-      "result": "PARTIAL PASS - REAL TWO-CLIENT REGRESSION EXPOSED",
-      "passed": [
-        "editor import / composition",
-        "M7 item join 18 assertions",
-        "M7 slot-aware transfers 67 assertions",
-        "inventory rev6 43 assertions",
-        "fix6 8 assertions",
-        "fix7 20 assertions",
-        "NX6 957 assertions",
-        "fix8 9 assertions",
-        "NX3 fixed-tick 6188 assertions 0 failures",
-        "NX4 client prediction 706 assertions",
-        "M7 realtime backpressure 701 assertions 0 failures"
-      ],
-      "blocked_at": "M7 two-client graphical process regression",
-      "failures": [
-        "A pickup confirmed by server",
-        "B opened shared 3D crate",
-        "B sees shared container slots",
-        "A converged to authoritative player checksum"
-      ],
-      "diagnosis": [
-        "eager coalescing was active during ordinary input, not only queue pressure; this changed the number of fixed ticks represented by movement samples and could erase look_yaw transitions even though yaw changes the authoritative movement trajectory",
-        "the item gameplay snapshot was suppressed while handle_canonical_item_command still advances the gameplay revision; after the final item command clients could remain one gameplay revision/checksum behind the server forever"
-      ],
-      "correction": [
-        "restore exact NX3 FIFO during normal operation and allow coalescing only at full-queue pressure for an exact motion/look state",
-        "retain Item Graph delta transport but restore a lightweight reliable gameplay revision snapshot after successful canonical item mutation"
-      ]
+      "candidate": "e2eda5db667229118f82e19ce40c4e4906697533",
+      "automated_result": "PASS: corrected two-client graphical process 51 assertions, 0 failures",
+      "manual_result": "FAIL: sustained two-client item stress reproduced critical movement rollback",
+      "key_metrics": {
+        "server_max_pending_inputs_total": 128,
+        "player_a_input_queue_full_rejections": 13,
+        "player_a_max_prediction_error_m": 2.3708705514033754,
+        "player_a_hard_corrections": 1,
+        "observed_prediction_lead_ticks": "30-49"
+      },
+      "decision": "REJECTED FOR MANUAL REALTIME ACCEPTANCE"
     }
   ],
   "assistant_local_validation": {
     "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "script_api_reproduction": "original ServerRuntime.can_instantiate() pattern reproduced the same Godot 4.7 parse error locally; Script-typed resource pattern parsed and executed successfully",
-    "conservative_input_backpressure_probe": "PASS: 265 assertions, 0 failures on the exact Godot build; verifies ordinary FIFO, full-queue-only exact refresh recovery, yaw-sensitive rejection and hard capacity",
-    "runtime_test_harness_probe": "PASS: 16 assertions, 0 failures on the exact Godot build; covers Script instantiation, report worker thread/coalescing, fixed-before-poll source order and item/gameplay revision-sync policy tokens",
-    "full_repository_execution": "not available in assistant container because repository source is not mounted and raw github.com git access is DNS-blocked; production source inspection is performed through the GitHub connector"
+    "fixed_tick_scheduler_parse": "PASS on exact Linux double Godot build",
+    "fixed_tick_scheduler_behavior_probe": "PASS: 250ms stall with max 4 ticks/frame emitted 4, retained 11, drained 4+4+3 to server_tick 15 with dropped_time_seconds 0",
+    "input_buffer_parse": "PASS on exact Linux double Godot build",
+    "input_pressure_behavior_probe": "PASS: 40 varying movement/look samples accepted; final pending 8, peak 9, five pressure compactions, 32 superseded continuous samples dropped, zero queue-full rejection, both jump edges preserved, final sequence 40",
+    "full_repository_execution": "not available in assistant container; Windows repository gate remains authoritative"
   },
   "runner": "VALIDATE_M7_REALTIME_FOUNDATION.ps1",
   "required_acceptance": [
-    "accepted inventory regression gate remains PASS",
-    "NX3 and NX4 regressions PASS",
-    "focused realtime backpressure contract test PASS",
+    "all accepted inventory, NX3, NX4 and focused realtime regressions PASS",
     "existing two-client graphical M7 process regression PASS",
-    "manual LOCAL two-client repeated drop/pickup stress has no INPUT_QUEUE_FULL",
-    "manual LOCAL two-client item activity has no MULTIPLAYER_SAME_REVISION_MUTATION",
-    "fixed_tick_simulation.failures remains 0",
-    "realtime_foundation.report_write_failures remains 0",
-    "prediction lead does not grow into sustained tens of ticks and no visible rollback occurs"
+    "manual LOCAL two-client repeated drop/pickup stress has zero INPUT_QUEUE_FULL",
+    "server pending movement input does not grow into a sustained multi-dozen queue",
+    "scheduler_dropped_time_seconds remains zero for transient stalls below one second",
+    "scheduler catch-up backlog may rise briefly but returns to zero",
+    "movement_snapshot_recovery_suppressions may increase during a stall and is considered expected protective behavior",
+    "client prediction lead does not remain in tens of ticks",
+    "no multi-metre prediction divergence, hard correction, visible backwards pull or rollback occurs after item interaction",
+    "fixed_tick_simulation.failures remains zero",
+    "realtime_foundation.report_write_failures remains zero"
   ],
-  "decision": "FIX3 CANDIDATE - TWO-CLIENT FAILURE DIAGNOSED; WINDOWS FULL GATE REQUIRED FROM CURRENT HEAD"
+  "decision": "FIX4 CANDIDATE - CRITICAL MOVEMENT ROLLBACK ROOT CAUSE ADDRESSED; WINDOWS FULL GATE AND LONG MANUAL ITEM STRESS REQUIRED"
 }
