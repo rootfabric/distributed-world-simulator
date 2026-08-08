@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v1",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v2",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_LAYERED_EQUIPMENT_IMPLEMENTED_PENDING_WINDOWS_RERUN",
-  "goal": "Add presentation-neutral layered equipment coexistence, deterministic conflict planning and explicit atomic conflict replacement before selecting real modular garment parts.",
+  "decision": "CH8A_LAYERED_EQUIPMENT_ACCEPTED_CH8B_SELECTIVE_REAL_PARTS_PENDING",
+  "goal": "Add presentation-neutral layered equipment coexistence, deterministic conflict planning and explicit atomic conflict replacement, then prove real Quaternius modular garment parts as independent skinned equipment items.",
   "canonical_contract": {
     "plain_equip_remains_strict": true,
     "plain_equip_auto_swaps": false,
@@ -19,6 +19,17 @@
     "gameplay_body_changes": false,
     "presentation_dependency_in_layer_planner": false
   },
+  "windows_ch8a_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "focused_layer_contract": "PASS 57 assertions",
+    "focused_presentation_diff": "PASS 51 assertions",
+    "accepted_ch7_8_regression": "PASS",
+    "combined_runner": "PASS",
+    "combined_runner_marker": "CH8 Layered Equipment contract + atomic replacement candidate runner: PASS",
+    "asset_preflight": "PASS 18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries",
+    "editor_import": "PASS",
+    "decision": "ACCEPTED"
+  },
   "layer_fixture": {
     "compatible_before_replacement": {
       "undersuit": ["body.torso.inner", "body.arms.inner", "body.legs.inner"],
@@ -27,19 +38,8 @@
       "boots": ["body.feet"],
       "armor": ["body.torso.armor"]
     },
-    "eva_replacement": [
-      "body.torso.outer",
-      "body.torso.armor",
-      "body.arms.outer",
-      "body.legs.outer",
-      "body.feet"
-    ],
-    "expected_conflicting_items": [
-      "item.armor.001",
-      "item.boots.001",
-      "item.jacket.001",
-      "item.trousers.001"
-    ],
+    "eva_replacement": ["body.torso.outer", "body.torso.armor", "body.arms.outer", "body.legs.outer", "body.feet"],
+    "expected_conflicting_items": ["item.armor.001", "item.boots.001", "item.jacket.001", "item.trousers.001"],
     "expected_compatible_survivor": "item.undersuit.001"
   },
   "presentation_diff_contract": {
@@ -50,6 +50,28 @@
     "expected_reused": 1,
     "compatible_visual_identity_reused": true,
     "idempotent_reapply_required": true
+  },
+  "real_quaternius_part_probe": {
+    "decision": "PASS",
+    "scene_files": 4,
+    "inspected_meshes": 26,
+    "male_peasant": {
+      "skeletons": 1,
+      "bones": 65,
+      "mesh_count": 4,
+      "parts": {
+        "upper_body": ["Male_Peasant_Body", "Male_Peasant_Arms"],
+        "lower_body": ["Male_Peasant_Legs"],
+        "feet": ["Male_Peasant_Feet"]
+      },
+      "important_conclusion": "Male_Peasant is already authored as four independently named skinned MeshInstance3D nodes on one exact 65-bone rig, so CH8B can reuse the same PackedScene for multiple equipment items while selecting only the requested mesh names."
+    },
+    "male_ranger": {
+      "skeletons": 1,
+      "bones": 65,
+      "mesh_count": 9,
+      "notable_parts": ["Male_Ranger_Body", "Male_Ranger_Arms", "Male_Ranger_Arms_Bracer", "Male_Ranger_Legs", "Male_Ranger_Feet_Boots", "Male_Ranger_Acc_Pauldron", "Male_Ranger_Head_Hood", "Male_Ranger_Body_Belt_1", "Male_Ranger_Body_Belt_2"]
+    }
   },
   "implementation_commits": {
     "layering_planner": "d8f0ba05a16c996f69d7fbb5d870e41cd89b8688",
@@ -63,36 +85,26 @@
     "design_doc": "89b8f0a36d47da492da8d9679436080d7073c23b",
     "test_type_hardening": "2baf9bbaba506e9255ee7854a70eef03927f52b0"
   },
-  "pending_windows_gates": {
-    "focused_layer_contract": "res://tests/characters/test_ch8_layered_equipment_contract.gd",
-    "focused_presentation_diff": "res://tests/characters/test_ch8_layered_equipment_presentation_diff.gd",
-    "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "required": [
-      "accepted CH7.8 runner remains PASS",
-      "five compatible layers coexist",
-      "EVA conflict plan reports all four conflicting items and five conflicting channels deterministically",
-      "plan leaves canonical revision unchanged",
-      "plain equip still rejects occupied channels",
-      "explicit replacement advances exactly one revision",
-      "undersuit survives EVA replacement",
-      "presentation diff reports created=1 removed=4 reused=1",
-      "compatible undersuit visual object is reused",
-      "idempotent presenter reapply creates/removes nothing"
-    ]
-  },
-  "ch8b_real_asset_probe": {
-    "script": "tests/characters/probe_ch8_quaternius_layered_parts.gd",
-    "launcher": ".\\PROBE_CH8_QUATERNIUS_LAYERED_PARTS.ps1 -GodotPath $Godot",
-    "blocking_for_ch8a": false,
-    "required_before_ch8c": true,
-    "purpose": "Inspect real Standard outfit glTF scenes and identify whether advertised modular parts are separate skinned MeshInstance3D nodes suitable for independent upper/lower/feet equipment items."
+  "ch8b_plan": {
+    "stage": "SELECTIVE_REAL_SKINNED_PARTS",
+    "scene": "Male_Peasant.gltf",
+    "items": {
+      "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"]},
+      "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"]},
+      "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"]}
+    },
+    "selection_layer": "SkinnedGarmentPoseBridge presentation filter",
+    "base_body_partial_suppression": "DEFER_TO_CH8C",
+    "item_graph_changes": false,
+    "network_changes": false,
+    "gameplay_body_changes": false
   },
   "deferred": [
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
     "persistence",
     "wardrobe UI",
-    "real partial-body suppression",
+    "real partial-body suppression until CH8C",
     "cloth physics",
     "arbitrary unrelated-rig retargeting",
     "body morph fitting",
