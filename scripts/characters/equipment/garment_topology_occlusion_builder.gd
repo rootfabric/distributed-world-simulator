@@ -9,17 +9,21 @@ const DEFAULT_BOUNDARY_PAD_M := 0.006
 static func create_masked_mesh(
 	body_target: MeshInstance3D,
 	character_root: Node3D,
-	garment_descriptors: Array
+	garment_descriptors: Array,
+	source_mesh_override: Mesh = null
 ) -> Dictionary:
-	if body_target == null or body_target.mesh == null:
+	if body_target == null:
+		return _result(false, "TOPOLOGY_BODY_MESH_MISSING")
+	var raw_source_mesh: Mesh = source_mesh_override if source_mesh_override != null else body_target.mesh
+	if raw_source_mesh == null:
 		return _result(false, "TOPOLOGY_BODY_MESH_MISSING")
 	if character_root == null:
 		return _result(false, "TOPOLOGY_CHARACTER_ROOT_MISSING")
-	if not body_target.mesh is ArrayMesh:
+	if not raw_source_mesh is ArrayMesh:
 		return _result(false, "TOPOLOGY_BODY_MESH_NOT_ARRAY_MESH", {
-			"mesh_class": body_target.mesh.get_class(),
+			"mesh_class": raw_source_mesh.get_class(),
 		})
-	var source_mesh := body_target.mesh as ArrayMesh
+	var source_mesh := raw_source_mesh as ArrayMesh
 	if source_mesh.get_surface_count() != 1:
 		return _result(false, "TOPOLOGY_BODY_EXPECTS_SINGLE_SURFACE", {
 			"surface_count": source_mesh.get_surface_count(),
