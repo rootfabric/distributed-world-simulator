@@ -6,7 +6,7 @@
   "implementation_candidate_head": "6fa824e3deea396fbfd20e3609b8003af67e09ef",
   "failed_windows_head": "8d846ac40d66bfc91e0aea4f5e85426b5ad38922",
   "fix1_candidate_head": "32a1a09fb1b1c9e013b6fcabd6e8b0b3efd4ae50",
-  "fix2_candidate_head": "89789ae7ac2338f84f73c8991d69d690e853f3cb",
+  "fix2_candidate_head": "353a73f08f6d07840145e61f79b197e5773a73a2",
   "decision": "FIX2_IMPLEMENTED_CANDIDATE",
   "runtime_validation": "WINDOWS_AUTOMATED_AND_ADAPTIVE_LOD_GRAPHICAL_RERUN_REQUIRED",
   "dependencies": {
@@ -68,6 +68,9 @@
     "river_sampling_derived_from_selected_representation_lod": true,
     "far_near_headless_lod_comparison": true,
     "far_near_headless_river_sample_comparison": true,
+    "runner_requires_explicit_pass_marker": true,
+    "runner_requires_max_lod_marker": true,
+    "runner_requires_river_lod_range_marker": true,
     "hud_exposes_virtual_altitude": true,
     "hud_exposes_leaf_count": true,
     "hud_exposes_max_lod": true,
