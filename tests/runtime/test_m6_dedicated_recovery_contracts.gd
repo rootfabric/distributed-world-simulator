@@ -83,6 +83,7 @@ func _test_recovery_client_snapshot_resync() -> void:
 	_assert(not bool(repaired.get("pending_replica_resync", true)), "M6 authoritative snapshot completes resync")
 	_assert(int(repaired.get("snapshot_resyncs", 0)) == 1, "M6 snapshot resync is counted")
 	_assert(String(runtime.get_snapshot().get("checksum", "")) == String(join_b.get("details", {}).get("snapshot", {}).get("checksum", "")), "M6 resynced replica matches authority")
+	runtime.free()
 	service.shutdown()
 
 func _test_dedicated_checkpoint_recovery() -> void:
