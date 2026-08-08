@@ -14,6 +14,7 @@ var _active_presentations: Array[String] = []
 var _active_key := ""
 var _last_removed_triangles := 0
 var _last_total_triangles := 0
+var _last_descriptor_reports: Array[Dictionary] = []
 
 
 func setup(
@@ -83,13 +84,27 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			})
 		var threshold_m := float(details.get("threshold_m", 0.0))
 		var boundary_pad_m := float(details.get("boundary_pad_m", 0.0))
+		var coverage_mode := String(details.get("coverage_mode", "ROBUST"))
+		var upper_y_pad_m := float(details.get("upper_y_pad_m", 0.0))
+		var upper_bias_fraction := float(details.get("upper_bias_fraction", 1.0))
 		descriptors.append({
+			"presentation_id": entry.presentation_id,
 			"scene": scene,
 			"threshold_m": threshold_m,
 			"boundary_pad_m": boundary_pad_m,
+			"coverage_mode": coverage_mode,
+			"upper_y_pad_m": upper_y_pad_m,
+			"upper_bias_fraction": upper_bias_fraction,
 		})
 		active_presentations.append(entry.presentation_id)
-		key_parts.append("%s@%.5f@%.5f" % [entry.presentation_id, threshold_m, boundary_pad_m])
+		key_parts.append("%s@%.5f@%.5f@%s@%.5f@%.5f" % [
+			entry.presentation_id,
+			threshold_m,
+			boundary_pad_m,
+			coverage_mode,
+			upper_y_pad_m,
+			upper_bias_fraction,
+		])
 	active_presentations.sort()
 	key_parts.sort()
 	var next_key := "|".join(key_parts)
@@ -100,6 +115,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			"active_presentations": _active_presentations.duplicate(),
 			"removed_triangles": _last_removed_triangles,
 			"total_triangles": _last_total_triangles,
+			"descriptor_reports": _last_descriptor_reports.duplicate(true),
 		})
 
 	if descriptors.is_empty():
@@ -108,10 +124,12 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 		_active_key = ""
 		_last_removed_triangles = 0
 		_last_total_triangles = 0
+		_last_descriptor_reports.clear()
 		return _result(true, CharacterEquipmentDomain.RESULT_OK, {
 			"changed": restored,
 			"restored_original": restored,
 			"active_presentations": [],
+			"descriptor_reports": [],
 		})
 
 	var build_result: Dictionary = Builder.create_masked_mesh(
@@ -132,6 +150,10 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 	_active_key = next_key
 	_last_removed_triangles = int(details.get("removed_triangles", 0))
 	_last_total_triangles = int(details.get("total_triangles", 0))
+	_last_descriptor_reports.clear()
+	for raw_report in details.get("descriptor_reports", []):
+		if raw_report is Dictionary:
+			_last_descriptor_reports.append((raw_report as Dictionary).duplicate(true))
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
 		"changed": true,
 		"active_presentations": _active_presentations.duplicate(),
@@ -140,6 +162,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 		"total_triangles": _last_total_triangles,
 		"removed_ratio": float(details.get("removed_ratio", 0.0)),
 		"sample_count": int(details.get("sample_count", 0)),
+		"descriptor_reports": _last_descriptor_reports.duplicate(true),
 		"target_name": String(_target.name),
 	})
 
@@ -156,12 +179,13 @@ func clear() -> Dictionary:
 	_active_key = ""
 	_last_removed_triangles = 0
 	_last_total_triangles = 0
+	_last_descriptor_reports.clear()
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {"restored_original": restored})
 
 
 func create_report() -> Dictionary:
 	return {
-		"schema": "planet_simulator.layered_body_topology_occlusion.v1",
+		"schema": "planet_simulator.layered_body_topology_occlusion.v2",
 		"rig_profile_id": String(rig_adapter.get("rig_profile_id")) if rig_adapter != null else "",
 		"target_ready": _target != null and is_instance_valid(_target),
 		"target_name": String(_target.name) if _target != null and is_instance_valid(_target) else "",
@@ -169,6 +193,7 @@ func create_report() -> Dictionary:
 		"active_presentations": _active_presentations.duplicate(),
 		"removed_triangles": _last_removed_triangles,
 		"total_triangles": _last_total_triangles,
+		"descriptor_reports": _last_descriptor_reports.duplicate(true),
 		"moves_gameplay_body": false,
 		"reads_input": false,
 		"owns_network_state": false,
