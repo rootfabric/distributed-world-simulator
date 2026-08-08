@@ -297,7 +297,9 @@ func _test_source_contracts() -> void:
 	var client_source: String = _load_script_source_chain(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd", {}
 	)
-	var playground_source: String = FileAccess.get_file_as_string("res://scripts/world/testing/playground_runtime.gd")
+	var playground_source: String = _load_script_source_chain(
+		"res://scripts/world/testing/playground_runtime.gd", {}
+	)
 	var player_source: String = FileAccess.get_file_as_string("res://scripts/actors/player/lunar_player.gd")
 	_assert(client_source.contains("advance_local_prediction"), "client runtime exposes prediction frame API")
 	_assert(client_source.contains("prediction_updated.emit"), "client runtime publishes predicted presentation")
