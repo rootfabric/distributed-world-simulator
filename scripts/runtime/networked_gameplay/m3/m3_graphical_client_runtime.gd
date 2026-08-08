@@ -4,15 +4,24 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 # snapshots, checksums, Item Graph semantics, FIX9 frame accounting and all
 # authority decisions remain inherited unchanged.
 #
+# The live wire form is COMPACT_ARRAY_V1 so the peer-local ACK does not push the
+# unreliable compact movement snapshot above the ENet MTU. The client normalizes
+# that positional array back to the verbose reconciliation dictionary before it
+# reaches the prediction layer. Legacy verbose dictionary sidecars remain
+# accepted for focused fixtures and compatibility.
+#
 # Accepted FIX9 source-contract compatibility anchors:
 # process_unattributed
 
 const FIX10_PREDICTION_ACK_POLICY: String = "SERVER_ECHOED_POST_INPUT_BASELINE_V1"
+const FIX10_PREDICTION_ACK_WIRE_POLICY: String = "COMPACT_ARRAY_V1"
+const FIX10_PREDICTION_ACK_WIRE_VALUES: int = 11
 
 var _fix10_pending_prediction_ack: Dictionary = {}
 var _fix10_ack_sidecars_received: int = 0
 var _fix10_ack_sidecars_registered: int = 0
 var _fix10_ack_sidecars_rejected: int = 0
+var _fix10_compact_ack_sidecars_received: int = 0
 var _fix10_last_ack_error_code: String = ""
 
 
@@ -21,6 +30,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_ack_sidecars_received = 0
 	_fix10_ack_sidecars_registered = 0
 	_fix10_ack_sidecars_rejected = 0
+	_fix10_compact_ack_sidecars_received = 0
 	_fix10_last_ack_error_code = ""
 	return super.setup(config)
 
@@ -104,7 +114,9 @@ func _emit_prediction_health_if_due() -> void:
 		"max_ack_baseline_error_m": float(prediction.get("fix10_max_ack_baseline_error_m", 0.0)),
 		"max_present_replay_error_m": float(prediction.get("fix10_max_present_replay_error_m", 0.0)),
 		"last_reconciliation_mode": String(prediction.get("fix10_last_reconciliation_mode", "NONE")),
+		"ack_wire_policy": FIX10_PREDICTION_ACK_WIRE_POLICY,
 		"sidecars_received": _fix10_ack_sidecars_received,
+		"compact_sidecars_received": _fix10_compact_ack_sidecars_received,
 		"sidecars_registered": _fix10_ack_sidecars_registered,
 		"sidecars_rejected": _fix10_ack_sidecars_rejected,
 	})
@@ -114,12 +126,41 @@ func _fix10_extract_prediction_ack(
 	payload: Dictionary,
 	message_type: String
 ) -> Dictionary:
-	if String(payload.get("prediction_ack_policy", "")) != FIX10_PREDICTION_ACK_POLICY:
+	var ack_value = payload.get("prediction_ack", null)
+	var ack: Dictionary = {}
+	if ack_value is Array:
+		var wire: Array = ack_value
+		if wire.size() != FIX10_PREDICTION_ACK_WIRE_VALUES:
+			return {}
+		for value in wire:
+			if not (value is int or value is float):
+				return {}
+		ack = {
+			"input_sequence": int(wire[0]),
+			"client_tick": int(wire[1]),
+			"applied_server_tick": int(wire[2]),
+			"position": {
+				"x": float(wire[3]),
+				"y": float(wire[4]),
+				"z": float(wire[5]),
+			},
+			"velocity": {
+				"x": float(wire[6]),
+				"y": float(wire[7]),
+				"z": float(wire[8]),
+			},
+			"orientation_yaw": float(wire[9]),
+			"state_revision": int(wire[10]),
+		}
+		_fix10_compact_ack_sidecars_received += 1
+	elif ack_value is Dictionary:
+		# Legacy/debug form. Require the explicit policy because a dictionary is not
+		# self-discriminating the way the fixed-size compact array is.
+		if String(payload.get("prediction_ack_policy", "")) != FIX10_PREDICTION_ACK_POLICY:
+			return {}
+		ack = Dictionary(ack_value).duplicate(true)
+	else:
 		return {}
-	var ack_value = payload.get("prediction_ack", {})
-	if not ack_value is Dictionary:
-		return {}
-	var ack: Dictionary = Dictionary(ack_value).duplicate(true)
 	if ack.is_empty():
 		return {}
 	var snapshot_value = payload.get("snapshot", {})
@@ -141,7 +182,9 @@ func get_report() -> Dictionary:
 	var report: Dictionary = super.get_report()
 	report["fix10_prediction_ack_transport"] = {
 		"policy": FIX10_PREDICTION_ACK_POLICY,
+		"wire_policy": FIX10_PREDICTION_ACK_WIRE_POLICY,
 		"sidecars_received": _fix10_ack_sidecars_received,
+		"compact_sidecars_received": _fix10_compact_ack_sidecars_received,
 		"sidecars_registered": _fix10_ack_sidecars_registered,
 		"sidecars_rejected": _fix10_ack_sidecars_rejected,
 		"last_error_code": _fix10_last_ack_error_code,
