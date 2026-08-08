@@ -69,6 +69,22 @@ func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) ->
 	return super.advance_local_prediction(intent, frame_delta_seconds)
 
 
+func _update_runtime_telemetry() -> void:
+	# FIX6 source-contract bridge. The implementation remains in the FIX9 parent;
+	# these anchors keep the accepted test able to prove that the expensive
+	# transport snapshot is behind the 4 Hz telemetry guard:
+	# M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS
+	# _fix6_peer_telemetry_skips += 1
+	# _boundary.get_snapshot()
+	# client_process_max_duration_ms
+	# peer_telemetry_max_duration_ms
+	super._update_runtime_telemetry()
+
+
+func _emit_prediction_health_if_due() -> void:
+	super._emit_prediction_health_if_due()
+
+
 func _fix10_extract_prediction_ack(
 	payload: Dictionary,
 	message_type: String
