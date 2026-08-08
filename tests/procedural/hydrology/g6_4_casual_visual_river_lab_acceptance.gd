@@ -4,6 +4,7 @@ const LAB_SCRIPT := "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.
 const SURFACE_SCRIPT := "res://scripts/labs/procedural/g6_4_adaptive_macro_surface_presenter.gd"
 const LAB_SCENE := "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn"
 const MANIFEST := "res://config/procedural/g6-4-casual-visual-river-lab.v1.json"
+const START_SCRIPT := "res://START_G6_4_VISUAL_RIVER_LAB.ps1"
 
 var assertions := 0
 var failures: Array[String] = []
@@ -26,7 +27,7 @@ func _test_manifest() -> void:
 	if not parsed is Dictionary:
 		return
 	_check(String(parsed.get("checkpoint", "")) == "g6.4-casual-visual-river-lab", "G6.4 checkpoint pinned")
-	_check(String(parsed.get("status", "")) == "FIX3_IMPLEMENTED_CANDIDATE", "G6.4 fix3 candidate status pinned")
+	_check(String(parsed.get("status", "")) == "FIX4_IMPLEMENTED_CANDIDATE", "G6.4 fix4 candidate status pinned")
 	_check(String(parsed.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-08-R1", "G6.4 global revision pinned")
 	_check(String(parsed.get("scene", "")) == LAB_SCENE, "G6.4 scene pinned")
 	_check(String(parsed.get("script", "")) == LAB_SCRIPT, "G6.4 lab script pinned")
@@ -47,6 +48,9 @@ func _test_manifest() -> void:
 	_check(bool(presentation.get("adaptive_river_sampling", false)), "G6.4 adaptive river sampling enabled")
 	_check(bool(presentation.get("adaptive_macro_surface_mesh", false)), "G6.4 adaptive macro surface enabled")
 	_check(String(presentation.get("macro_surface_provider", "")) == "geo-provider/casual-macro-terrain-v1", "G6.4 G3 macro provider pinned")
+	_check(int(presentation.get("macro_octaves", 0)) == 8, "G6.4 fix4 diagnostic G3 octave count pinned")
+	_check(float(presentation.get("macro_min_signal_wavelength_m", INF)) < 10000.0, "G6.4 fix4 exposes sub-10km G3 signal")
+	_check(bool(presentation.get("macro_detail_recipe_is_lab_only", false)), "G6.4 detail recipe explicitly lab-only")
 	_check(int(presentation.get("macro_cell_segments", 0)) >= 2, "G6.4 macro surface has per-cell geometry")
 	_check(float(presentation.get("macro_height_display_exaggeration", 0.0)) > 1.0, "G6.4 macro height display exaggeration explicit")
 	_check(bool(presentation.get("macro_height_exaggeration_is_presentation_only", false)), "G6.4 macro height exaggeration presentation-only")
@@ -54,6 +58,8 @@ func _test_manifest() -> void:
 	_check(int(presentation.get("lod_max", -1)) == 12, "G6.4 LOD max pinned")
 	_check(int(presentation.get("lod_leaf_budget", 0)) >= 1024, "G6.4 LOD leaf budget meaningful")
 	_check(float(presentation.get("water_width_exaggeration", 0.0)) > 1.0, "G6.4 visual width exaggeration explicit")
+	var manual_launch: Dictionary = parsed.get("manual_launch", {})
+	_check(bool(manual_launch.get("breakpoint_runtime_disabled", false)), "G6.4 standalone launch disables breakpoint runtime")
 	var acceptance: Dictionary = parsed.get("acceptance", {})
 	_check(String(acceptance.get("adaptive_macro_surface_explicit_pass_marker", "")) == "REQUIRED", "G6.4 adaptive surface marker required")
 	_check(String(acceptance.get("near_macro_surface_triangle_count_greater_than_far", "")) == "REQUIRED", "G6.4 adaptive surface geometry refinement required")
@@ -64,6 +70,7 @@ func _test_files_and_scene_contract() -> void:
 	_check(FileAccess.file_exists(LAB_SCRIPT), "G6.4 lab script exists")
 	_check(FileAccess.file_exists(SURFACE_SCRIPT), "G6.4 adaptive macro surface script exists")
 	_check(FileAccess.file_exists(LAB_SCENE), "G6.4 lab scene exists")
+	_check(FileAccess.file_exists(START_SCRIPT), "G6.4 standalone start script exists")
 	var scene_source := FileAccess.get_file_as_string(LAB_SCENE)
 	_check(scene_source.find("G64CasualVisualRiverLab") >= 0, "G6.4 scene root pinned")
 	_check(scene_source.find("AdaptiveMacroSurface") >= 0, "G6.4 scene has adaptive macro surface node")
@@ -74,6 +81,8 @@ func _test_files_and_scene_contract() -> void:
 	_check(scene_source.find("DirectionalLight3D") >= 0, "G6.4 scene has lighting")
 	_check(scene_source.find("HUD") >= 0, "G6.4 scene has HUD")
 	_check(scene_source.find(LAB_SCRIPT) >= 0, "G6.4 scene loads lab script")
+	var start_source := FileAccess.get_file_as_string(START_SCRIPT)
+	_check(start_source.find("BREAKPOINT_RUNTIME_DISABLED") >= 0, "G6.4 standalone launch suppresses breakpoint runtime bridge")
 
 
 func _test_visual_source_contract() -> void:
@@ -132,6 +141,8 @@ func _test_adaptive_macro_surface_contract() -> void:
 		"MacroProvider.FIELD_SURFACE_HEIGHT_M",
 		"CELL_SEGMENTS",
 		"HEIGHT_DISPLAY_EXAGGERATION",
+		"MACRO_OCTAVES: int = 8",
+		"MIN_SIGNAL_WAVELENGTH_M",
 		"_rebuild_mesh",
 		"surface_add_vertex",
 		"last_triangle_count",
@@ -167,6 +178,7 @@ func _test_p0_boundaries() -> void:
 			"lod_selector_changes_feature_id",
 			"macro_surface_mesh_is_canonical_truth",
 			"macro_height_display_exaggeration_changes_geo_sample",
+			"macro_detail_recipe_changes_g3_provider_contract",
 			"macro_surface_carves_river_valley",
 		]:
 			_check(not bool(boundaries.get(key, true)), "G6.4 P0 boundary %s false" % key)
