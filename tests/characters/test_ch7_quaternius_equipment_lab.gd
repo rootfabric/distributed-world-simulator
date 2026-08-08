@@ -89,6 +89,8 @@ func _run() -> void:
 	_assert(lab.equipment_source.has_item(lab.BACKPACK_ITEM_ID), "Backpack canonical lab state was not equipped")
 	var backpack_visual: Node3D = lab.equipment_presenter.get_visual(lab.BACKPACK_ITEM_ID)
 	_assert(backpack_visual != null, "Backpack presentation visual missing")
+	_assert(backpack_visual.position.is_equal_approx(lab.QUATERNIUS_BACKPACK_FIT_OFFSET), "Backpack lost the Quaternius rear fit offset")
+	_assert(backpack_visual.position.z < 0.0, "Backpack fit must remain on the rear (-Z) side of the Quaternius torso")
 	_assert(_count_mesh_instances(backpack_visual) == 3, "Backpack synthetic visual must contain pack and two tanks")
 	_assert(_has_ancestor(backpack_visual, lab.avatar), "Backpack visual is outside avatar presentation hierarchy")
 	_assert(_all_visuals_use_layer(backpack_visual, world_mask), "Backpack visuals were not recaptured into CH6 world render layer")
