@@ -17,7 +17,7 @@ G6.0 Fluid Contracts                   ACCEPTED
 G6.1 CasualRiverProviderV1             ACCEPTED
 G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
 G6.3 Runtime WaterSurfaceQuery         ACCEPTED
-G6.4 Casual Visual River Lab           IMPLEMENTED CANDIDATE
+G6.4 Casual Visual River Lab           FIX2 IMPLEMENTED CANDIDATE
 G6 Full Acceptance                     NEXT AFTER G6.4 ACCEPTANCE
 ```
 
@@ -65,9 +65,25 @@ git diff --check                       PASS
 working tree                           clean
 ```
 
-## G6.4 Casual Visual River Lab — candidate
+## G6.4 Casual Visual River Lab — fix2 candidate
 
-G6.4 is the first manual visual hydrology checkpoint.
+Первый graphical run подтвердил, что derived ribbon, centerline, banks, query probes и PX/PZ seam визуально работают, но выявил design gap: representation была статической — `97 samples`, без observer-driven LOD. Поэтому G6.4 не принят и получил fix2.
+
+Fix2 подключает уже принятый G2 representation pipeline:
+
+```text
+canonical G6 river
+        ↓
+G2 SurfaceLodSelector
+        ↓
+adaptive SurfaceCellKey leaf cover
+        ↓
+local river representation LOD
+        ↓
+adaptive ribbon sample density + LOD grid
+```
+
+Canonical `FeatureId`, `FluidRegionId`, `RiverSpline` и `WaterSurfaceSample` от LOD не зависят.
 
 Scene:
 
@@ -75,17 +91,7 @@ Scene:
 res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
 ```
 
-Presentation flow:
-
-```text
-accepted G6.1 canonical geography
-        ↓
-accepted G6.3 WaterSurfaceQuery / WaterSurfaceSample
-        ↓
-replaceable G6.4 presentation
-```
-
-The lab renders a planet-scale globe and the accepted G6.2 seam-river with:
+Теперь lab показывает:
 
 ```text
 water ribbon
@@ -93,16 +99,18 @@ canonical centerline debug
 bank guides
 query normal / flow probes
 PX/PZ cube-face transition marker
+rainbow active SurfaceCellKey LOD grid
+HUD: virtual altitude / leaves / max LOD / river samples / river LOD range
 ```
 
-Water/bank widths are deliberately exaggerated only in display space so the kilometer-scale river is visible on an 8-unit globe. Canonical width/depth/bank values remain those returned by `WaterSurfaceSample`.
+`W/S` теперь не только меняет zoom: virtual observer проходит через реальный `SurfaceLodSelector`, поэтому при приближении leaf cover дробится, `Max LOD` растёт и river sample density увеличивается. При удалении representation coarsen-ится.
 
 Controls:
 
 ```text
 A/D orbit
 Q/E pitch
-W/S zoom
+W/S zoom + refine/coarsen
 Space auto-orbit
 R reset
 1 water
@@ -110,6 +118,7 @@ R reset
 3 banks
 4 query probes
 5 seam markers
+6 LOD grid
 ```
 
 Automated gate:
@@ -119,19 +128,25 @@ $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
 ```
 
+Headless smoke теперь дополнительно обязан доказать:
+
+```text
+near max LOD > far max LOD
+near river sample count > far river sample count
+near selection hash != far selection hash
+```
+
 Manual launch after automated PASS:
 
 ```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-G6.4 remains `IMPLEMENTED CANDIDATE` until both the automated Windows gate and manual graphical observation pass.
+G6.4 остаётся `FIX2 IMPLEMENTED CANDIDATE`, пока automated Windows gate и повторная graphical LOD-проверка не пройдут.
 
 ## Synchronization / shared baseline
 
-`main` still uses `GLOBAL-P0-2026-08-08-R1` at G6.4 implementation start.
-
-A fresh shared-baseline PR #43 exists for MW10 atomic lock release on G5. It is currently open and is not a G6.4 dependency. Before full G6 acceptance the G5/main/shared baseline must be checked again and G6 synchronized if that fix or a newer global revision has landed.
+`main` всё ещё использует `GLOBAL-P0-2026-08-08-R1` для этого checkpoint. Shared-baseline MW10 integration не является зависимостью visual lab; перед full G6 acceptance G5/main/shared baseline проверяется заново.
 
 ## Next after G6.4 acceptance
 
@@ -155,6 +170,7 @@ FluidRegion != InterestRegion
 query/index/cache != canonical identity
 visual mesh != canonical truth
 visual width != canonical channel width
+SurfaceLodSelector changes representation only
 spatial location != authority route
 canonical truth != representation
 ```
