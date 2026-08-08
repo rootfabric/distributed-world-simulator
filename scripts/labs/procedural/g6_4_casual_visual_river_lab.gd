@@ -262,7 +262,7 @@ func _build_probe_mesh() -> ImmediateMesh:
 	var material := _line_material()
 	mesh.surface_begin(Mesh.PRIMITIVE_LINES, material)
 	query_probe_count = 0
-	var stride := max(1, int(floor(float(visual_samples.size() - 1) / 6.0)))
+	var stride: int = maxi(1, int(floor(float(visual_samples.size() - 1) / 6.0)))
 	for index in range(0, visual_samples.size(), stride):
 		var sample: Dictionary = visual_samples[index]
 		var frame := _display_frame(sample)
@@ -291,7 +291,8 @@ func _build_seam_mesh() -> ImmediateMesh:
 		var sample: Dictionary = visual_samples[index]
 		var face := String(sample["face"])
 		if face != previous_face:
-			var center := _display_frame(sample)["center"]
+			var frame: Dictionary = _display_frame(sample)
+			var center: Vector3 = frame["center"]
 			var normal := _normal_display(sample)
 			mesh.surface_set_color(Color(1.0, 0.1, 0.85, 1.0))
 			mesh.surface_add_vertex(center - normal * 0.25)
