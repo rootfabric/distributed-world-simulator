@@ -4,6 +4,9 @@ extends RefCounted
 const MIN_THRESHOLD_M := 0.005
 const MAX_THRESHOLD_M := 0.12
 const DEFAULT_BOUNDARY_PAD_M := 0.006
+const MAX_UPPER_Y_PAD_M := 0.05
+const COVERAGE_ROBUST := "ROBUST"
+const COVERAGE_HIGH_BOOT := "HIGH_BOOT"
 
 
 static func create_masked_mesh(
@@ -62,6 +65,7 @@ static func create_masked_mesh(
 		var scene = descriptor.get("scene")
 		if not scene is PackedScene:
 			return _result(false, "TOPOLOGY_GARMENT_SCENE_MISSING")
+		var presentation_id := String(descriptor.get("presentation_id", ""))
 		var threshold_m := float(descriptor.get("threshold_m", 0.0))
 		if not is_finite(threshold_m) or threshold_m < MIN_THRESHOLD_M or threshold_m > MAX_THRESHOLD_M:
 			return _result(false, "TOPOLOGY_THRESHOLD_INVALID", {
@@ -75,7 +79,34 @@ static func create_masked_mesh(
 				"boundary_pad_m": boundary_pad_m,
 				"threshold_m": threshold_m,
 			})
-		var sampler_result: Dictionary = _build_sampler(scene as PackedScene, threshold_m, boundary_pad_m)
+		var coverage_mode := String(descriptor.get("coverage_mode", COVERAGE_ROBUST))
+		if coverage_mode != COVERAGE_ROBUST and coverage_mode != COVERAGE_HIGH_BOOT:
+			return _result(false, "TOPOLOGY_COVERAGE_MODE_INVALID", {
+				"coverage_mode": coverage_mode,
+			})
+		var upper_y_pad_m := float(descriptor.get("upper_y_pad_m", 0.0))
+		if not is_finite(upper_y_pad_m) or upper_y_pad_m < 0.0 or upper_y_pad_m > MAX_UPPER_Y_PAD_M:
+			return _result(false, "TOPOLOGY_UPPER_Y_PAD_INVALID", {
+				"upper_y_pad_m": upper_y_pad_m,
+				"max_upper_y_pad_m": MAX_UPPER_Y_PAD_M,
+			})
+		var upper_bias_fraction := float(descriptor.get("upper_bias_fraction", 1.0))
+		if not is_finite(upper_bias_fraction) or upper_bias_fraction < 0.0 or upper_bias_fraction > 1.0:
+			return _result(false, "TOPOLOGY_UPPER_BIAS_FRACTION_INVALID", {
+				"upper_bias_fraction": upper_bias_fraction,
+			})
+		if coverage_mode == COVERAGE_ROBUST and (upper_y_pad_m > 0.0 or upper_bias_fraction < 1.0):
+			return _result(false, "ROBUST_TOPOLOGY_CANNOT_USE_HIGH_BOOT_BIAS")
+
+		var sampler_result: Dictionary = _build_sampler(
+			presentation_id,
+			scene as PackedScene,
+			threshold_m,
+			boundary_pad_m,
+			coverage_mode,
+			upper_y_pad_m,
+			upper_bias_fraction
+		)
 		if not bool(sampler_result.get("success", false)):
 			return sampler_result
 		var sampler: Dictionary = sampler_result.get("details", {})
@@ -121,6 +152,21 @@ static func create_masked_mesh(
 	masked_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, output_arrays)
 	masked_mesh.surface_set_material(0, source_mesh.surface_get_material(0))
 
+	var descriptor_reports: Array[Dictionary] = []
+	for sampler in samplers:
+		descriptor_reports.append({
+			"presentation_id": String(sampler.get("presentation_id", "")),
+			"coverage_mode": String(sampler.get("coverage_mode", COVERAGE_ROBUST)),
+			"threshold_m": float(sampler.get("threshold_m", 0.0)),
+			"boundary_pad_m": float(sampler.get("boundary_pad_m", 0.0)),
+			"upper_y_pad_m": float(sampler.get("upper_y_pad_m", 0.0)),
+			"upper_bias_fraction": float(sampler.get("upper_bias_fraction", 1.0)),
+			"aggressive_upper_y_min": float(sampler.get("aggressive_upper_y_min", 0.0)),
+			"bounds_min": sampler.get("bounds_min", Vector3.ZERO),
+			"bounds_max": sampler.get("bounds_max", Vector3.ZERO),
+			"sample_count": int(sampler.get("sample_count", 0)),
+		})
+
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
 		"mesh": masked_mesh,
 		"total_triangles": total_triangles,
@@ -129,6 +175,7 @@ static func create_masked_mesh(
 		"removed_ratio": float(removed_triangles) / float(maxi(1, total_triangles)),
 		"sample_count": sample_count,
 		"descriptor_count": samplers.size(),
+		"descriptor_reports": descriptor_reports,
 		"preserves_skin_arrays": true,
 		"presentation_only": true,
 		"moves_gameplay_body": false,
@@ -136,7 +183,15 @@ static func create_masked_mesh(
 	})
 
 
-static func _build_sampler(scene: PackedScene, threshold_m: float, boundary_pad_m: float) -> Dictionary:
+static func _build_sampler(
+	presentation_id: String,
+	scene: PackedScene,
+	threshold_m: float,
+	boundary_pad_m: float,
+	coverage_mode: String,
+	upper_y_pad_m: float,
+	upper_bias_fraction: float
+) -> Dictionary:
 	var instance = scene.instantiate()
 	if not instance is Node3D:
 		if instance is Node:
@@ -205,12 +260,21 @@ static func _build_sampler(scene: PackedScene, threshold_m: float, boundary_pad_
 			cells[key] = []
 		(cells[key] as Array).append(point)
 
+	var aggressive_upper_y_min := max_bound.y
+	if coverage_mode == COVERAGE_HIGH_BOOT:
+		aggressive_upper_y_min = lerpf(min_bound.y, max_bound.y, upper_bias_fraction)
+
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+		"presentation_id": presentation_id,
 		"cells": cells,
 		"cell_size": cell_size,
 		"threshold_m": threshold_m,
 		"threshold_sq": threshold_m * threshold_m,
 		"boundary_pad_m": boundary_pad_m,
+		"coverage_mode": coverage_mode,
+		"upper_y_pad_m": upper_y_pad_m,
+		"upper_bias_fraction": upper_bias_fraction,
+		"aggressive_upper_y_min": aggressive_upper_y_min,
 		"bounds_min": min_bound,
 		"bounds_max": max_bound,
 		"sample_count": points.size(),
@@ -219,36 +283,41 @@ static func _build_sampler(scene: PackedScene, threshold_m: float, boundary_pad_
 
 static func _triangle_is_covered(p0: Vector3, p1: Vector3, p2: Vector3, samplers: Array[Dictionary]) -> bool:
 	var centroid := (p0 + p1 + p2) / 3.0
-	if _point_is_covered(centroid, samplers):
-		return true
-	var covered := 0
-	for point in [
+	var triangle_max_y := maxf(p0.y, maxf(p1.y, p2.y))
+	var triangle_samples := [
 		p0,
 		p1,
 		p2,
 		(p0 + p1) * 0.5,
 		(p1 + p2) * 0.5,
 		(p2 + p0) * 0.5,
-	]:
-		if _point_is_covered(point, samplers):
-			covered += 1
-	return covered >= 2
-
-
-static func _point_is_covered(point: Vector3, samplers: Array[Dictionary]) -> bool:
+	]
 	for sampler in samplers:
-		if _point_is_near_sampler(point, sampler):
+		if _point_is_near_sampler(centroid, sampler):
+			return true
+		var covered := 0
+		for raw_point in triangle_samples:
+			var point: Vector3 = raw_point
+			if _point_is_near_sampler(point, sampler):
+				covered += 1
+		var coverage_mode := String(sampler.get("coverage_mode", COVERAGE_ROBUST))
+		if coverage_mode == COVERAGE_HIGH_BOOT:
+			var aggressive_upper_y_min := float(sampler.get("aggressive_upper_y_min", INF))
+			if triangle_max_y >= aggressive_upper_y_min and covered >= 1:
+				return true
+		if covered >= 2:
 			return true
 	return false
 
 
 static func _point_is_near_sampler(point: Vector3, sampler: Dictionary) -> bool:
 	var pad := float(sampler.get("boundary_pad_m", DEFAULT_BOUNDARY_PAD_M))
+	var upper_y_pad_m := float(sampler.get("upper_y_pad_m", 0.0))
 	var min_bound: Vector3 = sampler.get("bounds_min", Vector3.ZERO)
 	var max_bound: Vector3 = sampler.get("bounds_max", Vector3.ZERO)
 	if (
 		point.x < min_bound.x - pad or point.x > max_bound.x + pad
-		or point.y < min_bound.y - pad or point.y > max_bound.y + pad
+		or point.y < min_bound.y - pad or point.y > max_bound.y + pad + upper_y_pad_m
 		or point.z < min_bound.z - pad or point.z > max_bound.z + pad
 	):
 		return false
