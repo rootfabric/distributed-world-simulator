@@ -65,7 +65,7 @@ func _run() -> void:
 		_assert(simulator.command_registry.get_registration_errors().is_empty(), "Command registration errors remain after load: %s" % world_id)
 		_assert(simulator.test_registry.get_registration_errors().is_empty(), "Test registration errors remain after load: %s" % world_id)
 		_assert(simulator.command_registry.has_command("display.fullscreen.toggle"), "Core display command disappeared in %s" % world_id)
-		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core display command disappeared in %s" % world_id)
+		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command disappeared in %s" % world_id)
 		_assert_world_command_surface(simulator, world_id)
 		_test_inventory_profile_command(simulator, world_id)
 		_assert_runtime_persistence_healthy(runtime, world_id)
@@ -142,20 +142,6 @@ func _assert_optional_diagnostic_menu_is_closed(runtime, world_id: String) -> vo
 	)
 
 
-func _assert_world_command_surface(simulator, world_id: String) -> void:
-	var expectations: Dictionary = COMMAND_EXPECTATIONS.get(world_id, {})
-	for command_id in expectations.get("required", []):
-		_assert(
-			simulator.command_registry.has_command(String(command_id)),
-			"Required command missing in %s: %s" % [world_id, command_id]
-		)
-	for command_id in expectations.get("forbidden", []):
-		_assert(
-			not simulator.command_registry.has_command(String(command_id)),
-			"Foreign command leaked into %s: %s" % [world_id, command_id]
-		)
-
-
 func _finish() -> void:
 	if failures.is_empty():
 		print("World boot matrix: PASS")
@@ -170,3 +156,17 @@ func _finish() -> void:
 func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _assert_world_command_surface(simulator, world_id: String) -> void:
+	var expectation: Dictionary = COMMAND_EXPECTATIONS.get(world_id, {})
+	for command_id in expectation.get("required", []):
+		_assert(
+			simulator.command_registry.has_command(String(command_id)),
+			"Required command is missing in %s: %s" % [world_id, command_id]
+		)
+	for command_id in expectation.get("forbidden", []):
+		_assert(
+			not simulator.command_registry.has_command(String(command_id)),
+			"Foreign command leaked into %s: %s" % [world_id, command_id]
+		)
