@@ -96,7 +96,8 @@ func _test_same_tick_sequence_order_is_wrap_aware() -> void:
 	var wrapped_old: Dictionary = {"client_tick": 200, "input_sequence": 2147483647}
 	_assert(int(reconciler.call("_fix10_fix5_compare_ack_order", wrapped_new, wrapped_old)) == 1, "FIX10 fix5 sequence 1 is newer than MAX after wrap")
 	_assert(int(reconciler.call("_fix10_fix5_compare_ack_order", wrapped_old, wrapped_new)) == -1, "FIX10 fix5 MAX is stale relative to wrapped sequence 1")
-	reconciler.free()
+	# Reconciler inherits RefCounted; do not call free(). The local reference is
+	# released automatically when this test scope ends.
 
 
 func _test_client_source_can_stamp_same_future_tick() -> void:
