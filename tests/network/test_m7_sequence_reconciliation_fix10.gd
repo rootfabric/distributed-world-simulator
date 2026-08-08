@@ -3,6 +3,7 @@ extends SceneTree
 const Reconciler = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
 const InputBufferFix10 = preload("res://scripts/network/simulation/fixed_tick_input_buffer_fix10.gd")
 const MovementService = preload("res://scripts/runtime/networked_gameplay/services/player_movement_service.gd")
+const ClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 
 var assertions: int = 0
 var failures: Array[String] = []
@@ -17,6 +18,7 @@ func _run() -> void:
 	_test_ack_baseline_replays_local_timeline_without_phase_correction()
 	_test_repeated_ack_does_not_reapply_baseline()
 	_test_real_baseline_divergence_still_corrects()
+	_test_compact_ack_wire_decoding()
 	_test_fix10_source_composition()
 	_finish()
 
@@ -108,17 +110,66 @@ func _test_real_baseline_divergence_still_corrects() -> void:
 	_assert(int(reconciler.get_report().get("corrections", 0)) >= 1, "FIX10 real divergence increments correction count")
 
 
+func _test_compact_ack_wire_decoding() -> void:
+	var runtime = ClientRuntime.new()
+	_assert(runtime != null, "FIX10 client runtime instantiates for compact ACK probe")
+	if runtime == null:
+		return
+	var wire: Array = [
+		17, 142, 144,
+		1.25, 2.5, -3.75,
+		6.0, 0.0, -1.5,
+		0.75, 24,
+	]
+	var verbose_ack: Dictionary = runtime.call(
+		"_fix10_extract_prediction_ack",
+		{
+			"snapshot": {"t": 150},
+			"prediction_ack": wire,
+		},
+		"COMPACT_GAMEPLAY_SNAPSHOT"
+	)
+	_assert(not verbose_ack.is_empty(), "FIX10 compact ACK wire decodes")
+	_assert(int(verbose_ack.get("input_sequence", 0)) == 17, "FIX10 compact ACK preserves sequence")
+	_assert(int(verbose_ack.get("client_tick", 0)) == 142, "FIX10 compact ACK preserves client tick")
+	_assert(int(verbose_ack.get("applied_server_tick", 0)) == 144, "FIX10 compact ACK preserves apply tick")
+	_assert(int(verbose_ack.get("transport_snapshot_server_tick", 0)) == 150, "FIX10 compact ACK binds transport snapshot tick")
+	_assert(_position(verbose_ack).distance_to(Vector3(1.25, 2.5, -3.75)) < 0.000001, "FIX10 compact ACK preserves position")
+	var velocity: Dictionary = Dictionary(verbose_ack.get("velocity", {}))
+	_assert(Vector3(float(velocity.get("x", 0.0)), float(velocity.get("y", 0.0)), float(velocity.get("z", 0.0))).distance_to(Vector3(6.0, 0.0, -1.5)) < 0.000001, "FIX10 compact ACK preserves velocity")
+	_assert(is_equal_approx(float(verbose_ack.get("orientation_yaw", 0.0)), 0.75), "FIX10 compact ACK preserves yaw")
+	_assert(int(verbose_ack.get("state_revision", 0)) == 24, "FIX10 compact ACK preserves state revision")
+	var transport_report: Dictionary = Dictionary(runtime.get_report().get("fix10_prediction_ack_transport", {}))
+	_assert(String(transport_report.get("wire_policy", "")) == "COMPACT_ARRAY_V1", "FIX10 compact ACK wire policy reported")
+	_assert(int(transport_report.get("compact_sidecars_received", 0)) == 1, "FIX10 compact ACK decode is observable")
+	var verbose_wire_bytes: int = JSON.stringify({
+		"input_sequence": 17,
+		"client_tick": 142,
+		"applied_server_tick": 144,
+		"position": {"x": 1.25, "y": 2.5, "z": -3.75},
+		"velocity": {"x": 6.0, "y": 0.0, "z": -1.5},
+		"orientation_yaw": 0.75,
+		"state_revision": 24,
+	}).to_utf8_buffer().size()
+	var compact_wire_bytes: int = JSON.stringify(wire).to_utf8_buffer().size()
+	_assert(compact_wire_bytes + 80 < verbose_wire_bytes, "FIX10 compact ACK materially reduces unreliable packet budget")
+	runtime.free()
+
+
 func _test_fix10_source_composition() -> void:
 	var server_source: String = FileAccess.get_file_as_string(
 		"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
 	)
 	_assert(server_source.contains("SERVER_ECHOED_POST_INPUT_BASELINE_V1"), "FIX10 server ack policy source missing")
 	_assert(server_source.contains("prediction_ack"), "FIX10 server snapshot ack sidecar missing")
+	_assert(server_source.contains("COMPACT_ARRAY_V1"), "FIX10 server compact ACK wire policy missing")
+	_assert(server_source.contains("_fix10_ack_wire_for_peer"), "FIX10 server does not compact ACK sidecar")
 	_assert(server_source.contains("fixed_tick_input_buffer_fix10.gd"), "FIX10 server does not activate client-tick input buffer")
 	var client_source: String = FileAccess.get_file_as_string(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
 	)
 	_assert(client_source.contains("set_authoritative_input_ack"), "FIX10 client does not route ack sidecar to reconciler")
+	_assert(client_source.contains("COMPACT_ARRAY_V1"), "FIX10 client compact ACK decoder missing")
 	_assert(client_source.contains("m3_graphical_client_runtime_fix9.gd"), "FIX10 client must preserve FIX9 runtime underneath")
 	var reconciler_source: String = FileAccess.get_file_as_string(
 		"res://scripts/network/prediction/client_prediction_reconciler.gd"
