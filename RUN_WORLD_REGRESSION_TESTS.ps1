@@ -256,6 +256,7 @@ $Tests = @(
     "res://tests/matter/handoff/test_mw9_lock_release_retry.gd",
     "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd",
     "res://tests/matter/transactions/test_mw10_cross_region_processes.gd",
+    "res://tests/matter/transactions/test_mw10_lock_release_retry.gd",
     "res://tests/representation/test_rl0_representation_contracts.gd",
     "res://tests/representation/test_rl1_matter_summary_pyramid.gd",
     "res://tests/representation/test_rl2_matter_multiresolution_meshing.gd",
