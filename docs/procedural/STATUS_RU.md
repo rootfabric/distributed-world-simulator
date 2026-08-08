@@ -12,8 +12,8 @@ G1 Geodesy + Body Shape                BASELINE
 G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
 G4 Provider Composition / Replacement  ACCEPTED
-G5 World Feature Graph                 IMPLEMENTED CANDIDATE — FULL GATE PENDING
-G6 Hydrology / Fluid Surface v0        NEXT AFTER G5 ACCEPTED
+G5 World Feature Graph                 ACCEPTED
+G6 Hydrology / Fluid Surface v0        NEXT — UNBLOCKED
 ```
 
 G5 base:
@@ -23,16 +23,17 @@ feature/g4-provider-composition-replacement
 4d1fed8e4367e6c4ea276fcf6b9b57159de72014
 ```
 
-Canonical G4 acceptance record:
+Accepted G5 candidate head:
+
+```text
+34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4
+```
+
+Canonical acceptance records:
 
 ```text
 docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
-```
-
-G5 candidate record:
-
-```text
-docs/checkpoints/G5_WORLD_FEATURE_GRAPH_CANDIDATE_RU.md
+docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md
 ```
 
 ## Universal architecture
@@ -70,7 +71,7 @@ geo/surface-height-m
 
 G4 Architecture Review A: `PASS`.
 
-## G5 implemented candidate
+## G5 accepted World Feature Graph
 
 Canonical feature vocabulary:
 
@@ -108,7 +109,7 @@ NO renderer
 NO query-order dependency
 ```
 
-Feature graph supports surface, subsurface and free-space semantics. Current acceptance fixtures include:
+Feature graph supports surface, subsurface and free-space semantics. Acceptance fixtures include:
 
 ```text
 fault
@@ -155,7 +156,7 @@ Feature != Cell
 LOD != Feature Identity
 ```
 
-## Exact-engine focused evidence
+## Acceptance evidence
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
@@ -163,6 +164,18 @@ cold editor import                 PASS
 G5 World Feature Graph             PASS — 249 assertions
 G5 feature/cell identity           PASS — 94 assertions
 G5 visual lab headless             PASS — 4 features
+full world/core regression         PASS
+Breakpoint :9081 collision noise   0
+git diff hygiene/freeze            PASS
+G5 full acceptance gate            PASS
+```
+
+Expected/known regression output did not block acceptance:
+
+```text
+manifest identity mismatch negative paths   suites PASS
+NX5 rejection warnings                      suite PASS
+MW7 ObjectDB/ResourceCache exit warnings    existing debt
 ```
 
 Lab:
@@ -171,35 +184,9 @@ Lab:
 res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
 ```
 
-Focused runner:
-
-```powershell
-.\RUN_G5_WORLD_FEATURE_GRAPH_TESTS.ps1
-```
-
-Full checkout gate:
-
-```powershell
-.\RUN_G5_FULL_ACCEPTANCE.ps1
-```
-
-Required before acceptance:
-
-```text
-G4 dependency focused PASS
-G5 focused PASS
-full world/core regression PASS
-Breakpoint :9081 collision noise 0
-git diff --check vs accepted G4 PASS
-frozen G0-G4 architecture paths unchanged
-production/runtime/network/Matter/world paths unchanged
-```
-
-Until the real Windows full-checkout wrapper is green, G5 remains `IMPLEMENTED CANDIDATE`.
-
 ## Next
 
-Blocking main track after G5 acceptance:
+Blocking main track:
 
 ```text
 G6 — Hydrology / Fluid Surface v0
