@@ -3,7 +3,7 @@
   "branch": "feature/m7-runtime-performance-fix6",
   "base": "10af3625122e5ebdf7d40e982492d2a488b7ccde",
   "base_stage": "M7 FIX5 automated Windows gate pass candidate",
-  "decision": "FIX6 CANDIDATE - WINDOWS TWO-CLIENT CONVERGENCE RERUN REQUIRED",
+  "decision": "FIX6 AUTOMATED WINDOWS GATE PASS - LONG TWO-CLIENT LOCAL STRESS REQUIRED",
   "problem_evidence": {
     "manual_session": "two-client LOCAL item pickup/drop stress",
     "server_transient_stall_frames_observed": 71,
@@ -24,7 +24,7 @@
     "slow_process_frame_threshold_ms": 50.0
   },
   "production_changes": [
-    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or shifts the oldest element on the realtime path",
+    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer copies and shifts the bounded sample window on the realtime path",
     "steady-state telemetry lookups avoid eager default Array/Dictionary allocation for existing distributions and transport channels",
     "M7 dedicated server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
     "M7 graphical client does the same 4 Hz transport peer-stat sampling instead of rebuilding the full boundary snapshot every frame",
@@ -67,46 +67,60 @@
     }
   },
   "windows_gate_evidence": {
-    "tested_head_before_convergence_correction": "a4104d0c42cf7a77d63631dd50fd4613da4a8cdc",
+    "tested_runtime_head": "768c41f75e203660f0ef0b0aba64934f9e335fba",
     "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_graphical_client_telemetry": "PASS - 14 assertions, 0 failures",
+    "focused_two_client_process": "PASS - 51 assertions, 0 failures",
+    "full_runner": "PASS - M7 FIX6 runtime performance validation passed",
     "editor_import_composition": "PASS",
     "server_realtime_hot_path": "PASS - 261 assertions, 0 failures",
-    "graphical_client_telemetry": "PASS - 10 assertions, 0 failures",
     "fix5_world_item_consistency": "PASS - 49 assertions, 0 failures",
     "nx6_predicted_items": "PASS - 957 assertions",
+    "accepted_inventory_regression": "PASS",
     "nx3_fixed_tick": "PASS - 6188 assertions, 0 failures",
     "nx4_prediction_reconciliation": "PASS - 706 assertions",
-    "m7_two_client_process": "FAIL - 3 convergence assertions",
-    "two_client_failure_evidence": {
-      "client_a_convergence_checksum": "115e456d086a3e2959f05b60885c552ed70afc0a538f901f710349da51448842",
-      "client_b_convergence_checksum": "115e456d086a3e2959f05b60885c552ed70afc0a538f901f710349da51448842",
-      "server_ready_file_snapshot_checksum": "67d4ba703c2b616227e9764f0aa98cc05c9f6d2889df3f2461bfa843b60e1807",
-      "item_graph_converged": true,
+    "m7_two_client_process": "PASS - 51 assertions, 0 failures",
+    "convergence": {
+      "client_a_complete": true,
+      "client_b_complete": true,
+      "item_graph_clients_converged": true,
+      "item_graph_server_clients_converged": true,
+      "player_replicas_converged_while_both_connected": true,
+      "server_clients_player_replicas_converged_before_disconnect": true,
       "client_a_hard_corrections": 0,
       "client_b_hard_corrections": 0,
       "client_a_reconcile_failures": 0,
-      "client_b_reconcile_failures": 0,
-      "diagnosis": "the two clients converged to the same gameplay checksum, but the process worker compared them with the throttled READY file's embedded snapshot. FIX6 deliberately reduced READY materialization to 1 Hz, so that diagnostic snapshot can be older than the runtime's explicit last_two_connected_checksum capture. This is an acceptance-fixture synchronization defect, not evidence of peer gameplay divergence."
+      "client_b_reconcile_failures": 0
     },
-    "correction": {
+    "performance_observations_from_process_gate": {
+      "client_a_max_prediction_error_m": 0.3,
+      "client_b_max_prediction_error_m": 0.4,
+      "client_a_peak_process_duration_ms": 106.953,
+      "client_b_peak_process_duration_ms": 123.205,
+      "client_a_slow_process_frames": 1,
+      "client_b_slow_process_frames": 1,
+      "note": "Short process gate converged despite one isolated >100 ms client frame on each client; long manual stress remains required to determine whether sustained item activity is now acceptable."
+    },
+    "breakpoint_runtime_noise": {
+      "message": "[breakpoint_runtime] could not listen on 127.0.0.1:9081 (error 22)",
+      "blocking": false,
+      "reason": "The bridge emits a diagnostic push_error when its optional loopback listener cannot bind; every affected test returned PASS and the full validation runner completed successfully. BREAKPOINT_RUNTIME_DISABLED=1 can be used for isolated headless runs."
+    },
+    "prior_convergence_fixture_correction": {
+      "old_failure_head": "a4104d0c42cf7a77d63631dd50fd4613da4a8cdc",
+      "diagnosis": "the process worker compared live client convergence with a throttled READY-file snapshot that could be up to one report interval stale",
       "worker_policy": "prefer server last_two_connected_checksum; fall back to snapshot.checksum for older runtimes",
       "worker_commit": "d99fe2555026b0c4d31e1de5acd407462db75b8d",
       "focused_contract_commit": "2a176ae47dcfd819dbc4669f69885dc6c42cb1ff",
       "production_runtime_semantics_changed": false,
-      "required_next_step": "rerun the FIX6 graphical-client focused test and the full two-client process gate"
+      "corrected_gate_result": "PASS"
     }
   },
-  "required_windows_gate": [
-    "FIX6 editor import/composition PASS on Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "FIX6 server realtime hot-path regression PASS",
-    "FIX6 graphical client telemetry/convergence-fixture regression PASS",
-    "FIX5 world-item consistency PASS",
-    "NX6 predicted item regression PASS",
-    "accepted inventory regression PASS",
-    "NX3 fixed tick PASS",
-    "NX4 prediction/reconciliation PASS",
-    "M7 two-client graphical process PASS"
-  ],
+  "automated_acceptance": {
+    "status": "PASS",
+    "tested_runtime_head": "768c41f75e203660f0ef0b0aba64934f9e335fba",
+    "remaining_blocker": "long manual two-client LOCAL item stress and ANALYZE_M7_FIX6_STRESS.ps1 review"
+  },
   "long_manual_acceptance": {
     "duration_minutes_min": 5,
     "clients": 2,
@@ -126,6 +140,6 @@
   "assistant_execution": {
     "full_repository_available": false,
     "windows_gate_executed_by_user": true,
-    "note": "The Windows gate confirmed the FIX6 focused runtime changes but exposed a process-fixture convergence check that read a stale throttled READY snapshot. The worker/test correction is committed; the two-client rerun remains authoritative."
+    "note": "The user executed the exact Windows automated FIX6 gate at runtime head 768c41f75e203660f0ef0b0aba64934f9e335fba. Focused telemetry and two-client convergence passed, and the complete FIX6 runner passed. Long manual item stress remains the final acceptance gate."
   }
 }
