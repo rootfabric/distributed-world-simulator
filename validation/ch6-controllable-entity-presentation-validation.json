@@ -1,0 +1,91 @@
+{
+  "schema": "planet_simulator.ch6_controllable_entity_presentation_validation.v1",
+  "branch": "feature/ch6-controllable-entity-presentation",
+  "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
+  "base_checkpoint": "CH5 full-body first-person implemented candidate",
+  "delivery": "CH5 fix1 / CH6 candidate",
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_ENGINE_AND_GRAPHICAL_ACCEPTANCE",
+  "trigger": {
+    "ch5_head_mask_tests": "PASS on Windows with real Quaternius assets",
+    "graphical_result": "REJECTED_BY_VISUAL_OBSERVATION",
+    "observed_problem": "First-person camera still intersects neck, chest and shoulders even when the Head bone is collapsed"
+  },
+  "scope": {
+    "production_lunar_player_changed": false,
+    "network_runtime_changed": false,
+    "inventory_changed": false,
+    "prediction_reconciliation_changed": false,
+    "collision_contract_changed": false,
+    "root_motion_authority_changed": false,
+    "integration_mode": "isolated_character_lab_and_generic_presentation_contract"
+  },
+  "ch5_fix1": {
+    "default_policy": "HIDE_WORLD_MODEL",
+    "mechanism": "World VisualInstance3D nodes are moved to a dedicated render layer that is excluded from the local first-person Camera3D cull_mask and retained in the third-person camera cull_mask",
+    "world_model_globally_hidden": false,
+    "world_animation_stopped": false,
+    "legacy_head_mask_removed": false,
+    "legacy_head_mask_role": "compatibility only"
+  },
+  "ch6_architecture": {
+    "profile": "ControllablePresentationProfile",
+    "generic_adapter": "ControllableViewAdapter",
+    "compatibility_adapter": "FullBodyFirstPersonAdapter v2",
+    "presenter_contract": [
+      "optional create_presentation_profile()",
+      "optional get_world_visual_root()",
+      "optional get_first_person_viewmodel_root()"
+    ],
+    "supported_entity_kind_model": "open string metadata; humanoid/drone/animal/cyborg are examples, not an enum gate",
+    "movement_presentation_separation": true,
+    "first_person_policies": [
+      "HIDE_WORLD_MODEL",
+      "SHOW_WORLD_MODEL",
+      "LEGACY_HEAD_MASK",
+      "VIEWMODEL"
+    ],
+    "viewmodel_layer_reserved": true
+  },
+  "non_humanoid_proof": {
+    "fixture": "tests/fixtures/ch6_test_drone_presenter.gd",
+    "skeleton_required": false,
+    "head_bone_required": false,
+    "quaternius_required": false,
+    "visuals": "one drone body plus four rotor meshes",
+    "test": "tests/characters/test_ch6_controllable_view_adapter.gd"
+  },
+  "render_layers": {
+    "default_world_model_layer_index": 20,
+    "default_first_person_viewmodel_layer_index": 19,
+    "configurable_per_profile": true,
+    "original_visual_layers_restored_on_unbind": true,
+    "original_camera_cull_masks_restored_on_unbind": true
+  },
+  "local_authoring_validation": {
+    "status": "NOT_EXECUTED_IN_CONNECTED_GITHUB_ENVIRONMENT",
+    "reason": "Godot runtime is on the user's Windows workstation; candidate is committed for the same real-asset runner used by CH5"
+  },
+  "windows_acceptance_gate": {
+    "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
+    "play_command": ".\\PLAY_CH6_CONTROLLABLE_PRESENTATION_LAB.ps1 -GodotPath $Godot",
+    "required": [
+      "asset_preflight PASS",
+      "editor_import PASS with no Parse Error or Compile Error",
+      "CH4 avatar presenter regression PASS",
+      "CH4 character lab regression PASS",
+      "CH5 legacy adapter compatibility PASS",
+      "CH5 fix1 camera-layer lab PASS",
+      "CH6 non-humanoid controllable view adapter PASS",
+      "real Quaternius graphical first-person view shows no own head, neck, chest or shoulder geometry",
+      "third-person view still shows the full animated Quaternius body",
+      "walk, run and jump still work",
+      "C repeatedly toggles first/third person without leaking own-body geometry",
+      "root motion remains disabled"
+    ]
+  },
+  "known_next_stage": {
+    "production_integration": "Bind the accepted profile/adapter contract into LunarPlayer as an optional presentation component in a separate branch",
+    "viewmodel": "Add dedicated hands/tools/weapons or vehicle-specific first-person geometry only when gameplay needs it",
+    "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles"
+  }
+}
