@@ -102,9 +102,8 @@ func _refresh_status() -> void:
 		state = "ON" if equipment_source.has_item(OUTFIT_ITEM_ID) else "OFF"
 	status_label.text += (
 		"\n\nCH7.8 — Skinned Garment\n"
-		+ "O — Peasant Male outfit | state: %s\n"
+		+ ("O — Peasant Male outfit | state: %s\n" % state)
 		+ "strategy: SKINNED_GARMENT | body hiding: not yet enabled"
-		% state
 	)
 
 
