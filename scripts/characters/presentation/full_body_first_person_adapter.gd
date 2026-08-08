@@ -1,10 +1,10 @@
 class_name FullBodyFirstPersonAdapter
-extends Node
+extends "res://scripts/characters/presentation/controllable_view_adapter.gd"
 
+const PresentationProfile = preload("res://scripts/characters/presentation/controllable_presentation_profile.gd")
 const FIRST_PERSON_HEAD_SCALE := Vector3(0.001, 0.001, 0.001)
 
 var avatar: Node
-var first_person_enabled := false
 var mask_mode := "UNBOUND"
 var head_bone_name := ""
 
@@ -14,9 +14,13 @@ var _head_default_scale := Vector3.ONE
 var _fallback_head: Node3D
 
 
-func bind_avatar(presenter: Node) -> Dictionary:
+func bind_avatar(presenter: Node, profile_override: Resource = null) -> Dictionary:
 	_restore_mask_target()
 	avatar = presenter
+	var effective_profile := profile_override
+	if effective_profile == null:
+		effective_profile = _create_legacy_compatibility_profile()
+	super.bind_presentation(presenter, effective_profile)
 	_resolve_mask_target()
 	_apply_mask()
 	return _success(create_report())
@@ -31,20 +35,33 @@ func unbind_avatar() -> void:
 	_fallback_head = null
 	mask_mode = "UNBOUND"
 	head_bone_name = ""
-	first_person_enabled = false
+	super.unbind_presentation()
 
 
 func set_first_person_enabled(enabled: bool) -> Dictionary:
-	first_person_enabled = enabled
+	super.set_first_person_enabled(enabled)
 	_apply_mask()
 	return _success(create_report())
 
 
 func _process(_delta: float) -> void:
-	# Keep the local visibility fence authoritative even if an animation track
-	# writes bone scale later in the frame.
-	if first_person_enabled:
+	# Legacy compatibility only. The CH5 fix1 path no longer edits a humanoid
+	# skeleton every frame; it keeps the world model alive and removes its render
+	# layer from the local first-person camera instead.
+	if first_person_enabled and _uses_legacy_head_mask():
 		_apply_mask()
+
+
+func _create_legacy_compatibility_profile() -> Resource:
+	var compatibility = PresentationProfile.new()
+	compatibility.profile_id = &"legacy_full_body_first_person"
+	compatibility.entity_kind = &"humanoid"
+	compatibility.first_person_policy = PresentationProfile.FirstPersonPolicy.LEGACY_HEAD_MASK
+	return compatibility
+
+
+func _uses_legacy_head_mask() -> bool:
+	return get_first_person_policy() == PresentationProfile.FirstPersonPolicy.LEGACY_HEAD_MASK
 
 
 func _resolve_mask_target() -> void:
@@ -56,6 +73,18 @@ func _resolve_mask_target() -> void:
 	head_bone_name = ""
 	if avatar == null:
 		mask_mode = "UNBOUND"
+		return
+
+	if not _uses_legacy_head_mask():
+		match get_first_person_policy():
+			PresentationProfile.FirstPersonPolicy.HIDE_WORLD_MODEL:
+				mask_mode = "CAMERA_LAYER"
+			PresentationProfile.FirstPersonPolicy.VIEWMODEL:
+				mask_mode = "VIEWMODEL"
+			PresentationProfile.FirstPersonPolicy.SHOW_WORLD_MODEL:
+				mask_mode = "NONE"
+			_:
+				mask_mode = "UNAVAILABLE"
 		return
 
 	var model_root := _find_descendant_named(avatar, "QuaterniusModel")
@@ -78,6 +107,8 @@ func _resolve_mask_target() -> void:
 
 
 func _apply_mask() -> void:
+	if not _uses_legacy_head_mask():
+		return
 	if mask_mode == "BONE_SCALE" and _target_skeleton != null and _head_bone_index >= 0:
 		_target_skeleton.set_bone_pose_scale(
 			_head_bone_index,
@@ -138,17 +169,39 @@ func _normalized_bone_name(value: StringName) -> String:
 
 
 func create_report() -> Dictionary:
+	var base_report := super.create_report()
+	var legacy_ready := mask_mode in ["BONE_SCALE", "FALLBACK_VISIBILITY"]
+	var camera_layer_ready := (
+		mask_mode == "CAMERA_LAYER"
+		and bool(base_report.get("first_person_camera_bound", false))
+		and int(base_report.get("world_visual_count", 0)) > 0
+	)
+	var camera_layer_applied := (
+		first_person_enabled
+		and camera_layer_ready
+		and bool(base_report.get("world_hidden_from_first_person", false))
+	)
 	return {
-		"schema": "planet_simulator.full_body_first_person_adapter.v1",
+		"schema": "planet_simulator.full_body_first_person_adapter.v2",
 		"first_person_enabled": first_person_enabled,
 		"mask_mode": mask_mode,
-		"mask_ready": mask_mode in ["BONE_SCALE", "FALLBACK_VISIBILITY"],
-		"mask_applied": first_person_enabled and mask_mode in ["BONE_SCALE", "FALLBACK_VISIBILITY"],
+		"mask_ready": legacy_ready or camera_layer_ready or mask_mode == "VIEWMODEL",
+		"mask_applied": (
+			(first_person_enabled and legacy_ready)
+			or camera_layer_applied
+			or (first_person_enabled and mask_mode == "VIEWMODEL")
+		),
 		"head_bone_name": head_bone_name,
 		"head_bone_present": _head_bone_index >= 0,
 		"fallback_head_present": _fallback_head != null,
+		"first_person_policy": String(base_report.get("first_person_policy", "")),
+		"profile_id": String(base_report.get("profile_id", "")),
+		"entity_kind": String(base_report.get("entity_kind", "")),
+		"world_visual_count": int(base_report.get("world_visual_count", 0)),
+		"world_hidden_from_first_person": bool(base_report.get("world_hidden_from_first_person", false)),
+		"world_visible_to_third_person": bool(base_report.get("world_visible_to_third_person", false)),
+		"world_animation_preserved": bool(base_report.get("world_animation_preserved", true)),
+		"shadow_caster_preserved": bool(base_report.get("shadow_caster_preserved", true)),
+		"world_render_layer_mask": int(base_report.get("world_render_layer_mask", 0)),
+		"viewmodel_render_layer_mask": int(base_report.get("viewmodel_render_layer_mask", 0)),
 	}
-
-
-func _success(details: Dictionary = {}) -> Dictionary:
-	return {"success": true, "error_code": "", "details": details.duplicate(true)}
