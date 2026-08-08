@@ -306,10 +306,21 @@ func _release_lock(token: String) -> Dictionary:
 	var owner: Dictionary = _read_lock_owner()
 	if int(owner.get("pid", -1)) != OS.get_process_id() or String(owner.get("token", "")) != token:
 		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_OWNERSHIP_MISMATCH")
-	_remove_file(_lock_path.path_join(LOCK_OWNER_FILE_NAME))
-	if DirAccess.remove_absolute(_lock_path) != OK:
-		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_RELEASE_FAILED")
-	return MatterUtils.success()
+	var released_path: String = _root_path.path_join(
+		".matter-cross-region-transactions.lock.%s.released" % token
+	)
+	_remove_directory(released_path)
+	var rename_error: int = DirAccess.rename_absolute(_lock_path, released_path)
+	if rename_error != OK:
+		return MatterUtils.failure("MATTER_CROSS_REGION_TRANSACTION_LOCK_RELEASE_RENAME_FAILED", {
+			"godot_error": rename_error,
+		})
+	var owner_removed: bool = _remove_file(released_path.path_join(LOCK_OWNER_FILE_NAME))
+	var directory_removed: bool = DirAccess.remove_absolute(released_path) == OK
+	return MatterUtils.success({
+		"cleanup_complete": owner_removed and directory_removed,
+		"release_residue": "" if directory_removed else released_path,
+	})
 
 
 func _wait_for_unlock() -> Dictionary:
