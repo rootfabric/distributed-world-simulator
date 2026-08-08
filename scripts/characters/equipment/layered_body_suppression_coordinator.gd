@@ -68,6 +68,13 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 		regions.append(String(raw_region))
 	regions.sort()
 
+	if regions == _active_regions and _presentation_is_intact():
+		_last_snapshot_fingerprint = fingerprint
+		return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+			"changed": false,
+			"active_regions": _active_regions.duplicate(),
+		})
+
 	if regions.is_empty():
 		var restored := _restore_original_material()
 		_active_regions.clear()
@@ -109,11 +116,10 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 		_target = next_target
 	_target.material_override = next_material
 	_applied_material = next_material
-	var changed := regions != _active_regions or _target.material_override != _applied_material
 	_active_regions = regions
 	_last_snapshot_fingerprint = fingerprint
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
-		"changed": true if changed else fingerprint != _last_snapshot_fingerprint,
+		"changed": true,
 		"active_regions": _active_regions.duplicate(),
 		"target_name": String(_target.name),
 		"target_key": String(composite_details.get("key", "")),
