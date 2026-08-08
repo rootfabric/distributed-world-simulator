@@ -1,6 +1,12 @@
 extends SceneTree
 
 const LabScene = preload("res://scenes/labs/character/quaternius_layered_equipment_lab.tscn")
+const UPPER_ITEM_ID := "lab.item.layer.upper.001"
+const LOWER_ITEM_ID := "lab.item.layer.lower.001"
+const FEET_ITEM_ID := "lab.item.layer.feet.001"
+const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
+const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
+const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 
 var failures: Array[String] = []
 var assertions := 0
@@ -28,33 +34,33 @@ func _run() -> void:
 	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before := float(lab.player_capsule.height)
 	for pair in [
-		[lab.UPPER_ITEM_ID, lab.UPPER_PROFILE_ID],
-		[lab.LOWER_ITEM_ID, lab.LOWER_PROFILE_ID],
-		[lab.FEET_ITEM_ID, lab.FEET_PROFILE_ID],
+		[UPPER_ITEM_ID, UPPER_PROFILE_ID],
+		[LOWER_ITEM_ID, LOWER_PROFILE_ID],
+		[FEET_ITEM_ID, FEET_PROFILE_ID],
 	]:
 		var on_result: Dictionary = lab.call("_toggle_layer", String(pair[0]), String(pair[1]))
 		_assert(bool(on_result.get("success", false)), "CH8C graphical lab layer toggle-on failed")
 		await process_frame
 
-	_assert(lab.equipment_source.has_item(lab.UPPER_ITEM_ID), "CH8C graphical lab upper missing")
-	_assert(lab.equipment_source.has_item(lab.LOWER_ITEM_ID), "CH8C graphical lab lower missing")
-	_assert(lab.equipment_source.has_item(lab.FEET_ITEM_ID), "CH8C graphical lab feet missing")
+	_assert(lab.equipment_source.has_item(UPPER_ITEM_ID), "CH8C graphical lab upper missing")
+	_assert(lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower missing")
+	_assert(lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet missing")
 	var peak_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	_assert((peak_report.get("active_regions", []) as Array).size() == 4, "CH8C graphical lab did not aggregate four body regions")
 	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply aggregate material")
 
 	for pair in [
-		[lab.LOWER_ITEM_ID, lab.LOWER_PROFILE_ID],
-		[lab.UPPER_ITEM_ID, lab.UPPER_PROFILE_ID],
-		[lab.FEET_ITEM_ID, lab.FEET_PROFILE_ID],
+		[LOWER_ITEM_ID, LOWER_PROFILE_ID],
+		[UPPER_ITEM_ID, UPPER_PROFILE_ID],
+		[FEET_ITEM_ID, FEET_PROFILE_ID],
 	]:
 		var off_result: Dictionary = lab.call("_toggle_layer", String(pair[0]), String(pair[1]))
 		_assert(bool(off_result.get("success", false)), "CH8C graphical lab layer toggle-off failed")
 		await process_frame
 
-	_assert(not lab.equipment_source.has_item(lab.UPPER_ITEM_ID), "CH8C graphical lab upper remained equipped")
-	_assert(not lab.equipment_source.has_item(lab.LOWER_ITEM_ID), "CH8C graphical lab lower remained equipped")
-	_assert(not lab.equipment_source.has_item(lab.FEET_ITEM_ID), "CH8C graphical lab feet remained equipped")
+	_assert(not lab.equipment_source.has_item(UPPER_ITEM_ID), "CH8C graphical lab upper remained equipped")
+	_assert(not lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower remained equipped")
+	_assert(not lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet remained equipped")
 	var final_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	_assert((final_report.get("active_regions", []) as Array).is_empty(), "CH8C graphical lab retained body regions after clear")
 	_assert(not bool(final_report.get("material_applied", true)), "CH8C graphical lab retained suppression material after clear")
