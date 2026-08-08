@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v3",
+  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v4",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "5d408029969ba8953011c559fc1376af357bca58",
   "base_checkpoint": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation — ACCEPTED",
-  "delivery": "CH7 rigid equipment candidate fix2 / bounded graphical shadow lifecycle",
-  "decision": "FIX2_PENDING_WINDOWS_GODOT_RERUN",
+  "delivery": "CH7 rigid equipment candidate fix3 / production Quaternius semantic anchor resolution",
+  "decision": "FIX3_PENDING_WINDOWS_GODOT_RERUN",
   "scope": {
     "production_lunar_player_changed": false,
     "network_runtime_changed": false,
@@ -26,37 +26,30 @@
     "ch7_8_skinned_garment": false,
     "ch7_9_full_lifecycle_acceptance": false
   },
-  "windows_rerun_after_fix1": {
+  "windows_rerun_after_fix2": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
-    "asset_preflight": "PASS 18 glTF",
-    "editor_import": "PASS",
-    "ch6_avatar_presenter": "PASS 43 assertions",
-    "ch6_character_lab": "PASS 11 assertions",
-    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
-    "ch6_first_person_jump_crouch_lab": "PASS 76 assertions",
-    "ch6_controllable_view_adapter_shadow": "PASS 66 assertions",
-    "ch6_shadow_proxy_contract": "PASS 21 assertions",
     "ch6_acceptance_runner": "PASS",
     "ch7_character_equipment_domain": "PASS 54 assertions",
     "ch7_character_equipment_presenter": "PASS 44 assertions",
     "ch7_quaternius_equipment_rig_adapter": "PASS 40 assertions",
-    "ch7_quaternius_equipment_lab": "STALLED_AFTER_SUITE_START_NO_OUTPUT"
+    "ch7_quaternius_equipment_lab": "FAIL DURING REAL ASSET SETUP",
+    "observed_primary_error": "MISSING_REQUIRED_EQUIPMENT_ANCHOR",
+    "observed_secondary_error": "equipment presenter remained null and the test attempted get_visual on Nil",
+    "interpretation": "The synthetic rig contract was valid, but the real imported Quaternius skeleton used bone naming not covered by the initial exact candidate table. This is a rig-adapter compatibility issue, not an equipment-domain or CH6 regression."
   },
-  "fix2": {
-    "diagnosis": "The graphical lab suite performed 25 equip/unequip cycles. Every mutation calls EquipmentAwareFirstPersonAdapter.refresh_presentation_visuals(), which rebuilds the complete Quaternius WORLD_PROXY shadow set. Fifty full real-asset recapture/rebuild operations were performed almost back-to-back, making the final graphical test unnecessarily heavy and able to appear hung.",
-    "runtime_architecture_changed": false,
-    "production_code_changed": false,
-    "ch6_code_changed": false,
+  "fix3": {
     "changes": [
-      "Generic CharacterEquipmentPresenter suite now owns 100 equip/unequip lifecycle cycles without full Quaternius rendering or shadow proxy rebuilds.",
-      "Quaternius graphical composition suite now runs 3 real-asset lifecycle cycles only.",
-      "A process frame is yielded after every real-asset equip and unequip so queued proxy/visual cleanup is completed before the next rebuild.",
-      "Graphical suite now prints phase markers: instantiate, ready, helmet, backpack, unequip_helmet, graphical_lifecycle, third_person, finish.",
-      "Generic type-count helper was replaced by a direct MeshInstance3D counter to keep the graphical test simple."
+      "Quaternius rig adapter expands spine naming compatibility for spine01/spine02/spine03 and Blender-style normalized spine001/spine002/spine003 variants.",
+      "If gear.back is not found by name, the adapter walks the actual Skeleton3D parent chain upward from the resolved head and chooses the nearest ancestor whose normalized name contains spine, chest, upperchest or torso.",
+      "body.root can be derived deterministically from the root ancestor of the resolved head when exact root/hips/pelvis naming is unavailable.",
+      "Rig bind failure now reports missing_required_anchors and the complete available_bones list before clearing temporary adapter state.",
+      "Quaternius rig test adds an independent hierarchy-based skeleton whose back bone is named BackSpineJoint, proving semantic parent-chain resolution rather than exact-name dependence.",
+      "Graphical equipment test now fails fast after setup failure and prints equipment_last_result instead of cascading into a secondary Nil.get_visual error."
     ],
     "commits": [
-      "c5beea11eefba92f07b92df5903bd4b38add8f2f",
-      "a7482df6ffa89b7e2b47e64c8d13cc196ffc7ed1"
+      "512844dc4a5abbb4872e7ffe43b947d8adf5eede",
+      "518a682800899bd9ad3330de39b589b8d5ac7d94",
+      "c1a4c08982cdc6bcc1093e38ee5201b4fe9f9830"
     ]
   },
   "lifecycle_safety": {
@@ -77,16 +70,18 @@
     "graphical_launcher": "PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1"
   },
   "windows_acceptance_gate": {
+    "focused_rig_command": "& $Godot --headless --path . --script res://tests/characters/test_ch7_quaternius_equipment_rig_adapter.gd",
+    "focused_lab_command": "& $Godot --headless --path . --script res://tests/characters/test_ch7_quaternius_equipment_lab.gd",
     "full_test_command": ".\\RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "focused_last_suite_command": "& $Godot --headless --path . --script res://tests/characters/test_ch7_quaternius_equipment_lab.gd",
     "play_command": ".\\PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
     "required_automated": [
       "complete CH6 acceptance runner PASS",
       "CH7 equipment domain PASS",
       "CH7 generic presenter 100-cycle lifecycle + second rig PASS",
-      "CH7 Quaternius skeleton/fallback rig mapping PASS",
-      "CH7 Quaternius FP/TP/shadow graphical composition PASS"
-    ]
+      "CH7 Quaternius synthetic + hierarchy + fallback rig mapping PASS",
+      "CH7 real Quaternius FP/TP/shadow graphical composition PASS"
+    ],
+    "diagnostic_on_remaining_bind_failure": "Copy the phase=setup_failed JSON. fix3 includes missing_required_anchors and available_bones so the exact production skeleton mapping can be completed without guesswork."
   },
   "deferred": {
     "ch7_8": "one skinned garment + body-region hiding",
