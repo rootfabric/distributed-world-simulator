@@ -7,14 +7,21 @@ const PresentationProfile = preload("res://scripts/characters/presentation/contr
 
 const WALK_SPEED := 3.5
 const RUN_SPEED := 7.5
+const CROUCH_SPEED := 1.8
 const ACCELERATION := 24.0
 const GRAVITY := 18.0
 const JUMP_SPEED := 6.0
+const STANDING_CAPSULE_HEIGHT := 1.85
+const CROUCH_CAPSULE_HEIGHT := 1.15
 const FIRST_PERSON_EYE_HEIGHT := 1.62
+const CROUCH_EYE_HEIGHT := 1.02
+const CROUCH_CAMERA_RESPONSE := 4.5
 const CAMERA_PITCH_MIN := -1.25
 const CAMERA_PITCH_MAX := 1.15
 
 var player: CharacterBody3D
+var player_collision: CollisionShape3D
+var player_capsule: CapsuleShape3D
 var avatar
 var first_person_adapter
 var presentation_profile
@@ -26,8 +33,8 @@ var first_person_camera: Camera3D
 var third_person_arm: SpringArm3D
 var third_person_camera: Camera3D
 var status_label: Label
-var yaw_offset_deg := 0.0
 var first_person_mode := false
+var crouching := false
 
 
 func _ready() -> void:
@@ -48,12 +55,18 @@ func _physics_process(delta: float) -> void:
 	var desired := right * input_vector.x + forward * -input_vector.y
 	if desired.length_squared() > 1.0:
 		desired = desired.normalized()
-	var target_speed := RUN_SPEED if Input.is_action_pressed("ch4_run") else WALK_SPEED
+
+	var grounded_before := player.is_on_floor()
+	var wants_crouch := Input.is_action_pressed("ch4_crouch")
+	crouching = wants_crouch and grounded_before
+	_apply_crouch_shape(crouching, delta)
+
+	var target_speed := CROUCH_SPEED if crouching else RUN_SPEED if Input.is_action_pressed("ch4_run") else WALK_SPEED
 	var target_horizontal := desired * target_speed
 	player.velocity.x = move_toward(player.velocity.x, target_horizontal.x, ACCELERATION * delta)
 	player.velocity.z = move_toward(player.velocity.z, target_horizontal.z, ACCELERATION * delta)
-	if player.is_on_floor():
-		if Input.is_action_just_pressed("ch4_jump"):
+	if grounded_before:
+		if Input.is_action_just_pressed("ch4_jump") and not crouching:
 			player.velocity.y = JUMP_SPEED
 		else:
 			player.velocity.y = -0.1
@@ -61,10 +74,23 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y -= GRAVITY * delta
 	player.move_and_slide()
 
+	var grounded_after := player.is_on_floor()
+	if not grounded_after:
+		crouching = false
+		_apply_crouch_shape(false, delta)
+
 	var avatar_facing := desired
 	if first_person_mode:
 		avatar_facing = forward
-	avatar.apply_motion(player.velocity, Vector3.UP, avatar_facing)
+	avatar.apply_motion(
+		player.velocity,
+		Vector3.UP,
+		avatar_facing,
+		{
+			"grounded": grounded_after,
+			"crouching": crouching,
+		}
+	)
 	_refresh_status()
 
 
@@ -79,9 +105,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		elif event.keycode == KEY_V:
-			yaw_offset_deg = 180.0 if is_zero_approx(yaw_offset_deg) else 0.0
-			avatar.set_model_yaw_offset_degrees(yaw_offset_deg)
 		elif event.keycode == KEY_C:
 			set_first_person_mode(not first_person_mode)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -98,6 +121,20 @@ func set_first_person_mode(enabled: bool) -> void:
 	if first_person_adapter != null:
 		first_person_adapter.set_first_person_enabled(first_person_mode)
 	_refresh_status()
+
+
+func _apply_crouch_shape(enabled: bool, delta: float) -> void:
+	if player_capsule != null:
+		player_capsule.height = CROUCH_CAPSULE_HEIGHT if enabled else STANDING_CAPSULE_HEIGHT
+	if player_collision != null:
+		player_collision.position.y = player_capsule.height * 0.5 if player_capsule != null else 0.0
+	if camera_yaw != null:
+		var target_eye_height := CROUCH_EYE_HEIGHT if enabled else FIRST_PERSON_EYE_HEIGHT
+		camera_yaw.position.y = move_toward(
+			camera_yaw.position.y,
+			target_eye_height,
+			CROUCH_CAMERA_RESPONSE * delta
+		)
 
 
 func _build_environment() -> void:
@@ -144,20 +181,20 @@ func _build_player() -> void:
 	player.floor_snap_length = 0.35
 	add_child(player)
 
-	var collision := CollisionShape3D.new()
-	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.42
-	capsule.height = 1.85
-	collision.shape = capsule
-	collision.position.y = 0.93
-	player.add_child(collision)
+	player_collision = CollisionShape3D.new()
+	player_capsule = CapsuleShape3D.new()
+	player_capsule.radius = 0.42
+	player_capsule.height = STANDING_CAPSULE_HEIGHT
+	player_collision.shape = player_capsule
+	player_collision.position.y = STANDING_CAPSULE_HEIGHT * 0.5
+	player.add_child(player_collision)
 
 	avatar = AvatarPresenter.new()
 	avatar.name = "AvatarPresentation"
 	player.add_child(avatar)
 	avatar.setup({
 		"run_threshold_mps": (WALK_SPEED + RUN_SPEED) * 0.5,
-		"model_yaw_offset_deg": yaw_offset_deg,
+		"model_yaw_offset_deg": 0.0,
 	})
 
 	presentation_profile = PresentationProfile.new()
@@ -226,11 +263,12 @@ func _refresh_status() -> void:
 	var fp_report: Dictionary = first_person_adapter.create_report() if first_person_adapter != null else {}
 	var shadow_state := "ACTIVE" if bool(fp_report.get("shadow_proxy_active", false)) else "READY" if bool(fp_report.get("shadow_proxy_ready", false)) else "OFF"
 	status_label.text = (
-		"CH6 fix1 — Shadow Preservation Lab\n"
-		+ "WASD — ходьба | Shift — бег | Space — прыжок | мышь — камера | C — 1/3 лицо | V — развернуть модель\n"
-		+ "view: %s\nentity: %s\npolicy: %s\nshadow: %s / %s (%d proxies)\nself body: %s\nasset: %s\nsemantic: %s\nanimation: %s\nmodel: %s\nmatched bones: %d"
+		"CH6 fix2 — Jump / Crouch Presentation Lab\n"
+		+ "WASD — ходьба | Shift — бег | Ctrl — присед | Space — прыжок | мышь — камера | C — 1/3 лицо\n"
+		+ "view: %s\nstance: %s\nentity: %s\npolicy: %s\nshadow: %s / %s (%d proxies)\nself body: %s\nasset: %s\nsemantic: %s\nanimation: %s\njump clip: %s | crouch clips: %s\nmodel: %s\nmatched bones: %d"
 		% [
 			"FIRST_PERSON" if first_person_mode else "THIRD_PERSON",
+			"CROUCH" if crouching else "STAND",
 			String(fp_report.get("entity_kind", "")),
 			String(fp_report.get("first_person_policy", "")),
 			String(fp_report.get("first_person_shadow_policy", "NONE")),
@@ -240,6 +278,8 @@ func _refresh_status() -> void:
 			String(report.get("asset_mode", "")),
 			String(report.get("current_semantic", "")),
 			String(report.get("current_animation", "")),
+			"YES" if bool(report.get("supports_jump", false)) else "NO",
+			"YES" if bool(report.get("supports_crouch", false)) else "NO",
 			String(report.get("model_path", "")),
 			int(report.get("matched_bones", 0)),
 		]
@@ -252,6 +292,7 @@ func _ensure_input_actions() -> void:
 	_add_key_action("ch4_left", KEY_A)
 	_add_key_action("ch4_right", KEY_D)
 	_add_key_action("ch4_run", KEY_SHIFT)
+	_add_key_action("ch4_crouch", KEY_CTRL)
 	_add_key_action("ch4_jump", KEY_SPACE)
 
 
