@@ -1,0 +1,95 @@
+param(
+    [Parameter(Mandatory = $true)][string]$GodotPath,
+    [switch]$FocusedOnly,
+    [switch]$IncludeTwoClientProcess
+)
+
+$ErrorActionPreference = "Stop"
+$ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Godot = (Resolve-Path $GodotPath).Path
+
+function Invoke-GodotCheck {
+    param([string]$Name, [string[]]$Arguments)
+    Write-Host ""
+    Write-Host "[$Name]" -ForegroundColor Cyan
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $PreviousBreakpoint = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        $ErrorActionPreference = "Continue"
+        $Output = @(& $Godot @Arguments 2>&1)
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -eq $PreviousBreakpoint) {
+            Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpoint
+        }
+    }
+    foreach ($Line in $Output) { Write-Host $Line }
+    $Text = ($Output | ForEach-Object { $_.ToString() }) -join "`n"
+    foreach ($Pattern in @("SCRIPT ERROR:", "Parse Error:", "Compile Error:", "Failed to load script")) {
+        if ($Text.Contains($Pattern)) {
+            throw "$Name emitted fatal Godot script diagnostics: $Pattern"
+        }
+    }
+    if ($ExitCode -ne 0) {
+        throw "$Name failed with exit code $ExitCode"
+    }
+    Write-Host "${Name}: PASS" -ForegroundColor Green
+}
+
+Write-Host "M7 FIX10 sequence-aware reconciliation validation" -ForegroundColor Cyan
+Write-Host "Project: $ProjectRoot"
+
+Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
+    "--headless", "--editor", "--path", $ProjectRoot, "--quit"
+)
+
+Invoke-GodotCheck -Name "FIX10 focused sequence-aware reconciliation" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10.gd"
+)
+
+Invoke-GodotCheck -Name "FIX9 frame-budget regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_client_frame_budget_fix9.gd"
+)
+
+Invoke-GodotCheck -Name "FIX8 prediction-clock regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_prediction_clock_fix8.gd"
+)
+
+Invoke-GodotCheck -Name "NX4 prediction/reconciliation regression" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_nx4_client_prediction_reconciliation.gd"
+)
+
+if (-not $FocusedOnly) {
+    Write-Host ""
+    Write-Host "[FIX9 + FIX8 + FIX7 + FIX6 + FIX5 + accepted network/inventory baseline]" -ForegroundColor Cyan
+    $Fix9Runner = Join-Path $ProjectRoot "VALIDATE_M7_CLIENT_FRAME_BUDGET_FIX9.ps1"
+    if ($IncludeTwoClientProcess) {
+        & $Fix9Runner -GodotPath $Godot -IncludeTwoClientProcess
+    }
+    else {
+        & $Fix9Runner -GodotPath $Godot
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "M7 FIX9/full accepted baseline failed with exit code $LASTEXITCODE"
+    }
+}
+
+Write-Host ""
+Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
+if ($FocusedOnly) {
+    Write-Host "FocusedOnly validates FIX10 ack baselines plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+}
+elseif (-not $IncludeTwoClientProcess) {
+    Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
+}
+Write-Host "Final FIX10 acceptance requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS, with subjective spring/back-pull review." -ForegroundColor Yellow
