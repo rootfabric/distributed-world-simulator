@@ -14,9 +14,13 @@ var outfit_last_result: Dictionary = {}
 
 
 func _ready() -> void:
+	print("CH7.8 garment lab runtime: phase=super_ready_begin")
 	super._ready()
+	print("CH7.8 garment lab runtime: phase=super_ready_end")
 	_setup_skinned_outfit()
+	print("CH7.8 garment lab runtime: phase=outfit_setup_end available=%s" % outfit_available)
 	_refresh_status()
+	print("CH7.8 garment lab runtime: phase=ready_end")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -42,10 +46,12 @@ func set_outfit_equipped(enabled: bool) -> Dictionary:
 
 
 func _setup_skinned_outfit() -> void:
+	print("CH7.8 garment lab runtime: phase=outfit_setup_begin")
 	outfit_available = false
 	if equipment_source == null or wearable_catalog == null or equipment_rig_adapter == null:
 		outfit_last_result = _outfit_failure("RIGID_EQUIPMENT_BASE_NOT_READY")
 		return
+	print("CH7.8 garment lab runtime: phase=resource_exists_check")
 	if not ResourceLoader.exists(OUTFIT_SCENE_PATH):
 		outfit_last_result = _outfit_failure("OUTFIT_RESOURCE_MISSING", {"path": OUTFIT_SCENE_PATH})
 		return
@@ -64,7 +70,9 @@ func _setup_skinned_outfit() -> void:
 		push_error("CH7.8 outfit profile registration failed: %s" % JSON.stringify(outfit_last_result))
 		return
 
+	print("CH7.8 garment lab runtime: phase=resource_load_begin")
 	var loaded = load(OUTFIT_SCENE_PATH)
+	print("CH7.8 garment lab runtime: phase=resource_load_end")
 	if not loaded is PackedScene:
 		outfit_last_result = _outfit_failure("OUTFIT_RESOURCE_NOT_PACKED_SCENE", {"path": OUTFIT_SCENE_PATH})
 		push_error("CH7.8 outfit scene failed to load: %s" % OUTFIT_SCENE_PATH)
