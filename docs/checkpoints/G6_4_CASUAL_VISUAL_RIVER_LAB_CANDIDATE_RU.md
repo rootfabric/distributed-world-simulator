@@ -4,6 +4,7 @@
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Dependencies:** `G2 / G6.0 / G6.1 / G6.2 / G6.3 — ACCEPTED`
+**Fix2 functional head:** `353a73f08f6d07840145e61f79b197e5773a73a2`
 **Решение:** `FIX2 IMPLEMENTED CANDIDATE — WINDOWS AUTOMATED + GRAPHICAL ADAPTIVE-LOD ACCEPTANCE REQUIRED`
 
 ## Почему понадобился fix2
@@ -134,10 +135,10 @@ near.planned_river_samples > far.planned_river_samples
 near.selection_hash != far.selection_hash
 ```
 
-Runner всё ещё требует явный runtime marker:
+Runner требует явный runtime marker:
 
 ```text
-G6.4 Casual Visual River Lab: PASS (...)
+G6.4 Casual Visual River Lab: PASS (... max_lod=... river_lod=.....)
 ```
 
 Parse/load error не может считаться PASS.
