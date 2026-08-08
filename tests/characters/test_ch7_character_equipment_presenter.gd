@@ -75,6 +75,36 @@ func _run() -> void:
 	await process_frame
 	_assert(human_back.get_child_count() == 0, "Removed backpack node leaked under its anchor")
 
+	# Lifecycle stress belongs here, where no full Quaternius WORLD_PROXY rebuild is involved.
+	# This proves presenter create/remove/idempotency cheaply and deterministically.
+	for cycle in range(100):
+		var revision_base := 1000 + cycle * 2
+		var with_backpack := Domain.Snapshot.new(
+			"entity.human.001",
+			"humanoid.standard",
+			revision_base,
+			[helmet_entry, backpack_entry]
+		)
+		var stress_equip: Dictionary = presenter.apply_snapshot(with_backpack)
+		_assert(bool(stress_equip.get("success", false)), "Generic lifecycle equip failed at cycle %d" % cycle)
+		_assert(presenter.get_visual("item.backpack.001") != null, "Generic lifecycle backpack visual missing at cycle %d" % cycle)
+		var without_backpack := Domain.Snapshot.new(
+			"entity.human.001",
+			"humanoid.standard",
+			revision_base + 1,
+			[helmet_entry]
+		)
+		var stress_unequip: Dictionary = presenter.apply_snapshot(without_backpack)
+		_assert(bool(stress_unequip.get("success", false)), "Generic lifecycle unequip failed at cycle %d" % cycle)
+		_assert(presenter.get_visual("item.backpack.001") == null, "Generic lifecycle backpack visual leaked at cycle %d" % cycle)
+		if cycle % 10 == 9:
+			await process_frame
+	await process_frame
+	var stress_report: Dictionary = presenter.create_report()
+	_assert(int(stress_report.get("visual_count", 0)) == 1, "Generic lifecycle stress left duplicate visuals")
+	_assert((stress_report.get("visual_item_ids", []) as Array).has("item.helmet.001"), "Generic lifecycle stress lost helmet presentation")
+	_assert(human_back.get_child_count() == 0, "Generic lifecycle stress left detached backpack nodes")
+
 	var robot_root := Node3D.new()
 	robot_root.name = "RobotVisualRoot"
 	root.add_child(robot_root)
