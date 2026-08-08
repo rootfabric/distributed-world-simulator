@@ -15,8 +15,7 @@ func register_scene(
 	hide_body_regions: Array = [],
 	local_transform: Transform3D = Transform3D.IDENTITY,
 	body_replacement_scene: PackedScene = null,
-	body_replacement_transform: Transform3D = Transform3D.IDENTITY,
-	visible_mesh_names: Array = []
+	body_replacement_transform: Transform3D = Transform3D.IDENTITY
 ) -> Dictionary:
 	if not CharacterEquipmentDomain.is_valid_semantic_id(presentation_id):
 		return _result(false, "INVALID_PRESENTATION_ID")
@@ -36,15 +35,6 @@ func register_scene(
 			regions.append(region)
 	regions.sort()
 
-	var mesh_names: Array[String] = []
-	for raw_name in visible_mesh_names:
-		var mesh_name := String(raw_name).strip_edges()
-		if not mesh_name.is_empty() and mesh_name not in mesh_names:
-			mesh_names.append(mesh_name)
-	mesh_names.sort()
-	if not mesh_names.is_empty() and strategy != STRATEGY_SKINNED_GARMENT:
-		return _result(false, "MESH_FILTER_REQUIRES_SKINNED_GARMENT")
-
 	var key := _key(presentation_id, rig_profile_id)
 	_entries[key] = {
 		"presentation_id": presentation_id,
@@ -55,7 +45,6 @@ func register_scene(
 		"local_transform": local_transform,
 		"body_replacement_scene": body_replacement_scene,
 		"body_replacement_transform": body_replacement_transform,
-		"visible_mesh_names": mesh_names,
 	}
 	return _result(true, CharacterEquipmentDomain.RESULT_OK)
 
@@ -77,7 +66,6 @@ func resolve(presentation_id: String, rig_profile_id: String) -> Dictionary:
 		"local_transform": entry.get("local_transform", Transform3D.IDENTITY),
 		"body_replacement_scene": entry.get("body_replacement_scene"),
 		"body_replacement_transform": entry.get("body_replacement_transform", Transform3D.IDENTITY),
-		"visible_mesh_names": (entry.get("visible_mesh_names", []) as Array).duplicate(),
 	})
 
 
