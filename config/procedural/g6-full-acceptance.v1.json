@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.g6_full_acceptance.v1",
+  "checkpoint": "g6-full-acceptance",
+  "status": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_SHARED_BASELINE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "dependencies": {
+    "g6_0_fluid_contracts": "ACCEPTED",
+    "g6_1_casual_river_provider": "ACCEPTED",
+    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
+    "g6_3_runtime_water_surface_query": "ACCEPTED",
+    "g6_4_fix4_manual_graphical_evidence": "PASS",
+    "g6_4_fix4_automated_gate": "REQUIRED_IN_FULL_GATE",
+    "g5_shared_baseline": "CURRENT_REF_REQUIRED",
+    "mw10_atomic_lock_shared_baseline": "REQUIRED"
+  },
+  "shared_baseline_requirement": {
+    "pr": 43,
+    "status_at_candidate_creation": "OPEN_NOT_MERGED",
+    "repository_blob_sha": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
+    "retry_test_blob_sha": "afab0c98de45c34dcf6c923d622c84835d428fa5",
+    "policy": "MW10 fix must land in G5 first, then G6 must be resynchronized. Do not copy the fix privately into G6."
+  },
+  "runner": {
+    "windows": "RUN_G6_FULL_ACCEPTANCE.ps1",
+    "shell": "RUN_G6_FULL_ACCEPTANCE.sh"
+  },
+  "gate_order": [
+    "CLEAN_WORKTREE",
+    "GLOBAL_CONFIG_MATCH_MAIN_AND_G5",
+    "CURRENT_G5_IS_ANCESTOR_OF_G6",
+    "MW10_ACCEPTED_BLOBS_PRESENT_IN_G5",
+    "MW10_ACCEPTED_BLOBS_PRESENT_IN_G6_AFTER_RESYNC",
+    "GIT_DIFF_CHECK_G5_TO_G6",
+    "G6_4_FIX4_AUTOMATED_GATE_INCLUDING_G6_0_TO_G6_3",
+    "MW10_LOCK_RELEASE_RETRY_FAULT_INJECTION",
+    "FULL_WORLD_CORE_REGRESSION",
+    "FINAL_CLEAN_WORKTREE",
+    "FINAL_GIT_DIFF_CHECK"
+  ],
+  "architecture_boundaries": {
+    "g6_owns_authority": false,
+    "g6_owns_persistence": false,
+    "g6_owns_network_transport": false,
+    "g6_identity_depends_on_lod": false,
+    "g6_identity_depends_on_surface_cell": false,
+    "g6_visual_lab_is_canonical_truth": false,
+    "full_acceptance_changes_world_semantics": false
+  },
+  "next_if_accepted": "G7_SEMANTIC_FIELD_FABRIC"
+}
