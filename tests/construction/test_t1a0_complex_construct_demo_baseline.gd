@@ -130,7 +130,7 @@ func _test_demo_scene_boundary() -> void:
 	_assert(ResourceLoader.exists(scene_path), "demo scene exists")
 	var packed = load(scene_path)
 	_assert(packed is PackedScene, "demo scene loads as PackedScene")
-	if not packed is PackedScene:
+	if not (packed is PackedScene):
 		return
 	var instance = packed.instantiate()
 	_assert(instance is Node3D, "demo scene root is Node3D")
