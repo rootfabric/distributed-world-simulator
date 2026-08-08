@@ -1,0 +1,120 @@
+{
+  "schema": "planet_simulator.m7_prediction_clock_fix8_validation.v1",
+  "stage": "M7 FIX8 — Prediction Clock Alignment",
+  "branch": "feature/m7-prediction-clock-fix8",
+  "base_branch": "feature/m7-smooth-prediction-fix7",
+  "base_commit": "7770b8b411488e5f02f6c6b7b74a56c750663402",
+  "trigger": {
+    "artifact": "m7-playable-21836.zip",
+    "observed": {
+      "server_process_max_duration_ms": 42.792,
+      "report_max_snapshot_build_duration_ms": 6.884,
+      "server_slow_process_frames": 0,
+      "client_a_maximum_prediction_error_m": 0.3,
+      "client_b_maximum_prediction_error_m": 0.3,
+      "client_a_visual_offset_m": 0.7989191394111743,
+      "client_b_visual_offset_m": 1.0933368356190358,
+      "hard_corrections": 0
+    },
+    "interpretation": "server-side FIX7 stall is no longer the dominant issue; the remaining 0.3 m signature matches a three-tick 60 Hz clock phase at 6 m/s and visual correction debt can exceed the individual prediction error"
+  },
+  "implementation": {
+    "prediction_clock_policy": "SEQUENCE_MATCHED_FUTURE_TICK_PREALIGN_V1",
+    "scheduler_alignment_policy": "MONOTONIC_FORWARD_PRESERVE_SUBTICK_PHASE_V1",
+    "visual_correction_policy": "BOUNDED_CONTINUITY_OFFSET_RATE_LIMITED_DECAY_V1",
+    "max_future_alignment_ticks": 8,
+    "max_visual_offset_m": 0.5,
+    "max_visual_correction_speed_mps": 2.5,
+    "remote_buffer_telemetry_policy": "MOVING_HOLD_AND_SNAPSHOT_GAP_DIAGNOSTICS_V1"
+  },
+  "assistant_side_validation": {
+    "exact_godot_binary": "4.7.1.stable.double.custom_build.a13da4feb",
+    "full_repository_mounted": false,
+    "synthetic_inheritance_probe": {
+      "passed": true,
+      "sequence_matched_future_gap_ticks": 3,
+      "prediction_error_m_after_alignment": 0.0,
+      "prediction_tick_after_alignment": 4,
+      "preserved_subtick_accumulator_seconds": 0.00694444444444,
+      "presentation_z_after_alignment": -0.44166666666667,
+      "clock_only_future_gap_ticks": 2,
+      "clock_only_prediction_error_m": 0.0,
+      "visual_correction_raw_offset_m": 0.8,
+      "visual_correction_bounded_offset_m": 0.5,
+      "visual_correction_decay_seconds": 0.2
+    }
+  },
+  "windows_validation": {
+    "artifact": "m7-playable-12128.zip",
+    "godot_binary": "4.7.1.stable.double.custom_build.a13da4feb",
+    "branch_head_tested": "eb409de0e3fa4b3a6c731f356f86e3b22089fbfe",
+    "full_fix8_runner_executed": true,
+    "include_two_client_process": true,
+    "passed": true,
+    "checks": {
+      "editor_import_composition": "PASS",
+      "fix8_prediction_clock": "PASS 50 assertions",
+      "fix7_smooth_prediction": "PASS 33 assertions",
+      "nx4_prediction_reconciliation": "PASS 706 assertions",
+      "fix6_server_realtime": "PASS 261 assertions",
+      "fix6_client_telemetry": "PASS 14 assertions",
+      "fix5_world_item_consistency": "PASS 49 assertions",
+      "nx6_predicted_item_interactions": "PASS 957 assertions",
+      "nx3_fixed_tick": "PASS 6188 assertions",
+      "two_client_graphical_process": "PASS 51 assertions"
+    },
+    "server": {
+      "process_max_duration_ms": 38.817,
+      "report_max_snapshot_build_duration_ms": 6.249,
+      "peer_telemetry_max_duration_ms": 0.137,
+      "slow_process_frames": 0,
+      "transient_stall_frames": 1,
+      "max_pending_input_count_observed": 2,
+      "max_scheduler_backlog_ticks_observed": 0,
+      "scheduler_dropped_time_seconds": 0.0,
+      "rejections": 0
+    },
+    "client_a": {
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.2,
+      "max_raw_visual_offset_m": 0.22154434690023,
+      "max_bounded_visual_offset_m": 0.22154434690023,
+      "clock_alignment_events": 27,
+      "clock_alignment_ticks": 80,
+      "clock_only_alignment_events": 24,
+      "large_gap_alignment_skips": 2,
+      "sequence_mismatch_alignment_skips": 2,
+      "history_miss_resets": 0
+    },
+    "client_b": {
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.4,
+      "max_raw_visual_offset_m": 0.32154434690023,
+      "max_bounded_visual_offset_m": 0.32154434690023,
+      "clock_alignment_events": 7,
+      "clock_alignment_ticks": 22,
+      "clock_only_alignment_events": 1,
+      "large_gap_alignment_skips": 1,
+      "sequence_mismatch_alignment_skips": 4,
+      "history_miss_resets": 1
+    },
+    "remote_diagnostics": {
+      "observed_on_client_a_for_player_b": true,
+      "snapshot_gap_samples": 18,
+      "mean_snapshot_gap_ticks": 3.66666666666667,
+      "max_snapshot_gap_ticks": 12,
+      "moving_buffer_underruns": 0,
+      "moving_hold_samples": 0,
+      "max_moving_hold_streak": 0,
+      "note": "short automated process run is not sufficient to tune remote interpolation; long manual movement run remains required"
+    },
+    "interpretation": "full Windows automated gate passed. FIX8 clock alignment is active and visual correction debt stayed below the 0.5 m bound. Client A reduced the former 0.3 m maximum to 0.2 m in this short run; client B reached 0.4 m during guarded sequence-mismatch/history-miss cases, so the result is not yet manual acceptance evidence. Large startup/join future gaps were correctly skipped instead of speculatively pre-aligned."
+  },
+  "required_gate": [
+    "repeat >=5 minute two-client LOCAL movement/item manual run",
+    "run ANALYZE_M7_FIX8_RESULTS.ps1 against that manual session server.json, a.json, b.json",
+    "manual confirmation that recurring local back-pull/micro-jerk is reduced",
+    "inspect fix8_moving_buffer_underruns while the remote player is actually moving before changing remote playout policy"
+  ],
+  "decision": "FIX8 WINDOWS AUTOMATED GATE PASS — LONG TWO-CLIENT MANUAL VALIDATION REQUIRED BEFORE ACCEPTANCE"
+}
