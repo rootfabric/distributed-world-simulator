@@ -21,7 +21,7 @@ func _run() -> void:
 	_assert(lab.camera is Camera3D, "Lab camera missing")
 	_assert(lab.player.get_child_count() >= 3, "Lab player composition is incomplete")
 	var report: Dictionary = lab.avatar.create_report()
-	_assert(String(report.get("schema", "")) == "planet_simulator.quaternius_avatar_presenter.v1", "Unexpected avatar report schema")
+	_assert(String(report.get("schema", "")) == "planet_simulator.quaternius_avatar_presenter.v2", "Unexpected avatar report schema")
 	_assert(not bool(report.get("root_motion_applied", true)), "Lab avatar enables root motion")
 	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
 	if require_external:
@@ -33,6 +33,8 @@ func _run() -> void:
 			bool(report.get("animation_ready", false)),
 			"Walkable lab has no Idle/Walk/Run animation set: %s" % JSON.stringify(report)
 		)
+		_assert(bool(report.get("supports_jump", false)), "Walkable lab has no Jump animation")
+		_assert(bool(report.get("supports_crouch", false)), "Walkable lab has no crouch animation pair")
 	lab.queue_free()
 	_finish()
 
@@ -45,10 +47,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH4 Quaternius character lab: PASS (%d assertions)" % assertions)
+		print("CH4/CH6 Quaternius character lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH4 Quaternius character lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH4/CH6 Quaternius character lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
