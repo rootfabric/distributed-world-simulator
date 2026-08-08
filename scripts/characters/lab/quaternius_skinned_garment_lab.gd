@@ -93,7 +93,7 @@ func _setup_skinned_outfit() -> void:
 	print("CH7.8 garment lab runtime: phase=body_suppression_probe_begin")
 	var suppression_targets: Array[Dictionary] = equipment_rig_adapter.resolve_body_region_suppression_targets(
 		avatar,
-		BODY_REPLACEMENT_REGIONS[0]
+		String(BODY_REPLACEMENT_REGIONS[0])
 	)
 	if suppression_targets.is_empty():
 		var failed_report: Dictionary = equipment_rig_adapter.create_report()
