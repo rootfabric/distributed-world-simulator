@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v6",
+  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v7",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "5d408029969ba8953011c559fc1376af357bca58",
   "base_checkpoint": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation — ACCEPTED",
-  "delivery": "CH7 rigid equipment fix4 / Quaternius backpack rear presentation fit",
-  "decision": "FIX4_PENDING_WINDOWS_RERUN_AND_GRAPHICAL_CONFIRMATION",
+  "delivery": "CH7 rigid equipment fix4 / universal semantic equipment + Quaternius rigid presentation",
+  "decision": "ACCEPTED",
   "scope": {
     "production_lunar_player_changed": false,
     "network_runtime_changed": false,
@@ -12,24 +12,24 @@
     "production_item_graph_changed": false,
     "prediction_reconciliation_changed": false,
     "production_collision_contract_changed": false,
-    "ch6_existing_runtime_files_changed": false,
-    "equipment_domain_changed_by_fix4": false,
-    "rig_anchor_resolution_changed_by_fix4": false,
-    "presentation_fit_only": true
+    "ch6_existing_runtime_files_changed": false
   },
-  "implemented": {
-    "ch7_0_architecture_lock": true,
-    "ch7_1_headless_equipment_domain": true,
-    "ch7_2_deterministic_lab_equipment_source": true,
-    "ch7_3_generic_equipment_presenter": true,
-    "ch7_4_quaternius_rig_adapter": true,
-    "ch7_5_rigid_helmet_and_backpack": true,
-    "ch7_6_dynamic_first_third_person_and_shadow_composition": true,
-    "ch7_7_second_rig_abstraction_proof": true,
-    "ch7_8_skinned_garment": false,
-    "ch7_9_full_lifecycle_acceptance": false
+  "accepted_implementation": {
+    "semantic_equipment_channels": true,
+    "semantic_presentation_anchors": true,
+    "multi_channel_single_item": true,
+    "deterministic_equipment_snapshot": true,
+    "equipment_source_abstraction": true,
+    "generic_equipment_presenter": true,
+    "generic_rig_adapter_contract": true,
+    "quaternius_rig_adapter": true,
+    "rigid_helmet": true,
+    "rigid_backpack": true,
+    "dynamic_first_third_person_composition": true,
+    "dynamic_shadow_proxy_composition": true,
+    "second_rig_abstraction_proof": true
   },
-  "windows_fix3_automated_validation": {
+  "windows_automated_validation_before_fit_only_fix4": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
     "focused_quaternius_rig_adapter": "PASS 45 assertions",
     "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
@@ -49,30 +49,26 @@
     "graphical_lifecycle_cycles": "PASS 3/3",
     "generic_presenter_lifecycle_stress_cycles": 100
   },
-  "graphical_user_observation_after_fix3": {
-    "overall": "PASS_WITH_ONE_PRESENTATION_FIT_ISSUE",
-    "reported_working": "User reported the lab works; the only reported defect is backpack placement.",
-    "blocking_visual_issue": "Backpack attaches on the front of the torso instead of the back.",
-    "breakpoint_runtime_9081_message": "Observed during graphical launch; lab still launched and the reported CH7 functional issue was only backpack placement. Not classified as a CH7 equipment blocker."
-  },
   "fix4": {
-    "cause": "The semantic gear.back anchor was correct, but the Quaternius-specific catalog fit used local Z +0.22. Quaternius forward presentation direction is -Z, so the positive offset moved the backpack toward the character front.",
-    "changes": [
-      "Introduced QUATERNIUS_BACKPACK_FIT_OFFSET = Vector3(0.0, 0.02, -0.22).",
-      "Quaternius backpack presentation registration now uses the named per-rig fit offset rather than the previous +0.22 Z literal.",
-      "Graphical composition test asserts that the backpack visual receives the declared fit offset and remains on the rear (-Z) side of its torso anchor."
-    ],
+    "scope": "presentation fit only",
+    "change": "Quaternius backpack local fit offset changed from front +Z to rear -Z and a rear-fit regression assertion was added.",
     "runtime_authority_changed": false,
     "canonical_equipment_state_changed": false,
-    "anchor_changed": false,
+    "anchor_resolution_changed": false,
     "collision_changed": false,
-    "network_changed": false,
-    "commits": [
-      "29dd08c2382f4f6c6ed84a15d4aadaafe659d372",
-      "9297f79bda0da46f0fa6fdc25a87a5ac1c78fdeb"
-    ]
+    "network_changed": false
   },
-  "invariants_to_preserve": {
+  "graphical_user_acceptance_after_fix4": {
+    "status": "PASS_BY_USER_OBSERVATION",
+    "observation": "User confirmed everything works after fix4, including the corrected backpack placement.",
+    "backpack_rear_fit": "PASS_BY_USER_OBSERVATION",
+    "helmet": "PASS_BY_USER_OBSERVATION",
+    "movement_jump_crouch_follow": "PASS_BY_USER_OBSERVATION",
+    "first_third_person_composition": "PASS_BY_USER_OBSERVATION",
+    "equipped_shadow_presentation": "PASS_BY_USER_OBSERVATION"
+  },
+  "acceptance_note": "The exact console output of a post-fix4 full automated rerun was not supplied. Acceptance uses the previously complete automated fix3 pass plus the fact that fix4 changed only the per-rig backpack presentation offset and the user explicitly confirmed the corrected graphical result. No new automated assertion count is invented for fix4.",
+  "invariants": {
     "canonical_equipment_snapshot_semantics": true,
     "same_semantic_equipment_across_independent_rigs": true,
     "dynamic_equipment_enters_ch6_world_render_layer": true,
@@ -80,29 +76,13 @@
     "equipment_changes_do_not_move_character_body": true,
     "equipment_changes_do_not_modify_gameplay_capsule": true,
     "snapshot_reapply_idempotent": true,
-    "equip_unequip_lifecycle_no_duplicate_visuals": true
+    "equip_unequip_lifecycle_no_duplicate_visuals": true,
+    "backpack_fit_is_presentation_only": true
   },
-  "fix4_acceptance_gate": {
-    "full_test_command": ".\\RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "play_command": ".\\PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
-    "required_automated": [
-      "complete CH6 acceptance runner PASS",
-      "CH7 equipment domain PASS",
-      "CH7 generic presenter lifecycle + second rig PASS",
-      "CH7 Quaternius rig mapping PASS",
-      "CH7 Quaternius equipment lab PASS with backpack rear-fit assertions"
-    ],
-    "required_graphical": [
-      "Backpack is visibly behind the torso rather than in front.",
-      "Backpack continues to follow idle/walk/run/jump/crouch.",
-      "Helmet remains correctly attached.",
-      "FP/TP and equipped-item shadow behavior remain correct."
-    ],
-    "status": "PENDING"
-  },
-  "deferred": {
-    "ch7_8": "one skinned garment + semantic body-region hiding",
-    "production_item_graph_bridge": "ItemGraphEquipmentSource after synchronization with production Item Graph line",
-    "atomic_equipment_replace": "future authoritative Item Graph transaction"
+  "next": {
+    "stage": "CH7.8",
+    "goal": "one skinned garment/outfit with semantic body-region replacement or hiding",
+    "production_item_graph_bridge": "deferred until the skinned presentation path is proven",
+    "cloth_physics": "deferred"
   }
 }
