@@ -41,8 +41,10 @@ func _run() -> void:
 		_assert(shader_material.shader != null and shader_material.shader.code.contains("discard"), "Head clip shader does not discard body fragments")
 		_assert(shader_material.shader != null and shader_material.shader.code.contains("base_rest_y = VERTEX.y"), "Head clip shader lost model-space clip coordinate")
 		_assert(is_equal_approx(float(shader_material.get_shader_parameter("clip_local_y")), 1.4836), "Head clip Y parameter mismatch")
-		var tint: Color = shader_material.get_shader_parameter("albedo_tint")
-		_assert(tint.is_equal_approx(source.albedo_color), "Head clip did not preserve albedo tint")
+		var tint = shader_material.get_shader_parameter("albedo_tint")
+		_assert(tint is Color, "Head clip albedo tint parameter is not Color")
+		if tint is Color:
+			_assert((tint as Color).is_equal_approx(source.albedo_color), "Head clip did not preserve albedo tint")
 		_assert(is_equal_approx(float(shader_material.get_shader_parameter("roughness_value")), source.roughness), "Head clip did not preserve roughness")
 		_assert(is_equal_approx(float(shader_material.get_shader_parameter("metallic_value")), source.metallic), "Head clip did not preserve metallic")
 		_assert(is_equal_approx(float(shader_material.get_shader_parameter("normal_scale_value")), source.normal_scale), "Head clip did not preserve normal scale")
