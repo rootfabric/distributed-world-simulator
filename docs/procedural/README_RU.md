@@ -17,6 +17,12 @@ G6.4 FIX4 MANUAL GRAPHICAL PASS
 G6 FULL ACCEPTANCE IMPLEMENTED CANDIDATE
 ```
 
+Current branch documentation head after runtime-environment verification:
+
+```text
+e7576bde3cbb91d327966ce7b095f326c6cae35e
+```
+
 G6 Full Acceptance is currently blocked by the shared MW10 baseline, not by the hydrology code. PR #43 must first land in `feature/g5-world-feature-graph`; G6 must then be resynchronized and `RUN_G6_FULL_ACCEPTANCE.ps1` rerun.
 
 Project-provided Linux double Godot has been independently verified in the assistant runtime:
