@@ -91,6 +91,9 @@ func _test_surface_descriptor() -> void:
 		region_id,
 		G5Fixture.BODY_ID,
 		FluidType.WATER,
+		G5Fixture.SEED + 10,
+		"1.0.0",
+		"fluid-key/river-001",
 		G5Fixture.FRAME_ID,
 		String(river["feature_id"]),
 		bounds,
@@ -103,12 +106,16 @@ func _test_surface_descriptor() -> void:
 	_check(String(descriptor["fluid_region_id"]) == region_id, "descriptor preserves canonical region")
 
 	var repeated := FluidSurfaceDescriptor.create(
-		region_id, G5Fixture.BODY_ID, FluidType.WATER, G5Fixture.FRAME_ID,
-		String(river["feature_id"]), bounds, FluidSurfaceDescriptor.PROFILED,
+		region_id, G5Fixture.BODY_ID, FluidType.WATER, G5Fixture.SEED + 10, "1.0.0", "fluid-key/river-001",
+		G5Fixture.FRAME_ID, String(river["feature_id"]), bounds, FluidSurfaceDescriptor.PROFILED,
 		G5Fixture.RADIUS_M + 5.0, {"semantic": "river-water"}
 	)
 	_check(String(descriptor["checksum"]) == String(repeated["checksum"]), "surface descriptor deterministic")
 
+	var identity_mismatch := descriptor.duplicate(true)
+	identity_mismatch["fluid_type_id"] = FluidType.LAVA
+	identity_mismatch["checksum"] = GeoUtils.compute_checksum(identity_mismatch)
+	_check(String(FluidSurfaceDescriptor.validate(identity_mismatch).get("error_code", "")) == "FLUID_SURFACE_REGION_IDENTITY_MISMATCH", "descriptor binds region id to canonical identity fields")
 	var tampered := descriptor.duplicate(true)
 	tampered["reference_level_m"] = float(tampered["reference_level_m"]) + 1.0
 	_check(not _success(FluidSurfaceDescriptor.validate(tampered)), "surface checksum catches tamper")
