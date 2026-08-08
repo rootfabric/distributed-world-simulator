@@ -22,6 +22,33 @@ if [[ -z "$GODOT_EXECUTABLE" || ! -x "$GODOT_EXECUTABLE" ]]; then
 	exit 2
 fi
 
+HAD_BREAKPOINT_RUNTIME_DISABLED=0
+PREVIOUS_BREAKPOINT_RUNTIME_DISABLED="${BREAKPOINT_RUNTIME_DISABLED-}"
+if [[ -v BREAKPOINT_RUNTIME_DISABLED ]]; then
+	HAD_BREAKPOINT_RUNTIME_DISABLED=1
+fi
+
+restore_breakpoint_runtime_env() {
+	if [[ "$HAD_BREAKPOINT_RUNTIME_DISABLED" -eq 1 ]]; then
+		export BREAKPOINT_RUNTIME_DISABLED="$PREVIOUS_BREAKPOINT_RUNTIME_DISABLED"
+	else
+		unset BREAKPOINT_RUNTIME_DISABLED || true
+	fi
+}
+trap restore_breakpoint_runtime_env EXIT
+
+# Standalone headless tests do not need the live MCP runtime socket. This also
+# prevents false 127.0.0.1:9081 collisions in multi-process regression runs.
+export BREAKPOINT_RUNTIME_DISABLED=1
+
+# Build the .godot UID cache once so a brand-new worktree resolves UID-backed
+# autoloads before the standalone contract script starts.
+"$GODOT_EXECUTABLE" \
+	--headless \
+	--editor \
+	--path "$ROOT_DIR" \
+	--quit
+
 "$GODOT_EXECUTABLE" \
 	--headless \
 	--path "$ROOT_DIR" \
