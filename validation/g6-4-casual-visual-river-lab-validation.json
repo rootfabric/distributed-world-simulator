@@ -3,9 +3,6 @@
   "checkpoint": "G6.4_CASUAL_VISUAL_RIVER_LAB",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "implementation_candidate_head": "6fa824e3deea396fbfd20e3609b8003af67e09ef",
-  "failed_windows_head": "8d846ac40d66bfc91e0aea4f5e85426b5ad38922",
-  "fix1_candidate_head": "32a1a09fb1b1c9e013b6fcabd6e8b0b3efd4ae50",
   "fix2_candidate_head": "353a73f08f6d07840145e61f79b197e5773a73a2",
   "post_fix2_docs_tail": true,
   "decision": "FIX2_IMPLEMENTED_CANDIDATE",
@@ -17,13 +14,8 @@
     "g6_3_runtime_water_surface_query": "ACCEPTED",
     "g6_3_tested_head": "974fc6682abac058ea158cf11efbf44501805817"
   },
-  "manual_visual_evidence_after_fix1": {
+  "previous_manual_observation": {
     "scene_renders": true,
-    "water_ribbon_visible": true,
-    "canonical_centerline_visible": true,
-    "bank_guides_visible": true,
-    "query_probes_visible": true,
-    "px_pz_seam_visible": true,
     "observed_samples": 97,
     "observed_query_probes": 7,
     "observed_seam_transitions": 1,
@@ -65,10 +57,6 @@
     "zoom_out_coarsens_max_lod_and_river_samples": "PASS_REQUIRED",
     "feature_and_fluid_ids_stable_during_lod_changes": "PASS_REQUIRED",
     "px_pz_seam_continuous": "PASS_REQUIRED"
-  },
-  "shared_baseline_sync": {
-    "main_global_revision_at_implementation": "GLOBAL-P0-2026-08-08-R1",
-    "full_g6_acceptance_requires_fresh_g5_main_sync_check": true
   },
   "next_if_accepted": "G6_FULL_ACCEPTANCE"
 }
