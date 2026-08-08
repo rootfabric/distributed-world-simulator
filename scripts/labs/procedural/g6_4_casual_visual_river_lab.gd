@@ -208,7 +208,7 @@ func _refresh_lod_presentation(force_rebuild: bool) -> Dictionary:
 		return selected
 
 	var details: Dictionary = selected["details"]
-	var selection_hash := String(details["selection_hash"])
+	var selection_hash: String = String(details["selection_hash"])
 	current_virtual_altitude_m = _virtual_altitude_for_distance(camera_distance)
 	if not force_rebuild and selection_hash == current_selection_hash:
 		return {"success": true, "details": {"changed": false}}
@@ -322,7 +322,7 @@ func _build_visual_samples() -> Dictionary:
 
 	for raw_sample in visual_samples:
 		var sample: Dictionary = Dictionary(raw_sample)
-		var face := String(sample["face"])
+		var face: String = String(sample["face"])
 		if not face_sequence.has(face):
 			face_sequence.append(face)
 
@@ -358,7 +358,7 @@ func _append_visual_sample(
 	var face_uv: Dictionary = addressing.direction_to_face_uv(sample["surface_position_m"])
 	if not bool(face_uv.get("success", false)):
 		return face_uv
-	var face := String(face_uv["details"]["face"])
+	var face: String = String(face_uv["details"]["face"])
 	seen_faces[face] = true
 	if not previous_face.is_empty() and previous_face != face:
 		seam_transition_count += 1
@@ -422,10 +422,12 @@ func _build_centerline_mesh() -> ImmediateMesh:
 		var b: Dictionary = Dictionary(visual_samples[index + 1])
 		var fa: Dictionary = _display_frame(a)
 		var fb: Dictionary = _display_frame(b)
+		var fa_center: Vector3 = fa["center"]
+		var fb_center: Vector3 = fb["center"]
 		mesh.surface_set_color(Color(1.0, 0.92, 0.18, 1.0))
-		mesh.surface_add_vertex(Vector3(fa["center"]) + _normal_display(a) * 0.018)
+		mesh.surface_add_vertex(fa_center + _normal_display(a) * 0.018)
 		mesh.surface_set_color(Color(1.0, 0.92, 0.18, 1.0))
-		mesh.surface_add_vertex(Vector3(fb["center"]) + _normal_display(b) * 0.018)
+		mesh.surface_add_vertex(fb_center + _normal_display(b) * 0.018)
 	mesh.surface_end()
 	return mesh
 
@@ -484,10 +486,10 @@ func _build_seam_mesh() -> ImmediateMesh:
 	var mesh := ImmediateMesh.new()
 	var material := _line_material()
 	mesh.surface_begin(Mesh.PRIMITIVE_LINES, material)
-	var previous_face := String(visual_samples[0]["face"])
+	var previous_face: String = String(visual_samples[0]["face"])
 	for index in range(1, visual_samples.size()):
 		var sample: Dictionary = Dictionary(visual_samples[index])
-		var face := String(sample["face"])
+		var face: String = String(sample["face"])
 		if face != previous_face:
 			var frame: Dictionary = _display_frame(sample)
 			var center: Vector3 = frame["center"]
