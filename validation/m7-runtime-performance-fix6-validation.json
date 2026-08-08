@@ -11,12 +11,14 @@
     "scheduler_backlog_ticks_at_health_samples": 0,
     "client_prediction_lead_ticks_observed_up_to": 157,
     "visible_symptom": "multi-second movement/network freeze while item actions were occurring",
-    "diagnosis": "realtime observability remained allocation-heavy: telemetry observe duplicated/shifted bounded arrays on every sample, transport telemetry allocated default channel dictionaries on every packet, peer transport statistics rebuilt a full boundary snapshot every authority frame, and dirty READY reports could materialize a full runtime report as often as every 250 ms"
+    "diagnosis": "realtime observability remained allocation-heavy on server and graphical clients: telemetry observe duplicated/shifted bounded arrays, transport telemetry allocated default dictionaries per packet, both sides rebuilt full transport boundary snapshots at frame rate, and dirty server READY reports could materialize a full runtime report every 250 ms"
   },
   "policies": {
     "telemetry_sample_storage": "BOUNDED_RING_OVERWRITE_V2",
-    "m7_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
-    "peer_transport_statistics_interval_ms": 250,
+    "m7_server_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
+    "m7_client_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
+    "server_peer_transport_statistics_interval_ms": 250,
+    "client_peer_transport_statistics_interval_ms": 250,
     "ready_report_min_interval_ms": 1000,
     "report_write_policy": "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1",
     "slow_process_frame_threshold_ms": 50.0
@@ -24,20 +26,26 @@
   "production_changes": [
     "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or pop_front()s on the realtime path",
     "steady-state telemetry lookups avoid eager default Array/Dictionary allocation for existing distributions and transport channels",
-    "M7 server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
+    "M7 dedicated server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
+    "M7 graphical client does the same 4 Hz transport peer-stat sampling instead of rebuilding the full boundary snapshot every frame",
     "M7 READY diagnostic report materialization is coalesced to at most 1 Hz while initial READY and terminal reports remain synchronous",
-    "SERVER_HEALTH and realtime_foundation expose current/peak server process duration, slow-frame count, report snapshot build current/peak duration, and peer telemetry sampling current/peak duration"
+    "SERVER_HEALTH exposes current/peak server process, report-build and peer-telemetry durations",
+    "PREDICTION_HEALTH exposes current/peak graphical-client process and peer-telemetry durations"
   ],
   "correctness_invariants": [
     "60 Hz authoritative fixed tick unchanged",
     "FIX4 retained transient authority time unchanged",
     "movement snapshot recovery suppression unchanged",
-    "32-event per-frame network drain unchanged",
+    "32-event per-frame server network drain unchanged",
     "NX3 input wire schema and pressure compaction unchanged",
+    "NX4 client prediction/reconciliation semantics unchanged",
     "Item Graph delta plus reliable gameplay revision synchronization unchanged",
     "FIX5 server-authoritative frozen WORLD replica policy unchanged"
   ],
-  "focused_test": "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
+  "focused_tests": [
+    "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
+    "res://tests/network/test_m7_fix6_client_telemetry.gd"
+  ],
   "runner": "VALIDATE_M7_RUNTIME_PERFORMANCE_FIX6.ps1",
   "stress_analyzer": "ANALYZE_M7_FIX6_STRESS.ps1",
   "assistant_exact_godot_probe": {
@@ -60,7 +68,8 @@
   },
   "required_windows_gate": [
     "FIX6 editor import/composition PASS on Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "FIX6 realtime hot-path regression PASS",
+    "FIX6 server realtime hot-path regression PASS",
+    "FIX6 graphical client telemetry throttle regression PASS",
     "FIX5 world-item consistency PASS",
     "NX6 predicted item regression PASS",
     "accepted inventory regression PASS",
@@ -80,13 +89,13 @@
       "prediction lead returns to the normal low-single-digit range instead of remaining in tens/hundreds of ticks",
       "no hard multi-metre reconciliation correction and no visible backwards pull",
       "item/player checksums still converge",
-      "SERVER_HEALTH report_snapshot_build_duration_ms and peer_telemetry_last_duration_ms make any remaining slow-frame source attributable",
+      "SERVER_HEALTH and PREDICTION_HEALTH timing fields make any remaining server/client slow-frame source attributable",
       "ANALYZE_M7_FIX6_STRESS.ps1 returns PASS under the chosen acceptance thresholds"
     ]
   },
   "assistant_execution": {
     "full_repository_available": false,
     "windows_gate_executed": false,
-    "note": "Full project execution remains authoritative on the user's Windows checkout."
+    "note": "The global telemetry ring was probed with exact Linux Godot. The new graphical-client composition still requires the full Windows repository parser/gate."
   }
 }
