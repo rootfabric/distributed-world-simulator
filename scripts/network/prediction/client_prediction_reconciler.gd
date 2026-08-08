@@ -106,7 +106,8 @@ func set_authoritative_input_ack(ack_value: Dictionary, snapshot_server_tick: in
 
 	# Compare against the most recently accepted semantic ACK using the composite
 	# key. Different sequences at the same client tick are legal state transitions,
-	# not contradictions.
+	# not contradictions. An exact duplicate remains eligible for ACK_REPLAY so a
+	# repeated snapshot cannot fall back to wall-clock reconciliation.
 	if not _fix10_last_ack_semantic.is_empty():
 		var accepted_order: int = _fix10_fix5_compare_ack_order(ack, _fix10_last_ack_semantic)
 		if accepted_order < 0:
@@ -114,13 +115,10 @@ func set_authoritative_input_ack(ack_value: Dictionary, snapshot_server_tick: in
 			if client_tick == _fix10_last_ack_client_tick:
 				_fix10_fix5_same_tick_sequence_stale += 1
 			return _fix10_fix5_stale_registration_result(ack)
-		if accepted_order == 0:
-			if not _fix10_fix5_same_ack_baseline(ack, _fix10_last_ack_semantic):
-				_fix10_ack_mismatches += 1
-				_fix10_fix5_exact_key_conflicts += 1
-				return _failure("FIX10_ACK_BASELINE_CONFLICT_AT_SEMANTIC_KEY")
-			_fix10_fix4_stale_ack_registrations += 1
-			return _fix10_fix5_stale_registration_result(ack, true)
+		if accepted_order == 0 and not _fix10_fix5_same_ack_baseline(ack, _fix10_last_ack_semantic):
+			_fix10_ack_mismatches += 1
+			_fix10_fix5_exact_key_conflicts += 1
+			return _failure("FIX10_ACK_BASELINE_CONFLICT_AT_SEMANTIC_KEY")
 
 	if not _fix10_pending_ack.is_empty():
 		var pending_order: int = _fix10_fix5_compare_ack_order(ack, _fix10_pending_ack)
