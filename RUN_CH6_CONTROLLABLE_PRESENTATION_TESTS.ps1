@@ -14,5 +14,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "CH6 fix1 Shadow Preservation acceptance runner: PASS" -ForegroundColor Green
+Write-Host "CH6 fix2 Jump/Crouch + Shadow Preservation acceptance runner: PASS" -ForegroundColor Green
 exit 0
