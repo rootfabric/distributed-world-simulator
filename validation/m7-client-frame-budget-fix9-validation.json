@@ -1,0 +1,82 @@
+{
+  "schema": "planet_simulator.validation.m7_client_frame_budget_fix9.v1",
+  "stage": "M7 FIX9 — Client Frame Budget / Presentation Hot Path",
+  "branch": "feature/m7-client-frame-budget-fix9",
+  "base_branch": "feature/m7-prediction-clock-fix8",
+  "base_commit": "950d456278c9f8c8dd14a48e6b45d4995304ad33",
+  "implementation_head_before_validation_record": "5611816faa079596f1c48202669e77d8c0cf3eef",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "trigger_evidence": {
+    "fix8_automated_analysis": "PASS",
+    "client_a_process_max_ms": 104.94,
+    "client_b_process_max_ms": 115.014,
+    "typical_client_process_p50_ms": "approximately 0.31",
+    "remote_moving_buffer_underruns": 0,
+    "hard_corrections": 0,
+    "inventory_observation": "sort_layout_updates and interaction_hint_layout_updates tracked client process iterations almost one-for-one"
+  },
+  "scope": {
+    "network_client_policy": "PHASE_ACCOUNTING_NO_GAMEPLAY_SEMANTICS_V1",
+    "network_phases": [
+      "message_dispatch",
+      "snapshot_message",
+      "item_message",
+      "control_message",
+      "prediction_reconcile",
+      "input_flush",
+      "telemetry_update",
+      "local_prediction",
+      "process_unattributed"
+    ],
+    "world_policy": "CLIENT_WORLD_PHASE_ACCOUNTING_V1",
+    "world_phases": [
+      "world_render_process",
+      "world_physics_process",
+      "world_physics_unattributed",
+      "prediction_sync",
+      "prediction_callback",
+      "presentation_flush",
+      "replica_presentation",
+      "item_projection"
+    ],
+    "inventory_policy": "WRITE_CONTROL_GEOMETRY_ONLY_WHEN_CHANGED_V1",
+    "inventory_change": "sort button geometry, interaction hint geometry and sort-button visibility are written only when values actually change; target geometry is still checked each frame so resize/reflow remains live",
+    "semantics_intentionally_unchanged": [
+      "FIX8 prediction clock alignment",
+      "FIX8 bounded visual correction",
+      "FIX7 manual player/camera presentation",
+      "NX4 prediction/reconciliation",
+      "NX6 item prediction",
+      "M7 server authority",
+      "snapshot cadence",
+      "interpolation delay"
+    ]
+  },
+  "composition": {
+    "playground_scene_identity": "res://scripts/world/testing/playground_view_relative_runtime_fix8.gd",
+    "reason": "preserve accepted tests that assert exact FIX8 script identity",
+    "fix9_world_instrumentation_location": "res://scripts/world/testing/playground_view_relative_runtime_fix8.gd",
+    "active_inventory_enhancer": "res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix9.gd"
+  },
+  "focused_test": "res://tests/network/test_m7_client_frame_budget_fix9.gd",
+  "validation_runner": "VALIDATE_M7_CLIENT_FRAME_BUDGET_FIX9.ps1",
+  "result_analyzer": "ANALYZE_M7_FIX9_RESULTS.ps1",
+  "required_windows_gate": [
+    "editor import/composition",
+    "FIX9 focused frame-budget contracts",
+    "FIX8 prediction-clock regression",
+    "FIX6 graphical telemetry regression",
+    "accepted inventory fix8 regression",
+    "full nested FIX8/FIX7/FIX6/FIX5/network/inventory baseline",
+    "two-client graphical process run"
+  ],
+  "manual_acceptance": {
+    "required": true,
+    "minimum_duration_minutes": 5,
+    "profile": "LOCAL",
+    "actions": "both clients continuously move/turn/start/stop while repeatedly exercising drop, pickup, transfer and inventory presentation",
+    "analysis": "run ANALYZE_M7_FIX9_RESULTS.ps1 on server.json/a.json/b.json and inspect dominant network/world phases",
+    "notes": "a single startup/OS scheduling hitch is separated from sustained stutter by count-based slow/unattributed gates"
+  },
+  "status": "Windows exact-engine validation and long manual stress not yet executed for FIX9"
+}
