@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v2",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v3",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8A_POSE_COMPOSITION_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "CH7_8A_FIX1_PENDING_WINDOWS_RERUN",
   "goal": "Prove one exact-rig Quaternius skinned outfit with minimum complexity before body-region replacement and wider garment support.",
   "selected_asset": {
     "family": "Quaternius Modular Character Outfits - Fantasy",
@@ -47,6 +47,34 @@
     "ch6_world_proxy_shadow_path_reused": true,
     "graphical_launcher": "PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1",
     "acceptance_runner": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
+  },
+  "windows_fix0_rerun": {
+    "focused_skinned_pose_bridge": "PASS 32 assertions",
+    "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
+    "editor_import": "PASS",
+    "ch6_avatar_presenter": "PASS 43 assertions",
+    "ch6_character_lab": "PASS 11 assertions",
+    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
+    "ch6_first_person_jump_crouch_lab": "PASS 76 assertions",
+    "ch6_controllable_view_adapter_shadow": "PASS 66 assertions",
+    "ch6_shadow_proxy_contract": "PASS 21 assertions",
+    "ch6_acceptance_runner": "PASS",
+    "ch7_character_equipment_domain": "PASS 54 assertions",
+    "ch7_character_equipment_presenter": "PASS 447 assertions",
+    "ch7_quaternius_equipment_rig_adapter": "FAIL 1 failure / 45 assertions",
+    "blocking_message": "Unexpected Quaternius equipment adapter schema",
+    "failure_classification": "BACKWARD_COMPATIBILITY_REPORT_SCHEMA_REGRESSION",
+    "new_skinned_runtime_reached": false
+  },
+  "fix1": {
+    "commit": "ea846e78f957ca45a91aa063aa65efc56a7ae5a4",
+    "change": "Restore the accepted planet_simulator.quaternius_equipment_rig_adapter.v2 report schema while keeping CH7.8 skinned_parent_ready as an additive optional field.",
+    "reason": "Adding skinned-garment capability did not require a breaking report-schema change. The accepted CH7 v2 contract must remain stable.",
+    "production_movement_changed": false,
+    "network_changed": false,
+    "collision_changed": false,
+    "equipment_domain_changed": false,
+    "pose_copy_changed": false
   },
   "minimal_scope": {
     "one_skinned_outfit": true,
