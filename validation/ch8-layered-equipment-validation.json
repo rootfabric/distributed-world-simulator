@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v4",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v5",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_PARTIAL_BASE_BODY_SUPPRESSION_IN_PROGRESS",
-  "goal": "Keep canonical layered equipment stable, accept real Quaternius selective skinned parts, then add presentation-only aggregate partial suppression for the fused base body.",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_PARTIAL_BODY_SUPPRESSION_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "goal": "Keep canonical layered equipment and real selective garment parts stable while adding aggregate presentation-only partial suppression for the fused Quaternius base body.",
   "windows_ch8a_acceptance": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
     "focused_layer_contract": "PASS 57 assertions",
@@ -41,31 +41,95 @@
       "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"], "skinned_meshes": 2},
       "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"], "skinned_meshes": 1},
       "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"], "skinned_meshes": 1}
-    },
-    "selection_strategy": "SelectiveGarmentSceneFactory creates temporary presentation-only PackedScenes while accepted presenter/catalog/pose-bridge contracts remain unchanged."
+    }
   },
-  "ch8c_plan": {
+  "ch8c_candidate": {
     "stage": "PARTIAL_BASE_BODY_SUPPRESSION",
-    "problem": "SuperHero_Male head/torso/arms/legs/feet are fused into one skinned mesh and one material surface, so CH7.8 whole-body head clip cannot represent independent upper/lower/feet coverage.",
-    "architecture": "A separate aggregate body-coverage coordinator consumes the complete canonical equipment snapshot, unions semantic presentation coverage regions, and asks the concrete rig for one composite material. This avoids per-item material conflicts and preserves the accepted CH7.8 MATERIAL_OVERRIDE path.",
+    "problem": "SuperHero_Male head/torso/arms/legs/feet are fused into one skinned mesh and one material surface. Independent garment items require one aggregate mask rather than competing material overrides.",
+    "architecture": {
+      "coverage_catalog": "WearableBodyCoverageCatalog stores rig-specific semantic body coverage separately from canonical equipment occupancy.",
+      "coordinator": "LayeredBodySuppressionCoordinator consumes the complete snapshot, unions/sorts coverage regions and applies one composite material. Unrelated snapshot changes do not rebuild an unchanged coverage material.",
+      "rig_adapter": "QuaterniusLayeredBodySuppressionAdapter maps aggregate semantic regions to the fused SuperHero_Male mesh.",
+      "material": "QuaterniusRegionClip uses opaque fragment discard with rest-coordinate bounds derived from the real base-body AABB.",
+      "accepted_presenter_changed": false,
+      "accepted_wearable_catalog_changed": false,
+      "accepted_pose_bridge_changed": false,
+      "ch7_8_material_override_path_changed": false
+    },
     "coverage_regions": {
       "upper": ["body.region.torso", "body.region.arms"],
       "lower": ["body.region.legs"],
       "feet": ["body.region.feet"]
     },
-    "required_composition": [
-      "upper alone suppresses torso/arms but not legs/feet/head",
-      "lower can be added or removed without recreating canonical items",
-      "feet can be added or removed independently",
-      "upper+lower+feet produces one aggregate material on the fused base mesh",
-      "eyes and eyebrows remain visible",
-      "removing the last covered item restores the exact original material_override",
-      "CH6 shadow proxy continues to synchronize source material_override",
-      "CharacterBody3D, capsule, Item Graph and network state remain unchanged"
+    "material_threshold_rules": {
+      "feet_max_y": "base_min_y + base_height * 0.30",
+      "legs_max_y": "base_min_y + base_height * 0.60",
+      "torso_min_y": "base_min_y + base_height * 0.49",
+      "torso_max_y": "base_min_y + base_height * 0.87",
+      "arms_min_y": "base_min_y + base_height * 0.73",
+      "arms_max_y": "base_min_y + base_height * 0.88",
+      "torso_half_x": "base_width * 0.22",
+      "arms_inner_abs_x": "base_width * 0.17"
+    },
+    "important_scope": {
+      "presentation_only": true,
+      "runtime_vertex_triangle_mesh_surgery": false,
+      "shader_writes_alpha": false,
+      "shader_uses_discard": true,
+      "gameplay_body_changes": false,
+      "collision_changes": false,
+      "item_graph_changes": false,
+      "network_changes": false
+    }
+  },
+  "ch8c_implementation_commits": {
+    "ch8b_acceptance": "7184bec9955f5e537d170a41bb4c2ef8146f5015",
+    "coverage_catalog": "b1e1057db3f83187c7fa404c0412ba8d05d7079f",
+    "aggregate_coordinator": "3878a67663adad01462e4ff69a14197eafdfc48e",
+    "coordinator_idempotence": "711371208152ad4b9f29a834a0b54f4990cf3963",
+    "region_clip_material": "62a0620f619c165c93a9eb0be6c19a0a6695f35d",
+    "region_clip_rebuild_fix": "26ed2d0e998253900ce6b22b3b05d94dd4635bd0",
+    "quaternius_layered_adapter": "5f2b7fc26b435f56b52bb4c0cfa1970c9e0faa1e",
+    "real_partial_suppression_test": "0eb9f26ad08c4c6d091b1f623524dd0d2b139169",
+    "graphical_lab": "1bc4abfc7893775b72a8a406843b92050e3a31c9",
+    "graphical_scene": "798771c3bdb1d833f57c73f4d9c57c8bd7853ceb",
+    "graphical_launcher": "5ecfe17f797d58d81ecda5df68f2fd1d1d2eb59b",
+    "graphical_smoke_test": "6fa36834471525c47416134acd05464f807604a0",
+    "graphical_smoke_hardening": "81ab96090523dfd30b7e316cd3f58f00ea7a9e4f",
+    "runner": "a67acfefbe801ce47e929d60d5c90e440fd77692",
+    "design_doc": "89db03d41b05d54a9ef1f1886b8d22f32c680ba7"
+  },
+  "pending_windows_gates": {
+    "focused_partial_suppression": "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd",
+    "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
+    "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
+    "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
+    "required_automated": [
+      "upper enables torso+arms only",
+      "unrelated helmet leaves aggregate material identity unchanged",
+      "lower adds/removes legs independently",
+      "feet adds/removes feet independently",
+      "upper+lower+feet yields four active semantic regions on one fused-body material",
+      "Eyes and Eyebrows remain visible",
+      "last garment removal restores exact original material_override",
+      "first-person shadow proxy remains active",
+      "CharacterBody3D and capsule remain unchanged",
+      "graphical lab U/L/K lifecycle passes headlessly",
+      "accepted CH7.8, CH8A and CH8B regressions remain PASS"
     ],
-    "status": "IMPLEMENTATION_IN_PROGRESS"
+    "required_graphical": [
+      "U upper covers torso/arms without unacceptable base-body bleed",
+      "L lower independently covers legs",
+      "K feet independently covers feet",
+      "head remains visible for all combinations",
+      "waist, shoulder, wrist/hand and boot boundaries are acceptable",
+      "walk/run/jump/crouch remain coherent",
+      "H/B rigid gear remains coherent",
+      "C first-person/third-person and shadow remain coherent"
+    ]
   },
   "deferred": [
+    "authored vertex or UV coverage masks if coarse geometric bounds are visually insufficient",
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
     "persistence",
