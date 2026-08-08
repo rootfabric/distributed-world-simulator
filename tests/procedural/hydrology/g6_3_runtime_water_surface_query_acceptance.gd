@@ -150,7 +150,9 @@ func _test_deterministic_multi_region_winner() -> void:
 			var reverse_id := String(reverse["details"]["sample"]["fluid_region_id"])
 			_check(forward_id == reverse_id, "G6.3 winner independent of registration order")
 			_check(String(forward["details"]["sample"]["checksum"]) == String(reverse["details"]["sample"]["checksum"]), "G6.3 deterministic winner sample checksum")
-			var expected_id := min(String(water["details"]["fluid_region_id"]), String(methane["details"]["fluid_region_id"]))
+			var water_id := String(water["details"]["fluid_region_id"])
+			var methane_id := String(methane["details"]["fluid_region_id"])
+			var expected_id := water_id if water_id < methane_id else methane_id
 			_check(forward_id == expected_id, "G6.3 tie break uses lexical FluidRegionId")
 
 
