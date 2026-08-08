@@ -1,10 +1,10 @@
 # G0 — Geo Contracts Freeze v0 — implementation candidate
 
-**Дата:** 2026-08-08  
-**Program branch:** `feature/g0-procedural-planetary-generation-lab`  
-**Implementation branch:** `feature/g0-geo-contracts`  
-**Decision:** `IMPLEMENTED CANDIDATE`  
-**Production worlds changed:** NO  
+**Дата:** 2026-08-08
+**Program branch:** `feature/g0-procedural-planetary-generation-lab`
+**Implementation branch:** `feature/g0-geo-contracts`
+**Decision:** `IMPLEMENTED CANDIDATE`
+**Production worlds changed:** NO
 **Production terrain changed:** NO
 
 ---
