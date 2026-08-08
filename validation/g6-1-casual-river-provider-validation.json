@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "checkpoint": "G6.1_CASUAL_RIVER_PROVIDER_V1",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "implementation_candidate": "5dc39eeb8a176912ab1c0cffc1a1677202eaee0a",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "runtime_validation": "PENDING_WINDOWS_GODOT_4_7_1_DOUBLE",
+  "dependencies": {
+    "g5_world_feature_graph": "ACCEPTED",
+    "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC"
+  },
+  "expected_gate": {
+    "runner": "RUN_G6_1_CASUAL_RIVER_PROVIDER_TESTS.ps1",
+    "g5_world_feature_graph": "PASS_249",
+    "g5_feature_cell_identity": "PASS_94",
+    "g6_0_fluid_contracts": "PASS_169",
+    "g6_1_casual_river_provider": "PASS_REQUIRED"
+  },
+  "scope": {
+    "provider": "scripts/simulation/procedural/hydrology/casual_river_provider_v1.gd",
+    "new_runtime_query_resolver": false,
+    "new_renderer": false,
+    "new_surface_cell_identity": false,
+    "new_authority": false,
+    "new_persistence": false,
+    "new_network_transport": false,
+    "accepted_g6_0_contracts_modified": false
+  },
+  "next_if_accepted": "G6.2_CROSS_CELL_CROSS_LOD_CONTINUITY"
+}
