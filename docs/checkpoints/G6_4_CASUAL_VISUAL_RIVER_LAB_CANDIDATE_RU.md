@@ -3,6 +3,7 @@
 **Дата:** 2026-08-09
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Fix3 candidate head:** `77e99819c319e8ad924485414c56f3dc14748844`
 
 Fix2 automated gate прошёл (`104 assertions`, headless scene PASS), а ручной прогон подтвердил, что `SurfaceLodSelector` действительно дробит сетку при приближении. Но он также выявил второй design gap: сама поверхность оставалась fixed `SphereMesh`, а увеличение river sample count только пересэмплировало ту же гладкую spline. Новая видимая геометрическая информация не появлялась. Поэтому Fix2 не принят.
 
