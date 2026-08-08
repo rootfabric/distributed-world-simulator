@@ -1,12 +1,11 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v7",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v8",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX2_PENDING_WINDOWS_RERUN",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX3_PENDING_WINDOWS_RERUN",
   "goal": "Keep canonical layered equipment and real selective garment parts stable while adding aggregate presentation-only partial suppression for the fused Quaternius base body.",
   "windows_ch8a_acceptance": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
     "focused_layer_contract": "PASS 57 assertions",
     "focused_presentation_diff": "PASS 51 assertions",
     "accepted_ch7_8_regression": "PASS",
@@ -20,36 +19,36 @@
     "accepted_ch7_8_regression": "PASS",
     "accepted_ch8a_regression": "PASS",
     "combined_runner": "PASS",
-    "combined_runner_marker": "CH8 Layered Equipment + selective real skinned parts candidate runner: PASS",
     "decision": "ACCEPTED"
   },
   "windows_ch8c_attempt1": {
     "head": "f293f529ae475e8ee92dc8f2f894d359a4ff46e3",
     "focused_partial_suppression": "PARSE_FAIL",
     "error": "Could not resolve external class member setup",
-    "location": "tests/characters/test_ch8c_quaternius_partial_body_suppression.gd:73",
-    "classification": "HEADLESS_GDSCRIPT_EXTERNAL_CLASS_SIGNATURE_RESOLUTION",
-    "runtime_reached": false,
-    "shader_executed": false,
-    "canonical_equipment_mutated": false
+    "classification": "HEADLESS_GDSCRIPT_EXTERNAL_CLASS_SIGNATURE_RESOLUTION"
   },
   "windows_ch8c_attempt2": {
     "head": "e981c1479798959acbc28d69a7cb32eb5539cae3",
     "focused_partial_suppression": "PASS 69 assertions",
     "graphical_lab_smoke": "PARSE_FAIL",
     "graphical_lab_error": "Cannot infer the type of enabled variable because the value does not have a set type",
-    "graphical_lab_location": "scripts/characters/lab/quaternius_layered_equipment_lab.gd:131",
-    "graphical_lab_secondary_error": "Invalid access to player on Node3D",
-    "secondary_error_classification": "CASCADE_FROM_LAB_SCRIPT_PARSE_FAILURE",
     "classification": "GRAPHICAL_LAB_LOCAL_TYPE_INFERENCE_ONLY",
     "core_ch8c_runtime_proven": true
+  },
+  "windows_ch8c_attempt3": {
+    "head": "34f53bcdb8cd3e4321668ac5162092d7a1a5db73",
+    "graphical_lab_smoke_reported_marker": "PASS 23 assertions",
+    "decision": "REJECTED_FALSE_PASS_RUNTIME_ERRORS_PRESENT",
+    "runtime_error": "String formatting error: not all arguments converted during string formatting",
+    "location": "scripts/characters/lab/quaternius_layered_equipment_lab.gd:157",
+    "cause": "Percent formatting bound only to the final concatenated string while four arguments were supplied.",
+    "core_equipment_lifecycle_completed": true,
+    "acceptance_allowed": false
   },
   "canonical_contract": {
     "plain_equip_remains_strict": true,
     "plain_equip_auto_swaps": false,
-    "planning_mutates_revision": false,
     "explicit_replace_conflicts_operation": true,
-    "replacement_revision_increment": 1,
     "compatible_layers_survive_replacement": true,
     "item_graph_changes": false,
     "network_changes": false,
@@ -59,53 +58,41 @@
     "source_scene": "Male_Peasant.gltf",
     "bones": 65,
     "items": {
-      "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"], "skinned_meshes": 2},
-      "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"], "skinned_meshes": 1},
-      "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"], "skinned_meshes": 1}
+      "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"]},
+      "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"]},
+      "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"]}
     }
   },
   "ch8c_candidate": {
     "stage": "PARTIAL_BASE_BODY_SUPPRESSION",
-    "problem": "SuperHero_Male head/torso/arms/legs/feet are fused into one skinned mesh and one material surface. Independent garment items require one aggregate mask rather than competing material overrides.",
-    "architecture": {
-      "coverage_catalog": "WearableBodyCoverageCatalog stores rig-specific semantic body coverage separately from canonical equipment occupancy.",
-      "coordinator": "LayeredBodySuppressionCoordinator consumes the complete snapshot, unions/sorts coverage regions and applies one composite material. New CH8C collaborators are capability-typed at the coordinator boundary so direct headless scripts do not depend on editor class-cache registration.",
-      "rig_adapter": "QuaterniusLayeredBodySuppressionAdapter maps aggregate semantic regions to the fused SuperHero_Male mesh.",
-      "material": "QuaterniusRegionClip uses opaque fragment discard with rest-coordinate bounds derived from the real base-body AABB.",
-      "accepted_presenter_changed": false,
-      "accepted_wearable_catalog_changed": false,
-      "accepted_pose_bridge_changed": false,
-      "ch7_8_material_override_path_changed": false
-    },
+    "architecture": "Full equipment snapshot -> wearable coverage union -> one Quaternius composite region material on the fused SuperHero_Male mesh.",
     "coverage_regions": {
       "upper": ["body.region.torso", "body.region.arms"],
       "lower": ["body.region.legs"],
       "feet": ["body.region.feet"]
     },
-    "important_scope": {
-      "presentation_only": true,
-      "runtime_vertex_triangle_mesh_surgery": false,
-      "shader_writes_alpha": false,
-      "shader_uses_discard": true,
-      "gameplay_body_changes": false,
-      "collision_changes": false,
-      "item_graph_changes": false,
-      "network_changes": false
-    }
+    "presentation_only": true,
+    "runtime_mesh_surgery": false,
+    "gameplay_body_changes": false,
+    "collision_changes": false,
+    "item_graph_changes": false,
+    "network_changes": false
   },
-  "ch8c_fix2": {
-    "graphical_lab_toggle_type_fix": "7c5c2d11b316592101002a6a1a9da1978e6d3060",
-    "canonical_lower_item_identity_restore": "77c4a05f5bdb14a9e662c24665196a7f01e313fa",
-    "effective_head_to_test": "77c4a05f5bdb14a9e662c24665196a7f01e313fa",
-    "semantic_changes": false,
+  "ch8c_fix3": {
+    "status_format_fix": "3df729ee6a4eb0e9b281d380b3737f7c751e1e5a",
+    "smoke_status_assertions": "e65fe4af5204768eaa695339018d11193186fd54",
+    "runner_runtime_error_gate": "c7ea85a177448a60c0db36f40187085e021d1c57",
+    "status_format_change_only": true,
     "mask_changes": false,
-    "coverage_changes": false
+    "coverage_changes": false,
+    "canonical_changes": false
   },
   "pending_windows_gates": {
     "focused_partial_suppression": "ALREADY_PASS_69",
     "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot"
+    "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
+    "require_no_runtime_error_lines": true
   },
   "deferred": [
     "authored vertex or UV coverage masks if coarse geometric bounds are visually insufficient",
