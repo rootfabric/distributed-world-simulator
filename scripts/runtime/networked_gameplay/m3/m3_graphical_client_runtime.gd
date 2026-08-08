@@ -12,6 +12,8 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 const M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS: int = 250
 const M7_CLIENT_TELEMETRY_HOT_PATH_POLICY: String = "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1"
 const M7_CLIENT_SLOW_PROCESS_FRAME_MS: float = 50.0
+const FIX9_CLIENT_FRAME_BUDGET_POLICY: String = "PHASE_ACCOUNTING_NO_GAMEPLAY_SEMANTICS_V1"
+const FIX9_PHASE_BUDGET_MS: float = 16.667
 
 var _pending_replica_resync := false
 var _delta_base_mismatches := 0
@@ -28,26 +30,109 @@ var _fix6_peer_telemetry_max_duration_ms: float = 0.0
 var _fix6_process_last_duration_ms: float = 0.0
 var _fix6_process_max_duration_ms: float = 0.0
 var _fix6_slow_process_frames: int = 0
+var _fix9_phase_stats: Dictionary = {}
+var _fix9_message_type_counts: Dictionary = {}
+var _fix9_in_process: bool = false
+var _fix9_frame_message_dispatch_ms: float = 0.0
+var _fix9_frame_input_flush_ms: float = 0.0
+var _fix9_frame_telemetry_ms: float = 0.0
+var _fix9_unattributed_last_duration_ms: float = 0.0
+var _fix9_unattributed_max_duration_ms: float = 0.0
+var _fix9_unattributed_slow_frames: int = 0
 
 
 func _process(delta: float) -> void:
 	var fix6_process_started_us: int = Time.get_ticks_usec()
+	_fix9_frame_message_dispatch_ms = 0.0
+	_fix9_frame_input_flush_ms = 0.0
+	_fix9_frame_telemetry_ms = 0.0
+	_fix9_in_process = true
 	# M5 keeps this transport-session binding visible at the production source
 	# boundary. The inherited NX6 process sends JOIN with the same value; this
 	# assignment makes the composed adapter explicitly preserve that contract.
 	if _handshake_verified and not _join_sent and not _transport_session_id.is_empty():
 		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
 	super._process(delta)
+	_fix9_in_process = false
 	_fix6_process_last_duration_ms = float(Time.get_ticks_usec() - fix6_process_started_us) / 1000.0
 	_fix6_process_max_duration_ms = maxf(
 		_fix6_process_max_duration_ms, _fix6_process_last_duration_ms
 	)
 	if _fix6_process_last_duration_ms >= M7_CLIENT_SLOW_PROCESS_FRAME_MS:
 		_fix6_slow_process_frames += 1
+	var accounted_ms: float = (
+		_fix9_frame_message_dispatch_ms
+		+ _fix9_frame_input_flush_ms
+		+ _fix9_frame_telemetry_ms
+	)
+	_fix9_unattributed_last_duration_ms = maxf(_fix6_process_last_duration_ms - accounted_ms, 0.0)
+	_fix9_unattributed_max_duration_ms = maxf(
+		_fix9_unattributed_max_duration_ms,
+		_fix9_unattributed_last_duration_ms
+	)
+	if _fix9_unattributed_last_duration_ms >= FIX9_PHASE_BUDGET_MS:
+		_fix9_unattributed_slow_frames += 1
+	_fix9_record_phase("process_unattributed", _fix9_unattributed_last_duration_ms)
 	_emit_prediction_health_if_due()
 
 
+func _handle_message(payload: Dictionary) -> void:
+	var started_us: int = Time.get_ticks_usec()
+	var message_type: String = String(payload.get("type", "UNKNOWN"))
+	super._handle_message(payload)
+	var duration_ms: float = float(Time.get_ticks_usec() - started_us) / 1000.0
+	if _fix9_in_process:
+		_fix9_frame_message_dispatch_ms += duration_ms
+	_fix9_message_type_counts[message_type] = int(_fix9_message_type_counts.get(message_type, 0)) + 1
+	_fix9_record_phase("message_dispatch", duration_ms)
+	match message_type:
+		"GAMEPLAY_DELTA", "GAMEPLAY_SNAPSHOT", "COMPACT_GAMEPLAY_SNAPSHOT":
+			_fix9_record_phase("snapshot_message", duration_ms)
+		"ITEM_GRAPH_SNAPSHOT", "ITEM_GRAPH_DELTA":
+			_fix9_record_phase("item_message", duration_ms)
+		_:
+			_fix9_record_phase("control_message", duration_ms)
+
+
+func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	var started_us: int = Time.get_ticks_usec()
+	super._reconcile_prediction_from_snapshot(snapshot)
+	_fix9_record_phase(
+		"prediction_reconcile",
+		float(Time.get_ticks_usec() - started_us) / 1000.0
+	)
+
+
+func _flush_pending_input_batch(force_send: bool) -> bool:
+	var started_us: int = Time.get_ticks_usec()
+	var result: bool = super._flush_pending_input_batch(force_send)
+	var duration_ms: float = float(Time.get_ticks_usec() - started_us) / 1000.0
+	if _fix9_in_process:
+		_fix9_frame_input_flush_ms += duration_ms
+	_fix9_record_phase("input_flush", duration_ms)
+	return result
+
+
+func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
+	var started_us: int = Time.get_ticks_usec()
+	var result: Dictionary = super.advance_local_prediction(intent, frame_delta_seconds)
+	_fix9_record_phase(
+		"local_prediction",
+		float(Time.get_ticks_usec() - started_us) / 1000.0
+	)
+	return result
+
+
 func _update_runtime_telemetry() -> void:
+	var started_us: int = Time.get_ticks_usec()
+	_fix9_update_runtime_telemetry_fix6()
+	var duration_ms: float = float(Time.get_ticks_usec() - started_us) / 1000.0
+	if _fix9_in_process:
+		_fix9_frame_telemetry_ms += duration_ms
+	_fix9_record_phase("telemetry_update", duration_ms)
+
+
+func _fix9_update_runtime_telemetry_fix6() -> void:
 	if _telemetry == null:
 		return
 	# Keep cheap client gauges current every frame. The inherited implementation
@@ -88,6 +173,61 @@ func _update_runtime_telemetry() -> void:
 	_fix6_peer_telemetry_samples += 1
 
 
+func _fix9_record_phase(phase_name: String, duration_ms: float) -> void:
+	var phase: Dictionary = Dictionary(_fix9_phase_stats.get(phase_name, {}))
+	var count: int = int(phase.get("count", 0)) + 1
+	phase["count"] = count
+	phase["last_ms"] = duration_ms
+	phase["max_ms"] = maxf(float(phase.get("max_ms", 0.0)), duration_ms)
+	phase["total_ms"] = float(phase.get("total_ms", 0.0)) + duration_ms
+	if duration_ms >= FIX9_PHASE_BUDGET_MS:
+		phase["over_budget"] = int(phase.get("over_budget", 0)) + 1
+	else:
+		phase["over_budget"] = int(phase.get("over_budget", 0))
+	_fix9_phase_stats[phase_name] = phase
+
+
+func _fix9_phase_report(phase_name: String) -> Dictionary:
+	var phase: Dictionary = Dictionary(_fix9_phase_stats.get(phase_name, {}))
+	var count: int = int(phase.get("count", 0))
+	return {
+		"count": count,
+		"last_ms": float(phase.get("last_ms", 0.0)),
+		"max_ms": float(phase.get("max_ms", 0.0)),
+		"mean_ms": (
+			float(phase.get("total_ms", 0.0)) / float(count)
+			if count > 0
+			else 0.0
+		),
+		"over_budget": int(phase.get("over_budget", 0)),
+	}
+
+
+func _fix9_client_frame_budget_report() -> Dictionary:
+	return {
+		"policy": FIX9_CLIENT_FRAME_BUDGET_POLICY,
+		"phase_budget_ms": FIX9_PHASE_BUDGET_MS,
+		"process_last_ms": _fix6_process_last_duration_ms,
+		"process_max_ms": _fix6_process_max_duration_ms,
+		"process_slow_frames": _fix6_slow_process_frames,
+		"unattributed_last_ms": _fix9_unattributed_last_duration_ms,
+		"unattributed_max_ms": _fix9_unattributed_max_duration_ms,
+		"unattributed_over_budget_frames": _fix9_unattributed_slow_frames,
+		"message_type_counts": _fix9_message_type_counts.duplicate(true),
+		"phases": {
+			"message_dispatch": _fix9_phase_report("message_dispatch"),
+			"snapshot_message": _fix9_phase_report("snapshot_message"),
+			"item_message": _fix9_phase_report("item_message"),
+			"control_message": _fix9_phase_report("control_message"),
+			"prediction_reconcile": _fix9_phase_report("prediction_reconcile"),
+			"input_flush": _fix9_phase_report("input_flush"),
+			"telemetry_update": _fix9_phase_report("telemetry_update"),
+			"local_prediction": _fix9_phase_report("local_prediction"),
+			"process_unattributed": _fix9_phase_report("process_unattributed"),
+		},
+	}
+
+
 func _emit_prediction_health_if_due() -> void:
 	if (
 		not _debug_logging
@@ -120,6 +260,12 @@ func _emit_prediction_health_if_due() -> void:
 		"client_process_duration_ms": _fix6_process_last_duration_ms,
 		"client_process_max_duration_ms": _fix6_process_max_duration_ms,
 		"client_slow_process_frames": _fix6_slow_process_frames,
+		"fix9_unattributed_last_ms": _fix9_unattributed_last_duration_ms,
+		"fix9_unattributed_max_ms": _fix9_unattributed_max_duration_ms,
+		"fix9_unattributed_over_budget_frames": _fix9_unattributed_slow_frames,
+		"fix9_message_dispatch_max_ms": float(_fix9_phase_report("message_dispatch").get("max_ms", 0.0)),
+		"fix9_prediction_reconcile_max_ms": float(_fix9_phase_report("prediction_reconcile").get("max_ms", 0.0)),
+		"fix9_local_prediction_max_ms": float(_fix9_phase_report("local_prediction").get("max_ms", 0.0)),
 		"peer_telemetry_samples": _fix6_peer_telemetry_samples,
 		"peer_telemetry_skips": _fix6_peer_telemetry_skips,
 		"peer_telemetry_last_duration_ms": _fix6_peer_telemetry_last_duration_ms,
@@ -262,4 +408,5 @@ func get_report() -> Dictionary:
 		"slow_process_frames": _fix6_slow_process_frames,
 		"telemetry_storage": _telemetry.get_report() if _telemetry != null else {},
 	}
+	report["client_frame_budget"] = _fix9_client_frame_budget_report()
 	return report
