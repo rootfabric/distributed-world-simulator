@@ -133,9 +133,39 @@ It runs focused G1, the existing world/core regression, current-run `:9081` nois
 
 ---
 
-## 6. Gate
+## 6. Isolated exact-engine verification
 
-Candidate can become `G1 ACCEPTED` only after the exact Godot double build confirms:
+До публикации candidate production G1 scripts были вынесены в минимальный headless harness и проверены на exact engine:
+
+```text
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb
+cold editor import:              PASS
+G1 geodesy deep smoke:           PASS — 76 assertions
+```
+
+Smoke проверил:
+
+```text
+equator and pole conversion
+arbitrary lat/lon/alt roundtrips
+sub-meter double-precision altitude
+negative altitude
+surface normals
+orthonormal tangent frames
+E × U = N orientation
+NaN/INF rejection
+center-of-body rejection
+```
+
+Первый isolated compile обнаружил GDScript inheritance collision: `SphereBodyShapeProvider` повторно объявлял `GeoUtilsScript`, уже унаследованный от `BodyShapeProvider`. Duplicate declaration удалён; после fix cold import и deep smoke проходят.
+
+Этот isolated harness не заменяет full checkout regression и поэтому не повышает candidate до accepted самостоятельно.
+
+---
+
+## 7. Gate
+
+Candidate can become `G1 ACCEPTED` only after the full checkout on the exact Godot double build confirms:
 
 ```text
 headless editor import PASS
