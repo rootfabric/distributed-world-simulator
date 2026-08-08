@@ -94,8 +94,9 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
 
 $Godot = Resolve-Godot $GodotPath
 Invoke-Godot-Test "ch7_8_skinned_garment_pose_bridge" "res://tests/characters/test_ch7_8_skinned_garment_pose_bridge.gd"
+Invoke-Godot-Test "ch7_8_body_region_replacement" "res://tests/characters/test_ch7_8_body_region_replacement.gd"
 Invoke-Godot-Test "ch7_8_quaternius_skinned_garment_lab" "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd"
 
 Write-Host ""
-Write-Host "CH7.8 Skinned Garment pose-composition candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH7.8 Skinned Garment + coarse body replacement candidate runner: PASS" -ForegroundColor Green
 exit 0
