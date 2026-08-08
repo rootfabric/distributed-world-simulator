@@ -1,7 +1,7 @@
 # G6 Full Acceptance — IMPLEMENTED CANDIDATE
 
-**Дата:** 2026-08-09  
-**Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
+**Дата:** 2026-08-09
+**Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 G6.4 Fix4 получил ручной graphical PASS: при приближении наблюдается refine сетки до LOD 10 и появляются дополнительные высокочастотные неровности diagnostic G3 surface. Остался автоматический Fix4 rerun, который теперь встроен в полный G6 gate.
@@ -61,11 +61,27 @@ afab0c98de45c34dcf6c923d622c84835d428fa5
 
 По архитектурной политике мы **не копируем этот fix приватно в G6**. Сначала он должен стать частью G5 shared baseline, после чего G6 синхронизируется поверх обновлённого G5.
 
-Поэтому ожидаемый результат полного gate на текущем baseline — детерминированная остановка на `shared MW10 baseline`, до запуска Godot runtime. Это корректный blocker, а не regression G6.
+Поэтому ожидаемый результат полного gate на текущем baseline — детерминированная остановка на `shared MW10 baseline`, до запуска project-level Godot runtime. Это корректный blocker, а не regression G6.
 
-## Самостоятельный runtime test из assistant environment
+## Assistant-side Godot verification
 
-Попытка выполнена, но в доступном runtime нет локального checkout проекта и нет Godot binary; сетевой clone/download из container также недоступен. Поэтому assistant-side Godot PASS не заявляется. Финальное runtime evidence должно быть получено на Windows Godot 4.7.1 double после shared-baseline resync.
+Project upload содержит рабочую Linux double-сборку:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+binary: tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64
+binary SHA-256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+archive SHA-256: d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92
+```
+
+Движок реально запущен headless и выполнил GDScript smoke:
+
+```text
+GODOT_PROJECT_SMOKE: PASS
+VECTOR3_SAMPLE: (0.12345678901234, 2.0, 3.0)
+```
+
+В assistant execution-container всё ещё нет полного checkout проекта, поэтому project-level G6 runtime gate здесь пока не запускался. Это ограничение checkout, а не Godot.
 
 ## После PASS
 
