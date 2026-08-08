@@ -16,7 +16,7 @@ G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
-G6.4 IMPLEMENTED CANDIDATE — Casual Visual River Lab
+G6.4 FIX2 IMPLEMENTED CANDIDATE — adaptive visual river LOD
 G6 FULL ACCEPTANCE NEXT after G6.4
 ```
 
@@ -30,61 +30,82 @@ Start here:
 
 1. `docs/procedural/STATUS_RU.md`
 2. `docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_CANDIDATE_RU.md`
-3. `docs/checkpoints/G6_3_RUNTIME_WATER_SURFACE_QUERY_ACCEPTED_RU.md`
-4. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md`
-5. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
-6. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
-7. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-8. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
-9. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-10. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
+3. `validation/g6-4-casual-visual-river-lab-validation.json`
+4. `docs/checkpoints/G6_3_RUNTIME_WATER_SURFACE_QUERY_ACCEPTED_RU.md`
+5. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md`
+6. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
+7. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
 
 ## Current architecture
 
 ```text
-G0 contracts / GeoKernel
+G5 canonical River FeatureId
         ↓
-G1 body-fixed geodesy
+G6.1 canonical river geography
         ↓
-G2 cube-sphere cells + LOD
+G6.2 cell/LOD identity continuity proof
         ↓
-G3 canonical macro surface
+G6.3 runtime WaterSurfaceQuery
         ↓
-G4 recipe-driven provider composition
+G2 SurfaceLodSelector (representation only)
         ↓
-G5 canonical World Feature Graph
-        ↓
-G6.0 canonical fluid contracts
-        ↓
-G6.1 deterministic river provider
-        ↓
-G6.2 cross-cell/cross-LOD continuity — ACCEPTED
-        ↓
-G6.3 runtime WaterSurfaceQuery — ACCEPTED
-        ↓
-G6.4 replaceable visual river lab — CANDIDATE
-        ↓
-G6 full acceptance
-        ↓
-G7 Semantic Field Fabric
+G6.4 adaptive visual river lab
 ```
 
-Accepted rule:
+## Why G6.4 fix2
+
+Первый graphical run показал рабочую river ribbon, centerline, banks, query probes и `PX/PZ` seam, но representation оставалась статической полосой с фиксированными `97 samples`.
+
+Fix2 использует accepted G2 LOD pipeline:
 
 ```text
-G5 FeatureId = semantic river owner
-G6.1 provider = canonical geography compiler
-G6.2 cell/LOD = representation addressing only
-G6.3 query resolver = read-only derived world service
-G6.4 mesh/debug lab = replaceable presentation only
+observer
+  -> BodyFixedPosition
+  -> SurfaceLodSelector
+  -> active SurfaceCellKey leaves
+  -> river representation LOD
+  -> adaptive ribbon sample density
 ```
-
-## G6.4 manual visual checkpoint
 
 Scene:
 
 ```text
 res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
+```
+
+Controls:
+
+```text
+W/S zoom + refine/coarsen
+A/D orbit
+Q/E pitch
+Space auto-orbit
+R reset
+1 water
+2 centerline
+3 banks
+4 probes
+5 seam
+6 LOD grid
+```
+
+HUD shows:
+
+```text
+Virtual altitude
+Leaves
+Max LOD
+River samples
+River representation LOD range
+```
+
+Canonical identity remains independent of representation:
+
+```text
+FeatureId unchanged
+FluidRegionId unchanged
+RiverSpline unchanged
+WaterSurfaceQuery semantics unchanged
 ```
 
 Automated gate:
@@ -94,34 +115,28 @@ $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
 ```
 
-Manual launch after automated PASS:
+After automated PASS:
 
 ```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-Controls:
+Acceptance requires visible refine/coarsen: near observer must produce higher `Max LOD` and more river samples than far observer while FeatureId and FluidRegionId stay stable.
+
+After G6.4:
 
 ```text
-A/D orbit     Q/E pitch     W/S zoom
-Space auto-orbit            R reset
-1 water       2 centerline  3 banks
-4 probes      5 seam
+G6 FULL ACCEPTANCE
+  -> fresh main/G5/GLOBAL-P0/shared-baseline check
+  -> full world/core regression
+  -> G7 Semantic Field Fabric
 ```
 
-The scene displays a planet-scale derived water ribbon, canonical centerline, bank guides, G6.3 query normal/flow probes and the `PX/PZ` cube-face transition marker. Water/bank width is deliberately exaggerated only in display space.
-
-G6.4 is not accepted until both automated Windows validation and graphical manual observation pass.
-
-## Synchronization note
-
-`GLOBAL-P0-2026-08-08-R1` still matches main at implementation start. A fresh G5 shared-baseline PR #43 exists for the MW10 atomic-lock fix and is still open. G6.4 is presentation-only and does not depend on Matter, but full G6 acceptance must synchronize with the shared baseline if that fix lands before the final gate.
-
-## Detail / asset doctrine
+## Detail doctrine
 
 ```text
 BASE FIRST
 BEAUTY SECOND
 ```
 
-Photoreal water, foam, FFT waves and production shoreline remain deferred. The current visual lab exists to prove replaceable presentation over stable canonical/query contracts.
+Photoreal water/foam/shoreline is still deferred; this lab proves canonical continuity plus adaptive replaceable representation.
