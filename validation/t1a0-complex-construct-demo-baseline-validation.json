@@ -25,8 +25,12 @@
   "static_validation": {
     "manifest_json_parse": "PASS",
     "fixture_checksum_reference": "PASS",
+    "d0_checksum_recomputed_independently": "PASS",
+    "d1_checksum_recomputed_independently": "PASS",
+    "branch_diff_scope_checked": "PASS",
     "production_contract_files_changed": 0,
-    "network_contract_files_changed": 0
+    "network_contract_files_changed": 0,
+    "github_actions_runs_for_candidate_head": 0
   },
   "runtime_validation": {
     "editor_import": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
