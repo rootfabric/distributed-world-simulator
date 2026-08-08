@@ -31,6 +31,7 @@ func _run() -> void:
 	var lab_source := FileAccess.get_file_as_string("res://scripts/characters/lab/quaternius_character_lab.gd")
 	_assert(not lab_source.contains("KEY_V"), "Technical model yaw toggle is still exposed in the lab")
 	_assert(not lab_source.contains("развернуть модель"), "HUD still advertises the technical model yaw toggle")
+	_assert(lab_source.contains("quaternius_grounded_avatar_presenter.gd"), "Lab does not use the Quaternius ground-compensated presenter")
 
 	lab.set_first_person_mode(true)
 	await process_frame
@@ -72,30 +73,48 @@ func _run() -> void:
 
 	var standing_height: float = float(lab.player_capsule.height)
 	var standing_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
+	var standing_player_y: float = float(lab.player.position.y)
 	lab._apply_crouch_shape(true, 1.0)
 	_assert(lab.player_capsule.height < standing_height, "Crouch does not reduce gameplay capsule height in the isolated lab")
 	var crouching_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
 	_assert(is_equal_approx(crouching_bottom, standing_bottom), "Crouch changes the gameplay capsule foot plane and can make the body float")
+	_assert(is_equal_approx(float(lab.player.position.y), standing_player_y), "Crouch shape moved the gameplay CharacterBody3D")
 	_assert(lab.camera_yaw.position.y < 1.62, "Crouch does not lower the local camera anchor")
 	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": true})
+	lab.avatar.call("_update_ground_compensation", 1.0)
 	await process_frame
 	var avatar_report: Dictionary = lab.avatar.create_report()
 	_assert(String(avatar_report.get("current_semantic", "")) == "crouch_idle", "Crouch lab state did not reach presenter")
+	var ground_report: Dictionary = avatar_report.get("ground_compensation", {})
+	_assert(String(ground_report.get("mode", "")) == "QUATERNIUS_CROUCH_VISUAL_ROOT_OFFSET", "Quaternius crouch ground compensation is missing")
+	_assert(is_equal_approx(float(ground_report.get("configured_offset_m", 0.0)), 0.35), "Unexpected Quaternius crouch ground offset")
+	if String(avatar_report.get("asset_mode", "")).begins_with("QUATERNIUS"):
+		_assert(is_equal_approx(float(ground_report.get("target_offset_y", 0.0)), -0.35), "Crouch visual root target is not lowered to the gameplay crouch center")
+		_assert(is_equal_approx(float(ground_report.get("current_offset_y", 0.0)), -0.35), "Crouch visual root did not reach the grounded offset")
+	_assert(not bool(ground_report.get("gameplay_body_moved", true)), "Ground compensation claims gameplay body ownership")
 	_assert(bool(lab.first_person_adapter.create_report().get("shadow_proxy_active", false)), "Crouch disabled first-person shadow preservation")
 
 	lab.avatar.apply_motion(Vector3(0.0, 4.0, 0.0), Vector3.UP, Vector3.FORWARD, {"grounded": false, "crouching": false})
+	lab.avatar.call("_update_ground_compensation", 1.0)
 	await process_frame
 	avatar_report = lab.avatar.create_report()
 	_assert(String(avatar_report.get("current_semantic", "")) == "jump", "Airborne lab state did not reach presenter")
+	ground_report = avatar_report.get("ground_compensation", {})
+	_assert(is_equal_approx(float(ground_report.get("target_offset_y", -1.0)), 0.0), "Leaving crouch did not clear the visual ground target")
+	_assert(is_equal_approx(float(ground_report.get("current_offset_y", -1.0)), 0.0), "Leaving crouch did not restore the visual root")
 	_assert(bool(lab.first_person_adapter.create_report().get("shadow_proxy_active", false)), "Jump disabled first-person shadow preservation")
 	lab._apply_crouch_shape(false, 1.0)
 	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": false})
+	lab.avatar.call("_update_ground_compensation", 1.0)
 	await process_frame
 	_assert(is_equal_approx(lab.player_capsule.height, standing_height), "Standing capsule height did not restore")
 	var restored_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
 	_assert(is_equal_approx(restored_bottom, standing_bottom), "Standing restore changes the gameplay capsule foot plane")
+	_assert(is_equal_approx(float(lab.player.position.y), standing_player_y), "Stand restore moved the gameplay CharacterBody3D")
 
 	avatar_report = lab.avatar.create_report()
+	ground_report = avatar_report.get("ground_compensation", {})
+	_assert(is_equal_approx(float(ground_report.get("current_offset_y", -1.0)), 0.0), "Standing presentation retained a crouch ground offset")
 	_assert(not bool(avatar_report.get("root_motion_applied", true)), "First-person lab enables root motion")
 
 	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
