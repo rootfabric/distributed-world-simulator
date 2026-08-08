@@ -42,15 +42,15 @@ git -C "$ROOT_DIR" merge-base --is-ancestor "$G5_REF" HEAD || {
 printf '%s\n' '=== G6 FULL ACCEPTANCE: shared MW10 baseline ==='
 g5_repo_blob="$(git -C "$ROOT_DIR" rev-parse "$G5_REF:$MW10_REPOSITORY_PATH")"
 g5_retry_blob="$(git -C "$ROOT_DIR" rev-parse "$G5_REF:$MW10_RETRY_TEST_PATH")"
-[[ "$g5_repo_blob" == "$EXPECTED_MW10_REPOSITORY_BLOB" ]] || { echo "G5 lacks accepted MW10 atomic-lock repository blob; integrate PR #43 first" >&2; exit 1; }
-[[ "$g5_retry_blob" == "$EXPECTED_MW10_RETRY_TEST_BLOB" ]] || { echo "G5 lacks accepted MW10 retry-test blob; integrate PR #43 first" >&2; exit 1; }
+[[ "$g5_repo_blob" == "$EXPECTED_MW10_REPOSITORY_BLOB" ]] || { echo "G5 lacks accepted MW10 atomic-lock repository blob" >&2; exit 1; }
+[[ "$g5_retry_blob" == "$EXPECTED_MW10_RETRY_TEST_BLOB" ]] || { echo "G5 lacks accepted MW10 retry-test blob" >&2; exit 1; }
 [[ "$(git -C "$ROOT_DIR" hash-object "$ROOT_DIR/$MW10_REPOSITORY_PATH")" == "$EXPECTED_MW10_REPOSITORY_BLOB" ]] || { echo "G6 is not resynchronized with MW10 repository fix" >&2; exit 1; }
 [[ "$(git -C "$ROOT_DIR" hash-object "$ROOT_DIR/$MW10_RETRY_TEST_PATH")" == "$EXPECTED_MW10_RETRY_TEST_BLOB" ]] || { echo "G6 is not resynchronized with MW10 retry test" >&2; exit 1; }
 
 git -C "$ROOT_DIR" diff --check "$G5_REF...HEAD"
 
-grep -Fq '"decision": "FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED"' "$ROOT_DIR/validation/g6-4-casual-visual-river-lab-validation.json" || {
-  echo "G6.4 Fix4 manual graphical PASS record is missing or stale" >&2
+grep -Fq '"decision": "ACCEPTED"' "$ROOT_DIR/validation/g6-4-casual-visual-river-lab-validation.json" || {
+  echo "G6.4 acceptance record is missing or stale" >&2
   exit 1
 }
 
@@ -58,7 +58,7 @@ previous_breakpoint_disabled="${BREAKPOINT_RUNTIME_DISABLED-__UNSET__}"
 export BREAKPOINT_RUNTIME_DISABLED=1
 trap 'if [[ "$previous_breakpoint_disabled" == "__UNSET__" ]]; then unset BREAKPOINT_RUNTIME_DISABLED; else export BREAKPOINT_RUNTIME_DISABLED="$previous_breakpoint_disabled"; fi' EXIT
 
-printf '%s\n' '=== G6 FULL ACCEPTANCE: G6.4 Fix4 closes G6.0-G6.4 chain ==='
+printf '%s\n' '=== G6 FULL ACCEPTANCE: rerun accepted G6.0-G6.4 chain ==='
 bash "$ROOT_DIR/RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.sh"
 
 printf '%s\n' '=== G6 FULL ACCEPTANCE: MW10 atomic-lock fault injection ==='
