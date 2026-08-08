@@ -49,6 +49,7 @@ func _run() -> void:
 	_assert(simulator.command_registry.has_command("display.fullscreen.toggle"), "Core display command is missing.")
 	_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command is missing.")
 	_assert(simulator.developer_console != null, "Developer console was not initialized.")
+	_assert_runtime_persistence_healthy(simulator.get_current_runtime(), "earth_moon")
 	_test_console_process_lifecycle(simulator)
 
 	for world_id in WORLD_IDS:
@@ -64,9 +65,10 @@ func _run() -> void:
 		_assert(simulator.command_registry.get_registration_errors().is_empty(), "Command registration errors remain after load: %s" % world_id)
 		_assert(simulator.test_registry.get_registration_errors().is_empty(), "Test registration errors remain after load: %s" % world_id)
 		_assert(simulator.command_registry.has_command("display.fullscreen.toggle"), "Core display command disappeared in %s" % world_id)
-		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command disappeared in %s" % world_id)
+		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core display command disappeared in %s" % world_id)
 		_assert_world_command_surface(simulator, world_id)
 		_test_inventory_profile_command(simulator, world_id)
+		_assert_runtime_persistence_healthy(runtime, world_id)
 		if runtime == null:
 			continue
 		_assert(runtime.has_method("create_runtime_snapshot"), "Runtime snapshot contract missing: %s" % world_id)
@@ -111,6 +113,22 @@ func _test_inventory_profile_command(simulator, world_id: String) -> void:
 	_assert(not bool(rejected.get("success", true)), "inventory.profile must reject unknown profile in %s" % world_id)
 
 
+func _assert_runtime_persistence_healthy(runtime, world_id: String) -> void:
+	if world_id not in ["moon", "earth_moon"]:
+		return
+	_assert(runtime != null, "Persistence health check has no runtime: %s" % world_id)
+	if runtime == null:
+		return
+	var persistence = runtime.get("persistence")
+	_assert(persistence != null, "Persistence repository is missing in %s" % world_id)
+	if persistence == null:
+		return
+	_assert(
+		bool(persistence.get("initialized")),
+		"Persistence repository failed to initialize in %s" % world_id
+	)
+
+
 func _assert_optional_diagnostic_menu_is_closed(runtime, world_id: String) -> void:
 	if world_id not in ["moon", "earth_moon"]:
 		return
@@ -122,6 +140,20 @@ func _assert_optional_diagnostic_menu_is_closed(runtime, world_id: String) -> vo
 		not bool(runtime_hud.call("is_menu_visible")),
 		"World-specific diagnostics menu intercepted startup in %s" % world_id
 	)
+
+
+func _assert_world_command_surface(simulator, world_id: String) -> void:
+	var expectations: Dictionary = COMMAND_EXPECTATIONS.get(world_id, {})
+	for command_id in expectations.get("required", []):
+		_assert(
+			simulator.command_registry.has_command(String(command_id)),
+			"Required command missing in %s: %s" % [world_id, command_id]
+		)
+	for command_id in expectations.get("forbidden", []):
+		_assert(
+			not simulator.command_registry.has_command(String(command_id)),
+			"Foreign command leaked into %s: %s" % [world_id, command_id]
+		)
 
 
 func _finish() -> void:
@@ -138,17 +170,3 @@ func _finish() -> void:
 func _assert(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
-
-
-func _assert_world_command_surface(simulator, world_id: String) -> void:
-	var expectation: Dictionary = COMMAND_EXPECTATIONS.get(world_id, {})
-	for command_id in expectation.get("required", []):
-		_assert(
-			simulator.command_registry.has_command(String(command_id)),
-			"Required command is missing in %s: %s" % [world_id, command_id]
-		)
-	for command_id in expectation.get("forbidden", []):
-		_assert(
-			not simulator.command_registry.has_command(String(command_id)),
-			"Foreign command leaked into %s: %s" % [world_id, command_id]
-		)
