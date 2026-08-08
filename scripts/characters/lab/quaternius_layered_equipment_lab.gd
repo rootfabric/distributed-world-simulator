@@ -10,7 +10,7 @@ const LayeredRigAdapterType = preload("res://scripts/characters/equipment/quater
 
 const MALE_PEASANT_PATH := "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf"
 const UPPER_ITEM_ID := "lab.item.layer.upper.001"
-const LOWER_ITEM_ID := "lab.item.layer.lower.peasant"
+const LOWER_ITEM_ID := "lab.item.layer.lower.001"
 const FEET_ITEM_ID := "lab.item.layer.feet.001"
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
