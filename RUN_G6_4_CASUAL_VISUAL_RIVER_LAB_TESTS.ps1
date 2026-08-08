@@ -29,9 +29,18 @@ try {
     }
 
     Write-Host "=== G6.4 headless scene smoke ==="
-    & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2
-    if ($LASTEXITCODE -ne 0) {
-        throw "G6.4 visual river lab headless smoke failed"
+    $SceneLines = @()
+    & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2 2>&1 | Tee-Object -Variable SceneLines
+    $SceneExitCode = $LASTEXITCODE
+    $SceneText = ($SceneLines | Out-String)
+    if ($SceneExitCode -ne 0) {
+        throw "G6.4 visual river lab headless smoke failed with exit code $SceneExitCode"
+    }
+    if ($SceneText -match "(?m)^(SCRIPT ERROR:|ERROR: Failed to load script)") {
+        throw "G6.4 visual river lab headless smoke reported a script parse/load error"
+    }
+    if ($SceneText -notmatch [regex]::Escape("G6.4 Casual Visual River Lab: PASS")) {
+        throw "G6.4 visual river lab headless smoke did not emit its explicit PASS marker"
     }
 
     Write-Host "G6.4 Casual Visual River Lab automated gate passed."
