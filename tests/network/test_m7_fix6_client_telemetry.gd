@@ -8,6 +8,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_client_runtime_telemetry_is_throttled()
+	_test_process_convergence_uses_captured_authority_checksum()
 	_finish()
 
 
@@ -60,6 +61,31 @@ func _test_client_runtime_telemetry_is_throttled() -> void:
 	_assert(
 		source.contains("peer_telemetry_max_duration_ms"),
 		"PREDICTION_HEALTH does not expose graphical client peer telemetry peak latency"
+	)
+
+
+func _test_process_convergence_uses_captured_authority_checksum() -> void:
+	var worker_source: String = FileAccess.get_file_as_string(
+		"res://tools/runtime/m7_playable_network_client_camera_sync_fix.gd"
+	)
+	var preferred_start: int = worker_source.find("func _preferred_server_player_checksum")
+	_assert(preferred_start >= 0, "FIX6 graphical process convergence checksum selector missing")
+	if preferred_start < 0:
+		return
+	var preferred_source := worker_source.substr(preferred_start)
+	var captured_pos: int = preferred_source.find("last_two_connected_checksum")
+	var snapshot_pos: int = preferred_source.find("get(\"snapshot\"")
+	_assert(
+		captured_pos >= 0,
+		"FIX6 graphical process does not use the server-captured two-peer authority checksum"
+	)
+	_assert(
+		snapshot_pos > captured_pos,
+		"FIX6 graphical process does not keep the stale READY snapshot checksum as a compatibility fallback"
+	)
+	_assert(
+		worker_source.contains("func _wait_server_player_checksum(timeout_ms: int) -> bool"),
+		"FIX6 graphical process does not override stale READY convergence waiting"
 	)
 
 
