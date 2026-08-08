@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v12",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v13",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8C_FUSED_BODY_HEAD_CLIP_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "CH7_8_AUTOMATED_ACCEPTED_GRAPHICAL_OBSERVATION_PENDING",
   "goal": "Prove one exact-rig Quaternius skinned outfit with presentation-only fused-body suppression and no cloth, gameplay-body or network complexity.",
   "selected_asset": {
     "outfit": "Male_Peasant.gltf",
@@ -13,13 +13,7 @@
     "base": "Superhero_Male_FullBody.gltf",
     "asset_bytes_committed_to_branch": false
   },
-  "confirmed_before_head_clip": {
-    "ch7_runner": "PASS",
-    "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
-    "real_quaternius_garment_lab_before_body_suppression": "PASS 37 assertions",
-    "synthetic_body_region_replacement": "PASS 65 assertions"
-  },
-  "windows_base_asset_refresh_and_normalization": {
+  "windows_base_asset": {
     "archive": "Universal Base Characters[Standard].zip",
     "preflight_after_refresh": "PASS 18 glTF, 2 files normalized, 3 URI fixes, 3 export-name recoveries",
     "editor_reimport_after_preflight": "PASS",
@@ -28,7 +22,6 @@
   },
   "windows_fullbody_structure_probe": {
     "decision": "PASS",
-    "script": "tests/characters/probe_ch7_8_quaternius_fullbody_mesh_structure.gd",
     "source": "Superhero_Male_FullBody.gltf",
     "skeleton_bones": 65,
     "mesh_count": 3,
@@ -38,30 +31,24 @@
         "name": "Eyebrows",
         "skinned": true,
         "surface_count": 1,
-        "albedo": "T_Hair_1_BaseColor.png",
-        "aabb_position": [-0.0623405687511, 1.694859623909, 0.05692157894373],
-        "aabb_size": [0.12468113750219, 0.03060781955719, 0.03755629062653]
+        "albedo": "T_Hair_1_BaseColor.png"
       },
       {
         "name": "Eyes",
         "skinned": true,
         "surface_count": 1,
-        "albedo": "T_Eye_Brown.png",
-        "aabb_position": [-0.04874879866838, 1.68359923362732, 0.05123402923346],
-        "aabb_size": [0.09749759733677, 0.02994549274445, 0.02940388768911]
+        "albedo": "T_Eye_Brown.png"
       },
       {
         "name": "SuperHero_Male",
         "skinned": true,
         "surface_count": 1,
-        "albedo": "T_Superhero_Male_Dark.png",
-        "aabb_position": [-0.92943251132965, -0.00950966961682, -0.16345079243183],
-        "aabb_size": [1.8588650226593, 1.81958638317883, 0.29148843884468]
+        "albedo": "T_Superhero_Male_Dark.png"
       }
     ],
-    "important_conclusion": "Eyes and Eyebrows are separate skinned meshes, but head/face/body are fused into the single SuperHero_Male mesh and its single surface. Whole-mesh or surface hiding cannot keep the face."
+    "important_conclusion": "Eyes and Eyebrows are separate skinned meshes, while head/face/body are fused into one SuperHero_Male mesh and one surface. Whole-mesh or surface hiding cannot preserve the face."
   },
-  "fused_body_head_clip_candidate": {
+  "fused_body_head_clip": {
     "strategy": "presentation-only opaque fragment discard on the fused SuperHero_Male material_override",
     "generic_adapter_contract": "CharacterRigAdapter.resolve_body_region_suppression_targets",
     "generic_default_mode": "VISIBILITY",
@@ -72,7 +59,7 @@
       "body.region.legs",
       "body.region.feet"
     ],
-    "deduplicated_target_count_expected": 1,
+    "deduplicated_target_count": 1,
     "body_mesh_remains_visible": true,
     "eyes_remain_visible": true,
     "eyebrows_remain_visible": true,
@@ -81,56 +68,50 @@
     "shader_writes_alpha": false,
     "shader_uses_discard": true,
     "clip_plane_primary_rule": "Eyes AABB min Y - 0.20 m",
-    "observed_expected_clip_local_y": 1.48359923362732,
-    "clip_plane_fallback_rule": "body AABB min Y + body height * 0.82",
+    "observed_clip_local_y": 1.4836,
     "original_material_override_restored_on_unequip": true,
-    "shadow_proxy_compatibility": "Accepted WORLD_PROXY copies source material_override at creation and during synchronization, so the head clip is expected to propagate without a shadow-specific implementation."
+    "shadow_proxy_compatibility": "WORLD_PROXY copies and synchronizes source material_override, so the clip propagates through the accepted first-person shadow path."
   },
-  "implementation_commits": {
-    "head_clip_material": "82d2d6ecd13550c7745f6917d7ca8c53aa3e1020",
-    "generic_suppression_targets": "bf6bdccd85b3476c588bd513ceec5b7364abddf2",
-    "quaternius_fused_body_clip": "a4d591d776c8f9edd70019d495d9947ff6a3d46d",
-    "presenter_material_suppression": "31bd088111ea84c1fa4a962a34c30ae0d412e70d",
-    "lab_fused_body_path": "e65fc8d8975f2302fd3faa78a9c4c7a62c57b8b2",
-    "rigid_first_real_test": "499d758a3d0a7f566919c2fe871327810da04138",
-    "real_garment_test": "3ca5d4e133e15ede98e27fc87fffa0a0992dd87f",
-    "material_source_hardening": "d1ac6a0e605a7d020d338e66638f50f24c7eb5b6",
-    "lab_type_hardening": "882b17c396751298d29b886ed1603864f8ffde0f",
-    "head_clip_contract_test": "4f923b431e0c96cb87243de4da2e9150148ec0b0",
-    "head_clip_contract_type_hardening": "41eb25553b7cc721f11f47be5de3488e631788a0",
-    "runner": "94655ffa605cc2af7ce8caeeabee844f9fc0e3cd",
-    "documentation": "f0ef55d26bcf117e2bb6eba41d11321705b04b2c"
+  "windows_automated_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "asset_preflight": "PASS 18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries",
+    "editor_import": "PASS",
+    "ch4_ch6_avatar_presenter": "PASS 43 assertions",
+    "ch4_ch6_character_lab": "PASS 11 assertions",
+    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
+    "ch6_jump_crouch_lab": "PASS 76 assertions",
+    "ch6_view_adapter_shadow": "PASS 66 assertions",
+    "ch6_shadow_proxy": "PASS 21 assertions",
+    "ch6_runner": "PASS",
+    "ch7_character_equipment_domain": "PASS 54 assertions",
+    "ch7_character_equipment_presenter": "PASS 447 assertions",
+    "ch7_quaternius_rig_adapter": "PASS 45 assertions",
+    "ch7_quaternius_equipment_lab": "PASS 64 assertions",
+    "ch7_runner": "PASS",
+    "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
+    "ch7_8_head_clip_material": "PASS 19 assertions",
+    "ch7_8_body_region_replacement": "PASS 65 assertions",
+    "ch7_8_fused_body_suppression_order": "PASS 49 assertions",
+    "ch7_8_real_quaternius_garment_lab": "PASS 67 assertions",
+    "combined_runner": "PASS",
+    "combined_runner_marker": "CH7.8 Skinned Garment + fused-body head clip candidate runner: PASS",
+    "important_conclusion": "All automated CH6, CH7 and CH7.8 gates passed with the real Male_Peasant garment, fused-body material suppression, rigid equipment composition, first-person/shadow composition, exact material restoration and unchanged gameplay body/capsule."
   },
-  "pending_windows_gates": {
-    "focused_head_clip_material": "res://tests/characters/test_ch7_8_quaternius_head_clip_material.gd",
-    "focused_generic_body_suppression": "res://tests/characters/test_ch7_8_body_region_replacement.gd",
-    "focused_rigid_first": "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd",
-    "focused_real": "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
-    "full": ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot",
-    "required": [
-      "head clip material contract PASS",
-      "accepted CH7 regression remains PASS",
-      "generic body replacement/hide test remains PASS",
-      "fused base body resolves to one suppression target",
-      "head clip ShaderMaterial applied while outfit is equipped",
-      "Eyes and Eyebrows remain visible",
-      "helmet/backpack remain visible in both equip orders",
-      "material_override restored exactly on unequip",
-      "garment remains exact 65/65 pose-driven",
-      "CH6 world/shadow composition remains active",
-      "CharacterBody3D position and gameplay capsule remain unchanged"
-    ]
-  },
-  "graphical_gate_after_automated_pass": {
+  "graphical_launch": {
     "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
-    "controls": "O outfit | H helmet | B backpack | C FP/TP | Ctrl crouch | Space jump",
-    "inspect": [
-      "O leaves the head/eyes/eyebrows visible while the old body below the neck is clipped away",
-      "the Peasant outfit covers the neck seam without visible body clipping",
+    "startup": "PASS",
+    "renderer": "OpenGL 3.3 Compatibility / NVIDIA GeForce RTX 4060",
+    "runtime_setup": "PASS outfit_available=true suppression=true mode=MATERIAL_OVERRIDE clip_y=1.4836 mesh=SuperHero_Male",
+    "observed_warning": "[Physics interpolation] Interpolated Camera3D triggered from outside physics process: FirstPersonCamera (possibly benign).",
+    "warning_classification": "NON_BLOCKING_FOR_CH7_8_UNLESS_VISIBLE_CAMERA_JITTER_IS_OBSERVED",
+    "visual_acceptance": "PENDING_USER_OBSERVATION",
+    "required_observation": [
+      "O leaves head, eyes and eyebrows visible while old body below the neck is clipped away",
+      "Peasant outfit covers the neck seam without obvious old-body clipping",
       "idle/walk/run/jump/crouch remain coherent",
       "helmet and backpack remain attached regardless of equip order",
-      "first-person own presentation remains hidden by the accepted policy while clipped shadows remain",
-      "third-person character remains visually coherent"
+      "first-person presentation and shadows remain coherent",
+      "third-person presentation remains coherent"
     ]
   },
   "scope_guards": {
@@ -142,5 +123,11 @@
     "network_changes": false,
     "collision_changes": false,
     "gameplay_body_changes": false
+  },
+  "next_gate": {
+    "type": "GRAPHICAL_USER_OBSERVATION_ONLY",
+    "no_automated_rerun_required_if_code_unchanged": true,
+    "on_visual_pass": "Mark CH7.8 ACCEPTED and keep clip_y=1.4836 unless seam tuning is visually needed.",
+    "on_visual_issue": "Tune presentation-only clip plane or material copy without changing equipment domain, gameplay body, collision or network contracts."
   }
 }
