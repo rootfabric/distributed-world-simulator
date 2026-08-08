@@ -1,14 +1,14 @@
 {
-  "schema": "planet_simulator.ch6_controllable_entity_presentation_validation.v1",
+  "schema": "planet_simulator.ch6_controllable_entity_presentation_validation.v2",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
-  "delivery": "CH5 fix1 / CH6 candidate",
-  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_GATES_PASS_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_ACCEPTANCE",
+  "delivery": "CH6 fix1 / Shadow Preservation",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_SHADOW_ACCEPTANCE",
   "trigger": {
-    "ch5_head_mask_tests": "PASS on Windows with real Quaternius assets",
-    "graphical_result": "REJECTED_BY_VISUAL_OBSERVATION",
-    "observed_problem": "First-person camera still intersects neck, chest and shoulders even when the Head bone is collapsed"
+    "ch5_fix1_graphical_body_suppression": "PASS by user observation",
+    "new_observation": "First-person body is hidden correctly but its world shadow is missing",
+    "goal": "Keep the local controlled entity invisible to the first-person camera while preserving an animated world shadow"
   },
   "scope": {
     "production_lunar_player_changed": false,
@@ -19,32 +19,53 @@
     "root_motion_authority_changed": false,
     "integration_mode": "isolated_character_lab_and_generic_presentation_contract"
   },
-  "ch5_fix1": {
-    "default_policy": "HIDE_WORLD_MODEL",
-    "mechanism": "World VisualInstance3D nodes are moved to a dedicated render layer that is excluded from the local first-person Camera3D cull_mask and retained in the third-person camera cull_mask",
-    "world_model_globally_hidden": false,
-    "world_animation_stopped": false,
-    "legacy_head_mask_removed": false,
-    "legacy_head_mask_role": "compatibility only"
-  },
-  "ch6_architecture": {
-    "profile": "ControllablePresentationProfile",
-    "generic_adapter": "ControllableViewAdapter",
+  "architecture": {
+    "profile": "ControllablePresentationProfile v2",
+    "generic_adapter": "ControllableViewAdapter v2",
+    "shadow_component": "ControllableShadowProxy v1",
     "compatibility_adapter": "FullBodyFirstPersonAdapter v2",
-    "presenter_contract": [
-      "optional create_presentation_profile()",
-      "optional get_world_visual_root()",
-      "optional get_first_person_viewmodel_root()"
-    ],
-    "supported_entity_kind_model": "open string metadata; humanoid/drone/animal/cyborg are examples, not an enum gate",
-    "movement_presentation_separation": true,
     "first_person_policies": [
       "HIDE_WORLD_MODEL",
       "SHOW_WORLD_MODEL",
       "LEGACY_HEAD_MASK",
       "VIEWMODEL"
     ],
-    "viewmodel_layer_reserved": true
+    "first_person_shadow_policies": [
+      "NONE",
+      "WORLD_PROXY",
+      "CUSTOM_PROXY"
+    ],
+    "presenter_contract": [
+      "optional create_presentation_profile()",
+      "optional get_world_visual_root()",
+      "optional get_first_person_viewmodel_root()",
+      "optional get_first_person_shadow_proxy_root() for CUSTOM_PROXY"
+    ],
+    "supported_entity_kind_model": "open string metadata; humanoid/drone/animal/cyborg are examples, not an enum gate",
+    "movement_presentation_separation": true
+  },
+  "shadow_preservation": {
+    "default_policy": "WORLD_PROXY",
+    "mechanism": "Generate SHADOWS_ONLY MeshInstance3D proxies from the controlled world presentation and activate them only for a local first-person policy that hides the world body",
+    "mesh_resource_copy": false,
+    "mesh_resource_shared_with_source": true,
+    "skin_resource_shared_with_source": true,
+    "skeleton_reused_when_source_is_skinned": true,
+    "source_global_transform_followed": true,
+    "second_animation_graph_created": false,
+    "second_physics_body_created": false,
+    "gameplay_authority_changed": false,
+    "custom_proxy_escape_hatch": true
+  },
+  "render_layers": {
+    "default_world_model_layer_index": 20,
+    "default_first_person_viewmodel_layer_index": 19,
+    "default_first_person_shadow_layer_index": 18,
+    "layers_must_be_distinct": true,
+    "configurable_per_profile": true,
+    "original_visual_layers_restored_on_unbind": true,
+    "original_camera_cull_masks_restored_on_unbind": true,
+    "custom_proxy_state_restored_on_unbind": true
   },
   "non_humanoid_proof": {
     "fixture": "tests/fixtures/ch6_test_drone_presenter.gd",
@@ -52,25 +73,27 @@
     "head_bone_required": false,
     "quaternius_required": false,
     "visuals": "one drone body plus four rotor meshes",
+    "expected_world_proxy_count": 5,
+    "expected_mesh_resource_reuse_count": 5,
     "test": "tests/characters/test_ch6_controllable_view_adapter.gd"
   },
-  "render_layers": {
-    "default_world_model_layer_index": 20,
-    "default_first_person_viewmodel_layer_index": 19,
-    "configurable_per_profile": true,
-    "original_visual_layers_restored_on_unbind": true,
-    "original_camera_cull_masks_restored_on_unbind": true
+  "real_quaternius_gate": {
+    "test": "tests/characters/test_ch5_full_body_first_person_lab.gd",
+    "requires_external_assets": true,
+    "requires_animated_asset_mode": true,
+    "requires_shadow_proxy_count_gt_zero": true,
+    "requires_skinned_proxy_count_gt_zero": true,
+    "requires_skeleton_bound_proxy_count_gt_zero": true,
+    "requires_root_motion_disabled": true
   },
   "local_authoring_validation": {
-    "status": "PASS",
+    "status": "FOCUSED_PASS",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb linuxbsd editor double x86_64",
-    "editor_import": "PASS; no SCRIPT ERROR, Parse Error or Compile Error",
-    "ch4_avatar_presenter_regression": "13/13 PASS",
-    "ch4_character_lab_regression": "7/7 PASS",
-    "ch5_legacy_adapter_compatibility": "21/21 PASS without external Quaternius assets",
-    "ch5_fix1_camera_layer_lab": "34/34 PASS without external Quaternius assets",
-    "ch6_non_humanoid_controllable_view_adapter": "27/27 PASS",
-    "root_motion_authority": "unchanged"
+    "generic_world_proxy": "PASS, 33 assertions in focused mini-project",
+    "skinned_world_proxy": "PASS, same Skeleton3D resolved through proxy NodePath",
+    "custom_proxy": "PASS, SHADOWS_ONLY activation and original state restoration",
+    "api_check": "GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY and MeshInstance3D skeleton/surface APIs parsed and executed",
+    "full_repository_suite": "pending Windows rerun because full repository checkout is not present in the local validation container"
   },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
@@ -81,18 +104,20 @@
       "CH4 avatar presenter regression PASS",
       "CH4 character lab regression PASS",
       "CH5 legacy adapter compatibility PASS",
-      "CH5 fix1 camera-layer lab PASS",
-      "CH6 non-humanoid controllable view adapter PASS",
-      "real Quaternius graphical first-person view shows no own head, neck, chest or shoulder geometry",
-      "third-person view still shows the full animated Quaternius body",
-      "walk, run and jump still work",
-      "C repeatedly toggles first/third person without leaking own-body geometry",
+      "CH5/CH6 first-person lab PASS including real skinned Quaternius shadow proxy",
+      "CH6 non-humanoid controllable adapter + shadow preservation PASS",
+      "first-person view contains no own head/neck/chest/shoulder geometry",
+      "first-person floor/world receives the animated controlled-body shadow",
+      "third-person view shows the full animated body and normal shadow",
+      "repeated C toggles do not create duplicate shadows or visible shadow-only geometry",
+      "walk, run and jump remain functional",
       "root motion remains disabled"
     ]
   },
   "known_next_stage": {
-    "production_integration": "Bind the accepted profile/adapter contract into LunarPlayer as an optional presentation component in a separate branch",
+    "production_integration": "Bind the accepted profile/adapter/shadow contract into LunarPlayer as an optional presentation component in a separate branch",
     "viewmodel": "Add dedicated hands/tools/weapons or vehicle-specific first-person geometry only when gameplay needs it",
-    "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles"
+    "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles",
+    "shadow_lod": "Only consider simplified shadow geometry later if profiling shows a real need"
   }
 }
