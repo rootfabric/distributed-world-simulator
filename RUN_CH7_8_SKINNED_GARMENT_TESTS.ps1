@@ -87,14 +87,6 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string]$FailureH
 
 $Godot = Resolve-Godot $GodotPath
 
-# The newly downloaded public Standard archive was observed without standalone
-# Head/Upperbody character glTF exports. Keep this early gate until CH7.8C is
-# switched to the smallest safe FullBody-internal body hiding strategy.
-Invoke-Godot-Test `
-    "ch7_8_quaternius_base_variant_probe" `
-    "res://tests/characters/probe_ch7_8_quaternius_base_variants.gd" `
-    "Current Standard export has no standalone Head variant. Do not re-download it; run res://tests/characters/probe_ch7_8_quaternius_fullbody_mesh_structure.gd and finish the FullBody-internal replacement path first."
-
 & $Ch7Runner -GodotPath $Godot
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
@@ -102,9 +94,9 @@ if ($LASTEXITCODE -ne 0) {
 
 Invoke-Godot-Test "ch7_8_skinned_garment_pose_bridge" "res://tests/characters/test_ch7_8_skinned_garment_pose_bridge.gd"
 Invoke-Godot-Test "ch7_8_body_region_replacement" "res://tests/characters/test_ch7_8_body_region_replacement.gd"
-Invoke-Godot-Test "ch7_8_quaternius_body_hiding_order" "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd"
+Invoke-Godot-Test "ch7_8_quaternius_fused_body_suppression_order" "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd"
 Invoke-Godot-Test "ch7_8_quaternius_skinned_garment_lab" "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd"
 
 Write-Host ""
-Write-Host "CH7.8 Skinned Garment + coarse body replacement candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH7.8 Skinned Garment + fused-body head clip candidate runner: PASS" -ForegroundColor Green
 exit 0
