@@ -69,7 +69,10 @@ Runner выставляет:
 BREAKPOINT_RUNTIME_DISABLED=1
 ```
 
-То же сделано в focused `RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS.ps1`.
+То же сделано в focused runners:
+
+- `RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS.ps1`;
+- `RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS.sh`.
 
 Debug/MCP bridge не входит в headless acceptance semantics и не должен создавать port/resource diagnostics в этих тестах.
 
@@ -110,6 +113,7 @@ e353e1bb4f1da065cf5b64fc42083eb064deef3f  test(t1a0): require healthy persistenc
 02fd8eab38c3f3ed3c49a497de34b386157df082  test(t1a0): gate unified boot on persistence health
 f41c3c67cafb6ef985ce46a6dd9640ff8be03f40  test(t1a0): disable runtime bridge in headless acceptance
 aa7488c439571669399cb7dbc9b150a6751770c9  test(t1a0): minimize boot matrix persistence diff
+dbc118ad7272ff2419108c629d5d6d825af435c8  test(t1a0): disable runtime bridge in shell acceptance
 ```
 
 ## Что должно исчезнуть после rerun
@@ -146,13 +150,14 @@ $env:GODOT_BIN = $Godot
 .\RUN_WORLD_REGRESSION_TESTS.ps1
 ```
 
-Дополнительная проверка output:
+Для проверки сохранённых текстовых логов, если они есть в `artifacts`, используйте:
 
 ```powershell
-Select-String -Path .\artifacts\test-results\* -Pattern `
-  "World manifest identity mismatch|repository_setup_failed|breakpoint_runtime|ObjectDB instances were leaked|resources still in use" `
-  -Recurse
+Get-ChildItem .\artifacts -Recurse -File |
+  Select-String -Pattern "World manifest identity mismatch|repository_setup_failed|breakpoint_runtime|ObjectDB instances were leaked|resources still in use"
 ```
+
+Главным источником истины остаётся stdout полного runner: intentional negative-path persistence errors допустимы только внутри соответствующих focused tests, а normal boot paths теперь fail-closed.
 
 ## Acceptance fix1
 
