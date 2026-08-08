@@ -80,6 +80,23 @@ func _run() -> void:
 	var restored_scale := target_skeleton.get_bone_pose_scale(head_index) if head_index >= 0 else Vector3.ZERO
 	_assert(restored_scale.is_equal_approx(Vector3.ONE), "Synthetic head scale did not restore in third person")
 
+	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
+	if require_external:
+		var real_presenter = AvatarPresenter.new()
+		host.add_child(real_presenter)
+		var real_setup: Dictionary = real_presenter.setup({"run_threshold_mps": 5.0})
+		_assert(bool(real_setup.get("success", false)), "Real Quaternius presenter setup failed")
+		_assert(String(real_presenter.create_report().get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"], "Real Quaternius presenter is not animated")
+		var real_adapter = FirstPersonAdapter.new()
+		host.add_child(real_adapter)
+		real_adapter.bind_avatar(real_presenter)
+		var real_report: Dictionary = real_adapter.create_report()
+		_assert(String(real_report.get("mask_mode", "")) == "BONE_SCALE", "Real Quaternius head mask did not resolve")
+		_assert(bool(real_report.get("head_bone_present", false)), "Real Quaternius head bone is missing")
+		real_adapter.set_first_person_enabled(true)
+		await process_frame
+		_assert(bool(real_adapter.create_report().get("mask_applied", false)), "Real Quaternius first-person mask was not applied")
+
 	host.queue_free()
 	_finish()
 
