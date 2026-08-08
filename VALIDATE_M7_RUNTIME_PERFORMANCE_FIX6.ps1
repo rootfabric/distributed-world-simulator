@@ -41,9 +41,14 @@ Invoke-GodotCheck -Name "FIX6 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
 )
 
-Invoke-GodotCheck -Name "FIX6 realtime hot-path regression" -Arguments @(
+Invoke-GodotCheck -Name "FIX6 server realtime hot-path regression" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_realtime_backpressure_foundation.gd"
+)
+
+Invoke-GodotCheck -Name "FIX6 graphical client telemetry throttle" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_fix6_client_telemetry.gd"
 )
 
 if (-not $FocusedOnly) {
@@ -64,7 +69,7 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX6 runtime performance validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly checks parser/composition and the FIX4/FIX6 realtime regression only." -ForegroundColor Yellow
+    Write-Host "FocusedOnly checks parser/composition plus server/client FIX6 realtime regressions only." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
