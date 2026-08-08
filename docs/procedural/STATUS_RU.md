@@ -2,7 +2,7 @@
 
 **Program foundation:** G0–G3 Procedural Planetary Generation
 **Post-G3 roadmap:** `docs/universal-world-generation-roadmap-post-g3`
-**Current implementation branch:** `feature/g5-world-feature-graph`
+**Current implementation branch:** `feature/g6-hydrology-fluid-surface-v0`
 
 ## Current state
 
@@ -13,14 +13,15 @@ G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
 G4 Provider Composition / Replacement  ACCEPTED
 G5 World Feature Graph                 ACCEPTED
-G6 Hydrology / Fluid Surface v0        NEXT — UNBLOCKED
+G6.0 Fluid Contracts                   IMPLEMENTED CANDIDATE
+G6.1 Casual River Provider             NEXT — BLOCKED ON G6.0 FOCUSED ACCEPTANCE
 ```
 
-G5 base:
+G6.0 base:
 
 ```text
-feature/g4-provider-composition-replacement
-4d1fed8e4367e6c4ea276fcf6b9b57159de72014
+feature/g5-world-feature-graph
+e7b10c09a6be879b25cd5c7ec8407832fd758ac2
 ```
 
 Accepted G5 candidate head:
@@ -29,11 +30,12 @@ Accepted G5 candidate head:
 34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4
 ```
 
-Canonical acceptance records:
+Canonical acceptance / candidate records:
 
 ```text
 docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
 docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md
+docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md
 ```
 
 ## Universal architecture
@@ -156,7 +158,7 @@ Feature != Cell
 LOD != Feature Identity
 ```
 
-## Acceptance evidence
+## G5 acceptance evidence
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
@@ -184,15 +186,57 @@ Lab:
 res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
 ```
 
+## G6.0 Fluid Contracts candidate
+
+Canonical fluid vocabulary now exists as contracts:
+
+```text
+FluidType
+FluidRegionId
+FluidSurfaceDescriptor
+RiverSpline
+RiverChannelProfile
+WaterSurfaceQuery
+```
+
+`FluidRegionId` is derived from:
+
+```text
+body_id
+fluid_type_id
+seed
+generator_version
+stable_key
+```
+
+and deliberately excludes representation state.
+
+The contracts are generic enough to represent water, lava, methane, ammonia and future fluids. River-specific geometry is expressed as stable `RiverSpline` and `RiverChannelProfile` descriptors while runtime provider generation remains deferred.
+
+Focused validation command:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_FLUID_CONTRACT_TESTS.ps1
+```
+
+Runtime evidence is pending because the connector environment has no Godot binary.
+
 ## Next
 
 Blocking main track:
 
 ```text
-G6 — Hydrology / Fluid Surface v0
+G6.0 focused acceptance
+  -> G6.1 CasualRiverProviderV1
+  -> G6.2 cross-cell/cross-LOD continuity
+  -> G6.3 runtime WaterSurfaceQuery
+  -> G6.4 casual visual river lab
+  -> G6 full acceptance
+  -> G7 Semantic Field Fabric
 ```
 
-G6 must express rivers/fluid geography through G5 feature identity instead of chunk-local identities.
+G6.1 must produce canonical fluid descriptors from stable G5 feature semantics rather than chunk-local identities.
 
 Parallel tracks remain available under the post-G3 roadmap:
 
@@ -208,6 +252,8 @@ Generator != Renderer
 LOD != World State
 Feature != Chunk
 Feature != SurfaceCell
+FluidRegion != SurfaceCell
+FluidRegion != renderer object
 recipe != planet class
 provider graph != world-type switch
 canonical truth != representation
