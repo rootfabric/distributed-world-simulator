@@ -1,0 +1,48 @@
+{
+  "schema": "planet_simulator.validation.m7_sequence_reconciliation_fix10_fix4.v1",
+  "stage": "M7 FIX10 fix4 — ACK Timeline + MTU Headroom",
+  "branch": "feature/m7-sequence-aware-reconciliation-fix10-fix4-ack-timeline-mtu-headroom",
+  "base_branch": "feature/m7-sequence-aware-reconciliation-fix10-fix3-remote-continuity",
+  "base_sha": "15e19b25b92c7938e940b1a09311a62300befd52",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "manual_fix3_evidence": {
+    "remote_visual_continuity": "PASS_BY_USER_OBSERVATION",
+    "old_freeze_catchup_bug": "NOT_REPRODUCED",
+    "hard_corrections_a": 0,
+    "hard_corrections_b": 0
+  },
+  "fix4_policies": {
+    "ack_transport": "SEMANTIC_ACK_BASELINE_DECOUPLED_FROM_TRANSPORT_SNAPSHOT_V1",
+    "movement_envelope": "OMIT_REDUNDANT_REASON_ON_REALTIME_SNAPSHOT_V1",
+    "unreliable_safe_packet_bytes": 1350,
+    "ack_fallback": "SEPARATE_TELEMETRY_CHANNEL_WHEN_SNAPSHOT_ACK_OMITTED_V1"
+  },
+  "targets": {
+    "ack_mismatches_a": 0,
+    "ack_mismatches_b": 0,
+    "ack_registration_rejections_a": 0,
+    "ack_registration_rejections_b": 0,
+    "movement_snapshots_dropped_for_mtu": 0,
+    "max_unreliable_sent_bytes_max": 1350,
+    "max_without_ack_bytes_max": 1350,
+    "hard_corrections_a": 0,
+    "hard_corrections_b": 0,
+    "remote_apply_failures_a": 0,
+    "remote_apply_failures_b": 0,
+    "remote_same_clock_conflicts_a": 0,
+    "remote_same_clock_conflicts_b": 0
+  },
+  "validation_required": [
+    "Godot 4.7.1 double editor import",
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -FocusedOnly",
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -IncludeTwoClientProcess",
+    "long two-client LOCAL movement/item run",
+    "ANALYZE_M7_FIX10_RESULTS.ps1"
+  ],
+  "notes": [
+    "Fix4 does not change FIX3 remote presentation lane or interpolation tuning.",
+    "Fix4 does not raise the 1350-byte unreliable guard.",
+    "Canonical same-revision semantic conflicts remain strict and are not hidden by this patch.",
+    "Overall FIX10 is not accepted until exact Windows validation and remaining analyzer gates pass."
+  ]
+}

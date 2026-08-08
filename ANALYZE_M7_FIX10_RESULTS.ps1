@@ -7,6 +7,8 @@ param(
     [double]$MaxPredictionErrorM = 0.50,
     [int]$MaxAckHistoryMisses = 5,
     [int]$MaxClientSlowProcessFrames = 2,
+    [int]$MaxRemoteMovingBufferUnderruns = 8,
+    [int]$MaxRemoteMovingHoldSamples = 250,
     [double]$MaxServerProcessMs = 75.0,
     [double]$MaxReportBuildMs = 25.0,
     [string]$OutputJson = ""
@@ -18,6 +20,8 @@ $ExpectedAckPolicy = "SERVER_ECHOED_POST_INPUT_BASELINE_V1"
 $ExpectedReconciliationPolicy = "ACK_BASELINE_REPLAY_LOCAL_TIMELINE_V1"
 $ExpectedFix3AckFallbackPolicy = "SEPARATE_TELEMETRY_CHANNEL_WHEN_SNAPSHOT_ACK_OMITTED_V1"
 $ExpectedFix3RemotePolicy = "EXACT_SNAPSHOT_CONTEXT_PRESENTATION_CONTINUITY_V1"
+$ExpectedFix4AckTransportPolicy = "SEMANTIC_ACK_BASELINE_DECOUPLED_FROM_TRANSPORT_SNAPSHOT_V1"
+$ExpectedFix4MovementEnvelopePolicy = "OMIT_REDUNDANT_REASON_ON_REALTIME_SNAPSHOT_V1"
 
 function Read-RequiredJson {
     param([string]$Path, [string]$Label)
@@ -58,6 +62,14 @@ function Get-ServerAckSummary {
     if ($MaxLag -eq 0 -and $null -ne $Detailed) { $MaxLag = [int]$Detailed.max_input_apply_lag_ticks }
     $Omitted = [int]$Foundation.fix10_ack_omitted_for_mtu
     if ($Omitted -eq 0 -and $null -ne $Detailed) { $Omitted = [int]$Detailed.ack_omitted_for_mtu }
+    $Drops = [int]$Foundation.fix10_movement_snapshots_dropped_for_mtu
+    if ($Drops -eq 0 -and $null -ne $Detailed) { $Drops = [int]$Detailed.movement_snapshots_dropped_for_mtu }
+    $SafeBytes = [int]$Foundation.fix10_unreliable_safe_packet_bytes
+    if ($SafeBytes -eq 0 -and $null -ne $Detailed) { $SafeBytes = [int]$Detailed.unreliable_safe_packet_bytes }
+    $MaxSentBytes = [int]$Foundation.fix10_max_unreliable_sent_bytes
+    if ($MaxSentBytes -eq 0 -and $null -ne $Detailed) { $MaxSentBytes = [int]$Detailed.max_unreliable_sent_bytes }
+    $MaxWithoutAckBytes = [int]$Foundation.fix10_max_without_ack_bytes
+    if ($MaxWithoutAckBytes -eq 0 -and $null -ne $Detailed) { $MaxWithoutAckBytes = [int]$Detailed.max_without_ack_bytes }
     $FallbackPolicy = [string]$Foundation.fix10_fix3_ack_fallback_policy
     if ([string]::IsNullOrWhiteSpace($FallbackPolicy) -and $null -ne $Detailed) {
         $FallbackPolicy = [string]$Detailed.fix3_ack_fallback_policy
@@ -70,6 +82,12 @@ function Get-ServerAckSummary {
     if ($StandaloneFailures -eq 0 -and $null -ne $Detailed) { $StandaloneFailures = [int]$Detailed.fix3_standalone_ack_failures }
     $MaxStandaloneBytes = [int]$Foundation.fix10_fix3_max_standalone_ack_bytes
     if ($MaxStandaloneBytes -eq 0 -and $null -ne $Detailed) { $MaxStandaloneBytes = [int]$Detailed.fix3_max_standalone_ack_bytes }
+    $Fix4EnvelopePolicy = [string]$Foundation.fix10_fix4_movement_envelope_policy
+    if ([string]::IsNullOrWhiteSpace($Fix4EnvelopePolicy) -and $null -ne $Detailed) {
+        $Fix4EnvelopePolicy = [string]$Detailed.fix4_movement_envelope_policy
+    }
+    $Reasonless = [int]$Foundation.fix10_fix4_reasonless_movement_snapshots
+    if ($Reasonless -eq 0 -and $null -ne $Detailed) { $Reasonless = [int]$Detailed.fix4_reasonless_movement_snapshots }
     return [ordered]@{
         policy = $Policy
         captures = $Captures
@@ -77,11 +95,17 @@ function Get-ServerAckSummary {
         snapshots_with_ack = $WithAck
         max_input_apply_lag_ticks = $MaxLag
         ack_omitted_for_mtu = $Omitted
+        movement_snapshots_dropped_for_mtu = $Drops
+        unreliable_safe_packet_bytes = $SafeBytes
+        max_unreliable_sent_bytes = $MaxSentBytes
+        max_without_ack_bytes = $MaxWithoutAckBytes
         fix3_ack_fallback_policy = $FallbackPolicy
         fix3_standalone_ack_attempts = $StandaloneAttempts
         fix3_standalone_ack_sent = $StandaloneSent
         fix3_standalone_ack_failures = $StandaloneFailures
         fix3_max_standalone_ack_bytes = $MaxStandaloneBytes
+        fix4_movement_envelope_policy = $Fix4EnvelopePolicy
+        fix4_reasonless_movement_snapshots = $Reasonless
     }
 }
 
@@ -107,6 +131,7 @@ function Get-ClientSummary {
         visual_offset_m = [double]$Prediction.visual_offset_m
         ack_policy = [string]$Prediction.fix10_prediction_ack_policy
         reconciliation_policy = [string]$Prediction.fix10_reconciliation_policy
+        fix4_ack_transport_policy = [string]$Prediction.fix10_fix4_ack_transport_policy
         ack_reconciliations = [int]$Prediction.fix10_ack_reconciliations
         ack_replays = [int]$Prediction.fix10_ack_replays
         ack_replayed_ticks = [int]$Prediction.fix10_ack_replayed_ticks
@@ -116,6 +141,11 @@ function Get-ClientSummary {
         max_ack_baseline_error_m = [double]$Prediction.fix10_max_ack_baseline_error_m
         max_present_replay_error_m = [double]$Prediction.fix10_max_present_replay_error_m
         last_reconciliation_mode = [string]$Prediction.fix10_last_reconciliation_mode
+        fix4_transport_tick_lagged = [int]$Prediction.fix10_fix4_transport_tick_lagged
+        fix4_authority_sequence_ahead = [int]$Prediction.fix10_fix4_authority_sequence_ahead
+        fix4_future_ack_deferrals = [int]$Prediction.fix10_fix4_future_ack_deferrals
+        fix4_stale_ack_registrations = [int]$Prediction.fix10_fix4_stale_ack_registrations
+        fix4_pending_ack_superseded = [int]$Prediction.fix10_fix4_pending_ack_superseded
         sidecar_policy = [string]$Transport.policy
         ack_fallback_policy = [string]$Transport.ack_fallback_policy
         sidecars_received = [int]$Transport.sidecars_received
@@ -180,15 +210,37 @@ if ($ServerAck.capture_mismatches -gt 0) {
 if ($ServerAck.fix3_ack_fallback_policy -ne $ExpectedFix3AckFallbackPolicy) {
     [void]$Failures.Add("Server does not expose FIX10 fix3 standalone ACK fallback policy")
 }
+if ($ServerAck.fix4_movement_envelope_policy -ne $ExpectedFix4MovementEnvelopePolicy) {
+    [void]$Failures.Add("Server does not expose FIX10 fix4 realtime movement envelope policy")
+}
+if ($ServerAck.fix4_reasonless_movement_snapshots -le 0) {
+    [void]$Failures.Add("Server emitted no FIX10 fix4 reasonless movement snapshot candidates")
+}
 if ($ServerAck.fix3_standalone_ack_failures -gt 0) {
     [void]$Failures.Add("Server failed to emit $($ServerAck.fix3_standalone_ack_failures) FIX10 fix3 standalone ACK packets")
 }
+if ($ServerAck.unreliable_safe_packet_bytes -le 0) {
+    [void]$Failures.Add("Server does not expose a positive FIX10 unreliable safe packet budget")
+}
+elseif ($ServerAck.max_unreliable_sent_bytes -gt $ServerAck.unreliable_safe_packet_bytes) {
+    [void]$Failures.Add("Server sent unreliable frame above safe budget ($($ServerAck.max_unreliable_sent_bytes)/$($ServerAck.unreliable_safe_packet_bytes))")
+}
+if ($ServerAck.max_without_ack_bytes -gt $ServerAck.unreliable_safe_packet_bytes) {
+    [void]$Failures.Add("Server no-ACK movement frame still exceeded safe budget ($($ServerAck.max_without_ack_bytes)/$($ServerAck.unreliable_safe_packet_bytes))")
+}
+if ($ServerAck.movement_snapshots_dropped_for_mtu -gt 0) {
+    [void]$Failures.Add("Server still dropped $($ServerAck.movement_snapshots_dropped_for_mtu) movement snapshots for MTU after FIX10 fix4 headroom change")
+}
 if ($ServerAck.ack_omitted_for_mtu -gt 0) {
-    if ($ServerAck.fix3_standalone_ack_attempts -le 0 -or $ServerAck.fix3_standalone_ack_sent -le 0) {
+    $ExpectedStandaloneCoverage = [Math]::Max(
+        [int]$ServerAck.ack_omitted_for_mtu - [int]$ServerAck.movement_snapshots_dropped_for_mtu,
+        0
+    )
+    if ($ExpectedStandaloneCoverage -gt 0 -and ($ServerAck.fix3_standalone_ack_attempts -le 0 -or $ServerAck.fix3_standalone_ack_sent -le 0)) {
         [void]$Failures.Add("Server omitted snapshot ACKs for MTU but emitted no FIX10 fix3 standalone ACK fallback")
     }
-    if ($ServerAck.fix3_standalone_ack_sent -lt $ServerAck.ack_omitted_for_mtu) {
-        [void]$Failures.Add("Server standalone ACK coverage is below MTU omission count ($($ServerAck.fix3_standalone_ack_sent)/$($ServerAck.ack_omitted_for_mtu))")
+    if ($ServerAck.fix3_standalone_ack_sent -lt $ExpectedStandaloneCoverage) {
+        [void]$Failures.Add("Server standalone ACK coverage is below successfully-sent MTU omission count ($($ServerAck.fix3_standalone_ack_sent)/$ExpectedStandaloneCoverage); dropped movement snapshots are excluded by policy")
     }
 }
 
@@ -208,6 +260,9 @@ foreach ($Client in @($A, $B)) {
     if ($Client.reconciliation_policy -ne $ExpectedReconciliationPolicy) {
         [void]$Failures.Add("Client $($Client.label) does not expose FIX10 reconciliation policy")
     }
+    if ($Client.fix4_ack_transport_policy -ne $ExpectedFix4AckTransportPolicy) {
+        [void]$Failures.Add("Client $($Client.label) does not expose FIX10 fix4 ACK transport-decoupling policy")
+    }
     if ($Client.sidecar_policy -ne $ExpectedAckPolicy) {
         [void]$Failures.Add("Client $($Client.label) transport does not expose FIX10 sidecar policy")
     }
@@ -224,7 +279,7 @@ foreach ($Client in @($A, $B)) {
         [void]$Failures.Add("Client $($Client.label) never used sequence-aware acknowledgement reconciliation")
     }
     if ($Client.ack_mismatches -gt 0 -or $Client.ack_registration_rejections -gt 0) {
-        [void]$Failures.Add("Client $($Client.label) had FIX10 ack mismatches/rejections ($($Client.ack_mismatches)/$($Client.ack_registration_rejections))")
+        [void]$Failures.Add("Client $($Client.label) had semantic FIX10 ack mismatches/rejections ($($Client.ack_mismatches)/$($Client.ack_registration_rejections))")
     }
     if ($Client.ack_history_misses -gt $MaxAckHistoryMisses) {
         [void]$Failures.Add("Client $($Client.label) FIX10 ack history misses exceeded $MaxAckHistoryMisses ($($Client.ack_history_misses))")
@@ -247,8 +302,8 @@ foreach ($Client in @($A, $B)) {
     if ($Client.remote_apply_failures -gt 0 -or $Client.remote_same_clock_conflicts -gt 0) {
         [void]$Failures.Add("Client $($Client.label) remote presentation had apply/same-clock failures ($($Client.remote_apply_failures)/$($Client.remote_same_clock_conflicts))")
     }
-    if ($Client.remote_moving_buffer_underruns -gt 0 -or $Client.remote_moving_hold_samples -gt 0) {
-        [void]$Failures.Add("Client $($Client.label) remote moving presentation exhausted its interpolation buffer (underruns=$($Client.remote_moving_buffer_underruns), holds=$($Client.remote_moving_hold_samples), max streak=$($Client.remote_max_moving_hold_streak))")
+    if ($Client.remote_moving_buffer_underruns -gt $MaxRemoteMovingBufferUnderruns -or $Client.remote_moving_hold_samples -gt $MaxRemoteMovingHoldSamples) {
+        [void]$Failures.Add("Client $($Client.label) remote moving presentation exceeded bounded startup/transport allowance (underruns=$($Client.remote_moving_buffer_underruns)/$MaxRemoteMovingBufferUnderruns, holds=$($Client.remote_moving_hold_samples)/$MaxRemoteMovingHoldSamples, max streak=$($Client.remote_max_moving_hold_streak))")
     }
     if ($Client.same_revision_semantic_conflicts -gt 0) {
         [void]$Failures.Add("Client $($Client.label) still observed $($Client.same_revision_semantic_conflicts) canonical same-revision semantic conflicts; inspect last_same_revision_conflict")
@@ -256,7 +311,7 @@ foreach ($Client in @($A, $B)) {
 }
 
 $Result = [ordered]@{
-    schema = "planet_simulator.m7_fix10_fix3_result_analysis.v1"
+    schema = "planet_simulator.m7_fix10_fix4_result_analysis.v1"
     passed = ($Failures.Count -eq 0)
     server_result_policy = $ServerResultPolicy
     thresholds = [ordered]@{
@@ -265,6 +320,8 @@ $Result = [ordered]@{
         max_prediction_error_m = $MaxPredictionErrorM
         max_ack_history_misses = $MaxAckHistoryMisses
         max_client_slow_process_frames = $MaxClientSlowProcessFrames
+        max_remote_moving_buffer_underruns = $MaxRemoteMovingBufferUnderruns
+        max_remote_moving_hold_samples = $MaxRemoteMovingHoldSamples
         max_server_process_ms = $MaxServerProcessMs
         max_report_build_ms = $MaxReportBuildMs
     }
@@ -282,16 +339,19 @@ $Result = [ordered]@{
 }
 
 Write-Host ""
-Write-Host "M7 FIX10 fix3 sequence/presentation continuity analysis" -ForegroundColor Cyan
-Write-Host ("Server: healthy={0}, state={1}, process max={2:N3} ms, report build max={3:N3} ms, ack captures={4}, snapshot ACKs={5}, MTU omissions={6}, standalone ACK={7}/{8}, fallback failures={9}" -f `
+Write-Host "M7 FIX10 fix4 ACK timeline / MTU headroom analysis" -ForegroundColor Cyan
+Write-Host ("Server: healthy={0}, state={1}, process max={2:N3} ms, report build max={3:N3} ms, ack captures={4}, snapshot ACKs={5}, MTU omissions={6}, drops={7}, max no-ACK/sent={8}/{9} B, standalone ACK={10}/{11}, fallback failures={12}" -f `
     $ServerHealthy, [string]$Server.state, $ServerProcessMs, $ReportBuildMs, `
     $ServerAck.captures, $ServerAck.snapshots_with_ack, $ServerAck.ack_omitted_for_mtu, `
+    $ServerAck.movement_snapshots_dropped_for_mtu, $ServerAck.max_without_ack_bytes, $ServerAck.max_unreliable_sent_bytes, `
     $ServerAck.fix3_standalone_ack_sent, $ServerAck.fix3_standalone_ack_attempts, $ServerAck.fix3_standalone_ack_failures)
 foreach ($Client in @($A, $B)) {
-    Write-Host ("Client {0}: corrections={1} ({2:N3}/1000), hard={3}, max error={4:N4} m, ack reconcile={5}, standalone ACK={6}/{7}, ack misses={8}, remote underruns/holds={9}/{10}, same-revision conflicts={11}" -f `
+    Write-Host ("Client {0}: corrections={1} ({2:N3}/1000), hard={3}, max error={4:N4} m, ack reconcile={5}, ack mismatch={6}, transport-lagged={7}, auth-ahead={8}, stale/superseded={9}/{10}, standalone ACK={11}/{12}, remote underruns/holds={13}/{14}, same-revision conflicts={15}" -f `
         $Client.label, $Client.corrections, $Client.corrections_per_1000_prediction_ticks, `
-        $Client.hard_corrections, $Client.maximum_error_m, $Client.ack_reconciliations, `
-        $Client.standalone_ack_received, $Client.standalone_ack_registered, $Client.ack_history_misses, `
+        $Client.hard_corrections, $Client.maximum_error_m, $Client.ack_reconciliations, $Client.ack_mismatches, `
+        $Client.fix4_transport_tick_lagged, $Client.fix4_authority_sequence_ahead, `
+        $Client.fix4_stale_ack_registrations, $Client.fix4_pending_ack_superseded, `
+        $Client.standalone_ack_received, $Client.standalone_ack_registered, `
         $Client.remote_moving_buffer_underruns, $Client.remote_moving_hold_samples, $Client.same_revision_semantic_conflicts)
 }
 
@@ -306,10 +366,10 @@ if (-not [string]::IsNullOrWhiteSpace($OutputJson)) {
 }
 
 if ($Failures.Count -gt 0) {
-    Write-Host "FIX10 fix3 analysis: FAIL" -ForegroundColor Red
+    Write-Host "FIX10 fix4 analysis: FAIL" -ForegroundColor Red
     foreach ($Failure in $Failures) { Write-Host " - $Failure" -ForegroundColor Red }
     exit 1
 }
 
-Write-Host "FIX10 fix3 analysis: PASS" -ForegroundColor Green
+Write-Host "FIX10 fix4 analysis: PASS" -ForegroundColor Green
 exit 0

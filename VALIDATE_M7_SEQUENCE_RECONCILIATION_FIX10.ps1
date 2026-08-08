@@ -49,6 +49,11 @@ Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
 )
 
+Invoke-GodotCheck -Name "FIX10 fix4 ACK timeline + MTU headroom" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix4.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 fix3 remote continuity + ACK fallback" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix3.gd"
@@ -97,10 +102,11 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates FIX10 fix3 remote continuity/standalone ACK, fix2 MTU preflight, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly validates FIX10 fix4 ACK timeline/MTU headroom, fix3 remote continuity/standalone ACK, fix2 MTU preflight, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
 Write-Host "Final FIX10 acceptance requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS." -ForegroundColor Yellow
-Write-Host "During manual stress, specifically keep B moving while A starts/stops movement; [fix10_fix3_remote] must keep advancing without moving HOLD/underrun growth or catch-up teleport." -ForegroundColor Yellow
+Write-Host "FIX10 fix4 target: ack_mismatches=0 under standalone ACK traffic and movement_snapshots_dropped_for_mtu=0 while max_unreliable_sent_bytes remains <=1350." -ForegroundColor Yellow
+Write-Host "Remote presentation fix3 is already visually accepted by user; keep watching [fix10_fix3_remote] for renewed moving HOLD/underrun growth or catch-up teleport." -ForegroundColor Yellow
