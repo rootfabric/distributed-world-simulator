@@ -22,29 +22,37 @@ try {
         throw "G6.3 accepted dependency gate failed"
     }
 
-    Write-Host "=== G6.4 source / P0 contract gate ==="
+    Write-Host "=== G6.4 source / P0 / adaptive LOD contract gate ==="
     & $GodotPath --headless --path $PSScriptRoot --script res://tests/procedural/hydrology/g6_4_casual_visual_river_lab_acceptance.gd
     if ($LASTEXITCODE -ne 0) {
         throw "G6.4 visual river lab contract gate failed"
     }
 
-    Write-Host "=== G6.4 headless scene smoke ==="
-    $SceneLines = @()
-    & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2 2>&1 | Tee-Object -Variable SceneLines
+    Write-Host "=== G6.4 headless scene + far/near LOD smoke ==="
+    $SceneOutput = & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2 2>&1
     $SceneExitCode = $LASTEXITCODE
-    $SceneText = ($SceneLines | Out-String)
+    $SceneText = ($SceneOutput | Out-String)
+    $SceneOutput | ForEach-Object { Write-Host $_ }
+
     if ($SceneExitCode -ne 0) {
         throw "G6.4 visual river lab headless smoke failed with exit code $SceneExitCode"
     }
-    if ($SceneText -match "(?m)^(SCRIPT ERROR:|ERROR: Failed to load script)") {
+    if ($SceneText -match "SCRIPT ERROR|Parse Error|Failed to load script") {
         throw "G6.4 visual river lab headless smoke reported a script parse/load error"
     }
-    if ($SceneText -notmatch [regex]::Escape("G6.4 Casual Visual River Lab: PASS")) {
-        throw "G6.4 visual river lab headless smoke did not emit its explicit PASS marker"
+    if ($SceneText -notmatch "G6\.4 Casual Visual River Lab: PASS") {
+        throw "G6.4 visual river lab did not emit the required PASS runtime marker"
+    }
+    if ($SceneText -notmatch "max_lod=\d+") {
+        throw "G6.4 visual river lab PASS marker did not expose active max LOD"
+    }
+    if ($SceneText -notmatch "river_lod=\d+\.\.\d+") {
+        throw "G6.4 visual river lab PASS marker did not expose river representation LOD range"
     }
 
-    Write-Host "G6.4 Casual Visual River Lab automated gate passed."
-    Write-Host "Manual graphical observation is still required before G6.4 acceptance."
+    Write-Host "G6.4 Casual Visual River Lab fix2 automated gate passed."
+    Write-Host "Headless proof includes far/near adaptive SurfaceLodSelector and river sample-density checks."
+    Write-Host "Manual graphical refine/coarsen observation is still required before G6.4 acceptance."
 }
 finally {
     if ($HadGodotBin) { $env:GODOT_BIN = $PreviousGodotBin }
