@@ -6,7 +6,8 @@
   "fix2_tested_head": "28ea4debafdc67fe2c5f0ace05a10b0dfd6f3fa9",
   "fix3_windows_tested_head": "3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298",
   "fix4_functional_head": "1beb592d421b8919d637b9bb0e156762ee11d970",
-  "decision": "FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED",
+  "fix4_windows_automated_tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
+  "decision": "FIX4_RUNTIME_AND_MANUAL_PASS_HYGIENE_RERUN_ONLY",
   "fix4_manual_evidence": {
     "observer_far_virtual_altitude_km": 812.7,
     "observer_far_max_lod": 6,
@@ -20,17 +21,44 @@
     "fluid_region_id_stable": "PASS_BY_USER_OBSERVATION",
     "breakpoint_runtime_9081_collision_after_fix4": "NOT_REPORTED"
   },
+  "fix4_automated_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows",
+    "g5_world_feature_graph": "PASS_249_ASSERTIONS",
+    "g5_feature_cell_identity": "PASS_94_ASSERTIONS",
+    "g6_0_fluid_contracts": "PASS_169_ASSERTIONS",
+    "g6_1_casual_river_provider": "PASS_74_ASSERTIONS",
+    "g6_2_cross_cell_cross_lod_continuity": "PASS_86_ASSERTIONS",
+    "g6_3_runtime_water_surface_query": "PASS_79_ASSERTIONS",
+    "g6_4_contracts": "PASS_158_ASSERTIONS",
+    "g6_4_adaptive_macro_surface": "PASS",
+    "far_lod": 1,
+    "near_lod": 9,
+    "far_triangles": 120,
+    "near_triangles": 4176,
+    "current_triangles": 240,
+    "macro_octaves": 8,
+    "minimum_signal_km": 4.688,
+    "visual_lab_runtime_marker": "PASS",
+    "breakpoint_runtime_bridge_disabled": true,
+    "working_tree": "CLEAN"
+  },
+  "repo_hygiene": {
+    "git_diff_check_on_tested_head": "FAIL_OLD_MARKDOWN_TRAILING_WHITESPACE",
+    "reported_files": [
+      "docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md",
+      "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md",
+      "docs/procedural/STATUS_RU.md"
+    ],
+    "cleanup_applied_after_runtime_test": true,
+    "runtime_code_changed_by_cleanup": false,
+    "rerun_required": "GIT_DIFF_CHECK_ONLY"
+  },
   "fix4_recipe": {
     "accepted_g3_provider_code_changed": false,
     "macro_octaves": 8,
     "macro_persistence": 0.58,
     "minimum_source_wavelength_m": 4687.5,
     "detail_recipe_is_presentation_lab_only": true
-  },
-  "remaining_before_g6_4_accepted": {
-    "fix4_windows_automated_gate": "PASS_REQUIRED",
-    "git_diff_check": "PASS_REQUIRED",
-    "working_tree_clean": "PASS_REQUIRED"
   },
   "deferred": {
     "river_valley_carving": "G8_GEOMORPHOLOGY",
@@ -39,5 +67,5 @@
     "layered_geology": "G9_LAYERED_GEOLOGY"
   },
   "next_checkpoint_started": "G6_FULL_ACCEPTANCE",
-  "note": "The G6 full gate reruns G6.4 fix4 automatically, so one full-acceptance run can close the remaining automated evidence and the full G6 checkpoint together."
+  "note": "Runtime and manual evidence are complete. Only a post-cleanup git diff --check rerun remains before recording G6.4 ACCEPTED; no Godot rerun is required because cleanup changed documentation only."
 }
