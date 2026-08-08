@@ -2,9 +2,7 @@
 
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
-**Local role:** hydrology/fluid semantic, query and derived-presentation layer above G5 World Feature Graph
-**Current stage:** `G6.4 Casual Visual River Lab — FIX2 IMPLEMENTED CANDIDATE`
-**Fix2 functional head:** `353a73f08f6d07840145e61f79b197e5773a73a2`
+**Current stage:** `G6.4 Casual Visual River Lab — FIX3 IMPLEMENTED CANDIDATE`
 **Next after acceptance:** `G6 FULL ACCEPTANCE`
 
 ## Canonical boundary
@@ -12,72 +10,60 @@
 ```text
 G5 WorldFeature / FeatureId
         ↓
-G6.1 deterministic fluid geography compiler
+G6.1 canonical fluid geography
         ↓
-FluidRegionId / FluidSurfaceDescriptor / RiverSpline / RiverChannelProfile
+G6.3 read-only WaterSurfaceQuery resolver
         ↓
-G6.3 read-only query resolver
-        ↓
-WaterSurfaceSample
-        ↓
-G2 SurfaceLodSelector (representation only)
-        ↓
-G6.4 replaceable derived presentation
+G6.4 derived presentation
+```
+
+Fix3 composes accepted G2/G3 only in representation:
+
+```text
+observer
+  -> G2 SurfaceLodSelector
+  -> adaptive SurfaceCellKey leaves
+  -> G3 CasualMacroTerrainProviderV1
+  -> geo/surface-height-m samples
+  -> adaptive terrain triangles
 ```
 
 Required invariants:
 
 ```text
-FluidRegion != SurfaceCell
-FluidRegion != AuthorityRegion
-FluidRegion != InterestRegion
-FluidRegion != renderer object
-Fluid identity != LOD / quality / observer state
-query/index/cache != canonical identity
-visual width != canonical channel width
+FeatureId != SurfaceCellKey
+FluidRegionId != SurfaceCellKey
+LOD != fluid identity
+terrain mesh != canonical G3 height field
+visual height exaggeration != canonical height
+renderer != authority
+renderer != persistence
 G5 River FeatureId remains semantic owner
 ```
 
-## Fix2 reason and boundary
+## Why Fix3
 
-First graphical G6.4 run proved ribbon/seam/query presentation but exposed a static fixed-density representation (`97 samples`). Fix2 therefore reuses accepted G2 LOD rather than adding a private hydrology LOD system.
+Fix2 automated gate passed and the manual run proved that `SurfaceLodSelector` refines the cover. But a smaller grid alone did not reveal new world detail because the visible globe remained a fixed `SphereMesh` and denser river samples stayed on the same smooth spline.
+
+Fix3 therefore hides the fixed sphere and rebuilds the visible surface from the selected leaves. Every new terrain vertex samples accepted G3 `geo/surface-height-m` in body-fixed direction space. Near views have more actual triangles and can expose more of the continuous G3 macro field.
+
+The x40 height multiplier is explicitly display-only. It exists only because a 900 m relief is otherwise almost invisible on an 8-unit debug globe.
+
+## No premature geomorphology
+
+G6.4 still does not alter terrain from hydrology:
 
 ```text
-observer -> BodyFixedPosition -> SurfaceLodSelector
-         -> adaptive SurfaceCellKey leaf cover
-         -> river representation_lod
-         -> adaptive visual sample density
+river does NOT carve a valley
+river does NOT rewrite G3 height
+water ribbon does NOT own terrain
 ```
 
-The following stay stable across refine/coarsen:
-
-```text
-FeatureId
-FluidRegionId
-RiverSpline
-WaterSurfaceQuery semantics
-```
+River/terrain causal shaping remains `G8 Geomorphology`; layered subsurface materials remain `G9 Layered Geology`.
 
 ## GLOBAL-P0 synchronization
 
 The checkpoint remains on `GLOBAL-P0-2026-08-08-R1`. G6 is currently not behind `feature/g5-world-feature-graph`. Before full G6 acceptance, main/G5/shared baseline must be checked again for the MW10 integration or a newer global revision.
-
-## P0-2 Spatial Domain Fabric
-
-G6.2 already proved canonical river continuity through `PX/PZ` and LOD `2 / 4 / 8 / 12`. G6.4 fix2 now consumes G2 addressing/LOD only for derived representation.
-
-Forbidden inversion remains:
-
-```text
-SurfaceCellKey / cube face / selected LOD
-        X
-        ↓
-FeatureId / FluidRegionId
-```
-
-## P0-3 / P0-4 / P0-5
-
-G6.4 does not create material ontology, authority, persistence, network transport or world mutation. It is read-only presentation. Future NX8 may choose which representation segments are interesting to a client, but `interest region != FluidRegionId` and `client visibility != river existence`.
 
 ## Accepted foundation
 
@@ -87,32 +73,24 @@ G6.2 cross-cell/cross-LOD continuity   ACCEPTED — 86 assertions
 G6.3 runtime WaterSurfaceQuery         ACCEPTED — 79 assertions
 ```
 
-## Fix2 visual proof
+## Fix3 proof requirements
 
-Scene:
-
-```text
-res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
-```
-
-Visual/HUD additions:
+Automated scene output must include:
 
 ```text
-adaptive SurfaceCellKey LOD grid
-Virtual altitude
-Leaf count
-Max LOD
-River sample count
-River representation LOD range
+G6.4 Adaptive Macro Surface: PASS (... far_triangles=... near_triangles=...)
+G6.4 Casual Visual River Lab: PASS (...)
 ```
 
-Headless proof must require:
+and prove:
 
 ```text
 near max_lod > far max_lod
-near planned_river_samples > far planned_river_samples
+near macro terrain triangles > far macro terrain triangles
 near selection_hash != far selection_hash
 ```
+
+Manual acceptance must show visible macro-surface refinement with `W/S`, while FeatureId/FluidRegionId remain stable and PX/PZ river continuity remains intact.
 
 ## Merge / composition gate
 
@@ -123,8 +101,8 @@ near selection_hash != far selection_hash
 [PASS] G6.1 Windows acceptance — 74 assertions
 [PASS] G6.2 Windows continuity acceptance — 86 assertions
 [PASS] G6.3 Windows runtime query acceptance — 79 assertions
-[PASS] G6.4 fix2 changes representation only
-[PENDING WINDOWS] G6.4 fix2 source/headless adaptive LOD gate
-[PENDING MANUAL] G6.4 graphical refine/coarsen observation
+[PASS] G6.4 fix3 changes representation only
+[PENDING WINDOWS] G6.4 fix3 source/headless macro-surface gate
+[PENDING MANUAL] G6.4 graphical macro-surface refinement observation
 [PENDING FULL G6] fresh main + G5/shared-baseline sync check, then full world/core regression
 ```
