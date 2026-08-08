@@ -8,8 +8,12 @@
   "test_tooling_head": "e164d2d261ac2dd374155a8c3ad73a7a278f4042",
   "source_contract_bridge_head": "36bd39a8cae5e514b4c1b8f125f48bc8477f74ab",
   "long_run_observability_head": "733f7bffe8ad1efe3f03150c23fe4e26cfe665d2",
+  "first_windows_gate_head": "95fe496cff4f3eaaf5ad6f844456816fc4584480",
+  "fix1_mtu_server_head": "b814c606cca6632fa4ff09d1746113b2cfbc105a",
+  "fix1_mtu_client_head": "4040a5557bb346a121e9e1a9d6b31e3a4a39fa74",
+  "fix1_mtu_test_head": "a763227a0c379389707008d6b2341a3823b89fe4",
   "draft_pr": 32,
-  "decision": "FIX10 CANDIDATE — EXACT WINDOWS AUTOMATED GATE + >=5 MIN TWO-CLIENT LOCAL MOVEMENT/ITEM STRESS REQUIRED",
+  "decision": "FIX10 FIX1 CANDIDATE — COMPACT ACK WIRE IMPLEMENTED; EXACT WINDOWS FULL GATE MUST BE RE-RUN BEFORE LONG STRESS",
   "trigger_evidence": {
     "manual_debug_archive": "m7-network-debug.zip",
     "duration_note": "approximately 2m20s, shorter than final acceptance but sufficient to reproduce the movement symptom",
@@ -28,8 +32,34 @@
     },
     "diagnosis": "FIX9 showed healthy steady frame/server budgets while corrections accumulated during active movement. Existing input entries already carry client_tick, but authority applies an input sequence on a later server wall-clock tick. Tick-keyed reconciliation therefore confuses normal transport phase with spatial divergence and repeatedly feeds the FIX8 visual correction compositor."
   },
+  "first_exact_windows_gate": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_only": {
+      "result": "PASS",
+      "fix10_assertions": 84,
+      "fix9_assertions": 37,
+      "fix8_assertions": 50,
+      "nx4_assertions": 706
+    },
+    "full_gate": {
+      "result": "FAIL",
+      "failure_stage": "M7 two-client graphical process regression",
+      "symptom": "first FIX10 compact movement snapshot with verbose ACK sidecar reached 1418 bytes, exceeding Godot ENet MTU 1392 for unreliable delivery; the peer then recorded a transport protocol violation/quarantine and client B timed out before JOIN convergence",
+      "warning": "Sending 1418 bytes unreliably which is above the MTU (1392), this will result in higher packet loss",
+      "client_b": {
+        "joined": false,
+        "last_error_code": "M3_CLIENT_CONNECT_TIMEOUT",
+        "messages_received": 3,
+        "server_disconnects": 1,
+        "transport_peer_protocol_violations": 1,
+        "fix10_sidecars_received": 0
+      },
+      "interpretation": "item, remote-player and convergence assertions are cascading failures after the transport disconnect; this evidence does not identify an Item Graph regression"
+    }
+  },
   "policies": {
     "prediction_ack": "SERVER_ECHOED_POST_INPUT_BASELINE_V1",
+    "prediction_ack_wire": "COMPACT_ARRAY_V1",
     "reconciliation": "ACK_BASELINE_REPLAY_LOCAL_TIMELINE_V1",
     "client_timeline": "BOUNDED_CLIENT_TICK_INPUT_TIMELINE_V1",
     "input_buffer_metadata": "PRESERVE_CLIENT_TICK_ON_CONSUMED_INPUT_V1"
@@ -42,16 +72,20 @@
     "canonical_snapshot_checksum_changed": false,
     "item_graph_semantics_changed": false,
     "sidecar_scope": "only the target peer's local-player post-input kinematic acknowledgement",
+    "sidecar_wire_shape": "[input_sequence, client_tick, applied_server_tick, px, py, pz, vx, vy, vz, orientation_yaw, state_revision]",
     "fallback": "invalid/missing/gapped acknowledgement falls back to inherited FIX8 reconciliation"
   },
   "implementation": {
     "server": [
       "preserve the existing client_tick from the input batch through consumption",
       "capture authoritative position/velocity/yaw immediately after first application of a new input sequence",
-      "attach the latest per-peer prediction acknowledgement outside full/compact canonical snapshots"
+      "attach the latest per-peer prediction acknowledgement outside full/compact canonical snapshots",
+      "encode the live peer-local ACK as COMPACT_ARRAY_V1 and omit the repeated verbose prediction_ack_policy field from snapshot payloads so the unreliable compact movement frame remains below the ENet MTU"
     ],
     "client": [
       "extract and register prediction acknowledgement sidecars before snapshot reconciliation",
+      "normalize COMPACT_ARRAY_V1 back into the verbose reconciliation dictionary",
+      "retain the original verbose dictionary decoder for compatibility/debug fixtures",
       "preserve FIX9 phase accounting and transport behavior",
       "emit FIX10_PREDICTION_HEALTH alongside the existing throttled health event when a 2-second sample is actually emitted"
     ],
@@ -73,7 +107,9 @@
     "script": "tests/network/test_m7_sequence_reconciliation_fix10.gd",
     "runner": "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1",
     "analyzer": "ANALYZE_M7_FIX10_RESULTS.ps1",
-    "status": "NOT_YET_RUN_ON_EXACT_WINDOWS_ENGINE"
+    "pre_fix1_exact_windows_status": "PASS (84 assertions)",
+    "fix1_added_coverage": "compact ACK array decoding, field preservation, wire policy observability and material JSON size reduction",
+    "fix1_exact_windows_status": "RE-RUN REQUIRED"
   },
   "acceptance_thresholds": {
     "hard_corrections": 0,
@@ -97,5 +133,5 @@
     "subjective": "the frequent spring/back-pull micro-rollbacks must be absent or substantially reduced compared with the FIX9 debug run"
   },
   "known_separate_issue": "Long FIX9 debug logs also showed intermittent MULTIPLAYER_SAME_REVISION_MUTATION. Items remained present and this is treated as a separate replica transport race unless it blocks FIX10 validation.",
-  "status": "Implementation candidate, compatibility bridges and long-run FIX10 health telemetry are committed and draft PR #32 is open. Exact Windows editor import, focused/regression gate, two-client process test and long manual stress remain required before acceptance."
+  "status": "The first exact-Windows focused gate passed, but the inherited two-client process exposed an MTU regression caused by the verbose FIX10 ACK sidecar. FIX10 fix1 now uses a compact 11-value ACK wire representation while preserving canonical snapshots and reconciliation semantics. Re-run FocusedOnly and then the full IncludeTwoClientProcess gate on the current branch head before manual acceptance."
 }
