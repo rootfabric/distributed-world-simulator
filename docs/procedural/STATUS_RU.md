@@ -1,7 +1,7 @@
 # Universal World Generation Fabric — status ledger
 
-**Program foundation:** G0–G3 Procedural Planetary Generation  
-**Post-G3 roadmap:** `docs/universal-world-generation-roadmap-post-g3`  
+**Program foundation:** G0–G3 Procedural Planetary Generation
+**Post-G3 roadmap:** `docs/universal-world-generation-roadmap-post-g3`
 **Current implementation branch:** `feature/g4-provider-composition-replacement`
 
 ## Current state
