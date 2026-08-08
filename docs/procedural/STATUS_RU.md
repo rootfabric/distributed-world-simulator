@@ -2,7 +2,7 @@
 
 **Program foundation:** G0–G3 Procedural Planetary Generation
 **Post-G3 roadmap:** `docs/universal-world-generation-roadmap-post-g3`
-**Current implementation branch:** `feature/g4-provider-composition-replacement`
+**Current implementation branch:** `feature/g5-world-feature-graph`
 
 ## Current state
 
@@ -12,20 +12,15 @@ G1 Geodesy + Body Shape                BASELINE
 G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
 G4 Provider Composition / Replacement  ACCEPTED
-G5 World Feature Graph                 NEXT — UNBLOCKED
+G5 World Feature Graph                 IMPLEMENTED CANDIDATE — FULL GATE PENDING
+G6 Hydrology / Fluid Surface v0        NEXT AFTER G5 ACCEPTED
 ```
 
-G4 base:
+G5 base:
 
 ```text
-docs/universal-world-generation-roadmap-post-g3
-21d325ccaa60c43d9f0ffdf927f8e2a8b84e2b96
-```
-
-G3 accepted head:
-
-```text
-bc58f650ffb43775667bf0d07cb361a98a40d294
+feature/g4-provider-composition-replacement
+4d1fed8e4367e6c4ea276fcf6b9b57159de72014
 ```
 
 Canonical G4 acceptance record:
@@ -34,9 +29,13 @@ Canonical G4 acceptance record:
 docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
 ```
 
-## Strategy after G3
+G5 candidate record:
 
-The project now follows the Universal World Generation Fabric roadmap:
+```text
+docs/checkpoints/G5_WORLD_FEATURE_GRAPH_CANDIDATE_RU.md
+```
+
+## Universal architecture
 
 ```text
 new world
@@ -54,129 +53,161 @@ docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md
 docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md
 ```
 
-## G4 accepted implementation
-
-Generic composition runtime:
+## G4 accepted composition foundation
 
 ```text
-GeoProviderRegistry
-GeoRecipeComposer
+PlanetRecipe
+  -> GeoRecipeComposer
+  -> GeoProviderRegistry
+  -> GeoKernel
 ```
 
-Surface proof graph:
+Replacement remains recipe-driven and the final semantic surface caller remains:
 
 ```text
-BaseSurfaceProviderV1
-        ↓
-CasualMacroTerrainLayerProviderV1
-        OR
-AlternativeMacroTerrainProviderV1
-        ↓
-CasualValleyModifierProviderV1
-        ↓
 geo/surface-height-m
 ```
 
-The accepted G3 `CasualMacroTerrainProviderV1` is not rewritten. G4 wraps it as a composition layer.
+G4 Architecture Review A: `PASS`.
 
-Replacement is recipe-driven. One registry knows both macro providers; caller, `GeoKernel`, G2 addressing/LOD and final query field stay unchanged.
+## G5 implemented candidate
 
-## Exact-engine evidence
+Canonical feature vocabulary:
+
+```text
+FeatureType
+FeatureId
+FeatureBounds
+FeatureAnchor
+FeatureRelation
+FeatureQuery
+WorldFeature
+FeatureGraph
+```
+
+Identity:
+
+```text
+FeatureId = hash(
+  body_id,
+  feature_type,
+  seed,
+  generator_version,
+  stable_key
+)
+```
+
+Representation state is deliberately excluded:
+
+```text
+NO SurfaceCellKey
+NO LOD
+NO face/x/y
+NO camera
+NO renderer
+NO query-order dependency
+```
+
+Feature graph supports surface, subsurface and free-space semantics. Current acceptance fixtures include:
+
+```text
+fault
+valley
+river
+cave system
+floating island
+```
+
+Spatial query v0 uses correctness-first broad phase:
+
+```text
+SPHERE
+AABB
+```
+
+The current graph scan is O(N). A future BVH/octree/spatial index may optimize lookup without changing canonical feature identity or query semantics.
+
+## Critical G5 gate
+
+The seam fault crosses the G2 cube-sphere `PX/PZ` boundary and is addressed at:
+
+```text
+LOD 2
+LOD 4
+LOD 8
+LOD 12
+```
+
+At every LOD:
+
+```text
+multiple SurfaceCellKey addresses  PASS
+both PX and PZ faces               PASS
+representation cell set changes    PASS
+canonical FeatureId unchanged      PASS
+graph manifest unchanged           PASS
+```
+
+Therefore:
+
+```text
+Feature != Cell
+LOD != Feature Identity
+```
+
+## Exact-engine focused evidence
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 cold editor import                 PASS
-G4 provider composition            PASS — 232 assertions
-G4 repeated provider replacement   PASS — 341 assertions
-G4 visual lab headless             PASS
-G3 macro regression                PASS — 14,275 assertions
-G3 fly-in regression               PASS — 99 assertions
-full world/core regression         PASS
-Breakpoint :9081 collision noise   0
+G5 World Feature Graph             PASS — 249 assertions
+G5 feature/cell identity           PASS — 94 assertions
+G5 visual lab headless             PASS — 4 features
 ```
 
-Repeated replacement cycle:
+Lab:
 
 ```text
-Casual → Alternative → Casual → Alternative
+res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
 ```
 
-For the same recipe, manifest hash and exact 81-point geography profile reproduce. Different recipes produce different provenance and terrain while downstream continues to query only `geo/surface-height-m`.
+Focused runner:
 
-## M5 regression blocker
+```powershell
+.\RUN_G5_WORLD_FEATURE_GRAPH_TESTS.ps1
+```
 
-The M5 graphical convergence/shutdown race found during real checkout validation is closed.
+Full checkout gate:
 
-Harness stabilization commits:
+```powershell
+.\RUN_G5_FULL_ACCEPTANCE.ps1
+```
+
+Required before acceptance:
 
 ```text
-f39aba61913d10fc13ad82ac601ee5c867c00791
-4581c012b4f4290f0f1d3466879aac95a1e1fd3f
+G4 dependency focused PASS
+G5 focused PASS
+full world/core regression PASS
+Breakpoint :9081 collision noise 0
+git diff --check vs accepted G4 PASS
+frozen G0-G4 architecture paths unchanged
+production/runtime/network/Matter/world paths unchanged
 ```
 
-Real Windows exact-engine evidence:
+Until the real Windows full-checkout wrapper is green, G5 remains `IMPLEMENTED CANDIDATE`.
+
+## Next
+
+Blocking main track after G5 acceptance:
 
 ```text
-M5 graphical multiplayer           PASS — 92 assertions, 0 failures
-M5 focused aggregate               PASS — 15/15
-server joins                       3
-server graceful leaves             3
-server stale peers                 0
-A/B final checksum convergence     PASS
-A reconnect completion             PASS
-B completion                       PASS
-client ObjectDB/resource leaks     0
-client MCP port collisions         0
+G6 — Hydrology / Fluid Surface v0
 ```
 
-The fix changes only M5 acceptance orchestration: clients freeze the same final convergence pair before either graceful leave can mutate the authoritative player snapshot. Production gameplay/network authority semantics remain unchanged.
+G6 must express rivers/fluid geography through G5 feature identity instead of chunk-local identities.
 
-Because this historical acceptance driver lives under `scripts/runtime/networked_gameplay/m5`, `RUN_G4_FULL_ACCEPTANCE.ps1` allowlists exactly that one harness path while preserving the freeze for every other production runtime/network/Matter/world path.
-
-## G4 full gate closure
-
-The real Windows wrapper reached the final hygiene stage with all functional suites green. Its only failure was Markdown trailing whitespace in three docs. Those spaces were removed with docs-only commits.
-
-The changed-file set against `docs/universal-world-generation-roadmap-post-g3` confirms:
-
-```text
-frozen G0-G3 architecture paths unchanged    PASS
-production world scenes unchanged            PASS
-production network/Matter paths unchanged    PASS
-only allowlisted M5 acceptance driver changed PASS
-```
-
-Architecture Review A confirms:
-
-```text
-replacement requires recipe/config only      PASS
-no world-type special case in GeoRecipeComposer PASS
-final semantic caller field stable           PASS
-provider graph/provenance deterministic       PASS
-```
-
-## G4 visual lab
-
-```text
-res://scenes/labs/procedural/g4_provider_replacement_lab.tscn
-```
-
-```text
-M     swap Casual / Alternative recipe
-W/S   altitude
-A/D   longitude
-Q/E   latitude
-```
-
-## Next after G4
-
-Blocking main track:
-
-```text
-G5 — World Feature Graph
-```
-
-Parallel tracks now allowed by the roadmap:
+Parallel tracks remain available under the post-G3 roadmap:
 
 ```text
 GR0 — Surface Representation Lab
@@ -189,6 +220,7 @@ GE0 — Environment Field Contracts
 Generator != Renderer
 LOD != World State
 Feature != Chunk
+Feature != SurfaceCell
 recipe != planet class
 provider graph != world-type switch
 canonical truth != representation
