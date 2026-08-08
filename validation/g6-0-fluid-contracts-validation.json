@@ -4,6 +4,7 @@
   "decision": "IMPLEMENTED_CANDIDATE",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "base_commit": "e7b10c09a6be879b25cd5c7ec8407832fd758ac2",
+  "candidate_head": "dcab2405051c537e170548fb399b98c4913b0a0f",
   "runtime": {
     "editor_import": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
     "g5_world_feature_graph": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
@@ -11,7 +12,10 @@
     "g6_0_fluid_contracts": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY"
   },
   "static": {
+    "base_relation": "AHEAD_23_BEHIND_0_AT_CANDIDATE",
+    "changed_files": 21,
     "identity_excludes_representation_state": "PASS_BY_CONTRACT_DESIGN",
+    "fluid_descriptor_revalidates_region_identity": true,
     "renderer_dependency_added": false,
     "network_transport_dependency_added": false,
     "geo_kernel_changed": false,
