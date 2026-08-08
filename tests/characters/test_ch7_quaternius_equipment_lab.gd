@@ -25,13 +25,13 @@ func _run() -> void:
 	_assert(lab.first_person_adapter != null and lab.first_person_adapter.has_method("refresh_presentation_visuals"), "CH7 lab did not upgrade to equipment-aware view adapter")
 	_assert(lab.equipment_source.get_snapshot().entries().is_empty(), "CH7 lab must start with no equipment")
 
-	var player_position_before := lab.player.position
+	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before: float = float(lab.player_capsule.height)
 	lab.set_first_person_mode(true)
 	await process_frame
 	var fp_before: Dictionary = lab.first_person_adapter.create_report()
-	var base_world_visual_count := int(fp_before.get("world_visual_count", 0))
-	var base_shadow_proxy_count := int(fp_before.get("shadow_proxy_count", 0))
+	var base_world_visual_count: int = int(fp_before.get("world_visual_count", 0))
+	var base_shadow_proxy_count: int = int(fp_before.get("shadow_proxy_count", 0))
 	_assert(bool(fp_before.get("world_hidden_from_first_person", false)), "CH7 first-person policy does not hide own world presentation")
 	_assert(bool(fp_before.get("shadow_proxy_active", false)), "CH7 first-person shadow proxy is not active before equipment")
 
@@ -42,15 +42,15 @@ func _run() -> void:
 	_assert(helmet_visual != null, "Helmet presentation visual missing")
 	_assert(_count_nodes_of_type(helmet_visual, MeshInstance3D) == 2, "Helmet synthetic visual must contain shell and visor")
 	_assert(_has_ancestor(helmet_visual, lab.avatar), "Helmet visual is outside avatar presentation hierarchy")
-	var helmet_parent := helmet_visual.get_parent()
-	var rig_mode := String(lab.equipment_rig_adapter.create_report().get("mode", ""))
+	var helmet_parent: Node = helmet_visual.get_parent()
+	var rig_mode: String = String(lab.equipment_rig_adapter.create_report().get("mode", ""))
 	if rig_mode == "SKELETON":
 		_assert(helmet_parent is BoneAttachment3D, "Quaternius helmet is not attached through BoneAttachment3D")
 	else:
 		_assert(helmet_parent is Node3D and String(helmet_parent.name) == "Head", "Fallback helmet did not attach to Head pivot")
 
 	var fp_helmet: Dictionary = lab.first_person_adapter.create_report()
-	var world_mask := int(fp_helmet.get("world_render_layer_mask", 0))
+	var world_mask: int = int(fp_helmet.get("world_render_layer_mask", 0))
 	_assert(world_mask != 0, "CH7 world render layer mask is invalid")
 	_assert(_all_visuals_use_layer(helmet_visual, world_mask), "Helmet visuals were not recaptured into CH6 world render layer")
 	_assert((lab.first_person_camera.cull_mask & world_mask) == 0, "First-person camera can render equipped helmet")
@@ -102,7 +102,7 @@ func _run() -> void:
 	_assert((lab.third_person_camera.cull_mask & world_mask) != 0, "Third-person camera lost equipment world render layer")
 	_assert(lab.equipment_presenter.get_visual(lab.BACKPACK_ITEM_ID) != null, "View switch removed equipped backpack")
 
-	var lab_source := FileAccess.get_file_as_string("res://scripts/characters/lab/quaternius_equipment_lab.gd")
+	var lab_source: String = FileAccess.get_file_as_string("res://scripts/characters/lab/quaternius_equipment_lab.gd")
 	_assert(not lab_source.contains("move_and_slide"), "CH7 equipment lab extension gained independent gameplay movement")
 	_assert(not lab_source.contains("multiplayer"), "CH7 equipment lab extension gained network dependency")
 	_assert(not lab_source.contains("ItemGraph"), "CH7 lab pretends to be production Item Graph integration")
@@ -139,7 +139,7 @@ func _count_nodes_of_type(node: Node, type_value: Variant) -> int:
 
 
 func _has_ancestor(node: Node, expected_ancestor: Node) -> bool:
-	var current := node
+	var current: Node = node
 	while current != null:
 		if current == expected_ancestor:
 			return true
