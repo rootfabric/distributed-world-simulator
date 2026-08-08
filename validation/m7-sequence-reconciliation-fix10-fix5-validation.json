@@ -38,6 +38,22 @@
     "local_timeline_older_ack": "CLASSIFY_SUPERSEDED_NOT_HISTORY_MISS"
   },
   "focused_test": "res://tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd",
+  "windows_attempt_1": {
+    "tested_commit": "ccce210e2e6fa9be6d91a99237d5e107c5a4891d",
+    "mode": "FocusedOnly",
+    "editor_import": "PASS",
+    "fix5_assertions_before_harness_error": "48 PASS",
+    "result": "HARNESS_FAIL",
+    "error": "Attempted to free a RefCounted object",
+    "location": "tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd:99",
+    "interpretation": "test_cleanup_bug_not_runtime_or_fix5_contract_failure"
+  },
+  "harness_fix": {
+    "commit": "30a8f86526c680c81a7af2d39165d3c3bb5ffb47",
+    "change": "remove explicit free() from RefCounted reconciler test fixture",
+    "runtime_files_changed": false,
+    "rerun_required": true
+  },
   "required_windows_validation": [
     "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -FocusedOnly",
     "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -IncludeTwoClientProcess"
@@ -51,5 +67,5 @@
     "movement_snapshots_dropped_for_mtu": 0,
     "max_unreliable_sent_bytes_lte": 1350
   },
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_VALIDATION_REQUIRED"
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_RERUN_REQUIRED_AFTER_HARNESS_FIX"
 }
