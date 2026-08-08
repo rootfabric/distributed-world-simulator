@@ -41,6 +41,7 @@ try {
     }
 
     Write-Host "=== Full world/core regression (Breakpoint runtime disabled) ==="
+    $RegressionStartedUtc = [DateTime]::UtcNow
     & $PowerShellExecutable `
         -NoProfile `
         -ExecutionPolicy Bypass `
@@ -54,8 +55,13 @@ try {
     $BreakpointCollisionPattern = "[breakpoint_runtime] could not listen on 127.0.0.1:9081"
     $BreakpointCollisionHits = @()
     if (Test-Path -LiteralPath $RegressionArtifacts -PathType Container) {
+        # Old acceptance artifacts are intentionally retained by the project.
+        # Audit only log files written by this invocation so historical :9081
+        # noise cannot make a clean new regression fail.
+        $AuditFloorUtc = $RegressionStartedUtc.AddSeconds(-2)
         $BreakpointCollisionHits = @(
             Get-ChildItem -LiteralPath $RegressionArtifacts -Recurse -File -Filter "*.log" |
+                Where-Object { $_.LastWriteTimeUtc -ge $AuditFloorUtc } |
                 Select-String -SimpleMatch $BreakpointCollisionPattern
         )
     }
@@ -63,7 +69,7 @@ try {
         $Locations = $BreakpointCollisionHits |
             ForEach-Object { "{0}:{1}" -f $_.Path, $_.LineNumber }
         throw (
-            "Breakpoint runtime port-collision noise remained in regression logs ({0} hits):`n{1}" -f `
+            "Breakpoint runtime port-collision noise remained in current regression logs ({0} hits):`n{1}" -f `
                 $BreakpointCollisionHits.Count,
                 ($Locations -join [Environment]::NewLine)
         )
