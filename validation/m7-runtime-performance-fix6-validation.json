@@ -3,7 +3,7 @@
   "branch": "feature/m7-runtime-performance-fix6",
   "base": "10af3625122e5ebdf7d40e982492d2a488b7ccde",
   "base_stage": "M7 FIX5 automated Windows gate pass candidate",
-  "decision": "IMPLEMENTED CANDIDATE - WINDOWS GATE AND LONG TWO-CLIENT STRESS REQUIRED",
+  "decision": "FIX6 CANDIDATE - WINDOWS TWO-CLIENT CONVERGENCE RERUN REQUIRED",
   "problem_evidence": {
     "manual_session": "two-client LOCAL item pickup/drop stress",
     "server_transient_stall_frames_observed": 71,
@@ -24,7 +24,7 @@
     "slow_process_frame_threshold_ms": 50.0
   },
   "production_changes": [
-    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or pop_front()s on the realtime path",
+    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer duplicate()s the sample window or shifts the oldest element on the realtime path",
     "steady-state telemetry lookups avoid eager default Array/Dictionary allocation for existing distributions and transport channels",
     "M7 dedicated server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
     "M7 graphical client does the same 4 Hz transport peer-stat sampling instead of rebuilding the full boundary snapshot every frame",
@@ -60,16 +60,46 @@
     "synthetic_hot_loop": {
       "iterations": 200000,
       "window": 512,
-      "legacy_duplicate_pop_front_ms": 412.636,
+      "legacy_duplicate_oldest_removal_ms": 412.636,
       "ring_overwrite_ms": 16.495,
       "observed_speedup": 25.0158,
       "note": "Synthetic single-process microbenchmark only; it demonstrates the cost class removed from observe(), not end-to-end server throughput."
     }
   },
+  "windows_gate_evidence": {
+    "tested_head_before_convergence_correction": "a4104d0c42cf7a77d63631dd50fd4613da4a8cdc",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import_composition": "PASS",
+    "server_realtime_hot_path": "PASS - 261 assertions, 0 failures",
+    "graphical_client_telemetry": "PASS - 10 assertions, 0 failures",
+    "fix5_world_item_consistency": "PASS - 49 assertions, 0 failures",
+    "nx6_predicted_items": "PASS - 957 assertions",
+    "nx3_fixed_tick": "PASS - 6188 assertions, 0 failures",
+    "nx4_prediction_reconciliation": "PASS - 706 assertions",
+    "m7_two_client_process": "FAIL - 3 convergence assertions",
+    "two_client_failure_evidence": {
+      "client_a_convergence_checksum": "115e456d086a3e2959f05b60885c552ed70afc0a538f901f710349da51448842",
+      "client_b_convergence_checksum": "115e456d086a3e2959f05b60885c552ed70afc0a538f901f710349da51448842",
+      "server_ready_file_snapshot_checksum": "67d4ba703c2b616227e9764f0aa98cc05c9f6d2889df3f2461bfa843b60e1807",
+      "item_graph_converged": true,
+      "client_a_hard_corrections": 0,
+      "client_b_hard_corrections": 0,
+      "client_a_reconcile_failures": 0,
+      "client_b_reconcile_failures": 0,
+      "diagnosis": "the two clients converged to the same gameplay checksum, but the process worker compared them with the throttled READY file's embedded snapshot. FIX6 deliberately reduced READY materialization to 1 Hz, so that diagnostic snapshot can be older than the runtime's explicit last_two_connected_checksum capture. This is an acceptance-fixture synchronization defect, not evidence of peer gameplay divergence."
+    },
+    "correction": {
+      "worker_policy": "prefer server last_two_connected_checksum; fall back to snapshot.checksum for older runtimes",
+      "worker_commit": "d99fe2555026b0c4d31e1de5acd407462db75b8d",
+      "focused_contract_commit": "2a176ae47dcfd819dbc4669f69885dc6c42cb1ff",
+      "production_runtime_semantics_changed": false,
+      "required_next_step": "rerun the FIX6 graphical-client focused test and the full two-client process gate"
+    }
+  },
   "required_windows_gate": [
     "FIX6 editor import/composition PASS on Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "FIX6 server realtime hot-path regression PASS",
-    "FIX6 graphical client telemetry throttle regression PASS",
+    "FIX6 graphical client telemetry/convergence-fixture regression PASS",
     "FIX5 world-item consistency PASS",
     "NX6 predicted item regression PASS",
     "accepted inventory regression PASS",
@@ -95,7 +125,7 @@
   },
   "assistant_execution": {
     "full_repository_available": false,
-    "windows_gate_executed": false,
-    "note": "The global telemetry ring was probed with exact Linux Godot. The new graphical-client composition still requires the full Windows repository parser/gate."
+    "windows_gate_executed_by_user": true,
+    "note": "The Windows gate confirmed the FIX6 focused runtime changes but exposed a process-fixture convergence check that read a stale throttled READY snapshot. The worker/test correction is committed; the two-client rerun remains authoritative."
   }
 }
