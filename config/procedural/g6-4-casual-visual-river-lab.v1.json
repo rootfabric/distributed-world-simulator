@@ -1,12 +1,14 @@
 {
   "schema": "planet_simulator.g6_4_casual_visual_river_lab.v1",
   "checkpoint": "g6.4-casual-visual-river-lab",
-  "status": "FIX2_IMPLEMENTED_CANDIDATE",
+  "status": "FIX3_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
   "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
+  "adaptive_macro_surface_script": "res://scripts/labs/procedural/g6_4_adaptive_macro_surface_presenter.gd",
   "dependencies": {
     "g2_surface_lod_selector": "ACCEPTED",
+    "g3_casual_macro_surface_provider": "ACCEPTED",
     "g6_1_canonical_geography": "ACCEPTED",
     "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
     "g6_3_runtime_water_surface_query": "ACCEPTED"
@@ -22,6 +24,14 @@
     "cube_face_seam_marker": true,
     "adaptive_surface_lod_grid": true,
     "adaptive_river_sampling": true,
+    "adaptive_macro_surface_mesh": true,
+    "macro_surface_provider": "geo-provider/casual-macro-terrain-v1",
+    "macro_amplitude_m": 900.0,
+    "macro_wavelength_m": 600000.0,
+    "macro_octaves": 4,
+    "macro_cell_segments": 2,
+    "macro_height_display_exaggeration": 40.0,
+    "macro_height_exaggeration_is_presentation_only": true,
     "lod_min": 0,
     "lod_max": 12,
     "lod_leaf_budget": 1536,
@@ -56,7 +66,10 @@
     "visual_lab_owns_network_transport": false,
     "lod_selector_changes_canonical_geography": false,
     "lod_selector_changes_fluid_region_id": false,
-    "lod_selector_changes_feature_id": false
+    "lod_selector_changes_feature_id": false,
+    "macro_surface_mesh_is_canonical_truth": false,
+    "macro_height_display_exaggeration_changes_geo_sample": false,
+    "macro_surface_carves_river_valley": false
   },
   "acceptance": {
     "headless_scene_smoke": "REQUIRED",
@@ -64,12 +77,20 @@
     "far_near_lod_selection_changes": "REQUIRED",
     "near_max_lod_greater_than_far": "REQUIRED",
     "near_river_sample_count_greater_than_far": "REQUIRED",
+    "adaptive_macro_surface_explicit_pass_marker": "REQUIRED",
+    "near_macro_surface_triangle_count_greater_than_far": "REQUIRED",
     "windows_graphical_manual_observation": "REQUIRED",
     "px_pz_seam_visible": "REQUIRED",
     "query_probes_visible": "REQUIRED",
     "lod_grid_visible": "REQUIRED",
     "zoom_refines_and_coarsens": "REQUIRED",
+    "macro_surface_detail_visibly_refines": "REQUIRED",
     "canonical_ids_unchanged": "REQUIRED"
+  },
+  "deferred": {
+    "river_valley_terrain_coupling": "G8_GEOMORPHOLOGY",
+    "erosion_and_bank_shaping": "G8_GEOMORPHOLOGY",
+    "layered_subsurface_materials": "G9_LAYERED_GEOLOGY"
   },
   "next_if_accepted": "G6_FULL_ACCEPTANCE"
 }
