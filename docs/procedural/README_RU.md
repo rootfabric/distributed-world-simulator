@@ -14,20 +14,22 @@ G4 ACCEPTED — Architecture Review A PASS
 G5 ACCEPTED
 G6.0 ACCEPTED
 G6.1 ACCEPTED
-G6.2 NEXT — cross-cell / cross-LOD continuity
+G6.2 IMPLEMENTED CANDIDATE — cross-cell / cross-LOD continuity
+G6.3 NEXT — after G6.2 acceptance
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
-3. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
-4. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-5. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
-6. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
-7. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
-8. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-9. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
+2. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_CANDIDATE_RU.md`
+3. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
+4. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
+5. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
+6. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
+7. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
+8. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
+9. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
+10. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
 
 ## Current architecture
 
@@ -48,47 +50,20 @@ G6.0 canonical fluid contracts
         ↓
 G6.1 deterministic river provider
         ↓
-G6.2 cross-cell/cross-LOD continuity
+G6.2 cross-cell/cross-LOD continuity proof
         ↓
 G6.3 runtime fluid surface query
         ↓
 G6.4 casual visual river
 ```
 
-G4 established:
-
-```text
-world semantics = recipe-driven provider graph
-```
-
-G5 established spatial semantic identity above representation cells. Its accepted seam gate proves that a canonical feature keeps one identity while its representation spans different cube-sphere cells and LODs.
-
-G6.0 established canonical fluid vocabulary:
-
-```text
-FluidType
-FluidRegionId
-FluidSurfaceDescriptor
-RiverSpline
-RiverChannelProfile
-WaterSurfaceQuery
-```
-
-G6.1 established the first deterministic river compiler:
-
-```text
-G5 RiverFeature
-      ↓
-CasualRiverProviderV1
-      ↓
-FluidRegionId + RiverSpline + RiverChannelProfile + FluidSurfaceDescriptor
-```
+G4 established recipe-driven world semantics. G5 established spatial semantic identity above representation cells. G6.0 established canonical fluid vocabulary. G6.1 established and accepted the first deterministic river compiler.
 
 Accepted rule:
 
 ```text
 G5 FeatureId = semantic river owner
-provider = deterministic derived geography compiler
+G6.1 provider = deterministic derived geography compiler
 cell/LOD/renderer = representation only
 ```
 
@@ -103,9 +78,39 @@ G6.1 CasualRiverProviderV1   PASS — 74 assertions
 git diff --check             PASS
 ```
 
-Blocking GEO track is now `G6.2 — Cross-Cell / Cross-LOD River Continuity`.
+## Current checkpoint — G6.2
 
-G6.2 must vary representation addressing across cube-sphere cells/faces and LOD 2/4/8/12 while preserving canonical `FeatureId`, `FluidRegionId`, `RiverSpline.spline_id`, `RiverChannelProfile.profile_id`, and provider result identity.
+G6.2 introduces no new production hydrology runtime. It proves continuity of one canonical river across changing G2 representation addresses.
+
+Fixture:
+
+```text
+planet radius: 6,000,000 m
+source:         longitude 34°
+mouth:          longitude 58°
+cube seam:      PX / PZ
+LOD:            2 / 4 / 8 / 12
+```
+
+Representation cell sets must change while these stay stable:
+
+```text
+FeatureId
+FluidRegionId
+RiverSpline.spline_id
+RiverChannelProfile.profile_id
+provider manifest hash
+canonical spline/surface checksums
+```
+
+Focused validation:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1
+```
+
+If green, G6.2 becomes `ACCEPTED` and the blocking GEO track advances to `G6.3 — runtime WaterSurfaceQuery resolver`.
 
 ## Detail / asset research doctrine
 
