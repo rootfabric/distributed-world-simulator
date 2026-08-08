@@ -45,7 +45,11 @@ export BREAKPOINT_RUNTIME_DISABLED=1
 	--path "$ROOT_DIR" \
 	--quit
 
-"$GODOT_EXECUTABLE" \
-	--headless \
-	--path "$ROOT_DIR" \
-	--script res://tests/procedural/geodesy/g1_geodesy_body_shape_acceptance.gd
+for focused_script in \
+	res://tests/procedural/geodesy/g1_geodesy_body_shape_acceptance.gd \
+	res://tests/procedural/geodesy/g1_fly_in_continuity.gd; do
+	"$GODOT_EXECUTABLE" \
+		--headless \
+		--path "$ROOT_DIR" \
+		--script "$focused_script"
+done
