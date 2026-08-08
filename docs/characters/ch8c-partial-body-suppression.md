@@ -12,14 +12,15 @@ CH8C solves visual overlap against the fused `SuperHero_Male` base body without 
 
 ## What graphical tuning proved
 
-Four visual iterations established the limits of the simple approaches:
+Five visual iterations established the limits and the accepted direction:
 
 1. coarse whole-body clipping removed underwear/pelvis and knees;
 2. protected fine regions preserved those boundaries but allowed skin to poke through trousers/footwear;
 3. adding shin/foot clip regions removed skin where open garments must reveal it;
-4. outward `BaseMaterial3D.grow` preserved skin topology but still could not guarantee that the garment shell stayed outside the more voluminous base leg in every pose.
+4. outward `BaseMaterial3D.grow` preserved skin topology but still could not guarantee that the garment shell stayed outside the more voluminous base leg in every pose;
+5. topology-aware occlusion fixed the trousers, while the tall Peasant footwear still showed a small residual calf penetration near the upper boot shaft.
 
-The fourth observation is decisive: open/torn garments need **topology-aware body occlusion**. Their own triangles must define where base-body geometry may be hidden.
+The fifth observation is important: the topology approach is correct, but different garment shapes need different **topology acceptance policies**. A torn trouser should be conservative around openings, while a tall boot may be more aggressive only near its upper shaft.
 
 ## Final CH8C policy
 
@@ -36,21 +37,36 @@ wearable.layer.upper.peasant
 
 ### Open/torn garment
 
-Open trousers/footwear do not use spatial body bands and do not rely on surface grow.
-
-Current Peasant lower/feet:
+Open trousers do not use spatial body bands and do not rely on surface grow.
 
 ```text
 wearable.layer.lower.peasant
     material body suppression -> none
     topology occlusion -> Male_Peasant_Legs geometry
-
-wearable.layer.feet.peasant
-    material body suppression -> none
-    topology occlusion -> Male_Peasant_Feet geometry
+    coverage mode -> ROBUST
 ```
 
 The base body remains present where the garment has no nearby surface: through actual holes and below real cuffs. Only base-body triangles close to actual garment geometry are removed from a temporary presentation mesh.
+
+### Tall footwear
+
+`Male_Peasant_Feet` visually behaves as a tall boot. Fix7 robust topology removed the foot/ankle penetration but left a small amount of calf geometry visible through the upper shaft.
+
+Fix8 introduces an explicit `HIGH_BOOT` topology mode for this presentation only:
+
+```text
+wearable.layer.feet.peasant
+    topology occlusion -> Male_Peasant_Feet geometry
+    coverage mode      -> HIGH_BOOT
+    threshold          -> 0.045 m
+    boundary pad       -> 0.006 m
+    upper Y guard      -> 0.012 m
+    upper bias start   -> 52% of boot AABB height
+```
+
+`HIGH_BOOT` keeps the same real garment topology and proximity-grid model as `ROBUST`, but in the upper part of the boot it may remove a base-body triangle when one sampled point is covered instead of requiring two. This is intentionally scoped to the upper shaft/calf zone. Below that band it keeps the normal robust rule.
+
+The upper Y guard is small and one-sided. It exists to cover deformation around the boot collar; it does not turn the mask into a global leg-height clip.
 
 ## Topology-aware architecture
 
@@ -64,7 +80,10 @@ canonical equipment snapshot
         |       -> closed-region material suppression
         |
         +--> WearableBodyTopologyCatalog
-                -> open-garment PackedScene + fit threshold
+                -> PackedScene
+                -> threshold / boundary pad
+                -> coverage mode
+                -> optional high-boot upper bias
                 |
                 v
         LayeredBodyTopologyOcclusionCoordinator
@@ -83,29 +102,38 @@ canonical equipment != body-fit metadata != presentation geometry
 
 The builder works once per equipment topology state, not per frame.
 
-For each active open garment it:
+For each active topology garment it:
 
 1. instantiates the selective garment scene;
 2. samples garment triangle vertices, edge midpoints and centroids in rig/model space;
 3. stores those samples in a spatial grid;
 4. examines triangles from the original fused base-body mesh;
-5. removes a base-body triangle only when its centroid or enough edge/vertex samples are close to actual garment samples;
-6. rejects matches outside the garment AABB except for a very small boundary pad;
+5. applies the descriptor-specific triangle acceptance mode;
+6. rejects matches outside the garment AABB except for configured small boundary guards;
 7. rebuilds an `ArrayMesh` with the original vertex/bone/weight arrays and a filtered index array.
 
 Consequences:
 
 - a real hole in the trousers has no garment samples in its center, so skin can remain there;
 - below the actual trouser cuff the garment AABB boundary prevents the mask from continuing down the leg;
+- `HIGH_BOOT` can be more aggressive around the upper calf without changing trouser behavior;
 - adding footwear unions the trouser and footwear topology masks;
 - removing one item always rebuilds from the exact original body mesh, never incrementally from an already masked mesh.
 
-Current prototype fit thresholds:
+Current prototype fit metadata:
 
 ```text
-Male_Peasant_Legs: threshold = 0.045 m
-Male_Peasant_Feet: threshold = 0.035 m
-boundary pad:                 0.006 m
+Male_Peasant_Legs
+    mode             = ROBUST
+    threshold        = 0.045 m
+    boundary pad     = 0.006 m
+
+Male_Peasant_Feet
+    mode             = HIGH_BOOT
+    threshold        = 0.045 m
+    boundary pad     = 0.006 m
+    upper Y guard    = 0.012 m
+    upper bias start = 0.52
 ```
 
 These are presentation-fit metadata and can be tuned without changing equipment semantics.
@@ -119,13 +147,13 @@ no lower/feet
     SuperHero_Male.mesh = exact imported mesh
 
 lower
-    SuperHero_Male.mesh = derived mesh masked by trouser topology
+    SuperHero_Male.mesh = derived mesh masked by ROBUST trouser topology
 
 lower + feet
-    SuperHero_Male.mesh = derived union mask
+    SuperHero_Male.mesh = derived union of trouser + HIGH_BOOT footwear masks
 
 feet only
-    rebuild from original mesh using footwear topology only
+    rebuild from original mesh using HIGH_BOOT footwear topology only
 
 none again
     restore exact imported mesh resource identity
@@ -160,33 +188,33 @@ The derived mesh preserves source vertices, bones and weights and changes only p
 
 Therefore fix6 surface-fit is retained only as an experimental utility and is not part of the CH8C acceptance runner.
 
-## Automated gates
+## Fix8 automated gates
 
-The CH8C topology candidate must prove:
+The high-boot tuning must prove:
 
-- lower-only applies a derived base-body mesh and removes some but not all body triangles;
-- the base-body material remains unchanged for lower/feet;
-- the derived mesh preserves source bone/weight array sizes;
-- lower+feet creates an aggregate topology mask;
-- feet-only recomposes from the original body mesh;
-- removing all open garments restores exact original mesh identity;
-- upper-only keeps original mesh topology and uses only `body.region.torso.core` material suppression;
-- gameplay `CharacterBody3D` and capsule remain unchanged;
-- graphical lab lifecycle reports topology state and completes without Godot `ERROR:` lines;
-- accepted CH7.8, CH8A and CH8B regression remains green.
+- `wearable.layer.lower.peasant` stays `ROBUST` at `0.045 m` with no high-boot upper padding;
+- `wearable.layer.feet.peasant` resolves as `HIGH_BOOT` at `0.045 m`;
+- footwear upper Y guard is exactly `0.012 m`;
+- footwear upper bias starts inside, not outside, the real footwear AABB;
+- feet-only removes some but not all body triangles;
+- lower+feet removes more body triangles than lower-only;
+- removing feet from the union deterministically restores the exact lower-only mask count;
+- removing all lower garments restores exact original mesh identity;
+- base material, gameplay `CharacterBody3D`, and capsule remain unchanged;
+- graphical lab status exposes the high-boot mode so the Windows screenshot can be tied to exact fit metadata;
+- the runner continues to reject any Godot `ERROR:` line.
 
 ## Graphical acceptance
 
-Inspect `L`, `K`, `L+K`, then `U+L+K` in idle/walk/run/jump/crouch.
+Inspect `K`, `L+K`, then `U+L+K` in idle/walk/run/jump/crouch.
 
 Required result:
 
-- trousers no longer show unacceptable base-leg poke-through on cloth surfaces;
-- skin remains visible through intended garment openings;
-- leg remains below the real trouser cuff;
-- footwear does not show unacceptable base-foot penetration;
-- open footwear areas still contain skin instead of holes;
+- trousers retain the already-correct fix7 appearance;
+- residual calf skin no longer penetrates the solid upper boot shaft;
+- skin above the actual boot collar is not removed;
+- intentionally open footwear areas retain skin rather than becoming holes;
 - underwear/pelvis remains intact;
 - helmet/backpack, FP/TP and shadow remain coherent.
 
-If the topology result is correct but an edge is slightly too aggressive or too permissive, tune only the per-garment proximity threshold/boundary pad. Do not return to global lower-leg Y clipping.
+If the calf still barely penetrates, tune only `FEET_TOPOLOGY_THRESHOLD_M`, `FEET_TOPOLOGY_UPPER_Y_PAD_M`, or `FEET_TOPOLOGY_UPPER_BIAS_FRACTION`. Do not change the trouser descriptor and do not return to global lower-leg Y clipping.
