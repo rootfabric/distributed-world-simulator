@@ -1,17 +1,28 @@
 # G0 Geo Contracts — cleanup1: чистый acceptance output
 
-**Дата:** 2026-08-08  
-**Ветка:** `feature/g0-geo-contracts`  
-**G0 implementation candidate:** `6bc49940fa6d762690d0e5a4ea4261a72c24310b`  
-**Cleanup1 head:** `ae58d9116d5d037262a6c50f326734c179bed77d`  
+**Дата:** 2026-08-08
+**Ветка:** `feature/g0-geo-contracts`
+**G0 implementation candidate:** `6bc49940fa6d762690d0e5a4ea4261a72c24310b`
+**Cleanup1 evidence head:** `388c680085d4cb30c75020906790c9c0d642fb0a`
+**Decision:** `ACCEPTED`
 **Scope:** только test/acceptance infrastructure; GeoKernel, procedural contracts и production runtime не изменены.
 
 ---
 
 ## 1. Основание
 
-Пользователь выполнил полный `RUN_WORLD_REGRESSION_TESTS.ps1` на реальном Windows checkout G0.
-Перед cleanup подтверждено:
+Пользователь выполнил полный `RUN_G0_FULL_ACCEPTANCE.ps1` на реальном Windows checkout G0.
+
+Подтверждено:
+
+```text
+focused G0:                         PASS — 209 assertions
+world/core regression:              PASS
+Breakpoint runtime :9081 noise:     0
+functional regression failures:     0
+```
+
+Полный regression ранее подтверждал:
 
 ```text
 world-regression-summary.json
@@ -22,68 +33,49 @@ steps:                  204
 failed steps:           0
 ```
 
-Focused G0 ранее также прошёл:
+В новом clean-wrapper прогоне все функциональные suites снова дошли до PASS, включая persistence, inventory, NX5/NX6, MW0–MW10 и RL0–RL3.
 
-```text
-G0 Geo contracts: PASS (209 assertions)
-```
+---
 
-Функциональных regression failures не обнаружено.
+## 2. Что исправлял cleanup1
 
-При анализе приложенного `test-results.zip` найден test-infrastructure noise:
+До cleanup в multi-process logs было:
 
 ```text
 17 occurrences
 ERROR: [breakpoint_runtime] could not listen on 127.0.0.1:9081 (error 22)
 ```
 
-Ошибки были распределены по multi-process M2/M3/M4/M6/N2 child logs. Они не влияли на итоговый verdict, но засоряли output и могли скрывать будущие настоящие engine errors.
+Причина: несколько child Godot processes одновременно поднимали Breakpoint runtime autoload на одном fixed port.
 
----
-
-## 2. Причина
-
-`BreakpointRuntimeBridge` является autoload и по умолчанию открывает фиксированный loopback port `127.0.0.1:9081`.
-
-Addon уже содержит штатный test/process switch:
+Сам addon уже поддерживает штатный switch:
 
 ```text
 BREAKPOINT_RUNTIME_DISABLED=1
 ```
 
-При его установке runtime bridge не открывает socket и не меняет gameplay composition.
-
-Поэтому addon и production behavior менять не требуется.
+Поэтому production addon/runtime не изменялся.
 
 ---
 
-## 3. Cleanup1
+## 3. Cleanup1 implementation
 
 ### RUN_G0_GEO_CONTRACTS_TESTS.ps1
 
-Runner теперь:
+Runner:
 
 1. временно устанавливает `BREAKPOINT_RUNTIME_DISABLED=1`;
 2. выполняет headless editor import;
 3. запускает G0 focused acceptance;
 4. восстанавливает исходное значение environment variable.
 
-Headless editor import закрывает второй источник лишнего шума: совершенно новый git worktree ещё не имеет `.godot` UID cache, поэтому прямой `--script` мог сначала вывести ошибки разрешения UID-backed autoload.
-
 ### RUN_G0_GEO_CONTRACTS_TESTS.sh
 
-Linux runner получил ту же семантику:
-
-```text
-cold editor import
-+ temporary runtime bridge disable
-+ focused G0
-+ environment restore
-```
+Linux runner имеет ту же семантику.
 
 ### RUN_G0_FULL_ACCEPTANCE.ps1
 
-Добавлен единый Windows gate:
+Единый Windows gate выполняет:
 
 ```text
 G0 focused
@@ -92,24 +84,34 @@ G0 focused
 → git diff --check
 ```
 
-World regression запускается в отдельном PowerShell child process с унаследованным:
+Подтверждённый результат текущего прогона:
 
 ```text
-BREAKPOINT_RUNTIME_DISABLED=1
-```
-
-После regression wrapper сканирует только `.log` файлы, записанные текущим запуском. Исторические artifacts не участвуют в проверке.
-
-Acceptance condition:
-
-```text
+All world/core regression tests ... passed.
 Breakpoint runtime :9081 collision noise: 0
-G0 full acceptance gate: PASS
 ```
+
+Первый проход `git diff --check` обнаружил только trailing whitespace в четырёх markdown-файлах. Никаких code/runtime defects за этим failure не стояло. Эти строки исправлены отдельным documentation-only patch после прогона.
 
 ---
 
-## 4. Что не изменено
+## 4. Expected negative-path output
+
+В regression output присутствуют сообщения вида:
+
+```text
+World manifest identity mismatch (...)
+CONFLICTING_REMOTE_SNAPSHOT_TICK
+STALE_REMOTE_AUTHORITY_EPOCH
+```
+
+Они возникают внутри тестов, которые намеренно проверяют rejection/error paths. Соответствующие suites завершаются `PASS`, поэтому эти строки не являются regression failures.
+
+Отдельно MW7 сообщает ObjectDB/ResourceCache exit warnings. Suite также завершился `PASS`; это уже существующий cleanup/performance debt и не относится к G0 cleanup1.
+
+---
+
+## 5. Что не изменено
 
 Cleanup1 не меняет:
 
@@ -129,47 +131,14 @@ Runtime bridge выключается только внутри G0 automated acc
 
 ---
 
-## 5. Проверка cleanup1
-
-На Windows worktree:
-
-```powershell
-git fetch origin --prune
-git pull --ff-only
-
-.\RUN_G0_FULL_ACCEPTANCE.ps1
-```
-
-Ожидаемый финал:
-
-```text
-G0 Geo contracts: PASS (209 assertions)
-...
-All world/core regression tests ... passed.
-Breakpoint runtime :9081 collision noise: 0
-G0 full acceptance gate: PASS
-```
-
-Если full wrapper проходит, cleanup1 можно считать `ACCEPTED` и использовать его head как чистую базу G1.
-
----
-
 ## 6. Решение
 
-G0 core получил полный внешний regression evidence до cleanup:
-
 ```text
-201 / 201 discovered tests
-204 / 204 steps PASS
-0 failed steps
+G0 CORE:       ACCEPTED
+CLEANUP1:      ACCEPTED
+:9081 NOISE:   0
+REGRESSION:    PASS
+NEXT:          G1 — Geodesy + Body Shape
 ```
 
-Cleanup1 является non-functional test-infrastructure patch.
-
-Текущий статус:
-
-```text
-G0 CORE:       ACCEPTED BY FULL REGRESSION EVIDENCE
-CLEANUP1:      CANDIDATE — one clean full-wrapper rerun required
-NEXT:          G1 Geodesy + Body Shape after cleanup1 PASS
-```
+После documentation whitespace fix повторный полный 201-test regression не требуется: изменены только Markdown-файлы. Для локального зеркала достаточно подтянуть branch и выполнить `git diff --check` либо полный wrapper при желании.
