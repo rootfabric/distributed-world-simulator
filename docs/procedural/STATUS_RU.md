@@ -13,29 +13,30 @@ G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
 G4 Provider Composition / Replacement  ACCEPTED
 G5 World Feature Graph                 ACCEPTED
-G6.0 Fluid Contracts                   IMPLEMENTED CANDIDATE
-G6.1 Casual River Provider             NEXT — BLOCKED ON G6.0 FOCUSED ACCEPTANCE
+G6.0 Fluid Contracts                   ACCEPTED
+G6.1 CasualRiverProviderV1             ACCEPTED
+G6.2 Cross-Cell / Cross-LOD Continuity NEXT
 ```
 
-G6.0 base:
+Current accepted G6.1 tested head:
 
 ```text
-feature/g5-world-feature-graph
-e7b10c09a6be879b25cd5c7ec8407832fd758ac2
+b8f36d17dc8ba138e6b215968aa0e651eec9ccd1
 ```
 
-Accepted G5 candidate head:
+Current global revision:
 
 ```text
-34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4
+GLOBAL-P0-2026-08-08-R1
 ```
 
-Canonical acceptance / candidate records:
+Canonical records:
 
 ```text
 docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
 docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md
 docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md
+docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md
 ```
 
 ## Universal architecture
@@ -56,7 +57,9 @@ docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md
 docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md
 ```
 
-## G4 accepted composition foundation
+## Accepted foundation through G5
+
+G4 established recipe-driven provider composition:
 
 ```text
 PlanetRecipe
@@ -65,17 +68,7 @@ PlanetRecipe
   -> GeoKernel
 ```
 
-Replacement remains recipe-driven and the final semantic surface caller remains:
-
-```text
-geo/surface-height-m
-```
-
-G4 Architecture Review A: `PASS`.
-
-## G5 accepted World Feature Graph
-
-Canonical feature vocabulary:
+G5 established stable spatial feature identity above representation cells:
 
 ```text
 FeatureType
@@ -88,107 +81,22 @@ WorldFeature
 FeatureGraph
 ```
 
-Identity:
+Canonical `FeatureId` excludes:
 
 ```text
-FeatureId = hash(
-  body_id,
-  feature_type,
-  seed,
-  generator_version,
-  stable_key
-)
+SurfaceCellKey
+LOD
+face/x/y
+camera
+renderer
+query order
 ```
 
-Representation state is deliberately excluded:
+The accepted G5 seam gate proves one feature can cross multiple cube-sphere cells/faces at LOD 2/4/8/12 while retaining one canonical identity and graph manifest.
 
-```text
-NO SurfaceCellKey
-NO LOD
-NO face/x/y
-NO camera
-NO renderer
-NO query-order dependency
-```
+## G6.0 Fluid Contracts — ACCEPTED
 
-Feature graph supports surface, subsurface and free-space semantics. Acceptance fixtures include:
-
-```text
-fault
-valley
-river
-cave system
-floating island
-```
-
-Spatial query v0 uses correctness-first broad phase:
-
-```text
-SPHERE
-AABB
-```
-
-The current graph scan is O(N). A future BVH/octree/spatial index may optimize lookup without changing canonical feature identity or query semantics.
-
-## Critical G5 gate
-
-The seam fault crosses the G2 cube-sphere `PX/PZ` boundary and is addressed at:
-
-```text
-LOD 2
-LOD 4
-LOD 8
-LOD 12
-```
-
-At every LOD:
-
-```text
-multiple SurfaceCellKey addresses  PASS
-both PX and PZ faces               PASS
-representation cell set changes    PASS
-canonical FeatureId unchanged      PASS
-graph manifest unchanged           PASS
-```
-
-Therefore:
-
-```text
-Feature != Cell
-LOD != Feature Identity
-```
-
-## G5 acceptance evidence
-
-```text
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-cold editor import                 PASS
-G5 World Feature Graph             PASS — 249 assertions
-G5 feature/cell identity           PASS — 94 assertions
-G5 visual lab headless             PASS — 4 features
-full world/core regression         PASS
-Breakpoint :9081 collision noise   0
-git diff hygiene/freeze            PASS
-G5 full acceptance gate            PASS
-```
-
-Expected/known regression output did not block acceptance:
-
-```text
-manifest identity mismatch negative paths   suites PASS
-NX5 rejection warnings                      suite PASS
-MW7 ObjectDB/ResourceCache exit warnings    existing debt
-```
-
-Lab:
-
-```text
-res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
-```
-
-## G6.0 Fluid Contracts candidate
-
-Canonical fluid vocabulary now exists as contracts:
+Canonical fluid vocabulary:
 
 ```text
 FluidType
@@ -199,44 +107,69 @@ RiverChannelProfile
 WaterSurfaceQuery
 ```
 
-`FluidRegionId` is derived from:
+`FluidRegionId` derives from stable semantic inputs and deliberately excludes representation state. G6.0 post-P0 dependency gate was reconfirmed during G6.1 acceptance:
 
 ```text
-body_id
-fluid_type_id
-seed
-generator_version
-stable_key
+G5 World Feature Graph: PASS — 249 assertions
+G5 feature/cell identity: PASS — 94 assertions
+G6.0 fluid contracts: PASS — 169 assertions
 ```
 
-and deliberately excludes representation state.
+## G6.1 CasualRiverProviderV1 — ACCEPTED
 
-The contracts are generic enough to represent water, lava, methane, ammonia and future fluids. River-specific geometry is expressed as stable `RiverSpline` and `RiverChannelProfile` descriptors while runtime provider generation remains deferred.
-
-Focused validation command:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FLUID_CONTRACT_TESTS.ps1
-```
-
-Runtime evidence is pending because the connector environment has no Godot binary.
-
-## Next
-
-Blocking main track:
+Accepted architecture:
 
 ```text
-G6.0 focused acceptance
-  -> G6.1 CasualRiverProviderV1
-  -> G6.2 cross-cell/cross-LOD continuity
-  -> G6.3 runtime WaterSurfaceQuery
+G5 WorldFeature(feature-type/river)
+        + optional linked valley
+        ↓
+CasualRiverProviderV1
+        ↓
+FluidRegionId
+RiverSpline
+RiverChannelProfile
+FluidSurfaceDescriptor
+```
+
+G5 `River FeatureId` remains semantic owner. The provider is a deterministic compiler and does not create a second WorldFeature, own authority/persistence/network transport, depend on renderer/SceneTree, or use runtime randomness.
+
+Exact Windows evidence on Godot `4.7.1.stable.double.custom_build.a13da4feb`:
+
+```text
+G6.1 CasualRiverProviderV1: PASS — 74 assertions
+git diff --check from post-P0 G6.0 baseline: PASS
+working tree: clean
+```
+
+Acceptance record:
+
+```text
+docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md
+```
+
+## Next — G6.2
+
+Blocking GEO track:
+
+```text
+G6.2 cross-cell / cross-LOD continuity
+  -> G6.3 runtime WaterSurfaceQuery resolver
   -> G6.4 casual visual river lab
   -> G6 full acceptance
   -> G7 Semantic Field Fabric
 ```
 
-G6.1 must produce canonical fluid descriptors from stable G5 feature semantics rather than chunk-local identities.
+G6.2 must prove that one canonical river may cross changing cube-sphere faces/cells and LOD 2/4/8/12 while retaining stable:
+
+```text
+FeatureId
+FluidRegionId
+RiverSpline.spline_id
+RiverChannelProfile.profile_id
+canonical provider result identity
+```
+
+`SurfaceCellKey` is representation addressing only and must not enter canonical hydrology identity.
 
 Parallel tracks remain available under the post-G3 roadmap:
 
@@ -253,6 +186,8 @@ LOD != World State
 Feature != Chunk
 Feature != SurfaceCell
 FluidRegion != SurfaceCell
+FluidRegion != AuthorityRegion
+FluidRegion != InterestRegion
 FluidRegion != renderer object
 recipe != planet class
 provider graph != world-type switch
