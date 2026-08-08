@@ -232,7 +232,7 @@ func _process(_delta: float) -> void:
 		"WAIT_CONVERGENCE_PEER":
 			# A late authoritative snapshot can arrive after one client has already
 			# locked an older checksum. Keep the convergence lock revocable until
-			# both clients have locked the same latest canonical state.
+			# the parent has observed both clients locked to the same canonical state.
 			var finish_requested := bool(Support.read(_control_file).get("finish", false))
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
@@ -265,6 +265,20 @@ func _process(_delta: float) -> void:
 			if String(peer_convergence.get("item_checksum", "")) != _item_checksum:
 				return
 			if not finish_requested:
+				return
+			# Do not leave immediately. A graceful leave mutates the authoritative
+			# player snapshot and can revoke the other client's convergence lock.
+			# Freeze the accepted checksums and wait until the peer has frozen the
+			# same pair before either process is allowed to leave.
+			_write_report("FINAL_CONVERGENCE_LOCKED", false, _convergence_world, shell)
+			_set_stage("WAIT_FINAL_CONVERGENCE_PEER")
+		"WAIT_FINAL_CONVERGENCE_PEER":
+			var peer_final := Support.read(_peer_result_file)
+			if String(peer_final.get("state", "")) not in ["FINAL_CONVERGENCE_LOCKED", "COMPLETE"]:
+				return
+			if String(peer_final.get("player_checksum", "")) != _player_checksum:
+				return
+			if String(peer_final.get("item_checksum", "")) != _item_checksum:
 				return
 			_finish(true)
 
@@ -478,12 +492,11 @@ func _finish(passed: bool, final_state: String = "COMPLETE") -> void:
 	if passed and not _convergence_world.is_empty():
 		world = _convergence_world.duplicate(true)
 	passed = passed and _failures.is_empty()
-	_write_report(final_state if passed else "FAILED", passed, world, shell)
 	var leave_result: Dictionary = _client.request_graceful_leave(4000)
 	if not bool(leave_result.get("success", false)):
 		_failures.append("Graceful leave failed: %s" % leave_result)
 		passed = false
-		_write_report("FAILED", false, world, shell, leave_result)
+	_write_report(final_state if passed else "FAILED", passed, world, shell, leave_result)
 	_finished = true
 	set_process(false)
 	print("M5_GRAPHICAL_CLIENT_RESULT %s" % JSON.stringify(Support.read(_result_file)))

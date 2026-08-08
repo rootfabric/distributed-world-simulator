@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/procedural/g4_provider_replacement_lab.gd" id="1_g4lab"]
+
+[node name="G4ProviderReplacementLab" type="Node3D"]
+script = ExtResource("1_g4lab")
+
+[node name="Terrain" type="MeshInstance3D" parent="."]
+
+[node name="Grid" type="MeshInstance3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 430.0
+offset_bottom = 215.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Panel/Margin"]
+
+[node name="Title" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "G4 Provider Composition / Replacement"
+
+[node name="Controls" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "M: swap recipe   W/S: altitude   A/D: longitude   Q/E: latitude"
+
+[node name="Description" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "Same renderer + same final field; recipe swaps macro generator."
+
+[node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "initializing..."

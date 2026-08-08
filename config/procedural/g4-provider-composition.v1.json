@@ -1,0 +1,19 @@
+{
+  "checkpoint": "g4-provider-composition-replacement-v0",
+  "status": "CANDIDATE",
+  "implementation_branch": "feature/g4-provider-composition-replacement",
+  "base_branch": "docs/universal-world-generation-roadmap-post-g3",
+  "g3_accepted_head": "bc58f650ffb43775667bf0d07cb361a98a40d294",
+  "geo_kernel_changed": false,
+  "surface_cell_key_changed": false,
+  "lod_selector_changed": false,
+  "production_worlds_changed": false,
+  "final_surface_field": "geo/surface-height-m",
+  "composition_chain": [
+    "geo/base-surface-height-m",
+    "geo/macro-surface-height-m",
+    "geo/surface-height-m"
+  ],
+  "next_stage": "G5 — World Feature Graph",
+  "base_commit": "21d325ccaa60c43d9f0ffdf927f8e2a8b84e2b96"
+}
