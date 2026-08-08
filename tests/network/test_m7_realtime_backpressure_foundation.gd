@@ -3,6 +3,8 @@ extends SceneTree
 const InputBuffer = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
 const Scheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const ServerRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+const TelemetryCollector = preload("res://scripts/network/observability/network_telemetry_collector.gd")
+const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
 
 var assertions: int = 0
 var failures: Array[String] = []
@@ -13,6 +15,7 @@ func _init() -> void:
 	_test_state_transitions_and_jump_edges_are_preserved()
 	_test_pressure_compaction_keeps_latest_state_and_jump_edges()
 	_test_lossless_scheduler_retains_transient_stall_time()
+	_test_telemetry_ring_is_hot_path_bounded()
 	_test_runtime_wiring_is_realtime_safe()
 	_finish()
 
@@ -124,6 +127,43 @@ func _test_lossless_scheduler_retains_transient_stall_time() -> void:
 	_assert(int(report.get("retained_backlog_peak_ticks", 0)) >= 11, "lossless scheduler backlog peak is not observable")
 
 
+func _test_telemetry_ring_is_hot_path_bounded() -> void:
+	var collector = TelemetryCollector.new()
+	var fingerprint: Dictionary = RuntimeIdentity.create_fingerprint({"playable_sandbox": true})
+	_assert(_ok(collector.configure("test", fingerprint, 8)), "telemetry ring setup failed")
+	for index in range(100):
+		_assert(_ok(collector.observe("server_process_duration_ms", float(index))), "telemetry observation failed at %d" % index)
+	var report: Dictionary = collector.get_report()
+	_assert(String(report.get("sample_storage_policy", "")) == "BOUNDED_RING_OVERWRITE_V2", "telemetry ring policy missing")
+	_assert(int(report.get("sample_overwrites", -1)) == 92, "telemetry ring did not overwrite in place: %s" % report)
+	var sampled: Dictionary = collector.create_sample(1000)
+	_assert(_ok(sampled), "telemetry ring failed to materialize a diagnostic sample")
+	var distribution: Dictionary = Dictionary(
+		sampled.get("details", {}).get("sample", {}).get("distributions", {}).get("server_process_duration_ms", {})
+	)
+	_assert(int(distribution.get("count", 0)) == 8, "telemetry ring changed bounded window size: %s" % distribution)
+	_assert(is_equal_approx(float(distribution.get("min", -1.0)), 92.0), "telemetry ring did not retain newest window minimum: %s" % distribution)
+	_assert(is_equal_approx(float(distribution.get("max", -1.0)), 99.0), "telemetry ring did not retain newest window maximum: %s" % distribution)
+	_assert(is_equal_approx(float(distribution.get("mean", -1.0)), 95.5), "telemetry ring distribution mean changed: %s" % distribution)
+	_assert(_ok(collector.reset_window()), "telemetry ring reset failed")
+	_assert(_ok(collector.observe("server_process_duration_ms", 7.0)), "telemetry observe after reset failed")
+	var reset_sample: Dictionary = collector.create_sample(1001)
+	var reset_distribution: Dictionary = Dictionary(
+		reset_sample.get("details", {}).get("sample", {}).get("distributions", {}).get("server_process_duration_ms", {})
+	)
+	_assert(int(reset_distribution.get("count", 0)) == 1, "telemetry ring reset left stale samples")
+
+	var telemetry_source: String = FileAccess.get_file_as_string(
+		"res://scripts/network/observability/network_telemetry_collector.gd"
+	)
+	var observe_start: int = telemetry_source.find("func observe(")
+	var record_start: int = telemetry_source.find("func record_transport(")
+	var observe_source := telemetry_source.substr(observe_start, record_start - observe_start)
+	_assert(not observe_source.contains(".duplicate("), "telemetry observe hot path still duplicates the sample window")
+	_assert(not observe_source.contains("pop_front()"), "telemetry observe hot path still shifts the sample window")
+	_assert(observe_source.contains("values[head] = value"), "telemetry observe does not use in-place ring overwrite")
+
+
 func _test_runtime_wiring_is_realtime_safe() -> void:
 	var runtime_script: Script = ServerRuntime
 	_assert(runtime_script.can_instantiate(), "M7 dedicated server runtime no longer instantiates")
@@ -135,10 +175,15 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	_assert(String(foundation.get("item_replication_policy", "")) == "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2", "item/gameplay revision sync policy missing")
 	_assert(String(foundation.get("fixed_tick_backlog_policy", "")) == "RETAIN_TRANSIENT_STALL_TIME_V1", "M7 transient-stall scheduler policy missing")
 	_assert(String(foundation.get("movement_snapshot_recovery_policy", "")) == "SUPPRESS_WHILE_STALL_OR_AUTHORITY_BACKLOG_V1", "stale movement snapshot guard missing")
+	_assert(String(foundation.get("telemetry_hot_path_policy", "")) == "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1", "FIX6 telemetry hot-path policy missing")
+	_assert(int(foundation.get("ready_report_min_interval_ms", 0)) >= 1000, "READY diagnostic reports are still materialized too frequently")
+	_assert(int(foundation.get("peer_telemetry_interval_ms", 0)) >= 250, "peer transport statistics are still sampled at frame rate")
 	_assert(int(foundation.get("network_event_budget_per_frame", 0)) <= 32, "network event drain is not tightly bounded")
 	_assert(int(foundation.get("fixed_tick_max_catch_up_ticks", 0)) == 16, "M7 catch-up batch size drifted")
 	_assert(is_equal_approx(float(foundation.get("fixed_tick_max_frame_delta_seconds", 0.0)), 1.0), "M7 transient stall retention window drifted")
 	_assert(int(foundation.get("item_gameplay_revision_snapshots_published", -1)) == 0, "fresh runtime has invalid item gameplay sync counter")
+	_assert(float(foundation.get("report_max_snapshot_build_duration_ms", -1.0)) >= 0.0, "report snapshot build max is not observable")
+	_assert(float(foundation.get("server_process_max_duration_ms", -1.0)) >= 0.0, "server process max duration is not observable")
 
 	var result_dir: String = ProjectSettings.globalize_path("res://artifacts/test-results")
 	DirAccess.make_dir_recursive_absolute(result_dir)
@@ -163,6 +208,7 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	_assert(int(after_foundation.get("report_requests_coalesced", 0)) >= 1, "READY report requests were not coalesced")
 	_assert(int(after_foundation.get("report_write_failures", -1)) == 0, "diagnostic report worker failed")
 	_assert(float(after_foundation.get("report_last_write_duration_ms", -1.0)) >= 0.0, "report write latency is not observable")
+	_assert(float(after_foundation.get("report_snapshot_build_duration_ms", -1.0)) >= 0.0, "report snapshot build latency is not observable")
 	runtime.free()
 	if FileAccess.file_exists(result_path):
 		DirAccess.remove_absolute(result_path)
@@ -174,6 +220,10 @@ func _test_runtime_wiring_is_realtime_safe() -> void:
 	_assert(source.contains("M7_FIXED_TICK_MAX_CATCH_UP_TICKS"), "M7 runtime does not tune transient catch-up")
 	_assert(source.contains("M7_STALL_SNAPSHOT_GUARD_SECONDS"), "M7 runtime does not guard post-stall snapshots")
 	_assert(source.contains("_movement_snapshot_recovery_suppressions"), "movement recovery suppression is not observable")
+	_assert(source.contains("M7_PEER_TELEMETRY_INTERVAL_MS"), "peer telemetry throttling is not wired")
+	_assert(source.contains("_peer_telemetry_skips"), "peer telemetry throttling is not observable")
+	_assert(source.contains("server_process_max_duration_ms"), "server process peak latency is not observable")
+	_assert(source.contains("report_max_snapshot_build_duration_ms"), "report build peak latency is not observable")
 	_assert(source.contains("Thread.new()"), "READY diagnostic writes are not moved off the authority thread")
 	_assert(source.contains("_report_requests_coalesced"), "report coalescing is not observable")
 	_assert(source.contains("_broadcast_snapshot(\"ITEM_GRAPH_UPDATED\", RealtimeChannelPolicy.RESYNC, \"RELIABLE_ORDERED\")"), "canonical item mutation does not publish its gameplay revision")
