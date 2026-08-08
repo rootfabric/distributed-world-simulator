@@ -1,0 +1,35 @@
+{
+  "schema": "planet_simulator.m7_sequence_reconciliation_fix10_fix2_validation.v1",
+  "stage": "M7 FIX10 fix2 — MTU-safe realtime prediction ACK transport",
+  "branch": "feature/m7-sequence-aware-reconciliation-fix10-fix2-mtu-guard",
+  "base_branch": "feature/m7-sequence-aware-reconciliation-fix10",
+  "base_commit": "8890f8dad38ff0304b47ec3645a9c99f52deb7fd",
+  "fix1_wire_policy": "COMPACT_ARRAY_V1",
+  "fix2_mtu_policy": "OPTIONAL_ACK_OMISSION_THEN_DROP_OVERSIZE_V1",
+  "safe_unreliable_packet_bytes": 1350,
+  "trigger": {
+    "exact_windows_warning": "Sending 1418 bytes unreliably which is above the MTU (1392)",
+    "failure": "physical transfer-mode mismatch caused peer quarantine/disconnect and cascading M7 item/player convergence failures",
+    "reason_for_fix2": "fix1 compacts the ACK sidecar, but fix2 adds a hard invariant so future payload growth cannot reintroduce fragmented raw unreliable frames"
+  },
+  "implementation": [
+    "measure exact canonical ProtocolFrame v2 UTF-8 bytes before boundary.send_to_peer",
+    "preserve fix1 COMPACT_ARRAY_V1 ACK wire representation",
+    "retry oversized movement snapshot once without optional prediction_ack",
+    "skip oversized no-ACK realtime snapshot instead of fragmenting it",
+    "leave reliable full/resync snapshots and canonical gameplay snapshot checksums unchanged",
+    "report ACK omissions, prevented oversized candidates, MTU drops and max candidate/sent byte counts"
+  ],
+  "focused_test": "tests/network/test_m7_sequence_reconciliation_fix10_fix2.gd",
+  "runner": "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1",
+  "required_windows_gate": [
+    "editor import/composition PASS",
+    "FIX10 fix2 MTU preflight focused PASS",
+    "existing FIX10 focused PASS",
+    "FIX9/FIX8/NX4 regressions PASS",
+    "full -IncludeTwoClientProcess PASS",
+    "no ENet unreliable-over-MTU warning",
+    "no transport physical protocol violation/quarantine"
+  ],
+  "status": "IMPLEMENTED CANDIDATE — exact Windows validation required"
+}
