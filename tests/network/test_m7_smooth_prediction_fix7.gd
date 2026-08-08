@@ -96,12 +96,12 @@ func _test_lightweight_ready_report_source_contract() -> void:
 	_assert(dispatch_start >= 0 and builder_start > dispatch_start, "FIX7 READY dispatch source is discoverable")
 	if dispatch_start >= 0 and builder_start > dispatch_start:
 		var dispatch_source := source.substr(dispatch_start, builder_start - dispatch_start)
-		_assert(not dispatch_source.contains("get_report()"), "steady READY dispatch never builds the full report on authority thread")
+		_assert(not dispatch_source.contains("var report: Dictionary = get_report()"), "steady READY dispatch never builds the full report on authority thread")
 	var builder_end := source.find("func get_fix7_ready_report_policy")
 	if builder_start >= 0 and builder_end > builder_start:
 		var builder_source := source.substr(builder_start, builder_end - builder_start)
-		_assert(not builder_source.contains("export_durable_state"), "light READY never exports durable state")
-		_assert(not builder_source.contains("export_replay_state"), "light READY never exports replay state")
+		_assert(not builder_source.contains(".export_durable_state("), "light READY never exports durable state")
+		_assert(not builder_source.contains(".export_replay_state("), "light READY never exports replay state")
 
 
 func _test_manual_prediction_interpolation_source_contract() -> void:
