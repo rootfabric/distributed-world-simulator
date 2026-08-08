@@ -81,6 +81,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			"line": line,
 			"anchor": anchor,
 			"scene": scene,
+			"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
 		}
 
 	var removed := 0
@@ -106,6 +107,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			return _result(false, "PRESENTATION_ROOT_NOT_NODE3D", {"item_id": item_id})
 		var visual := instance as Node3D
 		visual.name = _visual_name(item_id)
+		visual.transform = plan.get("local_transform", Transform3D.IDENTITY)
 		var anchor: Node3D = plan["anchor"]
 		anchor.add_child(visual)
 		_visuals_by_item[item_id] = visual
