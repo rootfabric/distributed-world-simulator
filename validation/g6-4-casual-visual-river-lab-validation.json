@@ -65,7 +65,5 @@
     "terrain_bank_coupling": "G8_GEOMORPHOLOGY",
     "layered_geology": "G9_LAYERED_GEOLOGY"
   },
-  "documentation_head_after_candidate": "e55f129361db561a233027d9d30d6446ec190f1b",
-  "current_candidate_metadata_head": "a3c2d429db7ecbee4f821aa9e9055e5b32d7d388",
   "next_if_accepted": "G6_FULL_ACCEPTANCE"
 }
