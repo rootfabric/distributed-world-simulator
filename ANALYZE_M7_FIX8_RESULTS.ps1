@@ -11,12 +11,35 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$ServerResultPolicy = "TERMINAL_PASS_OR_READY_HEALTHY_V1"
+
 function Read-RequiredJson {
     param([string]$Path, [string]$Label)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         throw "$Label JSON not found: $Path"
     }
     return (Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json)
+}
+
+function Test-HealthyServerResult {
+    param([object]$Server)
+
+    # A dedicated authority is intentionally long-lived. The playable harness can
+    # capture server.json while the authority is still in READY and only terminate
+    # it after both clients have completed. In that valid case `passed` is false
+    # because the server never entered a terminal COMPLETE state. Do not turn that
+    # lifecycle detail into a false FIX8 failure. A non-terminal READY report is
+    # accepted only when the authority is configured and has no runtime rejection,
+    # fixed-tick failure, or explicit error code.
+    if ([bool]$Server.passed) { return $true }
+    if ([string]$Server.state -ne "READY") { return $false }
+    if (-not [bool]$Server.configured) { return $false }
+    if (-not [string]::IsNullOrWhiteSpace([string]$Server.last_error_code)) { return $false }
+    if ([int]$Server.rejections -gt 0) { return $false }
+    if ($null -ne $Server.fixed_tick_simulation -and [int]$Server.fixed_tick_simulation.failures -gt 0) {
+        return $false
+    }
+    return $true
 }
 
 function Get-RemoteSummary {
@@ -87,9 +110,12 @@ $ClientB = Read-RequiredJson -Path $ClientBJson -Label "Client B"
 $A = Get-ClientSummary -Client $ClientA -Label "A"
 $B = Get-ClientSummary -Client $ClientB -Label "B"
 $Realtime = $Server.realtime_foundation
+$ServerHealthy = Test-HealthyServerResult -Server $Server
 
 $Failures = @()
-if (-not [bool]$Server.passed) { $Failures += "Server result is not passed" }
+if (-not $ServerHealthy) {
+    $Failures += "Server result is neither terminal PASS nor a healthy READY authority"
+}
 foreach ($Client in @($A, $B)) {
     if (-not $Client.passed) { $Failures += "Client $($Client.label) result is not passed" }
     if ($Client.clock_alignment_policy -ne "SEQUENCE_MATCHED_FUTURE_TICK_PREALIGN_V1") {
@@ -130,6 +156,7 @@ $RemoteFollowupRequired = $RemoteUnderruns -gt 0
 $Result = [ordered]@{
     schema = "planet_simulator.m7_fix8_result_analysis.v1"
     passed = ($Failures.Count -eq 0)
+    server_result_policy = $ServerResultPolicy
     thresholds = [ordered]@{
         max_prediction_error_m = $MaxPredictionErrorM
         max_visual_offset_m = $MaxVisualOffsetM
@@ -137,6 +164,9 @@ $Result = [ordered]@{
         max_report_build_ms = $MaxReportBuildMs
     }
     server = [ordered]@{
+        healthy = $ServerHealthy
+        terminal_passed = [bool]$Server.passed
+        state = [string]$Server.state
         process_max_duration_ms = $ServerProcessMs
         report_max_snapshot_build_duration_ms = $ReportBuildMs
         slow_process_frames = [int]$Realtime.slow_process_frames
@@ -152,7 +182,8 @@ $Result = [ordered]@{
 
 Write-Host ""
 Write-Host "M7 FIX8 result analysis" -ForegroundColor Cyan
-Write-Host ("Server: process max={0:N3} ms, report build max={1:N3} ms" -f $ServerProcessMs, $ReportBuildMs)
+Write-Host ("Server: healthy={0}, state={1}, terminal_pass={2}, process max={3:N3} ms, report build max={4:N3} ms" -f `
+    $ServerHealthy, [string]$Server.state, [bool]$Server.passed, $ServerProcessMs, $ReportBuildMs)
 foreach ($Client in @($A, $B)) {
     Write-Host ("Client {0}: corrections={1}, hard={2}, max error={3:N4} m, visual now/max bounded={4:N4}/{5:N4} m, clock align={6} events/{7} ticks, remote moving underruns={8}" -f `
         $Client.label, $Client.corrections, $Client.hard_corrections, $Client.maximum_error_m, $Client.visual_offset_m, $Client.max_bounded_visual_offset_m, $Client.clock_alignment_events, $Client.clock_alignment_ticks, $Client.remote.moving_buffer_underruns)
