@@ -1,9 +1,9 @@
 # G4 — Provider Composition / Replacement — candidate
 
-**Дата:** 2026-08-08  
-**Ветка:** `feature/g4-provider-composition-replacement`  
-**Base:** `docs/universal-world-generation-roadmap-post-g3 @ 21d325ccaa60c43d9f0ffdf927f8e2a8b84e2b96`  
-**G3 accepted head:** `bc58f650ffb43775667bf0d07cb361a98a40d294`  
+**Дата:** 2026-08-08
+**Ветка:** `feature/g4-provider-composition-replacement`
+**Base:** `docs/universal-world-generation-roadmap-post-g3 @ 21d325ccaa60c43d9f0ffdf927f8e2a8b84e2b96`
+**G3 accepted head:** `bc58f650ffb43775667bf0d07cb361a98a40d294`
 **Статус:** `IMPLEMENTED CANDIDATE`
 
 ## Цель
