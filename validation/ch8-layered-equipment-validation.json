@@ -1,39 +1,26 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v9",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v10",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX4_PROTECTED_OVERLAY_PENDING_WINDOWS_RERUN",
-  "goal": "Preserve canonical layered equipment while preventing coarse base-body suppression from deleting underwear, limbs and knee boundaries around open modular garments.",
-  "windows_ch8a_acceptance": {
-    "focused_layer_contract": "PASS 57 assertions",
-    "focused_presentation_diff": "PASS 51 assertions",
-    "accepted_ch7_8_regression": "PASS",
-    "combined_runner": "PASS",
-    "real_part_probe": "PASS 4 scenes / 26 meshes",
-    "decision": "ACCEPTED"
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX5_LOWER_LEG_BOOT_COVERAGE_PENDING_WINDOWS_RERUN",
+  "goal": "Keep underwear and the open knee presentation visible while suppressing base shins/feet that visibly poke through the real Male_Peasant lower and foot meshes.",
+  "windows_acceptance_so_far": {
+    "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
+    "ch8b": "ACCEPTED — selective real parts 39 assertions, real presenter 46 assertions, combined regression PASS",
+    "ch8c_core_before_visual_tuning": "PASS 69 assertions",
+    "runtime_error_gate": "ENABLED — full CH8 runner rejects any Godot ERROR line"
   },
-  "windows_ch8b_acceptance": {
-    "focused_factory_pose": "PASS 39 assertions",
-    "focused_real_presenter": "PASS 46 assertions",
-    "accepted_ch7_8_regression": "PASS",
-    "accepted_ch8a_regression": "PASS",
-    "combined_runner": "PASS",
-    "decision": "ACCEPTED"
-  },
-  "windows_ch8c_history": {
-    "attempt1": "PARSE_FAIL external class setup resolution",
-    "attempt2_core": "PASS 69 assertions",
-    "attempt2_graphical_lab": "PARSE_FAIL local enabled type inference",
-    "attempt3_graphical_lab_marker": "PASS 23 assertions but REJECTED because runtime String formatting ERROR lines were present",
-    "runtime_error_gate_added": true
-  },
-  "graphical_observation_before_fix4": {
-    "upper": "Garment equips, but base underwear/pelvis disappears.",
-    "lower": "Garment equips, but knee area disappears.",
-    "classification": "COARSE_BODY_COVERAGE_TOO_AGGRESSIVE_AT_OPEN_GARMENT_BOUNDARIES",
-    "architecture_rejected": false,
-    "mask_policy_rejected": true
+  "graphical_tuning_history": {
+    "coarse_mask": {
+      "observation": "Upper removed underwear/pelvis and lower removed knee area.",
+      "decision": "REJECTED_MASK_POLICY"
+    },
+    "fix4_protected_overlay": {
+      "positive": "Underwear/pelvis no longer disappears.",
+      "remaining_problem": "Base legs visibly poke through trousers and the foot/boot mesh.",
+      "decision": "FIX5_REQUIRED"
+    }
   },
   "canonical_contract": {
     "plain_equip_remains_strict": true,
@@ -42,19 +29,22 @@
     "compatible_layers_survive_replacement": true,
     "item_graph_changes": false,
     "network_changes": false,
-    "gameplay_body_changes": false
+    "gameplay_body_changes": false,
+    "collision_changes": false
   },
-  "fix4_policy": {
-    "principle": "Suppress only safely covered body cores for open layered garments; preserve visible garment boundaries and allow overlay-only parts.",
+  "fix5_policy": {
+    "principle": "Use garment-specific fine body cores. Preserve underwear and an explicit knee band, but suppress shin and boot volumes that are actually enclosed by the real modular meshes.",
     "coarse_regions_preserved_for_closed_outfits": [
       "body.region.torso",
       "body.region.arms",
       "body.region.legs",
       "body.region.feet"
     ],
-    "fine_regions_added": [
+    "fine_regions": [
       "body.region.torso.core",
-      "body.region.thighs.core"
+      "body.region.thighs.core",
+      "body.region.shins.core",
+      "body.region.feet.core"
     ],
     "male_peasant": {
       "upper": {
@@ -64,62 +54,66 @@
       },
       "lower": {
         "garment_meshes": ["Male_Peasant_Legs"],
-        "coverage": ["body.region.thighs.core"],
-        "preserves": ["pelvis_underwear", "knees", "lower_legs", "feet"]
+        "coverage": ["body.region.thighs.core", "body.region.shins.core"],
+        "preserves": ["pelvis_underwear", "knee_band", "feet"]
       },
       "feet": {
         "garment_meshes": ["Male_Peasant_Feet"],
-        "coverage": [],
-        "mode": "OVERLAY_ONLY",
-        "preserves": ["feet", "ankles"]
+        "coverage": ["body.region.feet.core"],
+        "preserves": ["coarse_feet_semantics"]
       }
+    },
+    "real_part_bounds": {
+      "male_peasant_legs_y": "0.403 .. 1.054 m",
+      "male_peasant_feet_y": "-0.004 .. 0.448 m"
     },
     "thresholds": {
       "torso_core_min_y": "base_min_y + base_height * 0.56",
       "torso_core_max_y": "base_min_y + base_height * 0.86",
-      "torso_core_half_x": "base_width * 0.20",
       "thighs_core_min_y": "base_min_y + base_height * 0.39",
       "thighs_core_max_y": "base_min_y + base_height * 0.56",
-      "thighs_core_half_x": "base_width * 0.16"
+      "shins_core_min_y": "base_min_y + base_height * 0.24",
+      "shins_core_max_y": "base_min_y + base_height * 0.33",
+      "feet_core_max_y": "base_min_y + base_height * 0.25"
     },
+    "protected_knee_band": "shins_core_max_y .. thighs_core_min_y",
+    "boot_shin_overlap": true,
     "accepted_presenter_changed": false,
     "accepted_wearable_catalog_changed": false,
     "accepted_pose_bridge_changed": false,
     "ch7_8_full_outfit_path_changed": false,
     "presentation_only": true,
-    "runtime_mesh_surgery": false,
-    "collision_changes": false,
-    "item_graph_changes": false,
-    "network_changes": false
+    "runtime_mesh_surgery": false
   },
-  "fix4_commits": {
-    "fine_region_adapter": "f6a32f4726565397195715e98488de5fabe6ff6f",
-    "protected_region_material": "68f8c3b2089fd764f4fc084bd34add5aa5ef11e7",
-    "peasant_coverage_policy": "8b938e9f08ad9069bb10ef90122ee429a6a8ffcd",
-    "protected_core_test": "c13727c2f22acd25212924f27cb63c2a41e532f6",
-    "protected_lab_test": "be25e5706bc9469ac48bd5dd1e487129033ede80",
-    "design_doc": "fa4396617cf3588be4ef12fa71c64baf07ea63c5"
+  "fix5_commits": {
+    "fine_region_adapter": "927b88ea87aceac592c06cd745a43b22e6a97791",
+    "lower_leg_boot_material": "516238f49c8253a63b4d1b46678405121e6dc724",
+    "peasant_coverage_policy": "4e39d86940c77235d7d2c84dca2d776e3376efd6",
+    "graphical_smoke_gate": "505ee68e279e3d72d36c190724c053b55b5db931",
+    "focused_lower_leg_boot_gate": "65d2db178c3cc493b3c65f04a852c4e6fd61b8e4",
+    "runner": "4edd47d7a7fb4470fe15130eeb2a48b7e39a48dc",
+    "design_doc": "ef6219a0be888843b207bf444a971664d2b2eab1"
   },
   "pending_windows_gates": {
-    "focused_protected_suppression": "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd",
+    "focused_existing_protected_suppression": "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd",
+    "focused_fix5_lower_leg_boot": "res://tests/characters/test_ch8c_quaternius_lower_leg_boot_coverage.gd",
     "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
     "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
-    "require_no_runtime_error_lines": true,
     "required_graphical": [
-      "U no longer removes underwear/pelvis or arms",
-      "L no longer removes knees/lower legs",
-      "K overlays without removing feet/ankles",
-      "central torso/thigh body does not visibly poke through garment in idle/motion",
-      "U+L+K composition remains coherent",
-      "walk/run/jump/crouch remain coherent",
+      "underwear/pelvis still remains visible",
+      "open knee band remains visible",
+      "base shin no longer pokes through trousers",
+      "base ankle/foot no longer pokes through foot/boot mesh",
+      "U+L+K remains coherent in movement/crouch/jump",
       "helmet/backpack remain coherent",
       "FP/TP and shadow remain coherent"
-    ]
+    ],
+    "require_no_runtime_error_lines": true
   },
   "deferred": [
-    "authored vertex or UV coverage masks if protected geometric cores are still visually insufficient",
-    "per-garment authored coverage volumes",
+    "authored vertex or UV coverage masks if geometric fine cores remain insufficient",
+    "per-garment authored/generated coverage volumes",
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
     "persistence",
