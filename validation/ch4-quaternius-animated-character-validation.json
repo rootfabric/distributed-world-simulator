@@ -2,8 +2,8 @@
   "schema": "planet_simulator.ch4_quaternius_animated_character_validation.v1",
   "branch": "feature/ch4-quaternius-animated-character",
   "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
-  "delivery": "fix2",
-  "decision": "FIX2_WINDOWS_STRICT_EXTERNAL_PASS_PENDING_GRAPHICAL_AND_CASE_WARNING_CLEANUP",
+  "delivery": "fix3",
+  "decision": "FIX2_GRAPHICAL_PASS_FIX3_CASE_NORMALIZATION_PENDING_RERUN",
   "scope": {
     "production_files_changed": 0,
     "integration_mode": "isolated_walkable_character_lab",
@@ -40,6 +40,12 @@
     "recursive_recovery": "If the aliased file is not in the referenced directory, the closest unique matching file inside the same Quaternius asset root may be used",
     "ambiguity_policy": "Multiple equally close candidates remain a hard failure with candidate diagnostics; no arbitrary texture is selected"
   },
+  "fix3": {
+    "installer_directory_case": "After extraction, Quaternius directories named Textures are normalized to lowercase textures through a two-step case-safe rename",
+    "reason": "The official package contains references that request lowercase textures paths; leaving uppercase Textures is non-fatal on Windows but unsafe for Linux and case-sensitive export targets",
+    "production_files_changed": 0,
+    "requires_asset_reinstall": true
+  },
   "local_engine": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
     "source_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz"
@@ -75,16 +81,34 @@
       "character_lab": "9/9 PASS",
       "overall": "PASS"
     },
+    "graphical_run": {
+      "asset_mode": "QUATERNIUS_RETARGET",
+      "semantic_at_capture": "idle",
+      "animation_at_capture": "Idle",
+      "matched_bones": 65,
+      "real_model_visible": true,
+      "walking_confirmed_by_user": true,
+      "running_with_shift_confirmed_by_user": true,
+      "movement_direction_confirmed_correct_by_user": true,
+      "overall": "PASS"
+    },
     "strict_external_path_confirmed": true,
     "fallback_not_accepted_by_strict_gate": true,
-    "remaining_warning": "Godot still reports case-mismatch requests for lowercase textures paths versus extracted Textures directories; this is non-fatal on Windows but must be cleaned before Linux/export acceptance"
+    "remaining_warning": "Before fix3 reinstall Godot reports lowercase textures requests versus extracted uppercase Textures directories"
+  },
+  "first_person_direction": {
+    "recommended_mode": "FULL_BODY_FIRST_PERSON_WITH_LOCAL_HEAD_MASK",
+    "camera_authority": "Camera remains owned by player/controller at stable eye height and is not parented to the animated head bone",
+    "local_visibility": "Keep torso, arms and legs visible; hide local head/hair/eyes to prevent camera self-clipping",
+    "network_impact": "None; first-person masking is local presentation only",
+    "production_integration_target": "Future CH5 adapter should replace LunarPlayer visual_root full hide in first-person with presenter.set_first_person_mode(true)"
   },
   "real_asset_acceptance_gate": {
-    "status": "WINDOWS_STRICT_HEADLESS_PASS_GRAPHICAL_PENDING",
+    "status": "WINDOWS_STRICT_AND_GRAPHICAL_PASS_FIX3_CASE_RERUN_PENDING",
     "remaining_required": [
-      "graphical HUD asset mode is QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED",
-      "Idle/Walk/Run visibly animate the real Base Character",
-      "case-mismatch warnings are eliminated or proven to be stale import-cache only before Linux/export acceptance"
+      "pull fix3 and rerun INSTALL_CH4_QUATERNIUS_ASSETS.ps1 using the already downloaded ZIP files",
+      "RUN_CH4_QUATERNIUS_CHARACTER_TESTS.ps1 remains PASS",
+      "editor import no longer emits textures versus Textures case-mismatch warnings"
     ]
   }
 }
