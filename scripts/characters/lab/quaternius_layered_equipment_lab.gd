@@ -16,6 +16,9 @@ const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 
+const REGION_TORSO_CORE := "body.region.torso.core"
+const REGION_THIGHS_CORE := "body.region.thighs.core"
+
 var layered_rig_adapter
 var body_coverage_catalog
 var body_suppression_coordinator
@@ -65,21 +68,26 @@ func _setup_layered_equipment() -> void:
 			"presentation": "wearable.layer.upper.peasant",
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-			"regions": ["body.region.torso", "body.region.arms"]
+			# Preserve underwear/pelvis and the complete base arms. Only the
+			# central torso volume under the shirt is clipped.
+			"regions": [REGION_TORSO_CORE]
 		},
 		{
 			"profile": LOWER_PROFILE_ID,
 			"presentation": "wearable.layer.lower.peasant",
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
-			"regions": ["body.region.legs"]
+			# Preserve the knee/lower-leg band and the pelvis/underwear edge.
+			"regions": [REGION_THIGHS_CORE]
 		},
 		{
 			"profile": FEET_PROFILE_ID,
 			"presentation": "wearable.layer.feet.peasant",
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
-			"regions": ["body.region.feet"]
+			# Current Peasant feet are safe as an overlay; do not remove the base
+			# extremity. A closed boot can opt into coarse feet coverage later.
+			"regions": []
 		}
 	]
 
