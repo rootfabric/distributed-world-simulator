@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.validation.m7_sequence_reconciliation_fix10_fix5.v1",
+  "stage": "M7 FIX10 fix5 — Composite ACK Semantic Identity",
+  "branch": "feature/m7-sequence-aware-reconciliation-fix10-fix5-composite-ack-identity",
+  "base": {
+    "stage": "M7 FIX10 fix4 — ACK Timeline + MTU Headroom",
+    "commit": "e0aab932904c8951c935147f607f85f32b12d128",
+    "automated_windows_gate": "PASS_WITH_FIX5_BLOCKER",
+    "two_client_graphical": "51/51 PASS"
+  },
+  "trigger": {
+    "run": "m7-playable-9876",
+    "client": "b",
+    "fix10_ack_mismatches": 1,
+    "fix10_ack_registration_rejections": 0,
+    "sidecars_received": 17,
+    "sidecars_registered": 16,
+    "sidecars_rejected": 1,
+    "standalone_ack_received": 4,
+    "standalone_ack_registered": 4,
+    "standalone_ack_rejected": 0,
+    "hard_corrections": 0
+  },
+  "diagnosis": {
+    "old_assumption": "client_tick_uniquely_identifies_prediction_ack",
+    "actual_contract": "multiple_input_sequences_may_target_same_future_client_tick",
+    "cause": "same_client_tick_different_input_sequence_was_rejected_as_semantic_conflict",
+    "scope": "ack_registration_only_not_transport_or_ack_shape"
+  },
+  "implementation": {
+    "ack_identity_policy": "CLIENT_TICK_AND_WRAP_AWARE_INPUT_SEQUENCE_V1",
+    "semantic_key": ["client_tick", "input_sequence"],
+    "same_tick_ordering": "WRAP_AWARE_INPUT_SEQUENCE",
+    "newer_same_tick": "SUPERSEDE",
+    "older_same_tick": "IGNORE_STALE",
+    "exact_key_different_baseline": "SEMANTIC_MISMATCH",
+    "repeated_exact_key": "PRESERVE_ACK_REPLAY",
+    "local_timeline_older_ack": "CLASSIFY_SUPERSEDED_NOT_HISTORY_MISS"
+  },
+  "focused_test": "res://tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd",
+  "required_windows_validation": [
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -FocusedOnly",
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -IncludeTwoClientProcess"
+  ],
+  "acceptance_targets": {
+    "fix10_ack_mismatches": 0,
+    "fix10_ack_registration_rejections": 0,
+    "sidecars_rejected": 0,
+    "standalone_ack_rejected": 0,
+    "hard_corrections": 0,
+    "movement_snapshots_dropped_for_mtu": 0,
+    "max_unreliable_sent_bytes_lte": 1350
+  },
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_VALIDATION_REQUIRED"
+}
