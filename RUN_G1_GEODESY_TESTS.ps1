@@ -37,13 +37,20 @@ try {
         throw "G1 headless editor import failed with exit code $LASTEXITCODE"
     }
 
-    & $GodotExecutable `
-        --headless `
-        --path $RootDir `
-        --script "res://tests/procedural/geodesy/g1_geodesy_body_shape_acceptance.gd"
+    $FocusedScripts = @(
+        "res://tests/procedural/geodesy/g1_geodesy_body_shape_acceptance.gd",
+        "res://tests/procedural/geodesy/g1_fly_in_continuity.gd"
+    )
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "G1 geodesy acceptance failed with exit code $LASTEXITCODE"
+    foreach ($FocusedScript in $FocusedScripts) {
+        & $GodotExecutable `
+            --headless `
+            --path $RootDir `
+            --script $FocusedScript
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "G1 focused acceptance failed for $FocusedScript with exit code $LASTEXITCODE"
+        }
     }
 }
 finally {
