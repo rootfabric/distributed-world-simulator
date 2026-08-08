@@ -1,12 +1,15 @@
 class_name CharacterEquipmentPresenter
 extends Node3D
 
+const SkinnedGarmentPoseBridge = preload("res://scripts/characters/equipment/skinned_garment_pose_bridge.gd")
+
 var character_visual_root: Node3D
 var rig_adapter: CharacterRigAdapter
 var presentation_catalog: WearablePresentationCatalog
 
 var _visuals_by_item: Dictionary = {}
 var _entry_lines_by_item: Dictionary = {}
+var _strategies_by_item: Dictionary = {}
 var _last_snapshot_fingerprint := ""
 
 
@@ -61,28 +64,53 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			return _result(false, String(resolved.get("code", "UNSUPPORTED_PRESENTATION")), resolved.get("details", {}))
 		var resolved_details: Dictionary = resolved.get("details", {})
 		var strategy := String(resolved_details.get("strategy", ""))
-		if strategy != WearablePresentationCatalog.STRATEGY_RIGID_ATTACHMENT:
+		var scene = resolved_details.get("scene")
+		if not scene is PackedScene:
+			return _result(false, "MISSING_PRESENTATION_SCENE", {"item_id": item_id})
+
+		if strategy == WearablePresentationCatalog.STRATEGY_RIGID_ATTACHMENT:
+			var anchor := rig_adapter.resolve_anchor(character_visual_root, entry.anchor_id)
+			if anchor == null:
+				return _result(false, CharacterEquipmentDomain.RESULT_UNSUPPORTED_ANCHOR, {
+					"anchor": entry.anchor_id,
+					"item_id": item_id,
+					"rig_profile_id": rig_adapter.rig_profile_id,
+				})
+			creation_plans[item_id] = {
+				"entry": entry,
+				"line": line,
+				"strategy": strategy,
+				"parent": anchor,
+				"scene": scene,
+				"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
+			}
+		elif strategy == WearablePresentationCatalog.STRATEGY_SKINNED_GARMENT:
+			var hidden_regions: Array = resolved_details.get("hide_body_regions", [])
+			if not hidden_regions.is_empty():
+				return _result(false, "SKINNED_BODY_REGION_HIDING_NOT_IMPLEMENTED", {
+					"item_id": item_id,
+					"hide_body_regions": hidden_regions.duplicate(),
+				})
+			var source_skeleton := rig_adapter.resolve_pose_skeleton(character_visual_root)
+			var skinned_parent := rig_adapter.resolve_skinned_parent(character_visual_root)
+			if source_skeleton == null:
+				return _result(false, "SKINNED_SOURCE_SKELETON_UNAVAILABLE", {"item_id": item_id})
+			if skinned_parent == null:
+				return _result(false, "SKINNED_PRESENTATION_PARENT_UNAVAILABLE", {"item_id": item_id})
+			creation_plans[item_id] = {
+				"entry": entry,
+				"line": line,
+				"strategy": strategy,
+				"parent": skinned_parent,
+				"source_skeleton": source_skeleton,
+				"scene": scene,
+				"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
+			}
+		else:
 			return _result(false, "PRESENTATION_STRATEGY_NOT_IMPLEMENTED", {
 				"strategy": strategy,
 				"item_id": item_id,
 			})
-		var anchor := rig_adapter.resolve_anchor(character_visual_root, entry.anchor_id)
-		if anchor == null:
-			return _result(false, CharacterEquipmentDomain.RESULT_UNSUPPORTED_ANCHOR, {
-				"anchor": entry.anchor_id,
-				"item_id": item_id,
-				"rig_profile_id": rig_adapter.rig_profile_id,
-			})
-		var scene = resolved_details.get("scene")
-		if not scene is PackedScene:
-			return _result(false, "MISSING_PRESENTATION_SCENE", {"item_id": item_id})
-		creation_plans[item_id] = {
-			"entry": entry,
-			"line": line,
-			"anchor": anchor,
-			"scene": scene,
-			"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
-		}
 
 	var removed := 0
 	var existing_ids := _visuals_by_item.keys().duplicate()
@@ -100,18 +128,40 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 	for raw_item_id in creation_plans.keys():
 		var item_id := String(raw_item_id)
 		var plan: Dictionary = creation_plans[item_id]
-		var scene: PackedScene = plan["scene"]
-		var instance = scene.instantiate()
-		if not instance is Node3D:
-			instance.free()
-			return _result(false, "PRESENTATION_ROOT_NOT_NODE3D", {"item_id": item_id})
-		var visual := instance as Node3D
+		var strategy := String(plan.get("strategy", ""))
+		var parent: Node3D = plan["parent"]
+		var visual: Node3D
+
+		if strategy == WearablePresentationCatalog.STRATEGY_RIGID_ATTACHMENT:
+			var scene: PackedScene = plan["scene"]
+			var instance = scene.instantiate()
+			if not instance is Node3D:
+				if instance is Node:
+					(instance as Node).free()
+				return _result(false, "PRESENTATION_ROOT_NOT_NODE3D", {"item_id": item_id})
+			visual = instance as Node3D
+			visual.transform = plan.get("local_transform", Transform3D.IDENTITY)
+			parent.add_child(visual)
+		elif strategy == WearablePresentationCatalog.STRATEGY_SKINNED_GARMENT:
+			var bridge = SkinnedGarmentPoseBridge.new()
+			parent.add_child(bridge)
+			var bridge_result: Dictionary = bridge.setup(
+				plan["source_skeleton"] as Skeleton3D,
+				plan["scene"] as PackedScene,
+				plan.get("local_transform", Transform3D.IDENTITY)
+			)
+			if not bool(bridge_result.get("success", false)):
+				parent.remove_child(bridge)
+				bridge.queue_free()
+				return _result(false, String(bridge_result.get("code", "SKINNED_GARMENT_SETUP_FAILED")), bridge_result.get("details", {}))
+			visual = bridge
+		else:
+			return _result(false, "PRESENTATION_STRATEGY_NOT_IMPLEMENTED", {"item_id": item_id, "strategy": strategy})
+
 		visual.name = _visual_name(item_id)
-		visual.transform = plan.get("local_transform", Transform3D.IDENTITY)
-		var anchor: Node3D = plan["anchor"]
-		anchor.add_child(visual)
 		_visuals_by_item[item_id] = visual
 		_entry_lines_by_item[item_id] = String(plan["line"])
+		_strategies_by_item[item_id] = strategy
 		created += 1
 
 	_last_snapshot_fingerprint = fingerprint
@@ -139,15 +189,19 @@ func get_visual(item_id: String) -> Node3D:
 
 func create_report() -> Dictionary:
 	var item_ids: Array[String] = []
+	var strategies: Dictionary = {}
 	for raw_item_id in _visuals_by_item.keys():
-		if _has_live_visual(String(raw_item_id)):
-			item_ids.append(String(raw_item_id))
+		var item_id := String(raw_item_id)
+		if _has_live_visual(item_id):
+			item_ids.append(item_id)
+			strategies[item_id] = String(_strategies_by_item.get(item_id, ""))
 	item_ids.sort()
 	return {
-		"schema": "planet_simulator.character_equipment_presenter.v1",
+		"schema": "planet_simulator.character_equipment_presenter.v2",
 		"rig_profile_id": rig_adapter.rig_profile_id if rig_adapter != null else "",
 		"snapshot_fingerprint": _last_snapshot_fingerprint,
 		"visual_item_ids": item_ids,
+		"visual_strategies": strategies,
 		"visual_count": item_ids.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
@@ -179,6 +233,7 @@ func _remove_visual(item_id: String) -> void:
 			(visual as Node).queue_free()
 	_visuals_by_item.erase(item_id)
 	_entry_lines_by_item.erase(item_id)
+	_strategies_by_item.erase(item_id)
 
 
 func _visual_name(item_id: String) -> String:
