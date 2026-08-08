@@ -34,12 +34,14 @@
   },
   "fix1": {
     "name": "T1A0_REGRESSION_HYGIENE_FIX1",
-    "implementation_head": "dbc118ad7272ff2419108c629d5d6d825af435c8",
+    "implementation_head": "197a4d1ba0c92ace0f7eb5c658a621ae15faaedf",
     "baseline_head_before_fix1": "f08c3401bd9fbd970c317f4d24a240a39668ee04",
     "per_step_user_profile_isolation": true,
     "multi_process_children_share_parent_step_profile": true,
     "breakpoint_runtime_disabled_in_headless_acceptance": true,
     "boot_persistence_initialized_is_required": true,
+    "breakpoint_port_collision_diagnostics_fail_regression": true,
+    "engine_exit_leak_diagnostics_fail_regression": true,
     "strict_runtime_error_steps": [
       "test_unified_runtime_boot",
       "test_world_switch_during_generation",
