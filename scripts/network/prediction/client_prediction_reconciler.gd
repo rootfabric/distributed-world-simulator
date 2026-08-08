@@ -12,9 +12,10 @@ extends "res://scripts/network/prediction/client_prediction_reconciler_nx4.gd"
 # receive T+3 while its prediction scheduler is still at T even though both sides
 # already agree on the active input sequence. Comparing T against T+3 creates an
 # artificial 0.3 m error at 6 m/s. FIX8 pre-simulates only this sequence-matched
-# bounded future gap, then advances the prediction clock without resetting the
-# scheduler's sub-tick phase. Real input-latency disagreement (different input
-# sequence) remains on the existing authoritative reconciliation path.
+# bounded future gap. A true clock-only snapshot whose kinematic state is already
+# identical advances only the clock. Both paths preserve the scheduler's sub-tick
+# phase instead of reconfiguring it. Real input-latency disagreement (different
+# input sequence) remains on the existing authoritative reconciliation path.
 #
 # FIX8 also makes visual correction continuity bounded and rate-limited. The old
 # compositor could preserve presentation continuity by accumulating repeated
@@ -30,6 +31,7 @@ const FIX8_CORRECTION_POLICY: String = "BOUNDED_CONTINUITY_OFFSET_RATE_LIMITED_D
 const FIX8_MAX_FUTURE_ALIGNMENT_TICKS: int = 8
 const FIX8_MAX_VISUAL_OFFSET_M: float = 0.50
 const FIX8_MAX_VISUAL_CORRECTION_SPEED_MPS: float = 2.50
+const FIX8_KINEMATIC_EPSILON_M: float = 0.000001
 
 var _fix7_render_samples: int = 0
 var _fix7_nonzero_subtick_samples: int = 0
@@ -38,6 +40,8 @@ var _fix7_max_extrapolation_m: float = 0.0
 
 var _fix8_clock_alignment_events: int = 0
 var _fix8_clock_alignment_ticks: int = 0
+var _fix8_clock_only_alignment_events: int = 0
+var _fix8_clock_only_alignment_ticks: int = 0
 var _fix8_max_future_gap_ticks: int = 0
 var _fix8_large_gap_alignment_skips: int = 0
 var _fix8_sequence_mismatch_alignment_skips: int = 0
@@ -50,6 +54,7 @@ var _fix8_max_decay_seconds: float = 0.0
 
 func reconcile(authoritative_player: Dictionary, server_tick: int) -> Dictionary:
 	var aligned_ticks: int = 0
+	var alignment_mode := "NONE"
 	if (
 		_configured
 		and server_tick >= _last_authoritative_tick
@@ -66,19 +71,60 @@ func reconcile(authoritative_player: Dictionary, server_tick: int) -> Dictionary
 			_fix8_sequence_mismatch_alignment_skips += 1
 		elif gap_ticks > FIX8_MAX_FUTURE_ALIGNMENT_TICKS:
 			_fix8_large_gap_alignment_skips += 1
+		elif _fix8_same_kinematic_state(authoritative_player, _predicted_state):
+			var clock_only_alignment: Dictionary = _fix8_align_clock_only_forward(
+				server_tick
+			)
+			if not bool(clock_only_alignment.get("success", false)):
+				return clock_only_alignment
+			aligned_ticks = int(
+				clock_only_alignment.get("details", {}).get("aligned_ticks", 0)
+			)
+			alignment_mode = "CLOCK_ONLY"
 		else:
 			var alignment: Dictionary = _fix8_align_prediction_forward(server_tick)
 			if not bool(alignment.get("success", false)):
 				return alignment
 			aligned_ticks = int(alignment.get("details", {}).get("aligned_ticks", 0))
+			alignment_mode = "SIMULATED"
 
 	var result: Dictionary = super.reconcile(authoritative_player, server_tick)
 	if bool(result.get("success", false)):
 		var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
 		details["fix8_clock_aligned_ticks"] = aligned_ticks
+		details["fix8_clock_alignment_mode"] = alignment_mode
 		details["fix8_clock_alignment_policy"] = FIX8_CLOCK_ALIGNMENT_POLICY
 		result["details"] = details
 	return result
+
+
+func _fix8_align_clock_only_forward(target_tick: int) -> Dictionary:
+	if target_tick <= _prediction_tick:
+		return _success({"aligned_ticks": 0})
+	var start_tick := _prediction_tick
+	var scheduler_alignment: Dictionary = _scheduler.align_forward_to_tick(target_tick)
+	if not bool(scheduler_alignment.get("success", false)):
+		return _failure(
+			String(scheduler_alignment.get(
+				"error_code", "FIX8_PREDICTION_CLOCK_ALIGNMENT_FAILED"
+			)),
+			Dictionary(scheduler_alignment.get("details", {}))
+		)
+	_prediction_tick = target_tick
+	var aligned_ticks := target_tick - start_tick
+	_fix8_clock_alignment_events += 1
+	_fix8_clock_alignment_ticks += aligned_ticks
+	_fix8_clock_only_alignment_events += 1
+	_fix8_clock_only_alignment_ticks += aligned_ticks
+	return _success({
+		"aligned_ticks": aligned_ticks,
+		"prediction_tick": _prediction_tick,
+		"preserved_subtick_seconds": float(
+			scheduler_alignment.get("details", {}).get(
+				"preserved_accumulator_seconds", 0.0
+			)
+		),
+	})
 
 
 func _fix8_align_prediction_forward(target_tick: int) -> Dictionary:
@@ -119,6 +165,30 @@ func _fix8_align_prediction_forward(target_tick: int) -> Dictionary:
 			)
 		),
 	})
+
+
+func _fix8_same_kinematic_state(left: Dictionary, right: Dictionary) -> bool:
+	if left.is_empty() or right.is_empty():
+		return false
+	if int(left.get("last_input_sequence", 0)) != int(right.get("last_input_sequence", 0)):
+		return false
+	if _position(left).distance_to(_position(right)) > FIX8_KINEMATIC_EPSILON_M:
+		return false
+	if _fix8_velocity(left).distance_to(_fix8_velocity(right)) > FIX8_KINEMATIC_EPSILON_M:
+		return false
+	return is_equal_approx(
+		float(left.get("orientation_yaw", 0.0)),
+		float(right.get("orientation_yaw", 0.0))
+	)
+
+
+func _fix8_velocity(state: Dictionary) -> Vector3:
+	var value: Dictionary = Dictionary(state.get("velocity", {}))
+	return Vector3(
+		float(value.get("x", 0.0)),
+		float(value.get("y", 0.0)),
+		float(value.get("z", 0.0))
+	)
 
 
 func _apply_correction(presentation_offset: Vector3, error_m: float) -> void:
@@ -240,6 +310,8 @@ func get_report() -> Dictionary:
 	report["max_future_alignment_ticks"] = FIX8_MAX_FUTURE_ALIGNMENT_TICKS
 	report["clock_alignment_events"] = _fix8_clock_alignment_events
 	report["clock_alignment_ticks"] = _fix8_clock_alignment_ticks
+	report["clock_only_alignment_events"] = _fix8_clock_only_alignment_events
+	report["clock_only_alignment_ticks"] = _fix8_clock_only_alignment_ticks
 	report["max_future_gap_ticks"] = _fix8_max_future_gap_ticks
 	report["large_gap_alignment_skips"] = _fix8_large_gap_alignment_skips
 	report["sequence_mismatch_alignment_skips"] = _fix8_sequence_mismatch_alignment_skips
