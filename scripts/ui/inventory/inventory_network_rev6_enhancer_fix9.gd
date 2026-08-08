@@ -57,16 +57,26 @@ func _fix9_layout_sort_button_if_needed(button: Button, panel) -> int:
 	if not is_instance_valid(button) or not is_instance_valid(panel) or not panel is Control:
 		return -1
 	var panel_rect: Rect2 = (panel as Control).get_global_rect()
+	# Control clamps `size` to its combined minimum size. The accepted button
+	# factory asks for 112x30, while Godot 4.7.1's default Button theme is already
+	# at least 31 px high (and the real Russian caption can require >112 px width).
+	# Comparing against the unattainable nominal size makes every frame look
+	# changed and recreates the exact hot-path churn FIX9 is meant to remove.
+	var minimum_size: Vector2 = button.get_combined_minimum_size()
+	var target_size := Vector2(
+		maxf(SORT_BUTTON_SIZE.x, minimum_size.x),
+		maxf(SORT_BUTTON_SIZE.y, minimum_size.y)
+	)
 	var target_position := Vector2(
-		panel_rect.end.x - SORT_BUTTON_SIZE.x - SORT_BUTTON_MARGIN.x,
+		panel_rect.end.x - target_size.x - SORT_BUTTON_MARGIN.x,
 		panel_rect.position.y + SORT_BUTTON_MARGIN.y
 	)
-	var size_changed: bool = button.size.distance_to(SORT_BUTTON_SIZE) > FIX9_LAYOUT_EPSILON
+	var size_changed: bool = button.size.distance_to(target_size) > FIX9_LAYOUT_EPSILON
 	var position_changed: bool = button.global_position.distance_to(target_position) > FIX9_LAYOUT_EPSILON
 	if not size_changed and not position_changed:
 		return 0
 	if size_changed:
-		button.size = SORT_BUTTON_SIZE
+		button.size = target_size
 	if position_changed:
 		button.global_position = target_position
 	return 1
