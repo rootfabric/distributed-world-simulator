@@ -10,13 +10,13 @@ if [[ -z "$GODOT_BIN" ]]; then
 fi
 
 printf '%s\n' '=== G6.3 accepted dependency gate ==='
-"$ROOT_DIR/RUN_G6_3_RUNTIME_WATER_QUERY_TESTS.sh"
+bash "$ROOT_DIR/RUN_G6_3_RUNTIME_WATER_QUERY_TESTS.sh"
 
 printf '%s\n' '=== G6.4 source / P0 contract gate ==='
 "$GODOT_BIN" --headless --path "$ROOT_DIR" --script res://tests/procedural/hydrology/g6_4_casual_visual_river_lab_acceptance.gd
 
 printf '%s\n' '=== G6.4 headless scene smoke ==='
-"$GODOT_BIN" --headless --path "$ROOT_DIR" res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
+"$GODOT_BIN" --headless --path "$ROOT_DIR" --scene res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn --quit-after 2
 
 printf '%s\n' 'G6.4 Casual Visual River Lab automated gate passed.'
 printf '%s\n' 'Manual graphical observation is still required before G6.4 acceptance.'
