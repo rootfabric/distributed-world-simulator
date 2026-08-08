@@ -12,6 +12,7 @@ func _init() -> void:
 	_test_manifest()
 	_test_files_and_scene_contract()
 	_test_visual_source_contract()
+	_test_adaptive_lod_contract()
 	_test_p0_boundaries()
 	_finish()
 
@@ -23,11 +24,12 @@ func _test_manifest() -> void:
 	if not parsed is Dictionary:
 		return
 	_check(String(parsed.get("checkpoint", "")) == "g6.4-casual-visual-river-lab", "G6.4 checkpoint pinned")
-	_check(String(parsed.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G6.4 candidate status pinned")
+	_check(String(parsed.get("status", "")) == "FIX2_IMPLEMENTED_CANDIDATE", "G6.4 fix2 candidate status pinned")
 	_check(String(parsed.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-08-R1", "G6.4 global revision pinned")
 	_check(String(parsed.get("scene", "")) == LAB_SCENE, "G6.4 scene pinned")
 	_check(String(parsed.get("script", "")) == LAB_SCRIPT, "G6.4 script pinned")
 	var dependencies: Dictionary = parsed.get("dependencies", {})
+	_check(String(dependencies.get("g2_surface_lod_selector", "")) == "ACCEPTED", "G6.4 consumes accepted G2 LOD")
 	_check(String(dependencies.get("g6_1_canonical_geography", "")) == "ACCEPTED", "G6.4 consumes accepted G6.1")
 	_check(String(dependencies.get("g6_2_cross_cell_cross_lod_continuity", "")) == "ACCEPTED", "G6.4 consumes accepted G6.2")
 	_check(String(dependencies.get("g6_3_runtime_water_surface_query", "")) == "ACCEPTED", "G6.4 consumes accepted G6.3")
@@ -37,6 +39,11 @@ func _test_manifest() -> void:
 	_check(bool(presentation.get("bank_guides", false)), "G6.4 bank guides enabled")
 	_check(bool(presentation.get("query_probes", false)), "G6.4 query probes enabled")
 	_check(bool(presentation.get("cube_face_seam_marker", false)), "G6.4 seam marker enabled")
+	_check(bool(presentation.get("adaptive_surface_lod_grid", false)), "G6.4 adaptive LOD grid enabled")
+	_check(bool(presentation.get("adaptive_river_sampling", false)), "G6.4 adaptive river sampling enabled")
+	_check(int(presentation.get("lod_min", -1)) == 0, "G6.4 LOD min pinned")
+	_check(int(presentation.get("lod_max", -1)) == 12, "G6.4 LOD max pinned")
+	_check(int(presentation.get("lod_leaf_budget", 0)) >= 1024, "G6.4 LOD leaf budget meaningful")
 	_check(float(presentation.get("water_width_exaggeration", 0.0)) > 1.0, "G6.4 visual width exaggeration explicit")
 	_check(String(parsed.get("next_if_accepted", "")) == "G6_FULL_ACCEPTANCE", "G6.4 next gate pinned")
 
@@ -48,6 +55,7 @@ func _test_files_and_scene_contract() -> void:
 	_check(scene_source.find("G64CasualVisualRiverLab") >= 0, "G6.4 scene root pinned")
 	_check(scene_source.find("SphereMesh") >= 0, "G6.4 scene has globe presentation")
 	_check(scene_source.find("Camera3D") >= 0, "G6.4 scene has camera")
+	_check(scene_source.find("near = 0.001") >= 0, "G6.4 camera supports near-surface LOD inspection")
 	_check(scene_source.find("DirectionalLight3D") >= 0, "G6.4 scene has lighting")
 	_check(scene_source.find("HUD") >= 0, "G6.4 scene has HUD")
 	_check(scene_source.find(LAB_SCRIPT) >= 0, "G6.4 scene loads lab script")
@@ -58,17 +66,44 @@ func _test_visual_source_contract() -> void:
 	_check(source.find("CasualRiverProvider.compile") >= 0, "G6.4 compiles accepted canonical geography")
 	_check(source.find("WaterSurfaceQuery.create") >= 0, "G6.4 creates accepted query contract")
 	_check(source.find("WaterSurfaceResolver.resolve") >= 0, "G6.4 consumes accepted G6.3 resolver")
-	_check(source.find("CubeSphereAddressing") >= 0, "G6.4 uses G2 addressing for debug seam only")
+	_check(source.find("CubeSphereAddressing") >= 0, "G6.4 uses G2 addressing for representation/debug")
 	_check(source.find("RiverRibbon") >= 0, "G6.4 ribbon presentation exists")
 	_check(source.find("CanonicalCenterline") >= 0, "G6.4 centerline debug exists")
 	_check(source.find("BankGuides") >= 0, "G6.4 bank debug exists")
 	_check(source.find("QueryProbes") >= 0, "G6.4 query probe debug exists")
 	_check(source.find("CubeFaceSeamMarkers") >= 0, "G6.4 seam debug exists")
+	_check(source.find("SurfaceLodGrid") >= 0, "G6.4 LOD grid presentation exists")
 	_check(source.find("WIDTH_EXAGGERATION") >= 0, "G6.4 visual width exaggeration explicit in source")
 	_check(source.find("DisplayServer.get_name() == \"headless\"") >= 0, "G6.4 supports headless smoke")
 	_check(source.find("PX") >= 0 and source.find("PZ") >= 0, "G6.4 PX/PZ coverage asserted")
-	for control in ["KEY_A", "KEY_D", "KEY_Q", "KEY_E", "KEY_W", "KEY_S", "KEY_SPACE", "KEY_R", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5"]:
+	for control in ["KEY_A", "KEY_D", "KEY_Q", "KEY_E", "KEY_W", "KEY_S", "KEY_SPACE", "KEY_R", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6"]:
 		_check(source.find(control) >= 0, "G6.4 control %s present" % control)
+
+
+func _test_adaptive_lod_contract() -> void:
+	var source := FileAccess.get_file_as_string(LAB_SCRIPT)
+	for required in [
+		"SurfaceLodPolicy",
+		"SurfaceLodSelector",
+		"BodyFixedPosition",
+		"selector.configure",
+		"selector.select_cells",
+		"_refresh_lod_presentation",
+		"_selected_lod_for_direction",
+		"_subdivisions_for_lod",
+		"representation_lod",
+		"_build_lod_grid_mesh",
+		"_lod_profile_for_distance",
+		"planned_river_samples",
+		"G6_4_HEADLESS_LOD_DID_NOT_REFINE",
+		"G6_4_HEADLESS_RIVER_REPRESENTATION_DID_NOT_REFINE",
+	]:
+		_check(source.find(required) >= 0, "G6.4 adaptive LOD source includes %s" % required)
+	_check(source.find("current_selection_hash") >= 0, "G6.4 LOD rebuild keyed by derived selection hash")
+	_check(source.find("current_max_lod") >= 0, "G6.4 exposes active max LOD")
+	_check(source.find("current_min_river_lod") >= 0 and source.find("current_max_river_lod") >= 0, "G6.4 exposes river representation LOD range")
+	_check(source.find("River samples:") >= 0, "G6.4 HUD exposes adaptive river sample count")
+	_check(source.find("Max LOD:") >= 0, "G6.4 HUD exposes adaptive max LOD")
 
 
 func _test_p0_boundaries() -> void:
@@ -87,6 +122,9 @@ func _test_p0_boundaries() -> void:
 			"visual_lab_mutates_world_state",
 			"visual_lab_owns_persistence",
 			"visual_lab_owns_network_transport",
+			"lod_selector_changes_canonical_geography",
+			"lod_selector_changes_fluid_region_id",
+			"lod_selector_changes_feature_id",
 		]:
 			_check(not bool(boundaries.get(key, true)), "G6.4 P0 boundary %s false" % key)
 
