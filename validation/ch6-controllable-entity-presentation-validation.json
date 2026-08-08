@@ -4,7 +4,8 @@
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
   "delivery": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation",
-  "decision": "FIX2_VISUAL_GROUND_COMPENSATION_CANDIDATE_PENDING_WINDOWS_RERUN",
+  "decision": "ACCEPTED",
+  "accepted_head_before_record": "48020c3c32b3ed71ccf4883f2ae4e245970db226",
   "accepted_previous_stage": {
     "stage": "CH6 fix1 / Shadow Preservation",
     "graphical_result": "PASS_BY_USER_OBSERVATION",
@@ -126,7 +127,8 @@
     "implementation_commits": [
       "6fcf451088fdd713ab3fccd93f52ad9128bdf63f",
       "5b02ea4269c9d97b1cdc1151dfd62f40c391b3b3",
-      "f24d8558cd615d86bd599ab85fa3abb771bd7c28"
+      "f24d8558cd615d86bd599ab85fa3abb771bd7c28",
+      "48020c3c32b3ed71ccf4883f2ae4e245970db226"
     ]
   },
   "shadow_preservation": {
@@ -161,7 +163,7 @@
     "parser_hotfix_probe": "PASS on Godot 4.7.1 double for explicitly typed dynamic capsule height conversion",
     "crouch_pelvis_grounding_probe": "PASS on Godot 4.7.1 double: hips Y preserved, hips X/Z filtered, root translation filtered",
     "visual_ground_compensation_probe": "PASS on exact Godot 4.7.1 double: QUATERNIUS crouch target/current offset=-0.35 m, standing restore=0.0 m",
-    "full_repository_suite": "pending Windows rerun with real Quaternius assets after visual-root grounding follow-up"
+    "full_repository_suite": "PASS on Windows real Quaternius asset acceptance rerun"
   },
   "windows_rerun_1": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
@@ -199,6 +201,22 @@
     "conclusion": "pelvis-only positional preservation is not sufficient for the real UAL1 crouch asset; apply presentation-root grounding compensation",
     "status": "SUPERSEDED_BY_VISUAL_ROOT_GROUND_COMPENSATION"
   },
+  "windows_rerun_4_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "external_assets_required": true,
+    "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
+    "editor_import": "PASS",
+    "avatar_presenter": "PASS 43 assertions",
+    "character_lab": "PASS 11 assertions",
+    "legacy_first_person_adapter": "PASS 26 assertions",
+    "first_person_jump_crouch_lab": "PASS 76 assertions",
+    "controllable_view_adapter_shadow": "PASS 66 assertions",
+    "shadow_proxy_contract": "PASS 21 assertions",
+    "acceptance_runner": "PASS",
+    "graphical_result": "PASS_BY_USER_OBSERVATION",
+    "user_observation": "crouching works correctly after visual-root ground compensation",
+    "accepted": true
+  },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
     "play_command": ".\\PLAY_CH6_CONTROLLABLE_PRESENTATION_LAB.ps1 -GodotPath $Godot",
@@ -219,12 +237,13 @@
       "V no longer rotates the model or shadow",
       "root motion remains disabled",
       "CH6 fix1 shadow tests remain PASS"
-    ]
+    ],
+    "status": "PASS"
   },
   "known_next_stage": {
-    "production_integration": "Do not integrate yet; accept fix2 graphically first",
+    "production_integration": "CH6 is accepted; production integration may now be implemented as a separate small branch so controller/network behavior remains isolated from the accepted presentation checkpoint",
     "jump_polish": "Optionally add Jump_Start/Jump_Land transitions later without changing the motion_state contract",
-    "production_crouch": "Implement clearance/network/authority rules in the future controller integration stage",
+    "production_crouch": "Implement stand-up clearance, network crouch state and authoritative collision reconciliation in the future controller integration stage",
     "controller_profiles": "Keep humanoid, drone, animal and other movement controllers independent from presentation profiles",
     "model_specific_offsets": "Keep asset calibration such as crouch visual grounding inside a model-specific presenter/config rather than generic movement/network code"
   }
