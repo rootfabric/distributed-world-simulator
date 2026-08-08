@@ -13,29 +13,34 @@ G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
-G6.4 FIX3 IMPLEMENTED CANDIDATE
+G6.4 FIX4 IMPLEMENTED CANDIDATE
 ```
 
-Fix3 candidate head:
+Fix3 Windows automated gate passed on `3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298`, but the manual close-up remained visually inconclusive because the visual G3 recipe contained only four octaves and therefore no source frequencies below roughly 75 km.
+
+Fix4 keeps accepted G3 provider code unchanged and changes only the debug recipe:
 
 ```text
-77e99819c319e8ad924485414c56f3dc14748844
+600 km base wavelength
+8 octaves
+0.58 persistence
+~4.7 km minimum source wavelength
 ```
 
-G6.4 now proves three separate representation layers without moving canonical truth into rendering:
+The lab still composes three independent representation layers:
 
 ```text
 G2 SurfaceLodSelector
         -> adaptive SurfaceCellKey cover
 
-G3 CasualMacroTerrainProviderV1
-        -> adaptive macro terrain mesh
+accepted G3 CasualMacroTerrainProviderV1
+        -> adaptive macro terrain mesh + higher-frequency lab recipe
 
-G6 canonical river + WaterSurfaceQuery
+accepted G6 canonical river + WaterSurfaceQuery
         -> adaptive derived water ribbon
 ```
 
-The previous fix2 manual run proved that the LOD grid refined, but the fixed sphere did not gain new visible detail. Fix3 hides that fixed sphere and rebuilds the visible surface from G2 leaves using G3 body-fixed macro-height samples. Near views therefore contain more actual terrain triangles and expose more sampled relief.
+Standalone G6.4 runs temporarily set `BREAKPOINT_RUNTIME_DISABLED=1`, so the unrelated MCP runtime bridge cannot fail the visual lab because port `127.0.0.1:9081` is occupied.
 
 Run:
 
@@ -45,18 +50,6 @@ $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-Manual expectation: `W` must not only shrink the LOD grid but also visibly refine the macro surface itself. River valley carving is not part of G6.4 and remains scheduled for G8 Geomorphology.
-
-Canonical detail:
-
-```text
-FeatureId / FluidRegionId / RiverSpline / G3 height samples
-```
-
-Derived presentation detail:
-
-```text
-SurfaceCellKey cover / terrain triangles / ribbon tessellation / debug grid
-```
+Manual expectation: `W` shrinks the LOD grid and must reveal genuinely new macro-height structure; `S` coarsens it. FeatureId and FluidRegionId must stay stable. River valley carving is not part of G6.4 and remains scheduled for G8 Geomorphology.
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
