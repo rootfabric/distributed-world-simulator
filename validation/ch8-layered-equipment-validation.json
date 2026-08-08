@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v10",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v11",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX5_LOWER_LEG_BOOT_COVERAGE_PENDING_WINDOWS_RERUN",
-  "goal": "Keep underwear and the open knee presentation visible while suppressing base shins/feet that visibly poke through the real Male_Peasant lower and foot meshes.",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX6_OPEN_GARMENT_SURFACE_FIT_PENDING_WINDOWS_RERUN",
+  "goal": "Keep skin available through open/torn trousers and below cuffs while removing unacceptable body poke-through by fitting the garment shell outward instead of clipping more of the fused base body.",
   "windows_acceptance_so_far": {
     "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
     "ch8b": "ACCEPTED — selective real parts 39 assertions, real presenter 46 assertions, combined regression PASS",
@@ -18,8 +18,13 @@
     },
     "fix4_protected_overlay": {
       "positive": "Underwear/pelvis no longer disappears.",
-      "remaining_problem": "Base legs visibly poke through trousers and the foot/boot mesh.",
+      "remaining_problem": "Base legs visibly poke through trousers and foot/boot mesh.",
       "decision": "FIX5_REQUIRED"
+    },
+    "fix5_lower_leg_boot_cores": {
+      "observation": "Trousers still show base-leg penetration and skin below the knee is removed in places where the open garment should reveal it.",
+      "classification": "SPATIAL_BODY_CLIP_CANNOT_REPRESENT_OPEN_OR_TORN_GARMENT_TOPOLOGY",
+      "decision": "REJECTED_VISUALLY_FIX6_REQUIRED"
     }
   },
   "canonical_contract": {
@@ -32,88 +37,82 @@
     "gameplay_body_changes": false,
     "collision_changes": false
   },
-  "fix5_policy": {
-    "principle": "Use garment-specific fine body cores. Preserve underwear and an explicit knee band, but suppress shin and boot volumes that are actually enclosed by the real modular meshes.",
-    "coarse_regions_preserved_for_closed_outfits": [
-      "body.region.torso",
-      "body.region.arms",
-      "body.region.legs",
-      "body.region.feet"
-    ],
-    "fine_regions": [
-      "body.region.torso.core",
-      "body.region.thighs.core",
-      "body.region.shins.core",
-      "body.region.feet.core"
-    ],
+  "fix6_policy": {
+    "principle": "Closed garments may suppress safely enclosed base-body regions. Open/torn garments preserve the base body and solve near-surface penetration by moving only the garment presentation shell outward along its normals.",
     "male_peasant": {
       "upper": {
         "garment_meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-        "coverage": ["body.region.torso.core"],
-        "preserves": ["arms", "pelvis_underwear", "legs", "feet"]
+        "body_coverage": ["body.region.torso.core"],
+        "surface_grow_m": 0.0
       },
       "lower": {
         "garment_meshes": ["Male_Peasant_Legs"],
-        "coverage": ["body.region.thighs.core", "body.region.shins.core"],
-        "preserves": ["pelvis_underwear", "knee_band", "feet"]
+        "body_coverage": [],
+        "surface_grow_m": 0.010,
+        "reason": "Preserve complete base legs through holes and below trouser cuffs."
       },
       "feet": {
         "garment_meshes": ["Male_Peasant_Feet"],
-        "coverage": ["body.region.feet.core"],
-        "preserves": ["coarse_feet_semantics"]
+        "body_coverage": [],
+        "surface_grow_m": 0.008,
+        "reason": "Preserve open foot/ankle skin while offsetting footwear from the base surface."
       }
     },
-    "real_part_bounds": {
-      "male_peasant_legs_y": "0.403 .. 1.054 m",
-      "male_peasant_feet_y": "-0.004 .. 0.448 m"
+    "implementation": {
+      "factory": "GarmentSurfaceFitSceneFactory",
+      "material_strategy": "Duplicate each effective BaseMaterial3D locally, enable grow, set grow amount, install as presentation override, repack temporary PackedScene.",
+      "source_asset_mutation": false,
+      "shared_material_mutation": false,
+      "runtime_vertex_triangle_mesh_surgery": false,
+      "accepted_presenter_changed": false,
+      "accepted_wearable_catalog_changed": false,
+      "accepted_pose_bridge_changed": false,
+      "ch7_8_full_outfit_path_changed": false
     },
-    "thresholds": {
-      "torso_core_min_y": "base_min_y + base_height * 0.56",
-      "torso_core_max_y": "base_min_y + base_height * 0.86",
-      "thighs_core_min_y": "base_min_y + base_height * 0.39",
-      "thighs_core_max_y": "base_min_y + base_height * 0.56",
-      "shins_core_min_y": "base_min_y + base_height * 0.24",
-      "shins_core_max_y": "base_min_y + base_height * 0.33",
-      "feet_core_max_y": "base_min_y + base_height * 0.25"
+    "guardrails": {
+      "grow_must_be_positive": true,
+      "max_grow_m": 0.05,
+      "tuning_unit": "meters",
+      "expected_tuning_scale": "millimeters"
     },
-    "protected_knee_band": "shins_core_max_y .. thighs_core_min_y",
-    "boot_shin_overlap": true,
-    "accepted_presenter_changed": false,
-    "accepted_wearable_catalog_changed": false,
-    "accepted_pose_bridge_changed": false,
-    "ch7_8_full_outfit_path_changed": false,
     "presentation_only": true,
-    "runtime_mesh_surgery": false
+    "item_graph_changes": false,
+    "network_changes": false,
+    "gameplay_body_changes": false,
+    "collision_changes": false
   },
-  "fix5_commits": {
-    "fine_region_adapter": "927b88ea87aceac592c06cd745a43b22e6a97791",
-    "lower_leg_boot_material": "516238f49c8253a63b4d1b46678405121e6dc724",
-    "peasant_coverage_policy": "4e39d86940c77235d7d2c84dca2d776e3376efd6",
-    "graphical_smoke_gate": "505ee68e279e3d72d36c190724c053b55b5db931",
-    "focused_lower_leg_boot_gate": "65d2db178c3cc493b3c65f04a852c4e6fd61b8e4",
-    "runner": "4edd47d7a7fb4470fe15130eeb2a48b7e39a48dc",
-    "design_doc": "ef6219a0be888843b207bf444a971664d2b2eab1"
+  "fix6_commits": {
+    "surface_fit_factory": "2a0d0ced427e5409fbd7a1fe86b06067a04c35a8",
+    "lab_surface_fit_policy": "1c99d746f27b3eff214cb3147365df399bbc4996",
+    "factory_isolation_gate": "2a619cad50304528f8224002d820fe8e925a88e7",
+    "real_surface_fit_overlay_gate": "5e8d1d344083d56f15f80535ddb713bbeb5f35d2",
+    "graphical_lab_gate": "a227f3770e9f1ae6ba5755f16878576ef1be5aee",
+    "runner": "4ed6d847559fa144b5014c11a263f343ee5d4d04",
+    "design_doc": "5349ebeb10e53f3436f17765fbe9ae33330e0917"
   },
   "pending_windows_gates": {
-    "focused_existing_protected_suppression": "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd",
-    "focused_fix5_lower_leg_boot": "res://tests/characters/test_ch8c_quaternius_lower_leg_boot_coverage.gd",
+    "focused_surface_fit_factory": "res://tests/characters/test_ch8c_garment_surface_fit_scene_factory.gd",
+    "focused_real_surface_fit_overlay": "res://tests/characters/test_ch8c_quaternius_surface_fit_overlay.gd",
     "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
     "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
     "required_graphical": [
-      "underwear/pelvis still remains visible",
-      "open knee band remains visible",
-      "base shin no longer pokes through trousers",
-      "base ankle/foot no longer pokes through foot/boot mesh",
-      "U+L+K remains coherent in movement/crouch/jump",
+      "trousers no longer show unacceptable base-leg poke-through",
+      "skin remains visible below the real trouser cuff and through intended openings",
+      "footwear no longer shows unacceptable foot/ankle poke-through",
+      "open foot/ankle skin remains where the asset is open",
+      "underwear/pelvis remains visible",
+      "U+L+K remains coherent in idle/walk/run/jump/crouch",
       "helmet/backpack remain coherent",
       "FP/TP and shadow remain coherent"
     ],
     "require_no_runtime_error_lines": true
   },
+  "tuning_rule_after_windows_rerun": "If residual penetration remains but topology is correct, tune LOWER_SURFACE_GROW_M / FEET_SURFACE_GROW_M by millimeters. Do not reintroduce lower-leg clipping for this open garment.",
   "deferred": [
-    "authored vertex or UV coverage masks if geometric fine cores remain insufficient",
-    "per-garment authored/generated coverage volumes",
+    "authored UV/vertex body coverage masks for closed garments that need topology-aware suppression",
+    "precomputed garment-to-body coverage masks",
+    "production presentation-fit metadata outside the lab",
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
     "persistence",
@@ -122,6 +121,6 @@
     "arbitrary unrelated-rig retargeting",
     "body morph fitting",
     "equipment gameplay stats",
-    "high-volume optimization for many material-clipped characters"
+    "high-volume optimization for fitted garment material variants"
   ]
 }
