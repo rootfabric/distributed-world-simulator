@@ -26,13 +26,24 @@ func set_interaction_controller(controller) -> void:
 			synchronize_all()
 	elif was_replica:
 		for body_value in world_nodes.values():
-			if body_value is RigidBody3D and is_instance_valid(body_value):
-				var body: RigidBody3D = body_value
-				var definition = item_registry.get_definition(
-					String(body.get_meta("item_instance_id", ""))
-				)
-				if definition != null:
-					body.freeze = bool(definition.metadata.get("freeze_world_body", false))
+			if not body_value is RigidBody3D or not is_instance_valid(body_value):
+				continue
+			var body: RigidBody3D = body_value
+			var item_id := String(body.get_meta("item_instance_id", ""))
+			var item = item_registry.get_item(item_id)
+			var definition = (
+				item_registry.get_definition(item.definition_id)
+				if item != null
+				else null
+			)
+			body.freeze = (
+				bool(definition.metadata.get("freeze_world_body", false))
+				if definition != null
+				else false
+			)
+			var gravity_driver = body.get_node_or_null("GravityBodyDriver")
+			if gravity_driver != null:
+				gravity_driver.process_mode = Node.PROCESS_MODE_INHERIT
 
 
 func _ensure_world_node(item) -> void:
