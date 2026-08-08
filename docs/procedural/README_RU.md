@@ -14,14 +14,14 @@ G4 ACCEPTED — Architecture Review A PASS
 G5 ACCEPTED
 G6.0 ACCEPTED
 G6.1 ACCEPTED
-G6.2 IMPLEMENTED CANDIDATE — cross-cell / cross-LOD continuity
-G6.3 NEXT — after G6.2 acceptance
+G6.2 ACCEPTED — cross-cell / cross-LOD continuity
+G6.3 NEXT — runtime WaterSurfaceQuery resolver
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_CANDIDATE_RU.md`
+2. `docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md`
 3. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
 4. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
 5. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
@@ -50,37 +50,22 @@ G6.0 canonical fluid contracts
         ↓
 G6.1 deterministic river provider
         ↓
-G6.2 cross-cell/cross-LOD continuity proof
+G6.2 cross-cell/cross-LOD continuity — ACCEPTED
         ↓
 G6.3 runtime fluid surface query
         ↓
 G6.4 casual visual river
 ```
 
-G4 established recipe-driven world semantics. G5 established spatial semantic identity above representation cells. G6.0 established canonical fluid vocabulary. G6.1 established and accepted the first deterministic river compiler.
-
 Accepted rule:
 
 ```text
 G5 FeatureId = semantic river owner
-G6.1 provider = deterministic derived geography compiler
+G6 provider = deterministic derived geography compiler
 cell/LOD/renderer = representation only
 ```
 
-Exact Windows G6.1 evidence:
-
-```text
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-G5 World Feature Graph       PASS — 249 assertions
-G5 feature/cell identity     PASS — 94 assertions
-G6.0 fluid contracts         PASS — 169 assertions
-G6.1 CasualRiverProviderV1   PASS — 74 assertions
-git diff --check             PASS
-```
-
-## Current checkpoint — G6.2
-
-G6.2 introduces no new production hydrology runtime. It proves continuity of one canonical river across changing G2 representation addresses.
+## Accepted G6.2 continuity result
 
 Fixture:
 
@@ -92,7 +77,7 @@ cube seam:      PX / PZ
 LOD:            2 / 4 / 8 / 12
 ```
 
-Representation cell sets must change while these stay stable:
+Representation cell sets change while these stay stable:
 
 ```text
 FeatureId
@@ -103,14 +88,42 @@ provider manifest hash
 canonical spline/surface checksums
 ```
 
-Focused validation:
+Exact accepted Windows chain:
 
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+G5 World Feature Graph       PASS — 249 assertions
+G5 feature/cell identity     PASS — 94 assertions
+G6.0 fluid contracts         PASS — 169 assertions
+G6.1 CasualRiverProviderV1   PASS — 74 assertions
+G6.2 continuity              PASS — 86 assertions
+git diff --check             PASS
+working tree                 clean
 ```
 
-If green, G6.2 becomes `ACCEPTED` and the blocking GEO track advances to `G6.3 — runtime WaterSurfaceQuery resolver`.
+This proves:
+
+```text
+canonical river != representation cells
+LOD != river identity
+cube face != river identity
+```
+
+## Next checkpoint — G6.3
+
+G6.3 introduces a runtime resolver for the already accepted `WaterSurfaceQuery` contract.
+
+The intended caller model is:
+
+```text
+body_id + frame_id + position + search range/filter
+        ↓
+WaterSurfaceQuery resolver
+        ↓
+canonical fluid match / surface sample
+```
+
+The caller must not need to know `SurfaceCellKey`, cube face, LOD, renderer patch or streaming representation. Any spatial index/cache remains derived acceleration, not canonical truth.
 
 ## Detail / asset research doctrine
 
