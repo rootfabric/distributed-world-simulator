@@ -22,13 +22,13 @@ try {
         throw "G6.3 accepted dependency gate failed"
     }
 
-    Write-Host "=== G6.4 source / P0 / adaptive LOD contract gate ==="
+    Write-Host "=== G6.4 source / P0 / adaptive representation contract gate ==="
     & $GodotPath --headless --path $PSScriptRoot --script res://tests/procedural/hydrology/g6_4_casual_visual_river_lab_acceptance.gd
     if ($LASTEXITCODE -ne 0) {
         throw "G6.4 visual river lab contract gate failed"
     }
 
-    Write-Host "=== G6.4 headless scene + far/near LOD smoke ==="
+    Write-Host "=== G6.4 headless scene + river LOD + G3 macro surface smoke ==="
     $SceneOutput = & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2 2>&1
     $SceneExitCode = $LASTEXITCODE
     $SceneText = ($SceneOutput | Out-String)
@@ -40,6 +40,12 @@ try {
     if ($SceneText -match "SCRIPT ERROR|Parse Error|Failed to load script") {
         throw "G6.4 visual river lab headless smoke reported a script parse/load error"
     }
+    if ($SceneText -notmatch "G6\.4 Adaptive Macro Surface: PASS") {
+        throw "G6.4 adaptive macro surface did not emit the required PASS marker"
+    }
+    if ($SceneText -notmatch "far_triangles=\d+ near_triangles=\d+") {
+        throw "G6.4 adaptive macro surface marker did not expose far/near geometry detail"
+    }
     if ($SceneText -notmatch "G6\.4 Casual Visual River Lab: PASS") {
         throw "G6.4 visual river lab did not emit the required PASS runtime marker"
     }
@@ -50,9 +56,9 @@ try {
         throw "G6.4 visual river lab PASS marker did not expose river representation LOD range"
     }
 
-    Write-Host "G6.4 Casual Visual River Lab fix2 automated gate passed."
-    Write-Host "Headless proof includes far/near adaptive SurfaceLodSelector and river sample-density checks."
-    Write-Host "Manual graphical refine/coarsen observation is still required before G6.4 acceptance."
+    Write-Host "G6.4 Casual Visual River Lab fix3 automated gate passed."
+    Write-Host "Headless proof now covers adaptive G2 selection, adaptive river sampling, and real G3 macro-surface triangle refinement."
+    Write-Host "Manual graphical macro-surface refinement is still required before G6.4 acceptance."
 }
 finally {
     if ($HadGodotBin) { $env:GODOT_BIN = $PreviousGodotBin }
