@@ -4,9 +4,8 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 # diagnostic stop-the-world path. FIX6 moved READY file writes to a worker, yet
 # it still called the full get_report() on the authority thread before starting
 # that worker. The full report walks durable/replay state and therefore grows
-# with long item sessions. Steady READY reports now contain only live state that
-# is already bounded by current players/items; full diagnostics remain available
-# through get_report() and are still used for initial/terminal synchronous dumps.
+# with long item sessions. Steady READY reports now contain only bounded live
+# state; full diagnostics remain available for initial/terminal sync reports.
 #
 # FIX6 is intentionally preserved in m3_dedicated_server_runtime_fix6.gd. The
 # accepted source-contract regression still scans the leaf file, so keep these
@@ -54,9 +53,9 @@ func _dispatch_deferred_report() -> void:
 
 
 func _build_fix7_ready_report() -> Dictionary:
-	# These two snapshots are bounded by *current* gameplay state. In particular,
-	# this path never calls NetworkedGameplayService.get_report(), export_durable_state(),
-	# export_replay_state(), or any operation-ledger/recovery checksum traversal.
+	# Keep the steady report compatible with the graphical process fixture while
+	# excluding the unbounded/expensive recovery, durable and operation-ledger
+	# traversals that made FIX6 report cost grow throughout an item stress run.
 	var gameplay_snapshot: Dictionary = (
 		_service.create_snapshot() if _service != null else {}
 	)
@@ -66,6 +65,7 @@ func _build_fix7_ready_report() -> Dictionary:
 	var scheduler_report: Dictionary = (
 		_fixed_tick_scheduler.get_report() if _fixed_tick_scheduler != null else {}
 	)
+	var telemetry_sample: Dictionary = _telemetry_sample()
 
 	var service_summary := {
 		"schema": "planet_simulator.m7_fix7_service_summary.v1",
@@ -73,6 +73,45 @@ func _build_fix7_ready_report() -> Dictionary:
 		"server_tick": int(gameplay_snapshot.get("server_tick", _server_tick)),
 		"player_count": Array(gameplay_snapshot.get("players", [])).size(),
 		"canonical_multiplayer_item_graph": item_graph_snapshot,
+	}
+	var realtime_traffic := {
+		"channel_policy": RealtimeChannelPolicy.canonical_policy(),
+		"movement_snapshot_interval_ms": NX2_MOVEMENT_SNAPSHOT_INTERVAL_MS,
+		"movement_snapshot_interval_ticks": NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS,
+		"movement_snapshot_rate_hz": NX3_FIXED_TICK_RATE_HZ / NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS,
+		"movement_batches_received": _movement_batches_received,
+		"movement_inputs_received": _movement_inputs_received,
+		"movement_inputs_applied": _movement_inputs_applied,
+		"movement_inputs_redundant": _movement_inputs_redundant,
+		"movement_inputs_rejected": _movement_inputs_rejected,
+		"last_movement_rejection_error_code": _last_movement_rejection_error_code,
+		"last_movement_rejection_stage": _last_movement_rejection_stage,
+		"movement_results_suppressed": _movement_results_suppressed,
+		"movement_deltas_suppressed": _movement_deltas_suppressed,
+		"movement_full_snapshots_suppressed": _movement_full_snapshots_suppressed,
+		"movement_snapshots_published": _movement_snapshots_published,
+		"item_graph_deltas_published": _item_graph_deltas_published,
+		"item_graph_delta_build_failures": _item_graph_delta_build_failures,
+		"item_graph_full_snapshots_published": _item_graph_full_snapshots_published,
+		"item_graph_resync_requests": _item_graph_resync_requests,
+		"compact_movement_snapshots_published": _compact_movement_snapshots_published,
+		"movement_snapshot_retransmit_requests": _movement_snapshot_retransmit_requests,
+		"movement_snapshot_enqueue_failures": _movement_snapshot_enqueue_failures,
+		"compact_movement_snapshot_failures": _compact_movement_snapshot_failures,
+	}
+	var fixed_tick_simulation := {
+		"schema": FixedTickScheduler.SCHEMA,
+		"tick_rate_hz": NX3_FIXED_TICK_RATE_HZ,
+		"tick_delta_seconds": NX3_FIXED_TICK_DELTA_SECONDS,
+		"server_tick": _server_tick,
+		"ticks_simulated": _fixed_ticks_simulated,
+		"catch_up_batches": _fixed_tick_catch_up_batches,
+		"failures": _fixed_tick_failures,
+		"last_tick_duration_ms": _last_fixed_tick_duration_ms,
+		"pending_input_count": _total_pending_input_count(),
+		"stale_input_drops": _input_queue_stale_drops,
+		"input_hold_expirations": _input_hold_expirations,
+		"scheduler": scheduler_report,
 	}
 	var realtime_foundation := {
 		"report_policy": M7_REPORT_POLICY,
@@ -120,14 +159,28 @@ func _build_fix7_ready_report() -> Dictionary:
 	}
 
 	return {
-		"schema": "planet_simulator.m3_dedicated_server_runtime.v1",
+		"schema": SCHEMA,
+		"checkpoint": RuntimeIdentity.CHECKPOINT,
+		"build_id": RuntimeIdentity.BUILD_ID,
+		"gameplay_checkpoint": (
+			M7_CHECKPOINT if _playable_sandbox
+			else M6_CHECKPOINT if _persistence_enabled
+			else Support.CHECKPOINT
+		),
+		"gameplay_build_id": (
+			M7_BUILD_ID if _playable_sandbox
+			else M6_BUILD_ID if _persistence_enabled
+			else Support.BUILD_ID
+		),
 		"report_mode": "FIX7_LIGHTWEIGHT_READY",
 		"configured": _configured,
 		"host": _host,
 		"port": _port,
+		"connected_peer_count": _peer_to_player.size(),
 		"moves": _moves,
 		"joins": _joins,
 		"leaves": _leaves,
+		"presentation_updates": _presentation_updates,
 		"rejections": _rejections,
 		"messages_received": _messages_received,
 		"messages_sent": _messages_sent,
@@ -137,12 +190,11 @@ func _build_fix7_ready_report() -> Dictionary:
 		"snapshot": gameplay_snapshot,
 		"item_graph_snapshot": item_graph_snapshot,
 		"service": service_summary,
-		"fixed_tick_simulation": {
-			"server_tick": _server_tick,
-			"ticks_simulated": _fixed_ticks_simulated,
-			"pending_input_count": _total_pending_input_count(),
-			"scheduler": scheduler_report,
-		},
+		"playable_sandbox": _playable_sandbox,
+		"network_fingerprint": _fingerprint.duplicate(true),
+		"network_telemetry": telemetry_sample,
+		"realtime_traffic": realtime_traffic,
+		"fixed_tick_simulation": fixed_tick_simulation,
 		"join_item_materialization": get_join_item_materialization_report(),
 		"realtime_foundation": realtime_foundation,
 	}
