@@ -15,20 +15,20 @@ G4 Provider Composition / Replacement  ACCEPTED
 G5 World Feature Graph                 ACCEPTED
 G6.0 Fluid Contracts                   ACCEPTED
 G6.1 CasualRiverProviderV1             ACCEPTED
-G6.2 Cross-Cell / Cross-LOD Continuity IMPLEMENTED CANDIDATE
-G6.3 Runtime WaterSurfaceQuery         NEXT AFTER G6.2 ACCEPTANCE
+G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
+G6.3 Runtime WaterSurfaceQuery         NEXT — UNBLOCKED
 ```
 
-Current accepted G6.1 tested head:
+Accepted G6.1 tested head:
 
 ```text
 b8f36d17dc8ba138e6b215968aa0e651eec9ccd1
 ```
 
-G6.2 implementation candidate:
+Accepted G6.2 tested head:
 
 ```text
-322265247bb0a01bf7bdd814adca2ead30b124c9
+444811c0ac98a133844cd7ec0869a6cf0a261f11
 ```
 
 Current global revision:
@@ -44,7 +44,7 @@ docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
 docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md
 docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md
 docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md
-docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_CANDIDATE_RU.md
+docs/checkpoints/G6_2_CROSS_CELL_CROSS_LOD_CONTINUITY_ACCEPTED_RU.md
 ```
 
 ## Universal architecture
@@ -57,24 +57,25 @@ new world
   = recipe + providers + features + environment + detail backends
 ```
 
-## Accepted foundation through G6.1
+## Accepted foundation through G6.2
 
 G4 established recipe-driven provider composition. G5 established stable spatial feature identity above representation cells. G6.0 established canonical fluid contracts. G6.1 accepted `CasualRiverProviderV1` as a deterministic compiler from stable G5 river semantics into `FluidRegionId`, `RiverSpline`, `RiverChannelProfile`, and `FluidSurfaceDescriptor`.
 
-Exact accepted G6.1 Windows evidence:
+G6.2 then proved that the resulting canonical river geography survives representation changes across cube-sphere faces and LOD without identity reroll.
+
+Accepted Windows dependency chain:
 
 ```text
 G5 World Feature Graph: PASS — 249 assertions
 G5 feature/cell identity: PASS — 94 assertions
 G6.0 fluid contracts: PASS — 169 assertions
 G6.1 CasualRiverProviderV1: PASS — 74 assertions
+G6.2 cross-cell/cross-LOD continuity: PASS — 86 assertions
 git diff --check: PASS
 working tree: clean
 ```
 
-## G6.2 Cross-Cell / Cross-LOD Continuity — candidate
-
-G6.2 is a proof-only checkpoint. Accepted G6.0 contracts and G6.1 provider are unchanged.
+## G6.2 accepted continuity proof
 
 Deterministic fixture:
 
@@ -83,10 +84,10 @@ planet radius:      6,000,000 m
 river source lon:   34°
 river mouth lon:    58°
 expected cube seam: PX / PZ
-LOD matrix:          2 / 4 / 8 / 12
+LOD matrix:         2 / 4 / 8 / 12
 ```
 
-The G2 representation address set must change with LOD, while these canonical values remain unchanged:
+The G2 representation address set changes with LOD while these stay stable:
 
 ```text
 FeatureId
@@ -98,7 +99,7 @@ RiverSpline checksum
 FluidSurfaceDescriptor checksum
 ```
 
-Architecture rule under test:
+Accepted architecture rule:
 
 ```text
 canonical river geography
@@ -111,28 +112,19 @@ NOT:
 SurfaceCellKey / LOD -> hydrology identity
 ```
 
-G6.2 does not introduce `RiverChunkId`, renderer, runtime water resolver, authority, persistence, or network transport.
-
-Focused validation:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1
-```
-
-Expected chain:
+Therefore:
 
 ```text
-G5 World Feature Graph       PASS — 249
-G5 feature/cell identity     PASS — 94
-G6.0 fluid contracts         PASS — 169
-G6.1 CasualRiverProviderV1   PASS — 74
-G6.2 continuity              PASS REQUIRED
+Feature != SurfaceCell
+FluidRegion != SurfaceCell
+LOD != river identity
+CubeSphere face != river identity
+RiverChunkId is not required
 ```
 
-## Next
+## Next — G6.3
 
-After focused G6.2 acceptance:
+Blocking GEO track is now:
 
 ```text
 G6.3 runtime WaterSurfaceQuery resolver
@@ -140,6 +132,8 @@ G6.3 runtime WaterSurfaceQuery resolver
   -> G6 full acceptance
   -> G7 Semantic Field Fabric
 ```
+
+G6.3 must resolve canonical fluid geography from world-space/body-frame queries without requiring the caller to know representation cell, cube face, or LOD.
 
 Parallel tracks remain available under the post-G3 roadmap:
 
