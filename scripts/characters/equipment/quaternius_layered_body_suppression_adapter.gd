@@ -3,6 +3,17 @@ extends QuaterniusEquipmentRigAdapter
 
 const RegionClipMaterial = preload("res://scripts/characters/equipment/quaternius_region_clip_material.gd")
 
+const REGION_TORSO_CORE := "body.region.torso.core"
+const REGION_THIGHS_CORE := "body.region.thighs.core"
+const LAYERED_BODY_REGIONS := [
+	REGION_TORSO_CORE,
+	REGION_THIGHS_CORE,
+]
+
+
+func supports_body_region(region_id: String) -> bool:
+	return region_id in LAYERED_BODY_REGIONS or super.supports_body_region(region_id)
+
 
 func resolve_composite_body_suppression(
 	_character_visual_root: Node,
@@ -38,6 +49,7 @@ func resolve_composite_body_suppression(
 			"kind": "QUATERNIUS_FUSED_BODY_REGION_CLIP",
 			"mesh_name": String(body_mesh.name),
 			"thresholds": material_details.get("thresholds", {}),
+			"protected_bands": material_details.get("protected_bands", {}),
 			"opaque_discard": bool(material_details.get("opaque_discard", false)),
 		}
 	})
@@ -47,4 +59,5 @@ func create_report() -> Dictionary:
 	var report := super.create_report()
 	report["composite_body_suppression"] = true
 	report["composite_body_suppression_mode"] = "REGION_MATERIAL_OVERRIDE"
+	report["layered_body_regions"] = LAYERED_BODY_REGIONS.duplicate()
 	return report
