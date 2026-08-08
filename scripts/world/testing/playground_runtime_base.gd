@@ -1,0 +1,1683 @@
+extends Node3D
+
+const PlayerScript = preload("res://scripts/actors/player/lunar_player.gd")
+const FlatWorldAdapterScript = preload(
+	"res://scripts/world/testing/flat_world_adapter.gd"
+)
+const GravityFieldScript = preload("res://scripts/simulation/gravity/gravity_field.gd")
+const ItemGameplayControllerScript = preload("res://scripts/items/presentation/item_gameplay_controller.gd")
+const WorldInteractorScript = preload("res://scripts/interaction/world_interactor.gd")
+const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+const PlayableAuthorityScript = preload(
+	"res://scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd"
+)
+const NetworkContractUtils = preload(
+	"res://scripts/network/contracts/network_contract_utils.gd"
+)
+const RemotePlayerPresenterScript = preload(
+	"res://scripts/runtime/networked_gameplay/m3/remote_player_presenter.gd"
+)
+const M5NetworkedInventoryShellScript = preload(
+	"res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"
+)
+const M7ItemGraphReplicaAdapterScript = preload(
+	"res://scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd"
+)
+const M7NetworkItemCommandBridgeScript = preload(
+	"res://scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd"
+)
+
+const M2_NETWORK_WALK_SPEED_MPS: float = 6.0
+const M2_NETWORK_RUN_SPEED_MPS: float = 12.0
+const M7_INPUT_SEND_INTERVAL_SECONDS: float = 1.0 / 30.0
+const M7_AUTHORITATIVE_INTERPOLATION_RATE: float = 18.0
+const M7_PREDICTION_MODE: String = "CLIENT_PREDICTION_RECONCILIATION"
+const M7_AUTHORITATIVE_TELEPORT_DISTANCE_M: float = 6.0
+const M7_INTERACTION_RANGE_M: float = 5.0
+
+var simulator
+var command_registry
+var test_registry
+var world_definition: Dictionary = {}
+var command_owner: String = "active_world"
+var test_owner: String = "active_world"
+var runtime_universe_id: String = "main"
+var runtime_instance_id: String = "scenario-playground"
+var world_adapter
+var player
+var spawned_objects: Node3D
+var spawn_position: Vector3 = Vector3(0.0, 1.2, 6.0)
+var object_counter: int = 0
+var overlay_label: Label
+var interaction_label: Label
+var item_world_root: Node3D
+var item_attachment_root: Node3D
+var item_gameplay
+var gravity_field
+var world_interactor
+var runtime_role: String = "offline"
+var presentation_enabled: bool = true
+var local_input_enabled: bool = true
+var playable_client_session
+var _m2_attached: bool = false
+var _m2_interaction_position: Vector3 = Vector3.ZERO
+var _m2_player_input_sequence: int = 0
+var _m2_player_operation_sequence: int = 0
+var _m2_last_candidate_hash: String = ""
+var _m2_last_sync_error: String = ""
+var _m2_sync_count: int = 0
+var _m2_rejection_count: int = 0
+var m3_multiplayer_client_runtime
+var _m3_attached: bool = false
+var _m3_input_accumulator: float = 0.0
+var _m3_local_sync_count: int = 0
+var _m3_remote_presenters: Dictionary = {}
+var _m3_remote_spawn_count: int = 0
+var _m3_remote_despawn_count: int = 0
+var _m3_remote_update_count: int = 0
+var _m4_item_graph_snapshot: Dictionary = {}
+var _m4_item_snapshot_updates: int = 0
+var _m4_item_commands: int = 0
+var _m4_item_rejections: int = 0
+var m5_networked_inventory_shell
+var _m5_acceptance_input_enabled: bool = false
+var _network_playground_enabled: bool = false
+var _m7_item_adapter
+var _m7_item_bridge
+var _m7_state_accumulator: float = 0.0
+var _m7_state_sync_enabled: bool = true
+var _m7_initial_player_replica_applied: bool = false
+var _m7_state_submissions: int = 0
+var _m7_reconciliations: int = 0
+var _m7_last_item_revision: int = -1
+var _m7_last_sync_error: String = ""
+var _m7_authoritative_target_position: Vector3 = Vector3.ZERO
+var _m7_authoritative_target_velocity: Vector3 = Vector3.ZERO
+var _m7_authoritative_target_sequence: int = -1
+var _m7_authoritative_target_valid: bool = false
+var _m7_interpolation_updates: int = 0
+var _m7_hard_snaps: int = 0
+var _m7_network_error: String = ""
+var _m7_prediction_updates: int = 0
+var _m7_prediction_report: Dictionary = {}
+
+
+func configure_runtime(context: Dictionary) -> void:
+	simulator = context.get("simulator_app")
+	command_registry = context.get("command_registry")
+	test_registry = context.get("test_registry")
+	world_definition = context.get("world_definition", {}).duplicate(true)
+	command_owner = String(context.get("command_owner_id", command_owner))
+	test_owner = String(context.get("test_owner_id", test_owner))
+	runtime_universe_id = String(context.get("universe_id", runtime_universe_id))
+	runtime_instance_id = String(context.get("instance_id", runtime_instance_id))
+	runtime_role = String(context.get("runtime_role", runtime_role))
+	presentation_enabled = bool(context.get("presentation_enabled", true))
+	local_input_enabled = bool(context.get("local_input_enabled", true))
+	var launch_options: Dictionary = context.get("launch_options", {})
+	_m5_acceptance_input_enabled = int(launch_options.get("m5_phase", 0)) > 0
+	_network_playground_enabled = bool(launch_options.get("network_playground", false))
+	var options: Dictionary = world_definition.get("options", {})
+	var spawn_values = options.get("spawn", [0.0, 1.2, 6.0])
+	if spawn_values is Array and spawn_values.size() >= 3:
+		spawn_position = Vector3(
+			float(spawn_values[0]),
+			float(spawn_values[1]),
+			float(spawn_values[2])
+		)
+
+
+func _ready() -> void:
+	_ensure_input_actions()
+	_build_environment()
+	world_adapter = FlatWorldAdapterScript.new()
+	world_adapter.name = "FlatWorldAdapter"
+	add_child(world_adapter)
+	world_adapter.setup(spawn_position)
+
+	player = PlayerScript.new()
+	player.name = "UniversalTestPlayer"
+	add_child(player)
+	player.setup(world_adapter, null, "flat_humanoid")
+	player.set_world_position(spawn_position)
+	player.align_body_to_up(Vector3.UP)
+	player.activate_after_spawn()
+	_m2_interaction_position = spawn_position
+	if runtime_role == "game-client":
+		player.set_network_replica_mode(true)
+	elif not local_input_enabled:
+		player.set_control_enabled(false)
+	if presentation_enabled:
+		# A remote graphical client must leave the native title bar reachable on launch.
+		# The first click in the viewport is handled by SimulatorApp and captures the
+		# cursor for gameplay; this keeps normal Windows window movement available.
+		Input.mouse_mode = (
+			Input.MOUSE_MODE_VISIBLE
+			if runtime_role == "game-client"
+			else Input.MOUSE_MODE_CAPTURED
+		)
+	if runtime_role not in ["listen-host", "game-client", "dedicated-server"]:
+		_setup_item_gameplay()
+	if presentation_enabled:
+		_build_overlay()
+
+
+func create_playable_listen_host_config() -> Dictionary:
+	if runtime_role not in ["listen-host", "dedicated-server"] or player == null:
+		return {}
+	return {
+		"authority_owner_id": String(
+			world_definition.get("local_authority_id", "local-process")
+		),
+		"authority_epoch": 1,
+		"server_tick": 0,
+		"session_id": "session/m2/playground/%s" % runtime_instance_id,
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"space_id": "playground",
+		"frame_id": "scenario/playground/local",
+		"gravity_reference_body_id": "playground-moon",
+		"item_state_key": "playground-r2-demo",
+		"item_profile_id": "playground",
+		"item_persistence_enabled": true,
+		"include_demo_world": true,
+		"player_state": _create_m2_player_state(0),
+	}
+
+
+func attach_playable_client_session(session) -> Dictionary:
+	if runtime_role not in ["listen-host", "game-client"]:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ROLE_REQUIRED"}
+	if playable_client_session != null or item_gameplay != null:
+		return {"success": false, "error_code": "PLAYABLE_CLIENT_ALREADY_ATTACHED"}
+	if session == null or not session is RefCounted:
+		return {"success": false, "error_code": "INVALID_PLAYABLE_CLIENT_SESSION"}
+	for method_name in ["get_snapshot", "get_item_bridge", "submit_player_state", "get_report"]:
+		if not session.has_method(method_name):
+			return {
+				"success": false,
+				"error_code": "PLAYABLE_CLIENT_SESSION_METHOD_MISSING",
+				"method": method_name,
+			}
+	playable_client_session = session
+	var initial_snapshot: Dictionary = playable_client_session.get_snapshot(
+		PlayableAuthorityScript.PLAYER_ENTITY_ID
+	)
+	if not _apply_m2_player_snapshot(initial_snapshot):
+		playable_client_session = null
+		return {"success": false, "error_code": "PLAYABLE_PLAYER_REPLICA_MISSING"}
+	var setup_result: Dictionary = _setup_item_gameplay()
+	if not bool(setup_result.get("success", false)):
+		playable_client_session = null
+		return setup_result
+	_m2_attached = true
+	_m2_last_candidate_hash = _m2_state_content_hash(_create_m2_player_state(0))
+	return {
+		"success": true,
+		"error_code": "",
+		"world_id": "playground",
+		"spawn_position": _vector_to_array(player.get_world_position()),
+	}
+
+
+func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	if runtime_role != "game-client":
+		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
+	if runtime == null:
+		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
+	var required_methods: Array[String] = [
+		"get_snapshot",
+		"get_item_graph_snapshot",
+		"get_local_player_id",
+		"move_blocking",
+		"move_nonblocking",
+		"execute_item_command_blocking",
+	]
+	if _network_playground_enabled:
+		required_methods.append("submit_movement_intent_nonblocking")
+		required_methods.append("advance_local_prediction")
+		required_methods.append("is_prediction_ready")
+	for method_name in required_methods:
+		if not runtime.has_method(method_name):
+			return {
+				"success": false,
+				"error_code": "M3_CLIENT_RUNTIME_METHOD_MISSING",
+				"method": method_name,
+			}
+	if _m3_attached:
+		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+	m3_multiplayer_client_runtime = runtime
+	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
+		runtime.replica_updated.connect(_on_m3_replica_updated)
+	if not runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
+		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
+	if runtime.has_signal("prediction_updated") and not runtime.prediction_updated.is_connected(_on_m3_prediction_updated):
+		runtime.prediction_updated.connect(_on_m3_prediction_updated)
+	_m3_attached = true
+	player.set_network_replica_mode(true)
+	if _network_playground_enabled:
+		# The shared movement kernel predicts locally; dedicated server remains authoritative.
+		player.set_network_prediction_mode(true)
+		var m7_setup := _setup_m7_networked_item_gameplay(runtime)
+		if not bool(m7_setup.get("success", false)):
+			_m3_attached = false
+			return m7_setup
+	_on_m3_replica_updated(runtime.get_snapshot())
+	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	if presentation_enabled and not _network_playground_enabled:
+		m5_networked_inventory_shell = M5NetworkedInventoryShellScript.new()
+		m5_networked_inventory_shell.name = "M5NetworkedInventoryShell"
+		add_child(m5_networked_inventory_shell)
+		var shell_setup: Dictionary = m5_networked_inventory_shell.setup(
+			runtime,
+			runtime.get_local_player_id()
+		)
+		if not bool(shell_setup.get("success", false)):
+			m5_networked_inventory_shell.queue_free()
+			m5_networked_inventory_shell = null
+			return shell_setup
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"world_id": "playground",
+			"local_player_id": runtime.get_local_player_id(),
+			"m4_item_graph": not _m4_item_graph_snapshot.is_empty(),
+		},
+	}
+
+
+func _setup_m7_networked_item_gameplay(runtime) -> Dictionary:
+	_m7_item_bridge = M7NetworkItemCommandBridgeScript.new()
+	var bridge_setup: Dictionary = _m7_item_bridge.setup(
+		runtime,
+		runtime.get_local_player_id(),
+		Callable(self, "_m7_selected_item_id")
+	)
+	if not bool(bridge_setup.get("success", false)):
+		return bridge_setup
+	_m7_item_adapter = _m7_item_bridge.get_adapter()
+	var converted: Dictionary = _m7_item_adapter.convert(runtime.get_item_graph_snapshot())
+	if not bool(converted.get("success", false)):
+		return converted
+	var details: Dictionary = Dictionary(converted.get("details", {}))
+	gravity_field = GravityFieldScript.new()
+	gravity_field.setup_static_sources([{
+		"id": "playground-moon",
+		"radius_m": 1737400.0,
+		"gravitational_parameter_m3_s2": 4890065191200.0,
+		"center_m": [0.0, -1737400.0, 0.0],
+		"interior_model": "uniform_sphere",
+	}], "scenario/playground/local")
+	item_gameplay = ItemGameplayControllerScript.new()
+	item_gameplay.name = "M7NetworkedItemGameplayController"
+	add_child(item_gameplay)
+	var setup_result: Dictionary = item_gameplay.setup_runtime(
+		player,
+		item_world_root,
+		item_attachment_root,
+		gravity_field,
+		"scenario/playground/local",
+		"playground-moon",
+		"m7-network-playground",
+		"playground",
+		presentation_enabled,
+		{
+			"mode": ItemGameplayControllerScript.RUNTIME_MODE_REPLICA,
+			"authority_owner_id": String(_m4_item_graph_snapshot.get("authority_owner_id", "network-authority")),
+			"authority_epoch": int(_m4_item_graph_snapshot.get("authority_epoch", 1)),
+			"initial_graph_snapshot": Dictionary(details.get("graph_snapshot", {})),
+			"replica_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+			"replica_checksum": String(_m4_item_graph_snapshot.get("checksum", "")),
+			"network_command_bridge": _m7_item_bridge,
+			"persistence_enabled": false,
+			"presentation_enabled": presentation_enabled,
+		}
+	)
+	if not bool(setup_result.get("success", false)):
+		item_gameplay.queue_free()
+		item_gameplay = null
+		return setup_result
+	item_gameplay.inventory_visibility_changed.connect(_on_inventory_visibility_changed)
+	world_interactor = WorldInteractorScript.new()
+	world_interactor.name = "M7NetworkWorldInteractor"
+	add_child(world_interactor)
+	world_interactor.setup(player, null)
+	world_interactor.interaction_distance_m = M7_INTERACTION_RANGE_M
+	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
+	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
+	world_interactor.set_enabled(true)
+	_m7_last_item_revision = int(_m4_item_graph_snapshot.get("revision", -1))
+	if presentation_enabled:
+		_command_inventory_profile(["seven_days_like"])
+	return {"success": true, "error_code": ""}
+
+
+func _m7_selected_item_id() -> String:
+	return item_gameplay.get_selected_hotbar_item_id() if item_gameplay != null else ""
+
+
+func _active_inventory_profile_id() -> String:
+	if item_gameplay == null or item_gameplay.inventory_ui == null or item_gameplay.inventory_ui.active_screen == null:
+		return ""
+	var profile = item_gameplay.inventory_ui.active_screen.active_interaction_profile
+	return String(profile.profile_id) if profile != null else ""
+
+
+func _create_m7_movement_intent(delta_seconds: float, input_override: Vector2 = Vector2(INF, INF), jump_override: int = -1, sprint_override: int = -1) -> Dictionary:
+	var input_vector := input_override
+	if is_inf(input_vector.x) or is_inf(input_vector.y):
+		input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if input_vector.length_squared() > 1.0:
+		input_vector = input_vector.normalized()
+	return {
+		"move_x": input_vector.x,
+		"move_z": -input_vector.y,
+		"look_yaw": clampf(player.camera_yaw, -PI, PI),
+		"look_pitch": clampf(player.camera_pitch, -1.45, 1.45),
+		"jump_pressed": Input.is_action_pressed("jump") if jump_override < 0 else jump_override > 0,
+		"sprint": Input.is_action_pressed("boost") if sprint_override < 0 else sprint_override > 0,
+		"delta_seconds": clampf(delta_seconds, 0.000001, 0.25),
+	}
+
+func _create_m7_player_state() -> Dictionary:
+	# Compatibility helper retained only for explicit security regression tests.
+	# The M7 network path never sends this client-authored state to authority.
+	var interaction_position: Vector3 = player.get_world_position()
+	var active_camera: Camera3D = player.get_active_camera()
+	if active_camera != null:
+		interaction_position = world_adapter.render_to_world(
+			active_camera.global_position + (-active_camera.global_transform.basis.z).normalized() * 2.0
+		)
+	return PlayableStateCodec.create_player_state(
+		player.get_world_position(), player.global_transform.basis, player.velocity,
+		interaction_position, player.get_controller_id(), player.get_camera_mode(),
+		player.is_flashlight_enabled(), 0, "scenario/playground/local",
+		runtime_universe_id, "playground", runtime_instance_id, 0.0
+	)
+
+
+func set_m7_state_sync_enabled(enabled: bool) -> void:
+	_m7_state_sync_enabled = enabled
+	if not enabled:
+		_m7_state_accumulator = 0.0
+
+
+func _sync_m7_predicted_player_state(delta: float) -> void:
+	if (
+		not _m7_state_sync_enabled
+		or m3_multiplayer_client_runtime == null
+		or player == null
+		or not local_input_enabled
+	):
+		return
+	var result: Dictionary = m3_multiplayer_client_runtime.advance_local_prediction(
+		_create_m7_movement_intent(delta),
+		delta
+	)
+	if not bool(result.get("success", false)):
+		_m7_last_sync_error = String(result.get("error_code", "NX4_CLIENT_PREDICTION_FAILED"))
+		return
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	if not bool(details.get("submission_attempted", false)):
+		return
+	var submission: Dictionary = Dictionary(details.get("submission", {}))
+	if bool(submission.get("success", false)):
+		_m7_state_submissions += 1
+		_m7_last_sync_error = ""
+	else:
+		_m7_last_sync_error = String(submission.get("error_code", "M7_PLAYER_INPUT_SEND_FAILED"))
+
+func _on_m3_prediction_updated(
+	_predicted_state: Dictionary,
+	presentation_state: Dictionary,
+	prediction_report: Dictionary
+) -> void:
+	if not _network_playground_enabled or player == null:
+		return
+	_m7_prediction_updates += 1
+	_m7_prediction_report = prediction_report.duplicate(true)
+	_apply_m7_prediction_presentation(presentation_state)
+
+func _apply_m7_prediction_presentation(state: Dictionary) -> void:
+	if state.is_empty() or player == null:
+		return
+	var position: Dictionary = Dictionary(state.get("position", {}))
+	var velocity: Dictionary = Dictionary(state.get("velocity", {}))
+	player.set_world_position(Vector3(
+		float(position.get("x", 0.0)),
+		float(position.get("y", 0.0)),
+		float(position.get("z", 0.0))
+	))
+	player.velocity = Vector3(
+		float(velocity.get("x", 0.0)),
+		float(velocity.get("y", 0.0)),
+		float(velocity.get("z", 0.0))
+	)
+	var yaw: float = float(state.get("orientation_yaw", player.rotation.y))
+	player.rotation.y = yaw
+
+
+func _on_m3_replica_updated(snapshot: Dictionary) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or player == null:
+		return
+	var local_id: String = m3_multiplayer_client_runtime.get_local_player_id()
+	var seen: Dictionary = {}
+	for player_value in snapshot.get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var record: Dictionary = player_value
+		var logical_id := String(record.get("logical_player_id", ""))
+		if logical_id == local_id:
+			if bool(record.get("connected", false)):
+				var position: Dictionary = record.get("position", {})
+				var authoritative_position := Vector3(
+					float(position.get("x", 0.0)),
+					float(position.get("y", 0.0)),
+					float(position.get("z", 0.0))
+				)
+				var velocity: Dictionary = record.get("velocity", {})
+				var authoritative_velocity := Vector3(
+					float(velocity.get("x", 0.0)),
+					float(velocity.get("y", 0.0)),
+					float(velocity.get("z", 0.0))
+				)
+				if _network_playground_enabled:
+					var authoritative_sequence := int(record.get("last_input_sequence", -1))
+					if authoritative_sequence >= _m7_authoritative_target_sequence:
+						_m7_authoritative_target_position = authoritative_position
+						_m7_authoritative_target_velocity = authoritative_velocity
+						_m7_authoritative_target_sequence = authoritative_sequence
+						_m7_authoritative_target_valid = true
+					if not _m7_initial_player_replica_applied:
+						player.set_world_position(authoritative_position)
+						player.velocity = authoritative_velocity
+						_m7_initial_player_replica_applied = true
+				else:
+					player.set_world_position(authoritative_position)
+					player.velocity = authoritative_velocity
+					_m7_initial_player_replica_applied = true
+				_m3_local_sync_count += 1
+			continue
+		if not bool(record.get("connected", false)):
+			continue
+		seen[logical_id] = true
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter == null or not is_instance_valid(presenter):
+			presenter = RemotePlayerPresenterScript.new()
+			add_child(presenter)
+			var setup_result: Dictionary = presenter.setup(record)
+			if not bool(setup_result.get("success", false)):
+				presenter.queue_free()
+				continue
+			_m3_remote_presenters[logical_id] = presenter
+			_m3_remote_spawn_count += 1
+		else:
+			presenter.apply_replica(record)
+		_m3_remote_update_count += 1
+	for logical_id_value in _m3_remote_presenters.keys().duplicate():
+		var logical_id := String(logical_id_value)
+		if seen.has(logical_id):
+			continue
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter != null and is_instance_valid(presenter):
+			presenter.queue_free()
+		_m3_remote_presenters.erase(logical_id)
+		_m3_remote_despawn_count += 1
+
+
+func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	_m4_item_graph_snapshot = snapshot.duplicate(true)
+	_m4_item_snapshot_updates += 1
+	if not _network_playground_enabled or item_gameplay == null or _m7_item_adapter == null:
+		return
+	var revision := int(snapshot.get("revision", -1))
+	if revision == _m7_last_item_revision:
+		return
+	var converted: Dictionary = _m7_item_adapter.convert(snapshot)
+	if not bool(converted.get("success", false)):
+		_m7_last_sync_error = String(converted.get("error_code", "M7_ITEM_REPLICA_CONVERSION_FAILED"))
+		return
+	var details: Dictionary = Dictionary(converted.get("details", {}))
+	var apply_result: Dictionary = item_gameplay.apply_network_graph_snapshot(
+		Dictionary(details.get("graph_snapshot", {})),
+		revision,
+		String(snapshot.get("checksum", ""))
+	)
+	if bool(apply_result.get("success", false)):
+		_m7_last_item_revision = revision
+		_m7_last_sync_error = ""
+	else:
+		_m7_last_sync_error = String(apply_result.get("error_code", "M7_ITEM_REPLICA_APPLY_FAILED"))
+
+
+func _apply_m3_network_input(delta: float) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or not local_input_enabled:
+		return
+	if (
+		m3_multiplayer_client_runtime.has_method("is_automated_acceptance")
+		and m3_multiplayer_client_runtime.is_automated_acceptance()
+		and not _m5_acceptance_input_enabled
+	):
+		return
+	_m3_input_accumulator += delta
+	if _m3_input_accumulator < 0.05:
+		return
+	if player == null:
+		return
+	var input_vector := Input.get_vector(
+		"move_left", "move_right", "move_forward", "move_back"
+	)
+	if input_vector.length_squared() < 0.000001:
+		return
+	var step := minf(_m3_input_accumulator, 0.1)
+	_m3_input_accumulator = 0.0
+	var speed := (
+		M2_NETWORK_RUN_SPEED_MPS
+		if Input.is_action_pressed("boost")
+		else M2_NETWORK_WALK_SPEED_MPS
+	)
+	var view_basis: Basis = player.get_view_basis()
+	var forward: Vector3 = (-view_basis.z).slide(Vector3.UP)
+	var right: Vector3 = view_basis.x.slide(Vector3.UP)
+	if forward.length_squared() < 0.000001:
+		forward = -player.global_transform.basis.z
+	if right.length_squared() < 0.000001:
+		right = player.global_transform.basis.x
+	forward = forward.normalized()
+	right = right.normalized()
+	var direction: Vector3 = right * input_vector.x + forward * -input_vector.y
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
+	m3_multiplayer_client_runtime.move_nonblocking(
+		direction.x * speed * step,
+		direction.z * speed * step
+	)
+
+
+func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M3_PLAYGROUND_NOT_READY"}
+	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
+
+
+func m4_execute_item_command(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M4_PLAYGROUND_NOT_READY"}
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_blocking(
+		command_type,
+		payload,
+		operation_id
+	)
+	_m4_item_commands += 1
+	if not bool(result.get("success", false)):
+		_m4_item_rejections += 1
+	return result
+
+
+func get_m5_inventory_shell():
+	return m5_networked_inventory_shell
+
+
+func _apply_m7_authoritative_interpolation(delta: float) -> void:
+	if (
+		not _network_playground_enabled
+		or not _m7_authoritative_target_valid
+		or player == null
+		or player.is_network_prediction_mode()
+	):
+		return
+	var current: Vector3 = player.get_world_position()
+	var distance: float = current.distance_to(_m7_authoritative_target_position)
+	if distance > M7_AUTHORITATIVE_TELEPORT_DISTANCE_M:
+		player.set_world_position(_m7_authoritative_target_position)
+		player.velocity = _m7_authoritative_target_velocity
+		_m7_hard_snaps += 1
+		_m7_reconciliations += 1
+		return
+	var weight: float = 1.0 - exp(-M7_AUTHORITATIVE_INTERPOLATION_RATE * clampf(delta, 0.0, 0.1))
+	var next_position: Vector3 = current.lerp(_m7_authoritative_target_position, weight)
+	if next_position.distance_to(_m7_authoritative_target_position) < 0.001:
+		next_position = _m7_authoritative_target_position
+	player.set_world_position(next_position)
+	player.velocity = _m7_authoritative_target_velocity
+	_m7_interpolation_updates += 1
+
+
+func show_network_error(error_code: String, details: Dictionary = {}) -> void:
+	_m7_network_error = error_code
+	var message := "Сетевая ошибка: %s" % error_code
+	if details.has("error_code") and String(details.get("error_code", "")) != error_code:
+		message += " (%s)" % String(details.get("error_code", ""))
+	if interaction_label != null:
+		interaction_label.text = message
+	if overlay_label != null:
+		overlay_label.text = message
+	push_error("[m7_network_error] %s %s" % [error_code, JSON.stringify(details)])
+
+
+func create_m3_graphical_client_report() -> Dictionary:
+	var presenters: Dictionary = {}
+	for logical_id_value in _m3_remote_presenters.keys():
+		var presenter = _m3_remote_presenters[logical_id_value]
+		if presenter != null and is_instance_valid(presenter):
+			presenters[String(logical_id_value)] = presenter.get_report()
+	return {
+		"schema": "planet_simulator.m4_playground_graphical_world_report.v1",
+		"world_id": "playground",
+		"runtime_role": runtime_role,
+		"attached": _m3_attached,
+		"local_player_id": (
+			m3_multiplayer_client_runtime.get_local_player_id()
+			if m3_multiplayer_client_runtime != null
+			else ""
+		),
+		"local_player_position": _vector_to_array(
+			player.get_world_position() if player != null else Vector3.ZERO
+		),
+		"active_camera": (
+			String(player.get_active_camera().get_path())
+			if (
+				player != null
+				and player.get_active_camera() != null
+				and player.get_active_camera().current
+			)
+			else NodePath()
+		),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": (
+			bool(player.is_network_replica_mode()) if player != null else false
+		),
+		"network_prediction_mode": (
+			bool(player.is_network_prediction_mode()) if player != null else false
+		),
+		"network_playground_enabled": _network_playground_enabled,
+		"m7_state_submissions": _m7_state_submissions,
+		"m7_state_sync_enabled": _m7_state_sync_enabled,
+		"m7_reconciliations": _m7_reconciliations,
+		"m7_prediction_updates": _m7_prediction_updates,
+		"m7_prediction_report": _m7_prediction_report.duplicate(true),
+		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_interpolation_mode": M7_PREDICTION_MODE,
+		"m7_interpolation_updates": _m7_interpolation_updates,
+		"m7_hard_snaps": _m7_hard_snaps,
+		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,
+		"m7_network_error": _m7_network_error,
+		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
+		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
+		"local_sync_count": _m3_local_sync_count,
+		"remote_presenter_count": _m3_remote_presenters.size(),
+		"remote_spawn_count": _m3_remote_spawn_count,
+		"remote_despawn_count": _m3_remote_despawn_count,
+		"remote_update_count": _m3_remote_update_count,
+		"remote_presenters": presenters,
+		"snapshot_checksum": (
+			String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", ""))
+			if m3_multiplayer_client_runtime != null
+			else ""
+		),
+		"m4_item_graph_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+		"m4_item_graph_checksum": String(_m4_item_graph_snapshot.get("checksum", "")),
+		"m4_item_snapshot_updates": _m4_item_snapshot_updates,
+		"m4_item_commands": _m4_item_commands,
+		"m4_item_rejections": _m4_item_rejections,
+		"m5_inventory_shell": (
+			m5_networked_inventory_shell.get_report()
+			if m5_networked_inventory_shell != null
+			else {}
+		),
+		"direct_authority_references": 0,
+	}
+
+
+func _process(delta: float) -> void:
+	if runtime_role != "game-client":
+		return
+	if _m3_attached:
+		if _network_playground_enabled:
+			_sync_m7_predicted_player_state(delta)
+		else:
+			_apply_m3_network_input(delta)
+	elif _m2_attached:
+		_apply_m2_flat_input(delta)
+		_sync_m2_player_state(delta)
+
+
+func _ensure_input_actions() -> void:
+	_set_single_key_action("move_forward", KEY_W)
+	_set_single_key_action("move_back", KEY_S)
+	_set_single_key_action("move_left", KEY_A)
+	_set_single_key_action("move_right", KEY_D)
+	_set_single_key_action("jump", KEY_SPACE)
+	_set_single_key_action("boost", KEY_SHIFT)
+
+
+func _set_single_key_action(action_name: StringName, physical_key: int) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	for existing_event in InputMap.action_get_events(action_name):
+		if existing_event is InputEventKey:
+			InputMap.action_erase_event(action_name, existing_event)
+	var input_event := InputEventKey.new()
+	input_event.physical_keycode = physical_key
+	InputMap.action_add_event(action_name, input_event)
+
+
+func register_runtime_commands(registry, owner_id: String) -> void:
+	_register_command(registry, owner_id, {
+		"id": "player.camera.toggle",
+		"description": "Переключить первое и третье лицо.",
+		"usage": "player.camera.toggle",
+		"category": "player",
+	}, Callable(self, "_command_camera_toggle"))
+	_register_command(registry, owner_id, {
+		"id": "player.reset",
+		"description": "Вернуть персонажа в начальную точку полигона.",
+		"usage": "player.reset",
+		"category": "player",
+	}, Callable(self, "_command_player_reset"))
+	_register_command(registry, owner_id, {
+		"id": "player.interact",
+		"description": "Подобрать предмет, открыть контейнер или использовать mount.",
+		"usage": "player.interact",
+		"category": "player",
+	}, Callable(self, "_command_player_interact"))
+	_register_command(registry, owner_id, {"id": "player.flashlight.toggle", "description": "Включить или выключить круговой фонарь.", "usage": "player.flashlight.toggle", "category": "player"}, Callable(self, "_command_flashlight_toggle"))
+	_register_command(registry, owner_id, {"id": "inventory.debug.grant", "description": "Выдать предмет в рюкзак.", "usage": "inventory.debug.grant <definition_id> [quantity]", "category": "items"}, Callable(self, "_command_debug_grant"))
+	_register_command(registry, owner_id, {
+		"id": "playground.spawn_box",
+		"description": "Создать физический тестовый ящик перед персонажем.",
+		"usage": "playground.spawn_box [size_m]",
+		"category": "playground",
+	}, Callable(self, "_command_spawn_box"))
+	_register_command(registry, owner_id, {
+		"id": "playground.clear",
+		"description": "Удалить созданные на полигоне объекты.",
+		"usage": "playground.clear",
+		"category": "playground",
+	}, Callable(self, "_command_clear"))
+	_register_command(registry, owner_id, {"id": "inventory.toggle", "description": "Открыть инвентарь.", "usage": "inventory.toggle", "category": "items"}, Callable(self, "_command_inventory_toggle"))
+	_register_command(registry, owner_id, {"id": "inventory.drop", "description": "Выбросить предмет выбранного hotbar stack.", "usage": "inventory.drop", "category": "items"}, Callable(self, "_command_inventory_drop"))
+	_register_command(registry, owner_id, {"id": "inventory.hotbar.select", "description": "Выбрать быстрый слот 1-10.", "usage": "inventory.hotbar.select <1-10>", "category": "items"}, Callable(self, "_command_hotbar_select"))
+	_register_command(registry, owner_id, {"id": "inventory.profile", "description": "Показать или сменить профиль управления инвентарём.", "usage": "inventory.profile [planet_default|rust_like|seven_days_like]", "category": "items"}, Callable(self, "_command_inventory_profile"))
+	_register_command(registry, owner_id, {"id": "inventory.save", "description": "Сохранить полный item graph.", "usage": "inventory.save", "category": "items"}, Callable(self, "_command_inventory_save"))
+	_register_command(registry, owner_id, {"id": "m4.item.pickup", "description": "Подобрать канонический M4 world item.", "usage": "m4.item.pickup <item_id>", "category": "m4"}, Callable(self, "_command_m4_pickup"))
+	_register_command(registry, owner_id, {"id": "m4.item.drop", "description": "Выбросить канонический M4 item.", "usage": "m4.item.drop <item_id> [quantity]", "category": "m4"}, Callable(self, "_command_m4_drop"))
+	_register_command(registry, owner_id, {"id": "m4.item.split", "description": "Разделить канонический M4 stack.", "usage": "m4.item.split <item_id> <quantity>", "category": "m4"}, Callable(self, "_command_m4_split"))
+	_register_command(registry, owner_id, {"id": "m4.item.stack", "description": "Объединить два канонических M4 stack.", "usage": "m4.item.stack <source_item_id> <target_item_id>", "category": "m4"}, Callable(self, "_command_m4_stack"))
+	_register_command(registry, owner_id, {"id": "m4.container.open", "description": "Открыть общий M4 container.", "usage": "m4.container.open <container_id>", "category": "m4"}, Callable(self, "_command_m4_container_open"))
+	_register_command(registry, owner_id, {"id": "m4.container.close", "description": "Закрыть общий M4 container.", "usage": "m4.container.close <container_id>", "category": "m4"}, Callable(self, "_command_m4_container_close"))
+	_register_command(registry, owner_id, {"id": "m4.item.move_to_container", "description": "Переместить M4 item в открытый container.", "usage": "m4.item.move_to_container <item_id> <container_id>", "category": "m4"}, Callable(self, "_command_m4_move_to_container"))
+	_register_command(registry, owner_id, {"id": "m4.item.mount", "description": "Установить M4 item в mount.", "usage": "m4.item.mount <item_id> <mount_id>", "category": "m4"}, Callable(self, "_command_m4_mount"))
+	_register_command(registry, owner_id, {"id": "m4.item.detach", "description": "Снять M4 item с mount.", "usage": "m4.item.detach <mount_id>", "category": "m4"}, Callable(self, "_command_m4_detach"))
+	_register_command(registry, owner_id, {"id": "m4.hotbar.select", "description": "Выбрать канонический M4 hotbar slot.", "usage": "m4.hotbar.select <0-7>", "category": "m4"}, Callable(self, "_command_m4_hotbar"))
+	_register_command(registry, owner_id, {"id": "m4.snapshot", "description": "Показать локальный canonical Item Graph snapshot.", "usage": "m4.snapshot", "category": "m4"}, Callable(self, "_command_m4_snapshot"))
+
+
+func register_runtime_tests(registry, owner_id: String) -> void:
+	registry.register_test({
+		"id": "world.playground.boot",
+		"description": "Полигон создал персонажа, пол и камеру.",
+		"category": "world",
+	}, Callable(self, "_test_boot"), owner_id)
+	registry.register_test({
+		"id": "world.playground.physics_object",
+		"description": "Полигон создаёт и удаляет физический объект.",
+		"category": "world",
+	}, Callable(self, "_test_physics_object"), owner_id)
+	registry.register_test({
+		"id": "world.playground.inventory_demo",
+		"description": "R2 demo создал рюкзак, hotbar, ящик, rack и socket.",
+		"category": "world",
+	}, Callable(self, "_test_inventory_demo"), owner_id)
+
+
+func create_runtime_snapshot() -> Dictionary:
+	return {
+		"schema": "planet_simulator.playground_runtime.v1",
+		"world_id": String(world_definition.get("id", "playground")),
+		"universe_id": runtime_universe_id,
+		"instance_id": runtime_instance_id,
+		"player_position": _vector_to_array(
+			player.get_world_position() if player != null else Vector3.ZERO
+		),
+		"controller": player.get_controller_snapshot() if player != null else {},
+		"spawned_object_count": spawned_objects.get_child_count() if spawned_objects != null else 0,
+		"item_gameplay": item_gameplay.create_debug_snapshot() if item_gameplay != null else {},
+		"m3_multiplayer": create_m3_graphical_client_report(),
+		"m4_item_graph": _m4_item_graph_snapshot.duplicate(true),
+		"m5_inventory_shell": (
+			m5_networked_inventory_shell.get_report()
+			if m5_networked_inventory_shell != null
+			else {}
+		),
+	}
+
+
+func get_world_entity_store():
+	if item_gameplay == null or item_gameplay.domain.is_empty():
+		return null
+	return item_gameplay.domain.world_entities
+
+
+func prepare_for_unload() -> void:
+	if m5_networked_inventory_shell != null:
+		m5_networked_inventory_shell.queue_free()
+		m5_networked_inventory_shell = null
+	if item_gameplay != null:
+		item_gameplay.save_graph()
+	if _m7_item_bridge != null:
+		_m7_item_bridge.stop("NX6_PLAYGROUND_UNLOAD")
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.replica_updated.is_connected(_on_m3_replica_updated):
+			m3_multiplayer_client_runtime.replica_updated.disconnect(_on_m3_replica_updated)
+		if m3_multiplayer_client_runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
+			m3_multiplayer_client_runtime.item_graph_updated.disconnect(_on_m4_item_graph_updated)
+	for presenter_value in _m3_remote_presenters.values():
+		if presenter_value != null and is_instance_valid(presenter_value):
+			presenter_value.queue_free()
+	_m3_remote_presenters.clear()
+	m3_multiplayer_client_runtime = null
+	_m3_attached = false
+	_m7_item_adapter = null
+	_m7_item_bridge = null
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _build_environment() -> void:
+	var environment_node := WorldEnvironment.new()
+	environment_node.name = "WorldEnvironment"
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.10, 0.13, 0.18)
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color(0.72, 0.78, 0.90)
+	environment.ambient_light_energy = 0.75
+	environment_node.environment = environment
+	add_child(environment_node)
+
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
+	sun.light_energy = 1.25
+	sun.shadow_enabled = true
+	add_child(sun)
+
+	spawned_objects = Node3D.new()
+	spawned_objects.name = "SpawnedObjects"
+	add_child(spawned_objects)
+	item_world_root = Node3D.new()
+	item_world_root.name = "ItemWorldRoot"
+	add_child(item_world_root)
+	item_attachment_root = Node3D.new()
+	item_attachment_root.name = "ItemAttachmentRoot"
+	add_child(item_attachment_root)
+
+	_create_static_box("Floor", Vector3(40.0, 0.5, 40.0), Vector3(0.0, -0.25, 0.0))
+	_create_static_box("NorthWall", Vector3(40.0, 4.0, 0.5), Vector3(0.0, 2.0, -20.0))
+	_create_static_box("SouthWall", Vector3(40.0, 4.0, 0.5), Vector3(0.0, 2.0, 20.0))
+	_create_static_box("WestWall", Vector3(0.5, 4.0, 40.0), Vector3(-20.0, 2.0, 0.0))
+	_create_static_box("EastWall", Vector3(0.5, 4.0, 40.0), Vector3(20.0, 2.0, 0.0))
+
+	for index in range(5):
+		_create_static_box(
+			"Step_%d" % index,
+			Vector3(2.5, 0.35 + index * 0.25, 2.5),
+			Vector3(-7.0 + index * 3.0, (0.35 + index * 0.25) * 0.5, -5.0)
+		)
+
+
+
+func _setup_item_gameplay() -> Dictionary:
+	gravity_field = GravityFieldScript.new()
+	gravity_field.setup_static_sources([{
+		"id": "playground-moon",
+		"radius_m": 1737400.0,
+		"gravitational_parameter_m3_s2": 4890065191200.0,
+		"center_m": [0.0, -1737400.0, 0.0],
+		"interior_model": "uniform_sphere",
+	}], "scenario/playground/local")
+	item_gameplay = ItemGameplayControllerScript.new()
+	item_gameplay.name = "ItemGameplayController"
+	add_child(item_gameplay)
+	var setup_result: Dictionary
+	if playable_client_session != null:
+		var item_snapshot: Dictionary = playable_client_session.get_snapshot(
+			PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID
+		)
+		var graph_value = item_snapshot.get(
+			"domain_components", {}
+		).get("item_graph", {})
+		if not graph_value is Dictionary or Dictionary(graph_value).is_empty():
+			item_gameplay.queue_free()
+			item_gameplay = null
+			return {
+				"success": false,
+				"error_code": "PLAYGROUND_ITEM_GRAPH_REPLICA_MISSING",
+			}
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			gravity_field,
+			"scenario/playground/local",
+			"playground-moon",
+			"playground-r2-demo",
+			"playground",
+			true,
+			{
+				"mode": ItemGameplayControllerScript.RUNTIME_MODE_REPLICA,
+				"authority_owner_id": String(
+					item_snapshot.get("authority_owner_id", "local-process")
+				),
+				"authority_epoch": int(item_snapshot.get("authority_epoch", 1)),
+				"initial_graph_snapshot": Dictionary(graph_value),
+				"replica_revision": int(item_snapshot.get("state_revision", -1)),
+				"replica_checksum": String(item_snapshot.get("checksum", "")),
+				"network_command_bridge": playable_client_session.get_item_bridge(),
+				"persistence_enabled": false,
+				"presentation_enabled": presentation_enabled,
+			}
+		)
+	else:
+		setup_result = item_gameplay.setup_runtime(
+			player,
+			item_world_root,
+			item_attachment_root,
+			gravity_field,
+			"scenario/playground/local",
+			"playground-moon",
+			"playground-r2-demo",
+			"playground",
+			true,
+			{
+				"include_demo_world": true,
+				"presentation_enabled": presentation_enabled,
+			}
+		)
+	if not bool(setup_result.get("success", false)):
+		item_gameplay.queue_free()
+		item_gameplay = null
+		return setup_result
+	item_gameplay.inventory_visibility_changed.connect(_on_inventory_visibility_changed)
+	world_interactor = WorldInteractorScript.new()
+	world_interactor.name = "ItemWorldInteractor"
+	add_child(world_interactor)
+	world_interactor.setup(player, null)
+	world_interactor.focus_changed.connect(_on_world_interaction_focus_changed)
+	world_interactor.interaction_completed.connect(_on_world_interaction_completed)
+	world_interactor.set_enabled(true)
+	return {"success": true, "error_code": ""}
+
+
+func _on_inventory_visibility_changed(visible_value: bool) -> void:
+	if world_interactor != null:
+		world_interactor.set_enabled(not visible_value)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	var keycode: int = int(event.physical_keycode if event.physical_keycode != 0 else event.keycode)
+	match keycode:
+		KEY_TAB:
+			_command_inventory_toggle([])
+		KEY_E:
+			_command_player_interact([])
+		KEY_G:
+			_command_inventory_drop([])
+		KEY_F:
+			_command_flashlight_toggle([])
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0:
+			var hotbar_index: int = 9 if keycode == KEY_0 else keycode - KEY_1
+			_command_hotbar_select([str(hotbar_index + 1)])
+		_:
+			return
+	get_viewport().set_input_as_handled()
+
+
+
+func _on_world_interaction_focus_changed(snapshot: Dictionary) -> void:
+	if interaction_label == null:
+		return
+	if snapshot.is_empty():
+		interaction_label.visible = false
+		interaction_label.text = ""
+		return
+	interaction_label.text = "%s\n%s" % [
+		String(snapshot.get("title", "Объект")),
+		String(snapshot.get("prompt", "E — взаимодействовать")),
+	]
+	interaction_label.visible = true
+
+
+func _on_world_interaction_completed(result: Dictionary) -> void:
+	if interaction_label == null:
+		return
+	interaction_label.text = String(result.get("message", result.get("output", "Взаимодействие выполнено")))
+	interaction_label.visible = true
+
+
+func _create_static_box(node_name: String, size: Vector3, position_value: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	body.position = position_value
+	body.collision_layer = 1
+	body.collision_mask = 3
+	add_child(body)
+
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	mesh_instance.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.32, 0.36, 0.43)
+	material.roughness = 0.9
+	mesh_instance.material_override = material
+	body.add_child(mesh_instance)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	collision.shape = shape
+	body.add_child(collision)
+
+
+func _build_overlay() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "PlaygroundOverlay"
+	add_child(canvas)
+	overlay_label = Label.new()
+	overlay_label.position = Vector2(18.0, 18.0)
+	overlay_label.text = (
+		"ИСПЫТАТЕЛЬНЫЙ ПОЛИГОН\n"
+		+ "WASD — движение, Shift — бег, Space — прыжок\n"
+		+ "Tab — инвентарь, E — взаимодействие/установка, G — выбросить, F — фонарь\n"
+		+ "1–0 — hotbar; ящик справа, battery rack слева, mount между ними"
+	)
+	overlay_label.add_theme_font_size_override("font_size", 15)
+	canvas.add_child(overlay_label)
+
+	interaction_label = Label.new()
+	interaction_label.name = "InteractionHint"
+	interaction_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	interaction_label.position = Vector2(-300.0, -105.0)
+	interaction_label.size = Vector2(600.0, 72.0)
+	interaction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_label.add_theme_font_size_override("font_size", 16)
+	interaction_label.visible = false
+	canvas.add_child(interaction_label)
+
+
+func _command_camera_toggle(_arguments: Array[String]) -> Dictionary:
+	var mode: String = player.toggle_camera_mode()
+	return {"success": true, "output": "Камера: %s" % mode}
+
+
+func _command_player_reset(_arguments: Array[String]) -> Dictionary:
+	world_adapter.recover_actor(player)
+	return {"success": true, "output": "Персонаж возвращён в стартовую точку"}
+
+
+func _command_player_interact(_arguments: Array[String]) -> Dictionary:
+	if world_interactor == null:
+		return {"success": false, "output": "Взаимодействие не готово"}
+	var result: Dictionary = world_interactor.perform_interaction()
+	if not bool(result.get("success", false)) and String(result.get("message", "")) == "Нет объекта для взаимодействия" and item_gameplay != null:
+		result = item_gameplay.place_selected_item_from_view()
+	if not result.has("output"):
+		result["output"] = String(result.get("message", "Взаимодействие выполнено"))
+	return result
+
+
+func set_runtime_mouse_capture(captured: bool) -> void:
+	Input.mouse_mode = (
+		Input.MOUSE_MODE_CAPTURED if captured else Input.MOUSE_MODE_VISIBLE
+	)
+
+
+func _command_inventory_toggle(_arguments: Array[String]) -> Dictionary:
+	if item_gameplay != null:
+		return item_gameplay.toggle_inventory()
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.toggle_inventory()
+	return {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_inventory_drop(_arguments: Array[String]) -> Dictionary:
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.acceptance_press_drop_selected()
+	return item_gameplay.drop_selected_item() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+func _command_hotbar_select(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty() or not arguments[0].is_valid_int():
+		return {"success": false, "output": "Использование: inventory.hotbar.select <1-10>"}
+	var index := clampi(int(arguments[0]), 1, 10) - 1
+	if item_gameplay != null:
+		return item_gameplay.select_hotbar(index)
+	if m5_networked_inventory_shell != null:
+		return m5_networked_inventory_shell.select_hotbar(mini(index, 7))
+	return {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_inventory_profile(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or item_gameplay.inventory_ui == null or item_gameplay.inventory_ui.active_screen == null:
+		return {"success": false, "output": "Инвентарь не готов"}
+	var screen = item_gameplay.inventory_ui.active_screen
+	if arguments.is_empty():
+		var active = screen.active_interaction_profile
+		return {
+			"success": active != null,
+			"output": "Профиль инвентаря: %s" % (active.profile_id if active != null else "недоступен"),
+		}
+	var profile_id := arguments[0].strip_edges().to_lower()
+	var profile = screen.interaction_profile_loader.get_profile(profile_id)
+	if profile == null:
+		return {"success": false, "output": "Неизвестный профиль: %s" % profile_id}
+	screen._apply_interaction_profile(profile, true, true)
+	return {"success": true, "output": "Профиль инвентаря: %s" % profile.profile_id}
+
+
+func _command_inventory_save(_arguments: Array[String]) -> Dictionary:
+	return item_gameplay.save_graph() if item_gameplay != null else {"success": false, "output": "Инвентарь не готов"}
+
+
+func _command_m4_pickup(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.item.pickup <item_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.pickup", {"item_id": arguments[0]}
+	))
+
+
+func _command_m4_drop(arguments: Array[String]) -> Dictionary:
+	if arguments.is_empty() or arguments.size() > 2:
+		return _m4_usage("m4.item.drop <item_id> [quantity]")
+	var quantity := -1
+	if arguments.size() == 2:
+		if not arguments[1].is_valid_int():
+			return _m4_usage("m4.item.drop <item_id> [quantity]")
+		quantity = int(arguments[1])
+	return _m4_console_result(m4_execute_item_command(
+		"item.drop", {"item_id": arguments[0], "quantity": quantity}
+	))
+
+
+func _command_m4_split(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2 or not arguments[1].is_valid_int():
+		return _m4_usage("m4.item.split <item_id> <quantity>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.split",
+		{"item_id": arguments[0], "quantity": int(arguments[1])}
+	))
+
+
+func _command_m4_stack(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.stack <source_item_id> <target_item_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.stack",
+		{"source_item_id": arguments[0], "target_item_id": arguments[1]}
+	))
+
+
+func _command_m4_container_open(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.container.open <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"container.open", {"container_id": arguments[0]}
+	))
+
+
+func _command_m4_container_close(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.container.close <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"container.close", {"container_id": arguments[0]}
+	))
+
+
+func _command_m4_move_to_container(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.move_to_container <item_id> <container_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.move_to_container",
+		{"item_id": arguments[0], "container_id": arguments[1]}
+	))
+
+
+func _command_m4_mount(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 2:
+		return _m4_usage("m4.item.mount <item_id> <mount_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.mount",
+		{"item_id": arguments[0], "mount_id": arguments[1]}
+	))
+
+
+func _command_m4_detach(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1:
+		return _m4_usage("m4.item.detach <mount_id>")
+	return _m4_console_result(m4_execute_item_command(
+		"item.detach", {"mount_id": arguments[0]}
+	))
+
+
+func _command_m4_hotbar(arguments: Array[String]) -> Dictionary:
+	if arguments.size() != 1 or not arguments[0].is_valid_int():
+		return _m4_usage("m4.hotbar.select <0-7>")
+	return _m4_console_result(m4_execute_item_command(
+		"inventory.select_hotbar",
+		{"selected_hotbar_index": int(arguments[0])}
+	))
+
+
+func _command_m4_snapshot(_arguments: Array[String]) -> Dictionary:
+	if _m4_item_graph_snapshot.is_empty():
+		return {
+			"success": false,
+			"error_code": "M4_ITEM_GRAPH_REPLICA_MISSING",
+			"output": "M4 Item Graph replica не получена",
+		}
+	return {
+		"success": true,
+		"output": JSON.stringify(_m4_item_graph_snapshot, "  "),
+		"snapshot": _m4_item_graph_snapshot.duplicate(true),
+	}
+
+
+func _m4_usage(usage: String) -> Dictionary:
+	return {
+		"success": false,
+		"error_code": "INVALID_M4_COMMAND_ARGUMENTS",
+		"output": "Использование: %s" % usage,
+	}
+
+
+func _m4_console_result(result: Dictionary) -> Dictionary:
+	var output := (
+		"M4 command выполнена"
+		if bool(result.get("success", false))
+		else "M4 command отклонена: %s" % String(
+			result.get("error_code", "M4_COMMAND_REJECTED")
+		)
+	)
+	var normalized := result.duplicate(true)
+	normalized["output"] = output
+	return normalized
+
+
+
+func _command_flashlight_toggle(_arguments: Array[String]) -> Dictionary:
+	var enabled: bool = bool(player.toggle_flashlight()) if player != null else false
+	return {"success": player != null, "output": "Фонарь: %s" % ("включён" if enabled else "выключен"), "enabled": enabled}
+
+
+func _command_debug_grant(arguments: Array[String]) -> Dictionary:
+	if item_gameplay == null or arguments.is_empty():
+		return {"success": false, "output": "Использование: inventory.debug.grant <definition_id> [quantity]"}
+	var quantity := 1
+	if arguments.size() > 1 and arguments[1].is_valid_int():
+		quantity = maxi(1, int(arguments[1]))
+	var result: Dictionary = item_gameplay.grant_debug_item(arguments[0], quantity)
+	result["output"] = item_gameplay.result_message(result)
+	return result
+
+
+func get_item_gameplay_controller():
+	return item_gameplay
+
+
+func _command_spawn_box(arguments: Array[String]) -> Dictionary:
+	var size_value: float = 1.0
+	if not arguments.is_empty() and arguments[0].is_valid_float():
+		size_value = clampf(float(arguments[0]), 0.2, 4.0)
+	var body := RigidBody3D.new()
+	object_counter += 1
+	body.name = "TestBox_%d" % object_counter
+	body.mass = maxf(0.2, size_value * size_value * size_value * 12.0)
+	body.collision_layer = 1
+	body.collision_mask = 3
+	var camera: Camera3D = player.get_active_camera()
+	var forward: Vector3 = -camera.global_transform.basis.z
+	body.position = camera.global_position + forward * 4.0 + Vector3.UP * 0.5
+	spawned_objects.add_child(body)
+
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3.ONE * size_value
+	mesh_instance.mesh = mesh
+	body.add_child(mesh_instance)
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3.ONE * size_value
+	collision.shape = shape
+	body.add_child(collision)
+	return {
+		"success": true,
+		"output": "Создан %s" % body.name,
+		"object_name": body.name,
+	}
+
+
+func _command_clear(_arguments: Array[String]) -> Dictionary:
+	var removed_count: int = spawned_objects.get_child_count()
+	for child in spawned_objects.get_children():
+		child.free()
+	return {
+		"success": true,
+		"output": "Удалено объектов: %d" % removed_count,
+	}
+
+
+func _test_boot() -> Dictionary:
+	var passed: bool = (
+		player != null
+		and player.get_active_camera() != null
+		and player.get_controller_id() == "flat_humanoid"
+		and get_node_or_null("Floor") is StaticBody3D
+	)
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: playground boot" if passed else "FAIL: playground boot",
+	}
+
+
+func _test_physics_object() -> Dictionary:
+	var before: int = spawned_objects.get_child_count()
+	var create_result: Dictionary = _command_spawn_box(["0.5"])
+	var after_create: int = spawned_objects.get_child_count()
+	var object_name: String = String(create_result.get("object_name", ""))
+	var created_object: Node = spawned_objects.get_node_or_null(object_name)
+	var object_was_found: bool = is_instance_valid(created_object)
+	if object_was_found:
+		created_object.free()
+	var after_cleanup: int = spawned_objects.get_child_count()
+	var passed: bool = (
+		bool(create_result.get("success", false))
+		and after_create == before + 1
+		and object_was_found
+		and after_cleanup == before
+	)
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: physics object lifecycle" if passed else "FAIL: physics object lifecycle",
+	}
+
+
+func _test_inventory_demo() -> Dictionary:
+	var passed: bool = (
+		item_gameplay != null
+		and item_gameplay.get_container(item_gameplay.player_inventory_id) != null
+		and item_gameplay.get_container(item_gameplay.player_hotbar_id) != null
+		and item_gameplay.get_container("demo_crate_contents") != null
+		and item_gameplay.get_container("battery_rack_slots") != null
+		and not item_gameplay.get_socket_state("demo_mount", "beacon_socket").is_empty()
+		and item_gameplay.placement_service != null
+		and item_gameplay.placement_service.fixture_nodes.size() >= 1
+		and command_registry != null
+		and command_registry.has_command("player.interact")
+		and bool(item_gameplay.domain.validator.validate_graph().get("success", false))
+	)
+	return {"success": passed, "passed": passed, "output": "PASS: inventory demo" if passed else "FAIL: inventory demo"}
+
+
+func _create_m2_player_state(input_sequence: int) -> Dictionary:
+	return PlayableStateCodec.create_player_state(
+		player.get_world_position(),
+		player.global_transform.basis,
+		player.velocity,
+		_m2_interaction_position,
+		player.get_controller_id(),
+		player.get_camera_mode(),
+		player.is_flashlight_enabled(),
+		input_sequence,
+		"scenario/playground/local",
+		runtime_universe_id,
+		"playground",
+		runtime_instance_id,
+		0.0
+	)
+
+
+func _m2_state_content_hash(player_state: Dictionary) -> String:
+	var comparable: Dictionary = player_state.duplicate(true)
+	comparable["last_input_sequence"] = 0
+	var spatial: Dictionary = Dictionary(
+		comparable.get("spatial_ref", {})
+	).duplicate(true)
+	spatial["sample_time_s"] = 0.0
+	comparable["spatial_ref"] = spatial
+	return NetworkContractUtils.payload_hash(comparable)
+
+
+func _apply_m2_player_snapshot(snapshot: Dictionary) -> bool:
+	if snapshot.is_empty() or player == null:
+		return false
+	var state_value = snapshot.get(
+		"domain_components", {}
+	).get("player_state", {})
+	if not state_value is Dictionary:
+		return false
+	var state: Dictionary = Dictionary(state_value)
+	if not bool(PlayableStateCodec.validate_player_state(state).get("success", false)):
+		return false
+	player.set_world_position(PlayableStateCodec.player_position(state))
+	player.global_transform = Transform3D(
+		PlayableStateCodec.player_basis(state),
+		player.global_position
+	)
+	player.velocity = PlayableStateCodec.player_velocity(state)
+	_m2_interaction_position = PlayableStateCodec.player_interaction_position(state)
+	if player.get_controller_id() != String(state.get("controller_id", "")):
+		player.activate_controller(String(state.get("controller_id", "")))
+	if player.get_camera_mode() != String(state.get("camera_mode", "")):
+		player.set_camera_mode(String(state.get("camera_mode", "")))
+	if player.is_flashlight_enabled() != bool(
+		state.get("flashlight_enabled", false)
+	):
+		player.set_flashlight_enabled(bool(state.get("flashlight_enabled", false)))
+	_m2_player_input_sequence = maxi(
+		_m2_player_input_sequence,
+		int(state.get("last_input_sequence", 0))
+	)
+	return true
+
+
+func _apply_m2_flat_input(delta: float) -> void:
+	if player == null or not local_input_enabled:
+		return
+	if item_gameplay != null and item_gameplay.inventory_open:
+		return
+	var input_vector := Input.get_vector(
+		"move_left", "move_right", "move_forward", "move_back"
+	)
+	if input_vector.length_squared() < 0.000001:
+		player.velocity = Vector3.ZERO
+		return
+	var view_basis: Basis = player.get_view_basis()
+	var forward: Vector3 = (-view_basis.z).slide(Vector3.UP).normalized()
+	var right: Vector3 = view_basis.x.slide(Vector3.UP).normalized()
+	var direction: Vector3 = right * input_vector.x + forward * -input_vector.y
+	if direction.length_squared() > 1.0:
+		direction = direction.normalized()
+	var speed: float = (
+		M2_NETWORK_RUN_SPEED_MPS
+		if Input.is_action_pressed("boost")
+		else M2_NETWORK_WALK_SPEED_MPS
+	)
+	var offset: Vector3 = direction * speed * clampf(delta, 0.0, 0.05)
+	var candidate_position: Vector3 = player.get_world_position() + offset
+	candidate_position.y = maxf(candidate_position.y, spawn_position.y)
+	player.set_world_position(candidate_position)
+	_m2_interaction_position += offset
+	player.velocity = direction * speed
+
+
+func _sync_m2_player_state(delta: float) -> void:
+	if playable_client_session == null or player == null:
+		return
+	var candidate: Dictionary = _create_m2_player_state(
+		_m2_player_input_sequence + 1
+	)
+	var content_hash: String = _m2_state_content_hash(candidate)
+	if content_hash == _m2_last_candidate_hash:
+		return
+	_m2_player_input_sequence += 1
+	_m2_player_operation_sequence += 1
+	candidate["last_input_sequence"] = _m2_player_input_sequence
+	var result: Dictionary = playable_client_session.submit_player_state(
+		candidate,
+		clampf(delta, 0.000001, 0.25),
+		"operation/m2/playground/%d/%d" % [
+			OS.get_process_id(),
+			_m2_player_operation_sequence,
+		]
+	)
+	var snapshot: Dictionary = Dictionary(
+		result.get("details", {}).get("snapshot", {})
+	)
+	if not bool(result.get("success", false)):
+		_m2_rejection_count += 1
+		_m2_last_sync_error = String(
+			result.get("error_code", "PLAYGROUND_PLAYER_SYNC_REJECTED")
+		)
+		_apply_m2_player_snapshot(snapshot)
+		_m2_last_candidate_hash = _m2_state_content_hash(
+			_create_m2_player_state(0)
+		)
+		return
+	if not _apply_m2_player_snapshot(snapshot):
+		_m2_rejection_count += 1
+		_m2_last_sync_error = "INVALID_PLAYGROUND_PLAYER_REPLICA_SNAPSHOT"
+		return
+	_m2_last_sync_error = ""
+	_m2_last_candidate_hash = content_hash
+	_m2_sync_count += 1
+
+
+func m2_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if runtime_role != "game-client" or not _m2_attached or player == null:
+		return {"success": false, "error_code": "M2_PLAYGROUND_NOT_READY"}
+	var before_position: Vector3 = player.get_world_position()
+	var candidate_position: Vector3 = before_position + offset
+	candidate_position.y = maxf(candidate_position.y, spawn_position.y)
+	player.set_world_position(candidate_position)
+	_m2_interaction_position += candidate_position - before_position
+	player.velocity = Vector3.ZERO
+	return {
+		"success": true,
+		"before_position": _vector_to_array(before_position),
+		"candidate_position": _vector_to_array(candidate_position),
+		"sync_count": _m2_sync_count,
+	}
+
+
+func m2_open_inventory_and_select_hotbar(index: int) -> Dictionary:
+	if runtime_role != "game-client" or item_gameplay == null:
+		return {"success": false, "error_code": "M2_PLAYGROUND_ITEM_REPLICA_NOT_READY"}
+	if not item_gameplay.inventory_open:
+		item_gameplay.toggle_inventory()
+	var selection: Dictionary = item_gameplay.select_hotbar(index)
+	return {
+		"success": bool(selection.get("success", false)),
+		"selection": selection.duplicate(true),
+		"inventory_open": item_gameplay.inventory_open,
+		"selected_hotbar_index": item_gameplay.selected_hotbar_index,
+		"runtime_mode": item_gameplay.runtime_mode,
+		"replica_revision": item_gameplay.network_replica_revision,
+		"replica_checksum": item_gameplay.network_replica_checksum,
+	}
+
+
+func create_m2_graphical_client_report() -> Dictionary:
+	var player_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.PLAYER_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	var item_snapshot: Dictionary = (
+		playable_client_session.get_snapshot(PlayableAuthorityScript.ITEM_GRAPH_ENTITY_ID)
+		if playable_client_session != null
+		else {}
+	)
+	return {
+		"schema": "planet_simulator.m2_graphical_world_report.v1",
+		"runtime_role": runtime_role,
+		"attached": _m2_attached,
+		"world_id": "playground",
+		"spawn_position": _vector_to_array(spawn_position),
+		"player_position": _vector_to_array(
+			player.get_world_position() if player != null else Vector3.ZERO
+		),
+		"player_entity_id": PlayableAuthorityScript.PLAYER_ENTITY_ID,
+		"interaction_position": _vector_to_array(_m2_interaction_position),
+		"player_input_sequence": _m2_player_input_sequence,
+		"player_sync_count": _m2_sync_count,
+		"player_rejection_count": _m2_rejection_count,
+		"player_snapshot": player_snapshot,
+		"item_snapshot": item_snapshot,
+		"item_controller_mode": (
+			String(item_gameplay.runtime_mode) if item_gameplay != null else ""
+		),
+		"inventory_open": (
+			bool(item_gameplay.inventory_open) if item_gameplay != null else false
+		),
+		"selected_hotbar_index": (
+			int(item_gameplay.selected_hotbar_index) if item_gameplay != null else -1
+		),
+		"active_camera": (
+			String(player.get_active_camera().get_path())
+			if (
+				player != null
+				and player.get_active_camera() != null
+				and player.get_active_camera().current
+			)
+			else NodePath()
+		),
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": (
+			bool(player.is_network_replica_mode()) if player != null else false
+		),
+		"network_prediction_mode": (
+			bool(player.is_network_prediction_mode()) if player != null else false
+		),
+		"network_playground_enabled": _network_playground_enabled,
+		"m7_state_submissions": _m7_state_submissions,
+		"m7_state_sync_enabled": _m7_state_sync_enabled,
+		"m7_reconciliations": _m7_reconciliations,
+		"m7_prediction_updates": _m7_prediction_updates,
+		"m7_prediction_report": _m7_prediction_report.duplicate(true),
+		"m7_last_sync_error": _m7_last_sync_error,
+		"m7_interpolation_mode": M7_PREDICTION_MODE,
+		"m7_interpolation_updates": _m7_interpolation_updates,
+		"m7_hard_snaps": _m7_hard_snaps,
+		"m7_authoritative_target_sequence": _m7_authoritative_target_sequence,
+		"m7_network_error": _m7_network_error,
+		"m7_item_bridge": _m7_item_bridge.get_report() if _m7_item_bridge != null else {},
+		"seven_days_inventory_active": _active_inventory_profile_id() == "seven_days_like",
+		"last_sync_error": _m2_last_sync_error,
+		"direct_authority_references": 0,
+		"direct_domain_references": 0,
+	}
+
+
+
+func _register_command(registry, owner_id: String, definition: Dictionary, callback: Callable) -> void:
+	if not registry.register_command(definition, callback, owner_id):
+		push_error("Playground command registration failed: %s" % definition.get("id", ""))
+
+
+func _vector_to_array(value: Vector3) -> Array:
+	return [value.x, value.y, value.z]
