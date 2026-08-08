@@ -7,6 +7,7 @@
   "runtime_implementation_head": "b5df50d891ab6963e6f4e73463238599c551b68a",
   "test_tooling_head": "e164d2d261ac2dd374155a8c3ad73a7a278f4042",
   "source_contract_bridge_head": "36bd39a8cae5e514b4c1b8f125f48bc8477f74ab",
+  "long_run_observability_head": "733f7bffe8ad1efe3f03150c23fe4e26cfe665d2",
   "draft_pr": 32,
   "decision": "FIX10 CANDIDATE — EXACT WINDOWS AUTOMATED GATE + >=5 MIN TWO-CLIENT LOCAL MOVEMENT/ITEM STRESS REQUIRED",
   "trigger_evidence": {
@@ -51,7 +52,8 @@
     ],
     "client": [
       "extract and register prediction acknowledgement sidecars before snapshot reconciliation",
-      "preserve FIX9 phase accounting and transport behavior"
+      "preserve FIX9 phase accounting and transport behavior",
+      "emit FIX10_PREDICTION_HEALTH alongside the existing throttled health event when a 2-second sample is actually emitted"
     ],
     "reconciler": [
       "maintain an independent bounded 512-tick local prediction timeline",
@@ -95,5 +97,5 @@
     "subjective": "the frequent spring/back-pull micro-rollbacks must be absent or substantially reduced compared with the FIX9 debug run"
   },
   "known_separate_issue": "Long FIX9 debug logs also showed intermittent MULTIPLAYER_SAME_REVISION_MUTATION. Items remained present and this is treated as a separate replica transport race unless it blocks FIX10 validation.",
-  "status": "Implementation candidate and compatibility bridges are committed and draft PR #32 is open. Exact Windows editor import, focused/regression gate, two-client process test and long manual stress remain required before acceptance."
+  "status": "Implementation candidate, compatibility bridges and long-run FIX10 health telemetry are committed and draft PR #32 is open. Exact Windows editor import, focused/regression gate, two-client process test and long manual stress remain required before acceptance."
 }
