@@ -38,6 +38,24 @@
   ],
   "focused_test": "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
   "runner": "VALIDATE_M7_RUNTIME_PERFORMANCE_FIX6.ps1",
+  "assistant_exact_godot_probe": {
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "telemetry_ring_semantics": "PASS",
+    "observations": 100,
+    "window": 8,
+    "retained_min": 92.0,
+    "retained_max": 99.0,
+    "retained_mean": 95.5,
+    "overwrite_count": 92,
+    "synthetic_hot_loop": {
+      "iterations": 200000,
+      "window": 512,
+      "legacy_duplicate_pop_front_ms": 412.636,
+      "ring_overwrite_ms": 16.495,
+      "observed_speedup": 25.0158,
+      "note": "Synthetic single-process microbenchmark only; it demonstrates the cost class removed from observe(), not end-to-end server throughput."
+    }
+  },
   "required_windows_gate": [
     "FIX6 editor import/composition PASS on Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "FIX6 realtime hot-path regression PASS",
