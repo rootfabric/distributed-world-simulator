@@ -59,9 +59,22 @@ func resolve_composite_body_suppression(
 	})
 
 
+func resolve_topology_occlusion_target(_character_visual_root: Node) -> Dictionary:
+	var body_mesh := _resolve_base_body_mesh()
+	if body_mesh == null:
+		return _result(false, "TOPOLOGY_OCCLUSION_BODY_MESH_NOT_FOUND")
+	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+		"key": "quaternius_topology_body:%d" % body_mesh.get_instance_id(),
+		"node": body_mesh,
+		"mesh": body_mesh.mesh,
+		"mesh_name": String(body_mesh.name),
+	})
+
+
 func create_report() -> Dictionary:
 	var report := super.create_report()
 	report["composite_body_suppression"] = true
 	report["composite_body_suppression_mode"] = "REGION_MATERIAL_OVERRIDE"
 	report["layered_body_regions"] = LAYERED_BODY_REGIONS.duplicate()
+	report["topology_occlusion_target"] = _resolve_base_body_mesh() != null
 	return report
