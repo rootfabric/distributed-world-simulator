@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v3",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v4",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8A_FIX1_PENDING_WINDOWS_RERUN",
+  "decision": "CH7_8A_FIX2_STREAMING_DIAGNOSTIC_PENDING_WINDOWS_FOCUSED_RERUN",
   "goal": "Prove one exact-rig Quaternius skinned outfit with minimum complexity before body-region replacement and wider garment support.",
   "selected_asset": {
     "family": "Quaternius Modular Character Outfits - Fantasy",
@@ -48,8 +48,8 @@
     "graphical_launcher": "PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1",
     "acceptance_runner": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
   },
-  "windows_fix0_rerun": {
-    "focused_skinned_pose_bridge": "PASS 32 assertions",
+  "windows_fix1_rerun": {
+    "focused_quaternius_rig_adapter": "PASS 45 assertions",
     "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
     "editor_import": "PASS",
     "ch6_avatar_presenter": "PASS 43 assertions",
@@ -61,20 +61,58 @@
     "ch6_acceptance_runner": "PASS",
     "ch7_character_equipment_domain": "PASS 54 assertions",
     "ch7_character_equipment_presenter": "PASS 447 assertions",
-    "ch7_quaternius_equipment_rig_adapter": "FAIL 1 failure / 45 assertions",
-    "blocking_message": "Unexpected Quaternius equipment adapter schema",
-    "failure_classification": "BACKWARD_COMPATIBILITY_REPORT_SCHEMA_REGRESSION",
-    "new_skinned_runtime_reached": false
+    "ch7_quaternius_equipment_rig_adapter": "PASS 45 assertions",
+    "ch7_quaternius_equipment_lab": "PASS 64 assertions",
+    "ch7_runner": "PASS",
+    "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
+    "ch7_8_real_lab": "STALLED_OR_LONG_RUNNING_AFTER_RUNNER_STAGE_HEADER",
+    "last_visible_line": "[ch7_8_quaternius_skinned_garment_lab]",
+    "important_runner_observation": "The CH7.8 runner buffered native Godot stdout until process exit, so the existing GDScript phase prints were hidden while the process was running. The last visible stage header does not localize the synchronous stall."
   },
   "fix1": {
     "commit": "ea846e78f957ca45a91aa063aa65efc56a7ae5a4",
     "change": "Restore the accepted planet_simulator.quaternius_equipment_rig_adapter.v2 report schema while keeping CH7.8 skinned_parent_ready as an additive optional field.",
-    "reason": "Adding skinned-garment capability did not require a breaking report-schema change. The accepted CH7 v2 contract must remain stable.",
-    "production_movement_changed": false,
+    "result": "CONFIRMED_BY_WINDOWS_FOCUSED_AND_FULL_CH7_RERUN"
+  },
+  "fix2_diagnostics": {
+    "streaming_runner_commit": "9d40b003e09dc6ab889de4124e967a0063828e6e",
+    "fine_grained_test_phase_commit": "1444896ee117ef975ea60e62822c4516cc330d32",
+    "runtime_setup_phase_commit": "8f9e1e1ed721ba028128a39f8bc19f964d170d3d",
+    "runner_streams_native_output_live": true,
+    "test_phases": [
+      "instantiate",
+      "add_child",
+      "after_add_child",
+      "after_process_frame",
+      "ready",
+      "enter_first_person",
+      "after_enter_first_person",
+      "equip_call",
+      "after_equip_call",
+      "after_equip_frame1",
+      "after_equip_frame2",
+      "motion",
+      "rigid_composition",
+      "unequip",
+      "after_unequip_call",
+      "finish"
+    ],
+    "runtime_setup_phases": [
+      "super_ready_begin",
+      "super_ready_end",
+      "outfit_setup_begin",
+      "resource_exists_check",
+      "resource_load_begin",
+      "resource_load_end",
+      "outfit_setup_end",
+      "ready_end"
+    ],
+    "production_behavior_changed": false,
     "network_changed": false,
     "collision_changed": false,
     "equipment_domain_changed": false,
-    "pose_copy_changed": false
+    "pose_copy_changed": false,
+    "shadow_policy_changed": false
   },
   "minimal_scope": {
     "one_skinned_outfit": true,
@@ -91,26 +129,8 @@
     "coarse_body_region_replacement_or_hiding": true,
     "reason": "First prove exact-rig pose composition. Then choose the smallest hiding/replacement mechanism based on actual graphical clipping of Male_Peasant over the accepted base character."
   },
-  "windows_gate": {
-    "command": ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot",
-    "required": [
-      "complete accepted CH7 runner PASS",
-      "synthetic skinned pose bridge PASS",
-      "real Male_Peasant bridge reports 65 matched bones and 4 skinned meshes",
-      "CH7.8 real lab enters CH6 world visual and shadow composition",
-      "rigid helmet/backpack coexist with skinned outfit",
-      "equip/unequip does not move CharacterBody3D or alter gameplay capsule"
-    ]
-  },
-  "graphical_gate_after_automated_pass": {
-    "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
-    "controls": "O outfit | H helmet | B backpack | C FP/TP | Ctrl crouch | Space jump",
-    "inspect": [
-      "Male Peasant follows idle/walk/run/jump/crouch without lag or exploding skin",
-      "FP hides own garment visuals while garment shadow remains",
-      "TP shows garment normally",
-      "helmet and backpack continue to compose",
-      "note any clipping or z-fighting from the still-visible base body"
-    ]
+  "next_gate": {
+    "focused_command": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
+    "purpose": "Use live phase output to localize the real-asset stall before changing functional code."
   }
 }
