@@ -1,0 +1,155 @@
+{
+  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v1",
+  "branch": "feature/ch6-controllable-entity-presentation",
+  "base_exact_sha": "5d408029969ba8953011c559fc1376af357bca58",
+  "base_checkpoint": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation — ACCEPTED",
+  "implemented_head_before_record": "477484870d9fe6133a964cb5c6bbd1c6947893a6",
+  "delivery": "CH7 rigid equipment candidate / universal semantic equipment + Quaternius composition",
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_GODOT_RERUN",
+  "scope": {
+    "production_lunar_player_changed": false,
+    "network_runtime_changed": false,
+    "inventory_changed": false,
+    "production_item_graph_changed": false,
+    "prediction_reconciliation_changed": false,
+    "production_collision_contract_changed": false,
+    "ch6_existing_runtime_files_changed": false,
+    "integration_mode": "isolated_character_equipment_domain_and_lab_presentation"
+  },
+  "architecture": {
+    "canonical_item_identity_preserved": true,
+    "semantic_equipment_channels": true,
+    "semantic_presentation_anchors": true,
+    "channels_separate_from_anchors": true,
+    "multi_channel_single_item_supported": true,
+    "character_layout_tags_and_capabilities": true,
+    "immutable_style_snapshot_boundary": true,
+    "equipment_source_abstraction": true,
+    "rig_adapter_abstraction": true,
+    "per_rig_presentation_catalog": true,
+    "per_rig_fit_transform_is_presentation_only": true,
+    "generic_presenter_has_no_character_type_switch": true,
+    "production_item_graph_bridge_deferred": true
+  },
+  "implemented": {
+    "ch7_0_architecture_lock": true,
+    "ch7_1_headless_equipment_domain": true,
+    "ch7_2_deterministic_lab_equipment_source": true,
+    "ch7_3_generic_equipment_presenter": true,
+    "ch7_4_quaternius_rig_adapter": true,
+    "ch7_5_rigid_helmet_and_backpack": true,
+    "ch7_6_dynamic_first_third_person_and_shadow_composition": true,
+    "ch7_7_second_rig_abstraction_proof": true,
+    "ch7_8_skinned_garment": false,
+    "ch7_9_full_lifecycle_acceptance": false
+  },
+  "character_compatibility": {
+    "generic_second_rig_test": "independent humanoid/robot node layouts use the same semantic body.head and gear.back entries through different CharacterRigAdapter maps",
+    "quaternius_modes": [
+      "SKELETON via semantic bone mapping + BoneAttachment3D",
+      "FALLBACK via semantic presentation pivots"
+    ],
+    "supported_initial_semantic_anchors": [
+      "body.root",
+      "body.head",
+      "gear.back",
+      "hand.left",
+      "hand.right"
+    ],
+    "fixed_humanoid_slot_enum_used": false
+  },
+  "initial_lab_equipment": {
+    "helmet": {
+      "item_id": "lab.item.helmet.001",
+      "profile_id": "equipment.helmet.mk1",
+      "presentation_id": "wearable.helmet.mk1",
+      "anchor": "body.head",
+      "occupies": ["body.head.outer"],
+      "input": "H"
+    },
+    "backpack": {
+      "item_id": "lab.item.backpack.001",
+      "profile_id": "equipment.backpack.mk1",
+      "presentation_id": "wearable.backpack.mk1",
+      "anchor": "gear.back",
+      "occupies": ["gear.back"],
+      "input": "B"
+    },
+    "visuals": "synthetic primitive rigid wearables; architecture validation assets, not production art"
+  },
+  "ch6_composition": {
+    "equipment_visuals_live_inside_avatar_presentation_hierarchy": true,
+    "quaternius_crouch_ground_offset_reused": true,
+    "equipment_moves_character_body": false,
+    "equipment_changes_collision": false,
+    "equipment_reads_gameplay_input_outside_lab_toggle_ui": false,
+    "dynamic_visual_refresh_added_as_ch7_subclass": "EquipmentAwareFirstPersonAdapter",
+    "reason_for_refresh": "CH6 captures VisualInstance3D render layers and shadow proxy sources at bind time; equipment can appear and disappear later",
+    "first_person_expected": "body and equipped world visuals excluded from own FP camera through the same CH6 world render layer",
+    "third_person_expected": "body and equipment remain visible",
+    "shadow_expected": "dynamic equipment is included in rebuilt WORLD_PROXY shadow capture"
+  },
+  "lifecycle_safety": {
+    "snapshot_reapply_idempotent": true,
+    "failed_unsupported_presentation_preflight_preserves_existing_visuals": true,
+    "removed_visual_detached_before_queue_free": true,
+    "reason": "prevents same-frame view/shadow refresh from recapturing an unequipped queued-for-deletion visual",
+    "automated_lab_cycles_declared": 25
+  },
+  "tests": {
+    "ch6_regression_runner": "RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1",
+    "ch7_runner": "RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1",
+    "domain": "tests/characters/test_ch7_character_equipment_domain.gd",
+    "generic_presenter": "tests/characters/test_ch7_character_equipment_presenter.gd",
+    "quaternius_rig_adapter": "tests/characters/test_ch7_quaternius_equipment_rig_adapter.gd",
+    "quaternius_equipment_lab": "tests/characters/test_ch7_quaternius_equipment_lab.gd",
+    "graphical_lab": "scenes/labs/character/quaternius_equipment_lab.tscn",
+    "graphical_launcher": "PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1"
+  },
+  "authoring_validation": {
+    "repository_compare": "PASS: candidate branch is fast-forward ahead of accepted CH6 base and CH7 diff contains added CH7 paths only",
+    "godot_binary_available_in_authoring_environment": false,
+    "editor_import": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
+    "ch6_runtime_regression": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
+    "ch7_domain_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
+    "ch7_presenter_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
+    "ch7_quaternius_rig_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
+    "ch7_graphical_lab_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT"
+  },
+  "windows_acceptance_gate": {
+    "engine": "Godot 4.7.1 stable double custom build used for CH6 acceptance",
+    "test_command": ".\\RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
+    "play_command": ".\\PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
+    "required_automated": [
+      "complete CH6 acceptance runner PASS",
+      "editor import has no Parse Error or Compile Error",
+      "CH7 equipment domain PASS",
+      "CH7 generic presenter + independent second rig PASS",
+      "CH7 Quaternius skeleton/fallback rig mapping PASS",
+      "CH7 equipment lab FP/TP/shadow/lifecycle PASS"
+    ],
+    "required_graphical": [
+      "H equips and unequips helmet on the character head",
+      "B equips and unequips backpack on the character back",
+      "helmet and backpack follow idle/walk/run/jump/crouch presentation",
+      "first-person own helmet/backpack do not float visibly in camera",
+      "first-person character and equipped-item shadows remain visible",
+      "third-person body and equipment remain visible",
+      "crouch keeps gameplay capsule foot plane unchanged and equipment follows the same visual grounding correction"
+    ]
+  },
+  "deferred": {
+    "ch7_8": "one skinned garment + body-region hiding",
+    "production_item_graph_bridge": "ItemGraphEquipmentSource on a later integration branch after current production synchronization",
+    "atomic_equipment_replace": "future authoritative Item Graph transaction",
+    "gameplay_properties": [
+      "pressure",
+      "oxygen",
+      "thermal insulation",
+      "armor",
+      "radiation",
+      "battery",
+      "durability"
+    ]
+  }
+}
