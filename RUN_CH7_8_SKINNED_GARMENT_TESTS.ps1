@@ -7,7 +7,6 @@ $Root = $PSScriptRoot
 $Ch7Runner = Join-Path $Root "RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1"
 $AssetRoot = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy"
 $Garment = Join-Path $AssetRoot "Modular Character Outfits - Fantasy[Standard]\Exports\glTF (Godot-Unreal)\Outfits\Male_Peasant.gltf"
-$BaseRefreshHelper = Join-Path $Root "REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1"
 
 if (-not (Test-Path $Ch7Runner -PathType Leaf)) {
     throw "CH7 acceptance runner is missing: $Ch7Runner"
@@ -16,9 +15,6 @@ if (-not (Test-Path -LiteralPath $Garment -PathType Leaf)) {
     throw "Male_Peasant.gltf is missing. Run PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1 first."
 }
 
-# The Standard pack includes duplicate FBX exports intended for Unity. Their
-# relative texture links are noisy in Godot and are not part of CH7.8. Keep the
-# authoritative Godot-Unreal glTF export visible and ignore only FBX (Unity).
 $FbxDirectories = @(
     Get-ChildItem -LiteralPath $AssetRoot -Directory -Recurse -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -eq "FBX (Unity)" }
@@ -53,7 +49,6 @@ function Resolve-Godot([string]$Requested) {
 function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string]$FailureHint = "") {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
-
     $PreviousErrorActionPreference = $ErrorActionPreference
     $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
@@ -80,7 +75,6 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string]$FailureH
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
         }
     }
-
     $Text = $Output -join "`n"
     $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     if ($ExitCode -ne 0 -or $HasFailureMarker) {
@@ -93,13 +87,13 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string]$FailureH
 
 $Godot = Resolve-Godot $GodotPath
 
-# CH7.8C relies on the post-November-2025 Base Characters update that added
-# Head/Upperbody variants specifically for Modular Character Outfits. Fail
-# before the expensive CH7 regression suite if a stale local asset pack is used.
+# The newly downloaded public Standard archive was observed without standalone
+# Head/Upperbody character glTF exports. Keep this early gate until CH7.8C is
+# switched to the smallest safe FullBody-internal body hiding strategy.
 Invoke-Godot-Test `
     "ch7_8_quaternius_base_variant_probe" `
     "res://tests/characters/probe_ch7_8_quaternius_base_variants.gd" `
-    "Refresh the current free Universal Base Characters Standard pack with: .\REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1 -GodotPath `$Godot -OpenDownloadPage"
+    "Current Standard export has no standalone Head variant. Do not re-download it; run res://tests/characters/probe_ch7_8_quaternius_fullbody_mesh_structure.gd and finish the FullBody-internal replacement path first."
 
 & $Ch7Runner -GodotPath $Godot
 if ($LASTEXITCODE -ne 0) {
