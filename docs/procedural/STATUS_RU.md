@@ -11,6 +11,12 @@ G6.3 Runtime WaterSurfaceQuery         ACCEPTED
 G6.4 Casual Visual River Lab           FIX3 IMPLEMENTED CANDIDATE
 ```
 
+Fix3 candidate head:
+
+```text
+77e99819c319e8ad924485414c56f3dc14748844
+```
+
 Fix2 automated evidence passed (`104 assertions` + scene smoke), and the manual run proved that G2 cell refinement works. It also exposed that selection detail alone is insufficient: the fixed sphere and resampled spline did not reveal new visible geometry.
 
 Fix3 composes accepted G2 + G3 into the lab:
