@@ -37,15 +37,27 @@ func _run() -> void:
 	_assert(String(fp_report.get("schema", "")) == "planet_simulator.full_body_first_person_adapter.v2", "Unexpected CH5 fix1 adapter schema")
 	_assert(String(fp_report.get("entity_kind", "")) == "humanoid", "Quaternius presentation profile lost its entity kind")
 	_assert(String(fp_report.get("first_person_policy", "")) == "HIDE_WORLD_MODEL", "CH5 fix1 is not using camera-layer body suppression")
+	_assert(String(fp_report.get("first_person_shadow_policy", "")) == "WORLD_PROXY", "CH6 fix1 is not using WORLD_PROXY shadow preservation")
 	_assert(String(fp_report.get("mask_mode", "")) == "CAMERA_LAYER", "CH5 fix1 fell back to destructive head masking")
 	_assert(bool(fp_report.get("mask_applied", false)), "First-person world-body suppression was not applied")
 	_assert(bool(fp_report.get("world_hidden_from_first_person", false)), "First-person camera can still render the world body")
 	_assert(bool(fp_report.get("world_visible_to_third_person", false)), "Third-person camera lost the world body")
 	_assert(bool(fp_report.get("world_animation_preserved", false)), "World avatar animation contract was disabled in first person")
 	_assert(int(fp_report.get("world_visual_count", 0)) > 0, "No world visuals were assigned to the dedicated presentation layer")
+	_assert(bool(fp_report.get("shadow_preservation_enabled", false)), "First-person shadow preservation is disabled")
+	_assert(bool(fp_report.get("shadow_proxy_ready", false)), "First-person shadow proxy is not ready")
+	_assert(bool(fp_report.get("shadow_proxy_active", false)), "First-person shadow proxy did not activate")
+	_assert(bool(fp_report.get("shadow_caster_preserved", false)), "First-person hidden body has no preserved shadow caster")
+	_assert(int(fp_report.get("shadow_proxy_count", 0)) > 0, "No shadow-only meshes were generated")
+	_assert(int(fp_report.get("shadow_proxy_shared_mesh_count", 0)) == int(fp_report.get("shadow_proxy_count", 0)), "Shadow proxy duplicates mesh resources")
+	_assert(bool(fp_report.get("render_layers_distinct", false)), "World/viewmodel/shadow layers overlap")
 	var world_mask := int(fp_report.get("world_render_layer_mask", 0))
+	var shadow_mask := int(fp_report.get("shadow_render_layer_mask", 0))
 	_assert(world_mask != 0, "World presentation render layer mask is invalid")
+	_assert(shadow_mask != 0, "Shadow presentation render layer mask is invalid")
+	_assert(world_mask != shadow_mask, "World and shadow render layer masks overlap")
 	_assert((lab.first_person_camera.cull_mask & world_mask) == 0, "First-person camera still contains the own-body render layer")
+	_assert((lab.first_person_camera.cull_mask & shadow_mask) != 0, "First-person camera excludes the shadow-only render layer")
 	_assert((lab.third_person_camera.cull_mask & world_mask) != 0, "Third-person camera excludes the avatar render layer")
 	_assert(not _has_skeleton_ancestor(lab.first_person_camera), "Camera is parented to an animated Skeleton3D")
 	_assert(is_equal_approx(lab.camera_yaw.position.y, 1.62), "First-person camera anchor is not at stable eye height")
@@ -59,11 +71,14 @@ func _run() -> void:
 	if require_external:
 		_assert(String(avatar_report.get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"], "Strict CH5 lab fell back from Quaternius")
 		_assert(int(fp_report.get("world_visual_count", 0)) > 0, "Real Quaternius world body was not captured for camera-layer suppression")
+		_assert(int(fp_report.get("shadow_proxy_skinned_count", 0)) > 0, "Real Quaternius did not produce a skinned first-person shadow proxy")
+		_assert(int(fp_report.get("shadow_proxy_skeleton_bound_count", 0)) > 0, "Real Quaternius shadow proxy is not bound to its animated Skeleton3D")
 
 	lab.set_first_person_mode(false)
 	await process_frame
 	fp_report = lab.first_person_adapter.create_report()
 	_assert(not bool(fp_report.get("mask_applied", true)), "First-person presentation state stayed active in third person")
+	_assert(not bool(fp_report.get("shadow_proxy_active", true)), "Shadow proxy stayed active in third person")
 	_assert(lab.third_person_camera.current, "Third-person camera did not restore")
 	_assert(lab.avatar.visible, "World avatar did not remain globally visible after returning to third person")
 
@@ -97,10 +112,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH5 fix1 camera-layer first-person lab: PASS (%d assertions)" % assertions)
+		print("CH5 fix1 / CH6 fix1 first-person lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH5 fix1 camera-layer first-person lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH5 fix1 / CH6 fix1 first-person lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
