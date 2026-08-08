@@ -147,3 +147,28 @@ Prediction:
 Главный ручной критерий: при постоянном движении/поворотах/старте/остановке исчезают или резко сокращаются периодические микрооткаты и ощущение «пружины», при этом pickup/drop/transfer продолжают сходиться и предметы не теряются.
 
 Если FIX10 убирает phase corrections, но остаются редкие реальные divergence corrections, следующий шаг должен настраивать только подтверждённый источник расхождения, а не маскировать его увеличением smoothing duration.
+
+## FIX10 fix2 — MTU-safe realtime snapshots
+
+Полный Windows gate исходного FIX10 показал отдельный transport blocker, не связанный с reconciliation: `COMPACT_GAMEPLAY_SNAPSHOT` с prediction-ack sidecar иногда превышал безопасный размер ENet unreliable packet. Godot отправляет логический `UNRELIABLE_SEQUENCED` через raw unreliable/unsequenced transport. После fragmentation физический transfer-mode, наблюдаемый на приёмнике, может отличаться от ожидаемого, а принятый `STRICT_CHANNEL_AND_TRANSFER_MODE_V1` корректно карантинит peer как protocol violation.
+
+FIX10 fix2 не ослабляет strict transport contract и не переводит snapshot channel на ordered/reliable delivery. Вместо этого сервер до `send_to_peer()` измеряет точный canonical ProtocolFrame v2 в UTF-8 — те же байты, которые затем кодирует ENet port. Для realtime movement snapshot действует политика `OPTIONAL_ACK_OMISSION_THEN_DROP_OVERSIZE_V1`:
+
+1. если frame <= 1350 bytes — отправляется как раньше;
+2. если frame > 1350 bytes и содержит optional `prediction_ack` — frame не коммитится в transport queue, sidecar удаляется и frame строится заново с тем же peer sequence;
+3. если даже компактный frame без ack > 1350 bytes — этот realtime snapshot пропускается, а не отправляется fragmented;
+4. reliable full/resync snapshots остаются без изменений;
+5. следующий movement snapshot может снова содержать свежий acknowledgement, поэтому единичное omission не ломает FIX10 semantic boundary.
+
+Добавлена telemetry:
+
+- `fix10_unreliable_mtu_policy`;
+- `fix10_unreliable_safe_packet_bytes`;
+- `fix10_ack_omitted_for_mtu`;
+- `fix10_oversized_unreliable_frames_prevented`;
+- `fix10_movement_snapshots_dropped_for_mtu`;
+- `fix10_max_unreliable_candidate_bytes`;
+- `fix10_max_unreliable_sent_bytes`;
+- `fix10_max_without_ack_bytes`.
+
+Fix2 acceptance дополнительно требует отсутствия ENet warning об unreliable packet выше MTU, отсутствия `transport_peer_protocol_violations`/peer quarantine в нормальном LOCAL two-client прогоне и успешного M7 item/player convergence.
