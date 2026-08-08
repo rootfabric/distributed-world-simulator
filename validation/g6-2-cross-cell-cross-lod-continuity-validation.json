@@ -4,12 +4,33 @@
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "implementation_candidate": "322265247bb0a01bf7bdd814adca2ead30b124c9",
-  "decision": "IMPLEMENTED_CANDIDATE",
-  "runtime_validation": "PENDING_WINDOWS_GODOT_4_7_1_DOUBLE",
+  "fix1_candidate": "a3efb5dd314ef6c2e7d3b5d75d118402e7b45117",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "runtime_validation": "WINDOWS_FIX1_RERUN_REQUIRED",
   "dependencies": {
     "g5_world_feature_graph": "ACCEPTED",
     "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC",
     "g6_1_casual_river_provider": "ACCEPTED"
+  },
+  "first_windows_run": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "g5_world_feature_graph": "PASS_249",
+    "g5_feature_cell_identity": "PASS_94",
+    "g6_0_fluid_contracts": "PASS_169",
+    "g6_1_casual_river_provider": "PASS_74",
+    "g6_2_cross_cell_cross_lod_continuity": "FAIL_85_OF_86",
+    "only_failure": "G6.2 LOD proof levels pinned",
+    "failure_classification": "TEST_MANIFEST_NUMERIC_TYPE_NORMALIZATION",
+    "canonical_continuity_failure": false,
+    "git_diff_check": "FAIL_TRAILING_WHITESPACE_CHECKPOINT_DOC"
+  },
+  "fix1": {
+    "normalizes_manifest_lod_values_to_int_before_comparison": true,
+    "changes_provider": false,
+    "changes_fluid_contracts": false,
+    "changes_fixture_geography": false,
+    "changes_canonical_identity_semantics": false,
+    "cleans_checkpoint_trailing_whitespace": true
   },
   "expected_gate": {
     "runner": "RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1",
@@ -17,7 +38,8 @@
     "g5_feature_cell_identity": "PASS_94",
     "g6_0_fluid_contracts": "PASS_169",
     "g6_1_casual_river_provider": "PASS_74",
-    "g6_2_cross_cell_cross_lod_continuity": "PASS_REQUIRED"
+    "g6_2_cross_cell_cross_lod_continuity": "PASS_86_REQUIRED",
+    "git_diff_check": "PASS_REQUIRED"
   },
   "proof": {
     "lod_levels": [2, 4, 8, 12],
