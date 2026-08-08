@@ -29,7 +29,7 @@ func _test_shallow_refreshes_preserve_fifo_and_look() -> void:
 	var report: Dictionary = buffer.get_report(1)
 	_assert(int(report.get("pending", -1)) == InputBuffer.PRESSURE_COMPACTION_THRESHOLD, "shallow continuous input no longer preserves NX3 FIFO depth: %s" % report)
 	_assert(int(report.get("pressure_compactions", -1)) == 0, "shallow input unexpectedly entered pressure recovery: %s" % report)
-	_assert(String(report.get("coalescing_policy", "")) == "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V3", "pressure compaction policy missing")
+	_assert(String(report.get("coalescing_policy", "")) == "PRESSURE_LATEST_STATE_WITH_JUMP_EDGE_PRESERVATION_V4", "pressure compaction policy missing")
 	for sequence in range(1, InputBuffer.PRESSURE_COMPACTION_THRESHOLD + 1):
 		var consumed: Dictionary = buffer.consume_for_tick(sequence)
 		_assert(int(consumed.get("details", {}).get("input_sequence", 0)) == sequence, "shallow FIFO sequence changed at tick %d: %s" % [sequence, consumed])
@@ -77,6 +77,19 @@ func _test_pressure_compaction_keeps_latest_state_and_jump_edges() -> void:
 	_assert(int(report.get("queue_full_rejected", -1)) == 0, "continuous pressure still reached hard INPUT_QUEUE_FULL")
 	_assert(int(report.get("peak_pending", 0)) <= InputBuffer.PRESSURE_COMPACTION_THRESHOLD + 1, "pressure recovery allowed a large pending spike: %s" % report)
 
+	# NX2 batches retransmit recent input history. Sequence 39 was deliberately
+	# compacted in favour of sequence 40 and must not be resurrected when resent.
+	var pending_before_retransmit: int = buffer.get_pending_count()
+	var retransmit_intent := _intent(1.0, 1.0, false, false)
+	retransmit_intent["look_yaw"] = 39.0 * 0.02
+	var retransmit: Dictionary = buffer.enqueue(_entry(39, retransmit_intent), 11)
+	_assert(_ok(retransmit), "compacted input retransmit returned transport failure")
+	_assert(not bool(retransmit.get("details", {}).get("accepted", true)), "compacted sequence 39 was resurrected")
+	_assert(bool(retransmit.get("details", {}).get("pressure_discarded", false)), "compacted retransmit was not identified")
+	_assert(buffer.get_pending_count() == pending_before_retransmit, "compacted retransmit changed pending depth")
+	report = buffer.get_report(11)
+	_assert(int(report.get("pressure_retransmits_suppressed", 0)) == 1, "compacted retransmit suppression is not observable")
+
 	var observed_jump_edges: int = 0
 	var last_sequence: int = 0
 	var tick: int = 11
@@ -88,6 +101,7 @@ func _test_pressure_compaction_keeps_latest_state_and_jump_edges() -> void:
 		tick += 1
 	_assert(observed_jump_edges == 2, "pressure compaction lost a jump edge: %d" % observed_jump_edges)
 	_assert(last_sequence == 40, "pressure compaction did not converge to newest input state: %d" % last_sequence)
+	_assert(int(buffer.get_report(tick).get("pressure_discarded_sequence_count", -1)) == 0, "pressure retransmit tombstones were not pruned after authority advanced")
 
 
 func _test_lossless_scheduler_retains_transient_stall_time() -> void:
