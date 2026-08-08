@@ -1,0 +1,29 @@
+{
+  "schema": "planet_simulator.g0_geo_contracts_manifest.v1",
+  "checkpoint": "g0-geo-contracts-v0",
+  "status": "CANDIDATE",
+  "program_branch": "feature/g0-procedural-planetary-generation-lab",
+  "implementation_branch": "feature/g0-geo-contracts",
+  "runtime_worlds_changed": false,
+  "production_terrain_changed": false,
+  "contracts": [
+    "planet_simulator.planet_definition.v1",
+    "planet_simulator.planet_environment.v1",
+    "planet_simulator.planet_recipe.v1",
+    "planet_simulator.geo_provider_descriptor.v1",
+    "planet_simulator.geo_generation_context.v1",
+    "planet_simulator.geo_surface_query.v1",
+    "planet_simulator.geo_volume_query.v1",
+    "planet_simulator.geo_field_bundle.v1",
+    "planet_simulator.geo_sample.v1"
+  ],
+  "flat_surface_provider": {
+    "provider_id": "geo-provider/flat-surface",
+    "contract_version": "1.0.0",
+    "generator_version": "1.0.0",
+    "provides": ["geo/surface-height-m"]
+  },
+  "focused_runner_windows": "RUN_G0_GEO_CONTRACTS_TESTS.ps1",
+  "focused_runner_linux": "RUN_G0_GEO_CONTRACTS_TESTS.sh",
+  "next_stage": "G1 geodesy + body shape"
+}
