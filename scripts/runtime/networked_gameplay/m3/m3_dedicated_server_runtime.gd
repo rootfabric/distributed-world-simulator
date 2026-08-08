@@ -18,9 +18,16 @@ const NetworkUtilsFix10 = preload("res://scripts/network/contracts/network_contr
 # the exact canonical ProtocolFrame bytes are measured before transport queue
 # commit. Oversized realtime snapshots first retry without the optional ACK; if
 # the no-ACK compact frame is still over the conservative budget, that realtime
-# snapshot is skipped rather than fragmented. The accepted strict physical
-# channel/transfer-mode binding remains unchanged, as do reliable full/resync
-# snapshots and canonical gameplay snapshot checksums.
+# snapshot is skipped rather than fragmented.
+#
+# FIX10 fix3 closes the coverage hole exposed by the long two-client run: when the
+# ACK must be omitted from the movement snapshot to preserve its MTU, the same
+# compact ACK is emitted as a tiny independent UNRELIABLE_SEQUENCED packet on the
+# TELEMETRY ENet channel. Snapshot traffic therefore never competes with its own
+# ACK in the same sequenced stream, and the prediction baseline is no longer lost
+# simply because a two-player snapshot is near the packet budget. This fallback
+# is best-effort metadata only; failure to enqueue it never fails or delays the
+# authoritative movement snapshot.
 #
 # Accepted FIX7/FIX6 source-contract compatibility anchors. The actual behavior
 # remains inherited; keep the fixed-simulation anchor before the network-drain
@@ -48,6 +55,7 @@ const FIX10_UNRELIABLE_SAFE_PACKET_BYTES: int = 1350
 const FIX10_UNRELIABLE_DECISION_SEND: String = "SEND"
 const FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK: String = "RETRY_WITHOUT_ACK"
 const FIX10_UNRELIABLE_DECISION_DROP: String = "DROP"
+const FIX10_FIX3_ACK_FALLBACK_POLICY: String = "SEPARATE_TELEMETRY_CHANNEL_WHEN_SNAPSHOT_ACK_OMITTED_V1"
 
 var _fix10_prediction_acks: Dictionary = {}
 var _fix10_ack_captures: int = 0
@@ -60,6 +68,10 @@ var _fix10_movement_snapshots_dropped_for_mtu: int = 0
 var _fix10_max_unreliable_candidate_bytes: int = 0
 var _fix10_max_unreliable_sent_bytes: int = 0
 var _fix10_max_without_ack_bytes: int = 0
+var _fix10_fix3_standalone_ack_attempts: int = 0
+var _fix10_fix3_standalone_ack_sent: int = 0
+var _fix10_fix3_standalone_ack_failures: int = 0
+var _fix10_fix3_max_standalone_ack_bytes: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -74,6 +86,10 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_max_unreliable_candidate_bytes = 0
 	_fix10_max_unreliable_sent_bytes = 0
 	_fix10_max_without_ack_bytes = 0
+	_fix10_fix3_standalone_ack_attempts = 0
+	_fix10_fix3_standalone_ack_sent = 0
+	_fix10_fix3_standalone_ack_failures = 0
+	_fix10_fix3_max_standalone_ack_bytes = 0
 	return super.setup(config)
 
 
@@ -182,10 +198,12 @@ func _fix10_send_mtu_safe_movement_snapshot(peer_id: String, data: Dictionary) -
 	var packet_bytes: int = int(candidate.get("packet_bytes", 0))
 	_fix10_max_unreliable_candidate_bytes = maxi(_fix10_max_unreliable_candidate_bytes, packet_bytes)
 	var included_ack: bool = payload.has("prediction_ack")
+	var omitted_ack_wire: Array = []
 	var decision: String = _fix10_unreliable_budget_decision(packet_bytes, included_ack)
 	if decision == FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK:
 		_fix10_oversized_unreliable_frames_prevented += 1
 		_fix10_ack_omitted_for_mtu += 1
+		omitted_ack_wire = Array(payload.get("prediction_ack", [])).duplicate(true)
 		payload.erase("prediction_ack")
 		candidate = _fix10_build_unreliable_frame(peer_id, payload)
 		if not bool(candidate.get("success", false)):
@@ -215,17 +233,84 @@ func _fix10_send_mtu_safe_movement_snapshot(peer_id: String, data: Dictionary) -
 		return flushed
 	_messages_sent += 1
 	_fix10_max_unreliable_sent_bytes = maxi(_fix10_max_unreliable_sent_bytes, packet_bytes)
+
+	# Preserve snapshot success even if the best-effort ACK fallback is lost. The
+	# client can reconcile from a later ACK; a metadata failure must never create a
+	# gameplay snapshot retransmission/backpressure loop.
+	if not omitted_ack_wire.is_empty():
+		var compact_snapshot: Dictionary = Dictionary(data.get("snapshot", {}))
+		_fix10_fix3_send_standalone_prediction_ack(
+			peer_id,
+			omitted_ack_wire,
+			int(compact_snapshot.get("t", -1))
+		)
 	return {
 		"success": true,
 		"included_prediction_ack": included_ack,
+		"standalone_ack_attempted": not omitted_ack_wire.is_empty(),
 		"packet_bytes": packet_bytes,
 	}
 
 
-func _fix10_build_unreliable_frame(peer_id: String, payload: Dictionary) -> Dictionary:
+func _fix10_fix3_send_standalone_prediction_ack(
+	peer_id: String,
+	ack_wire: Array,
+	snapshot_server_tick: int
+) -> bool:
+	if (
+		_boundary == null
+		or peer_id.is_empty()
+		or ack_wire.is_empty()
+		or snapshot_server_tick < 0
+		or not _ensure_peer_ready(peer_id)
+	):
+		_fix10_fix3_standalone_ack_failures += 1
+		return false
+	_fix10_fix3_standalone_ack_attempts += 1
+	var payload: Dictionary = {
+		"type": "PREDICTION_ACK",
+		"server_sent_at_ms": Time.get_ticks_msec(),
+		"prediction_ack": ack_wire.duplicate(true),
+		"snapshot_server_tick": snapshot_server_tick,
+	}
+	var candidate: Dictionary = _fix10_build_unreliable_frame(
+		peer_id,
+		payload,
+		RealtimeChannelPolicy.TELEMETRY
+	)
+	if not bool(candidate.get("success", false)):
+		_fix10_fix3_standalone_ack_failures += 1
+		return false
+	var packet_bytes: int = int(candidate.get("packet_bytes", 0))
+	_fix10_fix3_max_standalone_ack_bytes = maxi(
+		_fix10_fix3_max_standalone_ack_bytes,
+		packet_bytes
+	)
+	if packet_bytes > FIX10_UNRELIABLE_SAFE_PACKET_BYTES:
+		_fix10_fix3_standalone_ack_failures += 1
+		return false
+	var frame: Dictionary = Dictionary(candidate.get("frame", {})).duplicate(true)
+	var queued: Dictionary = _boundary.send_to_peer(peer_id, frame)
+	if not bool(queued.get("success", false)):
+		_fix10_fix3_standalone_ack_failures += 1
+		return false
+	var flushed: Dictionary = _boundary.flush_outbound(32, peer_id)
+	if not bool(flushed.get("success", false)):
+		_fix10_fix3_standalone_ack_failures += 1
+		return false
+	_messages_sent += 1
+	_fix10_fix3_standalone_ack_sent += 1
+	return true
+
+
+func _fix10_build_unreliable_frame(
+	peer_id: String,
+	payload: Dictionary,
+	channel: String = RealtimeChannelPolicy.SNAPSHOT
+) -> Dictionary:
 	var frame_result: Dictionary = _boundary.create_frame_for_peer(
 		peer_id,
-		RealtimeChannelPolicy.SNAPSHOT,
+		channel,
 		Support.MESSAGE_SCHEMA,
 		payload,
 		"UNRELIABLE_SEQUENCED"
@@ -333,6 +418,11 @@ func _build_fix7_ready_report() -> Dictionary:
 	foundation["fix10_max_unreliable_candidate_bytes"] = _fix10_max_unreliable_candidate_bytes
 	foundation["fix10_max_unreliable_sent_bytes"] = _fix10_max_unreliable_sent_bytes
 	foundation["fix10_max_without_ack_bytes"] = _fix10_max_without_ack_bytes
+	foundation["fix10_fix3_ack_fallback_policy"] = FIX10_FIX3_ACK_FALLBACK_POLICY
+	foundation["fix10_fix3_standalone_ack_attempts"] = _fix10_fix3_standalone_ack_attempts
+	foundation["fix10_fix3_standalone_ack_sent"] = _fix10_fix3_standalone_ack_sent
+	foundation["fix10_fix3_standalone_ack_failures"] = _fix10_fix3_standalone_ack_failures
+	foundation["fix10_fix3_max_standalone_ack_bytes"] = _fix10_fix3_max_standalone_ack_bytes
 	report["realtime_foundation"] = foundation
 	return report
 
@@ -343,6 +433,7 @@ func get_fix7_ready_report_policy() -> Dictionary:
 	report["fix10_prediction_ack_wire_policy"] = FIX10_PREDICTION_ACK_WIRE_POLICY
 	report["fix10_unreliable_mtu_policy"] = FIX10_UNRELIABLE_MTU_POLICY
 	report["fix10_unreliable_safe_packet_bytes"] = FIX10_UNRELIABLE_SAFE_PACKET_BYTES
+	report["fix10_fix3_ack_fallback_policy"] = FIX10_FIX3_ACK_FALLBACK_POLICY
 	return report
 
 
@@ -364,5 +455,10 @@ func get_report() -> Dictionary:
 		"max_unreliable_candidate_bytes": _fix10_max_unreliable_candidate_bytes,
 		"max_unreliable_sent_bytes": _fix10_max_unreliable_sent_bytes,
 		"max_without_ack_bytes": _fix10_max_without_ack_bytes,
+		"fix3_ack_fallback_policy": FIX10_FIX3_ACK_FALLBACK_POLICY,
+		"fix3_standalone_ack_attempts": _fix10_fix3_standalone_ack_attempts,
+		"fix3_standalone_ack_sent": _fix10_fix3_standalone_ack_sent,
+		"fix3_standalone_ack_failures": _fix10_fix3_standalone_ack_failures,
+		"fix3_max_standalone_ack_bytes": _fix10_fix3_max_standalone_ack_bytes,
 	}
 	return report
