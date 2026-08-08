@@ -1,9 +1,13 @@
 param(
-    [string]$GodotPath = ""
+    [string]$GodotPath = "",
+    [string]$ArchivePath = "",
+    [string]$AssetSourcePath = "",
+    [switch]$OpenDownloadPage
 )
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
+$DownloadPage = "https://quaternius.itch.io/modular-character-outfits-fantasy/purchase"
 
 function Resolve-Godot([string]$Requested) {
     $Candidates = @()
@@ -25,16 +29,82 @@ function Resolve-Godot([string]$Requested) {
     throw "Godot 4.7.1 double was not found. Pass -GodotPath or set GODOT_BIN."
 }
 
+function Find-StandardArchive([string]$Requested) {
+    if (-not [string]::IsNullOrWhiteSpace($Requested)) {
+        if (-not (Test-Path -LiteralPath $Requested -PathType Leaf)) {
+            throw "ArchivePath does not exist: $Requested"
+        }
+        return (Resolve-Path -LiteralPath $Requested).Path
+    }
+
+    $Downloads = Join-Path $HOME "Downloads"
+    if (-not (Test-Path $Downloads -PathType Container)) {
+        return ""
+    }
+
+    $Matches = Get-ChildItem -LiteralPath $Downloads -File -Filter "*.zip" -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Name -match '(?i)modular.*character.*outfits.*fantasy' -and
+            $_.Name -match '(?i)standard'
+        } |
+        Sort-Object LastWriteTime -Descending
+
+    if ($Matches.Count -gt 0) {
+        return $Matches[0].FullName
+    }
+    return ""
+}
+
+function Install-AssetDirectory([string]$Source, [string]$Destination) {
+    if (-not (Test-Path -LiteralPath $Source -PathType Container)) {
+        throw "AssetSourcePath does not exist: $Source"
+    }
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $Source "*") -Destination $Destination -Recurse -Force
+}
+
+function Install-AssetArchive([string]$Archive, [string]$Destination) {
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    Write-Host "CH7.8 extracting archive:" -ForegroundColor Cyan
+    Write-Host "  $Archive"
+    Write-Host "to:" -ForegroundColor Cyan
+    Write-Host "  $Destination"
+    Expand-Archive -LiteralPath $Archive -DestinationPath $Destination -Force
+}
+
 $Godot = Resolve-Godot $GodotPath
 $AssetRoot = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy"
 
 Write-Host "Godot: $Godot"
 Write-Host "CH7.8 outfit asset root: $AssetRoot"
-if (-not (Test-Path $AssetRoot)) {
+
+if (-not (Test-Path $AssetRoot -PathType Container)) {
+    if (-not [string]::IsNullOrWhiteSpace($AssetSourcePath)) {
+        Install-AssetDirectory $AssetSourcePath $AssetRoot
+    }
+    else {
+        $ResolvedArchive = Find-StandardArchive $ArchivePath
+        if (-not [string]::IsNullOrWhiteSpace($ResolvedArchive)) {
+            Install-AssetArchive $ResolvedArchive $AssetRoot
+        }
+    }
+}
+
+if (-not (Test-Path $AssetRoot -PathType Container)) {
     Write-Host ""
-    Write-Host "Asset root is missing." -ForegroundColor Yellow
-    Write-Host "Download Quaternius 'Modular Character Outfits - Fantasy' [Standard] and extract it under:" -ForegroundColor Yellow
-    Write-Host "  $AssetRoot" -ForegroundColor Cyan
+    Write-Host "Asset root is missing and no Standard ZIP was found automatically in Downloads." -ForegroundColor Yellow
+    Write-Host "Download the free Quaternius 'Modular Character Outfits - Fantasy[Standard].zip'." -ForegroundColor Yellow
+    Write-Host "Download page:" -ForegroundColor Yellow
+    Write-Host "  $DownloadPage" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "After the ZIP appears in your Downloads folder, run this same command again." -ForegroundColor Yellow
+    Write-Host "The launcher will discover and extract it automatically." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Optional explicit archive usage:" -ForegroundColor DarkGray
+    Write-Host '  .\PROBE_CH7_8_QUATERNIUS_OUTFITS.ps1 -GodotPath $Godot -ArchivePath "C:\path\Modular Character Outfits - Fantasy[Standard].zip"' -ForegroundColor DarkGray
+    if ($OpenDownloadPage) {
+        Start-Process $DownloadPage
+    }
     exit 2
 }
 
