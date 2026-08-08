@@ -1,8 +1,8 @@
 # G3 — Mega Casual Macro Surface — ACCEPTED
 
-**Дата:** 2026-08-08  
-**Accepted branch:** `feature/g3-casual-macro-surface`  
-**Accepted head:** `bc58f650ffb43775667bf0d07cb361a98a40d294`  
+**Дата:** 2026-08-08
+**Accepted branch:** `feature/g3-casual-macro-surface`
+**Accepted head:** `bc58f650ffb43775667bf0d07cb361a98a40d294`
 **Decision:** `ACCEPTED`
 
 Пользователь подтвердил успешный полный G3 acceptance gate перед началом G4.
