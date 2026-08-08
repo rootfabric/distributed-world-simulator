@@ -10,6 +10,9 @@ var presentation_catalog: WearablePresentationCatalog
 var _visuals_by_item: Dictionary = {}
 var _entry_lines_by_item: Dictionary = {}
 var _strategies_by_item: Dictionary = {}
+var _hidden_visuals_by_item: Dictionary = {}
+var _body_hide_state_by_instance: Dictionary = {}
+var _body_replacement_nodes_by_item: Dictionary = {}
 var _last_snapshot_fingerprint := ""
 
 
@@ -85,18 +88,37 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 				"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
 			}
 		elif strategy == WearablePresentationCatalog.STRATEGY_SKINNED_GARMENT:
-			var hidden_regions: Array = resolved_details.get("hide_body_regions", [])
-			if not hidden_regions.is_empty():
-				return _result(false, "SKINNED_BODY_REGION_HIDING_NOT_IMPLEMENTED", {
-					"item_id": item_id,
-					"hide_body_regions": hidden_regions.duplicate(),
-				})
 			var source_skeleton := rig_adapter.resolve_pose_skeleton(character_visual_root)
 			var skinned_parent := rig_adapter.resolve_skinned_parent(character_visual_root)
 			if source_skeleton == null:
 				return _result(false, "SKINNED_SOURCE_SKELETON_UNAVAILABLE", {"item_id": item_id})
 			if skinned_parent == null:
 				return _result(false, "SKINNED_PRESENTATION_PARENT_UNAVAILABLE", {"item_id": item_id})
+
+			var hidden_regions: Array = resolved_details.get("hide_body_regions", [])
+			var hidden_visuals: Array = []
+			for raw_region in hidden_regions:
+				var region_id := String(raw_region)
+				if not rig_adapter.supports_body_region(region_id):
+					return _result(false, "UNSUPPORTED_BODY_REGION", {
+						"item_id": item_id,
+						"body_region": region_id,
+						"rig_profile_id": rig_adapter.rig_profile_id,
+					})
+				var region_visuals: Array = rig_adapter.resolve_body_region_visuals(character_visual_root, region_id)
+				if region_visuals.is_empty():
+					return _result(false, "BODY_REGION_HAS_NO_VISUALS", {
+						"item_id": item_id,
+						"body_region": region_id,
+						"rig_profile_id": rig_adapter.rig_profile_id,
+					})
+				for raw_visual in region_visuals:
+					if raw_visual is GeometryInstance3D and raw_visual not in hidden_visuals:
+						hidden_visuals.append(raw_visual)
+
+			var replacement_scene = resolved_details.get("body_replacement_scene")
+			if replacement_scene != null and not replacement_scene is PackedScene:
+				return _result(false, "INVALID_BODY_REPLACEMENT_SCENE", {"item_id": item_id})
 			creation_plans[item_id] = {
 				"entry": entry,
 				"line": line,
@@ -105,6 +127,9 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 				"source_skeleton": source_skeleton,
 				"scene": scene,
 				"local_transform": resolved_details.get("local_transform", Transform3D.IDENTITY),
+				"hidden_visuals": hidden_visuals,
+				"body_replacement_scene": replacement_scene,
+				"body_replacement_transform": resolved_details.get("body_replacement_transform", Transform3D.IDENTITY),
 			}
 		else:
 			return _result(false, "PRESENTATION_STRATEGY_NOT_IMPLEMENTED", {
@@ -133,8 +158,8 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 		var visual: Node3D
 
 		if strategy == WearablePresentationCatalog.STRATEGY_RIGID_ATTACHMENT:
-			var scene: PackedScene = plan["scene"]
-			var instance = scene.instantiate()
+			var rigid_scene: PackedScene = plan["scene"]
+			var instance = rigid_scene.instantiate()
 			if not instance is Node3D:
 				if instance is Node:
 					(instance as Node).free()
@@ -154,6 +179,29 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 				parent.remove_child(bridge)
 				bridge.queue_free()
 				return _result(false, String(bridge_result.get("code", "SKINNED_GARMENT_SETUP_FAILED")), bridge_result.get("details", {}))
+
+			var replacement_scene = plan.get("body_replacement_scene")
+			if replacement_scene is PackedScene:
+				var replacement_bridge = SkinnedGarmentPoseBridge.new()
+				replacement_bridge.name = "BodyReplacement"
+				bridge.add_child(replacement_bridge)
+				var replacement_result: Dictionary = replacement_bridge.setup(
+					plan["source_skeleton"] as Skeleton3D,
+					replacement_scene as PackedScene,
+					plan.get("body_replacement_transform", Transform3D.IDENTITY)
+				)
+				if not bool(replacement_result.get("success", false)):
+					bridge.remove_child(replacement_bridge)
+					replacement_bridge.queue_free()
+					parent.remove_child(bridge)
+					bridge.queue_free()
+					return _result(false, "BODY_REPLACEMENT_SETUP_FAILED", {
+						"item_id": item_id,
+						"cause": replacement_result,
+					})
+				_body_replacement_nodes_by_item[item_id] = replacement_bridge
+
+			_hide_body_visuals(item_id, plan.get("hidden_visuals", []))
 			visual = bridge
 		else:
 			return _result(false, "PRESENTATION_STRATEGY_NOT_IMPLEMENTED", {"item_id": item_id, "strategy": strategy})
@@ -190,12 +238,16 @@ func get_visual(item_id: String) -> Node3D:
 func create_report() -> Dictionary:
 	var item_ids: Array[String] = []
 	var strategies: Dictionary = {}
+	var replacement_item_ids: Array[String] = []
 	for raw_item_id in _visuals_by_item.keys():
 		var item_id := String(raw_item_id)
 		if _has_live_visual(item_id):
 			item_ids.append(item_id)
 			strategies[item_id] = String(_strategies_by_item.get(item_id, ""))
+			if _has_live_body_replacement(item_id):
+				replacement_item_ids.append(item_id)
 	item_ids.sort()
+	replacement_item_ids.sort()
 	return {
 		"schema": "planet_simulator.character_equipment_presenter.v2",
 		"rig_profile_id": rig_adapter.rig_profile_id if rig_adapter != null else "",
@@ -203,6 +255,9 @@ func create_report() -> Dictionary:
 		"visual_item_ids": item_ids,
 		"visual_strategies": strategies,
 		"visual_count": item_ids.size(),
+		"hidden_body_visual_count": _body_hide_state_by_instance.size(),
+		"body_replacement_item_ids": replacement_item_ids,
+		"body_replacement_item_count": replacement_item_ids.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
 		"owns_network_state": false,
@@ -211,7 +266,10 @@ func create_report() -> Dictionary:
 
 func _presentation_is_intact() -> bool:
 	for raw_item_id in _visuals_by_item.keys():
-		if not _has_live_visual(String(raw_item_id)):
+		var item_id := String(raw_item_id)
+		if not _has_live_visual(item_id):
+			return false
+		if _body_replacement_nodes_by_item.has(item_id) and not _has_live_body_replacement(item_id):
 			return false
 	return true
 
@@ -223,7 +281,61 @@ func _has_live_visual(item_id: String) -> bool:
 	return visual is Node3D and is_instance_valid(visual) and not visual.is_queued_for_deletion()
 
 
+func _has_live_body_replacement(item_id: String) -> bool:
+	if not _body_replacement_nodes_by_item.has(item_id):
+		return false
+	var replacement = _body_replacement_nodes_by_item[item_id]
+	return replacement is Node3D and is_instance_valid(replacement) and not replacement.is_queued_for_deletion()
+
+
+func _hide_body_visuals(item_id: String, visuals: Array) -> void:
+	var unique: Array = []
+	for raw_visual in visuals:
+		if not raw_visual is GeometryInstance3D or not is_instance_valid(raw_visual):
+			continue
+		var body_visual := raw_visual as GeometryInstance3D
+		if body_visual in unique:
+			continue
+		unique.append(body_visual)
+		var instance_id := body_visual.get_instance_id()
+		var state: Dictionary = _body_hide_state_by_instance.get(instance_id, {})
+		if state.is_empty():
+			state = {
+				"node": body_visual,
+				"original_visible": body_visual.visible,
+				"ref_count": 0,
+			}
+		state["ref_count"] = int(state.get("ref_count", 0)) + 1
+		_body_hide_state_by_instance[instance_id] = state
+		body_visual.visible = false
+	_hidden_visuals_by_item[item_id] = unique
+
+
+func _restore_body_visuals(item_id: String) -> void:
+	var visuals: Array = _hidden_visuals_by_item.get(item_id, [])
+	for raw_visual in visuals:
+		if not raw_visual is GeometryInstance3D:
+			continue
+		var body_visual := raw_visual as GeometryInstance3D
+		var instance_id := body_visual.get_instance_id()
+		if not _body_hide_state_by_instance.has(instance_id):
+			continue
+		var state: Dictionary = _body_hide_state_by_instance[instance_id]
+		var ref_count := int(state.get("ref_count", 0)) - 1
+		if ref_count <= 0:
+			var node = state.get("node")
+			if node is GeometryInstance3D and is_instance_valid(node):
+				(node as GeometryInstance3D).visible = bool(state.get("original_visible", true))
+			_body_hide_state_by_instance.erase(instance_id)
+		else:
+			state["ref_count"] = ref_count
+			_body_hide_state_by_instance[instance_id] = state
+	_hidden_visuals_by_item.erase(item_id)
+
+
 func _remove_visual(item_id: String) -> void:
+	_restore_body_visuals(item_id)
+	_body_replacement_nodes_by_item.erase(item_id)
 	if _visuals_by_item.has(item_id):
 		var visual = _visuals_by_item[item_id]
 		if visual is Node and is_instance_valid(visual):
