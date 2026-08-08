@@ -5,10 +5,11 @@
 [node name="T1ComplexConstructDemo" type="Node3D"]
 script = ExtResource("1_t1_demo")
 profile_id = "D0"
+detail_mode = "NEAR"
 
 [node name="FixtureOrigin" type="Marker3D" parent="."]
 
 [node name="FixtureLabel" type="Label3D" parent="."]
-text = "T1A.0 Lunar Engineering Outpost — D0 baseline"
+text = "T1A.1 Lunar Engineering Outpost — visual adapter candidate"
 position = Vector3(0, 2, 0)
 billboard = 1

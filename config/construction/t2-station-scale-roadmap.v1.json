@@ -1,0 +1,32 @@
+{
+  "schema": "planet_simulator.t2_station_scale_roadmap.v1",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status": "PLANNED",
+  "track": "T_CONSTRUCTION",
+  "goal": "ONE_CANONICAL_STATION_ACROSS_SCALE_FRAMES_AUTHORITY_REPRESENTATION_AND_DORMANCY",
+  "invariants": [
+    "STATION_IDENTITY_NE_SECTION_IDENTITY",
+    "STATION_IDENTITY_NE_SERVER_OWNER",
+    "STATION_IDENTITY_NE_HLOD_ARTIFACT",
+    "CONSTRUCT_LOCAL_FRAME_NE_AUTHORITY_ROUTE",
+    "PART_IDENTITY_NE_MESH_IDENTITY",
+    "CANONICAL_GRAPH_NE_PRESENTATION_GRAPH"
+  ],
+  "stages": [
+    {"id": "T2_0", "name": "Large Static Construct Scale", "depends_on": ["C21", "C22", "C24"]},
+    {"id": "T2_1", "name": "Hierarchical Construct Frames", "depends_on": ["C6", "C7", "P0_SPATIAL_FABRIC_MAPPING"]},
+    {"id": "T2_2", "name": "Moving / Orbital Construct", "depends_on": ["C6", "T2_1"]},
+    {"id": "T2_3", "name": "Docking / Undocking Composition", "depends_on": ["T2_1", "T2_2", "M0_DURABLE_OPERATION_FOUNDATION"]},
+    {"id": "T2_4", "name": "Distributed Station Authority", "depends_on": ["C17", "T2_3"]},
+    {"id": "T2_5", "name": "Dormancy / Promotion / Work Budgets", "depends_on": ["C18", "NX8_SHARED_INTEREST_BUDGET", "P1_WORLD_WORK_BUDGET_FABRIC"]},
+    {"id": "T2_6", "name": "Station Scale Acceptance", "depends_on": ["T2_0", "T2_1", "T2_2", "T2_3", "T2_4", "T2_5"]}
+  ],
+  "scale_profiles": {
+    "S0": 10000,
+    "S1": 100000,
+    "S2_RESEARCH": 1000000
+  },
+  "parallel_tracks": ["G_WORLD_GENERATION", "NETWORK", "CH_CHARACTER_CLOTHING"],
+  "parallel_rule": "PARALLEL_IMPLEMENTATION_ALLOWED_FOUNDATION_DUPLICATION_FORBIDDEN",
+  "next_after_t2": "T5_MATTER_CONSTRUCTION_COMPOSITION"
+}
