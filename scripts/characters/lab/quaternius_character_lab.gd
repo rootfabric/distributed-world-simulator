@@ -164,8 +164,10 @@ func _build_player() -> void:
 	presentation_profile.profile_id = &"quaternius_humanoid"
 	presentation_profile.entity_kind = &"humanoid"
 	presentation_profile.first_person_policy = PresentationProfile.FirstPersonPolicy.HIDE_WORLD_MODEL
+	presentation_profile.first_person_shadow_policy = PresentationProfile.FirstPersonShadowPolicy.WORLD_PROXY
 	presentation_profile.world_render_layer_index = 20
 	presentation_profile.viewmodel_render_layer_index = 19
+	presentation_profile.shadow_render_layer_index = 18
 	presentation_profile.keep_world_animation_active = true
 	presentation_profile.allow_shadow_from_hidden_world_model = true
 
@@ -222,14 +224,18 @@ func _refresh_status() -> void:
 		return
 	var report: Dictionary = avatar.create_report()
 	var fp_report: Dictionary = first_person_adapter.create_report() if first_person_adapter != null else {}
+	var shadow_state := "ACTIVE" if bool(fp_report.get("shadow_proxy_active", false)) else "READY" if bool(fp_report.get("shadow_proxy_ready", false)) else "OFF"
 	status_label.text = (
-		"CH5 fix1 / CH6 Controllable Presentation Lab\n"
+		"CH6 fix1 — Shadow Preservation Lab\n"
 		+ "WASD — ходьба | Shift — бег | Space — прыжок | мышь — камера | C — 1/3 лицо | V — развернуть модель\n"
-		+ "view: %s\nentity: %s\npolicy: %s\nself body: %s\nasset: %s\nsemantic: %s\nanimation: %s\nmodel: %s\nmatched bones: %d"
+		+ "view: %s\nentity: %s\npolicy: %s\nshadow: %s / %s (%d proxies)\nself body: %s\nasset: %s\nsemantic: %s\nanimation: %s\nmodel: %s\nmatched bones: %d"
 		% [
 			"FIRST_PERSON" if first_person_mode else "THIRD_PERSON",
 			String(fp_report.get("entity_kind", "")),
 			String(fp_report.get("first_person_policy", "")),
+			String(fp_report.get("first_person_shadow_policy", "NONE")),
+			shadow_state,
+			int(fp_report.get("shadow_proxy_count", 0)),
 			"HIDDEN_FROM_FP_CAMERA" if bool(fp_report.get("world_hidden_from_first_person", false)) else "VISIBLE_TO_FP_CAMERA",
 			String(report.get("asset_mode", "")),
 			String(report.get("current_semantic", "")),
