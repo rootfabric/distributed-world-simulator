@@ -52,9 +52,12 @@ func _run() -> void:
 		_assert(bool(external_setup.get("success", false)), "External Quaternius setup failed")
 		await process_frame
 		var external_report: Dictionary = external_presenter.create_report()
-		_assert(String(external_report.get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"], "Quaternius model did not reach animated mode")
-		_assert(bool(external_report.get("target_skeleton", false)), "Quaternius target skeleton missing")
-		_assert(bool(external_report.get("animation_ready", false)), "Idle/Walk/Run animations were not resolved")
+		_assert(
+			String(external_report.get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"],
+			"Quaternius model did not reach animated mode: %s" % JSON.stringify(external_report)
+		)
+		_assert(bool(external_report.get("target_skeleton", false)), "Quaternius target skeleton missing: %s" % JSON.stringify(external_report))
+		_assert(bool(external_report.get("animation_ready", false)), "Idle/Walk/Run animations were not resolved: %s" % JSON.stringify(external_report))
 		_assert(not bool(external_report.get("root_motion_applied", true)), "External Quaternius path applies root motion")
 		external_host.queue_free()
 
