@@ -69,6 +69,7 @@ func _ready() -> void:
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 	camera.near = 1.0
 	camera.far = 50000000.0
+
 	terrain_material = StandardMaterial3D.new()
 	terrain_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	terrain_material.vertex_color_use_as_albedo = true
