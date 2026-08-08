@@ -70,7 +70,7 @@ func _run() -> void:
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CharacterBody3D) == 0, "First-person adapter owns gameplay body")
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CollisionShape3D) == 0, "First-person adapter owns collision")
 
-	var standing_height := lab.player_capsule.height
+	var standing_height: float = float(lab.player_capsule.height)
 	lab._apply_crouch_shape(true, 1.0)
 	_assert(lab.player_capsule.height < standing_height, "Crouch does not reduce gameplay capsule height in the isolated lab")
 	_assert(lab.camera_yaw.position.y < 1.62, "Crouch does not lower the local camera anchor")
