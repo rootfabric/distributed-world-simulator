@@ -4,6 +4,8 @@ const REGION_TORSO := "body.region.torso"
 const REGION_ARMS := "body.region.arms"
 const REGION_LEGS := "body.region.legs"
 const REGION_FEET := "body.region.feet"
+const REGION_TORSO_CORE := "body.region.torso.core"
+const REGION_THIGHS_CORE := "body.region.thighs.core"
 
 const SHADER_CODE := """
 shader_type spatial;
@@ -20,6 +22,7 @@ uniform bool has_albedo_texture = false;
 uniform bool has_normal_texture = false;
 uniform bool has_roughness_texture = false;
 
+// Coarse regions remain available for full-body / EVA presentations.
 uniform bool hide_torso = false;
 uniform bool hide_arms = false;
 uniform bool hide_legs = false;
@@ -32,6 +35,16 @@ uniform float torso_half_x = 0.41;
 uniform float arms_min_y = 1.32;
 uniform float arms_max_y = 1.58;
 uniform float arms_inner_abs_x = 0.31;
+
+// Fine layered regions deliberately preserve underwear/pelvis and joints.
+uniform bool hide_torso_core = false;
+uniform bool hide_thighs_core = false;
+uniform float torso_core_min_y = 1.00;
+uniform float torso_core_max_y = 1.56;
+uniform float torso_core_half_x = 0.38;
+uniform float thighs_core_min_y = 0.70;
+uniform float thighs_core_max_y = 1.01;
+uniform float thighs_core_half_x = 0.30;
 
 varying vec3 base_rest_pos;
 
@@ -56,6 +69,17 @@ void fragment() {
 	if (hide_arms && y >= arms_min_y && y < arms_max_y && ax >= arms_inner_abs_x) {
 		discard_fragment = true;
 	}
+
+	// Layered garments use these narrower protected cuts. Arms, underwear,
+	// knees, lower legs and feet remain rendered so the garment can layer over
+	// the base character instead of creating visible holes at open boundaries.
+	if (hide_torso_core && y >= torso_core_min_y && y < torso_core_max_y && ax <= torso_core_half_x) {
+		discard_fragment = true;
+	}
+	if (hide_thighs_core && y >= thighs_core_min_y && y < thighs_core_max_y && ax <= thighs_core_half_x) {
+		discard_fragment = true;
+	}
+
 	if (discard_fragment) {
 		discard;
 	}
@@ -99,10 +123,18 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 			"material_class": source_material.get_class() if source_material != null else "",
 		})
 
+	var supported_regions := [
+		REGION_TORSO,
+		REGION_ARMS,
+		REGION_LEGS,
+		REGION_FEET,
+		REGION_TORSO_CORE,
+		REGION_THIGHS_CORE,
+	]
 	var regions: Array[String] = []
 	for raw_region in active_regions:
 		var region := String(raw_region)
-		if region not in [REGION_TORSO, REGION_ARMS, REGION_LEGS, REGION_FEET]:
+		if region not in supported_regions:
 			return _result(false, "REGION_CLIP_UNSUPPORTED_REGION", {"body_region": region})
 		if region not in regions:
 			regions.append(region)
@@ -114,6 +146,8 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 	var min_y := body_aabb.position.y
 	var height := body_aabb.size.y
 	var width := body_aabb.size.x
+
+	# Existing coarse bounds remain unchanged for closed/full-body garments.
 	var feet_max_y := min_y + height * 0.30
 	var legs_max_y := min_y + height * 0.60
 	var torso_min_y := min_y + height * 0.49
@@ -122,6 +156,16 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 	var arms_max_y := min_y + height * 0.88
 	var torso_half_x := width * 0.22
 	var arms_inner_abs_x := width * 0.17
+
+	# Protected layered bounds intentionally leave open garment boundaries on
+	# the base body. For the current SuperHero_Male AABB these are roughly:
+	# torso core 1.01..1.55 m, thigh core 0.70..1.01 m.
+	var torso_core_min_y := min_y + height * 0.56
+	var torso_core_max_y := min_y + height * 0.86
+	var torso_core_half_x := width * 0.20
+	var thighs_core_min_y := min_y + height * 0.39
+	var thighs_core_max_y := min_y + height * 0.56
+	var thighs_core_half_x := width * 0.16
 
 	var base := source_material as BaseMaterial3D
 	var shader := Shader.new()
@@ -141,6 +185,14 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 	material.set_shader_parameter("arms_min_y", arms_min_y)
 	material.set_shader_parameter("arms_max_y", arms_max_y)
 	material.set_shader_parameter("arms_inner_abs_x", arms_inner_abs_x)
+	material.set_shader_parameter("hide_torso_core", REGION_TORSO_CORE in regions)
+	material.set_shader_parameter("hide_thighs_core", REGION_THIGHS_CORE in regions)
+	material.set_shader_parameter("torso_core_min_y", torso_core_min_y)
+	material.set_shader_parameter("torso_core_max_y", torso_core_max_y)
+	material.set_shader_parameter("torso_core_half_x", torso_core_half_x)
+	material.set_shader_parameter("thighs_core_min_y", thighs_core_min_y)
+	material.set_shader_parameter("thighs_core_max_y", thighs_core_max_y)
+	material.set_shader_parameter("thighs_core_half_x", thighs_core_half_x)
 	material.set_shader_parameter("albedo_tint", base.albedo_color)
 	material.set_shader_parameter("roughness_value", base.roughness)
 	material.set_shader_parameter("metallic_value", base.metallic)
@@ -170,7 +222,19 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 			"torso_half_x": torso_half_x,
 			"arms_min_y": arms_min_y,
 			"arms_max_y": arms_max_y,
-			"arms_inner_abs_x": arms_inner_abs_x
+			"arms_inner_abs_x": arms_inner_abs_x,
+			"torso_core_min_y": torso_core_min_y,
+			"torso_core_max_y": torso_core_max_y,
+			"torso_core_half_x": torso_core_half_x,
+			"thighs_core_min_y": thighs_core_min_y,
+			"thighs_core_max_y": thighs_core_max_y,
+			"thighs_core_half_x": thighs_core_half_x,
+		},
+		"protected_bands": {
+			"underwear_and_pelvis_below_y": torso_core_min_y,
+			"knee_and_lower_leg_below_y": thighs_core_min_y,
+			"arms_preserved_by_layered_upper": true,
+			"feet_preserved_by_overlay_profile": true,
 		},
 		"opaque_discard": true,
 		"writes_alpha": false,
