@@ -1,19 +1,20 @@
 # Procedural Planetary Generation Lab — индекс программы
 
-**Program branch:** `feature/g0-procedural-planetary-generation-lab`  
-**Current implementation:** `feature/g0-geo-contracts`  
-**Current state:** `G0 IMPLEMENTED CANDIDATE`
+**Program branch:** `feature/g0-procedural-planetary-generation-lab`
+**Current implementation:** `feature/g0-geo-contracts`
+**Current state:** `G0 ACCEPTED`
 
 ---
 
 ## С чего начинать после перерыва
 
 1. [`STATUS_RU.md`](STATUS_RU.md) — текущее состояние и следующий gate.
-2. [`../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md) — что именно реализовано в G0 и как проверено.
-3. [`../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md`](../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md) — практический порядок G0–G19.
-4. [`../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md`](../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md) — общая архитектурная доктрина.
-5. [`../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md`](../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md) — сквозные acceptance invariants.
-6. [`../architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md`](../architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md) — будущий параллельный high-resolution track.
+2. [`../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md) — исходный implementation checkpoint G0.
+3. [`../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md) — финальная cleanup/acceptance фиксация G0.
+4. [`../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md`](../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md) — практический порядок G0–G19.
+5. [`../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md`](../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md) — общая архитектурная доктрина.
+6. [`../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md`](../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md) — сквозные acceptance invariants.
+7. [`../architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md`](../architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md) — будущий параллельный high-resolution track.
 
 ---
 
@@ -21,9 +22,8 @@
 
 ```text
 G0 Contracts Freeze v0
-    IMPLEMENTED CANDIDATE
+        ACCEPTED
           │
-          │ full-checkout acceptance required
           ▼
 G1 Geodesy + Body Shape
           │
@@ -69,7 +69,7 @@ G14→G16 MAIN GEO       GH0→GH6 HIGH RES
 
 ---
 
-## Что уже доказал G0
+## Что доказал G0
 
 Реализованы data-only contracts и сменный provider graph:
 
@@ -105,16 +105,17 @@ Surface and Volume contracts separated
 Geo core has no renderer/mesh/SceneTree dependency
 ```
 
-Exact-engine focused result:
+Acceptance result:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
-editor import: PASS
-G0 focused:   PASS — 209 assertions
-hygiene:      PASS
+editor import:                     PASS
+G0 focused:                       PASS — 209 assertions
+world/core regression:            PASS
+201 / 201 discovered tests:       PASS
+204 / 204 steps:                  PASS
+Breakpoint :9081 collision noise: 0
 ```
-
-G0 остаётся `IMPLEMENTED CANDIDATE`, пока не пройдёт полная regression композиция на полном checkout.
 
 ---
 
@@ -167,15 +168,7 @@ providers consume only declared dependencies
 
 ## Следующее действие
 
-Сначала независимо принять G0 на полном checkout:
-
-```text
-RUN_G0_GEO_CONTRACTS_TESTS.ps1
-existing world/core regression
-git diff --check
-```
-
-После `G0 ACCEPTED` создать:
+Создать следующую implementation branch:
 
 ```text
 feature/g1-geodesy-body-shape
