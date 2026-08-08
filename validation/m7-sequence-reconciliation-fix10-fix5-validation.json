@@ -1,0 +1,140 @@
+{
+  "schema": "planet_simulator.validation.m7_sequence_reconciliation_fix10_fix5.v1",
+  "stage": "M7 FIX10 fix5 — Composite ACK Semantic Identity",
+  "branch": "feature/m7-sequence-aware-reconciliation-fix10-fix5-composite-ack-identity",
+  "base": {
+    "stage": "M7 FIX10 fix4 — ACK Timeline + MTU Headroom",
+    "commit": "e0aab932904c8951c935147f607f85f32b12d128",
+    "automated_windows_gate": "PASS_WITH_FIX5_BLOCKER",
+    "two_client_graphical": "51/51 PASS"
+  },
+  "trigger": {
+    "run": "m7-playable-9876",
+    "client": "b",
+    "fix10_ack_mismatches": 1,
+    "fix10_ack_registration_rejections": 0,
+    "sidecars_received": 17,
+    "sidecars_registered": 16,
+    "sidecars_rejected": 1,
+    "standalone_ack_received": 4,
+    "standalone_ack_registered": 4,
+    "standalone_ack_rejected": 0,
+    "hard_corrections": 0
+  },
+  "diagnosis": {
+    "old_assumption": "client_tick_uniquely_identifies_prediction_ack",
+    "actual_contract": "multiple_input_sequences_may_target_same_future_client_tick",
+    "cause": "same_client_tick_different_input_sequence_was_rejected_as_semantic_conflict",
+    "scope": "ack_registration_only_not_transport_or_ack_shape"
+  },
+  "implementation": {
+    "ack_identity_policy": "CLIENT_TICK_AND_WRAP_AWARE_INPUT_SEQUENCE_V1",
+    "semantic_key": ["client_tick", "input_sequence"],
+    "same_tick_ordering": "WRAP_AWARE_INPUT_SEQUENCE",
+    "newer_same_tick": "SUPERSEDE",
+    "older_same_tick": "IGNORE_STALE",
+    "exact_key_different_baseline": "SEMANTIC_MISMATCH",
+    "repeated_exact_key": "PRESERVE_ACK_REPLAY",
+    "local_timeline_older_ack": "CLASSIFY_SUPERSEDED_NOT_HISTORY_MISS"
+  },
+  "focused_test": "res://tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd",
+  "windows_attempt_1": {
+    "tested_commit": "ccce210e2e6fa9be6d91a99237d5e107c5a4891d",
+    "mode": "FocusedOnly",
+    "editor_import": "PASS",
+    "fix5_assertions_before_harness_error": "48 PASS",
+    "result": "HARNESS_FAIL",
+    "error": "Attempted to free a RefCounted object",
+    "location": "tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd:99",
+    "interpretation": "test_cleanup_bug_not_runtime_or_fix5_contract_failure"
+  },
+  "harness_fix": {
+    "commit": "30a8f86526c680c81a7af2d39165d3c3bb5ffb47",
+    "change": "remove explicit free() from RefCounted reconciler test fixture",
+    "runtime_files_changed": false,
+    "rerun_required": false
+  },
+  "windows_attempt_2": {
+    "tested_commit": "8e79981c74da3aeb80528322f057d756b86433cc",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "result": "PASS",
+      "editor_import": "PASS",
+      "fix10_fix5": "48/48 PASS",
+      "fix10_fix4": "51/51 PASS",
+      "fix10_fix3": "29/29 PASS",
+      "fix10_fix2": "12/12 PASS",
+      "fix10_core": "100/100 PASS",
+      "fix9": "37/37 PASS",
+      "fix8": "50/50 PASS",
+      "nx4": "706/706 PASS"
+    },
+    "full_gate": {
+      "result": "PASS",
+      "two_client_graphical": "51/51 PASS",
+      "artifact": "artifacts/test-results/m7-playable-11700",
+      "client_a": {
+        "fix10_ack_mismatches": 0,
+        "fix10_ack_registration_rejections": 0,
+        "sidecars_received": 36,
+        "sidecars_registered": 36,
+        "sidecars_rejected": 0,
+        "standalone_ack_received": 0,
+        "standalone_ack_registered": 0,
+        "standalone_ack_rejected": 0,
+        "hard_corrections": 0,
+        "fix10_ack_history_misses": 4,
+        "fix10_last_reconciliation_mode": "ACK_REPLAY",
+        "maximum_error_m": 0.2,
+        "max_present_replay_error_m": 0.1,
+        "corrections": 5,
+        "ticks_predicted": 31,
+        "corrections_per_1000_prediction_ticks": 161.290322580645,
+        "fix10_fix5_local_timeline_superseded_acks": 1,
+        "fix10_fix5_same_tick_sequence_supersessions": 0,
+        "fix10_fix5_exact_key_conflicts": 0
+      },
+      "client_b": {
+        "fix10_ack_mismatches": 0,
+        "fix10_ack_registration_rejections": 0,
+        "sidecars_received": 17,
+        "sidecars_registered": 17,
+        "sidecars_rejected": 0,
+        "standalone_ack_received": 4,
+        "standalone_ack_registered": 4,
+        "standalone_ack_rejected": 0,
+        "hard_corrections": 0,
+        "fix10_ack_history_misses": 4,
+        "fix10_last_reconciliation_mode": "ACK_REPLAY",
+        "maximum_error_m": 0.3,
+        "max_present_replay_error_m": 0.2,
+        "corrections": 11,
+        "ticks_predicted": 32,
+        "corrections_per_1000_prediction_ticks": 343.75,
+        "fix10_fix5_local_timeline_superseded_acks": 1,
+        "fix10_fix5_same_tick_sequence_supersessions": 1,
+        "fix10_fix5_exact_key_conflicts": 0
+      },
+      "interpretation": "fix5 target exercised and passed: same-tick sequence supersession occurred on client B without ACK semantic mismatch or sidecar rejection"
+    }
+  },
+  "required_windows_validation": [
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -FocusedOnly",
+    "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1 -IncludeTwoClientProcess"
+  ],
+  "acceptance_targets": {
+    "fix10_ack_mismatches": 0,
+    "fix10_ack_registration_rejections": 0,
+    "sidecars_rejected": 0,
+    "standalone_ack_rejected": 0,
+    "hard_corrections": 0,
+    "movement_snapshots_dropped_for_mtu": 0,
+    "max_unreliable_sent_bytes_lte": 1350
+  },
+  "remaining_acceptance": {
+    "minimum_duration": ">=5 minute two-client LOCAL movement/item stress",
+    "analyzer": "ANALYZE_M7_FIX10_RESULTS.ps1",
+    "note": "short automated process is intentionally not used to judge correction-density acceptance because it contains only 31/32 prediction ticks; long-run analyzer thresholds remain authoritative"
+  },
+  "decision": "AUTOMATED_WINDOWS_GATE_PASS_LONG_STRESS_REQUIRED"
+}
