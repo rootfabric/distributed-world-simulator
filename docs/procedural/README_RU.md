@@ -3,21 +3,22 @@
 Current implementation:
 
 ```text
-feature/g4-provider-composition-replacement
+feature/g5-world-feature-graph
 ```
 
 Current state:
 
 ```text
 G3 ACCEPTED
-G4 IMPLEMENTED CANDIDATE
+G4 ACCEPTED — Architecture Review A PASS
+G5 IMPLEMENTED CANDIDATE
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_CANDIDATE_RU.md`
-3. `docs/checkpoints/G3_CASUAL_MACRO_SURFACE_ACCEPTED_RU.md`
+2. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_CANDIDATE_RU.md`
+3. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
 4. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
 5. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
 6. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
@@ -34,57 +35,80 @@ G2 cube-sphere cells + LOD
 G3 canonical macro surface
         ↓
 G4 recipe-driven provider composition
+        ↓
+G5 canonical World Feature Graph
 ```
 
-G4 proves this replacement:
+G4 established:
 
 ```text
-CasualMacroTerrainLayerProviderV1
-            ↓ recipe swap
-AlternativeMacroTerrainProviderV1
+world semantics = recipe-driven provider graph
 ```
 
-without changing:
+G5 adds spatial semantic identity above representation cells:
 
 ```text
-GeoKernel
+WorldFeature
+  feature_id
+  feature_type
+  bounds
+  anchors
+  parent
+  relations
+        ↓
+FeatureGraph
+        ↓
+FeatureQuery
+```
+
+Canonical FeatureId depends on:
+
+```text
+body_id
+feature_type
+seed
+generator_version
+stable_key
+```
+
+and deliberately does not depend on:
+
+```text
 SurfaceCellKey
-CubeSphereAddressing
-SurfaceLodSelector
-renderer query caller
-final field: geo/surface-height-m
+LOD
+camera
+renderer
+streaming state
 ```
 
-Composition proof:
+The G5 seam acceptance proves that one fault crosses multiple cube-sphere cells and the PX/PZ face boundary at LOD 2/4/8/12 while keeping one FeatureId and one graph manifest.
 
-```text
-BaseSurface
-    ↓
-Macro provider
-    ↓
-Valley modifier
-    ↓
-final surface field
-```
+G5 is not surface-only. Acceptance also contains a subsurface cave system and a free-space floating island.
 
 Focused tests:
 
 ```powershell
-.\RUN_G4_PROVIDER_COMPOSITION_TESTS.ps1
+.\RUN_G5_WORLD_FEATURE_GRAPH_TESTS.ps1
+```
+
+Expected focused evidence:
+
+```text
+G5 World Feature Graph: PASS (249 assertions)
+G5 feature/cell identity: PASS (94 assertions)
+G5 World Feature Graph lab: PASS
 ```
 
 Full acceptance:
 
 ```powershell
-.\RUN_G4_FULL_ACCEPTANCE.ps1
+.\RUN_G5_FULL_ACCEPTANCE.ps1
 ```
 
 Visual lab:
 
 ```text
-res://scenes/labs/procedural/g4_provider_replacement_lab.tscn
+res://scenes/labs/procedural/g5_world_feature_graph_lab.tscn
 ```
 
-Press `M` to replace the macro recipe while the same renderer and G2 LOD continue to operate.
-
-After G4 acceptance the blocking GEO track moves to `G5 — World Feature Graph`; parallel `GR0` representation and `GE0` environment tracks become available under the post-G3 roadmap.
+After G5 acceptance the blocking GEO track moves to `G6 — Hydrology / Fluid Surface v0`, which will build river/fluid geography on top of stable G5 feature identity.
