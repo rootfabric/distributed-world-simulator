@@ -9,6 +9,8 @@ const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 const REGION_TORSO_CORE := "body.region.torso.core"
 const REGION_THIGHS_CORE := "body.region.thighs.core"
+const REGION_SHINS_CORE := "body.region.shins.core"
+const REGION_FEET_CORE := "body.region.feet.core"
 
 var failures: Array[String] = []
 var assertions := 0
@@ -51,9 +53,11 @@ func _run() -> void:
 	_assert(String(lab.status_label.text).contains("upper: ON | lower: ON | feet: ON"), "CH8C graphical lab status did not reflect equipped layers")
 	var peak_report: Dictionary = lab.body_suppression_coordinator.create_report()
 	var active_regions: Array = peak_report.get("active_regions", [])
-	_assert(active_regions.size() == 2, "CH8C graphical lab expected two protected body regions")
+	_assert(active_regions.size() == 4, "CH8C graphical lab expected four fine body regions")
 	_assert(REGION_TORSO_CORE in active_regions, "CH8C graphical lab lost protected torso core")
-	_assert(REGION_THIGHS_CORE in active_regions, "CH8C graphical lab lost protected thigh core")
+	_assert(REGION_THIGHS_CORE in active_regions, "CH8C graphical lab lost thigh core")
+	_assert(REGION_SHINS_CORE in active_regions, "CH8C graphical lab lost shin core")
+	_assert(REGION_FEET_CORE in active_regions, "CH8C graphical lab lost boot/foot core")
 	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply protected aggregate material")
 
 	for pair in [
@@ -87,10 +91,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius protected layered equipment lab: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius lower-leg layered equipment lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius protected layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius lower-leg layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
