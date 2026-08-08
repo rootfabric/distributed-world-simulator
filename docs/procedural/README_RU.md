@@ -1,42 +1,56 @@
 # Universal World Generation Fabric — entrypoint
 
-Current branch:
+Current implementation branch:
 
 ```text
 feature/g6-hydrology-fluid-surface-v0
 ```
 
-Status:
+Current state:
 
 ```text
 G6.0 ACCEPTED
 G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
-G6.4 FIX2 IMPLEMENTED CANDIDATE
+G6.4 FIX3 IMPLEMENTED CANDIDATE
 ```
 
-G6.4 fix2 functional head:
+G6.4 now proves three separate representation layers without moving canonical truth into rendering:
 
 ```text
-353a73f08f6d07840145e61f79b197e5773a73a2
+G2 SurfaceLodSelector
+        -> adaptive SurfaceCellKey cover
+
+G3 CasualMacroTerrainProviderV1
+        -> adaptive macro terrain mesh
+
+G6 canonical river + WaterSurfaceQuery
+        -> adaptive derived water ribbon
 ```
 
-Fix2 exists because the first graphical river lab rendered correctly but remained a static `97 samples` strip. It now reuses accepted G2 `SurfaceLodSelector` for observer-driven SurfaceCellKey refinement and adaptive river representation density.
+The previous fix2 manual run proved that the LOD grid refined, but the fixed sphere did not gain new visible detail. Fix3 hides that fixed sphere and rebuilds the visible surface from G2 leaves using G3 body-fixed macro-height samples. Near views therefore contain more actual terrain triangles and expose more sampled relief.
 
 Run:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
-```
-
-Then:
-
-```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-Use `W/S` to refine/coarsen and `6` for the LOD grid. Watch `Max LOD` and `River samples` in HUD. FeatureId and FluidRegionId must stay stable.
+Manual expectation: `W` must not only shrink the LOD grid but also visibly refine the macro surface itself. River valley carving is not part of G6.4 and remains scheduled for G8 Geomorphology.
 
-After G6.4 acceptance: full G6 sync/regression gate, then G7 Semantic Field Fabric.
+Canonical detail:
+
+```text
+FeatureId / FluidRegionId / RiverSpline / G3 height samples
+```
+
+Derived presentation detail:
+
+```text
+SurfaceCellKey cover / terrain triangles / ribbon tessellation / debug grid
+```
+
+Global revision: `GLOBAL-P0-2026-08-08-R1`.
