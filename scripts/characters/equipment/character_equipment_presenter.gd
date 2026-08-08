@@ -173,7 +173,10 @@ func _remove_visual(item_id: String) -> void:
 	if _visuals_by_item.has(item_id):
 		var visual = _visuals_by_item[item_id]
 		if visual is Node and is_instance_valid(visual):
-			visual.queue_free()
+			var parent := (visual as Node).get_parent()
+			if parent != null:
+				parent.remove_child(visual)
+			(visual as Node).queue_free()
 	_visuals_by_item.erase(item_id)
 	_entry_lines_by_item.erase(item_id)
 
