@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v6",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v7",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
@@ -44,7 +44,7 @@
     ],
     "real_equip_result": "OK, created=1, visual_count=1, canonical revision=1",
     "real_unequip_result": "OK, removed=1, rigid visuals preserved=2, canonical revision=4",
-    "important_conclusion": "The exact Male_Peasant asset loads, instantiates, follows the 65-bone presentation pose, composes with accepted rigid equipment and survives equip/unequip lifecycle. The earlier stall was diagnostic buffering plus parser issues, not a garment-runtime hang."
+    "important_conclusion": "The exact Male_Peasant asset loads, instantiates, follows the 65-bone presentation pose, composes with accepted rigid equipment and survives equip/unequip lifecycle."
   },
   "body_replacement_candidate": {
     "catalog_optional_body_replacement_scene": true,
@@ -57,6 +57,7 @@
     ],
     "quaternius_regions_resolve_to_coarse_full_body_geometry": true,
     "hide_mesh_nodes_not_quaternius_model_root": true,
+    "bone_attachment_subtrees_excluded_from_body_scan": true,
     "skeleton_remains_alive": true,
     "rigid_bone_attachments_remain_alive": true,
     "ref_counted_body_hide_state": true,
@@ -65,6 +66,7 @@
     "head_scene_resolution": "direct *_FullBody -> *_Head sibling first; scored Base Character head fallback second",
     "head_pose_bridge_uses_same_overlap_guard": true,
     "synthetic_test": "tests/characters/test_ch7_8_body_region_replacement.gd",
+    "rigid_first_order_test": "tests/characters/test_ch7_8_quaternius_body_hiding_order.gd",
     "real_test_extended": "tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
     "runner_extended": "RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1"
   },
@@ -77,7 +79,10 @@
     "synthetic_body_replacement_test": "b6b35cbfec211911b229bf2ffddeb82b4b2a1563",
     "synthetic_scene_ownership_fix": "16983ae592bdc7e5fc6bff86da4329dfa2a76f4a",
     "real_body_replacement_test": "40359b44d1289fb6d36be5e659bc583de7bad121",
-    "runner_gate": "9d7e0777e53254fa22b5d1b2883791c379bf4c5b",
+    "initial_runner_gate": "9d7e0777e53254fa22b5d1b2883791c379bf4c5b",
+    "exclude_rigid_attachments_from_body_scan": "eee68a8492169bfe1fb2e5e5261041d0ac15cc49",
+    "rigid_first_order_test": "2569bceedbb9bbcaf88a0d17fd7b79a0865b640f",
+    "final_runner_gate": "29d278d5c47a6a44d421b635d307a5ca03738c41",
     "documentation": "cec19326e886714895b111c470ebb061d9b7e99f"
   },
   "minimal_scope": {
@@ -95,6 +100,7 @@
   },
   "next_gate": {
     "focused_synthetic": "godot --headless --path . --script res://tests/characters/test_ch7_8_body_region_replacement.gd",
+    "focused_rigid_first": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd",
     "focused_real": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
     "full": ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot",
     "required": [
@@ -102,7 +108,8 @@
       "real lab finds compatible Base Character head scene",
       "head replacement reports exact 65-bone overlap",
       "base full-body geometry is hidden while outfit is equipped",
-      "helmet and backpack remain composed while base body meshes are hidden",
+      "rigid-first helmet/backpack geometry is excluded from body hiding",
+      "helmet and backpack remain composed when equipped before or after outfit",
       "base geometry visibility is restored exactly on unequip",
       "CH6 first-person world/shadow composition remains active",
       "CharacterBody3D position and gameplay capsule remain unchanged",
@@ -115,7 +122,7 @@
     "inspect": [
       "O shows head + Peasant outfit without the old full-body mesh fighting through it",
       "idle/walk/run/jump/crouch remain visually coherent",
-      "helmet and backpack remain attached",
+      "helmet and backpack remain attached regardless of equip order",
       "first person does not show floating own garment/head while shadows remain",
       "third person shows the composed character normally"
     ]
