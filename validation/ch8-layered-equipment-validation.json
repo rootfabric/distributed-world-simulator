@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v5",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v6",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_PARTIAL_BODY_SUPPRESSION_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX1_PENDING_WINDOWS_RERUN",
   "goal": "Keep canonical layered equipment and real selective garment parts stable while adding aggregate presentation-only partial suppression for the fused Quaternius base body.",
   "windows_ch8a_acceptance": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
@@ -22,6 +22,16 @@
     "combined_runner": "PASS",
     "combined_runner_marker": "CH8 Layered Equipment + selective real skinned parts candidate runner: PASS",
     "decision": "ACCEPTED"
+  },
+  "windows_ch8c_attempt1": {
+    "head": "f293f529ae475e8ee92dc8f2f894d359a4ff46e3",
+    "focused_partial_suppression": "PARSE_FAIL",
+    "error": "Could not resolve external class member setup",
+    "location": "tests/characters/test_ch8c_quaternius_partial_body_suppression.gd:73",
+    "classification": "HEADLESS_GDSCRIPT_EXTERNAL_CLASS_SIGNATURE_RESOLUTION",
+    "runtime_reached": false,
+    "shader_executed": false,
+    "canonical_equipment_mutated": false
   },
   "canonical_contract": {
     "plain_equip_remains_strict": true,
@@ -48,7 +58,7 @@
     "problem": "SuperHero_Male head/torso/arms/legs/feet are fused into one skinned mesh and one material surface. Independent garment items require one aggregate mask rather than competing material overrides.",
     "architecture": {
       "coverage_catalog": "WearableBodyCoverageCatalog stores rig-specific semantic body coverage separately from canonical equipment occupancy.",
-      "coordinator": "LayeredBodySuppressionCoordinator consumes the complete snapshot, unions/sorts coverage regions and applies one composite material. Unrelated snapshot changes do not rebuild an unchanged coverage material.",
+      "coordinator": "LayeredBodySuppressionCoordinator consumes the complete snapshot, unions/sorts coverage regions and applies one composite material. New CH8C collaborators are capability-typed at the coordinator boundary so direct headless scripts do not depend on editor class-cache registration.",
       "rig_adapter": "QuaterniusLayeredBodySuppressionAdapter maps aggregate semantic regions to the fused SuperHero_Male mesh.",
       "material": "QuaterniusRegionClip uses opaque fragment discard with rest-coordinate bounds derived from the real base-body AABB.",
       "accepted_presenter_changed": false,
@@ -96,6 +106,7 @@
     "graphical_launcher": "5ecfe17f797d58d81ecda5df68f2fd1d1d2eb59b",
     "graphical_smoke_test": "6fa36834471525c47416134acd05464f807604a0",
     "graphical_smoke_hardening": "81ab96090523dfd30b7e316cd3f58f00ea7a9e4f",
+    "headless_setup_resolution_fix": "882789836b2ed35d781d5ec35ee6ca6848c6054f",
     "runner": "a67acfefbe801ce47e929d60d5c90e440fd77692",
     "design_doc": "89db03d41b05d54a9ef1f1886b8d22f32c680ba7"
   },
@@ -105,6 +116,7 @@
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
     "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
     "required_automated": [
+      "focused partial-suppression script parses without prior editor import",
       "upper enables torso+arms only",
       "unrelated helmet leaves aggregate material identity unchanged",
       "lower adds/removes legs independently",
