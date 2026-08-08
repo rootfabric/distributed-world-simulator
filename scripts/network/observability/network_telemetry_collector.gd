@@ -64,8 +64,8 @@ func observe(distribution_name: String, value: float) -> Dictionary:
 		return _failure("INVALID_DISTRIBUTION_SAMPLE")
 
 	# Hot-path telemetry is called hundreds of times per second by the realtime
-	# server. The old implementation duplicated the entire sample window and used
-	# pop_front() for every observation after the window filled, turning a bounded
+	# server. The old implementation duplicated the entire sample window and
+	# shifted the oldest entry out after the window filled, turning a bounded
 	# metric into an O(window) allocation/copy path. Keep the same bounded sample
 	# semantics with in-place ring overwrite instead. Avoid a default [] expression
 	# on existing metrics too, so the steady-state path does not allocate a throwaway
