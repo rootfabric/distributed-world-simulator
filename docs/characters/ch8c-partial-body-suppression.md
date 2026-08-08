@@ -8,122 +8,134 @@ CH8B proved that `Male_Peasant.gltf` can be presented as three independent equip
 - lower: `Male_Peasant_Legs`;
 - feet: `Male_Peasant_Feet`.
 
-The remaining problem is presentation fit against the fused `SuperHero_Male` base body. The canonical equipment domain is already correct; CH8C must solve overlap without moving `CharacterBody3D`, changing collision, mutating Item Graph, or adding mesh-specific state to networking.
+CH8C solves visual overlap against the fused `SuperHero_Male` base body without moving `CharacterBody3D`, changing collision, mutating Item Graph, or adding mesh-specific state to networking.
 
-## What the graphical tuning proved
+## What graphical tuning proved
 
-Three visual iterations established the boundary of region clipping:
+Four visual iterations established the limits of the simple approaches:
 
-1. coarse whole-body regions removed underwear/pelvis and knee geometry;
-2. protected fine regions preserved those boundaries but allowed base leg/foot geometry to poke through garments;
-3. extending fine shin/foot clipping reduced poke-through but again removed skin that must remain visible below open cuffs and through open/torn garment topology.
+1. coarse whole-body clipping removed underwear/pelvis and knees;
+2. protected fine regions preserved those boundaries but allowed skin to poke through trousers/footwear;
+3. adding shin/foot clip regions removed skin where open garments must reveal it;
+4. outward `BaseMaterial3D.grow` preserved skin topology but still could not guarantee that the garment shell stayed outside the more voluminous base leg in every pose.
 
-The third observation is decisive: `Male_Peasant_Legs` and `Male_Peasant_Feet` are **open garments**. A body mask based only on spatial bands cannot know where the garment has holes/open edges. Making that mask more aggressive trades penetration for missing limbs.
+The fourth observation is decisive: open/torn garments need **topology-aware body occlusion**. Their own triangles must define where base-body geometry may be hidden.
 
-Therefore fix6 introduces two explicit presentation policies.
+## Final CH8C policy
 
-## Policy A — closed garment: body suppression
+### Closed garment
 
-Closed garments that completely cover an area may suppress the base body underneath.
+A closed garment may use semantic body suppression where the covered area is unambiguous.
 
-Current Peasant upper uses this only for the safely enclosed shirt core:
+Current Peasant upper:
 
 ```text
 wearable.layer.upper.peasant
-    body coverage -> body.region.torso.core
+    material body suppression -> body.region.torso.core
 ```
 
-The base arms and underwear/pelvis remain visible. Coarse regions remain available for future EVA/full-body suits:
+### Open/torn garment
 
-```text
-body.region.torso
-body.region.arms
-body.region.legs
-body.region.feet
-```
+Open trousers/footwear do not use spatial body bands and do not rely on surface grow.
 
-## Policy B — open/torn garment: surface-fit overlay
-
-Open trousers, sandals/boots with openings, sleeves with intentional skin gaps, and similar garments must keep the base body intact.
-
-For current Peasant lower/feet:
+Current Peasant lower/feet:
 
 ```text
 wearable.layer.lower.peasant
-    body coverage -> none
-    presentation fit -> outward garment grow 0.010 m
+    material body suppression -> none
+    topology occlusion -> Male_Peasant_Legs geometry
 
 wearable.layer.feet.peasant
-    body coverage -> none
-    presentation fit -> outward garment grow 0.008 m
+    material body suppression -> none
+    topology occlusion -> Male_Peasant_Feet geometry
 ```
 
-Only the wearable presentation shell moves outward. The base leg/foot is not clipped, so skin remains available through garment holes and below cuffs.
+The base body remains present where the garment has no nearby surface: through actual holes and below real cuffs. Only base-body triangles close to actual garment geometry are removed from a temporary presentation mesh.
 
-Godot `BaseMaterial3D` provides vertex grow: when enabled, vertices are displaced along their normals. CH8C uses that feature on **duplicated per-scene materials**, never on the imported/shared asset material.
-
-## Surface-fit implementation
-
-`GarmentSurfaceFitSceneFactory` takes an already selective `PackedScene` and a small grow distance.
-
-It:
-
-1. instantiates the selective scene;
-2. visits all garment `MeshInstance3D` surfaces;
-3. resolves each effective `BaseMaterial3D`;
-4. duplicates the material locally;
-5. enables vertex grow and applies the requested amount;
-6. installs the duplicate as a surface/material override;
-7. repacks a temporary presentation-only `PackedScene`.
-
-The source glTF, source mesh resource, and imported/shared materials are not mutated.
-
-Guard rails:
-
-```text
-grow > 0
-max grow = 0.05 m
-current lower = 0.010 m
-current feet  = 0.008 m
-```
-
-These values are asset-fit metadata. They are intentionally not equipment channels or gameplay dimensions.
-
-## Separation of responsibilities
+## Topology-aware architecture
 
 ```text
 canonical equipment snapshot
         |
         +--> CharacterEquipmentPresenter
-        |       -> independent skinned garment visuals
-        |       -> fitted temporary lower/feet scenes
+        |       -> unchanged skinned garment visuals
         |
         +--> WearableBodyCoverageCatalog
-                -> only actual closed-body coverage
+        |       -> closed-region material suppression
+        |
+        +--> WearableBodyTopologyCatalog
+                -> open-garment PackedScene + fit threshold
                 |
                 v
-        LayeredBodySuppressionCoordinator
-                -> torso.core for current upper
-                -> no leg/foot clipping for current open garments
+        LayeredBodyTopologyOcclusionCoordinator
+                -> aggregate equipped topology descriptors
+                -> GarmentTopologyOcclusionBuilder
+                -> temporary derived SuperHero_Male ArrayMesh
 ```
 
 This keeps the invariant:
 
 ```text
-canonical equipment != rig fit != rendered garment geometry
+canonical equipment != body-fit metadata != presentation geometry
 ```
 
-## Why not keep adding local clip volumes
+## GarmentTopologyOcclusionBuilder
 
-Local boxes/cylinders can improve a closed garment, but they still cannot express arbitrary holes or torn boundaries without authored mask data. For the current trousers a volume large enough to remove every penetration also removes skin that must remain visible.
+The builder works once per equipment topology state, not per frame.
 
-Surface-fit overlay is the lowest-complexity solution that respects the actual garment topology: the garment itself defines where cloth exists.
+For each active open garment it:
 
-If grow is insufficient for some future asset, the next escalation is authored UV/vertex coverage or a precomputed garment-to-body mask, not wider Y bands.
+1. instantiates the selective garment scene;
+2. samples garment triangle vertices, edge midpoints and centroids in rig/model space;
+3. stores those samples in a spatial grid;
+4. examines triangles from the original fused base-body mesh;
+5. removes a base-body triangle only when its centroid or enough edge/vertex samples are close to actual garment samples;
+6. rejects matches outside the garment AABB except for a very small boundary pad;
+7. rebuilds an `ArrayMesh` with the original vertex/bone/weight arrays and a filtered index array.
+
+Consequences:
+
+- a real hole in the trousers has no garment samples in its center, so skin can remain there;
+- below the actual trouser cuff the garment AABB boundary prevents the mask from continuing down the leg;
+- adding footwear unions the trouser and footwear topology masks;
+- removing one item always rebuilds from the exact original body mesh, never incrementally from an already masked mesh.
+
+Current prototype fit thresholds:
+
+```text
+Male_Peasant_Legs: threshold = 0.045 m
+Male_Peasant_Feet: threshold = 0.035 m
+boundary pad:                 0.006 m
+```
+
+These are presentation-fit metadata and can be tuned without changing equipment semantics.
+
+## Runtime lifecycle
+
+`LayeredBodyTopologyOcclusionCoordinator` owns only presentation mesh substitution.
+
+```text
+no lower/feet
+    SuperHero_Male.mesh = exact imported mesh
+
+lower
+    SuperHero_Male.mesh = derived mesh masked by trouser topology
+
+lower + feet
+    SuperHero_Male.mesh = derived union mask
+
+feet only
+    rebuild from original mesh using footwear topology only
+
+none again
+    restore exact imported mesh resource identity
+```
+
+The existing `LayeredBodySuppressionCoordinator` remains independent and handles the upper `torso.core` material clip.
 
 ## Compatibility
 
-Fix6 does not modify accepted:
+CH8C topology occlusion does not modify accepted:
 
 - `CharacterEquipmentPresenter`;
 - `WearablePresentationCatalog`;
@@ -140,34 +152,41 @@ It does not change:
 - gameplay body/capsule;
 - imported Quaternius asset bytes.
 
-## Fix6 automated gates
+The derived mesh preserves source vertices, bones and weights and changes only presentation triangle indices.
 
-The candidate must prove:
+## Why surface grow is no longer the accepted path
 
-- surface-fit factory duplicates materials rather than mutating the selected source scene;
-- lower visual uses grow `0.010 m`;
-- feet visual uses grow `0.008 m`;
-- lower alone contributes zero body suppression regions;
-- feet alone contributes zero body suppression regions;
-- lower+feet leave the exact original base-body `material_override` intact;
-- upper+lower+feet has exactly `body.region.torso.core` active;
-- toggling lower/feet while upper remains equipped does not rebuild the torso mask;
-- removing upper restores the exact original base material while lower/feet remain equipped;
-- gameplay body and capsule remain unchanged;
-- the graphical lab lifecycle is clean with no Godot `ERROR:` lines;
-- accepted CH7.8, CH8A and CH8B regression stays green.
+`BaseMaterial3D.grow` remains a useful general rendering tool, but graphical observation proved that a fixed outward offset cannot guarantee separation from this specific base-body shape across all regions/poses. Increasing grow further would visibly inflate the garment while still not encoding where real openings are.
 
-## Fix6 graphical acceptance
+Therefore fix6 surface-fit is retained only as an experimental utility and is not part of the CH8C acceptance runner.
 
-Inspect `L`, `K`, and `L+K` in idle, walking, jumping and crouching.
+## Automated gates
+
+The CH8C topology candidate must prove:
+
+- lower-only applies a derived base-body mesh and removes some but not all body triangles;
+- the base-body material remains unchanged for lower/feet;
+- the derived mesh preserves source bone/weight array sizes;
+- lower+feet creates an aggregate topology mask;
+- feet-only recomposes from the original body mesh;
+- removing all open garments restores exact original mesh identity;
+- upper-only keeps original mesh topology and uses only `body.region.torso.core` material suppression;
+- gameplay `CharacterBody3D` and capsule remain unchanged;
+- graphical lab lifecycle reports topology state and completes without Godot `ERROR:` lines;
+- accepted CH7.8, CH8A and CH8B regression remains green.
+
+## Graphical acceptance
+
+Inspect `L`, `K`, `L+K`, then `U+L+K` in idle/walk/run/jump/crouch.
 
 Required result:
 
-- trousers no longer show unacceptable leg poke-through;
-- the leg remains visible below the actual trouser cuff and through intentional openings;
-- footwear no longer shows unacceptable foot/ankle poke-through;
-- open skin areas remain present instead of becoming holes;
-- underwear/pelvis remains visible where intended;
-- upper, helmet, backpack, FP/TP and shadow remain coherent.
+- trousers no longer show unacceptable base-leg poke-through on cloth surfaces;
+- skin remains visible through intended garment openings;
+- leg remains below the real trouser cuff;
+- footwear does not show unacceptable base-foot penetration;
+- open footwear areas still contain skin instead of holes;
+- underwear/pelvis remains intact;
+- helmet/backpack, FP/TP and shadow remain coherent.
 
-If a small residual intersection remains, tune `LOWER_SURFACE_GROW_M` or `FEET_SURFACE_GROW_M` by millimeters. Do not reintroduce lower-leg body clipping for this open asset.
+If the topology result is correct but an edge is slightly too aggressive or too permissive, tune only the per-garment proximity threshold/boundary pad. Do not return to global lower-leg Y clipping.
