@@ -1,10 +1,10 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v16",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v17",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX8_HIGH_BOOT_CALF_TUNING_PENDING_WINDOWS_RERUN",
-  "goal": "Keep the accepted fix7 trouser topology result and remove the remaining calf penetration through the upper Peasant boot shaft without clipping unrelated lower-leg skin.",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX9_PROFILE_VERTEX_INFLATION_PENDING_WINDOWS_RERUN",
+  "goal": "Preserve the accepted topology-aware body occlusion while adding a millimetre-scale garment separation reserve so skinned body surfaces do not re-penetrate trousers or tall boots after animation begins.",
   "windows_acceptance_so_far": {
     "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
     "ch8b": "ACCEPTED — selective real parts 39 assertions, real presenter 46 assertions, combined regression PASS",
@@ -31,18 +31,22 @@
       "classification": "SPATIAL_BODY_CLIP_CANNOT_REPRESENT_OPEN_OR_TORN_GARMENT_TOPOLOGY",
       "decision": "REJECTED_VISUALLY"
     },
-    "fix6_surface_fit": {
+    "fix6_surface_fit_material_grow": {
       "automated": "PASS 18 / 37 / 30 assertions",
-      "observation": "Outward material grow preserves the full leg, but the more voluminous base body still penetrates the trousers in several visible areas.",
-      "classification": "FIXED_NORMAL_OFFSET_CANNOT_GUARANTEE_SEPARATION_ACROSS_BODY_AND_GARMENT_SHAPES",
+      "observation": "Material grow preserved the full leg but could not guarantee separation from the more voluminous base body.",
       "decision": "REJECTED_VISUALLY_FIX7_REQUIRED"
     },
     "fix7_topology_occlusion": {
       "automated": "PASS 39 / 40 assertions on Windows",
-      "positive_graphical_observation": "Trousers are visually fixed; their solid cloth surfaces no longer show the previous leg penetration.",
-      "remaining_graphical_problem": "A small amount of calf skin still penetrates the solid upper shafts of Male_Peasant_Feet boots.",
-      "classification": "TOPOLOGY_DIRECTION_ACCEPTED_FOOTWEAR_UPPER_SHAFT_NEEDS_LOCAL_BIAS",
+      "positive_graphical_observation": "Trousers are visually fixed in the initial pose.",
+      "remaining_graphical_problem": "Small calf penetration remained through the upper boot shaft.",
       "decision": "FIX8_HIGH_BOOT_TUNING_REQUIRED"
+    },
+    "fix8_high_boot": {
+      "positive": "The topology direction remains useful and the initial/static view is substantially improved.",
+      "motion_observation": "After movement, additional base-body skin becomes visible through lower garments; the issue is not only the rest-pose boot collar.",
+      "classification": "REST_TOPOLOGY_OCCLUSION_NEEDS_GARMENT_SEPARATION_RESERVE_UNDER_SKINNING",
+      "decision": "FIX9_PROFILE_VERTEX_INFLATION_REQUIRED"
     }
   },
   "canonical_contract": {
@@ -55,41 +59,52 @@
     "gameplay_body_changes": false,
     "collision_changes": false
   },
-  "fix8_policy": {
-    "principle": "Do not change the working ROBUST trouser mask. Treat the tall Peasant footwear as a separate HIGH_BOOT topology profile that is more permissive only near the upper shaft/calf zone.",
+  "fix9_policy": {
+    "principle": "Do not scale complete wearable nodes and do not delete more body geometry globally. Inflate only the temporary garment rest mesh by a profile-driven normal offset, then derive topology occlusion from that same inflated scene.",
+    "pipeline": [
+      "SelectiveGarmentSceneFactory",
+      "GarmentVertexInflationSceneFactory",
+      "WearablePresentationCatalog / SKINNED_GARMENT",
+      "WearableBodyTopologyCatalog using the same inflated PackedScene"
+    ],
     "male_peasant": {
+      "upper": {
+        "vertex_inflation": false,
+        "material_body_coverage": ["body.region.torso.core"]
+      },
       "lower": {
-        "presentation_id": "wearable.layer.lower.peasant",
-        "coverage_mode": "ROBUST",
-        "proximity_threshold_m": 0.045,
-        "boundary_pad_m": 0.006,
-        "upper_y_pad_m": 0.0,
-        "upper_bias_fraction": 1.0,
-        "changed_by_fix8": false
+        "mesh": "Male_Peasant_Legs",
+        "vertex_inflation_profile": [
+          {"t": 0.0, "offset_m": 0.0015},
+          {"t": 0.18, "offset_m": 0.0040},
+          {"t": 0.45, "offset_m": 0.0060},
+          {"t": 0.72, "offset_m": 0.0050},
+          {"t": 1.0, "offset_m": 0.0015}
+        ],
+        "topology_mode": "ROBUST",
+        "topology_threshold_m": 0.045
       },
       "feet": {
-        "presentation_id": "wearable.layer.feet.peasant",
-        "coverage_mode": "HIGH_BOOT",
-        "proximity_threshold_m": 0.045,
-        "previous_fix7_threshold_m": 0.035,
-        "boundary_pad_m": 0.006,
-        "upper_y_pad_m": 0.012,
-        "upper_bias_fraction": 0.52,
-        "meaning": "Use normal robust triangle coverage below the upper band; in the upper 48 percent of the boot AABB allow one covered body sample to occlude a triangle, with only a 12 mm one-sided collar guard above the real footwear AABB."
+        "mesh": "Male_Peasant_Feet",
+        "vertex_inflation_profile": [
+          {"t": 0.0, "offset_m": 0.0015},
+          {"t": 0.35, "offset_m": 0.0025},
+          {"t": 0.65, "offset_m": 0.0045},
+          {"t": 1.0, "offset_m": 0.0070}
+        ],
+        "topology_mode": "HIGH_BOOT",
+        "topology_threshold_m": 0.045,
+        "topology_upper_y_pad_m": 0.012,
+        "topology_upper_bias_fraction": 0.52
       }
     },
-    "implementation": {
-      "catalog": "WearableBodyTopologyCatalog stores coverage_mode, upper_y_pad_m and upper_bias_fraction per presentation/rig.",
-      "builder": "GarmentTopologyOcclusionBuilder keeps the existing topology sampler and AABB guard, but supports HIGH_BOOT one-sample acceptance only in the configured upper band.",
-      "coordinator": "LayeredBodyTopologyOcclusionCoordinator propagates the fit metadata, includes it in idempotency keys and exposes descriptor_reports for diagnostics.",
-      "lab": "Peasant lower remains ROBUST; Peasant feet uses HIGH_BOOT and prints the exact tuning values in the graphical status panel.",
-      "source_asset_mutation": false,
-      "shared_material_mutation": false,
-      "accepted_presenter_changed": false,
-      "accepted_wearable_catalog_changed": false,
-      "accepted_pose_bridge_changed": false,
-      "runtime_per_frame_mesh_rebuild": false,
-      "rebuild_trigger": "equipment topology state change only"
+    "mesh_contract": {
+      "changes": ["rest vertex positions only"],
+      "preserves": ["normals", "indices", "materials", "UV arrays", "bone indices", "weights", "MeshInstance3D skin/skeleton binding"],
+      "source_scene_mutated": false,
+      "imported_asset_mutated": false,
+      "per_frame_mesh_rebuild": false,
+      "build_time": "temporary wearable scene construction only"
     },
     "presentation_only": true,
     "item_graph_changes": false,
@@ -97,51 +112,46 @@
     "gameplay_body_changes": false,
     "collision_changes": false
   },
-  "author_local_sanity_check": {
+  "author_local_fix9_sanity_check": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "platform": "Linux Xvfb + Mesa llvmpipe gl_compatibility",
-    "fixture": "Synthetic tapered calf/body cylinder inside a tall boot cylinder; not the Quaternius asset.",
-    "fix7_robust": {
-      "threshold_m": 0.035,
-      "removed_triangles": 448,
-      "total_triangles": 768
-    },
-    "fix8_high_boot": {
-      "threshold_m": 0.045,
-      "upper_y_pad_m": 0.012,
-      "upper_bias_fraction": 0.52,
-      "removed_triangles": 524,
-      "total_triangles": 768,
-      "aggressive_upper_y_min": 0.30
-    },
-    "graphical_observation": "The synthetic before/after frame shows the HIGH_BOOT profile removing additional upper-shaft body geometry while leaving body geometry above the boot collar.",
-    "scope_limit": "This is an algorithm/render sanity check only. The sandbox does not contain the user's actual Quaternius project/asset bytes, so real Male_Peasant graphical acceptance remains a Windows user gate."
+    "fixture": "Synthetic curved garment shell; not the Quaternius asset.",
+    "result": "PASS — factory parsed and executed, PackedScene rebuilt and rendered.",
+    "configured_peak_m": 0.006,
+    "observed_peak_m": 0.00598316495807885,
+    "vertex_count": 2112,
+    "reason_for_peak_difference": "No synthetic source vertex lies exactly on the profile peak t=0.45; configured and observed maxima are therefore reported separately.",
+    "scope_limit": "The sandbox does not contain the real Quaternius asset bytes, so Male_Peasant acceptance remains a Windows gate."
   },
-  "fix8_commits": {
-    "topology_catalog_metadata": "6d1ea27942dca516a980a4cb20d09f07f4975469",
-    "high_boot_builder": "e387dd1c04d03c20c2f3ec3e32d261b22d09ba89",
-    "coordinator_metadata_propagation": "abcb04d4f7929ad45fbe72022e6be41b91350a6c",
-    "peasant_high_boot_lab_tuning": "43713a16bc4b630787c64925c58dc82fb8b6f7ea",
-    "focused_high_boot_gate": "7bda36e068b54ab8ee8855d2acd85df3b918ca9d",
-    "graphical_lab_gate": "609357a6e72ebc21bea52d919d758d4ae4db9b8f",
-    "runner": "d25096d2c5ebe8f76e7ebe2478cebd0a62ad058b",
-    "design_doc": "37dcd3162b210ce68a0cca6fa68b7905c7cae114"
+  "fix9_commits": {
+    "vertex_inflation_factory": "148d486897653eb0ede529c069459c486bfe47c3",
+    "lab_integration": "71c0e80c5a58e1f65a07467913d1ae78f6560447",
+    "real_quaternius_gate": "13924438ccfed4269365efd2fc0fbe2e60183888",
+    "lab_gate": "e2143db740935e999916cefeb512eb70caa5c122",
+    "runner": "a38a1dad0d7aa732393404188e4d42ce233628fd",
+    "configured_vs_observed_telemetry": "991e1cdf8f47b7642447a77fa2e7fc910f988a01",
+    "real_gate_peak_tolerance": "257a3219b82d23b4ee946aa7d671c7548415a784",
+    "lab_configured_peak_assertions": "3db27016c08c3ab66eb0d6ad8049274a1d328be1",
+    "design_doc": "b05f6e729d680b8c7cdd248681da6b72b7677e57"
   },
   "completed_fix7_windows_gates": {
     "focused_topology_occlusion": "PASS 39 — res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
     "focused_graphical_lab_smoke": "PASS 40 — res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd"
   },
-  "pending_fix8_windows_gates": {
-    "focused_high_boot": "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd",
+  "pending_fix9_windows_gates": {
+    "focused_vertex_inflation": "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd",
     "focused_topology_regression": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
+    "focused_high_boot_regression": "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd",
     "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
     "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
     "required_graphical": [
-      "fix7 trouser appearance remains unchanged and correct",
-      "solid upper boot shafts no longer show the residual calf penetration",
-      "skin above the actual boot collar remains visible",
-      "intentional footwear openings retain skin instead of holes",
+      "trousers remain visually correct in the initial pose",
+      "body skin does not reappear through trouser cloth after movement begins",
+      "calf skin does not reappear through solid boot shafts after movement",
+      "intentional trouser and footwear openings retain skin",
+      "skin above actual cuffs/collars remains present",
+      "garments do not look visibly ballooned or detached",
       "underwear/pelvis remains visible",
       "U+L+K remains coherent in idle/walk/run/jump/crouch",
       "helmet/backpack remain coherent",
@@ -149,10 +159,10 @@
     ],
     "require_no_runtime_error_lines": true
   },
-  "tuning_rule_after_fix8_rerun": "If the calf still penetrates slightly, tune only FEET_TOPOLOGY_THRESHOLD_M, FEET_TOPOLOGY_UPPER_Y_PAD_M or FEET_TOPOLOGY_UPPER_BIAS_FRACTION. Do not change the accepted ROBUST trouser descriptor and do not return to global Y clipping or garment grow.",
+  "tuning_rule_after_fix9_rerun": "If residual penetration is small, tune only the lower/feet vertex-inflation profile points in millimetres. If the garment visibly floats, reduce the local profile point rather than scaling the complete wearable node or expanding global body suppression.",
   "deferred": [
-    "offline/cache generation of topology masks instead of runtime derivation",
-    "authored UV/vertex masks for production-quality garments where generated proximity masks are insufficient",
+    "offline/cache generation of topology and inflation-fitted wearable meshes",
+    "authored UV/vertex masks for production-quality garments where generated masks are insufficient",
     "production presentation-fit metadata outside the lab",
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
