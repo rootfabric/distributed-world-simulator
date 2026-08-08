@@ -1,5 +1,6 @@
 extends SceneTree
 
+const GeoUtils = preload("res://scripts/simulation/procedural/geo_contract_utils.gd")
 const PlanetDefinition = preload("res://scripts/simulation/procedural/contracts/planet_definition.gd")
 const PlanetEnvironment = preload("res://scripts/simulation/procedural/contracts/planet_environment.gd")
 const PlanetRecipe = preload("res://scripts/simulation/procedural/contracts/planet_recipe.gd")
@@ -65,6 +66,8 @@ func _init() -> void:
 	if reference_hashes.size() == 2:
 		_check(String(reference_hashes["1.0.0"]) != String(reference_hashes["2.0.0"]), "recipe replacement provenance differs")
 		_check(Array(reference_profiles["1.0.0"]) != Array(reference_profiles["2.0.0"]), "recipe replacement geography differs")
+
+	# Caller contract remains stable for both worlds.
 	_check(FINAL_FIELD == ValleyModifier.FIELD_SURFACE_HEIGHT_M, "same final semantic field across replacement")
 	_finish()
 
