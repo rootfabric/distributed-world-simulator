@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/procedural/g5_world_feature_graph_lab.gd" id="1_script"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_world"]
+radius = 5.0
+height = 10.0
+radial_segments = 48
+rings = 24
+
+[sub_resource type="StandardMaterial3D" id="Material_world"]
+albedo_color = Color(0.08, 0.1, 0.13, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_lines"]
+shading_mode = 0
+albedo_color = Color(1, 0.72, 0.2, 1)
+
+[node name="G5WorldFeatureGraphLab" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="World" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_world")
+material_override = SubResource("Material_world")
+
+[node name="FeatureLines" type="MeshInstance3D" parent="."]
+material_override = SubResource("Material_lines")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-35, -30, 0)
+light_energy = 1.4
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 15)
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 520.0
+offset_bottom = 250.0
+
+[node name="Label" type="Label" parent="HUD/Panel"]
+text = "G5 — World Feature Graph"
