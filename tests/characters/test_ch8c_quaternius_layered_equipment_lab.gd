@@ -25,10 +25,11 @@ func _run() -> void:
 	_assert(lab.player is CharacterBody3D, "CH8C graphical lab gameplay body missing")
 	_assert(lab.equipment_source != null, "CH8C graphical lab equipment source missing")
 	_assert(lab.equipment_presenter != null, "CH8C graphical lab presenter missing")
-	_assert(lab.body_suppression_coordinator != null, "CH8C graphical lab coordinator missing")
+	_assert(lab.body_suppression_coordinator != null, "CH8C graphical lab material coordinator missing")
+	_assert(lab.body_topology_coordinator != null, "CH8C graphical lab topology coordinator missing")
 	_assert(bool(lab.layered_setup_result.get("success", false)), "CH8C graphical lab setup failed: %s" % JSON.stringify(lab.layered_setup_result))
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("CH8C — Layered Garments"), "CH8C graphical lab status extension failed")
-	_assert(lab.status_label != null and String(lab.status_label.text).contains("surface fit: lower 0.010 m | feet 0.008 m"), "CH8C graphical lab surface-fit status missing")
+	_assert(lab.status_label != null and String(lab.status_label.text).contains("topology:"), "CH8C graphical lab topology status missing")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
@@ -49,24 +50,38 @@ func _run() -> void:
 	_assert(lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower missing")
 	_assert(lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet missing")
 	_assert(String(lab.status_label.text).contains("upper: ON | lower: ON | feet: ON"), "CH8C graphical lab status did not reflect equipped layers")
-	var peak_report: Dictionary = lab.body_suppression_coordinator.create_report()
-	var active_regions: Array = peak_report.get("active_regions", [])
-	_assert(active_regions.size() == 1, "CH8C surface-fit lab expected torso-only body suppression")
-	_assert(REGION_TORSO_CORE in active_regions, "CH8C surface-fit lab lost protected torso core")
-	_assert(bool(peak_report.get("material_applied", false)), "CH8C graphical lab did not apply torso-core material")
 
-	# Lower/feet are presentation-shell fits and must not add body suppression.
+	var material_report: Dictionary = lab.body_suppression_coordinator.create_report()
+	var active_regions: Array = material_report.get("active_regions", [])
+	_assert(active_regions.size() == 1, "CH8C topology lab expected torso-only material suppression")
+	_assert(REGION_TORSO_CORE in active_regions, "CH8C topology lab lost torso-core material suppression")
+	_assert(bool(material_report.get("material_applied", false)), "CH8C topology lab did not apply torso-core material")
+
+	var topology_report: Dictionary = lab.body_topology_coordinator.create_report()
+	_assert(bool(topology_report.get("mesh_applied", false)), "CH8C graphical lab did not apply topology body mesh")
+	_assert((topology_report.get("active_presentations", []) as Array).size() == 2, "CH8C graphical lab expected lower+feet topology presentations")
+	_assert(int(topology_report.get("removed_triangles", 0)) > 0, "CH8C graphical lab topology removed no body triangles")
+
+	# Removing lower must keep the feet topology mask while leaving upper material
+	# suppression unchanged.
 	var lower_off: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
 	_assert(bool(lower_off.get("success", false)), "CH8C graphical lab lower toggle-off failed")
 	await process_frame
-	var after_lower: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
-	_assert(after_lower.size() == 1 and REGION_TORSO_CORE in after_lower, "CH8C lower toggle changed body coverage")
+	var after_lower_material: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
+	_assert(after_lower_material.size() == 1 and REGION_TORSO_CORE in after_lower_material, "CH8C lower toggle changed upper body coverage")
+	var after_lower_topology: Dictionary = lab.body_topology_coordinator.create_report()
+	_assert((after_lower_topology.get("active_presentations", []) as Array).size() == 1, "CH8C lower toggle did not leave feet topology")
+	_assert(int(after_lower_topology.get("removed_triangles", 0)) > 0, "CH8C feet topology removed no body triangles")
 
+	# Removing feet must restore the exact unmasked base mesh while upper remains.
 	var feet_off: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
 	_assert(bool(feet_off.get("success", false)), "CH8C graphical lab feet toggle-off failed")
 	await process_frame
-	var after_feet: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
-	_assert(after_feet.size() == 1 and REGION_TORSO_CORE in after_feet, "CH8C feet toggle changed body coverage")
+	var after_feet_topology: Dictionary = lab.body_topology_coordinator.create_report()
+	_assert((after_feet_topology.get("active_presentations", []) as Array).is_empty(), "CH8C feet toggle retained topology presentations")
+	_assert(not bool(after_feet_topology.get("mesh_applied", true)), "CH8C feet toggle retained topology mesh")
+	var after_feet_material: Array = lab.body_suppression_coordinator.create_report().get("active_regions", [])
+	_assert(after_feet_material.size() == 1 and REGION_TORSO_CORE in after_feet_material, "CH8C feet toggle changed upper body coverage")
 
 	var upper_off: Dictionary = lab.call("_toggle_layer", UPPER_ITEM_ID, UPPER_PROFILE_ID)
 	_assert(bool(upper_off.get("success", false)), "CH8C graphical lab upper toggle-off failed")
@@ -76,9 +91,12 @@ func _run() -> void:
 	_assert(not lab.equipment_source.has_item(LOWER_ITEM_ID), "CH8C graphical lab lower remained equipped")
 	_assert(not lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C graphical lab feet remained equipped")
 	_assert(String(lab.status_label.text).contains("upper: OFF | lower: OFF | feet: OFF"), "CH8C graphical lab status did not reflect cleared layers")
-	var final_report: Dictionary = lab.body_suppression_coordinator.create_report()
-	_assert((final_report.get("active_regions", []) as Array).is_empty(), "CH8C graphical lab retained body regions after clear")
-	_assert(not bool(final_report.get("material_applied", true)), "CH8C graphical lab retained suppression material after clear")
+	var final_material: Dictionary = lab.body_suppression_coordinator.create_report()
+	_assert((final_material.get("active_regions", []) as Array).is_empty(), "CH8C graphical lab retained body material regions after clear")
+	_assert(not bool(final_material.get("material_applied", true)), "CH8C graphical lab retained suppression material after clear")
+	var final_topology: Dictionary = lab.body_topology_coordinator.create_report()
+	_assert((final_topology.get("active_presentations", []) as Array).is_empty(), "CH8C graphical lab retained topology presentations after clear")
+	_assert(not bool(final_topology.get("mesh_applied", true)), "CH8C graphical lab retained topology mesh after clear")
 	_assert(lab.player.position.is_equal_approx(player_position_before), "CH8C graphical lab moved gameplay body")
 	_assert(is_equal_approx(float(lab.player_capsule.height), capsule_height_before), "CH8C graphical lab changed gameplay capsule")
 
@@ -94,10 +112,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius surface-fit layered equipment lab: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius topology-aware layered equipment lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius surface-fit layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius topology-aware layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
