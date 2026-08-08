@@ -6,6 +6,8 @@ const RemoteSnapshotInterpolator = preload(
 
 const SCHEMA := "planet_simulator.remote_player_presenter.v2"
 const LEGACY_SCHEMA := "planet_simulator.remote_player_presenter.v1"
+const FIX8_REMOTE_BUFFER_TELEMETRY_POLICY := "MOVING_HOLD_AND_SNAPSHOT_GAP_DIAGNOSTICS_V1"
+const FIX8_MOVING_SPEED_EPSILON_MPS := 0.05
 
 var logical_player_id := ""
 var player_entity_id := ""
@@ -25,6 +27,16 @@ var _interpolator
 var _fallback_server_tick := 0
 var _last_mode := "UNINITIALIZED"
 var _last_render_tick := 0.0
+
+var _fix8_last_snapshot_tick := -1
+var _fix8_snapshot_gap_samples := 0
+var _fix8_snapshot_gap_total_ticks := 0
+var _fix8_max_snapshot_gap_ticks := 0
+var _fix8_moving_extrapolation_samples := 0
+var _fix8_moving_hold_samples := 0
+var _fix8_moving_buffer_underruns := 0
+var _fix8_current_moving_hold_streak := 0
+var _fix8_max_moving_hold_streak := 0
 
 
 func setup(record: Dictionary, snapshot_context: Dictionary = {}) -> Dictionary:
@@ -96,6 +108,10 @@ func apply_replica(
 			"reset_reason": String(push_details.get("reset_reason", "")),
 		})
 	last_apply_error_code = ""
+	_observe_fix8_snapshot_gap(
+		server_tick,
+		String(push_details.get("reset_reason", ""))
+	)
 	var position_data: Dictionary = record.get("position", {})
 	var velocity_data: Dictionary = record.get("velocity", {})
 	target_position = Vector3(
@@ -147,6 +163,7 @@ func _process(delta: float) -> void:
 
 
 func _apply_interpolated_state(state: Dictionary) -> void:
+	var previous_mode := _last_mode
 	position = state.get("position", position)
 	target_velocity = state.get("velocity", target_velocity)
 	target_orientation_yaw = float(state.get(
@@ -166,8 +183,48 @@ func _apply_interpolated_state(state: Dictionary) -> void:
 	)
 	_last_mode = String(state.get("mode", "UNKNOWN"))
 	_last_render_tick = float(state.get("render_tick", _last_render_tick))
+	_observe_fix8_remote_buffer_sample(previous_mode, _last_mode, target_velocity)
 	_apply_orientation()
 	_apply_flashlight()
+
+
+func _observe_fix8_snapshot_gap(server_tick: int, reset_reason: String) -> void:
+	if server_tick < 0:
+		return
+	if (
+		_fix8_last_snapshot_tick < 0
+		or reset_reason in ["INITIAL", "AUTHORITY_OR_SESSION_CHANGED"]
+	):
+		_fix8_last_snapshot_tick = server_tick
+		return
+	if server_tick <= _fix8_last_snapshot_tick:
+		return
+	var gap_ticks := server_tick - _fix8_last_snapshot_tick
+	_fix8_snapshot_gap_samples += 1
+	_fix8_snapshot_gap_total_ticks += gap_ticks
+	_fix8_max_snapshot_gap_ticks = maxi(_fix8_max_snapshot_gap_ticks, gap_ticks)
+	_fix8_last_snapshot_tick = server_tick
+
+
+func _observe_fix8_remote_buffer_sample(
+	previous_mode: String,
+	mode: String,
+	velocity: Vector3
+) -> void:
+	var moving := velocity.length() > FIX8_MOVING_SPEED_EPSILON_MPS
+	if moving and mode == "EXTRAPOLATE":
+		_fix8_moving_extrapolation_samples += 1
+	if moving and mode == "HOLD_EXTRAPOLATION_LIMIT":
+		_fix8_moving_hold_samples += 1
+		_fix8_current_moving_hold_streak += 1
+		_fix8_max_moving_hold_streak = maxi(
+			_fix8_max_moving_hold_streak,
+			_fix8_current_moving_hold_streak
+		)
+		if previous_mode != "HOLD_EXTRAPOLATION_LIMIT":
+			_fix8_moving_buffer_underruns += 1
+	else:
+		_fix8_current_moving_hold_streak = 0
 
 
 func _resolve_snapshot_context(
@@ -238,6 +295,11 @@ func get_interpolation_report() -> Dictionary:
 
 
 func get_report() -> Dictionary:
+	var mean_gap_ticks := (
+		float(_fix8_snapshot_gap_total_ticks) / float(_fix8_snapshot_gap_samples)
+		if _fix8_snapshot_gap_samples > 0
+		else 0.0
+	)
 	return {
 		"schema": SCHEMA,
 		"legacy_schema": LEGACY_SCHEMA,
@@ -265,6 +327,14 @@ func get_report() -> Dictionary:
 		"interpolation_failures": interpolation_failures,
 		"last_apply_error_code": last_apply_error_code,
 		"interpolation": get_interpolation_report(),
+		"fix8_remote_buffer_policy": FIX8_REMOTE_BUFFER_TELEMETRY_POLICY,
+		"fix8_snapshot_gap_samples": _fix8_snapshot_gap_samples,
+		"fix8_mean_snapshot_gap_ticks": mean_gap_ticks,
+		"fix8_max_snapshot_gap_ticks": _fix8_max_snapshot_gap_ticks,
+		"fix8_moving_extrapolation_samples": _fix8_moving_extrapolation_samples,
+		"fix8_moving_hold_samples": _fix8_moving_hold_samples,
+		"fix8_moving_buffer_underruns": _fix8_moving_buffer_underruns,
+		"fix8_max_moving_hold_streak": _fix8_max_moving_hold_streak,
 	}
 
 
