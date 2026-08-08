@@ -29,7 +29,7 @@ try {
     }
 
     Write-Host "=== G6.4 headless scene smoke ==="
-    & $GodotPath --headless --path $PSScriptRoot res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn
+    & $GodotPath --headless --path $PSScriptRoot --scene "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn" --quit-after 2
     if ($LASTEXITCODE -ne 0) {
         throw "G6.4 visual river lab headless smoke failed"
     }
