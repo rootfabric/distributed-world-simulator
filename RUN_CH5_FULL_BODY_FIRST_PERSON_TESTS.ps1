@@ -79,7 +79,7 @@ try {
     )
     Invoke-Godot "editor_import" @("--headless", "--editor", "--path", $Root, "--quit")
 
-    Invoke-Godot "ch4_avatar_presenter_regression" @(
+    Invoke-Godot "ch4_ch6_avatar_presenter_jump_crouch" @(
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch4_quaternius_avatar_presenter.gd"
     )
@@ -91,7 +91,7 @@ try {
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch5_full_body_first_person_adapter.gd"
     )
-    Invoke-Godot "ch5_fix1_ch6_fix1_first_person_lab" @(
+    Invoke-Godot "ch6_fix2_first_person_jump_crouch_lab" @(
         "--headless", "--path", $Root,
         "--script", "res://tests/characters/test_ch5_full_body_first_person_lab.gd"
     )
@@ -105,7 +105,7 @@ try {
     )
 
     Write-Host ""
-    Write-Host "CH6 fix1 Shadow Preservation tests: PASS" -ForegroundColor Green
+    Write-Host "CH6 fix2 Jump/Crouch + Shadow Preservation tests: PASS" -ForegroundColor Green
 }
 finally {
     if ($null -eq $OriginalRequire) {
