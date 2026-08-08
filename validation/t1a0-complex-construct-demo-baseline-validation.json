@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.t1a0_complex_construct_demo_validation.v1",
+  "checkpoint": "T1A0_BASELINE_AND_FIXTURE_CONTRACTS",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1-complex-construct-demo-lab",
+  "branch_base_commit": "68085c9154a85a581226d08001f8e524b0992323",
+  "c24_accepted_commit": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+  "fixture_seed": "t1a0-lunar-engineering-outpost-v1",
+  "profiles": {
+    "D0": {
+      "expected_part_count": 64,
+      "expected_room_count": 1,
+      "expected_utility_count": 2,
+      "expected_item_count": 6,
+      "initial_fixture_checksum": "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58"
+    },
+    "D1": {
+      "expected_part_count": 384,
+      "expected_room_count": 5,
+      "expected_utility_count": 3,
+      "expected_item_count": 15,
+      "initial_fixture_checksum": "876cae0b17d8d508515ea2dafc577ad1b9389070d29d1102d3ad8565bd00b474"
+    }
+  },
+  "static_validation": {
+    "manifest_json_parse": "PASS",
+    "fixture_checksum_reference": "PASS",
+    "production_contract_files_changed": 0,
+    "network_contract_files_changed": 0
+  },
+  "runtime_validation": {
+    "editor_import": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
+    "focused_t1a0": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
+    "world_regression": "NOT_RUN_PENDING_FOCUSED_PASS"
+  },
+  "acceptance_requirements": [
+    "Godot 4.7.1 double editor import PASS",
+    "RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS focused PASS",
+    "project regression gate PASS",
+    "no production Item/Construction contract mutation"
+  ],
+  "next": "T1A.1_PART_VISUAL_PROFILE_ASSET_ADAPTER"
+}
