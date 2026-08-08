@@ -78,7 +78,8 @@ Invoke-Godot-Test "ch8_layered_equipment_contract" "res://tests/characters/test_
 Invoke-Godot-Test "ch8_layered_equipment_presentation_diff" "res://tests/characters/test_ch8_layered_equipment_presentation_diff.gd"
 Invoke-Godot-Test "ch8b_quaternius_selective_skinned_parts" "res://tests/characters/test_ch8b_quaternius_selective_skinned_parts.gd"
 Invoke-Godot-Test "ch8b_real_layered_equipment_presentation" "res://tests/characters/test_ch8b_real_layered_equipment_presentation.gd"
+Invoke-Godot-Test "ch8c_quaternius_partial_body_suppression" "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd"
 
 Write-Host ""
-Write-Host "CH8 Layered Equipment + selective real skinned parts candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH8 Layered Equipment + selective parts + partial body suppression candidate runner: PASS" -ForegroundColor Green
 exit 0
