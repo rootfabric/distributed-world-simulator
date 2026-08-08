@@ -3,13 +3,45 @@
   "checkpoint": "G6_FULL_ACCEPTANCE",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "decision": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_SHARED_BASELINE",
+  "decision": "BLOCKED_BY_SHARED_MW10_BASELINE_EXPECTED",
   "implementation": {
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "shell_runner": "RUN_G6_FULL_ACCEPTANCE.sh",
     "manifest": "config/procedural/g6-full-acceptance.v1.json",
     "g6_4_manual_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md",
     "nested_powershell_runners_are_isolated_processes": true
+  },
+  "windows_attempt": {
+    "tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows",
+    "working_tree_before": "CLEAN",
+    "global_revision": "GLOBAL-P0-2026-08-08-R1",
+    "global_config_blob": "56aa7b14ccdb96e43375011a67b4829f936cf6f1",
+    "repository_sync_preflight": "PASS",
+    "shared_mw10_baseline": "BLOCKED_EXPECTED",
+    "expected_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
+    "actual_g5_repository_blob": "ec596493c5b96a6140b17adbe18d6283c0615bf0",
+    "runtime_after_mw10_preflight_started": false
+  },
+  "g6_4_fix4_windows_evidence": {
+    "tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
+    "dependency_chain_through_g6_3": "PASS",
+    "g6_4_contracts": "PASS_158_ASSERTIONS",
+    "adaptive_macro_surface": "PASS",
+    "far_lod": 1,
+    "near_lod": 9,
+    "far_triangles": 120,
+    "near_triangles": 4176,
+    "macro_octaves": 8,
+    "minimum_signal_km": 4.688,
+    "visual_lab_runtime_marker": "PASS",
+    "manual_graphical_observation": "PASS_BY_USER_OBSERVATION"
+  },
+  "repo_hygiene": {
+    "git_diff_check_on_tested_head": "FAIL_OLD_MARKDOWN_TRAILING_WHITESPACE",
+    "cleanup_applied_after_test": true,
+    "runtime_code_changed_by_cleanup": false,
+    "post_cleanup_rerun_required": "GIT_DIFF_CHECK_ONLY"
   },
   "preflight_evidence": {
     "main_global_revision": "GLOBAL-P0-2026-08-08-R1",
@@ -41,17 +73,12 @@
     "assistant_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
     "assistant_godot_platform": "linuxbsd-x86_64-double",
     "assistant_headless_gdscript_smoke": "PASS",
-    "assistant_headless_gdscript_smoke_output": [
-      "GODOT_PROJECT_SMOKE: PASS",
-      "VECTOR3_SAMPLE: (0.12345678901234, 2.0, 3.0)"
-    ],
     "assistant_environment_repository_checkout_available": false,
     "assistant_environment_network_clone_available": false,
-    "assistant_runtime_result": "ENGINE_VERIFIED_BUT_PROJECT_GATE_NOT_RUN_NO_CHECKOUT",
-    "required_engine_for_final_acceptance": "Godot 4.7.1 stable double precision a13da4f-compatible build",
-    "windows_full_gate": "PENDING_AFTER_SHARED_BASELINE_RESYNC"
+    "assistant_runtime_result": "ENGINE_VERIFIED_BUT_PROJECT_GATE_NOT_RUN_NO_CHECKOUT"
   },
   "next_actions": [
+    "Rerun git diff --check after markdown whitespace cleanup",
     "Integrate accepted PR #43 into feature/g5-world-feature-graph",
     "Resynchronize feature/g6-hydrology-fluid-surface-v0 on top of updated G5",
     "Run RUN_G6_FULL_ACCEPTANCE.ps1",
