@@ -1,8 +1,9 @@
 {
   "schema": "planet_simulator.network_experience_roadmap.v1",
-  "document_revision": 9,
+  "document_revision": 10,
   "created_at_utc": "2026-08-01T03:00:00Z",
-  "updated_at_utc": "2026-08-03T07:53:00Z",
+  "updated_at_utc": "2026-08-08T10:40:00Z",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "base_checkpoint": "v16.15.0-network-nx5-remote-snapshot-interpolation",
   "status": "active",
   "strategy": "SERVER_AUTHORITY_WITH_CLIENT_PREDICTION_AND_INTERPOLATED_PRESENTATION",
@@ -10,6 +11,12 @@
   "current_checkpoint": "v16.16.0-network-nx6-predicted-item-interactions",
   "recommended_branch": "feature/nx6-predicted-item-interactions",
   "distributed_runtime_note": "B1 remains architecturally valid after A3, but product implementation priority is temporarily moved behind the realtime network-experience chain. No B1 contract is changed by this roadmap.",
+  "p0_reconciliation": {
+    "nx7_rule": "Physics authority profiles are policy over existing aggregate/spatial/lease authority foundations and must not introduce a second canonical owner registry.",
+    "nx8_rule": "Interest management is a shared interest/replication-budget contract with domain adapters; interest regions, LOD and HLOD never become canonical object identity.",
+    "nx9_rule": "Async persistence removes blocking I/O from realtime execution while preserving existing R3/M0/MW durable commit, replay, outbox and recovery semantics.",
+    "cross_domain_rule": "Network delivery never substitutes for durable Item/Matter/Construction transaction semantics."
+  },
   "authority_profiles": {
     "local_player": "OWNER_PREDICTED_SERVER_AUTHORITY",
     "remote_player": "SERVER_SNAPSHOT_INTERPOLATED",
@@ -76,19 +83,22 @@
       "id": "NX7",
       "name": "Physics Authority Profiles",
       "status": "planned",
-      "goal": "Introduce explicit SERVER_ONLY, OWNER_PREDICTED, OWNER_AUTHORITY_VALIDATED, PREDICTED_SPAWN and CLIENT_COSMETIC policies."
+      "architecture_boundary": "POLICY_OVER_EXISTING_AUTHORITY_FOUNDATION",
+      "goal": "Introduce explicit SERVER_ONLY, OWNER_PREDICTED, OWNER_AUTHORITY_VALIDATED, PREDICTED_SPAWN and CLIENT_COSMETIC policies by composing existing aggregate authority, spatial scope and lease/fencing semantics without creating a second owner registry."
     },
     {
       "id": "NX8",
       "name": "Interest Management and Replication Budget",
       "status": "planned",
-      "goal": "Replicate only relevant entities under per-client bandwidth and priority budgets."
+      "architecture_boundary": "SHARED_INTEREST_BUDGET_WITH_DOMAIN_ADAPTERS",
+      "goal": "Replicate only relevant entities and derived representations under per-client bandwidth, priority, age and hysteresis budgets while keeping interest regions, LOD and HLOD separate from canonical identity."
     },
     {
       "id": "NX9",
       "name": "Async Persistence and Production Hardening",
       "status": "planned",
-      "goal": "Remove disk work from the realtime loop while preserving durable inventory and bounded position recovery loss."
+      "architecture_boundary": "ASYNC_IO_OVER_EXISTING_DURABILITY",
+      "goal": "Remove disk work from the realtime loop while preserving R3/M0/MW commit, replay, outbox and crash-recovery semantics; scheduling/backend changes must not redefine canonical durability."
     }
   ],
   "first_playable_gate": "NX4_PLUS_NX5",
