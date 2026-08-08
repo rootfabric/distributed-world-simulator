@@ -1,11 +1,12 @@
 # G6.2 — Cross-cell / Cross-LOD Continuity — IMPLEMENTED CANDIDATE
 
-**Дата:** 2026-08-08  
-**Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Dependency:** `G6.1 CasualRiverProviderV1 — ACCEPTED`  
-**Implementation candidate:** `322265247bb0a01bf7bdd814adca2ead30b124c9`  
-**Решение:** `IMPLEMENTED CANDIDATE — WINDOWS FOCUSED ACCEPTANCE REQUIRED`
+**Дата:** 2026-08-08
+**Ветка:** `feature/g6-hydrology-fluid-surface-v0`
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Dependency:** `G6.1 CasualRiverProviderV1 — ACCEPTED`
+**Implementation candidate:** `322265247bb0a01bf7bdd814adca2ead30b124c9`
+**Fix1 candidate:** `a3efb5dd314ef6c2e7d3b5d75d118402e7b45117`
+**Решение:** `IMPLEMENTED CANDIDATE — FIX1 WINDOWS FOCUSED ACCEPTANCE REQUIRED`
 
 ## Цель
 
@@ -94,6 +95,16 @@ new network transport
 
 Принятые G6.0 contracts и G6.1 provider не изменены.
 
+## Fix1 после первого Windows focused run
+
+Первый Windows запуск на Godot `4.7.1.stable.double.custom_build.a13da4feb` подтвердил dependency chain и 85 из 86 assertions G6.2. Единственный failure был в manifest meta-check `G6.2 LOD proof levels pinned`.
+
+Причина: `JSON.parse_string()` возвращает JSON numeric values как generic numeric Variant values, а тест напрямую сравнивал parsed array с типизированным `Array[int] = [2, 4, 8, 12]`. Manifest содержал правильные значения; canonical continuity assertions не падали.
+
+Fix1 нормализует каждый parsed LOD через `int(lod_value)` перед сравнением. Production provider/contracts, fixture geography и continuity semantics не изменены.
+
+Одновременно удалены trailing whitespace в этом checkpoint, обнаруженные `git diff --check`.
+
 ## Новые файлы
 
 ```text
@@ -132,12 +143,12 @@ G5 graph                         PASS 249
 G5 feature/cell identity         PASS 94
 G6.0 fluid contracts             PASS 169
 G6.1 CasualRiverProviderV1       PASS 74
-G6.2 continuity                  PASS
+G6.2 continuity                  PASS 86
 working tree                     CLEAN
 git diff --check                 PASS
 ```
 
-Если focused run зелёный, checkpoint можно перевести в:
+Если Fix1 focused run зелёный, checkpoint можно перевести в:
 
 ```text
 G6.2 = ACCEPTED
