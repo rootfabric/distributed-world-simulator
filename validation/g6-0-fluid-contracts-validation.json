@@ -1,0 +1,22 @@
+{
+  "schema": "planet_simulator.g6_0_fluid_contracts_validation.v1",
+  "checkpoint": "g6.0-fluid-contracts",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "base_commit": "e7b10c09a6be879b25cd5c7ec8407832fd758ac2",
+  "runtime": {
+    "editor_import": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
+    "g5_world_feature_graph": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
+    "g5_feature_cell_identity": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY",
+    "g6_0_fluid_contracts": "NOT_RUN_CONNECTOR_ENVIRONMENT_NO_GODOT_BINARY"
+  },
+  "static": {
+    "identity_excludes_representation_state": "PASS_BY_CONTRACT_DESIGN",
+    "renderer_dependency_added": false,
+    "network_transport_dependency_added": false,
+    "geo_kernel_changed": false,
+    "g5_contracts_changed": false
+  },
+  "focused_runner": "RUN_G6_FLUID_CONTRACT_TESTS.ps1",
+  "acceptance_requires_windows_godot_4_7_1_double": true
+}
