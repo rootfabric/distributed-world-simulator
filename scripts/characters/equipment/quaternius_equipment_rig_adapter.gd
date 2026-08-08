@@ -109,9 +109,9 @@ func resolve_body_region_visuals(
 	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
 	if model_root != null:
 		# Universal Base Characters can expose the visible body as one coarse
-		# skinned mesh. Hiding the mesh nodes (not the model root) deliberately
-		# keeps Skeleton3D/BoneAttachment3D alive for animation, helmet and pack.
-		_collect_geometry_instances(model_root, result)
+		# skinned mesh. Hide imported body geometry only. BoneAttachment3D subtrees
+		# are runtime equipment and must never be swallowed by body replacement.
+		_collect_base_model_geometry(model_root, result)
 	return result
 
 
@@ -152,6 +152,18 @@ func create_report() -> Dictionary:
 		"reads_input": false,
 		"owns_network_state": false,
 	}
+
+
+func _collect_base_model_geometry(
+	root: Node,
+	output: Array[GeometryInstance3D]
+) -> void:
+	if root is BoneAttachment3D:
+		return
+	if root is GeometryInstance3D:
+		output.append(root as GeometryInstance3D)
+	for child in root.get_children():
+		_collect_base_model_geometry(child, output)
 
 
 func _resolve_skeleton_bones() -> void:
