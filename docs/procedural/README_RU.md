@@ -1,16 +1,16 @@
 # Procedural Planetary Generation Lab — индекс программы
 
 **Program branch:** `feature/g0-procedural-planetary-generation-lab`
-**Current implementation:** `feature/g0-geo-contracts`
-**Current state:** `G0 ACCEPTED`
+**Current implementation:** `feature/g1-geodesy-body-shape`
+**Current state:** `G1 IMPLEMENTED CANDIDATE`
 
 ---
 
 ## С чего начинать после перерыва
 
 1. [`STATUS_RU.md`](STATUS_RU.md) — текущее состояние и следующий gate.
-2. [`../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md) — исходный implementation checkpoint G0.
-3. [`../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md) — финальная cleanup/acceptance фиксация G0.
+2. [`../checkpoints/G1_GEODESY_BODY_SHAPE_CANDIDATE_RU.md`](../checkpoints/G1_GEODESY_BODY_SHAPE_CANDIDATE_RU.md) — текущий implementation checkpoint G1.
+3. [`../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md`](../checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md) — принятый G0 baseline.
 4. [`../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md`](../plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md) — практический порядок G0–G19.
 5. [`../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md`](../architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md) — общая архитектурная доктрина.
 6. [`../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md`](../validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md) — сквозные acceptance invariants.
@@ -26,7 +26,9 @@ G0 Contracts Freeze v0
           │
           ▼
 G1 Geodesy + Body Shape
+   IMPLEMENTED CANDIDATE
           │
+          │ full-checkout acceptance
           ▼
 G2 Planetary Cells + LOD
           │
@@ -69,52 +71,102 @@ G14→G16 MAIN GEO       GH0→GH6 HIGH RES
 
 ---
 
-## Что доказал G0
-
-Реализованы data-only contracts и сменный provider graph:
+## Что уже доказал G0
 
 ```text
-PlanetDefinition
-PlanetEnvironment
-PlanetRecipe
-GeoProviderDescriptor
-GeoGenerationContext
-GeoSurfaceQuery
-GeoVolumeQuery
-GeoFieldBundle
-GeoSample
-GeoProvider
-FlatSurfaceProvider
-GeoKernel
-```
-
-Ключевые свойства:
-
-```text
+versioned provider graph
+canonical provider ordering
 same input → same sample
-query order does not matter
-provider order canonicalized
-missing dependency rejected
-duplicate output rejected
-dependency cycle rejected
-nondeterministic provider rejected
-provider descriptor must match recipe
-provider parameters are part of provenance
-provider receives only declared requires[]
-Surface and Volume contracts separated
-Geo core has no renderer/mesh/SceneTree dependency
+query-order independence
+provider parameter provenance
+Surface / Volume contract split
+no renderer/mesh/SceneTree dependency in Geo core
+full world/core regression PASS
 ```
 
-Acceptance result:
+G0 accepted head:
+
+```text
+7632ed576a3c0d9007c0ff1296d1d89cd43756d7
+```
+
+---
+
+## Что добавляет G1
+
+Canonical coordinate contracts:
+
+```text
+BodyFixedPosition
+GeodeticPosition
+LocalTangentFrame
+```
+
+Replaceable body-shape boundary:
+
+```text
+BodyShapeProvider
+SphereBodyShapeProvider
+```
+
+Provider-neutral service:
+
+```text
+GeodesyService
+├── body_to_geodetic()
+├── geodetic_to_body()
+├── surface_normal()
+├── altitude()
+└── local_tangent_frame()
+```
+
+First lab body:
+
+```text
+radius = 6_000_000 m
+shape  = body-shape/sphere-v1
+```
+
+Coordinate convention:
+
+```text
++Y              north pole
+longitude 0°    +X
+longitude +90°  +Z
+latitude         [-90°, +90°]
+longitude        [-180°, +180°)
+```
+
+At exact poles longitude is canonicalized to `0°`.
+
+Local tangent semantics:
+
+```text
+Up    = surface normal
+East  = increasing longitude tangent
+North = East × Up
+```
+
+Shape identity, contract/generator versions and `PlanetDefinition.checksum` participate in `body_shape_manifest_hash`.
+
+---
+
+## G1 verification so far
+
+Exact-engine isolated harness:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
-editor import:                     PASS
-G0 focused:                       PASS — 209 assertions
-world/core regression:            PASS
-201 / 201 discovered tests:       PASS
-204 / 204 steps:                  PASS
-Breakpoint :9081 collision noise: 0
+cold editor import:       PASS
+G1 deep smoke:            PASS — 76 assertions
+```
+
+The smoke covered equator/poles, arbitrary roundtrips, altitude, surface normals, tangent-frame orthogonality/handedness, double precision and invalid-value rejection.
+
+G1 remains `IMPLEMENTED CANDIDATE` until the full project checkout passes:
+
+```text
+RUN_G1_FULL_ACCEPTANCE.ps1
 ```
 
 ---
@@ -123,6 +175,8 @@ Breakpoint :9081 collision noise: 0
 
 ```text
 PlanetDefinition + PlanetRecipe
+              ↓
+       body shape + geodesy
               ↓
            GeoKernel
               ↓
@@ -147,7 +201,7 @@ persistent Matter/Construction deltas
 authoritative world
 ```
 
-Истина мира — seed/recipe/provider versions/configuration, stable features и canonical persistent deltas. Mesh, collision mesh, LOD artifact, high-resolution patch и cache entry являются производными представлениями.
+World truth is seed/recipe/provider versions/configuration, stable features and canonical persistent deltas. Mesh, collision mesh, LOD artifact, high-resolution patch and cache entry are derived representations.
 
 ---
 
@@ -160,18 +214,24 @@ Feature != Chunk
 GeoKernel != planet-specific monolith
 procedural baseline != persistent delta
 high-resolution detail != canonical topology
-provider parameters participate in provenance
-providers consume only declared dependencies
+body shape != renderer mesh
+body-shape identity/version participates in provenance
 ```
 
 ---
 
 ## Следующее действие
 
-Создать следующую implementation branch:
+On the full Windows checkout:
 
-```text
-feature/g1-geodesy-body-shape
+```powershell
+.\RUN_G1_FULL_ACCEPTANCE.ps1
 ```
 
-и реализовать только геодезию/body-shape foundation — без mountains, rivers и LOD.
+After `G1 ACCEPTED`, create:
+
+```text
+feature/g2-planetary-cells-lod
+```
+
+G2 adds cube-sphere compatible addressing, quadtree parent/children, neighbors, LOD selection/hysteresis and cell lifecycle without changing G1 geodesy semantics.

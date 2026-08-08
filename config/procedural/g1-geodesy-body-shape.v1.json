@@ -1,0 +1,31 @@
+{
+  "schema": "planet_simulator.g1_geodesy_body_shape_manifest.v1",
+  "checkpoint": "g1-geodesy-body-shape-v0",
+  "status": "CANDIDATE",
+  "program_branch": "feature/g0-procedural-planetary-generation-lab",
+  "base_branch": "feature/g0-geo-contracts",
+  "implementation_branch": "feature/g1-geodesy-body-shape",
+  "base_commit": "7632ed576a3c0d9007c0ff1296d1d89cd43756d7",
+  "runtime_worlds_changed": false,
+  "production_terrain_changed": false,
+  "nominal_radius_m": 6000000.0,
+  "body_shape_id": "body-shape/sphere-v1",
+  "body_shape_contract_version": "1.0.0",
+  "body_shape_generator_version": "1.0.0",
+  "contracts": [
+    "planet_simulator.body_fixed_position.v1",
+    "planet_simulator.geodetic_position.v1",
+    "planet_simulator.local_tangent_frame.v1"
+  ],
+  "operations": [
+    "body_to_geodetic",
+    "geodetic_to_body",
+    "surface_normal",
+    "altitude",
+    "local_tangent_frame"
+  ],
+  "focused_runner_windows": "RUN_G1_GEODESY_TESTS.ps1",
+  "focused_runner_linux": "RUN_G1_GEODESY_TESTS.sh",
+  "full_runner_windows": "RUN_G1_FULL_ACCEPTANCE.ps1",
+  "next_stage": "G2 planetary surface cells + LOD"
+}
