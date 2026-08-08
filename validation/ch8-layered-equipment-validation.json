@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v13",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v14",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX7_FIX1_PENDING_WINDOWS_RERUN",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX7_FOCUSED_WINDOWS_ACCEPTED_FULL_AND_GRAPHICAL_PENDING",
   "goal": "Remove base-body penetration through open/torn trousers and footwear while preserving skin through real garment holes and below actual cuffs.",
   "windows_acceptance_so_far": {
     "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
@@ -12,6 +12,8 @@
     "fix6_surface_fit_factory": "PASS 18 assertions",
     "fix6_surface_fit_overlay": "PASS 37 assertions",
     "fix6_graphical_lab_smoke": "PASS 30 assertions",
+    "fix7_topology_occlusion": "PASS 39 assertions",
+    "fix7_graphical_lab_smoke": "PASS 40 assertions",
     "runtime_error_gate": "ENABLED — full CH8 runner rejects any Godot ERROR line"
   },
   "graphical_tuning_history": {
@@ -48,7 +50,14 @@
     "fix1": {
       "commit": "14bbc494c20293c9a894d84bb1cc094085a0fda1",
       "change": "Replace var snapshot := equipment_source.get_snapshot() with a dynamic local var snapshot = ...; preserve topology and canonical semantics.",
-      "status": "PENDING_WINDOWS_RERUN"
+      "status": "WINDOWS_PASS"
+    },
+    "attempt2": {
+      "topology_occlusion": "PASS 39 assertions",
+      "graphical_lab_smoke": "PASS 40 assertions",
+      "runtime_error_lines": 0,
+      "topology_algorithm_executed": true,
+      "decision": "FOCUSED_WINDOWS_ACCEPTED"
     }
   },
   "canonical_contract": {
@@ -105,9 +114,11 @@
     "gameplay_body_changes": false,
     "collision_changes": false
   },
+  "completed_fix7_windows_gates": {
+    "focused_topology_occlusion": "PASS 39 — res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
+    "focused_graphical_lab_smoke": "PASS 40 — res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd"
+  },
   "pending_windows_gates": {
-    "focused_topology_occlusion": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
-    "focused_graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
     "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
     "graphical": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
     "required_graphical": [
