@@ -4,6 +4,7 @@
   "branch": "feature/m7-sequence-aware-reconciliation-fix10-fix2-mtu-guard",
   "base_branch": "feature/m7-sequence-aware-reconciliation-fix10",
   "base_commit": "8890f8dad38ff0304b47ec3645a9c99f52deb7fd",
+  "implementation_head_before_windows_validation": "04e635d25f30dddc8aba19e78e0d0e18780d945d",
   "fix1_wire_policy": "COMPACT_ARRAY_V1",
   "fix2_mtu_policy": "OPTIONAL_ACK_OMISSION_THEN_DROP_OVERSIZE_V1",
   "safe_unreliable_packet_bytes": 1350,
@@ -22,6 +23,60 @@
   ],
   "focused_test": "tests/network/test_m7_sequence_reconciliation_fix10_fix2.gd",
   "runner": "VALIDATE_M7_SEQUENCE_RECONCILIATION_FIX10.ps1",
+  "exact_windows_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_only": {
+      "result": "PASS",
+      "fix10_fix2_mtu_assertions": 12,
+      "fix10_assertions": 100,
+      "fix9_assertions": 37,
+      "fix8_assertions": 50,
+      "nx4_assertions": 706
+    },
+    "full_gate": {
+      "result": "PASS",
+      "artifact": "artifacts/test-results/m7-playable-28872",
+      "m7_two_client_process_assertions": 51,
+      "m7_two_client_process_failures": 0,
+      "client_a_complete": true,
+      "client_b_complete": true,
+      "item_graph_converged": true,
+      "player_replicas_converged": true,
+      "clean_shutdown": true,
+      "observed_mtu_warning": false,
+      "observed_transport_quarantine": false,
+      "observed_connect_timeout": false
+    }
+  },
+  "short_process_prediction_observations": {
+    "note": "The short automated two-client process is not the final FIX10 movement-quality acceptance run. It does, however, show remaining prediction fallbacks/corrections that must be evaluated in the >=5 minute stress run rather than hidden by the MTU fix.",
+    "client_a": {
+      "ticks_predicted": 31,
+      "corrections": 4,
+      "corrections_per_1000_prediction_ticks": 129.032258064516,
+      "hard_corrections": 0,
+      "maximum_error_m": 0.54994853179463,
+      "ack_history_misses": 3,
+      "ack_reconciliations": 9,
+      "ack_replays": 20,
+      "max_present_replay_error_m": 0.2,
+      "process_slow_frames": 1
+    },
+    "client_b": {
+      "ticks_predicted": 32,
+      "corrections": 9,
+      "corrections_per_1000_prediction_ticks": 281.25,
+      "hard_corrections": 0,
+      "maximum_error_m": 0.6,
+      "ack_history_misses": 7,
+      "ack_reconciliations": 5,
+      "ack_replays": 0,
+      "max_present_replay_error_m": 0.2,
+      "last_reconciliation_mode": "FALLBACK",
+      "process_slow_frames": 1
+    },
+    "known_separate_replica_signal": "Client A still reported MULTIPLAYER_SAME_REVISION_MUTATION; the automated item/player convergence gate nevertheless passed. Keep this separate unless it reproduces as a functional failure in long stress."
+  },
   "required_windows_gate": [
     "editor import/composition PASS",
     "FIX10 fix2 MTU preflight focused PASS",
@@ -31,5 +86,12 @@
     "no ENet unreliable-over-MTU warning",
     "no transport physical protocol violation/quarantine"
   ],
-  "status": "IMPLEMENTED CANDIDATE — exact Windows validation required"
+  "remaining_acceptance": [
+    ">=5 minute two-client LOCAL movement/item stress",
+    "ANALYZE_M7_FIX10_RESULTS.ps1 PASS on the long-run artifacts",
+    "manual confirmation that recurring spring/back-pull micro-rollbacks are absent or substantially reduced",
+    "inspect server FIX10 MTU telemetry to confirm max unreliable sent bytes <= 1350 and understand whether ACK omission/drop path activated"
+  ],
+  "decision": "FIX10 FIX2 AUTOMATED WINDOWS GATE PASS — MTU/QUARANTINE BLOCKER CLOSED; LONG MOVEMENT/ITEM STRESS STILL REQUIRED FOR FIX10 ACCEPTANCE",
+  "status": "Exact Windows focused and full inherited validation passed at 04e635d, including M7 two-client graphical process 51/51. The previous unreliable-over-MTU transport disconnect no longer reproduces. FIX10 remains unaccepted until the long stress/analyzer/manual movement-quality criteria pass."
 }
