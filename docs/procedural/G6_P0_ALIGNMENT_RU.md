@@ -1,9 +1,9 @@
 # G6 Hydrology / Fluid Surface v0 — P0 alignment
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`
-**Branch:** `feature/g6-hydrology-fluid-surface-v0`
-**Current stage:** `G6.4 Casual Visual River Lab — FIX3 IMPLEMENTED CANDIDATE`
-**Next after acceptance:** `G6 FULL ACCEPTANCE`
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
+**Branch:** `feature/g6-hydrology-fluid-surface-v0`  
+**Current stage:** `G6 FULL ACCEPTANCE — IMPLEMENTED CANDIDATE / SHARED BASELINE BLOCKED`  
+**Next after acceptance:** `G7 Semantic Field Fabric`
 
 ## Canonical boundary
 
@@ -14,44 +14,44 @@ G6.1 canonical fluid geography
         ↓
 G6.3 read-only WaterSurfaceQuery resolver
         ↓
-G6.4 derived presentation
+G6.4 replaceable derived presentation
 ```
 
-Fix3 composes accepted G2/G3 only in representation:
+G6.4 consumes accepted G2/G3 only as representation:
 
 ```text
 observer
   -> G2 SurfaceLodSelector
   -> adaptive SurfaceCellKey leaves
-  -> G3 CasualMacroTerrainProviderV1
-  -> geo/surface-height-m samples
-  -> adaptive terrain triangles
+  -> accepted G3 CasualMacroTerrainProviderV1
+  -> derived terrain triangles
+
+accepted G6 river/query truth
+  -> derived adaptive water ribbon
 ```
 
-Required invariants:
+Required invariants remain:
 
 ```text
 FeatureId != SurfaceCellKey
 FluidRegionId != SurfaceCellKey
 LOD != fluid identity
 terrain mesh != canonical G3 height field
-visual height exaggeration != canonical height
+visual detail recipe != canonical identity
 renderer != authority
 renderer != persistence
 G5 River FeatureId remains semantic owner
 ```
 
-## Why Fix3
+## G6.4 Fix4 manual evidence
 
-Fix2 automated gate passed and the manual run proved that `SurfaceLodSelector` refines the cover. But a smaller grid alone did not reveal new world detail because the visible globe remained a fixed `SphereMesh` and denser river samples stayed on the same smooth spline.
+The Fix4 lab keeps accepted G3 provider code unchanged and uses a diagnostic 8-octave recipe down to about `4.6875 km` source wavelength. Manual observation confirmed refinement from roughly `LOD 6 @ 812.7 km` to `LOD 10 @ 42.2 km` and subtle newly visible macro irregularities. River presentation and canonical IDs stayed stable.
 
-Fix3 therefore hides the fixed sphere and rebuilds the visible surface from the selected leaves. Every new terrain vertex samples accepted G3 `geo/surface-height-m` in body-fixed direction space. Near views have more actual triangles and can expose more of the continuous G3 macro field.
-
-The x40 height multiplier is explicitly display-only. It exists only because a 900 m relief is otherwise almost invisible on an 8-unit debug globe.
+This is sufficient manual presentation evidence. The remaining Fix4 automated rerun is included in the full G6 runner.
 
 ## No premature geomorphology
 
-G6.4 still does not alter terrain from hydrology:
+G6 still does not make hydrology authoritative over terrain:
 
 ```text
 river does NOT carve a valley
@@ -61,9 +61,29 @@ water ribbon does NOT own terrain
 
 River/terrain causal shaping remains `G8 Geomorphology`; layered subsurface materials remain `G9 Layered Geology`.
 
-## GLOBAL-P0 synchronization
+## Full acceptance / synchronization gate
 
-The checkpoint remains on `GLOBAL-P0-2026-08-08-R1`. G6 is currently not behind `feature/g5-world-feature-graph`. Before full G6 acceptance, main/G5/shared baseline must be checked again for the MW10 integration or a newer global revision.
+Entrypoint:
+
+```powershell
+.\RUN_G6_FULL_ACCEPTANCE.ps1
+```
+
+It requires:
+
+```text
+GLOBAL config == main == G5
+current G5 is ancestor of G6
+accepted MW10 atomic-lock blobs are present in G5
+same MW10 blobs are present in G6 after resync
+git diff --check G5...G6
+G6.0-G6.4 focused chain PASS
+MW10 lock-release retry PASS
+full world/core regression PASS
+clean worktree
+```
+
+The MW10 requirement is deliberate P0 ownership hygiene. PR #43 is currently open and not merged into G5. G6 must not privately absorb that shared-baseline fix; it waits for G5 integration and then resynchronizes.
 
 ## Accepted foundation
 
@@ -71,38 +91,17 @@ The checkpoint remains on `GLOBAL-P0-2026-08-08-R1`. G6 is currently not behind 
 G6.1 CasualRiverProviderV1             ACCEPTED — 74 assertions
 G6.2 cross-cell/cross-LOD continuity   ACCEPTED — 86 assertions
 G6.3 runtime WaterSurfaceQuery         ACCEPTED — 79 assertions
+G6.4 manual graphical evidence         PASS — Fix4
 ```
 
-## Fix3 proof requirements
+## Status dimensions
 
-Automated scene output must include:
+A green full gate will establish `G6 SOURCE_ACCEPTED`. It does not by itself claim:
 
 ```text
-G6.4 Adaptive Macro Surface: PASS (... far_triangles=... near_triangles=...)
-G6.4 Casual Visual River Lab: PASS (...)
+MAIN_INTEGRATED
+COMPOSITION_VERIFIED
+PRODUCTION_READY
 ```
 
-and prove:
-
-```text
-near max_lod > far max_lod
-near macro terrain triangles > far macro terrain triangles
-near selection_hash != far selection_hash
-```
-
-Manual acceptance must show visible macro-surface refinement with `W/S`, while FeatureId/FluidRegionId remain stable and PX/PZ river continuity remains intact.
-
-## Merge / composition gate
-
-```text
-[PASS] GLOBAL-P0-2026-08-08-R1 checkpoint
-[PASS] Feature != SurfaceCell
-[PASS] FluidRegion != SurfaceCell / AuthorityRegion / InterestRegion
-[PASS] G6.1 Windows acceptance — 74 assertions
-[PASS] G6.2 Windows continuity acceptance — 86 assertions
-[PASS] G6.3 Windows runtime query acceptance — 79 assertions
-[PASS] G6.4 fix3 changes representation only
-[PENDING WINDOWS] G6.4 fix3 source/headless macro-surface gate
-[PENDING MANUAL] G6.4 graphical macro-surface refinement observation
-[PENDING FULL G6] fresh main + G5/shared-baseline sync check, then full world/core regression
-```
+Those remain distinct according to GLOBAL-P0.
