@@ -18,9 +18,18 @@ func _ready() -> void:
 	player.name = "AnimationPlayer"
 	add_child(player)
 	var library := AnimationLibrary.new()
-	for animation_name in ["Idle", "Walk", "Run"]:
+	for animation_name in [
+		"Idle",
+		"Walk",
+		"Run",
+		"Jump_Start",
+		"Jump",
+		"Jump_Land",
+		"Crouch_Idle",
+		"Crouch_Fwd",
+	]:
 		var animation := Animation.new()
 		animation.length = 1.0
-		animation.loop_mode = Animation.LOOP_LINEAR
+		animation.loop_mode = Animation.LOOP_NONE if animation_name in ["Jump_Start", "Jump_Land"] else Animation.LOOP_LINEAR
 		library.add_animation(animation_name, animation)
 	player.add_animation_library("", library)
