@@ -3,8 +3,8 @@
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
-  "delivery": "CH6 fix2 / Jump Crouch Presentation Polish",
-  "decision": "FIX2_TEST_PARSER_HOTFIX_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "delivery": "CH6 fix2 / Jump Crouch Presentation Polish + grounding hotfix",
+  "decision": "FIX2_GROUNDING_HOTFIX_CANDIDATE_PENDING_WINDOWS_RERUN",
   "accepted_previous_stage": {
     "stage": "CH6 fix1 / Shadow Preservation",
     "graphical_result": "PASS_BY_USER_OBSERVATION",
@@ -18,7 +18,8 @@
     "problem_1": "Technical V yaw toggle rotates both world body and first-person shadow by 180 degrees and makes locomotion appear backwards",
     "problem_2": "Current lab has jump physics but does not select a jump animation",
     "problem_3": "Current lab has no crouch controller or crouch animation state",
-    "goal": "Remove user-facing technical yaw control and exercise UAL1 jump/crouch clips without integrating into production LunarPlayer/network branches"
+    "problem_4": "Real crouch animation visually lifts the feet because retarget filtering discarded all hips/pelvis positional animation",
+    "goal": "Exercise UAL1 jump/crouch clips in the isolated lab while preserving floor contact and gameplay/root-motion authority"
   },
   "scope": {
     "production_lunar_player_changed": false,
@@ -79,12 +80,34 @@
     "crouch_eye_height_m": 1.02,
     "crouch_speed_mps": 1.8,
     "jump_while_crouching": "blocked",
+    "gameplay_capsule_foot_plane_preserved": true,
     "production_ready": false,
     "deferred_for_production": [
       "stand-up head clearance test",
       "network crouch state",
       "authoritative collision reconciliation"
     ]
+  },
+  "crouch_grounding_hotfix": {
+    "symptom": "crouching character is pulled upward and appears to float above the floor",
+    "root_cause": "retarget safety fence removed hips/pelvis positional tracks together with root translation; crouch requires the vertical pelvis component to keep the pose grounded",
+    "policy": "preserve only hips/pelvis Y delta while crouching; reject hips/pelvis X/Z; always reject root translation",
+    "anchor_strategy": "capture source and target root/hips/pelvis pose anchors when building the retarget bone map, apply source Y delta relative to the captured anchor, restore target anchor when leaving crouch",
+    "applies_to": [
+      "crouch_idle",
+      "crouch_walk"
+    ],
+    "does_not_apply_to": [
+      "idle",
+      "walk",
+      "run",
+      "jump"
+    ],
+    "gameplay_body_moved_by_presenter": false,
+    "root_motion_enabled": false,
+    "fix_commit": "0dc44cc664726e00f1e752db94dd594162c353a9",
+    "presenter_test_commit": "9660d49afc33383565a0ac89a9de6c499305f47f",
+    "capsule_invariant_test_commit": "7bad970affde0780295f9bc30d74ade6f2d330f6"
   },
   "shadow_preservation": {
     "stage": "CH6 fix1 retained",
@@ -115,7 +138,8 @@
     "matched_bones": 12,
     "root_motion": "disabled",
     "parser_hotfix_probe": "PASS on Godot 4.7.1 double for explicitly typed dynamic capsule height conversion",
-    "full_repository_suite": "pending Windows rerun with real Quaternius assets"
+    "crouch_pelvis_grounding_probe": "PASS on Godot 4.7.1 double: hips Y=-0.35 preserved, hips X/Z filtered, root translation filtered",
+    "full_repository_suite": "pending Windows rerun with real Quaternius assets after grounding hotfix"
   },
   "windows_rerun_1": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
@@ -130,7 +154,13 @@
     "implementation_failure_observed": false,
     "hotfix_commit": "0836e9875cf832051aab59b4c15b21b4ade06606",
     "hotfix": "var standing_height: float = float(lab.player_capsule.height)",
-    "status": "RERUN_REQUIRED"
+    "status": "SUPERSEDED_BY_SUCCESSFUL_RERUN"
+  },
+  "windows_rerun_2": {
+    "result": "PASS_BY_USER_OBSERVATION",
+    "reported_state": "works normally after parser hotfix",
+    "remaining_visual_issue": "crouch pose floats above floor",
+    "status": "FUNCTIONAL_EXCEPT_GROUNDING_POLISH"
   },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
@@ -143,8 +173,12 @@
       "Space produces Jump semantic while airborne",
       "Ctrl produces Crouch_Idle while stationary and Crouch_Fwd while moving",
       "crouch lowers isolated lab capsule and camera",
+      "crouch keeps gameplay capsule foot plane fixed",
+      "crouch pelvis Y offset keeps animated feet grounded",
+      "crouch pelvis X/Z and root translation remain filtered",
+      "standing restores the original pelvis anchor",
       "first-person body remains hidden during jump and crouch",
-      "first-person shadow follows jump and crouch animation",
+      "first-person shadow follows jump and crouch animation and remains grounded",
       "third-person full body remains correct",
       "V no longer rotates the model or shadow",
       "root motion remains disabled",
