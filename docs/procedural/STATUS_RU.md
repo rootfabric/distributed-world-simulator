@@ -11,7 +11,7 @@ G0 Contracts Freeze                    ACCEPTED
 G1 Geodesy + Body Shape                BASELINE
 G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
-G4 Provider Composition / Replacement  IMPLEMENTED CANDIDATE
+G4 Provider Composition / Replacement  IMPLEMENTED CANDIDATE — FULL GATE PENDING
 G5 World Feature Graph                 NEXT AFTER G4 ACCEPTED
 ```
 
@@ -95,6 +95,36 @@ Casual → Alternative → Casual → Alternative
 
 For the same recipe, manifest hash and exact 81-point geography profile reproduce. Different recipes produce different provenance and terrain while downstream continues to query only `geo/surface-height-m`.
 
+## M5 regression blocker
+
+The M5 graphical convergence/shutdown race found during real checkout validation is now closed.
+
+Harness stabilization commits:
+
+```text
+f39aba61913d10fc13ad82ac601ee5c867c00791
+4581c012b4f4290f0f1d3466879aac95a1e1fd3f
+```
+
+Real Windows exact-engine evidence:
+
+```text
+M5 graphical multiplayer           PASS — 92 assertions, 0 failures
+M5 focused aggregate               PASS — 15/15
+server joins                       3
+server graceful leaves             3
+server stale peers                 0
+A/B final checksum convergence     PASS
+A reconnect completion             PASS
+B completion                       PASS
+client ObjectDB/resource leaks     0
+client MCP port collisions         0
+```
+
+The fix changes only M5 acceptance orchestration: clients freeze the same final convergence pair before either graceful leave can mutate the authoritative player snapshot. Production gameplay/network authority semantics remain unchanged.
+
+Because this historical acceptance driver lives under `scripts/runtime/networked_gameplay/m5`, `RUN_G4_FULL_ACCEPTANCE.ps1` allowlists exactly that one harness path while preserving the freeze for every other production runtime/network/Matter/world path.
+
 ## G4 visual lab
 
 ```text
@@ -126,7 +156,7 @@ frozen G0-G3 architecture paths unchanged
 production/runtime/network/Matter paths unchanged
 ```
 
-Until this real-checkout gate is green, G4 remains `IMPLEMENTED CANDIDATE`.
+M5 focused/multi-process blocker is accepted. Until the complete real-checkout G4 wrapper is green, G4 remains `IMPLEMENTED CANDIDATE` and PR #34 remains draft.
 
 ## Next after G4
 
