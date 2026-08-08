@@ -28,8 +28,21 @@
     "remote_buffer_telemetry_policy": "MOVING_HOLD_AND_SNAPSHOT_GAP_DIAGNOSTICS_V1"
   },
   "assistant_side_validation": {
-    "exact_godot_binary_available": "4.7.1.stable.double.custom_build.a13da4feb",
+    "exact_godot_binary": "4.7.1.stable.double.custom_build.a13da4feb",
     "full_repository_mounted": false,
+    "synthetic_inheritance_probe": {
+      "passed": true,
+      "sequence_matched_future_gap_ticks": 3,
+      "prediction_error_m_after_alignment": 0.0,
+      "prediction_tick_after_alignment": 4,
+      "preserved_subtick_accumulator_seconds": 0.00694444444444,
+      "presentation_z_after_alignment": -0.44166666666667,
+      "clock_only_future_gap_ticks": 2,
+      "clock_only_prediction_error_m": 0.0,
+      "visual_correction_raw_offset_m": 0.8,
+      "visual_correction_bounded_offset_m": 0.5,
+      "visual_correction_decay_seconds": 0.2
+    },
     "full_fix8_runner_executed": false,
     "windows_gate_claimed": false
   },
