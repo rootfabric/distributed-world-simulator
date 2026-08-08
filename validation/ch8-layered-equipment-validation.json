@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v15",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v16",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
@@ -96,6 +96,26 @@
     "network_changes": false,
     "gameplay_body_changes": false,
     "collision_changes": false
+  },
+  "author_local_sanity_check": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "Linux Xvfb + Mesa llvmpipe gl_compatibility",
+    "fixture": "Synthetic tapered calf/body cylinder inside a tall boot cylinder; not the Quaternius asset.",
+    "fix7_robust": {
+      "threshold_m": 0.035,
+      "removed_triangles": 448,
+      "total_triangles": 768
+    },
+    "fix8_high_boot": {
+      "threshold_m": 0.045,
+      "upper_y_pad_m": 0.012,
+      "upper_bias_fraction": 0.52,
+      "removed_triangles": 524,
+      "total_triangles": 768,
+      "aggressive_upper_y_min": 0.30
+    },
+    "graphical_observation": "The synthetic before/after frame shows the HIGH_BOOT profile removing additional upper-shaft body geometry while leaving body geometry above the boot collar.",
+    "scope_limit": "This is an algorithm/render sanity check only. The sandbox does not contain the user's actual Quaternius project/asset bytes, so real Male_Peasant graphical acceptance remains a Windows user gate."
   },
   "fix8_commits": {
     "topology_catalog_metadata": "6d1ea27942dca516a980a4cb20d09f07f4975469",
