@@ -1,121 +1,65 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v9",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v10",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8C_BLOCKED_BY_STALE_BASE_CHARACTER_ASSET_PACK",
-  "goal": "Prove one exact-rig Quaternius skinned outfit with coarse body replacement and no cloth, mesh surgery, gameplay-body or network complexity.",
+  "decision": "CH7_8C_STANDARD_BASE_EXPORT_HAS_NO_STANDALONE_HEAD_PENDING_FULLBODY_STRUCTURE_PROBE",
+  "goal": "Prove one exact-rig Quaternius skinned outfit with coarse body replacement and no cloth, gameplay-body or network complexity.",
   "selected_asset": {
-    "family": "Quaternius Modular Character Outfits - Fantasy",
-    "package": "Standard",
-    "resource": "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf",
-    "base_resource": "res://assets/external/quaternius/base_characters/Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Male_FullBody.gltf",
+    "outfit": "Male_Peasant.gltf",
+    "outfit_bones": 65,
+    "matched_bones": 65,
+    "outfit_skinned_meshes": 4,
+    "base": "Superhero_Male_FullBody.gltf",
     "asset_bytes_committed_to_branch": false
   },
-  "windows_asset_probe": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
-    "discovered_scene_files": 24,
-    "recommended": "Male_Peasant.gltf",
-    "base_bones": 65,
-    "garment_bones": 65,
-    "matched_bones": 65,
-    "base_overlap": 1.0,
-    "garment_overlap": 1.0,
-    "mesh_count": 4,
-    "skinned_mesh_count": 4,
-    "probe_decision": "PASS"
-  },
-  "confirmed_pre_body_replacement": {
-    "focused_quaternius_rig_adapter": "PASS 45 assertions",
+  "confirmed": {
     "ch7_runner": "PASS",
     "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
-    "real_quaternius_garment_lab_after_fix3": "PASS 37 assertions",
-    "important_conclusion": "The exact Male_Peasant asset loads, instantiates, follows the 65-bone presentation pose, composes with accepted rigid equipment and survives equip/unequip lifecycle."
+    "real_quaternius_garment_lab_before_body_replacement": "PASS 37 assertions",
+    "synthetic_body_region_replacement": "PASS 65 assertions",
+    "important_conclusion": "SKINNED_GARMENT pose composition and generic ref-counted hide/restore are proven. The remaining real-asset question is how to preserve the head while hiding the Standard-pack FullBody geometry."
   },
-  "windows_body_replacement_rerun": {
-    "focused_synthetic_body_region_replacement": "PASS 65 assertions",
-    "focused_quaternius_body_hiding_order": "FAIL 1 failure / 2 assertions",
-    "focused_real_quaternius_lab": "FAIL 2 failures / 7 assertions",
-    "runtime_head_probe": "path empty, available=false",
-    "rigid_first_blocking_message": "Order test head replacement is unavailable",
-    "real_blocking_messages": [
-      "CH7.8 compatible base head replacement was not found",
-      "CH7.8 head replacement path is empty"
+  "windows_current_standard_refresh": {
+    "archive": "Universal Base Characters[Standard].zip downloaded from the current public download flow",
+    "refresh_import_completed": true,
+    "discovered_scene_files_after_refresh": 18,
+    "standalone_head_upperbody_candidate_count": 0,
+    "variant_probe_exit": 3,
+    "observed_base_scenes": [
+      "Superhero_Female_FullBody.gltf",
+      "Superhero_Male_FullBody.gltf"
     ],
-    "classification": "EXTERNAL_BASE_ASSET_PACK_PREDATES_HEAD_UPPERBODY_VARIANTS",
-    "important_conclusion": "Generic hide/restore is proven by the 65-assertion synthetic gate. The real Quaternius body replacement is blocked before equip by missing Head/Upperbody variants in the locally installed Universal Base Characters package, not by the presenter or garment pose bridge."
+    "false_positive_in_previous_zip_preflight": "Paths under 'Hairstyles/Rigged to Head Bone' were incorrectly counted as Head/Upperbody character variants because the matcher inspected the full archive path instead of the leaf model filename.",
+    "powershell_diagnostic_bug": "Invoke-VariantProbe emitted native stdout to the success pipeline, so assigning its return value captured the whole Godot log plus the numeric exit code instead of only the exit code.",
+    "classification": "CURRENT_STANDARD_EXPORT_OBSERVED_WITHOUT_STANDALONE_HEAD_UPPERBODY_GLTF",
+    "important_correction": "Do not classify the user's local archive as merely stale. The newly downloaded Standard archive itself was observed without standalone Head/Upperbody glTF character variants."
   },
-  "upstream_asset_fact": {
-    "author": "Quaternius",
-    "update_context": "The Universal Base Characters package was updated for Modular Character Outfits with Head/Upperbody variants; the outfit changelog states Male_Peasant works with just the Base Character head.",
-    "current_standard_download_size_observed_2026_08_08": "122 MB",
-    "resolution": "Refresh the local free Universal Base Characters Standard package instead of adding runtime complexity for an obsolete asset layout."
-  },
-  "body_replacement_candidate": {
-    "catalog_optional_body_replacement_scene": true,
-    "semantic_body_region_visual_hook": true,
-    "quaternius_coarse_regions": [
-      "body.region.torso",
-      "body.region.arms",
-      "body.region.legs",
-      "body.region.feet"
+  "import_noise_after_refresh": {
+    "observed": [
+      "T_Eye_Normal_png.png missing",
+      "T_Hair_1_Normal_png.png missing"
     ],
-    "quaternius_regions_resolve_to_coarse_full_body_geometry": true,
-    "hide_mesh_nodes_not_quaternius_model_root": true,
-    "bone_attachment_subtrees_excluded_from_body_scan": true,
-    "skeleton_remains_alive": true,
-    "rigid_bone_attachments_remain_alive": true,
-    "ref_counted_body_hide_state": true,
-    "duplicate_region_visuals_deduplicated": true,
-    "original_visibility_restored_exactly": true,
-    "head_scene_resolution": "direct *_FullBody -> *_Head sibling first; scored Base Character head fallback second",
-    "accessory_only_head_candidates_rejected": true,
-    "head_pose_bridge_uses_same_overlap_guard": true
+    "classification": "KNOWN_QUATERNIUS_GLTF_EXPORTED_FILENAME_ALIAS_PATTERN",
+    "existing_preflight_can_normalize_duplicate_extension_aliases": true,
+    "followup": "Refresh tooling should run the existing Quaternius asset preflight before editor import."
   },
-  "asset_refresh_pipeline": {
-    "variant_probe": "tests/characters/probe_ch7_8_quaternius_base_variants.gd",
-    "refresh_helper": "REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1",
-    "official_download_page": "Quaternius Universal Base Characters itch.io purchase/download page",
-    "zip_preflight_requires_head_or_upperbody_models": true,
-    "existing_external_asset_bytes_remain_uncommitted": true,
-    "runner_checks_base_variant_before_expensive_ch7_regression": true,
-    "commits": {
-      "base_variant_probe": "5457f386bcfa0e72e6bcb3613af3228fff2660e9",
-      "base_refresh_helper": "a2141f32901a91b4fac6a10746f90874f7a0058a",
-      "early_runner_gate": "5e9505f5758c34fefa13c1918eb74d94288a2900"
-    }
+  "next_probe": {
+    "script": "tests/characters/probe_ch7_8_quaternius_fullbody_mesh_structure.gd",
+    "commit": "98de4d9433045714c6891152ded7aeed4edd4e99",
+    "command": "godot --headless --path . --script res://tests/characters/probe_ch7_8_quaternius_fullbody_mesh_structure.gd",
+    "purpose": "Print the real FullBody scene tree, every MeshInstance3D, surface/material name and AABB so CH7.8 can decide whether body-only hiding is possible while keeping head/eyes/hair from the same already-animated base scene.",
+    "preferred_if_supported": "Hide only body geometry in the existing FullBody scene; keep its Skeleton3D and head-related geometry alive; do not instantiate a second head skeleton.",
+    "fallback_if_head_is_fused_into_body_surface": "Choose the smallest surface-level presentation solution only after inspecting real mesh/material structure; do not add generic retargeting, mesh surgery or gameplay changes speculatively."
   },
-  "minimal_scope": {
-    "one_skinned_outfit": true,
-    "one_item_occupies_torso_arms_legs_feet_channels": true,
+  "scope_guards": {
     "cloth_physics": false,
-    "arbitrary_external_rig_retargeting": false,
+    "generic_external_retargeting": false,
     "body_morphing": false,
-    "shader_cut_masks": false,
-    "runtime_mesh_surgery": false,
+    "runtime_vertex_mesh_surgery": false,
     "production_item_graph_bridge": false,
     "network_changes": false,
     "collision_changes": false,
     "gameplay_body_changes": false
-  },
-  "next_gate": {
-    "refresh_command": ".\\REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1 -GodotPath $Godot -OpenDownloadPage",
-    "expected_after_download": "Helper validates the newest Universal Base Characters[Standard].zip in Downloads, overlays the external asset root, runs editor import, then proves a compatible Head variant and prints RECOMMENDED=...",
-    "then_rerun": [
-      "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd",
-      "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
-      ".\\RUN_CH7_8_SKINNED_GARMENT_TESTS.ps1 -GodotPath $Godot"
-    ]
-  },
-  "graphical_gate_after_automated_pass": {
-    "command": ".\\PLAY_CH7_8_SKINNED_GARMENT_LAB.ps1 -GodotPath $Godot",
-    "controls": "O outfit | H helmet | B backpack | C FP/TP | Ctrl crouch | Space jump",
-    "inspect": [
-      "O shows head + Peasant outfit without the old full-body mesh fighting through it",
-      "idle/walk/run/jump/crouch remain visually coherent",
-      "helmet and backpack remain attached regardless of equip order",
-      "first person does not show floating own garment/head while shadows remain",
-      "third person shows the composed character normally"
-    ]
   }
 }
