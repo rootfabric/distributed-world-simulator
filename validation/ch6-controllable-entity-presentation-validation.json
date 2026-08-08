@@ -4,7 +4,7 @@
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
   "delivery": "CH6 fix2 / Jump Crouch Presentation Polish",
-  "decision": "FIX2_IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_ACCEPTANCE",
+  "decision": "FIX2_TEST_PARSER_HOTFIX_IMPLEMENTED_PENDING_WINDOWS_RERUN",
   "accepted_previous_stage": {
     "stage": "CH6 fix1 / Shadow Preservation",
     "graphical_result": "PASS_BY_USER_OBSERVATION",
@@ -114,7 +114,23 @@
     },
     "matched_bones": 12,
     "root_motion": "disabled",
+    "parser_hotfix_probe": "PASS on Godot 4.7.1 double for explicitly typed dynamic capsule height conversion",
     "full_repository_suite": "pending Windows rerun with real Quaternius assets"
+  },
+  "windows_rerun_1": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "external_assets_required": true,
+    "asset_preflight": "PASS (18 glTF)",
+    "editor_import": "PASS",
+    "avatar_presenter": "PASS 36 assertions",
+    "character_lab": "PASS 11 assertions",
+    "legacy_first_person_adapter": "PASS 26 assertions",
+    "first_person_jump_crouch_lab": "BLOCKED_BY_TEST_PARSE_ERROR_BEFORE_EXECUTION",
+    "parse_error": "Cannot infer type of standing_height from dynamic lab.player_capsule.height",
+    "implementation_failure_observed": false,
+    "hotfix_commit": "0836e9875cf832051aab59b4c15b21b4ade06606",
+    "hotfix": "var standing_height: float = float(lab.player_capsule.height)",
+    "status": "RERUN_REQUIRED"
   },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
