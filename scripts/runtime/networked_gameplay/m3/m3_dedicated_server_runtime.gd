@@ -29,6 +29,14 @@ const NetworkUtilsFix10 = preload("res://scripts/network/contracts/network_contr
 # is best-effort metadata only; failure to enqueue it never fails or delays the
 # authoritative movement snapshot.
 #
+# FIX10 fix4 restores conservative packet headroom without weakening the 1350-byte
+# guard. The realtime movement message already has an unambiguous message type, so
+# the redundant human-readable reason="MOVEMENT_NETWORK_TICK" field is removed
+# only from this high-frequency envelope. Reliable full/resync snapshots retain
+# their reason field. In the observed long run the no-ACK frame peaked at 1361
+# bytes; removing this redundant envelope field saves enough wire bytes to keep
+# the same canonical compact snapshot below the existing safe budget.
+#
 # Accepted FIX7/FIX6 source-contract compatibility anchors. The actual behavior
 # remains inherited; keep the fixed-simulation anchor before the network-drain
 # anchor because the accepted regression verifies that source ordering:
@@ -56,6 +64,7 @@ const FIX10_UNRELIABLE_DECISION_SEND: String = "SEND"
 const FIX10_UNRELIABLE_DECISION_RETRY_WITHOUT_ACK: String = "RETRY_WITHOUT_ACK"
 const FIX10_UNRELIABLE_DECISION_DROP: String = "DROP"
 const FIX10_FIX3_ACK_FALLBACK_POLICY: String = "SEPARATE_TELEMETRY_CHANNEL_WHEN_SNAPSHOT_ACK_OMITTED_V1"
+const FIX10_FIX4_MOVEMENT_ENVELOPE_POLICY: String = "OMIT_REDUNDANT_REASON_ON_REALTIME_SNAPSHOT_V1"
 
 var _fix10_prediction_acks: Dictionary = {}
 var _fix10_ack_captures: int = 0
@@ -72,6 +81,7 @@ var _fix10_fix3_standalone_ack_attempts: int = 0
 var _fix10_fix3_standalone_ack_sent: int = 0
 var _fix10_fix3_standalone_ack_failures: int = 0
 var _fix10_fix3_max_standalone_ack_bytes: int = 0
+var _fix10_fix4_reasonless_movement_snapshots: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -90,6 +100,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_fix3_standalone_ack_sent = 0
 	_fix10_fix3_standalone_ack_failures = 0
 	_fix10_fix3_max_standalone_ack_bytes = 0
+	_fix10_fix4_reasonless_movement_snapshots = 0
 	return super.setup(config)
 
 
@@ -161,10 +172,13 @@ func _maybe_publish_movement_snapshot() -> void:
 	for peer_id_value in _peer_to_player.keys():
 		var peer_id: String = String(peer_id_value)
 		target_count += 1
+		# FIX10 fix4: COMPACT_GAMEPLAY_SNAPSHOT already identifies this realtime
+		# message. Do not spend the conservative unreliable budget on the redundant
+		# reason string. Reliable _broadcast_snapshot() still carries reasons.
 		var data: Dictionary = {
-			"reason": "MOVEMENT_NETWORK_TICK",
 			"snapshot": compact_snapshot,
 		}
+		_fix10_fix4_reasonless_movement_snapshots += 1
 		var ack_wire: Array = _fix10_ack_wire_for_peer(peer_id)
 		if not ack_wire.is_empty():
 			data["prediction_ack"] = ack_wire
@@ -423,6 +437,8 @@ func _build_fix7_ready_report() -> Dictionary:
 	foundation["fix10_fix3_standalone_ack_sent"] = _fix10_fix3_standalone_ack_sent
 	foundation["fix10_fix3_standalone_ack_failures"] = _fix10_fix3_standalone_ack_failures
 	foundation["fix10_fix3_max_standalone_ack_bytes"] = _fix10_fix3_max_standalone_ack_bytes
+	foundation["fix10_fix4_movement_envelope_policy"] = FIX10_FIX4_MOVEMENT_ENVELOPE_POLICY
+	foundation["fix10_fix4_reasonless_movement_snapshots"] = _fix10_fix4_reasonless_movement_snapshots
 	report["realtime_foundation"] = foundation
 	return report
 
@@ -434,6 +450,7 @@ func get_fix7_ready_report_policy() -> Dictionary:
 	report["fix10_unreliable_mtu_policy"] = FIX10_UNRELIABLE_MTU_POLICY
 	report["fix10_unreliable_safe_packet_bytes"] = FIX10_UNRELIABLE_SAFE_PACKET_BYTES
 	report["fix10_fix3_ack_fallback_policy"] = FIX10_FIX3_ACK_FALLBACK_POLICY
+	report["fix10_fix4_movement_envelope_policy"] = FIX10_FIX4_MOVEMENT_ENVELOPE_POLICY
 	return report
 
 
@@ -460,5 +477,7 @@ func get_report() -> Dictionary:
 		"fix3_standalone_ack_sent": _fix10_fix3_standalone_ack_sent,
 		"fix3_standalone_ack_failures": _fix10_fix3_standalone_ack_failures,
 		"fix3_max_standalone_ack_bytes": _fix10_fix3_max_standalone_ack_bytes,
+		"fix4_movement_envelope_policy": FIX10_FIX4_MOVEMENT_ENVELOPE_POLICY,
+		"fix4_reasonless_movement_snapshots": _fix10_fix4_reasonless_movement_snapshots,
 	}
 	return report
