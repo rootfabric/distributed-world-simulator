@@ -200,6 +200,7 @@ $Tests = @(
     "res://tests/construction/test_c24_proxy_mesh_backend_integration.gd",
     "res://tests/construction/test_c24_proxy_mesh_backend_graphical.gd",
     "res://tests/construction/test_c24_proxy_mesh_backend_scale_soak.gd",
+    "res://tests/construction/test_t1a0_complex_construct_demo_baseline.gd",
     "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
