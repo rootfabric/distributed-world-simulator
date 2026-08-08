@@ -86,10 +86,13 @@ static func create_from_mesh(mesh_instance: MeshInstance3D, active_regions: Arra
 			"surface_count": mesh_instance.mesh.get_surface_count(),
 		})
 
+	# A previous aggregate pass may already have installed our ShaderMaterial as
+	# material_override. Rebuild from the imported PBR surface instead of using
+	# that transient presentation material as a source.
 	var source_material: Material = mesh_instance.material_override
-	if source_material == null:
+	if not source_material is BaseMaterial3D:
 		source_material = mesh_instance.get_surface_override_material(0)
-	if source_material == null:
+	if not source_material is BaseMaterial3D:
 		source_material = mesh_instance.mesh.surface_get_material(0)
 	if not source_material is BaseMaterial3D:
 		return _result(false, "REGION_CLIP_SOURCE_MATERIAL_UNSUPPORTED", {
