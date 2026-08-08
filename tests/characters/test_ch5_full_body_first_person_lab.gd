@@ -71,6 +71,11 @@ func _run() -> void:
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CharacterBody3D) == 0, "First-person adapter owns gameplay body")
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CollisionShape3D) == 0, "First-person adapter owns collision")
 
+	# The following section injects presentation states directly. Freeze only the
+	# lab gameplay loop so its next headless physics tick cannot overwrite the
+	# injected crouch/jump semantic from real Input state while presenter/shadow
+	# processing continues normally.
+	lab.set_physics_process(false)
 	var standing_height: float = float(lab.player_capsule.height)
 	var standing_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
 	var standing_player_y: float = float(lab.player.position.y)
@@ -116,6 +121,7 @@ func _run() -> void:
 	ground_report = avatar_report.get("ground_compensation", {})
 	_assert(is_equal_approx(float(ground_report.get("current_offset_y", -1.0)), 0.0), "Standing presentation retained a crouch ground offset")
 	_assert(not bool(avatar_report.get("root_motion_applied", true)), "First-person lab enables root motion")
+	lab.set_physics_process(true)
 
 	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
 	if require_external:
