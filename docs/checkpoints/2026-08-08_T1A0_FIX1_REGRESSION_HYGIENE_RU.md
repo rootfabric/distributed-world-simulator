@@ -3,7 +3,8 @@
 **Дата:** 2026-08-08  
 **Ветка:** `feature/t1-complex-construct-demo-lab`  
 **Статус:** `FIX1 IMPLEMENTED CANDIDATE`  
-**Baseline head до fix1:** `f08c3401bd9fbd970c317f4d24a240a39668ee04`
+**Baseline head до fix1:** `f08c3401bd9fbd970c317f4d24a240a39668ee04`  
+**Fix1 implementation head:** `197a4d1ba0c92ace0f7eb5c658a621ae15faaedf`
 
 ## Причина fix1
 
@@ -93,7 +94,7 @@ runtime.persistence.initialized == true
 
 Если `repository_setup_failed` повторится, boot test больше не сможет закончиться зелёным только потому, что остальная сцена продолжила запуск.
 
-### 4. Strict runtime-error hygiene on normal boot paths
+### 4. Runtime error hygiene gate
 
 PowerShell runner отдельно помечает как failure любой обычный `ERROR:` в шагах:
 
@@ -103,6 +104,16 @@ PowerShell runner отдельно помечает как failure любой о
 - `main_scene_cli_all`
 
 Это намеренно не применяется глобально ко всем negative-path suites, где `push_error()` является частью тестируемого reject behavior.
+
+Кроме того, следующие diagnostics являются глобальным hard failure независимо от suite:
+
+```text
+ERROR: [breakpoint_runtime] could not listen ...
+WARNING: <N> ObjectDB instances were leaked at exit
+ERROR: <N> resources still in use at exit
+```
+
+Поэтому повторение MW7 leak или MCP port collision теперь физически не может закончиться общим зелёным regression result.
 
 ## Fix1 commits
 
@@ -114,7 +125,10 @@ e353e1bb4f1da065cf5b64fc42083eb064deef3f  test(t1a0): require healthy persistenc
 f41c3c67cafb6ef985ce46a6dd9640ff8be03f40  test(t1a0): disable runtime bridge in headless acceptance
 aa7488c439571669399cb7dbc9b150a6751770c9  test(t1a0): minimize boot matrix persistence diff
 dbc118ad7272ff2419108c629d5d6d825af435c8  test(t1a0): disable runtime bridge in shell acceptance
+197a4d1ba0c92ace0f7eb5c658a621ae15faaedf  test(t1a0): fail regression on bridge and leak diagnostics
 ```
+
+Metadata/validation commits that follow the implementation head do not change runtime behavior.
 
 ## Что должно исчезнуть после rerun
 
@@ -132,7 +146,7 @@ repository_setup_failed
 [breakpoint_runtime] could not listen on 127.0.0.1:9081
 ```
 
-MW7 следует проверить отдельно: если `ObjectDB instances were leaked at exit` / `resources still in use at exit` сохранятся при отключённом runtime bridge, это уже отдельный MW7 ownership/cleanup defect и fix1 нельзя считать полностью чистым.
+Если после отключения runtime bridge MW7 всё ещё выдаст `ObjectDB instances were leaked at exit` / `resources still in use at exit`, полный runner теперь остановится на MW7. Это будет отдельный реальный ownership/cleanup defect, а не скрытый warning в успешном прогоне.
 
 ## Проверка
 
@@ -157,7 +171,7 @@ Get-ChildItem .\artifacts -Recurse -File |
   Select-String -Pattern "World manifest identity mismatch|repository_setup_failed|breakpoint_runtime|ObjectDB instances were leaked|resources still in use"
 ```
 
-Главным источником истины остаётся stdout полного runner: intentional negative-path persistence errors допустимы только внутри соответствующих focused tests, а normal boot paths теперь fail-closed.
+Главным источником истины остаётся stdout полного runner: intentional negative-path persistence errors допустимы только внутри соответствующих focused tests, а normal boot paths и engine leak diagnostics теперь fail-closed.
 
 ## Acceptance fix1
 
@@ -168,7 +182,8 @@ Fix1 можно принять только если:
 3. normal boot persistence health PASS;
 4. `World manifest identity mismatch` отсутствует вне намеренных persistence negative tests;
 5. `breakpoint_runtime ... 9081` отсутствует;
-6. MW7 exit leak diagnostics отсутствуют либо изолированы и исправлены отдельным follow-up до финального `T1A.0 ACCEPTED`.
+6. MW7 exit leak diagnostics отсутствуют;
+7. production Item/Construction contracts не изменены.
 
 ## Решение
 
