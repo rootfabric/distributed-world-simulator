@@ -9,4 +9,10 @@ if (-not (Test-Path $Runner)) {
 }
 
 & $Runner -GodotPath $GodotPath
-exit $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+Write-Host ""
+Write-Host "CH6 fix1 Shadow Preservation acceptance runner: PASS" -ForegroundColor Green
+exit 0
