@@ -1,5 +1,5 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v7",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v8",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
@@ -64,6 +64,7 @@
     "duplicate_region_visuals_deduplicated": true,
     "original_visibility_restored_exactly": true,
     "head_scene_resolution": "direct *_FullBody -> *_Head sibling first; scored Base Character head fallback second",
+    "accessory_only_head_candidates_rejected": true,
     "head_pose_bridge_uses_same_overlap_guard": true,
     "synthetic_test": "tests/characters/test_ch7_8_body_region_replacement.gd",
     "rigid_first_order_test": "tests/characters/test_ch7_8_quaternius_body_hiding_order.gd",
@@ -82,7 +83,9 @@
     "initial_runner_gate": "9d7e0777e53254fa22b5d1b2883791c379bf4c5b",
     "exclude_rigid_attachments_from_body_scan": "eee68a8492169bfe1fb2e5e5261041d0ac15cc49",
     "rigid_first_order_test": "2569bceedbb9bbcaf88a0d17fd7b79a0865b640f",
+    "rigid_first_dynamic_array_hardening": "96c6e9189b5b97237c69a45f77fd1a14ceb4905a",
     "final_runner_gate": "29d278d5c47a6a44d421b635d307a5ca03738c41",
+    "head_candidate_hardening": "9d09b754837b908510672bb01086399dc2352b0c",
     "documentation": "cec19326e886714895b111c470ebb061d9b7e99f"
   },
   "minimal_scope": {
