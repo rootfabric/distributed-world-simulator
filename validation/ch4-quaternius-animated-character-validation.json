@@ -3,31 +3,12 @@
   "branch": "feature/ch4-quaternius-animated-character",
   "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
   "delivery": "fix3",
-  "decision": "FIX2_GRAPHICAL_PASS_FIX3_CASE_NORMALIZATION_PENDING_RERUN",
+  "decision": "ACCEPTED",
   "scope": {
     "production_files_changed": 0,
     "integration_mode": "isolated_walkable_character_lab",
     "root_motion_authority": false
   },
-  "user_observed_blockers": [
-    {
-      "delivery": "candidate",
-      "platform": "Windows PowerShell 5.1",
-      "editor_import": "ABORTED_BY_NATIVE_STDERR_WARNING",
-      "runtime_result": "FALLBACK",
-      "root_cause": "PowerShell converted non-fatal Godot stderr warning into terminating NativeCommandError before editor import completed"
-    },
-    {
-      "delivery": "fix1",
-      "asset_preflight": "FAIL",
-      "real_package_errors": [
-        "Superhero_Female_FullBody.gltf -> T_Eye_Normal_png.png",
-        "Superhero_Male_FullBody.gltf -> T_Hair_1_Normal_png.png",
-        "Superhero_Male_FullBody.gltf -> T_Eye_Normal_png.png"
-      ],
-      "root_cause": "Official Standard glTF export contains malformed duplicated-extension texture URIs that are not resolvable by case normalization alone"
-    }
-  ],
   "fix1": {
     "powershell_native_stderr": "Godot warnings no longer become terminating NativeCommandError; runner decides by process exit code and explicit failure markers",
     "asset_preflight": "Local glTF relative URI path case is normalized against the real filesystem before editor import",
@@ -44,37 +25,29 @@
     "installer_directory_case": "After extraction, Quaternius directories named Textures are normalized to lowercase textures through a two-step case-safe rename",
     "reason": "The official package contains references that request lowercase textures paths; leaving uppercase Textures is non-fatal on Windows but unsafe for Linux and case-sensitive export targets",
     "production_files_changed": 0,
-    "requires_asset_reinstall": true
+    "validated_directory_case_normalizations": 2
   },
   "local_engine": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
     "source_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz"
   },
-  "local_fix2_validation": {
-    "exact_user_failure_fixture": "PASS",
-    "fixture_input_uris": [
-      "T_Eye_Normal_png.png",
-      "T_Hair_1_Normal_png.png",
-      "T_Eye_Normal_png.png"
-    ],
-    "fixture_output": "PASS (2 glTF, 2 files normalized, 3 URI fixes, 3 export-name recoveries)",
-    "resolved_uris": [
-      "T_Eye_Normal.png",
-      "T_Hair_1_Normal.png"
-    ],
-    "engine_parse_and_execution": "PASS on Godot 4.7.1 double a13da4feb"
-  },
   "windows_real_asset_validation": {
     "platform": "Windows",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "first_fix2_run": {
+    "asset_install": {
+      "character_source_files": 44,
+      "animation_source_files": 4,
+      "directory_case_normalizations": 2
+    },
+    "fix3_acceptance_run": {
       "asset_preflight": "PASS (18 glTF, 2 files normalized, 3 URI fixes, 3 export-name recoveries)",
       "editor_import": "PASS",
+      "texture_directory_case_warnings": 0,
       "avatar_presenter": "18/18 PASS",
       "character_lab": "9/9 PASS",
       "overall": "PASS"
     },
-    "second_idempotence_run": {
+    "previous_idempotence_run": {
       "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
       "editor_import": "PASS",
       "avatar_presenter": "18/18 PASS",
@@ -93,8 +66,17 @@
       "overall": "PASS"
     },
     "strict_external_path_confirmed": true,
-    "fallback_not_accepted_by_strict_gate": true,
-    "remaining_warning": "Before fix3 reinstall Godot reports lowercase textures requests versus extracted uppercase Textures directories"
+    "fallback_not_accepted_by_strict_gate": true
+  },
+  "clean_worktree_bootstrap_note": {
+    "classification": "BASE_PROJECT_BOOTSTRAP_NOISE_NOT_CH4_BLOCKER",
+    "observed_before_first_editor_scan": [
+      "Resource file not found: res://",
+      "Failed to instantiate an autoload, can't load from path: ."
+    ],
+    "root_cause": "project.godot registers BreakpointRuntimeBridge through uid://cpjc0o64cgs1; the matching addons/breakpoint_mcp/runtime_bridge.gd.uid exists, but a brand-new worktree has no local Godot UID cache before the first filesystem/editor scan",
+    "evidence": "The preflight still completes successfully; the subsequent editor scan/import completes; all strict CH4 tests pass; the issue is independent of Quaternius presentation and assets",
+    "recommended_followup": "Fix clean-worktree UID/autoload bootstrap separately in the base project or MCP integration instead of modifying CH4 production scope"
   },
   "first_person_direction": {
     "recommended_mode": "FULL_BODY_FIRST_PERSON_WITH_LOCAL_HEAD_MASK",
@@ -104,11 +86,19 @@
     "production_integration_target": "Future CH5 adapter should replace LunarPlayer visual_root full hide in first-person with presenter.set_first_person_mode(true)"
   },
   "real_asset_acceptance_gate": {
-    "status": "WINDOWS_STRICT_AND_GRAPHICAL_PASS_FIX3_CASE_RERUN_PENDING",
-    "remaining_required": [
-      "pull fix3 and rerun INSTALL_CH4_QUATERNIUS_ASSETS.ps1 using the already downloaded ZIP files",
-      "RUN_CH4_QUATERNIUS_CHARACTER_TESTS.ps1 remains PASS",
-      "editor import no longer emits textures versus Textures case-mismatch warnings"
+    "status": "PASS",
+    "accepted": [
+      "official Standard character and animation packages installed",
+      "asset preflight PASS",
+      "editor import PASS",
+      "texture directory case mismatch warnings eliminated",
+      "strict external avatar presenter 18/18 PASS",
+      "strict external character lab 9/9 PASS",
+      "graphical asset mode QUATERNIUS_RETARGET",
+      "65 matched bones",
+      "Idle/Walk/Run visually confirmed",
+      "movement direction visually confirmed correct",
+      "root motion does not own gameplay movement"
     ]
   }
 }
