@@ -93,6 +93,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Invoke-Godot-Test "ch7_8_skinned_garment_pose_bridge" "res://tests/characters/test_ch7_8_skinned_garment_pose_bridge.gd"
+Invoke-Godot-Test "ch7_8_quaternius_head_clip_material" "res://tests/characters/test_ch7_8_quaternius_head_clip_material.gd"
 Invoke-Godot-Test "ch7_8_body_region_replacement" "res://tests/characters/test_ch7_8_body_region_replacement.gd"
 Invoke-Godot-Test "ch7_8_quaternius_fused_body_suppression_order" "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd"
 Invoke-Godot-Test "ch7_8_quaternius_skinned_garment_lab" "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd"
