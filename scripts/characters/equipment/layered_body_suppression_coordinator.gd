@@ -1,9 +1,13 @@
 class_name LayeredBodySuppressionCoordinator
 extends RefCounted
 
+# Keep CH8C's new collaborators capability-typed instead of class-name typed.
+# Focused headless scripts can run before an editor import/class cache refresh,
+# so compile-time references to newly introduced class_name symbols here would
+# make the public setup() member itself impossible for GDScript to resolve.
 var character_visual_root: Node3D
-var rig_adapter: CharacterRigAdapter
-var coverage_catalog: WearableBodyCoverageCatalog
+var rig_adapter
+var coverage_catalog
 
 var _target: GeometryInstance3D
 var _original_material_override: Material
@@ -14,15 +18,22 @@ var _last_snapshot_fingerprint := ""
 
 func setup(
 	p_character_visual_root: Node3D,
-	p_rig_adapter: CharacterRigAdapter,
-	p_coverage_catalog: WearableBodyCoverageCatalog
+	p_rig_adapter,
+	p_coverage_catalog
 ) -> Dictionary:
 	clear()
 	if p_character_visual_root == null:
 		return _result(false, "MISSING_CHARACTER_VISUAL_ROOT")
-	if p_rig_adapter == null or p_rig_adapter.rig_profile_id.is_empty():
+	if p_rig_adapter == null or not p_rig_adapter.has_method("supports_body_region"):
 		return _result(false, "INVALID_RIG_ADAPTER")
-	if p_coverage_catalog == null:
+	var rig_profile_id := String(p_rig_adapter.get("rig_profile_id"))
+	if rig_profile_id.is_empty():
+		return _result(false, "INVALID_RIG_ADAPTER")
+	if (
+		p_coverage_catalog == null
+		or not p_coverage_catalog.has_method("has")
+		or not p_coverage_catalog.has_method("resolve")
+	):
 		return _result(false, "MISSING_BODY_COVERAGE_CATALOG")
 	character_visual_root = p_character_visual_root
 	rig_adapter = p_rig_adapter
@@ -43,14 +54,15 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 			"active_regions": _active_regions.duplicate(),
 		})
 
+	var rig_profile_id := _rig_profile_id()
 	var region_set: Dictionary = {}
 	for raw_entry in snapshot.entries():
 		if not raw_entry is CharacterEquipmentDomain.Entry:
 			return _result(false, "INVALID_EQUIPMENT_ENTRY")
 		var entry := raw_entry as CharacterEquipmentDomain.Entry
-		if not coverage_catalog.has(entry.presentation_id, rig_adapter.rig_profile_id):
+		if not coverage_catalog.has(entry.presentation_id, rig_profile_id):
 			continue
-		var coverage: Dictionary = coverage_catalog.resolve(entry.presentation_id, rig_adapter.rig_profile_id)
+		var coverage: Dictionary = coverage_catalog.resolve(entry.presentation_id, rig_profile_id)
 		if not bool(coverage.get("success", false)):
 			return coverage
 		var details: Dictionary = coverage.get("details", {})
@@ -87,7 +99,7 @@ func apply_snapshot(snapshot: CharacterEquipmentDomain.Snapshot) -> Dictionary:
 
 	if not rig_adapter.has_method("resolve_composite_body_suppression"):
 		return _result(false, "COMPOSITE_BODY_SUPPRESSION_UNSUPPORTED", {
-			"rig_profile_id": rig_adapter.rig_profile_id,
+			"rig_profile_id": rig_profile_id,
 			"active_regions": regions,
 		})
 	var composite: Dictionary = rig_adapter.call(
@@ -140,7 +152,7 @@ func clear() -> Dictionary:
 func create_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.layered_body_suppression_coordinator.v1",
-		"rig_profile_id": rig_adapter.rig_profile_id if rig_adapter != null else "",
+		"rig_profile_id": _rig_profile_id(),
 		"active_regions": _active_regions.duplicate(),
 		"target_ready": _target != null and is_instance_valid(_target),
 		"target_name": String(_target.name) if _target != null and is_instance_valid(_target) else "",
@@ -172,6 +184,12 @@ func _restore_original_material() -> bool:
 	_original_material_override = null
 	_applied_material = null
 	return restored
+
+
+func _rig_profile_id() -> String:
+	if rig_adapter == null:
+		return ""
+	return String(rig_adapter.get("rig_profile_id"))
 
 
 func _result(success: bool, code: String, details: Dictionary = {}) -> Dictionary:
