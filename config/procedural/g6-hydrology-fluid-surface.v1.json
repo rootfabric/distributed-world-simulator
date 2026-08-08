@@ -1,0 +1,20 @@
+{
+  "schema": "planet_simulator.procedural_checkpoint.v1",
+  "checkpoint": "g6-hydrology-fluid-surface-v0",
+  "base_branch": "feature/g5-world-feature-graph",
+  "river_feature_schema": "planet_simulator.world_feature.v1",
+  "river_spline_schema": "planet_simulator.river_spline.v1",
+  "river_channel_profile_schema": "planet_simulator.river_channel_profile.v1",
+  "fluid_surface_descriptor_schema": "planet_simulator.fluid_surface_descriptor.v1",
+  "water_surface_query_schema": "planet_simulator.water_surface_query.v1",
+  "water_surface_sample_schema": "planet_simulator.water_surface_sample.v1",
+  "provider_id": "hydro-provider/casual-river-v1",
+  "provider_version": "1.0.0",
+  "cell_owns_river_identity": false,
+  "lod_changes_river_identity": false,
+  "renderer_owns_fluid_truth": false,
+  "query_depends_on_representation_cell": false,
+  "full_cfd": false,
+  "canonical_fluid_geography": true,
+  "notes": "G6 establishes canonical river/fluid geography and query semantics; representation and full hydrodynamics remain separate."
+}
