@@ -1,0 +1,44 @@
+{
+  "schema": "planet_simulator.m7_prediction_clock_fix8_validation.v1",
+  "stage": "M7 FIX8 — Prediction Clock Alignment",
+  "branch": "feature/m7-prediction-clock-fix8",
+  "base_branch": "feature/m7-smooth-prediction-fix7",
+  "base_commit": "7770b8b411488e5f02f6c6b7b74a56c750663402",
+  "trigger": {
+    "artifact": "m7-playable-21836.zip",
+    "observed": {
+      "server_process_max_duration_ms": 42.792,
+      "report_max_snapshot_build_duration_ms": 6.884,
+      "server_slow_process_frames": 0,
+      "client_a_maximum_prediction_error_m": 0.3,
+      "client_b_maximum_prediction_error_m": 0.3,
+      "client_a_visual_offset_m": 0.7989191394111743,
+      "client_b_visual_offset_m": 1.0933368356190358,
+      "hard_corrections": 0
+    },
+    "interpretation": "server-side FIX7 stall is no longer the dominant issue; the remaining 0.3 m signature matches a three-tick 60 Hz clock phase at 6 m/s and visual correction debt can exceed the individual prediction error"
+  },
+  "implementation": {
+    "prediction_clock_policy": "SEQUENCE_MATCHED_FUTURE_TICK_PREALIGN_V1",
+    "scheduler_alignment_policy": "MONOTONIC_FORWARD_PRESERVE_SUBTICK_PHASE_V1",
+    "visual_correction_policy": "BOUNDED_CONTINUITY_OFFSET_RATE_LIMITED_DECAY_V1",
+    "max_future_alignment_ticks": 8,
+    "max_visual_offset_m": 0.5,
+    "max_visual_correction_speed_mps": 2.5,
+    "remote_buffer_telemetry_policy": "MOVING_HOLD_AND_SNAPSHOT_GAP_DIAGNOSTICS_V1"
+  },
+  "assistant_side_validation": {
+    "exact_godot_binary_available": "4.7.1.stable.double.custom_build.a13da4feb",
+    "full_repository_mounted": false,
+    "full_fix8_runner_executed": false,
+    "windows_gate_claimed": false
+  },
+  "required_gate": [
+    "VALIDATE_M7_PREDICTION_CLOCK_FIX8.ps1 -GodotPath <exact Godot> -IncludeTwoClientProcess",
+    "repeat two-client LOCAL movement/item manual run",
+    "ANALYZE_M7_FIX8_RESULTS.ps1 against server.json, a.json, b.json",
+    "manual confirmation that recurring local back-pull/micro-jerk is reduced",
+    "inspect fix8_moving_buffer_underruns before changing remote playout policy"
+  ],
+  "decision": "FIX8 CANDIDATE — EXACT WINDOWS AUTOMATED GATE AND TWO-CLIENT MANUAL VALIDATION REQUIRED"
+}
