@@ -23,7 +23,8 @@ func _run() -> void:
 	var bind_result: Dictionary = fallback_adapter.bind_avatar(fallback_presenter)
 	_assert(bool(bind_result.get("success", false)), "Fallback adapter bind failed")
 	var report: Dictionary = fallback_adapter.create_report()
-	_assert(String(report.get("schema", "")) == "planet_simulator.full_body_first_person_adapter.v1", "Unexpected adapter schema")
+	_assert(String(report.get("schema", "")) == "planet_simulator.full_body_first_person_adapter.v2", "Unexpected adapter schema")
+	_assert(String(report.get("first_person_policy", "")) == "LEGACY_HEAD_MASK", "Legacy adapter compatibility policy changed unexpectedly")
 	_assert(String(report.get("mask_mode", "")) == "FALLBACK_VISIBILITY", "Fallback head mask was not resolved")
 	_assert(bool(report.get("mask_ready", false)), "Fallback mask is not ready")
 
@@ -134,10 +135,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH5 full-body first-person adapter: PASS (%d assertions)" % assertions)
+		print("CH5 legacy first-person adapter compatibility: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH5 full-body first-person adapter: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH5 legacy first-person adapter compatibility: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
