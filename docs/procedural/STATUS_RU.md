@@ -8,53 +8,32 @@ G6.0 Fluid Contracts                   ACCEPTED
 G6.1 CasualRiverProviderV1             ACCEPTED
 G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
 G6.3 Runtime WaterSurfaceQuery         ACCEPTED
-G6.4 Casual Visual River Lab           FIX3 IMPLEMENTED CANDIDATE
+G6.4 Casual Visual River Lab           FIX4 IMPLEMENTED CANDIDATE
 ```
 
-Fix3 candidate head:
+Fix3 automated Windows gate passed on `3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298`: G2 selection refined from far LOD 1 to near LOD 9 and G3 surface triangles from 120 to 4176. The manual run reached LOD 10, but additional terrain detail remained visually inconclusive because the Fix3 lab recipe used only four G3 octaves: `600 / 300 / 150 / 75 km` wavelengths.
+
+Fix4 keeps the accepted G3 provider unchanged and changes only the visual-lab recipe:
 
 ```text
-77e99819c319e8ad924485414c56f3dc14748844
+G3 base wavelength      600 km
+G3 octave count         8
+G3 persistence          0.58
+minimum source signal   ~4.7 km
 ```
 
-Fix2 automated evidence passed (`104 assertions` + scene smoke), and the manual run proved that G2 cell refinement works. It also exposed that selection detail alone is insufficient: the fixed sphere and resampled spline did not reveal new visible geometry.
+This lets increasing G2 LOD expose genuinely new height-field frequencies instead of only adding triangles over a ~75 km-limited field.
 
-Fix3 composes accepted G2 + G3 into the lab:
+Standalone G6.4 launches now set `BREAKPOINT_RUNTIME_DISABLED=1`, because the visual lab does not require the MCP runtime bridge and must not fail when `127.0.0.1:9081` is already occupied.
 
-```text
-G2 SurfaceLodSelector
-        ↓
-adaptive SurfaceCellKey leaves
-        ↓
-G3 CasualMacroTerrainProviderV1
-        ↓
-real adaptive macro-surface triangles
-```
-
-The fixed `SphereMesh` is hidden. The visible surface is rebuilt from selected leaves; newly introduced vertices sample canonical G3 `geo/surface-height-m`. A display-only x40 height exaggeration makes the 900 m macro relief readable on the 8-unit debug globe.
-
-The river remains accepted G6 canonical/query truth rendered as a derived ribbon. Terrain carving by hydrology is intentionally deferred to G8 Geomorphology.
-
-Automated gate:
+Run:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
-```
-
-The gate now requires both runtime markers:
-
-```text
-G6.4 Adaptive Macro Surface: PASS (... far_triangles=... near_triangles=...)
-G6.4 Casual Visual River Lab: PASS (...)
-```
-
-Manual gate:
-
-```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
 
-Use `W/S` to refine/coarsen. Acceptance now requires visible macro-surface geometry/relief refinement, not only a finer debug grid.
+Manual acceptance requires visible higher-frequency macro detail during `W` refine, coarsening on `S`, stable FeatureId/FluidRegionId, and continuous PX/PZ river presentation.
 
-Next after G6.4: G6 full sync/regression acceptance, then G7 Semantic Field Fabric.
+River-valley carving remains deferred to G8 Geomorphology. Next after G6.4 acceptance: G6 full sync/regression gate, then G7 Semantic Field Fabric.
