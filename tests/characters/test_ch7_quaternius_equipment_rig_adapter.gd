@@ -29,7 +29,7 @@ func _run() -> void:
 	var bind_result: Dictionary = adapter.bind_presenter(presenter)
 	_assert(bool(bind_result.get("success", false)), "Quaternius equipment rig adapter bind failed")
 	var report: Dictionary = adapter.create_report()
-	_assert(String(report.get("schema", "")) == "planet_simulator.quaternius_equipment_rig_adapter.v1", "Unexpected Quaternius equipment adapter schema")
+	_assert(String(report.get("schema", "")) == "planet_simulator.quaternius_equipment_rig_adapter.v2", "Unexpected Quaternius equipment adapter schema")
 	_assert(String(report.get("rig_profile_id", "")) == "quaternius.ual1.humanoid", "Unexpected Quaternius equipment rig profile ID")
 	_assert(String(report.get("mode", "")) == "SKELETON", "Synthetic Quaternius equipment adapter did not select skeleton mode")
 	_assert(bool(report.get("target_skeleton", false)), "Synthetic Quaternius target skeleton missing")
@@ -66,6 +66,30 @@ func _run() -> void:
 	_assert(not bool(adapter.create_report().get("reads_input", true)), "Rig adapter claims input authority")
 	_assert(not bool(adapter.create_report().get("owns_network_state", true)), "Rig adapter claims network authority")
 
+	var hierarchy_presenter := Node3D.new()
+	hierarchy_presenter.name = "HierarchyPresenter"
+	root.add_child(hierarchy_presenter)
+	var hierarchy_model := Node3D.new()
+	hierarchy_model.name = "QuaterniusModel"
+	hierarchy_presenter.add_child(hierarchy_model)
+	var hierarchy_skeleton := Skeleton3D.new()
+	hierarchy_skeleton.name = "Armature"
+	hierarchy_model.add_child(hierarchy_skeleton)
+	_add_bone(hierarchy_skeleton, "Armature|Root", -1)
+	_add_bone(hierarchy_skeleton, "PelvisJoint", 0)
+	_add_bone(hierarchy_skeleton, "BackSpineJoint", 1)
+	_add_bone(hierarchy_skeleton, "NeckJoint", 2)
+	_add_bone(hierarchy_skeleton, "DEF-head", 3)
+	var hierarchy_adapter = RigAdapter.new()
+	var hierarchy_bind: Dictionary = hierarchy_adapter.bind_presenter(hierarchy_presenter)
+	_assert(bool(hierarchy_bind.get("success", false)), "Hierarchy-based rig bind failed")
+	var hierarchy_head: Node3D = hierarchy_adapter.resolve_anchor(hierarchy_presenter, "body.head")
+	var hierarchy_back: Node3D = hierarchy_adapter.resolve_anchor(hierarchy_presenter, "gear.back")
+	_assert(hierarchy_head is BoneAttachment3D, "Hierarchy head anchor is not BoneAttachment3D")
+	_assert(hierarchy_back is BoneAttachment3D, "Hierarchy back anchor is not BoneAttachment3D")
+	_assert(String((hierarchy_head as BoneAttachment3D).bone_name) == "DEF-head", "Normalized hierarchy head mapping failed")
+	_assert(String((hierarchy_back as BoneAttachment3D).bone_name) == "BackSpineJoint", "Hierarchy semantic spine fallback did not choose the head ancestor")
+
 	var fallback_host := Node3D.new()
 	root.add_child(fallback_host)
 	var fallback_presenter = AvatarPresenter.new()
@@ -87,8 +111,16 @@ func _run() -> void:
 		_assert(not source.contains(forbidden), "Quaternius equipment adapter gained forbidden gameplay/runtime dependency: %s" % forbidden)
 
 	host.queue_free()
+	hierarchy_presenter.queue_free()
 	fallback_host.queue_free()
 	_finish()
+
+
+func _add_bone(skeleton: Skeleton3D, bone_name: String, parent_index: int) -> void:
+	var index := skeleton.get_bone_count()
+	skeleton.add_bone(bone_name)
+	if parent_index >= 0:
+		skeleton.set_bone_parent(index, parent_index)
 
 
 func _has_ancestor(node: Node, expected_ancestor: Node) -> bool:
