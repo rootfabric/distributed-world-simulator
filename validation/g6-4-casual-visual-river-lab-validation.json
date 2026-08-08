@@ -5,59 +5,32 @@
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "fix2_tested_head": "28ea4debafdc67fe2c5f0ace05a10b0dfd6f3fa9",
   "fix3_windows_tested_head": "3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298",
-  "fix3_automated_evidence": {
-    "accepted_dependency_chain_through_g6_3": "PASS",
-    "g6_4_contracts": "PASS_149_ASSERTIONS",
-    "far_max_lod": 1,
-    "near_max_lod": 9,
-    "far_triangles": 120,
-    "near_triangles": 4176,
-    "visual_lab_runtime_marker": "PASS",
-    "git_diff_check": "PASS",
-    "working_tree": "CLEAN"
-  },
-  "fix3_manual_evidence": {
-    "adaptive_grid_refines": "PASS_BY_USER_OBSERVATION",
-    "manual_max_lod_observed": 10,
-    "macro_surface_visible": "PASS_BY_USER_OBSERVATION",
-    "new_detail_visibility": "INCONCLUSIVE",
-    "root_cause": "FIX3_G3_RECIPE_USED_ONLY_4_OCTAVES_WITH_APPROX_75KM_MINIMUM_SOURCE_WAVELENGTH"
-  },
-  "fix3_acceptance_effect": "NOT_ACCEPTED_MANUAL_DETAIL_INCONCLUSIVE",
   "fix4_functional_head": "1beb592d421b8919d637b9bb0e156762ee11d970",
-  "decision": "FIX4_IMPLEMENTED_CANDIDATE",
-  "runtime_validation": "WINDOWS_AUTOMATED_AND_GRAPHICAL_RERUN_REQUIRED",
-  "fix4": {
+  "decision": "FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED",
+  "fix4_manual_evidence": {
+    "observer_far_virtual_altitude_km": 812.7,
+    "observer_far_max_lod": 6,
+    "observer_near_virtual_altitude_km": 42.2,
+    "observer_near_max_lod": 10,
+    "adaptive_grid_refines": "PASS_BY_USER_OBSERVATION",
+    "higher_frequency_macro_detail_appears_on_refine": "PASS_BY_USER_OBSERVATION_SUBTLE",
+    "water_ribbon_visible": "PASS_BY_USER_OBSERVATION",
+    "px_pz_seam_continuity": "PASS_BY_USER_OBSERVATION",
+    "feature_id_stable": "PASS_BY_USER_OBSERVATION",
+    "fluid_region_id_stable": "PASS_BY_USER_OBSERVATION",
+    "breakpoint_runtime_9081_collision_after_fix4": "NOT_REPORTED"
+  },
+  "fix4_recipe": {
     "accepted_g3_provider_code_changed": false,
-    "lab_recipe_macro_octaves": 8,
-    "lab_recipe_macro_persistence": 0.58,
-    "lab_recipe_min_signal_wavelength_m": 4687.5,
-    "detail_recipe_is_presentation_lab_only": true,
-    "breakpoint_runtime_disabled_for_standalone_start": true,
-    "breakpoint_runtime_disabled_for_g6_4_gate": true,
-    "feature_id_depends_on_lod": false,
-    "fluid_region_id_depends_on_lod": false,
-    "accepted_g6_0_to_g6_3_semantics_changed": false,
-    "river_valley_carving_in_scope": false
+    "macro_octaves": 8,
+    "macro_persistence": 0.58,
+    "minimum_source_wavelength_m": 4687.5,
+    "detail_recipe_is_presentation_lab_only": true
   },
-  "required_automated_evidence": {
-    "accepted_dependency_chain_through_g6_3": "PASS_REQUIRED",
-    "g6_4_fix4_contract_gate": "PASS_REQUIRED",
-    "g6_4_adaptive_macro_surface_marker": "PASS_REQUIRED",
-    "octaves_8_marker": "PASS_REQUIRED",
-    "min_signal_km_4_688_marker": "PASS_REQUIRED",
-    "near_macro_surface_triangle_count_gt_far": "PASS_REQUIRED",
+  "remaining_before_g6_4_accepted": {
+    "fix4_windows_automated_gate": "PASS_REQUIRED",
     "git_diff_check": "PASS_REQUIRED",
-    "working_tree": "CLEAN_REQUIRED"
-  },
-  "required_manual_evidence": {
-    "no_breakpoint_runtime_9081_collision": "PASS_REQUIRED",
-    "zoom_refines_and_coarsens_surface_mesh": "PASS_REQUIRED",
-    "higher_frequency_macro_detail_appears_on_refine": "PASS_REQUIRED",
-    "lod_grid_tracks_surface_refinement": "PASS_REQUIRED",
-    "water_ribbon_remains_visible": "PASS_REQUIRED",
-    "px_pz_continuity": "PASS_REQUIRED",
-    "canonical_ids_stable": "PASS_REQUIRED"
+    "working_tree_clean": "PASS_REQUIRED"
   },
   "deferred": {
     "river_valley_carving": "G8_GEOMORPHOLOGY",
@@ -65,5 +38,6 @@
     "terrain_bank_coupling": "G8_GEOMORPHOLOGY",
     "layered_geology": "G9_LAYERED_GEOLOGY"
   },
-  "next_if_accepted": "G6_FULL_ACCEPTANCE"
+  "next_checkpoint_started": "G6_FULL_ACCEPTANCE",
+  "note": "The G6 full gate reruns G6.4 fix4 automatically, so one full-acceptance run can close the remaining automated evidence and the full G6 checkpoint together."
 }
