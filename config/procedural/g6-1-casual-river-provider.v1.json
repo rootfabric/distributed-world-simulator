@@ -1,0 +1,53 @@
+{
+  "schema": "planet_simulator.g6_1_casual_river_provider_manifest.v1",
+  "checkpoint": "g6.1-casual-river-provider-v1",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "depends_on": {
+    "g5_world_feature_graph": "ACCEPTED",
+    "g6_0_fluid_contracts": "ACCEPTED_POST_P0_SYNC"
+  },
+  "provider": {
+    "id": "hydro-provider/casual-river-v1",
+    "version": "1.0.0",
+    "source": "res://scripts/simulation/procedural/hydrology/casual_river_provider_v1.gd",
+    "source_feature_type": "feature-type/river",
+    "optional_support_feature_type": "feature-type/valley",
+    "default_fluid_type": "fluid-type/water",
+    "control_point_count": 7
+  },
+  "outputs": [
+    "FluidRegionId",
+    "RiverSpline",
+    "RiverChannelProfile",
+    "FluidSurfaceDescriptor"
+  ],
+  "identity_rules": {
+    "g5_feature_id_remains_semantic_owner": true,
+    "fluid_region_identity_derived_from_source_feature_semantics": true,
+    "spline_identity_derived_from_source_feature_semantics": true,
+    "geometry_checksum_may_change_without_identity_change": true,
+    "surface_cell_is_identity_input": false,
+    "lod_is_identity_input": false,
+    "camera_is_identity_input": false,
+    "renderer_is_identity_input": false,
+    "query_order_is_identity_input": false
+  },
+  "architecture_boundaries": {
+    "writes_canonical_world_state": false,
+    "owns_authority": false,
+    "owns_persistence": false,
+    "depends_on_network_transport": false,
+    "depends_on_renderer": false,
+    "defines_material_ontology": false,
+    "uses_runtime_random": false
+  },
+  "deferred": {
+    "cross_cell_cross_lod_continuity": "G6.2",
+    "runtime_water_surface_query_resolver": "G6.3",
+    "casual_visual_river_lab": "G6.4",
+    "authoritative_fluid_mutation": "P0_CROSS_DOMAIN_WORLD_TRANSACTION_MODEL",
+    "material_projection": "P0_UNIFIED_MATERIAL_ONTOLOGY"
+  }
+}
