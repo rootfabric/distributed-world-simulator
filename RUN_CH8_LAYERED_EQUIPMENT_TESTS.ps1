@@ -78,10 +78,10 @@ Invoke-Godot-Test "ch8_layered_equipment_contract" "res://tests/characters/test_
 Invoke-Godot-Test "ch8_layered_equipment_presentation_diff" "res://tests/characters/test_ch8_layered_equipment_presentation_diff.gd"
 Invoke-Godot-Test "ch8b_quaternius_selective_skinned_parts" "res://tests/characters/test_ch8b_quaternius_selective_skinned_parts.gd"
 Invoke-Godot-Test "ch8b_real_layered_equipment_presentation" "res://tests/characters/test_ch8b_real_layered_equipment_presentation.gd"
-Invoke-Godot-Test "ch8c_quaternius_partial_body_suppression" "res://tests/characters/test_ch8c_quaternius_partial_body_suppression.gd"
-Invoke-Godot-Test "ch8c_quaternius_lower_leg_boot_coverage" "res://tests/characters/test_ch8c_quaternius_lower_leg_boot_coverage.gd"
+Invoke-Godot-Test "ch8c_garment_surface_fit_scene_factory" "res://tests/characters/test_ch8c_garment_surface_fit_scene_factory.gd"
+Invoke-Godot-Test "ch8c_quaternius_surface_fit_overlay" "res://tests/characters/test_ch8c_quaternius_surface_fit_overlay.gd"
 Invoke-Godot-Test "ch8c_quaternius_layered_equipment_lab" "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd"
 
 Write-Host ""
-Write-Host "CH8 Layered Equipment + protected lower-leg/boot coverage candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH8 Layered Equipment + open-garment surface-fit overlay candidate runner: PASS" -ForegroundColor Green
 exit 0
