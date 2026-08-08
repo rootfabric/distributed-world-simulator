@@ -2,102 +2,81 @@
 
 **Ветка программы:** `feature/g0-procedural-planetary-generation-lab`  
 **Статус:** архитектурная программа зафиксирована; production runtime не изменён.  
-**Назначение документа:** практический порядок реализации от пустого GeoKernel до fly-in, реки, скалы, пещеры и параллельного high-resolution detail generator.
+**Назначение:** единый практический порядок реализации от пустого GeoKernel до fly-in, реки, скалы, пещеры, progressive detail и параллельного high-resolution backend.
 
 Связанные документы:
 
+- `docs/procedural/README_RU.md`
+- `docs/procedural/STATUS_RU.md`
 - `docs/architecture/PROCEDURAL_PLANETARY_GENERATION_FABRIC_RU.md`
 - `docs/plans/PROCEDURAL_PLANETARY_GENERATION_ROADMAP_RU.md`
 - `docs/architecture/HIGH_RESOLUTION_DETAIL_GENERATOR_RU.md`
 - `docs/validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md`
-- `docs/procedural/STATUS_RU.md`
 - `docs/architecture/adr/ADR-019-procedural-planetary-generation-fabric.md`
 
+> Каноническая нумерация G0–G19 в этом документе обязана совпадать с `PROCEDURAL_PLANETARY_GENERATION_ROADMAP_RU.md`. При расхождении roadmap является источником истины, а execution/status документы должны быть немедленно синхронизированы.
+
 ---
 
-# 1. Главная цель
+# 1. Что строим
 
-Сначала реализуется архитектурно правильный, но намеренно простой procedural world. Реализм откладывается до тех пор, пока не доказаны:
+Первая программа сознательно не пытается сразу получить реалистичную Землю. Она должна доказать архитектуру:
 
 ```text
-determinism
-+ body-fixed geodesy
-+ stable planetary addressing
-+ provider replacement
-+ feature identity
-+ continuous fields
-+ LOD independence
-+ surface/volume separation
-+ progressive detail
+body-fixed geodesy
+→ planetary addressing
+→ deterministic provider graph
+→ replaceable generators
+→ stable WorldFeatures
+→ semantic fields
+→ surface + volume
+→ multi-LOD representation
+→ progressive refinement
+→ independent high-resolution backend
 ```
 
-Целевой первый вертикальный сценарий:
+Первый сквозной сценарий:
 
 ```text
-камера 30–50 km над планетой
-        ↓
-видна крупная долина
-        ↓
-видна длинная река
-        ↓
-при приближении появляются береговые формы
-        ↓
-видны остров / отмель / cliff
-        ↓
-посадка рядом со скалой
-        ↓
-локальная детализация усиливается
-        ↓
-в скале есть простая объёмная пещера
-        ↓
-игрок может войти внутрь
+30–50 km altitude
+→ одна и та же долина
+→ длинная река
+→ остров / отмель / cliff
+→ посадка
+→ локальная детализация
+→ вход в процедурную пещеру
 ```
 
-Весь сценарий должен происходить в одном процедурном мире, от одного seed и через один GeoKernel.
+Весь сценарий должен использовать один world seed, одну body-fixed систему координат и один GeoKernel.
 
 ---
 
-# 2. Жёсткие правила реализации
+# 2. Неподвижные архитектурные правила
 
-Эти правила считаются архитектурными инвариантами программы.
+```text
+Generator != Renderer
+LOD != World State
+Feature != Chunk
+GeoKernel != planet-specific monolith
+High-resolution detail != canonical topology
+procedural baseline + persistent delta = authoritative world
+renderer/cache artifact != canonical world state
+network transport != generation semantics
+```
 
-## 2.1. Generator != Renderer
-
-GeoKernel и providers возвращают данные/поля/feature semantics. Они не создают `MeshInstance3D`, collision nodes или scene hierarchy.
-
-## 2.2. LOD != World State
-
-LOD меняет плотность sampling и representation budget, но не географический смысл мира.
-
-## 2.3. Feature != Chunk
-
-Река, хребет, долина, скала, пещера и остров существуют независимо от текущих streaming cells.
-
-## 2.4. High-resolution detail != canonical topology
-
-Мелкий визуальный detail может быть производным artifact. Проходимая пещера, отверстие, существенный навес, изменяемая полость или topology-changing geometry должны принадлежать GeoVolume/WorldFeature/Matter.
-
-## 2.5. Procedural baseline + persistent delta
-
-Процедурный baseline не сохраняется как mesh. Изменения игрока в будущем хранятся отдельно.
-
-## 2.6. Provider replacement обязателен
-
-Любой крупный генераторный слой должен быть заменяем через контракт, без `if planet_type == ...` в GeoKernel.
+Практическое следствие: река длиной 40 km существует как одна `RiverFeature`, а не как набор независимо сгенерированных рек в streaming cells. Пещера существует в `GeoVolume`, а не как декоративная дырка в mesh. HR backend может добавить трещины и гравий, но не имеет права самовольно открыть новый проходимый тоннель.
 
 ---
 
-# 3. Организация веток
+# 3. Как вести ветки
 
-Архитектурная ветка:
+Архитектурная программа:
 
 ```text
 feature/g0-procedural-planetary-generation-lab
 ```
 
-Рекомендуется не вести всю реализацию одним огромным diff. После фиксации архитектуры каждый gate выполняется короткой feature-веткой от актуальной согласованной базы.
-
-Рекомендуемые ветки:
+Рекомендуемые короткие implementation branches:
 
 ```text
 feature/g0-geo-contracts
@@ -112,34 +91,34 @@ feature/g8-casual-geomorphology
 feature/g9-geology-lite
 feature/g10-geo-volume
 feature/g11-casual-cave
-feature/g12-progressive-detail
-feature/g13-detail-patch-contract
-feature/g14-detail-budget-streaming
+feature/g12-geo-cache-scheduler
+feature/g13-progressive-detail-contract
+feature/g14-simple-detail-generator
 feature/g15-planet-recipes
-feature/g16-generator-substitution-acceptance
+feature/g16-generator-substitution
 ```
 
-После G13 отдельно открывается:
+После `G13 ACCEPTED` открыть параллельную ветку:
 
 ```text
 feature/gh0-high-resolution-detail-generator
 ```
 
-HR track не должен изменять GeoKernel contracts без отдельного архитектурного review.
+Future integration после первого прототипа:
+
+```text
+G17 Matter bridge
+G18 Representation LOD integration
+G19 Network manifest integration
+```
 
 ---
 
-# 4. Фаза A — фундамент GeoKernel
+# 4. SERIES A — фундамент
 
 ## G0 — Contracts freeze v0
 
-### Цель
-
-Создать чистое domain/data ядро без SceneTree и rendering dependencies.
-
 ### Реализовать
-
-Минимальные типы:
 
 ```text
 PlanetDefinition
@@ -153,15 +132,10 @@ GeoSurfaceQuery
 GeoVolumeQuery
 GeoSample
 GeoFieldBundle
-```
-
-Минимальный provider:
-
-```text
 FlatSurfaceProvider
 ```
 
-### Обязательные свойства provider descriptor
+`GeoProviderDescriptor` минимум:
 
 ```text
 provider_id
@@ -171,43 +145,34 @@ provides[]
 deterministic
 ```
 
-### Реализовать validator provider graph
-
-Он должен обнаруживать:
+Validator provider graph должен ловить:
 
 ```text
 missing dependency
-duplicate provider output
-cyclic dependency
-unknown provider id
-invalid generator version
+duplicate incompatible output
+cycle
+unknown provider
+invalid version
 ```
 
 ### Тесты
 
 ```text
-same input → same GeoSample
+same input → same sample
+query order does not matter
 invalid graph rejected
-provider order normalized deterministically
-no Node/Mesh dependency in contracts
-provider replacement works through interface
+provider order canonicalized
+core contracts have no Node/Mesh dependency
+FlatSurfaceProvider can be replaced through contract
 ```
 
-### Gate G0
+### Gate
 
-GeoKernel headless принимает `FlatSurfaceProvider`, возвращает стабильный sample и может заменить его альтернативным provider без изменения caller.
-
-### После G0 НЕ делать
-
-Реки, горы, LOD, визуальную красоту.
+Headless GeoKernel возвращает детерминированный sample и допускает замену provider без изменения caller.
 
 ---
 
 ## G1 — Geodesy + Body Shape
-
-### Цель
-
-Сделать корректную геодезическую основу для планет разной формы.
 
 ### Реализовать
 
@@ -220,7 +185,7 @@ LocalTangentFrame
 GeodesyService
 ```
 
-Минимальные операции:
+Операции:
 
 ```text
 body_to_geodetic()
@@ -230,88 +195,67 @@ altitude()
 local_tangent_frame()
 ```
 
-### Первая планета
+Первая лабораторная планета:
 
 ```text
-radius = 6_000_000 m
+nominal_radius_m = 6_000_000
 ```
 
 ### Тесты
 
-- equator roundtrip;
-- pole roundtrip;
-- arbitrary latitude/longitude;
-- altitude ± values;
+- equator/pole/arbitrary roundtrip;
+- altitude roundtrip;
 - tangent frame orthonormality;
-- double precision на больших body-fixed координатах;
-- отсутствие NaN/INF.
+- stable Up/East/North;
+- double-precision coordinates;
+- NaN/INF rejection.
 
-### Visual check
+### Gate
 
-Гладкая сфера; камера может двигаться от десятков километров до поверхности.
-
-### Gate G1
-
-Координатная система и tangent frame не зависят от renderer origin и не дают заметного jitter в лаборатории.
+Fly-in к гладкой сфере от десятков километров до поверхности без coordinate discontinuity/jitter, связанного с логикой geodesy.
 
 ---
 
-## G2 — Planetary Surface Cells + LOD lifecycle
-
-### Цель
-
-Доказать planet-scale addressing до появления сложного terrain.
+## G2 — Planetary Surface Cells + LOD
 
 ### Реализовать
 
 ```text
 SurfaceCellKey
-cube-sphere face addressing
+cube-sphere compatible addressing
 quadtree parent/children
 neighbor lookup
-LOD selector
-basic hysteresis
-active/requested cell lifecycle
+LOD selection
+hysteresis
+requested/building/active/retiring lifecycle
 ```
 
-### Важно
-
-`SurfaceCellKey` — адрес representation/streaming, а не identity feature.
-
-### Debug modes
+### Debug
 
 ```text
 cell bounds
 cell id
-LOD level
-requested
-building
-active
-retiring
+LOD
+requested/building/active state
 ```
 
 ### Тесты
 
-- parent/children roundtrip;
-- stable neighbors;
-- no same-LOD edge gaps;
-- repeated fly-in/fly-out;
-- no leaked cell records;
-- same GeoSample независимо от выбранного cell LOD.
+```text
+parent/children stable
+neighbors stable
+same-level boundaries agree
+fly-in/out does not leak cells
+GeoSample semantics independent from LOD
+```
 
-### Gate G2
+### Gate
 
-Гладкая сфера стабильно уточняется и огрубляется при движении камеры.
+Гладкая планета стабильно уточняется и огрубляется при движении камеры.
 
 ---
 
-# 5. Фаза B — первая намеренно примитивная география
-
 ## G3 — Mega Casual Macro Surface
-
-### Цель
-
-Впервые получить горы/холмы, но не тратить время на реализм.
 
 ### Реализовать
 
@@ -319,76 +263,55 @@ retiring
 CasualMacroTerrainProviderV1
 ```
 
-Принцип:
+Первая формула намеренно простая:
 
 ```text
-low-frequency deterministic field
-→ radial displacement
+very-low-frequency deterministic field
++ radial displacement
 ```
 
-Типичный масштаб:
+Масштаб: километровые wavelengths, сотни метров amplitude.
 
-```text
-wavelength: несколько километров
-amplitude: сотни метров
-```
+### Gate
 
-### Gate G3
-
-Одна крупная форма визуально остаётся той же при переходах от дальнего LOD к близкому.
+Одна крупная гора/долина остаётся той же географической формой на всех LOD.
 
 ---
 
-## G4 — Provider Composition
+## G4 — Provider Composition / Replacement
 
-### Цель
-
-Доказать, что генератор — композиция слоёв, а не монолит.
-
-### Реализовать минимум
+### Реализовать композицию
 
 ```text
 BaseSurfaceProvider
-CasualMacroTerrainProviderV1
-CasualValleyModifierProviderV1
++ CasualMacroTerrainProviderV1
++ CasualValleyModifierProviderV1
 ```
 
-### Обязательный тест подмены
+Создать `AlternativeMacroTerrainProviderV1` и заменить основной macro provider только через recipe/config.
 
-Заменить:
+### Запрещено
 
 ```text
-CasualMacroTerrainProviderV1
+if planet_type == ...
+if provider_id == ...
 ```
 
-на:
+в GeoKernel/renderer для поддержки альтернативы.
 
-```text
-AlternativeMacroTerrainProviderV1
-```
+### Gate
 
-не меняя:
+Provider replacement проходит без изменения GeoKernel, renderer и query callers.
 
-```text
-GeoKernel
-renderer
-cell streaming
-query callers
-```
+### Architecture review A
 
-### Gate G4
-
-Подмена provider проходит как configuration/recipe change.
+После G4 остановиться и проверить, действительно ли core остаётся renderer-independent и provider-neutral. Только после этого идти в FeatureGraph.
 
 ---
 
-# 6. Фаза C — WorldFeature и река
+# 5. SERIES B — река и причинная география
 
-## G5 — WorldFeature / FeatureGraph
-
-### Цель
-
-Отделить долговременные географические признаки от streaming cells.
+## G5 — WorldFeature + FeatureGraph
 
 ### Реализовать
 
@@ -398,15 +321,10 @@ FeatureId
 FeatureBounds
 FeatureGraph
 FeatureQuery
-```
-
-Минимальная feature:
-
-```text
 ValleyFeature
 ```
 
-Поля identity:
+Feature identity:
 
 ```text
 feature_id
@@ -417,21 +335,15 @@ bounds
 parent_feature_id optional
 ```
 
-### Первый ValleyFeature
+Первая ValleyFeature: spline + width + depth falloff.
 
-Простой spline + width + depth falloff.
+### Gate
 
-### Gate G5
-
-Долина пересекает много cells, но существует как одна feature identity.
+Долина проходит через много cells, но имеет одну stable feature identity.
 
 ---
 
 ## G6 — Mega Casual River
-
-### Цель
-
-Создать длинную реку без настоящей гидрологии.
 
 ### Реализовать
 
@@ -442,7 +354,7 @@ CasualRiverProviderV1
 WaterPresentationAdapter
 ```
 
-Простейшие параметры:
+Параметры v0:
 
 ```text
 centerline
@@ -452,31 +364,21 @@ water_level(s)
 seed
 ```
 
-Целевая длина лабораторной реки:
+Целевой RiverFeature:
 
 ```text
-~40 km
+length ≈ 40 km
 ```
 
-### Важно
+### Gate
 
-Река не создаётся отдельно каждым cell.
-
-### Gate G6
-
-Один RiverFeature бесшовно пересекает десятки/сотни cells и сохраняет identity при fly-in/out.
+Одна RiverFeature бесшовно проходит через десятки/сотни cells и сохраняет identity при fly-in/fly-out.
 
 ---
 
 ## G7 — Semantic Geo Fields
 
-### Цель
-
-Перестать заставлять downstream generators знать внутреннее устройство RiverProvider.
-
-### Реализовать RiverField
-
-Минимальные channels:
+### Добавить channels
 
 ```text
 river_distance
@@ -488,23 +390,21 @@ erosion
 deposition
 ```
 
-Пока erosion/deposition могут быть очень грубыми.
+Первые erosion/deposition могут быть грубой аналитической эвристикой.
 
-### Debug visualization
+### Debug overlays
 
-Каждый channel должен иметь отдельный визуальный overlay.
+Каждый field должен визуализироваться независимо.
 
-### Gate G7
+### Gate
 
-Независимый provider может использовать `erosion/deposition`, ничего не зная о spline implementation.
+Downstream provider использует `erosion/deposition`, ничего не зная о реализации river spline.
 
 ---
 
-# 7. Фаза D — причинная геоморфология
-
 ## G8 — Casual Geomorphology
 
-### Реализовать отдельными providers
+### Отдельные providers
 
 ```text
 CasualCliffProviderV1
@@ -513,25 +413,21 @@ CasualIslandProviderV1
 CasualBankProviderV1
 ```
 
-Пример правил:
+Простейшие правила:
 
 ```text
 high erosion + slope → cliff
 high deposition + wide river → shoal/island
-low flow + deposition → beach/bar
+low flow + deposition → bank/bar
 ```
 
-### Gate G8
+### Gate
 
-Река порождает связанные береговые формы через semantic fields, а не прямые вызовы конкретных генераторов.
+Cliffs/islands/shoals возникают через semantic fields, а не через прямые зависимости на `CasualRiverProviderV1`.
 
 ---
 
 ## G9 — Geology Lite
-
-### Цель
-
-Добавить причинность через материал, но без полноценной геологической симуляции.
 
 ### Реализовать
 
@@ -547,7 +443,7 @@ MEDIUM
 HARD
 ```
 
-Дополнительные fields:
+Fields:
 
 ```text
 rock_hardness
@@ -555,59 +451,60 @@ material_id
 strata_hint
 ```
 
-### Проверка
+### Gate
 
-На HARD участке река должна давать более узкий/крутой профиль, на SOFT — более широкий и пологий.
+Одна и та же RiverFeature создаёт разные формы берегов при смене geology profile без изменения river identity.
 
-### Gate G9
+### Visual milestone B
 
-Geomorphology реагирует на geology через контрактные поля.
+После G9 должен существовать первый интересный river-valley fly-in:
+
+```text
+altitude
+→ recognizable valley
+→ ~40 km river
+→ islands/shoals
+→ cliff zones
+→ visibly different soft/hard geology behavior
+```
 
 ---
 
-# 8. Фаза E — переход от surface к volume
+# 6. SERIES C — объём, пещера и инфраструктура дорогих генераторов
 
 ## G10 — GeoVolume Contract
-
-### Цель
-
-Снять ограничение heightfield-only до реализации реальной пещеры.
 
 ### Реализовать
 
 ```text
+IVolumeProvider
 GeoVolumeQuery
 GeoVolumeSample
-IVolumeProvider
 ```
 
-Минимальные channels:
+Channels v0:
 
 ```text
 signed_distance
-matter_class
+density or matter class
 material_id
 hardness
 ```
 
-Первая реализация:
+Первая семантика:
 
 ```text
-ниже surface → SOLID
-выше surface → AIR
+below procedural surface → SOLID
+above procedural surface → AIR
 ```
 
-### Gate G10
+### Gate
 
-Любая точка пространства может быть определена как volume sample без обращения к renderer mesh.
+Volume query детерминирован и не требует построенного mesh.
 
 ---
 
 ## G11 — Mega Casual Cave
-
-### Цель
-
-Доказать topology-changing procedural geometry.
 
 ### Реализовать
 
@@ -616,76 +513,97 @@ CaveFeature
 CasualCaveVolumeProviderV1
 ```
 
-Первая пещера:
+Первая cave geometry:
 
 ```text
-несколько sphere/capsule SDF
-boolean subtraction из базового volume
+sphere/capsule SDF primitives
+boolean subtraction from base volume
 ```
 
-Связать её с конкретным CliffFeature через FeatureGraph.
-
-### Visual acceptance
+Feature linkage:
 
 ```text
-fly-in
-→ cliff
-→ visible entrance
-→ approach
+RiverFeature
+→ CliffFeature
+→ CaveFeature
+```
+
+### Gate
+
+```text
+cave stable across reload
+entrance agrees between surface and volume adapters
+no teleport/load transition
+player/spectator can enter real volume cavity
+```
+
+### Visual milestone C
+
+```text
+fly to river
+→ land near cliff
+→ approach entrance
 → enter cave
 ```
 
-### Gate G11
-
-Пещера является volume/feature truth, а не декоративной дырой в mesh.
-
 ---
 
-# 9. Фаза F — progressive detail
-
-## G12 — Detail hierarchy
+## G12 — Cache + Generation Scheduler Boundaries
 
 ### Цель
 
-Разделить географическую истину и всё более плотное представление.
+Подготовить систему к дорогим поздним generators до появления настоящего HR backend.
 
-Ввести уровни:
-
-```text
-D0 GEO/MACRO      kilometers → tens of meters
-D1 STRUCTURAL     hundreds → meters
-D2 PHYSICAL       meters → ~10 cm
-D3 MICRO VISUAL   < ~10 cm
-```
-
-Для каждого результата явно отмечать:
+### Кэши
 
 ```text
-visual_relevance
-collision_relevance
-simulation_relevance
-canonical_relevance
+FeatureCache
+FieldCache
+SurfaceSampleCache
+VolumeSampleCache
+RepresentationArtifactCache
 ```
 
-### Gate G12
+Cache key обязан включать versioned provenance:
 
-При приближении detail добавляется, но уже существующие крупные features не меняют identity/location.
+```text
+body/recipe
+provider manifest
+scope
+resolution/error tier
+source/dependency hash
+```
+
+### Scheduler boundary
+
+```text
+data generation
+    !=
+main-thread scene commit
+```
+
+### Gate
+
+Повторный fly-in использует cache, но canonical sample не зависит от наличия cache entry или порядка build jobs.
 
 ---
 
-## G13 — DetailPatchContext freeze
+## G13 — Progressive Detail Contract Freeze
 
-### Это ключевой fork point программы.
+### Это главный fork point программы
 
-После G13 основной planet generator и high-resolution generator могут развиваться параллельно.
-
-### Реализовать immutable-ish input contract
+### Ввести
 
 ```text
+DetailPatchRequest
 DetailPatchContext
+DetailPatchArtifact
+DetailSemanticMask
+DetailBudget
+IDetailProvider
 ```
 
-Он должен содержать достаточный локальный контекст, например:
+`DetailPatchContext` должен включать достаточно локального semantic context:
 
 ```text
 body_id
@@ -694,278 +612,373 @@ patch_id
 body-fixed anchor
 local tangent frame
 bounds
-requested_detail_scale
-surface samples
-surface normals
-slope
-curvature
-geology fields
-material fields
-river fields
-erosion/deposition
+requested scale/error
+surface samples/normals
+slope/curvature
+geology/material fields
+river/erosion/deposition fields
 nearby stable feature descriptors
 volume boundary hints
-generator/source versions
+source/generator versions
 ```
 
-### Нельзя передавать
+В contract нельзя протаскивать:
 
 ```text
+SceneTree
 MeshInstance3D
-SceneTree nodes
-renderer-specific material instances
-mutable global state
 camera object
 network peer
+mutable renderer state
 ```
 
-### Fixtures
+### Recorded fixtures
 
-Зафиксировать минимум:
+Минимум:
 
 ```text
-flat_plain_100m
-river_inner_bank_100m
-river_outer_cliff_100m
-hard_rock_cliff_100m
-cave_entrance_100m
+flat_plain
+river_inner_bank
+river_outer_cliff
+hard_rock_cliff
+cave_entrance
+cave_interior
 ```
 
-### Gate G13
+Рекомендуемые масштабы fixture:
 
-HR generator может полностью тестироваться на записанном `DetailPatchContext` без запуска планеты.
+```text
+20×20 m
+100×100 m
+500×500 m stress
+```
 
----
+### Gate
 
-# 10. Параллельный High-Resolution track
+Stub `IDetailProvider` можно заменить fake detail backend без изменения GeoKernel/representation selection contract. Recorded `DetailPatchContext` позволяет тестировать detail backend без запуска планеты.
 
-После G13 открыть:
+### После G13
+
+Открывается параллельная ветка:
 
 ```text
 feature/gh0-high-resolution-detail-generator
 ```
 
-## GH0 — Fixture harness
+---
 
-Читает recorded DetailPatchContext и генерирует локальный patch вне planet runtime.
+# 7. SERIES D — основной Geo track после fork
 
-## GH1 — Structural detail
+## G14 — Simple Detail Generator
 
-Добавляет:
-
-```text
-ledges
-fracture families
-boulders
-talus
-small erosion cuts
-rock clusters
-```
-
-Масштаб примерно метры → десятки сантиметров.
-
-## GH2 — Physical near detail
-
-Добавляет collision-relevant формы только в пределах согласованного physical budget.
-
-Например:
+### Реализовать дешёвый reference backend
 
 ```text
-20–50 cm rocks
-small steps
-walkable ledges
-shallow channels
-```
-
-## GH3 — Micro visual detail
-
-Не mesh-first. Использовать:
-
-```text
+large rocks
+small rocks
+gravel descriptors
+simple bank micro displacement
 material masks
-normal detail
-procedural roughness
-micro displacement where appropriate
-decals
-small non-canonical scatter
 ```
 
-## GH4 — Promotion boundary
-
-Любая новая форма, которая меняет topology/gameplay, не остаётся HR artifact.
-
-Она должна быть promoted/requested в:
+Пример progressive policy:
 
 ```text
-GeoVolume / WorldFeature / Matter
+> 2 km       macro only
+200–2000 m  feature silhouettes
+20–200 m    large detail
+2–20 m      physical near detail
+< 2 m       dense local detail / micro material
 ```
 
-## GH5 — Determinism + nesting
+### Gate
 
-Обязательное правило:
-
-```text
-coarse patch features ⊂ finer patch features
-```
-
-Крупный камень, появившийся на 5 m detail, не должен исчезнуть при переходе к 50 cm detail.
-
-## GH6 — Performance budgets
-
-Измерять отдельно:
-
-```text
-CPU generation ms
-GPU/upload cost
-vertex count
-instance count
-collision count
-RAM/cache footprint
-```
-
-## GH7 — Mainline integration
-
-HR generator подключается как один из DetailProvider backends. GeoKernel не меняется ради его интеграции.
+Повышение detail добавляет новые deterministic detail, не переролливая уже существующие крупные детали.
 
 ---
 
-# 11. Фаза G — budgets, streaming и recipes
+## G15 — Multiple PlanetRecipe Acceptance
 
-## G14 — Detail budget + cache
-
-Ввести:
+Минимум два рецепта.
 
 ```text
-DetailBudget
-GeoGenerationBudget
-DetailPatchCache
+CasualEarthLikeV1
+- Sphere
+- CasualMacroTerrain
+- CasualRiver
+- SimpleGeology
+- CasualCaves
+- SimpleDetail
 ```
-
-Бюджеты должны определять количество работы, но не world identity.
-
-Пример:
 
 ```text
-far: detail_budget = 0.02
-regional: 0.10
-near: 0.50
-contact: 1.00
+DryRockyWorldV1
+- Sphere
+- TerracedMacroTerrain
+- rare/no hydrology
+- HardGeology
+- FractureCaves
+- RockyDetail
 ```
 
-Gate: изменение budget меняет качество/стоимость, но не переносит реку, cliff или cave.
+### Gate
+
+Один GeoKernel и один lab runtime запускают обе планеты только configuration/recipe composition.
 
 ---
 
-## G15 — PlanetRecipe profiles
+## G16 — Generator Substitution Acceptance
 
-Создать минимум два radically different recipes.
-
-### CasualEarthLikeV1
+Обязательно заменить минимум:
 
 ```text
-SphereBodyShape
-CasualMacroTerrain
-CasualRiver
-SimpleGeology
-CasualCave
-TemperateDetail placeholder
+MacroTerrain V1 → V2
+River V1 → AlternativeRiver V1
+Geology V1 → LayeredGeology stub
+Detail stub/simple → alternative detail backend
 ```
 
-### DryRockyWorldV1
+### Gate
 
 ```text
-SphereBodyShape
-TerracedMacroTerrain
-SparseDryChannel
-HardGeology
-FractureCavity
-RockyDetail placeholder
+no planet-specific branches in GeoKernel
+no provider-specific branches in renderer
+same validation harness works across recipes
+incompatible contract versions fail before generation
 ```
 
-Gate: одна лаборатория и один GeoKernel запускают оба recipe.
+### Definition of Done первой программы
+
+```text
+[PASS] body-fixed geodesy
+[PASS] planetary cells/LOD
+[PASS] deterministic replaceable providers
+[PASS] stable FeatureGraph
+[PASS] 40 km RiverFeature
+[PASS] field-driven cliffs/islands/shoals
+[PASS] geology affects form
+[PASS] GeoVolume independent of mesh
+[PASS] enterable cave
+[PASS] cache/scheduler independence
+[PASS] frozen DetailPatchContext fixtures
+[PASS] progressive local detail
+[PASS] multiple recipes
+[PASS] generator substitution acceptance
+```
 
 ---
 
-## G16 — Generator substitution acceptance
+# 8. HIGH-RESOLUTION TRACK — параллельно после G13
 
-Это финальная проверка архитектуры первой программы.
-
-Нужно последовательно заменить минимум:
+Отдельная ветка:
 
 ```text
-macro surface provider
-river provider
-geology provider
-detail provider
+feature/gh0-high-resolution-detail-generator
 ```
 
-без изменений общих callers и renderer contract.
+Она работает прежде всего на recorded fixtures, а не на полном planet runtime.
+
+## GH0 — Contract + Fixture Harness
+
+Реализовать standalone runner/lab для:
+
+```text
+DetailPatchRequest
+DetailPatchContext
+DetailPatchArtifact
+fixture serialization
+deterministic hash
+```
 
 Gate:
 
 ```text
-[PASS] no planet-type branching in GeoKernel
-[PASS] no provider-specific branching in renderer
-[PASS] same validation harness works for both recipes
-[PASS] deterministic fixtures versioned
+same fixture → canonical-equivalent descriptors
 ```
 
 ---
 
-# 12. Отдельный Fly-In Acceptance Scenario
+## GH1 — Structural 100 m Patch
 
-После каждого визуального этапа не создавать новый ad-hoc lab. Расширять один:
+Добавить:
+
+```text
+large rock anchors
+bank cuts
+ledge descriptors
+fracture families
+boulder/talus anchors
+```
+
+Без сантиметрового шума.
+
+Gate: соседние patches и разные requested detail scales сохраняют крупные anchors.
+
+---
+
+## GH2 — Decimeter Physical Detail
+
+Добавить collision-budgeted:
+
+```text
+rocks
+small holes
+small steps
+gravel clusters
+small channels
+```
+
+Проверять collision count и generation cost отдельно от visual detail.
+
+---
+
+## GH3 — Material Micro Detail
+
+Добавить преимущественно presentation-level detail:
+
+```text
+normal detail
+roughness variation
+wetness
+sediment masks
+micro displacement
+decals/scatter where appropriate
+```
+
+Микродеталь не становится canonical geometry только потому, что визуально заметна.
+
+---
+
+## GH4 — Volumetric Refinement Adapter
+
+Доказать границу:
+
+```text
+derived local detail
+vs
+canonical topology/volume refinement
+```
+
+Если HR algorithm обнаруживает/предлагает topology-changing form, он создаёт explicit promotion proposal. Он не мутирует GeoVolume/Matter напрямую.
+
+---
+
+## GH5 — Performance Budgets
+
+Проверить targets примерно:
+
+```text
+2 m
+0.5 m
+0.1 m
+0.02 m visual
+```
+
+Собирать:
+
+```text
+generation ms
+peak RAM
+artifact bytes
+triangle count
+instance count
+collision count
+cache hit latency
+```
+
+---
+
+## GH6 — Main Geo Composition
+
+Подключить HR backend в `procedural_planet_lab` через тот же `IDetailProvider` contract.
+
+Gate:
+
+> GeoKernel не изменяется ради подключения high-resolution backend.
+
+---
+
+# 9. Future integration — не смешивать с первым prototype
+
+## G17 — Matter Bridge
+
+```text
+procedural GeoVolume baseline
++
+persistent Matter deltas
+```
+
+## G18 — Representation LOD Integration
+
+Использовать существующий Representation LOD Fabric для macro/regional/local/volume/HR artifacts.
+
+## G19 — Network Manifest Integration
+
+Синхронизировать только необходимые canonical inputs/provenance:
+
+```text
+recipe id
+provider manifest versions
+feature provenance
+persistent deltas
+```
+
+Не реплицировать mesh как истину мира.
+
+---
+
+# 10. Единый Procedural Planet Lab
+
+Не плодить отдельные ad-hoc scenes для каждого G-stage. Один lab расширяется постепенно:
 
 ```text
 procedural_planet_lab
 ```
 
-Финальный сценарий первой программы:
+Финальный fly-in acceptance первой программы:
 
 ```text
-1. Spawn spectator at ~50 km altitude.
-2. Confirm same macro valley visible at far LOD.
-3. Descend to ~10 km; river becomes readable.
-4. Descend to ~1 km; islands/cliffs become distinguishable.
-5. Descend to ~100 m; structural detail appears.
+1. Spawn spectator at ~50 km.
+2. Recognize same macro valley at far LOD.
+3. Descend to ~10 km; long river becomes readable.
+4. Descend to ~1 km; islands/cliffs visible.
+5. Descend to ~100 m; detail refinement visible.
 6. Land near selected cliff.
-7. Confirm near-detail refinement without feature relocation.
+7. Confirm stable anchors/features after refinement.
 8. Approach cave entrance.
 9. Enter cave.
-10. Move back outside and climb to altitude again.
-11. Confirm no identity/seam/cache corruption after roundtrip.
+10. Exit and fly back to altitude.
+11. Repeat route; confirm no identity/cache/LOD corruption.
 ```
 
 ---
 
-# 13. Debug UI, обязательный с ранних этапов
+# 11. Debug observability
 
-Рекомендуемые режимы:
+Начиная с ранних stages поддерживать debug modes:
 
 ```text
-F1 normal
-F2 surface cells
-F3 LOD
-F4 provider outputs
-F5 features
-F6 river field
-F7 erosion/deposition
-F8 geology
-F9 volume/SDF
+F1  normal
+F2  surface cells
+F3  LOD
+F4  provider outputs
+F5  features
+F6  river field
+F7  erosion/deposition
+F8  geology
+F9  volume/SDF
 F10 detail layers
 F11 cache/build state
 F12 generation timing
 ```
 
-Debug overlays являются частью acceptance infrastructure, а не временным удобством.
+Конкретные hotkeys могут измениться при конфликте с текущим проектом; сами debug views обязательны.
 
 ---
 
-# 14. Автоматическая проверка на каждом этапе
+# 12. Общие автоматические инварианты
 
-Каждый stage должен иметь focused runner и общий regression subset.
-
-Минимальные общие свойства:
+На каждом stage проверять:
 
 ## Determinism
 
@@ -973,159 +986,130 @@ Debug overlays являются частью acceptance infrastructure, а не 
 same seed + same versions + same coordinates = same logical result
 ```
 
-## Query order independence
+## Query-order independence
 
 ```text
-A → B == B → A
+A then B == B then A
 ```
 
-## Cell independence
+## Cross-cell continuity
 
-Соседние cells не могут менять Feature identity или semantics.
+Cell boundaries не меняют Feature semantics.
 
-## LOD compatibility
+## LOD semantic compatibility
 
-Более детальное представление уточняет coarse representation, но не заменяет географию другой.
+Fine representation уточняет coarse, а не создаёт другую географию.
+
+## Cache independence
+
+Cache hit и cache miss дают один canonical result.
 
 ## Provider isolation
 
-Provider нельзя заставлять читать renderer/network mutable state.
+Provider не читает camera/SceneTree/network mutable state как источник canonical randomness.
 
-## Version visibility
+## Provenance
 
-Generator version всегда входит в provenance результата/fixture/cache key.
+Generator/provider versions входят в fixture/cache/artifact provenance.
 
 ---
 
-# 15. Что сознательно запрещено делать слишком рано
+# 13. Что не делать в первой программе
 
-До завершения первой программы не требуется:
+Сознательно отложить:
 
 ```text
-real tectonic simulation
+real tectonics
 full hydraulic erosion
+full sediment simulation
 climate simulation
-real sediment transport
 vegetation ecology
 dynamic rivers
-fully realistic karst simulation
-centimeter mesh over entire region
-planet-wide SDF allocation
-Matter persistence integration
-network replication of generated terrain
+realistic karst evolution
+centimeter geometry planet-wide
+planet-wide voxel allocation
+production Matter persistence composition
+terrain networking
 ```
 
-Эти возможности должны подключаться новыми providers/backends позднее.
+Архитектура должна позволять добавить это позднее новыми providers/backends.
 
 ---
 
-# 16. Точки, после которых можно распараллеливать работу
+# 14. Порядок реальной работы
 
-```text
-G0 accepted
-├─ provider implementations можно писать параллельно
-
-G2 accepted
-├─ renderer/LOD experiments можно вести отдельно
-
-G7 accepted
-├─ geomorphology generators можно разрабатывать независимо
-
-G10 accepted
-├─ cave/volume backends можно развивать независимо
-
-G13 accepted
-├─ MAIN PLANET TRACK
-└─ HIGH-RESOLUTION DETAIL TRACK  ← ключевой fork
-```
-
-Главный fork:
-
-```text
-                         G13 DetailPatchContext
-                                  │
-                   ┌──────────────┴──────────────┐
-                   ▼                             ▼
-            PLANET / GEO TRACK              HR DETAIL TRACK
-            G14/G15/G16...                  GH0/GH1/GH2...
-```
-
----
-
-# 17. Рекомендуемый порядок реальной работы сейчас
-
-Не начинать с всей программы сразу.
-
-Первая реализационная серия:
+## Серия A
 
 ```text
 STEP 1  G0 contracts + FlatSurfaceProvider
 STEP 2  G1 sphere/geodesy
-STEP 3  G2 cube-sphere cells + LOD
-STEP 4  G3 casual macro hills
+STEP 3  G2 planetary cells/LOD
+STEP 4  G3 mega-casual macro terrain
 STEP 5  G4 provider replacement proof
 ```
 
-После этого сделать первый архитектурный review.
+После STEP 5 — architecture review.
 
-Вторая серия:
+## Серия B
 
 ```text
 STEP 6  G5 FeatureGraph + ValleyFeature
-STEP 7  G6 40 km RiverFeature
-STEP 8  G7 RiverField + debug overlays
+STEP 7  G6 ~40 km RiverFeature
+STEP 8  G7 semantic RiverField
 STEP 9  G8 cliffs/islands/shoals
 STEP 10 G9 geology lite
 ```
 
-После этого должен появиться первый интересный river-valley fly-in.
+После STEP 10 — river-valley fly-in review.
 
-Третья серия:
+## Серия C
 
 ```text
 STEP 11 G10 GeoVolume
 STEP 12 G11 CaveFeature
-STEP 13 G12 progressive detail hierarchy
-STEP 14 G13 DetailPatchContext + fixtures
+STEP 13 G12 cache/scheduler boundaries
+STEP 14 G13 DetailPatch contract + fixtures
 ```
 
-После G13 открыть HR track.
+После STEP 14 — открыть HR track.
 
-Четвёртая серия идёт параллельно:
+## Серия D — параллельная
 
 ```text
-PLANET TRACK                 HR TRACK
-G14 budget/cache             GH0 fixture harness
-G15 recipes                  GH1 structural detail
-G16 substitution             GH2 physical detail
-                             GH3 micro detail
-                             GH4 promotion boundary
-                             GH5 determinism
-                             GH6 performance
-                             GH7 integration
+MAIN GEO                         HIGH RESOLUTION
+G14 SimpleDetail                GH0 fixture harness
+G15 PlanetRecipes               GH1 structural patch
+G16 substitution acceptance     GH2 physical detail
+                                 GH3 material micro detail
+                                 GH4 volume refinement adapter
+                                 GH5 performance budgets
+                                 GH6 main composition
+```
+
+Future integration только после acceptance первой программы:
+
+```text
+G17 → G18 → G19
 ```
 
 ---
 
-# 18. Definition of Done первой программы
+# 15. Как закрывать каждый stage
 
-Первая procedural generation program считается архитектурно доказанной, когда:
+Каждый G/GH stage обязан оставить запись в `docs/procedural/STATUS_RU.md`:
 
 ```text
-[PASS] spherical body + body-fixed geodesy
-[PASS] planetary cells and LOD
-[PASS] deterministic replaceable providers
-[PASS] stable FeatureGraph
-[PASS] 40 km river crossing many cells
-[PASS] semantic fields drive cliffs/islands/shoals
-[PASS] geology changes resulting forms
-[PASS] GeoVolume exists independently from surface renderer
-[PASS] cave can be entered
-[PASS] progressive detail refines one stable place
-[PASS] DetailPatchContext frozen and fixture-tested
-[PASS] second PlanetRecipe works without GeoKernel branching
-[PASS] HR backend can be developed from fixtures independently
-[PASS] fly-in/fly-out scenario survives repeated roundtrips
+stage
+branch
+base commit
+implementation commit
+checkpoint/tag if used
+validation commands
+assertion/test counts
+visual acceptance result
+known debt
+next gate
+decision: CANDIDATE / ACCEPTED / REJECTED
 ```
 
-После этого можно увеличивать реализм сколько угодно, не меняя базовую парадигму.
+Этап не считается закрытым только потому, что картинка выглядит правильно.
