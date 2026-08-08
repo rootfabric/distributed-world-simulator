@@ -1,11 +1,11 @@
 # G6.0 — Fluid Contracts — ACCEPTED
 
-**Дата:** 2026-08-08  
-**Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
-**Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`  
-**G5 accepted candidate:** `34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4`  
-**Accepted candidate head:** `5deb455113a62a201b2c5441509917fd9ac6ca9e`  
-**Acceptance validation commit:** `b0dce09d4d0324c6b28bbcfef2a24cd38e940af1`  
+**Дата:** 2026-08-08
+**Ветка:** `feature/g6-hydrology-fluid-surface-v0`
+**Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`
+**G5 accepted candidate:** `34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4`
+**Accepted candidate head:** `5deb455113a62a201b2c5441509917fd9ac6ca9e`
+**Acceptance validation commit:** `b0dce09d4d0324c6b28bbcfef2a24cd38e940af1`
 **Решение:** `ACCEPTED`
 
 ## Цель
