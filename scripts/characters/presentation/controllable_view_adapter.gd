@@ -19,6 +19,8 @@ var _viewmodel_original_visible := true
 
 
 func bind_presentation(presenter: Node, profile_override: Resource = null) -> Dictionary:
+	if viewmodel_visual_root is Node3D:
+		(viewmodel_visual_root as Node3D).visible = _viewmodel_original_visible
 	_restore_visual_layers()
 	presentation = presenter
 	profile = profile_override if profile_override != null else _resolve_profile(presenter)
@@ -45,7 +47,7 @@ func unbind_presentation() -> void:
 	world_visual_root = null
 	viewmodel_visual_root = null
 	first_person_enabled = false
-	_apply_camera_policy()
+	_restore_camera_masks()
 
 
 func bind_cameras(first_person: Camera3D, third_person: Camera3D = null) -> Dictionary:
@@ -93,7 +95,7 @@ func _resolve_profile(presenter: Node) -> Resource:
 	if presenter != null and presenter.has_method("create_presentation_profile"):
 		var candidate = presenter.call("create_presentation_profile")
 		if candidate is Resource:
-			return candidate as Resource
+			return candidate
 	return PresentationProfile.new()
 
 
@@ -103,7 +105,7 @@ func _resolve_world_visual_root(presenter: Node) -> Node:
 	if presenter.has_method("get_world_visual_root"):
 		var candidate = presenter.call("get_world_visual_root")
 		if candidate is Node:
-			return candidate as Node
+			return candidate
 	return presenter
 
 
@@ -111,7 +113,9 @@ func _resolve_viewmodel_visual_root(presenter: Node) -> Node:
 	if presenter == null or not presenter.has_method("get_first_person_viewmodel_root"):
 		return null
 	var candidate = presenter.call("get_first_person_viewmodel_root")
-	return candidate as Node if candidate is Node else null
+	if candidate is Node:
+		return candidate
+	return null
 
 
 func _capture_and_move_visuals(root: Node, target_layer_mask: int, storage: Array[Dictionary]) -> void:
@@ -147,6 +151,9 @@ func _restore_visual_state_array(states: Array[Dictionary]) -> void:
 
 
 func _apply_camera_policy() -> void:
+	if presentation == null or profile == null:
+		_restore_camera_masks()
+		return
 	var world_mask := _world_render_layer_mask()
 	var viewmodel_mask := _viewmodel_render_layer_mask()
 	var policy := get_first_person_policy()
@@ -175,7 +182,7 @@ func _apply_camera_policy() -> void:
 
 
 func _apply_viewmodel_visibility() -> void:
-	if not viewmodel_visual_root is Node3D:
+	if not (viewmodel_visual_root is Node3D):
 		return
 	var should_show := (
 		first_person_enabled
@@ -205,7 +212,9 @@ func _viewmodel_render_layer_mask() -> int:
 
 func _profile_report() -> Dictionary:
 	if profile != null and profile.has_method("create_report"):
-		return Dictionary(profile.call("create_report"))
+		var candidate = profile.call("create_report")
+		if candidate is Dictionary:
+			return candidate
 	return {}
 
 
@@ -213,19 +222,24 @@ func create_report() -> Dictionary:
 	var world_mask := _world_render_layer_mask()
 	var first_person_hides_world := (
 		first_person_camera != null
+		and presentation != null
 		and (first_person_camera.cull_mask & world_mask) == 0
 	)
 	var third_person_sees_world := (
-		third_person_camera == null
-		or (third_person_camera.cull_mask & world_mask) != 0
+		presentation != null
+		and (
+			third_person_camera == null
+			or (third_person_camera.cull_mask & world_mask) != 0
+		)
 	)
+	var profile_report := _profile_report()
 	return {
 		"schema": "planet_simulator.controllable_view_adapter.v1",
 		"presentation_bound": presentation != null,
 		"first_person_enabled": first_person_enabled,
-		"first_person_policy": String(_profile_report().get("first_person_policy", "HIDE_WORLD_MODEL")),
-		"profile_id": String(_profile_report().get("profile_id", "generic")),
-		"entity_kind": String(_profile_report().get("entity_kind", "generic")),
+		"first_person_policy": String(profile_report.get("first_person_policy", "HIDE_WORLD_MODEL")),
+		"profile_id": String(profile_report.get("profile_id", "generic")),
+		"entity_kind": String(profile_report.get("entity_kind", "generic")),
 		"world_visual_root_present": world_visual_root != null,
 		"world_visual_count": _world_visual_states.size(),
 		"viewmodel_visual_root_present": viewmodel_visual_root != null,
@@ -236,8 +250,8 @@ func create_report() -> Dictionary:
 		"viewmodel_render_layer_mask": _viewmodel_render_layer_mask(),
 		"world_hidden_from_first_person": first_person_hides_world,
 		"world_visible_to_third_person": third_person_sees_world,
-		"world_animation_preserved": bool(_profile_report().get("keep_world_animation_active", true)),
-		"shadow_caster_preserved": bool(_profile_report().get("allow_shadow_from_hidden_world_model", true)),
+		"world_animation_preserved": bool(profile_report.get("keep_world_animation_active", true)),
+		"shadow_caster_preserved": bool(profile_report.get("allow_shadow_from_hidden_world_model", true)),
 	}
 
 
