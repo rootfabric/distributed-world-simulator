@@ -10,7 +10,7 @@ const LayeredRigAdapterType = preload("res://scripts/characters/equipment/quater
 
 const MALE_PEASANT_PATH := "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf"
 const UPPER_ITEM_ID := "lab.item.layer.upper.001"
-const LOWER_ITEM_ID := "lab.item.layer.lower.001"
+const LOWER_ITEM_ID := "lab.item.layer.lower.peasant"
 const FEET_ITEM_ID := "lab.item.layer.feet.001"
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
@@ -128,7 +128,7 @@ func _setup_layered_equipment() -> void:
 func _toggle_layer(item_id: String, profile_id: String) -> Dictionary:
 	if body_suppression_coordinator == null:
 		return {"success": false, "code": "CH8C_COORDINATOR_NOT_READY", "details": {}}
-	var enabled := not equipment_source.has_item(item_id)
+	var enabled: bool = not bool(equipment_source.has_item(item_id))
 	var mutation_result: Dictionary = _set_item_equipped(item_id, profile_id, enabled)
 	if not bool(mutation_result.get("success", false)):
 		return mutation_result
