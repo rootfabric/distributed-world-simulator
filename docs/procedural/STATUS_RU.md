@@ -10,11 +10,11 @@
 
 ```text
 PROGRAM: Procedural Planetary Generation Fabric
-STATE: G0 IMPLEMENTED CANDIDATE
+G0 CORE: ACCEPTED BY FULL REGRESSION EVIDENCE
+G0 CLEANUP1: CANDIDATE — CLEAN FULL-WRAPPER RERUN REQUIRED
 PRODUCTION RUNTIME CHANGED: NO
 PRODUCTION TERRAIN CHANGED: NO
-CURRENT GATE: G0 — Contracts freeze v0
-NEXT GATE AFTER ACCEPTANCE: G1 — Geodesy + Body Shape
+NEXT GATE AFTER CLEANUP1 PASS: G1 — Geodesy + Body Shape
 ```
 
 G0 реализован как data-only/headless foundation. На этом этапе намеренно отсутствуют sphere mesh, geodesy, LOD, mountains, rivers, caves и production-world integration.
@@ -27,7 +27,10 @@ G0 реализован как data-only/headless foundation. На этом эт
 stage:                  G0 — Contracts freeze v0
 branch:                 feature/g0-geo-contracts
 program base branch:    feature/g0-procedural-planetary-generation-lab
-candidate state:        IMPLEMENTED CANDIDATE
+core candidate head:    6bc49940fa6d762690d0e5a4ea4261a72c24310b
+cleanup1 head:          ae58d9116d5d037262a6c50f326734c179bed77d + docs
+core decision:          ACCEPTED BY FULL REGRESSION EVIDENCE
+cleanup1 decision:      CANDIDATE
 production worlds:      unchanged
 production terrain:     unchanged
 renderer dependency:    none
@@ -52,7 +55,7 @@ FlatSurfaceProvider
 GeoKernel
 ```
 
-`GeoProviderDescriptor` фиксирует не только provider/version/requires/provides, но и canonical JSON-safe `parameters`. Поэтому изменение параметров генератора меняет descriptor hash/provider manifest и не может незаметно создать другой procedural baseline под той же provenance.
+`GeoProviderDescriptor` фиксирует provider/version/requires/provides и canonical JSON-safe `parameters`. Изменение параметров генератора меняет descriptor/provider-manifest hash и не может незаметно создать другой procedural baseline под той же provenance.
 
 `GeoKernel`:
 
@@ -66,7 +69,7 @@ GeoKernel
 - строит deterministic lexical topological order;
 - вычисляет provider manifest hash;
 - запускает только providers, необходимые для requested fields;
-- передаёт provider только объявленные `requires[]`, исключая hidden dependencies;
+- передаёт provider только объявленные `requires[]`;
 - проверяет exact provider output contract;
 - сохраняет field provenance в GeoSample;
 - разделяет Surface и Volume query kinds уже в G0.
@@ -75,70 +78,110 @@ GeoKernel
 
 ## G0 validation evidence
 
-Проверено на exact engine:
+Exact engine:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-Локальный изолированный harness содержал G0 source tree и необходимые существующие contract dependencies.
-
-Результат:
+Focused evidence:
 
 ```text
-headless editor import: PASS
-focused G0:            PASS — 209 assertions
-source hygiene:        PASS — 15 GDScript files
-NaN/INF rejection:     PASS
-checksum mutation:     PASS
-query order independence: PASS
-provider replacement:  PASS
+headless editor import:       PASS
+focused G0:                  PASS — 209 assertions
+source hygiene:              PASS — 15 GDScript files
+query order independence:    PASS
+provider replacement:        PASS
 provider parameter provenance: PASS
-missing dependency:    rejected
-output collision:      rejected
-dependency cycle:      rejected
-nondeterministic provider: rejected
-surface/volume boundary: enforced
-renderer/Node/RNG source markers in Geo core: absent
+surface/volume boundary:     enforced
 ```
 
-Focused runners:
+Внешний полный Windows regression на реальном checkout, подтверждённый `test-results.zip`:
+
+```text
+world-regression-summary.json
+passed:                 true
+declared_test_count:    201
+discovered_test_count:  201
+steps:                  204
+failed steps:           0
+```
+
+Следовательно G0 core больше не блокируется отсутствием full regression evidence.
+
+---
+
+## G0 cleanup1 — acceptance output hygiene
+
+При анализе полного regression обнаружено:
+
+```text
+17 x
+ERROR: [breakpoint_runtime] could not listen on 127.0.0.1:9081 (error 22)
+```
+
+Это не gameplay/G0 failure. Multi-process child Godot instances одновременно пытались поднять `BreakpointRuntimeBridge` на одном fixed loopback port.
+
+Сам addon уже имеет штатный switch:
+
+```text
+BREAKPOINT_RUNTIME_DISABLED=1
+```
+
+Поэтому cleanup1 не меняет addon или production runtime.
+
+Изменения:
 
 ```text
 RUN_G0_GEO_CONTRACTS_TESTS.ps1
+  + temporary BREAKPOINT_RUNTIME_DISABLED=1
+  + automatic cold editor import
+  + environment restore
+
 RUN_G0_GEO_CONTRACTS_TESTS.sh
+  + same behavior for Linux
+
+RUN_G0_FULL_ACCEPTANCE.ps1
+  + focused G0
+  + full world/core regression in child PowerShell
+  + inherited BREAKPOINT_RUNTIME_DISABLED=1
+  + current-run log scan requiring zero :9081 collision errors
+  + git diff --check
 ```
 
-Standalone acceptance script intentionally называется:
+Cleanup checkpoint:
 
 ```text
-tests/procedural/contracts/g0_geo_contracts_acceptance.gd
+docs/checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md
 ```
 
-а не `test_*.gd`, чтобы implementation candidate не ломал strict coverage manifest существующего `RUN_WORLD_REGRESSION_TESTS.ps1` до формальной регистрации G0 в общей regression suite.
+### Cleanup1 acceptance command
 
-### Что ещё требуется для `G0 ACCEPTED`
+На текущем Windows worktree:
 
-На полном рабочем checkout проекта:
+```powershell
+git fetch origin --prune
+git pull --ff-only
+.\RUN_G0_FULL_ACCEPTANCE.ps1
+```
+
+Обязательный финал:
 
 ```text
-1. editor import/parse
-2. RUN_G0_GEO_CONTRACTS_TESTS.ps1
-3. существующие world/core regression suites
-4. git diff --check
-5. проверить отсутствие production-world changes
-6. после PASS зарегистрировать G0 acceptance evidence
+G0 Geo contracts: PASS (209 assertions)
+Breakpoint runtime :9081 collision noise: 0
+G0 full acceptance gate: PASS
 ```
 
-До этой внешней проверки решение остаётся `IMPLEMENTED CANDIDATE`, а не `ACCEPTED`.
+После этого cleanup1 получает `ACCEPTED`, а его exact head становится рекомендуемой базой G1.
 
 ---
 
 ## Канонический порядок программы
 
 ```text
-G0  Contracts freeze v0                     IMPLEMENTED CANDIDATE
-G1  Geodesy + Body Shape                     BLOCKED BY G0 ACCEPTANCE
+G0  Contracts freeze v0                     CORE ACCEPTED / CLEANUP1 CANDIDATE
+G1  Geodesy + Body Shape                     NEXT AFTER CLEANUP1 PASS
 G2  Planetary Surface Cells + LOD            BLOCKED BY G1
 G3  Mega Casual Macro Surface                BLOCKED BY G2
 G4  Provider Composition / Replacement       BLOCKED BY G3
@@ -178,13 +221,15 @@ G19 Network Manifest Integration
 
 ---
 
-## Следующая ветка после G0 acceptance
+## Следующая ветка
+
+После cleanup1 PASS:
 
 ```text
 feature/g1-geodesy-body-shape
 ```
 
-G1 должен добавить только:
+G1 добавляет только:
 
 ```text
 IBodyShapeProvider
@@ -195,7 +240,7 @@ LocalTangentFrame
 GeodesyService
 ```
 
-и доказать body/geodetic roundtrip, altitude, surface normal и tangent frame на double-precision координатах.
+и доказывает body/geodetic roundtrip, altitude, surface normal и tangent frame на double-precision координатах.
 
 G1 не должен добавлять mountains, river generation или planetary LOD.
 
@@ -234,6 +279,9 @@ docs/plans/PROCEDURAL_PLANETARY_GENERATION_ROADMAP_RU.md
 docs/plans/PROCEDURAL_PLANETARY_GENERATION_EXECUTION_PLAN_RU.md
 
 docs/validation/PROCEDURAL_PLANET_LAB_ACCEPTANCE_RU.md
+
+docs/checkpoints/G0_GEO_CONTRACTS_CANDIDATE_RU.md
+docs/checkpoints/G0_GEO_CONTRACTS_CLEANUP1_RU.md
 ```
 
 При закрытии каждого следующего gate этот ledger обновляется первым.
