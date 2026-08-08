@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.g6_fluid_contracts_manifest.v1",
+  "checkpoint": "g6.0-fluid-contracts",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "base_branch": "feature/g5-world-feature-graph",
+  "base_commit": "e7b10c09a6be879b25cd5c7ec8407832fd758ac2",
+  "g5_accepted_candidate": "34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4",
+  "contracts": {
+    "fluid_type": "res://scripts/simulation/procedural/contracts/fluid_type.gd",
+    "fluid_region_id": "res://scripts/simulation/procedural/contracts/fluid_region_id.gd",
+    "fluid_surface_descriptor": "res://scripts/simulation/procedural/contracts/fluid_surface_descriptor.gd",
+    "river_spline": "res://scripts/simulation/procedural/contracts/river_spline.gd",
+    "river_channel_profile": "res://scripts/simulation/procedural/contracts/river_channel_profile.gd",
+    "water_surface_query": "res://scripts/simulation/procedural/contracts/water_surface_query.gd"
+  },
+  "schemas": {
+    "fluid_surface_descriptor": "planet_simulator.fluid_surface_descriptor.v1",
+    "river_spline": "planet_simulator.river_spline.v1",
+    "river_channel_profile": "planet_simulator.river_channel_profile.v1",
+    "water_surface_query": "planet_simulator.water_surface_query.v1"
+  },
+  "baseline_fluid_types": [
+    "fluid-type/ammonia",
+    "fluid-type/lava",
+    "fluid-type/methane",
+    "fluid-type/water"
+  ],
+  "identity_inputs": [
+    "body_id",
+    "fluid_type_id",
+    "seed",
+    "generator_version",
+    "stable_key"
+  ],
+  "invariants": {
+    "fluid_region_is_canonical": true,
+    "source_feature_is_optional": true,
+    "surface_cell_owns_fluid_identity": false,
+    "lod_changes_fluid_identity": false,
+    "camera_changes_fluid_identity": false,
+    "renderer_changes_fluid_identity": false,
+    "river_spline_geometry_changes_spline_identity": false,
+    "river_channel_profile_geometry_changes_profile_identity": false,
+    "renderer_dependency_allowed": false,
+    "network_transport_dependency_allowed": false
+  },
+  "deferred": {
+    "casual_river_provider": "G6.1",
+    "cross_cell_cross_lod_continuity": "G6.2",
+    "runtime_water_surface_query": "G6.3",
+    "casual_visual_river_lab": "G6.4",
+    "full_fluid_dynamics": "POST_BASELINE_RESEARCH"
+  }
+}
