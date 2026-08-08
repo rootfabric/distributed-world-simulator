@@ -1,0 +1,46 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "checkpoint": "G6_FULL_ACCEPTANCE",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "decision": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_SHARED_BASELINE",
+  "implementation": {
+    "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
+    "shell_runner": "RUN_G6_FULL_ACCEPTANCE.sh",
+    "manifest": "config/procedural/g6-full-acceptance.v1.json",
+    "g6_4_manual_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md"
+  },
+  "preflight_evidence": {
+    "main_global_revision": "GLOBAL-P0-2026-08-08-R1",
+    "main_global_config_blob": "56aa7b14ccdb96e43375011a67b4829f936cf6f1",
+    "g5_global_revision": "GLOBAL-P0-2026-08-08-R1",
+    "g5_global_config_blob": "56aa7b14ccdb96e43375011a67b4829f936cf6f1",
+    "g6_was_not_behind_g5_before_full_gate_implementation": true,
+    "mw10_shared_baseline_pr": 43,
+    "mw10_shared_baseline_pr_state": "OPEN",
+    "mw10_shared_baseline_pr_merged": false,
+    "mw10_shared_baseline_required_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
+    "mw10_shared_baseline_required_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5"
+  },
+  "expected_current_result": {
+    "repository_sync_preflight": "PASS_UNTIL_MW10_BASELINE_CHECK",
+    "mw10_shared_baseline_check": "BLOCKED_EXPECTED",
+    "reason": "PR #43 has not yet been merged into feature/g5-world-feature-graph",
+    "godot_runtime_should_start_before_baseline_is_fixed": false
+  },
+  "runtime_validation": {
+    "assistant_environment_godot_available": false,
+    "assistant_environment_repository_checkout_available": false,
+    "assistant_environment_network_clone_available": false,
+    "assistant_runtime_result": "NOT_RUN_ENVIRONMENT_UNAVAILABLE",
+    "required_engine_for_final_acceptance": "Godot 4.7.1 stable double precision a13da4f-compatible build",
+    "windows_full_gate": "PENDING_AFTER_SHARED_BASELINE_RESYNC"
+  },
+  "next_actions": [
+    "Integrate accepted PR #43 into feature/g5-world-feature-graph",
+    "Resynchronize feature/g6-hydrology-fluid-surface-v0 on top of updated G5",
+    "Run RUN_G6_FULL_ACCEPTANCE.ps1",
+    "If PASS, record G6.4 ACCEPTED and G6 FULL ACCEPTANCE",
+    "Then start G7 Semantic Field Fabric"
+  ]
+}
