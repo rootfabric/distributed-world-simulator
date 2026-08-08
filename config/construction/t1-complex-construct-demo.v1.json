@@ -1,0 +1,78 @@
+{
+  "schema": "planet_simulator.t1_complex_construct_demo_manifest.v1",
+  "checkpoint": "T1A0_BASELINE_AND_FIXTURE_CONTRACTS",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1-complex-construct-demo-lab",
+  "branch_base_commit": "68085c9154a85a581226d08001f8e524b0992323",
+  "c24_accepted_commit": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+  "c24_implementation_head": "8623d0e5b4b6455fb4a75f2cc04c6cb5d3c38cb8",
+  "fixture_seed": "t1a0-lunar-engineering-outpost-v1",
+  "scene_path": "res://scenes/labs/t1_complex_construct_demo.tscn",
+  "fixture_builder_path": "res://scripts/labs/t1/t1_complex_construct_fixture_builder.gd",
+  "authority_policy": {
+    "production_contract_changes_allowed": false,
+    "fixture_is_authoritative_state": false,
+    "fixture_is_data_only": true,
+    "canonical_construct_checksum_stage": "T1A.2",
+    "visual_asset_catalog_stage": "T1A.1",
+    "network_transport_dependency_allowed": false
+  },
+  "profiles": {
+    "D0": {
+      "profile_id": "D0",
+      "construct_id": "construct/t1/lunar-outpost/d0",
+      "expected_part_count": 64,
+      "expected_room_ids": [
+        "room/t1/d0/habitat"
+      ],
+      "expected_utility_ids": [
+        "utility/t1/d0/power",
+        "utility/t1/d0/data"
+      ],
+      "expected_item_ids": [
+        "item/t1/d0/door/main",
+        "item/t1/d0/container/storage",
+        "item/t1/d0/generator/main",
+        "item/t1/d0/battery/main",
+        "item/t1/d0/lamp/main",
+        "item/t1/d0/console/main"
+      ],
+      "initial_fixture_checksum": "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58"
+    },
+    "D1": {
+      "profile_id": "D1",
+      "construct_id": "construct/t1/lunar-outpost/d1",
+      "expected_part_count": 384,
+      "expected_room_ids": [
+        "room/t1/d1/habitat",
+        "room/t1/d1/airlock",
+        "room/t1/d1/workshop",
+        "room/t1/d1/storage",
+        "room/t1/d1/utility"
+      ],
+      "expected_utility_ids": [
+        "utility/t1/d1/power",
+        "utility/t1/d1/data",
+        "utility/t1/d1/air"
+      ],
+      "expected_item_ids": [
+        "item/t1/d1/door/airlock-inner",
+        "item/t1/d1/door/airlock-outer",
+        "item/t1/d1/door/workshop",
+        "item/t1/d1/door/storage",
+        "item/t1/d1/container/habitat",
+        "item/t1/d1/container/storage",
+        "item/t1/d1/container/tools",
+        "item/t1/d1/generator/main",
+        "item/t1/d1/battery/main",
+        "item/t1/d1/lamp/habitat",
+        "item/t1/d1/lamp/airlock",
+        "item/t1/d1/lamp/workshop",
+        "item/t1/d1/console/main",
+        "item/t1/d1/fabricator/main",
+        "item/t1/d1/workbench/main"
+      ],
+      "initial_fixture_checksum": "876cae0b17d8d508515ea2dafc577ad1b9389070d29d1102d3ad8565bd00b474"
+    }
+  }
+}

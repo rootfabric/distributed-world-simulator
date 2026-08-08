@@ -1,0 +1,30 @@
+{
+  "schema": "planet_simulator.t1a1_part_visual_adapter_validation.v1",
+  "checkpoint": "T1A1_PART_VISUAL_PROFILE_ASSET_ADAPTER",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1-complex-construct-demo-lab",
+  "base_head": "b92cc1be4f7d0dfd268ed294928f57706b489268",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "catalog_revision": "t1a1-visual-catalog-v1",
+  "catalog_manifest_hash": "f3fadc7d6b1427fdc899a439e2eeca8dcea758d1010227cd6efd3a7c49c1f120",
+  "representation_classes": ["STRUCTURAL_CELL", "STATIC_COMPLEX_MESH", "INSTANCED_MESH", "INTERACTIVE_FIXTURE"],
+  "isolated_exact_engine": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "t1a1_assertions": 67,
+    "t1a1_result": "PASS",
+    "scene_adapter_probe": "PASS"
+  },
+  "architecture_proofs": {
+    "visual_adaptation_preserves_fixture_checksum": true,
+    "detail_mode_changes_presentation_checksum_only": true,
+    "part_identity_preserved": true,
+    "headless_catalog_resolution_loads_renderer_assets": false,
+    "production_construction_contracts_changed": false,
+    "network_contracts_changed": false,
+    "world_generation_contracts_changed": false,
+    "character_contracts_changed": false
+  },
+  "windows_full_checkout": "PENDING",
+  "next": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER"
+}

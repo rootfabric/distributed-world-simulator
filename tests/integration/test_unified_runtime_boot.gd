@@ -25,6 +25,13 @@ func _run() -> void:
 	var planetary_runtime = simulator.get_current_runtime()
 	_assert(planetary_runtime != null, "Planetary runtime was not created.")
 	if planetary_runtime != null:
+		var persistence = planetary_runtime.get("persistence")
+		_assert(persistence != null, "Planetary runtime persistence repository is missing.")
+		if persistence != null:
+			_assert(
+				bool(persistence.get("initialized")),
+				"Planetary runtime persistence repository failed to initialize."
+			)
 		_assert(planetary_runtime.celestial_system != null, "Celestial system was not initialized.")
 		_assert(planetary_runtime.shared_space_mode, "Shared-space startup mode did not activate.")
 		_assert(planetary_runtime.earth_initialized, "Earth did not initialize lazily.")

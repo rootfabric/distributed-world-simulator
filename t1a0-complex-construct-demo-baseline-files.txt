@@ -1,0 +1,17 @@
+Checkpoint: T1A.0 — Complex Construct Demo Baseline and Fixture Contracts
+Status: IMPLEMENTED CANDIDATE
+Branch: feature/t1-complex-construct-demo-lab
+Base: main @ 68085c9154a85a581226d08001f8e524b0992323
+
+RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS.ps1
+RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS.sh
+config/construction/t1-complex-construct-demo.v1.json
+docs/checkpoints/2026-08-08_T1A0_COMPLEX_CONSTRUCT_DEMO_BASELINE_RU.md
+scenes/labs/t1_complex_construct_demo.tscn
+scripts/labs/t1/t1_complex_construct_demo.gd
+scripts/labs/t1/t1_complex_construct_demo.gd.uid
+scripts/labs/t1/t1_complex_construct_fixture_builder.gd
+scripts/labs/t1/t1_complex_construct_fixture_builder.gd.uid
+tests/construction/test_t1a0_complex_construct_demo_baseline.gd
+tests/construction/test_t1a0_complex_construct_demo_baseline.gd.uid
+validation/t1a0-complex-construct-demo-baseline-validation.json

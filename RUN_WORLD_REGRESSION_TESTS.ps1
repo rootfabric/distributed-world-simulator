@@ -1,4 +1,4 @@
-﻿# Accepted M7 validation marker: v16.10.6.1-testing-m7-playable-networked-playground
+# Accepted M7 validation marker: v16.10.6.1-testing-m7-playable-networked-playground
 # Accepted architecture coverage marker: v16.10.6-architecture-a3-single-server-multiplayer
 $ErrorActionPreference = "Stop"
 
@@ -7,8 +7,9 @@ $ReportDirectory = Join-Path $ProjectRoot "artifacts/test-results"
 $ReportPath = Join-Path $ReportDirectory "world-regression-summary.json"
 New-Item -ItemType Directory -Force -Path $ReportDirectory | Out-Null
 
-# Every regression run receives a clean user profile. Old user:// manifests from
-# another checkpoint must never influence persistence or checksum contracts.
+# Every regression run receives a clean base profile and every Godot step gets
+# its own child profile. Child processes spawned by one step inherit that same
+# profile, so multi-process tests still share the state they intentionally own.
 $IsolatedProfileRoot = Join-Path $ReportDirectory ("world-profile-{0}" -f $PID)
 $IsolatedDataRoot = Join-Path $IsolatedProfileRoot "data"
 $IsolatedConfigRoot = Join-Path $IsolatedProfileRoot "config"
@@ -26,6 +27,17 @@ $env:XDG_CACHE_HOME = $IsolatedCacheRoot
 # World regression is a deterministic baseline suite. Dedicated inventory
 # profile contracts switch to Rust/7DTD explicitly inside their own process.
 $env:PLANET_SIMULATOR_INVENTORY_PROFILE = "planet_default"
+# The MCP runtime bridge is a developer/debug surface, not part of standalone
+# regression semantics. Disabling it prevents child-process port contention on
+# 127.0.0.1:9081 and keeps plugin resources out of leak diagnostics.
+$env:BREAKPOINT_RUNTIME_DISABLED = "1"
+
+$StrictRuntimeErrorSteps = @(
+    "test_unified_runtime_boot",
+    "test_world_switch_during_generation",
+    "test_world_boot_matrix",
+    "main_scene_cli_all"
+)
 
 $Candidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:GODOT_BIN)) {
@@ -200,6 +212,8 @@ $Tests = @(
     "res://tests/construction/test_c24_proxy_mesh_backend_integration.gd",
     "res://tests/construction/test_c24_proxy_mesh_backend_graphical.gd",
     "res://tests/construction/test_c24_proxy_mesh_backend_scale_soak.gd",
+    "res://tests/construction/test_t1a0_complex_construct_demo_baseline.gd",
+    "res://tests/construction/test_t1a1_part_visual_adapter.gd",
     "res://tests/runtime/test_simulation_kernel_boundary.gd",
     "res://tests/unit/test_jetpack_controller.gd",
     "res://tests/unit/test_reference_frame_graph.gd",
@@ -274,6 +288,9 @@ $Summary = [ordered]@{
     godot = $Godot
     project_root = $ProjectRoot
     isolated_user_profile = $IsolatedProfileRoot
+    per_step_user_profile_isolation = $true
+    breakpoint_runtime_disabled = $true
+    strict_runtime_error_steps = $StrictRuntimeErrorSteps
     declared_test_count = $Tests.Count
     discovered_test_count = 0
     passed = $false
@@ -440,6 +457,37 @@ function Invoke-GodotStep {
     $PreviousErrorActionPreference = $ErrorActionPreference
     $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+
+    $SafeStepName = ($Name -replace '[^A-Za-z0-9_.-]', '_')
+    $StepOrdinal = $Summary.steps.Count + 1
+    $StepProfileRoot = Join-Path $IsolatedProfileRoot ("steps\{0:D3}-{1}" -f $StepOrdinal, $SafeStepName)
+    $StepDataRoot = Join-Path $StepProfileRoot "data"
+    $StepConfigRoot = Join-Path $StepProfileRoot "config"
+    $StepCacheRoot = Join-Path $StepProfileRoot "cache"
+    foreach ($Path in @($StepProfileRoot, $StepDataRoot, $StepConfigRoot, $StepCacheRoot)) {
+        New-Item -ItemType Directory -Force -Path $Path | Out-Null
+    }
+    $EnvironmentNames = @(
+        "APPDATA",
+        "LOCALAPPDATA",
+        "USERPROFILE",
+        "HOME",
+        "XDG_DATA_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_CACHE_HOME"
+    )
+    $PreviousEnvironment = @{}
+    foreach ($EnvironmentName in $EnvironmentNames) {
+        $PreviousEnvironment[$EnvironmentName] = [Environment]::GetEnvironmentVariable($EnvironmentName, "Process")
+    }
+    $env:APPDATA = $StepDataRoot
+    $env:LOCALAPPDATA = $StepDataRoot
+    $env:USERPROFILE = $StepProfileRoot
+    $env:HOME = $StepProfileRoot
+    $env:XDG_DATA_HOME = $StepDataRoot
+    $env:XDG_CONFIG_HOME = $StepConfigRoot
+    $env:XDG_CACHE_HOME = $StepCacheRoot
+
     try {
         # Expected Godot diagnostics may be emitted on stderr even when the
         # test succeeds. Capture them without turning NativeCommandError into
@@ -456,16 +504,40 @@ function Invoke-GodotStep {
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
         }
+        foreach ($EnvironmentName in $EnvironmentNames) {
+            [Environment]::SetEnvironmentVariable(
+                $EnvironmentName,
+                $PreviousEnvironment[$EnvironmentName],
+                "Process"
+            )
+        }
     }
     $OutputText = ($Captured | Out-String)
     # Keep failure-marker detection case-sensitive: successful assertion text
     # may legitimately contain phrases such as "PASS: Failed durable restore...".
-    $HasFailureMarker = $OutputText -cmatch '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
-    $ExitCode = if ($RawExitCode -ne 0) { $RawExitCode } elseif ($HasFailureMarker) { 1 } else { 0 }
+    # Engine leak diagnostics and MCP loopback collisions are never expected
+    # negative-path behavior, so they fail every regression step.
+    $HasFailureMarker = $OutputText -cmatch '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:|^ERROR: \[breakpoint_runtime\] could not listen|^WARNING: \d+ ObjectDB instances were leaked at exit|^ERROR: \d+ resources still in use at exit)'
+    # Negative-path suites intentionally exercise push_error(). Normal boot and
+    # CLI smoke steps do not; any ERROR line there is an acceptance failure.
+    $HasUnexpectedRuntimeError = (
+        $Name -in $StrictRuntimeErrorSteps -and
+        $OutputText -cmatch '(?m)^ERROR:\s'
+    )
+    $ExitCode = if ($RawExitCode -ne 0) {
+        $RawExitCode
+    } elseif ($HasFailureMarker -or $HasUnexpectedRuntimeError) {
+        1
+    } else {
+        0
+    }
     $Duration = ([DateTime]::UtcNow - $Started).TotalSeconds
     Add-StepResult -Name $Name -Kind $Kind -ExitCode $ExitCode -DurationSeconds $Duration -Target $Target
     Save-Summary
     if ($ExitCode -ne 0) {
+        if ($HasUnexpectedRuntimeError) {
+            throw "Regression step emitted unexpected runtime ERROR diagnostics: $Name"
+        }
         throw "Regression step failed: $Name (exit code $ExitCode)"
     }
 }

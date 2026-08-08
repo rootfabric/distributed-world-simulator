@@ -49,6 +49,7 @@ func _run() -> void:
 	_assert(simulator.command_registry.has_command("display.fullscreen.toggle"), "Core display command is missing.")
 	_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command is missing.")
 	_assert(simulator.developer_console != null, "Developer console was not initialized.")
+	_assert_runtime_persistence_healthy(simulator.get_current_runtime(), "earth_moon")
 	_test_console_process_lifecycle(simulator)
 
 	for world_id in WORLD_IDS:
@@ -67,6 +68,7 @@ func _run() -> void:
 		_assert(simulator.command_registry.has_command("display.resolution.cycle"), "Core resolution command disappeared in %s" % world_id)
 		_assert_world_command_surface(simulator, world_id)
 		_test_inventory_profile_command(simulator, world_id)
+		_assert_runtime_persistence_healthy(runtime, world_id)
 		if runtime == null:
 			continue
 		_assert(runtime.has_method("create_runtime_snapshot"), "Runtime snapshot contract missing: %s" % world_id)
@@ -109,6 +111,22 @@ func _test_inventory_profile_command(simulator, world_id: String) -> void:
 	)
 	var rejected: Dictionary = simulator.command_registry.execute_line("inventory.profile unknown")
 	_assert(not bool(rejected.get("success", true)), "inventory.profile must reject unknown profile in %s" % world_id)
+
+
+func _assert_runtime_persistence_healthy(runtime, world_id: String) -> void:
+	if world_id not in ["moon", "earth_moon"]:
+		return
+	_assert(runtime != null, "Persistence health check has no runtime: %s" % world_id)
+	if runtime == null:
+		return
+	var persistence = runtime.get("persistence")
+	_assert(persistence != null, "Persistence repository is missing in %s" % world_id)
+	if persistence == null:
+		return
+	_assert(
+		bool(persistence.get("initialized")),
+		"Persistence repository failed to initialize in %s" % world_id
+	)
 
 
 func _assert_optional_diagnostic_menu_is_closed(runtime, world_id: String) -> void:

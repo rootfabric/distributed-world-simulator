@@ -1,0 +1,76 @@
+{
+  "schema": "planet_simulator.t1a0_complex_construct_demo_validation.v1",
+  "checkpoint": "T1A0_BASELINE_AND_FIXTURE_CONTRACTS",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1-complex-construct-demo-lab",
+  "branch_base_commit": "68085c9154a85a581226d08001f8e524b0992323",
+  "c24_accepted_commit": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
+  "fixture_seed": "t1a0-lunar-engineering-outpost-v1",
+  "profiles": {
+    "D0": {
+      "expected_part_count": 64,
+      "expected_room_count": 1,
+      "expected_utility_count": 2,
+      "expected_item_count": 6,
+      "initial_fixture_checksum": "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58"
+    },
+    "D1": {
+      "expected_part_count": 384,
+      "expected_room_count": 5,
+      "expected_utility_count": 3,
+      "expected_item_count": 15,
+      "initial_fixture_checksum": "876cae0b17d8d508515ea2dafc577ad1b9389070d29d1102d3ad8565bd00b474"
+    }
+  },
+  "static_validation": {
+    "manifest_json_parse": "PASS",
+    "fixture_checksum_reference": "PASS",
+    "d0_checksum_recomputed_independently": "PASS",
+    "d1_checksum_recomputed_independently": "PASS",
+    "branch_diff_scope_checked": "PASS",
+    "production_contract_files_changed": 0,
+    "network_contract_files_changed": 0,
+    "github_actions_runs_for_candidate_head": 0
+  },
+  "fix1": {
+    "name": "T1A0_REGRESSION_HYGIENE_FIX1",
+    "implementation_head": "197a4d1ba0c92ace0f7eb5c658a621ae15faaedf",
+    "baseline_head_before_fix1": "f08c3401bd9fbd970c317f4d24a240a39668ee04",
+    "per_step_user_profile_isolation": true,
+    "multi_process_children_share_parent_step_profile": true,
+    "breakpoint_runtime_disabled_in_headless_acceptance": true,
+    "boot_persistence_initialized_is_required": true,
+    "breakpoint_port_collision_diagnostics_fail_regression": true,
+    "engine_exit_leak_diagnostics_fail_regression": true,
+    "strict_runtime_error_steps": [
+      "test_unified_runtime_boot",
+      "test_world_switch_during_generation",
+      "test_world_boot_matrix",
+      "main_scene_cli_all"
+    ],
+    "pre_fix1_observed_diagnostics": [
+      "World manifest identity mismatch during normal boot",
+      "repository_setup_failed during normal boot",
+      "breakpoint runtime port 9081 collisions in multi-process tests",
+      "MW7 ObjectDB/resource exit leak diagnostics"
+    ]
+  },
+  "runtime_validation": {
+    "pre_fix1_full_regression": "PROCESS_EXIT_PASS_WITH_UNEXPECTED_RUNTIME_ERRORS",
+    "fix1_editor_import": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
+    "fix1_focused_t1a0": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
+    "fix1_world_regression": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
+    "fix1_mw7_exit_hygiene": "PENDING_LOCAL_WINDOWS_GODOT_RERUN"
+  },
+  "acceptance_requirements": [
+    "Godot 4.7.1 double editor import PASS",
+    "RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS focused PASS",
+    "project regression gate PASS",
+    "normal boot has initialized persistence",
+    "no unexpected world manifest identity mismatch in normal boot tests",
+    "no breakpoint runtime 9081 collision diagnostics",
+    "no MW7 ObjectDB/resource exit leak diagnostics",
+    "no production Item/Construction contract mutation"
+  ],
+  "next": "LOCAL_WINDOWS_GODOT_RERUN_THEN_T1A1_PART_VISUAL_PROFILE_ASSET_ADAPTER"
+}

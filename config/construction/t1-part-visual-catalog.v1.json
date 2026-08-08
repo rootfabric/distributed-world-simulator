@@ -1,0 +1,87 @@
+{
+  "schema": "planet_simulator.t1_part_visual_catalog.v1",
+  "catalog_revision": "t1a1-visual-catalog-v1",
+  "headless_resource_loading": false,
+  "profiles": [
+    {
+      "schema": "planet_simulator.t1_part_visual_profile.v1",
+      "visual_profile_id": "visual-profile/t1/structural-cell",
+      "representation_class": "STRUCTURAL_CELL",
+      "material_family": "construction/structural",
+      "bounds_m": [1.0, 1.0, 1.0],
+      "pivot_m": [0.0, 0.0, 0.0],
+      "grid_footprint": [1, 1, 1],
+      "collision_profile": "INHERIT_RUNTIME_DESCRIPTOR",
+      "batching_policy": "SECTION_COMPILE",
+      "near": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://box"},
+      "mid": {"source_kind": "COMPILED_PROXY", "source_ref": "proxy://section"},
+      "far": {"source_kind": "COMPILED_PROXY", "source_ref": "proxy://distant-shell"},
+      "checksum": "911358dc6789785edfbf904fc643268eeaa1883c4dcd39de427463803f79c747"
+    },
+    {
+      "schema": "planet_simulator.t1_part_visual_profile.v1",
+      "visual_profile_id": "visual-profile/t1/static-complex",
+      "representation_class": "STATIC_COMPLEX_MESH",
+      "material_family": "construction/static-complex",
+      "bounds_m": [2.0, 2.0, 2.0],
+      "pivot_m": [0.0, 0.0, 0.0],
+      "grid_footprint": [2, 2, 2],
+      "collision_profile": "INHERIT_RUNTIME_DESCRIPTOR",
+      "batching_policy": "STATIC_MERGE",
+      "near": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://box"},
+      "mid": {"source_kind": "COMPILED_PROXY", "source_ref": "proxy://static-merge"},
+      "far": {"source_kind": "COMPILED_PROXY", "source_ref": "proxy://distant-shell"},
+      "checksum": "97072028f76b210553ae1977165b0d300575eec259b730a6c5a77f8601111eeb"
+    },
+    {
+      "schema": "planet_simulator.t1_part_visual_profile.v1",
+      "visual_profile_id": "visual-profile/t1/instanced-detail",
+      "representation_class": "INSTANCED_MESH",
+      "material_family": "construction/instanced-detail",
+      "bounds_m": [0.5, 0.5, 0.5],
+      "pivot_m": [0.0, 0.0, 0.0],
+      "grid_footprint": [1, 1, 1],
+      "collision_profile": "NONE",
+      "batching_policy": "INSTANCE_BATCH",
+      "near": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://cylinder"},
+      "mid": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://cylinder"},
+      "far": {"source_kind": "NONE", "source_ref": ""},
+      "checksum": "77812e368e0b6128404c9e4887e351dbd0c178c5e7d45562049574ce1fe03936"
+    },
+    {
+      "schema": "planet_simulator.t1_part_visual_profile.v1",
+      "visual_profile_id": "visual-profile/t1/interactive-fixture",
+      "representation_class": "INTERACTIVE_FIXTURE",
+      "material_family": "construction/interactive",
+      "bounds_m": [1.0, 2.0, 0.4],
+      "pivot_m": [0.0, 0.0, 0.0],
+      "grid_footprint": [1, 2, 1],
+      "collision_profile": "INHERIT_RUNTIME_DESCRIPTOR",
+      "batching_policy": "SEPARATE_INTERACTIVE",
+      "near": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://box"},
+      "mid": {"source_kind": "BUILTIN_PRIMITIVE", "source_ref": "primitive://box"},
+      "far": {"source_kind": "COMPILED_PROXY", "source_ref": "proxy://interactive-marker"},
+      "checksum": "30f1a6153acd62ff6889fd9cddaaae04037f4479ee1363b1f1250ef2bb620084"
+    }
+  ],
+  "semantic_bindings": {
+    "STRUCTURAL_CELL": "visual-profile/t1/structural-cell",
+    "STATIC_COMPLEX_MESH": "visual-profile/t1/static-complex",
+    "INSTANCED_MESH": "visual-profile/t1/instanced-detail",
+    "INTERACTIVE_FIXTURE": "visual-profile/t1/interactive-fixture"
+  },
+  "fixture_binding_rules": {
+    "D0": [
+      {"start": 0, "end": 39, "semantic_class": "STRUCTURAL_CELL"},
+      {"start": 40, "end": 47, "semantic_class": "STATIC_COMPLEX_MESH"},
+      {"start": 48, "end": 55, "semantic_class": "INSTANCED_MESH"},
+      {"start": 56, "end": 63, "semantic_class": "INTERACTIVE_FIXTURE"}
+    ],
+    "D1": [
+      {"start": 0, "end": 255, "semantic_class": "STRUCTURAL_CELL"},
+      {"start": 256, "end": 319, "semantic_class": "STATIC_COMPLEX_MESH"},
+      {"start": 320, "end": 351, "semantic_class": "INSTANCED_MESH"},
+      {"start": 352, "end": 383, "semantic_class": "INTERACTIVE_FIXTURE"}
+    ]
+  }
+}
