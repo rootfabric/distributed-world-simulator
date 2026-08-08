@@ -1,6 +1,8 @@
 class_name LabEquipmentSource
 extends CharacterEquipmentDomain.Source
 
+const EquipmentLayering = preload("res://scripts/characters/equipment/character_equipment_layering.gd")
+
 var owner_entity_id := ""
 var layout: CharacterEquipmentDomain.Layout
 var revision := 0
@@ -46,6 +48,38 @@ func equip(item_id: String, profile_id: String) -> Dictionary:
 		"item_id": item_id,
 		"profile_id": profile_id,
 		"revision": revision,
+	})
+
+
+func plan_equip(item_id: String, profile_id: String) -> Dictionary:
+	var profile = _profiles.get(profile_id)
+	if not profile is CharacterEquipmentDomain.Profile:
+		return _result(false, CharacterEquipmentDomain.RESULT_INVALID_PROFILE, {"profile_id": profile_id})
+	return EquipmentLayering.plan_equip(layout, profile, _entries(), item_id)
+
+
+func equip_replacing_conflicts(item_id: String, profile_id: String) -> Dictionary:
+	var profile = _profiles.get(profile_id)
+	if not profile is CharacterEquipmentDomain.Profile:
+		return _result(false, CharacterEquipmentDomain.RESULT_INVALID_PROFILE, {"profile_id": profile_id})
+
+	var plan: Dictionary = EquipmentLayering.plan_equip(layout, profile, _entries(), item_id)
+	if not bool(plan.get("success", false)):
+		return plan
+	var conflicting_item_ids: Array[String] = EquipmentLayering.conflicting_item_ids(plan)
+	for conflicting_item_id in conflicting_item_ids:
+		_entries_by_item.erase(conflicting_item_id)
+
+	var entry := CharacterEquipmentDomain.create_entry(item_id, profile)
+	_entries_by_item[item_id] = entry
+	revision += 1
+	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+		"item_id": item_id,
+		"profile_id": profile_id,
+		"revision": revision,
+		"replacement": not conflicting_item_ids.is_empty(),
+		"replaced_item_ids": conflicting_item_ids,
+		"conflict_plan": plan.get("details", {}).duplicate(true),
 	})
 
 
