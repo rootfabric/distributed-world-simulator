@@ -67,12 +67,17 @@ func observe(distribution_name: String, value: float) -> Dictionary:
 	# server. The old implementation duplicated the entire sample window and used
 	# pop_front() for every observation after the window filled, turning a bounded
 	# metric into an O(window) allocation/copy path. Keep the same bounded sample
-	# semantics with in-place ring overwrite instead. Sorting still happens only
-	# when a diagnostic sample is explicitly materialized.
-	var values: Array = _samples.get(distribution_name, [])
+	# semantics with in-place ring overwrite instead. Avoid a default [] expression
+	# on existing metrics too, so the steady-state path does not allocate a throwaway
+	# Array before the ring lookup.
+	var values: Array
+	if _samples.has(distribution_name):
+		values = _samples[distribution_name]
+	else:
+		values = []
+		_samples[distribution_name] = values
 	if values.size() < _sample_limit:
 		values.append(value)
-		_samples[distribution_name] = values
 		if values.size() == _sample_limit and not _sample_heads.has(distribution_name):
 			_sample_heads[distribution_name] = 0
 	else:
@@ -88,7 +93,14 @@ func record_transport(channel_name: String, direction: String, packet_bytes: int
 		return _failure("NOT_CONFIGURED")
 	if not _is_metric_name(channel_name) or direction not in DIRECTIONS or packet_bytes < 0:
 		return _failure("INVALID_TRANSPORT_SAMPLE")
-	var metrics: Dictionary = _channels.get(channel_name, _empty_channel_metrics())
+	# Dictionary.get(key, _empty_channel_metrics()) evaluates the default argument
+	# before get(), allocating a new metrics Dictionary for every packet even when
+	# the channel already exists. Allocate only on first sight of a channel.
+	var metrics: Dictionary
+	if _channels.has(channel_name):
+		metrics = _channels[channel_name]
+	else:
+		metrics = _empty_channel_metrics()
 	metrics["packets_%s" % direction] = int(metrics["packets_%s" % direction]) + 1
 	metrics["bytes_%s" % direction] = int(metrics["bytes_%s" % direction]) + packet_bytes
 	_channels[channel_name] = metrics
