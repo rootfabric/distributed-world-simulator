@@ -7,6 +7,7 @@ $Root = $PSScriptRoot
 $Ch7Runner = Join-Path $Root "RUN_CH7_CHARACTER_EQUIPMENT_TESTS.ps1"
 $AssetRoot = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy"
 $Garment = Join-Path $AssetRoot "Modular Character Outfits - Fantasy[Standard]\Exports\glTF (Godot-Unreal)\Outfits\Male_Peasant.gltf"
+$BaseRefreshHelper = Join-Path $Root "REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1"
 
 if (-not (Test-Path $Ch7Runner -PathType Leaf)) {
     throw "CH7 acceptance runner is missing: $Ch7Runner"
@@ -29,11 +30,6 @@ foreach ($Directory in $FbxDirectories) {
     }
 }
 
-& $Ch7Runner -GodotPath $GodotPath
-if ($LASTEXITCODE -ne 0) {
-    exit $LASTEXITCODE
-}
-
 function Resolve-Godot([string]$Requested) {
     $Candidates = @()
     if (-not [string]::IsNullOrWhiteSpace($Requested)) { $Candidates += $Requested }
@@ -54,7 +50,7 @@ function Resolve-Godot([string]$Requested) {
     throw "Godot 4.7.1 double was not found. Pass -GodotPath or set GODOT_BIN."
 }
 
-function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
+function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string]$FailureHint = "") {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
 
@@ -88,11 +84,28 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
     $Text = $Output -join "`n"
     $HasFailureMarker = $Text -match '(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)'
     if ($ExitCode -ne 0 -or $HasFailureMarker) {
+        if (-not [string]::IsNullOrWhiteSpace($FailureHint)) {
+            Write-Host $FailureHint -ForegroundColor Yellow
+        }
         throw "$Name failed with exit code $ExitCode"
     }
 }
 
 $Godot = Resolve-Godot $GodotPath
+
+# CH7.8C relies on the post-November-2025 Base Characters update that added
+# Head/Upperbody variants specifically for Modular Character Outfits. Fail
+# before the expensive CH7 regression suite if a stale local asset pack is used.
+Invoke-Godot-Test `
+    "ch7_8_quaternius_base_variant_probe" `
+    "res://tests/characters/probe_ch7_8_quaternius_base_variants.gd" `
+    "Refresh the current free Universal Base Characters Standard pack with: .\REFRESH_CH7_8_QUATERNIUS_BASE_CHARACTERS.ps1 -GodotPath `$Godot -OpenDownloadPage"
+
+& $Ch7Runner -GodotPath $Godot
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
 Invoke-Godot-Test "ch7_8_skinned_garment_pose_bridge" "res://tests/characters/test_ch7_8_skinned_garment_pose_bridge.gd"
 Invoke-Godot-Test "ch7_8_body_region_replacement" "res://tests/characters/test_ch7_8_body_region_replacement.gd"
 Invoke-Godot-Test "ch7_8_quaternius_body_hiding_order" "res://tests/characters/test_ch7_8_quaternius_body_hiding_order.gd"
