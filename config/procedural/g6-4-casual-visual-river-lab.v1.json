@@ -1,0 +1,57 @@
+{
+  "schema": "planet_simulator.g6_4_casual_visual_river_lab.v1",
+  "checkpoint": "g6.4-casual-visual-river-lab",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
+  "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
+  "dependencies": {
+    "g6_1_canonical_geography": "ACCEPTED",
+    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
+    "g6_3_runtime_water_surface_query": "ACCEPTED"
+  },
+  "presentation": {
+    "display_radius": 8.0,
+    "water_width_exaggeration": 5200.0,
+    "bank_width_exaggeration": 3600.0,
+    "samples_per_canonical_segment": 16,
+    "water_ribbon": true,
+    "canonical_centerline": true,
+    "bank_guides": true,
+    "query_probes": true,
+    "cube_face_seam_marker": true
+  },
+  "manual_controls": {
+    "orbit_left_right": "A/D",
+    "pitch_up_down": "Q/E",
+    "zoom_in_out": "W/S",
+    "auto_orbit": "SPACE",
+    "reset_camera": "R",
+    "toggle_water": "1",
+    "toggle_centerline": "2",
+    "toggle_bank_guides": "3",
+    "toggle_query_probes": "4",
+    "toggle_seam_markers": "5"
+  },
+  "architecture_boundaries": {
+    "renderer_is_canonical_truth": false,
+    "visual_width_is_canonical_width": false,
+    "surface_cell_is_fluid_identity": false,
+    "lod_is_fluid_identity": false,
+    "cube_face_is_fluid_identity": false,
+    "query_cache_is_fluid_identity": false,
+    "visual_lab_owns_authority": false,
+    "visual_lab_mutates_world_state": false,
+    "visual_lab_owns_persistence": false,
+    "visual_lab_owns_network_transport": false
+  },
+  "acceptance": {
+    "headless_scene_smoke": "REQUIRED",
+    "focused_source_contract": "REQUIRED",
+    "windows_graphical_manual_observation": "REQUIRED",
+    "px_pz_seam_visible": "REQUIRED",
+    "query_probes_visible": "REQUIRED",
+    "canonical_ids_unchanged": "REQUIRED"
+  },
+  "next_if_accepted": "G6_FULL_ACCEPTANCE"
+}
