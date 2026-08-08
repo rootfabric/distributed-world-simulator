@@ -118,12 +118,17 @@ func _init() -> void:
 	var b_converge := _wait_state(b_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS)
 	_assert(String(a2_ready.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "A reconnect reached convergence barrier")
 	_assert(String(b_converge.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "B reached convergence barrier")
+	# Commit finalization before waiting for the matching pair. The client driver
+	# keeps locks revocable while finish=false so late authoritative snapshots can
+	# replace stale checksums. Once finish=true is atomically published, the first
+	# mutually observed matching lock becomes the committed barrier and can no
+	# longer be revoked between parent observation and client shutdown.
+	_write_control(control_path, {"finish": true})
 	var convergence_pair := _wait_convergence_pair(a2_path, b_path, CLIENT_TIMEOUT_MS)
 	a2_ready = Dictionary(convergence_pair.get("a", a2_ready))
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
 	_assert(bool(convergence_pair.get("success", false)), "A and B reached identical player and Item Graph checksums")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
-	_write_control(control_path, {"finish": true})
 	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	_assert(bool(a2_final.get("passed", false)), "A reconnect graphical acceptance completed")
@@ -303,13 +308,15 @@ func _wait_convergence_pair(a_path: String, b_path: String, timeout_ms: int) -> 
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		a = Support.read(a_path)
 		b = Support.read(b_path)
+		var a_state := String(a.get("state", ""))
+		var b_state := String(b.get("state", ""))
 		var a_player := String(a.get("player_checksum", ""))
 		var b_player := String(b.get("player_checksum", ""))
 		var a_item := String(a.get("item_checksum", ""))
 		var b_item := String(b.get("item_checksum", ""))
 		if (
-			String(a.get("state", "")) == "CONVERGENCE_LOCKED"
-			and String(b.get("state", "")) == "CONVERGENCE_LOCKED"
+			a_state in ["CONVERGENCE_LOCKED", "COMPLETE"]
+			and b_state in ["CONVERGENCE_LOCKED", "COMPLETE"]
 			and not a_player.is_empty()
 			and a_player == b_player
 			and not a_item.is_empty()
