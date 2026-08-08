@@ -17,11 +17,17 @@ const FEET_ITEM_ID := "lab.item.layer.feet.001"
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
+const UPPER_PRESENTATION_ID := "wearable.layer.upper.peasant"
+const LOWER_PRESENTATION_ID := "wearable.layer.lower.peasant"
+const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 
 const REGION_TORSO_CORE := "body.region.torso.core"
 const LOWER_TOPOLOGY_THRESHOLD_M := 0.045
-const FEET_TOPOLOGY_THRESHOLD_M := 0.035
+const FEET_TOPOLOGY_THRESHOLD_M := 0.045
 const TOPOLOGY_BOUNDARY_PAD_M := 0.006
+const FEET_TOPOLOGY_COVERAGE_MODE := "HIGH_BOOT"
+const FEET_TOPOLOGY_UPPER_Y_PAD_M := 0.012
+const FEET_TOPOLOGY_UPPER_BIAS_FRACTION := 0.52
 
 var layered_rig_adapter
 var body_coverage_catalog
@@ -79,32 +85,43 @@ func _setup_layered_equipment() -> void:
 	var definitions := [
 		{
 			"profile": UPPER_PROFILE_ID,
-			"presentation": "wearable.layer.upper.peasant",
+			"presentation": UPPER_PRESENTATION_ID,
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
 			"regions": [REGION_TORSO_CORE],
 			"topology_threshold_m": 0.0,
+			"topology_coverage_mode": "ROBUST",
+			"topology_upper_y_pad_m": 0.0,
+			"topology_upper_bias_fraction": 1.0,
 		},
 		{
 			"profile": LOWER_PROFILE_ID,
-			"presentation": "wearable.layer.lower.peasant",
+			"presentation": LOWER_PRESENTATION_ID,
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
-			# Open/torn trousers preserve skin through real holes and below cuffs.
-			# Only body triangles geometrically close to actual trouser surfaces are
-			# removed from a temporary presentation mesh.
+			# Open/torn trousers use the accepted robust topology mask. Do not
+			# broaden this path while tuning the independent high-boot coverage.
 			"regions": [],
 			"topology_threshold_m": LOWER_TOPOLOGY_THRESHOLD_M,
+			"topology_coverage_mode": "ROBUST",
+			"topology_upper_y_pad_m": 0.0,
+			"topology_upper_bias_fraction": 1.0,
 		},
 		{
 			"profile": FEET_PROFILE_ID,
-			"presentation": "wearable.layer.feet.peasant",
+			"presentation": FEET_PRESENTATION_ID,
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
-			# Open footwear uses the same topology-aware rule instead of deleting the
-			# complete foot/ankle volume.
+			# This asset is a tall boot. Fix7 robust proximity solved the foot but
+			# left small calf penetrations near the upper shaft. HIGH_BOOT keeps the
+			# real topology/AABB rule, raises proximity from 35 to 45 mm, gives the
+			# collar only a 12 mm upward guard band, and accepts a single covered
+			# triangle sample only in the upper 48% of the boot height.
 			"regions": [],
 			"topology_threshold_m": FEET_TOPOLOGY_THRESHOLD_M,
+			"topology_coverage_mode": FEET_TOPOLOGY_COVERAGE_MODE,
+			"topology_upper_y_pad_m": FEET_TOPOLOGY_UPPER_Y_PAD_M,
+			"topology_upper_bias_fraction": FEET_TOPOLOGY_UPPER_BIAS_FRACTION,
 		}
 	]
 
@@ -158,7 +175,10 @@ func _setup_layered_equipment() -> void:
 				layered_rig_adapter.rig_profile_id,
 				presentation_scene,
 				topology_threshold_m,
-				TOPOLOGY_BOUNDARY_PAD_M
+				TOPOLOGY_BOUNDARY_PAD_M,
+				String(definition.get("topology_coverage_mode", "ROBUST")),
+				float(definition.get("topology_upper_y_pad_m", 0.0)),
+				float(definition.get("topology_upper_bias_fraction", 1.0))
 			)
 			if not bool(layered_setup_result.get("success", false)):
 				push_error("CH8C topology registration failed: %s" % JSON.stringify(layered_setup_result))
@@ -223,7 +243,8 @@ func _refresh_status() -> void:
 		+ "U — upper | L — lower | K — feet\n"
 		+ "upper: %s | lower: %s | feet: %s\n"
 		+ "material suppression: %s\n"
-		+ "topology: %s | removed triangles: %d"
+		+ "topology: %s | removed triangles: %d\n"
+		+ "feet topology: %s | threshold %.3f m | +Y %.3f m | upper bias %.0f%%"
 	)
 	status_label.text += layered_status % [
 		upper_state,
@@ -232,4 +253,8 @@ func _refresh_status() -> void:
 		", ".join(regions),
 		", ".join(topology_active),
 		topology_removed,
+		FEET_TOPOLOGY_COVERAGE_MODE,
+		FEET_TOPOLOGY_THRESHOLD_M,
+		FEET_TOPOLOGY_UPPER_Y_PAD_M,
+		FEET_TOPOLOGY_UPPER_BIAS_FRACTION * 100.0,
 	]
