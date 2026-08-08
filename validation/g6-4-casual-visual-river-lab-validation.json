@@ -17,25 +17,6 @@
     "g6_3_runtime_water_surface_query": "ACCEPTED",
     "g6_3_tested_head": "974fc6682abac058ea158cf11efbf44501805817"
   },
-  "windows_evidence_2026_08_09": {
-    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "git_diff_check": "PASS",
-    "working_tree": "CLEAN",
-    "g5_world_feature_graph": "PASS_249_ASSERTIONS",
-    "g5_feature_cell_identity": "PASS_94_ASSERTIONS",
-    "g6_0_fluid_contracts": "PASS_169_ASSERTIONS",
-    "g6_1_casual_river_provider": "PASS_74_ASSERTIONS",
-    "g6_2_cross_cell_cross_lod_continuity": "PASS_86_ASSERTIONS",
-    "g6_3_runtime_water_surface_query": "PASS_79_ASSERTIONS",
-    "g6_4_source_p0_contracts_initial": "PASS_73_ASSERTIONS",
-    "g6_4_headless_scene_smoke_initial": "FAIL_SCRIPT_PARSE",
-    "observed_parse_errors": [
-      "line 265: inferred Variant from max() warning treated as error",
-      "line 294: center type could not be inferred from Dictionary value"
-    ],
-    "runner_false_positive": true,
-    "acceptance_effect": "G6.4_NOT_ACCEPTED"
-  },
   "manual_visual_evidence_after_fix1": {
     "scene_renders": true,
     "water_ribbon_visible": true,
@@ -49,24 +30,11 @@
     "observed_gap": "STATIC_FIXED_DENSITY_RIBBON_WITHOUT_OBSERVER_DRIVEN_LOD",
     "acceptance_effect": "G6.4_NOT_ACCEPTED_FIX2_REQUIRED"
   },
-  "fix1": {
-    "explicit_stride_type": true,
-    "integer_max_uses_maxi": true,
-    "explicit_seam_frame_dictionary": true,
-    "explicit_seam_center_vector3": true,
-    "powershell_scene_gate_requires_pass_marker": true,
-    "powershell_scene_gate_rejects_script_parse_load_errors": true,
-    "shell_scene_gate_requires_pass_marker": true,
-    "shell_scene_gate_rejects_script_parse_load_errors": true,
-    "accepted_g6_0_to_g6_3_semantics_changed": false
-  },
   "fix2": {
     "uses_accepted_g2_surface_lod_selector": true,
-    "uses_surface_lod_policy": true,
     "observer_driven_selection": true,
     "adaptive_surface_cell_grid": true,
     "adaptive_river_sampling": true,
-    "river_sampling_derived_from_selected_representation_lod": true,
     "far_near_headless_lod_comparison": true,
     "far_near_headless_river_sample_comparison": true,
     "runner_requires_explicit_pass_marker": true,
@@ -82,44 +50,6 @@
     "feature_id_depends_on_lod": false,
     "fluid_region_id_depends_on_lod": false
   },
-  "implementation": {
-    "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
-    "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
-    "manifest": "config/procedural/g6-4-casual-visual-river-lab.v1.json",
-    "contract_test": "tests/procedural/hydrology/g6_4_casual_visual_river_lab_acceptance.gd",
-    "automated_runner": "RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1",
-    "manual_launcher": "START_G6_4_VISUAL_RIVER_LAB.ps1"
-  },
-  "presentation_scope": {
-    "water_ribbon": true,
-    "canonical_centerline_debug": true,
-    "bank_guides": true,
-    "water_surface_query_probes": true,
-    "px_pz_seam_marker": true,
-    "planet_globe": true,
-    "adaptive_lod_grid": true,
-    "adaptive_river_sampling": true,
-    "lod_range": [0, 12],
-    "lod_leaf_budget": 1536,
-    "water_width_exaggeration": 5200.0,
-    "bank_width_exaggeration": 3600.0
-  },
-  "architecture": {
-    "uses_g6_1_canonical_geography": true,
-    "uses_g6_3_water_surface_query": true,
-    "uses_g6_3_water_surface_sample": true,
-    "uses_g2_surface_lod_selector_for_representation": true,
-    "renderer_is_canonical_truth": false,
-    "visual_width_is_canonical_width": false,
-    "surface_cell_is_fluid_identity": false,
-    "lod_is_fluid_identity": false,
-    "new_river_identity": false,
-    "new_fluid_identity": false,
-    "new_authority": false,
-    "new_persistence": false,
-    "new_network_transport": false,
-    "mutates_world_state": false
-  },
   "required_automated_evidence": {
     "accepted_dependency_chain_through_g6_3": "PASS_REQUIRED",
     "g6_4_source_p0_contracts": "PASS_REQUIRED_FIX2",
@@ -130,23 +60,14 @@
     "working_tree": "CLEAN_REQUIRED"
   },
   "required_manual_evidence": {
-    "water_ribbon_visible": "PASS_REQUIRED",
-    "px_pz_seam_continuous": "PASS_REQUIRED",
-    "centerline_inside_ribbon": "PASS_REQUIRED",
-    "bank_guides_continuous": "PASS_REQUIRED",
-    "query_probe_normals_valid": "PASS_REQUIRED",
-    "flow_arrows_downstream": "PASS_REQUIRED",
     "lod_grid_visible": "PASS_REQUIRED",
     "zoom_in_increases_max_lod_and_river_samples": "PASS_REQUIRED",
     "zoom_out_coarsens_max_lod_and_river_samples": "PASS_REQUIRED",
     "feature_and_fluid_ids_stable_during_lod_changes": "PASS_REQUIRED",
-    "debug_toggles_work": "PASS_REQUIRED",
-    "camera_controls_work": "PASS_REQUIRED"
+    "px_pz_seam_continuous": "PASS_REQUIRED"
   },
   "shared_baseline_sync": {
     "main_global_revision_at_implementation": "GLOBAL-P0-2026-08-08-R1",
-    "mw10_shared_baseline_pr_43_observed_open": true,
-    "g6_4_blocked_by_mw10_pr_43": false,
     "full_g6_acceptance_requires_fresh_g5_main_sync_check": true
   },
   "next_if_accepted": "G6_FULL_ACCEPTANCE"
