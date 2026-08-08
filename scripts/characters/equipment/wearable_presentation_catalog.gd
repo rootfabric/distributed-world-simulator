@@ -12,7 +12,8 @@ func register_scene(
 	rig_profile_id: String,
 	strategy: String,
 	scene: PackedScene,
-	hide_body_regions: Array = []
+	hide_body_regions: Array = [],
+	local_transform: Transform3D = Transform3D.IDENTITY
 ) -> Dictionary:
 	if not CharacterEquipmentDomain.is_valid_semantic_id(presentation_id):
 		return _result(false, "INVALID_PRESENTATION_ID")
@@ -37,6 +38,7 @@ func register_scene(
 		"strategy": strategy,
 		"scene": scene,
 		"hide_body_regions": regions,
+		"local_transform": local_transform,
 	}
 	return _result(true, CharacterEquipmentDomain.RESULT_OK)
 
@@ -55,6 +57,7 @@ func resolve(presentation_id: String, rig_profile_id: String) -> Dictionary:
 		"strategy": String(entry.get("strategy", "")),
 		"scene": entry.get("scene"),
 		"hide_body_regions": (entry.get("hide_body_regions", []) as Array).duplicate(),
+		"local_transform": entry.get("local_transform", Transform3D.IDENTITY),
 	})
 
 
