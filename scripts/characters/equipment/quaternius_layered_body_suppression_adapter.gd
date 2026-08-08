@@ -5,9 +5,13 @@ const RegionClipMaterial = preload("res://scripts/characters/equipment/quaterniu
 
 const REGION_TORSO_CORE := "body.region.torso.core"
 const REGION_THIGHS_CORE := "body.region.thighs.core"
+const REGION_SHINS_CORE := "body.region.shins.core"
+const REGION_FEET_CORE := "body.region.feet.core"
 const LAYERED_BODY_REGIONS := [
 	REGION_TORSO_CORE,
 	REGION_THIGHS_CORE,
+	REGION_SHINS_CORE,
+	REGION_FEET_CORE,
 ]
 
 
