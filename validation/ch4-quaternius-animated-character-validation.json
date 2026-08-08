@@ -3,7 +3,7 @@
   "branch": "feature/ch4-quaternius-animated-character",
   "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
   "delivery": "fix2",
-  "decision": "FIX2_IMPLEMENTED_CANDIDATE_PENDING_REAL_QUATERNIUS_RERUN",
+  "decision": "FIX2_WINDOWS_STRICT_EXTERNAL_PASS_PENDING_GRAPHICAL_AND_CASE_WARNING_CLEANUP",
   "scope": {
     "production_files_changed": 0,
     "integration_mode": "isolated_walkable_character_lab",
@@ -58,15 +58,33 @@
     ],
     "engine_parse_and_execution": "PASS on Godot 4.7.1 double a13da4feb"
   },
+  "windows_real_asset_validation": {
+    "platform": "Windows",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "first_fix2_run": {
+      "asset_preflight": "PASS (18 glTF, 2 files normalized, 3 URI fixes, 3 export-name recoveries)",
+      "editor_import": "PASS",
+      "avatar_presenter": "18/18 PASS",
+      "character_lab": "9/9 PASS",
+      "overall": "PASS"
+    },
+    "second_idempotence_run": {
+      "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
+      "editor_import": "PASS",
+      "avatar_presenter": "18/18 PASS",
+      "character_lab": "9/9 PASS",
+      "overall": "PASS"
+    },
+    "strict_external_path_confirmed": true,
+    "fallback_not_accepted_by_strict_gate": true,
+    "remaining_warning": "Godot still reports case-mismatch requests for lowercase textures paths versus extracted Textures directories; this is non-fatal on Windows but must be cleaned before Linux/export acceptance"
+  },
   "real_asset_acceptance_gate": {
-    "status": "PENDING_USER_RERUN_AFTER_FIX2_PULL",
-    "required": [
-      "asset_preflight PASS with the installed official Standard packages",
-      "editor_import completes despite non-fatal Godot warnings",
-      "avatar_presenter strict external PASS",
-      "character_lab strict external PASS",
+    "status": "WINDOWS_STRICT_HEADLESS_PASS_GRAPHICAL_PENDING",
+    "remaining_required": [
       "graphical HUD asset mode is QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED",
-      "Idle/Walk/Run visibly animate the real Base Character"
+      "Idle/Walk/Run visibly animate the real Base Character",
+      "case-mismatch warnings are eliminated or proven to be stale import-cache only before Linux/export acceptance"
     ]
   }
 }
