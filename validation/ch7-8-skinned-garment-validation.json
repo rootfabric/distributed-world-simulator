@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v4",
+  "schema": "planet_simulator.ch7_8_skinned_garment_validation.v5",
   "branch": "feature/ch7-8-skinned-garment",
   "base_exact_sha": "bd3830ce56bceac501a193d92b429a0ff96ff0c2",
   "base_checkpoint": "CH7 rigid equipment fix4 — ACCEPTED",
-  "decision": "CH7_8A_FIX2_STREAMING_DIAGNOSTIC_PENDING_WINDOWS_FOCUSED_RERUN",
+  "decision": "CH7_8A_FIX3_INHERITED_CONSTANT_PARSE_FIX_PENDING_WINDOWS_FOCUSED_RERUN",
   "goal": "Prove one exact-rig Quaternius skinned outfit with minimum complexity before body-region replacement and wider garment support.",
   "selected_asset": {
     "family": "Quaternius Modular Character Outfits - Fantasy",
@@ -67,7 +67,7 @@
     "ch7_8_skinned_pose_bridge": "PASS 32 assertions",
     "ch7_8_real_lab": "STALLED_OR_LONG_RUNNING_AFTER_RUNNER_STAGE_HEADER",
     "last_visible_line": "[ch7_8_quaternius_skinned_garment_lab]",
-    "important_runner_observation": "The CH7.8 runner buffered native Godot stdout until process exit, so the existing GDScript phase prints were hidden while the process was running. The last visible stage header does not localize the synchronous stall."
+    "important_runner_observation": "The CH7.8 runner buffered native Godot stdout until process exit, so the existing GDScript phase prints were hidden while the process was running."
   },
   "fix1": {
     "commit": "ea846e78f957ca45a91aa063aa65efc56a7ae5a4",
@@ -79,35 +79,25 @@
     "fine_grained_test_phase_commit": "1444896ee117ef975ea60e62822c4516cc330d32",
     "runtime_setup_phase_commit": "8f9e1e1ed721ba028128a39f8bc19f964d170d3d",
     "runner_streams_native_output_live": true,
-    "test_phases": [
-      "instantiate",
-      "add_child",
-      "after_add_child",
-      "after_process_frame",
-      "ready",
-      "enter_first_person",
-      "after_enter_first_person",
-      "equip_call",
-      "after_equip_call",
-      "after_equip_frame1",
-      "after_equip_frame2",
-      "motion",
-      "rigid_composition",
-      "unequip",
-      "after_unequip_call",
-      "finish"
+    "production_behavior_changed": false
+  },
+  "windows_fix2_focused_observation": {
+    "script": "res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
+    "result": "PARSE_ERROR",
+    "primary_errors": [
+      "The member EquipmentDomain already exists in parent class QuaterniusEquipmentLab.",
+      "The member WearableCatalog already exists in parent class QuaterniusEquipmentLab."
     ],
-    "runtime_setup_phases": [
-      "super_ready_begin",
-      "super_ready_end",
-      "outfit_setup_begin",
-      "resource_exists_check",
-      "resource_load_begin",
-      "resource_load_end",
-      "outfit_setup_end",
-      "ready_end"
-    ],
-    "production_behavior_changed": false,
+    "secondary_error": "Invalid access to property or key player on a base object of type Node3D.",
+    "classification": "CHILD_CLASS_REDECLARED_INHERITED_CONSTANTS",
+    "interpretation": "The scene script failed to load, so the instantiated root became a plain Node3D. The missing player property is a cascade, not a separate runtime failure.",
+    "real_garment_runtime_reached": false
+  },
+  "fix3": {
+    "commit": "d796797cad50661004918494453211855011c497",
+    "change": "Remove EquipmentDomain and WearableCatalog redeclarations from QuaterniusSkinnedGarmentLab and use the already inherited parent-class constants.",
+    "parent_contract_confirmed": "QuaterniusEquipmentLab already declares both constants.",
+    "production_movement_changed": false,
     "network_changed": false,
     "collision_changed": false,
     "equipment_domain_changed": false,
@@ -131,6 +121,13 @@
   },
   "next_gate": {
     "focused_command": "godot --headless --path . --script res://tests/characters/test_ch7_8_quaternius_skinned_garment_lab.gd",
-    "purpose": "Use live phase output to localize the real-asset stall before changing functional code."
+    "expected_first_runtime_phases": [
+      "instantiate",
+      "add_child",
+      "super_ready_begin",
+      "super_ready_end",
+      "outfit_setup_begin"
+    ],
+    "purpose": "Confirm parser recovery and continue live localization into the real Male_Peasant runtime path."
   }
 }
