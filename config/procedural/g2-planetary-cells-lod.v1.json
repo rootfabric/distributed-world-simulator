@@ -1,0 +1,22 @@
+{
+  "schema": "planet_simulator.g2_planetary_cells_lod_manifest.v1",
+  "checkpoint": "g2-planetary-cells-lod-v0",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "program_branch": "feature/g0-procedural-planetary-generation-lab",
+  "base_branch": "feature/g1-geodesy-body-shape",
+  "base_commit": "b30b1cad64a7176f2e3155fbe5cea2ec811c2e7a",
+  "implementation_branch": "feature/g2-planetary-cells-lod",
+  "runtime_worlds_changed": false,
+  "production_terrain_changed": false,
+  "canonical_world_semantics_changed_by_lod": false,
+  "surface_cell_schema": "planet_simulator.surface_cell_key.v1",
+  "lod_policy_schema": "planet_simulator.surface_lod_policy.v1",
+  "cube_faces": ["PX", "NX", "PY", "NY", "PZ", "NZ"],
+  "max_address_lod": 30,
+  "lifecycle": ["REQUESTED", "BUILDING", "ACTIVE", "RETIRING"],
+  "debug_lab_scene": "res://scenes/labs/procedural/g2_planetary_cells_lab.tscn",
+  "focused_runner_windows": "RUN_G2_PLANETARY_CELLS_TESTS.ps1",
+  "focused_runner_linux": "RUN_G2_PLANETARY_CELLS_TESTS.sh",
+  "full_runner_windows": "RUN_G2_FULL_ACCEPTANCE.ps1",
+  "next_stage": "G3 Mega Casual Surface"
+}

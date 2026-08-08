@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/procedural/g2_planetary_cells_lab.gd" id="1_g2lab"]
+
+[node name="G2PlanetaryCellsLab" type="Node3D"]
+script = ExtResource("1_g2lab")
+
+[node name="Grid" type="MeshInstance3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 360.0
+offset_bottom = 178.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Panel/Margin"]
+
+[node name="Title" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "G2 Planetary Cells + LOD"
+
+[node name="Controls" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "W/S: altitude   A/D: longitude   Q/E: latitude"
+
+[node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
+text = "initializing..."
