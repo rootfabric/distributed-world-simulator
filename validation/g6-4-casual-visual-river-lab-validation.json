@@ -3,6 +3,7 @@
   "checkpoint": "G6.4_CASUAL_VISUAL_RIVER_LAB",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "implementation_candidate_head": "6fa824e3deea396fbfd20e3609b8003af67e09ef",
   "decision": "IMPLEMENTED_CANDIDATE",
   "runtime_validation": "PENDING_WINDOWS_AUTOMATED_AND_GRAPHICAL",
   "dependencies": {
