@@ -1,18 +1,26 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v3",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v4",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_SELECTIVE_REAL_PARTS_IMPLEMENTED_PENDING_WINDOWS_RERUN",
-  "goal": "Add presentation-neutral layered equipment coexistence and prove real Quaternius modular garment parts as independent skinned equipment items before partial base-body suppression.",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_PARTIAL_BASE_BODY_SUPPRESSION_IN_PROGRESS",
+  "goal": "Keep canonical layered equipment stable, accept real Quaternius selective skinned parts, then add presentation-only aggregate partial suppression for the fused base body.",
   "windows_ch8a_acceptance": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
     "focused_layer_contract": "PASS 57 assertions",
     "focused_presentation_diff": "PASS 51 assertions",
     "accepted_ch7_8_regression": "PASS",
     "combined_runner": "PASS",
-    "combined_runner_marker": "CH8 Layered Equipment contract + atomic replacement candidate runner: PASS",
     "real_part_probe": "PASS 4 scenes / 26 meshes",
+    "decision": "ACCEPTED"
+  },
+  "windows_ch8b_acceptance": {
+    "focused_factory_pose": "PASS 39 assertions",
+    "focused_real_presenter": "PASS 46 assertions",
+    "accepted_ch7_8_regression": "PASS",
+    "accepted_ch8a_regression": "PASS",
+    "combined_runner": "PASS",
+    "combined_runner_marker": "CH8 Layered Equipment + selective real skinned parts candidate runner: PASS",
     "decision": "ACCEPTED"
   },
   "canonical_contract": {
@@ -26,84 +34,46 @@
     "network_changes": false,
     "gameplay_body_changes": false
   },
-  "real_quaternius_part_probe": {
-    "decision": "PASS",
-    "scene_files": 4,
-    "inspected_meshes": 26,
-    "male_peasant": {
-      "skeletons": 1,
-      "bones": 65,
-      "mesh_count": 4,
-      "parts": {
-        "upper": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-        "lower": ["Male_Peasant_Legs"],
-        "feet": ["Male_Peasant_Feet"]
-      }
-    },
-    "male_ranger": {
-      "skeletons": 1,
-      "bones": 65,
-      "mesh_count": 9,
-      "notable_parts": ["Male_Ranger_Body", "Male_Ranger_Arms", "Male_Ranger_Arms_Bracer", "Male_Ranger_Legs", "Male_Ranger_Feet_Boots", "Male_Ranger_Acc_Pauldron", "Male_Ranger_Head_Hood", "Male_Ranger_Body_Belt_1", "Male_Ranger_Body_Belt_2"]
-    }
-  },
-  "ch8b_candidate": {
-    "stage": "SELECTIVE_REAL_SKINNED_PARTS",
+  "real_quaternius_parts": {
     "source_scene": "Male_Peasant.gltf",
-    "scene_selection_strategy": "SelectiveGarmentSceneFactory instantiates the source PackedScene, removes unselected MeshInstance3D nodes, then packs a temporary presentation-only PackedScene. Accepted CharacterEquipmentPresenter, WearablePresentationCatalog and SkinnedGarmentPoseBridge contracts remain unchanged.",
+    "bones": 65,
     "items": {
-      "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"], "expected_skinned_meshes": 2},
-      "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"], "expected_skinned_meshes": 1},
-      "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"], "expected_skinned_meshes": 1}
+      "upper": {"channels": ["body.torso.outer", "body.arms.outer"], "mesh_names": ["Male_Peasant_Body", "Male_Peasant_Arms"], "skinned_meshes": 2},
+      "lower": {"channels": ["body.legs.outer"], "mesh_names": ["Male_Peasant_Legs"], "skinned_meshes": 1},
+      "feet": {"channels": ["body.feet"], "mesh_names": ["Male_Peasant_Feet"], "skinned_meshes": 1}
     },
-    "simultaneous_pose_bridges": 3,
-    "expected_bone_match_per_item": "65/65",
-    "real_presenter_items": 3,
-    "ch6_world_shadow_recapture_required": true,
-    "base_body_partial_suppression": "DEFER_TO_CH8C",
-    "item_graph_changes": false,
-    "network_changes": false,
-    "gameplay_body_changes": false
+    "selection_strategy": "SelectiveGarmentSceneFactory creates temporary presentation-only PackedScenes while accepted presenter/catalog/pose-bridge contracts remain unchanged."
   },
-  "ch8b_implementation_commits": {
-    "ch8a_acceptance_and_probe_record": "bbf88e59217600f141a3e542717505bc5ce3d09b",
-    "selective_scene_factory": "1c48d1483fc1afddf1cf4a8c3845294210f67fc7",
-    "selective_pose_test": "93f852971615b31f9af362a9c9f98576ca42d7f8",
-    "real_presenter_test": "3e148d2c739b42de64eb853b763c632b66d5dc5e",
-    "runner": "e2d90e76b22ed1951ab2b3b12bf418fc1ff34aec",
-    "accepted_bridge_restored": "b93055e20441067d488ce494c264e81e9bfe3b1b",
-    "accepted_catalog_restored": "53019fc71b3b6d7876b2fc3d6d9e7134ea97dcaf"
-  },
-  "pending_windows_gates": {
-    "focused_factory_pose": "res://tests/characters/test_ch8b_quaternius_selective_skinned_parts.gd",
-    "focused_real_presenter": "res://tests/characters/test_ch8b_real_layered_equipment_presentation.gd",
-    "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
-    "required": [
-      "upper selected scene contains exactly Body + Arms and one 65-bone skeleton",
-      "lower selected scene contains exactly Legs and one 65-bone skeleton",
-      "feet selected scene contains exactly Feet and one 65-bone skeleton",
-      "all three selective bridges coexist and each matches 65/65 bones",
-      "three canonical real layered items coexist through CharacterEquipmentPresenter",
-      "presenter reports three SKINNED_GARMENT visuals",
-      "CH6 first-person world/shadow recaptures the four selected garment meshes",
-      "unequip clears canonical and presentation state",
-      "CharacterBody3D and gameplay capsule remain unchanged",
-      "accepted CH7.8 and CH8A regression remains PASS"
-    ]
-  },
-  "next_after_ch8b": {
-    "stage": "CH8C_PARTIAL_BASE_BODY_SUPPRESSION",
-    "reason": "The base SuperHero_Male body/head is one fused surface. Whole-body head clip is correct for a full outfit but cannot be reused for independent upper/lower/feet items. CH8C must add region-aware presentation suppression without changing canonical equipment semantics."
+  "ch8c_plan": {
+    "stage": "PARTIAL_BASE_BODY_SUPPRESSION",
+    "problem": "SuperHero_Male head/torso/arms/legs/feet are fused into one skinned mesh and one material surface, so CH7.8 whole-body head clip cannot represent independent upper/lower/feet coverage.",
+    "architecture": "A separate aggregate body-coverage coordinator consumes the complete canonical equipment snapshot, unions semantic presentation coverage regions, and asks the concrete rig for one composite material. This avoids per-item material conflicts and preserves the accepted CH7.8 MATERIAL_OVERRIDE path.",
+    "coverage_regions": {
+      "upper": ["body.region.torso", "body.region.arms"],
+      "lower": ["body.region.legs"],
+      "feet": ["body.region.feet"]
+    },
+    "required_composition": [
+      "upper alone suppresses torso/arms but not legs/feet/head",
+      "lower can be added or removed without recreating canonical items",
+      "feet can be added or removed independently",
+      "upper+lower+feet produces one aggregate material on the fused base mesh",
+      "eyes and eyebrows remain visible",
+      "removing the last covered item restores the exact original material_override",
+      "CH6 shadow proxy continues to synchronize source material_override",
+      "CharacterBody3D, capsule, Item Graph and network state remain unchanged"
+    ],
+    "status": "IMPLEMENTATION_IN_PROGRESS"
   },
   "deferred": [
     "production ItemGraphEquipmentSource transaction/ledger integration",
     "network replication",
     "persistence",
     "wardrobe UI",
-    "real partial-body suppression until CH8C",
     "cloth physics",
     "arbitrary unrelated-rig retargeting",
     "body morph fitting",
-    "equipment gameplay stats"
+    "equipment gameplay stats",
+    "high-volume optimization for many material-clipped characters"
   ]
 }
