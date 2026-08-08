@@ -4,11 +4,12 @@
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "decision": "BLOCKED_BY_SHARED_MW10_BASELINE_EXPECTED",
+  "g6_4_status": "ACCEPTED",
   "implementation": {
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "shell_runner": "RUN_G6_FULL_ACCEPTANCE.sh",
     "manifest": "config/procedural/g6-full-acceptance.v1.json",
-    "g6_4_manual_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md",
+    "g6_4_acceptance_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_ACCEPTED_RU.md",
     "nested_powershell_runners_are_isolated_processes": true
   },
   "windows_attempt": {
@@ -35,20 +36,15 @@
     "macro_octaves": 8,
     "minimum_signal_km": 4.688,
     "visual_lab_runtime_marker": "PASS",
-    "manual_graphical_observation": "PASS_BY_USER_OBSERVATION"
-  },
-  "repo_hygiene": {
-    "git_diff_check_on_tested_head": "FAIL_OLD_MARKDOWN_TRAILING_WHITESPACE",
-    "cleanup_applied_after_test": true,
-    "runtime_code_changed_by_cleanup": false,
-    "post_cleanup_rerun_required": "GIT_DIFF_CHECK_ONLY"
+    "manual_graphical_observation": "PASS_BY_USER_OBSERVATION",
+    "post_cleanup_git_diff_check": "PASS",
+    "working_tree": "CLEAN"
   },
   "preflight_evidence": {
     "main_global_revision": "GLOBAL-P0-2026-08-08-R1",
     "main_global_config_blob": "56aa7b14ccdb96e43375011a67b4829f936cf6f1",
     "g5_global_revision": "GLOBAL-P0-2026-08-08-R1",
     "g5_global_config_blob": "56aa7b14ccdb96e43375011a67b4829f936cf6f1",
-    "g6_was_not_behind_g5_before_full_gate_implementation": true,
     "mw10_shared_baseline_pr": 43,
     "mw10_shared_baseline_pr_state": "OPEN",
     "mw10_shared_baseline_pr_merged": false,
@@ -57,32 +53,19 @@
     "mw10_required_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5",
     "mw10_retry_test_present_in_g5": false
   },
-  "static_gate_result": {
-    "global_config_match": "PASS",
-    "shared_mw10_repository_blob": "BLOCKED_EXPECTED",
-    "shared_mw10_retry_test": "BLOCKED_EXPECTED",
-    "result": "BLOCKED_BEFORE_GODOT_BY_DESIGN",
-    "reason": "PR #43 has not yet been merged into feature/g5-world-feature-graph"
-  },
   "runtime_validation": {
     "assistant_environment_godot_available": true,
-    "assistant_godot_archive_source": "project upload /mnt/data/godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
-    "assistant_godot_archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
-    "assistant_godot_binary": "tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
-    "assistant_godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "assistant_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "assistant_godot_platform": "linuxbsd-x86_64-double",
+    "assistant_godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "assistant_headless_gdscript_smoke": "PASS",
     "assistant_environment_repository_checkout_available": false,
-    "assistant_environment_network_clone_available": false,
     "assistant_runtime_result": "ENGINE_VERIFIED_BUT_PROJECT_GATE_NOT_RUN_NO_CHECKOUT"
   },
   "next_actions": [
-    "Rerun git diff --check after markdown whitespace cleanup",
     "Integrate accepted PR #43 into feature/g5-world-feature-graph",
     "Resynchronize feature/g6-hydrology-fluid-surface-v0 on top of updated G5",
     "Run RUN_G6_FULL_ACCEPTANCE.ps1",
-    "If PASS, record G6.4 ACCEPTED and G6 SOURCE_ACCEPTED",
+    "If PASS, record G6 SOURCE_ACCEPTED",
     "Then start G7 Semantic Field Fabric"
   ]
 }
