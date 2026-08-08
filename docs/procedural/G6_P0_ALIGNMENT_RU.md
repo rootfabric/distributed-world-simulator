@@ -3,8 +3,8 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`  
 **Local role:** hydrology/fluid semantic layer above G5 World Feature Graph  
-**Current stage:** `G6.0 Fluid Contracts — ACCEPTED`  
-**Next stage:** `G6.1 CasualRiverProviderV1`
+**Current stage:** `G6.1 CasualRiverProviderV1 — IMPLEMENTED CANDIDATE`  
+**Next stage after acceptance:** `G6.2 cross-cell / cross-LOD continuity`
 
 ## Назначение
 
@@ -81,16 +81,28 @@ NX9 может менять I/O scheduling/cache path, но не canonical fluid
 
 ## G6.1 boundary
 
-`CasualRiverProviderV1` разрешено реализовывать до P0 Spatial Domain Fabric при следующих условиях:
+`CasualRiverProviderV1` реализован как deterministic compiler из stable G5 river/valley semantics в принятые G6.0 data contracts.
+
+Зафиксировано:
 
 - вход строится из stable G5 river/valley semantics;
+- существующий G5 `River FeatureId` остаётся semantic owner и provider не создаёт второй `WorldFeature`;
 - `FluidRegionId` не зависит от representation cell;
 - `RiverSpline.spline_id` не зависит от текущего LOD или camera;
 - channel profile deterministic и versioned;
 - один source feature даёт одну semantic river identity независимо от query order;
+- geometry revision может менять checksums без reroll canonical identities;
 - provider не пишет canonical world state;
 - provider не владеет persistence/authority/network transport;
 - renderer/SceneTree не требуется для deterministic generation.
+
+До Windows focused acceptance G6.1 остаётся `IMPLEMENTED CANDIDATE`, а не `ACCEPTED`.
+
+## G6.2 boundary
+
+Следующий checkpoint после G6.1 acceptance должен доказать, что одна canonical river geography адресуется через меняющиеся G2 representation cells/LOD без изменения `FeatureId`, `FluidRegionId`, `spline_id` и canonical provider result.
+
+G6.2 может использовать `SurfaceCellKey` только как representation addressing для доказательства continuity. Cell не становится входом G6.1 provider identity.
 
 ## Stop conditions
 
@@ -115,7 +127,8 @@ G6 должен остановиться и потребовать global archit
 [PASS] Feature != SurfaceCell
 [PASS] FluidRegion != SurfaceCell / AuthorityRegion / InterestRegion
 [PASS] renderer is derived presentation
-[PASS] G6 relevant focused regressions
+[PENDING] G6.1 Windows focused acceptance
+[PASS] G6.0 post-P0 focused regression remains in G6.1 runner
 ```
 
 Канонический общий план: `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
