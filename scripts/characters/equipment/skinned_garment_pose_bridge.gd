@@ -97,7 +97,7 @@ func sync_pose_now() -> Dictionary:
 			continue
 		var target_skeleton := target as Skeleton3D
 		for raw_pair in map_entry.get("pairs", []):
-			var pair := raw_pair as Vector2i
+			var pair: Vector2i = raw_pair
 			if pair.x < 0 or pair.y < 0:
 				continue
 			target_skeleton.set_bone_pose_position(pair.y, source_skeleton.get_bone_pose_position(pair.x))
