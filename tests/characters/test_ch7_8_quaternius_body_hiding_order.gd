@@ -42,10 +42,14 @@ func _run() -> void:
 	for rigid_visual in rigid_visuals:
 		_assert(rigid_visual.visible, "Rigid equipment was unexpectedly hidden before outfit")
 
-	var base_visuals: Array[GeometryInstance3D] = lab.equipment_rig_adapter.resolve_body_region_visuals(
+	var base_visuals: Array[GeometryInstance3D] = []
+	var resolved_body_visuals: Array = lab.equipment_rig_adapter.resolve_body_region_visuals(
 		lab.avatar,
 		"body.region.torso"
 	)
+	for raw_visual in resolved_body_visuals:
+		if raw_visual is GeometryInstance3D:
+			base_visuals.append(raw_visual as GeometryInstance3D)
 	_assert(not base_visuals.is_empty(), "Order test resolved no base-body geometry")
 	for base_visual in base_visuals:
 		_assert(base_visual not in rigid_visuals, "Body-region resolver incorrectly included rigid equipment geometry")
