@@ -121,13 +121,13 @@ $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.
 .\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
 ```
 
+Fix2 is not accepted yet. Automated proof must show far/near LOD refinement and adaptive river sample-count growth, then the graphical lab must visibly refine/coarsen with `W/S` while FeatureId and FluidRegionId stay fixed.
+
 After automated PASS:
 
 ```powershell
 .\START_G6_4_VISUAL_RIVER_LAB.ps1
 ```
-
-Acceptance requires visible refine/coarsen: near observer must produce higher `Max LOD` and more river samples than far observer while FeatureId and FluidRegionId stay stable.
 
 After G6.4:
 
