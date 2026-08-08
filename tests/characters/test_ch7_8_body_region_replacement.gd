@@ -143,12 +143,15 @@ func _packed_skinned_scene(scene_name: String, mesh_count: int) -> PackedScene:
 	var skeleton := Skeleton3D.new()
 	skeleton.name = "Skeleton3D"
 	scene_root.add_child(skeleton)
+	skeleton.owner = scene_root
 	_add_test_bones(skeleton)
 	for index in range(mesh_count):
 		var mesh := MeshInstance3D.new()
 		mesh.name = "Mesh%d" % index
 		mesh.mesh = BoxMesh.new()
-		scene_root.add_child(mesh)
+		skeleton.add_child(mesh)
+		mesh.owner = scene_root
+		mesh.skin = Skin.new()
 		mesh.skeleton = mesh.get_path_to(skeleton)
 	var packed := PackedScene.new()
 	var error := packed.pack(scene_root)
