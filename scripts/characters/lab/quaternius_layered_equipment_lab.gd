@@ -18,6 +18,8 @@ const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
 
 const REGION_TORSO_CORE := "body.region.torso.core"
 const REGION_THIGHS_CORE := "body.region.thighs.core"
+const REGION_SHINS_CORE := "body.region.shins.core"
+const REGION_FEET_CORE := "body.region.feet.core"
 
 var layered_rig_adapter
 var body_coverage_catalog
@@ -68,8 +70,8 @@ func _setup_layered_equipment() -> void:
 			"presentation": "wearable.layer.upper.peasant",
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-			# Preserve underwear/pelvis and the complete base arms. Only the
-			# central torso volume under the shirt is clipped.
+			# Preserve underwear/pelvis and complete base arms. Only the central
+			# torso volume safely enclosed by the shirt is clipped.
 			"regions": [REGION_TORSO_CORE]
 		},
 		{
@@ -77,17 +79,19 @@ func _setup_layered_equipment() -> void:
 			"presentation": "wearable.layer.lower.peasant",
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
-			# Preserve the knee/lower-leg band and the pelvis/underwear edge.
-			"regions": [REGION_THIGHS_CORE]
+			# Suppress the enclosed thigh and shin volumes, but deliberately leave
+			# a knee band between them for the open/torn knee presentation.
+			"regions": [REGION_THIGHS_CORE, REGION_SHINS_CORE]
 		},
 		{
 			"profile": FEET_PROFILE_ID,
 			"presentation": "wearable.layer.feet.peasant",
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
-			# Current Peasant feet are safe as an overlay; do not remove the base
-			# extremity. A closed boot can opt into coarse feet coverage later.
-			"regions": []
+			# The real Peasant foot mesh encloses the ankle/foot volume up to about
+			# 0.45 m, so suppress only that fine core rather than the coarse feet
+			# region used by closed/full-body presentations.
+			"regions": [REGION_FEET_CORE]
 		}
 	]
 
