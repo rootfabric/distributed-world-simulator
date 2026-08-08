@@ -100,12 +100,21 @@ G5 full acceptance gate            PASS
 
 The regression tail also confirms representative compatibility suites including inventory, unified runtime, NX2/NX5/NX6, MW0–MW10 and RL0–RL3.
 
-Intentional/known negative-path output observed during the green regression is not a G5 blocker:
+Non-blocking log output observed during the green regression is classified precisely:
 
 ```text
-World manifest identity mismatch   expected validation path; suites PASS
-NX5 conflicting/stale snapshot     expected rejection warnings; suite PASS
-MW7 ObjectDB/ResourceCache exit    existing leak warning debt; suite PASS
+persistence_roundtrip manifest mismatch
+    intentional identity-rejection negative path; suite PASS
+
+world_switch / world_boot_matrix manifest mismatch
+    stale/incompatible user://worlds/moon-experiment-001 test-profile manifest;
+    suites PASS and G5 does not modify persistence; cleanup/debt, not G5 blocker
+
+NX5 conflicting/stale snapshot
+    expected rejection warnings; suite PASS
+
+MW7 ObjectDB/ResourceCache exit
+    existing leak warning debt; suite PASS
 ```
 
 No Breakpoint runtime `:9081` collision noise was observed.
@@ -115,6 +124,10 @@ No Breakpoint runtime `:9081` collision noise was observed.
 G5 is accepted as the canonical feature identity foundation for subsequent geography stages.
 
 Spatial query v0 intentionally remains correctness-first O(N) over `SPHERE` / `AABB` bounds. Future BVH/octree/spatial-hash indexes may optimize lookup without changing canonical identity, graph manifest semantics or query semantics.
+
+## Base-branch note
+
+After the accepted G5 code candidate was validated, `feature/g4-provider-composition-replacement` advanced by three documentation-only commits containing procedural asset research and the post-baseline detail plan. Those documents were carried forward into G5. They do not change G4/G5 runtime contracts or invalidate the exact accepted code candidate.
 
 ## Next
 
