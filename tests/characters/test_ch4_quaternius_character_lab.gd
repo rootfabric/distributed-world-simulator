@@ -23,6 +23,16 @@ func _run() -> void:
 	var report: Dictionary = lab.avatar.create_report()
 	_assert(String(report.get("schema", "")) == "planet_simulator.quaternius_avatar_presenter.v1", "Unexpected avatar report schema")
 	_assert(not bool(report.get("root_motion_applied", true)), "Lab avatar enables root motion")
+	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
+	if require_external:
+		_assert(
+			String(report.get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"],
+			"Walkable lab fell back instead of using Quaternius: %s" % JSON.stringify(report)
+		)
+		_assert(
+			bool(report.get("animation_ready", false)),
+			"Walkable lab has no Idle/Walk/Run animation set: %s" % JSON.stringify(report)
+		)
 	lab.queue_free()
 	_finish()
 
