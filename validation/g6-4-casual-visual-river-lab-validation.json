@@ -7,18 +7,9 @@
   "post_fix2_docs_tail": true,
   "decision": "FIX2_IMPLEMENTED_CANDIDATE",
   "runtime_validation": "WINDOWS_AUTOMATED_AND_ADAPTIVE_LOD_GRAPHICAL_RERUN_REQUIRED",
-  "dependencies": {
-    "g2_surface_lod_selector": "ACCEPTED",
-    "g6_1_casual_river_provider": "ACCEPTED",
-    "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
-    "g6_3_runtime_water_surface_query": "ACCEPTED",
-    "g6_3_tested_head": "974fc6682abac058ea158cf11efbf44501805817"
-  },
   "previous_manual_observation": {
     "scene_renders": true,
     "observed_samples": 97,
-    "observed_query_probes": 7,
-    "observed_seam_transitions": 1,
     "observed_gap": "STATIC_FIXED_DENSITY_RIBBON_WITHOUT_OBSERVER_DRIVEN_LOD",
     "acceptance_effect": "G6.4_NOT_ACCEPTED_FIX2_REQUIRED"
   },
@@ -29,21 +20,12 @@
     "adaptive_river_sampling": true,
     "far_near_headless_lod_comparison": true,
     "far_near_headless_river_sample_comparison": true,
-    "runner_requires_explicit_pass_marker": true,
-    "runner_requires_max_lod_marker": true,
-    "runner_requires_river_lod_range_marker": true,
-    "hud_exposes_virtual_altitude": true,
-    "hud_exposes_leaf_count": true,
-    "hud_exposes_max_lod": true,
-    "hud_exposes_river_sample_count": true,
-    "hud_exposes_river_lod_range": true,
     "manual_lod_grid_toggle": "KEY_6",
     "accepted_g6_0_to_g6_3_semantics_changed": false,
     "feature_id_depends_on_lod": false,
     "fluid_region_id_depends_on_lod": false
   },
   "required_automated_evidence": {
-    "accepted_dependency_chain_through_g6_3": "PASS_REQUIRED",
     "g6_4_source_p0_contracts": "PASS_REQUIRED_FIX2",
     "g6_4_headless_scene_smoke": "PASS_REQUIRED_WITH_EXPLICIT_MARKER",
     "far_near_max_lod_changes": "PASS_REQUIRED",
