@@ -7,6 +7,7 @@ const FEET_ITEM_ID := "lab.item.layer.feet.001"
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOWER_PROFILE_ID := "equipment.layer.lower.peasant"
 const FEET_PROFILE_ID := "equipment.layer.feet.peasant"
+const LOWER_PRESENTATION_ID := "wearable.layer.lower.peasant"
 const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 const REGION_TORSO_CORE := "body.region.torso.core"
 
@@ -32,6 +33,13 @@ func _run() -> void:
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("CH8C — Layered Garments"), "CH8C graphical lab status extension failed")
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("topology:"), "CH8C graphical lab topology status missing")
 	_assert(lab.status_label != null and String(lab.status_label.text).contains("feet topology: HIGH_BOOT"), "CH8C graphical lab high-boot status missing")
+	_assert(lab.status_label != null and String(lab.status_label.text).contains("vertex inflation:"), "CH8C graphical lab vertex inflation status missing")
+	_assert(lab.inflation_reports.has(LOWER_PRESENTATION_ID), "CH8C graphical lab lower inflation report missing")
+	_assert(lab.inflation_reports.has(FEET_PRESENTATION_ID), "CH8C graphical lab feet inflation report missing")
+	if lab.inflation_reports.has(LOWER_PRESENTATION_ID):
+		_assert(is_equal_approx(float((lab.inflation_reports[LOWER_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0)), 0.006), "CH8C graphical lab lower inflation max mismatch")
+	if lab.inflation_reports.has(FEET_PRESENTATION_ID):
+		_assert(is_equal_approx(float((lab.inflation_reports[FEET_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0)), 0.007), "CH8C graphical lab feet inflation max mismatch")
 	if not bool(lab.layered_setup_result.get("success", false)):
 		lab.queue_free()
 		_finish()
@@ -69,8 +77,6 @@ func _run() -> void:
 	_assert(is_equal_approx(float(feet_descriptor.get("threshold_m", 0.0)), 0.045), "CH8C graphical lab high-boot threshold mismatch")
 	_assert(is_equal_approx(float(feet_descriptor.get("upper_y_pad_m", 0.0)), 0.012), "CH8C graphical lab high-boot upper pad mismatch")
 
-	# Removing lower must keep the feet topology mask while leaving upper material
-	# suppression unchanged.
 	var lower_off: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
 	_assert(bool(lower_off.get("success", false)), "CH8C graphical lab lower toggle-off failed")
 	await process_frame
@@ -81,7 +87,6 @@ func _run() -> void:
 	_assert(int(after_lower_topology.get("removed_triangles", 0)) > 0, "CH8C feet topology removed no body triangles")
 	_assert(String(_find_descriptor(after_lower_topology, FEET_PRESENTATION_ID).get("coverage_mode", "")) == "HIGH_BOOT", "CH8C feet-only topology lost HIGH_BOOT mode")
 
-	# Removing feet must restore the exact unmasked base mesh while upper remains.
 	var feet_off: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
 	_assert(bool(feet_off.get("success", false)), "CH8C graphical lab feet toggle-off failed")
 	await process_frame
@@ -129,10 +134,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius topology-aware layered equipment lab: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius topology + vertex-inflation layered equipment lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius topology-aware layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius topology + vertex-inflation layered equipment lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
