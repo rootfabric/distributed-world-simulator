@@ -77,14 +77,15 @@ func _test_pressure_compaction_keeps_latest_state_and_jump_edges() -> void:
 	_assert(int(report.get("queue_full_rejected", -1)) == 0, "continuous pressure still reached hard INPUT_QUEUE_FULL")
 	_assert(int(report.get("peak_pending", 0)) <= InputBuffer.PRESSURE_COMPACTION_THRESHOLD + 1, "pressure recovery allowed a large pending spike: %s" % report)
 
-	# NX2 batches retransmit recent input history. Sequence 39 was deliberately
-	# compacted in favour of sequence 40 and must not be resurrected when resent.
+	# NX2 batches retransmit recent input history. Sequence 34 is deliberately
+	# compacted when sequence 35 pushes the pressure backlog above the threshold.
+	# It must not be resurrected when resent.
 	var pending_before_retransmit: int = buffer.get_pending_count()
-	var retransmit_intent := _intent(1.0, 1.0, false, false)
-	retransmit_intent["look_yaw"] = 39.0 * 0.02
-	var retransmit: Dictionary = buffer.enqueue(_entry(39, retransmit_intent), 11)
+	var retransmit_intent := _intent(0.0, -1.0, false, false)
+	retransmit_intent["look_yaw"] = 34.0 * 0.02
+	var retransmit: Dictionary = buffer.enqueue(_entry(34, retransmit_intent), 11)
 	_assert(_ok(retransmit), "compacted input retransmit returned transport failure")
-	_assert(not bool(retransmit.get("details", {}).get("accepted", true)), "compacted sequence 39 was resurrected")
+	_assert(not bool(retransmit.get("details", {}).get("accepted", true)), "compacted sequence 34 was resurrected")
 	_assert(bool(retransmit.get("details", {}).get("pressure_discarded", false)), "compacted retransmit was not identified")
 	_assert(buffer.get_pending_count() == pending_before_retransmit, "compacted retransmit changed pending depth")
 	report = buffer.get_report(11)
