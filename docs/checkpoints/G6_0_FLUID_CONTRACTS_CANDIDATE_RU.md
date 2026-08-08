@@ -1,11 +1,12 @@
-# G6.0 — Fluid Contracts — IMPLEMENTED CANDIDATE
+# G6.0 — Fluid Contracts — ACCEPTED
 
 **Дата:** 2026-08-08  
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
 **Base:** `feature/g5-world-feature-graph @ e7b10c09a6be879b25cd5c7ec8407832fd758ac2`  
 **G5 accepted candidate:** `34be9d35e7f0a0e6c7a7c7c8bdd58b70c95413b4`  
-**Candidate head:** `dcab2405051c537e170548fb399b98c4913b0a0f`  
-**Решение:** `IMPLEMENTED_CANDIDATE`
+**Accepted candidate head:** `5deb455113a62a201b2c5441509917fd9ac6ca9e`  
+**Acceptance validation commit:** `b0dce09d4d0324c6b28bbcfef2a24cd38e940af1`  
+**Решение:** `ACCEPTED`
 
 ## Цель
 
@@ -129,7 +130,7 @@ CFD / Navier-Stokes            -> post-baseline research
 
 ## Static scope check
 
-Candidate compare against exact G5 base:
+Accepted candidate compare against exact G5 base:
 
 ```text
 status        ahead
@@ -141,27 +142,40 @@ renderer deps none
 network deps  none
 ```
 
-## Focused gate
+Два commits после первоначального implementation candidate `dcab2405051c537e170548fb399b98c4913b0a0f` до `5deb455113a62a201b2c5441509917fd9ac6ca9e` меняли только checkpoint/validation metadata; production contracts не изменялись.
+
+## Focused acceptance evidence
+
+Независимый Windows-прогон выполнен пользователем **дважды** на:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+Windows
+2026-08-08
+```
+
+Команда:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G6_FLUID_CONTRACT_TESTS.ps1
 ```
 
-Runner выполняет:
+Оба запуска дали одинаковый результат:
 
 ```text
-cold editor import
-G5 World Feature Graph acceptance
-G5 feature/cell identity acceptance
-G6.0 fluid contracts acceptance
+cold editor import             PASS
+G5 World Feature Graph         PASS (249 assertions)
+G5 feature/cell identity       PASS (94 assertions)
+G6.0 fluid contracts           PASS (169 assertions)
+focused gate                   PASS
 ```
 
-В connector environment Godot binary недоступен, поэтому runtime acceptance должен быть подтверждён независимым Windows-прогоном на Godot 4.7.1 double.
+Ошибок G6.0 не зафиксировано. Повторяемость focused gate подтверждена одинаковыми assertion counts в обоих прогонах.
 
-## Acceptance gate
+## Acceptance decision
 
-G6.0 можно перевести в `ACCEPTED`, когда подтверждены:
+Все обязательные условия checkpoint выполнены:
 
 ```text
 editor import                PASS
@@ -170,14 +184,26 @@ G5 feature/cell identity     PASS
 G6.0 fluid contracts         PASS
 ```
 
-Полный world regression для каждого внутреннего подпункта G6 не обязателен; он потребуется перед финальным `G6 ACCEPTED` после composition G6.1–G6.4.
+Полный world regression для внутреннего подпункта G6.0 не требуется по принятому gate; он остаётся обязательным перед финальным `G6 ACCEPTED` после composition G6.1–G6.4.
+
+Итог:
+
+```text
+G6.0 — Fluid Contracts
+ACCEPTED
+```
 
 ## Следующий шаг
-
-После focused acceptance G6.0:
 
 ```text
 G6.1 — CasualRiverProviderV1
 ```
 
 Он должен производить `FluidRegionId + FluidSurfaceDescriptor + RiverSpline + RiverChannelProfile` из stable G5 river/valley semantics, не из chunk-local state.
+
+G6.1 обязан сохранить принципы G6.0:
+
+- canonical river/fluid identity не зависит от representation cell, LOD, observer или renderer;
+- один и тот же semantic river должен быть выводим одинаково из соседних cells;
+- provider остаётся data/domain layer и не получает зависимости на SceneTree, renderer, network transport или GeoKernel mutation;
+- геометрия может уточняться в следующих стадиях без смены semantic river identity.
