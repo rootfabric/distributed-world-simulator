@@ -178,7 +178,10 @@ func _toggle_layer(item_id: String, profile_id: String) -> Dictionary:
 	if not bool(mutation_result.get("success", false)):
 		return mutation_result
 
-	var snapshot := equipment_source.get_snapshot()
+	# equipment_source is deliberately capability-typed in the lab hierarchy.
+	# Avoid := here: direct headless --script runs do not have enough static
+	# information to infer Snapshot from the dynamic collaborator.
+	var snapshot = equipment_source.get_snapshot()
 	var suppression_result: Dictionary = body_suppression_coordinator.apply_snapshot(snapshot)
 	if not bool(suppression_result.get("success", false)):
 		layered_setup_result = suppression_result
