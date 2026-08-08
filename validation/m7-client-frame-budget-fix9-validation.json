@@ -5,7 +5,8 @@
   "base_branch": "feature/m7-prediction-clock-fix8",
   "base_commit": "950d456278c9f8c8dd14a48e6b45d4995304ad33",
   "implementation_head_before_validation_record": "5611816faa079596f1c48202669e77d8c0cf3eef",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "fix1_tested_head": "6037c2607a3980432e231b03f77a5499bb85c529",
+  "decision": "AUTOMATED_WINDOWS_GATE_PASS_MANUAL_STRESS_REQUIRED",
   "trigger_evidence": {
     "fix8_automated_analysis": "PASS",
     "client_a_process_max_ms": 104.94,
@@ -40,7 +41,7 @@
       "item_projection"
     ],
     "inventory_policy": "WRITE_CONTROL_GEOMETRY_ONLY_WHEN_CHANGED_V1",
-    "inventory_change": "sort button geometry, interaction hint geometry and sort-button visibility are written only when values actually change; target geometry is still checked each frame so resize/reflow remains live",
+    "inventory_change": "sort button geometry, interaction hint geometry and sort-button visibility are written only when values actually change; target size respects Control.get_combined_minimum_size() so the dedupe target is attainable under the active theme/localized caption",
     "semantics_intentionally_unchanged": [
       "FIX8 prediction clock alignment",
       "FIX8 bounded visual correction",
@@ -50,6 +51,83 @@
       "M7 server authority",
       "snapshot cadence",
       "interpolation delay"
+    ]
+  },
+  "first_windows_gate": {
+    "tested_head": "434a558b307c98aee4a09d468d4dc4d7f659a747",
+    "focused_result": "FAIL 35 assertions / 2 failures",
+    "failure": "sort-button geometry did not converge because nominal 112x30 was below the Godot combined minimum size",
+    "root_cause": "Godot clamped Button.size after every write, so the next frame still observed a size mismatch",
+    "fix1": "derive realizable target size from get_combined_minimum_size() and position using that target width"
+  },
+  "automated_windows_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "tested_head": "6037c2607a3980432e231b03f77a5499bb85c529",
+    "focused_fix9": "PASS 37 assertions / 0 failures",
+    "editor_import_composition": "PASS",
+    "fix8_prediction_clock_regression": "PASS 50 assertions",
+    "fix7_smooth_prediction_regression": "PASS 33 assertions",
+    "nx4_prediction_reconciliation": "PASS 706 assertions",
+    "fix6_server_realtime": "PASS 261 assertions / 0 failures",
+    "fix6_graphical_telemetry": "PASS 14 assertions / 0 failures",
+    "fix5_world_item_consistency": "PASS 49 assertions / 0 failures",
+    "nx6_predicted_item_interactions": "PASS 957 assertions",
+    "nx3_fixed_tick": "PASS 6188 assertions / 0 failures",
+    "accepted_inventory_fix8": "PASS 9 assertions",
+    "two_client_graphical_process": "PASS 51 assertions / 0 failures",
+    "runner": "M7 FIX9 client frame budget validation passed",
+    "client_a": {
+      "process_max_ms": 171.688,
+      "process_slow_frames_ge_50ms": 1,
+      "process_p50_ms": 0.317,
+      "process_p95_ms": 0.6049,
+      "process_p99_ms": 3.0272,
+      "unattributed_max_ms": 4.261,
+      "unattributed_over_budget_frames": 0,
+      "control_message_max_ms": 166.829,
+      "control_message_over_budget": 2,
+      "snapshot_message_max_ms": 1.467,
+      "prediction_reconcile_max_ms": 0.281,
+      "local_prediction_max_ms": 2.308,
+      "world_item_projection_max_ms": 16.9,
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.2,
+      "inventory_sort_layout_writes": 1,
+      "inventory_sort_layout_skips": 836,
+      "inventory_hint_layout_writes": 1,
+      "inventory_hint_layout_skips": 835,
+      "inventory_visibility_writes": 2,
+      "inventory_visibility_skips": 1668
+    },
+    "client_b": {
+      "process_max_ms": 125.891,
+      "process_slow_frames_ge_50ms": 1,
+      "process_p50_ms": 0.311,
+      "process_p95_ms": 2.0835,
+      "process_p99_ms": 3.03274,
+      "unattributed_max_ms": 5.253,
+      "unattributed_over_budget_frames": 0,
+      "control_message_max_ms": 120.571,
+      "control_message_over_budget": 3,
+      "snapshot_message_max_ms": 1.821,
+      "prediction_reconcile_max_ms": 0.412,
+      "local_prediction_max_ms": 2.187,
+      "world_item_projection_max_ms": 16.828,
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.4,
+      "inventory_sort_layout_writes": 2,
+      "inventory_sort_layout_skips": 371,
+      "inventory_hint_layout_writes": 1,
+      "inventory_hint_layout_skips": 371,
+      "inventory_visibility_writes": 4,
+      "inventory_visibility_skips": 738
+    },
+    "interpretation": [
+      "FIX9 inventory write-on-change policy is active and removes the previous near-frame-rate Control geometry churn",
+      "normal client process cost remains low; p50 is approximately 0.31 ms and p99 approximately 3.03 ms in the short process run",
+      "the isolated >=50 ms client process frame is now attributed to non-snapshot/non-item message dispatch classified as control_message, not to prediction, telemetry, snapshot processing, or unattributed process work",
+      "item_projection reached approximately one 16.8-16.9 ms sample and should be watched under the required long item stress",
+      "the current control_message bucket combines several message types, so the short run does not yet identify which exact control message caused the startup-scale peak"
     ]
   },
   "composition": {
@@ -76,7 +154,7 @@
     "profile": "LOCAL",
     "actions": "both clients continuously move/turn/start/stop while repeatedly exercising drop, pickup, transfer and inventory presentation",
     "analysis": "run ANALYZE_M7_FIX9_RESULTS.ps1 on server.json/a.json/b.json and inspect dominant network/world phases",
-    "notes": "a single startup/OS scheduling hitch is separated from sustained stutter by count-based slow/unattributed gates"
+    "notes": "the automated short run passes composition/regression but exposes isolated control-message dispatch peaks; long stress is required to distinguish startup-only work from sustained gameplay stutter"
   },
-  "status": "Windows exact-engine validation and long manual stress not yet executed for FIX9"
+  "status": "Automated Windows exact-engine gate PASS on tested runtime/test head 6037c2607a3980432e231b03f77a5499bb85c529. Long two-client LOCAL movement/item stress and FIX9 analyzer review remain required before final acceptance."
 }
