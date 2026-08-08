@@ -46,11 +46,11 @@ func _run() -> void:
 		return
 	var original_arrays: Array = (original_mesh as ArrayMesh).surface_get_arrays(0)
 	var original_indices: PackedInt32Array = original_arrays[Mesh.ARRAY_INDEX]
-	var original_bones = original_arrays[Mesh.ARRAY_BONES]
-	var original_weights = original_arrays[Mesh.ARRAY_WEIGHTS]
+	var original_bones: PackedInt32Array = original_arrays[Mesh.ARRAY_BONES]
+	var original_weights: PackedFloat32Array = original_arrays[Mesh.ARRAY_WEIGHTS]
 	_assert(not original_indices.is_empty(), "CH8C topology original body has no indices")
-	_assert(original_bones != null, "CH8C topology original body has no bone array")
-	_assert(original_weights != null, "CH8C topology original body has no weight array")
+	_assert(not original_bones.is_empty(), "CH8C topology original body has no bone array")
+	_assert(not original_weights.is_empty(), "CH8C topology original body has no weight array")
 
 	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before := float(lab.player_capsule.height)
@@ -72,9 +72,11 @@ func _run() -> void:
 	if body_mesh.mesh is ArrayMesh:
 		var masked_arrays: Array = (body_mesh.mesh as ArrayMesh).surface_get_arrays(0)
 		var masked_indices: PackedInt32Array = masked_arrays[Mesh.ARRAY_INDEX]
+		var masked_bones: PackedInt32Array = masked_arrays[Mesh.ARRAY_BONES]
+		var masked_weights: PackedFloat32Array = masked_arrays[Mesh.ARRAY_WEIGHTS]
 		_assert(masked_indices.size() < original_indices.size(), "CH8C topology lower index count was not reduced")
-		_assert((masked_arrays[Mesh.ARRAY_BONES] as PackedInt32Array).size() == (original_bones as PackedInt32Array).size(), "CH8C topology lower changed bone array size")
-		_assert((masked_arrays[Mesh.ARRAY_WEIGHTS] as PackedFloat32Array).size() == (original_weights as PackedFloat32Array).size(), "CH8C topology lower changed weight array size")
+		_assert(masked_bones.size() == original_bones.size(), "CH8C topology lower changed bone array size")
+		_assert(masked_weights.size() == original_weights.size(), "CH8C topology lower changed weight array size")
 
 	var lower_removed := int(lower_report.get("removed_triangles", 0))
 
