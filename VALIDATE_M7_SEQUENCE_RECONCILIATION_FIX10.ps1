@@ -49,6 +49,11 @@ Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
 )
 
+Invoke-GodotCheck -Name "FIX10 fix2 MTU-safe realtime snapshot contracts" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix2.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 focused sequence-aware reconciliation" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10.gd"
@@ -87,7 +92,7 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates FIX10 ack baselines plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly validates FIX10 fix2 MTU safety, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
