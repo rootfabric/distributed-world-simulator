@@ -74,6 +74,20 @@ function Install-AssetArchive([string]$Archive, [string]$Destination) {
     Expand-Archive -LiteralPath $Archive -DestinationPath $Destination -Force
 }
 
+function Disable-UnityFbxImport([string]$AssetRootPath) {
+    $FbxDirectories = @(
+        Get-ChildItem -LiteralPath $AssetRootPath -Directory -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -eq "FBX (Unity)" }
+    )
+    foreach ($Directory in $FbxDirectories) {
+        $IgnorePath = Join-Path $Directory.FullName ".gdignore"
+        if (-not (Test-Path -LiteralPath $IgnorePath -PathType Leaf)) {
+            Set-Content -LiteralPath $IgnorePath -Value "" -Encoding utf8
+        }
+        Write-Host "CH7.8 Godot import ignores unused Unity FBX exports: $($Directory.FullName)" -ForegroundColor DarkGray
+    }
+}
+
 $Godot = Resolve-Godot $GodotPath
 $AssetRoot = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy"
 
@@ -109,6 +123,8 @@ if (-not (Test-Path $AssetRoot -PathType Container)) {
     }
     exit 2
 }
+
+Disable-UnityFbxImport $AssetRoot
 
 Write-Host ""
 Write-Host "[editor_import]" -ForegroundColor Cyan
