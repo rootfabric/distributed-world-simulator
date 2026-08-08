@@ -122,6 +122,67 @@ G3 macro regression:            PASS — 14,275 assertions
 G3 fly-in regression:           PASS — 99 assertions
 ```
 
+## M5 graphical regression blocker closure
+
+Во время full-checkout validation обнаружилась гонка только в M5 acceptance orchestration: первый клиент после совпадения checksum успевал выполнить graceful leave, `PLAYER_LEFT` менял authoritative player snapshot и второй клиент откатывался обратно в `READY_TO_CONVERGE`.
+
+Harness-only fix:
+
+```text
+f39aba61913d10fc13ad82ac601ee5c867c00791
+4581c012b4f4290f0f1d3466879aac95a1e1fd3f
+```
+
+Добавлен финальный двухфазный convergence barrier:
+
+```text
+CONVERGENCE_LOCKED
+  -> FINAL_CONVERGENCE_LOCKED on both clients
+  -> graceful leave
+  -> COMPLETE
+```
+
+Production gameplay/network authority semantics не менялись.
+
+Реальный Windows multi-process прогон на exact engine после fix:
+
+```text
+M5 graphical acceptance contracts:      PASS — 80 assertions
+M5 preparation:                         PASS — 65 assertions
+M5 graphical multiplayer:               PASS — 92 assertions, 0 failures
+M4 canonical shared gameplay:           PASS — 26 assertions
+M4 networked playground extension:      PASS — 23 assertions
+M4 graphical shared gameplay:           PASS — 22 assertions
+M3 graphical multiplayer contracts:     PASS — 77 assertions
+Inventory interaction profiles:         PASS — 86 assertions
+7 Days inventory interface:             PASS — 140 assertions
+Item stack transfers:                   PASS — 74 assertions
+Inventory UI-I0:                        PASS — 44 assertions
+Inventory UI-I1:                        PASS — 73 assertions
+Inventory UI-I2:                        PASS — 55 assertions
+A2 networked gameplay audit:            PASS — 170 assertions
+Post-A2 roadmap audit:                  PASS — 138 assertions
+M5 focused aggregate:                   PASS — 15/15
+```
+
+Critical multi-process evidence:
+
+```text
+A reconnect convergence                 PASS
+B convergence                           PASS
+identical player + Item Graph checksums PASS
+A reconnect completed                   PASS
+B completed                             PASS
+server joins                            3
+server graceful leaves                  3
+stale peers                             0
+client ObjectDB leaks                   0
+client resource leaks                   0
+client MCP port collisions              0
+```
+
+Поскольку historical test orchestration расположен в `scripts/runtime/networked_gameplay/m5`, G4 full gate разрешает ровно один этот acceptance-harness path. Любые другие изменения `scripts/runtime/*`, `scripts/network/*`, Matter или production world scenes остаются запрещены.
+
 ## Visual lab
 
 ```text
@@ -151,7 +212,7 @@ SurfaceLodSelector
 accepted G3 CasualMacroTerrainProviderV1
 ```
 
-а также production runtime/network/Matter/world scenes.
+а также production runtime/network/Matter/world scenes. Единственное точечное исключение — уже отдельно проверенный M5 graphical acceptance driver, который является test orchestration, а не production authority path.
 
 ## Full checkout gate
 
@@ -168,9 +229,10 @@ world/core regression PASS
 Breakpoint :9081 current-run audit PASS
 git diff --check PASS
 architecture freeze PASS
+production/runtime/network/Matter freeze PASS
 ```
 
-До подтверждения полного checkout gate G4 остаётся `IMPLEMENTED CANDIDATE`.
+M5 focused blocker закрыт реальным Windows multi-process прогоном. До подтверждения полного `RUN_G4_FULL_ACCEPTANCE.ps1` G4 остаётся `IMPLEMENTED CANDIDATE`.
 
 ## Architecture Review A
 
