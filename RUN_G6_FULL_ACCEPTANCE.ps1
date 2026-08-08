@@ -32,6 +32,21 @@ function Assert-Equal {
     }
 }
 
+function Invoke-PowerShellChild {
+    param(
+        [Parameter(Mandatory = $true)][string]$ScriptPath,
+        [string[]]$ScriptArguments = @()
+    )
+    $PowerShellExecutable = (Get-Process -Id $PID).Path
+    if ([string]::IsNullOrWhiteSpace($PowerShellExecutable) -or -not (Test-Path -LiteralPath $PowerShellExecutable -PathType Leaf)) {
+        throw "Could not resolve the current PowerShell executable for isolated child runners"
+    }
+    & $PowerShellExecutable -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ScriptArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Child PowerShell runner failed: $ScriptPath (exit $LASTEXITCODE)"
+    }
+}
+
 if ($null -eq (Get-Command git -ErrorAction SilentlyContinue)) {
     throw "git is required for G6 full acceptance"
 }
@@ -116,10 +131,7 @@ try {
     $env:BREAKPOINT_RUNTIME_DISABLED = "1"
 
     Write-Host "=== G6 FULL ACCEPTANCE: G6.4 Fix4 closes G6.0-G6.4 chain ==="
-    & "$RootDir\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1" -GodotPath $GodotPath
-    if (-not $?) {
-        throw "G6.0-G6.4 focused chain failed"
-    }
+    Invoke-PowerShellChild (Join-Path $RootDir "RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1") @("-GodotPath", $GodotPath)
 
     Write-Host "=== G6 FULL ACCEPTANCE: MW10 atomic-lock fault injection ==="
     & $GodotPath --headless --path $RootDir --script "res://tests/matter/transactions/test_mw10_lock_release_retry.gd"
@@ -128,10 +140,7 @@ try {
     }
 
     Write-Host "=== G6 FULL ACCEPTANCE: full world/core regression ==="
-    & "$RootDir\RUN_WORLD_REGRESSION_TESTS.ps1"
-    if (-not $?) {
-        throw "World/core regression failed"
-    }
+    Invoke-PowerShellChild (Join-Path $RootDir "RUN_WORLD_REGRESSION_TESTS.ps1")
 }
 finally {
     if ($HadGodotBin) { $env:GODOT_BIN = $PreviousGodotBin }
