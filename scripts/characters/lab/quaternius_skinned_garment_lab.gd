@@ -1,9 +1,6 @@
 class_name QuaterniusSkinnedGarmentLab
 extends "res://scripts/characters/lab/quaternius_equipment_lab.gd"
 
-const EquipmentDomain = preload("res://scripts/characters/equipment/character_equipment_domain.gd")
-const WearableCatalog = preload("res://scripts/characters/equipment/wearable_presentation_catalog.gd")
-
 const OUTFIT_ITEM_ID := "lab.item.outfit.peasant_male.001"
 const OUTFIT_PROFILE_ID := "equipment.outfit.peasant_male.prototype"
 const OUTFIT_PRESENTATION_ID := "wearable.outfit.peasant_male"
