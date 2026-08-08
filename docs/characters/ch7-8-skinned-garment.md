@@ -6,38 +6,27 @@ Prove one real rigged outfit on the accepted CH7 semantic equipment architecture
 
 This stage is intentionally **not** a full wardrobe system and **not** cloth simulation.
 
-## Selected asset family
+## Selected asset
 
-Use Quaternius **Modular Character Outfits - Fantasy**, Standard package, current v2.1-compatible download.
-
-Why this family:
-
-- authored by the same creator as Universal Base Characters;
-- explicitly compatible with Universal Base Characters;
-- humanoid rig and Universal Animation Library compatible;
-- glTF/FBX are available in the Standard package;
-- CC0;
-- the Base Characters were updated with Head/Upperbody variants for this outfit family;
-- v2.0 specifically improved modularity and clipping, and notes that Peasant_Male works with only the Base Character head;
-- v2.1 fixed GLTF export/content issues for several outfits.
-
-The asset probe selected **Male_Peasant.gltf** from the Godot-Unreal glTF export. The real Windows probe measured 65 base bones, 65 garment bones, 65 matched bones, overlap 1.0/1.0 and four skinned garment meshes. Arbitrary retargeting is therefore not required for this prototype.
-
-## External asset location
-
-Do not commit the downloaded package into the feature branch.
-
-Extract the Standard package under:
+The real Windows asset probe selected:
 
 ```text
-assets/external/quaternius/modular_outfits_fantasy/
+Male_Peasant.gltf
+base bones:       65
+garment bones:    65
+matched bones:    65
+base overlap:     1.0
+garment overlap:  1.0
+skinned meshes:   4
 ```
 
-The Base Characters and Universal Animation Library remain under their existing external roots.
+Therefore CH7.8 does not require arbitrary retargeting for this outfit.
+
+External asset bytes remain outside Git.
 
 ## Canonical equipment model
 
-The first outfit remains **one canonical equipment item** even though its presentation contains multiple skinned mesh parts.
+The outfit remains one canonical equipment item even though its presentation contains multiple skinned mesh parts.
 
 ```text
 profile_id:       equipment.outfit.peasant_male.prototype
@@ -50,123 +39,184 @@ occupied channels:
   body.feet
 ```
 
-No garment mesh, Skeleton3D or head proxy becomes a second inventory/equipment identity.
+No garment mesh, Skeleton3D, material or shadow proxy becomes a second inventory/equipment identity.
 
 ## Skinned presentation strategy
 
-`SKINNED_GARMENT` is a presentation strategy in `CharacterEquipmentPresenter`.
-
-The garment keeps its own presentation Skeleton3D and is driven from the already authoritative avatar presentation pose through `SkinnedGarmentPoseBridge`:
+`SKINNED_GARMENT` is presentation-only.
 
 ```text
 avatar presentation Skeleton3D
         |
-        | normalized bone map
+        | exact normalized 65-bone map
         v
 Male_Peasant garment Skeleton3D
 ```
 
-For the selected asset the map is exact 65/65. Position, rotation and scale are copied in presentation processing only.
+`SkinnedGarmentPoseBridge` copies presentation pose only. It does not move `CharacterBody3D`, own root-motion authority, read gameplay input, mutate Item Graph state or own network state.
 
-The bridge:
+## Actual Universal Base Character structure
 
-- does not move the gameplay body;
-- does not read input;
-- does not own network state;
-- does not apply root-motion authority;
-- does not mutate Item Graph state.
+The current Standard archive was inspected on Windows after URI normalization and a clean Godot reimport.
 
-## Coarse body replacement
-
-The Universal Base Character may expose torso, arms, legs and head through one coarse full-body skinned mesh. CH7.8 deliberately does **not** introduce per-triangle masking or runtime mesh surgery to solve that.
-
-Instead the presentation uses this composition while the outfit is equipped:
+`Superhero_Male_FullBody.gltf` resolves to:
 
 ```text
-original full-body MeshInstance3D(s)  -> hidden only
-original Skeleton3D                  -> remains alive and authoritative for presentation pose
-BoneAttachment3D helmet/backpack     -> remains alive
-compatible Base Character Head scene -> visible, pose-driven
-Male_Peasant outfit                   -> visible, pose-driven
+Skeleton3D                         65 bones
+├─ Eyebrows      skinned, 1 surface
+├─ Eyes          skinned, 1 surface
+└─ SuperHero_Male skinned, 1 surface
 ```
 
-The accepted base mesh nodes are hidden individually, not their `QuaterniusModel` parent. This preserves Skeleton3D and rigid equipment attachments.
+Observed material identities:
 
-Semantic body regions used by the outfit:
+```text
+Eyebrows       -> T_Hair_1_BaseColor.png
+Eyes           -> T_Eye_Brown.png
+SuperHero_Male -> T_Superhero_Male_Dark.png
+```
+
+Important consequence: the face/head and body are fused into the single `SuperHero_Male` mesh and its single material surface. Mesh-level or surface-level hiding cannot preserve the face.
+
+The current Standard archive also did not expose a standalone Head/Upperbody character glTF in the inspected export. CH7.8 therefore does not depend on a separate head scene.
+
+## CH7.8C fused-body suppression
+
+The chosen minimal solution is a presentation-only **head clip material**.
+
+While the outfit is equipped:
+
+```text
+original Skeleton3D           ACTIVE
+Eyes                          VISIBLE
+Eyebrows                      VISIBLE
+SuperHero_Male mesh           VISIBLE, custom head-clip material
+  fragments below neck plane  DISCARDED
+  head fragments              VISIBLE
+Male_Peasant                  VISIBLE, skinned
+helmet/backpack               VISIBLE on original BoneAttachment3D anchors
+```
+
+On unequip, the original `material_override` is restored exactly.
+
+There is no second head skeleton, no runtime vertex editing and no gameplay-body change.
+
+### Clip plane
+
+The clip plane is derived from the actual imported asset rather than a gameplay coordinate.
+
+Primary rule:
+
+```text
+clip_local_y = Eyes AABB min Y - 0.20 m
+```
+
+For the inspected asset:
+
+```text
+Eyes min Y ~= 1.6836 m
+clip Y     ~= 1.4836 m
+```
+
+Fallback for a compatible Quaternius rig without a separately named Eyes mesh:
+
+```text
+clip_local_y = body AABB min Y + body height * 0.82
+```
+
+This value belongs to rig presentation and never changes the gameplay capsule or canonical character transform.
+
+## Generic suppression contract
+
+The equipment presenter does not hard-code Quaternius.
+
+`CharacterRigAdapter.resolve_body_region_suppression_targets()` maps semantic body regions to presentation targets.
+
+Generic rigs use:
+
+```text
+VISIBILITY
+```
+
+which preserves the existing ref-counted hide/restore behavior.
+
+The inspected Quaternius fused rig uses:
+
+```text
+MATERIAL_OVERRIDE
+```
+
+with one deduplicated target for all coarse semantic regions:
 
 ```text
 body.region.torso
 body.region.arms
 body.region.legs
 body.region.feet
+        -> SuperHero_Male fused mesh
+        -> one head-clip material target
 ```
 
-For this coarse imported rig those semantic regions intentionally resolve to the same underlying full-body geometry set. `CharacterEquipmentPresenter` deduplicates the geometry and maintains reference-counted hide state so overlapping semantic regions cannot corrupt visibility restoration.
+The presenter reference-counts both target modes and restores the exact original state when the last owner disappears.
 
-The original `visible` value of every body geometry node is restored exactly on unequip. A node that was already hidden before equip remains hidden afterward.
+## CH6 first-person and shadow composition
 
-## Head variant resolution
+The accepted CH6 `WORLD_PROXY` shadow implementation shares the source Mesh/Skin and copies `material_override` from the source, including during proxy synchronization. Therefore the same head clip presentation is expected to apply to the first-person shadow proxy without creating a second shadow-specific mask path.
 
-The laboratory resolves the compatible head scene at runtime from the already selected base model. It first tries the direct sibling naming convention:
+The CH7.8 real lab continues to assert:
 
-```text
-*_FullBody.gltf -> *_Head.gltf
-```
-
-If that exact sibling is absent, it recursively scores Base Character head candidates, preferring the same character family, gender, export directory and glTF format.
-
-The selected head scene is then passed through the same pose bridge. Its bone-overlap guard must pass before body hiding is applied.
-
-This keeps the production equipment presenter independent from Quaternius file names.
-
-## CH6 composition
-
-Equip/unequip still uses the accepted `EquipmentAwareFirstPersonAdapter.refresh_presentation_visuals()` path.
-
-After a presentation change CH6 recaptures dynamic visuals and rebuilds its world-shadow proxy. The expected result is:
-
-- third person: head + outfit + rigid equipment are visible;
-- first person: own world presentation obeys the existing camera-layer policy;
-- first-person character/equipment shadow remains available;
-- crouch keeps the accepted presentation-only `-0.35 m` ground correction;
-- gameplay CharacterBody3D and capsule are unchanged.
+- garment meshes are recaptured into CH6 world presentation;
+- garment meshes are recaptured into CH6 shadow proxy;
+- first-person shadow proxy remains active;
+- crouch keeps the accepted presentation-only `-0.35 m` ground compensation;
+- gameplay `CharacterBody3D` position and capsule remain unchanged;
+- helmet/backpack compose before or after outfit equip.
 
 ## Explicitly deferred
 
 - cloth physics;
-- skirts/capes with secondary simulation;
-- arbitrary garments from unrelated skeletons;
-- runtime retarget profile authoring UI;
+- capes/skirts with secondary simulation;
+- generic unrelated-rig retargeting;
 - body shape morphing;
-- automatic garment fitting;
-- shader cut masks;
-- runtime vertex or triangle editing;
-- dozens of simultaneous clothing pieces;
+- automatic arbitrary garment fitting;
+- runtime vertex/triangle mesh surgery;
 - production ItemGraphEquipmentSource bridge;
-- network/persistence integration.
+- network/persistence integration;
+- high-volume optimization for hundreds of clipped characters.
+
+For a high population of characters, a pre-generated head-only asset may later be preferable to fragment `discard`. CH7.8 first proves the semantic/presentation composition with one character before optimizing that representation.
 
 ## Acceptance ladder
 
 ### CH7.8-A — Asset probe — PASS
 
-Real Windows probe selected `Male_Peasant.gltf` with exact 65/65 bone overlap and four skinned meshes.
+`Male_Peasant.gltf` selected with exact 65/65 bone overlap and four skinned meshes.
 
-### CH7.8-B — One skinned outfit — focused PASS
+### CH7.8-B — One skinned outfit — PASS
 
-The real asset laboratory completed equip, two process frames, locomotion pose copy and crouch composition with 37 assertions after parser fixes.
+Real Windows lab completed equip, motion, crouch, rigid composition and unequip with 37 assertions before body suppression was added.
 
-### CH7.8-C — Body-region replacement — IMPLEMENTED, rerun required
+### CH7.8-C1 — Generic body suppression — PASS
 
-Synthetic acceptance now checks semantic region expansion, deduplication, reference-counted hiding, optional pose-driven replacement, idempotency and exact visibility restoration.
+Synthetic body-region replacement/hide lifecycle passed 65 assertions.
 
-The real lab now requires a compatible Base Character head, hides the coarse full-body geometry while equipped and restores it after unequip.
+### CH7.8-C2 — FullBody structure probe — PASS
 
-### CH7.8-D — CH6 composition — focused PASS before body replacement; rerun required with replacement
+Real Windows probe proved the 3-mesh / 3-surface layout and the fused `SuperHero_Male` head+body surface.
 
-The prior real lab proved FP/world-shadow capture and rigid helmet/backpack coexistence. The same checks remain in place and will be repeated with body replacement active.
+### CH7.8-C3 — Fused-body head clip — IMPLEMENTED, Windows rerun required
 
-### CH7.8-E — Lifecycle — focused PASS before body replacement; rerun required with replacement
+Pending gates prove:
 
-The prior real lab proved canonical equip/unequip and no registered garment visual after removal. The new synthetic gate additionally stresses body hide/restore lifecycle.
+- synthetic clip material contract;
+- Quaternius semantic regions resolve only to the fused body mesh;
+- one material suppression target is deduplicated across torso/arms/legs/feet;
+- Eyes/Eyebrows remain visible;
+- head clip survives motion, crouch and rigid-equipment composition;
+- original material override is restored exactly on unequip.
 
-Only after the combined runner and graphical observation pass should the generic garment system be widened to a second outfit or more granular layered clothing.
+### CH7.8-D — CH6 composition — rerun required with head clip
+
+### CH7.8-E — lifecycle — rerun required with head clip
+
+Only after the combined runner and graphical observation pass should the system widen to a second outfit or more granular layered clothing.
