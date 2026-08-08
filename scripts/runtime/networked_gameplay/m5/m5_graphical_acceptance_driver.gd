@@ -31,6 +31,8 @@ var _player_checksum := ""
 var _item_checksum := ""
 var _convergence_world: Dictionary = {}
 var _convergence_locked := false
+var _convergence_prepare_id := ""
+var _convergence_prepared := false
 
 
 func setup(app_reference, client_runtime, config: Dictionary) -> Dictionary:
@@ -230,15 +232,29 @@ func _process(_delta: float) -> void:
 				_peer_result_file = reconnect_peer_path
 			_begin_convergence(world, shell)
 		"WAIT_CONVERGENCE_PEER":
-			# A late authoritative snapshot can arrive after one client has already
-			# locked an older checksum. Keep the convergence lock revocable until
-			# both clients have locked the same latest canonical state.
-			var finish_requested := bool(Support.read(_control_file).get("finish", false))
+			# The coordinator owns the final two-phase barrier. Client locks remain
+			# revocable until a concrete checksum pair is prepared, so late
+			# authoritative snapshots can never strand peers on different locks.
+			var control := Support.read(_control_file)
+			var prepare: Dictionary = control.get("convergence_prepare", {})
+			var prepare_id := String(prepare.get("id", "")).strip_edges()
+			var prepare_player_checksum := String(prepare.get("player_checksum", ""))
+			var prepare_item_checksum := String(prepare.get("item_checksum", ""))
+			var release_id := String(control.get("convergence_release_id", "")).strip_edges()
+			if _convergence_prepared:
+				if prepare_id != _convergence_prepare_id:
+					_convergence_prepared = false
+					_convergence_prepare_id = ""
+					_convergence_locked = false
+					_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
+					return
+				if release_id == _convergence_prepare_id:
+					_finish(true)
+				return
 			var latest_player_checksum := String(_client.get_snapshot().get("checksum", ""))
 			var latest_item_checksum := String(_client.get_item_graph_snapshot().get("checksum", ""))
 			if (
-				not (_convergence_locked and finish_requested)
-				and not latest_player_checksum.is_empty()
+				not latest_player_checksum.is_empty()
 				and not latest_item_checksum.is_empty()
 				and (latest_player_checksum != _player_checksum or latest_item_checksum != _item_checksum)
 			):
@@ -249,7 +265,7 @@ func _process(_delta: float) -> void:
 				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
 			if not _convergence_locked:
 				var peer_ready := Support.read(_peer_result_file)
-				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]:
+				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "CONVERGENCE_PREPARED"]:
 					return
 				if String(peer_ready.get("player_checksum", "")) != _player_checksum:
 					return
@@ -257,16 +273,14 @@ func _process(_delta: float) -> void:
 					return
 				_convergence_locked = true
 				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
-			var peer_convergence := Support.read(_peer_result_file)
-			if String(peer_convergence.get("state", "")) not in ["CONVERGENCE_LOCKED", "COMPLETE"]:
-				return
-			if String(peer_convergence.get("player_checksum", "")) != _player_checksum:
-				return
-			if String(peer_convergence.get("item_checksum", "")) != _item_checksum:
-				return
-			if not finish_requested:
-				return
-			_finish(true)
+			if (
+				not prepare_id.is_empty()
+				and prepare_player_checksum == _player_checksum
+				and prepare_item_checksum == _item_checksum
+			):
+				_convergence_prepare_id = prepare_id
+				_convergence_prepared = true
+				_write_report("CONVERGENCE_PREPARED", false, _convergence_world, shell)
 
 
 func _run_winner_ui_workflow(shell) -> Dictionary:
@@ -520,6 +534,8 @@ func _write_report(
 		"screenshot": _screenshot_result.duplicate(true),
 		"player_checksum": _player_checksum,
 		"item_checksum": _item_checksum,
+		"convergence_prepare_id": _convergence_prepare_id,
+		"convergence_prepared": _convergence_prepared,
 		"client_runtime": _client.get_report() if _client != null else {},
 		"item_graph": _client.get_item_graph_snapshot() if _client != null else {},
 		"world": world.duplicate(true),
