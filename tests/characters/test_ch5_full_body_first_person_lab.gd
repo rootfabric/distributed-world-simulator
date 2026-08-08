@@ -71,8 +71,11 @@ func _run() -> void:
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CollisionShape3D) == 0, "First-person adapter owns collision")
 
 	var standing_height: float = float(lab.player_capsule.height)
+	var standing_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
 	lab._apply_crouch_shape(true, 1.0)
 	_assert(lab.player_capsule.height < standing_height, "Crouch does not reduce gameplay capsule height in the isolated lab")
+	var crouching_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
+	_assert(is_equal_approx(crouching_bottom, standing_bottom), "Crouch changes the gameplay capsule foot plane and can make the body float")
 	_assert(lab.camera_yaw.position.y < 1.62, "Crouch does not lower the local camera anchor")
 	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": true})
 	await process_frame
@@ -89,6 +92,8 @@ func _run() -> void:
 	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": false})
 	await process_frame
 	_assert(is_equal_approx(lab.player_capsule.height, standing_height), "Standing capsule height did not restore")
+	var restored_bottom: float = float(lab.player_collision.position.y - lab.player_capsule.height * 0.5)
+	_assert(is_equal_approx(restored_bottom, standing_bottom), "Standing restore changes the gameplay capsule foot plane")
 
 	avatar_report = lab.avatar.create_report()
 	_assert(not bool(avatar_report.get("root_motion_applied", true)), "First-person lab enables root motion")
