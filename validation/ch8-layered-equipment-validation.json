@@ -1,0 +1,101 @@
+{
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v1",
+  "branch": "feature/ch8-layered-equipment",
+  "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
+  "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
+  "decision": "CH8A_LAYERED_EQUIPMENT_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "goal": "Add presentation-neutral layered equipment coexistence, deterministic conflict planning and explicit atomic conflict replacement before selecting real modular garment parts.",
+  "canonical_contract": {
+    "plain_equip_remains_strict": true,
+    "plain_equip_auto_swaps": false,
+    "planning_mutates_revision": false,
+    "explicit_replace_conflicts_operation": true,
+    "replacement_revision_increment": 1,
+    "compatible_layers_survive_replacement": true,
+    "conflict_item_ids_sorted": true,
+    "conflict_rows_sorted": true,
+    "item_graph_changes": false,
+    "network_changes": false,
+    "gameplay_body_changes": false,
+    "presentation_dependency_in_layer_planner": false
+  },
+  "layer_fixture": {
+    "compatible_before_replacement": {
+      "undersuit": ["body.torso.inner", "body.arms.inner", "body.legs.inner"],
+      "jacket": ["body.torso.outer", "body.arms.outer"],
+      "trousers": ["body.legs.outer"],
+      "boots": ["body.feet"],
+      "armor": ["body.torso.armor"]
+    },
+    "eva_replacement": [
+      "body.torso.outer",
+      "body.torso.armor",
+      "body.arms.outer",
+      "body.legs.outer",
+      "body.feet"
+    ],
+    "expected_conflicting_items": [
+      "item.armor.001",
+      "item.boots.001",
+      "item.jacket.001",
+      "item.trousers.001"
+    ],
+    "expected_compatible_survivor": "item.undersuit.001"
+  },
+  "presentation_diff_contract": {
+    "before_visual_count": 5,
+    "after_visual_count": 2,
+    "expected_created": 1,
+    "expected_removed": 4,
+    "expected_reused": 1,
+    "compatible_visual_identity_reused": true,
+    "idempotent_reapply_required": true
+  },
+  "implementation_commits": {
+    "layering_planner": "d8f0ba05a16c996f69d7fbb5d870e41cd89b8688",
+    "atomic_lab_mutation": "1ed3bb04d766f8c4da22e14fb7dfdcb8e1f05fa1",
+    "planner_internal_decoupling": "a50991fae9d1a60fe7f7043aa7ff5336cbb666fe",
+    "layer_contract_test": "3ba6f084ad36354b024b566d4fe9e344f5790537",
+    "presentation_diff_test": "bbd87d34aba434cdc367e9f1f22282aeaa60c51e",
+    "real_part_probe": "0488ca55067bfd1440c448cff35b31bdfa7c3aed",
+    "acceptance_runner": "e6c1238e1a9251de32e96d495fa1c04ab8ce72a4",
+    "probe_launcher": "4aa41ab631c31797a9a87693adebb8bda2a5fc61",
+    "design_doc": "89b8f0a36d47da492da8d9679436080d7073c23b",
+    "test_type_hardening": "2baf9bbaba506e9255ee7854a70eef03927f52b0"
+  },
+  "pending_windows_gates": {
+    "focused_layer_contract": "res://tests/characters/test_ch8_layered_equipment_contract.gd",
+    "focused_presentation_diff": "res://tests/characters/test_ch8_layered_equipment_presentation_diff.gd",
+    "full": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
+    "required": [
+      "accepted CH7.8 runner remains PASS",
+      "five compatible layers coexist",
+      "EVA conflict plan reports all four conflicting items and five conflicting channels deterministically",
+      "plan leaves canonical revision unchanged",
+      "plain equip still rejects occupied channels",
+      "explicit replacement advances exactly one revision",
+      "undersuit survives EVA replacement",
+      "presentation diff reports created=1 removed=4 reused=1",
+      "compatible undersuit visual object is reused",
+      "idempotent presenter reapply creates/removes nothing"
+    ]
+  },
+  "ch8b_real_asset_probe": {
+    "script": "tests/characters/probe_ch8_quaternius_layered_parts.gd",
+    "launcher": ".\\PROBE_CH8_QUATERNIUS_LAYERED_PARTS.ps1 -GodotPath $Godot",
+    "blocking_for_ch8a": false,
+    "required_before_ch8c": true,
+    "purpose": "Inspect real Standard outfit glTF scenes and identify whether advertised modular parts are separate skinned MeshInstance3D nodes suitable for independent upper/lower/feet equipment items."
+  },
+  "deferred": [
+    "production ItemGraphEquipmentSource transaction/ledger integration",
+    "network replication",
+    "persistence",
+    "wardrobe UI",
+    "real partial-body suppression",
+    "cloth physics",
+    "arbitrary unrelated-rig retargeting",
+    "body morph fitting",
+    "equipment gameplay stats"
+  ]
+}
