@@ -1,6 +1,8 @@
 class_name QuaterniusEquipmentRigAdapter
 extends CharacterRigAdapter
 
+const HeadClipMaterial = preload("res://scripts/characters/equipment/quaternius_head_clip_material.gd")
+
 const RIG_PROFILE_ID := "quaternius.ual1.humanoid"
 const REQUIRED_ANCHORS := ["body.head", "gear.back"]
 const COARSE_BODY_REGIONS := [
@@ -9,6 +11,8 @@ const COARSE_BODY_REGIONS := [
 	"body.region.legs",
 	"body.region.feet",
 ]
+const HEAD_CLIP_BELOW_EYES_M := 0.20
+const HEAD_CLIP_FALLBACK_BODY_FRACTION := 0.82
 const SEMANTIC_BONE_CANDIDATES := {
 	"body.root": ["root", "hips", "pelvis"],
 	"body.head": ["head"],
@@ -29,6 +33,10 @@ var _resolved_bones: Dictionary = {}
 var _fallback_anchors: Dictionary = {}
 var _attachments: Dictionary = {}
 var _mode := "UNBOUND"
+var _head_clip_mesh: MeshInstance3D
+var _head_clip_material: ShaderMaterial
+var _head_clip_y := 0.0
+var _head_clip_error := ""
 
 
 func bind_presenter(presenter: Node) -> Dictionary:
@@ -70,6 +78,10 @@ func clear() -> void:
 	_presenter = null
 	_mode = "UNBOUND"
 	rig_profile_id = ""
+	_head_clip_mesh = null
+	_head_clip_material = null
+	_head_clip_y = 0.0
+	_head_clip_error = ""
 
 
 func supports_anchor(anchor_id: String) -> bool:
@@ -104,14 +116,40 @@ func resolve_body_region_visuals(
 	region_id: String
 ) -> Array[GeometryInstance3D]:
 	var result: Array[GeometryInstance3D] = []
-	if region_id not in COARSE_BODY_REGIONS or _presenter == null:
+	if region_id not in COARSE_BODY_REGIONS:
 		return result
-	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
-	if model_root != null:
-		# Universal Base Characters can expose the visible body as one coarse
-		# skinned mesh. Hide imported body geometry only. BoneAttachment3D subtrees
-		# are runtime equipment and must never be swallowed by body replacement.
-		_collect_base_model_geometry(model_root, result)
+	var body_mesh := _resolve_base_body_mesh()
+	if body_mesh != null:
+		result.append(body_mesh)
+	return result
+
+
+func resolve_body_region_suppression_targets(
+	_character_visual_root: Node,
+	region_id: String
+) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if region_id not in COARSE_BODY_REGIONS:
+		return result
+	var body_mesh := _resolve_base_body_mesh()
+	if body_mesh == null:
+		_head_clip_error = "HEAD_CLIP_BODY_MESH_NOT_FOUND"
+		return result
+	var clip_result := _ensure_head_clip_material(body_mesh)
+	if not bool(clip_result.get("success", false)):
+		_head_clip_error = String(clip_result.get("code", "HEAD_CLIP_SETUP_FAILED"))
+		return result
+	result.append({
+		"key": "material_clip:%d" % body_mesh.get_instance_id(),
+		"mode": BODY_SUPPRESSION_MATERIAL_OVERRIDE,
+		"node": body_mesh,
+		"material_override": _head_clip_material,
+		"debug": {
+			"kind": "QUATERNIUS_FUSED_BODY_HEAD_CLIP",
+			"clip_local_y": _head_clip_y,
+			"mesh_name": String(body_mesh.name),
+		},
+	})
 	return result
 
 
@@ -147,6 +185,11 @@ func create_report() -> Dictionary:
 		"bone_count": _target_skeleton.get_bone_count() if _target_skeleton != null else 0,
 		"skinned_parent_ready": resolve_skinned_parent(_presenter) != null,
 		"coarse_body_regions": COARSE_BODY_REGIONS.duplicate(),
+		"body_suppression_mode": "MATERIAL_HEAD_CLIP",
+		"head_clip_ready": _head_clip_material != null,
+		"head_clip_mesh": String(_head_clip_mesh.name) if _head_clip_mesh != null else "",
+		"head_clip_local_y": _head_clip_y,
+		"head_clip_error": _head_clip_error,
 		"attachment_count": _attachments.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
@@ -154,16 +197,86 @@ func create_report() -> Dictionary:
 	}
 
 
-func _collect_base_model_geometry(
-	root: Node,
-	output: Array[GeometryInstance3D]
-) -> void:
+func _ensure_head_clip_material(body_mesh: MeshInstance3D) -> Dictionary:
+	if _head_clip_material != null and _head_clip_mesh == body_mesh:
+		return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+			"material": _head_clip_material,
+			"clip_local_y": _head_clip_y,
+		})
+	_head_clip_y = _resolve_head_clip_y(body_mesh)
+	var clip_result: Dictionary = HeadClipMaterial.create_from_mesh(body_mesh, _head_clip_y)
+	if not bool(clip_result.get("success", false)):
+		return clip_result
+	var details: Dictionary = clip_result.get("details", {})
+	var material = details.get("material")
+	if not material is ShaderMaterial:
+		return _result(false, "HEAD_CLIP_MATERIAL_NOT_SHADER")
+	_head_clip_mesh = body_mesh
+	_head_clip_material = material as ShaderMaterial
+	_head_clip_error = ""
+	return clip_result
+
+
+func _resolve_head_clip_y(body_mesh: MeshInstance3D) -> float:
+	var eyes := _resolve_base_eye_mesh()
+	if eyes != null:
+		return eyes.get_aabb().position.y - HEAD_CLIP_BELOW_EYES_M
+	var body_aabb := body_mesh.get_aabb()
+	return body_aabb.position.y + body_aabb.size.y * HEAD_CLIP_FALLBACK_BODY_FRACTION
+
+
+func _resolve_base_body_mesh() -> MeshInstance3D:
+	if _head_clip_mesh != null and is_instance_valid(_head_clip_mesh):
+		return _head_clip_mesh
+	if _presenter == null:
+		return null
+	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
+	if model_root == null:
+		return null
+	var meshes: Array[MeshInstance3D] = []
+	_collect_base_model_meshes(model_root, meshes)
+	var best: MeshInstance3D
+	var best_score := -100000.0
+	for mesh in meshes:
+		var lower := String(mesh.name).to_lower()
+		var score := mesh.get_aabb().size.length()
+		if lower.contains("superhero") or lower.contains("superhero"):
+			score += 1000.0
+		if lower.contains("male") and not lower.contains("female"):
+			score += 200.0
+		for unwanted in ["eye", "eyebrow", "hair", "beard"]:
+			if lower.contains(String(unwanted)):
+				score -= 2000.0
+		if score > best_score:
+			best_score = score
+			best = mesh
+	return best
+
+
+func _resolve_base_eye_mesh() -> MeshInstance3D:
+	if _presenter == null:
+		return null
+	var model_root := _find_descendant_named(_presenter, "QuaterniusModel")
+	if model_root == null:
+		return null
+	var meshes: Array[MeshInstance3D] = []
+	_collect_base_model_meshes(model_root, meshes)
+	for mesh in meshes:
+		if String(mesh.name).to_lower() == "eyes":
+			return mesh
+	for mesh in meshes:
+		if String(mesh.name).to_lower().contains("eye") and not String(mesh.name).to_lower().contains("eyebrow"):
+			return mesh
+	return null
+
+
+func _collect_base_model_meshes(root: Node, output: Array[MeshInstance3D]) -> void:
 	if root is BoneAttachment3D:
 		return
-	if root is GeometryInstance3D:
-		output.append(root as GeometryInstance3D)
+	if root is MeshInstance3D:
+		output.append(root as MeshInstance3D)
 	for child in root.get_children():
-		_collect_base_model_geometry(child, output)
+		_collect_base_model_meshes(child, output)
 
 
 func _resolve_skeleton_bones() -> void:
