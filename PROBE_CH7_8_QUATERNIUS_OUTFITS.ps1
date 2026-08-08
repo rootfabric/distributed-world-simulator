@@ -42,12 +42,14 @@ function Find-StandardArchive([string]$Requested) {
         return ""
     }
 
-    $Matches = Get-ChildItem -LiteralPath $Downloads -File -Filter "*.zip" -ErrorAction SilentlyContinue |
-        Where-Object {
-            $_.Name -match '(?i)modular.*character.*outfits.*fantasy' -and
-            $_.Name -match '(?i)standard'
-        } |
-        Sort-Object LastWriteTime -Descending
+    $Matches = @(
+        Get-ChildItem -LiteralPath $Downloads -File -Filter "*.zip" -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Name -match '(?i)modular.*character.*outfits.*fantasy' -and
+                $_.Name -match '(?i)standard'
+            } |
+            Sort-Object LastWriteTime -Descending
+    )
 
     if ($Matches.Count -gt 0) {
         return $Matches[0].FullName
@@ -60,7 +62,7 @@ function Install-AssetDirectory([string]$Source, [string]$Destination) {
         throw "AssetSourcePath does not exist: $Source"
     }
     New-Item -ItemType Directory -Path $Destination -Force | Out-Null
-    Copy-Item -LiteralPath (Join-Path $Source "*") -Destination $Destination -Recurse -Force
+    Get-ChildItem -LiteralPath $Source -Force | Copy-Item -Destination $Destination -Recurse -Force
 }
 
 function Install-AssetArchive([string]$Archive, [string]$Destination) {
