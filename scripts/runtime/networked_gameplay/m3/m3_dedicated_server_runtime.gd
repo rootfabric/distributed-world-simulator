@@ -11,6 +11,14 @@ const FixedTickInputBufferFix10 = preload(
 # that input. This gives reconciliation a command-stream baseline rather than a
 # wall-clock phase comparison.
 #
+# The sidecar is deliberately compact on the wire. A verbose dictionary pushed
+# the compact unreliable movement frame above Godot ENet's 1392-byte MTU in the
+# exact Windows two-client process test (1418 bytes). Godot then had to use an
+# unreliable fragment, which is incompatible with the strict physical transfer
+# binding used by the project and could quarantine the peer. The canonical
+# gameplay snapshot itself is unchanged; only the non-canonical peer-local ACK
+# sidecar uses a fixed positional array.
+#
 # Accepted FIX7/FIX6 source-contract compatibility anchors. The actual behavior
 # remains inherited; keep the fixed-simulation anchor before the network-drain
 # anchor because the accepted regression verifies that source ordering:
@@ -31,6 +39,7 @@ const FixedTickInputBufferFix10 = preload(
 # res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_fix6.gd
 
 const FIX10_PREDICTION_ACK_POLICY: String = "SERVER_ECHOED_POST_INPUT_BASELINE_V1"
+const FIX10_PREDICTION_ACK_WIRE_POLICY: String = "COMPACT_ARRAY_V1"
 
 var _fix10_prediction_acks: Dictionary = {}
 var _fix10_ack_captures: int = 0
@@ -119,11 +128,10 @@ func _maybe_publish_movement_snapshot() -> void:
 		var data: Dictionary = {
 			"reason": "MOVEMENT_NETWORK_TICK",
 			"snapshot": compact_snapshot,
-			"prediction_ack_policy": FIX10_PREDICTION_ACK_POLICY,
 		}
-		var ack: Dictionary = _fix10_ack_for_peer(peer_id)
-		if not ack.is_empty():
-			data["prediction_ack"] = ack
+		var ack_wire: Array = _fix10_ack_wire_for_peer(peer_id)
+		if not ack_wire.is_empty():
+			data["prediction_ack"] = ack_wire
 			_fix10_snapshots_with_ack += 1
 		if _send_on_channel(
 			peer_id,
@@ -153,11 +161,10 @@ func _broadcast_snapshot(
 		var data: Dictionary = {
 			"reason": reason,
 			"snapshot": snapshot,
-			"prediction_ack_policy": FIX10_PREDICTION_ACK_POLICY,
 		}
-		var ack: Dictionary = _fix10_ack_for_peer(peer_id)
-		if not ack.is_empty():
-			data["prediction_ack"] = ack
+		var ack_wire: Array = _fix10_ack_wire_for_peer(peer_id)
+		if not ack_wire.is_empty():
+			data["prediction_ack"] = ack_wire
 			_fix10_snapshots_with_ack += 1
 		if _send_on_channel(peer_id, "GAMEPLAY_SNAPSHOT", data, channel, delivery_mode):
 			_broadcasts += 1
@@ -168,6 +175,30 @@ func _fix10_ack_for_peer(peer_id: String) -> Dictionary:
 	if logical_id.is_empty() or not _fix10_prediction_acks.has(logical_id):
 		return {}
 	return Dictionary(_fix10_prediction_acks[logical_id]).duplicate(true)
+
+
+func _fix10_ack_wire_for_peer(peer_id: String) -> Array:
+	var ack: Dictionary = _fix10_ack_for_peer(peer_id)
+	if ack.is_empty():
+		return []
+	var position: Dictionary = Dictionary(ack.get("position", {}))
+	var velocity: Dictionary = Dictionary(ack.get("velocity", {}))
+	# Positional contract COMPACT_ARRAY_V1:
+	# [sequence, client_tick, applied_server_tick,
+	#  px, py, pz, vx, vy, vz, orientation_yaw, state_revision]
+	return [
+		int(ack.get("input_sequence", 0)),
+		int(ack.get("client_tick", 0)),
+		int(ack.get("applied_server_tick", 0)),
+		float(position.get("x", 0.0)),
+		float(position.get("y", 0.0)),
+		float(position.get("z", 0.0)),
+		float(velocity.get("x", 0.0)),
+		float(velocity.get("y", 0.0)),
+		float(velocity.get("z", 0.0)),
+		float(ack.get("orientation_yaw", 0.0)),
+		int(ack.get("state_revision", 1)),
+	]
 
 
 func _dispatch_deferred_report() -> void:
@@ -182,6 +213,7 @@ func _build_fix7_ready_report() -> Dictionary:
 		report.get("realtime_foundation", {})
 	).duplicate(true)
 	foundation["fix10_prediction_ack_policy"] = FIX10_PREDICTION_ACK_POLICY
+	foundation["fix10_prediction_ack_wire_policy"] = FIX10_PREDICTION_ACK_WIRE_POLICY
 	foundation["fix10_prediction_ack_captures"] = _fix10_ack_captures
 	foundation["fix10_prediction_ack_capture_mismatches"] = _fix10_ack_capture_mismatches
 	foundation["fix10_snapshots_with_prediction_ack"] = _fix10_snapshots_with_ack
@@ -194,6 +226,7 @@ func _build_fix7_ready_report() -> Dictionary:
 func get_fix7_ready_report_policy() -> Dictionary:
 	var report: Dictionary = super.get_fix7_ready_report_policy()
 	report["fix10_prediction_ack_policy"] = FIX10_PREDICTION_ACK_POLICY
+	report["fix10_prediction_ack_wire_policy"] = FIX10_PREDICTION_ACK_WIRE_POLICY
 	return report
 
 
@@ -201,6 +234,7 @@ func get_report() -> Dictionary:
 	var report: Dictionary = super.get_report()
 	report["fix10_prediction_ack"] = {
 		"policy": FIX10_PREDICTION_ACK_POLICY,
+		"wire_policy": FIX10_PREDICTION_ACK_WIRE_POLICY,
 		"captures": _fix10_ack_captures,
 		"capture_mismatches": _fix10_ack_capture_mismatches,
 		"snapshots_with_ack": _fix10_snapshots_with_ack,
