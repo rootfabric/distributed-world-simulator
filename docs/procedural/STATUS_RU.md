@@ -1,6 +1,6 @@
 # Universal World Generation Fabric — status ledger
 
-**Current branch:** `feature/g6-hydrology-fluid-surface-v0`
+**Current branch:** `feature/g6-hydrology-fluid-surface-v0`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
@@ -8,32 +8,33 @@ G6.0 Fluid Contracts                   ACCEPTED
 G6.1 CasualRiverProviderV1             ACCEPTED
 G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
 G6.3 Runtime WaterSurfaceQuery         ACCEPTED
-G6.4 Casual Visual River Lab           FIX4 IMPLEMENTED CANDIDATE
+G6.4 Casual Visual River Lab           FIX4 MANUAL PASS / AUTOMATED RERUN IN FULL GATE
+G6 Full Acceptance                     IMPLEMENTED CANDIDATE — BLOCKED BY SHARED MW10 BASELINE
 ```
 
-Fix3 automated Windows gate passed on `3a5427fb1ccdad8e2a63650c5c253a0ac1fcf298`: G2 selection refined from far LOD 1 to near LOD 9 and G3 surface triangles from 120 to 4176. The manual run reached LOD 10, but additional terrain detail remained visually inconclusive because the Fix3 lab recipe used only four G3 octaves: `600 / 300 / 150 / 75 km` wavelengths.
+G6.4 Fix4 manual evidence is recorded: observer refinement from about `LOD 6 @ 812.7 km` to `LOD 10 @ 42.2 km`, with subtle higher-frequency macro irregularities becoming visible while the river and canonical IDs remain stable. The remaining Fix4 automated rerun is intentionally folded into `RUN_G6_FULL_ACCEPTANCE.ps1`.
 
-Fix4 keeps the accepted G3 provider unchanged and changes only the visual-lab recipe:
-
-```text
-G3 base wavelength      600 km
-G3 octave count         8
-G3 persistence          0.58
-minimum source signal   ~4.7 km
-```
-
-This lets increasing G2 LOD expose genuinely new height-field frequencies instead of only adding triangles over a ~75 km-limited field.
-
-Standalone G6.4 launches now set `BREAKPOINT_RUNTIME_DISABLED=1`, because the visual lab does not require the MCP runtime bridge and must not fail when `127.0.0.1:9081` is already occupied.
-
-Run:
+Full gate:
 
 ```powershell
 $env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_4_CASUAL_VISUAL_RIVER_LAB_TESTS.ps1
-.\START_G6_4_VISUAL_RIVER_LAB.ps1
+.\RUN_G6_FULL_ACCEPTANCE.ps1
 ```
 
-Manual acceptance requires visible higher-frequency macro detail during `W` refine, coarsening on `S`, stable FeatureId/FluidRegionId, and continuous PX/PZ river presentation.
+The full gate requires:
 
-River-valley carving remains deferred to G8 Geomorphology. Next after G6.4 acceptance: G6 full sync/regression gate, then G7 Semantic Field Fabric.
+```text
+GLOBAL config == main == G5
+current G5 is ancestor of G6
+accepted MW10 atomic-lock blobs exist in G5 and G6
+G6.0-G6.4 focused chain PASS
+MW10 lock-release retry PASS
+RUN_WORLD_REGRESSION_TESTS.ps1 PASS
+clean worktree + git diff --check
+```
+
+Current blocker: PR #43 (`MW10: integrate atomic lock release into shared G5 baseline`) is still open and not merged. By design G6 does not privately copy that fix. After #43 lands in G5, resynchronize G6 and rerun the same full gate.
+
+Assistant-side runtime execution was attempted, but the available container has neither a Godot binary nor a local repository checkout, and network clone/download is unavailable. No assistant-side Godot PASS is claimed.
+
+After G6 Full Acceptance: `G7 Semantic Field Fabric`.
