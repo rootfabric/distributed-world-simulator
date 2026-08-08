@@ -118,6 +118,18 @@ func _test_inventory_layout_write_suppression() -> void:
 	var first_hint_updates: int = int(first.get("interaction_hint_layout_updates", 0))
 	_assert(first_sort_updates >= 1, "FIX9 initial sort geometry is applied")
 	_assert(first_hint_updates >= 1, "FIX9 initial hint geometry is applied")
+	var player_minimum: Vector2 = enhancer.player_sort_button.get_combined_minimum_size()
+	var external_minimum: Vector2 = enhancer.external_sort_button.get_combined_minimum_size()
+	_assert(
+		enhancer.player_sort_button.size.x + 0.001 >= player_minimum.x
+		and enhancer.player_sort_button.size.y + 0.001 >= player_minimum.y,
+		"FIX9 player sort geometry respects Godot combined minimum size"
+	)
+	_assert(
+		enhancer.external_sort_button.size.x + 0.001 >= external_minimum.x
+		and enhancer.external_sort_button.size.y + 0.001 >= external_minimum.y,
+		"FIX9 external sort geometry respects Godot combined minimum size"
+	)
 
 	enhancer._layout_sort_buttons()
 	enhancer._layout_interaction_hint()
