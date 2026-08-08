@@ -1,11 +1,12 @@
 {
-  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v1",
+  "schema": "planet_simulator.ch7_universal_character_equipment_validation.v2",
   "branch": "feature/ch6-controllable-entity-presentation",
   "base_exact_sha": "5d408029969ba8953011c559fc1376af357bca58",
   "base_checkpoint": "CH6 fix2 / Jump Crouch Presentation Polish + visual ground compensation — ACCEPTED",
   "implemented_head_before_record": "477484870d9fe6133a964cb5c6bbd1c6947893a6",
-  "delivery": "CH7 rigid equipment candidate / universal semantic equipment + Quaternius composition",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_GODOT_RERUN",
+  "fix1_head_before_record": "9fdbc119288b8ed7d15869272681f944d7763245",
+  "delivery": "CH7 rigid equipment candidate fix1 / explicit Godot 4.7.1 test typing",
+  "decision": "FIX1_PENDING_WINDOWS_GODOT_RERUN",
   "scope": {
     "production_lunar_player_changed": false,
     "network_runtime_changed": false,
@@ -42,6 +43,44 @@
     "ch7_7_second_rig_abstraction_proof": true,
     "ch7_8_skinned_garment": false,
     "ch7_9_full_lifecycle_acceptance": false
+  },
+  "fix1": {
+    "trigger": "Windows Godot 4.7.1 double parsed the first CH7 test and rejected strict := inference from helper functions without declared return types",
+    "observed_errors": [
+      "Cannot infer the type of human variable because the value doesn't have a set type",
+      "Cannot infer the type of robot variable because the value doesn't have a set type",
+      "Cannot infer the type of helmet variable because the value doesn't have a set type",
+      "Cannot infer the type of backpack variable because the value doesn't have a set type",
+      "Cannot infer the type of eva_suit variable because the value doesn't have a set type"
+    ],
+    "implementation": [
+      "test_ch7_character_equipment_domain now declares Domain.Layout and Domain.Profile helper return types and local variable types explicitly",
+      "test_ch7_quaternius_equipment_rig_adapter now declares dynamic anchor/node/string types explicitly",
+      "test_ch7_quaternius_equipment_lab now declares values read through the dynamically instantiated lab explicitly rather than relying on strict inference"
+    ],
+    "runtime_behavior_changed": false,
+    "production_code_changed": false,
+    "ch6_code_changed": false,
+    "commits": [
+      "91581c9a8887fa20cc970f1deb2e0b48a326071a",
+      "2f649cabd4d844ca919547217e3978dd0d73ab34",
+      "9fdbc119288b8ed7d15869272681f944d7763245"
+    ]
+  },
+  "windows_rerun_1": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows editor double x86_64",
+    "asset_preflight": "PASS (18 glTF, 0 files normalized, 0 URI fixes, 0 export-name recoveries)",
+    "editor_import": "PASS",
+    "ch6_avatar_presenter": "PASS 43 assertions",
+    "ch6_character_lab": "PASS 11 assertions",
+    "ch5_legacy_first_person_adapter": "PASS 26 assertions",
+    "ch6_first_person_jump_crouch_lab": "PASS 76 assertions",
+    "ch6_controllable_view_adapter_shadow": "PASS 66 assertions",
+    "ch6_shadow_proxy_contract": "PASS 21 assertions",
+    "ch6_acceptance_runner": "PASS",
+    "ch7_character_equipment_domain": "BLOCKED_BY_PARSE_ERROR_BEFORE_EXECUTION",
+    "implementation_failure_observed": false,
+    "status": "SUPERSEDED_BY_FIX1_PENDING_RERUN"
   },
   "character_compatibility": {
     "generic_second_rig_test": "independent humanoid/robot node layouts use the same semantic body.head and gear.back entries through different CharacterRigAdapter maps",
@@ -105,16 +144,6 @@
     "quaternius_equipment_lab": "tests/characters/test_ch7_quaternius_equipment_lab.gd",
     "graphical_lab": "scenes/labs/character/quaternius_equipment_lab.tscn",
     "graphical_launcher": "PLAY_CH7_CHARACTER_EQUIPMENT_LAB.ps1"
-  },
-  "authoring_validation": {
-    "repository_compare": "PASS: candidate branch is fast-forward ahead of accepted CH6 base and CH7 diff contains added CH7 paths only",
-    "godot_binary_available_in_authoring_environment": false,
-    "editor_import": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
-    "ch6_runtime_regression": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
-    "ch7_domain_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
-    "ch7_presenter_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
-    "ch7_quaternius_rig_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT",
-    "ch7_graphical_lab_runtime": "NOT_EXECUTED_IN_AUTHORING_ENVIRONMENT"
   },
   "windows_acceptance_gate": {
     "engine": "Godot 4.7.1 stable double custom build used for CH6 acceptance",
