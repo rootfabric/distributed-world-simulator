@@ -1,7 +1,6 @@
 class_name FullBodyFirstPersonAdapter
 extends "res://scripts/characters/presentation/controllable_view_adapter.gd"
 
-const PresentationProfile = preload("res://scripts/characters/presentation/controllable_presentation_profile.gd")
 const FIRST_PERSON_HEAD_SCALE := Vector3(0.001, 0.001, 0.001)
 
 var avatar: Node
