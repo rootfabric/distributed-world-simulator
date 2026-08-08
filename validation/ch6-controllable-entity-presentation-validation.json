@@ -77,6 +77,20 @@
     "expected_mesh_resource_reuse_count": 5,
     "test": "tests/characters/test_ch6_controllable_view_adapter.gd"
   },
+  "shadow_contract_test": {
+    "test": "tests/characters/test_ch6_shadow_proxy_contract.gd",
+    "local_result": "21/21 PASS",
+    "covers": [
+      "skinned WORLD_PROXY",
+      "same Mesh resource",
+      "same Skin resource",
+      "Skeleton3D NodePath reuse",
+      "SHADOWS_ONLY mode",
+      "dedicated shadow layer",
+      "CUSTOM_PROXY activation",
+      "CUSTOM_PROXY visibility/layer/cast_shadow restore"
+    ]
+  },
   "real_quaternius_gate": {
     "test": "tests/characters/test_ch5_full_body_first_person_lab.gd",
     "requires_external_assets": true,
@@ -87,12 +101,22 @@
     "requires_root_motion_disabled": true
   },
   "local_authoring_validation": {
-    "status": "FOCUSED_PASS",
+    "status": "FOCUSED_AND_SYNTHETIC_GRAPHICAL_PASS",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb linuxbsd editor double x86_64",
     "generic_world_proxy": "PASS, 33 assertions in focused mini-project",
-    "skinned_world_proxy": "PASS, same Skeleton3D resolved through proxy NodePath",
+    "shadow_proxy_contract": "21/21 PASS",
     "custom_proxy": "PASS, SHADOWS_ONLY activation and original state restoration",
     "api_check": "GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY and MeshInstance3D skeleton/surface APIs parsed and executed",
+    "synthetic_graphical_render": {
+      "renderer": "Godot Compatibility OpenGL 4.5 under Xvfb/llvmpipe",
+      "camera_world_layer_hidden": true,
+      "shadow_proxy_layer_visible_to_camera": true,
+      "source_body_visible_in_image": false,
+      "shadow_visible_with_proxy": true,
+      "no_proxy_vs_with_proxy_pixel_difference": true,
+      "no_proxy_vs_after_proxy_pixel_difference": false,
+      "result": "PASS; shadow-only proxy changes only the rendered shadow contribution while the source body remains excluded"
+    },
     "full_repository_suite": "pending Windows rerun because full repository checkout is not present in the local validation container"
   },
   "windows_acceptance_gate": {
@@ -106,6 +130,7 @@
       "CH5 legacy adapter compatibility PASS",
       "CH5/CH6 first-person lab PASS including real skinned Quaternius shadow proxy",
       "CH6 non-humanoid controllable adapter + shadow preservation PASS",
+      "CH6 shadow proxy contract PASS",
       "first-person view contains no own head/neck/chest/shoulder geometry",
       "first-person floor/world receives the animated controlled-body shadow",
       "third-person view shows the full animated body and normal shadow",
