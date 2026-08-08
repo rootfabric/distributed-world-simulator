@@ -1,0 +1,38 @@
+{
+  "schema": "planet_simulator.validation_record.v1",
+  "checkpoint": "G5_MW10_SHARED_BASELINE",
+  "branch": "feature/g5-world-feature-graph",
+  "decision": "ACCEPTED",
+  "accepted_head_before_validation_metadata": "36ec94fcc96e0f1a0837bbfecffd970ea614cbee",
+  "integration": {
+    "source_pr": 43,
+    "source_pr_merged": true,
+    "scope_files": 2,
+    "repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
+    "retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5",
+    "hydrology_files_changed": false
+  },
+  "assistant_linux_double": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "linuxbsd-x86_64-double",
+    "official_lock_release_retry": "PASS_12_ASSERTIONS",
+    "additional_acquire_release_stress": "PASS_501_ASSERTIONS",
+    "stress_cycles": 100,
+    "lock_residue": 0,
+    "note": "The focused assistant fixture executes the accepted atomic acquire/release implementation on the project-provided Linux double Godot. Unrelated checkpoint/persistence dependencies are isolated because this focused test exercises only lock lifecycle paths."
+  },
+  "independent_windows_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "lock_release_retry": "PASS_12_ASSERTIONS",
+    "contention_runs": "25/25_PASS",
+    "contention_assertions": "1275/1275_PASS",
+    "zero_or_multiple_winners": 0,
+    "ordinary_mw10_transactions": "PASS_184_ASSERTIONS",
+    "ordinary_mw10_processes": "PASS_51_ASSERTIONS"
+  },
+  "architecture": {
+    "shared_baseline_owner": "feature/g5-world-feature-graph",
+    "g6_private_copy_allowed": false,
+    "next": "resynchronize G6 with real G5 ancestry and run G6 full acceptance"
+  }
+}
