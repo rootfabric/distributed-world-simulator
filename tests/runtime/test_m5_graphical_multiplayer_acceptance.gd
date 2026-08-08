@@ -36,6 +36,8 @@ func _init() -> void:
 		"disconnect_a": false,
 		"finish": false,
 		"reconnect_peer_result_file": "",
+		"convergence_prepare": {},
+		"convergence_release_id": "",
 	})
 	var profiles := [
 		ProcessEnvironment.create(root.path_join("profiles"), "server", 0, "disabled"),
@@ -118,17 +120,13 @@ func _init() -> void:
 	var b_converge := _wait_state(b_path, ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FAILED"], CLIENT_TIMEOUT_MS)
 	_assert(String(a2_ready.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "A reconnect reached convergence barrier")
 	_assert(String(b_converge.get("state", "")) in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"], "B reached convergence barrier")
-	# Commit finalization before waiting for the matching pair. The client driver
-	# keeps locks revocable while finish=false so late authoritative snapshots can
-	# replace stale checksums. Once finish=true is atomically published, the first
-	# mutually observed matching lock becomes the committed barrier and can no
-	# longer be revoked between parent observation and client shutdown.
-	_write_control(control_path, {"finish": true})
-	var convergence_pair := _wait_convergence_pair(a2_path, b_path, CLIENT_TIMEOUT_MS)
+	var convergence_pair := _prepare_convergence_pair(a2_path, b_path, control_path, CLIENT_TIMEOUT_MS)
 	a2_ready = Dictionary(convergence_pair.get("a", a2_ready))
 	b_converge = Dictionary(convergence_pair.get("b", b_converge))
-	_assert(bool(convergence_pair.get("success", false)), "A and B reached identical player and Item Graph checksums")
+	_assert(bool(convergence_pair.get("success", false)), "A and B prepared identical player and Item Graph checksums")
 	_validate_pre_finish(a_ready, b_ready, a_cursor, b_wait, a2_ready, b_converge)
+	var prepare_id := String(convergence_pair.get("prepare_id", ""))
+	_write_control(control_path, {"finish": true, "convergence_release_id": prepare_id})
 	var a2_final := _wait_state(a2_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	var b_final := _wait_state(b_path, ["COMPLETE", "FAILED"], CLIENT_TIMEOUT_MS)
 	_assert(bool(a2_final.get("passed", false)), "A reconnect graphical acceptance completed")
@@ -246,6 +244,8 @@ func _validate_pre_finish(
 	_assert(not bool(a2.get("ui", {}).get("cursor_active", true)), "transient cursor did not survive reconnect")
 	_assert(String(a2.get("player_checksum", "")) == String(b.get("player_checksum", "")), "A and B player checksum convergence")
 	_assert(String(a2.get("item_checksum", "")) == String(b.get("item_checksum", "")), "A and B Item Graph checksum convergence")
+	_assert(String(a2.get("convergence_prepare_id", "")) == String(b.get("convergence_prepare_id", "")), "A and B prepared the same convergence generation")
+	_assert(bool(a2.get("convergence_prepared", false)) and bool(b.get("convergence_prepared", false)), "A and B both acknowledged prepared convergence")
 	_assert(String(b_wait.get("movement_result", {}).get("input_map_action", "")) == "move_forward", "B initial movement used InputMap")
 	_assert(int(b_wait.get("world", {}).get("remote_despawn_count", 0)) >= 1, "B despawned A after disconnect")
 
@@ -301,30 +301,73 @@ func _wait_state(path: String, states: Array[String], timeout_ms: int) -> Dictio
 	return last
 
 
-func _wait_convergence_pair(a_path: String, b_path: String, timeout_ms: int) -> Dictionary:
+func _prepare_convergence_pair(a_path: String, b_path: String, control_path: String, timeout_ms: int) -> Dictionary:
 	var started := Time.get_ticks_msec()
 	var a: Dictionary = {}
 	var b: Dictionary = {}
+	var generation := 0
+	var active_id := ""
+	var target_player := ""
+	var target_item := ""
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		a = Support.read(a_path)
 		b = Support.read(b_path)
 		var a_state := String(a.get("state", ""))
 		var b_state := String(b.get("state", ""))
+		if a_state == "FAILED" or b_state == "FAILED":
+			return {"success": false, "a": a, "b": b, "prepare_id": active_id}
 		var a_player := String(a.get("player_checksum", ""))
 		var b_player := String(b.get("player_checksum", ""))
 		var a_item := String(a.get("item_checksum", ""))
 		var b_item := String(b.get("item_checksum", ""))
+		if not active_id.is_empty():
+			var a_prepared := (
+				a_state == "CONVERGENCE_PREPARED"
+				and String(a.get("convergence_prepare_id", "")) == active_id
+				and a_player == target_player
+				and a_item == target_item
+			)
+			var b_prepared := (
+				b_state == "CONVERGENCE_PREPARED"
+				and String(b.get("convergence_prepare_id", "")) == active_id
+				and b_player == target_player
+				and b_item == target_item
+			)
+			if a_prepared and b_prepared:
+				return {"success": true, "a": a, "b": b, "prepare_id": active_id}
+			var a_still_target := a_player == target_player and a_item == target_item
+			var b_still_target := b_player == target_player and b_item == target_item
+			if not a_still_target or not b_still_target:
+				_write_control(control_path, {"convergence_prepare": {}})
+				active_id = ""
+				target_player = ""
+				target_item = ""
+				OS.delay_msec(POLL_MS)
+				continue
+			OS.delay_msec(POLL_MS)
+			continue
 		if (
-			a_state in ["CONVERGENCE_LOCKED", "COMPLETE"]
-			and b_state in ["CONVERGENCE_LOCKED", "COMPLETE"]
+			a_state == "CONVERGENCE_LOCKED"
+			and b_state == "CONVERGENCE_LOCKED"
 			and not a_player.is_empty()
 			and a_player == b_player
 			and not a_item.is_empty()
 			and a_item == b_item
 		):
-			return {"success": true, "a": a, "b": b}
+			generation += 1
+			target_player = a_player
+			target_item = a_item
+			active_id = "m5-convergence/%d/%s/%s" % [generation, target_player.left(12), target_item.left(12)]
+			_write_control(control_path, {
+				"convergence_prepare": {
+					"id": active_id,
+					"player_checksum": target_player,
+					"item_checksum": target_item,
+				},
+			})
 		OS.delay_msec(POLL_MS)
-	return {"success": false, "a": a, "b": b}
+	_write_control(control_path, {"convergence_prepare": {}})
+	return {"success": false, "a": a, "b": b, "prepare_id": active_id}
 
 
 func _wait_server_counts(path: String, joins: int, leaves: int, timeout_ms: int) -> Dictionary:
