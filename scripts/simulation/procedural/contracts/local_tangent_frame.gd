@@ -49,9 +49,10 @@ static func validate(value: Dictionary) -> Dictionary:
 	var east: Vector3 = _vector3(Array(value["east"]))
 	var north: Vector3 = _vector3(Array(value["north"]))
 	var up: Vector3 = _vector3(Array(value["up"]))
-	for pair in [["east", east], ["north", north], ["up", up]]:
-		if absf(Vector3(pair[1]).length() - 1.0) > ORTHONORMAL_TOLERANCE:
-			return GeoUtilsScript.failure("LOCAL_TANGENT_FRAME_AXIS_NOT_UNIT", {"axis": String(pair[0])})
+	for axis_name in ["east", "north", "up"]:
+		var axis: Vector3 = _vector3(Array(value[axis_name]))
+		if absf(axis.length() - 1.0) > ORTHONORMAL_TOLERANCE:
+			return GeoUtilsScript.failure("LOCAL_TANGENT_FRAME_AXIS_NOT_UNIT", {"axis": String(axis_name)})
 	if absf(east.dot(north)) > ORTHONORMAL_TOLERANCE or absf(east.dot(up)) > ORTHONORMAL_TOLERANCE or absf(north.dot(up)) > ORTHONORMAL_TOLERANCE:
 		return GeoUtilsScript.failure("LOCAL_TANGENT_FRAME_NOT_ORTHOGONAL")
 	var expected_north: Vector3 = east.cross(up)
