@@ -3,6 +3,7 @@ extends Node3D
 
 const AvatarPresenter = preload("res://scripts/characters/presentation/quaternius_avatar_presenter.gd")
 const FirstPersonAdapter = preload("res://scripts/characters/presentation/full_body_first_person_adapter.gd")
+const PresentationProfile = preload("res://scripts/characters/presentation/controllable_presentation_profile.gd")
 
 const WALK_SPEED := 3.5
 const RUN_SPEED := 7.5
@@ -16,6 +17,7 @@ const CAMERA_PITCH_MAX := 1.15
 var player: CharacterBody3D
 var avatar
 var first_person_adapter
+var presentation_profile
 var camera_pivot: Node3D
 var camera_yaw: Node3D
 var camera_pitch: Node3D
@@ -137,7 +139,7 @@ func _build_environment() -> void:
 
 func _build_player() -> void:
 	player = CharacterBody3D.new()
-	player.name = "CH5CharacterBody"
+	player.name = "CH6ControllableBody"
 	player.position = Vector3(0.0, 0.05, 0.0)
 	player.floor_snap_length = 0.35
 	add_child(player)
@@ -158,10 +160,19 @@ func _build_player() -> void:
 		"model_yaw_offset_deg": yaw_offset_deg,
 	})
 
+	presentation_profile = PresentationProfile.new()
+	presentation_profile.profile_id = &"quaternius_humanoid"
+	presentation_profile.entity_kind = &"humanoid"
+	presentation_profile.first_person_policy = PresentationProfile.FirstPersonPolicy.HIDE_WORLD_MODEL
+	presentation_profile.world_render_layer_index = 20
+	presentation_profile.viewmodel_render_layer_index = 19
+	presentation_profile.keep_world_animation_active = true
+	presentation_profile.allow_shadow_from_hidden_world_model = true
+
 	first_person_adapter = FirstPersonAdapter.new()
-	first_person_adapter.name = "FullBodyFirstPersonAdapter"
+	first_person_adapter.name = "ControllableFirstPersonAdapter"
 	player.add_child(first_person_adapter)
-	first_person_adapter.bind_avatar(avatar)
+	first_person_adapter.bind_avatar(avatar, presentation_profile)
 
 	camera_yaw = Node3D.new()
 	camera_yaw.name = "CameraYaw"
@@ -192,6 +203,7 @@ func _build_player() -> void:
 	third_person_camera.fov = 70.0
 	third_person_arm.add_child(third_person_camera)
 
+	first_person_adapter.bind_cameras(first_person_camera, third_person_camera)
 	set_first_person_mode(false)
 
 
@@ -211,16 +223,17 @@ func _refresh_status() -> void:
 	var report: Dictionary = avatar.create_report()
 	var fp_report: Dictionary = first_person_adapter.create_report() if first_person_adapter != null else {}
 	status_label.text = (
-		"CH5 Full-Body First-Person Lab\n"
+		"CH5 fix1 / CH6 Controllable Presentation Lab\n"
 		+ "WASD — ходьба | Shift — бег | Space — прыжок | мышь — камера | C — 1/3 лицо | V — развернуть модель\n"
-		+ "view: %s\nasset: %s\nsemantic: %s\nanimation: %s\nhead mask: %s (%s)\nmodel: %s\nmatched bones: %d"
+		+ "view: %s\nentity: %s\npolicy: %s\nself body: %s\nasset: %s\nsemantic: %s\nanimation: %s\nmodel: %s\nmatched bones: %d"
 		% [
 			"FIRST_PERSON" if first_person_mode else "THIRD_PERSON",
+			String(fp_report.get("entity_kind", "")),
+			String(fp_report.get("first_person_policy", "")),
+			"HIDDEN_FROM_FP_CAMERA" if bool(fp_report.get("world_hidden_from_first_person", false)) else "VISIBLE_TO_FP_CAMERA",
 			String(report.get("asset_mode", "")),
 			String(report.get("current_semantic", "")),
 			String(report.get("current_animation", "")),
-			"ON" if bool(fp_report.get("mask_applied", false)) else "OFF",
-			String(fp_report.get("mask_mode", "")),
 			String(report.get("model_path", "")),
 			int(report.get("matched_bones", 0)),
 		]
