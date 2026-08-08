@@ -49,6 +49,11 @@ Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
 )
 
+Invoke-GodotCheck -Name "FIX10 fix6 semantic baseline + replay correctness" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix6.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 fix5 composite ACK semantic identity" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd"
@@ -107,12 +112,13 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates FIX10 fix5 composite ACK identity, fix4 ACK timeline/MTU headroom, fix3 remote continuity/standalone ACK, fix2 MTU preflight, FIX10 ack baselines, plus direct FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly validates FIX10 fix6 semantic input scheduling, transition-aware ACK baselines and ACK dispatch, then fix5/fix4/fix3/fix2 plus FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
-Write-Host "Final FIX10 acceptance requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS." -ForegroundColor Yellow
-Write-Host "FIX10 fix5 target: ack_mismatches=0 and sidecars_rejected=0 even when multiple input sequences share one client prediction tick." -ForegroundColor Yellow
+Write-Host "Final FIX10 acceptance still requires a >=5 minute two-client LOCAL movement/item stress run and ANALYZE_M7_FIX10_RESULTS.ps1 PASS." -ForegroundColor Yellow
+Write-Host "FIX10 fix6 target: semantic server scheduling preserves client_tick spacing; phase-only ACK offsets do not enter direct baseline correction; PREDICTION_ACK never reports UNKNOWN_M3_SERVER_MESSAGE; snapshot ACK registration survives canonical same-revision conflicts." -ForegroundColor Yellow
+Write-Host "FIX10 fix5 target remains ack_mismatches=0 and sidecars_rejected=0." -ForegroundColor Yellow
 Write-Host "FIX10 fix4 MTU target remains movement_snapshots_dropped_for_mtu=0 while max_unreliable_sent_bytes remains <=1350." -ForegroundColor Yellow
-Write-Host "Remote presentation fix3 is already visually accepted by user; keep watching [fix10_fix3_remote] for renewed moving HOLD/underrun growth or catch-up teleport." -ForegroundColor Yellow
+Write-Host "Remote presentation fix3 remains unchanged; continue watching moving HOLD/underrun telemetry during the long run." -ForegroundColor Yellow
