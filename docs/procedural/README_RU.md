@@ -12,21 +12,22 @@ Current state:
 G3 ACCEPTED
 G4 ACCEPTED — Architecture Review A PASS
 G5 ACCEPTED
-G6.0 IMPLEMENTED CANDIDATE
-G6.1 NEXT — after focused G6.0 acceptance
+G6.0 ACCEPTED
+G6.1 ACCEPTED
+G6.2 NEXT — cross-cell / cross-LOD continuity
 ```
 
 Start here:
 
 1. `docs/procedural/STATUS_RU.md`
-2. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
-3. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
-4. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
-5. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
-6. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
-7. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
-8. `docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md`
-9. `docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md`
+2. `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`
+3. `docs/checkpoints/G6_0_FLUID_CONTRACTS_CANDIDATE_RU.md`
+4. `docs/checkpoints/G5_WORLD_FEATURE_GRAPH_ACCEPTED_RU.md`
+5. `docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md`
+6. `docs/procedural/G6_P0_ALIGNMENT_RU.md`
+7. `docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md`
+8. `docs/plans/UNIVERSAL_WORLD_GENERATION_EXECUTION_PLAN_RU.md`
+9. `docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md`
 
 ## Current architecture
 
@@ -45,7 +46,7 @@ G5 canonical World Feature Graph
         ↓
 G6.0 canonical fluid contracts
         ↓
-G6.1 river provider
+G6.1 deterministic river provider
         ↓
 G6.2 cross-cell/cross-LOD continuity
         ↓
@@ -62,7 +63,7 @@ world semantics = recipe-driven provider graph
 
 G5 established spatial semantic identity above representation cells. Its accepted seam gate proves that a canonical feature keeps one identity while its representation spans different cube-sphere cells and LODs.
 
-G6.0 adds the canonical fluid vocabulary:
+G6.0 established canonical fluid vocabulary:
 
 ```text
 FluidType
@@ -73,42 +74,42 @@ RiverChannelProfile
 WaterSurfaceQuery
 ```
 
-`FluidRegionId` depends only on:
+G6.1 established the first deterministic river compiler:
 
 ```text
-body_id
-fluid_type_id
-seed
-generator_version
-stable_key
+G5 RiverFeature
+      ↓
+CasualRiverProviderV1
+      ↓
+FluidRegionId + RiverSpline + RiverChannelProfile + FluidSurfaceDescriptor
 ```
 
-and deliberately does not depend on:
+Accepted rule:
 
 ```text
-SurfaceCellKey
-LOD
-camera
-renderer
-streaming state
+G5 FeatureId = semantic river owner
+provider = deterministic derived geography compiler
+cell/LOD/renderer = representation only
 ```
 
-`FluidSurfaceDescriptor` can optionally reference a G5 `FeatureId`, so rivers may be derived from stable feature semantics while lakes, oceans, lava seas or other fluid regions remain first-class generic fluid geography.
+Exact Windows G6.1 evidence:
 
-Focused validation:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FLUID_CONTRACT_TESTS.ps1
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+G5 World Feature Graph       PASS — 249 assertions
+G5 feature/cell identity     PASS — 94 assertions
+G6.0 fluid contracts         PASS — 169 assertions
+G6.1 CasualRiverProviderV1   PASS — 74 assertions
+git diff --check             PASS
 ```
 
-The focused runner rechecks both accepted G5 contract suites before the new G6.0 contract suite.
+Blocking GEO track is now `G6.2 — Cross-Cell / Cross-LOD River Continuity`.
 
-Blocking GEO track after that focused acceptance is `G6.1 — CasualRiverProviderV1`.
+G6.2 must vary representation addressing across cube-sphere cells/faces and LOD 2/4/8/12 while preserving canonical `FeatureId`, `FluidRegionId`, `RiverSpline.spline_id`, `RiverChannelProfile.profile_id`, and provider result identity.
 
 ## Detail / asset research doctrine
 
-The 2026-08-08 asset research is intentionally **reference-only during the base generation program**.
+The 2026-08-08 asset research remains **reference-only during the base generation program**.
 
 ```text
 BASE FIRST
@@ -132,10 +133,3 @@ mutation compatibility
 ```
 
 Only after that baseline is accepted should the project spend significant effort adapting high-quality ideas from the accumulated reference mosaic.
-
-See:
-
-```text
-docs/procedural/SESSION_2026-08-08_GENERATION_ASSET_RESEARCH_RU.md
-docs/plans/POST_BASELINE_WORLD_DETAIL_PLAN_RU.md
-```
