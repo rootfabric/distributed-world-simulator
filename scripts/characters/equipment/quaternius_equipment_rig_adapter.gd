@@ -111,7 +111,9 @@ func create_report() -> Dictionary:
 			var node = _fallback_anchors[anchor_id]
 			resolved[anchor_id] = String(node.name) if node is Node else ""
 	return {
-		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v3",
+		# Keep the accepted CH7 report contract stable. CH7.8 adds optional
+		# capability fields, but that is not a breaking schema change.
+		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v2",
 		"rig_profile_id": rig_profile_id,
 		"mode": _mode,
 		"resolved_anchors": resolved,
@@ -248,8 +250,6 @@ func _find_descendant_named(root: Node, target_name: String) -> Node:
 
 
 func _find_first_skeleton(root: Node) -> Skeleton3D:
-	if root == null:
-		return null
 	if root is Skeleton3D:
 		return root as Skeleton3D
 	for child in root.get_children():
