@@ -2,44 +2,64 @@
   "schema": "planet_simulator.ch4_quaternius_animated_character_validation.v1",
   "branch": "feature/ch4-quaternius-animated-character",
   "base_exact_sha": "25a156638aaf74d136ecf299ebe0d96c0f30897a",
-  "delivery": "fix1",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE_PENDING_REAL_QUATERNIUS_RERUN",
+  "delivery": "fix2",
+  "decision": "FIX2_IMPLEMENTED_CANDIDATE_PENDING_REAL_QUATERNIUS_RERUN",
   "scope": {
     "production_files_changed": 0,
     "integration_mode": "isolated_walkable_character_lab",
     "root_motion_authority": false
   },
-  "user_observed_blocker": {
-    "platform": "Windows PowerShell 5.1",
-    "editor_import": "ABORTED_BY_NATIVE_STDERR_WARNING",
-    "warning": "glTF URI requested textures path with case different from extracted Textures directory",
-    "runtime_result": "FALLBACK",
-    "runtime_error": "No loader found for selected raw .gltf because editor import did not finish"
-  },
+  "user_observed_blockers": [
+    {
+      "delivery": "candidate",
+      "platform": "Windows PowerShell 5.1",
+      "editor_import": "ABORTED_BY_NATIVE_STDERR_WARNING",
+      "runtime_result": "FALLBACK",
+      "root_cause": "PowerShell converted non-fatal Godot stderr warning into terminating NativeCommandError before editor import completed"
+    },
+    {
+      "delivery": "fix1",
+      "asset_preflight": "FAIL",
+      "real_package_errors": [
+        "Superhero_Female_FullBody.gltf -> T_Eye_Normal_png.png",
+        "Superhero_Male_FullBody.gltf -> T_Hair_1_Normal_png.png",
+        "Superhero_Male_FullBody.gltf -> T_Eye_Normal_png.png"
+      ],
+      "root_cause": "Official Standard glTF export contains malformed duplicated-extension texture URIs that are not resolvable by case normalization alone"
+    }
+  ],
   "fix1": {
     "powershell_native_stderr": "Godot warnings no longer become terminating NativeCommandError; runner decides by process exit code and explicit failure markers",
-    "asset_preflight": "Before editor import, local glTF relative URI path case is normalized against the real filesystem without rewriting numeric glTF content",
+    "asset_preflight": "Local glTF relative URI path case is normalized against the real filesystem before editor import",
     "play_self_sufficient": "PLAY performs preflight and editor import before graphical scene launch",
-    "strict_external_lab_gate": "When both Quaternius packages are installed, both presenter and walkable lab must use QUATERNIUS_RETARGET or QUATERNIUS_EMBEDDED instead of fallback"
+    "strict_external_lab_gate": "Installed Quaternius packages may not silently fall back"
+  },
+  "fix2": {
+    "safe_export_alias": "Known duplicated image extension spelling such as _png.png is normalized to .png",
+    "resolution_policy": "Exact/case-only resolution is attempted first; malformed export alias recovery is used only after exact failure",
+    "recursive_recovery": "If the aliased file is not in the referenced directory, the closest unique matching file inside the same Quaternius asset root may be used",
+    "ambiguity_policy": "Multiple equally close candidates remain a hard failure with candidate diagnostics; no arbitrary texture is selected"
   },
   "local_engine": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
     "source_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz"
   },
-  "local_fix1_validation": {
-    "editor_import": "PASS",
-    "case_mismatch_fixture": "PASS: textures/T_Hair.png and mesh.bin normalized to real Textures/T_Hair.png and Mesh.bin while integer JSON fields remained byte-for-byte numeric integers",
-    "synthetic_same_rig_external_presenter": "18/18 PASS",
-    "synthetic_walkable_lab_strict_external": "9/9 PASS",
-    "presentation_owns_character_body": false,
-    "presentation_owns_collision": false,
-    "presentation_reads_input": false,
-    "presentation_calls_move_and_slide": false,
-    "presentation_has_network_dependency": false,
-    "root_motion_applied": false
+  "local_fix2_validation": {
+    "exact_user_failure_fixture": "PASS",
+    "fixture_input_uris": [
+      "T_Eye_Normal_png.png",
+      "T_Hair_1_Normal_png.png",
+      "T_Eye_Normal_png.png"
+    ],
+    "fixture_output": "PASS (2 glTF, 2 files normalized, 3 URI fixes, 3 export-name recoveries)",
+    "resolved_uris": [
+      "T_Eye_Normal.png",
+      "T_Hair_1_Normal.png"
+    ],
+    "engine_parse_and_execution": "PASS on Godot 4.7.1 double a13da4feb"
   },
   "real_asset_acceptance_gate": {
-    "status": "PENDING_USER_RERUN_AFTER_GIT_PULL",
+    "status": "PENDING_USER_RERUN_AFTER_FIX2_PULL",
     "required": [
       "asset_preflight PASS with the installed official Standard packages",
       "editor_import completes despite non-fatal Godot warnings",
