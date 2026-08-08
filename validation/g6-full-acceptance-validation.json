@@ -8,7 +8,8 @@
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "shell_runner": "RUN_G6_FULL_ACCEPTANCE.sh",
     "manifest": "config/procedural/g6-full-acceptance.v1.json",
-    "g6_4_manual_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md"
+    "g6_4_manual_record": "docs/checkpoints/G6_4_CASUAL_VISUAL_RIVER_LAB_MANUAL_PASS_RU.md",
+    "nested_powershell_runners_are_isolated_processes": true
   },
   "preflight_evidence": {
     "main_global_revision": "GLOBAL-P0-2026-08-08-R1",
@@ -19,14 +20,17 @@
     "mw10_shared_baseline_pr": 43,
     "mw10_shared_baseline_pr_state": "OPEN",
     "mw10_shared_baseline_pr_merged": false,
-    "mw10_shared_baseline_required_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
-    "mw10_shared_baseline_required_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5"
+    "mw10_required_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
+    "mw10_actual_g5_repository_blob": "ec596493c5b96a6140b17adbe18d6283c0615bf0",
+    "mw10_required_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5",
+    "mw10_retry_test_present_in_g5": false
   },
-  "expected_current_result": {
-    "repository_sync_preflight": "PASS_UNTIL_MW10_BASELINE_CHECK",
-    "mw10_shared_baseline_check": "BLOCKED_EXPECTED",
-    "reason": "PR #43 has not yet been merged into feature/g5-world-feature-graph",
-    "godot_runtime_should_start_before_baseline_is_fixed": false
+  "static_gate_result": {
+    "global_config_match": "PASS",
+    "shared_mw10_repository_blob": "BLOCKED_EXPECTED",
+    "shared_mw10_retry_test": "BLOCKED_EXPECTED",
+    "result": "BLOCKED_BEFORE_GODOT_BY_DESIGN",
+    "reason": "PR #43 has not yet been merged into feature/g5-world-feature-graph"
   },
   "runtime_validation": {
     "assistant_environment_godot_available": false,
@@ -40,7 +44,7 @@
     "Integrate accepted PR #43 into feature/g5-world-feature-graph",
     "Resynchronize feature/g6-hydrology-fluid-surface-v0 on top of updated G5",
     "Run RUN_G6_FULL_ACCEPTANCE.ps1",
-    "If PASS, record G6.4 ACCEPTED and G6 FULL ACCEPTANCE",
+    "If PASS, record G6.4 ACCEPTED and G6 SOURCE_ACCEPTED",
     "Then start G7 Semantic Field Fabric"
   ]
 }
