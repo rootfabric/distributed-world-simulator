@@ -1,0 +1,110 @@
+{
+  "stage": "M7 FIX7 - Smooth Prediction and Report Stall Removal",
+  "branch": "feature/m7-smooth-prediction-fix7",
+  "base": "f0b158d3c47978726a8b9bcb2ebb4488d391d5ec",
+  "base_stage": "M7 FIX6 automated Windows gate pass; long manual stress failed",
+  "decision": "FIX7 CANDIDATE - WINDOWS AUTOMATED GATE AND LONG TWO-CLIENT LOCAL STRESS REQUIRED",
+  "manual_fix6_stress_evidence": {
+    "session": "fix6stress1",
+    "network_profile": "LOCAL",
+    "server": {
+      "max_pending_inputs": 16,
+      "max_process_duration_ms": 352.734,
+      "max_report_snapshot_build_duration_ms": 348.208,
+      "max_peer_telemetry_duration_ms": 0.204,
+      "transient_stall_frames": 27,
+      "scheduler_backlog_final_ticks": 0
+    },
+    "client_a": {
+      "max_prediction_lead_ticks": 17,
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.9,
+      "history_miss_resets_observed": 20,
+      "same_revision_mutation_observed": true
+    },
+    "client_b": {
+      "raw_max_prediction_lead_ticks": 247,
+      "hard_corrections": 0,
+      "maximum_prediction_error_m": 0.4,
+      "same_revision_mutation_observed": true,
+      "tail_evidence": "authoritative_tick remained 9540 while prediction_tick advanced through 9547, 9667 and 9787 and receive/snapshot counters stopped changing; the 127/247 tick samples are post-authority-feed tail rather than normal live-session lead"
+    },
+    "subjective": [
+      "movement was substantially better than pre-FIX6",
+      "occasional run-ahead followed by a small rollback remained",
+      "normal local movement still felt discrete/stepwise"
+    ]
+  },
+  "root_causes": [
+    "FIX6 moved READY file I/O to a worker but still materialized the full get_report() on the authority thread; the full report traverses recovery/durable/replay state whose cost grows during item-heavy sessions",
+    "deterministic local prediction runs at 60 Hz and the old presentation path held each fixed-tick pose across higher-frequency render frames, exposing 0.1 m walk / 0.2 m sprint steps",
+    "GAMEPLAY_DELTA and snapshot delivery can race on separate streams; an older delta targeting the same revision after a newer-tick snapshot was being misclassified as MULTIPLAYER_SAME_REVISION_MUTATION",
+    "the FIX6 stress analyzer counted post-authority-feed client prediction tail as live-session prediction lead"
+  ],
+  "production_changes": [
+    "steady READY report dispatch now uses LIGHTWEIGHT_READY_FULL_TERMINAL_V1 and no longer calls the full get_report() on the authority realtime thread",
+    "light READY reports retain live snapshot, canonical Item Graph snapshot, convergence checksum, scheduler and bounded realtime counters while excluding durable/replay/recovery ledger traversal",
+    "the accepted FIX6 server runtime is preserved as an inherited implementation so FIX7 is an isolated policy overlay",
+    "FixedTickScheduler exposes O(1) residual accumulator/subtick alpha accessors without changing fixed-tick semantics",
+    "ClientPredictionReconciler keeps deterministic simulation at 60 Hz but samples render presentation with SUBTICK_VELOCITY_EXTRAPOLATION_V1; only the returned presentation pose advances during the residual sub-tick and extrapolation is capped at 0.35 m",
+    "the network playground disables Godot physics interpolation on the local predicted player/camera hierarchy because the prediction layer now owns render-rate presentation",
+    "MultiplayerGameplayReplicaStore treats an older-server-tick, different-checksum delta targeting the already-installed same revision as superseded transport history; equal/newer-tick different-checksum mutations remain strict failures"
+  ],
+  "test_changes": [
+    "tests/network/test_m7_smooth_prediction_fix7.gd covers render sub-tick smoothing without deterministic-state mutation, stale same-revision delta supersession, strict equal-tick mutation rejection, lightweight READY source contracts, and manual interpolation ownership",
+    "VALIDATE_M7_SMOOTH_PREDICTION_FIX7.ps1 composes FIX7 focused checks with NX4 and accepted FIX6/FIX5/network baselines",
+    "ANALYZE_M7_FIX7_STRESS.ps1 reports raw and live prediction lead separately and excludes only a trailing client-health suffix where both received-message and snapshot counters have frozen"
+  ],
+  "fix7_stress_thresholds": {
+    "max_live_prediction_lead_ticks": 12,
+    "max_pending_inputs": 20,
+    "max_server_process_ms": 75.0,
+    "max_ready_report_build_ms": 25.0,
+    "max_peer_telemetry_ms": 20.0,
+    "max_live_prediction_error_m": 0.75,
+    "max_transient_stall_frames": 10,
+    "max_live_history_miss_resets": 12,
+    "hard_corrections": 0,
+    "input_queue_full": 0,
+    "same_revision_mutation": 0,
+    "camera_interpolation_warning": 0
+  },
+  "assistant_exact_engine_probes": {
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "scheduler_wrapper_inherited_constants_and_state": "PASS - exact Godot probe confirmed child script can access inherited constants and protected-style member state",
+    "prediction_subtick_probe": "PASS - 60 Hz fixed position -0.1 m remained deterministic while 1/144 s residual presentation produced approximately -0.1416667 m at 6 m/s",
+    "manual_interpolation_api_probe": "PASS - Node.PHYSICS_INTERPOLATION_MODE_OFF exists and is assignable on exact engine",
+    "server_overlay_parse_probe": "PASS - FIX7 server overlay pattern loaded against exact-engine stub base",
+    "full_repository_available_to_assistant": false
+  },
+  "required_windows_automated_gate": [
+    "FIX7 editor import/composition PASS on exact Godot 4.7.1 double build",
+    "M7 FIX7 focused smooth-prediction contracts PASS",
+    "NX4 client prediction/reconciliation PASS",
+    "FIX6 server realtime hot-path regression PASS",
+    "FIX6 graphical-client telemetry regression PASS",
+    "FIX5 world-item consistency PASS",
+    "NX6 predicted item interaction PASS",
+    "accepted inventory regression PASS",
+    "NX3 fixed-tick PASS",
+    "two-client graphical process PASS"
+  ],
+  "required_manual_gate": {
+    "duration_minutes_min": 5,
+    "clients": 2,
+    "network_profile": "LOCAL",
+    "actions": [
+      "continuous walk/run/turn on both clients",
+      "repeated drop and pickup",
+      "split and stack",
+      "container transfer while both clients remain active"
+    ],
+    "subjective_acceptance": [
+      "no visible 60 Hz stepping on a high-refresh display",
+      "no recurring run-ahead/back-pull micro correction during ordinary LOCAL movement",
+      "no repeated Camera3D physics interpolation warning"
+    ],
+    "analyzer": "ANALYZE_M7_FIX7_STRESS.ps1 must PASS"
+  },
+  "merge_policy": "Do not merge FIX7 until the user supplies the exact Windows automated gate and long manual stress evidence."
+}

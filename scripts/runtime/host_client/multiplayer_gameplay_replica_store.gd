@@ -5,12 +5,14 @@ const DeltaContract = preload("res://scripts/runtime/networked_gameplay/contract
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA := "planet_simulator.multiplayer_gameplay_replica_store.v1"
+const FIX7_SAME_REVISION_DELTA_POLICY := "OLDER_TICK_DIFFERENT_CHECKSUM_IS_SUPERSEDED_V1"
 
 var _snapshot: Dictionary = {}
 var _snapshot_deliveries := 0
 var _delta_deliveries := 0
 var _replays := 0
 var _superseded_deltas := 0
+var _same_revision_superseded_deltas := 0
 
 
 func accept_snapshot(snapshot: Dictionary) -> Dictionary:
@@ -48,10 +50,37 @@ func accept_delta(delta: Dictionary) -> Dictionary:
 	var base_revision := int(delta.get("base_revision", -1))
 	var target_revision := int(delta.get("target_revision", -1))
 	if target_revision == current_revision:
-		if String(delta.get("target_checksum", "")) != String(_snapshot.get("checksum", "")):
-			return _failure("MULTIPLAYER_SAME_REVISION_MUTATION")
-		_replays += 1
-		return _success({"replay": true, "superseded": false})
+		if String(delta.get("target_checksum", "")) == String(_snapshot.get("checksum", "")):
+			_replays += 1
+			return _success({"replay": true, "superseded": false})
+		# SNAPSHOT and GAMEPLAY_DELTA travel on different delivery streams. A newer
+		# snapshot can therefore legitimately win the race and install revision R at
+		# server tick T2 before an older delta targeting the same revision R at T1.
+		# That is not an authority mutation when T1 < T2; it is simply superseded
+		# transport history. Equal/newer ticks with a different checksum remain a
+		# hard invariant violation.
+		var current_tick := int(_snapshot.get("server_tick", -1))
+		var target_tick := int(delta.get("server_tick", -1))
+		if target_tick >= 0 and current_tick >= 0 and target_tick < current_tick:
+			_replays += 1
+			_superseded_deltas += 1
+			_same_revision_superseded_deltas += 1
+			return _success({
+				"replay": true,
+				"superseded": true,
+				"same_revision": true,
+				"current_revision": current_revision,
+				"target_revision": target_revision,
+				"current_server_tick": current_tick,
+				"target_server_tick": target_tick,
+				"policy": FIX7_SAME_REVISION_DELTA_POLICY,
+			})
+		return _failure("MULTIPLAYER_SAME_REVISION_MUTATION", {
+			"current_revision": current_revision,
+			"target_revision": target_revision,
+			"current_server_tick": current_tick,
+			"target_server_tick": target_tick,
+		})
 	if target_revision < current_revision:
 		_replays += 1
 		_superseded_deltas += 1
@@ -118,6 +147,8 @@ func get_report() -> Dictionary:
 		"delta_deliveries": _delta_deliveries,
 		"replays": _replays,
 		"superseded_deltas": _superseded_deltas,
+		"same_revision_superseded_deltas": _same_revision_superseded_deltas,
+		"same_revision_delta_policy": FIX7_SAME_REVISION_DELTA_POLICY,
 		"direct_authority_references": 0,
 		"direct_domain_references": 0,
 	}
@@ -125,7 +156,6 @@ func get_report() -> Dictionary:
 
 func _success(details: Dictionary = {}) -> Dictionary:
 	return {"success": true, "error_code": "", "details": details.duplicate(true)}
-
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}

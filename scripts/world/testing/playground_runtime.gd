@@ -6,9 +6,39 @@ extends "res://scripts/world/testing/playground_runtime_base.gd"
 # strictly stale revisions are suppressed; same-revision projections are
 # always applied so a rejected pickup can restore the WORLD representation.
 const FIX5_ITEM_PROJECTION_POLICY := "APPLY_ALL_NONSTALE_SAME_REVISION_PROJECTIONS_V1"
+const FIX7_PLAYER_INTERPOLATION_POLICY := "MANUAL_PREDICTION_PRESENTATION_ENGINE_INTERPOLATION_OFF_V1"
 
 var _fix5_same_revision_item_projection_applies: int = 0
 var _fix5_stale_item_projection_suppressions: int = 0
+var _fix7_manual_interpolation_nodes: int = 0
+
+
+func _ready() -> void:
+	super._ready()
+	_configure_fix7_manual_prediction_presentation()
+
+
+func _configure_fix7_manual_prediction_presentation() -> void:
+	if not _network_playground_enabled or runtime_role != "game-client" or player == null:
+		return
+	# ClientPredictionReconciler now supplies a render-rate sub-tick pose. Leaving
+	# Godot physics interpolation enabled on the same player/camera hierarchy would
+	# interpolate an already-interpolated transform and also triggers Camera3D's
+	# "outside physics process" warning when the network presentation updates from
+	# _process(). Make this hierarchy explicitly manual-presentation only.
+	_fix7_manual_interpolation_nodes = _set_interpolation_mode_recursive(player)
+	player.reset_physics_interpolation()
+
+
+func _set_interpolation_mode_recursive(node: Node) -> int:
+	if node == null:
+		return 0
+	node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	var count := 1
+	for child in node.get_children():
+		if child is Node:
+			count += _set_interpolation_mode_recursive(child)
+	return count
 
 
 func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
@@ -48,4 +78,13 @@ func get_fix5_item_consistency_report() -> Dictionary:
 		"same_revision_projection_applies": _fix5_same_revision_item_projection_applies,
 		"stale_projection_suppressions": _fix5_stale_item_projection_suppressions,
 		"last_sync_error": _m7_last_sync_error,
+	}
+
+
+func get_fix7_prediction_presentation_report() -> Dictionary:
+	return {
+		"interpolation_policy": FIX7_PLAYER_INTERPOLATION_POLICY,
+		"manual_interpolation_nodes": _fix7_manual_interpolation_nodes,
+		"network_playground_enabled": _network_playground_enabled,
+		"runtime_role": runtime_role,
 	}
