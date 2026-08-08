@@ -1,6 +1,5 @@
 extends "res://scripts/simulation/procedural/geodesy/body_shape_provider.gd"
 
-const GeoUtilsScript = preload("res://scripts/simulation/procedural/geo_contract_utils.gd")
 const PlanetDefinitionScript = preload("res://scripts/simulation/procedural/contracts/planet_definition.gd")
 
 const SHAPE_ID: String = "body-shape/sphere-v1"
