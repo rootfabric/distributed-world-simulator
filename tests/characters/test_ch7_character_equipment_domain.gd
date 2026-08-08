@@ -12,11 +12,11 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var human := _human_layout()
-	var robot := _robot_layout()
-	var helmet := _helmet_profile()
-	var backpack := _backpack_profile()
-	var eva_suit := _eva_suit_profile()
+	var human: Domain.Layout = _human_layout()
+	var robot: Domain.Layout = _robot_layout()
+	var helmet: Domain.Profile = _helmet_profile()
+	var backpack: Domain.Profile = _backpack_profile()
+	var eva_suit: Domain.Profile = _eva_suit_profile()
 
 	_assert(human.is_valid(), "Humanoid layout is invalid")
 	_assert(robot.is_valid(), "Robot layout is invalid")
@@ -34,7 +34,7 @@ func _run() -> void:
 	_assert(bool(helmet_validation.get("success", false)), "Compatible helmet was rejected")
 	_assert(String(helmet_validation.get("code", "")) == Domain.RESULT_OK, "Compatible helmet returned wrong result code")
 
-	var missing_capability := Domain.Profile.new(
+	var missing_capability: Domain.Profile = Domain.Profile.new(
 		"equipment.test.scanner",
 		"wearable.scanner.test",
 		"body.head",
@@ -46,7 +46,7 @@ func _run() -> void:
 	var missing_capability_result: Dictionary = Domain.validate_equip(human, missing_capability, [], "item.scanner.001")
 	_assert(String(missing_capability_result.get("code", "")) == Domain.RESULT_MISSING_CAPABILITY, "Missing capability was not rejected")
 
-	var unsupported_anchor := Domain.Profile.new(
+	var unsupported_anchor: Domain.Profile = Domain.Profile.new(
 		"equipment.test.tail",
 		"wearable.tail.test",
 		"body.tail",
@@ -55,7 +55,7 @@ func _run() -> void:
 	var unsupported_anchor_result: Dictionary = Domain.validate_equip(human, unsupported_anchor, [], "item.tail.001")
 	_assert(String(unsupported_anchor_result.get("code", "")) == Domain.RESULT_UNSUPPORTED_ANCHOR, "Unsupported anchor was not rejected")
 
-	var unsupported_channel := Domain.Profile.new(
+	var unsupported_channel: Domain.Profile = Domain.Profile.new(
 		"equipment.test.hardpoint",
 		"module.hardpoint.test",
 		"body.root",
@@ -64,7 +64,7 @@ func _run() -> void:
 	var unsupported_channel_result: Dictionary = Domain.validate_equip(human, unsupported_channel, [], "item.hardpoint.001")
 	_assert(String(unsupported_channel_result.get("code", "")) == Domain.RESULT_UNSUPPORTED_CHANNEL, "Unsupported channel was not rejected")
 
-	var biological_only := Domain.Profile.new(
+	var biological_only: Domain.Profile = Domain.Profile.new(
 		"equipment.test.biological",
 		"wearable.biological.test",
 		"body.head",
@@ -74,7 +74,7 @@ func _run() -> void:
 	var biological_on_robot: Dictionary = Domain.validate_equip(robot, biological_only, [], "item.biological.001")
 	_assert(String(biological_on_robot.get("code", "")) == Domain.RESULT_INCOMPATIBLE_CHARACTER_TAG, "Required character tag was not enforced")
 
-	var no_mechanical := Domain.Profile.new(
+	var no_mechanical: Domain.Profile = Domain.Profile.new(
 		"equipment.test.no_mechanical",
 		"wearable.no_mechanical.test",
 		"body.head",
@@ -114,7 +114,7 @@ func _run() -> void:
 	_assert(suit_entry != null, "EVA suit missing from snapshot")
 	_assert(suit_entry.occupied_channels().size() == 3, "EVA suit lost multi-channel occupancy")
 
-	var torso_outer := Domain.Profile.new(
+	var torso_outer: Domain.Profile = Domain.Profile.new(
 		"equipment.test.jacket",
 		"wearable.jacket.test",
 		"body.root",
@@ -128,9 +128,9 @@ func _run() -> void:
 	_assert(String(suit_conflict.get("code", "")) == Domain.RESULT_EQUIPMENT_CHANNEL_OCCUPIED, "Multi-channel suit did not reserve torso channel")
 
 	var snapshot_a = source.get_snapshot()
-	var reordered_entries := snapshot_a.entries()
+	var reordered_entries: Array = snapshot_a.entries()
 	reordered_entries.reverse()
-	var snapshot_b := Domain.Snapshot.new(snapshot_a.owner_entity_id, snapshot_a.layout_id, snapshot_a.revision, reordered_entries)
+	var snapshot_b: Domain.Snapshot = Domain.Snapshot.new(snapshot_a.owner_entity_id, snapshot_a.layout_id, snapshot_a.revision, reordered_entries)
 	_assert(snapshot_a.state_fingerprint() == snapshot_b.state_fingerprint(), "Snapshot state fingerprint depends on entry order")
 	_assert(snapshot_a.fingerprint() == snapshot_b.fingerprint(), "Snapshot fingerprint depends on entry order")
 
@@ -147,8 +147,8 @@ func _run() -> void:
 	_assert(bool(robot_helmet.get("success", false)), "Semantic helmet contract could not be reused by second character layout")
 	_assert(robot_source.get_snapshot().layout_id == "robot.humanoid", "Robot snapshot lost its independent layout ID")
 
-	var domain_source := FileAccess.get_file_as_string("res://scripts/characters/equipment/character_equipment_domain.gd")
-	var lab_source := FileAccess.get_file_as_string("res://scripts/characters/equipment/lab_equipment_source.gd")
+	var domain_source: String = FileAccess.get_file_as_string("res://scripts/characters/equipment/character_equipment_domain.gd")
+	var lab_source: String = FileAccess.get_file_as_string("res://scripts/characters/equipment/lab_equipment_source.gd")
 	for forbidden in ["Skeleton3D", "MeshInstance3D", "CharacterBody3D", "Input.", "multiplayer", "quaternius"]:
 		_assert(not domain_source.to_lower().contains(String(forbidden).to_lower()), "Equipment domain gained forbidden presentation/runtime dependency: %s" % forbidden)
 		_assert(not lab_source.to_lower().contains(String(forbidden).to_lower()), "Lab equipment source gained forbidden presentation/runtime dependency: %s" % forbidden)
@@ -156,7 +156,7 @@ func _run() -> void:
 	_finish()
 
 
-func _human_layout():
+func _human_layout() -> Domain.Layout:
 	return Domain.Layout.new(
 		"humanoid.standard",
 		["character", "biological", "humanoid", "biped"],
@@ -173,7 +173,7 @@ func _human_layout():
 	)
 
 
-func _robot_layout():
+func _robot_layout() -> Domain.Layout:
 	return Domain.Layout.new(
 		"robot.humanoid",
 		["character", "mechanical", "humanoid", "biped"],
@@ -183,7 +183,7 @@ func _robot_layout():
 	)
 
 
-func _helmet_profile():
+func _helmet_profile() -> Domain.Profile:
 	return Domain.Profile.new(
 		"equipment.helmet.mk1",
 		"wearable.helmet.mk1",
@@ -195,7 +195,7 @@ func _helmet_profile():
 	)
 
 
-func _backpack_profile():
+func _backpack_profile() -> Domain.Profile:
 	return Domain.Profile.new(
 		"equipment.backpack.mk1",
 		"wearable.backpack.mk1",
@@ -207,7 +207,7 @@ func _backpack_profile():
 	)
 
 
-func _eva_suit_profile():
+func _eva_suit_profile() -> Domain.Profile:
 	return Domain.Profile.new(
 		"equipment.eva_suit.mk1",
 		"wearable.eva_suit.mk1",
