@@ -89,6 +89,19 @@ func resolve_anchor(_character_visual_root: Node, anchor_id: String) -> Node3D:
 	return attachment
 
 
+func resolve_pose_skeleton(_character_visual_root: Node) -> Skeleton3D:
+	return _target_skeleton if _target_skeleton != null and is_instance_valid(_target_skeleton) else null
+
+
+func resolve_skinned_parent(_character_visual_root: Node) -> Node3D:
+	if _presenter == null:
+		return null
+	var yaw_root := _find_descendant_named(_presenter, "AvatarYawRoot")
+	if yaw_root is Node3D:
+		return yaw_root as Node3D
+	return _presenter as Node3D if _presenter is Node3D else null
+
+
 func create_report() -> Dictionary:
 	var resolved: Dictionary = {}
 	for anchor_id in SEMANTIC_BONE_CANDIDATES.keys():
@@ -98,12 +111,13 @@ func create_report() -> Dictionary:
 			var node = _fallback_anchors[anchor_id]
 			resolved[anchor_id] = String(node.name) if node is Node else ""
 	return {
-		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v2",
+		"schema": "planet_simulator.quaternius_equipment_rig_adapter.v3",
 		"rig_profile_id": rig_profile_id,
 		"mode": _mode,
 		"resolved_anchors": resolved,
 		"target_skeleton": _target_skeleton != null,
 		"bone_count": _target_skeleton.get_bone_count() if _target_skeleton != null else 0,
+		"skinned_parent_ready": resolve_skinned_parent(_presenter) != null,
 		"attachment_count": _attachments.size(),
 		"moves_gameplay_body": false,
 		"reads_input": false,
@@ -234,6 +248,8 @@ func _find_descendant_named(root: Node, target_name: String) -> Node:
 
 
 func _find_first_skeleton(root: Node) -> Skeleton3D:
+	if root == null:
+		return null
 	if root is Skeleton3D:
 		return root as Skeleton3D
 	for child in root.get_children():
