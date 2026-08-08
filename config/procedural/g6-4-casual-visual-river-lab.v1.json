@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g6_4_casual_visual_river_lab.v1",
   "checkpoint": "g6.4-casual-visual-river-lab",
-  "status": "FIX3_IMPLEMENTED_CANDIDATE",
+  "status": "FIX4_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "scene": "res://scenes/labs/procedural/g6_4_casual_visual_river_lab.tscn",
   "script": "res://scripts/labs/procedural/g6_4_casual_visual_river_lab.gd",
@@ -28,7 +28,10 @@
     "macro_surface_provider": "geo-provider/casual-macro-terrain-v1",
     "macro_amplitude_m": 900.0,
     "macro_wavelength_m": 600000.0,
-    "macro_octaves": 4,
+    "macro_octaves": 8,
+    "macro_persistence": 0.58,
+    "macro_min_signal_wavelength_m": 4687.5,
+    "macro_detail_recipe_is_lab_only": true,
     "macro_cell_segments": 2,
     "macro_height_display_exaggeration": 40.0,
     "macro_height_exaggeration_is_presentation_only": true,
@@ -39,6 +42,10 @@
     "lod_coarsen_ratio": 0.30,
     "lod_update_interval_s": 0.16,
     "river_subdivision_policy": "1 << clamp(floor(representation_lod / 2), 0, 5)"
+  },
+  "manual_launch": {
+    "breakpoint_runtime_disabled": true,
+    "reason": "standalone visual lab does not require MCP runtime bridge and must not collide on 127.0.0.1:9081"
   },
   "manual_controls": {
     "orbit_left_right": "A/D",
@@ -69,6 +76,7 @@
     "lod_selector_changes_feature_id": false,
     "macro_surface_mesh_is_canonical_truth": false,
     "macro_height_display_exaggeration_changes_geo_sample": false,
+    "macro_detail_recipe_changes_g3_provider_contract": false,
     "macro_surface_carves_river_valley": false
   },
   "acceptance": {
@@ -79,6 +87,8 @@
     "near_river_sample_count_greater_than_far": "REQUIRED",
     "adaptive_macro_surface_explicit_pass_marker": "REQUIRED",
     "near_macro_surface_triangle_count_greater_than_far": "REQUIRED",
+    "macro_detail_recipe_min_signal_below_10km": "REQUIRED",
+    "standalone_launch_disables_breakpoint_runtime": "REQUIRED",
     "windows_graphical_manual_observation": "REQUIRED",
     "px_pz_seam_visible": "REQUIRED",
     "query_probes_visible": "REQUIRED",
