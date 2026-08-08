@@ -6,6 +6,14 @@ extends "res://tools/runtime/m7_playable_network_client.gd"
 # As a result the worker kept sending yaw=0 while believing it was steering
 # toward the beacon/crate. Use the player's public view API so the scalar and
 # camera node stay synchronized before each authoritative movement intent.
+#
+# FIX6 throttles materialization of the server READY diagnostic file to 1 Hz.
+# That file's embedded `snapshot` can therefore be older than the dedicated
+# runtime's explicit `last_two_connected_checksum`, which is captured directly
+# from authority whenever the two-player semantic state is synchronized. The
+# graphical process acceptance must compare against that captured authority
+# checksum first, while retaining the snapshot checksum as a compatibility
+# fallback for older runtimes.
 
 func _move_authority_toward(target: Vector3, steps: int) -> Dictionary:
 	var result: Dictionary = {"success": true, "error_code": ""}
@@ -50,3 +58,37 @@ func _set_automated_camera_yaw(desired_yaw: float) -> void:
 	var current_yaw := float(playground.player.camera_yaw)
 	var yaw_delta := wrapf(desired_yaw - current_yaw, -PI, PI)
 	playground.player.adjust_view(yaw_delta, 0.0)
+
+
+func _wait_server_player_checksum(timeout_ms: int) -> bool:
+	if server_file.is_empty():
+		return false
+	var start := Time.get_ticks_msec()
+	var stable_checksum := ""
+	var stable_since := 0
+	while Time.get_ticks_msec() - start < timeout_ms:
+		var server_report := _read(server_file)
+		var expected := _preferred_server_player_checksum(server_report)
+		var local := String(client.get_snapshot().get("checksum", ""))
+		if not expected.is_empty() and local == expected:
+			if stable_checksum != expected:
+				stable_checksum = expected
+				stable_since = Time.get_ticks_msec()
+			elif Time.get_ticks_msec() - stable_since >= 250:
+				return true
+		else:
+			stable_checksum = ""
+			stable_since = 0
+		await create_timer(0.05).timeout
+	return false
+
+
+func _server_player_checksum() -> String:
+	return _preferred_server_player_checksum(_read(server_file))
+
+
+func _preferred_server_player_checksum(server_report: Dictionary) -> String:
+	var captured := String(server_report.get("last_two_connected_checksum", "")).strip_edges()
+	if not captured.is_empty():
+		return captured
+	return String(server_report.get("snapshot", {}).get("checksum", "")).strip_edges()

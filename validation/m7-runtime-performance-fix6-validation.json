@@ -1,0 +1,145 @@
+{
+  "stage": "M7 FIX6 runtime performance hardening",
+  "branch": "feature/m7-runtime-performance-fix6",
+  "base": "10af3625122e5ebdf7d40e982492d2a488b7ccde",
+  "base_stage": "M7 FIX5 automated Windows gate pass candidate",
+  "decision": "FIX6 AUTOMATED WINDOWS GATE PASS - LONG TWO-CLIENT LOCAL STRESS REQUIRED",
+  "problem_evidence": {
+    "manual_session": "two-client LOCAL item pickup/drop stress",
+    "server_transient_stall_frames_observed": 71,
+    "server_max_pending_inputs_observed": 16,
+    "scheduler_backlog_ticks_at_health_samples": 0,
+    "client_prediction_lead_ticks_observed_up_to": 157,
+    "visible_symptom": "multi-second movement/network freeze while item actions were occurring",
+    "diagnosis": "realtime observability remained allocation-heavy on server and graphical clients: telemetry observe duplicated/shifted bounded arrays, transport telemetry allocated default dictionaries per packet, both sides rebuilt full transport boundary snapshots at frame rate, and dirty server READY reports could materialize a full runtime report every 250 ms"
+  },
+  "policies": {
+    "telemetry_sample_storage": "BOUNDED_RING_OVERWRITE_V2",
+    "m7_server_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
+    "m7_client_telemetry_hot_path": "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1",
+    "server_peer_transport_statistics_interval_ms": 250,
+    "client_peer_transport_statistics_interval_ms": 250,
+    "ready_report_min_interval_ms": 1000,
+    "report_write_policy": "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1",
+    "slow_process_frame_threshold_ms": 50.0
+  },
+  "production_changes": [
+    "network_telemetry_collector.observe now appends until full and then overwrites an in-place ring slot; it no longer copies and shifts the bounded sample window on the realtime path",
+    "steady-state telemetry lookups avoid eager default Array/Dictionary allocation for existing distributions and transport channels",
+    "M7 dedicated server keeps cheap gauges frame-current but samples full transport boundary peer statistics at 4 Hz instead of every process frame",
+    "M7 graphical client does the same 4 Hz transport peer-stat sampling instead of rebuilding the full boundary snapshot every frame",
+    "M7 READY diagnostic report materialization is coalesced to at most 1 Hz while initial READY and terminal reports remain synchronous",
+    "SERVER_HEALTH exposes current/peak server process, report-build and peer-telemetry durations",
+    "PREDICTION_HEALTH exposes current/peak graphical-client process and peer-telemetry durations"
+  ],
+  "correctness_invariants": [
+    "60 Hz authoritative fixed tick unchanged",
+    "FIX4 retained transient authority time unchanged",
+    "movement snapshot recovery suppression unchanged",
+    "32-event per-frame server network drain unchanged",
+    "NX3 input wire schema and pressure compaction unchanged",
+    "NX4 client prediction/reconciliation semantics unchanged",
+    "Item Graph delta plus reliable gameplay revision synchronization unchanged",
+    "FIX5 server-authoritative frozen WORLD replica policy unchanged"
+  ],
+  "focused_tests": [
+    "res://tests/network/test_m7_realtime_backpressure_foundation.gd",
+    "res://tests/network/test_m7_fix6_client_telemetry.gd"
+  ],
+  "runner": "VALIDATE_M7_RUNTIME_PERFORMANCE_FIX6.ps1",
+  "stress_analyzer": "ANALYZE_M7_FIX6_STRESS.ps1",
+  "assistant_exact_godot_probe": {
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "telemetry_ring_semantics": "PASS",
+    "observations": 100,
+    "window": 8,
+    "retained_min": 92.0,
+    "retained_max": 99.0,
+    "retained_mean": 95.5,
+    "overwrite_count": 92,
+    "synthetic_hot_loop": {
+      "iterations": 200000,
+      "window": 512,
+      "legacy_duplicate_oldest_removal_ms": 412.636,
+      "ring_overwrite_ms": 16.495,
+      "observed_speedup": 25.0158,
+      "note": "Synthetic single-process microbenchmark only; it demonstrates the cost class removed from observe(), not end-to-end server throughput."
+    }
+  },
+  "windows_gate_evidence": {
+    "tested_runtime_head": "768c41f75e203660f0ef0b0aba64934f9e335fba",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_graphical_client_telemetry": "PASS - 14 assertions, 0 failures",
+    "focused_two_client_process": "PASS - 51 assertions, 0 failures",
+    "full_runner": "PASS - M7 FIX6 runtime performance validation passed",
+    "editor_import_composition": "PASS",
+    "server_realtime_hot_path": "PASS - 261 assertions, 0 failures",
+    "fix5_world_item_consistency": "PASS - 49 assertions, 0 failures",
+    "nx6_predicted_items": "PASS - 957 assertions",
+    "accepted_inventory_regression": "PASS",
+    "nx3_fixed_tick": "PASS - 6188 assertions, 0 failures",
+    "nx4_prediction_reconciliation": "PASS - 706 assertions",
+    "m7_two_client_process": "PASS - 51 assertions, 0 failures",
+    "convergence": {
+      "client_a_complete": true,
+      "client_b_complete": true,
+      "item_graph_clients_converged": true,
+      "item_graph_server_clients_converged": true,
+      "player_replicas_converged_while_both_connected": true,
+      "server_clients_player_replicas_converged_before_disconnect": true,
+      "client_a_hard_corrections": 0,
+      "client_b_hard_corrections": 0,
+      "client_a_reconcile_failures": 0,
+      "client_b_reconcile_failures": 0
+    },
+    "performance_observations_from_process_gate": {
+      "client_a_max_prediction_error_m": 0.3,
+      "client_b_max_prediction_error_m": 0.4,
+      "client_a_peak_process_duration_ms": 106.953,
+      "client_b_peak_process_duration_ms": 123.205,
+      "client_a_slow_process_frames": 1,
+      "client_b_slow_process_frames": 1,
+      "note": "Short process gate converged despite one isolated >100 ms client frame on each client; long manual stress remains required to determine whether sustained item activity is now acceptable."
+    },
+    "breakpoint_runtime_noise": {
+      "message": "[breakpoint_runtime] could not listen on 127.0.0.1:9081 (error 22)",
+      "blocking": false,
+      "reason": "The bridge emits a diagnostic push_error when its optional loopback listener cannot bind; every affected test returned PASS and the full validation runner completed successfully. BREAKPOINT_RUNTIME_DISABLED=1 can be used for isolated headless runs."
+    },
+    "prior_convergence_fixture_correction": {
+      "old_failure_head": "a4104d0c42cf7a77d63631dd50fd4613da4a8cdc",
+      "diagnosis": "the process worker compared live client convergence with a throttled READY-file snapshot that could be up to one report interval stale",
+      "worker_policy": "prefer server last_two_connected_checksum; fall back to snapshot.checksum for older runtimes",
+      "worker_commit": "d99fe2555026b0c4d31e1de5acd407462db75b8d",
+      "focused_contract_commit": "2a176ae47dcfd819dbc4669f69885dc6c42cb1ff",
+      "production_runtime_semantics_changed": false,
+      "corrected_gate_result": "PASS"
+    }
+  },
+  "automated_acceptance": {
+    "status": "PASS",
+    "tested_runtime_head": "768c41f75e203660f0ef0b0aba64934f9e335fba",
+    "remaining_blocker": "long manual two-client LOCAL item stress and ANALYZE_M7_FIX6_STRESS.ps1 review"
+  },
+  "long_manual_acceptance": {
+    "duration_minutes_min": 5,
+    "clients": 2,
+    "network_profile": "LOCAL",
+    "actions": "continuously move/turn while repeatedly dropping, picking up, splitting, stacking and transferring items from both clients",
+    "requirements": [
+      "zero INPUT_QUEUE_FULL",
+      "no sustained pending input growth into the dozens",
+      "scheduler backlog may rise transiently but returns to zero and dropped_time_seconds remains zero for stalls below the configured one-second retention window",
+      "prediction lead returns to the normal low-single-digit range instead of remaining in tens/hundreds of ticks",
+      "no hard multi-metre reconciliation correction and no visible backwards pull",
+      "item/player checksums still converge",
+      "SERVER_HEALTH and PREDICTION_HEALTH timing fields make any remaining server/client slow-frame source attributable",
+      "ANALYZE_M7_FIX6_STRESS.ps1 returns PASS under the chosen acceptance thresholds"
+    ]
+  },
+  "assistant_execution": {
+    "full_repository_available": false,
+    "windows_gate_executed_by_user": true,
+    "note": "The user executed the exact Windows automated FIX6 gate at runtime head 768c41f75e203660f0ef0b0aba64934f9e335fba. Focused telemetry and two-client convergence passed, and the complete FIX6 runner passed. Long manual item stress remains the final acceptance gate."
+  }
+}

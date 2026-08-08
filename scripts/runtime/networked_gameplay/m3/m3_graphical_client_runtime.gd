@@ -3,10 +3,15 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 # INT0 composition boundary:
 # - the inherited script remains the accepted NX6 transport, fixed-tick,
 #   prediction, reconciliation and predicted-item runtime;
-# - this adapter adds only bounded recovery from out-of-order gameplay state.
+# - this adapter adds bounded recovery from out-of-order gameplay state and FIX6
+#   observability throttling without changing authority or prediction semantics.
 # Full and compact snapshots may cross channels with the same semantic revision
 # but different fixed server ticks. Those clock-only reorderings are not state
 # mutations; true same-revision semantic mutations remain rejected.
+
+const M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS: int = 250
+const M7_CLIENT_TELEMETRY_HOT_PATH_POLICY: String = "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1"
+const M7_CLIENT_SLOW_PROCESS_FRAME_MS: float = 50.0
 
 var _pending_replica_resync := false
 var _delta_base_mismatches := 0
@@ -15,16 +20,72 @@ var _last_prediction_health_ms := 0
 var _full_snapshot_clock_updates := 0
 var _full_snapshot_clock_replays := 0
 var _compact_snapshot_clock_replays := 0
+var _fix6_last_peer_telemetry_sample_ms: int = 0
+var _fix6_peer_telemetry_samples: int = 0
+var _fix6_peer_telemetry_skips: int = 0
+var _fix6_peer_telemetry_last_duration_ms: float = 0.0
+var _fix6_peer_telemetry_max_duration_ms: float = 0.0
+var _fix6_process_last_duration_ms: float = 0.0
+var _fix6_process_max_duration_ms: float = 0.0
+var _fix6_slow_process_frames: int = 0
 
 
 func _process(delta: float) -> void:
+	var fix6_process_started_us: int = Time.get_ticks_usec()
 	# M5 keeps this transport-session binding visible at the production source
 	# boundary. The inherited NX6 process sends JOIN with the same value; this
 	# assignment makes the composed adapter explicitly preserve that contract.
 	if _handshake_verified and not _join_sent and not _transport_session_id.is_empty():
 		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
 	super._process(delta)
+	_fix6_process_last_duration_ms = float(Time.get_ticks_usec() - fix6_process_started_us) / 1000.0
+	_fix6_process_max_duration_ms = maxf(
+		_fix6_process_max_duration_ms, _fix6_process_last_duration_ms
+	)
+	if _fix6_process_last_duration_ms >= M7_CLIENT_SLOW_PROCESS_FRAME_MS:
+		_fix6_slow_process_frames += 1
 	_emit_prediction_health_if_due()
+
+
+func _update_runtime_telemetry() -> void:
+	if _telemetry == null:
+		return
+	# Keep cheap client gauges current every frame. The inherited implementation
+	# rebuilt the complete transport boundary snapshot every process frame only to
+	# read one peer's RTT/jitter/loss. That duplicates queues/session/runtime state
+	# on both graphical clients and compounds server-side allocation pressure during
+	# item stress, so FIX6 samples the diagnostic transport snapshot at 4 Hz.
+	_telemetry.set_gauge("pending_blocking_commands", float(_awaited_command_ids.size()))
+	_telemetry.set_gauge("buffered_command_results", float(_command_results.size()))
+	_telemetry.set_gauge("pending_operation_timers", float(_operation_started_ms.size()))
+	_telemetry.set_gauge("handshake_verified", 1.0 if _handshake_verified else 0.0)
+	if _prediction_reconciler != null and _prediction_reconciler.is_configured():
+		var prediction_report: Dictionary = _prediction_reconciler.get_report()
+		_telemetry.set_gauge("prediction_buffer_size", float(prediction_report.get("history_size", 0)))
+		_telemetry.set_gauge("prediction_visual_offset_m", float(prediction_report.get("visual_offset_m", 0.0)))
+		_telemetry.set_gauge("prediction_tick", float(prediction_report.get("prediction_tick", 0)))
+
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms - _fix6_last_peer_telemetry_sample_ms < M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS:
+		_fix6_peer_telemetry_skips += 1
+		return
+	_fix6_last_peer_telemetry_sample_ms = now_ms
+	var sample_started_us: int = Time.get_ticks_usec()
+	var boundary_snapshot: Dictionary = _boundary.get_snapshot() if _boundary != null else {}
+	var port_runtime: Dictionary = boundary_snapshot.get("port_runtime", {})
+	var peer_statistics: Dictionary = port_runtime.get("peer_statistics", {})
+	var server_stats: Dictionary = {}
+	if peer_statistics.has(SERVER_PEER_ID) and peer_statistics[SERVER_PEER_ID] is Dictionary:
+		server_stats = peer_statistics[SERVER_PEER_ID]
+	if not server_stats.is_empty():
+		_telemetry.set_gauge("rtt_ms", float(server_stats.get("rtt_ms", 0)))
+		_telemetry.set_gauge("jitter_ms", float(server_stats.get("rtt_variance_ms", 0)))
+		_telemetry.set_gauge("packet_loss_percent", float(server_stats.get("packet_loss_percent", 0.0)))
+	_fix6_peer_telemetry_last_duration_ms = float(Time.get_ticks_usec() - sample_started_us) / 1000.0
+	_fix6_peer_telemetry_max_duration_ms = maxf(
+		_fix6_peer_telemetry_max_duration_ms, _fix6_peer_telemetry_last_duration_ms
+	)
+	_fix6_peer_telemetry_samples += 1
 
 
 func _emit_prediction_health_if_due() -> void:
@@ -56,6 +117,13 @@ func _emit_prediction_health_if_due() -> void:
 		"last_error_m": float(prediction.get("last_error_m", 0.0)),
 		"maximum_error_m": float(prediction.get("maximum_error_m", 0.0)),
 		"visual_offset_m": float(prediction.get("visual_offset_m", 0.0)),
+		"client_process_duration_ms": _fix6_process_last_duration_ms,
+		"client_process_max_duration_ms": _fix6_process_max_duration_ms,
+		"client_slow_process_frames": _fix6_slow_process_frames,
+		"peer_telemetry_samples": _fix6_peer_telemetry_samples,
+		"peer_telemetry_skips": _fix6_peer_telemetry_skips,
+		"peer_telemetry_last_duration_ms": _fix6_peer_telemetry_last_duration_ms,
+		"peer_telemetry_max_duration_ms": _fix6_peer_telemetry_max_duration_ms,
 	})
 
 
@@ -181,4 +249,17 @@ func get_report() -> Dictionary:
 	report["full_snapshot_clock_updates"] = _full_snapshot_clock_updates
 	report["full_snapshot_clock_replays"] = _full_snapshot_clock_replays
 	report["compact_snapshot_clock_replays"] = _compact_snapshot_clock_replays
+	report["client_realtime_foundation"] = {
+		"telemetry_hot_path_policy": M7_CLIENT_TELEMETRY_HOT_PATH_POLICY,
+		"peer_telemetry_interval_ms": M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS,
+		"peer_telemetry_samples": _fix6_peer_telemetry_samples,
+		"peer_telemetry_skips": _fix6_peer_telemetry_skips,
+		"peer_telemetry_last_duration_ms": _fix6_peer_telemetry_last_duration_ms,
+		"peer_telemetry_max_duration_ms": _fix6_peer_telemetry_max_duration_ms,
+		"process_last_duration_ms": _fix6_process_last_duration_ms,
+		"process_max_duration_ms": _fix6_process_max_duration_ms,
+		"slow_process_frame_threshold_ms": M7_CLIENT_SLOW_PROCESS_FRAME_MS,
+		"slow_process_frames": _fix6_slow_process_frames,
+		"telemetry_storage": _telemetry.get_report() if _telemetry != null else {},
+	}
 	return report

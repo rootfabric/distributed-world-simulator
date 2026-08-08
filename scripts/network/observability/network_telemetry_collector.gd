@@ -7,6 +7,7 @@ const SCHEMA: String = "planet_simulator.network_telemetry_collector.v1"
 const DEFAULT_SAMPLE_LIMIT: int = 512
 const MAX_SAMPLE_LIMIT: int = 4096
 const DIRECTIONS: Array[String] = ["sent", "received"]
+const SAMPLE_STORAGE_POLICY: String = "BOUNDED_RING_OVERWRITE_V2"
 
 var _configured: bool = false
 var _runtime_role: String = ""
@@ -16,6 +17,8 @@ var _sample_sequence: int = 0
 var _counters: Dictionary = {}
 var _gauges: Dictionary = {}
 var _samples: Dictionary = {}
+var _sample_heads: Dictionary = {}
+var _sample_overwrites: int = 0
 var _channels: Dictionary = {}
 
 
@@ -59,11 +62,29 @@ func observe(distribution_name: String, value: float) -> Dictionary:
 		return _failure("NOT_CONFIGURED")
 	if not _is_metric_name(distribution_name) or is_nan(value) or is_inf(value):
 		return _failure("INVALID_DISTRIBUTION_SAMPLE")
-	var values: Array = Array(_samples.get(distribution_name, [])).duplicate()
-	values.append(value)
-	while values.size() > _sample_limit:
-		values.pop_front()
-	_samples.set(distribution_name, values)
+
+	# Hot-path telemetry is called hundreds of times per second by the realtime
+	# server. The old implementation duplicated the entire sample window and
+	# shifted the oldest entry out after the window filled, turning a bounded
+	# metric into an O(window) allocation/copy path. Keep the same bounded sample
+	# semantics with in-place ring overwrite instead. Avoid a default [] expression
+	# on existing metrics too, so the steady-state path does not allocate a throwaway
+	# Array before the ring lookup.
+	var values: Array
+	if _samples.has(distribution_name):
+		values = _samples[distribution_name]
+	else:
+		values = []
+		_samples[distribution_name] = values
+	if values.size() < _sample_limit:
+		values.append(value)
+		if values.size() == _sample_limit and not _sample_heads.has(distribution_name):
+			_sample_heads[distribution_name] = 0
+	else:
+		var head: int = int(_sample_heads.get(distribution_name, 0))
+		values[head] = value
+		_sample_heads[distribution_name] = (head + 1) % _sample_limit
+		_sample_overwrites += 1
 	return _success({"window_size": values.size()})
 
 
@@ -72,7 +93,14 @@ func record_transport(channel_name: String, direction: String, packet_bytes: int
 		return _failure("NOT_CONFIGURED")
 	if not _is_metric_name(channel_name) or direction not in DIRECTIONS or packet_bytes < 0:
 		return _failure("INVALID_TRANSPORT_SAMPLE")
-	var metrics: Dictionary = _channels.get(channel_name, _empty_channel_metrics())
+	# Dictionary.get(key, _empty_channel_metrics()) evaluates the default argument
+	# before get(), allocating a new metrics Dictionary for every packet even when
+	# the channel already exists. Allocate only on first sight of a channel.
+	var metrics: Dictionary
+	if _channels.has(channel_name):
+		metrics = _channels[channel_name]
+	else:
+		metrics = _empty_channel_metrics()
 	metrics["packets_%s" % direction] = int(metrics["packets_%s" % direction]) + 1
 	metrics["bytes_%s" % direction] = int(metrics["bytes_%s" % direction]) + packet_bytes
 	_channels[channel_name] = metrics
@@ -105,6 +133,8 @@ func reset_window() -> Dictionary:
 	if not _configured:
 		return _failure("NOT_CONFIGURED")
 	_samples.clear()
+	_sample_heads.clear()
+	_sample_overwrites = 0
 	return _success()
 
 
@@ -115,6 +145,8 @@ func get_report() -> Dictionary:
 		"runtime_role": _runtime_role,
 		"sample_limit": _sample_limit,
 		"sample_sequence": _sample_sequence,
+		"sample_storage_policy": SAMPLE_STORAGE_POLICY,
+		"sample_overwrites": _sample_overwrites,
 		"counter_count": _counters.size(),
 		"gauge_count": _gauges.size(),
 		"distribution_count": _samples.size(),
@@ -126,6 +158,8 @@ func _create_distributions() -> Dictionary:
 	var result: Dictionary = {}
 	for name_value in _samples.keys():
 		var name: String = String(name_value)
+		# Diagnostic materialization may copy/sort because it is cold-path and
+		# explicitly requested. observe() itself stays allocation-bounded.
 		var values: Array = Array(_samples[name_value]).duplicate()
 		values.sort()
 		if values.is_empty():
