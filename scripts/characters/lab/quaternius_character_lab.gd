@@ -1,7 +1,7 @@
 class_name QuaterniusCharacterLab
 extends Node3D
 
-const AvatarPresenter = preload("res://scripts/characters/presentation/quaternius_avatar_presenter.gd")
+const AvatarPresenter = preload("res://scripts/characters/presentation/quaternius_grounded_avatar_presenter.gd")
 const FirstPersonAdapter = preload("res://scripts/characters/presentation/full_body_first_person_adapter.gd")
 const PresentationProfile = preload("res://scripts/characters/presentation/controllable_presentation_profile.gd")
 
@@ -13,6 +13,7 @@ const GRAVITY := 18.0
 const JUMP_SPEED := 6.0
 const STANDING_CAPSULE_HEIGHT := 1.85
 const CROUCH_CAPSULE_HEIGHT := 1.15
+const CROUCH_VISUAL_GROUND_OFFSET_M := (STANDING_CAPSULE_HEIGHT - CROUCH_CAPSULE_HEIGHT) * 0.5
 const FIRST_PERSON_EYE_HEIGHT := 1.62
 const CROUCH_EYE_HEIGHT := 1.02
 const CROUCH_CAMERA_RESPONSE := 4.5
@@ -195,6 +196,7 @@ func _build_player() -> void:
 	avatar.setup({
 		"run_threshold_mps": (WALK_SPEED + RUN_SPEED) * 0.5,
 		"model_yaw_offset_deg": 0.0,
+		"crouch_ground_offset_m": CROUCH_VISUAL_GROUND_OFFSET_M,
 	})
 
 	presentation_profile = PresentationProfile.new()
