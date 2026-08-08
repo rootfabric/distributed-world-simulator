@@ -17,14 +17,20 @@ func _run() -> void:
 	await physics_frame
 
 	_assert(lab.player is CharacterBody3D, "CharacterBody3D missing")
+	_assert(lab.player_capsule is CapsuleShape3D, "Lab crouch capsule missing")
 	_assert(lab.avatar != null, "Avatar presenter missing")
 	_assert(lab.first_person_adapter != null, "First-person adapter missing")
 	_assert(lab.presentation_profile != null, "Controllable presentation profile missing")
 	_assert(lab.first_person_camera is Camera3D, "First-person camera missing")
 	_assert(lab.third_person_camera is Camera3D, "Third-person camera missing")
+	_assert(InputMap.has_action("ch4_crouch"), "Crouch input action missing")
 	_assert(not lab.first_person_mode, "Lab must start in third person for A/B comparison")
 	_assert(lab.third_person_camera.current, "Third-person camera is not current initially")
 	_assert(lab.camera == lab.third_person_camera, "Current camera alias is not third-person initially")
+
+	var lab_source := FileAccess.get_file_as_string("res://scripts/characters/lab/quaternius_character_lab.gd")
+	_assert(not lab_source.contains("KEY_V"), "Technical model yaw toggle is still exposed in the lab")
+	_assert(not lab_source.contains("развернуть модель"), "HUD still advertises the technical model yaw toggle")
 
 	lab.set_first_person_mode(true)
 	await process_frame
@@ -64,12 +70,34 @@ func _run() -> void:
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CharacterBody3D) == 0, "First-person adapter owns gameplay body")
 	_assert(_count_nodes_of_type(lab.first_person_adapter, CollisionShape3D) == 0, "First-person adapter owns collision")
 
+	var standing_height := lab.player_capsule.height
+	lab._apply_crouch_shape(true, 1.0)
+	_assert(lab.player_capsule.height < standing_height, "Crouch does not reduce gameplay capsule height in the isolated lab")
+	_assert(lab.camera_yaw.position.y < 1.62, "Crouch does not lower the local camera anchor")
+	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": true})
+	await process_frame
 	var avatar_report: Dictionary = lab.avatar.create_report()
+	_assert(String(avatar_report.get("current_semantic", "")) == "crouch_idle", "Crouch lab state did not reach presenter")
+	_assert(bool(lab.first_person_adapter.create_report().get("shadow_proxy_active", false)), "Crouch disabled first-person shadow preservation")
+
+	lab.avatar.apply_motion(Vector3(0.0, 4.0, 0.0), Vector3.UP, Vector3.FORWARD, {"grounded": false, "crouching": false})
+	await process_frame
+	avatar_report = lab.avatar.create_report()
+	_assert(String(avatar_report.get("current_semantic", "")) == "jump", "Airborne lab state did not reach presenter")
+	_assert(bool(lab.first_person_adapter.create_report().get("shadow_proxy_active", false)), "Jump disabled first-person shadow preservation")
+	lab._apply_crouch_shape(false, 1.0)
+	lab.avatar.apply_motion(Vector3.ZERO, Vector3.UP, Vector3.FORWARD, {"grounded": true, "crouching": false})
+	await process_frame
+	_assert(is_equal_approx(lab.player_capsule.height, standing_height), "Standing capsule height did not restore")
+
+	avatar_report = lab.avatar.create_report()
 	_assert(not bool(avatar_report.get("root_motion_applied", true)), "First-person lab enables root motion")
 
 	var require_external := OS.get_environment("PLANET_SIMULATOR_REQUIRE_QUATERNIUS_ASSETS") == "1"
 	if require_external:
 		_assert(String(avatar_report.get("asset_mode", "")) in ["QUATERNIUS_RETARGET", "QUATERNIUS_EMBEDDED"], "Strict CH5 lab fell back from Quaternius")
+		_assert(bool(avatar_report.get("supports_jump", false)), "Real UAL1 Jump clip unavailable in lab")
+		_assert(bool(avatar_report.get("supports_crouch", false)), "Real UAL1 crouch clips unavailable in lab")
 		_assert(int(fp_report.get("world_visual_count", 0)) > 0, "Real Quaternius world body was not captured for camera-layer suppression")
 		_assert(int(fp_report.get("shadow_proxy_skinned_count", 0)) > 0, "Real Quaternius did not produce a skinned first-person shadow proxy")
 		_assert(int(fp_report.get("shadow_proxy_skeleton_bound_count", 0)) > 0, "Real Quaternius shadow proxy is not bound to its animated Skeleton3D")
@@ -112,10 +140,10 @@ func _assert(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH5 fix1 / CH6 fix1 first-person lab: PASS (%d assertions)" % assertions)
+		print("CH5/CH6 fix2 first-person jump/crouch lab: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH5 fix1 / CH6 fix1 first-person lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH5/CH6 fix2 first-person jump/crouch lab: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
