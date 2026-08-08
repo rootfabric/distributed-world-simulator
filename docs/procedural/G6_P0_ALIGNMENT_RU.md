@@ -3,8 +3,8 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Local role:** hydrology/fluid semantic layer above G5 World Feature Graph
-**Current stage:** `G6.1 CasualRiverProviderV1 — ACCEPTED`
-**Next stage:** `G6.2 cross-cell / cross-LOD continuity`
+**Current stage:** `G6.2 cross-cell / cross-LOD continuity — IMPLEMENTED CANDIDATE`
+**Next after acceptance:** `G6.3 runtime WaterSurfaceQuery resolver`
 
 ## Canonical boundary
 
@@ -37,6 +37,8 @@ G5 River FeatureId remains semantic owner
 До появления общего `WorldAddress` G6 использует G5 body/reference-frame/feature semantics. Одна река может пересекать много generation/representation cells; cell/LOD являются производным addressing, а не identity.
 
 Будущая интеграция должна маппировать canonical fluid bounds/anchors в Spatial Domain Fabric, а не вводить `RiverChunkId`.
+
+G6.2 теперь формально проверяет эту границу на seam-river, проходящей через `PX/PZ` и LOD `2 / 4 / 8 / 12`.
 
 ## P0-3 Unified Material Ontology
 
@@ -86,23 +88,44 @@ working tree: clean
 
 Canonical acceptance record: `docs/checkpoints/G6_1_CASUAL_RIVER_PROVIDER_ACCEPTED_RU.md`.
 
-## G6.2 boundary
+## G6.2 implemented boundary
 
-Следующий checkpoint должен доказать, что одна canonical river geography адресуется через меняющиеся G2 representation cells/LOD без изменения `FeatureId`, `FluidRegionId`, `spline_id`, `profile_id` и canonical provider result identity.
+G6.2 добавляет только deterministic fixture + acceptance proof. Принятый G6.1 provider и G6.0 contracts не изменяются.
 
-G6.2 разрешено использовать `SurfaceCellKey` и `CubeSphereAddressing` только как representation addressing для continuity proof. Они не входят в canonical river/fluid identity и не должны менять provider output.
-
-Минимальный continuity matrix:
+Proof matrix:
 
 ```text
-cube-sphere faces: crossing at least one face seam
-LOD: 2 / 4 / 8 / 12
-representation cell sets: expected to change
-FeatureId: stable
-FluidRegionId: stable
-RiverSpline.spline_id: stable
-RiverChannelProfile.profile_id: stable
-provider output checksum/manifest for same canonical source: stable
+source longitude: 34°
+mouth longitude:  58°
+cube faces:        PX / PZ
+LOD:               2 / 4 / 8 / 12
+```
+
+Для одной canonical river geography проверяется:
+
+```text
+representation cell set changes
+FeatureId stays stable
+FluidRegionId stays stable
+RiverSpline.spline_id stays stable
+RiverChannelProfile.profile_id stays stable
+provider manifest stays stable
+canonical spline/surface checksums stay stable
+```
+
+`SurfaceCellKey` и `CubeSphereAddressing` используются только как representation addressing. G6.2 не создаёт `RiverChunkId`, runtime query resolver, renderer, authority или persistence.
+
+Focused Windows gate:
+
+```powershell
+$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_2_CROSS_CELL_CONTINUITY_TESTS.ps1
+```
+
+До этого прогона:
+
+```text
+G6.2 = IMPLEMENTED CANDIDATE
 ```
 
 ## Stop conditions
@@ -128,7 +151,7 @@ provider output checksum/manifest for same canonical source: stable
 [PASS] renderer remains derived presentation
 [PASS] G6.0 post-P0 dependency regression
 [PASS] G6.1 Windows focused acceptance — 74 assertions
-[NEXT] G6.2 cross-cell / cross-LOD continuity
+[PENDING WINDOWS] G6.2 cross-cell / cross-LOD continuity
 ```
 
 Канонический общий план: `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
