@@ -1,0 +1,21 @@
+{
+  "schema": "planet_simulator.g5_world_feature_graph_manifest.v1",
+  "checkpoint": "g5-world-feature-graph-v0",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "program": "Universal World Generation Fabric",
+  "base_branch": "feature/g4-provider-composition-replacement",
+  "base_commit": "4d1fed8e4367e6c4ea276fcf6b9b57159de72014",
+  "world_feature_schema": "planet_simulator.world_feature.v1",
+  "feature_bounds_schema": "planet_simulator.feature_bounds.v1",
+  "feature_anchor_schema": "planet_simulator.feature_anchor.v1",
+  "feature_relation_schema": "planet_simulator.feature_relation.v1",
+  "feature_query_schema": "planet_simulator.feature_query.v1",
+  "feature_graph_manifest_schema": "planet_simulator.feature_graph_manifest.v1",
+  "surface_cell_owns_feature_identity": false,
+  "lod_changes_feature_identity": false,
+  "feature_graph_is_renderer_neutral": true,
+  "feature_graph_is_surface_only": false,
+  "spatial_query_broad_phase": ["SPHERE", "AABB"],
+  "identity_inputs": ["body_id", "feature_type", "seed", "generator_version", "stable_key"],
+  "next_stage": "G6 Hydrology / Fluid Surface v0"
+}
