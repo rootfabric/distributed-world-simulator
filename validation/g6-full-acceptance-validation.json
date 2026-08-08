@@ -3,7 +3,7 @@
   "checkpoint": "G6_FULL_ACCEPTANCE",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "decision": "READY_FOR_FULL_WINDOWS_GATE",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
   "g6_4_status": "ACCEPTED",
   "implementation": {
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
@@ -14,11 +14,11 @@
     "accepted_g6_4_state_gate": true
   },
   "shared_g5_baseline": {
-    "accepted_head": "6e83824956f4bb9337ba0e22be6c40ccfca8bd43",
     "mw10_source_pr": 43,
     "mw10_source_pr_merged": true,
     "mw10_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
     "mw10_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5",
+    "world_regression_coverage_fix_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
     "validation_record": "validation/g5-mw10-shared-baseline-validation.json",
     "checkpoint_record": "docs/checkpoints/G5_MW10_SHARED_BASELINE_ACCEPTED_RU.md"
   },
@@ -27,6 +27,8 @@
     "runtime_sync_merge_commit": "d5879f7a5263ad98eb8ae575194e34d69a74e56c",
     "metadata_sync_pr": 48,
     "metadata_sync_merge_commit": "854d79cbde7daf4ce72d2b89dd3d8900401fbcd0",
+    "world_regression_coverage_sync_pr": 49,
+    "world_regression_coverage_sync_merge_commit": "b7dd5c02a34a20fa2f589b7b9e0286135d2c8ab8",
     "g5_is_current_g6_ancestor": true,
     "g6_behind_g5": 0,
     "hydrology_semantics_changed_by_sync": false,
@@ -49,6 +51,30 @@
     "post_cleanup_git_diff_check": "PASS",
     "working_tree": "CLEAN"
   },
+  "first_full_windows_attempt_after_g5_sync": {
+    "g6_3_runtime_water_surface_query": "PASS_79_ASSERTIONS",
+    "g6_4_contracts": "PASS_158_ASSERTIONS",
+    "g6_4_adaptive_macro_surface": "PASS",
+    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
+    "world_regression": "FAIL_COVERAGE_MANIFEST_ONLY",
+    "coverage_missing_from_runner": [
+      "res://tests/matter/transactions/test_mw10_lock_release_retry.gd"
+    ],
+    "coverage_missing_from_project": [],
+    "world_test_execution_started": false,
+    "root_cause": "Accepted MW10 retry test was added to the project by the shared G5 baseline, but RUN_WORLD_REGRESSION_TESTS.ps1 had not yet declared it in its explicit test list. The runner coverage guard correctly rejected the mismatch."
+  },
+  "fix1": {
+    "owner": "feature/g5-world-feature-graph",
+    "g5_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
+    "g6_sync_pr": 49,
+    "g6_sync_merge_commit": "b7dd5c02a34a20fa2f589b7b9e0286135d2c8ab8",
+    "scope_files": 1,
+    "scope": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "change": "Add res://tests/matter/transactions/test_mw10_lock_release_retry.gd to the declared world regression suite.",
+    "runtime_or_hydrology_changed": false,
+    "expected_effect": "Declared and discovered test manifests match; the world regression proceeds to editor import and actual test execution instead of failing coverage preflight."
+  },
   "assistant_linux_double": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "platform": "linuxbsd-x86_64-double",
@@ -56,16 +82,11 @@
     "mw10_acquire_release_stress": "PASS_501_ASSERTIONS",
     "mw10_stress_cycles": 100,
     "g6_production_contract_smoke": "PASS_115_ASSERTIONS",
-    "g6_smoke_scope": [
-      "FluidType canonical namespace",
-      "FluidRegionId deterministic identity and validation",
-      "WaterSurfaceQuery canonicalization, validation and checksum behavior"
-    ],
     "full_repository_checkout_available": false,
     "full_world_regression_run": false,
     "note": "Focused assistant tests execute exact current production contract/lock files with isolated generic dependencies. They are supplementary evidence and do not replace the full repository world regression."
   },
-  "required_final_windows_gate": {
+  "required_fix1_windows_gate": {
     "command": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "must_pass": [
       "repository/global sync preflight",
@@ -74,6 +95,7 @@
       "git diff --check G5...G6",
       "accepted G6.0-G6.4 focused chain",
       "MW10 lock-release retry",
+      "world regression manifest coverage",
       "RUN_WORLD_REGRESSION_TESTS.ps1",
       "final clean worktree and diff hygiene"
     ]
