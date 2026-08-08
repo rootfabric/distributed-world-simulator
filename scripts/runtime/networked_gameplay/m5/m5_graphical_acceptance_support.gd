@@ -10,6 +10,12 @@ const CONTROL_SCHEMA := "planet_simulator.m5_graphical_acceptance_control.v1"
 const WRITE_RETRY_TIMEOUT_MS := 5000
 const WRITE_RETRY_DELAY_MS := 10
 
+# M5 result/control files are non-empty dictionaries with one writer per path.
+# Windows atomic replace can expose a brief read gap while the old path is being
+# replaced. Keep the last process-local successful snapshot so a coordinator
+# read-modify-write never rebuilds control state from a transient empty read.
+static var _read_cache: Dictionary = {}
+
 
 static func write(path: String, value: Dictionary) -> bool:
 	var normalized_path := path.strip_edges()
@@ -20,6 +26,7 @@ static func write(path: String, value: Dictionary) -> bool:
 	while Time.get_ticks_msec() - started_ms <= WRITE_RETRY_TIMEOUT_MS:
 		last_result = AtomicJson.write_dictionary(normalized_path, value)
 		if bool(last_result.get("success", false)):
+			_read_cache[normalized_path] = value.duplicate(true)
 			return true
 		OS.delay_msec(WRITE_RETRY_DELAY_MS)
 	push_error(
@@ -30,6 +37,13 @@ static func write(path: String, value: Dictionary) -> bool:
 
 
 static func read(path: String) -> Dictionary:
-	if path.strip_edges().is_empty():
+	var normalized_path := path.strip_edges()
+	if normalized_path.is_empty():
 		return {}
-	return AtomicJson.read_value(path)
+	var value: Dictionary = AtomicJson.read_value(normalized_path)
+	if not value.is_empty():
+		_read_cache[normalized_path] = value.duplicate(true)
+		return value
+	if _read_cache.has(normalized_path):
+		return Dictionary(_read_cache[normalized_path]).duplicate(true)
+	return {}
