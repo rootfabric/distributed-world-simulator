@@ -1,0 +1,111 @@
+{
+  "schema": "planet_simulator.validation.m7_world_item_consistency_fix5.v3",
+  "stage": "M7 FIX5 - authoritative world-item consistency",
+  "branch": "feature/m7-world-item-consistency-fix5",
+  "base_commit": "cda01de1f112d999dd477bc53dae38eb7f6fd2b0",
+  "base_stage": "M7 realtime backpressure FIX4 candidate",
+  "trigger": {
+    "session": "m7stress1",
+    "symptoms": [
+      "a WORLD item remained visible on one client but disappeared on the other after a rejected predicted pickup",
+      "WORLD item positions diverged between clients because each replica simulated its own RigidBody3D transform",
+      "player-b received ITEM_NOT_VISIBLE_TO_PLAYER while interacting with a locally visible item"
+    ],
+    "diagnosis": [
+      "predicted pickup removes the WORLD presentation before authority responds",
+      "same-revision authoritative duplicate did not rebuild presentation after pending prediction removal",
+      "playground presentation discarded all same-revision Item Graph projections",
+      "graphical replicas retained local RigidBody3D physics authority between Item Graph revisions"
+    ]
+  },
+  "implementation": {
+    "prediction_duplicate_policy": "REPROJECT_SAME_REVISION_AFTER_PENDING_CHANGE_V1",
+    "presentation_projection_policy": "APPLY_ALL_NONSTALE_SAME_REVISION_PROJECTIONS_V1",
+    "world_item_authority_policy": "SERVER_ITEM_GRAPH_TRANSFORM_FROZEN_REPLICA_V1",
+    "details": [
+      "same-revision authoritative duplicates rebuild projection from authority plus surviving pending predictions",
+      "strictly stale Item Graph revisions are suppressed, but same-revision prediction/rollback projections are always applied",
+      "game-client WORLD RigidBody3D replicas are frozen and their position, rotation, linear velocity and angular velocity are reapplied from the projected server Item Graph on synchronization",
+      "replica capture_world_state is rejected so a client cannot silently become the transform authority",
+      "offline/authority presentation keeps the legacy local physics behavior"
+    ]
+  },
+  "tests": {
+    "focused_test": "res://tests/network/test_m7_world_item_consistency_fix5.gd",
+    "runner": "VALIDATE_M7_WORLD_ITEM_CONSISTENCY_FIX5.ps1",
+    "coverage": [
+      "rejected optimistic pickup resolved with the exact same authority revision/checksum restores the WORLD item and its transform",
+      "same-revision presentation projections are both applied while strictly stale revisions remain suppressed",
+      "two independently materialized client replicas receive the same authoritative position and quaternion rotation",
+      "artificially diverged client transforms are restored to the same server pose on the next synchronization",
+      "replica WORLD bodies remain frozen and cannot capture their local world state back into the domain",
+      "existing NX6 predicted-item regression is part of the FIX5 runner",
+      "existing accepted inventory/FIX4 baseline and optional multi-process regression remain in the full runner"
+    ]
+  },
+  "windows_gate": {
+    "tested_head": "1611b0ce2c68a0244afab568274ed8ed8fcb1232",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "standalone_nx4_rerun": "PASS - 706 assertions",
+    "full_gate": {
+      "editor_import_composition": "PASS",
+      "fix5_world_item_consistency": "PASS - 49 assertions, 0 failures",
+      "nx6_predicted_item_interactions": "PASS - 957 assertions",
+      "accepted_inventory_regression": "PASS",
+      "fix8_direct_regression": "PASS - 9 assertions",
+      "nx3_fixed_tick": "PASS - 6188 assertions, 0 failures",
+      "nx4_prediction": "PASS - 706 assertions",
+      "m7_realtime_backpressure": "PASS - 137 assertions, 0 failures",
+      "m7_two_client_graphical_process": "PASS - 51 assertions, 0 failures",
+      "runner_result": "PASS"
+    },
+    "multi_process_evidence": {
+      "client_a_complete": true,
+      "client_b_complete": true,
+      "server_clean_shutdown": true,
+      "client_a_clean_shutdown": true,
+      "client_b_clean_shutdown": true,
+      "client_a_item_graph_checksum": "ed56094f70d17ab44c80d4e413d97c9e1e64384d137fcdfaa947be2bf1d1ae64",
+      "client_b_item_graph_checksum": "ed56094f70d17ab44c80d4e413d97c9e1e64384d137fcdfaa947be2bf1d1ae64",
+      "player_convergence_checksum": "1b41e919f14935a4d46927df2136f4cf32b00e632519202024e9a3028f197cc5",
+      "prediction_reconcile_failures": 0,
+      "pending_blocking_commands_at_completion": 0,
+      "item_graph_converged": true,
+      "player_replicas_converged_while_both_connected": true
+    },
+    "previous_test_false_negative": {
+      "original_tested_head": "e829137f1604742aaf37aced2bd16485b8fe0475",
+      "nx4_failures": [
+        "playground enables local prediction",
+        "playground reports NX4 presentation mode"
+      ],
+      "diagnosis": "FIX5 moved the legacy playground implementation into playground_runtime_base.gd and kept playground_runtime.gd as a thin derived layer. NX4 read only the leaf playground source and therefore missed valid inherited contracts.",
+      "test_fix_commit": "665d3806baf293be73fa360bc40221d3b2d50b32",
+      "production_files_changed_by_test_fix": false,
+      "resolved": true
+    }
+  },
+  "assistant_side_validation": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "checks": [
+      "GDScript inheritance/override dispatch probe PASS",
+      "same-revision journal rollback probe PASS: predicted INVENTORY -> rejected same-revision -> WORLD",
+      "replica RigidBody freeze/reapply/capture-suppression probe PASS",
+      "same-revision runtime projection probe PASS: 2 same-revision applies, 1 stale suppression"
+    ],
+    "limitations": "Manual interactive two-client pose/rotation acceptance still requires the user's Windows graphical session."
+  },
+  "manual_acceptance": {
+    "required": true,
+    "criteria": [
+      "the same WORLD item set is visible on both clients after accepted and rejected pickup attempts",
+      "a rejected pickup returns the item on the rejecting client without reconnect or resync",
+      "for every canonical WORLD item, both clients show the same position and rotation after synchronization",
+      "repeated drop/pickup does not create client-local physics drift",
+      "no ITEM_NOT_VISIBLE_TO_PLAYER caused by client/server item transform divergence",
+      "no INPUT_QUEUE_FULL or sustained prediction lead regression from FIX4",
+      "no SCRIPT ERROR, Parse Error, Compile Error or Failed to load script diagnostics"
+    ]
+  },
+  "decision": "FIX5 AUTOMATED WINDOWS GATE PASS - MANUAL TWO-CLIENT GRAPHICAL WORLD-ITEM POSE/ROTATION ACCEPTANCE REQUIRED BEFORE FINAL ACCEPTANCE"
+}
