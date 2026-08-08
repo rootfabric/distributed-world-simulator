@@ -19,6 +19,17 @@ func _run() -> void:
 	await physics_frame
 	print("CH7 equipment lab: phase=ready")
 
+	var equipment_ready: bool = (
+		lab.player is CharacterBody3D
+		and lab.avatar != null
+		and lab.equipment_source != null
+		and lab.equipment_presenter != null
+		and lab.equipment_rig_adapter != null
+		and lab.wearable_catalog != null
+		and lab.first_person_adapter != null
+		and lab.first_person_adapter.has_method("refresh_presentation_visuals")
+		and bool(lab.equipment_last_result.get("success", false))
+	)
 	_assert(lab.player is CharacterBody3D, "CH7 lab gameplay body missing")
 	_assert(lab.avatar != null, "CH7 lab avatar missing")
 	_assert(lab.equipment_source != null, "CH7 lab equipment source missing")
@@ -26,6 +37,13 @@ func _run() -> void:
 	_assert(lab.equipment_rig_adapter != null, "CH7 lab rig adapter missing")
 	_assert(lab.wearable_catalog != null, "CH7 lab wearable catalog missing")
 	_assert(lab.first_person_adapter != null and lab.first_person_adapter.has_method("refresh_presentation_visuals"), "CH7 lab did not upgrade to equipment-aware view adapter")
+	_assert(bool(lab.equipment_last_result.get("success", false)), "CH7 lab setup failed: %s" % JSON.stringify(lab.equipment_last_result))
+	if not equipment_ready:
+		print("CH7 equipment lab: phase=setup_failed details=%s" % JSON.stringify(lab.equipment_last_result))
+		lab.queue_free()
+		_finish()
+		return
+
 	_assert(lab.equipment_source.get_snapshot().entries().is_empty(), "CH7 lab must start with no equipment")
 
 	var player_position_before: Vector3 = lab.player.position
@@ -92,10 +110,6 @@ func _run() -> void:
 	_assert(int(fp_without_helmet.get("world_visual_count", 0)) < int(fp_full.get("world_visual_count", 0)), "Unequipped helmet remained in CH6 world visual capture")
 	_assert(int(fp_without_helmet.get("shadow_proxy_count", 0)) < int(fp_full.get("shadow_proxy_count", 0)), "Unequipped helmet remained in CH6 shadow proxy")
 
-	# Only a few real-asset cycles belong in this suite. Every mutation rebuilds the
-	# complete Quaternius WORLD_PROXY shadow set, so large stress counts make the
-	# graphical composition test unnecessarily expensive. The generic presenter
-	# suite carries the 100-cycle lifecycle stress instead.
 	print("CH7 equipment lab: phase=graphical_lifecycle cycles=%d" % GRAPHICAL_LIFECYCLE_CYCLES)
 	for cycle in range(GRAPHICAL_LIFECYCLE_CYCLES):
 		_assert(bool(lab.set_backpack_equipped(false).get("success", false)), "Backpack graphical lifecycle unequip failed at cycle %d" % cycle)
