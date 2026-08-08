@@ -11,6 +11,11 @@ const SEMANTIC_CANDIDATES := {
 	"idle": ["idle", "idle01", "idle1", "standingidle"],
 	"walk": ["walk", "walkforward", "walking", "walkfwd"],
 	"run": ["run", "runforward", "running", "jog", "jogforward", "sprint"],
+	"jump_start": ["jumpstart", "jump_start"],
+	"jump": ["jump"],
+	"jump_land": ["jumpland", "jump_land"],
+	"crouch_idle": ["crouchidle", "crouch_idle"],
+	"crouch_walk": ["crouchfwd", "crouch_fwd", "crouchforward", "crouchwalk"],
 }
 
 var asset_mode := "UNINITIALIZED"
@@ -53,14 +58,26 @@ func setup(options: Dictionary = {}) -> Dictionary:
 func apply_motion(
 	velocity: Vector3,
 	up: Vector3 = Vector3.UP,
-	facing_direction: Vector3 = Vector3.ZERO
+	facing_direction: Vector3 = Vector3.ZERO,
+	motion_state: Dictionary = {}
 ) -> Dictionary:
 	var safe_up := up.normalized() if up.length_squared() > 0.000001 else Vector3.UP
 	var horizontal_velocity := velocity - safe_up * velocity.dot(safe_up)
 	var speed := horizontal_velocity.length()
-	var semantic := "idle"
+	var locomotion_semantic := "idle"
 	if speed > IDLE_SPEED_MPS:
-		semantic = "run" if speed >= run_threshold_mps else "walk"
+		locomotion_semantic = "run" if speed >= run_threshold_mps else "walk"
+
+	var grounded := bool(motion_state.get("grounded", true))
+	var crouching := bool(motion_state.get("crouching", false))
+	var semantic := locomotion_semantic
+	if not grounded and _can_use_semantic("jump"):
+		semantic = "jump"
+	elif crouching:
+		var crouch_semantic := "crouch_idle" if speed <= IDLE_SPEED_MPS else "crouch_walk"
+		if _can_use_semantic(crouch_semantic):
+			semantic = crouch_semantic
+
 	var direction := facing_direction - safe_up * facing_direction.dot(safe_up)
 	if direction.length_squared() <= 0.000001:
 		direction = horizontal_velocity
@@ -76,10 +93,18 @@ func apply_motion(
 		"semantic": current_semantic,
 		"speed_mps": speed,
 		"animation": current_animation,
+		"grounded": grounded,
+		"crouching": crouching,
 	})
 
 
+func supports_semantic(semantic: String) -> bool:
+	return _can_use_semantic(semantic)
+
+
 func set_model_yaw_offset_degrees(value: float) -> void:
+	# Technical asset-alignment setting. Gameplay/lab input must not use this as
+	# a runtime facing toggle because it would also rotate the shadow proxy.
 	model_yaw_offset_rad = deg_to_rad(value)
 
 
@@ -169,6 +194,14 @@ func _resolve_required_animations() -> bool:
 	return true
 
 
+func _can_use_semantic(semantic: String) -> bool:
+	if semantic not in SEMANTIC_CANDIDATES:
+		return false
+	if asset_mode == "FALLBACK":
+		return semantic in ["idle", "walk", "run", "jump", "crouch_idle", "crouch_walk"]
+	return not _find_animation_for_semantic(semantic).is_empty()
+
+
 func _play_semantic(semantic: String) -> void:
 	if _animation_player == null:
 		current_animation = ""
@@ -208,6 +241,17 @@ func _find_animation_for_semantic(semantic: String) -> String:
 			for unwanted in ["back", "left", "right", "strafe", "turn", "crouch", "crawl"]:
 				if normalized.contains(unwanted):
 					score -= 35
+		elif semantic == "jump":
+			for unwanted in ["start", "land"]:
+				if normalized.contains(unwanted):
+					score -= 80
+		elif semantic == "crouch_idle":
+			for unwanted in ["fwd", "forward", "walk", "back", "left", "right"]:
+				if normalized.contains(unwanted):
+					score -= 60
+		elif semantic == "crouch_walk":
+			if normalized.contains("idle"):
+				score -= 80
 		if score > best_score:
 			best_score = score
 			best_name = name
@@ -412,19 +456,38 @@ func _animate_fallback() -> void:
 	elif current_semantic == "run":
 		amplitude = 0.95
 		frequency = 11.0
+	elif current_semantic == "crouch_walk":
+		amplitude = 0.35
+		frequency = 6.0
 	var swing := sin(_motion_time * frequency) * amplitude
 	for pair in [["LeftArm", swing], ["RightArm", -swing], ["LeftLeg", -swing], ["RightLeg", swing]]:
 		var part: Node3D = _fallback_parts.get(String(pair[0]))
 		if part != null:
 			part.rotation.x = float(pair[1])
+	if _model_root != null:
+		_model_root.position.y = -0.32 if current_semantic in ["crouch_idle", "crouch_walk"] else 0.0
 	var torso: Node3D = _fallback_parts.get("Torso")
 	if torso != null:
-		torso.rotation.z = sin(_motion_time * 2.0) * 0.015 if current_semantic == "idle" else 0.0
+		if current_semantic == "idle":
+			torso.rotation.z = sin(_motion_time * 2.0) * 0.015
+		elif current_semantic == "jump":
+			torso.rotation.x = -0.12
+			torso.rotation.z = 0.0
+		else:
+			torso.rotation.x = 0.0
+			torso.rotation.z = 0.0
 
 
 func create_report() -> Dictionary:
+	var animation_capabilities := {
+		"jump_start": _can_use_semantic("jump_start"),
+		"jump": _can_use_semantic("jump"),
+		"jump_land": _can_use_semantic("jump_land"),
+		"crouch_idle": _can_use_semantic("crouch_idle"),
+		"crouch_walk": _can_use_semantic("crouch_walk"),
+	}
 	return {
-		"schema": "planet_simulator.quaternius_avatar_presenter.v1",
+		"schema": "planet_simulator.quaternius_avatar_presenter.v2",
 		"asset_mode": asset_mode,
 		"model_path": model_path,
 		"animation_path": animation_path,
@@ -435,6 +498,12 @@ func create_report() -> Dictionary:
 		"target_skeleton": _target_skeleton != null,
 		"source_skeleton": _source_skeleton != null,
 		"animation_ready": _animation_player != null and _resolve_required_animations(),
+		"animation_capabilities": animation_capabilities,
+		"supports_jump": bool(animation_capabilities.get("jump", false)),
+		"supports_crouch": (
+			bool(animation_capabilities.get("crouch_idle", false))
+			and bool(animation_capabilities.get("crouch_walk", false))
+		),
 		"root_motion_applied": root_motion_applied,
 	}
 
