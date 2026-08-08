@@ -15,9 +15,16 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 # client and the next snapshot pulls the character backwards. M7 therefore keeps
 # up to one second of transient fixed-tick debt, drains it in bounded batches and
 # suppresses movement snapshots while that debt is being recovered.
+#
+# FIX6 removes two remaining diagnostic hot paths seen in long two-client item
+# stress. Transport peer-stat snapshots are sampled at 4 Hz instead of rebuilding
+# the full boundary snapshot every authority frame, and READY report materializing
+# is limited to 1 Hz. Terminal reports remain synchronous. Together with the
+# telemetry collector's bounded ring storage this keeps observability off the
+# realtime allocation path without weakening gameplay authority semantics.
 
 const M7_NETWORK_EVENT_BUDGET_PER_FRAME: int = 32
-const M7_READY_REPORT_MIN_INTERVAL_MS: int = 250
+const M7_READY_REPORT_MIN_INTERVAL_MS: int = 1000
 const M7_REPORT_POLICY: String = "ASYNC_COALESCED_READY_SYNC_TERMINAL_V1"
 const M7_EVENT_LOOP_POLICY: String = "FIXED_TICK_BEFORE_NETWORK_DRAIN_V1"
 const M7_ITEM_REPLICATION_POLICY: String = "ITEM_GRAPH_DELTA_WITH_GAMEPLAY_REVISION_SYNC_V2"
@@ -27,6 +34,9 @@ const M7_FIXED_TICK_BACKLOG_POLICY: String = "RETAIN_TRANSIENT_STALL_TIME_V1"
 const M7_STALL_SNAPSHOT_GUARD_SECONDS: float = 0.05
 const M7_INPUT_SNAPSHOT_BACKLOG_GUARD: int = 8
 const M7_MOVEMENT_SNAPSHOT_RECOVERY_POLICY: String = "SUPPRESS_WHILE_STALL_OR_AUTHORITY_BACKLOG_V1"
+const M7_PEER_TELEMETRY_INTERVAL_MS: int = 250
+const M7_TELEMETRY_HOT_PATH_POLICY: String = "RING_BUFFER_OBSERVE_THROTTLED_PEER_STATS_V1"
+const M7_SLOW_PROCESS_FRAME_MS: float = 50.0
 
 var _join_item_materializations: int = 0
 var _join_item_materialization_failures: int = 0
@@ -43,6 +53,7 @@ var _report_writes_started: int = 0
 var _report_writes_completed: int = 0
 var _report_write_failures: int = 0
 var _report_snapshot_build_duration_ms: float = 0.0
+var _report_max_snapshot_build_duration_ms: float = 0.0
 var _report_last_write_duration_ms: float = 0.0
 var _report_max_write_duration_ms: float = 0.0
 var _item_gameplay_revision_snapshots_published: int = 0
@@ -50,6 +61,14 @@ var _max_pending_input_count_observed: int = 0
 var _movement_snapshot_recovery_suppressions: int = 0
 var _transient_stall_frames: int = 0
 var _max_scheduler_backlog_ticks_observed: int = 0
+var _server_process_last_duration_ms: float = 0.0
+var _server_process_max_duration_ms: float = 0.0
+var _slow_process_frames: int = 0
+var _last_peer_telemetry_sample_ms: int = 0
+var _peer_telemetry_samples: int = 0
+var _peer_telemetry_skips: int = 0
+var _peer_telemetry_last_duration_ms: float = 0.0
+var _peer_telemetry_max_duration_ms: float = 0.0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -133,8 +152,13 @@ func _process(delta: float) -> void:
 	)
 	_dispatch_deferred_report()
 
-	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
-	_telemetry.observe("server_process_duration_ms", process_duration_ms)
+	_server_process_last_duration_ms = float(Time.get_ticks_usec() - process_started_us) / 1000.0
+	_server_process_max_duration_ms = maxf(
+		_server_process_max_duration_ms, _server_process_last_duration_ms
+	)
+	if _server_process_last_duration_ms >= M7_SLOW_PROCESS_FRAME_MS:
+		_slow_process_frames += 1
+	_telemetry.observe("server_process_duration_ms", _server_process_last_duration_ms)
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("SERVER_HEALTH", {
@@ -152,9 +176,18 @@ func _process(delta: float) -> void:
 			"max_scheduler_backlog_ticks": _max_scheduler_backlog_ticks_observed,
 			"movement_snapshot_recovery_suppressions": _movement_snapshot_recovery_suppressions,
 			"transient_stall_frames": _transient_stall_frames,
+			"server_process_duration_ms": _server_process_last_duration_ms,
+			"server_process_max_duration_ms": _server_process_max_duration_ms,
+			"slow_process_frames": _slow_process_frames,
 			"report_thread_active": _report_thread != null,
 			"report_requests_coalesced": _report_requests_coalesced,
+			"report_snapshot_build_duration_ms": _report_snapshot_build_duration_ms,
+			"report_max_snapshot_build_duration_ms": _report_max_snapshot_build_duration_ms,
 			"report_last_write_duration_ms": _report_last_write_duration_ms,
+			"peer_telemetry_samples": _peer_telemetry_samples,
+			"peer_telemetry_skips": _peer_telemetry_skips,
+			"peer_telemetry_last_duration_ms": _peer_telemetry_last_duration_ms,
+			"peer_telemetry_max_duration_ms": _peer_telemetry_max_duration_ms,
 			"last_error_code": _last_error_code,
 		})
 
@@ -166,6 +199,42 @@ func _scheduler_pending_catch_up_ticks() -> int:
 		return int(_fixed_tick_scheduler.call("get_pending_catch_up_ticks"))
 	var scheduler_report: Dictionary = _fixed_tick_scheduler.get_report()
 	return int(scheduler_report.get("pending_catch_up_ticks", 0))
+
+
+func _update_runtime_telemetry() -> void:
+	if _telemetry == null:
+		return
+	# Cheap gauges stay frame-current. The expensive transport snapshot and peer
+	# statistics are observability, not simulation input, so sample them at 4 Hz.
+	_telemetry.set_gauge("connected_gameplay_peers", float(_peer_to_player.size()))
+	_telemetry.set_gauge("compatible_transport_peers", float(_peer_compatibility.size()))
+	_telemetry.set_gauge("handshake_replay_count", float(_handshake_replays))
+	_telemetry.set_gauge("checkpoint_generation", float(_checkpoint_generation))
+	_telemetry.set_gauge("fixed_server_tick", float(_server_tick))
+	_telemetry.set_gauge("pending_input_count", float(_total_pending_input_count()))
+	_telemetry.set_gauge("fixed_tick_failures", float(_fixed_tick_failures))
+
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms - _last_peer_telemetry_sample_ms < M7_PEER_TELEMETRY_INTERVAL_MS:
+		_peer_telemetry_skips += 1
+		return
+	_last_peer_telemetry_sample_ms = now_ms
+	var sample_started_us: int = Time.get_ticks_usec()
+	var boundary_snapshot: Dictionary = _boundary.get_snapshot() if _boundary != null else {}
+	var port_runtime: Dictionary = boundary_snapshot.get("port_runtime", {})
+	var peer_statistics: Dictionary = port_runtime.get("peer_statistics", {})
+	for stats_value in peer_statistics.values():
+		if not stats_value is Dictionary:
+			continue
+		var stats: Dictionary = stats_value
+		_telemetry.observe("peer_rtt_ms", float(stats.get("rtt_ms", 0)))
+		_telemetry.observe("peer_jitter_ms", float(stats.get("rtt_variance_ms", 0)))
+		_telemetry.observe("peer_packet_loss_percent", float(stats.get("packet_loss_percent", 0.0)))
+	_peer_telemetry_last_duration_ms = float(Time.get_ticks_usec() - sample_started_us) / 1000.0
+	_peer_telemetry_max_duration_ms = maxf(
+		_peer_telemetry_max_duration_ms, _peer_telemetry_last_duration_ms
+	)
+	_peer_telemetry_samples += 1
 
 
 func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -328,7 +397,7 @@ func _dispatch_deferred_report() -> void:
 	report["state"] = _report_requested_state
 	report["passed"] = _report_requested_passed
 	report["process_id"] = OS.get_process_id()
-	_report_snapshot_build_duration_ms = float(Time.get_ticks_usec() - snapshot_started_us) / 1000.0
+	_record_report_snapshot_build(report, snapshot_started_us)
 	_report_thread = Thread.new()
 	var start_error: Error = _report_thread.start(
 		Callable(self, "_report_worker_write").bind(_result_file, report)
@@ -340,6 +409,20 @@ func _dispatch_deferred_report() -> void:
 	_report_dirty = false
 	_report_writes_started += 1
 	_last_report_dispatch_ms = now_ms
+
+
+func _record_report_snapshot_build(report: Dictionary, snapshot_started_us: int) -> void:
+	_report_snapshot_build_duration_ms = float(Time.get_ticks_usec() - snapshot_started_us) / 1000.0
+	_report_max_snapshot_build_duration_ms = maxf(
+		_report_max_snapshot_build_duration_ms, _report_snapshot_build_duration_ms
+	)
+	# get_report() necessarily contains the previous build duration because the
+	# current build is only known after it returns. Stamp the just-measured values
+	# into the outgoing snapshot so the JSON and SERVER_HEALTH agree.
+	var foundation: Dictionary = Dictionary(report.get("realtime_foundation", {}))
+	foundation["report_snapshot_build_duration_ms"] = _report_snapshot_build_duration_ms
+	foundation["report_max_snapshot_build_duration_ms"] = _report_max_snapshot_build_duration_ms
+	report["realtime_foundation"] = foundation
 
 
 func _report_worker_write(path: String, report: Dictionary) -> Dictionary:
@@ -393,7 +476,7 @@ func _write_report_sync(state: String, passed: bool) -> void:
 	report["state"] = state
 	report["passed"] = passed
 	report["process_id"] = OS.get_process_id()
-	_report_snapshot_build_duration_ms = float(Time.get_ticks_usec() - snapshot_started_us) / 1000.0
+	_record_report_snapshot_build(report, snapshot_started_us)
 	var write_started_us: int = Time.get_ticks_usec()
 	var success: bool = Support.write(_result_file, report)
 	_report_last_write_duration_ms = float(Time.get_ticks_usec() - write_started_us) / 1000.0
@@ -425,6 +508,12 @@ func get_report() -> Dictionary:
 		"item_replication_policy": M7_ITEM_REPLICATION_POLICY,
 		"network_event_budget_per_frame": M7_NETWORK_EVENT_BUDGET_PER_FRAME,
 		"ready_report_min_interval_ms": M7_READY_REPORT_MIN_INTERVAL_MS,
+		"telemetry_hot_path_policy": M7_TELEMETRY_HOT_PATH_POLICY,
+		"peer_telemetry_interval_ms": M7_PEER_TELEMETRY_INTERVAL_MS,
+		"peer_telemetry_samples": _peer_telemetry_samples,
+		"peer_telemetry_skips": _peer_telemetry_skips,
+		"peer_telemetry_last_duration_ms": _peer_telemetry_last_duration_ms,
+		"peer_telemetry_max_duration_ms": _peer_telemetry_max_duration_ms,
 		"fixed_tick_backlog_policy": M7_FIXED_TICK_BACKLOG_POLICY,
 		"fixed_tick_max_catch_up_ticks": M7_FIXED_TICK_MAX_CATCH_UP_TICKS,
 		"fixed_tick_max_frame_delta_seconds": M7_FIXED_TICK_MAX_FRAME_DELTA_SECONDS,
@@ -436,6 +525,10 @@ func get_report() -> Dictionary:
 		"movement_snapshot_recovery_suppressions": _movement_snapshot_recovery_suppressions,
 		"transient_stall_frames": _transient_stall_frames,
 		"max_scheduler_backlog_ticks_observed": _max_scheduler_backlog_ticks_observed,
+		"server_process_last_duration_ms": _server_process_last_duration_ms,
+		"server_process_max_duration_ms": _server_process_max_duration_ms,
+		"slow_process_frame_threshold_ms": M7_SLOW_PROCESS_FRAME_MS,
+		"slow_process_frames": _slow_process_frames,
 		"report_requests": _report_requests,
 		"report_requests_coalesced": _report_requests_coalesced,
 		"report_dirty": _report_dirty,
@@ -444,6 +537,7 @@ func get_report() -> Dictionary:
 		"report_writes_completed": _report_writes_completed,
 		"report_write_failures": _report_write_failures,
 		"report_snapshot_build_duration_ms": _report_snapshot_build_duration_ms,
+		"report_max_snapshot_build_duration_ms": _report_max_snapshot_build_duration_ms,
 		"report_last_write_duration_ms": _report_last_write_duration_ms,
 		"report_max_write_duration_ms": _report_max_write_duration_ms,
 		"item_gameplay_revision_snapshots_published": _item_gameplay_revision_snapshots_published,
