@@ -34,12 +34,17 @@
   },
   "runtime_validation": {
     "assistant_environment_godot_available": true,
-    "assistant_godot_archive_source": "project upload godot-4.7.1-linux-double-x86_64-a13da4f.tar.gz",
+    "assistant_godot_archive_source": "project upload /mnt/data/godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "assistant_godot_archive_sha256": "d7a184b893d4e3ad4d4b6cb2e3a4fbb52997dfc87e4f00d2a7f24ac075903b92",
+    "assistant_godot_binary": "tools/godot/linux-x86_64/godot.linuxbsd.editor.double.x86_64",
+    "assistant_godot_binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "assistant_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "assistant_godot_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
     "assistant_godot_platform": "linuxbsd-x86_64-double",
-    "assistant_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "assistant_headless_gdscript_smoke": "PASS",
+    "assistant_headless_gdscript_smoke_output": [
+      "GODOT_PROJECT_SMOKE: PASS",
+      "VECTOR3_SAMPLE: (0.12345678901234, 2.0, 3.0)"
+    ],
     "assistant_environment_repository_checkout_available": false,
     "assistant_environment_network_clone_available": false,
     "assistant_runtime_result": "ENGINE_VERIFIED_BUT_PROJECT_GATE_NOT_RUN_NO_CHECKOUT",
