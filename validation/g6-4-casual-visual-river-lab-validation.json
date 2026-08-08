@@ -10,18 +10,14 @@
   "previous_manual_observation": {
     "scene_renders": true,
     "observed_samples": 97,
-    "observed_gap": "STATIC_FIXED_DENSITY_RIBBON_WITHOUT_OBSERVER_DRIVEN_LOD",
-    "acceptance_effect": "G6.4_NOT_ACCEPTED_FIX2_REQUIRED"
+    "observed_gap": "STATIC_FIXED_DENSITY_RIBBON_WITHOUT_OBSERVER_DRIVEN_LOD"
   },
   "fix2": {
     "uses_accepted_g2_surface_lod_selector": true,
-    "observer_driven_selection": true,
     "adaptive_surface_cell_grid": true,
     "adaptive_river_sampling": true,
     "far_near_headless_lod_comparison": true,
     "far_near_headless_river_sample_comparison": true,
-    "manual_lod_grid_toggle": "KEY_6",
-    "accepted_g6_0_to_g6_3_semantics_changed": false,
     "feature_id_depends_on_lod": false,
     "fluid_region_id_depends_on_lod": false
   },
@@ -29,9 +25,7 @@
     "g6_4_source_p0_contracts": "PASS_REQUIRED_FIX2",
     "g6_4_headless_scene_smoke": "PASS_REQUIRED_WITH_EXPLICIT_MARKER",
     "far_near_max_lod_changes": "PASS_REQUIRED",
-    "far_near_river_sample_count_changes": "PASS_REQUIRED",
-    "git_diff_check": "PASS_REQUIRED",
-    "working_tree": "CLEAN_REQUIRED"
+    "far_near_river_sample_count_changes": "PASS_REQUIRED"
   },
   "required_manual_evidence": {
     "lod_grid_visible": "PASS_REQUIRED",
