@@ -15,6 +15,9 @@ const FIELDS: Array[String] = [
 	"fluid_region_id",
 	"body_id",
 	"fluid_type_id",
+	"seed",
+	"generator_version",
+	"stable_key",
 	"frame_id",
 	"source_feature_id",
 	"bounds",
@@ -29,6 +32,9 @@ static func create(
 	fluid_region_id: String,
 	body_id: String,
 	fluid_type_id: String,
+	seed: int,
+	generator_version: String,
+	stable_key: String,
 	frame_id: String,
 	source_feature_id: String,
 	bounds: Dictionary,
@@ -41,6 +47,9 @@ static func create(
 		"fluid_region_id": fluid_region_id,
 		"body_id": body_id,
 		"fluid_type_id": fluid_type_id,
+		"seed": seed,
+		"generator_version": generator_version,
+		"stable_key": stable_key,
 		"frame_id": frame_id,
 		"source_feature_id": source_feature_id,
 		"bounds": bounds.duplicate(true),
@@ -67,6 +76,21 @@ static func validate(value: Dictionary) -> Dictionary:
 	var type_validation: Dictionary = FluidTypeScript.validate(value.get("fluid_type_id"))
 	if not bool(type_validation.get("success", false)):
 		return type_validation
+	if not GeoUtilsScript.is_json_integer(value.get("seed")):
+		return GeoUtilsScript.failure("INVALID_FLUID_SURFACE_SEED")
+	if not GeoUtilsScript.is_semantic_version(value.get("generator_version")):
+		return GeoUtilsScript.failure("INVALID_FLUID_SURFACE_GENERATOR_VERSION")
+	if not GeoUtilsScript.is_canonical_id(value.get("stable_key"), 2) or not String(value["stable_key"]).begins_with(FluidRegionIdScript.STABLE_KEY_PREFIX):
+		return GeoUtilsScript.failure("INVALID_FLUID_SURFACE_STABLE_KEY")
+	var derived_region: Dictionary = FluidRegionIdScript.derive(
+		String(value["body_id"]),
+		String(value["fluid_type_id"]),
+		int(value["seed"]),
+		String(value["generator_version"]),
+		String(value["stable_key"])
+	)
+	if not bool(derived_region.get("success", false)) or String(value["fluid_region_id"]) != String(derived_region["details"]["fluid_region_id"]):
+		return GeoUtilsScript.failure("FLUID_SURFACE_REGION_IDENTITY_MISMATCH")
 	if not GeoUtilsScript.is_canonical_id(value.get("frame_id"), 2):
 		return GeoUtilsScript.failure("INVALID_FLUID_SURFACE_FRAME_ID")
 	if typeof(value.get("source_feature_id")) != TYPE_STRING:
