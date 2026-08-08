@@ -4,7 +4,7 @@ extends "res://scripts/characters/presentation/full_body_first_person_adapter.gd
 
 func refresh_presentation_visuals() -> Dictionary:
 	if presentation == null:
-		return _failure("NO_PRESENTATION_BOUND")
+		return {"success": false, "error_code": "NO_PRESENTATION_BOUND", "details": {}}
 
 	_clear_shadow_proxy()
 	_restore_visual_layers()
