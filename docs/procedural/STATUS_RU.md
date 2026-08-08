@@ -11,8 +11,8 @@ G0 Contracts Freeze                    ACCEPTED
 G1 Geodesy + Body Shape                BASELINE
 G2 Planetary Surface Cells + LOD       ACCEPTED
 G3 Mega Casual Macro Surface           ACCEPTED
-G4 Provider Composition / Replacement  IMPLEMENTED CANDIDATE — FULL GATE PENDING
-G5 World Feature Graph                 NEXT AFTER G4 ACCEPTED
+G4 Provider Composition / Replacement  ACCEPTED
+G5 World Feature Graph                 NEXT — UNBLOCKED
 ```
 
 G4 base:
@@ -26,6 +26,12 @@ G3 accepted head:
 
 ```text
 bc58f650ffb43775667bf0d07cb361a98a40d294
+```
+
+Canonical G4 acceptance record:
+
+```text
+docs/checkpoints/G4_PROVIDER_COMPOSITION_REPLACEMENT_ACCEPTED_RU.md
 ```
 
 ## Strategy after G3
@@ -48,7 +54,7 @@ docs/plans/UNIVERSAL_WORLD_GENERATION_ROADMAP_RU.md
 docs/procedural/NEXT_AFTER_G3_UNIVERSAL_WORLD_GENERATION_RU.md
 ```
 
-## G4 implementation
+## G4 accepted implementation
 
 Generic composition runtime:
 
@@ -85,6 +91,8 @@ G4 repeated provider replacement   PASS — 341 assertions
 G4 visual lab headless             PASS
 G3 macro regression                PASS — 14,275 assertions
 G3 fly-in regression               PASS — 99 assertions
+full world/core regression         PASS
+Breakpoint :9081 collision noise   0
 ```
 
 Repeated replacement cycle:
@@ -97,7 +105,7 @@ For the same recipe, manifest hash and exact 81-point geography profile reproduc
 
 ## M5 regression blocker
 
-The M5 graphical convergence/shutdown race found during real checkout validation is now closed.
+The M5 graphical convergence/shutdown race found during real checkout validation is closed.
 
 Harness stabilization commits:
 
@@ -125,6 +133,28 @@ The fix changes only M5 acceptance orchestration: clients freeze the same final 
 
 Because this historical acceptance driver lives under `scripts/runtime/networked_gameplay/m5`, `RUN_G4_FULL_ACCEPTANCE.ps1` allowlists exactly that one harness path while preserving the freeze for every other production runtime/network/Matter/world path.
 
+## G4 full gate closure
+
+The real Windows wrapper reached the final hygiene stage with all functional suites green. Its only failure was Markdown trailing whitespace in three docs. Those spaces were removed with docs-only commits.
+
+The changed-file set against `docs/universal-world-generation-roadmap-post-g3` confirms:
+
+```text
+frozen G0-G3 architecture paths unchanged    PASS
+production world scenes unchanged            PASS
+production network/Matter paths unchanged    PASS
+only allowlisted M5 acceptance driver changed PASS
+```
+
+Architecture Review A confirms:
+
+```text
+replacement requires recipe/config only      PASS
+no world-type special case in GeoRecipeComposer PASS
+final semantic caller field stable           PASS
+provider graph/provenance deterministic       PASS
+```
+
 ## G4 visual lab
 
 ```text
@@ -138,26 +168,6 @@ A/D   longitude
 Q/E   latitude
 ```
 
-## G4 full gate
-
-```powershell
-.\RUN_G4_FULL_ACCEPTANCE.ps1
-```
-
-Required before acceptance:
-
-```text
-G3 dependency focused PASS
-G4 focused PASS
-full world/core regression PASS
-Breakpoint :9081 current-run audit PASS
-git diff --check vs post-G3 docs base PASS
-frozen G0-G3 architecture paths unchanged
-production/runtime/network/Matter paths unchanged
-```
-
-M5 focused/multi-process blocker is accepted. Until the complete real-checkout G4 wrapper is green, G4 remains `IMPLEMENTED CANDIDATE` and PR #34 remains draft.
-
 ## Next after G4
 
 Blocking main track:
@@ -166,7 +176,7 @@ Blocking main track:
 G5 — World Feature Graph
 ```
 
-After G4 acceptance the roadmap also allows parallel:
+Parallel tracks now allowed by the roadmap:
 
 ```text
 GR0 — Surface Representation Lab
