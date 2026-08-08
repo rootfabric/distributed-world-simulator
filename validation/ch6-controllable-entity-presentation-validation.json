@@ -4,7 +4,7 @@
   "base_exact_sha": "d83ff4ed7b41f69663fbc68611c1d9ffa8c1c6ba",
   "base_checkpoint": "CH5 full-body first-person implemented candidate",
   "delivery": "CH5 fix1 / CH6 candidate",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_ENGINE_AND_GRAPHICAL_ACCEPTANCE",
+  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_GATES_PASS_PENDING_WINDOWS_REAL_ASSET_GRAPHICAL_ACCEPTANCE",
   "trigger": {
     "ch5_head_mask_tests": "PASS on Windows with real Quaternius assets",
     "graphical_result": "REJECTED_BY_VISUAL_OBSERVATION",
@@ -62,8 +62,15 @@
     "original_camera_cull_masks_restored_on_unbind": true
   },
   "local_authoring_validation": {
-    "status": "NOT_EXECUTED_IN_CONNECTED_GITHUB_ENVIRONMENT",
-    "reason": "Godot runtime is on the user's Windows workstation; candidate is committed for the same real-asset runner used by CH5"
+    "status": "PASS",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb linuxbsd editor double x86_64",
+    "editor_import": "PASS; no SCRIPT ERROR, Parse Error or Compile Error",
+    "ch4_avatar_presenter_regression": "13/13 PASS",
+    "ch4_character_lab_regression": "7/7 PASS",
+    "ch5_legacy_adapter_compatibility": "21/21 PASS without external Quaternius assets",
+    "ch5_fix1_camera_layer_lab": "34/34 PASS without external Quaternius assets",
+    "ch6_non_humanoid_controllable_view_adapter": "27/27 PASS",
+    "root_motion_authority": "unchanged"
   },
   "windows_acceptance_gate": {
     "test_command": ".\\RUN_CH6_CONTROLLABLE_PRESENTATION_TESTS.ps1 -GodotPath $Godot",
