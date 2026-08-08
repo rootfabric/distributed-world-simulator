@@ -168,6 +168,9 @@ func _score_head_scene(candidate_path: String, source_model_path: String) -> int
 	var candidate_name := candidate_path.get_file().get_basename().to_lower()
 	if not candidate_name.contains("head") or candidate_name.contains("fullbody"):
 		return -100000
+	for accessory_token in ["hair", "beard", "helmet", "outfit", "animation"]:
+		if candidate_name.contains(String(accessory_token)):
+			return -100000
 
 	var source_name := source_model_path.get_file().get_basename().to_lower()
 	var source_prefix := source_name.replace("_fullbody", "")
@@ -189,9 +192,8 @@ func _score_head_scene(candidate_path: String, source_model_path: String) -> int
 	for token in source_prefix.split("_", false):
 		if String(token).length() >= 4 and candidate_name.contains(String(token)):
 			score += 30
-	for unwanted in ["hair", "beard", "helmet", "outfit", "animation", "upperbody"]:
-		if candidate_name.contains(String(unwanted)):
-			score -= 150
+	if candidate_name.contains("upperbody"):
+		score -= 300
 	return score
 
 
