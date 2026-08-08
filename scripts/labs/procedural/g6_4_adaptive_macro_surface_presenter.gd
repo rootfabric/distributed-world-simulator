@@ -13,8 +13,13 @@ const TERRAIN_BASE_RADIUS: float = 7.985
 const HEIGHT_DISPLAY_EXAGGERATION: float = 40.0
 const MACRO_AMPLITUDE_M: float = 900.0
 const MACRO_WAVELENGTH_M: float = 600000.0
-const MACRO_OCTAVES: int = 4
-const MACRO_PERSISTENCE: float = 0.5
+# Fix4 visual recipe: use the accepted G3 provider's full configurable octave
+# range so observer-driven LOD reveals new height-field frequencies instead of
+# merely adding triangles over a four-octave (~75 km minimum wavelength) field.
+# This changes only the lab recipe; the accepted G3 provider is untouched.
+const MACRO_OCTAVES: int = 8
+const MACRO_PERSISTENCE: float = 0.58
+const MIN_SIGNAL_WAVELENGTH_M: float = 4687.5
 const CELL_SEGMENTS: int = 2
 const UPDATE_INTERVAL_S: float = 0.18
 
@@ -97,12 +102,14 @@ func _ready() -> void:
 			push_error("G6.4 adaptive macro surface headless proof failed: %s" % String(smoke.get("error_code", "")))
 			return
 		var details: Dictionary = smoke["details"]
-		print("G6.4 Adaptive Macro Surface: PASS (far_lod=%d near_lod=%d far_triangles=%d near_triangles=%d current_triangles=%d)" % [
+		print("G6.4 Adaptive Macro Surface: PASS (far_lod=%d near_lod=%d far_triangles=%d near_triangles=%d current_triangles=%d octaves=%d min_signal_km=%.3f)" % [
 			int(details["far_max_lod"]),
 			int(details["near_max_lod"]),
 			int(details["far_triangles"]),
 			int(details["near_triangles"]),
 			last_triangle_count,
+			MACRO_OCTAVES,
+			MIN_SIGNAL_WAVELENGTH_M / 1000.0,
 		])
 
 
