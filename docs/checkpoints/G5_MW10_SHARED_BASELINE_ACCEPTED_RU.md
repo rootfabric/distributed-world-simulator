@@ -6,7 +6,7 @@
 
 PR #43 интегрировал независимо принятый MW10 atomic-lock lifecycle fix в shared G5 baseline.
 
-Scope ровно два runtime/test файла:
+Scope runtime/test fix:
 
 ```text
 scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd
@@ -51,10 +51,25 @@ ordinary MW10 transaction contracts   PASS — 184 assertions
 ordinary MW10 processes               PASS — 51 assertions
 ```
 
+## Shared regression integration
+
+После первого G6 full-gate закрыты два integration/hygiene хвоста в shared G5 baseline:
+
+```text
+RUN_WORLD_REGRESSION_TESTS.ps1
+  + res://tests/matter/transactions/test_mw10_lock_release_retry.gd
+
+tracked Godot UID
+  tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
+  uid://yush8dg03nlf
+```
+
+UID сгенерирован project-provided Godot 4.7.1 double через `ResourceUID.create_id()` / `ResourceUID.id_to_text()`.
+
 ## Решение
 
 ```text
 G5 shared MW10 baseline — ACCEPTED
 ```
 
-G6 больше не должен содержать приватную копию fix. Следующий обязательный шаг — lineage-preserving sync текущего G5 head в `feature/g6-hydrology-fluid-surface-v0`, затем `RUN_G6_FULL_ACCEPTANCE.ps1`.
+G6 должен синхронизироваться с текущим G5 head через lineage-preserving merge перед следующим full acceptance run.
