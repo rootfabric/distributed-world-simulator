@@ -77,6 +77,18 @@ new Fluid identity   NONE
 Geomorphology owner  NO
 ```
 
+Assistant exact-engine structural evidence:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+G3 exact published blob parse/load     PASS
+G5 exact published blob parse/load     PASS
+G6 exact published blob parse/load     PASS
+G7_1_ADAPTER_STUB_SMOKE                PASS
+```
+
+The smoke uses byte-exact adapter blobs and stubbed accepted upstream API shapes. It does not replace the full Windows repository gate.
+
 P0 guards:
 
 ```text
