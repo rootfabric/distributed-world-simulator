@@ -1,4 +1,4 @@
-extends "res://tests/matter/interest/test_mw7_matter_interest_replication_base.gd"
+extends "res://tests/matter/interest/mw7_matter_interest_replication_suite.gd"
 
 const FixtureCleanupScript = preload(
 	"res://tests/matter/interest/mw7_test_fixture.gd"
