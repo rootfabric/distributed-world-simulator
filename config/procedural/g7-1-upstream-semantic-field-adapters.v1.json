@@ -1,9 +1,10 @@
 {
   "schema": "planet_simulator.g7_1_upstream_semantic_field_adapters_manifest.v1",
   "checkpoint": "g7.1-upstream-semantic-field-adapters",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g7-semantic-field-fabric",
+  "tested_head": "61de8526448a5a2ab95745fa380cdc8b3c4ea24f",
   "g7_0_accepted_commit": "06466ac034a25492ef8c3ff3cfc053f536eb97b9",
   "adapters": {
     "g3_surface": {
