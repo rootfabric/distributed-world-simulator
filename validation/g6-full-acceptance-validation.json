@@ -3,8 +3,9 @@
   "checkpoint": "G6_FULL_ACCEPTANCE",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "decision": "FIX3_IMPLEMENTED_CANDIDATE",
+  "decision": "SOURCE_ACCEPTED",
   "g6_4_status": "ACCEPTED",
+  "source_accepted": true,
   "implementation": {
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "shell_runner": "RUN_G6_FULL_ACCEPTANCE.sh",
@@ -22,48 +23,54 @@
     "retry_test_uid_tracking_commit": "2911cffb2fda3f14069379ccac3a48e79644c1b7",
     "retry_test_uid": "uid://yush8dg03nlf"
   },
-  "first_full_windows_attempt": {
-    "result": "FIX1_REQUIRED",
-    "g6_chain_through_g6_4": "PASS",
-    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
-    "world_regression_started": false,
-    "blocker": "world regression coverage list omitted test_mw10_lock_release_retry.gd"
+  "acceptance_history": {
+    "fix1": {
+      "result": "FIX1_REQUIRED",
+      "blocker": "world regression coverage list omitted test_mw10_lock_release_retry.gd",
+      "runtime_failure": false
+    },
+    "fix2": {
+      "result": "FIX2_REQUIRED",
+      "blocker": "Godot generated untracked tests/matter/transactions/test_mw10_lock_release_retry.gd.uid",
+      "runtime_failure": false
+    },
+    "fix3": {
+      "result": "ACCEPTED",
+      "blocker": "post-run untracked Microsoft/ directory only",
+      "fix_commit": "865b907cfb886aec122ed611a82f7dc5cc6bb7b1",
+      "production_runtime_changed": false,
+      "world_runtime_changed": false,
+      "full_world_regression_rerun_required": false
+    }
   },
-  "second_full_windows_attempt_preflight": {
-    "result": "FIX2_REQUIRED",
-    "world_runner_coverage_fix_present": true,
-    "blocker": "Godot generated untracked tests/matter/transactions/test_mw10_lock_release_retry.gd.uid, so clean-tree preflight rejected the checkout before runtime",
-    "runtime_started": false
-  },
-  "third_full_windows_attempt": {
-    "result": "RUNTIME_PASS_FINAL_HYGIENE_FIX3_REQUIRED",
+  "full_windows_runtime_evidence": {
+    "tested_runtime_head": "c165f797304334d1fbde6e8178fbd143751c1e60",
     "g6_chain_through_g6_4": "PASS",
     "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
     "world_regression_manifest_coverage": "PASS",
     "world_core_regression": "PASS",
     "main_scene_cli_all": "PASS_6_TESTS_0_FAIL",
-    "world_regression_terminal_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
-    "world_regression_report": "artifacts/test-results/world-regression-summary.json",
-    "final_hygiene": "FAIL_TRANSIENT_ONLY",
-    "final_hygiene_blocker": "untracked Microsoft/ directory created during Windows regression child processes",
+    "terminal_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report": "artifacts/test-results/world-regression-summary.json",
     "production_runtime_failure": false
   },
-  "fix3": {
-    "commit": "865b907cfb886aec122ed611a82f7dc5cc6bb7b1",
-    "scope": "G6 full acceptance harness cleanup only",
-    "action": "snapshot whether root Microsoft/ existed before the run; after child processes remove it only when it is newly created and contains no tracked files",
-    "preexisting_directory_deleted": false,
-    "tracked_files_deleted": false,
-    "hydrology_runtime_changed": false,
-    "world_runtime_changed": false,
-    "rerun_full_world_regression_required": false,
-    "tested_runtime_head_before_fix3": "c165f797304334d1fbde6e8178fbd143751c1e60",
-    "post_runtime_changes_are_harness_validation_docs_only": true,
-    "acceptance_rule": "reuse the already green full world regression evidence; require updated-head PowerShell parse plus clean git status and git diff --check after removing the stale directory from the previous run"
+  "fix3_closeout_evidence": {
+    "tested_closeout_head": "04987a5bc8ade0a4aff94671eefac3181156bc60",
+    "post_runtime_diff_scope": [
+      "RUN_G6_FULL_ACCEPTANCE.ps1",
+      "docs/checkpoints/G6_FULL_ACCEPTANCE_CANDIDATE_RU.md",
+      "docs/procedural/STATUS_RU.md",
+      "validation/g6-full-acceptance-validation.json"
+    ],
+    "post_runtime_diff_is_harness_validation_docs_only": true,
+    "powershell_parser": "PASS",
+    "stale_microsoft_directory_removed": true,
+    "git_status_porcelain": "EMPTY",
+    "git_diff_check_g5_to_g6": "PASS",
+    "working_tree": "CLEAN"
   },
   "g6_4_windows_evidence": {
     "tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
-    "dependency_chain_through_g6_3": "PASS",
     "g6_4_contracts": "PASS_158_ASSERTIONS",
     "adaptive_macro_surface": "PASS",
     "far_lod": 1,
@@ -78,17 +85,13 @@
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
     "mw10_acquire_release_stress": "PASS_501_ASSERTIONS",
-    "g6_production_contract_smoke": "PASS_115_ASSERTIONS",
-    "uid_generated_with_project_godot": true,
-    "full_repository_checkout_available": false
+    "g6_production_contract_smoke": "PASS_115_ASSERTIONS"
   },
-  "required_fix3_hygiene_closeout": {
-    "full_world_regression_rerun": false,
-    "must_pass": [
-      "updated RUN_G6_FULL_ACCEPTANCE.ps1 parses in local PowerShell",
-      "stale Microsoft/ from previous run removed",
-      "git status --porcelain is empty",
-      "git diff --check G5...G6 is empty"
-    ]
+  "architecture_status": {
+    "source_accepted": true,
+    "main_integrated": false,
+    "composition_verified": false,
+    "production_ready": false,
+    "next_checkpoint": "G7_SEMANTIC_FIELD_FABRIC"
   }
 }
