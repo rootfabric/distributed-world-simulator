@@ -1,0 +1,53 @@
+{
+  "schema": "planet_simulator.g7_1_upstream_semantic_field_adapters_manifest.v1",
+  "checkpoint": "g7.1-upstream-semantic-field-adapters",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_0_accepted_commit": "06466ac034a25492ef8c3ff3cfc053f536eb97b9",
+  "adapters": {
+    "g3_surface": {
+      "adapter_id": "semantic-adapter/g3-surface-v1",
+      "fields": ["geo/surface-height-m"],
+      "upstream_owner": "G3/G4 Geo provider",
+      "identity_replaced": false
+    },
+    "g5_feature": {
+      "adapter_id": "semantic-adapter/g5-feature-v1",
+      "fields": ["geo/valley-influence"],
+      "policy": "FEATURE_BOUNDS_FALLOFF_V1",
+      "upstream_owner": "G5 WorldFeatureGraph",
+      "feature_id_replaced": false,
+      "geomorphology_owned": false
+    },
+    "g6_fluid": {
+      "adapter_id": "semantic-adapter/g6-fluid-v1",
+      "fields": ["geo/fluid-surface-distance-m", "geo/river-distance-m", "geo/river-width-m"],
+      "upstream_owner": "G5/G6 river and fluid geography",
+      "feature_id_replaced": false,
+      "fluid_region_id_replaced": false
+    }
+  },
+  "registry": {
+    "adapter_available_marker": "ADAPTER_AVAILABLE_G7_1",
+    "still_vocabulary_only": [
+      "geo/slope",
+      "geo/curvature",
+      "geo/drainage-potential",
+      "geo/continentalness",
+      "geo/temperature-baseline",
+      "geo/moisture-baseline"
+    ]
+  },
+  "p0": {
+    "owns_world_query": false,
+    "owns_spatial_identity": false,
+    "owns_authority": false,
+    "owns_interest": false,
+    "owns_persistence": false,
+    "owns_network_replication": false,
+    "owns_material_ontology": false,
+    "owns_scheduler_cache": false
+  },
+  "next_stage": "G7.2 Composition / Provenance"
+}
