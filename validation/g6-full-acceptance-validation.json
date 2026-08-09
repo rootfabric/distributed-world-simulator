@@ -57,6 +57,8 @@
     "hydrology_runtime_changed": false,
     "world_runtime_changed": false,
     "rerun_full_world_regression_required": false,
+    "tested_runtime_head_before_fix3": "c165f797304334d1fbde6e8178fbd143751c1e60",
+    "post_runtime_changes_are_harness_validation_docs_only": true,
     "acceptance_rule": "reuse the already green full world regression evidence; require updated-head PowerShell parse plus clean git status and git diff --check after removing the stale directory from the previous run"
   },
   "g6_4_windows_evidence": {
