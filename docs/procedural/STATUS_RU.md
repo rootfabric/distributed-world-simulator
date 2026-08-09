@@ -1,6 +1,6 @@
 # Universal World Generation Fabric — status ledger
 
-**Current branch:** `feature/g6-hydrology-fluid-surface-v0`
+**Current branch:** `feature/g6-hydrology-fluid-surface-v0`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
@@ -10,10 +10,10 @@ G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
 G6.3 Runtime WaterSurfaceQuery         ACCEPTED
 G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
-G6 Full Acceptance                     FIX3 IMPLEMENTED CANDIDATE
+G6 Full Acceptance                     SOURCE_ACCEPTED
 ```
 
-Current G6 full-acceptance evidence:
+Final G6 Windows evidence:
 
 ```text
 G6.0-G6.4 focused chain                PASS
@@ -21,33 +21,38 @@ MW10 lock release retry                PASS (12 assertions)
 world regression manifest coverage     PASS
 RUN_WORLD_REGRESSION_TESTS.ps1         PASS
 main_scene_cli_all                      PASS (6 tests, 0 fail)
-world regression terminal marker       PASS
-final hygiene                          FAIL — transient Microsoft/ only
+PowerShell Fix3 parser                  PASS
+git status --porcelain                 EMPTY
+git diff --check G5...G6               PASS
+working tree                           CLEAN
 ```
 
-The full Windows world/core regression completed successfully and printed:
+Full world/core regression terminal marker:
 
 ```text
 All world/core regression tests through NX4 client prediction and reconciliation passed.
 ```
 
-The only remaining blocker was an untracked root `Microsoft/` directory created by Windows child-process profile handling after the regression had already passed.
+Runtime-tested head was `c165f797304334d1fbde6e8178fbd143751c1e60`. Fix3 closeout was verified at `04987a5bc8ade0a4aff94671eefac3181156bc60`; post-runtime changes were limited to acceptance harness/validation/docs and did not change hydrology, Matter or world runtime semantics.
 
-Fix3 is acceptance-harness-only. `RUN_G6_FULL_ACCEPTANCE.ps1` now snapshots whether `Microsoft/` existed before the run and removes it after child processes only when all of the following are true:
+Acceptance record:
 
 ```text
-directory did not exist before the run
-path is Microsoft/ at repository root
-Git reports no tracked files under Microsoft/
+docs/checkpoints/G6_FULL_ACCEPTANCE_ACCEPTED_RU.md
+validation/g6-full-acceptance-validation.json
 ```
 
-Pre-existing or tracked content is never deleted. No hydrology, Matter, world runtime, or test semantics changed.
-
-Because the full world regression is already green and the only post-tested changes are the cleanup logic plus validation/status records, the closeout does not require another full world regression. Required closeout is PowerShell parse + clean tree + `git diff --check` on the updated head.
-
-After that:
+Architecture status remains intentionally separated:
 
 ```text
-G6 Full Acceptance -> SOURCE_ACCEPTED
-next -> G7 Semantic Field Fabric
+SOURCE_ACCEPTED        YES
+MAIN_INTEGRATED        NO
+COMPOSITION_VERIFIED   NO
+PRODUCTION_READY       NO
+```
+
+Next checkpoint:
+
+```text
+G7 Semantic Field Fabric
 ```
