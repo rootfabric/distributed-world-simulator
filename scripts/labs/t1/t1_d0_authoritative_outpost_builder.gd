@@ -6,6 +6,7 @@ const PartScript = preload("res://scripts/construction/contracts/construction_pa
 const BondScript = preload("res://scripts/construction/contracts/construction_bond_record.gd")
 const SnapshotScript = preload("res://scripts/construction/contracts/construct_snapshot.gd")
 const ConstructMutationScript = preload("res://scripts/construction/item_graph/construction_construct_mutation.gd")
+const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const BUILDER_SCHEMA := "planet_simulator.t1a2_d0_authoritative_outpost_builder.v1"
 const PROFILE_ID := "D0"
@@ -146,13 +147,21 @@ static func materialize_into_store(store, build_result: Dictionary = {}) -> Dict
 	if not bool(applied.get("success", false)):
 		return _failure("T1A2_CONSTRUCT_STORE_CREATE_FAILED", {"cause": applied})
 	var stored: Dictionary = store.get_snapshot(construct_id)
-	if stored != snapshot:
-		return _failure("T1A2_CONSTRUCT_STORE_ROUNDTRIP_MISMATCH")
+	var stored_validation: Dictionary = SnapshotScript.validate(stored)
+	if not bool(stored_validation.get("success", false)):
+		return _failure("T1A2_CONSTRUCT_STORE_RETURNED_INVALID_SNAPSHOT", {"cause": stored_validation})
+	var source_canonical := UtilsScript.canonical_json(snapshot)
+	var stored_canonical := UtilsScript.canonical_json(stored)
+	if source_canonical.is_empty() or stored_canonical.is_empty() or stored_canonical != source_canonical:
+		return _failure("T1A2_CONSTRUCT_STORE_ROUNDTRIP_MISMATCH", {
+			"source_checksum": String(snapshot.get("checksum", "")),
+			"stored_checksum": String(stored.get("checksum", "")),
+		})
 	return {
 		"success": true,
 		"error_code": "",
 		"construct_id": construct_id,
-		"snapshot_checksum": String(snapshot["checksum"]),
+		"snapshot_checksum": String(stored["checksum"]),
 		"snapshot": stored,
 	}
 
