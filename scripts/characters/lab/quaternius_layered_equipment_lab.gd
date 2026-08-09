@@ -22,6 +22,8 @@ const UPPER_PRESENTATION_ID := "wearable.layer.upper.peasant"
 const LOWER_PRESENTATION_ID := "wearable.layer.lower.peasant"
 const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 
+const BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY := "BODY_VISIBLE_INFLATED_OVERLAY"
+const BODY_FIT_POLICY_TOPOLOGY_OCCLUSION := "TOPOLOGY_OCCLUSION"
 const REGION_TORSO_CORE := "body.region.torso.core"
 const LOWER_TOPOLOGY_THRESHOLD_M := 0.045
 const FEET_TOPOLOGY_THRESHOLD_M := 0.045
@@ -30,19 +32,30 @@ const FEET_TOPOLOGY_COVERAGE_MODE := "HIGH_BOOT"
 const FEET_TOPOLOGY_UPPER_Y_PAD_M := 0.012
 const FEET_TOPOLOGY_UPPER_BIAS_FRACTION := 0.52
 
+# Fix10 default: the imported base body remains completely intact. Garment
+# rest meshes alone are enlarged along their own normals. Values are intentionally
+# presentation-only and easy to tune in millimetres after graphical observation.
+const UPPER_INFLATION_PROFILE := [
+	{"t": 0.00, "offset_m": 0.0040},
+	{"t": 0.30, "offset_m": 0.0070},
+	{"t": 0.70, "offset_m": 0.0080},
+	{"t": 1.00, "offset_m": 0.0040},
+]
 const LOWER_INFLATION_PROFILE := [
-	{"t": 0.00, "offset_m": 0.0015},
-	{"t": 0.18, "offset_m": 0.0040},
-	{"t": 0.45, "offset_m": 0.0060},
-	{"t": 0.72, "offset_m": 0.0050},
-	{"t": 1.00, "offset_m": 0.0015},
+	{"t": 0.00, "offset_m": 0.0060},
+	{"t": 0.18, "offset_m": 0.0100},
+	{"t": 0.45, "offset_m": 0.0140},
+	{"t": 0.72, "offset_m": 0.0120},
+	{"t": 1.00, "offset_m": 0.0060},
 ]
 const FEET_INFLATION_PROFILE := [
-	{"t": 0.00, "offset_m": 0.0015},
-	{"t": 0.35, "offset_m": 0.0025},
-	{"t": 0.65, "offset_m": 0.0045},
-	{"t": 1.00, "offset_m": 0.0070},
+	{"t": 0.00, "offset_m": 0.0050},
+	{"t": 0.35, "offset_m": 0.0080},
+	{"t": 0.65, "offset_m": 0.0120},
+	{"t": 1.00, "offset_m": 0.0160},
 ]
+
+@export_enum("BODY_VISIBLE_INFLATED_OVERLAY", "TOPOLOGY_OCCLUSION") var body_fit_policy: String = BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY
 
 var layered_rig_adapter
 var body_coverage_catalog
@@ -78,6 +91,11 @@ func _setup_layered_equipment() -> void:
 		return
 	var source_scene := loaded as PackedScene
 
+	if body_fit_policy != BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY and body_fit_policy != BODY_FIT_POLICY_TOPOLOGY_OCCLUSION:
+		layered_setup_result = {"success": false, "code": "UNSUPPORTED_BODY_FIT_POLICY", "details": {"policy": body_fit_policy}}
+		push_error("CH8C unsupported body fit policy: %s" % body_fit_policy)
+		return
+
 	layered_rig_adapter = LayeredRigAdapterType.new()
 	layered_setup_result = layered_rig_adapter.bind_presenter(avatar)
 	if not bool(layered_setup_result.get("success", false)):
@@ -98,6 +116,7 @@ func _setup_layered_equipment() -> void:
 		push_error("CH8C topology coordinator setup failed: %s" % JSON.stringify(layered_setup_result))
 		return
 
+	var use_body_occlusion := body_fit_policy == BODY_FIT_POLICY_TOPOLOGY_OCCLUSION
 	inflation_reports.clear()
 	var definitions := [
 		{
@@ -105,8 +124,8 @@ func _setup_layered_equipment() -> void:
 			"presentation": UPPER_PRESENTATION_ID,
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
-			"regions": [REGION_TORSO_CORE],
-			"inflation_profile": [],
+			"regions": [REGION_TORSO_CORE] if use_body_occlusion else [],
+			"inflation_profile": [] if use_body_occlusion else UPPER_INFLATION_PROFILE,
 			"topology_threshold_m": 0.0,
 			"topology_coverage_mode": "ROBUST",
 			"topology_upper_y_pad_m": 0.0,
@@ -119,7 +138,7 @@ func _setup_layered_equipment() -> void:
 			"meshes": ["Male_Peasant_Legs"],
 			"regions": [],
 			"inflation_profile": LOWER_INFLATION_PROFILE,
-			"topology_threshold_m": LOWER_TOPOLOGY_THRESHOLD_M,
+			"topology_threshold_m": LOWER_TOPOLOGY_THRESHOLD_M if use_body_occlusion else 0.0,
 			"topology_coverage_mode": "ROBUST",
 			"topology_upper_y_pad_m": 0.0,
 			"topology_upper_bias_fraction": 1.0,
@@ -131,7 +150,7 @@ func _setup_layered_equipment() -> void:
 			"meshes": ["Male_Peasant_Feet"],
 			"regions": [],
 			"inflation_profile": FEET_INFLATION_PROFILE,
-			"topology_threshold_m": FEET_TOPOLOGY_THRESHOLD_M,
+			"topology_threshold_m": FEET_TOPOLOGY_THRESHOLD_M if use_body_occlusion else 0.0,
 			"topology_coverage_mode": FEET_TOPOLOGY_COVERAGE_MODE,
 			"topology_upper_y_pad_m": FEET_TOPOLOGY_UPPER_Y_PAD_M,
 			"topology_upper_bias_fraction": FEET_TOPOLOGY_UPPER_BIAS_FRACTION,
@@ -262,32 +281,33 @@ func _refresh_status() -> void:
 		var topology_report: Dictionary = body_topology_coordinator.create_report()
 		topology_removed = int(topology_report.get("removed_triangles", 0))
 		topology_active = topology_report.get("active_presentations", [])
+	var upper_inflation_max := 0.0
 	var lower_inflation_max := 0.0
 	var feet_inflation_max := 0.0
+	if inflation_reports.has(UPPER_PRESENTATION_ID):
+		upper_inflation_max = float((inflation_reports[UPPER_PRESENTATION_ID] as Dictionary).get("profile_max_offset_m", 0.0))
 	if inflation_reports.has(LOWER_PRESENTATION_ID):
-		lower_inflation_max = float((inflation_reports[LOWER_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0))
+		lower_inflation_max = float((inflation_reports[LOWER_PRESENTATION_ID] as Dictionary).get("profile_max_offset_m", 0.0))
 	if inflation_reports.has(FEET_PRESENTATION_ID):
-		feet_inflation_max = float((inflation_reports[FEET_PRESENTATION_ID] as Dictionary).get("max_offset_m", 0.0))
+		feet_inflation_max = float((inflation_reports[FEET_PRESENTATION_ID] as Dictionary).get("profile_max_offset_m", 0.0))
 	var layered_status := (
 		"\n\nCH8C — Layered Garments\n"
 		+ "U — upper | L — lower | K — feet\n"
+		+ "fit policy: %s\n"
 		+ "upper: %s | lower: %s | feet: %s\n"
 		+ "material suppression: %s\n"
 		+ "topology: %s | removed triangles: %d\n"
-		+ "vertex inflation: lower max %.3f m | feet max %.3f m\n"
-		+ "feet topology: %s | threshold %.3f m | +Y %.3f m | upper bias %.0f%%"
+		+ "vertex inflation configured max: upper %.3f m | lower %.3f m | feet %.3f m"
 	)
 	status_label.text += layered_status % [
+		body_fit_policy,
 		upper_state,
 		lower_state,
 		feet_state,
 		", ".join(regions),
 		", ".join(topology_active),
 		topology_removed,
+		upper_inflation_max,
 		lower_inflation_max,
 		feet_inflation_max,
-		FEET_TOPOLOGY_COVERAGE_MODE,
-		FEET_TOPOLOGY_THRESHOLD_M,
-		FEET_TOPOLOGY_UPPER_Y_PAD_M,
-		FEET_TOPOLOGY_UPPER_BIAS_FRACTION * 100.0,
 	]
