@@ -3,7 +3,7 @@
   "checkpoint": "G6_FULL_ACCEPTANCE",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "FIX2_IMPLEMENTED_CANDIDATE",
   "g6_4_status": "ACCEPTED",
   "implementation": {
     "windows_runner": "RUN_G6_FULL_ACCEPTANCE.ps1",
@@ -18,22 +18,28 @@
     "mw10_source_pr_merged": true,
     "mw10_repository_blob": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
     "mw10_retry_test_blob": "afab0c98de45c34dcf6c923d622c84835d428fa5",
-    "world_regression_coverage_fix_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
-    "validation_record": "validation/g5-mw10-shared-baseline-validation.json",
-    "checkpoint_record": "docs/checkpoints/G5_MW10_SHARED_BASELINE_ACCEPTED_RU.md"
+    "world_runner_coverage_fix_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
+    "retry_test_uid_tracking_commit": "2911cffb2fda3f14069379ccac3a48e79644c1b7",
+    "retry_test_uid": "uid://yush8dg03nlf"
   },
-  "g6_resync": {
-    "runtime_sync_pr": 47,
-    "runtime_sync_merge_commit": "d5879f7a5263ad98eb8ae575194e34d69a74e56c",
-    "metadata_sync_pr": 48,
-    "metadata_sync_merge_commit": "854d79cbde7daf4ce72d2b89dd3d8900401fbcd0",
-    "world_regression_coverage_sync_pr": 49,
-    "world_regression_coverage_sync_merge_commit": "b7dd5c02a34a20fa2f589b7b9e0286135d2c8ab8",
-    "g5_is_current_g6_ancestor": true,
-    "g6_behind_g5": 0,
-    "hydrology_semantics_changed_by_sync": false,
-    "full_runner_acceptance_state_fix_ps1": "183c96a8541a177606a31a74ea83bd86a4a3fad2",
-    "full_runner_acceptance_state_fix_sh": "96cdb7f672b802852a4388508edb99ea884977f5"
+  "first_full_windows_attempt": {
+    "result": "FIX1_REQUIRED",
+    "g6_chain_through_g6_4": "PASS",
+    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
+    "world_regression_started": false,
+    "blocker": "world regression coverage list omitted test_mw10_lock_release_retry.gd"
+  },
+  "second_full_windows_attempt_preflight": {
+    "result": "FIX2_REQUIRED",
+    "world_runner_coverage_fix_present": true,
+    "blocker": "Godot generated untracked tests/matter/transactions/test_mw10_lock_release_retry.gd.uid, so clean-tree preflight rejected the checkout before runtime",
+    "runtime_started": false
+  },
+  "fix2": {
+    "owner": "feature/g5-world-feature-graph",
+    "action": "track the Godot UID file for the accepted MW10 retry test in shared baseline, then lineage-sync G5 into G6",
+    "uid": "uid://yush8dg03nlf",
+    "hydrology_runtime_changed": false
   },
   "g6_4_windows_evidence": {
     "tested_head": "7cb3c69bbca276c815b27563fa494ac35b078779",
@@ -46,63 +52,28 @@
     "near_triangles": 4176,
     "macro_octaves": 8,
     "minimum_signal_km": 4.688,
-    "visual_lab_runtime_marker": "PASS",
-    "manual_graphical_observation": "PASS_BY_USER_OBSERVATION",
-    "post_cleanup_git_diff_check": "PASS",
-    "working_tree": "CLEAN"
-  },
-  "first_full_windows_attempt_after_g5_sync": {
-    "g6_3_runtime_water_surface_query": "PASS_79_ASSERTIONS",
-    "g6_4_contracts": "PASS_158_ASSERTIONS",
-    "g6_4_adaptive_macro_surface": "PASS",
-    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
-    "world_regression": "FAIL_COVERAGE_MANIFEST_ONLY",
-    "coverage_missing_from_runner": [
-      "res://tests/matter/transactions/test_mw10_lock_release_retry.gd"
-    ],
-    "coverage_missing_from_project": [],
-    "world_test_execution_started": false,
-    "root_cause": "Accepted MW10 retry test was added to the project by the shared G5 baseline, but RUN_WORLD_REGRESSION_TESTS.ps1 had not yet declared it in its explicit test list. The runner coverage guard correctly rejected the mismatch."
-  },
-  "fix1": {
-    "owner": "feature/g5-world-feature-graph",
-    "g5_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
-    "g6_sync_pr": 49,
-    "g6_sync_merge_commit": "b7dd5c02a34a20fa2f589b7b9e0286135d2c8ab8",
-    "scope_files": 1,
-    "scope": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "change": "Add res://tests/matter/transactions/test_mw10_lock_release_retry.gd to the declared world regression suite.",
-    "runtime_or_hydrology_changed": false,
-    "expected_effect": "Declared and discovered test manifests match; the world regression proceeds to editor import and actual test execution instead of failing coverage preflight."
+    "manual_graphical_observation": "PASS_BY_USER_OBSERVATION"
   },
   "assistant_linux_double": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "platform": "linuxbsd-x86_64-double",
     "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
     "mw10_acquire_release_stress": "PASS_501_ASSERTIONS",
-    "mw10_stress_cycles": 100,
     "g6_production_contract_smoke": "PASS_115_ASSERTIONS",
-    "full_repository_checkout_available": false,
-    "full_world_regression_run": false,
-    "note": "Focused assistant tests execute exact current production contract/lock files with isolated generic dependencies. They are supplementary evidence and do not replace the full repository world regression."
+    "uid_generated_with_project_godot": true,
+    "full_repository_checkout_available": false
   },
-  "required_fix1_windows_gate": {
+  "required_final_windows_gate": {
     "command": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "must_pass": [
-      "repository/global sync preflight",
-      "G5 shared MW10 exact blobs",
-      "G5 ancestor of G6",
+      "clean repository preflight",
+      "repository/global/G5 ancestry",
+      "shared MW10 exact blobs",
       "git diff --check G5...G6",
-      "accepted G6.0-G6.4 focused chain",
+      "accepted G6.0-G6.4 chain",
       "MW10 lock-release retry",
       "world regression manifest coverage",
       "RUN_WORLD_REGRESSION_TESTS.ps1",
       "final clean worktree and diff hygiene"
     ]
-  },
-  "next_if_pass": [
-    "Record G6 SOURCE_ACCEPTED",
-    "Keep MAIN_INTEGRATED and COMPOSITION_VERIFIED as separate statuses",
-    "Start G7 Semantic Field Fabric"
-  ]
+  }
 }
