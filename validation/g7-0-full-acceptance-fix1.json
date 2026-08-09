@@ -1,16 +1,25 @@
 {
   "schema": "planet_simulator.validation.g7_0_full_acceptance_fix1.v1",
   "checkpoint": "g7.0-full-acceptance-fix1",
-  "decision": "UPSTREAM_G6_HARNESS_FIX_REQUIRED",
+  "decision": "FIX1_IMPLEMENTED_SHARED_G6_SYNCED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "focused_g7_0": "PASS_BEFORE_WORLD_REGRESSION",
-  "world_regression": "FAIL_AT_M4_REPORT_READ_RACE",
+  "first_world_regression": "FAIL_AT_M4_REPORT_READ_RACE",
   "m4_assertions": 22,
   "m4_failures": 4,
   "client_item_graph_convergence": "PASS",
+  "root_cause": "M4 single final server.json read raced AtomicJson target-to-backup replacement during server disconnect report write",
   "upstream_fix_branch": "feature/g6-hydrology-fluid-surface-v0",
+  "upstream_fix_head": "62def33a40481354820adfb6288672183887c9f1",
   "upstream_test_blob": "9a17996df2545efbaaa807283b9ec70542e35128",
+  "g7_sync_merge": "0c08c600c10bfedd730243e866bfa272aa14707b",
+  "assistant_exact_engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "race_smoke": "PASS",
+    "marker": "M4_REPORT_RACE_SMOKE: PASS"
+  },
   "production_g7_runtime_implicated": false,
-  "next": "SYNC_CURRENT_G6_THEN_RERUN_G7_0_FULL_ACCEPTANCE"
+  "production_g6_runtime_changed": false,
+  "next": "RERUN_G7_0_FULL_ACCEPTANCE"
 }
