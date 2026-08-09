@@ -14,7 +14,7 @@ G6 Full Acceptance                     SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
 G7.0 Semantic Field Contracts          ACCEPTED
 G7.1 Upstream Semantic Field Adapters  ACCEPTED
-G7.2 Composition / Provenance           NEXT
+G7.2 Composition / Provenance           IMPLEMENTED CANDIDATE
 ```
 
 ## G7.1 acceptance
@@ -44,51 +44,71 @@ working tree                           CLEAN
 G7.1 FULL ACCEPTANCE                   PASS
 ```
 
-Fix1 closed the two real upstream-contract mismatches found by the first Windows candidate run:
+Accepted G7.1 checkpoint:
 
 ```text
-G3 provider result envelope: details.values
-G6 WaterSurfaceSample width: channel_width_m
+af0898ba2f0fc03dbd0298440f302b497a5d0cad
 ```
 
-Accepted adapter blobs:
+## G7.2 candidate
+
+G7.2 adds synchronous deterministic composition only:
 
 ```text
-G3 adapter  c728cfed5a2b3dd55d23b81b250177af19746623
-G5 adapter  39ef95704cdf516b10146d2fa79b0d80bf173492
-G6 adapter  437d82b7f056648045fff08f1daa57968331104c
-G7.1 test   1af618356b700e5c87a55b42daa05d35b267014e
+partial adapter results
+        │
+        ▼
+SemanticFieldComposerV1
+        │
+        ├─ SemanticFieldBundle
+        └─ SemanticFieldCompositionReceipt
 ```
 
-Ownership remains upstream:
+Strict policy:
 
 ```text
-G3 provider id       PRESERVED IN PROVENANCE
-G5 FeatureId         PRESERVED IN PROVENANCE
-G6 FluidRegionId     PRESERVED IN PROVENANCE
-new River identity   NONE
-new Feature identity NONE
-new Fluid identity   NONE
-Geomorphology owner  NO
+semantic-composition-policy/require-complete-v1
+
+missing requested field       REJECT
+duplicate field ownership     REJECT
+duplicate adapter             REJECT
+unrequested contributed field REJECT
+input ordering                 NORMALIZED BY ADAPTER_ID
 ```
 
-P0 guards remain mandatory:
+The composer preserves adapter-produced samples byte-for-byte and does not rewrite their provenance. The receipt pins query, bundle, sample and upstream provenance checksums.
+
+Focused integration paths use real accepted G7.1 adapters:
 
 ```text
-SemanticFieldId != SurfaceCellKey
-SemanticFieldId != LOD
-SemanticFieldQuery != universal WorldQuery Fabric
-G7 != Material Ontology
-G7 != Authority / Interest
-G7 != Persistence / Network
-G7 != Scheduler / Cache owner
-G7.1 != Geomorphology
+G3 + G5 -> surface-height + valley-influence bundle
+G3 + G6 -> surface-height + river/fluid semantic bundle
 ```
 
-## Next
+P0 boundaries remain:
 
 ```text
-G7.2 Composition / Provenance
+composer != WorldQuery
+composer != scheduler/cache
+composer != authority/interest
+composer != persistence/network
+composer != material ontology
+composer != geomorphology
+receipt != world identity
 ```
 
-G7.2 composes partial adapter outputs into one deterministic `SemanticFieldBundle`, rejects ambiguous duplicate ownership and missing requested fields, and emits an auditable composition receipt. It must not introduce scheduler/cache, authority, persistence or new world identity ownership.
+Validation:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_2_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+G7.2 remains unaccepted until the full Windows gate passes.
+
+Next if accepted:
+
+```text
+G7.3 Cross-Cell / Cross-LOD Invariance
+```
