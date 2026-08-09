@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g6_full_acceptance.v1",
   "checkpoint": "g6-full-acceptance",
-  "status": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_SHARED_BASELINE",
+  "status": "SOURCE_ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g6-hydrology-fluid-surface-v0",
   "dependencies": {
@@ -9,23 +9,23 @@
     "g6_1_casual_river_provider": "ACCEPTED",
     "g6_2_cross_cell_cross_lod_continuity": "ACCEPTED",
     "g6_3_runtime_water_surface_query": "ACCEPTED",
-    "g6_4_fix4_manual_graphical_evidence": "PASS",
-    "g6_4_fix4_automated_gate": "REQUIRED_IN_FULL_GATE",
-    "g5_shared_baseline": "CURRENT_REF_REQUIRED",
-    "mw10_atomic_lock_shared_baseline": "REQUIRED"
+    "g6_4_casual_visual_river_lab": "ACCEPTED",
+    "g5_shared_baseline": "ACCEPTED_INTEGRATED_ANCESTOR",
+    "mw10_atomic_lock_shared_baseline": "ACCEPTED_INTEGRATED"
   },
-  "shared_baseline_requirement": {
-    "pr": 43,
-    "status_at_candidate_creation": "OPEN_NOT_MERGED",
+  "shared_baseline": {
+    "source_pr": 43,
+    "source_pr_merged": true,
     "repository_blob_sha": "a25b7d8c358410e60e1bb7db9d3f99333a305a63",
     "retry_test_blob_sha": "afab0c98de45c34dcf6c923d622c84835d428fa5",
-    "policy": "MW10 fix must land in G5 first, then G6 must be resynchronized. Do not copy the fix privately into G6."
+    "retry_test_uid": "uid://yush8dg03nlf",
+    "policy": "MW10 remains shared G5/Matter foundation; G6 contains it only through lineage-preserving baseline synchronization."
   },
   "runner": {
     "windows": "RUN_G6_FULL_ACCEPTANCE.ps1",
     "shell": "RUN_G6_FULL_ACCEPTANCE.sh"
   },
-  "gate_order": [
+  "accepted_gate_order": [
     "CLEAN_WORKTREE",
     "GLOBAL_CONFIG_MATCH_MAIN_AND_G5",
     "CURRENT_G5_IS_ANCESTOR_OF_G6",
@@ -38,6 +38,18 @@
     "FINAL_CLEAN_WORKTREE",
     "FINAL_GIT_DIFF_CHECK"
   ],
+  "acceptance_evidence": {
+    "runtime_tested_head": "c165f797304334d1fbde6e8178fbd143751c1e60",
+    "fix3_closeout_tested_head": "04987a5bc8ade0a4aff94671eefac3181156bc60",
+    "g6_0_to_g6_4": "PASS",
+    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
+    "world_regression_manifest_coverage": "PASS",
+    "world_core_regression": "PASS",
+    "main_scene_cli_all": "PASS_6_TESTS_0_FAIL",
+    "powershell_fix3_parser": "PASS",
+    "git_status_porcelain": "EMPTY",
+    "git_diff_check_g5_to_g6": "PASS"
+  },
   "architecture_boundaries": {
     "g6_owns_authority": false,
     "g6_owns_persistence": false,
@@ -45,7 +57,14 @@
     "g6_identity_depends_on_lod": false,
     "g6_identity_depends_on_surface_cell": false,
     "g6_visual_lab_is_canonical_truth": false,
+    "fluid_type_is_material_definition": false,
     "full_acceptance_changes_world_semantics": false
   },
-  "next_if_accepted": "G7_SEMANTIC_FIELD_FABRIC"
+  "status_dimensions": {
+    "source_accepted": true,
+    "main_integrated": false,
+    "composition_verified": false,
+    "production_ready": false
+  },
+  "next": "G7_SEMANTIC_FIELD_FABRIC"
 }
