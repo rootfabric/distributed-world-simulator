@@ -1,16 +1,16 @@
 {
   "schema": "planet_simulator.t1a3_item_graph_materialization_validation.v1",
   "checkpoint": "T1A3_ITEM_GRAPH_MATERIALIZATION",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_REQUIRED",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a3-item-graph-materialization",
   "base_head": "47d41c097941b834c3b5eab79510a0a8c39d873d",
   "candidate_head": "db90a1c21368060500bfca0da117a059cbcab5b8",
-  "focused_evidence_commit": "82f0fb3fe639d3fa45e24d869e8f0e59a6752899",
+  "accepted_tested_head": "92178a00de8c6de0e98f7ef55c4540748d139cde",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "scope": {
@@ -55,7 +55,15 @@
     "t1a3_acceptance": "PASS_865_ASSERTIONS",
     "result": "PASS"
   },
-  "full_regression": "PENDING",
+  "full_regression": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "head": "92178a00de8c6de0e98f7ef55c4540748d139cde",
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+    "main_scene_cli_all": "PASS_6_OF_6",
+    "final_sentinel": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "result": "PASS"
+  },
   "next_after_acceptance": "T1A4_INTERACTIVE_FIXTURE_BINDING",
-  "acceptance_note": "Exact Windows focused gate is PASS. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until RUN_WORLD_REGRESSION_TESTS.ps1 passes on this T1A.3 branch."
+  "acceptance_note": "T1A.3 exact Windows focused gate and full world/core regression both passed. SOURCE_ACCEPTED and COMPOSITION_VERIFIED are true; MAIN_INTEGRATED and PRODUCTION_READY remain false."
 }
