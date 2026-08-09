@@ -1,7 +1,7 @@
 # G7–G13 — P0-aligned roadmap Universal World Generation Fabric
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Upstream accepted:** `G6 Hydrology / Fluid Surface v0 — SOURCE_ACCEPTED`  
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Upstream accepted:** `G6 Hydrology / Fluid Surface v0 — SOURCE_ACCEPTED`
 **Current next checkpoint:** `G7 Semantic Field Fabric`
 
 ## 1. Цель продолжения
