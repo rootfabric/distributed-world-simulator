@@ -79,10 +79,11 @@ Invoke-Godot-Test "ch8_layered_equipment_presentation_diff" "res://tests/charact
 Invoke-Godot-Test "ch8b_quaternius_selective_skinned_parts" "res://tests/characters/test_ch8b_quaternius_selective_skinned_parts.gd"
 Invoke-Godot-Test "ch8b_real_layered_equipment_presentation" "res://tests/characters/test_ch8b_real_layered_equipment_presentation.gd"
 Invoke-Godot-Test "ch8c_quaternius_vertex_inflation" "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd"
-Invoke-Godot-Test "ch8c_quaternius_topology_occlusion" "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd"
-Invoke-Godot-Test "ch8c_quaternius_high_boot_occlusion" "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd"
+Invoke-Godot-Test "ch8c_body_visible_inflated_overlay" "res://tests/characters/test_ch8c_body_visible_inflated_overlay.gd"
 Invoke-Godot-Test "ch8c_quaternius_layered_equipment_lab" "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd"
+Invoke-Godot-Test "ch8c_topology_fallback_regression" "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd"
+Invoke-Godot-Test "ch8c_high_boot_fallback_regression" "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd"
 
 Write-Host ""
-Write-Host "CH8 Layered Equipment + topology + profile vertex inflation candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH8 Layered Equipment + body-visible inflated overlay candidate runner: PASS" -ForegroundColor Green
 exit 0
