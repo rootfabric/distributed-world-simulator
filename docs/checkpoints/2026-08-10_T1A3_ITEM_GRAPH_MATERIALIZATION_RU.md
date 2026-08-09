@@ -116,6 +116,7 @@ Exact Windows engine:
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 candidate head: db90a1c21368060500bfca0da117a059cbcab5b8
+focused evidence commit: 82f0fb3fe639d3fa45e24d869e8f0e59a6752899
 ```
 
 Результат:
