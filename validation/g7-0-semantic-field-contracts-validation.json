@@ -13,10 +13,13 @@
     "precision": "double",
     "headless_editor_import": "PASS",
     "isolated_contract_suite": "PASS",
-    "assertions": 208,
+    "assertions": 180,
     "parse_or_load_errors": 0,
     "full_repository_checkout_available": false,
-    "scope": "ISOLATED_NEW_CONTRACTS_WITH_G0_CONTRACT_HELPERS"
+    "scope": "ISOLATED_NEW_CONTRACTS_WITH_G0_CONTRACT_HELPERS",
+    "exact_tested_registry_blob": "9e92aa345f02856cf906e81e2fa6e1746955199b",
+    "exact_tested_contract_test_blob": "8dea46beea10efda51439d17737c9be8ac7811e2",
+    "published_exact_tested_runtime_head": "1f23befb793b74d951460ecb52a4747f5e73a710"
   },
   "contract_results": {
     "semantic_field_id": "PASS",
@@ -43,9 +46,13 @@
     "owns_scheduler_cache": false
   },
   "required_windows_acceptance": {
-    "runner": "RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1",
+    "focused_runner": "RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1",
+    "full_runner": "RUN_G7_0_FULL_ACCEPTANCE.ps1",
     "focused_pass": true,
     "full_world_regression": true,
+    "g6_current_ancestor": true,
+    "global_revision_alignment": true,
+    "changed_file_allowlist": true,
     "clean_worktree": true,
     "git_diff_check": true
   },

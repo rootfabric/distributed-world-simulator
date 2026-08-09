@@ -102,23 +102,39 @@ G7 registry does not replace provider execution DTO
 
 ## Assistant-side exact-engine evidence
 
+Проверен exact опубликованный runtime/test content:
+
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 headless editor import / parse       PASS
-G7.0 Semantic Field Contracts        PASS — 208 assertions
-script parse/load errors              0
+G7.0 Semantic Field Contracts        PASS — 180 assertions
+script parse/load errors             0
+registry blob                        9e92aa345f02856cf906e81e2fa6e1746955199b
+test blob                            8dea46beea10efda51439d17737c9be8ac7811e2
+published tested runtime head         1f23befb793b74d951460ecb52a4747f5e73a710
 ```
 
 Это isolated exact-engine verification новых contracts. Оно не заменяет полный Windows checkout gate.
 
-## Acceptance gate
+## Full acceptance gate
+
+Полный runner теперь сам проверяет current G6 ancestry, GLOBAL-P0 byte-alignment, allowlist changed-files, focused contracts, full world/core regression и финальную repository hygiene:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_0_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Перед переводом G7.0 в `ACCEPTED` также проверить G6 ancestry/base, GLOBAL revision, отсутствие untracked `.gd.uid`, полный project regression, `git diff --check` и clean worktree.
+Перед `ACCEPTED` нужны финальные markers:
+
+```text
+G7.0 FULL ACCEPTANCE: PASS
+G6 SOURCE_ACCEPTED ancestor: PASS
+G7.0 contract-first scope: PASS
+G7.0 focused contracts: PASS
+World/core regression: PASS
+Working tree: CLEAN
+```
 
 ## Следующий checkpoint после acceptance
 

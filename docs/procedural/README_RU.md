@@ -63,20 +63,24 @@ G7 != Authority / Interest / Persistence / Network
 G7 != Scheduler / Cache execution owner
 ```
 
-Assistant exact-engine isolated gate:
+Assistant exact-engine isolated gate on byte-exact published registry/test content:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 headless editor import                PASS
-G7.0 contracts                        PASS — 208 assertions
+G7.0 contracts                        PASS — 180 assertions
+registry blob                         9e92aa345f02856cf906e81e2fa6e1746955199b
+test blob                             8dea46beea10efda51439d17737c9be8ac7811e2
 ```
 
 Full-checkout acceptance remains pending. Run:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_0_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
+
+The full runner checks current G6 ancestry, GLOBAL-P0 byte alignment, a strict contract-first changed-file allowlist, focused G7.0 contracts, full world/core regression and final repository hygiene.
 
 Candidate details:
 
