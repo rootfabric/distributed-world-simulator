@@ -11,6 +11,7 @@ G6.3 Runtime WaterSurfaceQuery         ACCEPTED
 G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
 G6 Full Acceptance                     SOURCE_ACCEPTED
+G6 P0 Alignment Cleanup                ACCEPTED
 ```
 
 Final G6 Windows evidence:
@@ -35,11 +36,13 @@ All world/core regression tests through NX4 client prediction and reconciliation
 
 Runtime-tested head was `c165f797304334d1fbde6e8178fbd143751c1e60`. Fix3 closeout was verified at `04987a5bc8ade0a4aff94671eefac3181156bc60`; post-runtime changes were limited to acceptance harness/validation/docs and did not change hydrology, Matter or world runtime semantics.
 
-Acceptance record:
+Acceptance / architecture records:
 
 ```text
 docs/checkpoints/G6_FULL_ACCEPTANCE_ACCEPTED_RU.md
 validation/g6-full-acceptance-validation.json
+docs/checkpoints/G6_P0_ALIGNMENT_CLEANUP_ACCEPTED_RU.md
+docs/procedural/G6_P0_ALIGNMENT_RU.md
 ```
 
 Architecture status remains intentionally separated:
@@ -51,8 +54,34 @@ COMPOSITION_VERIFIED   NO
 PRODUCTION_READY       NO
 ```
 
-Next checkpoint:
+P0 audit adds two mandatory forward guards:
 
 ```text
-G7 Semantic Field Fabric
+FluidTypeId != MaterialDefinitionId
+SemanticFieldQuery != universal WorldQuery Fabric
+```
+
+Current development roadmap:
+
+```text
+G7 Semantic Field Fabric                 NEXT
+G8 Geomorphology                         PLANNED
+G9 Layered Geology                       PLANNED / P0 Material gate
+G10 GeoVolume / SDF                      PLANNED
+G11 Heterogeneous Body Lab               PLANNED
+G12 Scheduler / Cache / Provenance       PLANNED
+G13 Detail Contract Freeze               PLANNED
+```
+
+Detailed P0-aligned roadmap:
+
+```text
+docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md
+config/procedural/g7-g13-p0-aligned-roadmap.v1.json
+```
+
+Immediate next implementation checkpoint:
+
+```text
+G7.0 Semantic Field Contracts + Registry Vocabulary
 ```
