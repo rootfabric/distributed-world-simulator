@@ -5,6 +5,7 @@ const BuilderScript = preload("res://scripts/labs/t1/t1_d0_authoritative_outpost
 const SnapshotScript = preload("res://scripts/construction/contracts/construct_snapshot.gd")
 const ConstructStoreScript = preload("res://scripts/construction/authoritative/construction_construct_store.gd")
 const ConstructStoreStateScript = preload("res://scripts/construction/authoritative/construction_construct_store.gd")
+const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const D0_FIXTURE_CHECKSUM := "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58"
 const D0_CONSTRUCT_ID := "construct/t1/lunar-outpost/d0"
@@ -103,7 +104,16 @@ func _test_authoritative_store_materialization() -> void:
 		return
 	_assert(store.size() == 1, "Authoritative construct store did not gain D0")
 	_assert(store.has_construct(D0_CONSTRUCT_ID), "Authoritative construct store lost D0 identity")
-	_assert(store.get_snapshot(D0_CONSTRUCT_ID) == built["snapshot"], "Authoritative store snapshot differs from builder snapshot")
+	var stored_snapshot: Dictionary = store.get_snapshot(D0_CONSTRUCT_ID)
+	_assert_ok(SnapshotScript.validate(stored_snapshot), "Authoritative store returned invalid D0 snapshot")
+	_assert(
+		UtilsScript.canonical_json(stored_snapshot) == UtilsScript.canonical_json(Dictionary(built["snapshot"])),
+		"Authoritative store snapshot is not canonically equivalent to builder snapshot"
+	)
+	_assert(
+		String(stored_snapshot.get("checksum", "")) == String(built.get("snapshot_checksum", "")),
+		"Authoritative store changed D0 snapshot checksum"
+	)
 	var store_state: Dictionary = store.to_dict()
 	_assert_ok(ConstructStoreStateScript.validate_state(store_state), "Authoritative construct store state is invalid")
 	var repeated: Dictionary = BuilderScript.materialize_into_store(store, built)
