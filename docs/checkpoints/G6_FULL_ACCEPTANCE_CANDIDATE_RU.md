@@ -1,112 +1,70 @@
-# G6 Full Acceptance — READY FOR FULL WINDOWS GATE
+# G6 Full Acceptance — FIX2 IMPLEMENTED CANDIDATE
 
 **Дата:** 2026-08-09
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
-Все внутренние checkpoint G6.0–G6.4 приняты. Shared MW10 blocker, ранее найденный full-gate, устранён через общий G5 baseline, а не приватную копию в G6.
+G6.0–G6.4 приняты. Shared MW10 baseline интегрирован в G5 и синхронизирован в G6.
 
-## Shared G5 baseline
+## Первый full-gate
 
-PR #43 интегрирован в `feature/g5-world-feature-graph`.
+Windows full-gate прошёл G6.0–G6.4 и MW10 retry `12/12`, но общий world regression coverage guard обнаружил, что новый тест существует в проекте, но отсутствует в `$Tests` списка `RUN_WORLD_REGRESSION_TESTS.ps1`.
 
-Текущий принятый G5 shared-baseline head:
-
-```text
-6e83824956f4bb9337ba0e22be6c40ccfca8bd43
-```
-
-Accepted MW10 blobs:
+Fix1 был внесён в shared G5 baseline и синхронизирован в G6:
 
 ```text
-matter_cross_region_transaction_repository.gd
-a25b7d8c358410e60e1bb7db9d3f99333a305a63
-
-test_mw10_lock_release_retry.gd
-afab0c98de45c34dcf6c923d622c84835d428fa5
+69cfaf9171127df7af563b5f9af6812d7775b74d
++ res://tests/matter/transactions/test_mw10_lock_release_retry.gd
 ```
 
-G6 синхронизирован lineage-preserving merges:
+## Второй full-gate preflight
+
+После обновления checkout Godot создал новый untracked sidecar:
 
 ```text
-PR #47 runtime sync     d5879f7a5263ad98eb8ae575194e34d69a74e56c
-PR #48 metadata sync    854d79cbde7daf4ce72d2b89dd3d8900401fbcd0
+?? tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
 ```
 
-Current G5 является реальным ancestor G6; compare показывает `behind G5 = 0`.
+Поэтому clean-tree preflight корректно остановил acceptance до запуска runtime.
 
-## Assistant-side Linux double verification
+Это shared G5 hygiene/integration defect, а не G6 runtime regression.
 
-Использован project-provided:
+## Fix2
+
+UID сгенерирован project-provided Godot 4.7.1 double через `ResourceUID.create_id()` и `ResourceUID.id_to_text()`:
 
 ```text
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-linuxbsd-x86_64-double
+uid://yush8dg03nlf
 ```
 
-После интеграции повторно пройдены focused checks:
+Он добавлен в G5 как tracked file:
 
 ```text
-MW10 lock release retry          PASS — 12 assertions
-MW10 acquire/release stress      PASS — 501 assertions / 100 cycles
-G6 production contract smoke     PASS — 115 assertions
+tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
 ```
 
-G6 focused smoke исполняет exact current production `FluidType`, `FluidRegionId` и `WaterSurfaceQuery`; generic hashing/spatial dependencies изолированы, поэтому этот smoke является дополнительным evidence, но не заменяет full-tree regression.
+После lineage-sync G5→G6 свежий `git reset --hard origin/feature/g6-hydrology-fluid-surface-v0` должен заменить локальный untracked sidecar tracked-версией и вернуть clean checkout.
 
-## Full runner correction
-
-После принятия G6.4 обнаружен stale orchestration contract: full-runner всё ещё ожидал промежуточный status `FIX4_MANUAL_PASS_AUTOMATED_RERUN_REQUIRED`.
-
-Исправлено:
-
-```text
-RUN_G6_FULL_ACCEPTANCE.ps1  183c96a8541a177606a31a74ea83bd86a4a3fad2
-RUN_G6_FULL_ACCEPTANCE.sh   96cdb7f672b802852a4388508edb99ea884977f5
-```
-
-Теперь full gate требует окончательный `G6.4 decision = ACCEPTED`.
-
-## Финальный Windows gate
+## Финальный gate
 
 ```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FULL_ACCEPTANCE.ps1
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G6_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Gate выполняет:
+Требуется:
 
 ```text
-clean worktree
-  ↓
-GLOBAL config == main == G5
-  ↓
-current G5 is ancestor of G6
-  ↓
-exact accepted MW10 blobs in G5 and G6
-  ↓
-git diff --check G5...G6
-  ↓
-accepted G6.0-G6.4 focused chain rerun
-  ↓
-MW10 lock-release retry fault injection
-  ↓
-RUN_WORLD_REGRESSION_TESTS.ps1
-  ↓
-final clean worktree + diff check
+clean repository preflight             PASS
+GLOBAL / G5 ancestry                    PASS
+shared MW10 blobs                       PASS
+git diff --check G5...G6               PASS
+G6.0-G6.4                               PASS
+MW10 retry                              PASS
+world regression manifest coverage      PASS
+RUN_WORLD_REGRESSION_TESTS.ps1          PASS
+final repository hygiene                PASS
+G6 FULL ACCEPTANCE                      PASS
 ```
 
-## Статус
-
-```text
-G6.0-G6.4            ACCEPTED
-G5 + MW10 baseline   ACCEPTED
-G6 resync             PASS
-assistant focused     PASS
-full world regression PENDING WINDOWS FULL TREE
-G6 Full               READY FOR FULL WINDOWS GATE
-```
-
-`G6 SOURCE_ACCEPTED` фиксируется только после полного зелёного `RUN_G6_FULL_ACCEPTANCE.ps1`. После этого следующий procedural checkpoint — `G7 Semantic Field Fabric`.
-
-`MAIN_INTEGRATED`, `COMPOSITION_VERIFIED` и `PRODUCTION_READY` остаются отдельными статусами согласно GLOBAL-P0.
+Только после этого фиксируется `G6 SOURCE_ACCEPTED`, затем начинается G7 Semantic Field Fabric.
