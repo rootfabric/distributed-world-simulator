@@ -12,8 +12,7 @@ G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
 G6 Full Acceptance                     SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
-G6 M4 report-race harness Fix1         IMPLEMENTED / SHARED BASELINE
-G7.0 Semantic Field Contracts          FIX1 IMPLEMENTED / FULL RERUN PENDING
+G7.0 Semantic Field Contracts          FIX1 WINDOWS FOCUSED PASS / FULL RERUN PENDING
 ```
 
 G7.0 introduces a typed semantic-field boundary while preserving the existing G0 provider execution payload:
@@ -21,9 +20,9 @@ G7.0 introduces a typed semantic-field boundary while preserving the existing G0
 ```text
 GeoFieldBundle / GeoSample             PRESERVED
 GeoKernel                               UNCHANGED
-existing geo/* field identities         PRESERVED
-SemanticField registry                  ADDED
-SemanticField typed query/sample        ADDED
+existing geo/* field identities        PRESERVED
+SemanticField registry                 ADDED
+SemanticField typed query/sample       ADDED
 ```
 
 Registry v1 contains 13 fields: three accepted upstream field identities and ten vocabulary-only fields reserved for G7.1+ providers/adapters.
@@ -51,26 +50,20 @@ registry blob                         9e92aa345f02856cf906e81e2fa6e1746955199b
 test blob                             8dea46beea10efda51439d17737c9be8ac7811e2
 ```
 
-First full Windows gate reached world/core regression and exposed one shared M4 process-test race:
+First Windows full gate reached legacy M4 graphical shared gameplay and exposed a shared report-read race. Shared G6 Fix1 was synchronized into G7. Windows focused verification on tested head `31316df5dc1068888a1e411d14c8af733a68ebc1` then passed:
 
 ```text
-A/B Item Graph convergence            PASS
-M4 server report assertions           FAIL — 4
-root cause                             one-shot read raced AtomicJson replacement
+M4 graphical shared gameplay          PASS — 22 assertions / 0 failures
+server canonical graph                PASS
+shared container replication          PASS
+server/client Item Graph convergence  PASS
+client shutdown                       PASS A / PASS B
+post-cleanup git status               EMPTY
 ```
 
-Shared Fix1 is now in current G6:
+G7.0 is not yet `ACCEPTED`: only the repeated full Windows checkout gate remains.
 
-```text
-G6 head                               62def33a40481354820adfb6288672183887c9f1
-M4 test blob                           9a17996df2545efbaaa807283b9ec70542e35128
-G7 sync merge                          0c08c600c10bfedd730243e866bfa272aa14707b
-assistant race smoke                   M4_REPORT_RACE_SMOKE: PASS
-```
-
-Current G6 is an ancestor of G7 and G7 is `behind_by = 0`. The G7 diff relative to current G6 remains contract-first; the M4 harness change belongs to the shared baseline.
-
-G7.0 is not yet `ACCEPTED`: repeat the full Windows gate.
+Full Windows command:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
