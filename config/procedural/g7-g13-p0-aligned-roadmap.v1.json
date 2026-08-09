@@ -1,0 +1,136 @@
+{
+  "schema": "planet_simulator.geo_g7_g13_p0_aligned_roadmap.v1",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "upstream": {
+    "g6": "SOURCE_ACCEPTED",
+    "g5_world_feature_identity": "ACCEPTED",
+    "g6_hydrology_fluid_semantics": "ACCEPTED"
+  },
+  "next_checkpoint": "G7_0_SEMANTIC_FIELD_CONTRACTS",
+  "global_invariants": [
+    "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
+    "SEMANTIC_FIELD_ID_NE_LOD",
+    "SEMANTIC_FIELD_ID_NE_AUTHORITY_REGION_ID",
+    "SEMANTIC_FIELD_ID_NE_INTEREST_REGION_ID",
+    "SEMANTIC_FIELD_QUERY_NE_UNIVERSAL_WORLD_QUERY_FABRIC",
+    "FLUID_TYPE_ID_NE_MATERIAL_DEFINITION_ID",
+    "GEO_PROVIDER_NE_AUTHORITY_OWNER",
+    "GEO_PROVIDER_NE_PERSISTENCE_OWNER",
+    "GEO_PROVIDER_NE_NETWORK_OWNER",
+    "PROCEDURAL_BASELINE_PLUS_SPARSE_AUTHORITATIVE_MATTER_MUTATIONS_EQUALS_CURRENT_WORLD_TRUTH"
+  ],
+  "stages": [
+    {
+      "id": "G7",
+      "name": "Semantic Field Fabric",
+      "status": "NEXT",
+      "subcheckpoints": [
+        "G7.0 Semantic Field Contracts",
+        "G7.1 G3/G5/G6 Upstream Adapters",
+        "G7.2 Composition and Provenance",
+        "G7.3 Cross-Cell / Cross-LOD Invariance",
+        "G7.4 Semantic Field Lab",
+        "G7 Full Acceptance"
+      ],
+      "forbidden_ownership": [
+        "WorldAddress",
+        "UniversalWorldQuery",
+        "AuthorityRouting",
+        "InterestManagement",
+        "PersistenceDurability",
+        "NetworkReplication",
+        "MaterialOntology",
+        "SchedulerCacheOwnership"
+      ]
+    },
+    {
+      "id": "G8",
+      "name": "Geomorphology",
+      "status": "PLANNED",
+      "owns": [
+        "valley_incisions",
+        "river_channel_incisions",
+        "banks",
+        "floodplain_shaping",
+        "erosion_deposition_procedural_baseline"
+      ],
+      "does_not_own": [
+        "player_excavation",
+        "persistent_terrain_damage",
+        "matter_transactions"
+      ]
+    },
+    {
+      "id": "G9",
+      "name": "Layered Geology",
+      "status": "PLANNED_P0_MATERIAL_GATE_REQUIRED",
+      "p0_dependency": "P0_MATERIAL_ONTOLOGY",
+      "rule": "Topology/layer geometry may proceed before the shared material ontology, but formal canonical material acceptance requires MaterialDefinitionId/composition integration."
+    },
+    {
+      "id": "G10",
+      "name": "GeoVolume / SDF",
+      "status": "PLANNED",
+      "rule": "GeoVolume is procedural volume semantics and must not become Matter storage or authoritative excavation state."
+    },
+    {
+      "id": "G11",
+      "name": "Heterogeneous Body Lab",
+      "status": "PLANNED",
+      "required_profiles": [
+        "earth_like",
+        "irregular_asteroid",
+        "floating_island",
+        "water_dominant",
+        "ice_or_methane_like",
+        "non_default_environment_or_gravity"
+      ]
+    },
+    {
+      "id": "G12",
+      "name": "Scheduler / Cache / Provenance",
+      "status": "PLANNED",
+      "owns": [
+        "generation_work_scheduling",
+        "provider_dependency_execution",
+        "cache_keys",
+        "cache_invalidation",
+        "provenance_manifests",
+        "budget_accounting_adapters"
+      ],
+      "forbidden_ownership": [
+        "authority",
+        "persistence_semantics",
+        "world_identity",
+        "network_ownership",
+        "canonical_transaction_commit"
+      ]
+    },
+    {
+      "id": "G13",
+      "name": "Detail Contract Freeze",
+      "status": "PLANNED",
+      "goal": "Freeze stable downstream contracts for surface, features, fluids, semantic fields, geomorphology, geology, volume/SDF, provenance and representation requests before production detail expansion."
+    }
+  ],
+  "composition_gates": {
+    "G9": "P0_MATERIAL_ONTOLOGY",
+    "G10": "GEO_MATTER_OWNERSHIP_AUDIT",
+    "G12": "AUTHORITY_PERSISTENCE_WORK_BUDGET_OWNERSHIP_AUDIT"
+  },
+  "acceptance_common": [
+    "GLOBAL_REVISION_MATCH",
+    "GLOBAL_CONFIG_BYTE_EQUIVALENT",
+    "LOCAL_P0_ALIGNMENT_CURRENT",
+    "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
+    "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK",
+    "HEADLESS_SEMANTIC_EXECUTION",
+    "FOCUSED_CONTRACTS_PASS",
+    "PARENT_G_STAGE_REGRESSION_PASS",
+    "WORLD_CORE_REGRESSION_PASS",
+    "CLEAN_WORKTREE",
+    "GIT_DIFF_CHECK_PASS",
+    "STATUS_DIMENSIONS_DISTINCT"
+  ]
+}
