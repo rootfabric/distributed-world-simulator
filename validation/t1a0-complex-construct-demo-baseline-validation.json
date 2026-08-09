@@ -1,8 +1,17 @@
 {
   "schema": "planet_simulator.t1a0_complex_construct_demo_validation.v1",
   "checkpoint": "T1A0_BASELINE_AND_FIXTURE_CONTRACTS",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "SOURCE_ACCEPTED",
   "branch": "feature/t1-complex-construct-demo-lab",
+  "validation_overlay_branch": "fix/t1-m5-convergence-finish-barrier",
+  "validated_head": "280c6e24ef5b847f27be7099140832ddd7e23a25",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
   "branch_base_commit": "68085c9154a85a581226d08001f8e524b0992323",
   "c24_accepted_commit": "c18b3afaf0f2f078899be20d0529fa94d53adf90",
   "fixture_seed": "t1a0-lunar-engineering-outpost-v1",
@@ -28,9 +37,8 @@
     "d0_checksum_recomputed_independently": "PASS",
     "d1_checksum_recomputed_independently": "PASS",
     "branch_diff_scope_checked": "PASS",
-    "production_contract_files_changed": 0,
-    "network_contract_files_changed": 0,
-    "github_actions_runs_for_candidate_head": 0
+    "production_contract_files_changed_by_t1a0": 0,
+    "network_contract_files_changed_by_t1a0": 0
   },
   "fix1": {
     "name": "T1A0_REGRESSION_HYGIENE_FIX1",
@@ -56,21 +64,30 @@
     ]
   },
   "runtime_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "pre_fix1_full_regression": "PROCESS_EXIT_PASS_WITH_UNEXPECTED_RUNTIME_ERRORS",
-    "fix1_editor_import": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
-    "fix1_focused_t1a0": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
-    "fix1_world_regression": "PENDING_LOCAL_WINDOWS_GODOT_RERUN",
-    "fix1_mw7_exit_hygiene": "PENDING_LOCAL_WINDOWS_GODOT_RERUN"
+    "world_boot_matrix": "PASS_EXIT_0",
+    "mw7_interest_replication": "PASS_114_ASSERTIONS_EXIT_0",
+    "full_world_regression": "PASS",
+    "full_world_regression_summary": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+  },
+  "p0_alignment": {
+    "fixture_is_authoritative_state": false,
+    "fixture_is_data_only": true,
+    "no_duplicate_authority_foundation": true,
+    "no_private_material_ontology": true,
+    "no_private_cross_domain_transaction_bridge": true,
+    "representation_is_not_canonical_state": true,
+    "regression_enabling_fixes_do_not_transfer_foundation_ownership_to_t1": true
   },
   "acceptance_requirements": [
-    "Godot 4.7.1 double editor import PASS",
-    "RUN_T1A0_COMPLEX_CONSTRUCT_DEMO_TESTS focused PASS",
-    "project regression gate PASS",
+    "Godot 4.7.1 double full regression PASS",
     "normal boot has initialized persistence",
     "no unexpected world manifest identity mismatch in normal boot tests",
     "no breakpoint runtime 9081 collision diagnostics",
     "no MW7 ObjectDB/resource exit leak diagnostics",
-    "no production Item/Construction contract mutation"
+    "no T1A0 production Item/Construction contract mutation"
   ],
-  "next": "LOCAL_WINDOWS_GODOT_RERUN_THEN_T1A1_PART_VISUAL_PROFILE_ASSET_ADAPTER"
+  "next": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER",
+  "integration_note": "SOURCE_ACCEPTED does not imply MAIN_INTEGRATED or PRODUCTION_READY."
 }
