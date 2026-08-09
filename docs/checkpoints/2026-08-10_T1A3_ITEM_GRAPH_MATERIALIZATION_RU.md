@@ -4,7 +4,7 @@
 **Ветка:** `feature/t1a3-item-graph-materialization`  
 **Base:** T1A.2 accepted @ `47d41c097941b834c3b5eab79510a0a8c39d873d`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `IMPLEMENTED CANDIDATE`
+**Статус:** `FOCUSED PASS — FULL REGRESSION REQUIRED`
 
 ## Цель
 
@@ -109,30 +109,42 @@ MaterialDefinitionId/private material ontology
 
 Общий C2B/M0 foundation остаётся владельцем atomic cross-domain commit.
 
-## Focused gate
+## Focused validation — PASS
 
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_T1A3_ITEM_GRAPH_MATERIALIZATION_TESTS.ps1 `
-    -GodotPath $Godot
-```
-
-Gate включает:
+Exact Windows engine:
 
 ```text
-editor import
-T1A.2 acceptance
-C2B authoritative Item Graph integration
-M0 aggregate transaction integration
-T1A.3 acceptance
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+candidate head: db90a1c21368060500bfca0da117a059cbcab5b8
 ```
 
-Acceptance проверяет deterministic global Item mapping, preserved construct/part identity, 71 production Items, 64 ATTACHMENT bindings, 6 deferred interactive WORLD Items, valid Item Graph, authoritative revision chain и exact replay.
+Результат:
+
+```text
+Editor import                         PASS
+T1A.2 authoritative D0 dependency    PASS 186 assertions
+C2B authoritative Item Graph         PASS 194 assertions
+M0 aggregate transaction             PASS 82 assertions
+T1A.3 Item Graph materialization     PASS 865 assertions
+Focused gate                         PASS
+```
+
+Таким образом deterministic global Item mapping, preserved construct/part identity, 71 production Items, 64 ATTACHMENT bindings, 6 deferred interactive WORLD Items, valid Item Graph, authoritative revision chain и exact replay подтверждены на целевой Windows сборке Godot.
+
+## Status dimensions
+
+```text
+SOURCE_ACCEPTED       = false
+MAIN_INTEGRATED       = false
+COMPOSITION_VERIFIED  = false
+PRODUCTION_READY      = false
+```
+
+`SOURCE_ACCEPTED` и `COMPOSITION_VERIFIED` остаются false только до полного `RUN_WORLD_REGRESSION_TESTS.ps1` на T1A.3 branch.
 
 ## Следующий checkpoint
 
-После focused + full regression acceptance:
+После full regression acceptance:
 
 `T1A.4 — Interactive Fixture Binding`
 
