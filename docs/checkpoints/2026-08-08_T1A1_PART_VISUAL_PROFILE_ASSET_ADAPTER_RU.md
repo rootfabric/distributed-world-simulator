@@ -1,10 +1,23 @@
 # T1A.1 — Part Visual Profile / Asset Adapter
 
-**Дата:** 2026-08-08
-**Ветка:** `feature/t1-complex-construct-demo-lab`
-**Статус:** `IMPLEMENTED CANDIDATE`
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`
-**Base head:** `b92cc1be4f7d0dfd268ed294928f57706b489268`
+**Дата:** 2026-08-08  
+**Acceptance update:** 2026-08-09  
+**Ветка:** `feature/t1-complex-construct-demo-lab`  
+**Validation overlay:** `fix/t1-m5-convergence-finish-barrier`  
+**Статус:** `SOURCE_ACCEPTED / COMPOSITION_VERIFIED`  
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
+**Validated head:** `280c6e24ef5b847f27be7099140832ddd7e23a25`
+
+## Статус в терминах P0
+
+```text
+SOURCE_ACCEPTED       = true
+MAIN_INTEGRATED       = false
+COMPOSITION_VERIFIED  = true
+PRODUCTION_READY      = false
+```
+
+`SOURCE_ACCEPTED` означает, что T1A.1 принят в своей исходной T1-линии после exact-engine focused validation и полного Windows world regression. Это не означает, что stage уже находится в `main`, что весь T1 принят или что production budgets закрыты.
 
 ## Цель
 
@@ -39,12 +52,12 @@ INTERACTIVE_FIXTURE
 
 - stable `visual_profile_id`;
 - representation class;
-- material family;
+- presentation `material_family`;
 - bounds/pivot/grid footprint;
 - collision presentation policy;
 - batching policy;
 - independent NEAR/MID/FAR source descriptors;
-- deterministic checksum.
+- deterministic presentation checksum.
 
 Source kinds:
 
@@ -83,24 +96,28 @@ D0 routing:
 
 D1 использует тот же routing contract на 384 parts.
 
-`T1ComplexConstructDemo` теперь умеет строить presentation plan и публикует diagnostic metadata для catalog hash, presentation checksum и detail mode, не меняя T1A.0 fixture API.
+`T1ComplexConstructDemo` умеет строить presentation plan и публикует diagnostic metadata для catalog hash, presentation checksum и detail mode, не меняя T1A.0 fixture API.
 
-## Почему это важно для станций
+## P0 alignment
 
-T2 может позже маршрутизировать один и тот же canonical part в разные backend:
+T1A.1 не создаёт и не владеет ни одной новой global foundation:
 
 ```text
-near interactive object
-mid merged/static batch
-far C22/C24 compiled proxy
-none/dormant
+visual_profile_id     != canonical part identity
+material_family       != MaterialDefinitionId
+near/mid/far mode     != authority region
+HLOD/proxy artifact   != canonical construct state
+renderer backend      != persistence owner
 ```
 
-Asset pack можно менять независимо от domain identity. Это позволяет подключать Quaternius/Sci-Fi assets и более сложные mesh compiler/instance backends без переписывания Construction semantics.
+Следовательно, stage не блокирует будущие P0 foundations:
 
-## Exact-engine isolated validation
+- Spatial Domain Fabric будет маппить Construction scopes наружу, а не заменяться section/HLOD keys;
+- Unified Material Ontology позже станет источником физических/material semantics; текущий `material_family` остаётся presentation-only;
+- cross-domain consume/build/salvage операции должны идти через общий `WorldOperation / WorldTransactionPlan`, а не через локальный T1 RPC bridge;
+- NX7/NX8/NX9 остаются общими authority/interest/persistence policy layers и не реализуются внутри T1A.1.
 
-Доступный Linux double build:
+## Exact-engine focused validation
 
 ```text
 Godot Engine v4.7.1.stable.double.custom_build.a13da4feb
@@ -109,31 +126,30 @@ T1A.1 part visual adapter                  PASS — 67 assertions
 T1 demo scene adapter probe                PASS
 ```
 
-Во время первого probe обнаружена JSON numeric normalization issue для integer-like fields/ranges. Исправлено до publication: JSON numeric values принимаются только если они конечные и целочисленные, затем canonical checksum использует integer normalization.
+Во время первого probe была обнаружена JSON numeric normalization issue для integer-like fields/ranges. Она была исправлена до publication: JSON numeric values принимаются только если конечные и целочисленные, затем canonical checksum использует integer normalization.
 
-Это isolated contract harness, а не полный checkout regression.
+## Full Windows composition validation
 
-## Windows acceptance gate
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_T1A1_PART_VISUAL_ADAPTER_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner выполняет:
+На validation overlay после устранения M5/boot/MW7 regression blockers получено:
 
 ```text
-editor import
-T1A.0 dependency regression
-T1A.1 visual adapter acceptance
+World boot matrix                             PASS / exit 0
+MW7 matter interest replication              PASS / 114 assertions / exit 0
+RUN_WORLD_REGRESSION_TESTS.ps1                PASS
+All world/core regression tests through NX4  PASS
 ```
 
-После focused PASS требуется обычный full project regression перед `ACCEPTED`.
+Эти M5/persistence/MW7 исправления являются regression-enabling fixes соседних foundations. Они не делают T1 владельцем network, persistence или Matter semantics.
 
 ## Решение
 
 ```text
-checkpoint: T1A1_PART_VISUAL_PROFILE_ASSET_ADAPTER
-decision:   IMPLEMENTED_CANDIDATE
-next:       T1A.2 D0 Authoritative Outpost Builder
+checkpoint:            T1A1_PART_VISUAL_PROFILE_ASSET_ADAPTER
+SOURCE_ACCEPTED:       true
+MAIN_INTEGRATED:       false
+COMPOSITION_VERIFIED:  true
+PRODUCTION_READY:      false
+next:                  T1A.2 D0 Authoritative Outpost Builder
 ```
+
+Следующий архитектурный gate в T1A.2/T1A.3: authoritative Construction state и Item integration не должны вводить private Spatial/Material/Transaction foundation.
