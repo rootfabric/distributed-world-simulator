@@ -14,39 +14,77 @@ G6.1 ACCEPTED
 G6.2 ACCEPTED
 G6.3 ACCEPTED
 G6.4 ACCEPTED
-G6 FULL ACCEPTANCE — BLOCKED BY SHARED MW10 BASELINE
+G6 FULL ACCEPTANCE — SOURCE_ACCEPTED
 ```
 
-G6.4 Fix4 is accepted from Windows Godot 4.7.1 double automated evidence, manual graphical observation and a clean post-cleanup `git diff --check`.
-
-Accepted evidence:
+Architecture status remains intentionally separated:
 
 ```text
-G6.4 contracts       PASS — 158 assertions
-far_lod -> near_lod  1 -> 9
-far_triangles        120 -> 4176
-octaves              8
-min_signal_km        4.688
-manual observation   PASS_BY_USER_OBSERVATION
-post-cleanup hygiene PASS
+SOURCE_ACCEPTED        YES
+MAIN_INTEGRATED        NO
+COMPOSITION_VERIFIED   NO
+PRODUCTION_READY       NO
 ```
 
-The lab remains derived presentation over accepted G2/G3/G6 semantics. LOD, SurfaceCellKey and renderer state do not own river identity. River valley carving remains deferred to G8 Geomorphology; layered geology remains G9.
-
-Next gate:
-
-```powershell
-$env:GODOT_BIN = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FULL_ACCEPTANCE.ps1
-```
-
-The full gate is currently blocked by the shared G5 baseline. PR #43 must integrate the accepted MW10 atomic-lock release fix into `feature/g5-world-feature-graph`, then G6 must be resynchronized and the same full gate rerun.
-
-After a green full gate:
+Accepted G6 evidence:
 
 ```text
-G6 SOURCE_ACCEPTED
-        -> G7 Semantic Field Fabric
+G6.4 contracts                         PASS — 158 assertions
+Adaptive Macro Surface                 PASS
+far_lod -> near_lod                    1 -> 9
+far_triangles                          120 -> 4176
+MW10 lock release retry                PASS — 12 assertions
+RUN_WORLD_REGRESSION_TESTS.ps1         PASS
+main_scene_cli_all                      PASS — 6 / 0 fail
+PowerShell Fix3 parser                  PASS
+git diff --check G5...G6               PASS
+working tree                            CLEAN
+```
+
+G6 remains P0-aligned: G5 owns river feature identity; G6 owns fluid geography/query semantics; G6.4 is derived presentation. Cell/LOD/renderer/network/authority do not own fluid identity.
+
+Additional P0 bridge fixed after acceptance audit:
+
+```text
+FluidRegionId        = geographic fluid identity
+FluidTypeId          = fluid-domain semantic class
+MaterialDefinitionId = future shared P0 material identity
+
+FluidTypeId != MaterialDefinitionId
+```
+
+Next development line:
+
+```text
+G7 Semantic Field Fabric
+    -> G8 Geomorphology
+    -> G9 Layered Geology
+    -> G10 GeoVolume / SDF
+    -> G11 Heterogeneous Body Lab
+    -> G12 Scheduler / Cache / Provenance
+    -> G13 Detail Contract Freeze
+```
+
+Important gates:
+
+- G7 is a domain semantic-field fabric, not a replacement for WorldAddress / universal WorldQuery / authority / persistence / network foundations;
+- G8 owns procedural river/valley incision, banks, floodplain and erosion baseline;
+- G9 formal material acceptance requires the P0 Unified Material Ontology bridge;
+- G10 GeoVolume/SDF must not become a second Matter implementation;
+- G12 may schedule/cache/provide provenance but must not own authority or persistence;
+- representation/detail experiments may run in parallel but remain derived.
+
+Detailed plan:
+
+```text
+docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md
+config/procedural/g7-g13-p0-aligned-roadmap.v1.json
+```
+
+Immediate next implementation checkpoint:
+
+```text
+G7.0 Semantic Field Contracts + Registry Vocabulary
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
