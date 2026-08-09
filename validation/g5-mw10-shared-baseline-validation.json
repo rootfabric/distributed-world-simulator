@@ -33,6 +33,7 @@
   "shared_regression_integration": {
     "world_runner_fix_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
     "world_runner_declares_retry_test": true,
+    "retry_test_uid_tracking_commit": "2911cffb2fda3f14069379ccac3a48e79644c1b7",
     "retry_test_uid_tracked": true,
     "retry_test_uid": "uid://yush8dg03nlf"
   },
