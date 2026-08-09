@@ -112,6 +112,45 @@ geo/moisture-baseline
 
 `geo/surface-height-m` уже имел accepted upstream identity и теперь получил explicit G3 adapter.
 
+## G7.0 forward compatibility
+
+Accepted G7.0 test раньше фиксировал candidate-era availability и требовал `VOCABULARY_ONLY_G7_0` для всех десяти будущих полей. G7.1 меняет только planned availability четырёх полей, поэтому regression assertion теперь допускает:
+
+```text
+planned adapter fields:
+  VOCABULARY_ONLY_G7_0 OR ADAPTER_AVAILABLE_G7_1
+
+remaining future fields:
+  VOCABULARY_ONLY_G7_0 only
+```
+
+Количество, identity и typed contracts всех 13 G7.0 fields не изменены.
+
+## Assistant exact-engine structural evidence
+
+Project-provided Godot:
+
+```text
+4.7.1.stable.double.custom_build.a13da4feb
+```
+
+Проверены byte-exact опубликованные adapter blobs:
+
+```text
+G3  aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a
+G5  39ef95704cdf516b10146d2fa79b0d80bf173492
+G6  f625644204882f41e7a2919eeba785aaa4788489
+```
+
+Результат:
+
+```text
+published adapter parse/load       PASS
+G7_1_ADAPTER_STUB_SMOKE            PASS
+```
+
+Smoke использует stubbed accepted upstream API shapes. Это structural author-side evidence, а не замена full checkout regression.
+
 ## P0 boundaries
 
 ```text
