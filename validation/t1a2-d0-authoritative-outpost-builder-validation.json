@@ -1,13 +1,12 @@
 {
   "schema": "planet_simulator.t1a2_d0_authoritative_outpost_builder_validation.v1",
   "checkpoint": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER",
-  "decision": "FIX1_IMPLEMENTED_RETEST_REQUIRED",
+  "decision": "FOCUSED_PASS_FULL_REGRESSION_REQUIRED",
   "branch": "feature/t1a2-d0-authoritative-outpost-builder",
   "base_branch": "fix/t1-m5-convergence-finish-barrier",
   "base_head": "b34a4377fd68c47522c714995d9448ae8e2e8fb9",
   "initial_candidate_head": "46f523cc9ae6d0609eb51d1b675fad2a9ef720ce",
-  "fix1_tested_head": null,
-  "fix1_current_head_before_validation_record": "ac2962a4d48ac908dd4bbfdef117e2eb803baaca",
+  "fix1_tested_head": "c1010d85f7a3c947f125bd6f509ba5b8b45492b2",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -75,18 +74,21 @@
       "require preserved ConstructSnapshot checksum",
       "keep production ConstructionConstructStore unchanged"
     ],
-    "windows_retest": "PENDING"
+    "windows_retest": "PASS"
   },
   "focused_gate": {
     "runner": "RUN_T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER_TESTS.ps1",
-    "fix1_editor_import": "PENDING_EXACT_WINDOWS_RETEST",
-    "fix1_t1a0_dependency": "PENDING_EXACT_WINDOWS_RETEST",
-    "fix1_t1a1_dependency": "PENDING_EXACT_WINDOWS_RETEST",
-    "fix1_c1_aggregate_dependency": "PENDING_EXACT_WINDOWS_RETEST",
-    "fix1_c2b_store_dependency": "PENDING_EXACT_WINDOWS_RETEST",
-    "fix1_t1a2_acceptance": "PENDING_EXACT_WINDOWS_RETEST"
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "head": "c1010d85f7a3c947f125bd6f509ba5b8b45492b2",
+    "editor_import": "PASS",
+    "t1a0_dependency": "PASS_58_ASSERTIONS",
+    "t1a1_dependency": "PASS_67_ASSERTIONS",
+    "c1_aggregate_dependency": "PASS_40_ASSERTIONS",
+    "c2b_store_dependency": "PASS_64_ASSERTIONS",
+    "t1a2_acceptance": "PASS_186_ASSERTIONS",
+    "result": "PASS"
   },
-  "full_regression": "PENDING_AFTER_FIX1_FOCUSED_PASS",
+  "full_regression": "PENDING_AFTER_FOCUSED_PASS",
   "next": "T1A3_ITEM_GRAPH_MATERIALIZATION",
-  "acceptance_note": "FIX1 is implemented but not accepted. SOURCE_ACCEPTED requires exact Windows focused revalidation on the current branch head and full project regression."
+  "acceptance_note": "Focused Windows FIX1 gate passed on c1010d85f7a3c947f125bd6f509ba5b8b45492b2. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until full RUN_WORLD_REGRESSION_TESTS.ps1 passes on the T1A.2 branch."
 }
