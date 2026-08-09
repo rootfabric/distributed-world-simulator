@@ -22,7 +22,8 @@ func _init()->void:
 	_assert(bool(ar.get("passed",false)),"A canonical gameplay complete: %s"%ar)
 	_assert(bool(br.get("passed",false)),"B contention and permission complete: %s"%br)
 	_wait_exit(a,10000);_wait_exit(b,10000)
-	var final_server:=_read(server_file);var snap:Dictionary=final_server.get("item_graph_snapshot",{})
+	var expected_server_checksum:=String(ar.get("item_graph",{}).get("checksum",""))
+	var final_server:=_wait_server_item_graph(server_file,expected_server_checksum,10000);var snap:Dictionary=final_server.get("item_graph_snapshot",{})
 	_assert(String(ar.get("display_server","")).to_lower() not in ["","headless","dummy"],"A is graphical")
 	_assert(String(br.get("display_server","")).to_lower() not in ["","headless","dummy"],"B is graphical")
 	_assert(String(ar.get("details",{}).get("pickup",{}).get("error_code",""))=="","A pickup succeeded")
@@ -60,6 +61,17 @@ func _wait_state(path:String,states:Array[String],timeout:int)->Dictionary:
 		if String(value.get("state","")) in states:return value
 		OS.delay_msec(POLL_MS)
 	return value
+func _wait_server_item_graph(path:String,expected_checksum:String,timeout:int)->Dictionary:
+	var start:=Time.get_ticks_msec();var last_valid:Dictionary={}
+	while Time.get_ticks_msec()-start<timeout:
+		var value:=_read(path);var snapshot_value=value.get("item_graph_snapshot",{})
+		if snapshot_value is Dictionary:
+			var checksum:=String(snapshot_value.get("checksum",""))
+			if checksum.length()==64:
+				last_valid=value
+				if expected_checksum.length()!=64 or checksum==expected_checksum:return value
+		OS.delay_msec(POLL_MS)
+	return last_valid
 func _wait_exit(pid:int,timeout:int)->void:
 	var start:=Time.get_ticks_msec()
 	while OS.is_process_running(pid) and Time.get_ticks_msec()-start<timeout:OS.delay_msec(POLL_MS)
