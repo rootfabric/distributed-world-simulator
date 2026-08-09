@@ -11,13 +11,12 @@ const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 var failures: Array[String] = []
 var assertions := 0
 
-
 func _init() -> void:
 	call_deferred("_run")
 
-
 func _run() -> void:
 	var lab = LabScene.instantiate()
+	lab.body_fit_policy = "TOPOLOGY_OCCLUSION"
 	root.add_child(lab)
 	await process_frame
 	await physics_frame
@@ -58,8 +57,6 @@ func _run() -> void:
 	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before := float(lab.player_capsule.height)
 
-	# Boots alone must use the high-boot descriptor and remove a non-empty,
-	# bounded set of body triangles while preserving the original material.
 	var feet_on: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
 	_assert(bool(feet_on.get("success", false)), "CH8C high-boot feet equip failed")
 	await process_frame
@@ -83,8 +80,6 @@ func _run() -> void:
 	await process_frame
 	_assert(body_mesh.mesh == original_mesh, "CH8C high-boot feet cleanup did not restore exact original mesh")
 
-	# The already accepted trouser mask stays identical when used alone. Adding
-	# boots must contribute additional lower-leg/foot occlusion to the union.
 	var lower_on: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
 	_assert(bool(lower_on.get("success", false)), "CH8C high-boot lower equip failed")
 	await process_frame
@@ -121,7 +116,6 @@ func _run() -> void:
 	lab.queue_free()
 	_finish()
 
-
 func _find_descriptor(report: Dictionary, presentation_id: String) -> Dictionary:
 	for raw_descriptor in report.get("descriptor_reports", []):
 		if raw_descriptor is Dictionary:
@@ -129,7 +123,6 @@ func _find_descriptor(report: Dictionary, presentation_id: String) -> Dictionary
 			if String(descriptor.get("presentation_id", "")) == presentation_id:
 				return descriptor
 	return {}
-
 
 func _find_mesh(root_node: Node, target_name: String) -> MeshInstance3D:
 	if root_node is MeshInstance3D and String(root_node.name).to_lower() == target_name.to_lower():
@@ -140,19 +133,17 @@ func _find_mesh(root_node: Node, target_name: String) -> MeshInstance3D:
 			return found
 	return null
 
-
 func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
 
-
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius high-boot calf occlusion: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius high-boot calf occlusion fallback: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius high-boot calf occlusion: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius high-boot calf occlusion fallback: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
