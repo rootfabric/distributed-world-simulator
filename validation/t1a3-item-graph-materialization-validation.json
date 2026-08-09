@@ -1,0 +1,55 @@
+{
+  "schema": "planet_simulator.t1a3_item_graph_materialization_validation.v1",
+  "checkpoint": "T1A3_ITEM_GRAPH_MATERIALIZATION",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1a3-item-graph-materialization",
+  "base_head": "47d41c097941b834c3b5eab79510a0a8c39d873d",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "scope": {
+    "construct_id": "construct/t1/lunar-outpost/d0",
+    "part_count": 64,
+    "interactive_fixture_count": 6,
+    "final_item_count": 71,
+    "source_reserved_refs_are_item_graph_ids": false,
+    "deterministic_global_item_id_resolution": true,
+    "construct_and_part_identity_preserved": true
+  },
+  "transaction_path": {
+    "source_snapshot": "T1A2 ConstructSnapshot",
+    "identity_resolution": "reserved semantic item reference -> deterministic RFC4122-v4-shaped global Item ID",
+    "planner": "ConstructionItemTransactionPlanner.build_assembly_plan",
+    "adapter": "AuthoritativeConstructionItemGraphAdapter",
+    "transaction_bridge": "ConstructionM0TransactionBridge",
+    "root_created_in_transaction": true,
+    "structural_parts_attached_in_transaction": 64,
+    "interactive_items_precreated_as_world_sources": 6,
+    "interactive_gameplay_semantics_materialized": false
+  },
+  "p0_alignment": {
+    "new_item_registry": false,
+    "new_operation_ledger": false,
+    "new_construct_store": false,
+    "new_transaction_coordinator": false,
+    "private_t1_rpc_bridge": false,
+    "authority_route_encoded_in_item_identity": false,
+    "lod_or_visual_profile_encoded_in_item_identity": false,
+    "material_definition_id_added": false,
+    "reserved_t1_item_refs_cross_production_item_boundary": false
+  },
+  "focused_gate": {
+    "runner": "RUN_T1A3_ITEM_GRAPH_MATERIALIZATION_TESTS.ps1",
+    "dependencies": [
+      "T1A2 acceptance",
+      "C2B authoritative Item Graph integration",
+      "M0 aggregate transaction integration"
+    ],
+    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+  },
+  "next_after_acceptance": "T1A4_INTERACTIVE_FIXTURE_BINDING"
+}
