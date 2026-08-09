@@ -35,6 +35,12 @@
     "acceptance_test_blob": "1af618356b700e5c87a55b42daa05d35b267014e",
     "expected_focused_assertions_if_all_paths_complete": 59
   },
+  "publication_hygiene": {
+    "accepted_g7_0_to_current_g7_1_changed_files": 18,
+    "changed_file_scope_rechecked": "PASS",
+    "accidental_noop_present_in_final_diff": false,
+    "runtime_outside_g7_1_adapter_scope_changed": false
+  },
   "ownership": {
     "g3_provider_identity_preserved": true,
     "g5_feature_id_preserved": true,
