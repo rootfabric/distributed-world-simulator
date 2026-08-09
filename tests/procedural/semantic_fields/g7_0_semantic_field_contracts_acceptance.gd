@@ -55,7 +55,9 @@ func _test_manifest_and_registry() -> void:
 		_check(not descriptor["metadata"].has("material_definition_id"), "no invented material identity")
 	for field_id in [Registry.BASE_SURFACE_HEIGHT_M, Registry.MACRO_SURFACE_HEIGHT_M, Registry.SURFACE_HEIGHT_M]:
 		_check(String(Registry.descriptor(field_id)["metadata"]["availability"]) == Registry.UPSTREAM_ACCEPTED, "accepted upstream field")
-	for field_id in [Registry.SLOPE, Registry.CURVATURE, Registry.VALLEY_INFLUENCE, Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M, Registry.FLUID_SURFACE_DISTANCE_M, Registry.DRAINAGE_POTENTIAL, Registry.CONTINENTALNESS, Registry.TEMPERATURE_BASELINE, Registry.MOISTURE_BASELINE]:
+	for field_id in [Registry.VALLEY_INFLUENCE, Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M, Registry.FLUID_SURFACE_DISTANCE_M]:
+		_check(String(Registry.descriptor(field_id)["metadata"]["availability"]) in ["VOCABULARY_ONLY_G7_0", "ADAPTER_AVAILABLE_G7_1"], "planned adapter field availability")
+	for field_id in [Registry.SLOPE, Registry.CURVATURE, Registry.DRAINAGE_POTENTIAL, Registry.CONTINENTALNESS, Registry.TEMPERATURE_BASELINE, Registry.MOISTURE_BASELINE]:
 		_check(String(Registry.descriptor(field_id)["metadata"]["availability"]) == Registry.VOCABULARY_ONLY, "vocabulary-only field")
 
 func _test_contracts() -> void:
