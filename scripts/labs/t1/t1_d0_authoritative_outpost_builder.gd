@@ -67,7 +67,7 @@ static func build_from_fixture(fixture: Dictionary) -> Dictionary:
 		var bond: Dictionary = bond_value
 		var bond_id := String(bond["bond_id"])
 		var add_result: Dictionary = aggregate.add_bond(
-			"%s/add-bond/%s" % [OPERATION_PREFIX, bond_id.get_file()],
+			"%s/add-bond/%s" % [OPERATION_PREFIX, bond_id],
 			revision,
 			bond
 		)
@@ -161,7 +161,7 @@ static func _build_parts(part_ids: Array) -> Array:
 	var parts: Array = []
 	for index in range(part_ids.size()):
 		var x := index % GRID_SIZE
-		var z := index / GRID_SIZE
+		var z := int(index / GRID_SIZE)
 		var support := _is_corner(x, z)
 		var role := "support" if support else "surface"
 		var part_kind := "FOUNDATION" if support else "PANEL"
