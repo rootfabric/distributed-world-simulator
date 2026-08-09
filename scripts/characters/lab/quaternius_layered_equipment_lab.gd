@@ -24,6 +24,7 @@ const FEET_PRESENTATION_ID := "wearable.layer.feet.peasant"
 
 const BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY := "BODY_VISIBLE_INFLATED_OVERLAY"
 const BODY_FIT_POLICY_TOPOLOGY_OCCLUSION := "TOPOLOGY_OCCLUSION"
+const CLOTHING_MATERIAL_NAMES := ["MI_Peasant"]
 const REGION_TORSO_CORE := "body.region.torso.core"
 const LOWER_TOPOLOGY_THRESHOLD_M := 0.045
 const FEET_TOPOLOGY_THRESHOLD_M := 0.045
@@ -32,9 +33,6 @@ const FEET_TOPOLOGY_COVERAGE_MODE := "HIGH_BOOT"
 const FEET_TOPOLOGY_UPPER_Y_PAD_M := 0.012
 const FEET_TOPOLOGY_UPPER_BIAS_FRACTION := 0.52
 
-# Fix10 default: the imported base body remains completely intact. Garment
-# rest meshes alone are enlarged along their own normals. Values are intentionally
-# presentation-only and easy to tune in millimetres after graphical observation.
 const UPPER_INFLATION_PROFILE := [
 	{"t": 0.00, "offset_m": 0.0040},
 	{"t": 0.30, "offset_m": 0.0070},
@@ -65,12 +63,10 @@ var body_topology_coordinator
 var layered_setup_result: Dictionary = {}
 var inflation_reports: Dictionary = {}
 
-
 func _ready() -> void:
 	super._ready()
 	_setup_layered_equipment()
 	_refresh_status()
-
 
 func _unhandled_input(event: InputEvent) -> void:
 	super._unhandled_input(event)
@@ -82,7 +78,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_K:
 			_toggle_layer(FEET_ITEM_ID, FEET_PROFILE_ID)
 
-
 func _setup_layered_equipment() -> void:
 	var loaded = load(MALE_PEASANT_PATH)
 	if not loaded is PackedScene:
@@ -90,7 +85,6 @@ func _setup_layered_equipment() -> void:
 		push_error("CH8C layered lab Male_Peasant source is unavailable")
 		return
 	var source_scene := loaded as PackedScene
-
 	if body_fit_policy != BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY and body_fit_policy != BODY_FIT_POLICY_TOPOLOGY_OCCLUSION:
 		layered_setup_result = {"success": false, "code": "UNSUPPORTED_BODY_FIT_POLICY", "details": {"policy": body_fit_policy}}
 		push_error("CH8C unsupported body fit policy: %s" % body_fit_policy)
@@ -101,14 +95,12 @@ func _setup_layered_equipment() -> void:
 	if not bool(layered_setup_result.get("success", false)):
 		push_error("CH8C layered rig adapter bind failed: %s" % JSON.stringify(layered_setup_result))
 		return
-
 	body_coverage_catalog = CoverageCatalogType.new()
 	body_suppression_coordinator = SuppressionCoordinatorType.new()
 	layered_setup_result = body_suppression_coordinator.setup(avatar, layered_rig_adapter, body_coverage_catalog)
 	if not bool(layered_setup_result.get("success", false)):
 		push_error("CH8C suppression coordinator setup failed: %s" % JSON.stringify(layered_setup_result))
 		return
-
 	body_topology_catalog = TopologyCatalogType.new()
 	body_topology_coordinator = TopologyCoordinatorType.new()
 	layered_setup_result = body_topology_coordinator.setup(avatar, layered_rig_adapter, body_topology_catalog)
@@ -117,6 +109,7 @@ func _setup_layered_equipment() -> void:
 		return
 
 	var use_body_occlusion := body_fit_policy == BODY_FIT_POLICY_TOPOLOGY_OCCLUSION
+	var clothing_filter: Array = [] if use_body_occlusion else CLOTHING_MATERIAL_NAMES
 	inflation_reports.clear()
 	var definitions := [
 		{
@@ -158,18 +151,11 @@ func _setup_layered_equipment() -> void:
 	]
 
 	for definition in definitions:
-		var profile := LayerDomain.Profile.new(
-			String(definition["profile"]),
-			String(definition["presentation"]),
-			"body.root",
-			definition["channels"],
-			[], [], ["equipment.clothing"]
-		)
+		var profile := LayerDomain.Profile.new(String(definition["profile"]), String(definition["presentation"]), "body.root", definition["channels"], [], [], ["equipment.clothing"])
 		layered_setup_result = equipment_source.register_profile(profile)
 		if not bool(layered_setup_result.get("success", false)):
 			push_error("CH8C layered profile registration failed: %s" % JSON.stringify(layered_setup_result))
 			return
-
 		var selected: Dictionary = SelectiveFactory.create(source_scene, definition["meshes"])
 		if not bool(selected.get("success", false)):
 			layered_setup_result = selected
@@ -180,10 +166,9 @@ func _setup_layered_equipment() -> void:
 			layered_setup_result = {"success": false, "code": "SELECTED_SCENE_NOT_PACKED", "details": {}}
 			return
 		var presentation_scene := selected_scene as PackedScene
-
 		var inflation_profile: Array = definition.get("inflation_profile", [])
 		if not inflation_profile.is_empty():
-			var inflation_result: Dictionary = InflationFactory.create(presentation_scene, inflation_profile)
+			var inflation_result: Dictionary = InflationFactory.create(presentation_scene, inflation_profile, clothing_filter)
 			if not bool(inflation_result.get("success", false)):
 				layered_setup_result = inflation_result
 				push_error("CH8C garment vertex inflation failed: %s" % JSON.stringify(inflation_result))
@@ -195,37 +180,17 @@ func _setup_layered_equipment() -> void:
 			presentation_scene = inflated_scene as PackedScene
 			inflation_reports[String(definition["presentation"])] = inflation_result.get("details", {}).duplicate(true)
 
-		layered_setup_result = wearable_catalog.register_scene(
-			String(definition["presentation"]),
-			equipment_rig_adapter.rig_profile_id,
-			PresentationCatalog.STRATEGY_SKINNED_GARMENT,
-			presentation_scene
-		)
+		layered_setup_result = wearable_catalog.register_scene(String(definition["presentation"]), equipment_rig_adapter.rig_profile_id, PresentationCatalog.STRATEGY_SKINNED_GARMENT, presentation_scene)
 		if not bool(layered_setup_result.get("success", false)):
 			push_error("CH8C layered presentation registration failed: %s" % JSON.stringify(layered_setup_result))
 			return
-
-		layered_setup_result = body_coverage_catalog.register_coverage(
-			String(definition["presentation"]),
-			layered_rig_adapter.rig_profile_id,
-			definition["regions"]
-		)
+		layered_setup_result = body_coverage_catalog.register_coverage(String(definition["presentation"]), layered_rig_adapter.rig_profile_id, definition["regions"])
 		if not bool(layered_setup_result.get("success", false)):
 			push_error("CH8C coverage registration failed: %s" % JSON.stringify(layered_setup_result))
 			return
-
 		var topology_threshold_m := float(definition.get("topology_threshold_m", 0.0))
 		if topology_threshold_m > 0.0:
-			layered_setup_result = body_topology_catalog.register_surface_occlusion(
-				String(definition["presentation"]),
-				layered_rig_adapter.rig_profile_id,
-				presentation_scene,
-				topology_threshold_m,
-				TOPOLOGY_BOUNDARY_PAD_M,
-				String(definition.get("topology_coverage_mode", "ROBUST")),
-				float(definition.get("topology_upper_y_pad_m", 0.0)),
-				float(definition.get("topology_upper_bias_fraction", 1.0))
-			)
+			layered_setup_result = body_topology_catalog.register_surface_occlusion(String(definition["presentation"]), layered_rig_adapter.rig_profile_id, presentation_scene, topology_threshold_m, TOPOLOGY_BOUNDARY_PAD_M, String(definition.get("topology_coverage_mode", "ROBUST")), float(definition.get("topology_upper_y_pad_m", 0.0)), float(definition.get("topology_upper_bias_fraction", 1.0)))
 			if not bool(layered_setup_result.get("success", false)):
 				push_error("CH8C topology registration failed: %s" % JSON.stringify(layered_setup_result))
 				return
@@ -235,7 +200,6 @@ func _setup_layered_equipment() -> void:
 		return
 	layered_setup_result = body_topology_coordinator.apply_snapshot(equipment_source.get_snapshot())
 
-
 func _toggle_layer(item_id: String, profile_id: String) -> Dictionary:
 	if body_suppression_coordinator == null or body_topology_coordinator == null:
 		return {"success": false, "code": "CH8C_COORDINATOR_NOT_READY", "details": {}}
@@ -243,7 +207,6 @@ func _toggle_layer(item_id: String, profile_id: String) -> Dictionary:
 	var mutation_result: Dictionary = _set_item_equipped(item_id, profile_id, enabled)
 	if not bool(mutation_result.get("success", false)):
 		return mutation_result
-
 	var snapshot = equipment_source.get_snapshot()
 	var suppression_result: Dictionary = body_suppression_coordinator.apply_snapshot(snapshot)
 	if not bool(suppression_result.get("success", false)):
@@ -251,19 +214,16 @@ func _toggle_layer(item_id: String, profile_id: String) -> Dictionary:
 		push_error("CH8C layered suppression apply failed: %s" % JSON.stringify(suppression_result))
 		_refresh_status()
 		return suppression_result
-
 	var topology_result: Dictionary = body_topology_coordinator.apply_snapshot(snapshot)
 	if not bool(topology_result.get("success", false)):
 		layered_setup_result = topology_result
 		push_error("CH8C topology occlusion apply failed: %s" % JSON.stringify(topology_result))
 		_refresh_status()
 		return topology_result
-
 	layered_setup_result = topology_result
 	_refresh_equipment_view_policy()
 	_refresh_status()
 	return mutation_result
-
 
 func _refresh_status() -> void:
 	super._refresh_status()
@@ -299,15 +259,4 @@ func _refresh_status() -> void:
 		+ "topology: %s | removed triangles: %d\n"
 		+ "vertex inflation configured max: upper %.3f m | lower %.3f m | feet %.3f m"
 	)
-	status_label.text += layered_status % [
-		body_fit_policy,
-		upper_state,
-		lower_state,
-		feet_state,
-		", ".join(regions),
-		", ".join(topology_active),
-		topology_removed,
-		upper_inflation_max,
-		lower_inflation_max,
-		feet_inflation_max,
-	]
+	status_label.text += layered_status % [body_fit_policy, upper_state, lower_state, feet_state, ", ".join(regions), ", ".join(topology_active), topology_removed, upper_inflation_max, lower_inflation_max, feet_inflation_max]
