@@ -63,7 +63,7 @@ static func sample(query: Dictionary, compiled_geographies: Array) -> Dictionary
 			RegistryScript.RIVER_DISTANCE_M:
 				field_value = float(water_sample.get("distance_to_centerline_m", 0.0))
 			RegistryScript.RIVER_WIDTH_M:
-				field_value = float(water_sample.get("width_m", 0.0))
+				field_value = float(water_sample.get("channel_width_m", 0.0))
 			RegistryScript.FLUID_SURFACE_DISTANCE_M:
 				field_value = float(water_sample.get("distance_to_surface_m", 0.0))
 			_:
