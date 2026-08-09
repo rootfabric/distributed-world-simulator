@@ -1,70 +1,70 @@
-# G6 Full Acceptance — FIX2 IMPLEMENTED CANDIDATE
+# G6 Full Acceptance — FIX3 IMPLEMENTED CANDIDATE
 
 **Дата:** 2026-08-09
 **Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
-G6.0–G6.4 приняты. Shared MW10 baseline интегрирован в G5 и синхронизирован в G6.
+G6.0–G6.4 приняты. Shared G5 + MW10 baseline интегрирован. Полный Windows world/core regression уже завершился успешно; остался только post-run hygiene хвост `Microsoft/`, созданный Windows child-process profile handling.
 
-## Первый full-gate
-
-Windows full-gate прошёл G6.0–G6.4 и MW10 retry `12/12`, но общий world regression coverage guard обнаружил, что новый тест существует в проекте, но отсутствует в `$Tests` списка `RUN_WORLD_REGRESSION_TESTS.ps1`.
-
-Fix1 был внесён в shared G5 baseline и синхронизирован в G6:
+## Full Windows runtime evidence
 
 ```text
-69cfaf9171127df7af563b5f9af6812d7775b74d
-+ res://tests/matter/transactions/test_mw10_lock_release_retry.gd
+G6.0-G6.4 focused chain                PASS
+MW10 lock release retry                PASS (12 assertions)
+world regression manifest coverage     PASS
+RUN_WORLD_REGRESSION_TESTS.ps1         PASS
+main_scene_cli_all                      PASS (6 tests, 0 fail)
+world regression terminal marker       PASS
 ```
 
-## Второй full-gate preflight
-
-После обновления checkout Godot создал новый untracked sidecar:
+Финальный runtime marker:
 
 ```text
-?? tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
+All world/core regression tests through NX4 client prediction and reconciliation passed.
 ```
 
-Поэтому clean-tree preflight корректно остановил acceptance до запуска runtime.
-
-Это shared G5 hygiene/integration defect, а не G6 runtime regression.
-
-## Fix2
-
-UID сгенерирован project-provided Godot 4.7.1 double через `ResourceUID.create_id()` и `ResourceUID.id_to_text()`:
+После этого только final hygiene обнаружил:
 
 ```text
-uid://yush8dg03nlf
+?? Microsoft/
 ```
 
-Он добавлен в G5 как tracked file:
+Функционального runtime regression нет.
+
+## Fix3
+
+`RUN_G6_FULL_ACCEPTANCE.ps1` теперь запоминает, существовал ли `Microsoft/` до запуска. После дочерних процессов каталог удаляется только если:
 
 ```text
-tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
+он отсутствовал до запуска;
+он расположен ровно как <repo>/Microsoft;
+Git не знает ни одного tracked файла под Microsoft/.
 ```
 
-После lineage-sync G5→G6 свежий `git reset --hard origin/feature/g6-hydrology-fluid-surface-v0` должен заменить локальный untracked sidecar tracked-версией и вернуть clean checkout.
-
-## Финальный gate
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
-```
-
-Требуется:
+Pre-existing и tracked content никогда не удаляется. Fix3 не меняет hydrology, Matter, world runtime или тестовую семантику.
 
 ```text
-clean repository preflight             PASS
-GLOBAL / G5 ancestry                    PASS
-shared MW10 blobs                       PASS
-git diff --check G5...G6               PASS
-G6.0-G6.4                               PASS
-MW10 retry                              PASS
-world regression manifest coverage      PASS
-RUN_WORLD_REGRESSION_TESTS.ps1          PASS
-final repository hygiene                PASS
-G6 FULL ACCEPTANCE                      PASS
+Fix3 commit: 865b907cfb886aec122ed611a82f7dc5cc6bb7b1
 ```
 
-Только после этого фиксируется `G6 SOURCE_ACCEPTED`, затем начинается G7 Semantic Field Fabric.
+## Closeout
+
+Полный world regression повторно не требуется, потому что он уже зелёный, а после tested runtime head изменены только acceptance-harness cleanup и validation/docs.
+
+На обновлённом head требуется:
+
+```text
+PowerShell parser                PASS
+stale Microsoft/ removed         PASS
+git status --porcelain           empty
+git diff --check G5...G6         empty
+```
+
+После этого:
+
+```text
+G6 Full Acceptance -> SOURCE_ACCEPTED
+G7 Semantic Field Fabric -> START
+```
+
+`MAIN_INTEGRATED`, `COMPOSITION_VERIFIED` и `PRODUCTION_READY` остаются отдельными статусами согласно GLOBAL-P0.
