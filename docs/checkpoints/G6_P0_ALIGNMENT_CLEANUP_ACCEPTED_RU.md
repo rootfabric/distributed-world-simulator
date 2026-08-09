@@ -1,7 +1,7 @@
 # G6 P0 Alignment Cleanup — ACCEPTED
 
-**Дата:** 2026-08-09  
-**Ветка:** `feature/g6-hydrology-fluid-surface-v0`  
+**Дата:** 2026-08-09
+**Ветка:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ## Причина
