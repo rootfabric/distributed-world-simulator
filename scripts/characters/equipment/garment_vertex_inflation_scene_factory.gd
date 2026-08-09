@@ -5,13 +5,14 @@ const MAX_OFFSET_M := 0.02
 const MIN_HEIGHT_EPSILON_M := 0.000001
 
 
-static func create(source_scene: PackedScene, height_profile: Array) -> Dictionary:
+static func create(source_scene: PackedScene, height_profile: Array, included_material_names: Array = []) -> Dictionary:
 	if source_scene == null:
 		return _result(false, "MISSING_GARMENT_SCENE")
 	var profile_result: Dictionary = _validate_profile(height_profile)
 	if not bool(profile_result.get("success", false)):
 		return profile_result
 	var profile: Array = profile_result.get("details", {}).get("profile", [])
+	var material_filter := _material_name_set(included_material_names)
 	var profile_min_offset := INF
 	var profile_max_offset := -INF
 	for point in profile:
@@ -33,16 +34,20 @@ static func create(source_scene: PackedScene, height_profile: Array) -> Dictiona
 
 	var inflated_meshes := 0
 	var inflated_vertices := 0
+	var kept_surfaces := 0
+	var filtered_surfaces := 0
 	var observed_min_offset := INF
 	var observed_max_offset := -INF
 	for mesh_instance in meshes:
-		var inflate_result: Dictionary = _inflate_mesh(mesh_instance, profile)
+		var inflate_result: Dictionary = _inflate_mesh(mesh_instance, profile, material_filter)
 		if not bool(inflate_result.get("success", false)):
 			root.free()
 			return inflate_result
 		var details: Dictionary = inflate_result.get("details", {})
 		inflated_meshes += 1
 		inflated_vertices += int(details.get("vertex_count", 0))
+		kept_surfaces += int(details.get("kept_surface_count", 0))
+		filtered_surfaces += int(details.get("filtered_surface_count", 0))
 		observed_min_offset = minf(observed_min_offset, float(details.get("min_offset_m", 0.0)))
 		observed_max_offset = maxf(observed_max_offset, float(details.get("max_offset_m", 0.0)))
 
@@ -59,6 +64,9 @@ static func create(source_scene: PackedScene, height_profile: Array) -> Dictiona
 		"profile_max_offset_m": 0.0 if profile_max_offset == -INF else profile_max_offset,
 		"mesh_count": inflated_meshes,
 		"vertex_count": inflated_vertices,
+		"kept_surface_count": kept_surfaces,
+		"filtered_surface_count": filtered_surfaces,
+		"included_material_names": _sorted_keys(material_filter),
 		"min_offset_m": 0.0 if observed_min_offset == INF else observed_min_offset,
 		"max_offset_m": 0.0 if observed_max_offset == -INF else observed_max_offset,
 		"mutates_source_scene": false,
@@ -69,11 +77,9 @@ static func create(source_scene: PackedScene, height_profile: Array) -> Dictiona
 	})
 
 
-static func _inflate_mesh(mesh_instance: MeshInstance3D, profile: Array) -> Dictionary:
+static func _inflate_mesh(mesh_instance: MeshInstance3D, profile: Array, material_filter: Dictionary) -> Dictionary:
 	if mesh_instance.mesh == null:
-		return _result(false, "GARMENT_VERTEX_INFLATION_MESH_MISSING", {
-			"mesh_name": String(mesh_instance.name),
-		})
+		return _result(false, "GARMENT_VERTEX_INFLATION_MESH_MISSING", {"mesh_name": String(mesh_instance.name)})
 	if not mesh_instance.mesh is ArrayMesh:
 		return _result(false, "GARMENT_VERTEX_INFLATION_REQUIRES_ARRAY_MESH", {
 			"mesh_name": String(mesh_instance.name),
@@ -88,33 +94,44 @@ static func _inflate_mesh(mesh_instance: MeshInstance3D, profile: Array) -> Dict
 
 	var min_y := INF
 	var max_y := -INF
-	var surface_arrays: Array = []
-	for surface_index in range(source_mesh.get_surface_count()):
-		if source_mesh.surface_get_primitive_type(surface_index) != Mesh.PRIMITIVE_TRIANGLES:
+	var surfaces: Array[Dictionary] = []
+	var filtered_surface_count := 0
+	for source_surface_index in range(source_mesh.get_surface_count()):
+		if source_mesh.surface_get_primitive_type(source_surface_index) != Mesh.PRIMITIVE_TRIANGLES:
 			return _result(false, "GARMENT_VERTEX_INFLATION_REQUIRES_TRIANGLES", {
 				"mesh_name": String(mesh_instance.name),
-				"surface_index": surface_index,
+				"surface_index": source_surface_index,
 			})
-		var arrays: Array = source_mesh.surface_get_arrays(surface_index)
+		var material := source_mesh.surface_get_material(source_surface_index)
+		var material_name := _material_name(material)
+		if not material_filter.is_empty() and not material_filter.has(material_name):
+			filtered_surface_count += 1
+			continue
+		var arrays: Array = source_mesh.surface_get_arrays(source_surface_index)
 		if arrays.size() <= Mesh.ARRAY_NORMAL:
 			return _result(false, "GARMENT_VERTEX_INFLATION_ARRAYS_INVALID", {
 				"mesh_name": String(mesh_instance.name),
-				"surface_index": surface_index,
+				"surface_index": source_surface_index,
 			})
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 		if vertices.is_empty() or normals.size() != vertices.size():
 			return _result(false, "GARMENT_VERTEX_INFLATION_NORMALS_REQUIRED", {
 				"mesh_name": String(mesh_instance.name),
-				"surface_index": surface_index,
+				"surface_index": source_surface_index,
 				"vertex_count": vertices.size(),
 				"normal_count": normals.size(),
 			})
 		for vertex in vertices:
 			min_y = minf(min_y, vertex.y)
 			max_y = maxf(max_y, vertex.y)
-		surface_arrays.append(arrays)
+		surfaces.append({"arrays": arrays, "material": material, "material_name": material_name})
 
+	if surfaces.is_empty():
+		return _result(false, "GARMENT_VERTEX_INFLATION_NO_SELECTED_SURFACES", {
+			"mesh_name": String(mesh_instance.name),
+			"included_material_names": _sorted_keys(material_filter),
+		})
 	if min_y == INF or max_y == -INF or max_y - min_y <= MIN_HEIGHT_EPSILON_M:
 		return _result(false, "GARMENT_VERTEX_INFLATION_HEIGHT_INVALID", {
 			"mesh_name": String(mesh_instance.name),
@@ -127,8 +144,9 @@ static func _inflate_mesh(mesh_instance: MeshInstance3D, profile: Array) -> Dict
 	var total_vertices := 0
 	var min_offset := INF
 	var max_offset := -INF
-	for surface_index in range(surface_arrays.size()):
-		var output_arrays: Array = (surface_arrays[surface_index] as Array).duplicate(true)
+	var kept_material_names: Array[String] = []
+	for surface in surfaces:
+		var output_arrays: Array = (surface["arrays"] as Array).duplicate(true)
 		var vertices: PackedVector3Array = output_arrays[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = output_arrays[Mesh.ARRAY_NORMAL]
 		for vertex_index in range(vertices.size()):
@@ -141,13 +159,19 @@ static func _inflate_mesh(mesh_instance: MeshInstance3D, profile: Array) -> Dict
 			max_offset = maxf(max_offset, offset_m)
 		output_arrays[Mesh.ARRAY_VERTEX] = vertices
 		inflated_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, output_arrays)
-		inflated_mesh.surface_set_material(surface_index, source_mesh.surface_get_material(surface_index))
+		var output_surface_index := inflated_mesh.get_surface_count() - 1
+		inflated_mesh.surface_set_material(output_surface_index, surface["material"])
+		kept_material_names.append(String(surface["material_name"]))
 		total_vertices += vertices.size()
 
 	mesh_instance.mesh = inflated_mesh
+	kept_material_names.sort()
 	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
 		"mesh_name": String(mesh_instance.name),
 		"vertex_count": total_vertices,
+		"kept_surface_count": surfaces.size(),
+		"filtered_surface_count": filtered_surface_count,
+		"kept_material_names": kept_material_names,
 		"min_offset_m": 0.0 if min_offset == INF else min_offset,
 		"max_offset_m": 0.0 if max_offset == -INF else max_offset,
 		"height_min_m": min_y,
@@ -196,16 +220,31 @@ static func _sample_profile(profile: Array, t: float) -> float:
 	return float(profile[-1]["offset_m"])
 
 
+static func _material_name(material: Material) -> String:
+	if material == null:
+		return ""
+	return String(material.resource_name).strip_edges()
+
+static func _material_name_set(raw_names: Array) -> Dictionary:
+	var result: Dictionary = {}
+	for raw_name in raw_names:
+		var name := String(raw_name).strip_edges()
+		if not name.is_empty():
+			result[name] = true
+	return result
+
+static func _sorted_keys(values: Dictionary) -> Array[String]:
+	var result: Array[String] = []
+	for key in values.keys():
+		result.append(String(key))
+	result.sort()
+	return result
+
 static func _collect_meshes(root_node: Node, output: Array[MeshInstance3D]) -> void:
 	if root_node is MeshInstance3D:
 		output.append(root_node as MeshInstance3D)
 	for child in root_node.get_children():
 		_collect_meshes(child, output)
 
-
 static func _result(success: bool, code: String, details: Dictionary = {}) -> Dictionary:
-	return {
-		"success": success,
-		"code": code,
-		"details": details.duplicate(true),
-	}
+	return {"success": success, "code": code, "details": details.duplicate(true)}
