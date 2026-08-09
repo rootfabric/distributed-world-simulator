@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.ch8c_fix9_focused_windows_validation.v1",
+  "branch": "feature/ch8-layered-equipment",
+  "decision": "FIX9_FOCUSED_WINDOWS_GATES_PASS_FULL_AND_GRAPHICAL_PENDING",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "reported_by_user": true,
+  "focused_windows_results": {
+    "vertex_inflation": {
+      "script": "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd",
+      "result": "PASS",
+      "assertions": 53
+    },
+    "topology_occlusion": {
+      "script": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
+      "result": "PASS",
+      "assertions": 39
+    },
+    "high_boot_occlusion": {
+      "script": "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd",
+      "result": "PASS",
+      "assertions": 41
+    },
+    "layered_equipment_lab": {
+      "script": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
+      "result": "PASS",
+      "assertions": 51
+    }
+  },
+  "conclusion": "The real Windows Male_Peasant path now passes the profile-driven vertex-inflation contract, topology regression, HIGH_BOOT regression, and integrated layered-lab lifecycle. No focused code gate remains before the full CH8 runner and graphical motion acceptance.",
+  "pending": {
+    "full_runner": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot",
+    "graphical_lab": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot"
+  },
+  "graphical_acceptance_focus": [
+    "body skin does not reappear through trousers after walk/run/crouch/jump",
+    "calf skin does not reappear through solid boot shafts after movement",
+    "intentional holes/openings still show skin",
+    "skin below/above real garment cuffs remains present where intended",
+    "trousers and boots do not look ballooned or visibly detached",
+    "underwear/pelvis remains intact",
+    "FP/TP and shadow remain coherent"
+  ]
+}
