@@ -1,0 +1,56 @@
+{
+  "schema": "planet_simulator.validation.g7_2_composition_provenance.v1",
+  "checkpoint": "g7.2-composition-provenance",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_1": {
+    "decision": "ACCEPTED",
+    "accepted_commit": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
+    "windows_full_acceptance": "PASS"
+  },
+  "implementation": {
+    "composition_receipt_contract": "IMPLEMENTED",
+    "deterministic_composer": "IMPLEMENTED",
+    "g3_g5_real_adapter_composition_test": "IMPLEMENTED",
+    "g3_g6_real_adapter_composition_test": "IMPLEMENTED",
+    "focused_runner": "IMPLEMENTED",
+    "full_acceptance_runner": "IMPLEMENTED"
+  },
+  "policy": {
+    "id": "semantic-composition-policy/require-complete-v1",
+    "missing_requested_fields": "REJECT",
+    "duplicate_field_ownership": "REJECT",
+    "duplicate_adapter": "REJECT",
+    "unrequested_contribution": "REJECT",
+    "input_order": "NORMALIZED_BY_ADAPTER_ID"
+  },
+  "provenance": {
+    "samples_preserved_without_rewrite": true,
+    "sample_checksums_pinned": true,
+    "upstream_provenance_checksums_pinned": true,
+    "query_checksum_pinned": true,
+    "bundle_checksum_pinned": true
+  },
+  "p0": {
+    "owns_world_query": false,
+    "owns_spatial_identity": false,
+    "owns_authority": false,
+    "owns_interest": false,
+    "owns_persistence": false,
+    "owns_network": false,
+    "owns_material_ontology": false,
+    "owns_scheduler_cache": false,
+    "owns_geomorphology": false
+  },
+  "required_windows_acceptance": {
+    "focused_runner": "RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1",
+    "full_runner": "RUN_G7_2_FULL_ACCEPTANCE.ps1",
+    "g7_0_regression": true,
+    "g7_1_regression": true,
+    "full_world_regression": true,
+    "clean_worktree": true,
+    "git_diff_check": true
+  },
+  "next_if_accepted": "G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE"
+}
