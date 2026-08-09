@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.t1a2_d0_authoritative_outpost_builder_validation.v1",
+  "checkpoint": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1a2-d0-authoritative-outpost-builder",
+  "base_branch": "fix/t1-m5-convergence-finish-barrier",
+  "base_head": "b34a4377fd68c47522c714995d9448ae8e2e8fb9",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "fixture": {
+    "profile_id": "D0",
+    "construct_id": "construct/t1/lunar-outpost/d0",
+    "fixture_checksum": "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58",
+    "part_count": 64,
+    "room_count": 1,
+    "utility_count": 2,
+    "deferred_item_graph_count": 6
+  },
+  "authoritative_materialization": {
+    "aggregate": "res://scripts/construction/domain/construct_aggregate.gd",
+    "snapshot_contract": "res://scripts/construction/contracts/construct_snapshot.gd",
+    "construct_store": "res://scripts/construction/authoritative/construction_construct_store.gd",
+    "store_operation": "CREATE",
+    "root_item_reference": "item/t1/d0/construct-root",
+    "structural_part_item_references_materialized_in_item_graph": false,
+    "fixture_item_ids_materialized_in_item_graph": false,
+    "expected_part_count": 64,
+    "expected_bond_count": 112,
+    "expected_state_revision": 177,
+    "expected_build_state": "OPERATIONAL",
+    "expected_rigid_island_count": 1
+  },
+  "p0_alignment": {
+    "new_global_spatial_identity": false,
+    "new_authority_registry": false,
+    "authority_owner_encoded_in_identity": false,
+    "lod_or_hlod_encoded_in_canonical_snapshot": false,
+    "presentation_profile_encoded_in_canonical_snapshot": false,
+    "new_material_definition_namespace": false,
+    "item_and_construction_cross_domain_commit_added": false,
+    "new_persistence_path": false,
+    "network_transport_dependency_added": false,
+    "item_graph_materialization_deferred_to_t1a3": true
+  },
+  "focused_gate": {
+    "runner": "RUN_T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER_TESTS.ps1",
+    "editor_import": "PENDING_EXACT_WINDOWS",
+    "t1a0_dependency": "PENDING_EXACT_WINDOWS",
+    "t1a1_dependency": "PENDING_EXACT_WINDOWS",
+    "c1_aggregate_dependency": "PENDING_EXACT_WINDOWS",
+    "c2b_store_dependency": "PENDING_EXACT_WINDOWS",
+    "t1a2_acceptance": "PENDING_EXACT_WINDOWS"
+  },
+  "full_regression": "PENDING_AFTER_FOCUSED_PASS",
+  "next": "T1A3_ITEM_GRAPH_MATERIALIZATION",
+  "acceptance_note": "IMPLEMENTED_CANDIDATE only. SOURCE_ACCEPTED requires exact Windows focused validation and full project regression."
+}
