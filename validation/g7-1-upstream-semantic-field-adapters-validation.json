@@ -1,0 +1,47 @@
+{
+  "schema": "planet_simulator.validation.g7_1_upstream_semantic_field_adapters.v1",
+  "checkpoint": "g7.1-upstream-semantic-field-adapters",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_0": {
+    "decision": "ACCEPTED",
+    "accepted_commit": "06466ac034a25492ef8c3ff3cfc053f536eb97b9",
+    "windows_full_acceptance": "PASS"
+  },
+  "implementation": {
+    "g3_surface_adapter": "IMPLEMENTED",
+    "g5_feature_adapter": "IMPLEMENTED",
+    "g6_fluid_adapter": "IMPLEMENTED",
+    "registry_activation": "IMPLEMENTED",
+    "focused_acceptance_test": "IMPLEMENTED",
+    "full_acceptance_runner": "IMPLEMENTED"
+  },
+  "ownership": {
+    "g3_provider_identity_preserved": true,
+    "g5_feature_id_preserved": true,
+    "g6_fluid_region_id_preserved": true,
+    "creates_new_river_identity": false,
+    "creates_new_feature_identity": false,
+    "creates_new_fluid_identity": false,
+    "owns_geomorphology": false,
+    "owns_material_ontology": false,
+    "owns_authority": false,
+    "owns_persistence": false,
+    "owns_network": false,
+    "owns_scheduler_cache": false
+  },
+  "assistant_exact_engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "status": "PENDING_POST_PUBLICATION_SMOKE"
+  },
+  "required_windows_acceptance": {
+    "focused_runner": "RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1",
+    "full_runner": "RUN_G7_1_FULL_ACCEPTANCE.ps1",
+    "focused_pass": true,
+    "full_world_regression": true,
+    "clean_worktree": true,
+    "git_diff_check": true
+  },
+  "next_if_accepted": "G7_2_COMPOSITION_PROVENANCE"
+}
