@@ -12,84 +12,68 @@ Current state:
 G6 Hydrology / Fluid Surface           SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
 G7.0 Semantic Field Contracts          ACCEPTED
-G7.1 Upstream Semantic Field Adapters  NEXT
+G7.1 Upstream Semantic Field Adapters  IMPLEMENTED CANDIDATE
 ```
 
-G7.0 is accepted. It adds typed field identity/descriptors/query/sample/provenance and a registry vocabulary without replacing `GeoKernel`, `GeoFieldBundle` or `GeoSample`.
+G7.0 accepted typed field identity/descriptors/query/sample/provenance while preserving `GeoKernel`, `GeoFieldBundle` and `GeoSample`.
 
-Core relationship:
-
-```text
-G0 GeoFieldBundle / GeoSample
-        = provider execution payload, preserved
-
-G7 SemanticField contracts
-        = typed semantic metadata/query/result boundary
-```
-
-Accepted registry preserves upstream IDs:
+G7.1 now connects accepted upstream semantics through partial adapters:
 
 ```text
-geo/base-surface-height-m
-geo/macro-surface-height-m
-geo/surface-height-m
-```
-
-and contains vocabulary for:
-
-```text
-geo/slope
-geo/curvature
-geo/valley-influence
-geo/river-distance-m
-geo/river-width-m
-geo/fluid-surface-distance-m
-geo/drainage-potential
-geo/continentalness
-geo/temperature-baseline
-geo/moisture-baseline
-```
-
-G7.0 full Windows acceptance:
-
-```text
-Godot                                  4.7.1.stable.double.custom_build.a13da4feb
-G7.0 focused contracts                 PASS
-M4 graphical shared gameplay Fix1      PASS — 22 / 0
-world/core regression                   PASS
-main_scene_cli_all                      PASS — 6 / 6
-G7.0 FULL ACCEPTANCE                    PASS
-Working tree                            CLEAN
-```
-
-Accepted record:
-
-```text
-docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_ACCEPTED_RU.md
-validation/g7-0-semantic-field-contracts-validation.json
-```
-
-G7.1 now connects accepted upstream sources through adapters:
-
-```text
-G3 macro surface provider
-    -> semantic field adapter
+G3 CasualMacroTerrainProviderV1
+        │
+        └─ geo/surface-height-m
+                 ↓
+        G3SurfaceSemanticFieldAdapterV1
 
 G5 WorldFeatureGraph
-    -> feature-derived field adapter
+        │
+        └─ valley FeatureBounds + FeatureId
+                 ↓
+        G5FeatureSemanticFieldAdapterV1
+                 ↓
+        geo/valley-influence
 
-G6 Fluid / river geography
-    -> fluid-derived field adapter
+G6 CasualRiverProviderV1 / WaterSurfaceResolverV1
+        │
+        ├─ FeatureId
+        ├─ FluidRegionId
+        ├─ RiverSpline
+        └─ RiverChannelProfile
+                 ↓
+        G6FluidSemanticFieldAdapterV1
+                 ↓
+        geo/river-distance-m
+        geo/river-width-m
+        geo/fluid-surface-distance-m
 ```
 
-Ownership rule:
+The adapters do not create a second source of truth. Values are projections of accepted upstream semantics and provenance carries original ownership identities.
 
 ```text
-adapter output != new upstream identity
+G3 provider id   -> preserved
+G5 FeatureId     -> preserved
+G6 FluidRegionId -> preserved
+```
 
-G3 provider id -> provenance
-G5 FeatureId   -> provenance
-G6 FluidRegionId -> provenance
+`geo/valley-influence` in G7.1 uses explicit `FEATURE_BOUNDS_FALLOFF_V1`. This is only a feature-derived proxy; it does not carve terrain. G8 still owns valley/channel incision, banks, floodplain and erosion/deposition baseline.
+
+Registry availability now distinguishes implemented adapters from future vocabulary:
+
+```text
+ADAPTER_AVAILABLE_G7_1
+  geo/valley-influence
+  geo/river-distance-m
+  geo/river-width-m
+  geo/fluid-surface-distance-m
+
+VOCABULARY_ONLY_G7_0
+  geo/slope
+  geo/curvature
+  geo/drainage-potential
+  geo/continentalness
+  geo/temperature-baseline
+  geo/moisture-baseline
 ```
 
 P0 guards remain mandatory:
@@ -104,11 +88,32 @@ G7 != Authority / Interest / Persistence / Network
 G7 != Scheduler / Cache execution owner
 ```
 
-Detailed G7–G13 plan:
+Validation:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_1_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+G7.0 accepted record:
 
 ```text
-docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md
-config/procedural/g7-g13-p0-aligned-roadmap.v1.json
+docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_ACCEPTED_RU.md
+```
+
+G7.1 candidate record:
+
+```text
+docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_CANDIDATE_RU.md
+validation/g7-1-upstream-semantic-field-adapters-validation.json
+config/procedural/g7-1-upstream-semantic-field-adapters.v1.json
+```
+
+Next after G7.1 acceptance:
+
+```text
+G7.2 — Composition / Provenance
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
