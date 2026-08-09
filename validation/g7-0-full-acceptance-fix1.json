@@ -1,0 +1,16 @@
+{
+  "schema": "planet_simulator.validation.g7_0_full_acceptance_fix1.v1",
+  "checkpoint": "g7.0-full-acceptance-fix1",
+  "decision": "UPSTREAM_G6_HARNESS_FIX_REQUIRED",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "focused_g7_0": "PASS_BEFORE_WORLD_REGRESSION",
+  "world_regression": "FAIL_AT_M4_REPORT_READ_RACE",
+  "m4_assertions": 22,
+  "m4_failures": 4,
+  "client_item_graph_convergence": "PASS",
+  "upstream_fix_branch": "feature/g6-hydrology-fluid-surface-v0",
+  "upstream_test_blob": "9a17996df2545efbaaa807283b9ec70542e35128",
+  "production_g7_runtime_implicated": false,
+  "next": "SYNC_CURRENT_G6_THEN_RERUN_G7_0_FULL_ACCEPTANCE"
+}
