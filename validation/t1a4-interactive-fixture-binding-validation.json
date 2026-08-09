@@ -1,0 +1,61 @@
+{
+  "schema": "planet_simulator.t1a4_interactive_fixture_binding_validation.v1",
+  "checkpoint": "T1A4_INTERACTIVE_FIXTURE_BINDING",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1a4-interactive-fixture-binding",
+  "base_head": "5e051f67bf6987a354de5b565da1448be6b0b4db",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "scope": {
+    "construct_id": "construct/t1/lunar-outpost/d0",
+    "interactive_fixture_count": 6,
+    "item_count_preserved": 71,
+    "canonical_construct_snapshot_changed": false,
+    "storage_container_id": "container/t1/d0/storage-main",
+    "storage_slot_count": 24,
+    "behavior_capability_count": 6,
+    "behavior_affordance_count": 10,
+    "power_network": "utility-network/power/t1a4/d0",
+    "data_network": "utility-network/data/t1a4/d0"
+  },
+  "bindings": {
+    "door": {"host_part_id": "part/t1/d0/p0025", "capability_kind": "DOOR_CONTROL", "power": true, "data": true},
+    "container": {"host_part_id": "part/t1/d0/p0026", "capability_kind": "CONTAINER", "production_container": true, "data": true},
+    "generator": {"host_part_id": "part/t1/d0/p0027", "capability_kind": "POWER_SOURCE", "power": true},
+    "battery": {"host_part_id": "part/t1/d0/p0028", "capability_kind": "POWER_STORAGE", "power": true},
+    "lamp": {"host_part_id": "part/t1/d0/p0029", "capability_kind": "LIGHTING", "power": true},
+    "console": {"host_part_id": "part/t1/d0/p0030", "capability_kind": "WORKSTATION", "power": true, "data": true}
+  },
+  "foundation_reuse": {
+    "item_graph": "production ItemRegistry + ContainerRegistry",
+    "behavior": "C5 construction capability/affordance descriptors",
+    "utility": "C15 POWER/DATA utility contracts and simulator",
+    "cross_domain_commit": "C2B authoritative adapter over ConstructionM0TransactionBridge",
+    "new_item_registry": false,
+    "new_container_registry": false,
+    "new_transaction_coordinator": false,
+    "new_utility_foundation": false,
+    "new_behavior_foundation": false,
+    "private_t1_rpc_bridge": false
+  },
+  "stage_boundary": {
+    "door_open_close_state_machine_implemented": false,
+    "generator_runtime_toggle_implemented": false,
+    "lamp_renderer_toggle_implemented": false,
+    "console_ui_implemented": false,
+    "container_inventory_contract_materialized": true,
+    "capability_affordance_binding_materialized": true,
+    "power_data_binding_materialized": true
+  },
+  "focused_gate": {
+    "runner": "RUN_T1A4_INTERACTIVE_FIXTURE_BINDING_TESTS.ps1",
+    "dependencies": ["T1A3 acceptance", "C5 capability/affordance contracts", "C15 executable utilities contracts", "C2B authoritative Item Graph integration"],
+    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+  },
+  "next_after_acceptance": "T1A5_INTERACTIVE_RUNTIME_EXECUTION"
+}
