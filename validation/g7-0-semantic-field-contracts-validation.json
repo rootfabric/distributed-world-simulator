@@ -1,11 +1,33 @@
 {
   "schema": "planet_simulator.validation.g7_0_semantic_field_contracts.v1",
   "checkpoint": "g7.0-semantic-field-contracts",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "base_branch": "feature/g6-hydrology-fluid-surface-v0",
-  "base_commit": "303d6830593cd3b4fbb20641daa90d6bef5d7ada",
+  "base_commit_at_first_implementation": "303d6830593cd3b4fbb20641daa90d6bef5d7ada",
+  "current_upstream_g6_head": "62def33a40481354820adfb6288672183887c9f1",
   "branch": "feature/g7-semantic-field-fabric",
+  "windows_full_acceptance": {
+    "tested_head": "03d1dd1e61ba671456259ab660286d3376520f8e",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "global_revision": "GLOBAL-P0-2026-08-08-R1",
+    "g6_source_accepted_ancestor": "PASS",
+    "contract_first_scope": "PASS",
+    "focused_contracts": "PASS",
+    "world_core_regression": "PASS",
+    "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+    "main_scene_cli_all": "PASS_6_OF_6",
+    "final_hygiene": "PASS",
+    "working_tree": "CLEAN",
+    "terminal_marker": "G7.0 FULL ACCEPTANCE: PASS"
+  },
+  "m4_fix1_windows_confirmation": {
+    "test": "test_m4_graphical_shared_gameplay_processes.gd",
+    "assertions": 22,
+    "failures": 0,
+    "server_client_item_graph_convergence": "PASS",
+    "upstream_test_blob": "9a17996df2545efbaaa807283b9ec70542e35128"
+  },
   "assistant_exact_engine": {
     "available": true,
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
@@ -15,24 +37,9 @@
     "isolated_contract_suite": "PASS",
     "assertions": 180,
     "parse_or_load_errors": 0,
-    "full_repository_checkout_available": false,
-    "scope": "ISOLATED_NEW_CONTRACTS_WITH_G0_CONTRACT_HELPERS",
     "exact_tested_registry_blob": "9e92aa345f02856cf906e81e2fa6e1746955199b",
     "exact_tested_contract_test_blob": "8dea46beea10efda51439d17737c9be8ac7811e2",
     "published_exact_tested_runtime_head": "1f23befb793b74d951460ecb52a4747f5e73a710"
-  },
-  "contract_results": {
-    "semantic_field_id": "PASS",
-    "semantic_field_value_type": "PASS",
-    "semantic_field_domain": "PASS",
-    "semantic_field_descriptor": "PASS",
-    "semantic_field_provenance": "PASS",
-    "semantic_field_query": "PASS",
-    "semantic_field_sample": "PASS",
-    "semantic_field_bundle": "PASS",
-    "semantic_field_registry_v1": "PASS",
-    "g0_geo_field_bundle_compatibility": "PASS",
-    "p0_negative_ownership_guards": "PASS"
   },
   "p0": {
     "semantic_field_identity_uses_surface_cell": false,
@@ -45,16 +52,5 @@
     "owns_material_ontology": false,
     "owns_scheduler_cache": false
   },
-  "required_windows_acceptance": {
-    "focused_runner": "RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1",
-    "full_runner": "RUN_G7_0_FULL_ACCEPTANCE.ps1",
-    "focused_pass": true,
-    "full_world_regression": true,
-    "g6_current_ancestor": true,
-    "global_revision_alignment": true,
-    "changed_file_allowlist": true,
-    "clean_worktree": true,
-    "git_diff_check": true
-  },
-  "next_if_accepted": "G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS"
+  "next_checkpoint": "G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS"
 }
