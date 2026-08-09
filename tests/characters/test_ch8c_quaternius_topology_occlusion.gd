@@ -12,13 +12,12 @@ const REGION_TORSO_CORE := "body.region.torso.core"
 var failures: Array[String] = []
 var assertions := 0
 
-
 func _init() -> void:
 	call_deferred("_run")
 
-
 func _run() -> void:
 	var lab = LabScene.instantiate()
+	lab.body_fit_policy = "TOPOLOGY_OCCLUSION"
 	root.add_child(lab)
 	await process_frame
 	await physics_frame
@@ -54,9 +53,6 @@ func _run() -> void:
 
 	var player_position_before: Vector3 = lab.player.position
 	var capsule_height_before := float(lab.player_capsule.height)
-
-	# Lower alone must preserve the original material but replace the base mesh
-	# with a topology-derived version that contains fewer body triangles.
 	var lower_on: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
 	_assert(bool(lower_on.get("success", false)), "CH8C topology lower equip failed")
 	await process_frame
@@ -79,8 +75,6 @@ func _run() -> void:
 		_assert(masked_weights.size() == original_weights.size(), "CH8C topology lower changed weight array size")
 
 	var lower_removed := int(lower_report.get("removed_triangles", 0))
-
-	# Adding feet builds one union mask from both garment topologies.
 	var feet_on: Dictionary = lab.call("_toggle_layer", FEET_ITEM_ID, FEET_PROFILE_ID)
 	_assert(bool(feet_on.get("success", false)), "CH8C topology feet equip failed")
 	await process_frame
@@ -89,8 +83,6 @@ func _run() -> void:
 	_assert(int(lower_feet_report.get("removed_triangles", 0)) >= lower_removed, "CH8C topology adding feet unexpectedly restored covered body triangles")
 	_assert(body_mesh.material_override == original_material, "CH8C topology lower+feet changed base-body material")
 
-	# Removing lower while feet remains must recompose from the exact original
-	# mesh, not incrementally from the already masked mesh.
 	var lower_off: Dictionary = lab.call("_toggle_layer", LOWER_ITEM_ID, LOWER_PROFILE_ID)
 	_assert(bool(lower_off.get("success", false)), "CH8C topology lower unequip failed")
 	await process_frame
@@ -105,8 +97,6 @@ func _run() -> void:
 	_assert(body_mesh.mesh == original_mesh, "CH8C topology final lower/feet removal did not restore exact original mesh")
 	_assert((lab.body_topology_coordinator.create_report().get("active_presentations", []) as Array).is_empty(), "CH8C topology coordinator retained presentations after clear")
 
-	# Upper keeps the accepted torso-core material path and must not alter mesh
-	# topology by itself.
 	var upper_on: Dictionary = lab.call("_toggle_layer", UPPER_ITEM_ID, UPPER_PROFILE_ID)
 	_assert(bool(upper_on.get("success", false)), "CH8C topology upper equip failed")
 	await process_frame
@@ -120,14 +110,12 @@ func _run() -> void:
 	await process_frame
 	_assert(body_mesh.mesh == original_mesh, "CH8C topology upper cleanup changed original mesh")
 	_assert(body_mesh.material_override == original_material, "CH8C topology upper cleanup did not restore original material")
-
 	_assert(lab.player.position.is_equal_approx(player_position_before), "CH8C topology moved gameplay CharacterBody3D")
 	_assert(is_equal_approx(float(lab.player_capsule.height), capsule_height_before), "CH8C topology changed gameplay capsule")
 
 	lab.body_topology_coordinator.clear()
 	lab.queue_free()
 	_finish()
-
 
 func _find_mesh(root_node: Node, target_name: String) -> MeshInstance3D:
 	if root_node is MeshInstance3D and String(root_node.name).to_lower() == target_name.to_lower():
@@ -138,19 +126,17 @@ func _find_mesh(root_node: Node, target_name: String) -> MeshInstance3D:
 			return found
 	return null
 
-
 func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
 
-
 func _finish() -> void:
 	if failures.is_empty():
-		print("CH8C Quaternius topology-aware occlusion: PASS (%d assertions)" % assertions)
+		print("CH8C Quaternius topology-aware occlusion fallback: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("CH8C Quaternius topology-aware occlusion: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
+	print("CH8C Quaternius topology-aware occlusion fallback: FAIL (%d failures, %d assertions)" % [failures.size(), assertions])
 	quit(1)
