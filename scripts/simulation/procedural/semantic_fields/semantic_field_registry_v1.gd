@@ -23,6 +23,7 @@ const TEMPERATURE_BASELINE: String = "geo/temperature-baseline"
 const MOISTURE_BASELINE: String = "geo/moisture-baseline"
 
 const UPSTREAM_ACCEPTED: String = "UPSTREAM_ACCEPTED"
+const ADAPTER_AVAILABLE: String = "ADAPTER_AVAILABLE_G7_1"
 const VOCABULARY_ONLY: String = "VOCABULARY_ONLY_G7_0"
 
 
@@ -33,10 +34,10 @@ static func descriptors() -> Dictionary:
 	_register(result, SURFACE_HEIGHT_M, "m", UPSTREAM_ACCEPTED, "G3/G4 resolved surface")
 	_register(result, SLOPE, "ratio", VOCABULARY_ONLY, "derived surface slope")
 	_register(result, CURVATURE, "1/m", VOCABULARY_ONLY, "derived surface curvature")
-	_register(result, VALLEY_INFLUENCE, "ratio", VOCABULARY_ONLY, "feature-derived valley influence")
-	_register(result, RIVER_DISTANCE_M, "m", VOCABULARY_ONLY, "distance to canonical river semantics")
-	_register(result, RIVER_WIDTH_M, "m", VOCABULARY_ONLY, "canonical river width projection")
-	_register(result, FLUID_SURFACE_DISTANCE_M, "m", VOCABULARY_ONLY, "distance to nearest accepted fluid surface")
+	_register(result, VALLEY_INFLUENCE, "ratio", ADAPTER_AVAILABLE, "G5 feature-bounds influence projection; not geomorphology")
+	_register(result, RIVER_DISTANCE_M, "m", ADAPTER_AVAILABLE, "distance to canonical G6 river centerline")
+	_register(result, RIVER_WIDTH_M, "m", ADAPTER_AVAILABLE, "canonical G6 river channel width projection")
+	_register(result, FLUID_SURFACE_DISTANCE_M, "m", ADAPTER_AVAILABLE, "distance to nearest accepted G6 fluid surface")
 	_register(result, DRAINAGE_POTENTIAL, "ratio", VOCABULARY_ONLY, "hydrology/terrain drainage potential")
 	_register(result, CONTINENTALNESS, "unitless", VOCABULARY_ONLY, "large-scale landmass semantic")
 	_register(result, TEMPERATURE_BASELINE, "K", VOCABULARY_ONLY, "environment baseline hook, not climate simulation")
