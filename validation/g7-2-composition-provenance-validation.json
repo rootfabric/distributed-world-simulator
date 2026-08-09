@@ -55,6 +55,7 @@
   },
   "required_windows_acceptance": {
     "focused_runner": "RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1",
+    "focused_expected_marker": "G7.2 Composition / Provenance: 52 assertions, 0 failures",
     "full_runner": "RUN_G7_2_FULL_ACCEPTANCE.ps1",
     "g7_0_regression": true,
     "g7_1_regression": true,
