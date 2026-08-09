@@ -26,11 +26,21 @@
     "input_order": "NORMALIZED_BY_ADAPTER_ID"
   },
   "provenance": {
-    "samples_preserved_without_rewrite": true,
+    "samples_preserved_by_checksum": true,
     "sample_checksums_pinned": true,
     "upstream_provenance_checksums_pinned": true,
     "query_checksum_pinned": true,
     "bundle_checksum_pinned": true
+  },
+  "scope_audit": {
+    "base": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
+    "changed_files": 14,
+    "unexpected_files": 0,
+    "upstream_g3_g5_g6_runtime_changed": false,
+    "hydrology_changed": false,
+    "matter_changed": false,
+    "network_changed": false,
+    "global_program_config_changed": false
   },
   "p0": {
     "owns_world_query": false,
