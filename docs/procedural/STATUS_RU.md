@@ -13,20 +13,10 @@ G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
 G6 Full Acceptance                     SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
 G7.0 Semantic Field Contracts          ACCEPTED
-G7.1 Upstream Semantic Field Adapters  NEXT
+G7.1 Upstream Semantic Field Adapters  IMPLEMENTED CANDIDATE
 ```
 
-G7.0 introduced a typed semantic-field boundary while preserving the existing G0 provider execution payload:
-
-```text
-GeoFieldBundle / GeoSample             PRESERVED
-GeoKernel                               UNCHANGED
-existing geo/* field identities        PRESERVED
-SemanticField registry                 ACCEPTED
-SemanticField typed query/sample       ACCEPTED
-```
-
-Windows full acceptance on tested head `03d1dd1e61ba671456259ab660286d3376520f8e`:
+G7.0 full Windows acceptance on tested head `03d1dd1e61ba671456259ab660286d3376520f8e`:
 
 ```text
 Godot                                  4.7.1.stable.double.custom_build.a13da4feb
@@ -39,7 +29,55 @@ G7.0 FULL ACCEPTANCE                    PASS
 working tree                            CLEAN
 ```
 
-P0 ownership remains explicit:
+G7.1 now provides partial typed projections from accepted upstream sources:
+
+```text
+G3 provider
+  geo/surface-height-m
+      -> SemanticFieldSample
+
+G5 WorldFeatureGraph
+  FeatureBounds / FeatureId
+      -> geo/valley-influence
+
+G6 river/fluid geography
+  WaterSurfaceResolverV1
+      -> geo/river-distance-m
+      -> geo/river-width-m
+      -> geo/fluid-surface-distance-m
+```
+
+Registry availability:
+
+```text
+ADAPTER_AVAILABLE_G7_1
+  geo/valley-influence
+  geo/river-distance-m
+  geo/river-width-m
+  geo/fluid-surface-distance-m
+
+VOCABULARY_ONLY_G7_0
+  geo/slope
+  geo/curvature
+  geo/drainage-potential
+  geo/continentalness
+  geo/temperature-baseline
+  geo/moisture-baseline
+```
+
+Ownership remains upstream:
+
+```text
+G3 provider id       PRESERVED IN PROVENANCE
+G5 FeatureId         PRESERVED IN PROVENANCE
+G6 FluidRegionId     PRESERVED IN PROVENANCE
+new River identity   NONE
+new Feature identity NONE
+new Fluid identity   NONE
+Geomorphology owner  NO
+```
+
+P0 guards:
 
 ```text
 SemanticFieldId != SurfaceCellKey
@@ -51,36 +89,24 @@ G7 != Persistence / Network
 G7 != Scheduler / Cache owner
 ```
 
-Accepted record:
+Current validation commands:
 
-```text
-docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_ACCEPTED_RU.md
-validation/g7-0-semantic-field-contracts-validation.json
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_1_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Current implementation target:
+Candidate record:
 
 ```text
-G7.1 G3/G5/G6 Upstream Semantic Field Adapters
+docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_CANDIDATE_RU.md
+validation/g7-1-upstream-semantic-field-adapters-validation.json
+config/procedural/g7-1-upstream-semantic-field-adapters.v1.json
 ```
 
-G7.1 must preserve upstream ownership:
+Next after acceptance:
 
 ```text
-G3 provider identity  -> provenance, not replaced
-G5 FeatureId          -> provenance, not replaced
-G6 FluidRegionId      -> provenance, not replaced
-river/fluid fields    -> derived projections, not new canonical river identity
-```
-
-Longer roadmap remains:
-
-```text
-G7 Semantic Field Fabric
-    -> G8 Geomorphology
-    -> G9 Layered Geology / P0 Material gate
-    -> G10 GeoVolume / SDF
-    -> G11 Heterogeneous Body Lab
-    -> G12 Scheduler / Cache / Provenance
-    -> G13 Detail Contract Freeze
+G7.2 Composition / Provenance
 ```
