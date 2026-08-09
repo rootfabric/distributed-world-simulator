@@ -75,6 +75,7 @@ function Test-G71AllowedPath {
         "docs/procedural/README_RU.md",
         "docs/procedural/STATUS_RU.md",
         "scripts/simulation/procedural/semantic_fields/semantic_field_registry_v1.gd",
+        "tests/procedural/semantic_fields/g7_0_semantic_field_contracts_acceptance.gd",
         "validation/g7-1-upstream-semantic-field-adapters-validation.json"
     )) { return $true }
     if ($Path -match '^scripts/simulation/procedural/semantic_fields/adapters/g[356]_[^/]+\.gd(\.uid)?$') { return $true }
