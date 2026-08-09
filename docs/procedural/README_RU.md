@@ -12,12 +12,15 @@ Current state:
 G6 Hydrology / Fluid Surface           SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
 G7.0 Semantic Field Contracts          ACCEPTED
-G7.1 Upstream Semantic Field Adapters  FIX1 IMPLEMENTED CANDIDATE
+G7.1 Upstream Semantic Field Adapters  ACCEPTED
+G7.2 Composition / Provenance           IMPLEMENTED CANDIDATE
 ```
 
-G7.0 introduced the typed semantic-field boundary without replacing `GeoKernel`, `GeoFieldBundle` or `GeoSample`.
+## Accepted semantic path
 
-G7.1 adapts accepted upstream semantics:
+G7.0 introduced typed semantic-field identity/query/sample/provenance contracts without replacing `GeoKernel`, `GeoFieldBundle` or `GeoSample`.
+
+G7.1 accepted projections:
 
 ```text
 G3 provider
@@ -32,99 +35,110 @@ G6 WaterSurfaceResolverV1
   -> geo/fluid-surface-distance-m
 ```
 
-The first real Windows full-checkout G7.1 run failed fast inside the focused adapter gate and exposed two contract-shape errors in the initial candidate:
+Full G7.1 Windows acceptance passed on:
 
 ```text
-G3 GeoProvider.success(values)
-  canonical path = details.values
-
-G6 WaterSurfaceSample
-  canonical width key = channel_width_m
+61de8526448a5a2ab95745fa380cdc8b3c4ea24f
+Godot 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-Initial G7.1 used `details` directly for G3 and stale `width_m` for G6. Fix1 corrects both and strengthens the test so these exact accepted shapes are pinned.
-
-Current Fix1 blobs:
+Accepted G7.1 checkpoint:
 
 ```text
-G3 adapter  c728cfed5a2b3dd55d23b81b250177af19746623
-G5 adapter  39ef95704cdf516b10146d2fa79b0d80bf173492
-G6 adapter  437d82b7f056648045fff08f1daa57968331104c
-G7.1 test   1af618356b700e5c87a55b42daa05d35b267014e
+af0898ba2f0fc03dbd0298440f302b497a5d0cad
 ```
 
-Expected focused marker after Fix1:
+## G7.2 Composition / Provenance
+
+G7.2 composes already-produced partial semantic samples:
 
 ```text
-G7.1 Upstream Semantic Field Adapters: 59 assertions, 0 failures
+G3/G5/G6 partial adapter results
+              │
+              ▼
+    SemanticFieldComposerV1
+              │
+              ├─ SemanticFieldBundle
+              └─ SemanticFieldCompositionReceipt
 ```
 
-The previous assistant stub smoke is superseded and is not acceptance evidence because its fake upstream shapes were too permissive.
-
-Ownership remains upstream:
+Strict policy:
 
 ```text
-G3 provider id   -> preserved
-G5 FeatureId     -> preserved
-G6 FluidRegionId -> preserved
+semantic-composition-policy/require-complete-v1
 ```
 
-No new RiverId, FeatureId or FluidRegionId is created by G7.
-
-`geo/valley-influence` remains only `FEATURE_BOUNDS_FALLOFF_V1` semantic proxy. G8 still owns terrain incision, banks, floodplain and erosion/deposition.
-
-Registry availability:
+It rejects:
 
 ```text
-ADAPTER_AVAILABLE_G7_1
-  geo/valley-influence
-  geo/river-distance-m
-  geo/river-width-m
-  geo/fluid-surface-distance-m
-
-VOCABULARY_ONLY_G7_0
-  geo/slope
-  geo/curvature
-  geo/drainage-potential
-  geo/continentalness
-  geo/temperature-baseline
-  geo/moisture-baseline
+missing requested fields
+duplicate field ownership
+duplicate adapters
+unrequested contributed fields
 ```
 
-P0 guards remain mandatory:
+Adapter input ordering is normalized by canonical `adapter_id`, so equivalent inputs must produce identical bundle and receipt checksums.
+
+The composer does not recalculate samples and does not replace upstream provenance. The receipt pins:
+
+```text
+query checksum
+bundle checksum
+per-field sample checksum
+per-field provenance checksum
+ordered adapter contributions
+```
+
+Focused tests compose real accepted adapter paths:
+
+```text
+G3 + G5
+G3 + G6
+```
+
+and verify that G5 `FeatureId` and G6 `FluidRegionId` remain inside original sample provenance.
+
+## Ownership / P0 guards
 
 ```text
 SemanticFieldId != SurfaceCellKey
 SemanticFieldId != LOD
 SemanticFieldQuery != universal WorldQuery Fabric
 FluidTypeId != MaterialDefinitionId
+
 G7 != Material Ontology
-G7 != Authority / Interest / Persistence / Network
+G7 != Authority / Interest
+G7 != Persistence / Network
 G7 != Scheduler / Cache execution owner
-G7.1 != Geomorphology
+G7 != Geomorphology
+
+SemanticFieldCompositionReceipt != world identity
 ```
 
-Validation:
+G8 still owns terrain incision, banks, floodplain and erosion/deposition. G12 remains the future scheduler/cache/provenance execution layer; G7.2 only performs synchronous deterministic composition of already available results.
+
+## Validation
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1 -GodotPath $Godot
-.\RUN_G7_1_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+
+.\RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_2_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
 Records:
 
 ```text
-docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_ACCEPTED_RU.md
-docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_CANDIDATE_RU.md
-validation/g7-1-upstream-semantic-field-adapters-validation.json
-config/procedural/g7-1-upstream-semantic-field-adapters.v1.json
+docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_ACCEPTED_RU.md
+docs/checkpoints/G7_2_COMPOSITION_PROVENANCE_CANDIDATE_RU.md
+validation/g7-2-composition-provenance-validation.json
+config/procedural/g7-2-composition-provenance.v1.json
 ```
 
-Next after G7.1 acceptance:
+Next after G7.2 acceptance:
 
 ```text
-G7.2 — Composition / Provenance
+G7.3 — Cross-Cell / Cross-LOD Invariance
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
