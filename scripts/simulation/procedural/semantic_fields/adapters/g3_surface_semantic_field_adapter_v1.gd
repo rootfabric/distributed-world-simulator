@@ -52,7 +52,10 @@ static func sample(query: Dictionary, provider) -> Dictionary:
 		return GeoUtilsScript.failure("G7_1_G3_PROVIDER_SAMPLE_FAILED", {"cause": provider_result.get("error_code", "")})
 	if typeof(provider_result.get("details")) != TYPE_DICTIONARY:
 		return GeoUtilsScript.failure("G7_1_G3_PROVIDER_DETAILS_REQUIRED")
-	var provider_fields: Dictionary = provider_result["details"]
+	var provider_details: Dictionary = provider_result["details"]
+	if typeof(provider_details.get("values")) != TYPE_DICTIONARY:
+		return GeoUtilsScript.failure("G7_1_G3_PROVIDER_VALUES_REQUIRED")
+	var provider_fields: Dictionary = provider_details["values"]
 	if not provider_fields.has(RegistryScript.SURFACE_HEIGHT_M):
 		return GeoUtilsScript.failure("G7_1_G3_SURFACE_HEIGHT_MISSING")
 	var height_value = provider_fields[RegistryScript.SURFACE_HEIGHT_M]
