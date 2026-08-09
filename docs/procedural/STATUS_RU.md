@@ -1,6 +1,6 @@
 # Universal World Generation Fabric — status ledger
 
-**Current branch:** `feature/g6-hydrology-fluid-surface-v0`  
+**Current branch:** `feature/g6-hydrology-fluid-surface-v0`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
