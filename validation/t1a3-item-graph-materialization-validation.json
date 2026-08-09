@@ -1,9 +1,10 @@
 {
   "schema": "planet_simulator.t1a3_item_graph_materialization_validation.v1",
   "checkpoint": "T1A3_ITEM_GRAPH_MATERIALIZATION",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "FOCUSED_PASS_FULL_REGRESSION_REQUIRED",
   "branch": "feature/t1a3-item-graph-materialization",
   "base_head": "47d41c097941b834c3b5eab79510a0a8c39d873d",
+  "candidate_head": "db90a1c21368060500bfca0da117a059cbcab5b8",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -44,12 +45,16 @@
   },
   "focused_gate": {
     "runner": "RUN_T1A3_ITEM_GRAPH_MATERIALIZATION_TESTS.ps1",
-    "dependencies": [
-      "T1A2 acceptance",
-      "C2B authoritative Item Graph integration",
-      "M0 aggregate transaction integration"
-    ],
-    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "head": "db90a1c21368060500bfca0da117a059cbcab5b8",
+    "editor_import": "PASS",
+    "t1a2_dependency": "PASS_186_ASSERTIONS",
+    "c2b_authoritative_dependency": "PASS_194_ASSERTIONS",
+    "m0_transaction_dependency": "PASS_82_ASSERTIONS",
+    "t1a3_acceptance": "PASS_865_ASSERTIONS",
+    "result": "PASS"
   },
-  "next_after_acceptance": "T1A4_INTERACTIVE_FIXTURE_BINDING"
+  "full_regression": "PENDING",
+  "next_after_acceptance": "T1A4_INTERACTIVE_FIXTURE_BINDING",
+  "acceptance_note": "Exact Windows focused gate is PASS. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until RUN_WORLD_REGRESSION_TESTS.ps1 passes on this T1A.3 branch."
 }
