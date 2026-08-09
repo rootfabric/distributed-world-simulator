@@ -1,17 +1,13 @@
 {
   "schema": "planet_simulator.t1a2_d0_authoritative_outpost_builder_validation.v1",
   "checkpoint": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER",
-  "decision": "FOCUSED_PASS_COMPOSITION_FIX_REQUIRED",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a2-d0-authoritative-outpost-builder",
-  "base_branch": "fix/t1-m5-convergence-finish-barrier",
-  "base_head": "b34a4377fd68c47522c714995d9448ae8e2e8fb9",
-  "initial_candidate_head": "46f523cc9ae6d0609eb51d1b675fad2a9ef720ce",
-  "fix1_tested_head": "c1010d85f7a3c947f125bd6f509ba5b8b45492b2",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "fixture": {
@@ -19,23 +15,32 @@
     "construct_id": "construct/t1/lunar-outpost/d0",
     "fixture_checksum": "9e20be039011f6b94582dc4c7cffd2098fea0d145f3c08a3b053902764514d58",
     "part_count": 64,
-    "room_count": 1,
-    "utility_count": 2,
+    "bond_count": 112,
+    "state_revision": 177,
     "deferred_item_graph_count": 6
   },
-  "authoritative_materialization": {
-    "aggregate": "res://scripts/construction/domain/construct_aggregate.gd",
-    "snapshot_contract": "res://scripts/construction/contracts/construct_snapshot.gd",
-    "construct_store": "res://scripts/construction/authoritative/construction_construct_store.gd",
-    "store_operation": "CREATE",
-    "root_item_reference": "item/t1/d0/construct-root",
-    "structural_part_item_references_materialized_in_item_graph": false,
-    "fixture_item_ids_materialized_in_item_graph": false,
-    "expected_part_count": 64,
-    "expected_bond_count": 112,
-    "expected_state_revision": 177,
-    "expected_build_state": "OPERATIONAL",
-    "expected_rigid_island_count": 1
+  "focused_gate": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "tested_head": "c1010d85f7a3c947f125bd6f509ba5b8b45492b2",
+    "t1a0": "PASS_58_ASSERTIONS",
+    "t1a1": "PASS_67_ASSERTIONS",
+    "c1": "PASS_40_ASSERTIONS",
+    "c2b": "PASS_64_ASSERTIONS",
+    "t1a2": "PASS_186_ASSERTIONS",
+    "result": "PASS"
+  },
+  "composition_gate": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "accepted_branch_head_before_closeout": "706ce2d8913063cbfbf4ebe02e362fe36ffba2be",
+    "declared_test_count": 203,
+    "discovered_test_count": 203,
+    "passed": true,
+    "m4_graphical_shared_gameplay": "PASS_EXIT_0",
+    "m5_m6": "PASS",
+    "mw7_mw10": "PASS",
+    "rl3": "PASS",
+    "main_scene_cli_all": "PASS_EXIT_0",
+    "report_schema": "planet_simulator.world_regression_summary.v1"
   },
   "p0_alignment": {
     "new_global_spatial_identity": false,
@@ -49,77 +54,6 @@
     "network_transport_dependency_added": false,
     "item_graph_materialization_deferred_to_t1a3": true
   },
-  "initial_windows_focused_run": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "head": "46f523cc9ae6d0609eb51d1b675fad2a9ef720ce",
-    "editor_import": "PASS",
-    "t1a0_dependency": "PASS_58_ASSERTIONS",
-    "t1a1_dependency": "PASS_67_ASSERTIONS",
-    "c1_aggregate_dependency": "PASS_40_ASSERTIONS",
-    "c2b_store_dependency": "PASS_64_ASSERTIONS",
-    "t1a2_acceptance": "FAIL_1_OF_179_ASSERTIONS",
-    "failure_code": "T1A2_CONSTRUCT_STORE_ROUNDTRIP_MISMATCH",
-    "failure_stage": "AFTER_SUCCESSFUL_CONSTRUCT_STORE_CREATE",
-    "root_cause": "T1A2 compared the builder snapshot and ConstructionConstructStore snapshot with raw Dictionary equality even though the production store intentionally canonicalizes JSON-safe numeric values. Integer-valued floats such as 250.0 and 0.0 may become canonical integers while preserving canonical JSON and snapshot checksum.",
-    "production_store_defect": false,
-    "authoritative_graph_defect": false
-  },
-  "fix1": {
-    "builder_commit": "808c8f239ad38f74b8778b678e50a248772cd47a",
-    "test_commit": "ac2962a4d48ac908dd4bbfdef117e2eb803baaca",
-    "policy": "CANONICAL_JSON_ROUNDTRIP_EQUIVALENCE_V1",
-    "changes": [
-      "validate snapshot returned by ConstructionConstructStore",
-      "compare source and stored snapshots through NetworkContractUtils.canonical_json",
-      "require preserved ConstructSnapshot checksum",
-      "keep production ConstructionConstructStore unchanged"
-    ],
-    "windows_retest": "PASS"
-  },
-  "focused_gate": {
-    "runner": "RUN_T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER_TESTS.ps1",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "head": "c1010d85f7a3c947f125bd6f509ba5b8b45492b2",
-    "editor_import": "PASS",
-    "t1a0_dependency": "PASS_58_ASSERTIONS",
-    "t1a1_dependency": "PASS_67_ASSERTIONS",
-    "c1_aggregate_dependency": "PASS_40_ASSERTIONS",
-    "c2b_store_dependency": "PASS_64_ASSERTIONS",
-    "t1a2_acceptance": "PASS_186_ASSERTIONS",
-    "result": "PASS"
-  },
-  "full_regression_attempt": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "result": "FAIL_PRE_T1A2_M4_HARNESS",
-    "failed_step": "test_m4_graphical_shared_gameplay_processes",
-    "m4_assertions": 22,
-    "m4_failures": 4,
-    "passed_client_checks": [
-      "A graphical",
-      "B graphical",
-      "A pickup succeeded",
-      "B deterministic contention rejection",
-      "foreign inventory write rejected",
-      "A received item graph replica",
-      "B received item graph replica",
-      "A and B item graph checksum convergence",
-      "A clean shutdown",
-      "B clean shutdown"
-    ],
-    "failed_server_checks": [
-      "server canonical graph has one beacon",
-      "beacon replicated in shared container",
-      "server item graph checksum",
-      "server and clients item graph checksum convergence"
-    ],
-    "classification": "PRE_EXISTING_M4_PROCESS_HARNESS_FINAL_REPORT_READ_RACE",
-    "t1a2_functional_regression": false,
-    "root_cause": "M4 reads server.json once immediately after both clients complete graceful shutdown. The dedicated server writes that file through AtomicJson on LEAVE and PEER_DISCONNECTED. On Windows the atomic replace can expose a transient path gap; the one-shot FileAccess read can therefore return an empty dictionary while both clients already hold the same valid canonical Item Graph checksum.",
-    "fix_commit": "6e9b9ca296c09650973cfdb728790668fff26013",
-    "fix_policy": "WAIT_FOR_AUTHORITATIVE_SERVER_CHECKSUM_ACKNOWLEDGED_BY_BOTH_CLIENTS",
-    "retest": "PENDING"
-  },
-  "full_regression": "RETEST_REQUIRED_AFTER_M4_HARNESS_FIX",
   "next": "T1A3_ITEM_GRAPH_MATERIALIZATION",
-  "acceptance_note": "T1A.2 focused Windows gate is PASS. The first full composition attempt failed earlier in the suite at an M4 final server-report read race; T1A.2 semantics were not implicated. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until full RUN_WORLD_REGRESSION_TESTS.ps1 passes with the M4 harness fix."
+  "acceptance_note": "Focused T1A.2 passed 186 assertions. Full Windows world regression passed with 203 declared/discovered tests after M4 final-report harness hardening. T1A.2 is SOURCE_ACCEPTED and COMPOSITION_VERIFIED; it is not MAIN_INTEGRATED or PRODUCTION_READY."
 }
