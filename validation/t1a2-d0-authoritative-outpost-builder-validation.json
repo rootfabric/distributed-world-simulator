@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1a2_d0_authoritative_outpost_builder_validation.v1",
   "checkpoint": "T1A2_D0_AUTHORITATIVE_OUTPOST_BUILDER",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_REQUIRED",
+  "decision": "FOCUSED_PASS_COMPOSITION_FIX_REQUIRED",
   "branch": "feature/t1a2-d0-authoritative-outpost-builder",
   "base_branch": "fix/t1-m5-convergence-finish-barrier",
   "base_head": "b34a4377fd68c47522c714995d9448ae8e2e8fb9",
@@ -88,7 +88,38 @@
     "t1a2_acceptance": "PASS_186_ASSERTIONS",
     "result": "PASS"
   },
-  "full_regression": "PENDING_AFTER_FOCUSED_PASS",
+  "full_regression_attempt": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "result": "FAIL_PRE_T1A2_M4_HARNESS",
+    "failed_step": "test_m4_graphical_shared_gameplay_processes",
+    "m4_assertions": 22,
+    "m4_failures": 4,
+    "passed_client_checks": [
+      "A graphical",
+      "B graphical",
+      "A pickup succeeded",
+      "B deterministic contention rejection",
+      "foreign inventory write rejected",
+      "A received item graph replica",
+      "B received item graph replica",
+      "A and B item graph checksum convergence",
+      "A clean shutdown",
+      "B clean shutdown"
+    ],
+    "failed_server_checks": [
+      "server canonical graph has one beacon",
+      "beacon replicated in shared container",
+      "server item graph checksum",
+      "server and clients item graph checksum convergence"
+    ],
+    "classification": "PRE_EXISTING_M4_PROCESS_HARNESS_FINAL_REPORT_READ_RACE",
+    "t1a2_functional_regression": false,
+    "root_cause": "M4 reads server.json once immediately after both clients complete graceful shutdown. The dedicated server writes that file through AtomicJson on LEAVE and PEER_DISCONNECTED. On Windows the atomic replace can expose a transient path gap; the one-shot FileAccess read can therefore return an empty dictionary while both clients already hold the same valid canonical Item Graph checksum.",
+    "fix_commit": "6e9b9ca296c09650973cfdb728790668fff26013",
+    "fix_policy": "WAIT_FOR_AUTHORITATIVE_SERVER_CHECKSUM_ACKNOWLEDGED_BY_BOTH_CLIENTS",
+    "retest": "PENDING"
+  },
+  "full_regression": "RETEST_REQUIRED_AFTER_M4_HARNESS_FIX",
   "next": "T1A3_ITEM_GRAPH_MATERIALIZATION",
-  "acceptance_note": "Focused Windows FIX1 gate passed on c1010d85f7a3c947f125bd6f509ba5b8b45492b2. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until full RUN_WORLD_REGRESSION_TESTS.ps1 passes on the T1A.2 branch."
+  "acceptance_note": "T1A.2 focused Windows gate is PASS. The first full composition attempt failed earlier in the suite at an M4 final server-report read race; T1A.2 semantics were not implicated. SOURCE_ACCEPTED and COMPOSITION_VERIFIED remain false until full RUN_WORLD_REGRESSION_TESTS.ps1 passes with the M4 harness fix."
 }
