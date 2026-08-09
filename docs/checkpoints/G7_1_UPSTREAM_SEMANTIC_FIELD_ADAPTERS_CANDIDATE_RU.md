@@ -1,4 +1,4 @@
-# G7.1 G3/G5/G6 Upstream Semantic Field Adapters — IMPLEMENTED CANDIDATE
+# G7.1 G3/G5/G6 Upstream Semantic Field Adapters — FIX1 IMPLEMENTED CANDIDATE
 
 **Дата:** 2026-08-10
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
@@ -22,24 +22,49 @@ G6 river/fluid geography
 
 Adapters возвращают partial semantic samples. Их объединение в единый deterministic bundle остаётся G7.2.
 
-## G3 adapter
+## Первый реальный Windows gate
 
-`semantic-adapter/g3-surface-v1` проецирует accepted provider output:
-
-```text
-geo/surface-height-m
-```
-
-Значение не пересчитывается по собственной формуле G7: adapter вызывает upstream provider и оборачивает его результат в `SemanticFieldSample`.
-
-Provenance сохраняет:
+Первый full-checkout запуск корректно остановился внутри focused G7.1 suite:
 
 ```text
-provider_id
-provider descriptor checksum
-contract version
-generator version
+assertions reached     54
+failures               6
+world regression       NOT RUN
+full gate              FAIL FAST
 ```
+
+Это не изменение G6/G5 runtime и не P0 regression. Initial G7.1 candidate неверно повторил две формы accepted upstream API.
+
+## Fix1 — G3 provider envelope
+
+Accepted `GeoProvider.success(values)` имеет форму:
+
+```text
+{
+  success: true,
+  details: {
+    values: {
+      geo/surface-height-m: ...
+    }
+  }
+}
+```
+
+Initial adapter ошибочно читал:
+
+```text
+provider_result.details[geo/surface-height-m]
+```
+
+Fix1 читает canonical path:
+
+```text
+provider_result.details.values[geo/surface-height-m]
+```
+
+Это объясняет пять ранних G3 failures: adapter возвращал failure; subsequent assertions получали пустые handled fields/sample/provenance, после чего старый test обращался к `source_refs[0]` и прекращал оставшуюся часть G3 subtest.
+
+Test теперь отдельно проверяет наличие canonical `details.values` и guard-ит source ref lookup, чтобы один root cause больше не создавал cascade/noisy runtime error.
 
 ## G5 adapter
 
@@ -55,19 +80,39 @@ geo/valley-influence
 FEATURE_BOUNDS_FALLOFF_V1
 ```
 
-Это нормализованный deterministic influence внутри accepted G5 `FeatureBounds`. Он предназначен как feature-derived semantic proxy и **не является geomorphology**. G8 по-прежнему владеет valley incision, banks, floodplain и terrain shaping.
+Это deterministic feature-derived proxy внутри accepted G5 `FeatureBounds`, а не geomorphology. G8 по-прежнему владеет valley incision, banks, floodplain и terrain shaping.
 
 При совпадении provenance сохраняет исходный G5 `FeatureId` и checksum. Вне valley bounds значение равно `0`, и adapter не изобретает фиктивный FeatureId.
 
-## G6 adapter
+## Fix1 — G6 channel width
 
-`semantic-adapter/g6-fluid-v1` использует accepted `WaterSurfaceResolverV1` и проецирует:
+Accepted `WaterSurfaceSample` использует canonical key:
+
+```text
+channel_width_m
+```
+
+Initial G7.1 ошибочно использовал:
+
+```text
+width_m
+```
+
+Поэтому видимая шестая ошибка была:
+
+```text
+FAIL: river-width projects G6 channel width
+```
+
+Fix1 проецирует:
 
 ```text
 geo/river-distance-m          <- distance_to_centerline_m
-geo/river-width-m             <- channel width_m
+geo/river-width-m             <- channel_width_m
 geo/fluid-surface-distance-m  <- distance_to_surface_m
 ```
+
+Test теперь отдельно доказывает `channel_width_m` и отсутствие stale `width_m` alias.
 
 Provenance сохраняет canonical upstream refs:
 
@@ -82,15 +127,20 @@ resolver id/version
 
 Adapter не создаёт собственную River identity или FluidRegion identity.
 
-## Registry
-
-Следующие fields переведены из vocabulary-only в:
+## Current Fix1 blobs
 
 ```text
-ADAPTER_AVAILABLE_G7_1
+G3 adapter  c728cfed5a2b3dd55d23b81b250177af19746623
+G5 adapter  39ef95704cdf516b10146d2fa79b0d80bf173492
+G6 adapter  437d82b7f056648045fff08f1daa57968331104c
+G7.1 test   1af618356b700e5c87a55b42daa05d35b267014e
 ```
 
-Поля:
+The pre-Fix1 assistant stub smoke is superseded and must not be used as acceptance evidence: its fake upstream results were too permissive and did not reproduce `details.values` / `channel_width_m` exactly.
+
+## Registry
+
+Adapter-backed:
 
 ```text
 geo/valley-influence
@@ -99,7 +149,7 @@ geo/river-width-m
 geo/fluid-surface-distance-m
 ```
 
-Остаются vocabulary-only:
+Vocabulary-only remains:
 
 ```text
 geo/slope
@@ -110,46 +160,17 @@ geo/temperature-baseline
 geo/moisture-baseline
 ```
 
-`geo/surface-height-m` уже имел accepted upstream identity и теперь получил explicit G3 adapter.
+`geo/surface-height-m` already had accepted upstream identity and has an explicit G3 adapter.
 
 ## G7.0 forward compatibility
 
-Accepted G7.0 test раньше фиксировал candidate-era availability и требовал `VOCABULARY_ONLY_G7_0` для всех десяти будущих полей. G7.1 меняет только planned availability четырёх полей, поэтому regression assertion теперь допускает:
+G7.0 keeps all 13 identity/type contracts. Its regression assertion now permits the planned availability transition only for G7.1 adapter fields:
 
 ```text
-planned adapter fields:
-  VOCABULARY_ONLY_G7_0 OR ADAPTER_AVAILABLE_G7_1
-
-remaining future fields:
-  VOCABULARY_ONLY_G7_0 only
+VOCABULARY_ONLY_G7_0 -> ADAPTER_AVAILABLE_G7_1
 ```
 
-Количество, identity и typed contracts всех 13 G7.0 fields не изменены.
-
-## Assistant exact-engine structural evidence
-
-Project-provided Godot:
-
-```text
-4.7.1.stable.double.custom_build.a13da4feb
-```
-
-Проверены byte-exact опубликованные adapter blobs:
-
-```text
-G3  aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a
-G5  39ef95704cdf516b10146d2fa79b0d80bf173492
-G6  f625644204882f41e7a2919eeba785aaa4788489
-```
-
-Результат:
-
-```text
-published adapter parse/load       PASS
-G7_1_ADAPTER_STUB_SMOKE            PASS
-```
-
-Smoke использует stubbed accepted upstream API shapes. Это structural author-side evidence, а не замена full checkout regression.
+No field identity changed.
 
 ## P0 boundaries
 
@@ -163,26 +184,20 @@ adapter != Scheduler / Cache owner
 adapter != Geomorphology
 ```
 
-Особенно:
+Especially:
 
 ```text
 Semantic sample provenance references FeatureId / FluidRegionId
 Semantic sample does not replace FeatureId / FluidRegionId
 ```
 
-## Tests
+## Acceptance
 
-Focused acceptance проверяет:
+Strengthened focused suite should now complete all paths and end with:
 
-- registry activation;
-- G3 semantic value == direct accepted provider value;
-- G5 valley center influence и zero-influence outside bounds;
-- G5 provenance сохраняет FeatureId;
-- G6 values == direct WaterSurfaceResolver values;
-- G6 provenance сохраняет FeatureId и FluidRegionId;
-- repeated adapter calls deterministic;
-- adapter не выдаёт fields, которыми не владеет;
-- G7.0 contracts продолжают проходить.
+```text
+G7.1 Upstream Semantic Field Adapters: 59 assertions, 0 failures
+```
 
 Focused command:
 
@@ -191,13 +206,13 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1 -GodotPath $Godot
 ```
 
-Full acceptance:
+Full acceptance after focused PASS:
 
 ```powershell
 .\RUN_G7_1_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Full runner additionally проверяет strict G7.1 changed-file allowlist, current G6 ancestry, G7.0 accepted ancestry, GLOBAL-P0 alignment, full world/core regression и final hygiene.
+Full runner additionally checks strict G7.1 changed-file allowlist, current G6 ancestry, G7.0 accepted ancestry, GLOBAL-P0 alignment, full world/core regression and final hygiene.
 
 ## Следующий checkpoint после acceptance
 
@@ -205,4 +220,4 @@ Full runner additionally проверяет strict G7.1 changed-file allowlist, 
 G7.2 — Composition / Provenance
 ```
 
-G7.2 должен объединять partial samples из этих adapters в deterministic semantic bundle без создания scheduler/cache ownership.
+G7.2 объединит partial samples into deterministic semantic bundle без scheduler/cache ownership.
