@@ -1,0 +1,53 @@
+{
+  "schema": "planet_simulator.ch8c_fix10_body_visible_inflated_overlay_validation.v1",
+  "branch": "feature/ch8-layered-equipment",
+  "decision": "FIX10_BODY_VISIBLE_INFLATED_OVERLAY_IMPLEMENTED_PENDING_WINDOWS_RERUN_AND_GRAPHICAL_ACCEPTANCE",
+  "goal": "Keep the complete imported base body visible and intact while making only clothing surfaces slightly larger so layered garments cover the body without topology/material body removal.",
+  "default_fit_policy": "BODY_VISIBLE_INFLATED_OVERLAY",
+  "fallback_fit_policy": "TOPOLOGY_OCCLUSION",
+  "body_contract": {
+    "base_mesh_resource_must_remain_exact": true,
+    "base_material_resource_must_remain_exact": true,
+    "material_suppression_regions": 0,
+    "topology_presentations": 0,
+    "removed_body_triangles": 0,
+    "gameplay_body_changes": false,
+    "collision_changes": false,
+    "item_graph_changes": false,
+    "network_changes": false
+  },
+  "wearable_surface_policy": {
+    "included_material_names": ["MI_Peasant"],
+    "reason": "Male_Peasant_Arms also contains MI_Regular_Male skin; body-visible overlay must not render/inflate duplicate garment-embedded skin.",
+    "source_asset_mutation": false,
+    "shared_material_mutation": false
+  },
+  "inflation_profiles_m": {
+    "upper": [0.004, 0.007, 0.008, 0.004],
+    "lower": [0.006, 0.010, 0.014, 0.012, 0.006],
+    "feet": [0.005, 0.008, 0.012, 0.016]
+  },
+  "automated_gates": {
+    "new_default_policy": "res://tests/characters/test_ch8c_body_visible_inflated_overlay.gd",
+    "graphical_lab_smoke": "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd",
+    "vertex_inflation_contract": "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd",
+    "topology_fallback_regression": "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd",
+    "high_boot_fallback_regression": "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd",
+    "full_runner": ".\\RUN_CH8_LAYERED_EQUIPMENT_TESTS.ps1 -GodotPath $Godot"
+  },
+  "graphical_gate": {
+    "launcher": ".\\PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1 -GodotPath $Godot",
+    "required": [
+      "no leg/body truncation above boot collars or garment openings",
+      "no visible skin penetration through solid trousers during movement",
+      "no visible calf/foot penetration through solid footwear during movement",
+      "intentional garment holes show the intact base body",
+      "upper does not duplicate or inflate embedded MI_Regular_Male skin",
+      "garments do not look excessively ballooned or detached",
+      "underwear/pelvis remains intact",
+      "idle/walk/run/turn/jump/crouch remain coherent",
+      "FP/TP and shadow remain coherent"
+    ]
+  },
+  "acceptance_state": "PENDING_WINDOWS_RERUN"
+}
