@@ -1,0 +1,20 @@
+{
+  "schema": "planet_simulator.validation.g6_post_acceptance_m4_report_race_fix1.v1",
+  "checkpoint": "g6-post-acceptance-m4-report-race-fix1",
+  "decision": "IMPLEMENTED_SHARED_TEST_HARNESS_FIX",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "trigger": "G7.0 full world regression M4 server report read returned an empty snapshot while both clients converged",
+  "root_cause": "single non-waiting FileAccess read raced AtomicJson target-to-backup replacement during concurrent server disconnect report write",
+  "production_runtime_changed": false,
+  "item_graph_semantics_changed": false,
+  "network_protocol_changed": false,
+  "test_file_blob": "9a17996df2545efbaaa807283b9ec70542e35128",
+  "assistant_exact_engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "race_smoke": "PASS",
+    "marker": "M4_REPORT_RACE_SMOKE: PASS"
+  },
+  "required_windows_validation": "RUN_G7_0_FULL_ACCEPTANCE.ps1",
+  "g6_source_acceptance_preserved": true
+}
