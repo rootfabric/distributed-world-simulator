@@ -33,7 +33,16 @@
   },
   "assistant_exact_engine": {
     "version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "status": "PENDING_POST_PUBLICATION_SMOKE"
+    "precision": "double",
+    "platform": "linux-x86_64",
+    "published_adapter_blob_parse": "PASS",
+    "stubbed_upstream_api_shape_smoke": "PASS",
+    "marker": "G7_1_ADAPTER_STUB_SMOKE: PASS",
+    "scope": "BYTE_EXACT_PUBLISHED_ADAPTERS_WITH_STUBBED_ACCEPTED_UPSTREAM_API_SHAPES",
+    "g3_adapter_blob": "aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a",
+    "g5_adapter_blob": "39ef95704cdf516b10146d2fa79b0d80bf173492",
+    "g6_adapter_blob": "f625644204882f41e7a2919eeba785aaa4788489",
+    "full_repository_checkout_available": false
   },
   "required_windows_acceptance": {
     "focused_runner": "RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1",
