@@ -1,0 +1,43 @@
+{
+  "schema": "planet_simulator.g7_2_composition_provenance_manifest.v1",
+  "checkpoint": "g7.2-composition-provenance",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_1_accepted_commit": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
+  "composer": {
+    "composer_id": "semantic-composer/g7-2-v1",
+    "version": "1.0.0",
+    "policy": "semantic-composition-policy/require-complete-v1",
+    "output": "SemanticFieldBundle + SemanticFieldCompositionReceipt"
+  },
+  "rules": {
+    "partial_result_order_affects_output": false,
+    "missing_requested_field_allowed": false,
+    "duplicate_field_ownership_allowed": false,
+    "duplicate_adapter_allowed": false,
+    "unrequested_field_allowed": false,
+    "sample_payload_rewritten": false,
+    "upstream_provenance_rewritten": false
+  },
+  "receipt": {
+    "pins_query_checksum": true,
+    "pins_bundle_checksum": true,
+    "pins_sample_checksums": true,
+    "pins_provenance_checksums": true,
+    "contributions_sorted_by_adapter_id": true
+  },
+  "p0": {
+    "owns_world_query": false,
+    "owns_spatial_identity": false,
+    "owns_authority": false,
+    "owns_interest": false,
+    "owns_persistence": false,
+    "owns_network_replication": false,
+    "owns_material_ontology": false,
+    "owns_scheduler_cache": false,
+    "creates_new_feature_identity": false,
+    "creates_new_fluid_identity": false
+  },
+  "next_stage": "G7.3 Cross-Cell / Cross-LOD Invariance"
+}
