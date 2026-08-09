@@ -47,15 +47,13 @@ func _run() -> void:
 	_assert(is_equal_approx(_profile_max(lab, UPPER_PRESENTATION_ID), 0.008), "CH8C fix10 upper inflation max mismatch")
 	_assert(is_equal_approx(_profile_max(lab, LOWER_PRESENTATION_ID), 0.014), "CH8C fix10 lower inflation max mismatch")
 	_assert(is_equal_approx(_profile_max(lab, FEET_PRESENTATION_ID), 0.016), "CH8C fix10 feet inflation max mismatch")
+	var upper_inflation: Dictionary = lab.inflation_reports[UPPER_PRESENTATION_ID]
+	_assert(int(upper_inflation.get("filtered_surface_count", 0)) >= 1, "CH8C fix10 upper did not filter embedded skin surface")
+	_assert((upper_inflation.get("included_material_names", []) as Array).has("MI_Peasant"), "CH8C fix10 upper clothing material filter missing")
 	_assert(String(lab.status_label.text).contains("fit policy: BODY_VISIBLE_INFLATED_OVERLAY"), "CH8C fix10 status does not expose fit policy")
 
 	_assert_body_intact(lab, body_mesh, original_mesh, original_material, "initial")
-
-	for pair in [
-		[UPPER_ITEM_ID, UPPER_PROFILE_ID],
-		[LOWER_ITEM_ID, LOWER_PROFILE_ID],
-		[FEET_ITEM_ID, FEET_PROFILE_ID],
-	]:
+	for pair in [[UPPER_ITEM_ID, UPPER_PROFILE_ID], [LOWER_ITEM_ID, LOWER_PROFILE_ID], [FEET_ITEM_ID, FEET_PROFILE_ID]]:
 		var on_result: Dictionary = lab.call("_toggle_layer", String(pair[0]), String(pair[1]))
 		_assert(bool(on_result.get("success", false)), "CH8C fix10 equip failed for %s" % String(pair[0]))
 		await process_frame
@@ -66,11 +64,7 @@ func _run() -> void:
 	_assert(lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C fix10 feet item missing")
 	_assert(String(lab.status_label.text).contains("upper: ON | lower: ON | feet: ON"), "CH8C fix10 status did not reflect all layers")
 
-	for pair in [
-		[FEET_ITEM_ID, FEET_PROFILE_ID],
-		[LOWER_ITEM_ID, LOWER_PROFILE_ID],
-		[UPPER_ITEM_ID, UPPER_PROFILE_ID],
-	]:
+	for pair in [[FEET_ITEM_ID, FEET_PROFILE_ID], [LOWER_ITEM_ID, LOWER_PROFILE_ID], [UPPER_ITEM_ID, UPPER_PROFILE_ID]]:
 		var off_result: Dictionary = lab.call("_toggle_layer", String(pair[0]), String(pair[1]))
 		_assert(bool(off_result.get("success", false)), "CH8C fix10 unequip failed for %s" % String(pair[0]))
 		await process_frame
@@ -81,7 +75,6 @@ func _run() -> void:
 	_assert(not lab.equipment_source.has_item(FEET_ITEM_ID), "CH8C fix10 feet remained equipped")
 	_assert(lab.player.position.is_equal_approx(player_position_before), "CH8C fix10 moved gameplay CharacterBody3D")
 	_assert(is_equal_approx(float(lab.player_capsule.height), capsule_height_before), "CH8C fix10 changed gameplay capsule")
-
 	lab.queue_free()
 	_finish()
 
