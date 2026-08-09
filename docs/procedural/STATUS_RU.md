@@ -10,38 +10,44 @@ G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
 G6.3 Runtime WaterSurfaceQuery         ACCEPTED
 G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
-G6 Full Acceptance                     FIX2 IMPLEMENTED CANDIDATE
+G6 Full Acceptance                     FIX3 IMPLEMENTED CANDIDATE
 ```
 
-G6.4 Windows evidence remains accepted:
+Current G6 full-acceptance evidence:
 
 ```text
-G6.4 contracts                         PASS — 158
-adaptive macro surface                 PASS
-far -> near LOD                        1 -> 9
-far -> near triangles                  120 -> 4176
-manual graphical observation           PASS_BY_USER_OBSERVATION
+G6.0-G6.4 focused chain                PASS
+MW10 lock release retry                PASS (12 assertions)
+world regression manifest coverage     PASS
+RUN_WORLD_REGRESSION_TESTS.ps1         PASS
+main_scene_cli_all                      PASS (6 tests, 0 fail)
+world regression terminal marker       PASS
+final hygiene                          FAIL — transient Microsoft/ only
 ```
 
-The first G6 full-gate attempt progressed through G6.4 and MW10 retry `12/12`, then stopped at world regression coverage because the new MW10 retry test was not declared in `RUN_WORLD_REGRESSION_TESTS.ps1`. Fix1 added that declaration in shared G5 and synchronized it into G6.
-
-The next preflight found one generated untracked Godot sidecar:
+The full Windows world/core regression completed successfully and printed:
 
 ```text
-tests/matter/transactions/test_mw10_lock_release_retry.gd.uid
+All world/core regression tests through NX4 client prediction and reconciliation passed.
 ```
 
-Fix2 tracks that UID in shared G5 using project-provided Godot-generated value:
+The only remaining blocker was an untracked root `Microsoft/` directory created by Windows child-process profile handling after the regression had already passed.
+
+Fix3 is acceptance-harness-only. `RUN_G6_FULL_ACCEPTANCE.ps1` now snapshots whether `Microsoft/` existed before the run and removes it after child processes only when all of the following are true:
 
 ```text
-uid://yush8dg03nlf
+directory did not exist before the run
+path is Microsoft/ at repository root
+Git reports no tracked files under Microsoft/
 ```
 
-After the current G5→G6 lineage sync, rerun only:
+Pre-existing or tracked content is never deleted. No hydrology, Matter, world runtime, or test semantics changed.
 
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G6_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+Because the full world regression is already green and the only post-tested changes are the cleanup logic plus validation/status records, the closeout does not require another full world regression. Required closeout is PowerShell parse + clean tree + `git diff --check` on the updated head.
+
+After that:
+
+```text
+G6 Full Acceptance -> SOURCE_ACCEPTED
+next -> G7 Semantic Field Fabric
 ```
-
-If it reaches `G6 FULL ACCEPTANCE: PASS`, record G6 SOURCE_ACCEPTED and proceed to G7 Semantic Field Fabric.
