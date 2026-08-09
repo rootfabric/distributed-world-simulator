@@ -1,9 +1,9 @@
 {
-  "schema": "planet_simulator.ch8_layered_equipment_validation.v17",
+  "schema": "planet_simulator.ch8_layered_equipment_validation.v18",
   "branch": "feature/ch8-layered-equipment",
   "base_exact_sha": "385328a693683bd958dabe716a08b3ef61272170",
   "base_checkpoint": "CH7.8 skinned garment + fused-body head clip — ACCEPTED",
-  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX9_PROFILE_VERTEX_INFLATION_PENDING_WINDOWS_RERUN",
+  "decision": "CH8A_ACCEPTED_CH8B_ACCEPTED_CH8C_FIX9_FIX1_NORMAL_EQUIVALENCE_PENDING_WINDOWS_RERUN",
   "goal": "Preserve the accepted topology-aware body occlusion while adding a millimetre-scale garment separation reserve so skinned body surfaces do not re-penetrate trousers or tall boots after animation begins.",
   "windows_acceptance_so_far": {
     "ch8a": "ACCEPTED — layered contract 57 assertions, presentation diff 51 assertions, combined regression PASS",
@@ -100,7 +100,13 @@
     },
     "mesh_contract": {
       "changes": ["rest vertex positions only"],
-      "preserves": ["normals", "indices", "materials", "UV arrays", "bone indices", "weights", "MeshInstance3D skin/skeleton binding"],
+      "preserves_exact": ["indices", "materials", "UV arrays", "bone indices", "weights", "MeshInstance3D skin/skeleton binding"],
+      "preserves_semantic": ["normal count", "normal direction", "normal length within tight tolerance after ArrayMesh rendering round-trip"],
+      "normal_gate": {
+        "min_normalized_dot": 0.9999,
+        "max_length_delta": 0.001,
+        "reason": "ArrayMesh surface reconstruction may round-trip packed normal storage without preserving exact PackedVector3Array bits; the accepted contract is the same normal field, while source-scene normals remain exact and unmutated."
+      },
       "source_scene_mutated": false,
       "imported_asset_mutated": false,
       "per_frame_mesh_rebuild": false,
@@ -123,6 +129,31 @@
     "reason_for_peak_difference": "No synthetic source vertex lies exactly on the profile peak t=0.45; configured and observed maxima are therefore reported separately.",
     "scope_limit": "The sandbox does not contain the real Quaternius asset bytes, so Male_Peasant acceptance remains a Windows gate."
   },
+  "fix9_windows_history": {
+    "attempt1": {
+      "script": "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd",
+      "result": "FAIL 2 / 49 assertions",
+      "failures": [
+        "exact PackedVector3Array normal equality failed for Male_Peasant_Legs",
+        "exact PackedVector3Array normal equality failed for Male_Peasant_Feet"
+      ],
+      "important_passed_contracts": [
+        "real Male_Peasant selective scenes loaded",
+        "vertex inflation factory executed for both lower and feet",
+        "indices remained exact-equal",
+        "bone indices remained exact-equal",
+        "weights remained exact-equal",
+        "source vertices remained unmutated"
+      ],
+      "classification": "OVERSTRICT_NORMAL_ROUNDTRIP_ASSERTION",
+      "visual_runtime_conclusion": "NOT_REACHED — focused gate stopped before graphical acceptance"
+    },
+    "fix1": {
+      "commit": "ac2fab4883ca6b901b06d5a33f37546a3d69ca2c",
+      "change": "Replace exact rebuilt-normal array equality with a semantic field check: equal count, normalized dot >= 0.9999, length delta <= 0.001; retain exact source-normal immutability and exact indices/bones/weights gates.",
+      "status": "PENDING_WINDOWS_RERUN"
+    }
+  },
   "fix9_commits": {
     "vertex_inflation_factory": "148d486897653eb0ede529c069459c486bfe47c3",
     "lab_integration": "71c0e80c5a58e1f65a07467913d1ae78f6560447",
@@ -132,6 +163,7 @@
     "configured_vs_observed_telemetry": "991e1cdf8f47b7642447a77fa2e7fc910f988a01",
     "real_gate_peak_tolerance": "257a3219b82d23b4ee946aa7d671c7548415a784",
     "lab_configured_peak_assertions": "3db27016c08c3ab66eb0d6ad8049274a1d328be1",
+    "normal_roundtrip_gate_fix": "ac2fab4883ca6b901b06d5a33f37546a3d69ca2c",
     "design_doc": "b05f6e729d680b8c7cdd248681da6b72b7677e57"
   },
   "completed_fix7_windows_gates": {
