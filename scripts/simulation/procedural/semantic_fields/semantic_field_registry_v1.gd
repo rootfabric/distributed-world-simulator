@@ -56,7 +56,11 @@ static func field_ids() -> Array:
 
 
 static func manifest_hash() -> String:
-	return GeoUtilsScript.payload_hash({"registry_id": REGISTRY_ID, "version": VERSION, "descriptors": descriptors()})
+	return GeoUtilsScript.payload_hash({
+		"registry_id": REGISTRY_ID,
+		"version": VERSION,
+		"descriptors": descriptors(),
+	})
 
 
 static func validate_registry() -> Dictionary:
@@ -91,5 +95,9 @@ static func _register(target: Dictionary, field_id: String, unit: String, availa
 		DomainScript.BODY_SURFACE_POINT,
 		unit,
 		VERSION,
-		{"availability": availability, "description": description, "representation_owned": false}
+		{
+			"availability": availability,
+			"description": description,
+			"representation_owned": false,
+		}
 	)
