@@ -37,11 +37,16 @@
     "platform": "linux-x86_64",
     "published_adapter_blob_parse": "PASS",
     "stubbed_upstream_api_shape_smoke": "PASS",
-    "marker": "G7_1_ADAPTER_STUB_SMOKE: PASS",
-    "scope": "BYTE_EXACT_PUBLISHED_ADAPTERS_WITH_STUBBED_ACCEPTED_UPSTREAM_API_SHAPES",
+    "adapter_smoke_marker": "G7_1_ADAPTER_STUB_SMOKE: PASS",
+    "published_acceptance_test_stubbed_run": "PASS",
+    "published_acceptance_test_assertions": 53,
+    "published_acceptance_test_failures": 0,
+    "acceptance_test_marker": "G7.1 Upstream Semantic Field Adapters: 53 assertions, 0 failures",
+    "scope": "BYTE_EXACT_PUBLISHED_ADAPTERS_AND_ACCEPTANCE_TEST_WITH_STUBBED_ACCEPTED_UPSTREAM_API_SHAPES",
     "g3_adapter_blob": "aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a",
     "g5_adapter_blob": "39ef95704cdf516b10146d2fa79b0d80bf173492",
     "g6_adapter_blob": "f625644204882f41e7a2919eeba785aaa4788489",
+    "acceptance_test_blob": "204d547a028f0fe342069be9f4b34e9fe381f844",
     "full_repository_checkout_available": false
   },
   "required_windows_acceptance": {
