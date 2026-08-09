@@ -5,6 +5,7 @@
   "branch": "feature/t1a3-item-graph-materialization",
   "base_head": "47d41c097941b834c3b5eab79510a0a8c39d873d",
   "candidate_head": "db90a1c21368060500bfca0da117a059cbcab5b8",
+  "focused_evidence_commit": "82f0fb3fe639d3fa45e24d869e8f0e59a6752899",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
