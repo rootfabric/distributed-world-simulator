@@ -30,9 +30,15 @@
     "ordinary_mw10_transactions": "PASS_184_ASSERTIONS",
     "ordinary_mw10_processes": "PASS_51_ASSERTIONS"
   },
+  "shared_regression_integration": {
+    "world_runner_fix_commit": "69cfaf9171127df7af563b5f9af6812d7775b74d",
+    "world_runner_declares_retry_test": true,
+    "retry_test_uid_tracked": true,
+    "retry_test_uid": "uid://yush8dg03nlf"
+  },
   "architecture": {
     "shared_baseline_owner": "feature/g5-world-feature-graph",
     "g6_private_copy_allowed": false,
-    "next": "resynchronize G6 with real G5 ancestry and run G6 full acceptance"
+    "next": "resynchronize G6 with current G5 ancestry and run G6 full acceptance"
   }
 }
