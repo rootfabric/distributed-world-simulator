@@ -1,0 +1,68 @@
+{
+  "schema": "planet_simulator.g7_0_semantic_field_contracts.v1",
+  "checkpoint": "g7.0-semantic-field-contracts",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "base_branch": "feature/g6-hydrology-fluid-surface-v0",
+  "base_commit": "303d6830593cd3b4fbb20641daa90d6bef5d7ada",
+  "branch": "feature/g7-semantic-field-fabric",
+  "contracts": [
+    "SemanticFieldId",
+    "SemanticFieldValueType",
+    "SemanticFieldDomain",
+    "SemanticFieldDescriptor",
+    "SemanticFieldProvenance",
+    "SemanticFieldQuery",
+    "SemanticFieldSample",
+    "SemanticFieldBundle",
+    "SemanticFieldRegistryV1"
+  ],
+  "compatibility": {
+    "existing_geo_field_ids_preserved": true,
+    "geo_field_bundle_replaced": false,
+    "geo_sample_replaced": false,
+    "geo_kernel_changed": false
+  },
+  "invariants": {
+    "semantic_field_id_depends_on_surface_cell": false,
+    "semantic_field_id_depends_on_lod": false,
+    "semantic_field_id_depends_on_authority_region": false,
+    "semantic_field_id_depends_on_interest_region": false,
+    "semantic_field_query_is_universal_world_query": false,
+    "semantic_field_query_has_renderer_state": false,
+    "semantic_field_query_has_network_state": false,
+    "g7_owns_material_ontology": false,
+    "g7_owns_scheduler_cache": false,
+    "g7_owns_persistence": false,
+    "g7_owns_network_replication": false
+  },
+  "registry": {
+    "id": "semantic-field-registry/geo-v1",
+    "version": "1.0.0",
+    "upstream_accepted_fields": [
+      "geo/base-surface-height-m",
+      "geo/macro-surface-height-m",
+      "geo/surface-height-m"
+    ],
+    "vocabulary_only_fields": [
+      "geo/continentalness",
+      "geo/curvature",
+      "geo/drainage-potential",
+      "geo/fluid-surface-distance-m",
+      "geo/moisture-baseline",
+      "geo/river-distance-m",
+      "geo/river-width-m",
+      "geo/slope",
+      "geo/temperature-baseline",
+      "geo/valley-influence"
+    ]
+  },
+  "deferred": {
+    "g3_g5_g6_adapters": "G7.1",
+    "composition_and_provenance_execution": "G7.2",
+    "cross_cell_cross_lod_invariance": "G7.3",
+    "semantic_field_lab": "G7.4",
+    "scheduler_cache_execution": "G12",
+    "material_definition_bridge": "P0-3/G9_GATE"
+  }
+}

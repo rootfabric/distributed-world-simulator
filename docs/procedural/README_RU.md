@@ -3,88 +3,100 @@
 Current implementation branch:
 
 ```text
-feature/g6-hydrology-fluid-surface-v0
+feature/g7-semantic-field-fabric
 ```
 
 Current state:
 
 ```text
-G6.0 ACCEPTED
-G6.1 ACCEPTED
-G6.2 ACCEPTED
-G6.3 ACCEPTED
-G6.4 ACCEPTED
-G6 FULL ACCEPTANCE — SOURCE_ACCEPTED
+G6 Hydrology / Fluid Surface           SOURCE_ACCEPTED
+G6 P0 Alignment Cleanup                ACCEPTED
+G7.0 Semantic Field Contracts          IMPLEMENTED CANDIDATE
 ```
 
-Architecture status remains intentionally separated:
+G7.0 is intentionally contract-first. It adds typed field identity/descriptors/query/sample/provenance and a registry vocabulary without changing GeoKernel, G6 Hydrology, Matter, network, authority or persistence.
+
+Core relationship:
 
 ```text
-SOURCE_ACCEPTED        YES
-MAIN_INTEGRATED        NO
-COMPOSITION_VERIFIED   NO
-PRODUCTION_READY       NO
+G0 GeoFieldBundle / GeoSample
+        = provider execution payload, preserved
+
+G7 SemanticField contracts
+        = typed semantic metadata/query/result boundary
 ```
 
-Accepted G6 evidence:
+Initial registry preserves accepted upstream IDs:
 
 ```text
-G6.4 contracts                         PASS — 158 assertions
-Adaptive Macro Surface                 PASS
-far_lod -> near_lod                    1 -> 9
-far_triangles                          120 -> 4176
-MW10 lock release retry                PASS — 12 assertions
-RUN_WORLD_REGRESSION_TESTS.ps1         PASS
-main_scene_cli_all                      PASS — 6 / 0 fail
-PowerShell Fix3 parser                  PASS
-git diff --check G5...G6               PASS
-working tree                            CLEAN
+geo/base-surface-height-m
+geo/macro-surface-height-m
+geo/surface-height-m
 ```
 
-G6 remains P0-aligned: G5 owns river feature identity; G6 owns fluid geography/query semantics; G6.4 is derived presentation. Cell/LOD/renderer/network/authority do not own fluid identity.
-
-Additional P0 bridge fixed after acceptance audit:
+and reserves vocabulary for:
 
 ```text
-FluidRegionId        = geographic fluid identity
-FluidTypeId          = fluid-domain semantic class
-MaterialDefinitionId = future shared P0 material identity
+geo/slope
+geo/curvature
+geo/valley-influence
+geo/river-distance-m
+geo/river-width-m
+geo/fluid-surface-distance-m
+geo/drainage-potential
+geo/continentalness
+geo/temperature-baseline
+geo/moisture-baseline
+```
 
+Vocabulary-only does not mean implemented provider. Actual G3/G5/G6 adapters are the next checkpoint, G7.1.
+
+P0 guards remain mandatory:
+
+```text
+SemanticFieldId != SurfaceCellKey
+SemanticFieldId != LOD
+SemanticFieldQuery != universal WorldQuery Fabric
 FluidTypeId != MaterialDefinitionId
+G7 != Material Ontology
+G7 != Authority / Interest / Persistence / Network
+G7 != Scheduler / Cache execution owner
 ```
 
-Next development line:
+Assistant exact-engine isolated gate:
 
 ```text
-G7 Semantic Field Fabric
-    -> G8 Geomorphology
-    -> G9 Layered Geology
-    -> G10 GeoVolume / SDF
-    -> G11 Heterogeneous Body Lab
-    -> G12 Scheduler / Cache / Provenance
-    -> G13 Detail Contract Freeze
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+headless editor import                PASS
+G7.0 contracts                        PASS — 208 assertions
 ```
 
-Important gates:
+Full-checkout acceptance remains pending. Run:
 
-- G7 is a domain semantic-field fabric, not a replacement for WorldAddress / universal WorldQuery / authority / persistence / network foundations;
-- G8 owns procedural river/valley incision, banks, floodplain and erosion baseline;
-- G9 formal material acceptance requires the P0 Unified Material Ontology bridge;
-- G10 GeoVolume/SDF must not become a second Matter implementation;
-- G12 may schedule/cache/provide provenance but must not own authority or persistence;
-- representation/detail experiments may run in parallel but remain derived.
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1 -GodotPath $Godot
+```
 
-Detailed plan:
+Candidate details:
+
+```text
+docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_CANDIDATE_RU.md
+validation/g7-0-semantic-field-contracts-validation.json
+config/procedural/g7-0-semantic-field-contracts.v1.json
+```
+
+Detailed G7–G13 plan:
 
 ```text
 docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md
 config/procedural/g7-g13-p0-aligned-roadmap.v1.json
 ```
 
-Immediate next implementation checkpoint:
+Next after G7.0 acceptance:
 
 ```text
-G7.0 Semantic Field Contracts + Registry Vocabulary
+G7.1 — G3/G5/G6 Upstream Semantic Field Adapters
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.

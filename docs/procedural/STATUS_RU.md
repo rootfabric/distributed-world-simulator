@@ -1,6 +1,6 @@
 # Universal World Generation Fabric — status ledger
 
-**Current branch:** `feature/g6-hydrology-fluid-surface-v0`
+**Current branch:** `feature/g7-semantic-field-fabric`
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
@@ -12,76 +12,73 @@ G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
 G6 Full Acceptance                     SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
+G7.0 Semantic Field Contracts          IMPLEMENTED CANDIDATE
 ```
 
-Final G6 Windows evidence:
+G7.0 introduces a typed semantic-field boundary while preserving the existing G0 provider execution payload:
 
 ```text
-G6.0-G6.4 focused chain                PASS
-MW10 lock release retry                PASS (12 assertions)
-world regression manifest coverage     PASS
-RUN_WORLD_REGRESSION_TESTS.ps1         PASS
-main_scene_cli_all                      PASS (6 tests, 0 fail)
-PowerShell Fix3 parser                  PASS
-git status --porcelain                 EMPTY
-git diff --check G5...G6               PASS
-working tree                           CLEAN
+GeoFieldBundle / GeoSample             PRESERVED
+GeoKernel                               UNCHANGED
+existing geo/* field identities         PRESERVED
+SemanticField registry                  ADDED
+SemanticField typed query/sample        ADDED
 ```
 
-Full world/core regression terminal marker:
+Registry v1 contains 13 fields: three accepted upstream field identities and ten vocabulary-only fields reserved for G7.1+ providers/adapters.
+
+P0 ownership remains explicit:
 
 ```text
-All world/core regression tests through NX4 client prediction and reconciliation passed.
-```
-
-Runtime-tested head was `c165f797304334d1fbde6e8178fbd143751c1e60`. Fix3 closeout was verified at `04987a5bc8ade0a4aff94671eefac3181156bc60`; post-runtime changes were limited to acceptance harness/validation/docs and did not change hydrology, Matter or world runtime semantics.
-
-Acceptance / architecture records:
-
-```text
-docs/checkpoints/G6_FULL_ACCEPTANCE_ACCEPTED_RU.md
-validation/g6-full-acceptance-validation.json
-docs/checkpoints/G6_P0_ALIGNMENT_CLEANUP_ACCEPTED_RU.md
-docs/procedural/G6_P0_ALIGNMENT_RU.md
-```
-
-Architecture status remains intentionally separated:
-
-```text
-SOURCE_ACCEPTED        YES
-MAIN_INTEGRATED        NO
-COMPOSITION_VERIFIED   NO
-PRODUCTION_READY       NO
-```
-
-P0 audit adds two mandatory forward guards:
-
-```text
-FluidTypeId != MaterialDefinitionId
+SemanticFieldId != SurfaceCellKey
+SemanticFieldId != LOD
 SemanticFieldQuery != universal WorldQuery Fabric
+G7 != Material Ontology
+G7 != Authority / Interest
+G7 != Persistence / Network
+G7 != Scheduler / Cache owner
 ```
 
-Current development roadmap:
+Assistant-side exact-engine isolated evidence:
 
 ```text
-G7 Semantic Field Fabric                 NEXT
-G8 Geomorphology                         PLANNED
-G9 Layered Geology                       PLANNED / P0 Material gate
-G10 GeoVolume / SDF                      PLANNED
-G11 Heterogeneous Body Lab               PLANNED
-G12 Scheduler / Cache / Provenance       PLANNED
-G13 Detail Contract Freeze               PLANNED
+Godot 4.7.1 double                    PASS
+headless editor import                PASS
+G7.0 contracts                        PASS — 208 assertions
+parse/load errors                     0
 ```
 
-Detailed P0-aligned roadmap:
+G7.0 is not yet `ACCEPTED`: full Windows checkout validation and project regression remain required.
 
-```text
-docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md
-config/procedural/g7-g13-p0-aligned-roadmap.v1.json
+Focused Windows command:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_0_SEMANTIC_FIELD_CONTRACTS_TESTS.ps1 -GodotPath $Godot
 ```
 
-Immediate next implementation checkpoint:
+Candidate record:
 
 ```text
-G7.0 Semantic Field Contracts + Registry Vocabulary
+docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_CANDIDATE_RU.md
+validation/g7-0-semantic-field-contracts-validation.json
+config/procedural/g7-0-semantic-field-contracts.v1.json
+```
+
+After G7.0 acceptance:
+
+```text
+G7.1 G3/G5/G6 Upstream Semantic Field Adapters
+```
+
+Longer roadmap remains:
+
+```text
+G7 Semantic Field Fabric
+    -> G8 Geomorphology
+    -> G9 Layered Geology / P0 Material gate
+    -> G10 GeoVolume / SDF
+    -> G11 Heterogeneous Body Lab
+    -> G12 Scheduler / Cache / Provenance
+    -> G13 Detail Contract Freeze
 ```
