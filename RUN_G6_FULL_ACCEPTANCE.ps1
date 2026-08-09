@@ -11,6 +11,8 @@ $Mw10RepositoryPath = "scripts/simulation/matter/transactions/distributed/matter
 $Mw10RetryTestPath = "tests/matter/transactions/test_mw10_lock_release_retry.gd"
 $ExpectedMw10RepositoryBlob = "a25b7d8c358410e60e1bb7db9d3f99333a305a63"
 $ExpectedMw10RetryTestBlob = "afab0c98de45c34dcf6c923d622c84835d428fa5"
+$WindowsProfileTransientPath = Join-Path $RootDir "Microsoft"
+$WindowsProfileTransientExistedBefore = Test-Path -LiteralPath $WindowsProfileTransientPath
 
 function Invoke-GitText {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
@@ -44,6 +46,30 @@ function Invoke-PowerShellChild {
     & $PowerShellExecutable -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ScriptArguments
     if ($LASTEXITCODE -ne 0) {
         throw "Child PowerShell runner failed: $ScriptPath (exit $LASTEXITCODE)"
+    }
+}
+
+function Remove-NewWindowsProfileTransient {
+    if ($WindowsProfileTransientExistedBefore -or -not (Test-Path -LiteralPath $WindowsProfileTransientPath)) {
+        return
+    }
+
+    $TrackedEntries = (& git -C $RootDir ls-files -- "Microsoft" 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Could not verify whether Microsoft/ contains tracked files; leaving it for final hygiene"
+        return
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TrackedEntries)) {
+        Write-Warning "Microsoft/ contains tracked files; refusing transient cleanup"
+        return
+    }
+
+    try {
+        Remove-Item -LiteralPath $WindowsProfileTransientPath -Recurse -Force -ErrorAction Stop
+        Write-Host "Removed transient Windows profile directory created during regression: Microsoft/"
+    }
+    catch {
+        Write-Warning "Could not remove transient Microsoft/ directory: $($_.Exception.Message)"
     }
 }
 
@@ -147,6 +173,7 @@ finally {
     else { Remove-Item Env:\GODOT_BIN -ErrorAction SilentlyContinue }
     if ($HadBreakpointRuntimeDisabled) { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpointRuntimeDisabled }
     else { Remove-Item Env:\BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
+    Remove-NewWindowsProfileTransient
 }
 
 Write-Host "=== G6 FULL ACCEPTANCE: final hygiene ==="
