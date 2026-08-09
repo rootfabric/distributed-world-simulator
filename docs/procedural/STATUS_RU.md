@@ -12,20 +12,32 @@ G6.4 Casual Visual River Lab           ACCEPTED
 G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
 G6 Full Acceptance                     SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
-G7.0 Semantic Field Contracts          FIX1 WINDOWS FOCUSED PASS / FULL RERUN PENDING
+G7.0 Semantic Field Contracts          ACCEPTED
+G7.1 Upstream Semantic Field Adapters  NEXT
 ```
 
-G7.0 introduces a typed semantic-field boundary while preserving the existing G0 provider execution payload:
+G7.0 introduced a typed semantic-field boundary while preserving the existing G0 provider execution payload:
 
 ```text
 GeoFieldBundle / GeoSample             PRESERVED
 GeoKernel                               UNCHANGED
 existing geo/* field identities        PRESERVED
-SemanticField registry                 ADDED
-SemanticField typed query/sample       ADDED
+SemanticField registry                 ACCEPTED
+SemanticField typed query/sample       ACCEPTED
 ```
 
-Registry v1 contains 13 fields: three accepted upstream field identities and ten vocabulary-only fields reserved for G7.1+ providers/adapters.
+Windows full acceptance on tested head `03d1dd1e61ba671456259ab660286d3376520f8e`:
+
+```text
+Godot                                  4.7.1.stable.double.custom_build.a13da4feb
+G7.0 focused contracts                 PASS
+M4 graphical shared gameplay Fix1      PASS — 22 assertions / 0 failures
+RL3 representation streaming processes PASS — 37 assertions
+main_scene_cli_all                      PASS — 6 / 6
+world/core regression                   PASS
+G7.0 FULL ACCEPTANCE                    PASS
+working tree                            CLEAN
+```
 
 P0 ownership remains explicit:
 
@@ -39,53 +51,26 @@ G7 != Persistence / Network
 G7 != Scheduler / Cache owner
 ```
 
-Assistant-side exact-engine evidence on byte-exact published registry/test content:
+Accepted record:
 
 ```text
-Godot 4.7.1 double                    PASS
-headless editor import                PASS
-G7.0 contracts                        PASS — 180 assertions
-parse/load errors                     0
-registry blob                         9e92aa345f02856cf906e81e2fa6e1746955199b
-test blob                             8dea46beea10efda51439d17737c9be8ac7811e2
-```
-
-First Windows full gate reached legacy M4 graphical shared gameplay and exposed a shared report-read race. Shared G6 Fix1 was synchronized into G7. Windows focused verification on tested head `31316df5dc1068888a1e411d14c8af733a68ebc1` then passed:
-
-```text
-M4 graphical shared gameplay          PASS — 22 assertions / 0 failures
-server canonical graph                PASS
-shared container replication          PASS
-server/client Item Graph convergence  PASS
-client shutdown                       PASS A / PASS B
-post-cleanup git status               EMPTY
-```
-
-G7.0 is not yet `ACCEPTED`: only the repeated full Windows checkout gate remains.
-
-Full Windows command:
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_0_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
-```
-
-The full runner checks current G6 ancestry, GLOBAL-P0 alignment, a strict G7.0 changed-file allowlist, focused contracts, world/core regression, clean worktree and `git diff --check`.
-
-Candidate / Fix1 records:
-
-```text
-docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_CANDIDATE_RU.md
-docs/procedural/G7_0_FULL_ACCEPTANCE_FIX1_RU.md
+docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_ACCEPTED_RU.md
 validation/g7-0-semantic-field-contracts-validation.json
-validation/g7-0-full-acceptance-fix1.json
-config/procedural/g7-0-semantic-field-contracts.v1.json
 ```
 
-After G7.0 acceptance:
+Current implementation target:
 
 ```text
 G7.1 G3/G5/G6 Upstream Semantic Field Adapters
+```
+
+G7.1 must preserve upstream ownership:
+
+```text
+G3 provider identity  -> provenance, not replaced
+G5 FeatureId          -> provenance, not replaced
+G6 FluidRegionId      -> provenance, not replaced
+river/fluid fields    -> derived projections, not new canonical river identity
 ```
 
 Longer roadmap remains:
