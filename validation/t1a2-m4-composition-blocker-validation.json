@@ -1,0 +1,23 @@
+{
+  "schema": "planet_simulator.t1a2_m4_composition_blocker_validation.v1",
+  "checkpoint": "T1A2_M4_COMPOSITION_BLOCKER",
+  "branch": "feature/t1a2-d0-authoritative-outpost-builder",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "t1a2_focused": "PASS_186_ASSERTIONS",
+  "full_regression_step": "test_m4_graphical_shared_gameplay_processes",
+  "m4_result": "FAIL_4_OF_22_ASSERTIONS",
+  "client_replica_convergence": true,
+  "server_report_assertions_failed": 4,
+  "classification": "WINDOWS_ATOMIC_SERVER_REPORT_READ_RACE",
+  "production_gameplay_defect": false,
+  "t1a2_defect": false,
+  "fix": {
+    "initial_commit": "6e9b9ca296c09650973cfdb728790668fff26013",
+    "minimal_patch_commit": "32fe310089ac2ed836c6c3b298f9d6e1d0b0462f",
+    "policy": "WAIT_FOR_AUTHORITATIVE_SERVER_CHECKSUM_ACKNOWLEDGED_BY_BOTH_CLIENTS",
+    "net_m4_diff": "+10/-1",
+    "exact_engine_helper_parse": "PASS"
+  },
+  "focused_m4_retest": "PENDING_WINDOWS",
+  "full_regression_retest": "PENDING_AFTER_FOCUSED_M4_PASS"
+}
