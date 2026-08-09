@@ -1,8 +1,8 @@
 # G6 Hydrology / Fluid Surface v0 — P0 alignment
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Branch:** `feature/g6-hydrology-fluid-surface-v0`  
-**Current stage:** `G6 Full Acceptance — SOURCE_ACCEPTED`  
+**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Branch:** `feature/g6-hydrology-fluid-surface-v0`
+**Current stage:** `G6 Full Acceptance — SOURCE_ACCEPTED`
 **Next:** `G7 Semantic Field Fabric`
 
 ## Решение P0-аудита
@@ -56,8 +56,8 @@ G5 River FeatureId remains semantic owner
 Обязательная граница для дальнейшей разработки:
 
 ```text
-FluidRegionId       = geographic/fluid-region identity
-FluidTypeId         = fluid-domain semantic class
+FluidRegionId        = geographic/fluid-region identity
+FluidTypeId          = fluid-domain semantic class
 MaterialDefinitionId = future shared P0 material identity
 
 FluidTypeId != MaterialDefinitionId
@@ -80,14 +80,14 @@ G7 Semantic Field Fabric строится поверх G3/G5/G6 semantics, но 
 Запрещено:
 
 ```text
-G7 owns WorldAddress             NO
-G7 owns universal WorldQuery     NO
-G7 owns authority routing        NO
-G7 owns interest management      NO
-G7 owns persistence/durability   NO
-G7 owns network replication      NO
-G7 owns material ontology        NO
-G7 field identity depends on LOD NO
+G7 owns WorldAddress              NO
+G7 owns universal WorldQuery      NO
+G7 owns authority routing         NO
+G7 owns interest management       NO
+G7 owns persistence/durability    NO
+G7 owns network replication       NO
+G7 owns material ontology         NO
+G7 field identity depends on LOD  NO
 G7 field identity depends on cell NO
 ```
 
