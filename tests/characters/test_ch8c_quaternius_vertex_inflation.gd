@@ -4,6 +4,10 @@ const SelectiveFactory = preload("res://scripts/characters/equipment/selective_g
 const InflationFactory = preload("res://scripts/characters/equipment/garment_vertex_inflation_scene_factory.gd")
 const MALE_PEASANT_PATH := "res://assets/external/quaternius/modular_outfits_fantasy/Modular Character Outfits - Fantasy[Standard]/Exports/glTF (Godot-Unreal)/Outfits/Male_Peasant.gltf"
 
+const NORMAL_MIN_DOT := 0.9999
+const NORMAL_MAX_LENGTH_DELTA := 0.001
+const ZERO_NORMAL_EPSILON := 0.000001
+
 const LOWER_PROFILE := [
 	{"t": 0.00, "offset_m": 0.0015},
 	{"t": 0.18, "offset_m": 0.0040},
@@ -86,11 +90,22 @@ func _run_case(source_scene: PackedScene, mesh_name: String, profile: Array, exp
 	var after_vertices: PackedVector3Array = after.get("vertices", PackedVector3Array())
 	var after_normals: PackedVector3Array = after.get("normals", PackedVector3Array())
 	_assert(before_vertices.size() == after_vertices.size(), "CH8C vertex inflation vertex count changed for %s" % mesh_name)
-	_assert(before_normals == after_normals, "CH8C vertex inflation normals changed for %s" % mesh_name)
+	_assert(before_normals.size() == after_normals.size(), "CH8C vertex inflation normal count changed for %s" % mesh_name)
+	var normal_check: Dictionary = _compare_normal_fields(before_normals, after_normals)
+	_assert(
+		bool(normal_check.get("success", false)),
+		"CH8C vertex inflation normal field drifted for %s: min_dot=%.8f max_length_delta=%.8f max_vector_delta=%.8f" % [
+			mesh_name,
+			float(normal_check.get("min_dot", -1.0)),
+			float(normal_check.get("max_length_delta", INF)),
+			float(normal_check.get("max_vector_delta", INF)),
+		]
+	)
 	_assert(before.get("indices") == after.get("indices"), "CH8C vertex inflation indices changed for %s" % mesh_name)
 	_assert(before.get("bones") == after.get("bones"), "CH8C vertex inflation bones changed for %s" % mesh_name)
 	_assert(before.get("weights") == after.get("weights"), "CH8C vertex inflation weights changed for %s" % mesh_name)
 	_assert(before_vertices == original_again.get("vertices"), "CH8C vertex inflation mutated source vertices for %s" % mesh_name)
+	_assert(before_normals == original_again.get("normals"), "CH8C vertex inflation mutated source normals for %s" % mesh_name)
 
 	var min_y := INF
 	var max_y := -INF
@@ -111,9 +126,45 @@ func _run_case(source_scene: PackedScene, mesh_name: String, profile: Array, exp
 			if delta.normalized().dot(before_normals[vertex_index].normalized()) < 0.999:
 				outward_ok = false
 	_assert(displacement_ok, "CH8C vertex inflation displacement profile mismatch for %s" % mesh_name)
-	_assert(outward_ok, "CH8C vertex inflation did not move outward along normals for %s" % mesh_name)
+	_assert(outward_ok, "CH8C vertex inflation did not move outward along source normals for %s" % mesh_name)
 	_assert(observed_max <= expected_max_offset + 0.000001, "CH8C vertex inflation observed displacement exceeded configured max for %s" % mesh_name)
 	_assert(observed_max >= expected_max_offset * 0.90, "CH8C vertex inflation observed displacement did not reach configured profile closely enough for %s" % mesh_name)
+
+
+func _compare_normal_fields(before: PackedVector3Array, after: PackedVector3Array) -> Dictionary:
+	if before.size() != after.size():
+		return {
+			"success": false,
+			"min_dot": -1.0,
+			"max_length_delta": INF,
+			"max_vector_delta": INF,
+		}
+	var min_dot := 1.0
+	var max_length_delta := 0.0
+	var max_vector_delta := 0.0
+	var equivalent := true
+	for index in range(before.size()):
+		var source_normal := before[index]
+		var rebuilt_normal := after[index]
+		var source_length := source_normal.length()
+		var rebuilt_length := rebuilt_normal.length()
+		var length_delta := absf(source_length - rebuilt_length)
+		max_length_delta = maxf(max_length_delta, length_delta)
+		max_vector_delta = maxf(max_vector_delta, source_normal.distance_to(rebuilt_normal))
+		if source_length <= ZERO_NORMAL_EPSILON or rebuilt_length <= ZERO_NORMAL_EPSILON:
+			if source_normal.distance_to(rebuilt_normal) > ZERO_NORMAL_EPSILON:
+				equivalent = false
+			continue
+		var dot_value := clampf(source_normal.normalized().dot(rebuilt_normal.normalized()), -1.0, 1.0)
+		min_dot = minf(min_dot, dot_value)
+		if dot_value < NORMAL_MIN_DOT or length_delta > NORMAL_MAX_LENGTH_DELTA:
+			equivalent = false
+	return {
+		"success": equivalent,
+		"min_dot": min_dot,
+		"max_length_delta": max_length_delta,
+		"max_vector_delta": max_vector_delta,
+	}
 
 
 func _snapshot_mesh(scene: PackedScene, mesh_name: String) -> Dictionary:
