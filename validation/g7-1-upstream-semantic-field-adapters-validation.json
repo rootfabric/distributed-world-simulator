@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_1_upstream_semantic_field_adapters.v1",
   "checkpoint": "g7.1-upstream-semantic-field-adapters",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_0": {
@@ -9,13 +9,31 @@
     "accepted_commit": "06466ac034a25492ef8c3ff3cfc053f536eb97b9",
     "windows_full_acceptance": "PASS"
   },
-  "implementation": {
-    "g3_surface_adapter": "IMPLEMENTED",
-    "g5_feature_adapter": "IMPLEMENTED",
-    "g6_fluid_adapter": "IMPLEMENTED",
-    "registry_activation": "IMPLEMENTED",
-    "focused_acceptance_test": "IMPLEMENTED",
-    "full_acceptance_runner": "IMPLEMENTED"
+  "windows_candidate_failure": {
+    "candidate_head": "cdcea9dfc0f09b701203795ab6c8441e508485a4",
+    "focused_suite_assertions_reached": 54,
+    "focused_suite_failures": 6,
+    "full_gate": "FAIL_FAST_AT_FOCUSED_G7_1",
+    "world_regression_after_g7_1": "NOT_RUN",
+    "visible_failure": "river-width projects G6 channel width",
+    "diagnosis": [
+      "G3 adapter consumed provider_result.details as the field map, but accepted GeoProvider.success wraps values under provider_result.details.values",
+      "G3 acceptance test made the same wrong direct-result assumption; the failed adapter then produced five assertion failures before an empty source_refs index aborted the remaining G3 assertions",
+      "G6 adapter and test used width_m while accepted WaterSurfaceSample canonical field is channel_width_m"
+    ],
+    "failure_count_explained": true
+  },
+  "fix1": {
+    "g3_provider_envelope": "details.values",
+    "g6_channel_width_key": "channel_width_m",
+    "test_guards_real_g3_envelope": true,
+    "test_guards_real_g6_width_key": true,
+    "test_prevents_empty_source_ref_index_cascade": true,
+    "g3_adapter_blob": "c728cfed5a2b3dd55d23b81b250177af19746623",
+    "g5_adapter_blob": "39ef95704cdf516b10146d2fa79b0d80bf173492",
+    "g6_adapter_blob": "437d82b7f056648045fff08f1daa57968331104c",
+    "acceptance_test_blob": "1af618356b700e5c87a55b42daa05d35b267014e",
+    "expected_focused_assertions_if_all_paths_complete": 59
   },
   "ownership": {
     "g3_provider_identity_preserved": true,
@@ -31,28 +49,15 @@
     "owns_network": false,
     "owns_scheduler_cache": false
   },
-  "assistant_exact_engine": {
-    "version": "4.7.1.stable.double.custom_build.a13da4feb",
-    "precision": "double",
-    "platform": "linux-x86_64",
-    "published_adapter_blob_parse": "PASS",
-    "stubbed_upstream_api_shape_smoke": "PASS",
-    "adapter_smoke_marker": "G7_1_ADAPTER_STUB_SMOKE: PASS",
-    "published_acceptance_test_stubbed_run": "PASS",
-    "published_acceptance_test_assertions": 53,
-    "published_acceptance_test_failures": 0,
-    "acceptance_test_marker": "G7.1 Upstream Semantic Field Adapters: 53 assertions, 0 failures",
-    "scope": "BYTE_EXACT_PUBLISHED_ADAPTERS_AND_ACCEPTANCE_TEST_WITH_STUBBED_ACCEPTED_UPSTREAM_API_SHAPES",
-    "g3_adapter_blob": "aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a",
-    "g5_adapter_blob": "39ef95704cdf516b10146d2fa79b0d80bf173492",
-    "g6_adapter_blob": "f625644204882f41e7a2919eeba785aaa4788489",
-    "acceptance_test_blob": "204d547a028f0fe342069be9f4b34e9fe381f844",
-    "full_repository_checkout_available": false
+  "assistant_pre_fix_evidence": {
+    "status": "SUPERSEDED_AS_TOO_PERMISSIVE",
+    "reason": "stubbed upstream shapes did not exactly preserve GeoProvider details.values or WaterSurfaceSample channel_width_m",
+    "do_not_use_for_acceptance": true
   },
   "required_windows_acceptance": {
     "focused_runner": "RUN_G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_TESTS.ps1",
+    "focused_expected_marker": "G7.1 Upstream Semantic Field Adapters: 59 assertions, 0 failures",
     "full_runner": "RUN_G7_1_FULL_ACCEPTANCE.ps1",
-    "focused_pass": true,
     "full_world_regression": true,
     "clean_worktree": true,
     "git_diff_check": true
