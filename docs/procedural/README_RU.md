@@ -76,6 +76,19 @@ VOCABULARY_ONLY_G7_0
   geo/moisture-baseline
 ```
 
+Assistant-side exact-engine structural verification used byte-exact published adapter blobs with stubbed accepted upstream API shapes:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+G3 adapter blob  aa0d0155a7d89cf05ed2863c5ab9c65be6bdbe9a
+G5 adapter blob  39ef95704cdf516b10146d2fa79b0d80bf173492
+G6 adapter blob  f625644204882f41e7a2919eeba785aaa4788489
+published adapters parse/load            PASS
+G7_1_ADAPTER_STUB_SMOKE                   PASS
+```
+
+This is not a full repository acceptance replacement; the real upstream implementations and world regression are still validated by the Windows full gate.
+
 P0 guards remain mandatory:
 
 ```text
