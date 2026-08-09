@@ -71,8 +71,10 @@ function Test-G70AllowedPath {
         "RUN_G7_0_FULL_ACCEPTANCE.ps1",
         "config/procedural/g7-0-semantic-field-contracts.v1.json",
         "docs/checkpoints/G7_0_SEMANTIC_FIELD_CONTRACTS_CANDIDATE_RU.md",
+        "docs/procedural/G7_0_FULL_ACCEPTANCE_FIX1_RU.md",
         "docs/procedural/README_RU.md",
         "docs/procedural/STATUS_RU.md",
+        "validation/g7-0-full-acceptance-fix1.json",
         "validation/g7-0-semantic-field-contracts-validation.json"
     )) { return $true }
     if ($Path -match '^scripts/simulation/procedural/contracts/semantic_field_[^/]+\.gd(\.uid)?$') { return $true }
