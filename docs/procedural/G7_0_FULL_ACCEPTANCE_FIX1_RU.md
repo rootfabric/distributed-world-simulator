@@ -1,6 +1,6 @@
-# G7.0 Full Acceptance — Fix1 implemented
+# G7.0 Full Acceptance — Fix1 Windows focused PASS
 
-**Дата:** 2026-08-09
+**Дата:** 2026-08-10
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 **Branch:** `feature/g7-semantic-field-fabric`
 
@@ -28,7 +28,7 @@ server item graph checksum
 server and clients item graph checksum convergence
 ```
 
-При этом A и B уже имели одинаковый canonical Item Graph checksum, что и отделило report-read race от gameplay divergence.
+При этом A и B уже имели одинаковый canonical Item Graph checksum, что отделило report-read race от gameplay divergence.
 
 ## Shared G6 fix
 
@@ -77,13 +77,48 @@ Current G6 синхронизирован в G7 merge-коммитом:
 
 После синхронизации `feature/g7-semantic-field-fabric` имеет current G6 как ancestor и `behind_by = 0`.
 
-## Следующий gate
+## Windows focused verification
 
-Повторить:
+На checkout head `31316df5dc1068888a1e411d14c8af733a68ebc1` выполнен прямой Windows Godot run:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+M4 graphical shared gameplay: 22 assertions, 0 failures
+```
+
+Подтверждены:
+
+```text
+server canonical graph has one beacon          PASS
+beacon replicated in shared container          PASS
+server item graph checksum                     PASS
+A received item graph replica                  PASS
+B received item graph replica                  PASS
+A/B checksum convergence                       PASS
+server/client checksum convergence             PASS
+A clean shutdown                               PASS
+B clean shutdown                               PASS
+```
+
+После удаления transient `Microsoft/`:
+
+```text
+git status --porcelain   EMPTY
+```
+
+Таким образом Fix1 считается подтверждённым на Windows focused gate. G7.0 целиком пока не принят: требуется только повторный полный `RUN_G7_0_FULL_ACCEPTANCE.ps1`.
+
+## Следующий gate
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G7_0_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Ожидается, что M4 теперь пройдёт свои прежние `22 assertions / 0 failures`, после чего world regression продолжится дальше.
+Ожидаемый финальный marker:
+
+```text
+G7.0 FULL ACCEPTANCE: PASS
+World/core regression: PASS
+Working tree: CLEAN
+```
