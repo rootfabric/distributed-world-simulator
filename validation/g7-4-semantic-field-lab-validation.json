@@ -1,82 +1,83 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX3_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
+  "decision": "FIX4_IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_3": {"decision": "ACCEPTED", "focused_assertions": 122, "full_windows_gate": "PASS", "world_core_regression": "PASS"},
-  "previous_automated_acceptance": {"status": "PASS_SUPERSEDED_BY_FIX3_PRESENTATION_RUNTIME_CHANGE", "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a", "world_core_regression": "PASS", "working_tree": "CLEAN"},
+  "previous_automated_acceptance": {"status": "PASS_SUPERSEDED_BY_FIX4_PRESENTATION_RUNTIME_CHANGE", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_regression": "PASS", "working_tree": "CLEAN"},
   "fix1": {"result": "CLOSED", "runtime_semantics_changed": false},
   "fix2": {"result": "CLOSED", "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17", "focused_assertions": 92, "focused_failures": 0, "subsequent_full_world_regression": "PASS", "production_gameplay_semantics_changed": false},
   "fix3": {
+    "result": "CLOSED_BY_AUTOMATED_ACCEPTANCE_THEN_SUPERSEDED_BY_FIX4_PRESENTATION_CHANGE",
     "trigger": "MANUAL_GRAPHICAL_OBSERVATION_FOUND_NO_VISIBLE_LOD_CHANGE",
-    "observed_behavior": "W/S changed camera distance but the semantic patch mesh stayed fixed at the 33x17 source grid. ADDRESSING_LOD 8 was cube-sphere addressing only, not a mesh LOD.",
     "implementation": "Camera-distance-derived presentation LOD0..3 changes only mesh sampling stride over the same precomputed semantic records.",
-    "lod_levels": [
-      {"lod": 0, "stride": 1, "mesh_grid": [33, 17], "distance": "<11", "detail": "NEAR_FINE"},
-      {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "distance": "11..15", "detail": "NEAR_MID"},
-      {"lod": 2, "stride": 4, "mesh_grid": [9, 5], "distance": "15..20", "detail": "MID_COARSE"},
-      {"lod": 3, "stride": 8, "mesh_grid": [5, 3], "distance": ">=20", "detail": "FAR_COARSE"}
-    ],
     "semantic_source_sample_count": 561,
     "reuses_same_semantic_records": true,
     "semantic_query_changed": false,
     "semantic_identity_changed": false,
     "feature_identity_changed": false,
     "fluid_identity_changed": false,
-    "mesh_density_in_canonical_checksum": false,
-    "hud_reports_active_lod": true,
-    "focused_revalidation": {
-      "status": "PASS",
-      "tested_head": "667648392c1c7b523ec6d043115fdcc36820fef7",
-      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-      "g7_0_assertions": 180,
-      "g7_1_assertions": 59,
-      "g7_2_assertions": 52,
-      "g7_3_assertions": 122,
-      "g7_4_assertions": 61,
-      "g7_4_failures": 0,
-      "headless_lab_smoke": "PASS",
-      "headless_semantic_samples": 561,
-      "headless_fields": 5,
-      "headless_vocabulary_only": 6,
-      "headless_faces": ["PX", "PZ"],
-      "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
+    "focused_revalidation": {"status": "PASS", "tested_head": "667648392c1c7b523ec6d043115fdcc36820fef7", "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb", "g7_0_assertions": 180, "g7_1_assertions": 59, "g7_2_assertions": 52, "g7_3_assertions": 122, "g7_4_assertions": 61, "g7_4_failures": 0, "headless_lab_smoke": "PASS"},
+    "full_world_regression": {"status": "PASS", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_tests_pass": 6, "world_core_tests_fail": 0, "nx4_client_prediction_reconciliation": "PASS", "lifecycle_final_state": "STOPPED"}
+  },
+  "fix4": {
+    "status": "IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
+    "trigger": "USER_SCREENSHOT_REVIEW_2026_08_10",
+    "observed_behavior": "LOD0..LOD3 and the 561-sample invariant were visible in the HUD, but dark island-like holes appeared in the semantic patch and the river was only a very thin white centerline. Code inspection showed the fixed radial offset could place negative-height patch vertices behind the radius-8 debug sphere; coarse triangle chords add further inward sagitta.",
+    "diagnosis": {
+      "base_debug_sphere_radius": 8.0,
+      "old_surface_offset": 0.045,
+      "height_scale": 0.0001,
+      "screenshot_height_min_m": -620.961669,
+      "old_min_vertex_radius_approx": 7.982904,
+      "old_river_geometry": "PRIMITIVE_LINE_STRIP",
+      "canonical_semantic_failure": false,
+      "presentation_occlusion_failure": true
     },
-    "full_world_regression": {
-      "status": "PASS",
-      "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
-      "world_core_tests_pass": 6,
-      "world_core_tests_fail": 0,
-      "nx4_client_prediction_reconciliation": "PASS",
-      "lifecycle_final_state": "STOPPED"
+    "implementation": {
+      "wrapper_script": "res://scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd",
+      "surface_shell_mode": "HEIGHT_RANGE_DERIVED_UNIFORM_RADIAL_LIFT",
+      "minimum_vertex_clearance_display_units": 0.075,
+      "coarse_chord_guard": true,
+      "relative_height_shape_preserved": true,
+      "river_source": "ACCEPTED_CANONICAL_RIVER_CENTERLINE_SPLINE",
+      "river_geometry": "TRIANGLE_STRIP_DIAGNOSTIC_RIBBON",
+      "river_half_width_display_units": 0.022,
+      "river_clearance_above_patch_display_units": 0.035,
+      "river_represents_physical_width": false
     },
-    "manual_graphical_recheck": "LOD0_TO_LOD3_AND_VISIBLE_GEOMETRY_CHANGE_PASS_BY_USER_OBSERVATION"
+    "semantic_source_sample_count": 561,
+    "semantic_query_changed": false,
+    "semantic_values_changed": false,
+    "semantic_identity_changed": false,
+    "feature_identity_changed": false,
+    "fluid_identity_changed": false,
+    "lod_contract_changed": false,
+    "canonical_checksums_include_fix4_presentation": false,
+    "focused_revalidation": "REQUIRED",
+    "full_automated_acceptance": "REQUIRED_AFTER_FOCUSED_PASS",
+    "manual_graphical_recheck": "REQUIRED_AFTER_AUTOMATED_PASS"
   },
   "automated_acceptance": {
-    "status": "PASS",
-    "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
-    "pc0_operational_g_frontier": "PASS",
-    "pc0_g_health_not_red": "PASS",
-    "g7_3_accepted_ancestor": "PASS",
-    "g7_4_visual_lab_scope": "PASS",
-    "adapter_backed_semantic_fields": 5,
-    "vocabulary_only_fields_not_faked": 6,
-    "world_core_regression": "PASS",
-    "working_tree": "CLEAN",
-    "manual_graphical_observation": "REQUIRED_BEFORE_G7_4_ACCEPTED"
+    "status": "STALE_AFTER_FIX4_PRESENTATION_RUNTIME_CHANGE",
+    "previous_tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
+    "focused_revalidation": "REQUIRED",
+    "full_world_regression": "REQUIRED_AFTER_FOCUSED_PASS",
+    "working_tree": "TO_BE_VERIFIED_BY_RUNNER"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_REMAINING_MANUAL_GRAPHICAL_CHECKS_PASS",
-    "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+    "expected_health": "RED_UNTIL_FIX4_FOCUSED_REVALIDATION_REFRESHES_RUNTIME_EVIDENCE",
+    "blockers": ["G7_4_FIX4_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_RECHECK_REQUIRED"]
   },
   "manual_graphical_acceptance": {
-    "status": "PARTIAL_PASS_LOD_VISIBILITY_CONFIRMED",
+    "status": "RECHECK_REQUIRED_AFTER_FIX4",
     "required": true,
-    "evidence_source": "USER_OBSERVATION_2026-08-10",
-    "confirmed": ["W/S visibly changes LOD0..LOD3", "derived semantic patch geometry visibly changes with LOD"],
-    "remaining_checks": ["HUD reports LOD stride mesh-grid and camera distance", "near 33x17 and far 5x3", "semantic source remains 561 samples", "1..5 changes color without changing selected-LOD geometry", "river overlay toggles", "no obvious PX/PZ semantic seam"]
+    "evidence_source": "USER_SCREENSHOTS_2026-08-10",
+    "previously_confirmed": ["W/S visibly changes LOD0..LOD3", "mesh grids 33x17 17x9 9x5 5x3 visible in HUD", "semantic source remains 561 samples", "derived semantic patch geometry visibly changes with LOD"],
+    "fix4_trigger_observations": ["false dark holes visible in patch", "river centerline too thin for reliable graphical acceptance"],
+    "remaining_after_revalidation": ["no false black sphere-occlusion holes across LOD0..LOD3", "diagnostic river ribbon is clearly visible and F toggles it", "1..5 changes color without changing selected-LOD geometry", "no obvious PX/PZ semantic seam"]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
