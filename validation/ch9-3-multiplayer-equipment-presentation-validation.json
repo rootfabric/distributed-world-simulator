@@ -20,6 +20,7 @@
   "transport": {
     "new_transport_protocol": false,
     "command_message": "ITEM_COMMAND",
+    "command_namespace": "equipment.*",
     "origin_replication": "COMMAND_RESULT.item_graph_delta",
     "remote_replication": "ITEM_GRAPH_DELTA",
     "resync": "ITEM_GRAPH_SNAPSHOT",
@@ -53,12 +54,14 @@
     "CHARACTER_EQUIPMENT_PROJECTION_IS_PRESENTATION_NEUTRAL",
     "SERVER_HAS_NO_RIG_MESH_SKELETON_CAMERA_OR_UI_DEPENDENCY",
     "CHARACTER_EQUIPMENT_PRESENTER_OWNS_VISUALS_ONLY",
+    "EQUIPMENT_COMMAND_NAMESPACE_DOES_NOT_ADMIT_UNRELATED_CHARACTER_MUTATIONS",
     "MOVEMENT_AND_PREDICTION_SNAPSHOTS_CARRY_ZERO_EQUIPMENT_ITEM_IDS"
   ],
   "focused_tests": {
     "ch9_0_regression": "res://tests/characters/test_ch9_item_graph_equipment_source.gd",
     "ch9_1_regression": "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd",
     "ch9_2_regression": "res://tests/characters/test_ch9_2_inventory_character_composition.gd",
+    "command_contract": "res://tests/characters/test_ch9_3_equipment_item_command_contract.gd",
     "authority": "res://tests/characters/test_ch9_3_multiplayer_equipment_authority.gd",
     "replica_projection": "res://tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd",
     "character_presentation": "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
@@ -81,6 +84,13 @@
     "body-visible garment policy remains presentation-only",
     "presenter owns no network state and never moves gameplay body"
   ],
+  "candidate_review": {
+    "join_ordering": "CHECKED: equipment container is ensured before M3 creates JOIN_ACK.item_graph_snapshot",
+    "replica_slot_preservation": "CHECKED: canonical CONTAINER slot_index is preserved into the production equipment slot container",
+    "delta_transport_reuse": "CHECKED: M3 ITEM_COMMAND already computes CanonicalItemGraphDelta, puts it in origin COMMAND_RESULT and broadcasts ITEM_GRAPH_DELTA to peers",
+    "blocking_network_command_in_same_tree": "AVOIDED: ENet gate uses nonblocking equipment command so server and clients continue polling in one SceneTree",
+    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+  },
   "deferred": [
     "CH9.4 equipment persistence recovery reconnect durability",
     "general multi-item atomic replacement for EVA-style conflicting outfits",
@@ -95,6 +105,7 @@
     "ch9_0_regression": "PENDING",
     "ch9_1_regression": "PENDING",
     "ch9_2_regression": "PENDING",
+    "command_contract": "PENDING",
     "authority": "PENDING",
     "replica_projection": "PENDING",
     "character_presentation": "PENDING",
