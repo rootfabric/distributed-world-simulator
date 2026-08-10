@@ -1,10 +1,11 @@
 {
   "schema": "planet_simulator.g7_3_cross_cell_cross_lod_invariance_manifest.v1",
   "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_2_accepted_commit": "68c4f90dbdac0e2d9968b4461207713f5661521b",
+  "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
   "lod_levels": [2, 4, 8, 12],
   "proofs": {
     "semantic_query_excludes_surface_cell": true,
@@ -16,6 +17,12 @@
     "fluid_region_identity_stable_across_cells": true,
     "px_pz_seam_centerline_semantics_continuous": true,
     "representation_density_not_canonical_identity": true
+  },
+  "acceptance": {
+    "focused_assertions": 122,
+    "full_windows_gate": "PASS",
+    "world_core_regression": "PASS",
+    "working_tree": "CLEAN"
   },
   "architecture_boundaries": {
     "surface_cell_is_semantic_identity": false,
