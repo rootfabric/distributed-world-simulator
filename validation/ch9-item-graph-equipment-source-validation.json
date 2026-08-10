@@ -4,7 +4,7 @@
   "branch": "feature/ch9-item-graph-equipment-source",
   "base_branch": "feature/ch8-layered-equipment",
   "base_commit": "1eebc1e741e65c64207942a0e39d7263fbd39f65",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_AND_PREDECESSOR_GATE",
+  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_SMOKE_PASS_PENDING_WINDOWS_FOCUSED_AND_PREDECESSOR_GATE",
   "goal": "Project canonical ItemRegistry plus an entity-owned slotted equipment ContainerState into CharacterEquipmentDomain.Snapshot without owning Item Graph mutations, networking, persistence, mesh or rig state.",
   "canonical_model": {
     "new_item_relation_added": false,
@@ -26,6 +26,7 @@
     "ITEM_DEFINITION_MUST_BE_ACCEPTED_BY_REAL_CONTAINER_SLOT",
     "CHARACTER_LAYOUT_AND_CHANNEL_CONFLICTS_FAIL_CLOSED",
     "FAILED_REFRESH_PRESERVES_LAST_VALID_PRESENTATION_SNAPSHOT",
+    "INTEGER_AND_JSON_STRING_SLOT_KEYS_PROJECT_IDENTICALLY",
     "NO_MOVEMENT_SNAPSHOT_EQUIPMENT_IDS",
     "NO_NETWORK_OR_PERSISTENCE_OWNERSHIP"
   ],
@@ -40,6 +41,19 @@
     ],
     "mutator_methods": [],
     "failure_observability": ["refresh", "get_last_result", "create_report"]
+  },
+  "local_exact_godot_smoke": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "environment": "Linux headless minimal contract fixture",
+    "editor_import": "PASS",
+    "first_runtime_attempt": "FAIL",
+    "first_runtime_blocker": "String(raw_slot) is not a universal Variant conversion constructor for integer Dictionary keys",
+    "fix_commit": "fe93014cc56be0cfc06e66363e9cc1b73b766a29",
+    "fix": "Use str(raw_slot) + is_valid_int so runtime integer keys and JSON string keys normalize identically",
+    "post_fix_integer_key_smoke": "PASS",
+    "post_fix_json_string_key_smoke": "PASS",
+    "post_fix_snapshot": "revision=5, equipped_item_count=1, stable state fingerprint",
+    "scope_limit": "This local fixture validates parser/runtime behavior of ItemGraphEquipmentSource but does not replace Windows tests against the full production checkout."
   },
   "focused_tests": {
     "source_projection": "res://tests/characters/test_ch9_item_graph_equipment_source.gd",
