@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.t1b0_runtime_failure_contracts_validation.v1",
+  "checkpoint": "T1B0_RUNTIME_FAILURE_CONTRACT",
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "branch": "feature/t1b-composition-failure-recovery",
+  "parent_checkpoint": "T1A.7 Runtime Recovery / Interest / Scale ACCEPTED",
+  "parent_branch_head": "bbddc9666777c0b4d6289ebc9483c8bfb0e90f14",
+  "parent_tested_checkout": "1430284c3e523d9292804be2fc347ac1f70d39a6",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "implementation": {
+    "policy": "scripts/construction/behavior/construction_runtime_failure_policy.gd",
+    "acceptance": "tests/construction/t1b0_runtime_failure_contracts.gd",
+    "runner": "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1"
+  },
+  "semantics": {
+    "operability": ["ONLINE", "DEGRADED", "OFFLINE"],
+    "requirement_levels": ["NONE", "OPTIONAL", "REQUIRED"],
+    "failure_codes": ["POWER_UNAVAILABLE", "DATA_UNAVAILABLE", "DEPENDENCY_UNAVAILABLE"],
+    "required_missing_is_offline": true,
+    "optional_missing_is_degraded_when_no_required_failure": true,
+    "recovery_to_online_is_deterministic": true,
+    "projection_is_pure": true,
+    "commit_uses_existing_runtime_store_revision_fence": true,
+    "construct_snapshot_mutated": false,
+    "new_failure_aggregate_created": false
+  },
+  "architecture": {
+    "new_canonical_store": false,
+    "new_persistence_repository": false,
+    "new_transaction_coordinator": false,
+    "new_authority_registry": false,
+    "new_network_channel": false,
+    "new_global_dependency_identity": false,
+    "new_world_work_budget": false,
+    "reuses_t1a7_recovery_path": true
+  },
+  "required_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_runner": "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1",
+    "focused_result": "PENDING",
+    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "full_regression_result": "PENDING"
+  },
+  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "t2_control_gate": {
+    "t2_0_active": false,
+    "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
+  },
+  "next_stage_if_accepted": "T1B.1 Dependency Failure Propagation"
+}
