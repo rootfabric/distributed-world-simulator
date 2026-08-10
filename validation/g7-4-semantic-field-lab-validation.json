@@ -1,144 +1,74 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX4_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_3": {"decision": "ACCEPTED", "focused_assertions": 122, "full_windows_gate": "PASS", "world_core_regression": "PASS"},
-  "previous_automated_acceptance": {"status": "PASS_SUPERSEDED_BY_FIX4_PRESENTATION_RUNTIME_CHANGE", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_regression": "PASS", "working_tree": "CLEAN"},
-  "fix1": {"result": "CLOSED", "runtime_semantics_changed": false},
-  "fix2": {"result": "CLOSED", "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17", "focused_assertions": 92, "focused_failures": 0, "subsequent_full_world_regression": "PASS", "production_gameplay_semantics_changed": false},
-  "fix3": {
-    "result": "CLOSED_BY_AUTOMATED_ACCEPTANCE_THEN_SUPERSEDED_BY_FIX4_PRESENTATION_CHANGE",
-    "trigger": "MANUAL_GRAPHICAL_OBSERVATION_FOUND_NO_VISIBLE_LOD_CHANGE",
-    "implementation": "Camera-distance-derived presentation LOD0..3 changes only mesh sampling stride over the same precomputed semantic records.",
-    "semantic_source_sample_count": 561,
-    "reuses_same_semantic_records": true,
-    "semantic_query_changed": false,
-    "semantic_identity_changed": false,
-    "feature_identity_changed": false,
-    "fluid_identity_changed": false,
-    "focused_revalidation": {"status": "PASS", "tested_head": "667648392c1c7b523ec6d043115fdcc36820fef7", "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb", "g7_0_assertions": 180, "g7_1_assertions": 59, "g7_2_assertions": 52, "g7_3_assertions": 122, "g7_4_assertions": 61, "g7_4_failures": 0, "headless_lab_smoke": "PASS"},
-    "full_world_regression": {"status": "PASS", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_tests_pass": 6, "world_core_tests_fail": 0, "nx4_client_prediction_reconciliation": "PASS", "lifecycle_final_state": "STOPPED"}
+  "fix_history": {
+    "fix1": {"result": "CLOSED", "runtime_semantics_changed": false},
+    "fix2": {"result": "CLOSED", "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17", "focused_assertions": 92, "focused_failures": 0, "subsequent_full_world_regression": "PASS", "production_gameplay_semantics_changed": false},
+    "fix3": {"result": "CLOSED", "purpose": "VISIBLE_CAMERA_DERIVED_PRESENTATION_LOD", "focused_tested_head": "667648392c1c7b523ec6d043115fdcc36820fef7", "semantic_source_sample_count": 561, "semantic_query_changed": false, "semantic_identity_changed": false},
+    "fix4": {"result": "CLOSED", "purpose": "PRESENTATION_SHELL_AND_VISIBLE_RIVER_RIBBON", "runtime_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f", "uid_tracking_head": "f704780b8ba658b280591c463301f275f505da3f", "full_scope_fix_head": "ddacaf18a5c4b57c708562538a71065240d73ddb", "canonical_semantics_changed": false}
   },
-  "fix4": {
-    "status": "AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
-    "trigger": "USER_SCREENSHOT_REVIEW_2026_08_10",
-    "observed_behavior": "Fix3 screenshots exposed false dark sphere-occlusion holes and an overly thin river centerline overlay. Fix4 changes only derived presentation.",
-    "diagnosis": {
-      "base_debug_sphere_radius": 8.0,
-      "old_surface_offset": 0.045,
-      "height_scale": 0.0001,
-      "screenshot_height_min_m": -620.961669,
-      "old_min_vertex_radius_approx": 7.982904,
-      "old_river_geometry": "PRIMITIVE_LINE_STRIP",
-      "canonical_semantic_failure": false,
-      "presentation_occlusion_failure": true
-    },
-    "implementation": {
-      "wrapper_script": "res://scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd",
-      "surface_shell_mode": "HEIGHT_RANGE_DERIVED_UNIFORM_RADIAL_LIFT",
-      "minimum_vertex_clearance_display_units": 0.075,
-      "coarse_chord_guard": true,
-      "relative_height_shape_preserved": true,
-      "river_source": "ACCEPTED_CANONICAL_RIVER_CENTERLINE_SPLINE",
-      "river_geometry": "TRIANGLE_STRIP_DIAGNOSTIC_RIBBON",
-      "river_half_width_display_units": 0.022,
-      "river_clearance_above_patch_display_units": 0.035,
-      "river_represents_physical_width": false
-    },
-    "semantic_source_sample_count": 561,
-    "semantic_query_changed": false,
-    "semantic_values_changed": false,
-    "semantic_identity_changed": false,
-    "feature_identity_changed": false,
-    "fluid_identity_changed": false,
-    "lod_contract_changed": false,
-    "canonical_checksums_include_fix4_presentation": false,
-    "focused_revalidation": {
-      "status": "PASS",
-      "tested_runtime_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
-      "evidence_preserved_through_uid_tracking_head": "f704780b8ba658b280591c463301f275f505da3f",
-      "uid_tracking_changes_executable_runtime": false,
-      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-      "g7_4_assertions": 80,
-      "g7_4_failures": 0,
-      "headless_lab_smoke": "PASS",
-      "headless_semantic_samples": 561,
-      "headless_fields": 5,
-      "headless_vocabulary_only": 6,
-      "headless_faces": ["PX", "PZ"],
-      "headless_presentation_hash": "9461c585ce4c6b04e305579526716b89dbaa8192fee88363448ff2408fb92ed8",
-      "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
-    },
-    "uid_sidecar_tracking": {
-      "status": "TRACKED",
-      "path": "scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd.uid",
-      "tracking_commit": "f704780b8ba658b280591c463301f275f505da3f",
-      "runtime_semantics_changed": false,
-      "focused_evidence_invalidated": false
-    },
-    "full_acceptance_scope_fix": {
-      "status": "CLOSED",
-      "trigger": "FULL_ACCEPTANCE_PREFLIGHT_REJECTED_NEW_FIX4_WRAPPER_AND_UID_OUTSIDE_OLD_ALLOWLIST",
-      "commit": "ddacaf18a5c4b57c708562538a71065240d73ddb",
-      "changes_executable_runtime": false,
-      "changes_acceptance_scope_only": true
-    },
-    "full_automated_acceptance": {
-      "status": "PASS",
-      "tested_head": "ddacaf18a5c4b57c708562538a71065240d73ddb",
-      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-      "pc0_operational_g_frontier": "PASS",
-      "pc0_g_health_not_red": "PASS",
-      "g7_3_accepted_ancestor": "PASS",
-      "g7_4_visual_lab_scope": "PASS",
-      "adapter_backed_semantic_fields": 5,
-      "vocabulary_only_fields_not_faked": 6,
-      "world_core_regression": "PASS",
-      "world_core_tests_pass": 6,
-      "world_core_tests_fail": 0,
-      "nx4_client_prediction_reconciliation": "PASS",
-      "lifecycle_final_state": "STOPPED",
-      "working_tree": "CLEAN"
-    },
-    "manual_graphical_recheck": {
-      "status": "PARTIAL_PASS_AFTER_FIX4",
-      "evidence_source": "USER_SCREENSHOTS_2026-08-10",
-      "confirmed": [
-        "false black sphere-occlusion holes are absent on inspected Fix4 LOD views",
-        "diagnostic cyan river ribbon is clearly visible",
-        "LOD0/LOD1/LOD3 views retain 561 semantic samples and expected presentation grids"
-      ],
-      "remaining": [
-        "F toggles the river ribbon off and on",
-        "fields 1..5 recolor without changing geometry at a fixed LOD",
-        "no obvious PX/PZ semantic seam under inspection"
-      ]
-    }
+  "focused_acceptance": {
+    "status": "PASS",
+    "tested_runtime_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "g7_4_assertions": 80,
+    "g7_4_failures": 0,
+    "headless_lab_smoke": "PASS",
+    "semantic_samples": 561,
+    "adapter_backed_fields": 5,
+    "vocabulary_only_fields": 6,
+    "faces": ["PX", "PZ"],
+    "presentation_hash": "9461c585ce4c6b04e305579526716b89dbaa8192fee88363448ff2408fb92ed8"
   },
   "automated_acceptance": {
     "status": "PASS",
     "tested_head": "ddacaf18a5c4b57c708562538a71065240d73ddb",
-    "focused_runtime_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
-    "full_world_regression": "PASS",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "pc0_operational_g_frontier": "PASS",
+    "pc0_g_health_not_red": "PASS",
+    "g7_3_accepted_ancestor": "PASS",
+    "g7_4_visual_lab_scope": "PASS",
+    "world_core_regression": "PASS",
     "world_core_tests_pass": 6,
     "world_core_tests_fail": 0,
     "nx4_client_prediction_reconciliation": "PASS",
-    "working_tree": "CLEAN",
-    "manual_graphical_observation": "REQUIRED_BEFORE_G7_4_ACCEPTED"
-  },
-  "project_control": {
-    "expected_health": "YELLOW_UNTIL_REMAINING_MANUAL_GRAPHICAL_CHECKS_PASS",
-    "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "manual_graphical_acceptance": {
-    "status": "PARTIAL_PASS_FIX4_SHELL_AND_RIVER_VISIBILITY_CONFIRMED",
-    "required": true,
-    "evidence_source": "USER_SCREENSHOTS_2026-08-10",
-    "confirmed": ["W/S visibly changes LOD0..LOD3", "mesh grids 33x17 17x9 9x5 5x3 previously confirmed", "semantic source remains 561 samples", "derived semantic patch geometry visibly changes with LOD", "Fix4 false black sphere-occlusion holes absent in inspected views", "Fix4 cyan diagnostic river ribbon clearly visible"],
-    "remaining_checks": ["F toggles river ribbon", "1..5 changes color without changing selected-LOD geometry", "no obvious PX/PZ semantic seam"]
+    "status": "PASS_BY_USER_OBSERVATION",
+    "date": "2026-08-10",
+    "confirmed": [
+      "W/S visibly changes LOD0..LOD3",
+      "presentation grids 33x17 17x9 9x5 5x3 are visible and consistent",
+      "semantic source remains 561 samples across presentation LOD",
+      "Fix4 false black sphere-occlusion holes are absent",
+      "cyan diagnostic river ribbon is clearly visible",
+      "F toggles the river ribbon off and on",
+      "fields 1..5 recolor without changing geometry at a fixed LOD",
+      "no obvious PX/PZ semantic seam is visible"
+    ],
+    "non_blocking_observation": "LOD switching is visibly abrupt. This is accepted as presentation tuning debt; future presentation may use more LOD levels, hysteresis, stitching or geomorphing without changing semantic truth or identity."
+  },
+  "canonical_invariants": {
+    "semantic_source_sample_count": 561,
+    "semantic_query_changed_by_presentation": false,
+    "semantic_values_changed_by_presentation": false,
+    "semantic_identity_changed_by_presentation": false,
+    "feature_identity_changed_by_presentation": false,
+    "fluid_identity_changed_by_presentation": false,
+    "lod_in_canonical_checksum": false,
+    "presentation_shell_in_canonical_checksum": false,
+    "river_overlay_geometry_in_canonical_checksum": false
+  },
+  "project_control": {
+    "g7_4_blockers": [],
+    "next_stage": "G7 Full Acceptance"
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
