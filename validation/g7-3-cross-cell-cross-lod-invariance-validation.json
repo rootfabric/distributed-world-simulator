@@ -2,12 +2,19 @@
   "schema": "planet_simulator.validation.g7_3_cross_cell_cross_lod_invariance.v1",
   "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
   "decision": "IMPLEMENTED_CANDIDATE",
-  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_2": {
     "decision": "ACCEPTED",
     "accepted_commit": "68c4f90dbdac0e2d9968b4461207713f5661521b",
-    "windows_full_acceptance": "PASS"
+    "windows_full_acceptance": "PASS",
+    "historical_global_revision": "GLOBAL-P0-2026-08-08-R1"
+  },
+  "active_frontier_p0_sync": {
+    "revision": "GLOBAL-P0-2026-08-10-R2",
+    "must_match_main": true,
+    "historical_g6_must_be_rewritten": false,
+    "policy": "ACTIVE_FRONTIER_MATCHES_MAIN_HISTORICAL_ACCEPTED_BRANCHES_NOT_REWRITTEN"
   },
   "implementation": {
     "production_runtime_changed": false,
@@ -56,7 +63,9 @@
     "g7_2_regression": true,
     "full_world_regression": true,
     "clean_worktree": true,
-    "git_diff_check": true
+    "git_diff_check": true,
+    "active_global_config_matches_main": true,
+    "active_global_markdown_matches_main": true
   },
   "next_if_accepted": "G7_4_SEMANTIC_FIELD_LAB"
 }
