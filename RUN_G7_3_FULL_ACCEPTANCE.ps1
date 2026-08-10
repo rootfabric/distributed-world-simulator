@@ -11,7 +11,6 @@ $MainRef = "origin/main"
 $G72AcceptedCommit = "68c4f90dbdac0e2d9968b4461207713f5661521b"
 $ExpectedGlobalRevision = "GLOBAL-P0-2026-08-10-R2"
 $WindowsProfileTransientPath = Join-Path $RootDir "Microsoft"
-$WindowsProfileTransientExistedBefore = Test-Path -LiteralPath $WindowsProfileTransientPath
 
 function Invoke-GitText {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
@@ -48,21 +47,49 @@ function Invoke-PowerShellChild {
     }
 }
 
-function Remove-NewWindowsProfileTransient {
-    if ($WindowsProfileTransientExistedBefore -or -not (Test-Path -LiteralPath $WindowsProfileTransientPath)) {
-        return
+function Test-WindowsProfileTransientSafeToRemove {
+    if (-not (Test-Path -LiteralPath $WindowsProfileTransientPath)) {
+        return $false
     }
+
     $TrackedEntries = (& git -C $RootDir ls-files -- "Microsoft" 2>$null | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or -not [string]::IsNullOrWhiteSpace($TrackedEntries)) {
-        Write-Warning "Refusing to clean Microsoft/ because tracked-state verification was not clean"
+        return $false
+    }
+
+    $StatusText = (& git -C $RootDir status --porcelain --untracked-files=all -- "Microsoft" 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($StatusText)) {
+        return $false
+    }
+
+    $StatusLines = @($StatusText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($StatusLines.Count -eq 0) {
+        return $false
+    }
+    foreach ($Line in $StatusLines) {
+        if (-not $Line.StartsWith("?? Microsoft/")) {
+            return $false
+        }
+    }
+    return $true
+}
+
+function Remove-SafeWindowsProfileTransient {
+    param([Parameter(Mandatory = $true)][string]$Phase)
+
+    if (-not (Test-Path -LiteralPath $WindowsProfileTransientPath)) {
+        return
+    }
+    if (-not (Test-WindowsProfileTransientSafeToRemove)) {
+        Write-Warning "Refusing to clean Microsoft/ during $Phase because it is not proven to be purely untracked transient content"
         return
     }
     try {
         Remove-Item -LiteralPath $WindowsProfileTransientPath -Recurse -Force -ErrorAction Stop
-        Write-Host "Removed transient Windows profile directory: Microsoft/"
+        Write-Host "Removed $Phase Windows profile transient directory: Microsoft/"
     }
     catch {
-        Write-Warning "Could not remove transient Microsoft/ directory: $($_.Exception.Message)"
+        Write-Warning "Could not remove transient Microsoft/ directory during $Phase: $($_.Exception.Message)"
     }
 }
 
@@ -113,6 +140,7 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $G
 }
 
 Write-Host "=== G7.3 FULL ACCEPTANCE: repository / P0 preflight ==="
+Remove-SafeWindowsProfileTransient -Phase "stale-preflight"
 $StatusBefore = Invoke-GitText @("status", "--porcelain")
 if (-not [string]::IsNullOrWhiteSpace($StatusBefore)) { throw "G7.3 full acceptance requires a clean working tree:`n$StatusBefore" }
 foreach ($Ref in @($MainRef, $G6Ref, $G72AcceptedCommit)) {
@@ -179,7 +207,7 @@ finally {
     else { Remove-Item Env:\GODOT_BIN -ErrorAction SilentlyContinue }
     if ($HadBreakpointRuntimeDisabled) { $env:BREAKPOINT_RUNTIME_DISABLED = $PreviousBreakpointRuntimeDisabled }
     else { Remove-Item Env:\BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
-    Remove-NewWindowsProfileTransient
+    Remove-SafeWindowsProfileTransient -Phase "post-runtime"
 }
 
 Write-Host "=== G7.3 FULL ACCEPTANCE: final hygiene ==="
