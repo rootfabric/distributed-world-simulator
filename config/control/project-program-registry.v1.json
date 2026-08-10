@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 10,
+  "registry_generation": 11,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T09:54:00Z",
+  "updated_at_utc": "2026-08-10T10:02:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -36,15 +36,12 @@
       "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
       "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
-      "stage_status": "FIX1_IMPLEMENTED_CANDIDATE",
-      "progress_note": "The first Windows recovery gate preserved all inherited T1A.4/C5B/T1A.5 tests but exposed a restart-bootstrap defect before runtime restore: after M0 synchronized the already assembled construct, T1A.4 rebuilt the assembly plan and correctly failed with ATTACH_PART_SOURCE_ALREADY_ATTACHED. FIX1 adds opt-in idempotent persisted-composition reuse for the T1A.7 recovery path only, validates the restored ConstructSnapshot against the deterministic T1A.4 source snapshot, and skips duplicate assembly planning. Because FIX1 touches watched T1A.4/T1A.5 runtime files, both fresh focused revalidation and a fresh full world regression are required before T1A.7.1 acceptance.",
+      "stage_status": "FIX1_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
+      "progress_note": "The first Windows recovery gate exposed restart-bootstrap duplicate assembly after M0 restore. FIX1 added opt-in persisted-composition reuse only for T1A.7 recovery, with deterministic ConstructSnapshot equivalence and no duplicate assembly plan. Fresh Windows revalidation on a1d856de348268c45eccfb1c4646720bc4a996db is green: T1A.4 153, C5B 32, T1A.5 67, T1A.5 transactional 36 and T1A.7 recovery 60 assertions. Full world regression remains required because FIX1 touched watched T1A.4/T1A.5 runtime files.",
       "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-      "next_stage": "Re-run T1A.7.1 focused Windows acceptance on FIX1; if green, run full world regression on the same code head, then accept T1A.7.1 and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
+      "next_stage": "Run full world regression on the same T1A.7.1 FIX1 runtime head; if green, accept T1A.7.1 and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "T1A7_1_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING",
-        "T1A7_1_FULL_WORLD_REGRESSION_PENDING"
-      ]
+      "blockers": ["T1A7_1_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
