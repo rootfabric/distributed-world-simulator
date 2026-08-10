@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1a7_5_composition_validation.v1",
   "checkpoint": "T1A7_5_COMPOSITION_ACCEPTANCE",
-  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
+  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.4 Scale / Soak Lab ACCEPTED",
   "accepted_runtime_dependency_head": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
@@ -54,28 +54,7 @@
     "standalone_t1a7_5_composition": "PASS",
     "standalone_t1a7_5_assertions": 56,
     "aggregate_focused": "FAIL_HARNESS_RACE",
-    "passed_before_failure": {
-      "T1A4": 153,
-      "C5B": 32,
-      "T1A5": 67,
-      "T1A5_TRANSACTIONAL": 36,
-      "T1A7_RECOVERY": 60,
-      "NX0": 150,
-      "M3_GRAPHICAL": 77,
-      "C5C": 29,
-      "T1A6_MULTIPLAYER": 25,
-      "T1A7_2_INTEREST_BINDING": 34,
-      "T1A7_2_LATE_INTEREST_RECONNECT": 35,
-      "T1A7_3_DIRTY_SELECTIVE": 44
-    },
     "failure_test": "tests/construction/t1a7_3_selective_replication_process_acceptance.gd",
-    "failure_evidence": [
-      "JSON parse collided with server.json rewrite window",
-      "client A had already received OPEN selective runtime mutation",
-      "immediate telemetry read returned empty/partial JSON",
-      "first selective mutation plan missing",
-      "first mutation did not target exactly A"
-    ],
     "classification": "TEST_HARNESS_TELEMETRY_READ_RACE_NOT_RUNTIME_SEMANTIC_FAILURE"
   },
   "fix1": {
@@ -87,6 +66,48 @@
     "network_contract_changed": false,
     "runtime_routing_changed": false,
     "authority_or_interest_semantics_changed": false
+  },
+  "windows_fix1_revalidation": {
+    "checkout": "1430284c3e523d9292804be2fc347ac1f70d39a6",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "result": "PASS",
+    "assertions": {
+      "T1A4": 153,
+      "C5B": 32,
+      "T1A5": 67,
+      "T1A5_TRANSACTIONAL": 36,
+      "T1A7_RECOVERY": 60,
+      "NX0": 150,
+      "M3_GRAPHICAL": 77,
+      "C5C": 29,
+      "T1A6_MULTIPLAYER": 25,
+      "T1A7_2_INTEREST_BINDING": 34,
+      "T1A7_2_LATE_INTEREST_RECONNECT": 35,
+      "T1A7_3_DIRTY_SELECTIVE": 44,
+      "T1A7_3_SELECTIVE_PROCESSES": 35,
+      "T1A7_4_SCALE_SOAK": 2394,
+      "T1A7_5_COMPOSITION": 56
+    },
+    "scale_cases": 2,
+    "large_scale_case": {
+      "canonical_subject_count": 10000,
+      "broadcast_baseline_messages": 32000,
+      "projected_baseline_messages": 800,
+      "broadcast_baseline_bytes": 147228480,
+      "projected_baseline_bytes": 3680627,
+      "mutation_iterations": 256,
+      "targeted_deliveries": 1024,
+      "avoided_peer_deliveries": 7168,
+      "planner_failures": 0,
+      "interest_move_iterations": 512,
+      "interest_move_static_memory_delta_bytes": 133036,
+      "reconnect_strategy": "FULL_AUTHORITATIVE_BASELINE",
+      "replay_history_bound": 0
+    },
+    "non_blocking_harness_noise": [
+      "T1A.7.2 result-file polling still emitted one transient JSON parse error while the suite itself passed 35 assertions"
+    ],
+    "final_marker": "T1A.7.5 composition focused gate passed."
   },
   "architecture": {
     "new_canonical_truth": false,
@@ -102,15 +123,15 @@
   "required_validation": {
     "focused_runner": "RUN_T1A7_5_COMPOSITION_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_result": "REVALIDATION_PENDING_AFTER_FIX1",
+    "focused_result": "PASS",
     "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
     "full_regression_result": "PENDING"
   },
   "tested_heads": {
     "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
-    "focused": "",
+    "focused": "1430284c3e523d9292804be2fc347ac1f70d39a6",
     "full_regression": ""
   },
-  "acceptance_effect": "When focused and full regression are green on one post-FIX1 checkout, T1A.7 Runtime Recovery / Interest / Scale can be accepted as a complete checkpoint.",
+  "acceptance_effect": "Focused acceptance is green after FIX1. A fresh full world/core regression on the same checkout is the only remaining gate for accepting T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint.",
   "next_stage_after_acceptance": "PC0 convergence toward T2.0 with TS0.4 structural/representation ceiling evidence"
 }
