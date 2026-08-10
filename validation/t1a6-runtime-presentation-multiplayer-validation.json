@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "PC0_TRANSACTIONAL_EFFECTS_FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "T1A5_TRANSACTIONAL_EFFECTS_FIX1_ACCEPTED_T1A6_REVALIDATION_PENDING",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
@@ -10,6 +10,7 @@
   "previous_full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
   "transactional_effects_fix1_head": "9698415f94c0a68d1536e0bdee7a00463f5c610a",
   "transactional_test_parse_fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
+  "transactional_windows_acceptance_head": "a5e2795698a469a7f160214b3e4880014f6759a2",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "status_dimensions": {
@@ -20,9 +21,10 @@
   },
   "pc0_control": {
     "main_registry_revision": "GLOBAL-P0-2026-08-10-R2",
-    "declared_health": "RED",
-    "blocker": "T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_FIX1_REQUIRED_BEFORE_T1A6_ACCEPTANCE",
+    "main_registry_still_declares_original_blocker": true,
+    "local_t1a5_transactional_blocker_evidence_closed": true,
     "transition_blocked": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE",
+    "remaining_reason": "Fresh T1A.6 multiplayer and full composition regression are still required after the runtime semantic change.",
     "stop_rule_observed": true
   },
   "transactional_effects_fix1": {
@@ -40,17 +42,21 @@
     "transport_changed": false,
     "persistence_foundation_added": false,
     "transaction_coordinator_added": false,
-    "result": "IMPLEMENTED_REQUIRES_WINDOWS_VALIDATION"
+    "windows_evidence": {
+      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+      "c5b_affordance_runtime_contracts": "PASS_32",
+      "t1a5_interactive_runtime_execution": "PASS_67",
+      "t1a5_transactional_runtime_effects": "PASS_36",
+      "focused_marker": "T1A.5 transactional runtime effects focused gate passed."
+    },
+    "result": "ACCEPTED"
   },
   "transactional_test_parse_fix": {
     "windows_probe_head": "64310ef10d76c28ca1111f33f7fc8cd0e7376912",
-    "c5b_affordance_runtime_contracts": "PASS_32",
-    "t1a5_interactive_runtime_execution": "PASS_67",
-    "transactional_test": "BLOCKED_GDSCRIPT_TYPE_INFERENCE",
     "error": "Cannot infer the type of success_generation variable because the value does not have a set type.",
     "fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
     "fix": "Make dynamic Dictionary/API-derived regression values explicit int/String/Dictionary types; production runtime semantics unchanged.",
-    "requires_windows_rerun": true
+    "windows_rerun": "PASS"
   },
   "previous_windows_evidence": {
     "t1a5_runtime_acceptance": "PASS_67",
@@ -63,9 +69,18 @@
     "freshness": "STALE_AFTER_TRANSACTIONAL_EFFECTS_FIX1_RUNTIME_CHANGE"
   },
   "required_revalidation": {
-    "step_1": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
-    "step_2": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
-    "step_3": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "step_1": {
+      "runner": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
+      "result": "PASS"
+    },
+    "step_2": {
+      "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
+      "result": "PENDING"
+    },
+    "step_3": {
+      "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+      "result": "PENDING"
+    },
     "source_acceptance_allowed_after_all_three_pass": true
   },
   "p0_alignment": {
