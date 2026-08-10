@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/ch9-4-equipment-persistence-reconnect",
+  "program": "CH",
+  "role": "PRIMARY_FRONTIER",
+  "short_description": "Persist and recover canonical character equipment through the existing M6 durability/replay/reconnect foundation.",
+  "purpose": "Prove that server-authoritative equipment accepted in CH9.3 survives durable checkpoint, server recovery, reconnect and late join without duplicate Item IDs, duplicate presentation or a character-private persistence layer.",
+  "expected_outcome": "An equipped Item UUID remains in the same canonical equipment container after restart; recovered authority continues to accept equipment commands; reconnecting and late-joining clients converge on the recovered Item Graph and render exactly one presentation per equipped item.",
+  "current_stage": "CH9.4 Equipment Persistence / Late Reconnect",
+  "stage_status": "DECLARED_PENDING_IMPLEMENTATION",
+  "progress_note": "CH9.3 is FOCUSED_ACCEPTED on runtime head cb5eac3c5ef334b84b5f1fe384eba0bfa66877db. CH9.4 is authorized as the next character stage and must reuse M6 authoritative checkpoints, durable replay/outbox and existing Item Graph persistence. No character-private save format or recovery manager is permitted.",
+  "last_accepted_checkpoint": "CH9.3 Multiplayer Equipment Presentation @ cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
+  "next_stage": "Implement durable equipment restore, reconnect and late-join convergence; run focused Windows gate before any later CH stage.",
+  "parent_branch_or_checkpoint": "feature/ch9-3-multiplayer-equipment-presentation @ c18eae9778a5020063163087269483bc43a924be",
+  "base_commit": "c18eae9778a5020063163087269483bc43a924be",
+  "dependencies": [
+    "CH9.3 server-authoritative equipment and Item Graph replication",
+    "M6 authoritative checkpoint/recovery coordinator",
+    "M6 dedicated gameplay authority adapter",
+    "M6 durable replay outbox",
+    "canonical multiplayer Item Graph durable state",
+    "CH8 CharacterEquipmentPresenter"
+  ],
+  "owned_paths": [
+    "scripts/runtime/networked_gameplay/ch9/ch9_4_equipment_recovery_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_4_dedicated_server_runtime.gd",
+    "tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
+    "tests/characters/test_ch9_4_equipment_reconnect_recovery.gd",
+    "RUN_CH9_4_EQUIPMENT_PERSISTENCE_TESTS.ps1",
+    "docs/characters/ch9-4-equipment-persistence-reconnect.md",
+    "validation/ch9-4-equipment-persistence-reconnect-validation.json"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+    "scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd",
+    "scripts/persistence/authoritative_recovery_coordinator.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_3_equipment_item_graph_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_3_networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_3_dedicated_server_runtime.gd"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
+    "scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd",
+    "scripts/persistence/authoritative_recovery_coordinator.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+  ],
+  "runtime_paths": [
+    "scripts/runtime/networked_gameplay/ch9/ch9_4_equipment_recovery_service.gd",
+    "scripts/runtime/networked_gameplay/ch9/ch9_4_dedicated_server_runtime.gd"
+  ],
+  "validation_paths": [
+    "tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
+    "tests/characters/test_ch9_4_equipment_reconnect_recovery.gd",
+    "validation/ch9-4-equipment-persistence-reconnect-validation.json"
+  ],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [
+    "CHARACTER_EQUIPMENT_RECOVERY_ADAPTER_ONLY",
+    "CHARACTER_EQUIPMENT_DURABLE_VALIDATION_ONLY"
+  ],
+  "forbidden_foundation_ownership": [
+    "NEW_PERSISTENCE_FORMAT",
+    "NEW_RECOVERY_COORDINATOR",
+    "NEW_REPLAY_LEDGER",
+    "NEW_ITEM_GRAPH_RELATION",
+    "NETWORK_TRANSPORT_FOUNDATION",
+    "MOVEMENT_SNAPSHOT_SCHEMA",
+    "WORLD_TRANSACTION_MODEL",
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY"
+  ],
+  "blockers": [
+    "CH9_4_IMPLEMENTATION_AND_WINDOWS_FOCUSED_ACCEPTANCE_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}
