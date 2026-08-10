@@ -7,7 +7,7 @@
     "commit": "3861fc7b511491439acf5a2d51a57372a951dc4d"
   },
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "decision": "FIX_PENDING_WINDOWS_REVALIDATION_AFTER_C24_WINDING_CORRECTION",
+  "decision": "COMPLETE_COVERAGE_FIX_IMPLEMENTED_PENDING_WINDOWS_REVALIDATION",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
@@ -23,11 +23,13 @@
   "profiles": {
     "CUBE_10K": {
       "canonical_parts": 10648,
-      "canonical_checksum": "6afcb91d403e0e380f33ad202748f6f7524843188036d9e083e1cbe315672a4f"
+      "canonical_checksum": "6afcb91d403e0e380f33ad202748f6f7524843188036d9e083e1cbe315672a4f",
+      "expected_sections": 27
     },
     "PYRAMID_10K": {
       "canonical_parts": 10416,
-      "canonical_checksum": "39babb3e29949f48fb2df1ddc89c24f6a16e46760939a5b009c29bfbbe5464bf"
+      "canonical_checksum": "39babb3e29949f48fb2df1ddc89c24f6a16e46760939a5b009c29bfbbe5464bf",
+      "expected_sections": 40
     }
   },
   "representation": {
@@ -37,8 +39,12 @@
     "near": "LOCAL_EXTERIOR",
     "mid": "SECTION_HLOD",
     "far": "DISTANT_SHELL",
-    "max_near_mid_section_artifacts": 12,
     "far_shell_artifacts": 1,
+    "complete_visual_coverage_invariant": "COMPLETE_VISUAL_COVERAGE_REQUIRED",
+    "near_coverage": "ALL_SECTION_ARTIFACTS_WITH_LOCAL_REFINEMENT_RESERVED",
+    "mid_coverage": "ALL_SECTION_ARTIFACTS",
+    "ts0_1_flat_complete_coverage_limit": 64,
+    "ts0_2_requires_hierarchical_coverage": true,
     "focus_policy": "EXTERIOR_POSITIVE_Z_SURFACE",
     "default_visual_mode": "FAR",
     "front_face_winding": "GODOT_CLOCKWISE"
@@ -49,13 +55,15 @@
     "adapter_uses_existing_interest_request": "PASS",
     "lab_uses_existing_streaming_controller": "PASS",
     "lab_uses_runtime_node_metrics": "PASS",
-    "headless_acceptance_added": "PASS",
-    "c22_c24_regression_in_focused_runner": "PASS",
-    "solid_construct_interest_avoids_fully_internal_center_section": "PASS_BY_EXTERIOR_FOCUS_POLICY"
+    "c22_production_planner_modified": "NO",
+    "c24_winding_corrected": "PASS_IMPLEMENTED",
+    "near_mid_explicitly_request_all_ts0_1_section_ids": "PASS_IMPLEMENTED",
+    "near_mid_section_budget_equals_manifest_total_sections": "PASS_IMPLEMENTED",
+    "flat_complete_coverage_has_hard_64_section_guard": "PASS_IMPLEMENTED",
+    "100k_flat_all_sections_forbidden_by_ts0_2_contract": "PASS"
   },
   "runtime_validation": {
-    "linux_parse_harness": "PASS_GODOT_4_7_1_DOUBLE_A13DA4FEB",
-    "linux_scene_smoke": "PASS_STUBBED_PIPELINE_SCENE_BOOT_FAR_AND_MID_CONTROL_FLOW",
+    "linux_parse_harness_before_complete_coverage_fix": "PASS_GODOT_4_7_1_DOUBLE_A13DA4FEB",
     "windows_focused_before_winding_fix": {
       "result": "PASS_BUT_VISUAL_DEFECT_NOT_COVERED",
       "tested_head": "9a3a2e7c8685a61cb1399bbbf6531b54de49925e",
@@ -68,24 +76,30 @@
       "c24_proxy_mesh_backend_graphical": "PASS_74_ASSERTIONS"
     },
     "manual_visual_observation": {
-      "result": "FAIL_BACK_FACE_CULLING_ORIENTATION",
-      "profile": "PYRAMID_10K",
-      "affected_modes": ["LOCAL_EXTERIOR", "SECTION_HLOD"],
-      "far_shell": "VISUALLY_COMPLETE",
-      "root_cause": "C24 triangles were indexed CCW relative to outward normals while Godot ArrayMesh front faces use clockwise winding"
+      "winding_after_fix": "PASS_BY_USER_OBSERVATION",
+      "far_shell_shape": "PASS_BY_USER_OBSERVATION_CUBE_AND_PYRAMID_COMPLETE",
+      "near_mid_before_complete_coverage_fix": "FAIL_PARTIAL_OBJECT_ONLY_12_OF_27_OR_40_SECTIONS",
+      "diagnosis": "flat nearest-section selection preserved only a local subset and violated whole-object visual coverage"
     },
     "winding_fix": {
       "backend_commit": "89e3fa8035225fb71a2de9d8df6842d9babf5ee1",
       "test_commit": "3ee01123ff4180bec93580f2bc01f6bfdcc058d3",
-      "strategy": "reverse triangle index order, preserve outward stored normals, pin GODOT_CLOCKWISE metadata/signature",
+      "strategy": "reverse triangle index order, preserve outward stored normals, pin GODOT_CLOCKWISE metadata/signature"
+    },
+    "complete_coverage_fix": {
+      "config_commit": "aef8ba9daedfd33faf845c37ad07f8c6d9c8af3f",
+      "adapter_commit": "ed1e70efb30a434531da2e910e85949cd0bc4f33",
+      "test_commit": "4ce372e1dd1c55d53520c7e20b6704e4e0cf6b73",
+      "strategy": "FAR full root shell; MID all section artifacts; NEAR all section artifacts with local refinement reserved; fail closed above 64 flat sections",
       "windows_revalidation": "PENDING"
     },
-    "repository_full_regression": "PENDING_AFTER_WINDING_REVALIDATION"
+    "repository_full_regression": "PENDING_AFTER_COMPLETE_COVERAGE_REVALIDATION"
   },
   "remaining_gates": [
-    "RUN_TS0_GRAPHICAL_TESTS.ps1 after C24 winding correction",
-    "RUN_TS0_GRAPHICAL_LAB.ps1 manual observation for CUBE_10K and PYRAMID_10K across NEAR/MID/FAR",
+    "RUN_TS0_GRAPHICAL_TESTS.ps1 after winding and complete-coverage fixes",
+    "RUN_TS0_GRAPHICAL_LAB.ps1 manual observation: CUBE_10K modes 3/4/5 all preserve full cube silhouette",
+    "RUN_TS0_GRAPHICAL_LAB.ps1 manual observation: PYRAMID_10K modes 3/4/5 all preserve full pyramid silhouette",
     "RUN_WORLD_REGRESSION_TESTS.ps1 full branch regression"
   ],
-  "next_gate": "Pull latest branch, rerun focused tests, then visually recheck PYRAMID_10K modes 3/4/5"
+  "next_gate": "Pull latest branch, rerun focused tests, then visually verify CUBE_10K and PYRAMID_10K remain complete in modes 3/4/5"
 }
