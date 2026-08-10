@@ -38,6 +38,8 @@ All world/core regression tests through NX4 client prediction and reconciliation
 
 Report path: `C:\Godot\lunar-world-t1-construct\artifacts\test-results\world-regression-summary.json`.
 
+Acceptance closeout metadata head: `784eebfacdebf98b2e6a681f8ea70ca3b9626559`.
+
 Предыдущий parse blocker был test-only и закрыт fix1 `eee48dee636b3fee4d2504049df3a069910f5ca6` явной типизацией M0 report как `Dictionary`.
 
 ## Цель
