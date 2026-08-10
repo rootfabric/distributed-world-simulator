@@ -4,7 +4,7 @@
 **Ветка:** `feature/t1a6-runtime-presentation-multiplayer-binding`  
 **Base:** T1A.5 accepted @ `7e6b83a0df8c509374af21e70615dafa66330846`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `IMPLEMENTED CANDIDATE`
+**Статус:** `FOCUSED ACCEPTED / FULL REGRESSION PENDING`
 
 ## Цель
 
@@ -42,7 +42,7 @@ T1A6M3RuntimeClientAdapter
 
 Все обычные M3 сообщения передаются в `super`; adapter перехватывает только новые construction-runtime message types.
 
-Нового transport boundary, ENet implementation или channel namespace нет.
+Нового transport boundary, ENet implementation или channel namespace нет. После Windows compile fix1 оба adapter используют унаследованный `RealtimeChannelPolicy` accepted M3/NX6 runtime и не объявляют локальную копию transport policy.
 
 ## Wire contract
 
@@ -173,9 +173,58 @@ same-revision mutation rejection
 authority epoch reset
 ```
 
+## Windows focused acceptance
+
+Первый Windows прогон на `cd249458d7bb2964007a129910164a63d0533f65` дошёл до запуска dedicated server и выявил compile-time shadowing `RealtimeChannelPolicy` в T1A.6 adapter. Runtime semantics до этого места не падали.
+
+Fix1:
+
+```text
+5f83dcb3ca3f7043fa3c205260e7e24d891ba32f  server adapter
+ afeea2789d319bcb0bd384c97bd31d4e133a8ff8  client adapter
+```
+
+Повторный focused gate после fix1 полностью прошёл:
+
+```text
+T1A.5 interactive runtime execution    PASS 67
+NX0 observability baseline             PASS 150
+M3 graphical multiplayer contracts     PASS 77
+C5C runtime replication contracts      PASS 29
+T1A.6 graphical multiplayer            PASS 25 / 0 failures
+```
+
+Дополнительно подтверждено:
+
+```text
+client A graphical                     PASS
+client B graphical                     PASS
+A/B final runtime revision             PASS
+server final runtime revision          PASS
+A/B state checksum convergence         PASS
+server/client checksum convergence     PASS
+A presentation == canonical runtime    PASS
+B presentation == canonical runtime    PASS
+A replica rejections                   0
+B replica rejections                   0
+server runtime commands                3
+server runtime command rejections      0
+join + mutation snapshots              PASS
+A/B/server clean shutdown              PASS
+```
+
+Финальный focused marker:
+
+```text
+T1A.6 runtime presentation multiplayer: 25 assertions, 0 failures
+T1A.6 runtime presentation + multiplayer focused gate passed.
+```
+
+Focused acceptance доказал реальную цепочку `canonical runtime -> transport -> replica -> presentation` на dedicated server + двух graphical clients, включая late join после открытия двери.
+
 ## Visual lab
 
-После focused acceptance можно запустить standalone visual lab:
+Standalone visual lab:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
@@ -214,32 +263,37 @@ MaterialDefinitionId/private material ontology
 
 Единственное существующее production-file изменение — регистрация нового wire schema в `NetworkProtocolManifest`; base M3 server/client files не изменяются.
 
-## Focused gate
+## Acceptance state
 
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1 `
-    -GodotPath $Godot
-```
-
-Gate:
-
-```text
-Editor import
-T1A.5 acceptance
-NX0 protocol-manifest baseline
-M3 graphical multiplayer contracts
-C5C runtime replication contracts
-T1A.6 graphical two-client multiplayer acceptance
-```
-
-До exact Windows focused + full regression:
+Focused gate теперь принят. До полного composition regression статус остаётся:
 
 ```text
 SOURCE_ACCEPTED       false
 MAIN_INTEGRATED       false
 COMPOSITION_VERIFIED  false
+PRODUCTION_READY      false
+```
+
+Последний gate T1A.6:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+$env:GODOT_BIN = $Godot
+.\RUN_WORLD_REGRESSION_TESTS.ps1
+```
+
+Целевой marker:
+
+```text
+All world/core regression tests through NX4 client prediction and reconciliation passed.
+```
+
+При полном PASS T1A.6 может перейти в:
+
+```text
+SOURCE_ACCEPTED       true
+MAIN_INTEGRATED       false
+COMPOSITION_VERIFIED  true
 PRODUCTION_READY      false
 ```
 
