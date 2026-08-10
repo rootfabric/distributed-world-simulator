@@ -70,7 +70,11 @@ func _test_manifest() -> void:
 			var level: Dictionary = levels[index]
 			_assert(int(level.get("lod", -1)) == index, "G7.4 presentation LOD%d id" % index)
 			strides.append(int(level.get("stride", 0)))
-			grids.append(Array(level.get("mesh_grid", [])))
+			var mesh_grid: Array = level.get("mesh_grid", [])
+			if mesh_grid.size() == 2:
+				grids.append([int(mesh_grid[0]), int(mesh_grid[1])])
+			else:
+				grids.append([])
 		_assert(strides == EXPECTED_LOD_STRIDES, "G7.4 presentation LOD strides are 1/2/4/8")
 		_assert(grids == EXPECTED_LOD_GRIDS, "G7.4 presentation LOD grids are 33x17 -> 5x3")
 	var presentation: Dictionary = manifest.get("presentation_contract", {})
