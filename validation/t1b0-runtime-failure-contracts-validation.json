@@ -37,6 +37,7 @@
   },
   "windows_focused_validation": {
     "checkout": "1f08defe57f592f5e2698da71a1e3180b0875014",
+    "checkout_note": "Exact focused checkout retained locally for the required full regression; subsequent remote commits are validation/passport metadata only.",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "result": "PASS",
     "t1b0_assertions": 39,
