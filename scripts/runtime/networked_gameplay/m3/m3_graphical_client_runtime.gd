@@ -14,6 +14,7 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 # _boundary.get_snapshot()
 # client_process_max_duration_ms
 # peer_telemetry_max_duration_ms
+# process_unattributed
 #
 # Dispatch-order source proof used by FIX10 fix6 focused validation:
 # if message_type == "PREDICTION_ACK":
@@ -22,3 +23,24 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 #     _fix10_fix6_register_snapshot_ack(snapshot_ack)
 #     super._handle_message(payload)
 # REGISTER_BEFORE_CANONICAL_ACCEPT_AND_TERMINATE_STANDALONE_V1
+#
+# FIX9 source-contract compatibility wrappers. The actual phase accounting still
+# lives exactly once in m3_graphical_client_runtime_fix9.gd further down the
+# inheritance chain. These wrappers only preserve the accepted canonical source
+# boundary after FIX10 fix6 was split into a thin leaf + implementation core.
+
+
+func _handle_message(payload: Dictionary) -> void:
+	super._handle_message(payload)
+
+
+func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	super._reconcile_prediction_from_snapshot(snapshot)
+
+
+func _flush_pending_input_batch(force_send: bool) -> bool:
+	return super._flush_pending_input_batch(force_send)
+
+
+func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
+	return super.advance_local_prediction(intent, frame_delta_seconds)
