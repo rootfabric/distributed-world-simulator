@@ -7,8 +7,8 @@
     "g5_world_feature_identity": "ACCEPTED",
     "g6_hydrology_fluid_semantics": "ACCEPTED"
   },
-  "current_checkpoint": "G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE",
-  "next_checkpoint": "G7_4_SEMANTIC_FIELD_LAB",
+  "current_checkpoint": "G7_4_SEMANTIC_FIELD_LAB",
+  "next_checkpoint": "G7_FULL_ACCEPTANCE",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -23,7 +23,7 @@
   ],
   "frontier_policy": {
     "active_frontier_matches_main": true,
-    "global_config_blob": "dd18f720cd4ce6493618efe270311605aea9bbbf",
+    "global_config_blob": "61939301c5ca21c3c152ba0a76b2c5c0617cea53",
     "global_roadmap_blob": "3eb52a69cef73da8a784dfce7acc6a0c38185cf9",
     "historical_accepted_branches_rewritten_for_new_global_revision": false,
     "world_generation_frontier": "feature/g7-semantic-field-fabric"
@@ -32,15 +32,15 @@
     {
       "id": "G7",
       "name": "Semantic Field Fabric",
-      "status": "IN_PROGRESS_G7_3",
+      "status": "IN_PROGRESS_G7_4",
       "accepted": [
         "G7.0 Semantic Field Contracts",
         "G7.1 G3/G5/G6 Upstream Adapters",
-        "G7.2 Composition and Provenance"
+        "G7.2 Composition and Provenance",
+        "G7.3 Cross-Cell / Cross-LOD Invariance"
       ],
-      "current": "G7.3 Cross-Cell / Cross-LOD Invariance",
+      "current": "G7.4 Semantic Field Lab",
       "remaining": [
-        "G7.4 Semantic Field Lab",
         "G7 Full Acceptance"
       ],
       "forbidden_ownership": [
