@@ -10,9 +10,9 @@
   "expected_outcome": "Accepted 10k and 100k visual/structural evidence showing canonical part count is decoupled from runtime node and draw-call count while complete object shape remains covered and local mutations do not require full presentation recompilation.",
   "current_stage": "TS0.1 10k Visual Proof",
   "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "TS0.0 is accepted. TS0.1 and TS0.2 graphical functionality are reported passing. TS0.3 local dirty-rebuild candidate proves the 100k corner mutation can be constrained to 27/216 sections and one HLOD cluster without a full post-mutation part scan or full C22 compile. Exact attached Godot focused validation passes 24 assertions at runtime head dfdf9dcf. Production C22 convergence remains pending because TS does not own scripts/construction/proxies/**.",
+  "progress_note": "TS0.0 is accepted. TS0.1 and TS0.2 graphical functionality are reported passing. TS0.3 local dirty rebuild now passes on the full Windows worktree: 24 assertions in about 30 ms for CUBE_100K remove-corner 10x10x10, with 27/216 sections rebuilt, 189 reused, one dirty HLOD cluster, and C24 contracts 81 assertions PASS. The remaining technical gate is convergence of the proven algorithm into the production C22 incremental execution path under the correct Construction/C22 ownership, followed by full regression.",
   "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures",
-  "next_stage": "Converge the TS0.3 local rebuild algorithm into the production C22 incremental execution path under Construction/C22 ownership, then run full worktree regression and update main PC0 from accepted facts.",
+  "next_stage": "Converge the TS0.3 local rebuild algorithm into the production C22 incremental execution path under Construction/C22 ownership, then run full world regression and update main PC0 from accepted facts.",
   "parent_branch_or_checkpoint": "T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db",
   "base_commit": "5e051f67bf6987a354de5b565da1448be6b0b4db",
   "dependencies": ["T1A3", "C21", "C22", "C24", "CONSTRUCT_SNAPSHOT"],
@@ -58,7 +58,7 @@
   ],
   "tested_heads": {
     "runtime": "dfdf9dcfbd233c526077f920a24fac76e0619205",
-    "focused": "dfdf9dcfbd233c526077f920a24fac76e0619205",
+    "focused": "c13249b6aa5c95f1e356db56be106345b6f68012",
     "full_regression": ""
   },
   "ownership_claims": [
@@ -89,15 +89,19 @@
     },
     {
       "stage": "TS0.3 Local Mutation / Dirty Section Rebuild",
-      "status": "IMPLEMENTED_CANDIDATE_LOCAL_REBUILD_PROVED_C22_CONVERGENCE_PENDING",
+      "status": "WINDOWS_FOCUSED_PASS_C22_CONVERGENCE_PENDING",
       "formal_frontier_advanced": false,
       "owned_paths_only": true,
       "exact_attached_godot_focused": "PASS_24_ASSERTIONS",
+      "windows_worktree_focused": "PASS_24_ASSERTIONS",
+      "windows_worktree_tested_head": "c13249b6aa5c95f1e356db56be106345b6f68012",
+      "c24_contract_regression": "PASS_81_ASSERTIONS",
       "tested_runtime_head": "dfdf9dcfbd233c526077f920a24fac76e0619205",
       "mutation": "CUBE_100K_REMOVE_CORNER_10x10x10",
       "rebuild_sections": 27,
       "reused_sections": 189,
       "dirty_clusters": 1,
+      "observed_elapsed_ms": 30,
       "full_post_mutation_scan": false,
       "full_c22_compile": false,
       "production_c22_modified": false
