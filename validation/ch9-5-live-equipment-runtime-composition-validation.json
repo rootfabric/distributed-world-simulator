@@ -1,0 +1,104 @@
+{
+  "schema": "planet_simulator.ch9_5_live_equipment_runtime_composition_validation.v1",
+  "stage": "CH9.5 Live Equipment Runtime Composition",
+  "branch": "feature/ch9-5-live-equipment-runtime-composition",
+  "base_branch": "feature/ch9-4-equipment-persistence-reconnect",
+  "base_checkpoint": "de3b6975641635d733f0a5e410101e09a778dd61",
+  "accepted_parent_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "candidate_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
+  "pc0_handoff": {
+    "post_ch9_4_audit_registry_generation": 40,
+    "post_ch9_4_audit_overall": "YELLOW",
+    "post_ch9_4_audit_ch": "YELLOW",
+    "ownership_schema_fix": "de3b6975641635d733f0a5e410101e09a778dd61",
+    "ch9_5_registry_generation": 41,
+    "main_passport_commit": "835ae95bef3b80570981c5660dfca29cba6810d8",
+    "main_registry_commit": "cc073e97f33383a9c9c41fe7b9e3756c9308d63f",
+    "main_roadmap_commit": "2eb819d51ccd00a310ec6e3da689fc62feac9ab2",
+    "status": "DECLARED_AS_PRIMARY_FRONTIER"
+  },
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "goal": "Compose accepted CH9.2 inventory equipment, CH9.3 live ENet Item Graph replication/presentation and CH9.4 M6 durable recovery in one production-shaped runtime without adding a second truth, transport or persistence foundation.",
+  "architecture": {
+    "new_item_relation": false,
+    "new_persistence_format": false,
+    "new_recovery_manager": false,
+    "new_replay_ledger": false,
+    "new_network_channel": false,
+    "movement_snapshot_equipment_ids": false,
+    "server_equipment_truth": "CANONICAL_ITEM_GRAPH_CONTAINER",
+    "equipment_transport": "EXISTING_ITEM_CHANNEL",
+    "equipment_durability": "EXISTING_M6_CHECKPOINT_REPLAY_RECOVERY",
+    "presentation_truth": "DERIVED_FROM_REPLICATED_ITEM_GRAPH",
+    "foundation_runtime_files_modified": false
+  },
+  "implementation": {
+    "persistent_server_runtime": "res://scripts/runtime/networked_gameplay/ch9/ch9_5_persistent_dedicated_server_runtime.gd",
+    "presentation_coordinator": "res://scripts/characters/equipment/network_character_equipment_presentation_coordinator.gd",
+    "runner": ".\\RUN_CH9_5_LIVE_EQUIPMENT_RUNTIME_TESTS.ps1 -GodotPath $Godot"
+  },
+  "composition_contract": [
+    "CH9.3 ENet transport is bootstrapped without persistence and remains the transport owner",
+    "CH9.4 recovery-aware gameplay service is installed synchronously before live SceneTree processing",
+    "inherited M6 recovery setup binds repository coordinator authority adapter and replay outbox to the recovery-aware service",
+    "recovered server tick reinitializes only the inherited fixed-tick scheduler clock",
+    "client item_graph_updated drives per-character NetworkCharacterEquipmentProjection",
+    "projection feeds bound CharacterEquipmentPresenter without owning canonical state",
+    "repeated canonical snapshots are presentation-idempotent",
+    "binding before a remote equipment container exists remains pending rather than becoming canonical failure"
+  ],
+  "invariants": [
+    "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
+    "CANONICAL_EQUIPMENT_RELATION_REMAINS_CONTAINER",
+    "SERVER_AUTHORITY_OWNS_EQUIPMENT_MUTATION",
+    "ITEM_CHANNEL_REMAINS_EQUIPMENT_TRANSPORT",
+    "M6_REMAINS_DURABILITY_OWNER",
+    "MOVEMENT_SNAPSHOT_REMAINS_EQUIPMENT_FREE",
+    "PRESENTATION_IS_DERIVED_AND_DISPOSABLE",
+    "RECONNECT_AND_LATE_JOIN_REBUILD_FROM_CANONICAL_STATE",
+    "IDENTICAL_FULL_SNAPSHOT_DOES_NOT_DUPLICATE_PRESENTATION",
+    "CH_BRANCH_OWNS_NO_GLOBAL_FOUNDATION"
+  ],
+  "focused_tests": {
+    "ch9_2_inventory_character_regression": "res://tests/characters/test_ch9_2_inventory_character_composition.gd",
+    "ch9_3_replicated_presentation_regression": "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
+    "ch9_3_real_enet_regression": "res://tests/characters/test_ch9_3_enet_equipment_replication.gd",
+    "ch9_4_durable_roundtrip_regression": "res://tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
+    "ch9_4_reconnect_recovery_regression": "res://tests/characters/test_ch9_4_equipment_reconnect_recovery.gd",
+    "presentation_coordinator": "res://tests/characters/test_ch9_5_equipment_presentation_coordinator.gd",
+    "persistent_enet_recovery": "res://tests/characters/test_ch9_5_persistent_enet_equipment_recovery.gd"
+  },
+  "persistent_enet_acceptance": [
+    "start generation 1 persistent dedicated server",
+    "join live clients A and B",
+    "equip A lower wearable over existing ITEM channel",
+    "converge A and B canonical Item Graph plus B presentation coordinator",
+    "verify one canonical wearable UUID and no movement snapshot leak",
+    "verify M6 checkpoint created",
+    "stop server generation 1",
+    "start fresh server generation 2 from same persistence root",
+    "verify recovery report and checkpoint generation",
+    "reconnect A and late-join new client C",
+    "verify recovered same UUID is equipped on A for both clients",
+    "bind C presenter for A and immediately derive recovered presentation",
+    "reapply identical snapshot without duplicate presentation change",
+    "unequip A after recovery and observe C presentation update",
+    "verify same UUID returns to inventory and another durable checkpoint commits"
+  ],
+  "candidate_review": {
+    "inherited_member_shadowing_audit": "PASS_BY_SOURCE_REVIEW",
+    "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
+    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+  },
+  "windows_results": {
+    "editor_import": "PENDING",
+    "ch9_2_inventory_character_regression": "PENDING",
+    "ch9_3_replicated_presentation_regression": "PENDING",
+    "ch9_3_real_enet_regression": "PENDING",
+    "ch9_4_durable_roundtrip_regression": "PENDING",
+    "ch9_4_reconnect_recovery_regression": "PENDING",
+    "presentation_coordinator": "PENDING",
+    "persistent_enet_recovery": "PENDING",
+    "candidate_runner": "PENDING"
+  }
+}
