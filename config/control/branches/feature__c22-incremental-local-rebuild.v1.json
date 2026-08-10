@@ -9,10 +9,10 @@
   "purpose": "Remove the current full-compile-before-invalidation behavior from C22 incremental recompilation while preserving canonical Construction ownership and disposable derived presentation semantics.",
   "expected_outcome": "Eligible local unit-grid mutations rebuild only dirty sections plus bounded neighbor context, reuse unchanged section artifacts, rebuild the root shell from compiled section artifacts, preserve C24 presentation correctness, and safely fall back to full compile for unsupported cases.",
   "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-  "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
-  "progress_note": "FIX1 is revalidated on exact Windows Godot 4.7.1 double. Focused gate passes: C22 incremental local rebuild 28 assertions, C22 compiled proxy graphical 35 assertions, and C24 proxy mesh backend contracts 81 assertions. Runtime head is 12b8375182fb855478325435a927228e34d21133; tested branch head is ece092753a4ae44f7de5b89d4e5681306cb05308. Only full world regression and final PC0 overlap audit remain before source acceptance/merge readiness.",
+  "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_FIX2_PENDING",
+  "progress_note": "Exact-Windows focused gate remains accepted: C22 incremental 28, C22 graphical 35, C24 contracts 81. The first full-regression attempt was stopped correctly by the static test-manifest coverage gate before any Godot regression test ran because the new C22 incremental test was not yet listed in RUN_WORLD_REGRESSION_TESTS.ps1. FIX2 adds it to declared coverage and tracks stable UID sidecars; runtime algorithm code is unchanged.",
   "last_accepted_checkpoint": "C22/C24 production baseline in main; TS0.3 algorithm evidence focused-pass",
-  "next_stage": "Run full world regression on the same runtime code, then PC0 audit; if green, mark C22 convergence SOURCE_ACCEPTED and merge-ready.",
+  "next_stage": "Pull FIX2, rerun full world regression, then PC0 audit; if green, mark C22 convergence SOURCE_ACCEPTED and merge-ready.",
   "parent_branch_or_checkpoint": "main @ 0cb0416f20946afc85abe9abcded07bfcc493bf7 plus TS0.3 evidence from feature/ts0-large-structural-visual-lab",
   "base_commit": "0cb0416f20946afc85abe9abcded07bfcc493bf7",
   "dependencies": [
@@ -24,12 +24,16 @@
   "owned_paths": [
     "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
     "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid",
     "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid",
     "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
     "tests/construction/test_c22_incremental_local_rebuild.gd",
+    "tests/construction/test_c22_incremental_local_rebuild.gd.uid",
     "tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
     "RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1",
     "RUN_C22_INCREMENTAL_REBUILD_TESTS.sh",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
     "validation/c22-incremental-local-rebuild-validation.json",
     "docs/checkpoints/*C22_INCREMENTAL*"
   ],
@@ -61,7 +65,8 @@
   "validation_paths": [
     "validation/c22-incremental-local-rebuild-validation.json",
     "tests/construction/test_c22_incremental_local_rebuild.gd",
-    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd"
+    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
+    "RUN_WORLD_REGRESSION_TESTS.ps1"
   ],
   "tested_heads": {
     "runtime": "12b8375182fb855478325435a927228e34d21133",
@@ -89,7 +94,7 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "C22_INCREMENTAL_FULL_WORLD_REGRESSION_PENDING"
+    "C22_INCREMENTAL_FULL_REGRESSION_FIX2_REVALIDATION_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
