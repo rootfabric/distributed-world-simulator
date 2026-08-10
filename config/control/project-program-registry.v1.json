@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 7,
+  "registry_generation": 8,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T04:54:00Z",
+  "updated_at_utc": "2026-08-10T09:24:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -39,12 +39,12 @@
       "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
       "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
-      "stage_status": "IMPLEMENTED_CANDIDATE",
-      "progress_note": "Architecture/reuse audit is closed: Construction already uses the shared M0 AggregateTransactionRepository/Coordinator through ConstructionM0TransactionBridge. T1A.7.1 adds a Construction-owned runtime aggregate state/adapter plus explicit checkpoint and restart restore, while reusing the existing M0 repository/coordinator. Windows focused acceptance is pending.",
+      "stage_status": "FIX1_IMPLEMENTED_CANDIDATE",
+      "progress_note": "The first Windows recovery gate preserved all inherited T1A.4/C5B/T1A.5 tests but exposed a restart-bootstrap defect before runtime restore: after M0 synchronized the already assembled construct, T1A.4 rebuilt the assembly plan and correctly failed with ATTACH_PART_SOURCE_ALREADY_ATTACHED. FIX1 adds opt-in idempotent persisted-composition reuse for the T1A.7 recovery path only, validates the restored ConstructSnapshot against the deterministic T1A.4 source snapshot, and skips duplicate assembly planning. Fresh Windows focused revalidation is pending.",
       "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-      "next_stage": "Accept T1A.7.1 recovery on Windows, then T1A.7.2 Late-Interest Baseline + Reconnect using the accepted MW7 subscription/replay pattern without Matter identity leakage.",
+      "next_stage": "Re-run T1A.7.1 focused Windows acceptance on FIX1; if green, record acceptance and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_1_WINDOWS_FOCUSED_ACCEPTANCE_PENDING"]
+      "blockers": ["T1A7_1_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING"]
     },
     "TS": {
       "program": "TS",
