@@ -1,27 +1,19 @@
 {
   "schema": "planet_simulator.t1a7_3_dirty_selective_runtime_replication_validation.v1",
   "checkpoint": "T1A7_3_DIRTY_SELECTIVE_RUNTIME_REPLICATION",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.2 Late-Interest Baseline + Reconnect ACCEPTED",
   "accepted_base_runtime_head": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
-  "candidate_runtime_head_before_validation_metadata": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
-  "focused_checkout_head": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
+  "accepted_runtime_head": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
+  "tested_checkout_head": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
-  },
-  "scope": {
-    "planner": "scripts/labs/t1/t1a7/construction_runtime_selective_replication_planner.gd",
-    "server_adapter": "scripts/labs/t1/t1a7/t1a7_3_m3_runtime_server_adapter.gd",
-    "server_harness": "tools/runtime/t1a7_3_runtime_server.gd",
-    "planner_acceptance": "tests/construction/t1a7_3_dirty_selective_replication_acceptance.gd",
-    "process_acceptance": "tests/construction/t1a7_3_selective_replication_process_acceptance.gd",
-    "focused_runner": "RUN_T1A7_3_DIRTY_SELECTIVE_REPLICATION_TESTS.ps1"
   },
   "architecture": {
     "canonical_truth_format_changed": false,
@@ -69,23 +61,23 @@
     "final_marker": "T1A.7.3 dirty/selective runtime replication focused gate passed.",
     "harness_noise": "Two transient Parse JSON failed log entries occurred while polling JSON result files during concurrent rewrite; subsequent polls succeeded and both affected process acceptance suites completed PASS with all assertions. Classified as non-blocking test-harness file-read race, not runtime/network failure."
   },
-  "focused_evidence_targets": [
-    "accepted T1A.7.2 focused gate remains green",
-    "synthetic D0/D1 reverse selection routes only relevant clients",
-    "one subject mutation yields exactly one dirty runtime id",
-    "same snapshot replay does not create a mutation plan",
-    "stale and same-revision mutations reject",
-    "real M3 A mutation targets A while B outside interest receives no runtime mutation",
-    "planner records avoided peer delivery when B is connected but irrelevant",
-    "no selective send failure",
-    "no broadcast fallback in normal path",
-    "late/re-entry/reconnect full baseline remains green"
-  ],
+  "full_regression_evidence": {
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PASS",
+    "checkout_head": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
+    "rl2_real_asteroid_multiresolution_assertions": 44,
+    "rl3_representation_aware_network_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli": "6 PASS / 0 FAIL",
+    "lifecycle_state": "STOPPED",
+    "exit_code": 0,
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json"
+  },
   "scale_boundary": {
     "t1a7_3_claim": "routing work follows dirty construct plus relevant-client projection instead of broadcast-all peers",
     "not_yet_claimed": [
       "10k runtime subject soak",
-      "bounded replay history under scale",
       "payload byte reduction via compact delta",
       "multi-node distributed interest execution"
     ],
@@ -96,11 +88,11 @@
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "focused_result": "PASS",
     "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+    "full_regression_result": "PASS"
   },
   "tested_heads": {
     "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
     "focused": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
-    "full_regression": ""
+    "full_regression": "c6544100564d2fa55d96b607ccd9ea61c01387b1"
   }
 }
