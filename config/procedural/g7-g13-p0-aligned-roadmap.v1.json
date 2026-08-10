@@ -9,10 +9,11 @@
     "g6_hydrology_fluid_semantics": "ACCEPTED",
     "g7_semantic_field_fabric": "ACCEPTED",
     "g8_0_geomorphology_contracts": "ACCEPTED",
-    "g8_1_valley_incision_baseline": "ACCEPTED"
+    "g8_1_valley_incision_baseline": "ACCEPTED",
+    "g8_2_river_channel_incision": "ACCEPTED"
   },
-  "current_checkpoint": "G8_2_RIVER_CHANNEL_INCISION",
-  "next_checkpoint": "G8_3_BANKS_AND_FLOODPLAIN_SHAPING",
+  "current_checkpoint": "G8_3_BANKS_AND_FLOODPLAIN_SHAPING",
+  "next_checkpoint": "G8_4_EROSION_DEPOSITION_BASELINE",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -66,12 +67,13 @@
     {
       "id": "G8",
       "name": "Geomorphology",
-      "status": "IN_PROGRESS_G8_2",
+      "status": "IN_PROGRESS_G8_3",
       "accepted": [
         "G8.0 Geomorphology Contracts",
-        "G8.1 Valley Incision Baseline"
+        "G8.1 Valley Incision Baseline",
+        "G8.2 River Channel Incision"
       ],
-      "current": "G8.2 River Channel Incision",
+      "current": "G8.3 Banks and Floodplain Shaping",
       "roadmap": [
         "G8.0 Geomorphology Contracts",
         "G8.1 Valley Incision Baseline",
