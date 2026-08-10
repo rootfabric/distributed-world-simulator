@@ -4,11 +4,18 @@
 **Ветка:** `feature/t1a4-interactive-fixture-binding`  
 **Base:** T1A.3 accepted @ `5e051f67bf6987a354de5b565da1448be6b0b4db`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `FOCUSED WINDOWS PASS — FULL REGRESSION REQUIRED`
+**Статус:** `ACCEPTED`
 
-## Exact Windows focused evidence
+## Acceptance status
 
-Проверено на `Godot 4.7.1.stable.double.custom_build.a13da4feb`, tested head `f5a2f3349ebb7be663f72a0bd435ae9386ce46a1`:
+```text
+SOURCE_ACCEPTED       true
+MAIN_INTEGRATED       false
+COMPOSITION_VERIFIED  true
+PRODUCTION_READY      false
+```
+
+Exact Windows focused gate прошёл на Godot `4.7.1.stable.double.custom_build.a13da4feb`:
 
 ```text
 T1A.3 Item Graph materialization      PASS 865
@@ -17,18 +24,21 @@ C15 executable utilities contracts   PASS 92
 C2B authoritative Item Graph         PASS 194
 T1A.4 direct acceptance              PASS 153
 T1A.4 focused runner                 PASS
+Focused total                        1409 assertions PASS
 ```
 
-Focused total: `1409 assertions`, все PASS. Предыдущий parse blocker был test-only и закрыт fix1 `eee48dee636b3fee4d2504049df3a069910f5ca6` явной типизацией M0 report как `Dictionary`.
+Focused tested head: `f5a2f3349ebb7be663f72a0bd435ae9386ce46a1`.
 
-Статусные измерения до полного world regression остаются:
+Full `RUN_WORLD_REGRESSION_TESTS.ps1` затем прошёл на metadata head `a81b56fdce2cc0b09d022989d866988faf92026f` до финального sentinel:
 
 ```text
-SOURCE_ACCEPTED       false
-MAIN_INTEGRATED       false
-COMPOSITION_VERIFIED  false
-PRODUCTION_READY      false
+main_scene_cli_all  6 PASS / 0 FAIL
+All world/core regression tests through NX4 client prediction and reconciliation passed.
 ```
+
+Report path: `C:\Godot\lunar-world-t1-construct\artifacts\test-results\world-regression-summary.json`.
+
+Предыдущий parse blocker был test-only и закрыт fix1 `eee48dee636b3fee4d2504049df3a069910f5ca6` явной типизацией M0 report как `Dictionary`.
 
 ## Цель
 
@@ -182,43 +192,8 @@ MaterialDefinitionId/private material ontology
 
 `ConstructSnapshot` остаётся semantic equivalent T1A.3 snapshot; binding data живут в Item Graph/C5/C15 artifacts.
 
-## Focused gate
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_T1A4_INTERACTIVE_FIXTURE_BINDING_TESTS.ps1 `
-    -GodotPath $Godot
-```
-
-Gate включает:
-
-```text
-editor import
-T1A.3 acceptance
-C5 capability / affordance contracts
-C15 executable utility contracts
-C2B authoritative Item Graph integration
-T1A.4 acceptance
-```
-
-T1A.4 acceptance проверяет 71 Items, six bindings, item-owned 24-slot storage, behavior descriptors, POWER/DATA networks and execution profiles, M0/C2B authority revisions, exact replay и отсутствие binding/runtime полей в canonical Construction snapshot.
-
-## Следующий gate
-
-Для acceptance T1A.4 остаётся полный:
-
-```powershell
-$env:GODOT_BIN = $Godot
-.\RUN_WORLD_REGRESSION_TESTS.ps1
-```
-
-После его PASS можно выставить `SOURCE_ACCEPTED=true` и `COMPOSITION_VERIFIED=true`.
-
 ## Следующий checkpoint
-
-После full regression acceptance:
 
 `T1A.5 — Interactive Runtime Execution`
 
-Там можно отдельно реализовать исполняемое состояние `OPEN/CLOSE`, generator start/stop, light toggle и console interaction, используя уже закреплённые T1A.4 capability/utility bindings.
+T1A.5 должен реализовать исполняемое authoritative состояние `OPEN/CLOSE`, generator start/stop, light toggle и console interaction, используя закреплённые T1A.4 capability/utility bindings и существующую operation/replay foundation. Runtime state не должен становиться частью `ConstructSnapshot`, permanent Item identity, LOD или authority-routing identity.
