@@ -1,17 +1,18 @@
 {
   "schema": "planet_simulator.t1a4_interactive_fixture_binding_validation.v1",
   "checkpoint": "T1A4_INTERACTIVE_FIXTURE_BINDING",
-  "decision": "FOCUSED_WINDOWS_PASS_FULL_REGRESSION_REQUIRED",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a4-interactive-fixture-binding",
   "base_head": "5e051f67bf6987a354de5b565da1448be6b0b4db",
   "candidate_head": "648529318cf362539ac111394acb61fe027ed592",
   "fix1_code_head": "eee48dee636b3fee4d2504049df3a069910f5ca6",
   "focused_tested_head": "f5a2f3349ebb7be663f72a0bd435ae9386ce46a1",
+  "accepted_tested_head": "a81b56fdce2cc0b09d022989d866988faf92026f",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "scope": {
@@ -73,7 +74,13 @@
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "result": "PENDING"
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "head": "a81b56fdce2cc0b09d022989d866988faf92026f",
+    "main_scene_cli_all": "PASS_6_OF_6",
+    "final_sentinel": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "C:/Godot/lunar-world-t1-construct/artifacts/test-results/world-regression-summary.json",
+    "result": "PASS"
   },
-  "next_after_acceptance": "T1A5_INTERACTIVE_RUNTIME_EXECUTION"
+  "next_after_acceptance": "T1A5_INTERACTIVE_RUNTIME_EXECUTION",
+  "acceptance_note": "Exact Windows focused gate and full world/core regression both passed. SOURCE_ACCEPTED and COMPOSITION_VERIFIED are true; MAIN_INTEGRATED and PRODUCTION_READY remain false."
 }
