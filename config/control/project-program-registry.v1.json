@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 6,
+  "registry_generation": 7,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
   "updated_at_utc": "2026-08-10T04:54:00Z",
@@ -38,13 +38,13 @@
       "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
       "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-      "current_stage": "T1A.7 Runtime Recovery / Interest / Scale",
-      "stage_status": "ACTIVE",
-      "progress_note": "T1A.6 is accepted after transactional-effects FIX1 and fresh Windows focused/full regression. T1A.7 is opened for architecture/reuse audit before runtime implementation; MW7 interest/reconnect and existing persistence repository/coordinator boundaries are being treated as watched dependencies, not copied foundations.",
+      "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
+      "stage_status": "IMPLEMENTED_CANDIDATE",
+      "progress_note": "Architecture/reuse audit is closed: Construction already uses the shared M0 AggregateTransactionRepository/Coordinator through ConstructionM0TransactionBridge. T1A.7.1 adds a Construction-owned runtime aggregate state/adapter plus explicit checkpoint and restart restore, while reusing the existing M0 repository/coordinator. Windows focused acceptance is pending.",
       "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-      "next_stage": "Complete architecture/reuse audit, then implement the smallest recovery + late-interest + selective-replication candidate and focused acceptance.",
+      "next_stage": "Accept T1A.7.1 recovery on Windows, then T1A.7.2 Late-Interest Baseline + Reconnect using the accepted MW7 subscription/replay pattern without Matter identity leakage.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_ARCHITECTURE_REUSE_AUDIT_PENDING"]
+      "blockers": ["T1A7_1_WINDOWS_FOCUSED_ACCEPTANCE_PENDING"]
     },
     "TS": {
       "program": "TS",
