@@ -1,178 +1,242 @@
-# T1 Complex Construct Demo — P0 alignment
+# T / Construction — P0 alignment
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Branch:** `feature/t1-complex-construct-demo-lab`  
-**Validation overlay:** `fix/t1-m5-convergence-finish-barrier`  
-**Local role:** Construction composition / complex construct validation
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`  
+**Branch family:** `T / Construction`  
+**Active frontier:** `feature/t1a4-interactive-fixture-binding`  
+**Current stage:** `T1A.4 — Interactive Fixture Binding`  
+**Parallel planned track:** `TS0 — Large Structural Visual Lab`  
+**Local role:** Construction composition + construction scale/visual validation
 
-## Зачем добавлен этот документ
+## 1. Назначение
 
-T1 проверяет сложную композицию Construction поверх Item, network и HLOD. После глобального архитектурного аудита здесь явно фиксируется, какие решения T1 может принимать локально, а какие принадлежат общему foundation и не должны повторно реализовываться внутри Construction.
+T проверяет Construction как canonical gameplay domain поверх Item, utilities, runtime representation, network и recovery.
 
-## Локальный план остаётся прежним
-
-```text
-T1A Complex Construct Demo
-    ↓
-T1B Construct Composition / Failure Demo
-    ↓
-T2 Construction Scale
-    ↓
-T5 Matter + Construction Composition
-```
-
-T1A/T1B разрешено развивать до завершения всех P0 implementations, если локальные эксперименты не замораживают конкурирующие global contracts.
-
-## Текущий статус после Windows composition regression
-
-Validation overlay `fix/t1-m5-convergence-finish-barrier` использовался для закрытия regression blockers, обнаруженных при полном T1 checkout. На head `280c6e24ef5b847f27be7099140832ddd7e23a25` подтверждено:
+T может развивать локальные composition/scale experiments, но не может переопределять P0 owners:
 
 ```text
-World boot matrix                             PASS / exit 0
-MW7 matter interest replication              PASS / 114 assertions / exit 0
-RUN_WORLD_REGRESSION_TESTS.ps1                PASS
-All world/core regression tests through NX4  PASS
+Spatial Domain Fabric
+Unified Material Ontology
+Cross-Domain World Transaction Model
+Authority foundation
+NX8 shared interest/budget
+Persistence/recovery foundation
+future World Work / Budget Fabric
 ```
 
-Статусы T1A.0 и T1A.1 фиксируются раздельно по P0 vocabulary:
+## 2. Текущая точка
+
+Принятая база для текущего T frontier:
 
 ```text
-SOURCE_ACCEPTED       = true
-MAIN_INTEGRATED       = false
-COMPOSITION_VERIFIED  = true
-PRODUCTION_READY      = false
+T1A.3 SOURCE_ACCEPTED
+commit 5e051f67bf6987a354de5b565da1448be6b0b4db
+        ↓
+T1A.4 Interactive Fixture Binding — CURRENT
 ```
 
-Это принципиально не означает `T1 ACCEPTED`: higher-level T0/T1 gates остаются отдельными.
+T1A.4 связывает шесть interactive Item identities с C5/C15/Container contracts. Binding/runtime artifacts не становятся полями canonical `ConstructSnapshot`.
 
-## Классификация regression-enabling fixes
+## 3. R2: две параллельные линии T
 
-При полном Windows regression были обнаружены и исправлены проблемы в соседних уже существующих foundations/harnesses:
+После принятого T1A.3 развитие разрешено параллельно:
 
 ```text
-M5 graphical acceptance finalization/publication
-world persistence manifest JSON numeric normalization
-MW7 test fixture lifecycle / exit cleanup
-world regression runner coverage/packaging
+                         T1A.3 ACCEPTED
+                              │
+               ┌──────────────┴──────────────┐
+               │                             │
+               ▼                             ▼
+         T COMPOSITION                    TS SCALE/VISUAL
+               │                             │
+         T1A.4 Binding                   TS0.0 fixtures
+               │                             │
+         T1A.5 Runtime                   TS0.1 10k
+               │                             │
+         T1A.6 Inspector                 TS0.2 100k
+               │                             │
+         T1B Failure/Recovery            TS0.3 mutation
+               │                             │
+               │                         TS0.4 1M probe
+               │                             │
+               └──────────────┬──────────────┘
+                              ▼
+                            T2.0+
 ```
 
-Эти изменения допустимы в validation overlay только как исправления существующих contracts. Они **не передают T1 владение** соответствующими foundations:
+Правило:
 
 ```text
-T1 != Network owner
-T1 != Persistence owner
-T1 != Matter interest owner
-T1 != global regression framework owner
+T1A.4 does not depend on TS0
+TS0 does not depend on T1A.4
 ```
 
-Перед интеграцией в `main` их scope должен оставаться явно описанным как общие regression fixes, а не как новые Construction semantics.
+TS0 не должен стартовать от незавершённого T1A.4 candidate. Его preferred base — accepted T1A.3 + synchronized P0 R2 change-set.
 
-## P0 dependencies
+## 4. Spatial boundary
 
-### Spatial
+Construction сохраняет construct/local scopes и local frames.
 
-Construction сохраняет собственные construct/local scopes и local frames. В будущем они должны отображаться через `Spatial Domain Fabric` в world/authority/interest адресацию.
+```text
+ConstructionScope != WorldAddress
+Construction section != WorldAddress
+HLOD section != InterestRegionId
+HLOD section != AuthorityRegionId
+```
 
-Запрещено использовать Construction section/chunk/HLOD key как глобальный world identity.
+Будущий Spatial Domain Fabric маппит Construction наружу; T не создаёт собственную глобальную world addressing system.
 
-До появления общего Spatial Domain Fabric T1A.2 может использовать существующие Construction/local identifiers только внутри уже определённого domain contract. Нельзя превращать их в permanent global addresses или server routes.
-
-### Materials
-
-Текущие construction `material_family` / visual profile IDs являются только presentation/fixture identifiers. Будущие физические, resource, fabrication и salvage свойства должны ссылаться на общий `MaterialDefinitionId`, а не создавать автономную material ontology Construction.
+## 5. Material boundary
 
 ```text
 presentation material_family != MaterialDefinitionId
 render material               != canonical material definition
 ```
 
-### Transactions
+TS0 может использовать простой визуальный материал блока. Он остаётся presentation-only и не становится физической/material truth.
 
-Следующие операции не должны становиться цепочкой best-effort RPC:
+## 6. Transaction boundary
+
+Cross-domain операции:
 
 ```text
 consume item -> place part
-remove part -> salvage item/material
-construction damage -> debris/material output
+remove part -> salvage
+construction damage -> debris/material
 ```
 
-До formal T5-like acceptance они должны подключаться к общему `WorldOperation / WorldTransactionPlan` contract.
+не должны становиться best-effort RPC chain.
 
-T1A.2 может создать authoritative D0 construct по существующему Construction operation path. T1A.3 может использовать существующие Item Graph transactions для перемещений предметов. Но операция, которая одновременно меняет Item и Construction canonical state, является P0 cross-domain boundary и не должна получать private T1 bridge.
+T1A.4 продолжает использовать существующие C2B/M0/C5/C15 boundaries. Будущий T5-like cross-domain acceptance подключается к общему `WorldOperation / WorldTransactionPlan`.
 
-### Network
+TS0 не требует Item consumption или salvage semantics: fixture создаётся как deterministic scale lab и может работать без новых cross-domain mutations.
 
-- NX7 задаёт physics authority policy поверх существующего authority foundation;
-- NX8 поставляет interest/budget contract для C22/C24 adapters;
-- NX9 не заменяет Construction/M0 durability новым persistence path;
-- network delivery никогда не является заменой domain transaction semantics.
+## 7. Network / authority boundary
 
-### Representation
+```text
+T != Network owner
+T != authority registry owner
+TS0 != Interest Management owner
+TS0 != replication budget owner
+```
+
+NX7 задаёт physics authority policy; NX8 — общий interest/replication budget contract.
+
+TS0 может измерять distance/HLOD и локальные budgets, но эти значения не получают canonical/global identity.
+
+## 8. Representation boundary
 
 ```text
 Construct canonical graph
     != C22 artifact
     != C24 ArrayMesh
     != HLOD selection
-    != T1 PartVisualProfile
+    != PartVisualProfile
+    != TS0 debug mode
 ```
 
-Эта граница остаётся неизменной. Presentation artifacts разрешено удалить и полностью перестроить из canonical state.
+Presentation artifact можно полностью удалить и rebuild-нуть из canonical state.
 
-## Локальные задачи, разрешённые без P0 block
+TS0 обязан переиспользовать C21/C22/C24 там, где они покрывают задачу. Создавать параллельный `TSMeshSystem`/`TSHlodSystem` как новый owner запрещено.
 
-- D0/D1 complex outpost fixture;
-- T1A.2 authoritative D0 builder через существующий Construction authority path;
-- rooms/openings/utilities/machines composition;
-- Item Graph transfer experiments, не создающие cross-domain commit chain;
-- multiplayer convergence/reconnect experiments;
-- C22/C24 near/mid/far representation;
-- dirty-section rebuild measurements;
-- representation backend routing research;
-- scale experiments, если они не создают новый global interest identity.
+## 9. Work / budget boundary
 
-## Explicit gate для T1A.2 / T1A.3
+Для 10k/100k/1M experiments будут нужны ограничения работы за frame.
 
-Перед добавлением нового contract необходимо проверить:
+Разрешены локальные lab knobs:
 
 ```text
-[ ] identity не зависит от LOD/HLOD
-[ ] local Construction scope не становится global world address
-[ ] authority owner не кодируется в permanent identity
-[ ] visual/material profile не становится physical material truth
-[ ] Item + Construction mutation не полагается на порядок RPC
-[ ] persistence/recovery использует существующий foundation
-[ ] headless/server path не требует renderer assets
+max_builds_per_frame
+max_upload_bytes_per_frame
+max_active_sections
 ```
 
-Если любой пункт требует нового общего понятия, T1 stage должен остановиться и вынести его в global P0 plan.
+Но:
 
-## Stop conditions
+```text
+lab knob != global scheduler contract
+```
 
-T1 должен остановить локальную реализацию и вынести вопрос в global plan, если потребуется:
+Будущий `World Work / Budget Fabric` остаётся P1 owner и позже сможет заменить/адаптировать эти knobs.
+
+## 10. Локально разрешённые задачи
+
+Без нового P0 gate разрешены:
+
+- T1A.4 binding C5/C15/Container semantics;
+- T1A.5 interactive runtime execution;
+- T1A.6 runtime inspector/telemetry;
+- D0/D1 gameplay composition;
+- C22/C24 near/mid/far representation;
+- TS0 cube/pyramid deterministic fixtures;
+- TS0 10k/100k visual scale tests;
+- TS0 dirty-section rebuild measurements;
+- TS0 1M research ceiling probe;
+- visual debug overlays;
+- runtime-node/draw-call/mesh/GPU telemetry.
+
+## 11. TS0 explicit P0 gate
+
+Перед новым TS0 contract проверить:
+
+```text
+[ ] fixture identity не зависит от camera/LOD
+[ ] section ID не является global world address
+[ ] authority owner не кодируется в part identity
+[ ] visual block material не является MaterialDefinitionId
+[ ] HLOD artifact не входит в canonical checksum
+[ ] lab scheduling knobs не становятся global Work Budget owner
+[ ] headless canonical fixture может существовать без renderer assets
+[ ] C21/C22/C24 reuse проверен до создания нового backend
+```
+
+## 12. Stop conditions
+
+T/TS должен остановить локальную реализацию и вынести вопрос в P0, если потребуется:
 
 - отдельный Construction authority registry;
-- отдельный глобальный material namespace;
-- Construction chunk как permanent world address;
-- cross-domain correctness через порядок RPC;
-- HLOD/proxy/PartVisualProfile как источник canonical state;
-- собственный persistence model вместо существующих transaction/recovery foundations;
-- server routing, встроенный в permanent construct/part identity.
+- отдельный global material namespace;
+- Construction/TS section как permanent WorldAddress;
+- private interest/replication identity;
+- private global work scheduler;
+- HLOD/proxy как canonical state;
+- собственный persistence model;
+- correctness через порядок RPC;
+- server route внутри permanent construct/part identity.
 
-## Merge gate
+## 13. T2 handoff
 
-Перед formal merge/acceptance T1 head обязан иметь:
+TS0 даёт synthetic scale evidence, но не закрывает T2.0.
 
 ```text
-[PASS] GLOBAL-P0-2026-08-08-R1 или более новая синхронная revision
-[PASS] global config byte-equivalent main
-[PASS] network NX7-NX9 boundaries синхронизированы
-[PASS] local T1 roadmap не переопределяет P0 ownership
-[PASS] regression-enabling fixes классифицированы по настоящим foundation owners
-[PASS] SOURCE_ACCEPTED отделён от MAIN_INTEGRATED / PRODUCTION_READY
-[PASS] branch regression / T1 focused tests
+TS0 10k/100k cube+pyramid proof
+        ↓
+T2.0 real large construct
 ```
 
-На текущем validation overlay первые, вторые, третьи, четвёртые, пятые, шестые и regression-пункты подтверждены. `MAIN_INTEGRATED` остаётся `false` до фактической интеграции соответствующих изменений в `main`.
+T2.0 должен доказать масштаб уже на реальной сложной базе/станции с неоднородной semantic composition.
 
-Этот документ является локальным дополнением. Канонический общий план находится в `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
+## 14. Merge gate
+
+Перед formal acceptance активного T head:
+
+```text
+[PASS] GLOBAL-P0-2026-08-10-R2 или более новая синхронная revision
+[PASS] global config byte-equivalent main
+[PASS] global roadmap byte-equivalent main
+[PASS] local T P0 alignment current
+[PASS] no duplicate P0 ownership
+[PASS] SOURCE_ACCEPTED / MAIN_INTEGRATED / COMPOSITION_VERIFIED / PRODUCTION_READY раздельны
+[PASS] focused tests
+[PASS] required world/core regression
+```
+
+Для TS0 дополнительно:
+
+```text
+[PASS] accepted T1A.3 ancestry
+[PASS] no dependency on unfinished T1A.4 semantics
+[PASS] 100k visual gate telemetry captured
+[PASS] 1M classified RESEARCH only
+```
+
+Канонический общий план: `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md`.
