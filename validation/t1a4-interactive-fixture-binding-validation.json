@@ -1,9 +1,11 @@
 {
   "schema": "planet_simulator.t1a4_interactive_fixture_binding_validation.v1",
   "checkpoint": "T1A4_INTERACTIVE_FIXTURE_BINDING",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "FIX1_PARSE_RETEST_REQUIRED",
   "branch": "feature/t1a4-interactive-fixture-binding",
   "base_head": "5e051f67bf6987a354de5b565da1448be6b0b4db",
+  "candidate_head": "648529318cf362539ac111394acb61fe027ed592",
+  "fix1_head": "eee48dee636b3fee4d2504049df3a069910f5ca6",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -54,8 +56,19 @@
   },
   "focused_gate": {
     "runner": "RUN_T1A4_INTERACTIVE_FIXTURE_BINDING_TESTS.ps1",
-    "dependencies": ["T1A3 acceptance", "C5 capability/affordance contracts", "C15 executable utilities contracts", "C2B authoritative Item Graph integration"],
-    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "dependencies": {
+      "t1a3": "PASS_865_ASSERTIONS",
+      "c5": "PASS_105_ASSERTIONS",
+      "c15": "PASS_92_ASSERTIONS",
+      "c2b": "PASS_194_ASSERTIONS"
+    },
+    "candidate_result": "FAIL_PARSE_BEFORE_T1A4_ASSERTIONS",
+    "windows_trigger": "Cannot infer the type of m0 variable because the value does not have a set type at t1a4_interactive_fixture_binding_acceptance.gd:101",
+    "fix1": "Explicit Dictionary type for M0 state report local variable",
+    "fix1_scope": "test-only one-line type annotation",
+    "fix1_exact_linux_parse": "PASS",
+    "retest": "REQUIRED"
   },
   "next_after_acceptance": "T1A5_INTERACTIVE_RUNTIME_EXECUTION"
 }
