@@ -6,8 +6,12 @@ $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $MainRef = "origin/main"
 $GlobalConfigPath = "config/architecture/global-program-roadmap.v1.json"
-$GlobalRoadmapPath = "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md"
 $ExpectedGlobalRevision = "GLOBAL-P0-2026-08-10-R2"
+$ExpectedControlRevision = "PC0-2026-08-10-R1"
+$ProjectRegistryPath = "config/control/project-program-registry.v1.json"
+$ProjectPolicyPath = "config/control/project-control-policy.v1.json"
+$BranchPassportPath = "config/control/branches/feature__g7-semantic-field-fabric.v1.json"
+$ControlReportPath = Join-Path $RootDir "artifacts/control/project-control-report.json"
 $G73AcceptedCommit = "1a2808a2e03c565c9a52fc467c51398d43fcf3e9"
 $WindowsProfileTransientPath = Join-Path $RootDir "Microsoft"
 
@@ -84,14 +88,26 @@ function Assert-PowerShellParses {
     }
 }
 
+function Assert-AsciiFile {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $Bytes = [IO.File]::ReadAllBytes($Path)
+    foreach ($Byte in $Bytes) {
+        if ($Byte -gt 127) {
+            throw "Windows PowerShell compatibility requires ASCII-only G7.4 runner/launcher: $Path"
+        }
+    }
+}
+
 function Test-G74AllowedPath {
     param([Parameter(Mandatory = $true)][string]$Path)
     if ($Path -in @(
+        "CONTROL_PROJECT.ps1",
         "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.ps1",
         "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.sh",
         "RUN_G7_4_FULL_ACCEPTANCE.ps1",
         "START_G7_4_SEMANTIC_FIELD_LAB.ps1",
         "config/architecture/global-program-roadmap.v1.json",
+        "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
         "config/procedural/g7-4-semantic-field-lab.v1.json",
         "config/procedural/g7-g13-p0-aligned-roadmap.v1.json",
         "docs/checkpoints/G7_4_SEMANTIC_FIELD_LAB_CANDIDATE_RU.md",
@@ -115,7 +131,7 @@ if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
     throw "Godot binary not found: $GodotPath"
 }
 
-Write-Host "=== G7.4 FULL ACCEPTANCE: repository / P0 preflight ==="
+Write-Host "=== G7.4 FULL ACCEPTANCE: repository / architecture / PC0 preflight ==="
 Remove-SafeWindowsProfileTransient -Phase "stale-preflight"
 $StatusBefore = Invoke-GitText @("status", "--porcelain")
 if (-not [string]::IsNullOrWhiteSpace($StatusBefore)) {
@@ -126,19 +142,31 @@ foreach ($Ref in @($MainRef, $G73AcceptedCommit)) {
     if ($LASTEXITCODE -ne 0) { throw "Missing required ref/commit $Ref. Run git fetch origin first." }
 }
 
-$LocalGlobalConfigBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalConfigPath))
-$MainGlobalConfigBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalConfigPath")
-Assert-Equal $LocalGlobalConfigBlob $MainGlobalConfigBlob "G7.4 active global config differs from main"
-$LocalGlobalRoadmapBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalRoadmapPath))
-$MainGlobalRoadmapBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalRoadmapPath")
-Assert-Equal $LocalGlobalRoadmapBlob $MainGlobalRoadmapBlob "G7.4 active global roadmap differs from main"
+$MainGlobalConfig = (Invoke-GitText @("show", "$MainRef`:$GlobalConfigPath")) | ConvertFrom-Json
+$LocalGlobalConfig = Get-Content -LiteralPath (Join-Path $RootDir $GlobalConfigPath) -Raw | ConvertFrom-Json
+Assert-Equal ([string]$MainGlobalConfig.global_revision) $ExpectedGlobalRevision "main GLOBAL-P0 revision is unexpected"
+Assert-Equal ([string]$LocalGlobalConfig.global_revision) $ExpectedGlobalRevision "G7.4 local architecture revision is stale"
 
-$GlobalConfig = Get-Content -LiteralPath (Join-Path $RootDir $GlobalConfigPath) -Raw | ConvertFrom-Json
-Assert-Equal ([string]$GlobalConfig.global_revision) $ExpectedGlobalRevision "G7.4 active global revision is stale"
-Assert-Equal ([string]$GlobalConfig.active_frontiers.world_generation.branch) "feature/g7-semantic-field-fabric" "G7.4 active frontier branch mismatch"
-Assert-Equal ([string]$GlobalConfig.active_frontiers.world_generation.stage) "G7.4 Semantic Field Lab" "GLOBAL-P0 does not declare G7.4 active"
-Write-Host "Global revision: $ExpectedGlobalRevision"
-Write-Host "Active G7.4 GLOBAL-P0 main alignment: PASS"
+$ProjectRegistry = (Invoke-GitText @("show", "$MainRef`:$ProjectRegistryPath")) | ConvertFrom-Json
+$ProjectPolicy = (Invoke-GitText @("show", "$MainRef`:$ProjectPolicyPath")) | ConvertFrom-Json
+Assert-Equal ([string]$ProjectRegistry.control_plane_revision) $ExpectedControlRevision "main PC0 registry revision is unexpected"
+Assert-Equal ([string]$ProjectPolicy.control_plane_revision) $ExpectedControlRevision "main PC0 policy revision is unexpected"
+Assert-Equal ([string]$ProjectRegistry.architecture_revision) $ExpectedGlobalRevision "PC0 registry architecture revision mismatch"
+Assert-Equal ([string]$ProjectPolicy.architecture_revision) $ExpectedGlobalRevision "PC0 policy architecture revision mismatch"
+Assert-Equal ([string]$ProjectPolicy.operational_frontier_source) $ProjectRegistryPath "PC0 operational frontier source mismatch"
+Assert-Equal ([string]$ProjectRegistry.programs.G.branch) "feature/g7-semantic-field-fabric" "PC0 G frontier branch mismatch"
+Assert-Equal ([string]$ProjectRegistry.programs.G.current_stage) "G7.4 Semantic Field Lab" "PC0 does not declare G7.4 as the operational G frontier"
+
+$BranchPassport = Get-Content -LiteralPath (Join-Path $RootDir $BranchPassportPath) -Raw | ConvertFrom-Json
+Assert-Equal ([string]$BranchPassport.control_plane_revision) $ExpectedControlRevision "G branch passport PC0 revision mismatch"
+Assert-Equal ([string]$BranchPassport.architecture_revision) $ExpectedGlobalRevision "G branch passport architecture revision mismatch"
+Assert-Equal ([string]$BranchPassport.branch) "feature/g7-semantic-field-fabric" "G branch passport branch mismatch"
+Assert-Equal ([string]$BranchPassport.program) "G" "G branch passport program mismatch"
+Assert-Equal ([string]$BranchPassport.current_stage) "G7.4 Semantic Field Lab" "G branch passport stage mismatch"
+Write-Host "Architecture revision: $ExpectedGlobalRevision"
+Write-Host "Project Control revision: $ExpectedControlRevision"
+Write-Host "PC0 operational G frontier: G7.4 Semantic Field Lab"
+Write-Host "Legacy GLOBAL-P0 active_frontiers: advisory only (not used as operational gate)"
 
 & git -C $RootDir merge-base --is-ancestor $G73AcceptedCommit HEAD
 if ($LASTEXITCODE -ne 0) { throw "G7.3 accepted checkpoint is not an ancestor of current G7.4 head" }
@@ -151,16 +179,38 @@ $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string
 if ($ChangedFiles.Count -eq 0) { throw "G7.4 diff is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G74AllowedPath $_) })
 if ($Unexpected.Count -gt 0) {
-    throw "G7.4 changed files outside visual-lab allowlist:`n$($Unexpected -join "`n")"
+    throw "G7.4 changed files outside visual-lab/control allowlist:`n$($Unexpected -join "`n")"
 }
 & git -C $RootDir diff --check "$G73AcceptedCommit...HEAD"
 if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for accepted G7.3...G7.4" }
 Write-Host "G7.4 changed-file scope: PASS ($($ChangedFiles.Count) files)"
 
-Assert-PowerShellParses (Join-Path $RootDir "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.ps1")
-Assert-PowerShellParses (Join-Path $RootDir "RUN_G7_4_FULL_ACCEPTANCE.ps1")
-Assert-PowerShellParses (Join-Path $RootDir "START_G7_4_SEMANTIC_FIELD_LAB.ps1")
-Write-Host "G7.4 PowerShell parse: PASS"
+foreach ($PowerShellPath in @(
+    (Join-Path $RootDir "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.ps1"),
+    (Join-Path $RootDir "RUN_G7_4_FULL_ACCEPTANCE.ps1"),
+    (Join-Path $RootDir "START_G7_4_SEMANTIC_FIELD_LAB.ps1")
+)) {
+    Assert-AsciiFile $PowerShellPath
+    Assert-PowerShellParses $PowerShellPath
+}
+Write-Host "G7.4 Windows PowerShell ASCII + parse: PASS"
+
+Write-Host "=== G7.4 FULL ACCEPTANCE: Project Control audit ==="
+Invoke-PowerShellChild (Join-Path $RootDir "CONTROL_PROJECT.ps1") @("-NoFetch", "-NoFailOnRed")
+if (-not (Test-Path -LiteralPath $ControlReportPath -PathType Leaf)) {
+    throw "PC0 did not produce project-control-report.json"
+}
+$ControlReport = Get-Content -LiteralPath $ControlReportPath -Raw | ConvertFrom-Json
+$GControl = @($ControlReport.programs | Where-Object { [string]$_.program -eq "G" }) | Select-Object -First 1
+if ($null -eq $GControl) { throw "PC0 report does not contain G program" }
+Assert-Equal ([string]$GControl.branch) "feature/g7-semantic-field-fabric" "PC0 audited G branch mismatch"
+Assert-Equal ([string]$GControl.current_stage) "G7.4 Semantic Field Lab" "PC0 audited G stage mismatch"
+if ([string]$GControl.health -eq "RED") {
+    $FindingText = @($GControl.findings | ForEach-Object { "$($_.code): $($_.detail)" }) -join "`n"
+    throw "PC0 blocks G7.4 acceptance because G health is RED:`n$FindingText"
+}
+Write-Host "PC0 G health: $([string]$GControl.health)"
+Write-Host "PC0 overall project health: $([string]$ControlReport.overall_health) (unrelated program RED does not block G when G itself is not RED)"
 
 $HadGodotBin = Test-Path Env:\GODOT_BIN
 $PreviousGodotBin = $env:GODOT_BIN
@@ -191,7 +241,10 @@ if (-not [string]::IsNullOrWhiteSpace($StatusAfter)) {
 if ($LASTEXITCODE -ne 0) { throw "Final G7.4 git diff --check failed" }
 
 Write-Host "G7.4 AUTOMATED ACCEPTANCE: PASS"
-Write-Host "Global revision: $ExpectedGlobalRevision"
+Write-Host "Architecture revision: $ExpectedGlobalRevision"
+Write-Host "Project Control revision: $ExpectedControlRevision"
+Write-Host "PC0 operational G frontier: PASS"
+Write-Host "PC0 G health is not RED: PASS"
 Write-Host "G7.3 ACCEPTED ancestor: PASS"
 Write-Host "G7.4 visual-lab scope: PASS"
 Write-Host "Five adapter-backed semantic fields: PASS"
