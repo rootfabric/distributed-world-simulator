@@ -49,8 +49,8 @@
     "validation/t1a6-*"
   ],
   "tested_heads": {
-    "runtime": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
-    "focused": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+    "runtime": "a5e2795698a469a7f160214b3e4880014f6759a2",
+    "focused": "",
     "full_regression": ""
   },
   "ownership_claims": [
