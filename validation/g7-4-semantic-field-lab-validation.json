@@ -5,37 +5,13 @@
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
-  "g7_3": {
-    "decision": "ACCEPTED",
-    "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
-    "focused_assertions": 122,
-    "full_windows_gate": "PASS",
-    "world_core_regression": "PASS"
-  },
-  "previous_automated_acceptance": {
-    "status": "PASS_SUPERSEDED_BY_FIX3_PRESENTATION_RUNTIME_CHANGE",
-    "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
-    "marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
-    "world_core_regression": "PASS",
-    "working_tree": "CLEAN"
-  },
-  "fix1": {
-    "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
-    "result": "CLOSED",
-    "runtime_semantics_changed": false
-  },
-  "fix2": {
-    "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
-    "result": "CLOSED",
-    "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
-    "focused_assertions": 92,
-    "focused_failures": 0,
-    "subsequent_full_world_regression": "PASS",
-    "production_gameplay_semantics_changed": false
-  },
+  "g7_3": {"decision": "ACCEPTED", "focused_assertions": 122, "full_windows_gate": "PASS", "world_core_regression": "PASS"},
+  "previous_automated_acceptance": {"status": "PASS_SUPERSEDED_BY_FIX3_PRESENTATION_RUNTIME_CHANGE", "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a", "world_core_regression": "PASS", "working_tree": "CLEAN"},
+  "fix1": {"result": "CLOSED", "runtime_semantics_changed": false},
+  "fix2": {"result": "CLOSED", "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17", "focused_assertions": 92, "focused_failures": 0, "subsequent_full_world_regression": "PASS", "production_gameplay_semantics_changed": false},
   "fix3": {
     "trigger": "MANUAL_GRAPHICAL_OBSERVATION_FOUND_NO_VISIBLE_LOD_CHANGE",
-    "observed_behavior": "W/S changed camera distance but the semantic patch mesh stayed fixed at the 33x17 source grid. ADDRESSING_LOD 8 was used only for cube-sphere face addressing and was not a mesh LOD.",
+    "observed_behavior": "W/S changed camera distance but the semantic patch mesh stayed fixed at the 33x17 source grid. ADDRESSING_LOD 8 was cube-sphere addressing only, not a mesh LOD.",
     "implementation": "Camera-distance-derived presentation LOD0..3 changes only mesh sampling stride over the same precomputed semantic records.",
     "lod_levels": [
       {"lod": 0, "stride": 1, "mesh_grid": [33, 17], "distance": "<11", "detail": "NEAR_FINE"},
@@ -55,43 +31,14 @@
     "full_world_regression": "PENDING",
     "manual_graphical_recheck": "PENDING"
   },
-  "operational_frontier": {
-    "owner": "origin/main:config/control/project-program-registry.v1.json",
-    "program": "G",
-    "branch": "feature/g7-semantic-field-fabric",
-    "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED"
-  },
   "project_control": {
     "expected_health_before_fix3_focused_pass": "RED",
-    "reason": "The lab runtime changed after the previously automated tested head. PC0 freshness therefore requires a new focused tested head before full acceptance can resume.",
-    "blockers": [
-      "G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED",
-      "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED",
-      "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
-    ]
-  },
-  "implementation": {
-    "scene": "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn",
-    "script": "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd",
-    "manifest": "res://config/procedural/g7-4-semantic-field-lab.v1.json",
-    "focused_runner": "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.ps1",
-    "automated_acceptance_runner": "RUN_G7_4_FULL_ACCEPTANCE.ps1",
-    "launcher": "START_G7_4_SEMANTIC_FIELD_LAB.ps1",
-    "production_semantic_runtime_changed": false
+    "blockers": ["G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"]
   },
   "manual_graphical_acceptance": {
     "status": "RECHECK_REQUIRED_AFTER_FIX3",
     "required": true,
-    "checks": [
-      "W/S visibly changes presentation LOD across LOD0..LOD3 thresholds",
-      "HUD reports active LOD stride mesh-grid and camera distance",
-      "near mesh reaches 33x17 and far mesh reaches 5x3",
-      "semantic source remains 561 samples while mesh density changes",
-      "1..5 changes field coloring without changing selected LOD geometry",
-      "river centerline overlay toggles",
-      "no obvious PX/PZ semantic seam"
-    ]
+    "checks": ["W/S visibly changes LOD0..LOD3", "HUD reports LOD stride mesh-grid and camera distance", "near 33x17 and far 5x3", "semantic source remains 561 samples", "1..5 changes color without changing selected-LOD geometry", "river overlay toggles", "no obvious PX/PZ semantic seam"]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
