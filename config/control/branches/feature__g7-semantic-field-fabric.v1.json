@@ -47,7 +47,8 @@
   "validation_paths": [
     "config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json",
     "config/procedural/g7-4-semantic-field-lab.v1.json",
-    "docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md"
+    "docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md",
+    "validation/g7-4-semantic-field-lab-validation.json"
   ],
   "tested_heads": {
     "runtime": "",
