@@ -17,19 +17,23 @@ const COMMAND_FIELDS: Array[String] = [
 var _store
 var _ledger
 var _handler: Callable
+var _effect_committer: Callable
 var _configured: bool = false
 
 
-func setup(store, ledger, handler: Callable) -> Dictionary:
+func setup(store, ledger, handler: Callable, effect_committer: Callable = Callable()) -> Dictionary:
 	if store == null or not store.has_method("get_subject") or not store.has_method("update_subject"):
 		return _failure("CONSTRUCTION_RUNTIME_STATE_STORE_REQUIRED")
 	if ledger == null or not ledger.has_method("resolve") or not ledger.has_method("remember_terminal"):
 		return _failure("CONSTRUCTION_RUNTIME_OPERATION_LEDGER_REQUIRED")
 	if not handler.is_valid():
 		return _failure("CONSTRUCTION_RUNTIME_HANDLER_REQUIRED")
+	if effect_committer.is_valid() and (not store.has_method("to_dict") or not store.has_method("load_dict")):
+		return _failure("CONSTRUCTION_RUNTIME_TRANSACTIONAL_STATE_STORE_REQUIRED")
 	_store = store
 	_ledger = ledger
 	_handler = handler
+	_effect_committer = effect_committer
 	_configured = true
 	return _success()
 
@@ -132,9 +136,33 @@ func execute(command: Dictionary) -> Dictionary:
 		)
 
 	var mutates: bool = bool(handled.get("mutates", false))
+	var has_effect := handled.has("effect")
+	var effect: Dictionary = {}
+	if has_effect:
+		var effect_value = handled.get("effect")
+		if not effect_value is Dictionary:
+			return _remember_rejected(
+				operation_id, command_type, payload_hash, runtime_id, expected_revision, current_revision,
+				"CONSTRUCTION_RUNTIME_EFFECT_INVALID"
+			)
+		if not mutates:
+			return _remember_rejected(
+				operation_id, command_type, payload_hash, runtime_id, expected_revision, current_revision,
+				"CONSTRUCTION_RUNTIME_EFFECT_REQUIRES_MUTATION"
+			)
+		if not _effect_committer.is_valid():
+			return _remember_rejected(
+				operation_id, command_type, payload_hash, runtime_id, expected_revision, current_revision,
+				"CONSTRUCTION_RUNTIME_EFFECT_COMMITTER_REQUIRED"
+			)
+		effect = Dictionary(effect_value).duplicate(true)
+
 	var result_revision := current_revision
 	var after: Dictionary = subject.duplicate(true)
+	var store_before: Dictionary = {}
 	if mutates:
+		if has_effect:
+			store_before = _store.to_dict()
 		var next_state_value = handled.get("next_state", {})
 		if not next_state_value is Dictionary:
 			return _remember_rejected(
@@ -151,11 +179,35 @@ func execute(command: Dictionary) -> Dictionary:
 		after = Dictionary(updated["after"])
 		result_revision = int(after["revision"])
 
+	if has_effect:
+		var committed_value = _effect_committer.call(
+			command.duplicate(true),
+			subject.duplicate(true),
+			after.duplicate(true),
+			effect.duplicate(true)
+		)
+		var committed: Dictionary = Dictionary(committed_value) if committed_value is Dictionary else _failure("CONSTRUCTION_RUNTIME_EFFECT_COMMIT_RESULT_INVALID")
+		if not bool(committed.get("success", false)):
+			var rollback: Dictionary = _store.load_dict(store_before)
+			if not bool(rollback.get("success", false)):
+				return _failure("CONSTRUCTION_RUNTIME_EFFECT_ROLLBACK_FAILED", {
+					"cause": committed,
+					"rollback": rollback,
+					"runtime_id": runtime_id,
+					"operation_id": operation_id,
+				})
+			return _remember_rejected(
+				operation_id, command_type, payload_hash, runtime_id, expected_revision, current_revision,
+				String(committed.get("error_code", "CONSTRUCTION_RUNTIME_EFFECT_COMMIT_FAILED")),
+				{"cause": committed, "runtime_state_rolled_back": true}
+			)
+
 	var details: Dictionary = Dictionary(handled.get("details", {})).duplicate(true)
 	details["runtime_id"] = runtime_id
 	details["action_kind"] = action_kind
 	details["mutated"] = mutates
 	details["subject"] = after.duplicate(true)
+	details["transactional_effect_committed"] = has_effect
 	return _ledger.remember_terminal(
 		operation_id,
 		command_type,
@@ -207,7 +259,7 @@ static func _is_upper_kind(value: String) -> bool:
 		return false
 	for character in value:
 		if not String(character) in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_":
-			return false
+				return false
 	return true
 
 
