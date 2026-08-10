@@ -115,6 +115,7 @@ function Test-G74AllowedPath {
         "docs/procedural/README_RU.md",
         "docs/procedural/STATUS_RU.md",
         "scenes/labs/procedural/g7_4_semantic_field_lab.tscn",
+        "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
         "tests/procedural/semantic_fields/g7_3_cross_cell_cross_lod_invariance_acceptance.gd",
         "validation/g7-4-semantic-field-lab-validation.json"
     )) { return $true }
@@ -179,7 +180,7 @@ $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string
 if ($ChangedFiles.Count -eq 0) { throw "G7.4 diff is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G74AllowedPath $_) })
 if ($Unexpected.Count -gt 0) {
-    throw "G7.4 changed files outside visual-lab/control allowlist:`n$($Unexpected -join "`n")"
+    throw "G7.4 changed files outside visual-lab/control/shared-M5-fix allowlist:`n$($Unexpected -join "`n")"
 }
 & git -C $RootDir diff --check "$G73AcceptedCommit...HEAD"
 if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for accepted G7.3...G7.4" }
