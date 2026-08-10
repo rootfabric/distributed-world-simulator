@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1b0_runtime_failure_contracts_validation.v1",
   "checkpoint": "T1B0_RUNTIME_FAILURE_CONTRACT",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1A.7 Runtime Recovery / Interest / Scale ACCEPTED",
   "parent_branch_head": "bbddc9666777c0b4d6289ebc9483c8bfb0e90f14",
@@ -37,7 +37,6 @@
   },
   "windows_focused_validation": {
     "checkout": "1f08defe57f592f5e2698da71a1e3180b0875014",
-    "checkout_note": "Exact focused checkout retained locally for the required full regression; subsequent remote commits are validation/passport metadata only.",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "result": "PASS",
     "t1b0_assertions": 39,
@@ -51,38 +50,33 @@
       "T1A7_4_SCALE_CASES": 2,
       "T1A7_5_COMPOSITION": 56
     },
-    "large_scale_case": {
-      "canonical_subject_count": 10000,
-      "broadcast_baseline_messages": 32000,
-      "projected_baseline_messages": 800,
-      "broadcast_baseline_bytes": 147228480,
-      "projected_baseline_bytes": 3680627,
-      "mutation_iterations": 256,
-      "targeted_deliveries": 1024,
-      "avoided_peer_deliveries": 7168,
-      "planner_failures": 0,
-      "interest_move_iterations": 512,
-      "interest_move_static_memory_delta_bytes": 133036,
-      "reconnect_strategy": "FULL_AUTHORITATIVE_BASELINE",
-      "replay_history_bound": 0
-    },
     "final_marker": "T1B.0 runtime failure focused gate passed."
   },
-  "required_validation": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_runner": "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1",
-    "focused_result": "PASS",
-    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+  "windows_full_regression": {
+    "checkout": "1f08defe57f592f5e2698da71a1e3180b0875014",
+    "result": "PASS",
+    "rl3_representation_aware_network_streaming_assertions": 175,
+    "rl3_representation_streaming_processes_assertions": 37,
+    "main_scene_cli_all_pass": 6,
+    "main_scene_cli_all_fail": 0,
+    "lifecycle": "STOPPED",
+    "exit_code": 0,
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+  },
+  "status": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
   },
   "tested_heads": {
     "runtime": "1f08defe57f592f5e2698da71a1e3180b0875014",
     "focused": "1f08defe57f592f5e2698da71a1e3180b0875014",
-    "full_regression": ""
+    "full_regression": "1f08defe57f592f5e2698da71a1e3180b0875014"
   },
   "t2_control_gate": {
     "t2_0_active": false,
     "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
   },
-  "next_stage_if_accepted": "T1B.1 Dependency Failure Propagation"
+  "next_stage": "T1B.1 Dependency Failure Propagation"
 }
