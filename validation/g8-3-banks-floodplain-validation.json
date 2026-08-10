@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_3_banks_floodplain.v1",
   "checkpoint": "g8.3-banks-and-floodplain-shaping",
-  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -51,13 +51,20 @@
     "network_ownership": false
   },
   "automated_evidence": {
-    "focused": "PENDING",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "tested_head": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "world_core_through_nx4": "PASS",
+    "rl3_representation_aware_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli_all": "6 PASS / 0 FAIL",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
-    "blockers": ["G8_3_FOCUSED_VALIDATION_REQUIRED", "G8_3_FULL_WORLD_REGRESSION_REQUIRED"]
+    "acceptance_ready": true,
+    "blockers": []
   },
   "next_if_accepted": "G8.4_EROSION_DEPOSITION_BASELINE"
 }
