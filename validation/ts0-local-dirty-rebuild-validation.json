@@ -6,7 +6,7 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "formal_frontier": "TS0.1_10K_VISUAL_PROOF",
-  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_REBUILD_PROVED_C22_CONVERGENCE_PENDING",
+  "decision": "WINDOWS_FOCUSED_PASS_C22_CONVERGENCE_PENDING",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
@@ -45,6 +45,20 @@
     "scope": "ISOLATED_TS_OWNED_ALGORITHM_HARNESS",
     "tested_runtime_head": "dfdf9dcfbd233c526077f920a24fac76e0619205"
   },
+  "windows_worktree_validation": {
+    "worktree": "C:/Godot/lunar-world-double-godot-ts0",
+    "tested_head": "c13249b6aa5c95f1e356db56be106345b6f68012",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "dirty_rebuild_acceptance": "PASS_24_ASSERTIONS",
+    "observed_elapsed_ms": 30,
+    "rebuild_sections": 27,
+    "reused_sections": 189,
+    "dirty_hlod_clusters": 1,
+    "scanned_rebuild_cells": 10648,
+    "context_occupancy_cells": 26000,
+    "c24_proxy_mesh_backend_contracts": "PASS_81_ASSERTIONS"
+  },
   "pc0": {
     "main_registry_generation_checked": 5,
     "formal_ts_frontier_advanced": false,
@@ -52,7 +66,6 @@
     "new_global_foundation_claimed": false
   },
   "remaining_gates": [
-    "Run repository TS0.3 focused runner on the full Windows worktree",
     "Converge the proven algorithm into the production C22 incremental execution path under the correct owner",
     "Run full world regression before any SOURCE_ACCEPTED claim",
     "Update main PC0 registry only from accepted facts"
