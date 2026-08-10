@@ -9,8 +9,8 @@
   "purpose": "Prove that ordinary inventory interactions can equip real Item UUIDs and immediately drive CH7/CH8 presentation without laboratory equipment state or new mutation ownership.",
   "expected_outcome": "A graphical composition scene where backpack-to-equipment drag, one-item replacement and unequip use CH9.1 canonical operations, CH9.0 projects the result and the accepted character presenter renders it.",
   "current_stage": "CH9.2 Inventory + Character Composition",
-  "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_AND_GRAPHICAL_GATE",
-  "progress_note": "Equipment-aware inventory panel, gameplay facade, real Item Graph/Inventory/Quaternius composition lab, focused tests and graphical launcher are implemented. Windows and manual graphical acceptance are pending.",
+  "stage_status": "FIX1_INVENTORY_MOVEMENT_FREEZE_PENDING_WINDOWS_RERUN",
+  "progress_note": "Windows attempt 1 proved all canonical CH8/CH9 logic and 53 CH9.2 composition assertions, but runner correctly failed on PhysicsServer ERROR markers because the inherited lab called move_and_slide while inventory had disabled the CharacterBody3D. Fix1 pauses only the CH9.2 lab movement loop while inventory is open and adds an open/close physics lifecycle regression gate.",
   "last_accepted_checkpoint": "CH9.1 focused Windows acceptance @ af6c02eee6c97d16c899dc7cbc6963a02e254fe3; passport checkpoint ee9c2d94467e6e739de3fc90c5f634e3357bf9ba",
   "next_stage": "CH9.3 Multiplayer Equipment Presentation after CH9.2 focused + graphical acceptance",
   "parent_branch_or_checkpoint": "feature/ch9-1-authoritative-equipment-operations @ ee9c2d94467e6e739de3fc90c5f634e3357bf9ba",
@@ -46,6 +46,7 @@
     "scripts/characters/equipment/character_equipment_operation_service.gd",
     "scripts/characters/equipment/item_graph_equipment_source.gd",
     "scripts/characters/equipment/character_equipment_presenter.gd",
+    "scripts/characters/lab/quaternius_character_lab.gd",
     "scripts/items/services/item_transfer_service.gd"
   ],
   "critical_watched_paths": [
@@ -72,7 +73,8 @@
   },
   "ownership_claims": [
     "CHARACTER_EQUIPMENT_UI_COMPOSITION_ONLY",
-    "CHARACTER_EQUIPMENT_PRESENTATION_SYNC_AFTER_CANONICAL_COMMIT"
+    "CHARACTER_EQUIPMENT_PRESENTATION_SYNC_AFTER_CANONICAL_COMMIT",
+    "CH9_2_LAB_INVENTORY_MOVEMENT_FREEZE_ONLY"
   ],
   "forbidden_foundation_ownership": [
     "ITEM_GRAPH_MUTATION",
@@ -87,7 +89,7 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "WINDOWS_FOCUSED_GATE_PENDING",
+    "WINDOWS_FIX1_FOCUSED_RERUN_PENDING",
     "MANUAL_GRAPHICAL_ACCEPTANCE_PENDING",
     "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
