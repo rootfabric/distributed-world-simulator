@@ -9,13 +9,14 @@
   "purpose": "Prove that server-authoritative equipment accepted in CH9.3 survives durable checkpoint, server recovery, reconnect and late join without duplicate Item IDs, duplicate presentation or a character-private persistence layer.",
   "expected_outcome": "An equipped Item UUID remains in the same canonical equipment container after restart; recovered authority continues to accept equipment commands; reconnecting and late-joining clients converge on the recovered Item Graph and render exactly one presentation per equipped item.",
   "current_stage": "CH9.4 Equipment Persistence / Late Reconnect",
-  "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
-  "progress_note": "PC0 handoff is complete in main generation 36. Candidate runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe stages and validates an equipment-aware Item Graph before invoking the accepted base transactional restore, then installs it only after base recovery succeeds. Existing M6 repository/coordinator/authority adapter/replay outbox are reused unchanged. Focused tests cover checksum-valid semantic corruption rejection, exact Item Graph round-trip, replay idempotency, M6 checkpoint recovery, reconnect, late join, continued post-recovery equipment mutation and a second recovery generation. Inherited-member audit is complete; Windows validation is pending.",
+  "stage_status": "FIX1_IMPLEMENTED_WINDOWS_RERUN_PENDING",
+  "progress_note": "PC0 handoff is complete in main generation 36. Candidate runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe stages and validates an equipment-aware Item Graph before invoking the accepted base transactional restore, then installs it only after base recovery succeeds. First exact-Windows attempt on branch head 4f34068 passed editor import and all inherited CH9.3 regressions (authority 41, replica 21, presentation 27, ENet 20) but the first new CH9.4 test was blocked before runtime execution by Godot 4.7.1 type inference on command/snapshot variables. FIX1 is test-harness-only: commits 5abe362 and b85b3d2 explicitly type those results as Dictionary in both CH9.4 tests. Production runtime is unchanged; Windows rerun is pending.",
   "last_accepted_checkpoint": "CH9.3 Multiplayer Equipment Presentation @ cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
-  "next_stage": "Run CH9.4 focused Windows acceptance. No later CH stage is authorized before CH9.4 acceptance and a subsequent PC0 audit.",
+  "next_stage": "Rerun the two CH9.4 tests on exact Windows Godot, then rerun RUN_CH9_4_EQUIPMENT_PERSISTENCE_TESTS.ps1. No later CH stage is authorized before CH9.4 acceptance and a subsequent PC0 audit.",
   "parent_branch_or_checkpoint": "feature/ch9-3-multiplayer-equipment-presentation @ c18eae9778a5020063163087269483bc43a924be",
   "base_commit": "c18eae9778a5020063163087269483bc43a924be",
   "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "fix1_test_head": "b85b3d2e84db11556249ad40799819f6a528ed39",
   "dependencies": [
     "CH9.3 server-authoritative equipment and Item Graph replication",
     "M6 authoritative checkpoint/recovery coordinator",
@@ -80,7 +81,7 @@
     "MATERIAL_ONTOLOGY"
   ],
   "blockers": [
-    "WINDOWS_FOCUSED_GATE_PENDING"
+    "WINDOWS_FIX1_RERUN_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
