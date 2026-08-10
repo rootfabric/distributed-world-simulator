@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 21,
+  "registry_generation": 22,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T11:31:00Z",
+  "updated_at_utc": "2026-08-10T11:50:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -18,12 +18,12 @@
       "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
       "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density without debug-shell occlusion artifacts.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX4_IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
-      "progress_note": "Manual screenshot review after Fix3 automated acceptance confirmed LOD0..LOD3, 33x17->5x3 presentation grids and the invariant 561 semantic samples, but exposed two derived-presentation defects: negative-height/coarse mesh portions could be occluded by the radius-8 debug sphere, producing false dark holes, and the canonical river overlay was only a one-pixel line. Fix4 is now implemented as a presentation-only wrapper: a height-range-derived uniform radial shell lift reserves 0.075 display-unit minimum vertex clearance including coarse-LOD chord guard, and the accepted canonical river centerline is rendered as a narrow diagnostic triangle-strip ribbon above the patch. Semantic queries/values/IDs/checksums and the LOD contract are unchanged. Fresh Windows focused revalidation is now required; the previous automated PASS at 661b0eec is historical only.",
+      "stage_status": "FIX4_FOCUSED_PASS_FULL_AUTOMATED_REVALIDATION_PENDING",
+      "progress_note": "Fix4 presentation-only shell/ribbon candidate is now focused-validated on exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb at runtime head e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f: G7.4 contracts 80 assertions / 0 failures and headless semantic lab smoke PASS with 561 samples, five adapter-backed fields, six vocabulary-only fields and PX/PZ faces. User screenshots additionally confirm the false black sphere-occlusion holes are gone and the cyan diagnostic river ribbon is clearly visible while LOD/source invariants remain intact. Canonical semantic queries/values/IDs/checksums and the LOD contract are unchanged. Fresh full automated acceptance is now required; manual graphical remainder is limited to F toggle, fixed-LOD fields 1..5 recolor-only behavior and PX/PZ seam inspection.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Run fresh G7.4 focused Windows validation for Fix4. If green, refresh PC0 evidence, rerun G7.4 full automated acceptance, then repeat the shortened graphical check and accept G7.4 before G7 full acceptance and G8 geomorphology.",
-      "health_declared": "RED",
-      "blockers": ["G7_4_FIX4_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_RECHECK_REQUIRED"]
+      "next_stage": "Run fresh G7.4 full automated acceptance for Fix4. If green, finish the three remaining graphical checks (F river toggle, 1..5 recolor-only at fixed LOD, no obvious PX/PZ seam), then accept G7.4 and run G7 full acceptance before G8 geomorphology.",
+      "health_declared": "YELLOW",
+      "blockers": ["G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -41,10 +41,7 @@
       "last_accepted_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
       "next_stage": "Pull FIX1 and rerun T1A.7.2 focused Windows acceptance. If green, record the tested runtime head and run full world regression on the same runtime code, then accept T1A.7.2 and proceed to T1A.7.3 Dirty / Selective Runtime Replication.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "T1A7_2_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING",
-        "T1A7_2_FULL_WORLD_REGRESSION_PENDING"
-      ]
+      "blockers": ["T1A7_2_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING", "T1A7_2_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
@@ -62,9 +59,7 @@
       "last_accepted_checkpoint": "C22/C24 production baseline in main; TS0.3 algorithm evidence focused-pass",
       "next_stage": "Pull FIX2, rerun full world regression, then run PC0 overlap audit; merge only after the full gate is green.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "C22_INCREMENTAL_FULL_REGRESSION_FIX2_REVALIDATION_PENDING"
-      ]
+      "blockers": ["C22_INCREMENTAL_FULL_REGRESSION_FIX2_REVALIDATION_PENDING"]
     },
     "CH": {
       "program": "CH",
@@ -158,22 +153,8 @@
     }
   },
   "global_blocked_transitions": [
-    {
-      "stage": "G7.4 ACCEPTED",
-      "blocked_by": "G7_4_FIX4_REVALIDATION_AND_MANUAL_ACCEPTANCE_REQUIRED"
-    },
-    {
-      "stage": "G7 FULL ACCEPTANCE",
-      "blocked_by": "G7_4_ACCEPTED_REQUIRED"
-    }
+    {"stage": "G7.4 ACCEPTED", "blocked_by": "G7_4_FIX4_FULL_AUTOMATED_AND_MANUAL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G7 FULL ACCEPTANCE", "blocked_by": "G7_4_ACCEPTED_REQUIRED"}
   ],
-  "audit_triggers": [
-    "ANY_MAJOR_CHECKPOINT_ACCEPTED",
-    "BEFORE_NEXT_MAJOR_STAGE",
-    "GLOBAL_ARCHITECTURE_CHANGE",
-    "NEW_FOUNDATION_OR_REGISTRY_CONCEPT",
-    "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY",
-    "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE",
-    "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"
-  ]
+  "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
 }
