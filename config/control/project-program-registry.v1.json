@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 14,
+  "registry_generation": 15,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T10:28:00Z",
+  "updated_at_utc": "2026-08-10T10:31:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -58,13 +58,13 @@
       "purpose": "Transfer the proven local dirty rebuild into production C22 so eligible mutations stop performing a full compile before invalidation while keeping Construction truth and authority ownership unchanged.",
       "expected_outcome": "Unit-grid local mutations rebuild only dirty plus neighbor sections, reuse unchanged content-addressed artifacts, rebuild FAR shell from section artifacts, preserve C24 graphical correctness, and safely fall back for unsupported cases.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-      "progress_note": "The dedicated convergence branch starts from main and imports no TS lab runtime. Production C22 incremental fast path, section-artifact shell merger and the previously proven Godot-clockwise C24 winding prerequisite are implemented. Focused Windows validation and full world regression remain pending before merge. The prior TS0 branch remains evidence lineage for 10k/100k/HLOD and dirty-rebuild research.",
+      "stage_status": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_REQUIRED",
+      "progress_note": "The first Windows focused attempt on 127aad8058 failed at GDScript parse: two cache.publish result variables used := while cache is dynamically typed. FIX1 at runtime head 12b8375182fb855478325435a927228e34d21133 adds explicit Dictionary result types only; the incremental algorithm is unchanged. Fresh Windows focused validation is required before tested-head acceptance. The prior TS0 branch remains evidence lineage.",
       "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures; C22/C24 production baseline in main",
-      "next_stage": "Run C22 incremental focused Windows gate, record tested head, then full world regression and PC0 overlap audit; merge only after all gates are green.",
-      "health_declared": "YELLOW",
+      "next_stage": "Pull FIX1, rerun C22 incremental focused Windows gate, then record tested head and run full world regression plus PC0 overlap audit; merge only after all gates are green.",
+      "health_declared": "RED",
       "blockers": [
-        "C22_INCREMENTAL_WINDOWS_FOCUSED_PENDING",
+        "C22_INCREMENTAL_FIX1_WINDOWS_FOCUSED_REVALIDATION_REQUIRED",
         "C22_INCREMENTAL_FULL_WORLD_REGRESSION_PENDING"
       ]
     },
