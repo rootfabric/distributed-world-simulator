@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/ch7-8-skinned-garment",
+  "program": "CH",
+  "role": "PRIMARY_FRONTIER",
+  "short_description": "Character presentation line for skinned garment/equipment integration over stable controllable-entity gameplay identity.",
+  "purpose": "Improve visible player presentation and clothing/equipment composition without turning rig, mesh, garment or Skeleton identity into player canonical truth.",
+  "expected_outcome": "Replaceable avatar/garment presentation adapters compatible with network authority and Item equipment semantics.",
+  "current_stage": "CH7-8 Skinned Garment",
+  "stage_status": "ACTIVE",
+  "progress_note": "CH6 presentation/crouch/shadow baseline is accepted; CH7-8 remains the declared character presentation frontier.",
+  "last_accepted_checkpoint": "CH6 fix2 Jump/Crouch/Shadow Presentation",
+  "next_stage": "CH7-8 focused acceptance and later equipment/network composition",
+  "parent_branch_or_checkpoint": "CH6 FIX2 ACCEPTED",
+  "base_commit": "5d408029",
+  "dependencies": ["CH6", "ITEM_EQUIPMENT_PRESENTATION", "NETWORK_AUTHORITY_POLICY_FUTURE"],
+  "owned_paths": [
+    "scripts/characters/**",
+    "scenes/characters/**",
+    "tests/characters/**",
+    "docs/characters/**",
+    "validation/ch*"
+  ],
+  "watched_paths": [
+    "scripts/items/**",
+    "scripts/runtime/networked_gameplay/**",
+    "scripts/construction/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/items/domain/**",
+    "scripts/runtime/networked_gameplay/**"
+  ],
+  "runtime_paths": [
+    "scripts/characters/**",
+    "scenes/characters/**",
+    "tests/characters/**"
+  ],
+  "validation_paths": ["docs/characters/CH_P0_ALIGNMENT_RU.md"],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [
+    {"foundation": "DERIVED_PRESENTATION", "claimed_owner": "DOMAIN_ADAPTERS", "scope": "character rig/avatar/garment presentation"}
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATERIAL_ONTOLOGY",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "SPATIAL_DOMAIN_FABRIC"
+  ],
+  "blockers": [],
+  "health_declared": "GREEN",
+  "cross_branch_overlap_enabled": false
+}
