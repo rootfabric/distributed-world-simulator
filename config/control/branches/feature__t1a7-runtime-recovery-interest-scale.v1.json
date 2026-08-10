@@ -9,10 +9,10 @@
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
   "current_stage": "T1A.7.2 Late-Interest Baseline + Reconnect",
-  "stage_status": "ACTIVE_REUSE_AUDIT",
-  "progress_note": "T1A.7.1 Recovery Snapshot + Restore Contract is accepted on runtime head a1d856de348268c45eccfb1c4646720bc4a996db after fresh Windows focused validation (153/32/67/36/60) and full world/core regression (6 PASS, 0 FAIL, NX4 final marker, clean STOPPED lifecycle). T1A.7.2 now starts from that accepted recovery base and must reuse existing session-fence/interest/replay foundations rather than create Construction-private global interest identity or transport policy.",
+  "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "progress_note": "T1A.7.2 reuse audit is closed PASS. MW7 contributes revision/session/reconnect semantics, M3/NX remains the transport/session owner, and T1A.6 remains the reliable ConstructionRuntimeSnapshot correctness path. The candidate adds a Construction-domain interest binding fed by authoritative upstream selection, a recoverable T1A.7 M3 server adapter, late/re-entry/reconnect full baselines over existing RESYNC/RELIABLE_ORDERED, and mutation suppression for out-of-interest peers. No new client-authoritative interest message, global interest identity, transport boundary, channel or protocol-manifest entry is added. Windows focused validation and full world regression are pending.",
   "last_accepted_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
-  "next_stage": "Complete T1A.7.2 reuse audit against MW7 and M3/NX session boundaries, then implement the smallest late-interest authoritative baseline + reconnect candidate and focused acceptance.",
+  "next_stage": "Run T1A.7.2 focused Windows acceptance; if green, record the tested runtime head and run full world regression, then accept T1A.7.2 and proceed to T1A.7.3 Dirty / Selective Runtime Replication.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
@@ -29,10 +29,13 @@
     "scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd",
     "scripts/construction/authoritative/construction_runtime_m0_translator.gd",
     "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
+    "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
     "scripts/labs/t1/t1a7/**",
     "scripts/runtime/networked_gameplay/t1a7/**",
+    "tools/runtime/t1a7_runtime_*.gd",
     "tests/construction/t1a7_*",
     "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1",
+    "RUN_T1A7_2_LATE_INTEREST_RECONNECT_TESTS.ps1",
     "validation/t1a7-*",
     "docs/checkpoints/*T1A7*",
     "docs/plans/*T1A7*"
@@ -78,8 +81,10 @@
     "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
     "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
     "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
+    "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
     "scripts/labs/t1/t1a7/**",
     "scripts/runtime/networked_gameplay/t1a7/**",
+    "tools/runtime/t1a7_runtime_*.gd",
     "tests/construction/t1a7_*"
   ],
   "validation_paths": [
@@ -88,16 +93,16 @@
     "docs/plans/*T1A7*"
   ],
   "tested_heads": {
-    "runtime": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "focused": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
   },
   "ownership_claims": [
     {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Construction runtime recovery state and domain-specific interest projection"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "reuse existing AggregateTransactionRepository/Coordinator; no private T1 repository/coordinator"},
-    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "consume existing session/channel/reconnect policy; T1A.7.2 may add Construction projection adapters only"},
+    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "consume existing session/channel/reconnect policy and existing RESYNC reliable baseline path; no new protocol/channel policy"},
     {"foundation": "AUTHORITY_FOUNDATION", "claimed_owner": "AUTHORITY", "scope": "consume existing authority owner/epoch/session fences; no new permanent owner registry"},
-    {"foundation": "SPATIAL_DOMAIN_FABRIC", "claimed_owner": "P0", "scope": "consume existing spatial/interest keys only; Construction runtime identity must not become a new global spatial identity"}
+    {"foundation": "SPATIAL_DOMAIN_FABRIC", "claimed_owner": "P0", "scope": "consume authoritative upstream selection only; Construction runtime identity does not become a new global spatial/interest identity"}
   ],
   "forbidden_foundation_ownership": [
     "SPATIAL_DOMAIN_FABRIC",
@@ -110,7 +115,8 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "T1A7_2_REUSE_AUDIT_AND_FOCUSED_ACCEPTANCE_PENDING"
+    "T1A7_2_WINDOWS_FOCUSED_ACCEPTANCE_PENDING",
+    "T1A7_2_FULL_WORLD_REGRESSION_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
