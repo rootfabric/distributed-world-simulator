@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
+  "decision": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -17,7 +17,7 @@
     "program": "G",
     "branch": "feature/g7-semantic-field-fabric",
     "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
+    "stage_status": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
     "legacy_global_active_frontiers_operational_owner": false
   },
   "project_control": {
@@ -25,16 +25,16 @@
     "branch_passport": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
     "auditor_entrypoint": "CONTROL_PROJECT.ps1",
     "auditor_logic_owner": "origin/main:scripts/control/project_control.py",
-    "expected_candidate_health_before_m5_rerun": "RED",
+    "expected_candidate_health": "YELLOW",
     "g_red_blocks_full_acceptance": true,
     "unrelated_program_red_blocks_g_acceptance": false,
-    "main_registry_generation": 4,
-    "reason": "The G program is RED until the shared M5 final-convergence fix passes its focused rerun. Overall project RED caused by an independent program remains non-blocking only after G itself is non-RED."
+    "main_registry_generation": 5,
+    "reason": "Focused M5 Fix2 is now green, so the inherited shared blocker is closed for focused scope. G remains YELLOW until full world regression and manual graphical observation complete."
   },
   "fix1": {
     "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
     "symptom": "START_G7_4_SEMANTIC_FIELD_LAB.ps1 parsed field legend tokens such as 2/valley/river as PowerShell expressions",
-    "cause": "The launcher contained a Unicode em dash. Legacy Windows PowerShell can decode UTF-8 without BOM through an ANSI codepage into a smart quote sequence, and PowerShell treats smart quotes as quote delimiters.",
+    "cause": "The launcher contained a Unicode em dash. Legacy Windows PowerShell can decode UTF-8 without BOM through an ANSI codepage into a smart-quote sequence, and PowerShell treats smart quotes as quote delimiters.",
     "launcher_fix": "Replace Unicode em dash with ASCII hyphen and keep the launcher ASCII-only.",
     "acceptance_hardening": "Full runner requires all G7.4 PowerShell runner/launcher files to be ASCII-only and AST-parse clean before runtime.",
     "runtime_semantics_changed": false
@@ -42,8 +42,8 @@
   "fix2": {
     "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
     "first_full_gate_result": "WORLD_REGRESSION_FAILED_AT_M5",
-    "m5_assertions": 92,
-    "m5_failures": 3,
+    "first_m5_assertions": 92,
+    "first_m5_failures": 3,
     "observed_client_a2": {
       "state": "FAILED",
       "passed": false,
@@ -63,10 +63,19 @@
       "connected_peer_count": 0
     },
     "canonical_world_checks_after_timeout": "PASS",
-    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier accepted only READY_TO_CONVERGE/CONVERGENCE_LOCKED or CONVERGENCE_LOCKED/COMPLETE, so the later valid FINAL state was rejected and the two peers deadlocked on adjacent barriers.",
+    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier accepted only earlier states, so the later valid FINAL state was rejected and the two peers deadlocked on adjacent barriers.",
     "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later peer states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
     "shared_driver": "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
-    "focused_rerun_required": true,
+    "focused_windows_rerun": {
+      "tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
+      "assertions": 92,
+      "failures": 0,
+      "result": "PASS",
+      "a_reconnect_graphical_acceptance": "PASS",
+      "b_graphical_acceptance": "PASS",
+      "final_clients_passed": "PASS"
+    },
+    "focused_rerun_required": false,
     "production_gameplay_semantics_changed": false
   },
   "implementation": {
@@ -152,7 +161,7 @@
     "owns_geomorphology": false
   },
   "automated_acceptance": {
-    "status": "BLOCKED_PENDING_M5_FIX2_FOCUSED_RERUN",
+    "status": "READY_FOR_WINDOWS_FULL_GATE",
     "expected_marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
     "requires_project_control_audit": true,
     "requires_g_health_not_red": true,
