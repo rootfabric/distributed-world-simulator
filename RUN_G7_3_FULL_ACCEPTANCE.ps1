@@ -86,6 +86,18 @@ function Test-G73AllowedPath {
     return $false
 }
 
+function Invoke-G73DiffCheck {
+    # The active GLOBAL roadmap is first proven byte-identical to origin/main.
+    # R2 currently uses Markdown hard-break spaces in that canonical upstream
+    # document, so G7.3 must not reinterpret those inherited bytes as a local
+    # whitespace defect. Every other G7.3/P0-sync file remains under strict
+    # git diff --check coverage.
+    & git -C $RootDir diff --check "$G72AcceptedCommit...HEAD" -- . ":(exclude)$GlobalRoadmapPath"
+    if ($LASTEXITCODE -ne 0) {
+        throw "git diff --check failed for accepted G7.2...G7.3 outside the byte-matched canonical GLOBAL roadmap"
+    }
+}
+
 if ($null -eq (Get-Command git -ErrorAction SilentlyContinue)) { throw "git is required for G7.3 full acceptance" }
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     $Candidates = @(
@@ -130,6 +142,7 @@ if ([string]$GlobalConfig.active_frontiers.world_generation.stage -ne "G7.3 Cros
 }
 Write-Host "Global revision: $GlobalRevision"
 Write-Host "Active frontier GLOBAL-P0 alignment: PASS"
+Write-Host "Canonical GLOBAL roadmap byte-match to main: PASS"
 Write-Host "Historical accepted G6 rewrite requirement: NONE (R2 policy)"
 
 & git -C $RootDir merge-base --is-ancestor $G6Ref HEAD
@@ -145,9 +158,9 @@ $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string
 if ($ChangedFiles.Count -eq 0) { throw "G7.3 diff is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G73AllowedPath $_) })
 if ($Unexpected.Count -gt 0) { throw "G7.3 changed files outside invariance/P0-sync allowlist:`n$($Unexpected -join "`n")" }
-& git -C $RootDir diff --check "$G72AcceptedCommit...HEAD"
-if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for accepted G7.2...G7.3" }
+Invoke-G73DiffCheck
 Write-Host "G7.3 changed-file scope: PASS ($($ChangedFiles.Count) files)"
+Write-Host "G7.3 strict diff hygiene outside byte-matched canonical GLOBAL roadmap: PASS"
 
 $HadGodotBin = Test-Path Env:\GODOT_BIN
 $PreviousGodotBin = $env:GODOT_BIN
@@ -172,12 +185,12 @@ finally {
 Write-Host "=== G7.3 FULL ACCEPTANCE: final hygiene ==="
 $StatusAfter = Invoke-GitText @("status", "--porcelain")
 if (-not [string]::IsNullOrWhiteSpace($StatusAfter)) { throw "G7.3 full acceptance left tracked/untracked changes:`n$StatusAfter" }
-& git -C $RootDir diff --check "$G72AcceptedCommit...HEAD"
-if ($LASTEXITCODE -ne 0) { throw "Final git diff --check failed" }
+Invoke-G73DiffCheck
 
 Write-Host "G7.3 FULL ACCEPTANCE: PASS"
 Write-Host "Global revision: $GlobalRevision"
 Write-Host "Active GLOBAL-P0 main alignment: PASS"
+Write-Host "Canonical GLOBAL roadmap byte-match to main: PASS"
 Write-Host "G7.2 ACCEPTED ancestor: PASS"
 Write-Host "G7.3 invariance scope: PASS"
 Write-Host "Cross-cell / cross-LOD semantic invariance: PASS"
