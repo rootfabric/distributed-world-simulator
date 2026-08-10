@@ -7,34 +7,8 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "checkpoint_document": "docs/checkpoints/2026-08-10_T1A7_1_RUNTIME_RECOVERY_ACCEPTED_RU.md",
-  "status_dimensions": {
-    "SOURCE_ACCEPTED": true,
-    "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": true,
-    "PRODUCTION_READY": false
-  },
-  "accepted_evidence": {
-    "runtime_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused": {
-      "t1a4": 153,
-      "c5b": 32,
-      "t1a5": 67,
-      "t1a5_transactional": 36,
-      "t1a7_recovery": 60,
-      "result": "PASS"
-    },
-    "full_world_regression": {
-      "result": "PASS_6_0",
-      "lifecycle_final_state": "STOPPED",
-      "exit_code": 0,
-      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
-    }
-  },
-  "tested_heads": {
-    "runtime": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "focused": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"
-  },
+  "status_dimensions": {"SOURCE_ACCEPTED": true, "MAIN_INTEGRATED": false, "COMPOSITION_VERIFIED": true, "PRODUCTION_READY": false},
+  "accepted_evidence": {"runtime_head": "a1d856de348268c45eccfb1c4646720bc4a996db", "focused_result": "PASS_153_32_67_36_60", "full_world_regression": "PASS_6_0", "lifecycle_final_state": "STOPPED", "exit_code": 0, "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."},
+  "tested_heads": {"runtime": "a1d856de348268c45eccfb1c4646720bc4a996db", "focused": "a1d856de348268c45eccfb1c4646720bc4a996db", "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"},
   "next_after_acceptance": "T1A7_2_LATE_INTEREST_BASELINE_AND_RECONNECT"
 }
