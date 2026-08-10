@@ -20,5 +20,12 @@ static func validate(value: Dictionary) -> Dictionary:
 static func validate_network_envelope(value: Dictionary) -> Dictionary:
 	var check: Dictionary = NetworkCommand.validate(value)
 	if not bool(check.get("success", false)): return Wire.failure(String(check.get("error_code", "INVALID_ITEM_COMMAND")))
-	if not String(value.get("command_type", "")).begins_with("item.") and not String(value.get("command_type", "")).begins_with("inventory.") and not String(value.get("command_type", "")).begins_with("container."): return Wire.failure("INVALID_ITEM_COMMAND_TYPE")
+	var command_type := String(value.get("command_type", ""))
+	if (
+		not command_type.begins_with("item.")
+		and not command_type.begins_with("inventory.")
+		and not command_type.begins_with("container.")
+		and not command_type.begins_with("equipment.")
+	):
+		return Wire.failure("INVALID_ITEM_COMMAND_TYPE")
 	return Wire.success()
