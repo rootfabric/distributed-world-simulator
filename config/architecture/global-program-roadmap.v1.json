@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-10T00:22:00Z",
+  "updated_at_utc": "2026-08-10T02:37:00Z",
   "canonical_branch": "main",
   "status": "active",
   "architecture_invariants": [
@@ -80,8 +80,8 @@
     },
     "world_generation": {
       "branch": "feature/g7-semantic-field-fabric",
-      "stage": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_visual_milestone": "G7.4 Semantic Field Lab",
+      "stage": "G7.4 Semantic Field Lab",
+      "next_visual_milestone": "G8 First Natural Terrain Showcase",
       "next_world_showcase_milestone": "G8 Geomorphology"
     },
     "character": {
