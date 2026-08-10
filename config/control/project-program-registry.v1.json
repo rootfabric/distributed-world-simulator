@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 41,
+  "registry_generation": 42,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T22:47:00Z",
+  "updated_at_utc": "2026-08-10T22:58:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -17,13 +17,13 @@
       "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
       "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
       "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
-      "current_stage": "G8.2 River Channel Incision",
+      "current_stage": "G8.3 Banks and Floodplain Shaping",
       "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
-      "progress_note": "G8.1 Valley Incision Baseline is ACCEPTED after exact-Windows full acceptance on head 42940c0b7f16b2ccf3704d7e603691415b1360cf with G8.0 parent PASS, valley baseline PASS, geomorphology ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. G8.2 is now implemented as river-channel incision composed on the accepted G8.1 valley result using the same semantic bundle and profile. Inputs add accepted geo/river-distance-m and geo/river-width-m. Full channel width is interpreted as +/- half-width around the centerline: the core reaches river_max_depth_m, the outer river_edge_softness_ratio band fades cubically to zero, and at/beyond half-width river incision is zero. G8.2 preserves the exact valley component and adds only river_channel_delta_m; bank/floodplain/erosion-deposition remain zero. No SurfaceCellKey, LOD, Matter, authority, persistence, material or network ownership is introduced. Focused and full Windows validation are pending.",
-      "last_accepted_checkpoint": "G8.1 Valley Incision Baseline",
-      "next_stage": "Run RUN_G8_2_RIVER_CHANNEL_INCISION_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_2_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only a full PASS unlocks G8.3 Banks and Floodplain Shaping.",
+      "progress_note": "G8.2 River Channel Incision is ACCEPTED after exact-Windows full acceptance on tested head 491fe10877c70c362c14ab595a8a0204165a880a with G8.1 parent PASS, river-channel PASS, valley+river composition PASS, geomorphology ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. G8.3 is now implemented as a replaceable banks/floodplain layer over the exact accepted G8.2 result. It uses accepted surface-height, valley-influence, river-distance and river-width semantics and normalizes lateral zones by channel half-width. Bank shaping rises smoothly outside the channel from normalized 1.0 to a peak at 1.5 and returns to zero at 2.0; floodplain shaping enters from 2.0 to 2.5, remains full through 4.5 and fades to zero by 6.0. Bank amplitude is positive and profile-bounded; floodplain amplitude is negative and profile-bounded; both are modulated by valley influence. G8.3 preserves exact G8.2 valley/river components and keeps erosion/deposition zero. geo/fluid-surface-distance-m is deliberately not reinterpreted as signed water elevation. No SurfaceCellKey, LOD, Matter, authority, persistence, material or network ownership is introduced. Focused and full Windows validation are pending.",
+      "last_accepted_checkpoint": "G8.2 River Channel Incision",
+      "next_stage": "Run RUN_G8_3_BANKS_FLOODPLAIN_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_3_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only a full PASS unlocks G8.4 Erosion / Deposition Baseline.",
       "health_declared": "YELLOW",
-      "blockers": ["G8_2_FOCUSED_VALIDATION_REQUIRED", "G8_2_FULL_WORLD_REGRESSION_REQUIRED"]
+      "blockers": ["G8_3_FOCUSED_VALIDATION_REQUIRED", "G8_3_FULL_WORLD_REGRESSION_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -153,7 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G8.3 START", "blocked_by": "G8_2_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G8.4 START", "blocked_by": "G8_3_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
     {"stage": "CH STAGE AFTER CH9.5 START", "blocked_by": "CH9_5_FOCUSED_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
   ],
