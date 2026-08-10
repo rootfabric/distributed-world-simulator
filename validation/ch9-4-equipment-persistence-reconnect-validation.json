@@ -5,14 +5,15 @@
   "base_branch": "feature/ch9-3-multiplayer-equipment-presentation",
   "base_checkpoint": "c18eae9778a5020063163087269483bc43a924be",
   "accepted_parent_runtime_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
-  "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "accepted_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "accepted_focused_head": "30e752436c82996e0f99253de040d60b11317c72",
   "fix1_test_head": "b85b3d2e84db11556249ad40799819f6a528ed39",
   "pc0_handoff": {
     "registry_generation": 36,
     "main_registry_commit": "b6740f5d2f254cc9e0320f225b1bac082bcec8fb",
     "status": "DECLARED_AS_PRIMARY_FRONTIER"
   },
-  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "FOCUSED_ACCEPTED",
   "goal": "Persist and recover CH9.3 server-authoritative equipment through the existing M6 checkpoint/replay/recovery system, then prove reconnect, late-join projection, replay idempotency and continued equipment mutation without duplicate canonical Item identities.",
   "architecture": {
     "new_persistence_format": false,
@@ -28,11 +29,11 @@
   "gap_closed": "The generic NetworkedGameplayService durable restore reconstructs CanonicalMultiplayerItemGraph. CH9.4 stages an equipment-aware Item Graph from the exact same durable bytes, verifies equipment semantics and checksum identity before commit, then reuses the accepted base transactional restore for players/ownership/shared state/revisions and installs the staged equipment-aware graph only after base restore succeeds.",
   "candidate_review": {
     "restore_transactionality": "STAGED_EQUIPMENT_GRAPH_VALIDATED_BEFORE_BASE_COMMIT",
-    "inherited_member_audit": "PASS: EquipmentItemGraph preload is inherited from CH9.3 and is not redeclared",
-    "persistence_ownership": "PASS: existing M6 repository/coordinator/authority adapter/outbox reused",
+    "inherited_member_audit": "PASS",
+    "persistence_ownership": "PASS_EXISTING_M6_FOUNDATION_REUSED",
     "transport_scope": "UNCHANGED_FROM_ACCEPTED_CH9_3",
     "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
-    "windows_execution": "FIRST_ATTEMPT_BLOCKED_IN_NEW_TEST_PARSE_BEFORE_CH9_4_RUNTIME_ASSERTIONS"
+    "windows_execution": "PASS_EXACT_WINDOWS_GODOT_4_7_1_DOUBLE_AFTER_TEST_HARNESS_FIX1"
   },
   "invariants": [
     "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
@@ -81,16 +82,32 @@
     "durable_roundtrip_fix_commit": "5abe362360182402daea4803c87d9958096a7e8b",
     "reconnect_recovery_hygiene_commit": "b85b3d2e84db11556249ad40799819f6a528ed39",
     "change": "Explicitly type command results and canonical Item Graph snapshots as Dictionary instead of asking Godot 4.7.1 to infer types through untyped service handles.",
-    "status": "PENDING_WINDOWS_RERUN"
+    "status": "ACCEPTED_BY_WINDOWS_RERUN"
+  },
+  "accepted_windows_run": {
+    "tested_branch_head": "30e752436c82996e0f99253de040d60b11317c72",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "direct_durable_roundtrip": "PASS_34",
+    "direct_checkpoint_reconnect_recovery": "PASS_53",
+    "editor_import": "PASS",
+    "ch9_3_authority_regression": "PASS_41",
+    "ch9_3_replica_regression": "PASS_21",
+    "ch9_3_presentation_regression": "PASS_27",
+    "ch9_3_real_enet_regression": "PASS_20",
+    "durable_roundtrip": "PASS_34",
+    "checkpoint_reconnect_recovery": "PASS_53",
+    "candidate_runner": "PASS",
+    "evidence_source": "USER_SUPPLIED_WINDOWS_OUTPUT"
   },
   "windows_results": {
-    "editor_import": "PASS_FIRST_ATTEMPT",
-    "ch9_3_authority_regression": "PASS_41_FIRST_ATTEMPT",
-    "ch9_3_replica_regression": "PASS_21_FIRST_ATTEMPT",
-    "ch9_3_presentation_regression": "PASS_27_FIRST_ATTEMPT",
-    "ch9_3_real_enet_regression": "PASS_20_FIRST_ATTEMPT",
-    "durable_roundtrip": "PENDING_FIX1_RERUN",
-    "checkpoint_reconnect_recovery": "PENDING_FIX1_RERUN",
-    "candidate_runner": "PENDING_FIX1_RERUN"
-  }
+    "editor_import": "PASS",
+    "ch9_3_authority_regression": "PASS_41",
+    "ch9_3_replica_regression": "PASS_21",
+    "ch9_3_presentation_regression": "PASS_27",
+    "ch9_3_real_enet_regression": "PASS_20",
+    "durable_roundtrip": "PASS_34",
+    "checkpoint_reconnect_recovery": "PASS_53",
+    "candidate_runner": "PASS"
+  },
+  "acceptance_note": "No new graphical asset or presentation strategy is introduced in CH9.4. Accepted CH9.3 replicated character presentation remains covered by its 27-assertion regression gate; CH9.4 acceptance is therefore focused on durability, replay, recovery, reconnect, late join and identity preservation."
 }
