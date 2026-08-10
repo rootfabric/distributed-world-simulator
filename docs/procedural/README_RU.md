@@ -9,12 +9,12 @@ feature/g7-semantic-field-fabric
 Current state:
 
 ```text
-G6 Hydrology / Fluid Surface           SOURCE_ACCEPTED
-G6 P0 Alignment Cleanup                ACCEPTED
-G7.0 Semantic Field Contracts          ACCEPTED
-G7.1 Upstream Semantic Field Adapters  ACCEPTED
-G7.2 Composition / Provenance           ACCEPTED
-G7.3 Cross-Cell / Cross-LOD Invariance  NEXT
+G6 Hydrology / Fluid Surface            SOURCE_ACCEPTED
+G6 P0 Alignment Cleanup                 ACCEPTED
+G7.0 Semantic Field Contracts           ACCEPTED
+G7.1 Upstream Semantic Field Adapters   ACCEPTED
+G7.2 Composition / Provenance            ACCEPTED
+G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
 ```
 
 ## Accepted semantic path
@@ -55,41 +55,53 @@ Full G7.2 Windows acceptance passed on:
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-The accepted composition policy is strict:
+Accepted G7.2 checkpoint:
 
 ```text
-semantic-composition-policy/require-complete-v1
-
-missing requested fields       REJECT
-duplicate field ownership      REJECT
-duplicate adapters             REJECT
-unrequested contributed fields REJECT
-input order                     NORMALIZED BY ADAPTER_ID
+68c4f90dbdac0e2d9968b4461207713f5661521b
 ```
 
-The composer does not recalculate upstream semantic values. `SemanticFieldCompositionReceipt` pins query, bundle, sample and provenance checksums and remains an audit artifact rather than canonical world identity.
+## G7.3 — Cross-Cell / Cross-LOD Invariance
 
-## G7.3 target
+G7.3 is intentionally proof-only. It does not add cell-aware production semantics; it validates that cell/LOD remain representation concerns.
 
-G7.3 proves the representation-independence already required by P0:
+Main formula:
 
 ```text
-one world point + one canonical semantic query
-    -> same values/checksums/provenance
-       regardless of SurfaceCellKey / LOD path
+canonical world point + SemanticFieldQuery
+    -> canonical semantic result
+
+SurfaceCellKey / LOD
+    -> representation addressing only
 ```
 
-Acceptance must demonstrate:
+The focused proof uses LOD `2, 4, 8, 12` and the accepted G6 river fixture that crosses the PX/PZ cube-sphere seam.
+
+For one shared world point the test requires equality of:
 
 ```text
-same world point is semantic-cell invariant
-LOD changes only representation density/addressing
-PX/PZ and other cube-sphere seams do not change semantic value
-one river/valley feature spans many cells without identity reroll
-query field order does not change bundle/provenance
+query checksum
+bundle checksum
+composition receipt checksum
+per-field sample checksum
+per-field provenance checksum
 ```
 
-Surface-cell and LOD information remain external representation context and do not enter `SemanticFieldId`, `SemanticFieldQuery`, `SemanticFieldSample`, `SemanticFieldBundle` or upstream Feature/Fluid identity.
+while `SurfaceCellKey` and representation resolution actually change.
+
+The test also verifies:
+
+```text
+SemanticFieldQuery has no surface_cell / surface_cell_key / lod fields
+query field-order normalization is deterministic
+an alternate valid external SurfaceCellKey cannot perturb the canonical bundle
+one river feature spans multiple cells
+FeatureId stays stable across cells
+FluidRegionId stays stable across cells
+river-distance-m remains centerline-consistent on both PX/PZ seam sides
+```
+
+No `SemanticCellId`, LOD-specific FeatureId or LOD-specific FluidRegionId is introduced.
 
 ## Ownership / P0 guards
 
@@ -110,19 +122,28 @@ SemanticFieldCompositionReceipt != world identity
 
 G8 still owns terrain incision, banks, floodplain and erosion/deposition. G12 remains the future scheduler/cache/provenance execution layer.
 
+Validation:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
 Records:
 
 ```text
-docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_ACCEPTED_RU.md
 docs/checkpoints/G7_2_COMPOSITION_PROVENANCE_ACCEPTED_RU.md
-validation/g7-2-composition-provenance-validation.json
-config/procedural/g7-2-composition-provenance.v1.json
+docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_CANDIDATE_RU.md
+validation/g7-3-cross-cell-cross-lod-invariance-validation.json
+config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json
 ```
 
-Next implementation checkpoint:
+Next after G7.3 acceptance:
 
 ```text
-G7.3 — Cross-Cell / Cross-LOD Invariance
+G7.4 — Semantic Field Lab
 ```
 
 Global revision: `GLOBAL-P0-2026-08-08-R1`.
