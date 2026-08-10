@@ -9,10 +9,10 @@
   "purpose": "Remove the current full-compile-before-invalidation behavior from C22 incremental recompilation while preserving canonical Construction ownership and disposable derived presentation semantics.",
   "expected_outcome": "Eligible local unit-grid mutations rebuild only dirty sections plus bounded neighbor context, reuse unchanged section artifacts, rebuild the root shell from compiled section artifacts, preserve C24 presentation correctness, and safely fall back to full compile for unsupported cases.",
   "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-  "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_FIX2_PENDING",
-  "progress_note": "Exact-Windows focused gate remains accepted: C22 incremental 28, C22 graphical 35, C24 contracts 81. The first full-regression attempt was stopped correctly by the static test-manifest coverage gate before any Godot regression test ran because the new C22 incremental test was not yet listed in RUN_WORLD_REGRESSION_TESTS.ps1. FIX2 adds it to declared coverage and tracks stable UID sidecars; runtime algorithm code is unchanged.",
-  "last_accepted_checkpoint": "C22/C24 production baseline in main; TS0.3 algorithm evidence focused-pass",
-  "next_stage": "Pull FIX2, rerun full world regression, then PC0 audit; if green, mark C22 convergence SOURCE_ACCEPTED and merge-ready.",
+  "stage_status": "SOURCE_ACCEPTED_MERGE_READY",
+  "progress_note": "Production convergence is SOURCE_ACCEPTED. Exact Windows focused gate passes C22 incremental 28 assertions, C22 graphical 35 and C24 contracts 81. After FIX2 added explicit world-regression coverage, the full world/core suite passes through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and a clean STOPPED lifecycle. Main drift since the branch base is control-plane-only; current T1A.7 work has no C22 proxy runtime/contract overlap. The branch is merge-ready; MAIN_INTEGRATED remains false until the PR lands and post-merge PC0 is green for TS.",
+  "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
+  "next_stage": "Merge the accepted convergence branch into main, run post-merge Project Control audit, mark MAIN_INTEGRATED, then retire this convergence frontier and resume the next Construction-scale evidence stage.",
   "parent_branch_or_checkpoint": "main @ 0cb0416f20946afc85abe9abcded07bfcc493bf7 plus TS0.3 evidence from feature/ts0-large-structural-visual-lab",
   "base_commit": "0cb0416f20946afc85abe9abcded07bfcc493bf7",
   "dependencies": [
@@ -71,7 +71,7 @@
   "tested_heads": {
     "runtime": "12b8375182fb855478325435a927228e34d21133",
     "focused": "ece092753a4ae44f7de5b89d4e5681306cb05308",
-    "full_regression": ""
+    "full_regression": "1eb3397d52bd2a402bd3736c0e57ea7f2719b56e"
   },
   "ownership_claims": [
     {
@@ -93,9 +93,7 @@
     "PERSISTENCE_DURABILITY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": [
-    "C22_INCREMENTAL_FULL_REGRESSION_FIX2_REVALIDATION_PENDING"
-  ],
-  "health_declared": "YELLOW",
+  "blockers": [],
+  "health_declared": "GREEN",
   "cross_branch_overlap_enabled": true
 }
