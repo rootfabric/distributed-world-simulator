@@ -33,9 +33,10 @@ func _test_manifest() -> void:
 	_check(parsed is Dictionary, "G8.1 manifest parses")
 	if parsed is Dictionary:
 		_check(String(parsed.get("checkpoint", "")) == "g8.1-valley-incision-baseline", "G8.1 checkpoint")
-		_check(String(parsed.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G8.1 candidate status")
+		_check(String(parsed.get("status", "")) == "ACCEPTED", "G8.1 accepted status")
 		_check(String(parsed.get("generator_id", "")) == Valley.GENERATOR_ID, "manifest generator id")
 		_check(Array(parsed.get("inputs", [])) == [Registry.SURFACE_HEIGHT_M, Registry.VALLEY_INFLUENCE], "manifest inputs")
+		_check(String(parsed.get("acceptance", {}).get("tested_head", "")) == "42940c0b7f16b2ccf3704d7e603691415b1360cf", "G8.1 accepted tested head")
 		_check(not bool(parsed.get("ownership", {}).get("matter_mutation", true)), "manifest excludes Matter mutation")
 		_check(not bool(parsed.get("ownership", {}).get("lod_dependency", true)), "manifest excludes LOD dependency")
 
