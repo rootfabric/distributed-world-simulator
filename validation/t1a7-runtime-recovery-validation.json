@@ -1,15 +1,15 @@
 {
   "schema": "planet_simulator.t1a7_runtime_recovery_validation.v1",
   "checkpoint": "T1A7_1_RUNTIME_RECOVERY_CONTRACT",
-  "decision": "FIX1_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_head": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "architecture_reuse_audit": {
@@ -102,16 +102,24 @@
     "t1a7_runtime_recovery": "PASS_60",
     "focused_gate": "PASS"
   },
+  "fresh_full_world_regression": {
+    "tested_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PASS_6_0",
+    "lifecycle_final_state": "STOPPED",
+    "exit_code": 0,
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+  },
   "tested_heads": {
     "runtime": "a1d856de348268c45eccfb1c4646720bc4a996db",
     "focused": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "full_regression": ""
+    "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"
   },
   "required_validation": {
     "focused_runner": "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1",
     "focused_result": "PASS",
     "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING",
+    "full_regression_result": "PASS",
     "acceptance_requires_both": true
   },
   "next_after_acceptance": "T1A7_2_LATE_INTEREST_BASELINE_AND_RECONNECT"
