@@ -8,8 +8,14 @@ try {
     & $GodotPath --headless --editor --path $ProjectRoot --quit
     if ($LASTEXITCODE -ne 0) { throw "T1A.6 editor parse failed: $LASTEXITCODE" }
 
+    & $GodotPath --headless --path $ProjectRoot --script res://tests/construction/c5b_affordance_runtime_contracts.gd
+    if ($LASTEXITCODE -ne 0) { throw "C5B runtime contract regression failed: $LASTEXITCODE" }
+
     & $GodotPath --headless --path $ProjectRoot --script res://tests/construction/t1a5_interactive_runtime_execution_acceptance.gd
     if ($LASTEXITCODE -ne 0) { throw "T1A.5 dependency regression failed: $LASTEXITCODE" }
+
+    & $GodotPath --headless --path $ProjectRoot --script res://tests/construction/t1a5_transactional_runtime_effects_acceptance.gd
+    if ($LASTEXITCODE -ne 0) { throw "T1A.5 transactional runtime effects fix regression failed: $LASTEXITCODE" }
 
     & $GodotPath --headless --path $ProjectRoot --script res://tests/network/test_nx0_observability_baseline.gd
     if ($LASTEXITCODE -ne 0) { throw "NX0 protocol manifest dependency regression failed: $LASTEXITCODE" }
