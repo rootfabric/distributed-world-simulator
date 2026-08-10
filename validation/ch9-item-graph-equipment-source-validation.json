@@ -4,7 +4,7 @@
   "branch": "feature/ch9-item-graph-equipment-source",
   "base_branch": "feature/ch8-layered-equipment",
   "base_commit": "1eebc1e741e65c64207942a0e39d7263fbd39f65",
-  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_SMOKE_PASS_PENDING_WINDOWS_FOCUSED_AND_PREDECESSOR_GATE",
+  "decision": "FOCUSED_ACCEPTED_FORMAL_ACCEPTANCE_PENDING_PREDECESSOR_AND_PC0_HANDOFF",
   "goal": "Project canonical ItemRegistry plus an entity-owned slotted equipment ContainerState into CharacterEquipmentDomain.Snapshot without owning Item Graph mutations, networking, persistence, mesh or rig state.",
   "canonical_model": {
     "new_item_relation_added": false,
@@ -60,6 +60,20 @@
     "json_roundtrip": "res://tests/characters/test_ch9_item_graph_equipment_source_roundtrip.gd",
     "runner": ".\\RUN_CH9_ITEM_GRAPH_EQUIPMENT_SOURCE_TESTS.ps1 -GodotPath $Godot"
   },
+  "windows_focused_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "Windows",
+    "checkout_head_before_validation_commit": "a5c946c1b87a9ef462bd7c17bc61c559140eb2f3",
+    "editor_import": "PASS",
+    "ch7_character_equipment_domain": "PASS 54",
+    "ch8_layered_equipment_contract": "PASS 57",
+    "ch9_source": "PASS 62",
+    "ch9_roundtrip": "PASS 33",
+    "runner": "PASS",
+    "direct_source_rerun": "PASS 62",
+    "direct_roundtrip_rerun": "PASS 33",
+    "reported_error_markers": 0
+  },
   "focused_acceptance_requires": [
     "editor import/parse PASS",
     "CH7 character equipment domain PASS",
@@ -85,10 +99,11 @@
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
   ],
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch7_domain": "PENDING",
-    "ch8_layering_contract": "PENDING",
-    "ch9_source": "PENDING",
-    "ch9_roundtrip": "PENDING"
+    "editor_import": "PASS",
+    "ch7_domain": "PASS 54",
+    "ch8_layering_contract": "PASS 57",
+    "ch9_source": "PASS 62",
+    "ch9_roundtrip": "PASS 33",
+    "candidate_runner": "PASS"
   }
 }
