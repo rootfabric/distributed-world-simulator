@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_1_valley_incision_baseline.v1",
   "checkpoint": "g8.1-valley-incision-baseline",
-  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_VALIDATION_PENDING",
+  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -16,6 +16,7 @@
     "manifest": "config/procedural/g8-1-valley-incision-baseline.v1.json",
     "acceptance_test": "tests/procedural/geomorphology/g8_1_valley_incision_acceptance.gd",
     "focused_runner": "RUN_G8_1_VALLEY_INCISION_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_1_FULL_ACCEPTANCE.ps1",
     "tracked_uid_sidecars": true
   },
   "formula": {
@@ -37,7 +38,36 @@
     "persistence_ownership": false,
     "network_ownership": false
   },
-  "automated_evidence": "PENDING",
+  "first_windows_attempt": {
+    "tested_head": "5de8716fc5b2893e00d31f109b73d0974891aca9",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "stage_reached": "G8.0 accepted contract regression",
+    "g8_0_assertions": 75,
+    "g8_0_failures": 4,
+    "g8_1_runtime_test_reached": false,
+    "classification": "PARENT_REGRESSION_HARNESS_STALE_AFTER_G8_0_ACCEPTANCE",
+    "failures": [
+      "G8.0 candidate status expectation stale after manifest status became ACCEPTED",
+      "geo/river-distance-m incorrectly still expected in planned_g8_1_inputs",
+      "geo/river-width-m incorrectly still expected in planned_g8_1_inputs",
+      "geo/fluid-surface-distance-m incorrectly still expected in planned_g8_1_inputs"
+    ]
+  },
+  "fix1": {
+    "status": "IMPLEMENTED_REVALIDATION_PENDING",
+    "parent_regression_test_commit": "92406530fbcbf48d08d0df832d2a38c58b31b925",
+    "full_acceptance_allowlist_commit": "e9c5073b1a635becbf38c6044fe0b32be9d326a1",
+    "changes_runtime": false,
+    "changes_valley_formula": false,
+    "changes_semantic_contracts": false,
+    "changes_ownership": false,
+    "description": "Make the accepted G8.0 parent regression validate stable ACCEPTED evidence and the current split between G8.1 valley inputs and future river/fluid inputs; allow that exact parent-regression test-only fix in the G8.1 full-acceptance scope."
+  },
+  "automated_evidence": {
+    "focused": "REVALIDATION_PENDING",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED"
+  },
   "project_control": {
     "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
     "blockers": ["G8_1_FOCUSED_VALIDATION_REQUIRED", "G8_1_FULL_WORLD_REGRESSION_REQUIRED"]
