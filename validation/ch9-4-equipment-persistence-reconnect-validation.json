@@ -5,6 +5,7 @@
   "base_branch": "feature/ch9-3-multiplayer-equipment-presentation",
   "base_checkpoint": "c18eae9778a5020063163087269483bc43a924be",
   "accepted_parent_runtime_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
+  "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
   "pc0_handoff": {
     "registry_generation": 36,
     "main_registry_commit": "b6740f5d2f254cc9e0320f225b1bac082bcec8fb",
@@ -20,9 +21,18 @@
     "durable_owner": "EXISTING_NETWORKED_GAMEPLAY_PLUS_M6",
     "equipment_durable_truth": "CANONICAL_ITEM_GRAPH.CONTAINER",
     "presentation_persisted": false,
-    "transport_session_persisted": false
+    "transport_session_persisted": false,
+    "foundation_runtime_files_modified": false
   },
-  "gap_closed": "The generic NetworkedGameplayService durable restore reconstructs CanonicalMultiplayerItemGraph. CH9.4 preserves the accepted base transactional restore, then rehydrates the canonical Item Graph as the CH9.3 equipment-aware subclass from the exact same durable snapshot and verifies checksum identity.",
+  "gap_closed": "The generic NetworkedGameplayService durable restore reconstructs CanonicalMultiplayerItemGraph. CH9.4 stages an equipment-aware Item Graph from the exact same durable bytes, verifies equipment semantics and checksum identity before commit, then reuses the accepted base transactional restore for players/ownership/shared state/revisions and installs the staged equipment-aware graph only after base restore succeeds.",
+  "candidate_review": {
+    "restore_transactionality": "STAGED_EQUIPMENT_GRAPH_VALIDATED_BEFORE_BASE_COMMIT",
+    "inherited_member_audit": "PASS: EquipmentItemGraph preload is inherited from CH9.3 and is not redeclared",
+    "persistence_ownership": "PASS: existing M6 repository/coordinator/authority adapter/outbox reused",
+    "transport_scope": "UNCHANGED_FROM_ACCEPTED_CH9_3",
+    "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
+    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+  },
   "invariants": [
     "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
     "EQUIPMENT_CONTAINER_AND_SLOT_RELATION_SURVIVE_RESTART",
@@ -31,6 +41,7 @@
     "EQUIPMENT_QUANTITY_IS_ONE",
     "EQUIPMENT_DEFINITION_MATCHES_SLOT",
     "SEMANTICALLY_CORRUPTED_CHECKSUM_VALID_STATE_IS_REJECTED",
+    "FAILED_EQUIPMENT_REHYDRATION_DOES_NOT_PARTIALLY_COMMIT_BASE_STATE",
     "RECOVERED_SERVICE_RETAINS_EQUIPMENT_COMMAND_CAPABILITY",
     "DURABLE_REPLAY_SURVIVES_RESTART",
     "TRANSIENT_TRANSPORT_SESSION_DOES_NOT_SURVIVE_RESTART",
