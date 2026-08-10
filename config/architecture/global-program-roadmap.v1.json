@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-10T02:37:00Z",
+  "updated_at_utc": "2026-08-10T22:48:00Z",
   "canonical_branch": "main",
   "status": "active",
   "architecture_invariants": [
@@ -67,31 +67,52 @@
   },
   "active_sync_branches": [
     "main",
-    "feature/t1a4-interactive-fixture-binding",
-    "feature/g7-semantic-field-fabric",
-    "feature/ch7-8-skinned-garment",
+    "feature/t1b-composition-failure-recovery",
+    "feature/g8-geomorphology",
+    "feature/ch9-5-live-equipment-runtime-composition",
     "feature/world-building-doctrine"
   ],
   "active_frontiers": {
     "construction": {
-      "branch": "feature/t1a4-interactive-fixture-binding",
-      "stage": "T1A.4 Interactive Fixture Binding",
-      "parallel_planned": "TS0 Large Structural Visual Lab"
+      "branch": "feature/t1b-composition-failure-recovery",
+      "stage": "T1B.0 Runtime Failure Contract",
+      "parallel_planned": "TS0 construction scale/convergence"
     },
     "world_generation": {
-      "branch": "feature/g7-semantic-field-fabric",
-      "stage": "G7.4 Semantic Field Lab",
-      "next_visual_milestone": "G8 First Natural Terrain Showcase",
+      "branch": "feature/g8-geomorphology",
+      "stage": "G8.2 River Channel Incision",
+      "next_visual_milestone": "G8 natural terrain showcase",
       "next_world_showcase_milestone": "G8 Geomorphology"
     },
     "character": {
-      "branch": "feature/ch7-8-skinned-garment",
-      "stage": "active character presentation frontier"
+      "branch": "feature/ch9-5-live-equipment-runtime-composition",
+      "stage": "CH9.5 Live Equipment Runtime Composition",
+      "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect",
+      "goal": "Compose inventory-driven equipment, server-authoritative ENet replication, durable recovery and derived character presentation in one live runtime."
     },
     "world_building_doctrine": {
       "branch": "feature/world-building-doctrine",
       "stage": "active design-doctrine frontier"
     }
+  },
+  "character_equipment_track": {
+    "accepted": [
+      "CH9.0 Item Graph Equipment Source",
+      "CH9.1 Authoritative Equipment Operations",
+      "CH9.2 Inventory + Character Composition",
+      "CH9.3 Multiplayer Equipment Presentation",
+      "CH9.4 Equipment Persistence / Late Reconnect"
+    ],
+    "active": "CH9.5 Live Equipment Runtime Composition",
+    "acceptance_goal": [
+      "persistent dedicated server uses the CH9.4 equipment-aware recovery service through existing M6 durability",
+      "equipment commands use the existing ITEM channel and canonical Item Graph",
+      "local and remote CharacterEquipment presentation follow replicated Item Graph updates automatically",
+      "server restart plus reconnect/late join preserve the same Item UUIDs and exactly one presentation per equipped item",
+      "movement snapshots remain free of equipment Item IDs",
+      "no character-private persistence, recovery manager, authority registry or network foundation is introduced"
+    ],
+    "after_ch9_5": "Run PC0 audit before declaring any additional Character stage. Prefer integration/composition work over new equipment foundations unless a demonstrated gameplay requirement creates a new gap."
   },
   "construction_parallel_tracks": {
     "composition": [
