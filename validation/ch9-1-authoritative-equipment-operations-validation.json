@@ -1,0 +1,79 @@
+{
+  "schema": "planet_simulator.ch9_1_authoritative_equipment_operations_validation.v1",
+  "stage": "CH9.1 Authoritative Equipment Operations",
+  "branch": "feature/ch9-1-authoritative-equipment-operations",
+  "base_branch": "feature/ch9-item-graph-equipment-source",
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "goal": "Move canonical item UUIDs between normal containers and entity-owned equipment slots through the existing ItemTransferService while preserving CH8 semantic equipment validation and refusing non-atomic multi-item replacement.",
+  "canonical_mutation": {
+    "owner": "ItemTransferService",
+    "new_item_relation_added": false,
+    "new_operation_ledger_added": false,
+    "strict_equip_primitive": "move_item",
+    "unequip_primitive": "move_item",
+    "single_replacement_primitive": "swap_items",
+    "multi_item_replacement": "FAIL_CLOSED_MULTI_ITEM_TRANSACTION_REQUIRED"
+  },
+  "implementation": {
+    "operation_service": "res://scripts/characters/equipment/character_equipment_operation_service.gd",
+    "read_only_candidate_planning": "ItemGraphEquipmentSource.plan_candidate",
+    "runner": ".\\RUN_CH9_1_AUTHORITATIVE_EQUIPMENT_OPERATIONS_TESTS.ps1 -GodotPath $Godot"
+  },
+  "invariants": [
+    "ONE_PHYSICAL_ITEM_ONE_UUID",
+    "EQUIPPED_RELATION_REMAINS_CONTAINER",
+    "CHARACTER_LAYERING_VALIDATED_BEFORE_ITEM_MUTATION",
+    "STRICT_EQUIP_DOES_NOT_AUTO_REPLACE",
+    "ONE_ITEM_REPLACEMENT_USES_ATOMIC_ITEM_TRANSFER_SWAP",
+    "MULTI_ITEM_REPLACEMENT_NEVER_CHAINS_PARTIAL_MOVE_COMMITS",
+    "EXPECTED_ITEM_REVISION_IS_DELEGATED_TO_CANONICAL_TRANSFER_SERVICE",
+    "CHARACTER_OPERATION_FACADE_OWNS_NO_OPERATION_LEDGER",
+    "FAILED_PLAN_OR_TRANSFER_PRESERVES_ITEM_GRAPH",
+    "SUCCESSFUL_TRANSFER_MUST_REFRESH_TO_MATCH_EQUIPMENT_PROJECTION",
+    "NO_NETWORK_OR_PERSISTENCE_OWNERSHIP",
+    "NO_MOVEMENT_SNAPSHOT_EQUIPMENT_IDS"
+  ],
+  "focused_tests": {
+    "ch9_0_source": "res://tests/characters/test_ch9_item_graph_equipment_source.gd",
+    "ch9_0_roundtrip": "res://tests/characters/test_ch9_item_graph_equipment_source_roundtrip.gd",
+    "operations": "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd",
+    "multi_conflict_guard": "res://tests/characters/test_ch9_1_multi_conflict_guard.gd"
+  },
+  "acceptance_requires": [
+    "editor import/parse PASS",
+    "CH7 character equipment domain PASS",
+    "CH8 layered equipment contract PASS",
+    "CH9.0 source projection PASS",
+    "CH9.0 JSON roundtrip PASS",
+    "CH9.1 authoritative operations PASS",
+    "CH9.1 multi-conflict guard PASS",
+    "no ERROR/SCRIPT ERROR/parse/compile failure"
+  ],
+  "expected_behavior": {
+    "strict_equip": "normal container -> equipment slot",
+    "unequip": "equipment slot -> requested normal container",
+    "single_replacement": "incoming item and old equipped item atomically exchange canonical relations",
+    "stale_item_revision": "canonical transfer rejects without mutation",
+    "wrong_equipment_slot": "candidate planning rejects without mutation",
+    "multi_conflict_eva": "plan identifies all conflicts and execution performs zero mutations"
+  },
+  "deferred": [
+    "shared multi-item transaction execution for EVA-style replacement",
+    "CH9.2 inventory UI plus character graphical composition",
+    "CH9.3 multiplayer equipment presentation",
+    "CH9.4 persistence late join reconnect"
+  ],
+  "formal_lineage_blockers": [
+    "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
+    "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
+  ],
+  "windows_results": {
+    "editor_import": "PENDING",
+    "ch7_domain": "PENDING",
+    "ch8_layering": "PENDING",
+    "ch9_0_source": "PENDING",
+    "ch9_0_roundtrip": "PENDING",
+    "ch9_1_operations": "PENDING",
+    "ch9_1_multi_conflict_guard": "PENDING"
+  }
+}
