@@ -1,0 +1,33 @@
+{
+  "schema": "planet_simulator.g7_3_cross_cell_cross_lod_invariance_manifest.v1",
+  "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_2_accepted_commit": "68c4f90dbdac0e2d9968b4461207713f5661521b",
+  "lod_levels": [2, 4, 8, 12],
+  "proofs": {
+    "semantic_query_excludes_surface_cell": true,
+    "semantic_query_excludes_lod": true,
+    "same_world_point_same_bundle_across_lod": true,
+    "same_world_point_same_receipt_across_lod": true,
+    "query_order_invariant": true,
+    "river_feature_identity_stable_across_cells": true,
+    "fluid_region_identity_stable_across_cells": true,
+    "px_pz_seam_centerline_semantics_continuous": true,
+    "representation_density_not_canonical_identity": true
+  },
+  "architecture_boundaries": {
+    "surface_cell_is_semantic_identity": false,
+    "lod_is_semantic_identity": false,
+    "representation_density_is_semantic_identity": false,
+    "creates_semantic_cell_identity": false,
+    "creates_lod_specific_feature_identity": false,
+    "creates_lod_specific_fluid_identity": false,
+    "owns_scheduler_cache": false,
+    "owns_authority": false,
+    "owns_persistence": false,
+    "owns_network": false
+  },
+  "next_stage": "G7.4 Semantic Field Lab"
+}
