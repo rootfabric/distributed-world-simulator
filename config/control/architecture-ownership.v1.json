@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.architecture_ownership.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "foundations": {
+    "PROGRAM_LEDGER": {"owner": "MAIN", "rule": "Main declares active frontiers, project state and global decisions."},
+    "SPATIAL_DOMAIN_FABRIC": {"owner": "P0", "rule": "WorldAddress and cross-domain spatial mappings are global foundation contracts."},
+    "MATERIAL_ONTOLOGY": {"owner": "P0", "rule": "MaterialDefinitionId and canonical material definitions are shared global contracts."},
+    "WORLD_TRANSACTION_MODEL": {"owner": "P0", "rule": "Cross-domain Item/Matter/Construction operation semantics are global foundation contracts."},
+    "ITEM_IDENTITY_AND_GRAPH": {"owner": "ITEM", "rule": "Item domain owns permanent Item identities and Item Graph semantics."},
+    "MATTER_TRUTH": {"owner": "MATTER", "rule": "Matter owns authoritative mutable material/volume truth and durable Matter transactions."},
+    "CONSTRUCTION_TRUTH": {"owner": "CONSTRUCTION", "rule": "Construction owns canonical construct/part/bond semantics."},
+    "GEO_PROCEDURAL_BASELINE": {"owner": "G", "rule": "World Generation owns deterministic procedural baseline and Geo feature/field contracts."},
+    "AUTHORITY_FOUNDATION": {"owner": "AUTHORITY", "rule": "Domain branches consume authority policy; they do not invent permanent owner registries."},
+    "NETWORK_REPLICATION_POLICY": {"owner": "NX", "rule": "Network owns transport/replication policy, not gameplay truth."},
+    "PERSISTENCE_DURABILITY": {"owner": "R3_M0_MW", "rule": "New async I/O must preserve existing commit/replay/recovery semantics."},
+    "DERIVED_PRESENTATION": {"owner": "DOMAIN_ADAPTERS", "rule": "Renderer/HLOD/rig/mesh artifacts are disposable derived representations."},
+    "COMPUTE_EXECUTION": {"owner": "S1", "rule": "Workers compute proposals; authority validates and commits."},
+    "WORLD_WORK_BUDGET": {"owner": "P1_FUTURE", "rule": "Local laboratory throttles must not become a hidden global scheduler foundation."},
+    "WORLD_QUERY_FABRIC": {"owner": "P1_FUTURE", "rule": "Domain queries may exist, but no branch may silently claim universal World Query ownership."}
+  },
+  "forbidden_duplicate_foundation_tokens": [
+    "WORLD_ADDRESS",
+    "GLOBAL_MATERIAL_REGISTRY",
+    "MATERIAL_DEFINITION_ID_OWNER",
+    "WORLD_TRANSACTION_COORDINATOR",
+    "GLOBAL_AUTHORITY_REGISTRY",
+    "GLOBAL_INTEREST_REGION_IDENTITY",
+    "GLOBAL_PERSISTENCE_MODEL",
+    "GLOBAL_WORK_SCHEDULER"
+  ]
+}
