@@ -1,12 +1,12 @@
 # Character track — P0 alignment
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`  
 **Branch:** `feature/ch7-8-skinned-garment`  
 **Local role:** universal controllable-character presentation and equipment
 
 ## Зачем добавлен этот документ
 
-Character track уже правильно отделяет controllable entity от конкретной модели, rig и first-person presentation. Глобальный P0 audit нужен здесь для того, чтобы будущая физика персонажа, экипировка и spatial integration не создали вторые authority/material/item foundations.
+Character track отделяет controllable entity от конкретной модели, rig и first-person presentation. Глобальный P0 audit нужен здесь для того, чтобы будущая физика персонажа, экипировка и spatial integration не создали вторые authority/material/item foundations.
 
 ## Локальный план
 
@@ -21,6 +21,8 @@ CH7.8 skinned garment bridge
 ```
 
 Character track остаётся presentation/domain-adapter программой, а не владельцем canonical player identity.
+
+P0 R2 дополнительно фиксирует будущий `V0 Planet + Outpost Showcase`: CH может быть его presentation consumer/participant, но V0 не переносит в Character ownership G/T/spatial/material semantics.
 
 ## P0 dependencies
 
@@ -75,7 +77,8 @@ Character presenter является consumer interest/representation decisions.
 - skinned garment pose bridge;
 - animation retargeting;
 - character presentation LOD research;
-- different humanoid/non-humanoid presenters над общим controllable contract.
+- different humanoid/non-humanoid presenters над общим controllable contract;
+- participation in V0 showcase only through stable presentation/domain contracts.
 
 ## Stop conditions
 
@@ -86,13 +89,15 @@ Character stage должен остановиться и вынести вопр
 - equipment visual state сделать источником Item truth;
 - garment/render material использовать как canonical physical material;
 - world position определять только Node3D transform без reference-frame contract;
-- presentation LOD менять gameplay identity/state.
+- presentation LOD менять gameplay identity/state;
+- V0-specific shortcut, который переносит ownership G/T semantics в Character.
 
 ## Merge gate
 
 ```text
-[PASS] GLOBAL-P0-2026-08-08-R1 или более новая синхронная revision
+[PASS] GLOBAL-P0-2026-08-10-R2 или более новая синхронная revision
 [PASS] global config byte-equivalent main
+[PASS] global roadmap byte-equivalent main
 [PASS] network NX7-NX9 boundaries синхронизированы
 [PASS] model/rig remain presentation adapters
 [PASS] equipment identity remains compatible with Item domain
