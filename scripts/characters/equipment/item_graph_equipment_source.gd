@@ -224,7 +224,10 @@ func _normalize_slot_mapping(raw_mapping: Dictionary) -> Dictionary:
 		return _result(false, RESULT_EQUIPMENT_SLOT_MAPPING_INVALID, {"reason": "EMPTY_MAPPING"})
 	var normalized: Dictionary = {}
 	for raw_slot in raw_mapping.keys():
-		var slot_text := String(raw_slot).strip_edges()
+		# Runtime dictionaries commonly use integer slot keys while JSON object
+		# round-trips return string keys. str() handles both in Godot 4.7;
+		# String(raw_slot) is not a universal Variant conversion constructor.
+		var slot_text := str(raw_slot).strip_edges()
 		if not slot_text.is_valid_int():
 			return _result(false, RESULT_EQUIPMENT_SLOT_MAPPING_INVALID, {"slot": slot_text})
 		var slot_index := int(slot_text)
