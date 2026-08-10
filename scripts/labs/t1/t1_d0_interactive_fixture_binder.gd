@@ -36,7 +36,7 @@ const HOST_PARTS := {
 	"CONSOLE": "part/t1/d0/p0030",
 }
 
-static func materialize_bound(m0_root: String) -> Dictionary:
+static func materialize_bound(m0_root: String, reuse_existing_m0: bool = false) -> Dictionary:
 	if m0_root.strip_edges().is_empty():
 		return _failure("T1A4_M0_ROOT_REQUIRED")
 	var resolved: Dictionary = T1A3Script.build_resolved_snapshot()
@@ -77,25 +77,40 @@ static func materialize_bound(m0_root: String) -> Dictionary:
 		return _failure("T1A4_AUTHORITATIVE_ADAPTER_SETUP_FAILED", {"cause": adapter_setup})
 
 	var snapshot: Dictionary = Dictionary(resolved["snapshot"])
-	var root_projection := PlannerScript.create_root_projection(
-		String(resolved["root_item_id"]), CONSTRUCT_ID, "T1 D0 Lunar Outpost", RelationsScript.world()
-	)
-	var part_sources: Array = []
-	for part_value in snapshot.get("parts", []):
-		var part: Dictionary = Dictionary(part_value)
-		var projection: Dictionary = adapter.get_item_projection(String(part["item_instance_id"]))
-		if projection.is_empty():
-			return _failure("T1A4_PART_SOURCE_PROJECTION_MISSING", {"part_id": String(part["part_id"])})
-		part_sources.append(projection)
-	var plan_result := PlannerScript.build_assembly_plan(
-		PLAN_ID, OPERATION_ID, snapshot, root_projection, part_sources, {}
-	)
-	if not bool(plan_result.get("success", false)):
-		return _failure("T1A4_ASSEMBLY_PLAN_FAILED", {"cause": plan_result})
-	var plan: Dictionary = plan_result["plan"]
-	var applied: Dictionary = adapter.apply_plan(plan)
-	if not bool(applied.get("success", false)):
-		return _failure("T1A4_AUTHORITATIVE_COMMIT_FAILED", {"cause": applied})
+	var plan: Dictionary = {}
+	var applied: Dictionary = {}
+	var reused_existing_m0: bool = false
+	var existing_snapshot: Dictionary = adapter.get_construct_snapshot(CONSTRUCT_ID)
+	if reuse_existing_m0 and not existing_snapshot.is_empty():
+		if UtilsScript.canonical_json(existing_snapshot) != UtilsScript.canonical_json(snapshot):
+			return _failure("T1A4_EXISTING_CONSTRUCT_MISMATCH", {
+				"expected_checksum": String(snapshot.get("checksum", "")),
+				"actual_checksum": String(existing_snapshot.get("checksum", "")),
+			})
+		applied = adapter.get_operation_result(OPERATION_ID)
+		if applied.is_empty():
+			return _failure("T1A4_EXISTING_CONSTRUCT_OPERATION_RESULT_MISSING")
+		reused_existing_m0 = true
+	else:
+		var root_projection := PlannerScript.create_root_projection(
+			String(resolved["root_item_id"]), CONSTRUCT_ID, "T1 D0 Lunar Outpost", RelationsScript.world()
+		)
+		var part_sources: Array = []
+		for part_value in snapshot.get("parts", []):
+			var part: Dictionary = Dictionary(part_value)
+			var projection: Dictionary = adapter.get_item_projection(String(part["item_instance_id"]))
+			if projection.is_empty():
+				return _failure("T1A4_PART_SOURCE_PROJECTION_MISSING", {"part_id": String(part["part_id"])})
+			part_sources.append(projection)
+		var plan_result := PlannerScript.build_assembly_plan(
+			PLAN_ID, OPERATION_ID, snapshot, root_projection, part_sources, {}
+		)
+		if not bool(plan_result.get("success", false)):
+			return _failure("T1A4_ASSEMBLY_PLAN_FAILED", {"cause": plan_result})
+		plan = plan_result["plan"]
+		applied = adapter.apply_plan(plan)
+		if not bool(applied.get("success", false)):
+			return _failure("T1A4_AUTHORITATIVE_COMMIT_FAILED", {"cause": applied})
 	var final_validation: Dictionary = domain.validator.validate_graph()
 	if not bool(final_validation.get("success", false)):
 		return _failure("T1A4_FINAL_ITEM_GRAPH_INVALID", {"cause": final_validation})
@@ -131,6 +146,7 @@ static func materialize_bound(m0_root: String) -> Dictionary:
 		"adapter": adapter,
 		"plan": plan,
 		"apply_result": applied,
+		"reused_existing_m0": reused_existing_m0,
 		"binding_profile": profile,
 		"authority_report": adapter.get_authority_report(),
 	}
