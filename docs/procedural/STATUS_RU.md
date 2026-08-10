@@ -4,18 +4,18 @@
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`
 
 ```text
-G6.0 Fluid Contracts                   ACCEPTED
-G6.1 CasualRiverProviderV1             ACCEPTED
-G6.2 Cross-Cell / Cross-LOD Continuity ACCEPTED
-G6.3 Runtime WaterSurfaceQuery         ACCEPTED
-G6.4 Casual Visual River Lab           ACCEPTED
-G5 + MW10 shared baseline              ACCEPTED / INTEGRATED
-G6 Full Acceptance                     SOURCE_ACCEPTED
-G6 P0 Alignment Cleanup                ACCEPTED
-G7.0 Semantic Field Contracts          ACCEPTED
-G7.1 Upstream Semantic Field Adapters  ACCEPTED
-G7.2 Composition / Provenance           ACCEPTED
-G7.3 Cross-Cell / Cross-LOD Invariance  NEXT
+G6.0 Fluid Contracts                    ACCEPTED
+G6.1 CasualRiverProviderV1              ACCEPTED
+G6.2 Cross-Cell / Cross-LOD Continuity  ACCEPTED
+G6.3 Runtime WaterSurfaceQuery          ACCEPTED
+G6.4 Casual Visual River Lab            ACCEPTED
+G5 + MW10 shared baseline               ACCEPTED / INTEGRATED
+G6 Full Acceptance                      SOURCE_ACCEPTED
+G6 P0 Alignment Cleanup                 ACCEPTED
+G7.0 Semantic Field Contracts           ACCEPTED
+G7.1 Upstream Semantic Field Adapters   ACCEPTED
+G7.2 Composition / Provenance            ACCEPTED
+G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
 ```
 
 ## G7.2 acceptance
@@ -43,38 +43,70 @@ working tree                            CLEAN
 G7.2 FULL ACCEPTANCE                    PASS
 ```
 
-Accepted composition policy:
+Accepted G7.2 checkpoint:
 
 ```text
-semantic-composition-policy/require-complete-v1
-
-missing requested field       REJECT
-duplicate field ownership     REJECT
-duplicate adapter             REJECT
-unrequested contributed field REJECT
-input ordering                 NORMALIZED BY ADAPTER_ID
+68c4f90dbdac0e2d9968b4461207713f5661521b
 ```
 
-The accepted composer preserves adapter-produced samples and their upstream provenance checksums; the receipt pins query, bundle, sample and provenance checksums without becoming world identity.
+## G7.3 candidate
+
+G7.3 is proof-only: accepted G7 semantic runtime is not modified.
+
+It proves:
+
+```text
+same world point
++ same canonical SemanticFieldQuery
++ different SurfaceCellKey / LOD representation path
+= same semantic bundle / provenance
+```
+
+LOD proof levels:
+
+```text
+2, 4, 8, 12
+```
+
+Required invariants:
+
+```text
+SemanticFieldQuery has no SurfaceCellKey or LOD
+same query checksum across representation paths
+same bundle checksum across LOD
+same receipt checksum across LOD
+same sample/provenance checksums across LOD
+query field order does not affect result
+one river spans multiple cells
+PX/PZ seam preserves river semantic behavior
+G5 FeatureId remains stable across cells
+G6 FluidRegionId remains stable across cells
+```
+
+Representation resolution changes with LOD, but representation density is not canonical semantic identity.
 
 P0 boundaries remain:
 
 ```text
 SemanticFieldId != SurfaceCellKey
 SemanticFieldId != LOD
-SemanticFieldQuery != universal WorldQuery Fabric
-composer != scheduler/cache
-composer != authority/interest
-composer != persistence/network
-composer != material ontology
-composer != geomorphology
-receipt != world identity
+FeatureId != SurfaceCellKey
+FluidRegionId != SurfaceCellKey
+G7.3 != scheduler/cache
+G7.3 != authority/interest
+G7.3 != persistence/network
 ```
 
-## Next
+Validation:
+
+```powershell
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 -GodotPath $Godot
+.\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+Next if accepted:
 
 ```text
-G7.3 Cross-Cell / Cross-LOD Invariance
+G7.4 Semantic Field Lab
 ```
-
-G7.3 must prove that representation addressing and LOD change sampling density/cell membership only, not canonical semantic values, sample/provenance checksums, FeatureId/FluidRegionId or composition results.
