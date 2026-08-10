@@ -249,7 +249,10 @@ func _process(_delta: float) -> void:
 				_write_report("READY_TO_CONVERGE", false, _convergence_world, shell)
 			if not _convergence_locked:
 				var peer_ready := Support.read(_peer_result_file)
-				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED"]:
+				# Peer report states are monotonic. A faster peer may already have
+				# crossed the final convergence barrier before this client observes
+				# CONVERGENCE_LOCKED; the frozen checksums below remain the proof.
+				if String(peer_ready.get("state", "")) not in ["READY_TO_CONVERGE", "CONVERGENCE_LOCKED", "FINAL_CONVERGENCE_LOCKED", "COMPLETE"]:
 					return
 				if String(peer_ready.get("player_checksum", "")) != _player_checksum:
 					return
@@ -258,7 +261,7 @@ func _process(_delta: float) -> void:
 				_convergence_locked = true
 				_write_report("CONVERGENCE_LOCKED", false, _convergence_world, shell)
 			var peer_convergence := Support.read(_peer_result_file)
-			if String(peer_convergence.get("state", "")) not in ["CONVERGENCE_LOCKED", "COMPLETE"]:
+			if String(peer_convergence.get("state", "")) not in ["CONVERGENCE_LOCKED", "FINAL_CONVERGENCE_LOCKED", "COMPLETE"]:
 				return
 			if String(peer_convergence.get("player_checksum", "")) != _player_checksum:
 				return
