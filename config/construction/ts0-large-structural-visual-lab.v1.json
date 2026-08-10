@@ -7,7 +7,7 @@
     "checkpoint": "T1A.3_SOURCE_ACCEPTED",
     "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
   },
-  "status": "TS0_0_IMPLEMENTED_CANDIDATE",
+  "status": "TS0_0_SOURCE_ACCEPTED",
   "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count.",
   "fixture_seed_version": "ts0-large-structural-fixtures-v1",
   "structural_grid": {
@@ -80,7 +80,7 @@
     "TS0.4_1M_RESEARCH_CEILING_PROBE"
   ],
   "stage_status": {
-    "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES": "IMPLEMENTED_CANDIDATE",
+    "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES": "SOURCE_ACCEPTED",
     "TS0.1_10K_VISUAL_PROOF": "PLANNED",
     "TS0.2_100K_VISUAL_SCALE_GATE": "PLANNED",
     "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD": "PLANNED",
