@@ -13,6 +13,7 @@ const AUTHORITY_EPOCH := 1
 const COMPILER_NODE_ID := "server/ts0/proxy-compiler"
 const DEFAULT_OBSERVER_ID := "observer/ts0/graphical-lab"
 const DEFAULT_CLIENT_ID := "client/ts0/graphical-lab"
+const COMPLETE_COVERAGE_INVARIANT := "COMPLETE_VISUAL_COVERAGE_REQUIRED"
 
 static func create_compile_request(profile_id: String) -> Dictionary:
 	var built: Dictionary = FixtureBuilder.build_profile(profile_id)
@@ -74,8 +75,37 @@ static func create_interest(manifest: Dictionary, mode: String, observer_id: Str
 	var policy: Dictionary = config.get("graphical_policy", {})
 	if policy.is_empty():
 		return _failure("TS0_GRAPHICAL_POLICY_MISSING")
+	var coverage_policy: Dictionary = policy.get("coverage_policy", {})
+	if String(coverage_policy.get("invariant", "")) != COMPLETE_COVERAGE_INVARIANT:
+		return _failure("TS0_COMPLETE_VISUAL_COVERAGE_POLICY_MISSING")
+
 	var distance_m := _distance_for_mode(manifest, mode)
 	var focus_local_m := manifest_exterior_focus(manifest)
+	var visible_section_ids: Array = []
+	var section_budget := 1
+	var coverage_mode := String(coverage_policy.get(mode, ""))
+	if mode != MODE_FAR:
+		var total_sections := int(manifest.get("total_section_count", 0))
+		var flat_limit := int(coverage_policy.get("ts0_1_max_flat_section_artifacts", 64))
+		if total_sections <= 0:
+			return _failure("TS0_COMPLETE_COVERAGE_HAS_NO_SECTIONS")
+		if total_sections > flat_limit:
+			return _failure("TS0_COMPLETE_COVERAGE_REQUIRES_HIERARCHICAL_HLOD", {
+				"total_sections": total_sections,
+				"ts0_1_flat_limit": flat_limit,
+				"mode": mode,
+			})
+		for ref_value in manifest.get("section_artifacts", []):
+			var ref: Dictionary = ref_value
+			visible_section_ids.append(String(ref.get("section_id", "")))
+		visible_section_ids.sort()
+		if visible_section_ids.size() != total_sections:
+			return _failure("TS0_COMPLETE_COVERAGE_SECTION_REFERENCE_MISMATCH", {
+				"manifest_total_sections": total_sections,
+				"section_reference_count": visible_section_ids.size(),
+			})
+		section_budget = total_sections
+
 	var interest: Dictionary = Interest.create(
 		observer_id,
 		String(manifest.get("construct_id", "")),
@@ -83,9 +113,9 @@ static func create_interest(manifest: Dictionary, mode: String, observer_id: Str
 		distance_m,
 		focus_local_m,
 		"",
-		[],
+		visible_section_ids,
 		int(policy.get("bandwidth_budget_bytes", 8388608)),
-		int(policy.get("max_section_artifacts", 12)),
+		section_budget,
 		int(policy.get("max_interactive_parts", 0))
 	)
 	var checked: Dictionary = Interest.validate(interest)
@@ -97,6 +127,9 @@ static func create_interest(manifest: Dictionary, mode: String, observer_id: Str
 		"interest": interest,
 		"focus_local_m": focus_local_m,
 		"distance_m": distance_m,
+		"coverage_invariant": COMPLETE_COVERAGE_INVARIANT,
+		"coverage_mode": coverage_mode,
+		"requested_section_count": visible_section_ids.size(),
 	})
 
 static func expected_detail_mode(mode: String) -> String:
