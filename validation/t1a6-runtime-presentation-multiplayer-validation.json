@@ -1,11 +1,12 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "FOCUSED_ACCEPTED_PENDING_FULL_REGRESSION",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
   "fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
+  "focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -64,7 +65,10 @@
     "final_state": "door CLOSED, lamp ON, generator RUNNING, console INACTIVE",
     "server_client_state_checksum_convergence_required": true,
     "presentation_convergence_required": true,
-    "runtime_snapshot_rejections_required": 0
+    "runtime_snapshot_rejections_required": 0,
+    "windows_assertions": 25,
+    "windows_failures": 0,
+    "result": "PASS"
   },
   "p0_alignment": {
     "canonical_runtime_is_presentation": false,
@@ -83,7 +87,7 @@
   "focused_gate": {
     "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "windows_run_head": "cd249458d7bb2964007a129910164a63d0533f65",
+    "windows_run_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
     "dependencies": [
       "T1A5 interactive runtime execution acceptance",
       "NX0 protocol manifest baseline",
@@ -98,14 +102,26 @@
       "c5c_runtime_replication_contracts": "PASS_29",
       "port_allocation": "PASS",
       "dedicated_server_launch": "PASS",
-      "graphical_process_acceptance": "BLOCKED_COMPILE_ERROR"
+      "client_a_graphical": "PASS",
+      "client_b_graphical": "PASS",
+      "client_a_final_revision": "PASS",
+      "client_b_final_revision": "PASS",
+      "server_final_revision": "PASS",
+      "client_checksum_convergence": "PASS",
+      "server_client_checksum_convergence": "PASS",
+      "client_a_presentation_matches_runtime": "PASS",
+      "client_b_presentation_matches_runtime": "PASS",
+      "client_a_replica_rejections": 0,
+      "client_b_replica_rejections": 0,
+      "server_runtime_commands": 3,
+      "server_runtime_command_rejections": 0,
+      "join_and_mutation_snapshots": "PASS",
+      "client_a_clean_shutdown": "PASS",
+      "client_b_clean_shutdown": "PASS",
+      "server_clean_shutdown": "PASS",
+      "graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES"
     },
-    "blocker": {
-      "stage": "dedicated_server_script_compile",
-      "error": "T1A6 server adapter redeclared RealtimeChannelPolicy already inherited from M3 dedicated runtime",
-      "semantic_runtime_failure": false
-    },
-    "candidate": "FIX1_IMPLEMENTED_REQUIRES_WINDOWS_RERUN"
+    "candidate": "PASS"
   },
   "fix1": {
     "server_commit": "5f83dcb3ca3f7043fa3c205260e7e24d891ba32f",
@@ -119,11 +135,11 @@
     "runtime_semantics_changed": false,
     "transport_policy_changed": false,
     "protocol_changed": false,
-    "requires_focused_windows_rerun": true
+    "focused_windows_rerun": "PASS"
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "result": "PENDING_AFTER_FOCUSED_PASS"
+    "result": "PENDING"
   },
   "next_after_acceptance": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE"
 }
