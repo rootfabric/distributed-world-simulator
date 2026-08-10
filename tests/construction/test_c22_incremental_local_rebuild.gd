@@ -6,7 +6,7 @@ const RuntimeRequest = preload("res://scripts/construction/runtime_projection/co
 const CompileRequest = preload("res://scripts/construction/proxies/construction_proxy_compile_request.gd")
 const Controller = preload("res://scripts/construction/proxies/construction_proxy_streaming_controller.gd")
 
-const SIZE := 24
+const SIZE := 32
 const SECTION_SIZE := 8.0
 const CUT_SIZE := 4
 
@@ -18,7 +18,7 @@ func _init() -> void:
 	_finish()
 
 func _test_local_incremental_matches_full_compile() -> void:
-	var original := _build_snapshot(1, false)
+	var original := _build_snapshot(1)
 	_ok(Snapshot.validate(original), "original snapshot validates")
 	_assert(Array(original["parts"]).size() == SIZE * SIZE * SIZE, "original cube part count")
 
@@ -27,7 +27,7 @@ func _test_local_incremental_matches_full_compile() -> void:
 	var initial := controller.compile_construct(_compile_request(original))
 	_ok(initial, "initial C22 compile")
 	var initial_manifest: Dictionary = initial["manifest"]
-	_assert(int(initial_manifest["total_section_count"]) == 27, "24m cube has 27 sections at 8m")
+	_assert(int(initial_manifest["total_section_count"]) == 64, "32m cube has 64 sections at 8m")
 
 	var mutated_result := _build_mutated_snapshot(original)
 	var mutated: Dictionary = mutated_result["snapshot"]
@@ -45,8 +45,9 @@ func _test_local_incremental_matches_full_compile() -> void:
 	_assert(not bool(stats.get("full_snapshot_scan_used", true)), "full snapshot scan not used")
 	_assert(int(stats.get("base_dirty_section_count", -1)) == 1, "corner cut starts in one base section")
 	_assert(int(stats.get("rebuild_section_count", -1)) == 8, "neighbor-safe rebuild limited to eight sections")
-	_assert(int(stats.get("reused_section_count", -1)) == 19, "nineteen unchanged sections reused")
-	_assert(int(stats.get("context_section_count", 0)) < 27, "context remains below full construct section count")
+	_assert(int(stats.get("reused_section_count", -1)) == 56, "fifty-six unchanged sections reused")
+	_assert(int(stats.get("context_section_count", -1)) == 27, "context bounded to 27 sections")
+	_assert(int(stats.get("context_section_count", 0)) < int(initial_manifest["total_section_count"]), "context remains below full construct section count")
 	_assert(int(stats.get("snapshot_binary_search_lookups", 0)) > 0, "snapshot uses indexed binary lookup work")
 
 	var reference_controller = Controller.new()
@@ -81,13 +82,11 @@ func _test_local_incremental_matches_full_compile() -> void:
 	controller.queue_free()
 	reference_controller.queue_free()
 
-func _build_snapshot(revision: int, omit_cut: bool) -> Dictionary:
+func _build_snapshot(revision: int) -> Dictionary:
 	var parts: Array = []
 	for z in range(SIZE):
 		for y in range(SIZE):
 			for x in range(SIZE):
-				if omit_cut and x < CUT_SIZE and y < CUT_SIZE and z < CUT_SIZE:
-					continue
 				parts.append(_part(x, y, z))
 	return Snapshot.create(
 		"construct/c22/incremental-grid",
