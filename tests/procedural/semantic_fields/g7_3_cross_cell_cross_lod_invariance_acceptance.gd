@@ -48,7 +48,7 @@ func _test_manifest() -> void:
 	if parsed is Dictionary:
 		_check(String(parsed.get("checkpoint", "")) == "g7.3-cross-cell-cross-lod-invariance", "G7.3 checkpoint")
 		_check(String(parsed.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G7.3 candidate status")
-		_check(String(parsed.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-08-R1", "G7.3 P0 revision")
+		_check(String(parsed.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-10-R2", "G7.3 P0 revision")
 		var lods: Array[int] = []
 		for value in parsed.get("lod_levels", []):
 			lods.append(int(value))
