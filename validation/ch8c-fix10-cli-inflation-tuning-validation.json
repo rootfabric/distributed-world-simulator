@@ -1,0 +1,42 @@
+{
+  "schema": "planet_simulator.ch8c_fix10_cli_inflation_tuning_validation.v1",
+  "branch": "feature/ch8-layered-equipment",
+  "decision": "FIX10_CLI_INFLATION_TUNING_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "goal": "Allow graphical CH8C body-visible garment inflation to be tuned from PowerShell without editing GDScript or rebuilding the canonical body.",
+  "launcher": "PLAY_CH8C_LAYERED_EQUIPMENT_LAB.ps1",
+  "parameters": {
+    "UpperInflation": {"default_m": 0.032, "min_m": 0.0, "max_m": 0.08},
+    "LowerInflation": {"default_m": 0.038, "min_m": 0.0, "max_m": 0.08},
+    "FeetInflation": {"default_m": 0.036, "min_m": 0.0, "max_m": 0.08},
+    "InflationScale": {"default": 1.0, "min": 0.1, "max": 2.0}
+  },
+  "godot_user_args": [
+    "--ch8c-upper-inflation=<metres>",
+    "--ch8c-lower-inflation=<metres>",
+    "--ch8c-feet-inflation=<metres>",
+    "--ch8c-inflation-scale=<factor>"
+  ],
+  "profile_semantics": "CLI values define the requested maximum offset. Existing height-biased profile shapes are scaled proportionally, so cuffs/waist/sole remain less inflated than the profile peak.",
+  "body_contract": {
+    "base_mesh_changed": false,
+    "base_material_changed": false,
+    "body_triangles_removed": false,
+    "body_suppression": false,
+    "gameplay_body_changed": false,
+    "collision_changed": false,
+    "item_graph_changed": false,
+    "network_changed": false
+  },
+  "factory_max_offset_m": 0.08,
+  "locale_safety": "PowerShell launcher serializes numeric user args with InvariantCulture.",
+  "focused_gate": {
+    "script": "res://tests/characters/test_ch8c_cli_inflation_override.gd",
+    "required_args": [
+      "--ch8c-upper-inflation=0.032",
+      "--ch8c-lower-inflation=0.038",
+      "--ch8c-feet-inflation=0.036",
+      "--ch8c-inflation-scale=1.0"
+    ],
+    "status": "PENDING_WINDOWS_RERUN"
+  }
+}
