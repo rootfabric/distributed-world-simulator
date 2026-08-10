@@ -6,6 +6,7 @@
   "base_head": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "checkpoint_document": "docs/checkpoints/2026-08-10_T1A7_1_RUNTIME_RECOVERY_ACCEPTED_RU.md",
   "status_dimensions": {
     "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
