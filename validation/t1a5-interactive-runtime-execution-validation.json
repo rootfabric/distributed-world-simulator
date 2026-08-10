@@ -1,16 +1,17 @@
 {
   "schema": "planet_simulator.t1a5_interactive_runtime_execution_validation.v1",
   "checkpoint": "T1A5_INTERACTIVE_RUNTIME_EXECUTION",
-  "decision": "FOCUSED_WINDOWS_PASS_FULL_REGRESSION_REQUIRED",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a5-interactive-runtime-execution",
   "base_head": "a14e6f04c265467e1590106ace8439bddae19ddb",
   "candidate_head": "a6fb2d2a1e0db1fd2b1f3773181d6830402cbccc",
   "focused_tested_head": "01b6ee2364d949858f12f0562de09743795cbc7e",
+  "full_regression_tested_head": "c05b1a86f05d1c6562ebb0dad1bf6c161cc6a185",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "scope": {
@@ -74,7 +75,12 @@
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "result": "PENDING"
+    "head": "c05b1a86f05d1c6562ebb0dad1bf6c161cc6a185",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "main_scene_cli_all": "PASS_6_FAIL_0",
+    "final_sentinel": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json",
+    "result": "PASS"
   },
   "next_after_acceptance": "T1A6_RUNTIME_PRESENTATION_AND_MULTIPLAYER_BINDING"
 }
