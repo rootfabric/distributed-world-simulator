@@ -4,24 +4,10 @@
   "status": "IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
-  "g7_3": {
-    "decision": "ACCEPTED",
-    "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
-    "focused_assertions": 122,
-    "full_windows_gate": "PASS"
-  },
+  "g7_3": {"decision": "ACCEPTED", "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4", "focused_assertions": 122, "full_windows_gate": "PASS"},
   "scene": "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn",
   "script": "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd",
-  "sample_grid": {
-    "latitude_min_deg": 0.0,
-    "latitude_max_deg": 10.0,
-    "longitude_min_deg": 30.0,
-    "longitude_max_deg": 62.0,
-    "latitude_segments": 16,
-    "longitude_segments": 32,
-    "expected_vertices": 561,
-    "crosses_cube_faces": ["PX", "PZ"]
-  },
+  "sample_grid": {"latitude_min_deg": 0.0, "latitude_max_deg": 10.0, "longitude_min_deg": 30.0, "longitude_max_deg": 62.0, "latitude_segments": 16, "longitude_segments": 32, "expected_vertices": 561, "crosses_cube_faces": ["PX", "PZ"]},
   "presentation_lod": {
     "mode": "CAMERA_DISTANCE_DERIVED",
     "semantic_source_sample_count": 561,
@@ -38,58 +24,10 @@
       {"lod": 3, "distance": ">=20", "stride": 8, "mesh_grid": [5, 3], "detail": "FAR_COARSE"}
     ]
   },
-  "visualized_fields": [
-    "geo/surface-height-m",
-    "geo/valley-influence",
-    "geo/river-distance-m",
-    "geo/river-width-m",
-    "geo/fluid-surface-distance-m"
-  ],
-  "vocabulary_only_not_faked": [
-    "geo/slope",
-    "geo/curvature",
-    "geo/drainage-potential",
-    "geo/continentalness",
-    "geo/temperature-baseline",
-    "geo/moisture-baseline"
-  ],
-  "controls": {
-    "1": "geo/surface-height-m",
-    "2": "geo/valley-influence",
-    "3": "geo/river-distance-m",
-    "4": "geo/river-width-m",
-    "5": "geo/fluid-surface-distance-m",
-    "F": "toggle canonical river centerline overlay",
-    "W_S": "zoom and automatically switch derived presentation LOD",
-    "A_D": "yaw",
-    "Q_E": "pitch",
-    "SPACE": "auto orbit",
-    "R": "reset camera field and derived presentation LOD"
-  },
-  "presentation_contract": {
-    "field_selection_changes_canonical_query": false,
-    "field_selection_changes_geometry": false,
-    "field_selection_changes_only_derived_color": true,
-    "camera_changes_canonical_semantics": false,
-    "presentation_lod_changes_canonical_semantics": false,
-    "presentation_lod_reuses_same_semantic_records": true,
-    "hud_changes_canonical_semantics": false,
-    "visual_colors_in_canonical_checksum": false,
-    "mesh_density_in_canonical_checksum": false,
-    "creates_new_feature_identity": false,
-    "creates_new_fluid_identity": false,
-    "creates_material_definition": false
-  },
-  "p0": {
-    "owns_renderer_foundation": false,
-    "owns_world_query": false,
-    "owns_spatial_identity": false,
-    "owns_authority": false,
-    "owns_interest": false,
-    "owns_persistence": false,
-    "owns_network": false,
-    "owns_scheduler_cache": false,
-    "owns_geomorphology": false
-  },
+  "visualized_fields": ["geo/surface-height-m", "geo/valley-influence", "geo/river-distance-m", "geo/river-width-m", "geo/fluid-surface-distance-m"],
+  "vocabulary_only_not_faked": ["geo/slope", "geo/curvature", "geo/drainage-potential", "geo/continentalness", "geo/temperature-baseline", "geo/moisture-baseline"],
+  "controls": {"1": "geo/surface-height-m", "2": "geo/valley-influence", "3": "geo/river-distance-m", "4": "geo/river-width-m", "5": "geo/fluid-surface-distance-m", "F": "toggle canonical river centerline overlay", "W_S": "zoom and automatically switch derived presentation LOD", "A_D": "yaw", "Q_E": "pitch", "SPACE": "auto orbit", "R": "reset camera field and derived presentation LOD"},
+  "presentation_contract": {"field_selection_changes_canonical_query": false, "field_selection_changes_geometry": false, "field_selection_changes_only_derived_color": true, "camera_changes_canonical_semantics": false, "presentation_lod_changes_canonical_semantics": false, "presentation_lod_reuses_same_semantic_records": true, "hud_changes_canonical_semantics": false, "visual_colors_in_canonical_checksum": false, "mesh_density_in_canonical_checksum": false, "creates_new_feature_identity": false, "creates_new_fluid_identity": false, "creates_material_definition": false},
+  "p0": {"owns_renderer_foundation": false, "owns_world_query": false, "owns_spatial_identity": false, "owns_authority": false, "owns_interest": false, "owns_persistence": false, "owns_network": false, "owns_scheduler_cache": false, "owns_geomorphology": false},
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
