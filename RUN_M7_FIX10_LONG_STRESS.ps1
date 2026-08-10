@@ -1,13 +1,14 @@
 param(
     [Parameter(Mandatory = $true)][string]$GodotPath,
     [int]$DurationSeconds = 330,
-    [string]$NetworkProfile = "LOCAL"
+    [string]$NetworkProfile = "LOCAL",
+    [switch]$DiagnosticOnly
 )
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Godot = (Resolve-Path $GodotPath).Path
-$DurationSeconds = [Math]::Max($DurationSeconds, 300)
+$DurationSeconds = [Math]::Max($DurationSeconds, $(if ($DiagnosticOnly) { 20 } else { 300 }))
 $DurationMs = $DurationSeconds * 1000
 $ServerShutdownMs = $DurationMs + 120000
 $NetworkProfile = $NetworkProfile.Trim().ToUpperInvariant()
@@ -121,8 +122,29 @@ function Stop-ProcessSafe {
     catch {}
 }
 
+function Write-LiveDiagnosticSummary {
+    param([object]$Result, [string]$Label)
+    if ($null -eq $Result) {
+        return
+    }
+    $Prediction = $Result.world_report.m7_prediction_report
+    if ($null -eq $Prediction -and $null -ne $Result.runtime_report.client_prediction) {
+        $Prediction = $Result.runtime_report.client_prediction.runtime
+    }
+    $Transport = $Result.runtime_report.fix10_prediction_ack_transport
+    Write-Host ("Client {0} live: state={1}, duration={2:N1}s, corrections={3}, max_error={4:N4}m, phase matched/mismatch={5}/{6}, hold_delta={7}, transition_error={8:N6}m, latch_suppressions={9}" -f `
+        $Label, [string]$Result.state, ([double]$Result.details.stress_duration_ms / 1000.0), `
+        [int]$Prediction.corrections, [double]$Prediction.maximum_error_m, `
+        [int]$Prediction.fix10_fix6_phase_matched_ack_reconciliations, `
+        [int]$Prediction.fix10_fix6_phase_mismatch_authority_reconciliations, `
+        [int]$Prediction.fix10_fix6_max_hold_delta_ticks, `
+        [double]$Prediction.fix10_fix6_max_transition_delta_error_m, `
+        [int]$Transport.fix6_same_tick_input_update_suppressions)
+}
+
 $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$OutDir = Join-Path $ProjectRoot "artifacts\test-results\m7-fix10-long-$Timestamp"
+$ModeName = if ($DiagnosticOnly) { "diagnostic" } else { "long" }
+$OutDir = Join-Path $ProjectRoot "artifacts\test-results\m7-fix10-$ModeName-$Timestamp"
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $ServerJson = Join-Path $OutDir "server.json"
 $ClientAJson = Join-Path $OutDir "a.json"
@@ -137,11 +159,12 @@ $ServerProcess = $null
 $ClientAProcess = $null
 $ClientBProcess = $null
 
-Write-Host "M7 FIX10 fix6 long prediction acceptance" -ForegroundColor Cyan
+Write-Host "M7 FIX10 fix6 prediction stress" -ForegroundColor Cyan
 Write-Host "Project: $ProjectRoot"
 Write-Host "Output:  $OutDir"
 Write-Host "Profile: $NetworkProfile"
-Write-Host "Stress:  $DurationSeconds seconds minimum"
+Write-Host "Mode:    $(if ($DiagnosticOnly) { 'VISUAL DIAGNOSTIC - NOT ACCEPTANCE' } else { 'FINAL ACCEPTANCE' })"
+Write-Host "Stress:  $DurationSeconds seconds"
 
 try {
     $ServerArgs = @(
@@ -160,7 +183,7 @@ try {
     $ServerProcess = Start-IsolatedGodot -Arguments $ServerArgs -UserRoot (Join-Path $OutDir "user-server")
     $ServerReady = Wait-JsonState -Path $ServerJson -States @("READY", "FAILED") -TimeoutMs 30000 -Process $ServerProcess
     if ($null -eq $ServerReady -or [string]$ServerReady.state -ne "READY") {
-        throw "FIX10 long stress dedicated server did not reach READY"
+        throw "FIX10 prediction stress dedicated server did not reach READY"
     }
     Write-Host "Server READY on 127.0.0.1:$Port" -ForegroundColor Green
 
@@ -169,6 +192,7 @@ try {
         "--rendering-method", "gl_compatibility",
         "--audio-driver", "Dummy"
     )
+    $DiagnosticArg = if ($DiagnosticOnly) { "--diagnostic=1" } else { "--diagnostic=0" }
     $ClientAArgs = $CommonClientArgs + @(
         "--log-file", $ClientALog,
         "--script", "res://tools/runtime/m7_fix10_long_prediction_client.gd",
@@ -181,7 +205,8 @@ try {
         "--peer-file=$ClientBJson",
         "--server-file=$ServerJson",
         "--network-profile=$NetworkProfile",
-        "--duration-ms=$DurationMs"
+        "--duration-ms=$DurationMs",
+        $DiagnosticArg
     )
     $ClientBArgs = $CommonClientArgs + @(
         "--log-file", $ClientBLog,
@@ -195,7 +220,8 @@ try {
         "--peer-file=$ClientAJson",
         "--server-file=$ServerJson",
         "--network-profile=$NetworkProfile",
-        "--duration-ms=$DurationMs"
+        "--duration-ms=$DurationMs",
+        $DiagnosticArg
     )
 
     $ClientAProcess = Start-IsolatedGodot -Arguments $ClientAArgs -UserRoot (Join-Path $OutDir "user-a")
@@ -206,19 +232,33 @@ try {
     $ClientBResult = Wait-JsonState -Path $ClientBJson -States @("COMPLETE", "FAILED") -TimeoutMs $ClientTimeoutMs -Process $ClientBProcess
 
     if ($null -eq $ClientAResult -or [string]$ClientAResult.state -ne "COMPLETE" -or -not [bool]$ClientAResult.passed) {
-        throw "FIX10 long stress client A failed; inspect $ClientALog and $ClientAJson"
+        Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
+        Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
+        throw "FIX10 prediction stress client A failed/stopped; inspect $ClientALog and $ClientAJson"
     }
     if ($null -eq $ClientBResult -or [string]$ClientBResult.state -ne "COMPLETE" -or -not [bool]$ClientBResult.passed) {
-        throw "FIX10 long stress client B failed; inspect $ClientBLog and $ClientBJson"
+        Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
+        Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
+        throw "FIX10 prediction stress client B failed/stopped; inspect $ClientBLog and $ClientBJson"
     }
 
     Start-Sleep -Milliseconds 1500
     $ServerFinal = Read-JsonSafe -Path $ServerJson
     if ($null -eq $ServerFinal -or [string]$ServerFinal.state -notin @("READY", "PASS")) {
-        throw "FIX10 long stress server report is not healthy after client completion"
+        throw "FIX10 prediction stress server report is not healthy after client completion"
     }
 
+    Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
+    Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
     Write-Host "Two-client prediction-only stress completed." -ForegroundColor Green
+
+    if ($DiagnosticOnly) {
+        Write-Host ""
+        Write-Host "M7 FIX10 fix6 visual diagnostic completed - NOT AN ACCEPTANCE PASS." -ForegroundColor Yellow
+        Write-Host "Results: $OutDir"
+        return
+    }
+
     Write-Host ""
     $Analyzer = Join-Path $ProjectRoot "ANALYZE_M7_FIX10_FIX6_RESULTS.ps1"
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Analyzer `
