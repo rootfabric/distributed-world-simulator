@@ -38,7 +38,9 @@
     "mid": "SECTION_HLOD",
     "far": "DISTANT_SHELL",
     "max_near_mid_section_artifacts": 12,
-    "far_shell_artifacts": 1
+    "far_shell_artifacts": 1,
+    "focus_policy": "EXTERIOR_POSITIVE_Z_SURFACE",
+    "default_visual_mode": "FAR"
   },
   "implementation_review": {
     "adapter_uses_existing_runtime_projection_request": "PASS",
@@ -47,11 +49,12 @@
     "lab_uses_existing_streaming_controller": "PASS",
     "lab_uses_runtime_node_metrics": "PASS",
     "headless_acceptance_added": "PASS",
-    "c22_c24_regression_in_focused_runner": "PASS"
+    "c22_c24_regression_in_focused_runner": "PASS",
+    "solid_construct_interest_avoids_fully_internal_center_section": "PASS_BY_EXTERIOR_FOCUS_POLICY"
   },
   "runtime_validation": {
     "linux_parse_harness": "PASS_GODOT_4_7_1_DOUBLE_A13DA4FEB",
-    "linux_scene_smoke": "PASS_STUBBED_PIPELINE_SCENE_BOOT_AND_NEAR_MID_CONTROL_FLOW",
+    "linux_scene_smoke": "PASS_STUBBED_PIPELINE_SCENE_BOOT_FAR_AND_MID_CONTROL_FLOW",
     "windows_focused": "PENDING_USER_WORKTREE_RUN",
     "windows_visual_observation": "PENDING_USER_OBSERVATION",
     "repository_full_regression": "PENDING_AFTER_FOCUSED"

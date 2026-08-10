@@ -28,7 +28,7 @@
   "graphical_policy": {
     "scene_path": "res://scenes/labs/construction/ts0_large_structural_visual_lab.tscn",
     "default_profile": "CUBE_10K",
-    "default_mode": "NEAR",
+    "default_mode": "FAR",
     "client_id": "client/ts0/graphical-lab",
     "observer_id": "observer/ts0/graphical-lab",
     "local_distance_m": 80.0,
@@ -53,7 +53,8 @@
       "SHIFT": "FAST_FLIGHT",
       "R": "RESET_CAMERA",
       "H": "TOGGLE_HUD"
-    }
+    },
+    "focus_policy": "EXTERIOR_POSITIVE_Z_SURFACE"
   },
   "profiles": {
     "CUBE_10K": {

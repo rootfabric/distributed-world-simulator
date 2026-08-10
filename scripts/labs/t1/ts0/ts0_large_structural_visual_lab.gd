@@ -5,7 +5,7 @@ const Controller = preload("res://scripts/construction/proxies/construction_prox
 
 @export var auto_boot: bool = true
 @export var default_profile: String = "CUBE_10K"
-@export var default_mode: String = Adapter.MODE_NEAR
+@export var default_mode: String = Adapter.MODE_FAR
 
 var _controller
 var _runtime
@@ -13,7 +13,7 @@ var _camera: Camera3D
 var _hud_label: Label
 var _hud_panel: PanelContainer
 var _current_profile := ""
-var _current_mode := Adapter.MODE_NEAR
+var _current_mode := Adapter.MODE_FAR
 var _request: Dictionary = {}
 var _manifest: Dictionary = {}
 var _compile_stats: Dictionary = {}

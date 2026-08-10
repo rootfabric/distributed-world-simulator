@@ -75,7 +75,7 @@ static func create_interest(manifest: Dictionary, mode: String, observer_id: Str
 	if policy.is_empty():
 		return _failure("TS0_GRAPHICAL_POLICY_MISSING")
 	var distance_m := _distance_for_mode(manifest, mode)
-	var focus_local_m := manifest_center(manifest)
+	var focus_local_m := manifest_exterior_focus(manifest)
 	var interest: Dictionary = Interest.create(
 		observer_id,
 		String(manifest.get("construct_id", "")),
@@ -119,6 +119,13 @@ static func manifest_center(manifest: Dictionary) -> Array:
 		(float(min_v[1]) + float(max_v[1])) * 0.5,
 		(float(min_v[2]) + float(max_v[2])) * 0.5,
 	]
+
+static func manifest_exterior_focus(manifest: Dictionary) -> Array:
+	var center := manifest_center(manifest)
+	var max_v: Array = manifest.get("bounds_max_m", [0.0, 0.0, 0.0])
+	if max_v.size() != 3:
+		return center
+	return [float(center[0]), float(center[1]), float(max_v[2]) - 0.5]
 
 static func manifest_span(manifest: Dictionary) -> float:
 	var min_v: Array = manifest.get("bounds_min_m", [0.0, 0.0, 0.0])

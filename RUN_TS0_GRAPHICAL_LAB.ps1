@@ -4,7 +4,7 @@ param(
     [ValidateSet("CUBE_10K", "PYRAMID_10K")]
     [string]$Profile = "CUBE_10K",
     [ValidateSet("NEAR", "MID", "FAR")]
-    [string]$Mode = "NEAR"
+    [string]$Mode = "FAR"
 )
 
 $ErrorActionPreference = "Stop"
