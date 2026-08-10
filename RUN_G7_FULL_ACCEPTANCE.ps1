@@ -8,6 +8,7 @@ $MainRef = "origin/main"
 $G6Ref = "origin/feature/g6-hydrology-fluid-surface-v0"
 $ExpectedGlobalRevision = "GLOBAL-P0-2026-08-10-R2"
 $ExpectedControlRevision = "PC0-2026-08-10-R1"
+$GlobalRoadmapPath = "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md"
 $ProjectRegistryPath = "config/control/project-program-registry.v1.json"
 $ProjectPolicyPath = "config/control/project-control-policy.v1.json"
 $BranchPassportPath = "config/control/branches/feature__g7-semantic-field-fabric.v1.json"
@@ -91,7 +92,7 @@ function Test-G7AllowedPath {
     if ($Path -match '^validation/g7-') { return $true }
     if ($Path -match '^docs/checkpoints/G7_') { return $true }
     if ($Path -match '^docs/procedural/(G7_|README_RU\.md$|STATUS_RU\.md$)') { return $true }
-    if ($Path -eq "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md") { return $true }
+    if ($Path -eq $GlobalRoadmapPath) { return $true }
     if ($Path -match '^scripts/simulation/procedural/contracts/semantic_field_.*\.gd(\.uid)?$') { return $true }
     if ($Path -match '^scripts/simulation/procedural/semantic_fields/') { return $true }
     if ($Path -match '^tests/procedural/semantic_fields/g7_') { return $true }
@@ -99,6 +100,13 @@ function Test-G7AllowedPath {
     if ($Path -match '^scenes/labs/procedural/g7_') { return $true }
     if ($Path -eq "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd") { return $true }
     return $false
+}
+
+function Invoke-G7DiffCheck {
+    & git -C $RootDir diff --check "$G6Ref...HEAD" -- . ":(exclude)$GlobalRoadmapPath"
+    if ($LASTEXITCODE -ne 0) {
+        throw "git diff --check failed for G6...G7 outside byte-matched canonical GLOBAL roadmap"
+    }
 }
 
 if ($null -eq (Get-Command git -ErrorAction SilentlyContinue)) { throw "git is required for G7 full acceptance" }
@@ -123,6 +131,10 @@ Assert-Equal ([string]$ProjectPolicy.control_plane_revision) $ExpectedControlRev
 Assert-Equal ([string]$ProjectRegistry.architecture_revision) $ExpectedGlobalRevision "PC0 architecture revision mismatch"
 Assert-Equal ([string]$ProjectRegistry.programs.G.branch) "feature/g7-semantic-field-fabric" "PC0 G branch mismatch"
 Assert-Equal ([string]$ProjectRegistry.programs.G.current_stage) "G7 Full Acceptance" "PC0 does not declare G7 Full Acceptance"
+
+$LocalGlobalRoadmapBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalRoadmapPath))
+$MainGlobalRoadmapBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalRoadmapPath")
+Assert-Equal $LocalGlobalRoadmapBlob $MainGlobalRoadmapBlob "G7 canonical GLOBAL roadmap differs from main"
 
 $BranchPassport = Get-Content -LiteralPath (Join-Path $RootDir $BranchPassportPath) -Raw | ConvertFrom-Json
 Assert-Equal ([string]$BranchPassport.control_plane_revision) $ExpectedControlRevision "G passport control revision mismatch"
@@ -152,9 +164,9 @@ $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string
 if ($ChangedFiles.Count -eq 0) { throw "G7 diff from G6 is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G7AllowedPath $_) })
 if ($Unexpected.Count -gt 0) { throw "G7 changed files outside aggregate Semantic Field Fabric allowlist:`n$($Unexpected -join "`n")" }
-& git -C $RootDir diff --check "$G6Ref...HEAD"
-if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for G6...G7" }
+Invoke-G7DiffCheck
 Write-Host "G7 aggregate changed-file scope: PASS ($($ChangedFiles.Count) files)"
+Write-Host "Canonical GLOBAL roadmap byte-match: PASS"
 
 Write-Host "=== G7 FULL ACCEPTANCE: Project Control audit ==="
 Invoke-PowerShellChild (Join-Path $RootDir "CONTROL_PROJECT.ps1") @("-NoFetch", "-NoFailOnRed")
@@ -193,8 +205,7 @@ finally {
 Write-Host "=== G7 FULL ACCEPTANCE: final hygiene ==="
 $StatusAfter = Invoke-GitText @("status", "--porcelain")
 if (-not [string]::IsNullOrWhiteSpace($StatusAfter)) { throw "G7 full acceptance left tracked/untracked changes:`n$StatusAfter" }
-& git -C $RootDir diff --check "$G6Ref...HEAD"
-if ($LASTEXITCODE -ne 0) { throw "Final G7 git diff --check failed" }
+Invoke-G7DiffCheck
 
 Write-Host "G7 FULL ACCEPTANCE: PASS"
 Write-Host "Architecture revision: $ExpectedGlobalRevision"
