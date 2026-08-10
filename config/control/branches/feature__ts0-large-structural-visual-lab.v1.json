@@ -10,7 +10,7 @@
   "expected_outcome": "Accepted 10k and 100k visual/structural evidence showing canonical part count is decoupled from runtime node and draw-call count while complete object shape remains covered and local mutations do not require full presentation recompilation.",
   "current_stage": "TS0.1 10k Visual Proof",
   "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "TS0.0 is accepted. TS0.1 and TS0.2 graphical functionality are reported passing. TS0.3 local dirty-rebuild candidate now proves the 100k corner mutation can be constrained to 27/216 sections and one HLOD cluster without a full post-mutation part scan or full C22 compile; exact attached Godot focused harness passes 24 assertions. Production C22 convergence remains pending because TS does not own scripts/construction/proxies/**.",
+  "progress_note": "TS0.0 is accepted. TS0.1 and TS0.2 graphical functionality are reported passing. TS0.3 local dirty-rebuild candidate proves the 100k corner mutation can be constrained to 27/216 sections and one HLOD cluster without a full post-mutation part scan or full C22 compile. Exact attached Godot focused validation passes 24 assertions at runtime head dfdf9dcf. Production C22 convergence remains pending because TS does not own scripts/construction/proxies/**.",
   "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures",
   "next_stage": "Converge the TS0.3 local rebuild algorithm into the production C22 incremental execution path under Construction/C22 ownership, then run full worktree regression and update main PC0 from accepted facts.",
   "parent_branch_or_checkpoint": "T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db",
@@ -57,8 +57,8 @@
     "validation/ts0-local-dirty-rebuild-validation.json"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "dfdf9dcfbd233c526077f920a24fac76e0619205",
+    "focused": "dfdf9dcfbd233c526077f920a24fac76e0619205",
     "full_regression": ""
   },
   "ownership_claims": [
@@ -93,6 +93,7 @@
       "formal_frontier_advanced": false,
       "owned_paths_only": true,
       "exact_attached_godot_focused": "PASS_24_ASSERTIONS",
+      "tested_runtime_head": "dfdf9dcfbd233c526077f920a24fac76e0619205",
       "mutation": "CUBE_100K_REMOVE_CORNER_10x10x10",
       "rebuild_sections": 27,
       "reused_sections": 189,
