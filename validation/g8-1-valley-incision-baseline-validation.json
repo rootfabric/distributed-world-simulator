@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_1_valley_incision_baseline.v1",
   "checkpoint": "g8.1-valley-incision-baseline",
-  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -45,32 +45,35 @@
     "g8_0_assertions": 75,
     "g8_0_failures": 4,
     "g8_1_runtime_test_reached": false,
-    "classification": "PARENT_REGRESSION_HARNESS_STALE_AFTER_G8_0_ACCEPTANCE",
-    "failures": [
-      "G8.0 candidate status expectation stale after manifest status became ACCEPTED",
-      "geo/river-distance-m incorrectly still expected in planned_g8_1_inputs",
-      "geo/river-width-m incorrectly still expected in planned_g8_1_inputs",
-      "geo/fluid-surface-distance-m incorrectly still expected in planned_g8_1_inputs"
-    ]
+    "classification": "PARENT_REGRESSION_HARNESS_STALE_AFTER_G8_0_ACCEPTANCE"
   },
   "fix1": {
-    "status": "IMPLEMENTED_REVALIDATION_PENDING",
+    "status": "PASS",
     "parent_regression_test_commit": "92406530fbcbf48d08d0df832d2a38c58b31b925",
     "full_acceptance_allowlist_commit": "e9c5073b1a635becbf38c6044fe0b32be9d326a1",
     "changes_runtime": false,
     "changes_valley_formula": false,
     "changes_semantic_contracts": false,
-    "changes_ownership": false,
-    "description": "Make the accepted G8.0 parent regression validate stable ACCEPTED evidence and the current split between G8.1 valley inputs and future river/fluid inputs; allow that exact parent-regression test-only fix in the G8.1 full-acceptance scope."
+    "changes_ownership": false
   },
   "automated_evidence": {
-    "focused": "REVALIDATION_PENDING",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "status": "PASS",
+    "tested_head": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "g8_0_parent_regression": "PASS",
+    "g8_1_valley_incision_baseline": "PASS",
+    "geomorphology_ownership_boundary": "PASS",
+    "full_world_regression": "PASS_THROUGH_NX4_CLIENT_PREDICTION_AND_RECONCILIATION",
+    "rl3_representation_aware_network_streaming": "PASS_175_ASSERTIONS",
+    "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+    "main_scene_cli_all": "PASS_6_FAIL_0",
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
-    "blockers": ["G8_1_FOCUSED_VALIDATION_REQUIRED", "G8_1_FULL_WORLD_REGRESSION_REQUIRED"]
+    "health_at_acceptance": "YELLOW",
+    "blockers": []
   },
   "next_if_accepted": "G8.2_RIVER_CHANNEL_INCISION"
 }
