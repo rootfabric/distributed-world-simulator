@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 19,
+  "registry_generation": 20,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T11:13:00Z",
+  "updated_at_utc": "2026-08-10T11:30:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -16,14 +16,14 @@
       "role": "PRIMARY_FRONTIER",
       "short_description": "Semantic Field Fabric and its derived visual lab on top of accepted G3/G5/G6 world-generation truth.",
       "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
-      "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density.",
+      "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density without debug-shell occlusion artifacts.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX3_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
-      "progress_note": "Fix3 visible presentation LOD is confirmed manually from LOD0 through LOD3. Focused Windows validation passes on runtime head 667648392c1c7b523ec6d043115fdcc36820fef7. Full G7.4 automated acceptance passes on control head 661b0eecaaa0efdedb1eaa4ea870613392029978: PC0 G frontier PASS, G health not RED, G7.3 ancestor PASS, G7.4 scope PASS, five adapter-backed fields PASS, six vocabulary-only fields not faked PASS, world/core regression 6 PASS 0 FAIL through NX4, and working tree CLEAN. Only remaining manual graphical observations block G7.4 acceptance.",
+      "stage_status": "FIX4_IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
+      "progress_note": "Manual screenshot review after Fix3 automated acceptance confirmed LOD0..LOD3, 33x17->5x3 presentation grids and the invariant 561 semantic samples, but exposed two derived-presentation defects: negative-height/coarse mesh portions could be occluded by the radius-8 debug sphere, producing false dark holes, and the canonical river overlay was only a one-pixel line. Fix4 is now implemented as a presentation-only wrapper: a height-range-derived uniform radial shell lift reserves 0.075 display-unit minimum vertex clearance including coarse-LOD chord guard, and the accepted canonical river centerline is rendered as a narrow diagnostic triangle-strip ribbon above the patch. Semantic queries/values/IDs/checksums and the LOD contract are unchanged. Fresh Windows focused revalidation is now required; the previous automated PASS at 661b0eec is historical only.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Complete the remaining G7.4 manual graphical checks; if green, accept G7.4 and run G7 full acceptance before starting G8 geomorphology.",
-      "health_declared": "YELLOW",
-      "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+      "next_stage": "Run fresh G7.4 focused Windows validation for Fix4. If green, refresh PC0 evidence, rerun G7.4 full automated acceptance, then repeat the shortened graphical check and accept G7.4 before G7 full acceptance and G8 geomorphology.",
+      "health_declared": "RED",
+      "blockers": ["G7_4_FIX4_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_RECHECK_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -160,7 +160,7 @@
   "global_blocked_transitions": [
     {
       "stage": "G7.4 ACCEPTED",
-      "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
+      "blocked_by": "G7_4_FIX4_REVALIDATION_AND_MANUAL_ACCEPTANCE_REQUIRED"
     },
     {
       "stage": "G7 FULL ACCEPTANCE",
