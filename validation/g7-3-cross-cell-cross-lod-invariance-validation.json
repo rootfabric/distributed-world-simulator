@@ -1,9 +1,10 @@
 {
   "schema": "planet_simulator.validation.g7_3_cross_cell_cross_lod_invariance.v1",
   "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
-  "decision": "FIX3_IMPLEMENTED_CANDIDATE",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
+  "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
   "g7_2": {
     "decision": "ACCEPTED",
     "accepted_commit": "68c4f90dbdac0e2d9968b4461207713f5661521b",
@@ -21,9 +22,9 @@
   },
   "implementation": {
     "production_runtime_changed": false,
-    "invariance_acceptance_test": "IMPLEMENTED",
-    "focused_runner": "IMPLEMENTED",
-    "full_acceptance_runner": "FIX3_IMPLEMENTED"
+    "invariance_acceptance_test": "ACCEPTED",
+    "focused_runner": "PASS",
+    "full_acceptance_runner": "PASS"
   },
   "windows_evidence": {
     "focused_gate": "PASS",
@@ -35,59 +36,33 @@
     "semantic_samples_on_both_seam_sides": "PASS",
     "px_centerline_river_distance_zero": "PASS",
     "pz_centerline_river_distance_zero": "PASS",
-    "full_gate_attempts": [
-      {
-        "stage": "scope_hygiene",
-        "result": "BLOCKED",
-        "reason": "git diff --check reported Markdown hard-break trailing spaces in byte-matched canonical GLOBAL roadmap",
-        "semantic_runtime_failure": false
-      },
-      {
-        "stage": "repository_preflight",
-        "result": "BLOCKED",
-        "reason": "stale untracked Microsoft/ directory remained from the earlier aborted acceptance run",
-        "semantic_runtime_failure": false
-      },
-      {
-        "stage": "powershell_parse",
-        "result": "BLOCKED",
-        "reason": "Fix2 warning string used $Phase: inside an interpolated string; PowerShell parsed Phase: as a drive-qualified variable reference",
-        "semantic_runtime_failure": false
-      }
-    ]
+    "world_core_regression": "PASS",
+    "main_scene_cli_all": {
+      "passed": 6,
+      "failed": 0
+    },
+    "final_hygiene": "PASS",
+    "working_tree": "CLEAN",
+    "final_marker": "G7.3 FULL ACCEPTANCE: PASS"
   },
-  "fix1": {
-    "runner_commit": "73ca4a0d356eb7ed18aa813c19f617b7b2c29137",
-    "runtime_changed": false,
-    "reason": "Canonical R2 GLOBAL roadmap from main contains Markdown hard-break spaces, and active G7 is required to remain byte-identical to main.",
-    "policy": "First require local GLOBAL roadmap blob == origin/main blob, then exclude only that already-byte-verified canonical roadmap from G7.3-local git diff --check. All remaining G7.3/P0-sync files retain strict diff hygiene."
-  },
-  "fix2": {
-    "runner_commit": "5bbbb52845b548fac7c5a95e6cc9ffba07644bdd",
-    "runtime_changed": false,
-    "reason": "A previous pre-runtime abort can leave the known root Microsoft/ Windows-profile transient behind, causing the next clean-tree preflight to fail before the runner reaches its post-runtime cleanup.",
-    "policy": "Before clean-tree preflight and after runtime, remove root Microsoft/ only when git proves there are no tracked entries and every path reported under Microsoft is purely untracked. Otherwise refuse cleanup."
-  },
-  "fix3": {
-    "runner_commit": "67b4b65576728b6337d84265574b856e87af7547",
-    "runtime_changed": false,
-    "reason": "PowerShell interpolated $Phase: as an invalid drive-qualified variable reference.",
-    "policy": "Use ${Phase}: when a colon immediately follows an interpolated variable name. No semantic/runtime code changes.",
-    "requires_ast_parse_check": true,
-    "requires_full_gate_rerun": true
+  "harness_fixes": {
+    "fix1": "byte-match canonical R2 roadmap before excluding its inherited Markdown hard-break spaces from local diff hygiene",
+    "fix2": "safe stale root Microsoft/ transient cleanup only when git proves it entirely untracked",
+    "fix3": "PowerShell ${Phase}: interpolation parser correction",
+    "semantic_runtime_changed": false
   },
   "proof_matrix": {
     "lod_levels": [2, 4, 8, 12],
-    "same_world_point_query_checksum": "REQUIRED_EQUAL",
-    "same_world_point_bundle_checksum": "REQUIRED_EQUAL",
-    "same_world_point_receipt_checksum": "REQUIRED_EQUAL",
-    "same_world_point_sample_checksums": "REQUIRED_EQUAL",
-    "same_world_point_provenance_checksums": "REQUIRED_EQUAL",
-    "different_representation_cell_tokens": "REQUIRED",
-    "query_order_invariance": "REQUIRED",
-    "px_pz_seam": "REQUIRED",
-    "river_feature_id_across_cells": "REQUIRED_EQUAL",
-    "fluid_region_id_across_cells": "REQUIRED_EQUAL"
+    "same_world_point_query_checksum": "PASS",
+    "same_world_point_bundle_checksum": "PASS",
+    "same_world_point_receipt_checksum": "PASS",
+    "same_world_point_sample_checksums": "PASS",
+    "same_world_point_provenance_checksums": "PASS",
+    "different_representation_cell_tokens": "PASS",
+    "query_order_invariance": "PASS",
+    "px_pz_seam": "PASS",
+    "river_feature_id_across_cells": "PASS",
+    "fluid_region_id_across_cells": "PASS"
   },
   "scope_audit": {
     "base": "68c4f90dbdac0e2d9968b4461207713f5661521b",
@@ -116,19 +91,5 @@
     "owns_scheduler_cache": false,
     "owns_geomorphology": false
   },
-  "required_windows_acceptance": {
-    "focused_runner": "RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
-    "focused_expected_marker_prefix": "G7.3 Cross-Cell / Cross-LOD Invariance: PASS",
-    "full_runner": "RUN_G7_3_FULL_ACCEPTANCE.ps1",
-    "g7_0_regression": true,
-    "g7_1_regression": true,
-    "g7_2_regression": true,
-    "full_world_regression": true,
-    "clean_worktree": true,
-    "git_diff_check_except_byte_matched_main_global_roadmap": true,
-    "active_global_config_matches_main": true,
-    "active_global_markdown_matches_main": true,
-    "powershell_ast_parse": true
-  },
-  "next_if_accepted": "G7_4_SEMANTIC_FIELD_LAB"
+  "next_checkpoint": "G7_4_SEMANTIC_FIELD_LAB"
 }
