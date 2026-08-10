@@ -8,9 +8,11 @@ const OperationLedgerScript = preload("res://scripts/items/services/item_operati
 const UtilityNodeScript = preload("res://scripts/construction/utilities/construction_utility_node_definition.gd")
 const UtilityNetworkScript = preload("res://scripts/construction/utilities/construction_utility_network_definition.gd")
 const UtilitySimulatorScript = preload("res://scripts/construction/utilities/construction_utility_simulator.gd")
+const ExecutionProfileScript = preload("res://scripts/construction/utilities/construction_utility_execution_profile.gd")
 
 const SCHEMA: String = "planet_simulator.t1a5_d0_interactive_runtime_executor.v1"
 const CONSTRUCT_ID: String = "construct/t1/lunar-outpost/d0"
+const POWER_EFFECT_KIND: String = "POWER_RUNTIME"
 
 const RUNTIME_IDS: Dictionary = {
 	"DOOR": "runtime/t1a5/d0/door",
@@ -75,7 +77,8 @@ func setup(m0_root: String) -> Dictionary:
 	var executor_setup: Dictionary = _runtime_executor.setup(
 		_runtime_store,
 		_runtime_ledger,
-		Callable(self, "_handle_runtime_command")
+		Callable(self, "_handle_runtime_command"),
+		Callable(self, "_commit_runtime_effect")
 	)
 	if not bool(executor_setup.get("success", false)):
 		return _failure("T1A5_RUNTIME_EXECUTOR_SETUP_FAILED", {"cause": executor_setup})
@@ -84,9 +87,12 @@ func setup(m0_root: String) -> Dictionary:
 	_power_storage = Dictionary(_profile["power_storage"]).duplicate(true)
 	_data_execution_profile = Dictionary(_profile["data_execution_profile"]).duplicate(true)
 	_power_tick = int(_power_storage.get("tick", 0))
-	var power_bootstrap: Dictionary = _recompute_power()
+	var power_bootstrap: Dictionary = _project_power()
 	if not bool(power_bootstrap.get("success", false)):
 		return _failure("T1A5_POWER_RUNTIME_BOOTSTRAP_FAILED", {"cause": power_bootstrap})
+	var bootstrap_commit: Dictionary = _apply_power_effect(Dictionary(power_bootstrap["effect"]))
+	if not bool(bootstrap_commit.get("success", false)):
+		return _failure("T1A5_POWER_RUNTIME_BOOTSTRAP_COMMIT_FAILED", {"cause": bootstrap_commit})
 	_configured = true
 	return _success({"report": get_report()})
 
@@ -188,24 +194,34 @@ func _handle_runtime_command(command: Dictionary, subject: Dictionary) -> Dictio
 		_:
 			return _reject("T1A5_UNHANDLED_ACTION")
 
+	var effect: Dictionary = {}
+	var projected_power_status := String(_power_execution_profile.get("status", ""))
+	var projected_power_tick := _power_tick
 	if mutates and kind in ["GENERATOR", "LAMP", "CONSOLE"]:
-		var projected: Dictionary = _recompute_power(runtime_id, next_state)
+		var projected: Dictionary = _project_power(runtime_id, next_state)
 		if not bool(projected.get("success", false)):
 			return _reject("T1A5_POWER_RUNTIME_UPDATE_FAILED", {"cause": projected})
-	return {
+		effect = Dictionary(projected["effect"]).duplicate(true)
+		projected_power_status = String(Dictionary(effect["profile"]).get("status", ""))
+		projected_power_tick = int(effect["tick"])
+
+	var result: Dictionary = {
 		"success": true,
 		"mutates": mutates,
 		"next_state": next_state,
 		"details": {
 			"kind": kind,
-			"power_status": String(_power_execution_profile.get("status", "")),
+			"power_status": projected_power_status,
 			"data_status": String(_data_execution_profile.get("status", "")),
-			"power_tick": _power_tick,
+			"power_tick": projected_power_tick,
 		},
 	}
+	if not effect.is_empty():
+		result["effect"] = effect
+	return result
 
 
-func _recompute_power(override_runtime_id: String = "", override_state: Dictionary = {}) -> Dictionary:
+func _project_power(override_runtime_id: String = "", override_state: Dictionary = {}) -> Dictionary:
 	var network: Dictionary = _base_power_network.duplicate(true)
 	var nodes: Array = Array(network.get("nodes", [])).duplicate(true)
 	var generator_running := _runtime_bool("GENERATOR", "running", override_runtime_id, override_state, true)
@@ -238,13 +254,54 @@ func _recompute_power(override_runtime_id: String = "", override_state: Dictiona
 	var stepped: Dictionary = UtilitySimulatorScript.step(network, demands, [_power_storage], next_tick)
 	if not bool(stepped.get("success", false)):
 		return stepped
-	_power_tick = next_tick
-	_power_execution_profile = Dictionary(stepped["profile"]).duplicate(true)
-	var storage_rows: Array = Array(_power_execution_profile.get("storage_states", []))
+	var next_profile: Dictionary = Dictionary(stepped["profile"]).duplicate(true)
+	var profile_validation: Dictionary = ExecutionProfileScript.validate(next_profile)
+	if not bool(profile_validation.get("success", false)):
+		return _failure("T1A5_POWER_EXECUTION_PROFILE_INVALID", {"cause": profile_validation})
+	var storage_rows: Array = Array(next_profile.get("storage_states", []))
 	if storage_rows.size() != 1 or not storage_rows[0] is Dictionary:
 		return _failure("T1A5_POWER_STORAGE_RUNTIME_STATE_MISSING")
-	_power_storage = Dictionary(storage_rows[0]).duplicate(true)
-	return _success({"profile": _power_execution_profile.duplicate(true), "storage": _power_storage.duplicate(true)})
+	var next_storage: Dictionary = Dictionary(storage_rows[0]).duplicate(true)
+	if int(next_storage.get("tick", -1)) != next_tick:
+		return _failure("T1A5_POWER_STORAGE_TICK_MISMATCH")
+	return _success({
+		"effect": {
+			"kind": POWER_EFFECT_KIND,
+			"tick": next_tick,
+			"profile": next_profile,
+			"storage": next_storage,
+		}
+	})
+
+
+func _commit_runtime_effect(_command: Dictionary, _before: Dictionary, _after: Dictionary, effect: Dictionary) -> Dictionary:
+	return _apply_power_effect(effect)
+
+
+func _apply_power_effect(effect: Dictionary) -> Dictionary:
+	if String(effect.get("kind", "")) != POWER_EFFECT_KIND:
+		return _failure("T1A5_UNSUPPORTED_RUNTIME_EFFECT")
+	var next_tick := int(effect.get("tick", -1))
+	if next_tick != _power_tick + 1:
+		return _failure("T1A5_POWER_EFFECT_TICK_MISMATCH", {
+			"current_tick": _power_tick,
+			"effect_tick": next_tick,
+		})
+	var profile_value = effect.get("profile", {})
+	var storage_value = effect.get("storage", {})
+	if not profile_value is Dictionary or not storage_value is Dictionary:
+		return _failure("T1A5_POWER_EFFECT_PAYLOAD_INVALID")
+	var next_profile: Dictionary = Dictionary(profile_value).duplicate(true)
+	var profile_validation: Dictionary = ExecutionProfileScript.validate(next_profile)
+	if not bool(profile_validation.get("success", false)):
+		return _failure("T1A5_POWER_EFFECT_PROFILE_INVALID", {"cause": profile_validation})
+	var next_storage: Dictionary = Dictionary(storage_value).duplicate(true)
+	if int(next_storage.get("tick", -1)) != next_tick:
+		return _failure("T1A5_POWER_EFFECT_STORAGE_TICK_MISMATCH")
+	_power_tick = next_tick
+	_power_execution_profile = next_profile
+	_power_storage = next_storage
+	return _success({"power_tick": _power_tick})
 
 
 func _runtime_bool(
