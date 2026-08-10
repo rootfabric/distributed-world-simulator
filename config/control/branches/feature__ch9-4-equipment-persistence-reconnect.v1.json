@@ -4,15 +4,15 @@
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/ch9-4-equipment-persistence-reconnect",
   "program": "CH",
-  "role": "PRIMARY_FRONTIER",
+  "role": "ACCEPTED_SOURCE",
   "short_description": "Persist and recover canonical character equipment through the existing M6 durability/replay/reconnect foundation.",
   "purpose": "Prove that server-authoritative equipment accepted in CH9.3 survives durable checkpoint, server recovery, reconnect and late join without duplicate Item IDs, duplicate presentation or a character-private persistence layer.",
   "expected_outcome": "An equipped Item UUID remains in the same canonical equipment container after restart; recovered authority continues to accept equipment commands; reconnecting and late-joining clients converge on the recovered Item Graph and render exactly one presentation per equipped item.",
   "current_stage": "CH9.4 Equipment Persistence / Late Reconnect",
-  "stage_status": "FIX1_IMPLEMENTED_WINDOWS_RERUN_PENDING",
-  "progress_note": "PC0 handoff is complete in main generation 36. Candidate runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe stages and validates an equipment-aware Item Graph before invoking the accepted base transactional restore, then installs it only after base recovery succeeds. First exact-Windows attempt on branch head 4f34068 passed editor import and all inherited CH9.3 regressions (authority 41, replica 21, presentation 27, ENet 20) but the first new CH9.4 test was blocked before runtime execution by Godot 4.7.1 type inference on command/snapshot variables. FIX1 is test-harness-only: commits 5abe362 and b85b3d2 explicitly type those results as Dictionary in both CH9.4 tests. Production runtime is unchanged; Windows rerun is pending.",
-  "last_accepted_checkpoint": "CH9.3 Multiplayer Equipment Presentation @ cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
-  "next_stage": "Rerun the two CH9.4 tests on exact Windows Godot, then rerun RUN_CH9_4_EQUIPMENT_PERSISTENCE_TESTS.ps1. No later CH stage is authorized before CH9.4 acceptance and a subsequent PC0 audit.",
+  "stage_status": "FOCUSED_ACCEPTED",
+  "progress_note": "CH9.4 is focused-accepted on exact Windows Godot 4.7.1 double. Accepted runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe preserves equipment-aware Item Graph capability across existing M6 durable recovery without changing M3/M6/base Item Graph/persistence foundations. After test-harness-only FIX1, tested branch head 30e752436c82996e0f99253de040d60b11317c72 passed direct durable roundtrip 34 assertions, direct checkpoint/reconnect/recovery 53 assertions, and the complete runner with inherited CH9.3 authority 41, replica 21, presentation 27 and real ENet 20 assertions. Recovery preserves Item UUIDs, equipment slots, replay idempotency, reconnect ownership transition, late-join projection and successive checkpoint generations without duplicates.",
+  "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect FOCUSED_ACCEPTED @ runtime e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "next_stage": "Run the mandatory post-acceptance PC0 audit from main before declaring or implementing any later CH stage.",
   "parent_branch_or_checkpoint": "feature/ch9-3-multiplayer-equipment-presentation @ c18eae9778a5020063163087269483bc43a924be",
   "base_commit": "c18eae9778a5020063163087269483bc43a924be",
   "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
@@ -61,8 +61,8 @@
     "validation/ch9-4-equipment-persistence-reconnect-validation.json"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+    "focused": "30e752436c82996e0f99253de040d60b11317c72",
     "full_regression": ""
   },
   "ownership_claims": [
@@ -81,8 +81,8 @@
     "MATERIAL_ONTOLOGY"
   ],
   "blockers": [
-    "WINDOWS_FIX1_RERUN_PENDING"
+    "POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
   ],
-  "health_declared": "YELLOW",
+  "health_declared": "GREEN",
   "cross_branch_overlap_enabled": true
 }
