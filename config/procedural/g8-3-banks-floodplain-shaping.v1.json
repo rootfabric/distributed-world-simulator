@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_3_banks_floodplain_shaping.v1",
   "checkpoint": "g8.3-banks-and-floodplain-shaping",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -69,10 +69,16 @@
     "fluid_surface_distance_used": false
   },
   "acceptance": {
-    "focused_runner": "RUN_G8_3_BANKS_FLOODPLAIN_TESTS.ps1",
-    "full_acceptance_runner": "RUN_G8_3_FULL_ACCEPTANCE.ps1",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING"
+    "tested_head": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "world_core_through_nx4": "PASS",
+    "rl3_representation_aware_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli_all": "6 PASS / 0 FAIL",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "next_if_accepted": "G8.4_EROSION_DEPOSITION_BASELINE"
 }
