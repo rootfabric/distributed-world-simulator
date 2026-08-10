@@ -5,7 +5,8 @@
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
-  "current_candidate_head": "18933d5979e75411b80bcb6e078f719facc98564",
+  "runtime_and_runner_candidate_head": "18933d5979e75411b80bcb6e078f719facc98564",
+  "validation_commit_self_pinned": false,
   "g7_3": {
     "decision": "ACCEPTED",
     "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
