@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 38,
+  "registry_generation": 39,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T15:18:00Z",
+  "updated_at_utc": "2026-08-10T15:25:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -28,20 +28,20 @@
     "T": {
       "program": "T",
       "program_name": "Construction Composition",
-      "branch": "feature/t1a7-runtime-recovery-interest-scale",
-      "passport_path": "config/control/branches/feature__t1a7-runtime-recovery-interest-scale.v1.json",
+      "branch": "feature/t1b-composition-failure-recovery",
+      "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
-      "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
-      "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-      "current_stage": "T1A.7.5 Composition Acceptance",
-      "stage_status": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
-      "progress_note": "T1A.7.4 Scale / Soak Lab remains ACCEPTED on checkout c0213f5edc078481c5705508244e6e556cd1945e. First T1A.7.5 Windows attempt used checkout 37a1f908ae2124a2f8ca7aaa2402c19bd344bb24: standalone composition passed 56 assertions; aggregate focused passed all inherited gates through T1A.7.3 dirty/selective 44 before T1A.7.3 selective process telemetry failed with a transient server.json parse/read race. The authoritative OPEN mutation had already reached client A, but the acceptance test performed an immediate single read while the server harness rewrites the JSON report every 100ms, yielding empty telemetry and two false assertions. FIX1 a76afddd1d82e7d11bf1e72819580cd90db60448 changes test harness only: wait for selective plan/targeted-send counters and retry partial JSON reads. No production runtime, network contract, authority, interest or routing semantics changed.",
-      "last_accepted_checkpoint": "T1A.7.4 Scale / Soak Lab",
-      "next_stage": "Sync the post-FIX1 T branch head and rerun RUN_T1A7_5_COMPOSITION_TESTS.ps1. If green, preserve the exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. A green pair accepts T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint; then converge through PC0 with TS0.4 evidence before T2.0.",
+      "short_description": "Construction composition/failure/recovery semantics over accepted T1A.7 runtime recovery, interest and selective-scale evidence.",
+      "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
+      "expected_outcome": "Runtime subjects expose deterministic operability/failure semantics, dependency failures and recoveries remain revisioned/recoverable, and later T1B composition can be proven before heterogeneous T2 scale.",
+      "current_stage": "T1B.0 Runtime Failure Contract",
+      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+      "progress_note": "T1A.7 Runtime Recovery / Interest / Scale is ACCEPTED. Exact post-FIX1 focused and full world/core regression both passed on checkout 1430284c3e523d9292804be2fc347ac1f70d39a6; focused includes selective processes 35, scale/soak 2394 across two cases with 10,000 canonical runtime subjects, and final composition 56. Full regression finished main_scene_cli_all 6 PASS / 0 FAIL, STOPPED, exit_code 0 and NX4 final marker. T1B.0 is now implemented on feature/t1b-composition-failure-recovery as a pure failure policy over existing ConstructionRuntimeSubjectState and ConstructionRuntimeStateStore: NONE/OPTIONAL/REQUIRED dependency requirements project deterministic ONLINE/DEGRADED/OFFLINE plus explicit power/data/dependency failure codes. It creates no new aggregate/store, persistence path, authority registry or network contract. Windows focused validation is pending. T2.0 remains blocked until C22 MAIN_INTEGRATED + TS0.4 ceiling classification + PC0 convergence.",
+      "last_accepted_checkpoint": "T1A.7 Runtime Recovery / Interest / Scale",
+      "next_stage": "Run RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1 on exact Windows double Godot. If green, run RUN_WORLD_REGRESSION_TESTS.ps1 on the same checkout. Only T1B.0 acceptance unlocks T1B.1 Dependency Failure Propagation.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_5_WINDOWS_FOCUSED_REVALIDATION_PENDING", "T1A7_5_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1B0_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B0_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
