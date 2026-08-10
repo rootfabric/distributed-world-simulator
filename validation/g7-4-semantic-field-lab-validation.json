@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX4_FOCUSED_ACCEPTED_FULL_AUTOMATED_REVALIDATION_PENDING",
+  "decision": "FIX4_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -23,7 +23,7 @@
     "full_world_regression": {"status": "PASS", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_tests_pass": 6, "world_core_tests_fail": 0, "nx4_client_prediction_reconciliation": "PASS", "lifecycle_final_state": "STOPPED"}
   },
   "fix4": {
-    "status": "FOCUSED_ACCEPTED_FULL_AUTOMATED_REVALIDATION_PENDING",
+    "status": "AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
     "trigger": "USER_SCREENSHOT_REVIEW_2026_08_10",
     "observed_behavior": "Fix3 screenshots exposed false dark sphere-occlusion holes and an overly thin river centerline overlay. Fix4 changes only derived presentation.",
     "diagnosis": {
@@ -73,15 +73,36 @@
       "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
     },
     "uid_sidecar_tracking": {
-      "status": "TRACKED_AFTER_FULL_ACCEPTANCE_PREFLIGHT_FOUND_UNTRACKED_GODOT_UID",
+      "status": "TRACKED",
       "path": "scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd.uid",
       "tracking_commit": "f704780b8ba658b280591c463301f275f505da3f",
-      "generated_by": "Godot 4.7.1 double editor import",
-      "reason": "repository policy tracks stable Godot .gd.uid sidecars; untracked sidecar correctly failed clean-tree preflight",
       "runtime_semantics_changed": false,
       "focused_evidence_invalidated": false
     },
-    "full_automated_acceptance": "PENDING",
+    "full_acceptance_scope_fix": {
+      "status": "CLOSED",
+      "trigger": "FULL_ACCEPTANCE_PREFLIGHT_REJECTED_NEW_FIX4_WRAPPER_AND_UID_OUTSIDE_OLD_ALLOWLIST",
+      "commit": "ddacaf18a5c4b57c708562538a71065240d73ddb",
+      "changes_executable_runtime": false,
+      "changes_acceptance_scope_only": true
+    },
+    "full_automated_acceptance": {
+      "status": "PASS",
+      "tested_head": "ddacaf18a5c4b57c708562538a71065240d73ddb",
+      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+      "pc0_operational_g_frontier": "PASS",
+      "pc0_g_health_not_red": "PASS",
+      "g7_3_accepted_ancestor": "PASS",
+      "g7_4_visual_lab_scope": "PASS",
+      "adapter_backed_semantic_fields": 5,
+      "vocabulary_only_fields_not_faked": 6,
+      "world_core_regression": "PASS",
+      "world_core_tests_pass": 6,
+      "world_core_tests_fail": 0,
+      "nx4_client_prediction_reconciliation": "PASS",
+      "lifecycle_final_state": "STOPPED",
+      "working_tree": "CLEAN"
+    },
     "manual_graphical_recheck": {
       "status": "PARTIAL_PASS_AFTER_FIX4",
       "evidence_source": "USER_SCREENSHOTS_2026-08-10",
@@ -98,15 +119,19 @@
     }
   },
   "automated_acceptance": {
-    "status": "FULL_REVALIDATION_PENDING_AFTER_FIX4_FOCUSED_PASS",
+    "status": "PASS",
+    "tested_head": "ddacaf18a5c4b57c708562538a71065240d73ddb",
     "focused_runtime_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
-    "focused_evidence_preserved_through_uid_tracking_head": "f704780b8ba658b280591c463301f275f505da3f",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED_BY_FULL_RUNNER"
+    "full_world_regression": "PASS",
+    "world_core_tests_pass": 6,
+    "world_core_tests_fail": 0,
+    "nx4_client_prediction_reconciliation": "PASS",
+    "working_tree": "CLEAN",
+    "manual_graphical_observation": "REQUIRED_BEFORE_G7_4_ACCEPTED"
   },
   "project_control": {
-    "expected_health": "YELLOW_AFTER_FIX4_FOCUSED_PASS_UNTIL_FULL_AND_MANUAL_REMAINDER_PASS",
-    "blockers": ["G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+    "expected_health": "YELLOW_UNTIL_REMAINING_MANUAL_GRAPHICAL_CHECKS_PASS",
+    "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
   },
   "manual_graphical_acceptance": {
     "status": "PARTIAL_PASS_FIX4_SHELL_AND_RIVER_VISIBILITY_CONFIRMED",
