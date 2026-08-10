@@ -8,12 +8,12 @@
   "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
   "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
   "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
-  "current_stage": "G8.2 River Channel Incision",
-  "stage_status": "ACCEPTED_READY_FOR_G8_3",
-  "progress_note": "G8.2 River Channel Incision is ACCEPTED after exact-Windows full acceptance on tested head 491fe10877c70c362c14ab595a8a0204165a880a. The final gate reports G8.1 parent PASS, G8.2 river-channel PASS, valley+river composition PASS, geomorphology ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. The accepted implementation interprets geo/river-width-m as full channel width, uses half-width around the canonical G6 centerline, preserves the accepted G8.1 valley component and adds only river_channel_delta_m with a smooth outer edge. Bank, floodplain and erosion/deposition remain zero. G8.2 does not own SurfaceCellKey, LOD, Matter, authority, persistence, material ontology or network replication. Next frontier is G8.3 Banks and Floodplain Shaping.",
+  "current_stage": "G8.3 Banks and Floodplain Shaping",
+  "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "progress_note": "G8.2 River Channel Incision is ACCEPTED after exact-Windows full acceptance on tested head 491fe10877c70c362c14ab595a8a0204165a880a with G8.1 parent PASS, river-channel PASS, valley+river composition PASS, ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. G8.3 is implemented as a replaceable banks/floodplain layer over the exact accepted G8.2 result. It uses the same surface-height, valley-influence, river-distance and river-width semantic bundle. Distances are normalized by channel half-width. The bank shoulder rises smoothly from normalized 1.0 to a peak at 1.5 and returns to zero at 2.0; the floodplain enters smoothly from 2.0 to 2.5, remains full through 4.5 and fades to zero by 6.0. Bank amplitude is +bank_max_delta_m * bank_weight * valley_influence; floodplain amplitude is -floodplain_max_delta_m * floodplain_weight * valley_influence. G8.3 preserves exact G8.2 valley and river components and keeps erosion/deposition zero. geo/fluid-surface-distance-m is deliberately not reinterpreted as signed water elevation. No SurfaceCellKey, LOD, Matter, authority, persistence, material or network ownership is introduced. Focused and full Windows validation are pending.",
   "last_accepted_checkpoint": "G8.2 River Channel Incision",
-  "next_stage": "Implement G8.3 Banks and Floodplain Shaping as a replaceable composition layer over accepted G8.2, then run focused and full Windows acceptance before G8.4 Erosion / Deposition Baseline.",
-  "parent_branch_or_checkpoint": "G8.2 ACCEPTED @ 491fe10877c70c362c14ab595a8a0204165a880a",
+  "next_stage": "Run RUN_G8_3_BANKS_FLOODPLAIN_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_3_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only a full PASS unlocks G8.4 Erosion / Deposition Baseline.",
+  "parent_branch_or_checkpoint": "G8.2 ACCEPTED @ e7b2f34637a42f88e107de83cfaff4a4cfda50be",
   "base_commit": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e",
   "dependencies": ["G3", "G5", "G6", "G7", "G8_0", "G8_1", "G8_2"],
   "owned_paths": ["config/procedural/g8-*", "scripts/simulation/procedural/geomorphology/**", "tests/procedural/geomorphology/**", "docs/procedural/*G8*", "docs/checkpoints/G8_*", "RUN_G8_*"],
@@ -33,19 +33,25 @@
     "validation/g8-2-river-channel-incision-validation.json",
     "tests/procedural/geomorphology/g8_2_river_channel_incision_acceptance.gd",
     "docs/checkpoints/G8_2_RIVER_CHANNEL_INCISION_ACCEPTED_RU.md",
-    "RUN_G8_2_RIVER_CHANNEL_INCISION_TESTS.ps1",
-    "RUN_G8_2_FULL_ACCEPTANCE.ps1"
+    "config/procedural/g8-3-banks-floodplain-shaping.v1.json",
+    "validation/g8-3-banks-floodplain-validation.json",
+    "tests/procedural/geomorphology/g8_3_banks_floodplain_acceptance.gd",
+    "RUN_G8_3_BANKS_FLOODPLAIN_TESTS.ps1",
+    "RUN_G8_3_FULL_ACCEPTANCE.ps1",
+    "docs/checkpoints/G8_3_BANKS_FLOODPLAIN_CANDIDATE_RU.md"
   ],
   "tested_heads": {
     "g7_full_acceptance": "a75a60b6da739cc759e1fb40510a98942bce4cde",
     "g8_0_full_acceptance": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
     "g8_1_first_windows_attempt": "5de8716fc5b2893e00d31f109b73d0974891aca9",
     "g8_1_full_acceptance": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
-    "g8_2_full_acceptance": "491fe10877c70c362c14ab595a8a0204165a880a"
+    "g8_2_full_acceptance": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "g8_3_focused": "PENDING",
+    "g8_3_full_acceptance": "PENDING"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "procedural geomorphology deformation only"}],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE"],
-  "blockers": [],
-  "health_declared": "GREEN",
+  "blockers": ["G8_3_FOCUSED_VALIDATION_REQUIRED", "G8_3_FULL_WORLD_REGRESSION_REQUIRED"],
+  "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
