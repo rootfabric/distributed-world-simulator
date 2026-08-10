@@ -1,49 +1,32 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "T1A6_FOCUSED_REACCEPTED_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
   "compile_fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
-  "previous_focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
-  "previous_full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
   "transactional_effects_fix1_head": "9698415f94c0a68d1536e0bdee7a00463f5c610a",
   "transactional_test_parse_fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
   "transactional_windows_acceptance_head": "a5e2795698a469a7f160214b3e4880014f6759a2",
-  "t1a6_focused_reacceptance_head": "83a0b861492041f3c0673226e236344449bf2f2a",
-  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "focused_reacceptance_head": "83a0b861492041f3c0673226e236344449bf2f2a",
+  "full_regression_head": "4725dc917f4d4c4ec495d27525b9e80ea3e1b335",
+  "global_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
-  "pc0_control": {
-    "main_registry_revision": "GLOBAL-P0-2026-08-10-R2",
-    "main_registry_still_declares_original_blocker": true,
-    "local_t1a5_transactional_blocker_evidence_closed": true,
-    "fresh_t1a6_focused_evidence_closed": true,
-    "transition_blocked": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE",
-    "remaining_reason": "Fresh full world/core composition regression is still required after the transactional runtime semantic change.",
-    "stop_rule_observed": true
-  },
   "transactional_effects_fix1": {
-    "cause": "T1A.5 utility recomputation mutated power_tick, power_storage and power_execution_profile inside the affordance handler before generic runtime subject commit and terminal operation recording.",
     "required_order": "PURE_EFFECT_PROJECTION -> RUNTIME_STATE_COMMIT -> VALIDATED_EFFECT_COMMIT -> TERMINAL_SUCCESS",
-    "generic_executor_commit_boundary": true,
     "runtime_state_rollback_on_effect_commit_failure": true,
     "effect_replay_exactly_once": true,
     "d0_power_projection_is_pure": true,
-    "d0_power_effect_committer_validates_before_mutation": true,
-    "runtime_semantics_changed": true,
-    "protocol_changed": false,
-    "transport_changed": false,
-    "persistence_foundation_added": false,
-    "transaction_coordinator_added": false,
+    "new_transaction_coordinator": false,
+    "new_persistence_foundation": false,
     "windows_evidence": {
-      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
       "c5b_affordance_runtime_contracts": "PASS_32",
       "t1a5_interactive_runtime_execution": "PASS_67",
       "t1a5_transactional_runtime_effects": "PASS_36",
@@ -51,23 +34,14 @@
     },
     "result": "ACCEPTED"
   },
-  "transactional_test_parse_fix": {
-    "windows_probe_head": "64310ef10d76c28ca1111f33f7fc8cd0e7376912",
-    "error": "Cannot infer the type of success_generation variable because the value does not have a set type.",
-    "fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
-    "fix": "Make dynamic Dictionary/API-derived regression values explicit int/String/Dictionary types; production runtime semantics unchanged.",
-    "windows_rerun": "PASS"
-  },
-  "focused_revalidation": {
+  "focused_gate": {
     "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "windows_run_head": "83a0b861492041f3c0673226e236344449bf2f2a",
-    "t1a5_transactional_dependency": "PASS",
+    "t1a6_assertions": 25,
+    "t1a6_failures": 0,
     "client_a_graphical": "PASS",
     "client_b_graphical": "PASS",
-    "client_a_final_revision": "PASS",
-    "client_b_final_revision": "PASS",
-    "server_final_revision": "PASS",
+    "server_client_revision_convergence": "PASS",
     "client_checksum_convergence": "PASS",
     "server_client_checksum_convergence": "PASS",
     "client_a_presentation_matches_runtime": "PASS",
@@ -80,30 +54,25 @@
     "client_a_clean_shutdown": "PASS",
     "client_b_clean_shutdown": "PASS",
     "server_clean_shutdown": "PASS",
-    "graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES",
-    "final_marker": "T1A.6 runtime presentation + multiplayer focused gate passed.",
     "result": "PASS"
   },
-  "previous_windows_evidence": {
-    "t1a6_graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES",
-    "world_regression": "PASS_6_FAIL_0",
+  "full_regression": {
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "windows_run_head": "4725dc917f4d4c4ec495d27525b9e80ea3e1b335",
+    "main_scene_cli": "PASS_6_FAIL_0",
+    "checks": [
+      "core.command_registry",
+      "core.simulation_clock",
+      "core.world_catalog",
+      "world.playground.boot",
+      "world.playground.inventory_demo",
+      "world.playground.physics_object"
+    ],
+    "lifecycle_shutdown": "RUNNING_TO_DRAINING_TO_STOPPING_TO_STOPPED",
+    "exit_code": 0,
+    "runtime_drain": "PASS",
     "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
-    "freshness": "PRE_TRANSACTIONAL_FIX_HISTORICAL_ONLY"
-  },
-  "required_revalidation": {
-    "step_1": {
-      "runner": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
-      "result": "PASS"
-    },
-    "step_2": {
-      "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
-      "result": "PASS"
-    },
-    "step_3": {
-      "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-      "result": "PENDING"
-    },
-    "source_acceptance_allowed_after_all_three_pass": true
+    "result": "PASS"
   },
   "p0_alignment": {
     "canonical_runtime_is_presentation": false,
@@ -119,6 +88,13 @@
     "authority_route_in_permanent_identity": false,
     "lod_or_hlod_in_runtime_identity": false,
     "material_definition_id_added": false
+  },
+  "acceptance": {
+    "source_accepted": true,
+    "composition_verified": true,
+    "main_integrated": false,
+    "production_ready": false,
+    "reason": "T1A.5 transactional-effects FIX1, fresh T1A.6 dedicated-server/two-client focused acceptance, and fresh full world/core composition regression all passed on Windows Godot 4.7.1 double."
   },
   "next_after_acceptance": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE"
 }
