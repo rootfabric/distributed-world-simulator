@@ -1,29 +1,29 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 30,
+  "registry_generation": 31,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T13:43:00Z",
+  "updated_at_utc": "2026-08-10T13:48:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
       "program": "G",
       "program_name": "World Generation",
-      "branch": "feature/g7-semantic-field-fabric",
-      "passport_path": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
+      "branch": "feature/g8-geomorphology",
+      "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Semantic Field Fabric final acceptance over accepted G3/G5/G6 world-generation truth.",
-      "purpose": "Close G7 as a stable semantic world-field foundation independent from SurfaceCellKey, LOD, camera and representation before G8 geomorphology begins.",
-      "expected_outcome": "G7.0 through G7.4 remain accepted together under one full acceptance gate, preserving semantic identity, provenance, cross-cell/cross-LOD invariance and derived-only presentation.",
-      "current_stage": "G7 Full Acceptance",
-      "stage_status": "G7_4_ACCEPTED_FULL_ACCEPTANCE_PENDING",
-      "progress_note": "G7.4 Semantic Field Lab is ACCEPTED. Fix4 automated acceptance passed on ddacaf18a5c4b57c708562538a71065240d73ddb with world/core regression 6 PASS / 0 FAIL through NX4, STOPPED lifecycle and clean working tree. Final user graphical observation confirms F river toggle, fixed-LOD fields 1..5 recolor-only behavior, no obvious PX/PZ seam, stable 561 semantic samples, visible LOD0..LOD3, no false black shell holes and visible cyan diagnostic river ribbon. Abrupt LOD switching is non-blocking presentation tuning debt. G7 now requires only its aggregate Full Acceptance gate before G8 Geomorphology.",
-      "last_accepted_checkpoint": "G7.4 Semantic Field Lab",
-      "next_stage": "Run RUN_G7_FULL_ACCEPTANCE.ps1. If green, accept G7 Semantic Field Fabric as a complete checkpoint and advance PC0 to G8 Geomorphology.",
+      "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
+      "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
+      "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
+      "current_stage": "G8.0 Geomorphology Contracts",
+      "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_VALIDATION_PENDING",
+      "progress_note": "G7 Semantic Field Fabric is ACCEPTED after the aggregate Windows gate passed on tested head a75a60b6da739cc759e1fb40510a98942bce4cde: G7.0-G7.4 ACCEPTED, semantic identity/provenance/cross-cell/presentation separation PASS, world/core regression through NX4 PASS, RL3 representation streaming 37 assertions PASS, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED and working tree CLEAN. G8.0 now starts on feature/g8-geomorphology from accepted G7 metadata head d9a900c28dee3914bcaa4d6f6bde126aef56a77e. Initial contracts define a deterministic profile and five-component signed deformation sample; valley and river components may only lower the procedural surface. No SurfaceCellKey, LOD, authority, interest, Matter, material, persistence or network identity is introduced. Focused Windows validation is pending.",
+      "last_accepted_checkpoint": "G7 Semantic Field Fabric",
+      "next_stage": "Run RUN_G8_0_GEOMORPHOLOGY_CONTRACTS_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, record the tested head, accept G8.0, and proceed to G8.1 Valley Incision Baseline.",
       "health_declared": "YELLOW",
-      "blockers": ["G7_FULL_ACCEPTANCE_REQUIRED"]
+      "blockers": ["G8_0_FOCUSED_VALIDATION_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -51,7 +51,7 @@
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
       "short_description": "Production convergence of TS0.3 local dirty-section evidence into the real C22/C24 Construction proxy pipeline.",
-      "purpose": "Transfer the proven local dirty rebuild into production C22 so eligible mutations stop performing a full compile before invalidation while keeping Construction truth and authority ownership unchanged.",
+      "purpose": "Transfer the TS0.3-proven local dirty-section rebuild into the production C22/C24 Construction proxy pipeline without changing canonical Construction truth, authority or persistence ownership.",
       "expected_outcome": "Unit-grid local mutations rebuild only dirty plus neighbor sections, reuse unchanged content-addressed artifacts, rebuild FAR shell from section artifacts, preserve C24 graphical correctness, and safely fall back for unsupported cases.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
       "stage_status": "SOURCE_ACCEPTED_MERGE_READY",
@@ -153,7 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G8 START", "blocked_by": "G7_FULL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G8.1 START", "blocked_by": "G8_0_FOCUSED_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
