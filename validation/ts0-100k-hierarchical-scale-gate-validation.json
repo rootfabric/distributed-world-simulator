@@ -50,17 +50,32 @@
     "production_pipeline_scope": "NOT_CLAIMED_BY_ISOLATED_HARNESS"
   },
   "runtime_validation": {
-    "windows_project_control": "PENDING_USER_WORKTREE_RUN",
-    "windows_focused_100k": "PENDING_USER_WORKTREE_RUN",
-    "windows_manual_visual": "PENDING_USER_OBSERVATION",
+    "windows_project_control": "PENDING_USER_WORKTREE_RUN_OR_REPORT",
+    "windows_focused_100k": "PENDING_USER_WORKTREE_RUN_OR_REPORT",
+    "windows_manual_visual": "PASS_BY_USER_OBSERVATION",
+    "manual_functionality": "PASS_BY_USER_OBSERVATION",
+    "manual_observation_note": "100k scene creates successfully and hierarchical FAR/MID/NEAR functionality works; complete object representation remains visible. Initial scene creation is noticeably slow.",
     "repository_full_regression": "PENDING_AFTER_TS0_1_ACCEPTANCE_AND_TS0_2_FOCUSED"
+  },
+  "performance_observation": {
+    "initial_scene_creation": "SLOW_BY_USER_OBSERVATION",
+    "severity": "NON_BLOCKING_FOR_FUNCTIONAL_PROOF",
+    "acceptance_interpretation": "FUNCTIONALITY_COUNTS_AS_WORKING; PERFORMANCE_REQUIRES_LATER_MEASUREMENT_AND_OPTIMIZATION",
+    "likely_cost_centers_to_measure_later": [
+      "100K_CANONICAL_FIXTURE_MATERIALIZATION",
+      "C22_FULL_COMPILE_AND_SURFACE_EXTRACTION",
+      "SECTION_ARTIFACT_BUILD",
+      "TS0_SECOND_PASS_CLUSTER_COMPILATION",
+      "C24_MESH_MATERIALIZATION"
+    ],
+    "do_not_do": "DO_NOT_REDUCE_100K_GATE_ONLY_TO_HIDE_STARTUP_COST"
   },
   "remaining_gates": [
     "TS0.1 source acceptance remains required before TS0.2 formal frontier advancement",
-    "Run CONTROL_PROJECT.ps1 -NoFailOnRed in TS worktree",
-    "Run RUN_TS0_100K_TESTS.ps1",
-    "Inspect CUBE_100K and PYRAMID_100K in NEAR/MID/FAR",
+    "Run or record CONTROL_PROJECT.ps1 -NoFailOnRed in TS worktree",
+    "Run or record RUN_TS0_100K_TESTS.ps1",
     "Run full world regression before TS0.2 source acceptance",
+    "Measure startup phase timings before treating 100k performance as production-ready",
     "Converge main PC0 registry only after accepted facts exist"
   ]
 }
