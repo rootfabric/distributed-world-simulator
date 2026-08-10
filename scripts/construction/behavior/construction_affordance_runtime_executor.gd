@@ -17,7 +17,7 @@ const COMMAND_FIELDS: Array[String] = [
 var _store
 var _ledger
 var _handler: Callable
-var _effect_committer: Callable
+var _effect_committer: Callable = Callable()
 var _configured: bool = false
 
 
@@ -259,7 +259,7 @@ static func _is_upper_kind(value: String) -> bool:
 		return false
 	for character in value:
 		if not String(character) in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_":
-				return false
+			return false
 	return true
 
 
