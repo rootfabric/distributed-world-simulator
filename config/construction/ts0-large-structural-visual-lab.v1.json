@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.ts0_large_structural_visual_lab.v1",
+  "global_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch_family": "T_CONSTRUCTION",
+  "planned_branch": "feature/ts0-large-structural-visual-lab",
+  "preferred_base": {
+    "checkpoint": "T1A.3_SOURCE_ACCEPTED",
+    "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
+  },
+  "status": "IMPLEMENTATION_READY_PRE_T2_EXPERIMENTAL",
+  "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count.",
+  "profiles": {
+    "CUBE_10K": {"shape":"CUBE","block_size_m":2.0,"dimensions":[22,22,22],"expected_part_count":10648,"acceptance_role":"TS0_1_VISUAL_PROOF"},
+    "PYRAMID_10K": {"shape":"STEPPED_SQUARE_PYRAMID","block_size_m":2.0,"levels":31,"expected_part_count":10416,"acceptance_role":"TS0_1_VISUAL_PROOF"},
+    "CUBE_100K": {"shape":"CUBE","block_size_m":2.0,"dimensions":[46,46,46],"expected_part_count":97336,"acceptance_role":"TS0_2_PRIMARY_SCALE_GATE"},
+    "PYRAMID_100K": {"shape":"STEPPED_SQUARE_PYRAMID","block_size_m":2.0,"levels":67,"expected_part_count":102510,"acceptance_role":"TS0_2_PRIMARY_SCALE_GATE"},
+    "CUBE_1M_RESEARCH": {"shape":"CUBE","block_size_m":2.0,"dimensions":[100,100,100],"expected_part_count":1000000,"acceptance_role":"TS0_4_RESEARCH_CEILING_ONLY"}
+  },
+  "stages": ["TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES","TS0.1_10K_VISUAL_PROOF","TS0.2_100K_VISUAL_SCALE_GATE","TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD","TS0.4_1M_RESEARCH_CEILING_PROBE"],
+  "telemetry": ["canonical_part_count","canonical_revision","canonical_checksum","active_runtime_nodes","visible_sections","compiled_mesh_artifacts","triangles","draw_calls","mesh_build_ms","upload_ms","estimated_cpu_bytes","estimated_gpu_resource_bytes","representation_mode","observer_distance","dirty_section_count","rebuilt_section_count"],
+  "debug_modes": ["SOLID","BLOCK_BOUNDARIES","SECTION_BOUNDARIES","HLOD_LEVELS","DIRTY_REBUILD_REGIONS","STATISTICS"],
+  "primary_gate": {"stage":"TS0.2","minimum_canonical_part_count":90000,"requirements":["RUNTIME_NODE_COUNT_BOUNDED_AND_FAR_BELOW_PART_COUNT","COMPILED_REPRESENTATION_USED","NEAR_MID_FAR_TRANSITION_OBSERVABLE","CANONICAL_CHECKSUM_INVARIANT_ACROSS_REPRESENTATION_MODES","HEADLESS_CANONICAL_PATH_REQUIRES_NO_MESH_ASSETS","NO_UNBOUNDED_ARTIFACT_OR_CACHE_GROWTH"]},
+  "mutation_probe": {"profile":"CUBE_100K","operation":"REMOVE_CORNER_VOLUME","dimensions":[10,10,10],"expected_removed_parts":1000,"require_local_dirty_rebuild":true},
+  "reuses": ["C21_LARGE_SCALE_ACCEPTANCE","C22_COMPILED_CONSTRUCT_PROXY_HLOD","C24_GPU_READY_PROXY_MESH_BACKEND","CONSTRUCT_SNAPSHOT_AND_AGGREGATE","EXISTING_DIRTY_SECTION_INVALIDATION"],
+  "forbidden_ownership": ["WORLD_ADDRESS","SPATIAL_DOMAIN_FABRIC","AUTHORITY_REGION_ID","INTEREST_REGION_ID","MATERIAL_DEFINITION_ID","WORLD_OPERATION_TRANSACTION_MODEL","NETWORK_REPLICATION_OWNER","PERSISTENCE_MODEL","GLOBAL_WORK_BUDGET_SCHEDULER"],
+  "status_dimensions": ["SOURCE_ACCEPTED","MAIN_INTEGRATED","COMPOSITION_VERIFIED","PRODUCTION_READY"]
+}
