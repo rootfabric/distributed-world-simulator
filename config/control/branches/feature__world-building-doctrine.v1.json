@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/world-building-doctrine",
+  "program": "DOCTRINE",
+  "role": "DESIGN_DOCTRINE_FRONTIER",
+  "short_description": "Design doctrine describing how a large simulated world produces discovery, capability, infrastructure, consequences and history.",
+  "purpose": "Keep gameplay/world-building principles reusable and aligned with technical foundations without giving design documentation ownership of identity, authority, material or persistence systems.",
+  "expected_outcome": "A durable design reference used to judge whether new simulation mechanics create interesting interconnected gameplay rather than isolated features.",
+  "current_stage": "Active doctrine consolidation",
+  "stage_status": "ACTIVE",
+  "progress_note": "Doctrine remains an active design reference and must map new mechanics onto canonical queries, operations, transactions and persistent world consequences.",
+  "last_accepted_checkpoint": "P0 Technical Alignment",
+  "next_stage": "Continue doctrine updates only when new gameplay/system evidence appears",
+  "parent_branch_or_checkpoint": "Existing accepted world-building doctrine baseline",
+  "base_commit": "78adcfd13c7355fca8a9dbeb499cdb728c8b0a8b",
+  "dependencies": ["GLOBAL_P0", "WORLD_SIMULATION_DOCTRINE"],
+  "owned_paths": [
+    "docs/future_features/world_building_doctrine/**"
+  ],
+  "watched_paths": [
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json"
+  ],
+  "critical_watched_paths": [
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": ["docs/future_features/world_building_doctrine/P0_TECHNICAL_ALIGNMENT_RU.md"],
+  "tested_heads": {
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_TRANSACTION_MODEL",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY"
+  ],
+  "blockers": [],
+  "health_declared": "GREEN",
+  "cross_branch_overlap_enabled": false
+}
