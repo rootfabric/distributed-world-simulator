@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.ts0_100k_hierarchical_scale_gate_validation.v1",
+  "checkpoint": "TS0.2_100K_VISUAL_SCALE_GATE",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "implementation_base_head": "91b89e48a3d0685158f35df448153edf82ebbadb",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "formal_frontier": "TS0.1_10K_VISUAL_PROOF",
+  "decision": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_TS0_1_ACCEPTANCE",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "pc0_preflight": {
+    "project_control_entrypoint_checked": true,
+    "registry_generation": 2,
+    "registry_ts_health": "YELLOW",
+    "red_blocker_present": false,
+    "central_frontier": "TS0.1 10k Visual Proof",
+    "ownership_matrix_checked": true,
+    "ownership_claim": "DERIVED_PRESENTATION",
+    "world_work_budget_claimed": false,
+    "production_c22_c24_change_for_ts0_2": false,
+    "passport_proxy_dependency_watch_corrected": true
+  },
+  "implementation": {
+    "profiles": [
+      "CUBE_100K",
+      "PYRAMID_100K"
+    ],
+    "cluster_edge_sections": 3,
+    "near_refined_cluster_count": 1,
+    "max_cluster_count": 64,
+    "source": "EXISTING_C22_SECTION_ARTIFACTS",
+    "cluster_compaction": "SECOND_PASS_GRID_GREEDY_MERGE",
+    "mesh_backend": "EXISTING_C24_ARRAY_MESH_CACHE",
+    "far": "EXISTING_C22_ROOT_SHELL",
+    "mid": "ALL_COARSE_CLUSTERS",
+    "near": "ONE_REFINED_CLUSTER_PLUS_COARSE_REMAINDER",
+    "complete_visual_coverage_required": true,
+    "cluster_artifacts_published_to_c22_cache": false
+  },
+  "local_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "isolated_editor_parse": "PASS",
+    "hierarchy_cluster_smoke": "PASS",
+    "hierarchy_runtime_mid_near_smoke": "PASS",
+    "production_pipeline_scope": "NOT_CLAIMED_BY_ISOLATED_HARNESS"
+  },
+  "runtime_validation": {
+    "windows_project_control": "PENDING_USER_WORKTREE_RUN",
+    "windows_focused_100k": "PENDING_USER_WORKTREE_RUN",
+    "windows_manual_visual": "PENDING_USER_OBSERVATION",
+    "repository_full_regression": "PENDING_AFTER_TS0_1_ACCEPTANCE_AND_TS0_2_FOCUSED"
+  },
+  "remaining_gates": [
+    "TS0.1 source acceptance remains required before TS0.2 formal frontier advancement",
+    "Run CONTROL_PROJECT.ps1 -NoFailOnRed in TS worktree",
+    "Run RUN_TS0_100K_TESTS.ps1",
+    "Inspect CUBE_100K and PYRAMID_100K in NEAR/MID/FAR",
+    "Run full world regression before TS0.2 source acceptance",
+    "Converge main PC0 registry only after accepted facts exist"
+  ]
+}

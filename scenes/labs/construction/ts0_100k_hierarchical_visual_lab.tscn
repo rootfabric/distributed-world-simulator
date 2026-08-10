@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/t1/ts0/ts0_100k_hierarchical_visual_lab.gd" id="1_ts0_100k"]
+
+[node name="TS0100KHierarchicalVisualLab" type="Node3D"]
+script = ExtResource("1_ts0_100k")

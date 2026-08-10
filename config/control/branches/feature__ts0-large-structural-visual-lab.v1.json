@@ -15,7 +15,13 @@
   "next_stage": "TS0.1 acceptance after complete-coverage revalidation, then TS0.2 hierarchical 100k Visual Scale Gate",
   "parent_branch_or_checkpoint": "T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db",
   "base_commit": "5e051f67bf6987a354de5b565da1448be6b0b4db",
-  "dependencies": ["T1A3", "C21", "C22", "C24", "CONSTRUCT_SNAPSHOT"],
+  "dependencies": [
+    "T1A3",
+    "C21",
+    "C22",
+    "C24",
+    "CONSTRUCT_SNAPSHOT"
+  ],
   "owned_paths": [
     "config/construction/ts0-*",
     "scripts/labs/t1/ts0/**",
@@ -26,13 +32,20 @@
     "docs/plans/TS0_*"
   ],
   "watched_paths": [
+    "scripts/construction/proxies/**",
     "scripts/construction/representation/**",
     "scripts/construction/contracts/**",
     "scripts/construction/domain/**",
     "scripts/network/contracts/**"
   ],
   "critical_watched_paths": [
-    "scripts/construction/representation/**",
+    "scripts/construction/proxies/construction_proxy_compiler.gd",
+    "scripts/construction/proxies/construction_proxy_streaming_planner.gd",
+    "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
+    "scripts/construction/proxies/construction_proxy_mesh_cache.gd",
+    "scripts/construction/proxies/construction_proxy_artifact.gd",
+    "scripts/construction/proxies/construction_proxy_section_topology.gd",
+    "scripts/construction/proxies/construction_exposed_surface_extractor.gd",
     "scripts/construction/contracts/construct_snapshot.gd"
   ],
   "runtime_paths": [
@@ -41,7 +54,10 @@
     "tests/construction/ts0/**"
   ],
   "validation_paths": [
-    "config/construction/ts0-large-structural-visual-lab.v1.json"
+    "config/construction/ts0-large-structural-visual-lab.v1.json",
+    "config/construction/ts0-100k-hierarchical-scale-gate.v1.json",
+    "validation/ts0-10k-graphical-proof-validation.json",
+    "validation/ts0-100k-hierarchical-scale-gate-validation.json"
   ],
   "tested_heads": {
     "runtime": "",
@@ -49,7 +65,11 @@
     "full_regression": ""
   },
   "ownership_claims": [
-    {"foundation": "DERIVED_PRESENTATION", "claimed_owner": "DOMAIN_ADAPTERS", "scope": "TS0 synthetic Construction representation evidence"}
+    {
+      "foundation": "DERIVED_PRESENTATION",
+      "claimed_owner": "DOMAIN_ADAPTERS",
+      "scope": "TS0 synthetic Construction representation evidence"
+    }
   ],
   "forbidden_foundation_ownership": [
     "SPATIAL_DOMAIN_FABRIC",
@@ -60,7 +80,19 @@
     "PERSISTENCE_DURABILITY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": ["TS0_1_COMPLETE_COVERAGE_WINDOWS_REVALIDATION_PENDING"],
+  "blockers": [
+    "TS0_1_COMPLETE_COVERAGE_WINDOWS_REVALIDATION_PENDING"
+  ],
   "health_declared": "YELLOW",
-  "cross_branch_overlap_enabled": true
+  "cross_branch_overlap_enabled": true,
+  "prestage_candidates": [
+    {
+      "stage": "TS0.2 100k Hierarchical Visual Scale Gate",
+      "status": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_TS0_1_ACCEPTANCE",
+      "formal_frontier_advanced": false,
+      "owned_paths_only": true,
+      "production_c22_c24_modified_by_ts0_2": false,
+      "pc0_registry_update_required_after_ts0_1_acceptance": true
+    }
+  ]
 }
