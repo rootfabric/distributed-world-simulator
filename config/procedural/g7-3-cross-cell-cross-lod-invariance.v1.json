@@ -32,6 +32,8 @@
   "p0_sync": {
     "policy": "ACTIVE_FRONTIER_MATCHES_MAIN_HISTORICAL_ACCEPTED_BRANCHES_NOT_REWRITTEN",
     "active_frontier": "feature/g7-semantic-field-fabric",
+    "global_config_blob": "dd18f720cd4ce6493618efe270311605aea9bbbf",
+    "global_roadmap_blob": "3eb52a69cef73da8a784dfce7acc6a0c38185cf9",
     "historical_g6_revision_may_differ": true
   },
   "next_stage": "G7.4 Semantic Field Lab"
