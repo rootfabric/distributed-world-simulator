@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_1_valley_incision_baseline.v1",
   "checkpoint": "g8.1-valley-incision-baseline",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -9,6 +9,13 @@
     "checkpoint": "G8.0 Geomorphology Contracts",
     "decision": "ACCEPTED",
     "full_acceptance_tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9"
+  },
+  "acceptance": {
+    "tested_head": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "working_tree": "CLEAN"
   },
   "implementation": "res://scripts/simulation/procedural/geomorphology/valley_incision_baseline_v1.gd",
   "generator_id": "geomorphology/g8-1-valley-incision-v1",
@@ -40,12 +47,6 @@
     "persistent_terrain_damage": false,
     "material_definition_ownership": false,
     "network_replication_ownership": false
-  },
-  "acceptance": {
-    "focused_runner": "RUN_G8_1_VALLEY_INCISION_TESTS.ps1",
-    "full_acceptance_runner": "RUN_G8_1_FULL_ACCEPTANCE.ps1",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING"
   },
   "next_if_accepted": "G8.2_RIVER_CHANNEL_INCISION"
 }
