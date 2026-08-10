@@ -35,7 +35,7 @@ func _test_parent_and_manifest() -> void:
 	if not manifest is Dictionary:
 		return
 	_check(String(manifest.get("checkpoint", "")) == "g8.0-geomorphology-contracts", "G8.0 checkpoint")
-	_check(String(manifest.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G8.0 candidate status")
+	_check(String(manifest.get("status", "")) == "ACCEPTED", "G8.0 accepted status")
 	_check(String(manifest.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-10-R2", "architecture revision")
 	_check(String(manifest.get("control_plane_revision", "")) == "PC0-2026-08-10-R1", "control revision")
 	_check(String(manifest.get("branch", "")) == "feature/g8-geomorphology", "G8 branch")
@@ -44,9 +44,24 @@ func _test_parent_and_manifest() -> void:
 	_check(Array(manifest.get("deformation_components", [])).size() == 5, "five deformation components")
 	for key in manifest.get("invariants", {}).keys():
 		_check(not bool(manifest["invariants"][key]), "ownership invariant false: %s" % String(key))
+
+	var acceptance: Dictionary = manifest.get("acceptance", {})
+	_check(String(acceptance.get("tested_head", "")) == "7a34c5d58b5a766fd8f4da46073dfcea29673fe9", "G8.0 accepted tested head")
+	_check(String(acceptance.get("focused_contracts", "")) == "PASS", "G8.0 focused evidence retained")
+	_check(String(acceptance.get("full_world_regression", "")) == "PASS", "G8.0 full regression evidence retained")
+	_check(String(acceptance.get("working_tree", "")) == "CLEAN", "G8.0 clean-tree evidence retained")
+
 	var planned_inputs: Array = manifest.get("planned_g8_1_inputs", [])
-	for field_id in [Registry.SURFACE_HEIGHT_M, Registry.VALLEY_INFLUENCE, Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M, Registry.FLUID_SURFACE_DISTANCE_M]:
+	_check(planned_inputs.size() == 2, "G8.1 has exactly two planned semantic inputs")
+	for field_id in [Registry.SURFACE_HEIGHT_M, Registry.VALLEY_INFLUENCE]:
 		_check(planned_inputs.has(field_id), "planned G8.1 input %s" % field_id)
+	for field_id in [Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M, Registry.FLUID_SURFACE_DISTANCE_M]:
+		_check(not planned_inputs.has(field_id), "future river/fluid input not prematurely owned by G8.1: %s" % field_id)
+
+	var future_inputs: Array = manifest.get("future_g8_inputs", [])
+	_check(future_inputs.size() == 3, "three future G8 river/fluid semantic inputs")
+	for field_id in [Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M, Registry.FLUID_SURFACE_DISTANCE_M]:
+		_check(future_inputs.has(field_id), "future G8 input %s" % field_id)
 
 
 func _test_profile_contract() -> void:
