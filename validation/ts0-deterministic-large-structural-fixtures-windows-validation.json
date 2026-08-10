@@ -2,13 +2,15 @@
   "schema": "distributed_world_simulator.ts0_windows_worktree_validation.v1",
   "checkpoint": "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES",
   "branch": "feature/ts0-large-structural-visual-lab",
-  "tested_head": "95865698ce213c45c73ec3967e2eb3b18a6a0e32",
+  "focused_tested_head": "95865698ce213c45c73ec3967e2eb3b18a6a0e32",
+  "full_regression_tested_head": "4cf121fe86ea204c1bae93b64231468a91a1d647",
   "date": "2026-08-10",
   "environment": {
     "platform": "Windows",
     "worktree": "C:/Godot/lunar-world-double-godot-ts0",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "runner": "RUN_TS0_FIXTURE_TESTS.ps1"
+    "focused_runner": "RUN_TS0_FIXTURE_TESTS.ps1",
+    "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1"
   },
   "results": {
     "git_worktree_branch": "PASS_feature/ts0-large-structural-visual-lab",
@@ -25,15 +27,21 @@
       "parts": 10416,
       "elapsed_ms": 5595,
       "result": "PASS"
+    },
+    "full_world_core_regression": {
+      "result": "PASS",
+      "runner_summary": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+      "cli_world_core_tail": "6_PASS_0_FAIL",
+      "report_path": "artifacts/test-results/world-regression-summary.json"
     }
   },
-  "decision": "WINDOWS_FOCUSED_PASS",
+  "decision": "SOURCE_ACCEPTED",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
     "COMPOSITION_VERIFIED": false,
     "PRODUCTION_READY": false
   },
-  "remaining_gate": "RUN_WORLD_REGRESSION_TESTS.ps1 on this TS0 worktree before SOURCE_ACCEPTED",
-  "next_after_acceptance": "TS0.1_10K_GRAPHICAL_PROOF"
+  "remaining_gate": "NONE_FOR_TS0_0_SOURCE_ACCEPTANCE",
+  "next": "TS0.1_10K_GRAPHICAL_PROOF"
 }
