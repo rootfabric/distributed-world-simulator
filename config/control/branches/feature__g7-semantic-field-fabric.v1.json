@@ -9,10 +9,10 @@
   "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
   "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected without becoming canonical identity.",
   "current_stage": "G7.4 Semantic Field Lab",
-  "stage_status": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
-  "progress_note": "Shared M5 final-convergence Fix2 passes focused Windows graphical verification with 92 assertions and 0 failures. G7.4 full world regression and manual graphical observation remain pending.",
+  "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
+  "progress_note": "G7.4 automated Windows acceptance passes on 594f96a1337a08d62e6371de61e43640f99aab4a: PC0 gate PASS, G7.3 ancestor PASS, semantic-lab scope PASS, five adapter-backed fields PASS, six vocabulary-only fields not faked PASS, full world/core regression PASS and final working tree CLEAN. Manual graphical observation remains the only blocker.",
   "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-  "next_stage": "Run G7.4 full automated acceptance, then manual graphical observation, then G7 FULL ACCEPTANCE and G8 Geomorphology",
+  "next_stage": "Complete G7.4 manual graphical observation, then accept G7.4, run G7 FULL ACCEPTANCE and proceed to G8 Geomorphology",
   "parent_branch_or_checkpoint": "G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "base_commit": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3", "M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE"],
@@ -54,9 +54,10 @@
     "validation/g7-4-semantic-field-lab-validation.json"
   ],
   "tested_heads": {
-    "runtime": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
-    "focused": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
-    "full_regression": "910899a906e684d6793cd74ba898d68c457a37b4"
+    "runtime": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "focused": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "full_regression": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "m5_fix2_focused": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17"
   },
   "ownership_claims": [
     {"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "semantic fields and derived G7 presentation"}
@@ -72,7 +73,6 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "G7_4_FULL_WORLD_REGRESSION_PENDING",
     "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
   ],
   "health_declared": "YELLOW",
