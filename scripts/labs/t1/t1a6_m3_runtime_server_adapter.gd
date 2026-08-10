@@ -15,11 +15,17 @@ var _runtime_snapshots: int = 0
 var _runtime_rejections: int = 0
 
 
+func _create_t1_runtime():
+	return T1RuntimeScript.new()
+
+
 func setup(config: Dictionary) -> Dictionary:
 	var m0_root := String(config.get("t1a6_m0_root", "")).strip_edges()
 	if m0_root.is_empty():
 		return _failure("T1A6_M0_ROOT_REQUIRED")
-	_t1_runtime = T1RuntimeScript.new()
+	_t1_runtime = _create_t1_runtime()
+	if _t1_runtime == null or not _t1_runtime.has_method("setup"):
+		return _failure("T1A6_RUNTIME_FACTORY_INVALID")
 	var runtime_setup: Dictionary = _t1_runtime.setup(m0_root)
 	if not bool(runtime_setup.get("success", false)):
 		_t1_runtime = null
@@ -108,7 +114,15 @@ func _send_runtime_result(peer_id: String, operation_id: String, result: Diction
 	return sent
 
 
+func _should_send_runtime_snapshot_to_peer(_peer_id: String, _reason: String) -> bool:
+	# Default preserves the accepted T1A.6 broadcast semantics. Later stacked
+	# stages may filter the target set, but they must not mutate canonical truth.
+	return true
+
+
 func _send_runtime_snapshot(peer_id: String, reason: String) -> bool:
+	if not _should_send_runtime_snapshot_to_peer(peer_id, reason):
+		return false
 	var snapshot: Dictionary = create_construction_runtime_snapshot()
 	var validation: Dictionary = RuntimeSnapshotScript.validate(snapshot)
 	if not bool(validation.get("success", false)):
