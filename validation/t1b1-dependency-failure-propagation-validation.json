@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1b1_dependency_failure_propagation_validation.v1",
   "checkpoint": "T1B1_DEPENDENCY_FAILURE_PROPAGATION",
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1B.0 Runtime Failure Contract ACCEPTED",
   "parent_tested_checkout": "1f08defe57f592f5e2698da71a1e3180b0875014",
@@ -46,17 +46,42 @@
     "new_world_work_budget": false,
     "propagator_commits_state": false
   },
-  "required_validation": {
+  "windows_acceptance": {
+    "checkout": "faff5f10f42d30a8769ee796fce26d93b8d24bcf",
+    "checkout_basis": "PASS_BY_USER_EXECUTION_SEQUENCE_ON_REQUIRED_PRESERVED_CHECKOUT",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_runner": "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1",
-    "focused_result": "PENDING",
-    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+    "focused_result": "PASS_BY_USER_CONFIRMATION",
+    "focused_assertion_count": "NOT_REPORTED_IN_FINAL_SNIPPET",
+    "full_regression_result": "PASS",
+    "full_regression_evidence": {
+      "MW10_cross_region_matter_processes": 51,
+      "RL0_representation_contracts": 92,
+      "RL1_matter_summary_pyramid": 245,
+      "RL2_matter_multiresolution_meshing": 153,
+      "RL2_real_asteroid_multiresolution": 44,
+      "RL3_representation_aware_network_streaming": 175,
+      "RL3_representation_streaming_processes": 37,
+      "main_scene_cli_all_pass": 6,
+      "main_scene_cli_all_fail": 0,
+      "lifecycle": "STOPPED",
+      "exit_code": 0,
+      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+    }
   },
-  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
+  "tested_heads": {
+    "runtime": "faff5f10f42d30a8769ee796fce26d93b8d24bcf",
+    "focused": "faff5f10f42d30a8769ee796fce26d93b8d24bcf",
+    "full_regression": "faff5f10f42d30a8769ee796fce26d93b8d24bcf"
+  },
   "t2_control_gate": {
     "t2_0_active": false,
     "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
   },
-  "next_stage_if_accepted": "T1B.2 Runtime Command Failure Semantics"
+  "next_stage": "T1B.2 Runtime Command Failure Semantics"
 }
