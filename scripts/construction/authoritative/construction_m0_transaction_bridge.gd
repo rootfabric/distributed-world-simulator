@@ -6,6 +6,9 @@ const InvariantRegistryScript = preload("res://scripts/simulation/transactions/t
 const CoordinatorScript = preload("res://scripts/simulation/transactions/aggregate_transaction_coordinator.gd")
 const TranslatorScript = preload("res://scripts/construction/authoritative/construction_m0_batch_translator.gd")
 const StateAdapterScript = preload("res://scripts/construction/authoritative/construction_m0_state_adapter.gd")
+const RuntimePersistenceScript = preload("res://scripts/construction/behavior/construction_runtime_persistence_state.gd")
+const RuntimeStateAdapterScript = preload("res://scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd")
+const RuntimeTranslatorScript = preload("res://scripts/construction/authoritative/construction_runtime_m0_translator.gd")
 
 var _registry
 var _repository
@@ -29,6 +32,9 @@ func setup(repository_root: String) -> Dictionary:
 		var registered: Dictionary = _registry.register_adapter(StateAdapterScript.new(String(row[0]), String(row[1])))
 		if not bool(registered.get("success", false)):
 			return registered
+	var runtime_registered: Dictionary = _registry.register_adapter(RuntimeStateAdapterScript.new())
+	if not bool(runtime_registered.get("success", false)):
+		return runtime_registered
 	_repository = RepositoryScript.new()
 	var configured_repository: Dictionary = _repository.configure(repository_root)
 	if not bool(configured_repository.get("success", false)):
@@ -61,6 +67,89 @@ func get_snapshot(aggregate_id: String) -> Dictionary:
 	if not _configured:
 		return _failure("CONSTRUCTION_M0_BRIDGE_NOT_CONFIGURED")
 	return _coordinator.get_snapshot(aggregate_id)
+
+
+func get_runtime_state(construct_id: String) -> Dictionary:
+	if not _configured:
+		return _failure("CONSTRUCTION_M0_BRIDGE_NOT_CONFIGURED")
+	var aggregate_id: String = RuntimeTranslatorScript.aggregate_id_for_construct(construct_id)
+	var loaded: Dictionary = _coordinator.get_snapshot(aggregate_id)
+	if not bool(loaded.get("success", false)):
+		return loaded
+	var envelope: Dictionary = Dictionary(loaded.get("details", {}).get("snapshot", {}))
+	var state: Dictionary = Dictionary(envelope.get("state", {}))
+	var validation: Dictionary = RuntimePersistenceScript.validate(state)
+	if not bool(validation.get("success", false)):
+		return _failure("CONSTRUCTION_RUNTIME_M0_PERSISTED_STATE_INVALID", {"cause": validation})
+	var authority: Dictionary = Dictionary(envelope.get("descriptor", {}).get("authority", {}))
+	return _success({
+		"aggregate_id": aggregate_id,
+		"state": state.duplicate(true),
+		"authority_owner_id": String(authority.get("authority_owner_id", "")),
+		"authority_epoch": int(authority.get("authority_epoch", 0)),
+		"revision": int(authority.get("state_revision", -1)),
+		"server_tick": int(authority.get("server_tick", 0)),
+		"snapshot_checksum": String(envelope.get("checksum", "")),
+	})
+
+
+func checkpoint_runtime(
+	operation_id: String,
+	state: Dictionary,
+	authority_owner_id: String,
+	authority_epoch: int,
+	server_tick: int
+) -> Dictionary:
+	if not _configured:
+		return _failure("CONSTRUCTION_M0_BRIDGE_NOT_CONFIGURED")
+	var validation: Dictionary = RuntimePersistenceScript.validate(state)
+	if not bool(validation.get("success", false)):
+		return _failure("CONSTRUCTION_RUNTIME_M0_CHECKPOINT_STATE_INVALID", {"cause": validation})
+	var aggregate_id: String = RuntimeTranslatorScript.aggregate_id_for_construct(String(state["construct_id"]))
+	var current_revision: int = -1
+	var existing: Dictionary = _coordinator.get_snapshot(aggregate_id)
+	if bool(existing.get("success", false)):
+		var envelope: Dictionary = Dictionary(existing.get("details", {}).get("snapshot", {}))
+		var existing_state: Dictionary = Dictionary(envelope.get("state", {}))
+		var authority: Dictionary = Dictionary(envelope.get("descriptor", {}).get("authority", {}))
+		if String(authority.get("authority_owner_id", "")) != authority_owner_id or int(authority.get("authority_epoch", 0)) != authority_epoch:
+			return _failure("CONSTRUCTION_RUNTIME_M0_AUTHORITY_MISMATCH", {
+				"aggregate_id": aggregate_id,
+				"persisted_owner_id": String(authority.get("authority_owner_id", "")),
+				"persisted_epoch": int(authority.get("authority_epoch", 0)),
+			})
+		current_revision = int(authority.get("state_revision", -1))
+		if String(existing_state.get("checksum", "")) == String(state.get("checksum", "")):
+			return _success({
+				"replay": true,
+				"unchanged": true,
+				"aggregate_id": aggregate_id,
+				"revision": current_revision,
+				"generation": int(_coordinator.get_state_report().get("details", {}).get("generation", 0)),
+			})
+	elif String(existing.get("error_code", "")) != "TRANSACTION_AGGREGATE_NOT_FOUND":
+		return existing
+	var translated: Dictionary = RuntimeTranslatorScript.build_checkpoint_batch(
+		operation_id,
+		state,
+		authority_owner_id,
+		authority_epoch,
+		current_revision,
+		server_tick
+	)
+	if not bool(translated.get("success", false)):
+		return translated
+	var committed: Dictionary = _coordinator.execute_batch(Dictionary(translated["batch"]))
+	if not bool(committed.get("success", false)):
+		return committed
+	return _success({
+		"replay": bool(committed.get("details", {}).get("replay", false)),
+		"unchanged": false,
+		"aggregate_id": aggregate_id,
+		"revision": int(translated["result_revision"]),
+		"generation": int(committed.get("details", {}).get("generation", 0)),
+		"batch_id": String(translated["batch_id"]),
+	})
 
 
 func get_state_report() -> Dictionary:
