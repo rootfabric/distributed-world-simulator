@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_2_river_channel_incision.v1",
   "checkpoint": "g8.2-river-channel-incision",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -10,6 +10,15 @@
     "decision": "ACCEPTED",
     "full_acceptance_tested_head": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
     "accepted_metadata_head": "b77591cd292fb6935d62de5c365a3013bdf7d157"
+  },
+  "acceptance": {
+    "tested_head": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "valley_river_composition": "PASS",
+    "ownership_boundary": "PASS",
+    "working_tree": "CLEAN"
   },
   "implementation": "res://scripts/simulation/procedural/geomorphology/river_channel_incision_v1.gd",
   "generator_id": "geomorphology/g8-2-river-channel-incision-v1",
@@ -53,12 +62,6 @@
     "persistent_terrain_damage": false,
     "material_definition_ownership": false,
     "network_replication_ownership": false
-  },
-  "acceptance": {
-    "focused_runner": "RUN_G8_2_RIVER_CHANNEL_INCISION_TESTS.ps1",
-    "full_acceptance_runner": "RUN_G8_2_FULL_ACCEPTANCE.ps1",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING"
   },
   "next_if_accepted": "G8.3_BANKS_AND_FLOODPLAIN_SHAPING"
 }
