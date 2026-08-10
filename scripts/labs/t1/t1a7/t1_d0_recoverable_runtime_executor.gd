@@ -12,8 +12,8 @@ func setup(m0_root: String) -> Dictionary:
 		return base
 	var restored: Dictionary = _restore_runtime_from_m0()
 	if not bool(restored.get("success", false)):
-		return _failure("T1A7_RUNTIME_RECOVERY_FAILED", {"cause": restored})
-	return _success({
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_FAILED", {"cause": restored})
+	return _recovery_success({
 		"report": get_report(),
 		"recovered_from_m0": _recovered_from_m0,
 		"runtime_checkpoint_revision": _runtime_checkpoint_revision,
@@ -47,16 +47,16 @@ func export_recovery_state() -> Dictionary:
 
 func checkpoint_runtime(operation_id: String) -> Dictionary:
 	if not _configured:
-		return _failure("T1A7_RUNTIME_NOT_CONFIGURED")
+		return _recovery_failure("T1A7_RUNTIME_NOT_CONFIGURED")
 	var state: Dictionary = export_recovery_state()
 	if state.is_empty():
-		return _failure("T1A7_RUNTIME_RECOVERY_STATE_INVALID")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_STATE_INVALID")
 	var bridge = _bound.get("bridge")
 	var adapter = _bound.get("adapter")
 	if bridge == null or not bridge.has_method("checkpoint_runtime"):
-		return _failure("T1A7_RUNTIME_M0_BRIDGE_REQUIRED")
+		return _recovery_failure("T1A7_RUNTIME_M0_BRIDGE_REQUIRED")
 	if adapter == null or not adapter.has_method("get_authority_report"):
-		return _failure("T1A7_RUNTIME_AUTHORITY_REPORT_REQUIRED")
+		return _recovery_failure("T1A7_RUNTIME_AUTHORITY_REPORT_REQUIRED")
 	var authority: Dictionary = adapter.get_authority_report()
 	var checkpoint_tick: int = maxi(int(authority.get("server_tick", 0)), _power_tick)
 	var committed: Dictionary = bridge.checkpoint_runtime(
@@ -67,9 +67,9 @@ func checkpoint_runtime(operation_id: String) -> Dictionary:
 		checkpoint_tick
 	)
 	if not bool(committed.get("success", false)):
-		return _failure("T1A7_RUNTIME_CHECKPOINT_FAILED", {"cause": committed})
+		return _recovery_failure("T1A7_RUNTIME_CHECKPOINT_FAILED", {"cause": committed})
 	_runtime_checkpoint_revision = int(committed.get("details", {}).get("revision", _runtime_checkpoint_revision))
-	return _success({
+	return _recovery_success({
 		"replay": bool(committed.get("details", {}).get("replay", false)),
 		"unchanged": bool(committed.get("details", {}).get("unchanged", false)),
 		"runtime_checkpoint_revision": _runtime_checkpoint_revision,
@@ -82,29 +82,29 @@ func _restore_runtime_from_m0() -> Dictionary:
 	var bridge = _bound.get("bridge")
 	var adapter = _bound.get("adapter")
 	if bridge == null or not bridge.has_method("get_runtime_state"):
-		return _failure("T1A7_RUNTIME_M0_BRIDGE_REQUIRED")
+		return _recovery_failure("T1A7_RUNTIME_M0_BRIDGE_REQUIRED")
 	if adapter == null or not adapter.has_method("get_authority_report"):
-		return _failure("T1A7_RUNTIME_AUTHORITY_REPORT_REQUIRED")
+		return _recovery_failure("T1A7_RUNTIME_AUTHORITY_REPORT_REQUIRED")
 	var loaded: Dictionary = bridge.get_runtime_state(CONSTRUCT_ID)
 	if not bool(loaded.get("success", false)):
 		if String(loaded.get("error_code", "")) == "TRANSACTION_AGGREGATE_NOT_FOUND":
 			_recovered_from_m0 = false
 			_runtime_checkpoint_revision = -1
-			return _success({"recovered": false})
+			return _recovery_success({"recovered": false})
 		return loaded
 	var state: Dictionary = Dictionary(loaded.get("details", {}).get("state", {}))
 	var validation: Dictionary = RuntimePersistenceScript.validate(state)
 	if not bool(validation.get("success", false)):
-		return _failure("T1A7_RUNTIME_PERSISTED_STATE_INVALID", {"cause": validation})
+		return _recovery_failure("T1A7_RUNTIME_PERSISTED_STATE_INVALID", {"cause": validation})
 	if String(state.get("construct_id", "")) != CONSTRUCT_ID:
-		return _failure("T1A7_RUNTIME_RECOVERY_CONSTRUCT_MISMATCH")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_CONSTRUCT_MISMATCH")
 	if String(state.get("construct_checksum", "")) != String(_profile.get("construct_checksum", "")):
-		return _failure("T1A7_RUNTIME_RECOVERY_CONSTRUCT_CHECKSUM_MISMATCH")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_CONSTRUCT_CHECKSUM_MISMATCH")
 	var authority: Dictionary = adapter.get_authority_report()
 	if String(loaded.get("details", {}).get("authority_owner_id", "")) != String(authority.get("authority_owner_id", "")):
-		return _failure("T1A7_RUNTIME_RECOVERY_AUTHORITY_OWNER_MISMATCH")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_AUTHORITY_OWNER_MISMATCH")
 	if int(loaded.get("details", {}).get("authority_epoch", 0)) != int(authority.get("authority_epoch", 0)):
-		return _failure("T1A7_RUNTIME_RECOVERY_AUTHORITY_EPOCH_MISMATCH")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_AUTHORITY_EPOCH_MISMATCH")
 
 	var runtime_backup: Dictionary = _runtime_store.to_dict()
 	var ledger_backup: Dictionary = _runtime_ledger.to_dict()
@@ -114,11 +114,11 @@ func _restore_runtime_from_m0() -> Dictionary:
 
 	var runtime_load: Dictionary = _runtime_store.load_dict(Dictionary(state["runtime_state"]))
 	if not bool(runtime_load.get("success", false)):
-		return _failure("T1A7_RUNTIME_STORE_RESTORE_FAILED", {"cause": runtime_load})
+		return _recovery_failure("T1A7_RUNTIME_STORE_RESTORE_FAILED", {"cause": runtime_load})
 	var ledger_load: Dictionary = _runtime_ledger.load_dict(Dictionary(state["operation_ledger"]))
 	if not bool(ledger_load.get("success", false)):
 		_runtime_store.load_dict(runtime_backup)
-		return _failure("T1A7_RUNTIME_LEDGER_RESTORE_FAILED", {"cause": ledger_load})
+		return _recovery_failure("T1A7_RUNTIME_LEDGER_RESTORE_FAILED", {"cause": ledger_load})
 
 	_power_tick = int(state["power_tick"])
 	_power_storage = Dictionary(state["power_storage"]).duplicate(true)
@@ -130,12 +130,23 @@ func _restore_runtime_from_m0() -> Dictionary:
 		_power_tick = power_tick_backup
 		_power_storage = power_storage_backup
 		_power_execution_profile = power_profile_backup
-		return _failure("T1A7_RUNTIME_RECOVERY_POST_RESTORE_MISMATCH")
+		return _recovery_failure("T1A7_RUNTIME_RECOVERY_POST_RESTORE_MISMATCH")
 
 	_recovered_from_m0 = true
 	_runtime_checkpoint_revision = int(loaded.get("details", {}).get("revision", -1))
-	return _success({
+	return _recovery_success({
 		"recovered": true,
 		"runtime_checkpoint_revision": _runtime_checkpoint_revision,
 		"state_checksum": String(state.get("checksum", "")),
 	})
+
+
+static func _recovery_success(details: Dictionary = {}) -> Dictionary:
+	var result: Dictionary = {"success": true, "error_code": ""}
+	for key in details:
+		result[key] = details[key]
+	return result
+
+
+static func _recovery_failure(code: String, details: Dictionary = {}) -> Dictionary:
+	return {"success": false, "error_code": code, "details": details.duplicate(true)}
