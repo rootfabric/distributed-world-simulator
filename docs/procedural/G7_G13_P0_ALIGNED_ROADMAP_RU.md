@@ -2,14 +2,14 @@
 
 **Global revision:** `GLOBAL-P0-2026-08-10-R2`
 **Branch:** `feature/g7-semantic-field-fabric`
-**Current frontier:** `G7.3 — Cross-Cell / Cross-LOD Invariance`
+**Current frontier:** `G7.4 — Semantic Field Lab`
 **Upstream accepted:** `G6 Hydrology / Fluid Surface v0 — SOURCE_ACCEPTED`
 
 ## 1. Цель линии
 
 G7–G13 превращает принятые G3/G5/G6 semantics в универсальный набор composable fields, затем в geomorphology, geology, volume и разные типы celestial bodies.
 
-Главная граница остаётся:
+Главная граница:
 
 ```text
 canonical procedural semantics
@@ -46,41 +46,121 @@ G7 остаётся domain semantic fabric. Scheduler/cache ownership — G12; s
 
 ```text
 G7.0 Semantic Field Contracts            ACCEPTED
-G7.1 Upstream Adapters                    completed upstream step
-G7.2 Composition / Provenance              completed upstream step
-G7.3 Cross-Cell / Cross-LOD Invariance    CURRENT
-G7.4 Semantic Field Lab                   NEXT VISUAL MILESTONE
+G7.1 Upstream Adapters                   ACCEPTED
+G7.2 Composition / Provenance            ACCEPTED
+G7.3 Cross-Cell / Cross-LOD Invariance  ACCEPTED
+G7.4 Semantic Field Lab                  CURRENT
+G7 Full Acceptance                       NEXT
 ```
 
-### G7.3 — Cross-Cell / Cross-LOD Invariance
+### G7.3 — accepted invariance proof
 
-Acceptance должен доказать:
+Windows acceptance:
 
-- один world point даёт одинаковые canonical semantic values независимо от `SurfaceCellKey`;
-- LOD меняет только sampling/representation density;
-- cube-sphere seams не меняют semantic value;
-- один river/valley feature пересекает много cells без смены identity;
-- query order не влияет на result/provenance;
-- renderer/camera не участвуют в canonical checksum.
+```text
+G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
+G7.3 FULL ACCEPTANCE: PASS
+World/core regression: PASS
+Working tree: CLEAN
+```
 
-G7.3 не должен вводить новый spatial mapping foundation. Он доказывает invariance уже существующих domain identities.
+Доказано:
+
+```text
+same world point -> same semantic values/checksums/provenance across LOD 2/4/8/12
+SurfaceCellKey / LOD are representation-only
+query field order does not change result
+PX/PZ seam does not change semantic meaning
+G5 FeatureId stable across cells
+G6 FluidRegionId stable across cells
+```
 
 ### G7.4 — Semantic Field Lab
 
-После G7.3 делается derived graphical lab с переключением:
+G7.4 является **derived graphical/debug presentation** поверх accepted G7 semantics.
+
+Lab визуализирует только поля, у которых уже есть реальный accepted adapter path:
 
 ```text
-height
-slope
-curvature
-river distance
-moisture proxy
-continentalness
+1  geo/surface-height-m
+2  geo/valley-influence
+3  geo/river-distance-m
+4  geo/river-width-m
+5  geo/fluid-surface-distance-m
 ```
 
-Lab colors, mesh density, patch layout и camera не входят в canonical truth.
+Следующие поля пока остаются `VOCABULARY_ONLY` и специально **не подменяются fake/debug formulas**:
 
-G7.4 — первый официальный visual milestone после текущего G7.3.
+```text
+geo/slope
+geo/curvature
+geo/drainage-potential
+geo/continentalness
+geo/temperature-baseline
+geo/moisture-baseline
+```
+
+Lab строит один deterministic semantic patch вокруг принятого G6 river fixture:
+
+```text
+latitude  0..10 deg
+longitude 30..62 deg
+16 x 32 cells
+561 canonical semantic sample points
+PX/PZ cube-sphere coverage
+```
+
+Каждый sample проходит настоящий pipeline:
+
+```text
+SemanticFieldQuery
+  -> G3 adapter
+  -> G5 adapter
+  -> G6 adapter
+  -> SemanticFieldComposerV1
+  -> SemanticFieldBundle + CompositionReceipt
+```
+
+Presentation использует те же samples только для:
+
+```text
+vertex position from accepted surface-height
+vertex color from selected semantic field
+river centerline overlay
+HUD / field selector
+camera/orbit
+```
+
+Не входят в canonical truth:
+
+```text
+colors
+camera
+mesh density
+patch triangulation
+HUD
+selected visualization mode
+presentation manifest hash
+```
+
+G7.4 не создаёт новый `FeatureId`, `FluidRegionId`, `MaterialDefinitionId`, renderer foundation или scheduler.
+
+### G7 Full Acceptance
+
+После graphical acceptance G7.4 отдельный G7 closeout должен подтвердить:
+
+```text
+G7.0 contracts PASS
+G7.1 adapters PASS
+G7.2 composition/provenance PASS
+G7.3 invariance PASS
+G7.4 semantic lab PASS
+full world/core regression PASS
+P0 ownership audit PASS
+clean worktree / diff hygiene PASS
+```
+
+После этого active frontier переходит к G8.
 
 ## 4. G8 — Geomorphology
 
@@ -219,11 +299,9 @@ representation requests
 
 ## 10. Визуальные milestones G
 
-Начиная с P0 R2 они фиксируются явно:
-
 ```text
 G7.4
-  semantic/debug visualization
+  SEMANTIC FIELD DEBUG VISUALIZATION
 
 G8
   FIRST NATURAL TERRAIN SHOWCASE
@@ -235,19 +313,19 @@ G11
   UNIVERSAL BODY SHOWCASE
 ```
 
-Это не новые canonical stages и не перенос ownership в renderer; это обязательные observable evidence points.
+Это observable evidence points, а не перенос canonical ownership в renderer.
 
 ## 11. Параллельность с T / TS
 
 Сейчас одновременно развивается:
 
 ```text
-G7.3  World Generation correctness
+G7.4  World Generation visual semantic proof
 T1A.4 Construction composition
-TS0   planned Construction scale/visual proof
+TS0   Construction scale/visual proof
 ```
 
-G не должен зависеть от TS0, а TS0 не должен использовать G cells как Construction section identity.
+G не зависит от TS0, а TS0 не использует G cells как Construction section identity.
 
 Позднее разрешён composition consumer:
 
@@ -309,9 +387,9 @@ renderer artifact as canonical source
 ## 14. Ближайшая последовательность
 
 ```text
-G7.3 CURRENT
+G7.4 CURRENT visual semantic field lab
   ↓
-G7.4 visual semantic field lab
+G7 Full Acceptance
   ↓
 G8 natural terrain showcase
 ```
