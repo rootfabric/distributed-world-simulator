@@ -11,11 +11,11 @@
     "c24_contracts": "PASS_81_ASSERTIONS",
     "evidence_only": true
   },
-  "decision": "FOCUSED_ACCEPTED_FULL_REGRESSION_FIX2_PENDING_REVALIDATION",
+  "decision": "SOURCE_ACCEPTED_MERGE_READY",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "production_changes": {
@@ -95,12 +95,40 @@
     "change": "Add the production incremental rebuild test to RUN_WORLD_REGRESSION_TESTS.ps1 declared coverage and track stable Godot UID sidecars for new GDScript files",
     "runtime_algorithm_changed": false,
     "focused_runtime_evidence_invalidated": false,
-    "full_regression_revalidation_required": true
+    "full_regression_revalidation_required": false
   },
-  "remaining_gates": [
-    "Pull FIX2 after removing the three locally generated untracked UID sidecars",
-    "Rerun RUN_WORLD_REGRESSION_TESTS.ps1",
-    "Run CONTROL_PROJECT.ps1 -NoFailOnRed and inspect cross-branch overlap",
-    "Only then mark convergence SOURCE_ACCEPTED / merge-ready"
-  ]
+  "full_regression_attempt_2": {
+    "tested_branch_head": "1eb3397d52bd2a402bd3736c0e57ea7f2719b56e",
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "test_manifest_coverage": "PASS",
+    "world_core_regression": "PASS",
+    "main_scene_cli_all": "PASS_6_FAIL_0",
+    "lifecycle_final_state": "STOPPED",
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json"
+  },
+  "final_control_review": {
+    "main_head_checked": "c3c8ad1f2087ba9c9ea84adbf9058d2db4c032e0",
+    "main_changes_since_base": [
+      "PROJECT_CONTROL.md",
+      "config/control/project-program-registry.v1.json",
+      "scripts/control/project_control.py"
+    ],
+    "critical_c22_dependency_drift": false,
+    "t1a7_runtime_or_contract_overlap_with_c22_proxy_paths": false,
+    "shared_non_runtime_file": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "ownership_conflict": false,
+    "result": "PASS"
+  },
+  "acceptance": {
+    "source_accepted": true,
+    "merge_ready": true,
+    "accepted_runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "accepted_full_regression_head": "1eb3397d52bd2a402bd3736c0e57ea7f2719b56e",
+    "remaining_before_main_integration": [
+      "Merge accepted convergence branch into main",
+      "Run post-merge Project Control audit and mark MAIN_INTEGRATED"
+    ]
+  }
 }
