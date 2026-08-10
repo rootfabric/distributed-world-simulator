@@ -1,8 +1,9 @@
 class_name Ch9EquipmentItemGraphReplicaAdapter
 extends "res://scripts/runtime/networked_gameplay/m7/m7_item_graph_replica_adapter.gd"
 
-const Definition = preload("res://scripts/items/domain/item_definition.gd")
-const ContainerState = preload("res://scripts/containers/container_state.gd")
+# Definition and ContainerState are intentionally inherited from the M7 adapter.
+# Godot 4.7 rejects re-declaring inherited class members, even when the preload
+# target is identical.
 const EquipmentCatalog = preload("res://scripts/characters/equipment/network_character_equipment_catalog.gd")
 
 
