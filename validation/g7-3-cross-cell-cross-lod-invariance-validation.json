@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.validation.g7_3_cross_cell_cross_lod_invariance.v1",
+  "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "g7_2": {
+    "decision": "ACCEPTED",
+    "accepted_commit": "68c4f90dbdac0e2d9968b4461207713f5661521b",
+    "windows_full_acceptance": "PASS"
+  },
+  "implementation": {
+    "production_runtime_changed": false,
+    "invariance_acceptance_test": "IMPLEMENTED",
+    "focused_runner": "IMPLEMENTED",
+    "full_acceptance_runner": "IMPLEMENTED"
+  },
+  "proof_matrix": {
+    "lod_levels": [2, 4, 8, 12],
+    "same_world_point_query_checksum": "REQUIRED_EQUAL",
+    "same_world_point_bundle_checksum": "REQUIRED_EQUAL",
+    "same_world_point_receipt_checksum": "REQUIRED_EQUAL",
+    "same_world_point_sample_checksums": "REQUIRED_EQUAL",
+    "same_world_point_provenance_checksums": "REQUIRED_EQUAL",
+    "different_representation_cell_tokens": "REQUIRED",
+    "query_order_invariance": "REQUIRED",
+    "px_pz_seam": "REQUIRED",
+    "river_feature_id_across_cells": "REQUIRED_EQUAL",
+    "fluid_region_id_across_cells": "REQUIRED_EQUAL"
+  },
+  "architecture": {
+    "semantic_query_contains_surface_cell": false,
+    "semantic_query_contains_lod": false,
+    "surface_cell_is_semantic_identity": false,
+    "lod_is_semantic_identity": false,
+    "representation_density_is_semantic_identity": false,
+    "creates_semantic_cell_identity": false
+  },
+  "p0": {
+    "owns_world_query": false,
+    "owns_spatial_identity": false,
+    "owns_authority": false,
+    "owns_interest": false,
+    "owns_persistence": false,
+    "owns_network": false,
+    "owns_material_ontology": false,
+    "owns_scheduler_cache": false,
+    "owns_geomorphology": false
+  },
+  "required_windows_acceptance": {
+    "focused_runner": "RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
+    "focused_expected_marker_prefix": "G7.3 Cross-Cell / Cross-LOD Invariance: PASS",
+    "full_runner": "RUN_G7_3_FULL_ACCEPTANCE.ps1",
+    "g7_0_regression": true,
+    "g7_1_regression": true,
+    "g7_2_regression": true,
+    "full_world_regression": true,
+    "clean_worktree": true,
+    "git_diff_check": true
+  },
+  "next_if_accepted": "G7_4_SEMANTIC_FIELD_LAB"
+}
