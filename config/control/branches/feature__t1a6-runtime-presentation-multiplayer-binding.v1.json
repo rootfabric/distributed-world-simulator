@@ -10,7 +10,7 @@
   "expected_outcome": "Two graphical clients and the server converge on the same runtime state while presentation remains derived, late join receives a full baseline, and no new network/authority foundation is introduced.",
   "current_stage": "T1A.6 Runtime Presentation + Multiplayer Binding",
   "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
-  "progress_note": "The dedicated server + two-client focused gate passes after a transport-policy duplicate-declaration fix. Full world regression is still pending, and the inherited T1A.5 transactional-effects gap remains an explicit control blocker before T1A.6 may be accepted.",
+  "progress_note": "The dedicated server + two-client focused gate passes. Full world regression is pending. PC0 also records that development advanced from T1A.5 before the transactional-effects gap identified by architecture audit was closed.",
   "last_accepted_checkpoint": "T1A.5 Interactive Runtime Execution",
   "next_stage": "Resolve T1A.5 Transactional Runtime Effects FIX1 and complete T1A.6 full regression; only then accept T1A.6 and move to T1A.7",
   "parent_branch_or_checkpoint": "T1A.5 SOURCE_ACCEPTED @ 7e6b83a0df8c509374af21e70615dafa66330846",
