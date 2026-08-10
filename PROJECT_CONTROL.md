@@ -4,7 +4,7 @@
 **Global architecture:** `GLOBAL-P0-2026-08-10-R2`  
 **Canonical owner:** `main`
 
-Это центральная точка для верхнеуровневого контроля всего проекта.
+Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется здесь вручную: live dashboard строится из main-owned registry, branch passports, validation heads и реальных Git refs.
 
 ## Главное правило
 
@@ -21,7 +21,7 @@ GLOBAL ARCHITECTURE DEFINES WHAT IS ALLOWED
 config/control/project-program-registry.v1.json
 ```
 
-Поля `active_frontiers` внутри старого `GLOBAL-P0 R2` считаются advisory legacy state до следующей global architecture revision. Это специально отделяет быстро меняющееся движение веток от медленно меняющейся архитектурной конституции.
+Поля `active_frontiers` внутри старого `GLOBAL-P0 R2` считаются advisory legacy state до следующей global architecture revision. Это отделяет быстро меняющееся движение веток от медленно меняющейся архитектурной конституции.
 
 ## Как читать проект
 
@@ -40,99 +40,78 @@ artifacts/control/PROJECT_STATUS_RU.md
 artifacts/control/project-control-report.json
 ```
 
-## Что видно для каждой активной ветки
+## Что обязан показывать live dashboard
 
-Dashboard обязан показывать:
-
-- имя и роль ветки;
-- что это за ветка;
-- зачем она нужна;
-- какой результат должна получить;
-- текущую стадию и stage status;
-- последний принятый checkpoint;
-- что происходит прямо сейчас;
-- следующий этап;
-- blockers;
-- declared health;
-- actual Git head/divergence;
-- dependency drift;
-- validation freshness;
-- cross-branch overlap.
-
-Эти descriptive поля обязательны и в central registry, и в branch passport. Auditor сверяет их между собой.
-
-## Текущая зарегистрированная картина
-
-| Program | Branch / mode | Что делает | Сейчас | Следом | Health |
-|---|---|---|---|---|---|
-| G | `feature/g7-semantic-field-fabric` | Semantic Field Fabric + visual proof | G7.4 Fix2 focused PASS; full regression + manual visual pending | G7.4 accept → G7 Full → G8 | YELLOW |
-| T | `feature/t1a7-runtime-recovery-interest-scale` | Construction runtime recovery + late interest + selective scale | T1A.7 architecture/reuse audit | T1A.7.1 recovery contract → interest/reconnect → selective scale | YELLOW |
-| TS | `feature/ts0-large-structural-visual-lab` | 10k/100k Construction scale evidence | TS0.1 candidate/manual presentation review | TS0.1 accept → TS0.2 | YELLOW |
-| CH | `feature/ch7-8-skinned-garment` | Character/garment presentation | CH7-8 active | focused acceptance | GREEN declared / auditor may raise YELLOW until fresh validation is registered |
-| Doctrine | `feature/world-building-doctrine` | Rules of interesting interconnected world simulation | active consolidation | evidence-driven updates | GREEN declared / dependency sync may raise YELLOW |
-| NX | tracked foundation | Network realtime foundation | no single PC0 frontier declared | declare before next NX acceptance | YELLOW |
-| Matter | stable foundation | Mutable material/volume truth | MW10 stable | GM/composition later | GREEN |
-| S1 | stable foundation | proposal-only distributed compute | stable | register when needed | GREEN |
-
-Это human-readable snapshot central registry. **Фактический health всегда пересчитывается auditor-ом.**
-
-## T: T1A.6 закрыт, T1A.7 открыт
-
-PC0 blocker по T1A.5 transactional effects закрыт реальным Windows revalidation:
+Для каждой зарегистрированной активной ветки:
 
 ```text
-C5B runtime contracts                  PASS 32
-T1A.5 interactive runtime              PASS 67
-T1A.5 transactional runtime effects    PASS 36
-T1A.6 dedicated + 2 clients            PASS 25 / 0 failures
-full world/core regression             6 PASS / 0 FAIL
-NX4 final marker                       PASS
+Identity / intent
+  branch + role
+  short description
+  purpose
+  expected outcome
+
+Progress
+  current stage + stage_status
+  progress note
+  last accepted checkpoint
+  next stage
+  blockers + health
+
+Validation evidence
+  runtime tested head
+  focused tested head
+  full-regression tested head
+  runtime freshness: FRESH / STALE / PENDING / NOT_APPLICABLE
+  runtime files changed after the tested head, если есть
+
+Architecture / convergence
+  dependencies
+  ownership claims: foundation -> canonical owner -> scope
+  foundations which the branch must not own
+  dependency drift / critical dependency drift
+  cross-branch overlap
+
+Git reality
+  actual branch head
+  main-only / branch-only divergence
+  findings emitted by the auditor
 ```
 
-T1A.6 теперь имеет:
+Поля validation/dependencies/ownership уже являются частью branch passport. PC0 R1 dashboard только делает их видимыми; новый schema или architecture revision для этого не нужен.
+
+## Почему validation heads показываются отдельно
+
+Нельзя считать `branch HEAD` автоматически проверенным runtime head. После успешного теста в ветку часто добавляются documentation/control commits, а иногда — новый runtime code.
+
+Поэтому dashboard различает:
 
 ```text
-SOURCE_ACCEPTED       true
-MAIN_INTEGRATED       false
-COMPOSITION_VERIFIED  true
-PRODUCTION_READY      false
+tested_heads.runtime
+  последний SHA, на котором проверялся runtime scope
+
+tested_heads.focused
+  SHA focused acceptance
+tested_heads.full_regression
+  SHA полного regression
+
+runtime freshness
+  сравнение tested_heads.runtime с runtime_paths после этого SHA
 ```
 
-Новый frontier:
+Если после tested runtime head изменился хотя бы один `runtime_paths`, auditor поднимает `RUNTIME_VALIDATION_STALE` независимо от текста progress note.
 
-```text
-feature/t1a7-runtime-recovery-interest-scale
-```
+## Почему dependencies и ownership должны быть прямо в dashboard
 
-T1A.7 начат не с нового runtime-кода, а с reuse/ownership audit. Уже проверены два важных существующих pattern-а:
+Для параллельной разработки недостаточно знать только название этапа. Нужно сразу видеть:
 
-```text
-MW7 Matter interest:
-  revisioned subscription
-  active/pending interest
-  reconnect/session fence
-  bounded replay
-  projection hash / ack
-  regional snapshot fallback
-  irrelevant changes filtered
+- какие foundations ветка переиспользует;
+- кто является их каноническим owner;
+- какие watched dependencies могут сделать локальное evidence устаревшим;
+- какие foundation concepts ветке запрещено присваивать себе;
+- не меняют ли две активные ветки один runtime/contract path одновременно.
 
-Matter persistence:
-  repository/coordinator split
-  checkpoint identity validation
-  validate-before-restore
-  backup before restore
-  rollback on partial restore failure
-```
-
-Construction может использовать эти architectural patterns и существующие owner boundaries, но не имеет права создавать собственные global interest identity, persistence foundation, authority registry или permanent spatial identity.
-
-Текущий T blocker — только архитектурный convergence gate:
-
-```text
-T1A7_ARCHITECTURE_REUSE_AUDIT_PENDING
-```
-
-Это YELLOW, а не RED: разработка T1A.7 может продолжаться после явного выбора reuse boundary, но major acceptance нельзя проводить с неразрешённым foundation ownership.
+Это позволяет заметить архитектурное расхождение до merge, а не после появления второго Registry/Manager/Authority/Persistence/Interest слоя.
 
 ## Запуск контроля из main
 
@@ -158,7 +137,7 @@ git fetch origin --prune
 
 ## Запуск из active checkout
 
-Active branches используют bootstrap `CONTROL_PROJECT.ps1`, который читает auditor и registry из `origin/main`. Поэтому feature-ветка не должна хранить независимую копию project-control truth.
+Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, который получает auditor и registry из `origin/main`. Поэтому active branch не хранит независимую копию project-control truth и после `git fetch origin --prune` автоматически использует актуальный renderer dashboard.
 
 ## Результаты
 
@@ -166,6 +145,8 @@ Active branches используют bootstrap `CONTROL_PROJECT.ps1`, котор
 artifacts/control/PROJECT_STATUS_RU.md
 artifacts/control/project-control-report.json
 ```
+
+Markdown предназначен для быстрого human review. JSON содержит те же сведения в machine-readable виде, включая tested heads, freshness, dependencies и ownership claims.
 
 ## Когда запускать
 
