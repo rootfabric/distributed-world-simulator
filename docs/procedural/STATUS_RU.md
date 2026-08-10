@@ -1,177 +1,101 @@
 # Universal World Generation Fabric — status ledger
 
 **Current branch:** `feature/g7-semantic-field-fabric`
-**Global revision:** `GLOBAL-P0-2026-08-10-R2`
+**Architecture revision:** `GLOBAL-P0-2026-08-10-R2`
+**Project Control:** `PC0-2026-08-10-R1`
 
 ```text
-G6.0 Fluid Contracts                    ACCEPTED
-G6.1 CasualRiverProviderV1              ACCEPTED
-G6.2 Cross-Cell / Cross-LOD Continuity  ACCEPTED
-G6.3 Runtime WaterSurfaceQuery          ACCEPTED
-G6.4 Casual Visual River Lab            ACCEPTED
-G5 + MW10 shared baseline               ACCEPTED / INTEGRATED
-G6 Full Acceptance                      SOURCE_ACCEPTED
-G6 P0 Alignment Cleanup                 ACCEPTED
+G6 Hydrology / Fluid Surface            SOURCE_ACCEPTED
 G7.0 Semantic Field Contracts           ACCEPTED
 G7.1 Upstream Semantic Field Adapters   ACCEPTED
 G7.2 Composition / Provenance            ACCEPTED
 G7.3 Cross-Cell / Cross-LOD Invariance  ACCEPTED
-G7.4 Semantic Field Lab                  IMPLEMENTED CANDIDATE
+G7.4 Semantic Field Lab                 FIX2 FOCUSED PASS / FULL PENDING
 ```
 
-## Active frontier
+## Operational frontier
 
-Machine-readable GLOBAL-P0 frontier moved in `main` first and is synchronized to active G7:
+Fast-moving project state is owned by main PC0 registry. Legacy `GLOBAL-P0 active_frontiers` remains advisory.
 
 ```text
-GLOBAL-P0-2026-08-10-R2
-world_generation.stage = G7.4 Semantic Field Lab
+registry generation: 5
+program: G
+stage: G7.4 Semantic Field Lab
+stage_status: FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING
+health: YELLOW
 ```
 
-Current active GLOBAL config blob:
-
-```text
-61939301c5ca21c3c152ba0a76b2c5c0617cea53
-```
-
-Historical accepted G6 remains on its historical R1 revision under R2 policy.
-
-## G7.3 acceptance
-
-Accepted Windows evidence on tested head:
-
-```text
-910899a906e684d6793cd74ba898d68c457a37b4
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-```
-
-Final gate:
+## G7.3 accepted baseline
 
 ```text
 G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
 G7.3 FULL ACCEPTANCE: PASS
-Active GLOBAL-P0 main alignment: PASS
-Canonical GLOBAL roadmap byte-match to main: PASS
-G7.2 ACCEPTED ancestor: PASS
-Cross-cell / cross-LOD semantic invariance: PASS
 World/core regression: PASS
 main_scene_cli_all: 6 PASS / 0 FAIL
 Working tree: CLEAN
 ```
 
-Accepted invariants:
+Accepted tested head:
 
 ```text
-SemanticFieldId != SurfaceCellKey
-SemanticFieldId != LOD
-same world point -> same semantic bundle/provenance across LOD 2/4/8/12
-query order invariant
-PX/PZ seam invariant
-FeatureId stable across cells
-FluidRegionId stable across cells
+910899a906e684d6793cd74ba898d68c457a37b4
 ```
 
-Record:
+## G7.4
+
+G7.4 remains a derived visual/debug layer over accepted semantic samples. It visualizes only real adapter-backed fields:
 
 ```text
-docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md
-validation/g7-3-cross-cell-cross-lod-invariance-validation.json
+geo/surface-height-m
+geo/valley-influence
+geo/river-distance-m
+geo/river-width-m
+geo/fluid-surface-distance-m
 ```
 
-## G7.4 candidate
+The six vocabulary-only fields remain explicitly not faked.
 
-G7.4 is derived visual/debug presentation over accepted semantic samples.
+### Fix1
 
-It visualizes exactly five currently backed fields:
+Windows PowerShell launcher/runners are ASCII-only and AST-parse checked before runtime.
+
+### Fix2 — shared M5 convergence
+
+The first full G7.4 world regression exposed a shared M5 final-barrier handoff deadlock. Fix2 makes later peer states monotonic evidence for earlier convergence barriers when frozen player/item checksums match.
+
+Focused Windows verification now passes:
 
 ```text
-1 geo/surface-height-m
-2 geo/valley-influence
-3 geo/river-distance-m
-4 geo/river-width-m
-5 geo/fluid-surface-distance-m
+PASS: A reconnect graphical acceptance completed
+PASS: B graphical acceptance completed
+PASS: final clients passed
+M5 graphical multiplayer acceptance: 92 assertions, 0 failures
 ```
 
-It intentionally does **not** synthesize the six vocabulary-only fields:
+Tested runtime/focused head:
 
 ```text
-geo/slope
-geo/curvature
-geo/drainage-potential
-geo/continentalness
-geo/temperature-baseline
-geo/moisture-baseline
+866187c437f0dbc14bf5d8d0f0f9fb25ab106f17
 ```
 
-Semantic patch:
+Remaining blockers:
 
 ```text
-lat 0..10 deg
-lon 30..62 deg
-16 x 32 cells
-561 semantic sample points
-PX/PZ coverage
+G7_4_FULL_WORLD_REGRESSION_PENDING
+G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING
 ```
 
-Pipeline per point:
-
-```text
-SemanticFieldQuery
- -> G3/G5/G6 adapters
- -> SemanticFieldComposerV1
- -> SemanticFieldBundle + CompositionReceipt
- -> derived vertex/color presentation
-```
-
-Presentation-only state:
-
-```text
-field selector
-colors
-camera/orbit
-mesh triangulation/density
-HUD
-river centerline overlay
-```
-
-None of it enters canonical semantic checksums.
-
-Current delta from accepted G7.3 checkpoint is 18 files, with no G3/G5/G6 adapter, composer, Hydrology, Matter or Network runtime change.
-
-### Automated gate
+## Next
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G7_4_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Required automated marker:
-
-```text
-G7.4 AUTOMATED ACCEPTANCE: PASS
-MANUAL GRAPHICAL OBSERVATION: REQUIRED before G7.4 ACCEPTED
-```
-
-### Graphical lab
+After automated PASS:
 
 ```powershell
 .\START_G7_4_SEMANTIC_FIELD_LAB.ps1 -GodotPath $Godot
 ```
 
-Controls:
-
-```text
-1..5 field modes
-F river centerline
-W/S zoom
-A/D yaw
-Q/E pitch
-Space auto-orbit
-R reset
-```
-
-Next after G7.4 acceptance:
-
-```text
-G7 Full Acceptance
-```
+Then manual graphical observation can close G7.4 before G7 Full Acceptance.
