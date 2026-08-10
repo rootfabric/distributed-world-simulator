@@ -1,37 +1,39 @@
 # Global Program Architecture Roadmap — P0 alignment
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`  
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`  
 **Status:** canonical program-level architecture plan  
 **Canonical branch:** `main`  
-**Date:** 2026-08-08
+**Date:** 2026-08-10
 
-## 1. Зачем вводится эта правка
+---
 
-Проект вырос из одной последовательной дорожной карты в несколько зрелых параллельных программ:
+## 1. Назначение global plan
+
+Проект развивается несколькими параллельными программами:
 
 ```text
 Distributed Runtime / S1
 Network / NX
-Construction / C + T1
+Construction / C + T
 Matter / MW + RL
 World Generation / G
 Character / CH
 World Building Doctrine
 ```
 
-Каждая программа по отдельности сохраняет правильные архитектурные принципы, но появилась новая системная опасность: разные ветки могут независимо начать реализовывать одинаковые фундаментальные понятия — spatial addressing, authority, material semantics, cross-domain transactions, interest и persistence.
-
-Цель этого документа — не заменить локальные roadmap. Он вводит общий уровень над ними:
+Global P0 plan не заменяет branch-local roadmap. Он задаёт общие ownership boundaries, синхронизацию активных heads и composition gates.
 
 ```text
 GLOBAL PROGRAM PLAN
-    ↓
+        ↓
 branch-local roadmap
-    ↓
+        ↓
 implementation checkpoint
 ```
 
-Локальная ветка может расширять свой план, но не может переопределять глобальные инварианты.
+Локальная ветка может расширять свою область, но не может создавать конкурирующий global foundation.
+
+---
 
 ## 2. Каноническая формула архитектуры
 
@@ -42,7 +44,7 @@ CANONICAL WORLD
     != COMPUTE
 ```
 
-Дополнительные обязательные инварианты:
+Обязательные инварианты:
 
 ```text
 identity != LOD
@@ -54,19 +56,23 @@ procedural baseline != mutable world state
 representation artifact != canonical state
 ```
 
-Эти границы уже подтверждены существующими foundation:
+Для природного и построенного мира действует один принцип:
 
-- S1: worker предлагает mutation, authority проверяет и commit-ит;
-- C22/C24: proxy/ArrayMesh/HLOD являются derived presentation;
-- G2/G5: SurfaceCell/LOD не задают Feature identity;
-- MW8–MW10: authority lease/fence и durable transaction не зависят от presentation;
-- NX3–NX6: realtime networking не определяет domain semantics.
+```text
+Canonical natural world
+    -> disposable terrain/detail/proxy representation
 
-## 3. Статусные уровни программы
+Canonical construct graph
+    -> disposable C22/C24/HLOD representation
+```
 
-С этого revision запрещено использовать одно слово `DONE` для разных состояний.
+Representation можно кэшировать, удалять и перестраивать. Она не является canonical truth.
 
-Каждый крупный stage отслеживается минимум в четырёх измерениях:
+---
+
+## 3. Статусы программы
+
+Каждый крупный stage отслеживается раздельно:
 
 ```text
 SOURCE_ACCEPTED
@@ -75,24 +81,18 @@ COMPOSITION_VERIFIED
 PRODUCTION_READY
 ```
 
-Определения:
-
 - `SOURCE_ACCEPTED` — stage принят в своей исходной ветке;
 - `MAIN_INTEGRATED` — stage реально присутствует в `main`;
-- `COMPOSITION_VERIFIED` — stage проверен совместно с соседними подсистемами;
-- `PRODUCTION_READY` — подтверждены эксплуатационные бюджеты, recovery/soak и production constraints.
+- `COMPOSITION_VERIFIED` — проверен совместно с соседними подсистемами;
+- `PRODUCTION_READY` — закрыты эксплуатационные budgets, recovery/soak и production constraints.
 
-Пример: принятый stage не обязан быть уже production-ready; принятая ветка не обязана быть ещё интегрирована в `main`.
+Один статус не подразумевает остальные.
+
+---
 
 ## 4. P0-1 — Global Program / Architecture Ledger
 
-### Проблема
-
-Существуют несколько локальных roadmap, и некоторые из них описывают исторически правильный, но уже не полный порядок развития.
-
-### Решение
-
-`main` является каноническим владельцем глобального program ledger.
+`main` является владельцем глобального ledger.
 
 Machine-readable companion:
 
@@ -100,28 +100,51 @@ Machine-readable companion:
 config/architecture/global-program-roadmap.v1.json
 ```
 
-Активные параллельные ветки обязаны содержать byte-equivalent копию глобального плана и global config той же revision.
-
-Локальные документы добавляются отдельно и обязаны ссылаться на:
+Активные ветки обязаны иметь byte-equivalent:
 
 ```text
-global_revision = GLOBAL-P0-2026-08-08-R1
+docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
+config/architecture/global-program-roadmap.v1.json
 ```
 
-### Правило
+### R2: правило active frontier
+
+Начиная с R2 каждая активная программа имеет **одну объявленную frontier branch**.
 
 ```text
-GLOBAL PLAN = одинаковый во всех активных heads
-LOCAL PLAN  = специфичен для ветки
+PROGRAM
+   ↓
+ACTIVE FRONTIER
+   ↓ acceptance / handoff
+NEXT ACTIVE FRONTIER
 ```
 
-Локальная ветка не должна редактировать global plan в одиночку. Изменение глобальной архитектуры сначала фиксируется в `main`, затем синхронно переносится в активные heads новой global revision.
+Accepted/frozen ancestor не переписывается новой global revision только ради синхронизации.
+
+Переход frontier фиксируется сначала в `main`, затем один и тот же global change-set переносится в новые активные heads.
+
+### Текущий active sync set R2
+
+```text
+main
+feature/t1a4-interactive-fixture-binding
+feature/g7-semantic-field-fabric
+feature/ch7-8-skinned-garment
+feature/world-building-doctrine
+```
+
+Текущие важные frontier stages:
+
+```text
+T: T1A.4 Interactive Fixture Binding
+G: G7.3 Cross-Cell / Cross-LOD Invariance
+```
+
+---
 
 ## 5. P0-2 — Spatial Domain Fabric
 
-### Причина
-
-Проект уже использует несколько корректных, но разных spatial identities:
+Проект уже использует разные корректные spatial identities:
 
 ```text
 S0 hierarchical cells
@@ -135,11 +158,9 @@ body/geodetic coordinates
 local/reference frames
 ```
 
-Ошибка — заменить их одним универсальным `ChunkId`.
+Они не должны быть сведены к одному `ChunkId`.
 
-### Целевой контракт
-
-Ввести общий semantic mapping layer:
+Целевой mapping:
 
 ```text
 WorldAddress
@@ -158,7 +179,7 @@ WorldAddress
     └──> SpacePopulationCell
 ```
 
-### Инварианты
+Инварианты:
 
 ```text
 SurfaceCellKey != FeatureId
@@ -166,24 +187,14 @@ MatterRegionId != AuthorityRegionId
 InterestRegionId != canonical identity
 LOD address != authoritative identity
 reference frame != server owner
+Construction section != WorldAddress
 ```
 
-Mapping может быть many-to-many и versioned.
-
-### Что должен доказать будущий P0 spatial checkpoint
-
-- одна canonical position адресуется в нужные domain regions;
-- изменение LOD не меняет canonical object/feature identity;
-- authority rebalancing не меняет world address;
-- один feature может пересекать много surface/matter/interest regions;
-- один construct может иметь собственный local frame и при этом корректно находиться в world address space;
-- headless server может выполнять mapping без renderer.
+---
 
 ## 6. P0-3 — Unified Material Ontology
 
-### Причина
-
-Материал уже появляется одновременно в:
+Material semantics встречаются одновременно в:
 
 ```text
 G9 geology
@@ -196,49 +207,27 @@ gases/atmosphere
 salvage/recycling
 ```
 
-Нельзя допустить независимые значения `iron`, `rock`, `water`, `steel` с разными semantics.
-
-### Целевой foundation
+Будущий общий owner:
 
 ```text
 MaterialDefinitionId
-
 MaterialDefinition
-├── stable identity
-├── composition
-├── allowed phases
-├── density model
-├── mechanical properties
-├── thermal properties
-├── chemical/resource tags
-├── fabrication tags
-└── schema/version
 ```
 
-Domain-specific projections:
+Domain projections могут различаться, identity материала — общая.
 
 ```text
-Geology      -> hardness/fracture/lithology
-Matter       -> mass/volume/composition
-Fluid        -> phase/density/flow properties
-Item         -> contained quantity/composition
-Construction -> structural/material properties
-Fabrication  -> transformation inputs/outputs
+render material != canonical material
+presentation material_family != MaterialDefinitionId
 ```
 
-### Инварианты
+G9 не имеет права вводить отдельные canonical `rock/iron/water` identities; Construction также не получает private material ontology.
 
-- MW10 mass ledger использует canonical material identity;
-- G9 не вводит конкурирующий material namespace;
-- Item resource identity не обязана равняться MaterialDefinitionId;
-- processed composite material может ссылаться на composition, а не маскироваться строковым item type;
-- rendering material никогда не является canonical material definition.
+---
 
 ## 7. P0-4 — Cross-Domain World Transaction Model
 
-### Причина
-
-M0 решает atomic multi-aggregate mutation в одной authority boundary. MW10 решает durable cross-region Matter transaction. Но будущие gameplay operations пересекают домены:
+Будущие операции пересекают Item / Construction / Matter:
 
 ```text
 mining:
@@ -254,7 +243,7 @@ Construction - part
 Item/Matter + recovered material
 ```
 
-### Целевая модель
+Целевая модель:
 
 ```text
 WorldOperation
@@ -263,255 +252,71 @@ WorldTransactionPlan
     ├── Item mutations
     ├── Construction mutations
     ├── Matter mutations
-    ├── produced events/outbox
+    ├── events/outbox
     └── compensation/recovery policy
 ```
 
-Execution class выбирается по реальной boundary:
+Запрещён correctness вида:
 
 ```text
-single authority + M0-capable aggregates
-    -> atomic M0 transaction
-
-multiple Matter authority regions
-    -> MW10-style durable coordinated transaction
-
-long-running / cross-service workflow
-    -> durable saga / intent / compensation
+Item commit -> best-effort Construction RPC
+Matter commit -> best-effort Item RPC
 ```
 
-### Запрещено
+Транспортный порядок не определяет canonical outcome.
 
-```text
-Matter commit -> затем best-effort Item RPC
-Item decrement -> затем best-effort Construction RPC
-```
+---
 
-Canonical gameplay result не может зависеть от случайного порядка сетевых сообщений.
+## 8. P0-5 — NX7/NX8/NX9 reconciliation
 
-### До T3/T5
+### NX7
 
-До формального T3/T5 acceptance должны быть определены:
+Physics Authority Profiles являются policy поверх существующего authority foundation, а не новым owner registry.
 
-- common operation identity;
-- durable decision ownership;
-- retry/replay semantics;
-- cross-domain revision/result envelope;
-- compensation rules для non-atomic workflows;
-- outbox/event publication boundary.
+### NX8
 
-## 8. P0-5 — NX7/NX8/NX9 architectural reconciliation
+Interest Management / Replication Budget является общим contract + domain adapters.
 
-Этапы NX7–NX9 остаются нужны, но им запрещено создавать вторую foundation поверх уже существующей.
-
-### NX7 Physics Authority Profiles
-
-NX7 = **policy layer над существующим authority foundation**.
-
-Использует:
-
-```text
-A1 aggregate authority
-S0 spatial scope
-C17 authority migration where applicable
-MW8/MW9 lease/fencing patterns where applicable
-network ownership/session mapping
-```
-
-NX7 не создаёт новый canonical owner registry.
-
-Profiles описывают runtime policy:
-
-```text
-SERVER_ONLY
-OWNER_PREDICTED
-OWNER_AUTHORITY_VALIDATED
-PREDICTED_SPAWN
-CLIENT_COSMETIC
-```
-
-### NX8 Interest Management / Replication Budget
-
-NX8 = **общий Interest/Budget contract + domain adapters**.
-
-Он не владеет world identity и не делает HLOD каноническим состоянием.
-
-Consumers/providers:
+Consumers:
 
 ```text
 players/entities
 items
 construction C22/C24
-Matter/RL representations
+Matter/RL
 Geo/detail representation
 future AI/population
 ```
 
-Общий vocabulary должен включать минимум:
+### NX9
 
-```text
-interest subject
-spatial bounds
-priority
-representation level
-bandwidth budget
-update age/staleness
-enter/leave hysteresis
-```
+Async Persistence / Hardening удаляет blocking I/O, но переиспользует существующие durability semantics R3/M0/MW.
 
-### NX9 Async Persistence / Hardening
+---
 
-NX9 = **удаление blocking I/O из realtime path**, а не новый persistence model.
-
-Он обязан переиспользовать semantics существующих foundation:
-
-```text
-R3 recovery
-M0 atomic transaction/outbox
-operation replay/dedup
-MW9/MW10 durable decision/recovery patterns
-```
-
-Разрешается менять scheduling/backend I/O. Запрещается менять canonical commit semantics ради производительности.
-
-## 9. Geo/Matter boundary
-
-Generation roadmap не должен создавать вторую Matter implementation.
-
-Будущая `GM` линия трактуется как:
-
-```text
-Geo <-> Matter Integration
-```
-
-а не:
-
-```text
-GM Matter implementation || MW Matter implementation
-```
-
-Целевая композиция:
+## 9. Geo / Matter boundary
 
 ```text
 procedural Geo baseline
         +
 authoritative sparse Matter mutations
         ↓
-current canonical material/volume truth
-        ↓
-GeoVolume / Matter / gameplay query
+current world truth
 ```
 
-`procedural baseline + sparse authoritative mutations = current world truth` остаётся обязательным правилом.
-
-## 10. Representation boundary
-
-Одинаковая модель применяется к природному и построенному миру:
+Будущий `GM` означает:
 
 ```text
-Canonical natural world
- -> terrain/detail/proxy representation
-
-Canonical construct graph
- -> C22/C24 proxy/HLOD representation
+Geo <-> Matter Integration
 ```
 
-Representation artifacts:
+а не вторую Matter implementation.
 
-- могут кэшироваться;
-- могут удаляться;
-- могут пересобираться;
-- могут отличаться по клиентскому бюджету;
-- не меняют checksum canonical world сами по себе.
+---
 
-## 11. Active branch synchronization policy
+## 10. P1 foundations, которые нельзя заблокировать
 
-Активный head обязан содержать:
-
-```text
-docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
-config/architecture/global-program-roadmap.v1.json
-```
-
-с одной global revision.
-
-Дополнительно branch-local plan обязан явно указать:
-
-- local branch purpose;
-- current local stage;
-- dependencies on P0 foundations;
-- что branch не имеет права переопределять;
-- merge/composition gate.
-
-### Текущий sync set R1
-
-```text
-main
-feature/t1-complex-construct-demo-lab
-feature/g5-world-feature-graph
-feature/ch7-8-skinned-garment
-feature/world-building-doctrine
-```
-
-Accepted/frozen historical checkpoint branches не переписываются задним числом.
-
-## 12. Branch-local responsibilities
-
-### T1 / Construction
-
-T1 продолжает Complex Construct Demo и composition validation.
-
-Дополнительные P0 требования:
-
-- construction spatial scopes должны маппиться через Spatial Domain Fabric;
-- construction materials в будущем используют Unified Material Ontology;
-- consume/build/salvage flows не создают private cross-domain transaction bridge;
-- C22/C24 representation остаётся derived;
-- T1 может исследовать composition до завершения P0 implementations, но formal T5-like cross-domain acceptance требует соответствующих contracts.
-
-### G5+ / World Generation
-
-G5 остаётся accepted feature-identity foundation; G6 и далее продолжаются.
-
-Дополнительные P0 требования:
-
-- G surface cells не становятся authority regions;
-- G9 использует shared MaterialDefinitionId;
-- GM = Geo/Matter integration;
-- G12 scheduler не становится authority/persistence owner;
-- generation/representation budgets должны быть совместимы с будущим shared work/interest vocabulary.
-
-### CH / Character
-
-Character остаётся presentation/domain-adapter track.
-
-Дополнительные P0 требования:
-
-- avatar rig/model не становятся player canonical identity;
-- equipment presentation не создаёт второй Item/Material truth;
-- future physical authority profiles подключаются через NX7 policy;
-- local character frames должны быть совместимы с общим spatial/reference-frame mapping.
-
-### World Building Doctrine
-
-Doctrine задаёт design intent, но не техническую authority.
-
-Её technical mapping:
-
-```text
-world-state progression
- -> canonical persistent mutations
-infrastructure
- -> Construction/Item/Matter
-automation
- -> WorldOperations + AI/compute
-large world
- -> Spatial/Interest/Authority separation
-```
-
-## 13. P1 foundations, которые должны быть защищены уже сейчас
-
-Они не входят в P0 implementation gate, но текущие решения не должны их блокировать:
+Текущие решения обязаны оставлять место для:
 
 ```text
 Time Fabric / multi-rate deterministic simulation
@@ -522,41 +327,408 @@ World Work / Budget Fabric
 Hierarchical Navigation / AI
 ```
 
-Особенно запрещено жёстко привязывать canonical state к render frame, camera, one-server clock или one-rate simulation loop.
+Особенно важно для scale/render labs: локальный lab budget не должен превращаться в новый global scheduler.
 
-## 14. Stop conditions
+---
 
-Любая ветка должна остановить stage и вынести решение на global architecture revision, если для реализации требуется хотя бы одно:
+# 11. Активная программа T — Construction
 
-```text
-новый canonical authority registry при существующем authority foundation
-новый global material namespace
-новый generic chunk identity, заменяющий domain-specific identities
-RPC chain как единственная гарантия cross-domain transaction
-renderer/HLOD как canonical source
-NX persistence model, несовместимый с M0/R3/MW durability
-GM Matter implementation, параллельная MW
-camera/LOD, влияющие на canonical identity
-server route, встроенный в permanent world identity
-```
-
-## 15. Merge и composition gate
-
-Перед merge активной параллельной ветки в `main` проверяется:
+Текущий frontier:
 
 ```text
-[ ] global revision совпадает
-[ ] global config совпадает
-[ ] local alignment doc присутствует
-[ ] local stage не нарушает P0 ownership boundaries
-[ ] новые contracts не дублируют existing foundation
-[ ] accepted source status отделён от main/composition status
-[ ] branch-specific tests/regression проходят
+T1A.4 Interactive Fixture Binding
 ```
 
-Если global revision ветки устарел, сначала выполняется synchronization rebase/merge или документационная sync-поставка, и только затем functional acceptance.
+T1A.4 продолжает gameplay composition и не должен блокироваться визуальным scale research.
 
-## 16. Целевая общая модель
+Начиная с R2 T делится на две параллельные линии после принятого Construction baseline:
+
+```text
+                         accepted T1A.3
+                              │
+              ┌───────────────┴───────────────┐
+              │                               │
+              ▼                               ▼
+       T COMPOSITION                     TS SCALE/VISUAL
+              │                               │
+       T1A.4 Binding                    TS0.0 Fixtures
+              │                               │
+       T1A.5 Runtime                    TS0.1 10k
+              │                               │
+       T1A.6 Inspector                  TS0.2 100k
+              │                               │
+       T1B Composition                  TS0.3 local mutation
+              │                               │
+              │                         TS0.4 1M probe
+              │                               │
+              └───────────────┬───────────────┘
+                              ▼
+                            T2.0+
+```
+
+TS означает Construction scale/visual research и остаётся внутри T family.
+
+---
+
+## 12. TS0 — Large Structural Visual Lab
+
+### Роль
+
+TS0 является **pre-T2 evidence**, а не новым production foundation и не T2 acceptance.
+
+Главный вопрос:
+
+> Может ли один canonical construct из большого количества простых одинаковых строительных блоков выглядеть и масштабироваться как один большой объект, не превращаясь в десятки/сотни тысяч тяжёлых SceneTree nodes и draw calls?
+
+### Текущая база для ветки
+
+TS0 не должен наследоваться от незавершённого T1A.4 candidate.
+
+Предпочтительная база:
+
+```text
+T1A.3 SOURCE_ACCEPTED
+commit: 5e051f67bf6987a354de5b565da1448be6b0b4db
++
+GLOBAL-P0-2026-08-10-R2 sync change-set
+```
+
+T1A.4 и TS0 после этого развиваются параллельно.
+
+### TS0.0 — Deterministic Large Structural Fixtures
+
+Минимальные профили:
+
+```text
+CUBE_10K
+PYRAMID_10K
+CUBE_100K
+PYRAMID_100K
+CUBE_1M_RESEARCH
+```
+
+Примеры:
+
+```text
+22 x 22 x 22 = 10 648 blocks
+46 x 46 x 46 = 97 336 blocks
+100 x 100 x 100 = 1 000 000 blocks
+```
+
+Ступенчатые пирамиды должны иметь deterministic dimensions и stable IDs.
+
+Fixture contract должен содержать минимум:
+
+```text
+fixture_id
+shape
+block_size_m
+dimensions / levels
+expected_part_count
+construct_id
+part_identity_policy
+expected canonical checksum
+```
+
+### TS0.1 — 10k Visual Proof
+
+Доказать реальный graphical observation:
+
+```text
+walk around object
+free-flight camera
+near block visibility
+mid section representation
+far compiled/HLOD representation
+```
+
+### TS0.2 — 100k Visual Scale Gate
+
+Это основной TS0 gate.
+
+Нужно доказать:
+
+```text
+~100k canonical semantic parts
+        !=
+~100k Node3D
+~100k MeshInstance3D
+~100k draw calls
+```
+
+HUD/telemetry:
+
+```text
+canonical_part_count
+active_runtime_nodes
+visible_sections
+triangles
+draw_calls
+mesh_artifact_count
+mesh_build_ms
+GPU/resource bytes
+current representation level
+observer distance
+```
+
+### TS0.3 — Local Mutation / Dirty Section
+
+На 100k fixture удалить локальную область, например `10x10x10` blocks.
+
+Acceptance:
+
+```text
+canonical revision changes
+only affected sections become dirty
+whole construct is not recompiled
+near/mid/far artifacts converge
+construct and unaffected part identities remain stable
+```
+
+### TS0.4 — 1M Research Ceiling Probe
+
+```text
+1 000 000 semantic parts
+```
+
+Это research/ceiling probe, не обязательный production gate.
+
+### TS0 representation modes
+
+Полезный visual debug:
+
+```text
+SOLID
+BLOCK_BOUNDARIES
+SECTION_BOUNDARIES
+HLOD_LEVELS
+DIRTY_REBUILD_REGIONS
+STATISTICS
+```
+
+Все debug modes — presentation-only.
+
+### TS0 P0 non-ownership
+
+TS0 не владеет и не создаёт:
+
+```text
+WorldAddress
+Spatial Domain Fabric
+AuthorityRegionId
+InterestRegionId
+MaterialDefinitionId
+WorldOperation / WorldTransactionPlan
+network replication policy
+persistence semantics
+global Work/Budget scheduler
+```
+
+Дополнительные guards:
+
+```text
+section_id != WorldAddress
+section_id != AuthorityRegionId
+section_id != InterestRegionId
+HLOD != canonical construct state
+visual material != MaterialDefinitionId
+lab budget knob != global Work Budget contract
+```
+
+TS0 переиспользует C21/C22/C24 и существующую Construction canonical truth.
+
+---
+
+## 13. T2 после появления TS0
+
+TS0 не заменяет T2.0.
+
+Правильный переход:
+
+```text
+TS0 synthetic 10k/100k scale evidence
+             ↓
+T2.0 real large construct
+```
+
+T2.0 должен заменить синтетический cube/pyramid реальной сложной базой или станцией с разными semantic sections, а не повторять тот же synthetic benchmark.
+
+Профили T2 остаются:
+
+```text
+S0  10 000+ semantic parts
+S1  100 000 semantic parts
+S2  1 000 000 research ceiling
+```
+
+Но после TS0 основной риск T2.0 смещается с raw rendering scale на composition scale.
+
+---
+
+# 14. Активная программа G — World Generation
+
+Текущий frontier:
+
+```text
+G7.3 Cross-Cell / Cross-LOD Invariance
+```
+
+Текущий порядок сохраняется:
+
+```text
+G7.3 Cross-Cell / Cross-LOD Invariance
+    ↓
+G7.4 Semantic Field Lab
+    ↓
+G8 Geomorphology
+    ↓
+G9 Layered Geology
+    ↓
+G10 GeoVolume / SDF
+    ↓
+G11 Heterogeneous Body Lab
+    ↓
+G12 Scheduler / Cache / Provenance
+    ↓
+G13 Detail Contract Freeze
+```
+
+P0 ownership G не меняется.
+
+### Визуальные milestones G
+
+Чтобы инфраструктурная разработка регулярно давала наблюдаемый результат, фиксируются отдельные visual milestones:
+
+```text
+G7.4
+    semantic/debug visualization
+
+G8
+    FIRST NATURAL TERRAIN SHOWCASE
+    river actually shapes valley/channel/banks/floodplain
+
+G10
+    FIRST TRUE 3D GEO/VOLUME SHOWCASE
+    caves / overhangs / arches / floating islands / asteroid voids
+
+G11
+    UNIVERSAL BODY SHOWCASE
+    Earth-like / asteroid / floating-island / water-dominant / unusual body recipes
+```
+
+Эти labs являются derived presentation и не меняют canonical semantics.
+
+---
+
+## 15. Future V0 — Planet + Outpost Showcase
+
+После того как одновременно доступны:
+
+```text
+G8 accepted natural terrain baseline
++
+usable T1 D1 outpost composition
++
+usable character presentation
+```
+
+разрешается отдельный composition consumer:
+
+```text
+V0 Planet + Outpost Showcase
+```
+
+Цель:
+
+```text
+procedural terrain
++ river/valley
++ real Construction outpost
++ character
+= first integrated visible world slice
+```
+
+V0 не является owner ни G, ни T, ни CH foundation.
+
+Если showcase требует нового global identity/authority/material/transaction понятия, работа останавливается и вопрос возвращается в P0.
+
+---
+
+## 16. Character / Doctrine responsibilities
+
+### CH
+
+Character остаётся presentation/domain-adapter track:
+
+```text
+avatar rig/model != player identity
+equipment presentation != Item/Material truth
+physics authority -> NX7 policy
+local frames -> future Spatial/Reference Frame mapping
+```
+
+### World Building Doctrine
+
+Doctrine задаёт design intent, но не technical authority.
+
+```text
+world-state progression -> persistent canonical mutations
+infrastructure           -> Construction / Item / Matter
+automation               -> WorldOperations + AI/compute
+large world              -> Spatial / Interest / Authority separation
+```
+
+---
+
+## 17. Merge / composition gate
+
+Перед merge active branch:
+
+```text
+[ ] GLOBAL revision == main
+[ ] global config byte-equivalent main
+[ ] global roadmap byte-equivalent main
+[ ] local alignment doc present/current
+[ ] no duplicate global foundation ownership
+[ ] identity independent from LOD/render/network route
+[ ] status dimensions remain distinct
+[ ] focused tests PASS
+[ ] branch/world regression PASS where required
+```
+
+Для TS0 дополнительно:
+
+```text
+[ ] branch based on accepted Construction checkpoint, not T1A.4 candidate
+[ ] C21/C22/C24 reused rather than duplicated
+[ ] section/HLOD identity remains derived
+[ ] laboratory build budgets are not promoted to global scheduler contracts
+[ ] 100k visual gate records runtime-node/draw-call/resource telemetry
+[ ] 1M result classified as research only
+```
+
+---
+
+## 18. Stop conditions
+
+Любая ветка останавливает локальную реализацию и поднимает global architecture revision, если требуется:
+
+```text
+new canonical authority registry
+new global material namespace
+new generic chunk identity replacing domain identities
+RPC ordering as canonical transaction guarantee
+renderer/HLOD as canonical source
+private persistence model conflicting with R3/M0/MW durability
+second Matter implementation
+camera/LOD influencing canonical identity
+server route embedded in permanent world identity
+private scale-lab scheduler pretending to be global Work Budget Fabric
+```
+
+---
+
+## 19. Целевая общая модель
 
 ```text
 WORLD =
@@ -578,8 +750,18 @@ COMPUTE =
 VIEW =
     WORLD
   -> interest
-  -> representation budget
+  -> representation/work budget
   -> disposable local artifacts
 ```
 
-Именно эта модель является общей архитектурной точкой, которой должны подчиняться все локальные roadmap начиная с `GLOBAL-P0-2026-08-08-R1`.
+R2 добавляет к этой модели не новый foundation, а дисциплину развития:
+
+```text
+one declared active frontier per program
++
+regular visual evidence tracks
++
+strict separation of synthetic scale proof from real composition acceptance
+```
+
+Это является общей архитектурной точкой для всех активных roadmap начиная с `GLOBAL-P0-2026-08-10-R2`.
