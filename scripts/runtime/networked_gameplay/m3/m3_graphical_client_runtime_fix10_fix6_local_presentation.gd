@@ -1,4 +1,4 @@
-extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_core.gd"
+extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_semantic_cadence.gd"
 
 # Local prediction presentation has exactly one render writer: the normal
 # advance_local_prediction() frame path. Authoritative snapshots still reconcile
