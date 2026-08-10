@@ -1,0 +1,62 @@
+{
+  "schema": "planet_simulator.t1b1_dependency_failure_propagation_validation.v1",
+  "checkpoint": "T1B1_DEPENDENCY_FAILURE_PROPAGATION",
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "branch": "feature/t1b-composition-failure-recovery",
+  "parent_checkpoint": "T1B.0 Runtime Failure Contract ACCEPTED",
+  "parent_tested_checkout": "1f08defe57f592f5e2698da71a1e3180b0875014",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "implementation": {
+    "propagator": "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd",
+    "acceptance": "tests/construction/t1b1_dependency_failure_propagation_acceptance.gd",
+    "runner": "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1"
+  },
+  "semantics": {
+    "scope": "SINGLE_CANONICAL_CONSTRUCT_RUNTIME_SUBJECT_SET",
+    "edge_identity": "EXISTING_RUNTIME_IDS_ONLY",
+    "commit_mode": "PURE_PROPOSALS_THEN_EXISTING_RUNTIME_STORE",
+    "offline_upstream_dependency_available": false,
+    "degraded_upstream_dependency_available": true,
+    "deterministic_topological_order": true,
+    "cycle_rejected": true,
+    "duplicate_edge_rejected": true,
+    "self_edge_rejected": true,
+    "missing_subject_edge_rejected": true,
+    "cross_construct_subject_set_rejected": true,
+    "node_bound": 1024,
+    "edge_bound": 4096
+  },
+  "acceptance_scenario": {
+    "graph": ["generator->bus", "bus->console", "console->door", "bus->lamp"],
+    "generator_power_loss": "OFFLINE",
+    "required_chain_result": "OFFLINE",
+    "optional_lamp_dependency_result": "DEGRADED",
+    "recovery_result": "ONLINE",
+    "recovery_roundtrip_covered": true,
+    "input_order_independence_covered": true
+  },
+  "architecture": {
+    "new_global_dependency_graph": false,
+    "new_canonical_store": false,
+    "new_persistence_repository": false,
+    "new_transaction_coordinator": false,
+    "new_authority_registry": false,
+    "new_network_channel": false,
+    "new_world_work_budget": false,
+    "propagator_commits_state": false
+  },
+  "required_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_runner": "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1",
+    "focused_result": "PENDING",
+    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "full_regression_result": "PENDING"
+  },
+  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "t2_control_gate": {
+    "t2_0_active": false,
+    "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
+  },
+  "next_stage_if_accepted": "T1B.2 Runtime Command Failure Semantics"
+}
