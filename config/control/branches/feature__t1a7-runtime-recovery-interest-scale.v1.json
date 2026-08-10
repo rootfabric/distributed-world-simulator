@@ -9,10 +9,10 @@
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
   "current_stage": "T1A.7.5 Composition Acceptance",
-  "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-  "progress_note": "T1A.7.4 Scale / Soak Lab is ACCEPTED on tested checkout c0213f5edc078481c5705508244e6e556cd1945e. The prescribed Windows sequence required the focused T1A.7.4 gate before full regression, and the user subsequently supplied a fresh full world/core PASS from that same checkout: RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED, exit_code 0 and NX4 final marker. Windows focused assertion count was not restated and is not inferred from the separate Linux 2394-assertion preflight. T1A.7.5 is now a test-orchestration-only composition candidate: no production runtime file changes after T1A.7.4 acceptance. Its focused runner reruns the complete T1A.7.4 chain (therefore actual recovery, real M3 late-interest/reconnect, selective process routing and 10k scale) and then an in-memory composition scenario over recovered canonical state, session/interest binding, selective planner, replica re-entry and reconnect convergence.",
+  "stage_status": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
+  "progress_note": "T1A.7.4 Scale / Soak Lab remains ACCEPTED on tested checkout c0213f5edc078481c5705508244e6e556cd1945e. First Windows T1A.7.5 attempt ran on checkout 37a1f908ae2124a2f8ca7aaa2402c19bd344bb24. Standalone T1A.7.5 recovery/interest/selective composition passed 56 assertions. Aggregate focused then passed T1A.4 153, C5B 32, T1A.5 67, T1A.5 transactional 36, T1A.7 recovery 60, NX0 150, M3 graphical 77, C5C 29, T1A.6 multiplayer 25, T1A.7.2 interest binding 34, T1A.7.2 late-interest/reconnect 35 and T1A.7.3 dirty/selective 44 before failing in T1A.7.3 selective process telemetry assertions. The client had already received the authoritative OPEN selective mutation; the server report reader collided with the harness 100ms server.json rewrite, emitted a JSON parse error and immediately observed empty telemetry, causing two false assertions. FIX1 a76afddd1d82e7d11bf1e72819580cd90db60448 changes only the process acceptance harness: it waits for selective plan/targeted-send counters and retries partial JSON reads using JSON.parse without noisy parse_string errors. Production runtime, network contracts, routing, authority and interest semantics are unchanged.",
   "last_accepted_checkpoint": "T1A.7.4 Scale / Soak Lab",
-  "next_stage": "Run RUN_T1A7_5_COMPOSITION_TESTS.ps1 on Windows double Godot. If green, preserve that exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. A green pair accepts T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint. Then run PC0 convergence with TS0.4 structural/representation ceiling evidence before activating T2.0.",
+  "next_stage": "Sync the post-FIX1 branch head and rerun RUN_T1A7_5_COMPOSITION_TESTS.ps1 on Windows double Godot. If green, do not fetch/reset; run RUN_WORLD_REGRESSION_TESTS.ps1 on that exact checkout. A green pair accepts T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint. Then run PC0 convergence with TS0.4 structural/representation ceiling evidence before activating T2.0.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
@@ -123,7 +123,7 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "T1A7_5_WINDOWS_FOCUSED_ACCEPTANCE_PENDING",
+    "T1A7_5_WINDOWS_FOCUSED_REVALIDATION_PENDING",
     "T1A7_5_FULL_WORLD_REGRESSION_PENDING"
   ],
   "health_declared": "YELLOW",
