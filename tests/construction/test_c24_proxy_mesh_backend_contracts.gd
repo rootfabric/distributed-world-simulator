@@ -29,6 +29,7 @@ func _test_array_mesh_contract() -> void:
 	_ok(Descriptor.validate(descriptor), "descriptor validates")
 	_assert(mesh is ArrayMesh, "backend returns ArrayMesh")
 	_assert(String(mesh.get_meta("construction_proxy_backend")) == Descriptor.BACKEND, "mesh backend metadata")
+	_assert(String(mesh.get_meta("construction_proxy_front_face_winding")) == "GODOT_CLOCKWISE", "mesh pins Godot clockwise front-face winding")
 	_assert(mesh.get_surface_count() == int(descriptor["surface_count"]), "surface count matches descriptor")
 	_assert(int(descriptor["vertex_count"]) == int(artifact["merged_quad_count"]) * 4, "four vertices per greedy quad")
 	_assert(int(descriptor["index_count"]) == int(artifact["merged_quad_count"]) * 6, "six indices per greedy quad")
@@ -64,8 +65,11 @@ func _test_winding_normals_and_uvs() -> void:
 			var a: Vector3 = vertices[indices[offset]]
 			var b: Vector3 = vertices[indices[offset + 1]]
 			var c: Vector3 = vertices[indices[offset + 2]]
-			var geometric := (b - a).cross(c - a).normalized()
-			_assert(geometric.dot(normals[indices[offset]]) > 0.999999, "triangle winding follows stored normal")
+			var geometric_cross := (b - a).cross(c - a).normalized()
+			# Godot considers clockwise winding front-facing. With an outward stored
+			# normal, the mathematical cross product of the rendered index order must
+			# therefore point inward (opposite the stored normal).
+			_assert(geometric_cross.dot(normals[indices[offset]]) < -0.999999, "Godot clockwise triangle winding opposes outward cross-product normal")
 			_assert(uvs[indices[offset]].is_finite(), "uv finite")
 	var aabb := mesh.get_aabb()
 	_assert(aabb.size.x > 0.0 and aabb.size.y > 0.0 and aabb.size.z > 0.0, "generated mesh has non-empty aabb")
@@ -132,7 +136,6 @@ func _test_content_addressed_lru_cache() -> void:
 	_assert(cache.has_content_hash(String(third_artifact["content_hash"])), "new entry retained")
 	_assert(int(stats["hits"]) == 2 and int(stats["misses"]) == 3, "cache metrics bounded and exact")
 
-
 func _test_oversized_mesh_bypasses_cache() -> void:
 	var cache = Cache.new(2, 1)
 	var artifact: Dictionary = F.sample_artifact("-oversized")
@@ -147,7 +150,6 @@ func _test_oversized_mesh_bypasses_cache() -> void:
 	var stats: Dictionary = cache.get_stats()
 	_assert(int(stats["hits"]) == 0 and int(stats["misses"]) == 2, "oversized attempts remain misses")
 	_assert(int(stats["oversized_bypasses"]) == 2 and int(stats["evictions"]) == 0, "oversized bypass metric exact")
-
 
 func _test_bounded_material_library() -> void:
 	var library = MaterialLibrary.new(2)
