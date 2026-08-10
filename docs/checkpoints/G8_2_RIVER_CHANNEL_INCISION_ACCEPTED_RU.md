@@ -1,7 +1,7 @@
 # G8.2 River Channel Incision — ACCEPTED
 
-**Architecture:** `GLOBAL-P0-2026-08-10-R2`  
-**Project Control:** `PC0-2026-08-10-R1`  
+**Architecture:** `GLOBAL-P0-2026-08-10-R2`
+**Project Control:** `PC0-2026-08-10-R1`
 **Branch:** `feature/g8-geomorphology`
 
 G8.2 принят после полного Windows acceptance на tested head:
