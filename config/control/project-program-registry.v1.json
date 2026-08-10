@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 24,
+  "registry_generation": 25,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T12:04:00Z",
+  "updated_at_utc": "2026-08-10T12:05:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -35,13 +35,13 @@
       "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
       "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-      "current_stage": "T1A.7.2 Late-Interest Baseline + Reconnect",
-      "stage_status": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
-      "progress_note": "First Windows focused run on checkout 96cfdde3818e70c5ccb1f0fc79bd71284c2c1b90 passed all inherited gates through T1A.6 multiplayer (T1A.4 153, C5B 32, T1A.5 67, transactional 36, T1A.7.1 recovery 60, NX0 150, M3 77, C5C 29, T1A.6 25/0) but T1A.7.2 binding failed 18 of 34 assertions. Root cause is local result-envelope misuse: _normalize_construct_ids returns construct_ids under details, while update_selection/restore_client_state read a top-level key. FIX1 runtime head d41d3d3721b61cc0464e1c5693ccaa4521b7819a changes only those two reads to details.construct_ids; interest/reconnect architecture and semantics are unchanged. Fresh focused revalidation is required; full regression must wait until focused is green.",
-      "last_accepted_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
-      "next_stage": "Pull FIX1 and rerun T1A.7.2 focused Windows acceptance. If green, record the tested runtime head and run full world regression on the same runtime code, then accept T1A.7.2 and proceed to T1A.7.3 Dirty / Selective Runtime Replication.",
+      "current_stage": "T1A.7.3 Dirty / Selective Runtime Replication",
+      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+      "progress_note": "T1A.7.2 Late-Interest Baseline + Reconnect is ACCEPTED on FIX1 runtime head d41d3d3721b61cc0464e1c5693ccaa4521b7819a after the required focused gate and fresh full world/core regression with 6 PASS / 0 FAIL, clean STOPPED lifecycle and the NX4 final marker. T1A.7.3 is implemented as a stacked candidate at runtime/test head cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0: a Construction-domain selective replication planner maintains reverse construct->logical-client projection, derives dirty runtime ids by comparing authoritative snapshot subject checksums, and routes exact full construct snapshots only to relevant active sessions. T1A.7.2 late/re-entry/reconnect baseline remains the correctness fallback. No compact delta DTO, new channel, protocol-manifest change, global interest identity or scheduler foundation is introduced. Windows focused validation and full regression are pending.",
+      "last_accepted_checkpoint": "T1A.7.2 Late-Interest Baseline + Reconnect",
+      "next_stage": "Run T1A.7.3 dirty/selective focused Windows gate. If green, record the tested runtime head and run full world regression on the same runtime code; then accept T1A.7.3 and proceed to T1A.7.4 Scale / Soak Lab with 100/1,000 constructs and 10,000 runtime subjects.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_2_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING", "T1A7_2_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1A7_3_WINDOWS_FOCUSED_ACCEPTANCE_PENDING", "T1A7_3_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
