@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 40,
+  "registry_generation": 41,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T22:41:00Z",
+  "updated_at_utc": "2026-08-10T22:47:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -64,20 +64,20 @@
     "CH": {
       "program": "CH",
       "program_name": "Character Presentation",
-      "branch": "feature/ch9-4-equipment-persistence-reconnect",
-      "passport_path": "config/control/branches/feature__ch9-4-equipment-persistence-reconnect.v1.json",
+      "branch": "feature/ch9-5-live-equipment-runtime-composition",
+      "passport_path": "config/control/branches/feature__ch9-5-live-equipment-runtime-composition.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Durable recovery and reconnect composition for server-authoritative character equipment.",
-      "purpose": "Carry accepted CH9.3 equipment through existing M6 authoritative checkpoints, replay recovery, reconnect and late join without introducing character-private persistence or transport truth.",
-      "expected_outcome": "Equipped Item UUIDs survive server restart in the same canonical equipment slots; recovered authority continues accepting equip/unequip commands; reconnecting and late-joining clients converge and render exactly one presentation per equipped item.",
-      "current_stage": "CH9.4 Equipment Persistence / Late Reconnect",
-      "stage_status": "SOURCE_ACCEPTED_POST_ACCEPTANCE_AUDIT_REQUIRED",
-      "progress_note": "CH9.4 is FOCUSED_ACCEPTED. Exact Windows Godot 4.7.1 double on tested branch head 30e752436c82996e0f99253de040d60b11317c72 passes inherited CH9.3 authority 41, replica projection 21, replicated presentation 27 and real ENet replication 20 assertions, plus CH9.4 durable roundtrip 34 and M6 checkpoint/reconnect/recovery 53 assertions; both new CH9.4 tests also pass directly. Accepted runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe stages and validates the equipment-aware Item Graph before base transactional restore and reuses existing M6 persistence/replay/recovery unchanged. CH9.4 therefore preserves exact Item UUIDs, equipment slots, replay idempotency, reconnect ownership transition, late-join projection and successive checkpoint generations without duplicate canonical identities. Per PC0 policy, a post-acceptance audit is now mandatory before another CH stage is declared.",
+      "short_description": "Persistent live runtime composition for server-authoritative character equipment.",
+      "purpose": "Compose accepted CH9.2 Inventory UI, CH9.3 live ENet equipment replication and CH9.4 M6 durable recovery in one production-shaped runtime without adding character-private truth, persistence or transport semantics.",
+      "expected_outcome": "A persistent dedicated server and live clients can equip through the existing ITEM channel, restart/recover, reconnect and late-join while the same canonical Item UUIDs automatically drive local and remote CharacterEquipment presentation exactly once.",
+      "current_stage": "CH9.5 Live Equipment Runtime Composition",
+      "stage_status": "DECLARED_PENDING_IMPLEMENTATION",
+      "progress_note": "CH9.4 is FOCUSED_ACCEPTED on runtime e41c6ec46ae13c2244e92d47d891ecd345e746fe and focused checkout 30e752436c82996e0f99253de040d60b11317c72. Its mandatory post-acceptance audit was executed from current main registry generation 40 after branch passport fix de3b697 and returned Overall YELLOW / CH YELLOW, with no critical CH dependency drift. CH9.5 is therefore authorized as the next Character frontier. The stage closes the remaining composition gap: CH9.3 dedicated runtime intentionally deferred persistence, CH9.4 validated recovery at service/M6 level, and live Item Graph updates still need an explicit presentation coordinator. No movement snapshot equipment IDs, new persistence format, new recovery manager or network foundation are allowed.",
       "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect FOCUSED_ACCEPTED",
-      "next_stage": "Run CONTROL_PROJECT.ps1 from an up-to-date main checkout and review the CH program for dependency drift/overlap. If the audit is non-RED for CH, declare the next Character stage in main before implementation.",
-      "health_declared": "GREEN",
-      "blockers": ["CH9_4_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"]
+      "next_stage": "Implement CH9.5 persistent dedicated runtime plus live Item Graph-to-character presentation composition and run its focused Windows gate. No later CH stage starts before CH9.5 acceptance and the next PC0 audit.",
+      "health_declared": "YELLOW",
+      "blockers": ["CH9_5_IMPLEMENTATION_AND_WINDOWS_FOCUSED_ACCEPTANCE_REQUIRED"]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -155,7 +155,7 @@
   "global_blocked_transitions": [
     {"stage": "G8.3 START", "blocked_by": "G8_2_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
-    {"stage": "CH NEXT STAGE START", "blocked_by": "CH9_4_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
+    {"stage": "CH STAGE AFTER CH9.5 START", "blocked_by": "CH9_5_FOCUSED_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
 }
