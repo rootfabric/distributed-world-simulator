@@ -44,7 +44,7 @@ var _configured: bool = false
 func setup(m0_root: String) -> Dictionary:
 	if m0_root.strip_edges().is_empty():
 		return _failure("T1A5_M0_ROOT_REQUIRED")
-	_bound = T1A4Script.materialize_bound(m0_root)
+	_bound = T1A4Script.materialize_bound(m0_root, _reuse_existing_m0_on_setup())
 	if not bool(_bound.get("success", false)):
 		return _failure("T1A5_T1A4_BOOTSTRAP_FAILED", {"cause": _bound})
 	_profile = Dictionary(_bound["binding_profile"]).duplicate(true)
@@ -95,6 +95,10 @@ func setup(m0_root: String) -> Dictionary:
 		return _failure("T1A5_POWER_RUNTIME_BOOTSTRAP_COMMIT_FAILED", {"cause": bootstrap_commit})
 	_configured = true
 	return _success({"report": get_report()})
+
+
+func _reuse_existing_m0_on_setup() -> bool:
+	return false
 
 
 func execute(
