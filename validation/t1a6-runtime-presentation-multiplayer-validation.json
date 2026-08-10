@@ -1,10 +1,11 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
+  "fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -20,7 +21,6 @@
     "runtime_command_count_in_acceptance": 3,
     "runtime_command_sequence": ["OPEN_DOOR", "TOGGLE_LIGHT", "CLOSE_DOOR"],
     "visual_lab": "tools/runtime/t1a6_visual_lab.gd",
-    "changed_file_count_from_base": 14,
     "base_m3_server_modified": false,
     "base_m3_client_modified": false
   },
@@ -34,7 +34,8 @@
     "runtime_full_snapshot_delivery": "RELIABLE_ORDERED",
     "runtime_full_snapshot_reason": "low-rate discrete canonical state; correctness must not depend on a later event",
     "transport_session_fence": true,
-    "protocol_manifest_fingerprints_runtime_snapshot": true
+    "protocol_manifest_fingerprints_runtime_snapshot": true,
+    "channel_policy_source": "inherited accepted M3/NX6 RealtimeChannelPolicy"
   },
   "replication_contract": {
     "snapshot_schema": "planet_simulator.construction_runtime_snapshot.v1",
@@ -82,13 +83,43 @@
   "focused_gate": {
     "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "windows_run_head": "cd249458d7bb2964007a129910164a63d0533f65",
     "dependencies": [
       "T1A5 interactive runtime execution acceptance",
       "NX0 protocol manifest baseline",
       "M3 graphical multiplayer contracts",
       "C5C runtime replication contracts"
     ],
-    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+    "windows_evidence": {
+      "editor_import": "PASS",
+      "t1a5_runtime_acceptance": "PASS_67",
+      "nx0_observability_baseline": "PASS_150",
+      "m3_graphical_multiplayer_contracts": "PASS_77",
+      "c5c_runtime_replication_contracts": "PASS_29",
+      "port_allocation": "PASS",
+      "dedicated_server_launch": "PASS",
+      "graphical_process_acceptance": "BLOCKED_COMPILE_ERROR"
+    },
+    "blocker": {
+      "stage": "dedicated_server_script_compile",
+      "error": "T1A6 server adapter redeclared RealtimeChannelPolicy already inherited from M3 dedicated runtime",
+      "semantic_runtime_failure": false
+    },
+    "candidate": "FIX1_IMPLEMENTED_REQUIRES_WINDOWS_RERUN"
+  },
+  "fix1": {
+    "server_commit": "5f83dcb3ca3f7043fa3c205260e7e24d891ba32f",
+    "head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
+    "cause": "GDScript forbids a child class member with the same name as an inherited member; both T1A6 adapters redundantly preloaded RealtimeChannelPolicy already supplied by their accepted M3/NX6 parents.",
+    "changes": [
+      "remove duplicate RealtimeChannelPolicy declaration from T1A6 server adapter",
+      "remove duplicate RealtimeChannelPolicy declaration from T1A6 client adapter",
+      "continue using inherited accepted M3/NX6 RealtimeChannelPolicy constants"
+    ],
+    "runtime_semantics_changed": false,
+    "transport_policy_changed": false,
+    "protocol_changed": false,
+    "requires_focused_windows_rerun": true
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
