@@ -11,7 +11,10 @@ extends "res://tools/runtime/m7_playable_network_client_camera_sync_fix.gd"
 const FIX10_MIN_STRESS_DURATION_MS: int = 300000
 const FIX10_MIN_DIAGNOSTIC_DURATION_MS: int = 20000
 const FIX10_DEFAULT_STRESS_DURATION_MS: int = 330000
-const FIX10_PROGRESS_WRITE_INTERVAL_MS: int = 2000
+# Full world/runtime report materialization is intentionally sparse. Calling the
+# inherited _write() every two seconds rebuilt a large report synchronously on the
+# SceneTree and contaminated the visual/network diagnostic with periodic stalls.
+const FIX10_PROGRESS_WRITE_INTERVAL_MS: int = 30000
 const FIX10_WAYPOINT_TOLERANCE_M: float = 0.65
 const FIX10_ITEM_WAYPOINT_TOLERANCE_M: float = 1.75
 
@@ -273,7 +276,7 @@ func _fix10_wait_for_remote_peer(timeout_ms: int) -> bool:
 
 
 func _fix10_write_progress_if_due() -> void:
-	if _fix10_stress_started_ms <= 0:
+	if _fix10_stress_started_ms <= 0 or _fix10_diagnostic_only:
 		return
 	var now_ms: int = Time.get_ticks_msec()
 	if now_ms - _fix10_last_progress_write_ms < FIX10_PROGRESS_WRITE_INTERVAL_MS:
