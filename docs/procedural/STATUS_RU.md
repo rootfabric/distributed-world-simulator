@@ -20,15 +20,25 @@ G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
 
 ## P0 frontier state
 
-Active world-generation frontier is now governed by `GLOBAL-P0-2026-08-10-R2`:
+Active world-generation frontier is governed by `GLOBAL-P0-2026-08-10-R2`:
 
 ```text
-main                           R2 canonical ledger
-feature/g7-semantic-field-fabric R2 active frontier
-feature/g6-hydrology-fluid-surface-v0 R1 historical accepted ancestor
+main                              R2 canonical ledger
+feature/g7-semantic-field-fabric  R2 active frontier
+feature/g6-hydrology-fluid-surface-v0  R1 historical accepted ancestor
 ```
 
 R2 explicitly allows historical accepted/frozen branches to remain on their historical global revision; active G7 must match `main` byte-equivalently instead of forcing a G6 rewrite.
+
+Current verified active GLOBAL blobs:
+
+```text
+config/architecture/global-program-roadmap.v1.json
+  dd18f720cd4ce6493618efe270311605aea9bbbf
+
+docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
+  3eb52a69cef73da8a784dfce7acc6a0c38185cf9
+```
 
 ## G7.2 acceptance
 
