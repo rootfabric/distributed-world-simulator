@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_3_cross_cell_cross_lod_invariance.v1",
   "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
-  "decision": "FIX2_IMPLEMENTED_CANDIDATE",
+  "decision": "FIX3_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_2": {
@@ -23,7 +23,7 @@
     "production_runtime_changed": false,
     "invariance_acceptance_test": "IMPLEMENTED",
     "focused_runner": "IMPLEMENTED",
-    "full_acceptance_runner": "FIX2_IMPLEMENTED"
+    "full_acceptance_runner": "FIX3_IMPLEMENTED"
   },
   "windows_evidence": {
     "focused_gate": "PASS",
@@ -47,6 +47,12 @@
         "result": "BLOCKED",
         "reason": "stale untracked Microsoft/ directory remained from the earlier aborted acceptance run",
         "semantic_runtime_failure": false
+      },
+      {
+        "stage": "powershell_parse",
+        "result": "BLOCKED",
+        "reason": "Fix2 warning string used $Phase: inside an interpolated string; PowerShell parsed Phase: as a drive-qualified variable reference",
+        "semantic_runtime_failure": false
       }
     ]
   },
@@ -60,7 +66,14 @@
     "runner_commit": "5bbbb52845b548fac7c5a95e6cc9ffba07644bdd",
     "runtime_changed": false,
     "reason": "A previous pre-runtime abort can leave the known root Microsoft/ Windows-profile transient behind, causing the next clean-tree preflight to fail before the runner reaches its post-runtime cleanup.",
-    "policy": "Before clean-tree preflight and after runtime, remove root Microsoft/ only when git proves there are no tracked entries and every path reported under Microsoft is purely untracked. Otherwise refuse cleanup.",
+    "policy": "Before clean-tree preflight and after runtime, remove root Microsoft/ only when git proves there are no tracked entries and every path reported under Microsoft is purely untracked. Otherwise refuse cleanup."
+  },
+  "fix3": {
+    "runner_commit": "67b4b65576728b6337d84265574b856e87af7547",
+    "runtime_changed": false,
+    "reason": "PowerShell interpolated $Phase: as an invalid drive-qualified variable reference.",
+    "policy": "Use ${Phase}: when a colon immediately follows an interpolated variable name. No semantic/runtime code changes.",
+    "requires_ast_parse_check": true,
     "requires_full_gate_rerun": true
   },
   "proof_matrix": {
@@ -114,7 +127,8 @@
     "clean_worktree": true,
     "git_diff_check_except_byte_matched_main_global_roadmap": true,
     "active_global_config_matches_main": true,
-    "active_global_markdown_matches_main": true
+    "active_global_markdown_matches_main": true,
+    "powershell_ast_parse": true
   },
   "next_if_accepted": "G7_4_SEMANTIC_FIELD_LAB"
 }
