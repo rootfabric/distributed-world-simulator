@@ -1,0 +1,77 @@
+{
+  "schema": "planet_simulator.ch9_4_equipment_persistence_reconnect_validation.v1",
+  "stage": "CH9.4 Equipment Persistence / Late Reconnect",
+  "branch": "feature/ch9-4-equipment-persistence-reconnect",
+  "base_branch": "feature/ch9-3-multiplayer-equipment-presentation",
+  "base_checkpoint": "c18eae9778a5020063163087269483bc43a924be",
+  "accepted_parent_runtime_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
+  "pc0_handoff": {
+    "registry_generation": 36,
+    "main_registry_commit": "b6740f5d2f254cc9e0320f225b1bac082bcec8fb",
+    "status": "DECLARED_AS_PRIMARY_FRONTIER"
+  },
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "goal": "Persist and recover CH9.3 server-authoritative equipment through the existing M6 checkpoint/replay/recovery system, then prove reconnect, late-join projection, replay idempotency and continued equipment mutation without duplicate canonical Item identities.",
+  "architecture": {
+    "new_persistence_format": false,
+    "new_recovery_coordinator": false,
+    "new_replay_ledger": false,
+    "new_item_relation": false,
+    "durable_owner": "EXISTING_NETWORKED_GAMEPLAY_PLUS_M6",
+    "equipment_durable_truth": "CANONICAL_ITEM_GRAPH.CONTAINER",
+    "presentation_persisted": false,
+    "transport_session_persisted": false
+  },
+  "gap_closed": "The generic NetworkedGameplayService durable restore reconstructs CanonicalMultiplayerItemGraph. CH9.4 preserves the accepted base transactional restore, then rehydrates the canonical Item Graph as the CH9.3 equipment-aware subclass from the exact same durable snapshot and verifies checksum identity.",
+  "invariants": [
+    "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
+    "EQUIPMENT_CONTAINER_AND_SLOT_RELATION_SURVIVE_RESTART",
+    "EQUIPMENT_SLOT_MAP_MATCHES_ITEM_LOCATION_SLOT_INDEX",
+    "EQUIPMENT_REFERENCE_ORDER_IS_DETERMINISTIC",
+    "EQUIPMENT_QUANTITY_IS_ONE",
+    "EQUIPMENT_DEFINITION_MATCHES_SLOT",
+    "SEMANTICALLY_CORRUPTED_CHECKSUM_VALID_STATE_IS_REJECTED",
+    "RECOVERED_SERVICE_RETAINS_EQUIPMENT_COMMAND_CAPABILITY",
+    "DURABLE_REPLAY_SURVIVES_RESTART",
+    "TRANSIENT_TRANSPORT_SESSION_DOES_NOT_SURVIVE_RESTART",
+    "RECONNECT_ADVANCES_OWNERSHIP_EPOCH_WITHOUT_CHANGING_EQUIPMENT",
+    "LATE_JOIN_PROJECTS_RECOVERED_EQUIPMENT",
+    "SUCCESSIVE_RECOVERY_CYCLES_DO_NOT_DUPLICATE_ITEMS",
+    "MOVEMENT_SNAPSHOT_REMAINS_EQUIPMENT_FREE"
+  ],
+  "implementation": {
+    "recovery_service": "res://scripts/runtime/networked_gameplay/ch9/ch9_4_equipment_recovery_service.gd",
+    "runner": ".\\RUN_CH9_4_EQUIPMENT_PERSISTENCE_TESTS.ps1 -GodotPath $Godot"
+  },
+  "focused_tests": {
+    "ch9_3_authority_regression": "res://tests/characters/test_ch9_3_multiplayer_equipment_authority.gd",
+    "ch9_3_replica_regression": "res://tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd",
+    "ch9_3_presentation_regression": "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
+    "ch9_3_real_enet_regression": "res://tests/characters/test_ch9_3_enet_equipment_replication.gd",
+    "durable_roundtrip": "res://tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
+    "checkpoint_reconnect_recovery": "res://tests/characters/test_ch9_4_equipment_reconnect_recovery.gd"
+  },
+  "checkpoint_recovery_acceptance": [
+    "equip canonical lower and helmet items",
+    "persist one M6 authoritative checkpoint with durable replay/outbox state",
+    "construct a fresh service instance and recover the committed checkpoint",
+    "recover the exact canonical Item Graph checksum and original Item UUIDs",
+    "verify recovered player has no stale transport session",
+    "reconnect player A with a new ownership epoch without changing equipment",
+    "join player B after recovery and project A recovered equipment",
+    "replay a pre-restart equipment operation idempotently",
+    "unequip after recovery using the new session",
+    "persist generation 2 and recover again",
+    "verify changed slot plus unchanged equipment survive the second recovery without duplicates"
+  ],
+  "windows_results": {
+    "editor_import": "PENDING",
+    "ch9_3_authority_regression": "PENDING",
+    "ch9_3_replica_regression": "PENDING",
+    "ch9_3_presentation_regression": "PENDING",
+    "ch9_3_real_enet_regression": "PENDING",
+    "durable_roundtrip": "PENDING",
+    "checkpoint_reconnect_recovery": "PENDING",
+    "candidate_runner": "PENDING"
+  }
+}
