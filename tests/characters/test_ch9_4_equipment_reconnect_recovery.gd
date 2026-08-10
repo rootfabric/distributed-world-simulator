@@ -110,7 +110,7 @@ func _run() -> void:
 	var projected_snapshot = projected.get("details", {}).get("snapshot")
 	_assert(projected_snapshot is CharacterEquipmentDomain.Snapshot, "late join projection type mismatch")
 	if projected_snapshot is CharacterEquipmentDomain.Snapshot:
-		_assert(projected_snapshot.get_entries().size() == 2, "late join projected duplicate or missing equipment entries")
+		_assert(projected_snapshot.entries().size() == 2, "late join projected duplicate or missing equipment entries")
 		_assert(projected_snapshot.find_item(lower_id) != null, "late join projection missing lower")
 		_assert(projected_snapshot.find_item(helmet_id) != null, "late join projection missing helmet")
 
