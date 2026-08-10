@@ -3,7 +3,7 @@
 **Дата:** 2026-08-10  
 **Ветка:** `feature/t1a7-runtime-recovery-interest-scale`  
 **Base:** T1A.7.1 ACCEPTED on runtime head `a1d856de348268c45eccfb1c4646720bc4a996db`  
-**Candidate runtime head:** `f3d1b3fe49f8a42ca797eecb64b599c7fef92806`  
+**Candidate runtime head:** `ebd0d35995640d38a03a684a515243b85bf52be7`  
 **Статус:** `IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING`
 
 ## Reuse audit
