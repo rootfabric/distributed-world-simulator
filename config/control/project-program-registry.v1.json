@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 26,
+  "registry_generation": 27,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T12:25:00Z",
+  "updated_at_utc": "2026-08-10T12:43:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -18,12 +18,12 @@
       "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
       "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density without debug-shell occlusion artifacts.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX4_FOCUSED_PASS_FULL_AUTOMATED_REVALIDATION_PENDING",
-      "progress_note": "Fix4 presentation-only shell/ribbon candidate passed focused Windows validation on exact Godot 4.7.1.stable.double.custom_build.a13da4feb at executable runtime head e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f: G7.4 contracts 80 assertions / 0 failures and headless semantic lab smoke PASS with 561 samples, five adapter-backed fields, six vocabulary-only fields and PX/PZ faces. User screenshots confirm false black sphere-occlusion holes are gone and the cyan diagnostic river ribbon is clearly visible. The first full-acceptance attempt stopped correctly at clean-tree preflight because Godot generated the new Fix4 .gd.uid sidecar; repository policy requires stable UID sidecars to be tracked. Commit f704780b8ba658b280591c463301f275f505da3f tracks only that sidecar and changes no executable runtime semantics, so focused evidence is preserved through that head. Fresh full automated acceptance is now required; manual graphical remainder is F toggle, fixed-LOD fields 1..5 recolor-only behavior and PX/PZ seam inspection.",
+      "stage_status": "FIX4_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
+      "progress_note": "Fix4 presentation-only shell/ribbon is now fully automated-validated. Focused Windows validation passed on executable runtime head e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f with G7.4 contracts 80 assertions / 0 failures and headless semantic lab smoke PASS over 561 samples, five adapter-backed fields, six vocabulary-only fields and PX/PZ faces. Stable Godot UID tracking at f704780b8ba658b280591c463301f275f505da3f and the acceptance-harness allowlist fix at ddacaf18a5c4b57c708562538a71065240d73ddb change no executable semantic runtime. Fresh full acceptance on ddacaf18a5c4b57c708562538a71065240d73ddb passed PC0 G frontier, G health, G7.3 ancestor, visual-lab scope, world/core regression through NX4 with 6 PASS / 0 FAIL, STOPPED lifecycle, and CLEAN working tree. User screenshots confirm the false black sphere-occlusion holes are gone and the cyan diagnostic river ribbon is clearly visible. Only three manual graphical checks remain: F toggle, fixed-LOD fields 1..5 recolor-only behavior, and PX/PZ seam inspection.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Sync the tracked Fix4 UID sidecar and run fresh G7.4 full automated acceptance. If green, finish the three remaining graphical checks (F river toggle, 1..5 recolor-only at fixed LOD, no obvious PX/PZ seam), then accept G7.4 and run G7 full acceptance before G8 geomorphology.",
+      "next_stage": "Finish the three remaining G7.4 manual graphical checks. If green, accept G7.4, run G7 full acceptance, then proceed to G8 geomorphology.",
       "health_declared": "YELLOW",
-      "blockers": ["G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+      "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -153,7 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G7.4 ACCEPTED", "blocked_by": "G7_4_FIX4_FULL_AUTOMATED_AND_MANUAL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G7.4 ACCEPTED", "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
     {"stage": "G7 FULL ACCEPTANCE", "blocked_by": "G7_4_ACCEPTED_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
