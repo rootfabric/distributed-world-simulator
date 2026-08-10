@@ -28,6 +28,18 @@ static func merge_to_shell(
 			section_ids.append(String(section_id))
 		exposed_face_count += int(artifact.get("exposed_face_count", 0))
 	section_ids.sort()
+	var collision_boxes := [{
+		"center_m": [
+			(float(bounds_min_m[0]) + float(bounds_max_m[0])) * 0.5,
+			(float(bounds_min_m[1]) + float(bounds_max_m[1])) * 0.5,
+			(float(bounds_min_m[2]) + float(bounds_max_m[2])) * 0.5,
+		],
+		"size_m": [
+			float(bounds_max_m[0]) - float(bounds_min_m[0]),
+			float(bounds_max_m[1]) - float(bounds_min_m[1]),
+			float(bounds_max_m[2]) - float(bounds_min_m[2]),
+		],
+	}]
 	var shell := Artifact.create(
 		construct_id,
 		source_revision,
@@ -42,7 +54,7 @@ static func merge_to_shell(
 		exposed_face_count,
 		int(merged["merged_quad_count"]),
 		merged["material_batches"],
-		[],
+		collision_boxes,
 		[]
 	)
 	var checked := Artifact.validate(shell)
