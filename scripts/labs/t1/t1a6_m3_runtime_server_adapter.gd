@@ -114,12 +114,15 @@ func _send_runtime_snapshot(peer_id: String, reason: String) -> bool:
 	var validation: Dictionary = RuntimeSnapshotScript.validate(snapshot)
 	if not bool(validation.get("success", false)):
 		return false
+	# T1A.6 intentionally sends the full low-rate runtime state over the existing
+	# reliable RESYNC channel. A future scale checkpoint may introduce deltas or
+	# periodic unreliable snapshots, but correctness cannot depend on a later event.
 	var sent := _send_on_channel(
 		peer_id,
 		RUNTIME_SNAPSHOT_MESSAGE,
 		{"reason": reason, "snapshot": snapshot},
-		RealtimeChannelPolicy.SNAPSHOT,
-		"UNRELIABLE_SEQUENCED"
+		RealtimeChannelPolicy.RESYNC,
+		"RELIABLE_ORDERED"
 	)
 	if sent:
 		_runtime_snapshots += 1
