@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_3_cross_cell_cross_lod_invariance.v1",
   "checkpoint": "g7.3-cross-cell-cross-lod-invariance",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "FIX2_IMPLEMENTED_CANDIDATE",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_2": {
@@ -23,7 +23,7 @@
     "production_runtime_changed": false,
     "invariance_acceptance_test": "IMPLEMENTED",
     "focused_runner": "IMPLEMENTED",
-    "full_acceptance_runner": "FIX1_IMPLEMENTED"
+    "full_acceptance_runner": "FIX2_IMPLEMENTED"
   },
   "windows_evidence": {
     "focused_gate": "PASS",
@@ -35,18 +35,32 @@
     "semantic_samples_on_both_seam_sides": "PASS",
     "px_centerline_river_distance_zero": "PASS",
     "pz_centerline_river_distance_zero": "PASS",
-    "full_gate_preflight": {
-      "global_revision": "PASS",
-      "active_frontier_global_alignment": "PASS",
-      "historical_g6_r2_rewrite_not_required": "PASS",
-      "initial_blocker": "git diff --check reported Markdown hard-break trailing spaces in byte-matched canonical GLOBAL roadmap"
-    }
+    "full_gate_attempts": [
+      {
+        "stage": "scope_hygiene",
+        "result": "BLOCKED",
+        "reason": "git diff --check reported Markdown hard-break trailing spaces in byte-matched canonical GLOBAL roadmap",
+        "semantic_runtime_failure": false
+      },
+      {
+        "stage": "repository_preflight",
+        "result": "BLOCKED",
+        "reason": "stale untracked Microsoft/ directory remained from the earlier aborted acceptance run",
+        "semantic_runtime_failure": false
+      }
+    ]
   },
   "fix1": {
     "runner_commit": "73ca4a0d356eb7ed18aa813c19f617b7b2c29137",
     "runtime_changed": false,
     "reason": "Canonical R2 GLOBAL roadmap from main contains Markdown hard-break spaces, and active G7 is required to remain byte-identical to main.",
-    "policy": "First require local GLOBAL roadmap blob == origin/main blob, then exclude only that already-byte-verified canonical roadmap from G7.3-local git diff --check. All remaining G7.3/P0-sync files retain strict diff hygiene.",
+    "policy": "First require local GLOBAL roadmap blob == origin/main blob, then exclude only that already-byte-verified canonical roadmap from G7.3-local git diff --check. All remaining G7.3/P0-sync files retain strict diff hygiene."
+  },
+  "fix2": {
+    "runner_commit": "5bbbb52845b548fac7c5a95e6cc9ffba07644bdd",
+    "runtime_changed": false,
+    "reason": "A previous pre-runtime abort can leave the known root Microsoft/ Windows-profile transient behind, causing the next clean-tree preflight to fail before the runner reaches its post-runtime cleanup.",
+    "policy": "Before clean-tree preflight and after runtime, remove root Microsoft/ only when git proves there are no tracked entries and every path reported under Microsoft is purely untracked. Otherwise refuse cleanup.",
     "requires_full_gate_rerun": true
   },
   "proof_matrix": {
