@@ -4,7 +4,31 @@
 **Ветка:** `feature/t1a4-interactive-fixture-binding`  
 **Base:** T1A.3 accepted @ `5e051f67bf6987a354de5b565da1448be6b0b4db`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `IMPLEMENTED CANDIDATE`
+**Статус:** `FOCUSED WINDOWS PASS — FULL REGRESSION REQUIRED`
+
+## Exact Windows focused evidence
+
+Проверено на `Godot 4.7.1.stable.double.custom_build.a13da4feb`, tested head `f5a2f3349ebb7be663f72a0bd435ae9386ce46a1`:
+
+```text
+T1A.3 Item Graph materialization      PASS 865
+C5 capability/affordance contracts   PASS 105
+C15 executable utilities contracts   PASS 92
+C2B authoritative Item Graph         PASS 194
+T1A.4 direct acceptance              PASS 153
+T1A.4 focused runner                 PASS
+```
+
+Focused total: `1409 assertions`, все PASS. Предыдущий parse blocker был test-only и закрыт fix1 `eee48dee636b3fee4d2504049df3a069910f5ca6` явной типизацией M0 report как `Dictionary`.
+
+Статусные измерения до полного world regression остаются:
+
+```text
+SOURCE_ACCEPTED       false
+MAIN_INTEGRATED       false
+COMPOSITION_VERIFIED  false
+PRODUCTION_READY      false
+```
 
 ## Цель
 
@@ -115,7 +139,7 @@ console   CONSUMER
 
 Utility node properties сохраняют ссылку на соответствующий global fixture Item ID, а network source pin содержит D0 `construct_id`, `state_revision=177` и checksum T1A.3 snapshot.
 
-Первый deterministic simulation tick должен обслужить door/lamp/console demands полностью.
+Первый deterministic simulation tick обслуживает door/lamp/console demands полностью в focused acceptance.
 
 ## DATA network
 
@@ -156,7 +180,7 @@ LOD/visual identity in canonical state
 MaterialDefinitionId/private material ontology
 ```
 
-`ConstructSnapshot` обязан остаться byte/semantic equivalent T1A.3 snapshot; binding data живут в Item Graph/C5/C15 artifacts.
+`ConstructSnapshot` остаётся semantic equivalent T1A.3 snapshot; binding data живут в Item Graph/C5/C15 artifacts.
 
 ## Focused gate
 
@@ -180,9 +204,20 @@ T1A.4 acceptance
 
 T1A.4 acceptance проверяет 71 Items, six bindings, item-owned 24-slot storage, behavior descriptors, POWER/DATA networks and execution profiles, M0/C2B authority revisions, exact replay и отсутствие binding/runtime полей в canonical Construction snapshot.
 
+## Следующий gate
+
+Для acceptance T1A.4 остаётся полный:
+
+```powershell
+$env:GODOT_BIN = $Godot
+.\RUN_WORLD_REGRESSION_TESTS.ps1
+```
+
+После его PASS можно выставить `SOURCE_ACCEPTED=true` и `COMPOSITION_VERIFIED=true`.
+
 ## Следующий checkpoint
 
-После focused + full regression acceptance:
+После full regression acceptance:
 
 `T1A.5 — Interactive Runtime Execution`
 
