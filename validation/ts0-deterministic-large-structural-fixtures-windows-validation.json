@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.ts0_windows_worktree_validation.v1",
+  "checkpoint": "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "tested_head": "95865698ce213c45c73ec3967e2eb3b18a6a0e32",
+  "date": "2026-08-10",
+  "environment": {
+    "platform": "Windows",
+    "worktree": "C:/Godot/lunar-world-double-godot-ts0",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "runner": "RUN_TS0_FIXTURE_TESTS.ps1"
+  },
+  "results": {
+    "git_worktree_branch": "PASS_feature/ts0-large-structural-visual-lab",
+    "fast_forward_to_tested_head": "PASS",
+    "runner_present": "PASS",
+    "editor_import": "PASS",
+    "fixture_acceptance": "PASS_61_ASSERTIONS",
+    "cube_10k": {
+      "parts": 10648,
+      "elapsed_ms": 5958,
+      "result": "PASS"
+    },
+    "pyramid_10k": {
+      "parts": 10416,
+      "elapsed_ms": 5595,
+      "result": "PASS"
+    }
+  },
+  "decision": "WINDOWS_FOCUSED_PASS",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "remaining_gate": "RUN_WORLD_REGRESSION_TESTS.ps1 on this TS0 worktree before SOURCE_ACCEPTED",
+  "next_after_acceptance": "TS0.1_10K_GRAPHICAL_PROOF"
+}
