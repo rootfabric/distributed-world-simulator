@@ -1,11 +1,11 @@
 {
   "schema": "planet_simulator.t1a7_2_late_interest_reconnect_validation.v1",
   "checkpoint": "T1A7_2_LATE_INTEREST_BASELINE_RECONNECT",
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
   "accepted_base_runtime_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
-  "candidate_runtime_head_before_validation_metadata": "ebd0d35995640d38a03a684a515243b85bf52be7",
+  "candidate_runtime_head_before_validation_metadata": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
@@ -39,6 +39,37 @@
     "new_authority_registry": false,
     "new_persistence_repository": false,
     "selection_source": "authoritative upstream world/query interest input; T1A.7.2 stores only a domain binding projection"
+  },
+  "first_windows_attempt": {
+    "checkout_head": "96cfdde3818e70c5ccb1f0fc79bd71284c2c1b90",
+    "runtime_head": "ebd0d35995640d38a03a684a515243b85bf52be7",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "inherited_passes": {
+      "t1a4_fixture_binding_assertions": 153,
+      "c5b_runtime_contract_assertions": 32,
+      "t1a5_runtime_execution_assertions": 67,
+      "t1a5_transactional_effect_assertions": 36,
+      "t1a7_1_recovery_assertions": 60,
+      "nx0_observability_assertions": 150,
+      "m3_graphical_multiplayer_assertions": 77,
+      "c5c_runtime_replication_assertions": 29,
+      "t1a6_multiplayer_assertions": 25,
+      "t1a6_multiplayer_failures": 0
+    },
+    "t1a7_2_binding_result": "FAIL_18_OF_34",
+    "error": "Invalid access to property or key 'construct_ids' on a Dictionary in construction_runtime_interest_binding.gd update_selection/restore_client_state",
+    "root_cause": "_normalize_construct_ids returns the shared success envelope {success,error_code,details}; callers incorrectly read construct_ids from the top level instead of details.construct_ids",
+    "disposition": "REJECTED_FIX1_REQUIRED",
+    "full_regression_run": false
+  },
+  "fix1": {
+    "runtime_head": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
+    "scope": "construction_runtime_interest_binding.gd only",
+    "change": "read normalized construct ids from normalized_result.details.construct_ids in update_selection and restore_client_state",
+    "semantic_change": false,
+    "architecture_change": false,
+    "focused_revalidation_required": true,
+    "full_regression_still_required_after_focused_pass": true
   },
   "candidate": {
     "t1a6_extension_hooks": "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
@@ -81,7 +112,7 @@
   "required_validation": {
     "runner": "RUN_T1A7_2_LATE_INTEREST_RECONNECT_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_result": "PENDING",
+    "focused_result": "FIX1_REVALIDATION_PENDING",
     "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
     "full_regression_result": "PENDING",
     "why_full_regression_required": "T1A.7.2 adds default-safe extension hooks to the accepted T1A.6 runtime server adapter"
