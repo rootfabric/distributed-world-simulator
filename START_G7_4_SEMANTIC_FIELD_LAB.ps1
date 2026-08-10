@@ -11,7 +11,7 @@ if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
     throw "Godot binary not found: $GodotPath"
 }
 
-Write-Host "G7.4 Semantic Field Lab — derived visualization over accepted G7 semantics"
+Write-Host "G7.4 Semantic Field Lab - derived visualization over accepted G7 semantics"
 Write-Host "1 surface height | 2 valley influence | 3 river distance | 4 river width | 5 fluid-surface distance"
 Write-Host "F river centerline | W/S zoom | A/D yaw | Q/E pitch | Space auto-orbit | R reset"
 Write-Host "Slope, curvature, drainage, continentalness, temperature and moisture remain vocabulary-only and are intentionally NOT faked."
