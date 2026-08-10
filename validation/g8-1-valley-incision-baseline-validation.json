@@ -1,0 +1,46 @@
+{
+  "schema": "planet_simulator.validation.g8_1_valley_incision_baseline.v1",
+  "checkpoint": "g8.1-valley-incision-baseline",
+  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_VALIDATION_PENDING",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.0 Geomorphology Contracts",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
+    "accepted_metadata_head": "5061d0ce77a1c08b2ea730dcb768810065df90c5"
+  },
+  "implementation": {
+    "generator": "scripts/simulation/procedural/geomorphology/valley_incision_baseline_v1.gd",
+    "manifest": "config/procedural/g8-1-valley-incision-baseline.v1.json",
+    "acceptance_test": "tests/procedural/geomorphology/g8_1_valley_incision_acceptance.gd",
+    "focused_runner": "RUN_G8_1_VALLEY_INCISION_TESTS.ps1",
+    "tracked_uid_sidecars": true
+  },
+  "formula": {
+    "expression": "valley_delta_m = -valley_max_depth_m * pow(valley_influence, valley_exponent)",
+    "input_fields": ["geo/surface-height-m", "geo/valley-influence"],
+    "zero_influence_zero_delta": true,
+    "unit_influence_reaches_profile_max_depth": true,
+    "monotonic": true,
+    "bounded": true,
+    "other_geomorphology_components_zero": true
+  },
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "material_definition_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "automated_evidence": "PENDING",
+  "project_control": {
+    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
+    "blockers": ["G8_1_FOCUSED_VALIDATION_REQUIRED", "G8_1_FULL_WORLD_REGRESSION_REQUIRED"]
+  },
+  "next_if_accepted": "G8.2_RIVER_CHANNEL_INCISION"
+}
