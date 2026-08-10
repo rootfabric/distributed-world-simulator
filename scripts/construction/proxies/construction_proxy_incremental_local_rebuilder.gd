@@ -148,7 +148,7 @@ static func try_rebuild(request: Dictionary, dirty_part_ids: Array, previous: Di
 		if not bool(compiled_section.get("success", false)):
 			return compiled_section
 		var artifact: Dictionary = compiled_section["artifact"]
-		var publish := cache.publish(artifact, _operation_id(snapshot, "section", String(artifact["content_hash"])))
+		var publish: Dictionary = cache.publish(artifact, _operation_id(snapshot, "section", String(artifact["content_hash"])))
 		if not bool(publish.get("success", false)):
 			return publish
 		rebuilt_artifacts[section_id] = artifact
@@ -189,7 +189,7 @@ static func try_rebuild(request: Dictionary, dirty_part_ids: Array, previous: Di
 	if not bool(shell_result.get("success", false)):
 		return shell_result
 	var shell_artifact: Dictionary = shell_result["artifact"]
-	var shell_publish := cache.publish(shell_artifact, _operation_id(snapshot, "shell", String(shell_artifact["content_hash"])))
+	var shell_publish: Dictionary = cache.publish(shell_artifact, _operation_id(snapshot, "shell", String(shell_artifact["content_hash"])))
 	if not bool(shell_publish.get("success", false)):
 		return shell_publish
 
