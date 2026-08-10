@@ -21,6 +21,8 @@ const VOCABULARY_ONLY_FIELDS: Array[String] = [
 	Registry.TEMPERATURE_BASELINE,
 	Registry.MOISTURE_BASELINE,
 ]
+const EXPECTED_LOD_STRIDES: Array[int] = [1, 2, 4, 8]
+const EXPECTED_LOD_GRIDS: Array = [[33, 17], [17, 9], [9, 5], [5, 3]]
 
 var assertions := 0
 var failures: Array[String] = []
@@ -50,10 +52,34 @@ func _test_manifest() -> void:
 	_assert(int(grid.get("latitude_segments", -1)) == 16, "G7.4 latitude segments pinned")
 	_assert(int(grid.get("longitude_segments", -1)) == 32, "G7.4 longitude segments pinned")
 	_assert(int(grid.get("expected_vertices", -1)) == 561, "G7.4 expected semantic sample count pinned")
+	var lod: Dictionary = manifest.get("presentation_lod", {})
+	_assert(String(lod.get("mode", "")) == "CAMERA_DISTANCE_DERIVED", "G7.4 presentation LOD is camera-distance derived")
+	_assert(int(lod.get("semantic_source_sample_count", -1)) == 561, "G7.4 all presentation LODs reuse 561 semantic records")
+	_assert(bool(lod.get("reuses_same_semantic_records", false)), "G7.4 presentation LOD reuses same semantic records")
+	_assert(not bool(lod.get("changes_canonical_semantics", true)), "presentation LOD cannot change canonical semantics")
+	_assert(not bool(lod.get("changes_semantic_query", true)), "presentation LOD cannot change semantic query")
+	_assert(not bool(lod.get("changes_feature_identity", true)), "presentation LOD cannot change feature identity")
+	_assert(not bool(lod.get("changes_fluid_identity", true)), "presentation LOD cannot change fluid identity")
+	_assert(not bool(lod.get("included_in_canonical_checksum", true)), "presentation LOD excluded from canonical checksum")
+	var levels: Array = lod.get("levels", [])
+	_assert(levels.size() == 4, "G7.4 exposes four visible presentation LOD levels")
+	if levels.size() == 4:
+		var strides: Array[int] = []
+		var grids: Array = []
+		for index in range(levels.size()):
+			var level: Dictionary = levels[index]
+			_assert(int(level.get("lod", -1)) == index, "G7.4 presentation LOD%d id" % index)
+			strides.append(int(level.get("stride", 0)))
+			grids.append(Array(level.get("mesh_grid", [])))
+		_assert(strides == EXPECTED_LOD_STRIDES, "G7.4 presentation LOD strides are 1/2/4/8")
+		_assert(grids == EXPECTED_LOD_GRIDS, "G7.4 presentation LOD grids are 33x17 -> 5x3")
 	var presentation: Dictionary = manifest.get("presentation_contract", {})
 	_assert(not bool(presentation.get("field_selection_changes_canonical_query", true)), "field selector cannot change canonical query")
 	_assert(not bool(presentation.get("field_selection_changes_geometry", true)), "field selector cannot change geometry")
 	_assert(bool(presentation.get("field_selection_changes_only_derived_color", false)), "field selector changes derived color only")
+	_assert(not bool(presentation.get("camera_changes_canonical_semantics", true)), "camera cannot change canonical semantics")
+	_assert(not bool(presentation.get("presentation_lod_changes_canonical_semantics", true)), "presentation LOD cannot own semantic truth")
+	_assert(bool(presentation.get("presentation_lod_reuses_same_semantic_records", false)), "presentation LOD uses the same semantic record source")
 	_assert(not bool(presentation.get("visual_colors_in_canonical_checksum", true)), "visual colors excluded from canonical checksum")
 	_assert(not bool(presentation.get("mesh_density_in_canonical_checksum", true)), "mesh density excluded from canonical checksum")
 	_assert(not bool(presentation.get("creates_new_feature_identity", true)), "G7.4 creates no production FeatureId ownership")
