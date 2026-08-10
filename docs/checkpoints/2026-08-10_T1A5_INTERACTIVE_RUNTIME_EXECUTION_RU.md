@@ -4,11 +4,34 @@
 **Ветка:** `feature/t1a5-interactive-runtime-execution`  
 **Base:** T1A.4 accepted @ `a14e6f04c265467e1590106ace8439bddae19ddb`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `IMPLEMENTED CANDIDATE`
+**Статус:** `FOCUSED WINDOWS PASS — FULL REGRESSION REQUIRED`
+
+## Exact Windows focused evidence
+
+Проверено на `Godot 4.7.1.stable.double.custom_build.a13da4feb`, tested head `01b6ee2364d949858f12f0562de09743795cbc7e`:
+
+```text
+T1A.4 interactive fixture binding   PASS 153
+C5B affordance runtime contracts    PASS 32
+C15 executable utilities contracts  PASS 92
+T1A.5 interactive runtime execution PASS 67
+Focused total                       344 assertions PASS
+```
+
+Editor import также прошёл успешно. Runtime implementation после tested head не менялся; последующие commits этого checkpoint должны быть только validation/checkpoint metadata до полного regression gate.
+
+Статусные измерения до полного world regression:
+
+```text
+SOURCE_ACCEPTED       false
+MAIN_INTEGRATED       false
+COMPOSITION_VERIFIED  false
+PRODUCTION_READY      false
+```
 
 ## Цель
 
-T1A.4 закрепил шесть интерактивных D0 fixtures как production Items с C5 affordances, item-owned storage и C15 POWER/DATA bindings, но намеренно не исполнял состояния двери, генератора, света и консоли.
+T1A.4 закрепил интерактивные D0 fixtures как production Items с C5 affordances, item-owned storage и C15 POWER/DATA bindings, но намеренно не исполнял состояния двери, генератора, света и консоли.
 
 T1A.5 добавляет первый исполняемый runtime слой:
 
@@ -21,11 +44,11 @@ C5 affordance
   -> C15 utility recomputation when required
 ```
 
-При этом canonical `ConstructSnapshot` и Item Graph не становятся хранилищем transient runtime state.
+Canonical `ConstructSnapshot` и Item Graph не становятся хранилищем transient runtime state.
 
 ## Generic C5B runtime foundation
 
-Выявленный gap закрыт у владельца C5, а не внутри T1 lab.
+Gap закрыт у владельца C5, а не внутри T1 lab.
 
 Добавлены generic contracts:
 
@@ -35,8 +58,6 @@ scripts/construction/behavior/
   construction_runtime_state_store.gd
   construction_affordance_runtime_executor.gd
 ```
-
-### Runtime subject
 
 Generic subject содержит только:
 
@@ -50,43 +71,11 @@ state {}
 checksum
 ```
 
-Contract не знает слов `DOOR`, `GENERATOR`, `LAMP`, `CONSOLE` и не содержит T1-specific transitions.
+Contract не содержит T1-specific transition logic.
 
-### Runtime state store
+Runtime state store обеспечивает register/replay, revisioned update, stale-revision rejection, canonical JSON state, checksum и export/load roundtrip.
 
-Store обеспечивает:
-
-```text
-register / replay
-revisioned update
-stale revision rejection
-canonical JSON state
-checksum
-export / load roundtrip
-```
-
-Это behavior-runtime state, а не новый ItemRegistry, ConstructStore или authority registry.
-
-### Affordance runtime executor
-
-Executor использует существующие:
-
-```text
-ItemOperationFingerprint
-ItemOperationLedger
-```
-
-Command envelope:
-
-```text
-operation_id
-action_kind
-runtime_id
-expected_revision
-payload
-```
-
-Семантика:
+Affordance runtime executor переиспользует существующие `ItemOperationFingerprint` и `ItemOperationLedger`:
 
 ```text
 exact operation replay -> exact stored result
@@ -96,9 +85,7 @@ successful mutation -> revision + 1
 read/no-op -> revision preserved
 ```
 
-T1A.5 создаёт отдельный **экземпляр** существующего `ItemOperationLedger` для behavior runtime. Это сознательно не M0 assembly ledger: runtime actions не должны менять уже committed Item+Construct transaction ledger без отдельного cross-domain transaction.
-
-Новой реализации ledger нет.
+T1A.5 использует отдельный экземпляр существующего `ItemOperationLedger` для behavior runtime и не загрязняет M0 assembly ledger.
 
 ## D0 runtime subjects
 
@@ -111,8 +98,6 @@ runtime/t1a5/d0/lamp
 runtime/t1a5/d0/console
 ```
 
-Каждый subject ссылается на global fixture Item ID и capability_id из accepted T1A.4 profile.
-
 Начальные состояния:
 
 ```text
@@ -122,109 +107,45 @@ LAMP       on=false
 CONSOLE    active=false, use_count=0
 ```
 
-## Door execution
+### Door
 
-Исполняются:
-
-```text
-OPEN_DOOR
-CLOSE_DOOR
-```
-
-Перед переходом проверяются текущие T1A.4/C15 allocations:
+`OPEN_DOOR` / `CLOSE_DOOR` требуют текущие C15 allocations:
 
 ```text
 POWER door allocation == FULL
 DATA  door allocation == FULL
 ```
 
-State:
+State: `CLOSED <-> OPEN`.
 
-```text
-CLOSED <-> OPEN
-```
+### Generator
 
-T1A.5 пока не моделирует промежуточную animation state `OPENING/CLOSING`; presentation interpolation относится к следующему checkpoint.
+`START_GENERATOR` / `STOP_GENERATOR` меняют runtime `running`, который проецируется в existing C15 generator SOURCE property `online`. После перехода POWER network пересчитывается deterministic utility tick.
 
-## Generator execution
+### Lamp
 
-Исполняются:
+`TOGGLE_LIGHT` меняет `on`. При `on=false` lamp demand не участвует в runtime POWER demand set; при включении demand возвращается и C15 simulator пересчитывает allocation/flows/storage.
 
-```text
-START_GENERATOR
-STOP_GENERATOR
-```
+### Console
 
-Runtime state `running` проецируется в существующий C15 generator SOURCE node через property `online`.
+`USE_WORKSTATION` выставляет `active=true` и увеличивает `use_count`. При активности console POWER demand участвует в runtime demand set.
 
-После изменения C15 POWER network пересчитывается новым deterministic utility tick.
+### Battery
 
-## Lamp execution
-
-Исполняется:
-
-```text
-TOGGLE_LIGHT
-```
-
-При `on=false` lamp demand не участвует в runtime POWER demand set.
-
-При включении demand возвращается и C15 simulator повторно рассчитывает allocation/flows/storage.
-
-Renderer/light emission пока не являются canonical state и не исполняются этим checkpoint.
-
-## Console execution
-
-Исполняется:
-
-```text
-USE_WORKSTATION
-```
-
-State:
-
-```text
-active=true
-use_count += 1
-```
-
-При active console его POWER demand включается в runtime demand set. DATA source остаётся T1A.4 C15 binding.
-
-UI самой консоли относится к следующему presentation/runtime integration checkpoint.
-
-## Battery behavior
-
-Battery не получает отдельную T1 state machine.
-
-Используется существующий C15 storage state:
-
-```text
-stored_amount
-capacity
-tick
-revision
-```
-
-При остановленном генераторе батарея реально разряжается через `construction_utility_simulator.gd`; после запуска генератора surplus снова может её заряжать.
-
-`INSPECT_BATTERY` как отдельный runtime command в T1A.5 не материализуется: состояние уже доступно из C15 profile, а inspection UI не должен создавать лишнюю canonical mutation.
+Отдельная T1 battery state machine не создаётся. Используется existing C15 storage state (`stored_amount`, `capacity`, `tick`, `revision`). Focused acceptance подтвердил discharge при остановке generator и recharge после повторного старта.
 
 ## Container boundary
 
-T1A.4 уже создал настоящий 24-slot item-owned Container.
-
-T1A.5 **не** реализует отдельные `STORE_ITEM/TAKE_ITEM` runtime transitions, потому что это дублировало бы production Item transfer semantics.
+T1A.4 уже создал настоящий 24-slot item-owned Container. T1A.5 не дублирует `STORE_ITEM/TAKE_ITEM` runtime transitions:
 
 ```text
 OPEN_CONTAINER / STORE_ITEM / TAKE_ITEM
   -> existing inventory + Item transfer foundation
 ```
 
-Это сознательная ownership boundary.
+## Инварианты
 
-## Что остаётся неизменным
-
-Runtime actions не должны менять:
+Focused PASS подтвердил, что runtime execution не меняет:
 
 ```text
 ConstructSnapshot
@@ -237,16 +158,7 @@ T1A.4 fixture binding components
 C2B/M0 authoritative assembly state
 ```
 
-Runtime state не записывается в:
-
-```text
-permanent item identity
-construct identity
-LOD/HLOD
-server/authority route
-render profile
-MaterialDefinitionId
-```
+Runtime state не входит в permanent item/construct identity, authority/server route, LOD/HLOD, render profile или material ontology.
 
 ## P0
 
@@ -263,9 +175,9 @@ private utility simulator
 private material ontology
 ```
 
-Новый C5B runtime слой является расширением существующего C5 behavior ownership, а не параллельной foundation.
+C5B является расширением существующего C5 behavior ownership, а не параллельной foundation.
 
-## Focused acceptance
+## Focused gate — PASS
 
 Runner:
 
@@ -276,47 +188,36 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
     -GodotPath $Godot
 ```
 
-Gate:
+Result:
 
 ```text
-Editor import
-T1A.4 acceptance
-C5B generic runtime contracts
-C15 executable utilities
-T1A.5 D0 runtime acceptance
+Editor import                         PASS
+T1A.4 interactive fixture binding    PASS 153
+C5B affordance runtime contracts     PASS 32
+C15 executable utilities contracts   PASS 92
+T1A.5 interactive runtime execution  PASS 67
+Focused total                         344 assertions PASS
 ```
 
-T1A.5 acceptance проверяет:
+Acceptance также покрывает exact successful replay, operation-id conflict, stale revision terminal rejection + exact rejected replay, wrong capability/action rejection, C15 profile validity, неизменность ConstructSnapshot/C2B/M0/Item Graph и P0 forbidden identity leakage.
+
+## Следующий gate
+
+Для source acceptance остаётся полный:
+
+```powershell
+$env:GODOT_BIN = $Godot
+.\RUN_WORLD_REGRESSION_TESTS.ps1
+```
+
+После PASS можно выставить:
 
 ```text
-4 runtime subjects
-runtime store checksums/revisions
-OPEN/CLOSE door
-exact success replay
-operation-id conflict
-STOP/START generator
-battery discharge/recharge
-TOGGLE_LIGHT
-USE_WORKSTATION
-stale revision rejection + rejected replay
-wrong capability/action rejection
-C15 profile validity after transitions
-ConstructSnapshot unchanged
-C2B/M0 authoritative state unchanged
-Item Graph unchanged
-P0 forbidden identity leakage absent
+SOURCE_ACCEPTED       true
+COMPOSITION_VERIFIED  true
 ```
 
-## Status gate
-
-До exact Windows focused + full world regression:
-
-```text
-SOURCE_ACCEPTED       false
-MAIN_INTEGRATED       false
-COMPOSITION_VERIFIED  false
-PRODUCTION_READY      false
-```
+`MAIN_INTEGRATED` и `PRODUCTION_READY` при этом остаются false.
 
 ## Следующий checkpoint
 
@@ -324,7 +225,7 @@ PRODUCTION_READY      false
 
 `T1A.6 — Runtime Presentation + Multiplayer Binding`
 
-Он должен привязать accepted runtime state к видимому состоянию двери/лампы/консоли и сетевой доставке, сохраняя принцип:
+Он должен связать accepted runtime state с видимым состоянием двери/лампы/консоли и сетевой доставкой, сохраняя:
 
 ```text
 canonical runtime state != presentation != transport
