@@ -1,35 +1,31 @@
-# G7.4 Semantic Field Lab — IMPLEMENTED CANDIDATE
+# G7.4 Semantic Field Lab — FIX2 FOCUSED PASS / FULL ACCEPTANCE PENDING
 
-**Дата:** 2026-08-10
-**Global revision:** `GLOBAL-P0-2026-08-10-R2`
+**Global architecture:** `GLOBAL-P0-2026-08-10-R2`
+**Project Control:** `PC0-2026-08-10-R1`
 **Branch:** `feature/g7-semantic-field-fabric`
-**G7.3 tested head:** `910899a906e684d6793cd74ba898d68c457a37b4`
+**Parent:** `G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9`
 
-## Цель
-
-G7.4 — первый официальный graphical/debug milestone Semantic Field Fabric.
-
-Он не создаёт новые canonical semantics. Lab читает уже принятые G7 fields и переводит их в derived color/mesh presentation.
+## Current state
 
 ```text
-canonical semantic samples
-       ↓ read only
-presentation patch / colors / HUD
+G7.4 Semantic Field Lab
+stage: FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING
+PC0 G health: YELLOW
 ```
 
-## Визуализируемые поля
+G7.4 is a derived graphical lab over accepted semantic truth. Rendering, camera, mesh density and color remain outside canonical world identity.
 
-Только реально доступные через accepted provider/adapter chain:
+Visualized adapter-backed fields:
 
 ```text
-1  geo/surface-height-m
-2  geo/valley-influence
-3  geo/river-distance-m
-4  geo/river-width-m
-5  geo/fluid-surface-distance-m
+geo/surface-height-m
+geo/valley-influence
+geo/river-distance-m
+geo/river-width-m
+geo/fluid-surface-distance-m
 ```
 
-### Поля, которые lab специально НЕ имитирует
+Vocabulary-only fields remain explicitly not faked:
 
 ```text
 geo/slope
@@ -40,161 +36,94 @@ geo/temperature-baseline
 geo/moisture-baseline
 ```
 
-Они остаются `VOCABULARY_ONLY_G7_0`. Их наличие в registry означает contract vocabulary, а не готовую truth-generating implementation.
+## Fix1 — Windows PowerShell launcher
 
-Это защищает G8/G9/environment stages от скрытого захвата ownership presentation-кодом.
+The initial launcher contained a Unicode em dash. Legacy Windows PowerShell could decode UTF-8-without-BOM through an ANSI codepage into smart-quote bytes and parse field legend text as PowerShell expressions.
 
-## Semantic patch
+Fix1 keeps G7.4 PowerShell launchers/runners ASCII-only and makes the full gate AST-parse them before runtime. No world semantics changed.
 
-Deterministic patch:
+## Fix2 — shared M5 final convergence
 
-```text
-body: accepted G6 continuity fixture
-latitude:   0..10 deg
-longitude: 30..62 deg
-segments: 16 x 32
-semantic vertices: 561
-visual proof faces: PX + PZ
-```
-
-Каждый vertex строится из настоящего query/composition pipeline:
+The first full G7.4 run reached shared world regression and exposed an inherited M5 barrier handoff deadlock:
 
 ```text
-SemanticFieldQuery
-  ├─ G3 surface adapter
-  ├─ G5 valley-bounds adapter
-  └─ G6 river/fluid adapter
-          ↓
-SemanticFieldComposerV1
-          ↓
-SemanticFieldBundle
-SemanticFieldCompositionReceipt
+A2: WAIT_CONVERGENCE_PEER timeout
+B : WAIT_FINAL_CONVERGENCE_PEER timeout
+
+both leave_result.success = true
+server joins = 3
+server leaves = 3
+server connected_peer_count = 0
 ```
 
-Для G5 используется deterministic lab-only valley fixture на том же body/frame, чтобы визуально показать уже принятый `FEATURE_BOUNDS_FALLOFF_V1`. Этот fixture не является production terrain feature и не переносит geomorphology ownership в G7.4.
+All canonical final-state assertions still passed. Root cause was monotonic barrier progress: a faster peer could publish `FINAL_CONVERGENCE_LOCKED` before the slower peer observed the earlier `CONVERGENCE_LOCKED` report.
 
-## Presentation
-
-Geometry shape использует только accepted `geo/surface-height-m`.
-
-Переключение `1..5` не перестраивает canonical query и не меняет geometry — меняется только vertex color mapping.
-
-Дополнительная white line — accepted G6 canonical river centerline overlay.
-
-HUD показывает:
+Fix2 accepts later peer states as proof of already-crossed earlier barriers only when frozen player/item checksums match:
 
 ```text
-selected field id
-unit
-registry availability
-min/max values
-sample count
-grid dimensions
-observed cube faces
-center bundle checksum prefix
-center provenance checksum prefix
-presentation-only manifest hash
-vocabulary-only fields NOT faked
+READY_TO_CONVERGE
+  < CONVERGENCE_LOCKED
+  < FINAL_CONVERGENCE_LOCKED
+  < COMPLETE
 ```
 
-## Controls
+No timeout was increased and no assertion was weakened.
+
+Focused Windows verification now passes:
 
 ```text
-1..5  field mode
-F     river centerline overlay
-W/S   zoom
-A/D   yaw
-Q/E   pitch
-Space auto orbit
-R     reset
+PASS: A reconnect graphical acceptance completed
+PASS: B graphical acceptance completed
+PASS: final clients passed
+M5 graphical multiplayer acceptance: 92 assertions, 0 failures
 ```
 
-## P0 boundary
+Tested runtime/focused head:
 
 ```text
-field mode != canonical query mutation
-color != semantic value
-camera != world truth
-mesh density != canonical identity
-patch topology != SurfaceCell identity
-presentation hash != world identity
-river overlay != FluidRegion owner
-lab valley fixture != production geomorphology
+866187c437f0dbc14bf5d8d0f0f9fb25ab106f17
 ```
 
-G7.4 не владеет:
+## PC0
+
+Main-owned registry generation 5 now declares:
 
 ```text
-WorldQuery Fabric
-Spatial Domain Fabric
-Authority / Interest
-Persistence
-Network
-Material Ontology
-Scheduler / Cache
-Geomorphology
-renderer foundation
+G stage_status = FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING
+G health       = YELLOW
 ```
 
-## Automated acceptance
+Remaining blockers:
+
+```text
+G7_4_FULL_WORLD_REGRESSION_PENDING
+G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING
+```
+
+Therefore full G7.4 acceptance may resume, but G7.4 is not accepted yet.
+
+## Next automated gate
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G7_4_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Automated gate включает:
-
-```text
-active GLOBAL config/roadmap == main
-G7.3 ACCEPTED ancestor
-strict G7.4 file allowlist
-git diff --check
-PowerShell AST parsing
-G7.0..G7.4 focused regressions
-headless scene smoke
-561 sample proof
-5 backed fields
-6 vocabulary-only fields not faked
-PX/PZ coverage
-full world/core regression
-safe Microsoft/ cleanup
-final clean worktree
-```
-
-Ожидаемый конец:
+Expected final marker:
 
 ```text
 G7.4 AUTOMATED ACCEPTANCE: PASS
+Architecture revision: GLOBAL-P0-2026-08-10-R2
+Project Control revision: PC0-2026-08-10-R1
+PC0 operational G frontier: PASS
+PC0 G health is not RED: PASS
+G7.3 ACCEPTED ancestor: PASS
+G7.4 visual-lab scope: PASS
+Five adapter-backed semantic fields: PASS
+Six vocabulary-only fields not faked: PASS
+World/core regression: PASS
+Working tree: CLEAN
 MANUAL GRAPHICAL OBSERVATION: REQUIRED before G7.4 ACCEPTED
 ```
 
-## Manual graphical acceptance
-
-```powershell
-.\START_G7_4_SEMANTIC_FIELD_LAB.ps1 -GodotPath $Godot
-```
-
-Нужно подтвердить:
-
-```text
-[ ] semantic patch виден на сфере около river fixture
-[ ] 1 surface-height показывает макро-рельеф цветом
-[ ] 2 valley-influence показывает широкое bounds/falloff поле
-[ ] 3 river-distance выделяет коридор около centerline
-[ ] 4 river-width читается как отдельное G6 semantic field
-[ ] 5 fluid-surface-distance меняет картину независимо от field 3
-[ ] F действительно скрывает/показывает river centerline
-[ ] переключение 1..5 не изменяет форму patch, только цвет
-[ ] camera/orbit controls работают
-[ ] HUD явно пишет vocabulary-only fields as NOT faked
-[ ] нет визуальных seam-разрывов при переходе PX/PZ
-```
-
-Только после automated PASS + manual observation G7.4 можно перевести в `ACCEPTED`.
-
-## Следующий checkpoint
-
-```text
-G7 Full Acceptance
-```
+After automated PASS, run `START_G7_4_SEMANTIC_FIELD_LAB.ps1` and complete the manual graphical checks before marking G7.4 accepted.
