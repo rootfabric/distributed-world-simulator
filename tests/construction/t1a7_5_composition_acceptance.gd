@@ -47,7 +47,9 @@ func _test_composition() -> void:
 	var recovered_opened: Dictionary = SnapshotScript.create(D0, 1, 20, recovered_store.to_dict())
 	_assert_ok(SnapshotScript.validate(recovered_opened), "recovered snapshot validates")
 	_assert(String(recovered_opened.get("state_checksum", "")) == String(opened.get("state_checksum", "")), "recovered runtime semantic checksum mismatch")
-	_assert(String(Dictionary(recovered_store.get_subject(DOOR)).get("state", {}).get("position", "")) == "OPEN", "recovered door is not OPEN")
+	var recovered_door: Dictionary = recovered_store.get_subject(DOOR)
+	var recovered_door_state: Dictionary = Dictionary(recovered_door.get("state", {}))
+	_assert(String(recovered_door_state.get("position", "")) == "OPEN", "recovered door is not OPEN")
 
 	# Interest/session and reverse selective projection are composed over recovered truth.
 	var interest = InterestScript.new()
@@ -79,7 +81,9 @@ func _test_composition() -> void:
 	var replica_b = ReplicaScript.new()
 	_assert_ok(replica_a.accept_snapshot(before), "A initial baseline")
 	_assert_ok(replica_a.accept_snapshot(recovered_opened), "A recovered OPEN mutation")
-	_assert(String(Dictionary(replica_a.get_subject(DOOR)).get("state", {}).get("position", "")) == "OPEN", "A replica did not converge OPEN")
+	var replica_a_door: Dictionary = replica_a.get_subject(DOOR)
+	var replica_a_door_state: Dictionary = Dictionary(replica_a_door.get("state", {}))
+	_assert(String(replica_a_door_state.get("position", "")) == "OPEN", "A replica did not converge OPEN")
 	_assert(not bool(replica_b.get_report().get("has_snapshot", false)), "out-of-interest B received runtime state")
 
 	# A leaves interest. A later re-enters and receives a full current baseline.
@@ -97,16 +101,20 @@ func _test_composition() -> void:
 	_assert_ok(interest.update_selection("client/a", 3, [D0]), "A re-enters interest")
 	_assert_ok(planner.update_selection("client/a", [D0]), "planner A re-enters")
 	_assert_ok(replica_a.accept_snapshot(lamp_on), "A re-entry full baseline")
-	_assert(bool(Dictionary(replica_a.get_subject(LAMP)).get("state", {}).get("on", false)), "A re-entry baseline did not converge lamp")
+	var replica_a_lamp: Dictionary = replica_a.get_subject(LAMP)
+	var replica_a_lamp_state: Dictionary = Dictionary(replica_a_lamp.get("state", {}))
+	_assert(bool(replica_a_lamp_state.get("on", false)), "A re-entry baseline did not converge lamp")
 
 	# Logical interest survives transport reconnect; old session fence must no longer select.
 	_assert_ok(interest.disconnect_session("peer/a", "session/a1"), "disconnect A old session")
 	var reconnect: Dictionary = interest.bind_session("peer/a2", "session/a2", "client/a")
 	_assert_ok(reconnect, "bind A reconnect")
-	_assert(bool(Dictionary(reconnect.get("details", {})).get("reconnect", false)), "A reconnect not classified reconnect")
+	var reconnect_details: Dictionary = Dictionary(reconnect.get("details", {}))
+	_assert(bool(reconnect_details.get("reconnect", false)), "A reconnect not classified reconnect")
 	_assert(not interest.is_selected("peer/a", "session/a1", D0), "old A session remained selected")
 	_assert(interest.is_selected("peer/a2", "session/a2", D0), "A retained interest missing on reconnect")
-	_assert(int(Dictionary(interest.client_state("client/a")).get("interest_revision", 0)) == 3, "A reconnect lost interest revision")
+	var a_client_state: Dictionary = interest.client_state("client/a")
+	_assert(int(a_client_state.get("interest_revision", 0)) == 3, "A reconnect lost interest revision")
 
 	var reconnect_replica = ReplicaScript.new()
 	_assert_ok(reconnect_replica.accept_snapshot(lamp_on), "A reconnect current full baseline")
