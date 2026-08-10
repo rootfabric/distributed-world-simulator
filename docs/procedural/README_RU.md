@@ -13,7 +13,8 @@ G6 Hydrology / Fluid Surface           SOURCE_ACCEPTED
 G6 P0 Alignment Cleanup                ACCEPTED
 G7.0 Semantic Field Contracts          ACCEPTED
 G7.1 Upstream Semantic Field Adapters  ACCEPTED
-G7.2 Composition / Provenance           IMPLEMENTED CANDIDATE
+G7.2 Composition / Provenance           ACCEPTED
+G7.3 Cross-Cell / Cross-LOD Invariance  NEXT
 ```
 
 ## Accepted semantic path
@@ -35,22 +36,7 @@ G6 WaterSurfaceResolverV1
   -> geo/fluid-surface-distance-m
 ```
 
-Full G7.1 Windows acceptance passed on:
-
-```text
-61de8526448a5a2ab95745fa380cdc8b3c4ea24f
-Godot 4.7.1.stable.double.custom_build.a13da4feb
-```
-
-Accepted G7.1 checkpoint:
-
-```text
-af0898ba2f0fc03dbd0298440f302b497a5d0cad
-```
-
-## G7.2 Composition / Provenance
-
-G7.2 composes already-produced partial semantic samples:
+G7.2 accepted deterministic composition:
 
 ```text
 G3/G5/G6 partial adapter results
@@ -62,41 +48,48 @@ G3/G5/G6 partial adapter results
               └─ SemanticFieldCompositionReceipt
 ```
 
-Strict policy:
+Full G7.2 Windows acceptance passed on:
+
+```text
+70d9a78d8f176ce532412a64afbbcb2592623720
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+```
+
+The accepted composition policy is strict:
 
 ```text
 semantic-composition-policy/require-complete-v1
+
+missing requested fields       REJECT
+duplicate field ownership      REJECT
+duplicate adapters             REJECT
+unrequested contributed fields REJECT
+input order                     NORMALIZED BY ADAPTER_ID
 ```
 
-It rejects:
+The composer does not recalculate upstream semantic values. `SemanticFieldCompositionReceipt` pins query, bundle, sample and provenance checksums and remains an audit artifact rather than canonical world identity.
+
+## G7.3 target
+
+G7.3 proves the representation-independence already required by P0:
 
 ```text
-missing requested fields
-duplicate field ownership
-duplicate adapters
-unrequested contributed fields
+one world point + one canonical semantic query
+    -> same values/checksums/provenance
+       regardless of SurfaceCellKey / LOD path
 ```
 
-Adapter input ordering is normalized by canonical `adapter_id`, so equivalent inputs must produce identical bundle and receipt checksums.
-
-The composer does not recalculate samples and does not replace upstream provenance. The receipt pins:
+Acceptance must demonstrate:
 
 ```text
-query checksum
-bundle checksum
-per-field sample checksum
-per-field provenance checksum
-ordered adapter contributions
+same world point is semantic-cell invariant
+LOD changes only representation density/addressing
+PX/PZ and other cube-sphere seams do not change semantic value
+one river/valley feature spans many cells without identity reroll
+query field order does not change bundle/provenance
 ```
 
-Focused tests compose real accepted adapter paths:
-
-```text
-G3 + G5
-G3 + G6
-```
-
-and verify that G5 `FeatureId` and G6 `FluidRegionId` remain inside original sample provenance.
+Surface-cell and LOD information remain external representation context and do not enter `SemanticFieldId`, `SemanticFieldQuery`, `SemanticFieldSample`, `SemanticFieldBundle` or upstream Feature/Fluid identity.
 
 ## Ownership / P0 guards
 
@@ -115,27 +108,18 @@ G7 != Geomorphology
 SemanticFieldCompositionReceipt != world identity
 ```
 
-G8 still owns terrain incision, banks, floodplain and erosion/deposition. G12 remains the future scheduler/cache/provenance execution layer; G7.2 only performs synchronous deterministic composition of already available results.
-
-## Validation
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1 -GodotPath $Godot
-.\RUN_G7_2_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
-```
+G8 still owns terrain incision, banks, floodplain and erosion/deposition. G12 remains the future scheduler/cache/provenance execution layer.
 
 Records:
 
 ```text
 docs/checkpoints/G7_1_UPSTREAM_SEMANTIC_FIELD_ADAPTERS_ACCEPTED_RU.md
-docs/checkpoints/G7_2_COMPOSITION_PROVENANCE_CANDIDATE_RU.md
+docs/checkpoints/G7_2_COMPOSITION_PROVENANCE_ACCEPTED_RU.md
 validation/g7-2-composition-provenance-validation.json
 config/procedural/g7-2-composition-provenance.v1.json
 ```
 
-Next after G7.2 acceptance:
+Next implementation checkpoint:
 
 ```text
 G7.3 — Cross-Cell / Cross-LOD Invariance
