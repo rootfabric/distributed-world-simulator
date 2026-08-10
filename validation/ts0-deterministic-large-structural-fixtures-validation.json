@@ -7,9 +7,9 @@
     "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
   },
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "ACCEPTED",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
     "COMPOSITION_VERIFIED": false,
     "PRODUCTION_READY": false
@@ -53,13 +53,20 @@
   },
   "focused_validation": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "environment": "isolated harness with byte-equivalent current-branch NetworkContractUtils, ConstructionPartRecord, ConstructionBondRecord and ConstructSnapshot files",
-    "editor_import": "PASS",
-    "fixture_acceptance": "PASS_61_ASSERTIONS",
+    "isolated_exact_contract_harness": "PASS_61_ASSERTIONS",
+    "windows_worktree": "PASS_61_ASSERTIONS",
     "cube_10k_forward_reverse": "PASS",
     "pyramid_10k_forward_reverse": "PASS",
-    "c22_unit_grid_probes": "PASS",
-    "repository_full_regression": "PENDING_EXTERNAL_BRANCH_RUN"
+    "c22_unit_grid_probes": "PASS"
+  },
+  "full_branch_regression": {
+    "platform": "Windows",
+    "worktree": "C:/Godot/lunar-world-double-godot-ts0",
+    "tested_head": "4cf121fe86ea204c1bae93b64231468a91a1d647",
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PASS",
+    "summary": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json"
   },
   "known_gap": {
     "stage": "TS0.3",
@@ -68,6 +75,13 @@
     "blocks_ts0_0": false,
     "blocks_ts0_2": false,
     "must_be_closed_by_ts0_3": true
+  },
+  "acceptance": {
+    "ts0_p0_grid_alignment": "PASS",
+    "ts0_0_implementation": "COMPLETE",
+    "focused_validation": "PASS",
+    "windows_full_branch_regression": "PASS",
+    "source_accepted": true
   },
   "next": "TS0.1_10K_GRAPHICAL_PROOF"
 }
