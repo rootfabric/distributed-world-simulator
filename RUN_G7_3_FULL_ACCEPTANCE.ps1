@@ -89,7 +89,7 @@ function Remove-SafeWindowsProfileTransient {
         Write-Host "Removed $Phase Windows profile transient directory: Microsoft/"
     }
     catch {
-        Write-Warning "Could not remove transient Microsoft/ directory during $Phase: $($_.Exception.Message)"
+        Write-Warning "Could not remove transient Microsoft/ directory during ${Phase}: $($_.Exception.Message)"
     }
 }
 
