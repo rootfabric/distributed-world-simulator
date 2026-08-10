@@ -1,4 +1,4 @@
-extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_core.gd"
+extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_local_presentation.gd"
 
 # FIX10 fix6 final client leaf. Runtime behavior lives in the core below; this
 # canonical file keeps accepted source-contract probes stable after layering.
