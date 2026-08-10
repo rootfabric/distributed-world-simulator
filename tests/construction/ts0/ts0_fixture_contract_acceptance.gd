@@ -39,7 +39,8 @@ func _test_config_alignment() -> void:
 		return
 	var config: Dictionary = loaded["config"]
 	_assert(String(config["global_revision"]) == "GLOBAL-P0-2026-08-10-R2", "global revision pinned")
-	_assert(String(config["status"]) == "TS0_0_IMPLEMENTED_CANDIDATE", "TS0.0 candidate status pinned")
+	var stage_status: Dictionary = config.get("stage_status", {})
+	_assert(String(stage_status.get("TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES", "")) == "SOURCE_ACCEPTED", "TS0.0 source acceptance remains pinned")
 	var grid: Dictionary = config["structural_grid"]
 	_assert(float(grid["cell_size_m"]) == 1.0, "C22 unit grid cell size")
 	_assert(float(grid["section_size_m"]) == 8.0, "TS0 local section size")
