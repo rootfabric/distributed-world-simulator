@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 16,
+  "registry_generation": 17,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T10:47:00Z",
+  "updated_at_utc": "2026-08-10T11:10:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -18,13 +18,12 @@
       "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
       "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX3_FOCUSED_PASS_FULL_REGRESSION_PENDING",
-      "progress_note": "Fix3 visible presentation LOD is confirmed manually from LOD0 through LOD3, and fresh Windows focused validation on 667648392c1c7b523ec6d043115fdcc36820fef7 passes G7.0 180, G7.1 59, G7.2 52, G7.3 122 and G7.4 61 assertions with 0 failures. The headless lab smoke also passes with 561 semantic samples, five backed fields and PX/PZ coverage. Full world/core regression and remaining manual graphical checks are still required before G7.4 acceptance.",
+      "stage_status": "FIX3_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
+      "progress_note": "Fix3 visible presentation LOD is confirmed manually from LOD0 through LOD3. Focused Windows validation passes on runtime head 667648392c1c7b523ec6d043115fdcc36820fef7. Full G7.4 automated acceptance passes on control head 661b0eecaaa0efdedb1eaa4ea870613392029978: PC0 G frontier PASS, G health not RED, G7.3 ancestor PASS, G7.4 scope PASS, five adapter-backed fields PASS, six vocabulary-only fields not faked PASS, world/core regression 6 PASS 0 FAIL through NX4, and working tree CLEAN. Only remaining manual graphical observations block G7.4 acceptance.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Run G7.4 full automated acceptance on the refreshed control state; if green, complete the remaining manual graphical checks, accept G7.4, then run G7 full acceptance.",
+      "next_stage": "Complete the remaining G7.4 manual graphical checks; if green, accept G7.4 and run G7 full acceptance before starting G8 geomorphology.",
       "health_declared": "YELLOW",
       "blockers": [
-        "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED",
         "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"
       ]
     },
@@ -161,11 +160,11 @@
   "global_blocked_transitions": [
     {
       "stage": "G7.4 ACCEPTED",
-      "blocked_by": "G7_4_FIX3_FULL_AND_MANUAL_ACCEPTANCE_REQUIRED"
+      "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
     },
     {
       "stage": "G7 FULL ACCEPTANCE",
-      "blocked_by": "G7_4_FULL_ACCEPTANCE_REQUIRED"
+      "blocked_by": "G7_4_ACCEPTED_REQUIRED"
     }
   ],
   "audit_triggers": [
