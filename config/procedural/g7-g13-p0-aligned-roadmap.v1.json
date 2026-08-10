@@ -7,10 +7,11 @@
     "g6": "SOURCE_ACCEPTED",
     "g5_world_feature_identity": "ACCEPTED",
     "g6_hydrology_fluid_semantics": "ACCEPTED",
-    "g7_semantic_field_fabric": "ACCEPTED"
+    "g7_semantic_field_fabric": "ACCEPTED",
+    "g8_0_geomorphology_contracts": "ACCEPTED"
   },
-  "current_checkpoint": "G8_0_GEOMORPHOLOGY_CONTRACTS",
-  "next_checkpoint": "G8_1_VALLEY_INCISION_BASELINE",
+  "current_checkpoint": "G8_1_VALLEY_INCISION_BASELINE",
+  "next_checkpoint": "G8_2_RIVER_CHANNEL_INCISION",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -64,8 +65,9 @@
     {
       "id": "G8",
       "name": "Geomorphology",
-      "status": "IN_PROGRESS_G8_0",
-      "current": "G8.0 Geomorphology Contracts",
+      "status": "IN_PROGRESS_G8_1",
+      "accepted": ["G8.0 Geomorphology Contracts"],
+      "current": "G8.1 Valley Incision Baseline",
       "roadmap": [
         "G8.0 Geomorphology Contracts",
         "G8.1 Valley Incision Baseline",
