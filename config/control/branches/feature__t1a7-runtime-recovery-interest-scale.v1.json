@@ -8,18 +8,19 @@
   "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-  "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
-  "stage_status": "FIX1_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
-  "progress_note": "The first Windows recovery gate exposed restart-bootstrap duplicate assembly after M0 restore. FIX1 added opt-in persisted-composition reuse only for T1A.7 recovery, with deterministic ConstructSnapshot equivalence and no duplicate assembly plan. Fresh Windows revalidation on a1d856de348268c45eccfb1c4646720bc4a996db is green: T1A.4 153, C5B 32, T1A.5 67, T1A.5 transactional 36 and T1A.7 recovery 60 assertions. Full world regression remains required because FIX1 touched watched T1A.4/T1A.5 runtime files.",
-  "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-  "next_stage": "Run full world regression on the same T1A.7.1 FIX1 runtime head; if green, accept T1A.7.1 and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
+  "current_stage": "T1A.7.2 Late-Interest Baseline + Reconnect",
+  "stage_status": "ACTIVE_REUSE_AUDIT",
+  "progress_note": "T1A.7.1 Recovery Snapshot + Restore Contract is accepted on runtime head a1d856de348268c45eccfb1c4646720bc4a996db after fresh Windows focused validation (153/32/67/36/60) and full world/core regression (6 PASS, 0 FAIL, NX4 final marker, clean STOPPED lifecycle). T1A.7.2 now starts from that accepted recovery base and must reuse existing session-fence/interest/replay foundations rather than create Construction-private global interest identity or transport policy.",
+  "last_accepted_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
+  "next_stage": "Complete T1A.7.2 reuse audit against MW7 and M3/NX session boundaries, then implement the smallest late-interest authoritative baseline + reconnect candidate and focused acceptance.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
     "T1A6",
+    "T1A7_1_ACCEPTED_RECOVERY",
     "C5B_CONSTRUCTION_RUNTIME_STATE",
-    "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR",
     "C5C_RUNTIME_REPLICATION",
+    "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR",
     "M3_NX_REALTIME_TRANSPORT",
     "MW7_MATTER_INTEREST_RECONNECT_REPLAY"
   ],
@@ -52,6 +53,7 @@
     "scripts/simulation/matter/persistence/**",
     "scripts/items/services/item_operation_ledger.gd",
     "scripts/runtime/networked_gameplay/m3/**",
+    "scripts/network/**",
     "scripts/network/contracts/network_protocol_manifest.gd"
   ],
   "critical_watched_paths": [
@@ -59,10 +61,14 @@
     "scripts/construction/behavior/construction_affordance_runtime_executor.gd",
     "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
     "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
+    "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
+    "scripts/labs/t1/t1a6_m3_runtime_client_adapter.gd",
+    "scripts/runtime/host_client/construction_runtime_replica_store.gd",
     "scripts/simulation/transactions/aggregate_transaction_repository.gd",
     "scripts/simulation/transactions/aggregate_transaction_coordinator.gd",
     "scripts/simulation/matter/interest/matter_interest_server.gd",
     "scripts/simulation/matter/interest/matter_interest_replica_client.gd",
+    "scripts/runtime/networked_gameplay/m3/**",
     "scripts/network/contracts/network_protocol_manifest.gd"
   ],
   "runtime_paths": [
@@ -73,6 +79,7 @@
     "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
     "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
     "scripts/labs/t1/t1a7/**",
+    "scripts/runtime/networked_gameplay/t1a7/**",
     "tests/construction/t1a7_*"
   ],
   "validation_paths": [
@@ -83,24 +90,27 @@
   "tested_heads": {
     "runtime": "a1d856de348268c45eccfb1c4646720bc4a996db",
     "focused": "a1d856de348268c45eccfb1c4646720bc4a996db",
-    "full_regression": ""
+    "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"
   },
   "ownership_claims": [
-    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Construction runtime recovery state schema and M0 aggregate adapter"},
+    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Construction runtime recovery state and domain-specific interest projection"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "reuse existing AggregateTransactionRepository/Coordinator; no private T1 repository/coordinator"},
-    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "consume existing transport/session/channel policy; no recovery transport added in T1A.7.1"},
-    {"foundation": "AUTHORITY_FOUNDATION", "claimed_owner": "AUTHORITY", "scope": "consume existing authority owner/epoch from Construction authoritative adapter"}
+    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "consume existing session/channel/reconnect policy; T1A.7.2 may add Construction projection adapters only"},
+    {"foundation": "AUTHORITY_FOUNDATION", "claimed_owner": "AUTHORITY", "scope": "consume existing authority owner/epoch/session fences; no new permanent owner registry"},
+    {"foundation": "SPATIAL_DOMAIN_FABRIC", "claimed_owner": "P0", "scope": "consume existing spatial/interest keys only; Construction runtime identity must not become a new global spatial identity"}
   ],
   "forbidden_foundation_ownership": [
     "SPATIAL_DOMAIN_FABRIC",
     "MATERIAL_ONTOLOGY",
     "WORLD_TRANSACTION_MODEL",
     "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
     "PERSISTENCE_DURABILITY",
-    "WORLD_WORK_BUDGET"
+    "WORLD_WORK_BUDGET",
+    "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "T1A7_1_FULL_WORLD_REGRESSION_PENDING"
+    "T1A7_2_REUSE_AUDIT_AND_FOCUSED_ACCEPTANCE_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
