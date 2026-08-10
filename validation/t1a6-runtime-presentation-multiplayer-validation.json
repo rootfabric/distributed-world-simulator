@@ -9,6 +9,7 @@
   "previous_focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
   "previous_full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
   "transactional_effects_fix1_head": "9698415f94c0a68d1536e0bdee7a00463f5c610a",
+  "transactional_test_parse_fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "status_dimensions": {
@@ -40,6 +41,16 @@
     "persistence_foundation_added": false,
     "transaction_coordinator_added": false,
     "result": "IMPLEMENTED_REQUIRES_WINDOWS_VALIDATION"
+  },
+  "transactional_test_parse_fix": {
+    "windows_probe_head": "64310ef10d76c28ca1111f33f7fc8cd0e7376912",
+    "c5b_affordance_runtime_contracts": "PASS_32",
+    "t1a5_interactive_runtime_execution": "PASS_67",
+    "transactional_test": "BLOCKED_GDSCRIPT_TYPE_INFERENCE",
+    "error": "Cannot infer the type of success_generation variable because the value does not have a set type.",
+    "fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
+    "fix": "Make dynamic Dictionary/API-derived regression values explicit int/String/Dictionary types; production runtime semantics unchanged.",
+    "requires_windows_rerun": true
   },
   "previous_windows_evidence": {
     "t1a5_runtime_acceptance": "PASS_67",
