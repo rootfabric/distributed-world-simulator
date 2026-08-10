@@ -1,17 +1,18 @@
 {
   "schema": "planet_simulator.t1a7_2_late_interest_reconnect_validation.v1",
   "checkpoint": "T1A7_2_LATE_INTEREST_BASELINE_RECONNECT",
-  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
   "accepted_base_runtime_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
-  "candidate_runtime_head_before_validation_metadata": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
+  "accepted_runtime_head": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
+  "accepted_control_head": "a851d1f8e680c253109e7ddb86ef8032276b17fb",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "reuse_audit": {
@@ -37,8 +38,7 @@
     "new_protocol_message": false,
     "network_protocol_manifest_changed": false,
     "new_authority_registry": false,
-    "new_persistence_repository": false,
-    "selection_source": "authoritative upstream world/query interest input; T1A.7.2 stores only a domain binding projection"
+    "new_persistence_repository": false
   },
   "first_windows_attempt": {
     "checkout_head": "96cfdde3818e70c5ccb1f0fc79bd71284c2c1b90",
@@ -57,33 +57,31 @@
       "t1a6_multiplayer_failures": 0
     },
     "t1a7_2_binding_result": "FAIL_18_OF_34",
-    "error": "Invalid access to property or key 'construct_ids' on a Dictionary in construction_runtime_interest_binding.gd update_selection/restore_client_state",
-    "root_cause": "_normalize_construct_ids returns the shared success envelope {success,error_code,details}; callers incorrectly read construct_ids from the top level instead of details.construct_ids",
-    "disposition": "REJECTED_FIX1_REQUIRED",
-    "full_regression_run": false
+    "root_cause": "shared result envelope was read at the wrong level in two normalization callers",
+    "disposition": "REJECTED_FIX1_REQUIRED"
   },
   "fix1": {
     "runtime_head": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
     "scope": "construction_runtime_interest_binding.gd only",
     "change": "read normalized construct ids from normalized_result.details.construct_ids in update_selection and restore_client_state",
     "semantic_change": false,
-    "architecture_change": false,
-    "focused_revalidation_required": true,
-    "full_regression_still_required_after_focused_pass": true
+    "architecture_change": false
   },
-  "candidate": {
-    "t1a6_extension_hooks": "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
-    "interest_binding": "scripts/labs/t1/t1a7/construction_runtime_interest_binding.gd",
-    "server_adapter": "scripts/labs/t1/t1a7/t1a7_m3_runtime_server_adapter.gd",
-    "server_harness": "tools/runtime/t1a7_runtime_server.gd",
-    "client_harness": "tools/runtime/t1a7_runtime_client.gd",
-    "binding_acceptance": "tests/construction/t1a7_2_runtime_interest_binding_acceptance.gd",
-    "multiplayer_acceptance": "tests/construction/t1a7_2_late_interest_reconnect_acceptance.gd",
-    "focused_runner": "RUN_T1A7_2_LATE_INTEREST_RECONNECT_TESTS.ps1"
+  "final_windows_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_result": "PASS",
+    "focused_evidence_note": "User executed the required FIX1 focused gate before proceeding to the supplied full-regression gate; exact new-stage assertion totals were not reproduced in the final transcript and are intentionally not invented here.",
+    "full_regression_result": "PASS",
+    "full_regression_summary": "6 PASS / 0 FAIL",
+    "full_regression_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "lifecycle": "STOPPED",
+    "exit_code": 0,
+    "additional_tail_evidence": [
+      "RL3 representation-aware network streaming PASS 175",
+      "RL3 representation streaming processes PASS 37"
+    ]
   },
   "semantics": {
-    "t1a6_default_snapshot_filter": "ALLOW_ALL",
-    "t1a7_runtime_factory": "T1A7_RECOVERABLE_RUNTIME",
     "selection_revision_monotonic": true,
     "same_revision_same_selection_replay": true,
     "same_revision_different_selection_rejected": true,
@@ -97,30 +95,10 @@
     "bounded_delta_replay_claimed": false,
     "multi_construct_dirty_stream_claimed": false
   },
-  "focused_scenario": [
-    "fresh A joins gameplay without D0 runtime interest and receives no Construction runtime snapshot",
-    "authoritative upstream selection enters D0 and A receives current reliable baseline",
-    "A opens D0 door",
-    "late B joins without D0 interest and receives no D0 runtime snapshot",
-    "B enters D0 interest and receives authoritative OPEN baseline",
-    "B leaves D0 interest",
-    "A closes D0 door and B receives no runtime mutation",
-    "B re-enters D0 and receives authoritative CLOSED baseline",
-    "B disconnects while logical selection is retained",
-    "B reconnects with a new transport session and receives current retained-interest baseline"
-  ],
-  "required_validation": {
-    "runner": "RUN_T1A7_2_LATE_INTEREST_RECONNECT_TESTS.ps1",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_result": "FIX1_REVALIDATION_PENDING",
-    "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING",
-    "why_full_regression_required": "T1A.7.2 adds default-safe extension hooks to the accepted T1A.6 runtime server adapter"
-  },
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
-    "full_regression": ""
+    "runtime": "d41d3d3721b61cc0464e1c5693ccaa4521b7819a",
+    "focused": "a851d1f8e680c253109e7ddb86ef8032276b17fb",
+    "full_regression": "a851d1f8e680c253109e7ddb86ef8032276b17fb"
   },
   "next_after_acceptance": "T1A7_3_DIRTY_SELECTIVE_RUNTIME_REPLICATION"
 }
