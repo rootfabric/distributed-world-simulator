@@ -8,7 +8,7 @@
     "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
   },
   "status": "TS0_1_IMPLEMENTED_CANDIDATE",
-  "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count.",
+  "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count, while preserving complete visual coverage at every representation level.",
   "fixture_seed_version": "ts0-large-structural-fixtures-v1",
   "structural_grid": {
     "cell_size_m": 1.0,
@@ -35,12 +35,20 @@
     "section_distance_m": 250.0,
     "shell_distance_m": 1000.0,
     "bandwidth_budget_bytes": 8388608,
-    "max_section_artifacts": 12,
+    "max_section_artifacts": 64,
     "max_interactive_parts": 0,
     "mode_mapping": {
       "NEAR": "LOCAL_EXTERIOR",
       "MID": "SECTION_HLOD",
       "FAR": "DISTANT_SHELL"
+    },
+    "coverage_policy": {
+      "invariant": "COMPLETE_VISUAL_COVERAGE_REQUIRED",
+      "FAR": "FULL_ROOT_SHELL",
+      "MID": "ALL_SECTION_ARTIFACTS",
+      "NEAR": "ALL_SECTION_ARTIFACTS_WITH_LOCAL_REFINEMENT_RESERVED",
+      "ts0_1_max_flat_section_artifacts": 64,
+      "ts0_2_requires_hierarchical_coverage": true
     },
     "controls": {
       "1": "CUBE_10K",
@@ -122,15 +130,19 @@
     "requirements": [
       "C22_COMPILER_USED_WITHOUT_TS0_RENDERER_FORK",
       "C24_ARRAY_MESH_USED_FOR_ALL_PROXY_MESHES",
+      "COMPLETE_VISUAL_COVERAGE_REQUIRED",
       "NEAR_LOCAL_EXTERIOR_VISIBLE",
       "MID_SECTION_HLOD_VISIBLE",
       "FAR_DISTANT_SHELL_VISIBLE",
-      "NEAR_MID_PROXY_MESH_COUNT_AT_MOST_12",
+      "NEAR_MID_VISIBLE_SECTION_COUNT_EQUALS_TOTAL_SECTION_COUNT",
+      "NEAR_MID_PROXY_MESH_COUNT_EQUALS_TOTAL_SECTION_COUNT",
+      "TS0_1_FLAT_COMPLETE_COVERAGE_AT_MOST_64_SECTIONS",
       "FAR_PROXY_MESH_COUNT_EXACTLY_1",
       "RUNTIME_NODE_COUNT_FAR_BELOW_CANONICAL_PART_COUNT",
       "CANONICAL_CHECKSUM_INVARIANT_ACROSS_MODES",
       "C22_ARTIFACT_CACHE_STABLE_ACROSS_MODE_SWITCHES",
-      "C24_MESH_CACHE_REUSED_ON_REPEAT_PRESENTATION"
+      "C24_MESH_CACHE_REUSED_ON_REPEAT_PRESENTATION",
+      "TS0_2_REQUIRES_HIERARCHICAL_COVERAGE_INSTEAD_OF_FLAT_ALL_SECTIONS"
     ],
     "user_visual_observation_required": true,
     "full_branch_regression_required_before_source_acceptance": true
@@ -168,10 +180,12 @@
     "requirements": [
       "RUNTIME_NODE_COUNT_BOUNDED_AND_FAR_BELOW_PART_COUNT",
       "COMPILED_REPRESENTATION_USED",
+      "COMPLETE_VISUAL_COVERAGE_REQUIRED_AT_EVERY_ACTIVE_HLOD_LEVEL",
       "NEAR_MID_FAR_TRANSITION_OBSERVABLE",
       "CANONICAL_CHECKSUM_INVARIANT_ACROSS_REPRESENTATION_MODES",
       "HEADLESS_CANONICAL_PATH_REQUIRES_NO_MESH_ASSETS",
-      "NO_UNBOUNDED_ARTIFACT_OR_CACHE_GROWTH"
+      "NO_UNBOUNDED_ARTIFACT_OR_CACHE_GROWTH",
+      "HIERARCHICAL_COVERAGE_REPLACES_FLAT_ALL_SECTIONS_ABOVE_TS0_1_LIMIT"
     ]
   },
   "mutation_probe": {
