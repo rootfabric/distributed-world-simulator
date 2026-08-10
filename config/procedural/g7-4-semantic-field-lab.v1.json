@@ -22,6 +22,22 @@
     "expected_vertices": 561,
     "crosses_cube_faces": ["PX", "PZ"]
   },
+  "presentation_lod": {
+    "mode": "CAMERA_DISTANCE_DERIVED",
+    "semantic_source_sample_count": 561,
+    "reuses_same_semantic_records": true,
+    "changes_canonical_semantics": false,
+    "changes_semantic_query": false,
+    "changes_feature_identity": false,
+    "changes_fluid_identity": false,
+    "included_in_canonical_checksum": false,
+    "levels": [
+      {"lod": 0, "distance": "<11", "stride": 1, "mesh_grid": [33, 17], "detail": "NEAR_FINE"},
+      {"lod": 1, "distance": "11..15", "stride": 2, "mesh_grid": [17, 9], "detail": "NEAR_MID"},
+      {"lod": 2, "distance": "15..20", "stride": 4, "mesh_grid": [9, 5], "detail": "MID_COARSE"},
+      {"lod": 3, "distance": ">=20", "stride": 8, "mesh_grid": [5, 3], "detail": "FAR_COARSE"}
+    ]
+  },
   "visualized_fields": [
     "geo/surface-height-m",
     "geo/valley-influence",
@@ -44,17 +60,19 @@
     "4": "geo/river-width-m",
     "5": "geo/fluid-surface-distance-m",
     "F": "toggle canonical river centerline overlay",
-    "W_S": "zoom",
+    "W_S": "zoom and automatically switch derived presentation LOD",
     "A_D": "yaw",
     "Q_E": "pitch",
     "SPACE": "auto orbit",
-    "R": "reset camera and field"
+    "R": "reset camera field and derived presentation LOD"
   },
   "presentation_contract": {
     "field_selection_changes_canonical_query": false,
     "field_selection_changes_geometry": false,
     "field_selection_changes_only_derived_color": true,
     "camera_changes_canonical_semantics": false,
+    "presentation_lod_changes_canonical_semantics": false,
+    "presentation_lod_reuses_same_semantic_records": true,
     "hud_changes_canonical_semantics": false,
     "visual_colors_in_canonical_checksum": false,
     "mesh_density_in_canonical_checksum": false,
