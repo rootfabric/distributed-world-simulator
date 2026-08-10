@@ -1,11 +1,11 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "decision": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
-  "runtime_and_runner_candidate_head": "18933d5979e75411b80bcb6e078f719facc98564",
+  "automated_tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
   "validation_commit_self_pinned": false,
   "g7_3": {
     "decision": "ACCEPTED",
@@ -19,7 +19,7 @@
     "program": "G",
     "branch": "feature/g7-semantic-field-fabric",
     "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
+    "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
     "legacy_global_active_frontiers_operational_owner": false
   },
   "project_control": {
@@ -28,10 +28,9 @@
     "auditor_entrypoint": "CONTROL_PROJECT.ps1",
     "auditor_logic_owner": "origin/main:scripts/control/project_control.py",
     "expected_candidate_health": "YELLOW",
-    "g_red_blocks_full_acceptance": true,
+    "g_red_blocks_acceptance": true,
     "unrelated_program_red_blocks_g_acceptance": false,
-    "main_registry_generation": 5,
-    "reason": "Focused M5 Fix2 is green, so the inherited shared blocker is closed for focused scope. G remains YELLOW until full world regression and manual graphical observation complete."
+    "reason": "Automated G7.4 acceptance is green. G remains YELLOW only because manual graphical observation is still required before G7.4 ACCEPTED."
   },
   "fix1": {
     "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
@@ -40,22 +39,18 @@
   },
   "fix2": {
     "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
-    "first_full_gate_result": "WORLD_REGRESSION_FAILED_AT_M5",
-    "first_m5_assertions": 92,
-    "first_m5_failures": 3,
-    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier rejected the later valid state and peers deadlocked on adjacent barriers.",
-    "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later peer states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
+    "first_m5_result": "92 assertions, 3 failures",
+    "root_cause": "A faster peer could publish FINAL_CONVERGENCE_LOCKED while the slower peer was still in WAIT_CONVERGENCE_PEER; the earlier barrier rejected that monotonic later state.",
+    "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
     "shared_driver": "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
     "focused_windows_rerun": {
       "tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
       "assertions": 92,
       "failures": 0,
       "result": "PASS",
-      "a_reconnect_graphical_acceptance": "PASS",
-      "b_graphical_acceptance": "PASS",
       "final_clients_passed": "PASS"
     },
-    "focused_rerun_required": false,
+    "full_world_regression_after_fix2": "PASS",
     "production_gameplay_semantics_changed": false
   },
   "implementation": {
@@ -67,12 +62,6 @@
     "production_semantic_runtime_changed": false
   },
   "semantic_patch": {
-    "latitude_min_deg": 0.0,
-    "latitude_max_deg": 10.0,
-    "longitude_min_deg": 30.0,
-    "longitude_max_deg": 62.0,
-    "latitude_segments": 16,
-    "longitude_segments": 32,
     "sample_count": 561,
     "expected_faces": ["PX", "PZ"]
   },
@@ -105,7 +94,6 @@
     "base": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
     "changed_files": 21,
     "unexpected_files": 0,
-    "pc0_bootstrap_files": 2,
     "shared_m5_acceptance_driver_changed": true,
     "production_semantic_runtime_changed": false,
     "production_network_runtime_changed": false,
@@ -114,29 +102,36 @@
     "hydrology_changed": false,
     "matter_changed": false
   },
-  "p0": {
-    "owns_renderer_foundation": false,
-    "owns_world_query": false,
-    "owns_spatial_identity": false,
-    "owns_authority": false,
-    "owns_interest": false,
-    "owns_persistence": false,
-    "owns_network": false,
-    "owns_material_ontology": false,
-    "owns_scheduler_cache": false,
-    "owns_geomorphology": false
-  },
   "automated_acceptance": {
-    "status": "READY_FOR_WINDOWS_FULL_GATE",
-    "expected_marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
-    "requires_project_control_audit": true,
-    "requires_g_health_not_red": true,
-    "requires_world_core_regression": true,
-    "requires_clean_worktree": true
+    "status": "PASS",
+    "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
+    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "project_control_revision": "PC0-2026-08-10-R1",
+    "pc0_operational_g_frontier": "PASS",
+    "pc0_g_health_not_red": "PASS",
+    "g7_3_accepted_ancestor": "PASS",
+    "visual_lab_scope": "PASS",
+    "five_adapter_backed_semantic_fields": "PASS",
+    "six_vocabulary_only_fields_not_faked": "PASS",
+    "world_core_regression": "PASS",
+    "working_tree": "CLEAN"
   },
   "manual_graphical_acceptance": {
     "status": "PENDING",
-    "required": true
+    "required": true,
+    "checks": [
+      "field switching changes color but not geometry",
+      "surface-height mode readable",
+      "valley-influence mode readable",
+      "river-distance corridor readable",
+      "river-width mode readable",
+      "fluid-surface-distance visually distinct",
+      "river centerline overlay toggles",
+      "camera controls work",
+      "vocabulary-only fields are not faked",
+      "no obvious PX/PZ visual seam"
+    ]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
