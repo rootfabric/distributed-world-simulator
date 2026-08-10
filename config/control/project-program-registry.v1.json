@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 11,
+  "registry_generation": 12,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T10:02:00Z",
+  "updated_at_utc": "2026-08-10T10:03:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -16,14 +16,18 @@
       "role": "PRIMARY_FRONTIER",
       "short_description": "Semantic Field Fabric and its derived visual lab on top of accepted G3/G5/G6 world-generation truth.",
       "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
-      "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected without becoming canonical identity.",
+      "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected across visibly different derived presentation LODs without becoming canonical identity.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
-      "progress_note": "G7.4 automated Windows acceptance passes on 594f96a1337a08d62e6371de61e43640f99aab4a. Project Control gate, G7.3 ancestry, visual-lab scope, five adapter-backed semantic fields, vocabulary-only non-faking rule, full world/core regression and final hygiene all pass. The shared M5 Fix2 is also verified at 92 assertions, 0 failures. Manual graphical observation is now the only remaining G7.4 blocker.",
+      "stage_status": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED",
+      "progress_note": "Manual graphical observation found a real presentation gap: W/S only changed camera distance and the mesh stayed fixed at 33x17; the prior VISUAL_LOD=8 was cube-sphere addressing only. Fix3 adds camera-distance-derived presentation LOD0..3 using mesh strides 1/2/4/8 over the same 561 semantic records. Because the G7.4 lab runtime changed after the previous automated tested head, focused and full revalidation are required before manual graphical acceptance resumes.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Complete G7.4 manual graphical observation, then accept G7.4, run G7 FULL ACCEPTANCE and proceed to G8 Geomorphology",
-      "health_declared": "YELLOW",
-      "blockers": ["G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"]
+      "next_stage": "Run G7.4 Fix3 focused validation; if green, refresh the tested head and run full automated acceptance; then repeat manual graphical observation and accept G7.4.",
+      "health_declared": "RED",
+      "blockers": [
+        "G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED",
+        "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED",
+        "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
+      ]
     },
     "T": {
       "program": "T",
@@ -155,7 +159,7 @@
   "global_blocked_transitions": [
     {
       "stage": "G7.4 ACCEPTED",
-      "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
+      "blocked_by": "G7_4_FIX3_FOCUSED_FULL_AND_MANUAL_ACCEPTANCE_REQUIRED"
     },
     {
       "stage": "G7 FULL ACCEPTANCE",
