@@ -5,6 +5,7 @@
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
+  "current_candidate_head": "18933d5979e75411b80bcb6e078f719facc98564",
   "g7_3": {
     "decision": "ACCEPTED",
     "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
@@ -29,14 +30,11 @@
     "g_red_blocks_full_acceptance": true,
     "unrelated_program_red_blocks_g_acceptance": false,
     "main_registry_generation": 5,
-    "reason": "Focused M5 Fix2 is now green, so the inherited shared blocker is closed for focused scope. G remains YELLOW until full world regression and manual graphical observation complete."
+    "reason": "Focused M5 Fix2 is green, so the inherited shared blocker is closed for focused scope. G remains YELLOW until full world regression and manual graphical observation complete."
   },
   "fix1": {
     "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
-    "symptom": "START_G7_4_SEMANTIC_FIELD_LAB.ps1 parsed field legend tokens such as 2/valley/river as PowerShell expressions",
-    "cause": "The launcher contained a Unicode em dash. Legacy Windows PowerShell can decode UTF-8 without BOM through an ANSI codepage into a smart-quote sequence, and PowerShell treats smart quotes as quote delimiters.",
-    "launcher_fix": "Replace Unicode em dash with ASCII hyphen and keep the launcher ASCII-only.",
-    "acceptance_hardening": "Full runner requires all G7.4 PowerShell runner/launcher files to be ASCII-only and AST-parse clean before runtime.",
+    "launcher_fix": "Keep G7.4 PowerShell launchers/runners ASCII-only and AST-parse them before runtime.",
     "runtime_semantics_changed": false
   },
   "fix2": {
@@ -44,26 +42,7 @@
     "first_full_gate_result": "WORLD_REGRESSION_FAILED_AT_M5",
     "first_m5_assertions": 92,
     "first_m5_failures": 3,
-    "observed_client_a2": {
-      "state": "FAILED",
-      "passed": false,
-      "failure": "M5_ACCEPTANCE_TIMEOUT at WAIT_CONVERGENCE_PEER",
-      "leave_result_success": true
-    },
-    "observed_client_b": {
-      "state": "FAILED",
-      "passed": false,
-      "failure": "M5_ACCEPTANCE_TIMEOUT at WAIT_FINAL_CONVERGENCE_PEER",
-      "leave_result_success": true
-    },
-    "observed_server": {
-      "state": "READY",
-      "joins": 3,
-      "leaves": 3,
-      "connected_peer_count": 0
-    },
-    "canonical_world_checks_after_timeout": "PASS",
-    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier accepted only earlier states, so the later valid FINAL state was rejected and the two peers deadlocked on adjacent barriers.",
+    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier rejected the later valid state and peers deadlocked on adjacent barriers.",
     "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later peer states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
     "shared_driver": "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
     "focused_windows_rerun": {
@@ -121,20 +100,6 @@
     "hud_in_canonical_checksum": false,
     "presentation_manifest_is_world_identity": false
   },
-  "author_preflight": {
-    "exact_engine": "4.7.1.stable.double.custom_build.a13da4feb",
-    "godot_api_probe": "PASS",
-    "checked_api": [
-      "GDScript not-in operator",
-      "SurfaceTool",
-      "Mesh.PRIMITIVE_LINE_STRIP",
-      "StandardMaterial3D vertex colors",
-      "BaseMaterial3D.SHADING_MODE_UNSHADED",
-      "BaseMaterial3D.CULL_DISABLED"
-    ],
-    "feature_anchor_world_feature_contract_audit": "PASS",
-    "full_repository_runtime_not_claimed": true
-  },
   "scope_audit": {
     "base": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
     "changed_files": 21,
@@ -170,20 +135,7 @@
   },
   "manual_graphical_acceptance": {
     "status": "PENDING",
-    "required": true,
-    "checks": [
-      "semantic patch visible near river fixture",
-      "surface-height visual mode readable",
-      "valley-influence visual mode readable",
-      "river-distance corridor readable",
-      "river-width field readable",
-      "fluid-surface-distance differs from river-distance",
-      "river centerline overlay toggles",
-      "field switching changes color but not geometry",
-      "camera controls work",
-      "vocabulary-only fields shown as NOT faked",
-      "no obvious PX/PZ visual seam"
-    ]
+    "required": true
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
