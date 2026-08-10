@@ -1,13 +1,14 @@
 {
   "schema": "planet_simulator.geo_g7_g13_p0_aligned_roadmap.v1",
-  "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
-  "branch": "feature/g6-hydrology-fluid-surface-v0",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/g7-semantic-field-fabric",
   "upstream": {
     "g6": "SOURCE_ACCEPTED",
     "g5_world_feature_identity": "ACCEPTED",
     "g6_hydrology_fluid_semantics": "ACCEPTED"
   },
-  "next_checkpoint": "G7_0_SEMANTIC_FIELD_CONTRACTS",
+  "current_checkpoint": "G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE",
+  "next_checkpoint": "G7_4_SEMANTIC_FIELD_LAB",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -20,16 +21,23 @@
     "GEO_PROVIDER_NE_NETWORK_OWNER",
     "PROCEDURAL_BASELINE_PLUS_SPARSE_AUTHORITATIVE_MATTER_MUTATIONS_EQUALS_CURRENT_WORLD_TRUTH"
   ],
+  "frontier_policy": {
+    "active_frontier_matches_main": true,
+    "historical_accepted_branches_rewritten_for_new_global_revision": false,
+    "world_generation_frontier": "feature/g7-semantic-field-fabric"
+  },
   "stages": [
     {
       "id": "G7",
       "name": "Semantic Field Fabric",
-      "status": "NEXT",
-      "subcheckpoints": [
+      "status": "IN_PROGRESS_G7_3",
+      "accepted": [
         "G7.0 Semantic Field Contracts",
         "G7.1 G3/G5/G6 Upstream Adapters",
-        "G7.2 Composition and Provenance",
-        "G7.3 Cross-Cell / Cross-LOD Invariance",
+        "G7.2 Composition and Provenance"
+      ],
+      "current": "G7.3 Cross-Cell / Cross-LOD Invariance",
+      "remaining": [
         "G7.4 Semantic Field Lab",
         "G7 Full Acceptance"
       ],
@@ -120,8 +128,8 @@
     "G12": "AUTHORITY_PERSISTENCE_WORK_BUDGET_OWNERSHIP_AUDIT"
   },
   "acceptance_common": [
-    "GLOBAL_REVISION_MATCH",
-    "GLOBAL_CONFIG_BYTE_EQUIVALENT",
+    "GLOBAL_REVISION_MATCH_MAIN_ACTIVE_FRONTIER",
+    "GLOBAL_CONFIG_BYTE_EQUIVALENT_TO_MAIN",
     "LOCAL_P0_ALIGNMENT_CURRENT",
     "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
     "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK",
