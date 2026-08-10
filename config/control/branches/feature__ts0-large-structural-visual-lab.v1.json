@@ -10,9 +10,9 @@
   "expected_outcome": "Accepted 10k and 100k visual/structural evidence showing canonical part count is decoupled from runtime node and draw-call count while complete object shape remains covered at every active HLOD level.",
   "current_stage": "TS0.1 10k Visual Proof",
   "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "TS0.0 is accepted. TS0.1 winding defect is fixed. Complete-coverage fix now makes FAR use the full root shell and MID/NEAR request every TS0.1 section (27 cube / 40 pyramid) with a hard 64-section flat guard; Windows focused/manual revalidation is pending.",
+  "progress_note": "TS0.0 is accepted. TS0.1 winding and complete-coverage fixes are manually observed working. TS0.2 hierarchical 100k pre-stage candidate is also manually observed working across its graphical functionality; initial 100k scene creation is noticeably slow and is recorded as non-blocking performance debt pending measured optimization. Formal PC0 frontier remains TS0.1 until focused/full acceptance and main registry convergence.",
   "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures",
-  "next_stage": "TS0.1 acceptance after complete-coverage revalidation, then TS0.2 hierarchical 100k Visual Scale Gate",
+  "next_stage": "Close TS0.1 focused/full acceptance and PC0 convergence; then formally advance to TS0.2, preserving the already working 100k hierarchical candidate and measuring startup cost separately.",
   "parent_branch_or_checkpoint": "T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db",
   "base_commit": "5e051f67bf6987a354de5b565da1448be6b0b4db",
   "dependencies": [
@@ -81,17 +81,19 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "TS0_1_COMPLETE_COVERAGE_WINDOWS_REVALIDATION_PENDING"
+    "TS0_1_FOCUSED_AND_FULL_ACCEPTANCE_PENDING_BEFORE_FORMAL_TS0_2_FRONTIER"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true,
   "prestage_candidates": [
     {
       "stage": "TS0.2 100k Hierarchical Visual Scale Gate",
-      "status": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_TS0_1_ACCEPTANCE",
+      "status": "MANUAL_FUNCTIONAL_PASS_FOCUSED_AND_FULL_PENDING",
       "formal_frontier_advanced": false,
       "owned_paths_only": true,
       "production_c22_c24_modified_by_ts0_2": false,
+      "manual_functional_observation": "PASS",
+      "initial_scene_creation_performance": "SLOW_NONBLOCKING_DEBT",
       "pc0_registry_update_required_after_ts0_1_acceptance": true
     }
   ]
