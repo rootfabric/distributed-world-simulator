@@ -33,6 +33,9 @@ const FEET_TOPOLOGY_COVERAGE_MODE := "HIGH_BOOT"
 const FEET_TOPOLOGY_UPPER_Y_PAD_M := 0.012
 const FEET_TOPOLOGY_UPPER_BIAS_FRACTION := 0.52
 
+# Base profile shapes remain the accepted fix9/fallback shapes. In the default
+# body-visible mode they are scaled so their maximum equals the requested CLI
+# tuning value. This preserves waist/cuff/shaft bias while allowing fast tuning.
 const UPPER_INFLATION_PROFILE := [
 	{"t": 0.00, "offset_m": 0.0040},
 	{"t": 0.30, "offset_m": 0.0070},
@@ -53,6 +56,19 @@ const FEET_INFLATION_PROFILE := [
 	{"t": 1.00, "offset_m": 0.0160},
 ]
 
+const DEFAULT_UPPER_INFLATION_MAX_M := 0.032
+const DEFAULT_LOWER_INFLATION_MAX_M := 0.038
+const DEFAULT_FEET_INFLATION_MAX_M := 0.036
+const DEFAULT_INFLATION_SCALE := 1.0
+const MAX_TUNABLE_INFLATION_M := 0.080
+const MIN_INFLATION_SCALE := 0.10
+const MAX_INFLATION_SCALE := 2.00
+
+const CLI_UPPER_PREFIX := "--ch8c-upper-inflation="
+const CLI_LOWER_PREFIX := "--ch8c-lower-inflation="
+const CLI_FEET_PREFIX := "--ch8c-feet-inflation="
+const CLI_SCALE_PREFIX := "--ch8c-inflation-scale="
+
 @export_enum("BODY_VISIBLE_INFLATED_OVERLAY", "TOPOLOGY_OCCLUSION") var body_fit_policy: String = BODY_FIT_POLICY_BODY_VISIBLE_INFLATED_OVERLAY
 
 var layered_rig_adapter
@@ -63,7 +79,14 @@ var body_topology_coordinator
 var layered_setup_result: Dictionary = {}
 var inflation_reports: Dictionary = {}
 
+var upper_inflation_max_m: float = DEFAULT_UPPER_INFLATION_MAX_M
+var lower_inflation_max_m: float = DEFAULT_LOWER_INFLATION_MAX_M
+var feet_inflation_max_m: float = DEFAULT_FEET_INFLATION_MAX_M
+var inflation_scale: float = DEFAULT_INFLATION_SCALE
+var cli_inflation_override_active: bool = false
+
 func _ready() -> void:
+	_apply_cli_inflation_overrides()
 	super._ready()
 	_setup_layered_equipment()
 	_refresh_status()
@@ -77,6 +100,59 @@ func _unhandled_input(event: InputEvent) -> void:
 			_toggle_layer(LOWER_ITEM_ID, LOWER_PROFILE_ID)
 		elif event.keycode == KEY_K:
 			_toggle_layer(FEET_ITEM_ID, FEET_PROFILE_ID)
+
+func _apply_cli_inflation_overrides() -> void:
+	for raw_argument in OS.get_cmdline_user_args():
+		var argument := String(raw_argument)
+		if argument.begins_with(CLI_UPPER_PREFIX):
+			var parsed_upper: Dictionary = _parse_cli_float(argument, CLI_UPPER_PREFIX, 0.0, MAX_TUNABLE_INFLATION_M)
+			if bool(parsed_upper.get("success", false)):
+				upper_inflation_max_m = float(parsed_upper.get("value", upper_inflation_max_m))
+				cli_inflation_override_active = true
+		elif argument.begins_with(CLI_LOWER_PREFIX):
+			var parsed_lower: Dictionary = _parse_cli_float(argument, CLI_LOWER_PREFIX, 0.0, MAX_TUNABLE_INFLATION_M)
+			if bool(parsed_lower.get("success", false)):
+				lower_inflation_max_m = float(parsed_lower.get("value", lower_inflation_max_m))
+				cli_inflation_override_active = true
+		elif argument.begins_with(CLI_FEET_PREFIX):
+			var parsed_feet: Dictionary = _parse_cli_float(argument, CLI_FEET_PREFIX, 0.0, MAX_TUNABLE_INFLATION_M)
+			if bool(parsed_feet.get("success", false)):
+				feet_inflation_max_m = float(parsed_feet.get("value", feet_inflation_max_m))
+				cli_inflation_override_active = true
+		elif argument.begins_with(CLI_SCALE_PREFIX):
+			var parsed_scale: Dictionary = _parse_cli_float(argument, CLI_SCALE_PREFIX, MIN_INFLATION_SCALE, MAX_INFLATION_SCALE)
+			if bool(parsed_scale.get("success", false)):
+				inflation_scale = float(parsed_scale.get("value", inflation_scale))
+				cli_inflation_override_active = true
+	if cli_inflation_override_active:
+		print("CH8C CLI inflation override: upper=%.4f lower=%.4f feet=%.4f scale=%.3f" % [upper_inflation_max_m, lower_inflation_max_m, feet_inflation_max_m, inflation_scale])
+
+func _parse_cli_float(argument: String, prefix: String, min_value: float, max_value: float) -> Dictionary:
+	var raw_value: String = argument.substr(prefix.length()).strip_edges()
+	if raw_value.is_empty() or not raw_value.is_valid_float():
+		push_warning("CH8C ignored invalid CLI value: %s" % argument)
+		return {"success": false}
+	var value: float = raw_value.to_float()
+	if not is_finite(value) or value < min_value or value > max_value:
+		push_warning("CH8C ignored out-of-range CLI value: %s (allowed %.3f..%.3f)" % [argument, min_value, max_value])
+		return {"success": false}
+	return {"success": true, "value": value}
+
+func _scaled_profile(base_profile: Array, requested_max_m: float) -> Array:
+	var base_max_m: float = 0.0
+	for raw_point in base_profile:
+		if raw_point is Dictionary:
+			base_max_m = maxf(base_max_m, float((raw_point as Dictionary).get("offset_m", 0.0)))
+	if base_max_m <= 0.0:
+		return base_profile.duplicate(true)
+	var effective_max_m: float = minf(requested_max_m * inflation_scale, MAX_TUNABLE_INFLATION_M)
+	var multiplier: float = effective_max_m / base_max_m
+	var scaled: Array = []
+	for raw_point in base_profile:
+		var point: Dictionary = (raw_point as Dictionary).duplicate(true)
+		point["offset_m"] = float(point.get("offset_m", 0.0)) * multiplier
+		scaled.append(point)
+	return scaled
 
 func _setup_layered_equipment() -> void:
 	var loaded = load(MALE_PEASANT_PATH)
@@ -110,6 +186,9 @@ func _setup_layered_equipment() -> void:
 
 	var use_body_occlusion := body_fit_policy == BODY_FIT_POLICY_TOPOLOGY_OCCLUSION
 	var clothing_filter: Array = [] if use_body_occlusion else CLOTHING_MATERIAL_NAMES
+	var upper_profile: Array = [] if use_body_occlusion else _scaled_profile(UPPER_INFLATION_PROFILE, upper_inflation_max_m)
+	var lower_profile: Array = LOWER_INFLATION_PROFILE if use_body_occlusion else _scaled_profile(LOWER_INFLATION_PROFILE, lower_inflation_max_m)
+	var feet_profile: Array = FEET_INFLATION_PROFILE if use_body_occlusion else _scaled_profile(FEET_INFLATION_PROFILE, feet_inflation_max_m)
 	inflation_reports.clear()
 	var definitions := [
 		{
@@ -118,7 +197,7 @@ func _setup_layered_equipment() -> void:
 			"channels": ["body.torso.outer", "body.arms.outer"],
 			"meshes": ["Male_Peasant_Body", "Male_Peasant_Arms"],
 			"regions": [REGION_TORSO_CORE] if use_body_occlusion else [],
-			"inflation_profile": [] if use_body_occlusion else UPPER_INFLATION_PROFILE,
+			"inflation_profile": upper_profile,
 			"topology_threshold_m": 0.0,
 			"topology_coverage_mode": "ROBUST",
 			"topology_upper_y_pad_m": 0.0,
@@ -130,7 +209,7 @@ func _setup_layered_equipment() -> void:
 			"channels": ["body.legs.outer"],
 			"meshes": ["Male_Peasant_Legs"],
 			"regions": [],
-			"inflation_profile": LOWER_INFLATION_PROFILE,
+			"inflation_profile": lower_profile,
 			"topology_threshold_m": LOWER_TOPOLOGY_THRESHOLD_M if use_body_occlusion else 0.0,
 			"topology_coverage_mode": "ROBUST",
 			"topology_upper_y_pad_m": 0.0,
@@ -142,7 +221,7 @@ func _setup_layered_equipment() -> void:
 			"channels": ["body.feet"],
 			"meshes": ["Male_Peasant_Feet"],
 			"regions": [],
-			"inflation_profile": FEET_INFLATION_PROFILE,
+			"inflation_profile": feet_profile,
 			"topology_threshold_m": FEET_TOPOLOGY_THRESHOLD_M if use_body_occlusion else 0.0,
 			"topology_coverage_mode": FEET_TOPOLOGY_COVERAGE_MODE,
 			"topology_upper_y_pad_m": FEET_TOPOLOGY_UPPER_Y_PAD_M,
@@ -254,9 +333,11 @@ func _refresh_status() -> void:
 		"\n\nCH8C — Layered Garments\n"
 		+ "U — upper | L — lower | K — feet\n"
 		+ "fit policy: %s\n"
+		+ "inflation input: upper %.3f m | lower %.3f m | feet %.3f m | scale %.2f%s\n"
 		+ "upper: %s | lower: %s | feet: %s\n"
 		+ "material suppression: %s\n"
 		+ "topology: %s | removed triangles: %d\n"
-		+ "vertex inflation configured max: upper %.3f m | lower %.3f m | feet %.3f m"
+		+ "vertex inflation effective max: upper %.3f m | lower %.3f m | feet %.3f m"
 	)
-	status_label.text += layered_status % [body_fit_policy, upper_state, lower_state, feet_state, ", ".join(regions), ", ".join(topology_active), topology_removed, upper_inflation_max, lower_inflation_max, feet_inflation_max]
+	var cli_marker := " | CLI" if cli_inflation_override_active else " | defaults"
+	status_label.text += layered_status % [body_fit_policy, upper_inflation_max_m, lower_inflation_max_m, feet_inflation_max_m, inflation_scale, cli_marker, upper_state, lower_state, feet_state, ", ".join(regions), ", ".join(topology_active), topology_removed, upper_inflation_max, lower_inflation_max, feet_inflation_max]
