@@ -9,10 +9,10 @@
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
   "current_stage": "T1A.7.3 Dirty / Selective Runtime Replication",
-  "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-  "progress_note": "T1A.7.2 Late-Interest Baseline + Reconnect is ACCEPTED on FIX1 runtime head d41d3d3721b61cc0464e1c5693ccaa4521b7819a after the required focused gate and a fresh full world/core regression with 6 PASS / 0 FAIL, clean STOPPED lifecycle and the NX4 final marker. T1A.7.3 is now implemented as a stacked candidate: a Construction-domain selective replication planner keeps reverse construct->logical-client projection, detects dirty runtime ids from authoritative snapshot checksum differences, and routes exact full construct runtime snapshots only to relevant active sessions. The accepted T1A.7.2 baseline/reconnect path remains the correctness fallback; no compact delta DTO, network channel, global interest identity, scheduler or protocol-manifest change is introduced. Windows focused validation and full regression are pending.",
+  "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "progress_note": "T1A.7.3 focused Windows validation PASSED on local checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 with runtime/test boundary cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0. Inherited gates remained green: T1A.4 153, C5B 32, T1A.5 67, transactional 36, T1A.7.1 recovery 60, NX0 150, M3 77, C5C 29, T1A.6 multiplayer 25/0, T1A.7.2 interest binding 34 and late-interest/reconnect 35. New T1A.7.3 selective planner passed 44 assertions and real selective M3 process acceptance passed 35 assertions. Two transient Parse JSON failed messages came from polling result files during concurrent rewrite; subsequent polls succeeded and both affected suites completed PASS, so this is non-blocking harness read-race noise rather than runtime/network failure. Full world/core regression remains required on the same local checkout without fetch/reset.",
   "last_accepted_checkpoint": "T1A.7.2 Late-Interest Baseline + Reconnect",
-  "next_stage": "Run T1A.7.3 dirty/selective focused Windows gate. If green, record the tested runtime head and run full world regression on the same runtime code; then accept T1A.7.3 and proceed to T1A.7.4 Scale / Soak Lab with 100/1,000 constructs and 10,000 runtime subjects.",
+  "next_stage": "Run RUN_WORLD_REGRESSION_TESTS.ps1 on the same local checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 without fetch/reset. If green, accept T1A.7.3 and proceed to T1A.7.4 Scale / Soak Lab with 100/1,000 constructs and 10,000 runtime subjects.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
@@ -97,8 +97,8 @@
     "docs/plans/*T1A7*"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
+    "focused": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
     "full_regression": ""
   },
   "ownership_claims": [
@@ -119,7 +119,6 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "T1A7_3_WINDOWS_FOCUSED_ACCEPTANCE_PENDING",
     "T1A7_3_FULL_WORLD_REGRESSION_PENDING"
   ],
   "health_declared": "YELLOW",
