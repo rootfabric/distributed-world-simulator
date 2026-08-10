@@ -14,7 +14,7 @@ G6 P0 Alignment Cleanup                 ACCEPTED
 G7.0 Semantic Field Contracts           ACCEPTED
 G7.1 Upstream Semantic Field Adapters   ACCEPTED
 G7.2 Composition / Provenance            ACCEPTED
-G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
+G7.3 Cross-Cell / Cross-LOD Invariance  FIX1 IMPLEMENTED CANDIDATE
 ```
 
 **Active GLOBAL revision:** `GLOBAL-P0-2026-08-10-R2`
@@ -82,21 +82,16 @@ Accepted G7.2 checkpoint:
 
 ## G7.3 — Cross-Cell / Cross-LOD Invariance
 
-G7.3 is intentionally proof-only. It does not add cell-aware production semantics; it validates that cell/LOD remain representation concerns.
-
-Main formula:
+Focused Windows evidence is already green:
 
 ```text
-canonical world point + SemanticFieldQuery
-    -> canonical semantic result
-
-SurfaceCellKey / LOD
-    -> representation addressing only
+G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
+G7.3 Cross-Cell / Cross-LOD Invariance focused gate passed.
 ```
 
-The focused proof uses LOD `2, 4, 8, 12` and the accepted G6 river fixture that crosses the PX/PZ cube-sphere seam.
+The proof uses LOD `2, 4, 8, 12` and the accepted G6 river fixture crossing the PX/PZ cube-sphere seam.
 
-For one shared world point the test requires equality of:
+It verifies stable:
 
 ```text
 query checksum
@@ -104,23 +99,29 @@ bundle checksum
 composition receipt checksum
 per-field sample checksum
 per-field provenance checksum
+FeatureId
+FluidRegionId
 ```
 
-while `SurfaceCellKey` and representation resolution actually change.
+while representation SurfaceCellKey/resolution changes.
 
-The test also verifies:
+## G7.3 Fix1 full-gate hygiene
+
+The first full gate passed R2 preflight but `git diff --check` stopped on canonical Markdown hard-break spaces in the byte-matched main roadmap.
+
+Fix1 does not mutate the canonical roadmap. The runner first proves:
 
 ```text
-SemanticFieldQuery has no surface_cell / surface_cell_key / lod fields
-query field-order normalization is deterministic
-an alternate valid external SurfaceCellKey cannot perturb the canonical bundle
-one river feature spans multiple cells
-FeatureId stays stable across cells
-FluidRegionId stays stable across cells
-river-distance-m remains centerline-consistent on both PX/PZ seam sides
+local GLOBAL roadmap blob == origin/main roadmap blob
 ```
 
-No `SemanticCellId`, LOD-specific FeatureId or LOD-specific FluidRegionId is introduced.
+then excludes only that already-verified upstream Markdown file from the local G7.3 `diff --check`. Every other G7.3/P0-sync file remains under strict whitespace hygiene.
+
+Fix1 runner commit:
+
+```text
+73ca4a0d356eb7ed18aa813c19f617b7b2c29137
+```
 
 ## Ownership / P0 guards
 
@@ -139,24 +140,25 @@ G7 != Geomorphology
 SemanticFieldCompositionReceipt != world identity
 ```
 
-G8 still owns terrain incision, banks, floodplain and erosion/deposition. G12 remains the future scheduler/cache/provenance execution layer.
-
-Validation:
+Validation now requires only the full gate rerun:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 -GodotPath $Godot
 .\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Records:
+Expected final marker:
 
 ```text
-docs/checkpoints/G7_2_COMPOSITION_PROVENANCE_ACCEPTED_RU.md
-docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_CANDIDATE_RU.md
-validation/g7-3-cross-cell-cross-lod-invariance-validation.json
-config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json
+G7.3 FULL ACCEPTANCE: PASS
+Global revision: GLOBAL-P0-2026-08-10-R2
+Active GLOBAL-P0 main alignment: PASS
+Canonical GLOBAL roadmap byte-match to main: PASS
+G7.2 ACCEPTED ancestor: PASS
+G7.3 invariance scope: PASS
+Cross-cell / cross-LOD semantic invariance: PASS
+World/core regression: PASS
+Working tree: CLEAN
 ```
 
 Next after G7.3 acceptance:
