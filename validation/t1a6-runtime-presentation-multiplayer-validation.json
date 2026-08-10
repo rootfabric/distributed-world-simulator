@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "T1A5_TRANSACTIONAL_EFFECTS_FIX1_ACCEPTED_T1A6_REVALIDATION_PENDING",
+  "decision": "T1A6_FOCUSED_REACCEPTED_FULL_REGRESSION_PENDING",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
@@ -11,6 +11,7 @@
   "transactional_effects_fix1_head": "9698415f94c0a68d1536e0bdee7a00463f5c610a",
   "transactional_test_parse_fix_head": "0d75e2bcceeb8a051b69ea7ea531f90c69868c56",
   "transactional_windows_acceptance_head": "a5e2795698a469a7f160214b3e4880014f6759a2",
+  "t1a6_focused_reacceptance_head": "83a0b861492041f3c0673226e236344449bf2f2a",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "status_dimensions": {
@@ -23,8 +24,9 @@
     "main_registry_revision": "GLOBAL-P0-2026-08-10-R2",
     "main_registry_still_declares_original_blocker": true,
     "local_t1a5_transactional_blocker_evidence_closed": true,
+    "fresh_t1a6_focused_evidence_closed": true,
     "transition_blocked": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE",
-    "remaining_reason": "Fresh T1A.6 multiplayer and full composition regression are still required after the runtime semantic change.",
+    "remaining_reason": "Fresh full world/core composition regression is still required after the transactional runtime semantic change.",
     "stop_rule_observed": true
   },
   "transactional_effects_fix1": {
@@ -35,8 +37,6 @@
     "effect_replay_exactly_once": true,
     "d0_power_projection_is_pure": true,
     "d0_power_effect_committer_validates_before_mutation": true,
-    "new_test": "tests/construction/t1a5_transactional_runtime_effects_acceptance.gd",
-    "focused_runner": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
     "runtime_semantics_changed": true,
     "protocol_changed": false,
     "transport_changed": false,
@@ -58,15 +58,37 @@
     "fix": "Make dynamic Dictionary/API-derived regression values explicit int/String/Dictionary types; production runtime semantics unchanged.",
     "windows_rerun": "PASS"
   },
+  "focused_revalidation": {
+    "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "windows_run_head": "83a0b861492041f3c0673226e236344449bf2f2a",
+    "t1a5_transactional_dependency": "PASS",
+    "client_a_graphical": "PASS",
+    "client_b_graphical": "PASS",
+    "client_a_final_revision": "PASS",
+    "client_b_final_revision": "PASS",
+    "server_final_revision": "PASS",
+    "client_checksum_convergence": "PASS",
+    "server_client_checksum_convergence": "PASS",
+    "client_a_presentation_matches_runtime": "PASS",
+    "client_b_presentation_matches_runtime": "PASS",
+    "client_a_replica_rejections": 0,
+    "client_b_replica_rejections": 0,
+    "server_runtime_commands": 3,
+    "server_runtime_command_rejections": 0,
+    "join_and_mutation_snapshots": "PASS",
+    "client_a_clean_shutdown": "PASS",
+    "client_b_clean_shutdown": "PASS",
+    "server_clean_shutdown": "PASS",
+    "graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES",
+    "final_marker": "T1A.6 runtime presentation + multiplayer focused gate passed.",
+    "result": "PASS"
+  },
   "previous_windows_evidence": {
-    "t1a5_runtime_acceptance": "PASS_67",
-    "nx0_observability_baseline": "PASS_150",
-    "m3_graphical_multiplayer_contracts": "PASS_77",
-    "c5c_runtime_replication_contracts": "PASS_29",
     "t1a6_graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES",
     "world_regression": "PASS_6_FAIL_0",
     "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
-    "freshness": "STALE_AFTER_TRANSACTIONAL_EFFECTS_FIX1_RUNTIME_CHANGE"
+    "freshness": "PRE_TRANSACTIONAL_FIX_HISTORICAL_ONLY"
   },
   "required_revalidation": {
     "step_1": {
@@ -75,7 +97,7 @@
     },
     "step_2": {
       "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
-      "result": "PENDING"
+      "result": "PASS"
     },
     "step_3": {
       "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
