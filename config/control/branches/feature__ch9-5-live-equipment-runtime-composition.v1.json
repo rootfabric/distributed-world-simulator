@@ -9,10 +9,10 @@
   "purpose": "Close the remaining composition gap between accepted CH9.2 Inventory UI, CH9.3 live ENet equipment replication and CH9.4 M6 durability/recovery without creating a second transport, persistence model or character truth.",
   "expected_outcome": "A persistent dedicated server and live clients can equip through the existing ITEM channel, restart/recover, reconnect and late-join while the same canonical Item UUIDs automatically drive local and remote CharacterEquipment presentation exactly once.",
   "current_stage": "CH9.5 Live Equipment Runtime Composition",
-  "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
-  "progress_note": "The mandatory CH9.4 post-acceptance PC0 audit completed on registry generation 40 with Overall YELLOW and CH YELLOW after ownership-claim schema fix de3b697; no critical CH dependency drift was found. Main registry generation 41 now declares CH9.5. Candidate runtime head c65b0b51f62be21f6c5d8e266a720a49bddf4c02 adds only a persistent CH9 equipment dedicated-runtime adapter and a presentation-only replicated Item Graph coordinator. The server reuses inherited M3/NX transport and existing M6 repository/coordinator/authority adapter/replay outbox while installing the accepted CH9.4 recovery-aware gameplay service before live traffic. The client coordinator projects item_graph_updated snapshots per logical character and applies them to existing CharacterEquipmentPresenter instances. Focused tests cover coordinator idempotency and a real persistent ENet server restart/reconnect/late-join cycle. Windows validation is pending.",
+  "stage_status": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "progress_note": "The mandatory CH9.4 post-acceptance PC0 audit completed on registry generation 40 with Overall YELLOW and CH YELLOW; main registry generation 41 declares CH9.5. Candidate runtime head c65b0b51f62be21f6c5d8e266a720a49bddf4c02 remains unchanged. Windows attempt 1 on branch head af5423b reached both new CH9.5 tests but Godot 4.7.1 rejected untyped PresenterProbe fingerprint/changed inference before any CH9.5 runtime assertion executed. Fix1 commits 7508259 and 9333408 explicitly type the probe state and harden persistent-ENet test scalar typing. Production runtime code was not changed by Fix1; focused rerun is pending.",
   "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect FOCUSED_ACCEPTED @ runtime e41c6ec46ae13c2244e92d47d891ecd345e746fe",
-  "next_stage": "Run RUN_CH9_5_LIVE_EQUIPMENT_RUNTIME_TESTS.ps1 on exact Windows Godot 4.7.1 double. No later CH stage is authorized before CH9.5 focused acceptance and the subsequent PC0 audit.",
+  "next_stage": "Rerun the two CH9.5 focused tests on exact Windows Godot 4.7.1 double. If both pass, run RUN_CH9_5_LIVE_EQUIPMENT_RUNTIME_TESTS.ps1. No later CH stage is authorized before CH9.5 acceptance and the subsequent PC0 audit.",
   "parent_branch_or_checkpoint": "feature/ch9-4-equipment-persistence-reconnect @ de3b6975641635d733f0a5e410101e09a778dd61",
   "base_commit": "de3b6975641635d733f0a5e410101e09a778dd61",
   "candidate_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
@@ -80,7 +80,7 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "WINDOWS_FOCUSED_GATE_PENDING"
+    "WINDOWS_FIX1_FOCUSED_RERUN_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
