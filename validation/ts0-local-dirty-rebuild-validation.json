@@ -2,6 +2,7 @@
   "schema": "distributed_world_simulator.ts0_local_dirty_rebuild_validation.v1",
   "checkpoint": "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
   "branch": "feature/ts0-large-structural-visual-lab",
+  "implementation_head": "dfdf9dcfbd233c526077f920a24fac76e0619205",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "formal_frontier": "TS0.1_10K_VISUAL_PROOF",
@@ -41,7 +42,8 @@
     "focused_acceptance": "PASS_24_ASSERTIONS",
     "observed_elapsed_ms": 28,
     "exact_engine": true,
-    "scope": "ISOLATED_TS_OWNED_ALGORITHM_HARNESS"
+    "scope": "ISOLATED_TS_OWNED_ALGORITHM_HARNESS",
+    "tested_runtime_head": "dfdf9dcfbd233c526077f920a24fac76e0619205"
   },
   "pc0": {
     "main_registry_generation_checked": 5,
