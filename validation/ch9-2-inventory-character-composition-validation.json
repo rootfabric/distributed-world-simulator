@@ -3,7 +3,7 @@
   "stage": "CH9.2 Inventory + Character Composition",
   "branch": "feature/ch9-2-inventory-character-composition",
   "base_branch": "feature/ch9-1-authoritative-equipment-operations",
-  "decision": "FIX1_INVENTORY_MOVEMENT_FREEZE_PENDING_WINDOWS_RERUN",
+  "decision": "FOCUSED_WINDOWS_PASS_FIX2_GRAPHICAL_LAUNCHER_PENDING_RERUN",
   "goal": "Use the existing component Inventory UI to mutate canonical Item Graph equipment state through CH9.1 and drive the accepted CH8 character presenter from CH9.0 snapshots.",
   "canonical_path": {
     "ui": "CharacterEquipmentInventoryScreen",
@@ -39,6 +39,7 @@
     "LAB_U_L_K_H_B_MUTATIONS_DISABLED",
     "OPEN_INVENTORY_FREEZES_GAMEPLAY_BODY_WITHOUT_PARENT_LAB_MOVE_AND_SLIDE",
     "CLOSING_INVENTORY_RESTORES_CHARACTER_BODY_MOVEMENT_LIFECYCLE",
+    "GRAPHICAL_LAUNCHER_MUST_PARSE_UNDER_WINDOWS_POWERSHELL",
     "NETWORK_EQUIPMENT_MUTATION_EXPLICITLY_DEFERRED_TO_CH9_3"
   ],
   "focused_tests": {
@@ -47,7 +48,8 @@
     "ch9_1_operations": "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd",
     "ch9_1_multi_conflict": "res://tests/characters/test_ch9_1_multi_conflict_guard.gd",
     "ch9_2_composition": "res://tests/characters/test_ch9_2_inventory_character_composition.gd",
-    "ch9_2_ui_routes": "res://tests/characters/test_ch9_2_inventory_ui_equipment_routes.gd"
+    "ch9_2_ui_routes": "res://tests/characters/test_ch9_2_inventory_ui_equipment_routes.gd",
+    "graphical_launcher_parse": "RUN_CH9_2_INVENTORY_CHARACTER_COMPOSITION_TESTS.ps1 parses PLAY_CH9_2_INVENTORY_CHARACTER_LAB.ps1 with System.Management.Automation.Language.Parser"
   },
   "graphical_acceptance": [
     "inventory opens with a visible five-slot equipment panel",
@@ -83,19 +85,39 @@
     "behavior": "QuaterniusItemGraphEquipmentLab overrides _physics_process and skips inherited movement while canonical inventory state is open; closing inventory restores PROCESS_MODE_INHERIT and the inherited movement loop.",
     "regression_gate": "composition test holds inventory open across physics frames, then closes it and crosses another physics frame; runner rejects any ERROR marker"
   },
+  "windows_attempt_2": {
+    "tested_head": "2fbc9fae1ea11fd37730122599ed36dae306a91f",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "ch8_layering": "PASS 57",
+    "ch9_0_source": "PASS 62",
+    "ch9_1_operations": "PASS 76",
+    "ch9_1_multi_conflict": "PASS 42",
+    "ch9_2_composition": "PASS 59",
+    "ch9_2_ui_routes": "PASS 16",
+    "candidate_runner": "PASS",
+    "physics_space_errors": "NONE",
+    "graphical_launcher": "FAIL_TO_PARSE",
+    "graphical_launcher_error": "ParserError TerminatorExpectedAtEndOfString at PLAY_CH9_2_INVENTORY_CHARACTER_LAB.ps1 line 77 near the -- argument",
+    "graphical_observation": "NOT_STARTED"
+  },
+  "fix2": {
+    "launcher_commit": "2bddcb99b037607b74c6c1d408a3c9623481fa0b",
+    "parse_gate_commit": "d16a5f04c1f30d1328e17db2be49ce1e3e2efcc1",
+    "scope": "PowerShell graphical launcher only plus runner validation",
+    "runtime_godot_changed": false,
+    "canonical_item_graph_changed": false,
+    "behavior": "Launcher is ASCII-only and uses a compact explicit Godot argument array; focused runner now parses the launcher through System.Management.Automation.Language.Parser before any Godot test.",
+    "reason": "Avoid Windows PowerShell encoding/parser ambiguity and ensure graphical launcher syntax is part of the automated acceptance surface."
+  },
   "formal_lineage_blockers": [
     "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
   ],
   "windows_results": {
-    "fix1_editor_import": "PENDING",
-    "fix1_ch8_layering": "PENDING",
-    "fix1_ch9_0_source": "PENDING",
-    "fix1_ch9_1_operations": "PENDING",
-    "fix1_ch9_1_multi_conflict": "PENDING",
-    "fix1_ch9_2_composition": "PENDING",
-    "fix1_ch9_2_ui_routes": "PENDING",
-    "fix1_candidate_runner": "PENDING",
+    "focused_runtime_gate": "PASS_ON_ATTEMPT_2",
+    "fix2_graphical_launcher_parse": "PENDING",
+    "fix2_candidate_runner": "PENDING",
     "graphical_observation": "PENDING"
   }
 }
