@@ -4,7 +4,7 @@
 **Ветка:** `feature/ts0-large-structural-visual-lab`
 **Base:** `T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db`
 **Global revision:** `GLOBAL-P0-2026-08-10-R2`
-**Статус:** `IMPLEMENTED CANDIDATE — FOCUSED PASS / FULL BRANCH REGRESSION PENDING`
+**Статус:** `SOURCE ACCEPTED — WINDOWS FOCUSED + FULL BRANCH REGRESSION PASS`
 
 ## Причина корректировки
 
@@ -110,7 +110,7 @@ TS0.4:
 
 ## Focused validation
 
-Локальный micro-harness использовал точный engine build:
+Первичный exact-contract harness использовал точный engine build:
 
 ```text
 Godot 4.7.1.stable.double.custom_build.a13da4feb
@@ -128,14 +128,31 @@ C22 unit-grid compatibility probes                 PASS
 1M research profile non-blocking guard             PASS
 ```
 
-Observed exact-contract harness timings:
+Затем тот же checkpoint проверен на реальном Windows worktree:
 
 ```text
-CUBE_10K       ~5.2 s for forward + reverse
-PYRAMID_10K    ~5.0 s for forward + reverse
+worktree      C:/Godot/lunar-world-double-godot-ts0
+engine        Godot 4.7.1.stable.double.custom_build.a13da4feb
+runner        RUN_TS0_FIXTURE_TESTS.ps1
+
+CUBE_10K      10 648 parts   5958 ms   PASS
+PYRAMID_10K   10 416 parts   5595 ms   PASS
+assertions                       61/61   PASS
 ```
 
-Focused harness использовал byte-equivalent copies текущих branch-файлов `NetworkContractUtils`, `ConstructionPartRecord`, `ConstructionBondRecord` и `ConstructSnapshot`, поэтому новый builder проверен именно против действующих canonical validation/hash contracts. Полный repository checkout в execution container недоступен, поэтому полный `RUN_WORLD_REGRESSION_TESTS.ps1` всё ещё должен быть выполнен отдельным branch acceptance run до `SOURCE_ACCEPTED`.
+## Full branch regression
+
+После focused PASS выполнен полный branch regression в том же Windows worktree на принятом TS0.0 source state.
+
+```text
+runner: RUN_WORLD_REGRESSION_TESTS.ps1
+result: PASS
+summary: All world/core regression tests through NX4 client prediction and reconciliation passed.
+CLI tail: 6 PASS, 0 FAIL
+report: artifacts/test-results/world-regression-summary.json
+```
+
+Этим закрыт последний gate TS0.0 `SOURCE_ACCEPTED`.
 
 ## Known TS0.3 gap
 
@@ -156,9 +173,14 @@ actual affected-section rebuild
 ## Решение
 
 ```text
-TS0 P0 grid alignment     PASS
-TS0.0 implementation     COMPLETE
-Focused validation       PASS
-SOURCE_ACCEPTED           false
-next                     TS0.1 — 10k graphical proof through existing C22/C24 path
+TS0 P0 grid alignment        PASS
+TS0.0 implementation        COMPLETE
+Focused exact-contract      PASS
+Windows focused             PASS — 61/61
+Full branch regression      PASS
+SOURCE_ACCEPTED              true
+MAIN_INTEGRATED              false
+COMPOSITION_VERIFIED         false
+PRODUCTION_READY             false
+next                        TS0.1 — 10k graphical proof through existing C22/C24 path
 ```
