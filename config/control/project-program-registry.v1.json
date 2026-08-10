@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 8,
+  "registry_generation": 9,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T09:24:00Z",
+  "updated_at_utc": "2026-08-10T09:28:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -40,11 +40,14 @@
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
       "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
       "stage_status": "FIX1_IMPLEMENTED_CANDIDATE",
-      "progress_note": "The first Windows recovery gate preserved all inherited T1A.4/C5B/T1A.5 tests but exposed a restart-bootstrap defect before runtime restore: after M0 synchronized the already assembled construct, T1A.4 rebuilt the assembly plan and correctly failed with ATTACH_PART_SOURCE_ALREADY_ATTACHED. FIX1 adds opt-in idempotent persisted-composition reuse for the T1A.7 recovery path only, validates the restored ConstructSnapshot against the deterministic T1A.4 source snapshot, and skips duplicate assembly planning. Fresh Windows focused revalidation is pending.",
+      "progress_note": "The first Windows recovery gate preserved all inherited T1A.4/C5B/T1A.5 tests but exposed a restart-bootstrap defect before runtime restore: after M0 synchronized the already assembled construct, T1A.4 rebuilt the assembly plan and correctly failed with ATTACH_PART_SOURCE_ALREADY_ATTACHED. FIX1 adds opt-in idempotent persisted-composition reuse for the T1A.7 recovery path only, validates the restored ConstructSnapshot against the deterministic T1A.4 source snapshot, and skips duplicate assembly planning. Because FIX1 touches watched T1A.4/T1A.5 runtime files, both fresh focused revalidation and a fresh full world regression are required before T1A.7.1 acceptance.",
       "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-      "next_stage": "Re-run T1A.7.1 focused Windows acceptance on FIX1; if green, record acceptance and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
+      "next_stage": "Re-run T1A.7.1 focused Windows acceptance on FIX1; if green, run full world regression on the same code head, then accept T1A.7.1 and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_1_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING"]
+      "blockers": [
+        "T1A7_1_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING",
+        "T1A7_1_FULL_WORLD_REGRESSION_PENDING"
+      ]
     },
     "TS": {
       "program": "TS",
