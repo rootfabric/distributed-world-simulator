@@ -40,7 +40,7 @@ func apply_runtime_interest(
 ) -> Dictionary:
 	if _runtime_interest == null:
 		return _t1a7_failure("T1A7_INTEREST_BINDING_NOT_READY")
-	var client := client_id.strip_edges().to_lower()
+	var client: String = client_id.strip_edges().to_lower()
 	var updated: Dictionary = _runtime_interest.update_selection(
 		client, interest_revision, selected_construct_ids
 	)
@@ -55,9 +55,9 @@ func apply_runtime_interest(
 		})
 	_interest_updates += 1
 	var state: Dictionary = Dictionary(details.get("state", {}))
-	var selected := Array(state.get("selected_construct_ids", [])).has(CONSTRUCT_ID)
-	var peer_id := _runtime_interest.active_peer_id(client)
-	var session_id := _runtime_interest.active_session_id(client)
+	var selected: bool = Array(state.get("selected_construct_ids", [])).has(CONSTRUCT_ID)
+	var peer_id: String = String(_runtime_interest.active_peer_id(client))
+	var session_id: String = String(_runtime_interest.active_session_id(client))
 	if not selected or peer_id.is_empty() or session_id.is_empty():
 		return _t1a7_success({
 			"mode": "OUT_OF_INTEREST" if not selected else "NO_ACTIVE_SESSION",
@@ -90,18 +90,18 @@ func _should_send_runtime_snapshot_to_peer(peer_id: String, _reason: String) -> 
 	if _runtime_interest == null or not _peer_to_player.has(peer_id):
 		_interest_suppressed_snapshots += 1
 		return false
-	var session_id := String(_peer_to_session.get(peer_id, ""))
-	var client_id := String(_peer_to_player.get(peer_id, ""))
+	var session_id: String = String(_peer_to_session.get(peer_id, ""))
+	var client_id: String = String(_peer_to_player.get(peer_id, ""))
 	if session_id.is_empty() or client_id.is_empty():
 		_interest_suppressed_snapshots += 1
 		return false
-	if _runtime_interest.active_peer_id(client_id) != peer_id \
-			or _runtime_interest.active_session_id(client_id) != session_id:
+	if String(_runtime_interest.active_peer_id(client_id)) != peer_id \
+			or String(_runtime_interest.active_session_id(client_id)) != session_id:
 		var bound: Dictionary = _runtime_interest.bind_session(peer_id, session_id, client_id)
 		if not bool(bound.get("success", false)):
 			_interest_suppressed_snapshots += 1
 			return false
-	var selected := _runtime_interest.is_selected(peer_id, session_id, CONSTRUCT_ID)
+	var selected: bool = bool(_runtime_interest.is_selected(peer_id, session_id, CONSTRUCT_ID))
 	if not selected:
 		_interest_suppressed_snapshots += 1
 	return selected
