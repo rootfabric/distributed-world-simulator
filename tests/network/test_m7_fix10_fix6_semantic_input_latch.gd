@@ -10,26 +10,36 @@ func _init() -> void:
 
 
 func _test_semantic_input_latch_source_contract() -> void:
-	var source: String = FileAccess.get_file_as_string(
+	var core_source: String = FileAccess.get_file_as_string(
 		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_core.gd"
 	)
+	var cadence_source: String = FileAccess.get_file_as_string(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_semantic_cadence.gd"
+	)
+	var canonical_source: String = FileAccess.get_file_as_string(
+		"res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
+	)
 	_assert(
-		source.contains("ONE_SEQUENCE_PER_CLIENT_FIXED_TICK_V1"),
+		core_source.contains("ONE_SEQUENCE_PER_CLIENT_FIXED_TICK_V1"),
 		"FIX10 fix6 semantic input latch policy missing"
 	)
 	_assert(
-		source.contains("target_client_tick == _fix10_fix6_last_latched_client_tick"),
-		"FIX10 fix6 same-client-tick submission guard missing"
+		canonical_source.contains("m3_graphical_client_runtime_fix10_fix6_local_presentation.gd"),
+		"FIX10 fix6 canonical client does not compose the active semantic latch chain"
 	)
 	_assert(
-		source.contains("_fix10_fix6_same_tick_input_update_suppressions += 1"),
-		"FIX10 fix6 same-client-tick suppression is not observable"
+		cadence_source.contains("target_client_tick <= _fix10_fix6_last_latched_client_tick"),
+		"FIX10 fix6 monotonic client-tick submission guard missing"
 	)
-	var guard_pos: int = source.find(
-		"target_client_tick == _fix10_fix6_last_latched_client_tick"
+	_assert(
+		cadence_source.contains("_fix10_fix6_same_tick_input_update_suppressions += 1"),
+		"FIX10 fix6 duplicate/nonmonotonic tick suppression is not observable"
 	)
-	var submit_pos: int = source.find(
-		"submit_movement_intent_nonblocking(canonical, target_client_tick)",
+	var guard_pos: int = cadence_source.find(
+		"target_client_tick <= _fix10_fix6_last_latched_client_tick"
+	)
+	var submit_pos: int = cadence_source.find(
+		"submit_movement_intent_nonblocking(",
 		guard_pos
 	)
 	_assert(
@@ -37,20 +47,24 @@ func _test_semantic_input_latch_source_contract() -> void:
 		"FIX10 fix6 guards duplicate semantic tick before creating input sequence"
 	)
 	_assert(
-		source.contains("_fix10_fix6_last_latched_client_tick = target_client_tick"),
+		cadence_source.contains("_fix10_fix6_last_latched_client_tick = target_client_tick"),
 		"FIX10 fix6 successful semantic submission does not latch client tick"
 	)
 	_assert(
-		source.contains("submission_error == \"M7_PLAYER_INPUT_SEND_FAILED\""),
+		cadence_source.contains("submission_error == \"M7_PLAYER_INPUT_SEND_FAILED\""),
 		"FIX10 fix6 transport retry path can recreate same-tick semantic sequence"
 	)
 	_assert(
-		source.contains("fix6_semantic_input_latch_policy"),
+		core_source.contains("fix6_semantic_input_latch_policy"),
 		"FIX10 fix6 input latch policy missing from runtime report"
 	)
 	_assert(
-		source.contains("fix6_same_tick_input_update_suppressions"),
+		core_source.contains("fix6_same_tick_input_update_suppressions"),
 		"FIX10 fix6 input latch suppression count missing from runtime report"
+	)
+	_assert(
+		cadence_source.contains("fix6_nonmonotonic_tick_suppressions"),
+		"FIX10 fix6 nonmonotonic tick suppression count missing from runtime report"
 	)
 
 
