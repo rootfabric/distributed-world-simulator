@@ -3,6 +3,7 @@ extends RefCounted
 const SnapshotEnvelopeScript = preload("res://scripts/network/contracts/aggregate_snapshot_envelope.gd")
 const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const ConstructSnapshotScript = preload("res://scripts/construction/contracts/construct_snapshot.gd")
+const RuntimePersistenceScript = preload("res://scripts/construction/behavior/construction_runtime_persistence_state.gd")
 const TranslatorScript = preload("res://scripts/construction/authoritative/construction_m0_batch_translator.gd")
 
 var _aggregate_kind: String = ""
@@ -37,6 +38,8 @@ func validate_snapshot(snapshot: Dictionary) -> Dictionary:
 			return _validate_wrapped_state(state, TranslatorScript.LEDGER_STATE_SCHEMA, ["operation_ledger"])
 		TranslatorScript.CONSTRUCT_KIND:
 			return ConstructSnapshotScript.validate(state)
+		TranslatorScript.RUNTIME_KIND:
+			return RuntimePersistenceScript.validate(state)
 	return _failure("CONSTRUCTION_M0_ADAPTER_KIND_UNSUPPORTED")
 
 
