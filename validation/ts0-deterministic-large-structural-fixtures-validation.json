@@ -53,7 +53,7 @@
   },
   "focused_validation": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "environment": "isolated micro-harness using the repository ConstructionPartRecord/ConstructSnapshot contract shape and canonical JSON hashing semantics",
+    "environment": "isolated harness with byte-equivalent current-branch NetworkContractUtils, ConstructionPartRecord, ConstructionBondRecord and ConstructSnapshot files",
     "editor_import": "PASS",
     "fixture_acceptance": "PASS_61_ASSERTIONS",
     "cube_10k_forward_reverse": "PASS",

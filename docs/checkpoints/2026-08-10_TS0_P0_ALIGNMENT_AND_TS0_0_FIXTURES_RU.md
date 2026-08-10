@@ -1,9 +1,9 @@
 # TS0 P0 alignment + TS0.0 deterministic large structural fixtures
 
-**Дата:** 2026-08-10  
-**Ветка:** `feature/ts0-large-structural-visual-lab`  
-**Base:** `T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db`  
-**Global revision:** `GLOBAL-P0-2026-08-10-R2`  
+**Дата:** 2026-08-10
+**Ветка:** `feature/ts0-large-structural-visual-lab`
+**Base:** `T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db`
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`
 **Статус:** `IMPLEMENTED CANDIDATE — FOCUSED PASS / FULL BRANCH REGRESSION PENDING`
 
 ## Причина корректировки
@@ -128,14 +128,14 @@ C22 unit-grid compatibility probes                 PASS
 1M research profile non-blocking guard             PASS
 ```
 
-Observed micro-harness timings:
+Observed exact-contract harness timings:
 
 ```text
-CUBE_10K       ~3.1 s for forward + reverse
-PYRAMID_10K    ~3.0 s for forward + reverse
+CUBE_10K       ~5.2 s for forward + reverse
+PYRAMID_10K    ~5.0 s for forward + reverse
 ```
 
-Это evidence syntax/contract correctness нового slice. Полный repository checkout в execution container недоступен, поэтому полный `RUN_WORLD_REGRESSION_TESTS.ps1` должен быть выполнен отдельным branch acceptance run до `SOURCE_ACCEPTED`.
+Focused harness использовал byte-equivalent copies текущих branch-файлов `NetworkContractUtils`, `ConstructionPartRecord`, `ConstructionBondRecord` и `ConstructSnapshot`, поэтому новый builder проверен именно против действующих canonical validation/hash contracts. Полный repository checkout в execution container недоступен, поэтому полный `RUN_WORLD_REGRESSION_TESTS.ps1` всё ещё должен быть выполнен отдельным branch acceptance run до `SOURCE_ACCEPTED`.
 
 ## Known TS0.3 gap
 
