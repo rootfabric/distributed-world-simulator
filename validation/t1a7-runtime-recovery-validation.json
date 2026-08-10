@@ -7,14 +7,68 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "checkpoint_document": "docs/checkpoints/2026-08-10_T1A7_1_RUNTIME_RECOVERY_ACCEPTED_RU.md",
-  "status_dimensions": {"SOURCE_ACCEPTED": true, "MAIN_INTEGRATED": false, "COMPOSITION_VERIFIED": true, "PRODUCTION_READY": false},
-  "architecture_reuse_audit": {"result": "PASS", "durability_owner": "existing M0 aggregate transaction repository/coordinator foundation", "construction_existing_bridge": "scripts/construction/authoritative/construction_m0_transaction_bridge.gd", "matter_pattern_reviewed": true, "mw7_interest_pattern_reviewed": true, "new_persistence_repository": false, "new_transaction_coordinator": false, "new_authority_registry": false, "new_interest_identity": false, "new_network_channel": false, "legacy_construction_m0_state_adapter_changed_semantically": false},
-  "recovery_contract": {"schema": "planet_simulator.construction_runtime_persistence_state.v1", "persisted_sections": ["construct_id", "construct_checksum", "runtime_state", "operation_ledger", "power_tick", "power_storage", "power_execution_profile"], "transient_fields_persisted": false, "runtime_operation_replay_state_persisted": true, "utility_effect_continuity_persisted": true, "power_tick_storage_profile_consistency_validated": true, "construct_checksum_pin_required": true},
-  "m0_integration": {"runtime_aggregate_kind": "CONSTRUCTION_RUNTIME", "runtime_aggregate_scope": "per construct", "existing_repository_reused": true, "existing_coordinator_reused": true, "existing_adapter_registry_reused": true, "runtime_adapter_is_separate_extension": true, "checkpoint_is_explicit": true, "per_command_crash_atomicity_claimed": false},
-  "fix1": {"first_windows_gate_head": "9595b222dbc0ed731654b08d36eed4db141a1b3a", "first_windows_gate_result": "REJECTED_RESTART_BOOTSTRAP_IDEMPOTENCY", "classification": "RESTART_BOOTSTRAP_IDEMPOTENCY_DEFECT_BEFORE_RUNTIME_RESTORE", "binder_fix_head": "a4d6c0b9038f801f0543e5391d8f0eac70f09db9", "t1a5_hook_head": "98320e2beff07f4bdf3e2973748354710136a0ae", "t1a7_opt_in_head": "abbbc5f1a69fbb04ee5b3413d2f47d4bb9ee5c49", "regression_head": "5766c53cb3dde788dd65d3ec181353bb45b74dca", "default_t1a4_t1a5_reuse_enabled": false, "t1a7_recovery_reuse_enabled": true, "existing_construct_checksum_equivalence_required": true, "duplicate_assembly_plan_skipped_on_recovery": true},
-  "fresh_windows_focused": {"tested_head": "a1d856de348268c45eccfb1c4646720bc4a996db", "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb", "editor_import": "PASS", "t1a4_interactive_fixture_binding": "PASS_153", "c5b_affordance_runtime_contracts": "PASS_32", "t1a5_interactive_runtime_execution": "PASS_67", "t1a5_transactional_runtime_effects": "PASS_36", "t1a7_runtime_recovery": "PASS_60", "focused_gate": "PASS"},
-  "fresh_full_world_regression": {"tested_head": "a1d856de348268c45eccfb1c4646720bc4a996db", "runner": "RUN_WORLD_REGRESSION_TESTS.ps1", "result": "PASS_6_0", "lifecycle_final_state": "STOPPED", "exit_code": 0, "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."},
-  "tested_heads": {"runtime": "a1d856de348268c45eccfb1c4646720bc4a996db", "focused": "a1d856de348268c45eccfb1c4646720bc4a996db", "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"},
-  "required_validation": {"focused_runner": "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1", "focused_result": "PASS", "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1", "full_regression_result": "PASS", "acceptance_requires_both": true},
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
+  "accepted_evidence": {
+    "runtime_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "t1a4": 153,
+      "c5b": 32,
+      "t1a5": 67,
+      "t1a5_transactional": 36,
+      "t1a7_recovery": 60,
+      "result": "PASS"
+    },
+    "full_world_regression": {
+      "result": "PASS_6_0",
+      "lifecycle_final_state": "STOPPED",
+      "exit_code": 0,
+      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+    }
+  },
+  "architecture_reuse_audit": {
+    "result": "PASS",
+    "durability_owner": "existing M0 aggregate transaction repository/coordinator foundation",
+    "new_persistence_repository": false,
+    "new_transaction_coordinator": false,
+    "new_authority_registry": false,
+    "new_interest_identity": false,
+    "new_network_channel": false
+  },
+  "recovery_contract": {
+    "schema": "planet_simulator.construction_runtime_persistence_state.v1",
+    "persisted_sections": [
+      "construct_id",
+      "construct_checksum",
+      "runtime_state",
+      "operation_ledger",
+      "power_tick",
+      "power_storage",
+      "power_execution_profile"
+    ],
+    "transient_fields_persisted": false,
+    "checkpoint_is_explicit": true,
+    "per_command_crash_atomicity_claimed": false
+  },
+  "fix1": {
+    "first_windows_gate_head": "9595b222dbc0ed731654b08d36eed4db141a1b3a",
+    "first_windows_gate_result": "REJECTED_RESTART_BOOTSTRAP_IDEMPOTENCY",
+    "binder_fix_head": "a4d6c0b9038f801f0543e5391d8f0eac70f09db9",
+    "t1a5_hook_head": "98320e2beff07f4bdf3e2973748354710136a0ae",
+    "t1a7_opt_in_head": "abbbc5f1a69fbb04ee5b3413d2f47d4bb9ee5c49",
+    "regression_head": "5766c53cb3dde788dd65d3ec181353bb45b74dca",
+    "default_t1a4_t1a5_reuse_enabled": false,
+    "t1a7_recovery_reuse_enabled": true
+  },
+  "tested_heads": {
+    "runtime": "a1d856de348268c45eccfb1c4646720bc4a996db",
+    "focused": "a1d856de348268c45eccfb1c4646720bc4a996db",
+    "full_regression": "a1d856de348268c45eccfb1c4646720bc4a996db"
+  },
   "next_after_acceptance": "T1A7_2_LATE_INTEREST_BASELINE_AND_RECONNECT"
 }
