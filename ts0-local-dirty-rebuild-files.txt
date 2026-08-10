@@ -1,0 +1,10 @@
+scripts/labs/t1/ts0/ts0_local_dirty_rebuild_probe.gd
+scripts/labs/t1/ts0/ts0_local_dirty_rebuild_probe.gd.uid
+tests/construction/ts0/ts0_local_dirty_rebuild_acceptance.gd
+tests/construction/ts0/ts0_local_dirty_rebuild_acceptance.gd.uid
+config/construction/ts0-local-dirty-rebuild.v1.json
+RUN_TS0_DIRTY_REBUILD_TESTS.ps1
+RUN_TS0_DIRTY_REBUILD_TESTS.sh
+docs/checkpoints/2026-08-10_TS0_3_LOCAL_MUTATION_DIRTY_REBUILD_RU.md
+validation/ts0-local-dirty-rebuild-validation.json
+ts0-local-dirty-rebuild-files.txt

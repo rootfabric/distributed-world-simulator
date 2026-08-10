@@ -1,0 +1,58 @@
+{
+  "schema": "distributed_world_simulator.ts0_local_dirty_rebuild_validation.v1",
+  "checkpoint": "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "formal_frontier": "TS0.1_10K_VISUAL_PROOF",
+  "decision": "IMPLEMENTED_CANDIDATE_LOCAL_REBUILD_PROVED_C22_CONVERGENCE_PENDING",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "mutation": {
+    "profile": "CUBE_100K",
+    "initial_part_count": 97336,
+    "operation": "REMOVE_CORNER_VOLUME",
+    "dimensions": [10, 10, 10],
+    "removed_part_count": 1000,
+    "remaining_part_count": 96336
+  },
+  "incremental_scope": {
+    "total_sections": 216,
+    "base_dirty_sections": 8,
+    "rebuild_sections": 27,
+    "rebuilt_nonempty_sections": 26,
+    "removed_sections": 1,
+    "reused_sections": 189,
+    "affected_section_ratio": 0.125,
+    "dirty_hlod_clusters": 1,
+    "scanned_rebuild_cells": 10648,
+    "context_occupancy_cells": 26000,
+    "full_snapshot_part_scan_required": false,
+    "full_c22_compile_required": false
+  },
+  "local_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "engine_source": "attached project archive godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "editor_import": "PASS",
+    "focused_acceptance": "PASS_24_ASSERTIONS",
+    "observed_elapsed_ms": 28,
+    "exact_engine": true,
+    "scope": "ISOLATED_TS_OWNED_ALGORITHM_HARNESS"
+  },
+  "pc0": {
+    "main_registry_generation_checked": 5,
+    "formal_ts_frontier_advanced": false,
+    "production_c22_c24_owned_by_ts": false,
+    "new_global_foundation_claimed": false
+  },
+  "remaining_gates": [
+    "Run repository TS0.3 focused runner on the full Windows worktree",
+    "Converge the proven algorithm into the production C22 incremental execution path under the correct owner",
+    "Run full world regression before any SOURCE_ACCEPTED claim",
+    "Update main PC0 registry only from accepted facts"
+  ]
+}

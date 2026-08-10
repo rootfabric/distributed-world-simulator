@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.ts0_local_dirty_rebuild.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "formal_frontier": "TS0.1_10K_VISUAL_PROOF",
+  "candidate_stage": "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
+  "status": "IMPLEMENTED_CANDIDATE_LOCAL_REBUILD_PROVED_C22_CONVERGENCE_PENDING",
+  "profile": "CUBE_100K",
+  "section_size_cells": 8,
+  "cluster_edge_sections": 3,
+  "dirty_halo_sections": 1,
+  "context_halo_sections": 2,
+  "mutation": {
+    "operation": "REMOVE_CORNER_VOLUME",
+    "dimensions": [10, 10, 10],
+    "expected_removed_parts": 1000
+  },
+  "algorithm": {
+    "rebuild_scope": "BASE_DIRTY_SECTIONS_PLUS_ONE_SECTION_HALO",
+    "context_scope": "REBUILD_SCOPE_PLUS_ONE_SECTION_CONTEXT_RING",
+    "surface_extraction": "LOCAL_UNIT_GRID_OCCUPANCY_ONLY",
+    "greedy_merge": "LOCAL_GRID_GREEDY",
+    "cluster_invalidation": "ONLY_CLUSTERS_INTERSECTING_REBUILD_SECTIONS",
+    "full_snapshot_part_scan_after_mutation": false,
+    "full_c22_compile_after_mutation": false,
+    "production_c22_recompile_incremental_modified": false,
+    "ownership_note": "TS0.3 proves the local rebuild algorithm in TS-owned lab paths. Moving the algorithm into production C22 requires Construction/C22 ownership convergence under PC0."
+  },
+  "acceptance": {
+    "expected_initial_parts": 97336,
+    "expected_removed_parts": 1000,
+    "expected_total_sections": 216,
+    "expected_base_dirty_sections": 8,
+    "expected_rebuild_sections": 27,
+    "expected_removed_sections": 1,
+    "expected_reused_sections": 189,
+    "expected_dirty_clusters": 1,
+    "max_affected_section_ratio": 0.13,
+    "full_snapshot_part_scan_for_rebuild": false,
+    "full_c22_compile_for_rebuild": false,
+    "c24_grid_quad_compatible_output": true
+  },
+  "local_exact_engine_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "attached_archive": "godot-4.7.1-linux-double-x86_64-a13da4f.tar(1).gz",
+    "editor_import": "PASS",
+    "focused_test": "PASS_24_ASSERTIONS",
+    "elapsed_ms_observed": 28,
+    "rebuild_sections": 27,
+    "reused_sections": 189,
+    "dirty_clusters": 1,
+    "scanned_rebuild_cells": 10648,
+    "context_occupancy_cells": 26000
+  }
+}
