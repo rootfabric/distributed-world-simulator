@@ -9,8 +9,6 @@
 
 T1B закрывает composition/failure semantics перед переходом к реальной heterogeneous station scale в T2.0.
 
-Canonical roadmap ведёт две параллельные линии:
-
 ```text
 T composition             TS scale/visual
      |                         |
@@ -23,19 +21,32 @@ T composition             TS scale/visual
 
 T1B не заменяет TS0.4 и не снимает PC0 blocker T2.0.
 
-## 2. Уже принятая база
+## 2. Принятая база
 
-T1A.7 доказал durable runtime recovery, late-interest/reconnect convergence, dirty/selective runtime fan-out, 10,000 runtime-subject scale и final recovery/interest/selective composition.
+T1A.7 доказал durable runtime recovery, late-interest/reconnect convergence, dirty/selective runtime fan-out и 10,000 runtime-subject scale.
 
-T1B.0 Runtime Failure Contract также ACCEPTED на exact Windows checkout `1f08defe57f592f5e2698da71a1e3180b0875014`: focused T1B.0 39 assertions PASS и полный world/core regression PASS с RL3 175 + 37, `main_scene_cli_all 6 PASS / 0 FAIL`, lifecycle `STOPPED` и финальным NX4 marker.
+T1B.0 `Runtime Failure Contract` — ACCEPTED на exact Windows checkout `1f08defe57f592f5e2698da71a1e3180b0875014`. Он ввёл pure projection `ONLINE / DEGRADED / OFFLINE` по `NONE / OPTIONAL / REQUIRED` requirements и explicit failure codes без второго aggregate/store.
+
+T1B.1 `Dependency Failure Propagation` — ACCEPTED на required preserved checkout `faff5f10f42d30a8769ee796fce26d93b8d24bcf`. Он добавил bounded deterministic construct-local propagation по существующим runtime IDs. Финальный full regression подтвердил MW10/RL0-RL3, `main_scene_cli_all 6 PASS / 0 FAIL`, `STOPPED`, exit 0 и NX4 marker.
+
+Принятые правила T1B.1:
+
+- OFFLINE upstream => dependency unavailable;
+- DEGRADED upstream => dependency остаётся available;
+- required outage => OFFLINE cascade;
+- optional outage => DEGRADED;
+- recovery детерминированно возвращает ONLINE;
+- cycle/duplicate/self/missing/mixed-construct rejected;
+- bounds: 1024 nodes / 4096 edges;
+- propagator pure: proposals only, commit остаётся у `ConstructionRuntimeStateStore`.
 
 ## 3. Архитектурная формула
 
 ```text
 canonical Construction runtime subject
         +
-existing dependency/utility availability
-        ↓ pure policy / pure propagation planner
+existing utility/dependency availability
+        ↓ pure policy / propagation
 proposed next runtime state
         ↓ existing revision fence/store
 canonical runtime commit
@@ -53,133 +64,63 @@ failure status != network message identity
 local dependency edge != global world dependency identity
 ```
 
-## 4. T1B.0 — Runtime Failure Contract — ACCEPTED
+## 4. T1B.2 — Runtime Command Failure Semantics — IMPLEMENTED CANDIDATE
 
-Generic operability:
+T1B.2 связывает canonical operability с уже существующим `ConstructionAffordanceRuntimeExecutor`, но **не изменяет transactional executor core**.
 
 ```text
-ONLINE
-DEGRADED
-OFFLINE
+command
+  ↓
+existing executor validation + operation ledger + revision fence
+  ↓
+T1B.2 failure-aware handler policy
+  ↓ allowed only
+existing gameplay handler
+  ↓
+existing runtime state commit + effect commit/rollback
 ```
 
-Dependency classes:
+Implementation:
 
 ```text
-power
-data
-dependency
+scripts/construction/behavior/construction_runtime_command_failure_handler.gd
+tests/construction/t1b2_runtime_command_failure_semantics_acceptance.gd
+RUN_T1B2_COMMAND_FAILURE_TESTS.ps1
+validation/t1b2-runtime-command-failure-semantics-validation.json
 ```
 
-Requirement levels:
+Action policy levels:
 
 ```text
-NONE
-OPTIONAL
-REQUIRED
+REQUIRE_ONLINE
+ALLOW_DEGRADED
+ALLOW_OFFLINE
 ```
 
-Failure codes:
+Semantics:
+
+- undeclared action fails closed;
+- `OFFLINE + REQUIRE_ONLINE/ALLOW_DEGRADED` => `CONSTRUCTION_RUNTIME_SUBJECT_OFFLINE`;
+- `DEGRADED + REQUIRE_ONLINE` => `CONSTRUCTION_RUNTIME_SUBJECT_DEGRADED`;
+- `DEGRADED + ALLOW_DEGRADED` can execute and reports `degraded_execution=true`;
+- `OFFLINE + ALLOW_OFFLINE` permits only deliberately declared safe operations such as diagnostic/reset-class actions;
+- rejection happens before base handler/effect committer;
+- terminal rejection uses the existing operation ledger and replay is idempotent;
+- allowed transactional effect remains exactly-once;
+- effect commit failure still rolls runtime state/revision back through the accepted T1A.5 transactional boundary;
+- wrapper does not own canonical state, ledger or transaction commit.
+
+T1B.2 не добавляет новый command bus, operation ledger, transaction coordinator, authority registry, network protocol или persistence path.
+
+## 5. Следующие T1B stages
 
 ```text
-POWER_UNAVAILABLE
-DATA_UNAVAILABLE
-DEPENDENCY_UNAVAILABLE
-```
-
-Правила:
-
-- missing REQUIRED dependency => `OFFLINE`;
-- missing OPTIONAL dependency при отсутствии required failure => `DEGRADED`;
-- всё доступно => `ONLINE` + empty failure codes;
-- projection deterministic;
-- существующие gameplay fields subject state сохраняются;
-- commit проходит через existing `ConstructionRuntimeStateStore.update_subject()` и revision fence;
-- failure-bearing runtime state переживает существующий store/M0 recovery путь;
-- ConstructSnapshot не мутируется.
-
-Accepted checkpoint:
-
-```text
-docs/checkpoints/2026-08-11_T1B0_RUNTIME_FAILURE_CONTRACT_ACCEPTED_RU.md
-```
-
-## 5. T1B.1 — Dependency Failure Propagation — IMPLEMENTED CANDIDATE
-
-T1B.1 добавляет bounded deterministic propagation **только внутри одного canonical construct**.
-
-Вход:
-
-```text
-existing runtime subjects
-+ per-runtime T1B.0 requirements
-+ direct power/data availability
-+ local directed edges between existing runtime IDs
-```
-
-Выход:
-
-```text
-pure ordered proposal set
-```
-
-Сам propagator state не коммитит. Canonical commit по-прежнему выполняется существующим `ConstructionRuntimeStateStore.update_subject()`.
-
-Текущий acceptance graph:
-
-```text
-generator -> bus -> console -> door
-              |
-              +-------> lamp
-```
-
-При потере direct power у generator:
-
-```text
-generator  OFFLINE  POWER_UNAVAILABLE
-bus        OFFLINE  DEPENDENCY_UNAVAILABLE
-console    OFFLINE  DEPENDENCY_UNAVAILABLE
-door       OFFLINE  DEPENDENCY_UNAVAILABLE
-lamp       DEGRADED DEPENDENCY_UNAVAILABLE   # optional dependency
-```
-
-После восстановления generator весь required-chain детерминированно возвращается в `ONLINE`.
-
-Правила T1B.1:
-
-- propagation order — deterministic topological order;
-- input ordering не влияет на output;
-- только `OFFLINE` upstream делает dependency unavailable;
-- `DEGRADED` upstream остаётся dependency-available;
-- cycle rejected;
-- duplicate/self edge rejected;
-- edge на отсутствующий runtime ID rejected;
-- mixed-construct subject set rejected;
-- default bound: `1024` nodes / `4096` edges;
-- node/edge bound overflow rejected до commit;
-- никаких persistent dependency IDs/registries не создаётся.
-
-Файлы:
-
-```text
-scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd
-tests/construction/t1b1_dependency_failure_propagation_acceptance.gd
-RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1
-validation/t1b1-dependency-failure-propagation-validation.json
-```
-
-## 6. Следующие T1B stages
-
-```text
-T1B.2 Runtime Command Failure Semantics
-  - commands against OFFLINE/DEGRADED subjects
-  - explicit rejection/degraded policy
-  - transactional effects remain atomic
-
 T1B.3 Recovery / Reconnect Composition
   - fail -> checkpoint -> restart -> recover
-  - late interest/reconnect receives current failure truth
+  - current operability/dependency state survives recovery
+  - reconnect/late-interest receives current failure truth
   - restore dependency -> canonical recovery transition
+  - command policy remains correct after recovery
 
 T1B.4 Composition Acceptance
   - multi-fixture outage/recovery scenario
@@ -187,9 +128,7 @@ T1B.4 Composition Acceptance
   - full world/core regression
 ```
 
-T1B может уточняться по evidence, но не имеет права создавать новый global foundation.
-
-## 7. Stop gates
+## 6. Stop gates
 
 STOP и перенос в P0/owner-program, если потребуется:
 
@@ -202,15 +141,21 @@ STOP и перенос в P0/owner-program, если потребуется:
 - private material ontology;
 - failure correctness через RPC ordering.
 
-## 8. Validation protocol T1B.1
+## 7. Validation protocol T1B.2
 
-Focused Windows gate:
+Standalone:
 
 ```powershell
-.\RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1 -GodotPath $Godot
+& $Godot --headless --path . --script res://tests/construction/t1b2_runtime_command_failure_semantics_acceptance.gd
 ```
 
-Runner повторяет принятый T1B.0/T1A.7 focused chain и затем T1B.1 acceptance.
+Focused:
+
+```powershell
+.\RUN_T1B2_COMMAND_FAILURE_TESTS.ps1 -GodotPath $Godot
+```
+
+Runner повторяет accepted T1B.1/T1B.0/T1A.7 chain и затем T1B.2 acceptance.
 
 Если focused green, на **том же checkout без fetch/reset**:
 
@@ -218,9 +163,9 @@ Runner повторяет принятый T1B.0/T1A.7 focused chain и зате
 .\RUN_WORLD_REGRESSION_TESTS.ps1
 ```
 
-Только green pair принимает T1B.1 и открывает T1B.2.
+Только green pair принимает T1B.2 и открывает T1B.3.
 
-## 9. T2.0 gate остаётся закрытым
+## 8. T2.0 gate остаётся закрытым
 
 Даже после T1B acceptance T2.0 нельзя объявлять active, пока PC0 не увидит:
 
