@@ -23,6 +23,8 @@
   ],
   "frontier_policy": {
     "active_frontier_matches_main": true,
+    "global_config_blob": "dd18f720cd4ce6493618efe270311605aea9bbbf",
+    "global_roadmap_blob": "3eb52a69cef73da8a784dfce7acc6a0c38185cf9",
     "historical_accepted_branches_rewritten_for_new_global_revision": false,
     "world_generation_frontier": "feature/g7-semantic-field-fabric"
   },
@@ -130,6 +132,7 @@
   "acceptance_common": [
     "GLOBAL_REVISION_MATCH_MAIN_ACTIVE_FRONTIER",
     "GLOBAL_CONFIG_BYTE_EQUIVALENT_TO_MAIN",
+    "GLOBAL_ROADMAP_BYTE_EQUIVALENT_TO_MAIN",
     "LOCAL_P0_ALIGNMENT_CURRENT",
     "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
     "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK",
