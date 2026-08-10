@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 27,
+  "registry_generation": 28,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T12:43:00Z",
+  "updated_at_utc": "2026-08-10T12:48:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -39,7 +39,7 @@
       "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
       "progress_note": "T1A.7.3 focused Windows validation PASSED on local checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 with runtime/test boundary cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0. Inherited gates remained green: T1A.4 153, C5B 32, T1A.5 67, transactional 36, T1A.7.1 recovery 60, NX0 150, M3 77, C5C 29, T1A.6 multiplayer 25/0, T1A.7.2 interest binding 34 and late-interest/reconnect 35. New T1A.7.3 selective planner passed 44 assertions and real selective M3 process acceptance passed 35 assertions. Two transient Parse JSON failed messages are classified as non-blocking polling file-read race noise because subsequent polls succeeded and both affected suites completed PASS with all assertions. Full world/core regression is still required on the same local checkout without fetch/reset.",
       "last_accepted_checkpoint": "T1A.7.2 Late-Interest Baseline + Reconnect",
-      "next_stage": "Run full world/core regression on local checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 without fetch/reset. If green, accept T1A.7.3 and proceed to T1A.7.4 Scale / Soak Lab with 100/1,000 constructs and 10,000 runtime subjects.",
+      "next_stage": "Run full world/core regression on local checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 without fetch/reset. If green, accept T1A.7.3 and proceed to T1A.7.4 Scale / Soak Lab with 100/1,000 constructs and 10,000 runtime subjects. T1A.7.4 is expected to run in parallel with TS0.4 1M structural/representation ceiling research; both evidence lines converge through PC0 before T2.0.",
       "health_declared": "YELLOW",
       "blockers": ["T1A7_3_FULL_WORLD_REGRESSION_PENDING"]
     },
@@ -55,9 +55,9 @@
       "expected_outcome": "Unit-grid local mutations rebuild only dirty plus neighbor sections, reuse unchanged content-addressed artifacts, rebuild FAR shell from section artifacts, preserve C24 graphical correctness, and safely fall back for unsupported cases.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
       "stage_status": "SOURCE_ACCEPTED_MERGE_READY",
-      "progress_note": "C22 production convergence is SOURCE_ACCEPTED. Exact-Windows focused validation passes C22 incremental 28 assertions, C22 graphical 35 and C24 contracts 81. After FIX2 added the new incremental test to explicit world-regression coverage, the full world/core suite passes through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and clean STOPPED lifecycle. Main drift since the convergence base is control-plane-only; active T1A.7 has no C22 proxy runtime/contract overlap. MAIN_INTEGRATED remains false until the accepted branch is merged and post-merge PC0 is run.",
+      "progress_note": "C22 production convergence is SOURCE_ACCEPTED. Exact-Windows focused validation passes C22 incremental 28 assertions, C22 graphical 35 and C24 contracts 81. After FIX2 added the new incremental test to explicit world-regression coverage, the full world/core suite passes through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and clean STOPPED lifecycle. Main drift since the convergence base is control-plane-only; active T1A.7 has no C22 proxy runtime/contract overlap. MAIN_INTEGRATED remains false until the accepted branch is merged and post-merge PC0 is run. The post-integration roadmap is now fixed in docs/plans/TS_C22_TO_T2_SCALE_CONVERGENCE_RU.md.",
       "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
-      "next_stage": "Merge feature/c22-incremental-local-rebuild into main, run post-merge Project Control audit, mark MAIN_INTEGRATED, then retire the convergence frontier and resume the next Construction-scale evidence stage.",
+      "next_stage": "Merge feature/c22-incremental-local-rebuild into main, run post-merge Project Control and mark MAIN_INTEGRATED. Then retire this convergence frontier and create a fresh main-based TS0.4 1M Research Ceiling branch. Run TS0.4 in parallel with T1A.7.4 Scale / Soak, record PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED plus bottleneck telemetry, and converge with accepted T runtime-scale evidence through PC0 before activating T2.0 real heterogeneous station scale.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -154,7 +154,8 @@
   },
   "global_blocked_transitions": [
     {"stage": "G7.4 ACCEPTED", "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
-    {"stage": "G7 FULL ACCEPTANCE", "blocked_by": "G7_4_ACCEPTED_REQUIRED"}
+    {"stage": "G7 FULL ACCEPTANCE", "blocked_by": "G7_4_ACCEPTED_REQUIRED"},
+    {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
 }
