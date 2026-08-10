@@ -1,15 +1,15 @@
 extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_fix10_fix6_semantic_cadence.gd"
 
 # Local prediction presentation has exactly one render writer: the normal
-# advance_local_prediction() frame path. Authoritative snapshots still reconcile
-# prediction state, history, correction debt and telemetry immediately, but they
-# never emit a second presentation pose from the network-dispatch path.
+# prediction/presentation path. Authoritative snapshots still reconcile prediction
+# state, history, correction debt and telemetry immediately, but never emit a
+# second presentation pose from network dispatch.
 #
-# Previously the snapshot path called sample_presentation(0.0) and emitted
-# prediction_updated while the regular render path also sampled/emitted later in
-# the frame. Under frequent corrections this produced a visible backward/forward
-# spring on the locally controlled character even though remote interpolation was
-# smooth.
+# FIX10 fix7 also restores FIX9 phase timing around this override. The previous
+# override bypassed FIX9's _reconcile_prediction_from_snapshot wrapper, making
+# `prediction_reconcile` report zero even while snapshot_message spent several ms
+# replaying prediction. Keeping that phase visible is essential for frame-stall
+# diagnosis and has no gameplay effect.
 
 const FIX10_FIX6_LOCAL_PRESENTATION_POLICY: String = \
 	"FRAME_PREDICTION_SINGLE_WRITER_AUTHORITY_STATE_ONLY_V1"
@@ -25,14 +25,18 @@ func setup(config: Dictionary) -> Dictionary:
 
 
 func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	var reconcile_started_us: int = Time.get_ticks_usec()
 	_fix10_fix6_flush_deferred_snapshot_ack()
 	if _prediction_reconciler == null:
+		_fix10_fix7_record_reconcile_phase(reconcile_started_us)
 		return
 	if not _prediction_reconciler.is_configured():
 		_initialize_prediction_from_snapshot(snapshot)
+		_fix10_fix7_record_reconcile_phase(reconcile_started_us)
 		return
 	var local_player: Dictionary = _player_from_snapshot(snapshot, _logical_player_id)
 	if local_player.is_empty():
+		_fix10_fix7_record_reconcile_phase(reconcile_started_us)
 		return
 	var reconciled: Dictionary = _prediction_reconciler.reconcile(
 		local_player,
@@ -40,6 +44,7 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 	)
 	if not bool(reconciled.get("success", false)):
 		_prediction_reconcile_failures += 1
+		_fix10_fix7_record_reconcile_phase(reconcile_started_us)
 		return
 
 	var details: Dictionary = Dictionary(reconciled.get("details", {}))
@@ -57,9 +62,19 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 		_telemetry.increment("prediction_hard_corrections")
 
 	# Deliberately do not sample presentation and do not emit prediction_updated
-	# here. The corrected predicted state and visual offset are consumed by the
-	# next normal frame sample, so the player transform has one writer per frame.
+	# here. The corrected prediction/correction debt is consumed by the next fixed
+	# prediction update, while the world presentation layer owns the render pose.
 	_fix10_fix6_authority_reconciliations_without_render_emit += 1
+	_fix10_fix7_record_reconcile_phase(reconcile_started_us)
+
+
+func _fix10_fix7_record_reconcile_phase(started_us: int) -> void:
+	# FIX9 owns this accounting helper further down the inheritance chain. This
+	# override displaced its wrapper, so record the same phase at the active leaf.
+	_fix9_record_phase(
+		"prediction_reconcile",
+		float(Time.get_ticks_usec() - started_us) / 1000.0
+	)
 
 
 func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
