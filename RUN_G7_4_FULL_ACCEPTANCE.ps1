@@ -115,7 +115,7 @@ function Test-G74AllowedPath {
         "tests/procedural/semantic_fields/g7_3_cross_cell_cross_lod_invariance_acceptance.gd",
         "validation/g7-4-semantic-field-lab-validation.json"
     )) { return $true }
-    if ($Path -match '^scripts/labs/procedural/g7_4_semantic_field_lab\.gd(\.uid)?$') { return $true }
+    if ($Path -match '^scripts/labs/procedural/g7_4_semantic_field_lab(_fix4)?\.gd(\.uid)?$') { return $true }
     if ($Path -match '^tests/procedural/semantic_fields/g7_4_semantic_field_lab_acceptance\.gd(\.uid)?$') { return $true }
     return $false
 }
