@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.ts0_10k_graphical_proof_validation.v1",
+  "checkpoint": "TS0.1_10K_VISUAL_PROOF",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "base": {
+    "checkpoint": "TS0.0_SOURCE_ACCEPTED",
+    "commit": "3861fc7b511491439acf5a2d51a57372a951dc4d"
+  },
+  "global_revision": "GLOBAL-P0-2026-08-10-R2",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "production_changes": {
+    "c22_modified": false,
+    "c24_modified": false,
+    "new_renderer_backend": false,
+    "new_authority_owner": false
+  },
+  "profiles": {
+    "CUBE_10K": {
+      "canonical_parts": 10648,
+      "canonical_checksum": "6afcb91d403e0e380f33ad202748f6f7524843188036d9e083e1cbe315672a4f"
+    },
+    "PYRAMID_10K": {
+      "canonical_parts": 10416,
+      "canonical_checksum": "39babb3e29949f48fb2df1ddc89c24f6a16e46760939a5b009c29bfbbe5464bf"
+    }
+  },
+  "representation": {
+    "compiler": "C22_CONSTRUCTION_PROXY_COMPILER",
+    "mesh_backend": "C24_ARRAY_MESH_V1",
+    "section_size_m": 8.0,
+    "near": "LOCAL_EXTERIOR",
+    "mid": "SECTION_HLOD",
+    "far": "DISTANT_SHELL",
+    "max_near_mid_section_artifacts": 12,
+    "far_shell_artifacts": 1
+  },
+  "implementation_review": {
+    "adapter_uses_existing_runtime_projection_request": "PASS",
+    "adapter_uses_existing_compile_request": "PASS",
+    "adapter_uses_existing_interest_request": "PASS",
+    "lab_uses_existing_streaming_controller": "PASS",
+    "lab_uses_runtime_node_metrics": "PASS",
+    "headless_acceptance_added": "PASS",
+    "c22_c24_regression_in_focused_runner": "PASS"
+  },
+  "runtime_validation": {
+    "linux_parse_harness": "PASS_GODOT_4_7_1_DOUBLE_A13DA4FEB",
+    "linux_scene_smoke": "PASS_STUBBED_PIPELINE_SCENE_BOOT_AND_NEAR_MID_CONTROL_FLOW",
+    "windows_focused": "PENDING_USER_WORKTREE_RUN",
+    "windows_visual_observation": "PENDING_USER_OBSERVATION",
+    "repository_full_regression": "PENDING_AFTER_FOCUSED"
+  },
+  "next_gate": "Run RUN_TS0_GRAPHICAL_TESTS.ps1 and RUN_TS0_GRAPHICAL_LAB.ps1 in C:/Godot/lunar-world-double-godot-ts0"
+}

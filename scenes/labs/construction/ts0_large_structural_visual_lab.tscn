@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/t1/ts0/ts0_large_structural_visual_lab.gd" id="1_ts0"]
+
+[node name="TS0LargeStructuralVisualLab" type="Node3D"]
+script = ExtResource("1_ts0")

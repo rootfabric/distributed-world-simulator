@@ -7,7 +7,7 @@
     "checkpoint": "T1A.3_SOURCE_ACCEPTED",
     "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
   },
-  "status": "TS0_0_SOURCE_ACCEPTED",
+  "status": "TS0_1_IMPLEMENTED_CANDIDATE",
   "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count.",
   "fixture_seed_version": "ts0-large-structural-fixtures-v1",
   "structural_grid": {
@@ -24,6 +24,36 @@
       "C22_GREEDY_GRID_MESHING",
       "C24_ARRAY_MESH_MATERIALIZATION"
     ]
+  },
+  "graphical_policy": {
+    "scene_path": "res://scenes/labs/construction/ts0_large_structural_visual_lab.tscn",
+    "default_profile": "CUBE_10K",
+    "default_mode": "NEAR",
+    "client_id": "client/ts0/graphical-lab",
+    "observer_id": "observer/ts0/graphical-lab",
+    "local_distance_m": 80.0,
+    "section_distance_m": 250.0,
+    "shell_distance_m": 1000.0,
+    "bandwidth_budget_bytes": 8388608,
+    "max_section_artifacts": 12,
+    "max_interactive_parts": 0,
+    "mode_mapping": {
+      "NEAR": "LOCAL_EXTERIOR",
+      "MID": "SECTION_HLOD",
+      "FAR": "DISTANT_SHELL"
+    },
+    "controls": {
+      "1": "CUBE_10K",
+      "2": "PYRAMID_10K",
+      "3": "NEAR",
+      "4": "MID",
+      "5": "FAR",
+      "WASD_QE": "FREE_FLIGHT",
+      "RIGHT_MOUSE": "LOOK",
+      "SHIFT": "FAST_FLIGHT",
+      "R": "RESET_CAMERA",
+      "H": "TOGGLE_HUD"
+    }
   },
   "profiles": {
     "CUBE_10K": {
@@ -81,10 +111,28 @@
   ],
   "stage_status": {
     "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES": "SOURCE_ACCEPTED",
-    "TS0.1_10K_VISUAL_PROOF": "PLANNED",
+    "TS0.1_10K_VISUAL_PROOF": "IMPLEMENTED_CANDIDATE",
     "TS0.2_100K_VISUAL_SCALE_GATE": "PLANNED",
     "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD": "PLANNED",
     "TS0.4_1M_RESEARCH_CEILING_PROBE": "PLANNED"
+  },
+  "ts0_1_acceptance": {
+    "profiles": ["CUBE_10K", "PYRAMID_10K"],
+    "requirements": [
+      "C22_COMPILER_USED_WITHOUT_TS0_RENDERER_FORK",
+      "C24_ARRAY_MESH_USED_FOR_ALL_PROXY_MESHES",
+      "NEAR_LOCAL_EXTERIOR_VISIBLE",
+      "MID_SECTION_HLOD_VISIBLE",
+      "FAR_DISTANT_SHELL_VISIBLE",
+      "NEAR_MID_PROXY_MESH_COUNT_AT_MOST_12",
+      "FAR_PROXY_MESH_COUNT_EXACTLY_1",
+      "RUNTIME_NODE_COUNT_FAR_BELOW_CANONICAL_PART_COUNT",
+      "CANONICAL_CHECKSUM_INVARIANT_ACROSS_MODES",
+      "C22_ARTIFACT_CACHE_STABLE_ACROSS_MODE_SWITCHES",
+      "C24_MESH_CACHE_REUSED_ON_REPEAT_PRESENTATION"
+    ],
+    "user_visual_observation_required": true,
+    "full_branch_regression_required_before_source_acceptance": true
   },
   "telemetry": [
     "canonical_part_count",

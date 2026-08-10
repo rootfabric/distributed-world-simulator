@@ -1,0 +1,15 @@
+RUN_TS0_GRAPHICAL_LAB.ps1
+RUN_TS0_GRAPHICAL_LAB.sh
+RUN_TS0_GRAPHICAL_TESTS.ps1
+RUN_TS0_GRAPHICAL_TESTS.sh
+config/construction/ts0-large-structural-visual-lab.v1.json
+docs/checkpoints/2026-08-10_TS0_1_10K_GRAPHICAL_PROOF_RU.md
+scenes/labs/construction/ts0_large_structural_visual_lab.tscn
+scripts/labs/t1/ts0/ts0_large_structural_proxy_adapter.gd
+scripts/labs/t1/ts0/ts0_large_structural_proxy_adapter.gd.uid
+scripts/labs/t1/ts0/ts0_large_structural_visual_lab.gd
+scripts/labs/t1/ts0/ts0_large_structural_visual_lab.gd.uid
+tests/construction/ts0/ts0_graphical_proxy_acceptance.gd
+tests/construction/ts0/ts0_graphical_proxy_acceptance.gd.uid
+ts0-10k-graphical-proof-files.txt
+validation/ts0-10k-graphical-proof-validation.json
