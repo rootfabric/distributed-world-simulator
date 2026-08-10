@@ -9,22 +9,32 @@ extends "res://tools/runtime/m7_playable_network_client_camera_sync_fix.gd"
 # semantic stream on client and authority.
 
 const FIX10_MIN_STRESS_DURATION_MS: int = 300000
+const FIX10_MIN_DIAGNOSTIC_DURATION_MS: int = 20000
 const FIX10_DEFAULT_STRESS_DURATION_MS: int = 330000
+const FIX10_PROGRESS_WRITE_INTERVAL_MS: int = 2000
 const FIX10_WAYPOINT_TOLERANCE_M: float = 0.65
 const FIX10_ITEM_WAYPOINT_TOLERANCE_M: float = 1.75
 
 var _fix10_stress_duration_ms: int = FIX10_DEFAULT_STRESS_DURATION_MS
 var _fix10_stress_started_ms: int = 0
+var _fix10_last_progress_write_ms: int = 0
 var _fix10_waypoints_completed: int = 0
 var _fix10_item_actions: int = 0
+var _fix10_diagnostic_only: bool = false
 
 
 func _run_phase() -> void:
 	await process_frame
 	await process_frame
+	_fix10_diagnostic_only = _fix10_user_arg_int("diagnostic", 0) > 0
+	var minimum_duration_ms: int = (
+		FIX10_MIN_DIAGNOSTIC_DURATION_MS
+		if _fix10_diagnostic_only
+		else FIX10_MIN_STRESS_DURATION_MS
+	)
 	_fix10_stress_duration_ms = maxi(
 		_fix10_user_arg_int("duration-ms", FIX10_DEFAULT_STRESS_DURATION_MS),
-		FIX10_MIN_STRESS_DURATION_MS
+		minimum_duration_ms
 	)
 	playground.set_m7_state_sync_enabled(true)
 
@@ -47,6 +57,7 @@ func _run_phase() -> void:
 		return
 
 	_fix10_stress_started_ms = Time.get_ticks_msec()
+	_fix10_last_progress_write_ms = _fix10_stress_started_ms
 	var item_ok: bool = (
 		await _fix10_item_probe_a()
 		if client_id == "a"
@@ -99,8 +110,12 @@ func _run_phase() -> void:
 		final_runtime_report.get("client_prediction", {}).get("runtime", {})
 	)
 	_assert(bool(final_world_report.get("m7_state_sync_enabled", false)), "FIX10 long stress never disabled prediction sync")
-	_assert(_fix10_waypoints_completed > 10, "FIX10 long stress completed repeated movement waypoints")
-	_assert(int(prediction.get("ticks_predicted", 0)) > 1000, "FIX10 long stress accumulated prediction ticks")
+	if _fix10_diagnostic_only:
+		_assert(_fix10_waypoints_completed > 0, "FIX10 diagnostic completed movement waypoints")
+		_assert(int(prediction.get("ticks_predicted", 0)) > 100, "FIX10 diagnostic accumulated prediction ticks")
+	else:
+		_assert(_fix10_waypoints_completed > 10, "FIX10 long stress completed repeated movement waypoints")
+		_assert(int(prediction.get("ticks_predicted", 0)) > 1000, "FIX10 long stress accumulated prediction ticks")
 	_assert(
 		int(final_runtime_report.get("client_prediction", {}).get("reconcile_failures", -1)) == 0,
 		"FIX10 long stress has no prediction reconcile failures"
@@ -110,14 +125,7 @@ func _run_phase() -> void:
 		_fail("FIX10_LONG_STRESS_FINAL_ASSERTION_FAILED")
 		return
 
-	_complete({
-		"normal_prediction_only": true,
-		"prediction_sync_enabled_for_entire_stress": true,
-		"stress_duration_ms": Time.get_ticks_msec() - _fix10_stress_started_ms,
-		"requested_stress_duration_ms": _fix10_stress_duration_ms,
-		"waypoints_completed": _fix10_waypoints_completed,
-		"item_actions": _fix10_item_actions,
-	})
+	_complete(_fix10_progress_details())
 
 
 func _fix10_item_probe_a() -> bool:
@@ -219,6 +227,7 @@ func _fix10_move_prediction_toward(
 ) -> bool:
 	var started_ms: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started_ms < timeout_ms:
+		_fix10_write_progress_if_due()
 		var current: Vector3 = playground.player.get_world_position()
 		var delta: Vector3 = (target - current).slide(Vector3.UP)
 		if delta.length() <= tolerance_m:
@@ -245,6 +254,28 @@ func _fix10_wait_for_remote_peer(timeout_ms: int) -> bool:
 			return true
 		await create_timer(0.05).timeout
 	return false
+
+
+func _fix10_write_progress_if_due() -> void:
+	if _fix10_stress_started_ms <= 0:
+		return
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms - _fix10_last_progress_write_ms < FIX10_PROGRESS_WRITE_INTERVAL_MS:
+		return
+	_fix10_last_progress_write_ms = now_ms
+	_write("STRESSING", false, _fix10_progress_details())
+
+
+func _fix10_progress_details() -> Dictionary:
+	return {
+		"normal_prediction_only": true,
+		"prediction_sync_enabled_for_entire_stress": true,
+		"diagnostic_only": _fix10_diagnostic_only,
+		"stress_duration_ms": maxi(Time.get_ticks_msec() - _fix10_stress_started_ms, 0),
+		"requested_stress_duration_ms": _fix10_stress_duration_ms,
+		"waypoints_completed": _fix10_waypoints_completed,
+		"item_actions": _fix10_item_actions,
+	}
 
 
 func _fix10_release_movement_actions() -> void:
