@@ -11,6 +11,12 @@ try {
     & $GodotPath --headless --path $ProjectRoot --script res://tests/construction/t1a5_interactive_runtime_execution_acceptance.gd
     if ($LASTEXITCODE -ne 0) { throw "T1A.5 dependency regression failed: $LASTEXITCODE" }
 
+    & $GodotPath --headless --path $ProjectRoot --script res://tests/network/test_nx0_observability_baseline.gd
+    if ($LASTEXITCODE -ne 0) { throw "NX0 protocol manifest dependency regression failed: $LASTEXITCODE" }
+
+    & $GodotPath --headless --path $ProjectRoot --script res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd
+    if ($LASTEXITCODE -ne 0) { throw "M3 graphical multiplayer dependency regression failed: $LASTEXITCODE" }
+
     & $GodotPath --headless --path $ProjectRoot --script res://tests/construction/c5c_runtime_replication_contracts.gd
     if ($LASTEXITCODE -ne 0) { throw "C5C runtime replication contracts failed: $LASTEXITCODE" }
 
