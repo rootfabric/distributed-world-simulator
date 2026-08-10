@@ -6,6 +6,10 @@ var _recovered_from_m0: bool = false
 var _runtime_checkpoint_revision: int = -1
 
 
+func _reuse_existing_m0_on_setup() -> bool:
+	return true
+
+
 func setup(m0_root: String) -> Dictionary:
 	var base: Dictionary = super.setup(m0_root)
 	if not bool(base.get("success", false)):
