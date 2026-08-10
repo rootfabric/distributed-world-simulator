@@ -17,6 +17,15 @@ G7.2 Composition / Provenance            ACCEPTED
 G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
 ```
 
+**Active GLOBAL revision:** `GLOBAL-P0-2026-08-10-R2`
+
+R2 frontier policy:
+
+```text
+active G7 global ledger == main
+historical accepted G6 may remain on its historical R1 revision
+```
+
 ## Accepted semantic path
 
 G7.0 introduced typed semantic-field identity/query/sample/provenance contracts without replacing `GeoKernel`, `GeoFieldBundle` or `GeoSample`.
@@ -145,5 +154,3 @@ Next after G7.3 acceptance:
 ```text
 G7.4 — Semantic Field Lab
 ```
-
-Global revision: `GLOBAL-P0-2026-08-08-R1`.
