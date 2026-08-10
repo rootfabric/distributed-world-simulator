@@ -1,0 +1,74 @@
+{
+  "schema": "planet_simulator.t1a5_interactive_runtime_execution_validation.v1",
+  "checkpoint": "T1A5_INTERACTIVE_RUNTIME_EXECUTION",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1a5-interactive-runtime-execution",
+  "base_head": "a14e6f04c265467e1590106ace8439bddae19ddb",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "scope": {
+    "construct_id": "construct/t1/lunar-outpost/d0",
+    "runtime_subject_count": 4,
+    "runtime_subjects": ["DOOR", "GENERATOR", "LAMP", "CONSOLE"],
+    "executed_affordances": ["OPEN_DOOR", "CLOSE_DOOR", "START_GENERATOR", "STOP_GENERATOR", "TOGGLE_LIGHT", "USE_WORKSTATION"],
+    "container_inventory_execution_delegated_to_existing_item_transfer": true,
+    "battery_inspection_execution_deferred": true,
+    "canonical_construct_snapshot_changed": false,
+    "item_graph_state_changed_by_runtime_actions": false
+  },
+  "generic_c5b_runtime": {
+    "subject_contract": "construction_runtime_subject_state.gd",
+    "state_store": "construction_runtime_state_store.gd",
+    "executor": "construction_affordance_runtime_executor.gd",
+    "t1_specific_transition_logic_in_generic_layer": false,
+    "operation_replay_foundation": "existing ItemOperationLedger + ItemOperationFingerprint",
+    "runtime_ledger_is_separate_instance_from_m0_assembly_ledger": true
+  },
+  "runtime_semantics": {
+    "door": "CLOSED <-> OPEN; requires current POWER door allocation FULL and DATA door allocation FULL",
+    "generator": "running true/false; updates C15 POWER source online state",
+    "lamp": "on true/false; active demand is projected into C15 POWER runtime simulation",
+    "console": "active + use_count; active demand is projected into C15 POWER runtime simulation",
+    "battery": "C15 storage state evolves across runtime utility ticks"
+  },
+  "replay_and_revision": {
+    "operation_id_replay_exact": true,
+    "operation_id_conflict_detected": true,
+    "expected_revision_required": true,
+    "stale_revision_terminal_rejection": true,
+    "rejected_replay_exact": true
+  },
+  "p0_alignment": {
+    "new_item_registry": false,
+    "new_construct_store": false,
+    "new_authority_registry": false,
+    "new_transaction_coordinator": false,
+    "new_operation_ledger_implementation": false,
+    "private_t1_rpc_bridge": false,
+    "runtime_state_in_construct_snapshot": false,
+    "runtime_state_in_permanent_item_identity": false,
+    "authority_route_in_runtime_identity": false,
+    "lod_or_visual_identity_in_runtime_state": false,
+    "material_definition_id_added": false
+  },
+  "focused_gate": {
+    "runner": "RUN_T1A5_INTERACTIVE_RUNTIME_EXECUTION_TESTS.ps1",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "dependencies": [
+      "T1A4 interactive fixture binding acceptance",
+      "C5B affordance runtime contracts",
+      "C15 executable utilities contracts"
+    ],
+    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+  },
+  "full_regression": {
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PENDING_AFTER_FOCUSED_PASS"
+  },
+  "next_after_acceptance": "T1A6_RUNTIME_PRESENTATION_AND_MULTIPLAYER_BINDING"
+}
