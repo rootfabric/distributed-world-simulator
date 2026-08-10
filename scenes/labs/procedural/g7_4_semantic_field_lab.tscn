@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/procedural/g7_4_semantic_field_lab.gd" id="1_g74"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_planet"]
+radius = 8.0
+height = 16.0
+radial_segments = 96
+rings = 48
+
+[node name="G74SemanticFieldLab" type="Node3D"]
+script = ExtResource("1_g74")
+
+[node name="Planet" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_planet")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-36, -28, 0)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(8.3, 1.0, 8.9)
+current = true
+fov = 48.0
+near = 0.001
+far = 100.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 980.0
+offset_bottom = 270.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Panel/Margin"]
+
+[node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
+theme_override_font_sizes/font_size = 15
+text = "G7.4 — Semantic Field Lab"
