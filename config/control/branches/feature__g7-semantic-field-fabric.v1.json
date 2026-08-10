@@ -9,10 +9,10 @@
   "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
   "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected without becoming canonical identity.",
   "current_stage": "G7.4 Semantic Field Lab",
-  "stage_status": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
-  "progress_note": "G7.4 semantic focused work reached world regression, where shared M5 graphical acceptance exposed an inherited final-convergence handoff deadlock. A2 timed out in WAIT_CONVERGENCE_PEER while B timed out in WAIT_FINAL_CONVERGENCE_PEER even though both graceful leaves succeeded and server joins/leaves/stale-peer checks converged. Fix2 makes later FINAL_CONVERGENCE_LOCKED/COMPLETE peer reports monotonic evidence for the earlier convergence barrier. Focused M5 rerun is required before G7.4 full acceptance may resume.",
+  "stage_status": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "progress_note": "G7.4 semantic focused work reached world regression, where shared M5 graphical acceptance exposed an inherited final-convergence handoff deadlock. Fix2 makes later FINAL_CONVERGENCE_LOCKED/COMPLETE peer reports monotonic evidence for the earlier convergence barrier. Focused Windows rerun now passes M5 graphical multiplayer acceptance with 92 assertions and 0 failures. G7.4 full world regression and manual graphical observation remain pending.",
   "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-  "next_stage": "Verify shared M5 convergence Fix2, then G7.4 automated + manual graphical acceptance, then G7 FULL ACCEPTANCE and G8 Geomorphology",
+  "next_stage": "Run G7.4 full automated acceptance, then manual graphical observation, then G7 FULL ACCEPTANCE and G8 Geomorphology",
   "parent_branch_or_checkpoint": "G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "base_commit": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3", "M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE"],
@@ -44,7 +44,8 @@
     "scripts/simulation/procedural/semantic_fields/**",
     "scripts/labs/procedural/g7_*",
     "scenes/labs/procedural/g7_*",
-    "tests/procedural/semantic_fields/**"
+    "tests/procedural/semantic_fields/**",
+    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
   ],
   "validation_paths": [
     "config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json",
@@ -53,8 +54,8 @@
     "validation/g7-4-semantic-field-lab-validation.json"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
+    "focused": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
     "full_regression": "910899a906e684d6793cd74ba898d68c457a37b4"
   },
   "ownership_claims": [
@@ -71,9 +72,9 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "G7_4_SHARED_M5_FINAL_CONVERGENCE_FIX2_FOCUSED_RERUN_REQUIRED",
-    "G7_4_AUTOMATED_AND_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
+    "G7_4_FULL_WORLD_REGRESSION_PENDING",
+    "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
   ],
-  "health_declared": "RED",
+  "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
