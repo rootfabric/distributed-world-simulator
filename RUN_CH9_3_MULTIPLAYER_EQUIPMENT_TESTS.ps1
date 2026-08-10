@@ -75,6 +75,7 @@ Invoke-Godot-Test "ch9_2_inventory_character_composition" "res://tests/character
 Invoke-Godot-Test "ch9_3_multiplayer_equipment_authority" "res://tests/characters/test_ch9_3_multiplayer_equipment_authority.gd"
 Invoke-Godot-Test "ch9_3_multiplayer_equipment_replica_projection" "res://tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd"
 Invoke-Godot-Test "ch9_3_replicated_equipment_character_presentation" "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd"
+Invoke-Godot-Test "ch9_3_enet_equipment_replication" "res://tests/characters/test_ch9_3_enet_equipment_replication.gd"
 
 Write-Host ""
 Write-Host "CH9.3 Multiplayer Equipment Presentation candidate runner: PASS" -ForegroundColor Green
