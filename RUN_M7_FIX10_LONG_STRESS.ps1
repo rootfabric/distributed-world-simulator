@@ -122,9 +122,22 @@ function Stop-ProcessSafe {
     catch {}
 }
 
+function Get-ResultDetails {
+    param([object]$Result)
+    if ($null -eq $Result) {
+        return $null
+    }
+    $Details = $Result.details
+    if ($null -ne $Details -and $null -ne $Details.cause) {
+        return $Details.cause
+    }
+    return $Details
+}
+
 function Write-LiveDiagnosticSummary {
     param([object]$Result, [string]$Label)
     if ($null -eq $Result) {
+        Write-Host "Client $Label live: no result JSON" -ForegroundColor Yellow
         return
     }
     $Prediction = $Result.world_report.m7_prediction_report
@@ -132,14 +145,40 @@ function Write-LiveDiagnosticSummary {
         $Prediction = $Result.runtime_report.client_prediction.runtime
     }
     $Transport = $Result.runtime_report.fix10_prediction_ack_transport
-    Write-Host ("Client {0} live: state={1}, duration={2:N1}s, corrections={3}, max_error={4:N4}m, phase matched/mismatch={5}/{6}, hold_delta={7}, transition_error={8:N6}m, latch_suppressions={9}" -f `
-        $Label, [string]$Result.state, ([double]$Result.details.stress_duration_ms / 1000.0), `
+    $Details = Get-ResultDetails -Result $Result
+    $DurationMs = if ($null -ne $Details) { [double]$Details.stress_duration_ms } else { 0.0 }
+    $ErrorCode = [string]$Result.details.error_code
+    $Remote = $Result.world_report.fix10_fix3_remote_continuity
+    Write-Host ("Client {0}: state={1}, error={2}, duration={3:N1}s, corrections={4}, max_error={5:N4}m, phase matched/mismatch={6}/{7}, hold_delta={8}, transition_error={9:N6}m, latch_suppressions={10}, remote_gap={11}, remote_underruns={12}, remote_holds={13}" -f `
+        $Label, [string]$Result.state, $ErrorCode, ($DurationMs / 1000.0), `
         [int]$Prediction.corrections, [double]$Prediction.maximum_error_m, `
         [int]$Prediction.fix10_fix6_phase_matched_ack_reconciliations, `
         [int]$Prediction.fix10_fix6_phase_mismatch_authority_reconciliations, `
         [int]$Prediction.fix10_fix6_max_hold_delta_ticks, `
         [double]$Prediction.fix10_fix6_max_transition_delta_error_m, `
-        [int]$Transport.fix6_same_tick_input_update_suppressions)
+        [int]$Transport.fix6_same_tick_input_update_suppressions, `
+        [int]$Remote.max_snapshot_gap_ticks, [int]$Remote.moving_buffer_underruns, [int]$Remote.moving_hold_samples)
+    if ($null -ne $Result.failures -and @($Result.failures).Count -gt 0) {
+        Write-Host ("Client {0} failures: {1}" -f $Label, (@($Result.failures) -join "; ")) -ForegroundColor Yellow
+    }
+}
+
+function Write-ServerRealtimeSummary {
+    param([object]$Server)
+    if ($null -eq $Server) {
+        Write-Host "Server realtime: no result JSON" -ForegroundColor Yellow
+        return
+    }
+    $Traffic = $Server.realtime_traffic
+    $Foundation = $Server.realtime_foundation
+    Write-Host ("Server realtime: movement snapshots={0}, compact sends={1}, enqueue_failures={2}, recovery_suppressions={3}, pending_guard_bypasses={4}, max_pending_allowed={5}, mtu_drops={6}, max_sent={7}B, process_max={8:N3}ms, report_build_max={9:N3}ms" -f `
+        [int]$Traffic.movement_snapshots_published, [int]$Traffic.compact_movement_snapshots_published, `
+        [int]$Traffic.movement_snapshot_enqueue_failures, [int]$Foundation.movement_snapshot_recovery_suppressions, `
+        [int]$Foundation.fix10_fix6_pending_input_snapshot_guard_bypasses, `
+        [int]$Foundation.fix10_fix6_max_pending_inputs_while_snapshot_allowed, `
+        [int]$Foundation.fix10_movement_snapshots_dropped_for_mtu, `
+        [int]$Foundation.fix10_max_unreliable_sent_bytes, `
+        [double]$Foundation.server_process_max_duration_ms, [double]$Foundation.report_max_snapshot_build_duration_ms)
 }
 
 $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -231,14 +270,17 @@ try {
     $ClientAResult = Wait-JsonState -Path $ClientAJson -States @("COMPLETE", "FAILED") -TimeoutMs $ClientTimeoutMs -Process $ClientAProcess
     $ClientBResult = Wait-JsonState -Path $ClientBJson -States @("COMPLETE", "FAILED") -TimeoutMs $ClientTimeoutMs -Process $ClientBProcess
 
+    $ServerNow = Read-JsonSafe -Path $ServerJson
     if ($null -eq $ClientAResult -or [string]$ClientAResult.state -ne "COMPLETE" -or -not [bool]$ClientAResult.passed) {
         Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
         Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
+        Write-ServerRealtimeSummary -Server $ServerNow
         throw "FIX10 prediction stress client A failed/stopped; inspect $ClientALog and $ClientAJson"
     }
     if ($null -eq $ClientBResult -or [string]$ClientBResult.state -ne "COMPLETE" -or -not [bool]$ClientBResult.passed) {
         Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
         Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
+        Write-ServerRealtimeSummary -Server $ServerNow
         throw "FIX10 prediction stress client B failed/stopped; inspect $ClientBLog and $ClientBJson"
     }
 
@@ -250,6 +292,7 @@ try {
 
     Write-LiveDiagnosticSummary -Result $ClientAResult -Label "A"
     Write-LiveDiagnosticSummary -Result $ClientBResult -Label "B"
+    Write-ServerRealtimeSummary -Server $ServerFinal
     Write-Host "Two-client prediction-only stress completed." -ForegroundColor Green
 
     if ($DiagnosticOnly) {
