@@ -1,0 +1,114 @@
+extends SceneTree
+
+const Registry = preload("res://scripts/simulation/procedural/semantic_fields/semantic_field_registry_v1.gd")
+
+const MANIFEST_PATH := "res://config/procedural/g7-4-semantic-field-lab.v1.json"
+const G73_VALIDATION_PATH := "res://validation/g7-3-cross-cell-cross-lod-invariance-validation.json"
+const SCENE_PATH := "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn"
+const SCRIPT_PATH := "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd"
+const AVAILABLE_FIELDS: Array[String] = [
+	Registry.SURFACE_HEIGHT_M,
+	Registry.VALLEY_INFLUENCE,
+	Registry.RIVER_DISTANCE_M,
+	Registry.RIVER_WIDTH_M,
+	Registry.FLUID_SURFACE_DISTANCE_M,
+]
+const VOCABULARY_ONLY_FIELDS: Array[String] = [
+	Registry.SLOPE,
+	Registry.CURVATURE,
+	Registry.DRAINAGE_POTENTIAL,
+	Registry.CONTINENTALNESS,
+	Registry.TEMPERATURE_BASELINE,
+	Registry.MOISTURE_BASELINE,
+]
+
+var assertions := 0
+var failures: Array[String] = []
+
+
+func _init() -> void:
+	_test_manifest()
+	_test_g73_acceptance()
+	_test_registry_boundary()
+	_test_scene_contract()
+	_finish()
+
+
+func _test_manifest() -> void:
+	_assert(FileAccess.file_exists(MANIFEST_PATH), "G7.4 manifest exists")
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST_PATH))
+	_assert(parsed is Dictionary, "G7.4 manifest parses")
+	if not (parsed is Dictionary):
+		return
+	var manifest: Dictionary = parsed
+	_assert(String(manifest.get("checkpoint", "")) == "g7.4-semantic-field-lab", "G7.4 checkpoint id")
+	_assert(String(manifest.get("status", "")) in ["IMPLEMENTED_CANDIDATE", "ACCEPTED"], "G7.4 status supports candidate to accepted transition")
+	_assert(String(manifest.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-10-R2", "G7.4 uses active R2 revision")
+	_assert(Array(manifest.get("visualized_fields", [])) == AVAILABLE_FIELDS, "G7.4 visualized field list is exact")
+	_assert(Array(manifest.get("vocabulary_only_not_faked", [])) == VOCABULARY_ONLY_FIELDS, "G7.4 explicitly lists vocabulary-only fields")
+	var grid: Dictionary = manifest.get("sample_grid", {})
+	_assert(int(grid.get("latitude_segments", -1)) == 16, "G7.4 latitude segments pinned")
+	_assert(int(grid.get("longitude_segments", -1)) == 32, "G7.4 longitude segments pinned")
+	_assert(int(grid.get("expected_vertices", -1)) == 561, "G7.4 expected semantic sample count pinned")
+	var presentation: Dictionary = manifest.get("presentation_contract", {})
+	_assert(not bool(presentation.get("field_selection_changes_canonical_query", true)), "field selector cannot change canonical query")
+	_assert(not bool(presentation.get("field_selection_changes_geometry", true)), "field selector cannot change geometry")
+	_assert(bool(presentation.get("field_selection_changes_only_derived_color", false)), "field selector changes derived color only")
+	_assert(not bool(presentation.get("visual_colors_in_canonical_checksum", true)), "visual colors excluded from canonical checksum")
+	_assert(not bool(presentation.get("mesh_density_in_canonical_checksum", true)), "mesh density excluded from canonical checksum")
+	_assert(not bool(presentation.get("creates_new_feature_identity", true)), "G7.4 creates no production FeatureId ownership")
+	_assert(not bool(presentation.get("creates_new_fluid_identity", true)), "G7.4 creates no FluidRegionId ownership")
+
+
+func _test_g73_acceptance() -> void:
+	_assert(FileAccess.file_exists(G73_VALIDATION_PATH), "G7.3 validation exists")
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(G73_VALIDATION_PATH))
+	_assert(parsed is Dictionary, "G7.3 validation parses")
+	if parsed is Dictionary:
+		_assert(String(parsed.get("decision", "")) == "ACCEPTED", "G7.3 is accepted before G7.4")
+		_assert(int(parsed.get("windows_evidence", {}).get("focused_assertions", 0)) == 122, "G7.3 122-assertion proof retained")
+		_assert(String(parsed.get("windows_evidence", {}).get("world_core_regression", "")) == "PASS", "G7.3 world regression retained")
+
+
+func _test_registry_boundary() -> void:
+	_assert(bool(Registry.validate_registry().get("success", false)), "semantic registry validates")
+	for field_id in AVAILABLE_FIELDS:
+		var descriptor := Registry.descriptor(field_id)
+		var availability := String(descriptor.get("metadata", {}).get("availability", ""))
+		_assert(availability != Registry.VOCABULARY_ONLY, "%s is backed by accepted semantics" % field_id)
+	for field_id in VOCABULARY_ONLY_FIELDS:
+		var descriptor := Registry.descriptor(field_id)
+		var availability := String(descriptor.get("metadata", {}).get("availability", ""))
+		_assert(availability == Registry.VOCABULARY_ONLY, "%s remains vocabulary-only and must not be faked" % field_id)
+
+
+func _test_scene_contract() -> void:
+	_assert(FileAccess.file_exists(SCRIPT_PATH), "G7.4 lab script exists")
+	_assert(ResourceLoader.exists(SCRIPT_PATH), "G7.4 lab script is loadable")
+	_assert(FileAccess.file_exists(SCENE_PATH), "G7.4 lab scene exists")
+	var packed = ResourceLoader.load(SCENE_PATH)
+	_assert(packed is PackedScene, "G7.4 scene loads as PackedScene")
+	if not (packed is PackedScene):
+		return
+	var root: Node = packed.instantiate()
+	_assert(root.name == "G74SemanticFieldLab", "G7.4 scene root")
+	_assert(root.get_node_or_null("Planet") is MeshInstance3D, "G7.4 scene has planet")
+	_assert(root.get_node_or_null("Camera3D") is Camera3D, "G7.4 scene has camera")
+	_assert(root.get_node_or_null("HUD/Panel/Margin/VBox/Status") is Label, "G7.4 scene has semantic HUD")
+	var root_script = root.get_script()
+	_assert(root_script != null and String(root_script.resource_path) == SCRIPT_PATH, "G7.4 scene uses expected lab script")
+	root.free()
+
+
+func _assert(ok: bool, message: String) -> void:
+	assertions += 1
+	if ok:
+		print("PASS: %s" % message)
+	else:
+		failures.append(message)
+		push_error("FAIL: %s" % message)
+
+
+func _finish() -> void:
+	print("G7.4 Semantic Field Lab contracts: %d assertions, %d failures" % [assertions, failures.size()])
+	quit(0 if failures.is_empty() else 1)
