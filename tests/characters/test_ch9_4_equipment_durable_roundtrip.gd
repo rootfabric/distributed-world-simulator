@@ -23,12 +23,12 @@ func _run() -> void:
 	var epoch := int(join.get("details", {}).get("player", {}).get("ownership_epoch", 0))
 	var lower_id := "item/player/a/wearable/lower"
 	var helmet_id := "item/player/a/wearable/helmet"
-	var equip_lower := service.handle_canonical_item_command(
+	var equip_lower: Dictionary = service.handle_canonical_item_command(
 		"a", "transport-session/ch9-4/a/1", epoch,
 		"operation/ch9-4/equip/a/lower", "equipment.equip",
 		{"item_id": lower_id, "slot_index": EquipmentCatalog.SLOT_LOWER}
 	)
-	var equip_helmet := service.handle_canonical_item_command(
+	var equip_helmet: Dictionary = service.handle_canonical_item_command(
 		"a", "transport-session/ch9-4/a/1", epoch,
 		"operation/ch9-4/equip/a/helmet", "equipment.equip",
 		{"item_id": helmet_id, "slot_index": EquipmentCatalog.SLOT_HEAD}
@@ -118,7 +118,7 @@ func _run() -> void:
 		{"item_id": lower_id}
 	)
 	_assert_ok(unequip, "post-recovery unequip")
-	var after_unequip := restored.create_canonical_item_graph_snapshot()
+	var after_unequip: Dictionary = restored.create_canonical_item_graph_snapshot()
 	_assert(_equipment_item(after_unequip, "a", EquipmentCatalog.SLOT_LOWER).is_empty(), "post-recovery unequip left slot occupied")
 	_assert(String(_find_item(after_unequip, lower_id).get("location", {}).get("kind", "")) == "INVENTORY", "post-recovery unequip did not return same Item UUID to inventory")
 
