@@ -1,0 +1,46 @@
+{
+  "schema": "planet_simulator.validation.g7_full_acceptance.v1",
+  "checkpoint": "g7-semantic-field-fabric",
+  "decision": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g7-semantic-field-fabric",
+  "tested_head": "a75a60b6da739cc759e1fb40510a98942bce4cde",
+  "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "accepted_substages": [
+    "G7.0 Semantic Field Contracts",
+    "G7.1 Upstream Semantic Field Adapters",
+    "G7.2 Composition / Provenance",
+    "G7.3 Cross-Cell / Cross-LOD Invariance",
+    "G7.4 Semantic Field Lab"
+  ],
+  "aggregate_acceptance": {
+    "status": "PASS",
+    "semantic_identity_provenance_cross_cell_presentation_separation": "PASS",
+    "world_core_regression": "PASS",
+    "world_core_tests_pass": 6,
+    "world_core_tests_fail": 0,
+    "nx4_client_prediction_reconciliation": "PASS",
+    "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN",
+    "terminal_marker": "G7 FULL ACCEPTANCE: PASS"
+  },
+  "g7_4_manual_graphical_acceptance": "PASS_BY_USER_OBSERVATION",
+  "non_blocking_presentation_debt": [
+    "LOD switching is visibly abrupt; future presentation may add more LOD levels, hysteresis, stitching and geomorphing without changing canonical semantic identity"
+  ],
+  "ownership": {
+    "semantic_field_id_is_surface_cell_key": false,
+    "semantic_field_id_is_lod": false,
+    "owns_world_address": false,
+    "owns_universal_world_query": false,
+    "owns_authority_routing": false,
+    "owns_interest_management": false,
+    "owns_persistence_durability": false,
+    "owns_network_replication": false,
+    "owns_material_ontology": false,
+    "owns_scheduler_cache_foundation": false
+  },
+  "next": "G8_GEOMORPHOLOGY"
+}
