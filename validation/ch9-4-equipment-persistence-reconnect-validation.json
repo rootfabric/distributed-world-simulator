@@ -6,12 +6,13 @@
   "base_checkpoint": "c18eae9778a5020063163087269483bc43a924be",
   "accepted_parent_runtime_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
   "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
+  "fix1_test_head": "b85b3d2e84db11556249ad40799819f6a528ed39",
   "pc0_handoff": {
     "registry_generation": 36,
     "main_registry_commit": "b6740f5d2f254cc9e0320f225b1bac082bcec8fb",
     "status": "DECLARED_AS_PRIMARY_FRONTIER"
   },
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
   "goal": "Persist and recover CH9.3 server-authoritative equipment through the existing M6 checkpoint/replay/recovery system, then prove reconnect, late-join projection, replay idempotency and continued equipment mutation without duplicate canonical Item identities.",
   "architecture": {
     "new_persistence_format": false,
@@ -31,7 +32,7 @@
     "persistence_ownership": "PASS: existing M6 repository/coordinator/authority adapter/outbox reused",
     "transport_scope": "UNCHANGED_FROM_ACCEPTED_CH9_3",
     "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
-    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+    "windows_execution": "FIRST_ATTEMPT_BLOCKED_IN_NEW_TEST_PARSE_BEFORE_CH9_4_RUNTIME_ASSERTIONS"
   },
   "invariants": [
     "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
@@ -62,27 +63,34 @@
     "durable_roundtrip": "res://tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
     "checkpoint_reconnect_recovery": "res://tests/characters/test_ch9_4_equipment_reconnect_recovery.gd"
   },
-  "checkpoint_recovery_acceptance": [
-    "equip canonical lower and helmet items",
-    "persist one M6 authoritative checkpoint with durable replay/outbox state",
-    "construct a fresh service instance and recover the committed checkpoint",
-    "recover the exact canonical Item Graph checksum and original Item UUIDs",
-    "verify recovered player has no stale transport session",
-    "reconnect player A with a new ownership epoch without changing equipment",
-    "join player B after recovery and project A recovered equipment",
-    "replay a pre-restart equipment operation idempotently",
-    "unequip after recovery using the new session",
-    "persist generation 2 and recover again",
-    "verify changed slot plus unchanged equipment survive the second recovery without duplicates"
-  ],
+  "first_windows_attempt": {
+    "tested_branch_head": "4f34068",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "ch9_3_authority_regression": "PASS_41",
+    "ch9_3_replica_regression": "PASS_21",
+    "ch9_3_presentation_regression": "PASS_27",
+    "ch9_3_real_enet_regression": "PASS_20",
+    "durable_roundtrip": "BLOCKED_BY_GDSCRIPT_TYPE_INFERENCE_PARSE_ERROR",
+    "checkpoint_reconnect_recovery": "NOT_REACHED",
+    "candidate_runner": "FAIL_BEFORE_CH9_4_RUNTIME_EXECUTION"
+  },
+  "fix1": {
+    "scope": "TEST_HARNESS_ONLY",
+    "production_runtime_changed": false,
+    "durable_roundtrip_fix_commit": "5abe362360182402daea4803c87d9958096a7e8b",
+    "reconnect_recovery_hygiene_commit": "b85b3d2e84db11556249ad40799819f6a528ed39",
+    "change": "Explicitly type command results and canonical Item Graph snapshots as Dictionary instead of asking Godot 4.7.1 to infer types through untyped service handles.",
+    "status": "PENDING_WINDOWS_RERUN"
+  },
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch9_3_authority_regression": "PENDING",
-    "ch9_3_replica_regression": "PENDING",
-    "ch9_3_presentation_regression": "PENDING",
-    "ch9_3_real_enet_regression": "PENDING",
-    "durable_roundtrip": "PENDING",
-    "checkpoint_reconnect_recovery": "PENDING",
-    "candidate_runner": "PENDING"
+    "editor_import": "PASS_FIRST_ATTEMPT",
+    "ch9_3_authority_regression": "PASS_41_FIRST_ATTEMPT",
+    "ch9_3_replica_regression": "PASS_21_FIRST_ATTEMPT",
+    "ch9_3_presentation_regression": "PASS_27_FIRST_ATTEMPT",
+    "ch9_3_real_enet_regression": "PASS_20_FIRST_ATTEMPT",
+    "durable_roundtrip": "PENDING_FIX1_RERUN",
+    "checkpoint_reconnect_recovery": "PENDING_FIX1_RERUN",
+    "candidate_runner": "PENDING_FIX1_RERUN"
   }
 }
