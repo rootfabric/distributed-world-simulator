@@ -2,6 +2,7 @@ class_name ItemGraphEquipmentSource
 extends CharacterEquipmentDomain.Source
 
 const ItemRelations = preload("res://scripts/items/domain/item_relations.gd")
+const EquipmentLayering = preload("res://scripts/characters/equipment/character_equipment_layering.gd")
 
 const RESULT_ITEM_GRAPH_PORT_INVALID := "ITEM_GRAPH_PORT_INVALID"
 const RESULT_EQUIPMENT_CONTAINER_NOT_FOUND := "EQUIPMENT_CONTAINER_NOT_FOUND"
@@ -172,6 +173,84 @@ func refresh() -> Dictionary:
 	}))
 
 
+# CH9.1 read-only planning helper. It deliberately does not change Item Graph
+# state; execution remains owned by ItemTransferService. removing_item_ids models
+# a proposed atomic replacement so the existing CH8 channel rules can validate
+# the resulting equipment snapshot before any canonical mutation is attempted.
+func plan_candidate(item_id: String, slot_index: int, removing_item_ids: Array = []) -> Dictionary:
+	var refresh_result: Dictionary = refresh()
+	if not bool(refresh_result.get("success", false)):
+		return refresh_result
+	if not _slot_profile_ids.has(slot_index):
+		return _result(false, RESULT_EQUIPMENT_SLOT_MAPPING_INVALID, {"slot_index": slot_index})
+
+	var profile_id := String(_slot_profile_ids.get(slot_index, ""))
+	var profile = _profiles.get(profile_id)
+	if not profile is CharacterEquipmentDomain.Profile:
+		return _result(false, RESULT_EQUIPMENT_SLOT_PROFILE_MISSING, {
+			"slot_index": slot_index,
+			"profile_id": profile_id,
+		})
+
+	var container = _container_registry.get_container(equipment_container_id)
+	if container == null:
+		return _result(false, RESULT_EQUIPMENT_CONTAINER_NOT_FOUND, {"container_id": equipment_container_id})
+	var item = _item_registry.get_item(item_id)
+	if item == null:
+		return _result(false, RESULT_EQUIPMENT_SLOT_ITEM_MISSING, {
+			"slot_index": slot_index,
+			"item_id": item_id,
+		})
+	if int(item.quantity) != 1:
+		return _result(false, RESULT_EQUIPMENT_ITEM_QUANTITY_INVALID, {
+			"slot_index": slot_index,
+			"item_id": item_id,
+			"quantity": int(item.quantity),
+		})
+	var definition = _item_registry.get_definition(String(item.definition_id))
+	if definition == null:
+		return _result(false, RESULT_EQUIPMENT_ITEM_DEFINITION_MISSING, {
+			"slot_index": slot_index,
+			"item_id": item_id,
+			"definition_id": String(item.definition_id),
+		})
+	if not bool(container.can_accept_definition_in_slot(definition, slot_index)):
+		return _result(false, RESULT_EQUIPMENT_ITEM_REJECTED_BY_SLOT, {
+			"slot_index": slot_index,
+			"item_id": item_id,
+			"definition_id": String(item.definition_id),
+		})
+
+	var removing: Dictionary = {}
+	for raw_item_id in removing_item_ids:
+		var removing_id := str(raw_item_id).strip_edges()
+		if not removing_id.is_empty():
+			removing[removing_id] = true
+	var current_entries: Array = []
+	for raw_entry in _last_snapshot.entries():
+		if not raw_entry is CharacterEquipmentDomain.Entry:
+			continue
+		if removing.has(raw_entry.item_id):
+			continue
+		current_entries.append(raw_entry)
+
+	var plan: Dictionary = EquipmentLayering.plan_equip(layout, profile, current_entries, item_id)
+	var details: Dictionary = Dictionary(plan.get("details", {})).duplicate(true)
+	details["slot_index"] = slot_index
+	details["profile_id"] = profile_id
+	details["target_occupant_item_id"] = String(container.get_item_at_slot(slot_index))
+	details["modeled_removed_item_ids"] = _sorted_string_values(removing.keys())
+	return _result(
+		bool(plan.get("success", false)),
+		String(plan.get("code", CharacterEquipmentDomain.RESULT_INVALID_PROFILE)),
+		details
+	)
+
+
+func slot_profile_id(slot_index: int) -> String:
+	return String(_slot_profile_ids.get(slot_index, ""))
+
+
 func get_snapshot() -> CharacterEquipmentDomain.Snapshot:
 	var result: Dictionary = refresh()
 	if not bool(result.get("success", false)) and _last_snapshot == null:
@@ -295,6 +374,14 @@ func _sorted_slot_mapping() -> Array:
 	for slot_index in slots:
 		rows.append({"slot_index": slot_index, "profile_id": String(_slot_profile_ids[slot_index])})
 	return rows
+
+
+func _sorted_string_values(values: Array) -> Array[String]:
+	var result: Array[String] = []
+	for raw_value in values:
+		result.append(str(raw_value))
+	result.sort()
+	return result
 
 
 func _store_result(result: Dictionary) -> Dictionary:
