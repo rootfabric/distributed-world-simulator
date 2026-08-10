@@ -77,7 +77,7 @@ func _test_executor_replay_and_conflict() -> void:
 	_assert(String(first.status) == LedgerScript.STATUS_SUCCEEDED, "Runtime command status mismatch")
 	_assert(int(first.result_revision) == 1, "Runtime command result revision mismatch")
 	_assert(bool(store.get_subject("runtime/contracts/door").state.enabled), "Runtime command did not mutate subject")
-	var generation_after_first := store.get_generation()
+	var generation_after_first: int = int(store.get_generation())
 	var replay: Dictionary = executor.execute(command)
 	_assert(UtilsScript.canonical_json(replay) == UtilsScript.canonical_json(first), "Runtime exact replay changed result")
 	_assert(store.get_generation() == generation_after_first, "Runtime replay mutated state")
