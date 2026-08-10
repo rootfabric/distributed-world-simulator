@@ -136,6 +136,8 @@ river centerline overlay
 
 None of it enters canonical semantic checksums.
 
+Current delta from accepted G7.3 checkpoint is 18 files, with no G3/G5/G6 adapter, composer, Hydrology, Matter or Network runtime change.
+
 ### Automated gate
 
 ```powershell
