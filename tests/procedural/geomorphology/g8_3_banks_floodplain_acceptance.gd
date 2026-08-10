@@ -43,7 +43,7 @@ func _test_manifest_and_parent() -> void:
 	_check(parsed is Dictionary, "G8.3 manifest parses")
 	if parsed is Dictionary:
 		_check(String(parsed.get("checkpoint", "")) == "g8.3-banks-and-floodplain-shaping", "G8.3 checkpoint")
-		_check(String(parsed.get("status", "")) == "IMPLEMENTED_CANDIDATE", "G8.3 candidate status")
+		_check(String(parsed.get("status", "")) == "ACCEPTED", "G8.3 accepted status")
 		_check(String(parsed.get("generator_id", "")) == BanksFloodplain.GENERATOR_ID, "manifest generator id")
 		_check(Array(parsed.get("inputs", [])) == [Registry.SURFACE_HEIGHT_M, Registry.VALLEY_INFLUENCE, Registry.RIVER_DISTANCE_M, Registry.RIVER_WIDTH_M], "manifest inputs")
 		_check(not bool(parsed.get("ownership", {}).get("matter_mutation", true)), "manifest excludes Matter mutation")
