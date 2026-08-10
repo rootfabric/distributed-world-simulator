@@ -93,6 +93,7 @@ function Test-G74AllowedPath {
         "START_G7_4_SEMANTIC_FIELD_LAB.ps1",
         "config/architecture/global-program-roadmap.v1.json",
         "config/procedural/g7-4-semantic-field-lab.v1.json",
+        "config/procedural/g7-g13-p0-aligned-roadmap.v1.json",
         "docs/checkpoints/G7_4_SEMANTIC_FIELD_LAB_CANDIDATE_RU.md",
         "docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md",
         "docs/procedural/README_RU.md",
