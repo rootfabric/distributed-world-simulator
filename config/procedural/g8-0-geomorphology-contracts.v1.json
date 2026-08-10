@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_0_geomorphology_contracts.v1",
   "checkpoint": "g8.0-geomorphology-contracts",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -10,6 +10,13 @@
     "decision": "ACCEPTED",
     "full_acceptance_tested_head": "a75a60b6da739cc759e1fb40510a98942bce4cde",
     "accepted_metadata_head": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e"
+  },
+  "acceptance": {
+    "tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_contracts": "PASS",
+    "full_world_regression": "PASS",
+    "working_tree": "CLEAN"
   },
   "goal": "Freeze a deterministic, LOD-independent procedural geomorphology deformation contract before implementing valley, river, bank, floodplain and erosion/deposition formulas.",
   "contracts": {
@@ -33,7 +40,9 @@
   "composition_rule": "resolved_surface_height_m = source_surface_height_m + sum(component_deltas_m)",
   "planned_g8_1_inputs": [
     "geo/surface-height-m",
-    "geo/valley-influence",
+    "geo/valley-influence"
+  ],
+  "future_g8_inputs": [
     "geo/river-distance-m",
     "geo/river-width-m",
     "geo/fluid-surface-distance-m"
