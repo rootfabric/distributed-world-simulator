@@ -40,11 +40,15 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 const FIX10_FIX6_PREDICTION_ACK_WIRE_POLICY: String = "COMPACT_TRANSITION_ARRAY_V2"
 const FIX10_FIX6_PREDICTION_ACK_WIRE_VALUES: int = 23
 const FIX10_FIX6_TRANSITION_POLICY: String = "PRE_POST_INPUT_TRANSITION_WITH_HOLD_TICKS_V1"
+const FIX10_FIX6_MOVEMENT_SNAPSHOT_GUARD_POLICY: String = \
+	"STALL_OR_FIXED_TICK_BACKLOG_ONLY_PENDING_FUTURE_INPUTS_ALLOWED_V1"
 
 var _fix10_fix6_transition_captures: int = 0
 var _fix10_fix6_transition_metadata_incomplete: int = 0
 var _fix10_fix6_max_server_hold_ticks: int = 0
 var _fix10_fix6_max_transition_displacement_m: float = 0.0
+var _fix10_fix6_pending_input_snapshot_guard_bypasses: int = 0
+var _fix10_fix6_max_pending_inputs_while_snapshot_allowed: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -52,7 +56,111 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_fix6_transition_metadata_incomplete = 0
 	_fix10_fix6_max_server_hold_ticks = 0
 	_fix10_fix6_max_transition_displacement_m = 0.0
+	_fix10_fix6_pending_input_snapshot_guard_bypasses = 0
+	_fix10_fix6_max_pending_inputs_while_snapshot_allowed = 0
 	return super.setup(config)
+
+
+func _process(delta: float) -> void:
+	if not _configured or _boundary == null or _fatal_persistence_failure:
+		return
+	_reap_report_thread()
+	var process_started_us: int = Time.get_ticks_usec()
+	_telemetry.increment("server_process_iterations")
+
+	# Authority simulation still has first budget. FIX6 semantic scheduling can
+	# intentionally retain future input transitions in the per-peer buffers until
+	# their mapped server tick. Raw pending count therefore does NOT mean the
+	# current authoritative state is incomplete. The old aggregate >8 guard was
+	# suppressing most realtime snapshots in healthy two-client LOCAL sessions.
+	_advance_fixed_simulation(delta)
+	var scheduler_backlog_ticks: int = _scheduler_pending_catch_up_ticks()
+	_max_scheduler_backlog_ticks_observed = maxi(
+		_max_scheduler_backlog_ticks_observed, scheduler_backlog_ticks
+	)
+	var input_backlog_before_drain: int = _total_pending_input_count()
+	var transient_stall: bool = delta > M7_STALL_SNAPSHOT_GUARD_SECONDS
+	if transient_stall:
+		_transient_stall_frames += 1
+	if transient_stall or scheduler_backlog_ticks > 0:
+		# Only real wall-clock/fixed-tick recovery makes an in-between snapshot
+		# misleading. Pending future semantic inputs are valid future work and must
+		# not starve remote presentation.
+		_movement_snapshot_recovery_suppressions += 1
+	else:
+		if input_backlog_before_drain > M7_INPUT_SNAPSHOT_BACKLOG_GUARD:
+			_fix10_fix6_pending_input_snapshot_guard_bypasses += 1
+			_fix10_fix6_max_pending_inputs_while_snapshot_allowed = maxi(
+				_fix10_fix6_max_pending_inputs_while_snapshot_allowed,
+				input_backlog_before_drain
+			)
+		_maybe_publish_movement_snapshot()
+
+	var polled: Dictionary = _boundary.poll_events(M7_NETWORK_EVENT_BUDGET_PER_FRAME)
+	if not bool(polled.get("success", false)):
+		_last_error_code = String(polled.get("error_code", "M3_SERVER_POLL_FAILED"))
+		_write_report("FAILED", false)
+		return
+	for event_value in polled.get("details", {}).get("events", []):
+		if not event_value is Dictionary:
+			continue
+		var event: Dictionary = event_value
+		var event_type := String(event.get("event_type", ""))
+		var peer_id := String(event.get("peer_id", ""))
+		var session_id := String(event.get("session_id", ""))
+		if event_type == "MESSAGE_RECEIVED":
+			_messages_received += 1
+			_handle_message(peer_id, session_id, event.get("frame", {}).get("payload", {}))
+		elif event_type == "PEER_DISCONNECTED":
+			_handle_disconnect(peer_id, session_id)
+
+	_maybe_persist_movement_checkpoint()
+	_update_runtime_telemetry()
+	_max_pending_input_count_observed = maxi(
+		_max_pending_input_count_observed, _total_pending_input_count()
+	)
+	_dispatch_deferred_report()
+
+	_server_process_last_duration_ms = float(Time.get_ticks_usec() - process_started_us) / 1000.0
+	_server_process_max_duration_ms = maxf(
+		_server_process_max_duration_ms, _server_process_last_duration_ms
+	)
+	if _server_process_last_duration_ms >= M7_SLOW_PROCESS_FRAME_MS:
+		_slow_process_frames += 1
+	_telemetry.observe("server_process_duration_ms", _server_process_last_duration_ms)
+	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
+		_last_debug_report_ms = Time.get_ticks_msec()
+		_debug_event("SERVER_HEALTH", {
+			"connected_peers": _peer_to_player.size(),
+			"moves": _moves,
+			"rejections": _rejections,
+			"messages_received": _messages_received,
+			"messages_sent": _messages_sent,
+			"checkpoint_generation": _checkpoint_generation,
+			"movement_dirty": _movement_checkpoint_dirty,
+			"movement_commands_since_checkpoint": _movement_commands_since_checkpoint,
+			"pending_inputs": _total_pending_input_count(),
+			"max_pending_inputs": _max_pending_input_count_observed,
+			"scheduler_backlog_ticks": scheduler_backlog_ticks,
+			"max_scheduler_backlog_ticks": _max_scheduler_backlog_ticks_observed,
+			"movement_snapshot_recovery_suppressions": _movement_snapshot_recovery_suppressions,
+			"fix10_fix6_snapshot_guard_policy": FIX10_FIX6_MOVEMENT_SNAPSHOT_GUARD_POLICY,
+			"fix10_fix6_pending_guard_bypasses": _fix10_fix6_pending_input_snapshot_guard_bypasses,
+			"transient_stall_frames": _transient_stall_frames,
+			"server_process_duration_ms": _server_process_last_duration_ms,
+			"server_process_max_duration_ms": _server_process_max_duration_ms,
+			"slow_process_frames": _slow_process_frames,
+			"report_thread_active": _report_thread != null,
+			"report_requests_coalesced": _report_requests_coalesced,
+			"report_snapshot_build_duration_ms": _report_snapshot_build_duration_ms,
+			"report_max_snapshot_build_duration_ms": _report_max_snapshot_build_duration_ms,
+			"report_last_write_duration_ms": _report_last_write_duration_ms,
+			"peer_telemetry_samples": _peer_telemetry_samples,
+			"peer_telemetry_skips": _peer_telemetry_skips,
+			"peer_telemetry_last_duration_ms": _peer_telemetry_last_duration_ms,
+			"peer_telemetry_max_duration_ms": _peer_telemetry_max_duration_ms,
+			"last_error_code": _last_error_code,
+		})
 
 
 func _run_fixed_tick(server_tick: int) -> void:
@@ -216,6 +324,9 @@ func _build_fix7_ready_report() -> Dictionary:
 	foundation["fix10_fix6_transition_metadata_incomplete"] = _fix10_fix6_transition_metadata_incomplete
 	foundation["fix10_fix6_max_server_hold_ticks"] = _fix10_fix6_max_server_hold_ticks
 	foundation["fix10_fix6_max_transition_displacement_m"] = _fix10_fix6_max_transition_displacement_m
+	foundation["fix10_fix6_movement_snapshot_guard_policy"] = FIX10_FIX6_MOVEMENT_SNAPSHOT_GUARD_POLICY
+	foundation["fix10_fix6_pending_input_snapshot_guard_bypasses"] = _fix10_fix6_pending_input_snapshot_guard_bypasses
+	foundation["fix10_fix6_max_pending_inputs_while_snapshot_allowed"] = _fix10_fix6_max_pending_inputs_while_snapshot_allowed
 	report["realtime_foundation"] = foundation
 	return report
 
@@ -224,6 +335,7 @@ func get_fix7_ready_report_policy() -> Dictionary:
 	var report: Dictionary = super.get_fix7_ready_report_policy()
 	report["fix10_fix6_ack_wire_policy"] = FIX10_FIX6_PREDICTION_ACK_WIRE_POLICY
 	report["fix10_fix6_transition_policy"] = FIX10_FIX6_TRANSITION_POLICY
+	report["fix10_fix6_movement_snapshot_guard_policy"] = FIX10_FIX6_MOVEMENT_SNAPSHOT_GUARD_POLICY
 	return report
 
 
@@ -236,5 +348,8 @@ func get_report() -> Dictionary:
 	ack_report["fix6_transition_metadata_incomplete"] = _fix10_fix6_transition_metadata_incomplete
 	ack_report["fix6_max_server_hold_ticks"] = _fix10_fix6_max_server_hold_ticks
 	ack_report["fix6_max_transition_displacement_m"] = _fix10_fix6_max_transition_displacement_m
+	ack_report["fix6_movement_snapshot_guard_policy"] = FIX10_FIX6_MOVEMENT_SNAPSHOT_GUARD_POLICY
+	ack_report["fix6_pending_input_snapshot_guard_bypasses"] = _fix10_fix6_pending_input_snapshot_guard_bypasses
+	ack_report["fix6_max_pending_inputs_while_snapshot_allowed"] = _fix10_fix6_max_pending_inputs_while_snapshot_allowed
 	report["fix10_prediction_ack"] = ack_report
 	return report
