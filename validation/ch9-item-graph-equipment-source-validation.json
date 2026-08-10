@@ -1,0 +1,80 @@
+{
+  "schema": "planet_simulator.ch9_item_graph_equipment_source_validation.v1",
+  "stage": "CH9.0 Item Graph Equipment Source",
+  "branch": "feature/ch9-item-graph-equipment-source",
+  "base_branch": "feature/ch8-layered-equipment",
+  "base_commit": "1eebc1e741e65c64207942a0e39d7263fbd39f65",
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_AND_PREDECESSOR_GATE",
+  "goal": "Project canonical ItemRegistry plus an entity-owned slotted equipment ContainerState into CharacterEquipmentDomain.Snapshot without owning Item Graph mutations, networking, persistence, mesh or rig state.",
+  "canonical_model": {
+    "new_item_relation_added": false,
+    "equipped_item_relation": "CONTAINER",
+    "equipment_container_storage_mode": "SLOTS",
+    "equipment_container_owner": "world/character entity id",
+    "snapshot_revision_source": "equipment_container.revision",
+    "slot_to_profile_mapping": "presentation configuration",
+    "read_only_projection": true
+  },
+  "invariants": [
+    "ITEM_UUID_REMAINS_CANONICAL",
+    "EQUIPMENT_SOURCE_DOES_NOT_MUTATE_ITEMS_OR_CONTAINERS",
+    "EQUIPMENT_CONTAINER_OWNER_MUST_MATCH_CHARACTER_ENTITY",
+    "MAPPED_EQUIPMENT_SLOTS_MUST_HAVE_CANONICAL_ACCEPTANCE_RULES",
+    "OCCUPIED_SLOT_ITEM_MUST_EXIST",
+    "EQUIPPED_ITEM_QUANTITY_MUST_EQUAL_ONE",
+    "ITEM_RELATION_CONTAINER_AND_SLOT_MUST_MATCH_CONTAINER_ASSIGNMENT",
+    "ITEM_DEFINITION_MUST_BE_ACCEPTED_BY_REAL_CONTAINER_SLOT",
+    "CHARACTER_LAYOUT_AND_CHANNEL_CONFLICTS_FAIL_CLOSED",
+    "FAILED_REFRESH_PRESERVES_LAST_VALID_PRESENTATION_SNAPSHOT",
+    "NO_MOVEMENT_SNAPSHOT_EQUIPMENT_IDS",
+    "NO_NETWORK_OR_PERSISTENCE_OWNERSHIP"
+  ],
+  "implementation": {
+    "source": "res://scripts/characters/equipment/item_graph_equipment_source.gd",
+    "extends": "CharacterEquipmentDomain.Source",
+    "canonical_inputs": [
+      "res://scripts/items/services/item_registry.gd",
+      "res://scripts/containers/container_registry.gd",
+      "res://scripts/containers/container_state.gd",
+      "res://scripts/items/domain/item_relations.gd"
+    ],
+    "mutator_methods": [],
+    "failure_observability": ["refresh", "get_last_result", "create_report"]
+  },
+  "focused_tests": {
+    "source_projection": "res://tests/characters/test_ch9_item_graph_equipment_source.gd",
+    "json_roundtrip": "res://tests/characters/test_ch9_item_graph_equipment_source_roundtrip.gd",
+    "runner": ".\\RUN_CH9_ITEM_GRAPH_EQUIPMENT_SOURCE_TESTS.ps1 -GodotPath $Godot"
+  },
+  "focused_acceptance_requires": [
+    "editor import/parse PASS",
+    "CH7 character equipment domain PASS",
+    "CH8 layered equipment contract PASS",
+    "CH9 Item Graph equipment source PASS",
+    "CH9 Item Graph equipment source roundtrip PASS",
+    "no ERROR/SCRIPT ERROR/parse failure"
+  ],
+  "deferred_to_ch9_1": [
+    "backpack_to_equipment_move",
+    "equipment_to_backpack_move",
+    "atomic_replace_conflicts",
+    "authoritative operation id and revision fencing",
+    "UI equipment slots"
+  ],
+  "later_stages": [
+    "CH9.2 Inventory + Character graphical composition",
+    "CH9.3 Multiplayer equipment presentation",
+    "CH9.4 Persistence / late join / reconnect"
+  ],
+  "formal_acceptance_blockers": [
+    "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
+    "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
+  ],
+  "windows_results": {
+    "editor_import": "PENDING",
+    "ch7_domain": "PENDING",
+    "ch8_layering_contract": "PENDING",
+    "ch9_source": "PENDING",
+    "ch9_roundtrip": "PENDING"
+  }
+}
