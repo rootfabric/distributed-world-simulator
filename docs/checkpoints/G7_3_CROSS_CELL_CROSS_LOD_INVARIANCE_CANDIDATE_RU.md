@@ -1,15 +1,58 @@
-# G7.3 Cross-Cell / Cross-LOD Invariance — IMPLEMENTED CANDIDATE
+# G7.3 Cross-Cell / Cross-LOD Invariance — FIX1 IMPLEMENTED CANDIDATE
 
 **Дата:** 2026-08-10
 **Global revision:** `GLOBAL-P0-2026-08-10-R2`
 **Branch:** `feature/g7-semantic-field-fabric`
 **G7.2 accepted baseline:** `68c4f90dbdac0e2d9968b4461207713f5661521b`
 
+## Текущий результат
+
+Focused Windows gate уже прошёл:
+
+```text
+G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
+G7.3 Cross-Cell / Cross-LOD Invariance focused gate passed.
+```
+
+Подтверждены FeatureId/FluidRegionId invariance, multi-cell river, PX/PZ seam и centerline river-distance continuity.
+
+Первый full-gate run дошёл до P0/scope hygiene и остановился только на:
+
+```text
+docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md:3: trailing whitespace
+```
+
+Это не локальная G7.3 мутация: active G7 roadmap заранее проверяется byte-identical к `origin/main`, а R2 canonical Markdown использует trailing double-space как Markdown hard break.
+
+## Fix1
+
+`RUN_G7_3_FULL_ACCEPTANCE.ps1` теперь делает порядок строго таким:
+
+```text
+1. local GLOBAL config blob == origin/main blob
+2. local GLOBAL roadmap blob == origin/main blob
+3. GLOBAL revision == GLOBAL-P0-2026-08-10-R2
+4. G7 is declared active world-generation frontier
+5. run strict git diff --check over G7.3 delta
+   EXCEPT the already-byte-verified canonical GLOBAL roadmap file
+6. final hygiene repeats the same strict check
+```
+
+То есть inherited canonical Markdown bytes не маскируются произвольно: исключается ровно один файл и только после доказательства его byte-equivalence с main. Все остальные G7.3/P0-sync files остаются под `git diff --check`.
+
+Fix1 commit:
+
+```text
+73ca4a0d356eb7ed18aa813c19f617b7b2c29137
+```
+
+Validation evidence commit:
+
+```text
+5710751f8d6ff9aaca5d718c50983e18c9d6ca71
+```
+
 ## P0 frontier rule
-
-`GLOBAL-P0-2026-08-10-R2` изменил program ledger так, что active frontier должен byte-exact совпадать с `main`, а исторические accepted/frozen branches не переписываются только ради нового global revision.
-
-Для G7.3:
 
 ```text
 active G7 global config/docs == main R2
@@ -28,21 +71,9 @@ docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
   3eb52a69cef73da8a784dfce7acc6a0c38185cf9
 ```
 
-## Цель
+## G7.3 semantic proof
 
-G7.3 не добавляет новый procedural runtime. Он доказывает, что уже принятые G7.0–G7.2 contracts/adapters/composer независимы от representation partitioning.
-
-Главный инвариант:
-
-```text
-canonical world point + canonical SemanticFieldQuery
-    -> same semantic values/checksums/provenance
-       regardless of SurfaceCellKey / LOD representation path
-```
-
-## Proof matrix
-
-Проверяются LOD:
+LOD matrix:
 
 ```text
 2
@@ -51,9 +82,7 @@ canonical world point + canonical SemanticFieldQuery
 12
 ```
 
-Одна и та же world position адресуется в разные `SurfaceCellKey` на разных LOD. После каждого representation-addressing шага повторяется та же canonical semantic composition.
-
-Должны оставаться неизменными:
+For the same canonical world position, the following must remain identical while representation SurfaceCellKey/resolution changes:
 
 ```text
 SemanticFieldQuery checksum
@@ -65,11 +94,7 @@ G5 FeatureId
 G6 FluidRegionId
 ```
 
-При этом representation resolution/cell identity обязаны реально меняться.
-
-## SurfaceCell boundary
-
-`SemanticFieldQuery` не содержит:
+`SemanticFieldQuery` contains no:
 
 ```text
 surface_cell
@@ -78,112 +103,38 @@ lod
 representation
 ```
 
-Тест дополнительно создаёт другой валидный external `SurfaceCellKey` рядом с фактической LOD8 cell и доказывает, что такая representation label не может изменить canonical bundle, потому что не входит в semantic API.
-
-Это не означает, что world point физически принадлежит двум cells. Это proof ownership boundary: representation address не является semantic input.
-
-## Cube seam
-
-Используется принятый G6 cross-cell river fixture, проходящий через PX/PZ seam.
-
-Для river spline control points на LOD8 проверяется:
-
-```text
-one river -> multiple SurfaceCellKey values
-faces include PX and PZ
-source FeatureId remains one
-FluidRegionId remains one
-river-distance-m on centerline stays approximately zero on both seam sides
-```
-
-Таким образом cube face не становится semantic branch condition.
-
-## Query-order invariance
-
-Один и тот же набор field ids подаётся в прямом и обратном порядке.
-
-`SemanticFieldQuery.create()` должен нормализовать порядок, поэтому совпадают:
-
-```text
-requested_field_ids
-query checksum
-bundle checksum
-composition receipt checksum
-```
-
-## Representation density
-
-LOD увеличивает side resolution `2^lod`, но canonical semantic result для shared world point не меняется.
-
-```text
-LOD -> representation density/addressing only
-LOD != semantic identity
-```
-
-## P0 boundaries
-
-G7.3 не вводит production runtime helper для cell-aware semantics.
-
-```text
-SemanticFieldId != SurfaceCellKey
-SemanticFieldId != LOD
-FeatureId != SurfaceCellKey
-FluidRegionId != SurfaceCellKey
-composer != representation scheduler
-G7.3 != scheduler/cache
-G7.3 != authority/interest
-G7.3 != persistence/network
-```
-
-Stage состоит из proof tests/runners/manifest/docs; accepted G7.0–G7.2 semantic runtime не изменяется.
+The accepted G6 seam fixture proves one river spans multiple cells and both PX/PZ cube faces without identity reroll.
 
 ## Scope
 
-От accepted G7.2 baseline допускаются только:
+G7.3 remains proof-only. No accepted G7 semantic runtime, G3/G5/G6 adapter, composer, Hydrology, Matter or Network runtime file is changed.
 
-```text
-G7.3 test/runners/manifest/validation/docs
-active GLOBAL-P0 R2 config + roadmap sync from main
-local G7-G13 R2 alignment docs/config
-```
+## Re-run
 
-Любой G3/G5/G6 adapter, composer, Hydrology, Matter или Network runtime change должен остановить gate.
-
-## Focused acceptance
+Only the full gate needs to be repeated after Fix1:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 `
-  -GodotPath $Godot
+.\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Focused runner повторно прогоняет G7.0, G7.1, G7.2 и затем G7.3 invariance test.
-
-## Full acceptance
-
-```powershell
-.\RUN_G7_3_FULL_ACCEPTANCE.ps1 `
-  -GodotPath $Godot
-```
-
-Full runner проверяет:
+Expected final marker:
 
 ```text
-current G6 ancestry
-G7.2 ACCEPTED ancestry
-active GLOBAL-P0 config/docs == main R2
-historical G6 is not required to equal R2
-strict G7.3 proof + P0-sync changed-file scope
-git diff --check
-G7.0/G7.1/G7.2 regressions
-G7.3 focused invariance
-full world/core regression
-Windows transient cleanup
-final clean worktree
+G7.3 FULL ACCEPTANCE: PASS
+Global revision: GLOBAL-P0-2026-08-10-R2
+Active GLOBAL-P0 main alignment: PASS
+Canonical GLOBAL roadmap byte-match to main: PASS
+G7.2 ACCEPTED ancestor: PASS
+G7.3 invariance scope: PASS
+Cross-cell / cross-LOD semantic invariance: PASS
+World/core regression: PASS
+Working tree: CLEAN
 ```
 
-## Следующий checkpoint после acceptance
+## Next
+
+After full acceptance:
 
 ```text
 G7.4 — Semantic Field Lab
