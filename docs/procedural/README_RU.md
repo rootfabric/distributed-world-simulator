@@ -174,6 +174,8 @@ G7.4 colors/camera/mesh != canonical truth
 SemanticFieldCompositionReceipt != world identity
 ```
 
+Current G7.4 delta from accepted G7.3 checkpoint is restricted to 18 visual-lab/frontier/docs/test files. It changes no G3/G5/G6 adapter, composer, Hydrology, Matter or Network runtime.
+
 Next after graphical G7.4 acceptance:
 
 ```text
