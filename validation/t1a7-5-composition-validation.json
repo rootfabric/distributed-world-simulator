@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1a7_5_composition_validation.v1",
   "checkpoint": "T1A7_5_COMPOSITION_ACCEPTANCE",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.4 Scale / Soak Lab ACCEPTED",
   "accepted_runtime_dependency_head": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
@@ -12,65 +12,19 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
-  "scope": {
-    "composition_acceptance": "tests/construction/t1a7_5_composition_acceptance.gd",
-    "focused_runner": "RUN_T1A7_5_COMPOSITION_TESTS.ps1",
-    "production_runtime_files_changed_after_t1a7_4_acceptance": false,
-    "fix1_changes_production_runtime": false
+  "tested_heads": {
+    "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
+    "focused": "1430284c3e523d9292804be2fc347ac1f70d39a6",
+    "full_regression": "1430284c3e523d9292804be2fc347ac1f70d39a6"
   },
-  "aggregate_dependencies": [
-    "T1A.7.1 Recovery ACCEPTED",
-    "T1A.7.2 Late-Interest Baseline + Reconnect ACCEPTED",
-    "T1A.7.3 Dirty / Selective Runtime Replication ACCEPTED",
-    "T1A.7.4 Scale / Soak Lab ACCEPTED"
-  ],
-  "composition_scenario": {
-    "recovered_canonical_store_round_trip": true,
-    "authoritative_runtime_snapshot_after_recovery": true,
-    "logical_interest_and_transport_session_separated": true,
-    "selective_plan_over_recovered_truth": true,
-    "out_of_interest_client_receives_zero_mutation": true,
-    "re_entry_uses_current_full_baseline": true,
-    "reconnect_retains_logical_interest_revision": true,
-    "old_transport_session_rejected_by_selection_fence": true,
-    "reconnect_replica_converges_to_authoritative_baseline": true,
-    "planner_failure_count_expected": 0
-  },
-  "focused_runner_semantics": {
-    "reruns_t1a7_4_chain": true,
-    "therefore_reruns_t1a7_3_chain": true,
-    "therefore_reruns_t1a7_2_real_m3_reconnect": true,
-    "therefore_reruns_t1a7_1_recovery": true,
-    "therefore_reruns_10000_subject_scale": true,
-    "then_runs_t1a7_5_in_memory_composition": true
-  },
-  "windows_attempt_1": {
-    "checkout": "37a1f908ae2124a2f8ca7aaa2402c19bd344bb24",
-    "standalone_t1a7_5_composition": "PASS",
-    "standalone_t1a7_5_assertions": 56,
-    "aggregate_focused": "FAIL_HARNESS_RACE",
-    "failure_test": "tests/construction/t1a7_3_selective_replication_process_acceptance.gd",
-    "classification": "TEST_HARNESS_TELEMETRY_READ_RACE_NOT_RUNTIME_SEMANTIC_FAILURE"
-  },
-  "fix1": {
-    "waits_for_selective_mutation_plans_and_targeted_sends": true,
-    "first_plan_minimum": 1,
-    "second_plan_minimum": 2,
-    "json_reads_retry_partial_rewrite_windows": true,
-    "json_parser_reports_error_without_engine_parse_noise": true,
-    "network_contract_changed": false,
-    "runtime_routing_changed": false,
-    "authority_or_interest_semantics_changed": false
-  },
-  "windows_fix1_revalidation": {
-    "checkout": "1430284c3e523d9292804be2fc347ac1f70d39a6",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "windows_fix1_focused": {
     "result": "PASS",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "assertions": {
       "T1A4": 153,
       "C5B": 32,
@@ -104,11 +58,25 @@
       "reconnect_strategy": "FULL_AUTHORITATIVE_BASELINE",
       "replay_history_bound": 0
     },
-    "non_blocking_harness_noise": [
-      "T1A.7.2 result-file polling still emitted one transient JSON parse error while the suite itself passed 35 assertions"
-    ],
     "final_marker": "T1A.7.5 composition focused gate passed."
   },
+  "full_world_regression": {
+    "result": "PASS",
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "rl3_representation_streaming_processes_assertions": 37,
+    "main_scene_cli_all": {
+      "passed": 6,
+      "failed": 0
+    },
+    "lifecycle_final_state": "STOPPED",
+    "exit_code": 0,
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report": "artifacts/test-results/world-regression-summary.json",
+    "note": "The final user-pasted tail did not repeat the RL3 representation-aware 175-assertion line, so this record does not reconstruct that count."
+  },
+  "known_non_blocking_debt": [
+    "T1A.7.2 process acceptance can emit one transient JSON.parse_string result-file polling error during report rewrite; the suite still passed 35 assertions. This is harness logging debt, not runtime semantic failure."
+  ],
   "architecture": {
     "new_canonical_truth": false,
     "new_persistence_foundation": false,
@@ -117,21 +85,8 @@
     "new_network_channel": false,
     "new_transport_boundary": false,
     "new_scheduler_foundation": false,
-    "new_compact_delta_dto": false,
-    "composition_stage_adds_test_orchestration_only": true
+    "new_compact_delta_dto": false
   },
-  "required_validation": {
-    "focused_runner": "RUN_T1A7_5_COMPOSITION_TESTS.ps1",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_result": "PASS",
-    "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
-  },
-  "tested_heads": {
-    "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
-    "focused": "1430284c3e523d9292804be2fc347ac1f70d39a6",
-    "full_regression": ""
-  },
-  "acceptance_effect": "Focused acceptance is green after FIX1. A fresh full world/core regression on the same checkout is the only remaining gate for accepting T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint.",
-  "next_stage_after_acceptance": "PC0 convergence toward T2.0 with TS0.4 structural/representation ceiling evidence"
+  "acceptance_effect": "T1A.7 Runtime Recovery / Interest / Scale is SOURCE_ACCEPTED and COMPOSITION_VERIFIED.",
+  "next_stage": "T2 readiness/convergence preflight under PC0; T2.0 remains blocked until C22 MAIN_INTEGRATED plus TS0.4 ceiling classification and PC0 convergence."
 }
