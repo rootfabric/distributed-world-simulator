@@ -32,6 +32,19 @@ func _ready() -> void:
 	_refresh_status()
 
 
+# The inherited character lab owns movement for its CharacterBody3D from this
+# parent Node3D. InventoryGameplayController intentionally sets the player node's
+# process_mode to DISABLED while inventory is open. For CollisionObject3D that
+# can remove the body from the PhysicsServer space, so the parent lab must not
+# call move_and_slide() until the inventory is closed again. This is a CH9.2 lab
+# composition concern only; the base character movement and production inventory
+# freeze semantics remain unchanged.
+func _physics_process(delta: float) -> void:
+	if character_gameplay_controller != null and character_gameplay_controller.inventory_open:
+		return
+	super._physics_process(delta)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
