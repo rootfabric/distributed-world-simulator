@@ -201,6 +201,12 @@ func _fix10_fix6_position(state: Dictionary) -> Vector3:
 	)
 
 
+func _dispatch_deferred_report() -> void:
+	# FIX7 source-contract compatibility wrapper. The accepted lightweight READY
+	# implementation remains inherited and still avoids the full get_report() path.
+	super._dispatch_deferred_report()
+
+
 func _build_fix7_ready_report() -> Dictionary:
 	var report: Dictionary = super._build_fix7_ready_report()
 	var foundation: Dictionary = Dictionary(report.get("realtime_foundation", {})).duplicate(true)
