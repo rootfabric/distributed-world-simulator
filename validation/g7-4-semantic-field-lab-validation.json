@@ -59,6 +59,31 @@
     "hud_in_canonical_checksum": false,
     "presentation_manifest_is_world_identity": false
   },
+  "author_preflight": {
+    "exact_engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_api_probe": "PASS",
+    "checked_api": [
+      "GDScript not-in operator",
+      "SurfaceTool",
+      "Mesh.PRIMITIVE_LINE_STRIP",
+      "StandardMaterial3D vertex colors",
+      "BaseMaterial3D.SHADING_MODE_UNSHADED",
+      "BaseMaterial3D.CULL_DISABLED"
+    ],
+    "feature_anchor_world_feature_contract_audit": "PASS",
+    "full_repository_runtime_not_claimed": true
+  },
+  "scope_audit": {
+    "base": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
+    "changed_files": 18,
+    "unexpected_files": 0,
+    "production_semantic_runtime_changed": false,
+    "g3_g5_g6_adapters_changed": false,
+    "composer_changed": false,
+    "hydrology_changed": false,
+    "matter_changed": false,
+    "network_changed": false
+  },
   "p0": {
     "owns_renderer_foundation": false,
     "owns_world_query": false,
