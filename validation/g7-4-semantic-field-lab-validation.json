@@ -1,12 +1,10 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
+  "decision": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
-  "automated_tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
-  "validation_commit_self_pinned": false,
   "g7_3": {
     "decision": "ACCEPTED",
     "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4",
@@ -14,123 +12,85 @@
     "full_windows_gate": "PASS",
     "world_core_regression": "PASS"
   },
+  "previous_automated_acceptance": {
+    "status": "PASS_SUPERSEDED_BY_FIX3_PRESENTATION_RUNTIME_CHANGE",
+    "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
+    "world_core_regression": "PASS",
+    "working_tree": "CLEAN"
+  },
+  "fix1": {
+    "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
+    "result": "CLOSED",
+    "runtime_semantics_changed": false
+  },
+  "fix2": {
+    "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
+    "result": "CLOSED",
+    "focused_tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
+    "focused_assertions": 92,
+    "focused_failures": 0,
+    "subsequent_full_world_regression": "PASS",
+    "production_gameplay_semantics_changed": false
+  },
+  "fix3": {
+    "trigger": "MANUAL_GRAPHICAL_OBSERVATION_FOUND_NO_VISIBLE_LOD_CHANGE",
+    "observed_behavior": "W/S changed camera distance but the semantic patch mesh stayed fixed at the 33x17 source grid. ADDRESSING_LOD 8 was used only for cube-sphere face addressing and was not a mesh LOD.",
+    "implementation": "Camera-distance-derived presentation LOD0..3 changes only mesh sampling stride over the same precomputed semantic records.",
+    "lod_levels": [
+      {"lod": 0, "stride": 1, "mesh_grid": [33, 17], "distance": "<11", "detail": "NEAR_FINE"},
+      {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "distance": "11..15", "detail": "NEAR_MID"},
+      {"lod": 2, "stride": 4, "mesh_grid": [9, 5], "distance": "15..20", "detail": "MID_COARSE"},
+      {"lod": 3, "stride": 8, "mesh_grid": [5, 3], "distance": ">=20", "detail": "FAR_COARSE"}
+    ],
+    "semantic_source_sample_count": 561,
+    "reuses_same_semantic_records": true,
+    "semantic_query_changed": false,
+    "semantic_identity_changed": false,
+    "feature_identity_changed": false,
+    "fluid_identity_changed": false,
+    "mesh_density_in_canonical_checksum": false,
+    "hud_reports_active_lod": true,
+    "focused_revalidation": "PENDING",
+    "full_world_regression": "PENDING",
+    "manual_graphical_recheck": "PENDING"
+  },
   "operational_frontier": {
     "owner": "origin/main:config/control/project-program-registry.v1.json",
     "program": "G",
     "branch": "feature/g7-semantic-field-fabric",
     "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
-    "legacy_global_active_frontiers_operational_owner": false
+    "stage_status": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED"
   },
   "project_control": {
-    "policy_owner": "origin/main:config/control/project-control-policy.v1.json",
-    "branch_passport": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
-    "auditor_entrypoint": "CONTROL_PROJECT.ps1",
-    "auditor_logic_owner": "origin/main:scripts/control/project_control.py",
-    "expected_candidate_health": "YELLOW",
-    "g_red_blocks_acceptance": true,
-    "unrelated_program_red_blocks_g_acceptance": false,
-    "reason": "Automated G7.4 acceptance is green. G remains YELLOW only because manual graphical observation is still required before G7.4 ACCEPTED."
-  },
-  "fix1": {
-    "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
-    "launcher_fix": "Keep G7.4 PowerShell launchers/runners ASCII-only and AST-parse them before runtime.",
-    "runtime_semantics_changed": false
-  },
-  "fix2": {
-    "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
-    "first_m5_result": "92 assertions, 3 failures",
-    "root_cause": "A faster peer could publish FINAL_CONVERGENCE_LOCKED while the slower peer was still in WAIT_CONVERGENCE_PEER; the earlier barrier rejected that monotonic later state.",
-    "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
-    "shared_driver": "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
-    "focused_windows_rerun": {
-      "tested_head": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17",
-      "assertions": 92,
-      "failures": 0,
-      "result": "PASS",
-      "final_clients_passed": "PASS"
-    },
-    "full_world_regression_after_fix2": "PASS",
-    "production_gameplay_semantics_changed": false
+    "expected_health_before_fix3_focused_pass": "RED",
+    "reason": "The lab runtime changed after the previously automated tested head. PC0 freshness therefore requires a new focused tested head before full acceptance can resume.",
+    "blockers": [
+      "G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED",
+      "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED",
+      "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
+    ]
   },
   "implementation": {
     "scene": "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn",
     "script": "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd",
-    "launcher": "START_G7_4_SEMANTIC_FIELD_LAB.ps1",
+    "manifest": "res://config/procedural/g7-4-semantic-field-lab.v1.json",
     "focused_runner": "RUN_G7_4_SEMANTIC_FIELD_LAB_TESTS.ps1",
     "automated_acceptance_runner": "RUN_G7_4_FULL_ACCEPTANCE.ps1",
+    "launcher": "START_G7_4_SEMANTIC_FIELD_LAB.ps1",
     "production_semantic_runtime_changed": false
   },
-  "semantic_patch": {
-    "sample_count": 561,
-    "expected_faces": ["PX", "PZ"]
-  },
-  "visualized_fields": [
-    "geo/surface-height-m",
-    "geo/valley-influence",
-    "geo/river-distance-m",
-    "geo/river-width-m",
-    "geo/fluid-surface-distance-m"
-  ],
-  "vocabulary_only_not_faked": [
-    "geo/slope",
-    "geo/curvature",
-    "geo/drainage-potential",
-    "geo/continentalness",
-    "geo/temperature-baseline",
-    "geo/moisture-baseline"
-  ],
-  "presentation": {
-    "canonical_surface_height_drives_geometry": true,
-    "selected_field_drives_color_only": true,
-    "river_centerline_is_overlay_only": true,
-    "camera_in_canonical_checksum": false,
-    "color_in_canonical_checksum": false,
-    "mesh_density_in_canonical_checksum": false,
-    "hud_in_canonical_checksum": false,
-    "presentation_manifest_is_world_identity": false
-  },
-  "scope_audit": {
-    "base": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
-    "changed_files": 21,
-    "unexpected_files": 0,
-    "shared_m5_acceptance_driver_changed": true,
-    "production_semantic_runtime_changed": false,
-    "production_network_runtime_changed": false,
-    "g3_g5_g6_adapters_changed": false,
-    "composer_changed": false,
-    "hydrology_changed": false,
-    "matter_changed": false
-  },
-  "automated_acceptance": {
-    "status": "PASS",
-    "tested_head": "594f96a1337a08d62e6371de61e43640f99aab4a",
-    "marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
-    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-    "project_control_revision": "PC0-2026-08-10-R1",
-    "pc0_operational_g_frontier": "PASS",
-    "pc0_g_health_not_red": "PASS",
-    "g7_3_accepted_ancestor": "PASS",
-    "visual_lab_scope": "PASS",
-    "five_adapter_backed_semantic_fields": "PASS",
-    "six_vocabulary_only_fields_not_faked": "PASS",
-    "world_core_regression": "PASS",
-    "working_tree": "CLEAN"
-  },
   "manual_graphical_acceptance": {
-    "status": "PENDING",
+    "status": "RECHECK_REQUIRED_AFTER_FIX3",
     "required": true,
     "checks": [
-      "field switching changes color but not geometry",
-      "surface-height mode readable",
-      "valley-influence mode readable",
-      "river-distance corridor readable",
-      "river-width mode readable",
-      "fluid-surface-distance visually distinct",
+      "W/S visibly changes presentation LOD across LOD0..LOD3 thresholds",
+      "HUD reports active LOD stride mesh-grid and camera distance",
+      "near mesh reaches 33x17 and far mesh reaches 5x3",
+      "semantic source remains 561 samples while mesh density changes",
+      "1..5 changes field coloring without changing selected LOD geometry",
       "river centerline overlay toggles",
-      "camera controls work",
-      "vocabulary-only fields are not faked",
-      "no obvious PX/PZ visual seam"
+      "no obvious PX/PZ semantic seam"
     ]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
