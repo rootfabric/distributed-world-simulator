@@ -4,6 +4,7 @@
   "decision": "IMPLEMENTED_CANDIDATE",
   "branch": "feature/t1a5-interactive-runtime-execution",
   "base_head": "a14e6f04c265467e1590106ace8439bddae19ddb",
+  "candidate_head": "a6fb2d2a1e0db1fd2b1f3773181d6830402cbccc",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
