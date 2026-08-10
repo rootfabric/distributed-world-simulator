@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX3_PRESENTATION_LOD_MANUAL_VISIBILITY_CONFIRMED_FOCUSED_REVALIDATION_REQUIRED",
+  "decision": "FIX3_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -27,13 +27,29 @@
     "fluid_identity_changed": false,
     "mesh_density_in_canonical_checksum": false,
     "hud_reports_active_lod": true,
-    "focused_revalidation": "PENDING_AFTER_JSON_NUMERIC_NORMALIZATION_FIX",
+    "focused_revalidation": {
+      "status": "PASS",
+      "tested_head": "667648392c1c7b523ec6d043115fdcc36820fef7",
+      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+      "g7_0_assertions": 180,
+      "g7_1_assertions": 59,
+      "g7_2_assertions": 52,
+      "g7_3_assertions": 122,
+      "g7_4_assertions": 61,
+      "g7_4_failures": 0,
+      "headless_lab_smoke": "PASS",
+      "headless_semantic_samples": 561,
+      "headless_fields": 5,
+      "headless_vocabulary_only": 6,
+      "headless_faces": ["PX", "PZ"],
+      "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
+    },
     "full_world_regression": "PENDING",
     "manual_graphical_recheck": "LOD0_TO_LOD3_AND_VISIBLE_GEOMETRY_CHANGE_PASS_BY_USER_OBSERVATION"
   },
   "project_control": {
-    "expected_health": "RED_UNTIL_FOCUSED_REVALIDATION_PASS",
-    "blockers": ["G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+    "expected_health": "YELLOW_AFTER_FOCUSED_PASS_UNTIL_FULL_REGRESSION_AND_REMAINING_MANUAL_CHECKS",
+    "blockers": ["G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
   },
   "manual_graphical_acceptance": {
     "status": "PARTIAL_PASS_LOD_VISIBILITY_CONFIRMED",
