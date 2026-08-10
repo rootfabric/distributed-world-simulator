@@ -77,11 +77,7 @@ function Assert-PowerShellParses {
     param([Parameter(Mandatory = $true)][string]$Path)
     $Tokens = $null
     $Errors = $null
-    [System.Management.Automation.Language.Parser]::ParseFile(
-        $Path,
-        [ref]$Tokens,
-        [ref]$Errors
-    ) | Out-Null
+    [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$Tokens, [ref]$Errors) | Out-Null
     if ($Errors.Count -gt 0) {
         $Errors | Format-List | Out-Host
         throw "PowerShell parse failed: $Path"
@@ -128,16 +124,12 @@ if ($null -eq (Get-Command git -ErrorAction SilentlyContinue)) { throw "git is r
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
     $GodotPath = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 }
-if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
-    throw "Godot binary not found: $GodotPath"
-}
+if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) { throw "Godot binary not found: $GodotPath" }
 
 Write-Host "=== G7.4 FULL ACCEPTANCE: repository / architecture / PC0 preflight ==="
 Remove-SafeWindowsProfileTransient -Phase "stale-preflight"
 $StatusBefore = Invoke-GitText @("status", "--porcelain")
-if (-not [string]::IsNullOrWhiteSpace($StatusBefore)) {
-    throw "G7.4 full acceptance requires a clean working tree:`n$StatusBefore"
-}
+if (-not [string]::IsNullOrWhiteSpace($StatusBefore)) { throw "G7.4 full acceptance requires a clean working tree:`n$StatusBefore" }
 foreach ($Ref in @($MainRef, $G73AcceptedCommit)) {
     & git -C $RootDir rev-parse --verify --quiet $Ref | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Missing required ref/commit $Ref. Run git fetch origin first." }
@@ -179,9 +171,7 @@ $ChangedFilesText = Invoke-GitText @("diff", "--name-only", "$G73AcceptedCommit.
 $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if ($ChangedFiles.Count -eq 0) { throw "G7.4 diff is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G74AllowedPath $_) })
-if ($Unexpected.Count -gt 0) {
-    throw "G7.4 changed files outside visual-lab/control/shared-M5-fix allowlist:`n$($Unexpected -join "`n")"
-}
+if ($Unexpected.Count -gt 0) { throw "G7.4 changed files outside visual-lab/control/shared-M5-fix allowlist:`n$($Unexpected -join "`n")" }
 & git -C $RootDir diff --check "$G73AcceptedCommit...HEAD"
 if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for accepted G7.3...G7.4" }
 Write-Host "G7.4 changed-file scope: PASS ($($ChangedFiles.Count) files)"
@@ -198,9 +188,7 @@ Write-Host "G7.4 Windows PowerShell ASCII + parse: PASS"
 
 Write-Host "=== G7.4 FULL ACCEPTANCE: Project Control audit ==="
 Invoke-PowerShellChild (Join-Path $RootDir "CONTROL_PROJECT.ps1") @("-NoFetch", "-NoFailOnRed")
-if (-not (Test-Path -LiteralPath $ControlReportPath -PathType Leaf)) {
-    throw "PC0 did not produce project-control-report.json"
-}
+if (-not (Test-Path -LiteralPath $ControlReportPath -PathType Leaf)) { throw "PC0 did not produce project-control-report.json" }
 $ControlReport = Get-Content -LiteralPath $ControlReportPath -Raw | ConvertFrom-Json
 $GControl = @($ControlReport.programs | Where-Object { [string]$_.program -eq "G" }) | Select-Object -First 1
 if ($null -eq $GControl) { throw "PC0 report does not contain G program" }
@@ -235,9 +223,7 @@ finally {
 
 Write-Host "=== G7.4 FULL ACCEPTANCE: final hygiene ==="
 $StatusAfter = Invoke-GitText @("status", "--porcelain")
-if (-not [string]::IsNullOrWhiteSpace($StatusAfter)) {
-    throw "G7.4 full acceptance left tracked/untracked changes:`n$StatusAfter"
-}
+if (-not [string]::IsNullOrWhiteSpace($StatusAfter)) { throw "G7.4 full acceptance left tracked/untracked changes:`n$StatusAfter" }
 & git -C $RootDir diff --check "$G73AcceptedCommit...HEAD"
 if ($LASTEXITCODE -ne 0) { throw "Final G7.4 git diff --check failed" }
 
