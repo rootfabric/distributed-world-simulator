@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 42,
+  "registry_generation": 43,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T22:58:00Z",
+  "updated_at_utc": "2026-08-10T23:19:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -35,13 +35,13 @@
       "short_description": "Construction composition/failure/recovery semantics over accepted T1A.7 runtime recovery, interest and selective-scale evidence.",
       "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
       "expected_outcome": "Runtime subjects expose deterministic operability/failure semantics, dependency failures and recoveries remain revisioned/recoverable, and later T1B composition can be proven before heterogeneous T2 scale.",
-      "current_stage": "T1B.0 Runtime Failure Contract",
-      "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
-      "progress_note": "T1A.7 Runtime Recovery / Interest / Scale remains ACCEPTED. T1B.0 Windows focused gate passed on checkout 1f08defe57f592f5e2698da71a1e3180b0875014 with Godot 4.7.1.stable.double.custom_build.a13da4feb. The accepted parent chain reran green, including T1A.6 multiplayer 25, T1A.7.2 interest 34 and late-interest/reconnect 35, T1A.7.3 dirty/selective 44 and selective processes 35, T1A.7.4 scale/soak 2394 across two cases, and T1A.7.5 composition 56. The new T1B.0 runtime failure contract passed 39 assertions. The 10k inherited scale case retained 800 projected vs 32000 broadcast baseline messages, 1024 targeted vs 7168 avoided mutation deliveries, zero planner failures and FULL_AUTHORITATIVE_BASELINE reconnect. Only a fresh full world/core regression on the exact same checkout remains before acceptance. T2.0 stays blocked until C22 MAIN_INTEGRATED + TS0.4 ceiling classification + PC0 convergence.",
-      "last_accepted_checkpoint": "T1A.7 Runtime Recovery / Interest / Scale",
-      "next_stage": "Without fetch/reset, run RUN_WORLD_REGRESSION_TESTS.ps1 on focused checkout 1f08defe57f592f5e2698da71a1e3180b0875014. If green, accept T1B.0 and advance to T1B.1 Dependency Failure Propagation.",
+      "current_stage": "T1B.1 Dependency Failure Propagation",
+      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+      "progress_note": "T1B.0 Runtime Failure Contract is ACCEPTED on exact Windows focused/full checkout 1f08defe57f592f5e2698da71a1e3180b0875014. Focused reran the accepted T1A.7 chain and passed the new T1B.0 contract with 39 assertions. Full world/core regression on the same checkout passed RL3 representation-aware network streaming 175, RL3 representation streaming processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit_code 0 and the NX4 final marker. T1B.1 is now implemented as a pure bounded dependency failure propagator scoped to runtime IDs inside one canonical construct. It produces deterministic topological proposals but never commits state. OFFLINE upstream makes dependency unavailable, DEGRADED remains available; cycle, duplicate/self edge, missing subject edge, mixed-construct input and node/edge bound overflow are rejected. Acceptance covers generator->bus->console->door with optional bus->lamp degradation and deterministic recovery. T2.0 remains blocked until C22 MAIN_INTEGRATED + TS0.4 ceiling classification + PC0 convergence.",
+      "last_accepted_checkpoint": "T1B.0 Runtime Failure Contract",
+      "next_stage": "Run RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1 on exact Windows double Godot. If green, preserve the same checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only T1B.1 acceptance unlocks T1B.2 Runtime Command Failure Semantics.",
       "health_declared": "YELLOW",
-      "blockers": ["T1B0_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1B1_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B1_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
