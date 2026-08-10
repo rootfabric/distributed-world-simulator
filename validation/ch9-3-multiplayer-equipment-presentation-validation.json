@@ -4,7 +4,7 @@
   "branch": "feature/ch9-3-multiplayer-equipment-presentation",
   "base_branch": "feature/ch9-2-inventory-character-composition",
   "base_checkpoint": "81009a47b64964f32e73c5ccd17167a446bf9b9f",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
   "goal": "Replicate server-authoritative character equipment through the existing Item Graph channel and drive the accepted character equipment presenter on every compatible graphical client without adding equipment state to movement snapshots.",
   "canonical_model": {
     "new_item_relation_added": false,
@@ -89,7 +89,28 @@
     "replica_slot_preservation": "CHECKED: canonical CONTAINER slot_index is preserved into the production equipment slot container",
     "delta_transport_reuse": "CHECKED: M3 ITEM_COMMAND already computes CanonicalItemGraphDelta, puts it in origin COMMAND_RESULT and broadcasts ITEM_GRAPH_DELTA to peers",
     "blocking_network_command_in_same_tree": "AVOIDED: ENet gate uses nonblocking equipment command so server and clients continue polling in one SceneTree",
-    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+    "windows_execution": "USER_RUN_ON_GODOT_4_7_1_DOUBLE_A13DA4FEB"
+  },
+  "windows_first_run": {
+    "engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb",
+    "head": "ce7e868c823ca40e73de3fae6d3683d8b36bc95b",
+    "editor_import": "PASS",
+    "ch9_0_regression": "PASS_62",
+    "ch9_1_regression": "PASS_76",
+    "ch9_2_regression": "PASS_59",
+    "command_contract": "PASS_2",
+    "authority": "PASS_41",
+    "replica_projection": "BLOCKED_BY_PARSE_ERROR",
+    "failure": "CH9.3 replica adapter redeclared inherited Definition and ContainerState members from M7 adapter",
+    "fix_commit": "7293baa494b609eddfd3c0704961f3a3a8dcea2b"
+  },
+  "fix1": {
+    "scope": "PARSER_ONLY",
+    "change": "Remove duplicate Definition and ContainerState declarations from CH9.3 adapter and use inherited M7 members.",
+    "architecture_changed": false,
+    "network_contract_changed": false,
+    "item_graph_semantics_changed": false,
+    "rerun_required": true
   },
   "deferred": [
     "CH9.4 equipment persistence recovery reconnect durability",
@@ -101,13 +122,13 @@
     "historic CH8 final-runner and PC0 character-frontier handoff remain recorded lineage work"
   ],
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch9_0_regression": "PENDING",
-    "ch9_1_regression": "PENDING",
-    "ch9_2_regression": "PENDING",
-    "command_contract": "PENDING",
-    "authority": "PENDING",
-    "replica_projection": "PENDING",
+    "editor_import": "PASS_ON_FIRST_RUN",
+    "ch9_0_regression": "PASS_62_ON_FIRST_RUN",
+    "ch9_1_regression": "PASS_76_ON_FIRST_RUN",
+    "ch9_2_regression": "PASS_59_ON_FIRST_RUN",
+    "command_contract": "PASS_2_ON_FIRST_RUN",
+    "authority": "PASS_41_ON_FIRST_RUN",
+    "replica_projection": "RERUN_PENDING_AFTER_FIX1",
     "character_presentation": "PENDING",
     "real_enet_replication": "PENDING",
     "candidate_runner": "PENDING"
