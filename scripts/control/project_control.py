@@ -149,6 +149,12 @@ def audit_program(
 
     result["passport_path"] = passport_path
     result["passport_loaded"] = True
+    result["dependencies"] = list(passport.get("dependencies", []))
+    result["ownership_claims"] = [
+        dict(claim) for claim in passport.get("ownership_claims", [])
+        if isinstance(claim, dict)
+    ]
+    result["forbidden_foundation_ownership"] = list(passport.get("forbidden_foundation_ownership", []))
 
     missing = [f for f in policy.get("required_branch_passport_fields", []) if f not in passport]
     if missing:
@@ -199,18 +205,28 @@ def audit_program(
     # Only branches that own runtime paths need runtime-tested-head freshness.
     runtime_paths = list(passport.get("runtime_paths", []))
     tested = passport.get("tested_heads", {}) if isinstance(passport.get("tested_heads"), dict) else {}
-    runtime_tested = str(tested.get("runtime", ""))
+    result["tested_heads"] = {
+        "runtime": str(tested.get("runtime", "")),
+        "focused": str(tested.get("focused", "")),
+        "full_regression": str(tested.get("full_regression", "")),
+    }
+    runtime_tested = str(result["tested_heads"]["runtime"])
     result["runtime_tested_head"] = runtime_tested
+    result["runtime_validation_freshness"] = "NOT_APPLICABLE" if not runtime_paths else "PENDING"
     if runtime_paths:
         if runtime_tested:
             if not ref_exists(runtime_tested):
+                result["runtime_validation_freshness"] = "MISSING_HEAD"
                 set_health(result, "RED", "TESTED_HEAD_MISSING", runtime_tested)
             else:
                 post_test = changed_files(runtime_tested, branch_ref)
                 runtime_after = [p for p in post_test if matches_any(p, runtime_paths)]
                 result["runtime_changes_after_test"] = runtime_after
                 if runtime_after:
+                    result["runtime_validation_freshness"] = "STALE"
                     set_health(result, "RED", "RUNTIME_VALIDATION_STALE", "; ".join(runtime_after[:12]))
+                else:
+                    result["runtime_validation_freshness"] = "FRESH"
         elif str(central.get("stage_status", "")) == "ACCEPTED":
             set_health(result, "RED", "ACCEPTED_WITHOUT_RUNTIME_TESTED_HEAD", "Accepted active stage has no tested_heads.runtime")
         else:
@@ -268,7 +284,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         branch = p.get("branch") or "—"
         why = f"{p.get('short_description','')} {p.get('purpose','')}".replace("|", "/")
         progress = str(p.get("progress_note", "")).replace("|", "/")
-        lines.append(f"| {p['program']} | `{branch}` | {why} | {p.get('current_stage','')} | {progress} | {p.get('next_stage','')} | **{p.get('health','')}** |")
+        stage = f"{p.get('current_stage','')} (`{p.get('stage_status','')}`)"
+        lines.append(f"| {p['program']} | `{branch}` | {why} | {stage} | {progress} | {p.get('next_stage','')} | **{p.get('health','')}** |")
 
     lines.extend(["", "## Detailed branch cards", ""])
     for p in report["programs"]:
@@ -292,6 +309,31 @@ def markdown_report(report: dict[str, Any]) -> str:
         ])
         if p.get("blockers"):
             lines.extend(["", "**Blockers:** " + ", ".join(f"`{x}`" for x in p["blockers"])])
+        if p.get("tested_heads"):
+            tested_heads = dict(p.get("tested_heads", {}))
+            lines.extend([
+                "",
+                "**Validation heads:** "
+                + f"runtime `{tested_heads.get('runtime') or '—'}`, "
+                + f"focused `{tested_heads.get('focused') or '—'}`, "
+                + f"full regression `{tested_heads.get('full_regression') or '—'}`.  ",
+                f"**Runtime freshness:** `{p.get('runtime_validation_freshness', 'UNKNOWN')}`",
+            ])
+            if p.get("runtime_changes_after_test"):
+                lines.append("Runtime changes after tested head: " + ", ".join(f"`{x}`" for x in p["runtime_changes_after_test"][:20]))
+        if p.get("dependencies"):
+            lines.extend(["", "**Dependencies:** " + ", ".join(f"`{x}`" for x in p["dependencies"])])
+        if p.get("ownership_claims"):
+            lines.extend(["", "**Ownership / foundation boundaries:**"])
+            for claim in p["ownership_claims"]:
+                lines.append(
+                    f"- `{claim.get('foundation','')}` → `{claim.get('claimed_owner','')}` — {claim.get('scope','')}"
+                )
+        if p.get("forbidden_foundation_ownership"):
+            lines.extend([
+                "",
+                "**Must not own:** " + ", ".join(f"`{x}`" for x in p["forbidden_foundation_ownership"]),
+            ])
         if p.get("branch"):
             lines.extend(["", f"Git: head `{p.get('head','?')}`, main-only `{p.get('main_commits_since_merge_base','?')}`, branch-only `{p.get('branch_commits_since_merge_base','?')}`."])
         if p.get("findings"):
