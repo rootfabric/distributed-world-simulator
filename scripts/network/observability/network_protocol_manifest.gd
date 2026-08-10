@@ -20,6 +20,7 @@ const RealtimeChannelPolicyScript = preload("res://scripts/network/realtime/real
 const PlayerInputBatchScript = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDeltaScript = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const ConstructionRuntimeSnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/construction_runtime_snapshot.gd")
 const ENetPortScript = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 const InputSequenceScript = preload("res://scripts/network/simulation/input_sequence.gd")
 const FixedTickSchedulerScript = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
@@ -88,6 +89,7 @@ static func contract_versions() -> Dictionary:
 			"validation_policy": CanonicalItemGraphDeltaScript.VALIDATION_POLICY,
 		},
 		"compact_gameplay_snapshot": {"schema": CompactGameplaySnapshotScript.SCHEMA},
+		"construction_runtime_snapshot": {"schema": ConstructionRuntimeSnapshotScript.SCHEMA},
 		"input_sequence": {
 			"schema": InputSequenceScript.SCHEMA,
 			"max_sequence": InputSequenceScript.MAX_SEQUENCE,
