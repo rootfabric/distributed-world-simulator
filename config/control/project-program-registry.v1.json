@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 28,
+  "registry_generation": 29,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T12:48:00Z",
+  "updated_at_utc": "2026-08-10T12:56:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -14,16 +14,16 @@
       "passport_path": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Semantic Field Fabric and its derived visual lab on top of accepted G3/G5/G6 world-generation truth.",
-      "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
-      "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density without debug-shell occlusion artifacts.",
-      "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX4_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
-      "progress_note": "Fix4 presentation-only shell/ribbon is now fully automated-validated. Focused Windows validation passed on executable runtime head e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f with G7.4 contracts 80 assertions / 0 failures and headless semantic lab smoke PASS over 561 samples, five adapter-backed fields, six vocabulary-only fields and PX/PZ faces. Stable Godot UID tracking at f704780b8ba658b280591c463301f275f505da3f and the acceptance-harness allowlist fix at ddacaf18a5c4b57c708562538a71065240d73ddb change no executable semantic runtime. Fresh full acceptance on ddacaf18a5c4b57c708562538a71065240d73ddb passed PC0 G frontier, G health, G7.3 ancestor, visual-lab scope, world/core regression through NX4 with 6 PASS / 0 FAIL, STOPPED lifecycle, and CLEAN working tree. User screenshots confirm the false black sphere-occlusion holes are gone and the cyan diagnostic river ribbon is clearly visible. Only three manual graphical checks remain: F toggle, fixed-LOD fields 1..5 recolor-only behavior, and PX/PZ seam inspection.",
-      "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Finish the three remaining G7.4 manual graphical checks. If green, accept G7.4, run G7 full acceptance, then proceed to G8 geomorphology.",
+      "short_description": "Semantic Field Fabric final acceptance over accepted G3/G5/G6 world-generation truth.",
+      "purpose": "Close G7 as a stable semantic world-field foundation independent from SurfaceCellKey, LOD, camera and representation before G8 geomorphology begins.",
+      "expected_outcome": "G7.0 through G7.4 remain accepted together under one full acceptance gate, preserving semantic identity, provenance, cross-cell/cross-LOD invariance and derived-only presentation.",
+      "current_stage": "G7 Full Acceptance",
+      "stage_status": "G7_4_ACCEPTED_FULL_ACCEPTANCE_PENDING",
+      "progress_note": "G7.4 Semantic Field Lab is ACCEPTED. Fix4 automated acceptance passed on ddacaf18a5c4b57c708562538a71065240d73ddb with world/core regression 6 PASS / 0 FAIL through NX4, STOPPED lifecycle and clean working tree. Final user graphical observation confirms F river toggle, fixed-LOD fields 1..5 recolor-only behavior, no obvious PX/PZ seam, stable 561 semantic samples, visible LOD0..LOD3, no false black shell holes and visible cyan diagnostic river ribbon. Abrupt LOD switching is non-blocking presentation tuning debt. G7 now requires only its aggregate Full Acceptance gate before G8 Geomorphology.",
+      "last_accepted_checkpoint": "G7.4 Semantic Field Lab",
+      "next_stage": "Run RUN_G7_FULL_ACCEPTANCE.ps1. If green, accept G7 Semantic Field Fabric as a complete checkpoint and advance PC0 to G8 Geomorphology.",
       "health_declared": "YELLOW",
-      "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+      "blockers": ["G7_FULL_ACCEPTANCE_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -153,8 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G7.4 ACCEPTED", "blocked_by": "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
-    {"stage": "G7 FULL ACCEPTANCE", "blocked_by": "G7_4_ACCEPTED_REQUIRED"},
+    {"stage": "G8 START", "blocked_by": "G7_FULL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
