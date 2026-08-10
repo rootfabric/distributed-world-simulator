@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 34,
+  "registry_generation": 35,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T14:37:00Z",
+  "updated_at_utc": "2026-08-10T14:45:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -17,13 +17,13 @@
       "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
       "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
       "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
-      "current_stage": "G8.0 Geomorphology Contracts",
-      "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
-      "progress_note": "G7 Semantic Field Fabric is ACCEPTED after the aggregate Windows gate passed on tested head a75a60b6da739cc759e1fb40510a98942bce4cde: G7.0-G7.4 ACCEPTED, semantic identity/provenance/cross-cell/presentation separation PASS, world/core regression through NX4 PASS, RL3 representation streaming 37 assertions PASS, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED and working tree CLEAN. G8.0 now starts on feature/g8-geomorphology from accepted G7 metadata head d9a900c28dee3914bcaa4d6f6bde126aef56a77e. Initial contracts define a deterministic profile and five-component signed deformation sample; valley and river components may only lower the procedural surface. No SurfaceCellKey, LOD, authority, interest, Matter, material, persistence or network identity is introduced. Stable UID sidecars are tracked. G8.0 acceptance requires the focused contracts gate plus a fresh full world/core regression on the same checkout before G8.1 may start.",
-      "last_accepted_checkpoint": "G7 Semantic Field Fabric",
-      "next_stage": "Run RUN_G8_0_GEOMORPHOLOGY_CONTRACTS_TESTS.ps1 first. If green, preserve the exact checkout and run RUN_G8_0_FULL_ACCEPTANCE.ps1. Only a full PASS accepts G8.0 and unlocks G8.1 Valley Incision Baseline.",
+      "current_stage": "G8.1 Valley Incision Baseline",
+      "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_VALIDATION_PENDING",
+      "progress_note": "G8.0 Geomorphology Contracts is ACCEPTED after exact-Windows full acceptance on head 7a34c5d58b5a766fd8f4da46073dfcea29673fe9 with G7 parent PASS, geomorphology contracts/ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. G8.1 is now implemented as a replaceable valley-only baseline over accepted geo/surface-height-m + geo/valley-influence semantics. Formula: valley_delta_m = -valley_max_depth_m * pow(valley_influence, valley_exponent). Zero influence gives zero incision; unit influence reaches the profile cap; the result is monotonic and profile-bounded while river/bank/floodplain/erosion-deposition components remain zero. No SurfaceCellKey, LOD, Matter, authority, persistence, material or network ownership is introduced. Focused Windows validation is pending.",
+      "last_accepted_checkpoint": "G8.0 Geomorphology Contracts",
+      "next_stage": "Run RUN_G8_1_VALLEY_INCISION_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, record the exact tested head and run a fresh G8.1 full/world regression before G8.2 River Channel Incision.",
       "health_declared": "YELLOW",
-      "blockers": ["G8_0_FOCUSED_VALIDATION_REQUIRED", "G8_0_FULL_WORLD_REGRESSION_REQUIRED"]
+      "blockers": ["G8_1_FOCUSED_VALIDATION_REQUIRED", "G8_1_FULL_WORLD_REGRESSION_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -153,7 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G8.1 START", "blocked_by": "G8_0_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G8.2 START", "blocked_by": "G8_1_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
