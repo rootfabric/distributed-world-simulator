@@ -1,0 +1,88 @@
+{
+  "schema": "planet_simulator.t1a7_runtime_recovery_validation.v1",
+  "checkpoint": "T1A7_1_RUNTIME_RECOVERY_CONTRACT",
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "branch": "feature/t1a7-runtime-recovery-interest-scale",
+  "base_head": "06f332dc99287e94ba4515ce51346c4f639d240f",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "architecture_reuse_audit": {
+    "result": "PASS",
+    "durability_owner": "existing M0 aggregate transaction repository/coordinator foundation",
+    "construction_existing_bridge": "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
+    "matter_pattern_reviewed": true,
+    "mw7_interest_pattern_reviewed": true,
+    "new_persistence_repository": false,
+    "new_transaction_coordinator": false,
+    "new_authority_registry": false,
+    "new_interest_identity": false,
+    "new_network_channel": false,
+    "legacy_construction_m0_state_adapter_changed_semantically": false
+  },
+  "recovery_contract": {
+    "schema": "planet_simulator.construction_runtime_persistence_state.v1",
+    "persisted_sections": [
+      "construct_id",
+      "construct_checksum",
+      "runtime_state",
+      "operation_ledger",
+      "power_tick",
+      "power_storage",
+      "power_execution_profile"
+    ],
+    "transient_fields_persisted": false,
+    "runtime_operation_replay_state_persisted": true,
+    "utility_effect_continuity_persisted": true,
+    "power_tick_storage_profile_consistency_validated": true,
+    "construct_checksum_pin_required": true
+  },
+  "m0_integration": {
+    "runtime_aggregate_kind": "CONSTRUCTION_RUNTIME",
+    "runtime_aggregate_scope": "per construct",
+    "existing_repository_reused": true,
+    "existing_coordinator_reused": true,
+    "existing_adapter_registry_reused": true,
+    "runtime_adapter_is_separate_extension": true,
+    "checkpoint_is_explicit": true,
+    "per_command_crash_atomicity_claimed": false
+  },
+  "candidate": {
+    "runtime_contract": "scripts/construction/behavior/construction_runtime_persistence_state.gd",
+    "runtime_m0_adapter": "scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd",
+    "runtime_m0_translator": "scripts/construction/authoritative/construction_runtime_m0_translator.gd",
+    "m0_bridge_extension": "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
+    "recoverable_runtime": "scripts/labs/t1/t1a7/t1_d0_recoverable_runtime_executor.gd",
+    "acceptance_test": "tests/construction/t1a7_runtime_recovery_acceptance.gd",
+    "focused_runner": "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1",
+    "head_before_validation_metadata": "18c07e433110a942c7e4e598db0153eeab6def2f"
+  },
+  "acceptance_scenario": {
+    "fresh_m0_aggregate_count_before_runtime_checkpoint": 3,
+    "m0_aggregate_count_after_runtime_checkpoint": 4,
+    "mutations_before_checkpoint": ["STOP_GENERATOR", "TOGGLE_LIGHT", "OPEN_DOOR"],
+    "restart_recovery_required": true,
+    "recovered_state_checksum_equivalence_required": true,
+    "old_operation_replay_without_effect_reapply_required": true,
+    "stale_command_no_runtime_or_utility_mutation_required": true,
+    "second_checkpoint_and_second_restart_required": true,
+    "canonical_construct_snapshot_unchanged_required": true
+  },
+  "required_validation": {
+    "runner": "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "dependencies": [
+      "T1A.4 interactive fixture binding",
+      "C5B affordance runtime contracts",
+      "T1A.5 interactive runtime execution",
+      "T1A.5 transactional runtime effects"
+    ],
+    "result": "PENDING"
+  },
+  "next_after_acceptance": "T1A7_2_LATE_INTEREST_BASELINE_AND_RECONNECT"
+}
