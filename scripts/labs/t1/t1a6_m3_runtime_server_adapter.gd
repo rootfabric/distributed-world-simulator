@@ -39,21 +39,21 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 	if not _is_peer_compatible(peer_id, session_id):
 		super._handle_message(peer_id, session_id, payload)
 		return
-	_handle_construction_runtime_command(peer_id, payload)
+	_handle_construction_runtime_command(peer_id, session_id, payload)
 
 
 func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	super._handle_join(peer_id, session_id, payload)
-	if _peer_to_player.has(peer_id):
+	if _peer_to_player.has(peer_id) and String(_peer_to_session.get(peer_id, "")) == session_id:
 		_send_runtime_snapshot(peer_id, "JOIN_BASELINE")
 
 
-func _handle_construction_runtime_command(peer_id: String, payload: Dictionary) -> void:
+func _handle_construction_runtime_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	_runtime_commands += 1
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
-	if not _peer_to_player.has(peer_id):
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
 		_runtime_rejections += 1
-		_send_runtime_result(peer_id, operation_id, _failure("T1A6_RUNTIME_PLAYER_NOT_JOINED"))
+		_send_runtime_result(peer_id, operation_id, _failure("STALE_TRANSPORT_SESSION"))
 		return
 	if _t1_runtime == null:
 		_runtime_rejections += 1
