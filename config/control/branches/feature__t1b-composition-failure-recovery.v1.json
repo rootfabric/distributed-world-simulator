@@ -5,38 +5,36 @@
   "branch": "feature/t1b-composition-failure-recovery",
   "program": "T",
   "role": "PRIMARY_FRONTIER",
-  "short_description": "Construction composition/failure/recovery semantics over the accepted T1A.7 runtime recovery, interest and selective-scale foundation.",
+  "short_description": "Construction composition/failure/recovery semantics over accepted T1A.7 runtime recovery, interest and selective-scale foundation.",
   "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state without creating a second aggregate, persistence path, authority registry or network correctness layer.",
-  "expected_outcome": "Runtime subjects expose deterministic ONLINE/DEGRADED/OFFLINE failure semantics, dependency failures propagate in bounded deterministic ways, failed commands have explicit policy, and checkpoint/reconnect recovery converges through the existing T1A.7 path.",
-  "current_stage": "T1B.1 Dependency Failure Propagation",
+  "expected_outcome": "Runtime subjects expose deterministic ONLINE/DEGRADED/OFFLINE failure semantics, dependency failures propagate in bounded deterministic ways, commands obey explicit operability policy, and checkpoint/reconnect recovery converges through the existing T1A.7 path.",
+  "current_stage": "T1B.2 Runtime Command Failure Semantics",
   "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-  "progress_note": "T1B.0 Runtime Failure Contract is ACCEPTED on exact Windows focused/full checkout 1f08defe57f592f5e2698da71a1e3180b0875014. Focused passed the complete inherited T1A.7 chain plus T1B.0 39 assertions; full regression passed RL3 representation-aware 175, RL3 process 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and the NX4 final marker. T1B.1 is implemented as a pure bounded dependency-failure propagator over existing runtime IDs inside one canonical construct. It computes deterministic topological proposals and never commits state itself. OFFLINE upstream makes dependency unavailable; DEGRADED upstream remains available. Cycle, duplicate/self edge, missing subject edge, mixed-construct input and node/edge bound overflow are rejected. Acceptance scenario covers generator->bus->console->door plus optional bus->lamp outage and deterministic recovery. T2.0 remains blocked by C22 MAIN_INTEGRATED + TS0.4 classification + PC0 convergence.",
-  "last_accepted_checkpoint": "T1B.0 Runtime Failure Contract",
-  "next_stage": "Run RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1 on Windows double Godot. If green, keep the exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only T1B.1 acceptance unlocks T1B.2 Runtime Command Failure Semantics.",
-  "parent_branch_or_checkpoint": "T1B.0 ACCEPTED on tested checkout 1f08defe57f592f5e2698da71a1e3180b0875014",
+  "progress_note": "T1B.1 Dependency Failure Propagation is ACCEPTED on the required preserved Windows checkout faff5f10f42d30a8769ee796fce26d93b8d24bcf by user-confirmed focused execution followed by a green full world/core regression. The supplied full evidence passes MW10 cross-region Matter processes 51, RL0 92, RL1 245, RL2 Matter 153, RL2 real asteroid 44, RL3 representation-aware 175, RL3 processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit 0 and the NX4 final marker. T1B.2 is now implemented as a failure-aware handler policy composed inside the existing ConstructionAffordanceRuntimeExecutor handler boundary; the executor core is unchanged. Action policies REQUIRE_ONLINE / ALLOW_DEGRADED / ALLOW_OFFLINE fail closed for undeclared actions, reject OFFLINE/DEGRADED before base handler/effect work, preserve terminal ledger replay, and keep the accepted T1A.5 transactional effect rollback boundary unchanged. T2.0 remains blocked by C22 MAIN_INTEGRATED + TS0.4 classification + PC0 convergence.",
+  "last_accepted_checkpoint": "T1B.1 Dependency Failure Propagation",
+  "next_stage": "Run the standalone T1B.2 command-failure acceptance and RUN_T1B2_COMMAND_FAILURE_TESTS.ps1 on exact Windows double Godot. If focused is green, keep that exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only T1B.2 acceptance unlocks T1B.3 Recovery / Reconnect Composition.",
+  "parent_branch_or_checkpoint": "T1B.1 ACCEPTED on required preserved checkout faff5f10f42d30a8769ee796fce26d93b8d24bcf",
   "base_commit": "bbddc9666777c0b4d6289ebc9483c8bfb0e90f14",
-  "dependencies": ["T1A7_ACCEPTED_RUNTIME_RECOVERY_INTEREST_SCALE", "T1B0_ACCEPTED_RUNTIME_FAILURE_CONTRACT", "C5B_CONSTRUCTION_RUNTIME_STATE", "C15_EXECUTABLE_UTILITIES", "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR"],
-  "owned_paths": ["scripts/construction/behavior/construction_runtime_failure_policy.gd", "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd", "tests/construction/t1b0_runtime_failure_contracts.gd", "tests/construction/t1b1_dependency_failure_propagation_acceptance.gd", "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1", "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1", "docs/plans/T1B_COMPOSITION_FAILURE_RECOVERY_PLAN_RU.md", "validation/t1b*-validation.json", "docs/checkpoints/*T1B*"],
+  "dependencies": ["T1A7_ACCEPTED_RUNTIME_RECOVERY_INTEREST_SCALE", "T1B0_ACCEPTED_RUNTIME_FAILURE_CONTRACT", "T1B1_ACCEPTED_DEPENDENCY_FAILURE_PROPAGATION", "C5B_CONSTRUCTION_RUNTIME_STATE", "C15_EXECUTABLE_UTILITIES", "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR"],
+  "owned_paths": ["scripts/construction/behavior/construction_runtime_failure_policy.gd", "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd", "scripts/construction/behavior/construction_runtime_command_failure_handler.gd", "tests/construction/t1b0_runtime_failure_contracts.gd", "tests/construction/t1b1_dependency_failure_propagation_acceptance.gd", "tests/construction/t1b2_runtime_command_failure_semantics_acceptance.gd", "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1", "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1", "RUN_T1B2_COMMAND_FAILURE_TESTS.ps1", "docs/plans/T1B_COMPOSITION_FAILURE_RECOVERY_PLAN_RU.md", "validation/t1b*-validation.json", "docs/checkpoints/*T1B*"],
   "watched_paths": ["scripts/construction/behavior/construction_runtime_subject_state.gd", "scripts/construction/behavior/construction_runtime_state_store.gd", "scripts/construction/behavior/construction_affordance_runtime_executor.gd", "scripts/construction/behavior/construction_runtime_persistence_state.gd", "scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd", "scripts/labs/t1/t1a7/**", "scripts/runtime/host_client/construction_runtime_replica_store.gd", "scripts/runtime/networked_gameplay/contracts/construction_runtime_snapshot.gd", "scripts/construction/utilities/**", "scripts/network/**"],
   "critical_watched_paths": ["scripts/construction/behavior/construction_runtime_subject_state.gd", "scripts/construction/behavior/construction_runtime_state_store.gd", "scripts/construction/behavior/construction_affordance_runtime_executor.gd", "scripts/construction/behavior/construction_runtime_persistence_state.gd", "scripts/simulation/transactions/aggregate_transaction_coordinator.gd", "scripts/network/contracts/network_protocol_manifest.gd"],
-  "runtime_paths": ["scripts/construction/behavior/construction_runtime_failure_policy.gd", "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd"],
-  "validation_paths": ["tests/construction/t1b0_runtime_failure_contracts.gd", "tests/construction/t1b1_dependency_failure_propagation_acceptance.gd", "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1", "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1", "validation/t1b0-runtime-failure-contracts-validation.json", "validation/t1b1-dependency-failure-propagation-validation.json", "docs/checkpoints/*T1B*", "docs/plans/T1B_COMPOSITION_FAILURE_RECOVERY_PLAN_RU.md"],
-  "tested_heads": {
-    "runtime": "",
-    "focused": "",
-    "full_regression": ""
-  },
+  "runtime_paths": ["scripts/construction/behavior/construction_runtime_failure_policy.gd", "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd", "scripts/construction/behavior/construction_runtime_command_failure_handler.gd"],
+  "validation_paths": ["tests/construction/t1b0_runtime_failure_contracts.gd", "tests/construction/t1b1_dependency_failure_propagation_acceptance.gd", "tests/construction/t1b2_runtime_command_failure_semantics_acceptance.gd", "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1", "RUN_T1B1_DEPENDENCY_FAILURE_TESTS.ps1", "RUN_T1B2_COMMAND_FAILURE_TESTS.ps1", "validation/t1b0-runtime-failure-contracts-validation.json", "validation/t1b1-dependency-failure-propagation-validation.json", "validation/t1b2-runtime-command-failure-semantics-validation.json", "docs/checkpoints/*T1B*", "docs/plans/T1B_COMPOSITION_FAILURE_RECOVERY_PLAN_RU.md"],
+  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
   "accepted_heads": {
-    "T1B0_RUNTIME_FAILURE_CONTRACT": "1f08defe57f592f5e2698da71a1e3180b0875014"
+    "T1B0_RUNTIME_FAILURE_CONTRACT": "1f08defe57f592f5e2698da71a1e3180b0875014",
+    "T1B1_DEPENDENCY_FAILURE_PROPAGATION": "faff5f10f42d30a8769ee796fce26d93b8d24bcf"
   },
   "ownership_claims": [
-    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "failure operability and local runtime dependency propagation are represented over existing canonical Construction runtime subjects"},
+    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "failure operability, construct-local dependency propagation and command operability policy are represented over existing canonical Construction runtime subjects"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "reuse accepted T1A.7 M0 persistence/recovery path; no T1B repository"},
-    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "future T1B replication reuses accepted ConstructionRuntimeSnapshot path; T1B.1 adds no message/channel"},
-    {"foundation": "WORLD_QUERY_FABRIC", "claimed_owner": "P1", "scope": "T1B.1 does not claim global dependency/world-query identity; graph is construct-local over existing runtime IDs"}
+    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "T1B continues to reuse accepted ConstructionRuntimeSnapshot path and adds no message/channel"},
+    {"foundation": "WORLD_QUERY_FABRIC", "claimed_owner": "P1", "scope": "T1B does not claim global dependency/world-query identity; dependency edges remain construct-local over existing runtime IDs"},
+    {"foundation": "WORLD_TRANSACTION_MODEL", "claimed_owner": "P0", "scope": "T1B.2 reuses the existing executor/ledger/effect rollback boundary and creates no transaction coordinator"}
   ],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC"],
-  "blockers": ["T1B1_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B1_FULL_WORLD_REGRESSION_PENDING"],
+  "blockers": ["T1B2_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B2_FULL_WORLD_REGRESSION_PENDING"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
