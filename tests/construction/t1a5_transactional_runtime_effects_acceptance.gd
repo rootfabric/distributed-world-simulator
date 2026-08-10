@@ -31,7 +31,7 @@ func _test_generic_transactional_effect_boundary() -> void:
 		Callable(self, "_generic_handler"),
 		Callable(self, "_generic_effect_committer")
 	), "Transactional executor setup failed")
-	var success_command := RuntimeExecutorScript.create_command(
+	var success_command: Dictionary = RuntimeExecutorScript.create_command(
 		"operation/t1a5/transaction/success",
 		"SET_VALUE",
 		"runtime/test/transaction",
@@ -44,11 +44,11 @@ func _test_generic_transactional_effect_boundary() -> void:
 	_assert(int(success_store.get_subject("runtime/test/transaction").revision) == 1, "Successful transaction revision mismatch")
 	_assert(int(success_store.get_subject("runtime/test/transaction").state.value) == 1, "Successful transaction state mismatch")
 	_assert(bool(Dictionary(success.get("details", {})).get("transactional_effect_committed", false)), "Successful transaction did not report committed effect")
-	var success_generation := success_store.get_generation()
+	var success_generation: int = int(success_store.get_generation())
 	var success_replay: Dictionary = success_executor.execute(success_command)
 	_assert(UtilsScript.canonical_json(success_replay) == UtilsScript.canonical_json(success), "Successful transaction replay changed result")
 	_assert(_effect_calls == 1, "Successful transaction replay committed effect twice")
-	_assert(success_store.get_generation() == success_generation, "Successful transaction replay changed runtime generation")
+	_assert(int(success_store.get_generation()) == success_generation, "Successful transaction replay changed runtime generation")
 
 	var fail_store = _make_store()
 	var fail_ledger = OperationLedgerScript.new()
@@ -61,8 +61,8 @@ func _test_generic_transactional_effect_boundary() -> void:
 		Callable(self, "_generic_handler"),
 		Callable(self, "_generic_effect_committer")
 	), "Rollback executor setup failed")
-	var before_store := UtilsScript.canonical_json(fail_store.to_dict())
-	var fail_command := RuntimeExecutorScript.create_command(
+	var before_store: String = String(UtilsScript.canonical_json(fail_store.to_dict()))
+	var fail_command: Dictionary = RuntimeExecutorScript.create_command(
 		"operation/t1a5/transaction/fail",
 		"SET_VALUE",
 		"runtime/test/transaction",
@@ -72,22 +72,22 @@ func _test_generic_transactional_effect_boundary() -> void:
 	var failed: Dictionary = fail_executor.execute(fail_command)
 	_assert_error(failed, "TEST_EFFECT_COMMIT_FAILED", "Failed effect commit was not rejected")
 	_assert(_effect_calls == 1, "Failed effect committer call count mismatch")
-	_assert(UtilsScript.canonical_json(fail_store.to_dict()) == before_store, "Failed effect commit left partial runtime state")
+	_assert(String(UtilsScript.canonical_json(fail_store.to_dict())) == before_store, "Failed effect commit left partial runtime state")
 	_assert(int(fail_store.get_subject("runtime/test/transaction").revision) == 0, "Failed effect commit left advanced subject revision")
-	_assert(fail_ledger.size() == 1, "Failed transaction was not terminally recorded")
+	_assert(int(fail_ledger.size()) == 1, "Failed transaction was not terminally recorded")
 	_assert(String(fail_ledger.get_record("operation/t1a5/transaction/fail").status) == OperationLedgerScript.STATUS_REJECTED, "Failed transaction ledger status mismatch")
 	var fail_replay: Dictionary = fail_executor.execute(fail_command)
 	_assert(UtilsScript.canonical_json(fail_replay) == UtilsScript.canonical_json(failed), "Failed transaction replay changed result")
 	_assert(_effect_calls == 1, "Failed transaction replay called effect committer twice")
-	_assert(UtilsScript.canonical_json(fail_store.to_dict()) == before_store, "Failed transaction replay changed runtime state")
+	_assert(String(UtilsScript.canonical_json(fail_store.to_dict())) == before_store, "Failed transaction replay changed runtime state")
 
 
 func _test_d0_utility_effect_exactly_once() -> void:
-	var root := "user://t1a5-transactional-effects-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var root: String = "user://t1a5-transactional-effects-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 	var runtime = RuntimeLabScript.new()
 	_assert_ok(runtime.setup(root), "D0 transactional runtime setup failed")
 	var before: Dictionary = runtime.get_report()
-	var before_tick := int(before.power_tick)
+	var before_tick: int = int(before.power_tick)
 	var stop: Dictionary = runtime.execute(
 		"GENERATOR",
 		"STOP_GENERATOR",
@@ -99,7 +99,7 @@ func _test_d0_utility_effect_exactly_once() -> void:
 	var after_stop: Dictionary = runtime.get_report()
 	_assert(int(after_stop.power_tick) == before_tick + 1, "D0 committed utility effect did not advance exactly one tick")
 	_assert(not bool(runtime.get_subject("GENERATOR").state.running), "D0 generator state did not commit")
-	var after_stop_storage := UtilsScript.canonical_json(Dictionary(after_stop.power_storage))
+	var after_stop_storage: String = String(UtilsScript.canonical_json(Dictionary(after_stop.power_storage)))
 	var stop_replay: Dictionary = runtime.execute(
 		"GENERATOR",
 		"STOP_GENERATOR",
@@ -109,11 +109,11 @@ func _test_d0_utility_effect_exactly_once() -> void:
 	_assert(UtilsScript.canonical_json(stop_replay) == UtilsScript.canonical_json(stop), "D0 transactional replay changed result")
 	var after_replay: Dictionary = runtime.get_report()
 	_assert(int(after_replay.power_tick) == int(after_stop.power_tick), "D0 transactional replay advanced utility tick twice")
-	_assert(UtilsScript.canonical_json(Dictionary(after_replay.power_storage)) == after_stop_storage, "D0 transactional replay changed battery state")
+	_assert(String(UtilsScript.canonical_json(Dictionary(after_replay.power_storage))) == after_stop_storage, "D0 transactional replay changed battery state")
 	_assert(int(runtime.get_subject("GENERATOR").revision) == 1, "D0 transactional replay advanced generator revision")
 
 	var before_stale: Dictionary = runtime.get_report()
-	var generator_before_stale := UtilsScript.canonical_json(runtime.get_subject("GENERATOR"))
+	var generator_before_stale: String = String(UtilsScript.canonical_json(runtime.get_subject("GENERATOR")))
 	var stale: Dictionary = runtime.execute(
 		"GENERATOR",
 		"START_GENERATOR",
@@ -124,13 +124,13 @@ func _test_d0_utility_effect_exactly_once() -> void:
 	var after_stale: Dictionary = runtime.get_report()
 	_assert(int(after_stale.power_tick) == int(before_stale.power_tick), "Rejected D0 transaction advanced utility tick")
 	_assert(UtilsScript.canonical_json(Dictionary(after_stale.power_storage)) == UtilsScript.canonical_json(Dictionary(before_stale.power_storage)), "Rejected D0 transaction changed battery state")
-	_assert(UtilsScript.canonical_json(runtime.get_subject("GENERATOR")) == generator_before_stale, "Rejected D0 transaction changed generator state")
+	_assert(String(UtilsScript.canonical_json(runtime.get_subject("GENERATOR"))) == generator_before_stale, "Rejected D0 transaction changed generator state")
 
 
 func _make_store():
 	var store = RuntimeStoreScript.new()
 	_assert_ok(store.setup(), "Runtime store setup failed")
-	var subject := RuntimeSubjectScript.create(
+	var subject: Dictionary = RuntimeSubjectScript.create(
 		"runtime/test/transaction",
 		"construct/test/transaction",
 		"item/test/transaction",
