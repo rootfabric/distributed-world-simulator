@@ -26,6 +26,16 @@ active G7 global ledger == main
 historical accepted G6 may remain on its historical R1 revision
 ```
 
+Verified active GLOBAL blobs:
+
+```text
+config/architecture/global-program-roadmap.v1.json
+  dd18f720cd4ce6493618efe270311605aea9bbbf
+
+docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
+  3eb52a69cef73da8a784dfce7acc6a0c38185cf9
+```
+
 ## Accepted semantic path
 
 G7.0 introduced typed semantic-field identity/query/sample/provenance contracts without replacing `GeoKernel`, `GeoFieldBundle` or `GeoSample`.
