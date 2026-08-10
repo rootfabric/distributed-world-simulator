@@ -116,12 +116,7 @@ func _equip_item(player_id: String, item_id: String, slot_index: int) -> Diction
 	_items[item_id] = item
 	equipment_slots[slot_key] = item_id
 	container["equipment_slots"] = equipment_slots
-	var referenced_items: Array = Array(container.get("slots", [])).duplicate()
-	if not replaced_item_id.is_empty():
-		referenced_items.erase(replaced_item_id)
-	if item_id not in referenced_items:
-		referenced_items.append(item_id)
-	container["slots"] = referenced_items
+	container["slots"] = _canonical_equipment_references(equipment_slots)
 	_containers[container_id] = container
 	return _success({
 		"item_id": item_id,
@@ -151,9 +146,7 @@ func _unequip_item(player_id: String, item_id: String) -> Dictionary:
 		return _failure(RESULT_EQUIPMENT_CONTAINER_INVALID)
 	equipment_slots.erase(str(slot_index))
 	container["equipment_slots"] = equipment_slots
-	var referenced_items: Array = Array(container.get("slots", [])).duplicate()
-	referenced_items.erase(item_id)
-	container["slots"] = referenced_items
+	container["slots"] = _canonical_equipment_references(equipment_slots)
 	_containers[container_id] = container
 	item["location"] = {"kind": "INVENTORY", "player_id": player_id}
 	_items[item_id] = item
@@ -163,6 +156,15 @@ func _unequip_item(player_id: String, item_id: String) -> Dictionary:
 		"slot_index": slot_index,
 		"container_id": "inventory/%s" % player_id,
 	})
+
+
+func _canonical_equipment_references(equipment_slots: Dictionary) -> Array:
+	var result: Array = []
+	for slot_index in range(EquipmentCatalog.EQUIPMENT_SLOT_COUNT):
+		var item_id := String(equipment_slots.get(str(slot_index), ""))
+		if not item_id.is_empty():
+			result.append(item_id)
+	return result
 
 
 func equipment_container_snapshot(logical_player_id: String) -> Dictionary:
