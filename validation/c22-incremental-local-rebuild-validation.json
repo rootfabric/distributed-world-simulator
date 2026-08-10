@@ -11,7 +11,7 @@
     "c24_contracts": "PASS_81_ASSERTIONS",
     "evidence_only": true
   },
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_REQUIRED",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
@@ -58,8 +58,26 @@
     "c22_graphical_regression_required": true,
     "c24_backend_contracts_required": true
   },
+  "windows_attempt_1": {
+    "tested_head": "127aad8058cd5f8daf5b5fed524dbeaac75979d2",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "focused_result": "REJECTED_PARSE_ERROR",
+    "failure": "GDSCRIPT_TYPE_INFERENCE_DYNAMIC_CACHE_PUBLISH",
+    "lines": [151, 192],
+    "details": [
+      "Cannot infer the type of publish variable because cache is dynamically typed",
+      "Cannot infer the type of shell_publish variable because cache is dynamically typed"
+    ]
+  },
+  "fix1": {
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "change": "Explicit Dictionary result types for both dynamic cache.publish calls",
+    "algorithm_changed": false,
+    "revalidation_required": true
+  },
   "remaining_gates": [
-    "Run RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1 on exact Windows Godot",
+    "Pull FIX1 and rerun RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1 on exact Windows Godot",
     "Record tested runtime/focused head after PASS",
     "Run RUN_WORLD_REGRESSION_TESTS.ps1 on the same runtime head",
     "Run CONTROL_PROJECT.ps1 -NoFailOnRed and inspect cross-branch overlap",
