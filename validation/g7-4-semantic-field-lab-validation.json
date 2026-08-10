@@ -17,7 +17,7 @@
     "program": "G",
     "branch": "feature/g7-semantic-field-fabric",
     "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "FIX1_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
+    "stage_status": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
     "legacy_global_active_frontiers_operational_owner": false
   },
   "project_control": {
@@ -28,7 +28,7 @@
     "expected_candidate_health_before_m5_rerun": "RED",
     "g_red_blocks_full_acceptance": true,
     "unrelated_program_red_blocks_g_acceptance": false,
-    "main_registry_generation": 3,
+    "main_registry_generation": 4,
     "reason": "The G program is RED until the shared M5 final-convergence fix passes its focused rerun. Overall project RED caused by an independent program remains non-blocking only after G itself is non-RED."
   },
   "fix1": {
