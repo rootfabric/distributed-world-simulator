@@ -2,7 +2,6 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime
 
 const T1RuntimeScript = preload("res://scripts/labs/t1/t1_d0_interactive_runtime_executor.gd")
 const RuntimeSnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/construction_runtime_snapshot.gd")
-const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const T1A6_SCHEMA: String = "planet_simulator.t1a6_m3_runtime_server_adapter.v1"
 const RUNTIME_COMMAND_MESSAGE: String = "CONSTRUCTION_RUNTIME_COMMAND"
