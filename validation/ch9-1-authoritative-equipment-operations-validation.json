@@ -3,7 +3,7 @@
   "stage": "CH9.1 Authoritative Equipment Operations",
   "branch": "feature/ch9-1-authoritative-equipment-operations",
   "base_branch": "feature/ch9-item-graph-equipment-source",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "decision": "FOCUSED_ACCEPTED_FORMAL_ACCEPTANCE_PENDING_PREDECESSOR_AND_PC0_HANDOFF",
   "goal": "Move canonical item UUIDs between normal containers and entity-owned equipment slots through the existing ItemTransferService while preserving CH8 semantic equipment validation and refusing non-atomic multi-item replacement.",
   "canonical_mutation": {
     "owner": "ItemTransferService",
@@ -39,6 +39,22 @@
     "operations": "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd",
     "multi_conflict_guard": "res://tests/characters/test_ch9_1_multi_conflict_guard.gd"
   },
+  "windows_focused_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "Windows",
+    "checkout_head_before_validation_commit": "42ba9514d2ac8f31be840dd2dea0ad3a89bfe968",
+    "editor_import": "PASS",
+    "ch7_character_equipment_domain": "PASS 54",
+    "ch8_layered_equipment_contract": "PASS 57",
+    "ch9_0_source": "PASS 62",
+    "ch9_0_roundtrip": "PASS 33",
+    "ch9_1_operations": "PASS 76",
+    "ch9_1_multi_conflict_guard": "PASS 42",
+    "candidate_runner": "PASS",
+    "direct_operations_rerun": "PASS 76",
+    "direct_multi_conflict_rerun": "PASS 42",
+    "reported_error_markers": 0
+  },
   "acceptance_requires": [
     "editor import/parse PASS",
     "CH7 character equipment domain PASS",
@@ -68,12 +84,13 @@
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
   ],
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch7_domain": "PENDING",
-    "ch8_layering": "PENDING",
-    "ch9_0_source": "PENDING",
-    "ch9_0_roundtrip": "PENDING",
-    "ch9_1_operations": "PENDING",
-    "ch9_1_multi_conflict_guard": "PENDING"
+    "editor_import": "PASS",
+    "ch7_domain": "PASS 54",
+    "ch8_layering": "PASS 57",
+    "ch9_0_source": "PASS 62",
+    "ch9_0_roundtrip": "PASS 33",
+    "ch9_1_operations": "PASS 76",
+    "ch9_1_multi_conflict_guard": "PASS 42",
+    "candidate_runner": "PASS"
   }
 }
