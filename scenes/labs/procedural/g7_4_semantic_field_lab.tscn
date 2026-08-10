@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/labs/procedural/g7_4_semantic_field_lab.gd" id="1_g74"]
+[ext_resource type="Script" path="res://scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd" id="1_g74"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_planet"]
 radius = 8.0
