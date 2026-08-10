@@ -9,7 +9,7 @@
   "purpose": "Close G7 as a stable semantic world-field foundation independent from SurfaceCellKey, LOD, camera and representation before G8 geomorphology begins.",
   "expected_outcome": "G7.0 through G7.4 remain accepted together under one full acceptance gate, preserving semantic identity, provenance, cross-cell/cross-LOD invariance and derived-only presentation.",
   "current_stage": "G7 Full Acceptance",
-  "stage_status": "G7_4_ACCEPTED_FULL_ACCEPTANCE_RUNNER_READY",
+  "stage_status": "G7_4_ACCEPTED_FULL_ACCEPTANCE_PENDING",
   "progress_note": "G7.4 Semantic Field Lab is ACCEPTED after Fix4 automated acceptance on ddacaf18a5c4b57c708562538a71065240d73ddb and final user graphical observation on 2026-08-10. Manual checks confirm F river toggle, fields 1..5 recolor-only behavior at fixed LOD, no obvious PX/PZ seam, stable 561 semantic samples, visible LOD0..LOD3, no false black shell holes and visible diagnostic river ribbon. Abrupt LOD switching is recorded as non-blocking presentation tuning debt. Aggregate RUN_G7_FULL_ACCEPTANCE.ps1 is now prepared: it verifies all G7.0..G7.4 ACCEPTED records, aggregate G7 scope, byte-matched canonical GLOBAL roadmap hygiene, PC0 G health, the full semantic focused chain and one fresh world/core regression before G8 may start.",
   "last_accepted_checkpoint": "G7.4 Semantic Field Lab",
   "next_stage": "Run RUN_G7_FULL_ACCEPTANCE.ps1 on exact Windows Godot 4.7.1 double. If green, accept G7 Semantic Field Fabric as a complete checkpoint and advance PC0 to G8 Geomorphology.",
