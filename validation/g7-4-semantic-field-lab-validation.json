@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX3_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
+  "decision": "FIX3_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -44,12 +44,32 @@
       "headless_faces": ["PX", "PZ"],
       "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
     },
-    "full_world_regression": "PENDING",
+    "full_world_regression": {
+      "status": "PASS",
+      "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
+      "world_core_tests_pass": 6,
+      "world_core_tests_fail": 0,
+      "nx4_client_prediction_reconciliation": "PASS",
+      "lifecycle_final_state": "STOPPED"
+    },
     "manual_graphical_recheck": "LOD0_TO_LOD3_AND_VISIBLE_GEOMETRY_CHANGE_PASS_BY_USER_OBSERVATION"
   },
+  "automated_acceptance": {
+    "status": "PASS",
+    "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
+    "pc0_operational_g_frontier": "PASS",
+    "pc0_g_health_not_red": "PASS",
+    "g7_3_accepted_ancestor": "PASS",
+    "g7_4_visual_lab_scope": "PASS",
+    "adapter_backed_semantic_fields": 5,
+    "vocabulary_only_fields_not_faked": 6,
+    "world_core_regression": "PASS",
+    "working_tree": "CLEAN",
+    "manual_graphical_observation": "REQUIRED_BEFORE_G7_4_ACCEPTED"
+  },
   "project_control": {
-    "expected_health": "YELLOW_AFTER_FOCUSED_PASS_UNTIL_FULL_REGRESSION_AND_REMAINING_MANUAL_CHECKS",
-    "blockers": ["G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
+    "expected_health": "YELLOW_UNTIL_REMAINING_MANUAL_GRAPHICAL_CHECKS_PASS",
+    "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
   },
   "manual_graphical_acceptance": {
     "status": "PARTIAL_PASS_LOD_VISIBILITY_CONFIRMED",
