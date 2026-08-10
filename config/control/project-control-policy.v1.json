@@ -3,6 +3,8 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
+  "operational_frontier_source": "config/control/project-program-registry.v1.json",
+  "legacy_global_active_frontiers_policy": "GLOBAL-P0-R2 active_frontiers fields are advisory legacy state until the next global architecture revision; PC0 registry is authoritative for fast-moving operational frontier state.",
   "central_registry_path": "config/control/project-program-registry.v1.json",
   "ownership_matrix_path": "config/control/architecture-ownership.v1.json",
   "dashboard_entrypoint": "PROJECT_CONTROL.md",
@@ -86,7 +88,10 @@
       "scripts/control/**",
       "config/control/**",
       "docs/control/**",
-      ".github/workflows/project-control.yml"
+      ".github/workflows/project-control.yml",
+      "config/architecture/global-program-roadmap.v1.json",
+      "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+      "config/network/network-experience-roadmap.v1.json"
     ],
     "yellow_patterns": [
       "docs/**",
