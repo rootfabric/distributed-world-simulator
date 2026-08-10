@@ -4,10 +4,10 @@ const T1A4Script = preload("res://scripts/labs/t1/t1_d0_interactive_fixture_bind
 const RuntimeSubjectScript = preload("res://scripts/construction/behavior/construction_runtime_subject_state.gd")
 const RuntimeStoreScript = preload("res://scripts/construction/behavior/construction_runtime_state_store.gd")
 const RuntimeExecutorScript = preload("res://scripts/construction/behavior/construction_affordance_runtime_executor.gd")
+const OperationLedgerScript = preload("res://scripts/items/services/item_operation_ledger.gd")
 const UtilityNodeScript = preload("res://scripts/construction/utilities/construction_utility_node_definition.gd")
 const UtilityNetworkScript = preload("res://scripts/construction/utilities/construction_utility_network_definition.gd")
 const UtilitySimulatorScript = preload("res://scripts/construction/utilities/construction_utility_simulator.gd")
-const UtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA: String = "planet_simulator.t1a5_d0_interactive_runtime_executor.v1"
 const CONSTRUCT_ID: String = "construct/t1/lunar-outpost/d0"
@@ -29,6 +29,7 @@ const ACTIONS_BY_KIND: Dictionary = {
 var _bound: Dictionary = {}
 var _profile: Dictionary = {}
 var _runtime_store
+var _runtime_ledger
 var _runtime_executor
 var _base_power_network: Dictionary = {}
 var _power_storage: Dictionary = {}
@@ -69,10 +70,11 @@ func setup(m0_root: String) -> Dictionary:
 		if not bool(registered.get("success", false)):
 			return _failure("T1A5_RUNTIME_SUBJECT_REGISTRATION_FAILED", {"kind": kind, "cause": registered})
 
+	_runtime_ledger = OperationLedgerScript.new()
 	_runtime_executor = RuntimeExecutorScript.new()
 	var executor_setup: Dictionary = _runtime_executor.setup(
 		_runtime_store,
-		_bound["domain"].operations,
+		_runtime_ledger,
 		Callable(self, "_handle_runtime_command")
 	)
 	if not bool(executor_setup.get("success", false)):
@@ -130,7 +132,7 @@ func get_report() -> Dictionary:
 		"power_storage": _power_storage.duplicate(true),
 		"power_execution_profile": _power_execution_profile.duplicate(true),
 		"data_execution_profile": _data_execution_profile.duplicate(true),
-		"operation_count": int(_bound["domain"].operations.size()) if not _bound.is_empty() else 0,
+		"operation_count": int(_runtime_ledger.size()) if _runtime_ledger != null else 0,
 	}
 
 
