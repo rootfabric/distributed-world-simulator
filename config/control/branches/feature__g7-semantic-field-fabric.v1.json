@@ -6,77 +6,30 @@
   "program": "G",
   "role": "PRIMARY_FRONTIER",
   "short_description": "Semantic Field Fabric and its derived visual lab on top of accepted G3/G5/G6 world-generation truth.",
-  "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
-  "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected across visibly different derived presentation LODs without becoming canonical identity.",
+  "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
+  "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density.",
   "current_stage": "G7.4 Semantic Field Lab",
   "stage_status": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED",
-  "progress_note": "The first manual graphical observation correctly found that W/S changed only camera distance while mesh density remained fixed at 33x17; VISUAL_LOD=8 was only cube-sphere addressing. Fix3 adds explicit camera-distance-derived presentation LOD0..3 using strides 1/2/4/8 and mesh grids 33x17, 17x9, 9x5 and 5x3 while reusing the same 561 semantic records. Because the lab runtime changed after the previous automated tested head, fresh focused and full revalidation are required before manual acceptance resumes.",
+  "progress_note": "Manual graphical review found that prior W/S behavior was camera zoom only. Fix3 now provides visible derived presentation LOD0..3 with stride 1/2/4/8 and mesh grids 33x17, 17x9, 9x5 and 5x3 over the same 561 semantic records. Fresh focused validation is required because lab runtime changed after the previous automated tested head.",
   "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-  "next_stage": "Run G7.4 Fix3 focused validation; if green, refresh PC0 tested head and run full automated acceptance; then repeat manual graphical observation and accept G7.4.",
+  "next_stage": "Run Fix3 focused validation; then refresh tested head, run full automated acceptance, repeat manual graphical observation, accept G7.4, then G7 full acceptance.",
   "parent_branch_or_checkpoint": "G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "base_commit": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3", "M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE"],
-  "owned_paths": [
-    "config/procedural/g7-*",
-    "scripts/simulation/procedural/semantic_fields/**",
-    "scripts/labs/procedural/g7_*",
-    "scenes/labs/procedural/g7_*",
-    "tests/procedural/semantic_fields/**",
-    "docs/procedural/*G7*",
-    "docs/checkpoints/*G7*"
-  ],
-  "watched_paths": [
-    "scripts/simulation/procedural/contracts/**",
-    "scripts/simulation/procedural/providers/**",
-    "scripts/simulation/procedural/features/**",
-    "scripts/simulation/procedural/hydrology/**",
-    "scripts/simulation/matter/**",
-    "scripts/network/contracts/**",
-    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
-  ],
-  "critical_watched_paths": [
-    "scripts/simulation/procedural/contracts/semantic_field_*.gd",
-    "scripts/simulation/procedural/semantic_fields/semantic_field_composer_v1.gd",
-    "scripts/simulation/procedural/hydrology/**",
-    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
-  ],
-  "runtime_paths": [
-    "scripts/simulation/procedural/semantic_fields/**",
-    "scripts/labs/procedural/g7_*",
-    "scenes/labs/procedural/g7_*",
-    "tests/procedural/semantic_fields/**",
-    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
-  ],
-  "validation_paths": [
-    "config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json",
-    "config/procedural/g7-4-semantic-field-lab.v1.json",
-    "docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md",
-    "validation/g7-4-semantic-field-lab-validation.json"
-  ],
+  "owned_paths": ["config/procedural/g7-*", "scripts/simulation/procedural/semantic_fields/**", "scripts/labs/procedural/g7_*", "scenes/labs/procedural/g7_*", "tests/procedural/semantic_fields/**", "docs/procedural/*G7*", "docs/checkpoints/*G7*"],
+  "watched_paths": ["scripts/simulation/procedural/contracts/**", "scripts/simulation/procedural/providers/**", "scripts/simulation/procedural/features/**", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/matter/**", "scripts/network/contracts/**", "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"],
+  "critical_watched_paths": ["scripts/simulation/procedural/contracts/semantic_field_*.gd", "scripts/simulation/procedural/semantic_fields/semantic_field_composer_v1.gd", "scripts/simulation/procedural/hydrology/**", "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"],
+  "runtime_paths": ["scripts/simulation/procedural/semantic_fields/**", "scripts/labs/procedural/g7_*", "scenes/labs/procedural/g7_*", "tests/procedural/semantic_fields/**", "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"],
+  "validation_paths": ["config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json", "config/procedural/g7-4-semantic-field-lab.v1.json", "docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md", "validation/g7-4-semantic-field-lab-validation.json"],
   "tested_heads": {
     "runtime": "594f96a1337a08d62e6371de61e43640f99aab4a",
     "focused": "594f96a1337a08d62e6371de61e43640f99aab4a",
     "full_regression": "594f96a1337a08d62e6371de61e43640f99aab4a",
     "m5_fix2_focused": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17"
   },
-  "ownership_claims": [
-    {"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "semantic fields and derived G7 presentation"}
-  ],
-  "forbidden_foundation_ownership": [
-    "SPATIAL_DOMAIN_FABRIC",
-    "MATERIAL_ONTOLOGY",
-    "WORLD_TRANSACTION_MODEL",
-    "AUTHORITY_FOUNDATION",
-    "NETWORK_REPLICATION_POLICY",
-    "PERSISTENCE_DURABILITY",
-    "WORLD_WORK_BUDGET",
-    "WORLD_QUERY_FABRIC"
-  ],
-  "blockers": [
-    "G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED",
-    "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED",
-    "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
-  ],
+  "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "semantic fields and derived G7 presentation"}],
+  "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC"],
+  "blockers": ["G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"],
   "health_declared": "RED",
   "cross_branch_overlap_enabled": true
 }
