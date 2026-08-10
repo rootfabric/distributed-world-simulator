@@ -72,6 +72,7 @@ if ($ImportExit -ne 0 -or $ImportText -match '(?m)(^ERROR:|SCRIPT ERROR:|Parse E
 Invoke-Godot-Test "ch9_0_item_graph_equipment_source" "res://tests/characters/test_ch9_item_graph_equipment_source.gd"
 Invoke-Godot-Test "ch9_1_authoritative_equipment_operations" "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd"
 Invoke-Godot-Test "ch9_2_inventory_character_composition" "res://tests/characters/test_ch9_2_inventory_character_composition.gd"
+Invoke-Godot-Test "ch9_3_equipment_item_command_contract" "res://tests/characters/test_ch9_3_equipment_item_command_contract.gd"
 Invoke-Godot-Test "ch9_3_multiplayer_equipment_authority" "res://tests/characters/test_ch9_3_multiplayer_equipment_authority.gd"
 Invoke-Godot-Test "ch9_3_multiplayer_equipment_replica_projection" "res://tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd"
 Invoke-Godot-Test "ch9_3_replicated_equipment_character_presentation" "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd"
