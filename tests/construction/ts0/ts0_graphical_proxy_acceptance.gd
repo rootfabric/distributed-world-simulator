@@ -4,7 +4,7 @@ const Adapter = preload("res://scripts/labs/t1/ts0/ts0_large_structural_proxy_ad
 
 const SCENE_PATH := "res://scenes/labs/construction/ts0_large_structural_visual_lab.tscn"
 const PROFILES: Array[String] = ["CUBE_10K", "PYRAMID_10K"]
-const MAX_SECTION_ARTIFACTS := 12
+const MAX_TS0_1_FLAT_COMPLETE_COVERAGE_SECTIONS := 64
 
 var assertions := 0
 var failures: Array[String] = []
@@ -38,10 +38,25 @@ func _test_graphical_scene_contract() -> void:
 		_assert(int(manifest["total_part_count"]) >= 10000, "%s keeps 10k canonical scale" % profile_id)
 		_assert(int(manifest["total_section_count"]) > 1, "%s compiled into multiple sections" % profile_id)
 		_assert(int(manifest["total_section_count"]) < int(manifest["total_part_count"]), "%s section count stays below part count" % profile_id)
+		_assert(int(manifest["total_section_count"]) <= MAX_TS0_1_FLAT_COMPLETE_COVERAGE_SECTIONS, "%s fits TS0.1 flat complete-coverage guard" % profile_id)
 		_assert(String(manifest["source_checksum"]) == String(initial_metrics["canonical_checksum"]), "%s canonical checksum reaches proxy manifest" % profile_id)
 		_assert(int(compile_stats.get("culled_face_count", 0)) > 0, "%s C22 occupancy culls internal faces" % profile_id)
 		_assert(int(compile_stats.get("exposed_face_count", 0)) < int(compile_stats.get("raw_face_count", 0)), "%s exposed surface is smaller than raw faces" % profile_id)
 		_assert(int(compile_stats.get("shell_quad_count", 0)) > 0, "%s shell has greedy geometry" % profile_id)
+
+		var near_interest := Adapter.create_interest(manifest, Adapter.MODE_NEAR)
+		_ok(near_interest, "%s near interest complete coverage" % profile_id)
+		if bool(near_interest.get("success", false)):
+			_assert(String(near_interest.get("coverage_invariant", "")) == Adapter.COMPLETE_COVERAGE_INVARIANT, "%s near pins complete-coverage invariant" % profile_id)
+			_assert(int(near_interest.get("requested_section_count", -1)) == int(manifest["total_section_count"]), "%s near requests every section" % profile_id)
+			_assert(Array(near_interest["interest"]["visible_section_ids"]).size() == int(manifest["total_section_count"]), "%s near visible section filter covers manifest" % profile_id)
+
+		var mid_interest := Adapter.create_interest(manifest, Adapter.MODE_MID)
+		_ok(mid_interest, "%s mid interest complete coverage" % profile_id)
+		if bool(mid_interest.get("success", false)):
+			_assert(String(mid_interest.get("coverage_invariant", "")) == Adapter.COMPLETE_COVERAGE_INVARIANT, "%s mid pins complete-coverage invariant" % profile_id)
+			_assert(int(mid_interest.get("requested_section_count", -1)) == int(manifest["total_section_count"]), "%s mid requests every section" % profile_id)
+			_assert(Array(mid_interest["interest"]["visible_section_ids"]).size() == int(manifest["total_section_count"]), "%s mid visible section filter covers manifest" % profile_id)
 
 		var controller = lab.get_controller()
 		var artifact_count_before := int(controller.get_cache().get_artifact_count())
@@ -88,9 +103,11 @@ func _check_mode(lab, profile_id: String, requested_mode: String, expected_detai
 		_assert(int(runtime.get_collision_proxy_count()) == 0, "%s FAR has no collision proxies" % profile_id)
 		_assert(int(metrics["visible_sections"]) == 0, "%s FAR has no visible section payload" % profile_id)
 	else:
-		_assert(int(runtime.get_proxy_mesh_count()) <= MAX_SECTION_ARTIFACTS, "%s %s proxy mesh count is bounded" % [profile_id, requested_mode])
-		_assert(int(runtime.get_collision_proxy_count()) <= MAX_SECTION_ARTIFACTS, "%s %s collision proxy count is bounded" % [profile_id, requested_mode])
-		_assert(int(metrics["visible_sections"]) <= MAX_SECTION_ARTIFACTS, "%s %s visible sections are bounded" % [profile_id, requested_mode])
+		var total_sections := int(metrics["total_sections"])
+		_assert(total_sections <= MAX_TS0_1_FLAT_COMPLETE_COVERAGE_SECTIONS, "%s %s stays inside flat complete-coverage guard" % [profile_id, requested_mode])
+		_assert(int(metrics["visible_sections"]) == total_sections, "%s %s represents every section" % [profile_id, requested_mode])
+		_assert(int(runtime.get_proxy_mesh_count()) == total_sections, "%s %s materializes one C24 proxy per section artifact" % [profile_id, requested_mode])
+		_assert(int(runtime.get_collision_proxy_count()) == total_sections, "%s %s keeps section collision coverage complete" % [profile_id, requested_mode])
 	_assert(int(metrics["active_runtime_nodes"]) < int(metrics["canonical_part_count"]) / 20, "%s %s runtime nodes stay far below semantic parts" % [profile_id, requested_mode])
 	_assert(int(runtime.get_total_proxy_triangle_count()) > 0, "%s %s has renderable triangles" % [profile_id, requested_mode])
 	_assert(int(runtime.get_total_proxy_surface_count()) > 0, "%s %s has renderable surfaces" % [profile_id, requested_mode])
