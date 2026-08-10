@@ -1,10 +1,11 @@
 {
   "schema": "planet_simulator.t1a5_interactive_runtime_execution_validation.v1",
   "checkpoint": "T1A5_INTERACTIVE_RUNTIME_EXECUTION",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "FOCUSED_WINDOWS_PASS_FULL_REGRESSION_REQUIRED",
   "branch": "feature/t1a5-interactive-runtime-execution",
   "base_head": "a14e6f04c265467e1590106ace8439bddae19ddb",
   "candidate_head": "a6fb2d2a1e0db1fd2b1f3773181d6830402cbccc",
+  "focused_tested_head": "01b6ee2364d949858f12f0562de09743795cbc7e",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -60,16 +61,20 @@
   "focused_gate": {
     "runner": "RUN_T1A5_INTERACTIVE_RUNTIME_EXECUTION_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "dependencies": [
-      "T1A4 interactive fixture binding acceptance",
-      "C5B affordance runtime contracts",
-      "C15 executable utilities contracts"
-    ],
-    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+    "head": "01b6ee2364d949858f12f0562de09743795cbc7e",
+    "editor_import": "PASS",
+    "dependencies": {
+      "t1a4": "PASS_153_ASSERTIONS",
+      "c5b": "PASS_32_ASSERTIONS",
+      "c15": "PASS_92_ASSERTIONS"
+    },
+    "t1a5": "PASS_67_ASSERTIONS",
+    "total_assertions": 344,
+    "result": "PASS"
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "result": "PENDING_AFTER_FOCUSED_PASS"
+    "result": "PENDING"
   },
   "next_after_acceptance": "T1A6_RUNTIME_PRESENTATION_AND_MULTIPLAYER_BINDING"
 }
