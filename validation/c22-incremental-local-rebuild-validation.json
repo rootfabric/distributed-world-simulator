@@ -11,7 +11,7 @@
     "c24_contracts": "PASS_81_ASSERTIONS",
     "evidence_only": true
   },
-  "decision": "FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
+  "decision": "FOCUSED_ACCEPTED_FULL_REGRESSION_FIX2_PENDING_REVALIDATION",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
@@ -82,8 +82,24 @@
     "c24_proxy_mesh_backend_contracts": "PASS_81_ASSERTIONS",
     "focused_gate": "PASS"
   },
+  "full_regression_attempt_1": {
+    "branch_head_before_attempt": "aead56ea8bad4b3ebbf0ca862f615e4cdb3c0765",
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "result": "BLOCKED_BEFORE_GODOT_TEST_EXECUTION",
+    "gate": "TEST_MANIFEST_COVERAGE",
+    "missing_from_runner": "res://tests/construction/test_c22_incremental_local_rebuild.gd",
+    "runtime_regression_failure": false
+  },
+  "fix2": {
+    "world_regression_runner_commit": "f36a6501741fb4e407108243f08be4453c5be1e4",
+    "change": "Add the production incremental rebuild test to RUN_WORLD_REGRESSION_TESTS.ps1 declared coverage and track stable Godot UID sidecars for new GDScript files",
+    "runtime_algorithm_changed": false,
+    "focused_runtime_evidence_invalidated": false,
+    "full_regression_revalidation_required": true
+  },
   "remaining_gates": [
-    "Run RUN_WORLD_REGRESSION_TESTS.ps1 on the same runtime head",
+    "Pull FIX2 after removing the three locally generated untracked UID sidecars",
+    "Rerun RUN_WORLD_REGRESSION_TESTS.ps1",
     "Run CONTROL_PROJECT.ps1 -NoFailOnRed and inspect cross-branch overlap",
     "Only then mark convergence SOURCE_ACCEPTED / merge-ready"
   ]
