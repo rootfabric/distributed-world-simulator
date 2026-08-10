@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
+  "program": "T",
+  "role": "PRIMARY_FRONTIER",
+  "short_description": "Construction runtime presentation and multiplayer binding over the accepted T1A.5 C5B runtime.",
+  "purpose": "Replicate canonical Construction runtime state to clients and drive derived door/lamp/generator/console presentation without making transport or presentation authoritative gameplay truth.",
+  "expected_outcome": "Two graphical clients and the server converge on the same runtime state while presentation remains derived, late join receives a full baseline, and no new network/authority foundation is introduced.",
+  "current_stage": "T1A.6 Runtime Presentation + Multiplayer Binding",
+  "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
+  "progress_note": "The dedicated server + two-client focused gate passes after a transport-policy duplicate-declaration fix. Full world regression is still pending, and the inherited T1A.5 transactional-effects gap remains an explicit control blocker before T1A.6 may be accepted.",
+  "last_accepted_checkpoint": "T1A.5 Interactive Runtime Execution",
+  "next_stage": "Resolve T1A.5 Transactional Runtime Effects FIX1 and complete T1A.6 full regression; only then accept T1A.6 and move to T1A.7",
+  "parent_branch_or_checkpoint": "T1A.5 SOURCE_ACCEPTED @ 7e6b83a0df8c509374af21e70615dafa66330846",
+  "base_commit": "7e6b83a0df8c509374af21e70615dafa66330846",
+  "dependencies": ["T1A5", "C5B", "C5C", "M3", "NX0", "NETWORK_PROTOCOL_MANIFEST"],
+  "owned_paths": [
+    "scripts/construction/behavior/**",
+    "scripts/labs/t1/t1a6/**",
+    "scripts/runtime/networked_gameplay/t1a6/**",
+    "tests/construction/t1a6_*",
+    "validation/t1a6-*",
+    "docs/checkpoints/*T1A6*"
+  ],
+  "watched_paths": [
+    "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
+    "scripts/construction/behavior/**",
+    "scripts/runtime/networked_gameplay/m3/**",
+    "scripts/network/contracts/**",
+    "scripts/items/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
+    "scripts/construction/behavior/construction_affordance_runtime_executor.gd",
+    "scripts/runtime/networked_gameplay/m3/**",
+    "scripts/network/contracts/network_protocol_manifest.gd"
+  ],
+  "runtime_paths": [
+    "scripts/construction/behavior/**",
+    "scripts/labs/t1/t1a6/**",
+    "scripts/runtime/networked_gameplay/t1a6/**",
+    "tests/construction/t1a6_*",
+    "scripts/network/contracts/network_protocol_manifest.gd"
+  ],
+  "validation_paths": [
+    "docs/checkpoints/*T1A6*",
+    "validation/t1a6-*"
+  ],
+  "tested_heads": {
+    "runtime": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+    "focused": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+    "full_regression": ""
+  },
+  "ownership_claims": [
+    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "canonical construction runtime replication source"},
+    {"foundation": "DERIVED_PRESENTATION", "claimed_owner": "DOMAIN_ADAPTERS", "scope": "door/lamp/generator/console client presentation"},
+    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "consume existing M3/NX transport policy only"}
+  ],
+  "forbidden_foundation_ownership": [
+    "SPATIAL_DOMAIN_FABRIC",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_TRANSACTION_MODEL",
+    "AUTHORITY_FOUNDATION",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_WORK_BUDGET"
+  ],
+  "blockers": [
+    "T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_FIX1_REQUIRED_BEFORE_T1A6_ACCEPTANCE",
+    "T1A6_FULL_WORLD_REGRESSION_PENDING"
+  ],
+  "health_declared": "RED",
+  "cross_branch_overlap_enabled": true
+}
