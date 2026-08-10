@@ -10,7 +10,7 @@
   "expected_outcome": "Player A equips a canonical wearable, clients A/B converge through Item Graph delta replication, late client C receives the already-equipped state, and any compatible character rig can render the same CharacterEquipmentDomain snapshot.",
   "current_stage": "CH9.3 Multiplayer Equipment Presentation",
   "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
-  "progress_note": "Equipment-aware canonical authority, semantic catalog, production replica adapter, network command/controller bridges, presentation-neutral projection, real ENet A/B/C convergence test and accepted CH8 presenter composition test are implemented. Windows focused validation is pending.",
+  "progress_note": "Equipment-aware canonical authority, semantic catalog, production replica adapter, equipment command namespace, network command/controller bridges, presentation-neutral projection, real ENet A/B/C convergence test and accepted CH8 presenter composition test are implemented. Join ordering and replica slot preservation were reviewed; Windows focused validation is pending.",
   "last_accepted_checkpoint": "CH9.2 focused and graphical acceptance @ 81009a47b64964f32e73c5ccd17167a446bf9b9f",
   "next_stage": "CH9.4 Equipment Persistence / Late Reconnect after CH9.3 acceptance",
   "parent_branch_or_checkpoint": "feature/ch9-2-inventory-character-composition @ 81009a47b64964f32e73c5ccd17167a446bf9b9f",
@@ -35,6 +35,8 @@
     "scripts/runtime/networked_gameplay/ch9/ch9_3_graphical_client_runtime.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_item_graph_replica_adapter.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
+    "scripts/runtime/networked_gameplay/contracts/item_command.gd",
+    "tests/characters/test_ch9_3_equipment_item_command_contract.gd",
     "tests/characters/test_ch9_3_multiplayer_equipment_authority.gd",
     "tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd",
     "tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
@@ -71,9 +73,11 @@
     "scripts/runtime/networked_gameplay/ch9/ch9_3_item_graph_replica_adapter.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "scripts/characters/equipment/network_character_equipment_projection.gd",
-    "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd"
+    "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
+    "scripts/runtime/networked_gameplay/contracts/item_command.gd"
   ],
   "validation_paths": [
+    "tests/characters/test_ch9_3_equipment_item_command_contract.gd",
     "tests/characters/test_ch9_3_multiplayer_equipment_authority.gd",
     "tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd",
     "tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
@@ -88,7 +92,8 @@
   "ownership_claims": [
     "CHARACTER_EQUIPMENT_NETWORK_ADAPTER_ONLY",
     "CHARACTER_EQUIPMENT_ITEM_GRAPH_AUTHORITY_EXTENSION_ONLY",
-    "CHARACTER_EQUIPMENT_REPLICA_PROJECTION_ONLY"
+    "CHARACTER_EQUIPMENT_REPLICA_PROJECTION_ONLY",
+    "EQUIPMENT_ITEM_COMMAND_NAMESPACE_ONLY"
   ],
   "forbidden_foundation_ownership": [
     "MOVEMENT_SNAPSHOT_SCHEMA",
