@@ -1,9 +1,24 @@
 # G7.3 Cross-Cell / Cross-LOD Invariance — IMPLEMENTED CANDIDATE
 
 **Дата:** 2026-08-10
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`
 **Branch:** `feature/g7-semantic-field-fabric`
 **G7.2 accepted baseline:** `68c4f90dbdac0e2d9968b4461207713f5661521b`
+
+## P0 frontier rule
+
+`GLOBAL-P0-2026-08-10-R2` изменил программу ledger так, что active frontier должен byte-exact совпадать с `main`, а исторические accepted/frozen branches не переписываются только ради нового global revision.
+
+Для G7.3 это означает:
+
+```text
+active G7 global config/docs == main R2
+historical accepted G6 may remain R1
+G6 ancestry still required
+G6 global byte equality no longer required
+```
+
+Это важно для acceptance runner: он проверяет `main <-> active G7`, а не пытается переписать accepted G6.
 
 ## Цель
 
@@ -137,8 +152,9 @@ Full runner проверяет:
 ```text
 current G6 ancestry
 G7.2 ACCEPTED ancestry
-GLOBAL-P0 byte alignment
-strict G7.3 proof-only changed-file scope
+active GLOBAL-P0 config/docs == main R2
+historical G6 is not required to equal R2
+strict G7.3 proof + P0-sync changed-file scope
 git diff --check
 G7.0/G7.1/G7.2 regressions
 G7.3 focused invariance
