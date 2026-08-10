@@ -9,10 +9,10 @@
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
   "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
-  "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "Architecture/reuse audit is closed: Construction already uses the shared M0 AggregateTransactionRepository/Coordinator through ConstructionM0TransactionBridge. T1A.7.1 adds a Construction-owned runtime aggregate state/adapter plus explicit checkpoint and restart restore, while reusing the existing M0 repository/coordinator. Windows focused acceptance is pending.",
+  "stage_status": "FIX1_IMPLEMENTED_CANDIDATE",
+  "progress_note": "The first Windows recovery gate preserved all inherited T1A.4/C5B/T1A.5 tests but exposed a restart-bootstrap defect before runtime restore: after M0 synchronized the already assembled construct, T1A.4 rebuilt the assembly plan and correctly failed with ATTACH_PART_SOURCE_ALREADY_ATTACHED. FIX1 adds opt-in idempotent persisted-composition reuse for the T1A.7 recovery path only, validates the restored ConstructSnapshot against the deterministic T1A.4 source snapshot, and skips duplicate assembly planning. Fresh Windows focused revalidation is pending.",
   "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-  "next_stage": "Accept T1A.7.1 recovery on Windows, then T1A.7.2 Late-Interest Baseline + Reconnect using the accepted MW7 subscription/replay pattern without Matter identity leakage.",
+  "next_stage": "Re-run T1A.7.1 focused Windows acceptance on FIX1; if green, record acceptance and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
@@ -39,6 +39,7 @@
   "watched_paths": [
     "scripts/construction/behavior/construction_runtime_state_store.gd",
     "scripts/construction/behavior/construction_affordance_runtime_executor.gd",
+    "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
     "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
     "scripts/labs/t1/t1a6_m3_runtime_server_adapter.gd",
     "scripts/labs/t1/t1a6_m3_runtime_client_adapter.gd",
@@ -56,6 +57,7 @@
   "critical_watched_paths": [
     "scripts/construction/behavior/construction_runtime_state_store.gd",
     "scripts/construction/behavior/construction_affordance_runtime_executor.gd",
+    "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
     "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
     "scripts/simulation/transactions/aggregate_transaction_repository.gd",
     "scripts/simulation/transactions/aggregate_transaction_coordinator.gd",
@@ -68,6 +70,8 @@
     "scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd",
     "scripts/construction/authoritative/construction_runtime_m0_translator.gd",
     "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
+    "scripts/labs/t1/t1_d0_interactive_fixture_binder.gd",
+    "scripts/labs/t1/t1_d0_interactive_runtime_executor.gd",
     "scripts/labs/t1/t1a7/**",
     "tests/construction/t1a7_*"
   ],
@@ -95,7 +99,7 @@
     "PERSISTENCE_DURABILITY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": ["T1A7_1_WINDOWS_FOCUSED_ACCEPTANCE_PENDING"],
+  "blockers": ["T1A7_1_FIX1_WINDOWS_FOCUSED_REVALIDATION_PENDING"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
