@@ -9,10 +9,10 @@
   "purpose": "Build stable semantic world fields independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
   "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields remain stable while derived presentation LOD visibly changes mesh density.",
   "current_stage": "G7.4 Semantic Field Lab",
-  "stage_status": "FIX3_FOCUSED_PASS_FULL_REGRESSION_PENDING",
-  "progress_note": "Fix3 visible presentation LOD is confirmed manually from LOD0 through LOD3, and fresh Windows focused validation on 667648392c1c7b523ec6d043115fdcc36820fef7 passes G7.0 180, G7.1 59, G7.2 52, G7.3 122 and G7.4 61 assertions with 0 failures. The headless lab smoke also passes with 561 semantic samples, five backed fields and PX/PZ coverage. Full world/core regression and remaining manual graphical checks are still required before G7.4 acceptance.",
+  "stage_status": "FIX3_AUTOMATED_ACCEPTANCE_PASS_MANUAL_GRAPHICAL_REMAINDER_PENDING",
+  "progress_note": "Fix3 visible presentation LOD is confirmed manually from LOD0 through LOD3. Focused Windows validation passes on runtime head 667648392c1c7b523ec6d043115fdcc36820fef7. Full G7.4 automated acceptance then passes on control head 661b0eecaaa0efdedb1eaa4ea870613392029978: PC0 G frontier PASS, G health not RED, G7.3 ancestor PASS, G7.4 scope PASS, five adapter-backed fields PASS, six vocabulary-only fields not faked PASS, world/core regression 6 PASS 0 FAIL through NX4, and working tree CLEAN. Only the remaining manual graphical observations block G7.4 acceptance.",
   "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-  "next_stage": "Run G7.4 full automated acceptance on the refreshed control state; if green, complete the remaining manual graphical checks, accept G7.4, then run G7 full acceptance.",
+  "next_stage": "Complete the remaining G7.4 manual graphical checks; if they pass, accept G7.4 and run G7 full acceptance before starting G8 geomorphology.",
   "parent_branch_or_checkpoint": "G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "base_commit": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3", "M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE"],
@@ -24,12 +24,13 @@
   "tested_heads": {
     "runtime": "667648392c1c7b523ec6d043115fdcc36820fef7",
     "focused": "667648392c1c7b523ec6d043115fdcc36820fef7",
-    "full_regression": "594f96a1337a08d62e6371de61e43640f99aab4a",
+    "full_regression": "661b0eecaaa0efdedb1eaa4ea870613392029978",
+    "full_acceptance": "661b0eecaaa0efdedb1eaa4ea870613392029978",
     "m5_fix2_focused": "866187c437f0dbc14bf5d8d0f0f9fb25ab106f17"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "semantic fields and derived G7 presentation"}],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC"],
-  "blockers": ["G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"],
+  "blockers": ["G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
