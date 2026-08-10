@@ -1,18 +1,19 @@
 {
   "schema": "planet_simulator.t1a7_4_scale_soak_validation.v1",
   "checkpoint": "T1A7_4_SCALE_SOAK_LAB",
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a7-runtime-recovery-interest-scale",
   "base_checkpoint": "T1A.7.3 Dirty / Selective Runtime Replication ACCEPTED",
   "accepted_runtime_dependency_head": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
   "accepted_t1a7_3_tested_checkout": "c6544100564d2fa55d96b607ccd9ea61c01387b1",
-  "candidate_lab_head_before_validation_metadata": "5231f83d52768437c9997d16bee9cff0594e0219",
+  "accepted_lab_head": "5231f83d52768437c9997d16bee9cff0594e0219",
+  "tested_checkout_head": "c0213f5edc078481c5705508244e6e556cd1945e",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "scope": {
@@ -62,6 +63,26 @@
     "interest_move_memory_static_observed": true,
     "timings_are_evidence_not_cpu_specific_hard_acceptance_thresholds": true
   },
+  "windows_focused_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "result": "PASS_BY_USER_EXECUTION_SEQUENCE",
+    "runner": "RUN_T1A7_4_SCALE_SOAK_TESTS.ps1",
+    "checkout_head": "c0213f5edc078481c5705508244e6e556cd1945e",
+    "assertion_count": "NOT_RESTATED_IN_USER_LOG; DO_NOT_INFER FROM PREFLIGHT",
+    "evidence_basis": "The prescribed sequence required the T1A.7.4 focused runner to pass before running full world regression; user then supplied the successful full regression from the same checkout."
+  },
+  "full_regression_evidence": {
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PASS",
+    "checkout_head": "c0213f5edc078481c5705508244e6e556cd1945e",
+    "rl3_representation_aware_network_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli": "6 PASS / 0 FAIL",
+    "lifecycle_state": "STOPPED",
+    "exit_code": 0,
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json"
+  },
   "preflight": {
     "platform": "Linux",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
@@ -91,14 +112,14 @@
   "required_validation": {
     "runner": "RUN_T1A7_4_SCALE_SOAK_TESTS.ps1",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "focused_result": "PENDING",
+    "focused_result": "PASS_BY_USER_EXECUTION_SEQUENCE",
     "full_regression_runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+    "full_regression_result": "PASS"
   },
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
-    "full_regression": ""
+    "runtime": "cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0",
+    "focused": "c0213f5edc078481c5705508244e6e556cd1945e",
+    "full_regression": "c0213f5edc078481c5705508244e6e556cd1945e"
   },
   "next_stage": "T1A.7.5 Composition Acceptance"
 }
