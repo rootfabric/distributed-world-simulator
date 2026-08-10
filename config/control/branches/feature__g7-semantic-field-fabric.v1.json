@@ -9,13 +9,13 @@
   "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
   "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected without becoming canonical identity.",
   "current_stage": "G7.4 Semantic Field Lab",
-  "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "G7.3 is accepted. G7.4 candidate exists and still requires automated/full acceptance plus manual graphical observation before G7 full acceptance and G8.",
+  "stage_status": "FIX1_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
+  "progress_note": "G7.4 semantic focused work reached world regression, where shared M5 graphical acceptance exposed an inherited final-convergence handoff deadlock. A2 timed out in WAIT_CONVERGENCE_PEER while B timed out in WAIT_FINAL_CONVERGENCE_PEER even though both graceful leaves succeeded and server joins/leaves/stale-peer checks converged. Fix1 makes later FINAL_CONVERGENCE_LOCKED/COMPLETE peer reports monotonic evidence for the earlier convergence barrier. Focused M5 rerun is required before G7.4 full acceptance may resume.",
   "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-  "next_stage": "G7 FULL ACCEPTANCE, then G8 Geomorphology",
+  "next_stage": "Verify shared M5 convergence Fix1, then G7.4 automated + manual graphical acceptance, then G7 FULL ACCEPTANCE and G8 Geomorphology",
   "parent_branch_or_checkpoint": "G7.3 ACCEPTED @ 1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
   "base_commit": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
-  "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3"],
+  "dependencies": ["G3", "G5", "G6", "G7_0", "G7_1", "G7_2", "G7_3", "M5_GRAPHICAL_MULTIPLAYER_ACCEPTANCE"],
   "owned_paths": [
     "config/procedural/g7-*",
     "scripts/simulation/procedural/semantic_fields/**",
@@ -31,12 +31,14 @@
     "scripts/simulation/procedural/features/**",
     "scripts/simulation/procedural/hydrology/**",
     "scripts/simulation/matter/**",
-    "scripts/network/contracts/**"
+    "scripts/network/contracts/**",
+    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
   ],
   "critical_watched_paths": [
     "scripts/simulation/procedural/contracts/semantic_field_*.gd",
     "scripts/simulation/procedural/semantic_fields/semantic_field_composer_v1.gd",
-    "scripts/simulation/procedural/hydrology/**"
+    "scripts/simulation/procedural/hydrology/**",
+    "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd"
   ],
   "runtime_paths": [
     "scripts/simulation/procedural/semantic_fields/**",
@@ -68,7 +70,10 @@
     "WORLD_WORK_BUDGET",
     "WORLD_QUERY_FABRIC"
   ],
-  "blockers": ["G7_4_AUTOMATED_AND_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"],
-  "health_declared": "YELLOW",
+  "blockers": [
+    "G7_4_SHARED_M5_FINAL_CONVERGENCE_FIX1_FOCUSED_RERUN_REQUIRED",
+    "G7_4_AUTOMATED_AND_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
+  ],
+  "health_declared": "RED",
   "cross_branch_overlap_enabled": true
 }
