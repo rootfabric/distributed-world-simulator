@@ -1,0 +1,104 @@
+{
+  "schema": "planet_simulator.ch9_3_multiplayer_equipment_presentation_validation.v1",
+  "stage": "CH9.3 Multiplayer Equipment Presentation",
+  "branch": "feature/ch9-3-multiplayer-equipment-presentation",
+  "base_branch": "feature/ch9-2-inventory-character-composition",
+  "base_checkpoint": "81009a47b64964f32e73c5ccd17167a446bf9b9f",
+  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "goal": "Replicate server-authoritative character equipment through the existing Item Graph channel and drive the accepted character equipment presenter on every compatible graphical client without adding equipment state to movement snapshots.",
+  "canonical_model": {
+    "new_item_relation_added": false,
+    "equipped_relation": "CONTAINER",
+    "equipment_container_pattern": "equipment/<logical_player_id>",
+    "container_kind": "CHARACTER_EQUIPMENT",
+    "slot_count": 5,
+    "slot_order": ["head", "back", "upper", "lower", "feet"],
+    "authority": "SERVER_CANONICAL_ITEM_GRAPH",
+    "single_slot_replace": "ATOMIC_IN_ONE_AUTHORITY_OPERATION",
+    "multi_item_replace": "DEFERRED_SHARED_TRANSACTION"
+  },
+  "transport": {
+    "new_transport_protocol": false,
+    "command_message": "ITEM_COMMAND",
+    "origin_replication": "COMMAND_RESULT.item_graph_delta",
+    "remote_replication": "ITEM_GRAPH_DELTA",
+    "resync": "ITEM_GRAPH_SNAPSHOT",
+    "late_join": "JOIN_ACK.item_graph_snapshot",
+    "movement_snapshot_equipment_ids": false,
+    "compact_movement_snapshot_equipment_ids": false
+  },
+  "implementation": {
+    "semantic_catalog": "res://scripts/characters/equipment/network_character_equipment_catalog.gd",
+    "authority_graph": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_equipment_item_graph_service.gd",
+    "network_service": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_networked_gameplay_service.gd",
+    "dedicated_runtime": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_dedicated_server_runtime.gd",
+    "client_runtime_probe": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_graphical_client_runtime.gd",
+    "production_replica_adapter": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_item_graph_replica_adapter.gd",
+    "network_item_bridge": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
+    "equipment_projection": "res://scripts/characters/equipment/network_character_equipment_projection.gd",
+    "network_equipment_gameplay_controller": "res://scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
+    "runner": ".\\RUN_CH9_3_MULTIPLAYER_EQUIPMENT_TESTS.ps1 -GodotPath $Godot"
+  },
+  "invariants": [
+    "ONE_PHYSICAL_ITEM_ONE_CANONICAL_ITEM_ID",
+    "EQUIPMENT_IS_ITEM_GRAPH_CONTAINER_STATE",
+    "SERVER_IS_ONLY_NETWORK_EQUIPMENT_MUTATION_AUTHORITY",
+    "PLAYER_CANNOT_EQUIP_ANOTHER_PLAYERS_ITEM",
+    "EQUIPMENT_QUANTITY_IS_ONE",
+    "SLOT_DEFINITION_MUST_MATCH",
+    "SINGLE_SLOT_REPLACEMENT_IS_ATOMIC",
+    "EQUIPMENT_CONTAINER_REFERENCE_ORDER_IS_DETERMINISTIC",
+    "REMOTE_AND_ORIGIN_CLIENTS_CONVERGE_ON_ITEM_GRAPH_CHECKSUM",
+    "LATE_JOIN_RECEIVES_EXISTING_EQUIPMENT_FROM_FULL_ITEM_GRAPH_SNAPSHOT",
+    "CHARACTER_EQUIPMENT_PROJECTION_IS_PRESENTATION_NEUTRAL",
+    "SERVER_HAS_NO_RIG_MESH_SKELETON_CAMERA_OR_UI_DEPENDENCY",
+    "CHARACTER_EQUIPMENT_PRESENTER_OWNS_VISUALS_ONLY",
+    "MOVEMENT_AND_PREDICTION_SNAPSHOTS_CARRY_ZERO_EQUIPMENT_ITEM_IDS"
+  ],
+  "focused_tests": {
+    "ch9_0_regression": "res://tests/characters/test_ch9_item_graph_equipment_source.gd",
+    "ch9_1_regression": "res://tests/characters/test_ch9_1_authoritative_equipment_operations.gd",
+    "ch9_2_regression": "res://tests/characters/test_ch9_2_inventory_character_composition.gd",
+    "authority": "res://tests/characters/test_ch9_3_multiplayer_equipment_authority.gd",
+    "replica_projection": "res://tests/characters/test_ch9_3_multiplayer_equipment_replica_projection.gd",
+    "character_presentation": "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
+    "real_enet_replication": "res://tests/characters/test_ch9_3_enet_equipment_replication.gd"
+  },
+  "enet_acceptance": [
+    "server plus clients A and B complete the existing compatibility handshake and JOIN path",
+    "A sends equipment.equip through reliable ITEM_COMMAND",
+    "A applies authoritative delta carried in COMMAND_RESULT",
+    "B applies broadcast ITEM_GRAPH_DELTA",
+    "A and B converge on the same canonical Item Graph checksum",
+    "B projects A equipment into CharacterEquipmentDomain.Snapshot",
+    "client C joins after equip and receives A equipment in JOIN_ACK full Item Graph snapshot",
+    "A unequips and A/B converge again",
+    "no equipment Item ID appears in gameplay/movement snapshot"
+  ],
+  "presentation_acceptance": [
+    "replicated full five-slot equipment snapshot is accepted by CH8 CharacterEquipmentPresenter",
+    "helmet backpack upper lower and feet visuals are created by existing presentation IDs",
+    "body-visible garment policy remains presentation-only",
+    "presenter owns no network state and never moves gameplay body"
+  ],
+  "deferred": [
+    "CH9.4 equipment persistence recovery reconnect durability",
+    "general multi-item atomic replacement for EVA-style conflicting outfits",
+    "main-world replacement of generic remote capsule with production art character"
+  ],
+  "formal_lineage_notes": [
+    "CH9.2 content is focused+graphically accepted",
+    "historic CH8 final-runner and PC0 character-frontier handoff remain recorded lineage work"
+  ],
+  "windows_results": {
+    "editor_import": "PENDING",
+    "ch9_0_regression": "PENDING",
+    "ch9_1_regression": "PENDING",
+    "ch9_2_regression": "PENDING",
+    "authority": "PENDING",
+    "replica_projection": "PENDING",
+    "character_presentation": "PENDING",
+    "real_enet_replication": "PENDING",
+    "candidate_runner": "PENDING"
+  }
+}
