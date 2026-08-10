@@ -81,7 +81,8 @@ function Test-G81AllowedPath {
         "config/procedural/g7-g13-p0-aligned-roadmap.v1.json",
         "config/procedural/g8-1-valley-incision-baseline.v1.json",
         "docs/checkpoints/G8_1_VALLEY_INCISION_BASELINE_CANDIDATE_RU.md",
-        "validation/g8-1-valley-incision-baseline-validation.json"
+        "validation/g8-1-valley-incision-baseline-validation.json",
+        "tests/procedural/geomorphology/g8_0_geomorphology_contracts_acceptance.gd"
     )) { return $true }
     if ($Path -match '^scripts/simulation/procedural/geomorphology/valley_incision_baseline_v1\.gd(\.uid)?$') { return $true }
     if ($Path -match '^tests/procedural/geomorphology/g8_1_valley_incision_acceptance\.gd(\.uid)?$') { return $true }
