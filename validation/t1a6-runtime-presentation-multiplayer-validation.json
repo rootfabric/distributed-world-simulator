@@ -1,0 +1,94 @@
+{
+  "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
+  "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
+  "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
+  "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "scope": {
+    "construct_id": "construct/t1/lunar-outpost/d0",
+    "runtime_subject_count": 4,
+    "presentation_subjects": ["DOOR", "GENERATOR", "LAMP", "CONSOLE"],
+    "graphical_client_count": 2,
+    "runtime_command_count_in_acceptance": 3,
+    "runtime_command_sequence": ["OPEN_DOOR", "TOGGLE_LIGHT", "CLOSE_DOOR"],
+    "visual_lab": "tools/runtime/t1a6_visual_lab.gd"
+  },
+  "transport": {
+    "base_server": "accepted M3 dedicated server runtime",
+    "base_client": "accepted M3 graphical client runtime",
+    "new_transport_foundation": false,
+    "runtime_command_channel": "CONTROL",
+    "runtime_command_delivery": "RELIABLE_ORDERED",
+    "runtime_full_snapshot_channel": "RESYNC",
+    "runtime_full_snapshot_delivery": "RELIABLE_ORDERED",
+    "runtime_full_snapshot_reason": "low-rate discrete canonical state; correctness must not depend on a later event",
+    "transport_session_fence": true,
+    "protocol_manifest_fingerprints_runtime_snapshot": true
+  },
+  "replication_contract": {
+    "snapshot_schema": "planet_simulator.construction_runtime_snapshot.v1",
+    "replica_store_schema": "planet_simulator.construction_runtime_replica_store.v1",
+    "revision_source": "construction runtime state store generation",
+    "exact_replay_supported": true,
+    "clock_only_update_supported": true,
+    "stale_revision_ignored": true,
+    "same_revision_mutation_rejected": true,
+    "authority_epoch_reset_supported": true
+  },
+  "presentation": {
+    "canonical_truth": false,
+    "derived_from_runtime_snapshot": true,
+    "door": "hinge yaw derived from CLOSED/OPEN",
+    "lamp": "OmniLight visibility derived from on",
+    "generator": "indicator visibility derived from running",
+    "console": "indicator visibility derived from active",
+    "writes_back_to_runtime": false,
+    "writes_back_to_construct": false,
+    "writes_back_to_item_graph": false
+  },
+  "graphical_acceptance": {
+    "client_a": "opens door, later closes door",
+    "client_b": "joins after door open, must observe open baseline, toggles lamp",
+    "final_state": "door CLOSED, lamp ON, generator RUNNING, console INACTIVE",
+    "server_client_state_checksum_convergence_required": true,
+    "presentation_convergence_required": true,
+    "runtime_snapshot_rejections_required": 0
+  },
+  "p0_alignment": {
+    "canonical_runtime_is_presentation": false,
+    "canonical_runtime_is_transport": false,
+    "new_authority_registry": false,
+    "new_transport_boundary": false,
+    "new_network_channel": false,
+    "new_item_registry": false,
+    "new_construct_store": false,
+    "new_transaction_coordinator": false,
+    "presentation_identity_in_canonical_state": false,
+    "authority_route_in_permanent_identity": false,
+    "lod_or_hlod_in_runtime_identity": false,
+    "material_definition_id_added": false
+  },
+  "focused_gate": {
+    "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "dependencies": [
+      "T1A5 interactive runtime execution acceptance",
+      "NX0 protocol manifest baseline",
+      "M3 graphical multiplayer contracts",
+      "C5C runtime replication contracts"
+    ],
+    "candidate": "PENDING_EXACT_WINDOWS_RUN"
+  },
+  "full_regression": {
+    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "result": "PENDING_AFTER_FOCUSED_PASS"
+  },
+  "next_after_acceptance": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE"
+}
