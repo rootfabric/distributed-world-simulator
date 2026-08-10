@@ -9,10 +9,10 @@
   "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state without creating a second aggregate, persistence path, authority registry or network correctness layer.",
   "expected_outcome": "Runtime subjects expose deterministic ONLINE/DEGRADED/OFFLINE failure semantics, dependency failures propagate in bounded deterministic ways, failed commands have explicit policy, and checkpoint/reconnect recovery converges through the existing T1A.7 path.",
   "current_stage": "T1B.0 Runtime Failure Contract",
-  "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-  "progress_note": "T1A.7 Runtime Recovery / Interest / Scale is ACCEPTED on exact Windows focused/full checkout 1430284c3e523d9292804be2fc347ac1f70d39a6 and final branch head bbddc9666777c0b4d6289ebc9483c8bfb0e90f14. T1B.0 is implemented as a pure failure policy over existing ConstructionRuntimeSubjectState plus existing ConstructionRuntimeStateStore commits. Requirement levels NONE/OPTIONAL/REQUIRED project deterministic ONLINE/DEGRADED/OFFLINE with POWER_UNAVAILABLE, DATA_UNAVAILABLE and DEPENDENCY_UNAVAILABLE codes. Existing gameplay fields are preserved, stale commits are fenced by the existing revision mechanism, failure-bearing runtime store state is recovery-roundtrip compatible, and ConstructSnapshot is not mutated. Focused Windows validation is pending. T2.0 remains blocked by C22 MAIN_INTEGRATED + TS0.4 classification + PC0 convergence.",
+  "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "progress_note": "T1B.0 Windows focused gate PASS on checkout 1f08defe57f592f5e2698da71a1e3180b0875014 using Godot 4.7.1.stable.double.custom_build.a13da4feb. The full accepted parent chain reran green: T1A.6 multiplayer 25, T1A.7.2 interest 34, late-interest/reconnect 35, T1A.7.3 dirty/selective 44, selective processes 35, T1A.7.4 scale/soak 2394 across two cases, T1A.7.5 composition 56. The new T1B.0 failure contract passed 39 assertions. The 10k inherited case retained 800 projected vs 32000 broadcast baseline messages, 1024 targeted vs 7168 avoided mutation deliveries, zero planner failures, and full-authoritative-baseline reconnect. Only a fresh full world/core regression on the same checkout remains before T1B.0 acceptance. T2.0 remains blocked by C22 MAIN_INTEGRATED + TS0.4 classification + PC0 convergence.",
   "last_accepted_checkpoint": "T1A.7 Runtime Recovery / Interest / Scale",
-  "next_stage": "Run RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1 on Windows double Godot. If green, keep the exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1. Only T1B.0 acceptance unlocks T1B.1 Dependency Failure Propagation.",
+  "next_stage": "Without fetch/reset, run RUN_WORLD_REGRESSION_TESTS.ps1 on the same focused checkout. A green full regression accepts T1B.0 and unlocks T1B.1 Dependency Failure Propagation.",
   "parent_branch_or_checkpoint": "feature/t1a7-runtime-recovery-interest-scale ACCEPTED @ bbddc9666777c0b4d6289ebc9483c8bfb0e90f14",
   "base_commit": "bbddc9666777c0b4d6289ebc9483c8bfb0e90f14",
   "dependencies": ["T1A7_ACCEPTED_RUNTIME_RECOVERY_INTEREST_SCALE", "C5B_CONSTRUCTION_RUNTIME_STATE", "C15_EXECUTABLE_UTILITIES", "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR"],
@@ -21,14 +21,18 @@
   "critical_watched_paths": ["scripts/construction/behavior/construction_runtime_subject_state.gd", "scripts/construction/behavior/construction_runtime_state_store.gd", "scripts/construction/behavior/construction_affordance_runtime_executor.gd", "scripts/construction/behavior/construction_runtime_persistence_state.gd", "scripts/simulation/transactions/aggregate_transaction_coordinator.gd", "scripts/network/contracts/network_protocol_manifest.gd"],
   "runtime_paths": ["scripts/construction/behavior/construction_runtime_failure_policy.gd"],
   "validation_paths": ["tests/construction/t1b0_runtime_failure_contracts.gd", "RUN_T1B0_RUNTIME_FAILURE_TESTS.ps1", "validation/t1b0-runtime-failure-contracts-validation.json", "docs/plans/T1B_COMPOSITION_FAILURE_RECOVERY_PLAN_RU.md"],
-  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "tested_heads": {
+    "runtime": "1f08defe57f592f5e2698da71a1e3180b0875014",
+    "focused": "1f08defe57f592f5e2698da71a1e3180b0875014",
+    "full_regression": ""
+  },
   "ownership_claims": [
     {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "failure operability is represented inside existing canonical Construction runtime subject state and committed by the existing runtime store"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "reuse accepted T1A.7 M0 persistence/recovery path; no T1B repository"},
     {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "future T1B replication reuses accepted ConstructionRuntimeSnapshot path; T1B.0 adds no message/channel"}
   ],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC"],
-  "blockers": ["T1B0_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B0_FULL_WORLD_REGRESSION_PENDING"],
+  "blockers": ["T1B0_FULL_WORLD_REGRESSION_PENDING"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
