@@ -30,7 +30,7 @@ function Resolve-Godot([string]$Requested) {
     throw "Godot 4.7.1 double was not found. Pass -GodotPath or set GODOT_BIN."
 }
 
-function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
+function Invoke-Godot-Test([string]$Name, [string]$ScriptPath, [string[]]$UserArgs = @()) {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
     $PreviousErrorActionPreference = $ErrorActionPreference
@@ -43,10 +43,15 @@ function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
         }
-        & $Godot @(
+        $GodotArgs = @(
             "--headless", "--path", $Root,
             "--script", $ScriptPath
-        ) 2>&1 | ForEach-Object {
+        )
+        if ($UserArgs.Count -gt 0) {
+            $GodotArgs += "--"
+            $GodotArgs += $UserArgs
+        }
+        & $Godot @GodotArgs 2>&1 | ForEach-Object {
             $Line = [string]$_
             $Output.Add($Line)
             Write-Host $Line
@@ -80,10 +85,16 @@ Invoke-Godot-Test "ch8b_quaternius_selective_skinned_parts" "res://tests/charact
 Invoke-Godot-Test "ch8b_real_layered_equipment_presentation" "res://tests/characters/test_ch8b_real_layered_equipment_presentation.gd"
 Invoke-Godot-Test "ch8c_quaternius_vertex_inflation" "res://tests/characters/test_ch8c_quaternius_vertex_inflation.gd"
 Invoke-Godot-Test "ch8c_body_visible_inflated_overlay" "res://tests/characters/test_ch8c_body_visible_inflated_overlay.gd"
+Invoke-Godot-Test "ch8c_cli_inflation_override" "res://tests/characters/test_ch8c_cli_inflation_override.gd" @(
+    "--ch8c-upper-inflation=0.032",
+    "--ch8c-lower-inflation=0.038",
+    "--ch8c-feet-inflation=0.036",
+    "--ch8c-inflation-scale=1.0"
+)
 Invoke-Godot-Test "ch8c_quaternius_layered_equipment_lab" "res://tests/characters/test_ch8c_quaternius_layered_equipment_lab.gd"
 Invoke-Godot-Test "ch8c_topology_fallback_regression" "res://tests/characters/test_ch8c_quaternius_topology_occlusion.gd"
 Invoke-Godot-Test "ch8c_high_boot_fallback_regression" "res://tests/characters/test_ch8c_quaternius_high_boot_occlusion.gd"
 
 Write-Host ""
-Write-Host "CH8 Layered Equipment + body-visible inflated overlay candidate runner: PASS" -ForegroundColor Green
+Write-Host "CH8 Layered Equipment + body-visible tunable inflated overlay candidate runner: PASS" -ForegroundColor Green
 exit 0
