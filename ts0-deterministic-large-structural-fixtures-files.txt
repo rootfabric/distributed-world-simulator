@@ -1,0 +1,10 @@
+RUN_TS0_FIXTURE_TESTS.ps1
+RUN_TS0_FIXTURE_TESTS.sh
+config/construction/ts0-large-structural-visual-lab.v1.json
+docs/checkpoints/2026-08-10_TS0_P0_ALIGNMENT_AND_TS0_0_FIXTURES_RU.md
+scripts/labs/t1/ts0/ts0_large_structural_fixture_builder.gd
+scripts/labs/t1/ts0/ts0_large_structural_fixture_builder.gd.uid
+tests/construction/ts0/ts0_fixture_contract_acceptance.gd
+tests/construction/ts0/ts0_fixture_contract_acceptance.gd.uid
+ts0-deterministic-large-structural-fixtures-files.txt
+validation/ts0-deterministic-large-structural-fixtures-validation.json

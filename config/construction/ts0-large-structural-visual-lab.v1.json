@@ -7,43 +7,69 @@
     "checkpoint": "T1A.3_SOURCE_ACCEPTED",
     "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
   },
-  "status": "IMPLEMENTATION_READY_PRE_T2_EXPERIMENTAL",
+  "status": "TS0_0_IMPLEMENTED_CANDIDATE",
   "purpose": "Prove large simple canonical Construction objects can be rendered through existing C21/C22/C24 representation paths without node/draw-call count scaling linearly with semantic part count.",
+  "fixture_seed_version": "ts0-large-structural-fixtures-v1",
+  "structural_grid": {
+    "cell_size_m": 1.0,
+    "section_size_m": 8.0,
+    "part_mass_kg": 100.0,
+    "representation_fast_path": "C22_UNIT_AXIS_GRID",
+    "position_policy": "INTEGER_LATTICE",
+    "rotation_policy": "IDENTITY",
+    "requirements": [
+      "UNIT_AXIS_ALIGNED_CELL",
+      "INTEGER_LOCAL_POSITION",
+      "C22_OCCUPANCY_INTERNAL_FACE_CULLING",
+      "C22_GREEDY_GRID_MESHING",
+      "C24_ARRAY_MESH_MATERIALIZATION"
+    ]
+  },
   "profiles": {
     "CUBE_10K": {
       "shape": "CUBE",
-      "block_size_m": 2.0,
+      "block_size_m": 1.0,
       "dimensions": [22, 22, 22],
       "expected_part_count": 10648,
-      "acceptance_role": "TS0_1_VISUAL_PROOF"
+      "expected_canonical_checksum": "6afcb91d403e0e380f33ad202748f6f7524843188036d9e083e1cbe315672a4f",
+      "acceptance_role": "TS0_1_VISUAL_PROOF",
+      "materialize_in_ts0_0_acceptance": true
     },
     "PYRAMID_10K": {
       "shape": "STEPPED_SQUARE_PYRAMID",
-      "block_size_m": 2.0,
+      "block_size_m": 1.0,
       "levels": 31,
       "expected_part_count": 10416,
-      "acceptance_role": "TS0_1_VISUAL_PROOF"
+      "expected_canonical_checksum": "39babb3e29949f48fb2df1ddc89c24f6a16e46760939a5b009c29bfbbe5464bf",
+      "acceptance_role": "TS0_1_VISUAL_PROOF",
+      "materialize_in_ts0_0_acceptance": true
     },
     "CUBE_100K": {
       "shape": "CUBE",
-      "block_size_m": 2.0,
+      "block_size_m": 1.0,
       "dimensions": [46, 46, 46],
       "expected_part_count": 97336,
-      "acceptance_role": "TS0_2_PRIMARY_SCALE_GATE"
+      "expected_canonical_checksum": "4aebed994f09f578ae241a9c8adb677eb5cf81d1581aea99491921c6f685e084",
+      "acceptance_role": "TS0_2_PRIMARY_SCALE_GATE",
+      "materialize_in_ts0_0_acceptance": false
     },
     "PYRAMID_100K": {
       "shape": "STEPPED_SQUARE_PYRAMID",
-      "block_size_m": 2.0,
+      "block_size_m": 1.0,
       "levels": 67,
       "expected_part_count": 102510,
-      "acceptance_role": "TS0_2_PRIMARY_SCALE_GATE"
+      "expected_canonical_checksum": "4a721061894d65b7bee1d9502a331e0879e4ce5a8047cfe53650460e07b636e6",
+      "acceptance_role": "TS0_2_PRIMARY_SCALE_GATE",
+      "materialize_in_ts0_0_acceptance": false
     },
     "CUBE_1M_RESEARCH": {
       "shape": "CUBE",
-      "block_size_m": 2.0,
+      "block_size_m": 1.0,
       "dimensions": [100, 100, 100],
       "expected_part_count": 1000000,
-      "acceptance_role": "TS0_4_RESEARCH_CEILING_ONLY"
+      "expected_canonical_checksum": "bfdefbbefc2cde42e713ff6eefbe63c88d35777a4ce9f7deb0d9d25318035543",
+      "acceptance_role": "TS0_4_RESEARCH_CEILING_ONLY",
+      "materialize_in_ts0_0_acceptance": false
     }
   },
   "stages": [
@@ -53,6 +79,13 @@
     "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
     "TS0.4_1M_RESEARCH_CEILING_PROBE"
   ],
+  "stage_status": {
+    "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES": "IMPLEMENTED_CANDIDATE",
+    "TS0.1_10K_VISUAL_PROOF": "PLANNED",
+    "TS0.2_100K_VISUAL_SCALE_GATE": "PLANNED",
+    "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD": "PLANNED",
+    "TS0.4_1M_RESEARCH_CEILING_PROBE": "PLANNED"
+  },
   "telemetry": [
     "canonical_part_count",
     "canonical_revision",
@@ -82,6 +115,7 @@
   "primary_gate": {
     "stage": "TS0.2",
     "minimum_canonical_part_count": 90000,
+    "require_grid_fast_path": true,
     "requirements": [
       "RUNTIME_NODE_COUNT_BOUNDED_AND_FAR_BELOW_PART_COUNT",
       "COMPILED_REPRESENTATION_USED",
@@ -96,7 +130,8 @@
     "operation": "REMOVE_CORNER_VOLUME",
     "dimensions": [10, 10, 10],
     "expected_removed_parts": 1000,
-    "require_local_dirty_rebuild": true
+    "require_local_dirty_rebuild": true,
+    "known_pre_ts0_gap": "C22 recompile_incremental currently performs full compile before deriving invalidation; TS0.3 must close this execution gap without changing authority."
   },
   "reuses": [
     "C21_LARGE_SCALE_ACCEPTANCE",

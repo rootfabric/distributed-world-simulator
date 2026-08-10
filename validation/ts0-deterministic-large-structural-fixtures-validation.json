@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.ts0_deterministic_large_structural_fixtures_validation.v1",
+  "checkpoint": "TS0.0_DETERMINISTIC_LARGE_STRUCTURAL_FIXTURES",
+  "branch": "feature/ts0-large-structural-visual-lab",
+  "base": {
+    "checkpoint": "T1A.3_SOURCE_ACCEPTED",
+    "commit": "5e051f67bf6987a354de5b565da1448be6b0b4db"
+  },
+  "global_revision": "GLOBAL-P0-2026-08-10-R2",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "alignment": {
+    "structural_cell_size_m": 1.0,
+    "section_size_m": 8.0,
+    "representation_fast_path": "C22_UNIT_AXIS_GRID",
+    "old_2m_fallback_risk_removed": true,
+    "new_foundation_ownership": false
+  },
+  "profiles": {
+    "CUBE_10K": {
+      "expected_part_count": 10648,
+      "canonical_checksum": "6afcb91d403e0e380f33ad202748f6f7524843188036d9e083e1cbe315672a4f",
+      "ts0_0_materialized": true
+    },
+    "PYRAMID_10K": {
+      "expected_part_count": 10416,
+      "canonical_checksum": "39babb3e29949f48fb2df1ddc89c24f6a16e46760939a5b009c29bfbbe5464bf",
+      "ts0_0_materialized": true
+    },
+    "CUBE_100K": {
+      "expected_part_count": 97336,
+      "canonical_checksum": "4aebed994f09f578ae241a9c8adb677eb5cf81d1581aea99491921c6f685e084",
+      "ts0_0_materialized": false,
+      "deferred_to": "TS0.2"
+    },
+    "PYRAMID_100K": {
+      "expected_part_count": 102510,
+      "canonical_checksum": "4a721061894d65b7bee1d9502a331e0879e4ce5a8047cfe53650460e07b636e6",
+      "ts0_0_materialized": false,
+      "deferred_to": "TS0.2"
+    },
+    "CUBE_1M_RESEARCH": {
+      "expected_part_count": 1000000,
+      "canonical_checksum": "bfdefbbefc2cde42e713ff6eefbe63c88d35777a4ce9f7deb0d9d25318035543",
+      "ts0_0_materialized": false,
+      "deferred_to": "TS0.4"
+    }
+  },
+  "focused_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "environment": "isolated micro-harness using the repository ConstructionPartRecord/ConstructSnapshot contract shape and canonical JSON hashing semantics",
+    "editor_import": "PASS",
+    "fixture_acceptance": "PASS_61_ASSERTIONS",
+    "cube_10k_forward_reverse": "PASS",
+    "pyramid_10k_forward_reverse": "PASS",
+    "c22_unit_grid_probes": "PASS",
+    "repository_full_regression": "PENDING_EXTERNAL_BRANCH_RUN"
+  },
+  "known_gap": {
+    "stage": "TS0.3",
+    "code_path": "ConstructionProxyStreamingController.recompile_incremental",
+    "issue": "Current implementation performs full compile_construct before reporting dirty-section invalidation.",
+    "blocks_ts0_0": false,
+    "blocks_ts0_2": false,
+    "must_be_closed_by_ts0_3": true
+  },
+  "next": "TS0.1_10K_GRAPHICAL_PROOF"
+}
