@@ -1,0 +1,68 @@
+{
+  "schema": "distributed_world_simulator.c22_incremental_local_rebuild_validation.v1",
+  "branch": "feature/c22-incremental-local-rebuild",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "base_main": "0cb0416f20946afc85abe9abcded07bfcc493bf7",
+  "source_evidence": {
+    "branch": "feature/ts0-large-structural-visual-lab",
+    "checkpoint": "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
+    "windows_focused": "PASS_24_ASSERTIONS",
+    "c24_contracts": "PASS_81_ASSERTIONS",
+    "evidence_only": true
+  },
+  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": false,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": false,
+    "PRODUCTION_READY": false
+  },
+  "production_changes": {
+    "incremental_rebuilder": "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "artifact_merger": "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "controller_integration": "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
+    "c24_clockwise_prerequisite": "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
+    "canonical_construction_truth_changed": false,
+    "authority_or_persistence_changed": false
+  },
+  "fast_path_contract": {
+    "eligible": "UNIT_AXIS_GRID_NO_INTERIOR_NO_INTERACTIVE_SAME_COMPILE_POLICY",
+    "dirty_lookup": "BINARY_SEARCH_CANONICALLY_SORTED_CONSTRUCT_SNAPSHOT_PARTS",
+    "base_dirty_sections": "OLD_AND_NEW_DIRTY_PART_SECTION_COORDS",
+    "rebuild_scope": "DIRTY_SECTIONS_PLUS_ONE_SECTION_NEIGHBORHOOD",
+    "surface_context": "REBUILD_SCOPE_PLUS_ONE_SECTION_NEIGHBORHOOD",
+    "unchanged_sections": "REUSE_CONTENT_ADDRESSED_SECTION_ARTIFACTS",
+    "far_shell": "SECOND_PASS_GREEDY_MERGE_FROM_SECTION_ARTIFACTS",
+    "unsupported_cases": "SAFE_FULL_COMPILE_FALLBACK",
+    "full_snapshot_scan_required_on_fast_path": false,
+    "full_c22_compile_required_on_fast_path": false
+  },
+  "focused_acceptance": {
+    "fixture": "32x32x32 unit grid",
+    "canonical_parts": 32768,
+    "section_size_m": 8,
+    "total_sections": 64,
+    "mutation": "REMOVE_CORNER_4x4x4",
+    "dirty_parts": 64,
+    "expected_base_dirty_sections": 1,
+    "expected_rebuild_sections": 8,
+    "expected_reused_sections": 56,
+    "expected_context_sections": 27,
+    "reference_equivalence_required": [
+      "TOPOLOGY_CHECKSUM_EQUALS_FULL_COMPILE",
+      "SECTION_ARTIFACT_IDS_EQUAL_FULL_COMPILE",
+      "SHELL_ARTIFACT_ID_EQUALS_FULL_COMPILE"
+    ],
+    "fallback_policy_change_test_required": true,
+    "c22_graphical_regression_required": true,
+    "c24_backend_contracts_required": true
+  },
+  "remaining_gates": [
+    "Run RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1 on exact Windows Godot",
+    "Record tested runtime/focused head after PASS",
+    "Run RUN_WORLD_REGRESSION_TESTS.ps1 on the same runtime head",
+    "Run CONTROL_PROJECT.ps1 -NoFailOnRed and inspect cross-branch overlap",
+    "Only then mark convergence SOURCE_ACCEPTED / merge-ready"
+  ]
+}
