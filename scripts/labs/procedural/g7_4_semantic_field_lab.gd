@@ -36,7 +36,14 @@ const LON_SEGMENTS := 32
 const GRID_WIDTH := LON_SEGMENTS + 1
 const GRID_HEIGHT := LAT_SEGMENTS + 1
 const EXPECTED_SAMPLE_COUNT := GRID_WIDTH * GRID_HEIGHT
-const VISUAL_LOD := 8
+const ADDRESSING_LOD := 8
+# Derived presentation only. LOD0 is nearest/highest detail; LOD3 is far/coarsest.
+# All four levels reuse the same 561 semantic records and therefore cannot
+# create a new SemanticFieldId, FeatureId, FluidRegionId, or canonical query.
+const PRESENTATION_LOD_STRIDES: Array[int] = [1, 2, 4, 8]
+const PRESENTATION_LOD1_DISTANCE := 11.0
+const PRESENTATION_LOD2_DISTANCE := 15.0
+const PRESENTATION_LOD3_DISTANCE := 20.0
 const FIELD_KEYS: Array[String] = [
 	Registry.SURFACE_HEIGHT_M,
 	Registry.VALLEY_INFLUENCE,
@@ -70,6 +77,7 @@ var field_ranges: Dictionary = {}
 var observed_faces: Dictionary = {}
 var presentation_manifest_hash := ""
 var current_field_index := 0
+var current_presentation_lod := -1
 var patch_node: MeshInstance3D
 var river_node: MeshInstance3D
 var yaw_deg := CAMERA_DEFAULT_YAW_DEG
@@ -112,7 +120,7 @@ func _ready() -> void:
 		return
 
 	_setup_planet_material()
-	_rebuild_patch_mesh()
+	_update_presentation_lod(true)
 	_rebuild_river_overlay()
 	_update_camera()
 	_update_hud()
@@ -122,6 +130,7 @@ func _process(delta: float) -> void:
 	if auto_orbit:
 		yaw_deg = fposmod(yaw_deg + 5.0 * delta, 360.0)
 	_update_camera_input(delta)
+	_update_presentation_lod(false)
 	_update_camera()
 	_update_hud()
 
@@ -151,7 +160,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			pitch_deg = CAMERA_DEFAULT_PITCH_DEG
 			camera_distance = CAMERA_DEFAULT_DISTANCE
 			auto_orbit = false
-			_rebuild_patch_mesh()
+			_update_presentation_lod(true)
 	_update_hud()
 
 
@@ -243,7 +252,7 @@ func _build_semantic_records() -> Dictionary:
 				provenance_checksums[field_id] = String(sample["provenance"]["checksum"])
 				_update_field_range(field_id, value)
 
-			var addressed: Dictionary = addressing.direction_to_cell(Fixture.BODY_ID, _array3(direction), VISUAL_LOD)
+			var addressed: Dictionary = addressing.direction_to_cell(Fixture.BODY_ID, _array3(direction), ADDRESSING_LOD)
 			if not bool(addressed.get("success", false)):
 				return addressed
 			var face := String(addressed["details"]["cell"]["face"])
@@ -277,6 +286,19 @@ func _headless_smoke() -> Dictionary:
 		return {"success": false, "error_code": "G7_4_SAMPLE_COUNT_MISMATCH", "details": {"actual": semantic_records.size()}}
 	if not observed_faces.has("PX") or not observed_faces.has("PZ"):
 		return {"success": false, "error_code": "G7_4_EXPECTED_PX_PZ_FACES_MISSING", "details": {"faces": observed_faces.keys()}}
+	var lod_policy: Dictionary = manifest.get("presentation_lod", {})
+	var lod_levels: Array = lod_policy.get("levels", [])
+	if String(lod_policy.get("mode", "")) != "CAMERA_DISTANCE_DERIVED" or lod_levels.size() != 4:
+		return {"success": false, "error_code": "G7_4_PRESENTATION_LOD_POLICY_INVALID"}
+	var manifest_strides: Array[int] = []
+	for level_value in lod_levels:
+		if not (level_value is Dictionary):
+			return {"success": false, "error_code": "G7_4_PRESENTATION_LOD_LEVEL_INVALID"}
+		manifest_strides.append(int(Dictionary(level_value).get("stride", 0)))
+	if manifest_strides != PRESENTATION_LOD_STRIDES:
+		return {"success": false, "error_code": "G7_4_PRESENTATION_LOD_STRIDE_MISMATCH", "details": {"actual": manifest_strides}}
+	if bool(lod_policy.get("changes_canonical_semantics", true)):
+		return {"success": false, "error_code": "G7_4_PRESENTATION_LOD_OWNS_SEMANTICS"}
 	var registry_validation: Dictionary = Registry.validate_registry()
 	if not bool(registry_validation.get("success", false)):
 		return registry_validation
@@ -305,19 +327,58 @@ func _select_field(index: int) -> void:
 	_rebuild_patch_mesh()
 
 
+func _presentation_lod_for_distance(distance: float) -> int:
+	if distance < PRESENTATION_LOD1_DISTANCE:
+		return 0
+	if distance < PRESENTATION_LOD2_DISTANCE:
+		return 1
+	if distance < PRESENTATION_LOD3_DISTANCE:
+		return 2
+	return 3
+
+
+func _presentation_stride() -> int:
+	var index := clampi(current_presentation_lod, 0, PRESENTATION_LOD_STRIDES.size() - 1)
+	return PRESENTATION_LOD_STRIDES[index]
+
+
+func _presentation_grid_dimensions() -> Vector2i:
+	var stride := _presentation_stride()
+	return Vector2i(int(LON_SEGMENTS / stride) + 1, int(LAT_SEGMENTS / stride) + 1)
+
+
+func _update_presentation_lod(force_rebuild: bool) -> void:
+	var desired := _presentation_lod_for_distance(camera_distance)
+	if not force_rebuild and desired == current_presentation_lod:
+		return
+	current_presentation_lod = desired
+	if not semantic_records.is_empty():
+		_rebuild_patch_mesh()
+	var dims := _presentation_grid_dimensions()
+	print("G7.4 presentation LOD -> %d stride=%d mesh=%dx%d camera=%.3f (semantic samples remain %d)" % [
+		current_presentation_lod,
+		_presentation_stride(),
+		dims.x,
+		dims.y,
+		camera_distance,
+		semantic_records.size(),
+	])
+
+
 func _rebuild_patch_mesh() -> void:
 	if patch_node == null:
 		patch_node = MeshInstance3D.new()
 		patch_node.name = "SemanticPatch"
 		add_child(patch_node)
+	var stride := _presentation_stride()
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for y in range(LAT_SEGMENTS):
-		for x in range(LON_SEGMENTS):
+	for y in range(0, LAT_SEGMENTS, stride):
+		for x in range(0, LON_SEGMENTS, stride):
 			var i00 := y * GRID_WIDTH + x
-			var i10 := i00 + 1
-			var i01 := (y + 1) * GRID_WIDTH + x
-			var i11 := i01 + 1
+			var i10 := y * GRID_WIDTH + (x + stride)
+			var i01 := (y + stride) * GRID_WIDTH + x
+			var i11 := (y + stride) * GRID_WIDTH + (x + stride)
 			_add_patch_vertex(surface, semantic_records[i00])
 			_add_patch_vertex(surface, semantic_records[i10])
 			_add_patch_vertex(surface, semantic_records[i11])
@@ -446,14 +507,16 @@ func _update_hud() -> void:
 	var unavailable: Array[String] = []
 	for vocabulary_field in VOCABULARY_ONLY_FIELDS:
 		unavailable.append(String(vocabulary_field).trim_prefix("geo/"))
-	hud.text = "G7.4 — Semantic Field Lab [DERIVED PRESENTATION]\n" + \
+	var lod_grid := _presentation_grid_dimensions()
+	hud.text = "G7.4 - Semantic Field Lab [DERIVED PRESENTATION]\n" + \
 		"Field %d/5: %s  unit=%s  availability=%s\n" % [current_field_index + 1, field_id, String(descriptor.get("unit", "")), String(descriptor.get("metadata", {}).get("availability", ""))] + \
-		"Range: %.6f .. %.6f   samples=%d   grid=%dx%d   faces=%s\n" % [float(field_range["min"]), float(field_range["max"]), semantic_records.size(), GRID_WIDTH, GRID_HEIGHT, ",".join(_sorted_face_names())] + \
+		"Range: %.6f .. %.6f   semantic-samples=%d   source-grid=%dx%d   faces=%s\n" % [float(field_range["min"]), float(field_range["max"]), semantic_records.size(), GRID_WIDTH, GRID_HEIGHT, ",".join(_sorted_face_names())] + \
+		"Presentation LOD%d stride=%d mesh-grid=%dx%d camera=%.2f (LOD0 near/fine -> LOD3 far/coarse)\n" % [current_presentation_lod, _presentation_stride(), lod_grid.x, lod_grid.y, camera_distance] + \
 		"Center bundle=%s  provenance=%s\n" % [String(center["bundle_checksum"]).substr(0, 16), String(center["provenance_checksums"][field_id]).substr(0, 16)] + \
 		"Presentation hash=%s\n" % presentation_manifest_hash.substr(0, 16) + \
 		"Vocabulary-only (NOT faked): %s\n" % ", ".join(unavailable) + \
-		"1..5 fields | F river | W/S zoom | A/D yaw | Q/E pitch | Space orbit | R reset\n" + \
-		"Colors/camera/mesh density are excluded from canonical semantic checksums."
+		"1..5 fields | F river | W/S zoom + auto LOD | A/D yaw | Q/E pitch | Space orbit | R reset\n" + \
+		"LOD/camera/colors/mesh density are excluded from canonical semantic checksums."
 
 
 func _bundle_checksums() -> Array[String]:
