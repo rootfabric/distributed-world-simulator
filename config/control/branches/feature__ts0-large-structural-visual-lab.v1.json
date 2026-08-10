@@ -7,12 +7,12 @@
   "role": "PARALLEL_TRACK",
   "short_description": "Synthetic 10k/100k Construction scale lab proving C22/C24 compiled representation without one runtime node per semantic part.",
   "purpose": "Reduce representation-scale risk before T2 by testing deterministic large cube/pyramid constructs, near/mid/far representations, telemetry and later local dirty rebuild.",
-  "expected_outcome": "Accepted 10k and 100k visual/structural evidence showing canonical part count is decoupled from runtime node and draw-call count, without creating new global foundations.",
+  "expected_outcome": "Accepted 10k and 100k visual/structural evidence showing canonical part count is decoupled from runtime node and draw-call count while complete object shape remains covered at every active HLOD level.",
   "current_stage": "TS0.1 10k Visual Proof",
   "stage_status": "IMPLEMENTED_CANDIDATE",
-  "progress_note": "TS0.0 is accepted. TS0.1 graphical proof is active; current manual review is checking completeness/orientation of near/mid representation before source acceptance.",
+  "progress_note": "TS0.0 is accepted. TS0.1 winding defect is fixed. Complete-coverage fix now makes FAR use the full root shell and MID/NEAR request every TS0.1 section (27 cube / 40 pyramid) with a hard 64-section flat guard; Windows focused/manual revalidation is pending.",
   "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures",
-  "next_stage": "TS0.1 acceptance, then TS0.2 100k Visual Scale Gate",
+  "next_stage": "TS0.1 acceptance after complete-coverage revalidation, then TS0.2 hierarchical 100k Visual Scale Gate",
   "parent_branch_or_checkpoint": "T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db",
   "base_commit": "5e051f67bf6987a354de5b565da1448be6b0b4db",
   "dependencies": ["T1A3", "C21", "C22", "C24", "CONSTRUCT_SNAPSHOT"],
@@ -60,7 +60,7 @@
     "PERSISTENCE_DURABILITY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": ["TS0_1_MANUAL_GRAPHICAL_PRESENTATION_REVIEW_PENDING"],
+  "blockers": ["TS0_1_COMPLETE_COVERAGE_WINDOWS_REVALIDATION_PENDING"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
