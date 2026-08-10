@@ -1,0 +1,63 @@
+{
+  "schema": "planet_simulator.validation.g8_3_banks_floodplain.v1",
+  "checkpoint": "g8.3-banks-and-floodplain-shaping",
+  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.2 River Channel Incision",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "accepted_metadata_head": "e7b2f34637a42f88e107de83cfaff4a4cfda50be"
+  },
+  "implementation": {
+    "generator": "scripts/simulation/procedural/geomorphology/banks_floodplain_shaping_v1.gd",
+    "manifest": "config/procedural/g8-3-banks-floodplain-shaping.v1.json",
+    "acceptance_test": "tests/procedural/geomorphology/g8_3_banks_floodplain_acceptance.gd",
+    "focused_runner": "RUN_G8_3_BANKS_FLOODPLAIN_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_3_FULL_ACCEPTANCE.ps1",
+    "tracked_uid_sidecars": true
+  },
+  "formula": {
+    "input_fields": ["geo/surface-height-m", "geo/valley-influence", "geo/river-distance-m", "geo/river-width-m"],
+    "normalized_distance": "river_distance_m / (river_width_m * 0.5)",
+    "bank_zone": "1.0 -> peak 1.5 -> 2.0",
+    "floodplain_zone": "2.0 -> full 2.5 -> core through 4.5 -> fade to 6.0",
+    "bank_delta_expression": "+bank_max_delta_m * bank_weight * valley_influence",
+    "floodplain_delta_expression": "-floodplain_max_delta_m * floodplain_weight * valley_influence"
+  },
+  "composition": {
+    "uses_g8_2_river_generator": true,
+    "same_semantic_bundle_for_parent_and_shaping": true,
+    "preserves_valley_component": true,
+    "preserves_river_component": true,
+    "adds_bank_component": true,
+    "adds_floodplain_component": true,
+    "erosion_deposition_component_zero": true
+  },
+  "semantic_safety": {
+    "fluid_surface_distance_used": false,
+    "reason": "accepted geo/fluid-surface-distance-m is a distance semantic, not a signed canonical water-level elevation"
+  },
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "material_definition_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "automated_evidence": {
+    "focused": "PENDING",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED"
+  },
+  "project_control": {
+    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
+    "blockers": ["G8_3_FOCUSED_VALIDATION_REQUIRED", "G8_3_FULL_WORLD_REGRESSION_REQUIRED"]
+  },
+  "next_if_accepted": "G8.4_EROSION_DEPOSITION_BASELINE"
+}
