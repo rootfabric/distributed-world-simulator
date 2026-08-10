@@ -75,7 +75,9 @@ G8 Full Acceptance
 
 G8 owns procedural geomorphology baseline shaping only. It does not own player excavation, persistent terrain damage, Matter transactions/storage, material ontology, global world addressing, authority routing, persistence durability, network replication or universal WorldQuery.
 
-## Focused gate
+## Validation sequence
+
+First run the fast focused contract gate:
 
 ```powershell
 cd C:\Godot\lunar-world-g6-fluid
@@ -83,4 +85,10 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_G8_0_GEOMORPHOLOGY_CONTRACTS_TESTS.ps1 -GodotPath $Godot
 ```
 
-G8.1 must not begin until this focused contract gate is green and the resulting exact tested head is recorded.
+If focused is green, keep the same checkout and run the full G8.0 acceptance gate:
+
+```powershell
+.\RUN_G8_0_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+The full gate repeats the focused contracts under PC0/scope hygiene and then runs one fresh world/core regression through NX4. G8.1 must not begin until **both** focused and full acceptance are green and the exact tested head is recorded.
