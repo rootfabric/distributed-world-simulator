@@ -97,6 +97,7 @@ $ClientA = Read-RequiredJson -Path $ClientAJson -Label "Client A"
 $ClientB = Read-RequiredJson -Path $ClientBJson -Label "Client B"
 $A = Get-Fix6ClientSummary -Client $ClientA -Label "A"
 $B = Get-Fix6ClientSummary -Client $ClientB -Label "B"
+$ServerFoundation = $Server.realtime_foundation
 $ServerAck = $Server.fix10_prediction_ack
 $Failures = [System.Collections.ArrayList]::new()
 
@@ -104,10 +105,33 @@ if ($BaseExitCode -ne 0) {
     [void]$Failures.Add("Existing FIX10 acceptance analyzer failed")
 }
 
-$ServerWirePolicy = [string]$ServerAck.fix6_wire_policy
-$ServerTransitionPolicy = [string]$ServerAck.fix6_transition_policy
-$ServerTransitionCaptures = [int]$ServerAck.fix6_transition_captures
-$ServerTransitionIncomplete = [int]$ServerAck.fix6_transition_metadata_incomplete
+# Steady FIX7 READY reports are intentionally lightweight. FIX10 fix6 mirrors
+# transition diagnostics into realtime_foundation there; terminal/full reports
+# also expose the detailed fix10_prediction_ack object. Accept either shape.
+$ServerWirePolicy = [string]$ServerFoundation.fix10_fix6_ack_wire_policy
+if ([string]::IsNullOrWhiteSpace($ServerWirePolicy) -and $null -ne $ServerAck) {
+    $ServerWirePolicy = [string]$ServerAck.fix6_wire_policy
+}
+$ServerTransitionPolicy = [string]$ServerFoundation.fix10_fix6_transition_policy
+if ([string]::IsNullOrWhiteSpace($ServerTransitionPolicy) -and $null -ne $ServerAck) {
+    $ServerTransitionPolicy = [string]$ServerAck.fix6_transition_policy
+}
+$ServerTransitionCaptures = [int]$ServerFoundation.fix10_fix6_transition_captures
+if ($ServerTransitionCaptures -eq 0 -and $null -ne $ServerAck) {
+    $ServerTransitionCaptures = [int]$ServerAck.fix6_transition_captures
+}
+$ServerTransitionIncomplete = [int]$ServerFoundation.fix10_fix6_transition_metadata_incomplete
+if ($ServerTransitionIncomplete -eq 0 -and $null -ne $ServerAck) {
+    $ServerTransitionIncomplete = [int]$ServerAck.fix6_transition_metadata_incomplete
+}
+$ServerMaxHoldTicks = [int]$ServerFoundation.fix10_fix6_max_server_hold_ticks
+if ($ServerMaxHoldTicks -eq 0 -and $null -ne $ServerAck) {
+    $ServerMaxHoldTicks = [int]$ServerAck.fix6_max_server_hold_ticks
+}
+$ServerMaxTransitionDisplacementM = [double]$ServerFoundation.fix10_fix6_max_transition_displacement_m
+if ($ServerMaxTransitionDisplacementM -eq 0.0 -and $null -ne $ServerAck) {
+    $ServerMaxTransitionDisplacementM = [double]$ServerAck.fix6_max_transition_displacement_m
+}
 
 if ($ServerWirePolicy -ne $ExpectedWirePolicy) {
     [void]$Failures.Add("Server FIX6 ACK wire policy is '$ServerWirePolicy', expected '$ExpectedWirePolicy'")
@@ -196,8 +220,8 @@ $Result = [ordered]@{
         transition_policy = $ServerTransitionPolicy
         transition_captures = $ServerTransitionCaptures
         transition_metadata_incomplete = $ServerTransitionIncomplete
-        max_server_hold_ticks = [int]$ServerAck.fix6_max_server_hold_ticks
-        max_transition_displacement_m = [double]$ServerAck.fix6_max_transition_displacement_m
+        max_server_hold_ticks = $ServerMaxHoldTicks
+        max_transition_displacement_m = $ServerMaxTransitionDisplacementM
     }
     client_a = $A
     client_b = $B
@@ -207,7 +231,7 @@ $Result = [ordered]@{
 Write-Host ""
 Write-Host "[FIX10 fix6 semantic phase/transition thresholds]" -ForegroundColor Cyan
 Write-Host ("Server: wire={0}, transitions={1}, incomplete={2}, max hold={3}" -f `
-    $ServerWirePolicy, $ServerTransitionCaptures, $ServerTransitionIncomplete, [int]$ServerAck.fix6_max_server_hold_ticks)
+    $ServerWirePolicy, $ServerTransitionCaptures, $ServerTransitionIncomplete, $ServerMaxHoldTicks)
 foreach ($Client in @($A, $B)) {
     Write-Host ("Client {0}: duration={1:N1}s, ticks={2}, phase matched/mismatch={3}/{4}, history misses={5}, hold delta={6}, transition error={7:N6}m, same-clock error={8:N6}m, raw phase offset={9:N6}m, items={10}, waypoints={11}" -f `
         $Client.label, ($Client.stress_duration_ms / 1000.0), $Client.ticks_predicted, `
