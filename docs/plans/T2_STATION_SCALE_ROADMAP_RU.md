@@ -1,20 +1,38 @@
 # T2 — Station Scale Roadmap
 
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`
 **Branch family:** `T / Construction`
-**Status:** planned continuation after T1 composition
+**Status:** planned continuation after T1 composition + TS0 scale evidence
 **Purpose:** превратить доказанную сложную базу в универсальный foundation для больших станций, кораблей, городов и мегаструктур без смены canonical Construction model.
 
-## 1. Главная коррекция T-roadmap
+## 1. Положение TS0 перед T2
 
-T2 больше не трактуется как просто `увеличить part_count`.
+Начиная с P0 R2 synthetic scale proof вынесен раньше T2 в параллельный lab:
 
-Правильная лестница:
+```text
+accepted T1A.3
+    ├── T1 composition continues
+    └── TS0 Large Structural Visual Lab
+            ├── 10k synthetic object
+            ├── 100k synthetic object — primary gate
+            ├── local mutation / dirty rebuild
+            └── 1M research ceiling probe
+
+T1 composition + TS0 evidence
+            ↓
+          T2.0
+```
+
+TS0 не считается T2 acceptance. Он снимает отдельный риск raw representation scale до того, как T2 начнёт масштабировать настоящую сложную станцию.
+
+## 2. Главная лестница T2
 
 ```text
 T1A Complex Construct Assembly
     ↓
 T1B Composition / Failure / Recovery
+    +
+TS0 synthetic scale evidence
     ↓
 T2.0 Large Static Construct Scale
     ↓
@@ -33,9 +51,9 @@ T2.6 Station Scale Acceptance
 T5 Matter + Construction Composition
 ```
 
-T1 остаётся composition-first. T2 добавляет масштаб и пространственную динамику, но не создаёт новую Construction truth.
+T1 остаётся composition-first. TS0 исследует synthetic representation scale. T2 соединяет composition + scale + spatial dynamics.
 
-## 2. Инварианты
+## 3. Инварианты
 
 ```text
 station identity != section identity
@@ -45,13 +63,41 @@ station identity != reference frame instance
 construct local frame != authority route
 part identity != mesh identity
 canonical graph != presentation graph
+TS0 section identity != WorldAddress
+TS0 lab budget != global Work Budget contract
 ```
 
-Перемещение, docking, смена LOD, authority rebalance и dormancy не имеют права менять canonical identity объекта только потому, что изменилась его runtime representation или compute placement.
+Перемещение, docking, LOD, authority rebalance, dormancy и renderer optimization не меняют canonical identity.
 
-## 3. T2.0 — Large Static Construct Scale
+## 4. TS0 evidence, которое T2.0 обязан переиспользовать
 
-Цель: заменить синтетический C21/C22 scale fixture реальной сложной базой/станцией.
+До T2.0 желательно иметь:
+
+```text
+TS0.1 10k visual proof
+TS0.2 ~100k visual scale gate
+TS0.3 local mutation / dirty-section rebuild
+```
+
+Evidence должно включать минимум:
+
+```text
+canonical part count
+runtime node count
+visible section count
+triangle count
+draw calls
+mesh artifact count
+build time
+resource/GPU bytes
+near/mid/far mode
+```
+
+T2.0 не должен повторно изобретать synthetic cube benchmark, если TS0 уже закрыл этот вопрос.
+
+## 5. T2.0 — Large Static Construct Scale
+
+Цель: заменить synthetic TS0/C21/C22 fixture реальной сложной базой/станцией.
 
 Профили:
 
@@ -66,19 +112,32 @@ S2  1 000 000 semantic parts — research/ceiling probe, не обязатель
 - C21 large-scale acceptance;
 - C22 compiled construct proxies / HLOD;
 - C24 GPU-ready proxy mesh backend;
+- TS0 representation evidence;
 - dirty-section invalidation;
-- bounded resource/cache budgets.
+- bounded local resource/cache budgets.
+
+T2.0 добавляет то, чего нет в TS0:
+
+```text
+heterogeneous semantic sections
+rooms/openings
+interactive parts
+real visual classes
+utilities where useful
+non-uniform local mutation patterns
+real station/base geometry
+```
 
 Acceptance:
 
 - canonical checksum не зависит от near/mid/far representation;
 - локальная mutation не требует полного rebuild объекта;
 - distant observer не получает все child presentation identities;
-- headless authority работает без mesh assets.
+- headless authority работает без mesh assets;
+- synthetic TS0 optimizations работают на реальной неоднородной конструкции;
+- T2 не создаёт private global scheduler/interest/spatial identity.
 
-## 4. T2.1 — Hierarchical Construct Frames
-
-Цель: доказать вложенные local/reference frames до начала настоящей orbital station composition.
+## 6. T2.1 — Hierarchical Construct Frames
 
 Минимальная иерархия:
 
@@ -94,32 +153,26 @@ ship frame
 room / item / player local state
 ```
 
-Используются существующие C6 Mobile Construct и C7 Spatial Construct contracts. Будущий `Spatial Domain Fabric` остаётся глобальным mapping owner; T2 не создаёт собственный глобальный WorldAddress.
+Используются существующие C6 Mobile Construct и C7 Spatial Construct contracts. `Spatial Domain Fabric` остаётся global mapping owner.
 
 Acceptance:
 
 - child local identities стабильны при движении parent frame;
 - attach/detach не пересоздаёт Item/Part identity;
-- world position выводится из frame composition, а не хранится как новая конкурирующая truth;
+- world position выводится из frame composition;
 - headless mapping не зависит от renderer.
 
-## 5. T2.2 — Moving / Orbital Construct
-
-Цель: одна и та же станция/корабль может двигаться в world space без смены canonical construct identity.
+## 7. T2.2 — Moving / Orbital Construct
 
 Проверить:
 
 - translation + rotation parent frame;
-- players/items внутри движущегося construct;
-- local utilities/rooms/structural state не пересобираются из-за world movement;
-- C6 motion policy остаётся domain owner;
-- NX7 позже задаёт physics authority profile, но не новую identity model.
+- players/items внутри moving construct;
+- local utilities/rooms/structure не пересобираются из-за world movement;
+- C6 motion policy остаётся owner;
+- NX7 задаёт physics authority profile без новой identity model.
 
-## 6. T2.3 — Docking / Undocking Composition
-
-Цель: корабль входит в station frame hierarchy и выходит из неё без identity duplication.
-
-Сценарий:
+## 8. T2.3 — Docking / Undocking Composition
 
 ```text
 ship approaches dock
@@ -129,22 +182,17 @@ ship approaches dock
 → shared local interaction
 → undocking intent
 → authoritative detach
-→ ship frame moves independently
+→ independent ship frame
 ```
 
 Acceptance:
 
-- ship construct ID не меняется;
-- station construct ID не меняется;
+- ship/station construct IDs стабильны;
 - players/items не клонируются;
-- reconnect в docked и undocked состояниях восстанавливает тот же hierarchy result;
+- reconnect восстанавливает hierarchy;
 - transport ordering не определяет canonical outcome.
 
-## 7. T2.4 — Distributed Station Authority
-
-Большая станция не означает `one station = one server`.
-
-Целевая модель:
+## 9. T2.4 — Distributed Station Authority
 
 ```text
 ONE CANONICAL STATION
@@ -155,20 +203,16 @@ ONE CANONICAL STATION
 └── exterior shell            low-detail representation
 ```
 
-Переиспользуются C17 distributed Construction authority и общие fencing/handoff patterns. T2 не создаёт второй authority registry поверх GLOBAL-P0.
+Переиспользуются C17 authority migration и общие fencing/handoff patterns. Новый station-specific authority registry запрещён.
 
 Acceptance:
 
-- authority rebalance не меняет station/part identities;
-- split-brain закрывается fail-closed;
-- reconnect после migration восстанавливает единый construct revision;
-- cross-section operations используют существующий durable operation foundation, а не best-effort RPC chain.
+- rebalance не меняет identities;
+- split-brain fail-closed;
+- reconnect после migration сходится;
+- cross-section operations используют durable operation foundation.
 
-## 8. T2.5 — Dormancy / Promotion / Work Budgets
-
-Миллионы деталей нельзя симулировать каждый tick.
-
-Целевая лестница:
+## 10. T2.5 — Dormancy / Promotion / Work Budgets
 
 ```text
 DORMANT SUMMARY
@@ -182,20 +226,20 @@ DEMOTING
 DORMANT SUMMARY
 ```
 
-Переиспользуется C18 streaming/dormant construct foundation. Будущие NX8 и `World Work / Budget Fabric` задают общий interest/work vocabulary; Construction не создаёт собственный глобальный scheduler identity.
+Переиспользуется C18. NX8 и будущий `World Work / Budget Fabric` остаются global owners vocabulary/policy.
+
+TS0 local frame budgets являются только evidence/knobs и не могут стать скрытым T2 scheduler foundation.
 
 Acceptance:
 
 - dormancy не меняет canonical checksum;
-- promotion восстанавливает актуальный state после удалённых mutations;
-- inactive rooms/utilities допускают coarse deterministic catch-up вместо per-tick simulation;
-- activity budget ограничен и измерим.
+- promotion восстанавливает актуальный state;
+- inactive systems допускают deterministic coarse catch-up;
+- budgets ограничены и измеримы.
 
-## 9. T2.6 — Station Scale Acceptance
+## 11. T2.6 — Station Scale Acceptance
 
 Контрольный объект: orbital engineering station с docking, habitat, industrial, storage и utility sections.
-
-Обязательный composition proof:
 
 ```text
 100k-class semantic parts
@@ -209,17 +253,16 @@ Acceptance:
 = one canonical station
 ```
 
-После этого T-line готова к T5 Matter + Construction composition: добыча, damage, debris, salvage, excavation и construction должны работать через общий WorldOperation/transaction boundary.
+После этого T-line готова к T5 Matter + Construction composition.
 
-## 10. Параллельные программы
-
-На текущем этапе сознательно продолжаются параллельно:
+## 12. Параллельные программы
 
 ```text
-T  Construction / station composition
-G  World Generation / geology / fluids
-N  Network / realtime tuning and policy
-CH Character / clothing / equipment presentation
+T   Construction / station composition
+TS  Construction scale/visual evidence
+G   World Generation / geology / fluids
+N   Network / realtime policy
+CH  Character presentation
 ```
 
 Правило:
@@ -230,4 +273,18 @@ foundation duplication is forbidden
 composition happens only at declared gates
 ```
 
-T не должен зависеть от случайного текущего implementation head G, Network или CH. Интеграция выполняется через stable contracts и GLOBAL-P0 boundaries.
+T2 не зависит от случайного implementation head G/Network/CH. Интеграция идёт через stable contracts и GLOBAL-P0 boundaries.
+
+## 13. Stop conditions
+
+T2 останавливается и поднимает P0 вопрос, если потребуется:
+
+```text
+private WorldAddress
+private authority registry
+private global InterestRegion identity
+private material ontology
+private Work/Budget foundation
+renderer artifact as canonical state
+best-effort RPC for canonical cross-domain mutation
+```
