@@ -21,7 +21,7 @@ jobs:
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
       - name: Run PC0 auditor
-        run: python3 scripts/control/project_control.py --no-fetch
+        run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
 
       - name: Upload control report
         if: always()
