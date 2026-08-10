@@ -7,7 +7,7 @@
     "commit": "3861fc7b511491439acf5a2d51a57372a951dc4d"
   },
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "decision": "WINDOWS_FOCUSED_PASS_PENDING_VISUAL_AND_FULL_REGRESSION",
+  "decision": "FIX_PENDING_WINDOWS_REVALIDATION_AFTER_C24_WINDING_CORRECTION",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
@@ -16,7 +16,7 @@
   },
   "production_changes": {
     "c22_modified": false,
-    "c24_modified": false,
+    "c24_modified": true,
     "new_renderer_backend": false,
     "new_authority_owner": false
   },
@@ -40,7 +40,8 @@
     "max_near_mid_section_artifacts": 12,
     "far_shell_artifacts": 1,
     "focus_policy": "EXTERIOR_POSITIVE_Z_SURFACE",
-    "default_visual_mode": "FAR"
+    "default_visual_mode": "FAR",
+    "front_face_winding": "GODOT_CLOCKWISE"
   },
   "implementation_review": {
     "adapter_uses_existing_runtime_projection_request": "PASS",
@@ -55,8 +56,8 @@
   "runtime_validation": {
     "linux_parse_harness": "PASS_GODOT_4_7_1_DOUBLE_A13DA4FEB",
     "linux_scene_smoke": "PASS_STUBBED_PIPELINE_SCENE_BOOT_FAR_AND_MID_CONTROL_FLOW",
-    "windows_focused": {
-      "result": "PASS",
+    "windows_focused_before_winding_fix": {
+      "result": "PASS_BUT_VISUAL_DEFECT_NOT_COVERED",
       "tested_head": "9a3a2e7c8685a61cb1399bbbf6531b54de49925e",
       "worktree": "C:/Godot/lunar-world-double-godot-ts0",
       "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
@@ -64,24 +65,27 @@
       "ts0_0_fixture_contract": "PASS_61_ASSERTIONS",
       "ts0_1_graphical_proxy_acceptance": "PASS_254_ASSERTIONS",
       "c22_compiled_proxy_graphical": "PASS_35_ASSERTIONS",
-      "c24_proxy_mesh_backend_graphical": "PASS_74_ASSERTIONS",
-      "fixture_metrics": {
-        "CUBE_10K": {
-          "parts": 10648,
-          "elapsed_ms": 5886
-        },
-        "PYRAMID_10K": {
-          "parts": 10416,
-          "elapsed_ms": 5635
-        }
-      }
+      "c24_proxy_mesh_backend_graphical": "PASS_74_ASSERTIONS"
     },
-    "windows_visual_observation": "PENDING_USER_OBSERVATION",
-    "repository_full_regression": "PENDING_AFTER_VISUAL_OR_IN_PARALLEL"
+    "manual_visual_observation": {
+      "result": "FAIL_BACK_FACE_CULLING_ORIENTATION",
+      "profile": "PYRAMID_10K",
+      "affected_modes": ["LOCAL_EXTERIOR", "SECTION_HLOD"],
+      "far_shell": "VISUALLY_COMPLETE",
+      "root_cause": "C24 triangles were indexed CCW relative to outward normals while Godot ArrayMesh front faces use clockwise winding"
+    },
+    "winding_fix": {
+      "backend_commit": "89e3fa8035225fb71a2de9d8df6842d9babf5ee1",
+      "test_commit": "3ee01123ff4180bec93580f2bc01f6bfdcc058d3",
+      "strategy": "reverse triangle index order, preserve outward stored normals, pin GODOT_CLOCKWISE metadata/signature",
+      "windows_revalidation": "PENDING"
+    },
+    "repository_full_regression": "PENDING_AFTER_WINDING_REVALIDATION"
   },
   "remaining_gates": [
+    "RUN_TS0_GRAPHICAL_TESTS.ps1 after C24 winding correction",
     "RUN_TS0_GRAPHICAL_LAB.ps1 manual observation for CUBE_10K and PYRAMID_10K across NEAR/MID/FAR",
     "RUN_WORLD_REGRESSION_TESTS.ps1 full branch regression"
   ],
-  "next_gate": "Run RUN_TS0_GRAPHICAL_LAB.ps1 in C:/Godot/lunar-world-double-godot-ts0, inspect both profiles and all three detail modes, then run full branch regression"
+  "next_gate": "Pull latest branch, rerun focused tests, then visually recheck PYRAMID_10K modes 3/4/5"
 }
