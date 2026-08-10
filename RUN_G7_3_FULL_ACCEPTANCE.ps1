@@ -5,9 +5,11 @@ param(
 $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $GlobalConfigPath = "config/architecture/global-program-roadmap.v1.json"
+$GlobalRoadmapPath = "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md"
 $G6Ref = "origin/feature/g6-hydrology-fluid-surface-v0"
 $MainRef = "origin/main"
 $G72AcceptedCommit = "68c4f90dbdac0e2d9968b4461207713f5661521b"
+$ExpectedGlobalRevision = "GLOBAL-P0-2026-08-10-R2"
 $WindowsProfileTransientPath = Join-Path $RootDir "Microsoft"
 $WindowsProfileTransientExistedBefore = Test-Path -LiteralPath $WindowsProfileTransientPath
 
@@ -70,7 +72,11 @@ function Test-G73AllowedPath {
         "RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
         "RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.sh",
         "RUN_G7_3_FULL_ACCEPTANCE.ps1",
+        "config/architecture/global-program-roadmap.v1.json",
+        "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+        "config/procedural/g7-g13-p0-aligned-roadmap.v1.json",
         "config/procedural/g7-3-cross-cell-cross-lod-invariance.v1.json",
+        "docs/procedural/G7_G13_P0_ALIGNED_ROADMAP_RU.md",
         "docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_CANDIDATE_RU.md",
         "docs/procedural/README_RU.md",
         "docs/procedural/STATUS_RU.md",
@@ -102,18 +108,32 @@ foreach ($Ref in @($MainRef, $G6Ref, $G72AcceptedCommit)) {
     if ($LASTEXITCODE -ne 0) { throw "Missing required ref/commit $Ref. Run git fetch origin first." }
 }
 
-$LocalGlobalBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalConfigPath))
-$MainGlobalBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalConfigPath")
-$G6GlobalBlob = Invoke-GitText @("rev-parse", "$G6Ref`:$GlobalConfigPath")
-Assert-Equal $LocalGlobalBlob $MainGlobalBlob "G7.3 global config differs from main"
-Assert-Equal $LocalGlobalBlob $G6GlobalBlob "G7.3 global config differs from G6"
+$LocalGlobalConfigBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalConfigPath))
+$MainGlobalConfigBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalConfigPath")
+Assert-Equal $LocalGlobalConfigBlob $MainGlobalConfigBlob "G7.3 active global config differs from main"
+$LocalGlobalRoadmapBlob = Invoke-GitText @("hash-object", (Join-Path $RootDir $GlobalRoadmapPath))
+$MainGlobalRoadmapBlob = Invoke-GitText @("rev-parse", "$MainRef`:$GlobalRoadmapPath")
+Assert-Equal $LocalGlobalRoadmapBlob $MainGlobalRoadmapBlob "G7.3 active global roadmap differs from main"
+
 $GlobalConfig = Get-Content -LiteralPath (Join-Path $RootDir $GlobalConfigPath) -Raw | ConvertFrom-Json
 $GlobalRevision = [string]$GlobalConfig.global_revision
-if ([string]::IsNullOrWhiteSpace($GlobalRevision)) { throw "Global program revision is missing" }
+Assert-Equal $GlobalRevision $ExpectedGlobalRevision "G7.3 active global revision is stale"
+$HistoricalPolicy = [string]$GlobalConfig.historical_branch_policy
+if ($HistoricalPolicy -ne "ACCEPTED_OR_FROZEN_CHECKPOINT_BRANCHES_ARE_NOT_REWRITTEN_FOR_LATER_GLOBAL_REVISIONS") {
+    throw "GLOBAL-P0 R2 historical branch policy is missing"
+}
+if ([string]$GlobalConfig.active_frontiers.world_generation.branch -ne "feature/g7-semantic-field-fabric") {
+    throw "GLOBAL-P0 R2 does not declare G7 as active world-generation frontier"
+}
+if ([string]$GlobalConfig.active_frontiers.world_generation.stage -ne "G7.3 Cross-Cell / Cross-LOD Invariance") {
+    throw "GLOBAL-P0 R2 world-generation stage is not G7.3"
+}
 Write-Host "Global revision: $GlobalRevision"
+Write-Host "Active frontier GLOBAL-P0 alignment: PASS"
+Write-Host "Historical accepted G6 rewrite requirement: NONE (R2 policy)"
 
 & git -C $RootDir merge-base --is-ancestor $G6Ref HEAD
-if ($LASTEXITCODE -ne 0) { throw "Current G7.3 head is not synchronized on top of current G6" }
+if ($LASTEXITCODE -ne 0) { throw "Current G7.3 head is not descended from accepted G6 lineage" }
 & git -C $RootDir merge-base --is-ancestor $G72AcceptedCommit HEAD
 if ($LASTEXITCODE -ne 0) { throw "G7.2 accepted checkpoint is not an ancestor of current G7.3 head" }
 $G72Record = Get-Content -LiteralPath (Join-Path $RootDir "validation/g7-2-composition-provenance-validation.json") -Raw | ConvertFrom-Json
@@ -124,7 +144,7 @@ $ChangedFilesText = Invoke-GitText @("diff", "--name-only", "$G72AcceptedCommit.
 $ChangedFiles = @($ChangedFilesText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if ($ChangedFiles.Count -eq 0) { throw "G7.3 diff is empty" }
 $Unexpected = @($ChangedFiles | Where-Object { -not (Test-G73AllowedPath $_) })
-if ($Unexpected.Count -gt 0) { throw "G7.3 changed files outside invariance allowlist:`n$($Unexpected -join "`n")" }
+if ($Unexpected.Count -gt 0) { throw "G7.3 changed files outside invariance/P0-sync allowlist:`n$($Unexpected -join "`n")" }
 & git -C $RootDir diff --check "$G72AcceptedCommit...HEAD"
 if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for accepted G7.2...G7.3" }
 Write-Host "G7.3 changed-file scope: PASS ($($ChangedFiles.Count) files)"
@@ -157,6 +177,7 @@ if ($LASTEXITCODE -ne 0) { throw "Final git diff --check failed" }
 
 Write-Host "G7.3 FULL ACCEPTANCE: PASS"
 Write-Host "Global revision: $GlobalRevision"
+Write-Host "Active GLOBAL-P0 main alignment: PASS"
 Write-Host "G7.2 ACCEPTED ancestor: PASS"
 Write-Host "G7.3 invariance scope: PASS"
 Write-Host "Cross-cell / cross-LOD semantic invariance: PASS"
