@@ -22,21 +22,142 @@
     "PRODUCTION_READY"
   ],
   "p0_priorities": [
-    {"id":"P0_PROGRAM_LEDGER","name":"Global Program and Architecture Ledger","status":"defined","owner":"main","rule":"Each active program declares one active frontier branch. Frontier movement is recorded in main first; accepted/frozen ancestors remain historical and are not rewritten."},
-    {"id":"P0_SPATIAL_FABRIC","name":"Spatial Domain Fabric","status":"planned","rule":"Map WorldAddress to domain-specific surface, matter, authority, interest, feature, construction and space-population identities without collapsing them into one ChunkId."},
-    {"id":"P0_MATERIAL_ONTOLOGY","name":"Unified Material Ontology","status":"planned","rule":"G9, MW, Item, Construction, Fluid and Fabrication share stable material definitions and domain-specific projections."},
-    {"id":"P0_WORLD_TRANSACTION_MODEL","name":"Cross-Domain World Transaction Model","status":"planned","rule":"Item, Matter and Construction mutations use one durable operation/transaction model instead of best-effort RPC chains."},
-    {"id":"P0_NX7_NX9_RECONCILIATION","name":"NX7-NX9 Foundation Reconciliation","status":"defined","rule":"NX7 is authority policy, NX8 is shared interest/budget contract, NX9 is asynchronous I/O over existing durability semantics."}
+    {
+      "id": "P0_PROGRAM_LEDGER",
+      "name": "Global Program and Architecture Ledger",
+      "status": "defined",
+      "owner": "main",
+      "rule": "Each active program declares one active frontier branch. Frontier movement is recorded in main first; accepted/frozen ancestors remain historical and are not rewritten."
+    },
+    {
+      "id": "P0_SPATIAL_FABRIC",
+      "name": "Spatial Domain Fabric",
+      "status": "planned",
+      "rule": "Map WorldAddress to domain-specific surface, matter, authority, interest, feature, construction and space-population identities without collapsing them into one ChunkId."
+    },
+    {
+      "id": "P0_MATERIAL_ONTOLOGY",
+      "name": "Unified Material Ontology",
+      "status": "planned",
+      "rule": "G9, MW, Item, Construction, Fluid and Fabrication share stable material definitions and domain-specific projections."
+    },
+    {
+      "id": "P0_WORLD_TRANSACTION_MODEL",
+      "name": "Cross-Domain World Transaction Model",
+      "status": "planned",
+      "rule": "Item, Matter and Construction mutations use one durable operation/transaction model instead of best-effort RPC chains."
+    },
+    {
+      "id": "P0_NX7_NX9_RECONCILIATION",
+      "name": "NX7-NX9 Foundation Reconciliation",
+      "status": "defined",
+      "rule": "NX7 is authority policy, NX8 is shared interest/budget contract, NX9 is asynchronous I/O over existing durability semantics."
+    }
   ],
-  "ownership_boundaries": {"nx7":"POLICY_OVER_EXISTING_AUTHORITY_FOUNDATION","nx8":"SHARED_INTEREST_AND_REPLICATION_BUDGET_WITH_DOMAIN_ADAPTERS","nx9":"ASYNC_IO_OVER_R3_M0_MW_DURABILITY","gm":"GEO_MATTER_INTEGRATION_NOT_SECOND_MATTER_IMPLEMENTATION","g12":"GENERATION_SCHEDULER_NOT_AUTHORITY_OR_PERSISTENCE_OWNER","c22_c24":"DERIVED_PRESENTATION_ONLY","s1":"COMPUTE_PROPOSAL_ONLY_AUTHORITY_COMMITS","ts0":"PRE_T2_CONSTRUCTION_SCALE_AND_VISUAL_EVIDENCE_ONLY","v0_showcase":"COMPOSITION_CONSUMER_ONLY_NO_FOUNDATION_OWNERSHIP"},
-  "active_sync_branches": ["main","feature/t1a4-interactive-fixture-binding","feature/g7-semantic-field-fabric","feature/ch7-8-skinned-garment","feature/world-building-doctrine"],
-  "active_frontiers": {"construction":{"branch":"feature/t1a4-interactive-fixture-binding","stage":"T1A.4 Interactive Fixture Binding","parallel_planned":"TS0 Large Structural Visual Lab"},"world_generation":{"branch":"feature/g7-semantic-field-fabric","stage":"G7.3 Cross-Cell / Cross-LOD Invariance","next_visual_milestone":"G7.4 Semantic Field Lab","next_world_showcase_milestone":"G8 Geomorphology"},"character":{"branch":"feature/ch7-8-skinned-garment","stage":"active character presentation frontier"},"world_building_doctrine":{"branch":"feature/world-building-doctrine","stage":"active design-doctrine frontier"}},
-  "construction_parallel_tracks": {"composition":["T1A.4 Interactive Fixture Binding","T1A.5 Interactive Runtime Execution","T1A.6 Inspector / Telemetry","T1B Composition / Failure / Recovery"],"scale_visual":["TS0.0 Deterministic Large Structural Fixtures","TS0.1 10k Visual Proof","TS0.2 100k Visual Scale Gate","TS0.3 Local Mutation / Dirty-Section Rebuild","TS0.4 1M Research Ceiling Probe"],"join":"T2.0 consumes TS0 evidence but still requires a real large construct; TS0 alone never satisfies T2 acceptance."},
-  "visual_milestones": {"world_generation":["G7.4 semantic/debug visualization","G8 first natural terrain showcase","G10 first true 3D volume showcase","G11 heterogeneous-body showcase"],"construction":["TS0.1 10k structural object","TS0.2 100k structural object","T1 D1 playable outpost","T2.0 real 10k-100k construct","T2.6 100k-class orbital station"],"composition":["V0 after G8 plus usable T1 D1 plus character presentation: procedural terrain + real outpost + player"]},
-  "ts0_rules": ["TS0 branches from an accepted Construction baseline, not an in-progress T candidate.","Current preferred base is T1A.3 accepted commit 5e051f67bf6987a354de5b565da1448be6b0b4db plus the synchronized GLOBAL-P0-2026-08-10-R2 documentation/config change-set.","TS0 reuses C21/C22/C24 and Construction canonical state.","TS0 must not create WorldAddress, AuthorityRegionId, InterestRegionId, MaterialDefinitionId, a global scheduler, persistence semantics, or a private transaction model.","TS0 section IDs, HLOD levels and laboratory budget knobs are local derived representation/execution data only.","100k is the primary TS0 visual scale gate; 1M is a non-blocking research ceiling probe."],
+  "ownership_boundaries": {
+    "nx7": "POLICY_OVER_EXISTING_AUTHORITY_FOUNDATION",
+    "nx8": "SHARED_INTEREST_AND_REPLICATION_BUDGET_WITH_DOMAIN_ADAPTERS",
+    "nx9": "ASYNC_IO_OVER_R3_M0_MW_DURABILITY",
+    "gm": "GEO_MATTER_INTEGRATION_NOT_SECOND_MATTER_IMPLEMENTATION",
+    "g12": "GENERATION_SCHEDULER_NOT_AUTHORITY_OR_PERSISTENCE_OWNER",
+    "c22_c24": "DERIVED_PRESENTATION_ONLY",
+    "s1": "COMPUTE_PROPOSAL_ONLY_AUTHORITY_COMMITS",
+    "ts0": "PRE_T2_CONSTRUCTION_SCALE_AND_VISUAL_EVIDENCE_ONLY",
+    "v0_showcase": "COMPOSITION_CONSUMER_ONLY_NO_FOUNDATION_OWNERSHIP"
+  },
+  "active_sync_branches": [
+    "main",
+    "feature/t1a4-interactive-fixture-binding",
+    "feature/g7-semantic-field-fabric",
+    "feature/ch7-8-skinned-garment",
+    "feature/world-building-doctrine"
+  ],
+  "active_frontiers": {
+    "construction": {
+      "branch": "feature/t1a4-interactive-fixture-binding",
+      "stage": "T1A.4 Interactive Fixture Binding",
+      "parallel_planned": "TS0 Large Structural Visual Lab"
+    },
+    "world_generation": {
+      "branch": "feature/g7-semantic-field-fabric",
+      "stage": "G7.3 Cross-Cell / Cross-LOD Invariance",
+      "next_visual_milestone": "G7.4 Semantic Field Lab",
+      "next_world_showcase_milestone": "G8 Geomorphology"
+    },
+    "character": {
+      "branch": "feature/ch7-8-skinned-garment",
+      "stage": "active character presentation frontier"
+    },
+    "world_building_doctrine": {
+      "branch": "feature/world-building-doctrine",
+      "stage": "active design-doctrine frontier"
+    }
+  },
+  "construction_parallel_tracks": {
+    "composition": [
+      "T1A.4 Interactive Fixture Binding",
+      "T1A.5 Interactive Runtime Execution",
+      "T1A.6 Inspector / Telemetry",
+      "T1B Composition / Failure / Recovery"
+    ],
+    "scale_visual": [
+      "TS0.0 Deterministic Large Structural Fixtures",
+      "TS0.1 10k Visual Proof",
+      "TS0.2 100k Visual Scale Gate",
+      "TS0.3 Local Mutation / Dirty-Section Rebuild",
+      "TS0.4 1M Research Ceiling Probe"
+    ],
+    "join": "T2.0 consumes TS0 evidence but still requires a real large construct; TS0 alone never satisfies T2 acceptance."
+  },
+  "visual_milestones": {
+    "world_generation": [
+      "G7.4 semantic/debug visualization",
+      "G8 first natural terrain showcase",
+      "G10 first true 3D volume showcase",
+      "G11 heterogeneous-body showcase"
+    ],
+    "construction": [
+      "TS0.1 10k structural object",
+      "TS0.2 100k structural object",
+      "T1 D1 playable outpost",
+      "T2.0 real 10k-100k construct",
+      "T2.6 100k-class orbital station"
+    ],
+    "composition": [
+      "V0 after G8 plus usable T1 D1 plus character presentation: procedural terrain + real outpost + player"
+    ]
+  },
+  "ts0_rules": [
+    "TS0 branches from an accepted Construction baseline, not an in-progress T candidate.",
+    "Current preferred base is T1A.3 accepted commit 5e051f67bf6987a354de5b565da1448be6b0b4db plus the synchronized GLOBAL-P0-2026-08-10-R2 documentation/config change-set.",
+    "TS0 reuses C21/C22/C24 and Construction canonical state.",
+    "TS0 must not create WorldAddress, AuthorityRegionId, InterestRegionId, MaterialDefinitionId, a global scheduler, persistence semantics, or a private transaction model.",
+    "TS0 section IDs, HLOD levels and laboratory budget knobs are local derived representation/execution data only.",
+    "100k is the primary TS0 visual scale gate; 1M is a non-blocking research ceiling probe."
+  ],
   "historical_branch_policy": "ACCEPTED_OR_FROZEN_CHECKPOINT_BRANCHES_ARE_NOT_REWRITTEN_FOR_LATER_GLOBAL_REVISIONS",
   "active_frontier_policy": "ONE_DECLARED_ACTIVE_FRONTIER_PER_PROGRAM; frontier handoff is recorded in main, then synchronized byte-equivalently to active heads.",
-  "local_plan_requirements": ["REFERENCE_GLOBAL_REVISION","DECLARE_LOCAL_PURPOSE_AND_STAGE","DECLARE_P0_DEPENDENCIES","DECLARE_FORBIDDEN_OWNERSHIP_OVERRIDES","DECLARE_MERGE_AND_COMPOSITION_GATE"],
-  "protected_p1_extensions": ["TIME_FABRIC","REFERENCE_FRAME_GEODESY_INTEGRATION","WORLD_QUERY_FABRIC","PROMOTION_DORMANCY_DEMOTION","WORLD_WORK_BUDGET_FABRIC","HIERARCHICAL_NAVIGATION_AND_AI"],
-  "merge_gate": ["GLOBAL_REVISION_MATCH","GLOBAL_CONFIG_MATCH","LOCAL_ALIGNMENT_DOC_PRESENT","NO_DUPLICATE_FOUNDATION_OWNERSHIP","STATUS_DIMENSIONS_REMAIN_DISTINCT","BRANCH_REGRESSION_PASS"]
+  "local_plan_requirements": [
+    "REFERENCE_GLOBAL_REVISION",
+    "DECLARE_LOCAL_PURPOSE_AND_STAGE",
+    "DECLARE_P0_DEPENDENCIES",
+    "DECLARE_FORBIDDEN_OWNERSHIP_OVERRIDES",
+    "DECLARE_MERGE_AND_COMPOSITION_GATE"
+  ],
+  "protected_p1_extensions": [
+    "TIME_FABRIC",
+    "REFERENCE_FRAME_GEODESY_INTEGRATION",
+    "WORLD_QUERY_FABRIC",
+    "PROMOTION_DORMANCY_DEMOTION",
+    "WORLD_WORK_BUDGET_FABRIC",
+    "HIERARCHICAL_NAVIGATION_AND_AI"
+  ],
+  "merge_gate": [
+    "GLOBAL_REVISION_MATCH",
+    "GLOBAL_CONFIG_MATCH",
+    "LOCAL_ALIGNMENT_DOC_PRESENT",
+    "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
+    "STATUS_DIMENSIONS_REMAIN_DISTINCT",
+    "BRANCH_REGRESSION_PASS"
+  ]
 }
