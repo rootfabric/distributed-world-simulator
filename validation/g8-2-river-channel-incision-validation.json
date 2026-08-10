@@ -1,0 +1,63 @@
+{
+  "schema": "planet_simulator.validation.g8_2_river_channel_incision.v1",
+  "checkpoint": "g8.2-river-channel-incision",
+  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.1 Valley Incision Baseline",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
+    "accepted_metadata_head": "b77591cd292fb6935d62de5c365a3013bdf7d157"
+  },
+  "implementation": {
+    "generator": "scripts/simulation/procedural/geomorphology/river_channel_incision_v1.gd",
+    "manifest": "config/procedural/g8-2-river-channel-incision.v1.json",
+    "acceptance_test": "tests/procedural/geomorphology/g8_2_river_channel_incision_acceptance.gd",
+    "focused_runner": "RUN_G8_2_RIVER_CHANNEL_INCISION_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_2_FULL_ACCEPTANCE.ps1",
+    "tracked_uid_sidecars": true
+  },
+  "formula": {
+    "input_fields": ["geo/surface-height-m", "geo/valley-influence", "geo/river-distance-m", "geo/river-width-m"],
+    "half_width_expression": "river_width_m * 0.5",
+    "normalized_distance_expression": "river_distance_m / half_width_m",
+    "core_ratio_expression": "1.0 - river_edge_softness_ratio",
+    "edge_weight": "cubic_smoothstep_over_outer_softness_band",
+    "river_delta_expression": "river_delta_m = -river_max_depth_m * channel_weight",
+    "centerline_max_depth": true,
+    "half_width_zero_depth": true,
+    "bounded": true,
+    "monotonic_outward": true
+  },
+  "composition": {
+    "uses_g8_1_valley_generator": true,
+    "same_semantic_bundle_for_valley_and_river": true,
+    "preserves_valley_component": true,
+    "adds_only_river_channel_component": true,
+    "bank_component_zero": true,
+    "floodplain_component_zero": true,
+    "erosion_deposition_component_zero": true
+  },
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "material_definition_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "automated_evidence": {
+    "focused": "PENDING",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED"
+  },
+  "project_control": {
+    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
+    "blockers": ["G8_2_FOCUSED_VALIDATION_REQUIRED", "G8_2_FULL_WORLD_REGRESSION_REQUIRED"]
+  },
+  "next_if_accepted": "G8.3_BANKS_AND_FLOODPLAIN_SHAPING"
+}
