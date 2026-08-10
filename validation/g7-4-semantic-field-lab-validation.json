@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX4_IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
+  "decision": "FIX4_FOCUSED_ACCEPTED_FULL_AUTOMATED_REVALIDATION_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -23,9 +23,9 @@
     "full_world_regression": {"status": "PASS", "tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978", "world_core_tests_pass": 6, "world_core_tests_fail": 0, "nx4_client_prediction_reconciliation": "PASS", "lifecycle_final_state": "STOPPED"}
   },
   "fix4": {
-    "status": "IMPLEMENTED_CANDIDATE_REVALIDATION_REQUIRED",
+    "status": "FOCUSED_ACCEPTED_FULL_AUTOMATED_REVALIDATION_PENDING",
     "trigger": "USER_SCREENSHOT_REVIEW_2026_08_10",
-    "observed_behavior": "LOD0..LOD3 and the 561-sample invariant were visible in the HUD, but dark island-like holes appeared in the semantic patch and the river was only a very thin white centerline. Code inspection showed the fixed radial offset could place negative-height patch vertices behind the radius-8 debug sphere; coarse triangle chords add further inward sagitta.",
+    "observed_behavior": "Fix3 screenshots exposed false dark sphere-occlusion holes and an overly thin river centerline overlay. Fix4 changes only derived presentation.",
     "diagnosis": {
       "base_debug_sphere_radius": 8.0,
       "old_surface_offset": 0.045,
@@ -56,28 +56,52 @@
     "fluid_identity_changed": false,
     "lod_contract_changed": false,
     "canonical_checksums_include_fix4_presentation": false,
-    "focused_revalidation": "REQUIRED",
-    "full_automated_acceptance": "REQUIRED_AFTER_FOCUSED_PASS",
-    "manual_graphical_recheck": "REQUIRED_AFTER_AUTOMATED_PASS"
+    "focused_revalidation": {
+      "status": "PASS",
+      "tested_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
+      "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+      "g7_4_assertions": 80,
+      "g7_4_failures": 0,
+      "headless_lab_smoke": "PASS",
+      "headless_semantic_samples": 561,
+      "headless_fields": 5,
+      "headless_vocabulary_only": 6,
+      "headless_faces": ["PX", "PZ"],
+      "headless_presentation_hash": "9461c585ce4c6b04e305579526716b89dbaa8192fee88363448ff2408fb92ed8",
+      "initial_presentation_lod": {"lod": 1, "stride": 2, "mesh_grid": [17, 9], "camera_distance": 12.0}
+    },
+    "full_automated_acceptance": "PENDING",
+    "manual_graphical_recheck": {
+      "status": "PARTIAL_PASS_AFTER_FIX4",
+      "evidence_source": "USER_SCREENSHOTS_2026-08-10",
+      "confirmed": [
+        "false black sphere-occlusion holes are absent on inspected Fix4 LOD views",
+        "diagnostic cyan river ribbon is clearly visible",
+        "LOD0/LOD1/LOD3 views retain 561 semantic samples and expected presentation grids"
+      ],
+      "remaining": [
+        "F toggles the river ribbon off and on",
+        "fields 1..5 recolor without changing geometry at a fixed LOD",
+        "no obvious PX/PZ semantic seam under inspection"
+      ]
+    }
   },
   "automated_acceptance": {
-    "status": "STALE_AFTER_FIX4_PRESENTATION_RUNTIME_CHANGE",
-    "previous_tested_head": "661b0eecaaa0efdedb1eaa4ea870613392029978",
-    "focused_revalidation": "REQUIRED",
-    "full_world_regression": "REQUIRED_AFTER_FOCUSED_PASS",
-    "working_tree": "TO_BE_VERIFIED_BY_RUNNER"
+    "status": "FULL_REVALIDATION_PENDING_AFTER_FIX4_FOCUSED_PASS",
+    "focused_tested_head": "e1c46bd793425bd8c0a0d6c7de6c24e4cdef282f",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED_BY_FULL_RUNNER"
   },
   "project_control": {
-    "expected_health": "RED_UNTIL_FIX4_FOCUSED_REVALIDATION_REFRESHES_RUNTIME_EVIDENCE",
-    "blockers": ["G7_4_FIX4_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_RECHECK_REQUIRED"]
+    "expected_health": "YELLOW_AFTER_FIX4_FOCUSED_PASS_UNTIL_FULL_AND_MANUAL_REMAINDER_PASS",
+    "blockers": ["G7_4_FIX4_FULL_AUTOMATED_REVALIDATION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_REMAINING_CHECKS_REQUIRED"]
   },
   "manual_graphical_acceptance": {
-    "status": "RECHECK_REQUIRED_AFTER_FIX4",
+    "status": "PARTIAL_PASS_FIX4_SHELL_AND_RIVER_VISIBILITY_CONFIRMED",
     "required": true,
     "evidence_source": "USER_SCREENSHOTS_2026-08-10",
-    "previously_confirmed": ["W/S visibly changes LOD0..LOD3", "mesh grids 33x17 17x9 9x5 5x3 visible in HUD", "semantic source remains 561 samples", "derived semantic patch geometry visibly changes with LOD"],
-    "fix4_trigger_observations": ["false dark holes visible in patch", "river centerline too thin for reliable graphical acceptance"],
-    "remaining_after_revalidation": ["no false black sphere-occlusion holes across LOD0..LOD3", "diagnostic river ribbon is clearly visible and F toggles it", "1..5 changes color without changing selected-LOD geometry", "no obvious PX/PZ semantic seam"]
+    "confirmed": ["W/S visibly changes LOD0..LOD3", "mesh grids 33x17 17x9 9x5 5x3 previously confirmed", "semantic source remains 561 samples", "derived semantic patch geometry visibly changes with LOD", "Fix4 false black sphere-occlusion holes absent in inspected views", "Fix4 cyan diagnostic river ribbon clearly visible"],
+    "remaining_checks": ["F toggles river ribbon", "1..5 changes color without changing selected-LOD geometry", "no obvious PX/PZ semantic seam"]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
