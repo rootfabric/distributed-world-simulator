@@ -15,7 +15,7 @@ G6 P0 Alignment Cleanup                 ACCEPTED
 G7.0 Semantic Field Contracts           ACCEPTED
 G7.1 Upstream Semantic Field Adapters   ACCEPTED
 G7.2 Composition / Provenance            ACCEPTED
-G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
+G7.3 Cross-Cell / Cross-LOD Invariance  FIX1 IMPLEMENTED CANDIDATE
 ```
 
 ## P0 frontier state
@@ -71,18 +71,48 @@ Accepted G7.2 checkpoint:
 68c4f90dbdac0e2d9968b4461207713f5661521b
 ```
 
-## G7.3 candidate
+## G7.3 focused evidence
 
-G7.3 is proof-only: accepted G7 semantic runtime is not modified.
-
-It proves:
+Windows focused gate:
 
 ```text
-same world point
-+ same canonical SemanticFieldQuery
-+ different SurfaceCellKey / LOD representation path
-= same semantic bundle / provenance
+G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
+G7.3 Cross-Cell / Cross-LOD Invariance focused gate passed.
 ```
+
+Confirmed:
+
+```text
+FeatureId stable across representation cells PASS
+FluidRegionId stable across cells             PASS
+one river spans multiple cells                PASS
+PX/PZ seam                                     PASS
+semantic samples on both seam sides           PASS
+PX centerline river-distance ~= 0              PASS
+PZ centerline river-distance ~= 0              PASS
+```
+
+## G7.3 Fix1
+
+The first full-gate run passed R2 preflight and stopped before runtime regression only because `git diff --check` interpreted canonical Markdown hard-break spaces in `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md` as trailing whitespace.
+
+That roadmap is already required to be byte-identical to `origin/main`, so Fix1 does not alter it. Instead the full gate now:
+
+```text
+prove canonical GLOBAL roadmap blob == main
+then exclude only that verified upstream file from local G7.3 diff --check
+keep every other G7.3/P0-sync file under strict diff --check
+```
+
+Fix1 runner commit:
+
+```text
+73ca4a0d356eb7ed18aa813c19f617b7b2c29137
+```
+
+Focused semantic runtime is unchanged; only the full acceptance harness and evidence docs changed.
+
+## G7.3 invariants
 
 LOD proof levels:
 
@@ -105,25 +135,10 @@ G5 FeatureId remains stable across cells
 G6 FluidRegionId remains stable across cells
 ```
 
-Representation resolution changes with LOD, but representation density is not canonical semantic identity.
-
-P0 boundaries remain:
-
-```text
-SemanticFieldId != SurfaceCellKey
-SemanticFieldId != LOD
-FeatureId != SurfaceCellKey
-FluidRegionId != SurfaceCellKey
-G7.3 != scheduler/cache
-G7.3 != authority/interest
-G7.3 != persistence/network
-```
-
 Validation:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 -GodotPath $Godot
 .\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
