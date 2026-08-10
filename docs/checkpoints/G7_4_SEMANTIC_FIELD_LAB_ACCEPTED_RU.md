@@ -1,8 +1,8 @@
 # G7.4 Semantic Field Lab — ACCEPTED
 
-**Architecture:** `GLOBAL-P0-2026-08-10-R2`  
-**Project Control:** `PC0-2026-08-10-R1`  
-**Branch:** `feature/g7-semantic-field-fabric`  
+**Architecture:** `GLOBAL-P0-2026-08-10-R2`
+**Project Control:** `PC0-2026-08-10-R1`
+**Branch:** `feature/g7-semantic-field-fabric`
 **Parent:** `G7.3 Cross-Cell / Cross-LOD Invariance — ACCEPTED`
 
 ## Decision
