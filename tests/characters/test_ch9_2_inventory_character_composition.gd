@@ -45,6 +45,15 @@ func _run() -> void:
 	_assert(String(screen.equipment_panel.container_id) == equipment_id, "CH9.2 equipment panel bound to wrong container")
 	_assert(int(screen.equipment_panel.current_model.get("physical_cell_count", 0)) == 5, "CH9.2 equipment panel did not render five canonical slots")
 	_assert(bool(controller.inventory_open), "CH9.2 inventory should open on lab startup")
+	_assert(lab.player.process_mode == Node.PROCESS_MODE_DISABLED, "CH9.2 open inventory must disable the gameplay CharacterBody3D")
+
+	# Keep inventory open across additional physics frames. The CH9.2 parent lab
+	# must not call move_and_slide() while the disabled CharacterBody3D has been
+	# removed from the physics space. The PowerShell runner treats any engine
+	# ERROR emitted here as a gate failure.
+	await physics_frame
+	await physics_frame
+	_assert(bool(controller.inventory_open), "CH9.2 inventory unexpectedly changed state during frozen movement gate")
 
 	for slot_index in range(5):
 		var item_id: String = lab.get_wearable_item_id(slot_index)
@@ -90,6 +99,16 @@ func _run() -> void:
 	var debug: Dictionary = controller.create_character_equipment_debug_snapshot()
 	_assert(String(debug.get("schema", "")) == "planet_simulator.character_equipment_gameplay_controller.v1", "CH9.2 gameplay debug schema drift")
 	_assert(not bool(debug.get("network_mutation_enabled", true)), "CH9.2 must not silently enable network equipment mutation before CH9.3")
+
+	# Closing inventory must restore the CharacterBody3D to normal processing and
+	# allow the inherited movement loop to run again without PhysicsServer errors.
+	var close_result: Dictionary = controller.toggle_inventory()
+	_assert(bool(close_result.get("success", false)), "CH9.2 inventory close failed")
+	_assert(not bool(controller.inventory_open), "CH9.2 inventory did not close")
+	_assert(lab.player.process_mode == Node.PROCESS_MODE_INHERIT, "CH9.2 closing inventory did not restore gameplay CharacterBody3D processing")
+	await process_frame
+	await physics_frame
+	_assert(not bool(controller.inventory_open), "CH9.2 inventory reopened unexpectedly during movement resume gate")
 
 	lab.queue_free()
 	_finish()
