@@ -12,7 +12,10 @@
   },
   "active_frontier_p0_sync": {
     "revision": "GLOBAL-P0-2026-08-10-R2",
-    "must_match_main": true,
+    "global_config_matches_main": "PASS",
+    "global_roadmap_matches_main": "PASS",
+    "global_config_blob": "dd18f720cd4ce6493618efe270311605aea9bbbf",
+    "global_roadmap_blob": "3eb52a69cef73da8a784dfce7acc6a0c38185cf9",
     "historical_g6_must_be_rewritten": false,
     "policy": "ACTIVE_FRONTIER_MATCHES_MAIN_HISTORICAL_ACCEPTED_BRANCHES_NOT_REWRITTEN"
   },
@@ -34,6 +37,14 @@
     "px_pz_seam": "REQUIRED",
     "river_feature_id_across_cells": "REQUIRED_EQUAL",
     "fluid_region_id_across_cells": "REQUIRED_EQUAL"
+  },
+  "scope_audit": {
+    "base": "68c4f90dbdac0e2d9968b4461207713f5661521b",
+    "changed_files": 14,
+    "unexpected_files": 0,
+    "g7_semantic_runtime_changed": false,
+    "allowed_global_r2_sync_files": 2,
+    "local_p0_roadmap_files": 2
   },
   "architecture": {
     "semantic_query_contains_surface_cell": false,
