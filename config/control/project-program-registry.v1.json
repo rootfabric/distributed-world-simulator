@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 4,
+  "registry_generation": 5,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T04:31:00Z",
+  "updated_at_utc": "2026-08-10T04:47:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -18,14 +18,14 @@
       "purpose": "Build stable semantic world fields that remain independent from SurfaceCellKey, LOD, camera and representation, then expose them for debug/visual inspection before G8 geomorphology.",
       "expected_outcome": "Accepted G7 semantic-field foundation plus a graphical proof that real adapter-backed fields can be inspected without becoming canonical identity.",
       "current_stage": "G7.4 Semantic Field Lab",
-      "stage_status": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
-      "progress_note": "G7.4 semantic focused work reached world regression. Shared M5 graphical acceptance then exposed an inherited final-convergence handoff deadlock: reconnect A timed out in WAIT_CONVERGENCE_PEER while B timed out in WAIT_FINAL_CONVERGENCE_PEER although both leave_result values succeeded and server joins/leaves/stale-peer checks converged. Fix2 is implemented on the G branch and must pass focused M5 before G7.4 full acceptance resumes.",
+      "stage_status": "FIX2_FOCUSED_PASS_FULL_REGRESSION_PENDING",
+      "progress_note": "Shared M5 final-convergence Fix2 has passed the focused Windows graphical rerun: 92 assertions, 0 failures. The inherited M5 blocker is closed for focused scope. G7.4 full world regression and manual graphical observation remain pending before G7.4 acceptance.",
       "last_accepted_checkpoint": "G7.3 Cross-Cell / Cross-LOD Invariance",
-      "next_stage": "Verify shared M5 convergence Fix2, then G7.4 automated + manual graphical acceptance, then G7 FULL ACCEPTANCE and G8 Geomorphology",
-      "health_declared": "RED",
+      "next_stage": "Run G7.4 full automated acceptance, then manual graphical observation, then G7 FULL ACCEPTANCE and G8 Geomorphology",
+      "health_declared": "YELLOW",
       "blockers": [
-        "G7_4_SHARED_M5_FINAL_CONVERGENCE_FIX2_FOCUSED_RERUN_REQUIRED",
-        "G7_4_AUTOMATED_AND_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
+        "G7_4_FULL_WORLD_REGRESSION_PENDING",
+        "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"
       ]
     },
     "T": {
@@ -160,8 +160,8 @@
   },
   "global_blocked_transitions": [
     {
-      "stage": "G7.4 AUTOMATED ACCEPTED",
-      "blocked_by": "G7_4_SHARED_M5_FINAL_CONVERGENCE_FIX2_FOCUSED_RERUN_REQUIRED"
+      "stage": "G7.4 ACCEPTED",
+      "blocked_by": "G7_4_FULL_WORLD_REGRESSION_AND_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
     },
     {
       "stage": "G7 FULL ACCEPTANCE",
