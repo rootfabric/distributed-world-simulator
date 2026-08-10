@@ -98,7 +98,7 @@ func _test_bound_authoritative_composition() -> void:
 	_assert(int(Dictionary(authority.get("construct_authority_revisions", {})).get(CONSTRUCT_ID, -1)) == 0, "Construct authority revision mismatch")
 	var exported: Dictionary = result["adapter"].export_state()
 	_assert(Array(Dictionary(exported.get("container_registry", {})).get("containers", [])).size() == 1, "Bound container was not included in authoritative Item Graph state")
-	var m0 := result["bridge"].get_state_report()
+	var m0: Dictionary = result["bridge"].get_state_report()
 	_assert_ok(m0, "M0 state report unavailable")
 	if bool(m0.get("success", false)):
 		_assert(int(m0.get("details", {}).get("aggregate_count", -1)) == 3, "M0 aggregate composition changed")
