@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 13,
+  "registry_generation": 14,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T10:22:00Z",
+  "updated_at_utc": "2026-08-10T10:28:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -39,13 +39,13 @@
       "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
       "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
       "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-      "current_stage": "T1A.7.1 Recovery Snapshot + Restore Contract",
-      "stage_status": "FIX1_FOCUSED_ACCEPTED_FULL_REGRESSION_PENDING",
-      "progress_note": "The first Windows recovery gate exposed restart-bootstrap duplicate assembly after M0 restore. FIX1 added opt-in persisted-composition reuse only for T1A.7 recovery, with deterministic ConstructSnapshot equivalence and no duplicate assembly plan. Fresh Windows revalidation on a1d856de348268c45eccfb1c4646720bc4a996db is green: T1A.4 153, C5B 32, T1A.5 67, T1A.5 transactional 36 and T1A.7 recovery 60 assertions. Full world regression remains required because FIX1 touched watched T1A.4/T1A.5 runtime files.",
-      "last_accepted_checkpoint": "T1A.6 Runtime Presentation + Multiplayer Binding",
-      "next_stage": "Run full world regression on the same T1A.7.1 FIX1 runtime head; if green, accept T1A.7.1 and proceed to T1A.7.2 Late-Interest Baseline + Reconnect.",
+      "current_stage": "T1A.7.2 Late-Interest Baseline + Reconnect",
+      "stage_status": "ACTIVE_REUSE_AUDIT",
+      "progress_note": "T1A.7.1 Recovery Snapshot + Restore Contract is accepted on runtime head a1d856de348268c45eccfb1c4646720bc4a996db after fresh Windows focused validation (T1A.4 153, C5B 32, T1A.5 67, transactional 36, T1A.7 recovery 60) and full world/core regression (6 PASS, 0 FAIL, clean STOPPED lifecycle and NX4 final marker). T1A.7.2 now starts from this accepted recovery base and must reuse existing M3/NX session boundaries and MW7 interest/replay patterns without creating Construction-private global interest identity or transport policy.",
+      "last_accepted_checkpoint": "T1A.7.1 Recovery Snapshot + Restore Contract",
+      "next_stage": "Complete T1A.7.2 reuse audit against MW7 and M3/NX session boundaries, then implement the smallest late-interest authoritative baseline + reconnect candidate and focused acceptance.",
       "health_declared": "YELLOW",
-      "blockers": ["T1A7_1_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1A7_2_REUSE_AUDIT_AND_FOCUSED_ACCEPTANCE_PENDING"]
     },
     "TS": {
       "program": "TS",
