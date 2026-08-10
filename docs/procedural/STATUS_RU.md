@@ -1,7 +1,7 @@
 # Universal World Generation Fabric — status ledger
 
 **Current branch:** `feature/g7-semantic-field-fabric`
-**Global revision:** `GLOBAL-P0-2026-08-08-R1`
+**Global revision:** `GLOBAL-P0-2026-08-10-R2`
 
 ```text
 G6.0 Fluid Contracts                    ACCEPTED
@@ -17,6 +17,18 @@ G7.1 Upstream Semantic Field Adapters   ACCEPTED
 G7.2 Composition / Provenance            ACCEPTED
 G7.3 Cross-Cell / Cross-LOD Invariance  IMPLEMENTED CANDIDATE
 ```
+
+## P0 frontier state
+
+Active world-generation frontier is now governed by `GLOBAL-P0-2026-08-10-R2`:
+
+```text
+main                           R2 canonical ledger
+feature/g7-semantic-field-fabric R2 active frontier
+feature/g6-hydrology-fluid-surface-v0 R1 historical accepted ancestor
+```
+
+R2 explicitly allows historical accepted/frozen branches to remain on their historical global revision; active G7 must match `main` byte-equivalently instead of forcing a G6 rewrite.
 
 ## G7.2 acceptance
 
