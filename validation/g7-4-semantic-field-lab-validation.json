@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX3_PRESENTATION_LOD_IMPLEMENTED_FOCUSED_REVALIDATION_REQUIRED",
+  "decision": "FIX3_PRESENTATION_LOD_MANUAL_VISIBILITY_CONFIRMED_FOCUSED_REVALIDATION_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -27,18 +27,20 @@
     "fluid_identity_changed": false,
     "mesh_density_in_canonical_checksum": false,
     "hud_reports_active_lod": true,
-    "focused_revalidation": "PENDING",
+    "focused_revalidation": "PENDING_AFTER_JSON_NUMERIC_NORMALIZATION_FIX",
     "full_world_regression": "PENDING",
-    "manual_graphical_recheck": "PENDING"
+    "manual_graphical_recheck": "LOD0_TO_LOD3_AND_VISIBLE_GEOMETRY_CHANGE_PASS_BY_USER_OBSERVATION"
   },
   "project_control": {
-    "expected_health_before_fix3_focused_pass": "RED",
-    "blockers": ["G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED", "G7_4_MANUAL_GRAPHICAL_ACCEPTANCE_PENDING"]
+    "expected_health": "RED_UNTIL_FOCUSED_REVALIDATION_PASS",
+    "blockers": ["G7_4_FIX3_PRESENTATION_LOD_FOCUSED_REVALIDATION_REQUIRED", "G7_4_FIX3_FULL_WORLD_REGRESSION_REQUIRED"]
   },
   "manual_graphical_acceptance": {
-    "status": "RECHECK_REQUIRED_AFTER_FIX3",
+    "status": "LOD_VISIBILITY_CONFIRMED",
     "required": true,
-    "checks": ["W/S visibly changes LOD0..LOD3", "HUD reports LOD stride mesh-grid and camera distance", "near 33x17 and far 5x3", "semantic source remains 561 samples", "1..5 changes color without changing selected-LOD geometry", "river overlay toggles", "no obvious PX/PZ semantic seam"]
+    "evidence_source": "USER_OBSERVATION_2026-08-10",
+    "confirmed": ["W/S visibly changes LOD0..LOD3", "derived semantic patch geometry visibly changes with LOD"],
+    "remaining_checks": ["HUD reports LOD stride mesh-grid and camera distance", "near 33x17 and far 5x3", "semantic source remains 561 samples", "1..5 changes color without changing selected-LOD geometry", "river overlay toggles", "no obvious PX/PZ semantic seam"]
   },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
