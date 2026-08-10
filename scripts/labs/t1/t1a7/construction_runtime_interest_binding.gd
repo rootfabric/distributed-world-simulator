@@ -72,7 +72,7 @@ func update_selection(client_id: String, interest_revision: int, selected_constr
 	var normalized_result := _normalize_construct_ids(selected_construct_ids)
 	if not bool(normalized_result.get("success", false)):
 		return normalized_result
-	var normalized: Array = normalized_result["construct_ids"]
+	var normalized: Array = Array(Dictionary(normalized_result.get("details", {})).get("construct_ids", []))
 	var checksum := _selection_checksum(client, interest_revision, normalized)
 	var existing: Dictionary = Dictionary(_states_by_client_id.get(client, _empty_client_state(client))).duplicate(true)
 	var previous_revision := int(existing.get("interest_revision", 0))
@@ -125,7 +125,7 @@ func restore_client_state(client_id: String, state: Dictionary) -> Dictionary:
 	var normalized_result := _normalize_construct_ids(Array(state.get("selected_construct_ids", [])))
 	if not bool(normalized_result.get("success", false)):
 		return normalized_result
-	var normalized: Array = normalized_result["construct_ids"]
+	var normalized: Array = Array(Dictionary(normalized_result.get("details", {})).get("construct_ids", []))
 	var revision := int(state.get("interest_revision", 0))
 	var expected_checksum := "" if revision == 0 else _selection_checksum(client, revision, normalized)
 	if String(state.get("selection_checksum", "")) != expected_checksum:
