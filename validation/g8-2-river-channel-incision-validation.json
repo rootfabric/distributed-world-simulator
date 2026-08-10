@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_2_river_channel_incision.v1",
   "checkpoint": "g8.2-river-channel-incision",
-  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -51,13 +51,22 @@
     "network_ownership": false
   },
   "automated_evidence": {
-    "focused": "PENDING",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "tested_head": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "g8_1_parent": "PASS",
+    "valley_river_composition": "PASS",
+    "ownership_boundary": "PASS",
+    "rl3_representation_aware_streaming_assertions": 175,
+    "rl3_representation_process_assertions": 37,
+    "main_scene_cli_all": "6_PASS_0_FAIL",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
-    "blockers": ["G8_2_FOCUSED_VALIDATION_REQUIRED", "G8_2_FULL_WORLD_REGRESSION_REQUIRED"]
+    "health_after_acceptance": "GREEN_FOR_G8_2_CHECKPOINT",
+    "blockers": []
   },
   "next_if_accepted": "G8.3_BANKS_AND_FLOODPLAIN_SHAPING"
 }
