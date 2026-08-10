@@ -2,9 +2,11 @@
 
 **Global revision:** `GLOBAL-P0-2026-08-10-R2`  
 **Branch family:** `T / Construction`  
-**Planned branch:** `feature/ts0-large-structural-visual-lab`  
-**Preferred base:** `T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db`  
-**Status:** `IMPLEMENTATION READY / PRE-T2 EXPERIMENTAL`
+**Historical TS0 branch:** `feature/ts0-large-structural-visual-lab`  
+**Historical bootstrap base:** `T1A.3 SOURCE_ACCEPTED @ 5e051f67bf6987a354de5b565da1448be6b0b4db`  
+**Current status:** `TS0.0–TS0.3 EVIDENCE COMPLETE / C22 PRODUCTION CONVERGENCE SOURCE_ACCEPTED / TS0.4 NEXT RESEARCH STAGE`
+
+**Canonical future handoff:** `docs/plans/TS_C22_TO_T2_SCALE_CONVERGENCE_RU.md` in `main`.
 
 ## 1. Зачем нужен TS0
 
@@ -25,59 +27,82 @@ stepped pyramid
 
 TS0 не добавляет приборы, контейнеры, utilities или сложный gameplay. Это visual/scale evidence для C21/C22/C24 и будущего T2.0.
 
-## 2. Почему ветка идёт параллельно T1A.4
-
-Текущий T frontier:
+Фактическая линия развития к текущему моменту:
 
 ```text
-T1A.4 Interactive Fixture Binding
+TS0.0 deterministic fixtures
+        ↓
+TS0.1 10k graphical proof
+        ↓
+TS0.2 100k hierarchical visual scale
+        ↓
+TS0.3 local mutation / dirty rebuild evidence
+        ↓
+C22 production incremental convergence
+        ↓
+merge/main integration
+        ↓
+TS0.4 1M research ceiling
 ```
 
-TS0 не использует T1A.4 interactive semantics, поэтому не должен наследовать незавершённый candidate.
+## 2. Почему TS0 идёт параллельно T composition/runtime
 
-Правильная схема:
+TS0 изначально стартовал от accepted T1A.3 и не должен был наследовать незавершённые gameplay candidates.
+
+Историческая схема:
 
 ```text
 T1A.3 ACCEPTED
       │
-      ├── T1A.4 -> T1A.5 -> ...
+      ├── T1A.4 -> T1A.5 -> T1A.6 -> T1A.7 -> ...
       │
       └── TS0.0 -> TS0.1 -> TS0.2 -> TS0.3 -> TS0.4
 ```
 
-## 3. Создание ветки
+Актуальная схема после TS0.3/C22 convergence:
 
-После получения актуального repository checkout:
+```text
+T runtime line
+T1A.7 selective replication
+        ↓
+T1A.7.4 Scale / Soak
+
+        || independent parallel work
+
+TS representation line
+C22 production convergence integrated in main
+        ↓
+TS0.4 1M Research Ceiling
+
+        ↓ both evidence lines converge via PC0
+T2.0 real heterogeneous station scale
+```
+
+## 3. Branch policy
+
+Старую `feature/ts0-large-structural-visual-lab` использовать как historical evidence lineage, а не как вечную рабочую ветку.
+
+После integration C22 в `main` TS0.4 должен начинаться от свежего `main` в новой ветке, рекомендуемое имя:
+
+```text
+feature/ts0-4-1m-research-ceiling
+```
+
+Перед началом:
 
 ```powershell
 git fetch origin --prune
-
-git switch --detach 5e051f67bf6987a354de5b565da1448be6b0b4db
-git switch -c feature/ts0-large-structural-visual-lab
+git switch main
+git pull --ff-only
+git switch -c feature/ts0-4-1m-research-ceiling
 ```
 
-Затем перенести **только global P0 R2 sync**, не T1A.4 gameplay commits:
-
-```powershell
-git cherry-pick 3a0d2ecb56da26b980a04ed44992e10335626e52
-git cherry-pick a926c71fa9e048f876a4256c541bdfee1fbe2e4d
-```
-
-После появления TS0 plan/config commits в `main` их также можно cherry-pick как documentation-only bootstrap.
-
-Проверить:
-
-```powershell
-git status --short
-git log --oneline -5
-```
-
-Обязательное состояние перед implementation:
+Обязательное состояние:
 
 ```text
-base ancestry contains T1A.3 accepted commit
+C22 production incremental convergence MAIN_INTEGRATED
 GLOBAL revision == GLOBAL-P0-2026-08-10-R2
-no T1A.4 implementation dependency
+PC0 has no TS ownership conflict
 working tree clean
 ```
 
@@ -88,6 +113,7 @@ working tree clean
 ```text
 C21 large-scale construct acceptance
 C22 compiled construct proxy / HLOD
+production C22 incremental local rebuild
 C24 GPU-ready proxy mesh backend
 ConstructSnapshot / ConstructAggregate
 existing section/dirty invalidation
@@ -102,9 +128,9 @@ adapter second
 new backend only after a documented gap
 ```
 
-## 5. TS0.0 — Deterministic Large Structural Fixtures
+TS0.4 не должен возвращать экспериментальный replacement C22 после того, как local dirty rebuild уже перенесён в production.
 
-Сначала никаких красивых assets.
+## 5. TS0.0 — Deterministic Large Structural Fixtures
 
 Один тип блока:
 
@@ -112,18 +138,13 @@ new backend only after a documented gap
 structural cube
 ```
 
-Предлагаемый визуальный размер:
+**Фактически принятый structural cell size:**
 
 ```text
-block_size_m = 2.0
+block_size_m = 1.0
 ```
 
-Это даёт хорошо воспринимаемый масштаб:
-
-```text
-46 blocks = 92 m
-100 blocks = 200 m
-```
+Это важно для C22 `C22_UNIT_AXIS_GRID` fast-path: 1m unit-axis box участвует в occupancy/internal-face culling и greedy grid compile. Старый proposal `2.0 m` считается устаревшим и не должен использоваться для accepted TS fixtures.
 
 Минимальные fixture profiles:
 
@@ -148,7 +169,7 @@ CUBE_1M_RESEARCH:
 100 x 100 x 100 = 1 000 000 blocks
 ```
 
-Для stepped pyramid использовать deterministic level formula и зафиксировать expected count в config/tests.
+Для stepped pyramid использовать deterministic level formula и зафиксированный expected count/checksum.
 
 Каждый block имеет stable canonical part identity.
 
@@ -179,45 +200,26 @@ fixture definition != runtime mesh
 
 ## 7. TS0.1 — 10k Visual Proof
 
-Собрать graphical lab:
-
-```text
-scenes/labs/construction/ts0_large_structural_visual_lab.tscn
-```
-
-Нужны два observer mode:
-
-```text
-walk / character-like camera
-free-flight / orbit camera
-```
+Graphical lab должен доказывать near/mid/far derived representation поверх одного canonical construct.
 
 Минимальный visual proof:
 
 ```text
 near:
-individual block structure readable
+local structure readable
 
 mid:
-compiled sections replace unnecessary individual detail
+compiled sections / hierarchical representation
 
 far:
-HLOD/proxy represents whole object cheaply
+full root shell / coarse proxy represents whole object cheaply
 ```
 
-Полезные переключатели:
-
-```text
-1 CUBE_10K
-2 PYRAMID_10K
-3 CUBE_100K
-4 PYRAMID_100K
-5 CUBE_1M_RESEARCH
-```
+Representation mode не меняет canonical checksum.
 
 ## 8. Debug presentation modes
 
-Добавить presentation-only режимы:
+Presentation-only режимы:
 
 ```text
 SOLID
@@ -246,15 +248,16 @@ active_runtime_nodes
 visible_sections
 compiled_mesh_artifacts
 triangles
-draw_calls
+draw_calls / draw-call proxy
 mesh_build_ms
-upload_ms
+presentation/materialize_ms
 estimated CPU bytes
 estimated GPU/resource bytes
 current representation mode
 observer distance
 last dirty section count
 last rebuild section count
+last reused section count
 ```
 
 Главное доказательство:
@@ -269,7 +272,7 @@ last rebuild section count
 
 ## 10. TS0.2 — 100k Visual Scale Gate
 
-Это основной acceptance TS0.
+Это основной production-scale evidence TS0.
 
 Проверить минимум:
 
@@ -283,7 +286,8 @@ Acceptance не должен задавать случайный жёсткий 
 ```text
 canonical_part_count >= 90 000
 runtime node count bounded and far below part count
-compiled representation used
+compiled/hierarchical representation used
+complete visual coverage at every representation mode
 near/mid/far transition observable
 canonical checksum invariant across representation modes
 headless canonical build/query does not require mesh assets
@@ -294,9 +298,10 @@ Performance report сохраняет реальные FPS/frame time/draw calls
 
 ## 11. TS0.3 — Local Mutation / Dirty Rebuild
 
-На `CUBE_100K` сделать deterministic mutation fixture:
+Primary deterministic evidence использует локальное изменение большого construct, например:
 
 ```text
+CUBE_100K
 remove 10 x 10 x 10 corner volume
 = 1000 blocks
 ```
@@ -307,15 +312,33 @@ remove 10 x 10 x 10 corner volume
 construct revision changes
 removed identities disappear
 unaffected identities remain stable
-only intersecting sections dirty
+bounded dirty/rebuild scope
 whole construct not rebuilt
 far proxy invalidated/rebuilt correctly
 near state after return matches canonical state
 ```
 
-Сохранить telemetry before/after.
+После TS0.3 экспериментальный алгоритм обязан пройти отдельный production convergence gate перед изменением C22.
+
+Фактический handoff:
+
+```text
+TS0.3 evidence
+        ↓
+feature/c22-incremental-local-rebuild
+        ↓
+production ConstructionProxyStreamingController.recompile_incremental
+        ↓
+focused equivalence vs independent full C22 compile
+        ↓
+full world regression
+        ↓
+SOURCE_ACCEPTED
+```
 
 ## 12. TS0.4 — 1M Research Ceiling Probe
+
+TS0.4 запускается **после MAIN_INTEGRATED production C22 convergence** в новой ветке от свежего `main`.
 
 Профиль:
 
@@ -325,7 +348,7 @@ CUBE_1M_RESEARCH
 1 000 000 parts
 ```
 
-Это не acceptance blocker.
+Это не acceptance blocker для уже доказанного 100k production path.
 
 Результат классифицировать:
 
@@ -335,7 +358,42 @@ DEGRADED
 CURRENT_CEILING_EXCEEDED
 ```
 
-Независимо от результата TS0.2 может быть SOURCE_ACCEPTED при хорошем 100k proof.
+Независимо от результата 1M, accepted 100k + local incremental path остаются валидными, если TS0.4 не обнаруживает correctness defect.
+
+### TS0.4 должен измерять фазы, а не только общий startup
+
+Обязательные cost centers:
+
+```text
+canonical fixture/materialization time
+canonical memory footprint
+section count
+C22 topology build time
+C22 exposed-surface extraction time
+section artifact compilation time
+FAR shell compilation time
+C24 mesh materialization/upload time
+artifact-cache entries/bytes
+mesh-cache entries/GPU bytes
+peak process memory where available
+MID/FAR nodes/triangles/surfaces
+local mutation dirty-section count
+local mutation rebuild time
+unchanged section reuse count
+```
+
+Нельзя уменьшать fixture только для того, чтобы скрыть медленный startup.
+
+Если `CURRENT_CEILING_EXCEEDED`, зафиксировать dominant bottleneck и возможное направление отдельной future optimization branch:
+
+```text
+canonical build/materialization bottleneck
+C22 topology/surface bottleneck
+section/HLOD compilation bottleneck
+C24 upload/cache residency bottleneck
+```
+
+Ни одно такое исследование не получает ownership глобального Work/Budget scheduler.
 
 ## 13. P0 non-ownership
 
@@ -363,6 +421,7 @@ part identity != mesh identity
 HLOD != canonical state
 visual block material != MaterialDefinitionId
 lab build budget != World Work / Budget Fabric
+network interest != renderer visibility identity
 ```
 
 ## 14. Локальные lab budgets
@@ -375,79 +434,99 @@ max_upload_bytes_per_frame
 max_active_build_jobs
 ```
 
-Они не получают global identity/API ownership и позднее заменяются adapter-ом к общему Work/Budget Fabric.
+Они не получают global identity/API ownership и позднее заменяются adapter-ом к общему Work/Budget Fabric, если такой global foundation будет отдельно принят.
 
-## 15. Proposed file layout
+## 15. Current / future file layout
+
+Historical/current evidence:
 
 ```text
-config/construction/ts0-large-structural-visual-lab.v1.json
-
+config/construction/ts0-*.json
 docs/plans/TS0_LARGE_STRUCTURAL_VISUAL_LAB_RU.md
-
-tests/construction/ts0/
-  ts0_fixture_contract_acceptance.gd
-  ts0_representation_invariance_acceptance.gd
-  ts0_dirty_section_acceptance.gd
-
-scripts/labs/t1/ts0/
-  ts0_large_structural_fixture_builder.gd
-  ts0_large_structural_visual_lab.gd
-  ts0_runtime_telemetry.gd
-  ts0_debug_overlay.gd
-
-scenes/labs/construction/
-  ts0_large_structural_visual_lab.tscn
-
-RUN_TS0_FIXTURE_TESTS.ps1
-RUN_TS0_100K_VISUAL_GATE.ps1
-PLAY_TS0_LARGE_STRUCTURAL_VISUAL_LAB.ps1
+tests/construction/ts0/**
+scripts/labs/t1/ts0/**
+scenes/labs/construction/ts0_*.tscn
+RUN_TS0_*.ps1
+validation/ts0-*.json
 ```
 
-Имена implementation files можно скорректировать под существующую layout проекта, но domain/presentation separation сохраняется.
-
-## 16. Первый implementation slice
-
-Первый commit после bootstrap должен быть маленьким:
+Production convergence:
 
 ```text
-TS0.0 fixture contract only
+scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd
+scripts/construction/proxies/construction_proxy_artifact_merger.gd
+scripts/construction/proxies/construction_proxy_streaming_controller.gd
+tests/construction/test_c22_incremental_local_rebuild.gd
 ```
 
-Он должен:
+TS0.4 должен использовать отдельные research config/test/lab files и не смешивать 1M experiment с production C22 contracts без отдельного convergence review.
 
-1. создать config с профилями;
-2. deterministic builder для cube/pyramid;
-3. создать canonical identities без renderer;
-4. проверить counts/checksums;
-5. не добавлять graphical backend.
+## 16. TS0.4 first implementation slice
 
-Только после focused PASS переходить к TS0.1 graphical presenter.
+Первый commit новой TS0.4 branch должен быть measurement-first:
 
-## 17. Acceptance ladder
+```text
+1M fixture opt-in contract
+phase timing telemetry
+memory/cache telemetry
+headless ceiling probe
+```
+
+Не начинать с красивой graphical scene.
+
+После deterministic/headless evidence можно добавить limited graphical FAR/MID proof, если машина выдерживает материализацию без неконтролируемого resource growth.
+
+## 17. Acceptance / evidence ladder
 
 ```text
 TS0.0 fixture contracts PASS
         ↓
 TS0.1 10k graphical proof PASS
         ↓
-TS0.2 100k visual scale gate PASS
+TS0.2 100k visual scale evidence PASS
         ↓
-TS0.3 local mutation / dirty rebuild PASS
+TS0.3 local mutation / dirty rebuild evidence PASS
         ↓
-TS0 SOURCE_ACCEPTED
+C22 production convergence SOURCE_ACCEPTED
+        ↓
+C22 MAIN_INTEGRATED
         │
-        └── TS0.4 1M research may continue independently
+        ├── production path available for T2.0
+        │
+        └── TS0.4 1M research continues independently
+                 ↓
+          PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED
 ```
+
+TS0.4 classification is research evidence, not a retroactive requirement to invalidate the 100k path.
 
 ## 18. Handoff в T2
 
-После TS0:
+После C22 main integration TS0.4 и T runtime-scale branch могут идти параллельно:
 
 ```text
-synthetic scale risk reduced
-        ↓
-T2.0 uses same representation path
-on a real heterogeneous large base/station
+T1A.7.4 runtime/network Scale / Soak
+                ||
+TS0.4 1M structural/representation ceiling
 ```
 
+Перед T2.0 требуется explicit PC0 convergence review:
+
+```text
+C22 MAIN_INTEGRATED
+        +
+accepted relevant T runtime/recovery/interest/scale evidence
+        +
+TS0 100k + dirty rebuild evidence
+        +
+TS0.4 ceiling classification recorded
+        ↓
+T2.0 uses the same production representation path
+on a real heterogeneous 100k-class base/station
+```
+
+Ключевой T2.0 proof обязан выполнить локальную структурную mutation на настоящей неоднородной станции и доказать, что production C22 перестраивает только bounded affected sections, переиспользуя остальные artifacts.
+
 TS0 никогда не заменяет T2.0 real-construct acceptance.
+
+Подробнее: `docs/plans/TS_C22_TO_T2_SCALE_CONVERGENCE_RU.md` в `main`.
