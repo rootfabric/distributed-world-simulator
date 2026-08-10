@@ -10,6 +10,7 @@ const GRID_FIELDS: Array[String] = ["kind", "axis", "direction", "plane_q2", "u"
 const FALLBACK_FIELDS: Array[String] = ["kind", "axis", "direction", "position_m", "dimensions_m"]
 const BYTES_PER_VERTEX := 32
 const BYTES_PER_INDEX := 4
+const FRONT_FACE_WINDING := "GODOT_CLOCKWISE"
 
 var _materials
 
@@ -25,6 +26,7 @@ func compile(artifact: Dictionary) -> Dictionary:
 	mesh.set_meta("construction_proxy_artifact_id", String(artifact["artifact_id"]))
 	mesh.set_meta("construction_proxy_content_hash", String(artifact["content_hash"]))
 	mesh.set_meta("construction_proxy_backend", Descriptor.BACKEND)
+	mesh.set_meta("construction_proxy_front_face_winding", FRONT_FACE_WINDING)
 
 	var material_keys: Array = []
 	var signature_surfaces: Array = []
@@ -58,6 +60,7 @@ func compile(artifact: Dictionary) -> Dictionary:
 
 	var signature_payload := {
 		"backend": Descriptor.BACKEND,
+		"front_face_winding": FRONT_FACE_WINDING,
 		"artifact_content_hash": String(artifact["content_hash"]),
 		"surfaces": signature_surfaces,
 	}
@@ -105,12 +108,16 @@ func _compile_surface(batch: Dictionary) -> Dictionary:
 			vertices.append(quad_vertices[index])
 			normals.append(normal)
 			uvs.append(quad_uvs[index])
+		# Godot treats clockwise winding as the front face. _oriented_quad keeps
+		# its corner basis mathematically aligned with the outward normal, so the
+		# triangle index order must be reversed relative to the cross-product
+		# convention. Stored normals remain outward for lighting.
 		indices.append(base)
+		indices.append(base + 2)
 		indices.append(base + 1)
-		indices.append(base + 2)
 		indices.append(base)
-		indices.append(base + 2)
 		indices.append(base + 3)
+		indices.append(base + 2)
 		signature_quads.append(quad_result["signature"])
 	return C.success({
 		"vertices": vertices,
