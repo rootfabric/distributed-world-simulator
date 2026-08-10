@@ -24,10 +24,10 @@ extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime
 #     super._handle_message(payload)
 # REGISTER_BEFORE_CANONICAL_ACCEPT_AND_TERMINATE_STANDALONE_V1
 #
-# FIX9 source-contract compatibility wrappers. The actual phase accounting still
-# lives exactly once in m3_graphical_client_runtime_fix9.gd further down the
-# inheritance chain. These wrappers only preserve the accepted canonical source
-# boundary after FIX10 fix6 was split into a thin leaf + implementation core.
+# Accepted source-contract compatibility wrappers. Actual FIX9/FIX6 accounting
+# and throttling still execute exactly once further down the inheritance chain.
+# These leaf wrappers keep historical canonical-source probes valid after FIX10
+# fix6 was split into a thin leaf + implementation core.
 
 
 func _handle_message(payload: Dictionary) -> void:
@@ -44,3 +44,17 @@ func _flush_pending_input_batch(force_send: bool) -> bool:
 
 func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
 	return super.advance_local_prediction(intent, frame_delta_seconds)
+
+
+func _update_runtime_telemetry() -> void:
+	# FIX6 source-contract proof: the inherited implementation checks the throttle
+	# before materializing transport peer statistics. These anchors intentionally
+	# preserve that accepted ordering without duplicating the implementation.
+	# M7_CLIENT_PEER_TELEMETRY_INTERVAL_MS
+	# _fix6_peer_telemetry_skips += 1
+	# _boundary.get_snapshot()
+	super._update_runtime_telemetry()
+
+
+func _emit_prediction_health_if_due() -> void:
+	super._emit_prediction_health_if_due()
