@@ -7,7 +7,8 @@
   "candidate_head": "648529318cf362539ac111394acb61fe027ed592",
   "fix1_code_head": "eee48dee636b3fee4d2504049df3a069910f5ca6",
   "focused_tested_head": "f5a2f3349ebb7be663f72a0bd435ae9386ce46a1",
-  "accepted_tested_head": "a81b56fdce2cc0b09d022989d866988faf92026f",
+  "full_regression_tested_head": "a81b56fdce2cc0b09d022989d866988faf92026f",
+  "accepted_head": "93fcab1a1ebdeaa0f88e57b4b10adb1919f28aac",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": true,
