@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g7_4_semantic_field_lab.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "decision": "FIX1_IMPLEMENTED_CANDIDATE",
+  "decision": "FIX2_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
@@ -17,7 +17,7 @@
     "program": "G",
     "branch": "feature/g7-semantic-field-fabric",
     "stage": "G7.4 Semantic Field Lab",
-    "stage_status": "IMPLEMENTED_CANDIDATE",
+    "stage_status": "FIX1_IMPLEMENTED_M5_FOCUSED_RERUN_REQUIRED",
     "legacy_global_active_frontiers_operational_owner": false
   },
   "project_control": {
@@ -25,18 +25,49 @@
     "branch_passport": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
     "auditor_entrypoint": "CONTROL_PROJECT.ps1",
     "auditor_logic_owner": "origin/main:scripts/control/project_control.py",
-    "expected_candidate_health": "YELLOW",
-    "g_red_blocks_acceptance": true,
+    "expected_candidate_health_before_m5_rerun": "RED",
+    "g_red_blocks_full_acceptance": true,
     "unrelated_program_red_blocks_g_acceptance": false,
-    "reason": "PC0 RED blocks the affected program. Overall project RED may be caused by an independent program such as T and is inspected with NoFailOnRed while G itself must remain non-RED."
+    "main_registry_generation": 3,
+    "reason": "The G program is RED until the shared M5 final-convergence fix passes its focused rerun. Overall project RED caused by an independent program remains non-blocking only after G itself is non-RED."
   },
   "fix1": {
     "launcher_parser_failure": "WINDOWS_POWERSHELL_UTF8_NO_BOM_SMART_QUOTE_CODEPAGE_COLLISION",
     "symptom": "START_G7_4_SEMANTIC_FIELD_LAB.ps1 parsed field legend tokens such as 2/valley/river as PowerShell expressions",
     "cause": "The launcher contained a Unicode em dash. Legacy Windows PowerShell can decode UTF-8 without BOM through an ANSI codepage into a smart quote sequence, and PowerShell treats smart quotes as quote delimiters.",
     "launcher_fix": "Replace Unicode em dash with ASCII hyphen and keep the launcher ASCII-only.",
-    "acceptance_hardening": "Full runner now requires all G7.4 PowerShell runner/launcher files to be ASCII-only and AST-parse clean before runtime.",
+    "acceptance_hardening": "Full runner requires all G7.4 PowerShell runner/launcher files to be ASCII-only and AST-parse clean before runtime.",
     "runtime_semantics_changed": false
+  },
+  "fix2": {
+    "shared_regression": "M5_GRAPHICAL_FINAL_CONVERGENCE_HANDOFF_DEADLOCK",
+    "first_full_gate_result": "WORLD_REGRESSION_FAILED_AT_M5",
+    "m5_assertions": 92,
+    "m5_failures": 3,
+    "observed_client_a2": {
+      "state": "FAILED",
+      "passed": false,
+      "failure": "M5_ACCEPTANCE_TIMEOUT at WAIT_CONVERGENCE_PEER",
+      "leave_result_success": true
+    },
+    "observed_client_b": {
+      "state": "FAILED",
+      "passed": false,
+      "failure": "M5_ACCEPTANCE_TIMEOUT at WAIT_FINAL_CONVERGENCE_PEER",
+      "leave_result_success": true
+    },
+    "observed_server": {
+      "state": "READY",
+      "joins": 3,
+      "leaves": 3,
+      "connected_peer_count": 0
+    },
+    "canonical_world_checks_after_timeout": "PASS",
+    "root_cause": "A faster peer may publish FINAL_CONVERGENCE_LOCKED while the slower peer is still in WAIT_CONVERGENCE_PEER. The earlier barrier accepted only READY_TO_CONVERGE/CONVERGENCE_LOCKED or CONVERGENCE_LOCKED/COMPLETE, so the later valid FINAL state was rejected and the two peers deadlocked on adjacent barriers.",
+    "fix": "Treat FINAL_CONVERGENCE_LOCKED and COMPLETE as monotonic later peer states when frozen player/item checksums match. No timeout increase and no acceptance assertion weakening.",
+    "shared_driver": "scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd",
+    "focused_rerun_required": true,
+    "production_gameplay_semantics_changed": false
   },
   "implementation": {
     "scene": "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn",
@@ -97,15 +128,16 @@
   },
   "scope_audit": {
     "base": "1a2808a2e03c565c9a52fc467c51398d43fcf3e9",
-    "changed_files": 20,
+    "changed_files": 21,
     "unexpected_files": 0,
     "pc0_bootstrap_files": 2,
+    "shared_m5_acceptance_driver_changed": true,
     "production_semantic_runtime_changed": false,
+    "production_network_runtime_changed": false,
     "g3_g5_g6_adapters_changed": false,
     "composer_changed": false,
     "hydrology_changed": false,
-    "matter_changed": false,
-    "network_changed": false
+    "matter_changed": false
   },
   "p0": {
     "owns_renderer_foundation": false,
@@ -120,7 +152,7 @@
     "owns_geomorphology": false
   },
   "automated_acceptance": {
-    "status": "PENDING_WINDOWS_FULL_GATE_AFTER_FIX1",
+    "status": "BLOCKED_PENDING_M5_FIX2_FOCUSED_RERUN",
     "expected_marker": "G7.4 AUTOMATED ACCEPTANCE: PASS",
     "requires_project_control_audit": true,
     "requires_g_health_not_red": true,
