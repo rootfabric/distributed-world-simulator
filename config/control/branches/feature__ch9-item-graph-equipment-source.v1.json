@@ -9,10 +9,10 @@
   "purpose": "Replace laboratory equipment state with a canonical Item Graph-backed source without giving character presentation ownership of items, transfers, networking or persistence.",
   "expected_outcome": "A deterministic ItemGraphEquipmentSource that reads entity-owned equipment slots, validates canonical Item relations and slot rules, and produces snapshots byte-semantically compatible with the accepted character equipment presenter contract.",
   "current_stage": "CH9.0 Item Graph Equipment Source",
-  "stage_status": "IMPLEMENTED_CANDIDATE_BLOCKED_BY_PREDECESSOR_AND_PC0_HANDOFF",
-  "progress_note": "CH9.0 source, production-registry projection tests, JSON round-trip test and focused runner are implemented. Formal acceptance waits for CH8 final runner and main-owned Character frontier handoff.",
+  "stage_status": "FOCUSED_ACCEPTED_BLOCKED_BY_PREDECESSOR_AND_PC0_HANDOFF",
+  "progress_note": "Windows Godot 4.7.1 double focused runner passes: CH7 54, CH8 57, CH9 source 62, CH9 JSON roundtrip 33 assertions. Formal CH9.0 acceptance still waits for CH8 final runner and main-owned Character frontier handoff.",
   "last_accepted_checkpoint": "CH7.8 fused-body garment experiment accepted; CH8 presentation prototype visually accepted by user but final full runner not yet recorded",
-  "next_stage": "CH9.1 Authoritative Equip / Unequip Operations after CH9.0 acceptance",
+  "next_stage": "CH9.1 Authoritative Equip / Unequip Operations candidate; formal acceptance remains gated by predecessor and PC0 handoff",
   "parent_branch_or_checkpoint": "feature/ch8-layered-equipment @ 1eebc1e741e65c64207942a0e39d7263fbd39f65",
   "base_commit": "1eebc1e741e65c64207942a0e39d7263fbd39f65",
   "dependencies": [
@@ -52,8 +52,8 @@
     "validation/ch9-item-graph-equipment-source-validation.json"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "fe93014cc56be0cfc06e66363e9cc1b73b766a29",
+    "focused": "a5c946c1b87a9ef462bd7c17bc61c559140eb2f3",
     "full_regression": ""
   },
   "ownership_claims": [
