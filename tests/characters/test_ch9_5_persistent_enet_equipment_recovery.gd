@@ -21,8 +21,8 @@ class PresenterProbe extends RefCounted:
 
 	func apply_snapshot(snapshot) -> Dictionary:
 		apply_count += 1
-		var fingerprint := snapshot.state_fingerprint()
-		var changed := fingerprint != last_state_fingerprint
+		var fingerprint: String = String(snapshot.state_fingerprint())
+		var changed: bool = fingerprint != last_state_fingerprint
 		if changed:
 			change_count += 1
 		last_state_fingerprint = fingerprint
@@ -57,7 +57,7 @@ func _run() -> void:
 		"user://ch9-5-live-equipment-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 	)
 	_remove_tree(persistence_root)
-	var port := 39700 + (OS.get_process_id() % 700)
+	var port: int = 39700 + (OS.get_process_id() % 700)
 
 	var server_1 = _create_server(port)
 	if server_1 == null:
@@ -74,7 +74,7 @@ func _run() -> void:
 	if client_a == null or client_b == null:
 		_cleanup_and_finish()
 		return
-	var ready_1 := await _wait_until(func() -> bool:
+	var ready_1: bool = await _wait_until(func() -> bool:
 		return client_a.is_ready() and client_b.is_ready()
 	, READY_TIMEOUT_MS)
 	_assert(ready_1, "generation 1 clients did not become ready")
@@ -82,16 +82,16 @@ func _run() -> void:
 		_cleanup_and_finish()
 		return
 
-	var initial_converged := await _wait_until(func() -> bool:
+	var initial_converged: bool = await _wait_until(func() -> bool:
 		return _same_item_graph(client_a, client_b)
 	, CONVERGENCE_TIMEOUT_MS)
 	_assert(initial_converged, "generation 1 Item Graph did not converge")
 
 	var coordinator_1 = PresentationCoordinator.new()
 	_assert_ok(coordinator_1.setup(client_b), "generation 1 presentation coordinator setup")
-	var presenter_1 := PresenterProbe.new()
+	var presenter_1: PresenterProbe = PresenterProbe.new()
 	_assert_ok(coordinator_1.bind_presenter("a", presenter_1), "generation 1 bind A presenter on B")
-	var lower_id := "item/player/a/wearable/lower"
+	var lower_id: String = "item/player/a/wearable/lower"
 	_assert(presenter_1.visible_item_ids.is_empty(), "A started visually equipped before command")
 
 	var equip_sent: Dictionary = client_a.submit_equipment_command_nonblocking(
@@ -100,7 +100,7 @@ func _run() -> void:
 		"operation/ch9-5/live/a/equip-lower"
 	)
 	_assert_ok(equip_sent, "generation 1 equipment send")
-	var equipped_live := await _wait_until(func() -> bool:
+	var equipped_live: bool = await _wait_until(func() -> bool:
 		return (
 			_same_item_graph(client_a, client_b)
 			and _item_is_equipped(client_a.get_item_graph_snapshot(), lower_id)
@@ -114,7 +114,7 @@ func _run() -> void:
 	var persistence_1: Dictionary = Dictionary(server_1.get_report().get("persistence", {}))
 	_assert(int(persistence_1.get("checkpoint_generation", 0)) >= 1, "equipment command produced no M6 checkpoint")
 	_assert(not bool(persistence_1.get("fatal_failure", true)), "generation 1 persistence entered fatal state")
-	var checkpoint_after_equip := int(persistence_1.get("checkpoint_generation", 0))
+	var checkpoint_after_equip: int = int(persistence_1.get("checkpoint_generation", 0))
 
 	# Stop the authority while clients still exist. They become disconnected, but
 	# the server's accepted M6 stop path writes a final checkpoint. Old clients are
@@ -122,7 +122,7 @@ func _run() -> void:
 	_assert_ok(coordinator_1.stop(false), "generation 1 coordinator stop")
 	var stop_1: Dictionary = server_1.stop()
 	_assert_ok(stop_1, "generation 1 server stop")
-	var disconnected := await _wait_until(func() -> bool:
+	var disconnected: bool = await _wait_until(func() -> bool:
 		return not client_a.is_ready() and not client_b.is_ready()
 	, 3000)
 	_assert(disconnected, "generation 1 clients did not observe server stop")
@@ -149,14 +149,14 @@ func _run() -> void:
 	if client_a2 == null or client_c == null:
 		_cleanup_and_finish()
 		return
-	var ready_2 := await _wait_until(func() -> bool:
+	var ready_2: bool = await _wait_until(func() -> bool:
 		return client_a2.is_ready() and client_c.is_ready()
 	, READY_TIMEOUT_MS)
 	_assert(ready_2, "generation 2 reconnect/late clients did not become ready")
 	if not ready_2:
 		_cleanup_and_finish()
 		return
-	var recovered_live := await _wait_until(func() -> bool:
+	var recovered_live: bool = await _wait_until(func() -> bool:
 		return (
 			_same_item_graph(client_a2, client_c)
 			and _item_is_equipped(client_a2.get_item_graph_snapshot(), lower_id)
@@ -168,10 +168,10 @@ func _run() -> void:
 
 	var coordinator_2 = PresentationCoordinator.new()
 	_assert_ok(coordinator_2.setup(client_c), "generation 2 presentation coordinator setup")
-	var presenter_2 := PresenterProbe.new()
+	var presenter_2: PresenterProbe = PresenterProbe.new()
 	_assert_ok(coordinator_2.bind_presenter("a", presenter_2), "generation 2 bind recovered A presenter")
 	_assert(presenter_2.visible_item_ids == [lower_id], "recovered equipment did not present immediately on late client")
-	var initial_change_count := presenter_2.change_count
+	var initial_change_count: int = presenter_2.change_count
 	coordinator_2.synchronize(client_c.get_item_graph_snapshot())
 	_assert(presenter_2.change_count == initial_change_count, "recovered full snapshot created duplicate presentation state")
 
@@ -181,7 +181,7 @@ func _run() -> void:
 		"operation/ch9-5/live/a/unequip-lower-after-recovery"
 	)
 	_assert_ok(unequip_sent, "post-recovery unequip send")
-	var unequipped_live := await _wait_until(func() -> bool:
+	var unequipped_live: bool = await _wait_until(func() -> bool:
 		return (
 			_same_item_graph(client_a2, client_c)
 			and not _item_is_equipped(client_a2.get_item_graph_snapshot(), lower_id)
@@ -267,7 +267,7 @@ func _find_item(snapshot: Dictionary, item_id: String) -> Dictionary:
 
 
 func _item_count(snapshot: Dictionary, item_id: String) -> int:
-	var count := 0
+	var count: int = 0
 	for value in snapshot.get("items", []):
 		if value is Dictionary and String(value.get("item_id", "")) == item_id:
 			count += 1
@@ -275,7 +275,7 @@ func _item_count(snapshot: Dictionary, item_id: String) -> int:
 
 
 func _wait_until(predicate: Callable, timeout_ms: int) -> bool:
-	var started := Time.get_ticks_msec()
+	var started: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started <= timeout_ms:
 		if bool(predicate.call()):
 			return true
@@ -286,17 +286,17 @@ func _wait_until(predicate: Callable, timeout_ms: int) -> bool:
 func _remove_tree(path: String) -> void:
 	if path.is_empty() or not DirAccess.dir_exists_absolute(path):
 		return
-	var directory := DirAccess.open(path)
+	var directory = DirAccess.open(path)
 	if directory == null:
 		return
 	directory.list_dir_begin()
 	while true:
-		var name := directory.get_next()
+		var name: String = directory.get_next()
 		if name.is_empty():
 			break
 		if name in [".", ".."]:
 			continue
-		var child := path.path_join(name)
+		var child: String = path.path_join(name)
 		if directory.current_is_dir():
 			_remove_tree(child)
 		else:
