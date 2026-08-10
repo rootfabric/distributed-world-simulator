@@ -17,7 +17,7 @@
     "main_roadmap_commit": "2eb819d51ccd00a310ec6e3da689fc62feac9ab2",
     "status": "DECLARED_AS_PRIMARY_FRONTIER"
   },
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_GATE",
+  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
   "goal": "Compose accepted CH9.2 inventory equipment, CH9.3 live ENet Item Graph replication/presentation and CH9.4 M6 durable recovery in one production-shaped runtime without adding a second truth, transport or persistence foundation.",
   "architecture": {
     "new_item_relation": false,
@@ -88,17 +88,41 @@
   "candidate_review": {
     "inherited_member_shadowing_audit": "PASS_BY_SOURCE_REVIEW",
     "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
-    "windows_execution": "NOT_RUN_BY_ASSISTANT"
+    "windows_execution": "ATTEMPT_1_BLOCKED_BY_TEST_PARSE_BEFORE_RUNTIME_EXECUTION",
+    "runtime_candidate_not_disproven": true
+  },
+  "windows_attempt_1": {
+    "tested_branch_head": "af5423b8191f97278e2c304c6b186131cbd4d2d7",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "presentation_coordinator": "PARSE_BLOCKED",
+    "persistent_enet_recovery": "PARSE_BLOCKED",
+    "errors": [
+      "test_ch9_5_equipment_presentation_coordinator.gd: Cannot infer the type of fingerprint variable because the value does not have a set type",
+      "test_ch9_5_equipment_presentation_coordinator.gd: Cannot infer the type of changed variable because the value does not have a set type",
+      "test_ch9_5_persistent_enet_equipment_recovery.gd: Cannot infer the type of fingerprint variable because the value does not have a set type",
+      "test_ch9_5_persistent_enet_equipment_recovery.gd: Cannot infer the type of changed variable because the value does not have a set type"
+    ],
+    "runtime_assertions_executed": false
+  },
+  "fix1": {
+    "presentation_probe_typing_commit": "75082594e8744bc6e6ca71f86b1339770eb86547",
+    "persistent_enet_typing_commit": "9333408cb9c729519d1393041a7ea4154e57c73c",
+    "changes": [
+      "PresenterProbe fingerprint is explicitly String",
+      "PresenterProbe changed is explicitly bool",
+      "persistent ENet test timing/convergence/count variables are explicitly typed where practical",
+      "production CH9.5 runtime files are unchanged"
+    ]
   },
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch9_2_inventory_character_regression": "PENDING",
-    "ch9_3_replicated_presentation_regression": "PENDING",
-    "ch9_3_real_enet_regression": "PENDING",
-    "ch9_4_durable_roundtrip_regression": "PENDING",
-    "ch9_4_reconnect_recovery_regression": "PENDING",
-    "presentation_coordinator": "PENDING",
-    "persistent_enet_recovery": "PENDING",
-    "candidate_runner": "PENDING"
+    "editor_import": "PENDING_RERUN",
+    "ch9_2_inventory_character_regression": "PENDING_RERUN",
+    "ch9_3_replicated_presentation_regression": "PENDING_RERUN",
+    "ch9_3_real_enet_regression": "PENDING_RERUN",
+    "ch9_4_durable_roundtrip_regression": "PENDING_RERUN",
+    "ch9_4_reconnect_recovery_regression": "PENDING_RERUN",
+    "presentation_coordinator": "FIX1_PENDING_RERUN",
+    "persistent_enet_recovery": "FIX1_PENDING_RERUN",
+    "candidate_runner": "PENDING_RERUN"
   }
 }
