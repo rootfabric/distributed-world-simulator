@@ -3,7 +3,7 @@
   "stage": "CH9.2 Inventory + Character Composition",
   "branch": "feature/ch9-2-inventory-character-composition",
   "base_branch": "feature/ch9-1-authoritative-equipment-operations",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_FOCUSED_AND_GRAPHICAL_GATE",
+  "decision": "FIX1_INVENTORY_MOVEMENT_FREEZE_PENDING_WINDOWS_RERUN",
   "goal": "Use the existing component Inventory UI to mutate canonical Item Graph equipment state through CH9.1 and drive the accepted CH8 character presenter from CH9.0 snapshots.",
   "canonical_path": {
     "ui": "CharacterEquipmentInventoryScreen",
@@ -37,6 +37,8 @@
     "PRESENTER_CONSUMES_CH9_0_SNAPSHOT_AFTER_COMMIT",
     "CH8_BODY_FIT_REMAINS_PRESENTATION_ONLY",
     "LAB_U_L_K_H_B_MUTATIONS_DISABLED",
+    "OPEN_INVENTORY_FREEZES_GAMEPLAY_BODY_WITHOUT_PARENT_LAB_MOVE_AND_SLIDE",
+    "CLOSING_INVENTORY_RESTORES_CHARACTER_BODY_MOVEMENT_LIFECYCLE",
     "NETWORK_EQUIPMENT_MUTATION_EXPLICITLY_DEFERRED_TO_CH9_3"
   ],
   "focused_tests": {
@@ -57,19 +59,43 @@
     "body-visible inflated garments do not expose the previous leg truncation artifact",
     "no laboratory U L K H B mutation is required"
   ],
+  "windows_attempt_1": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "ch8_layering": "PASS 57",
+    "ch9_0_source": "PASS 62",
+    "ch9_1_operations": "PASS 76",
+    "ch9_1_multi_conflict": "PASS 42",
+    "ch9_2_composition_assertions": "PASS 53",
+    "candidate_runner": "FAIL",
+    "runner_reason": "ERROR markers despite script exit code 0",
+    "engine_error": "Parameter body->get_space() is null in GodotPhysicsServer3D::body_test_motion",
+    "backtrace": "res://scripts/characters/lab/quaternius_character_lab.gd:76",
+    "diagnosis": "Inventory open intentionally disables the CharacterBody3D process mode; the inherited parent lab continued to call move_and_slide on the body after CollisionObject3D left PhysicsServer space.",
+    "canonical_equipment_logic_failed": false
+  },
+  "fix1": {
+    "runtime_commit": "c59eb1f121d29b506b70048413c3e5c9db588c3c",
+    "test_commit": "62b1e13c77424ebad93e5b618945238c3ab88792",
+    "scope": "CH9.2 graphical lab lifecycle only",
+    "production_item_gameplay_controller_changed": false,
+    "base_character_movement_changed": false,
+    "behavior": "QuaterniusItemGraphEquipmentLab overrides _physics_process and skips inherited movement while canonical inventory state is open; closing inventory restores PROCESS_MODE_INHERIT and the inherited movement loop.",
+    "regression_gate": "composition test holds inventory open across physics frames, then closes it and crosses another physics frame; runner rejects any ERROR marker"
+  },
   "formal_lineage_blockers": [
     "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
   ],
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch8_layering": "PENDING",
-    "ch9_0_source": "PENDING",
-    "ch9_1_operations": "PENDING",
-    "ch9_1_multi_conflict": "PENDING",
-    "ch9_2_composition": "PENDING",
-    "ch9_2_ui_routes": "PENDING",
-    "candidate_runner": "PENDING",
+    "fix1_editor_import": "PENDING",
+    "fix1_ch8_layering": "PENDING",
+    "fix1_ch9_0_source": "PENDING",
+    "fix1_ch9_1_operations": "PENDING",
+    "fix1_ch9_1_multi_conflict": "PENDING",
+    "fix1_ch9_2_composition": "PENDING",
+    "fix1_ch9_2_ui_routes": "PENDING",
+    "fix1_candidate_runner": "PENDING",
     "graphical_observation": "PENDING"
   }
 }
