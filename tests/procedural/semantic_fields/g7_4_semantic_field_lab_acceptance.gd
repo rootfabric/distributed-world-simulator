@@ -5,7 +5,8 @@ const Registry = preload("res://scripts/simulation/procedural/semantic_fields/se
 const MANIFEST_PATH := "res://config/procedural/g7-4-semantic-field-lab.v1.json"
 const G73_VALIDATION_PATH := "res://validation/g7-3-cross-cell-cross-lod-invariance-validation.json"
 const SCENE_PATH := "res://scenes/labs/procedural/g7_4_semantic_field_lab.tscn"
-const SCRIPT_PATH := "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd"
+const SCRIPT_PATH := "res://scripts/labs/procedural/g7_4_semantic_field_lab_fix4.gd"
+const BASE_SCRIPT_PATH := "res://scripts/labs/procedural/g7_4_semantic_field_lab.gd"
 const AVAILABLE_FIELDS: Array[String] = [
 	Registry.SURFACE_HEIGHT_M,
 	Registry.VALLEY_INFLUENCE,
@@ -46,6 +47,8 @@ func _test_manifest() -> void:
 	_assert(String(manifest.get("checkpoint", "")) == "g7.4-semantic-field-lab", "G7.4 checkpoint id")
 	_assert(String(manifest.get("status", "")) in ["IMPLEMENTED_CANDIDATE", "ACCEPTED"], "G7.4 status supports candidate to accepted transition")
 	_assert(String(manifest.get("global_program_revision", "")) == "GLOBAL-P0-2026-08-10-R2", "G7.4 uses active R2 revision")
+	_assert(String(manifest.get("script", "")) == SCRIPT_PATH, "G7.4 manifest points to Fix4 presentation wrapper")
+	_assert(String(manifest.get("base_script", "")) == BASE_SCRIPT_PATH, "G7.4 manifest retains the accepted semantic lab base script")
 	_assert(Array(manifest.get("visualized_fields", [])) == AVAILABLE_FIELDS, "G7.4 visualized field list is exact")
 	_assert(Array(manifest.get("vocabulary_only_not_faked", [])) == VOCABULARY_ONLY_FIELDS, "G7.4 explicitly lists vocabulary-only fields")
 	var grid: Dictionary = manifest.get("sample_grid", {})
@@ -77,6 +80,24 @@ func _test_manifest() -> void:
 				grids.append([])
 		_assert(strides == EXPECTED_LOD_STRIDES, "G7.4 presentation LOD strides are 1/2/4/8")
 		_assert(grids == EXPECTED_LOD_GRIDS, "G7.4 presentation LOD grids are 33x17 -> 5x3")
+
+	var fix4: Dictionary = manifest.get("presentation_fix4", {})
+	var shell: Dictionary = fix4.get("surface_shell", {})
+	var river: Dictionary = fix4.get("river_overlay", {})
+	_assert(String(shell.get("mode", "")) == "HEIGHT_RANGE_DERIVED_UNIFORM_RADIAL_LIFT", "Fix4 uses a uniform height-range-derived presentation shell lift")
+	_assert(float(shell.get("minimum_vertex_clearance_display_units", 0.0)) >= 0.07, "Fix4 reserves enough vertex clearance above the debug sphere")
+	_assert(bool(shell.get("includes_coarse_chord_guard", false)), "Fix4 shell includes a coarse-LOD chord guard")
+	_assert(bool(shell.get("preserves_relative_height_shape", false)), "Fix4 shell preserves relative semantic height shape")
+	_assert(String(river.get("source", "")) == "ACCEPTED_CANONICAL_RIVER_CENTERLINE_SPLINE", "Fix4 river overlay derives from the accepted canonical centerline")
+	_assert(String(river.get("geometry", "")) == "TRIANGLE_STRIP_DIAGNOSTIC_RIBBON", "Fix4 river overlay is a visible diagnostic ribbon")
+	_assert(not bool(river.get("represents_physical_river_width", true)), "Fix4 diagnostic ribbon does not pretend to be physical river width")
+	_assert(float(river.get("clearance_above_patch_display_units", 0.0)) > 0.0, "Fix4 river ribbon is lifted above the patch")
+	_assert(not bool(fix4.get("changes_canonical_semantics", true)), "Fix4 cannot change canonical semantics")
+	_assert(not bool(fix4.get("changes_semantic_query", true)), "Fix4 cannot change canonical semantic queries")
+	_assert(not bool(fix4.get("changes_feature_identity", true)), "Fix4 cannot create or change FeatureId")
+	_assert(not bool(fix4.get("changes_fluid_identity", true)), "Fix4 cannot create or change FluidRegionId")
+	_assert(not bool(fix4.get("included_in_canonical_checksum", true)), "Fix4 presentation is excluded from canonical checksums")
+
 	var presentation: Dictionary = manifest.get("presentation_contract", {})
 	_assert(not bool(presentation.get("field_selection_changes_canonical_query", true)), "field selector cannot change canonical query")
 	_assert(not bool(presentation.get("field_selection_changes_geometry", true)), "field selector cannot change geometry")
@@ -86,6 +107,8 @@ func _test_manifest() -> void:
 	_assert(bool(presentation.get("presentation_lod_reuses_same_semantic_records", false)), "presentation LOD uses the same semantic record source")
 	_assert(not bool(presentation.get("visual_colors_in_canonical_checksum", true)), "visual colors excluded from canonical checksum")
 	_assert(not bool(presentation.get("mesh_density_in_canonical_checksum", true)), "mesh density excluded from canonical checksum")
+	_assert(not bool(presentation.get("presentation_shell_in_canonical_checksum", true)), "Fix4 presentation shell excluded from canonical checksum")
+	_assert(not bool(presentation.get("river_overlay_geometry_in_canonical_checksum", true)), "Fix4 river ribbon excluded from canonical checksum")
 	_assert(not bool(presentation.get("creates_new_feature_identity", true)), "G7.4 creates no production FeatureId ownership")
 	_assert(not bool(presentation.get("creates_new_fluid_identity", true)), "G7.4 creates no FluidRegionId ownership")
 
@@ -113,8 +136,10 @@ func _test_registry_boundary() -> void:
 
 
 func _test_scene_contract() -> void:
-	_assert(FileAccess.file_exists(SCRIPT_PATH), "G7.4 lab script exists")
-	_assert(ResourceLoader.exists(SCRIPT_PATH), "G7.4 lab script is loadable")
+	_assert(FileAccess.file_exists(BASE_SCRIPT_PATH), "G7.4 base lab script exists")
+	_assert(ResourceLoader.exists(BASE_SCRIPT_PATH), "G7.4 base lab script is loadable")
+	_assert(FileAccess.file_exists(SCRIPT_PATH), "G7.4 Fix4 lab script exists")
+	_assert(ResourceLoader.exists(SCRIPT_PATH), "G7.4 Fix4 lab script is loadable")
 	_assert(FileAccess.file_exists(SCENE_PATH), "G7.4 lab scene exists")
 	var packed = ResourceLoader.load(SCENE_PATH)
 	_assert(packed is PackedScene, "G7.4 scene loads as PackedScene")
@@ -126,7 +151,7 @@ func _test_scene_contract() -> void:
 	_assert(root.get_node_or_null("Camera3D") is Camera3D, "G7.4 scene has camera")
 	_assert(root.get_node_or_null("HUD/Panel/Margin/VBox/Status") is Label, "G7.4 scene has semantic HUD")
 	var root_script = root.get_script()
-	_assert(root_script != null and String(root_script.resource_path) == SCRIPT_PATH, "G7.4 scene uses expected lab script")
+	_assert(root_script != null and String(root_script.resource_path) == SCRIPT_PATH, "G7.4 scene uses expected Fix4 wrapper script")
 	root.free()
 
 
