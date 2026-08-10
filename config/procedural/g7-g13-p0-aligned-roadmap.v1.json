@@ -1,6 +1,7 @@
 {
   "schema": "planet_simulator.geo_g7_g13_p0_aligned_roadmap.v1",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "upstream": {
     "g6": "SOURCE_ACCEPTED",
@@ -22,10 +23,13 @@
     "PROCEDURAL_BASELINE_PLUS_SPARSE_AUTHORITATIVE_MATTER_MUTATIONS_EQUALS_CURRENT_WORLD_TRUTH"
   ],
   "frontier_policy": {
-    "active_frontier_matches_main": true,
-    "global_config_blob": "61939301c5ca21c3c152ba0a76b2c5c0617cea53",
-    "global_roadmap_blob": "3eb52a69cef73da8a784dfce7acc6a0c38185cf9",
-    "historical_accepted_branches_rewritten_for_new_global_revision": false,
+    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "control_plane_revision": "PC0-2026-08-10-R1",
+    "operational_frontier_source": "origin/main:config/control/project-program-registry.v1.json",
+    "branch_passport": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
+    "legacy_global_active_frontiers_operational_owner": false,
+    "status_only_frontier_changes_require_global_revision": false,
+    "historical_accepted_branches_rewritten_for_status_only_changes": false,
     "world_generation_frontier": "feature/g7-semantic-field-fabric"
   },
   "stages": [
@@ -130,9 +134,11 @@
     "G12": "AUTHORITY_PERSISTENCE_WORK_BUDGET_OWNERSHIP_AUDIT"
   },
   "acceptance_common": [
-    "GLOBAL_REVISION_MATCH_MAIN_ACTIVE_FRONTIER",
-    "GLOBAL_CONFIG_BYTE_EQUIVALENT_TO_MAIN",
-    "GLOBAL_ROADMAP_BYTE_EQUIVALENT_TO_MAIN",
+    "ARCHITECTURE_REVISION_MATCH_PC0",
+    "PC0_BRANCH_REGISTERED",
+    "PC0_BRANCH_PASSPORT_PRESENT",
+    "PC0_CENTRAL_AND_BRANCH_STAGE_MATCH",
+    "PC0_G_HEALTH_NOT_RED",
     "LOCAL_P0_ALIGNMENT_CURRENT",
     "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
     "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK",
