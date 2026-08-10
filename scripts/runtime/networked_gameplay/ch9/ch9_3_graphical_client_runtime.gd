@@ -1,7 +1,9 @@
 class_name Ch9GraphicalClientRuntime
 extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
 
-const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
+# RealtimeChannelPolicy is inherited through the accepted NX6 runtime. Do not
+# redeclare inherited members in Godot 4.7; the same member-shadowing rule that
+# applies to the CH9.3 replica adapter applies to this runtime adapter as well.
 
 
 func submit_equipment_command_nonblocking(
