@@ -1,7 +1,8 @@
 class_name Ch9EquipmentRecoveryService
 extends "res://scripts/runtime/networked_gameplay/ch9/ch9_3_networked_gameplay_service.gd"
 
-const EquipmentItemGraph = preload("res://scripts/runtime/networked_gameplay/ch9/ch9_3_equipment_item_graph_service.gd")
+# EquipmentItemGraph is inherited from the CH9.3 network service. Godot 4.7
+# rejects re-declaring inherited class members even for an identical preload.
 const EquipmentCatalog = preload("res://scripts/characters/equipment/network_character_equipment_catalog.gd")
 
 const RESULT_EQUIPMENT_DURABLE_STATE_INVALID := "CH9_4_EQUIPMENT_DURABLE_STATE_INVALID"
