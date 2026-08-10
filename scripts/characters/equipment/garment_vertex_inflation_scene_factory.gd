@@ -1,7 +1,7 @@
 class_name GarmentVertexInflationSceneFactory
 extends RefCounted
 
-const MAX_OFFSET_M := 0.02
+const MAX_OFFSET_M := 0.08
 const MIN_HEIGHT_EPSILON_M := 0.000001
 
 
