@@ -4,6 +4,7 @@
   "decision": "IMPLEMENTED_CANDIDATE",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
+  "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
@@ -18,7 +19,10 @@
     "graphical_client_count": 2,
     "runtime_command_count_in_acceptance": 3,
     "runtime_command_sequence": ["OPEN_DOOR", "TOGGLE_LIGHT", "CLOSE_DOOR"],
-    "visual_lab": "tools/runtime/t1a6_visual_lab.gd"
+    "visual_lab": "tools/runtime/t1a6_visual_lab.gd",
+    "changed_file_count_from_base": 14,
+    "base_m3_server_modified": false,
+    "base_m3_client_modified": false
   },
   "transport": {
     "base_server": "accepted M3 dedicated server runtime",
