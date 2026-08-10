@@ -27,14 +27,10 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	if not bool(equipment_validation.get("success", false)):
 		return equipment_validation
 
-	# Reuse the accepted base restore for players, ownership, shared items,
-	# revisions and all transactionality. It restores a generic canonical Item
-	# Graph; CH9.4 then replaces only that staged graph with the equipment-aware
-	# subclass restored from the exact same durable bytes.
-	var restored: Dictionary = super.restore_durable_state(value)
-	if not bool(restored.get("success", false)):
-		return restored
-
+	# Stage the equipment-aware graph first. If any semantic, graph or checksum
+	# check fails, the live service remains untouched. Only after this staging
+	# succeeds do we invoke the accepted base transactional restore for players,
+	# ownership, shared items and revisions.
 	var durable_item_state: Dictionary = Dictionary(value.get("canonical_item_graph", {}))
 	var durable_snapshot: Dictionary = Dictionary(durable_item_state.get("snapshot", {}))
 	var equipment_graph = EquipmentItemGraph.new()
@@ -48,22 +44,26 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	var graph_restore: Dictionary = equipment_graph.restore_durable_state(durable_item_state)
 	if not bool(graph_restore.get("success", false)):
 		return _failure(RESULT_EQUIPMENT_GRAPH_REHYDRATE_FAILED, {"cause": graph_restore})
-	var restored_snapshot: Dictionary = equipment_graph.create_snapshot()
-	var restored_validation: Dictionary = _validate_equipment_snapshot(restored_snapshot)
-	if not bool(restored_validation.get("success", false)):
-		return restored_validation
-	if String(restored_snapshot.get("checksum", "")) != String(durable_snapshot.get("checksum", "")):
+	var staged_snapshot: Dictionary = equipment_graph.create_snapshot()
+	var staged_validation: Dictionary = _validate_equipment_snapshot(staged_snapshot)
+	if not bool(staged_validation.get("success", false)):
+		return staged_validation
+	if String(staged_snapshot.get("checksum", "")) != String(durable_snapshot.get("checksum", "")):
 		return _failure(RESULT_EQUIPMENT_GRAPH_REHYDRATE_FAILED, {
 			"cause": "CHECKSUM_MISMATCH",
 			"expected": String(durable_snapshot.get("checksum", "")),
-			"actual": String(restored_snapshot.get("checksum", "")),
+			"actual": String(staged_snapshot.get("checksum", "")),
 		})
+
+	var restored: Dictionary = super.restore_durable_state(value)
+	if not bool(restored.get("success", false)):
+		return restored
 
 	_canonical_multiplayer_items = equipment_graph
 	var details: Dictionary = Dictionary(restored.get("details", {})).duplicate(true)
 	details["character_equipment_recovered"] = true
-	details["equipment_container_count"] = int(restored_validation.get("details", {}).get("equipment_container_count", 0))
-	details["equipped_item_count"] = int(restored_validation.get("details", {}).get("equipped_item_count", 0))
+	details["equipment_container_count"] = int(staged_validation.get("details", {}).get("equipment_container_count", 0))
+	details["equipped_item_count"] = int(staged_validation.get("details", {}).get("equipped_item_count", 0))
 	restored["details"] = details
 	return restored
 
