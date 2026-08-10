@@ -4,7 +4,7 @@
 **Ветка:** `feature/t1a6-runtime-presentation-multiplayer-binding`  
 **Control plane:** `PC0-2026-08-10-R1`  
 **Причина:** blocker `T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_FIX1_REQUIRED_BEFORE_T1A6_ACCEPTANCE`  
-**Статус:** `IMPLEMENTED CANDIDATE / WINDOWS VALIDATION REQUIRED`
+**Статус:** `ACCEPTED / T1A6 REVALIDATION PENDING`
 
 ## Почему потребовался FIX1
 
@@ -23,7 +23,7 @@ runtime command
   -> operation terminal record
 ```
 
-То есть utility side effect мог произойти раньше canonical runtime commit. При последующем отказе runtime update это оставляло риск partial state.
+Utility side effect мог произойти раньше canonical runtime commit. При последующем отказе runtime update это оставляло риск partial state.
 
 ## Исправленная граница
 
@@ -69,7 +69,7 @@ _apply_power_effect() # validate first, mutate only after validation
 
 `GENERATOR`, `LAMP`, `CONSOLE` строят effect projection в handler-е. `DOOR` не создаёт utility effect.
 
-## Новый regression
+## Regression
 
 Добавлен:
 
@@ -90,20 +90,36 @@ D0 generator replay does not advance tick/battery/revision
 stale D0 command changes neither runtime nor utility state
 ```
 
-Focused runner:
+Первый Windows probe обнаружил только parse-проблему самого нового regression-теста: GDScript не смог вывести тип динамического `success_generation`. Production runtime до этого прошёл C5B и исходный T1A.5 acceptance. Parse fix сделал динамические значения теста явными `int/String/Dictionary`; runtime semantics не менялись.
+
+## Windows acceptance
+
+На head `a5e2795698a469a7f160214b3e4880014f6759a2` focused runner прошёл полностью:
+
+```text
+C5B affordance runtime contracts: PASS (32 assertions)
+T1A.5 interactive runtime execution: PASS (67 assertions)
+T1A.5 transactional runtime effects: PASS (36 assertions)
+T1A.5 transactional runtime effects focused gate passed.
+```
+
+Это закрывает локальное доказательство blocker-а `T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_FIX1_REQUIRED_BEFORE_T1A6_ACCEPTANCE`.
+
+## Что остаётся для T1A.6
+
+Предыдущий T1A.6 multiplayer PASS и world regression PASS были получены до runtime semantic change, поэтому они остаются исторически корректными, но stale для formal acceptance.
+
+Нужно повторить:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1 -GodotPath $Godot
+.\RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1 -GodotPath $Godot
+
+$env:GODOT_BIN = $Godot
+.\RUN_WORLD_REGRESSION_TESTS.ps1
 ```
 
-Он выполняет editor import, C5B contracts, прежний T1A.5 acceptance и новый transactional regression.
-
-После его PASS требуется повторный T1A.6 focused multiplayer gate и полный world regression, потому что runtime code изменён после предыдущих acceptance evidence.
-
-## PC0
-
-До свежих PASS статус T1A.6 не считается ACCEPTED:
+До этих двух свежих PASS статус T1A.6:
 
 ```text
 SOURCE_ACCEPTED       false
@@ -112,4 +128,4 @@ COMPOSITION_VERIFIED  false
 PRODUCTION_READY      false
 ```
 
-Переход в `T1A.7 Runtime Recovery / Interest / Scale` остаётся заблокирован stop rule-ом PC0 до закрытия FIX1 и повторной acceptance T1A.6.
+Переход в `T1A.7 Runtime Recovery / Interest / Scale` остаётся заблокирован stop rule-ом PC0 до повторной acceptance T1A.6.
