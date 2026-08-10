@@ -7,22 +7,30 @@
 
 ## P0 frontier rule
 
-`GLOBAL-P0-2026-08-10-R2` изменил программу ledger так, что active frontier должен byte-exact совпадать с `main`, а исторические accepted/frozen branches не переписываются только ради нового global revision.
+`GLOBAL-P0-2026-08-10-R2` изменил program ledger так, что active frontier должен byte-exact совпадать с `main`, а исторические accepted/frozen branches не переписываются только ради нового global revision.
 
-Для G7.3 это означает:
+Для G7.3:
 
 ```text
 active G7 global config/docs == main R2
 historical accepted G6 may remain R1
 G6 ancestry still required
-G6 global byte equality no longer required
+G6 global byte equality is not required
 ```
 
-Это важно для acceptance runner: он проверяет `main <-> active G7`, а не пытается переписать accepted G6.
+Verified active GLOBAL blobs:
+
+```text
+config/architecture/global-program-roadmap.v1.json
+  dd18f720cd4ce6493618efe270311605aea9bbbf
+
+docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
+  3eb52a69cef73da8a784dfce7acc6a0c38185cf9
+```
 
 ## Цель
 
-G7.3 не добавляет новый procedural runtime. Он доказывает, что уже принятые G7.0–G7.2 contracts/adapters/composer действительно независимы от representation partitioning.
+G7.3 не добавляет новый procedural runtime. Он доказывает, что уже принятые G7.0–G7.2 contracts/adapters/composer независимы от representation partitioning.
 
 Главный инвариант:
 
@@ -61,7 +69,7 @@ G6 FluidRegionId
 
 ## SurfaceCell boundary
 
-`SemanticFieldQuery` по-прежнему не содержит:
+`SemanticFieldQuery` не содержит:
 
 ```text
 surface_cell
@@ -114,7 +122,7 @@ LOD != semantic identity
 
 ## P0 boundaries
 
-G7.3 специально не вводит production runtime helper для cell-aware semantics.
+G7.3 не вводит production runtime helper для cell-aware semantics.
 
 ```text
 SemanticFieldId != SurfaceCellKey
@@ -127,7 +135,19 @@ G7.3 != authority/interest
 G7.3 != persistence/network
 ```
 
-Stage состоит из proof tests/runners/manifest/docs; accepted G7.0–G7.2 runtime не изменяется.
+Stage состоит из proof tests/runners/manifest/docs; accepted G7.0–G7.2 semantic runtime не изменяется.
+
+## Scope
+
+От accepted G7.2 baseline допускаются только:
+
+```text
+G7.3 test/runners/manifest/validation/docs
+active GLOBAL-P0 R2 config + roadmap sync from main
+local G7-G13 R2 alignment docs/config
+```
+
+Любой G3/G5/G6 adapter, composer, Hydrology, Matter или Network runtime change должен остановить gate.
 
 ## Focused acceptance
 
