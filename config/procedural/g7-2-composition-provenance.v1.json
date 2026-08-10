@@ -1,10 +1,11 @@
 {
   "schema": "planet_simulator.g7_2_composition_provenance_manifest.v1",
   "checkpoint": "g7.2-composition-provenance",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_1_accepted_commit": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
+  "tested_head": "70d9a78d8f176ce532412a64afbbcb2592623720",
   "composer": {
     "composer_id": "semantic-composer/g7-2-v1",
     "version": "1.0.0",
@@ -26,6 +27,11 @@
     "pins_sample_checksums": true,
     "pins_provenance_checksums": true,
     "contributions_sorted_by_adapter_id": true
+  },
+  "acceptance": {
+    "windows_full_gate": "PASS",
+    "world_core_regression": "PASS",
+    "working_tree": "CLEAN"
   },
   "p0": {
     "owns_world_query": false,
