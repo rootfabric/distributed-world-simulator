@@ -23,10 +23,7 @@
     "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
     "config/architecture/global-program-roadmap.v1.json"
   ],
-  "critical_watched_paths": [
-    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
-    "config/architecture/global-program-roadmap.v1.json"
-  ],
+  "critical_watched_paths": [],
   "runtime_paths": [],
   "validation_paths": ["docs/future_features/world_building_doctrine/P0_TECHNICAL_ALIGNMENT_RU.md"],
   "tested_heads": {
