@@ -1,21 +1,23 @@
 {
   "schema": "planet_simulator.validation.g7_2_composition_provenance.v1",
   "checkpoint": "g7.2-composition-provenance",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-08-R1",
   "branch": "feature/g7-semantic-field-fabric",
+  "tested_head": "70d9a78d8f176ce532412a64afbbcb2592623720",
+  "engine": "4.7.1.stable.double.custom_build.a13da4feb",
   "g7_1": {
     "decision": "ACCEPTED",
     "accepted_commit": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
-    "windows_full_acceptance": "PASS"
+    "ancestor": "PASS"
   },
   "implementation": {
-    "composition_receipt_contract": "IMPLEMENTED",
-    "deterministic_composer": "IMPLEMENTED",
-    "g3_g5_real_adapter_composition_test": "IMPLEMENTED",
-    "g3_g6_real_adapter_composition_test": "IMPLEMENTED",
-    "focused_runner": "IMPLEMENTED",
-    "full_acceptance_runner": "IMPLEMENTED"
+    "composition_receipt_contract": "ACCEPTED",
+    "deterministic_composer": "ACCEPTED",
+    "g3_g5_real_adapter_composition_test": "PASS",
+    "g3_g6_real_adapter_composition_test": "PASS",
+    "focused_runner": "PASS",
+    "full_acceptance_runner": "PASS"
   },
   "policy": {
     "id": "semantic-composition-policy/require-complete-v1",
@@ -31,6 +33,17 @@
     "upstream_provenance_checksums_pinned": true,
     "query_checksum_pinned": true,
     "bundle_checksum_pinned": true
+  },
+  "windows_full_acceptance": {
+    "g7_2_composition_scope": "PASS",
+    "deterministic_bundle_and_provenance_receipt": "PASS",
+    "world_core_regression": "PASS",
+    "main_scene_cli_all": {
+      "passed": 6,
+      "failed": 0
+    },
+    "final_marker": "G7.2 FULL ACCEPTANCE: PASS",
+    "working_tree": "CLEAN"
   },
   "scope_audit": {
     "base": "af0898ba2f0fc03dbd0298440f302b497a5d0cad",
@@ -53,15 +66,5 @@
     "owns_scheduler_cache": false,
     "owns_geomorphology": false
   },
-  "required_windows_acceptance": {
-    "focused_runner": "RUN_G7_2_COMPOSITION_PROVENANCE_TESTS.ps1",
-    "focused_expected_marker": "G7.2 Composition / Provenance: 52 assertions, 0 failures",
-    "full_runner": "RUN_G7_2_FULL_ACCEPTANCE.ps1",
-    "g7_0_regression": true,
-    "g7_1_regression": true,
-    "full_world_regression": true,
-    "clean_worktree": true,
-    "git_diff_check": true
-  },
-  "next_if_accepted": "G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE"
+  "next_checkpoint": "G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE"
 }
