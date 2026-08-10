@@ -112,7 +112,8 @@ func _test_d0_utility_effect_exactly_once() -> void:
 	_assert(UtilsScript.canonical_json(Dictionary(after_replay.power_storage)) == after_stop_storage, "D0 transactional replay changed battery state")
 	_assert(int(runtime.get_subject("GENERATOR").revision) == 1, "D0 transactional replay advanced generator revision")
 
-	var before_stale := runtime.get_report()
+	var before_stale: Dictionary = runtime.get_report()
+	var generator_before_stale := UtilsScript.canonical_json(runtime.get_subject("GENERATOR"))
 	var stale: Dictionary = runtime.execute(
 		"GENERATOR",
 		"START_GENERATOR",
@@ -120,10 +121,10 @@ func _test_d0_utility_effect_exactly_once() -> void:
 		0
 	)
 	_assert_error(stale, "CONSTRUCTION_RUNTIME_REVISION_MISMATCH", "D0 stale transactional command was accepted")
-	var after_stale := runtime.get_report()
+	var after_stale: Dictionary = runtime.get_report()
 	_assert(int(after_stale.power_tick) == int(before_stale.power_tick), "Rejected D0 transaction advanced utility tick")
 	_assert(UtilsScript.canonical_json(Dictionary(after_stale.power_storage)) == UtilsScript.canonical_json(Dictionary(before_stale.power_storage)), "Rejected D0 transaction changed battery state")
-	_assert(UtilsScript.canonical_json(runtime.get_subject("GENERATOR")) == UtilsScript.canonical_json(Dictionary(before_stale.runtime_state.subjects).get("", {})) or int(runtime.get_subject("GENERATOR").revision) == 1, "Rejected D0 transaction changed generator revision")
+	_assert(UtilsScript.canonical_json(runtime.get_subject("GENERATOR")) == generator_before_stale, "Rejected D0 transaction changed generator state")
 
 
 func _make_store():
