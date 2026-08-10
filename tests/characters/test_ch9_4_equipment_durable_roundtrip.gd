@@ -103,14 +103,14 @@ func _run() -> void:
 	_assert(reconnect_epoch > epoch, "reconnect did not advance ownership epoch")
 	_assert(_equipment_item(restored.create_canonical_item_graph_snapshot(), "a", EquipmentCatalog.SLOT_LOWER) == lower_id, "reconnect changed recovered equipment")
 
+	var checksum_before_replay := String(restored.create_canonical_item_graph_snapshot().get("checksum", ""))
 	var old_replay: Dictionary = restored.handle_canonical_item_command(
 		"a", "transport-session/ch9-4/a/1", epoch,
 		"operation/ch9-4/equip/a/lower", "equipment.equip",
 		{"item_id": lower_id, "slot_index": EquipmentCatalog.SLOT_LOWER}
 	)
 	_assert(bool(old_replay.get("success", false)) and bool(old_replay.get("replay", false)), "pre-restart equipment operation did not replay idempotently")
-	var checksum_before_unequip := String(restored.create_canonical_item_graph_snapshot().get("checksum", ""))
-	_assert(String(restored.create_canonical_item_graph_snapshot().get("checksum", "")) == checksum_before_unequip, "replay mutated recovered Item Graph")
+	_assert(String(restored.create_canonical_item_graph_snapshot().get("checksum", "")) == checksum_before_replay, "replay mutated recovered Item Graph")
 
 	var unequip: Dictionary = restored.handle_canonical_item_command(
 		"a", "transport-session/ch9-4/a/2", reconnect_epoch,
