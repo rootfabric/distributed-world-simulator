@@ -4,7 +4,7 @@
 **Ветка:** `feature/t1a6-runtime-presentation-multiplayer-binding`  
 **Base:** T1A.5 accepted @ `7e6b83a0df8c509374af21e70615dafa66330846`  
 **Global revision:** `GLOBAL-P0-2026-08-08-R1`  
-**Статус:** `FOCUSED ACCEPTED / FULL REGRESSION PENDING`
+**Статус:** `ACCEPTED`
 
 ## Цель
 
@@ -181,7 +181,7 @@ Fix1:
 
 ```text
 5f83dcb3ca3f7043fa3c205260e7e24d891ba32f  server adapter
- afeea2789d319bcb0bd384c97bd31d4e133a8ff8  client adapter
+afeea2789d319bcb0bd384c97bd31d4e133a8ff8  client adapter
 ```
 
 Повторный focused gate после fix1 полностью прошёл:
@@ -221,6 +221,25 @@ T1A.6 runtime presentation + multiplayer focused gate passed.
 ```
 
 Focused acceptance доказал реальную цепочку `canonical runtime -> transport -> replica -> presentation` на dedicated server + двух graphical clients, включая late join после открытия двери.
+
+## Full Windows composition regression
+
+После focused acceptance выполнен полный `RUN_WORLD_REGRESSION_TESTS.ps1` на metadata-only HEAD `bae283f8dcc87b0a5a706040e918b14f65e81ca8`.
+
+Финал:
+
+```text
+6 PASS, 0 FAIL
+[PASS] core.command_registry
+[PASS] core.simulation_clock
+[PASS] core.world_catalog
+[PASS] world.playground.boot
+[PASS] world.playground.inventory_demo
+[PASS] world.playground.physics_object
+All world/core regression tests through NX4 client prediction and reconciliation passed.
+```
+
+Lifecycle завершился чисто через `RUNNING -> DRAINING -> STOPPING -> STOPPED`, `exit_code=0`, runtime drain successful.
 
 ## Visual lab
 
@@ -265,30 +284,7 @@ MaterialDefinitionId/private material ontology
 
 ## Acceptance state
 
-Focused gate теперь принят. До полного composition regression статус остаётся:
-
-```text
-SOURCE_ACCEPTED       false
-MAIN_INTEGRATED       false
-COMPOSITION_VERIFIED  false
-PRODUCTION_READY      false
-```
-
-Последний gate T1A.6:
-
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-$env:GODOT_BIN = $Godot
-.\RUN_WORLD_REGRESSION_TESTS.ps1
-```
-
-Целевой marker:
-
-```text
-All world/core regression tests through NX4 client prediction and reconciliation passed.
-```
-
-При полном PASS T1A.6 может перейти в:
+T1A.6 принят:
 
 ```text
 SOURCE_ACCEPTED       true
@@ -297,10 +293,23 @@ COMPOSITION_VERIFIED  true
 PRODUCTION_READY      false
 ```
 
+Основание acceptance:
+
+```text
+focused graphical multiplayer          PASS 25 / 0 failures
+full world/core regression             PASS
+main scene CLI                          6 PASS / 0 FAIL
+canonical/server/client convergence     PASS
+presentation convergence               PASS
+clean shutdown                          PASS
+```
+
+PR остаётся stacked Draft и не merge'ится автоматически.
+
 ## Следующий checkpoint
 
-После acceptance T1A.6 следующий логичный слой:
+Следующий слой T-линии:
 
 `T1A.7 — Runtime Recovery / Interest / Scale`
 
-Он должен решить durable recovery runtime state, late-interest resync, selective replication и scale policy, не меняя принятую границу canonical/presentation/transport.
+Он должен решить durable recovery runtime state, late-interest resync, selective replication и scale policy, не меняя принятую границу canonical/presentation/transport и не создавая второй persistence/interest authority.
