@@ -45,9 +45,9 @@ artifacts/control/project-control-report.json
 Dashboard обязан показывать:
 
 - имя и роль ветки;
-- **что это за ветка**;
-- **зачем она нужна**;
-- **какой результат должна получить**;
+- что это за ветка;
+- зачем она нужна;
+- какой результат должна получить;
 - текущую стадию и stage status;
 - последний принятый checkpoint;
 - что происходит прямо сейчас;
@@ -65,8 +65,8 @@ Dashboard обязан показывать:
 
 | Program | Branch / mode | Что делает | Сейчас | Следом | Health |
 |---|---|---|---|---|---|
-| G | `feature/g7-semantic-field-fabric` | Semantic Field Fabric + visual proof | G7.4 candidate | G7 Full → G8 | YELLOW |
-| T | `feature/t1a6-runtime-presentation-multiplayer-binding` | Runtime presentation + multiplayer binding | focused PASS, full regression pending; inherited T1A.5 transactional gap remains | FIX1 + full regression → T1A.6 accept → T1A.7 | RED |
+| G | `feature/g7-semantic-field-fabric` | Semantic Field Fabric + visual proof | G7.4 Fix2 focused PASS; full regression + manual visual pending | G7.4 accept → G7 Full → G8 | YELLOW |
+| T | `feature/t1a7-runtime-recovery-interest-scale` | Construction runtime recovery + late interest + selective scale | T1A.7 architecture/reuse audit | T1A.7.1 recovery contract → interest/reconnect → selective scale | YELLOW |
 | TS | `feature/ts0-large-structural-visual-lab` | 10k/100k Construction scale evidence | TS0.1 candidate/manual presentation review | TS0.1 accept → TS0.2 | YELLOW |
 | CH | `feature/ch7-8-skinned-garment` | Character/garment presentation | CH7-8 active | focused acceptance | GREEN declared / auditor may raise YELLOW until fresh validation is registered |
 | Doctrine | `feature/world-building-doctrine` | Rules of interesting interconnected world simulation | active consolidation | evidence-driven updates | GREEN declared / dependency sync may raise YELLOW |
@@ -76,24 +76,63 @@ Dashboard обязан показывать:
 
 Это human-readable snapshot central registry. **Фактический health всегда пересчитывается auditor-ом.**
 
-## Почему T сейчас RED
+## T: T1A.6 закрыт, T1A.7 открыт
 
-PC0 фиксирует реальное движение, даже если оно опередило архитектурную коррекцию:
+PC0 blocker по T1A.5 transactional effects закрыт реальным Windows revalidation:
 
 ```text
-T1A.5 functional acceptance
-        ↓
-architecture audit finds transactional side-effect gap
-        ↓
-T1A.6 branch already exists and focused multiplayer gate passes
-        ↓
-PC0 records actual T1A.6 as frontier
-        ↓
-T1A.6 acceptance remains BLOCKED
-until T1A.5 transactional-effects FIX1 + full regression are closed
+C5B runtime contracts                  PASS 32
+T1A.5 interactive runtime              PASS 67
+T1A.5 transactional runtime effects    PASS 36
+T1A.6 dedicated + 2 clients            PASS 25 / 0 failures
+full world/core regression             6 PASS / 0 FAIL
+NX4 final marker                       PASS
 ```
 
-То есть контроль не переписывает историю и не скрывает уже выполненную работу; он показывает, что следующий formal acceptance нельзя считать безопасным.
+T1A.6 теперь имеет:
+
+```text
+SOURCE_ACCEPTED       true
+MAIN_INTEGRATED       false
+COMPOSITION_VERIFIED  true
+PRODUCTION_READY      false
+```
+
+Новый frontier:
+
+```text
+feature/t1a7-runtime-recovery-interest-scale
+```
+
+T1A.7 начат не с нового runtime-кода, а с reuse/ownership audit. Уже проверены два важных существующих pattern-а:
+
+```text
+MW7 Matter interest:
+  revisioned subscription
+  active/pending interest
+  reconnect/session fence
+  bounded replay
+  projection hash / ack
+  regional snapshot fallback
+  irrelevant changes filtered
+
+Matter persistence:
+  repository/coordinator split
+  checkpoint identity validation
+  validate-before-restore
+  backup before restore
+  rollback on partial restore failure
+```
+
+Construction может использовать эти architectural patterns и существующие owner boundaries, но не имеет права создавать собственные global interest identity, persistence foundation, authority registry или permanent spatial identity.
+
+Текущий T blocker — только архитектурный convergence gate:
+
+```text
+T1A7_ARCHITECTURE_REUSE_AUDIT_PENDING
+```
+
+Это YELLOW, а не RED: разработка T1A.7 может продолжаться после явного выбора reuse boundary, но major acceptance нельзя проводить с неразрешённым foundation ownership.
 
 ## Запуск контроля из main
 
@@ -103,9 +142,9 @@ git fetch origin --prune
 .\CONTROL_PROJECT.ps1
 ```
 
-По умолчанию `RED` возвращает exit code `2`, что удобно как локальный acceptance/convergence gate.
+По умолчанию `RED` возвращает exit code `2`.
 
-Только посмотреть состояние, не падать по RED:
+Только посмотреть состояние:
 
 ```powershell
 .\CONTROL_PROJECT.ps1 -NoFailOnRed
@@ -117,23 +156,9 @@ git fetch origin --prune
 .\CONTROL_PROJECT.ps1 -NoFetch -NoFailOnRed
 ```
 
-## Запуск из G/T/TS/CH/Doctrine checkout
+## Запуск из active checkout
 
-В active branches есть маленький `CONTROL_PROJECT.ps1` bootstrap. Он не хранит собственную копию логики контроля, а делает:
-
-```text
-git fetch origin
-        ↓
-git show origin/main:scripts/control/project_control.py
-        ↓
-temporary local auditor
-        ↓
-reads registry/policy from origin/main
-        ↓
-audit all registered branches
-```
-
-Поэтому одна старая feature-ветка не может незаметно продолжать пользоваться старой control policy.
+Active branches используют bootstrap `CONTROL_PROJECT.ps1`, который читает auditor и registry из `origin/main`. Поэтому feature-ветка не должна хранить независимую копию project-control truth.
 
 ## Результаты
 
@@ -141,8 +166,6 @@ audit all registered branches
 artifacts/control/PROJECT_STATUS_RU.md
 artifacts/control/project-control-report.json
 ```
-
-`PROJECT_STATUS_RU.md` содержит общую таблицу динамики и отдельную карточку каждой программы с описанием, purpose, expected outcome, current progress, blockers и Git findings.
 
 ## Когда запускать
 
