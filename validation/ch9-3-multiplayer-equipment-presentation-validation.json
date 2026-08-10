@@ -4,7 +4,8 @@
   "branch": "feature/ch9-3-multiplayer-equipment-presentation",
   "base_branch": "feature/ch9-2-inventory-character-composition",
   "base_checkpoint": "81009a47b64964f32e73c5ccd17167a446bf9b9f",
-  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "FOCUSED_ACCEPTED",
+  "accepted_runtime_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
   "goal": "Replicate server-authoritative character equipment through the existing Item Graph channel and drive the accepted character equipment presenter on every compatible graphical client without adding equipment state to movement snapshots.",
   "canonical_model": {
     "new_item_relation_added": false,
@@ -115,9 +116,37 @@
     ],
     "architecture_changed": false,
     "network_contract_changed": false,
-    "item_graph_semantics_changed": false,
-    "rerun_required": true
+    "item_graph_semantics_changed": false
   },
+  "windows_fix1_acceptance": {
+    "engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb",
+    "tested_head": "cb5eac3c5ef334b84b5f1fe384eba0bfa66877db",
+    "direct_replica_projection": "PASS_21",
+    "direct_character_presentation": "PASS_27",
+    "direct_real_enet_replication": "PASS_20",
+    "full_runner_first": {
+      "editor_import": "PASS",
+      "ch9_0_regression": "PASS_62",
+      "ch9_1_regression": "PASS_76",
+      "ch9_2_regression": "PASS_59",
+      "command_contract": "PASS_2",
+      "authority": "PASS_41",
+      "replica_projection": "PASS_21",
+      "character_presentation": "PASS_27",
+      "real_enet_replication": "PASS_20",
+      "candidate_runner": "PASS"
+    },
+    "full_runner_repeat": "PASS_IDENTICAL_ACCEPTANCE_SURFACE",
+    "parser_or_runtime_errors": "NONE_REPORTED",
+    "decision": "PASS"
+  },
+  "acceptance_basis": [
+    "Fix1 parser blocker is removed on the tested runtime head.",
+    "Production replica conversion passes after real canonical Item Graph equipment mutation.",
+    "Replicated five-slot equipment drives the previously graphically accepted CH8 presenter.",
+    "Real ENet origin/remote/late-join equipment convergence passes.",
+    "Full focused runner passes twice on the exact project Godot double build."
+  ],
   "deferred": [
     "CH9.4 equipment persistence recovery reconnect durability",
     "general multi-item atomic replacement for EVA-style conflicting outfits",
@@ -125,18 +154,19 @@
   ],
   "formal_lineage_notes": [
     "CH9.2 content is focused+graphically accepted",
+    "CH9.3 content is focused accepted at cb5eac3",
     "historic CH8 final-runner and PC0 character-frontier handoff remain recorded lineage work"
   ],
   "windows_results": {
-    "editor_import": "PASS_ON_FIRST_RUN",
-    "ch9_0_regression": "PASS_62_ON_FIRST_RUN",
-    "ch9_1_regression": "PASS_76_ON_FIRST_RUN",
-    "ch9_2_regression": "PASS_59_ON_FIRST_RUN",
-    "command_contract": "PASS_2_ON_FIRST_RUN",
-    "authority": "PASS_41_ON_FIRST_RUN",
-    "replica_projection": "RERUN_PENDING_AFTER_FIX1",
-    "character_presentation": "PENDING",
-    "real_enet_replication": "PENDING",
-    "candidate_runner": "PENDING"
+    "editor_import": "PASS",
+    "ch9_0_regression": "PASS_62",
+    "ch9_1_regression": "PASS_76",
+    "ch9_2_regression": "PASS_59",
+    "command_contract": "PASS_2",
+    "authority": "PASS_41",
+    "replica_projection": "PASS_21",
+    "character_presentation": "PASS_27",
+    "real_enet_replication": "PASS_20",
+    "candidate_runner": "PASS_TWICE"
   }
 }
