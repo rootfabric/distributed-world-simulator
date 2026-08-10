@@ -1,75 +1,61 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "ACCEPTED",
+  "decision": "PC0_TRANSACTIONAL_EFFECTS_FIX1_IMPLEMENTED_CANDIDATE",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
-  "fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
-  "focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
-  "full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+  "compile_fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
+  "previous_focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
+  "previous_full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+  "transactional_effects_fix1_head": "9698415f94c0a68d1536e0bdee7a00463f5c610a",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": true,
+    "SOURCE_ACCEPTED": false,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": true,
+    "COMPOSITION_VERIFIED": false,
     "PRODUCTION_READY": false
   },
-  "scope": {
-    "construct_id": "construct/t1/lunar-outpost/d0",
-    "runtime_subject_count": 4,
-    "presentation_subjects": ["DOOR", "GENERATOR", "LAMP", "CONSOLE"],
-    "graphical_client_count": 2,
-    "runtime_command_count_in_acceptance": 3,
-    "runtime_command_sequence": ["OPEN_DOOR", "TOGGLE_LIGHT", "CLOSE_DOOR"],
-    "visual_lab": "tools/runtime/t1a6_visual_lab.gd",
-    "base_m3_server_modified": false,
-    "base_m3_client_modified": false
+  "pc0_control": {
+    "main_registry_revision": "GLOBAL-P0-2026-08-10-R2",
+    "declared_health": "RED",
+    "blocker": "T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_FIX1_REQUIRED_BEFORE_T1A6_ACCEPTANCE",
+    "transition_blocked": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE",
+    "stop_rule_observed": true
   },
-  "transport": {
-    "base_server": "accepted M3 dedicated server runtime",
-    "base_client": "accepted M3 graphical client runtime",
-    "new_transport_foundation": false,
-    "runtime_command_channel": "CONTROL",
-    "runtime_command_delivery": "RELIABLE_ORDERED",
-    "runtime_full_snapshot_channel": "RESYNC",
-    "runtime_full_snapshot_delivery": "RELIABLE_ORDERED",
-    "runtime_full_snapshot_reason": "low-rate discrete canonical state; correctness must not depend on a later event",
-    "transport_session_fence": true,
-    "protocol_manifest_fingerprints_runtime_snapshot": true,
-    "channel_policy_source": "inherited accepted M3/NX6 RealtimeChannelPolicy"
+  "transactional_effects_fix1": {
+    "cause": "T1A.5 utility recomputation mutated power_tick, power_storage and power_execution_profile inside the affordance handler before generic runtime subject commit and terminal operation recording.",
+    "required_order": "PURE_EFFECT_PROJECTION -> RUNTIME_STATE_COMMIT -> VALIDATED_EFFECT_COMMIT -> TERMINAL_SUCCESS",
+    "generic_executor_commit_boundary": true,
+    "runtime_state_rollback_on_effect_commit_failure": true,
+    "effect_replay_exactly_once": true,
+    "d0_power_projection_is_pure": true,
+    "d0_power_effect_committer_validates_before_mutation": true,
+    "new_test": "tests/construction/t1a5_transactional_runtime_effects_acceptance.gd",
+    "focused_runner": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
+    "runtime_semantics_changed": true,
+    "protocol_changed": false,
+    "transport_changed": false,
+    "persistence_foundation_added": false,
+    "transaction_coordinator_added": false,
+    "result": "IMPLEMENTED_REQUIRES_WINDOWS_VALIDATION"
   },
-  "replication_contract": {
-    "snapshot_schema": "planet_simulator.construction_runtime_snapshot.v1",
-    "replica_store_schema": "planet_simulator.construction_runtime_replica_store.v1",
-    "revision_source": "construction runtime state store generation",
-    "exact_replay_supported": true,
-    "clock_only_update_supported": true,
-    "stale_revision_ignored": true,
-    "same_revision_mutation_rejected": true,
-    "authority_epoch_reset_supported": true
+  "previous_windows_evidence": {
+    "t1a5_runtime_acceptance": "PASS_67",
+    "nx0_observability_baseline": "PASS_150",
+    "m3_graphical_multiplayer_contracts": "PASS_77",
+    "c5c_runtime_replication_contracts": "PASS_29",
+    "t1a6_graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES",
+    "world_regression": "PASS_6_FAIL_0",
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "freshness": "STALE_AFTER_TRANSACTIONAL_EFFECTS_FIX1_RUNTIME_CHANGE"
   },
-  "presentation": {
-    "canonical_truth": false,
-    "derived_from_runtime_snapshot": true,
-    "door": "hinge yaw derived from CLOSED/OPEN",
-    "lamp": "OmniLight visibility derived from on",
-    "generator": "indicator visibility derived from running",
-    "console": "indicator visibility derived from active",
-    "writes_back_to_runtime": false,
-    "writes_back_to_construct": false,
-    "writes_back_to_item_graph": false
-  },
-  "graphical_acceptance": {
-    "client_a": "opens door, later closes door",
-    "client_b": "joins after door open, must observe open baseline, toggles lamp",
-    "final_state": "door CLOSED, lamp ON, generator RUNNING, console INACTIVE",
-    "server_client_state_checksum_convergence_required": true,
-    "presentation_convergence_required": true,
-    "runtime_snapshot_rejections_required": 0,
-    "windows_assertions": 25,
-    "windows_failures": 0,
-    "result": "PASS"
+  "required_revalidation": {
+    "step_1": "RUN_T1A5_TRANSACTIONAL_RUNTIME_EFFECTS_TESTS.ps1",
+    "step_2": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
+    "step_3": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "source_acceptance_allowed_after_all_three_pass": true
   },
   "p0_alignment": {
     "canonical_runtime_is_presentation": false,
@@ -80,77 +66,11 @@
     "new_item_registry": false,
     "new_construct_store": false,
     "new_transaction_coordinator": false,
+    "private_t1_persistence": false,
     "presentation_identity_in_canonical_state": false,
     "authority_route_in_permanent_identity": false,
     "lod_or_hlod_in_runtime_identity": false,
     "material_definition_id_added": false
-  },
-  "focused_gate": {
-    "runner": "RUN_T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_TESTS.ps1",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "windows_run_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
-    "dependencies": [
-      "T1A5 interactive runtime execution acceptance",
-      "NX0 protocol manifest baseline",
-      "M3 graphical multiplayer contracts",
-      "C5C runtime replication contracts"
-    ],
-    "windows_evidence": {
-      "editor_import": "PASS",
-      "t1a5_runtime_acceptance": "PASS_67",
-      "nx0_observability_baseline": "PASS_150",
-      "m3_graphical_multiplayer_contracts": "PASS_77",
-      "c5c_runtime_replication_contracts": "PASS_29",
-      "port_allocation": "PASS",
-      "dedicated_server_launch": "PASS",
-      "client_a_graphical": "PASS",
-      "client_b_graphical": "PASS",
-      "client_a_final_revision": "PASS",
-      "client_b_final_revision": "PASS",
-      "server_final_revision": "PASS",
-      "client_checksum_convergence": "PASS",
-      "server_client_checksum_convergence": "PASS",
-      "client_a_presentation_matches_runtime": "PASS",
-      "client_b_presentation_matches_runtime": "PASS",
-      "client_a_replica_rejections": 0,
-      "client_b_replica_rejections": 0,
-      "server_runtime_commands": 3,
-      "server_runtime_command_rejections": 0,
-      "join_and_mutation_snapshots": "PASS",
-      "client_a_clean_shutdown": "PASS",
-      "client_b_clean_shutdown": "PASS",
-      "server_clean_shutdown": "PASS",
-      "graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES"
-    },
-    "result": "PASS"
-  },
-  "fix1": {
-    "server_commit": "5f83dcb3ca3f7043fa3c205260e7e24d891ba32f",
-    "head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
-    "cause": "GDScript forbids a child class member with the same name as an inherited member; both T1A6 adapters redundantly preloaded RealtimeChannelPolicy already supplied by their accepted M3/NX6 parents.",
-    "changes": [
-      "remove duplicate RealtimeChannelPolicy declaration from T1A6 server adapter",
-      "remove duplicate RealtimeChannelPolicy declaration from T1A6 client adapter",
-      "continue using inherited accepted M3/NX6 RealtimeChannelPolicy constants"
-    ],
-    "runtime_semantics_changed": false,
-    "transport_policy_changed": false,
-    "protocol_changed": false,
-    "focused_windows_rerun": "PASS"
-  },
-  "full_regression": {
-    "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "windows_run_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
-    "main_scene_cli": "PASS_6_FAIL_0",
-    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
-    "result": "PASS"
-  },
-  "acceptance": {
-    "source_accepted": true,
-    "composition_verified": true,
-    "main_integrated": false,
-    "production_ready": false,
-    "reason": "Exact Windows focused multiplayer acceptance and full world/core composition regression both passed."
   },
   "next_after_acceptance": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE"
 }
