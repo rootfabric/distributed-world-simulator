@@ -4,7 +4,6 @@ signal construction_runtime_updated(snapshot: Dictionary)
 
 const ReplicaStoreScript = preload("res://scripts/runtime/host_client/construction_runtime_replica_store.gd")
 const PresenterScript = preload("res://scripts/labs/t1/t1_d0_runtime_presenter.gd")
-const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const T1A6_SCHEMA: String = "planet_simulator.t1a6_m3_runtime_client_adapter.v1"
 const RUNTIME_COMMAND_MESSAGE: String = "CONSTRUCTION_RUNTIME_COMMAND"
