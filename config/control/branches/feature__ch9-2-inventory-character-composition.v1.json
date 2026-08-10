@@ -9,10 +9,10 @@
   "purpose": "Prove that ordinary inventory interactions can equip real Item UUIDs and immediately drive CH7/CH8 presentation without laboratory equipment state or new mutation ownership.",
   "expected_outcome": "A graphical composition scene where backpack-to-equipment drag, one-item replacement and unequip use CH9.1 canonical operations, CH9.0 projects the result and the accepted character presenter renders it.",
   "current_stage": "CH9.2 Inventory + Character Composition",
-  "stage_status": "FOCUSED_WINDOWS_PASS_FIX2_GRAPHICAL_LAUNCHER_PENDING_RERUN",
-  "progress_note": "Windows focused runner passed after Fix1: CH8 57, CH9.0 62, CH9.1 operations 76, multi-conflict 42, CH9.2 composition 59 and UI routes 16. The graphical launcher then failed PowerShell parsing; Fix2 rewrites it ASCII-only and adds an explicit parser gate to the focused runner. Graphical observation remains pending.",
-  "last_accepted_checkpoint": "CH9.1 focused Windows acceptance @ af6c02eee6c97d16c899dc7cbc6963a02e254fe3; CH9.2 focused runtime gate passed @ 2fbc9fae1ea11fd37730122599ed36dae306a91f",
-  "next_stage": "CH9.3 Multiplayer Equipment Presentation after CH9.2 graphical acceptance",
+  "stage_status": "FOCUSED_AND_GRAPHICAL_ACCEPTED_FORMAL_LINEAGE_PENDING",
+  "progress_note": "Windows focused runner passed after Fix1: CH8 57, CH9.0 62, CH9.1 operations 76, multi-conflict 42, CH9.2 composition 59 and UI routes 16 with no PhysicsServer errors. Fix2 made the graphical launcher Windows PowerShell safe. User graphical observation confirmed that real backpack items drag into equipment slots and are equipped on the Quaternius character. CH9.2 content is accepted; only predecessor/control-plane lineage handoff remains.",
+  "last_accepted_checkpoint": "CH9.2 focused + graphical acceptance @ 4bee283704f544419fee3f38fde2bee5ec9fac33",
+  "next_stage": "CH9.3 Multiplayer Equipment Presentation",
   "parent_branch_or_checkpoint": "feature/ch9-1-authoritative-equipment-operations @ ee9c2d94467e6e739de3fc90c5f634e3357bf9ba",
   "base_commit": "ee9c2d94467e6e739de3fc90c5f634e3357bf9ba",
   "dependencies": [
@@ -35,7 +35,8 @@
     "RUN_CH9_2_INVENTORY_CHARACTER_COMPOSITION_TESTS.ps1",
     "PLAY_CH9_2_INVENTORY_CHARACTER_LAB.ps1",
     "docs/characters/ch9-2-inventory-character-composition.md",
-    "validation/ch9-2-inventory-character-composition-validation.json"
+    "validation/ch9-2-inventory-character-composition-validation.json",
+    "validation/ch9-2-graphical-acceptance.json"
   ],
   "watched_paths": [
     "scripts/items/presentation/item_gameplay_controller.gd",
@@ -64,10 +65,11 @@
   "validation_paths": [
     "tests/characters/test_ch9_2_inventory_character_composition.gd",
     "tests/characters/test_ch9_2_inventory_ui_equipment_routes.gd",
-    "validation/ch9-2-inventory-character-composition-validation.json"
+    "validation/ch9-2-inventory-character-composition-validation.json",
+    "validation/ch9-2-graphical-acceptance.json"
   ],
   "tested_heads": {
-    "runtime": "2fbc9fae1ea11fd37730122599ed36dae306a91f",
+    "runtime": "bb42ba4b0a77eb6dc533b41204994b6038c603e7",
     "focused": "2fbc9fae1ea11fd37730122599ed36dae306a91f",
     "full_regression": ""
   },
@@ -90,8 +92,6 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "FIX2_GRAPHICAL_LAUNCHER_PARSE_RERUN_PENDING",
-    "MANUAL_GRAPHICAL_ACCEPTANCE_PENDING",
     "CH8_FINAL_RUNNER_NOT_YET_RECORDED",
     "PC0_CHARACTER_FRONTIER_HANDOFF_PENDING_IN_MAIN"
   ],
