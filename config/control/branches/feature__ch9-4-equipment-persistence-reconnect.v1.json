@@ -10,9 +10,9 @@
   "expected_outcome": "An equipped Item UUID remains in the same canonical equipment container after restart; recovered authority continues to accept equipment commands; reconnecting and late-joining clients converge on the recovered Item Graph and render exactly one presentation per equipped item.",
   "current_stage": "CH9.4 Equipment Persistence / Late Reconnect",
   "stage_status": "FOCUSED_ACCEPTED",
-  "progress_note": "CH9.4 is focused-accepted on exact Windows Godot 4.7.1 double. Accepted runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe preserves equipment-aware Item Graph capability across existing M6 durable recovery without changing M3/M6/base Item Graph/persistence foundations. After test-harness-only FIX1, tested branch head 30e752436c82996e0f99253de040d60b11317c72 passed direct durable roundtrip 34 assertions, direct checkpoint/reconnect/recovery 53 assertions, and the complete runner with inherited CH9.3 authority 41, replica 21, presentation 27 and real ENet 20 assertions. Recovery preserves Item UUIDs, equipment slots, replay idempotency, reconnect ownership transition, late-join projection and successive checkpoint generations without duplicates.",
+  "progress_note": "CH9.4 is focused-accepted on exact Windows Godot 4.7.1 double. Accepted runtime head e41c6ec46ae13c2244e92d47d891ecd345e746fe preserves equipment-aware Item Graph capability across existing M6 durable recovery without changing M3/M6/base Item Graph/persistence foundations. After test-harness-only FIX1, tested branch head 30e752436c82996e0f99253de040d60b11317c72 passed direct durable roundtrip 34 assertions, direct checkpoint/reconnect/recovery 53 assertions, and the complete runner with inherited CH9.3 authority 41, replica 21, presentation 27 and real ENet 20 assertions. Recovery preserves Item UUIDs, equipment slots, replay idempotency, reconnect ownership transition, late-join projection and successive checkpoint generations without duplicates. First post-acceptance PC0 audit reported RED only because this passport encoded adapter-scope notes as string ownership_claims; PC0 requires foundation claims to be structured objects. CH9.4 owns no global foundation, so ownership_claims is intentionally empty while dependencies and forbidden_foundation_ownership declare the reuse boundary.",
   "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect FOCUSED_ACCEPTED @ runtime e41c6ec46ae13c2244e92d47d891ecd345e746fe",
-  "next_stage": "Run the mandatory post-acceptance PC0 audit from main before declaring or implementing any later CH stage.",
+  "next_stage": "Rerun the mandatory post-acceptance PC0 audit after the ownership-claim schema fix. No later CH stage is declared until CH is non-RED.",
   "parent_branch_or_checkpoint": "feature/ch9-3-multiplayer-equipment-presentation @ c18eae9778a5020063163087269483bc43a924be",
   "base_commit": "c18eae9778a5020063163087269483bc43a924be",
   "candidate_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
@@ -65,10 +65,7 @@
     "focused": "30e752436c82996e0f99253de040d60b11317c72",
     "full_regression": ""
   },
-  "ownership_claims": [
-    "CHARACTER_EQUIPMENT_RECOVERY_ADAPTER_ONLY",
-    "CHARACTER_EQUIPMENT_DURABLE_VALIDATION_ONLY"
-  ],
+  "ownership_claims": [],
   "forbidden_foundation_ownership": [
     "NEW_PERSISTENCE_FORMAT",
     "NEW_RECOVERY_COORDINATOR",
@@ -81,7 +78,7 @@
     "MATERIAL_ONTOLOGY"
   ],
   "blockers": [
-    "POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
+    "POST_ACCEPTANCE_PC0_AUDIT_RERUN_REQUIRED"
   ],
   "health_declared": "GREEN",
   "cross_branch_overlap_enabled": true
