@@ -34,11 +34,11 @@ func _run() -> void:
 	var epoch := int(join.get("details", {}).get("player", {}).get("ownership_epoch", 0))
 	var lower_id := "item/player/a/wearable/lower"
 	var helmet_id := "item/player/a/wearable/helmet"
-	var lower_result := live.handle_canonical_item_command(
+	var lower_result: Dictionary = live.handle_canonical_item_command(
 		"a", SESSION_1, epoch, EQUIP_LOWER_OP, "equipment.equip",
 		{"item_id": lower_id, "slot_index": EquipmentCatalog.SLOT_LOWER}
 	)
-	var helmet_result := live.handle_canonical_item_command(
+	var helmet_result: Dictionary = live.handle_canonical_item_command(
 		"a", SESSION_1, epoch, EQUIP_HELMET_OP, "equipment.equip",
 		{"item_id": helmet_id, "slot_index": EquipmentCatalog.SLOT_HEAD}
 	)
@@ -66,7 +66,7 @@ func _run() -> void:
 	_assert_ok(coordinator.configure(repo, authority, outbox), "recovery coordinator setup")
 	var persisted: Dictionary = coordinator.persist_checkpoint("checkpoint/ch9-4/equipment/1", 1, 0, EQUIP_HELMET_OP)
 	_assert_ok(persisted, "persist equipment checkpoint generation 1")
-	var durable_generation_1 := live.export_durable_state()
+	var durable_generation_1: Dictionary = live.export_durable_state()
 	live.shutdown()
 
 	var recovered = _new_service()
@@ -84,7 +84,7 @@ func _run() -> void:
 	_assert_ok(recovery, "recover generation 1")
 	_assert(String(recovery.get("details", {}).get("source", "")) == "ACTIVE", "recovery did not use active checkpoint")
 	_assert(String(recovered.export_durable_state().get("checksum", "")) == String(durable_generation_1.get("checksum", "")), "durable gameplay checksum changed after checkpoint recovery")
-	var snapshot_after_restart := recovered.create_canonical_item_graph_snapshot()
+	var snapshot_after_restart: Dictionary = recovered.create_canonical_item_graph_snapshot()
 	_assert(String(snapshot_after_restart.get("checksum", "")) == checksum_generation_1, "recovered Item Graph checksum mismatch")
 	_assert(_equipment_item(snapshot_after_restart, "a", EquipmentCatalog.SLOT_LOWER) == lower_id, "lower missing after server restart")
 	_assert(_equipment_item(snapshot_after_restart, "a", EquipmentCatalog.SLOT_HEAD) == helmet_id, "helmet missing after server restart")
@@ -102,7 +102,7 @@ func _run() -> void:
 
 	var late_join: Dictionary = recovered.join("b", "transport-session/ch9-4/recovery/b/1", "operation/ch9-4/recovery/join/b/1")
 	_assert_ok(late_join, "late client B join")
-	var late_snapshot := recovered.create_canonical_item_graph_snapshot()
+	var late_snapshot: Dictionary = recovered.create_canonical_item_graph_snapshot()
 	_assert(_equipment_item(late_snapshot, "a", EquipmentCatalog.SLOT_LOWER) == lower_id, "late join snapshot lost recovered lower")
 	_assert(_equipment_item(late_snapshot, "a", EquipmentCatalog.SLOT_HEAD) == helmet_id, "late join snapshot lost recovered helmet")
 	var projected: Dictionary = EquipmentProjection.new().project(late_snapshot, "a")
@@ -149,7 +149,7 @@ func _run() -> void:
 	_assert_ok(coordinator_2.configure(repo, authority_2, outbox_2), "second recovery coordinator setup")
 	var recovery_2: Dictionary = coordinator_2.recover_latest()
 	_assert_ok(recovery_2, "recover generation 2")
-	var final_snapshot := recovered_again.create_canonical_item_graph_snapshot()
+	var final_snapshot: Dictionary = recovered_again.create_canonical_item_graph_snapshot()
 	_assert(_equipment_item(final_snapshot, "a", EquipmentCatalog.SLOT_LOWER).is_empty(), "generation 2 restored stale lower equipment")
 	_assert(_equipment_item(final_snapshot, "a", EquipmentCatalog.SLOT_HEAD) == helmet_id, "generation 2 lost unchanged helmet")
 	_assert(String(_find_item(final_snapshot, lower_id).get("location", {}).get("kind", "")) == "INVENTORY", "generation 2 lower Item UUID not returned to inventory")
