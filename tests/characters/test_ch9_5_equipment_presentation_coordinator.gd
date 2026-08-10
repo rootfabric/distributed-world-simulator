@@ -29,8 +29,8 @@ class PresenterProbe extends RefCounted:
 
 	func apply_snapshot(snapshot) -> Dictionary:
 		apply_count += 1
-		var fingerprint := snapshot.state_fingerprint()
-		var changed := fingerprint != last_state_fingerprint
+		var fingerprint: String = String(snapshot.state_fingerprint())
+		var changed: bool = fingerprint != last_state_fingerprint
 		if changed:
 			change_count += 1
 		last_state_fingerprint = fingerprint
