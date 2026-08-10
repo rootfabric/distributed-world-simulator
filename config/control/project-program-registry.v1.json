@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 18,
+  "registry_generation": 19,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-10T11:12:00Z",
+  "updated_at_utc": "2026-08-10T11:13:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -57,14 +57,13 @@
       "purpose": "Transfer the proven local dirty rebuild into production C22 so eligible mutations stop performing a full compile before invalidation while keeping Construction truth and authority ownership unchanged.",
       "expected_outcome": "Unit-grid local mutations rebuild only dirty plus neighbor sections, reuse unchanged content-addressed artifacts, rebuild FAR shell from section artifacts, preserve C24 graphical correctness, and safely fall back for unsupported cases.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-      "stage_status": "FIX1_IMPLEMENTED_WINDOWS_FOCUSED_REVALIDATION_REQUIRED",
-      "progress_note": "The first Windows focused attempt on 127aad8058 failed at GDScript parse: two cache.publish result variables used := while cache is dynamically typed. FIX1 at runtime head 12b8375182fb855478325435a927228e34d21133 adds explicit Dictionary result types only; the incremental algorithm is unchanged. Fresh Windows focused validation is required before tested-head acceptance. The prior TS0 branch remains evidence lineage.",
-      "last_accepted_checkpoint": "TS0.0 Deterministic Large Structural Fixtures; C22/C24 production baseline in main",
-      "next_stage": "Pull FIX1, rerun C22 incremental focused Windows gate, then record tested head and run full world regression plus PC0 overlap audit; merge only after all gates are green.",
-      "health_declared": "RED",
+      "stage_status": "FOCUSED_ACCEPTED_FULL_REGRESSION_FIX2_PENDING",
+      "progress_note": "Exact-Windows focused validation is accepted: C22 incremental local rebuild 28 assertions, C22 graphical 35 assertions and C24 contracts 81 assertions. The first full-regression attempt did not execute runtime tests because the static manifest-coverage gate correctly found the new C22 incremental test missing from RUN_WORLD_REGRESSION_TESTS.ps1. FIX2 adds the test to declared world-regression coverage and tracks stable Godot UID sidecars; production runtime algorithm code is unchanged.",
+      "last_accepted_checkpoint": "C22/C24 production baseline in main; TS0.3 algorithm evidence focused-pass",
+      "next_stage": "Pull FIX2, rerun full world regression, then run PC0 overlap audit; merge only after the full gate is green.",
+      "health_declared": "YELLOW",
       "blockers": [
-        "C22_INCREMENTAL_FIX1_WINDOWS_FOCUSED_REVALIDATION_REQUIRED",
-        "C22_INCREMENTAL_FULL_WORLD_REGRESSION_PENDING"
+        "C22_INCREMENTAL_FULL_REGRESSION_FIX2_REVALIDATION_PENDING"
       ]
     },
     "CH": {
