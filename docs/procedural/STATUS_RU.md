@@ -15,135 +15,161 @@ G6 P0 Alignment Cleanup                 ACCEPTED
 G7.0 Semantic Field Contracts           ACCEPTED
 G7.1 Upstream Semantic Field Adapters   ACCEPTED
 G7.2 Composition / Provenance            ACCEPTED
-G7.3 Cross-Cell / Cross-LOD Invariance  FIX1 IMPLEMENTED CANDIDATE
+G7.3 Cross-Cell / Cross-LOD Invariance  ACCEPTED
+G7.4 Semantic Field Lab                  IMPLEMENTED CANDIDATE
 ```
 
-## P0 frontier state
+## Active frontier
 
-Active world-generation frontier is governed by `GLOBAL-P0-2026-08-10-R2`:
+Machine-readable GLOBAL-P0 frontier moved in `main` first and is synchronized to active G7:
 
 ```text
-main                              R2 canonical ledger
-feature/g7-semantic-field-fabric  R2 active frontier
-feature/g6-hydrology-fluid-surface-v0  R1 historical accepted ancestor
+GLOBAL-P0-2026-08-10-R2
+world_generation.stage = G7.4 Semantic Field Lab
 ```
 
-R2 explicitly allows historical accepted/frozen branches to remain on their historical global revision; active G7 must match `main` byte-equivalently instead of forcing a G6 rewrite.
-
-Current verified active GLOBAL blobs:
+Current active GLOBAL config blob:
 
 ```text
-config/architecture/global-program-roadmap.v1.json
-  dd18f720cd4ce6493618efe270311605aea9bbbf
-
-docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
-  3eb52a69cef73da8a784dfce7acc6a0c38185cf9
+61939301c5ca21c3c152ba0a76b2c5c0617cea53
 ```
 
-## G7.2 acceptance
+Historical accepted G6 remains on its historical R1 revision under R2 policy.
 
-Full Windows acceptance passed on tested head:
+## G7.3 acceptance
 
-```text
-70d9a78d8f176ce532412a64afbbcb2592623720
-```
-
-Engine:
+Accepted Windows evidence on tested head:
 
 ```text
+910899a906e684d6793cd74ba898d68c457a37b4
 Godot 4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-Confirmed:
-
-```text
-G7.2 composition scope                 PASS
-Deterministic bundle + provenance      PASS
-world/core regression                  PASS
-main_scene_cli_all                      PASS — 6 / 6
-working tree                            CLEAN
-G7.2 FULL ACCEPTANCE                    PASS
-```
-
-Accepted G7.2 checkpoint:
-
-```text
-68c4f90dbdac0e2d9968b4461207713f5661521b
-```
-
-## G7.3 focused evidence
-
-Windows focused gate:
+Final gate:
 
 ```text
 G7.3 Cross-Cell / Cross-LOD Invariance: PASS (122 assertions)
-G7.3 Cross-Cell / Cross-LOD Invariance focused gate passed.
+G7.3 FULL ACCEPTANCE: PASS
+Active GLOBAL-P0 main alignment: PASS
+Canonical GLOBAL roadmap byte-match to main: PASS
+G7.2 ACCEPTED ancestor: PASS
+Cross-cell / cross-LOD semantic invariance: PASS
+World/core regression: PASS
+main_scene_cli_all: 6 PASS / 0 FAIL
+Working tree: CLEAN
 ```
 
-Confirmed:
+Accepted invariants:
 
 ```text
-FeatureId stable across representation cells PASS
-FluidRegionId stable across cells             PASS
-one river spans multiple cells                PASS
-PX/PZ seam                                     PASS
-semantic samples on both seam sides           PASS
-PX centerline river-distance ~= 0              PASS
-PZ centerline river-distance ~= 0              PASS
+SemanticFieldId != SurfaceCellKey
+SemanticFieldId != LOD
+same world point -> same semantic bundle/provenance across LOD 2/4/8/12
+query order invariant
+PX/PZ seam invariant
+FeatureId stable across cells
+FluidRegionId stable across cells
 ```
 
-## G7.3 Fix1
-
-The first full-gate run passed R2 preflight and stopped before runtime regression only because `git diff --check` interpreted canonical Markdown hard-break spaces in `docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md` as trailing whitespace.
-
-That roadmap is already required to be byte-identical to `origin/main`, so Fix1 does not alter it. Instead the full gate now:
+Record:
 
 ```text
-prove canonical GLOBAL roadmap blob == main
-then exclude only that verified upstream file from local G7.3 diff --check
-keep every other G7.3/P0-sync file under strict diff --check
+docs/checkpoints/G7_3_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md
+validation/g7-3-cross-cell-cross-lod-invariance-validation.json
 ```
 
-Fix1 runner commit:
+## G7.4 candidate
+
+G7.4 is derived visual/debug presentation over accepted semantic samples.
+
+It visualizes exactly five currently backed fields:
 
 ```text
-73ca4a0d356eb7ed18aa813c19f617b7b2c29137
+1 geo/surface-height-m
+2 geo/valley-influence
+3 geo/river-distance-m
+4 geo/river-width-m
+5 geo/fluid-surface-distance-m
 ```
 
-Focused semantic runtime is unchanged; only the full acceptance harness and evidence docs changed.
-
-## G7.3 invariants
-
-LOD proof levels:
+It intentionally does **not** synthesize the six vocabulary-only fields:
 
 ```text
-2, 4, 8, 12
+geo/slope
+geo/curvature
+geo/drainage-potential
+geo/continentalness
+geo/temperature-baseline
+geo/moisture-baseline
 ```
 
-Required invariants:
+Semantic patch:
 
 ```text
-SemanticFieldQuery has no SurfaceCellKey or LOD
-same query checksum across representation paths
-same bundle checksum across LOD
-same receipt checksum across LOD
-same sample/provenance checksums across LOD
-query field order does not affect result
-one river spans multiple cells
-PX/PZ seam preserves river semantic behavior
-G5 FeatureId remains stable across cells
-G6 FluidRegionId remains stable across cells
+lat 0..10 deg
+lon 30..62 deg
+16 x 32 cells
+561 semantic sample points
+PX/PZ coverage
 ```
 
-Validation:
+Pipeline per point:
+
+```text
+SemanticFieldQuery
+ -> G3/G5/G6 adapters
+ -> SemanticFieldComposerV1
+ -> SemanticFieldBundle + CompositionReceipt
+ -> derived vertex/color presentation
+```
+
+Presentation-only state:
+
+```text
+field selector
+colors
+camera/orbit
+mesh triangulation/density
+HUD
+river centerline overlay
+```
+
+None of it enters canonical semantic checksums.
+
+### Automated gate
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-.\RUN_G7_3_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
+.\RUN_G7_4_FULL_ACCEPTANCE.ps1 -GodotPath $Godot
 ```
 
-Next if accepted:
+Required automated marker:
 
 ```text
-G7.4 Semantic Field Lab
+G7.4 AUTOMATED ACCEPTANCE: PASS
+MANUAL GRAPHICAL OBSERVATION: REQUIRED before G7.4 ACCEPTED
+```
+
+### Graphical lab
+
+```powershell
+.\START_G7_4_SEMANTIC_FIELD_LAB.ps1 -GodotPath $Godot
+```
+
+Controls:
+
+```text
+1..5 field modes
+F river centerline
+W/S zoom
+A/D yaw
+Q/E pitch
+Space auto-orbit
+R reset
+```
+
+Next after G7.4 acceptance:
+
+```text
+G7 Full Acceptance
 ```
