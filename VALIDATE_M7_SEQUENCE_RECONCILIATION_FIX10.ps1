@@ -69,6 +69,11 @@ Invoke-GodotCheck -Name "FIX10 fix6 remote snapshot guard" -Arguments @(
     "--script", "res://tests/network/test_m7_fix10_fix6_remote_snapshot_guard.gd"
 )
 
+Invoke-GodotCheck -Name "FIX10 fix7 relative scheduler + render presentation" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_fix10_fix7_relative_scheduler_render.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 fix5 composite ACK semantic identity" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_sequence_reconciliation_fix10_fix5.gd"
@@ -127,13 +132,14 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates FIX10 fix6 semantic scheduling, monotonic latching, 30 Hz continuous input cadence, single-writer local presentation, remote snapshot publication with pending future inputs, transition-aware ACK baselines and ACK dispatch, then fix5/fix4/fix3/fix2 plus FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly validates FIX10 fix7 relative authority scheduling and render-rate presentation plus FIX10 fix6 semantic scheduling, latching, 30 Hz continuous cadence, single-writer ownership, remote snapshot publication, ACK baselines/dispatch, then fix5/fix4/fix3/fix2 and FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
 Write-Host "Final FIX10 acceptance still requires a >=5 minute two-client LOCAL prediction-only movement/item stress run and ANALYZE_M7_FIX10_FIX6_RESULTS.ps1 PASS." -ForegroundColor Yellow
-Write-Host "FIX10 fix6 target: 30 Hz continuous semantic input with immediate responsiveness edges; one monotonic semantic input sequence per client fixed tick; single-writer local render presentation; realtime movement snapshots are not suppressed merely because future semantic inputs are pending; semantic server scheduling preserves client_tick spacing; phase-only ACK offsets do not enter direct baseline correction; PREDICTION_ACK never reports UNKNOWN_M3_SERVER_MESSAGE; snapshot ACK registration survives canonical same-revision conflicts." -ForegroundColor Yellow
+Write-Host "FIX10 fix7 target: first available semantic input applies immediately; later transitions preserve relative client_tick spacing and rebase after late arrival; local simulation stays 60 Hz while visible presentation updates every render frame." -ForegroundColor Yellow
+Write-Host "FIX10 fix6 target remains: 30 Hz continuous semantic input with immediate responsiveness edges; monotonic semantic sequences; realtime movement snapshots are not suppressed merely because future semantic inputs are pending; PREDICTION_ACK dispatch remains independent from canonical snapshot acceptance." -ForegroundColor Yellow
 Write-Host "FIX10 fix5 target remains ack_mismatches=0 and sidecars_rejected=0." -ForegroundColor Yellow
 Write-Host "FIX10 fix4 MTU target remains movement_snapshots_dropped_for_mtu=0 while max_unreliable_sent_bytes remains <=1350." -ForegroundColor Yellow
-Write-Host "Remote presentation target: ~20 Hz movement snapshot cadence with no long moving HOLD/underrun streaks." -ForegroundColor Yellow
+Write-Host "Remote presentation target: ~20 Hz movement snapshot cadence with no long moving HOLD/underrun streaks; snapshot processing should no longer force deep 8-14 tick replay on LOCAL." -ForegroundColor Yellow
