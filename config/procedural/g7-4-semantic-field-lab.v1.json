@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g7_4_semantic_field_lab_manifest.v1",
   "checkpoint": "g7.4-semantic-field-lab",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "branch": "feature/g7-semantic-field-fabric",
   "g7_3": {"decision": "ACCEPTED", "tested_head": "910899a906e684d6793cd74ba898d68c457a37b4", "focused_assertions": 122, "full_windows_gate": "PASS"},
@@ -27,21 +27,8 @@
   },
   "presentation_fix4": {
     "trigger": "MANUAL_SCREENSHOT_REVIEW_FOUND_BASE_SPHERE_OCCLUSION_AND_ONE_PIXEL_RIVER_OVERLAY",
-    "surface_shell": {
-      "mode": "HEIGHT_RANGE_DERIVED_UNIFORM_RADIAL_LIFT",
-      "legacy_surface_offset": 0.045,
-      "minimum_vertex_clearance_display_units": 0.075,
-      "includes_coarse_chord_guard": true,
-      "preserves_relative_height_shape": true
-    },
-    "river_overlay": {
-      "source": "ACCEPTED_CANONICAL_RIVER_CENTERLINE_SPLINE",
-      "geometry": "TRIANGLE_STRIP_DIAGNOSTIC_RIBBON",
-      "half_width_display_units": 0.022,
-      "clearance_above_patch_display_units": 0.035,
-      "represents_physical_river_width": false,
-      "toggle": "F"
-    },
+    "surface_shell": {"mode": "HEIGHT_RANGE_DERIVED_UNIFORM_RADIAL_LIFT", "legacy_surface_offset": 0.045, "minimum_vertex_clearance_display_units": 0.075, "includes_coarse_chord_guard": true, "preserves_relative_height_shape": true},
+    "river_overlay": {"source": "ACCEPTED_CANONICAL_RIVER_CENTERLINE_SPLINE", "geometry": "TRIANGLE_STRIP_DIAGNOSTIC_RIBBON", "half_width_display_units": 0.022, "clearance_above_patch_display_units": 0.035, "represents_physical_river_width": false, "toggle": "F"},
     "changes_canonical_semantics": false,
     "changes_semantic_query": false,
     "changes_feature_identity": false,
@@ -53,5 +40,13 @@
   "controls": {"1": "geo/surface-height-m", "2": "geo/valley-influence", "3": "geo/river-distance-m", "4": "geo/river-width-m", "5": "geo/fluid-surface-distance-m", "F": "toggle diagnostic ribbon derived from canonical river centerline", "W_S": "zoom and automatically switch derived presentation LOD", "A_D": "yaw", "Q_E": "pitch", "SPACE": "auto orbit", "R": "reset camera field and derived presentation LOD"},
   "presentation_contract": {"field_selection_changes_canonical_query": false, "field_selection_changes_geometry": false, "field_selection_changes_only_derived_color": true, "camera_changes_canonical_semantics": false, "presentation_lod_changes_canonical_semantics": false, "presentation_lod_reuses_same_semantic_records": true, "hud_changes_canonical_semantics": false, "visual_colors_in_canonical_checksum": false, "mesh_density_in_canonical_checksum": false, "presentation_shell_in_canonical_checksum": false, "river_overlay_geometry_in_canonical_checksum": false, "creates_new_feature_identity": false, "creates_new_fluid_identity": false, "creates_material_definition": false},
   "p0": {"owns_renderer_foundation": false, "owns_world_query": false, "owns_spatial_identity": false, "owns_authority": false, "owns_interest": false, "owns_persistence": false, "owns_network": false, "owns_scheduler_cache": false, "owns_geomorphology": false},
+  "acceptance": {
+    "automated_status": "PASS",
+    "automated_tested_head": "ddacaf18a5c4b57c708562538a71065240d73ddb",
+    "manual_graphical_status": "PASS_BY_USER_OBSERVATION",
+    "manual_graphical_date": "2026-08-10",
+    "confirmed": ["LOD0_TO_LOD3_VISIBLE", "SEMANTIC_SOURCE_561_STABLE", "FIX4_FALSE_BLACK_HOLES_ABSENT", "CYAN_RIVER_RIBBON_VISIBLE", "F_TOGGLES_RIVER_RIBBON", "FIELDS_1_TO_5_RECOLOR_ONLY_AT_FIXED_LOD", "NO_OBVIOUS_PX_PZ_SEMANTIC_SEAM"],
+    "non_blocking_presentation_debt": ["LOD_TRANSITION_IS_VISIBLY_ABRUPT; FUTURE PRESENTATION MAY ADD_MORE_LODS_HYSTERESIS_OR_GEOMORPH_WITHOUT_CHANGING_CANONICAL_SEMANTICS"]
+  },
   "next_if_accepted": "G7_FULL_ACCEPTANCE"
 }
