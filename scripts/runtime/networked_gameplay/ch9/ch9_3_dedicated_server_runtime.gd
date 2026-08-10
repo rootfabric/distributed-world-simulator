@@ -27,7 +27,7 @@ func setup(config: Dictionary) -> Dictionary:
 		}
 	)
 	if not bool(replacement_setup.get("success", false)):
-		shutdown()
+		_cleanup_setup_failure()
 		return replacement_setup
 	if _service != null:
 		_service.shutdown()
