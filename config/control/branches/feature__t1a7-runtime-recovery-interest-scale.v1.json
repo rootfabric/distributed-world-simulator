@@ -8,11 +8,11 @@
   "short_description": "Construction runtime recovery, late-interest synchronization and replication-scale policy over accepted T1A.6 runtime networking.",
   "purpose": "Make canonical Construction runtime survive recovery/reconnect and replicate only relevant runtime state at scale while reusing existing persistence, authority and interest foundations instead of creating domain-private global infrastructure.",
   "expected_outcome": "Recovered runtime state preserves canonical revisions and effects, reconnect/late-interest clients converge from authoritative baselines, irrelevant constructs are not replicated, and scale behavior is bounded without changing permanent identity or authority ownership.",
-  "current_stage": "T1A.7.4 Scale / Soak Lab",
+  "current_stage": "T1A.7.5 Composition Acceptance",
   "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-  "progress_note": "T1A.7.3 Dirty / Selective Runtime Replication is ACCEPTED at runtime/test boundary cab2e1cdcafd831ab9c0cb09123383bf96f5dfe0 after focused Windows PASS and fresh full world/core regression on checkout c6544100564d2fa55d96b607ccd9ea61c01387b1 with RL3 175 + 37, main_scene_cli_all 6 PASS / 0 FAIL, clean STOPPED lifecycle and NX4 final marker. T1A.7.4 is now an implemented lab-only candidate: after T1A.7.3 acceptance it adds no production runtime files, only a headless scale/soak acceptance and runner. Cases cover 100x10 and 1000x10 constructs/subjects, reaching 10,000 canonical runtime subjects with deterministic projected-vs-broadcast message/byte accounting, 128/256 sequential dirty mutations, 256/512 interest moves, bounded reverse-index cardinality, projected connect/reconnect replica apply and static-memory/timing observations. Construction replay-history bound is explicitly 0 with full authoritative baseline fallback; no new replay subsystem, network channel, global interest identity, scheduler or world-work-budget ownership is introduced. Linux double-build preflight passed 2394 assertions across both cases; formal Windows focused validation and full regression are pending.",
-  "last_accepted_checkpoint": "T1A.7.3 Dirty / Selective Runtime Replication",
-  "next_stage": "Run RUN_T1A7_4_SCALE_SOAK_TESTS.ps1 on Windows double Godot. If green, record the exact tested checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 on that same checkout without fetch/reset. Then accept T1A.7.4 and proceed to T1A.7.5 Composition Acceptance. T1A.7.4 runtime/interest scale evidence converges with parallel TS0.4 structural/representation ceiling evidence through PC0 before T2.0.",
+  "progress_note": "T1A.7.4 Scale / Soak Lab is ACCEPTED on tested checkout c0213f5edc078481c5705508244e6e556cd1945e. The prescribed Windows sequence required the focused T1A.7.4 gate before full regression, and the user subsequently supplied a fresh full world/core PASS from that same checkout: RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED, exit_code 0 and NX4 final marker. Windows focused assertion count was not restated and is not inferred from the separate Linux 2394-assertion preflight. T1A.7.5 is now a test-orchestration-only composition candidate: no production runtime file changes after T1A.7.4 acceptance. Its focused runner reruns the complete T1A.7.4 chain (therefore actual recovery, real M3 late-interest/reconnect, selective process routing and 10k scale) and then an in-memory composition scenario over recovered canonical state, session/interest binding, selective planner, replica re-entry and reconnect convergence.",
+  "last_accepted_checkpoint": "T1A.7.4 Scale / Soak Lab",
+  "next_stage": "Run RUN_T1A7_5_COMPOSITION_TESTS.ps1 on Windows double Godot. If green, preserve that exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. A green pair accepts T1A.7 Runtime Recovery / Interest / Scale as a complete checkpoint. Then run PC0 convergence with TS0.4 structural/representation ceiling evidence before activating T2.0.",
   "parent_branch_or_checkpoint": "T1A.6 ACCEPTED @ 06f332dc99287e94ba4515ce51346c4f639d240f",
   "base_commit": "06f332dc99287e94ba4515ce51346c4f639d240f",
   "dependencies": [
@@ -20,6 +20,7 @@
     "T1A7_1_ACCEPTED_RECOVERY",
     "T1A7_2_ACCEPTED_LATE_INTEREST_RECONNECT",
     "T1A7_3_ACCEPTED_DIRTY_SELECTIVE_RUNTIME_REPLICATION",
+    "T1A7_4_ACCEPTED_SCALE_SOAK",
     "C5B_CONSTRUCTION_RUNTIME_STATE",
     "C5C_RUNTIME_REPLICATION",
     "M0_AGGREGATE_TRANSACTION_REPOSITORY_COORDINATOR",
@@ -41,6 +42,7 @@
     "RUN_T1A7_2_LATE_INTEREST_RECONNECT_TESTS.ps1",
     "RUN_T1A7_3_DIRTY_SELECTIVE_REPLICATION_TESTS.ps1",
     "RUN_T1A7_4_SCALE_SOAK_TESTS.ps1",
+    "RUN_T1A7_5_COMPOSITION_TESTS.ps1",
     "validation/t1a7-*",
     "docs/checkpoints/*T1A7*",
     "docs/plans/*T1A7*"
@@ -104,9 +106,9 @@
     "full_regression": ""
   },
   "ownership_claims": [
-    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Construction runtime recovery state, domain-specific interest projection, dirty runtime detection, selective construct fan-out and T1A.7.4 runtime-scale evidence"},
+    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Accepted Construction runtime recovery, domain interest projection, dirty/selective fan-out, 10k runtime-scale evidence and final T1A.7 composition validation"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "reuse existing AggregateTransactionRepository/Coordinator; no private T1 repository/coordinator"},
-    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "reuse existing RESYNC/RELIABLE_ORDERED correctness path; T1A.7.4 measures Construction-domain projection without changing channel or transport policy"},
+    {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "reuse existing RESYNC/RELIABLE_ORDERED correctness path; T1A.7 composition changes no channel or transport policy"},
     {"foundation": "AUTHORITY_FOUNDATION", "claimed_owner": "AUTHORITY", "scope": "consume existing authority owner/epoch/session fences; no new permanent owner registry"},
     {"foundation": "SPATIAL_DOMAIN_FABRIC", "claimed_owner": "P0", "scope": "consume authoritative upstream selection only; construct/runtime identity is not replaced by interest, LOD or camera identity"}
   ],
@@ -121,8 +123,8 @@
     "WORLD_QUERY_FABRIC"
   ],
   "blockers": [
-    "T1A7_4_WINDOWS_FOCUSED_ACCEPTANCE_PENDING",
-    "T1A7_4_FULL_WORLD_REGRESSION_PENDING"
+    "T1A7_5_WINDOWS_FOCUSED_ACCEPTANCE_PENDING",
+    "T1A7_5_FULL_WORLD_REGRESSION_PENDING"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
