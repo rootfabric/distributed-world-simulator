@@ -43,7 +43,7 @@
     }
   },
   "fix1": {
-    "commit": "73ca4a0d356eb7ed18aa813c19f617b7b2c29137",
+    "runner_commit": "73ca4a0d356eb7ed18aa813c19f617b7b2c29137",
     "runtime_changed": false,
     "reason": "Canonical R2 GLOBAL roadmap from main contains Markdown hard-break spaces, and active G7 is required to remain byte-identical to main.",
     "policy": "First require local GLOBAL roadmap blob == origin/main blob, then exclude only that already-byte-verified canonical roadmap from G7.3-local git diff --check. All remaining G7.3/P0-sync files retain strict diff hygiene.",
