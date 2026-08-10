@@ -23,6 +23,7 @@ func _test_runtime_checkpoint_restore_and_replay() -> void:
 	_assert_ok(first_setup, "T1A.7 first runtime setup failed")
 	if not bool(first_setup.get("success", false)):
 		return
+	_assert(not bool(first.get_bound_composition().get("reused_existing_m0", true)), "Fresh T1A.7 setup incorrectly reused an existing M0 construct")
 	_assert(not bool(first.get_report().get("recovered_from_m0", true)), "Fresh T1A.7 runtime incorrectly reported recovery")
 	_assert(int(first.get_report().get("runtime_checkpoint_revision", -2)) == -1, "Fresh T1A.7 runtime checkpoint revision mismatch")
 	var construct_before: Dictionary = first.get_bound_composition()["adapter"].get_construct_snapshot(CONSTRUCT_ID)
@@ -78,6 +79,8 @@ func _test_runtime_checkpoint_restore_and_replay() -> void:
 	_assert_ok(recovered_setup, "T1A.7 recovered runtime setup failed")
 	if not bool(recovered_setup.get("success", false)):
 		return
+	_assert(bool(recovered.get_bound_composition().get("reused_existing_m0", false)), "T1A.7 restart did not reuse the persisted M0 construct")
+	_assert(Dictionary(recovered.get_bound_composition().get("plan", {})).is_empty(), "T1A.7 restart rebuilt an assembly plan instead of reusing M0")
 	_assert(bool(recovered.get_report().get("recovered_from_m0", false)), "T1A.7 second runtime did not report recovery")
 	_assert(int(recovered.get_report().get("runtime_checkpoint_revision", -1)) == 0, "T1A.7 recovered checkpoint revision mismatch")
 	var recovered_state: Dictionary = recovered.export_recovery_state()
@@ -123,6 +126,8 @@ func _test_runtime_checkpoint_restore_and_replay() -> void:
 	_assert_ok(recovered_again_setup, "T1A.7 second recovery setup failed")
 	if not bool(recovered_again_setup.get("success", false)):
 		return
+	_assert(bool(recovered_again.get_bound_composition().get("reused_existing_m0", false)), "T1A.7 second restart did not reuse the persisted M0 construct")
+	_assert(Dictionary(recovered_again.get_bound_composition().get("plan", {})).is_empty(), "T1A.7 second restart rebuilt an assembly plan")
 	_assert(bool(recovered_again.get_report().get("recovered_from_m0", false)), "T1A.7 third runtime did not recover")
 	_assert(int(recovered_again.get_report().get("runtime_checkpoint_revision", -1)) == 1, "T1A.7 third runtime checkpoint revision mismatch")
 	var recovered_again_state: Dictionary = recovered_again.export_recovery_state()
