@@ -1,0 +1,67 @@
+{
+  "schema": "planet_simulator.validation.g8_4_erosion_deposition.v1",
+  "checkpoint": "g8.4-erosion-deposition-baseline",
+  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.3 Banks and Floodplain Shaping",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
+    "accepted_metadata_head": "02d975952966113d65bc2e968881099975a10f33"
+  },
+  "implementation": {
+    "generator": "scripts/simulation/procedural/geomorphology/erosion_deposition_baseline_v1.gd",
+    "manifest": "config/procedural/g8-4-erosion-deposition-baseline.v1.json",
+    "acceptance_test": "tests/procedural/geomorphology/g8_4_erosion_deposition_acceptance.gd",
+    "focused_runner": "RUN_G8_4_EROSION_DEPOSITION_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_4_FULL_ACCEPTANCE.ps1",
+    "tracked_uid_sidecars": true
+  },
+  "formula": {
+    "input_fields": ["geo/surface-height-m", "geo/valley-influence", "geo/river-distance-m", "geo/river-width-m"],
+    "normalized_distance": "river_distance_m / (river_width_m * 0.5)",
+    "erosion_zone": "1.0 -> peak 1.35 -> 2.0",
+    "deposition_zone": "2.0 -> peak 3.25 -> 5.5",
+    "signed_weight": "deposition_weight - erosion_weight",
+    "delta_expression": "erosion_deposition_max_delta_m * signed_weight * valley_influence"
+  },
+  "composition": {
+    "uses_g8_3_banks_floodplain_generator": true,
+    "same_semantic_bundle_for_parent_and_shaping": true,
+    "preserves_valley_component": true,
+    "preserves_river_component": true,
+    "preserves_bank_component": true,
+    "preserves_floodplain_component": true,
+    "adds_only_erosion_deposition_component": true
+  },
+  "semantic_safety": {
+    "fluid_surface_distance_used": false,
+    "sediment_mass_conservation_claimed": false,
+    "time_integration_claimed": false,
+    "matter_mutation_claimed": false
+  },
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "sediment_inventory_ownership": false,
+    "time_integration_ownership": false,
+    "material_definition_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "automated_evidence": {
+    "focused": "PENDING",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED"
+  },
+  "project_control": {
+    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
+    "blockers": ["G8_4_FOCUSED_VALIDATION_REQUIRED", "G8_4_FULL_WORLD_REGRESSION_REQUIRED"]
+  },
+  "next_if_accepted": "G8.5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE"
+}
