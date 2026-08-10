@@ -25,6 +25,28 @@ function Resolve-Godot([string]$Requested) {
     throw "Godot 4.7.1 double was not found. Pass -GodotPath or set GODOT_BIN."
 }
 
+function Assert-PowerShell-Parse([string]$Path, [string]$Name) {
+    Write-Host ""
+    Write-Host "[$Name]" -ForegroundColor Cyan
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "$Name file is missing: $Path"
+    }
+    $Tokens = $null
+    $ParseErrors = $null
+    [System.Management.Automation.Language.Parser]::ParseFile(
+        $Path,
+        [ref]$Tokens,
+        [ref]$ParseErrors
+    ) | Out-Null
+    if ($null -ne $ParseErrors -and $ParseErrors.Count -gt 0) {
+        foreach ($ParseError in $ParseErrors) {
+            Write-Host ("PowerShell parse error: {0} at {1}" -f $ParseError.Message, $ParseError.Extent.Text) -ForegroundColor Red
+        }
+        throw "$Name failed PowerShell parser validation"
+    }
+    Write-Host "$Name: PASS" -ForegroundColor Green
+}
+
 function Invoke-Godot-Test([string]$Name, [string]$ScriptPath) {
     Write-Host ""
     Write-Host "[$Name]" -ForegroundColor Cyan
@@ -65,6 +87,8 @@ $Godot = Resolve-Godot $GodotPath
 Write-Host "Godot: $Godot"
 Write-Host "CH9.2: real Inventory UI + canonical equipment container + CH8 character presentation" -ForegroundColor Cyan
 Write-Host "Network equipment mutation remains disabled until CH9.3" -ForegroundColor Cyan
+
+Assert-PowerShell-Parse (Join-Path $Root "PLAY_CH9_2_INVENTORY_CHARACTER_LAB.ps1") "graphical_launcher_parse"
 
 Write-Host ""
 Write-Host "[editor_import]" -ForegroundColor Cyan
