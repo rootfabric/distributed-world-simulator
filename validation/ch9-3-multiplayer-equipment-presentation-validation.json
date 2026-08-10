@@ -101,12 +101,18 @@
     "command_contract": "PASS_2",
     "authority": "PASS_41",
     "replica_projection": "BLOCKED_BY_PARSE_ERROR",
-    "failure": "CH9.3 replica adapter redeclared inherited Definition and ContainerState members from M7 adapter",
-    "fix_commit": "7293baa494b609eddfd3c0704961f3a3a8dcea2b"
+    "failure": "CH9.3 replica adapter redeclared inherited Definition and ContainerState members from M7 adapter"
   },
   "fix1": {
     "scope": "PARSER_ONLY",
-    "change": "Remove duplicate Definition and ContainerState declarations from CH9.3 adapter and use inherited M7 members.",
+    "commits": [
+      "7293baa494b609eddfd3c0704961f3a3a8dcea2b",
+      "fdf8db81d8715febe661f6ff1825a2d5476b91b4"
+    ],
+    "changes": [
+      "Remove duplicate Definition and ContainerState declarations from CH9.3 replica adapter and use inherited M7 members.",
+      "Remove duplicate RealtimeChannelPolicy declaration from CH9.3 graphical runtime after proactive inherited-member audit."
+    ],
     "architecture_changed": false,
     "network_contract_changed": false,
     "item_graph_semantics_changed": false,
