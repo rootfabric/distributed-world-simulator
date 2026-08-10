@@ -31,7 +31,7 @@ func _test_relative_scheduler_rebases_after_late_packet() -> void:
 	_assert(bool(buffer.enqueue(_input(3, 104), 120).get("success", false)), "FIX10 fix7 late input queues")
 	var late: Dictionary = buffer.consume_for_tick(120)
 	_assert(bool(late.get("details", {}).get("consumed_new_input", false)), "FIX10 fix7 late input applies immediately")
-	_assert(int(late.get("details", {}).get("fix10_fix6_input_applied_server_tick", late.get("details", {}).get("fix10_input_applied_server_tick", 0))) == 120, "FIX10 fix7 late input rebases on actual server tick")
+	_assert(int(late.get("details", {}).get("fix10_input_applied_server_tick", 0)) == 120, "FIX10 fix7 late input rebases on actual server tick")
 
 	_assert(bool(buffer.enqueue(_input(4, 106), 120).get("success", false)), "FIX10 fix7 post-rebase input queues")
 	var wait121: Dictionary = buffer.consume_for_tick(121)
@@ -47,16 +47,20 @@ func _test_relative_scheduler_rebases_after_late_packet() -> void:
 
 func _test_render_rate_presentation_composition() -> void:
 	var scene_source := FileAccess.get_file_as_string("res://scenes/testing/playground.tscn")
-	var source := FileAccess.get_file_as_string(
-		"res://scripts/world/testing/playground_view_relative_runtime_fix10_fix7.gd"
+	var fix8_source := FileAccess.get_file_as_string(
+		"res://scripts/world/testing/playground_view_relative_runtime_fix8.gd"
 	)
-	_assert(scene_source.contains("playground_view_relative_runtime_fix10_fix7.gd"), "FIX10 fix7 playground composes render presentation leaf")
+	var source := FileAccess.get_file_as_string(
+		"res://scripts/world/testing/playground_view_relative_runtime_fix7.gd"
+	)
+	_assert(scene_source.contains("playground_view_relative_runtime_fix8.gd"), "FIX10 fix7 preserves accepted FIX8 playground scene identity")
+	_assert(fix8_source.contains("playground_view_relative_runtime_fix7.gd"), "FIX10 fix7 render repair remains in active FIX8 inheritance chain")
 	_assert(source.contains("PHYSICS_SIMULATION_RENDER_RATE_BOUNDED_EXTRAPOLATION_V1"), "FIX10 fix7 render presentation policy present")
-	_assert(source.contains("super._process(delta)"), "FIX10 fix7 preserves parent remote/FIX9 render processing")
+	_assert(source.contains("super._process(delta)"), "FIX10 fix7 preserves parent render processing")
 	_assert(source.contains("_fix10_fix7_apply_render_presentation()"), "FIX10 fix7 applies local presentation from render process")
 	_assert(source.contains("velocity_vector * _fix10_fix7_render_elapsed_seconds"), "FIX10 fix7 bounded sub-tick extrapolation present")
 	_assert(source.contains("FIX10_FIX7_FIXED_DELTA_SECONDS"), "FIX10 fix7 render extrapolation bounded to fixed tick")
-	_assert(not source.contains("_sync_m7_predicted_player_state(delta)"), "FIX10 fix7 leaf does not advance simulation from render")
+	_assert(not source.contains("_sync_m7_predicted_player_state(delta)"), "FIX10 fix7 layer does not advance simulation from render")
 
 
 func _input(sequence: int, client_tick: int) -> Dictionary:
