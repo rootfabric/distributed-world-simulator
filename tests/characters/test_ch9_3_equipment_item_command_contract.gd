@@ -15,13 +15,11 @@ func _run() -> void:
 	var equipment_command: Dictionary = NetworkCommand.create(
 		"message/ch9-3/equipment",
 		"operation/ch9-3/equipment-contract",
-		"a",
-		"transport-session/ch9-3/equipment-contract",
-		1,
-		1,
-		-1,
+		"player/a",
 		"equipment.equip",
-		{"item_id": "item/player/a/wearable/lower", "slot_index": 3}
+		{"item_id": "item/player/a/wearable/lower", "slot_index": 3},
+		-1,
+		1
 	)
 	_assert(bool(ItemCommand.validate_network_envelope(equipment_command).get("success", false)), "CH9.3 equipment command rejected by item command contract")
 
