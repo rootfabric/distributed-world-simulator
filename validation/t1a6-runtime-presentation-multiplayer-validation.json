@@ -1,17 +1,18 @@
 {
   "schema": "planet_simulator.t1a6_runtime_presentation_multiplayer_validation.v1",
   "checkpoint": "T1A6_RUNTIME_PRESENTATION_MULTIPLAYER_BINDING",
-  "decision": "FOCUSED_ACCEPTED_PENDING_FULL_REGRESSION",
+  "decision": "ACCEPTED",
   "branch": "feature/t1a6-runtime-presentation-multiplayer-binding",
   "base_head": "7e6b83a0df8c509374af21e70615dafa66330846",
   "candidate_head": "e8c0ec5a468bc63a800856fa8491b2186c1ddf96",
   "fix1_head": "afeea2789d319bcb0bd384c97bd31d4e133a8ff8",
   "focused_acceptance_head": "2d7a0a00dd1b2748d80e5f3fae51fec979bc59e2",
+  "full_regression_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
-    "SOURCE_ACCEPTED": false,
+    "SOURCE_ACCEPTED": true,
     "MAIN_INTEGRATED": false,
-    "COMPOSITION_VERIFIED": false,
+    "COMPOSITION_VERIFIED": true,
     "PRODUCTION_READY": false
   },
   "scope": {
@@ -121,7 +122,7 @@
       "server_clean_shutdown": "PASS",
       "graphical_process_acceptance": "PASS_25_ASSERTIONS_0_FAILURES"
     },
-    "candidate": "PASS"
+    "result": "PASS"
   },
   "fix1": {
     "server_commit": "5f83dcb3ca3f7043fa3c205260e7e24d891ba32f",
@@ -139,7 +140,17 @@
   },
   "full_regression": {
     "runner": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "result": "PENDING"
+    "windows_run_head": "bae283f8dcc87b0a5a706040e918b14f65e81ca8",
+    "main_scene_cli": "PASS_6_FAIL_0",
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "result": "PASS"
+  },
+  "acceptance": {
+    "source_accepted": true,
+    "composition_verified": true,
+    "main_integrated": false,
+    "production_ready": false,
+    "reason": "Exact Windows focused multiplayer acceptance and full world/core composition regression both passed."
   },
   "next_after_acceptance": "T1A7_RUNTIME_RECOVERY_INTEREST_AND_SCALE"
 }
