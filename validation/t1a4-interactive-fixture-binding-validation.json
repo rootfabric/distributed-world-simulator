@@ -6,7 +6,7 @@
   "base_head": "5e051f67bf6987a354de5b565da1448be6b0b4db",
   "candidate_head": "648529318cf362539ac111394acb61fe027ed592",
   "fix1_code_head": "eee48dee636b3fee4d2504049df3a069910f5ca6",
-  "retest_head": "51302a057b52f2a2913e1cd36240d524120ae565",
+  "retest_head": "cdc76c1ff6c6267f75e56d3291086b4ffee730f9",
   "global_revision": "GLOBAL-P0-2026-08-08-R1",
   "status_dimensions": {
     "SOURCE_ACCEPTED": false,
