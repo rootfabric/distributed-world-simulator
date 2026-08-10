@@ -58,15 +58,20 @@ func _run_phase() -> void:
 
 	_fix10_stress_started_ms = Time.get_ticks_msec()
 	_fix10_last_progress_write_ms = _fix10_stress_started_ms
-	var item_ok: bool = (
-		await _fix10_item_probe_a()
-		if client_id == "a"
-		else await _fix10_item_probe_b()
-	)
-	_assert(item_ok, "FIX10 long stress item probe completed")
-	if not item_ok:
-		_fail("FIX10_LONG_STRESS_ITEM_PROBE_FAILED")
-		return
+
+	# The short visual diagnostic isolates movement/presentation. Item probes are
+	# intentionally reserved for the >=5 minute acceptance run so a 45-second
+	# visual check cannot overrun its deadline inside blocking item helpers.
+	if not _fix10_diagnostic_only:
+		var item_ok: bool = (
+			await _fix10_item_probe_a()
+			if client_id == "a"
+			else await _fix10_item_probe_b()
+		)
+		_assert(item_ok, "FIX10 long stress item probe completed")
+		if not item_ok:
+			_fail("FIX10_LONG_STRESS_ITEM_PROBE_FAILED", _fix10_progress_details())
+			return
 
 	var waypoints: Array[Vector3] = (
 		[
@@ -84,7 +89,7 @@ func _run_phase() -> void:
 		]
 	)
 	var waypoint_index: int = 0
-	while Time.get_ticks_msec() - _fix10_stress_started_ms < _fix10_stress_duration_ms:
+	while not _fix10_deadline_reached():
 		var remaining_ms: int = _fix10_stress_duration_ms - (
 			Time.get_ticks_msec() - _fix10_stress_started_ms
 		)
@@ -100,10 +105,11 @@ func _run_phase() -> void:
 			_fix10_waypoints_completed += 1
 		waypoint_index += 1
 		_fix10_release_movement_actions()
-		await _wait_frames(4)
+		if not _fix10_deadline_reached():
+			await _wait_frames(4)
 
 	_fix10_release_movement_actions()
-	await create_timer(1.0).timeout
+	await create_timer(0.25 if _fix10_diagnostic_only else 1.0).timeout
 	var final_world_report: Dictionary = playground.create_m3_graphical_client_report()
 	var final_runtime_report: Dictionary = client.get_report()
 	var prediction: Dictionary = Dictionary(
@@ -122,7 +128,7 @@ func _run_phase() -> void:
 	)
 	_assert("b" in client.get_remote_player_ids() if client_id == "a" else "a" in client.get_remote_player_ids(), "FIX10 long stress remote peer remains visible")
 	if not failures.is_empty():
-		_fail("FIX10_LONG_STRESS_FINAL_ASSERTION_FAILED")
+		_fail("FIX10_LONG_STRESS_FINAL_ASSERTION_FAILED", _fix10_progress_details())
 		return
 
 	_complete(_fix10_progress_details())
@@ -227,6 +233,9 @@ func _fix10_move_prediction_toward(
 ) -> bool:
 	var started_ms: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started_ms < timeout_ms:
+		if _fix10_deadline_reached():
+			_fix10_release_movement_actions()
+			return false
 		_fix10_write_progress_if_due()
 		var current: Vector3 = playground.player.get_world_position()
 		var delta: Vector3 = (target - current).slide(Vector3.UP)
@@ -244,6 +253,13 @@ func _fix10_move_prediction_toward(
 		await process_frame
 	_fix10_release_movement_actions()
 	return false
+
+
+func _fix10_deadline_reached() -> bool:
+	return (
+		_fix10_stress_started_ms > 0
+		and Time.get_ticks_msec() - _fix10_stress_started_ms >= _fix10_stress_duration_ms
+	)
 
 
 func _fix10_wait_for_remote_peer(timeout_ms: int) -> bool:
