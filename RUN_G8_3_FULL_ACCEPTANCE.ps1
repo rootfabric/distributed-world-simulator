@@ -74,6 +74,7 @@ function Test-G83AllowedPath {
         "config/control/branches/feature__g8-geomorphology.v1.json",
         "config/procedural/g7-g13-p0-aligned-roadmap.v1.json",
         "config/procedural/g8-3-banks-floodplain-shaping.v1.json",
+        "docs/checkpoints/G8_2_RIVER_CHANNEL_INCISION_ACCEPTED_RU.md",
         "docs/checkpoints/G8_3_BANKS_FLOODPLAIN_CANDIDATE_RU.md",
         "validation/g8-3-banks-floodplain-validation.json"
     )) { return $true }
