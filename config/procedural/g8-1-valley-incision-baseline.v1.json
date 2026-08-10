@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.g8_1_valley_incision_baseline.v1",
+  "checkpoint": "g8.1-valley-incision-baseline",
+  "status": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.0 Geomorphology Contracts",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9"
+  },
+  "implementation": "res://scripts/simulation/procedural/geomorphology/valley_incision_baseline_v1.gd",
+  "generator_id": "geomorphology/g8-1-valley-incision-v1",
+  "generator_version": "1.0.0",
+  "inputs": ["geo/surface-height-m", "geo/valley-influence"],
+  "formula": "valley_delta_m = -valley_max_depth_m * pow(valley_influence, valley_exponent)",
+  "rules": {
+    "valley_influence_range": [0.0, 1.0],
+    "zero_influence_zero_incision": true,
+    "unit_influence_reaches_profile_max_depth": true,
+    "monotonic_with_influence": true,
+    "valley_delta_non_positive": true,
+    "bounded_by_profile_valley_max_depth": true,
+    "other_g8_components_zero": true,
+    "source_semantic_bundle_immutable": true,
+    "output_binds_source_bundle_checksum": true,
+    "output_binds_profile_checksum": true,
+    "deterministic": true
+  },
+  "semantic_note": "geo/valley-influence remains accepted G5 feature-bounds influence projected through G7. G8.1 is the first stage that turns that semantic influence into actual procedural surface incision.",
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "camera_dependency": false,
+    "representation_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "persistent_terrain_damage": false,
+    "material_definition_ownership": false,
+    "network_replication_ownership": false
+  },
+  "acceptance": {
+    "focused_runner": "RUN_G8_1_VALLEY_INCISION_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_1_FULL_ACCEPTANCE.ps1",
+    "focused": "PENDING",
+    "full_world_regression": "PENDING"
+  },
+  "next_if_accepted": "G8.2_RIVER_CHANNEL_INCISION"
+}
