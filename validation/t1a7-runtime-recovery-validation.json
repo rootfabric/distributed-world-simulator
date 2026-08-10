@@ -28,15 +28,7 @@
   },
   "recovery_contract": {
     "schema": "planet_simulator.construction_runtime_persistence_state.v1",
-    "persisted_sections": [
-      "construct_id",
-      "construct_checksum",
-      "runtime_state",
-      "operation_ledger",
-      "power_tick",
-      "power_storage",
-      "power_execution_profile"
-    ],
+    "persisted_sections": ["construct_id","construct_checksum","runtime_state","operation_ledger","power_tick","power_storage","power_execution_profile"],
     "transient_fields_persisted": false,
     "runtime_operation_replay_state_persisted": true,
     "utility_effect_continuity_persisted": true,
@@ -53,23 +45,9 @@
     "checkpoint_is_explicit": true,
     "per_command_crash_atomicity_claimed": false
   },
-  "candidate": {
-    "runtime_contract": "scripts/construction/behavior/construction_runtime_persistence_state.gd",
-    "runtime_m0_adapter": "scripts/construction/authoritative/construction_runtime_m0_state_adapter.gd",
-    "runtime_m0_translator": "scripts/construction/authoritative/construction_runtime_m0_translator.gd",
-    "m0_bridge_extension": "scripts/construction/authoritative/construction_m0_transaction_bridge.gd",
-    "recoverable_runtime": "scripts/labs/t1/t1a7/t1_d0_recoverable_runtime_executor.gd",
-    "acceptance_test": "tests/construction/t1a7_runtime_recovery_acceptance.gd",
-    "focused_runner": "RUN_T1A7_RUNTIME_RECOVERY_TESTS.ps1"
-  },
   "fix1": {
     "first_windows_gate_head": "9595b222dbc0ed731654b08d36eed4db141a1b3a",
     "first_windows_gate_result": "REJECTED_RESTART_BOOTSTRAP_IDEMPOTENCY",
-    "failure_chain": [
-      "T1A5_T1A4_BOOTSTRAP_FAILED",
-      "T1A4_ASSEMBLY_PLAN_FAILED",
-      "ATTACH_PART_SOURCE_ALREADY_ATTACHED"
-    ],
     "classification": "RESTART_BOOTSTRAP_IDEMPOTENCY_DEFECT_BEFORE_RUNTIME_RESTORE",
     "binder_fix_head": "a4d6c0b9038f801f0543e5391d8f0eac70f09db9",
     "t1a5_hook_head": "98320e2beff07f4bdf3e2973748354710136a0ae",
@@ -79,18 +57,6 @@
     "t1a7_recovery_reuse_enabled": true,
     "existing_construct_checksum_equivalence_required": true,
     "duplicate_assembly_plan_skipped_on_recovery": true
-  },
-  "acceptance_scenario": {
-    "fresh_m0_aggregate_count_before_runtime_checkpoint": 3,
-    "m0_aggregate_count_after_runtime_checkpoint": 4,
-    "mutations_before_checkpoint": ["STOP_GENERATOR", "TOGGLE_LIGHT", "OPEN_DOOR"],
-    "restart_recovery_required": true,
-    "persisted_t1a4_composition_reuse_required": true,
-    "recovered_state_checksum_equivalence_required": true,
-    "old_operation_replay_without_effect_reapply_required": true,
-    "stale_command_no_runtime_or_utility_mutation_required": true,
-    "second_checkpoint_and_second_restart_required": true,
-    "canonical_construct_snapshot_unchanged_required": true
   },
   "fresh_windows_focused": {
     "tested_head": "a1d856de348268c45eccfb1c4646720bc4a996db",
