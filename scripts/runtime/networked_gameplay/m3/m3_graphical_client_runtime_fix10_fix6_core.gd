@@ -21,6 +21,7 @@ const FIX10_FIX6_PREDICTION_ACK_WIRE_POLICY: String = "COMPACT_TRANSITION_ARRAY_
 const FIX10_FIX6_PREDICTION_ACK_WIRE_VALUES: int = 23
 const FIX10_FIX6_TRANSITION_POLICY: String = "PRE_POST_INPUT_TRANSITION_WITH_HOLD_TICKS_V1"
 const FIX10_FIX6_ACK_DISPATCH_POLICY: String = "REGISTER_BEFORE_CANONICAL_ACCEPT_AND_TERMINATE_STANDALONE_V1"
+const FIX10_FIX6_SEMANTIC_INPUT_LATCH_POLICY: String = "ONE_SEQUENCE_PER_CLIENT_FIXED_TICK_V1"
 
 var _fix10_fix6_deferred_snapshot_ack: Dictionary = {}
 var _fix10_fix6_snapshot_ack_registered_before_canonical: int = 0
@@ -28,6 +29,9 @@ var _fix10_fix6_snapshot_ack_deferred: int = 0
 var _fix10_fix6_snapshot_ack_deferred_flushes: int = 0
 var _fix10_fix6_prediction_ack_base_dispatch_suppressed: int = 0
 var _fix10_fix6_transition_wire_received: int = 0
+var _fix10_fix6_last_latched_client_tick: int = 0
+var _fix10_fix6_semantic_input_submissions: int = 0
+var _fix10_fix6_same_tick_input_update_suppressions: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -37,6 +41,9 @@ func setup(config: Dictionary) -> Dictionary:
 	_fix10_fix6_snapshot_ack_deferred_flushes = 0
 	_fix10_fix6_prediction_ack_base_dispatch_suppressed = 0
 	_fix10_fix6_transition_wire_received = 0
+	_fix10_fix6_last_latched_client_tick = 0
+	_fix10_fix6_semantic_input_submissions = 0
+	_fix10_fix6_same_tick_input_update_suppressions = 0
 	return super.setup(config)
 
 
@@ -74,6 +81,79 @@ func _handle_message(payload: Dictionary) -> void:
 func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 	_fix10_fix6_flush_deferred_snapshot_ack()
 	super._reconcile_prediction_from_snapshot(snapshot)
+
+
+func advance_local_prediction(intent: Dictionary, frame_delta_seconds: float) -> Dictionary:
+	if not is_ready():
+		return _failure("M7_CLIENT_NOT_READY")
+	if _prediction_reconciler == null or not _prediction_reconciler.is_configured():
+		_initialize_prediction_from_snapshot(get_snapshot())
+	if _prediction_reconciler == null or not _prediction_reconciler.is_configured():
+		return _failure("NX4_PREDICTION_NOT_READY")
+
+	var canonical: Dictionary = _canonical_prediction_intent(intent)
+	_prediction_input_accumulator += maxf(frame_delta_seconds, 0.0)
+	var changed: bool = not _same_prediction_intent(_prediction_last_network_intent, canonical)
+	var should_submit: bool = (
+		_prediction_last_network_intent.is_empty()
+		or changed
+		or _prediction_input_accumulator >= NX4_INPUT_SEND_INTERVAL_SECONDS
+	)
+	var target_client_tick: int = _prediction_reconciler.get_prediction_tick() + 1
+	var submission: Dictionary = _success()
+	var submission_attempted: bool = false
+
+	# A render loop can run several times before the next 60 Hz prediction tick.
+	# The old path created a fresh input_sequence on every changed render intent,
+	# stamping all of them with the same future client_tick. The client can only
+	# simulate the newest sequence at that tick, while authority may already have
+	# consumed an earlier packet. Freeze the first sampled intent for this fixed
+	# tick and let later render changes become the next tick's semantic transition.
+	if should_submit:
+		if target_client_tick == _fix10_fix6_last_latched_client_tick:
+			_fix10_fix6_same_tick_input_update_suppressions += 1
+		else:
+			submission_attempted = true
+			submission = submit_movement_intent_nonblocking(canonical, target_client_tick)
+			var submission_error: String = String(submission.get("error_code", ""))
+			var semantic_latched: bool = (
+				bool(submission.get("success", false))
+				or submission_error == "M7_PLAYER_INPUT_SEND_FAILED"
+			)
+			if semantic_latched:
+				# Even if the immediate transport flush failed, set_input() and the
+				# pending batch already own this semantic sequence. The regular network
+				# process will retry that batch; creating another sequence for the same
+				# client tick would reintroduce the ambiguity this latch removes.
+				_fix10_fix6_last_latched_client_tick = target_client_tick
+				_fix10_fix6_semantic_input_submissions += 1
+				_prediction_input_accumulator = 0.0
+				_prediction_last_network_intent = canonical.duplicate(true)
+			elif not submission_error.is_empty():
+				return submission
+
+	var advanced: Dictionary = _prediction_reconciler.advance_frame(frame_delta_seconds)
+	if not bool(advanced.get("success", false)):
+		_prediction_advance_failures += 1
+		return advanced
+	_prediction_frames += 1
+	var predicted_state: Dictionary = _prediction_reconciler.get_predicted_state()
+	var presentation_state: Dictionary = _prediction_reconciler.sample_presentation(frame_delta_seconds)
+	_prediction_updates_emitted += 1
+	prediction_updated.emit(
+		predicted_state.duplicate(true),
+		presentation_state.duplicate(true),
+		_prediction_reconciler.get_report()
+	)
+	return _success({
+		"submission_attempted": submission_attempted,
+		"submission": submission,
+		"predicted_state": predicted_state,
+		"presentation_state": presentation_state,
+		"prediction": _prediction_reconciler.get_report(),
+		"fix10_fix6_target_client_tick": target_client_tick,
+		"fix10_fix6_semantic_input_latch_policy": FIX10_FIX6_SEMANTIC_INPUT_LATCH_POLICY,
+	})
 
 
 func _fix10_fix6_register_snapshot_ack(ack: Dictionary) -> void:
@@ -197,6 +277,9 @@ func _emit_prediction_health_if_due() -> void:
 		"max_raw_phase_baseline_offset_m": float(prediction.get("fix10_fix6_max_raw_phase_baseline_offset_m", 0.0)),
 		"max_transition_delta_error_m": float(prediction.get("fix10_fix6_max_transition_delta_error_m", 0.0)),
 		"max_same_clock_authority_error_m": float(prediction.get("fix10_fix6_max_same_clock_authority_error_m", 0.0)),
+		"semantic_input_latch_policy": FIX10_FIX6_SEMANTIC_INPUT_LATCH_POLICY,
+		"semantic_input_submissions": _fix10_fix6_semantic_input_submissions,
+		"same_tick_input_update_suppressions": _fix10_fix6_same_tick_input_update_suppressions,
 		"snapshot_ack_registered_before_canonical": _fix10_fix6_snapshot_ack_registered_before_canonical,
 		"prediction_ack_base_dispatch_suppressed": _fix10_fix6_prediction_ack_base_dispatch_suppressed,
 	})
@@ -214,5 +297,9 @@ func get_report() -> Dictionary:
 	transport["fix6_snapshot_ack_deferred_flushes"] = _fix10_fix6_snapshot_ack_deferred_flushes
 	transport["fix6_prediction_ack_base_dispatch_suppressed"] = _fix10_fix6_prediction_ack_base_dispatch_suppressed
 	transport["fix6_transition_wire_received"] = _fix10_fix6_transition_wire_received
+	transport["fix6_semantic_input_latch_policy"] = FIX10_FIX6_SEMANTIC_INPUT_LATCH_POLICY
+	transport["fix6_last_latched_client_tick"] = _fix10_fix6_last_latched_client_tick
+	transport["fix6_semantic_input_submissions"] = _fix10_fix6_semantic_input_submissions
+	transport["fix6_same_tick_input_update_suppressions"] = _fix10_fix6_same_tick_input_update_suppressions
 	report["fix10_prediction_ack_transport"] = transport
 	return report
