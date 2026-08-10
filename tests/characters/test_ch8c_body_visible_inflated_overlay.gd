@@ -44,13 +44,17 @@ func _run() -> void:
 	_assert(lab.inflation_reports.has(UPPER_PRESENTATION_ID), "CH8C fix10 upper inflation report missing")
 	_assert(lab.inflation_reports.has(LOWER_PRESENTATION_ID), "CH8C fix10 lower inflation report missing")
 	_assert(lab.inflation_reports.has(FEET_PRESENTATION_ID), "CH8C fix10 feet inflation report missing")
-	_assert(is_equal_approx(_profile_max(lab, UPPER_PRESENTATION_ID), 0.008), "CH8C fix10 upper inflation max mismatch")
-	_assert(is_equal_approx(_profile_max(lab, LOWER_PRESENTATION_ID), 0.014), "CH8C fix10 lower inflation max mismatch")
-	_assert(is_equal_approx(_profile_max(lab, FEET_PRESENTATION_ID), 0.016), "CH8C fix10 feet inflation max mismatch")
+	_assert(is_equal_approx(_profile_max(lab, UPPER_PRESENTATION_ID), 0.032), "CH8C fix10 upper inflation max mismatch")
+	_assert(is_equal_approx(_profile_max(lab, LOWER_PRESENTATION_ID), 0.038), "CH8C fix10 lower inflation max mismatch")
+	_assert(is_equal_approx(_profile_max(lab, FEET_PRESENTATION_ID), 0.036), "CH8C fix10 feet inflation max mismatch")
+	_assert(is_equal_approx(float(lab.upper_inflation_max_m), 0.032), "CH8C fix10 upper tuning default mismatch")
+	_assert(is_equal_approx(float(lab.lower_inflation_max_m), 0.038), "CH8C fix10 lower tuning default mismatch")
+	_assert(is_equal_approx(float(lab.feet_inflation_max_m), 0.036), "CH8C fix10 feet tuning default mismatch")
 	var upper_inflation: Dictionary = lab.inflation_reports[UPPER_PRESENTATION_ID]
 	_assert(int(upper_inflation.get("filtered_surface_count", 0)) >= 1, "CH8C fix10 upper did not filter embedded skin surface")
 	_assert((upper_inflation.get("included_material_names", []) as Array).has("MI_Peasant"), "CH8C fix10 upper clothing material filter missing")
 	_assert(String(lab.status_label.text).contains("fit policy: BODY_VISIBLE_INFLATED_OVERLAY"), "CH8C fix10 status does not expose fit policy")
+	_assert(String(lab.status_label.text).contains("upper 0.032 m | lower 0.038 m | feet 0.036 m"), "CH8C fix10 status did not expose tuning defaults")
 
 	_assert_body_intact(lab, body_mesh, original_mesh, original_material, "initial")
 	for pair in [[UPPER_ITEM_ID, UPPER_PROFILE_ID], [LOWER_ITEM_ID, LOWER_PROFILE_ID], [FEET_ITEM_ID, FEET_PROFILE_ID]]:
