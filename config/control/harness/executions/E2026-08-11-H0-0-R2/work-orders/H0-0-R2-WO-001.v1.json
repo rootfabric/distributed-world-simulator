@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R2",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "VERIFYING",
+  "state": "EPOCH_INVALIDATED",
   "work_order_type": "CONTROL",
   "base_sha": "40c117bb16a635b03acfbaa7d9fe18b74245c989",
   "branch": "control/h0-closed-loop-development-r2",
@@ -89,25 +89,22 @@
     "DIRECTOR"
   ],
   "design_brief": {
-    "problem_statement": "The prior H0.0 implementation and evidence were created from main 790fd79f, while canonical main is now 40c117bb after project-control and ECO advisory-control changes. Continuing the old Project Epoch would violate epoch freshness.",
-    "current_behavior": "The historical control/h0-closed-loop-development branch contains useful scaffold implementation and evidence, but its active epoch base is stale and its latest Work Order is BLOCKED.",
-    "desired_behavior": "A fresh current-main H0.0 branch owns a new Project Epoch, transfers only the already-reviewed control scaffold capability, completes phase-independent evidence isolation, and re-verifies every H0.0 predicate against the fresh base.",
+    "problem_statement": "The prior H0.0 implementation and evidence were created from main 790fd79f, while canonical main was 40c117bb when R2 started. Continuing after later main movement would violate epoch freshness.",
+    "current_behavior": "The historical R2 branch contains the refreshed scaffold and reviewed scope-isolation repair, but canonical main advanced to registry generation 67 before final H0.0 verification completed.",
+    "desired_behavior": "A fresh current-main H0.0 epoch transfers only the proven R2 implementation capability, not R2 execution authorization evidence, and re-runs exact-head verification against the new canonical base.",
     "alternatives_considered": [
-      "Continue the old epoch despite main movement.",
-      "Merge the entire historical branch including its execution ledger into the fresh branch.",
-      "Create a fresh current-main epoch and selectively transfer only current H0 scaffold capability while keeping R1 as immutable historical evidence."
+      "Continue R2 after main movement.",
+      "Treat registry-only movement as automatically ignorable.",
+      "Invalidate R2 fail-closed and refresh the bounded H0 capability onto current main."
     ],
-    "selected_design": "Create E2026-08-11-H0-0-R2 at exact current main, use a new bounded Work Order, preserve E2026-08-11-H0-0-R1 unchanged, and transfer only control-only scaffold implementation/tests required by H0_0_SCAFFOLD_READY.",
-    "why_selected": "This preserves restart-safe epoch semantics, avoids stale evidence authorization, keeps historical forensic value, and prevents unrelated ECO research movement from blocking H0 while retaining normal control gates.",
-    "affected_owners": [
-      "MAIN/HARNESS",
-      "PC0"
-    ],
+    "selected_design": "R2 is terminal historical evidence after main movement. A fresh epoch must start from current main and selectively transfer only implementation capability while keeping R1/R2 execution ledgers historical.",
+    "why_selected": "This preserves exact epoch identity and prevents stale registry/control assumptions from authorizing H0_0_SCAFFOLD_READY.",
+    "affected_owners": ["MAIN/HARNESS", "PC0"],
     "dependencies": [
-      "main @ 40c117bb16a635b03acfbaa7d9fe18b74245c989",
-      "canonical H0-2026-08-11-R1 contracts",
-      "historical control/h0-closed-loop-development scaffold capability @ 51bf235da643d62bb9f0e655a75404bd0c9ed6a1",
-      "PC0 advisory research semantics merged by PR #71"
+      "R2 epoch base 40c117bb16a635b03acfbaa7d9fe18b74245c989",
+      "current main 9ad18eab0a1361bc3efcd38a19027880aac4e339",
+      "registry generation 67",
+      "historical R2 implementation head 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb"
     ],
     "non_goals": [
       "No C22 runtime branch creation",
@@ -115,22 +112,18 @@
       "No ECO integration",
       "No canonical schema changes",
       "No gameplay/domain changes",
-      "No rewrite of historical H0 R1 events"
+      "No rewrite of historical H0 R1/R2 events"
     ],
     "expected_risks": [
-      "Accidentally copying historical authorization evidence into the active R2 epoch",
-      "Dropping a needed scaffold fix while transferring files",
-      "Tests passing because of historical documents rather than active Work Order evidence",
-      "Epoch becoming stale if main moves again"
+      "Reusing stale R2 authorization evidence",
+      "Copying historical execution ledgers into a fresh epoch",
+      "Losing the reviewed scope-isolation fixes during refresh"
     ],
     "validation_plan": [
-      "Compare the fresh branch against current main and require control-only paths.",
-      "Pin and review the historical scaffold source before transfer.",
-      "Run phase-independent harness tests before and after fresh R2 review/evidence records exist.",
-      "Prove historical R1 evidence is not part of active R2 authorization.",
-      "Run Status, Plan and Resume from clean Git-only recovery context.",
-      "Run standard and directional PC0 and require no blocking RED.",
-      "Require fresh exact-head Reviewer, Verifier and Evidence Map before checkpoint proposal."
+      "Create a fresh current-main H0 epoch.",
+      "Transfer only implementation/test/validation capability from R2 implementation head 905f0d7d.",
+      "Keep R1 and R2 execution ledgers historical-only.",
+      "Run fresh unit, Status/Plan/Resume, clean-clone and PC0 evidence before checkpoint proposal."
     ]
   },
   "repair_context_required": false,
@@ -141,8 +134,6 @@
     "CONTROL_DOCS_MERGE_APPROVAL"
   ],
   "issued_at_utc": "2026-08-11T09:33:00Z",
-  "human_approval_required_for": [
-    "CONTROL_DOCS_ONLY_MERGE"
-  ],
-  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only on its historical branch and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Scope/freshness repair H0-0-R2-WO-001-SCOPE-ISOLATION-001 received bounded independent PASS on implementation head 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb and was safely redispatched. Verification is active. Checkpoint-readiness review remains INSUFFICIENT_EVIDENCE until fresh unit-suite, Status/Plan/Resume, clean-clone recovery, final Evidence Map and final independent Verifier evidence exist."
+  "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
+  "notes": "R2 is terminal EPOCH_INVALIDATED. Canonical main advanced from 40c117bb16a635b03acfbaa7d9fe18b74245c989 to 9ad18eab0a1361bc3efcd38a19027880aac4e339 and registry generation changed 66 -> 67 before checkpoint proposal. PR #73 must remain unmerged. The reviewed implementation capability at 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb may be transferred into a fresh epoch, but R2 reviews/evidence/events cannot authorize it."
 }
