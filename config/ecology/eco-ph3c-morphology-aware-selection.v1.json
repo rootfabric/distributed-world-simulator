@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.PH3C",
   "name": "Morphology-Aware Selection / Competition Convergence",
-  "status": "ANALYTIC_PREFLIGHT_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -25,14 +25,23 @@
     {"id":"REFERENCE_HEIGHT","environment":"REFERENCE","a":"HEIGHT_LOW","b":"HEIGHT_HIGH","expected":"HEIGHT_LOW wins >0.75"},
     {"id":"REFERENCE_GIANT","environment":"REFERENCE","a":"BASE","b":"GIANT_DENSE","expected":"BASE wins >0.95; GIANT_DENSE <0.01"}
   ],
-  "analytic_preflight": {
-    "method": "independent equation-level reproduction of accepted PH2 GrowthGraph and PH3 morphology ledger; verified against accepted PH3 numerical evidence",
-    "sun_crown_wide_share_approx": 0.6498,
-    "dry_crown_narrow_share_approx": 0.6845,
-    "reference_branch_low_share_approx": 0.6768,
-    "reference_height_low_share_approx": 0.8831,
-    "reference_giant_dense_share_approx": 0.000144,
-    "resource_only_control": "all pair shares remain exactly 0.5/0.5 because genome/environment/P1 score are identical"
+  "exact_windows_evidence": {
+    "engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC)",
+    "parent_regressions": {"p1c_s4":15,"ph0":63,"ph1":128,"ph2":107,"ph3":217},
+    "focused_assertions": 97,
+    "restart_assertions": 6,
+    "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+    "crown_reversal": {
+      "sun_wide_share": 0.64978120448288,
+      "dry_wide_share": 0.31553289557419,
+      "sun_winner": "CROWN_WIDE",
+      "dry_winner": "CROWN_NARROW"
+    },
+    "selection": {
+      "branch_low_share": 0.67681023488994,
+      "height_low_share": 0.88312054209733,
+      "giant_dense_share": 0.00014414428813
+    }
   },
   "acceptance_semantics": [
     "resource-only controls remain neutral ties",
@@ -45,6 +54,6 @@
     "accepted P1 resource result checksum is identical within each pair",
     "no renderer, mesh, LOD, authority, network or persistence semantics participate"
   ],
-  "exact_windows_hash": "PENDING_FIRST_WINDOWS_EXECUTION",
+  "known_scope_limit": "PH3C proves causal morphology-aware selection, not unrestricted morphology coexistence. Full-pool compact dominance remains an explicit calibration blocker before unconstrained morphology mutation/evolution.",
   "next_after_acceptance": "ECO.PH4 Seed Development Lifecycle"
 }
