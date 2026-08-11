@@ -54,6 +54,7 @@ func _draw() -> void:
 	var front_origin := Vector2(viewport_size.x * 0.25, viewport_size.y * 0.82)
 	var top_origin := Vector2(viewport_size.x * 0.72, viewport_size.y * 0.54)
 	var pixels_per_meter := 105.0 * zoom
+	# Diagnostic axes only. GrowthGraph remains the only geometry input.
 	draw_line(Vector2(20.0, front_origin.y), Vector2(viewport_size.x * 0.48, front_origin.y), Color(0.35, 0.35, 0.35), 1.0)
 	draw_circle(top_origin, 3.0, Color(0.7, 0.7, 0.7))
 	for segment in Array(current_graph["segments"]):
