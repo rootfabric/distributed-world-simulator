@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R1-ECO-MAIN-INTEGRATION-WO-001-0003",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-001",
+  "sequence": 3,
+  "event_type": "EPOCH_INVALIDATED",
+  "work_state": "EPOCH_INVALIDATED",
+  "recorded_at_utc": "2026-08-11T07:54:17Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration",
+  "head_sha": "db1225daef3a53b3401427c387a960a1e8484ff3",
+  "predicate": "EXACT_MAIN_AND_ECO_INPUTS_PINNED",
+  "command": "git fetch origin --prune; compare exact integration inputs before merge creation",
+  "exit_code": 1,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-ECO-MAIN-R1/integration-inputs.v1.json"],
+  "summary": "Fail-closed freshness guard stopped implementation because the ECO target advanced to dc474554 after dispatch. No merge was created.",
+  "blocker": "ECO_SOURCE_HEAD_MOVED_REFRESH_REQUIRED"
+}

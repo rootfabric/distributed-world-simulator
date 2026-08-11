@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-ECO-MAIN-R1",
   "program": "ECO",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "DISPATCHED",
+  "state": "EPOCH_INVALIDATED",
   "work_order_type": "CONTROL",
   "base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
   "branch": "control/eco-main-integration",
@@ -87,5 +87,5 @@
   "human_attention_triggers": ["CONTROL_DOCS_ONLY_MERGE", "INPUT_SHA_MOVED", "PC0_REMAINS_RED"],
   "issued_at_utc": "2026-08-11T07:45:00Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "The candidate PR must target feature/eco-evolutionary-ecology, never main. H0.0 remains blocked until that PR is actually merged and live PC0 is rerun."
+  "notes": "Epoch invalidated before merge creation: ECO target advanced from pinned 75c7794e to dc474554 immediately after dispatch. No merge candidate or runtime/content change was created. A replacement requires a new stable source pin and repeated pre-build review."
 }
