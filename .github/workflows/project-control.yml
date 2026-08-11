@@ -20,10 +20,36 @@ jobs:
       - name: Fetch all branch refs
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
+      - name: Validate control candidate syntax
+        run: |
+          python3 -m py_compile \
+            scripts/control/project_control.py \
+            scripts/control/project_control_directional_watch.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          required_json = [
+              Path("config/control/project-control-policy.v1.json"),
+              Path("config/control/project-program-registry.v1.json"),
+              Path("config/control/architecture-ownership.v1.json"),
+              Path("config/architecture/global-program-roadmap.v1.json"),
+          ]
+          for path in required_json:
+              with path.open("r", encoding="utf-8") as handle:
+                  value = json.load(handle)
+              if not isinstance(value, dict):
+                  raise SystemExit(f"Expected JSON object: {path}")
+              print(f"JSON OK: {path}")
+          PY
+
       - name: Run PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
 
-      - name: Upload control report
+      - name: Run PC0 directional watch auditor
+        run: python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+
+      - name: Upload control reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -31,4 +57,6 @@ jobs:
           path: |
             artifacts/control/PROJECT_STATUS_RU.md
             artifacts/control/project-control-report.json
+            artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
+            artifacts/control/directional-watch-report.json
           if-no-files-found: warn

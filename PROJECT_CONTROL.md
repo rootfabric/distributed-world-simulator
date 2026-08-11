@@ -4,7 +4,13 @@
 **Global architecture:** `GLOBAL-P0-2026-08-10-R2`  
 **Canonical owner:** `main`
 
-Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется здесь вручную: live dashboard строится из main-owned registry, branch passports, validation heads и реальных Git refs.
+Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется в архитектурном roadmap вручную: operational truth строится из main-owned registry, branch passports, validation heads и реальных Git refs.
+
+Текущий convergence playbook:
+
+```text
+docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
+```
 
 ## Главное правило
 
@@ -23,6 +29,26 @@ config/control/project-program-registry.v1.json
 
 Поля `active_frontiers` внутри старого `GLOBAL-P0 R2` считаются advisory legacy state до следующей global architecture revision. Это отделяет быстро меняющееся движение веток от медленно меняющейся архитектурной конституции.
 
+## Canonical continuation rule
+
+После принятого major handoff новая production-разработка по умолчанию **не продолжается бесконечным stacked lineage**.
+
+```text
+accepted evidence
+      +
+current canonical main
+      ↓
+fresh convergence/runtime frontier
+      ↓
+minimal capability transfer
+      ↓
+validation
+      ↓
+composition / merge / handoff
+```
+
+Длинная accepted ветка может оставаться evidence, но не становится автоматически базой следующего major runtime frontier.
+
 ## Как читать проект
 
 ```text
@@ -30,19 +56,61 @@ GLOBAL architecture / rules
         ↓
 main-owned Project Registry
         ↓
-registered active branch passports
+registered branch passports
         ↓
 validation + actual Git refs
+        ↓
+standard PC0 auditor
+        +
+directional watched-dependency auditor
         ↓
 CONTROL_PROJECT.ps1
         ↓
 artifacts/control/PROJECT_STATUS_RU.md
 artifacts/control/project-control-report.json
+artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
+artifacts/control/directional-watch-report.json
 ```
+
+## Два вида dependency control
+
+### Main dependency drift
+
+Стандартный auditor проверяет:
+
+```text
+main changed dependency since branch merge-base
+                ∩
+branch watched_paths
+                ↓
+review / RED if critical
+```
+
+### Directional cross-branch watch
+
+Дополнительный gate закрывает старую blind spot:
+
+```text
+producer branch changed X
+                ∩
+consumer watched_paths
+                ↓
+consumer YELLOW
+
+producer branch changed X
+                ∩
+consumer critical_watched_paths
+                ↓
+consumer RED
+```
+
+Это отличается от обычного same-file overlap: consumer сам может вообще не менять `X`.
+
+`SOURCE_ACCEPTED_HANDOFF_COMPLETE` остаётся consumer evidence, но подавляется как active producer. Поэтому замороженная accepted ветка не создаёт новые изменения, однако новая ветка всё ещё может потребовать её targeted revalidation, если затрагивает watched dependency.
 
 ## Что обязан показывать live dashboard
 
-Для каждой зарегистрированной активной ветки:
+Для каждой зарегистрированной ветки:
 
 ```text
 Identity / intent
@@ -71,14 +139,31 @@ Architecture / convergence
   foundations which the branch must not own
   dependency drift / critical dependency drift
   cross-branch overlap
+  directional watched-dependency hits
 
 Git reality
   actual branch head
   main-only / branch-only divergence
-  findings emitted by the auditor
+  findings emitted by the auditors
 ```
 
-Поля validation/dependencies/ownership уже являются частью branch passport. PC0 R1 dashboard только делает их видимыми; новый schema или architecture revision для этого не нужен.
+## Registry/passport mirror rule
+
+Correctness не зависит от byte-equivalence длинного человеческого текста.
+
+Механически зеркалируются только operational поля:
+
+```text
+branch
+program
+role
+current_stage
+stage_status
+blockers
+health_declared
+```
+
+`short_description`, `purpose`, `expected_outcome`, `progress_note`, `last_accepted_checkpoint`, `next_stage` остаются обязательной информацией, но их небольшое редакционное расхождение не является blocking control failure.
 
 ## Почему validation heads показываются отдельно
 
@@ -92,11 +177,9 @@ tested_heads.runtime
 
 tested_heads.focused
   SHA focused acceptance
+
 tested_heads.full_regression
   SHA полного regression
-
-runtime freshness
-  сравнение tested_heads.runtime с runtime_paths после этого SHA
 ```
 
 Если после tested runtime head изменился хотя бы один `runtime_paths`, auditor поднимает `RUNTIME_VALIDATION_STALE` независимо от текста progress note.
@@ -109,11 +192,12 @@ runtime freshness
 - кто является их каноническим owner;
 - какие watched dependencies могут сделать локальное evidence устаревшим;
 - какие foundation concepts ветке запрещено присваивать себе;
-- не меняют ли две активные ветки один runtime/contract path одновременно.
+- не меняют ли две активные ветки один runtime/contract path одновременно;
+- не изменяет ли producer путь, который другая ветка считает watched/critical dependency.
 
 Это позволяет заметить архитектурное расхождение до merge, а не после появления второго Registry/Manager/Authority/Persistence/Interest слоя.
 
-## Запуск контроля из main
+## Запуск контроля
 
 ```powershell
 cd C:\Godot\<checkout>
@@ -121,7 +205,7 @@ git fetch origin --prune
 .\CONTROL_PROJECT.ps1
 ```
 
-По умолчанию `RED` возвращает exit code `2`.
+`CONTROL_PROJECT.ps1` запускает оба auditor-а. По умолчанию любой RED возвращает exit code `2`.
 
 Только посмотреть состояние:
 
@@ -129,7 +213,7 @@ git fetch origin --prune
 .\CONTROL_PROJECT.ps1 -NoFailOnRed
 ```
 
-Без повторного fetch:
+Без повторного fetch стандартным auditor-ом:
 
 ```powershell
 .\CONTROL_PROJECT.ps1 -NoFetch -NoFailOnRed
@@ -137,16 +221,7 @@ git fetch origin --prune
 
 ## Запуск из active checkout
 
-Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, который получает auditor и registry из `origin/main`. Поэтому active branch не хранит независимую копию project-control truth и после `git fetch origin --prune` автоматически использует актуальный renderer dashboard.
-
-## Результаты
-
-```text
-artifacts/control/PROJECT_STATUS_RU.md
-artifacts/control/project-control-report.json
-```
-
-Markdown предназначен для быстрого human review. JSON содержит те же сведения в machine-readable виде, включая tested heads, freshness, dependencies и ownership claims.
+Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, который получает central registry/policy truth из `origin/main`. Поэтому feature branch не должна становиться независимым владельцем project state.
 
 ## Когда запускать
 
@@ -159,7 +234,8 @@ Markdown предназначен для быстрого human review. JSON с�
 после появления нового Manager/Registry/Authority/Region/Transaction/Material/Scheduler foundation concept
 после существенного изменения main
 перед merge/composition
-когда нужно понять текущее движение всего проекта
+после регистрации новой active branch
+когда producer branch меняет чужую watched dependency
 ```
 
 Минимальное правило: нельзя пройти два последовательных крупных acceptance checkpoint одной программы без промежуточного Project Control audit.
@@ -182,6 +258,9 @@ Current operational project state:
 
 Branch-local facts:
   config/control/branches/<branch>.v1.json
+
+Current convergence execution order:
+  docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
 
 Detailed control instructions:
   docs/control/PROJECT_CONTROL_PLANE_RU.md
