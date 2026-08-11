@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0039",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 39,
+  "event_type": "AUDIT_COMPLETED",
+  "work_state": "AUDITED",
+  "recorded_at_utc": "2026-08-11T06:40:09Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "cedebf34530f0ddd134aed8cbe5a1b691fdeb592",
+  "predicate": "H0_0_SUPPORTING_EVIDENCE_ROUTING_AUDITED",
+  "command": "Review exact-head Evidence Map, validation summary, critique, Reviewer and Verifier PASS",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-001-VALIDATION-SUMMARY-002.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-001-CHANGED-FILES-002.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/critiques/H0-0-WO-001-POSTBUILD-CRITIQUE-003.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/verifications/H0-0-WO-001-VERIFIER-003.v1.json"
+  ],
+  "summary": "Director audit confirms the repaired mixed-evidence recovery boundary, fresh exact-head review/evidence, non-RED controls and zero blocking Human Attention.",
+  "blocker": ""
+}

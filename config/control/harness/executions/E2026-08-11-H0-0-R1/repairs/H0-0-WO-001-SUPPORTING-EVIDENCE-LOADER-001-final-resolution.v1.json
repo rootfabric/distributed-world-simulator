@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_resolution.v1",
+  "repair_id": "H0-0-WO-001-SUPPORTING-EVIDENCE-LOADER-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "FIX_VERIFIED",
+  "resolved_at_utc": "2026-08-11T06:40:04Z",
+  "resolved_by": "DIRECTOR",
+  "review_result": "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json",
+  "verifier_result": "config/control/harness/executions/E2026-08-11-H0-0-R1/verifications/H0-0-WO-001-VERIFIER-003.v1.json",
+  "reviewed_head_sha": "cedebf34530f0ddd134aed8cbe5a1b691fdeb592",
+  "remaining_required_fixes": []
+}
