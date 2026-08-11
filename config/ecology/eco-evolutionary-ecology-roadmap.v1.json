@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R8-2026-08-11",
+  "revision": "ECO-R9-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
-  "current_checkpoint": "ECO.P1A",
-  "current_step": "P1A-S4",
-  "last_accepted_step": "P1A-S3",
+  "current_checkpoint": "ECO.P1B",
+  "current_step": "P1B-START",
+  "last_accepted_step": "ECO.P1A",
   "mission": "Prove that continuous environmental fields plus resource competition, mutation, dispersal, developmental programs and history can generate reusable plant species whose ecological strategies and visible forms emerge without hardcoded biome or tree/bush/grass placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -35,6 +35,7 @@
   "nearest_checkpoint": {
     "id": "ECO.P1A",
     "name": "Environmental Causality Baseline",
+    "status": "ACCEPTED",
     "goal": "Prove deterministic continuous environment truth and a causal resource/cost response of one fixed plant genome before introducing evolution or developmental complexity.",
     "execution_doc": "docs/future_features/evolutionary_ecology/ECO_P1A_EXECUTION_PLAN_RU.md",
     "steps": [
@@ -89,7 +90,7 @@
       {
         "id": "P1A-S4",
         "name": "Determinism, Sensitivity and Failure Classification",
-        "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+        "status": "ACCEPTED",
         "depends_on": ["P1A-S3"],
         "output": "Replay acceptance runner, sensitivity evidence and explicit failure matrix.",
         "evidence": {
@@ -100,17 +101,24 @@
           "baseline_summary_hash": "327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a",
           "baseline_result_hash": "cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e",
           "biomass_series_hash": "7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c",
-          "failure_matrix": "LOCAL_PASS",
-          "windows": "PENDING",
+          "failure_matrix": "PASS",
+          "windows": "PASS_CLEAN",
           "validation": "validation/ecology/eco-p1a-s4-determinism-sensitivity-validation.json"
         }
       },
       {
         "id": "P1A-S5",
         "name": "P1A Acceptance + Evolution Decision",
-        "status": "BLOCKED_BY_P1A_S4_ACCEPTANCE",
+        "status": "ACCEPTED",
         "depends_on": ["P1A-S4"],
-        "output": "ACCEPTED or classified FAIL decision and handoff to ECO.P1B Local Adaptation Proof plus ECO.PH0 Development Trait Contract."
+        "output": "ECO.P1A ACCEPTED; open ECO.P1B Local Adaptation Proof plus ECO.PH0 Development Trait Contract.",
+        "evidence": {
+          "criteria_total": 10,
+          "criteria_passed": 10,
+          "criteria_failed": 0,
+          "decision": "ACCEPTED",
+          "validation": "validation/ecology/eco-p1a-s5-acceptance-decision-validation.json"
+        }
       }
     ],
     "acceptance_gate": [
@@ -125,13 +133,37 @@
       "baseline biomass remains bounded",
       "visual and headless evidence share one truth model"
     ],
+    "aggregate_decision": "ACCEPTED_10_OF_10_GATE_PASS",
     "after_pass": "Open ECO.P1B Local Adaptation Proof and ECO.PH0 Development Trait Contract in parallel research lanes; evolution remains based on accepted resource truth.",
     "after_fail": "Do not add evolution or developmental complexity; classify and repair ENVIRONMENT_MODEL, RESOURCE_MODEL, TRADEOFF_MODEL, NUMERICAL_STABILITY, DIAGNOSTIC_GAP or PERFORMANCE_MODEL."
+  },
+  "next_checkpoint": {
+    "id": "ECO.P1B",
+    "name": "Local Adaptation Proof",
+    "status": "OPEN_FOR_RESEARCH_IMPLEMENTATION",
+    "goal": "Start from one ancestor and prove that deterministic mutation plus selection through accepted P1A resource consequences creates regional trait divergence without predefined species roles.",
+    "rules": [
+      "one ancestor only",
+      "S3 controlled probes remain diagnostics and do not seed species",
+      "mutation stream is deterministic for a fixed seed",
+      "selection uses accepted P1A resource consequences rather than biome labels or cosmetic scores",
+      "lineage/provenance must remain observable",
+      "same seed produces identical evolution hash",
+      "different seeds may discover different genomes but should preserve specialization as a phenomenon"
+    ],
+    "expected_outputs": [
+      "mutation and inheritance contract",
+      "ancestor-to-descendant lineage records",
+      "regional trait distributions over time",
+      "selection/resource evidence",
+      "evolution hash and replay evidence",
+      "multi-seed specialization comparison"
+    ]
   },
   "developmental_phenotype_track": {
     "id": "ECO.PH",
     "name": "Plant Development and Phenotype",
-    "status": "PLANNED_DOCUMENTED_BLOCKED_BY_P1A_ACCEPTANCE",
+    "status": "PH0_OPEN_RESEARCH_ONLY",
     "role": "CROSS_CUTTING_RESEARCH_TRACK_NOT_RUNTIME_FRONTIER",
     "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
     "goal": "Turn inherited plant genomes into deterministic development programs, environment-dependent phenotypes, seed-carried heredity and representation-safe visual forms without canonical tree/bush/grass classes.",
@@ -140,8 +172,8 @@
       {
         "id": "PH0",
         "name": "Development Trait Contract",
-        "status": "BLOCKED_BY_ECO_P1A_ACCEPTANCE",
-        "depends_on": ["ECO.P1A"],
+        "status": "OPEN_FOR_RESEARCH_CONTRACT_WORK",
+        "depends_on": ["ECO.P1A ACCEPTED"],
         "output": "DevelopmentTraits, DevelopmentState, GrowthGraph and IndividualSeed contracts; explicit inherited-vs-derived boundaries.",
         "gate": ["no TREE/BUSH/GRASS canonical type", "development traits do not change accepted EnvironmentSample truth", "renderer does not participate in genome/resource hashes"]
       },
@@ -199,7 +231,7 @@
       }
     ],
     "convergence_rules": [
-      "PH0/PH1 may begin only after P1A acceptance so developmental complexity cannot hide errors in baseline resource causality",
+      "PH0 opened after P1A acceptance",
       "PH1 may run in parallel with P1B",
       "PH3 must converge before final strategy-competition acceptance if morphology is part of the selected strategy space",
       "PH4 must converge before dispersal/biogeography treats seeds as inheritance carriers",
