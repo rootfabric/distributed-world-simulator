@@ -23,6 +23,50 @@ func equip_character_item(item_id: String, slot_index: int, quantity: int = -1) 
 	return _finish_network_equipment_operation(result, "Предмет надет")
 
 
+func preview_character_unequip(
+	item_id: String,
+	target_container_id: String,
+	target_slot_index: int = -1,
+	quantity: int = -1
+) -> Dictionary:
+	if not _uses_network_commands():
+		return {"success": false, "error_code": "NETWORK_EQUIPMENT_PREVIEW_NOT_ACTIVE"}
+	if not has_character_equipment():
+		return _failure(RESULT_EQUIPMENT_NOT_CONFIGURED)
+	var item = get_item(item_id)
+	if item == null:
+		return _failure("ITEM_NOT_FOUND")
+	var requested_quantity := int(item.quantity) if quantity < 0 else quantity
+	if requested_quantity != 1 or int(item.quantity) != 1:
+		return _failure(RESULT_EQUIPMENT_QUANTITY_INVALID)
+	var relation: Dictionary = Dictionary(item.relation)
+	if (
+		String(relation.get("kind", "")) != "CONTAINER"
+		or String(relation.get("container_id", "")) != character_equipment_container_id
+	):
+		return _failure("CHARACTER_EQUIPMENT_ITEM_NOT_EQUIPPED")
+	if target_container_id != player_inventory_id or target_slot_index < -1:
+		return _failure("NETWORK_EQUIPMENT_UNEQUIP_TARGET_UNSUPPORTED", {
+			"target_container_id": target_container_id,
+			"target_slot_index": target_slot_index,
+		})
+	if get_container(player_inventory_id) == null:
+		return _failure("TARGET_CONTAINER_INVALID", {"target_container_id": target_container_id})
+	return {
+		"success": true,
+		"code": "OK",
+		"mode": "NETWORK_UNEQUIP_TO_BACKPACK",
+		"maximum_quantity": 1,
+		"target_container_id": player_inventory_id,
+		"requested_target_slot_index": target_slot_index,
+		# This CH lineage predates the later slot-aware canonical network transfer
+		# foundation. A graphical slot is therefore an accepted drop target, while
+		# authority returns the item to the canonical backpack and the replica
+		# deterministically assigns the available presentation slot.
+		"placement_policy": "CANONICAL_BACKPACK_PRESENTATION_SLOT",
+	}
+
+
 func unequip_character_item(
 	item_id: String,
 	target_container_id: String,
@@ -30,18 +74,19 @@ func unequip_character_item(
 ) -> Dictionary:
 	if not _uses_network_commands():
 		return super.unequip_character_item(item_id, target_container_id, target_slot_index)
-	if not has_character_equipment():
-		return _remember_character_equipment(_failure(RESULT_EQUIPMENT_NOT_CONFIGURED))
-	if target_container_id != player_inventory_id or target_slot_index >= 0:
-		return _remember_character_equipment(_failure("NETWORK_EQUIPMENT_UNEQUIP_TARGET_UNSUPPORTED", {
-			"target_container_id": target_container_id,
-			"target_slot_index": target_slot_index,
-		}))
+	var preview: Dictionary = preview_character_unequip(item_id, target_container_id, target_slot_index, 1)
+	if not bool(preview.get("success", false)):
+		return _remember_character_equipment(preview)
 	var result: Dictionary = _submit_network_operation(
 		"equipment.unequip",
 		{"item_id": item_id},
 		"character_unequip"
 	)
+	if bool(result.get("success", false)):
+		var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
+		details["requested_target_slot_index"] = target_slot_index
+		details["placement_policy"] = String(preview.get("placement_policy", ""))
+		result["details"] = details
 	return _finish_network_equipment_operation(result, "Предмет снят")
 
 
