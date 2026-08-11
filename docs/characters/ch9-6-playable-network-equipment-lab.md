@@ -173,7 +173,35 @@ e547ba52a440e72cc02c6bbe449edaf160bae7ab
 
 The Windows operator explicitly accepted the graphical stage after the interactive fixes were exercised. The project conversation did not include the generated local evidence JSON path or the runner's literal `OPERATOR_REPORTED_PASS` console line, so repository documentation does not fabricate those values; the validation file records the operator declaration and that evidence limitation explicitly.
 
-The mandatory next gate is the post-acceptance canonical Project Control audit. No later CH stage is authorized before CH is reported non-RED by that mechanism.
+## Post-acceptance Project Control
+
+The mandatory canonical audit was run from main:
+
+```text
+main head:            be6ea2a8636a9242fc808aea377d9144ef9bc9eb
+registry generation:  69
+base Overall:         YELLOW
+CH:                   YELLOW
+Directional Overall: YELLOW
+Directional finding: YELLOW CH -> NX WATCH_HIT BLOCK: 2 path(s)
+Combined:             YELLOW
+```
+
+Both canonical Project Control auditors completed successfully. CH is non-RED, so the CH9.6 post-acceptance control gate is satisfied.
+
+The directional CH->NX watch remains visible and is not erased by acceptance. It is a convergence signal for future Character/Network work, not a reason to reopen the already accepted CH9.6 slice.
+
+## Frozen state
+
+The canonical main frontier doctrine requires:
+
+```text
+manual PASS -> CH9.6 ACCEPTED -> post-acceptance PC0 -> freeze slice
+```
+
+That sequence is now complete for CH9.6.
+
+Do not create CH9.7 from the old stacked lineage. Future Character runtime work must wait until canonical `main` explicitly declares the next Character frontier and dispatches it from the then-current project epoch/base.
 
 ## Non-blocking interaction follow-ups
 
@@ -198,7 +226,7 @@ These do not reopen CH9.6 and are not CH9.6 acceptance blockers:
 
 ## Exit gate
 
-CH9.6 acceptance requires:
+CH9.6 exit requirements are complete:
 
 - editor import on exact Windows Godot 4.7.1 double;
 - CH9.2 UI route regression;
@@ -208,4 +236,6 @@ CH9.6 acceptance requires:
 - CH9.6 playable UI network test;
 - explicit Windows operator graphical acceptance on the accepted implementation lineage;
 - an honest evidence record without inferred graphical observations;
-- post-acceptance PC0 audit before any later CH stage.
+- post-acceptance canonical PC0 with CH non-RED.
+
+Current disposition: `FOCUSED_ACCEPTED_POST_PC0_NON_RED_FROZEN`.
