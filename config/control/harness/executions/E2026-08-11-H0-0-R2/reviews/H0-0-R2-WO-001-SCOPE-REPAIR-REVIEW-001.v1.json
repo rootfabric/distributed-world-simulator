@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "H0-0-R2-WO-001-SCOPE-REPAIR-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "H0-0-R2-WO-001",
+  "risk_class": "HIGH",
+  "reviewed_head_sha": "905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb",
+  "reviewer": "INDEPENDENT_REVIEWER_SOL",
+  "verdict": "PASS",
+  "reviewed_at_utc": "2026-08-11T10:14:00Z",
+  "required_fixes": [],
+  "rank_up_moves": [
+    "After H0.0 acceptance, add the focused harness unit suite to Project Control CI so PC0 and harness reconstruction are checked by one PR workflow.",
+    "Keep historical execution ledgers on their historical branches; transfer capability into fresh epochs through bounded active-scope trees rather than whole-history net diffs."
+  ],
+  "evidence_gaps": [
+    "FRESH_H0_UNIT_SUITE_PENDING",
+    "FRESH_STATUS_PLAN_RESUME_PENDING",
+    "CLEAN_CLONE_RECOVERY_PENDING"
+  ],
+  "risk_assessment": "PASS for the bounded scope-isolation repair, not for H0_0_SCAFFOLD_READY. The repaired PR surface is control/harness-only, the historical R1 execution ledger is absent from the active R2 net diff, tests use structurally valid synthetic historical authorization fixtures instead of physical R1 files, and state_builder derives implementation freshness from the selected active execution directory while excluding append-only ledgers and unrelated checkpoint documents. Project Control on implementation head 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb is NON_RED. Remaining unit/public-command/clean-clone evidence gaps must be closed before final checkpoint review."
+}
