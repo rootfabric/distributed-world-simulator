@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_p1a_s3_visual_lab.gd" id="1_eco"]
+
+[node name="EcoP1AS3VisualLab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_eco")
+
+[node name="Status" type="Label" parent="."]
+layout_mode = 0
+offset_left = 760.0
+offset_top = 76.0
+offset_right = 1250.0
+offset_bottom = 650.0
+theme_override_font_sizes/font_size = 14
+text = "ECO.P1A-S3 — Diagnostic Visual Lab"
+autowrap_mode = 2
+
+[node name="Help" type="Label" parent="."]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = 1250.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 14
+text = "1-8 fields | Q/E probes | click inspect | R reset"
