@@ -8,6 +8,24 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Godot = (Resolve-Path $GodotPath).Path
 
+function Invoke-PowerShellParseCheck {
+    param([string]$Name, [string]$Path)
+    Write-Host ""
+    Write-Host "[$Name]" -ForegroundColor Cyan
+    $Tokens = $null
+    $ParseErrors = $null
+    [System.Management.Automation.Language.Parser]::ParseFile(
+        $Path,
+        [ref]$Tokens,
+        [ref]$ParseErrors
+    ) | Out-Null
+    if ($null -ne $ParseErrors -and @($ParseErrors).Count -gt 0) {
+        $Messages = @($ParseErrors | ForEach-Object { $_.Message }) -join "; "
+        throw "$Name emitted PowerShell parse errors: $Messages"
+    }
+    Write-Host "${Name}: PASS" -ForegroundColor Green
+}
+
 function Invoke-GodotCheck {
     param([string]$Name, [string[]]$Arguments)
     Write-Host ""
@@ -44,6 +62,10 @@ function Invoke-GodotCheck {
 
 Write-Host "M7 FIX10 sequence-aware reconciliation validation" -ForegroundColor Cyan
 Write-Host "Project: $ProjectRoot"
+
+Invoke-PowerShellParseCheck -Name "M7 owner-authority diagnostic PowerShell parse" -Path (
+    Join-Path $ProjectRoot "RUN_M7_OWNER_AUTHORITY_DIAGNOSTIC.ps1"
+)
 
 Invoke-GodotCheck -Name "FIX10 editor import/composition" -Arguments @(
     "--headless", "--editor", "--path", $ProjectRoot, "--quit"
@@ -147,7 +169,7 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly validates the experimental OWNER_AUTHORITATIVE_VALIDATED movement boundary, then the existing FIX10 fix8/fix7b/FIX6 scheduling, ACK, render presentation, remote snapshot and FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly parse-checks the owner-authority PowerShell diagnostic, validates the experimental OWNER_AUTHORITATIVE_VALIDATED movement boundary, then the existing FIX10 fix8/fix7b/FIX6 scheduling, ACK, render presentation, remote snapshot and FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
