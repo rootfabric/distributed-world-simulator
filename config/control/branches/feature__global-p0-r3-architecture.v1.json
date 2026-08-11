@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-11-R3-CANDIDATE",
+  "branch": "feature/global-p0-r3-architecture",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "ARCHITECTURE_REVISION_CANDIDATE",
+  "short_description": "R3 candidate defining missing cross-domain foundations, ownership boundaries, parallel contract waves and long-range convergence milestones.",
+  "purpose": "Extend GLOBAL-P0 R2 with Identity, Authorization, Reference Frames, Time, Spatial Domain, Material, World Operation, World Query, Lifecycle, Work Budget, Compatibility and Security foundations while preserving accepted domain/runtime ownership.",
+  "expected_outcome": "A reviewable R3 architecture change-set that can be promoted in main before selected Wave A contract branches are activated.",
+  "current_stage": "GLOBAL-P0 R3 architecture candidate review",
+  "stage_status": "DOCUMENTED_CANDIDATE",
+  "progress_note": "Candidate architecture, machine-readable program map, ownership candidate and parallel implementation plan are present. No production runtime path is changed. R3 explicitly preserves A1/S0/S1/M0, existing domain owners and B1/B2/N3-N6 ordering. The recommended first contract wave is IAM0/IAM1 + MAT0 + WT0 + WQ0/WQ1, with RF/TF/AUTHZ/LIFE/WB/COMPAT following after first contract freeze.",
+  "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
+  "next_stage": "Review R3 ownership/intersections, then merge candidate to main, promote revision to GLOBAL-P0-2026-08-11-R3, update canonical ownership/config, run PC0, and register only selected Wave A frontiers.",
+  "parent_branch_or_checkpoint": "main / GLOBAL-P0-2026-08-10-R2",
+  "dependencies": ["GLOBAL_P0_R2", "A1", "S0", "S1", "M0", "A3", "G", "MATTER", "CONSTRUCTION", "NX", "RL", "CH"],
+  "owned_paths": [
+    "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
+    "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/branches/feature__global-p0-r3-architecture.v1.json"
+  ],
+  "watched_paths": [
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md",
+    "docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md"
+  ],
+  "critical_watched_paths": [
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json"
+  ],
+  "tested_heads": {"runtime": "NOT_APPLICABLE", "focused": "NOT_APPLICABLE", "full_regression": "NOT_APPLICABLE"},
+  "ownership_claims": [
+    {"foundation": "PROGRAM_LEDGER", "claimed_owner": "MAIN", "scope": "candidate proposes future owner names but does not change main project state"}
+  ],
+  "forbidden_foundation_ownership": ["ITEM_IDENTITY_AND_GRAPH", "MATTER_TRUTH", "CONSTRUCTION_TRUTH", "GEO_PROCEDURAL_BASELINE", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "COMPUTE_EXECUTION"],
+  "blockers": ["ARCHITECTURE_REVIEW_REQUIRED", "MAIN_PROMOTION_AND_PC0_REQUIRED_BEFORE_WAVE_A_ACTIVATION"],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}
