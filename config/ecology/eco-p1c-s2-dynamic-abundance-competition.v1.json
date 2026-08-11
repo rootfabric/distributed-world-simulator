@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1C-S2",
   "name": "Dynamic Shared-Patch Abundance Competition",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -10,10 +10,7 @@
   "experiment_revision": "ECO.P1C-S2.1",
   "purpose": "Replace static top-N competition ranking with deterministic shared-patch biomass abundance dynamics and determine whether the S1 generalist pressure becomes a real global takeover or remains compatible with niche coexistence.",
   "baseline": {
-    "grid": [
-      5,
-      5
-    ],
+    "grid": [5, 5],
     "patch_count": 25,
     "founder_count": 20,
     "cycles": 12,
@@ -46,9 +43,13 @@
     "alternate_result_hash": "4706d80289b1fc9918f1758ccabdbb62a76053739f3c7bccadcd282e797d572b",
     "founder_pool_hash": "77acaada39a39c54224b73f2548ebc228343e869264e45780d08419ebb6bee38"
   },
-  "local_evidence": {
-    "focused_assertions": 101,
-    "restart_assertions": 5,
+  "accepted_evidence": {
+    "linux_focused_assertions": 101,
+    "linux_restart_assertions": 5,
+    "windows_focused_assertions": 101,
+    "windows_restart_assertions": 5,
+    "windows_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+    "windows_confirmation": "PASS_EXACT_HASHES_2026-08-11",
     "heterogeneous": {
       "total_biomass_kg_m2": 75.2932643036904,
       "effective_founders_1pct": 19,
@@ -87,5 +88,5 @@
     "migration_enabled": false,
     "presentation_inputs_added": false
   },
-  "next_after_acceptance": "ECO.P1C-S3 Niche/Cluster Diagnostics + Multi-seed Coexistence: post-hoc trait-space clustering and longer/multi-seed abundance robustness without predefined strategy names."
+  "next_after_acceptance": "ECO.P1C-S3 Niche/Cluster Diagnostics + Multi-seed Coexistence: post-hoc trait-space clustering and multi-seed abundance diagnostics without predefined strategy names."
 }
