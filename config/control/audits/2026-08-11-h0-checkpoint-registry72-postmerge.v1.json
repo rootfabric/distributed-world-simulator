@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.post_checkpoint_audit_marker.v1",
+  "checkpoint": "H0_0_SCAFFOLD_READY",
+  "canonical_main_sha": "e9cde601122cb2d9c9e836c27627ffbce419b24c",
+  "registry_generation": 72,
+  "audit_purpose": "Trigger canonical Project Control after H0.0 checkpoint and registry-72 synchronization.",
+  "runtime_authorized": false,
+  "expected": {
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED_FOR_BLOCKING_CRITICAL_FINDINGS",
+    "eco_role": "RESEARCH_DESIGN_FRONTIER_ADVISORY",
+    "c22_runtime": "NOT_DISPATCHED"
+  }
+}
