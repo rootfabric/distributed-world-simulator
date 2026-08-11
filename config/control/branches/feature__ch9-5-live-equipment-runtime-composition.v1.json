@@ -9,10 +9,10 @@
   "purpose": "Close the remaining composition gap between accepted CH9.2 Inventory UI, CH9.3 live ENet equipment replication and CH9.4 M6 durability/recovery without creating a second transport, persistence model or character truth.",
   "expected_outcome": "A persistent dedicated server and live clients can equip through the existing ITEM channel, restart/recover, reconnect and late-join while the same canonical Item UUIDs automatically drive local and remote CharacterEquipment presentation exactly once.",
   "current_stage": "CH9.5 Live Equipment Runtime Composition",
-  "stage_status": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
-  "progress_note": "The mandatory CH9.4 post-acceptance PC0 audit completed on registry generation 40 with Overall YELLOW and CH YELLOW; main registry generation 41 declares CH9.5. Candidate runtime head c65b0b51f62be21f6c5d8e266a720a49bddf4c02 remains unchanged. Windows attempt 1 on branch head af5423b reached both new CH9.5 tests but Godot 4.7.1 rejected untyped PresenterProbe fingerprint/changed inference before any CH9.5 runtime assertion executed. Fix1 commits 7508259 and 9333408 explicitly type the probe state and harden persistent-ENet test scalar typing. Production runtime code was not changed by Fix1; focused rerun is pending.",
-  "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect FOCUSED_ACCEPTED @ runtime e41c6ec46ae13c2244e92d47d891ecd345e746fe",
-  "next_stage": "Rerun the two CH9.5 focused tests on exact Windows Godot 4.7.1 double. If both pass, run RUN_CH9_5_LIVE_EQUIPMENT_RUNTIME_TESTS.ps1. No later CH stage is authorized before CH9.5 acceptance and the subsequent PC0 audit.",
+  "stage_status": "FOCUSED_ACCEPTED",
+  "progress_note": "CH9.5 is FOCUSED_ACCEPTED after exact Windows Godot 4.7.1 double validation on tested head 0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1. The two new focused tests pass directly: presentation coordinator 27 assertions and persistent ENet restart/recovery composition 41 assertions. The full CH9.5 runner also passes editor import plus inherited CH9.2 composition 59, CH9.3 replicated presentation 27, CH9.3 real ENet 20, CH9.4 durable roundtrip 34, CH9.4 reconnect/recovery 53, CH9.5 coordinator 27 and CH9.5 persistent ENet recovery 41 assertions. Accepted runtime head c65b0b51f62be21f6c5d8e266a720a49bddf4c02 remains unchanged by the test-only Fix1. Evidence proves live equipment command replication, M6 checkpoint durability, fresh-server recovery, reconnect, late join, derived presentation idempotency, same-UUID unequip after recovery and equipment-free movement snapshots without new transport/persistence foundations.",
+  "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition FOCUSED_ACCEPTED @ runtime c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
+  "next_stage": "Run the mandatory post-acceptance Project Control audit from an up-to-date main checkout. No later CH stage is authorized until CH is non-RED and main explicitly declares the next Character frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-4-equipment-persistence-reconnect @ de3b6975641635d733f0a5e410101e09a778dd61",
   "base_commit": "de3b6975641635d733f0a5e410101e09a778dd61",
   "candidate_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
@@ -64,8 +64,8 @@
     "validation/ch9-5-live-equipment-runtime-composition-validation.json"
   ],
   "tested_heads": {
-    "runtime": "",
-    "focused": "",
+    "runtime": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
+    "focused": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
     "full_regression": ""
   },
   "ownership_claims": [],
@@ -80,8 +80,8 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "WINDOWS_FIX1_FOCUSED_RERUN_PENDING"
+    "CH9_5_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
   ],
-  "health_declared": "YELLOW",
+  "health_declared": "GREEN",
   "cross_branch_overlap_enabled": true
 }
