@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 52,
+  "registry_generation": 53,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T01:13:00Z",
+  "updated_at_utc": "2026-08-11T01:30:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -34,14 +34,14 @@
       "role": "PRIMARY_FRONTIER",
       "short_description": "Construction composition/failure/recovery semantics over accepted T1A.7 runtime recovery, interest and selective-scale evidence.",
       "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
-      "expected_outcome": "Runtime subjects expose deterministic operability/failure semantics, dependency failures propagate in bounded deterministic ways, commands obey explicit operability policy, and checkpoint/reconnect composition converges through the existing durability and replication foundations before heterogeneous T2 scale.",
-      "current_stage": "T1B.3 Recovery / Reconnect Composition",
-      "stage_status": "FIX1_IMPLEMENTED_WINDOWS_RETEST_REQUIRED",
-      "progress_note": "T1B.2 Runtime Command Failure Semantics remains ACCEPTED on exact Windows checkout 067fa6d8440ecc52771a5b8b5bb7a1e66b075192. The first T1B.3 standalone Windows attempt on candidate 373cdd477a0e9a29c245c22f40fe8d222ff6484a was rejected before semantic execution because the T1B.3 lab subclass redeclared inherited RuntimeExecutorScript and SCHEMA members. The same failed dependency load exposed an acceptance-harness defect: the scenario aborted before assertions while _finish() emitted PASS (0 assertions). FIX1 runtime commit 928b4a8b0e156b15038b26ffab8689293fadc37f reuses the inherited RuntimeExecutorScript and renames only the local schema to T1B3_SCHEMA. Harness FIX1 commit 6a7894baab0559bbc4e7e74aa879d82cbf037973 adds a scenario_completed marker so early aborts exit FAIL. No accepted production foundation, persistence, network, authority or transaction code was changed. T1B.3 focused retest and full world regression remain required. T2.0 remains blocked until C22 MAIN_INTEGRATED + TS0.4 ceiling classification + PC0 convergence.",
-      "last_accepted_checkpoint": "T1B.2 Runtime Command Failure Semantics",
-      "next_stage": "Sync latest feature/t1b-composition-failure-recovery and rerun standalone T1B.3. A valid PASS must show a nonzero assertion count and no SCRIPT ERROR. Then run RUN_T1B3_RECOVERY_RECONNECT_TESTS.ps1; if focused is green, preserve that exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only T1B.3 acceptance unlocks T1B.4 Composition Acceptance.",
+      "expected_outcome": "T1B closes with a real M3 process composition proving failure, durable restart recovery, external-interest visibility, replica convergence and derived presentation before heterogeneous T2 scale.",
+      "current_stage": "T1B.4 Composition Acceptance",
+      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+      "progress_note": "T1B.3 Recovery / Reconnect Composition is ACCEPTED on FIX1 Windows checkout 3a2a6a3e14f97e070139a00402d0cf0e19238622 after the required focused/full execution sequence. The shown full tail passes RL3 representation-aware network streaming 175, RL3 representation streaming processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit 0 and the NX4 final marker; the omitted T1B.3 focused assertion count is not reconstructed. T1B.4 is implemented as the final production-shaped live M3 process gate. Its server adapter inherits accepted T1A.7 interest-aware M3 and swaps only the runtime factory to accepted T1B.3. Graphical clients reuse accepted T1A.6 M3 client/presenter. The process scenario covers two initial interested clients, live outage fanout, OFFLINE command rejection, M0 checkpoint, dedicated-server process restart on the same durable root, recovered failure truth, no Construction snapshot before external interest is re-applied, reconnect plus late-interest recovered baselines, terminal rejection replay, dependency recovery, ONLINE convergence, post-recovery command success, derived OPEN presentation and a final ONLINE/OPEN checkpoint. No production-owned executor, persistence, authority, network protocol/channel or transaction foundation is modified. T2.0 remains blocked by the canonical convergence gate.",
+      "last_accepted_checkpoint": "T1B.3 Recovery / Reconnect Composition",
+      "next_stage": "Run RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1 on exact Windows double Godot. If focused is green, preserve the exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only the green pair closes T1B aggregate; T2.0 remains blocked until C22 MAIN_INTEGRATED + T runtime-scale evidence + TS0.4 ceiling classification + PC0 convergence.",
       "health_declared": "YELLOW",
-      "blockers": ["T1B3_FIX1_WINDOWS_RETEST_REQUIRED", "T1B3_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1B4_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B4_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
