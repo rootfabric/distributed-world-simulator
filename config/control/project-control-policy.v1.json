@@ -23,7 +23,8 @@
     "branch_must_declare_forbidden_foundation_ownership": true,
     "two_major_acceptance_steps_require_intermediate_control_audit": true,
     "tested_runtime_must_not_be_older_than_runtime_changes": true,
-    "active_branch_changes_watched_dependency_requires_directional_audit": true
+    "active_branch_changes_watched_dependency_requires_directional_audit": true,
+    "human_prose_drift_is_not_a_correctness_failure": true
   },
   "branch_lifecycle": [
     "PLANNED",
@@ -72,16 +73,18 @@
     "branch",
     "program",
     "role",
+    "current_stage",
+    "stage_status",
+    "blockers",
+    "health_declared"
+  ],
+  "central_registry_informational_fields": [
     "short_description",
     "purpose",
     "expected_outcome",
-    "current_stage",
-    "stage_status",
     "progress_note",
     "last_accepted_checkpoint",
-    "next_stage",
-    "blockers",
-    "health_declared"
+    "next_stage"
   ],
   "overlap_policy": {
     "ignored_patterns": [
