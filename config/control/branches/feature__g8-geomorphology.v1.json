@@ -10,9 +10,9 @@
   "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
   "current_stage": "G8.6 Geomorphology Visual Lab",
   "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
-  "progress_note": "G8.5 remains ACCEPTED on exact-Windows tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736. G8.6 first Windows attempt exposed and FIX1 corrected a harness-only JSON numeric Array comparison. The second exact-Windows attempt on 666a56e104b521c642afd3168f9d3e3b3f1d9ad4 then exposed a real presentation-corridor alignment bug: the lab forced samples to Fixture.RADIUS_M while accepted G6 centerline carried radial elevation, leaving river_channel_delta_m invisible. FIX2 introduced only a G8.6 presentation wrapper that preserves the accepted G6 centerline radius. On exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb, automated acceptance on checkout a9ca1f8b723e4edc5ebff40db26e41283d464597 passed the focused/headless G8.6 gate, G8.5 parent acceptance, derived presentation LOD/truth separation, PX/PZ seam diagnostic corridor, and the complete world/core regression through NX4. Visible regression evidence includes MW10 processes 51 assertions, MW10 lock-release retry 12, RL0 92, RL1 245, RL2 multiresolution 153, RL2 real asteroid 44, RL3 representation-aware 175, RL3 process composition 37, and main_scene_cli_all 6 PASS / 0 FAIL with final STOPPED lifecycle. Working tree was CLEAN. Automated G8.6 is accepted; only manual graphical observation remains before G8.6 and then G8 Full Acceptance can close.",
+  "progress_note": "G8.5 remains ACCEPTED on exact-Windows tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736. G8.6 first Windows attempt exposed and FIX1 corrected a harness-only JSON numeric Array comparison. The second exact-Windows attempt on 666a56e104b521c642afd3168f9d3e3b3f1d9ad4 then exposed a real presentation-corridor alignment bug: the lab forced samples to Fixture.RADIUS_M while accepted G6 centerline carried radial elevation, leaving river_channel_delta_m invisible. FIX2 introduced only a G8.6 presentation wrapper that preserves the accepted G6 centerline radius. On exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb, automated acceptance on checkout a9ca1f8b723e4edc5ebff40db26e41283d464597 passed the focused/headless G8.6 gate, G8.5 parent acceptance, derived presentation LOD/truth separation, PX/PZ seam diagnostic corridor, and the complete world/core regression through NX4. Visible regression evidence includes MW10 processes 51 assertions, MW10 lock-release retry 12, RL0 92, RL1 245, RL2 multiresolution 153, RL2 real asteroid 44, RL3 representation-aware 175, RL3 process composition 37, and main_scene_cli_all 6 PASS / 0 FAIL with final STOPPED lifecycle. Working tree was CLEAN. Automated G8.6 is accepted. A guarded manual graphical runner now verifies branch, clean worktree, automated-head ancestry, executable G8.6 freshness and a fresh focused headless PASS before opening the lab. Only user-observed graphical observation remains before G8.6 and then G8 Full Acceptance can close.",
   "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-  "next_stage": "Launch res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn graphically on the exact latest feature/g8-geomorphology checkout. Verify G source/resolved geometry with stable Truth hash, views 1..7, W/S presentation LOD with Canonical samples=561 and stable hash, X PX/PZ seam without a visible crack, and F canonical river alignment with coherent channel/bank/floodplain shaping. A user-observed graphical PASS is the only remaining G8.6 blocker; after it, record G8.6 ACCEPTED and run G8 Full Acceptance.",
+  "next_stage": "Run RUN_G8_6_MANUAL_GRAPHICAL_ACCEPTANCE.ps1 on the exact latest feature/g8-geomorphology checkout. The runner must report CLEAN worktree, automated tested head ancestry, zero executable drift and a focused automated PASS before opening the graphical lab. Then verify G source/resolved geometry with stable Truth hash, views 1..7, W/S presentation LOD with Canonical samples=561 and stable hash, X PX/PZ seam without a visible crack, and F canonical river alignment with coherent channel/bank/floodplain shaping. A user-observed graphical PASS is the only remaining G8.6 blocker; after it, record G8.6 ACCEPTED and run G8 Full Acceptance.",
   "parent_branch_or_checkpoint": "G8.5 ACCEPTED @ 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
   "base_commit": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e",
   "dependencies": ["G3", "G5", "G6", "G7", "G7_3", "G8_0", "G8_1", "G8_2", "G8_3", "G8_4", "G8_5"],
@@ -40,7 +40,7 @@
     "config/procedural/g8-4-erosion-deposition-baseline.v1.json",
     "validation/g8-4-erosion-deposition-validation.json",
     "tests/procedural/geomorphology/g8_4_erosion_deposition_acceptance.gd",
-    "docs/checkpoints/G8_4_EROSION_DEPOSITION_ACCEPTED_RU.md",
+    "docs/checkpoints/G8_4_EROSION_DEPOSITION_BASELINE_ACCEPTED_RU.md",
     "config/procedural/g8-5-cross-cell-cross-lod-geomorphology-invariance.v1.json",
     "validation/g8-5-cross-cell-cross-lod-geomorphology-invariance-validation.json",
     "tests/procedural/geomorphology/g8_5_cross_cell_cross_lod_invariance_acceptance.gd",
@@ -53,6 +53,7 @@
     "scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn",
     "RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1",
     "RUN_G8_6_AUTOMATED_ACCEPTANCE.ps1",
+    "RUN_G8_6_MANUAL_GRAPHICAL_ACCEPTANCE.ps1",
     "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_CANDIDATE_RU.md"
   ],
   "tested_heads": {
@@ -74,6 +75,7 @@
     "g8_6_second_windows_attempt": "666a56e104b521c642afd3168f9d3e3b3f1d9ad4",
     "g8_6_fix2_runtime": "6d461ea5b201047cf12f1d284fb08e93ceae1689",
     "g8_6_automated_acceptance": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "g8_6_manual_gate_runner": "793800271350fe5a7eaa819296d07968ba78eed8",
     "g8_6_manual_graphical": "PENDING"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "procedural geomorphology deformation only"}],
