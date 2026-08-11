@@ -20,26 +20,78 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
-from harness.state_builder import _git_implementation_head, _load_evidence_maps, _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
+from harness.state_builder import (
+    _git_implementation_head,
+    _load_evidence_maps,
+    _load_reviews,
+    _select_epoch_audit,
+    _validate_event_git_provenance,
+    _validate_semantics,
+    build_state,
+)
 
 
-EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R1"
+ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R2"
+HISTORICAL_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R1"
+ACTIVE_WORK_ORDER_ID = "H0-0-R2-WO-001"
+ACTIVE_BRANCH = "control/h0-closed-loop-development-r2"
 
 
 class H0ControlHarnessTests(unittest.TestCase):
+    """Phase-independent H0.0 R2 acceptance and historical-isolation tests."""
+
     def setUp(self) -> None:
         self.bundle = ContractBundle.load(ROOT)
-        self.work_order = read_json(EXECUTION / "work-orders/H0-0-WO-001.v1.json")
-        self.transition_table = read_json(EXECUTION / "transition-table.v1.json")
-        self.events = [read_json(path) for path in sorted((EXECUTION / "events/H0-0-WO-001").glob("*.json"))]
-        self.guard_context = load_guard_context(ROOT, EXECUTION)
+        self.active_work_order = read_json(
+            ACTIVE_EXECUTION / f"work-orders/{ACTIVE_WORK_ORDER_ID}.v1.json"
+        )
+        self.active_transition_table = read_json(
+            ACTIVE_EXECUTION / "transition-table.v1.json"
+        )
+        self.active_events = [
+            read_json(path)
+            for path in sorted(
+                (ACTIVE_EXECUTION / f"events/{ACTIVE_WORK_ORDER_ID}").glob("*.json")
+            )
+        ]
+        self.active_guard_context = load_guard_context(ROOT, ACTIVE_EXECUTION)
+
+        self.historical_work_order = read_json(
+            HISTORICAL_EXECUTION / "work-orders/H0-0-WO-001.v1.json"
+        )
+        self.historical_transition_table = read_json(
+            HISTORICAL_EXECUTION / "transition-table.v1.json"
+        )
+        self.historical_events = [
+            read_json(path)
+            for path in sorted(
+                (HISTORICAL_EXECUTION / "events/H0-0-WO-001").glob("*.json")
+            )
+        ]
+        self.historical_guard_context = load_guard_context(
+            ROOT, HISTORICAL_EXECUTION
+        )
+
+    def reduce_historical(
+        self,
+        events: list[dict] | None = None,
+        work_order: dict | None = None,
+    ) -> dict:
+        return reduce_events(
+            self.bundle,
+            work_order or self.historical_work_order,
+            events or self.historical_events,
+            self.historical_transition_table,
+            self.historical_guard_context,
+        )
 
     @contextmanager
-    def execution_documents(self, documents: dict[str, dict]):
-        paths = []
+    def active_documents(self, documents: dict[str, dict]):
+        paths: list[Path] = []
         try:
             for relative, document in documents.items():
-                path = EXECUTION / relative
+                path = ACTIVE_EXECUTION / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
                 self.assertFalse(path.exists(), relative)
                 path.write_text(json.dumps(document), encoding="utf-8")
                 paths.append(path)
@@ -48,229 +100,218 @@ class H0ControlHarnessTests(unittest.TestCase):
             for path in paths:
                 path.unlink(missing_ok=True)
 
-    def active_evidence_map(self, head_sha: str, **updates) -> dict:
-        evidence_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json")
-        evidence_map.update({"work_order_id": "H0-0-WO-002", "evidence_head_sha": head_sha, **updates})
-        return evidence_map
-
-    def active_post_build_review(self, head_sha: str, **updates) -> dict:
-        review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
-        review.update({
-            "review_id": "H0-0-WO-002-TEST-POSTBUILD-REVIEW",
-            "work_order_id": "H0-0-WO-002",
-            "reviewed_head_sha": head_sha,
-            **updates,
-        })
-        return review
-
-    def reduce(self, events: list[dict] | None = None, work_order: dict | None = None) -> dict:
-        return reduce_events(
-            self.bundle,
-            work_order or self.work_order,
-            events or self.events,
-            self.transition_table,
-            self.guard_context,
+    def historical_evidence_map(self) -> dict:
+        return read_json(
+            HISTORICAL_EXECUTION
+            / "evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json"
         )
 
-    def test_positive_live_ledger_matches_declared_snapshot(self) -> None:
-        reduced = self.reduce()
-        self.assertEqual("CHECKPOINT_PROPOSED", self.work_order["state"])
-        self.assertEqual("CHECKPOINT_PROPOSED", reduced["state"])
-        self.assertEqual(40, len(self.events))
-        self.assertEqual(40, reduced["last_event_sequence"])
-        self.assertTrue(reduced["snapshot_matches_authoritative_state"])
-        active_work_order = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")
-        active_events = [read_json(path) for path in sorted((EXECUTION / "events/H0-0-WO-002").glob("*.json"))]
-        active_reduced = reduce_events(self.bundle, active_work_order, active_events, self.transition_table, self.guard_context)
-        state = build_state(ROOT, EXECUTION)
-        self.assertEqual("GIT_ONLY_WORKER_DATA", state["source"])
-        self.assertEqual("H0-0-WO-002", state["active_work_order"]["work_order_id"])
-        self.assertEqual(active_work_order["state"], active_reduced["state"])
-        self.assertEqual(active_reduced, state["reduced_work_order"])
-        self.assertEqual(len(active_events), state["reduced_work_order"]["last_event_sequence"])
-        heads = state["repository"]
-        self.assertEqual(40, len(heads["event_subject_head_sha"]))
-        self.assertEqual(40, len(heads["event_ledger_head_sha"]))
-        self.assertEqual(40, len(heads["current_branch_head_sha"]))
-        self.assertEqual(40, len(heads["implementation_head_sha"]))
-        expected_implementation_head = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md", "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"],
-            cwd=ROOT, text=True, capture_output=True, check=True,
-        ).stdout.strip()
-        self.assertEqual(expected_implementation_head, heads["implementation_head_sha"])
+    def historical_post_build_review(self) -> dict:
+        return read_json(
+            HISTORICAL_EXECUTION
+            / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json"
+        )
 
-    def test_implementation_head_ignores_ledgers_but_tracks_transition_policy(self) -> None:
+    def active_evidence_map(self, head_sha: str, **updates) -> dict:
+        value = self.historical_evidence_map()
+        value.update(
+            {
+                "work_order_id": ACTIVE_WORK_ORDER_ID,
+                "program": "HARNESS",
+                "checkpoint": "H0_0_SCAFFOLD_READY",
+                "risk_class": "HIGH",
+                "evidence_head_sha": head_sha,
+                **updates,
+            }
+        )
+        return value
+
+    def active_post_build_review(self, head_sha: str, **updates) -> dict:
+        value = self.historical_post_build_review()
+        value.update(
+            {
+                "review_id": "H0-0-R2-WO-001-TEST-POSTBUILD-REVIEW",
+                "work_order_id": ACTIVE_WORK_ORDER_ID,
+                "risk_class": "HIGH",
+                "reviewed_head_sha": head_sha,
+                **updates,
+            }
+        )
+        return value
+
+    def test_active_r2_ledger_matches_snapshot(self) -> None:
+        reduced = reduce_events(
+            self.bundle,
+            self.active_work_order,
+            self.active_events,
+            self.active_transition_table,
+            self.active_guard_context,
+        )
+        self.assertEqual("IMPLEMENTED", self.active_work_order["state"])
+        self.assertEqual("IMPLEMENTED", reduced["state"])
+        self.assertEqual(len(self.active_events), reduced["last_event_sequence"])
+        self.assertTrue(reduced["snapshot_matches_authoritative_state"])
+
+        state = build_state(ROOT, ACTIVE_EXECUTION)
+        self.assertEqual("GIT_ONLY_WORKER_DATA", state["source"])
+        self.assertEqual(ACTIVE_WORK_ORDER_ID, state["active_work_order"]["work_order_id"])
+        self.assertEqual(ACTIVE_BRANCH, state["active_work_order"]["branch"])
+        self.assertEqual(reduced, state["reduced_work_order"])
+        self.assertFalse(state["runtime_authorized"])
+        self.assertIn("REQUIRED_PREDICATES_INCOMPLETE", state["checkpoint_blockers"])
+        self.assertIn("POST_BUILD_REVIEW_NOT_FRESH_PASS", state["checkpoint_blockers"])
+        self.assertIn("EVIDENCE_MAP_MISSING", state["checkpoint_blockers"])
+
+    def test_r1_history_exists_but_cannot_authorize_r2(self) -> None:
+        historical_maps = _load_evidence_maps(
+            self.bundle, HISTORICAL_EXECUTION / "evidence"
+        )
+        historical_reviews = [
+            read_json(path)
+            for path in sorted((HISTORICAL_EXECUTION / "reviews").glob("*.json"))
+            if read_json(path).get("work_order_id") in {"H0-0-WO-001", "H0-0-WO-002"}
+        ]
+        self.assertTrue(any(item["review_verdict"] == "PASS" for item in historical_maps))
+        self.assertTrue(any(item["verdict"] == "PASS" for item in historical_reviews))
+
+        state = build_state(ROOT, ACTIVE_EXECUTION)
+        self.assertEqual([], state["review"]["evidence_maps"])
+        self.assertEqual([], state["review"]["reviews"])
+        serialized = json.dumps(state, sort_keys=True)
+        self.assertNotIn('"H0-0-WO-001"', serialized)
+        self.assertNotIn('"H0-0-WO-002"', serialized)
+        self.assertIn(ACTIVE_WORK_ORDER_ID, serialized)
+
+    def test_implementation_head_is_epoch_independent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory)
-            subprocess.run(["git", "init", "-b", "main"], cwd=repository, check=True, capture_output=True)
-            subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=repository, check=True)
-            subprocess.run(["git", "config", "user.name", "H0"], cwd=repository, check=True)
-            transition = repository / "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"
+            subprocess.run(
+                ["git", "init", "-b", "main"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "h0@example.test"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "H0"],
+                cwd=repository,
+                check=True,
+            )
+
+            execution = repository / "config/control/harness/executions/E-FRESH-R9"
+            transition = execution / "transition-table.v1.json"
             transition.parent.mkdir(parents=True)
             transition.write_text('{"version":1}', encoding="utf-8")
+            (repository / "scripts/harness").mkdir(parents=True)
+            (repository / "scripts/harness/module.py").write_text("VALUE = 1\n", encoding="utf-8")
             subprocess.run(["git", "add", "."], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "implementation"], cwd=repository, check=True, capture_output=True)
-            implementation = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            self.assertEqual(implementation, _git_implementation_head(repository))
-            event = repository / "config/control/harness/executions/E2026-08-11-H0-0-R1/events/E/0001.json"
+            subprocess.run(
+                ["git", "commit", "-m", "implementation"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            implementation = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            self.assertEqual(
+                implementation,
+                _git_implementation_head(repository, execution),
+            )
+
+            event = execution / "events/W/0001.json"
             event.parent.mkdir(parents=True)
             event.write_text("{}", encoding="utf-8")
             subprocess.run(["git", "add", "."], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "ledger"], cwd=repository, check=True, capture_output=True)
-            self.assertEqual(implementation, _git_implementation_head(repository))
+            subprocess.run(
+                ["git", "commit", "-m", "ledger"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            self.assertEqual(
+                implementation,
+                _git_implementation_head(repository, execution),
+            )
+
             transition.write_text('{"version":2}', encoding="utf-8")
             subprocess.run(["git", "add", "."], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "transition policy"], cwd=repository, check=True, capture_output=True)
-            policy_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            self.assertEqual(policy_head, _git_implementation_head(repository))
+            subprocess.run(
+                ["git", "commit", "-m", "active transition policy"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            policy_head = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            self.assertEqual(
+                policy_head,
+                _git_implementation_head(repository, execution),
+            )
 
-    def test_plan_keeps_c22_dry_run_blocked(self) -> None:
-        reduced = self.reduce()
-        plan = build_plan(self.bundle.contracts, reduced)
+    def test_implementation_head_rejects_execution_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as outside:
+            root = Path(directory)
+            with self.assertRaisesRegex(
+                ContractValidationError, "EXECUTION_PATH_ESCAPES_REPOSITORY"
+            ):
+                _git_implementation_head(root, Path(outside))
+
+    def test_plan_keeps_c22_blocked_until_h0_0(self) -> None:
+        state = build_state(ROOT, ACTIVE_EXECUTION)
+        plan = build_plan(self.bundle.contracts, state["reduced_work_order"])
         self.assertEqual("H0_0_SCAFFOLD_READY", plan["selected_checkpoint"])
         self.assertEqual("BLOCKED", plan["c22_dry_run"]["status"])
         self.assertEqual("FORBIDDEN", plan["c22_dry_run"]["branch_creation"])
+        self.assertEqual(0, plan["autonomous_runtime_workers"])
 
-    def test_negative_snapshot_mismatch_is_hard_error(self) -> None:
-        changed = copy.deepcopy(self.work_order)
-        changed["state"] = "PLANNED"
-        reduced = self.reduce(work_order=changed)
-        self.assertFalse(reduced["snapshot_matches_authoritative_state"])
-
-    def test_negative_transition_pair_is_rejected(self) -> None:
-        changed = copy.deepcopy(self.events)
+    def test_historical_reducer_guards_remain_fail_closed(self) -> None:
+        changed = copy.deepcopy(self.historical_events)
         changed[0]["work_state"] = "DISPATCHED"
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_TYPE_STATE_PAIR_INVALID"):
-            self.reduce(changed)
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_TYPE_STATE_PAIR_INVALID"
+        ):
+            self.reduce_historical(changed)
 
-    def test_replay_requires_contiguous_unique_ledger(self) -> None:
-        changed = copy.deepcopy(self.events)
+        changed = copy.deepcopy(self.historical_events)
         changed[3]["sequence"] = 99
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_SEQUENCE_GAP"):
-            self.reduce(changed)
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_SEQUENCE_GAP"
+        ):
+            self.reduce_historical(changed)
 
-    def test_replay_is_ordered_by_numeric_sequence_not_filename_order(self) -> None:
-        changed = list(reversed(copy.deepcopy(self.events)))
-        reduced = self.reduce(changed)
-        self.assertEqual(self.work_order["state"], reduced["state"])
-        self.assertEqual(len(self.events), reduced["last_event_sequence"])
+        changed = copy.deepcopy(self.historical_events[:4])
+        changed[3]["evidence_paths"] = []
+        with self.assertRaisesRegex(
+            ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"
+        ):
+            self.reduce_historical(changed)
 
-    def test_duplicate_event_id_is_rejected(self) -> None:
-        changed = copy.deepcopy(self.events)
-        changed[1]["event_id"] = changed[0]["event_id"]
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_ID_NOT_UNIQUE"):
-            self.reduce(changed)
-
-    def test_duplicate_sequence_is_rejected(self) -> None:
-        changed = copy.deepcopy(self.events)
-        changed[1]["sequence"] = changed[0]["sequence"]
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_SEQUENCE_NOT_UNIQUE"):
-            self.reduce(changed)
-
-    def test_zero_sequence_is_rejected_by_schema(self) -> None:
-        changed = copy.deepcopy(self.events)
-        changed[0]["sequence"] = 0
-        with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID"):
-            self.reduce(changed)
-
-    def test_cross_work_order_and_branch_events_are_rejected(self) -> None:
-        changed = copy.deepcopy(self.events)
-        changed[0]["work_order_id"] = "OTHER"
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_WORK_ORDER_OR_EPOCH_MISMATCH"):
-            self.reduce(changed)
-        changed = copy.deepcopy(self.events)
-        changed[0]["branch"] = "other/branch"
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_BRANCH_MISMATCH"):
-            self.reduce(changed)
-
-    def test_illegal_state_jump_and_terminal_continuation_are_rejected(self) -> None:
-        changed = copy.deepcopy(self.events[:2])
-        changed[1]["event_type"] = "PREDICATE_VERIFIED"
-        changed[1]["work_state"] = "VERIFIED"
-        with self.assertRaisesRegex(ContractValidationError, "STATE_TRANSITION_INVALID"):
-            self.reduce(changed)
-        changed = copy.deepcopy(self.events[:2])
-        changed[1]["event_type"] = "CANCELLED"
-        changed[1]["work_state"] = "CANCELLED"
-        continuation = copy.deepcopy(changed[1])
-        continuation.update({"event_id": "continued", "sequence": 3, "event_type": "RECOVERY_RESUMED", "work_state": "DISPATCHED"})
-        with self.assertRaisesRegex(ContractValidationError, "STATE_TRANSITION_INVALID"):
-            self.reduce([*changed, continuation])
-
-    def test_timestamp_regression_and_invalid_sha_are_rejected(self) -> None:
-        changed = copy.deepcopy(self.events)
-        changed[1]["recorded_at_utc"] = "2000-01-01T00:00:00Z"
-        with self.assertRaisesRegex(ContractValidationError, "EVENT_TIMESTAMP_DECREASES"):
-            self.reduce(changed)
-        changed = copy.deepcopy(self.events)
-        changed[0]["head_sha"] = "bad"
-        with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID"):
-            self.reduce(changed)
-
-    def test_all_redispatch_guards_fail_closed(self) -> None:
-        blocked = copy.deepcopy(self.events[:4])
-        blocked[3]["evidence_paths"] = []
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce(blocked)
-        blocked[3]["evidence_paths"] = ["AGENTS.md"]
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce(blocked)
-        arbitrary_blocker = copy.deepcopy(self.events[:4])
-        arbitrary_blocker[2]["blocker"] = "PC0_RED_UNRESOLVED"
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce(arbitrary_blocker)
-        future_block = copy.deepcopy(self.events[:4])
-        blocker = copy.deepcopy(self.events[2])
-        blocker.update({"event_id": "future-block", "sequence": 5, "blocker": "UNRELATED_SECURITY_STOP", "recorded_at_utc": "2026-08-11T06:00:00Z"})
-        dispatch = copy.deepcopy(self.events[3])
-        dispatch.update({"event_id": "future-dispatch", "sequence": 6, "recorded_at_utc": "2026-08-11T06:00:01Z"})
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce([*future_block, blocker, dispatch])
-
-        waiting = copy.deepcopy(self.events[:4])
-        waiting[2].update({"event_type": "WAITING_HUMAN", "work_state": "WAITING_HUMAN", "blocker": "DECISION"})
-        waiting[3]["evidence_paths"] = []
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_HUMAN_REDISPATCH_RESOLUTION_MISSING"):
-            self.reduce(waiting)
-
-        fixing = copy.deepcopy(self.events[:4])
-        fixing[2].update({"event_type": "FIX_REQUIRED", "work_state": "FIX_REQUIRED", "blocker": "DEFECT"})
-        fixing[3]["evidence_paths"] = ["fake/final-resolution.v1.json"]
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_FIX_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce(fixing)
-
-    def test_premature_recovery_requires_reviewer_or_director_and_blocker(self) -> None:
-        changed = copy.deepcopy(self.events[:5])
-        changed[2].update({"event_type": "FIX_REQUIRED", "work_state": "FIX_REQUIRED", "blocker": "DEFECT"})
-        changed[3].update({"event_type": "DISPATCHED", "work_state": "DISPATCHED", "evidence_paths": []})
-        changed[4].update({"event_type": "FIX_REQUIRED", "work_state": "FIX_REQUIRED", "actor": "IMPLEMENTER", "blocker": ""})
-        with self.assertRaisesRegex(ContractValidationError, "GUARDED_FIX_REDISPATCH_EVIDENCE_MISSING"):
-            self.reduce(changed)
-
-    def test_failed_event_predicate_is_observed_but_not_completed(self) -> None:
-        changed = copy.deepcopy(self.events[:3])
-        changed[2].update({"event_type": "FIX_REQUIRED", "work_state": "FIX_REQUIRED", "predicate": "CONTROL_DEVELOPMENT_STATUS_WORKS", "blocker": "FAILED"})
-        reduced = self.reduce(changed)
-        self.assertIn("CONTROL_DEVELOPMENT_STATUS_WORKS", reduced["observed_predicates"])
-        self.assertNotIn("CONTROL_DEVELOPMENT_STATUS_WORKS", reduced["completed_predicates"])
-        implementation = copy.deepcopy(self.events[:3])
-        implementation[2].update({"event_type": "IMPLEMENTATION_COMMITTED", "work_state": "IMPLEMENTED", "predicate": "PC0_NON_RED"})
-        implementation[2].pop("command", None)
-        implementation[2].pop("exit_code", None)
-        reduced = self.reduce(implementation)
-        self.assertIn("PC0_NON_RED", reduced["observed_predicates"])
-        self.assertNotIn("PC0_NON_RED", reduced["completed_predicates"])
-
-    def test_high_risk_requires_review_and_evidence_map(self) -> None:
-        epoch = read_json(EXECUTION / "project-epoch.v1.json")
+    def test_high_risk_r2_requires_review_and_evidence(self) -> None:
+        epoch = read_json(ACTIVE_EXECUTION / "project-epoch.v1.json")
         for field in ("review_required", "evidence_map_required"):
-            changed = copy.deepcopy(self.work_order)
+            changed = copy.deepcopy(self.active_work_order)
             changed[field] = False
-            with self.subTest(field=field), self.assertRaisesRegex(ContractValidationError, "RISK_"):
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ContractValidationError, "RISK_"
+            ):
                 _validate_semantics(self.bundle, epoch, changed)
 
-    def test_scope_symlink_escape_is_rejected_when_supported(self) -> None:
-        epoch = read_json(EXECUTION / "project-epoch.v1.json")
+    def test_scope_escape_is_rejected_when_supported(self) -> None:
+        epoch = read_json(ACTIVE_EXECUTION / "project-epoch.v1.json")
         with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as outside:
             root = Path(directory)
             link = root / "escape"
@@ -279,466 +320,452 @@ class H0ControlHarnessTests(unittest.TestCase):
             except OSError:
                 self.skipTest("Windows symlink creation is unavailable")
             bundle = ContractBundle(root=root, contracts=self.bundle.contracts)
-            changed = copy.deepcopy(self.work_order)
+            changed = copy.deepcopy(self.active_work_order)
             changed["allowed_paths"] = ["escape/**"]
-            with self.assertRaisesRegex(ContractValidationError, "SCOPE_PATH_ESCAPES_REPOSITORY"):
+            with self.assertRaisesRegex(
+                ContractValidationError, "SCOPE_PATH_ESCAPES_REPOSITORY"
+            ):
                 _validate_semantics(bundle, epoch, changed)
 
-    def test_duplicate_json_keys_are_rejected(self) -> None:
+    def test_duplicate_json_keys_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "duplicate.json"
-            path.write_text('{"state":"BLOCKED","state":"DISPATCHED"}', encoding="utf-8")
-            with self.assertRaisesRegex(ContractValidationError, "JSON_DUPLICATE_KEY"):
+            path.write_text(
+                '{"state":"BLOCKED","state":"DISPATCHED"}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                ContractValidationError, "JSON_DUPLICATE_KEY"
+            ):
                 read_json(path)
 
-    def test_review_results_fail_closed_on_shape_and_head(self) -> None:
-        source = read_json(EXECUTION / "reviews/H0-0-WO-001-PREBUILD-REVIEW-001.v1.json")
-        cases = (("reviewed_head_sha", "bad"), ("required_fixes", "not-an-array"), ("review_type", None))
-        for field, value in cases:
-            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
-                review_dir = Path(directory) / "reviews"
-                review_dir.mkdir()
-                changed = copy.deepcopy(source)
-                if value is None:
-                    changed.pop(field)
-                else:
-                    changed[field] = value
-                (review_dir / "review.json").write_text(json.dumps(changed), encoding="utf-8")
-                with self.assertRaises(ContractValidationError):
-                    _load_reviews(ROOT, Path(directory), self.work_order)
-
-    def test_event_git_provenance_rejects_worktree_mutation(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            repository = Path(directory)
-            subprocess.run(["git", "init", "-b", "main"], cwd=repository, check=True, capture_output=True)
-            subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=repository, check=True)
-            subprocess.run(["git", "config", "user.name", "H0"], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "--allow-empty", "-m", "base"], cwd=repository, check=True, capture_output=True)
-            subject = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            event_dir = repository / "events"
-            event_dir.mkdir()
-            event_path = event_dir / "0001.json"
-            event = {"event_id": "E1", "head_sha": subject}
-            event_path.write_text(json.dumps(event), encoding="utf-8")
-            subprocess.run(["git", "add", "events/0001.json"], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "event"], cwd=repository, check=True, capture_output=True)
-            current = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            self.assertEqual(40, len(_validate_event_git_provenance(repository, [event_path], [event], current)))
-            event_path.write_text(json.dumps({**event, "changed": True}), encoding="utf-8")
-            with self.assertRaisesRegex(ContractValidationError, "EVENT_WORKTREE_MUTATION_DETECTED"):
-                _validate_event_git_provenance(repository, [event_path], [event], current)
-            subprocess.run(["git", "add", "events/0001.json"], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "illegal mutation"], cwd=repository, check=True, capture_output=True)
-            mutated_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            with self.assertRaisesRegex(ContractValidationError, "EVENT_IMMUTABILITY_NOT_PROVEN"):
-                _validate_event_git_provenance(repository, [event_path], [{**event, "changed": True}], mutated_head)
-            with self.assertRaisesRegex(ContractValidationError, "EVENT_SUBJECT_HEAD_UNREACHABLE"):
-                fresh_repository = Path(directory) / "fresh"
-                fresh_repository.mkdir()
-                subprocess.run(["git", "init", "-b", "main"], cwd=fresh_repository, check=True, capture_output=True)
-                subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=fresh_repository, check=True)
-                subprocess.run(["git", "config", "user.name", "H0"], cwd=fresh_repository, check=True)
-                unreachable_path = fresh_repository / "0001.json"
-                unreachable = {"event_id": "E2", "head_sha": "0" * 40}
-                unreachable_path.write_text(json.dumps(unreachable), encoding="utf-8")
-                subprocess.run(["git", "add", "0001.json"], cwd=fresh_repository, check=True)
-                subprocess.run(["git", "commit", "-m", "event"], cwd=fresh_repository, check=True, capture_output=True)
-                fresh_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=fresh_repository, check=True, text=True, capture_output=True).stdout.strip()
-                _validate_event_git_provenance(fresh_repository, [unreachable_path], [unreachable], fresh_head)
-
-    def test_event_git_provenance_rejects_committed_deletion(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            repository = Path(directory)
-            subprocess.run(["git", "init", "-b", "main"], cwd=repository, check=True, capture_output=True)
-            subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=repository, check=True)
-            subprocess.run(["git", "config", "user.name", "H0"], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "--allow-empty", "-m", "base"], cwd=repository, check=True, capture_output=True)
-            subject = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            event_dir = repository / "events"
-            event_dir.mkdir()
-            first = event_dir / "0001.json"
-            second = event_dir / "0002.json"
-            first_event = {"event_id": "E1", "head_sha": subject}
-            first.write_text(json.dumps(first_event), encoding="utf-8")
-            second.write_text(json.dumps({"event_id": "E2", "head_sha": subject}), encoding="utf-8")
-            subprocess.run(["git", "add", "events"], cwd=repository, check=True)
-            subprocess.run(["git", "commit", "-m", "events"], cwd=repository, check=True, capture_output=True)
-            subprocess.run(["git", "rm", "events/0002.json"], cwd=repository, check=True, capture_output=True)
-            subprocess.run(["git", "commit", "-m", "illegal deletion"], cwd=repository, check=True, capture_output=True)
-            current = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            with self.assertRaisesRegex(ContractValidationError, "EVENT_LEDGER_DELETION_DETECTED"):
-                _validate_event_git_provenance(repository, [first], [first_event], current)
-
-    def test_contract_schema_negatives_are_machine_identified(self) -> None:
-        cases = [
-            ("work_order_schema", self.work_order, "state", "UNKNOWN"),
-            ("event_schema", self.events[0], "schema", "wrong"),
-        ]
-        for schema_name, original, field, value in cases:
-            with self.subTest(schema=schema_name, field=field):
-                changed = copy.deepcopy(original)
-                changed[field] = value
-                with self.assertRaisesRegex(ContractValidationError, f"SCHEMA_INVALID:negative-{field}"):
-                    self.bundle.validate(schema_name, changed, f"negative-{field}")
-
     def test_wrong_pinned_dependency_version_fails_closed(self) -> None:
-        with mock.patch("harness.contracts.importlib.metadata.version", return_value="4.21.0"):
-            with self.assertRaisesRegex(ContractValidationError, "PINNED_DEPENDENCY_VERSION_REQUIRED"):
-                self.bundle.validate("event_schema", self.events[0], "event")
-        with mock.patch("harness.contracts.importlib.metadata.version", side_effect=__import__("importlib").metadata.PackageNotFoundError("jsonschema")):
-            with self.assertRaisesRegex(ContractValidationError, "PINNED_DEPENDENCY_MISSING"):
-                self.bundle.validate("event_schema", self.events[0], "event")
-
-    def test_unreferenced_epoch_audit_never_authorizes_continuation(self) -> None:
-        audit_path = "config/control/harness/executions/E/audits/audit.json"
-        audit = {"schema": "distributed_world_simulator.harness_epoch_audit.v1", "base_sha": "1" * 40, "main_sha": "2" * 40, "decision": "CONTINUE", "pc0": "NON_RED", "directional_pc0": "NON_RED"}
-        context = {"documents": {audit_path: audit}}
-        self.assertIsNone(_select_epoch_audit(context, []))
-        incomplete_event = {"event_type": "AUDIT_COMPLETED", "work_state": "AUDITED", "exit_code": 0, "evidence_paths": [audit_path]}
-        self.assertIsNone(_select_epoch_audit(context, [incomplete_event]))
-        complete_event = {**incomplete_event, "command": "CONTROL_PROJECT.ps1"}
-        self.assertEqual(audit, _select_epoch_audit(context, [complete_event]))
-
-    def test_review_evidence_and_human_attention_contracts_load(self) -> None:
-        state = build_state(ROOT, EXECUTION)
-        active_id = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")["work_order_id"]
-        review_documents = [read_json(path) for path in sorted((EXECUTION / "reviews").glob("*.json"))]
-        evidence_documents = [read_json(path) for path in sorted((EXECUTION / "evidence").glob("*.json"))]
-        active_reviews = [item for item in review_documents if item.get("schema") == "distributed_world_simulator.harness_review_result.v1" and item.get("work_order_id") == active_id]
-        active_maps = [item for item in evidence_documents if item.get("schema") == "distributed_world_simulator.harness_evidence_map.v1" and item.get("work_order_id") == active_id]
-        implementation_head = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md", "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"],
-            cwd=ROOT, text=True, capture_output=True, check=True,
-        ).stdout.strip()
-        pre_build = [item for item in active_reviews if item["review_type"] == "PRE_BUILD_DESIGN_AUTHORIZATION"]
-        post_build = [item for item in active_reviews if item["review_type"] != "PRE_BUILD_DESIGN_AUTHORIZATION"]
-        expected_pre_build = pre_build[-1]["verdict"] if pre_build else "MISSING"
-        expected_post_build = "MISSING" if not post_build else post_build[-1]["verdict"] if post_build[-1]["reviewed_head_sha"] == implementation_head else "STALE"
-        self.assertEqual(active_reviews, state["review"]["reviews"])
-        self.assertEqual(active_maps, state["review"]["evidence_maps"])
-        self.assertEqual(expected_pre_build, state["review"]["pre_build_state"])
-        self.assertEqual(expected_post_build, state["review"]["post_build_state"])
-        self.assertEqual("READY" if expected_post_build == "PASS" else "PENDING_POST_BUILD_REVIEW", state["review"]["state"])
-        self.assertEqual(expected_post_build != "PASS", "POST_BUILD_REVIEW_NOT_FRESH_PASS" in state["checkpoint_blockers"])
-        expected_map_blocked = not active_maps or active_maps[-1]["evidence_head_sha"] != implementation_head or active_maps[-1]["review_verdict"] != "PASS"
-        self.assertEqual(expected_map_blocked, any(item in state["checkpoint_blockers"] for item in ("EVIDENCE_MAP_MISSING", "EVIDENCE_MAP_NOT_FRESH_PASS")))
-        human_schema = self.bundle.contracts["human_attention_schema"]
-        candidate = {
-            "schema": "distributed_world_simulator.harness_human_attention.v1",
-            "decision_id": "D1", "program": "HARNESS", "checkpoint": "H0_0_SCAFFOLD_READY",
-            "risk_class": "HIGH", "reason": "test", "decision_required": "choose",
-            "options": ["A", "B"], "blast_radius": [], "blocking": True, "status": "OPEN",
-        }
-        self.bundle.validate("human_attention_schema", candidate, "human")
-        candidate["options"] = ["A"]
-        with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID:human"):
-            self.bundle.validate("human_attention_schema", candidate, "human")
-
-    def test_typed_supporting_evidence_coexists_without_entering_review_state(self) -> None:
-        evidence = _load_evidence_maps(self.bundle, EXECUTION / "evidence")
-        self.assertTrue(evidence)
-        self.assertTrue(all(item["schema"] == "distributed_world_simulator.harness_evidence_map.v1" for item in evidence))
-        self.assertTrue(all(item["work_order_id"] == "H0-0-WO-001" for item in evidence))
-        self.assertEqual([], _load_evidence_maps(self.bundle, EXECUTION / "evidence", "UNREGISTERED-WORK-ORDER"))
-
-    def test_malformed_document_claiming_evidence_map_schema_fails_closed(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            evidence_dir = Path(directory)
-            (evidence_dir / "claimed-map.json").write_text(
-                json.dumps({"schema": "distributed_world_simulator.harness_evidence_map.v1"}),
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID:evidence:claimed-map.json"):
-                _load_evidence_maps(self.bundle, evidence_dir)
-            (evidence_dir / "claimed-map.json").unlink()
-            (evidence_dir / "ambiguous-map.json").write_text(
-                json.dumps({"schema": "distributed_world_simulator.harness_evidence_map.v2"}),
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(ContractValidationError, "EVIDENCE_MAP_SCHEMA_AMBIGUOUS:ambiguous-map.json"):
-                _load_evidence_maps(self.bundle, evidence_dir)
-
-    def test_missing_or_non_string_evidence_schema_identity_fails_closed(self) -> None:
-        for name, document in (
-            ("missing-schema.json", {}),
-            ("numeric-schema.json", {"schema": 1}),
-            ("empty-schema.json", {"schema": ""}),
+        with mock.patch(
+            "harness.contracts.importlib.metadata.version",
+            return_value="4.21.0",
         ):
-            with self.subTest(document=name), tempfile.TemporaryDirectory() as directory:
-                evidence_dir = Path(directory)
-                (evidence_dir / name).write_text(json.dumps(document), encoding="utf-8")
-                with self.assertRaisesRegex(ContractValidationError, f"EVIDENCE_SCHEMA_IDENTITY_REQUIRED:{name}"):
-                    _load_evidence_maps(self.bundle, evidence_dir)
+            with self.assertRaisesRegex(
+                ContractValidationError, "PINNED_DEPENDENCY_VERSION_REQUIRED"
+            ):
+                self.bundle.validate(
+                    "event_schema", self.active_events[0], "event"
+                )
 
-    def test_checkpoint_evidence_selection_uses_only_validated_maps(self) -> None:
+    def test_evidence_maps_validate_before_work_order_filtering(self) -> None:
+        historical = self.historical_evidence_map()
         with tempfile.TemporaryDirectory() as directory:
             evidence_dir = Path(directory)
-            valid_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-001.v1.json")
-            supporting = read_json(EXECUTION / "evidence/H0-0-WO-001-VALIDATION-SUMMARY-001.v1.json")
-            (evidence_dir / "001-supporting-before.json").write_text(json.dumps(supporting), encoding="utf-8")
-            (evidence_dir / "002-valid-map.json").write_text(json.dumps(valid_map), encoding="utf-8")
-            (evidence_dir / "999-supporting-after.json").write_text(json.dumps(supporting), encoding="utf-8")
-            selected = _load_evidence_maps(self.bundle, evidence_dir)
-            self.assertEqual([valid_map], selected)
-            self.assertEqual("PASS", selected[-1]["review_verdict"])
+            (evidence_dir / "historical.json").write_text(
+                json.dumps(historical), encoding="utf-8"
+            )
+            self.assertEqual(
+                [],
+                _load_evidence_maps(
+                    self.bundle, evidence_dir, ACTIVE_WORK_ORDER_ID
+                ),
+            )
+            malformed = copy.deepcopy(historical)
+            malformed.pop("intent")
+            (evidence_dir / "malformed.json").write_text(
+                json.dumps(malformed), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(
+                ContractValidationError, "SCHEMA_INVALID:evidence"
+            ):
+                _load_evidence_maps(
+                    self.bundle, evidence_dir, ACTIVE_WORK_ORDER_ID
+                )
 
-    def test_pass_like_supporting_evidence_cannot_substitute_for_a_map(self) -> None:
+    def test_reviews_validate_before_work_order_filtering(self) -> None:
+        historical = self.historical_post_build_review()
         with tempfile.TemporaryDirectory() as directory:
-            evidence_dir = Path(directory)
-            pass_like_support = {
-                "schema": "distributed_world_simulator.harness_validation_summary.v1",
-                "work_order_id": "H0-0-WO-001",
-                "evidence_head_sha": "3bf704243e38b6a9dd6a4a72434907ae776db019",
-                "review_verdict": "PASS",
-                "focused_validation": "PASS",
-                "full_regression": "PASS",
-            }
-            (evidence_dir / "pass-like-support.json").write_text(json.dumps(pass_like_support), encoding="utf-8")
-            self.assertEqual([], _load_evidence_maps(self.bundle, evidence_dir))
+            execution = Path(directory)
+            reviews = execution / "reviews"
+            reviews.mkdir()
+            (reviews / "historical.json").write_text(
+                json.dumps(historical), encoding="utf-8"
+            )
+            self.assertEqual(
+                [],
+                _load_reviews(ROOT, execution, self.active_work_order),
+            )
 
-    def test_historical_pass_documents_are_validated_but_cannot_authorize_active_work(self) -> None:
-        historical_maps = _load_evidence_maps(self.bundle, EXECUTION / "evidence")
-        historical_reviews = [document for path in sorted((EXECUTION / "reviews").glob("*.json")) if (document := read_json(path)).get("work_order_id") == "H0-0-WO-001"]
-        self.assertTrue(any(item["review_verdict"] == "PASS" for item in historical_maps))
-        self.assertTrue(any(item["verdict"] == "PASS" for item in historical_reviews))
-        with tempfile.TemporaryDirectory() as directory:
-            isolated_execution = Path(directory)
-            evidence_dir = isolated_execution / "evidence"
-            review_dir = isolated_execution / "reviews"
-            evidence_dir.mkdir()
-            review_dir.mkdir()
-            for index, document in enumerate(historical_maps):
-                (evidence_dir / f"{index:02d}.json").write_text(json.dumps(document), encoding="utf-8")
-            for index, document in enumerate(historical_reviews):
-                (review_dir / f"{index:02d}.json").write_text(json.dumps(document), encoding="utf-8")
-            active_work_order = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")
-            self.assertEqual([], _load_evidence_maps(self.bundle, evidence_dir, active_work_order["work_order_id"]))
-            self.assertEqual([], _load_reviews(ROOT, isolated_execution, active_work_order))
+            malformed = copy.deepcopy(historical)
+            malformed.pop("risk_assessment")
+            (reviews / "malformed.json").write_text(
+                json.dumps(malformed), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(
+                ContractValidationError, "REVIEW_RESULT_INVALID"
+            ):
+                _load_reviews(ROOT, execution, self.active_work_order)
 
-    def test_malformed_historical_claims_and_global_review_integrity_fail_closed(self) -> None:
-        historical_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json")
-        historical_map.pop("intent")
-        historical_review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
-        historical_review.pop("risk_assessment")
-        unreachable_review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
-        unreachable_review.update({"review_id": "HISTORICAL-UNREACHABLE", "reviewed_head_sha": "0" * 40})
-        duplicate_active_review = self.active_post_build_review(_git_implementation_head(ROOT), review_id=historical_review["review_id"])
-        cases = (
-            ("evidence/ZZ-HISTORICAL-MALFORMED-MAP.json", historical_map, "SCHEMA_INVALID:evidence"),
-            ("reviews/ZZ-HISTORICAL-MALFORMED-REVIEW.json", historical_review, "REVIEW_RESULT_INVALID"),
-            ("reviews/ZZ-HISTORICAL-UNREACHABLE-REVIEW.json", unreachable_review, "REVIEW_HEAD_UNREACHABLE"),
-            ("reviews/ZZ-ACTIVE-DUPLICATE-REVIEW.json", duplicate_active_review, "REVIEW_ID_NOT_UNIQUE"),
+    def test_active_identity_and_freshness_matrix(self) -> None:
+        implementation_head = _git_implementation_head(ROOT, ACTIVE_EXECUTION)
+        old_head = read_json(
+            HISTORICAL_EXECUTION
+            / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json"
+        )["reviewed_head_sha"]
+
+        wrong_identity = self.active_evidence_map(
+            implementation_head, checkpoint="WRONG"
         )
-        for relative, document, error in cases:
-            with self.subTest(document=relative), self.execution_documents({relative: document}):
-                with self.assertRaisesRegex(ContractValidationError, error):
-                    build_state(ROOT, EXECUTION)
+        with self.active_documents({"evidence/ZZ-WRONG-MAP.json": wrong_identity}):
+            with self.assertRaisesRegex(
+                ContractValidationError, "EVIDENCE_IDENTITY_MISMATCH"
+            ):
+                build_state(ROOT, ACTIVE_EXECUTION)
 
-    def test_active_document_identity_and_freshness_matrix(self) -> None:
-        implementation_head = _git_implementation_head(ROOT)
-        old_head = "3bf704243e38b6a9dd6a4a72434907ae776db019"
-        wrong_identity_cases = (
-            ("map-checkpoint", {"evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(implementation_head, checkpoint="WRONG")}, "EVIDENCE_IDENTITY_MISMATCH"),
-            ("map-risk", {"evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(implementation_head, risk_class="LOW")}, "EVIDENCE_IDENTITY_MISMATCH"),
-            ("review-risk", {"reviews/ZZ-ACTIVE-REVIEW.json": self.active_post_build_review(implementation_head, risk_class="LOW")}, "REVIEW_WORK_ORDER_OR_RISK_MISMATCH"),
+        wrong_risk_review = self.active_post_build_review(
+            implementation_head, risk_class="LOW"
         )
-        for name, documents, error in wrong_identity_cases:
-            with self.subTest(identity=name), self.execution_documents(documents):
-                with self.assertRaisesRegex(ContractValidationError, error):
-                    build_state(ROOT, EXECUTION)
+        with self.active_documents(
+            {"reviews/ZZ-WRONG-REVIEW.json": wrong_risk_review}
+        ):
+            with self.assertRaisesRegex(
+                ContractValidationError, "REVIEW_WORK_ORDER_OR_RISK_MISMATCH"
+            ):
+                build_state(ROOT, ACTIVE_EXECUTION)
 
-        for review_fresh, map_fresh in ((False, False), (False, True), (True, False), (True, True)):
+        for review_fresh, map_fresh in (
+            (False, False),
+            (False, True),
+            (True, False),
+            (True, True),
+        ):
             review_head = implementation_head if review_fresh else old_head
             map_head = implementation_head if map_fresh else old_head
             documents = {
-                "evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(map_head),
-                "reviews/ZZ-ACTIVE-REVIEW.json": self.active_post_build_review(review_head),
+                "reviews/ZZ-ACTIVE-REVIEW.json": self.active_post_build_review(
+                    review_head
+                ),
+                "evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(
+                    map_head
+                ),
             }
-            with self.subTest(review_fresh=review_fresh, map_fresh=map_fresh), self.execution_documents(documents):
-                state = build_state(ROOT, EXECUTION)
-                self.assertEqual("PASS" if review_fresh else "STALE", state["review"]["post_build_state"])
-                self.assertEqual(not review_fresh, "POST_BUILD_REVIEW_NOT_FRESH_PASS" in state["checkpoint_blockers"])
-                self.assertEqual(not map_fresh, "EVIDENCE_MAP_NOT_FRESH_PASS" in state["checkpoint_blockers"])
-                self.assertNotIn("EVIDENCE_MAP_MISSING", state["checkpoint_blockers"])
-                self.assertEqual(not map_fresh, "EVIDENCE_HEAD_STALE" in state["findings"])
+            with self.subTest(
+                review_fresh=review_fresh, map_fresh=map_fresh
+            ), self.active_documents(documents):
+                state = build_state(ROOT, ACTIVE_EXECUTION)
+                self.assertEqual(
+                    "PASS" if review_fresh else "STALE",
+                    state["review"]["post_build_state"],
+                )
+                self.assertEqual(
+                    not review_fresh,
+                    "POST_BUILD_REVIEW_NOT_FRESH_PASS"
+                    in state["checkpoint_blockers"],
+                )
+                self.assertEqual(
+                    not map_fresh,
+                    "EVIDENCE_MAP_NOT_FRESH_PASS"
+                    in state["checkpoint_blockers"],
+                )
+                self.assertNotIn(
+                    "EVIDENCE_MAP_MISSING", state["checkpoint_blockers"]
+                )
                 self.assertTrue(state["checkpoint_proposal_blocked"])
 
-    def test_public_commands_fail_closed_for_malformed_or_ambiguous_map_claims(self) -> None:
-        shell = shutil.which("powershell") or shutil.which("pwsh")
-        self.assertIsNotNone(shell)
-        for name, document, detail in (
-            ("ZZ-MALFORMED-EVIDENCE-MAP.json", {"schema": "distributed_world_simulator.harness_evidence_map.v1"}, "SCHEMA_INVALID:evidence:ZZ-MALFORMED-EVIDENCE-MAP.json"),
-            ("ZZ-AMBIGUOUS-EVIDENCE-MAP.json", {"schema": "distributed_world_simulator.harness_evidence_map.v2"}, "EVIDENCE_MAP_SCHEMA_AMBIGUOUS:ZZ-AMBIGUOUS-EVIDENCE-MAP.json"),
-        ):
-            path = EXECUTION / "evidence" / name
-            self.assertFalse(path.exists())
-            try:
-                path.write_text(json.dumps(document), encoding="utf-8")
-                for switch in ("-Status", "-Plan", "-Resume"):
-                    with self.subTest(document=name, command=switch):
-                        completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-                        self.assertEqual(3, completed.returncode, completed.stderr)
-                        envelope = json.loads(completed.stdout.splitlines()[-1])
-                        self.assertFalse(envelope["ok"])
-                        self.assertEqual("CONTRACT_OR_DEPENDENCY_INVALID", envelope["error"]["code"])
-                        self.assertIn(detail, envelope["error"]["detail"])
-            finally:
-                path.unlink(missing_ok=True)
-
-    def test_status_plan_resume_and_invalid_invocation_contract(self) -> None:
-        shell = shutil.which("powershell") or shutil.which("pwsh")
-        self.assertIsNotNone(shell)
-        for switch, command in (("-Status", "STATUS"), ("-Plan", "PLAN"), ("-Resume", "RESUME")):
-            with self.subTest(command=command):
-                completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-                self.assertEqual(0, completed.returncode, completed.stderr)
-                envelope = json.loads(completed.stdout.splitlines()[-1])
-                self.assertEqual(command, envelope["command"])
-                self.assertFalse(envelope["runtime_authorized"])
-                self.assertEqual("H0_0_SCAFFOLD_READY", envelope["next"]["checkpoint"])
-                self.assertEqual("H0-0-WO-002", envelope["active_work_order"]["work_order_id"])
-                self.assertTrue(all(item["work_order_id"] == "H0-0-WO-002" for item in envelope["review"]["evidence_maps"]))
-                self.assertTrue(all(item["work_order_id"] == "H0-0-WO-002" for item in envelope["review"]["reviews"]))
-        invalid = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Status", "-Plan"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-        self.assertEqual(2, invalid.returncode)
-        self.assertEqual("INVALID_INVOCATION", json.loads(invalid.stdout.splitlines()[-1])["error"]["code"])
-        execute = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Execute"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-        self.assertEqual(2, execute.returncode)
-        unknown = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Unknown"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-        self.assertEqual(2, unknown.returncode)
-        self.assertEqual("INVALID_INVOCATION", json.loads(unknown.stdout.splitlines()[-1])["error"]["code"])
-
-    def test_public_commands_exit_zero_with_active_authorization_documents_missing(self) -> None:
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
-        if dirty:
-            self.skipTest("clean-HEAD public recovery matrix runs after the recovery unit is committed")
-        shell = shutil.which("powershell") or shutil.which("pwsh")
-        self.assertIsNotNone(shell)
-        with tempfile.TemporaryDirectory() as directory:
-            clone = Path(directory) / "missing active authorization"
-            completed = subprocess.run(["git", "clone", "--no-hardlinks", "--branch", "control/h0-closed-loop-development", str(ROOT), str(clone)], text=True, capture_output=True, check=False)
-            self.assertEqual(0, completed.returncode, completed.stderr)
-            canonical_main = subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
-            subprocess.run(["git", "update-ref", "refs/remotes/origin/main", canonical_main], cwd=clone, check=True)
-            clone_execution = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1"
-            for path in (clone_execution / "evidence").glob("*.json"):
-                document = read_json(path)
-                if document.get("schema") == "distributed_world_simulator.harness_evidence_map.v1" and document.get("work_order_id") == "H0-0-WO-002":
-                    path.unlink()
-            for path in (clone_execution / "reviews").glob("*.json"):
-                document = read_json(path)
-                if document.get("schema") == "distributed_world_simulator.harness_review_result.v1" and document.get("work_order_id") == "H0-0-WO-002" and document.get("review_type") != "PRE_BUILD_DESIGN_AUTHORIZATION":
-                    path.unlink()
-            for switch, command in (("-Status", "STATUS"), ("-Plan", "PLAN"), ("-Resume", "RESUME")):
-                with self.subTest(command=command):
-                    result = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(clone / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=clone.parent, text=True, encoding="utf-8", capture_output=True, check=False)
-                    self.assertEqual(0, result.returncode, result.stderr)
-                    envelope = json.loads(result.stdout.splitlines()[-1])
-                    self.assertTrue(envelope["ok"])
-                    self.assertEqual(command, envelope["command"])
-                    self.assertEqual("H0-0-WO-002", envelope["active_work_order"]["work_order_id"])
-                    self.assertEqual("MISSING", envelope["review"]["post_build_state"])
-                    self.assertEqual([], envelope["review"]["evidence_maps"])
-                    self.assertIn("POST_BUILD_REVIEW_NOT_FRESH_PASS", envelope["checkpoint_blockers"])
-                    self.assertIn("EVIDENCE_MAP_MISSING", envelope["checkpoint_blockers"])
-
-    def test_output_envelope_matches_published_schema(self) -> None:
-        from jsonschema import Draft202012Validator
-        schema = read_json(ROOT / "validation/harness/control-development-output.schema.v1.json")
-        shell = shutil.which("powershell") or shutil.which("pwsh")
-        completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Status"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-        envelope = json.loads(completed.stdout.splitlines()[-1])
-        self.assertEqual([], list(Draft202012Validator(schema).iter_errors(envelope)))
-        minimal = {"schema": "distributed_world_simulator.control_development_output.v1", "command": "STATUS", "ok": True}
-        self.assertTrue(list(Draft202012Validator(schema).iter_errors(minimal)))
-        with_error = copy.deepcopy(envelope)
-        with_error["error"] = {"code": "INTERNAL_ERROR", "detail": "must not coexist with success"}
-        self.assertTrue(list(Draft202012Validator(schema).iter_errors(with_error)))
-        for switch, section in (("-Plan", "plan"), ("-Resume", "resume")):
-            completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
-            candidate = json.loads(completed.stdout.splitlines()[-1])
-            candidate.pop(section)
-            self.assertTrue(list(Draft202012Validator(schema).iter_errors(candidate)))
-            empty_section = json.loads(completed.stdout.splitlines()[-1])
-            empty_section[section] = {}
-            self.assertTrue(list(Draft202012Validator(schema).iter_errors(empty_section)))
-        status_with_sections = copy.deepcopy(envelope)
-        status_with_sections.update({"plan": {}, "resume": {}})
-        self.assertTrue(list(Draft202012Validator(schema).iter_errors(status_with_sections)))
-        error_with_plan = {
-            "schema": "distributed_world_simulator.control_development_output.v1",
-            "command": "PLAN",
-            "ok": False,
-            "error": {"code": "INVALID_INVOCATION", "detail": "bad"},
-            "exit_codes": envelope["exit_codes"],
-            "plan": {},
+    def test_unreferenced_epoch_audit_never_authorizes(self) -> None:
+        audit_path = "config/control/harness/executions/E/audits/audit.json"
+        audit = {
+            "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+            "base_sha": "1" * 40,
+            "main_sha": "2" * 40,
+            "decision": "CONTINUE",
+            "pc0": "NON_RED",
+            "directional_pc0": "NON_RED",
         }
-        self.assertTrue(list(Draft202012Validator(schema).iter_errors(error_with_plan)))
-
-    def test_plan_lists_required_unsatisfied_predicates_and_c22_gate(self) -> None:
-        state = build_state(ROOT, EXECUTION)
-        plan = build_plan(self.bundle.contracts, state["reduced_work_order"])
-        required = self.bundle.contracts["checkpoint_catalog"]["checkpoints"]["H0_0_SCAFFOLD_READY"]["required_predicates"]
-        expected_unsatisfied = [predicate for predicate in required if predicate not in state["reduced_work_order"]["completed_predicates"]]
-        self.assertEqual(expected_unsatisfied, plan["unsatisfied_predicates"])
-        self.assertEqual("H0_0_SCAFFOLD_READY_REQUIRED", plan["c22_dry_run"]["reason"])
-        self.assertEqual(0, plan["autonomous_runtime_workers"])
+        context = {"documents": {audit_path: audit}}
+        self.assertIsNone(_select_epoch_audit(context, []))
+        incomplete = {
+            "event_type": "AUDIT_COMPLETED",
+            "work_state": "AUDITED",
+            "exit_code": 0,
+            "evidence_paths": [audit_path],
+        }
+        self.assertIsNone(_select_epoch_audit(context, [incomplete]))
+        complete = {**incomplete, "command": "CONTROL_PROJECT.ps1"}
+        self.assertEqual(audit, _select_epoch_audit(context, [complete]))
 
     def test_epoch_exact_moved_and_invalidated(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory)
-            for args in (("init", "-b", "main"), ("config", "user.email", "h0@example.test"), ("config", "user.name", "H0"), ("commit", "--allow-empty", "-m", "base")):
-                subprocess.run(["git", *args], cwd=repository, check=True, capture_output=True)
-            base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            for args in (
+                ("init", "-b", "main"),
+                ("config", "user.email", "h0@example.test"),
+                ("config", "user.name", "H0"),
+                ("commit", "--allow-empty", "-m", "base"),
+            ):
+                subprocess.run(
+                    ["git", *args],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                )
+            base = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
             epoch = {"base_sha": base, "status": "ACTIVE"}
-            self.assertEqual("EXACT_BASE", validate_epoch(repository, epoch, "main", None)["status"])
-            subprocess.run(["git", "commit", "--allow-empty", "-m", "advance"], cwd=repository, check=True, capture_output=True)
-            main = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
-            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", validate_epoch(repository, epoch, "main", None)["status"])
-            wrong_audit = {
+            self.assertEqual(
+                "EXACT_BASE",
+                validate_epoch(repository, epoch, "main", None)["status"],
+            )
+            subprocess.run(
+                ["git", "commit", "--allow-empty", "-m", "advance"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            main = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            self.assertEqual(
+                "MAIN_MOVED_REVIEW_REQUIRED",
+                validate_epoch(repository, epoch, "main", None)["status"],
+            )
+            audit = {
                 "schema": "distributed_world_simulator.harness_epoch_audit.v1",
                 "base_sha": base,
-                "main_sha": "0" * 40,
+                "main_sha": main,
                 "decision": "CONTINUE",
                 "pc0": "NON_RED",
                 "directional_pc0": "NON_RED",
             }
-            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", validate_epoch(repository, epoch, "main", wrong_audit)["status"])
-            exact_audit = {**wrong_audit, "main_sha": main}
-            self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", validate_epoch(repository, epoch, "main", exact_audit)["status"])
+            self.assertEqual(
+                "MAIN_MOVED_AUDIT_CONTINUE",
+                validate_epoch(repository, epoch, "main", audit)["status"],
+            )
             epoch["status"] = "INVALIDATED"
-            self.assertEqual("EPOCH_INVALIDATED", validate_epoch(repository, epoch, "main", exact_audit)["status"])
+            self.assertEqual(
+                "EPOCH_INVALIDATED",
+                validate_epoch(repository, epoch, "main", audit)["status"],
+            )
 
-    def test_powershell_non_root_cwd_returns_single_json_envelope(self) -> None:
+    def test_event_git_provenance_rejects_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            subprocess.run(
+                ["git", "init", "-b", "main"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "h0@example.test"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "H0"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "--allow-empty", "-m", "base"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            subject = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            event_dir = repository / "events"
+            event_dir.mkdir()
+            path = event_dir / "0001.json"
+            event = {"event_id": "E1", "head_sha": subject}
+            path.write_text(json.dumps(event), encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=repository, check=True)
+            subprocess.run(
+                ["git", "commit", "-m", "event"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            current = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            self.assertEqual(
+                40,
+                len(
+                    _validate_event_git_provenance(
+                        repository, [path], [event], current
+                    )
+                ),
+            )
+            path.write_text(
+                json.dumps({**event, "changed": True}), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(
+                ContractValidationError, "EVENT_WORKTREE_MUTATION_DETECTED"
+            ):
+                _validate_event_git_provenance(
+                    repository, [path], [event], current
+                )
+
+    def test_status_plan_resume_use_r2_active_epoch(self) -> None:
         shell = shutil.which("powershell") or shutil.which("pwsh")
-        self.assertIsNotNone(shell)
-        completed = subprocess.run([shell, "-NoProfile", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Resume"], cwd=ROOT.parent, text=True, capture_output=True, check=False)
-        self.assertEqual(0, completed.returncode, completed.stderr)
-        envelope = json.loads(completed.stdout.splitlines()[-1])
-        self.assertEqual("RESUME", envelope["command"])
-        self.assertTrue(envelope["ok"])
-        self.assertIn("[CONTROL][RESUME]", completed.stdout)
+        if shell is None:
+            self.skipTest("PowerShell unavailable")
+        for switch, command in (
+            ("-Status", "STATUS"),
+            ("-Plan", "PLAN"),
+            ("-Resume", "RESUME"),
+        ):
+            with self.subTest(command=command):
+                completed = subprocess.run(
+                    [
+                        shell,
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ROOT / "CONTROL_DEVELOPMENT.ps1"),
+                        switch,
+                    ],
+                    cwd=ROOT,
+                    text=True,
+                    encoding="utf-8",
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, completed.returncode, completed.stderr)
+                envelope = json.loads(completed.stdout.splitlines()[-1])
+                self.assertTrue(envelope["ok"])
+                self.assertEqual(command, envelope["command"])
+                self.assertEqual(
+                    "E2026-08-11-H0-0-R2", envelope["epoch"]["epoch_id"]
+                )
+                self.assertEqual(
+                    ACTIVE_WORK_ORDER_ID,
+                    envelope["active_work_order"]["work_order_id"],
+                )
+                self.assertEqual([], envelope["review"]["reviews"])
+                self.assertEqual([], envelope["review"]["evidence_maps"])
+                self.assertFalse(envelope["runtime_authorized"])
+                self.assertEqual(
+                    "H0_0_SCAFFOLD_READY", envelope["next"]["checkpoint"]
+                )
 
-    def test_clean_clone_public_snapshot_mismatch_exits_five(self) -> None:
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
+    def test_invalid_public_invocation_fails_closed(self) -> None:
+        shell = shutil.which("powershell") or shutil.which("pwsh")
+        if shell is None:
+            self.skipTest("PowerShell unavailable")
+        invalid = subprocess.run(
+            [
+                shell,
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "CONTROL_DEVELOPMENT.ps1"),
+                "-Status",
+                "-Plan",
+            ],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(2, invalid.returncode)
+        envelope = json.loads(invalid.stdout.splitlines()[-1])
+        self.assertEqual("INVALID_INVOCATION", envelope["error"]["code"])
+
+    def test_clean_clone_snapshot_mismatch_exits_five(self) -> None:
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
         if dirty:
-            self.skipTest("clean-HEAD recovery drill runs after the repair unit is committed")
+            self.skipTest("clean-HEAD recovery drill requires a committed worktree")
         shell = shutil.which("powershell") or shutil.which("pwsh")
+        if shell is None:
+            self.skipTest("PowerShell unavailable")
+
         with tempfile.TemporaryDirectory() as directory:
             clone = Path(directory) / "verification clone"
-            completed = subprocess.run(["git", "clone", "--no-hardlinks", "--branch", "control/h0-closed-loop-development", str(ROOT), str(clone)], text=True, capture_output=True, check=False)
+            completed = subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--no-hardlinks",
+                    "--branch",
+                    ACTIVE_BRANCH,
+                    str(ROOT),
+                    str(clone),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
             self.assertEqual(0, completed.returncode, completed.stderr)
-            canonical_main = subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
-            subprocess.run(["git", "update-ref", "refs/remotes/origin/main", canonical_main], cwd=clone, check=True)
-            work_order_path = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-002.v1.json"
+            canonical_main = subprocess.run(
+                ["git", "rev-parse", "origin/main"],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=True,
+            ).stdout.strip()
+            subprocess.run(
+                ["git", "update-ref", "refs/remotes/origin/main", canonical_main],
+                cwd=clone,
+                check=True,
+            )
+            work_order_path = (
+                clone
+                / "config/control/harness/executions/E2026-08-11-H0-0-R2"
+                / f"work-orders/{ACTIVE_WORK_ORDER_ID}.v1.json"
+            )
             work_order = read_json(work_order_path)
             work_order["state"] = "PLANNED"
-            work_order_path.write_text(json.dumps(work_order), encoding="utf-8")
-            result = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(clone / "CONTROL_DEVELOPMENT.ps1"), "-Resume"], cwd=clone.parent, text=True, encoding="utf-8", capture_output=True, check=False)
+            work_order_path.write_text(
+                json.dumps(work_order), encoding="utf-8"
+            )
+            result = subprocess.run(
+                [
+                    shell,
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(clone / "CONTROL_DEVELOPMENT.ps1"),
+                    "-Resume",
+                ],
+                cwd=clone.parent,
+                text=True,
+                encoding="utf-8",
+                capture_output=True,
+                check=False,
+            )
             self.assertEqual(5, result.returncode, result.stderr)
             envelope = json.loads(result.stdout.splitlines()[-1])
-            self.assertEqual("EXECUTION_STATE_INVALID", envelope["error"]["code"])
-            self.assertIn("WORK_ORDER_SNAPSHOT_STATE_MISMATCH", envelope["error"]["detail"])
+            self.assertEqual(
+                "EXECUTION_STATE_INVALID", envelope["error"]["code"]
+            )
+            self.assertIn(
+                "WORK_ORDER_SNAPSHOT_STATE_MISMATCH",
+                envelope["error"]["detail"],
+            )
 
 
 if __name__ == "__main__":
