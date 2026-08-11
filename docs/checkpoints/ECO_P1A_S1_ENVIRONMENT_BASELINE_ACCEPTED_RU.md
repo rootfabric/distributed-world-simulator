@@ -28,7 +28,7 @@
 
 Результат:
 
-`108 assertions, 0 failures`
+`109 assertions, 0 failures`
 
 Принятый environment hash:
 
@@ -38,6 +38,7 @@
 
 - повторяемость sample checksum;
 - повторяемость полного fixture hash;
+- **безусловную** проверку принятого baseline hash;
 - изменение hash при смене seed;
 - валидацию exact schema;
 - запрет LOD injection;
@@ -46,11 +47,20 @@
 - одинаковый canonical sample для общей координаты при разных sampling resolutions;
 - отсутствие camera/network/authority/material/biome-specific ownership в research source.
 
+## Проверка опубликованного содержимого
+
+После публикации GitHub blobs были сравнены с локально протестированными файлами через Git blob SHA-1:
+
+- `environment_sample_v1.gd` — `7ae8cc2534940ceb3c69879f8850467ba32fea8c`;
+- `synthetic_environment_fixture_v1.gd` — `ff7bcff3f825fbb0595fb57d2b85d899a7888a80`;
+- `eco_p1a_s1_environment_acceptance.gd` — `afb8faa54a5ef9ac1b5d165dc23d760dab8ba056`;
+- accepted manifest — `80b8d900893ddc0e80069b4d431a902a0d53fc7d`.
+
+Опубликованное содержимое совпадает с тем, которое прошло финальный focused run.
+
 ## Ограничение проверки
 
-Execution container не имел прямого DNS-доступа к GitHub, поэтому полный repository checkout не мог быть клонирован. Focused test запускался в минимальном Godot checkout, собранном из exact ECO source/config/test файлов, на предоставленном Godot double binary. ECO-файлы не подключены к production runtime, поэтому world/core full regression для этого research-only шага классифицирован как `NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED`.
-
-Перед финальным handoff опубликованные GitHub-файлы повторно сверяются с локально протестированными версиями.
+Execution container не имел прямого DNS-доступа к GitHub, поэтому полный repository checkout не мог быть клонирован. Focused test запускался в минимальном Godot checkout на предоставленном Godot double binary. ECO-файлы не подключены к production runtime, поэтому world/core full regression для этого research-only шага классифицирован как `NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED`.
 
 ## Что этот checkpoint пока НЕ доказывает
 
