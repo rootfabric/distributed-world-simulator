@@ -1,0 +1,40 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH3C",
+  "decision": "ANALYTIC_PREFLIGHT_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "EXACT_WINDOWS_PENDING",
+  "execution": {
+    "kernel": "res://scripts/research/ecology/plant_morphology_aware_selection_competition_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph3c_morphology_aware_selection_acceptance.gd",
+    "restart": "res://tests/research/ecology/eco_ph3c_restart_replay_probe.gd",
+    "runner": "RUN_ECO_PH3C_TESTS.ps1",
+    "pair_cases": 5,
+    "negative_controls": 5,
+    "cycles": 10,
+    "selection_strength": 0.35
+  },
+  "parent_regressions_required": {
+    "p1c_s4_aggregate": 15,
+    "ph0": 63,
+    "ph1": 128,
+    "ph2": 107,
+    "ph3": 217
+  },
+  "causal_matrix": {
+    "RESOURCE_ONLY_NEUTRALITY": "REQUIRE_ALL_5_CONTROLS_TIE_0_5_0_5",
+    "SUN_CROWN": "REQUIRE_CROWN_WIDE_WIN_SHARE_GT_0_60",
+    "DRY_CROWN": "REQUIRE_CROWN_NARROW_WIN_SHARE_GT_0_60",
+    "CROWN_ENVIRONMENT_REVERSAL": "REQUIRE_WINNER_CHANGE_SUN_VS_DRY",
+    "BRANCH_COST_SELECTION": "REQUIRE_BRANCH_LOW_SHARE_GT_0_60",
+    "HEIGHT_COST_SELECTION": "REQUIRE_HEIGHT_LOW_SHARE_GT_0_75",
+    "GIANT_DENSE_SELECTION": "REQUIRE_BASE_SHARE_GT_0_95_AND_GIANT_SHARE_LT_0_01",
+    "GENOME_ISOLATION": "REQUIRE_IDENTICAL_GENOME_AND_INDIVIDUAL_SEED_WITHIN_PAIR",
+    "P1_ISOLATION": "REQUIRE_IDENTICAL_ACCEPTED_RESOURCE_CHECKSUM_WITHIN_PAIR"
+  },
+  "analytic_preflight": "PASS; independent equation reproduction matches accepted PH3 tradeoff numbers and predicts all acceptance inequalities with margin",
+  "aggregate_hash": "PENDING_FIRST_EXACT_WINDOWS_RUN",
+  "truth_boundary": "PH3C is a research-only causal selection experiment over accepted PH3 coupling. It does not claim global coexistence, mutate the genome, create species, own population runtime truth, or introduce renderer/network/persistence semantics.",
+  "windows_confirmation": "PENDING",
+  "next": "Exact Windows PH3C pass pins aggregate hash and allows PH3C acceptance; then PH4 Seed Development Lifecycle may open."
+}
