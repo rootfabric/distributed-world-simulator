@@ -74,7 +74,10 @@ static func create(source_scene: PackedScene, selected_mesh_names: Array) -> Dic
 	if pack_error != OK:
 		return _result(false, "GARMENT_MESH_SELECTION_PACK_FAILED", {"error": int(pack_error)})
 
-	return _result(true, CharacterEquipmentDomain.RESULT_OK, {
+	# This generic scene factory should not depend on CharacterEquipmentDomain
+	# being registered as a global class before the script is parsed. Returning
+	# the canonical success token keeps the helper independently loadable.
+	return _result(true, "OK", {
 		"scene": packed,
 		"selected_mesh_names": remaining_names,
 		"selected_mesh_count": remaining_names.size(),
