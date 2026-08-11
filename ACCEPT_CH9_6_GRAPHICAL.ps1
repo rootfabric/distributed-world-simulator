@@ -7,9 +7,17 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 $Launcher = Join-Path $Root "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
+$PowerShellExe = if ($PSVersionTable.PSEdition -eq "Core") {
+    Join-Path $PSHOME "pwsh.exe"
+} else {
+    Join-Path $PSHOME "powershell.exe"
+}
 
 if (-not (Test-Path -LiteralPath $Launcher -PathType Leaf)) {
     throw "CH9.6 launcher not found: $Launcher"
+}
+if (-not (Test-Path -LiteralPath $PowerShellExe -PathType Leaf)) {
+    throw "PowerShell executable not found: $PowerShellExe"
 }
 if ($Port -lt 1024 -or $Port -gt 65535) {
     throw "Port must be in range 1024..65535."
@@ -47,18 +55,21 @@ function Read-YesNo {
 function Invoke-Ch96Lab {
     param([switch]$ResetState)
 
-    $LaunchArgs = @{
-        Port = $Port
-    }
+    $ChildArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", $Launcher,
+        "-Port", [string]$Port
+    )
     if (-not [string]::IsNullOrWhiteSpace($GodotPath)) {
-        $LaunchArgs.GodotPath = $GodotPath
+        $ChildArgs += @("-GodotPath", $GodotPath)
     }
     if ($ResetState) {
-        $LaunchArgs.ResetState = $true
+        $ChildArgs += "-ResetState"
     }
 
-    & $Launcher @LaunchArgs
-    return $LASTEXITCODE
+    & $PowerShellExe @ChildArgs
+    return [int]$LASTEXITCODE
 }
 
 $Head = "UNKNOWN"
@@ -71,7 +82,7 @@ try {
     $Head = "UNKNOWN"
 }
 
-Write-Host "" 
+Write-Host ""
 Write-Host "CH9.6 MANUAL GRAPHICAL ACCEPTANCE" -ForegroundColor Cyan
 Write-Host "Repository head: $Head" -ForegroundColor Cyan
 Write-Host "This runner does not infer PASS. It records only your explicit visual observations." -ForegroundColor Yellow
@@ -126,6 +137,7 @@ $Evidence = [ordered]@{
     tested_head = $Head
     recorded_at_utc = (Get-Date).ToUniversalTime().ToString("o")
     launcher = "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
+    operator_runner = "ACCEPT_CH9_6_GRAPHICAL.ps1"
     first_launch = [ordered]@{
         reset_state = $true
         exit_code = $FirstExit
