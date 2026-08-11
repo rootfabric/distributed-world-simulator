@@ -11,7 +11,7 @@ The accepted pieces already exist independently:
 - CH9.4: equipment-aware M6 durable recovery;
 - CH9.5: persistent live ENet restart/reconnect/late-join composition and Item Graph driven presentation coordination.
 
-The missing proof is one production-shaped playable path where the actual Inventory UI invokes the network-aware character equipment controller rather than a local ItemTransferService or a low-level test command.
+The missing proof was one production-shaped playable path where the actual Inventory UI invokes the network-aware character equipment controller rather than a local ItemTransferService or a low-level test command.
 
 ## Composition
 
@@ -75,7 +75,9 @@ Use the operator runner instead of manually coordinating the two launches:
 .\ACCEPT_CH9_6_GRAPHICAL.ps1 -GodotPath $Godot
 ```
 
-The runner deliberately launches each graphical generation in a separate child PowerShell process because `PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1` exits with the Godot process exit code. This prevents the first graphical run from terminating the acceptance controller.
+The runner launches each graphical generation in a separate child PowerShell process because `PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1` exits with the Godot process exit code. This prevents the first graphical run from terminating the acceptance controller.
+
+The accepted runner lineage also fails closed before graphical questions unless the Godot executable and all required Quaternius asset families exist, performs an editor import/parse pass, and executes targeted CH9.6 presentation and real GUI unequip-route probes before opening the client.
 
 Generation 1 is launched with `-ResetState`. Generation 2 is launched without reset. After each graphical process closes, the runner asks only for observations that cannot be inferred safely from automated output.
 
@@ -105,27 +107,33 @@ It never promotes CH9.6 by itself and never treats a zero process exit code as g
 Generation 1:
 
 1. Wait until the HUD reports CH9.6 `READY` and the inventory opens.
-2. Drag lower/upper/feet (and optionally helmet/backpack) from backpack to their equipment slots.
-3. Verify the items appear on the real Quaternius character.
-4. Close inventory with Tab and verify movement/jump/crouch still work with the equipped presentation.
-5. Close the application normally so the embedded CH9.5 server commits its final checkpoint.
-6. Explicitly answer the runner's generation-1 visual questions.
+2. Confirm helmet/backpack/upper/lower/feet are visibly distinguishable as inventory items.
+3. Drag lower/upper/feet (and optionally helmet/backpack) from backpack to their equipment slots.
+4. Verify the items appear on the real Quaternius character.
+5. Close inventory with Tab and verify movement/jump/crouch still work with the equipped presentation.
+6. Close the application normally so the embedded CH9.5 server commits its final checkpoint.
+7. Explicitly answer the runner's generation-1 visual questions.
 
 Generation 2:
 
 1. The runner starts the lab again without `-ResetState`.
 2. Do not perform a new equip operation at startup.
 3. Verify the previously equipped items are already present in the equipment slots and on the character.
-4. Drag one restored equipped item back to the backpack.
-5. Verify the same item disappears from the character.
+4. Drag one restored equipped item onto an ordinary backpack cell.
+5. Verify the item returns to the backpack and the same wearable disappears from the character.
 6. Close the application normally.
 7. Explicitly answer the runner's recovery and unequip visual questions.
 
-Manual PASS must be reported by the Windows operator. The assistant must not infer graphical PASS from automated output.
+Manual PASS remains a Windows operator decision. Automated output alone is not graphical acceptance.
 
 ## Automated gate
 
 `test_ch9_6_playable_network_equipment_ui.gd` instantiates the same graphical lab scene headlessly. It calls the actual Inventory screen preview/drop routes, verifies server canonical Item Graph convergence, replica graph state, real `CharacterEquipmentPresenter` visuals, bridge activity, no movement snapshot equipment UUID, shutdown checkpoint, fresh lab recovery, same canonical wearable identity, recovered UI slot binding and recovered real presentation.
+
+Additional hardening probes on the accepted lineage include:
+
+- `test_ch9_6_wearable_inventory_presentation.gd` — prevents canonical wearables from becoming visually empty/inoperable UI cells;
+- `test_ch9_6_graphical_unequip_route.gd` — covers the real GUI `preview -> drop -> equipment.unequip -> canonical backpack -> removed presentation` path that the original direct-handler focused test did not exercise.
 
 Runner:
 
@@ -133,7 +141,7 @@ Runner:
 .\RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1 -GodotPath $Godot
 ```
 
-The exact Windows automated candidate already passed:
+The exact Windows automated baseline passed:
 
 ```text
 CH9.2 Inventory UI routes                 PASS 16
@@ -142,6 +150,37 @@ CH9.4 reconnect/recovery                  PASS 53
 CH9.5 persistent ENet recovery            PASS 41
 CH9.6 playable network equipment UI       PASS 22
 ```
+
+During graphical hardening, the wearable inventory presentation probe also reported `PASS (31 assertions)` before the interactive client was opened.
+
+## Graphical defects closed during acceptance
+
+The manual pass exposed several issues that automated composition alone did not reveal:
+
+- graphical acceptance initially asked questions even when the Godot client had not opened; the runner now fails closed;
+- a fresh worktree could lack required Quaternius assets; the runner now checks base characters, animation library and modular outfits explicitly;
+- full Quaternius archives contain irrelevant FBX/Unity exports with missing texture references; CH9.6 now treats those diagnostics as non-authoritative and validates the required Godot-friendly glTF runtime path directly;
+- network-replica wearable definitions initially lost their icon metadata, making real canonical wearables appear as empty dark inventory cells; visible metadata is now restored and regression-tested;
+- equipped-item drag back to backpack was rejected at GUI preview before the valid `equipment.unequip` handler could run; equipment-aware preview now routes the real graphical reverse path and a dedicated regression covers it.
+
+## Accepted checkpoint
+
+CH9.6 is `FOCUSED_ACCEPTED` on implementation head:
+
+```text
+e547ba52a440e72cc02c6bbe449edaf160bae7ab
+```
+
+The Windows operator explicitly accepted the graphical stage after the interactive fixes were exercised. The project conversation did not include the generated local evidence JSON path or the runner's literal `OPERATOR_REPORTED_PASS` console line, so repository documentation does not fabricate those values; the validation file records the operator declaration and that evidence limitation explicitly.
+
+The mandatory next gate is the post-acceptance canonical Project Control audit. No later CH stage is authorized before CH is reported non-RED by that mechanism.
+
+## Non-blocking interaction follow-ups
+
+These do not reopen CH9.6 and are not CH9.6 acceptance blockers:
+
+- direct `equipment -> hotbar` currently remains intentionally unsupported by the CH9.6 unequip preview. The correct future implementation is one atomic authority operation, not client-side `unequip` followed by a second independent hotbar mutation;
+- `backpack -> hotbar` foundation already exists, but occupied-slot replacement UX/semantics should be hardened separately.
 
 ## Invariants
 
@@ -159,14 +198,14 @@ CH9.6 playable network equipment UI       PASS 22
 
 ## Exit gate
 
-CH9.6 can be accepted only when:
+CH9.6 acceptance requires:
 
-- editor import is clean on exact Windows Godot 4.7.1 double;
-- CH9.2 UI route regression passes;
-- CH9.3 real ENet regression passes;
-- CH9.4 reconnect/recovery regression passes;
-- CH9.5 persistent ENet regression passes;
-- CH9.6 playable UI network test passes;
-- `ACCEPT_CH9_6_GRAPHICAL.ps1` records `OPERATOR_REPORTED_PASS` on the same implementation lineage;
-- manual graphical evidence is preserved;
-- post-acceptance PC0 audit is performed before any later CH stage.
+- editor import on exact Windows Godot 4.7.1 double;
+- CH9.2 UI route regression;
+- CH9.3 real ENet regression;
+- CH9.4 reconnect/recovery regression;
+- CH9.5 persistent ENet regression;
+- CH9.6 playable UI network test;
+- explicit Windows operator graphical acceptance on the accepted implementation lineage;
+- an honest evidence record without inferred graphical observations;
+- post-acceptance PC0 audit before any later CH stage.
