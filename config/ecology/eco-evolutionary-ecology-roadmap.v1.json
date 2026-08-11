@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R13-2026-08-11",
+  "revision": "ECO-R14-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
-  "current_checkpoint": "ECO.P1C",
-  "current_step": "P1C-S4",
-  "last_accepted_step": "ECO.P1C-S3",
-  "mission": "Prove that continuous environmental fields plus resource competition, mutation, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
+  "current_checkpoint": "ECO.PH",
+  "current_step": "PH0 exact-Windows gate; PH1 implemented and locally green",
+  "last_accepted_step": "ECO.P1 Plant Adaptation and Strategy Proof",
+  "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
     "SPECIES_ARE_DISCOVERED_NOT_PLACED",
@@ -20,88 +20,38 @@
     "ECOLOGY_DOES_NOT_OWN_GEOLOGY_HYDROLOGY_MATTER_AUTHORITY_TRANSPORT_PERSISTENCE_QUERY_OR_GLOBAL_WORK_BUDGET"
   ],
   "accepted_checkpoints": [
-    {
-      "id": "ECO.P1A",
-      "name": "Environmental Causality Baseline",
-      "decision": "ACCEPTED_10_OF_10",
-      "evidence": "S1 109; S2 235; S3 208 + graphical; S4 165 + restart 5",
-      "validation": "validation/ecology/eco-p1a-s5-acceptance-decision-validation.json"
-    },
-    {
-      "id": "ECO.P1B",
-      "name": "Local Adaptation Proof",
-      "decision": "ACCEPTED_10_OF_10",
-      "evidence": {
-        "S1": "5834 + restart 6",
-        "S2": "364 + restart 6",
-        "S3": "388 + restart 6",
-        "S4": "86 + restart 5",
-        "robustness_hash": "2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05"
-      },
-      "validation": "validation/ecology/eco-p1b-aggregate-acceptance-validation.json",
-      "control_audit": "validation/ecology/eco-p1b-intermediate-control-audit.json"
-    }
+    {"id":"ECO.P1A","name":"Environmental Causality Baseline","decision":"ACCEPTED_10_OF_10","evidence":"S1 109; S2 235; S3 208 + graphical; S4 165 + restart 5"},
+    {"id":"ECO.P1B","name":"Local Adaptation Proof","decision":"ACCEPTED_10_OF_10","evidence":"S1 5834+6; S2 364+6; S3 388+6; S4 86+5; hash 2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05"},
+    {"id":"ECO.P1C","name":"Strategy Competition Proof","decision":"ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE","evidence":"S1 116+5; S2 101+5; S3 64/63/63/64 + aggregate 5 + restart 5; S4 6x30 + uniform 27 + deep 30 + aggregate 15 + restart 6; hash 0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112"},
+    {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","decision":"ACCEPTED","scope":"environment/resource causality + local adaptation + ecological-trait strategy coexistence; morphology coupling not yet claimed"}
   ],
   "next_checkpoint": {
-    "id": "ECO.P1C",
-    "name": "Strategy Competition Proof",
-    "status": "ACTIVE_RESEARCH",
-    "goal": "Prove that several resource-paying ecological strategies can coexist across a heterogeneous world without predefined species roles or one global optimum.",
-    "execution_doc": "docs/future_features/evolutionary_ecology/ECO_P1C_EXECUTION_PLAN_RU.md",
-    "steps": [
-      {
-        "id": "P1C-S1",
-        "name": "Unlabeled Founder Pool + Shared-Field Competition Baseline",
-        "status": "ACCEPTED",
-        "evidence": {"focused_assertions":116,"restart_assertions":5,"result_hash":"cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928","uniform_hash":"1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58","persistent_founders":15,"uniform_persistent_founders":4,"known_top1_dominance":0.83673469387755,"windows":"PASS_EXACT_116_RESTART_5"}
-      },
-      {
-        "id": "P1C-S2",
-        "name": "Dynamic Shared-Patch Abundance Competition",
-        "status": "ACCEPTED",
-        "evidence": {"focused_assertions":101,"restart_assertions":5,"result_hash":"3e52c4e93fcdefba64607dd2c935ccbddba78db3f400d6a6ea51b23db766982b","uniform_hash":"47f0e9c7573bf002151718a57c930d400682c3d86dbd3a8b96b8ddf48c4a01a2","alternate_result_hash":"4706d80289b1fc9918f1758ccabdbb62a76053739f3c7bccadcd282e797d572b","effective_founders_1pct":19,"top1_biomass_share":0.24134318423165,"uniform_effective_founders_1pct":11,"windows":"PASS_EXACT_101_RESTART_5"}
-      },
-      {
-        "id": "P1C-S3",
-        "name": "Niche/Cluster Diagnostics + Multi-seed Coexistence",
-        "status": "ACCEPTED",
-        "evidence": {"seed_case_assertions":"64+63+63+64","aggregate_assertions":5,"restart_assertions":5,"aggregate_hash":"75512459aa4a7d97b7e9549842c41a5ebf4b5574575bac9fec3ee51fd92d44a9","minimum_effective_founders_1pct":18,"maximum_top1_biomass_share":0.241343184231652,"minimum_shannon":2.49393796434879,"minimum_silhouette":0.132726365954859,"minimum_substantial_clusters":3,"minimum_niche_enriched_clusters":2,"uniform_max_niche_enrichment_span":0.0,"windows":"PASS_EXACT_SEED_MATRIX_AGGREGATE_5_RESTART_5"}
-      },
-      {
-        "id": "P1C-S4",
-        "name": "Competition Robustness + Aggregate Acceptance",
-        "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
-        "evidence": {"heterogeneous_seeds":6,"robustness_cycles":18,"deep_horizon_cycles":24,"minimum_effective_founders_1pct":15,"maximum_top1_biomass_share":0.27832221094551,"minimum_shannon":2.29610063443602,"minimum_substantial_clusters":3,"minimum_niche_enriched_clusters":2,"uniform_max_niche_enrichment_span":0.0,"aggregate_assertions":15,"restart_assertions":6,"aggregate_hash":"0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112","failure_matrix":"ALL_PASS_LOCAL"}
-      }
-    ],
-    "acceptance_gate": [
-      "at least three persistent strategies/clusters occupy different environmental niches",
-      "no strategy owns 99% of world independent of environment",
-      "coexistence persists over time and multiple seeds",
-      "uniform control has materially lower niche diversity",
-      "tradeoffs pay accepted resource costs",
-      "no predefined species or biome rules",
-      "no runaway height/root/seed strategy",
-      "migration remains out of scope until dedicated dispersal work"
-    ]
-  },
-  "developmental_phenotype_track": {
     "id": "ECO.PH",
-    "status": "PH0_OPEN_RESEARCH_ONLY",
+    "name": "Plant Development & Phenotype Track",
+    "status": "ACTIVE_RESEARCH",
     "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
     "steps": [
-      {"id":"PH0","status":"OPEN_FOR_RESEARCH_CONTRACT_WORK"},
-      {"id":"PH1","status":"PLANNED_PARALLEL_WITH_P1C"},
-      {"id":"PH2","status":"PLANNED"},
-      {"id":"PH3","status":"PLANNED_CONVERGENCE_BEFORE_MORPHOLOGY_AWARE_P1C_ACCEPTANCE"},
-      {"id":"PH4","status":"PLANNED_BEFORE_DISPERSAL"},
-      {"id":"PH5","status":"PLANNED_P3"},
-      {"id":"PH6","status":"DEFERRED_RUNTIME_PROMOTION"}
+      {"id":"PH0","name":"Development Trait Contract","status":"LOCAL_FOCUSED_PASS_WINDOWS_PENDING","evidence":{"assertions":63,"development_traits_hash":"9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea","individual_seed":959597643576420676}},
+      {"id":"PH1","name":"Deterministic GrowthGraph Skeleton Lab","status":"LOCAL_FOCUSED_PASS_PARENT_PH0_WINDOWS_AND_GRAPHICAL_PENDING","evidence":{"focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"base_graph_hash":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451","probe_count":9}},
+      {"id":"PH2","name":"Environment-Coupled Development / Plasticity","status":"BLOCKED_BY_PH0_PH1_ACCEPTANCE"},
+      {"id":"PH3","name":"Morphology-to-Resource Coupling","status":"PLANNED_AFTER_PH2"},
+      {"id":"PH4","name":"Seed Development Lifecycle","status":"PLANNED_BEFORE_P2_DISPERSAL"},
+      {"id":"PH5","name":"Procedural Visual Materialization","status":"PLANNED_P3"},
+      {"id":"PH6","name":"Promoted Individual Persistence","status":"DEFERRED_RUNTIME_PROMOTION"}
+    ],
+    "acceptance_gate": [
+      "developmental traits remain separate from accepted environment/resource truth",
+      "IndividualSeed is deterministic and does not change inherited genome",
+      "one generator produces continuous morphology transitions without canonical TREE/BUSH/GRASS types",
+      "GrowthGraph remains derived representation",
+      "renderer/mesh changes cannot modify ecology/genome hashes",
+      "PH2 plasticity and PH3 morphology costs must be proven before morphology-aware competition claims"
     ]
   },
   "waves": [
-    {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","status":"P1A_ACCEPTED_P1B_ACCEPTED_P1C_ACTIVE"},
-    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_P1"},
+    {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","status":"ACCEPTED"},
+    {"id":"ECO.PH","name":"Plant Development & Phenotype","status":"PH0_PH1_ACTIVE_RESEARCH"},
+    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_PH_PREREQUISITES"},
     {"id":"ECO.P3","name":"Species Catalog, Phenotype Projection and Population Representation","status":"PLANNED_AFTER_P2"}
   ],
   "production_blockers": [
