@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1C-S2",
-  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux and Windows x86_64",
   "parent_evidence": {
     "p1a": "ACCEPTED",
     "p1b": "ACCEPTED",
@@ -24,6 +24,15 @@
     "failures": 0,
     "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
   },
+  "windows_confirmation": {
+    "decision": "PASS_EXACT",
+    "date": "2026-08-11",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+    "focused_assertions": 101,
+    "restart_assertions": 5,
+    "parent_regressions": "P1A-S1/S2/S3/S4 + P1B-S1/S2/S3/S4 + P1C-S1 PASS",
+    "hashes_match": true
+  },
   "causal_evidence": [
     "all twenty S1 founders begin at equal biomass on every patch",
     "growth, mortality and recruitment are delegated to accepted P1A SinglePlantPatchSimulatorV1 rather than a new fitness score",
@@ -34,6 +43,5 @@
     "alternate founder seed preserves broad abundance coexistence and distributes patch leadership more strongly"
   ],
   "truth_boundary": "P1C-S2 is research-only abundance competition over accepted founder genomes and accepted P1A plant consequences. It does not add species classes, biome placement, mutation, migration, authority, persistence, networking or presentation truth.",
-  "windows_confirmation": "PENDING",
-  "next": "Run RUN_ECO_P1C_S2_TESTS.ps1 on exact Windows. Matching parent regressions, 101/101 focused, 5/5 restart and exact hashes allow S2 acceptance and P1C-S3 opening."
+  "next": "ECO.P1C-S3 Niche/Cluster Diagnostics + Multi-seed Coexistence."
 }
