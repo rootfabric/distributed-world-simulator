@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1b2_runtime_command_failure_semantics_validation.v1",
   "checkpoint": "T1B2_RUNTIME_COMMAND_FAILURE_SEMANTICS",
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1B.1 Dependency Failure Propagation ACCEPTED",
   "parent_tested_checkout": "faff5f10f42d30a8769ee796fce26d93b8d24bcf",
@@ -39,15 +39,50 @@
     "new_global_dependency_identity": false,
     "new_world_work_budget": false
   },
+  "windows_acceptance": {
+    "checkout": "067fa6d8440ecc52771a5b8b5bb7a1e66b075192",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_result": "PASS_BY_USER_EXECUTION_SEQUENCE",
+    "focused_assertion_count": null,
+    "focused_note": "User reported the requested T1B.2 sequence passing and then supplied the green full world/core regression from the same preserved checkout; no assertion count is inferred because the T1B.2 marker line is not present in the supplied excerpt.",
+    "full_regression_result": "PASS",
+    "full_evidence": {
+      "MW9_DURABLE_HANDOFF_PROCESSES": 225,
+      "MW9_LOCK_RELEASE_RETRY": 12,
+      "MW10_CROSS_REGION_TRANSACTIONS": 184,
+      "MW10_CROSS_REGION_PROCESSES": 51,
+      "RL0_REPRESENTATION_CONTRACTS": 92,
+      "RL1_MATTER_SUMMARY_PYRAMID": 245,
+      "RL2_MATTER_MULTIRESOLUTION_MESHING": 153,
+      "RL2_REAL_ASTEROID_MULTIRESOLUTION": 44,
+      "RL3_REPRESENTATION_AWARE_NETWORK_STREAMING": 175,
+      "RL3_REPRESENTATION_STREAMING_PROCESSES": 37,
+      "MAIN_SCENE_CLI_PASS": 6,
+      "MAIN_SCENE_CLI_FAIL": 0,
+      "LIFECYCLE": "STOPPED",
+      "EXIT_CODE": 0,
+      "FINAL_MARKER": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+    }
+  },
   "required_validation": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "standalone": "res://tests/construction/t1b2_runtime_command_failure_semantics_acceptance.gd",
     "focused_runner": "RUN_T1B2_COMMAND_FAILURE_TESTS.ps1",
-    "focused_result": "PENDING",
+    "focused_result": "PASS_BY_USER_EXECUTION_SEQUENCE",
     "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+    "full_regression_result": "PASS"
   },
-  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "tested_heads": {
+    "runtime": "067fa6d8440ecc52771a5b8b5bb7a1e66b075192",
+    "focused": "067fa6d8440ecc52771a5b8b5bb7a1e66b075192",
+    "full_regression": "067fa6d8440ecc52771a5b8b5bb7a1e66b075192"
+  },
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
   "t2_control_gate": {
     "t2_0_active": false,
     "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
