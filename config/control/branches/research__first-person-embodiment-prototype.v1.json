@@ -8,14 +8,14 @@
   "short_description": "Non-canonical FirstPersonEmbodiment prototype layered on the accepted CH9.6 character, clothing, Item Graph and ENet presentation stack.",
   "purpose": "Evaluate first-person hands, clothing-visible viewmodels, independent left/right grip UX and network-state projection without reopening or mutating the frozen CH9.6 checkpoint and without claiming item/network authority.",
   "expected_outcome": "A separate research lab can render two first-person hands, mirror the server-backed selected hotbar item, project upper clothing into first person, exercise local-only grab targets, and fail closed for canonical world-item grabbing until an explicit hand authority contract is authorized.",
-  "current_stage": "FPE-R1 FirstPersonEmbodiment Research Prototype",
-  "stage_status": "RESEARCH_PROTOTYPE_NON_CANONICAL",
-  "progress_note": "Created from accepted CH9.6 runtime head e547ba52a440e72cc02c6bbe449edaf160bae7ab. The prototype reuses the accepted VIEWMODEL/render-layer adapter, network equipment replica, Quaternius garment selection and pose bridge. It adds only new research files and does not modify the accepted CH9.6 runtime files. Synthetic headless validation of the core FPE scripts passed 13/13 assertions on Godot 4.7.1 stable double custom build a13da4feb. Full repository focused regression and graphical operator acceptance are still required before this research can be considered evidence for a future centrally authorized Character frontier.",
+  "current_stage": "FPE-R1 Fix1 — standalone compile + fail-closed runner + asset fallback",
+  "stage_status": "RESEARCH_FIX_PENDING_OPERATOR_RERUN",
+  "progress_note": "The first real Windows operator run on Godot 4.7.1 stable double a13da4feb invalidated the earlier synthetic PASS claim. Godot reported CharacterEquipmentDomain parse failures while loading selective_garment_scene_factory.gd and skinned_garment_pose_bridge.gd, but RUN_FPE_RESEARCH_TESTS.ps1 still printed PASS because Godot returned exit 0 and stale/continued script output contained the PASS marker. PLAY_FPE_RESEARCH.ps1 then stopped because the external Male_Peasant.gltf asset is absent in this checkout. Fix1 removes the unnecessary CharacterEquipmentDomain success-token dependency from the two generic garment helpers, makes the focused runner fail closed on SCRIPT ERROR / Parse Error / Compile Error / failed-script-load markers as well as missing PASS output, and makes the graphical launcher continue without the optional external garment asset using the procedural-sleeve path. No CH9.6 gameplay/network authority contract is changed.",
   "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Run the focused FPE contract test and graphical FPE lab in a real repository checkout. If the prototype is useful, feed results into a future explicitly authorized Character frontier. Do not rename this work CH9.7 and do not merge it into the frozen CH9.6 lineage. Canonical world grabbing requires a separate authority/network contract frontier.",
+  "next_stage": "Operator reruns RUN_FPE_RESEARCH_TESTS.ps1 on Fix1. Only a clean run with no fatal Godot markers counts as focused evidence. Then run PLAY_FPE_RESEARCH.ps1; absence of Male_Peasant.gltf is allowed and should produce procedural sleeves. If the prototype is useful, feed results into a future explicitly authorized Character frontier. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "candidate_runtime_head": "ab46c1b44c742d3e0c33e18ba3e7539c9a6298ec",
+  "candidate_runtime_head": "32c854e39547e88452fe0edcb82902a015fc60d5",
   "dependencies": [
     "CH9.6 accepted playable network equipment composition",
     "CH8 real Quaternius character and layered clothing presentation",
@@ -34,13 +34,15 @@
     "docs/characters/first-person-embodiment-research.md",
     "config/control/branches/research__first-person-embodiment-prototype.v1.json"
   ],
+  "research_hardened_shared_paths": [
+    "scripts/characters/equipment/selective_garment_scene_factory.gd",
+    "scripts/characters/equipment/skinned_garment_pose_bridge.gd"
+  ],
   "watched_paths": [
     "scripts/characters/presentation/controllable_presentation_profile.gd",
     "scripts/characters/presentation/controllable_view_adapter.gd",
     "scripts/characters/presentation/full_body_first_person_adapter.gd",
     "scripts/characters/presentation/equipment_aware_first_person_adapter.gd",
-    "scripts/characters/equipment/selective_garment_scene_factory.gd",
-    "scripts/characters/equipment/skinned_garment_pose_bridge.gd",
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "scripts/items/presentation/item_gameplay_controller.gd"
@@ -65,10 +67,15 @@
     "docs/characters/first-person-embodiment-research.md"
   ],
   "tested_heads": {
-    "synthetic_core": "ab46c1b44c742d3e0c33e18ba3e7539c9a6298ec",
-    "focused_repository": "PENDING_OPERATOR_RUN",
-    "graphical": "PENDING_OPERATOR_RUN"
+    "synthetic_core": "INVALIDATED_FAIL_OPEN_RUNNER",
+    "operator_attempt_pre_fix1": "FAILED_PARSE_AND_MISSING_EXTERNAL_GARMENT",
+    "focused_repository_fix1": "PENDING_OPERATOR_RERUN",
+    "graphical_fix1": "PENDING_OPERATOR_RERUN"
   },
+  "evidence_invalidations": [
+    "PRE_FIX1_SYNTHETIC_PASS_INVALIDATED_BY_REAL_WINDOWS_PARSE_ERRORS",
+    "PRE_FIX1_RUNNER_PASS_INVALIDATED_BECAUSE_FATAL_GODOT_ERRORS_DID_NOT_FORCE_NONZERO_EXIT"
+  ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
     "ITEM_IDENTITY_AND_GRAPH",
@@ -82,10 +89,11 @@
   ],
   "blockers": [
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_NOT_AUTHORIZED",
-    "FULL_REPOSITORY_FOCUSED_TEST_PENDING",
-    "GRAPHICAL_OPERATOR_ACCEPTANCE_PENDING"
+    "FIX1_FOCUSED_OPERATOR_RERUN_PENDING",
+    "FIX1_GRAPHICAL_OPERATOR_RERUN_PENDING"
   ],
   "non_blocking_followups": [
+    "EXTERNAL_QUATERNIUS_MALE_PEASANT_ASSET_NOT_PRESENT_IN_THIS_CHECKOUT_REAL_SLEEVES_DISABLED",
     "REAL_HAND_SKELETON_AND_POSE_LIBRARY",
     "ITEM_VIEWMODEL_PRESENTATION_CATALOG",
     "TWO_HAND_GRIP_PRESENTATION",
