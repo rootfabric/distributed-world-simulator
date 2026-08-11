@@ -5,7 +5,7 @@
 **Control plane:** `PC0-2026-08-10-R1`  
 **Harness:** `H0-2026-08-11-R1`
 
-> Human-facing milestone snapshot. Machine truth remains `config/control/project-program-registry.v1.json`.
+> Human-facing milestone snapshot. Machine truth is `config/control/project-program-registry.v1.json`.
 
 ## Project milestone
 
@@ -19,18 +19,18 @@ MATTER / S1                           STABLE
 Project Control                       NON_RED
 ```
 
-The canonicalization candidate is built from current `main @ 82835a37bab1390b6b3f87fb18903070fdd64256`, registry generation `70`.
+The canonicalization candidate is based on `main @ 82835a37bab1390b6b3f87fb18903070fdd64256` and carries synchronized project registry generation `71`.
 
-It preserves the terminal H0.0 R3 evidence and prepares a fresh **H0.1-R4 planning pointer**. It does not create a C22 runtime branch and does not authorize runtime work.
+It preserves terminal H0.0 R3 evidence and prepares **H0.1-R5** as a planning-only handoff. It does not create a C22 runtime branch and does not authorize runtime work.
 
 ## Live frontiers
 
 | Program | Current state | Checkpoint disposition |
 |---|---|---|
-| **HARNESS** | H0.0 verified terminal evidence; H0.1-R4 planning prepared | **READY FOR CONTROL-ONLY CANONICALIZATION** |
+| **HARNESS** | H0.0 verified terminal evidence; H0.1-R5 planning handoff | **READY FOR CONTROL-ONLY CANONICALIZATION** |
 | **G** | **G8 FULL ACCEPTED / FROZEN** | READY; no G8 work remains |
 | **T** | **T1B HANDOFF COMPLETE** | READY as accepted handoff evidence |
-| **TS/C22** | SOURCE_ACCEPTED evidence | Intentionally waits fresh H0.1 worker after checkpoint |
+| **TS/C22** | SOURCE_ACCEPTED evidence | Intentionally waits fresh post-checkpoint H0.1 execution |
 | **CH** | Windows automated accepted; graphical recovery observation pending | Nonblocking for H0.0; blocks only later CH progression |
 | **NX** | NX.C0 preparation complete | Intentionally waits H0.1 PASS |
 | **ECO** | advisory research; P1C-S4 exact-Windows pending | Nonblocking project research frontier |
@@ -71,19 +71,19 @@ C22 branch creation = FORBIDDEN
 
 R3 is historical checkpoint evidence and must never be rewritten to follow later registry generations.
 
-## H0.1 pre-merge planning pointer
+## H0.1 pre-merge planning handoff
 
 ```text
-E2026-08-11-H0-1-R4
+E2026-08-11-H0-1-R5
 base main: 82835a37bab1390b6b3f87fb18903070fdd64256
-registry generation: 70
+registry generation: 71
 checkpoint: H0_1_CLOSED_LOOP_C22_PILOT
-Work Order: H0-1-R4-DISPATCH-WO-001
+Work Order: H0-1-R5-DISPATCH-WO-001
 state: PLANNED
 branch: main
 ```
 
-Before Director dispatch:
+Before any runtime execution:
 
 ```text
 autonomous_runtime_workers = 0
@@ -92,21 +92,7 @@ C22 branch creation = FORBIDDEN_UNTIL_DISPATCH
 runtime_authorized = false
 ```
 
-The R4 epoch is a **pre-merge handoff pointer**, not the C22 execution epoch. The checkpoint merge itself moves canonical `main`, so this pointer is expected to fail closed as moved-main until the actual H0.1 runtime worker is created from the post-checkpoint main.
-
-After the checkpoint is integrated, the next controlled action is:
-
-```text
-read exact new main
-        ↓
-create fresh H0.1 execution epoch/work order on a new control/runtime branch
-        ↓
-Director dispatch
-        ↓
-create fresh current-main C22 child branch
-```
-
-No stale pre-merge epoch may authorize runtime.
+R5 is a **pre-merge planning handoff**, not the C22 execution epoch. The checkpoint merge itself moves canonical `main`; no pre-merge pointer may then authorize runtime. The actual H0.1 execution epoch/work order must be freshly created from exact post-checkpoint main on a new controlled branch before Director dispatch.
 
 ## G8 achievement
 
@@ -164,11 +150,13 @@ They remain visible and governed by their own stop gates, but do not postpone th
 ```text
 H0_0_SCAFFOLD_READY canonical
         ↓
-fresh post-checkpoint H0.1 execution epoch from exact main
+read exact post-checkpoint main
+        ↓
+fresh H0.1 execution epoch / control branch
         ↓
 Director dispatch
         ↓
-fresh C22 convergence branch / child Work Order
+fresh C22 convergence child Work Order / branch
         ↓
 semantic production-diff equivalence
 focused C22 + C24 contracts + graphical
@@ -189,7 +177,7 @@ NX.C1 remains blocked until H0.1 PASS. Multiple autonomous runtime workers remai
 ## Immediate stop gates
 
 ```text
-NO C22 runtime branch before fresh post-checkpoint H0.1 epoch + Director dispatch
+NO C22 runtime branch before fresh post-checkpoint H0.1 execution + Director dispatch
 NO C22 runtime merge without explicit human authorization
 NO NX.C1 runtime before H0.1 PASS
 NO multiple runtime workers before H0.3
@@ -211,5 +199,5 @@ CONTROL_DEVELOPMENT.ps1
 config/control/project-program-registry.v1.json
 config/control/harness/checkpoint-catalog.v1.json
 config/control/harness/scheduler-policy.v1.json
-docs/checkpoints/2026-08-11_PROJECT_CHECKPOINT_READINESS_AUDIT_RU.md
+docs/checkpoints/2026-08-11_PROJECT_H0_0_CONVERGENCE_MILESTONE_RU.md
 ```
