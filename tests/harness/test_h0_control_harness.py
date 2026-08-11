@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock
 
@@ -33,6 +34,35 @@ class H0ControlHarnessTests(unittest.TestCase):
         self.events = [read_json(path) for path in sorted((EXECUTION / "events/H0-0-WO-001").glob("*.json"))]
         self.guard_context = load_guard_context(ROOT, EXECUTION)
 
+    @contextmanager
+    def execution_documents(self, documents: dict[str, dict]):
+        paths = []
+        try:
+            for relative, document in documents.items():
+                path = EXECUTION / relative
+                self.assertFalse(path.exists(), relative)
+                path.write_text(json.dumps(document), encoding="utf-8")
+                paths.append(path)
+            yield
+        finally:
+            for path in paths:
+                path.unlink(missing_ok=True)
+
+    def active_evidence_map(self, head_sha: str, **updates) -> dict:
+        evidence_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json")
+        evidence_map.update({"work_order_id": "H0-0-WO-002", "evidence_head_sha": head_sha, **updates})
+        return evidence_map
+
+    def active_post_build_review(self, head_sha: str, **updates) -> dict:
+        review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
+        review.update({
+            "review_id": "H0-0-WO-002-TEST-POSTBUILD-REVIEW",
+            "work_order_id": "H0-0-WO-002",
+            "reviewed_head_sha": head_sha,
+            **updates,
+        })
+        return review
+
     def reduce(self, events: list[dict] | None = None, work_order: dict | None = None) -> dict:
         return reduce_events(
             self.bundle,
@@ -44,11 +74,20 @@ class H0ControlHarnessTests(unittest.TestCase):
 
     def test_positive_live_ledger_matches_declared_snapshot(self) -> None:
         reduced = self.reduce()
-        self.assertEqual(self.work_order["state"], reduced["state"])
+        self.assertEqual("CHECKPOINT_PROPOSED", self.work_order["state"])
+        self.assertEqual("CHECKPOINT_PROPOSED", reduced["state"])
+        self.assertEqual(40, len(self.events))
+        self.assertEqual(40, reduced["last_event_sequence"])
         self.assertTrue(reduced["snapshot_matches_authoritative_state"])
+        active_work_order = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")
+        active_events = [read_json(path) for path in sorted((EXECUTION / "events/H0-0-WO-002").glob("*.json"))]
+        active_reduced = reduce_events(self.bundle, active_work_order, active_events, self.transition_table, self.guard_context)
         state = build_state(ROOT, EXECUTION)
         self.assertEqual("GIT_ONLY_WORKER_DATA", state["source"])
-        self.assertEqual(self.work_order["state"], state["reduced_work_order"]["state"])
+        self.assertEqual("H0-0-WO-002", state["active_work_order"]["work_order_id"])
+        self.assertEqual(active_work_order["state"], active_reduced["state"])
+        self.assertEqual(active_reduced, state["reduced_work_order"])
+        self.assertEqual(len(active_events), state["reduced_work_order"]["last_event_sequence"])
         heads = state["repository"]
         self.assertEqual(40, len(heads["event_subject_head_sha"]))
         self.assertEqual(40, len(heads["event_ledger_head_sha"]))
@@ -362,21 +401,27 @@ class H0ControlHarnessTests(unittest.TestCase):
 
     def test_review_evidence_and_human_attention_contracts_load(self) -> None:
         state = build_state(ROOT, EXECUTION)
-        self.assertEqual("PASS", state["review"]["pre_build_state"])
-        implementation_head = state["repository"]["implementation_head_sha"]
-        post_build_reviews = [item for item in state["review"]["reviews"] if item["review_type"] != "PRE_BUILD_DESIGN_AUTHORIZATION"]
-        self.assertTrue(post_build_reviews)
-        latest_post_build = post_build_reviews[-1]
-        expected_post_build = latest_post_build["verdict"] if latest_post_build["reviewed_head_sha"] == implementation_head else "STALE"
+        active_id = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")["work_order_id"]
+        review_documents = [read_json(path) for path in sorted((EXECUTION / "reviews").glob("*.json"))]
+        evidence_documents = [read_json(path) for path in sorted((EXECUTION / "evidence").glob("*.json"))]
+        active_reviews = [item for item in review_documents if item.get("schema") == "distributed_world_simulator.harness_review_result.v1" and item.get("work_order_id") == active_id]
+        active_maps = [item for item in evidence_documents if item.get("schema") == "distributed_world_simulator.harness_evidence_map.v1" and item.get("work_order_id") == active_id]
+        implementation_head = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md", "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"],
+            cwd=ROOT, text=True, capture_output=True, check=True,
+        ).stdout.strip()
+        pre_build = [item for item in active_reviews if item["review_type"] == "PRE_BUILD_DESIGN_AUTHORIZATION"]
+        post_build = [item for item in active_reviews if item["review_type"] != "PRE_BUILD_DESIGN_AUTHORIZATION"]
+        expected_pre_build = pre_build[-1]["verdict"] if pre_build else "MISSING"
+        expected_post_build = "MISSING" if not post_build else post_build[-1]["verdict"] if post_build[-1]["reviewed_head_sha"] == implementation_head else "STALE"
+        self.assertEqual(active_reviews, state["review"]["reviews"])
+        self.assertEqual(active_maps, state["review"]["evidence_maps"])
+        self.assertEqual(expected_pre_build, state["review"]["pre_build_state"])
         self.assertEqual(expected_post_build, state["review"]["post_build_state"])
-        self.assertNotEqual(latest_post_build["reviewed_head_sha"], implementation_head)
-        self.assertEqual("STALE", state["review"]["post_build_state"])
-        self.assertEqual("PENDING_POST_BUILD_REVIEW", state["review"]["state"])
-        latest_evidence = state["review"]["evidence_maps"][-1]
-        self.assertNotEqual(latest_evidence["evidence_head_sha"], implementation_head)
-        self.assertTrue(state["checkpoint_proposal_blocked"])
-        self.assertIn("POST_BUILD_REVIEW_NOT_FRESH_PASS", state["checkpoint_blockers"])
-        self.assertIn("EVIDENCE_MAP_NOT_FRESH_PASS", state["checkpoint_blockers"])
+        self.assertEqual("READY" if expected_post_build == "PASS" else "PENDING_POST_BUILD_REVIEW", state["review"]["state"])
+        self.assertEqual(expected_post_build != "PASS", "POST_BUILD_REVIEW_NOT_FRESH_PASS" in state["checkpoint_blockers"])
+        expected_map_blocked = not active_maps or active_maps[-1]["evidence_head_sha"] != implementation_head or active_maps[-1]["review_verdict"] != "PASS"
+        self.assertEqual(expected_map_blocked, any(item in state["checkpoint_blockers"] for item in ("EVIDENCE_MAP_MISSING", "EVIDENCE_MAP_NOT_FRESH_PASS")))
         human_schema = self.bundle.contracts["human_attention_schema"]
         candidate = {
             "schema": "distributed_world_simulator.harness_human_attention.v1",
@@ -391,10 +436,10 @@ class H0ControlHarnessTests(unittest.TestCase):
 
     def test_typed_supporting_evidence_coexists_without_entering_review_state(self) -> None:
         evidence = _load_evidence_maps(self.bundle, EXECUTION / "evidence")
-        self.assertEqual(1, len(evidence))
-        self.assertEqual("distributed_world_simulator.harness_evidence_map.v1", evidence[0]["schema"])
-        state = build_state(ROOT, EXECUTION)
-        self.assertEqual(evidence, state["review"]["evidence_maps"])
+        self.assertTrue(evidence)
+        self.assertTrue(all(item["schema"] == "distributed_world_simulator.harness_evidence_map.v1" for item in evidence))
+        self.assertTrue(all(item["work_order_id"] == "H0-0-WO-001" for item in evidence))
+        self.assertEqual([], _load_evidence_maps(self.bundle, EXECUTION / "evidence", "UNREGISTERED-WORK-ORDER"))
 
     def test_malformed_document_claiming_evidence_map_schema_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -451,6 +496,73 @@ class H0ControlHarnessTests(unittest.TestCase):
             (evidence_dir / "pass-like-support.json").write_text(json.dumps(pass_like_support), encoding="utf-8")
             self.assertEqual([], _load_evidence_maps(self.bundle, evidence_dir))
 
+    def test_historical_pass_documents_are_validated_but_cannot_authorize_active_work(self) -> None:
+        historical_maps = _load_evidence_maps(self.bundle, EXECUTION / "evidence")
+        historical_reviews = [document for path in sorted((EXECUTION / "reviews").glob("*.json")) if (document := read_json(path)).get("work_order_id") == "H0-0-WO-001"]
+        self.assertTrue(any(item["review_verdict"] == "PASS" for item in historical_maps))
+        self.assertTrue(any(item["verdict"] == "PASS" for item in historical_reviews))
+        with tempfile.TemporaryDirectory() as directory:
+            isolated_execution = Path(directory)
+            evidence_dir = isolated_execution / "evidence"
+            review_dir = isolated_execution / "reviews"
+            evidence_dir.mkdir()
+            review_dir.mkdir()
+            for index, document in enumerate(historical_maps):
+                (evidence_dir / f"{index:02d}.json").write_text(json.dumps(document), encoding="utf-8")
+            for index, document in enumerate(historical_reviews):
+                (review_dir / f"{index:02d}.json").write_text(json.dumps(document), encoding="utf-8")
+            active_work_order = read_json(EXECUTION / "work-orders/H0-0-WO-002.v1.json")
+            self.assertEqual([], _load_evidence_maps(self.bundle, evidence_dir, active_work_order["work_order_id"]))
+            self.assertEqual([], _load_reviews(ROOT, isolated_execution, active_work_order))
+
+    def test_malformed_historical_claims_and_global_review_integrity_fail_closed(self) -> None:
+        historical_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-002.v1.json")
+        historical_map.pop("intent")
+        historical_review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
+        historical_review.pop("risk_assessment")
+        unreachable_review = read_json(EXECUTION / "reviews/H0-0-WO-001-POSTBUILD-REVIEW-007.v1.json")
+        unreachable_review.update({"review_id": "HISTORICAL-UNREACHABLE", "reviewed_head_sha": "0" * 40})
+        duplicate_active_review = self.active_post_build_review(_git_implementation_head(ROOT), review_id=historical_review["review_id"])
+        cases = (
+            ("evidence/ZZ-HISTORICAL-MALFORMED-MAP.json", historical_map, "SCHEMA_INVALID:evidence"),
+            ("reviews/ZZ-HISTORICAL-MALFORMED-REVIEW.json", historical_review, "REVIEW_RESULT_INVALID"),
+            ("reviews/ZZ-HISTORICAL-UNREACHABLE-REVIEW.json", unreachable_review, "REVIEW_HEAD_UNREACHABLE"),
+            ("reviews/ZZ-ACTIVE-DUPLICATE-REVIEW.json", duplicate_active_review, "REVIEW_ID_NOT_UNIQUE"),
+        )
+        for relative, document, error in cases:
+            with self.subTest(document=relative), self.execution_documents({relative: document}):
+                with self.assertRaisesRegex(ContractValidationError, error):
+                    build_state(ROOT, EXECUTION)
+
+    def test_active_document_identity_and_freshness_matrix(self) -> None:
+        implementation_head = _git_implementation_head(ROOT)
+        old_head = "3bf704243e38b6a9dd6a4a72434907ae776db019"
+        wrong_identity_cases = (
+            ("map-checkpoint", {"evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(implementation_head, checkpoint="WRONG")}, "EVIDENCE_IDENTITY_MISMATCH"),
+            ("map-risk", {"evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(implementation_head, risk_class="LOW")}, "EVIDENCE_IDENTITY_MISMATCH"),
+            ("review-risk", {"reviews/ZZ-ACTIVE-REVIEW.json": self.active_post_build_review(implementation_head, risk_class="LOW")}, "REVIEW_WORK_ORDER_OR_RISK_MISMATCH"),
+        )
+        for name, documents, error in wrong_identity_cases:
+            with self.subTest(identity=name), self.execution_documents(documents):
+                with self.assertRaisesRegex(ContractValidationError, error):
+                    build_state(ROOT, EXECUTION)
+
+        for review_fresh, map_fresh in ((False, False), (False, True), (True, False), (True, True)):
+            review_head = implementation_head if review_fresh else old_head
+            map_head = implementation_head if map_fresh else old_head
+            documents = {
+                "evidence/ZZ-ACTIVE-MAP.json": self.active_evidence_map(map_head),
+                "reviews/ZZ-ACTIVE-REVIEW.json": self.active_post_build_review(review_head),
+            }
+            with self.subTest(review_fresh=review_fresh, map_fresh=map_fresh), self.execution_documents(documents):
+                state = build_state(ROOT, EXECUTION)
+                self.assertEqual("PASS" if review_fresh else "STALE", state["review"]["post_build_state"])
+                self.assertEqual(not review_fresh, "POST_BUILD_REVIEW_NOT_FRESH_PASS" in state["checkpoint_blockers"])
+                self.assertEqual(not map_fresh, "EVIDENCE_MAP_NOT_FRESH_PASS" in state["checkpoint_blockers"])
+                self.assertNotIn("EVIDENCE_MAP_MISSING", state["checkpoint_blockers"])
+                self.assertEqual(not map_fresh, "EVIDENCE_HEAD_STALE" in state["findings"])
+                self.assertTrue(state["checkpoint_proposal_blocked"])
+
     def test_public_commands_fail_closed_for_malformed_or_ambiguous_map_claims(self) -> None:
         shell = shutil.which("powershell") or shutil.which("pwsh")
         self.assertIsNotNone(shell)
@@ -484,6 +596,9 @@ class H0ControlHarnessTests(unittest.TestCase):
                 self.assertEqual(command, envelope["command"])
                 self.assertFalse(envelope["runtime_authorized"])
                 self.assertEqual("H0_0_SCAFFOLD_READY", envelope["next"]["checkpoint"])
+                self.assertEqual("H0-0-WO-002", envelope["active_work_order"]["work_order_id"])
+                self.assertTrue(all(item["work_order_id"] == "H0-0-WO-002" for item in envelope["review"]["evidence_maps"]))
+                self.assertTrue(all(item["work_order_id"] == "H0-0-WO-002" for item in envelope["review"]["reviews"]))
         invalid = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Status", "-Plan"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
         self.assertEqual(2, invalid.returncode)
         self.assertEqual("INVALID_INVOCATION", json.loads(invalid.stdout.splitlines()[-1])["error"]["code"])
@@ -492,6 +607,40 @@ class H0ControlHarnessTests(unittest.TestCase):
         unknown = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), "-Unknown"], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
         self.assertEqual(2, unknown.returncode)
         self.assertEqual("INVALID_INVOCATION", json.loads(unknown.stdout.splitlines()[-1])["error"]["code"])
+
+    def test_public_commands_exit_zero_with_active_authorization_documents_missing(self) -> None:
+        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
+        if dirty:
+            self.skipTest("clean-HEAD public recovery matrix runs after the recovery unit is committed")
+        shell = shutil.which("powershell") or shutil.which("pwsh")
+        self.assertIsNotNone(shell)
+        with tempfile.TemporaryDirectory() as directory:
+            clone = Path(directory) / "missing active authorization"
+            completed = subprocess.run(["git", "clone", "--no-hardlinks", "--branch", "control/h0-closed-loop-development", str(ROOT), str(clone)], text=True, capture_output=True, check=False)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            canonical_main = subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
+            subprocess.run(["git", "update-ref", "refs/remotes/origin/main", canonical_main], cwd=clone, check=True)
+            clone_execution = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1"
+            for path in (clone_execution / "evidence").glob("*.json"):
+                document = read_json(path)
+                if document.get("schema") == "distributed_world_simulator.harness_evidence_map.v1" and document.get("work_order_id") == "H0-0-WO-002":
+                    path.unlink()
+            for path in (clone_execution / "reviews").glob("*.json"):
+                document = read_json(path)
+                if document.get("schema") == "distributed_world_simulator.harness_review_result.v1" and document.get("work_order_id") == "H0-0-WO-002" and document.get("review_type") != "PRE_BUILD_DESIGN_AUTHORIZATION":
+                    path.unlink()
+            for switch, command in (("-Status", "STATUS"), ("-Plan", "PLAN"), ("-Resume", "RESUME")):
+                with self.subTest(command=command):
+                    result = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(clone / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=clone.parent, text=True, encoding="utf-8", capture_output=True, check=False)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    envelope = json.loads(result.stdout.splitlines()[-1])
+                    self.assertTrue(envelope["ok"])
+                    self.assertEqual(command, envelope["command"])
+                    self.assertEqual("H0-0-WO-002", envelope["active_work_order"]["work_order_id"])
+                    self.assertEqual("MISSING", envelope["review"]["post_build_state"])
+                    self.assertEqual([], envelope["review"]["evidence_maps"])
+                    self.assertIn("POST_BUILD_REVIEW_NOT_FRESH_PASS", envelope["checkpoint_blockers"])
+                    self.assertIn("EVIDENCE_MAP_MISSING", envelope["checkpoint_blockers"])
 
     def test_output_envelope_matches_published_schema(self) -> None:
         from jsonschema import Draft202012Validator
@@ -581,7 +730,7 @@ class H0ControlHarnessTests(unittest.TestCase):
             self.assertEqual(0, completed.returncode, completed.stderr)
             canonical_main = subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
             subprocess.run(["git", "update-ref", "refs/remotes/origin/main", canonical_main], cwd=clone, check=True)
-            work_order_path = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-001.v1.json"
+            work_order_path = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-002.v1.json"
             work_order = read_json(work_order_path)
             work_order["state"] = "PLANNED"
             work_order_path.write_text(json.dumps(work_order), encoding="utf-8")

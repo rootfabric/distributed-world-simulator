@@ -157,7 +157,7 @@ def _validate_repair_map(bundle: ContractBundle, execution_dir: Path, work_order
 
 
 def _load_reviews(root: Path, execution_dir: Path, work_order: dict[str, Any]) -> list[dict[str, Any]]:
-    reviews = []
+    validated_reviews = []
     review_ids: set[str] = set()
     required = {"schema", "review_id", "review_type", "work_order_id", "risk_class", "reviewed_head_sha", "reviewer", "verdict", "reviewed_at_utc", "required_fixes", "rank_up_moves", "evidence_gaps", "risk_assessment"}
     for path in _json_files(execution_dir / "reviews"):
@@ -167,8 +167,6 @@ def _load_reviews(root: Path, execution_dir: Path, work_order: dict[str, Any]) -
         if value["review_id"] in review_ids:
             raise ContractValidationError("REVIEW_ID_NOT_UNIQUE")
         review_ids.add(value["review_id"])
-        if value["work_order_id"] != work_order["work_order_id"] or value["risk_class"] != work_order["risk_class"]:
-            raise ContractValidationError("REVIEW_WORK_ORDER_OR_RISK_MISMATCH")
         if value["verdict"] not in {"PASS", "FAIL", "INSUFFICIENT_EVIDENCE"}:
             raise ContractValidationError("REVIEW_VERDICT_INVALID")
         if value["review_type"] not in {"PRE_BUILD_DESIGN_AUTHORIZATION", "POST_BUILD_IMPLEMENTATION_REVIEW", "POST_BUILD_EXACT_HEAD_REVIEW"}:
@@ -188,8 +186,11 @@ def _load_reviews(root: Path, execution_dir: Path, work_order: dict[str, Any]) -
         code, _ = _git(root, "cat-file", "-e", f"{value['reviewed_head_sha']}^{{commit}}")
         if code != 0:
             raise ContractValidationError("REVIEW_HEAD_UNREACHABLE")
-        reviews.append(value)
-    return reviews
+        validated_reviews.append(value)
+    active_reviews = [item for item in validated_reviews if item["work_order_id"] == work_order["work_order_id"]]
+    if any(item["risk_class"] != work_order["risk_class"] for item in active_reviews):
+        raise ContractValidationError("REVIEW_WORK_ORDER_OR_RISK_MISMATCH")
+    return active_reviews
 
 
 def _select_epoch_audit(guard_context: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -209,15 +210,16 @@ def _select_epoch_audit(guard_context: dict[str, Any], events: list[dict[str, An
     return audits[-1] if audits else None
 
 
-def _load_evidence_maps(bundle: ContractBundle, evidence_dir: Path) -> list[dict[str, Any]]:
-    """Load canonical Evidence Maps without treating supporting evidence as maps.
+def _load_evidence_maps(bundle: ContractBundle, evidence_dir: Path, work_order_id: str | None = None) -> list[dict[str, Any]]:
+    """Validate every Evidence Map claim, then optionally select one Work Order.
 
     The execution evidence directory is intentionally shared by review maps and
-    typed supporting artifacts.  A document that claims the canonical Evidence
-    Map identity is always schema-validated; documents with another explicit
-    schema identity remain supporting evidence and cannot influence review or
-    checkpoint state.  Missing or map-like-but-unknown identities are rejected
-    rather than silently routed away from the Evidence Map contract.
+    typed supporting artifacts. A document that claims the canonical Evidence
+    Map identity is always schema-validated before Work Order partitioning;
+    documents with another explicit schema identity remain supporting evidence
+    and cannot influence review or checkpoint state. Missing or map-like-but-
+    unknown identities are rejected rather than silently routed away from the
+    Evidence Map contract.
     """
     evidence_maps: list[dict[str, Any]] = []
     for path in _json_files(evidence_dir):
@@ -230,7 +232,9 @@ def _load_evidence_maps(bundle: ContractBundle, evidence_dir: Path) -> list[dict
             raise ContractValidationError(f"EVIDENCE_SCHEMA_IDENTITY_REQUIRED:{path.name}")
         elif schema_identity.startswith(_EVIDENCE_MAP_SCHEMA_PREFIX):
             raise ContractValidationError(f"EVIDENCE_MAP_SCHEMA_AMBIGUOUS:{path.name}")
-    return evidence_maps
+    if work_order_id is None:
+        return evidence_maps
+    return [item for item in evidence_maps if item["work_order_id"] == work_order_id]
 
 
 def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
@@ -254,7 +258,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if not work_orders:
         raise ContractValidationError("WORK_ORDER_REQUIRED")
     active = work_orders[-1]
-    evidence = _load_evidence_maps(bundle, execution_dir / "evidence")
+    evidence = _load_evidence_maps(bundle, execution_dir / "evidence", active["definition"]["work_order_id"])
     attention = []
     for path in _json_files(execution_dir / "human-attention"):
         value = read_json(path)
