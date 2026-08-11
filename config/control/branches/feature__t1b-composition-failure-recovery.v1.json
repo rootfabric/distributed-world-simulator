@@ -43,7 +43,7 @@
     {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "failure operability, construct-local dependency propagation and command operability policy live on existing canonical Construction runtime subjects"},
     {"foundation": "PERSISTENCE_DURABILITY", "claimed_owner": "R3_M0_MW", "scope": "T1B reuses T1A.7 M0 checkpoint/recovery across actual dedicated-server process restart"},
     {"foundation": "NETWORK_REPLICATION_POLICY", "claimed_owner": "NX", "scope": "T1B reuses existing M3 CONTROL/RESYNC and ConstructionRuntimeSnapshot; no channel/protocol added"},
-    {"foundation": "WORLD_QUERY_FABRIC", "claimed_owner": "P1", "scope": "post-restart visibility is restored only after external interest projection is explicitly reapplied"},
+    {"foundation": "WORLD_QUERY_FABRIC", "claimed_owner": "P1_FUTURE", "scope": "post-restart visibility is restored only after external interest projection is explicitly reapplied; T1B consumes the external query/interest projection and does not own World Query"},
     {"foundation": "WORLD_TRANSACTION_MODEL", "claimed_owner": "P0", "scope": "existing executor/ledger/effect rollback boundary remains unchanged"},
     {"foundation": "DERIVED_PRESENTATION", "claimed_owner": "DOMAIN_ADAPTERS", "scope": "existing T1A.6 presenter derives visuals from replicated canonical runtime snapshot"}
   ],
