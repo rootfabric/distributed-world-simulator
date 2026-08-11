@@ -9,6 +9,7 @@ $Root = $PSScriptRoot
 $Launcher = Join-Path $Root "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
 $FocusedTest = "res://tests/characters/test_ch9_6_playable_network_equipment_ui.gd"
 $PresentationTest = "res://tests/characters/test_ch9_6_wearable_inventory_presentation.gd"
+$UnequipRouteTest = "res://tests/characters/test_ch9_6_graphical_unequip_route.gd"
 $Garment = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy\Modular Character Outfits - Fantasy[Standard]\Exports\glTF (Godot-Unreal)\Outfits\Male_Peasant.gltf"
 $BaseRoot = Join-Path $Root "assets\external\quaternius\base_characters"
 $AnimationRoot = Join-Path $Root "assets\external\quaternius\animation_library"
@@ -123,6 +124,16 @@ if ($Presentation.exit_code -ne 0 -or -not $PresentationPassMarker) {
 Write-Host "CH9.6 wearable inventory presentation preflight: PASS" -ForegroundColor Green
 
 Write-Host ""
+Write-Host "Running CH9.6 graphical unequip-route preflight..." -ForegroundColor Cyan
+$UnequipRoute = Invoke-GodotCaptured -Arguments @("--headless", "--path", $Root, "--script", $UnequipRouteTest)
+$UnequipRoute.output | ForEach-Object { Write-Host $_ }
+$UnequipRoutePassMarker = $UnequipRoute.text -match 'CH9\.6 graphical unequip route: PASS \([0-9]+ assertions\)'
+if ($UnequipRoute.exit_code -ne 0 -or -not $UnequipRoutePassMarker) {
+    throw "CH9.6 graphical unequip-route preflight failed with exit code $($UnequipRoute.exit_code). Graphical acceptance was not started."
+}
+Write-Host "CH9.6 graphical unequip-route preflight: PASS" -ForegroundColor Green
+
+Write-Host ""
 Write-Host "Running focused CH9.6 runtime/presentation preflight..." -ForegroundColor Cyan
 $Focused = Invoke-GodotCaptured -Arguments @("--headless", "--path", $Root, "--script", $FocusedTest)
 $Focused.output | ForEach-Object { Write-Host $_ }
@@ -186,8 +197,8 @@ Write-Host ""
 Write-Host "PASS 2 / RECOVERY" -ForegroundColor Cyan
 Write-Host "1. Do not equip anything manually at startup."
 Write-Host "2. Confirm equipment slots and Quaternius presentation restore automatically."
-Write-Host "3. Drag one restored equipped item back to backpack."
-Write-Host "4. Confirm that exact wearable disappears from the character."
+Write-Host "3. Drag one restored equipped item onto any normal backpack cell."
+Write-Host "4. Confirm the item returns to the backpack and that exact wearable disappears from the character."
 Write-Host "5. Close the application normally."
 
 $SecondExit = Invoke-Ch96Lab
@@ -195,7 +206,7 @@ if ($SecondExit -ne 0) { throw "CH9.6 recovery graphical launch failed (exit cod
 
 $Recovered = Read-YesNo "Were the previously equipped items restored automatically after restart?"
 $RecoveredPresentation = Read-YesNo "Was recovered equipment already visible on the Quaternius character without a new drag?"
-$UnequipPresentation = Read-YesNo "After dragging a restored item back to backpack, did its visual disappear?"
+$UnequipPresentation = Read-YesNo "After dragging a restored item onto the backpack, did it return to inventory and disappear from the character?"
 
 $AllObservations = @($FirstReady,$WearablesVisible,$FirstPresentation,$FirstMovement,$FirstNormalClose,$Recovered,$RecoveredPresentation,$UnequipPresentation)
 $ObservationPass = -not ($AllObservations -contains $false)
@@ -212,6 +223,7 @@ $Evidence = [ordered]@{
     operator_runner = "ACCEPT_CH9_6_GRAPHICAL.ps1"
     import_preflight = "PASS"
     wearable_inventory_presentation_preflight = "PASS"
+    graphical_unequip_route_preflight = "PASS"
     focused_runtime_preflight = "PASS"
     ignored_unrelated_fbx_diagnostic_lines = $KnownFbxImportErrors
     assets = [ordered]@{ base_scene_count = $BaseSceneCount; animation_scene_count = $AnimationSceneCount; modular_outfit = $Garment }
@@ -225,7 +237,7 @@ $Evidence = [ordered]@{
         first_run_closed_normally = $FirstNormalClose
         equipment_restored_after_restart = $Recovered
         recovered_quaternius_presentation_visible_without_new_drag = $RecoveredPresentation
-        unequipped_visual_removed = $UnequipPresentation
+        unequipped_item_returned_to_backpack_and_visual_removed = $UnequipPresentation
     }
     process_pass = $ProcessPass
     observation_pass = $ObservationPass
