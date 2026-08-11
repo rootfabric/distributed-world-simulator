@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1C-S1",
-  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
   "parent_evidence": {
@@ -33,6 +33,14 @@
     "alternate founder seed changes exact strategies while preserving broad competition diversity"
   ],
   "known_pressure": "Default top1 dominance is 0.8367; this is intentionally not treated as final coexistence acceptance.",
-  "windows_confirmation": "PENDING",
-  "next": "Run RUN_ECO_P1C_S1_TESTS.ps1; on exact Windows PASS accept S1 and proceed to dynamic abundance competition."
+  "windows_confirmation": {
+    "result": "PASS_EXACT",
+    "focused_assertions": 116,
+    "restart_assertions": 5,
+    "result_hash": "cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928",
+    "uniform_hash": "1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58",
+    "alternate_result_hash": "bded62e12ade0285c019d0dc2e4f77d0d6cb88431df7ade605160e0f18d82f8c",
+    "founder_pool_hash": "77acaada39a39c54224b73f2548ebc228343e869264e45780d08419ebb6bee38"
+  },
+  "next": "ECO.P1C-S2 Dynamic Shared-Patch Abundance Competition is open."
 }
