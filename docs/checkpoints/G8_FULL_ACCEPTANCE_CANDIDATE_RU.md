@@ -1,7 +1,7 @@
 # G8 — Full Acceptance — CANDIDATE
 
-**Architecture:** `GLOBAL-P0-2026-08-10-R2`  
-**Project Control:** `PC0-2026-08-10-R1`  
+**Architecture:** `GLOBAL-P0-2026-08-10-R2`
+**Project Control:** `PC0-2026-08-10-R1`
 **Branch:** `feature/g8-geomorphology`
 
 ## Accepted chain
