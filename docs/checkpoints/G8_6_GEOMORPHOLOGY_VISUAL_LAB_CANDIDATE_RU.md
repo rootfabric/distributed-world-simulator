@@ -71,21 +71,47 @@ NX4 final world/core marker                  PASS
 
 G8.6 is therefore `AUTOMATED_ACCEPTED_MANUAL_PENDING`.
 
-## Manual graphical gate
+## Guarded manual graphical gate
 
-Launch on the same automated-tested checkout if it is still clean. Do not fetch/reset merely for the manual observation.
+A dedicated manual runner was added after automated acceptance. It is harness-only and does not alter the accepted G8.6 runtime, scene, manifest or geomorphology algorithms.
 
-```powershell
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-& $Godot --path . res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn
+Runner commit:
+
+```text
+3a0330a62f71bf0ec7a2379d722f03e28ca0ae6d
 ```
 
-Confirm:
+The runner fail-closes before opening the graphical scene unless all of the following are true:
+
+1. current branch is exactly `feature/g8-geomorphology`;
+2. working tree is clean;
+3. automated-tested head `a9ca1f8b723e4edc5ebff40db26e41283d464597` is an ancestor of the current checkout;
+4. no G8.6 runtime/presentation/manifest/validation/acceptance file changed after that automated-tested head;
+5. the focused G8.6 headless gate passes again on the current checkout.
+
+Run from the G checkout:
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git fetch origin --prune
+git switch feature/g8-geomorphology
+git pull --ff-only
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_G8_6_MANUAL_GRAPHICAL_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+The script deliberately does **not** mark G8.6 accepted when the window closes. Human graphical observation remains mandatory.
+
+## Manual graphical observations
+
+Confirm all five items:
 
 1. `G` visibly switches source G3 ↔ resolved G8 geometry while HUD `Truth hash` remains unchanged.
 2. `1..7` show resolved height, total deformation, valley, channel, bank, floodplain and erosion/deposition views.
-3. `W/S` changes derived presentation LOD/mesh-grid while `Canonical samples=561` and `Truth hash` remain unchanged.
+3. `W/S` changes derived presentation LOD/mesh-grid through `33×17`, `17×9`, `9×5`, `5×3` while `Canonical samples=561` and `Truth hash` remain unchanged.
 4. With `X`, the magenta PX/PZ seam crosses the resolved surface without a visible crack/discontinuity.
 5. With `F`, the cyan canonical river overlay agrees with the visible channel/bank/floodplain structure.
 
-Only user-observed graphical PASS moves G8.6 to `ACCEPTED`. After that, run G8 Full Acceptance. No automatic PR merge.
+Only user-observed graphical PASS moves G8.6 to `ACCEPTED`. After that, record G8.6 ACCEPTED and run G8 Full Acceptance. No automatic PR merge.
