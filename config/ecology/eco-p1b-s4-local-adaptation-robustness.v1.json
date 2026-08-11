@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1B-S4",
+  "name": "Local Adaptation Robustness Gate",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1B-S3 ACCEPTED",
+  "experiment_revision": "ECO.P1B-S4.1",
+  "purpose": "Require the P1B local-adaptation phenomenon to survive multiple deterministic evolution seeds, a neutral control and a longer horizon before accepting the aggregate P1B checkpoint.",
+  "baseline": {
+    "grid": [5, 5],
+    "population_per_patch": 4,
+    "generations": 9,
+    "long_generations": 12,
+    "offspring_per_parent": 2,
+    "seeds": [918221, 918222, 918223],
+    "neutral_seed": 918221,
+    "long_seed": 918221
+  },
+  "robustness_rules": [
+    "every real seed must improve accepted P1A net_resource_balance from the common ancestor field",
+    "water_preference must positively track moisture for every seed",
+    "root_depth must negatively track moisture for every seed",
+    "shade_tolerance must negatively track sunlight for every seed",
+    "wet-vs-dry, dry-vs-wet-root and shaded-vs-sunlit regional divergences must keep the same causal signs",
+    "neutral control must not reproduce the real multi-seed signal",
+    "a longer horizon must preserve specialization without runaway trait means or collapse to biological bounds",
+    "seed_dispersal_distance remains frozen until migration benefit is modeled"
+  ],
+  "determinism_baseline": {
+    "aggregate_hash": "2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05",
+    "seed_result_hashes": [
+      "b7b7da27158e35d5ab8fa16bc209526c7144e9f178d62aee91c8de9e107cd9a2",
+      "68ba3c9bdfebc12b87f454e9d87e5865229d2198628904b473216928f2aa493e",
+      "6592cf2c06276253d72779955f0ee9fd73d0a19f16d265c7690804e843152cab"
+    ],
+    "neutral_hash": "175bbef1c085d0783bd0d48f23bbc9a865cc438ae09e15785d4e48cdf1cc27bf",
+    "long_run_hash": "7f68ed87e10fa7dd6f9f79c6d50d0a82cf4360e4a416dc481e0e6005bcfb44f3"
+  },
+  "local_evidence": {
+    "focused_assertions": 86,
+    "restart_assertions": 5,
+    "seed_count": 3,
+    "mean_final_net_resource_balance": 0.16535418455137,
+    "mean_water_preference_vs_moisture": 0.90029838256578,
+    "mean_root_depth_vs_moisture": -0.53806074795987,
+    "mean_shade_tolerance_vs_sunlight": -0.42182297846991,
+    "minimum_water_preference_vs_moisture": 0.85801174154343,
+    "maximum_root_depth_vs_moisture": -0.52432910764987,
+    "maximum_shade_tolerance_vs_sunlight": -0.34002992316875,
+    "neutral_correlations": {
+      "water_preference_vs_moisture": -0.05510176857941,
+      "root_depth_vs_moisture": -0.03354433896664,
+      "shade_tolerance_vs_sunlight": 0.23538665315046
+    },
+    "long_run_final_net": 0.24858004129971,
+    "long_run_correlations": {
+      "water_preference_vs_moisture": 0.88929107014718,
+      "root_depth_vs_moisture": -0.58287212519222,
+      "shade_tolerance_vs_sunlight": -0.45881799008637
+    }
+  },
+  "invariants": {
+    "accepted_p1a_truth_modified": false,
+    "accepted_p1b_s1_s2_s3_truth_modified": false,
+    "new_fitness_score_added": false,
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "migration_enabled": false,
+    "presentation_inputs_added": false,
+    "authority_or_network_inputs_added": false
+  },
+  "next_after_acceptance": "Accept aggregate ECO.P1B Local Adaptation Proof if exact Windows reproduces the robustness hashes. Then open the next ecology checkpoint without introducing migration until the dedicated dispersal/biogeography stage."
+}
