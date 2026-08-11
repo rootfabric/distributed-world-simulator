@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-1-R6-H0-1-R6-C22-WO-001-0022",
+  "project_epoch":"E2026-08-11-H0-1-R6",
+  "work_order_id":"H0-1-R6-C22-WO-001",
+  "sequence":22,
+  "event_type":"IMPLEMENTATION_COMMITTED",
+  "work_state":"IMPLEMENTED",
+  "recorded_at_utc":"2026-08-11T23:54:10Z",
+  "actor":"IMPLEMENTER",
+  "branch":"feature/h0-1-c22-current-main-r1",
+  "head_sha":"28e11c776b74d4e423e9210da9b6299dd690bbb7",
+  "predicate":"H0_1_WORK_ORDER_TYPE_REPAIR_IMPLEMENTED",
+  "command":"CLASSIFY_C22_WORK_ORDER_AS_IMPLEMENTATION_AND_ADD_REGRESSION_ASSERTION",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-1-R6/work-orders/H0-1-R6-C22-WO-001.v1.json","tests/harness/test_h0_control_harness.py"],
+  "summary":"Implemented the reviewed schema repair: work_order_type is canonical IMPLEMENTATION and the focused H0.1 harness test now asserts that discriminator. No C22 production, construction test, C24 test, runner or validation blob changed."
+}
