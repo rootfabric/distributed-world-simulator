@@ -24,18 +24,50 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path $GodotPath)) {
 }
 
 $Tests = @(
-    "res://tests/characters/test_first_person_embodiment_contract.gd"
+    @{
+        Path = "res://tests/characters/test_first_person_embodiment_contract.gd"
+        PassMarker = "FirstPersonEmbodiment contract: PASS"
+    }
+)
+
+$FatalMarkers = @(
+    "SCRIPT ERROR:",
+    "Parse Error:",
+    "Compile Error:",
+    "ERROR: Failed to load script"
 )
 
 $Failed = $false
 foreach ($Test in $Tests) {
-    Write-Host "Running $Test" -ForegroundColor Cyan
-    & $GodotPath --headless --path $Root --script $Test
-    if ($LASTEXITCODE -ne 0) {
+    $TestPath = [string]$Test.Path
+    Write-Host "Running $TestPath" -ForegroundColor Cyan
+
+    $OutputLines = [System.Collections.Generic.List[string]]::new()
+    & $GodotPath --headless --path $Root --script $TestPath 2>&1 | ForEach-Object {
+        $Line = [string]$_
+        $OutputLines.Add($Line)
+        Write-Host $Line
+    }
+    $ExitCode = $LASTEXITCODE
+    $OutputText = $OutputLines -join "`n"
+
+    $EngineError = $false
+    foreach ($Marker in $FatalMarkers) {
+        if ($OutputText.Contains($Marker)) {
+            $EngineError = $true
+            Write-Host "Detected fatal Godot marker: $Marker" -ForegroundColor Red
+            break
+        }
+    }
+
+    $PassMarkerSeen = $OutputText.Contains([string]$Test.PassMarker)
+    if ($ExitCode -ne 0 -or $EngineError -or -not $PassMarkerSeen) {
         $Failed = $true
-        Write-Host "FAIL: $Test" -ForegroundColor Red
+        Write-Host "FAIL: $TestPath (exit=$ExitCode, engine_error=$EngineError, pass_marker=$PassMarkerSeen)" -ForegroundColor Red
         break
     }
+
+    Write-Host "PASS: $TestPath" -ForegroundColor Green
 }
 
 if ($Failed) {
