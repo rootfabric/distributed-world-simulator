@@ -1,0 +1,95 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "control/global-p0-r3-refresh-r1",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "ARCHITECTURE_REVISION_CANDIDATE",
+  "short_description": "Fresh current-main GLOBAL-P0 R3 architecture candidate; control/docs/config only, no promotion and no runtime ownership changes.",
+  "purpose": "Refresh R3 against main 1112d1f7 / registry generation 75, resolve current ownership/intersection drift, add explicit R2-to-R3 transition semantics, and prepare the R3_REFRESHED_CANDIDATE checkpoint without promoting architecture.",
+  "expected_outcome": "A CRITICAL-reviewed, PC0 NON_RED, evidence-complete R3 candidate ready for a separate human GLOBAL_ARCHITECTURE_PROMOTION gate after the active H0.1 R2 runtime checkpoint reaches a safe boundary.",
+  "current_stage": "GLOBAL-P0 R3 fresh candidate construction",
+  "stage_status": "REFRESHED_CURRENT_MAIN_DESIGN_AND_TRANSITION_POLICY_READY_REVIEW_PENDING",
+  "progress_note": "Fresh candidate starts from exact main 1112d1f7 / registry 75. Architecture design, frontier guards and R2-to-R3 transition policy are refreshed. H0.1 R6 C22 remains an active R2 pilot preparation and blocks R3 promotion while open. ECO remains Evolutionary Ecology; ECON is reserved for future economy to eliminate the old R3 program-ID collision. Ownership/intersection review, Evidence Map, Reviewer PASS and PC0 remain pending.",
+  "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
+  "next_stage": "Complete independent ownership/intersection review, build Evidence Map, run Project Control/PC0, and stop at R3_REFRESHED_CANDIDATE. Do not promote until H0.1 boundary and explicit GLOBAL_ARCHITECTURE_PROMOTION.",
+  "parent_branch_or_checkpoint": "main @ 1112d1f7cfad1df18fb3621a537e191e674848c6 / registry generation 75 / H0_0_SCAFFOLD_READY canonical",
+  "dependencies": [
+    "GLOBAL_P0_R2",
+    "H0_0_SCAFFOLD_READY",
+    "H0_1_R6_ACTIVE_R2_BOUNDARY",
+    "PC0_REGISTRY_GENERATION_75",
+    "G8_FULL_ACCEPTANCE",
+    "T1B_HANDOFF_COMPLETE",
+    "C22_SOURCE_ACCEPTED",
+    "NX_C0_PREPARATION",
+    "MATTER_STABLE",
+    "S1_STABLE",
+    "ECO_PH3_ACCEPTED_PH3C_RESEARCH_PENDING"
+  ],
+  "owned_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/branches/control__global-p0-r3-refresh-r1.v1.json",
+    "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
+    "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
+    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md"
+  ],
+  "watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/**",
+    "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json",
+    "scripts/construction/**",
+    "scripts/network/**",
+    "scripts/research/ecology/**"
+  ],
+  "critical_watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "PENDING_CONTROL_VALIDATION",
+    "full_regression": "NOT_APPLICABLE"
+  },
+  "ownership_claims": [
+    {"foundation": "PROGRAM_LEDGER", "claimed_owner": "MAIN", "scope": "Candidate only; canonical ownership changes require promotion."},
+    {"foundation": "DEVELOPMENT_HARNESS", "claimed_owner": "MAIN/HARNESS", "scope": "Protect development-control ownership from WB/OPS runtime scheduling concepts."},
+    {"foundation": "EVOLUTIONARY_ECOLOGY_RESEARCH", "claimed_owner": "ECO", "scope": "Preserve live ECO program identity."},
+    {"foundation": "WORLD_ECONOMY", "claimed_owner": "ECON_FUTURE", "scope": "Avoid collision with ECO Evolutionary Ecology."}
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "blockers": [
+    "OWNERSHIP_INTERSECTION_REVIEW_REQUIRED",
+    "EVIDENCE_MAP_REQUIRED",
+    "REVIEWER_PASS_REQUIRED",
+    "PC0_NON_RED_REQUIRED",
+    "H0_1_R2_RUNTIME_CHECKPOINT_MUST_REACH_BOUNDARY_BEFORE_PROMOTION",
+    "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}
