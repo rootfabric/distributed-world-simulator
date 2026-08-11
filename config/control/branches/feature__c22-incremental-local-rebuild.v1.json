@@ -9,10 +9,10 @@
   "purpose": "Remove the current full-compile-before-invalidation behavior from C22 incremental recompilation while preserving canonical Construction ownership and disposable derived presentation semantics.",
   "expected_outcome": "Eligible local unit-grid mutations rebuild only dirty sections plus bounded neighbor context, reuse unchanged section artifacts, rebuild the root shell from compiled section artifacts, preserve C24 presentation correctness, and safely fall back to full compile for unsupported cases.",
   "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-  "stage_status": "SOURCE_ACCEPTED_MERGE_READY",
-  "progress_note": "Production convergence is SOURCE_ACCEPTED. Exact Windows focused gate passes C22 incremental 28 assertions, C22 graphical 35 and C24 contracts 81. After FIX2 added explicit world-regression coverage, the full world/core suite passes through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and a clean STOPPED lifecycle. Main drift since the branch base is control-plane-only; current T1A.7 work has no C22 proxy runtime/contract overlap. The branch is merge-ready; MAIN_INTEGRATED remains false until the PR lands and post-merge PC0 is green for TS.",
+  "stage_status": "SOURCE_ACCEPTED_MAIN_CONVERGENCE_REFRESH_REQUIRED",
+  "progress_note": "Production convergence remains SOURCE_ACCEPTED on exact Windows evidence: C22 incremental 28 assertions, C22 graphical 35, C24 contracts 81, and full world/core regression through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and clean STOPPED lifecycle. The source runtime has not been invalidated. However PR #59 is currently non-mergeable against main and the source branch is 70 main commits behind its merge-base. A direct compare from the C22 base 0cb0416f20946afc85abe9abcded07bfcc493bf7 to current main 42ace1e77e09ea9392359111bdd611b2b9250e48 shows only project-control, architecture metadata and documentation changes; no C22 production proxy/runtime file changed in main. Therefore the blocker is integration ancestry/control convergence, not a semantic C22 code conflict. A fresh current-main convergence refresh must reproduce the accepted C22 production diff, then rerun focused and full regression before MAIN_INTEGRATED can be authorized.",
   "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
-  "next_stage": "Merge the accepted convergence branch into main, run post-merge Project Control audit, mark MAIN_INTEGRATED, then retire this convergence frontier and resume the next Construction-scale evidence stage.",
+  "next_stage": "Create a fresh current-main C22 convergence refresh, reproduce the accepted production diff without altering C22 semantics, prove the production/runtime diff is equivalent, rerun focused C22/C24 validation and full world/core regression, then return the refreshed branch to MERGE_READY. Merge still requires explicit authorization; only after merge run post-merge Project Control and mark MAIN_INTEGRATED, then create TS0.4 from that canonical main.",
   "parent_branch_or_checkpoint": "main @ 0cb0416f20946afc85abe9abcded07bfcc493bf7 plus TS0.3 evidence from feature/ts0-large-structural-visual-lab",
   "base_commit": "0cb0416f20946afc85abe9abcded07bfcc493bf7",
   "dependencies": [
@@ -93,7 +93,9 @@
     "PERSISTENCE_DURABILITY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": [],
-  "health_declared": "GREEN",
+  "blockers": [
+    "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
