@@ -5,14 +5,14 @@
   "branch": "feature/eco-evolutionary-ecology",
   "program": "ECO",
   "role": "RESEARCH_DESIGN_FRONTIER",
-  "short_description": "Evolutionary ecology research for continuous environment-driven plant specialization, species catalogs, population truth and representation-safe future runtime integration.",
-  "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
-  "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
+  "short_description": "Evolutionary ecology research for continuous environment-driven plant specialization, developmental genotype-to-phenotype programs, species catalogs, population truth and representation-safe future runtime integration.",
+  "purpose": "Prove that vegetation diversity and plant form can emerge from environmental fields, resource trade-offs, inherited developmental programs, mutation, competition, dispersal and history without hardcoded biome placement or canonical TREE/BUSH/GRASS classes.",
+  "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence, a developmental Genome-to-GrowthGraph-to-Phenotype track, seed-carried heredity design and portable SpeciesCatalog contracts that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
   "current_stage": "ECO.P1A Environmental Causality Baseline",
   "stage_status": "P1A_S2_ACCEPTED_P1A_S3_FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING_RESEARCH_ONLY",
-  "progress_note": "P1A-S1 and P1A-S2 remain accepted. The first S3 graphical review found presentation-only defects: diagnostic text visually intruded on the heatmap and did not sufficiently explain probe-vs-BASE effect or selected-patch causality. S3 Fix1 now uses a dedicated right-side scrollable diagnostics panel and exposes existing S2 responses/limitations plus explicit global/local comparisons and WHY explanations. Local Godot 4.7.1 double regression is S1 109/109, S2 235/235, S3 Fix1 208/208; focused dataset hash dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690 and 33x33 BASE scene hash 9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c are unchanged. Exact Windows Fix1 automated and graphical reruns are required before S3 acceptance.",
+  "progress_note": "P1A-S1 and P1A-S2 remain accepted. The first S3 graphical review found presentation-only defects: diagnostic text visually intruded on the heatmap and did not sufficiently explain probe-vs-BASE effect or selected-patch causality. S3 Fix1 now uses a dedicated right-side scrollable diagnostics panel and exposes existing S2 responses/limitations plus explicit global/local comparisons and WHY explanations. Local Godot 4.7.1 double regression is S1 109/109, S2 235/235, S3 Fix1 208/208; focused dataset hash dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690 and 33x33 BASE scene hash 9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c are unchanged. Exact Windows Fix1 automated and graphical reruns are required before S3 acceptance. In parallel, ECO.PH Plant Development and Phenotype has been documented as a future cross-cutting research track: no implementation opens before P1A acceptance; PH1 may then run beside P1B, PH3 converges before final morphology-aware strategy competition, PH4 before seed/dispersal biogeography, and PH5 with P3 phenotype materialization.",
   "last_accepted_checkpoint": "ECO.P1A-S2 Single-Plant Resource Model",
-  "next_stage": "Pull S3 Fix1 on the exact Windows worktree and run RUN_ECO_P1A_S3_TESTS.ps1. Require S1 109/109, S2 235/235, S3 208/208 and unchanged hashes. Then rerun scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn graphically and verify map/panel separation, scroll/readability, probe-vs-BASE summaries and selected-patch RESP/LIMIT/ENERGY/BIO/WHY diagnostics. On PASS accept P1A-S3 and open P1A-S4. Mutation/evolution remains blocked until P1A acceptance.",
+  "next_stage": "Pull S3 Fix1 on the exact Windows worktree and run RUN_ECO_P1A_S3_TESTS.ps1. Require S1 109/109, S2 235/235, S3 208/208 and unchanged hashes. Then rerun scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn graphically and verify map/panel separation, scroll/readability, probe-vs-BASE summaries and selected-patch RESP/LIMIT/ENERGY/BIO/WHY diagnostics. On PASS accept P1A-S3 and open P1A-S4. Mutation/evolution and ECO.PH implementation remain blocked until P1A acceptance.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -21,6 +21,16 @@
     "G environment semantics as future production input",
     "Matter/Material Ontology as future substrate truth",
     "Harness gate before production runtime promotion"
+  ],
+  "planned_cross_tracks": [
+    {
+      "id": "ECO.PH",
+      "name": "Plant Development and Phenotype",
+      "status": "DOCUMENTED_BLOCKED_BY_P1A_ACCEPTANCE",
+      "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
+      "ownership": "research-only inherited development traits, DevelopmentState/GrowthGraph candidate contracts, seed heredity and representation projection",
+      "convergence": ["PH1 parallel with P1B", "PH3 before morphology-aware strategy competition acceptance", "PH4 before EXP-V6 seed/dispersal biogeography", "PH5 with EXP-V9 developmental phenotype materialization", "PH6 waits for canonical persistence/authority adapters"]
+    }
   ],
   "owned_paths": [
     "config/ecology/**",
@@ -74,6 +84,7 @@
     "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
     "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
     "docs/future_features/evolutionary_ecology/ECO_P1A_EXECUTION_PLAN_RU.md",
+    "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
     "docs/future_features/evolutionary_ecology/P0_TECHNICAL_ALIGNMENT_RU.md"
   ],
   "tested_heads": {
@@ -91,7 +102,7 @@
     {
       "foundation": "ECOLOGY_RESEARCH_MODEL",
       "claimed_owner": "ECO",
-      "scope": "research-only ecology traits, population models, evolution experiments and SpeciesCatalog candidate contracts"
+      "scope": "research-only ecology traits, population models, evolution experiments, developmental phenotype candidate contracts and SpeciesCatalog candidate contracts"
     }
   ],
   "forbidden_foundation_ownership": [
@@ -108,10 +119,12 @@
     "HYDROLOGY_TRUTH",
     "TERRAIN_SURFACE_IDENTITY",
     "REPRESENTATION_CELL_IDENTITY",
-    "PRESENTATION_MESH_AS_TRUTH"
+    "PRESENTATION_MESH_AS_TRUTH",
+    "PLANET_WIDE_INDIVIDUAL_GROWTH_GRAPH_TRUTH"
   ],
   "blockers": [
     "P1A_S3_FIX1_EXACT_WINDOWS_AND_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
+    "ECO_PH_IMPLEMENTATION_REQUIRES_P1A_ACCEPTANCE",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
