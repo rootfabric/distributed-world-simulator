@@ -1,10 +1,11 @@
 {
   "schema": "planet_simulator.t1b4_composition_acceptance_validation.v1",
   "checkpoint": "T1B4_COMPOSITION_ACCEPTANCE",
-  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1B.3 Recovery / Reconnect Composition ACCEPTED",
   "parent_tested_checkout": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
+  "accepted_executable_checkout": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "implementation": {
@@ -69,16 +70,34 @@
       "A reconnect/C late join/server clean shutdown"
     ],
     "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
+    "full_regression_result": "PASS_BY_REQUIRED_PRESERVED_CHECKOUT_SEQUENCE",
+    "full_regression_evidence": {
+      "rl2_real_asteroid_multiresolution_assertions": 44,
+      "rl3_representation_aware_network_streaming_assertions": 175,
+      "rl3_representation_streaming_processes_assertions": 37,
+      "main_scene_cli_all_pass": 6,
+      "main_scene_cli_all_fail": 0,
+      "lifecycle": "STOPPED",
+      "exit_code": 0,
+      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+      "report": "C:\\Godot\\lunar-world-t1-construct\\artifacts\\test-results\\world-regression-summary.json"
+    }
   },
   "tested_heads": {
     "runtime": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
     "focused": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
-    "full_regression": ""
+    "full_regression": "88736b1e57a5fb96d80c8842ea983c20d8b833f3"
+  },
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
   },
   "t2_control_gate": {
     "t2_0_active": false,
-    "blocked_until": ["C22_MAIN_INTEGRATED", "T_RUNTIME_SCALE_EVIDENCE", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
+    "blocked_until": ["C22_MAIN_INTEGRATED", "T_RUNTIME_SCALE_EVIDENCE", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"],
+    "canonical_blocker": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
   },
-  "next_stage_if_accepted": "T1B aggregate handoff complete; wait for global T2.0 convergence gate"
+  "next_stage_if_accepted": "T1B aggregate handoff complete; no T1B.5; wait for global T2.0 convergence gate"
 }
