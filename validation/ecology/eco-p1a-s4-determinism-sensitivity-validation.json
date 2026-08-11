@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1A-S4",
-  "decision": "CANDIDATE_LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "parent_regression": {
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
@@ -23,6 +23,17 @@
     "assertions": 5,
     "failures": 0,
     "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "exact_windows_evidence": {
+    "result": "PASS_CLEAN",
+    "p1a_s1": "PASS_109_ASSERTIONS",
+    "p1a_s2": "PASS_235_ASSERTIONS",
+    "p1a_s3": "PASS_208_ASSERTIONS",
+    "p1a_s4": "PASS_165_ASSERTIONS",
+    "restart_replay": "PASS_5_ASSERTIONS",
+    "summary_hash_match": true,
+    "result_hash_match": true,
+    "biomass_series_hash_match": true
   },
   "baseline_summary": {
     "grid": "17x17",
@@ -57,6 +68,6 @@
     "floating_point_replay_divergence": "PASS_EXACT_HASH"
   },
   "truth_boundary": "S4 is a research-only experiment harness. The accepted S1 fixture, S2 resource equations and S2 PatchSimulator remain unchanged. Full biomass runs use the accepted PatchSimulator; coefficient perturbations are applied only to exposed cost terms for sensitivity summaries.",
-  "windows_confirmation": "PENDING",
-  "next": "Run RUN_ECO_P1A_S4_TESTS.ps1 on the exact Windows worktree. On clean matching hashes, accept S4 and open P1A-S5 final P1A decision."
+  "windows_confirmation": "PASS_CLEAN",
+  "next": "ECO.P1A-S4 is accepted. Run P1A-S5 final evidence gate; if all ten P1A criteria remain satisfied, accept ECO.P1A and open ECO.P1B Local Adaptation Proof plus ECO.PH0 Development Trait Contract."
 }
