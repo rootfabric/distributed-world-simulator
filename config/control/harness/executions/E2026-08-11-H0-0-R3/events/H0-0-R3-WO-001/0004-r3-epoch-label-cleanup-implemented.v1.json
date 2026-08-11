@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0004",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 4,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-11T10:28:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "predicate": "H0_0_R3_EPOCH_SPECIFIC_REWRITE_COMPLETE",
+  "command": "Remove final R2-specific checkpoint freshness label from state_builder and bind it to the R3 checkpoint document path",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/harness/state_builder.py",
+    "CONTROL_DEVELOPMENT.ps1",
+    "tests/harness/test_h0_control_harness.py"
+  ],
+  "summary": "R3 epoch-specific rewrite is complete. Launcher, active tests and implementation freshness labels now reference R3; historical R1/R2 execution directories are absent from the active tree.",
+  "blocker": "FRESH_R3_UNIT_STATUS_PLAN_RESUME_CLEAN_CLONE_AND_PC0_VERIFICATION_REQUIRED"
+}

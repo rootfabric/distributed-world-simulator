@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R5-H0-1-R5-DISPATCH-WO-001-0001",
+  "project_epoch": "E2026-08-11-H0-1-R5",
+  "work_order_id": "H0-1-R5-DISPATCH-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T12:27:30Z",
+  "actor": "DIRECTOR",
+  "branch": "main",
+  "head_sha": "9ab5b16332de47fe6a9c525442d4efa882c9a71c",
+  "predicate": "H0_1_REGISTRY_71_PLANNING_HANDOFF_CREATED",
+  "command": "CREATE_H0_1_R5_PLANNING_HANDOFF",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-1-R5/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-1-R5/work-orders/H0-1-R5-DISPATCH-WO-001.v1.json"
+  ],
+  "summary": "Created/refreshed the registry-generation-71 H0.1 planning handoff on current main 9ab5b163. It does not authorize runtime; fresh post-checkpoint H0.1 execution remains required."
+}

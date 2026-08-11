@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.harness_pc0_evidence.v1",
+  "work_order_id": "H0-0-R3-WO-001",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "candidate_head_sha": "2afb19af138e1050adbb6c2619c20798eec5e1c8",
+  "main_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
+  "merge_candidate_sha": "be54fa0ea6879b742313e79bf998274f0e95ba74",
+  "workflow": "Project Control",
+  "workflow_run_id": 31482566948,
+  "workflow_job_id": 93750631717,
+  "workflow_conclusion": "success",
+  "standard_pc0": {
+    "overall": "YELLOW",
+    "non_red": true,
+    "harness": "GREEN",
+    "eco": "RED_ADVISORY",
+    "registry_generation": 67
+  },
+  "directional_pc0": {
+    "overall": "YELLOW",
+    "non_red": true,
+    "blocking_findings": [
+      "CH -> NX WATCH_HIT YELLOW"
+    ],
+    "advisory_findings": [
+      "G -> ECO WATCH_HIT YELLOW_ADVISORY"
+    ]
+  },
+  "interpretation": "Fresh R3 Project Control is NON_RED on Draft PR #75 with exact base main 9ad18eab and candidate head 2afb19af. This proves the PC0_NON_RED predicate for the current implementation phase only. A final freshness rerun remains required before checkpoint proposal because append-only control evidence may continue to advance the branch head.",
+  "source": "GitHub Actions run 31482566948, job 93750631717"
+}

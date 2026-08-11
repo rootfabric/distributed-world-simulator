@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.harness_execution_result.v1",
+  "execution_id": "H0-0-R3-WO-001-WINDOWS-EXECUTION-001",
+  "work_order_id": "H0-0-R3-WO-001",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "platform": "Windows / PowerShell / Python 3.11",
+  "recorded_at_utc": "2026-08-11T10:45:00Z",
+  "checkout": {
+    "source": "fresh git clone",
+    "branch": "control/h0-closed-loop-development-r3",
+    "head_sha": "a3cde435e0e59b1de74d411b502be98f6e3a88ab",
+    "origin_main_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
+    "worktree_clean_after_run": true
+  },
+  "dependency": {
+    "jsonschema_required": "4.22.0",
+    "status": "SATISFIED"
+  },
+  "focused_suite": {
+    "command": "python -m unittest discover -s tests/harness -v",
+    "tests_run": 18,
+    "passed": 17,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 1,
+    "skip_reason": "symlink creation unavailable",
+    "result": "PASS",
+    "duration_seconds": 11.823,
+    "required_predicate_impact": "NONE; skipped symlink escape test is not a required H0_0_SCAFFOLD_READY predicate"
+  },
+  "public_commands": {
+    "status": {"ok": true, "epoch_status": "EXACT_BASE", "findings": [], "runtime_authorized": false},
+    "plan": {"ok": true, "c22_status": "BLOCKED", "c22_branch_creation": "FORBIDDEN", "runtime_authorized": false},
+    "resume": {"ok": true, "active_epoch": "E2026-08-11-H0-0-R3", "open_blocker": null, "runtime_authorized": false}
+  },
+  "verified_predicates": [
+    "CONTROL_DEVELOPMENT_STATUS_WORKS",
+    "CONTROL_DEVELOPMENT_PLAN_WORKS",
+    "CONTROL_DEVELOPMENT_RESUME_WORKS",
+    "CANONICAL_CONTRACTS_LOAD_PASS",
+    "REVIEW_AND_EVIDENCE_CONTRACTS_LOAD_PASS",
+    "WORK_ORDER_SCHEMA_VALIDATION_PASS",
+    "EVENT_REDUCER_REBUILDS_STATE_PASS",
+    "PROJECT_EPOCH_VALIDATION_PASS",
+    "MAIN_MOVEMENT_EPOCH_INVALIDATION_DETECTION_PASS",
+    "DRY_RUN_C22_PLAN_PASS",
+    "RECOVERY_FIXTURE_WITHOUT_CHAT_PASS",
+    "NO_RUNTIME_SCOPE_CHANGES"
+  ],
+  "notes": [
+    "Freshness fence matched the R3 epoch base before execution.",
+    "Status, Plan and Resume each returned ok=true from the fresh clone.",
+    "C22 remained blocked and runtime_authorized remained false.",
+    "Final git status --short produced no output, proving the checkout remained clean."
+  ]
+}

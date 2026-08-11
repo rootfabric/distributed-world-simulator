@@ -1,0 +1,43 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-0-R3-WO-001-AUDITED-REGISTRY-CONTINUATION-001",
+  "work_order_id": "H0-0-R3-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "H0.0 audited main-movement continuation across main-owned registry generation bumps",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume",
+    "scripts/harness/state_builder.py::build_state",
+    "scripts/harness/state_builder.py::_validate_semantics",
+    "scripts/harness/epoch_validator.py::validate_epoch"
+  ],
+  "callers": ["Git-only recovery", "checkpoint audit", "future current-main H0/H1 workers"],
+  "callees": ["Project Epoch validation", "project registry contract", "referenced epoch audit selection"],
+  "sibling_paths": ["tests/harness/**", "config/control/harness/executions/E2026-08-11-H0-0-R3/audits/**"],
+  "existing_tests": [
+    "test_epoch_exact_moved_audited_and_invalidated",
+    "test_unreferenced_epoch_audit_never_authorizes",
+    "test_active_ledger_matches_declared_phase"
+  ],
+  "missing_tests": [
+    "Full semantic validation permits registry-generation movement only with a referenced audit matching old/new generations and NON_RED PC0",
+    "Registry-generation mismatch without a valid audit remains fail-closed"
+  ],
+  "public_or_internal_contracts": [
+    "Project Epoch identity remains pinned to its creation base and registry generation",
+    "MAIN_MOVED_AUDIT_CONTINUE must compose with full build_state semantics",
+    "Unreferenced/stale/mismatched audits cannot authorize continuation"
+  ],
+  "expected_shipped_behavior": "A descendant main commit that only advances main-owned control metadata may continue an existing Project Epoch without rewriting epoch identity only when an explicitly referenced audit matches the epoch base, current main SHA, base registry generation, current registry generation and proves standard/directional PC0 NON_RED. All other registry-generation mismatches fail closed.",
+  "relevant_history_or_evidence": [
+    "R3 Windows clean-clone verified all 13 H0.0 predicates on head a3cde435",
+    "main advanced to 8c388d6595115e4a22953629e07008299e66b6c7 / registry generation 68 via ECO advisory registry update only",
+    "GitHub Project Control run 31483922647 checked merge 3796d83e + main 8c388d and returned standard YELLOW/NON_RED, directional YELLOW/NON_RED, HARNESS GREEN",
+    "state_builder currently rejects epoch registry 67 versus current registry 68 before epoch_validator can consume an audit"
+  ],
+  "root_cause_hypothesis": "Audited main movement was implemented in epoch_validator after semantic validation had already enforced exact registry-generation equality. The two individually correct fail-closed checks were never composed, making MAIN_MOVED_AUDIT_CONTINUE unreachable when a main movement also increments the registry generation.",
+  "canonical_fix_location": "scripts/harness/state_builder.py: select a validated referenced audit before semantic registry-generation enforcement and make mismatch continuation conditional on matching audit generation metadata; tests/harness: add explicit audited-registry continuation coverage.",
+  "why_not_symptom_patch": "Rewriting the epoch registry generation, merging around the check, or ignoring registry mismatch would corrupt epoch identity or weaken fail-closed behavior. The repair composes the existing audit mechanism with semantic validation under explicit exact-match guards."
+}

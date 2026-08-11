@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+  "audit_id": "H0-0-R3-WO-001-MAIN-8C388D-REG68-AUDIT-001",
+  "work_order_id": "H0-0-R3-WO-001",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "base_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
+  "main_sha": "8c388d6595115e4a22953629e07008299e66b6c7",
+  "base_registry_generation": 67,
+  "main_registry_generation": 68,
+  "main_delta": [
+    "config/control/project-program-registry.v1.json"
+  ],
+  "main_delta_classification": "MAIN_OWNED_REGISTRY_ONLY_ECO_ADVISORY_STATE",
+  "decision": "CONTINUE",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "project_control": {
+    "run_id": 31484468604,
+    "job_id": 93756588038,
+    "merge_checkout_sha": "cf0230f8022d761aea8275fc6b1d6e7996e0331c",
+    "candidate_head_sha": "2354462db0e2b8c5da06c8d268958a1f08ad1543",
+    "main_sha": "8c388d6595115e4a22953629e07008299e66b6c7",
+    "registry_generation": 68,
+    "standard_overall": "YELLOW",
+    "harness": "GREEN",
+    "eco": "RED_ADVISORY",
+    "directional_overall": "YELLOW",
+    "directional_findings": [
+      "G -> ECO YELLOW ADVISORY: 12 paths",
+      "CH -> NX YELLOW BLOCK consumer: 2 paths"
+    ]
+  },
+  "audited_at_utc": "2026-08-11T10:58:00Z",
+  "reason": "Canonical main advanced by one descendant commit that changes only the main-owned program registry to mirror ECO P1C-S2 advisory research state. No H0 implementation, canonical harness schema, runtime or domain path changed. Fresh Project Control on the exact merge composition is NON_RED in both standard and directional modes."
+}

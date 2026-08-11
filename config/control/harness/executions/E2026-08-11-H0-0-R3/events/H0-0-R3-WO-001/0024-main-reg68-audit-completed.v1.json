@@ -1,0 +1,20 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0024",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":24,
+  "event_type":"AUDIT_COMPLETED",
+  "work_state":"AUDITED",
+  "recorded_at_utc":"2026-08-11T10:59:00Z",
+  "actor":"DIRECTOR",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"2354462db0e2b8c5da06c8d268958a1f08ad1543",
+  "predicate":"MAIN_MOVED_AUDIT_CONTINUE",
+  "command":"Audit descendant main 8c388d6595115e4a22953629e07008299e66b6c7 / registry 68 using GitHub Project Control run 31484468604, job 93756588038, merge checkout cf0230f8022d761aea8275fc6b1d6e7996e0331c",
+  "exit_code":0,
+  "evidence_paths":[
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/audits/H0-0-R3-WO-001-MAIN-8C388D-REG68-AUDIT-001.v1.json"
+  ],
+  "summary":"Canonical main advanced by one descendant registry-only ECO advisory update. Fresh standard and directional PC0 are NON_RED, HARNESS is GREEN, and no H0 implementation/runtime/domain path changed. R3 may continue under MAIN_MOVED_AUDIT_CONTINUE; runtime remains unauthorized."
+}

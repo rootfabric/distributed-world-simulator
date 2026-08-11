@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0002",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-11T10:26:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "f8ee0b5bfe6d5d0bb89301e34dbd0837fa22782a",
+  "predicate": "H0_0_R3_HIGH_DESIGN_AUTHORIZED",
+  "command": "Dispatch H0-0-R3-WO-001 after independent HIGH pre-build design review PASS",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/reviews/H0-0-R3-WO-001-PREBUILD-REVIEW-001.v1.json"
+  ],
+  "summary": "Fresh R3 H0.0 Work Order is formally dispatched after HIGH design authorization. The transferred files existed as unaccepted capability transport before dispatch; no predicate or checkpoint evidence is inherited from that transport.",
+  "blocker": "FRESH_R3_IMPLEMENTATION_AND_VERIFICATION_REQUIRED"
+}

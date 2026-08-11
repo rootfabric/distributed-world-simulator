@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0001",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T10:24:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "5a50e813e34bd7511cc8f642ae3aa2f0e80904fe",
+  "predicate": "H0_0_R3_FRESH_WORK_ORDER_READY",
+  "command": "Create fresh current-main H0.0 R3 Project Epoch and bounded HIGH Work Order",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/work-orders/H0-0-R3-WO-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/transition-table.v1.json"
+  ],
+  "summary": "Fresh H0.0 R3 authorization state was created from main 9ad18eab / registry generation 67. Historical R1/R2 execution ledgers are absent from the active R3 tree and no prior predicate PASS is transferred.",
+  "blocker": "R3_CAPABILITY_REWRITE_AND_PREBUILD_REVIEW_REQUIRED"
+}
