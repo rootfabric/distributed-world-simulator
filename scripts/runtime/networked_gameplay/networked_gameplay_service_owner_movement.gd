@@ -9,7 +9,7 @@ extends "res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd"
 # PlayerMovementService before it replaces transform fields in the canonical
 # server record.
 
-const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+const OwnerPlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
 
 const OWNER_MOVEMENT_AUTHORITY_POLICY: String = \
 	"OWNER_AUTHORS_TRANSFORM_SERVER_VALIDATES_AND_RELAYS_V1"
@@ -97,9 +97,9 @@ func submit_player_state(
 # -Basis(Vector3.UP, yaw).z, the inverse is atan2(-forward.x, -forward.z).
 func _apply_playable_state_to_record(record: Dictionary, player_state: Dictionary) -> Dictionary:
 	var next := record.duplicate(true)
-	var position := PlayableStateCodec.player_position(player_state)
-	var velocity := PlayableStateCodec.player_velocity(player_state)
-	var forward := -PlayableStateCodec.player_basis(player_state).z
+	var position := OwnerPlayableStateCodec.player_position(player_state)
+	var velocity := OwnerPlayableStateCodec.player_velocity(player_state)
+	var forward := -OwnerPlayableStateCodec.player_basis(player_state).z
 	next["position"] = {"x": position.x, "y": position.y, "z": position.z}
 	next["velocity"] = {"x": velocity.x, "y": velocity.y, "z": velocity.z}
 	var horizontal_forward := forward.slide(Vector3.UP)
