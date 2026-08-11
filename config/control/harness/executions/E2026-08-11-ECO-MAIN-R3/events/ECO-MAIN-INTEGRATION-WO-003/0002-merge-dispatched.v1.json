@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R3-ECO-MAIN-INTEGRATION-WO-003-0002",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R3",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-11T08:47:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r3",
+  "head_sha": "47f465f61b681199a1374a07a8365fd0b1b316d5",
+  "predicate": "HIGH_PREBUILD_REVIEW_PASS",
+  "command": "Independent exact-head HIGH pre-build review of R3 pins, source delta and two-parent ancestry design",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/reviews/ECO-MAIN-INTEGRATION-WO-003-PREBUILD-REVIEW-001.v1.json"
+  ],
+  "summary": "Fresh HIGH pre-build review passed on exact R3 head 47f465f6. Candidate construction is dispatched only while main, ECO, passport and source-tree pins remain exact.",
+  "blocker": ""
+}
