@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-10T22:48:00Z",
+  "updated_at_utc": "2026-08-11T01:08:00Z",
   "canonical_branch": "main",
   "status": "active",
   "architecture_invariants": [
@@ -69,7 +69,7 @@
     "main",
     "feature/t1b-composition-failure-recovery",
     "feature/g8-geomorphology",
-    "feature/ch9-5-live-equipment-runtime-composition",
+    "feature/ch9-6-playable-network-equipment-lab",
     "feature/world-building-doctrine"
   ],
   "active_frontiers": {
@@ -85,10 +85,10 @@
       "next_world_showcase_milestone": "G8 Geomorphology"
     },
     "character": {
-      "branch": "feature/ch9-5-live-equipment-runtime-composition",
-      "stage": "CH9.5 Live Equipment Runtime Composition",
-      "last_accepted_checkpoint": "CH9.4 Equipment Persistence / Late Reconnect",
-      "goal": "Compose inventory-driven equipment, server-authoritative ENet replication, durable recovery and derived character presentation in one live runtime."
+      "branch": "feature/ch9-6-playable-network-equipment-lab",
+      "stage": "CH9.6 Playable Network Equipment Lab",
+      "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition",
+      "goal": "Route the real component Inventory UI through server-authoritative network equipment and durable recovery into the real Quaternius presenter in one playable graphical composition."
     },
     "world_building_doctrine": {
       "branch": "feature/world-building-doctrine",
@@ -101,18 +101,20 @@
       "CH9.1 Authoritative Equipment Operations",
       "CH9.2 Inventory + Character Composition",
       "CH9.3 Multiplayer Equipment Presentation",
-      "CH9.4 Equipment Persistence / Late Reconnect"
+      "CH9.4 Equipment Persistence / Late Reconnect",
+      "CH9.5 Live Equipment Runtime Composition"
     ],
-    "active": "CH9.5 Live Equipment Runtime Composition",
+    "active": "CH9.6 Playable Network Equipment Lab",
     "acceptance_goal": [
-      "persistent dedicated server uses the CH9.4 equipment-aware recovery service through existing M6 durability",
-      "equipment commands use the existing ITEM channel and canonical Item Graph",
-      "local and remote CharacterEquipment presentation follow replicated Item Graph updates automatically",
-      "server restart plus reconnect/late join preserve the same Item UUIDs and exactly one presentation per equipped item",
+      "the real CharacterEquipmentInventoryScreen routes equip/unequip through NetworkCharacterEquipmentGameplayController",
+      "network equipment mutations use the existing Ch9NetworkItemCommandBridge and ITEM/ENet channel",
+      "canonical server Item Graph remains the only equipment truth and client Item Graph remains a replica",
+      "the real Quaternius CharacterEquipmentPresenter follows the resulting replica equipment state",
+      "closing and reopening the playable lab restores the same canonical wearable UUID and presentation from CH9.5/M6 persistence",
       "movement snapshots remain free of equipment Item IDs",
-      "no character-private persistence, recovery manager, authority registry or network foundation is introduced"
+      "no character-private persistence, transport, authority registry or new equipment foundation is introduced"
     ],
-    "after_ch9_5": "Run PC0 audit before declaring any additional Character stage. Prefer integration/composition work over new equipment foundations unless a demonstrated gameplay requirement creates a new gap."
+    "after_ch9_6": "Run PC0 audit before declaring any later Character stage. Prefer additional cross-domain/playable composition only when a demonstrated scenario exposes a concrete gap."
   },
   "construction_parallel_tracks": {
     "composition": [
