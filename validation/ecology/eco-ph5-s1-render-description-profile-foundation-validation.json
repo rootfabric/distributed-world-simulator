@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH5-S1",
+  "decision": "LOCAL_CORE_FIXTURE_PASS_REAL_PH2_WINDOWS_AND_GRAPHICAL_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "LOCAL_LINUX_GODOT_4_7_1_DOUBLE_CORE_FIXTURE; EXACT_WINDOWS_REAL_PH2_PENDING",
+  "execution": {
+    "renderer_profile": "res://scripts/research/ecology/plant_renderer_profile_v1.gd",
+    "render_description": "res://scripts/research/ecology/plant_render_description_v1.gd",
+    "probe_matrix": "res://scripts/research/ecology/plant_render_description_probes_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph5_render_materialization_acceptance.gd",
+    "visual_smoke": "res://tests/research/ecology/eco_ph5_visual_lab_smoke.gd",
+    "restart": "res://tests/research/ecology/eco_ph5_restart_replay_probe.gd",
+    "scene": "res://scenes/labs/ecology/eco_ph5_render_materialization_lab.tscn",
+    "runner": "RUN_ECO_PH5_TESTS.ps1",
+    "opener": "OPEN_ECO_PH5_LAB.ps1"
+  },
+  "parent_gate": {
+    "ph4_focused": 718,
+    "ph4_restart": 5,
+    "ph4_lifecycle_hash": "88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1",
+    "ph4_offspring_batch_hash": "48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"
+  },
+  "acceptance_matrix": {
+    "DERIVED_DESCRIPTION": "REQUIRE source_graph_hash preserved and derived_representation=true",
+    "GROWTH_GRAPH_IMMUTABILITY": "REQUIRE source graph JSON unchanged before/after description and profile materialization",
+    "PROFILE_INDEPENDENCE": "REQUIRE six renderer profiles over the same description with distinct materialization hashes",
+    "DETERMINISTIC_REBUILD": "REQUIRE same GrowthGraph -> same render_description_hash",
+    "TAPER": "REQUIRE all branch radii positive and start radius >= end radius",
+    "FOLIAGE_ANCHORS": "REQUIRE deterministic positive foliage anchor set",
+    "CANOPY": "REQUIRE positive derived canopy bounds",
+    "DEBUG_SKELETON": "REQUIRE no foliage instances",
+    "BRANCH_TUBES": "REQUIRE tapered branch profile metadata",
+    "BRANCH_LEAF_INSTANCED": "REQUIRE foliage instances",
+    "CANOPY_APPROXIMATION": "REQUIRE canopy primitive",
+    "FULL_PROCEDURAL": "REQUIRE all branch and foliage primitives exposed",
+    "IMPOSTOR_BILLBOARD": "REQUIRE one impostor and zero branch primitives",
+    "NO_CANONICAL_PLANT_TYPES": "REQUIRE no tree_type/bush_type/grass_type fields",
+    "RESTART_REPLAY": "REQUIRE focused and fresh-process reference description, profile matrix and full materialization hashes equal",
+    "GRAPHICAL": "PENDING_USER_OBSERVATION"
+  },
+  "local_core_preflight": {
+    "focused": "PASS_492_SYNTHETIC_CORE_FIXTURE",
+    "visual_smoke": "PASS_15",
+    "restart": "PASS_4",
+    "tested_equals_published": "PASS_ALL_10_FILES_EXACT_GIT_BLOBS"
+  },
+  "windows_confirmation": "PENDING_REAL_PH2_EXECUTION",
+  "graphical_confirmation": "PENDING",
+  "truth_boundary": "PH5-S1 defines derived presentation metadata only. No renderer output participates in ecology, resource, selection, lifecycle, authority, networking or persistence semantics.",
+  "next": "On exact Windows + graphical PASS accept PH5-S1, then implement PH5-S2 actual 3D branch tubes and foliage instancing."
+}
