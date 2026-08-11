@@ -1,11 +1,11 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 60,
+  "registry_generation": 61,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T02:44:00Z",
-  "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
+  "updated_at_utc": "2026-08-11T03:03:00Z",
+  "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger. Generation 61 is a convergence snapshot: T1B is accepted handoff evidence, G8.6 and CH9.6 await only manual graphical gates, C22 remains source-accepted but requires current-main convergence refresh, and NX.C0 is a clean main-based preparation frontier.",
   "programs": {
     "G": {
       "program": "G",
@@ -14,16 +14,18 @@
       "passport_path": "config/control/branches/feature__g8-geomorphology.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
-      "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
-      "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
+      "short_description": "Procedural geomorphology over accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
+      "purpose": "Finish G8 with deterministic geomorphology and a truthful visual lab before geology starts.",
+      "expected_outcome": "G8 closes with invariant canonical geomorphology and presentation-only LOD/seam behavior; G9 starts only after MAT identity is available under R3.",
       "current_stage": "G8.6 Geomorphology Visual Lab",
       "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
-      "progress_note": "G8.5 remains ACCEPTED on exact-Windows tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736. G8.6 first Windows attempt exposed and FIX1 corrected a harness-only JSON numeric Array comparison. The second exact-Windows attempt on 666a56e104b521c642afd3168f9d3e3b3f1d9ad4 exposed a real presentation-corridor alignment bug: samples were forced to Fixture.RADIUS_M while the accepted G6 river centerline carried radial elevation, so river_channel_delta_m was invisible. FIX2 preserves the upstream G6 centerline radius in a presentation-only wrapper and leaves all accepted G8.1-G8.5 runtime/formulas unchanged. Exact-Windows automated acceptance on checkout a9ca1f8b723e4edc5ebff40db26e41283d464597 passed the G8.6 focused/headless gate, G8.5 parent, derived presentation LOD/truth separation, PX/PZ seam diagnostic corridor and complete world/core regression through NX4. Supplied final evidence includes MW10 processes 51 assertions, MW10 lock-release retry 12, RL0 92, RL1 245, RL2 multiresolution 153, RL2 real asteroid 44, RL3 representation-aware 175, RL3 process composition 37, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED and working tree CLEAN. Automated G8.6 is accepted; only manual graphical observation remains.",
+      "progress_note": "Exact-Windows automated acceptance passed on a9ca1f8b723e4edc5ebff40db26e41283d464597, including focused G8.6, G8.5 parent, LOD/truth separation, PX/PZ seam diagnostics and full world/core regression. Only user-observed graphical acceptance remains.",
       "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-      "next_stage": "Launch the G8.6 visual-lab scene graphically on the latest feature/g8-geomorphology checkout and verify: G source/resolved geometry with stable Truth hash; views 1..7; W/S presentation LOD with Canonical samples=561 and stable hash; X PX/PZ seam without a visible crack; F canonical river alignment with coherent channel/bank/floodplain shaping. A user-observed graphical PASS is the only remaining G8.6 blocker. Then record G8.6 ACCEPTED and run G8 Full Acceptance.",
+      "next_stage": "Perform the G8.6 manual graphical gate on the preserved tested checkout; if PASS, record G8.6 ACCEPTED, run G8 Full Acceptance, freeze G8 evidence, and do not start G9 until canonical MAT0/R3 gating is satisfied.",
       "health_declared": "YELLOW",
-      "blockers": ["G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"]
+      "blockers": [
+        "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
+      ]
     },
     "T": {
       "program": "T",
@@ -32,14 +34,14 @@
       "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Accepted Construction composition/failure/recovery semantics over T1A.7 runtime recovery, interest, M0 durability and M3 replication.",
-      "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
-      "expected_outcome": "T1B is accepted handoff evidence for deterministic failure semantics, durable restart recovery, external-interest visibility, real M3 replica convergence and derived presentation before heterogeneous T2 scale.",
+      "short_description": "Accepted Construction composition/failure/recovery handoff evidence over T1A.7 runtime recovery, interest, durability and M3 replication.",
+      "purpose": "Preserve the accepted T1B semantics as evidence while global Construction scale/integration converges.",
+      "expected_outcome": "No T1B.5. The next Construction implementation frontier is T2.0 only after C22 integration, TS0.4 ceiling classification and PC0 convergence.",
       "current_stage": "T1B Aggregate Handoff Complete",
       "stage_status": "SOURCE_ACCEPTED_HANDOFF_COMPLETE",
-      "progress_note": "T1B.4 Composition Acceptance is ACCEPTED on executable Windows checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3. Focused live M3 process acceptance passed 93 assertions / 0 failures, proving outage fanout, OFFLINE command rejection, M0 checkpoint, dedicated-server process restart on the same durable root, recovered failure truth, no Construction visibility before external interest is reapplied, reconnect and late-interest recovered baselines, terminal rejection replay, dependency recovery, ONLINE convergence, successful post-recovery OPEN command, A/C derived OPEN presentation and final ONLINE/OPEN checkpoint with clean shutdown. The subsequent full world/core regression ran by the required preserved-checkout sequence without fetch/reset and passed RL2 real asteroid 44, RL3 representation-aware 175, RL3 processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit 0 and the NX4 final marker. T1B.0 through T1B.4 are accepted. SOURCE_ACCEPTED=true, MAIN_INTEGRATED=false, COMPOSITION_VERIFIED=true, PRODUCTION_READY=false. There is no T1B.5; the next T action is global convergence before T2.0.",
+      "progress_note": "T1B.0 through T1B.4 are accepted; executable checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3 passed the 93-assertion M3 failure/recovery composition gate and preserved full world/core regression. SOURCE_ACCEPTED=true, MAIN_INTEGRATED=false, COMPOSITION_VERIFIED=true, PRODUCTION_READY=false.",
       "last_accepted_checkpoint": "T1B.4 Composition Acceptance / T1B Aggregate Handoff",
-      "next_stage": "No T1B.5. Preserve this branch as accepted handoff evidence. Next: explicitly integrate accepted C22/TS0.3 into main when authorized, run post-merge Project Control, create fresh main-based TS0.4 1M Research Ceiling, classify PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED with bottleneck telemetry, converge accepted T runtime-scale/composition evidence with TS0.4 through PC0, and only then activate T2.0.",
+      "next_stage": "No new T1B stage. Keep the branch frozen as accepted handoff evidence. Resume T only after C22 current-main refresh/integration and TS0.4 classification clear the T2.0 convergence gate.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -50,16 +52,18 @@
       "passport_path": "config/control/branches/feature__c22-incremental-local-rebuild.v1.json",
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
-      "short_description": "Production convergence of TS0.3 local dirty-section evidence into the real C22/C24 Construction proxy pipeline.",
-      "purpose": "Transfer the TS0.3-proven local dirty-section rebuild into the production C22/C24 Construction proxy pipeline without changing canonical Construction truth, authority or persistence ownership.",
-      "expected_outcome": "Unit-grid local mutations rebuild only dirty plus neighbor sections, reuse unchanged content-addressed artifacts, rebuild FAR shell from section artifacts, preserve C24 graphical correctness, and safely fall back for unsupported cases.",
+      "short_description": "Source-accepted production convergence of TS0.3 local dirty-section evidence into the real C22/C24 Construction proxy pipeline.",
+      "purpose": "Land accepted incremental C22 behavior into current main without altering canonical Construction truth or derived-presentation semantics.",
+      "expected_outcome": "A fresh main-based convergence refresh reproduces the accepted C22 production diff, passes C22/C24 focused validation plus full world/core regression, then becomes explicitly mergeable.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-      "stage_status": "SOURCE_ACCEPTED_MERGE_READY",
-      "progress_note": "C22 production convergence is SOURCE_ACCEPTED. Exact-Windows focused validation passes C22 incremental 28 assertions, C22 graphical 35 and C24 contracts 81. After FIX2 added the new incremental test to explicit world-regression coverage, the full world/core suite passes through NX4 with main_scene_cli_all 6 PASS / 0 FAIL and clean STOPPED lifecycle. Main drift since the convergence base is control-plane-only; active T1A.7 has no C22 proxy runtime/contract overlap. MAIN_INTEGRATED remains false until the accepted branch is merged and post-merge PC0 is run. The post-integration roadmap is now fixed in docs/plans/TS_C22_TO_T2_SCALE_CONVERGENCE_RU.md.",
+      "stage_status": "SOURCE_ACCEPTED_MAIN_CONVERGENCE_REFRESH_REQUIRED",
+      "progress_note": "The source implementation remains accepted. PR #59 is currently non-mergeable and the source branch is 70 main commits behind its original base. Direct comparison shows those 70 main commits are control/architecture/docs only and do not touch C22 production proxy/runtime files, so this is an ancestry/control convergence blocker rather than a semantic C22 defect.",
       "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
-      "next_stage": "Merge feature/c22-incremental-local-rebuild into main, run post-merge Project Control and mark MAIN_INTEGRATED. Then retire this convergence frontier and create a fresh main-based TS0.4 1M Research Ceiling branch. Run TS0.4 in parallel with T1A.7.4 Scale / Soak, record PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED plus bottleneck telemetry, and converge with accepted T runtime-scale evidence through PC0 before activating T2.0 real heterogeneous station scale.",
-      "health_declared": "GREEN",
-      "blockers": []
+      "next_stage": "Create a fresh current-main C22 convergence refresh, reproduce/prove the accepted production diff, rerun focused C22/C24 and full regression, then return to MERGE_READY. Merge requires explicit authorization; after merge run PC0 and create TS0.4 from canonical main.",
+      "health_declared": "YELLOW",
+      "blockers": [
+        "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"
+      ]
     },
     "CH": {
       "program": "CH",
@@ -69,15 +73,17 @@
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
       "short_description": "Playable graphical composition of Inventory UI, server-authoritative network equipment, durable recovery and real Quaternius presentation.",
-      "purpose": "Route the accepted component Inventory UI through NetworkCharacterEquipmentGameplayController and the existing ITEM/ENet authority path into the persistent canonical Item Graph and real CharacterEquipmentPresenter.",
-      "expected_outcome": "A player can drag wearables in the actual Inventory UI, observe server-authoritative equipment on the real Quaternius character, restart the persistent runtime and see the same canonical equipped items restored automatically.",
+      "purpose": "Close the playable equipment vertical slice without introducing speculative equipment authority or a duplicate Item Graph path.",
+      "expected_outcome": "UI equipment, server confirmation, presenter state and restart recovery all remain consistent on the real character.",
       "current_stage": "CH9.6 Playable Network Equipment Lab",
-      "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_AND_GRAPHICAL_GATE",
-      "progress_note": "CH9.5 is FOCUSED_ACCEPTED. The mandatory post-acceptance audit supplied from registry generation 49 returned CH YELLOW; Overall RED was isolated to T1B.3 Construction. The T1B.3 passport declares only Construction failure/recovery runtime paths and no CH Character/M3/M6 equipment runtime overlap. The global roadmap explicitly prefers post-CH9.5 integration/composition instead of new equipment foundations. CH9.6 is therefore the authorized Character frontier. Candidate runtime head 19b463ca0a7a0a43284e953d36348145b428a0a6 adds a playable network equipment lab scene. The automated gate instantiates that same graphical scene headlessly and invokes the actual Inventory screen preview/drop route through NetworkCharacterEquipmentGameplayController, Ch9NetworkItemCommandBridge, persistent CH9.5 server, replica Item Graph and real Quaternius presenter, including a fresh-lab recovery cycle. Manual graphical observation remains required.",
+      "stage_status": "WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
+      "progress_note": "Windows automated acceptance is complete. Runtime head 7b2269b39952b8201714a7078a62b8f97057325c and tested executable/focused/full head 4cdafddce7cd6b5fa7ff45a06ae00f06320464ab pass CH9.2 UI routes 16, CH9.3 real ENet 20, CH9.4 reconnect/recovery 53, CH9.5 persistent ENet recovery 41 and CH9.6 playable UI/network/presenter 22 assertions. Only the manual graphical restart/recovery observation remains.",
       "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition FOCUSED_ACCEPTED",
-      "next_stage": "Run RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, launch PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1 with -ResetState, perform UI equip and movement observation, close normally, relaunch without -ResetState and verify recovered presentation. No later CH stage is authorized before CH9.6 acceptance and post-acceptance PC0 audit.",
+      "next_stage": "Run the two-pass graphical CH9.6 acceptance on preserved checkout 4cdafddc: equip/unequip plus movement, close normally, relaunch without ResetState, verify automatic restored presentation and post-recovery unequip. Then record CH9.6 acceptance and run post-acceptance PC0 before any later CH stage.",
       "health_declared": "YELLOW",
-      "blockers": ["CH9_6_WINDOWS_AUTOMATED_GATE_PENDING", "CH9_6_GRAPHICAL_USER_OBSERVATION_PENDING"]
+      "blockers": [
+        "CH9_6_GRAPHICAL_USER_OBSERVATION_PENDING"
+      ]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -104,14 +110,14 @@
       "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
-      "short_description": "Main-based convergence of the proven M7 owner-authoritative locomotion slice into the canonical network runtime without importing the legacy FIX ladder or render/physics violations.",
-      "purpose": "Promote the accepted owner-authority movement and item-interaction evidence into a small maintainable NX implementation while preserving server-owned gameplay truth, Item Graph authority, persistence and existing domain contracts.",
-      "expected_outcome": "Canonical main gains a configurable OWNER_AUTHORITATIVE_VALIDATED locomotion profile, smooth remote interpolation and rollback-safe optimistic item presentation with physics/render single-writer separation and bounded input metadata handling.",
+      "short_description": "Clean main-based convergence of proven owner-authority network evidence without importing the legacy FIX ladder or render/physics violations.",
+      "purpose": "Reimplement the minimal owner-authority capability over canonical main while preserving server-owned gameplay truth, Item Graph authority, durability and single-writer physics/presentation separation.",
+      "expected_outcome": "NX gains a maintainable OWNER_AUTHORITATIVE_VALIDATED profile, smooth remote interpolation and rollback-safe optimistic item presentation with bounded input metadata handling.",
       "current_stage": "NX.C0 Owner Authority Convergence Preparation",
       "stage_status": "ACTIVE_GREEN_PREPARATION",
-      "progress_note": "Fresh convergence branch has actual merge-base main a4cc8402d71424261f5bb50dac8fedbcd8c99bb6 (T1B aggregate handoff already included). The legacy feature/m7-sequence-aware-reconciliation-fix10-fix6-semantic-baseline lineage is retained only as research/evidence; its validated owner-authority vertical slice at runtime head 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record at 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are source evidence, not a merge base. No runtime code has been transferred in NX.C0, so there is no runtime drift or cross-branch overlap yet.",
-      "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice accepted as legacy branch evidence on 2026-08-11",
-      "next_stage": "NX.C1 Minimal Runtime Transfer: reimplement only movement authority profile/service/client-server composition and same-revision item rollback on top of current main. Do not cherry-pick legacy FIX7 render CharacterBody writes or the stacked FIX6/FIX7/FIX8/FIX9/FIX10 implementation ladder. Mark NX YELLOW while runtime transfer is unvalidated, then return GREEN only after exact-Windows focused, full world/core, two-client and dependency revalidation evidence is recorded in tested_heads.",
+      "progress_note": "NX.C0 remains control/docs only and therefore runtime freshness is not applicable. The legacy M7/FIX lineage is evidence only. Before NX.C1 begins, PC0 directional watched-dependency hardening must be integrated and the NX implementation branch must be refreshed from then-current canonical main.",
+      "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice retained as legacy evidence",
+      "next_stage": "After PC0 directional-watch hardening lands, create/refresh the NX.C1 runtime branch from current main. Reimplement only the minimal authority profile/service/client-server composition and same-revision item rollback; turn NX YELLOW until exact-Windows focused/full/two-client/dependency validation restores GREEN.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -127,7 +133,7 @@
       "expected_outcome": "MW10 remains the accepted transaction baseline until GM/T3/T5 composition requires new declared work.",
       "current_stage": "MW10 accepted stable baseline",
       "stage_status": "STABLE",
-      "progress_note": "No active Matter frontier is declared in PC0 generation 2.",
+      "progress_note": "No active Matter frontier is declared; MW10 remains the stable baseline.",
       "last_accepted_checkpoint": "MW10 Durable Same-Body Multi-Region Transactions",
       "next_stage": "GM Geo-Matter integration / future composition gate",
       "health_declared": "GREEN",
@@ -145,17 +151,78 @@
       "expected_outcome": "Reusable compute execution for future generation, AI and simulation workloads under explicit read/write contracts.",
       "current_stage": "Stable proposal-only compute foundation",
       "stage_status": "STABLE",
-      "progress_note": "No active S1 frontier is declared in PC0 generation 2.",
+      "progress_note": "No active S1 frontier is declared.",
       "last_accepted_checkpoint": "S1 Compute Proposal Foundation",
       "next_stage": "Register a new frontier only when a concrete workload requires it",
       "health_declared": "GREEN",
       "blockers": []
     }
   },
+  "convergence_order": {
+    "principle": "Do not open a new major runtime frontier from an old stacked lineage. Accepted legacy branches become evidence; new convergence/runtime work starts from the then-current canonical main unless a registered stacked dependency is intentional.",
+    "now_parallel": [
+      "PC0 directional-watch hardening / registry synchronization",
+      "G8.6 manual graphical acceptance",
+      "CH9.6 manual graphical acceptance",
+      "R3 candidate refresh preparation only"
+    ],
+    "construction_train": [
+      "C22 current-main convergence refresh",
+      "C22 focused + full regression",
+      "explicit C22 merge authorization",
+      "post-merge PC0 / MAIN_INTEGRATED",
+      "fresh main-based TS0.4 1M Research Ceiling",
+      "PC0 convergence with accepted T evidence",
+      "T2.0 Real Heterogeneous Base / Station"
+    ],
+    "network_train": [
+      "PC0 directional-watch hardening integrated",
+      "fresh/current-main NX.C1 runtime branch",
+      "minimal owner-authority transfer",
+      "exact-Windows focused/full/two-client/dependency validation",
+      "NX SOURCE_ACCEPTED"
+    ],
+    "architecture_train": [
+      "refresh GLOBAL-P0 R3 candidate onto current main/control baseline",
+      "update stale frontier guards to G8.6/T1B handoff/CH9.6/C22/NX.C0",
+      "define revision-transition handling before canonical R3 promotion",
+      "promote R3 only with PC0 non-RED",
+      "then register/start IAM/MAT/WT/WQ Wave A from one canonical base"
+    ]
+  },
   "global_blocked_transitions": [
-    {"stage": "G8 FULL ACCEPTANCE", "blocked_by": "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
-    {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
-    {"stage": "CH STAGE AFTER CH9.6 START", "blocked_by": "CH9_6_AUTOMATED_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
+    {
+      "stage": "G8 FULL ACCEPTANCE",
+      "blocked_by": "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
+    },
+    {
+      "stage": "C22 MERGE",
+      "blocked_by": "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED_PLUS_EXPLICIT_MERGE_AUTHORIZATION"
+    },
+    {
+      "stage": "T2.0 START",
+      "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
+    },
+    {
+      "stage": "CH STAGE AFTER CH9.6 START",
+      "blocked_by": "CH9_6_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
+    },
+    {
+      "stage": "NX.C1 RUNTIME TRANSFER START",
+      "blocked_by": "PC0_DIRECTIONAL_WATCH_HARDENING_MAIN_INTEGRATED_AND_FRESH_MAIN_BASE_REQUIRED"
+    },
+    {
+      "stage": "GLOBAL-P0 R3 PROMOTION",
+      "blocked_by": "R3_CURRENT_MAIN_REFRESH_PLUS_FRONTIER_GUARD_REFRESH_PLUS_REVISION_TRANSITION_PLAN_PLUS_PC0_NON_RED_REQUIRED"
+    }
   ],
-  "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
+  "audit_triggers": [
+    "ANY_MAJOR_CHECKPOINT_ACCEPTED",
+    "BEFORE_NEXT_MAJOR_STAGE",
+    "GLOBAL_ARCHITECTURE_CHANGE",
+    "NEW_FOUNDATION_OR_REGISTRY_CONCEPT",
+    "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY",
+    "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE",
+    "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"
+  ]
 }
