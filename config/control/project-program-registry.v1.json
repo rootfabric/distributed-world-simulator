@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 46,
+  "registry_generation": 47,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T00:04:00Z",
+  "updated_at_utc": "2026-08-11T00:38:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -18,10 +18,10 @@
       "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
       "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
       "current_stage": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-      "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
-      "progress_note": "G8.4 Erosion / Deposition Baseline is ACCEPTED after exact-Windows full acceptance on tested head 82cc31429f2bf2ea419bf1b50159838eea51c727 with G8.3 parent PASS, signed erosion/deposition PASS, full geomorphology composition PASS, ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. Frozen G8.4 metadata parent is d42b8ecb1dcf09f4317c0ef212e46df295c0ebdd. G8.5 is implemented as a proof-only stage with no new terrain runtime. It reuses accepted G7.3 representation-independence and builds real G3+G5+G6 semantic bundles through the accepted G7 composer, then evaluates accepted G8.4 deformation. Proof LODs are 2/4/8/12; same-point query, bundle, final deformation checksum and all component deltas must remain identical while external SurfaceCellKey identities differ. Alternate external cell/cube-face labels and requested-field order must not perturb deformation; the canonical river must evaluate across multiple cells and PX/PZ seam sides.",
+      "stage_status": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+      "progress_note": "G8.4 Erosion / Deposition Baseline is ACCEPTED after exact-Windows full acceptance on tested head 82cc31429f2bf2ea419bf1b50159838eea51c727. G8.5 remains proof-only with no new terrain runtime. First exact-Windows focused attempt on 00de94e2a75320de3ab66b9e4a52f55aa9067c75 passed editor import and accepted regressions G7.3=122, G8.0=84, G8.1=49, G8.2=63, G8.3=107 and G8.4=93 assertions, then stopped before G8.5 proof execution on three GDScript type-inference parse errors in the test harness. The failure is classified TEST_HARNESS_PARSE_ONLY, not semantic/runtime regression. FIX1 at fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a explicitly types the three direction_to_cell results as Dictionary; runtime, geomorphology formulas, semantic inputs and proof meaning are unchanged. Focused retest and full acceptance remain required.",
       "last_accepted_checkpoint": "G8.4 Erosion / Deposition Baseline",
-      "next_stage": "Run RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_5_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only full PASS unlocks G8.6 Geomorphology Visual Lab.",
+      "next_stage": "Sync latest feature/g8-geomorphology and rerun RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_5_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only full PASS unlocks G8.6 Geomorphology Visual Lab.",
       "health_declared": "YELLOW",
       "blockers": ["G8_5_FOCUSED_INVARIANCE_VALIDATION_REQUIRED", "G8_5_FULL_WORLD_REGRESSION_REQUIRED"]
     },
