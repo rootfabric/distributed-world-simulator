@@ -126,7 +126,7 @@ func _test_same_world_point_across_lod_and_cells() -> void:
 	var cell_tokens: Dictionary = {}
 
 	for lod in LODS:
-		var addressed := addressing.direction_to_cell(Fixture.BODY_ID, point, lod)
+		var addressed: Dictionary = addressing.direction_to_cell(Fixture.BODY_ID, point, lod)
 		_ok(addressed, "proof point addressed at LOD %d" % lod)
 		if not _success(addressed):
 			continue
@@ -154,7 +154,7 @@ func _test_same_world_point_across_lod_and_cells() -> void:
 
 	_check(cell_tokens.size() == LODS.size(), "same world point maps to distinct representation cells across proof LODs")
 
-	var actual := addressing.direction_to_cell(Fixture.BODY_ID, point, 8)
+	var actual: Dictionary = addressing.direction_to_cell(Fixture.BODY_ID, point, 8)
 	_ok(actual, "actual LOD8 representation cell available")
 	if _success(actual):
 		var actual_cell: Dictionary = actual["details"]["cell"]
@@ -203,7 +203,7 @@ func _test_px_pz_seam_representation_boundary() -> void:
 	var cells: Dictionary = {}
 	for point_value in compiled_river["details"]["river_spline"]["points_m"]:
 		var point: Array = point_value
-		var addressed := addressing.direction_to_cell(Fixture.BODY_ID, point, 8)
+		var addressed: Dictionary = addressing.direction_to_cell(Fixture.BODY_ID, point, 8)
 		_ok(addressed, "river centerline point addressed at seam proof LOD")
 		if not _success(addressed):
 			continue
