@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.ecology_checkpoint_decision.v1",
+  "checkpoint": "ECO.P1",
+  "name": "Plant Adaptation and Strategy Proof",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "components": [
+    {"id":"ECO.P1A","status":"ACCEPTED_10_OF_10","evidence":"environment causality, single-plant resource model, diagnostics and determinism"},
+    {"id":"ECO.P1B","status":"ACCEPTED_10_OF_10","evidence":"mutation/inheritance, local spatial selection, regional adaptation and robustness"},
+    {"id":"ECO.P1C","status":"ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE","evidence":"multi-strategy coexistence, anonymous niche diagnostics and robustness"}
+  ],
+  "proved": ["environmental fields causally influence plant resource balance","mutation and selection generate repeatable local adaptation from one ancestor","multiple unlabeled ecological strategies coexist under heterogeneous resource competition","uniform controls distinguish environmental niche structure from trait-space clustering artifacts","all accepted research outputs replay deterministically"],
+  "not_yet_claimed": ["morphology-to-resource coupling","seed dispersal and ecological history","canonical species discovery/catalog","planet-wide runtime ecology","production persistence/network/authority integration"],
+  "next": "ECO.PH developmental phenotype track: PH0 contract then PH1 deterministic GrowthGraph skeleton; P2 remains planned after P1/PH prerequisites."
+}
