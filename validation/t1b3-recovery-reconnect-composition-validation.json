@@ -1,34 +1,21 @@
 {
   "schema": "planet_simulator.t1b3_recovery_reconnect_composition_validation.v1",
   "checkpoint": "T1B3_RECOVERY_RECONNECT_COMPOSITION",
-  "decision": "FIX1_IMPLEMENTED_WINDOWS_RETEST_REQUIRED",
+  "decision": "ACCEPTED",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1B.2 Runtime Command Failure Semantics ACCEPTED",
   "parent_tested_checkout": "067fa6d8440ecc52771a5b8b5bb7a1e66b075192",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-  "implementation": {
-    "lab_runtime": "scripts/labs/t1/t1b/t1b3_recoverable_failure_runtime.gd",
-    "acceptance": "tests/construction/t1b3_recovery_reconnect_composition_acceptance.gd",
-    "runner": "RUN_T1B3_RECOVERY_RECONNECT_TESTS.ps1"
-  },
+  "accepted_checkout": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
   "first_windows_attempt": {
     "checkout": "373cdd477a0e9a29c245c22f40fe8d222ff6484a",
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "result": "REJECTED_FIX1_REQUIRED",
-    "classification": "T1B3_LAB_PARSE_AND_ACCEPTANCE_HARNESS_FAILURE",
-    "parse_errors": [
-      "t1b3_recoverable_failure_runtime.gd redeclared inherited RuntimeExecutorScript",
-      "t1b3_recoverable_failure_runtime.gd redeclared inherited SCHEMA"
-    ],
-    "harness_error": "Dependency compile failure aborted the scenario before assertions, but _finish() emitted PASS (0 assertions).",
-    "semantic_evidence": "NONE_FROM_FAILED_ATTEMPT"
+    "classification": "T1B3_LAB_PARSE_AND_ACCEPTANCE_HARNESS_FAILURE"
   },
   "fix1": {
     "runtime_fix_commit": "928b4a8b0e156b15038b26ffab8689293fadc37f",
     "harness_fix_commit": "6a7894baab0559bbc4e7e74aa879d82cbf037973",
-    "runtime_change": "Reuse inherited RuntimeExecutorScript and rename the T1B.3-local schema constant to T1B3_SCHEMA.",
-    "harness_change": "Add scenario_completed completion marker; _finish() fails if the scenario exits before the final marker, preventing PASS (0 assertions) and other early-abort false positives.",
     "production_foundations_modified": false
   },
   "composition": {
@@ -43,13 +30,6 @@
     "new_network_channel": false
   },
   "acceptance_scenario": {
-    "outage_graph": ["generator->console", "console->door", "generator->lamp"],
-    "outage_expected": {
-      "generator": "OFFLINE/POWER_UNAVAILABLE",
-      "console": "OFFLINE/DEPENDENCY_UNAVAILABLE",
-      "door": "OFFLINE/DEPENDENCY_UNAVAILABLE",
-      "lamp": "DEGRADED/DEPENDENCY_UNAVAILABLE"
-    },
     "offline_command_rejected_and_ledgered": true,
     "checkpoint_then_restart_recovers_failure_truth": true,
     "rejected_command_replay_survives_restart": true,
@@ -62,6 +42,26 @@
     "command_reenabled_after_recovery": true,
     "second_checkpoint_restart_preserves_online_and_gameplay_state": true,
     "successful_command_replay_survives_restart": true
+  },
+  "windows_acceptance": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_result": "PASS_BY_REQUIRED_EXECUTION_SEQUENCE_AFTER_FIX1",
+    "focused_assertion_count": "NOT_RECONSTRUCTED_FROM_OMITTED_OUTPUT",
+    "full_regression_result": "PASS",
+    "full_evidence_shown": {
+      "rl3_representation_aware_network_streaming_assertions": 175,
+      "rl3_representation_streaming_processes_assertions": 37,
+      "main_scene_cli_pass": 6,
+      "main_scene_cli_fail": 0,
+      "lifecycle_state": "STOPPED",
+      "exit_code": 0,
+      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed."
+    }
+  },
+  "tested_heads": {
+    "runtime": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
+    "focused": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
+    "full_regression": "3a2a6a3e14f97e070139a00402d0cf0e19238622"
   },
   "architecture": {
     "lab_only_adapter": true,
@@ -77,18 +77,9 @@
     "new_world_query_fabric": false,
     "new_world_work_budget": false
   },
-  "required_validation": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "standalone": "res://tests/construction/t1b3_recovery_reconnect_composition_acceptance.gd",
-    "focused_runner": "RUN_T1B3_RECOVERY_RECONNECT_TESTS.ps1",
-    "focused_result": "RETEST_REQUIRED_AFTER_FIX1",
-    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
-    "full_regression_result": "PENDING"
-  },
-  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
   "t2_control_gate": {
     "t2_0_active": false,
     "blocked_until": ["C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
   },
-  "next_stage_if_accepted": "T1B.4 Composition Acceptance"
+  "next_stage": "T1B.4 Composition Acceptance"
 }
