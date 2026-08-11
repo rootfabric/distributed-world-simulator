@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1B-S2",
+  "name": "Spatial Selection Baseline",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1B-S1 ACCEPTED",
+  "experiment_revision": "ECO.P1B-S2.1",
+  "one_ancestor_rule": true,
+  "diagnostic_sites": ["floodplain", "sunny_slope", "shaded_slope", "dry_ridge"],
+  "baseline": {
+    "generations": 16,
+    "population_size": 12,
+    "offspring_per_parent": 3,
+    "evaluation_seasons": 16,
+    "lineage_seed": 781223,
+    "alternate_lineage_seed": 781224
+  },
+  "selection_rule": {
+    "candidate_mutation_stream_depends_on_environment": false,
+    "ranking_input": "accepted P1A PlantResourceModel net_resource_balance at initial biomass",
+    "ranking_policy": "higher accepted net resource balance survives to the next generation; deterministic lineage checksum breaks exact ties",
+    "new_handwritten_fitness_score": false,
+    "biomass_and_recruitment_evidence": "accepted P1A SinglePlantPatchSimulatorV1 is run on selected populations for observed consequences"
+  },
+  "mutation_policy": {
+    "mutation_probability": 0.24,
+    "water_preference_step": 0.045,
+    "root_depth_m_step": 0.18,
+    "growth_rate_step": 0.045,
+    "shade_tolerance_step": 0.045,
+    "seed_dispersal_distance_m_step": 0.0,
+    "why_dispersal_frozen": "dispersal has a P1A cost but no modeled migration benefit yet; mutating it here would create a one-way cost-only selection artifact"
+  },
+  "determinism_baseline": {
+    "result_hash": "a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80",
+    "alternate_result_hash": "507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521",
+    "first_candidate_pool_hash": "9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd"
+  },
+  "local_specialization_evidence": {
+    "water_preference_divergence": 0.31804878747885,
+    "root_depth_m_divergence": 0.90360221360365,
+    "shade_tolerance_divergence": 0.19484783988267,
+    "seed_dispersal_distance_m_divergence": 0.0,
+    "native_population_best_in_own_environment": true,
+    "alternate_seed_repeats_specialization_phenomenon": true
+  },
+  "invariants": {
+    "accepted_p1a_truth_modified": false,
+    "p1b_s1_mutation_kernel_modified": false,
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "site_name_affects_mutation_stream": false,
+    "presentation_inputs_added": false,
+    "migration_enabled": false,
+    "competition_between_populations_enabled": false
+  }
+}
