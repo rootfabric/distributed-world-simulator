@@ -9,6 +9,7 @@
   "eligible_checkpoints": [
     "H0_0_SCAFFOLD_READY"
   ],
-  "status": "ACTIVE",
-  "decision": "CONTINUE"
+  "status": "INVALIDATED",
+  "invalidated_by_main_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
+  "decision": "REFRESH_REQUIRED"
 }
