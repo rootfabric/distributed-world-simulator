@@ -77,7 +77,7 @@ function Test-G86AllowedPath {
         "validation/g8-6-geomorphology-visual-lab-validation.json",
         "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_CANDIDATE_RU.md"
     )) { return $true }
-    if ($Path -match '^scripts/labs/procedural/g8_6_geomorphology_visual_lab\.gd(\.uid)?$') { return $true }
+    if ($Path -match '^scripts/labs/procedural/g8_6_geomorphology_visual_lab(_fix2)?\.gd(\.uid)?$') { return $true }
     if ($Path -eq "scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn") { return $true }
     if ($Path -match '^tests/procedural/geomorphology/g8_6_geomorphology_visual_lab_acceptance\.gd(\.uid)?$') { return $true }
     return $false
