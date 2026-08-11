@@ -23,6 +23,7 @@ REGISTRY_PATH = "config/control/project-program-registry.v1.json"
 POLICY_PATH = "config/control/project-control-policy.v1.json"
 OWNERSHIP_PATH = "config/control/architecture-ownership.v1.json"
 HEALTH_RANK = {"GREEN": 0, "YELLOW": 1, "RED": 2}
+NON_BLOCKING_GLOBAL_ROLES = {"RESEARCH_DESIGN_FRONTIER"}
 
 
 def git(*args: str, allow_fail: bool = False) -> str:
@@ -75,6 +76,18 @@ def matches_any(path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
 
 
+def program_blocks_global_progress(central: dict[str, Any]) -> bool:
+    """Return whether this program contributes its own health to global health.
+
+    Research/design frontiers stay fully audited, but their local drift does not
+    stop unrelated mainline delivery. An explicit registry override remains
+    available for future exceptional cases.
+    """
+    if "blocks_global_progress" in central:
+        return bool(central.get("blocks_global_progress"))
+    return str(central.get("role", "")) not in NON_BLOCKING_GLOBAL_ROLES
+
+
 def set_health(record: dict[str, Any], level: str, code: str, detail: str) -> None:
     if HEALTH_RANK[level] > HEALTH_RANK.get(str(record.get("health", "GREEN")), 0):
         record["health"] = level
@@ -108,6 +121,7 @@ def audit_program(
         "program_name": central.get("program_name", key),
         "branch": central.get("branch", ""),
         "role": central.get("role", ""),
+        "blocks_global_progress": program_blocks_global_progress(central),
         "short_description": central.get("short_description", ""),
         "purpose": central.get("purpose", ""),
         "expected_outcome": central.get("expected_outcome", ""),
@@ -277,23 +291,26 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Project dynamics",
         "",
-        "| Program | Branch | Что это / зачем | Current stage | Сейчас | Next | Health |",
-        "|---|---|---|---|---|---|---|",
+        "| Program | Branch | Global gate | Что это / зачем | Current stage | Сейчас | Next | Health |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for p in report["programs"]:
         branch = p.get("branch") or "—"
+        gate = "BLOCKING" if p.get("blocks_global_progress", True) else "ADVISORY"
         why = f"{p.get('short_description','')} {p.get('purpose','')}".replace("|", "/")
         progress = str(p.get("progress_note", "")).replace("|", "/")
         stage = f"{p.get('current_stage','')} (`{p.get('stage_status','')}`)"
-        lines.append(f"| {p['program']} | `{branch}` | {why} | {stage} | {progress} | {p.get('next_stage','')} | **{p.get('health','')}** |")
+        lines.append(f"| {p['program']} | `{branch}` | **{gate}** | {why} | {stage} | {progress} | {p.get('next_stage','')} | **{p.get('health','')}** |")
 
     lines.extend(["", "## Detailed branch cards", ""])
     for p in report["programs"]:
+        gate = "BLOCKING" if p.get("blocks_global_progress", True) else "ADVISORY_RESEARCH"
         lines.extend([
             f"### {p['program']} — {p.get('program_name','')}",
             "",
             f"**Branch:** `{p.get('branch') or 'not declared'}`  ",
             f"**Role:** `{p.get('role','')}`  ",
+            f"**Global gate:** `{gate}`  ",
             f"**Health:** **{p.get('health','')}**  ",
             f"**Stage:** {p.get('current_stage','')} (`{p.get('stage_status','')}`)  ",
             f"**Last accepted:** {p.get('last_accepted_checkpoint','')}  ",
@@ -354,7 +371,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Interpretation",
         "",
-        "`GREEN` — continue. `YELLOW` — converge/review before next major acceptance. `RED` — the affected program's next declared major stage/acceptance is blocked until resolved or explicitly reclassified in main.",
+        "`GREEN` — continue. `YELLOW` — converge/review before next major acceptance. `RED` — the affected program's next declared major stage/acceptance is blocked until resolved or explicitly reclassified in main. A program with global gate `ADVISORY_RESEARCH` keeps its own health/findings but does not raise project-wide health by itself; promotion into canonical/runtime scope still requires its normal merge and dependency gates.",
         "",
     ])
     return "\n".join(lines)
@@ -389,6 +406,8 @@ def main() -> int:
     overlaps = apply_cross_branch_overlap(programs, policy)
     overall = "GREEN"
     for program in programs:
+        if not bool(program.get("blocks_global_progress", True)):
+            continue
         if HEALTH_RANK.get(str(program.get("health", "GREEN")), 0) > HEALTH_RANK[overall]:
             overall = str(program["health"])
 
@@ -416,7 +435,8 @@ def main() -> int:
     print(f"Overall:      {overall}")
     for p in programs:
         branch = p.get("branch") or "tracked/stable"
-        print(f"  {p['program']:<10} {p.get('health',''):<6} {p.get('current_stage','')} [{branch}]")
+        gate = "BLOCK" if p.get("blocks_global_progress", True) else "ADVISORY"
+        print(f"  {p['program']:<10} {p.get('health',''):<6} {gate:<8} {p.get('current_stage','')} [{branch}]")
     print(f"\nReport: {ARTIFACT_DIR / 'PROJECT_STATUS_RU.md'}")
     print(f"JSON:   {ARTIFACT_DIR / 'project-control-report.json'}")
 
