@@ -1,0 +1,43 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1B-S2",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_regression": {
+    "p1a_s1": "PASS_109_ASSERTIONS",
+    "p1a_s2": "PASS_235_ASSERTIONS",
+    "p1a_s3": "PASS_208_ASSERTIONS",
+    "p1a_s4": "PASS_165_ASSERTIONS",
+    "p1b_s1": "PASS_5834_ASSERTIONS"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1b_s2_spatial_selection_acceptance.gd",
+    "assertions": 364,
+    "failures": 0,
+    "result_hash": "a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80",
+    "alternate_result_hash": "507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521",
+    "first_candidate_pool_hash": "9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1b_s2_restart_replay_probe.gd",
+    "assertions": 6,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "causal_evidence": [
+    "all four environments receive the exact same generation-one mutation candidate pool",
+    "the first selected population differs in every environment despite the identical mutation pool",
+    "selection ranking reads only accepted P1A net_resource_balance and deterministic lineage checksum tie-breaks",
+    "selected populations improve accepted net resource consequence and observed biomass in every diagnostic environment",
+    "initially negative shaded-slope and dry-ridge populations evolve to positive mean net resource balance and nonzero recruitment",
+    "dry-ridge descendants evolve much deeper roots than floodplain descendants",
+    "floodplain and dry-ridge descendants diverge strongly in water preference",
+    "shaded-slope descendants evolve greater shade tolerance than sunny-slope descendants",
+    "each final population has the best accepted net resource balance in its own native diagnostic environment among the four evolved populations",
+    "a second mutation seed produces different genomes/hashes while reproducing the local-specialization phenomenon"
+  ],
+  "truth_boundary": "P1B-S2 is a selection chamber over accepted P1A truth, not yet a population ecology runtime. Diagnostic site labels do not affect mutation or selection rules. Seed dispersal is intentionally frozen because migration benefit is not modeled yet. No species classes, biome roles, migration, inter-population competition, presentation, authority, persistence or networking are introduced.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1B_S2_TESTS.ps1 on exact Windows worktree. On matching hashes and regressions, accept S2 and open the next regional population/divergence step."
+}
