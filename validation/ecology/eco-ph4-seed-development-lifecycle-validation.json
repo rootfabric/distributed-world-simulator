@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH4",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "LOCAL_LINUX_GODOT_4_7_1_DOUBLE; EXACT_WINDOWS_PENDING",
+  "execution": {
+    "profile": "res://scripts/research/ecology/plant_seed_lifecycle_profile_v1.gd",
+    "kernel": "res://scripts/research/ecology/plant_seed_lifecycle_v1.gd",
+    "probes": "res://scripts/research/ecology/plant_seed_lifecycle_probes_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph4_seed_lifecycle_acceptance.gd",
+    "restart": "res://tests/research/ecology/eco_ph4_restart_replay_probe.gd",
+    "runner": "RUN_ECO_PH4_TESTS.ps1"
+  },
+  "parent_regressions_required": {
+    "p1c_s4_aggregate": 15,
+    "ph0": 63,
+    "ph1": 128,
+    "ph2": 107,
+    "ph3": 217,
+    "ph3c_focused": 97,
+    "ph3c_restart": 6
+  },
+  "local_acceptance": {
+    "focused_assertions": 718,
+    "restart_assertions": 5,
+    "profile_hash": "d8c8b9ff56ec630b832c4b6bdbb49d39147586f4d97e6535dcc6fbd37c29a795",
+    "founder_payload_hash": "1b5ff858fc57fdf98d75eb796cc6d7e6aa68b0b0e51e8321611e13b024cdc396",
+    "lifecycle_hash": "88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1",
+    "offspring_batch_hash": "48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"
+  },
+  "acceptance_matrix": {
+    "SEED_PAYLOAD_HEREDITY": "PASS_GENOME_AND_INHERITED_DEVELOPMENT_CARRIED_BY_CHECKSUM",
+    "NO_PREBUILT_PHENOTYPE_IN_SEED": "PASS_NO_GROWTH_GRAPH_NO_PHENOTYPE_NO_MESH",
+    "DETERMINISTIC_LIFECYCLE": "PASS_REFERENCE_TIMELINE_AND_EXACT_REPLAY",
+    "DORMANCY": "PASS_CHRONOLOGICAL_AGE_ADVANCES_DEVELOPMENT_AGE_ZERO",
+    "RECOVERY": "PASS_SAME_DORMANT_PAYLOAD_GERMINATES_AFTER_ENVIRONMENT_RECOVERY",
+    "REPRODUCTION": "PASS_80_UNIQUE_OFFSPRING_PAYLOADS_FROM_DEFAULT_GENOME_SEED_COUNT",
+    "PARENT_POINTER": "PASS",
+    "LINEAGE_RETENTION": "PASS",
+    "ENVIRONMENT_REGROWTH": "PASS_SAME_CHILD_PAYLOAD_SHADE_VS_SUN_DIFFERENT_PHENOTYPE",
+    "GENOME_IMMUTABILITY": "PASS",
+    "INHERITED_DEVELOPMENT_IMMUTABILITY": "PASS",
+    "MORPHOLOGY_MUTATION": "DISABLED_FAIL_CLOSED_PENDING_FULL_POOL_CALIBRATION",
+    "RENDERER_NETWORK_AUTHORITY_PERSISTENCE_INPUTS": "ABSENT"
+  },
+  "runner_guard": "RUN_ECO_PH4_TESTS.ps1 checks current Git branch and stops with WRONG_BRANCH unless it is feature/eco-evolutionary-ecology.",
+  "tested_equals_published": "PASS_ALL_6_EXECUTION_BLOBS_EXACT",
+  "truth_boundary": "PH4 is bounded research lifecycle evidence. It does not make individual plants or GrowthGraphs planet-wide canonical truth and does not introduce persistence/network/authority semantics.",
+  "windows_confirmation": "PENDING",
+  "next": "Exact Windows PH4 pass may accept lifecycle."
+}
