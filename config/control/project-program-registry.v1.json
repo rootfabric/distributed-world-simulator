@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 56,
+  "registry_generation": 57,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T02:18:00Z",
+  "updated_at_utc": "2026-08-11T02:33:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -32,16 +32,16 @@
       "passport_path": "config/control/branches/feature__t1b-composition-failure-recovery.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Construction composition/failure/recovery semantics over accepted T1A.7 runtime recovery, interest and selective-scale evidence.",
+      "short_description": "Accepted Construction composition/failure/recovery semantics over T1A.7 runtime recovery, interest, M0 durability and M3 replication.",
       "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
-      "expected_outcome": "T1B closes with a real M3 process composition proving failure, durable restart recovery, external-interest visibility, replica convergence and derived presentation before heterogeneous T2 scale.",
-      "current_stage": "T1B.4 Composition Acceptance",
-      "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
-      "progress_note": "T1B.3 Recovery / Reconnect Composition remains ACCEPTED on FIX1 Windows checkout 3a2a6a3e14f97e070139a00402d0cf0e19238622. T1B.4 final production-shaped live M3 process composition passed its Windows focused gate on executable checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3 with 93 assertions and 0 failures. Supplied evidence confirms OPEN mutation reached reconnect and late-interest replicas with semantic convergence; A and C presenters derived OPEN from canonical runtime; final ONLINE/OPEN M0 checkpoint succeeded; server recorded no failure-plan or checkpoint failures, recorded dependency recovery and replayed OFFLINE command rejection; reconnect, late join and server shutdown were clean. This focused PASS proves the live outage/restart/reconnect/recovery process path but does not yet close T1B. Full world/core regression remains required on exactly the same local executable checkout without fetch/reset. No accepted production executor, persistence, authority, network protocol/channel or transaction foundation is modified. T2.0 remains blocked by the canonical convergence gate.",
-      "last_accepted_checkpoint": "T1B.3 Recovery / Reconnect Composition",
-      "next_stage": "Do not fetch/reset the Windows worktree. Run RUN_WORLD_REGRESSION_TESTS.ps1 on exact checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3. Only a green full world/core regression accepts T1B.4 and closes the T1B aggregate; T2.0 remains blocked until C22 MAIN_INTEGRATED + T runtime-scale evidence + TS0.4 ceiling classification + PC0 convergence.",
-      "health_declared": "YELLOW",
-      "blockers": ["T1B4_FULL_WORLD_REGRESSION_PENDING"]
+      "expected_outcome": "T1B is accepted handoff evidence for deterministic failure semantics, durable restart recovery, external-interest visibility, real M3 replica convergence and derived presentation before heterogeneous T2 scale.",
+      "current_stage": "T1B Aggregate Handoff Complete",
+      "stage_status": "SOURCE_ACCEPTED_HANDOFF_COMPLETE",
+      "progress_note": "T1B.4 Composition Acceptance is ACCEPTED on executable Windows checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3. Focused live M3 process acceptance passed 93 assertions / 0 failures, proving outage fanout, OFFLINE command rejection, M0 checkpoint, dedicated-server process restart on the same durable root, recovered failure truth, no Construction visibility before external interest is reapplied, reconnect and late-interest recovered baselines, terminal rejection replay, dependency recovery, ONLINE convergence, successful post-recovery OPEN command, A/C derived OPEN presentation and final ONLINE/OPEN checkpoint with clean shutdown. The subsequent full world/core regression ran by the required preserved-checkout sequence without fetch/reset and passed RL2 real asteroid 44, RL3 representation-aware 175, RL3 processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit 0 and the NX4 final marker. T1B.0 through T1B.4 are accepted. SOURCE_ACCEPTED=true, MAIN_INTEGRATED=false, COMPOSITION_VERIFIED=true, PRODUCTION_READY=false. There is no T1B.5; the next T action is global convergence before T2.0.",
+      "last_accepted_checkpoint": "T1B.4 Composition Acceptance / T1B Aggregate Handoff",
+      "next_stage": "No T1B.5. Preserve this branch as accepted handoff evidence. Next: explicitly integrate accepted C22/TS0.3 into main when authorized, run post-merge Project Control, create fresh main-based TS0.4 1M Research Ceiling, classify PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED with bottleneck telemetry, converge accepted T runtime-scale/composition evidence with TS0.4 through PC0, and only then activate T2.0.",
+      "health_declared": "GREEN",
+      "blockers": []
     },
     "TS": {
       "program": "TS",
