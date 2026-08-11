@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.ecology_control_audit.v1",
+  "audit": "ECO.P1B_INTERMEDIATE_CONTROL_AUDIT",
+  "decision": "PASS_ADVISORY_RESEARCH_CONTINUE",
+  "policy_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "program": "ECO",
+  "role": "RESEARCH_DESIGN_FRONTIER",
+  "trigger": "two_major_acceptance_steps_require_intermediate_control_audit",
+  "accepted_checkpoint": "ECO.P1B Local Adaptation Proof",
+  "checks": {
+    "branch_reports_local_facts": "PASS",
+    "main_declares_project_state": "REQUIRES_REGISTRY_SYNC",
+    "runtime_paths_changed": false,
+    "foundation_ownership_changed": false,
+    "watched_runtime_g_matter_architecture_drift": "NONE_OBSERVED",
+    "main_only_changes": "CONTROL_PLANE_ONLY",
+    "directional_consumer_risk": "ADVISORY_ECO_NO_BLOCKING_RUNTIME_CONSUMER_HIT_OBSERVED",
+    "production_promotion_requested": false,
+    "harness_runtime_epoch_required": false
+  },
+  "remaining_production_blockers": [
+    "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
+    "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
+    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
+  ],
+  "next": "Update canonical PC0 registry to P1B ACCEPTED / P1C OPEN; continue research-only P1C."
+}
