@@ -1,0 +1,78 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1C-S3",
+  "name": "Niche/Cluster Diagnostics + Multi-seed Coexistence",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1C-S2 ACCEPTED",
+  "experiment_revision": "ECO.P1C-S3.1",
+  "purpose": "Determine whether dynamically coexisting P1C-S2 founders form multiple anonymous trait-space strategies with environment-dependent niche enrichment across independent founder seeds, rather than many near-identical variants of one generalist.",
+  "baseline": {
+    "dynamic_model": "accepted ECO.P1C-S2 Dynamic Shared-Patch Abundance Competition",
+    "grid": [5, 5],
+    "founder_count": 20,
+    "cycles": 12,
+    "seasons_per_cycle": 3,
+    "heterogeneous_seeds": [1138701, 1138702, 1138703],
+    "uniform_control_seed": 1138701,
+    "effective_founder_share_threshold": 0.01,
+    "anonymous_cluster_count": 3,
+    "substantial_cluster_share_threshold": 0.10,
+    "niche_enrichment_span_threshold": 0.30
+  },
+  "trait_space": {
+    "dimensions": ["height_m", "growth_rate", "root_depth_m", "water_preference", "water_tolerance_width", "shade_tolerance", "seed_count", "lifespan_years"],
+    "normalization": "fixed P1C-S1 founder-generation ranges",
+    "clustering": "deterministic farthest-first initialized k-means, three anonymous diagnostic clusters, unweighted trait geometry",
+    "cluster_identity": "diagnostic only; cluster indices are not species, biome roles or canonical identities",
+    "separation_metric": "mean silhouette score"
+  },
+  "niche_diagnostic": {
+    "region_labels": "DRY/WET/SHADED/SUNLIT are post-hoc quartile diagnostics only",
+    "regional_enrichment": "cluster regional biomass share divided by cluster global biomass share",
+    "niche_enrichment_span": "max regional enrichment minus min regional enrichment",
+    "uniform_negative_control": "same founder pool and abundance dynamics under one uniform mean environment must retain possible trait clusters while regional enrichment collapses to zero"
+  },
+  "determinism_baseline": {
+    "aggregate_hash": "75512459aa4a7d97b7e9549842c41a5ebf4b5574575bac9fec3ee51fd92d44a9",
+    "default_diagnostic_hash": "33de1af8e20e45eea88d9ddc20ee0664b6c53f20282995c593c1738e9105db2d",
+    "alternate_diagnostic_hash": "960ddf64b554e096e966796e6d614b75dfe2455259502310d75f700995d946a6",
+    "third_diagnostic_hash": "cfe5778cf188ce06b512ce77e35ec6675cdc65703b1c8f437dcaa70db93b1c92",
+    "uniform_diagnostic_hash": "b7a93ccdf4af05d92d2324a89331200a6957ce1433688dbe9ce70ded5e9c96f9",
+    "dynamic_hashes": [
+      "3e52c4e93fcdefba64607dd2c935ccbddba78db3f400d6a6ea51b23db766982b",
+      "4706d80289b1fc9918f1758ccabdbb62a76053739f3c7bccadcd282e797d572b",
+      "a7f2713bc3a014d8bf440e9ecae36e37ef5bd67537358f985ad6a0442e5a3dfc"
+    ],
+    "uniform_dynamic_hash": "47f0e9c7573bf002151718a57c930d400682c3d86dbd3a8b96b8ddf48c4a01a2"
+  },
+  "local_evidence": {
+    "seed_case_assertions": {"1138701": 64, "1138702": 63, "1138703": 63, "uniform_1138701": 64},
+    "aggregate_contract_assertions": 5,
+    "restart_assertions": 5,
+    "aggregate": {
+      "minimum_effective_founders_1pct": 18,
+      "maximum_top1_biomass_share": 0.241343184231652,
+      "minimum_shannon_biomass_diversity": 2.49393796434879,
+      "minimum_silhouette_score": 0.132726365954859,
+      "minimum_substantial_cluster_count": 3,
+      "minimum_niche_enriched_cluster_count": 2,
+      "uniform_max_niche_enrichment_span": 0.0
+    }
+  },
+  "invariants": {
+    "accepted_p1a_truth_modified": false,
+    "accepted_p1b_truth_modified": false,
+    "accepted_p1c_s1_s2_truth_modified": false,
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "new_fitness_score_added": false,
+    "mutation_enabled": false,
+    "migration_enabled": false,
+    "presentation_inputs_added": false,
+    "authority_or_network_inputs_added": false
+  },
+  "next_after_acceptance": "ECO.P1C-S4 Competition Robustness and Aggregate Acceptance: extend seed/horizon coverage, classify coexistence failures, and decide whether the full P1C Strategy Competition Proof is accepted."
+}
