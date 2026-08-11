@@ -5,7 +5,8 @@
   "base_branch": "feature/ch9-4-equipment-persistence-reconnect",
   "base_checkpoint": "de3b6975641635d733f0a5e410101e09a778dd61",
   "accepted_parent_runtime_head": "e41c6ec46ae13c2244e92d47d891ecd345e746fe",
-  "candidate_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
+  "accepted_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
+  "tested_focused_head": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
   "pc0_handoff": {
     "post_ch9_4_audit_registry_generation": 40,
     "post_ch9_4_audit_overall": "YELLOW",
@@ -17,7 +18,7 @@
     "main_roadmap_commit": "2eb819d51ccd00a310ec6e3da689fc62feac9ab2",
     "status": "DECLARED_AS_PRIMARY_FRONTIER"
   },
-  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "decision": "FOCUSED_ACCEPTED",
   "goal": "Compose accepted CH9.2 inventory equipment, CH9.3 live ENet Item Graph replication/presentation and CH9.4 M6 durable recovery in one production-shaped runtime without adding a second truth, transport or persistence foundation.",
   "architecture": {
     "new_item_relation": false,
@@ -59,70 +60,46 @@
     "IDENTICAL_FULL_SNAPSHOT_DOES_NOT_DUPLICATE_PRESENTATION",
     "CH_BRANCH_OWNS_NO_GLOBAL_FOUNDATION"
   ],
-  "focused_tests": {
-    "ch9_2_inventory_character_regression": "res://tests/characters/test_ch9_2_inventory_character_composition.gd",
-    "ch9_3_replicated_presentation_regression": "res://tests/characters/test_ch9_3_replicated_equipment_character_presentation.gd",
-    "ch9_3_real_enet_regression": "res://tests/characters/test_ch9_3_enet_equipment_replication.gd",
-    "ch9_4_durable_roundtrip_regression": "res://tests/characters/test_ch9_4_equipment_durable_roundtrip.gd",
-    "ch9_4_reconnect_recovery_regression": "res://tests/characters/test_ch9_4_equipment_reconnect_recovery.gd",
-    "presentation_coordinator": "res://tests/characters/test_ch9_5_equipment_presentation_coordinator.gd",
-    "persistent_enet_recovery": "res://tests/characters/test_ch9_5_persistent_enet_equipment_recovery.gd"
-  },
-  "persistent_enet_acceptance": [
-    "start generation 1 persistent dedicated server",
-    "join live clients A and B",
-    "equip A lower wearable over existing ITEM channel",
-    "converge A and B canonical Item Graph plus B presentation coordinator",
-    "verify one canonical wearable UUID and no movement snapshot leak",
-    "verify M6 checkpoint created",
-    "stop server generation 1",
-    "start fresh server generation 2 from same persistence root",
-    "verify recovery report and checkpoint generation",
-    "reconnect A and late-join new client C",
-    "verify recovered same UUID is equipped on A for both clients",
-    "bind C presenter for A and immediately derive recovered presentation",
-    "reapply identical snapshot without duplicate presentation change",
-    "unequip A after recovery and observe C presentation update",
-    "verify same UUID returns to inventory and another durable checkpoint commits"
-  ],
-  "candidate_review": {
-    "inherited_member_shadowing_audit": "PASS_BY_SOURCE_REVIEW",
-    "foundation_diff": "NO_M3_M6_BASE_ITEM_GRAPH_OR_PERSISTENCE_RUNTIME_FILE_MODIFIED",
-    "windows_execution": "ATTEMPT_1_BLOCKED_BY_TEST_PARSE_BEFORE_RUNTIME_EXECUTION",
-    "runtime_candidate_not_disproven": true
-  },
   "windows_attempt_1": {
     "tested_branch_head": "af5423b8191f97278e2c304c6b186131cbd4d2d7",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "presentation_coordinator": "PARSE_BLOCKED",
     "persistent_enet_recovery": "PARSE_BLOCKED",
-    "errors": [
-      "test_ch9_5_equipment_presentation_coordinator.gd: Cannot infer the type of fingerprint variable because the value does not have a set type",
-      "test_ch9_5_equipment_presentation_coordinator.gd: Cannot infer the type of changed variable because the value does not have a set type",
-      "test_ch9_5_persistent_enet_equipment_recovery.gd: Cannot infer the type of fingerprint variable because the value does not have a set type",
-      "test_ch9_5_persistent_enet_equipment_recovery.gd: Cannot infer the type of changed variable because the value does not have a set type"
-    ],
     "runtime_assertions_executed": false
   },
   "fix1": {
     "presentation_probe_typing_commit": "75082594e8744bc6e6ca71f86b1339770eb86547",
     "persistent_enet_typing_commit": "9333408cb9c729519d1393041a7ea4154e57c73c",
-    "changes": [
-      "PresenterProbe fingerprint is explicitly String",
-      "PresenterProbe changed is explicitly bool",
-      "persistent ENet test timing/convergence/count variables are explicitly typed where practical",
-      "production CH9.5 runtime files are unchanged"
-    ]
+    "production_runtime_changed": false
   },
-  "windows_results": {
-    "editor_import": "PENDING_RERUN",
-    "ch9_2_inventory_character_regression": "PENDING_RERUN",
-    "ch9_3_replicated_presentation_regression": "PENDING_RERUN",
-    "ch9_3_real_enet_regression": "PENDING_RERUN",
-    "ch9_4_durable_roundtrip_regression": "PENDING_RERUN",
-    "ch9_4_reconnect_recovery_regression": "PENDING_RERUN",
-    "presentation_coordinator": "FIX1_PENDING_RERUN",
-    "persistent_enet_recovery": "FIX1_PENDING_RERUN",
-    "candidate_runner": "PENDING_RERUN"
-  }
+  "windows_acceptance": {
+    "tested_branch_head": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "direct_focused": {
+      "presentation_coordinator": "PASS_27_ASSERTIONS",
+      "persistent_enet_recovery": "PASS_41_ASSERTIONS"
+    },
+    "candidate_runner": "PASS",
+    "runner_results": {
+      "editor_import": "PASS",
+      "ch9_2_inventory_character_regression": "PASS_59_ASSERTIONS",
+      "ch9_3_replicated_presentation_regression": "PASS_27_ASSERTIONS",
+      "ch9_3_real_enet_regression": "PASS_20_ASSERTIONS",
+      "ch9_4_durable_roundtrip_regression": "PASS_34_ASSERTIONS",
+      "ch9_4_reconnect_recovery_regression": "PASS_53_ASSERTIONS",
+      "presentation_coordinator": "PASS_27_ASSERTIONS",
+      "persistent_enet_recovery": "PASS_41_ASSERTIONS"
+    }
+  },
+  "accepted_evidence": [
+    "persistent ENet generation 1 equip converges on canonical Item Graph and remote presentation",
+    "M6 checkpoint is committed for equipment mutation",
+    "fresh server generation 2 recovers equipment-aware canonical state",
+    "reconnecting A and late-joining C receive the same equipped Item UUID",
+    "recovered presentation is derived immediately and repeated full snapshot does not duplicate semantic presentation state",
+    "post-recovery unequip removes presentation and returns the same Item UUID to inventory",
+    "movement/gameplay snapshots remain equipment-ID free",
+    "CH9.2 through CH9.4 focused regression chain remains green"
+  ],
+  "next_control_gate": "POST_ACCEPTANCE_PC0_AUDIT_REQUIRED_BEFORE_NEXT_CH_STAGE"
 }
