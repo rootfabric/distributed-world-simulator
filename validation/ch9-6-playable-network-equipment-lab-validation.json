@@ -6,8 +6,8 @@
   "base_checkpoint": "9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "accepted_parent_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
   "accepted_parent_focused_head": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
-  "candidate_runtime_head": "19b463ca0a7a0a43284e953d36348145b428a0a6",
-  "decision": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_AND_GRAPHICAL_GATE",
+  "candidate_runtime_head": "7b2269b39952b8201714a7078a62b8f97057325c",
+  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
   "pc0_audit": {
     "registry_generation": 49,
     "overall": "RED",
@@ -15,12 +15,6 @@
     "overall_red_source": "T1B.3 Recovery / Reconnect Composition",
     "character_red": false,
     "construction_overlap_review": "NO_CH_RUNTIME_PATH_OVERLAP",
-    "construction_runtime_paths": [
-      "scripts/construction/behavior/construction_runtime_failure_policy.gd",
-      "scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd",
-      "scripts/construction/behavior/construction_runtime_command_failure_handler.gd",
-      "scripts/labs/t1/t1b/t1b3_recoverable_failure_runtime.gd"
-    ],
     "status": "CH_POST_ACCEPTANCE_AUDIT_PASSED_NON_RED"
   },
   "goal": "Prove the actual component Inventory UI routes wearable drag/drop through NetworkCharacterEquipmentGameplayController and the accepted ITEM/ENet authority path into a persistent canonical server Item Graph, then rebuild the same real Quaternius presentation after restart.",
@@ -36,14 +30,51 @@
     "transport": "EXISTING_ITEM_CHANNEL",
     "durability": "EXISTING_CH9_5_M6_PIPELINE",
     "presentation": "EXISTING_CHARACTER_EQUIPMENT_PRESENTER",
-    "movement_snapshot_equipment_ids": false
+    "movement_snapshot_equipment_ids": false,
+    "equipment_client_latency_policy": "AUTHORITATIVE_NONBLOCKING_NO_SPECULATIVE_EQUIPMENT_PREDICTION"
   },
   "implementation": {
     "lab_script": "res://scripts/characters/lab/quaternius_playable_network_equipment_lab.gd",
     "lab_scene": "res://scenes/labs/character/quaternius_playable_network_equipment_lab.tscn",
+    "equipment_bridge": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "launcher": ".\\PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1",
     "automated_test": "res://tests/characters/test_ch9_6_playable_network_equipment_ui.gd",
     "runner": ".\\RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1"
+  },
+  "windows_attempt_1": {
+    "tested_branch_head": "0b9db6b912d5ed947fe25f5eaad890e5111598f5",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "test": "test_ch9_6_playable_network_equipment_ui.gd",
+    "assertions": 22,
+    "failures": 3,
+    "first_failure": "CH9.6 UI -> network -> canonical Item Graph -> real presenter equip did not converge",
+    "wire_evidence": [
+      "equipment.equip returned M4_ITEM_COMMAND_TIMEOUT",
+      "subsequent item.transfer and equipment.equip returned M4_ITEM_COMMAND_SEND_FAILED"
+    ],
+    "classification": "LIVE_COMPOSITION_BLOCKING_COMMAND_DEADLOCK",
+    "runtime_assertions_executed": true
+  },
+  "root_cause": {
+    "bridge": "Ch9NetworkItemCommandBridge inherited generic M7 submit_item_command behavior",
+    "generic_behavior": "the NX6 nonblocking pump is used only for PredictedItemInteractionJournal.PREDICTABLE_COMMANDS",
+    "equipment_predictable": false,
+    "result": "equipment.equip fell through to execute_item_command_blocking",
+    "same_scene_tree_effect": "blocking client polling prevented the colocated CH9.5 server Node from processing the request until timeout",
+    "server_transport_disproven": false
+  },
+  "fix1": {
+    "bridge_runtime_commit": "7b2269b39952b8201714a7078a62b8f97057325c",
+    "changes": [
+      "Ch9NetworkItemCommandBridge routes equipment.equip and equipment.unequip through the existing Ch9GraphicalClientRuntime.submit_equipment_command_nonblocking public API when available",
+      "replica item_id is converted to the canonical Item UUID before send",
+      "the UI result is success+pending+authoritative_pending and does not create a speculative equipment projection",
+      "canonical Item Graph delta remains the only trigger for replica graph and Quaternius presentation change",
+      "generic M7/NX predicted-item commands and blocking fallback for runtimes without the CH9 helper remain unchanged",
+      "bridge submitted/rejected telemetry remains compatible"
+    ],
+    "foundation_files_modified": false,
+    "nx_prediction_semantics_modified": false
   },
   "automated_acceptance_contract": [
     "instantiate the same graphical CH9.6 lab scene headlessly",
@@ -74,14 +105,14 @@
     ]
   },
   "windows_results": {
-    "editor_import": "PENDING",
-    "ch9_2_inventory_ui_routes_regression": "PENDING",
-    "ch9_3_real_enet_regression": "PENDING",
-    "ch9_4_reconnect_recovery_regression": "PENDING",
-    "ch9_5_persistent_enet_regression": "PENDING",
-    "ch9_6_playable_network_equipment_ui": "PENDING",
-    "candidate_runner": "PENDING",
+    "editor_import": "PENDING_RERUN",
+    "ch9_2_inventory_ui_routes_regression": "PENDING_RERUN",
+    "ch9_3_real_enet_regression": "PENDING_RERUN",
+    "ch9_4_reconnect_recovery_regression": "PENDING_RERUN",
+    "ch9_5_persistent_enet_regression": "PENDING_RERUN",
+    "ch9_6_playable_network_equipment_ui": "FIX1_PENDING_RERUN",
+    "candidate_runner": "PENDING_RERUN",
     "graphical": "PENDING_USER_OBSERVATION"
   },
-  "next_control_gate": "WINDOWS_AUTOMATED_PLUS_GRAPHICAL_ACCEPTANCE_REQUIRED"
+  "next_control_gate": "WINDOWS_FIX1_RERUN_THEN_GRAPHICAL_ACCEPTANCE"
 }
