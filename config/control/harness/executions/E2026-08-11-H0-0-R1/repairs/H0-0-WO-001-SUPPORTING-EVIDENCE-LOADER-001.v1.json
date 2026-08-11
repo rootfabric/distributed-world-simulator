@@ -31,11 +31,11 @@
     "Evidence Map schema and freshness fixtures",
     "root and non-root Status, Plan and Resume",
     "clean canonical URL checkout recovery",
-    "strict malformed and unknown Evidence Map rejection"
+    "strict malformed JSON, non-object JSON and duplicate-key rejection at the shared JSON loader boundary"
   ],
   "missing_tests": [
     "A typed non-Evidence-Map supporting JSON document may coexist in the evidence directory without entering review state",
-    "A malformed document claiming the Evidence Map schema still fails closed",
+    "A malformed or reserved-namespace document claiming an Evidence Map identity still fails closed",
     "Checkpoint reconstruction selects only validated Evidence Maps"
   ],
   "public_or_internal_contracts": [
