@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "H0-0-WO-001-POSTBUILD-REVIEW-003",
+  "work_order_id": "H0-0-WO-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "risk_class": "HIGH",
+  "reviewed_head_sha": "f75f2d4c129aa05fb43217c37057e6fd233670af",
+  "reviewer": "INDEPENDENT_REVIEWER_SOL",
+  "verdict": "FAIL",
+  "reviewed_at_utc": "2026-08-11T05:32:46Z",
+  "required_fixes": [
+    "A historical Work Order may resolve only the exact legacy risk-reclassification blocker; arbitrary blockers require a typed blocker-resolution document bound to blocker and resolved head.",
+    "Error, STATUS, PLAN and RESUME output shapes must be mutually exclusive and command-discriminated."
+  ],
+  "rank_up_moves": [
+    "Promote the branch-local blocker-resolution shape to a canonical schema after H0.0 if future pilots need it."
+  ],
+  "evidence_gaps": [
+    "Final fresh PASS and checkpoint evidence remain pending."
+  ],
+  "risk_assessment": "HIGH remains correct; the remaining defects are narrow authorization and public-schema exclusivity gaps.",
+  "summary": "Third exact-head review narrowed the final repair to exact legacy blocker identity and mutually exclusive command payloads."
+}

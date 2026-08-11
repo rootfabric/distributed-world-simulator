@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-002-0020",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-002",
+  "sequence": 20,
+  "event_type": "BLOCKED",
+  "work_state": "BLOCKED",
+  "recorded_at_utc": "2026-08-11T07:24:47Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "b5b2e953b20ed40c5a606fb3191fc8fe95805f4d",
+  "predicate": "PC0_NON_RED",
+  "command": "git fetch origin --prune; CONTROL_PROJECT.ps1 -NoFetch",
+  "exit_code": 1,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-H0-0-R1/human-attention/H0-0-WO-002-PC0-RED-001.v1.json"],
+  "summary": "Canonical main is d95e5bae at registry generation 65; HARNESS is GREEN but aggregate PC0 is RED because ECO reports CRITICAL_DEPENDENCY_DRIFT. Directional PC0 is YELLOW. Continuation and epoch audit are blocked.",
+  "blocker": "PC0_RED_ECO_CRITICAL_DEPENDENCY_DRIFT"
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0001",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T04:25:51Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
+  "predicate": "H0_0_WORK_ORDER_READY",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-001.v1.json",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"
+  ],
+  "summary": "Director created the immutable H0.0 Project Epoch, MEDIUM-risk bounded CONTROL Work Order and pre-build Design Brief from exact canonical main."
+}

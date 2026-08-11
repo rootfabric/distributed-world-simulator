@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_changed_file_archive.v1",
+  "work_order_id": "H0-0-WO-001",
+  "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
+  "implementation_head_sha": "cedebf34530f0ddd134aed8cbe5a1b691fdeb592",
+  "changed_file_count": 76,
+  "archive_command": "git diff --name-only 790fd79f8055fefa19cf9d7263441fc9f4326ebd..cedebf34530f0ddd134aed8cbe5a1b691fdeb592",
+  "implementation_surfaces": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/**",
+    "tests/harness/**",
+    "validation/harness/control-development-output.schema.v1.json",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"
+  ],
+  "control_ledger_surfaces": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/**"
+  ],
+  "forbidden_or_runtime_paths": [],
+  "canonical_policy_or_schema_changes": []
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_escalation.v1",
+  "repair_id": "H0-0-WO-001-PREBUILD-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "BLOCKED",
+  "escalated_at_utc": "2026-08-11T04:39:48Z",
+  "failed_attempts": 2,
+  "escalated_to": "DIRECTOR_SOL",
+  "reason": "The second focused pre-build review still found ambiguous snapshot mismatch behavior, no published transition table, incomplete explicit head fields and premature redispatch governance.",
+  "required_before_redispatch": [
+    "Director publishes the exact hard-error snapshot mismatch rule.",
+    "Director publishes a machine-readable transition table with evidence guards.",
+    "Director publishes explicit subject, ledger and current branch head fields.",
+    "Independent Reviewer returns PASS on the repaired design.",
+    "A new Director dispatch event is appended only after Reviewer PASS."
+  ]
+}

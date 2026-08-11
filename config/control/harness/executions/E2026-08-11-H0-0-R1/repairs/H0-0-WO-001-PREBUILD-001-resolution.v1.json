@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_resolution.v1",
+  "repair_id": "H0-0-WO-001-PREBUILD-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "FIX_VERIFIED",
+  "resolved_at_utc": "2026-08-11T04:36:32Z",
+  "resolved_by": "DIRECTOR",
+  "changes": [
+    "Risk raised to HIGH and DIRECTOR added to routing.",
+    "Events made authoritative; Work Order state defined as a consistency snapshot.",
+    "Event subject head, ledger head and current branch head separated.",
+    "Moved-main behavior made fail-closed pending explicit audit decision.",
+    "Semantic cross-contract invariants defined beyond JSON Schema.",
+    "Versioned CLI envelope and exit codes defined.",
+    "Pinned dependency strategy defined without implicit installation.",
+    "Repair context cleared after the Repair Map was completed."
+  ],
+  "remaining_required_fixes": []
+}

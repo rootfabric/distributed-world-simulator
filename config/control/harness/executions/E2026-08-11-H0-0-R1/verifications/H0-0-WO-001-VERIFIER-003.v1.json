@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_result.v1",
+  "verification_id": "H0-0-WO-001-VERIFIER-003",
+  "work_order_id": "H0-0-WO-001",
+  "verified_head_sha": "cedebf34530f0ddd134aed8cbe5a1b691fdeb592",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T06:40:04Z",
+  "focused_tests": "38 tests PASS; one expected Windows symlink-capability skip",
+  "freshness_simulation": "PASS: ledger metadata is excluded while code, tests and transition policy remain implementation surfaces",
+  "clean_checkout_recovery": "PASS",
+  "root_and_non_root_cli": "PASS",
+  "diff_and_scope": "PASS; all 76 paths allowed and forbidden/runtime/canonical-policy changes zero",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "remaining_gaps": []
+}

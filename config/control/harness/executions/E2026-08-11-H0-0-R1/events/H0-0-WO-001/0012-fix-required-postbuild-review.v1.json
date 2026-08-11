@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0012",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 12,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-11T05:06:48Z",
+  "actor": "INDEPENDENT_REVIEWER_SOL",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "b967e83cfa96900172897a31cd82c4235832f83b",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-IMPLEMENTATION-001.v1.json"
+  ],
+  "summary": "Independent exact-head post-build review found fail-open transition, predicate, audit, provenance and output-contract defects. A complete Repair Map is ready before any second implementation attempt.",
+  "blocker": "POST_BUILD_REVIEW_REQUIRED_FIXES"
+}

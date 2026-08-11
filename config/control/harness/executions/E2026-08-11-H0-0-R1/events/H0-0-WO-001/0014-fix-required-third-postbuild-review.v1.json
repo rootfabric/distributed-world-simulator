@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0014",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 14,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-11T05:32:46Z",
+  "actor": "INDEPENDENT_REVIEWER_SOL",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "f75f2d4c129aa05fb43217c37057e6fd233670af",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-003.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-IMPLEMENTATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-IMPLEMENTATION-001-escalation.v1.json"
+  ],
+  "summary": "Third exact-head review found two narrow residual variants. Director keeps the Work Order in FIX_REQUIRED and applies the already-escalated canonical-owner repair.",
+  "blocker": "THIRD_IMPLEMENTATION_REVIEW_NARROW_REQUIRED_FIXES"
+}

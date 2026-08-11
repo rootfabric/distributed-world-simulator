@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "H0-0-WO-001-POSTBUILD-REVIEW-001",
+  "work_order_id": "H0-0-WO-001",
+  "review_type": "POST_BUILD_IMPLEMENTATION_REVIEW",
+  "risk_class": "HIGH",
+  "reviewed_head_sha": "b967e83cfa96900172897a31cd82c4235832f83b",
+  "reviewer": "INDEPENDENT_REVIEWER_SOL",
+  "verdict": "FAIL",
+  "reviewed_at_utc": "2026-08-11T05:06:48Z",
+  "required_fixes": [
+    "Enforce every transition guard using structurally validated evidence, including premature-transition recovery rules.",
+    "Separate observed predicates from successfully verified predicates so failed events cannot satisfy checkpoints.",
+    "Bind moved-main continuation to exact base/current-main audit evidence.",
+    "Validate append-only Git provenance, event immutability and subject-head reachability.",
+    "Make the public success/error output schema complete and consistent on every path.",
+    "Reject duplicate JSON keys and validate scope paths against repository/symlink escape.",
+    "Add the missing adversarial, recovery and checkpoint-proposal tests.",
+    "Remove trailing whitespace detected by git diff --check."
+  ],
+  "rank_up_moves": [
+    "Discover the active execution instead of hardcoding its path.",
+    "Capture branch/ref/head in one consistent Git snapshot.",
+    "Track provenance for every derived field.",
+    "Add property-based reducer tests after deterministic coverage is complete."
+  ],
+  "evidence_gaps": [
+    "Evidence Map and validation summary are not present.",
+    "Post-build critique and changed-file archive are not present.",
+    "Independent Verifier and exact aggregate PC0 verdict are pending.",
+    "Checkpoint proposal is not explicitly blocked for missing or stale review/evidence."
+  ],
+  "risk_assessment": "HIGH remains correct. Confirmed fail-open guard, predicate and audit behavior can misroute future development or falsely satisfy control gates.",
+  "summary": "Exact-head independent review failed the first implementation recovery unit; Repair Doctrine is mandatory before another code change."
+}

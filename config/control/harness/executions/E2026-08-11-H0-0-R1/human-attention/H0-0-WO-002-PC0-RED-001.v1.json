@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "H0-0-WO-002-PC0-RED-001",
+  "program": "HARNESS",
+  "checkpoint": "H0_0_SCAFFOLD_READY",
+  "risk_class": "HIGH",
+  "reason": "Canonical main advanced from epoch base 790fd79f to d95e5bae and Project Control is RED because ECO has CRITICAL_DEPENDENCY_DRIFT on the central registry. An epoch CONTINUE audit requires aggregate and directional PC0 NON_RED, so H0.0 cannot truthfully continue or propose acceptance.",
+  "decision_required": "Choose how the project should restore a non-RED control plane before WO-002 repair and epoch audit resume.",
+  "options": [
+    "Wait for the ECO owner flow to align its passport/dependency state with registry generation 65 and re-run PC0; resume H0.0 only after aggregate PC0 is NON_RED.",
+    "Explicitly invalidate this Project Epoch and authorize a fresh H0.0 recovery epoch from the new canonical main after preserving the current branch as evidence."
+  ],
+  "recommended_option": "Wait for ECO control convergence, then record an exact-main epoch audit and resume WO-002.",
+  "recommendation_reason": "The main delta is registry-only and HARNESS remains GREEN; waiting preserves the reviewed implementation and avoids unnecessary epoch restart while respecting the PC0 RED gate.",
+  "blast_radius": ["H0_0_SCAFFOLD_READY acceptance", "H0.1 C22 runtime pilot", "H0.2 NX high-risk pilot", "all autonomous runtime branch creation"],
+  "blocking": true,
+  "evidence_paths": ["config/control/project-program-registry.v1.json", "config/control/branches/feature__eco-evolutionary-ecology.v1.json"],
+  "status": "OPEN",
+  "resolution": ""
+}
