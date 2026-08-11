@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0003",
+  "project_epoch": "E2026-08-11-H0-0-R3",
+  "work_order_id": "H0-0-R3-WO-001",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-11T10:27:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/h0-closed-loop-development-r3",
+  "head_sha": "f8ee0b5bfe6d5d0bb89301e34dbd0837fa22782a",
+  "predicate": "H0_0_R3_CAPABILITY_IMPLEMENTED",
+  "command": "Selectively retain reviewed H0 scaffold capability, rewrite launcher/tests to R3, and exclude all R1/R2 execution ledgers from active tree",
+  "exit_code": 0,
+  "evidence_paths": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/**",
+    "tests/harness/test_h0_control_harness.py",
+    "validation/harness/control-development-output.schema.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R3/transition-table.v1.json"
+  ],
+  "summary": "R3 executable capability is implemented on the fresh current-main lineage. Active execution points to R3; tests target R3 and use synthetic historical fixtures; R1/R2 execution trees are absent; runtime remains unauthorized.",
+  "blocker": "FRESH_R3_UNIT_STATUS_PLAN_RESUME_CLEAN_CLONE_AND_PC0_VERIFICATION_REQUIRED"
+}
