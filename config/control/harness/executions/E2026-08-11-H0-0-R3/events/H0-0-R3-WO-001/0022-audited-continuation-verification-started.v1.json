@@ -1,0 +1,17 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0022",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":22,
+  "event_type":"VERIFICATION_STARTED",
+  "work_state":"VERIFYING",
+  "recorded_at_utc":"2026-08-11T10:53:20Z",
+  "actor":"VERIFIER",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"8deffb80c3e445ef9b8d556d2a1fc2666abea8fc",
+  "command":"Verify moved-main continuation semantics against current main and fresh PC0",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-0-R3/reviews/H0-0-R3-WO-001-AUDIT-COMPOSITION-REVIEW-001.v1.json"],
+  "summary":"Verification restarted specifically for referenced descendant-main audit continuation; runtime remains unauthorized."
+}
