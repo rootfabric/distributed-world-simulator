@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_post_build_critique.v1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "implementation_head_sha": "64592d414fc1d2cdd904b6954d8fa32e3aa6064c",
+  "risk_class": "HIGH",
+  "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "completed_at_utc": "2026-08-11T08:52:00Z",
+  "questions": {
+    "unnecessary_complexity": "No. R3 reuses the established R2 transaction shape: exact pins, append-only control records and one tree-preserving two-parent ancestry commit.",
+    "duplicate_truth": "No. main remains the owner of registry and PC0 policy; ECO remains the owner of its research branch facts. No registry or passport content is copied into a new truth surface.",
+    "implicit_owner": "No. The candidate changes ancestry only and introduces no new architecture owner, authority layer, runtime manager or persistence boundary.",
+    "coupling_reduction": "Yes. Exact main becomes an ancestor, removing the main-to-ECO critical dependency-drift condition instead of masking it with copied control content.",
+    "sibling_surface_fix": "Checked exact source tree, source passport blob, both parents, merge-base, first-parent tree equality, R2 terminal invalidation, current active program watched paths, standard PC0 semantics and directional PC0 semantics.",
+    "removable_code": "No runtime or research code was added by the integration candidate. R3 execution records are durable recovery evidence.",
+    "design_regression": "No. Candidate 64592d41 exactly follows the reviewed HIGH design and preserves the current ECO content tree.",
+    "refactor_if_redesigned": "No refactor is warranted. A future harness improvement should let canonical PC0 accept an explicit synthetic branch-ref override so this check does not require mutating a disposable local remote-tracking ref."
+  }
+}
