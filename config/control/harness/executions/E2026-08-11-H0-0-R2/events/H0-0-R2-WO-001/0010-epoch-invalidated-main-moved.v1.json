@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R2-H0-0-R2-WO-001-0010",
+  "project_epoch": "E2026-08-11-H0-0-R2",
+  "work_order_id": "H0-0-R2-WO-001",
+  "sequence": 10,
+  "event_type": "EPOCH_INVALIDATED",
+  "work_state": "EPOCH_INVALIDATED",
+  "recorded_at_utc": "2026-08-11T10:19:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development-r2",
+  "head_sha": "cc17e0a336390a1b048d903eaab1e05cd3df2abb",
+  "predicate": "H0_0_R2_EPOCH_FRESHNESS_FAILED",
+  "command": "Compare epoch base 40c117bb16a635b03acfbaa7d9fe18b74245c989 with current main 9ad18eab0a1361bc3efcd38a19027880aac4e339",
+  "exit_code": 1,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/project-epoch.v1.json"
+  ],
+  "summary": "H0.0 R2 was invalidated fail-closed after canonical main advanced by two commits and registry generation changed from 66 to 67. The observed main delta is main-owned project-program-registry only, but epoch identity is no longer exact, so R2 verification and PR #73 cannot authorize H0_0_SCAFFOLD_READY.",
+  "blocker": "FRESH_CURRENT_MAIN_H0_0_EPOCH_REQUIRED"
+}
