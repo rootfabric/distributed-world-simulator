@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1B-S1",
+  "name": "Deterministic Mutation, Inheritance and Lineage Kernel",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1A ACCEPTED",
+  "experiment_revision": "ECO.P1B-S1.1",
+  "one_ancestor_rule": true,
+  "mutable_traits": [
+    "water_preference",
+    "root_depth_m",
+    "growth_rate",
+    "shade_tolerance",
+    "seed_dispersal_distance_m"
+  ],
+  "default_mutation_policy": {
+    "mutation_probability": 0.42,
+    "water_preference_step": 0.08,
+    "root_depth_m_step": 0.30,
+    "growth_rate_step": 0.08,
+    "shade_tolerance_step": 0.08,
+    "seed_dispersal_distance_m_step": 3.0
+  },
+  "identity_rules": [
+    "genotype identity is separate from individual identity",
+    "offspring with zero effective mutations retains parent genotype checksum/id",
+    "every offspring receives a new deterministic individual_id and parent pointer",
+    "all descendants of the P1B ancestor retain one lineage_id until later lineage-split research explicitly changes the contract"
+  ],
+  "determinism_baseline": {
+    "ancestor_lineage_seed": 4701001,
+    "mutation_seed": 4702001,
+    "population_size": 256,
+    "chain_generations": 160,
+    "ancestor_lineage_hash": "73621a2c49d6496bb89faef63a8350f2a76b553fd718fa88d1bc6b21b83a230f",
+    "population_hash": "83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84",
+    "chain_hash": "3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874"
+  },
+  "invariants": {
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "selection_enabled": false,
+    "spatial_population_enabled": false,
+    "presentation_inputs_added": false,
+    "accepted_p1a_truth_modified": false
+  },
+  "next_after_acceptance": "ECO.P1B-S2 Spatial Selection Baseline: place descendants into the accepted P1A environment and let reproductive success be driven only by accepted resource consequences."
+}
