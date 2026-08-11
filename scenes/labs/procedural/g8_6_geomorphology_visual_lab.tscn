@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd" id="1_g86"]
+[ext_resource type="Script" path="res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd" id="1_g86"]
 
 [node name="G86GeomorphologyVisualLab" type="Node3D"]
 script = ExtResource("1_g86")
