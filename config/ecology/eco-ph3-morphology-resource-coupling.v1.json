@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH3",
+  "name": "Morphology-to-Resource Coupling",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.PH2 Environment-Coupled Development / Plasticity ACCEPTED",
+  "experiment_revision": "ECO.PH3.1",
+  "purpose": "Make realized developmental morphology pay explicit bounded resource benefits and costs without modifying accepted P1 resource truth, so morphology can later participate in selection instead of being presentation-only.",
+  "coupling_boundary": "accepted PlantResourceModel result is immutable parent evidence; PH3 produces a separate research-only morphology ledger and coupled balance",
+  "controlled_matrix": {
+    "environment_count": 4,
+    "morphology_variant_count": 8,
+    "case_count": 32,
+    "environments": ["REFERENCE","SHADE","SUN","DRY"],
+    "variants": ["BASE","HEIGHT_LOW","HEIGHT_HIGH","CROWN_NARROW","CROWN_WIDE","BRANCH_LOW","BRANCH_HIGH","GIANT_DENSE"]
+  },
+  "local_evidence": {
+    "parent_p1c_s4_aggregate_assertions": 15,
+    "parent_ph0_assertions": 63,
+    "parent_ph1_assertions": 128,
+    "parent_ph2_assertions": 107,
+    "focused_assertions": 217,
+    "visual_smoke_assertions": 17,
+    "restart_assertions": 5,
+    "profile_hash": "1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a",
+    "reference_coupling_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+    "giant_dense_coupling_hash": "eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704",
+    "shade_height_high_hash": "d437d45d4beea747df717703afb1e536e5712df837677956f16c24953e5c2759",
+    "dry_crown_wide_hash": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466"
+  },
+  "tradeoff_evidence": {
+    "height": {"low_light_access_benefit":0.10793180609541,"high_light_access_benefit":0.22555282393566,"low_structural_cost":0.05554005295525,"high_structural_cost":0.45586460008189},
+    "crown": {"sun_wide_light_benefit":0.27716756558614,"dry_narrow_water_cost":0.04529108507294,"dry_wide_water_cost":0.39016450691621},
+    "branching": {"low_light_benefit":0.05200125315039,"high_light_benefit":0.1203905843144,"low_construction_cost":0.02437293216083,"high_construction_cost":0.22498005661554},
+    "bigger_not_free": {"balanced_morphology_delta":-0.01937785666868,"giant_dense_morphology_delta":-2.70651869262583}
+  },
+  "acceptance_semantics": [
+    "accepted P1 resource checksum remains exact and is referenced, not rewritten",
+    "height increases shade light-access benefit and super-linear structural cost",
+    "crown spread increases light capture and drought water cost",
+    "branching increases light capture and construction/maintenance cost",
+    "extreme giant dense morphology gains gross benefit but loses net morphology balance to the balanced form",
+    "same inputs replay to exact coupling hashes",
+    "renderer/mesh/LOD are absent from coupling truth",
+    "no TREE/BUSH/GRASS canonical class is introduced"
+  ],
+  "next_after_acceptance": "ECO.PH3C Morphology-Aware Selection / Competition Convergence, then ECO.PH4 Seed Development Lifecycle"
+}
