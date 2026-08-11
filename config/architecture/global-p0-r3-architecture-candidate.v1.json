@@ -1,0 +1,137 @@
+{
+  "schema": "distributed_world_simulator.global_p0_r3_candidate.v1",
+  "revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "parent_revision": "GLOBAL-P0-2026-08-10-R2",
+  "status": "REFRESH_IN_PROGRESS_NO_PROMOTION",
+  "risk_class": "CRITICAL",
+  "canonical_branch_after_acceptance": "main",
+  "candidate_base_state": {
+    "main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+    "registry_generation": 75,
+    "control_plane_revision": "PC0-2026-08-10-R1",
+    "harness_revision": "H0-2026-08-11-R1",
+    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "refresh_reason": "Rebuild the R3 architecture candidate from exact current main after H0.0 canonicalization and before any architecture promotion. Preserve the active H0.1/C22 pilot on R2 until its checkpoint boundary."
+  },
+  "design_brief": {
+    "problem_statement": "The accepted project now has strong domain foundations and a canonical restart-safe development harness, but it still lacks explicit cross-domain ownership for identity/session, authorization, reference frames, simulation time, spatial addressing, material identity, world operations, world queries, lifecycle, work budgeting, compatibility and security. The original R3 candidate is stale and also collides with the live ECO program identifier by using ECO for economy.",
+    "current_behavior": "Canonical main is GLOBAL-P0 R2. H0.0 is canonical. A fresh H0.1 R6 C22 Work Order is planned from exact main 1112d1f7 and must not be invalidated by an architecture promotion mid-pilot. G8 is accepted/frozen, T1B is accepted handoff evidence, C22 is source-accepted convergence, NX.C0 waits H0.1 PASS, Matter and S1 are stable, and Evolutionary Ecology is an advisory research frontier with PH3 accepted and PH3C awaiting exact-Windows confirmation.",
+    "desired_behavior": "Produce a current-main R3 architecture candidate with explicit ownership and transition semantics. R3 promotion remains a separate human gate. Frozen R2 evidence remains valid as evidence; active R2 runtime work must finish or be deliberately refreshed before promotion; every new post-promotion runtime frontier starts from one canonical R3 base.",
+    "selected_design": "Retain the old R3 cross-domain foundations, refresh their ownership/intersections against registry generation 75, reserve ECO for Evolutionary Ecology, introduce ECON for world economy/markets, implement an explicit R2-to-R3 transition policy, and prepare Wave A only after canonical promotion.",
+    "non_goals": [
+      "No gameplay/runtime implementation",
+      "No C22/NX/G/CH/ECO runtime mutation",
+      "No architecture promotion in this branch",
+      "No Wave A production branches before the human promotion gate",
+      "No replacement of M0, Item, Matter, Construction, G, NX or S1 truth owners"
+    ],
+    "validation_plan": [
+      "Refresh current frontier guards from registry generation 75",
+      "Review ownership and mandatory intersections independently",
+      "Validate R2-to-R3 transition policy against the active H0.1 R6 pilot",
+      "Build a complete Evidence Map",
+      "Run standard and directional PC0 and require NON_RED",
+      "Stop at R3_REFRESHED_CANDIDATE before GLOBAL_ARCHITECTURE_PROMOTION"
+    ]
+  },
+  "principles": [
+    "CANONICAL_WORLD_NE_PRESENTATION",
+    "CANONICAL_WORLD_NE_TRANSPORT",
+    "CANONICAL_WORLD_NE_COMPUTE",
+    "ACCOUNT_ID_NE_PLAYER_ENTITY_ID",
+    "PRINCIPAL_ID_NE_NETWORK_PEER_ID",
+    "SESSION_ID_NE_AUTHORITY_LEASE_ID",
+    "AUTHORIZATION_NE_AUTHENTICATION",
+    "REFERENCE_FRAME_ID_NE_AUTHORITY_REGION_ID",
+    "SIMULATION_TIME_NE_WALL_CLOCK",
+    "DOMAIN_TICK_NE_NETWORK_TICK",
+    "WORLD_QUERY_NE_CANONICAL_STORE",
+    "WORLD_WORK_BUDGET_NE_AUTHORITY",
+    "DORMANT_NE_DELETED",
+    "MATERIAL_DEFINITION_ID_NE_RENDER_MATERIAL",
+    "ORGANIZATION_CLAIM_NE_SERVER_SHARD",
+    "AI_PLANNER_NE_AUTHORITY",
+    "LLM_OUTPUT_NE_WORLD_MUTATION",
+    "LOWER_RESOLUTION_MAY_REDUCE_COST_BUT_NOT_TRUTH"
+  ],
+  "p0_cross_domain_foundations": [
+    "IAM",
+    "AUTHZ",
+    "RF",
+    "TF",
+    "SD",
+    "MAT",
+    "WT",
+    "WQ",
+    "LIFE",
+    "WB",
+    "COMPAT",
+    "SEC"
+  ],
+  "existing_truth_owners_preserved": [
+    "MAIN/HARNESS",
+    "A1",
+    "S0",
+    "S1",
+    "M0",
+    "ITEM",
+    "MATTER",
+    "CONSTRUCTION",
+    "G",
+    "NX",
+    "AUTHORITY",
+    "R3_M0_MW"
+  ],
+  "p1_composition_programs": [
+    "GM",
+    "SP",
+    "ENV",
+    "NAV",
+    "AI",
+    "POP",
+    "ECO",
+    "ECON",
+    "ORG",
+    "OPS",
+    "MOD"
+  ],
+  "programs": {
+    "IAM": {"purpose": "Separate AccountId, PrincipalId and SessionId from network peers and world entities.", "first_stages": ["IAM0 contracts", "IAM1 local self-host provider"], "activation": "WAVE_A_AFTER_R3_PROMOTION"},
+    "AUTHZ": {"purpose": "One deny/allow decision boundary for principal/actor actions on resources while domains retain semantic validation.", "depends_on": ["IAM0"], "activation": "WAVE_B_OR_CONTRACT_PREP"},
+    "RF": {"purpose": "Stable reference-frame identity/transforms for bodies, ships, interiors and local physics.", "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"},
+    "TF": {"purpose": "Simulation-time and domain-tick semantics independent from wall/network/presentation clocks.", "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"},
+    "SD": {"purpose": "Frame-aware WorldAddress mappings without one universal ChunkId.", "depends_on": ["RF0", "S0"], "activation": "AFTER_RF0"},
+    "MAT": {"purpose": "Canonical MaterialDefinitionId shared by G9, Matter, Item, Construction and environment projections.", "activation": "WAVE_A_AFTER_R3_PROMOTION"},
+    "WT": {"purpose": "Compile semantic WorldOperation intents into existing M0 atomic transaction plans; never become a second commit engine.", "depends_on": ["M0"], "activation": "WAVE_A_AFTER_R3_PROMOTION"},
+    "WQ": {"purpose": "Actor-scoped query planning across domain adapters without canonical storage ownership.", "activation": "WAVE_A_AFTER_R3_PROMOTION"},
+    "LIFE": {"purpose": "Shared active/dormant/abstract/presented lifecycle vocabulary without duplicate domain truth.", "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"},
+    "WB": {"purpose": "Bound simulation work and choose quality/defer/batch/S1 dispatch without owning authority.", "depends_on": ["S1"], "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"},
+    "COMPAT": {"purpose": "Explicit schema/protocol/content/migration compatibility governance.", "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"},
+    "SEC": {"purpose": "Cross-domain trust boundaries, negative requirements, query secrecy and abuse resistance.", "activation": "DOCUMENTATION_NOW_PRODUCTION_LATER"},
+    "ECO": {"purpose": "Existing Evolutionary Ecology research frontier; later consumes MAT/TF/LIFE/WB/environment adapters without taking economy ownership.", "activation": "EXISTING_ADVISORY_RESEARCH_FRONTIER"},
+    "ECON": {"purpose": "Future physical resource economy, contracts, markets and production-chain semantics built on Item/MAT/WT truth.", "activation": "RESERVE_ONLY_UNTIL_FOUNDATIONS"}
+  },
+  "current_frontier_guards": [
+    "H0.0 is canonical. H0.1 R6 is an active fresh-current-main C22 pilot preparation on architecture R2. Do not promote R3 while that runtime checkpoint is open; finish H0.1 or deliberately invalidate/refresh it first.",
+    "G8 is fully accepted/frozen. G9 requires canonical R3 plus MAT0 canonical material identity and must start from then-current canonical main.",
+    "T1B is accepted handoff evidence; no T1B.5. T2.0 waits C22 MAIN_INTEGRATED, TS0.4 ceiling classification and PC0 convergence.",
+    "C22 is source-accepted evidence. H0.1 must transfer only bounded accepted capability into a fresh current-main child branch; old C22 ancestry is evidence only.",
+    "NX.C0 preparation remains valid; NX.C1 runtime waits H0.1 PASS and must start fresh from then-current main.",
+    "ECO is Evolutionary Ecology research, not economy. ECO PH3 is accepted and PH3C remains research-only until exact-Windows confirmation; ECO must not block R3/H0 runtime trains.",
+    "Canonical main registry generation 75 remains R2 until an explicit GLOBAL_ARCHITECTURE_PROMOTION gate succeeds."
+  ],
+  "parallel_waves_after_promotion": {
+    "wave_a_max_four": ["IAM0/IAM1", "MAT0", "WT0", "WQ0/WQ1"],
+    "wave_b": ["RF0/RF1", "TF0", "AUTHZ0", "LIFE0", "WB0/WB1", "COMPAT0"],
+    "reserve_only": ["distributed SD routing", "production global TF scheduler", "production global WB arbiter", "WT cross-authority commit", "distributed WQ fan-out", "GM production", "SP interplanetary handoff", "ENV large-scale atmosphere", "AI LLM execution", "POP runtime", "ECON markets", "OPS migrations", "dynamic shard split/merge"]
+  },
+  "promotion_blockers": [
+    "H0_1_ACTIVE_R2_RUNTIME_CHECKPOINT_MUST_REACH_BOUNDARY_OR_BE_INVALIDATED",
+    "OWNERSHIP_INTERSECTION_REVIEW_PASS_REQUIRED",
+    "EVIDENCE_MAP_COMPLETE_REQUIRED",
+    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
+    "PC0_NON_RED_REQUIRED",
+    "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
+  ],
+  "target_checkpoint": "R3_REFRESHED_CANDIDATE"
+}
