@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_full_acceptance.v1",
   "checkpoint": "g8-full-acceptance",
-  "decision": "IMPLEMENTED_CANDIDATE",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -23,25 +23,43 @@
     "full_world_core_regression": true,
     "final_working_tree_clean": true
   },
+  "preflight_history": [
+    {
+      "head": "796cc4df5ae23a1a6f9ca337776893cdd2b5401f",
+      "status": "METADATA_HYGIENE_FAIL_ONLY",
+      "cause": "two trailing-space lines in G8_FULL_ACCEPTANCE_CANDIDATE_RU.md",
+      "runtime_regression": false,
+      "g8_6_acceptance_invalidated": false
+    }
+  ],
   "execution": {
-    "status": "PENDING_EXACT_WINDOWS_RUN",
-    "tested_head": "PENDING",
+    "status": "PASS",
+    "tested_head": "31c0d4eef30544d4d5090b14721585047a97b979",
     "engine": "4.7.1.stable.double.custom_build.a13da4feb",
-    "g8_0_to_g8_6_chain": "PENDING",
-    "pc0_g_health": "PENDING",
-    "focused_g8_6": "PENDING",
-    "world_core_regression": "PENDING",
-    "working_tree": "PENDING",
-    "final_marker": "PENDING_G8_FULL_ACCEPTANCE_PASS"
+    "g8_0_to_g8_6_chain": "PASS",
+    "g8_6_manual_graphical": "PASS_AT_b91ed3eb8664ec1aee28453947a84c6a56acb95b",
+    "pc0_g_health": "NON_RED",
+    "focused_g8_6": "PASS",
+    "world_core_regression": "PASS_THROUGH_NX4_CLIENT_PREDICTION_AND_RECONCILIATION",
+    "main_scene_cli_all": "PASS_6_FAIL_0",
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN",
+    "final_marker": "G8 FULL ACCEPTANCE: PASS"
   },
-  "if_pass": {
+  "accepted_result": {
     "decision": "G8_FULL_ACCEPTED",
     "branch_disposition": "FREEZE_ACCEPTED_EVIDENCE",
     "next_runtime_stage": "G9_BLOCKED",
-    "g9_requires": ["CANONICAL_GLOBAL_P0_R3", "MAT0_CANONICAL_MATERIAL_IDENTITY"]
+    "g9_requires": [
+      "CANONICAL_GLOBAL_P0_R3",
+      "MAT0_CANONICAL_MATERIAL_IDENTITY"
+    ]
   },
   "project_control": {
-    "expected_pre_acceptance_health": "YELLOW",
-    "blockers": ["G8_FULL_ACCEPTANCE_REQUIRED"]
+    "acceptance_health": "NON_RED",
+    "blockers": [
+      "G9_REQUIRES_CANONICAL_GLOBAL_P0_R3",
+      "G9_REQUIRES_MAT0_CANONICAL_MATERIAL_IDENTITY"
+    ]
   }
 }
