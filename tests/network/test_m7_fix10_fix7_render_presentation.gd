@@ -6,13 +6,17 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	var scene_source := FileAccess.get_file_as_string("res://scenes/testing/playground.tscn")
+	var item_projection_source := FileAccess.get_file_as_string(
+		"res://scripts/world/testing/playground_view_relative_runtime_fix10_item_projection.gd"
+	)
 	var fix7_source := FileAccess.get_file_as_string(
 		"res://scripts/world/testing/playground_view_relative_runtime_fix7.gd"
 	)
 	var base_source := FileAccess.get_file_as_string(
 		"res://scripts/world/testing/playground_view_relative_runtime.gd"
 	)
-	_assert(scene_source.contains("playground_view_relative_runtime_fix8.gd"), "accepted FIX8 scene identity preserved")
+	_assert(scene_source.contains("playground_view_relative_runtime_fix10_item_projection.gd"), "rollback-safe playground leaf composed")
+	_assert(item_projection_source.contains("playground_view_relative_runtime_fix8.gd"), "rollback-safe leaf preserves accepted FIX8 inheritance")
 	_assert(fix7_source.contains("PHYSICS_SIMULATION_RENDER_RATE_BOUNDED_EXTRAPOLATION_V1"), "render-rate presentation policy present")
 	_assert(fix7_source.contains("velocity_vector * _fix10_fix7_render_elapsed_seconds"), "render extrapolation uses predicted velocity")
 	_assert(fix7_source.contains("FIX10_FIX7_FIXED_DELTA_SECONDS"), "render extrapolation is bounded to one fixed tick")
