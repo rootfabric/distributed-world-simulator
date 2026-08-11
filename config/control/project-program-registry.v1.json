@@ -1,11 +1,13 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 61,
+  "registry_generation": 62,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T03:10:00Z",
-  "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger. Generation 61 is a convergence snapshot: T1B is accepted handoff evidence, G8.6 and CH9.6 await only manual graphical gates, C22 remains source-accepted but requires current-main convergence refresh, and NX.C0 is a clean main-based preparation frontier.",
+  "updated_at_utc": "2026-08-11T03:23:00Z",
+  "control_checkpoint": "PC0 project convergence main-integrated @ d931f8f9a336df8c507d0183fe0d32d792e49a03",
+  "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+  "project_summary": "Distributed World Simulator is controlled from main. PC0 directional watched-dependency hardening is now canonical. T1B is accepted handoff evidence; G8.6 and CH9.6 await manual graphical gates; C22 may proceed with a current-main convergence refresh; NX may proceed by creating a fresh current-main NX.C1 frontier; R3 may proceed with a current-main candidate refresh before promotion.",
   "programs": {
     "G": {
       "program": "G",
@@ -21,11 +23,9 @@
       "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
       "progress_note": "Exact-Windows automated acceptance passed on a9ca1f8b723e4edc5ebff40db26e41283d464597, including focused G8.6 and full world/core regression. Only user-observed graphical acceptance remains.",
       "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-      "next_stage": "Manual G8.6 graphical gate, then G8.6 ACCEPTED and G8 Full Acceptance. Freeze G8 evidence; G9 waits for R3/MAT0.",
+      "next_stage": "Manual G8.6 graphical gate, then G8.6 ACCEPTED and G8 Full Acceptance. Freeze G8 evidence; G9 waits for canonical R3/MAT0.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
-      ]
+      "blockers": ["G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -57,13 +57,11 @@
       "expected_outcome": "A current-main refresh preserves the accepted C22 production diff and passes focused plus full regression before merge authorization.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
       "stage_status": "SOURCE_ACCEPTED_MAIN_CONVERGENCE_REFRESH_REQUIRED",
-      "progress_note": "The source implementation remains accepted but was validated before the current main control lineage. At the synchronization audit the source branch was 70 main commits behind its original base; direct comparison showed those commits were control/architecture/docs only and did not touch C22 production proxy/runtime files. GitHub mergeability is intentionally not used as the acceptance criterion because it can recalculate after metadata-only changes. The required gate is current-main base freshness plus focused/full composition revalidation, not a discovered semantic C22 defect.",
+      "progress_note": "The source implementation remains accepted but was validated before the current main control lineage. Main drift observed during synchronization was control/architecture/docs only and did not touch C22 production proxy/runtime files. The remaining gate is a fresh current-main composition plus focused/full revalidation, not a discovered semantic C22 defect.",
       "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
-      "next_stage": "Refresh C22 onto then-current main, prove production-diff equivalence, rerun focused C22/C24 and full regression, then restore MERGE_READY. Merge still requires explicit authorization; after merge run PC0 and create TS0.4 from canonical main.",
+      "next_stage": "Create a fresh C22 convergence branch from current main, prove production-diff equivalence, rerun focused C22/C24 and full regression, then restore MERGE_READY. Merge still requires explicit authorization; after merge run PC0 and create TS0.4 from canonical main.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"
-      ]
+      "blockers": ["C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"]
     },
     "CH": {
       "program": "CH",
@@ -81,9 +79,7 @@
       "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition FOCUSED_ACCEPTED",
       "next_stage": "Run the two-pass graphical CH9.6 acceptance on preserved checkout 4cdafddc, then record acceptance and run post-acceptance PC0 before any later CH stage.",
       "health_declared": "YELLOW",
-      "blockers": [
-        "CH9_6_GRAPHICAL_USER_OBSERVATION_PENDING"
-      ]
+      "blockers": ["CH9_6_GRAPHICAL_USER_OBSERVATION_PENDING"]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -115,9 +111,9 @@
       "expected_outcome": "Maintainable owner-authoritative locomotion, remote interpolation and rollback-safe optimistic item presentation.",
       "current_stage": "NX.C0 Owner Authority Convergence Preparation",
       "stage_status": "ACTIVE_GREEN_PREPARATION",
-      "progress_note": "NX.C0 remains control/docs only; runtime freshness is not applicable. Legacy M7/FIX is evidence only. NX.C1 waits for canonical directional-watch hardening and a fresh current-main base.",
+      "progress_note": "NX.C0 is preparation evidence only. PC0 directional watched-dependency hardening is now canonical in main. Legacy M7/FIX remains evidence only. The next authorized action is to create a fresh current-main NX.C1 runtime frontier and transfer only the minimal owner-authority capability.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice retained as legacy evidence",
-      "next_stage": "After PC0 hardening lands, create/refresh NX.C1 from current main and implement only the minimal owner-authority transfer; keep NX YELLOW until exact-Windows focused/full/two-client/dependency validation restores GREEN.",
+      "next_stage": "Create/register fresh NX.C1 from current main, implement the minimal owner-authority runtime slice, mark NX YELLOW while runtime is unvalidated, then return GREEN/SOURCE_ACCEPTED only after exact-Windows focused/full/two-client/impaired-network/reconnect and dependency revalidation gates.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -161,10 +157,11 @@
   "convergence_order": {
     "principle": "Do not open a new major runtime frontier from an old stacked lineage. Accepted legacy branches become evidence; new convergence/runtime work starts from then-current canonical main unless an intentional stacked dependency is registered.",
     "now_parallel": [
-      "PC0 directional-watch hardening / registry synchronization",
       "G8.6 manual graphical acceptance",
       "CH9.6 manual graphical acceptance",
-      "R3 candidate refresh preparation only"
+      "C22 current-main convergence refresh + revalidation",
+      "fresh current-main NX.C1 minimal runtime transfer",
+      "R3 current-main candidate refresh + revision-transition control"
     ],
     "construction_train": [
       "C22 current-main convergence refresh",
@@ -176,45 +173,26 @@
       "T2.0 Real Heterogeneous Base / Station"
     ],
     "network_train": [
-      "PC0 directional-watch hardening integrated",
       "fresh/current-main NX.C1 runtime branch",
       "minimal owner-authority transfer",
-      "exact-Windows focused/full/two-client/dependency validation",
+      "exact-Windows focused/full/two-client/impaired-network/reconnect/dependency validation",
       "NX SOURCE_ACCEPTED"
     ],
     "architecture_train": [
       "refresh GLOBAL-P0 R3 candidate onto current main/control baseline",
       "update frontier guards",
-      "define revision-transition handling before canonical R3 promotion",
+      "implement revision-transition handling before canonical R3 promotion",
       "promote R3 only with PC0 non-RED",
       "then register/start IAM/MAT/WT/WQ Wave A from one canonical base"
     ]
   },
   "global_blocked_transitions": [
-    {
-      "stage": "G8 FULL ACCEPTANCE",
-      "blocked_by": "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
-    },
-    {
-      "stage": "C22 MERGE",
-      "blocked_by": "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED_PLUS_EXPLICIT_MERGE_AUTHORIZATION"
-    },
-    {
-      "stage": "T2.0 START",
-      "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
-    },
-    {
-      "stage": "CH STAGE AFTER CH9.6 START",
-      "blocked_by": "CH9_6_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
-    },
-    {
-      "stage": "NX.C1 RUNTIME TRANSFER START",
-      "blocked_by": "PC0_DIRECTIONAL_WATCH_HARDENING_MAIN_INTEGRATED_AND_FRESH_MAIN_BASE_REQUIRED"
-    },
-    {
-      "stage": "GLOBAL-P0 R3 PROMOTION",
-      "blocked_by": "R3_CURRENT_MAIN_REFRESH_PLUS_FRONTIER_GUARD_REFRESH_PLUS_REVISION_TRANSITION_PLAN_PLUS_PC0_NON_RED_REQUIRED"
-    }
+    {"stage": "G8 FULL ACCEPTANCE", "blocked_by": "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
+    {"stage": "C22 MERGE", "blocked_by": "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED_PLUS_EXPLICIT_MERGE_AUTHORIZATION"},
+    {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
+    {"stage": "CH STAGE AFTER CH9.6 START", "blocked_by": "CH9_6_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"},
+    {"stage": "NX.C1 SOURCE_ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_RUNTIME_VALIDATION_AND_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
+    {"stage": "GLOBAL-P0 R3 PROMOTION", "blocked_by": "R3_CURRENT_MAIN_REFRESH_PLUS_FRONTIER_GUARD_REFRESH_PLUS_REVISION_TRANSITION_PLAN_PLUS_PC0_NON_RED_REQUIRED"}
   ],
   "audit_triggers": [
     "ANY_MAJOR_CHECKPOINT_ACCEPTED",
