@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1C-S1",
+  "name": "Unlabeled Founder Pool and Shared-Field Competition Baseline",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1B ACCEPTED",
+  "experiment_revision": "ECO.P1C-S1.1",
+  "purpose": "Introduce competition among multiple unlabeled ancestral strategies without predefined species roles and prove that heterogeneous accepted P1A environments retain a broader set of competitors than a uniform control.",
+  "baseline": {
+    "grid": [7, 7],
+    "patch_count": 49,
+    "founder_count": 20,
+    "winners_per_patch": 4,
+    "evaluation_seasons": 20,
+    "founder_seed": 1138701,
+    "alternate_founder_seed": 1138702
+  },
+  "founder_rule": {
+    "predefined_strategy_names": false,
+    "generation": "deterministic small continuous perturbations around the accepted baseline genome",
+    "independent_lineage_per_founder": true,
+    "seed_dispersal_distance_m": 15.0,
+    "mutation_during_competition": false
+  },
+  "competition_rule": {
+    "new_fitness_score": false,
+    "ranking": "lexicographic accepted P1A cumulative_recruitment, final_biomass, final_net_resource_balance, then genome checksum tie-break",
+    "shared_field": true,
+    "migration": false,
+    "inter_patch_reproduction": false
+  },
+  "uniform_control": {
+    "same_founder_pool": true,
+    "selection_environment": "one uniform mean environment",
+    "purpose": "measure strategy diversity caused by heterogeneous niche structure rather than founder generation alone"
+  },
+  "determinism_baseline": {
+    "result_hash": "cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928",
+    "uniform_hash": "1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58",
+    "alternate_result_hash": "bded62e12ade0285c019d0dc2e4f77d0d6cb88431df7ade605160e0f18d82f8c",
+    "founder_pool_hash": "77acaada39a39c54224b73f2548ebc228343e869264e45780d08419ebb6bee38"
+  },
+  "local_evidence": {
+    "focused_assertions": 116,
+    "restart_assertions": 5,
+    "persistent_founders": 15,
+    "top1_persistent_founders": 5,
+    "winner_slot_dominance_ratio": 0.21428571428571,
+    "top1_dominance_ratio": 0.83673469387755,
+    "shannon_winner_diversity": 1.99552677223777,
+    "unique_patch_winner_sets": 49,
+    "uniform_persistent_founders": 4,
+    "uniform_top1_persistent_founders": 1,
+    "uniform_unique_patch_winner_sets": 1
+  },
+  "tradeoff_evidence": {
+    "height_extra_cost": 0.25494681079805,
+    "root_extra_cost": 0.28759960764056,
+    "deep_root_dry_net_gain": 0.1732135381936,
+    "deep_root_flood_net_gain": -0.37086596637934,
+    "growth_extra_cost": 0.143,
+    "seed_extra_cost": 0.054,
+    "seed_recruitment_gain": 0.00868082757728,
+    "shade_shaded_gross_gain": 0.2583918489107,
+    "shade_sunny_net_gain": -0.14132408040047,
+    "long_life_mortality_delta": -0.01554640236069
+  },
+  "known_pressure": "Default seed has a high top1 dominance ratio of 0.8367. S1 is therefore a competition baseline, not the final coexistence proof; P1C-S2 must add dynamic abundance/frequency competition and test whether dominance relaxes or becomes a classified failure.",
+  "invariants": {
+    "accepted_p1a_truth_modified": false,
+    "accepted_p1b_truth_modified": false,
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "migration_enabled": false,
+    "presentation_inputs_added": false
+  },
+  "next_after_acceptance": "ECO.P1C-S2 Dynamic Shared-Patch Abundance Competition."
+}
