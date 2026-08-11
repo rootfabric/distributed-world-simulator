@@ -175,7 +175,10 @@ static func _evaluate_strategy(name: String, traits: Dictionary, environment: Di
 static func _pair_definition(case_id: String) -> Dictionary:
 	for definition in PAIR_CASES:
 		if String(definition["id"]) == case_id:
-			return Dictionary(definition).duplicate(true)
+			var copy := {}
+			for key in definition.keys():
+				copy[key] = definition[key]
+			return copy
 	return {}
 
 static func _strategy_token(strategy: Dictionary) -> String:
