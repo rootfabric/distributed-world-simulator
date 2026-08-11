@@ -19,6 +19,14 @@
     "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "result": "PASS_UNCHANGED"
   },
+  "published_blob_verification": {
+    "plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
+    "plant_resource_model_v1.gd": "26fd4118307f098bd85b6d4b953a27ad8b9d85cd",
+    "single_plant_patch_simulator_v1.gd": "068c8aaa47e17d924d741a044a059df18ad0ed25",
+    "eco_p1a_s2_single_plant_resource_acceptance.gd": "5bfa09618d83b8b137ac8f9b3386c61f66c2c054",
+    "RUN_ECO_P1A_S2_TESTS.ps1": "b293a66a4d17ebbf12c7756c94f6f078bdd55b0c",
+    "model_and_test_match_local_tested_content": true
+  },
   "evidence": [
     "one identical plant genome is evaluated at all control points",
     "resource outcome is decomposed into light/water/nutrient/temperature responses and explicit costs/penalties",
@@ -33,6 +41,6 @@
   ],
   "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
   "windows_confirmation": "PENDING",
-  "published_blob_verification": "PENDING_AFTER_PUBLICATION",
+  "execution_note": "The focused S2 model/test was executed in the minimal ECO Godot project using the provided Godot 4.7.1 double Linux binary. S2 produced 235/235 assertions and the fixed simulation hash; S1 parent regression remained 109/109. Git blob SHA-1 for every published S2 model/test file matches the local tested content. The PowerShell runner is published and awaits exact-Windows confirmation in the full checkout.",
   "next": "Exact Windows focused confirmation, then P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes"
 }
