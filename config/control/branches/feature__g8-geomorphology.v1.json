@@ -9,10 +9,10 @@
   "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
   "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
   "current_stage": "G8.6 Geomorphology Visual Lab",
-  "stage_status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
-  "progress_note": "G8.5 remains ACCEPTED on exact-Windows tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736. G8.6 first Windows attempt exposed and FIX1 corrected a harness-only JSON numeric Array comparison. The second exact-Windows attempt on 666a56e104b521c642afd3168f9d3e3b3f1d9ad4 then exposed a real presentation-corridor alignment bug: the lab forced samples to Fixture.RADIUS_M while accepted G6 centerline carried radial elevation, leaving river_channel_delta_m invisible. FIX2 introduced only a G8.6 presentation wrapper that preserves the accepted G6 centerline radius. On exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb, automated acceptance on checkout a9ca1f8b723e4edc5ebff40db26e41283d464597 passed the focused/headless G8.6 gate, G8.5 parent acceptance, derived presentation LOD/truth separation, PX/PZ seam diagnostic corridor, and the complete world/core regression through NX4. Visible regression evidence includes MW10 processes 51 assertions, MW10 lock-release retry 12, RL0 92, RL1 245, RL2 multiresolution 153, RL2 real asteroid 44, RL3 representation-aware 175, RL3 process composition 37, and main_scene_cli_all 6 PASS / 0 FAIL with final STOPPED lifecycle. Working tree was CLEAN. Automated G8.6 is accepted. A guarded manual graphical runner now verifies branch, clean worktree, automated-head ancestry, executable G8.6 freshness and a fresh focused headless PASS before opening the lab. Only user-observed graphical observation remains before G8.6 and then G8 Full Acceptance can close.",
-  "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-  "next_stage": "Run RUN_G8_6_MANUAL_GRAPHICAL_ACCEPTANCE.ps1 on the exact latest feature/g8-geomorphology checkout. The runner must report CLEAN worktree, automated tested head ancestry, zero executable drift and a focused automated PASS before opening the graphical lab. Then verify G source/resolved geometry with stable Truth hash, views 1..7, W/S presentation LOD with Canonical samples=561 and stable hash, X PX/PZ seam without a visible crack, and F canonical river alignment with coherent channel/bank/floodplain shaping. A user-observed graphical PASS is the only remaining G8.6 blocker; after it, record G8.6 ACCEPTED and run G8 Full Acceptance.",
+  "stage_status": "ACCEPTED_PENDING_G8_FULL_ACCEPTANCE",
+  "progress_note": "G8.6 is ACCEPTED. Exact-Windows automated acceptance passed on a9ca1f8b723e4edc5ebff40db26e41283d464597 with focused/headless G8.6, accepted G8.5 parent, presentation LOD/truth separation, PX/PZ seam diagnostics and full world/core regression through NX4. User-observed graphical acceptance was explicitly PASS on checkout b91ed3eb8664ec1aee28453947a84c6a56acb95b: G source/resolved toggle preserved Truth hash, all 1..7 views were observed, four presentation LODs 33x17/17x9/9x5/5x3 preserved Canonical samples=561 and Truth hash 36c87791f25bbd0b, PX/PZ seam had no visible crack, and canonical river overlay aligned with channel/bank/floodplain. Only aggregate G8 Full Acceptance remains before G8 freezes.",
+  "last_accepted_checkpoint": "G8.6 Geomorphology Visual Lab",
+  "next_stage": "Run G8 Full Acceptance on one clean exact-Windows checkout: require accepted G8.0-G8.6 records, fresh G8.6 focused/headless gate, PC0 NON_RED, complete world/core regression, stable repository hygiene and no post-tested runtime drift. Then record G8 FULL ACCEPTED and freeze G8; G9 remains blocked on canonical R3/MAT0.",
   "parent_branch_or_checkpoint": "G8.5 ACCEPTED @ 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
   "base_commit": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e",
   "dependencies": ["G3", "G5", "G6", "G7", "G7_3", "G8_0", "G8_1", "G8_2", "G8_3", "G8_4", "G8_5"],
@@ -54,7 +54,8 @@
     "RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1",
     "RUN_G8_6_AUTOMATED_ACCEPTANCE.ps1",
     "RUN_G8_6_MANUAL_GRAPHICAL_ACCEPTANCE.ps1",
-    "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_CANDIDATE_RU.md"
+    "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_CANDIDATE_RU.md",
+    "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_ACCEPTED_RU.md"
   ],
   "tested_heads": {
     "runtime": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
@@ -76,11 +77,11 @@
     "g8_6_fix2_runtime": "6d461ea5b201047cf12f1d284fb08e93ceae1689",
     "g8_6_automated_acceptance": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
     "g8_6_manual_gate_runner": "793800271350fe5a7eaa819296d07968ba78eed8",
-    "g8_6_manual_graphical": "PENDING"
+    "g8_6_manual_graphical": "b91ed3eb8664ec1aee28453947a84c6a56acb95b"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "procedural geomorphology deformation only"}],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE", "SEDIMENT_INVENTORY", "TIME_INTEGRATION", "REPRESENTATION_CELL_IDENTITY", "PRESENTATION_MESH_AS_TRUTH"],
-  "blockers": ["G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"],
+  "blockers": ["G8_FULL_ACCEPTANCE_REQUIRED"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
