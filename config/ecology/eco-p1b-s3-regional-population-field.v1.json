@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1B-S3",
   "name": "Regional Population Field and Trait Distribution",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -40,7 +40,10 @@
     "neutral_hash": "b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6",
     "alternate_result_hash": "ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b"
   },
-  "local_evidence": {
+  "accepted_evidence": {
+    "focused_assertions": 388,
+    "restart_assertions": 6,
+    "windows": "PASS_CLEAN",
     "initial_average_net": -0.15744116082374,
     "final_average_net": 0.18194278221549,
     "water_preference_vs_moisture": 0.84993290943488,
