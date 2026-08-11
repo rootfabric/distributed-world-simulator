@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R1",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "AUDITED",
+  "state": "FIX_REQUIRED",
   "work_order_type": "CONTROL",
   "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "branch": "control/h0-closed-loop-development",
@@ -101,7 +101,7 @@
       "Verify C22 remains blocked, runtime remains unauthorized and PC0 remains non-RED."
     ]
   },
-  "repair_context_required": false,
+  "repair_context_required": true,
   "evidence_map_required": true,
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "CONTROL_DOCS_MERGE_APPROVAL"],
   "issued_at_utc": "2026-08-11T06:45:29Z",

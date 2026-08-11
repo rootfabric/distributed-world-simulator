@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-0-WO-002-PHASE-INDEPENDENT-TESTS-001",
+  "work_order_id": "H0-0-WO-002",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "H0.0 multi-Work-Order acceptance fixtures across pre-evidence and post-evidence ledger phases",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": ["python -m unittest discover -s tests/harness", "CONTROL_DEVELOPMENT.ps1 -Status", "CONTROL_DEVELOPMENT.ps1 -Plan", "CONTROL_DEVELOPMENT.ps1 -Resume"],
+  "callers": ["Director checkpoint audit", "Reviewer and Verifier fresh-clone runs", "future CI"],
+  "callees": ["tests/harness fixture document selection", "state_builder active map/review selection", "checkpoint blocker derivation"],
+  "sibling_paths": ["historical-only map/review fixture", "typed supporting evidence fixture", "active freshness combination matrix", "required predicate completion", "terminal WO-001 regression"],
+  "existing_tests": ["42-test pre-evidence suite PASS", "historical malformed claim matrix", "active identity/freshness matrix", "clean-clone public command matrix"],
+  "missing_tests": ["The same suite after fresh active review/map and completed predicates", "Historical-only fixtures constructed independently from the live shared directory", "Checkpoint expectation derived independently from required predicate and document facts"],
+  "public_or_internal_contracts": ["Git-only recovery semantics", "active Work Order evidence partition", "H0_0_SCAFFOLD_READY checkpoint predicate gate"],
+  "expected_shipped_behavior": "The identical acceptance suite passes before and after active evidence is appended, while independently proving that historical documents never authorize active work and that checkpoint blocking follows the actual predicate/review/map facts.",
+  "relevant_history_or_evidence": ["0f3ca58644fc74e9e78950d4d994790643cf441d pre-evidence exact implementation PASS", "b993ea5199c6446fba6161a534d8ca9e857d2c0d fresh WO-002 evidence ledger", "post-evidence suite: 42 run, 3 assertion failures, one expected skip"],
+  "root_cause_hypothesis": "Three tests read the evolving live evidence directory but asserted a fixed pre-evidence population/blocker state. Their fixture setup did not isolate historical-only inputs or independently derive checkpoint conditions.",
+  "canonical_fix_location": "tests/harness/test_h0_control_harness.py only; production state_builder logic, canonical contracts, ledgers and runtime remain unchanged.",
+  "why_not_symptom_patch": "Removing the fresh documents or weakening production authorization would hide the phase coupling. Fixtures must select their intended document set explicitly and calculate expected blockers from independent contract and Git facts."
+}

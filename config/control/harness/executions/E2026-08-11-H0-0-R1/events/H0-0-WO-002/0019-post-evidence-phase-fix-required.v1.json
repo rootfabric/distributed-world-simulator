@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-002-0019",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-002",
+  "sequence": 19,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-11T07:16:06Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "b993ea5199c6446fba6161a534d8ca9e857d2c0d",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-002-VALIDATION-SUMMARY-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-002-PHASE-INDEPENDENT-TESTS-001.v1.json"
+  ],
+  "summary": "The mandatory post-evidence full suite found three remaining assertions coupled to the pre-evidence phase: global map membership, historical-only fixture construction, and a hardcoded checkpoint-blocked expectation after all required predicates became complete.",
+  "blocker": "POST_EVIDENCE_PHASE_INDEPENDENT_TESTS_REQUIRED"
+}
