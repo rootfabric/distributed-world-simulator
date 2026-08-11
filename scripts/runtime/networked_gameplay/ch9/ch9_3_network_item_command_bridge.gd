@@ -37,12 +37,14 @@ func submit_item_command(
 	if command_type not in EQUIPMENT_COMMANDS:
 		return super.submit_item_command(command_type, payload, operation_id)
 	if _runtime == null or _adapter == null:
+		_rejected += 1
 		return _failure("M7_ITEM_BRIDGE_NOT_CONFIGURED")
 	if not _runtime.has_method("submit_equipment_command_nonblocking"):
 		return super.submit_item_command(command_type, payload, operation_id)
 
 	var normalized_operation_id: String = operation_id.strip_edges()
 	if normalized_operation_id.is_empty():
+		_rejected += 1
 		return _failure("CH9_EQUIPMENT_OPERATION_ID_REQUIRED")
 
 	var canonical_payload: Dictionary = payload.duplicate(true)
@@ -59,13 +61,16 @@ func submit_item_command(
 	)
 	if not submitted_value is Dictionary:
 		_equipment_authoritative_async_send_failures += 1
+		_rejected += 1
 		return _failure("CH9_INVALID_EQUIPMENT_NONBLOCKING_RESULT")
 	var submitted: Dictionary = Dictionary(submitted_value).duplicate(true)
 	if not bool(submitted.get("success", false)):
 		_equipment_authoritative_async_send_failures += 1
+		_rejected += 1
 		return submitted
 
 	_equipment_authoritative_async_submitted += 1
+	_submitted += 1
 	return {
 		"success": true,
 		"error_code": "",
