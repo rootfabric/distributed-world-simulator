@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1A-S1",
+  "name": "Environment Contracts + Deterministic Fixture",
+  "status": "FOCUSED_ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "fixture": {
+    "fixture_id": "eco-fixture/p1a-s1-river-valley",
+    "size_m": [4000, 4000],
+    "logical_grid": [128, 128],
+    "default_seed": 104701,
+    "environment_revision": "ECO.P1A-S1.1"
+  },
+  "fields": [
+    "temperature_c",
+    "soil_moisture",
+    "sunlight",
+    "nutrients",
+    "flood_frequency"
+  ],
+  "control_points": [
+    "river_bank",
+    "floodplain",
+    "wet_lowland",
+    "lower_slope",
+    "sunny_slope",
+    "shaded_slope",
+    "plateau",
+    "dry_ridge"
+  ],
+  "invariants": [
+    "same seed + revision + coordinate -> same EnvironmentSample checksum",
+    "environment sampling does not depend on camera, LOD or representation cell identity",
+    "synthetic fixture fields are continuous across logical cell boundaries",
+    "different seed changes the fixture hash without changing schemas",
+    "biome labels are not inputs to environment queries"
+  ],
+  "scope": "research-only synthetic environment fixture; no production G/Matter/authority/persistence ownership",
+  "acceptance": {
+    "decision": "ACCEPTED",
+    "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_test": "PASS",
+    "assertions": 108,
+    "failures": 0,
+    "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
+    "note": "Focused test executed in a minimal local Godot project reconstructed from the branch files because the execution container has no direct GitHub network access."
+  }
+}
