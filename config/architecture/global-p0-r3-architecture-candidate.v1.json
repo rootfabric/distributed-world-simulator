@@ -3,8 +3,13 @@
   "revision": "GLOBAL-P0-2026-08-11-R3-CANDIDATE",
   "parent_revision": "GLOBAL-P0-2026-08-10-R2",
   "date": "2026-08-11",
-  "status": "candidate",
+  "status": "candidate_refresh_required",
   "canonical_branch_after_acceptance": "main",
+  "candidate_base_state": {
+    "last_known_main_before_refresh": "42ace1e77e09ea9392359111bdd611b2b9250e48",
+    "required_refresh_target": "current main after PC0 project-convergence hardening is integrated",
+    "reason": "The architectural content remains a candidate, but the branch was prepared before T1B aggregate handoff, NX.C0 declaration, G8.6 automated acceptance, CH9.6 Windows automated acceptance and the C22 current-main convergence disposition. Promotion from the stale ancestry would immediately create false architecture/control drift."
+  },
   "principles": [
     "CANONICAL_WORLD_NE_PRESENTATION",
     "CANONICAL_WORLD_NE_TRANSPORT",
@@ -25,104 +30,288 @@
     "LOWER_RESOLUTION_MAY_REDUCE_COST_BUT_NOT_TRUTH"
   ],
   "program_classes": {
-    "p0_cross_domain_foundations": ["IAM", "AUTHZ", "RF", "TF", "SD", "MAT", "WT", "WQ", "LIFE", "WB", "COMPAT", "SEC"],
-    "existing_distributed_foundations": ["A1", "S0", "S1", "M0", "NX", "B1", "B2", "N3", "N4", "N5", "N6"],
-    "p1_composition_programs": ["GM", "SP", "ENV", "NAV", "AI", "POP", "ECO", "ORG", "OPS", "MOD"]
+    "p0_cross_domain_foundations": [
+      "IAM",
+      "AUTHZ",
+      "RF",
+      "TF",
+      "SD",
+      "MAT",
+      "WT",
+      "WQ",
+      "LIFE",
+      "WB",
+      "COMPAT",
+      "SEC"
+    ],
+    "existing_distributed_foundations": [
+      "A1",
+      "S0",
+      "S1",
+      "M0",
+      "NX",
+      "B1",
+      "B2",
+      "N3",
+      "N4",
+      "N5",
+      "N6"
+    ],
+    "p1_composition_programs": [
+      "GM",
+      "SP",
+      "ENV",
+      "NAV",
+      "AI",
+      "POP",
+      "ECO",
+      "ORG",
+      "OPS",
+      "MOD"
+    ]
   },
   "programs": {
     "IAM": {
       "owner": "IAM",
       "purpose": "Separate AccountId, PrincipalId and SessionId from network peers and world entities.",
-      "first_stages": ["IAM0 contracts", "IAM1 local self-host provider", "IAM2 provider-neutral auth", "IAM3 session rotation/reconnect", "IAM4 multi-server acceptance"],
+      "first_stages": [
+        "IAM0 contracts",
+        "IAM1 local self-host provider",
+        "IAM2 provider-neutral auth",
+        "IAM3 session rotation/reconnect",
+        "IAM4 multi-server acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS_AND_LOCAL_MOCK"
     },
     "AUTHZ": {
       "owner": "AUTHZ",
       "purpose": "One deny/allow decision boundary for principal/actor actions on resources.",
-      "depends_on": ["IAM0"],
-      "first_stages": ["AUTHZ0 policy contracts", "AUTHZ1 domain adapters", "AUTHZ2 ownership/roles", "AUTHZ3 organizations", "AUTHZ4 distributed acceptance"],
+      "depends_on": [
+        "IAM0"
+      ],
+      "first_stages": [
+        "AUTHZ0 policy contracts",
+        "AUTHZ1 domain adapters",
+        "AUTHZ2 ownership/roles",
+        "AUTHZ3 organizations",
+        "AUTHZ4 distributed acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS_PRODUCTION_ADOPTION_AFTER_IAM0"
     },
     "RF": {
       "owner": "RF",
       "purpose": "Stable reference-frame identity/transforms for bodies, ships, interiors and local physics.",
-      "first_stages": ["RF0 contracts", "RF1 geodesy adapter", "RF2 mobile construct frame", "RF3 observer-relative presentation", "RF4 distributed acceptance"],
+      "first_stages": [
+        "RF0 contracts",
+        "RF1 geodesy adapter",
+        "RF2 mobile construct frame",
+        "RF3 observer-relative presentation",
+        "RF4 distributed acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS"
     },
     "TF": {
       "owner": "TF",
       "purpose": "Simulation-time and domain-tick semantics independent from wall/network/presentation clocks.",
-      "first_stages": ["TF0 contracts", "TF1 multi-rate semantics", "TF2 scheduled events", "TF3 dormant catch-up", "TF4 distributed acceptance"],
+      "first_stages": [
+        "TF0 contracts",
+        "TF1 multi-rate semantics",
+        "TF2 scheduled events",
+        "TF3 dormant catch-up",
+        "TF4 distributed acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS_FAKE_CLOCK_ONLY"
     },
     "SD": {
       "owner": "SD",
       "purpose": "Frame-aware WorldAddress and mappings to domain-specific spatial identities without one universal ChunkId.",
-      "depends_on": ["RF0", "S0"],
-      "first_stages": ["SD0 WorldAddress contracts", "SD1 domain adapters", "SD2 authority/interest adapters", "SD3 cross-frame mapping"],
+      "depends_on": [
+        "RF0",
+        "S0"
+      ],
+      "first_stages": [
+        "SD0 WorldAddress contracts",
+        "SD1 domain adapters",
+        "SD2 authority/interest adapters",
+        "SD3 cross-frame mapping"
+      ],
       "start_policy": "START_AFTER_RF0_CONTRACT_SHAPE"
     },
     "MAT": {
       "owner": "MAT",
       "purpose": "One MaterialDefinitionId shared by G9, Matter, Item, Construction, fabrication and ENV.",
-      "first_stages": ["MAT0 identity/registry", "MAT1 property projections", "MAT2 Item/Matter", "MAT3 G9", "MAT4 Construction/fabrication", "MAT5 ENV"],
+      "first_stages": [
+        "MAT0 identity/registry",
+        "MAT1 property projections",
+        "MAT2 Item/Matter",
+        "MAT3 G9",
+        "MAT4 Construction/fabrication",
+        "MAT5 ENV"
+      ],
       "start_policy": "START_NOW_BEFORE_G9"
     },
     "WT": {
       "owner": "WT",
       "purpose": "WorldOperation and WorldTransactionPlan compile cross-domain consequences to existing M0 atomic commits.",
-      "depends_on": ["M0"],
-      "first_stages": ["WT0 contracts", "WT1 deterministic planner", "WT2 mining", "WT3 construction consumption", "WT4 salvage", "WT5 cross-authority policy"],
+      "depends_on": [
+        "M0"
+      ],
+      "first_stages": [
+        "WT0 contracts",
+        "WT1 deterministic planner",
+        "WT2 mining",
+        "WT3 construction consumption",
+        "WT4 salvage",
+        "WT5 cross-authority policy"
+      ],
       "start_policy": "START_NOW_CONTRACTS_AND_MOCK_INTENTS"
     },
     "WQ": {
       "owner": "WQ",
       "purpose": "Actor-scoped query planning across domain adapters without canonical storage ownership.",
-      "first_stages": ["WQ0 contracts", "WQ1 deterministic merge/ranking", "WQ2 Item/Construction", "WQ3 Geo/Matter", "WQ4 auth/perception", "WQ5 distributed query"],
+      "first_stages": [
+        "WQ0 contracts",
+        "WQ1 deterministic merge/ranking",
+        "WQ2 Item/Construction",
+        "WQ3 Geo/Matter",
+        "WQ4 auth/perception",
+        "WQ5 distributed query"
+      ],
       "start_policy": "START_NOW_MOCK_ADAPTERS"
     },
     "LIFE": {
       "owner": "LIFE",
       "purpose": "Common ABSTRACT/DORMANT/SIMULATED/ACTIVE/PRESENTED lifecycle semantics preserving canonical identity.",
-      "first_stages": ["LIFE0 contracts", "LIFE1 C18/RL adapter", "LIFE2 population/agent adapter", "LIFE3 distributed acceptance"],
+      "first_stages": [
+        "LIFE0 contracts",
+        "LIFE1 C18/RL adapter",
+        "LIFE2 population/agent adapter",
+        "LIFE3 distributed acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS"
     },
     "WB": {
       "owner": "WB",
       "purpose": "Bound work and choose full/coarse/defer/batch/S1-dispatch without owning authority or canonical state.",
-      "depends_on": ["S1"],
-      "first_stages": ["WB0 contracts", "WB1 fake arbiter", "WB2 multi-domain lab", "WB3 S1 dispatch", "WB4 distributed acceptance"],
+      "depends_on": [
+        "S1"
+      ],
+      "first_stages": [
+        "WB0 contracts",
+        "WB1 fake arbiter",
+        "WB2 multi-domain lab",
+        "WB3 S1 dispatch",
+        "WB4 distributed acceptance"
+      ],
       "start_policy": "START_NOW_CONTRACTS_FAKE_ARBITER_PRODUCTION_LATER"
     },
     "COMPAT": {
       "owner": "COMPAT",
       "purpose": "Explicit schema/protocol/content/migration versions for a long-lived persistent universe.",
-      "first_stages": ["COMPAT0 taxonomy", "COMPAT1 migration registry", "COMPAT2 network matrix", "COMPAT3 rolling upgrade"],
+      "first_stages": [
+        "COMPAT0 taxonomy",
+        "COMPAT1 migration registry",
+        "COMPAT2 network matrix",
+        "COMPAT3 rolling upgrade"
+      ],
       "start_policy": "START_NOW_CONTRACTS"
     },
     "SEC": {
       "owner": "SEC",
       "purpose": "Trust boundaries, abuse resistance, negative tests, query secrecy and admin audit.",
-      "first_stages": ["SEC0 model", "SEC1 rate-limit contracts", "SEC2 query visibility", "SEC3 duplication attacks", "SEC4 admin audit"],
+      "first_stages": [
+        "SEC0 model",
+        "SEC1 rate-limit contracts",
+        "SEC2 query visibility",
+        "SEC3 duplication attacks",
+        "SEC4 admin audit"
+      ],
       "start_policy": "START_NOW_DOCUMENTATION_AND_NEGATIVE_TEST_REQUIREMENTS"
     }
   },
   "mandatory_intersections": [
-    {"producer": "IAM", "consumer": "AUTHZ/N5/ORG", "rule": "session continuity never redefines actor identity"},
-    {"producer": "RF", "consumer": "SD/SP/NX/G", "rule": "frame identity never implies authority route"},
-    {"producer": "TF", "consumer": "ENV/AI/POP/ECO", "rule": "simulation time never becomes work scheduler"},
-    {"producer": "MAT", "consumer": "G9/Matter/Item/Construction/ENV", "rule": "one material identity; domain projections remain domain-owned"},
-    {"producer": "WT", "consumer": "Item/Construction/Matter", "rule": "compile to M0; never create a second transaction engine"},
-    {"producer": "WQ", "consumer": "AI/NAV/gameplay", "rule": "queries are actor-scoped and non-authoritative"},
-    {"producer": "LIFE", "consumer": "C18/RL/POP/N6", "rule": "dormancy preserves canonical identity"},
-    {"producer": "WB", "consumer": "G12/S1/NX8/AI/POP/ENV", "rule": "budget and authority remain separate"},
-    {"producer": "AI", "consumer": "WT/WQ/AUTHZ/C19", "rule": "human and AI actors converge on the same WorldOperation path"}
+    {
+      "producer": "IAM",
+      "consumer": "AUTHZ/N5/ORG",
+      "rule": "session continuity never redefines actor identity"
+    },
+    {
+      "producer": "RF",
+      "consumer": "SD/SP/NX/G",
+      "rule": "frame identity never implies authority route"
+    },
+    {
+      "producer": "TF",
+      "consumer": "ENV/AI/POP/ECO",
+      "rule": "simulation time never becomes work scheduler"
+    },
+    {
+      "producer": "MAT",
+      "consumer": "G9/Matter/Item/Construction/ENV",
+      "rule": "one material identity; domain projections remain domain-owned"
+    },
+    {
+      "producer": "WT",
+      "consumer": "Item/Construction/Matter",
+      "rule": "compile to M0; never create a second transaction engine"
+    },
+    {
+      "producer": "WQ",
+      "consumer": "AI/NAV/gameplay",
+      "rule": "queries are actor-scoped and non-authoritative"
+    },
+    {
+      "producer": "LIFE",
+      "consumer": "C18/RL/POP/N6",
+      "rule": "dormancy preserves canonical identity"
+    },
+    {
+      "producer": "WB",
+      "consumer": "G12/S1/NX8/AI/POP/ENV",
+      "rule": "budget and authority remain separate"
+    },
+    {
+      "producer": "AI",
+      "consumer": "WT/WQ/AUTHZ/C19",
+      "rule": "human and AI actors converge on the same WorldOperation path"
+    }
   ],
   "parallel_waves": {
-    "wave_a_start_now": ["IAM0/IAM1", "MAT0", "WT0", "WQ0/WQ1"],
-    "wave_b_after_first_contract_freeze": ["RF0/RF1", "TF0", "AUTHZ0", "LIFE0", "WB0/WB1", "COMPAT0"],
-    "network_continuation": ["declare current NX/M7 frontier before next acceptance", "B1 may be prepared after explicit PC0 declaration", "keep B2/N3-N6 dependency gates"],
-    "reserve_only": ["distributed SD routing", "production global TF scheduler", "production global WB arbiter", "WT cross-authority commit", "distributed WQ fan-out", "GM production", "SP interplanetary handoff", "ENV large-scale atmosphere", "AI LLM execution", "POP runtime", "ECO global markets", "OPS migration controls", "dynamic shard split/merge"]
+    "wave_a_start_now": [
+      "IAM0/IAM1",
+      "MAT0",
+      "WT0",
+      "WQ0/WQ1"
+    ],
+    "wave_b_after_first_contract_freeze": [
+      "RF0/RF1",
+      "TF0",
+      "AUTHZ0",
+      "LIFE0",
+      "WB0/WB1",
+      "COMPAT0"
+    ],
+    "network_continuation": [
+      "NX.C0 is the declared convergence frontier",
+      "NX.C1 runtime transfer starts only after PC0 directional-watch hardening is canonical and the implementation branch is refreshed from current main",
+      "B1 may be prepared only after explicit PC0 declaration",
+      "keep B2/N3-N6 dependency gates"
+    ],
+    "reserve_only": [
+      "distributed SD routing",
+      "production global TF scheduler",
+      "production global WB arbiter",
+      "WT cross-authority commit",
+      "distributed WQ fan-out",
+      "GM production",
+      "SP interplanetary handoff",
+      "ENV large-scale atmosphere",
+      "AI LLM execution",
+      "POP runtime",
+      "ECO global markets",
+      "OPS migration controls",
+      "dynamic shard split/merge"
+    ]
   },
   "p1_programs": {
     "GM": "Geo + sparse authoritative Matter composition",
@@ -144,10 +333,17 @@
     "V5": "Distributed Living World"
   },
   "current_frontier_guards": [
-    "G8.4 acceptance continues; G9 must consume MAT identity",
-    "T1B.2 acceptance continues; T2 consumes new foundations only at explicit gates",
-    "CH9.5 acceptance continues without IAM/AUTHZ rewrite",
-    "C22/TS convergence merges before TS0.4",
-    "network M7/FIX lineage must be declared in PC0 before next network acceptance"
+    "G8.6 automated acceptance is complete; manual graphical acceptance and G8 Full Acceptance must close before the G frontier moves. G9 must consume canonical MAT identity and therefore cannot start before the R3/MAT0 gate.",
+    "T1B.0-T1B.4 are SOURCE_ACCEPTED_HANDOFF_COMPLETE; there is no T1B.5. T2.0 starts only after C22 is MAIN_INTEGRATED, TS0.4 classifies the 1M ceiling, accepted T scale/composition evidence is converged through PC0, and the canonical T2 blocker is cleared.",
+    "CH9.6 Windows automated acceptance is complete; only the graphical restart/recovery gate remains. Do not rewrite the accepted equipment authority path through IAM/AUTHZ while closing CH9.6.",
+    "C22/TS0.3 remains SOURCE_ACCEPTED but requires a current-main convergence refresh because PR #59 is non-mergeable against the present control lineage. Reproduce the accepted production diff on current main and revalidate before any merge.",
+    "NX.C0 owner-authority convergence is the declared network frontier. Legacy M7/FIX is evidence only. NX.C1 cannot begin runtime transfer until PC0 directional watched-dependency hardening is canonical and the implementation branch is refreshed from then-current main."
+  ],
+  "promotion_blockers": [
+    "R3 candidate ancestry must be refreshed onto current main after the PC0 project-convergence hardening lands.",
+    "Current frontier guards must match the main-owned PC0 registry at promotion time.",
+    "A revision-transition plan must prevent accepted R2 evidence branches from becoming false RED merely because canonical main advances to R3; active new runtime frontiers must use R3 while frozen evidence remains explicitly grandfathered as evidence only.",
+    "Project Control must be non-RED after the refreshed R3 change-set is applied.",
+    "Wave A IAM/MAT/WT/WQ branches must all be created from one accepted canonical R3 base, not from the stale candidate ancestry."
   ]
 }
