@@ -8,9 +8,9 @@
 
 `feature/nx-m7-owner-authority-convergence`
 
-База:
+Фактический merge-base:
 
-`main @ 9391ccfce40a14a0f568f81c4c68ddfc76f79c76`
+`main @ a4cc8402d71424261f5bb50dac8fedbcd8c99bb6`
 
 Причина: старая N разошлась с main на сотни коммитов и накопила FIX6/FIX7/FIX8/FIX9/FIX10, presentation, scheduler, inventory/UI и diagnostics в одной lineage. Перенос всей истории создаст альтернативную integration architecture вместо convergence.
 
@@ -109,11 +109,26 @@ Owner-authority locomotion should not depend on legacy relative-tick scheduler b
 
 Only control/passport/plan changes.
 
-- branch based on current main;
+- branch based on current main lineage;
 - no runtime paths changed;
 - no stale tested head can exist;
 - no cross-branch runtime overlap;
 - old N is evidence only.
+
+### PC0 hardening gate before NX.C1
+
+Current `project_control.py` detects direct active-branch file overlap and main-to-branch dependency drift, but it does not yet implement the directional rule already named by the registry audit trigger: `ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY`.
+
+Before NX.C1 changes production runtime, make a separate **main-owned PC0 control change** that:
+
+1. compares every registered active producer branch `scope_changed_files` against every other active consumer branch `watched_paths` and `critical_watched_paths`;
+2. marks the consumer YELLOW for watched dependency impact;
+3. marks the consumer RED for critical watched dependency impact;
+4. records the producer/consumer/files in the report so the producer knows it triggered required revalidation;
+5. does not treat historical/unregistered evidence branches as active producers;
+6. has focused control-plane tests before it is used as an acceptance gate.
+
+Do not hide this global PC0 change inside the NX branch. PC0 is main-owned infrastructure.
 
 ### NX.C1 — YELLOW implementation candidate
 
