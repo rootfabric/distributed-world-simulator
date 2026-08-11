@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R2-H0-0-R2-WO-001-0006",
+  "project_epoch": "E2026-08-11-H0-0-R2",
+  "work_order_id": "H0-0-R2-WO-001",
+  "sequence": 6,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T10:00:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/h0-closed-loop-development-r2",
+  "head_sha": "daabf783111d00846ed0cd98e72f597085544591",
+  "predicate": "PC0_NON_RED",
+  "command": "GitHub Actions Project Control run 31480090577: standard PC0 overall YELLOW; directional PC0 overall YELLOW; no RED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/evidence/H0-0-R2-WO-001-PC0-001.v1.json"
+  ],
+  "summary": "PC0_NON_RED verified on exact Draft PR #73 head daabf783111d00846ed0cd98e72f597085544591. Standard and directional audits are YELLOW, not RED. ECO RED is advisory and does not raise global health; CH to NX remains a blocking-consumer YELLOW finding.",
+  "blocker": "FRESH_H0_HARNESS_AND_PUBLIC_COMMAND_VERIFICATION_PENDING"
+}
