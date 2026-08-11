@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1A-S1",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "scope": "research-only deterministic environment contracts and synthetic fixture",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1a_s1_environment_acceptance.gd",
+    "runner": "RUN_ECO_P1A_S1_TESTS.ps1",
+    "assertions": 108,
+    "failures": 0,
+    "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
+  },
+  "evidence": [
+    "EnvironmentSample exact schema validates and rejects ratio/LOD injection",
+    "same seed + revision + coordinate returns identical sample/checksum",
+    "full 128x128 fixture hash repeats exactly",
+    "different seed changes fixture hash",
+    "river/floodplain/lowland/slope/ridge control-point relations are causally ordered",
+    "five sampled logical x boundaries and five sampled logical z boundaries are continuous within strict tolerances",
+    "33x33 and 65x65 sampling share identical canonical sample at the same coordinate",
+    "research sources contain no camera, LOD-cell, authority, network, material or hardcoded biome-plant ownership"
+  ],
+  "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
+  "execution_note": "The execution container had no direct GitHub DNS access. The focused test was executed against a minimal local Godot project containing the exact ECO source/config/test files and the provided Godot 4.7.1 double binary. Branch file content is re-fetched and compared after publication before final handoff.",
+  "next": "ECO.P1A-S2 Single-Plant Resource Model"
+}
