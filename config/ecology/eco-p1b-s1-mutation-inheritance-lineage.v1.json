@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1B-S1",
   "name": "Deterministic Mutation, Inheritance and Lineage Kernel",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -39,6 +39,12 @@
     "population_hash": "83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84",
     "chain_hash": "3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874"
   },
+  "acceptance": {
+    "windows": "PASS_CLEAN",
+    "focused_assertions": 5834,
+    "restart_process_assertions": 6,
+    "failures": 0
+  },
   "invariants": {
     "species_classes_added": false,
     "biome_roles_added": false,
@@ -47,5 +53,5 @@
     "presentation_inputs_added": false,
     "accepted_p1a_truth_modified": false
   },
-  "next_after_acceptance": "ECO.P1B-S2 Spatial Selection Baseline: place descendants into the accepted P1A environment and let reproductive success be driven only by accepted resource consequences."
+  "next_after_acceptance": "ECO.P1B-S2 Spatial Selection Baseline: expose identical mutation candidates to contrasting accepted P1A environments and let selection be driven only by accepted resource consequences."
 }
