@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_5_cross_cell_cross_lod_geomorphology_invariance.v1",
   "checkpoint": "g8.5-cross-cell-cross-lod-geomorphology-invariance",
-  "decision": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -36,12 +36,11 @@
     "failure": {
       "kind": "GDSCRIPT_TYPE_INFERENCE_PARSE_ERROR",
       "lines": [129, 157, 206],
-      "message": "Cannot infer the type of addressing.direction_to_cell() result because the addressing harness variable is dynamically typed.",
       "semantic_or_runtime_regression": false
     }
   },
   "fix1": {
-    "status": "IMPLEMENTED_CANDIDATE_RETEST_REQUIRED",
+    "status": "ACCEPTED_WITH_STAGE",
     "head": "fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a",
     "scope": "Acceptance-test typing only; three direction_to_cell results explicitly typed Dictionary.",
     "runtime_changes": false,
@@ -51,14 +50,14 @@
   "proof": {
     "lod_levels": [2, 4, 8, 12],
     "real_upstream_bundle": "G3 + G5 + G6 accepted adapters composed through G7 SemanticFieldComposer",
-    "same_point_query_checksum_across_lod": "PENDING_RETEST",
-    "same_point_bundle_checksum_across_lod": "PENDING_RETEST",
-    "same_point_deformation_checksum_across_lod": "PENDING_RETEST",
-    "same_point_component_deltas_across_lod": "PENDING_RETEST",
-    "external_surface_cell_label_independence": "PENDING_RETEST",
-    "external_cube_face_label_independence": "PENDING_RETEST",
-    "query_order_independence": "PENDING_RETEST",
-    "px_pz_seam_evaluation": "PENDING_RETEST"
+    "same_point_query_checksum_across_lod": "PASS",
+    "same_point_bundle_checksum_across_lod": "PASS",
+    "same_point_deformation_checksum_across_lod": "PASS",
+    "same_point_component_deltas_across_lod": "PASS",
+    "external_surface_cell_label_independence": "PASS",
+    "external_cube_face_label_independence": "PASS",
+    "query_order_independence": "PASS",
+    "px_pz_seam_evaluation": "PASS"
   },
   "ownership": {
     "surface_cell_key_dependency": false,
@@ -71,13 +70,22 @@
     "network_ownership": false
   },
   "automated_evidence": {
-    "focused": "PENDING_FIX1_RETEST",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED_AFTER_SYNC"
+    "tested_head": "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "g8_4_parent": "PASS",
+    "g7_3_parent_semantic_proof": "PASS",
+    "geomorphology_cross_cell_cross_lod_invariance": "PASS",
+    "canonical_identity_excludes_surface_cell_cube_face_lod": "PASS",
+    "full_world_regression_through_nx4": "PASS",
+    "main_scene_cli_all": "6_PASS_0_FAIL",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN",
+    "final_marker": "G8.5 FULL ACCEPTANCE: PASS"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
-    "blockers": ["G8_5_FOCUSED_INVARIANCE_VALIDATION_REQUIRED", "G8_5_FULL_WORLD_REGRESSION_REQUIRED"]
+    "expected_health": "GREEN_FOR_G8_5",
+    "blockers": []
   },
   "next_if_accepted": "G8.6_GEOMORPHOLOGY_VISUAL_LAB"
 }
