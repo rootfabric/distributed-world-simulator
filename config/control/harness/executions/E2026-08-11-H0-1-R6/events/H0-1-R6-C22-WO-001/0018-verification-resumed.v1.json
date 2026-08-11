@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R6-H0-1-R6-C22-WO-001-0018",
+  "project_epoch": "E2026-08-11-H0-1-R6",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "sequence": 18,
+  "event_type": "VERIFICATION_STARTED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T14:37:40Z",
+  "actor": "VERIFIER",
+  "branch": "feature/h0-1-c22-current-main-r1",
+  "head_sha": "cec9eabd584a393d6787fe4990a4256c07be2a9b",
+  "predicate": "H0_1_C22_VERIFICATION_RESUMED",
+  "command": "RESUME_RUNTIME_VERIFICATION_AFTER_REPAIR",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-1-R6/repairs/H0-1-R6-C22-WO-001-SCOPE-DECLARATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-1-R6/reviews/H0-1-R6-C22-WO-001-SCOPE-REPAIR-REVIEW-001.v1.json"
+  ],
+  "summary": "Returned to VERIFYING after guarded redispatch and declaration-only repair. Windows C22/C24/graphical/full regression remains the next evidence gate."
+}
