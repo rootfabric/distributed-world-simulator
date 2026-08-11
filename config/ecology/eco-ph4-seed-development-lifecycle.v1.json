@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH4",
+  "name": "Seed Development Lifecycle",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.PH3C Morphology-Aware Selection / Competition Convergence ACCEPTED",
+  "experiment_revision": "ECO.PH4.1",
+  "purpose": "Carry heredity and deterministic development through seed -> germination -> juvenile -> adult -> reproduction -> new seed while regenerating realized phenotype from the local environment instead of transporting a prebuilt GrowthGraph or mesh.",
+  "lifecycle_stages": ["SEED","DORMANT_SEED","GERMINATED","JUVENILE","ADULT","REPRODUCTIVE","SENESCENT"],
+  "seed_payload_contract": {
+    "carries": ["genome","inherited_development_traits","PH0 seed envelope","lineage_id","generation","parent_individual_seed","payload_hash"],
+    "must_not_carry": ["GrowthGraph","realized phenotype","mesh","renderer profile","LOD"],
+    "offspring_identity": "new deterministic IndividualSeed + parent pointer; lineage retained",
+    "mutation": "DISABLED_IN_PH4_PENDING_FULL_POOL_MORPHOLOGY_CALIBRATION"
+  },
+  "development_semantics": {
+    "germination": "requires sufficient stored seed energy and PH3 coupled net above deterministic threshold",
+    "dormancy": "chronological age advances while development age remains zero",
+    "regrowth": "accepted PH2 realizes phenotype again from inherited traits + the seed envelope + local EnvironmentSample",
+    "resource_gate": "accepted PH3 morphology-resource coupling participates in lifecycle viability/reproduction",
+    "reproduction": "default P1 genome seed_count produces 80 unique deterministic offspring payloads in the bounded research fixture"
+  },
+  "local_evidence": {
+    "platform": "Godot 4.7.1 double Linux research fixture",
+    "parent_regressions": {"ph0":63,"ph1":128,"ph2":107,"ph3":217},
+    "focused_assertions": 718,
+    "restart_assertions": 5,
+    "profile_hash": "d8c8b9ff56ec630b832c4b6bdbb49d39147586f4d97e6535dcc6fbd37c29a795",
+    "founder_payload_hash": "1b5ff858fc57fdf98d75eb796cc6d7e6aa68b0b0e51e8321611e13b024cdc396",
+    "lifecycle_hash": "88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1",
+    "offspring_batch_hash": "48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce",
+    "reference_timeline": ["SEED","GERMINATED","JUVENILE","ADULT","REPRODUCTIVE"],
+    "offspring_count": 80,
+    "dormancy_recovery": "PASS",
+    "same_offspring_different_environment_phenotype": "PASS"
+  },
+  "tested_published_blobs": {
+    "profile": "6c03754237e8e2d5467a047fa7d548565dc323d0",
+    "kernel": "b79ee3e9b795f451054dda57490f6dd2445a1cf8",
+    "probes": "8cfbe02da800343625112cf1e1db2ed4a91471a8",
+    "focused_test": "b598baf7e72882ec2a6e4f9f7cd03004b9f98121",
+    "restart_test": "6fd279300ed8209dc804d1e386acf12f87001a84",
+    "windows_runner": "3a231c370ad148ae09c940d954b3430e8033cfdb"
+  },
+  "research_fixture_boundary": "Materializing all 80 offspring payloads is bounded acceptance evidence only. Production ecology remains population-canonical and does not require planet-wide individual GrowthGraph truth.",
+  "windows_confirmation": "PENDING",
+  "next_after_acceptance": "PH5 rendering/materialization may proceed as presentation research; unrestricted morphology mutation/evolution remains blocked by PH3C_FULL_POOL_COMPACT_DOMINANCE calibration."
+}
