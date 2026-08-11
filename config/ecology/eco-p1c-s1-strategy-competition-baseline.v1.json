@@ -10,7 +10,10 @@
   "experiment_revision": "ECO.P1C-S1.1",
   "purpose": "Introduce competition among multiple unlabeled ancestral strategies without predefined species roles and prove that heterogeneous accepted P1A environments retain a broader set of competitors than a uniform control.",
   "baseline": {
-    "grid": [7, 7],
+    "grid": [
+      7,
+      7
+    ],
     "patch_count": 49,
     "founder_count": 20,
     "winners_per_patch": 4,
