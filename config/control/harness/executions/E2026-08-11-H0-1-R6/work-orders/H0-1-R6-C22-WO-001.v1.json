@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-1-R6",
   "program": "TS",
   "goal_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-  "state": "FIX_REQUIRED",
+  "state": "VERIFYING",
   "work_order_type": "RUNTIME",
   "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
   "branch": "feature/h0-1-c22-current-main-r1",
@@ -101,47 +101,19 @@
     "problem_statement": "C22 incremental local rebuild is SOURCE_ACCEPTED on an old branch, while current main has advanced hundreds of control/integration commits. H0.1 must converge the accepted capability onto current main without importing stale branch history or changing Construction truth.",
     "current_behavior": "Canonical main 1112d1f7 / registry generation 75 contains H0.0 and the control harness, but not the accepted C22 production diff. The source C22 branch remains accepted evidence and requires main convergence refresh.",
     "desired_behavior": "A fresh current-main branch contains only the accepted C22 production/runtime/test/validation delta plus H0.1 execution evidence. Eligible local mutations rebuild dirty sections plus bounded neighbor context, unchanged section artifacts are reused, unsupported cases fall back safely to full compile, and C24/full regression behavior remains unchanged.",
-    "alternatives_considered": [
-      "Merge the old C22 branch wholesale",
-      "Reimplement C22 from memory",
-      "Selective capability transfer with exact source diff equivalence and full revalidation"
-    ],
+    "alternatives_considered": ["Merge the old C22 branch wholesale", "Reimplement C22 from memory", "Selective capability transfer with exact source diff equivalence and full revalidation"],
     "selected_design": "Create a fresh branch from exact current main after Director dispatch. Transfer only SOURCE_ACCEPTED C22-owned production/test/validation files from accepted source evidence, compare the resulting production diff against the accepted source delta, then rerun all focused, graphical, full regression and review gates.",
     "why_selected": "It preserves current canonical history, minimizes scope, makes equivalence reviewable, and treats the old branch as evidence rather than authority.",
     "affected_owners": ["TS/C22", "CONSTRUCTION", "DERIVED_PRESENTATION", "PC0", "MAIN/HARNESS"],
-    "dependencies": [
-      "main @ 1112d1f7cfad1df18fb3621a537e191e674848c6",
-      "registry generation 75",
-      "C22 SOURCE_ACCEPTED passport and PR #59 evidence",
-      "C24 proxy mesh contracts",
-      "H0_0_SCAFFOLD_READY canonical"
-    ],
-    "non_goals": [
-      "No new Construction gameplay semantics",
-      "No authoritative Construction mutation changes",
-      "No NX/network runtime work",
-      "No G/ECO/MATTER changes",
-      "No C22 runtime merge"
-    ],
-    "expected_risks": [
-      "Source branch divergence hides unrelated historical changes",
-      "Accepted source files depend on watched current-main files that changed semantically",
-      "Graphical output regresses despite focused tests passing"
-    ],
-    "validation_plan": [
-      "HIGH pre-build review before Director dispatch",
-      "Create fresh branch from exact current main only after dispatch",
-      "Prove transferred production diff equivalence to accepted C22 source",
-      "Run C22 focused, C24 contracts, C22 graphical and full world/core regression",
-      "Run standard and directional PC0 and require NON_RED",
-      "Complete recovery drill, Evidence Map, independent Reviewer and Verifier",
-      "Open Draft PR and stop at H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY"
-    ]
+    "dependencies": ["main @ 1112d1f7cfad1df18fb3621a537e191e674848c6", "registry generation 75", "C22 SOURCE_ACCEPTED passport and PR #59 evidence", "C24 proxy mesh contracts", "H0_0_SCAFFOLD_READY canonical"],
+    "non_goals": ["No new Construction gameplay semantics", "No authoritative Construction mutation changes", "No NX/network runtime work", "No G/ECO/MATTER changes", "No C22 runtime merge"],
+    "expected_risks": ["Source branch divergence hides unrelated historical changes", "Accepted source files depend on watched current-main files that changed semantically", "Graphical output regresses despite focused tests passing"],
+    "validation_plan": ["HIGH pre-build review before Director dispatch", "Create fresh branch from exact current main only after dispatch", "Prove transferred production diff equivalence to accepted C22 source", "Run C22 focused, C24 contracts, C22 graphical and full world/core regression", "Run standard and directional PC0 and require NON_RED", "Complete recovery drill, Evidence Map, independent Reviewer and Verifier", "Open Draft PR and stop at H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY"]
   },
-  "repair_context_required": true,
+  "repair_context_required": false,
   "evidence_map_required": true,
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "RUNTIME_FEATURE_MERGE"],
   "issued_at_utc": "2026-08-11T14:23:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "Fail-closed scope declaration repair in progress. The only proposed allowed-path change is tests/harness/**, which was already present and reviewed before Director dispatch. No C22 production blob changes and no new runtime domain authorization."
+  "notes": "Scope declaration repair is complete and independently reviewed. Work Order is back in VERIFYING. tests/harness/** is explicitly allowed as control validation only; the 13 C22 production/test/validation blobs remain byte-identical to the accepted source. Windows focused/C24/graphical/full regression and final Evidence Map/Reviewer/Verifier/PC0/recovery remain required. Runtime merge is not authorized."
 }
