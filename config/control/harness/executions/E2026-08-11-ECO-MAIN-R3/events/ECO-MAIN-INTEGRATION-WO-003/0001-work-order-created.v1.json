@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R3-ECO-MAIN-INTEGRATION-WO-003-0001",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R3",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T08:45:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r3",
+  "head_sha": "2a4c3103234717f813cd6fe8f60de0d50f3012ba",
+  "predicate": "ECO_MAIN_INTEGRATION_WORK_ORDER_READY",
+  "command": "Pin exact current main/ECO/passport/source-tree inputs after terminally invalidating R2 and create fresh HIGH integration Design Brief",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/integration-inputs.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/work-orders/ECO-MAIN-INTEGRATION-WO-003.v1.json"
+  ],
+  "summary": "Fresh R3 HIGH ancestry-integration Work Order created from exact ECO 2a4c3103 after R2 became EPOCH_INVALIDATED. Source tree b78d75da was independently reconstructed from R2 tree plus the complete 67e23224-to-2a4c3103 delta and verified byte-identical to the current ECO head.",
+  "blocker": ""
+}

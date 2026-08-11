@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.harness_integration_inputs.v1",
+  "main_base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
+  "eco_source_head_sha": "2a4c3103234717f813cd6fe8f60de0d50f3012ba",
+  "eco_passport_source_commit": "2a4c3103234717f813cd6fe8f60de0d50f3012ba",
+  "eco_passport_blob_sha": "ee47c97bfbda186c4efe4704281020741d31d3ac",
+  "source_dry_merge_tree_sha": "b78d75da0f23308f74961f4951e7087c2d514f65",
+  "source_tree_sha": "b78d75da0f23308f74961f4951e7087c2d514f65",
+  "target_branch": "feature/eco-evolutionary-ecology",
+  "candidate_branch": "control/eco-main-integration-r3",
+  "pre_merge_control_head_rule": "Pin the exact final durable control head immediately before merge creation. Its first-parent ancestry must contain eco_source_head_sha and its source delta may contain only this Work Order's allowed control records.",
+  "candidate_parent_rule": "The candidate has exactly two parents: exact pre_merge_control_head_sha first and exact main_base_sha second. The candidate tree must equal the immediate first-parent tree.",
+  "freshness_rule": "Any change to main_base_sha, eco_source_head_sha, passport blob, or source dry-merge tree before merge creation, synthetic PC0, evidence, exact-head review, draft PR, or human merge requires stop, immutable invalidation, refreshed manifest, and repeated review."
+}
