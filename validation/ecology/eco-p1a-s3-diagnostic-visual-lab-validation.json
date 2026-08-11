@@ -1,74 +1,47 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1A-S3",
-  "decision": "FIX1_GRAPHICAL_PASS_WINDOWS_AUTOMATED_CONFIRMATION_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "accepted_truth_baseline": {
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c"
   },
-  "pre_fix_windows_automated_evidence": {
-    "checkout_head": "6b5f3592696dc7db0897ca8cef69c3c395f32589",
+  "final_windows_automated_evidence": {
+    "checkout_after_pull": "441957baec079a330dca3dc8cf6287f840b59bb2",
     "p1a_s1": "PASS_109_ASSERTIONS",
     "p1a_s2": "PASS_235_ASSERTIONS",
-    "p1a_s3": "PASS_114_ASSERTIONS",
+    "p1a_s3": "PASS_208_ASSERTIONS",
     "focused_dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
     "scene_headless_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
     "result": "PASS_CLEAN"
   },
+  "runner_reporting_fix": {
+    "issue": "PowerShell runner printed stale summary text saying 114 assertions although the Godot S3 test in the same run actually executed and passed 208 assertions.",
+    "truth_or_test_failure": false,
+    "fixed_in_commit": "a1fa4ecdb88c04f1a40c6620c650735d44e99314",
+    "correct_summary": "PASS_208_ASSERTIONS"
+  },
   "manual_graphical_review": {
     "pre_fix_result": "FIX_REQUIRED_PRESENTATION_ONLY",
-    "pre_fix_observation": "Ecology outcome looked plausible, but diagnostic text visually intruded on the heatmap at the observed window size and the panel did not explain enough of the probe effect or selected-patch causality.",
     "truth_failure": false,
-    "fix1_rerun_result": "PASS_BY_USER_OBSERVATION",
-    "fix1_evidence": [
-      "heatmap and right-side diagnostics panel are visually separated and readable",
-      "temperature view is continuous and correctly described as probe-independent S1 environment truth",
-      "dominant limiting-factor view visibly separates WATER, NUTRIENT, LIGHT and FLOOD regions",
-      "selected-patch panel exposes ENV, RESP, LIMIT, ENERGY, BIO, RESULT, WHY and LOCAL VS BASE diagnostics",
-      "view switching works graphically",
-      "user reported the revised display as excellent"
+    "fix1_result": "PASS_BY_USER_OBSERVATION",
+    "evidence": [
+      "heatmap and right-side diagnostics panel are separated and readable",
+      "views 1 through 8 switch correctly",
+      "temperature view remains continuous probe-independent S1 truth",
+      "limiting-factor view exposes WATER, NUTRIENT, LIGHT and FLOOD regions",
+      "selected patch exposes ENV, RESP, LIMIT, ENERGY, BIO, RESULT, WHY and LOCAL VS BASE diagnostics"
     ]
   },
-  "fix1": {
-    "scope": "presentation and derived diagnostics only; accepted S1/S2 truth equations unchanged",
-    "changes": [
-      "right-anchored opaque diagnostic PanelContainer separated from heatmap",
-      "scrollable diagnostic panel for small windows",
-      "view explanation and legend",
-      "current probe trait values and deltas versus BASE",
-      "global viability/limitation percentages and average net/biomass",
-      "global probe effect versus BASE",
-      "selected-patch response and limitation decomposition",
-      "selected-patch gross/cost/stress/net equation",
-      "selected-patch biomass productive/stress season summary",
-      "short WHY explanation and local delta versus BASE"
-    ],
-    "local_focused_test": {
-      "assertions": 208,
-      "failures": 0,
-      "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690"
-    },
-    "local_scene_headless_smoke": {
-      "grid": "33x33",
-      "probe": "BASE",
-      "dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
-      "result": "PASS"
-    },
-    "parent_regression": {
-      "p1a_s2": "PASS_235_ASSERTIONS",
-      "p1a_s1": "PASS_109_ASSERTIONS"
-    },
-    "published_blob_verification": {
-      "eco_p1a_s3_lab_dataset_v1.gd": "2a68b1c719b4bc9d71803c3c1dfe7a819b2dafd9",
-      "eco_p1a_s3_visual_lab.gd": "c28c6b3673382bf1471313e4b39da08515acf889",
-      "eco_p1a_s3_visual_lab.tscn": "ce0483139c63127c4684f45c47fb76e8ee551823",
-      "eco_p1a_s3_visual_lab_acceptance.gd": "74ab4e559f6e85c85e95c5c413101788f63251cd"
-    },
-    "windows_automated_confirmation": "PENDING_208_ASSERTION_RERUN",
-    "graphical_confirmation": "PASS_BY_USER_OBSERVATION"
+  "focused_evidence": {
+    "assertions": 208,
+    "failures": 0,
+    "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "scene_grid": "33x33",
+    "scene_dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c"
   },
-  "truth_boundary": "Fix1 exposes additional fields already contained in the accepted S2 resource balance and changes only derived presentation/diagnostics. Environment, resource equations, simulation hashes and dataset identity remain unchanged.",
-  "next": "Run RUN_ECO_P1A_S3_TESTS.ps1 once on the exact Windows Fix1 checkout; require S1 109/109, S2 235/235, S3 208/208 and unchanged hashes. Graphical Fix1 review is already PASS. On Windows automated PASS, accept S3 and open P1A-S4."
+  "truth_boundary": "S3 remains presentation/diagnostics over accepted S1/S2 truth. Fix1 changed only derived diagnostics and layout; accepted environment/resource/simulation hashes did not change.",
+  "next": "ECO.P1A-S4 Determinism, Sensitivity and Failure Classification"
 }
