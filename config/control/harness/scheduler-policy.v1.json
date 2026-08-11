@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.harness_scheduler_policy.v1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "selection_factors": {
+    "critical_path_weight": 30,
+    "blocker_removal_weight": 25,
+    "checkpoint_closeness_weight": 15,
+    "parallelism_gain_weight": 10,
+    "automation_confidence_weight": 15,
+    "architectural_risk_penalty": 25,
+    "human_dependency_penalty": 15,
+    "branch_divergence_penalty": 10
+  },
+  "current_pilot_override": {
+    "enabled": true,
+    "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+    "reason": "Do not open broad autonomous parallel execution until restart-safe closed loop is proven."
+  },
+  "concurrency": {
+    "h0_1_max_autonomous_runtime_workers": 1,
+    "human_observation_orders_may_wait_in_parallel": true,
+    "architecture_candidate_analysis_may_run_in_parallel": true,
+    "h0_3_required_before_multi_runtime_worker_scheduler": true
+  },
+  "escalation": {
+    "same_defect_failed_attempts_before_stronger_model_or_director_takeover": 2,
+    "architecture_or_ownership_question": "DIRECTOR_OR_HUMAN",
+    "unexpected_scope_expansion": "STOP_AND_REPLAN",
+    "critical_pc0_red": "STOP_PROGRAM"
+  }
+}

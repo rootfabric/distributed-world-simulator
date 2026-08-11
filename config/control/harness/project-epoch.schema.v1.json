@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.project_epoch.schema.v1",
+  "title": "Distributed World Simulator Harness Project Epoch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "epoch_id", "base_sha", "registry_generation", "architecture_revision", "harness_revision", "created_at_utc", "eligible_checkpoints", "status"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.project_epoch.v1"},
+    "epoch_id": {"type": "string", "minLength": 1},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "registry_generation": {"type": "integer", "minimum": 1},
+    "architecture_revision": {"type": "string", "minLength": 1},
+    "harness_revision": {"type": "string", "minLength": 1},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "eligible_checkpoints": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "status": {"enum": ["ACTIVE", "INVALIDATED", "CLOSED"]},
+    "invalidated_by_main_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "decision": {"enum": ["CONTINUE", "REFRESH_REQUIRED", "CLOSE"]}
+  }
+}

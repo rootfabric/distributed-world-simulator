@@ -34,6 +34,13 @@ jobs:
               Path("config/control/project-program-registry.v1.json"),
               Path("config/control/architecture-ownership.v1.json"),
               Path("config/architecture/global-program-roadmap.v1.json"),
+              Path("config/control/harness/project-goals.v1.json"),
+              Path("config/control/harness/checkpoint-catalog.v1.json"),
+              Path("config/control/harness/harness-policy.v1.json"),
+              Path("config/control/harness/scheduler-policy.v1.json"),
+              Path("config/control/harness/work-order.schema.v1.json"),
+              Path("config/control/harness/event.schema.v1.json"),
+              Path("config/control/harness/project-epoch.schema.v1.json"),
           ]
           for path in required_json:
               with path.open("r", encoding="utf-8") as handle:

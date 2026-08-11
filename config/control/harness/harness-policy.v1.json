@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.development_harness_policy.v1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "canonical_branch": "main",
+  "pc0_policy": "config/control/project-control-policy.v1.json",
+  "project_goals": "config/control/harness/project-goals.v1.json",
+  "checkpoint_catalog": "config/control/harness/checkpoint-catalog.v1.json",
+  "scheduler_policy": "config/control/harness/scheduler-policy.v1.json",
+  "work_order_schema": "config/control/harness/work-order.schema.v1.json",
+  "event_schema": "config/control/harness/event.schema.v1.json",
+  "project_epoch_schema": "config/control/harness/project-epoch.schema.v1.json",
+  "principles": {
+    "git_is_durable_memory": true,
+    "chat_history_is_not_required_for_resume": true,
+    "main_owns_goals_policy_and_project_state": true,
+    "branches_report_execution_facts": true,
+    "events_are_append_only": true,
+    "derived_status_is_rebuildable": true,
+    "implementer_cannot_self_accept_checkpoint": true,
+    "one_atomic_predicate_per_commit_when_practical": true,
+    "push_after_each_durable_atomic_checkpoint": true,
+    "no_force_push_on_active_harness_branches": true,
+    "clean_worktree_required_at_planned_stop": true,
+    "failure_must_be_recorded_as_fix_required_or_blocked": true,
+    "exact_tested_heads_required": true,
+    "epoch_must_be_checked_before_dispatch_and_before_acceptance": true
+  },
+  "work_order_states": [
+    "PLANNED",
+    "DISPATCHED",
+    "IN_PROGRESS",
+    "IMPLEMENTED",
+    "VERIFYING",
+    "VERIFIED",
+    "AUDITED",
+    "CHECKPOINT_PROPOSED",
+    "FIX_REQUIRED",
+    "BLOCKED",
+    "WAITING_HUMAN",
+    "EPOCH_INVALIDATED",
+    "CANCELLED"
+  ],
+  "autonomy_levels": {
+    "A0_OBSERVE": ["fetch", "audit", "analyze", "report"],
+    "A1_PLAN": ["select_eligible_checkpoint", "create_work_order", "prepare_branch_plan"],
+    "A2_IMPLEMENT": ["create_feature_or_control_branch", "create_clean_worktree", "edit_code", "test", "commit", "push"],
+    "A3_INTEGRATE_CANDIDATE": ["update_passport", "record_evidence", "open_draft_pr", "propose_source_accepted_checkpoint"],
+    "A4_MERGE": "HUMAN_APPROVAL_UNLESS_EXPLICITLY_WHITELISTED",
+    "A5_ARCHITECTURE_PROMOTION": "HUMAN_APPROVAL_REQUIRED"
+  },
+  "default_autonomy_ceiling": "A3_INTEGRATE_CANDIDATE",
+  "human_gates": [
+    "RUNTIME_FEATURE_MERGE",
+    "TS0_4_ACTIVATION_AFTER_C22_MERGE",
+    "GLOBAL_ARCHITECTURE_PROMOTION",
+    "FOUNDATION_OWNERSHIP_TRANSFER",
+    "NEW_GLOBAL_FOUNDATION"
+  ],
+  "recovery_contract": {
+    "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, last completed predicate, open blocker, next work order, verification commands and human approvals using Git only.",
+    "recovery_drill_required_before_h0_1_acceptance": true,
+    "chat_dependency_is_failure": true
+  },
+  "commit_trailers": ["Project-Epoch", "Work-Order", "Predicate", "Work-State"]
+}

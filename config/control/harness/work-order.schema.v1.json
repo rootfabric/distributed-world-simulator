@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.work_order.schema.v1",
+  "title": "Distributed World Simulator Harness Work Order",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "work_order_id", "project_epoch", "program", "goal_checkpoint", "state", "work_order_type", "base_sha", "branch", "scope", "allowed_paths", "forbidden_paths", "required_predicates", "required_outputs", "stop_conditions", "issued_at_utc"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.work_order.v1"},
+    "work_order_id": {"type": "string", "minLength": 1},
+    "project_epoch": {"type": "string", "minLength": 1},
+    "program": {"type": "string", "minLength": 1},
+    "goal_checkpoint": {"type": "string", "minLength": 1},
+    "state": {"enum": ["PLANNED", "DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED", "CHECKPOINT_PROPOSED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"]},
+    "work_order_type": {"enum": ["IMPLEMENTATION", "VALIDATION", "CONTROL", "HUMAN_OBSERVATION", "RECOVERY", "FIX"]},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "branch": {"type": "string", "minLength": 1},
+    "scope": {"type": "string", "minLength": 1},
+    "allowed_paths": {"type": "array", "items": {"type": "string"}},
+    "forbidden_paths": {"type": "array", "items": {"type": "string"}},
+    "required_predicates": {"type": "array", "items": {"type": "string"}},
+    "required_outputs": {"type": "array", "items": {"type": "string"}},
+    "stop_conditions": {"type": "array", "items": {"type": "string"}},
+    "issued_at_utc": {"type": "string", "format": "date-time"},
+    "human_approval_required_for": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"}
+  }
+}
