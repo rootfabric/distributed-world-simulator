@@ -2,6 +2,28 @@
   "schema": "distributed_world_simulator.harness_checkpoint_catalog.v1",
   "harness_revision": "H0-2026-08-11-R1",
   "checkpoints": {
+    "H0_0_SCAFFOLD_READY": {
+      "kind": "HARNESS",
+      "description": "Prove the executable harness scaffold before any autonomous runtime implementation.",
+      "preconditions": ["PC0_MAIN_INTEGRATED", "CANONICAL_HARNESS_CONTRACTS_PRESENT"],
+      "required_predicates": [
+        "CONTROL_DEVELOPMENT_STATUS_WORKS",
+        "CONTROL_DEVELOPMENT_PLAN_WORKS",
+        "CONTROL_DEVELOPMENT_RESUME_WORKS",
+        "CANONICAL_CONTRACTS_LOAD_PASS",
+        "WORK_ORDER_SCHEMA_VALIDATION_PASS",
+        "EVENT_REDUCER_REBUILDS_STATE_PASS",
+        "PROJECT_EPOCH_VALIDATION_PASS",
+        "MAIN_MOVEMENT_EPOCH_INVALIDATION_DETECTION_PASS",
+        "DRY_RUN_C22_PLAN_PASS",
+        "RECOVERY_FIXTURE_WITHOUT_CHAT_PASS",
+        "NO_RUNTIME_SCOPE_CHANGES",
+        "PC0_NON_RED"
+      ],
+      "success_state": "H0_0_SCAFFOLD_READY",
+      "next_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+      "stop_before": ["AUTONOMOUS_RUNTIME_BRANCH_CREATION"]
+    },
     "H0_1_CLOSED_LOOP_C22_PILOT": {
       "kind": "HARNESS",
       "description": "Prove a restart-safe closed-loop development cycle by bringing fresh current-main C22 convergence to a machine-verifiable merge-ready proposal without performing the runtime merge.",
