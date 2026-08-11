@@ -1,0 +1,45 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH3",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "execution": {
+    "profile": "res://scripts/research/ecology/plant_morphology_resource_profile_v1.gd",
+    "kernel": "res://scripts/research/ecology/plant_morphology_resource_coupling_v1.gd",
+    "probes": "res://scripts/research/ecology/plant_morphology_resource_probes_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph3_morphology_resource_coupling_acceptance.gd",
+    "visual_smoke": "res://tests/research/ecology/eco_ph3_visual_lab_smoke.gd",
+    "restart": "res://tests/research/ecology/eco_ph3_restart_replay_probe.gd",
+    "runner": "RUN_ECO_PH3_TESTS.ps1",
+    "focused_assertions": 217,
+    "visual_smoke_assertions": 17,
+    "restart_assertions": 5,
+    "failures": 0
+  },
+  "parent_regressions": {
+    "p1c_s4_aggregate": 15,
+    "ph0": 63,
+    "ph1": 128,
+    "ph2": 107
+  },
+  "hashes": {
+    "profile": "1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a",
+    "reference": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+    "giant_dense": "eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704",
+    "shade_height_high": "d437d45d4beea747df717703afb1e536e5712df837677956f16c24953e5c2759",
+    "dry_crown_wide": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466"
+  },
+  "tradeoff_matrix": {
+    "HEIGHT": "PASS_BENEFIT_AND_SUPERLINEAR_STRUCTURAL_COST",
+    "CROWN_SPREAD": "PASS_LIGHT_BENEFIT_AND_DROUGHT_WATER_COST",
+    "BRANCHING": "PASS_LIGHT_BENEFIT_AND_CONSTRUCTION_MAINTENANCE_COST",
+    "BIGGER_ALWAYS_BETTER": "REJECTED_GIANT_DENSE_NET_WORSE_THAN_BALANCED",
+    "P1_RESOURCE_REWRITE": "PASS_PARENT_CHECKSUM_PRESERVED",
+    "REPLAY_DIVERGENCE": "PASS_EXACT_HASH_CONTRACT"
+  },
+  "truth_boundary": "PH3 is a research-only adapter over accepted P1 resource truth and PH2 phenotype/GrowthGraph evidence. It introduces no runtime ownership, renderer truth, species class, authority, network or persistence semantics.",
+  "windows_confirmation": "PENDING",
+  "graphical_confirmation": "OPTIONAL_DIAGNOSTIC_NOT_ACCEPTANCE_BLOCKER",
+  "next": "Exact Windows PH3 pass accepts the coupling gate and opens morphology-aware selection/competition convergence before PH4 lifecycle work."
+}
