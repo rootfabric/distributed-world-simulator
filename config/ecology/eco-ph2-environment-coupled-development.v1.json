@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH2",
+  "name": "Environment-Coupled Development / Plasticity",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.PH0 + ECO.PH1 ACCEPTED",
+  "experiment_revision": "ECO.PH2.1",
+  "purpose": "Prove that the same genome, inherited developmental traits and IndividualSeed produce explainably different realized developmental programs and GrowthGraphs under different continuous EnvironmentSample inputs without mutating heredity or accepted ecology/resource truth.",
+  "response_profile": {
+    "trait_count": 6,
+    "checksum": "16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d"
+  },
+  "controlled_probes": ["REFERENCE","SHADE","SUN","DRY","NUTRIENT_POOR","NUTRIENT_RICH","FLOODED"],
+  "local_evidence": {
+    "focused_assertions": 107,
+    "visual_smoke_assertions": 12,
+    "restart_assertions": 5,
+    "reference_phenotype_hash": "da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10",
+    "shade_phenotype_hash": "bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0",
+    "sun_phenotype_hash": "b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa",
+    "dry_phenotype_hash": "7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f"
+  },
+  "acceptance_semantics": [
+    "genome checksum is identical across all environment probes",
+    "inherited development checksum is identical across all environment probes",
+    "IndividualSeed is identical across all environment probes",
+    "EnvironmentSample changes only the realized developmental program and derived GrowthGraph",
+    "shade elongates the axis while suppressing crown branching/spread",
+    "high light increases branching/spread",
+    "drought and flood suppress realized size",
+    "nutrient availability changes realized extension continuously",
+    "no biome/species/plant-type switch is used",
+    "accepted P1 resource equations are not modified"
+  ],
+  "next_after_acceptance": "ECO.PH3 Morphology-to-Resource Coupling"
+}
