@@ -129,9 +129,31 @@ func _preview_equipment_drop(
 ) -> Dictionary:
 	if gameplay_controller == null or not gameplay_controller.has_method("preview_character_equipment"):
 		return {"success": false, "error_code": "CHARACTER_EQUIPMENT_NOT_CONFIGURED"}
-	if target_container_id != _equipment_container_id():
-		return command_facade.preview_transfer(item_id, quantity, target_container_id, target_slot_index)
-	return gameplay_controller.call("preview_character_equipment", item_id, target_slot_index, quantity)
+	var equipment_container_id := _equipment_container_id()
+	if target_container_id == equipment_container_id:
+		return gameplay_controller.call("preview_character_equipment", item_id, target_slot_index, quantity)
+
+	# A network-backed equipped item is not a generic source container: the
+	# ordinary InventoryCommandFacade preview rejects it before the screen can
+	# route the accepted drop to equipment.unequip. Give equipment-aware
+	# controllers the first chance to validate this exact reverse route.
+	var source_item = gameplay_controller.get_item(item_id)
+	if source_item != null:
+		var source_relation: Dictionary = Dictionary(source_item.relation)
+		if (
+			String(source_relation.get("kind", "")) == "CONTAINER"
+			and String(source_relation.get("container_id", "")) == equipment_container_id
+			and gameplay_controller.has_method("preview_character_unequip")
+		):
+			return gameplay_controller.call(
+				"preview_character_unequip",
+				item_id,
+				target_container_id,
+				target_slot_index,
+				quantity
+			)
+
+	return command_facade.preview_transfer(item_id, quantity, target_container_id, target_slot_index)
 
 
 func _equipment_container_id() -> String:
