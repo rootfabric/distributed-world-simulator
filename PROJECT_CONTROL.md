@@ -2,6 +2,7 @@
 
 **Control plane:** `PC0-2026-08-10-R1`  
 **Global architecture:** `GLOBAL-P0-2026-08-10-R2`  
+**Development harness:** `H0-2026-08-11-R1`  
 **Canonical owner:** `main`
 
 Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется в архитектурном roadmap вручную: operational truth строится из main-owned registry, branch passports, validation heads и реальных Git refs.
@@ -26,6 +27,15 @@ config/control/project-program-registry.v1.json
 docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
 ```
 
+Для автономной/полуавтономной разработки через harness:
+
+```text
+HARNESS_CONTROL.md
+docs/control/DEVELOPMENT_HARNESS_RU.md
+config/control/harness/project-goals.v1.json
+config/control/harness/checkpoint-catalog.v1.json
+```
+
 ## Главное правило
 
 ```text
@@ -33,6 +43,7 @@ BRANCHES REPORT FACTS
 MAIN DECLARES PROJECT STATE
 AUDITOR CHECKS CONSISTENCY
 GLOBAL ARCHITECTURE DEFINES WHAT IS ALLOWED
+HARNESS MOVES ONLY BETWEEN DECLARED CHECKPOINTS
 ```
 
 Оперативный active frontier берётся из:
@@ -63,12 +74,48 @@ composition / merge / handoff
 
 Длинная accepted ветка может оставаться evidence, но не становится автоматически базой следующего major runtime frontier.
 
+## Harness continuation rule
+
+Open-ended команда вроде `продолжай разработку проекта` не должна напрямую уходить worker-агенту.
+
+```text
+Director reads main + PC0
+        ↓
+select declared eligible checkpoint
+        ↓
+create Project Epoch from exact main SHA
+        ↓
+issue bounded Work Order
+        ↓
+worker implementation
+        ↓
+independent verification
+        ↓
+PC0 + directional audit
+        ↓
+checkpoint proposal
+```
+
+Git является durable memory harness. Возобновление работы не должно требовать истории чата. Implementer не может сам объявить checkpoint accepted. Полный протокол: `docs/control/DEVELOPMENT_HARNESS_RU.md`.
+
+Текущий harness pilot:
+
+```text
+H0.1 CLOSED-LOOP C22 PILOT
++
+C22 SOURCE_ACCEPTED_MERGE_READY
+```
+
+До H0.1 допускается максимум один автономный runtime worker. Runtime merge, TS0.4 activation, global architecture promotion, foundation ownership transfer и новые global foundations остаются human gates.
+
 ## Как читать проект
 
 ```text
 GLOBAL architecture / rules
         ↓
 main-owned Project Registry
+        +
+main-owned Harness Goals / Checkpoints
         ↓
 registered branch passports
         ↓
@@ -249,6 +296,8 @@ Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, кот�
 перед merge/composition
 после регистрации новой active branch
 когда producer branch меняет чужую watched dependency
+перед harness checkpoint proposal
+при Project Epoch invalidation/recovery
 ```
 
 Минимальное правило: нельзя пройти два последовательных крупных acceptance checkpoint одной программы без промежуточного Project Control audit.
@@ -269,6 +318,16 @@ Architecture ownership:
 Current operational project state:
   config/control/project-program-registry.v1.json   <-- MAIN ONLY OWNER
 
+Harness goals/checkpoints/policy:
+  config/control/harness/project-goals.v1.json
+  config/control/harness/checkpoint-catalog.v1.json
+  config/control/harness/harness-policy.v1.json
+  config/control/harness/scheduler-policy.v1.json
+
+Human harness protocol:
+  HARNESS_CONTROL.md
+  docs/control/DEVELOPMENT_HARNESS_RU.md
+
 Human current-frontier snapshot:
   docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
 
@@ -285,5 +344,7 @@ Detailed control instructions:
 ## Stop rule
 
 Если конкретная программа получает `RED`, её следующий объявленный major stage/acceptance блокируется, пока причина не закрыта или явно не пересмотрена в `main`.
+
+Если harness не может восстановить state из Git без истории чата, autonomous checkpoint блокируется до исправления recovery contract.
 
 `SOURCE_ACCEPTED` не означает автоматически `MAIN_INTEGRATED`, `COMPOSITION_VERIFIED`, `PRODUCTION_READY` или разрешение перейти на следующий stage.
