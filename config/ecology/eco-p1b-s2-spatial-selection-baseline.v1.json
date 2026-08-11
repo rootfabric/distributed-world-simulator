@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1B-S2",
   "name": "Spatial Selection Baseline",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -39,6 +39,13 @@
     "alternate_result_hash": "507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521",
     "first_candidate_pool_hash": "9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd"
   },
+  "acceptance": {
+    "focused_assertions": 364,
+    "restart_process_assertions": 6,
+    "failures": 0,
+    "windows_confirmation": "PASS_CLEAN",
+    "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb"
+  },
   "local_specialization_evidence": {
     "water_preference_divergence": 0.31804878747885,
     "root_depth_m_divergence": 0.90360221360365,
@@ -56,5 +63,6 @@
     "presentation_inputs_added": false,
     "migration_enabled": false,
     "competition_between_populations_enabled": false
-  }
+  },
+  "next_after_acceptance": "ECO.P1B-S3 Regional Population Field and Trait Distribution."
 }
