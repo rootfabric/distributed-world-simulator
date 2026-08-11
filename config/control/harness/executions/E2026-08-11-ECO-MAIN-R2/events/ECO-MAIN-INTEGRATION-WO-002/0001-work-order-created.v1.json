@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R2-ECO-MAIN-INTEGRATION-WO-002-0001",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R2",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T08:06:53Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r2",
+  "head_sha": "67e23224ae153a9fc43ca5feea21c50165a99f1d",
+  "predicate": "ECO_MAIN_INTEGRATION_WORK_ORDER_READY",
+  "command": "Pin exact paused main/ECO/passport/tree inputs and create HIGH integration Design Brief",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/integration-inputs.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/work-orders/ECO-MAIN-INTEGRATION-WO-002.v1.json"
+  ],
+  "summary": "A replacement HIGH normal-merge integration Work Order was created after the ECO pause was confirmed and an exact zero-tree-delta dry merge was observed.",
+  "blocker": ""
+}
