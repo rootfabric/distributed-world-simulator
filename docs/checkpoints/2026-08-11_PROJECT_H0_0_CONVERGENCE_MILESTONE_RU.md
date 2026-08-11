@@ -2,7 +2,7 @@
 
 **Checkpoint:** `H0_0_SCAFFOLD_READY`  
 **Canonical source main:** `82835a37bab1390b6b3f87fb18903070fdd64256`  
-**Registry generation:** `70`  
+**Checkpoint registry generation:** `71`  
 **Architecture:** `GLOBAL-P0-2026-08-10-R2`  
 **Control plane:** `PC0-2026-08-10-R1`
 
@@ -12,7 +12,7 @@
 PROJECT CONVERGENCE MILESTONE = READY FOR HUMAN CONTROL-ONLY CANONICALIZATION GATE
 ```
 
-This milestone records that the project is coherent enough to close H0.0 without waiting for unrelated manual/research frontiers.
+The project is coherent enough to close H0.0 without waiting for unrelated manual/research frontiers.
 
 ## Accepted / stable fronts
 
@@ -81,35 +81,52 @@ These are intentionally **not** checkpoint blockers:
 CH9.6    Windows automated accepted; manual graphical/recovery observation pending
 ECO      advisory research; P1C-S4 exact-Windows pending
 R3       GLOBAL-P0 R3 architecture candidate requires fresh CRITICAL promotion review
-TS/C22   source accepted; fresh convergence intentionally belongs to H0.1
-NX       preparation complete; runtime intentionally waits H0.1 PASS
+TS/C22   source accepted; fresh convergence belongs to H0.1
+NX       preparation complete; runtime waits H0.1 PASS
 DOCTRINE active design reference
 ```
 
 ECO remains `RESEARCH_DESIGN_FRONTIER`, so its research RED/YELLOW state is advisory to global project health until explicit production promotion.
 
-## H0.1 handoff prepared but runtime remains closed
+## Machine-state synchronization
 
-Pre-merge planning pointer:
+The checkpoint candidate advances the main-owned project registry to generation `71` and records the live facts:
 
 ```text
-E2026-08-11-H0-1-R4
-base main:          82835a37bab1390b6b3f87fb18903070fdd64256
-registry:           70
-work order:         H0-1-R4-DISPATCH-WO-001
+HARNESS  H0_0_SCAFFOLD_READY verified / checkpoint canonicalization candidate
+G        G8 FULL ACCEPTED / FROZEN
+T        T1B HANDOFF COMPLETE
+TS       waits fresh post-checkpoint H0.1 execution
+CH       manual graphical pending
+NX       waits H0.1 PASS
+ECO      advisory P1C-S4 Windows pending
+MATTER   stable
+S1       stable
+```
+
+This removes the previous central-dashboard drift where main still described H0.0 as planned and G8.6 as manual-pending.
+
+## H0.1 planning handoff — runtime remains closed
+
+```text
+E2026-08-11-H0-1-R5
+base source main:   82835a37bab1390b6b3f87fb18903070fdd64256
+registry:           71
+work order:         H0-1-R5-DISPATCH-WO-001
 state:              PLANNED
 next checkpoint:    H0_1_CLOSED_LOOP_C22_PILOT
 ```
 
-Before Director dispatch:
+Before any runtime execution:
 
 ```text
 autonomous_runtime_workers = 0
+C22 state                   = WAITING_DIRECTOR_DISPATCH
 C22 branch creation         = FORBIDDEN_UNTIL_DISPATCH
-runtime_authorized           = false
+runtime_authorized          = false
 ```
 
-This pre-merge pointer is not the future C22 execution epoch. After canonical checkpoint integration, the merge commit has moved main by definition. A fresh H0.1 execution epoch/work order must therefore be created from the exact post-checkpoint main on a new controlled branch before any runtime dispatch.
+R5 is only the pre-merge **planning handoff**. It is not the future C22 execution epoch. The checkpoint merge itself moves canonical `main`, so no pre-merge pointer may authorize runtime after merge. The actual H0.1 execution epoch/work order must be freshly created from exact post-checkpoint main on a new controlled branch before Director dispatch.
 
 ## Project state at checkpoint
 
@@ -119,7 +136,7 @@ G8    ACCEPTED / FROZEN
 T1B   ACCEPTED HANDOFF
 CH    NONBLOCKING MANUAL GATE
 ECO   NONBLOCKING ADVISORY RESEARCH
-C22   WAITING H0.1 FRESH EXECUTION
+C22   WAITING FRESH POST-CHECKPOINT H0.1 EXECUTION
 NX    WAITING H0.1 PASS
 R3    NONBLOCKING ARCHITECTURE PROMOTION TRACK
 MATTER/S1 STABLE
@@ -132,10 +149,10 @@ The control-only checkpoint integration must not happen automatically.
 Before merge re-check:
 
 ```text
-1. current main still equals the candidate's audited source or candidate is freshly rebuilt
+1. current main still equals the candidate source or candidate is freshly rebuilt
 2. candidate contains no runtime/domain changes
 3. H0.0 historical evidence remains immutable
-4. active pre-merge H0.1 pointer matches current registry generation
+4. registry generation and H0.1 handoff epoch match
 5. focused canonical handoff suite passes
 6. Status / Plan / Resume pass on exact candidate checkout
 7. standard PC0 NON_RED
@@ -143,7 +160,7 @@ Before merge re-check:
 9. Draft PR is mergeable
 ```
 
-Only explicit human authorization `CONTROL_DOCS_ONLY_MERGE` may integrate this control checkpoint.
+Only explicit human authorization `CONTROL_DOCS_ONLY_MERGE` may integrate this checkpoint.
 
 ## Next critical path after integration
 
