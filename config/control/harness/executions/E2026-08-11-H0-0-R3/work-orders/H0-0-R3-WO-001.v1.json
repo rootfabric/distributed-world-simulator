@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R3",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "AUDITED",
+  "state": "CHECKPOINT_PROPOSED",
   "work_order_type": "CONTROL",
   "base_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
   "branch": "control/h0-closed-loop-development-r3",
@@ -36,5 +36,5 @@
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "CONTROL_DOCS_MERGE_APPROVAL"],
   "issued_at_utc": "2026-08-11T10:23:00Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "All 13 required H0.0 predicates are complete. Descendant main 8c388d6595115e4a22953629e07008299e66b6c7 / registry generation 68 is explicitly audited by H0-0-R3-WO-001-MAIN-8C388D-REG68-AUDIT-001 using fresh Project Control run 31484468604 with standard and directional NON_RED and HARNESS GREEN. Work Order is AUDITED. A short moved-main Status/Plan/Resume confirmation must now prove the public interface consumes the referenced audit before final Evidence Map/reviews and checkpoint proposal."
+  "notes": "H0_0_SCAFFOLD_READY is now terminally CHECKPOINT_PROPOSED by append-only event #25. All required predicates are complete; Windows clean-clone and moved-main public-interface evidence pass; descendant main 8c388d6595115e4a22953629e07008299e66b6c7 is covered by referenced NON_RED audit; final Evidence Map, exact-head Reviewer and independent Verifier pass; final Project Control run 31485188749 is standard/directional NON_RED with HARNESS GREEN. Runtime remains unauthorized and C22 remains blocked. Merge is not authorized by this Work Order; CONTROL_DOCS_ONLY_MERGE requires explicit human approval plus a final main/PR-head freshness fence."
 }
