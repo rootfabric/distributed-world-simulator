@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1C-S4",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_evidence": {
+    "p1a": "ACCEPTED",
+    "p1b": "ACCEPTED",
+    "p1c_s1": "ACCEPTED_WINDOWS_116_RESTART_5",
+    "p1c_s2": "ACCEPTED_WINDOWS_101_RESTART_5",
+    "p1c_s3": "ACCEPTED_WINDOWS_SEED_MATRIX_64_63_63_64_AGGREGATE_5_RESTART_5"
+  },
+  "execution": {
+    "kernel": "res://scripts/research/ecology/plant_competition_robustness_gate_v1.gd",
+    "seed_test": "res://tests/research/ecology/eco_p1c_s4_robustness_seed_acceptance.gd",
+    "aggregate_test": "res://tests/research/ecology/eco_p1c_s4_aggregate_contract.gd",
+    "restart_test": "res://tests/research/ecology/eco_p1c_s4_restart_replay_probe.gd",
+    "runner": "RUN_ECO_P1C_S4_TESTS.ps1",
+    "heterogeneous_seed_assertions": "6 x 30",
+    "uniform_assertions": 27,
+    "deep_horizon_assertions": 30,
+    "aggregate_assertions": 15,
+    "restart_assertions": 6,
+    "failures": 0
+  },
+  "hashes": {
+    "aggregate": "0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112",
+    "default_case": "431c4b6c0683b692c9fe88fbc912f49c3659db122c8fdf2715f525ea712dc43b",
+    "uniform_case": "8f27fb89d87d7b92911efcb80ae461d2d0f32ff169ed8f3efbdf73a296d67d47",
+    "deep_horizon_case": "ca49a238f82303ac6ad7e36d10f849baff07442873ab3b20c22d2d32f9f34411"
+  },
+  "robustness_evidence": [
+    "six independent heterogeneous founder seeds survive eighteen abundance cycles with at least fifteen founders above one percent global biomass",
+    "maximum top-founder global biomass share across the six-seed matrix is 0.27832221094551, far below the explicit 0.50 takeover guard and the program-level 0.99 catastrophic takeover definition",
+    "minimum Shannon abundance diversity is 2.29610063443602",
+    "all six runs retain three substantial anonymous trait clusters and at least two environment-enriched clusters",
+    "uniform environment yields exactly zero regional niche-enrichment span and therefore does not create false environmental niches",
+    "a twenty-four-cycle deep-horizon run retains fifteen effective founders, three substantial clusters and three niche-enriched clusters with top share 0.27843144748739",
+    "founder traits remain static and bounded because P1C competition intentionally contains no mutation; S1 accepted tradeoff audits cover height/root/growth/seed/shade/lifespan costs"
+  ],
+  "failure_matrix": {
+    "GLOBAL_TAKEOVER": "PASS",
+    "DIVERSITY_COLLAPSE": "PASS",
+    "CLUSTER_COLLAPSE": "PASS",
+    "FALSE_NICHE_UNIFORM": "PASS",
+    "RUNAWAY_TRAIT": "PASS_NO_MUTATION_STATIC_BOUNDED_FOUNDERS",
+    "REPLAY_DIVERGENCE": "PASS_EXACT_HASH_CONTRACT"
+  },
+  "truth_boundary": "P1C-S4 is a research-only robustness and acceptance gate over accepted P1C abundance and post-hoc diagnostics. It introduces no new ecological truth equations, species identities, biome placement rules, mutation, migration, runtime authority, networking, persistence or presentation truth.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1C_S4_TESTS.ps1 on exact Windows. Matching parent regressions, six-seed robustness matrix, uniform negative control, deep-horizon case, aggregate hash and restart replay allow full ECO.P1C aggregate acceptance."
+}
