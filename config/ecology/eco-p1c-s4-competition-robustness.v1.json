@@ -2,83 +2,18 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1C-S4",
   "name": "Competition Robustness + Aggregate Acceptance",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "parent_checkpoint": "ECO.P1C-S3 ACCEPTED",
   "experiment_revision": "ECO.P1C-S4.1",
   "purpose": "Attempt to falsify the P1C coexistence proof over more founder seeds and longer abundance horizons, classify failure modes explicitly, and provide the final aggregate gate for ECO.P1C.",
-  "baseline": {
-    "grid": [5, 5],
-    "founder_count": 20,
-    "robustness_cycles": 18,
-    "deep_horizon_cycles": 24,
-    "seasons_per_cycle": 3,
-    "heterogeneous_seeds": [1138701, 1138702, 1138703, 1138704, 1138705, 1138706],
-    "uniform_control": {"seed": 1138701, "cycles": 18},
-    "thresholds": {
-      "minimum_effective_founders_1pct": 12,
-      "maximum_top1_biomass_share": 0.50,
-      "minimum_shannon_biomass_diversity": 2.10,
-      "minimum_substantial_clusters": 3,
-      "minimum_niche_enriched_clusters": 2,
-      "uniform_max_niche_enrichment_span": 1e-9
-    }
-  },
-  "failure_classes": [
-    "GLOBAL_TAKEOVER",
-    "DIVERSITY_COLLAPSE",
-    "CLUSTER_COLLAPSE",
-    "FALSE_NICHE_UNIFORM",
-    "RUNAWAY_TRAIT",
-    "REPLAY_DIVERGENCE"
-  ],
-  "local_evidence": {
-    "heterogeneous_seed_assertions": "6 x 30",
-    "uniform_assertions": 27,
-    "deep_horizon_assertions": 30,
-    "aggregate_assertions": 15,
-    "restart_assertions": 6,
-    "minimum_effective_founders_1pct": 15,
-    "maximum_top1_biomass_share": 0.27832221094551,
-    "minimum_shannon_biomass_diversity": 2.29610063443602,
-    "minimum_substantial_cluster_count": 3,
-    "minimum_niche_enriched_cluster_count": 2,
-    "uniform_max_niche_enrichment_span": 0.0,
-    "deep_horizon": {
-      "effective_founders_1pct": 15,
-      "top1_biomass_share": 0.27843144748739,
-      "shannon_biomass_diversity": 2.33530222571843,
-      "substantial_clusters": 3,
-      "niche_enriched_clusters": 3
-    }
-  },
-  "determinism_baseline": {
-    "aggregate_hash": "0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112",
-    "default_case_hash": "431c4b6c0683b692c9fe88fbc912f49c3659db122c8fdf2715f525ea712dc43b",
-    "uniform_case_hash": "8f27fb89d87d7b92911efcb80ae461d2d0f32ff169ed8f3efbdf73a296d67d47",
-    "deep_horizon_case_hash": "ca49a238f82303ac6ad7e36d10f849baff07442873ab3b20c22d2d32f9f34411"
-  },
-  "failure_matrix": {
-    "GLOBAL_TAKEOVER": "PASS",
-    "DIVERSITY_COLLAPSE": "PASS",
-    "CLUSTER_COLLAPSE": "PASS",
-    "FALSE_NICHE_UNIFORM": "PASS",
-    "RUNAWAY_TRAIT": "PASS_NO_MUTATION_STATIC_BOUNDED_FOUNDERS",
-    "REPLAY_DIVERGENCE": "PASS_EXACT_HASH_CONTRACT"
-  },
-  "invariants": {
-    "accepted_p1a_truth_modified": false,
-    "accepted_p1b_truth_modified": false,
-    "accepted_p1c_s1_s2_s3_truth_modified": false,
-    "species_classes_added": false,
-    "biome_roles_added": false,
-    "new_fitness_score_added": false,
-    "mutation_enabled": false,
-    "migration_enabled": false,
-    "presentation_inputs_added": false,
-    "authority_or_network_inputs_added": false
-  },
-  "next_after_acceptance": "Accept ECO.P1C Strategy Competition Proof aggregate, close ECO.P1 plant strategy proof, then choose the next research lane between ECO.P2 history/disturbance/succession and the already-open ECO.PH developmental phenotype track."
+  "baseline": {"grid":[5,5],"founder_count":20,"robustness_cycles":18,"deep_horizon_cycles":24,"seasons_per_cycle":3,"heterogeneous_seeds":[1138701,1138702,1138703,1138704,1138705,1138706],"uniform_control":{"seed":1138701,"cycles":18},"thresholds":{"minimum_effective_founders_1pct":12,"maximum_top1_biomass_share":0.50,"minimum_shannon_biomass_diversity":2.10,"minimum_substantial_clusters":3,"minimum_niche_enriched_clusters":2,"uniform_max_niche_enrichment_span":1e-9}},
+  "windows_evidence": {"engine":"Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64","heterogeneous_seed_assertions":"6 x 30","uniform_assertions":27,"deep_horizon_assertions":30,"aggregate_assertions":15,"restart_assertions":6,"failures":0},
+  "determinism_baseline": {"aggregate_hash":"0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112","default_case_hash":"431c4b6c0683b692c9fe88fbc912f49c3659db122c8fdf2715f525ea712dc43b","uniform_case_hash":"8f27fb89d87d7b92911efcb80ae461d2d0f32ff169ed8f3efbdf73a296d67d47","deep_horizon_case_hash":"ca49a238f82303ac6ad7e36d10f849baff07442873ab3b20c22d2d32f9f34411"},
+  "aggregate_evidence": {"minimum_effective_founders_1pct":15,"maximum_top1_biomass_share":0.27832221094551,"minimum_shannon_biomass_diversity":2.29610063443602,"minimum_substantial_cluster_count":3,"minimum_niche_enriched_cluster_count":2,"uniform_max_niche_enrichment_span":0.0,"deep_horizon_effective_founders_1pct":15,"deep_horizon_top1_biomass_share":0.27843144748739,"deep_horizon_shannon":2.33530222571843},
+  "failure_matrix": {"GLOBAL_TAKEOVER":"PASS","DIVERSITY_COLLAPSE":"PASS","CLUSTER_COLLAPSE":"PASS","FALSE_NICHE_UNIFORM":"PASS","RUNAWAY_TRAIT":"PASS_NO_MUTATION_STATIC_BOUNDED_FOUNDERS","REPLAY_DIVERGENCE":"PASS_EXACT_HASH_CONTRACT"},
+  "invariants": {"accepted_p1a_truth_modified":false,"accepted_p1b_truth_modified":false,"accepted_p1c_s1_s2_s3_truth_modified":false,"species_classes_added":false,"biome_roles_added":false,"new_fitness_score_added":false,"mutation_enabled":false,"migration_enabled":false,"presentation_inputs_added":false,"authority_or_network_inputs_added":false},
+  "next_after_acceptance": "ECO.P1C and ECO.P1 aggregate acceptance; continue developmental phenotype PH0/PH1 research."
 }
