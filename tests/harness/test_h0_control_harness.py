@@ -363,9 +363,20 @@ class H0ControlHarnessTests(unittest.TestCase):
     def test_review_evidence_and_human_attention_contracts_load(self) -> None:
         state = build_state(ROOT, EXECUTION)
         self.assertEqual("PASS", state["review"]["pre_build_state"])
-        self.assertEqual("PASS", state["review"]["post_build_state"])
-        self.assertEqual("READY", state["review"]["state"])
-        self.assertFalse(state["checkpoint_proposal_blocked"])
+        implementation_head = state["repository"]["implementation_head_sha"]
+        post_build_reviews = [item for item in state["review"]["reviews"] if item["review_type"] != "PRE_BUILD_DESIGN_AUTHORIZATION"]
+        self.assertTrue(post_build_reviews)
+        latest_post_build = post_build_reviews[-1]
+        expected_post_build = latest_post_build["verdict"] if latest_post_build["reviewed_head_sha"] == implementation_head else "STALE"
+        self.assertEqual(expected_post_build, state["review"]["post_build_state"])
+        self.assertNotEqual(latest_post_build["reviewed_head_sha"], implementation_head)
+        self.assertEqual("STALE", state["review"]["post_build_state"])
+        self.assertEqual("PENDING_POST_BUILD_REVIEW", state["review"]["state"])
+        latest_evidence = state["review"]["evidence_maps"][-1]
+        self.assertNotEqual(latest_evidence["evidence_head_sha"], implementation_head)
+        self.assertTrue(state["checkpoint_proposal_blocked"])
+        self.assertIn("POST_BUILD_REVIEW_NOT_FRESH_PASS", state["checkpoint_blockers"])
+        self.assertIn("EVIDENCE_MAP_NOT_FRESH_PASS", state["checkpoint_blockers"])
         human_schema = self.bundle.contracts["human_attention_schema"]
         candidate = {
             "schema": "distributed_world_simulator.harness_human_attention.v1",
@@ -519,7 +530,8 @@ class H0ControlHarnessTests(unittest.TestCase):
         state = build_state(ROOT, EXECUTION)
         plan = build_plan(self.bundle.contracts, state["reduced_work_order"])
         required = self.bundle.contracts["checkpoint_catalog"]["checkpoints"]["H0_0_SCAFFOLD_READY"]["required_predicates"]
-        self.assertEqual(required, plan["unsatisfied_predicates"])
+        expected_unsatisfied = [predicate for predicate in required if predicate not in state["reduced_work_order"]["completed_predicates"]]
+        self.assertEqual(expected_unsatisfied, plan["unsatisfied_predicates"])
         self.assertEqual("H0_0_SCAFFOLD_READY_REQUIRED", plan["c22_dry_run"]["reason"])
         self.assertEqual(0, plan["autonomous_runtime_workers"])
 
