@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-PC0-R1-ECO-PC0-SYNC-WO-001-0002",
+  "project_epoch": "E2026-08-11-ECO-PC0-R1",
+  "work_order_id": "ECO-PC0-SYNC-WO-001",
+  "sequence": 2,
+  "event_type": "CANCELLED",
+  "work_state": "CANCELLED",
+  "recorded_at_utc": "2026-08-11T07:39:59Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-pc0-sync",
+  "head_sha": "e9327e74d2fffbfe970d85447a6ad2997a4a8c66",
+  "predicate": "ECO_PC0_SYNC_DESIGN_STALE",
+  "command": "Cancel before dispatch after fresh pre-build Reviewer FAIL",
+  "exit_code": 1,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-ECO-PC0-R1/reviews/ECO-PC0-SYNC-WO-001-PREBUILD-REVIEW-001.v1.json"],
+  "summary": "The Work Order was cancelled without registry mutation because the external ECO source and passport facts were not stable enough for an exact-head canonical mirror proposal.",
+  "blocker": "ECO_SOURCE_MOVING_REPLAN_REQUIRED"
+}

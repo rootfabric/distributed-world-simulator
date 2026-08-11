@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-ECO-PC0-R1",
   "program": "ECO",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "PLANNED",
+  "state": "CANCELLED",
   "work_order_type": "CONTROL",
   "base_sha": "d95e5bae3719dbfa86fb35ca07d9b306f4a4fb6a",
   "branch": "control/eco-pc0-sync",
@@ -89,5 +89,5 @@
   "human_attention_triggers": ["CONTROL_DOCS_MERGE_APPROVAL", "REGISTRY_GENERATION_COLLISION", "PC0_REMAINS_RED"],
   "issued_at_utc": "2026-08-11T07:32:39Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "This branch is a control-plane remediation only. After merge, ECO must merge origin/main normally and PC0 must be rerun before H0.0 resumes."
+  "notes": "Cancelled before dispatch because the ECO source head and passport state advanced repeatedly during pre-build review. No registry mutation was authorized or made. A replacement Work Order requires a stable exact source pin and explicit two-step candidate-main plus synthetic-ECO integration validation."
 }

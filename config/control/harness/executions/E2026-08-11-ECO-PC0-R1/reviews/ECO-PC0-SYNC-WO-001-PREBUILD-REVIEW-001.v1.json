@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "ECO-PC0-SYNC-WO-001-PREBUILD-REVIEW-001",
+  "work_order_id": "ECO-PC0-SYNC-WO-001",
+  "review_type": "PRE_BUILD_DESIGN_AUTHORIZATION",
+  "risk_class": "HIGH",
+  "reviewed_head_sha": "e9327e74d2fffbfe970d85447a6ad2997a4a8c66",
+  "reviewer": "INDEPENDENT_REVIEWER_SOL",
+  "verdict": "FAIL",
+  "reviewed_at_utc": "2026-08-11T07:39:59Z",
+  "required_fixes": [
+    "Pin exact ECO branch head and passport blob/source commit after the source frontier stabilizes.",
+    "Specify candidate-main RED and synthetic post-ECO-merge NON_RED as separate topology validations.",
+    "Fail closed if origin/main or registry generation moves from the Project Epoch.",
+    "Mirror only the exact passport's seven operational fields and use one canonical CONTROL_DOCS_ONLY_MERGE gate identifier.",
+    "End any replacement Work Order at WAITING_HUMAN after draft PR; real merges remain outside its authorization."
+  ],
+  "rank_up_moves": ["Add a machine-readable integration manifest containing main base, ECO source head, passport blob, candidate main and synthetic ECO heads."],
+  "evidence_gaps": ["Stable ECO source pin", "Candidate-main generation-66 simulation", "Synthetic post-merge PC0 reports"],
+  "risk_assessment": "HIGH remains correct. No CRITICAL ownership or architecture change was proposed, but stale canonical project-state input makes implementation unsafe.",
+  "summary": "Pre-build authorization failed because ECO advanced repeatedly through P1B while the Work Order described P1A-S4, and the validation topology conflated a registry candidate with real post-merge NON_RED."
+}
