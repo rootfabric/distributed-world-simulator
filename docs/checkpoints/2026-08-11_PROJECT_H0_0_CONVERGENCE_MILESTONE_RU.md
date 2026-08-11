@@ -1,8 +1,8 @@
 # Distributed World Simulator — H0.0 Project Convergence Milestone — 2026-08-11
 
 **Checkpoint:** `H0_0_SCAFFOLD_READY`  
-**Canonical source main:** `82835a37bab1390b6b3f87fb18903070fdd64256`  
-**Checkpoint registry generation:** `71`  
+**Canonical source main:** `9ab5b16332de47fe6a9c525442d4efa882c9a71c`  
+**Canonical registry generation at merge gate:** `71`  
 **Architecture:** `GLOBAL-P0-2026-08-10-R2`  
 **Control plane:** `PC0-2026-08-10-R1`
 
@@ -79,7 +79,7 @@ These are intentionally **not** checkpoint blockers:
 
 ```text
 CH9.6    Windows automated accepted; manual graphical/recovery observation pending
-ECO      advisory research; P1C-S4 exact-Windows pending
+ECO      advisory research; P1 accepted, PH0/PH1 exact-Windows + PH1 graphical review pending
 R3       GLOBAL-P0 R3 architecture candidate requires fresh CRITICAL promotion review
 TS/C22   source accepted; fresh convergence belongs to H0.1
 NX       preparation complete; runtime waits H0.1 PASS
@@ -90,27 +90,23 @@ ECO remains `RESEARCH_DESIGN_FRONTIER`, so its research RED/YELLOW state is advi
 
 ## Machine-state synchronization
 
-The checkpoint candidate advances the main-owned project registry to generation `71` and records the live facts:
+A newer main-owned registry generation `71` landed while the checkpoint was at the human merge gate. It advances ECO research facts through accepted P1 and local-green PH0/PH1. The checkpoint refresh **preserves that canonical registry byte-for-byte** rather than overwriting it with the older H0/G snapshot.
+
+Therefore canonical merge is split into two safe control steps:
 
 ```text
-HARNESS  H0_0_SCAFFOLD_READY verified / checkpoint canonicalization candidate
-G        G8 FULL ACCEPTED / FROZEN
-T        T1B HANDOFF COMPLETE
-TS       waits fresh post-checkpoint H0.1 execution
-CH       manual graphical pending
-NX       waits H0.1 PASS
-ECO      advisory P1C-S4 Windows pending
-MATTER   stable
-S1       stable
+1. merge H0.0 harness/checkpoint evidence while preserving registry generation 71
+2. post-merge create registry generation 72 that records H0.0 canonical + G8 FULL ACCEPTED
+   while retaining the generation-71 ECO P1 / PH0 / PH1 facts
 ```
 
-This removes the previous central-dashboard drift where main still described H0.0 as planned and G8.6 as manual-pending.
+This avoids losing newer ECO research state and removes the registry-file merge conflict. No runtime authorization is introduced by either step.
 
 ## H0.1 planning handoff — runtime remains closed
 
 ```text
 E2026-08-11-H0-1-R5
-base source main:   82835a37bab1390b6b3f87fb18903070fdd64256
+base source main:   9ab5b16332de47fe6a9c525442d4efa882c9a71c
 registry:           71
 work order:         H0-1-R5-DISPATCH-WO-001
 state:              PLANNED
@@ -135,7 +131,7 @@ H0.0  READY FOR CANONICALIZATION
 G8    ACCEPTED / FROZEN
 T1B   ACCEPTED HANDOFF
 CH    NONBLOCKING MANUAL GATE
-ECO   NONBLOCKING ADVISORY RESEARCH
+ECO   NONBLOCKING ADVISORY RESEARCH — P1 ACCEPTED / PH0+PH1 RESEARCH VALIDATION
 C22   WAITING FRESH POST-CHECKPOINT H0.1 EXECUTION
 NX    WAITING H0.1 PASS
 R3    NONBLOCKING ARCHITECTURE PROMOTION TRACK
@@ -152,20 +148,22 @@ Before merge re-check:
 1. current main still equals the candidate source or candidate is freshly rebuilt
 2. candidate contains no runtime/domain changes
 3. H0.0 historical evidence remains immutable
-4. registry generation and H0.1 handoff epoch match
-5. focused canonical handoff suite passes
-6. Status / Plan / Resume pass on exact candidate checkout
+4. candidate preserves current canonical registry generation 71
+5. H0.1 R5 base/main identity matches current main
+6. focused canonical handoff suite semantics remain unchanged except for the refreshed base pin
 7. standard PC0 NON_RED
 8. directional PC0 NON_RED for blocking/critical findings
-9. Draft PR is mergeable
+9. PR is mergeable
 ```
 
-Only explicit human authorization `CONTROL_DOCS_ONLY_MERGE` may integrate this checkpoint.
+Explicit human authorization `CONTROL_DOCS_ONLY_MERGE` was granted. No force/bypass is permitted; GitHub mergeability and freshness remain mandatory.
 
 ## Next critical path after integration
 
 ```text
 exact post-checkpoint main
+        ↓
+post-merge registry generation 72 sync (H0/G milestone + preserved ECO facts)
         ↓
 fresh H0.1 execution epoch / control branch
         ↓
