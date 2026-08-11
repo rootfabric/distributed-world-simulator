@@ -2,39 +2,20 @@
 
 ## Статус
 
-`FIX1_LOCAL_HEADLESS_PASS / WINDOWS + MANUAL_GRAPHICAL_RERUN_PENDING`.
+`FIX1_GRAPHICAL_PASS / WINDOWS_AUTOMATED_CONFIRMATION_PENDING`.
 
 Автоматический baseline S3 ранее прошёл exact Windows: S1 `109/109`, S2 `235/235`, S3 `114/114`. Первый ручной graphical review показал, что **экологический результат выглядит правдоподобно, но presentation недостаточно читаем**: диагностический текст визуально заходил на heatmap и не хватало явного объяснения, что изменил probe и почему конкретный patch успешен или неуспешен.
 
-Это классифицировано как `FIX_REQUIRED_PRESENTATION_ONLY`, а не как failure ecology truth.
-
-## Что было нормальным в первом graphical review
-
-На наблюдаемой точке для `SUN_FAVORED` было видно отрицательный `net` при `limit=WATER` и классе `UNSUSTAINABLE`. Это согласуется с моделью: больше света не устраняет дефицит воды, то есть probe не получает магического глобального преимущества.
-
-Heatmap также имел непрерывную структуру без очевидных seams.
+Это было классифицировано как `FIX_REQUIRED_PRESENTATION_ONLY`, а не как failure ecology truth.
 
 ## Что исправлено в Fix1
 
-- Heatmap и diagnostics теперь физически разделены: справа отдельный `PanelContainer`.
-- Панель anchored к правому краю и имеет вертикальный scroll, поэтому небольшое окно не должно заставлять текст заходить на карту.
-- Для текущего view добавлены краткое объяснение и legend.
-- Для текущего probe показываются traits и их delta относительно `BASE`.
-- Добавлен глобальный результат: viability counts/percentages, limiting-factor counts, average net и biomass.
-- Добавлен `PROBE EFFECT VS BASE`: delta favourable patches, average net и average biomass.
-- Для выбранного patch теперь показываются:
-  - raw environment;
-  - effective soil moisture;
-  - light/water/nutrient/temperature responses;
-  - LIGHT/WATER/NUTRIENT/TEMPERATURE/FLOOD limitations;
-  - gross income;
-  - regular costs;
-  - stress costs;
-  - explicit `gross - total = net`;
-  - final/peak biomass;
-  - productive/stress seasons;
-  - short `WHY` explanation;
-  - local delta versus `BASE`.
+- Heatmap и diagnostics физически разделены: справа отдельный `PanelContainer`.
+- Панель anchored к правому краю и имеет vertical scroll.
+- Для текущего view добавлены объяснение и legend.
+- Для текущего probe показываются traits и delta относительно `BASE`.
+- Добавлен глобальный `PROBE EFFECT VS BASE`.
+- Для выбранного patch показываются `ENV`, `RESP`, `LIMIT`, `ENERGY`, `BIO`, `RESULT`, `WHY`, `LOCAL VS BASE`.
 - Полные hashes сокращены только визуально; canonical hashes в truth/test evidence не изменены.
 
 ## Fix1 automated evidence
@@ -44,22 +25,45 @@ Godot `4.7.1.stable.double.custom_build.a13da4feb` local focused run:
 - S1: `109 assertions, 0 failures`;
 - S2: `235 assertions, 0 failures`;
 - S3 Fix1: `208 assertions, 0 failures`;
-- focused dataset hash remains `dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690`;
-- scene headless smoke remains PASS, `33x33`, BASE hash `9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c`.
+- focused dataset hash остаётся `dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690`;
+- scene headless smoke остаётся PASS, `33x33`, BASE hash `9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c`.
 
 То есть Fix1 добавляет derived diagnostics/presentation и не меняет accepted S1/S2 truth или S3 dataset identity.
 
-## Что проверить повторно на Windows
+## Повторный graphical review — PASS
 
-Сначала automated runner: ожидается S3 `208/208` при прежних hashes.
+На Windows graphical rerun пользователь подтвердил, что revised отображение читается хорошо и views переключаются.
 
-Затем graphical scene:
+По предоставленным screenshots зафиксировано:
 
-1. heatmap не пересекается с правой diagnostic panel;
-2. panel читается на текущем размере окна и при необходимости scroll-ится;
-3. `PROBE EFFECT VS BASE` действительно помогает понять направление изменения;
-4. после клика видно `RESP`, `LIMIT`, `ENERGY`, `BIO`, `RESULT`, `WHY`, `LOCAL VS BASE`;
-5. `1..8` и `Q/E` остаются понятными;
-6. graphical state не меняет accepted hashes.
+- heatmap и правая diagnostic panel больше не пересекаются;
+- `View 1/8 temperature_c` имеет плавную непрерывную пространственную структуру и правильно помечен как probe-independent accepted S1 environment field;
+- `View 8/8 dominant_limiting_factor` визуально разделяет WATER / NUTRIENT / LIGHT / FLOOD regions;
+- выбранный patch показывает полный causal breakdown через `ENV`, `RESP`, `LIMIT`, `ENERGY`, `BIO`, `RESULT`, `WHY`, `LOCAL VS BASE`;
+- numerical totals и selected-patch explanation читаются без наложения на карту;
+- view switching работает графически.
 
-Только после этого S3 переводится в `ACCEPTED` и открывается `P1A-S4 Determinism, Sensitivity and Failure Classification`.
+Решение graphical gate:
+
+`PASS_BY_USER_OBSERVATION`.
+
+## Остался один gate
+
+После Fix1 ещё нужен exact-Windows automated runner уже на версии с `208 assertions`:
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+git pull
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\RUN_ECO_P1A_S3_TESTS.ps1 -GodotPath $Godot
+```
+
+Требуется:
+
+- S1 `109/109`;
+- S2 `235/235`;
+- S3 Fix1 `208/208`;
+- focused dataset hash `dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690`;
+- scene dataset hash `9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c`.
+
+После этого S3 переводится в `ACCEPTED` и открывается `P1A-S4 Determinism, Sensitivity and Failure Classification`.
