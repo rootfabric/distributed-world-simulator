@@ -75,18 +75,20 @@ G8.6 is therefore `AUTOMATED_ACCEPTED_MANUAL_PENDING`.
 
 A dedicated manual runner was added after automated acceptance. It is harness-only and does not alter the accepted G8.6 runtime, scene, manifest or geomorphology algorithms.
 
-Runner commit:
+Initial runner commit:
 
 ```text
 3a0330a62f71bf0ec7a2379d722f03e28ca0ae6d
 ```
 
-The runner fail-closes before opening the graphical scene unless all of the following are true:
+The final guard intentionally allows later control/manifest/validation **metadata** to move while fail-closing if executable G8.6 behavior or its focused acceptance harness moved after automated acceptance.
+
+The runner refuses to open the graphical scene unless all of the following are true:
 
 1. current branch is exactly `feature/g8-geomorphology`;
 2. working tree is clean;
 3. automated-tested head `a9ca1f8b723e4edc5ebff40db26e41283d464597` is an ancestor of the current checkout;
-4. no G8.6 runtime/presentation/manifest/validation/acceptance file changed after that automated-tested head;
+4. no executable G8.6 presentation/runtime file, G8.6 scene, geomorphology runtime, focused G8.6 acceptance test, or accepted G8.6 automated/focused runner changed after that head;
 5. the focused G8.6 headless gate passes again on the current checkout.
 
 Run from the G checkout:
