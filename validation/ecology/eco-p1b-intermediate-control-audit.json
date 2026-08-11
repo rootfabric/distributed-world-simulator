@@ -10,7 +10,7 @@
   "accepted_checkpoint": "ECO.P1B Local Adaptation Proof",
   "checks": {
     "branch_reports_local_facts": "PASS",
-    "main_declares_project_state": "REQUIRES_REGISTRY_SYNC",
+    "main_declares_project_state": "PASS_REGISTRY_GENERATION_67",
     "runtime_paths_changed": false,
     "foundation_ownership_changed": false,
     "watched_runtime_g_matter_architecture_drift": "NONE_OBSERVED",
@@ -19,10 +19,15 @@
     "production_promotion_requested": false,
     "harness_runtime_epoch_required": false
   },
+  "canonical_registry_sync": {
+    "registry_generation": 67,
+    "main_commit": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
+    "state": "P1B_ACCEPTED_P1C_S1_LOCAL_FOCUSED_PASS_WINDOWS_PENDING_PH0_OPEN_RESEARCH_ONLY"
+  },
   "remaining_production_blockers": [
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
   ],
-  "next": "Update canonical PC0 registry to P1B ACCEPTED / P1C OPEN; continue research-only P1C."
+  "next": "Continue research-only ECO.P1C-S1; exact Windows confirmation is required before P1C-S2."
 }
