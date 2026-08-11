@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R5-2026-08-11",
+  "revision": "ECO-R6-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
@@ -63,27 +63,28 @@
       {
         "id": "P1A-S3",
         "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-        "status": "AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
+        "status": "FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING",
         "depends_on": ["P1A-S2"],
         "output": "Presentation-only heatmap lab and controlled sensitivity probes sharing the accepted S1/S2 truth model.",
         "evidence": {
-          "focused_assertions": 114,
-          "focused_failures": 0,
+          "pre_fix_windows": "PASS_114_ASSERTIONS_ON_6b5f3592696dc7db0897ca8cef69c3c395f32589",
+          "manual_pre_fix": "FIX_REQUIRED_PRESENTATION_ONLY",
+          "fix1_focused_assertions": 208,
+          "fix1_focused_failures": 0,
           "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
           "scene_headless_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
           "parent_s2_regression": "PASS_235_ASSERTIONS",
           "parent_s1_regression": "PASS_109_ASSERTIONS",
-          "published_blobs": "MATCHED_LOCAL_TESTED_CONTENT",
-          "windows": "PASS_CLEAN",
-          "windows_checkout_head": "6b5f3592696dc7db0897ca8cef69c3c395f32589",
-          "graphical": "PENDING",
+          "fix1_presentation": "DEDICATED_SCROLLABLE_PANEL_PLUS_CAUSAL_AND_PROBE_VS_BASE_DIAGNOSTICS",
+          "fix1_windows": "PENDING",
+          "fix1_graphical": "PENDING",
           "validation": "validation/ecology/eco-p1a-s3-diagnostic-visual-lab-validation.json"
         }
       },
       {
         "id": "P1A-S4",
         "name": "Determinism, Sensitivity and Failure Classification",
-        "status": "BLOCKED_BY_P1A_S3_GRAPHICAL_ACCEPTANCE",
+        "status": "BLOCKED_BY_P1A_S3_FIX1_ACCEPTANCE",
         "depends_on": ["P1A-S3"],
         "output": "Replay acceptance runner, sensitivity evidence and explicit failure matrix."
       },
