@@ -1,10 +1,9 @@
-"""Command-line adapter for the deliberately narrow H0.0 control surface."""
+"""Command-line adapter for the restart-safe development control surface."""
 from __future__ import annotations
 
 import argparse
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 from .checkpoint_planner import build_plan
@@ -57,19 +56,31 @@ def main(argv: list[str] | None = None) -> int:
         state["ok"] = True
         state["exit_codes"] = EXIT_CODES
         if args.mode == "plan":
-            state["plan"] = build_plan(ContractBundle.load(root).contracts, state["reduced_work_order"])
+            state["plan"] = build_plan(
+                ContractBundle.load(root).contracts,
+                state["active_work_order"],
+                state["reduced_work_order"],
+            )
         elif args.mode == "resume":
             state["resume"] = {
-                "active_epoch": state["epoch"]["epoch_id"], "branch": state["active_work_order"]["branch"],
-                "current_branch_head_sha": state["repository"]["current_branch_head_sha"], "implementation_head_sha": state["repository"]["implementation_head_sha"],
+                "active_epoch": state["epoch"]["epoch_id"],
+                "branch": state["active_work_order"]["branch"],
+                "current_branch_head_sha": state["repository"]["current_branch_head_sha"],
+                "implementation_head_sha": state["repository"]["implementation_head_sha"],
                 "last_completed_predicate": state["reduced_work_order"]["last_completed_predicate"],
-                "open_blocker": state["reduced_work_order"]["open_blocker"], "next_work_order": state["active_work_order"]["work_order_id"],
-                "review_state": state["review"]["state"], "open_human_attention": state["human_attention"]["open_items"],
+                "open_blocker": state["reduced_work_order"]["open_blocker"],
+                "next_work_order": state["active_work_order"]["work_order_id"],
+                "review_state": state["review"]["state"],
+                "open_human_attention": state["human_attention"]["open_items"],
                 "human_approval_required_for": state["active_work_order"].get("human_approval_required_for", []),
                 "verification_commands": state["verification_commands"],
             }
-        state["next"] = {"checkpoint": state["active_work_order"]["goal_checkpoint"], "work_order": state["active_work_order"]["work_order_id"],
-                         "verification_commands": state["verification_commands"], "human_gate": state["active_work_order"].get("human_approval_required_for", [])}
+        state["next"] = {
+            "checkpoint": state["active_work_order"]["goal_checkpoint"],
+            "work_order": state["active_work_order"]["work_order_id"],
+            "verification_commands": state["verification_commands"],
+            "human_gate": state["active_work_order"].get("human_approval_required_for", []),
+        }
         _emit(state)
         return 0
     except ContractValidationError as exc:
@@ -80,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, subprocess.SubprocessError) as exc:
         _emit({"schema": SCHEMA, "command": command, "ok": False, "error": {"code": "GIT_STATE_INVALID", "detail": type(exc).__name__}, "exit_codes": EXIT_CODES})
         return EXIT_CODES["GIT_STATE_INVALID"]
-    except Exception as exc:  # fail closed at the public command boundary
+    except Exception as exc:
         _emit({"schema": SCHEMA, "command": command, "ok": False, "error": {"code": "INTERNAL_ERROR", "detail": type(exc).__name__}, "exit_codes": EXIT_CODES})
         return EXIT_CODES["INTERNAL_ERROR"]
 
