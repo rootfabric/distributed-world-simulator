@@ -7,5 +7,7 @@
   "dry_merge_tree_sha": "275e23549579b2cecd17becdfb27dbb0026ca558",
   "target_branch": "feature/eco-evolutionary-ecology",
   "candidate_branch": "control/eco-main-integration",
-  "freshness_rule": "Any change to main_base_sha or eco_source_head_sha before merge commit creation requires stop and re-plan."
+  "pre_merge_control_head_rule": "Pin the exact final durable control head immediately before merge creation; its first-parent ancestry must contain eco_source_head_sha and its source delta must contain allowed control records only.",
+  "candidate_parent_rule": "Candidate has exactly two parents: exact pre-merge control head first and exact main_base_sha second; candidate tree equals the immediate first-parent tree.",
+  "freshness_rule": "Any change to main_base_sha or eco_source_head_sha before merge creation, synthetic PC0, evidence, exact-head review, draft PR or human merge requires stop, manifest refresh and repeated review."
 }

@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "ECO-MAIN-INTEGRATION-WO-001-PREBUILD-REVIEW-001",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-001",
+  "review_type": "PRE_BUILD_DESIGN_AUTHORIZATION",
+  "risk_class": "HIGH",
+  "reviewed_head_sha": "7cdb62d59aa360d1c7dc525896215e5f420fbf7f",
+  "reviewer": "INDEPENDENT_REVIEWER_SOL",
+  "verdict": "FAIL",
+  "reviewed_at_utc": "2026-08-11T07:50:00Z",
+  "required_fixes": [
+    "Make the final durable pre-merge control head the first parent and require exact ECO only in its first-parent ancestry.",
+    "Extend main/ECO freshness guards through synthetic PC0, evidence, review, draft PR and human merge.",
+    "Separate the original source dry-merge tree identity from the actual candidate tree identity."
+  ],
+  "rank_up_moves": ["Add a canonical integration-input manifest schema in a later harness revision."],
+  "evidence_gaps": [],
+  "risk_assessment": "HIGH remains correct. The topology proof controls whether critical drift is truthfully removed, but no runtime or architecture change is in scope.",
+  "summary": "Initial design pinned the right refs but required an impossible first parent after durable planning commits and did not keep freshness through the full PR lifecycle."
+}
