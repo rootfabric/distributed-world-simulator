@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1A-S4",
+  "name": "Determinism, Sensitivity and Failure Classification",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parents": {"p1a_s1": "ACCEPTED", "p1a_s2": "ACCEPTED", "p1a_s3": "ACCEPTED"},
+  "experiment_revision": "ECO.P1A-S4.1",
+  "baseline": {
+    "seed": 104701,
+    "summary_grid": 17,
+    "full_grid": 9,
+    "seasons": 24,
+    "summary_hash": "327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a",
+    "result_hash": "cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e",
+    "biomass_series_hash": "7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c"
+  },
+  "sensitivity_parameters": ["moisture_amplitude_scale", "sunlight_amplitude_scale", "root_cost_scale", "maintenance_cost_scale", "flood_penalty_scale", "root_depth_scale", "shade_tolerance_delta"],
+  "sensitivity_policy": "All perturbations are explicit experiment config. Accepted S1 environment and S2 resource/population equations are not rewritten. Cost-coefficient sweeps adjust already-exposed S2 cost terms only for sensitivity summaries; full biomass dynamics remain delegated to the accepted S2 PatchSimulator.",
+  "failure_classes": ["global_extinction", "unbounded_biomass", "one_field_domination", "free_trait_escalation", "boundary_seams", "hidden_biome_conditionals", "presentation_resolution_dependency", "floating_point_replay_divergence"],
+  "acceptance": {"focused_assertions": 165, "restart_process_assertions": 5, "failures": 0, "windows_confirmation": "PENDING"},
+  "invariants": {
+    "accepted_s1_truth_modified": false,
+    "accepted_s2_resource_equations_modified": false,
+    "accepted_s2_patch_simulator_modified": false,
+    "biome_rules_added": false,
+    "presentation_inputs_added": false,
+    "evolution_enabled": false
+  }
+}
