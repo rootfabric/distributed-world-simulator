@@ -8,6 +8,9 @@
   "source_tree_sha": "b78d75da0f23308f74961f4951e7087c2d514f65",
   "target_branch": "feature/eco-evolutionary-ecology",
   "candidate_branch": "control/eco-main-integration-r3",
+  "pre_merge_control_head_sha": "f257d4398a2c36699735f7ebe6be3909d5906418",
+  "candidate_merge_sha": "64592d414fc1d2cdd904b6954d8fa32e3aa6064c",
+  "candidate_tree_sha": "33509ee7d4164107c0d735f0ce9b894db985a194",
   "pre_merge_control_head_rule": "Pin the exact final durable control head immediately before merge creation. Its first-parent ancestry must contain eco_source_head_sha and its source delta may contain only this Work Order's allowed control records.",
   "candidate_parent_rule": "The candidate has exactly two parents: exact pre_merge_control_head_sha first and exact main_base_sha second. The candidate tree must equal the immediate first-parent tree.",
   "freshness_rule": "Any change to main_base_sha, eco_source_head_sha, passport blob, or source dry-merge tree before merge creation, synthetic PC0, evidence, exact-head review, draft PR, or human merge requires stop, immutable invalidation, refreshed manifest, and repeated review."
