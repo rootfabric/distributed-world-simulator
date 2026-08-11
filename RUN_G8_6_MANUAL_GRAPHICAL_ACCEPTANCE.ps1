@@ -37,22 +37,25 @@ if ($LASTEXITCODE -ne 0) {
     throw "Automated-tested G8.6 head $AutomatedTestedHead is not an ancestor of current head $CurrentHead. Re-run automated acceptance before graphical acceptance."
 }
 
-$RuntimeGuardPaths = @(
-    "config/procedural/g8-6-geomorphology-visual-lab.v1.json",
-    "validation/g8-6-geomorphology-visual-lab-validation.json",
+# Post-acceptance control/manifest/validation metadata is allowed to move.
+# The manual gate must fail closed only if executable G8.6 presentation/runtime
+# or its focused acceptance harness changed after the automated-tested head.
+$ExecutableGuardPaths = @(
     "scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd",
     "scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd",
     "scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn",
     "scripts/simulation/procedural/geomorphology",
-    "tests/procedural/geomorphology/g8_6_geomorphology_visual_lab_acceptance.gd"
+    "tests/procedural/geomorphology/g8_6_geomorphology_visual_lab_acceptance.gd",
+    "RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1",
+    "RUN_G8_6_AUTOMATED_ACCEPTANCE.ps1"
 )
-$RuntimeDrift = & git -C $RootDir diff --name-only "$AutomatedTestedHead..$CurrentHead" -- @RuntimeGuardPaths
+$ExecutableDrift = & git -C $RootDir diff --name-only "$AutomatedTestedHead..$CurrentHead" -- @ExecutableGuardPaths
 if ($LASTEXITCODE -ne 0) {
-    throw "Unable to check G8.6 runtime drift."
+    throw "Unable to check G8.6 executable drift."
 }
-$RuntimeDriftText = (($RuntimeDrift | Out-String).Trim())
-if (-not [string]::IsNullOrWhiteSpace($RuntimeDriftText)) {
-    throw "G8.6 runtime/presentation files changed after automated acceptance. Re-run automated acceptance first.`n$RuntimeDriftText"
+$ExecutableDriftText = (($ExecutableDrift | Out-String).Trim())
+if (-not [string]::IsNullOrWhiteSpace($ExecutableDriftText)) {
+    throw "G8.6 executable presentation/runtime or focused acceptance harness changed after automated acceptance. Re-run automated acceptance first.`n$ExecutableDriftText"
 }
 
 $Candidates = @()
@@ -75,7 +78,7 @@ Write-Host "=== G8.6 MANUAL GRAPHICAL ACCEPTANCE PREFLIGHT ==="
 Write-Host "branch              : $CurrentBranch"
 Write-Host "current head        : $CurrentHead"
 Write-Host "automated tested    : $AutomatedTestedHead"
-Write-Host "runtime drift       : NONE"
+Write-Host "executable drift    : NONE"
 Write-Host "working tree        : CLEAN"
 Write-Host "Godot               : $GodotExecutable"
 Write-Host ""
