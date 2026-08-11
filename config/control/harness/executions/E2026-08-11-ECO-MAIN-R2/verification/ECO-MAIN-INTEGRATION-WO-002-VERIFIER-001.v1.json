@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "verified_head_sha": "04528ad2820536b512c0844083b10d9dfc4cf171",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T08:16:00Z",
+  "environment": "fresh canonical GitHub URL clone with full fetch; synthetic ECO remote-tracking ref only",
+  "commands": ["git show -s --format=%P 04528ad2820536b512c0844083b10d9dfc4cf171", "git merge-tree --write-tree 67e23224ae153a9fc43ca5feea21c50165a99f1d 5ba1dcb7b7671bff519739387513a50d90e8feac", "powershell -NoProfile -ExecutionPolicy Bypass -File .\\CONTROL_PROJECT.ps1 -NoFetch"],
+  "results": {"parents": ["2d8449a242df005638b7f48648c4966a82f7cda2", "5ba1dcb7b7671bff519739387513a50d90e8feac"], "candidate_tree_equals_first_parent": true, "source_dry_merge_equals_source_tree": true, "source_to_candidate_forbidden_delta": false, "standard_pc0": "NON_RED", "directional_pc0": "NON_RED"},
+  "summary": "Fresh independent verifier PASS: aggregate synthetic PC0 is YELLOW/NON_RED with ECO GREEN; directional PC0 is YELLOW with zero RED findings."
+}

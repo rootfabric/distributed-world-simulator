@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R2-ECO-MAIN-INTEGRATION-WO-002-0003",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R2",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-11T08:16:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/eco-main-integration-r2",
+  "head_sha": "04528ad2820536b512c0844083b10d9dfc4cf171",
+  "predicate": "NORMAL_MERGE_COMMIT_CREATED",
+  "command": "git merge --no-ff origin/main -m merge(control): integrate canonical main into ECO r2 candidate",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-ECO-MAIN-R2/integration-inputs.v1.json"],
+  "summary": "A normal two-parent merge candidate was created with the final durable control head first, exact main second, and a tree identical to its first parent.",
+  "blocker": ""
+}

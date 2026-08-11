@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_post_build_critique.v1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-002",
+  "implementation_head_sha": "04528ad2820536b512c0844083b10d9dfc4cf171",
+  "risk_class": "HIGH",
+  "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "completed_at_utc": "2026-08-11T08:16:00Z",
+  "questions": {
+    "unnecessary_complexity": "No: the candidate is one normal merge plus durable control records; it adds no alternate integration mechanism.",
+    "duplicate_truth": "No: main remains canonical project-state owner and ECO passport remains branch-local fact; the merge changes ancestry, not duplicated registry content.",
+    "implicit_owner": "No: ECO owns its target branch while main owns registry and PC0 policy; the candidate creates no new owner.",
+    "coupling_reduction": "No additional coupling is introduced; ancestry removes the existing critical drift instead of adding an adapter.",
+    "sibling_surface_fix": "Checked merge parents, merge-base, source dry-tree, passport blob, registry mirror, R1 invalidation, standard PC0, and directional PC0. No sibling repair is required.",
+    "removable_code": "No code was added. Execution records are required durable recovery evidence.",
+    "design_regression": "No: the actual merge exactly implements the pre-build design and preserves the paused ECO tree.",
+    "refactor_if_redesigned": "No refactor is warranted. A future canonical schema for the integration-input manifest is a non-blocking harness rank-up move."
+  }
+}
