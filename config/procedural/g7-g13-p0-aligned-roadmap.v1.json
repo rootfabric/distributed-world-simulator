@@ -11,10 +11,11 @@
     "g8_0_geomorphology_contracts": "ACCEPTED",
     "g8_1_valley_incision_baseline": "ACCEPTED",
     "g8_2_river_channel_incision": "ACCEPTED",
-    "g8_3_banks_and_floodplain_shaping": "ACCEPTED"
+    "g8_3_banks_and_floodplain_shaping": "ACCEPTED",
+    "g8_4_erosion_deposition_baseline": "ACCEPTED"
   },
-  "current_checkpoint": "G8_4_EROSION_DEPOSITION_BASELINE",
-  "next_checkpoint": "G8_5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE",
+  "current_checkpoint": "G8_5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE",
+  "next_checkpoint": "G8_6_GEOMORPHOLOGY_VISUAL_LAB",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -68,14 +69,15 @@
     {
       "id": "G8",
       "name": "Geomorphology",
-      "status": "IN_PROGRESS_G8_4",
+      "status": "IN_PROGRESS_G8_5",
       "accepted": [
         "G8.0 Geomorphology Contracts",
         "G8.1 Valley Incision Baseline",
         "G8.2 River Channel Incision",
-        "G8.3 Banks and Floodplain Shaping"
+        "G8.3 Banks and Floodplain Shaping",
+        "G8.4 Erosion / Deposition Baseline"
       ],
-      "current": "G8.4 Erosion / Deposition Baseline",
+      "current": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
       "roadmap": [
         "G8.0 Geomorphology Contracts",
         "G8.1 Valley Incision Baseline",
