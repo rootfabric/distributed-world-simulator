@@ -168,6 +168,12 @@ func _test_owner_authority_keeps_item_drop_server_authoritative() -> void:
 		"operation/test/owner-state/b/1"
 	)
 	_assert(bool(state_result.get("success", false)), "owner-authored locomotion state is accepted before item action")
+	var accepted_player: Dictionary = Dictionary(state_result.get("details", {}).get("player", {}))
+	_assert(absf(float(accepted_player.get("orientation_yaw", 99.0))) < 0.000001, "identity owner basis round-trips to yaw zero")
+	_assert(
+		String(service.get_report().get("owner_basis_yaw_roundtrip_policy", "")) == "GODOT_FORWARD_MINUS_Z_BASIS_TO_YAW_V1",
+		"owner service reports Godot -Z basis/yaw roundtrip policy"
+	)
 
 	var drop: Dictionary = service.handle_canonical_item_command(
 		"b", transport, 1,
