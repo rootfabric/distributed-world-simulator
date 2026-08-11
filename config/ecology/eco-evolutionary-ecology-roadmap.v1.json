@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R15-2026-08-11",
+  "revision": "ECO-R16-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
   "current_checkpoint": "ECO.PH",
-  "current_step": "PH2 Environment-Coupled Development / Plasticity local focused pass; exact-Windows pending",
-  "last_accepted_step": "ECO.PH1 Deterministic GrowthGraph Skeleton Lab",
+  "current_step": "PH3 Morphology-to-Resource Coupling local focused pass; exact-Windows pending",
+  "last_accepted_step": "ECO.PH2 Environment-Coupled Development / Plasticity",
   "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -18,6 +18,7 @@
     "GENOME_DEFINES_DEVELOPMENT_PROGRAM_NOT_MESH_ASSET",
     "INHERITED_DEVELOPMENT_PROGRAM_NE_REALIZED_PHENOTYPE",
     "GROWTH_GRAPH_NE_RENDERER_PROFILE_NE_LOD",
+    "ACCEPTED_P1_RESOURCE_TRUTH_NE_PH3_MORPHOLOGY_RESEARCH_OVERLAY",
     "REPRESENTATION_LEVEL_NE_SPECIES_OR_POPULATION_IDENTITY",
     "ECOLOGY_DOES_NOT_OWN_GEOLOGY_HYDROLOGY_MATTER_AUTHORITY_TRANSPORT_PERSISTENCE_QUERY_OR_GLOBAL_WORK_BUDGET"
   ],
@@ -27,7 +28,8 @@
     {"id":"ECO.P1C","name":"Strategy Competition Proof","decision":"ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE","evidence":"S1 116+5; S2 101+5; S3 64/63/63/64 + aggregate 5 + restart 5; S4 6x30 + uniform 27 + deep 30 + aggregate 15 + restart 6; hash 0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112"},
     {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","decision":"ACCEPTED","scope":"environment/resource causality + local adaptation + ecological-trait strategy coexistence; morphology coupling not yet claimed"},
     {"id":"ECO.PH0","name":"Development Trait Contract","decision":"ACCEPTED","evidence":"exact Windows 63/63; development hash 9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea; IndividualSeed 959597643576420676"},
-    {"id":"ECO.PH1","name":"Deterministic GrowthGraph Skeleton Lab","decision":"ACCEPTED","evidence":"exact Windows focused 128 + visual smoke 10 + restart 4; graph hash 6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451; graphical PASS_BY_USER_OBSERVATION"}
+    {"id":"ECO.PH1","name":"Deterministic GrowthGraph Skeleton Lab","decision":"ACCEPTED","evidence":"exact Windows focused 128 + visual smoke 10 + restart 4; graph hash 6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451; graphical PASS_BY_USER_OBSERVATION"},
+    {"id":"ECO.PH2","name":"Environment-Coupled Development / Plasticity","decision":"ACCEPTED","evidence":"exact Windows P1C-S4 15 + PH0 63 + PH1 128 + PH2 107 + visual smoke 12 + restart 5; reference da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10; diagnostic graphical PASS_BY_USER_OBSERVATION"}
   ],
   "next_checkpoint": {
     "id": "ECO.PH",
@@ -38,9 +40,10 @@
     "steps": [
       {"id":"PH0","name":"Development Trait Contract","status":"ACCEPTED","evidence":{"assertions":63,"development_traits_hash":"9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea","individual_seed":959597643576420676,"platform":"exact Windows"}},
       {"id":"PH1","name":"Deterministic GrowthGraph Skeleton Lab","status":"ACCEPTED","evidence":{"focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"base_graph_hash":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451","probe_count":9,"graphical":"PASS_BY_USER_OBSERVATION","renderer_scope":"DEBUG_SKELETON_ONLY"}},
-      {"id":"PH2","name":"Environment-Coupled Development / Plasticity","status":"LOCAL_FOCUSED_PASS_WINDOWS_PENDING","evidence":{"focused_assertions":107,"visual_smoke_assertions":12,"restart_assertions":5,"plasticity_profile_hash":"16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d","reference_phenotype_hash":"da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10","shade_phenotype_hash":"bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0","sun_phenotype_hash":"b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa","dry_phenotype_hash":"7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f"}},
-      {"id":"PH3","name":"Morphology-to-Resource Coupling","status":"BLOCKED_BY_PH2_ACCEPTANCE"},
-      {"id":"PH4","name":"Seed Development Lifecycle","status":"PLANNED_BEFORE_P2_DISPERSAL"},
+      {"id":"PH2","name":"Environment-Coupled Development / Plasticity","status":"ACCEPTED","evidence":{"focused_assertions":107,"visual_smoke_assertions":12,"restart_assertions":5,"plasticity_profile_hash":"16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d","reference_phenotype_hash":"da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10","shade_phenotype_hash":"bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0","sun_phenotype_hash":"b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa","dry_phenotype_hash":"7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f","platform":"exact Windows","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC"}},
+      {"id":"PH3","name":"Morphology-to-Resource Coupling","status":"LOCAL_FOCUSED_PASS_WINDOWS_PENDING","evidence":{"focused_assertions":217,"visual_smoke_assertions":17,"restart_assertions":5,"profile_hash":"1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a","reference_coupling_hash":"58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e","giant_dense_hash":"eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704","tradeoffs":["HEIGHT_BENEFIT_AND_STRUCTURAL_COST","CROWN_LIGHT_AND_DROUGHT_WATER_COST","BRANCH_CAPTURE_AND_BUILD_MAINTENANCE_COST","BIGGER_ALWAYS_BETTER_REJECTED"]}},
+      {"id":"PH3C","name":"Morphology-Aware Selection / Competition Convergence","status":"BLOCKED_BY_PH3_ACCEPTANCE","purpose":"Prove that developmental morphology costs/benefits alter selection and coexistence before morphology-aware evolutionary claims."},
+      {"id":"PH4","name":"Seed Development Lifecycle","status":"BLOCKED_BY_PH3C_CONVERGENCE","purpose":"Carry heredity and deterministic development through seed -> germination -> juvenile -> adult -> seed without transporting prebuilt meshes."},
       {"id":"PH5","name":"Extensible Procedural Visual Materialization","status":"PLANNED_P3","required_pipeline":"GrowthGraph -> PlantRenderDescription -> RendererProfile -> LOD","planned_profiles":["DEBUG_SKELETON","BRANCH_TUBES","BRANCH_LEAF_INSTANCED","CANOPY_APPROXIMATION","FULL_PROCEDURAL","IMPOSTOR_BILLBOARD"]},
       {"id":"PH6","name":"Promoted Individual Persistence","status":"DEFERRED_RUNTIME_PROMOTION"}
     ],
@@ -50,14 +53,17 @@
       "one generator produces continuous morphology transitions without canonical TREE/BUSH/GRASS types",
       "GrowthGraph remains derived representation",
       "realized phenotype may change with EnvironmentSample while inherited genome/development checksums remain unchanged",
-      "renderer/mesh/LOD changes cannot modify ecology/genome/GrowthGraph truth hashes",
-      "PH3 morphology costs must be proven before morphology-aware competition claims"
+      "PH3 must consume accepted P1 resource truth by checksum without modifying its equations",
+      "at least height, crown spread and branching must each show a measurable benefit/cost trade-off",
+      "bigger is always better must be rejected before morphology-aware selection",
+      "PH3C must prove selection/competition responds to morphology ledger before PH4",
+      "renderer/mesh/LOD changes cannot modify ecology/genome/GrowthGraph/resource truth hashes"
     ]
   },
   "waves": [
     {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","status":"ACCEPTED"},
-    {"id":"ECO.PH","name":"Plant Development & Phenotype","status":"PH0_PH1_ACCEPTED_PH2_ACTIVE_RESEARCH"},
-    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_PH_PREREQUISITES"},
+    {"id":"ECO.PH","name":"Plant Development & Phenotype","status":"PH0_PH1_PH2_ACCEPTED_PH3_ACTIVE_RESEARCH"},
+    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_PH4_PREREQUISITES"},
     {"id":"ECO.P3","name":"Species Catalog, Phenotype Projection and Population Representation","status":"PLANNED_AFTER_P2"}
   ],
   "production_blockers": [
