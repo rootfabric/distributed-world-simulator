@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R1",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "DISPATCHED",
+  "state": "IMPLEMENTED",
   "work_order_type": "CONTROL",
   "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "branch": "control/h0-closed-loop-development",

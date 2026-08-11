@@ -31,13 +31,13 @@ class H0ControlHarnessTests(unittest.TestCase):
         self.transition_table = read_json(EXECUTION / "transition-table.v1.json")
         self.events = [read_json(path) for path in sorted((EXECUTION / "events/H0-0-WO-001").glob("*.json"))]
 
-    def test_positive_live_ledger_is_authoritative_and_dispatched(self) -> None:
+    def test_positive_live_ledger_matches_declared_snapshot(self) -> None:
         reduced = reduce_events(self.bundle, self.work_order, self.events, self.transition_table)
-        self.assertEqual("DISPATCHED", reduced["state"])
+        self.assertEqual(self.work_order["state"], reduced["state"])
         self.assertTrue(reduced["snapshot_matches_authoritative_state"])
         state = build_state(ROOT, EXECUTION)
         self.assertEqual("GIT_ONLY_WORKER_DATA", state["source"])
-        self.assertEqual("DISPATCHED", state["reduced_work_order"]["state"])
+        self.assertEqual(self.work_order["state"], state["reduced_work_order"]["state"])
         heads = state["repository"]
         self.assertEqual(40, len(heads["event_subject_head_sha"]))
         self.assertEqual(40, len(heads["event_ledger_head_sha"]))
@@ -71,8 +71,8 @@ class H0ControlHarnessTests(unittest.TestCase):
     def test_replay_is_ordered_by_numeric_sequence_not_filename_order(self) -> None:
         changed = list(reversed(copy.deepcopy(self.events)))
         reduced = reduce_events(self.bundle, self.work_order, changed, self.transition_table)
-        self.assertEqual("DISPATCHED", reduced["state"])
-        self.assertEqual(10, reduced["last_event_sequence"])
+        self.assertEqual(self.work_order["state"], reduced["state"])
+        self.assertEqual(len(self.events), reduced["last_event_sequence"])
 
     def test_duplicate_event_id_is_rejected(self) -> None:
         changed = copy.deepcopy(self.events)
