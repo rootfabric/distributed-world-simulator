@@ -9,10 +9,10 @@
   "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
   "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
   "current_stage": "ECO.P1A Environmental Causality Baseline",
-  "stage_status": "P1A_S1_ACCEPTED_P1A_S2_NEXT_RESEARCH_ONLY",
-  "progress_note": "P1A-S1 Environment Contracts + Deterministic Fixture is accepted as a research-only focused baseline: exact EnvironmentSample schema, 4x4 km synthetic fixture, five continuous fields, eight control points, stable 128x128 environment hash and 109/109 headless acceptance on Godot 4.7.1 double. Published GitHub source/fixture/test/manifest blobs were matched against the locally tested content. The next work is P1A-S2 Single-Plant Resource Model; mutation/evolution remains blocked until P1A is accepted.",
+  "stage_status": "P1A_S1_ACCEPTED_P1A_S2_LINUX_FOCUSED_PASS_WINDOWS_PENDING_RESEARCH_ONLY",
+  "progress_note": "P1A-S1 is fully accepted including clean exact-Windows runner evidence. P1A-S2 now implements one fixed PlantGenome, explicit light/water/nutrient/temperature responses, maintenance/root/structural/growth/reproduction/stress costs, dominant limiting factors and a bounded 120-season aggregate biomass simulation. Local Godot 4.7.1 double focused acceptance passed 235/235 with simulation hash 618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c; parent S1 regression remained 109/109 with unchanged environment hash. Exact Windows confirmation is the only S2 gate before S3.",
   "last_accepted_checkpoint": "ECO.P1A-S1 Environment Contracts + Deterministic Fixture",
-  "next_stage": "Implement P1A-S2: one fixed plant genome over the accepted EnvironmentSample truth, with explicit light/water/nutrient income, maintenance/root/height/reproduction costs, biomass dynamics and limiting-factor evidence. No mutation, species competition or visual-only truth changes yet.",
+  "next_stage": "Run RUN_ECO_P1A_S2_TESTS.ps1 on exact Windows checkout. Require parent S1 109/109 and S2 235/235 with simulation hash 618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c. On PASS, record P1A-S2 ACCEPTED and open P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes; mutation/evolution remains blocked.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -56,6 +56,11 @@
     "tests/research/ecology/eco_p1a_s1_environment_acceptance.gd",
     "RUN_ECO_P1A_S1_TESTS.ps1",
     "docs/checkpoints/ECO_P1A_S1_ENVIRONMENT_BASELINE_ACCEPTED_RU.md",
+    "config/ecology/eco-p1a-s2-single-plant-resource-model.v1.json",
+    "validation/ecology/eco-p1a-s2-single-plant-resource-model-validation.json",
+    "tests/research/ecology/eco_p1a_s2_single_plant_resource_acceptance.gd",
+    "RUN_ECO_P1A_S2_TESTS.ps1",
+    "docs/checkpoints/ECO_P1A_S2_SINGLE_PLANT_RESOURCE_MODEL_CANDIDATE_RU.md",
     "docs/future_features/evolutionary_ecology/README_RU.md",
     "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
     "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
@@ -63,10 +68,12 @@
     "docs/future_features/evolutionary_ecology/P0_TECHNICAL_ALIGNMENT_RU.md"
   ],
   "tested_heads": {
-    "documentation": "df141fce4efdca6e1c816bc4bbbaa2770dbc9eea",
+    "documentation": "c1350e04c34bafb1c6c634d10bbd2f736bd75da3",
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
-    "focused_content_boundary": "45377c8baa0493fa6e37bb56a9a5c75fbb0c22bd",
-    "focused": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "p1a_s1_focused": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7_WINDOWS_CLEAN",
+    "p1a_s2_focused_content_boundary": "e691d8f3447c3b3c3ee6f08d648989ab0ae5bb7c",
+    "p1a_s2_focused": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c_LINUX",
+    "p1a_s2_windows": "PENDING",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
   "ownership_claims": [
@@ -93,6 +100,7 @@
     "PRESENTATION_MESH_AS_TRUTH"
   ],
   "blockers": [
+    "P1A_S2_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_P1A_S3",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
