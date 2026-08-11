@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1C-S1",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_evidence": {
+    "p1a": "ACCEPTED",
+    "p1b": "ACCEPTED",
+    "p1b_s4_regression": "PASS_86_ASSERTIONS_HASH_2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1c_s1_strategy_competition_acceptance.gd",
+    "assertions": 116,
+    "failures": 0,
+    "result_hash": "cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928",
+    "uniform_hash": "1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58",
+    "alternate_result_hash": "bded62e12ade0285c019d0dc2e4f77d0d6cb88431df7ade605160e0f18d82f8c",
+    "founder_pool_hash": "77acaada39a39c54224b73f2548ebc228343e869264e45780d08419ebb6bee38"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1c_s1_restart_replay_probe.gd",
+    "assertions": 5,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "causal_evidence": [
+    "20 founders are generated deterministically without species or strategy labels",
+    "default and uniform controls use the exact same founder pool",
+    "heterogeneous field retains 15 founders versus 4 in uniform control",
+    "heterogeneous field has 49 distinct retained compositions versus 1 in uniform control",
+    "accepted P1A tradeoffs are measurable for height, roots, growth, seed number, shade tolerance and lifespan",
+    "alternate founder seed changes exact strategies while preserving broad competition diversity"
+  ],
+  "known_pressure": "Default top1 dominance is 0.8367; this is intentionally not treated as final coexistence acceptance.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1C_S1_TESTS.ps1; on exact Windows PASS accept S1 and proceed to dynamic abundance competition."
+}
