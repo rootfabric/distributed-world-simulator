@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.harness_risk_policy.v1",
+  "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
+  "purpose": "Route agent work to review depth based on blast radius instead of treating every change equally.",
+  "classes": {
+    "LOW": {
+      "examples": ["docs", "tests", "simple_ui", "presentation_plumbing", "simple_adapter", "generated_mapping"],
+      "required_roles": ["IMPLEMENTER", "VERIFIER"],
+      "human_review_required": false
+    },
+    "MEDIUM": {
+      "examples": ["bounded_internal_runtime_logic", "local_representation", "cache", "non_authoritative_optimization"],
+      "required_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER"],
+      "human_review_required": false
+    },
+    "HIGH": {
+      "examples": ["network_protocol", "persistence", "canonical_state_mutation", "public_contract", "save_format", "recovery", "authority"],
+      "required_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
+      "human_review_required": false,
+      "director_verdict_required": true
+    },
+    "CRITICAL": {
+      "examples": ["architecture_ownership", "migration", "security_or_auth", "world_truth_ownership", "global_identity", "new_foundation", "cross_server_authority"],
+      "required_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+      "human_review_required": true
+    }
+  },
+  "minimum_risk_triggers": {
+    "HIGH": ["PERSISTENCE_CHANGE", "NETWORK_PROTOCOL_CHANGE", "AUTHORITY_CHANGE", "PUBLIC_CONTRACT_CHANGE", "SAVE_FORMAT_CHANGE", "RECOVERY_SEMANTICS_CHANGE"],
+    "CRITICAL": ["ARCHITECTURE_OWNERSHIP_CHANGE", "SECURITY_OR_AUTH_CHANGE", "GLOBAL_IDENTITY_CHANGE", "NEW_GLOBAL_FOUNDATION", "CROSS_SERVER_AUTHORITY_CHANGE"]
+  },
+  "rules": {
+    "risk_may_be_raised_but_not_lowered_below_trigger_minimum": true,
+    "unexpected_blast_radius_requires_reclassification": true,
+    "risk_class_is_recorded_before_implementation_for_medium_or_higher": true,
+    "commits_per_day_is_not_a_risk_signal": true
+  }
+}
