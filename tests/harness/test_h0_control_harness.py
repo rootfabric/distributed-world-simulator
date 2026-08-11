@@ -19,7 +19,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
-from harness.state_builder import _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
+from harness.state_builder import _git_implementation_head, _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
 
 
 EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R1"
@@ -55,10 +55,35 @@ class H0ControlHarnessTests(unittest.TestCase):
         self.assertEqual(40, len(heads["current_branch_head_sha"]))
         self.assertEqual(40, len(heads["implementation_head_sha"]))
         expected_implementation_head = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"],
+            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md", "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"],
             cwd=ROOT, text=True, capture_output=True, check=True,
         ).stdout.strip()
         self.assertEqual(expected_implementation_head, heads["implementation_head_sha"])
+
+    def test_implementation_head_ignores_ledgers_but_tracks_transition_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            subprocess.run(["git", "init", "-b", "main"], cwd=repository, check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.name", "H0"], cwd=repository, check=True)
+            transition = repository / "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json"
+            transition.parent.mkdir(parents=True)
+            transition.write_text('{"version":1}', encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-m", "implementation"], cwd=repository, check=True, capture_output=True)
+            implementation = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            self.assertEqual(implementation, _git_implementation_head(repository))
+            event = repository / "config/control/harness/executions/E2026-08-11-H0-0-R1/events/E/0001.json"
+            event.parent.mkdir(parents=True)
+            event.write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-m", "ledger"], cwd=repository, check=True, capture_output=True)
+            self.assertEqual(implementation, _git_implementation_head(repository))
+            transition.write_text('{"version":2}', encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-m", "transition policy"], cwd=repository, check=True, capture_output=True)
+            policy_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            self.assertEqual(policy_head, _git_implementation_head(repository))
 
     def test_plan_keeps_c22_dry_run_blocked(self) -> None:
         reduced = self.reduce()

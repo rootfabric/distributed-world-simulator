@@ -34,6 +34,7 @@ def _git_implementation_head(root: Path) -> str:
         "tests/harness",
         "validation/harness",
         "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md",
+        "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json",
     ]
     output = subprocess.run(
         ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
