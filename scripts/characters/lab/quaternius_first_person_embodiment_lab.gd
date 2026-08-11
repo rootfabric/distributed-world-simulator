@@ -1,12 +1,15 @@
 class_name QuaterniusFirstPersonEmbodimentLab
-extends "res://scripts/characters/lab/quaternius_playable_network_equipment_lab.gd"
+extends Node3D
 
 const FirstPersonEmbodimentType = preload("res://scripts/characters/presentation/first_person_embodiment.gd")
 const GrabAuthorityBridgeType = preload("res://scripts/characters/interaction/first_person_grab_authority_bridge.gd")
+const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 
+var base_lab
 var first_person_embodiment
 var grab_authority_bridge
 var fpe_setup_result: Dictionary = {}
+var fpe_status_label: Label
 var _last_hotbar_item_id := ""
 var _last_equipment_fingerprint := ""
 var _last_upper_clothing_enabled := false
@@ -15,36 +18,55 @@ var _sandbox_targets: Array[RigidBody3D] = []
 
 
 func _ready() -> void:
-	super._ready()
+	base_lab = get_node_or_null("CH9_6BaseLab")
+	_build_status_overlay()
+	if base_lab == null:
+		fpe_setup_result = _failure("FPE_BASE_CH9_6_LAB_REQUIRED")
+		_refresh_status()
+		return
 	_setup_first_person_embodiment()
 	_spawn_local_grab_sandbox()
-	set_first_person_mode(true)
+	if base_lab.has_method("set_first_person_mode"):
+		base_lab.call("set_first_person_mode", true)
 	_refresh_status()
 
 
 func _process(_delta: float) -> void:
-	if first_person_embodiment == null or character_gameplay_controller == null:
+	if first_person_embodiment == null or base_lab == null:
+		return
+	if base_lab.character_gameplay_controller == null:
 		return
 	_sync_authoritative_hotbar_presentation()
 	_sync_equipment_viewmodel()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	super._unhandled_input(event)
+	if base_lab == null:
+		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
-	if character_gameplay_controller == null or character_gameplay_controller.inventory_open:
+	if base_lab.character_gameplay_controller == null or base_lab.character_gameplay_controller.inventory_open:
 		return
-	var hotbar_index := _hotbar_index_for_key(event.physical_keycode)
+	var hotbar_index: int = _hotbar_index_for_key(event.physical_keycode)
 	if hotbar_index < 0:
 		return
-	var result: Dictionary = character_gameplay_controller.select_hotbar(hotbar_index)
+	var result: Dictionary = base_lab.character_gameplay_controller.select_hotbar(hotbar_index)
 	_last_fpe_status_code = String(result.get("error_code", result.get("code", "OK")))
 	_refresh_status()
 	get_viewport().set_input_as_handled()
 
 
 func _setup_first_person_embodiment() -> void:
+	if (
+		base_lab.player == null
+		or base_lab.avatar == null
+		or base_lab.first_person_adapter == null
+		or base_lab.presentation_profile == null
+		or base_lab.first_person_camera == null
+	):
+		fpe_setup_result = _failure("FPE_BASE_PRESENTATION_NOT_READY")
+		return
+
 	grab_authority_bridge = GrabAuthorityBridgeType.new()
 	# CH9.6 has canonical network item/equipment authority but no accepted
 	# hand.grab world-physics command. Canonical targets therefore fail closed;
@@ -52,21 +74,21 @@ func _setup_first_person_embodiment() -> void:
 	grab_authority_bridge.setup(Callable(), true)
 
 	var source_skeleton: Skeleton3D = null
-	if layered_rig_adapter != null and layered_rig_adapter.has_method("resolve_pose_skeleton"):
-		var skeleton_value = layered_rig_adapter.call("resolve_pose_skeleton", avatar)
+	if base_lab.layered_rig_adapter != null and base_lab.layered_rig_adapter.has_method("resolve_pose_skeleton"):
+		var skeleton_value: Variant = base_lab.layered_rig_adapter.call("resolve_pose_skeleton", base_lab.avatar)
 		if skeleton_value is Skeleton3D:
 			source_skeleton = skeleton_value as Skeleton3D
 
 	first_person_embodiment = FirstPersonEmbodimentType.new()
 	first_person_embodiment.name = "FirstPersonEmbodiment"
-	player.add_child(first_person_embodiment)
+	base_lab.player.add_child(first_person_embodiment)
 	fpe_setup_result = first_person_embodiment.setup(
-		player,
-		avatar,
-		first_person_adapter,
-		presentation_profile,
-		first_person_camera,
-		third_person_camera,
+		base_lab.player,
+		base_lab.avatar,
+		base_lab.first_person_adapter,
+		base_lab.presentation_profile,
+		base_lab.first_person_camera,
+		base_lab.third_person_camera,
 		grab_authority_bridge,
 		source_skeleton
 	)
@@ -76,15 +98,15 @@ func _setup_first_person_embodiment() -> void:
 	# The first-person ray starts at the camera inside the player capsule. Keep
 	# self-collision out explicitly instead of relying on hit-from-inside details.
 	if first_person_embodiment.interaction_raycast != null:
-		first_person_embodiment.interaction_raycast.add_exception(player)
+		first_person_embodiment.interaction_raycast.add_exception(base_lab.player)
 	first_person_embodiment.interaction_result_changed.connect(_on_fpe_interaction_result_changed)
 	first_person_embodiment.grab_state_changed.connect(_on_fpe_grab_state_changed)
 
 
 func _sync_authoritative_hotbar_presentation() -> void:
-	if not network_ready:
+	if not bool(base_lab.network_ready):
 		return
-	var selected_item_id := character_gameplay_controller.get_selected_hotbar_item_id()
+	var selected_item_id: String = String(base_lab.character_gameplay_controller.get_selected_hotbar_item_id())
 	if selected_item_id == _last_hotbar_item_id:
 		return
 	_last_hotbar_item_id = selected_item_id
@@ -92,11 +114,11 @@ func _sync_authoritative_hotbar_presentation() -> void:
 		first_person_embodiment.clear_authoritative_hand_item("right")
 		_refresh_status()
 		return
-	var item = character_gameplay_controller.get_item(selected_item_id)
+	var item: Variant = base_lab.character_gameplay_controller.get_item(selected_item_id)
 	if item == null:
 		first_person_embodiment.clear_authoritative_hand_item("right")
 		return
-	var definition = character_gameplay_controller.get_definition(String(item.definition_id))
+	var definition: Variant = base_lab.character_gameplay_controller.get_definition(String(item.definition_id))
 	var display_name := String(item.definition_id)
 	var item_color := Color(0.65, 0.68, 0.72, 1.0)
 	if definition != null:
@@ -112,12 +134,12 @@ func _sync_authoritative_hotbar_presentation() -> void:
 
 
 func _sync_equipment_viewmodel() -> void:
-	if item_graph_equipment_source == null:
+	if base_lab.item_graph_equipment_source == null:
 		return
-	var snapshot = item_graph_equipment_source.get_snapshot()
+	var snapshot: Variant = base_lab.item_graph_equipment_source.get_snapshot()
 	if snapshot == null:
 		return
-	var fingerprint := snapshot.fingerprint()
+	var fingerprint: String = String(snapshot.fingerprint())
 	if fingerprint == _last_equipment_fingerprint:
 		return
 	_last_equipment_fingerprint = fingerprint
@@ -128,9 +150,9 @@ func _sync_equipment_viewmodel() -> void:
 		if raw_entry == null or String(raw_entry.profile_id) != UPPER_PROFILE_ID:
 			continue
 		upper_enabled = true
-		var item = character_gameplay_controller.get_item(String(raw_entry.item_id))
+		var item: Variant = base_lab.character_gameplay_controller.get_item(String(raw_entry.item_id))
 		if item != null:
-			var definition = character_gameplay_controller.get_definition(String(item.definition_id))
+			var definition: Variant = base_lab.character_gameplay_controller.get_definition(String(item.definition_id))
 			if definition != null:
 				sleeve_color = _metadata_color(definition.metadata, sleeve_color)
 		break
@@ -182,10 +204,22 @@ func _spawn_local_grab_sandbox() -> void:
 		_sandbox_targets.append(body)
 
 
-func _metadata_color(metadata_value, fallback: Color) -> Color:
+func _build_status_overlay() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "FPEStatusCanvas"
+	canvas.layer = 100
+	add_child(canvas)
+	fpe_status_label = Label.new()
+	fpe_status_label.name = "FPEStatusLabel"
+	fpe_status_label.position = Vector2(12.0, 500.0)
+	fpe_status_label.add_theme_font_size_override("font_size", 14)
+	canvas.add_child(fpe_status_label)
+
+
+func _metadata_color(metadata_value: Variant, fallback: Color) -> Color:
 	if not metadata_value is Dictionary:
 		return fallback
-	var raw_color = Dictionary(metadata_value).get("icon_color")
+	var raw_color: Variant = Dictionary(metadata_value).get("icon_color")
 	if raw_color is Color:
 		return raw_color as Color
 	if raw_color is Array and raw_color.size() >= 3:
@@ -234,9 +268,11 @@ func _on_fpe_grab_state_changed(_hand_id: String, _occupied: bool, _target_path:
 
 func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 	return {
-		"schema": "planet_simulator.quaternius_first_person_embodiment_lab.v1",
+		"schema": "planet_simulator.quaternius_first_person_embodiment_lab.v2",
+		"composition_mode": "CH9_6_SCENE_CHILD",
+		"base_lab_present": base_lab != null,
 		"setup": fpe_setup_result.duplicate(true),
-		"network_ready": network_ready,
+		"network_ready": bool(base_lab.network_ready) if base_lab != null else false,
 		"selected_hotbar_item_id": _last_hotbar_item_id,
 		"equipment_fingerprint": _last_equipment_fingerprint,
 		"upper_clothing_enabled": _last_upper_clothing_enabled,
@@ -248,19 +284,20 @@ func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 
 
 func _refresh_status() -> void:
-	super._refresh_status()
-	if status_label == null:
+	if fpe_status_label == null:
 		return
 	var embodiment_report: Dictionary = first_person_embodiment.create_report() if first_person_embodiment != null else {}
 	var grab_report: Dictionary = grab_authority_bridge.create_report() if grab_authority_bridge != null else {}
 	var sleeve_mode := "REAL_QUATERNIUS" if bool(embodiment_report.get("real_quaternius_sleeves_ready", false)) else "PROCEDURAL" if _last_upper_clothing_enabled else "OFF"
-	status_label.text += (
-		"\n\nFPE research prototype — FirstPersonEmbodiment"
+	var network_state := "READY" if base_lab != null and bool(base_lab.network_ready) else "BOOTSTRAPPING"
+	fpe_status_label.text = (
+		"FPE research prototype — FirstPersonEmbodiment"
 		+ "\nC — 1/3 лицо | Q — левая рука | E — правая рука | 1..0 — network hotbar"
 		+ "\nAim at floating cubes: Q/E grabs locally; press the same key again to release"
-		+ "\nviewmodel: %s | sleeves: %s | selected item: %s"
+		+ "\nnetwork: %s | viewmodel: %s | sleeves: %s | selected item: %s"
 		+ "\nworld grab authority: %s | local sandbox: %s | last: %s"
 	) % [
+		network_state,
 		String(embodiment_report.get("view_policy", "PENDING")),
 		sleeve_mode,
 		_last_hotbar_item_id if not _last_hotbar_item_id.is_empty() else "EMPTY",
@@ -268,3 +305,11 @@ func _refresh_status() -> void:
 		"ON" if bool(grab_report.get("local_sandbox_enabled", false)) else "OFF",
 		_last_fpe_status_code if not _last_fpe_status_code.is_empty() else "OK",
 	]
+
+
+func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
+	return {
+		"success": false,
+		"error_code": error_code,
+		"details": details.duplicate(true),
+	}
