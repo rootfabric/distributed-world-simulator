@@ -14,7 +14,7 @@ from .event_reducer import load_guard_context, reduce_events
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
 _EVIDENCE_MAP_SCHEMA_PREFIX = "distributed_world_simulator.harness_evidence_map"
-_H0_0_CHECKPOINT_DOC = "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R2_RU.md"
+_H0_0_CHECKPOINT_DOC = "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R3_RU.md"
 
 
 def _git_head(root: Path) -> str:
