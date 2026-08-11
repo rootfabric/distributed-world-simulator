@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1A-S3",
-  "decision": "FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING",
+  "decision": "FIX1_GRAPHICAL_PASS_WINDOWS_AUTOMATED_CONFIRMATION_PENDING",
   "branch": "feature/eco-evolutionary-ecology",
   "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "accepted_truth_baseline": {
@@ -18,14 +18,17 @@
     "result": "PASS_CLEAN"
   },
   "manual_graphical_review": {
-    "result": "FIX_REQUIRED_PRESENTATION_ONLY",
-    "observation": "Ecology outcome looked plausible, but diagnostic text visually intruded on the heatmap at the observed window size and the panel did not explain enough of the probe effect or selected-patch causality.",
+    "pre_fix_result": "FIX_REQUIRED_PRESENTATION_ONLY",
+    "pre_fix_observation": "Ecology outcome looked plausible, but diagnostic text visually intruded on the heatmap at the observed window size and the panel did not explain enough of the probe effect or selected-patch causality.",
     "truth_failure": false,
-    "issues": [
-      "diagnostic text and heatmap were not visually isolated",
-      "raw dictionaries/counts were hard to read",
-      "no explicit probe-vs-BASE summary",
-      "selected patch lacked response/limitation decomposition and a short causal explanation"
+    "fix1_rerun_result": "PASS_BY_USER_OBSERVATION",
+    "fix1_evidence": [
+      "heatmap and right-side diagnostics panel are visually separated and readable",
+      "temperature view is continuous and correctly described as probe-independent S1 environment truth",
+      "dominant limiting-factor view visibly separates WATER, NUTRIENT, LIGHT and FLOOD regions",
+      "selected-patch panel exposes ENV, RESP, LIMIT, ENERGY, BIO, RESULT, WHY and LOCAL VS BASE diagnostics",
+      "view switching works graphically",
+      "user reported the revised display as excellent"
     ]
   },
   "fix1": {
@@ -63,9 +66,9 @@
       "eco_p1a_s3_visual_lab.tscn": "ce0483139c63127c4684f45c47fb76e8ee551823",
       "eco_p1a_s3_visual_lab_acceptance.gd": "74ab4e559f6e85c85e95c5c413101788f63251cd"
     },
-    "windows_automated_confirmation": "PENDING",
-    "graphical_confirmation": "PENDING"
+    "windows_automated_confirmation": "PENDING_208_ASSERTION_RERUN",
+    "graphical_confirmation": "PASS_BY_USER_OBSERVATION"
   },
   "truth_boundary": "Fix1 exposes additional fields already contained in the accepted S2 resource balance and changes only derived presentation/diagnostics. Environment, resource equations, simulation hashes and dataset identity remain unchanged.",
-  "next": "Run RUN_ECO_P1A_S3_TESTS.ps1 on the exact Windows worktree; require S1 109/109, S2 235/235, S3 208/208 and unchanged hashes. Then rerun the graphical scene and confirm the panel is readable and the new causal/probe explanations are useful."
+  "next": "Run RUN_ECO_P1A_S3_TESTS.ps1 once on the exact Windows Fix1 checkout; require S1 109/109, S2 235/235, S3 208/208 and unchanged hashes. Graphical Fix1 review is already PASS. On Windows automated PASS, accept S3 and open P1A-S4."
 }
