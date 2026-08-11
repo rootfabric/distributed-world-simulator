@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_doctrine.v1",
+  "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
+  "trigger": "Any FIX_REQUIRED or repeated defect in MEDIUM/HIGH/CRITICAL work must establish a repair map before changing code again.",
+  "repair_map_fields": [
+    "affected_module",
+    "canonical_owner",
+    "entry_points",
+    "callers",
+    "callees",
+    "sibling_paths",
+    "existing_tests",
+    "missing_tests",
+    "public_or_internal_contracts",
+    "expected_shipped_behavior",
+    "relevant_history_or_evidence",
+    "root_cause_hypothesis",
+    "canonical_fix_location",
+    "why_not_symptom_patch"
+  ],
+  "rules": {
+    "failing_test_is_not_assumed_to_be_root_cause_location": true,
+    "fix_must_target_canonical_owner_when_possible": true,
+    "sibling_surfaces_must_be_checked": true,
+    "repair_scope_expansion_requires_director_replan": true,
+    "same_defect_second_failed_attempt_requires_escalation": true
+  },
+  "states": ["REPAIR_MAP_REQUIRED", "REPAIR_MAP_READY", "FIX_IN_PROGRESS", "FIX_VERIFIED", "BLOCKED"]
+}
