@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0016",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 16,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-11T05:46:30Z",
+  "actor": "INDEPENDENT_REVIEWER_SOL",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "7942bb984b75cf654dfe3038be6095e55de672dc",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-005.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/critiques/H0-0-WO-001-POSTBUILD-CRITIQUE-001.v1.json"
+  ],
+  "summary": "Exact-head review found that executable transition policy was omitted from implementation-head freshness. Mutable ledgers remain excluded; transition-table coverage is required.",
+  "blocker": "TRANSITION_TABLE_IMPLEMENTATION_SURFACE_REQUIRED"
+}
