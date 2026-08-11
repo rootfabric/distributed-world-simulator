@@ -28,9 +28,18 @@ def _validator(schema: dict[str, Any]):
 
 
 def read_json(path: Path) -> dict[str, Any]:
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ContractValidationError(f"JSON_DUPLICATE_KEY:{path}:{key}")
+            value[key] = item
+        return value
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=reject_duplicate_keys)
+    except ContractValidationError:
+        raise
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ContractValidationError(f"JSON_LOAD_FAILED:{path}:{exc}") from exc
     if not isinstance(value, dict):
         raise ContractValidationError(f"JSON_OBJECT_REQUIRED:{path}")

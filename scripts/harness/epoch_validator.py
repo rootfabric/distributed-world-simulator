@@ -24,7 +24,7 @@ def current_main_sha(root: Path, canonical_branch: str) -> str:
     raise ContractValidationError("CANONICAL_MAIN_REF_UNAVAILABLE")
 
 
-def validate_epoch(root: Path, epoch: dict[str, Any], canonical_branch: str, audit_continue: bool, main_sha: str | None = None) -> dict[str, Any]:
+def validate_epoch(root: Path, epoch: dict[str, Any], canonical_branch: str, audit: dict[str, Any] | None, main_sha: str | None = None) -> dict[str, Any]:
     base_sha = epoch["base_sha"]
     actual_main = main_sha or current_main_sha(root, canonical_branch)
     if len(actual_main) != 40:
@@ -36,7 +36,16 @@ def validate_epoch(root: Path, epoch: dict[str, Any], canonical_branch: str, aud
         return {"status": "EXACT_BASE", "base_sha": base_sha, "main_sha": actual_main,
                 "action": "CONTINUE", "reason": "CANONICAL_MAIN_EQUALS_EPOCH_BASE"}
     code, _ = _git(root, "merge-base", "--is-ancestor", base_sha, actual_main)
-    if code == 0 and audit_continue:
+    audit_matches = bool(
+        audit
+        and audit.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"
+        and audit.get("base_sha") == base_sha
+        and audit.get("main_sha") == actual_main
+        and audit.get("decision") == "CONTINUE"
+        and audit.get("pc0") == "NON_RED"
+        and audit.get("directional_pc0") == "NON_RED"
+    )
+    if code == 0 and audit_matches:
         return {"status": "MAIN_MOVED_AUDIT_CONTINUE", "base_sha": base_sha, "main_sha": actual_main,
                 "action": "CONTINUE", "reason": "RECORDED_AUDIT_PERMITS_CONTINUATION"}
     if code == 0:

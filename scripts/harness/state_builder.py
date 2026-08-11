@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import subprocess
+import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
-from .event_reducer import reduce_events
+from .event_reducer import load_guard_context, reduce_events
 
 
 def _git_head(root: Path) -> str:
@@ -34,6 +36,44 @@ def _git_path_head(root: Path, path: Path) -> str:
     return value
 
 
+def _git(root: Path, *args: str) -> tuple[int, str]:
+    output = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True, check=False)
+    return output.returncode, output.stdout.strip()
+
+
+def _validate_event_git_provenance(root: Path, event_paths: list[Path], events: list[dict[str, Any]], current_head: str) -> str:
+    if len(event_paths) != len(events):
+        raise ContractValidationError("EVENT_PATH_COUNT_MISMATCH")
+    latest_add = ""
+    for path, event in zip(event_paths, events):
+        relative = path.resolve().relative_to(root.resolve()).as_posix()
+        code, dirty = _git(root, "status", "--porcelain", "--", relative)
+        if code != 0 or dirty:
+            raise ContractValidationError(f"EVENT_WORKTREE_MUTATION_DETECTED:{relative}")
+        code, history = _git(root, "log", "--format=%H", "--", relative)
+        commits = [line for line in history.splitlines() if line]
+        if code != 0 or len(commits) != 1:
+            raise ContractValidationError(f"EVENT_IMMUTABILITY_NOT_PROVEN:{relative}")
+        code, add_commit = _git(root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        if code != 0 or len(add_commit) != 40 or add_commit != commits[0]:
+            raise ContractValidationError(f"EVENT_ADD_COMMIT_NOT_PROVEN:{relative}")
+        code, _ = _git(root, "merge-base", "--is-ancestor", add_commit, current_head)
+        if code != 0:
+            raise ContractValidationError(f"EVENT_LEDGER_NOT_REACHABLE:{relative}")
+        code, _ = _git(root, "cat-file", "-e", f"{event['head_sha']}^{{commit}}")
+        if code != 0:
+            raise ContractValidationError(f"EVENT_SUBJECT_HEAD_UNREACHABLE:{event['event_id']}")
+        code, _ = _git(root, "merge-base", "--is-ancestor", event["head_sha"], current_head)
+        if code != 0:
+            raise ContractValidationError(f"EVENT_SUBJECT_NOT_ANCESTOR:{event['event_id']}")
+        latest_add = add_commit
+    event_dir = event_paths[0].parent.resolve().relative_to(root.resolve()).as_posix()
+    code, deleted = _git(root, "log", "--diff-filter=D", "--name-only", "--format=", "--", event_dir)
+    if code != 0 or deleted.strip():
+        raise ContractValidationError("EVENT_LEDGER_DELETION_DETECTED")
+    return latest_add
+
+
 def _json_files(directory: Path) -> list[Path]:
     return sorted(directory.rglob("*.json")) if directory.exists() else []
 
@@ -53,6 +93,10 @@ def _validate_semantics(bundle: ContractBundle, epoch: dict[str, Any], work_orde
     if work_order.get("required_review_roles") != expected_roles:
         raise ContractValidationError("RISK_REQUIRED_ROLES_MISMATCH")
     if work_order["risk_class"] in {"MEDIUM", "HIGH", "CRITICAL"}:
+        if not work_order.get("review_required"):
+            raise ContractValidationError("RISK_REVIEW_REQUIRED")
+        if not work_order.get("evidence_map_required"):
+            raise ContractValidationError("RISK_EVIDENCE_MAP_REQUIRED")
         brief = work_order.get("design_brief", {})
         missing = [field for field in bundle.contracts["review_policy"]["pre_build"]["design_brief_fields"] if not brief.get(field)]
         if missing:
@@ -62,34 +106,65 @@ def _validate_semantics(bundle: ContractBundle, epoch: dict[str, Any], work_orde
             normalized = raw_path.replace("\\", "/")
             if normalized.startswith("/") or ":" in normalized or ".." in normalized.split("/"):
                 raise ContractValidationError("SCOPE_PATH_NOT_REPOSITORY_RELATIVE")
+            static_prefix = normalized
+            for marker in ("*", "?", "["):
+                static_prefix = static_prefix.split(marker, 1)[0]
+            candidate = (bundle.root / static_prefix.rstrip("/")).resolve()
+            try:
+                candidate.relative_to(bundle.root.resolve())
+            except ValueError as exc:
+                raise ContractValidationError("SCOPE_PATH_ESCAPES_REPOSITORY") from exc
 
 
-def _validate_repair_map(bundle: ContractBundle, execution_dir: Path, work_order_id: str) -> dict[str, Any] | None:
-    candidates = []
+def _validate_repair_map(bundle: ContractBundle, execution_dir: Path, work_order_id: str, evidence_paths: list[str]) -> dict[str, Any] | None:
+    candidates: list[tuple[str, dict[str, Any]]] = []
     for path in _json_files(execution_dir / "repairs"):
         value = read_json(path)
         if value.get("schema") == "distributed_world_simulator.harness_repair_map.v1" and value.get("work_order_id") == work_order_id:
-            candidates.append(value)
+            relative = path.resolve().relative_to(bundle.root.resolve()).as_posix()
+            candidates.append((relative, value))
     if not candidates:
         return None
-    latest = candidates[-1]
+    referenced = [value for relative, value in candidates if relative in {item.replace("\\", "/") for item in evidence_paths}]
+    latest = referenced[-1] if referenced else candidates[-1][1]
     missing = [field for field in bundle.contracts["repair_doctrine"]["repair_map_fields"] if not latest.get(field)]
     if missing:
         raise ContractValidationError(f"REPAIR_MAP_FIELD_MISSING:{','.join(missing)}")
     return latest
 
 
-def _load_reviews(execution_dir: Path, work_order: dict[str, Any]) -> list[dict[str, Any]]:
+def _load_reviews(root: Path, execution_dir: Path, work_order: dict[str, Any]) -> list[dict[str, Any]]:
     reviews = []
-    required = {"schema", "work_order_id", "risk_class", "reviewed_head_sha", "reviewer", "verdict", "required_fixes", "rank_up_moves", "evidence_gaps", "risk_assessment"}
+    review_ids: set[str] = set()
+    required = {"schema", "review_id", "review_type", "work_order_id", "risk_class", "reviewed_head_sha", "reviewer", "verdict", "reviewed_at_utc", "required_fixes", "rank_up_moves", "evidence_gaps", "risk_assessment"}
     for path in _json_files(execution_dir / "reviews"):
         value = read_json(path)
         if value.get("schema") != "distributed_world_simulator.harness_review_result.v1" or required - value.keys():
             raise ContractValidationError(f"REVIEW_RESULT_INVALID:{path.name}")
+        if value["review_id"] in review_ids:
+            raise ContractValidationError("REVIEW_ID_NOT_UNIQUE")
+        review_ids.add(value["review_id"])
         if value["work_order_id"] != work_order["work_order_id"] or value["risk_class"] != work_order["risk_class"]:
             raise ContractValidationError("REVIEW_WORK_ORDER_OR_RISK_MISMATCH")
         if value["verdict"] not in {"PASS", "FAIL", "INSUFFICIENT_EVIDENCE"}:
             raise ContractValidationError("REVIEW_VERDICT_INVALID")
+        if value["review_type"] not in {"PRE_BUILD_DESIGN_AUTHORIZATION", "POST_BUILD_IMPLEMENTATION_REVIEW", "POST_BUILD_EXACT_HEAD_REVIEW"}:
+            raise ContractValidationError("REVIEW_TYPE_INVALID")
+        if not re.fullmatch(r"[0-9a-f]{40}", value["reviewed_head_sha"]):
+            raise ContractValidationError("REVIEW_HEAD_SHA_INVALID")
+        if "IMPLEMENTER" in value["reviewer"].upper() or not value["reviewer"].strip():
+            raise ContractValidationError("REVIEWER_INDEPENDENCE_INVALID")
+        if any(not isinstance(value[field], list) or any(not isinstance(item, str) for item in value[field]) for field in ("required_fixes", "rank_up_moves", "evidence_gaps")):
+            raise ContractValidationError("REVIEW_SECTIONS_INVALID")
+        if not isinstance(value["risk_assessment"], str) or not value["risk_assessment"]:
+            raise ContractValidationError("REVIEW_RISK_ASSESSMENT_INVALID")
+        try:
+            datetime.fromisoformat(value["reviewed_at_utc"].replace("Z", "+00:00"))
+        except (AttributeError, ValueError) as exc:
+            raise ContractValidationError("REVIEW_TIMESTAMP_INVALID") from exc
+        code, _ = _git(root, "cat-file", "-e", f"{value['reviewed_head_sha']}^{{commit}}")
+        if code != 0:
+            raise ContractValidationError("REVIEW_HEAD_UNREACHABLE")
         reviews.append(value)
     return reviews
 
@@ -102,13 +177,16 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if transition_table.get("schema") != "distributed_world_simulator.harness_transition_table.v1":
         raise ContractValidationError("TRANSITION_TABLE_INVALID")
     work_orders = []
+    guard_context = load_guard_context(root, execution_dir)
     for path in _json_files(execution_dir / "work-orders"):
         work_order = read_json(path)
         bundle.validate("work_order_schema", work_order, f"work_order:{path.name}")
         _validate_semantics(bundle, epoch, work_order)
         event_dir = execution_dir / "events" / work_order["work_order_id"]
-        events = [read_json(event) for event in _json_files(event_dir)]
-        work_orders.append({"definition": work_order, "reduced": reduce_events(bundle, work_order, events, transition_table), "event_dir": event_dir})
+        event_paths = _json_files(event_dir)
+        events = [read_json(event) for event in event_paths]
+        work_orders.append({"definition": work_order, "events": events, "event_paths": event_paths,
+                            "reduced": reduce_events(bundle, work_order, events, transition_table, guard_context), "event_dir": event_dir})
     if not work_orders:
         raise ContractValidationError("WORK_ORDER_REQUIRED")
     active = work_orders[-1]
@@ -125,11 +203,19 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     for item in evidence:
         if item["work_order_id"] != active["definition"]["work_order_id"] or item["checkpoint"] != active["definition"]["goal_checkpoint"] or item["risk_class"] != active["definition"]["risk_class"]:
             raise ContractValidationError("EVIDENCE_IDENTITY_MISMATCH")
-    reviews = _load_reviews(execution_dir, active["definition"])
-    repair_map = _validate_repair_map(bundle, execution_dir, active["definition"]["work_order_id"])
+    reviews = _load_reviews(root, execution_dir, active["definition"])
+    repair_map = _validate_repair_map(
+        bundle,
+        execution_dir,
+        active["definition"]["work_order_id"],
+        active["events"][-1].get("evidence_paths", []),
+    )
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
-    audit_continue = any(event.get("event_type") == "AUDIT_COMPLETED" and event.get("work_state") == "AUDITED" for event in [read_json(path) for path in _json_files(active["event_dir"])])
-    epoch_validation = validate_epoch(root, epoch, canonical_branch, audit_continue)
+    current_head = _git_head(root)
+    ledger_head = _validate_event_git_provenance(root, active["event_paths"], active["events"], current_head)
+    audits = [item for item in guard_context["documents"].values() if item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"]
+    exact_audit = audits[-1] if audits else None
+    epoch_validation = validate_epoch(root, epoch, canonical_branch, exact_audit)
     snapshot_mismatch = not active["reduced"]["snapshot_matches_authoritative_state"]
     findings = []
     if snapshot_mismatch:
@@ -141,9 +227,15 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if active["reduced"]["state"] == "FIX_REQUIRED" and repair_map is None:
         findings.append("REPAIR_MAP_REQUIRED")
     blocking_attention = [item for item in attention if item["status"] == "OPEN" and item.get("blocking", False)]
+    decision_ids: set[str] = set()
+    for item in attention:
+        if item["decision_id"] in decision_ids:
+            raise ContractValidationError("HUMAN_ATTENTION_ID_NOT_UNIQUE")
+        decision_ids.add(item["decision_id"])
+        if item["program"] != active["definition"]["program"] or item["checkpoint"] != active["definition"]["goal_checkpoint"] or item["risk_class"] != active["definition"]["risk_class"]:
+            raise ContractValidationError("HUMAN_ATTENTION_IDENTITY_MISMATCH")
     if blocking_attention:
         findings.append("BLOCKING_HUMAN_ATTENTION")
-    current_head = _git_head(root)
     current_branch = _git_branch(root)
     if current_branch != active["definition"]["branch"]:
         findings.append("WORK_ORDER_BRANCH_NOT_CHECKED_OUT")
@@ -157,11 +249,26 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     review_state = "READY" if post_build_state == "PASS" else "PENDING_POST_BUILD_REVIEW"
     if evidence and evidence[-1]["evidence_head_sha"] != current_head:
         findings.append("EVIDENCE_HEAD_STALE")
+    checkpoint_blockers = []
+    required_predicates = active["definition"]["required_predicates"]
+    missing_predicates = [item for item in required_predicates if item not in active["reduced"]["completed_predicates"]]
+    if missing_predicates:
+        checkpoint_blockers.append("REQUIRED_PREDICATES_INCOMPLETE")
+    if post_build_state != "PASS":
+        checkpoint_blockers.append("POST_BUILD_REVIEW_NOT_FRESH_PASS")
+    if not evidence:
+        checkpoint_blockers.append("EVIDENCE_MAP_MISSING")
+    elif evidence[-1]["evidence_head_sha"] != current_head or evidence[-1]["review_verdict"] != "PASS":
+        checkpoint_blockers.append("EVIDENCE_MAP_NOT_FRESH_PASS")
+    if blocking_attention:
+        checkpoint_blockers.append("BLOCKING_HUMAN_ATTENTION")
+    if epoch_validation["action"] != "CONTINUE":
+        checkpoint_blockers.append("EPOCH_NOT_CONTINUABLE")
     return {
         "schema": "distributed_world_simulator.control_development_output.v1",
         "source": "GIT_ONLY_WORKER_DATA",
         "repository": {"event_subject_head_sha": active["reduced"]["event_subject_head_sha"],
-                       "event_ledger_head_sha": _git_path_head(root, active["event_dir"]),
+                       "event_ledger_head_sha": ledger_head,
                        "current_branch_head_sha": current_head,
                        "current_branch": current_branch,
                        "origin_main_head_sha": epoch_validation["main_sha"],
@@ -177,6 +284,8 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         "human_attention": {"open_items": [item for item in attention if item["status"] == "OPEN"], "all_items": attention},
         "findings": findings,
         "continuation_blocked": bool(findings) or active["reduced"]["state"] in {"FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"},
+        "checkpoint_proposal_blocked": bool(checkpoint_blockers),
+        "checkpoint_blockers": checkpoint_blockers,
         "runtime_authorized": False,
         "verification_commands": [
             "python -m unittest discover -s tests/harness -v",

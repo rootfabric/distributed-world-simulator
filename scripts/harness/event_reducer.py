@@ -2,17 +2,128 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from .contracts import ContractBundle, ContractValidationError
+from .contracts import ContractBundle, ContractValidationError, read_json
 
 
-def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: list[dict[str, Any],], transition_table: dict[str, Any]) -> dict[str, Any]:
+def load_guard_context(root: Path, execution_dir: Path) -> dict[str, Any]:
+    documents: dict[str, dict[str, Any]] = {}
+    for area in ("repairs", "reviews", "evidence", "human-attention", "audits"):
+        directory = execution_dir / area
+        if not directory.exists():
+            continue
+        for path in sorted(directory.rglob("*.json")):
+            documents[path.resolve().relative_to(root.resolve()).as_posix()] = read_json(path)
+    return {"root": root, "execution_dir": execution_dir, "documents": documents}
+
+
+def _referenced_documents(event: dict[str, Any], context: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if context is None:
+        return []
+    documents = context["documents"]
+    return [documents[path.replace("\\", "/")] for path in event.get("evidence_paths", []) if path.replace("\\", "/") in documents]
+
+
+def _is_complete_repair(document: dict[str, Any], bundle: ContractBundle, work_order_id: str) -> bool:
+    return (
+        document.get("schema") == "distributed_world_simulator.harness_repair_map.v1"
+        and document.get("work_order_id") == work_order_id
+        and document.get("state") in {"REPAIR_MAP_READY", "FIX_IN_PROGRESS", "FIX_VERIFIED"}
+        and all(document.get(field) for field in bundle.contracts["repair_doctrine"]["repair_map_fields"])
+    )
+
+
+def _enforce_guard(
+    bundle: ContractBundle,
+    work_order: dict[str, Any],
+    previous_state: str,
+    event: dict[str, Any],
+    ordered: list[dict[str, Any]],
+    index: int,
+    context: dict[str, Any] | None,
+) -> None:
+    transition = (previous_state, event["work_state"])
+    documents = _referenced_documents(event, context)
+    if transition == ("BLOCKED", "DISPATCHED"):
+        existing_paths = []
+        if context:
+            root = context["root"]
+            existing_paths = [path for path in event.get("evidence_paths", []) if (root / path).exists()]
+        if event["actor"] != "DIRECTOR" or not existing_paths:
+            raise ContractValidationError("GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING")
+    elif transition == ("WAITING_HUMAN", "DISPATCHED"):
+        resolved = any(
+            item.get("schema") == "distributed_world_simulator.harness_human_attention.v1"
+            and item.get("status") == "RESOLVED"
+            and item.get("resolution")
+            for item in documents
+        )
+        if event["actor"] != "DIRECTOR" or not resolved:
+            raise ContractValidationError("GUARDED_HUMAN_REDISPATCH_RESOLUTION_MISSING")
+    elif transition == ("FIX_REQUIRED", "DISPATCHED"):
+        next_event = ordered[index + 1] if index + 1 < len(ordered) else None
+        corrected_premature = (
+            next_event is not None
+            and next_event["event_type"] == "FIX_REQUIRED"
+            and next_event["work_state"] == "FIX_REQUIRED"
+            and next_event.get("actor") in {"REVIEWER", "DIRECTOR", "INDEPENDENT_REVIEWER_SOL"}
+            and bool(next_event.get("blocker"))
+        )
+        all_documents = list(context["documents"].values()) if context else []
+        direct_repair_ready = any(_is_complete_repair(item, bundle, work_order["work_order_id"]) for item in documents)
+        referenced_resolutions = [
+            item for item in documents
+            if item.get("schema") == "distributed_world_simulator.harness_repair_resolution.v1"
+            and item.get("work_order_id") == work_order["work_order_id"]
+            and item.get("state") == "FIX_VERIFIED"
+            and item.get("reviewed_head_sha") == event["head_sha"]
+            and item.get("remaining_required_fixes") == []
+        ]
+        chained_repair_ready = any(
+            resolution.get("repair_id") == repair.get("repair_id")
+            and _is_complete_repair(repair, bundle, work_order["work_order_id"])
+            for resolution in referenced_resolutions
+            for repair in all_documents
+        )
+        repair_ready = direct_repair_ready or chained_repair_ready
+        review_pass = any(
+            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
+            and item.get("work_order_id") == work_order["work_order_id"]
+            and item.get("verdict") == "PASS"
+            and item.get("reviewed_head_sha") == event["head_sha"]
+            for item in documents
+        )
+        if not corrected_premature and not (event["actor"] == "DIRECTOR" and repair_ready and review_pass):
+            raise ContractValidationError("GUARDED_FIX_REDISPATCH_EVIDENCE_MISSING")
+    elif transition == ("AUDITED", "CHECKPOINT_PROPOSED"):
+        evidence_pass = any(
+            item.get("schema") == "distributed_world_simulator.harness_evidence_map.v1"
+            and item.get("work_order_id") == work_order["work_order_id"]
+            and item.get("review_verdict") == "PASS"
+            and item.get("pc0") == "NON_RED"
+            and item.get("directional_pc0") == "NON_RED"
+            and item.get("evidence_head_sha") == event["head_sha"]
+            for item in documents
+        )
+        review_pass = any(
+            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
+            and item.get("verdict") == "PASS"
+            and item.get("reviewed_head_sha") == event["head_sha"]
+            for item in documents
+        )
+        if event["actor"] != "DIRECTOR" or not evidence_pass or not review_pass:
+            raise ContractValidationError("GUARDED_CHECKPOINT_PROPOSAL_EVIDENCE_MISSING")
+
+
+def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: list[dict[str, Any],], transition_table: dict[str, Any], guard_context: dict[str, Any] | None = None) -> dict[str, Any]:
     if not events:
         raise ContractValidationError("EVENT_LEDGER_EMPTY")
     expected_sequence = 1
     state = "NONE"
     completed_predicates: list[str] = []
+    observed_predicates: list[str] = []
     open_blocker: str | None = None
     event_ids: set[str] = set()
     for event in events:
@@ -38,6 +149,7 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
             raise ContractValidationError("EVENT_TYPE_STATE_PAIR_INVALID")
         if event["work_state"] not in transition_table["allowed_state_transitions"].get(state, []):
             raise ContractValidationError(f"STATE_TRANSITION_INVALID:{state}->{event['work_state']}")
+        _enforce_guard(bundle, work_order, state, event, ordered, index, guard_context)
         try:
             recorded = datetime.fromisoformat(event["recorded_at_utc"].replace("Z", "+00:00"))
         except ValueError as exc:
@@ -45,14 +157,13 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         if previous_time and recorded < previous_time:
             raise ContractValidationError("EVENT_TIMESTAMP_DECREASES")
         previous_time = recorded
-        if state == "FIX_REQUIRED" and event["work_state"] == "DISPATCHED":
-            has_final_review = any("final-resolution" in path or "/reviews/" in path for path in event.get("evidence_paths", []))
-            is_corrected_premature_dispatch = index + 1 < len(ordered) and ordered[index + 1]["event_type"] == "FIX_REQUIRED"
-            if not has_final_review and not is_corrected_premature_dispatch:
-                raise ContractValidationError("GUARDED_REDISPATCH_EVIDENCE_MISSING")
         state = event["work_state"]
         predicate = event.get("predicate")
-        if predicate and predicate not in completed_predicates:
+        if predicate and predicate not in observed_predicates:
+            observed_predicates.append(predicate)
+        successful_predicate_event = event["event_type"] in {"IMPLEMENTATION_COMMITTED", "PREDICATE_VERIFIED", "AUDIT_COMPLETED", "CHECKPOINT_PROPOSED"}
+        successful_exit = event.get("exit_code", 0) == 0
+        if predicate and successful_predicate_event and successful_exit and predicate not in completed_predicates:
             completed_predicates.append(predicate)
         if event["event_type"] in {"BLOCKED", "FIX_REQUIRED", "WAITING_HUMAN", "EPOCH_INVALIDATED"}:
             open_blocker = event.get("blocker") or event["event_type"]
@@ -65,6 +176,7 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         "last_event_sequence": expected_sequence - 1,
         "last_completed_predicate": completed_predicates[-1] if completed_predicates else None,
         "completed_predicates": completed_predicates,
+        "observed_predicates": observed_predicates,
         "open_blocker": open_blocker,
         "event_subject_head_sha": ordered[-1]["head_sha"],
         "last_event_id": ordered[-1]["event_id"],

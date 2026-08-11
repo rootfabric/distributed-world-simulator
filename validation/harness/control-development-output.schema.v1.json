@@ -26,10 +26,53 @@
       "properties": {
         "code": {"enum": ["INVALID_INVOCATION", "CONTRACT_OR_DEPENDENCY_INVALID", "GIT_STATE_INVALID", "EXECUTION_STATE_INVALID", "INTERNAL_ERROR"]},
         "detail": {"type": "string"}
-      }
+      },
+      "additionalProperties": false
+    },
+    "source": {"const": "GIT_ONLY_WORKER_DATA"},
+    "repository": {
+      "type": "object",
+      "required": ["event_subject_head_sha", "event_ledger_head_sha", "current_branch_head_sha", "current_branch", "origin_main_head_sha", "worktree_dirty"],
+      "properties": {
+        "event_subject_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "event_ledger_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "current_branch_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "current_branch": {"type": "string", "minLength": 1},
+        "origin_main_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "worktree_dirty": {"type": "boolean"}
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [
-    {"if": {"properties": {"ok": {"const": false}}}, "then": {"required": ["error", "exit_codes"]}}
+    {
+      "if": {"properties": {"ok": {"const": false}}},
+      "then": {"required": ["error", "exit_codes"]}
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}}},
+      "then": {
+        "required": [
+          "exit_codes", "source", "repository", "epoch", "active_work_order", "reduced_work_order",
+          "review", "human_attention", "findings", "continuation_blocked", "checkpoint_proposal_blocked",
+          "checkpoint_blockers", "runtime_authorized", "verification_commands", "next"
+        ],
+        "properties": {
+          "command": {"enum": ["STATUS", "PLAN", "RESUME"]},
+          "runtime_authorized": {"const": false},
+          "continuation_blocked": {"type": "boolean"},
+          "checkpoint_proposal_blocked": {"type": "boolean"},
+          "checkpoint_blockers": {"type": "array", "items": {"type": "string"}},
+          "findings": {"type": "array", "items": {"type": "string"}},
+          "verification_commands": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "epoch": {"type": "object"},
+          "active_work_order": {"type": "object"},
+          "reduced_work_order": {"type": "object"},
+          "review": {"type": "object"},
+          "human_attention": {"type": "object"},
+          "next": {"type": "object"}
+        }
+      }
+    }
   ]
 }
