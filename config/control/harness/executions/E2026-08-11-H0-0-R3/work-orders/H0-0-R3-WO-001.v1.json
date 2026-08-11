@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R3",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "VERIFIED",
+  "state": "FIX_REQUIRED",
   "work_order_type": "CONTROL",
   "base_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
   "branch": "control/h0-closed-loop-development-r3",
@@ -73,7 +73,7 @@
     "Any gameplay/runtime/domain path would need to change",
     "Any canonical harness schema or checkpoint contract would need to change",
     "Any historical R1/R2 execution record would need to enter or mutate in the R3 tree",
-    "Current main moves away from the epoch base before checkpoint proposal",
+    "Current main moves away from the epoch base before checkpoint proposal unless an exact referenced NON_RED epoch audit authorizes descendant-main continuation",
     "PC0 has an unresolved blocking RED",
     "A blocking Human Attention decision is required"
   ],
@@ -98,10 +98,10 @@
     "expected_risks": ["Accidentally retaining an R2 epoch-specific path in executable code or tests", "Historical execution evidence entering the R3 active tree", "A repair review being mistaken for final checkpoint authorization", "Main moving again before evidence freeze"],
     "validation_plan": ["Require main..R3 net diff to contain only allowed H0 control/harness paths and no R1/R2 execution subtree.", "Run phase-independent unit tests on exact R3 checkout.", "Run Status, Plan and Resume from the exact R3 checkout and a clean clone.", "Prove malformed/stale historical review/evidence claims fail closed before active Work Order filtering.", "Run standard and directional PC0 and require NON_RED.", "Require fresh exact-head Evidence Map, final Reviewer PASS and Verifier PASS before checkpoint proposal."]
   },
-  "repair_context_required": false,
+  "repair_context_required": true,
   "evidence_map_required": true,
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "CONTROL_DOCS_MERGE_APPROVAL"],
   "issued_at_utc": "2026-08-11T10:23:00Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "R3 verification is complete on a fresh Windows clone at a3cde435e0e59b1de74d411b502be98f6e3a88ab. All 13 required predicates are present in the append-only ledger: 12 from the exact clean-clone harness/public-command run plus PC0_NON_RED from GitHub Project Control. The Work Order is VERIFIED; audit, final Evidence Map, post-build Reviewer/Verifier and final PC0 freshness remain required before checkpoint proposal."
+  "notes": "The clean-clone verification completed all required H0.0 predicates, but audit fencing against main 8c388d / registry generation 68 exposed a composability defect: state_builder rejects registry mismatch before epoch_validator can apply a referenced audited continuation. Repair map H0-0-R3-WO-001-AUDITED-REGISTRY-CONTINUATION-001 is active. Checkpoint progression is fail-closed until the canonical state-builder repair, focused regression and independent repair review pass."
 }
