@@ -76,6 +76,11 @@ Invoke-GodotCheck -Name "M7 owner-authoritative movement boundary" -Arguments @(
     "--script", "res://tests/network/test_m7_owner_movement_authority.gd"
 )
 
+Invoke-GodotCheck -Name "M7 owner-authority item drop + same-revision rollback" -Arguments @(
+    "--headless", "--path", $ProjectRoot,
+    "--script", "res://tests/network/test_m7_owner_authority_item_drop_projection.gd"
+)
+
 Invoke-GodotCheck -Name "FIX10 fix7b arrival-paced authority input playout" -Arguments @(
     "--headless", "--path", $ProjectRoot,
     "--script", "res://tests/network/test_m7_fix10_fix7b_arrival_playout.gd"
@@ -169,13 +174,14 @@ if (-not $FocusedOnly) {
 Write-Host ""
 Write-Host "M7 FIX10 sequence-aware reconciliation validation passed." -ForegroundColor Green
 if ($FocusedOnly) {
-    Write-Host "FocusedOnly parse-checks the owner-authority PowerShell diagnostic, validates the experimental OWNER_AUTHORITATIVE_VALIDATED movement boundary, then the existing FIX10 fix8/fix7b/FIX6 scheduling, ACK, render presentation, remote snapshot and FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
+    Write-Host "FocusedOnly parse-checks the owner-authority diagnostic, validates OWNER_AUTHORITATIVE_VALIDATED movement plus server-authoritative item drop/same-revision prediction rollback, then the existing FIX10/FIX9/FIX8/NX4 regressions." -ForegroundColor Yellow
 }
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
 Write-Host "Final FIX10 server-predicted acceptance remains unchanged until owner-authority visual diagnostics are explicitly accepted." -ForegroundColor Yellow
 Write-Host "Owner movement target: local transform is authored by the owning client, PLAYER_STATE is validated by the server and relayed through the existing remote snapshot/interpolation path; ownership/items/world authority remain server-side." -ForegroundColor Yellow
+Write-Host "Item projection target: optimistic item presentation may change without changing authoritative revision; rejected predictions must reapply the same-revision canonical graph so ghost inventory ownership cannot survive rollback." -ForegroundColor Yellow
 Write-Host "FIX10 fix8 target: exact or conservatively phase-equivalent authoritative ACKs confirm local owner prediction without rewind/replay or visible correction; real kinematic divergence keeps the authoritative correction path." -ForegroundColor Yellow
 Write-Host "FIX10 fix7b target: client_tick is ACK identity/diagnostic metadata only; available movement input applies on the nearest server fixed tick; queue pressure recovery may never turn a dropped client_tick gap into artificial authority playout delay." -ForegroundColor Yellow
 Write-Host "FIX10 fix7 target remains: local simulation stays deterministic 60 Hz while visible presentation updates every render frame." -ForegroundColor Yellow
