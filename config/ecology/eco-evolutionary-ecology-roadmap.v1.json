@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R6-2026-08-11",
+  "revision": "ECO-R7-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
@@ -8,13 +8,19 @@
   "current_checkpoint": "ECO.P1A",
   "current_step": "P1A-S3",
   "last_accepted_step": "P1A-S2",
-  "mission": "Prove that continuous environmental fields plus resource competition, mutation, dispersal and history can generate reusable plant species and population patterns without hardcoded biome placement.",
+  "mission": "Prove that continuous environmental fields plus resource competition, mutation, dispersal, developmental programs and history can generate reusable plant species whose ecological strategies and visible forms emerge without hardcoded biome or tree/bush/grass placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
     "SPECIES_ARE_DISCOVERED_NOT_PLACED",
     "POPULATION_IS_TRUTH_INDIVIDUAL_IS_REPRESENTATION",
     "ECOLOGY_DEPENDS_ON_HISTORY",
     "FITNESS_EMERGES_FROM_RESOURCES_AND_COSTS",
+    "TREE_BUSH_GRASS_ARE_EMERGENT_MORPHOLOGIES_NOT_CANONICAL_TYPES",
+    "GENOME_DEFINES_DEVELOPMENT_PROGRAM_NOT_MESH_ASSET",
+    "PHENOTYPE_EQUALS_GENOME_X_ENVIRONMENT_X_AGE_X_HISTORY_X_INDIVIDUAL_SEED",
+    "MORPHOLOGY_TRAITS_MUST_PAY_RESOURCE_COSTS_BEFORE_SELECTION",
+    "GROWTH_GRAPH_IS_DERIVED_UNLESS_INDIVIDUAL_IS_PROMOTED",
+    "SEED_CARRIES_HEREDITY_AND_DETERMINISTIC_INDIVIDUAL_SEED_NOT_PREBUILT_MODEL",
     "ECOLOGY_DOES_NOT_OWN_GEOLOGY_HYDROLOGY_MATTER_AUTHORITY_TRANSPORT_PERSISTENCE_QUERY_OR_GLOBAL_WORK_BUDGET",
     "REPRESENTATION_LEVEL_NE_SPECIES_OR_POPULATION_IDENTITY"
   ],
@@ -23,12 +29,13 @@
     "grid": [128, 128],
     "features": ["river", "wet_lowland", "dry_plateau", "sunny_slope", "shaded_slope", "flood_prone_patches"],
     "environment_fields": ["temperature_c", "soil_moisture", "sunlight", "nutrients", "flood_frequency"],
-    "initial_plant_traits": ["height", "growth_rate", "root_depth", "water_preference", "water_tolerance_width", "shade_tolerance", "seed_count", "seed_dispersal_distance", "lifespan"]
+    "initial_plant_traits": ["height", "growth_rate", "root_depth", "water_preference", "water_tolerance_width", "shade_tolerance", "seed_count", "seed_dispersal_distance", "lifespan"],
+    "planned_development_traits_after_p1a": ["max_height", "internode_length", "apical_dominance", "branch_probability", "branch_angle", "branch_length_ratio", "branching_depth", "leaf_density", "leaf_area", "root_lateral_spread", "phototropism", "gravitropism"]
   },
   "nearest_checkpoint": {
     "id": "ECO.P1A",
     "name": "Environmental Causality Baseline",
-    "goal": "Prove deterministic continuous environment truth and a causal resource/cost response of one fixed plant genome before introducing evolution.",
+    "goal": "Prove deterministic continuous environment truth and a causal resource/cost response of one fixed plant genome before introducing evolution or developmental complexity.",
     "execution_doc": "docs/future_features/evolutionary_ecology/ECO_P1A_EXECUTION_PLAN_RU.md",
     "steps": [
       {
@@ -93,7 +100,7 @@
         "name": "P1A Acceptance + Evolution Decision",
         "status": "PLANNED",
         "depends_on": ["P1A-S4"],
-        "output": "ACCEPTED or classified FAIL decision and handoff to ECO.P1B Local Adaptation Proof."
+        "output": "ACCEPTED or classified FAIL decision and handoff to ECO.P1B Local Adaptation Proof plus ECO.PH0 Development Trait Contract."
       }
     ],
     "acceptance_gate": [
@@ -108,52 +115,115 @@
       "baseline biomass remains bounded",
       "visual and headless evidence share one truth model"
     ],
-    "after_pass": "ECO.P1B Local Adaptation Proof using mutation and selection from one ancestor",
-    "after_fail": "Do not add evolution; classify and repair ENVIRONMENT_MODEL, RESOURCE_MODEL, TRADEOFF_MODEL, NUMERICAL_STABILITY, DIAGNOSTIC_GAP or PERFORMANCE_MODEL."
+    "after_pass": "Open ECO.P1B Local Adaptation Proof and ECO.PH0 Development Trait Contract in parallel research lanes; evolution remains based on accepted resource truth.",
+    "after_fail": "Do not add evolution or developmental complexity; classify and repair ENVIRONMENT_MODEL, RESOURCE_MODEL, TRADEOFF_MODEL, NUMERICAL_STABILITY, DIAGNOSTIC_GAP or PERFORMANCE_MODEL."
+  },
+  "developmental_phenotype_track": {
+    "id": "ECO.PH",
+    "name": "Plant Development and Phenotype",
+    "status": "PLANNED_DOCUMENTED_BLOCKED_BY_P1A_ACCEPTANCE",
+    "role": "CROSS_CUTTING_RESEARCH_TRACK_NOT_RUNTIME_FRONTIER",
+    "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
+    "goal": "Turn inherited plant genomes into deterministic development programs, environment-dependent phenotypes, seed-carried heredity and representation-safe visual forms without canonical tree/bush/grass classes.",
+    "pipeline": "Genome + Environment + Age + History + IndividualSeed -> DevelopmentState -> ShootGraph/RootGraph -> Phenotype -> Representation",
+    "steps": [
+      {
+        "id": "PH0",
+        "name": "Development Trait Contract",
+        "status": "BLOCKED_BY_ECO_P1A_ACCEPTANCE",
+        "depends_on": ["ECO.P1A"],
+        "output": "DevelopmentTraits, DevelopmentState, GrowthGraph and IndividualSeed contracts; explicit inherited-vs-derived boundaries.",
+        "gate": ["no TREE/BUSH/GRASS canonical type", "development traits do not change accepted EnvironmentSample truth", "renderer does not participate in genome/resource hashes"]
+      },
+      {
+        "id": "PH1",
+        "name": "Deterministic GrowthGraph Skeleton Lab",
+        "status": "PLANNED",
+        "depends_on": ["PH0"],
+        "parallel_with": ["ECO.P1B Local Adaptation Proof"],
+        "output": "One shared developmental generator creates line/skeleton plants from traits and IndividualSeed without mesh.",
+        "gate": ["same genome + environment + individual seed produces identical graph hash", "apical dominance branch angle internode and branching probes create continuous morphology changes", "tree-like and shrub-like forms emerge without separate generators"]
+      },
+      {
+        "id": "PH2",
+        "name": "Environment-Coupled Development and Phenotypic Plasticity",
+        "status": "PLANNED",
+        "depends_on": ["PH1", "ECO.P1A"],
+        "output": "Phototropism/gravitropism and resource-aware development produce explainable phenotype differences for one unchanged genome.",
+        "gate": ["one genome yields distinct phenotypes across environments", "genome checksum remains unchanged across plastic responses", "environment truth remains independent from GrowthGraph"]
+      },
+      {
+        "id": "PH3",
+        "name": "Morphology-to-Resource Coupling",
+        "status": "PLANNED",
+        "depends_on": ["PH2", "ECO.P1B"],
+        "converges_before": ["ECO.P1C Strategy Competition Proof final acceptance"],
+        "output": "Height, leaf area/density, branching/crown and root architecture gain explicit benefits and costs in resource competition.",
+        "gate": ["no bigger-is-always-better morphology", "at least three morphology traits demonstrate measurable trade-offs", "selection can act on morphology through resource consequences rather than cosmetic score"]
+      },
+      {
+        "id": "PH4",
+        "name": "Seed Development Lifecycle",
+        "status": "PLANNED",
+        "depends_on": ["PH3", "ECO.P1B mutation/inheritance contracts"],
+        "converges_before": ["EXP-V6 Dispersal and Biogeography"],
+        "output": "Parent genome -> SeedGenomeEnvelope -> mutation/inheritance -> germination -> juvenile -> adult -> seeds.",
+        "gate": ["seed transports heredity and stored energy not prebuilt mesh", "individual seed deterministically initializes development variation", "lineage provenance survives dispersal and germination"]
+      },
+      {
+        "id": "PH5",
+        "name": "Procedural Visual Materialization",
+        "status": "PLANNED",
+        "depends_on": ["PH1", "ECO.P3 EXP-V8 SpeciesCatalog Bake"],
+        "converges_with": ["EXP-V9 Developmental Phenotype Materialization"],
+        "output": "GrowthGraph becomes branch mesh plus parameterized leaf/flower/fruit representation with LOD.",
+        "gate": ["renderer asset pack and tessellation changes do not change ecology/genome hashes", "evolved developmental traits are visually distinguishable", "GrowthGraph can project to multiple representation levels"]
+      },
+      {
+        "id": "PH6",
+        "name": "Promoted Individual Persistence",
+        "status": "DEFERRED_TO_P3_AND_RUNTIME_PROMOTION",
+        "depends_on": ["PH5", "ECO.P3 representation research"],
+        "output": "Only interacted/promoted individuals persist damage pruning growth and DevelopmentState/GrowthGraph deltas through canonical future persistence adapters.",
+        "gate": ["ordinary individuals remain reproducible derived representations", "promotion and demotion conserve population/ecological state", "ECO does not create a duplicate production persistence foundation"]
+      }
+    ],
+    "convergence_rules": [
+      "PH0/PH1 may begin only after P1A acceptance so developmental complexity cannot hide errors in baseline resource causality",
+      "PH1 may run in parallel with P1B",
+      "PH3 must converge before final strategy-competition acceptance if morphology is part of the selected strategy space",
+      "PH4 must converge before dispersal/biogeography treats seeds as inheritance carriers",
+      "PH5 extends P3 EXP-V9; mesh and leaf assets remain representation only",
+      "PH6 waits for future canonical persistence/authority adapters"
+    ]
   },
   "waves": [
     {
       "id": "ECO.P1",
       "name": "Plant Adaptation Proof",
-      "goal": "Prove deterministic environment response, local adaptation and coexistence of multiple strategies.",
+      "goal": "Prove deterministic environment response, local adaptation and coexistence of multiple resource-paying strategies, including morphology once PH3 converges.",
       "subcheckpoints": ["ECO.P1A Environmental Causality Baseline", "ECO.P1B Local Adaptation Proof", "ECO.P1C Strategy Competition Proof"],
       "experiments": ["EXP-V0", "EXP-V1", "EXP-V2", "EXP-V3"],
-      "gate": [
-        "environment queries are deterministic and seam-safe",
-        "resource response is causal",
-        "mutation creates regionally distinct trait distributions",
-        "at least three persistent strategies coexist on one heterogeneous fixture",
-        "no hardcoded biome species roles",
-        "same seed produces identical result hash",
-        "different seeds preserve specialization as a phenomenon"
-      ]
+      "cross_track": ["ECO.PH0", "ECO.PH1", "ECO.PH2", "ECO.PH3"],
+      "gate": ["environment queries are deterministic and seam-safe", "resource response is causal", "mutation creates regionally distinct trait distributions", "at least three persistent strategies coexist on one heterogeneous fixture", "no hardcoded biome species roles", "same seed produces identical result hash", "different seeds preserve specialization as a phenomenon", "if developmental morphology participates in selection then PH3 morphology resource trade-offs are proven before final strategy-competition acceptance"]
     },
     {
       "id": "ECO.P2",
       "name": "Ecological History Proof",
       "goal": "Prove succession, disturbance memory, dispersal-limited ranges and lineage divergence.",
       "experiments": ["EXP-V4", "EXP-V5", "EXP-V6", "EXP-V7"],
+      "cross_track": ["ECO.PH4"],
       "depends_on": ["ECO.P1"],
-      "gate": [
-        "succession emerges without scripted succession states",
-        "disturbance history remains visible in population composition",
-        "suitable habitat does not create species without migration",
-        "at least one stable lineage split preserves common ancestry"
-      ]
+      "gate": ["succession emerges without scripted succession states", "disturbance history remains visible in population composition", "suitable habitat does not create species without migration", "at least one stable lineage split preserves common ancestry", "seed/dispersal heredity preserves genome and lineage provenance when PH4 is active"]
     },
     {
       "id": "ECO.P3",
       "name": "Portable Ecology Proof",
-      "goal": "Convert expensive evolution results into reusable catalog and representation-safe runtime candidates.",
+      "goal": "Convert expensive evolution results into reusable catalog and representation-safe runtime candidates, including deterministic developmental phenotype materialization.",
       "experiments": ["EXP-V8", "EXP-V9", "EXP-V10", "EXP-V11"],
+      "cross_track": ["ECO.PH5", "ECO.PH6"],
       "depends_on": ["ECO.P2"],
-      "gate": [
-        "SpeciesCatalog serialization is deterministic",
-        "new fixtures can be populated without replaying long evolution",
-        "phenotype presentation does not affect ecology hash",
-        "population representation transitions conserve ecological state",
-        "player disturbance feeds generic ecological rules rather than scripted biome replacement"
-      ]
+      "gate": ["SpeciesCatalog serialization is deterministic", "new fixtures can be populated without replaying long evolution", "SpeciesCatalog carries development traits/recipe sufficient to reproduce phenotype candidates", "phenotype presentation does not affect ecology hash", "population representation transitions conserve ecological state", "player disturbance feeds generic ecological rules rather than scripted biome replacement"]
     }
   ],
   "experiments": {
@@ -166,15 +236,16 @@
     "EXP-V6": "Dispersal and Biogeography",
     "EXP-V7": "Lineage Split / Proto-Speciation",
     "EXP-V8": "SpeciesCatalog Bake",
-    "EXP-V9": "Phenotype Projection",
+    "EXP-V9": "Developmental Phenotype Materialization",
     "EXP-V10": "Population Representation LOD",
     "EXP-V11": "Player Disturbance Probe"
   },
   "deferred_until_after_p3": ["herbivores", "predators", "food_webs", "sexual_genetics", "procedural_mesh_evolution", "planet_wide_authoritative_ecology", "per_individual_network_replication", "alien_life_chemistry", "global_ecology_scheduler"],
-  "future_program_stages": ["ECO0 Contracts", "ECO1 Environmental Field Lab", "ECO2 Plant Competition Baseline", "ECO3 Evolution and Lineages", "ECO4 Herbivore Research", "ECO5 Predator and Food-Web Research", "ECO6 Ecosystem Bake", "ECO7 Runtime Population Resolver", "ECO8 Visual Materialization", "ECO9 Persistent Living Ecology", "ECO10 Discovery and Breeding Gameplay"],
+  "future_program_stages": ["ECO0 Contracts", "ECO1 Environmental Field Lab", "ECO2 Plant Competition Baseline", "ECO3 Evolution and Lineages", "ECO4 Herbivore Research", "ECO5 Predator and Food-Web Research", "ECO6 Ecosystem Bake", "ECO7 Runtime Population Resolver", "ECO8 Developmental Phenotype and Visual Materialization", "ECO9 Persistent Living Ecology", "ECO10 Discovery and Breeding Gameplay"],
   "runtime_promotion_requirements": [
     "ECO.P1 accepted",
     "ECO.P3 SpeciesCatalog bake proven before production integration",
+    "developmental phenotype contracts remain representation-safe and do not make GrowthGraph planet-wide canonical truth",
     "current canonical environment/query adapter defined",
     "no duplicate foundation ownership",
     "PC0 branch registration from then-current main",
