@@ -96,7 +96,7 @@ function Stop-ProcessSafe {
 function Write-OwnerClientSummary {
     param([object]$Result, [string]$Label)
     if ($null -eq $Result) {
-        Write-Host "Client $Label: no result JSON" -ForegroundColor Yellow
+        Write-Host "Client ${Label}: no result JSON" -ForegroundColor Yellow
         return
     }
     $Prediction = $Result.world_report.m7_prediction_report
