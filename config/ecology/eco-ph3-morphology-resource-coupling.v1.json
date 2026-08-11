@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.PH3",
   "name": "Morphology-to-Resource Coupling",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -17,7 +17,8 @@
     "environments": ["REFERENCE","SHADE","SUN","DRY"],
     "variants": ["BASE","HEIGHT_LOW","HEIGHT_HIGH","CROWN_NARROW","CROWN_WIDE","BRANCH_LOW","BRANCH_HIGH","GIANT_DENSE"]
   },
-  "local_evidence": {
+  "accepted_evidence": {
+    "platform": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
     "parent_p1c_s4_aggregate_assertions": 15,
     "parent_ph0_assertions": 63,
     "parent_ph1_assertions": 128,
@@ -25,11 +26,13 @@
     "focused_assertions": 217,
     "visual_smoke_assertions": 17,
     "restart_assertions": 5,
+    "failures": 0,
     "profile_hash": "1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a",
     "reference_coupling_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
     "giant_dense_coupling_hash": "eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704",
     "shade_height_high_hash": "d437d45d4beea747df717703afb1e536e5712df837677956f16c24953e5c2759",
-    "dry_crown_wide_hash": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466"
+    "dry_crown_wide_hash": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466",
+    "graphical": "PASS_BY_USER_OBSERVATION_DIAGNOSTIC"
   },
   "tradeoff_evidence": {
     "height": {"low_light_access_benefit":0.10793180609541,"high_light_access_benefit":0.22555282393566,"low_structural_cost":0.05554005295525,"high_structural_cost":0.45586460008189},
