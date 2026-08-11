@@ -8,14 +8,14 @@
   "short_description": "Non-canonical FirstPersonEmbodiment prototype layered on the accepted CH9.6 character, clothing, Item Graph and ENet presentation stack.",
   "purpose": "Evaluate first-person hands, clothing-visible viewmodels, independent left/right grip UX and network-state projection without reopening or mutating the frozen CH9.6 checkpoint and without claiming item/network authority.",
   "expected_outcome": "A separate research lab can render two first-person hands, mirror the server-backed selected hotbar item, project upper clothing into first person, exercise local-only grab targets, and fail closed for canonical world-item grabbing until an explicit hand authority contract is authorized.",
-  "current_stage": "FPE-R1 Fix1 — standalone compile + fail-closed runner + asset fallback",
-  "stage_status": "RESEARCH_FIX_PENDING_OPERATOR_RERUN",
-  "progress_note": "The first real Windows operator run on Godot 4.7.1 stable double a13da4feb invalidated the earlier synthetic PASS claim. Godot reported CharacterEquipmentDomain parse failures while loading selective_garment_scene_factory.gd and skinned_garment_pose_bridge.gd, but RUN_FPE_RESEARCH_TESTS.ps1 still printed PASS because Godot returned exit 0 and stale/continued script output contained the PASS marker. PLAY_FPE_RESEARCH.ps1 then stopped because the external Male_Peasant.gltf asset is absent in this checkout. Fix1 removes the unnecessary CharacterEquipmentDomain success-token dependency from the two generic garment helpers, makes the focused runner fail closed on SCRIPT ERROR / Parse Error / Compile Error / failed-script-load markers as well as missing PASS output, and makes the graphical launcher continue without the optional external garment asset using the procedural-sleeve path. No CH9.6 gameplay/network authority contract is changed.",
+  "current_stage": "FPE-R1 Fix2 — CH9.6 scene composition + graphical load gate",
+  "stage_status": "RESEARCH_FIX2_PENDING_OPERATOR_RERUN",
+  "progress_note": "Fix1 was rerun on Windows Godot 4.7.1 stable double a13da4feb. The core FirstPersonEmbodiment contract passed cleanly with 23 assertions and the fail-closed runner correctly reported PASS. The subsequent graphical launch exposed a separate composition parse failure: quaternius_first_person_embodiment_lab.gd inherited the accepted QuaterniusPlayableNetworkEquipmentLab script and Godot could not resolve that class in this loading path; two dynamic-return variables also used unsupported inferred typing. Fix2 removes the research inheritance boundary entirely. The FPE scene now composes the accepted quaternius_playable_network_equipment_lab.tscn as child CH9_6BaseLab and accesses it as an external runtime owner. Explicit String/Variant typing replaces the two failing inferred variables. A new test_first_person_embodiment_lab_load.gd preloads and instantiates the exact graphical scene without entering the tree, and RUN_FPE_RESEARCH_TESTS.ps1 now requires both the 23-assertion core contract and the graphical scene-load smoke test to pass before PLAY is attempted. Canonical item/network authority remains unchanged and fail-closed.",
   "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Operator reruns RUN_FPE_RESEARCH_TESTS.ps1 on Fix1. Only a clean run with no fatal Godot markers counts as focused evidence. Then run PLAY_FPE_RESEARCH.ps1; absence of Male_Peasant.gltf is allowed and should produce procedural sleeves. If the prototype is useful, feed results into a future explicitly authorized Character frontier. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
+  "next_stage": "Operator pulls Fix2 and reruns RUN_FPE_RESEARCH_TESTS.ps1. A valid focused result requires both FirstPersonEmbodiment contract PASS and FirstPersonEmbodiment graphical scene load PASS with no fatal Godot markers. Only then rerun PLAY_FPE_RESEARCH.ps1. Missing Male_Peasant.gltf remains an allowed procedural-sleeve condition. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "candidate_runtime_head": "32c854e39547e88452fe0edcb82902a015fc60d5",
+  "candidate_runtime_head": "5cf471040ceca7c8dcccb4cfa45f9d953e2ff516",
   "dependencies": [
     "CH9.6 accepted playable network equipment composition",
     "CH8 real Quaternius character and layered clothing presentation",
@@ -29,6 +29,7 @@
     "scripts/characters/lab/quaternius_first_person_embodiment_lab.gd",
     "scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
     "tests/characters/test_first_person_embodiment_contract.gd",
+    "tests/characters/test_first_person_embodiment_lab_load.gd",
     "RUN_FPE_RESEARCH_TESTS.ps1",
     "PLAY_FPE_RESEARCH.ps1",
     "docs/characters/first-person-embodiment-research.md",
@@ -45,13 +46,16 @@
     "scripts/characters/presentation/equipment_aware_first_person_adapter.gd",
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
-    "scripts/items/presentation/item_gameplay_controller.gd"
+    "scripts/items/presentation/item_gameplay_controller.gd",
+    "scripts/characters/lab/quaternius_playable_network_equipment_lab.gd",
+    "scenes/labs/character/quaternius_playable_network_equipment_lab.tscn"
   ],
   "critical_watched_paths": [
     "scripts/characters/presentation/controllable_view_adapter.gd",
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
-    "scripts/items/presentation/item_gameplay_controller.gd"
+    "scripts/items/presentation/item_gameplay_controller.gd",
+    "scenes/labs/character/quaternius_playable_network_equipment_lab.tscn"
   ],
   "runtime_paths": [
     "scripts/characters/presentation/first_person_embodiment_presentation_proxy.gd",
@@ -62,6 +66,7 @@
   ],
   "validation_paths": [
     "tests/characters/test_first_person_embodiment_contract.gd",
+    "tests/characters/test_first_person_embodiment_lab_load.gd",
     "RUN_FPE_RESEARCH_TESTS.ps1",
     "PLAY_FPE_RESEARCH.ps1",
     "docs/characters/first-person-embodiment-research.md"
@@ -69,12 +74,15 @@
   "tested_heads": {
     "synthetic_core": "INVALIDATED_FAIL_OPEN_RUNNER",
     "operator_attempt_pre_fix1": "FAILED_PARSE_AND_MISSING_EXTERNAL_GARMENT",
-    "focused_repository_fix1": "PENDING_OPERATOR_RERUN",
-    "graphical_fix1": "PENDING_OPERATOR_RERUN"
+    "operator_core_fix1": "PASS_23_ASSERTIONS_CLEAN",
+    "operator_graphical_fix1": "FAILED_FPE_LAB_INHERITANCE_PARSE",
+    "focused_repository_fix2": "PENDING_OPERATOR_RERUN",
+    "graphical_fix2": "PENDING_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "PRE_FIX1_SYNTHETIC_PASS_INVALIDATED_BY_REAL_WINDOWS_PARSE_ERRORS",
-    "PRE_FIX1_RUNNER_PASS_INVALIDATED_BECAUSE_FATAL_GODOT_ERRORS_DID_NOT_FORCE_NONZERO_EXIT"
+    "PRE_FIX1_RUNNER_PASS_INVALIDATED_BECAUSE_FATAL_GODOT_ERRORS_DID_NOT_FORCE_NONZERO_EXIT",
+    "FIX1_CORE_PASS_DOES_NOT_IMPLY_GRAPHICAL_COMPOSITION_PASS"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -89,8 +97,8 @@
   ],
   "blockers": [
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_NOT_AUTHORIZED",
-    "FIX1_FOCUSED_OPERATOR_RERUN_PENDING",
-    "FIX1_GRAPHICAL_OPERATOR_RERUN_PENDING"
+    "FIX2_FOCUSED_OPERATOR_RERUN_PENDING",
+    "FIX2_GRAPHICAL_OPERATOR_RERUN_PENDING"
   ],
   "non_blocking_followups": [
     "EXTERNAL_QUATERNIUS_MALE_PEASANT_ASSET_NOT_PRESENT_IN_THIS_CHECKOUT_REAL_SLEEVES_DISABLED",
