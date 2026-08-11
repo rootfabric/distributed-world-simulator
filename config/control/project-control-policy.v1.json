@@ -9,6 +9,7 @@
   "ownership_matrix_path": "config/control/architecture-ownership.v1.json",
   "dashboard_entrypoint": "PROJECT_CONTROL.md",
   "auditor": "scripts/control/project_control.py",
+  "directional_watch_auditor": "scripts/control/project_control_directional_watch.py",
   "rules": {
     "main_declares_project_state": true,
     "branches_report_local_facts": true,
@@ -21,7 +22,8 @@
     "branch_must_declare_owned_and_watched_paths": true,
     "branch_must_declare_forbidden_foundation_ownership": true,
     "two_major_acceptance_steps_require_intermediate_control_audit": true,
-    "tested_runtime_must_not_be_older_than_runtime_changes": true
+    "tested_runtime_must_not_be_older_than_runtime_changes": true,
+    "active_branch_changes_watched_dependency_requires_directional_audit": true
   },
   "branch_lifecycle": [
     "PLANNED",
@@ -99,6 +101,14 @@
     ],
     "same_runtime_or_contract_file_in_two_active_branches": "RED"
   },
+  "directional_watch_policy": {
+    "watched_hit_health": "YELLOW",
+    "critical_hit_health": "RED",
+    "producer_suppression_stage_statuses": [
+      "SOURCE_ACCEPTED_HANDOFF_COMPLETE"
+    ],
+    "rule": "An active producer branch changing a path matched by another registered branch's watched_paths makes the consumer YELLOW; critical_watched_paths makes the consumer RED. Accepted handoff evidence remains a consumer but is suppressed as a producer."
+  },
   "merge_gate": [
     "BRANCH_REGISTERED",
     "BRANCH_PASSPORT_PRESENT",
@@ -107,6 +117,7 @@
     "PARENT_CHECKPOINT_VALID",
     "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
     "NO_UNRESOLVED_CRITICAL_DEPENDENCY_DRIFT",
+    "NO_UNRESOLVED_CRITICAL_DIRECTIONAL_WATCH_HIT",
     "NO_UNRESOLVED_CRITICAL_CROSS_BRANCH_OVERLAP",
     "RUNTIME_VALIDATION_FRESH",
     "FOCUSED_VALIDATION_PASS",
