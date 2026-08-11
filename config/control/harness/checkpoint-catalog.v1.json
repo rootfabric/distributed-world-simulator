@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.harness_checkpoint_catalog.v1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "checkpoints": {
+    "H0_1_CLOSED_LOOP_C22_PILOT": {
+      "kind": "HARNESS",
+      "description": "Prove a restart-safe closed-loop development cycle by bringing fresh current-main C22 convergence to a machine-verifiable merge-ready proposal without performing the runtime merge.",
+      "preconditions": ["PC0_MAIN_INTEGRATED", "CANONICAL_MAIN_KNOWN", "REGISTRY_GENERATION_KNOWN", "NO_PROJECT_RED_BLOCKING_C22"],
+      "required_predicates": [
+        "PROJECT_EPOCH_CREATED", "C22_WORK_ORDER_ISSUED", "FRESH_CURRENT_MAIN_C22_BRANCH_CREATED",
+        "C22_ACCEPTED_CAPABILITY_TRANSFERRED_WITHIN_SCOPE", "C22_PRODUCTION_DIFF_EQUIVALENCE_PASS",
+        "C22_FOCUSED_PASS", "C24_CONTRACTS_PASS", "C22_GRAPHICAL_PASS", "FULL_WORLD_CORE_REGRESSION_PASS",
+        "TESTED_HEADS_EXACT_AND_FRESH", "STANDARD_PC0_NON_RED", "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO", "RECOVERY_DRILL_PASS", "DRAFT_PR_OPEN", "C22_CHECKPOINT_PROPOSED"
+      ],
+      "success_state": "H0_1_PASS",
+      "project_success_state": "SOURCE_ACCEPTED_MERGE_READY",
+      "stop_before": ["C22_RUNTIME_MERGE", "TS0_4_START"]
+    },
+    "C22_CURRENT_MAIN_MERGE_READY": {
+      "kind": "PROJECT",
+      "program": "TS",
+      "required_predicates": [
+        "FRESH_CURRENT_MAIN_BASE", "PRODUCTION_DIFF_SEMANTIC_EQUIVALENCE", "C22_INCREMENTAL_FOCUSED_PASS",
+        "C22_GRAPHICAL_PASS", "C24_CONTRACTS_PASS", "FULL_WORLD_CORE_REGRESSION_PASS", "RUNTIME_VALIDATION_FRESH",
+        "NO_UNRESOLVED_CRITICAL_DIRECTIONAL_HIT", "NO_UNRESOLVED_CRITICAL_OVERLAP"
+      ],
+      "success_state": "SOURCE_ACCEPTED_MERGE_READY",
+      "human_gate_after": "RUNTIME_FEATURE_MERGE"
+    },
+    "NX_SOURCE_ACCEPTED": {
+      "kind": "PROJECT",
+      "program": "NX",
+      "required_predicates": [
+        "FRESH_CURRENT_MAIN_NX_C1", "OWNER_AUTHORITY_FOCUSED_PASS", "PHYSICS_PRESENTATION_SINGLE_WRITER_PASS",
+        "ITEM_ROLLBACK_PICKUP_DROP_PASS", "CLIENT_TICK_FUZZ_PASS_IF_TOUCHED", "FULL_WORLD_CORE_REGRESSION_PASS",
+        "TWO_CLIENT_PASS", "IMPAIRED_NETWORK_PASS", "RECONNECT_OWNERSHIP_EPOCH_PASS",
+        "DIRECTIONAL_DEPENDENCY_REVALIDATION_PASS"
+      ],
+      "success_state": "SOURCE_ACCEPTED"
+    },
+    "R3_REFRESHED_CANDIDATE": {
+      "kind": "PROJECT",
+      "program": "R3",
+      "required_predicates": [
+        "CURRENT_MAIN_REFRESH", "FRONTIER_GUARDS_REFRESHED", "R2_TO_R3_TRANSITION_POLICY_IMPLEMENTED",
+        "OWNERSHIP_INTERSECTION_REVIEW_PASS", "PC0_NON_RED"
+      ],
+      "success_state": "REFRESHED_CANDIDATE",
+      "human_gate_after": "GLOBAL_ARCHITECTURE_PROMOTION"
+    }
+  }
+}
