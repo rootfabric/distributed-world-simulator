@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R2",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "PLANNED",
+  "state": "IMPLEMENTED",
   "work_order_type": "CONTROL",
   "base_sha": "40c117bb16a635b03acfbaa7d9fe18b74245c989",
   "branch": "control/h0-closed-loop-development-r2",
@@ -106,7 +106,7 @@
     "dependencies": [
       "main @ 40c117bb16a635b03acfbaa7d9fe18b74245c989",
       "canonical H0-2026-08-11-R1 contracts",
-      "historical control/h0-closed-loop-development scaffold capability",
+      "historical control/h0-closed-loop-development scaffold capability @ 51bf235da643d62bb9f0e655a75404bd0c9ed6a1",
       "PC0 advisory research semantics merged by PR #71"
     ],
     "non_goals": [
@@ -144,5 +144,5 @@
   "human_approval_required_for": [
     "CONTROL_DOCS_ONLY_MERGE"
   ],
-  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only and must not authorize this Work Order. The first implementation event must pin the exact historical scaffold source head before any capability transfer."
+  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Fresh R2 scaffold transfer is IMPLEMENTED; verification and phase-independent evidence isolation remain pending."
 }
