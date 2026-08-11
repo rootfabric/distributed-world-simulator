@@ -1,9 +1,11 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-11T01:08:00Z",
+  "updated_at_utc": "2026-08-11T03:15:00Z",
   "canonical_branch": "main",
   "status": "active",
+  "operational_status_source": "config/control/project-program-registry.v1.json",
+  "operational_snapshot_note": "The fields active_sync_branches and active_frontiers below are an advisory R2 snapshot synchronized with PC0 generation 61. The main-owned project-program-registry remains authoritative for fast-moving frontier state.",
   "architecture_invariants": [
     "CANONICAL_WORLD_NE_PRESENTATION",
     "CANONICAL_WORLD_NE_TRANSPORT",
@@ -68,31 +70,54 @@
   "active_sync_branches": [
     "main",
     "feature/t1b-composition-failure-recovery",
+    "feature/c22-incremental-local-rebuild",
     "feature/g8-geomorphology",
     "feature/ch9-6-playable-network-equipment-lab",
+    "feature/nx-m7-owner-authority-convergence",
     "feature/world-building-doctrine"
   ],
   "active_frontiers": {
-    "construction": {
+    "construction_composition": {
       "branch": "feature/t1b-composition-failure-recovery",
-      "stage": "T1B.0 Runtime Failure Contract",
-      "parallel_planned": "TS0 construction scale/convergence"
+      "stage": "T1B Aggregate Handoff Complete",
+      "status": "SOURCE_ACCEPTED_HANDOFF_COMPLETE",
+      "next_major_runtime": "T2.0 only after C22 MAIN_INTEGRATED + TS0.4 classification + PC0 convergence"
+    },
+    "construction_scale": {
+      "branch": "feature/c22-incremental-local-rebuild",
+      "stage": "TS0.3 / C22 Production Incremental Convergence",
+      "status": "SOURCE_ACCEPTED_MAIN_CONVERGENCE_REFRESH_REQUIRED",
+      "next": "current-main refresh + focused/full revalidation + explicit merge; then TS0.4 from canonical main"
     },
     "world_generation": {
       "branch": "feature/g8-geomorphology",
-      "stage": "G8.2 River Channel Incision",
-      "next_visual_milestone": "G8 natural terrain showcase",
-      "next_world_showcase_milestone": "G8 Geomorphology"
+      "stage": "G8.6 Geomorphology Visual Lab",
+      "status": "AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING",
+      "next_visual_milestone": "G8 Full Acceptance",
+      "next_world_generation_stage": "G9 only after canonical R3/MAT0"
     },
     "character": {
       "branch": "feature/ch9-6-playable-network-equipment-lab",
       "stage": "CH9.6 Playable Network Equipment Lab",
+      "status": "WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
       "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition",
-      "goal": "Route the real component Inventory UI through server-authoritative network equipment and durable recovery into the real Quaternius presenter in one playable graphical composition."
+      "goal": "Finish the two-pass graphical equipment/recovery gate, then post-acceptance PC0 before any later Character stage."
+    },
+    "network": {
+      "branch": "feature/nx-m7-owner-authority-convergence",
+      "stage": "NX.C0 Owner Authority Convergence Preparation",
+      "status": "ACTIVE_GREEN_PREPARATION",
+      "next": "NX.C1 starts from then-current main only after PC0 directional-watch hardening is canonical"
     },
     "world_building_doctrine": {
       "branch": "feature/world-building-doctrine",
       "stage": "active design-doctrine frontier"
+    },
+    "architecture_candidate": {
+      "branch": "feature/global-p0-r3-architecture",
+      "stage": "GLOBAL-P0 R3 candidate current-main refresh",
+      "status": "DOCUMENTED_CANDIDATE_REFRESH_REQUIRED",
+      "note": "R3 is not canonical until current-main refresh, revision-transition policy and non-RED PC0."
     }
   },
   "character_equipment_track": {
@@ -104,7 +129,7 @@
       "CH9.4 Equipment Persistence / Late Reconnect",
       "CH9.5 Live Equipment Runtime Composition"
     ],
-    "active": "CH9.6 Playable Network Equipment Lab",
+    "active": "CH9.6 Playable Network Equipment Lab — Windows automated accepted, graphical pending",
     "acceptance_goal": [
       "the real CharacterEquipmentInventoryScreen routes equip/unequip through NetworkCharacterEquipmentGameplayController",
       "network equipment mutations use the existing Ch9NetworkItemCommandBridge and ITEM/ENet channel",
@@ -114,52 +139,54 @@
       "movement snapshots remain free of equipment Item IDs",
       "no character-private persistence, transport, authority registry or new equipment foundation is introduced"
     ],
-    "after_ch9_6": "Run PC0 audit before declaring any later Character stage. Prefer additional cross-domain/playable composition only when a demonstrated scenario exposes a concrete gap."
+    "after_ch9_6": "Run PC0 audit before declaring any later Character stage. New major CH work should converge from then-current main instead of extending the old lineage by default."
   },
   "construction_parallel_tracks": {
     "composition": [
       "T1A.4 Interactive Fixture Binding",
       "T1A.5 Interactive Runtime Execution",
       "T1A.6 Inspector / Telemetry",
-      "T1B Composition / Failure / Recovery"
+      "T1A.7 Runtime Recovery / Interest / Scale",
+      "T1B.0-T1B.4 Composition / Failure / Recovery — SOURCE_ACCEPTED_HANDOFF_COMPLETE"
     ],
     "scale_visual": [
       "TS0.0 Deterministic Large Structural Fixtures",
       "TS0.1 10k Visual Proof",
       "TS0.2 100k Visual Scale Gate",
       "TS0.3 Local Mutation / Dirty-Section Rebuild",
-      "TS0.4 1M Research Ceiling Probe"
+      "C22 production convergence — source accepted, current-main refresh required",
+      "TS0.4 1M Research Ceiling Probe after C22 main integration"
     ],
-    "join": "T2.0 consumes TS0 evidence but still requires a real large construct; TS0 alone never satisfies T2 acceptance."
+    "join": "T2.0 consumes accepted T composition evidence plus TS0/C22 scale evidence but still requires a real heterogeneous construct."
   },
   "visual_milestones": {
     "world_generation": [
-      "G7.4 semantic/debug visualization",
-      "G8 first natural terrain showcase",
+      "G8.6 geomorphology visual acceptance",
+      "G8 Full Acceptance",
       "G10 first true 3D volume showcase",
       "G11 heterogeneous-body showcase"
     ],
     "construction": [
       "TS0.1 10k structural object",
       "TS0.2 100k structural object",
-      "T1 D1 playable outpost",
-      "T2.0 real 10k-100k construct",
+      "TS0.4 1M research ceiling classification",
+      "T2.0 real heterogeneous base / station",
       "T2.6 100k-class orbital station"
     ],
     "composition": [
-      "V0 after G8 plus usable T1 D1 plus character presentation: procedural terrain + real outpost + player"
+      "V0 after G8 plus usable Construction and character presentation: procedural terrain + real outpost + player"
     ]
   },
   "ts0_rules": [
-    "TS0 branches from an accepted Construction baseline, not an in-progress T candidate.",
-    "Current preferred base is T1A.3 accepted commit 5e051f67bf6987a354de5b565da1448be6b0b4db plus the synchronized GLOBAL-P0-2026-08-10-R2 documentation/config change-set.",
+    "TS0 branches from an accepted/current Construction convergence baseline, not an in-progress candidate.",
+    "TS0.4 must branch from canonical main after C22 is MAIN_INTEGRATED and post-merge PC0 has run.",
     "TS0 reuses C21/C22/C24 and Construction canonical state.",
     "TS0 must not create WorldAddress, AuthorityRegionId, InterestRegionId, MaterialDefinitionId, a global scheduler, persistence semantics, or a private transaction model.",
     "TS0 section IDs, HLOD levels and laboratory budget knobs are local derived representation/execution data only.",
-    "100k is the primary TS0 visual scale gate; 1M is a non-blocking research ceiling probe."
+    "100k is the primary accepted visual scale evidence; 1M remains a non-blocking research ceiling whose job is honest bottleneck classification."
   ],
   "historical_branch_policy": "ACCEPTED_OR_FROZEN_CHECKPOINT_BRANCHES_ARE_NOT_REWRITTEN_FOR_LATER_GLOBAL_REVISIONS",
-  "active_frontier_policy": "ONE_DECLARED_ACTIVE_FRONTIER_PER_PROGRAM; frontier handoff is recorded in main, then synchronized byte-equivalently to active heads.",
+  "active_frontier_policy": "PC0_REGISTRY_IS_AUTHORITATIVE_FOR_FAST_MOVING_FRONTIERS; this R2 snapshot is advisory. New major runtime frontiers default to then-current canonical main unless a stacked dependency is explicitly registered.",
   "local_plan_requirements": [
     "REFERENCE_GLOBAL_REVISION",
     "DECLARE_LOCAL_PURPOSE_AND_STAGE",
