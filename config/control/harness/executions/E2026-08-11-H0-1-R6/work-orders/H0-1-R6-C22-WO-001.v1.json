@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-1-R6",
   "program": "TS",
   "goal_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-  "state": "IMPLEMENTED",
+  "state": "VERIFYING",
   "work_order_type": "RUNTIME",
   "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
   "branch": "feature/h0-1-c22-current-main-r1",
@@ -142,5 +142,5 @@
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "RUNTIME_FEATURE_MERGE"],
   "issued_at_utc": "2026-08-11T14:23:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "C22 SOURCE_ACCEPTED capability was transferred atomically into the fresh H0.1 runtime branch using exact source blob identities. The Work Order is IMPLEMENTED and awaits exact-head equivalence verification plus Windows focused/graphical/full regression. Runtime merge remains a separate human gate."
+  "notes": "All pre-runtime control predicates plus exact C22 source blob equivalence are verified. Work Order is VERIFYING on the fresh H0.1 runtime branch. Windows focused/C24/graphical/full world regression and final Evidence Map/Reviewer/Verifier/PC0/recovery remain required. Runtime merge is not authorized."
 }
