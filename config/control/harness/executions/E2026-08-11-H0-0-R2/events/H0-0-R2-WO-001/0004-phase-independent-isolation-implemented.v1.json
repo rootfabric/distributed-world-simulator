@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R2-H0-0-R2-WO-001-0004",
+  "project_epoch": "E2026-08-11-H0-0-R2",
+  "work_order_id": "H0-0-R2-WO-001",
+  "sequence": 4,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-11T09:48:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "control/h0-closed-loop-development-r2",
+  "head_sha": "c4deedd7dbd8b06815f1549b1ae60f8a27d6622c",
+  "predicate": "PHASE_INDEPENDENT_ACTIVE_EVIDENCE_ISOLATION_IMPLEMENTED",
+  "command": "Remove R1 implementation-head hardcoding; derive active transition policy from execution_dir; retarget acceptance tests to R2 while retaining R1 as historical reducer/evidence fixtures",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/harness/state_builder.py",
+    "tests/harness/test_h0_control_harness.py",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/**",
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/**"
+  ],
+  "summary": "H0.0 reconstruction no longer hardcodes the R1 epoch. Active implementation freshness follows the selected execution directory, historical R1 reviews/evidence are validated as fixtures but cannot authorize the R2 Work Order, and public-command expectations now bind to the R2 epoch/work order.",
+  "blocker": "FRESH_WINDOWS_OR_CLEAN_CHECKOUT_HARNESS_VERIFICATION_REQUIRED"
+}
