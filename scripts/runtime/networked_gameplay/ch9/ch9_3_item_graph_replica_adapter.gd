@@ -58,12 +58,16 @@ func _definition_id(canonical_id: String) -> String:
 
 func _register_definitions(domain: Dictionary) -> void:
 	super._register_definitions(domain)
+	# CH9.2 already proved these icon colors in the Inventory UI. Keep the
+	# network-replica definitions presentation-equivalent: without icon_color the
+	# five real wearable items exist canonically but render as empty dark slots,
+	# making the graphical equipment workflow impossible to operate reliably.
 	for data in [
-		{"id": EquipmentCatalog.REPLICA_DEFINITION_HELMET, "display_name": "Helmet", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_HEAD), "mass": 1.6, "volume": 4.0},
-		{"id": EquipmentCatalog.REPLICA_DEFINITION_BACKPACK, "display_name": "Backpack", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_BACK), "mass": 2.4, "volume": 18.0},
-		{"id": EquipmentCatalog.REPLICA_DEFINITION_UPPER, "display_name": "Peasant Upper", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_UPPER), "mass": 1.1, "volume": 5.0},
-		{"id": EquipmentCatalog.REPLICA_DEFINITION_LOWER, "display_name": "Peasant Trousers", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_LOWER), "mass": 1.0, "volume": 4.5},
-		{"id": EquipmentCatalog.REPLICA_DEFINITION_FEET, "display_name": "Peasant Boots", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_FEET), "mass": 1.4, "volume": 5.5},
+		{"id": EquipmentCatalog.REPLICA_DEFINITION_HELMET, "display_name": "Helmet", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_HEAD), "mass": 1.6, "volume": 4.0, "color": [0.36, 0.52, 0.70]},
+		{"id": EquipmentCatalog.REPLICA_DEFINITION_BACKPACK, "display_name": "Backpack", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_BACK), "mass": 2.4, "volume": 18.0, "color": [0.32, 0.44, 0.24]},
+		{"id": EquipmentCatalog.REPLICA_DEFINITION_UPPER, "display_name": "Peasant Upper", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_UPPER), "mass": 1.1, "volume": 5.0, "color": [0.62, 0.33, 0.20]},
+		{"id": EquipmentCatalog.REPLICA_DEFINITION_LOWER, "display_name": "Peasant Trousers", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_LOWER), "mass": 1.0, "volume": 4.5, "color": [0.42, 0.31, 0.20]},
+		{"id": EquipmentCatalog.REPLICA_DEFINITION_FEET, "display_name": "Peasant Boots", "tag": EquipmentCatalog.slot_tag(EquipmentCatalog.SLOT_FEET), "mass": 1.4, "volume": 5.5, "color": [0.34, 0.24, 0.16]},
 	]:
 		domain.items.register_definition(Definition.new({
 			"id": String(data["id"]),
@@ -72,5 +76,5 @@ func _register_definitions(domain: Dictionary) -> void:
 			"unit_mass_kg": float(data["mass"]),
 			"external_volume_l": float(data["volume"]),
 			"tags": ["equipment", String(data["tag"])],
-			"metadata": {},
+			"metadata": {"icon_color": data["color"]},
 		}))
