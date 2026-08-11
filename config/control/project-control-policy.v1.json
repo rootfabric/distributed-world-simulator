@@ -41,6 +41,8 @@
     "tested_runtime_must_not_be_older_than_runtime_changes": true,
     "active_branch_changes_watched_dependency_requires_directional_audit": true,
     "human_prose_drift_is_not_a_correctness_failure": true,
+    "research_design_frontiers_are_advisory_to_global_health": true,
+    "research_design_frontier_promotion_still_requires_full_merge_gates": true,
     "harness_must_select_declared_checkpoint_not_open_ended_task": true,
     "harness_resume_must_not_require_chat_history": true,
     "harness_implementer_cannot_self_accept_checkpoint": true,
@@ -56,6 +58,14 @@
     "harness_review_head_must_be_fresh_for_runtime_scope": true,
     "harness_human_attention_is_exception_driven": true,
     "commits_per_day_is_not_project_throughput": true
+  },
+  "global_health_semantics": {
+    "default_program_gate": "BLOCKING",
+    "non_blocking_roles": ["RESEARCH_DESIGN_FRONTIER"],
+    "registry_override_field": "blocks_global_progress",
+    "advisory_behavior": "Keep full local health/findings visible, but do not raise project-wide overall_health from that program alone.",
+    "promotion_boundary": "A research/design frontier becomes subject to normal blocking merge/dependency/review gates when it is explicitly promoted toward canonical or runtime scope.",
+    "directional_exception": "A research producer that touches paths watched by a blocking consumer can still make that blocking consumer YELLOW/RED; only findings whose consumer is advisory are excluded from directional overall_health."
   },
   "branch_lifecycle": [
     "PLANNED",
@@ -143,7 +153,7 @@
     "producer_suppression_stage_statuses": [
       "SOURCE_ACCEPTED_HANDOFF_COMPLETE"
     ],
-    "rule": "An active producer branch changing a path matched by another registered branch's watched_paths makes the consumer YELLOW; critical_watched_paths makes the consumer RED. Accepted handoff evidence remains a consumer but is suppressed as a producer."
+    "rule": "An active producer branch changing a path matched by another registered branch's watched_paths makes the consumer YELLOW; critical_watched_paths makes the consumer RED. Accepted handoff evidence remains a consumer but is suppressed as a producer. RESEARCH_DESIGN_FRONTIER consumers are advisory to global health until explicit promotion; research producers can still affect blocking consumers."
   },
   "merge_gate": [
     "BRANCH_REGISTERED",
