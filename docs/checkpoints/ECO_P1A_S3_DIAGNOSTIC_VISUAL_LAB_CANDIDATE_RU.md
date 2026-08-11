@@ -2,9 +2,11 @@
 
 ## Статус
 
-`HEADLESS_FOCUSED_PASS / GRAPHICAL_REVIEW_PENDING`.
+`AUTOMATED_ACCEPTED / MANUAL_GRAPHICAL_REVIEW_PENDING`.
 
 S3 не меняет принятую экологическую математику S1/S2. Он добавляет наблюдаемое представление той же truth-модели и набор контролируемых sensitivity probes.
+
+Exact Windows automated runner уже подтверждён на checkout `6b5f3592696dc7db0897ca8cef69c3c395f32589`.
 
 ## Что видно в лаборатории
 
@@ -35,13 +37,15 @@ S3 не меняет принятую экологическую математ�
 
 ## Автоматическое evidence
 
-Godot 4.7.1 double:
+Godot `4.7.1.stable.double.custom_build.a13da4feb`:
 
-- S3 focused dataset/probe acceptance: `114 assertions, 0 failures`;
-- dataset hash: `dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690`;
-- scene headless smoke: PASS, `33x33`, BASE, hash `9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c`;
-- parent S2: `235/235` unchanged;
-- parent S1: `109/109` unchanged.
+- exact Windows S1 parent regression: `109 assertions, 0 failures`;
+- exact Windows S2 parent regression: `235 assertions, 0 failures`;
+- exact Windows S3 focused dataset/probe acceptance: `114 assertions, 0 failures`;
+- focused dataset hash: `dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690`;
+- exact Windows scene headless smoke: PASS, `33x33`, BASE, hash `9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c`.
+
+То есть автоматическая часть S3 закрыта. Единственный оставшийся gate — graphical review человеком.
 
 ## Что проверить глазами
 
@@ -54,4 +58,4 @@ Godot 4.7.1 double:
 7. DEEP_ROOT помогает в сухом, но не является бесплатным преимуществом во влажном.
 8. Клик по плохой точке позволяет объяснить причину именно через breakdown.
 
-После автоматического Windows PASS и ручного визуального подтверждения S3 можно принять и открыть `P1A-S4 Determinism, Sensitivity and Failure Classification`.
+После ручного визуального подтверждения S3 можно принять и открыть `P1A-S4 Determinism, Sensitivity and Failure Classification`.
