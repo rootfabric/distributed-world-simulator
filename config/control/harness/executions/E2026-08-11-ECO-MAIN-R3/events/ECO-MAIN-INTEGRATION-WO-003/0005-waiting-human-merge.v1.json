@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R3-ECO-MAIN-INTEGRATION-WO-003-0005",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R3",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "sequence": 5,
+  "event_type": "HUMAN_ATTENTION_REQUIRED",
+  "work_state": "WAITING_HUMAN",
+  "recorded_at_utc": "2026-08-11T09:03:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r3",
+  "head_sha": "d7cac27af35cfb8b6d220ed9ef78f653041dab6f",
+  "predicate": "CONTROL_DOCS_ONLY_MERGE",
+  "command": "Stop before ECO merge and require explicit human approval for Draft PR #70",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/human-attention/ECO-MAIN-INTEGRATION-WO-003-CONTROL-DOCS-MERGE-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/evidence/ECO-MAIN-INTEGRATION-WO-003-EVIDENCE-001.v1.json",
+    "docs/checkpoints/ECO_MAIN_INTEGRATION_CANDIDATE_R3_RU.md"
+  ],
+  "summary": "R3 has completed the autonomous evidence lifecycle through an ECO-targeted Draft PR. No merge is authorized. Resume only after explicit CONTROL_DOCS_ONLY_MERGE and a final exact-pin freshness check.",
+  "blocker": "CONTROL_DOCS_ONLY_MERGE_APPROVAL_REQUIRED"
+}
