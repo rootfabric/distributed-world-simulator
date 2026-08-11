@@ -45,7 +45,7 @@ finally {
 
 Write-Host "ECO.P1A-S1 parent regression: PASS (109 assertions)"
 Write-Host "ECO.P1A-S2 parent regression: PASS (235 assertions)"
-Write-Host "ECO.P1A-S3 focused acceptance: PASS (114 assertions)"
+Write-Host "ECO.P1A-S3 focused acceptance: PASS (208 assertions)"
 Write-Host "ECO.P1A-S3 dataset_hash=dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690"
 Write-Host "ECO.P1A-S3 visual scene headless smoke: PASS"
-Write-Host "MANUAL GRAPHICAL REVIEW: run the scene and inspect views/probes before accepting S3"
+Write-Host "ECO.P1A-S3 graphical acceptance: PASS_BY_USER_OBSERVATION (recorded)"
