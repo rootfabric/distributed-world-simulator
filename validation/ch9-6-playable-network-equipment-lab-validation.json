@@ -39,6 +39,9 @@
     "lab_scene": "res://scenes/labs/character/quaternius_playable_network_equipment_lab.tscn",
     "equipment_bridge": "res://scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "launcher": ".\\PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1",
+    "operator_acceptance_runner": ".\\ACCEPT_CH9_6_GRAPHICAL.ps1",
+    "operator_evidence_root": "artifacts/ch9-6-manual",
+    "operator_evidence_schema": "planet_simulator.ch9_6_manual_graphical_acceptance_evidence.v1",
     "automated_test": "res://tests/characters/test_ch9_6_playable_network_equipment_ui.gd",
     "runner": ".\\RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1"
   },
@@ -112,16 +115,25 @@
   "manual_graphical_gate": {
     "required": true,
     "status": "PENDING_USER_OBSERVATION",
+    "runner": ".\\ACCEPT_CH9_6_GRAPHICAL.ps1",
+    "runner_behavior": [
+      "launch generation 1 through PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1 with ResetState in an isolated child PowerShell process",
+      "collect explicit operator observations only after the graphical process exits",
+      "launch generation 2 through the same launcher without ResetState in a new isolated child PowerShell process",
+      "collect explicit restart recovery and unequip presentation observations",
+      "write a local machine-readable evidence JSON under artifacts/ch9-6-manual by default",
+      "never infer graphical PASS from automated state or process exit codes alone"
+    ],
     "steps": [
-      "launch with -ResetState and wait for READY",
-      "drag wearable items from backpack into equipment slots",
-      "visually confirm real Quaternius clothing/equipment",
-      "close inventory and verify movement/jump/crouch",
-      "close application normally",
-      "relaunch without -ResetState",
-      "visually confirm equipped items restore without a new drag",
-      "drag an equipped item back to backpack and confirm its visual disappears"
-    ]
+      "run ACCEPT_CH9_6_GRAPHICAL.ps1 on Windows",
+      "generation 1: wait for READY, equip real wearables through visible Inventory UI, verify real Quaternius presentation, verify movement/jump/crouch, close normally",
+      "answer the generation-1 visual questions explicitly",
+      "generation 2: verify equipment and presentation restore without a new drag, unequip one restored item and verify its visual disappears, close normally",
+      "answer the generation-2 visual questions explicitly",
+      "preserve the generated evidence JSON and report its decision"
+    ],
+    "pass_marker": "OPERATOR_REPORTED_PASS",
+    "fail_marker": "OPERATOR_REPORTED_FAIL"
   },
   "windows_results": {
     "editor_import": "PASS",
