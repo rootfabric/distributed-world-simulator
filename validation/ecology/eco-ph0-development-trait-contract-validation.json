@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH0",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "execution": {"traits":"res://scripts/research/ecology/plant_development_traits_v1.gd","contract":"res://scripts/research/ecology/plant_development_contract_v1.gd","test":"res://tests/research/ecology/eco_ph0_development_contract_acceptance.gd","runner":"RUN_ECO_PH0_TESTS.ps1","assertions":63,"failures":0},
+  "evidence": ["eight bounded developmental traits validate and hash independently from accepted PlantGenome","changing development traits does not mutate accepted genome checksum or EnvironmentSample truth","IndividualSeed is deterministic from lineage/reproduction/seed-index/genome-revision and changes with seed index","SeedGenomeEnvelope carries heredity checksums and deterministic individual seed, not a prebuilt model","DevelopmentState is separate from inherited genome","GrowthGraph contract is explicitly derived representation","source boundaries exclude canonical plant type, renderer, authority, network and persistence ownership"],
+  "hashes": {"development_traits":"9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea"},
+  "windows_confirmation": "PENDING",
+  "next": "Exact Windows PH0 pass allows PH0 acceptance and unblocks PH1 acceptance."
+}
