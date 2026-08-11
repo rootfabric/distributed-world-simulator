@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH2",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "execution": {
+    "profile": "res://scripts/research/ecology/plant_development_plasticity_profile_v1.gd",
+    "kernel": "res://scripts/research/ecology/plant_environment_coupled_development_v1.gd",
+    "probes": "res://scripts/research/ecology/plant_environment_coupled_development_probes_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph2_environment_coupled_development_acceptance.gd",
+    "visual_smoke": "res://tests/research/ecology/eco_ph2_visual_lab_smoke.gd",
+    "restart": "res://tests/research/ecology/eco_ph2_restart_replay_probe.gd",
+    "runner": "RUN_ECO_PH2_TESTS.ps1",
+    "focused_assertions": 107,
+    "visual_smoke_assertions": 12,
+    "restart_assertions": 5,
+    "failures": 0
+  },
+  "hashes": {
+    "plasticity_profile": "16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d",
+    "reference_phenotype": "da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10",
+    "shade_phenotype": "bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0",
+    "sun_phenotype": "b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa",
+    "dry_phenotype": "7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f"
+  },
+  "truth_boundary": "PH2 creates a realized developmental program and derived GrowthGraph from EnvironmentSample. It cannot mutate inherited genome/development traits and does not own resource equations, geology, hydrology, authority, transport, persistence or rendering truth.",
+  "windows_confirmation": "PENDING",
+  "graphical_confirmation": "OPTIONAL_DIAGNOSTIC_NOT_ACCEPTANCE_BLOCKER_UNLESS_AUTOMATED_SIGNAL_DISAGREES",
+  "next": "Exact Windows PH2 pass allows PH2 acceptance and opens PH3 morphology-to-resource coupling."
+}
