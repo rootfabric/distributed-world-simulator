@@ -64,6 +64,13 @@ func _test_truth_projection() -> void:
 		_check(String(record.get("balance_checksum", "")) == String(direct.get("checksum", "")), "lab reuses resource truth: %s" % point_name)
 		_check(_approx(float(record.get("net_resource_balance", 0.0)), float(direct.get("net_resource_balance", 1.0))), "lab net matches resource model: %s" % point_name)
 		_check(String(record.get("dominant_limiting_factor", "")) == String(direct.get("dominant_limiting_factor", "")), "lab limiting factor matches: %s" % point_name)
+		for diagnostic_field in [
+			"effective_soil_moisture",
+			"light_response", "water_response", "nutrient_response", "temperature_response",
+			"light_limitation", "water_limitation", "nutrient_limitation", "temperature_limitation", "flood_limitation",
+			"density_cost",
+		]:
+			_check(_approx(float(record.get(diagnostic_field, -999.0)), float(direct.get(diagnostic_field, 999.0))), "lab diagnostic field matches resource model %s: %s" % [diagnostic_field, point_name])
 
 
 func _test_controlled_trait_probes() -> void:
@@ -104,12 +111,19 @@ func _test_controlled_trait_probes() -> void:
 func _test_source_boundaries() -> void:
 	var dataset_source := FileAccess.get_file_as_string("res://scripts/research/ecology/eco_p1a_s3_lab_dataset_v1.gd")
 	var lab_source := FileAccess.get_file_as_string("res://scripts/labs/ecology/eco_p1a_s3_visual_lab.gd")
+	var scene_source := FileAccess.get_file_as_string("res://scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn")
 	for forbidden in ["biome ==", "biome_id", "mutation", "natural_selection", "speciation", "AuthorityRegion", "ENetMultiplayerPeer", "MaterialDefinitionId"]:
 		_check(dataset_source.find(forbidden) < 0, "dataset excludes forbidden ownership/logic: %s" % forbidden)
 	_check(lab_source.find("PlantResourceModelV1") < 0, "visual lab does not implement duplicate named resource model")
 	_check(lab_source.find("gross_photosynthetic_income =") < 0, "visual lab does not recompute photosynthesis truth")
 	_check(lab_source.find("soil_moisture :=") < 0, "visual lab does not recompute environment truth")
 	_check(lab_source.find("Dataset.build") >= 0, "visual lab consumes derived dataset")
+	_check(lab_source.find("PROBE EFFECT VS BASE") >= 0, "visual lab explains global probe effect")
+	_check(lab_source.find("WHY  %s") >= 0, "visual lab explains selected patch causality")
+	_check(lab_source.find("LOCAL VS BASE") >= 0, "visual lab compares selected patch to BASE")
+	_check(scene_source.find("StatusPanel") >= 0, "visual lab has dedicated status panel")
+	_check(scene_source.find("ScrollContainer") >= 0, "status diagnostics are scrollable")
+	_check(scene_source.find("anchor_left = 1.0") >= 0, "status panel anchored to right edge")
 
 
 func _approx(a: float, b: float, tolerance: float = 0.000000001) -> bool:
