@@ -19,9 +19,9 @@ MATTER / S1                           STABLE
 Project Control                       NON_RED
 ```
 
-The canonicalization candidate is based on `main @ 82835a37bab1390b6b3f87fb18903070fdd64256` and carries synchronized project registry generation `71`.
+The refreshed canonicalization candidate is based on `main @ 9ab5b16332de47fe6a9c525442d4efa882c9a71c` and preserves canonical project registry generation `71` byte-for-byte. That registry includes newer ECO P1 / PH0 / PH1 research state that landed while the H0.0 merge gate was open.
 
-It preserves terminal H0.0 R3 evidence and prepares **H0.1-R5** as a planning-only handoff. It does not create a C22 runtime branch and does not authorize runtime work.
+It preserves terminal H0.0 R3 evidence and prepares **H0.1-R5** as a planning-only handoff. It does not create a C22 runtime branch and does not authorize runtime work. A separate post-merge registry generation `72` sync will record the H0.0/G8 milestone without losing the newer ECO facts.
 
 ## Live frontiers
 
@@ -33,7 +33,7 @@ It preserves terminal H0.0 R3 evidence and prepares **H0.1-R5** as a planning-on
 | **TS/C22** | SOURCE_ACCEPTED evidence | Intentionally waits fresh post-checkpoint H0.1 execution |
 | **CH** | Windows automated accepted; graphical recovery observation pending | Nonblocking for H0.0; blocks only later CH progression |
 | **NX** | NX.C0 preparation complete | Intentionally waits H0.1 PASS |
-| **ECO** | advisory research; P1C-S4 exact-Windows pending | Nonblocking project research frontier |
+| **ECO** | advisory research; **P1 ACCEPTED**, PH0/PH1 locally green, exact-Windows + PH1 graphical pending | Nonblocking project research frontier |
 | **GLOBAL-P0 R3** | architecture candidate / refresh required | Nonblocking H0.0; promotion remains CRITICAL + human gate |
 | **DOCTRINE** | design reference | Nonblocking |
 | **MATTER** | MW10 stable | Stable foundation |
@@ -75,7 +75,7 @@ R3 is historical checkpoint evidence and must never be rewritten to follow later
 
 ```text
 E2026-08-11-H0-1-R5
-base main: 82835a37bab1390b6b3f87fb18903070fdd64256
+base main: 9ab5b16332de47fe6a9c525442d4efa882c9a71c
 registry generation: 71
 checkpoint: H0_1_CLOSED_LOOP_C22_PILOT
 Work Order: H0-1-R5-DISPATCH-WO-001
@@ -139,16 +139,20 @@ The following work is intentionally outside the H0.0 checkpoint acceptance bound
 
 ```text
 CH9.6 manual graphical/recovery observation
-ECO.P1C-S4 exact-Windows research acceptance
+ECO.PH0 exact-Windows confirmation
+ECO.PH1 exact-Windows + graphical nine-probe review
 GLOBAL-P0 R3 current-main refresh/promotion
 ```
 
-They remain visible and governed by their own stop gates, but do not postpone this project milestone.
+ECO.P1A/P1B/P1C are accepted. PH0 and PH1 remain research-only validation work and do not postpone this project milestone.
 
 ## Critical path after checkpoint integration
 
 ```text
 H0_0_SCAFFOLD_READY canonical
+        ↓
+post-merge registry generation 72 sync
+(H0.0 canonical + G8 FULL ACCEPTED + preserved ECO P1/PH0/PH1 facts)
         ↓
 read exact post-checkpoint main
         ↓
