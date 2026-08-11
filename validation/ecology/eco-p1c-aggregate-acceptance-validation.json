@@ -1,0 +1,12 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1C",
+  "decision": "ACCEPTED_ECOLOGICAL_TRAIT_ONLY_SCOPE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "windows_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+  "evidence": {"s1":"PASS_116_RESTART_5","s2":"PASS_101_RESTART_5","s3":"PASS_SEED_MATRIX_64_63_63_UNIFORM_64_AGGREGATE_5_RESTART_5","s4":"PASS_6x30_HETERO_27_UNIFORM_30_DEEP_AGGREGATE_15_RESTART_6","s4_aggregate_hash":"0ca70eab1e5db569a45e244a6cd2f378469197472de2a7d35f8a4a15db870112"},
+  "failure_matrix": {"GLOBAL_TAKEOVER":"PASS","DIVERSITY_COLLAPSE":"PASS","CLUSTER_COLLAPSE":"PASS","FALSE_NICHE_UNIFORM":"PASS","RUNAWAY_TRAIT":"PASS_NO_MUTATION_STATIC_BOUNDED_FOUNDERS","REPLAY_DIVERGENCE":"PASS_EXACT_HASH_CONTRACT"},
+  "scope_note": "Acceptance covers ecological traits and abundance competition only. PH morphology traits are not yet coupled into P1C selection and no morphology-aware strategy proof is claimed.",
+  "failures": 0,
+  "next": "ECO.P1 aggregate acceptance and PH0/PH1 developmental phenotype work."
+}
