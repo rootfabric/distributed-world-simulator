@@ -1,11 +1,11 @@
 {
   "schema": "distributed_world_simulator.global_program_roadmap.v1",
   "global_revision": "GLOBAL-P0-2026-08-10-R2",
-  "updated_at_utc": "2026-08-11T03:15:00Z",
+  "updated_at_utc": "2026-08-11T03:24:00Z",
   "canonical_branch": "main",
   "status": "active",
   "operational_status_source": "config/control/project-program-registry.v1.json",
-  "operational_snapshot_note": "The fields active_sync_branches and active_frontiers below are an advisory R2 snapshot synchronized with PC0 generation 61. The main-owned project-program-registry remains authoritative for fast-moving frontier state.",
+  "operational_snapshot_note": "The fields active_sync_branches and active_frontiers below are an advisory R2 snapshot synchronized with PC0 generation 62 after project-control convergence became canonical in main. The main-owned project-program-registry remains authoritative for fast-moving frontier state.",
   "architecture_invariants": [
     "CANONICAL_WORLD_NE_PRESENTATION",
     "CANONICAL_WORLD_NE_TRANSPORT",
@@ -107,7 +107,7 @@
       "branch": "feature/nx-m7-owner-authority-convergence",
       "stage": "NX.C0 Owner Authority Convergence Preparation",
       "status": "ACTIVE_GREEN_PREPARATION",
-      "next": "NX.C1 starts from then-current main only after PC0 directional-watch hardening is canonical"
+      "next": "PC0 hardening is canonical; create/register a fresh current-main NX.C1 and implement only the minimal owner-authority runtime slice before validation."
     },
     "world_building_doctrine": {
       "branch": "feature/world-building-doctrine",

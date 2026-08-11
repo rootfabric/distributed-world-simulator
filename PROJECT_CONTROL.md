@@ -6,7 +6,21 @@
 
 Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется в архитектурном roadmap вручную: operational truth строится из main-owned registry, branch passports, validation heads и реальных Git refs.
 
-Текущий convergence playbook:
+## С чего начинать проверку проекта
+
+Для ответа на вопросы «какие ветки сейчас в работе, что им делать дальше и какой checkpoint следующий» сначала читать:
+
+```text
+docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
+```
+
+Machine operational truth:
+
+```text
+config/control/project-program-registry.v1.json
+```
+
+Подробный convergence train:
 
 ```text
 docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
@@ -177,7 +191,6 @@ tested_heads.runtime
 
 tested_heads.focused
   SHA focused acceptance
-
 tested_heads.full_regression
   SHA полного regression
 ```
@@ -255,6 +268,9 @@ Architecture ownership:
 
 Current operational project state:
   config/control/project-program-registry.v1.json   <-- MAIN ONLY OWNER
+
+Human current-frontier snapshot:
+  docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
 
 Branch-local facts:
   config/control/branches/<branch>.v1.json
