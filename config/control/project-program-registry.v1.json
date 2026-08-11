@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 50,
+  "registry_generation": 51,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T01:05:00Z",
+  "updated_at_utc": "2026-08-11T01:10:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -64,20 +64,20 @@
     "CH": {
       "program": "CH",
       "program_name": "Character Presentation",
-      "branch": "feature/ch9-5-live-equipment-runtime-composition",
-      "passport_path": "config/control/branches/feature__ch9-5-live-equipment-runtime-composition.v1.json",
+      "branch": "feature/ch9-6-playable-network-equipment-lab",
+      "passport_path": "config/control/branches/feature__ch9-6-playable-network-equipment-lab.v1.json",
       "requires_passport": true,
       "role": "PRIMARY_FRONTIER",
-      "short_description": "Persistent live runtime composition for server-authoritative character equipment.",
-      "purpose": "Compose accepted CH9.2 Inventory UI, CH9.3 live ENet equipment replication and CH9.4 M6 durable recovery in one production-shaped runtime without adding character-private truth, persistence or transport semantics.",
-      "expected_outcome": "A persistent dedicated server and live clients can equip through the existing ITEM channel, restart/recover, reconnect and late-join while the same canonical Item UUIDs automatically drive local and remote CharacterEquipment presentation exactly once.",
-      "current_stage": "CH9.5 Live Equipment Runtime Composition",
-      "stage_status": "SOURCE_ACCEPTED_POST_ACCEPTANCE_AUDIT_REQUIRED",
-      "progress_note": "CH9.5 is FOCUSED_ACCEPTED. Exact Windows Godot 4.7.1 double on focused head 0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1 passes direct CH9.5 presentation coordinator 27 assertions and persistent ENet restart/recovery composition 41 assertions. The complete CH9.5 candidate runner also passes editor import, CH9.2 composition 59, CH9.3 replicated presentation 27, CH9.3 real ENet 20, CH9.4 durable roundtrip 34, CH9.4 reconnect/recovery 53, CH9.5 coordinator 27 and CH9.5 persistent ENet recovery 41 assertions. Accepted runtime head c65b0b51f62be21f6c5d8e266a720a49bddf4c02 remains unchanged by test-only Fix1. Evidence proves persistent live ITEM-channel equipment, M6 checkpoint durability, fresh-server recovery, reconnect and late join of the same canonical Item UUID, idempotent derived presentation and post-recovery unequip without movement snapshot equipment IDs or new foundation ownership. Per PC0 policy, a post-acceptance audit is mandatory before another Character stage is declared.",
+      "short_description": "Playable graphical composition of Inventory UI, server-authoritative network equipment, durable recovery and real Quaternius presentation.",
+      "purpose": "Route the accepted component Inventory UI through NetworkCharacterEquipmentGameplayController and the existing ITEM/ENet authority path into the persistent canonical Item Graph and real CharacterEquipmentPresenter.",
+      "expected_outcome": "A player can drag wearables in the actual Inventory UI, observe server-authoritative equipment on the real Quaternius character, restart the persistent runtime and see the same canonical equipped items restored automatically.",
+      "current_stage": "CH9.6 Playable Network Equipment Lab",
+      "stage_status": "IMPLEMENTED_CANDIDATE_PENDING_WINDOWS_AND_GRAPHICAL_GATE",
+      "progress_note": "CH9.5 is FOCUSED_ACCEPTED. The mandatory post-acceptance audit supplied from registry generation 49 returned CH YELLOW; Overall RED was isolated to T1B.3 Construction. The T1B.3 passport declares only Construction failure/recovery runtime paths and no CH Character/M3/M6 equipment runtime overlap. The global roadmap explicitly prefers post-CH9.5 integration/composition instead of new equipment foundations. CH9.6 is therefore the authorized Character frontier. Candidate runtime head 19b463ca0a7a0a43284e953d36348145b428a0a6 adds a playable network equipment lab scene. The automated gate instantiates that same graphical scene headlessly and invokes the actual Inventory screen preview/drop route through NetworkCharacterEquipmentGameplayController, Ch9NetworkItemCommandBridge, persistent CH9.5 server, replica Item Graph and real Quaternius presenter, including a fresh-lab recovery cycle. Manual graphical observation remains required.",
       "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition FOCUSED_ACCEPTED",
-      "next_stage": "Run CONTROL_PROJECT.ps1 from an up-to-date main checkout and review CH for dependency drift/overlap. If CH is non-RED, declare the next Character frontier in main before implementation.",
-      "health_declared": "GREEN",
-      "blockers": ["CH9_5_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"]
+      "next_stage": "Run RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, launch PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1 with -ResetState, perform UI equip and movement observation, close normally, relaunch without -ResetState and verify recovered presentation. No later CH stage starts before automated plus graphical acceptance and post-acceptance PC0 audit.",
+      "health_declared": "YELLOW",
+      "blockers": ["CH9_6_WINDOWS_AUTOMATED_GATE_PENDING", "CH9_6_GRAPHICAL_USER_OBSERVATION_PENDING"]
     },
     "DOCTRINE": {
       "program": "DOCTRINE",
@@ -155,7 +155,7 @@
   "global_blocked_transitions": [
     {"stage": "G8.6 START", "blocked_by": "G8_5_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
-    {"stage": "CH STAGE AFTER CH9.5 START", "blocked_by": "CH9_5_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
+    {"stage": "CH STAGE AFTER CH9.6 START", "blocked_by": "CH9_6_AUTOMATED_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
   ],
   "audit_triggers": ["ANY_MAJOR_CHECKPOINT_ACCEPTED", "BEFORE_NEXT_MAJOR_STAGE", "GLOBAL_ARCHITECTURE_CHANGE", "NEW_FOUNDATION_OR_REGISTRY_CONCEPT", "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY", "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE", "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"]
 }
