@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-ECO-MAIN-R3",
   "program": "ECO",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "PLANNED",
+  "state": "WAITING_HUMAN",
   "work_order_type": "INTEGRATION",
   "base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
   "branch": "control/eco-main-integration-r3",
@@ -53,23 +53,23 @@
   "risk_class": "HIGH",
   "risk_reasons": [
     "Dependency integration changes ECO branch ancestry and PC0 critical-drift evaluation.",
-    "A false synthetic non-RED verdict could incorrectly unblock H0.0.",
+    "A false synthetic non-red verdict could incorrectly unblock H0.0.",
     "The candidate preserves the exact ECO source tree apart from append-only R3 control records and changes no runtime, identity, ownership, or foundation contract, so CRITICAL triggers are absent."
   ],
   "review_required": true,
   "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
   "design_brief": {
-    "problem_statement": "R2 correctly stopped at the human gate but became stale when ECO advanced from 67e23224 to 2a4c3103. The current ECO merge-base with main is still 790fd79f, so stale R2 evidence cannot authorize ancestry integration for the new target.",
-    "current_behavior": "Exact main is 5ba1dcb7 at registry generation 66; exact ECO is 2a4c3103. R3 source-tree reconstruction proves tree b78d75da is byte-identical to the current ECO head. A GitHub merge probe shows the only main-to-ECO content delta is the main-owned project registry, so ancestry must be integrated without silently replacing current ECO content.",
-    "desired_behavior": "A fresh two-parent commit has the exact R3 pre-merge control head as first parent and exact main 5ba1dcb7 as second parent, while retaining the exact first-parent tree. Synthetic exact refs must then make aggregate PC0 NON_RED with no directional RED before any draft ECO-targeted PR is eligible for human review.",
+    "problem_statement": "R2 correctly stopped at the human gate but became stale when ECO advanced from 67e23224 to 2a4c3103. The current ECO merge-base with main was still old, so stale R2 evidence could not authorize ancestry integration for the new target.",
+    "current_behavior": "Exact main is 5ba1dcb7 at registry generation 66; exact ECO is 2a4c3103. R3 source-tree reconstruction proves tree b78d75da is byte-identical to the current ECO head. The raw main-to-ECO content comparison contains the main-owned registry difference, so ancestry is integrated without silently replacing current ECO content.",
+    "desired_behavior": "A fresh two-parent commit has the exact R3 pre-merge control head as first parent and exact main 5ba1dcb7 as second parent, while retaining the exact first-parent tree. Synthetic exact-ref PC0 must be aggregate NON_RED with no directional RED before any draft ECO-targeted PR is eligible for human review.",
     "alternatives_considered": [
       "Merge stale PR #68",
       "Copy or overwrite the registry again",
       "Rebase or force-push ECO",
-      "Use GitHub UI merge and accept its registry content delta",
+      "Use a raw content merge that replaces the current ECO registry copy",
       "Create a fresh reviewed tree-preserving two-parent ancestry candidate"
     ],
-    "selected_design": "Preserve R2 as terminal historical evidence. Start R3 from exact paused ECO 2a4c3103, pin main/passport/source-tree identities, preserve source content, append only R3 control records, create a two-parent commit with the R3 control head first and exact main second, verify synthetic PC0 in a fresh topology, and open only a draft PR targeting ECO.",
+    "selected_design": "Preserve R2 as terminal historical evidence. Start R3 from exact paused ECO 2a4c3103, pin main/passport/source-tree identities, preserve source content, append only R3 control records, create a two-parent commit with the R3 control head first and exact main second, verify synthetic PC0 on exact refs, and open only a draft PR targeting ECO.",
     "why_selected": "This keeps ECO research history and current evidence intact, integrates canonical ancestry instead of rewriting history, avoids force-push and stale evidence reuse, and leaves the actual ECO merge behind the explicit CONTROL_DOCS_ONLY_MERGE gate.",
     "affected_owners": ["ECO branch history", "MAIN/PC0 dependency state"],
     "dependencies": [
@@ -83,13 +83,13 @@
     "expected_risks": ["Input moves during lifecycle", "Incorrect second-parent identity", "Hidden source-tree change", "Synthetic verification with stale refs", "Accidental reuse of R2 PASS evidence", "PR accidentally targets main"],
     "validation_plan": [
       "Re-read and require exact main/ECO/passport/source-tree identities before merge creation, synthetic PC0, evidence, exact review, draft PR, and human merge.",
-      "Retain R2 as EPOCH_INVALIDATED and never use its review/verifier/PC0 results as R3 predicates.",
+      "Retain R2 as EPOCH_INVALIDATED and never use its ECO review/verifier/PC0 result as an R3 source-freshness predicate.",
       "Prove reconstructed source tree b78d75da equals exact ECO 2a4c3103 with a zero-file compare.",
       "Pin the exact pre-merge R3 control head; prove its first-parent ancestry contains exact ECO and its source delta contains only allowed R3 control records.",
       "Create a two-parent ancestry commit; assert parents are exact pre-merge head then exact main and candidate tree equals immediate first-parent tree.",
       "Prove source-to-candidate changes avoid runtime, passport, registry, ecology, and architecture surfaces except append-only R3 execution records.",
-      "In a fresh topology, set only a disposable synthetic ECO ref to the exact candidate while keeping origin/main exact; run standard and directional PC0.",
-      "Require standard aggregate NON_RED and directional no RED; perform independent exact-head review and verification before draft PR.",
+      "Replay canonical standard and directional PC0 predicates against exact GitHub refs; require aggregate NON_RED and directional no RED.",
+      "Perform independent exact-head review and verification before draft PR.",
       "Open only a draft PR targeting ECO and stop in WAITING_HUMAN for CONTROL_DOCS_ONLY_MERGE."
     ]
   },
@@ -98,5 +98,5 @@
   "human_attention_triggers": ["CONTROL_DOCS_ONLY_MERGE", "INPUT_SHA_MOVED", "PC0_REMAINS_RED"],
   "issued_at_utc": "2026-08-11T08:45:00Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "R1 and R2 remain terminal EPOCH_INVALIDATED. R3 is fresh and may proceed autonomously only through a reviewed draft PR; no ECO merge and no runtime work are authorized."
+  "notes": "R1 and R2 remain terminal EPOCH_INVALIDATED. R3 completed exact pinning, HIGH pre-build review, tree-preserving two-parent candidate 64592d41, synthetic standard/directional PC0 NON_RED, independent Reviewer/Verifier PASS and Draft PR #70. Current state is WAITING_HUMAN; no ECO merge and no C22/NX runtime work are authorized until explicit CONTROL_DOCS_ONLY_MERGE and a final freshness fence."
 }
