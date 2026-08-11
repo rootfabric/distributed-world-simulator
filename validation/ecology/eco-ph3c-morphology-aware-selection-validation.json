@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.PH3C",
-  "decision": "ANALYTIC_PREFLIGHT_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "EXACT_WINDOWS_PENDING",
+  "tested_engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC)",
   "execution": {
     "kernel": "res://scripts/research/ecology/plant_morphology_aware_selection_competition_v1.gd",
     "focused_test": "res://tests/research/ecology/eco_ph3c_morphology_aware_selection_acceptance.gd",
@@ -14,27 +14,37 @@
     "cycles": 10,
     "selection_strength": 0.35
   },
-  "parent_regressions_required": {
+  "parent_regressions": {
     "p1c_s4_aggregate": 15,
     "ph0": 63,
     "ph1": 128,
     "ph2": 107,
     "ph3": 217
   },
-  "causal_matrix": {
-    "RESOURCE_ONLY_NEUTRALITY": "REQUIRE_ALL_5_CONTROLS_TIE_0_5_0_5",
-    "SUN_CROWN": "REQUIRE_CROWN_WIDE_WIN_SHARE_GT_0_60",
-    "DRY_CROWN": "REQUIRE_CROWN_NARROW_WIN_SHARE_GT_0_60",
-    "CROWN_ENVIRONMENT_REVERSAL": "REQUIRE_WINNER_CHANGE_SUN_VS_DRY",
-    "BRANCH_COST_SELECTION": "REQUIRE_BRANCH_LOW_SHARE_GT_0_60",
-    "HEIGHT_COST_SELECTION": "REQUIRE_HEIGHT_LOW_SHARE_GT_0_75",
-    "GIANT_DENSE_SELECTION": "REQUIRE_BASE_SHARE_GT_0_95_AND_GIANT_SHARE_LT_0_01",
-    "GENOME_ISOLATION": "REQUIRE_IDENTICAL_GENOME_AND_INDIVIDUAL_SEED_WITHIN_PAIR",
-    "P1_ISOLATION": "REQUIRE_IDENTICAL_ACCEPTED_RESOURCE_CHECKSUM_WITHIN_PAIR"
+  "exact_windows": {
+    "focused_assertions": 97,
+    "restart_assertions": 6,
+    "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+    "sun_wide_share": 0.64978120448288,
+    "dry_wide_share": 0.31553289557419,
+    "branch_low_share": 0.67681023488994,
+    "height_low_share": 0.88312054209733,
+    "giant_dense_share": 0.00014414428813
   },
-  "analytic_preflight": "PASS; independent equation reproduction matches accepted PH3 tradeoff numbers and predicts all acceptance inequalities with margin",
-  "aggregate_hash": "PENDING_FIRST_EXACT_WINDOWS_RUN",
-  "truth_boundary": "PH3C is a research-only causal selection experiment over accepted PH3 coupling. It does not claim global coexistence, mutate the genome, create species, own population runtime truth, or introduce renderer/network/persistence semantics.",
-  "windows_confirmation": "PENDING",
-  "next": "Exact Windows PH3C pass pins aggregate hash and allows PH3C acceptance; then PH4 Seed Development Lifecycle may open."
+  "causal_matrix": {
+    "RESOURCE_ONLY_NEUTRALITY": "PASS_ALL_5_CONTROLS_TIE_0_5_0_5",
+    "SUN_CROWN": "PASS_CROWN_WIDE",
+    "DRY_CROWN": "PASS_CROWN_NARROW",
+    "CROWN_ENVIRONMENT_REVERSAL": "PASS",
+    "BRANCH_COST_SELECTION": "PASS",
+    "HEIGHT_COST_SELECTION": "PASS",
+    "GIANT_DENSE_SELECTION": "PASS",
+    "GENOME_ISOLATION": "PASS",
+    "P1_ISOLATION": "PASS",
+    "RESTART_REPLAY": "PASS_EXACT_AGGREGATE_HASH"
+  },
+  "truth_boundary": "PH3C is a research-only causal selection experiment over accepted PH3 coupling. It does not claim global morphology coexistence, mutate the genome, create species, own population runtime truth, or introduce renderer/network/persistence semantics.",
+  "known_scope_limit": "Full unrestricted morphology pool currently shows compact/low-height dominance and remains a calibration blocker before unconstrained morphology evolution.",
+  "windows_confirmation": "PASS",
+  "next": "ECO.PH4 Seed Development Lifecycle may open."
 }
