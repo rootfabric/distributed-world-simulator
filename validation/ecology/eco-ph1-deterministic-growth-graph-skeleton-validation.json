@@ -1,0 +1,13 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH1",
+  "decision": "LOCAL_FOCUSED_PASS_PARENT_PH0_WINDOWS_AND_GRAPHICAL_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "execution": {"kernel":"res://scripts/research/ecology/plant_growth_graph_skeleton_v1.gd","probes":"res://scripts/research/ecology/plant_growth_graph_controlled_probes_v1.gd","focused_test":"res://tests/research/ecology/eco_ph1_growth_graph_skeleton_acceptance.gd","visual_smoke":"res://tests/research/ecology/eco_ph1_visual_lab_smoke.gd","restart":"res://tests/research/ecology/eco_ph1_restart_replay_probe.gd","runner":"RUN_ECO_PH1_TESTS.ps1","focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"failures":0},
+  "hashes": {"base_graph":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451"},
+  "truth_boundary": "PH1 is a derived skeleton research representation. It does not change accepted ecology/resource truth and does not create canonical plant classes, mesh truth, population identity, persistence, authority or networking.",
+  "windows_confirmation": "PENDING",
+  "graphical_confirmation": "PENDING",
+  "next": "Exact Windows automated pass plus graphical probe review allow PH1 acceptance and PH2 opening."
+}
