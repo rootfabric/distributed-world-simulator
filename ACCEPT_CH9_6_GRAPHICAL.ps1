@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 $Launcher = Join-Path $Root "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
+$Garment = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy\Modular Character Outfits - Fantasy[Standard]\Exports\glTF (Godot-Unreal)\Outfits\Male_Peasant.gltf"
 $PowerShellExe = if ($PSVersionTable.PSEdition -eq "Core") {
     Join-Path $PSHOME "pwsh.exe"
 } else {
@@ -22,6 +23,30 @@ if (-not (Test-Path -LiteralPath $PowerShellExe -PathType Leaf)) {
 if ($Port -lt 1024 -or $Port -gt 65535) {
     throw "Port must be in range 1024..65535."
 }
+
+if ([string]::IsNullOrWhiteSpace($GodotPath)) {
+    $Candidates = @(
+        $env:GODOT_BIN,
+        "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe",
+        "C:\Godot\bin\godot.windows.editor.double.x86_64.console.exe"
+    )
+    foreach ($Candidate in $Candidates) {
+        if (-not [string]::IsNullOrWhiteSpace($Candidate) -and (Test-Path -LiteralPath $Candidate -PathType Leaf)) {
+            $GodotPath = (Resolve-Path -LiteralPath $Candidate).Path
+            break
+        }
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
+    throw "Godot executable not found. Expected C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe or pass a valid -GodotPath. Do not insert a backslash before the underscore in x86_64."
+}
+if (-not (Test-Path -LiteralPath $Garment -PathType Leaf)) {
+    throw "CH9.6 Quaternius garment asset is missing in this worktree: $Garment`nCopy/link the accepted assets into this checkout before graphical acceptance."
+}
+
+Write-Host "Godot preflight: PASS -> $GodotPath" -ForegroundColor Green
+Write-Host "Quaternius asset preflight: PASS" -ForegroundColor Green
 
 if ([string]::IsNullOrWhiteSpace($EvidencePath)) {
     $EvidenceDir = Join-Path $Root "artifacts\ch9-6-manual"
@@ -42,12 +67,8 @@ function Read-YesNo {
 
     while ($true) {
         $Answer = (Read-Host "$Question [y/n]").Trim().ToLowerInvariant()
-        if ($Answer -in @("y", "yes")) {
-            return $true
-        }
-        if ($Answer -in @("n", "no")) {
-            return $false
-        }
+        if ($Answer -in @("y", "yes")) { return $true }
+        if ($Answer -in @("n", "no")) { return $false }
         Write-Host "Enter y or n." -ForegroundColor Yellow
     }
 }
@@ -59,15 +80,12 @@ function Invoke-Ch96Lab {
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", $Launcher,
-        "-Port", [string]$Port
+        "-Port", [string]$Port,
+        "-GodotPath", $GodotPath
     )
-    if (-not [string]::IsNullOrWhiteSpace($GodotPath)) {
-        $ChildArgs += @("-GodotPath", $GodotPath)
-    }
-    if ($ResetState) {
-        $ChildArgs += "-ResetState"
-    }
+    if ($ResetState) { $ChildArgs += "-ResetState" }
 
+    Write-Host "Launching graphical CH9.6 client..." -ForegroundColor Cyan
     & $PowerShellExe @ChildArgs
     return [int]$LASTEXITCODE
 }
@@ -78,9 +96,7 @@ try {
     if ($null -ne $HeadCandidate -and -not [string]::IsNullOrWhiteSpace($HeadCandidate)) {
         $Head = $HeadCandidate.Trim()
     }
-} catch {
-    $Head = "UNKNOWN"
-}
+} catch { $Head = "UNKNOWN" }
 
 Write-Host ""
 Write-Host "CH9.6 MANUAL GRAPHICAL ACCEPTANCE" -ForegroundColor Cyan
@@ -96,6 +112,9 @@ Write-Host "5. Close the application normally." -ForegroundColor Cyan
 Write-Host ""
 
 $FirstExit = Invoke-Ch96Lab -ResetState
+if ($FirstExit -ne 0) {
+    throw "CH9.6 first graphical launch failed before acceptance questions (exit code $FirstExit). No graphical PASS can be recorded."
+}
 
 $FirstReady = Read-YesNo "Did the lab reach READY with the Inventory UI available?"
 $FirstPresentation = Read-YesNo "Did equipped clothing appear correctly on the real Quaternius character?"
@@ -112,20 +131,15 @@ Write-Host "5. Close the application normally." -ForegroundColor Cyan
 Write-Host ""
 
 $SecondExit = Invoke-Ch96Lab
+if ($SecondExit -ne 0) {
+    throw "CH9.6 recovery graphical launch failed before recovery questions (exit code $SecondExit). No graphical PASS can be recorded."
+}
 
 $Recovered = Read-YesNo "Were the previously equipped items restored automatically after restart?"
 $RecoveredPresentation = Read-YesNo "Was the recovered equipment already visible on the Quaternius character without a new drag?"
 $UnequipPresentation = Read-YesNo "After dragging a restored item back to backpack, did its visual disappear?"
 
-$AllObservations = @(
-    $FirstReady,
-    $FirstPresentation,
-    $FirstMovement,
-    $FirstNormalClose,
-    $Recovered,
-    $RecoveredPresentation,
-    $UnequipPresentation
-)
+$AllObservations = @($FirstReady,$FirstPresentation,$FirstMovement,$FirstNormalClose,$Recovered,$RecoveredPresentation,$UnequipPresentation)
 $ObservationPass = -not ($AllObservations -contains $false)
 $ProcessPass = ($FirstExit -eq 0 -and $SecondExit -eq 0)
 $Decision = if ($ObservationPass -and $ProcessPass) { "OPERATOR_REPORTED_PASS" } else { "OPERATOR_REPORTED_FAIL" }
@@ -138,14 +152,8 @@ $Evidence = [ordered]@{
     recorded_at_utc = (Get-Date).ToUniversalTime().ToString("o")
     launcher = "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
     operator_runner = "ACCEPT_CH9_6_GRAPHICAL.ps1"
-    first_launch = [ordered]@{
-        reset_state = $true
-        exit_code = $FirstExit
-    }
-    second_launch = [ordered]@{
-        reset_state = $false
-        exit_code = $SecondExit
-    }
+    first_launch = [ordered]@{ reset_state = $true; exit_code = $FirstExit }
+    second_launch = [ordered]@{ reset_state = $false; exit_code = $SecondExit }
     observations = [ordered]@{
         ready_and_inventory_available = $FirstReady
         equipped_quaternius_presentation_visible = $FirstPresentation
