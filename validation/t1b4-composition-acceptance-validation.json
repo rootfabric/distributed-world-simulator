@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.t1b4_composition_acceptance_validation.v1",
   "checkpoint": "T1B4_COMPOSITION_ACCEPTANCE",
-  "decision": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
+  "decision": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
   "branch": "feature/t1b-composition-failure-recovery",
   "parent_checkpoint": "T1B.3 Recovery / Reconnect Composition ACCEPTED",
   "parent_tested_checkout": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
@@ -58,11 +58,24 @@
   "required_validation": {
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "focused_runner": "RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1",
-    "focused_result": "PENDING",
+    "focused_result": "PASS_93_ASSERTIONS_0_FAILURES",
+    "focused_evidence": [
+      "OPEN mutation reached reconnect and late-interest replicas",
+      "OPEN mutation semantic convergence",
+      "A presenter derived OPEN from canonical runtime",
+      "C presenter derived OPEN from canonical runtime",
+      "final ONLINE/OPEN runtime checkpoint succeeded",
+      "server recorded replayed OFFLINE command rejection",
+      "A reconnect/C late join/server clean shutdown"
+    ],
     "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
     "full_regression_result": "PENDING"
   },
-  "tested_heads": {"runtime": "", "focused": "", "full_regression": ""},
+  "tested_heads": {
+    "runtime": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
+    "focused": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
+    "full_regression": ""
+  },
   "t2_control_gate": {
     "t2_0_active": false,
     "blocked_until": ["C22_MAIN_INTEGRATED", "T_RUNTIME_SCALE_EVIDENCE", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"]
