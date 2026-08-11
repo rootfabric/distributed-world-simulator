@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/world/testing/playground_view_relative_runtime_fix8.gd" id="1_playground"]
+[ext_resource type="Script" path="res://scripts/world/testing/playground_view_relative_runtime_fix10_item_projection.gd" id="1_playground"]
 
 [node name="PlaygroundRuntime" type="Node3D"]
 script = ExtResource("1_playground")
