@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "evidence_head_sha": "09ef6e6707b002fef7c79ddd96727f59e893cd91",
+  "tests": [],
+  "test_environment": {
+    "platform": "GITHUB_CONTROL_REVIEW",
+    "engine": "NOT_APPLICABLE",
+    "notes": "Pre-dispatch evidence only; no runtime tests are claimed."
+  },
+  "review_status": "PASS",
+  "required_fixes": [],
+  "evidence_gaps": [
+    "RUNTIME_NOT_DISPATCHED",
+    "C22_TRANSFER_PENDING",
+    "WINDOWS_RUNTIME_VALIDATION_PENDING"
+  ],
+  "invariants": [
+    "branch merge-base equals current main 1112d1f7cfad1df18fb3621a537e191e674848c6",
+    "pre-dispatch diff contains control/harness files only",
+    "no C22 production/runtime file changed before Director dispatch",
+    "scheduler permits at most one H0.1 runtime worker"
+  ],
+  "pc0_standard": "PENDING",
+  "pc0_directional": "PENDING"
+}
