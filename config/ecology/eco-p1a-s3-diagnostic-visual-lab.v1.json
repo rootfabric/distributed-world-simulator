@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1A-S3",
   "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -42,8 +42,8 @@
     "SHADE_TOLERANT",
     "SUN_FAVORED"
   ],
-  "headless_evidence": {
-    "assertions": 114,
+  "fix1_headless_evidence": {
+    "assertions": 208,
     "failures": 0,
     "dataset_grid": 17,
     "dataset_seasons": 24,
@@ -53,6 +53,21 @@
     "scene_dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
     "parent_s2": "PASS_235_ASSERTIONS",
     "parent_s1": "PASS_109_ASSERTIONS"
+  },
+  "graphical_review": {
+    "pre_fix_result": "FIX_REQUIRED_PRESENTATION_ONLY",
+    "pre_fix_findings": [
+      "diagnostic text intruded visually on the heatmap at the observed window size",
+      "insufficient explanation of probe effect and selected-patch causality"
+    ],
+    "fix1_targets": [
+      "dedicated right-side scrollable panel",
+      "view explanation and legend",
+      "global probe-vs-BASE effect",
+      "selected patch responses, limitations, energy equation and WHY explanation"
+    ],
+    "fix1_windows_automated": "PENDING",
+    "fix1_manual_graphical": "PENDING"
   },
   "invariants": {
     "presentation_is_truth": false,
@@ -65,11 +80,13 @@
   },
   "manual_review_required": true,
   "manual_review_targets": [
+    "heatmap and diagnostics panel do not overlap",
     "heatmaps are readable and spatially coherent",
     "biomass and net-balance views visibly differ from raw environment fields",
     "limiting-factor view exposes water/light/nutrient/flood structure",
     "Q/E probe switching produces explainable niche changes",
-    "click inspection exposes environment plus resource/cost breakdown",
+    "global probe-vs-BASE summary explains the direction of change",
+    "click inspection exposes environment, responses, limitations, costs, biomass and a causal WHY statement",
     "no visual state changes accepted S1/S2 hashes"
   ]
 }
