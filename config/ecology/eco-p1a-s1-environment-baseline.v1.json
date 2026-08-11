@@ -42,7 +42,7 @@
     "decision": "ACCEPTED",
     "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "focused_test": "PASS",
-    "assertions": 108,
+    "assertions": 109,
     "failures": 0,
     "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
