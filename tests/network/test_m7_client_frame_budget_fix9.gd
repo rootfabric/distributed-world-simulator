@@ -3,6 +3,7 @@ extends SceneTree
 const ClientRuntime = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const InventoryFix9 = preload("res://scripts/ui/inventory/inventory_network_rev6_enhancer_fix9.gd")
 const RuntimeFix8 = preload("res://scripts/world/testing/playground_view_relative_runtime_fix8.gd")
+const RuntimeItemProjection = preload("res://scripts/world/testing/playground_view_relative_runtime_fix10_item_projection.gd")
 const PlaygroundScene = preload("res://scenes/testing/playground.tscn")
 
 class FakeProfile:
@@ -149,7 +150,18 @@ func _test_playground_composition_uses_fix9() -> void:
 	var instance = PlaygroundScene.instantiate()
 	_assert(instance != null, "FIX9 playground scene instantiates")
 	if instance != null:
-		_assert(instance.get_script() == RuntimeFix8, "FIX9 must preserve accepted FIX8 playground script identity")
+		_assert(
+			instance.get_script() == RuntimeItemProjection,
+			"playground scene composes current FIX10 item-projection leaf"
+		)
+		var projection_source: String = FileAccess.get_file_as_string(
+			"res://scripts/world/testing/playground_view_relative_runtime_fix10_item_projection.gd"
+		)
+		_assert(
+			projection_source.contains("extends \"res://scripts/world/testing/playground_view_relative_runtime_fix8.gd\""),
+			"current playground leaf must preserve accepted FIX8 composition chain"
+		)
+		_assert(RuntimeFix8 != null, "accepted FIX8 runtime remains loadable beneath current playground leaf")
 		var source: String = FileAccess.get_file_as_string(
 			"res://scripts/world/testing/playground_view_relative_runtime_fix8.gd"
 		)
