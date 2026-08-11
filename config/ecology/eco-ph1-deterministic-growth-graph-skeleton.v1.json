@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH1",
+  "name": "Deterministic GrowthGraph Skeleton Lab",
+  "status": "LOCAL_FOCUSED_PASS_PARENT_PH0_WINDOWS_AND_GRAPHICAL_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.PH0 candidate; acceptance blocked until exact Windows PH0",
+  "experiment_revision": "ECO.PH1.1",
+  "purpose": "Prove that one parametric developmental model can generate smoothly different plant skeleton morphologies from continuous developmental traits and deterministic IndividualSeed without TREE/BUSH/GRASS generator classes.",
+  "controlled_probes": ["BASE","APICAL_LOW","APICAL_HIGH","BRANCH_LOW","BRANCH_HIGH","ANGLE_NARROW","ANGLE_WIDE","INTERNODE_SHORT","INTERNODE_LONG"],
+  "local_evidence": {"focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"base_graph_hash":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451","base_metrics":{"segments":14,"main_axis_segments":10,"lateral_segments":4,"lateral_branches":2,"height_m":3.2,"horizontal_radius_m":0.35867697975006,"total_length_m":4.2040149018635,"mean_lateral_angle_deg":43.785653956289}},
+  "acceptance_semantics": ["same development traits + IndividualSeed produce exact GrowthGraph hash","different IndividualSeed changes stochastic realization without changing inherited traits","lower apical dominance increases lateral branching","higher branch probability increases branch count","wider branch angle increases angular spread and crown radius","shorter internode increases axis segmentation while preserving max height","branch-probability sweep changes morphology monotonically without type switching","GrowthGraph remains derived representation and no mesh/biome/species/authority/network/persistence truth is introduced"],
+  "manual_graphical_gate": "Cycle all nine probes in res://scenes/labs/ecology/eco_ph1_growth_graph_visual_lab.tscn and verify smooth skeleton changes with no discontinuous generator switch.",
+  "next_after_acceptance": "ECO.PH2 Environment-Coupled Development / Plasticity"
+}
