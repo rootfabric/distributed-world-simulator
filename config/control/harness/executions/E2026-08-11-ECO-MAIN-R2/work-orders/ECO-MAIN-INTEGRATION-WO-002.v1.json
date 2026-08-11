@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-ECO-MAIN-R2",
   "program": "ECO",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "PLANNED",
+  "state": "DISPATCHED",
   "work_order_type": "INTEGRATION",
   "base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
   "branch": "control/eco-main-integration-r2",
