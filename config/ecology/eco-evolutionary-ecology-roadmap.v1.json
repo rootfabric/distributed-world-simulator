@@ -1,6 +1,6 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R2-2026-08-11",
+  "revision": "ECO-R3-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
@@ -63,20 +63,30 @@
           "assertions": 109,
           "failures": 0,
           "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+          "windows": "PASS_CLEAN",
           "validation": "validation/ecology/eco-p1a-s1-environment-baseline-validation.json"
         }
       },
       {
         "id": "P1A-S2",
         "name": "Single-Plant Resource Model",
-        "status": "NEXT",
+        "status": "LINUX_FOCUSED_PASS_WINDOWS_CONFIRMATION_PENDING",
         "depends_on": ["P1A-S1"],
-        "output": "Headless EXP-V1 with explicit resource income, costs, biomass and limiting-factor evidence."
+        "output": "Headless EXP-V1 with explicit resource income, costs, bounded biomass and limiting-factor evidence.",
+        "evidence": {
+          "assertions": 235,
+          "failures": 0,
+          "simulation_hash": "618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
+          "parent_s1_regression": "PASS_109_ASSERTIONS",
+          "root_depth_tradeoff": "PASS",
+          "windows": "PENDING",
+          "validation": "validation/ecology/eco-p1a-s2-single-plant-resource-model-validation.json"
+        }
       },
       {
         "id": "P1A-S3",
         "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-        "status": "PLANNED",
+        "status": "BLOCKED_BY_P1A_S2_WINDOWS_CONFIRMATION",
         "depends_on": ["P1A-S2"],
         "output": "Presentation-only heatmap lab and controlled sensitivity probes sharing the headless truth model."
       },
