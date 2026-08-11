@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1A-S2",
+  "decision": "CANDIDATE_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "scope": "research-only fixed-genome resource balance and bounded patch biomass",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1a_s2_single_plant_resource_acceptance.gd",
+    "runner": "RUN_ECO_P1A_S2_TESTS.ps1",
+    "assertions": 235,
+    "failures": 0,
+    "simulation_hash": "618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c"
+  },
+  "parent_regression": {
+    "checkpoint": "ECO.P1A-S1",
+    "assertions": 109,
+    "failures": 0,
+    "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "result": "PASS_UNCHANGED"
+  },
+  "evidence": [
+    "one identical plant genome is evaluated at all control points",
+    "resource outcome is decomposed into light/water/nutrient/temperature responses and explicit costs/penalties",
+    "floodplain and lower slope are favourable, sunny slope is marginal, and five contrasting control points are unsustainable",
+    "wet lowland fails despite maximum moisture because excess-water and flood penalties are explicit",
+    "dry ridge is water-limited, shaded slope is light-limited, and river bank is flood-limited",
+    "120-season aggregate biomass remains bounded and favourable sites sustain more biomass than the marginal site",
+    "root-depth probe proves bounded benefit plus super-linear cost; deeper is not always better",
+    "same environment/genome/config reproduces identical resource and patch simulation checksums",
+    "fixed accepted simulation hash is asserted unconditionally",
+    "S2 source contains no biome placement, mutation, species competition, camera/LOD, authority, network or material ownership"
+  ],
+  "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
+  "windows_confirmation": "PENDING",
+  "published_blob_verification": "PENDING_AFTER_PUBLICATION",
+  "next": "Exact Windows focused confirmation, then P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes"
+}
