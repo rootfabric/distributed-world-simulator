@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.control_development_output.schema.v1",
+  "title": "CONTROL_DEVELOPMENT command envelope",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "command", "ok"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.control_development_output.v1"},
+    "command": {"enum": ["STATUS", "PLAN", "RESUME", "UNKNOWN"]},
+    "ok": {"type": "boolean"},
+    "exit_codes": {
+      "type": "object",
+      "required": ["INVALID_INVOCATION", "CONTRACT_OR_DEPENDENCY_INVALID", "GIT_STATE_INVALID", "EXECUTION_STATE_INVALID", "INTERNAL_ERROR"],
+      "properties": {
+        "INVALID_INVOCATION": {"const": 2},
+        "CONTRACT_OR_DEPENDENCY_INVALID": {"const": 3},
+        "GIT_STATE_INVALID": {"const": 4},
+        "EXECUTION_STATE_INVALID": {"const": 5},
+        "INTERNAL_ERROR": {"const": 6}
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "detail"],
+      "properties": {
+        "code": {"enum": ["INVALID_INVOCATION", "CONTRACT_OR_DEPENDENCY_INVALID", "GIT_STATE_INVALID", "EXECUTION_STATE_INVALID", "INTERNAL_ERROR"]},
+        "detail": {"type": "string"}
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"ok": {"const": false}}}, "then": {"required": ["error", "exit_codes"]}}
+  ]
+}
