@@ -1,0 +1,8 @@
+{
+  "epoch": "E2026-08-11-H0-1-R6",
+  "purpose": "Fresh post-H0.0 H0.1 closed-loop C22 execution",
+  "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+  "registry_generation": 75,
+  "active_work_order": "H0-1-R6-C22-WO-001",
+  "runtime_merge_authorized": false
+}
