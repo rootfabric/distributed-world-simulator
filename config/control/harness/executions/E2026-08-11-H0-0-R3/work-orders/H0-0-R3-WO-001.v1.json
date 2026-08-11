@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R3",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "VERIFYING",
+  "state": "VERIFIED",
   "work_order_type": "CONTROL",
   "base_sha": "9ad18eab0a1361bc3efcd38a19027880aac4e339",
   "branch": "control/h0-closed-loop-development-r3",
@@ -84,67 +84,24 @@
     "The refresh must preserve current-main registry/control semantics while transferring only proven H0 implementation capability."
   ],
   "review_required": true,
-  "required_review_roles": [
-    "IMPLEMENTER",
-    "REVIEWER",
-    "VERIFIER",
-    "DIRECTOR"
-  ],
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
   "design_brief": {
     "problem_statement": "H0.0 R2 was correctly invalidated when main advanced from 40c117bb to registry generation 67 at 9ad18eab before final verification. The reviewed implementation fixes must be retained without allowing R2 execution evidence to authorize a fresh epoch.",
     "current_behavior": "Current main contains the canonical registry/control baseline but not the executable H0 scaffold. Historical R2 contains a reviewed implementation head 905f0d7d with phase-independent evidence isolation and narrowed implementation freshness, plus a terminal stale execution ledger that must not be reused.",
     "desired_behavior": "R3 starts from exact current main, contains only the executable H0 implementation/test/validation capability plus a new R3 execution ledger, reconstructs state without chat, keeps C22 runtime blocked, and requires fresh R3 evidence for every checkpoint predicate.",
-    "alternatives_considered": [
-      "Continue stale R2.",
-      "Merge the terminal R2 branch and keep its execution ledger active.",
-      "Selectively transfer only the reviewed implementation capability into a fresh current-main R3 tree and create a new epoch/work order."
-    ],
+    "alternatives_considered": ["Continue stale R2.", "Merge the terminal R2 branch and keep its execution ledger active.", "Selectively transfer only the reviewed implementation capability into a fresh current-main R3 tree and create a new epoch/work order."],
     "selected_design": "Use current main 9ad18eab as first-parent base. Use R2 implementation head 905f0d7d only as capability provenance/transport, delete the entire R2 execution subtree before creating R3 state, rewrite epoch-specific launcher/tests to R3, and re-prove all H0.0 predicates.",
     "why_selected": "This preserves exact epoch freshness, prevents stale PASS reuse, retains proven fixes, minimizes net diff, and keeps runtime work fail-closed until H0_0_SCAFFOLD_READY.",
-    "affected_owners": [
-      "MAIN/HARNESS",
-      "PC0"
-    ],
-    "dependencies": [
-      "main @ 9ad18eab0a1361bc3efcd38a19027880aac4e339",
-      "registry generation 67",
-      "canonical H0-2026-08-11-R1 contracts",
-      "reviewed R2 implementation capability @ 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb",
-      "R2 terminal invalidation evidence @ control/h0-closed-loop-development-r2"
-    ],
-    "non_goals": [
-      "No C22 runtime branch creation",
-      "No NX runtime work",
-      "No ECO integration",
-      "No canonical schema changes",
-      "No gameplay/domain changes",
-      "No R1/R2 execution ledger promotion"
-    ],
-    "expected_risks": [
-      "Accidentally retaining an R2 epoch-specific path in executable code or tests",
-      "Historical execution evidence entering the R3 active tree",
-      "A repair review being mistaken for final checkpoint authorization",
-      "Main moving again before evidence freeze"
-    ],
-    "validation_plan": [
-      "Require main..R3 net diff to contain only allowed H0 control/harness paths and no R1/R2 execution subtree.",
-      "Run phase-independent unit tests on exact R3 checkout.",
-      "Run Status, Plan and Resume from the exact R3 checkout and a clean clone.",
-      "Prove malformed/stale historical review/evidence claims fail closed before active Work Order filtering.",
-      "Run standard and directional PC0 and require NON_RED.",
-      "Require fresh exact-head Evidence Map, final Reviewer PASS and Verifier PASS before checkpoint proposal."
-    ]
+    "affected_owners": ["MAIN/HARNESS", "PC0"],
+    "dependencies": ["main @ 9ad18eab0a1361bc3efcd38a19027880aac4e339", "registry generation 67", "canonical H0-2026-08-11-R1 contracts", "reviewed R2 implementation capability @ 905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb", "R2 terminal invalidation evidence @ control/h0-closed-loop-development-r2"],
+    "non_goals": ["No C22 runtime branch creation", "No NX runtime work", "No ECO integration", "No canonical schema changes", "No gameplay/domain changes", "No R1/R2 execution ledger promotion"],
+    "expected_risks": ["Accidentally retaining an R2 epoch-specific path in executable code or tests", "Historical execution evidence entering the R3 active tree", "A repair review being mistaken for final checkpoint authorization", "Main moving again before evidence freeze"],
+    "validation_plan": ["Require main..R3 net diff to contain only allowed H0 control/harness paths and no R1/R2 execution subtree.", "Run phase-independent unit tests on exact R3 checkout.", "Run Status, Plan and Resume from the exact R3 checkout and a clean clone.", "Prove malformed/stale historical review/evidence claims fail closed before active Work Order filtering.", "Run standard and directional PC0 and require NON_RED.", "Require fresh exact-head Evidence Map, final Reviewer PASS and Verifier PASS before checkpoint proposal."]
   },
   "repair_context_required": false,
   "evidence_map_required": true,
-  "human_attention_triggers": [
-    "CANONICAL_CONTRACT_CHANGE_REQUIRED",
-    "RISK_RECLASSIFIED_CRITICAL",
-    "CONTROL_DOCS_MERGE_APPROVAL"
-  ],
+  "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "CONTROL_DOCS_MERGE_APPROVAL"],
   "issued_at_utc": "2026-08-11T10:23:00Z",
-  "human_approval_required_for": [
-    "CONTROL_DOCS_ONLY_MERGE"
-  ],
-  "notes": "R3 is a fresh authorization epoch. R1/R2 branches remain historical provenance only. No predicate PASS transfers from R2; only implementation capability is transferred. HIGH pre-build review PASS is recorded. Verification is active. Fresh GitHub Project Control run 31482566948 on Draft PR #75 proves PC0_NON_RED for the current implementation phase; focused unit, Status/Plan/Resume and clean-clone recovery evidence remain required before final checkpoint review."
+  "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
+  "notes": "R3 verification is complete on a fresh Windows clone at a3cde435e0e59b1de74d411b502be98f6e3a88ab. All 13 required predicates are present in the append-only ledger: 12 from the exact clean-clone harness/public-command run plus PC0_NON_RED from GitHub Project Control. The Work Order is VERIFIED; audit, final Evidence Map, post-build Reviewer/Verifier and final PC0 freshness remain required before checkpoint proposal."
 }
