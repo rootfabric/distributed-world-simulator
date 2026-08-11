@@ -8,6 +8,7 @@ $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 $Launcher = Join-Path $Root "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
 $FocusedTest = "res://tests/characters/test_ch9_6_playable_network_equipment_ui.gd"
+$PresentationTest = "res://tests/characters/test_ch9_6_wearable_inventory_presentation.gd"
 $Garment = Join-Path $Root "assets\external\quaternius\modular_outfits_fantasy\Modular Character Outfits - Fantasy[Standard]\Exports\glTF (Godot-Unreal)\Outfits\Male_Peasant.gltf"
 $BaseRoot = Join-Path $Root "assets\external\quaternius\base_characters"
 $AnimationRoot = Join-Path $Root "assets\external\quaternius\animation_library"
@@ -107,9 +108,19 @@ $KnownFbxImportErrors = @($Import.output | Where-Object {
 }).Count
 if ($KnownFbxImportErrors -gt 0) {
     Write-Host "Godot editor import completed with exit code 0; unrelated Quaternius FBX/Unity import diagnostics were observed ($KnownFbxImportErrors lines)." -ForegroundColor Yellow
-    Write-Host "They are not used by CH9.6; the focused CH9.6 runtime probe below is authoritative for the required glTF path." -ForegroundColor Yellow
+    Write-Host "They are not used by CH9.6; focused CH9.6 probes below are authoritative for the required glTF path." -ForegroundColor Yellow
 }
 Write-Host "Godot editor import/parse preflight: PASS" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "Running CH9.6 wearable inventory presentation preflight..." -ForegroundColor Cyan
+$Presentation = Invoke-GodotCaptured -Arguments @("--headless", "--path", $Root, "--script", $PresentationTest)
+$Presentation.output | ForEach-Object { Write-Host $_ }
+$PresentationPassMarker = $Presentation.text -match 'CH9\.6 wearable inventory presentation: PASS \([0-9]+ assertions\)'
+if ($Presentation.exit_code -ne 0 -or -not $PresentationPassMarker) {
+    throw "CH9.6 wearable inventory presentation preflight failed with exit code $($Presentation.exit_code). Graphical acceptance was not started."
+}
+Write-Host "CH9.6 wearable inventory presentation preflight: PASS" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "Running focused CH9.6 runtime/presentation preflight..." -ForegroundColor Cyan
@@ -156,15 +167,17 @@ Write-Host "This runner never infers graphical PASS; it records only explicit op
 Write-Host ""
 Write-Host "PASS 1 / RESET STATE" -ForegroundColor Cyan
 Write-Host "1. Wait for HUD status READY and the Inventory UI to open."
-Write-Host "2. Drag lower/upper/feet wearables from backpack into equipment slots."
-Write-Host "3. Confirm clothing appears on the real Quaternius character."
-Write-Host "4. Press Tab and verify walking, jump and crouch."
-Write-Host "5. Close the application normally."
+Write-Host "2. Confirm the backpack shows distinct wearable items for helmet/backpack/upper/lower/feet."
+Write-Host "3. Drag lower/upper/feet wearables from backpack into equipment slots."
+Write-Host "4. Confirm clothing appears on the real Quaternius character."
+Write-Host "5. Press Tab and verify walking, jump and crouch."
+Write-Host "6. Close the application normally."
 
 $FirstExit = Invoke-Ch96Lab -ResetState
 if ($FirstExit -ne 0) { throw "CH9.6 first graphical launch failed (exit code $FirstExit). No graphical PASS can be recorded." }
 
 $FirstReady = Read-YesNo "Did the lab reach READY with the Inventory UI available?"
+$WearablesVisible = Read-YesNo "Were helmet/backpack/upper/lower/feet visibly distinguishable as inventory items?"
 $FirstPresentation = Read-YesNo "Did equipped clothing appear correctly on the real Quaternius character?"
 $FirstMovement = Read-YesNo "Did walking, jump and crouch remain functional while equipped?"
 $FirstNormalClose = Read-YesNo "Did you close the first run normally after the checks?"
@@ -184,7 +197,7 @@ $Recovered = Read-YesNo "Were the previously equipped items restored automatical
 $RecoveredPresentation = Read-YesNo "Was recovered equipment already visible on the Quaternius character without a new drag?"
 $UnequipPresentation = Read-YesNo "After dragging a restored item back to backpack, did its visual disappear?"
 
-$AllObservations = @($FirstReady,$FirstPresentation,$FirstMovement,$FirstNormalClose,$Recovered,$RecoveredPresentation,$UnequipPresentation)
+$AllObservations = @($FirstReady,$WearablesVisible,$FirstPresentation,$FirstMovement,$FirstNormalClose,$Recovered,$RecoveredPresentation,$UnequipPresentation)
 $ObservationPass = -not ($AllObservations -contains $false)
 $ProcessPass = ($FirstExit -eq 0 -and $SecondExit -eq 0)
 $Decision = if ($ObservationPass -and $ProcessPass) { "OPERATOR_REPORTED_PASS" } else { "OPERATOR_REPORTED_FAIL" }
@@ -198,6 +211,7 @@ $Evidence = [ordered]@{
     launcher = "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1"
     operator_runner = "ACCEPT_CH9_6_GRAPHICAL.ps1"
     import_preflight = "PASS"
+    wearable_inventory_presentation_preflight = "PASS"
     focused_runtime_preflight = "PASS"
     ignored_unrelated_fbx_diagnostic_lines = $KnownFbxImportErrors
     assets = [ordered]@{ base_scene_count = $BaseSceneCount; animation_scene_count = $AnimationSceneCount; modular_outfit = $Garment }
@@ -205,6 +219,7 @@ $Evidence = [ordered]@{
     second_launch = [ordered]@{ reset_state = $false; exit_code = $SecondExit }
     observations = [ordered]@{
         ready_and_inventory_available = $FirstReady
+        wearables_visibly_distinguishable_in_inventory = $WearablesVisible
         equipped_quaternius_presentation_visible = $FirstPresentation
         movement_jump_crouch_functional = $FirstMovement
         first_run_closed_normally = $FirstNormalClose
