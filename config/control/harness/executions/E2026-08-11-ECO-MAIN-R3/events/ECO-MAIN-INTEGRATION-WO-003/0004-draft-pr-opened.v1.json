@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R3-ECO-MAIN-INTEGRATION-WO-003-0004",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R3",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "sequence": 4,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFIED",
+  "recorded_at_utc": "2026-08-11T09:01:00Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration-r3",
+  "head_sha": "157445a4eb51482cfd00d4db5186f46cf33108c2",
+  "predicate": "DRAFT_PR_TARGETING_ECO_OPEN",
+  "command": "Open Draft PR #70 from control/eco-main-integration-r3 to feature/eco-evolutionary-ecology after final pre-PR freshness fence",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/pr/ECO-MAIN-INTEGRATION-WO-003-DRAFT-PR-001.v1.json"],
+  "summary": "Draft PR #70 was opened against exact ECO base 2a4c3103234717f813cd6fe8f60de0d50f3012ba. No merge was performed.",
+  "blocker": ""
+}
