@@ -172,7 +172,7 @@ func _owner_playable_state(predicted_state: Dictionary) -> Dictionary:
 		position,
 		Basis(Vector3.UP, yaw),
 		velocity,
-		position + Vector3.UP * 0.9,
+		position,
 		"flat_humanoid",
 		"first_person",
 		bool(local_record.get("flashlight_enabled", false)),
