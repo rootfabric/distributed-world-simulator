@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R1",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "DISPATCHED",
+  "state": "BLOCKED",
   "work_order_type": "CONTROL",
   "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "branch": "control/h0-closed-loop-development",
@@ -69,21 +69,23 @@
     "Unexpected scope expansion is required",
     "A blocking Human Attention decision is required before implementation can continue"
   ],
-  "risk_class": "MEDIUM",
+  "risk_class": "HIGH",
   "risk_reasons": [
     "The scaffold is control infrastructure whose incorrect state reconstruction could route later development to the wrong checkpoint.",
+    "The new Status, Plan and Resume interface defines public control behavior and recovery semantics, which are explicit HIGH minimum-risk triggers.",
     "The implementation is bounded and does not mutate gameplay/runtime or canonical architecture ownership."
   ],
   "review_required": true,
   "required_review_roles": [
     "IMPLEMENTER",
     "REVIEWER",
-    "VERIFIER"
+    "VERIFIER",
+    "DIRECTOR"
   ],
   "design_brief": {
     "problem_statement": "Canonical harness, risk, review and evidence contracts exist in main, but no executable Status, Plan or Resume implementation exists.",
     "current_behavior": "A new session must manually interpret control files and cannot reconstruct an active execution train through one canonical command.",
-    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, reduce append-only events, validate epochs, build status, plan the declared checkpoint and resume from Git-only state.",
+    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, treat append-only events as the authoritative execution state, validate any mutable Work Order state only as a derived snapshot, validate epochs, build status, plan the declared checkpoint and resume from Git-only state.",
     "alternatives_considered": [
       "Implement all behavior in one PowerShell script.",
       "Implement a thin PowerShell entrypoint over focused Python modules.",
@@ -111,6 +113,8 @@
     ],
     "expected_risks": [
       "Incorrect event ordering or transition reduction",
+      "Dual truth between append-only events and the mutable Work Order state snapshot",
+      "Confusing an event subject head with the actual Git ledger/ref head that contains the event",
       "False epoch freshness after main moves",
       "Derived state depending on artifacts or chat",
       "Incomplete review or Human Attention state in Resume",
@@ -120,6 +124,9 @@
       "Validate all canonical control, review and evidence contracts load.",
       "Exercise valid and invalid Work Order, Event, Epoch, Evidence Map and Human Attention instances.",
       "Reduce ordered fixtures including FIX_REQUIRED and recovery continuation.",
+      "Reject or report disagreement between event-derived state and the Work Order state snapshot.",
+      "Report event subject head and actual ledger/ref head as distinct fields.",
+      "Validate semantic cross-contract invariants that JSON Schema alone cannot express.",
       "Detect exact-main, moved-main CONTINUE and REFRESH_REQUIRED epoch states.",
       "Prove Status, Plan and Resume output from a clean checkout after artifacts are removed.",
       "Prove dry-run C22 remains blocked until H0_0_SCAFFOLD_READY.",

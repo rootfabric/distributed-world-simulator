@@ -4,12 +4,14 @@
 **Work Order:** `H0-0-WO-001`  
 **Base:** `790fd79f8055fefa19cf9d7263441fc9f4326ebd`  
 **Branch:** `control/h0-closed-loop-development`  
-**Risk:** `MEDIUM`  
+**Risk:** `HIGH`  
 **Target:** `H0_0_SCAFFOLD_READY`
 
 ## Решение Director
 
 H0.0 реализует только исполняемый control scaffold поверх уже канонических контрактов `H0-2026-08-11-R1` и `H0-REVIEW-2026-08-11-R1`.
+
+Pre-build Reviewer поднял риск с `MEDIUM` до `HIGH`: новый публичный control interface задаёт recovery semantics, а это minimum HIGH trigger. Реализация была остановлена до фиксации reclassification.
 
 ```text
 CONTROL_DEVELOPMENT.ps1
@@ -36,6 +38,10 @@ review/evidence/human-attention state
 
 Тонкий PowerShell entrypoint вызывает небольшие Python modules. Derived state всегда перестраивается из Git и canonical JSON. `artifacts/harness/**` остаётся удаляемым кешем.
 
+Append-only events являются авторитетной execution history. Поле `Work Order.state` рассматривается только как сверяемый derived snapshot: расхождение должно быть явно показано как finding, а не молча разрешено в пользу mutable summary.
+
+`event.head_sha` обозначает subject head, к которому относится событие. Фактический Git/ref head, содержащий ledger, выводится отдельно; `Resume` не имеет права подменять один другим.
+
 ### Почему не монолитный PowerShell
 
 Reducer, schema validation, epoch comparison и planner требуют независимых negative/replay tests. Отдельные Python modules дают более узкие ownership boundaries и позволяют проверять их без запуска runtime.
@@ -51,6 +57,8 @@ Reducer, schema validation, epoch comparison и planner требуют неза�
 ### Главные риски
 
 - неправильный порядок/переходы событий;
+- dual truth между events и mutable Work Order snapshot;
+- смешение event subject head и ledger/ref head;
 - ложная свежесть epoch после движения `main`;
 - скрытая зависимость Resume от artifacts или истории чата;
 - потеря Reviewer/Evidence Map/Human Attention state;

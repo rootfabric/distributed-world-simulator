@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0003",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 3,
+  "event_type": "BLOCKED",
+  "work_state": "BLOCKED",
+  "recorded_at_utc": "2026-08-11T04:31:49Z",
+  "actor": "REVIEWER",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "ce69e829d7df6e6d664c9e2e960aaa476982b05b",
+  "predicate": "H0_0_RISK_CLASSIFICATION_COMPLETE",
+  "evidence_paths": [
+    "config/control/harness/risk-policy.v1.json",
+    "config/control/harness/review-policy.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-001.v1.json",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"
+  ],
+  "summary": "Pre-build review raised H0.0 from MEDIUM to HIGH because the public control interface defines recovery semantics. Implementation is paused until Director accepts the reclassification and design clarifications.",
+  "blocker": "HIGH_RISK_RECLASSIFICATION_AND_RECOVERY_SEMANTICS_CLARIFICATION_REQUIRED"
+}
