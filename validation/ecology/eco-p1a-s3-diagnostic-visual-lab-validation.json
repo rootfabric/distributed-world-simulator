@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1A-S3",
+  "decision": "CANDIDATE_HEADLESS_PASS_GRAPHICAL_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "focused_test": {
+    "assertions": 114,
+    "failures": 0,
+    "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690"
+  },
+  "scene_headless_smoke": {
+    "grid": "33x33",
+    "seasons": 24,
+    "probe": "BASE",
+    "dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
+    "result": "PASS"
+  },
+  "parent_regression": {
+    "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
+    "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
+  },
+  "probe_evidence": [
+    "drought-tolerant probe improves dry-ridge net balance over BASE",
+    "deep-root probe improves dry ridge over shallow-root probe",
+    "deep roots carry a cost on wet floodplain relative to BASE",
+    "shade-tolerant probe improves shaded-slope net balance over BASE",
+    "sun-favored probe improves sunny-slope net balance over BASE",
+    "water-loving probe changes wet-site response without changing environment truth",
+    "all seven probe datasets have distinct deterministic hashes"
+  ],
+  "truth_boundary": "Visual lab consumes a derived Dataset built from accepted S1/S2 contracts; the lab script does not recompute environment or photosynthetic/resource equations.",
+  "graphical_confirmation": "PENDING",
+  "next": "Exact Windows automated runner, then manual graphical review; on PASS accept S3 and open P1A-S4."
+}
