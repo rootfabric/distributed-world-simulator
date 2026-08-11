@@ -5,51 +5,43 @@
 **Control plane:** `PC0-2026-08-10-R1`  
 **Harness:** `H0-2026-08-11-R1`
 
-> Human-facing snapshot. Machine truth is `config/control/project-program-registry.v1.json`.
+> Human-facing milestone snapshot. Machine truth remains `config/control/project-program-registry.v1.json`.
 
 ## Project milestone
 
-The project has reached the H0.0 convergence milestone:
+The project has reached a coherent H0.0 checkpoint milestone:
 
 ```text
-H0.0 verified checkpoint evidence     COMPLETE
+H0.0 verified checkpoint evidence     COMPLETE / CHECKPOINT_PROPOSED
 G8 Full Acceptance                    COMPLETE / FROZEN
 T1B aggregate handoff                 COMPLETE
 MATTER / S1                           STABLE
+Project Control                       NON_RED
 ```
 
-The canonicalization candidate preserves the terminal H0.0 R3 evidence and switches the active development control surface to a fresh generation-70 **H0.1 planning epoch**.
+The canonicalization candidate is built from current `main @ 82835a37bab1390b6b3f87fb18903070fdd64256`, registry generation `70`.
 
-```text
-H0_0_SCAFFOLD_READY
-        ↓ canonical control integration
-H0.1 planning state
-        ↓ post-merge main audit
-        ↓ Director dispatch
-fresh current-main C22 child Work Order
-```
-
-No C22 runtime branch is authorized merely by the H0.0 checkpoint merge.
+It preserves the terminal H0.0 R3 evidence and prepares a fresh **H0.1-R4 planning pointer**. It does not create a C22 runtime branch and does not authorize runtime work.
 
 ## Live frontiers
 
-| Program | Current state | What may happen next |
+| Program | Current state | Checkpoint disposition |
 |---|---|---|
-| **HARNESS** | H0.0 verified; H0.1 planning prepared | Canonicalize checkpoint, post-merge audit, Director-dispatch the C22 child Work Order |
-| **G** | **G8 FULL ACCEPTED / FROZEN** | No G8 work. G9 waits canonical GLOBAL-P0 R3 + MAT0 |
-| **T** | **T1B HANDOFF COMPLETE** | No T1B.5. T2.0 waits C22 integration + TS0.4 + PC0 |
-| **TS/C22** | SOURCE_ACCEPTED evidence; fresh convergence pending | H0.1 will create a fresh current-main C22 convergence branch only after dispatch |
-| **CH** | Windows automated accepted; graphical recovery gate pending | Finish two-pass manual CH9.6 observation; this does not block H0.1 |
-| **NX** | NX.C0 preparation complete | Runtime NX.C1 waits H0.1 PASS |
-| **ECO** | advisory research; P1C-S3 exact Windows pending | Continue independently; does not block mainline delivery |
-| **GLOBAL-P0 R3** | architecture candidate; refresh required | Refresh/review in parallel; promotion remains CRITICAL + human gate |
-| **DOCTRINE** | design reference | Update from new evidence only |
-| **MATTER** | MW10 stable | No active frontier |
-| **S1** | stable proposal-only compute | No active frontier |
+| **HARNESS** | H0.0 verified terminal evidence; H0.1-R4 planning prepared | **READY FOR CONTROL-ONLY CANONICALIZATION** |
+| **G** | **G8 FULL ACCEPTED / FROZEN** | READY; no G8 work remains |
+| **T** | **T1B HANDOFF COMPLETE** | READY as accepted handoff evidence |
+| **TS/C22** | SOURCE_ACCEPTED evidence | Intentionally waits fresh H0.1 worker after checkpoint |
+| **CH** | Windows automated accepted; graphical recovery observation pending | Nonblocking for H0.0; blocks only later CH progression |
+| **NX** | NX.C0 preparation complete | Intentionally waits H0.1 PASS |
+| **ECO** | advisory research; P1C-S4 exact-Windows pending | Nonblocking project research frontier |
+| **GLOBAL-P0 R3** | architecture candidate / refresh required | Nonblocking H0.0; promotion remains CRITICAL + human gate |
+| **DOCTRINE** | design reference | Nonblocking |
+| **MATTER** | MW10 stable | Stable foundation |
+| **S1** | stable proposal-only compute | Stable foundation |
 
-## H0.0 evidence preserved
+## H0.0 achievement
 
-Terminal historical execution:
+Historical terminal execution:
 
 ```text
 E2026-08-11-H0-0-R3
@@ -57,13 +49,14 @@ Work Order: H0-0-R3-WO-001
 implementation head: 8deffb80c3e445ef9b8d556d2a1fc2666abea8fc
 terminal control head: 53533c8bb7d185b4617adcb2561cb322e5297e8e
 state: CHECKPOINT_PROPOSED
+checkpoint: H0_0_SCAFFOLD_READY
 ```
 
-Evidence includes:
+Accepted evidence:
 
 ```text
-13 / 13 required predicates
-Windows clean-clone focused suite PASS
+13 / 13 required predicates complete
+fresh Windows clean-clone harness suite PASS
 Status / Plan / Resume PASS
 Git-only recovery PASS
 main-movement audit continuation PASS
@@ -73,34 +66,51 @@ Independent Verifier PASS
 standard PC0 NON_RED
 directional PC0 NON_RED
 runtime_authorized = false
+C22 branch creation = FORBIDDEN
 ```
 
-R3 execution identity is historical and must not be rewritten to follow later registry generations.
+R3 is historical checkpoint evidence and must never be rewritten to follow later registry generations.
 
-## Active canonical planning state
+## H0.1 pre-merge planning pointer
 
 ```text
-E2026-08-11-H0-1-R1
-base main: be6ea2a8636a9242fc808aea377d9144ef9bc9eb
-registry generation: 70 candidate / generation-69 source base
+E2026-08-11-H0-1-R4
+base main: 82835a37bab1390b6b3f87fb18903070fdd64256
+registry generation: 70
 checkpoint: H0_1_CLOSED_LOOP_C22_PILOT
-Work Order: H0-1-R1-DISPATCH-WO-001
+Work Order: H0-1-R4-DISPATCH-WO-001
 state: PLANNED
 branch: main
 ```
 
-The planning Work Order explicitly forbids runtime/domain paths. Before Director dispatch:
+Before Director dispatch:
 
 ```text
 autonomous_runtime_workers = 0
+C22 state = WAITING_DIRECTOR_DISPATCH
 C22 branch creation = FORBIDDEN_UNTIL_DISPATCH
+runtime_authorized = false
 ```
 
-After actual canonical merge, main has moved relative to the epoch base by definition. H0 must therefore first record a post-merge NON_RED main audit. Only after that audit may the Director dispatch H0.1 and create the fresh C22 child Work Order/branch.
+The R4 epoch is a **pre-merge handoff pointer**, not the C22 execution epoch. The checkpoint merge itself moves canonical `main`, so this pointer is expected to fail closed as moved-main until the actual H0.1 runtime worker is created from the post-checkpoint main.
+
+After the checkpoint is integrated, the next controlled action is:
+
+```text
+read exact new main
+        ↓
+create fresh H0.1 execution epoch/work order on a new control/runtime branch
+        ↓
+Director dispatch
+        ↓
+create fresh current-main C22 child branch
+```
+
+No stale pre-merge epoch may authorize runtime.
 
 ## G8 achievement
 
-Live G passport records:
+The live G passport records:
 
 ```text
 G8.0 ACCEPTED
@@ -122,7 +132,7 @@ manual graphical:  b91ed3eb8664ec1aee28453947a84c6a56acb95b
 aggregate Windows: 31c0d4eef30544d4d5090b14721585047a97b979
 ```
 
-Do not extend the frozen G8 branch into G9.
+G8 is frozen. G9 requires canonical GLOBAL-P0 R3 and MAT0 material identity.
 
 ## T1B achievement
 
@@ -135,26 +145,26 @@ T1B.4 ACCEPTED
 T1B Aggregate HANDOFF COMPLETE
 ```
 
-There is no T1B.5.
+There is no T1B.5. T2.0 waits C22 main integration, TS0.4 ceiling classification and PC0 convergence.
 
 ## Nonblocking unfinished work
 
-These do not block the H0.0 project checkpoint:
+The following work is intentionally outside the H0.0 checkpoint acceptance boundary:
 
 ```text
 CH9.6 manual graphical/recovery observation
-ECO.P1C-S3 exact-Windows research acceptance
-GLOBAL-P0 R3 current-main refresh/promotion work
+ECO.P1C-S4 exact-Windows research acceptance
+GLOBAL-P0 R3 current-main refresh/promotion
 ```
 
-They remain governed by their own stop gates.
+They remain visible and governed by their own stop gates, but do not postpone this project milestone.
 
-## Critical path after canonical checkpoint
+## Critical path after checkpoint integration
 
 ```text
 H0_0_SCAFFOLD_READY canonical
         ↓
-post-merge H0.1 main audit
+fresh post-checkpoint H0.1 execution epoch from exact main
         ↓
 Director dispatch
         ↓
@@ -179,7 +189,7 @@ NX.C1 remains blocked until H0.1 PASS. Multiple autonomous runtime workers remai
 ## Immediate stop gates
 
 ```text
-NO C22 runtime branch before post-merge H0.1 audit + Director dispatch
+NO C22 runtime branch before fresh post-checkpoint H0.1 epoch + Director dispatch
 NO C22 runtime merge without explicit human authorization
 NO NX.C1 runtime before H0.1 PASS
 NO multiple runtime workers before H0.3
@@ -187,7 +197,7 @@ NO T1B.5
 NO G9 before canonical R3 + MAT0
 NO CH stage after CH9.6 before graphical acceptance + post-PC0
 NO GLOBAL-P0 R3 promotion without CRITICAL review + human approval
-NO ECO production promotion from research state without fresh controlled frontier
+NO ECO production promotion from advisory research without a fresh controlled frontier
 ```
 
 ## Canonical entry points
