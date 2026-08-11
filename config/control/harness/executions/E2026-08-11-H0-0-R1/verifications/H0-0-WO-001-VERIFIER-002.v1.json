@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_result.v1",
+  "verification_id": "H0-0-WO-001-VERIFIER-002",
+  "work_order_id": "H0-0-WO-001",
+  "verified_head_sha": "3bf704243e38b6a9dd6a4a72434907ae776db019",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T05:52:52Z",
+  "focused_tests": "32 tests PASS; one Windows symlink capability skip manually inspected",
+  "freshness_simulation": "PASS: ledger-only commit preserves implementation head; transition-policy commit makes review and evidence stale",
+  "clean_checkout_recovery": "PASS",
+  "root_and_non_root_cli": "PASS",
+  "diff_and_scope": "PASS; all 50 paths allowed and forbidden/runtime changes zero",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "remaining_gaps": []
+}

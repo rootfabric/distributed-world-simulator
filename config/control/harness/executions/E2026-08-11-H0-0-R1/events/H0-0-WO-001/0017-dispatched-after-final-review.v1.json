@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0017",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 17,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-11T05:52:52Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "3bf704243e38b6a9dd6a4a72434907ae776db019",
+  "predicate": "H0_0_FINAL_EXACT_HEAD_REVIEW_PASS",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/reviews/H0-0-WO-001-POSTBUILD-REVIEW-006.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/verifications/H0-0-WO-001-VERIFIER-002.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-IMPLEMENTATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-IMPLEMENTATION-001-final-resolution.v1.json"
+  ],
+  "summary": "Final exact implementation head received independent Reviewer and Verifier PASS. Repair is FIX_VERIFIED and Director redispatches the Work Order for durable predicate recording.",
+  "blocker": ""
+}
