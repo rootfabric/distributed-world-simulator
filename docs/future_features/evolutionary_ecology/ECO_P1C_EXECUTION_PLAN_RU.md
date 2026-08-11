@@ -2,20 +2,29 @@
 
 Цель P1C: доказать, что несколько resource-paying ecological strategies могут устойчиво сосуществовать в heterogeneous world без predefined species/biome roles и без одного глобального optimum.
 
-## P1C-S1 — Unlabeled Founder Pool + Shared-Field Competition Baseline
+## P1C-S1 — Unlabeled Founder Pool + Shared-Field Competition Baseline — ACCEPTED
 
-20 deterministic continuous founder genomes, общий competition field, uniform control, explicit P1A tradeoff probes. Это baseline, а не финальный coexistence proof.
+20 deterministic continuous founder genomes, общий competition field, uniform control, explicit P1A tradeoff probes. Windows: `116/116 + restart 5/5`.
 
-## P1C-S2 — Dynamic Shared-Patch Abundance Competition
+## P1C-S2 — Dynamic Shared-Patch Abundance Competition — ACCEPTED
 
-Перевести retained-set comparison в population frequencies/biomass through time. Competition update должен использовать accepted recruitment/biomass/resource consequences, а не новый hand-written fitness. Проверить dominance, turnover, extinction и persistence.
+Retained-set comparison переведён в biomass/frequency dynamics through time. Competition использует accepted recruitment/biomass/resource consequences, а не новый hand-written fitness. Windows: `101/101 + restart 5/5`.
 
-## P1C-S3 — Niche/Cluster Diagnostics + Multi-seed Coexistence
+## P1C-S3 — Niche/Cluster Diagnostics + Multi-seed Coexistence — ACCEPTED
 
-Post-hoc trait clustering без canonical species classes. Метрики: persistent clusters, Shannon diversity, dominance ratio, occupied niche volume, coexistence duration. Несколько seeds должны воспроизводить coexistence как явление, даже если конкретные clusters различаются.
+Post-hoc anonymous trait clustering без canonical species classes. Ниша требует environment-dependent regional enrichment; геометрического clustering недостаточно. Windows: heterogeneous `64/63/63`, uniform `64`, aggregate `5/5`, restart `5/5`.
 
-## P1C-S4 — Robustness / PH convergence gate
+## P1C-S4 — Competition Robustness + Aggregate Acceptance — CURRENT
 
-Long run, neutral/homogeneous controls, failure matrix `99% dominance`, runaway traits, all-extinction, hardcoded region dependence. Если morphology входит в strategy space, перед финальным P1C acceptance требуется convergence с PH3 morphology-to-resource coupling; иначе P1C фиксируется как ecological-trait-only proof и morphology остаётся отдельным расширением.
+Финальный falsification gate:
+
+- шесть heterogeneous founder seeds;
+- 18 abundance cycles;
+- uniform negative control;
+- 24-cycle deep horizon;
+- explicit failure matrix: `GLOBAL_TAKEOVER`, `DIVERSITY_COLLAPSE`, `CLUSTER_COLLAPSE`, `FALSE_NICHE_UNIFORM`, `RUNAWAY_TRAIT`, `REPLAY_DIVERGENCE`;
+- exact deterministic hashes + fresh-process replay.
+
+P1C остаётся **ecological-trait-only proof**: morphology/development graph ещё не участвуют в competition state или resource equations. Поэтому PH3 convergence не является блокером текущего P1C aggregate acceptance. Если в будущем morphology войдёт в strategy/resource space, соответствующий morphology-aware gate должен пройти отдельную PH convergence проверку до принятия такой расширенной модели.
 
 Migration/dispersal biogeography остаётся вне P1C.
