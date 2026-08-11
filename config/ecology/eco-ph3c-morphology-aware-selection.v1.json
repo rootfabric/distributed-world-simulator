@@ -1,0 +1,50 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH3C",
+  "name": "Morphology-Aware Selection / Competition Convergence",
+  "status": "ANALYTIC_PREFLIGHT_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.PH3 Morphology-to-Resource Coupling ACCEPTED",
+  "experiment_revision": "ECO.PH3C.1",
+  "purpose": "Prove causally that accepted PH3 morphology economics changes competitive abundance and can reverse selection across environments while the genome and accepted P1 resource result are held identical.",
+  "causal_design": {
+    "genome": "single shared PlantGenome.create_default() across each pair",
+    "individual_seed": "same deterministic IndividualSeed across paired strategies",
+    "initial_abundance": "0.5 / 0.5",
+    "cycles": 10,
+    "selection_strength": 0.35,
+    "aware_mode": "selection score = PH3 coupled net resource balance",
+    "negative_control": "selection score = accepted P1 base net resource balance; morphology excluded from fitness"
+  },
+  "pair_cases": [
+    {"id":"SUN_CROWN","environment":"SUN","a":"CROWN_NARROW","b":"CROWN_WIDE","expected":"CROWN_WIDE wins >0.60"},
+    {"id":"DRY_CROWN","environment":"DRY","a":"CROWN_NARROW","b":"CROWN_WIDE","expected":"CROWN_NARROW wins >0.60"},
+    {"id":"REFERENCE_BRANCH","environment":"REFERENCE","a":"BRANCH_LOW","b":"BRANCH_HIGH","expected":"BRANCH_LOW wins >0.60"},
+    {"id":"REFERENCE_HEIGHT","environment":"REFERENCE","a":"HEIGHT_LOW","b":"HEIGHT_HIGH","expected":"HEIGHT_LOW wins >0.75"},
+    {"id":"REFERENCE_GIANT","environment":"REFERENCE","a":"BASE","b":"GIANT_DENSE","expected":"BASE wins >0.95; GIANT_DENSE <0.01"}
+  ],
+  "analytic_preflight": {
+    "method": "independent equation-level reproduction of accepted PH2 GrowthGraph and PH3 morphology ledger; verified against accepted PH3 numerical evidence",
+    "sun_crown_wide_share_approx": 0.6498,
+    "dry_crown_narrow_share_approx": 0.6845,
+    "reference_branch_low_share_approx": 0.6768,
+    "reference_height_low_share_approx": 0.8831,
+    "reference_giant_dense_share_approx": 0.000144,
+    "resource_only_control": "all pair shares remain exactly 0.5/0.5 because genome/environment/P1 score are identical"
+  },
+  "acceptance_semantics": [
+    "resource-only controls remain neutral ties",
+    "morphology-aware mode diverges from the neutral controls",
+    "the same crown pair reverses winner between SUN and DRY",
+    "branch construction/maintenance cost affects competitive abundance",
+    "super-linear height structural cost affects competitive abundance",
+    "giant-dense morphology is strongly selected against in reference conditions",
+    "all paired strategies keep identical genome checksum and IndividualSeed",
+    "accepted P1 resource result checksum is identical within each pair",
+    "no renderer, mesh, LOD, authority, network or persistence semantics participate"
+  ],
+  "exact_windows_hash": "PENDING_FIRST_WINDOWS_EXECUTION",
+  "next_after_acceptance": "ECO.PH4 Seed Development Lifecycle"
+}
