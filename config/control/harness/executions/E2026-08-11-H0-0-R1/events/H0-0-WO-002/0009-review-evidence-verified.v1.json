@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-002",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "0f3ca58644fc74e9e78950d4d994790643cf441d",
+  "blocker": "",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-002-0009",
+  "sequence": 9,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T07:09:31Z",
+  "actor": "INDEPENDENT_VERIFIER_TERRA",
+  "predicate": "REVIEW_AND_EVIDENCE_CONTRACTS_LOAD_PASS",
+  "command": "python -m unittest discover -s tests/harness -k historical",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-002-VALIDATION-SUMMARY-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/verifications/H0-0-WO-002-VERIFIER-001.v1.json"
+  ],
+  "summary": "Exact-head verification passed: REVIEW_AND_EVIDENCE_CONTRACTS_LOAD_PASS."
+}

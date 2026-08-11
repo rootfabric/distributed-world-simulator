@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_result.v1",
+  "verification_id": "H0-0-WO-002-VERIFIER-001",
+  "work_order_id": "H0-0-WO-002",
+  "verified_head_sha": "0f3ca58644fc74e9e78950d4d994790643cf441d",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T07:09:24Z",
+  "focused_tests": "42 tests PASS; one expected Windows symlink-capability skip",
+  "freshness_simulation": "PASS: active/historical review-map combinations and implementation freshness are isolated correctly",
+  "clean_checkout_recovery": "PASS",
+  "root_and_non_root_cli": "PASS",
+  "diff_and_scope": "PASS; all 94 paths allowed and forbidden/runtime/canonical-policy changes zero",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "remaining_gaps": []
+}
