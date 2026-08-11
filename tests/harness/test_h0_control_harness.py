@@ -419,11 +419,48 @@ class H0ControlHarnessTests(unittest.TestCase):
             evidence_dir = Path(directory)
             valid_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-001.v1.json")
             supporting = read_json(EXECUTION / "evidence/H0-0-WO-001-VALIDATION-SUMMARY-001.v1.json")
-            (evidence_dir / "001-valid-map.json").write_text(json.dumps(valid_map), encoding="utf-8")
-            (evidence_dir / "999-supporting.json").write_text(json.dumps(supporting), encoding="utf-8")
+            (evidence_dir / "001-supporting-before.json").write_text(json.dumps(supporting), encoding="utf-8")
+            (evidence_dir / "002-valid-map.json").write_text(json.dumps(valid_map), encoding="utf-8")
+            (evidence_dir / "999-supporting-after.json").write_text(json.dumps(supporting), encoding="utf-8")
             selected = _load_evidence_maps(self.bundle, evidence_dir)
             self.assertEqual([valid_map], selected)
             self.assertEqual("PASS", selected[-1]["review_verdict"])
+
+    def test_pass_like_supporting_evidence_cannot_substitute_for_a_map(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            evidence_dir = Path(directory)
+            pass_like_support = {
+                "schema": "distributed_world_simulator.harness_validation_summary.v1",
+                "work_order_id": "H0-0-WO-001",
+                "evidence_head_sha": "3bf704243e38b6a9dd6a4a72434907ae776db019",
+                "review_verdict": "PASS",
+                "focused_validation": "PASS",
+                "full_regression": "PASS",
+            }
+            (evidence_dir / "pass-like-support.json").write_text(json.dumps(pass_like_support), encoding="utf-8")
+            self.assertEqual([], _load_evidence_maps(self.bundle, evidence_dir))
+
+    def test_public_commands_fail_closed_for_malformed_or_ambiguous_map_claims(self) -> None:
+        shell = shutil.which("powershell") or shutil.which("pwsh")
+        self.assertIsNotNone(shell)
+        for name, document, detail in (
+            ("ZZ-MALFORMED-EVIDENCE-MAP.json", {"schema": "distributed_world_simulator.harness_evidence_map.v1"}, "SCHEMA_INVALID:evidence:ZZ-MALFORMED-EVIDENCE-MAP.json"),
+            ("ZZ-AMBIGUOUS-EVIDENCE-MAP.json", {"schema": "distributed_world_simulator.harness_evidence_map.v2"}, "EVIDENCE_MAP_SCHEMA_AMBIGUOUS:ZZ-AMBIGUOUS-EVIDENCE-MAP.json"),
+        ):
+            path = EXECUTION / "evidence" / name
+            self.assertFalse(path.exists())
+            try:
+                path.write_text(json.dumps(document), encoding="utf-8")
+                for switch in ("-Status", "-Plan", "-Resume"):
+                    with self.subTest(document=name, command=switch):
+                        completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
+                        self.assertEqual(3, completed.returncode, completed.stderr)
+                        envelope = json.loads(completed.stdout.splitlines()[-1])
+                        self.assertFalse(envelope["ok"])
+                        self.assertEqual("CONTRACT_OR_DEPENDENCY_INVALID", envelope["error"]["code"])
+                        self.assertIn(detail, envelope["error"]["detail"])
+            finally:
+                path.unlink(missing_ok=True)
 
     def test_status_plan_resume_and_invalid_invocation_contract(self) -> None:
         shell = shutil.which("powershell") or shutil.which("pwsh")
