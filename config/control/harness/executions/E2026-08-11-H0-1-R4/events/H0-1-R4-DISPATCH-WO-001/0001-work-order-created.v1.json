@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R4-H0-1-R4-DISPATCH-WO-001-0001",
+  "project_epoch": "E2026-08-11-H0-1-R4",
+  "work_order_id": "H0-1-R4-DISPATCH-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-11T12:12:30Z",
+  "actor": "DIRECTOR",
+  "branch": "main",
+  "head_sha": "82835a37bab1390b6b3f87fb18903070fdd64256",
+  "predicate": "H0_1_CURRENT_MAIN_PLANNING_STATE_CREATED",
+  "command": "CREATE_H0_1_R4_PLANNING_STATE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-1-R4/project-epoch.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-1-R4/work-orders/H0-1-R4-DISPATCH-WO-001.v1.json"
+  ],
+  "summary": "Created H0.1 R4 planning state on exact current main registry generation 70. This is a canonical handoff pointer only; runtime workers remain zero and the real C22 execution epoch must be created on a fresh branch from post-checkpoint main after Director dispatch."
+}
