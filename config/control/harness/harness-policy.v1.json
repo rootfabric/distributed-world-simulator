@@ -1,6 +1,7 @@
 {
   "schema": "distributed_world_simulator.development_harness_policy.v1",
   "harness_revision": "H0-2026-08-11-R1",
+  "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
   "project_goals": "config/control/harness/project-goals.v1.json",
@@ -9,6 +10,11 @@
   "work_order_schema": "config/control/harness/work-order.schema.v1.json",
   "event_schema": "config/control/harness/event.schema.v1.json",
   "project_epoch_schema": "config/control/harness/project-epoch.schema.v1.json",
+  "risk_policy": "config/control/harness/risk-policy.v1.json",
+  "review_policy": "config/control/harness/review-policy.v1.json",
+  "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
+  "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
+  "human_attention_schema": "config/control/harness/human-attention.schema.v1.json",
   "principles": {
     "git_is_durable_memory": true,
     "chat_history_is_not_required_for_resume": true,
@@ -23,7 +29,23 @@
     "clean_worktree_required_at_planned_stop": true,
     "failure_must_be_recorded_as_fix_required_or_blocked": true,
     "exact_tested_heads_required": true,
-    "epoch_must_be_checked_before_dispatch_and_before_acceptance": true
+    "epoch_must_be_checked_before_dispatch_and_before_acceptance": true,
+    "checkpoint_is_unit_of_control": true,
+    "evidence_package_is_unit_of_review": true,
+    "exception_is_unit_of_human_attention": true,
+    "risk_routes_review_depth": true,
+    "reviewer_does_not_guess_missing_evidence": true,
+    "commits_are_recovery_units_not_throughput_kpi": true,
+    "proven_project_progress_is_primary_throughput": true
+  },
+  "roles": {
+    "IMPLEMENTER": "Changes code within bounded Work Order scope.",
+    "REVIEWER": "Challenges design/root-cause/ownership/sibling coverage and emits PASS, FAIL or INSUFFICIENT_EVIDENCE.",
+    "VERIFIER": "Independently executes required validation and confirms exact evidence.",
+    "INTEGRATOR": "Checks cross-branch/composition behavior when checkpoint requires it.",
+    "PC0": "Checks project architecture/convergence constraints.",
+    "DIRECTOR": "Decides whether checkpoint predicates and review evidence are sufficient.",
+    "HUMAN": "Resolves explicit high-impact exceptions and approval gates."
   },
   "work_order_states": [
     "PLANNED",
@@ -42,9 +64,9 @@
   ],
   "autonomy_levels": {
     "A0_OBSERVE": ["fetch", "audit", "analyze", "report"],
-    "A1_PLAN": ["select_eligible_checkpoint", "create_work_order", "prepare_branch_plan"],
+    "A1_PLAN": ["select_eligible_checkpoint", "create_work_order", "prepare_branch_plan", "classify_risk", "prepare_design_brief"],
     "A2_IMPLEMENT": ["create_feature_or_control_branch", "create_clean_worktree", "edit_code", "test", "commit", "push"],
-    "A3_INTEGRATE_CANDIDATE": ["update_passport", "record_evidence", "open_draft_pr", "propose_source_accepted_checkpoint"],
+    "A3_INTEGRATE_CANDIDATE": ["update_passport", "record_evidence", "open_draft_pr", "request_independent_review", "propose_source_accepted_checkpoint"],
     "A4_MERGE": "HUMAN_APPROVAL_UNLESS_EXPLICITLY_WHITELISTED",
     "A5_ARCHITECTURE_PROMOTION": "HUMAN_APPROVAL_REQUIRED"
   },
@@ -56,10 +78,31 @@
     "FOUNDATION_OWNERSHIP_TRANSFER",
     "NEW_GLOBAL_FOUNDATION"
   ],
+  "human_attention_triggers": [
+    "CRITICAL_RISK",
+    "ARCHITECTURE_OR_OWNERSHIP_DECISION",
+    "SECURITY_OR_AUTH_CHANGE",
+    "CROSS_SERVER_AUTHORITY_CHANGE",
+    "UNRESOLVED_HIGH_RISK_REVIEW_DISAGREEMENT",
+    "FAILED_COMPOSITION_REQUIRING_SCOPE_CHANGE",
+    "DIRECTOR_REQUIRES_PRODUCT_OR_ARCHITECT_CHOICE"
+  ],
   "recovery_contract": {
-    "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, last completed predicate, open blocker, next work order, verification commands and human approvals using Git only.",
+    "required_command_goal": "A fresh session/worktree must reconstruct active epoch, branch/head, last completed predicate, open blocker, next work order, verification commands, review state, open human-attention items and human approvals using Git only.",
     "recovery_drill_required_before_h0_1_acceptance": true,
     "chat_dependency_is_failure": true
   },
+  "throughput_metrics": [
+    "accepted_checkpoints",
+    "critical_path_checkpoints",
+    "blockers_cleared",
+    "regressions_escaped",
+    "architecture_drift_findings",
+    "accepted_but_not_integrated_backlog",
+    "average_work_order_cycle",
+    "human_decisions_required",
+    "recovery_success_rate"
+  ],
+  "non_kpis": ["commits_per_day", "lines_changed", "agent_action_count_without_checkpoint_evidence"],
   "commit_trailers": ["Project-Epoch", "Work-Order", "Predicate", "Work-State"]
 }
