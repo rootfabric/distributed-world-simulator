@@ -41,6 +41,11 @@ jobs:
               Path("config/control/harness/work-order.schema.v1.json"),
               Path("config/control/harness/event.schema.v1.json"),
               Path("config/control/harness/project-epoch.schema.v1.json"),
+              Path("config/control/harness/risk-policy.v1.json"),
+              Path("config/control/harness/review-policy.v1.json"),
+              Path("config/control/harness/repair-doctrine.v1.json"),
+              Path("config/control/harness/evidence-map.schema.v1.json"),
+              Path("config/control/harness/human-attention.schema.v1.json"),
           ]
           for path in required_json:
               with path.open("r", encoding="utf-8") as handle:

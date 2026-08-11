@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.harness_evidence_map.schema.v1",
+  "title": "Distributed World Simulator Harness Evidence Map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "work_order_id", "program", "checkpoint", "risk_class", "evidence_head_sha", "intent", "changed_surfaces",
+    "canonical_owner", "entry_points", "callers", "callees", "sibling_surfaces_checked", "canonical_truth_changed",
+    "architecture_ownership_changed", "focused_validation", "full_regression", "pc0", "directional_pc0", "remaining_risks", "review_verdict"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.harness_evidence_map.v1"},
+    "work_order_id": {"type": "string", "minLength": 1},
+    "program": {"type": "string", "minLength": 1},
+    "checkpoint": {"type": "string", "minLength": 1},
+    "risk_class": {"enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+    "evidence_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "intent": {"type": "string", "minLength": 1},
+    "root_cause_or_reason": {"type": "string"},
+    "changed_surfaces": {"type": "array", "items": {"type": "string"}},
+    "canonical_owner": {"type": "string", "minLength": 1},
+    "entry_points": {"type": "array", "items": {"type": "string"}},
+    "callers": {"type": "array", "items": {"type": "string"}},
+    "callees": {"type": "array", "items": {"type": "string"}},
+    "sibling_surfaces_checked": {"type": "array", "items": {"type": "string"}},
+    "canonical_truth_changed": {"type": "boolean"},
+    "architecture_ownership_changed": {"type": "boolean"},
+    "focused_validation": {"enum": ["PASS", "FAIL", "NOT_REQUIRED"]},
+    "full_regression": {"enum": ["PASS", "FAIL", "NOT_REQUIRED"]},
+    "pc0": {"enum": ["NON_RED", "RED", "NOT_RUN"]},
+    "directional_pc0": {"enum": ["NON_RED", "RED", "NOT_RUN"]},
+    "production_diff_summary": {"type": "string"},
+    "remaining_risks": {"type": "array", "items": {"type": "string"}},
+    "required_fixes": {"type": "array", "items": {"type": "string"}},
+    "rank_up_moves": {"type": "array", "items": {"type": "string"}},
+    "evidence_gaps": {"type": "array", "items": {"type": "string"}},
+    "review_verdict": {"enum": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"]}
+  }
+}

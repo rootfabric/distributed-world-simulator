@@ -1,14 +1,32 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 62,
+  "registry_generation": 63,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T03:23:00Z",
-  "control_checkpoint": "PC0 project convergence main-integrated @ d931f8f9a336df8c507d0183fe0d32d792e49a03",
+  "updated_at_utc": "2026-08-11T04:10:00Z",
+  "control_checkpoint": "H0 restart-safe scaffold gate canonical baseline @ c24b821dcfe5d590199d0894c2afd54a04a53e34",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "Distributed World Simulator is controlled from main. PC0 directional watched-dependency hardening is now canonical. T1B is accepted handoff evidence; G8.6 and CH9.6 await manual graphical gates; C22 may proceed with a current-main convergence refresh; NX may proceed by creating a fresh current-main NX.C1 frontier; R3 may proceed with a current-main candidate refresh before promotion.",
+  "project_summary": "Distributed World Simulator is controlled from main. The immediate autonomous-development checkpoint is H0.0 Restart-Safe Harness Scaffold; autonomous runtime work is blocked until H0_0_SCAFFOLD_READY. G8.6 and CH9.6 may continue as manual observation gates, R3 analysis may continue without promotion, C22 becomes the H0.1 closed-loop runtime pilot after H0.0, and NX runtime starts only after H0.1 proves the closed loop.",
   "programs": {
+    "HARNESS": {
+      "program": "HARNESS",
+      "program_name": "Development Harness",
+      "branch": "",
+      "passport_path": "",
+      "requires_passport": false,
+      "role": "CONTROL_INFRASTRUCTURE",
+      "short_description": "Restart-safe checkpoint-driven development control with risk routing, evidence review and human-exception compression.",
+      "purpose": "Prove that project development can resume from Git-only state and then safely scale agent execution without making commit volume the unit of control.",
+      "expected_outcome": "H0.0 proves Status/Plan/Resume and recovery without runtime changes; H0.1 proves evidence-driven C22 closed-loop execution before broader autonomous runtime concurrency.",
+      "current_stage": "H0.0 Restart-Safe Harness Scaffold",
+      "stage_status": "PLANNED_CANONICAL_CONTRACTS_READY",
+      "progress_note": "Harness protocol, checkpoint graph and review/evidence contracts are main-owned control policy. The next implementation is the executable H0.0 scaffold; runtime workers remain disabled until H0_0_SCAFFOLD_READY.",
+      "last_accepted_checkpoint": "H0 canonical restart-safe protocol and H0.0 scaffold gate",
+      "next_stage": "Create the H0.0 control implementation from current main; prove Status/Plan/Resume, event reduction, schema loading including review/evidence contracts, epoch invalidation and Git-only recovery; then propose H0_0_SCAFFOLD_READY.",
+      "health_declared": "GREEN",
+      "blockers": []
+    },
     "G": {
       "program": "G",
       "program_name": "World Generation",
@@ -54,14 +72,14 @@
       "role": "CONVERGENCE_FRONTIER",
       "short_description": "Source-accepted production convergence of TS0.3 local dirty-section evidence into C22/C24.",
       "purpose": "Land accepted incremental C22 behavior into current main without changing Construction truth.",
-      "expected_outcome": "A current-main refresh preserves the accepted C22 production diff and passes focused plus full regression before merge authorization.",
+      "expected_outcome": "After H0.0, H0.1 uses C22 as the first autonomous runtime pilot and proves an evidence-reviewed current-main merge-ready proposal.",
       "current_stage": "TS0.3 / C22 Production Incremental Convergence",
-      "stage_status": "SOURCE_ACCEPTED_MAIN_CONVERGENCE_REFRESH_REQUIRED",
-      "progress_note": "The source implementation remains accepted but was validated before the current main control lineage. Main drift observed during synchronization was control/architecture/docs only and did not touch C22 production proxy/runtime files. The remaining gate is a fresh current-main composition plus focused/full revalidation, not a discovered semantic C22 defect.",
+      "stage_status": "SOURCE_ACCEPTED_WAITING_H0_0_FOR_H0_1_REFRESH",
+      "progress_note": "The source implementation remains accepted. Fresh current-main C22 convergence is intentionally delayed until H0_0_SCAFFOLD_READY so C22 can serve as the first real closed-loop harness pilot rather than bypassing the new control system.",
       "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED",
-      "next_stage": "Create a fresh C22 convergence branch from current main, prove production-diff equivalence, rerun focused C22/C24 and full regression, then restore MERGE_READY. Merge still requires explicit authorization; after merge run PC0 and create TS0.4 from canonical main.",
+      "next_stage": "After H0_0_SCAFFOLD_READY, create fresh C22 convergence from then-current main as H0.1, prove semantic equivalence, focused/full/graphical gates, Evidence Map, independent review and PC0, then stop at SOURCE_ACCEPTED_MERGE_READY pending explicit runtime merge authorization.",
       "health_declared": "YELLOW",
-      "blockers": ["C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"]
+      "blockers": ["H0_0_SCAFFOLD_READY_REQUIRED", "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED"]
     },
     "CH": {
       "program": "CH",
@@ -110,12 +128,12 @@
       "purpose": "Reimplement minimal owner-authority capability while preserving canonical domain/server truth and physics/presentation separation.",
       "expected_outcome": "Maintainable owner-authoritative locomotion, remote interpolation and rollback-safe optimistic item presentation.",
       "current_stage": "NX.C0 Owner Authority Convergence Preparation",
-      "stage_status": "ACTIVE_GREEN_PREPARATION",
-      "progress_note": "NX.C0 is preparation evidence only. PC0 directional watched-dependency hardening is now canonical in main. Legacy M7/FIX remains evidence only. The next authorized action is to create a fresh current-main NX.C1 runtime frontier and transfer only the minimal owner-authority capability.",
+      "stage_status": "PREPARATION_COMPLETE_WAITING_H0_1",
+      "progress_note": "NX.C0 preparation remains valid, but autonomous NX.C1 runtime work is intentionally delayed until H0.1 proves the closed-loop runtime harness on C22. NX will then be the H0.2 high-risk authority/protocol pilot.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice retained as legacy evidence",
-      "next_stage": "Create/register fresh NX.C1 from current main, implement the minimal owner-authority runtime slice, mark NX YELLOW while runtime is unvalidated, then return GREEN/SOURCE_ACCEPTED only after exact-Windows focused/full/two-client/impaired-network/reconnect and dependency revalidation gates.",
+      "next_stage": "After H0.1 PASS, create/register fresh NX.C1 from then-current main, apply HIGH-risk review routing, implement minimal owner-authority runtime slice, then pass exact-Windows focused/full/two-client/impaired-network/reconnect, Evidence Map, independent review and dependency revalidation gates.",
       "health_declared": "GREEN",
-      "blockers": []
+      "blockers": ["H0_1_CLOSED_LOOP_PILOT_REQUIRED_BEFORE_NX_RUNTIME"]
     },
     "MATTER": {
       "program": "MATTER",
@@ -155,17 +173,27 @@
     }
   },
   "convergence_order": {
-    "principle": "Do not open a new major runtime frontier from an old stacked lineage. Accepted legacy branches become evidence; new convergence/runtime work starts from then-current canonical main unless an intentional stacked dependency is registered.",
+    "principle": "Do not open a new major runtime frontier from an old stacked lineage. Accepted legacy branches become evidence; new runtime work is dispatched only through the canonical harness checkpoint graph from then-current main.",
     "now_parallel": [
+      "H0.0 restart-safe harness scaffold implementation (control-only; no runtime workers)",
       "G8.6 manual graphical acceptance",
       "CH9.6 manual graphical acceptance",
-      "C22 current-main convergence refresh + revalidation",
-      "fresh current-main NX.C1 minimal runtime transfer",
-      "R3 current-main candidate refresh + revision-transition control"
+      "R3 current-main candidate analysis/refresh without promotion"
+    ],
+    "harness_train": [
+      "H0.0 executable Status/Plan/Resume + reducer + contracts + epoch + Git-only recovery",
+      "H0_0_SCAFFOLD_READY",
+      "H0.1 C22 evidence-driven closed-loop pilot",
+      "H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY",
+      "H0.2 NX high-risk closed-loop pilot",
+      "H0.3 multi-runtime-worker scheduler",
+      "H1 multi-program autonomous development"
     ],
     "construction_train": [
-      "C22 current-main convergence refresh",
-      "C22 focused + full regression",
+      "H0_0_SCAFFOLD_READY",
+      "H0.1 fresh current-main C22 convergence refresh",
+      "C22 focused + graphical + C24 + full regression + Evidence Map + independent review",
+      "C22 SOURCE_ACCEPTED_MERGE_READY",
       "explicit C22 merge authorization",
       "post-merge PC0 / MAIN_INTEGRATED",
       "fresh main-based TS0.4 1M Research Ceiling",
@@ -173,26 +201,31 @@
       "T2.0 Real Heterogeneous Base / Station"
     ],
     "network_train": [
+      "H0.1 PASS",
       "fresh/current-main NX.C1 runtime branch",
-      "minimal owner-authority transfer",
-      "exact-Windows focused/full/two-client/impaired-network/reconnect/dependency validation",
+      "HIGH-risk minimal owner-authority transfer",
+      "exact-Windows focused/full/two-client/impaired-network/reconnect + Evidence Map/review/dependency validation",
       "NX SOURCE_ACCEPTED"
     ],
     "architecture_train": [
       "refresh GLOBAL-P0 R3 candidate onto current main/control baseline",
+      "apply CRITICAL risk classification/evidence review to promotion path",
       "update frontier guards",
       "implement revision-transition handling before canonical R3 promotion",
-      "promote R3 only with PC0 non-RED",
+      "promote R3 only with PC0 non-RED and human approval",
       "then register/start IAM/MAT/WT/WQ Wave A from one canonical base"
     ]
   },
   "global_blocked_transitions": [
+    {"stage": "AUTONOMOUS RUNTIME BRANCH CREATION", "blocked_by": "H0_0_SCAFFOLD_READY_REQUIRED"},
+    {"stage": "C22 H0.1 RUNTIME START", "blocked_by": "H0_0_SCAFFOLD_READY_REQUIRED"},
+    {"stage": "NX.C1 RUNTIME START", "blocked_by": "H0_1_CLOSED_LOOP_PILOT_PASS_REQUIRED"},
     {"stage": "G8 FULL ACCEPTANCE", "blocked_by": "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"},
-    {"stage": "C22 MERGE", "blocked_by": "C22_MAIN_CONVERGENCE_REFRESH_REQUIRED_PLUS_EXPLICIT_MERGE_AUTHORIZATION"},
+    {"stage": "C22 MERGE", "blocked_by": "C22_SOURCE_ACCEPTED_MERGE_READY_PLUS_EXPLICIT_MERGE_AUTHORIZATION"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
     {"stage": "CH STAGE AFTER CH9.6 START", "blocked_by": "CH9_6_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"},
-    {"stage": "NX.C1 SOURCE_ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_RUNTIME_VALIDATION_AND_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
-    {"stage": "GLOBAL-P0 R3 PROMOTION", "blocked_by": "R3_CURRENT_MAIN_REFRESH_PLUS_FRONTIER_GUARD_REFRESH_PLUS_REVISION_TRANSITION_PLAN_PLUS_PC0_NON_RED_REQUIRED"}
+    {"stage": "NX.C1 SOURCE_ACCEPTANCE", "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_REVIEW_RUNTIME_VALIDATION_AND_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"},
+    {"stage": "GLOBAL-P0 R3 PROMOTION", "blocked_by": "R3_CURRENT_MAIN_REFRESH_PLUS_CRITICAL_RISK_REVIEW_PLUS_FRONTIER_GUARD_REFRESH_PLUS_REVISION_TRANSITION_PLAN_PLUS_PC0_NON_RED_PLUS_HUMAN_APPROVAL_REQUIRED"}
   ],
   "audit_triggers": [
     "ANY_MAJOR_CHECKPOINT_ACCEPTED",
@@ -201,6 +234,9 @@
     "NEW_FOUNDATION_OR_REGISTRY_CONCEPT",
     "ACTIVE_BRANCH_CHANGES_A_WATCHED_DEPENDENCY",
     "TWO_ACTIVE_BRANCHES_TOUCH_THE_SAME_RUNTIME_OR_CONTRACT_FILE",
-    "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES"
+    "VALIDATION_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES",
+    "REVIEW_HEAD_BECOMES_OLDER_THAN_RUNTIME_CHANGES",
+    "RISK_RECLASSIFICATION",
+    "BLOCKING_HUMAN_ATTENTION_ITEM_BEFORE_CHECKPOINT"
   ]
 }

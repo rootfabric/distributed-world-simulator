@@ -3,6 +3,7 @@
 **Control plane:** `PC0-2026-08-10-R1`  
 **Global architecture:** `GLOBAL-P0-2026-08-10-R2`  
 **Development harness:** `H0-2026-08-11-R1`  
+**Agent review layer:** `H0-REVIEW-2026-08-11-R1`  
 **Canonical owner:** `main`
 
 Это центральная точка верхнеуровневого контроля проекта. Быстро меняющееся состояние программ не дублируется в архитектурном roadmap вручную: operational truth строится из main-owned registry, branch passports, validation heads и реальных Git refs.
@@ -30,8 +31,10 @@ docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
 Для автономной/полуавтономной разработки через harness:
 
 ```text
+AGENTS.md
 HARNESS_CONTROL.md
 docs/control/DEVELOPMENT_HARNESS_RU.md
+docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
 ```
@@ -44,6 +47,9 @@ MAIN DECLARES PROJECT STATE
 AUDITOR CHECKS CONSISTENCY
 GLOBAL ARCHITECTURE DEFINES WHAT IS ALLOWED
 HARNESS MOVES ONLY BETWEEN DECLARED CHECKPOINTS
+RISK ROUTES REVIEW DEPTH
+EVIDENCE PACKAGE IS THE REVIEW UNIT
+EXCEPTION IS THE HUMAN ATTENTION UNIT
 ```
 
 Оперативный active frontier берётся из:
@@ -83,20 +89,85 @@ Director reads main + PC0
         ↓
 select declared eligible checkpoint
         ↓
+classify risk / Design Brief when required
+        ↓
 create Project Epoch from exact main SHA
         ↓
 issue bounded Work Order
         ↓
 worker implementation
         ↓
-independent verification
+post-build critique when required
+        ↓
+Evidence Map
+        ↓
+independent Reviewer + Verifier
         ↓
 PC0 + directional audit
         ↓
 checkpoint proposal
+        ↓
+Human Attention only for explicit exception/approval
 ```
 
-Git является durable memory harness. Возобновление работы не должно требовать истории чата. Implementer не может сам объявить checkpoint accepted. Полный протокол: `docs/control/DEVELOPMENT_HARNESS_RU.md`.
+Git является durable memory harness. Возобновление работы не должно требовать истории чата. Implementer не может сам объявить checkpoint accepted.
+
+Полные правила:
+
+```text
+docs/control/DEVELOPMENT_HARNESS_RU.md
+docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+```
+
+### Единицы управления
+
+```text
+commit          = recovery unit
+checkpoint      = control unit
+Evidence Map    = review unit
+exception       = human attention unit
+```
+
+Количество commits или lines changed не является throughput KPI. Цель — доказанный project progress через принятые checkpoints, снятые blockers, свежую regression evidence и отсутствие architectural drift.
+
+### Risk routing
+
+```text
+LOW      → Implementer + Verifier
+MEDIUM   → Implementer + Reviewer + Verifier
+HIGH     → Implementer + Reviewer + Verifier + Director
+CRITICAL → Implementer + Reviewer + Verifier + Director + Human
+```
+
+Reviewer имеет verdict только:
+
+```text
+PASS
+FAIL
+INSUFFICIENT_EVIDENCE
+```
+
+Если доказательства не хватает, reviewer не угадывает.
+
+`FIX_REQUIRED` для MEDIUM+ работы требует Repair Map перед следующим non-trivial fix. Runtime review должен быть exact-head fresh; runtime commit после review делает review stale.
+
+### Human Attention Queue
+
+Человек должен получать не поток agent commits, а явные решения:
+
+```text
+decision id
+program / checkpoint
+risk
+reason
+options
+recommended option + reason
+blast radius
+blocking/non-blocking
+evidence paths
+```
+
+Типичные human-attention triggers: architecture/ownership choice, security/auth, global identity, cross-server authority, CRITICAL risk, unresolved HIGH-risk reviewer disagreement, scope expansion after failed composition и product decision, который Director не может безопасно вывести сам.
 
 Текущая harness pilot-последовательность:
 
@@ -110,7 +181,9 @@ H0.1 CLOSED-LOOP C22 PILOT
 C22 SOURCE_ACCEPTED_MERGE_READY
 ```
 
-До `H0_0_SCAFFOLD_READY` автономная runtime-разработка запрещена. На H0.1 допускается максимум один автономный runtime worker. Runtime merge, TS0.4 activation, global architecture promotion, foundation ownership transfer и новые global foundations остаются human gates.
+До `H0_0_SCAFFOLD_READY` автономная runtime-разработка запрещена. H0.0 должен также загружать/валидировать review/evidence contracts, но не исполняет runtime review flow. На H0.1 допускается максимум один автономный runtime worker и уже обязательны Risk Classification, Evidence Map, independent Reviewer, bounded post-build critique и exact-head review freshness.
+
+Runtime merge, TS0.4 activation, global architecture promotion, foundation ownership transfer и новые global foundations остаются human gates.
 
 ## Как читать проект
 
@@ -119,22 +192,25 @@ GLOBAL architecture / rules
         ↓
 main-owned Project Registry
         +
-main-owned Harness Goals / Checkpoints
+main-owned Harness Goals / Checkpoints / Review Policy
+        ↓
+root AGENTS.md router
         ↓
 registered branch passports
         ↓
+Work Orders / Events / Evidence Maps
+        ↓
 validation + actual Git refs
+        ↓
+Reviewer + Verifier
         ↓
 standard PC0 auditor
         +
 directional watched-dependency auditor
         ↓
-CONTROL_PROJECT.ps1
+Director checkpoint verdict
         ↓
-artifacts/control/PROJECT_STATUS_RU.md
-artifacts/control/project-control-report.json
-artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
-artifacts/control/directional-watch-report.json
+Human Attention Queue only when required
 ```
 
 ## Два вида dependency control
@@ -191,6 +267,14 @@ Progress
   next stage
   blockers + health
 
+Harness / review
+  active Project Epoch
+  active Work Order
+  risk class
+  review state / exact reviewed head
+  Evidence Map state
+  open human-attention items
+
 Validation evidence
   runtime tested head
   focused tested head
@@ -230,23 +314,21 @@ health_declared
 
 `short_description`, `purpose`, `expected_outcome`, `progress_note`, `last_accepted_checkpoint`, `next_stage` остаются обязательной информацией, но их небольшое редакционное расхождение не является blocking control failure.
 
-## Почему validation heads показываются отдельно
+## Validation/review freshness
 
-Нельзя считать `branch HEAD` автоматически проверенным runtime head. После успешного теста в ветку часто добавляются documentation/control commits, а иногда — новый runtime code.
+Нельзя считать `branch HEAD` автоматически проверенным runtime head. Поэтому dashboard различает `tested_heads.runtime`, `tested_heads.focused`, `tested_heads.full_regression`.
 
-Поэтому dashboard различает:
+Если после tested runtime head изменился хотя бы один `runtime_paths`, auditor поднимает `RUNTIME_VALIDATION_STALE`.
+
+Для agent review действует дополнительное правило:
 
 ```text
-tested_heads.runtime
-  последний SHA, на котором проверялся runtime scope
-
-tested_heads.focused
-  SHA focused acceptance
-tested_heads.full_regression
-  SHA полного regression
+reviewed head
+  == evidence head
+  == tested runtime head for the reviewed runtime scope
 ```
 
-Если после tested runtime head изменился хотя бы один `runtime_paths`, auditor поднимает `RUNTIME_VALIDATION_STALE` независимо от текста progress note.
+Если после review изменился runtime scope, review становится `REVIEW_STALE` и не поддерживает checkpoint proposal до повторной проверки.
 
 ## Почему dependencies и ownership должны быть прямо в dashboard
 
@@ -287,6 +369,8 @@ git fetch origin --prune
 
 Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, который получает central registry/policy truth из `origin/main`. Поэтому feature branch не должна становиться независимым владельцем project state.
 
+Root `AGENTS.md` также не владеет roadmap: он только маршрутизирует любого агента к актуальному central control.
+
 ## Когда запускать
 
 Обязательно:
@@ -302,6 +386,9 @@ Feature-ветки используют bootstrap `CONTROL_PROJECT.ps1`, кот�
 когда producer branch меняет чужую watched dependency
 перед harness checkpoint proposal
 при Project Epoch invalidation/recovery
+при risk reclassification
+при REVIEW_STALE
+при unresolved human-attention item перед blocking checkpoint
 ```
 
 Минимальное правило: нельзя пройти два последовательных крупных acceptance checkpoint одной программы без промежуточного Project Control audit.
@@ -328,9 +415,20 @@ Harness goals/checkpoints/policy:
   config/control/harness/harness-policy.v1.json
   config/control/harness/scheduler-policy.v1.json
 
+Harness review/evidence contracts:
+  config/control/harness/risk-policy.v1.json
+  config/control/harness/review-policy.v1.json
+  config/control/harness/repair-doctrine.v1.json
+  config/control/harness/evidence-map.schema.v1.json
+  config/control/harness/human-attention.schema.v1.json
+
+Agent router:
+  AGENTS.md
+
 Human harness protocol:
   HARNESS_CONTROL.md
   docs/control/DEVELOPMENT_HARNESS_RU.md
+  docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
 
 Human current-frontier snapshot:
   docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
@@ -350,5 +448,7 @@ Detailed control instructions:
 Если конкретная программа получает `RED`, её следующий объявленный major stage/acceptance блокируется, пока причина не закрыта или явно не пересмотрена в `main`.
 
 Если harness не может восстановить state из Git без истории чата, autonomous checkpoint блокируется до исправления recovery contract.
+
+Если Reviewer выдаёт `FAIL`, `INSUFFICIENT_EVIDENCE`, review stale или существует blocking Human Attention item, соответствующий runtime checkpoint proposal блокируется.
 
 `SOURCE_ACCEPTED` не означает автоматически `MAIN_INTEGRATED`, `COMPOSITION_VERIFIED`, `PRODUCTION_READY` или разрешение перейти на следующий stage.

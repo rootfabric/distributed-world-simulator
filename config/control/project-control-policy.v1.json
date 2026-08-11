@@ -8,15 +8,23 @@
   "central_registry_path": "config/control/project-program-registry.v1.json",
   "ownership_matrix_path": "config/control/architecture-ownership.v1.json",
   "dashboard_entrypoint": "PROJECT_CONTROL.md",
+  "agent_router": "AGENTS.md",
   "auditor": "scripts/control/project_control.py",
   "directional_watch_auditor": "scripts/control/project_control_directional_watch.py",
   "development_harness": {
     "revision": "H0-2026-08-11-R1",
+    "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
     "protocol": "docs/control/DEVELOPMENT_HARNESS_RU.md",
+    "review_protocol": "docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md",
     "project_goals": "config/control/harness/project-goals.v1.json",
     "checkpoint_catalog": "config/control/harness/checkpoint-catalog.v1.json",
     "harness_policy": "config/control/harness/harness-policy.v1.json",
-    "scheduler_policy": "config/control/harness/scheduler-policy.v1.json"
+    "scheduler_policy": "config/control/harness/scheduler-policy.v1.json",
+    "risk_policy": "config/control/harness/risk-policy.v1.json",
+    "review_policy": "config/control/harness/review-policy.v1.json",
+    "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
+    "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
+    "human_attention_schema": "config/control/harness/human-attention.schema.v1.json"
   },
   "rules": {
     "main_declares_project_state": true,
@@ -38,7 +46,16 @@
     "harness_implementer_cannot_self_accept_checkpoint": true,
     "harness_epoch_required_for_autonomous_runtime_work": true,
     "harness_execution_events_are_append_only_in_worker_branch": true,
-    "harness_default_autonomy_stops_before_runtime_merge": true
+    "harness_default_autonomy_stops_before_runtime_merge": true,
+    "harness_runtime_work_requires_risk_classification": true,
+    "harness_medium_plus_requires_design_brief": true,
+    "harness_fix_required_medium_plus_requires_repair_map": true,
+    "harness_runtime_checkpoint_requires_evidence_map": true,
+    "harness_runtime_checkpoint_requires_independent_review": true,
+    "harness_missing_review_evidence_is_not_assumed_pass": true,
+    "harness_review_head_must_be_fresh_for_runtime_scope": true,
+    "harness_human_attention_is_exception_driven": true,
+    "commits_per_day_is_not_project_throughput": true
   },
   "branch_lifecycle": [
     "PLANNED",
@@ -103,6 +120,8 @@
   "overlap_policy": {
     "ignored_patterns": [
       "PROJECT_CONTROL.md",
+      "HARNESS_CONTROL.md",
+      "AGENTS.md",
       "CONTROL_PROJECT.ps1",
       "scripts/control/**",
       "config/control/**",
@@ -137,6 +156,9 @@
     "NO_UNRESOLVED_CRITICAL_DIRECTIONAL_WATCH_HIT",
     "NO_UNRESOLVED_CRITICAL_CROSS_BRANCH_OVERLAP",
     "RUNTIME_VALIDATION_FRESH",
+    "REVIEW_EVIDENCE_COMPLETE_WHEN_REQUIRED",
+    "REVIEW_HEAD_FRESH_WHEN_REQUIRED",
+    "NO_BLOCKING_HUMAN_ATTENTION_ITEM",
     "FOCUSED_VALIDATION_PASS",
     "REQUIRED_REGRESSION_PASS",
     "STATUS_DIMENSIONS_REMAIN_DISTINCT"
