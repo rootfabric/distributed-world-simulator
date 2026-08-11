@@ -49,11 +49,22 @@ class H01ClosedLoopControlTests(unittest.TestCase):
         self.assertEqual(self.work_order["state"], self.reduced["state"])
         self.assertGreaterEqual(self.reduced["last_event_sequence"], 1)
 
-    def test_public_state_selects_fresh_r6_epoch(self):
+    def test_public_state_selects_r6_and_handles_main_movement_fail_closed(self):
         state = build_state(ROOT, ACTIVE_EXECUTION)
         self.assertEqual("E2026-08-11-H0-1-R6", state["epoch"]["epoch_id"])
         self.assertEqual(ACTIVE_WORK_ORDER_ID, state["active_work_order"]["work_order_id"])
-        self.assertEqual("EXACT_BASE", state["epoch"]["validation"]["status"])
+        status = state["epoch"]["validation"]["status"]
+        main_sha = state["epoch"]["validation"]["main_sha"]
+        if main_sha == EPOCH_BASE_SHA:
+            self.assertEqual("EXACT_BASE", status)
+            self.assertEqual("CONTINUE", state["epoch"]["validation"]["action"])
+        elif any(event.get("event_type") == "AUDIT_COMPLETED" for event in self.events):
+            self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", status)
+            self.assertEqual("CONTINUE", state["epoch"]["validation"]["action"])
+        else:
+            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", status)
+            self.assertEqual("BLOCK_CONTINUATION", state["epoch"]["validation"]["action"])
+            self.assertTrue(state["continuation_blocked"])
 
     def test_plan_is_zero_workers_before_dispatch_and_one_after(self):
         state = build_state(ROOT, ACTIVE_EXECUTION)
@@ -93,15 +104,21 @@ class H01ClosedLoopControlTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractValidationError, "EPOCH_REGISTRY_GENERATION_MISMATCH"):
             _validate_semantics(self.bundle, changed, self.work_order)
 
-    def test_epoch_validator_is_exact_on_current_main(self):
+    def test_epoch_validator_requires_audit_if_main_moved(self):
         result = validate_epoch(ROOT, self.epoch, "main", None)
-        self.assertEqual("EXACT_BASE", result["status"])
-        self.assertEqual("CONTINUE", result["action"])
+        if result["main_sha"] == EPOCH_BASE_SHA:
+            self.assertEqual("EXACT_BASE", result["status"])
+            self.assertEqual("CONTINUE", result["action"])
+        else:
+            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", result["status"])
+            self.assertEqual("BLOCK_CONTINUATION", result["action"])
+            self.assertEqual("CANONICAL_MAIN_ADVANCED_WITHOUT_RECORDED_AUDIT", result["reason"])
 
     def test_work_order_is_bounded_to_c22_and_forbids_other_runtime_domains(self):
         allowed = tuple(self.work_order["allowed_paths"])
         forbidden = tuple(self.work_order["forbidden_paths"])
         self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", allowed)
+        self.assertIn("tests/harness/**", allowed)
         self.assertIn("scripts/network/**", forbidden)
         self.assertIn("scripts/items/**", forbidden)
         self.assertIn("scripts/characters/**", forbidden)
