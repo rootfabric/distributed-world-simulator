@@ -1,0 +1,63 @@
+{
+  "schema": "planet_simulator.g8_5_cross_cell_cross_lod_geomorphology_invariance.v1",
+  "checkpoint": "g8.5-cross-cell-cross-lod-geomorphology-invariance",
+  "status": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.4 Erosion / Deposition Baseline",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "82cc31429f2bf2ea419bf1b50159838eea51c727",
+    "accepted_metadata_head": "d42b8ecb1dcf09f4317c0ef212e46df295c0ebdd"
+  },
+  "proof_kind": "CANONICAL_GEOMORPHOLOGY_REPRESENTATION_INVARIANCE",
+  "proof_lod_levels": [2, 4, 8, 12],
+  "semantic_inputs": [
+    "geo/surface-height-m",
+    "geo/valley-influence",
+    "geo/river-distance-m",
+    "geo/river-width-m"
+  ],
+  "real_upstream_sources": [
+    "G3 casual macro terrain provider through accepted G3 semantic adapter",
+    "G5 FeatureGraph valley through accepted G5 semantic adapter",
+    "G6 compiled cross-cell river through accepted G6 semantic adapter"
+  ],
+  "invariants": {
+    "semantic_query_has_no_surface_cell_key": true,
+    "semantic_query_has_no_lod": true,
+    "same_body_fixed_point_same_query_checksum_across_lod": true,
+    "same_body_fixed_point_same_bundle_checksum_across_lod": true,
+    "same_body_fixed_point_same_deformation_checksum_across_lod": true,
+    "same_body_fixed_point_same_component_deltas_across_lod": true,
+    "external_surface_cell_label_cannot_perturb_deformation": true,
+    "external_cube_face_label_cannot_perturb_deformation": true,
+    "query_field_order_cannot_perturb_deformation": true,
+    "px_pz_seam_is_representation_only": true,
+    "profile_checksum_remains_canonical_input": true,
+    "source_semantic_bundle_checksum_remains_canonical_input": true
+  },
+  "architecture_boundaries": {
+    "surface_cell_is_geomorphology_identity": false,
+    "lod_is_geomorphology_identity": false,
+    "cube_face_is_geomorphology_identity": false,
+    "creates_geomorphology_cell_identity": false,
+    "creates_seam_authority": false,
+    "creates_representation_owned_truth": false,
+    "matter_mutation": false,
+    "authority_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "acceptance": {
+    "focused_runner": "RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_5_FULL_ACCEPTANCE.ps1",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "tested_head": "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "working_tree": "CLEAN"
+  },
+  "next_if_accepted": "G8.6_GEOMORPHOLOGY_VISUAL_LAB"
+}

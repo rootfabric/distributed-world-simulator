@@ -2,10 +2,21 @@
   "schema": "planet_simulator.geo_g7_g13_p0_aligned_roadmap.v1",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "branch": "feature/g7-semantic-field-fabric",
-  "upstream": {"g6": "SOURCE_ACCEPTED", "g5_world_feature_identity": "ACCEPTED", "g6_hydrology_fluid_semantics": "ACCEPTED"},
-  "current_checkpoint": "G7_FULL_ACCEPTANCE",
-  "next_checkpoint": "G8_GEOMORPHOLOGY",
+  "branch": "feature/g8-geomorphology",
+  "upstream": {
+    "g6": "SOURCE_ACCEPTED",
+    "g5_world_feature_identity": "ACCEPTED",
+    "g6_hydrology_fluid_semantics": "ACCEPTED",
+    "g7_semantic_field_fabric": "ACCEPTED",
+    "g8_0_geomorphology_contracts": "ACCEPTED",
+    "g8_1_valley_incision_baseline": "ACCEPTED",
+    "g8_2_river_channel_incision": "ACCEPTED",
+    "g8_3_banks_and_floodplain_shaping": "ACCEPTED",
+    "g8_4_erosion_deposition_baseline": "ACCEPTED",
+    "g8_5_cross_cell_cross_lod_geomorphology_invariance": "ACCEPTED"
+  },
+  "current_checkpoint": "G8_6_GEOMORPHOLOGY_VISUAL_LAB",
+  "next_checkpoint": "G8_FULL_ACCEPTANCE",
   "global_invariants": [
     "SEMANTIC_FIELD_ID_NE_SURFACE_CELL_KEY",
     "SEMANTIC_FIELD_ID_NE_LOD",
@@ -13,6 +24,9 @@
     "SEMANTIC_FIELD_ID_NE_INTEREST_REGION_ID",
     "SEMANTIC_FIELD_QUERY_NE_UNIVERSAL_WORLD_QUERY_FABRIC",
     "FLUID_TYPE_ID_NE_MATERIAL_DEFINITION_ID",
+    "GEOMORPHOLOGY_NE_SURFACE_CELL_KEY",
+    "GEOMORPHOLOGY_NE_LOD",
+    "GEOMORPHOLOGY_NE_MATTER_MUTATION_STORAGE",
     "GEO_PROVIDER_NE_AUTHORITY_OWNER",
     "GEO_PROVIDER_NE_PERSISTENCE_OWNER",
     "GEO_PROVIDER_NE_NETWORK_OWNER",
@@ -22,41 +36,150 @@
     "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
     "control_plane_revision": "PC0-2026-08-10-R1",
     "operational_frontier_source": "origin/main:config/control/project-program-registry.v1.json",
-    "branch_passport": "config/control/branches/feature__g7-semantic-field-fabric.v1.json",
+    "branch_passport": "config/control/branches/feature__g8-geomorphology.v1.json",
     "legacy_global_active_frontiers_operational_owner": false,
     "status_only_frontier_changes_require_global_revision": false,
     "historical_accepted_branches_rewritten_for_status_only_changes": false,
-    "world_generation_frontier": "feature/g7-semantic-field-fabric"
+    "world_generation_frontier": "feature/g8-geomorphology"
   },
   "stages": [
     {
       "id": "G7",
       "name": "Semantic Field Fabric",
-      "status": "IN_PROGRESS_FULL_ACCEPTANCE",
+      "status": "ACCEPTED",
       "accepted": [
         "G7.0 Semantic Field Contracts",
         "G7.1 G3/G5/G6 Upstream Adapters",
         "G7.2 Composition and Provenance",
         "G7.3 Cross-Cell / Cross-LOD Invariance",
-        "G7.4 Semantic Field Lab"
+        "G7.4 Semantic Field Lab",
+        "G7 Full Acceptance"
       ],
-      "current": "G7 Full Acceptance",
-      "remaining": ["G7 Full Acceptance"],
-      "forbidden_ownership": ["WorldAddress", "UniversalWorldQuery", "AuthorityRouting", "InterestManagement", "PersistenceDurability", "NetworkReplication", "MaterialOntology", "SchedulerCacheOwnership"]
+      "remaining": [],
+      "forbidden_ownership": [
+        "WorldAddress",
+        "UniversalWorldQuery",
+        "AuthorityRouting",
+        "InterestManagement",
+        "PersistenceDurability",
+        "NetworkReplication",
+        "MaterialOntology",
+        "SchedulerCacheOwnership"
+      ]
     },
     {
       "id": "G8",
       "name": "Geomorphology",
-      "status": "PLANNED_BLOCKED_BY_G7_FULL_ACCEPTANCE",
-      "owns": ["valley_incisions", "river_channel_incisions", "banks", "floodplain_shaping", "erosion_deposition_procedural_baseline"],
-      "does_not_own": ["player_excavation", "persistent_terrain_damage", "matter_transactions"]
+      "status": "IN_PROGRESS_G8_6",
+      "accepted": [
+        "G8.0 Geomorphology Contracts",
+        "G8.1 Valley Incision Baseline",
+        "G8.2 River Channel Incision",
+        "G8.3 Banks and Floodplain Shaping",
+        "G8.4 Erosion / Deposition Baseline",
+        "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance"
+      ],
+      "current": "G8.6 Geomorphology Visual Lab",
+      "roadmap": [
+        "G8.0 Geomorphology Contracts",
+        "G8.1 Valley Incision Baseline",
+        "G8.2 River Channel Incision",
+        "G8.3 Banks and Floodplain Shaping",
+        "G8.4 Erosion / Deposition Baseline",
+        "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
+        "G8.6 Geomorphology Visual Lab",
+        "G8 Full Acceptance"
+      ],
+      "owns": [
+        "valley_incisions",
+        "river_channel_incisions",
+        "banks",
+        "floodplain_shaping",
+        "erosion_deposition_procedural_baseline"
+      ],
+      "does_not_own": [
+        "player_excavation",
+        "persistent_terrain_damage",
+        "matter_transactions",
+        "material_ontology",
+        "world_address",
+        "authority_routing",
+        "persistence_durability"
+      ]
     },
-    {"id": "G9", "name": "Layered Geology", "status": "PLANNED_P0_MATERIAL_GATE_REQUIRED", "p0_dependency": "P0_MATERIAL_ONTOLOGY", "rule": "Topology/layer geometry may proceed before the shared material ontology, but formal canonical material acceptance requires MaterialDefinitionId/composition integration."},
-    {"id": "G10", "name": "GeoVolume / SDF", "status": "PLANNED", "rule": "GeoVolume is procedural volume semantics and must not become Matter storage or authoritative excavation state."},
-    {"id": "G11", "name": "Heterogeneous Body Lab", "status": "PLANNED", "required_profiles": ["earth_like", "irregular_asteroid", "floating_island", "water_dominant", "ice_or_methane_like", "non_default_environment_or_gravity"]},
-    {"id": "G12", "name": "Scheduler / Cache / Provenance", "status": "PLANNED", "owns": ["generation_work_scheduling", "provider_dependency_execution", "cache_keys", "cache_invalidation", "provenance_manifests", "budget_accounting_adapters"], "forbidden_ownership": ["authority", "persistence_semantics", "world_identity", "network_ownership", "canonical_transaction_commit"]},
-    {"id": "G13", "name": "Detail Contract Freeze", "status": "PLANNED", "goal": "Freeze stable downstream contracts for surface, features, fluids, semantic fields, geomorphology, geology, volume/SDF, provenance and representation requests before production detail expansion."}
+    {
+      "id": "G9",
+      "name": "Layered Geology",
+      "status": "PLANNED_P0_MATERIAL_GATE_REQUIRED",
+      "p0_dependency": "P0_MATERIAL_ONTOLOGY",
+      "rule": "Topology/layer geometry may proceed before the shared material ontology, but formal canonical material acceptance requires MaterialDefinitionId/composition integration."
+    },
+    {
+      "id": "G10",
+      "name": "GeoVolume / SDF",
+      "status": "PLANNED",
+      "rule": "GeoVolume is procedural volume semantics and must not become Matter storage or authoritative excavation state."
+    },
+    {
+      "id": "G11",
+      "name": "Heterogeneous Body Lab",
+      "status": "PLANNED",
+      "required_profiles": [
+        "earth_like",
+        "irregular_asteroid",
+        "floating_island",
+        "water_dominant",
+        "ice_or_methane_like",
+        "non_default_environment_or_gravity"
+      ]
+    },
+    {
+      "id": "G12",
+      "name": "Scheduler / Cache / Provenance",
+      "status": "PLANNED",
+      "owns": [
+        "generation_work_scheduling",
+        "provider_dependency_execution",
+        "cache_keys",
+        "cache_invalidation",
+        "provenance_manifests",
+        "budget_accounting_adapters"
+      ],
+      "forbidden_ownership": [
+        "authority",
+        "persistence_semantics",
+        "world_identity",
+        "network_ownership",
+        "canonical_transaction_commit"
+      ]
+    },
+    {
+      "id": "G13",
+      "name": "Detail Contract Freeze",
+      "status": "PLANNED",
+      "goal": "Freeze stable downstream contracts for surface, features, fluids, semantic fields, geomorphology, geology, volume/SDF, provenance and representation requests before production detail expansion."
+    }
   ],
-  "composition_gates": {"G8": "G7_FULL_ACCEPTANCE", "G9": "P0_MATERIAL_ONTOLOGY", "G10": "GEO_MATTER_OWNERSHIP_AUDIT", "G12": "AUTHORITY_PERSISTENCE_WORK_BUDGET_OWNERSHIP_AUDIT"},
-  "acceptance_common": ["ARCHITECTURE_REVISION_MATCH_PC0", "PC0_BRANCH_REGISTERED", "PC0_BRANCH_PASSPORT_PRESENT", "PC0_CENTRAL_AND_BRANCH_STAGE_MATCH", "PC0_G_HEALTH_NOT_RED", "LOCAL_P0_ALIGNMENT_CURRENT", "NO_DUPLICATE_FOUNDATION_OWNERSHIP", "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK", "HEADLESS_SEMANTIC_EXECUTION", "FOCUSED_CONTRACTS_PASS", "PARENT_G_STAGE_REGRESSION_PASS", "WORLD_CORE_REGRESSION_PASS", "CLEAN_WORKTREE", "GIT_DIFF_CHECK_PASS", "STATUS_DIMENSIONS_DISTINCT"]
+  "composition_gates": {
+    "G9": "P0_MATERIAL_ONTOLOGY",
+    "G10": "GEO_MATTER_OWNERSHIP_AUDIT",
+    "G12": "AUTHORITY_PERSISTENCE_WORK_BUDGET_OWNERSHIP_AUDIT"
+  },
+  "acceptance_common": [
+    "ARCHITECTURE_REVISION_MATCH_PC0",
+    "PC0_BRANCH_REGISTERED",
+    "PC0_BRANCH_PASSPORT_PRESENT",
+    "PC0_CENTRAL_AND_BRANCH_STAGE_MATCH",
+    "PC0_G_HEALTH_NOT_RED",
+    "LOCAL_P0_ALIGNMENT_CURRENT",
+    "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
+    "IDENTITY_INDEPENDENT_FROM_CELL_LOD_RENDERING_NETWORK",
+    "HEADLESS_SEMANTIC_EXECUTION",
+    "FOCUSED_CONTRACTS_PASS",
+    "PARENT_G_STAGE_REGRESSION_PASS",
+    "WORLD_CORE_REGRESSION_PASS",
+    "CLEAN_WORKTREE",
+    "GIT_DIFF_CHECK_PASS",
+    "STATUS_DIMENSIONS_DISTINCT"
+  ]
 }

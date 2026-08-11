@@ -1,0 +1,81 @@
+{
+  "schema": "planet_simulator.g8_4_erosion_deposition_baseline.v1",
+  "checkpoint": "g8.4-erosion-deposition-baseline",
+  "status": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.3 Banks and Floodplain Shaping",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
+    "accepted_metadata_head": "02d975952966113d65bc2e968881099975a10f33"
+  },
+  "implementation": "res://scripts/simulation/procedural/geomorphology/erosion_deposition_baseline_v1.gd",
+  "generator_id": "geomorphology/g8-4-erosion-deposition-baseline-v1",
+  "generator_version": "1.0.0",
+  "inputs": [
+    "geo/surface-height-m",
+    "geo/valley-influence",
+    "geo/river-distance-m",
+    "geo/river-width-m"
+  ],
+  "zone_geometry": {
+    "normalization": "normalized_distance = river_distance_m / (river_width_m * 0.5)",
+    "channel": [0.0, 1.0],
+    "erosion_inner": 1.0,
+    "erosion_peak": 1.35,
+    "erosion_outer": 2.0,
+    "deposition_inner": 2.0,
+    "deposition_peak": 3.25,
+    "deposition_outer": 5.5
+  },
+  "formula": {
+    "erosion_weight": "cubic smooth lobe 1.0 -> peak 1.35 -> 2.0",
+    "deposition_weight": "cubic smooth lobe 2.0 -> peak 3.25 -> 5.5",
+    "signed_weight": "deposition_weight - erosion_weight",
+    "erosion_deposition_delta_m": "erosion_deposition_max_delta_m * signed_weight * valley_influence"
+  },
+  "rules": {
+    "inside_channel_zero": true,
+    "erosion_non_positive": true,
+    "deposition_non_negative": true,
+    "profile_bounded": true,
+    "valley_influence_modulates_amplitude": true,
+    "zero_valley_influence_suppresses_component": true,
+    "preserves_g8_3_valley_component": true,
+    "preserves_g8_3_river_component": true,
+    "preserves_g8_3_bank_component": true,
+    "preserves_g8_3_floodplain_component": true,
+    "same_bundle_used_for_parent_and_shaping": true,
+    "output_binds_source_bundle_checksum": true,
+    "output_binds_profile_checksum": true,
+    "deterministic": true
+  },
+  "semantic_note": "G8.4 is a static procedural redistribution baseline, not sediment mass conservation, time integration, persistent terrain mutation or Matter storage. It uses accepted river geometry plus valley influence only. geo/fluid-surface-distance-m remains deliberately unused because it is not a signed canonical water elevation.",
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "camera_dependency": false,
+    "representation_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "persistent_terrain_damage": false,
+    "sediment_inventory_ownership": false,
+    "time_integration_ownership": false,
+    "material_definition_ownership": false,
+    "network_replication_ownership": false,
+    "fluid_surface_distance_used": false
+  },
+  "acceptance": {
+    "focused_runner": "RUN_G8_4_EROSION_DEPOSITION_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_4_FULL_ACCEPTANCE.ps1",
+    "focused": "PASS_ON_FULL_ACCEPTANCE_CHECKOUT",
+    "full_world_regression": "PASS",
+    "full_acceptance_tested_head": "82cc31429f2bf2ea419bf1b50159838eea51c727",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "working_tree": "CLEAN"
+  },
+  "next_if_accepted": "G8.5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE"
+}

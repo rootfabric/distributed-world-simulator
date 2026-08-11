@@ -1,0 +1,73 @@
+{
+  "schema": "planet_simulator.g8_0_geomorphology_contracts.v1",
+  "checkpoint": "g8.0-geomorphology-contracts",
+  "status": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G7 Semantic Field Fabric",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "a75a60b6da739cc759e1fb40510a98942bce4cde",
+    "accepted_metadata_head": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e"
+  },
+  "acceptance": {
+    "tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_contracts": "PASS",
+    "full_world_regression": "PASS",
+    "working_tree": "CLEAN"
+  },
+  "goal": "Freeze a deterministic, LOD-independent procedural geomorphology deformation contract before implementing valley, river, bank, floodplain and erosion/deposition formulas.",
+  "contracts": {
+    "profile": "res://scripts/simulation/procedural/geomorphology/geomorphology_profile.gd",
+    "deformation_sample": "res://scripts/simulation/procedural/geomorphology/geomorphology_deformation_sample.gd"
+  },
+  "deformation_components": [
+    "valley_delta_m",
+    "river_channel_delta_m",
+    "bank_delta_m",
+    "floodplain_delta_m",
+    "erosion_deposition_delta_m"
+  ],
+  "sign_rules": {
+    "valley_delta_m": "NON_POSITIVE",
+    "river_channel_delta_m": "NON_POSITIVE",
+    "bank_delta_m": "SIGNED",
+    "floodplain_delta_m": "SIGNED",
+    "erosion_deposition_delta_m": "SIGNED"
+  },
+  "composition_rule": "resolved_surface_height_m = source_surface_height_m + sum(component_deltas_m)",
+  "planned_g8_1_inputs": [
+    "geo/surface-height-m",
+    "geo/valley-influence"
+  ],
+  "future_g8_inputs": [
+    "geo/river-distance-m",
+    "geo/river-width-m",
+    "geo/fluid-surface-distance-m"
+  ],
+  "invariants": {
+    "geomorphology_is_surface_cell_key": false,
+    "geomorphology_is_lod": false,
+    "geomorphology_is_authority_region": false,
+    "geomorphology_is_interest_region": false,
+    "geomorphology_owns_player_excavation": false,
+    "geomorphology_owns_persistent_matter_mutation": false,
+    "geomorphology_owns_material_definition": false,
+    "geomorphology_owns_persistence": false,
+    "geomorphology_owns_network_replication": false,
+    "geomorphology_owns_universal_world_query": false
+  },
+  "roadmap": [
+    "G8.0 Geomorphology Contracts",
+    "G8.1 Valley Incision Baseline",
+    "G8.2 River Channel Incision",
+    "G8.3 Banks and Floodplain Shaping",
+    "G8.4 Erosion / Deposition Baseline",
+    "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
+    "G8.6 Geomorphology Visual Lab",
+    "G8 Full Acceptance"
+  ],
+  "next_if_accepted": "G8.1_VALLEY_INCISION_BASELINE"
+}

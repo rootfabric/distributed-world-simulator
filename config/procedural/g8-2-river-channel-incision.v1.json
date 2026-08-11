@@ -1,0 +1,67 @@
+{
+  "schema": "planet_simulator.g8_2_river_channel_incision.v1",
+  "checkpoint": "g8.2-river-channel-incision",
+  "status": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.1 Valley Incision Baseline",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
+    "accepted_metadata_head": "b77591cd292fb6935d62de5c365a3013bdf7d157"
+  },
+  "acceptance": {
+    "tested_head": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "valley_river_composition": "PASS",
+    "ownership_boundary": "PASS",
+    "working_tree": "CLEAN"
+  },
+  "implementation": "res://scripts/simulation/procedural/geomorphology/river_channel_incision_v1.gd",
+  "generator_id": "geomorphology/g8-2-river-channel-incision-v1",
+  "generator_version": "1.0.0",
+  "inputs": [
+    "geo/surface-height-m",
+    "geo/valley-influence",
+    "geo/river-distance-m",
+    "geo/river-width-m"
+  ],
+  "formula": {
+    "half_width_m": "river_width_m * 0.5",
+    "normalized_distance": "river_distance_m / half_width_m",
+    "core_ratio": "1.0 - river_edge_softness_ratio",
+    "edge_weight": "smoothstep-like cubic over the outer softness band",
+    "river_delta_m": "-river_max_depth_m * channel_weight"
+  },
+  "rules": {
+    "centerline_reaches_profile_max_depth": true,
+    "core_region_reaches_profile_max_depth": true,
+    "outer_softness_band_fades_monotonically": true,
+    "half_width_and_beyond_zero_river_incision": true,
+    "river_delta_non_positive": true,
+    "bounded_by_profile_river_max_depth": true,
+    "preserves_g8_1_valley_component": true,
+    "bank_floodplain_erosion_components_zero": true,
+    "same_bundle_used_for_valley_and_river": true,
+    "output_binds_source_bundle_checksum": true,
+    "output_binds_profile_checksum": true,
+    "deterministic": true
+  },
+  "semantic_note": "geo/river-distance-m is accepted G6 distance_to_centerline_m projected through G7; geo/river-width-m is accepted G6 channel_width_m. G8.2 interprets the width as full channel width and applies river incision only inside half-width from the centerline.",
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "camera_dependency": false,
+    "representation_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "persistent_terrain_damage": false,
+    "material_definition_ownership": false,
+    "network_replication_ownership": false
+  },
+  "next_if_accepted": "G8.3_BANKS_AND_FLOODPLAIN_SHAPING"
+}

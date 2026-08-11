@@ -1,0 +1,82 @@
+{
+  "schema": "planet_simulator.validation.g8_0_geomorphology_contracts.v1",
+  "checkpoint": "g8.0-geomorphology-contracts",
+  "decision": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G7 Semantic Field Fabric",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "a75a60b6da739cc759e1fb40510a98942bce4cde",
+    "accepted_metadata_head": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e"
+  },
+  "implementation": {
+    "profile_contract": "scripts/simulation/procedural/geomorphology/geomorphology_profile.gd",
+    "deformation_contract": "scripts/simulation/procedural/geomorphology/geomorphology_deformation_sample.gd",
+    "acceptance_test": "tests/procedural/geomorphology/g8_0_geomorphology_contracts_acceptance.gd",
+    "focused_runner": "RUN_G8_0_GEOMORPHOLOGY_CONTRACTS_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_0_FULL_ACCEPTANCE.ps1",
+    "tracked_uid_sidecars": true,
+    "component_count": 5,
+    "component_names": ["valley_delta_m", "river_channel_delta_m", "bank_delta_m", "floodplain_delta_m", "erosion_deposition_delta_m"]
+  },
+  "contract_rules": {
+    "valley_component_non_positive": true,
+    "river_channel_component_non_positive": true,
+    "bank_component_signed": true,
+    "floodplain_component_signed": true,
+    "erosion_deposition_component_signed": true,
+    "resolved_height_is_source_plus_component_sum": true,
+    "profile_bounds_each_component": true,
+    "binds_source_semantic_bundle_checksum": true,
+    "binds_profile_checksum": true,
+    "body_fixed_position_used": true
+  },
+  "ownership": {
+    "surface_cell_key_in_contract": false,
+    "lod_in_contract": false,
+    "authority_region_in_contract": false,
+    "interest_region_in_contract": false,
+    "matter_revision_in_contract": false,
+    "material_definition_id_in_contract": false,
+    "network_peer_id_in_contract": false,
+    "owns_player_excavation": false,
+    "owns_persistent_matter_mutation": false,
+    "owns_persistence": false
+  },
+  "automated_evidence": {
+    "focused": "PASS_WITHIN_FULL_ACCEPTANCE",
+    "full_acceptance": "PASS",
+    "tested_head": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "g7_parent_accepted": "PASS",
+    "geomorphology_contracts": "PASS",
+    "ownership_boundary": "PASS",
+    "world_core_regression": "PASS",
+    "mw10_cross_region_matter_processes": "PASS_51_ASSERTIONS",
+    "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
+    "rl0_representation_contracts": "PASS_92_ASSERTIONS",
+    "rl1_matter_summary_pyramid": "PASS_245_ASSERTIONS",
+    "rl2_matter_multiresolution_meshing": "PASS_153_ASSERTIONS",
+    "rl2_real_asteroid_multiresolution": "PASS_44_ASSERTIONS",
+    "rl3_representation_aware_network_streaming": "PASS_175_ASSERTIONS",
+    "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+    "main_scene_cli_all": "PASS_6_OF_6",
+    "nx4_client_prediction_reconciliation": "PASS",
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN",
+    "terminal_marker": "G8.0 FULL ACCEPTANCE: PASS"
+  },
+  "known_non_blocking_test_harness_debt": {
+    "m5_polling_json_parse_noise": true,
+    "classification": "TRANSIENT_POLLING_READ_RACE",
+    "acceptance_impact": "NONE",
+    "recommended_follow_up": "Use AtomicJson.read_dictionary/read_value in M5 polling support instead of raw JSON.parse_string read."
+  },
+  "project_control": {
+    "expected_health": "GREEN_AT_G8_0_CHECKPOINT",
+    "blockers": []
+  },
+  "next_if_accepted": "G8.1_VALLEY_INCISION_BASELINE"
+}

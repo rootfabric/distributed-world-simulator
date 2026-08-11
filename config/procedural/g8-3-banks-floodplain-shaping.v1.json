@@ -1,0 +1,84 @@
+{
+  "schema": "planet_simulator.g8_3_banks_floodplain_shaping.v1",
+  "checkpoint": "g8.3-banks-and-floodplain-shaping",
+  "status": "ACCEPTED",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.2 River Channel Incision",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "491fe10877c70c362c14ab595a8a0204165a880a",
+    "accepted_metadata_head": "e7b2f34637a42f88e107de83cfaff4a4cfda50be"
+  },
+  "implementation": "res://scripts/simulation/procedural/geomorphology/banks_floodplain_shaping_v1.gd",
+  "generator_id": "geomorphology/g8-3-banks-floodplain-v1",
+  "generator_version": "1.0.0",
+  "inputs": [
+    "geo/surface-height-m",
+    "geo/valley-influence",
+    "geo/river-distance-m",
+    "geo/river-width-m"
+  ],
+  "zone_geometry": {
+    "normalization": "normalized_distance = river_distance_m / (river_width_m * 0.5)",
+    "channel": [0.0, 1.0],
+    "bank_inner": 1.0,
+    "bank_peak": 1.5,
+    "bank_outer": 2.0,
+    "floodplain_inner": 2.0,
+    "floodplain_full": 2.5,
+    "floodplain_core_end": 4.5,
+    "floodplain_outer": 6.0
+  },
+  "formula": {
+    "bank_weight": "cubic smooth rise/fall from normalized distance 1.0 -> 1.5 -> 2.0",
+    "bank_delta_m": "+bank_max_delta_m * bank_weight * valley_influence",
+    "floodplain_weight": "cubic entry 2.0 -> 2.5, full core 2.5 -> 4.5, cubic fade 4.5 -> 6.0",
+    "floodplain_delta_m": "-floodplain_max_delta_m * floodplain_weight * valley_influence"
+  },
+  "rules": {
+    "inside_channel_bank_zero": true,
+    "inside_channel_floodplain_zero": true,
+    "bank_positive_or_zero": true,
+    "floodplain_non_positive": true,
+    "bank_profile_bounded": true,
+    "floodplain_profile_bounded": true,
+    "valley_influence_modulates_both": true,
+    "zero_valley_influence_suppresses_both": true,
+    "preserves_g8_2_valley_component": true,
+    "preserves_g8_2_river_component": true,
+    "erosion_deposition_component_zero": true,
+    "same_bundle_used_for_parent_and_shaping": true,
+    "output_binds_source_bundle_checksum": true,
+    "output_binds_profile_checksum": true,
+    "deterministic": true
+  },
+  "semantic_note": "G8.3 deliberately does not use geo/fluid-surface-distance-m as an absolute water elevation because the accepted G7 descriptor exposes only distance to the nearest fluid surface, not a signed canonical water-level height. Banks and floodplain therefore use only accepted river centerline/width geometry plus valley influence.",
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "camera_dependency": false,
+    "representation_dependency": false,
+    "authority_dependency": false,
+    "interest_dependency": false,
+    "matter_mutation": false,
+    "persistent_terrain_damage": false,
+    "material_definition_ownership": false,
+    "network_replication_ownership": false,
+    "fluid_surface_distance_used": false
+  },
+  "acceptance": {
+    "tested_head": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "world_core_through_nx4": "PASS",
+    "rl3_representation_aware_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli_all": "6 PASS / 0 FAIL",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN"
+  },
+  "next_if_accepted": "G8.4_EROSION_DEPOSITION_BASELINE"
+}
