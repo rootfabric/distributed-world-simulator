@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.harness_verification_result.v1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-003",
+  "verified_head_sha": "64592d414fc1d2cdd904b6954d8fa32e3aa6064c",
+  "verifier": "INDEPENDENT_VERIFIER_TERRA",
+  "verdict": "PASS",
+  "verified_at_utc": "2026-08-11T08:52:00Z",
+  "environment": "Exact GitHub refs through the connected GitHub control surface, with semantic replay of the canonical pure-Git/JSON PC0 algorithms. The execution sandbox could not create a network Git clone, so no claim is made that CONTROL_PROJECT.ps1 itself was invoked here.",
+  "commands": [
+    "Re-read feature/eco-evolutionary-ecology and main against exact R3 pins",
+    "Compare exact first parent f257d4398a2c36699735f7ebe6be3909d5906418 to candidate 64592d414fc1d2cdd904b6954d8fa32e3aa6064c",
+    "Compare main to candidate and require merge-base 5ba1dcb7b7671bff519739387513a50d90e8feac",
+    "Replay scripts/control/project_control.py dependency-drift predicates on exact refs",
+    "Replay scripts/control/project_control_directional_watch.py matching predicates for the complete 67e23224-to-2a4c3103 ECO delta against current G/T/TS/CH/DOCTRINE/NX passports"
+  ],
+  "results": {
+    "parents": ["f257d4398a2c36699735f7ebe6be3909d5906418", "5ba1dcb7b7671bff519739387513a50d90e8feac"],
+    "candidate_tree_equals_first_parent": true,
+    "source_tree_exact": "b78d75da0f23308f74961f4951e7087c2d514f65",
+    "source_tree_reconstruction_zero_file_compare": true,
+    "source_to_candidate_forbidden_delta": false,
+    "main_pin_fresh": true,
+    "eco_pin_fresh": true,
+    "passport_blob_fresh": true,
+    "standard_pc0": "NON_RED",
+    "directional_pc0": "NON_RED",
+    "new_r3_directional_watch_hits": 0,
+    "new_r3_directional_critical_hits": 0
+  },
+  "summary": "Independent verifier PASS. The R3 candidate integrates exact main ancestry while preserving the first-parent content tree. ECO critical main-dependency drift is eliminated because exact main is an ancestor of the candidate. The only new source material since R2 is ECO-owned P1B research/validation/documentation, and none of those paths matches watched or critical-watched surfaces of G, T, TS, CH, DOCTRINE or NX. Aggregate and directional PC0 are therefore NON_RED."
+}
