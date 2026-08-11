@@ -1,9 +1,0 @@
-{
-  "schema": "distributed_world_simulator.harness_event.v1", "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0028",
-  "project_epoch": "E2026-08-11-H0-0-R1", "work_order_id": "H0-0-WO-001", "sequence": 28,
-  "event_type": "PREDICATE_VERIFIED", "work_state": "VERIFYING", "recorded_at_utc": "2026-08-11T05:54:27Z",
-  "actor": "INDEPENDENT_VERIFIER_TERRA", "branch": "control/h0-closed-loop-development", "head_sha": "3bf704243e38b6a9dd6a4a72434907ae776db019",
-  "predicate": "MAIN_MOVEMENT_EPOCH_INVALIDATION_DETECTION_PASS", "command": "python -m unittest discover -s tests/harness -k epoch", "exit_code": 0,
-  "evidence_paths": ["config/control/harness/executions/E2026-08-11-H0-0-R1/evidence/H0-0-WO-001-VALIDATION-SUMMARY-001.v1.json"],
-  "summary": "Moved main blocks unless exact successful audit evidence matches base and current main; invalid ancestry refreshes.", "blocker": ""
-}
