@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_review_candidate.v1",
+  "repair_id": "H0-0-WO-001-PREBUILD-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "prepared_at_utc": "2026-08-11T04:43:33Z",
+  "prepared_by": "DIRECTOR_SOL",
+  "candidate_head_subject": "4e9434861ef993b57b59a0f602931eb33b644c19",
+  "changes": [
+    "Added FIX_REQUIRED to FIX_REQUIRED so events 0007 and 0008 are valid.",
+    "Added self-transitions for every state that RECOVERY_RESUMED may preserve.",
+    "Documented that self-transitions record durable progress and cannot remove blockers or bypass guarded state advancement."
+  ],
+  "reviewer_verdict": "PENDING"
+}

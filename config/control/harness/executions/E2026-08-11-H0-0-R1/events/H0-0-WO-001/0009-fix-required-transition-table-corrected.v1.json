@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0009",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 9,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-11T04:43:33Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "4e9434861ef993b57b59a0f602931eb33b644c19",
+  "predicate": "H0_0_PREBUILD_TRANSITION_TABLE_REPAIRED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/repairs/H0-0-WO-001-PREBUILD-001-review-candidate-2.v1.json"
+  ],
+  "summary": "Director aligned the transition table with the actual append-only ledger and every state that RECOVERY_RESUMED may preserve. Work remains FIX_REQUIRED pending independent Reviewer PASS.",
+  "blocker": "PREBUILD_REVIEWER_PASS_REQUIRED_BEFORE_REDISPATCH"
+}
