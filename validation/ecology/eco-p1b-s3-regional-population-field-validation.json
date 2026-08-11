@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1B-S3",
-  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
   "parent_evidence": {
     "p1a_s1": "ACCEPTED_WINDOWS_109",
     "p1a_s2": "ACCEPTED_WINDOWS_235",
@@ -38,7 +38,7 @@
     "alternate mutation seed changes exact genomes/hash while preserving the three specialization signals",
     "dispersal remains frozen because migration benefit is not part of P1B"
   ],
-  "windows_confirmation": "PENDING",
+  "windows_confirmation": "PASS_CLEAN",
   "truth_boundary": "P1B-S3 proves spatial regional trait distributions under local selection on one heterogeneous fixture. It is not a migration, species, biome, authority, persistence, networking or presentation system.",
-  "next": "Run RUN_ECO_P1B_S3_TESTS.ps1 on exact Windows worktree. On matching hashes and parent regressions, accept S3 and open P1B-S4 robustness/aggregate gate."
+  "next": "P1B-S3 accepted. Proceed to P1B-S4 Local Adaptation Robustness Gate; migration remains deferred to the dedicated dispersal/biogeography stage."
 }
