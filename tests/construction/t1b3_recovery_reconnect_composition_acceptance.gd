@@ -8,6 +8,7 @@ const UtilsScript = preload("res://scripts/network/contracts/network_contract_ut
 
 var assertions: int = 0
 var failures: Array[String] = []
+var scenario_completed: bool = false
 
 
 func _init() -> void:
@@ -190,6 +191,7 @@ func _test_failure_checkpoint_restart_reconnect_recovery() -> void:
 	var interest_report: Dictionary = interest2.report()
 	_assert(int(interest_report.get("reconnect_binds", 0)) >= 1, "Reconnect telemetry was not recorded")
 	_assert(int(interest_report.get("active_sessions", 0)) == 2, "Unexpected active session count after reconnect + late interest")
+	scenario_completed = true
 
 
 func _requirements(power: String, data: String, dependency: String) -> Dictionary:
@@ -222,6 +224,8 @@ func _assert(condition: bool, message: String) -> void:
 
 
 func _finish() -> void:
+	if not scenario_completed:
+		failures.append("T1B.3 acceptance scenario did not reach completion marker")
 	if failures.is_empty():
 		print("T1B.3 recovery/reconnect composition: PASS (%d assertions)" % assertions)
 		quit(0)
