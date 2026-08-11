@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.PH2",
   "name": "Environment-Coupled Development / Plasticity",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -14,14 +14,19 @@
     "checksum": "16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d"
   },
   "controlled_probes": ["REFERENCE","SHADE","SUN","DRY","NUTRIENT_POOR","NUTRIENT_RICH","FLOODED"],
-  "local_evidence": {
+  "accepted_evidence": {
+    "platform": "exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "parent_p1c_s4_aggregate_assertions": 15,
+    "parent_ph0_assertions": 63,
+    "parent_ph1_assertions": 128,
     "focused_assertions": 107,
     "visual_smoke_assertions": 12,
     "restart_assertions": 5,
     "reference_phenotype_hash": "da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10",
     "shade_phenotype_hash": "bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0",
     "sun_phenotype_hash": "b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa",
-    "dry_phenotype_hash": "7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f"
+    "dry_phenotype_hash": "7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f",
+    "graphical_observation": "PASS_BY_USER_OBSERVATION_DIAGNOSTIC: visible plant representation changes between probes, including leaf-like lateral elements and stem/petiole-length differences; presentation remains non-canonical"
   },
   "acceptance_semantics": [
     "genome checksum is identical across all environment probes",
