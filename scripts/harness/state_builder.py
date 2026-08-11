@@ -14,6 +14,7 @@ from .event_reducer import load_guard_context, reduce_events
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
 _EVIDENCE_MAP_SCHEMA_PREFIX = "distributed_world_simulator.harness_evidence_map"
+_H0_0_CHECKPOINT_DOC = "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R2_RU.md"
 
 
 def _git_head(root: Path) -> str:
@@ -42,8 +43,9 @@ def _git_implementation_head(root: Path, execution_dir: Path) -> str:
     """Return the latest commit touching active H0 implementation surfaces.
 
     The active transition table is derived from ``execution_dir`` instead of a
-    hard-coded epoch. Append-only event/review/evidence ledgers are deliberately
-    excluded so recording evidence cannot stale the implementation target.
+    hard-coded epoch. Append-only event/review/evidence ledgers and unrelated
+    checkpoint documentation are deliberately excluded so recording evidence
+    or another program's docs cannot stale the H0 implementation target.
     """
     transition_path = _repo_relative(root, execution_dir / "transition-table.v1.json")
     implementation_paths = [
@@ -51,7 +53,7 @@ def _git_implementation_head(root: Path, execution_dir: Path) -> str:
         "scripts/harness",
         "tests/harness",
         "validation/harness",
-        "docs/checkpoints",
+        _H0_0_CHECKPOINT_DOC,
         transition_path,
     ]
     output = subprocess.run(
