@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R1-H0-1-R1-DISPATCH-WO-001-0002",
+  "project_epoch": "E2026-08-11-H0-1-R1",
+  "work_order_id": "H0-1-R1-DISPATCH-WO-001",
+  "sequence": 2,
+  "event_type": "CANCELLED",
+  "work_state": "CANCELLED",
+  "recorded_at_utc": "2026-08-11T12:00:00Z",
+  "actor": "DIRECTOR",
+  "branch": "main",
+  "head_sha": "0f65ac28837cd850167a0741734c71ffe907332d",
+  "blocker": "REGISTRY_GENERATION_ADVANCED_DURING_CANONICALIZATION_CANDIDATE_BUILD",
+  "summary": "Cancelled the generation-69 H0.1 planning attempt instead of rewriting its epoch identity after the canonicalization candidate advanced the main-owned registry to generation 70. A fresh H0.1 R2 planning epoch must be created from the generation-70 control tree."
+}
