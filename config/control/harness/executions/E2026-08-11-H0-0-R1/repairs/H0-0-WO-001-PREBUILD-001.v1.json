@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-0-WO-001-PREBUILD-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "H0.0 executable harness design and its future control/recovery boundary",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume"
+  ],
+  "callers": [
+    "DIRECTOR sessions",
+    "IMPLEMENTER/REVIEWER/VERIFIER agents",
+    "future automation and CI consumers"
+  ],
+  "callees": [
+    "scripts/harness contract loader",
+    "scripts/harness event reducer",
+    "scripts/harness state builder",
+    "scripts/harness epoch validator",
+    "scripts/harness checkpoint planner",
+    "Git command boundary"
+  ],
+  "sibling_paths": [
+    "config/control/harness/*.v1.json canonical contracts",
+    "config/control/project-program-registry.v1.json",
+    "CONTROL_PROJECT.ps1",
+    "scripts/control/project_control.py",
+    "scripts/control/project_control_directional_watch.py",
+    "artifacts/harness/** disposable cache"
+  ],
+  "existing_tests": [
+    "Canonical Project Control CI validates policy JSON and registry consistency",
+    "Director validated the Project Epoch, Work Order and Events 0001-0004 against Draft 2020-12 schemas"
+  ],
+  "missing_tests": [
+    "Cross-contract semantic validation",
+    "Authoritative event reduction and snapshot mismatch",
+    "Subject/ledger/current-head separation",
+    "Fail-closed moved-main behavior",
+    "Versioned CLI envelope and exit codes",
+    "Pinned dependency absence behavior",
+    "Clean-checkout Git-only Resume",
+    "C22/NX creation remains blocked"
+  ],
+  "public_or_internal_contracts": [
+    "H0-2026-08-11-R1",
+    "H0-REVIEW-2026-08-11-R1",
+    "distributed_world_simulator.work_order.v1",
+    "distributed_world_simulator.harness_event.v1",
+    "distributed_world_simulator.project_epoch.v1",
+    "new versioned CONTROL_DEVELOPMENT output envelope"
+  ],
+  "expected_shipped_behavior": "Status, Plan and Resume fail closed, emit a stable versioned machine result plus readable console stages, reconstruct authoritative state from immutable Git events, and never authorize runtime work before H0_0_SCAFFOLD_READY.",
+  "relevant_history_or_evidence": [
+    "ce69e829d7df6e6d664c9e2e960aaa476982b05b initial MEDIUM dispatch",
+    "f7ef01a26c8628e9f430b44a8b7e46dd8bef4cd8 HIGH risk reclassification",
+    "6fb3be342be7d1bc3110a0bc5745689fec87acad premature redispatch before final pre-build review",
+    "Independent Reviewer pre-build verdict FAIL with eight REQUIRED_FIXES"
+  ],
+  "root_cause_hypothesis": "The initial Brief treated schema loading and Git recovery as implementation details, so it did not define the public CLI contract, semantic invariants, fail-closed moved-main state or dependency reproducibility before dispatch.",
+  "canonical_fix_location": "Branch-local H0.0 Work Order Design Brief, checkpoint document and allowed implementation/tests; canonical main-owned policy/schema files remain unchanged.",
+  "why_not_symptom_patch": "The repair specifies authority, protocol, dependency and transition semantics for every Status/Plan/Resume caller instead of adding isolated checks only where one fixture fails."
+}
