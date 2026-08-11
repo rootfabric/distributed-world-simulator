@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-ECO-MAIN-R1-ECO-MAIN-INTEGRATION-WO-001-0002",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-11T07:53:15Z",
+  "actor": "DIRECTOR",
+  "branch": "control/eco-main-integration",
+  "head_sha": "75591f976518362b8ddb72958d06248b00482d04",
+  "predicate": "ECO_MAIN_INTEGRATION_DISPATCHED",
+  "command": "Authorize normal merge after exact HIGH pre-build PASS",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R1/integration-inputs.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R1/reviews/ECO-MAIN-INTEGRATION-WO-001-PREBUILD-REVIEW-002.v1.json"
+  ],
+  "summary": "Normal main integration, synthetic PC0 verification and draft ECO-targeted PR are dispatched within the bounded Work Order.",
+  "blocker": ""
+}
