@@ -98,15 +98,19 @@ checkpoint proposal
 
 Git является durable memory harness. Возобновление работы не должно требовать истории чата. Implementer не может сам объявить checkpoint accepted. Полный протокол: `docs/control/DEVELOPMENT_HARNESS_RU.md`.
 
-Текущий harness pilot:
+Текущая harness pilot-последовательность:
 
 ```text
+H0.0 RESTART-SAFE HARNESS SCAFFOLD
+        ↓
+H0_0_SCAFFOLD_READY
+        ↓
 H0.1 CLOSED-LOOP C22 PILOT
-+
+        +
 C22 SOURCE_ACCEPTED_MERGE_READY
 ```
 
-До H0.1 допускается максимум один автономный runtime worker. Runtime merge, TS0.4 activation, global architecture promotion, foundation ownership transfer и новые global foundations остаются human gates.
+До `H0_0_SCAFFOLD_READY` автономная runtime-разработка запрещена. На H0.1 допускается максимум один автономный runtime worker. Runtime merge, TS0.4 activation, global architecture promotion, foundation ownership transfer и новые global foundations остаются human gates.
 
 ## Как читать проект
 

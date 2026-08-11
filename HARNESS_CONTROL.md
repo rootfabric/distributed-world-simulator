@@ -49,14 +49,25 @@ human gate where required
 
 Git является durable memory. Потеря чата не должна мешать `Resume`.
 
-Текущий pilot override:
+Текущая pilot-последовательность:
 
 ```text
+H0.0 RESTART-SAFE HARNESS SCAFFOLD
+        ↓
+Status / Plan / Resume
+state reducer
+schema validation
+epoch invalidation detection
+Git-only recovery fixture
+NO runtime branch creation
+        ↓
+H0_0_SCAFFOLD_READY
+        ↓
 H0.1 CLOSED-LOOP C22 PILOT
         +
 C22 SOURCE_ACCEPTED_MERGE_READY
 ```
 
-До H0.1 допускается не более одного автономного runtime worker. G8.6/CH9.6 могут ждать как HUMAN_OBSERVATION work orders; R3 analysis может идти параллельно без promotion.
+До `H0_0_SCAFFOLD_READY` автономных runtime workers быть не должно. На H0.1 разрешён максимум один автономный runtime worker. G8.6/CH9.6 могут ждать как HUMAN_OBSERVATION work orders; R3 analysis может идти параллельно без promotion.
 
 Human approval обязателен для runtime merge, TS0.4 activation, architecture promotion, foundation ownership transfer и новых global foundations.

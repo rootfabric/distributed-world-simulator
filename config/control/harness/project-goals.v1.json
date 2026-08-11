@@ -16,13 +16,20 @@
   },
   "current_goal_graph": [
     {
+      "id": "HARNESS_H0_0",
+      "program": "HARNESS",
+      "title": "H0.0 Restart-Safe Harness Scaffold",
+      "priority": 110,
+      "depends_on": ["PC0_MAIN_INTEGRATED"],
+      "target_checkpoint": "H0_0_SCAFFOLD_READY",
+      "reason": "Before touching runtime code, prove that the executable harness can load canonical contracts, build/reduce state, plan work, detect epoch invalidation and resume from Git-only fixtures."
+    },
+    {
       "id": "HARNESS_H0_1",
       "program": "HARNESS",
       "title": "H0.1 Closed-Loop C22 Pilot",
       "priority": 100,
-      "depends_on": [
-        "PC0_MAIN_INTEGRATED"
-      ],
+      "depends_on": ["H0_0_SCAFFOLD_READY"],
       "target_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
       "project_checkpoint": "C22_CURRENT_MAIN_MERGE_READY",
       "reason": "First autonomous pilot must prove restart-safe branch creation, constrained implementation, independent verification, PC0 audit and checkpoint proposal on a high-value but bounded Construction convergence task."
@@ -33,25 +40,15 @@
       "title": "Construction convergence to real heterogeneous base",
       "priority": 95,
       "depends_on": [],
-      "sequence": [
-        "C22_CURRENT_MAIN_MERGE_READY",
-        "C22_MAIN_INTEGRATED",
-        "TS0_4_CEILING_CLASSIFIED",
-        "T2_0_ACTIVATED"
-      ]
+      "sequence": ["C22_CURRENT_MAIN_MERGE_READY", "C22_MAIN_INTEGRATED", "TS0_4_CEILING_CLASSIFIED", "T2_0_ACTIVATED"]
     },
     {
       "id": "NETWORK_TRAIN",
       "program": "NX",
       "title": "Owner-authority runtime convergence",
       "priority": 80,
-      "depends_on": [
-        "HARNESS_H0_1"
-      ],
-      "sequence": [
-        "NX_C1_IMPLEMENTED_CANDIDATE",
-        "NX_SOURCE_ACCEPTED"
-      ]
+      "depends_on": ["HARNESS_H0_1"],
+      "sequence": ["NX_C1_IMPLEMENTED_CANDIDATE", "NX_SOURCE_ACCEPTED"]
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -59,11 +56,7 @@
       "title": "Refresh and promote GLOBAL-P0 R3",
       "priority": 85,
       "depends_on": [],
-      "sequence": [
-        "R3_REFRESHED_CANDIDATE",
-        "R3_PC0_NON_RED",
-        "GLOBAL_P0_R3_CANONICAL"
-      ],
+      "sequence": ["R3_REFRESHED_CANDIDATE", "R3_PC0_NON_RED", "GLOBAL_P0_R3_CANONICAL"],
       "human_gate": "ARCHITECTURE_PROMOTION"
     },
     {

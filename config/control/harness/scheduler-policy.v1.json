@@ -13,10 +13,12 @@
   },
   "current_pilot_override": {
     "enabled": true,
-    "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-    "reason": "Do not open broad autonomous parallel execution until restart-safe closed loop is proven."
+    "checkpoint_sequence": ["H0_0_SCAFFOLD_READY", "H0_1_CLOSED_LOOP_C22_PILOT"],
+    "current_checkpoint": "H0_0_SCAFFOLD_READY",
+    "reason": "First prove Status/Plan/Resume and Git-only recovery without runtime changes; only then authorize the C22 closed-loop pilot."
   },
   "concurrency": {
+    "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,
     "human_observation_orders_may_wait_in_parallel": true,
     "architecture_candidate_analysis_may_run_in_parallel": true,
