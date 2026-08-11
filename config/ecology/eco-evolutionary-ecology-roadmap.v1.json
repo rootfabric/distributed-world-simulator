@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R3-2026-08-11",
+  "revision": "ECO-R4-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
   "current_checkpoint": "ECO.P1A",
-  "current_step": "P1A-S2",
-  "last_accepted_step": "P1A-S1",
+  "current_step": "P1A-S3",
+  "last_accepted_step": "P1A-S2",
   "mission": "Prove that continuous environmental fields plus resource competition, mutation, dispersal and history can generate reusable plant species and population patterns without hardcoded biome placement.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -21,32 +21,9 @@
   "first_fixture": {
     "size_m": [4000, 4000],
     "grid": [128, 128],
-    "features": [
-      "river",
-      "wet_lowland",
-      "dry_plateau",
-      "sunny_slope",
-      "shaded_slope",
-      "flood_prone_patches"
-    ],
-    "environment_fields": [
-      "temperature_c",
-      "soil_moisture",
-      "sunlight",
-      "nutrients",
-      "flood_frequency"
-    ],
-    "initial_plant_traits": [
-      "height",
-      "growth_rate",
-      "root_depth",
-      "water_preference",
-      "water_tolerance_width",
-      "shade_tolerance",
-      "seed_count",
-      "seed_dispersal_distance",
-      "lifespan"
-    ]
+    "features": ["river", "wet_lowland", "dry_plateau", "sunny_slope", "shaded_slope", "flood_prone_patches"],
+    "environment_fields": ["temperature_c", "soil_moisture", "sunlight", "nutrients", "flood_frequency"],
+    "initial_plant_traits": ["height", "growth_rate", "root_depth", "water_preference", "water_tolerance_width", "shade_tolerance", "seed_count", "seed_dispersal_distance", "lifespan"]
   },
   "nearest_checkpoint": {
     "id": "ECO.P1A",
@@ -70,7 +47,7 @@
       {
         "id": "P1A-S2",
         "name": "Single-Plant Resource Model",
-        "status": "LINUX_FOCUSED_PASS_WINDOWS_CONFIRMATION_PENDING",
+        "status": "ACCEPTED",
         "depends_on": ["P1A-S1"],
         "output": "Headless EXP-V1 with explicit resource income, costs, bounded biomass and limiting-factor evidence.",
         "evidence": {
@@ -79,21 +56,33 @@
           "simulation_hash": "618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
           "parent_s1_regression": "PASS_109_ASSERTIONS",
           "root_depth_tradeoff": "PASS",
-          "windows": "PENDING",
+          "windows": "PASS_CLEAN",
           "validation": "validation/ecology/eco-p1a-s2-single-plant-resource-model-validation.json"
         }
       },
       {
         "id": "P1A-S3",
         "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-        "status": "BLOCKED_BY_P1A_S2_WINDOWS_CONFIRMATION",
+        "status": "HEADLESS_PASS_WINDOWS_GRAPHICAL_PENDING",
         "depends_on": ["P1A-S2"],
-        "output": "Presentation-only heatmap lab and controlled sensitivity probes sharing the headless truth model."
+        "output": "Presentation-only heatmap lab and controlled sensitivity probes sharing the accepted S1/S2 truth model.",
+        "evidence": {
+          "focused_assertions": 114,
+          "focused_failures": 0,
+          "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+          "scene_headless_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
+          "parent_s2_regression": "PASS_235_ASSERTIONS",
+          "parent_s1_regression": "PASS_109_ASSERTIONS",
+          "published_blobs": "MATCHED_LOCAL_TESTED_CONTENT",
+          "windows": "PENDING",
+          "graphical": "PENDING",
+          "validation": "validation/ecology/eco-p1a-s3-diagnostic-visual-lab-validation.json"
+        }
       },
       {
         "id": "P1A-S4",
         "name": "Determinism, Sensitivity and Failure Classification",
-        "status": "PLANNED",
+        "status": "BLOCKED_BY_P1A_S3_ACCEPTANCE",
         "depends_on": ["P1A-S3"],
         "output": "Replay acceptance runner, sensitivity evidence and explicit failure matrix."
       },
@@ -179,30 +168,8 @@
     "EXP-V10": "Population Representation LOD",
     "EXP-V11": "Player Disturbance Probe"
   },
-  "deferred_until_after_p3": [
-    "herbivores",
-    "predators",
-    "food_webs",
-    "sexual_genetics",
-    "procedural_mesh_evolution",
-    "planet_wide_authoritative_ecology",
-    "per_individual_network_replication",
-    "alien_life_chemistry",
-    "global_ecology_scheduler"
-  ],
-  "future_program_stages": [
-    "ECO0 Contracts",
-    "ECO1 Environmental Field Lab",
-    "ECO2 Plant Competition Baseline",
-    "ECO3 Evolution and Lineages",
-    "ECO4 Herbivore Research",
-    "ECO5 Predator and Food-Web Research",
-    "ECO6 Ecosystem Bake",
-    "ECO7 Runtime Population Resolver",
-    "ECO8 Visual Materialization",
-    "ECO9 Persistent Living Ecology",
-    "ECO10 Discovery and Breeding Gameplay"
-  ],
+  "deferred_until_after_p3": ["herbivores", "predators", "food_webs", "sexual_genetics", "procedural_mesh_evolution", "planet_wide_authoritative_ecology", "per_individual_network_replication", "alien_life_chemistry", "global_ecology_scheduler"],
+  "future_program_stages": ["ECO0 Contracts", "ECO1 Environmental Field Lab", "ECO2 Plant Competition Baseline", "ECO3 Evolution and Lineages", "ECO4 Herbivore Research", "ECO5 Predator and Food-Web Research", "ECO6 Ecosystem Bake", "ECO7 Runtime Population Resolver", "ECO8 Visual Materialization", "ECO9 Persistent Living Ecology", "ECO10 Discovery and Breeding Gameplay"],
   "runtime_promotion_requirements": [
     "ECO.P1 accepted",
     "ECO.P3 SpeciesCatalog bake proven before production integration",
