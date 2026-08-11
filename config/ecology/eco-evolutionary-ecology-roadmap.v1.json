@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R10-2026-08-11",
+  "revision": "ECO-R11-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
   "current_checkpoint": "ECO.P1C",
-  "current_step": "P1C-S1",
-  "last_accepted_step": "ECO.P1B",
+  "current_step": "P1C-S2",
+  "last_accepted_step": "ECO.P1C-S1",
   "mission": "Prove that continuous environmental fields plus resource competition, mutation, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -52,7 +52,7 @@
       {
         "id": "P1C-S1",
         "name": "Unlabeled Founder Pool + Shared-Field Competition Baseline",
-        "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+        "status": "ACCEPTED",
         "evidence": {
           "focused_assertions": 116,
           "restart_assertions": 5,
@@ -60,18 +60,29 @@
           "uniform_hash": "1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58",
           "persistent_founders": 15,
           "uniform_persistent_founders": 4,
-          "known_top1_dominance": 0.83673469387755
+          "known_top1_dominance": 0.83673469387755,
+          "windows": "PASS_EXACT_116_RESTART_5"
         }
       },
       {
         "id": "P1C-S2",
         "name": "Dynamic Shared-Patch Abundance Competition",
-        "status": "BLOCKED_BY_P1C_S1_WINDOWS_ACCEPTANCE"
+        "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+        "evidence": {
+          "focused_assertions": 101,
+          "restart_assertions": 5,
+          "result_hash": "3e52c4e93fcdefba64607dd2c935ccbddba78db3f400d6a6ea51b23db766982b",
+          "uniform_hash": "47f0e9c7573bf002151718a57c930d400682c3d86dbd3a8b96b8ddf48c4a01a2",
+          "alternate_result_hash": "4706d80289b1fc9918f1758ccabdbb62a76053739f3c7bccadcd282e797d572b",
+          "effective_founders_1pct": 19,
+          "top1_biomass_share": 0.24134318423165,
+          "uniform_effective_founders_1pct": 11
+        }
       },
       {
         "id": "P1C-S3",
         "name": "Niche/Cluster Diagnostics + Multi-seed Coexistence",
-        "status": "PLANNED"
+        "status": "BLOCKED_BY_P1C_S2_WINDOWS_ACCEPTANCE"
       },
       {
         "id": "P1C-S4",
@@ -95,52 +106,19 @@
     "status": "PH0_OPEN_RESEARCH_ONLY",
     "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
     "steps": [
-      {
-        "id": "PH0",
-        "status": "OPEN_FOR_RESEARCH_CONTRACT_WORK"
-      },
-      {
-        "id": "PH1",
-        "status": "PLANNED_PARALLEL_WITH_P1C"
-      },
-      {
-        "id": "PH2",
-        "status": "PLANNED"
-      },
-      {
-        "id": "PH3",
-        "status": "PLANNED_CONVERGENCE_BEFORE_MORPHOLOGY_AWARE_P1C_ACCEPTANCE"
-      },
-      {
-        "id": "PH4",
-        "status": "PLANNED_BEFORE_DISPERSAL"
-      },
-      {
-        "id": "PH5",
-        "status": "PLANNED_P3"
-      },
-      {
-        "id": "PH6",
-        "status": "DEFERRED_RUNTIME_PROMOTION"
-      }
+      {"id":"PH0","status":"OPEN_FOR_RESEARCH_CONTRACT_WORK"},
+      {"id":"PH1","status":"PLANNED_PARALLEL_WITH_P1C"},
+      {"id":"PH2","status":"PLANNED"},
+      {"id":"PH3","status":"PLANNED_CONVERGENCE_BEFORE_MORPHOLOGY_AWARE_P1C_ACCEPTANCE"},
+      {"id":"PH4","status":"PLANNED_BEFORE_DISPERSAL"},
+      {"id":"PH5","status":"PLANNED_P3"},
+      {"id":"PH6","status":"DEFERRED_RUNTIME_PROMOTION"}
     ]
   },
   "waves": [
-    {
-      "id": "ECO.P1",
-      "name": "Plant Adaptation and Strategy Proof",
-      "status": "P1A_ACCEPTED_P1B_ACCEPTED_P1C_ACTIVE"
-    },
-    {
-      "id": "ECO.P2",
-      "name": "History, Disturbance, Succession and Dispersal",
-      "status": "PLANNED_AFTER_P1"
-    },
-    {
-      "id": "ECO.P3",
-      "name": "Species Catalog, Phenotype Projection and Population Representation",
-      "status": "PLANNED_AFTER_P2"
-    }
+    {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","status":"P1A_ACCEPTED_P1B_ACCEPTED_P1C_ACTIVE"},
+    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_P1"},
+    {"id":"ECO.P3","name":"Species Catalog, Phenotype Projection and Population Representation","status":"PLANNED_AFTER_P2"}
   ],
   "production_blockers": [
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
