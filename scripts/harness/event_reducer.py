@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from pathlib import Path
+import subprocess
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, read_json
@@ -35,6 +37,57 @@ def _is_complete_repair(document: dict[str, Any], bundle: ContractBundle, work_o
     )
 
 
+def _blocked_resolution_proven(
+    bundle: ContractBundle,
+    work_order: dict[str, Any],
+    event: dict[str, Any],
+    documents: list[dict[str, Any]],
+    context: dict[str, Any] | None,
+) -> bool:
+    typed_resolution = any(
+        (
+            item.get("schema") == "distributed_world_simulator.harness_repair_resolution.v1"
+            and item.get("work_order_id") == work_order["work_order_id"]
+            and item.get("state") == "FIX_VERIFIED"
+        )
+        or (
+            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
+            and item.get("work_order_id") == work_order["work_order_id"]
+            and item.get("verdict") == "PASS"
+        )
+        for item in documents
+    )
+    if typed_resolution:
+        return True
+    if context is None:
+        return False
+    work_order_paths = [
+        path.replace("\\", "/") for path in event.get("evidence_paths", [])
+        if "/work-orders/" in path.replace("\\", "/") and path.endswith(".json")
+    ]
+    for relative in work_order_paths:
+        completed = subprocess.run(
+            ["git", "show", f"{event['head_sha']}:{relative}"],
+            cwd=context["root"], text=True, capture_output=True, check=False,
+        )
+        if completed.returncode != 0:
+            continue
+        try:
+            historical = json.loads(completed.stdout)
+        except json.JSONDecodeError:
+            continue
+        if (
+            historical.get("schema") == "distributed_world_simulator.work_order.v1"
+            and historical.get("work_order_id") == work_order["work_order_id"]
+            and historical.get("risk_class") == work_order["risk_class"]
+            and historical.get("review_required") is True
+            and historical.get("evidence_map_required") is True
+            and historical.get("design_brief")
+        ):
+            return True
+    return False
+
+
 def _enforce_guard(
     bundle: ContractBundle,
     work_order: dict[str, Any],
@@ -47,11 +100,7 @@ def _enforce_guard(
     transition = (previous_state, event["work_state"])
     documents = _referenced_documents(event, context)
     if transition == ("BLOCKED", "DISPATCHED"):
-        existing_paths = []
-        if context:
-            root = context["root"]
-            existing_paths = [path for path in event.get("evidence_paths", []) if (root / path).exists()]
-        if event["actor"] != "DIRECTOR" or not existing_paths:
+        if event["actor"] != "DIRECTOR" or not _blocked_resolution_proven(bundle, work_order, event, documents, context):
             raise ContractValidationError("GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING")
     elif transition == ("WAITING_HUMAN", "DISPATCHED"):
         resolved = any(
@@ -161,9 +210,10 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         predicate = event.get("predicate")
         if predicate and predicate not in observed_predicates:
             observed_predicates.append(predicate)
-        successful_predicate_event = event["event_type"] in {"IMPLEMENTATION_COMMITTED", "PREDICATE_VERIFIED", "AUDIT_COMPLETED", "CHECKPOINT_PROPOSED"}
-        successful_exit = event.get("exit_code", 0) == 0
-        if predicate and successful_predicate_event and successful_exit and predicate not in completed_predicates:
+        successful_predicate_event = event["event_type"] in {"PREDICATE_VERIFIED", "AUDIT_COMPLETED", "CHECKPOINT_PROPOSED"}
+        successful_exit = event.get("exit_code") == 0
+        evidence_complete = bool(event.get("command")) and bool(event.get("evidence_paths"))
+        if predicate and successful_predicate_event and successful_exit and evidence_complete and predicate not in completed_predicates:
             completed_predicates.append(predicate)
         if event["event_type"] in {"BLOCKED", "FIX_REQUIRED", "WAITING_HUMAN", "EPOCH_INVALIDATED"}:
             open_blocker = event.get("blocker") or event["event_type"]

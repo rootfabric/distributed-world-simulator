@@ -57,6 +57,7 @@
           "review", "human_attention", "findings", "continuation_blocked", "checkpoint_proposal_blocked",
           "checkpoint_blockers", "runtime_authorized", "verification_commands", "next"
         ],
+        "not": {"required": ["error"]},
         "properties": {
           "command": {"enum": ["STATUS", "PLAN", "RESUME"]},
           "runtime_authorized": {"const": false},
@@ -73,6 +74,14 @@
           "next": {"type": "object"}
         }
       }
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}, "command": {"const": "PLAN"}}, "required": ["ok", "command"]},
+      "then": {"required": ["plan"]}
+    },
+    {
+      "if": {"properties": {"ok": {"const": true}, "command": {"const": "RESUME"}}, "required": ["ok", "command"]},
+      "then": {"required": ["resume"]}
     }
   ]
 }

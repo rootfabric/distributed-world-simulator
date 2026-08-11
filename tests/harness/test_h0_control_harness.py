@@ -19,7 +19,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
-from harness.state_builder import _load_reviews, _validate_event_git_provenance, _validate_semantics, build_state
+from harness.state_builder import _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
 
 
 EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R1"
@@ -142,6 +142,9 @@ class H0ControlHarnessTests(unittest.TestCase):
         blocked[3]["evidence_paths"] = []
         with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
             self.reduce(blocked)
+        blocked[3]["evidence_paths"] = ["AGENTS.md"]
+        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
+            self.reduce(blocked)
 
         waiting = copy.deepcopy(self.events[:4])
         waiting[2].update({"event_type": "WAITING_HUMAN", "work_state": "WAITING_HUMAN", "blocker": "DECISION"})
@@ -169,6 +172,13 @@ class H0ControlHarnessTests(unittest.TestCase):
         reduced = self.reduce(changed)
         self.assertIn("CONTROL_DEVELOPMENT_STATUS_WORKS", reduced["observed_predicates"])
         self.assertNotIn("CONTROL_DEVELOPMENT_STATUS_WORKS", reduced["completed_predicates"])
+        implementation = copy.deepcopy(self.events[:3])
+        implementation[2].update({"event_type": "IMPLEMENTATION_COMMITTED", "work_state": "IMPLEMENTED", "predicate": "PC0_NON_RED"})
+        implementation[2].pop("command", None)
+        implementation[2].pop("exit_code", None)
+        reduced = self.reduce(implementation)
+        self.assertIn("PC0_NON_RED", reduced["observed_predicates"])
+        self.assertNotIn("PC0_NON_RED", reduced["completed_predicates"])
 
     def test_high_risk_requires_review_and_evidence_map(self) -> None:
         epoch = read_json(EXECUTION / "project-epoch.v1.json")
@@ -177,6 +187,21 @@ class H0ControlHarnessTests(unittest.TestCase):
             changed[field] = False
             with self.subTest(field=field), self.assertRaisesRegex(ContractValidationError, "RISK_"):
                 _validate_semantics(self.bundle, epoch, changed)
+
+    def test_scope_symlink_escape_is_rejected_when_supported(self) -> None:
+        epoch = read_json(EXECUTION / "project-epoch.v1.json")
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as outside:
+            root = Path(directory)
+            link = root / "escape"
+            try:
+                os.symlink(outside, link, target_is_directory=True)
+            except OSError:
+                self.skipTest("Windows symlink creation is unavailable")
+            bundle = ContractBundle(root=root, contracts=self.bundle.contracts)
+            changed = copy.deepcopy(self.work_order)
+            changed["allowed_paths"] = ["escape/**"]
+            with self.assertRaisesRegex(ContractValidationError, "SCOPE_PATH_ESCAPES_REPOSITORY"):
+                _validate_semantics(bundle, epoch, changed)
 
     def test_duplicate_json_keys_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -221,6 +246,47 @@ class H0ControlHarnessTests(unittest.TestCase):
             event_path.write_text(json.dumps({**event, "changed": True}), encoding="utf-8")
             with self.assertRaisesRegex(ContractValidationError, "EVENT_WORKTREE_MUTATION_DETECTED"):
                 _validate_event_git_provenance(repository, [event_path], [event], current)
+            subprocess.run(["git", "add", "events/0001.json"], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-m", "illegal mutation"], cwd=repository, check=True, capture_output=True)
+            mutated_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            with self.assertRaisesRegex(ContractValidationError, "EVENT_IMMUTABILITY_NOT_PROVEN"):
+                _validate_event_git_provenance(repository, [event_path], [{**event, "changed": True}], mutated_head)
+            with self.assertRaisesRegex(ContractValidationError, "EVENT_SUBJECT_HEAD_UNREACHABLE"):
+                fresh_repository = Path(directory) / "fresh"
+                fresh_repository.mkdir()
+                subprocess.run(["git", "init", "-b", "main"], cwd=fresh_repository, check=True, capture_output=True)
+                subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=fresh_repository, check=True)
+                subprocess.run(["git", "config", "user.name", "H0"], cwd=fresh_repository, check=True)
+                unreachable_path = fresh_repository / "0001.json"
+                unreachable = {"event_id": "E2", "head_sha": "0" * 40}
+                unreachable_path.write_text(json.dumps(unreachable), encoding="utf-8")
+                subprocess.run(["git", "add", "0001.json"], cwd=fresh_repository, check=True)
+                subprocess.run(["git", "commit", "-m", "event"], cwd=fresh_repository, check=True, capture_output=True)
+                fresh_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=fresh_repository, check=True, text=True, capture_output=True).stdout.strip()
+                _validate_event_git_provenance(fresh_repository, [unreachable_path], [unreachable], fresh_head)
+
+    def test_event_git_provenance_rejects_committed_deletion(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            subprocess.run(["git", "init", "-b", "main"], cwd=repository, check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "h0@example.test"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.name", "H0"], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "--allow-empty", "-m", "base"], cwd=repository, check=True, capture_output=True)
+            subject = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            event_dir = repository / "events"
+            event_dir.mkdir()
+            first = event_dir / "0001.json"
+            second = event_dir / "0002.json"
+            first_event = {"event_id": "E1", "head_sha": subject}
+            first.write_text(json.dumps(first_event), encoding="utf-8")
+            second.write_text(json.dumps({"event_id": "E2", "head_sha": subject}), encoding="utf-8")
+            subprocess.run(["git", "add", "events"], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-m", "events"], cwd=repository, check=True, capture_output=True)
+            subprocess.run(["git", "rm", "events/0002.json"], cwd=repository, check=True, capture_output=True)
+            subprocess.run(["git", "commit", "-m", "illegal deletion"], cwd=repository, check=True, capture_output=True)
+            current = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository, check=True, text=True, capture_output=True).stdout.strip()
+            with self.assertRaisesRegex(ContractValidationError, "EVENT_LEDGER_DELETION_DETECTED"):
+                _validate_event_git_provenance(repository, [first], [first_event], current)
 
     def test_contract_schema_negatives_are_machine_identified(self) -> None:
         cases = [
@@ -238,6 +304,19 @@ class H0ControlHarnessTests(unittest.TestCase):
         with mock.patch("harness.contracts.importlib.metadata.version", return_value="4.21.0"):
             with self.assertRaisesRegex(ContractValidationError, "PINNED_DEPENDENCY_VERSION_REQUIRED"):
                 self.bundle.validate("event_schema", self.events[0], "event")
+        with mock.patch("harness.contracts.importlib.metadata.version", side_effect=__import__("importlib").metadata.PackageNotFoundError("jsonschema")):
+            with self.assertRaisesRegex(ContractValidationError, "PINNED_DEPENDENCY_MISSING"):
+                self.bundle.validate("event_schema", self.events[0], "event")
+
+    def test_unreferenced_epoch_audit_never_authorizes_continuation(self) -> None:
+        audit_path = "config/control/harness/executions/E/audits/audit.json"
+        audit = {"schema": "distributed_world_simulator.harness_epoch_audit.v1", "base_sha": "1" * 40, "main_sha": "2" * 40, "decision": "CONTINUE", "pc0": "NON_RED", "directional_pc0": "NON_RED"}
+        context = {"documents": {audit_path: audit}}
+        self.assertIsNone(_select_epoch_audit(context, []))
+        incomplete_event = {"event_type": "AUDIT_COMPLETED", "work_state": "AUDITED", "exit_code": 0, "evidence_paths": [audit_path]}
+        self.assertIsNone(_select_epoch_audit(context, [incomplete_event]))
+        complete_event = {**incomplete_event, "command": "CONTROL_PROJECT.ps1"}
+        self.assertEqual(audit, _select_epoch_audit(context, [complete_event]))
 
     def test_review_evidence_and_human_attention_contracts_load(self) -> None:
         state = build_state(ROOT, EXECUTION)
@@ -286,6 +365,14 @@ class H0ControlHarnessTests(unittest.TestCase):
         self.assertEqual([], list(Draft202012Validator(schema).iter_errors(envelope)))
         minimal = {"schema": "distributed_world_simulator.control_development_output.v1", "command": "STATUS", "ok": True}
         self.assertTrue(list(Draft202012Validator(schema).iter_errors(minimal)))
+        with_error = copy.deepcopy(envelope)
+        with_error["error"] = {"code": "INTERNAL_ERROR", "detail": "must not coexist with success"}
+        self.assertTrue(list(Draft202012Validator(schema).iter_errors(with_error)))
+        for switch, section in (("-Plan", "plan"), ("-Resume", "resume")):
+            completed = subprocess.run([shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "CONTROL_DEVELOPMENT.ps1"), switch], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False)
+            candidate = json.loads(completed.stdout.splitlines()[-1])
+            candidate.pop(section)
+            self.assertTrue(list(Draft202012Validator(schema).iter_errors(candidate)))
 
     def test_plan_lists_required_unsatisfied_predicates_and_c22_gate(self) -> None:
         state = build_state(ROOT, EXECUTION)
@@ -339,6 +426,8 @@ class H0ControlHarnessTests(unittest.TestCase):
             clone = Path(directory) / "verification clone"
             completed = subprocess.run(["git", "clone", "--no-hardlinks", "--branch", "control/h0-closed-loop-development", str(ROOT), str(clone)], text=True, capture_output=True, check=False)
             self.assertEqual(0, completed.returncode, completed.stderr)
+            canonical_main = subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
+            subprocess.run(["git", "update-ref", "refs/remotes/origin/main", canonical_main], cwd=clone, check=True)
             work_order_path = clone / "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-001.v1.json"
             work_order = read_json(work_order_path)
             work_order["state"] = "PLANNED"

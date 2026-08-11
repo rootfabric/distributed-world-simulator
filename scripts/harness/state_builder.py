@@ -169,6 +169,23 @@ def _load_reviews(root: Path, execution_dir: Path, work_order: dict[str, Any]) -
     return reviews
 
 
+def _select_epoch_audit(guard_context: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any] | None:
+    audited_paths = {
+        path.replace("\\", "/")
+        for event in events
+        if event.get("event_type") == "AUDIT_COMPLETED"
+        and event.get("work_state") == "AUDITED"
+        and event.get("exit_code") == 0
+        and event.get("command")
+        for path in event.get("evidence_paths", [])
+    }
+    audits = [
+        item for path, item in guard_context["documents"].items()
+        if path in audited_paths and item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"
+    ]
+    return audits[-1] if audits else None
+
+
 def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     bundle = ContractBundle.load(root)
     epoch = read_json(execution_dir / "project-epoch.v1.json")
@@ -213,8 +230,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
     ledger_head = _validate_event_git_provenance(root, active["event_paths"], active["events"], current_head)
-    audits = [item for item in guard_context["documents"].values() if item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"]
-    exact_audit = audits[-1] if audits else None
+    exact_audit = _select_epoch_audit(guard_context, active["events"])
     epoch_validation = validate_epoch(root, epoch, canonical_branch, exact_audit)
     snapshot_mismatch = not active["reduced"]["snapshot_matches_authoritative_state"]
     findings = []

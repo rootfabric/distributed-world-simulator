@@ -22,7 +22,7 @@ def _validator(schema: dict[str, Any]):
         if version != "4.22.0":
             raise ContractValidationError(f"PINNED_DEPENDENCY_VERSION_REQUIRED:jsonschema={version}")
         from jsonschema import Draft202012Validator, FormatChecker
-    except ModuleNotFoundError as exc:
+    except (ModuleNotFoundError, importlib.metadata.PackageNotFoundError) as exc:
         raise ContractValidationError("PINNED_DEPENDENCY_MISSING:jsonschema==4.22.0") from exc
     return Draft202012Validator(schema, format_checker=FormatChecker())
 
