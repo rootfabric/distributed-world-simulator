@@ -1,0 +1,141 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "H0-0-WO-001",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "program": "HARNESS",
+  "goal_checkpoint": "H0_0_SCAFFOLD_READY",
+  "state": "PLANNED",
+  "work_order_type": "CONTROL",
+  "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
+  "branch": "control/h0-closed-loop-development",
+  "scope": "Implement the restart-safe executable H0.0 control scaffold and prove Status, Plan and Resume from Git-only state without creating or changing runtime code.",
+  "allowed_paths": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/**",
+    "tests/harness/**",
+    "validation/harness/**",
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/**",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"
+  ],
+  "forbidden_paths": [
+    "project.godot",
+    "scenes/**",
+    "scripts/construction/**",
+    "scripts/network/**",
+    "scripts/runtime/**",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/event.schema.v1.json",
+    "config/control/harness/evidence-map.schema.v1.json",
+    "config/control/harness/harness-policy.v1.json",
+    "config/control/harness/human-attention.schema.v1.json",
+    "config/control/harness/project-epoch.schema.v1.json",
+    "config/control/harness/project-goals.v1.json",
+    "config/control/harness/repair-doctrine.v1.json",
+    "config/control/harness/review-policy.v1.json",
+    "config/control/harness/risk-policy.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/work-order.schema.v1.json"
+  ],
+  "required_predicates": [
+    "CONTROL_DEVELOPMENT_STATUS_WORKS",
+    "CONTROL_DEVELOPMENT_PLAN_WORKS",
+    "CONTROL_DEVELOPMENT_RESUME_WORKS",
+    "CANONICAL_CONTRACTS_LOAD_PASS",
+    "REVIEW_AND_EVIDENCE_CONTRACTS_LOAD_PASS",
+    "WORK_ORDER_SCHEMA_VALIDATION_PASS",
+    "EVENT_REDUCER_REBUILDS_STATE_PASS",
+    "PROJECT_EPOCH_VALIDATION_PASS",
+    "MAIN_MOVEMENT_EPOCH_INVALIDATION_DETECTION_PASS",
+    "DRY_RUN_C22_PLAN_PASS",
+    "RECOVERY_FIXTURE_WITHOUT_CHAT_PASS",
+    "NO_RUNTIME_SCOPE_CHANGES",
+    "PC0_NON_RED"
+  ],
+  "required_outputs": [
+    "Executable CONTROL_DEVELOPMENT.ps1 entrypoint",
+    "Modular scripts/harness implementation",
+    "Negative and recovery fixture tests",
+    "Machine-readable validation summary",
+    "Post-build critique",
+    "Evidence Map",
+    "Changed-file archive",
+    "Draft pull request and checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "Any gameplay or runtime path would need to change",
+    "Canonical harness contracts appear contradictory or require modification",
+    "Risk must be raised to HIGH or CRITICAL",
+    "PC0 becomes RED",
+    "Unexpected scope expansion is required",
+    "A blocking Human Attention decision is required before implementation can continue"
+  ],
+  "risk_class": "MEDIUM",
+  "risk_reasons": [
+    "The scaffold is control infrastructure whose incorrect state reconstruction could route later development to the wrong checkpoint.",
+    "The implementation is bounded and does not mutate gameplay/runtime or canonical architecture ownership."
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER"
+  ],
+  "design_brief": {
+    "problem_statement": "Canonical harness, risk, review and evidence contracts exist in main, but no executable Status, Plan or Resume implementation exists.",
+    "current_behavior": "A new session must manually interpret control files and cannot reconstruct an active execution train through one canonical command.",
+    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, reduce append-only events, validate epochs, build status, plan the declared checkpoint and resume from Git-only state.",
+    "alternatives_considered": [
+      "Implement all behavior in one PowerShell script.",
+      "Implement a thin PowerShell entrypoint over focused Python modules.",
+      "Build a full autonomous execution engine in H0.0."
+    ],
+    "selected_design": "Use a thin PowerShell entrypoint over focused Python modules with JSON output derived from canonical contracts and branch-local execution instances.",
+    "why_selected": "The modular design is testable and cross-session recoverable while keeping H0.0 bounded to read/plan/resume behavior and excluding autonomous runtime execution.",
+    "affected_owners": [
+      "MAIN/HARNESS",
+      "PC0"
+    ],
+    "dependencies": [
+      "H0-2026-08-11-R1 canonical contracts",
+      "H0-REVIEW-2026-08-11-R1 review contracts",
+      "PC0-2026-08-10-R1",
+      "project-program-registry generation 63",
+      "Git refs and immutable worker events"
+    ],
+    "non_goals": [
+      "No autonomous -Execute mode",
+      "No C22 or NX runtime branch creation",
+      "No gameplay/runtime modification",
+      "No canonical schema or policy revision",
+      "No architecture promotion or ownership transfer"
+    ],
+    "expected_risks": [
+      "Incorrect event ordering or transition reduction",
+      "False epoch freshness after main moves",
+      "Derived state depending on artifacts or chat",
+      "Incomplete review or Human Attention state in Resume",
+      "Planner bypassing the H0.0 pilot override"
+    ],
+    "validation_plan": [
+      "Validate all canonical control, review and evidence contracts load.",
+      "Exercise valid and invalid Work Order, Event, Epoch, Evidence Map and Human Attention instances.",
+      "Reduce ordered fixtures including FIX_REQUIRED and recovery continuation.",
+      "Detect exact-main, moved-main CONTINUE and REFRESH_REQUIRED epoch states.",
+      "Prove Status, Plan and Resume output from a clean checkout after artifacts are removed.",
+      "Prove dry-run C22 remains blocked until H0_0_SCAFFOLD_READY.",
+      "Run git diff --check and Project Control non-RED."
+    ]
+  },
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "CANONICAL_CONTRACT_CHANGE_REQUIRED",
+    "RISK_RECLASSIFIED_HIGH_OR_CRITICAL",
+    "CONTROL_DOCS_MERGE_APPROVAL"
+  ],
+  "issued_at_utc": "2026-08-11T04:25:51Z",
+  "human_approval_required_for": [
+    "CONTROL_DOCS_ONLY_MERGE"
+  ],
+  "notes": "H0.0 may prepare HUMAN_OBSERVATION work-order shapes and R3 analysis state, but it must not create autonomous runtime branches."
+}
