@@ -29,9 +29,6 @@ if ([string]::IsNullOrWhiteSpace($GodotPath)) {
 if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path $GodotPath)) {
     throw "Godot executable not found. Pass -GodotPath or set GODOT_BIN."
 }
-if (-not (Test-Path -LiteralPath $Garment -PathType Leaf)) {
-    throw "Male_Peasant.gltf is missing. FPE reuses the accepted CH8/CH9 clothing asset."
-}
 if ($Port -lt 1024 -or $Port -gt 65535) {
     throw "Port must be in range 1024..65535."
 }
@@ -49,14 +46,20 @@ if ($InflationScale -lt 0.10 -or $InflationScale -gt 2.00) {
     throw "InflationScale must be in range 0.10..2.00."
 }
 
+$GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $UserArgs = @(
-    "--ch8c-upper-inflation=$($UpperInflation.ToString('0.######', $Invariant))",
-    "--ch8c-lower-inflation=$($LowerInflation.ToString('0.######', $Invariant))",
-    "--ch8c-feet-inflation=$($FeetInflation.ToString('0.######', $Invariant))",
-    "--ch8c-inflation-scale=$($InflationScale.ToString('0.######', $Invariant))",
     "--ch9-6-port=$Port"
 )
+if ($GarmentAvailable) {
+    $UserArgs = @(
+        "--ch8c-upper-inflation=$($UpperInflation.ToString('0.######', $Invariant))",
+        "--ch8c-lower-inflation=$($LowerInflation.ToString('0.######', $Invariant))",
+        "--ch8c-feet-inflation=$($FeetInflation.ToString('0.######', $Invariant))",
+        "--ch8c-inflation-scale=$($InflationScale.ToString('0.######', $Invariant))",
+        "--ch9-6-port=$Port"
+    )
+}
 if ($ResetState) {
     $UserArgs += "--ch9-6-reset-state"
 }
@@ -65,7 +68,13 @@ Write-Host "Godot: $GodotPath"
 Write-Host "FPE research - FirstPersonEmbodiment over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: network hotbar" -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing." -ForegroundColor Cyan
-Write-Host "Equip Peasant Upper in the inventory to test first-person sleeve synchronization." -ForegroundColor Cyan
+if ($GarmentAvailable) {
+    Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
+    Write-Host "Equip Peasant Upper in the inventory to test first-person sleeve synchronization." -ForegroundColor Cyan
+} else {
+    Write-Host "WARNING: Male_Peasant.gltf is not present in this checkout." -ForegroundColor Yellow
+    Write-Host "The FPE lab will still launch. Clothing viewmodel will use procedural sleeves and CH8C real-garment presentation may report MALE_PEASANT_SCENE_MISSING." -ForegroundColor Yellow
+}
 Write-Host "Canonical world-item hand grabbing remains fail-closed until a server hand.grab authority contract exists." -ForegroundColor Yellow
 
 $PreviousErrorActionPreference = $ErrorActionPreference
