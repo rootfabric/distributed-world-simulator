@@ -2,10 +2,11 @@
 
 **Operational owner:** `main`  
 **Architecture baseline:** `GLOBAL-P0-2026-08-10-R2`  
-**Control plane:** `PC0-2026-08-10-R1` with directional watched-dependency hardening  
-**Purpose:** one-page operational map answering what is active, what may continue now, what checkpoint is next, and what blocks the following stage.
+**Control plane:** `PC0-2026-08-10-R1`  
+**Harness:** `H0-2026-08-11-R1`  
+**Review layer:** `H0-REVIEW-2026-08-11-R1`
 
-> This file is a human-facing snapshot. Machine operational truth remains `config/control/project-program-registry.v1.json`. If the two differ, the registry wins and this file must be refreshed.
+> Human-facing snapshot. Machine operational truth is `config/control/project-program-registry.v1.json`; if they differ, the registry wins.
 
 ---
 
@@ -14,242 +15,246 @@
 ```text
 BRANCHES REPORT FACTS
 MAIN DECLARES PROJECT STATE
-AUDITORS CHECK CONSISTENCY
-GLOBAL ARCHITECTURE DEFINES OWNERSHIP AND INVARIANTS
+HARNESS MOVES ONLY BETWEEN DECLARED CHECKPOINTS
+RISK ROUTES REVIEW DEPTH
+EVIDENCE MAP IS THE REVIEW UNIT
+EXCEPTION IS THE HUMAN ATTENTION UNIT
 ```
 
-For a new major runtime stage, default to:
+New runtime work does not continue old stacked lineage by default:
 
 ```text
 accepted evidence
       +
 then-current canonical main
       ↓
-fresh registered frontier
+Project Epoch
       ↓
-minimal implementation
+bounded Work Order
       ↓
-focused validation
+risk/design gate
       ↓
-full regression
+implementation
       ↓
-composition / merge / handoff
+validation + Evidence Map + independent review
+      ↓
+PC0 / composition
+      ↓
+checkpoint proposal
 ```
-
-Do not continue an old accepted stacked lineage by default.
 
 ---
 
 ## 2. Active and tracked frontiers
 
-| Program | Branch | Current state | What may be done now | Next checkpoint | Gate after checkpoint |
-|---|---|---|---|---|---|
-| **G** | `feature/g8-geomorphology` | G8.6 automated accepted, graphical pending | Run manual graphical acceptance only; no new runtime | **G8.6 ACCEPTED**, then **G8 Full Acceptance** | Freeze G8; **G9 waits for canonical R3 + MAT0** |
-| **T** | `feature/t1b-composition-failure-recovery` | T1B.0–T1B.4 accepted handoff | No new T1B work | **HANDOFF COMPLETE** already reached | Resume at **T2.0** only after C22 integration + TS0.4 + PC0 convergence |
-| **TS / C22** | `feature/c22-incremental-local-rebuild` | Source accepted, current-main refresh required | Build fresh current-main C22 convergence and retest | **SOURCE_ACCEPTED_MERGE_READY** on refreshed exact head | Explicit merge → post-merge PC0 → **MAIN_INTEGRATED** → TS0.4 |
-| **CH** | `feature/ch9-6-playable-network-equipment-lab` | Windows automated accepted, graphical pending | Run two-pass graphical/recovery acceptance only | **CH9.6 ACCEPTED** | Post-acceptance PC0; later CH major work starts from current main/convergence base |
-| **NX** | `feature/nx-m7-owner-authority-convergence` | NX.C0 clean preparation; legacy N frozen as evidence | PC0 hardening is now canonical; create fresh current-main **NX.C1** and implement minimal owner-authority slice | **NX.C1 IMPLEMENTED_CANDIDATE**, then validation → **NX SOURCE_ACCEPTED** | Exact-Windows focused/full/two-client/impaired-network/reconnect/dependency gates |
-| **R3** | `feature/global-p0-r3-architecture` | Architecture candidate; refresh required | Refresh R3 change-set on current main and implement revision-transition rule | **R3 REFRESHED CANDIDATE / PC0 NON-RED** | Promote canonical R3, then Wave A from one SHA |
-| **DOCTRINE** | `feature/world-building-doctrine` | Active design reference | Update only from new gameplay/system evidence | next doctrine alignment checkpoint | Must not acquire technical foundation ownership |
-| **MATTER** | — | MW10 stable accepted foundation | No new branch unless a registered composition need appears | future GM/Geo-Matter gate | Keep Matter truth canonical |
-| **S1** | — | stable proposal-only distributed compute | No new branch until a concrete workload needs it | workload-specific registered frontier | Workers remain proposal-only; authority commits |
+| Program | Current state | What may be done now | Next checkpoint | Gate after checkpoint |
+|---|---|---|---|---|
+| **HARNESS** | H0.0 planned; canonical contracts ready | Implement **control-only** Status/Plan/Resume, reducer, contract loader, epoch validator, Git-only recovery fixtures | **H0_0_SCAFFOLD_READY** | Then H0.1/C22 becomes first autonomous runtime pilot |
+| **G** | G8.6 automated accepted, graphical pending | Manual graphical acceptance only | **G8.6 ACCEPTED**, then **G8 Full Acceptance** | Freeze G8; G9 waits canonical R3 + MAT0 |
+| **T** | T1B.0–T1B.4 accepted handoff | No new T1B work | HANDOFF COMPLETE already reached | Resume at T2.0 after C22 + TS0.4 + PC0 |
+| **TS / C22** | Accepted evidence; waiting H0.0 before fresh convergence | No autonomous C22 runtime yet | After H0.0: **H0.1 + C22 SOURCE_ACCEPTED_MERGE_READY** | Explicit runtime merge → PC0 → MAIN_INTEGRATED → TS0.4 |
+| **CH** | Windows automated accepted, graphical pending | Two-pass graphical/recovery acceptance | **CH9.6 ACCEPTED** | Post-acceptance PC0; freeze slice |
+| **NX** | NX.C0 preparation complete; runtime waiting H0.1 | Analysis/evidence only; do not start NX.C1 runtime | After H0.1: H0.2/NX → **NX SOURCE_ACCEPTED** | HIGH-risk evidence/review + network/reconnect gates |
+| **R3** | Architecture candidate; refresh required | Analysis/current-main refresh may proceed; **no promotion** | **R3 REFRESHED CANDIDATE / PC0 NON-RED** | CRITICAL review + human promotion gate |
+| **DOCTRINE** | Active design reference | Update only from new gameplay/system evidence | next doctrine alignment checkpoint | Must not own technical foundations |
+| **MATTER** | MW10 stable accepted | No new branch without registered composition need | future GM/Geo-Matter gate | Keep Matter truth canonical |
+| **S1** | Stable proposal-only compute | No new branch until concrete workload | workload-specific frontier | Workers remain proposal-only |
 
 ---
 
-## 3. Work that can proceed in parallel now
-
-After PC0 directional-watch hardening became canonical in `main`, these tracks are independent enough to proceed in parallel:
+## 3. What can proceed in parallel now
 
 ```text
-A. G8.6 manual graphical acceptance
-B. CH9.6 two-pass graphical/recovery acceptance
-C. C22 current-main convergence refresh + revalidation
-D. fresh current-main NX.C1 minimal runtime transfer
-E. R3 current-main refresh + revision-transition control rule
+A. H0.0 restart-safe harness scaffold (control-only)
+B. G8.6 manual graphical acceptance
+C. CH9.6 manual graphical/recovery acceptance
+D. R3 current-main analysis/refresh without promotion
 ```
 
-They must still run `CONTROL_PROJECT.ps1` at their declared control gates. Directional watched-dependency findings may require targeted revalidation of another program.
+Explicitly **not yet allowed**:
+
+```text
+C22 autonomous runtime convergence  → waits H0_0_SCAFFOLD_READY
+NX.C1 runtime                        → waits H0.1 PASS
+multiple autonomous runtime workers → waits H0.3
+```
+
+This intentionally slows runtime branching for one checkpoint so the development control loop becomes restart-safe before scaling agent concurrency.
 
 ---
 
-## 4. G — exact continuation
+## 4. HARNESS — immediate critical path
 
-Current evidence:
+### H0.0 — Restart-Safe Harness Scaffold
+
+Nearest project-wide checkpoint:
 
 ```text
-stage:   G8.6 Geomorphology Visual Lab
-status:  AUTOMATED_ACCEPTED_MANUAL_GRAPHICAL_PENDING
-tested:  a9ca1f8b723e4edc5ebff40db26e41283d464597
+H0_0_SCAFFOLD_READY
 ```
 
-Do now:
+Implement from then-current canonical `main`:
 
 ```text
-G     source/resolved changes visibly; Truth hash stable
-1..7  all semantic views meaningful
-W/S   LOD/stride/grid changes; canonical samples=561 and hash stay stable
-X     PX/PZ seam has no crack/discontinuity
-F     river overlay agrees with channel/bank/floodplain shape
+CONTROL_DEVELOPMENT.ps1
+-Status
+-Plan
+-Resume
+
+state/event reducer
+contract/schema loader
+Project Epoch validator + invalidation detection
+Git-only recovery fixtures
+review/evidence contract loading
 ```
 
-Checkpoint sequence:
+Required properties:
 
 ```text
-manual PASS
-  ↓
-G8.6 ACCEPTED
-  ↓
-G8 Full Acceptance
-  ↓
-PC0
-  ↓
-G8 frozen as accepted evidence
+NO runtime branch creation
+NO gameplay/domain changes
+state reconstructs without chat
+review/evidence contracts parse/load
+PC0 non-RED
 ```
 
-Stop rule:
+Only after H0.0 is accepted and integrated may H0.1 create the fresh C22 runtime branch.
+
+### H0.1 — C22 Closed Loop
+
+H0.1 must prove not only tests, but the full evidence-driven flow:
 
 ```text
-DO NOT START G9
-until canonical R3 + MAT0 MaterialDefinitionId exists
+risk classification
+Design Brief when required
+fresh current-main C22 branch
+bounded capability transfer
+focused + graphical + C24 + full regression
+post-build critique
+Evidence Map
+independent Reviewer verdict PASS
+exact fresh review/test heads
+PC0 + directional PC0
+Human Attention Queue empty/resolved
+clean-session recovery drill
+Draft PR
+STOP before merge
+```
+
+Target:
+
+```text
+H0_1_PASS
++
+C22 SOURCE_ACCEPTED_MERGE_READY
 ```
 
 ---
 
-## 5. CH — exact continuation
-
-Current evidence:
+## 5. Risk/review routing
 
 ```text
-stage:         CH9.6 Playable Network Equipment Lab
-runtime:       7b2269b39952b8201714a7078a62b8f97057325c
-tested head:   4cdafddce7cd6b5fa7ff45a06ae00f06320464ab
-status:        WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING
+LOW      → Implementer + Verifier
+MEDIUM   → Implementer + Reviewer + Verifier
+HIGH     → Implementer + Reviewer + Verifier + Director
+CRITICAL → Implementer + Reviewer + Verifier + Director + Human
 ```
 
-Do now on the preserved tested checkout:
+Mandatory review rules for runtime checkpoints:
 
 ```text
-Run 1 with ResetState
-  READY
-  equip upper/lower/feet through real Inventory UI
-  visual equipment appears only after canonical/server path
-  unequip removes presentation
-  movement/jump/crouch work
-  close normally
-
-Run 2 without ResetState
-  equipment restores before new drag
-  post-recovery unequip removes presentation
+Evidence Map complete
+Reviewer verdict = PASS
+INSUFFICIENT_EVIDENCE blocks checkpoint
+reviewed HEAD == evidence HEAD == tested runtime HEAD for runtime scope
+FIX_REQUIRED on MEDIUM+ → Repair Map before next non-trivial fix
 ```
 
-Checkpoint sequence:
-
-```text
-manual PASS
-  ↓
-CH9.6 ACCEPTED
-  ↓
-post-acceptance PC0
-  ↓
-freeze playable equipment vertical slice
-```
-
-Do not create CH9.7 merely to avoid the graphical gate.
+Human attention is exception-driven; commit count is never the control interface.
 
 ---
 
-## 6. Construction / C22 / TS / T — exact train
+## 6. G — exact continuation
 
-### C22 current-main refresh
-
-The original C22 implementation stays accepted evidence. The next implementation branch must be current-main based.
-
-Transfer/reproduce only the accepted production capability and related tests/validation. Do not import stale control-plane copies.
-
-Checkpoint sequence:
+Tested automated head:
 
 ```text
-fresh current-main C22 convergence
-  ↓
-production-diff semantic equivalence
-  ↓
-C22 incremental focused PASS
-C22 graphical PASS
-C24 contracts PASS
-  ↓
-full world/core regression PASS
-  ↓
-SOURCE_ACCEPTED_MERGE_READY
-  ↓ explicit merge authorization
-C22 merged to main
-  ↓
-post-merge PC0
-  ↓
-MAIN_INTEGRATED
+a9ca1f8b723e4edc5ebff40db26e41283d464597
 ```
 
-### TS0.4
-
-Only after C22 `MAIN_INTEGRATED`, create fresh main-based:
+Manual checks:
 
 ```text
-TS0.4 — 1M Research Ceiling
+G     source/resolved changes; Truth hash stable
+1..7  semantic views meaningful
+W/S   LOD/stride/grid changes; canonical samples=561 and hash stable
+X     PX/PZ seam has no crack
+F     river overlay coherent with channel/bank/floodplain
 ```
 
-Measure at minimum:
+Sequence:
 
 ```text
-build / ingest time
-incremental rebuild time
-memory
-artifact count and cache reuse
-far-shell cost
-streaming / representation cost
-hot sections
-main-thread budget
+manual PASS → G8.6 ACCEPTED → G8 Full Acceptance → PC0 → freeze G8
 ```
 
-Classify honestly:
+Do not start G9 before canonical R3 + MAT0.
+
+---
+
+## 7. CH — exact continuation
+
+Preserved tested head:
 
 ```text
-PASSABLE
-DEGRADED
-CURRENT_CEILING_EXCEEDED
+4cdafddce7cd6b5fa7ff45a06ae00f06320464ab
 ```
 
-The goal is a trustworthy ceiling and bottleneck telemetry, not forcing one million objects to pass at any cost.
+Run 1 with ResetState: equip/unequip through real Inventory UI, verify presentation, movement/jump/crouch, normal close.
 
-### T2.0 activation
+Run 2 without ResetState: durable equipment restores before new drag; post-recovery unequip removes presentation.
 
-Start `T2.0 — Real Heterogeneous Base / Station` only after:
+Sequence:
 
 ```text
+manual PASS → CH9.6 ACCEPTED → post-acceptance PC0 → freeze slice
+```
+
+Do not create CH9.7 to bypass the gate.
+
+---
+
+## 8. Construction train
+
+```text
+H0_0_SCAFFOLD_READY
+        ↓
+H0.1 fresh C22 convergence
+        ↓
+C22 SOURCE_ACCEPTED_MERGE_READY
+        ↓ human runtime merge authorization
 C22 MAIN_INTEGRATED
-+
-accepted T1A.7/T1B scale/composition evidence
-+
-TS0.4 classification
-+
-PC0 convergence
+        ↓
+TS0.4 1M Research Ceiling
+        ↓
+classification: PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED
+        ↓
+PC0 convergence with accepted T evidence
+        ↓
+T2.0 Real Heterogeneous Base / Station
 ```
-
-T2.0 must be a real heterogeneous construct, not another uniform cube-only benchmark. It should combine structural parts, doors/airlocks, generators, dependency networks, interactive fixtures, local rebuild, persistence/recovery, reconnect, interest and derived C22 representation.
 
 T1B has no T1B.5.
 
 ---
 
-## 7. NX — exact continuation
+## 9. NX train
 
-PC0 directional-watch hardening is now in canonical `main`, so the old NX.C0 gate is cleared.
+NX runtime is intentionally held until H0.1 proves the closed loop.
 
-Next action:
+Then NX becomes H0.2 and has minimum HIGH risk because it touches authority/protocol/recovery behavior.
 
-```text
-create fresh NX.C1 from then-current main
-```
-
-Transfer/reimplement only:
+Authorized capability remains minimal:
 
 ```text
 MovementAuthorityProfile
@@ -259,7 +264,7 @@ remote snapshot interpolation presentation
 same-revision optimistic item rollback
 ```
 
-Never transfer as production design:
+Never transfer:
 
 ```text
 legacy FIX ladder
@@ -267,161 +272,76 @@ render _process() writing CharacterBody3D transform
 unbounded relative client_tick scheduler
 ```
 
-When runtime is introduced, NX health becomes YELLOW until validation finishes.
-
-Required checkpoint gates:
-
-```text
-editor import
-owner-authority focused
-render/physics single-writer
-item rollback/drop/pickup
-client_tick fuzz if touched
-full world/core regression
-two-client process
-LOCAL movement + items
-impaired network
-reconnect / ownership_epoch
-directional dependency revalidation
-```
-
-Target checkpoint:
-
-```text
-NX SOURCE_ACCEPTED
-```
-
-Legacy `feature/m7-sequence-aware-...` remains evidence only and must not be directly merged.
+NX acceptance additionally requires Evidence Map, independent review and exact-head freshness on top of focused/full/two-client/impaired-network/reconnect/dependency gates.
 
 ---
 
-## 8. GLOBAL-P0 R3 — exact continuation
+## 10. R3 train
 
-R3 remains the intended next architecture revision, but the old candidate ancestry is not a promotion base.
+R3 may be refreshed/analyzed in parallel but promotion remains a CRITICAL risk/human gate.
 
-Do now:
-
-```text
-refresh R3 change-set on current main
-update machine frontier guards
-implement R2 -> R3 revision-transition policy in PC0
-run ownership/intersection review
-require PC0 non-RED
-```
-
-Revision-transition categories:
+Required candidate path:
 
 ```text
-ACTIVE_NEW_RUNTIME_FRONTIER
-  must use canonical R3 after promotion
-
-FROZEN_ACCEPTED_EVIDENCE
-  may remain R2 evidence-only
-
-CONVERGENCE_FRONTIER
-  must adopt R3 before adding new post-promotion runtime
+current-main refresh
+CRITICAL risk classification
+Design Brief
+frontier guards
+R2→R3 transition policy
+ownership/intersection review
+Evidence Map
+Reviewer PASS
+PC0 non-RED
+Human Attention item when architectural choice exists
 ```
 
-Target checkpoint:
-
-```text
-GLOBAL-P0-2026-08-11-R3 canonical
-```
-
-Only then create, from one exact R3 SHA:
-
-```text
-IAM0/IAM1
-MAT0
-WT0
-WQ0/WQ1
-```
-
-No Wave A branch may start from a different architecture base.
+Only human-approved canonical R3 may start IAM/MAT/WT/WQ Wave A from one exact SHA.
 
 ---
 
-## 9. Immediate stop gates
-
-Do not do any of the following without first changing the main-owned control/architecture state:
+## 11. Immediate stop gates
 
 ```text
-T1B.5
-G9 before canonical R3/MAT0
-CH9.7 to bypass graphical acceptance
-legacy N direct merge
-legacy FIX7 render/physics writes
-NX.C1 from stale/non-main base
-TS0.4 before C22 MAIN_INTEGRATED
-T2.0 before TS0.4 classification + PC0 convergence
-R3 direct promotion from stale candidate ancestry
-Wave A from different architecture bases
-new global Registry/Manager/Authority/Material/Transaction/Query foundation in a domain branch
+NO autonomous runtime before H0_0_SCAFFOLD_READY
+NO NX.C1 runtime before H0.1 PASS
+NO multiple autonomous runtime workers before H0.3
+NO T1B.5
+NO G9 before canonical R3 + MAT0
+NO CH9.7 to bypass graphical gate
+NO legacy N direct merge
+NO FIX7 render/physics writes
+NO TS0.4 before C22 MAIN_INTEGRATED
+NO T2.0 before TS0.4 classification + PC0 convergence
+NO R3 promotion without CRITICAL review + human approval
+NO Wave A from divergent bases
+NO new global Registry/Manager/Authority/Material/Transaction/Query foundation in a domain branch
 ```
 
 ---
 
-## 10. Checkpoint discipline
-
-For every active program:
-
-```text
-implementation or manual gate
-  ↓
-focused checkpoint
-  ↓
-CONTROL_PROJECT.ps1
-  ↓
-full/composition checkpoint when required
-  ↓
-CONTROL_PROJECT.ps1
-  ↓
-frontier move is declared in main
-```
-
-No program may silently declare its own next global frontier only in branch-local docs.
-
-`SOURCE_ACCEPTED`, `MAIN_INTEGRATED`, `COMPOSITION_VERIFIED`, and `PRODUCTION_READY` remain separate dimensions.
-
----
-
-## 11. Canonical entry points
-
-Start project-wide control from:
+## 12. Canonical entry points
 
 ```text
 PROJECT_CONTROL.md
-```
-
-Machine operational truth:
-
-```text
+AGENTS.md
+HARNESS_CONTROL.md
+docs/control/DEVELOPMENT_HARNESS_RU.md
+docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
 config/control/project-program-registry.v1.json
+config/control/harness/project-goals.v1.json
+config/control/harness/checkpoint-catalog.v1.json
 ```
 
-This current one-page snapshot:
-
-```text
-docs/control/CURRENT_PROJECT_FRONTIERS_RU.md
-```
-
-Detailed current convergence plan:
-
-```text
-docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md
-```
-
-Architecture constitution:
-
-```text
-docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md
-config/architecture/global-program-roadmap.v1.json
-```
-
-Run live control:
+Live control:
 
 ```powershell
 .\CONTROL_PROJECT.ps1 -NoFailOnRed
 ```
 
-Read both standard and directional reports before opening any unregistered major frontier.
+When H0.0 is implemented, development control adds:
+
+```powershell
+.\CONTROL_DEVELOPMENT.ps1 -Status
+.\CONTROL_DEVELOPMENT.ps1 -Plan
+.\CONTROL_DEVELOPMENT.ps1 -Resume
+```
