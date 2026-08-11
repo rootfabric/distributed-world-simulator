@@ -63,7 +63,7 @@ func setup(
 	process_priority = 100
 	set_process(true)
 	sync_pose_now()
-	return _result(true, CharacterEquipmentDomain.RESULT_OK, create_report())
+	return _result(true, "OK", create_report())
 
 
 func clear() -> void:
@@ -104,7 +104,7 @@ func sync_pose_now() -> Dictionary:
 			target_skeleton.set_bone_pose_rotation(pair.y, source_skeleton.get_bone_pose_rotation(pair.x))
 			target_skeleton.set_bone_pose_scale(pair.y, source_skeleton.get_bone_pose_scale(pair.x))
 			copied += 1
-	return _result(true, CharacterEquipmentDomain.RESULT_OK, {"copied_bones": copied})
+	return _result(true, "OK", {"copied_bones": copied})
 
 
 func get_visual_root() -> Node3D:
