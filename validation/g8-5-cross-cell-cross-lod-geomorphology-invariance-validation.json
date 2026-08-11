@@ -1,0 +1,54 @@
+{
+  "schema": "planet_simulator.validation.g8_5_cross_cell_cross_lod_geomorphology_invariance.v1",
+  "checkpoint": "g8.5-cross-cell-cross-lod-geomorphology-invariance",
+  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "parent": {
+    "checkpoint": "G8.4 Erosion / Deposition Baseline",
+    "decision": "ACCEPTED",
+    "full_acceptance_tested_head": "82cc31429f2bf2ea419bf1b50159838eea51c727",
+    "accepted_metadata_head": "d42b8ecb1dcf09f4317c0ef212e46df295c0ebdd"
+  },
+  "implementation": {
+    "runtime_changes": false,
+    "proof_manifest": "config/procedural/g8-5-cross-cell-cross-lod-geomorphology-invariance.v1.json",
+    "acceptance_test": "tests/procedural/geomorphology/g8_5_cross_cell_cross_lod_invariance_acceptance.gd",
+    "focused_runner": "RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
+    "full_acceptance_runner": "RUN_G8_5_FULL_ACCEPTANCE.ps1",
+    "tracked_uid_sidecars": true
+  },
+  "proof": {
+    "lod_levels": [2, 4, 8, 12],
+    "real_upstream_bundle": "G3 + G5 + G6 accepted adapters composed through G7 SemanticFieldComposer",
+    "same_point_query_checksum_across_lod": "PENDING",
+    "same_point_bundle_checksum_across_lod": "PENDING",
+    "same_point_deformation_checksum_across_lod": "PENDING",
+    "same_point_component_deltas_across_lod": "PENDING",
+    "external_surface_cell_label_independence": "PENDING",
+    "external_cube_face_label_independence": "PENDING",
+    "query_order_independence": "PENDING",
+    "px_pz_seam_evaluation": "PENDING"
+  },
+  "ownership": {
+    "surface_cell_key_dependency": false,
+    "lod_dependency": false,
+    "cube_face_dependency": false,
+    "representation_owned_truth": false,
+    "matter_mutation": false,
+    "authority_ownership": false,
+    "persistence_ownership": false,
+    "network_ownership": false
+  },
+  "automated_evidence": {
+    "focused": "PENDING",
+    "full_world_regression": "PENDING",
+    "working_tree": "TO_BE_VERIFIED"
+  },
+  "project_control": {
+    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
+    "blockers": ["G8_5_FOCUSED_INVARIANCE_VALIDATION_REQUIRED", "G8_5_FULL_WORLD_REGRESSION_REQUIRED"]
+  },
+  "next_if_accepted": "G8.6_GEOMORPHOLOGY_VISUAL_LAB"
+}
