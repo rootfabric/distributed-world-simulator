@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_4_erosion_deposition_baseline.v1",
   "checkpoint": "g8.4-erosion-deposition-baseline",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -71,8 +71,11 @@
   "acceptance": {
     "focused_runner": "RUN_G8_4_EROSION_DEPOSITION_TESTS.ps1",
     "full_acceptance_runner": "RUN_G8_4_FULL_ACCEPTANCE.ps1",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING"
+    "focused": "PASS_ON_FULL_ACCEPTANCE_CHECKOUT",
+    "full_world_regression": "PASS",
+    "full_acceptance_tested_head": "82cc31429f2bf2ea419bf1b50159838eea51c727",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "working_tree": "CLEAN"
   },
   "next_if_accepted": "G8.5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE"
 }
