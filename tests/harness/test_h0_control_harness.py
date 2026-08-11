@@ -19,7 +19,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
-from harness.state_builder import _git_implementation_head, _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
+from harness.state_builder import _git_implementation_head, _load_evidence_maps, _load_reviews, _select_epoch_audit, _validate_event_git_provenance, _validate_semantics, build_state
 
 
 EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R1"
@@ -363,9 +363,9 @@ class H0ControlHarnessTests(unittest.TestCase):
     def test_review_evidence_and_human_attention_contracts_load(self) -> None:
         state = build_state(ROOT, EXECUTION)
         self.assertEqual("PASS", state["review"]["pre_build_state"])
-        self.assertIn(state["review"]["post_build_state"], {"FAIL", "STALE"})
-        self.assertEqual("PENDING_POST_BUILD_REVIEW", state["review"]["state"])
-        self.assertTrue(state["checkpoint_proposal_blocked"])
+        self.assertEqual("PASS", state["review"]["post_build_state"])
+        self.assertEqual("READY", state["review"]["state"])
+        self.assertFalse(state["checkpoint_proposal_blocked"])
         human_schema = self.bundle.contracts["human_attention_schema"]
         candidate = {
             "schema": "distributed_world_simulator.harness_human_attention.v1",
@@ -377,6 +377,53 @@ class H0ControlHarnessTests(unittest.TestCase):
         candidate["options"] = ["A"]
         with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID:human"):
             self.bundle.validate("human_attention_schema", candidate, "human")
+
+    def test_typed_supporting_evidence_coexists_without_entering_review_state(self) -> None:
+        evidence = _load_evidence_maps(self.bundle, EXECUTION / "evidence")
+        self.assertEqual(1, len(evidence))
+        self.assertEqual("distributed_world_simulator.harness_evidence_map.v1", evidence[0]["schema"])
+        state = build_state(ROOT, EXECUTION)
+        self.assertEqual(evidence, state["review"]["evidence_maps"])
+
+    def test_malformed_document_claiming_evidence_map_schema_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            evidence_dir = Path(directory)
+            (evidence_dir / "claimed-map.json").write_text(
+                json.dumps({"schema": "distributed_world_simulator.harness_evidence_map.v1"}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ContractValidationError, "SCHEMA_INVALID:evidence:claimed-map.json"):
+                _load_evidence_maps(self.bundle, evidence_dir)
+            (evidence_dir / "claimed-map.json").unlink()
+            (evidence_dir / "ambiguous-map.json").write_text(
+                json.dumps({"schema": "distributed_world_simulator.harness_evidence_map.v2"}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ContractValidationError, "EVIDENCE_MAP_SCHEMA_AMBIGUOUS:ambiguous-map.json"):
+                _load_evidence_maps(self.bundle, evidence_dir)
+
+    def test_missing_or_non_string_evidence_schema_identity_fails_closed(self) -> None:
+        for name, document in (
+            ("missing-schema.json", {}),
+            ("numeric-schema.json", {"schema": 1}),
+            ("empty-schema.json", {"schema": ""}),
+        ):
+            with self.subTest(document=name), tempfile.TemporaryDirectory() as directory:
+                evidence_dir = Path(directory)
+                (evidence_dir / name).write_text(json.dumps(document), encoding="utf-8")
+                with self.assertRaisesRegex(ContractValidationError, f"EVIDENCE_SCHEMA_IDENTITY_REQUIRED:{name}"):
+                    _load_evidence_maps(self.bundle, evidence_dir)
+
+    def test_checkpoint_evidence_selection_uses_only_validated_maps(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            evidence_dir = Path(directory)
+            valid_map = read_json(EXECUTION / "evidence/H0-0-WO-001-EVIDENCE-MAP-001.v1.json")
+            supporting = read_json(EXECUTION / "evidence/H0-0-WO-001-VALIDATION-SUMMARY-001.v1.json")
+            (evidence_dir / "001-valid-map.json").write_text(json.dumps(valid_map), encoding="utf-8")
+            (evidence_dir / "999-supporting.json").write_text(json.dumps(supporting), encoding="utf-8")
+            selected = _load_evidence_maps(self.bundle, evidence_dir)
+            self.assertEqual([valid_map], selected)
+            self.assertEqual("PASS", selected[-1]["review_verdict"])
 
     def test_status_plan_resume_and_invalid_invocation_contract(self) -> None:
         shell = shutil.which("powershell") or shutil.which("pwsh")

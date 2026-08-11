@@ -12,6 +12,10 @@ from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
 
 
+_EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
+_EVIDENCE_MAP_SCHEMA_PREFIX = "distributed_world_simulator.harness_evidence_map"
+
+
 def _git_head(root: Path) -> str:
     output = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=False)
     if output.returncode != 0:
@@ -205,6 +209,30 @@ def _select_epoch_audit(guard_context: dict[str, Any], events: list[dict[str, An
     return audits[-1] if audits else None
 
 
+def _load_evidence_maps(bundle: ContractBundle, evidence_dir: Path) -> list[dict[str, Any]]:
+    """Load canonical Evidence Maps without treating supporting evidence as maps.
+
+    The execution evidence directory is intentionally shared by review maps and
+    typed supporting artifacts.  A document that claims the canonical Evidence
+    Map identity is always schema-validated; documents with another explicit
+    schema identity remain supporting evidence and cannot influence review or
+    checkpoint state.  Missing or map-like-but-unknown identities are rejected
+    rather than silently routed away from the Evidence Map contract.
+    """
+    evidence_maps: list[dict[str, Any]] = []
+    for path in _json_files(evidence_dir):
+        value = read_json(path)
+        schema_identity = value.get("schema")
+        if schema_identity == _EVIDENCE_MAP_SCHEMA:
+            bundle.validate("evidence_map_schema", value, f"evidence:{path.name}")
+            evidence_maps.append(value)
+        elif not isinstance(schema_identity, str) or not schema_identity:
+            raise ContractValidationError(f"EVIDENCE_SCHEMA_IDENTITY_REQUIRED:{path.name}")
+        elif schema_identity.startswith(_EVIDENCE_MAP_SCHEMA_PREFIX):
+            raise ContractValidationError(f"EVIDENCE_MAP_SCHEMA_AMBIGUOUS:{path.name}")
+    return evidence_maps
+
+
 def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     bundle = ContractBundle.load(root)
     epoch = read_json(execution_dir / "project-epoch.v1.json")
@@ -226,11 +254,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if not work_orders:
         raise ContractValidationError("WORK_ORDER_REQUIRED")
     active = work_orders[-1]
-    evidence = []
-    for path in _json_files(execution_dir / "evidence"):
-        value = read_json(path)
-        bundle.validate("evidence_map_schema", value, f"evidence:{path.name}")
-        evidence.append(value)
+    evidence = _load_evidence_maps(bundle, execution_dir / "evidence")
     attention = []
     for path in _json_files(execution_dir / "human-attention"):
         value = read_json(path)
