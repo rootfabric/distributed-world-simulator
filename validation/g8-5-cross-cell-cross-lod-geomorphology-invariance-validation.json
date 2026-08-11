@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_5_cross_cell_cross_lod_geomorphology_invariance.v1",
   "checkpoint": "g8.5-cross-cell-cross-lod-geomorphology-invariance",
-  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "decision": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -19,17 +19,46 @@
     "full_acceptance_runner": "RUN_G8_5_FULL_ACCEPTANCE.ps1",
     "tracked_uid_sidecars": true
   },
+  "first_windows_attempt": {
+    "status": "PARSE_FAIL_TEST_HARNESS_ONLY",
+    "tested_head": "00de94e2a75320de3ab66b9e4a52f55aa9067c75",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "accepted_regressions_before_g8_5": {
+      "g7_3_cross_cell_cross_lod_invariance": "PASS_122_ASSERTIONS",
+      "g8_0_geomorphology_contracts": "PASS_84_ASSERTIONS",
+      "g8_1_valley_incision": "PASS_49_ASSERTIONS",
+      "g8_2_river_channel": "PASS_63_ASSERTIONS",
+      "g8_3_banks_floodplain": "PASS_107_ASSERTIONS",
+      "g8_4_erosion_deposition": "PASS_93_ASSERTIONS"
+    },
+    "g8_5_runtime_proof_executed": false,
+    "failure": {
+      "kind": "GDSCRIPT_TYPE_INFERENCE_PARSE_ERROR",
+      "lines": [129, 157, 206],
+      "message": "Cannot infer the type of addressing.direction_to_cell() result because the addressing harness variable is dynamically typed.",
+      "semantic_or_runtime_regression": false
+    }
+  },
+  "fix1": {
+    "status": "IMPLEMENTED_CANDIDATE_RETEST_REQUIRED",
+    "head": "fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a",
+    "scope": "Acceptance-test typing only; three direction_to_cell results explicitly typed Dictionary.",
+    "runtime_changes": false,
+    "semantic_formula_changes": false,
+    "proof_meaning_changes": false
+  },
   "proof": {
     "lod_levels": [2, 4, 8, 12],
     "real_upstream_bundle": "G3 + G5 + G6 accepted adapters composed through G7 SemanticFieldComposer",
-    "same_point_query_checksum_across_lod": "PENDING",
-    "same_point_bundle_checksum_across_lod": "PENDING",
-    "same_point_deformation_checksum_across_lod": "PENDING",
-    "same_point_component_deltas_across_lod": "PENDING",
-    "external_surface_cell_label_independence": "PENDING",
-    "external_cube_face_label_independence": "PENDING",
-    "query_order_independence": "PENDING",
-    "px_pz_seam_evaluation": "PENDING"
+    "same_point_query_checksum_across_lod": "PENDING_RETEST",
+    "same_point_bundle_checksum_across_lod": "PENDING_RETEST",
+    "same_point_deformation_checksum_across_lod": "PENDING_RETEST",
+    "same_point_component_deltas_across_lod": "PENDING_RETEST",
+    "external_surface_cell_label_independence": "PENDING_RETEST",
+    "external_cube_face_label_independence": "PENDING_RETEST",
+    "query_order_independence": "PENDING_RETEST",
+    "px_pz_seam_evaluation": "PENDING_RETEST"
   },
   "ownership": {
     "surface_cell_key_dependency": false,
@@ -42,9 +71,9 @@
     "network_ownership": false
   },
   "automated_evidence": {
-    "focused": "PENDING",
+    "focused": "PENDING_FIX1_RETEST",
     "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "working_tree": "TO_BE_VERIFIED_AFTER_SYNC"
   },
   "project_control": {
     "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
