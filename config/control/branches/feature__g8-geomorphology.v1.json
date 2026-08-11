@@ -9,13 +9,13 @@
   "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
   "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
   "current_stage": "G8.4 Erosion / Deposition Baseline",
-  "stage_status": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
-  "progress_note": "G8.3 Banks and Floodplain Shaping is ACCEPTED after exact-Windows full acceptance on tested head ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50 with G8.2 parent PASS, banks/floodplain PASS, valley+river+banks/floodplain composition PASS, ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions, RL3 process streaming 37 assertions, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. G8.4 is now implemented as a static signed erosion/deposition redistribution baseline over exact G8.3 output. It uses the same accepted surface-height, valley-influence, river-distance and river-width semantics. Channel interior remains zero; an erosion lobe spans normalized distance 1.0 -> peak 1.35 -> 2.0; a deposition lobe spans 2.0 -> peak 3.25 -> 5.5. The signed component is erosion_deposition_max_delta_m * (deposition_weight - erosion_weight) * valley_influence. G8.4 preserves exact valley, river, bank and floodplain components and writes only erosion_deposition_delta_m. It does not claim sediment mass conservation, time integration, Matter mutation, fluid water-level semantics, material, persistence, authority or network ownership. Focused and full Windows validation are pending.",
-  "last_accepted_checkpoint": "G8.3 Banks and Floodplain Shaping",
-  "next_stage": "Run RUN_G8_4_EROSION_DEPOSITION_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_4_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only a full PASS unlocks G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance.",
+  "stage_status": "ACCEPTED",
+  "progress_note": "G8.4 Erosion / Deposition Baseline is ACCEPTED after exact-Windows full acceptance on tested head 82cc31429f2bf2ea419bf1b50159838eea51c727 using Godot 4.7.1.stable.double.custom_build.a13da4feb. G8.3 parent PASS, G8.4 signed erosion/deposition PASS, full valley+river+banks/floodplain+erosion/deposition composition PASS, geomorphology ownership PASS, world/core regression through NX4 PASS, RL3 representation-aware streaming 175 assertions PASS, RL3 process streaming 37 assertions PASS, main_scene_cli_all 6 PASS / 0 FAIL, lifecycle STOPPED and working tree CLEAN. G8.4 remains a static procedural redistribution baseline only; no sediment inventory, time integration, Matter mutation, fluid water-level reinterpretation, material, persistence, authority or network ownership is introduced. The G8.4 acceptance regression is now candidate-to-accepted stable for downstream parent checks.",
+  "last_accepted_checkpoint": "G8.4 Erosion / Deposition Baseline",
+  "next_stage": "Implement and validate G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance using the accepted G7.3 representation-independence proof and the full accepted G8.4 deformation chain.",
   "parent_branch_or_checkpoint": "G8.3 ACCEPTED @ 02d975952966113d65bc2e968881099975a10f33",
   "base_commit": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e",
-  "dependencies": ["G3", "G5", "G6", "G7", "G8_0", "G8_1", "G8_2", "G8_3"],
+  "dependencies": ["G3", "G5", "G6", "G7", "G8_0", "G8_1", "G8_2", "G8_3", "G8_4"],
   "owned_paths": ["config/procedural/g8-*", "scripts/simulation/procedural/geomorphology/**", "tests/procedural/geomorphology/**", "docs/procedural/*G8*", "docs/checkpoints/G8_*", "RUN_G8_*"],
   "watched_paths": ["scripts/simulation/procedural/contracts/semantic_field_*.gd", "scripts/simulation/procedural/semantic_fields/**", "scripts/simulation/procedural/providers/**", "scripts/simulation/procedural/features/**", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/matter/**"],
   "critical_watched_paths": ["scripts/simulation/procedural/semantic_fields/semantic_field_registry_v1.gd", "scripts/simulation/procedural/semantic_fields/semantic_field_composer_v1.gd", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/matter/**"],
@@ -42,7 +42,7 @@
     "tests/procedural/geomorphology/g8_4_erosion_deposition_acceptance.gd",
     "RUN_G8_4_EROSION_DEPOSITION_TESTS.ps1",
     "RUN_G8_4_FULL_ACCEPTANCE.ps1",
-    "docs/checkpoints/G8_4_EROSION_DEPOSITION_CANDIDATE_RU.md"
+    "docs/checkpoints/G8_4_EROSION_DEPOSITION_ACCEPTED_RU.md"
   ],
   "tested_heads": {
     "g7_full_acceptance": "a75a60b6da739cc759e1fb40510a98942bce4cde",
@@ -51,12 +51,11 @@
     "g8_1_full_acceptance": "42940c0b7f16b2ccf3704d7e603691415b1360cf",
     "g8_2_full_acceptance": "491fe10877c70c362c14ab595a8a0204165a880a",
     "g8_3_full_acceptance": "ce8b76f5ba46c3ed105ab6d4ee71ab7d8aadaf50",
-    "g8_4_focused": "PENDING",
-    "g8_4_full_acceptance": "PENDING"
+    "g8_4_full_acceptance": "82cc31429f2bf2ea419bf1b50159838eea51c727"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "procedural geomorphology deformation only"}],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE", "SEDIMENT_INVENTORY", "TIME_INTEGRATION"],
-  "blockers": ["G8_4_FOCUSED_VALIDATION_REQUIRED", "G8_4_FULL_WORLD_REGRESSION_REQUIRED"],
-  "health_declared": "YELLOW",
+  "blockers": [],
+  "health_declared": "GREEN",
   "cross_branch_overlap_enabled": true
 }
