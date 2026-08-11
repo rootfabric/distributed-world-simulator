@@ -1,0 +1,89 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "ECO-MAIN-INTEGRATION-WO-001",
+  "project_epoch": "E2026-08-11-ECO-MAIN-R1",
+  "program": "ECO",
+  "goal_checkpoint": "H0_0_SCAFFOLD_READY",
+  "state": "PLANNED",
+  "work_order_type": "CONTROL",
+  "base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
+  "branch": "control/eco-main-integration",
+  "scope": "Create a reviewable normal-merge integration of exact canonical main into the exact ECO source head, prove the synthetic post-merge topology removes aggregate PC0 RED without runtime tree changes, open a draft PR targeting ECO, and stop before merge.",
+  "allowed_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R1/**",
+    "docs/checkpoints/ECO_MAIN_INTEGRATION_CANDIDATE_RU.md"
+  ],
+  "forbidden_paths": [
+    "project.godot",
+    "scripts/**",
+    "scenes/**",
+    "tests/**",
+    "config/ecology/**",
+    "validation/ecology/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/branches/**",
+    "config/control/harness/*.v1.json",
+    "config/architecture/**"
+  ],
+  "required_predicates": [
+    "EXACT_MAIN_AND_ECO_INPUTS_PINNED",
+    "NORMAL_MERGE_COMMIT_CREATED",
+    "MERGE_TREE_RUNTIME_DELTA_ZERO",
+    "SYNTHETIC_ECO_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NO_RED",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "DRAFT_PR_TARGETING_ECO_OPEN"
+  ],
+  "required_outputs": [
+    "Exact integration manifest",
+    "Normal two-parent merge commit",
+    "Pre-merge RED and synthetic post-merge NON_RED reports",
+    "Post-build critique and Evidence Map",
+    "Independent Reviewer and Verifier PASS",
+    "Draft PR targeting feature/eco-evolutionary-ecology"
+  ],
+  "stop_conditions": [
+    "origin/main moves from 5ba1dcb7 or ECO source moves from 75c7794e before merge creation",
+    "Merge conflict or non-control tree delta appears",
+    "Synthetic standard PC0 remains RED or directional PC0 becomes RED",
+    "Any runtime, passport, ecology or architecture edit is required",
+    "CONTROL_DOCS_ONLY_MERGE approval has not been granted"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "Dependency integration changes ECO branch ancestry and PC0 critical-drift evaluation.",
+    "A false synthetic GREEN could incorrectly unblock H0.0.",
+    "The candidate has no runtime tree delta and changes no ownership, identity or foundation contract, so CRITICAL triggers are absent."
+  ],
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
+  "design_brief": {
+    "problem_statement": "Main generation 66 and the ECO passport now mirror P1B state, but ECO still has merge-base 790fd79f and therefore correctly reports RED critical dependency drift on the registry.",
+    "current_behavior": "Live pre-merge PC0 is RED for ECO even though the registry content was copied into ECO, because copying content does not integrate the canonical commits or move the merge-base.",
+    "desired_behavior": "A normal two-parent merge of exact main 5ba1dcb7 into exact ECO 75c7794e updates ancestry with no runtime tree delta. A synthetic ref at that merge must make aggregate PC0 NON_RED while directional findings remain YELLOW/non-critical.",
+    "alternatives_considered": ["Ignore drift", "Copy registry again", "Rebase/force-push ECO", "Create a normal-merge draft PR into ECO"],
+    "selected_design": "Use a new branch from the exact ECO head, pin exact main/passport inputs, create a non-fast-forward normal merge of main, validate synthetic remote topology in a clean clone, and open a draft PR targeting ECO.",
+    "why_selected": "Normal merge preserves recovery history, explicitly integrates canonical ancestry, avoids force-push, and lets the ECO owner review/merge a zero-runtime-delta candidate.",
+    "affected_owners": ["ECO branch history", "MAIN/PC0 dependency state"],
+    "dependencies": ["origin/main 5ba1dcb7 generation 66", "ECO source 75c7794e", "passport source 20f8bd90", "PC0 critical watched registry path"],
+    "non_goals": ["No registry edit", "No passport edit", "No ECO runtime/research edit", "No G-to-ECO convergence", "No direct push to ECO", "No PR merge"],
+    "expected_risks": ["Source moves during review", "Merge creates hidden tree delta", "Verification uses live remote instead of synthetic exact ref", "PR targets main accidentally"],
+    "validation_plan": [
+      "Fetch/prune and require exact main/ECO/passport identities before merge creation.",
+      "Record live pre-merge PC0 RED as expected evidence, not failure of the candidate.",
+      "Create a normal two-parent merge and assert first parent is exact ECO and second parent exact main.",
+      "Assert source-to-candidate tree delta contains only this Work Order's control/evidence records and no runtime/passport/registry edits.",
+      "In a fresh URL clone, set a disposable synthetic ECO remote-tracking ref to the exact candidate while keeping origin/main exact, then run standard and directional PC0.",
+      "Require standard aggregate NON_RED and directional no RED critical hit.",
+      "Run independent exact-head Reviewer and Verifier, produce Evidence Map and draft PR targeting ECO.",
+      "Stop in WAITING_HUMAN at CONTROL_DOCS_ONLY_MERGE."
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": ["CONTROL_DOCS_ONLY_MERGE", "INPUT_SHA_MOVED", "PC0_REMAINS_RED"],
+  "issued_at_utc": "2026-08-11T07:45:00Z",
+  "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
+  "notes": "The candidate PR must target feature/eco-evolutionary-ecology, never main. H0.0 remains blocked until that PR is actually merged and live PC0 is rerun."
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "distributed_world_simulator.harness_integration_inputs.v1",
+  "main_base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
+  "eco_source_head_sha": "75c7794e3422f9bac69109effe98e237638324e5",
+  "eco_passport_source_commit": "20f8bd9041f97834b417fc2593a8067e37855042",
+  "eco_passport_blob_sha": "f4f6aced5f32121bdb7e0af6ceb15db50520726e",
+  "dry_merge_tree_sha": "275e23549579b2cecd17becdfb27dbb0026ca558",
+  "target_branch": "feature/eco-evolutionary-ecology",
+  "candidate_branch": "control/eco-main-integration",
+  "freshness_rule": "Any change to main_base_sha or eco_source_head_sha before merge commit creation requires stop and re-plan."
+}
