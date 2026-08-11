@@ -3,6 +3,7 @@ extends SceneTree
 const MANIFEST_PATH := "res://config/procedural/g8-6-geomorphology-visual-lab.v1.json"
 const G85_VALIDATION_PATH := "res://validation/g8-5-cross-cell-cross-lod-geomorphology-invariance-validation.json"
 const LAB_SCRIPT_PATH := "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd"
+const LAB_RUNTIME_SCRIPT_PATH := "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd"
 const LAB_SCENE_PATH := "res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn"
 const EXPECTED_G85_HEAD := "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736"
 const EXPECTED_STRIDES: Array[int] = [1, 2, 4, 8]
@@ -40,6 +41,7 @@ func _test_manifest() -> void:
 	_check(int(manifest.get("corridor", {}).get("sample_count", 0)) == 561, "canonical sample count pinned")
 	var source_grid: Array = manifest.get("corridor", {}).get("source_grid", [])
 	_check(source_grid.size() == 2 and int(source_grid[0]) == 33 and int(source_grid[1]) == 17, "source grid pinned")
+	_check(String(manifest.get("script", "")) == LAB_RUNTIME_SCRIPT_PATH, "manifest binds FIX2 runtime wrapper")
 	_check(Array(manifest.get("canonical_inputs", [])).size() == 4, "four canonical G8 inputs")
 	_check(Array(manifest.get("views", [])).size() == 7, "seven graphical views")
 	var lod_policy: Dictionary = manifest.get("presentation_lod", {})
@@ -59,18 +61,23 @@ func _test_manifest() -> void:
 
 
 func _test_presentation_boundary() -> void:
-	_check(FileAccess.file_exists(LAB_SCRIPT_PATH), "G8.6 lab script exists")
+	_check(FileAccess.file_exists(LAB_SCRIPT_PATH), "G8.6 base lab script exists")
+	_check(FileAccess.file_exists(LAB_RUNTIME_SCRIPT_PATH), "G8.6 FIX2 runtime wrapper exists")
 	_check(FileAccess.file_exists(LAB_SCENE_PATH), "G8.6 lab scene exists")
 	var source := FileAccess.get_file_as_string(LAB_SCRIPT_PATH)
+	var runtime_source := FileAccess.get_file_as_string(LAB_RUNTIME_SCRIPT_PATH)
+	var combined_source := source + "\n" + runtime_source
 	var scene := FileAccess.get_file_as_string(LAB_SCENE_PATH)
 	_check(source.find("ErosionDeposition.apply") >= 0, "lab evaluates accepted G8.4 deformation")
 	_check(source.find("canonical_truth_hash") >= 0, "lab exposes canonical truth hash")
 	_check(source.find("show_resolved_geometry") >= 0, "lab has source/resolved presentation toggle")
 	_check(source.find("PRESENTATION_LOD_STRIDES") >= 0, "lab has derived presentation LOD")
 	_check(source.find("seam_overlay") >= 0, "lab has PX/PZ diagnostic seam overlay")
-	_check(scene.find("g8_6_geomorphology_visual_lab.gd") >= 0, "scene binds G8.6 script")
+	_check(runtime_source.find("corridor_radius_m := seam_center_world.length()") >= 0, "FIX2 preserves real G6 centerline radial height")
+	_check(runtime_source.find("_sample_g6_radial_segment") >= 0, "FIX2 follows G6 radial segment interpolation")
+	_check(scene.find("g8_6_geomorphology_visual_lab_fix2.gd") >= 0, "scene binds G8.6 FIX2 runtime wrapper")
 	for forbidden in ["MatterTransaction", "AuthorityRegion", "InterestRegion", "ENetMultiplayerPeer", "save_game", "persist_mutation"]:
-		_check(source.find(forbidden) < 0, "visual lab excludes runtime ownership token %s" % forbidden)
+		_check(combined_source.find(forbidden) < 0, "visual lab excludes runtime ownership token %s" % forbidden)
 
 
 func _check(condition: bool, label: String) -> void:
