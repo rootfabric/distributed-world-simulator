@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0017",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":17,
+  "event_type":"PREDICATE_VERIFIED",
+  "work_state":"VERIFYING",
+  "recorded_at_utc":"2026-08-11T10:46:50Z",
+  "actor":"VERIFIER",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"a3cde435e0e59b1de74d411b502be98f6e3a88ab",
+  "predicate":"RECOVERY_FIXTURE_WITHOUT_CHAT_PASS",
+  "command":"fresh git clone + switch tracked R3 branch + Status/Plan/Resume + test_status_plan_resume_use_r3_epoch",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-WINDOWS-EXECUTION-001.v1.json"],
+  "summary":"A new checkout reconstructed the active R3 epoch/work order and continuation state using Git-versioned data only, without chat/session state."
+}

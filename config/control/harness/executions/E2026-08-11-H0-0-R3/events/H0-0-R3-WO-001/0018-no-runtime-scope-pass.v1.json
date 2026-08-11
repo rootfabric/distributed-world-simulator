@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-0-R3-H0-0-R3-WO-001-0018",
+  "project_epoch":"E2026-08-11-H0-0-R3",
+  "work_order_id":"H0-0-R3-WO-001",
+  "sequence":18,
+  "event_type":"PREDICATE_VERIFIED",
+  "work_state":"VERIFIED",
+  "recorded_at_utc":"2026-08-11T10:47:00Z",
+  "actor":"VERIFIER",
+  "branch":"control/h0-closed-loop-development-r3",
+  "head_sha":"a3cde435e0e59b1de74d411b502be98f6e3a88ab",
+  "predicate":"NO_RUNTIME_SCOPE_CHANGES",
+  "command":"python -m unittest discover -s tests/harness -v :: test_no_runtime_or_historical_execution_paths_in_r3_diff + GitHub PR #75 changed-file audit",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-0-R3/evidence/H0-0-R3-WO-001-WINDOWS-EXECUTION-001.v1.json"],
+  "summary":"The R3 diff remains control/harness-only with no runtime/domain paths and no R1/R2 execution subtree; all required predicates are now complete."
+}
