@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1B-S4",
   "name": "Local Adaptation Robustness Gate",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -72,5 +72,14 @@
     "presentation_inputs_added": false,
     "authority_or_network_inputs_added": false
   },
-  "next_after_acceptance": "Accept aggregate ECO.P1B Local Adaptation Proof if exact Windows reproduces the robustness hashes. Then open the next ecology checkpoint without introducing migration until the dedicated dispersal/biogeography stage."
+  "next_after_acceptance": "ECO.P1B aggregate ACCEPTED; open ECO.P1C Strategy Competition Proof. Migration remains deferred to dedicated dispersal/biogeography work.",
+  "windows_confirmation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+    "focused_assertions": 86,
+    "restart_assertions": 5,
+    "failures": 0,
+    "aggregate_hash": "2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05",
+    "neutral_hash": "175bbef1c085d0783bd0d48f23bbc9a865cc438ae09e15785d4e48cdf1cc27bf",
+    "long_run_hash": "7f68ed87e10fa7dd6f9f79c6d50d0a82cf4360e4a416dc481e0e6005bcfb44f3"
+  }
 }
