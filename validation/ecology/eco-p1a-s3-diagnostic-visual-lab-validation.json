@@ -20,6 +20,15 @@
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
   },
+  "published_blob_verification": {
+    "controlled_trait_probes_v1.gd": "523bf41482b49f19f77fe50938fd241fe9b2b121",
+    "eco_p1a_s3_lab_dataset_v1.gd": "3f22da7c2473412821a206e2d059ccbab0fb33fa",
+    "eco_p1a_s3_visual_lab.gd": "88e9e9c6fc43b557cbc27b7211ecc79865568174",
+    "eco_p1a_s3_visual_lab.tscn": "1ef4a27f675143559b95b120f5fe92835f206e13",
+    "eco_p1a_s3_visual_lab_acceptance.gd": "f5756bd91720c09b67ed11749e1d476a8a7359ce",
+    "RUN_ECO_P1A_S3_TESTS.ps1": "f7abbc6e06018aca35dcd46f6990763af199323f",
+    "result": "MATCHED_LOCAL_TESTED_CONTENT"
+  },
   "probe_evidence": [
     "drought-tolerant probe improves dry-ridge net balance over BASE",
     "deep-root probe improves dry ridge over shallow-root probe",
