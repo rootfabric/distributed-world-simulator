@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.P1B-S3",
+  "name": "Regional Population Field and Trait Distribution",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1B-S2 ACCEPTED",
+  "experiment_revision": "ECO.P1B-S3.1",
+  "one_ancestor_rule": true,
+  "baseline": {
+    "grid": [7, 7],
+    "patch_count": 49,
+    "population_per_patch": 6,
+    "generations": 8,
+    "offspring_per_parent": 2,
+    "lineage_seed": 918221,
+    "alternate_lineage_seed": 918222
+  },
+  "selection_rule": {
+    "environment_input": "accepted P1A EnvironmentSampleV1",
+    "selection_input": "accepted P1A PlantResourceModelV1 net_resource_balance",
+    "new_fitness_score": false,
+    "mutation_stream_reads_environment": false,
+    "diagnostic_region_labels_affect_selection": false
+  },
+  "diagnostic_regions": {
+    "definition": "post-hoc quartiles computed from environment fields only after patch environments exist",
+    "regions": ["DRY", "WET", "SHADED", "SUNLIT"],
+    "simulation_role": "NONE_DIAGNOSTIC_ONLY"
+  },
+  "neutral_control": {
+    "enabled": true,
+    "purpose": "Run the same spatial founder/mutation seeds against one uniform mean environment so random spatial mutation structure can be separated from heterogeneous-environment selection.",
+    "first_generation_candidate_pool_match": "REQUIRED_PATCH_BY_PATCH"
+  },
+  "determinism_baseline": {
+    "result_hash": "cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56",
+    "neutral_hash": "b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6",
+    "alternate_result_hash": "ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b"
+  },
+  "local_evidence": {
+    "initial_average_net": -0.15744116082374,
+    "final_average_net": 0.18194278221549,
+    "water_preference_vs_moisture": 0.84993290943488,
+    "root_depth_vs_moisture": -0.59843213283152,
+    "shade_tolerance_vs_sunlight": -0.44673843532395,
+    "neutral_water_preference_vs_moisture": 0.18267791279887,
+    "neutral_root_depth_vs_moisture": 0.09853453500786,
+    "neutral_shade_tolerance_vs_sunlight": 0.21176886290468,
+    "alternate_seed_repeats_specialization": true
+  },
+  "invariants": {
+    "accepted_p1a_truth_modified": false,
+    "p1b_s1_mutation_kernel_modified": false,
+    "p1b_s2_selection_baseline_modified": false,
+    "species_classes_added": false,
+    "biome_roles_added": false,
+    "migration_enabled": false,
+    "inter_patch_competition_enabled": false,
+    "seed_dispersal_trait_mutates": false,
+    "presentation_inputs_added": false
+  },
+  "next_after_acceptance": "ECO.P1B-S4 Local Adaptation Robustness Gate: multi-seed/longer-run aggregate acceptance of regional specialization before P1B closes. Migration remains deferred to ECO.P2 dispersal/biogeography work."
+}
