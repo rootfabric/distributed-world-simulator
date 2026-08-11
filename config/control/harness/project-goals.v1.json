@@ -1,0 +1,89 @@
+{
+  "schema": "distributed_world_simulator.harness_project_goals.v1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "canonical_branch": "main",
+  "north_star": {
+    "id": "DWS_NORTH_STAR",
+    "goal": "Build a persistent seamless distributed world simulator where large-scale construction, terrain, matter, characters and multiplayer authority compose without duplicate truth layers.",
+    "success_dimensions": [
+      "canonical_truth_integrity",
+      "seamless_scale",
+      "restart_recovery",
+      "network_authority",
+      "incremental_representation",
+      "parallel_program_convergence"
+    ]
+  },
+  "current_goal_graph": [
+    {
+      "id": "HARNESS_H0_1",
+      "program": "HARNESS",
+      "title": "H0.1 Closed-Loop C22 Pilot",
+      "priority": 100,
+      "depends_on": [
+        "PC0_MAIN_INTEGRATED"
+      ],
+      "target_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+      "project_checkpoint": "C22_CURRENT_MAIN_MERGE_READY",
+      "reason": "First autonomous pilot must prove restart-safe branch creation, constrained implementation, independent verification, PC0 audit and checkpoint proposal on a high-value but bounded Construction convergence task."
+    },
+    {
+      "id": "CONSTRUCTION_TRAIN",
+      "program": "TS/T",
+      "title": "Construction convergence to real heterogeneous base",
+      "priority": 95,
+      "depends_on": [],
+      "sequence": [
+        "C22_CURRENT_MAIN_MERGE_READY",
+        "C22_MAIN_INTEGRATED",
+        "TS0_4_CEILING_CLASSIFIED",
+        "T2_0_ACTIVATED"
+      ]
+    },
+    {
+      "id": "NETWORK_TRAIN",
+      "program": "NX",
+      "title": "Owner-authority runtime convergence",
+      "priority": 80,
+      "depends_on": [
+        "HARNESS_H0_1"
+      ],
+      "sequence": [
+        "NX_C1_IMPLEMENTED_CANDIDATE",
+        "NX_SOURCE_ACCEPTED"
+      ]
+    },
+    {
+      "id": "ARCHITECTURE_TRAIN",
+      "program": "R3",
+      "title": "Refresh and promote GLOBAL-P0 R3",
+      "priority": 85,
+      "depends_on": [],
+      "sequence": [
+        "R3_REFRESHED_CANDIDATE",
+        "R3_PC0_NON_RED",
+        "GLOBAL_P0_R3_CANONICAL"
+      ],
+      "human_gate": "ARCHITECTURE_PROMOTION"
+    },
+    {
+      "id": "G8_ACCEPTANCE",
+      "program": "G",
+      "title": "Close G8 graphical acceptance",
+      "priority": 70,
+      "depends_on": [],
+      "target_checkpoint": "G8_FULL_ACCEPTANCE",
+      "work_order_type": "HUMAN_OBSERVATION"
+    },
+    {
+      "id": "CH9_6_ACCEPTANCE",
+      "program": "CH",
+      "title": "Close CH9.6 graphical/recovery acceptance",
+      "priority": 70,
+      "depends_on": [],
+      "target_checkpoint": "CH9_6_ACCEPTED",
+      "work_order_type": "HUMAN_OBSERVATION"
+    }
+  ],
+  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy; never bypass dependency, ownership, validation, epoch or human-approval gates."
+}
