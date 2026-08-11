@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R2",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "IMPLEMENTED",
+  "state": "VERIFYING",
   "work_order_type": "CONTROL",
   "base_sha": "40c117bb16a635b03acfbaa7d9fe18b74245c989",
   "branch": "control/h0-closed-loop-development-r2",
@@ -144,5 +144,5 @@
   "human_approval_required_for": [
     "CONTROL_DOCS_ONLY_MERGE"
   ],
-  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Fresh R2 scaffold transfer is IMPLEMENTED; verification and phase-independent evidence isolation remain pending."
+  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Phase-independent R2 isolation is implemented. Verification is active; PC0_NON_RED is proven by GitHub Actions run 31480090577, while the fresh H0 harness unit suite and public Status/Plan/Resume predicates remain pending."
 }
