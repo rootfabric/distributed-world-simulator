@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_5_cross_cell_cross_lod_geomorphology_invariance.v1",
   "checkpoint": "g8.5-cross-cell-cross-lod-geomorphology-invariance",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -53,8 +53,11 @@
   "acceptance": {
     "focused_runner": "RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
     "full_acceptance_runner": "RUN_G8_5_FULL_ACCEPTANCE.ps1",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING"
+    "focused": "PASS",
+    "full_world_regression": "PASS",
+    "tested_head": "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "working_tree": "CLEAN"
   },
   "next_if_accepted": "G8.6_GEOMORPHOLOGY_VISUAL_LAB"
 }
