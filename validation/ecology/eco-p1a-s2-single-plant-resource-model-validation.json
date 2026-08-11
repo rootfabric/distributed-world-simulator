@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1A-S2",
-  "decision": "CANDIDATE_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "scope": "research-only fixed-genome resource balance and bounded patch biomass",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "focused_test": {
     "script": "res://tests/research/ecology/eco_p1a_s2_single_plant_resource_acceptance.gd",
     "runner": "RUN_ECO_P1A_S2_TESTS.ps1",
@@ -18,6 +18,14 @@
     "failures": 0,
     "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "result": "PASS_UNCHANGED"
+  },
+  "windows_evidence": {
+    "worktree": "C:\\Godot\\lunar-world-eco-evolutionary-ecology",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+    "parent_s1": "PASS_109_ASSERTIONS",
+    "s2": "PASS_235_ASSERTIONS",
+    "simulation_hash_match": true,
+    "result": "PASS_CLEAN"
   },
   "published_blob_verification": {
     "plant_genome_v1.gd": "6d00dbb8286e9856bd5db8a8d7d4fd308a0b72bd",
@@ -40,7 +48,6 @@
     "S2 source contains no biome placement, mutation, species competition, camera/LOD, authority, network or material ownership"
   ],
   "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
-  "windows_confirmation": "PENDING",
-  "execution_note": "The focused S2 model/test was executed in the minimal ECO Godot project using the provided Godot 4.7.1 double Linux binary. S2 produced 235/235 assertions and the fixed simulation hash; S1 parent regression remained 109/109. Git blob SHA-1 for every published S2 model/test file matches the local tested content. The PowerShell runner is published and awaits exact-Windows confirmation in the full checkout.",
-  "next": "Exact Windows focused confirmation, then P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes"
+  "execution_note": "S2 passed on the exact Windows worktree with the canonical custom Godot 4.7.1 double build: parent S1 109/109, S2 235/235, and the accepted simulation hash matched exactly. The prior Linux focused result and published blob verification match the same model/test content.",
+  "next": "ECO.P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes"
 }
