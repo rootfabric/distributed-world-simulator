@@ -40,25 +40,105 @@
     "harness_execution_events_are_append_only_in_worker_branch": true,
     "harness_default_autonomy_stops_before_runtime_merge": true
   },
-  "branch_lifecycle": ["PLANNED", "ACTIVE", "IMPLEMENTED_CANDIDATE", "FIX_REQUIRED", "ACCEPTED", "SUPERSEDED", "FROZEN"],
+  "branch_lifecycle": [
+    "PLANNED",
+    "ACTIVE",
+    "IMPLEMENTED_CANDIDATE",
+    "FIX_REQUIRED",
+    "ACCEPTED",
+    "SUPERSEDED",
+    "FROZEN"
+  ],
   "health_levels": {
     "GREEN": "Development may continue. No blocking control-plane inconsistency is known.",
     "YELLOW": "Development may continue, but a convergence/control review is required before the next major acceptance.",
     "RED": "The next declared stage or acceptance is blocked until the listed control issue is resolved."
   },
-  "required_branch_passport_fields": ["schema", "control_plane_revision", "architecture_revision", "branch", "program", "role", "short_description", "purpose", "expected_outcome", "current_stage", "stage_status", "progress_note", "last_accepted_checkpoint", "next_stage", "parent_branch_or_checkpoint", "base_commit", "dependencies", "owned_paths", "watched_paths", "critical_watched_paths", "runtime_paths", "validation_paths", "tested_heads", "ownership_claims", "forbidden_foundation_ownership", "blockers", "health_declared"],
-  "central_registry_mirror_fields": ["branch", "program", "role", "current_stage", "stage_status", "blockers", "health_declared"],
-  "central_registry_informational_fields": ["short_description", "purpose", "expected_outcome", "progress_note", "last_accepted_checkpoint", "next_stage"],
+  "required_branch_passport_fields": [
+    "schema",
+    "control_plane_revision",
+    "architecture_revision",
+    "branch",
+    "program",
+    "role",
+    "short_description",
+    "purpose",
+    "expected_outcome",
+    "current_stage",
+    "stage_status",
+    "progress_note",
+    "last_accepted_checkpoint",
+    "next_stage",
+    "parent_branch_or_checkpoint",
+    "base_commit",
+    "dependencies",
+    "owned_paths",
+    "watched_paths",
+    "critical_watched_paths",
+    "runtime_paths",
+    "validation_paths",
+    "tested_heads",
+    "ownership_claims",
+    "forbidden_foundation_ownership",
+    "blockers",
+    "health_declared"
+  ],
+  "central_registry_mirror_fields": [
+    "branch",
+    "program",
+    "role",
+    "current_stage",
+    "stage_status",
+    "blockers",
+    "health_declared"
+  ],
+  "central_registry_informational_fields": [
+    "short_description",
+    "purpose",
+    "expected_outcome",
+    "progress_note",
+    "last_accepted_checkpoint",
+    "next_stage"
+  ],
   "overlap_policy": {
-    "ignored_patterns": ["PROJECT_CONTROL.md", "CONTROL_PROJECT.ps1", "scripts/control/**", "config/control/**", "docs/control/**", ".github/workflows/project-control.yml", "config/architecture/global-program-roadmap.v1.json", "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md", "config/network/network-experience-roadmap.v1.json"],
-    "yellow_patterns": ["docs/**", "validation/**"],
+    "ignored_patterns": [
+      "PROJECT_CONTROL.md",
+      "CONTROL_PROJECT.ps1",
+      "scripts/control/**",
+      "config/control/**",
+      "docs/control/**",
+      ".github/workflows/project-control.yml",
+      "config/architecture/global-program-roadmap.v1.json",
+      "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+      "config/network/network-experience-roadmap.v1.json"
+    ],
+    "yellow_patterns": [
+      "docs/**",
+      "validation/**"
+    ],
     "same_runtime_or_contract_file_in_two_active_branches": "RED"
   },
   "directional_watch_policy": {
     "watched_hit_health": "YELLOW",
     "critical_hit_health": "RED",
-    "producer_suppression_stage_statuses": ["SOURCE_ACCEPTED_HANDOFF_COMPLETE"],
+    "producer_suppression_stage_statuses": [
+      "SOURCE_ACCEPTED_HANDOFF_COMPLETE"
+    ],
     "rule": "An active producer branch changing a path matched by another registered branch's watched_paths makes the consumer YELLOW; critical_watched_paths makes the consumer RED. Accepted handoff evidence remains a consumer but is suppressed as a producer."
   },
-  "merge_gate": ["BRANCH_REGISTERED", "BRANCH_PASSPORT_PRESENT", "CENTRAL_AND_BRANCH_IDENTITY_MATCH", "ARCHITECTURE_REVISION_MATCH", "PARENT_CHECKPOINT_VALID", "NO_DUPLICATE_FOUNDATION_OWNERSHIP", "NO_UNRESOLVED_CRITICAL_DEPENDENCY_DRIFT", "NO_UNRESOLVED_CRITICAL_DIRECTIONAL_WATCH_HIT", "NO_UNRESOLVED_CRITICAL_CROSS_BRANCH_OVERLAP", "RUNTIME_VALIDATION_FRESH", "FOCUSED_VALIDATION_PASS", "REQUIRED_REGRESSION_PASS", "STATUS_DIMENSIONS_REMAIN_DISTINCT"]
+  "merge_gate": [
+    "BRANCH_REGISTERED",
+    "BRANCH_PASSPORT_PRESENT",
+    "CENTRAL_AND_BRANCH_IDENTITY_MATCH",
+    "ARCHITECTURE_REVISION_MATCH",
+    "PARENT_CHECKPOINT_VALID",
+    "NO_DUPLICATE_FOUNDATION_OWNERSHIP",
+    "NO_UNRESOLVED_CRITICAL_DEPENDENCY_DRIFT",
+    "NO_UNRESOLVED_CRITICAL_DIRECTIONAL_WATCH_HIT",
+    "NO_UNRESOLVED_CRITICAL_CROSS_BRANCH_OVERLAP",
+    "RUNTIME_VALIDATION_FRESH",
+    "FOCUSED_VALIDATION_PASS",
+    "REQUIRED_REGRESSION_PASS",
+    "STATUS_DIMENSIONS_REMAIN_DISTINCT"
+  ]
 }
