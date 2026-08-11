@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 58,
+  "registry_generation": 59,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T02:40:00Z",
+  "updated_at_utc": "2026-08-11T02:43:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -109,7 +109,7 @@
       "expected_outcome": "Canonical main gains a configurable OWNER_AUTHORITATIVE_VALIDATED locomotion profile, smooth remote interpolation and rollback-safe optimistic item presentation with physics/render single-writer separation and bounded input metadata handling.",
       "current_stage": "NX.C0 Owner Authority Convergence Preparation",
       "stage_status": "ACTIVE_GREEN_PREPARATION",
-      "progress_note": "Fresh convergence branch created from main 9391ccfce40a14a0f568f81c4c68ddfc76f79c76. The legacy feature/m7-sequence-aware-reconciliation-fix10-fix6-semantic-baseline lineage is retained only as research/evidence; its validated owner-authority vertical slice at runtime head 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record at 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are source evidence, not a merge base. No runtime code has been transferred in NX.C0, so there is no runtime drift or cross-branch overlap yet.",
+      "progress_note": "Fresh convergence branch has actual merge-base main a4cc8402d71424261f5bb50dac8fedbcd8c99bb6 (T1B aggregate handoff already included). The legacy feature/m7-sequence-aware-reconciliation-fix10-fix6-semantic-baseline lineage is retained only as research/evidence; its validated owner-authority vertical slice at runtime head 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record at 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are source evidence, not a merge base. No runtime code has been transferred in NX.C0, so there is no runtime drift or cross-branch overlap yet.",
       "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice accepted as legacy branch evidence on 2026-08-11",
       "next_stage": "NX.C1 Minimal Runtime Transfer: reimplement only movement authority profile/service/client-server composition and same-revision item rollback on top of current main. Do not cherry-pick legacy FIX7 render CharacterBody writes or the stacked FIX6/FIX7/FIX8/FIX9/FIX10 implementation ladder. Mark NX YELLOW while runtime transfer is unvalidated, then return GREEN only after exact-Windows focused, full world/core, two-client and dependency revalidation evidence is recorded in tested_heads.",
       "health_declared": "GREEN",
