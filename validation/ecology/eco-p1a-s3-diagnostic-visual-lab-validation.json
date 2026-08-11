@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1A-S3",
-  "decision": "CANDIDATE_HEADLESS_PASS_GRAPHICAL_PENDING",
+  "decision": "AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
   "focused_test": {
     "assertions": 114,
     "failures": 0,
@@ -19,6 +19,17 @@
   "parent_regression": {
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
+  },
+  "windows_evidence": {
+    "checkout_head": "6b5f3592696dc7db0897ca8cef69c3c395f32589",
+    "worktree": "C:\\Godot\\lunar-world-eco-evolutionary-ecology",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
+    "p1a_s1": "PASS_109_ASSERTIONS",
+    "p1a_s2": "PASS_235_ASSERTIONS",
+    "p1a_s3": "PASS_114_ASSERTIONS",
+    "focused_dataset_hash_match": true,
+    "scene_headless_hash_match": true,
+    "result": "PASS_CLEAN"
   },
   "published_blob_verification": {
     "controlled_trait_probes_v1.gd": "523bf41482b49f19f77fe50938fd241fe9b2b121",
@@ -40,5 +51,6 @@
   ],
   "truth_boundary": "Visual lab consumes a derived Dataset built from accepted S1/S2 contracts; the lab script does not recompute environment or photosynthetic/resource equations.",
   "graphical_confirmation": "PENDING",
-  "next": "Exact Windows automated runner, then manual graphical review; on PASS accept S3 and open P1A-S4."
+  "execution_note": "Exact Windows automated runner passed cleanly on checkout 6b5f3592: S1 109/109, S2 235/235, S3 focused 114/114, focused dataset hash matched, and the 33x33 BASE visual-scene headless hash matched. Only manual graphical review remains before full S3 acceptance.",
+  "next": "Launch the visual lab graphically and inspect views 1-8, Q/E probes and click diagnostics; on manual PASS accept S3 and open P1A-S4."
 }
