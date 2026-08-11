@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 51,
+  "registry_generation": 52,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T01:10:00Z",
+  "updated_at_utc": "2026-08-11T01:13:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -17,13 +17,13 @@
       "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
       "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
       "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
-      "current_stage": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-      "stage_status": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
-      "progress_note": "G8.4 Erosion / Deposition Baseline is ACCEPTED after exact-Windows full acceptance on tested head 82cc31429f2bf2ea419bf1b50159838eea51c727. G8.5 remains proof-only with no new terrain runtime. First exact-Windows focused attempt on 00de94e2a75320de3ab66b9e4a52f55aa9067c75 passed editor import and accepted regressions G7.3=122, G8.0=84, G8.1=49, G8.2=63, G8.3=107 and G8.4=93 assertions, then stopped before G8.5 proof execution on three GDScript type-inference parse errors in the test harness. The failure is classified TEST_HARNESS_PARSE_ONLY, not semantic/runtime regression. FIX1 at fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a explicitly types the three direction_to_cell results as Dictionary; runtime, geomorphology formulas, semantic inputs and proof meaning are unchanged. Focused retest and full acceptance remain required.",
-      "last_accepted_checkpoint": "G8.4 Erosion / Deposition Baseline",
-      "next_stage": "Sync latest feature/g8-geomorphology and rerun RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_5_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only full PASS unlocks G8.6 Geomorphology Visual Lab.",
+      "current_stage": "G8.6 Geomorphology Visual Lab",
+      "stage_status": "IMPLEMENTED_CANDIDATE_AUTOMATED_AND_MANUAL_VALIDATION_PENDING",
+      "progress_note": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance is ACCEPTED on exact-Windows tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736 with G8.4 parent, G7.3 parent proof, final geomorphology invariance, world/core through NX4 and clean lifecycle all PASS. G8.6 is implemented as a derived-presentation 33x17 local river corridor centered on the real accepted G6 PX/PZ seam crossing. It evaluates accepted G8.4 deformation from canonical G3+G5+G6 semantics through G7 and exposes resolved height, total deformation and all five component views. Source/resolved geometry toggle, river/seam overlays and presentation LOD strides 1/2/4/8 are presentation-only. Automated focused/headless + fresh world/core regression and manual graphical acceptance remain required before G8 Full Acceptance.",
+      "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
+      "next_stage": "Run RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_6_AUTOMATED_ACCEPTANCE.ps1 on the same clean checkout. Then launch the G8.6 scene and complete source/resolved, 1..7 component, LOD, PX/PZ seam and river-coherence graphical checks. Only automated plus manual PASS unlocks G8 Full Acceptance.",
       "health_declared": "YELLOW",
-      "blockers": ["G8_5_FOCUSED_INVARIANCE_VALIDATION_REQUIRED", "G8_5_FULL_WORLD_REGRESSION_REQUIRED"]
+      "blockers": ["G8_6_AUTOMATED_VALIDATION_REQUIRED", "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"]
     },
     "T": {
       "program": "T",
@@ -153,7 +153,7 @@
     }
   },
   "global_blocked_transitions": [
-    {"stage": "G8.6 START", "blocked_by": "G8_5_FOCUSED_AND_FULL_ACCEPTANCE_REQUIRED"},
+    {"stage": "G8 FULL ACCEPTANCE", "blocked_by": "G8_6_AUTOMATED_AND_MANUAL_ACCEPTANCE_REQUIRED"},
     {"stage": "T2.0 START", "blocked_by": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"},
     {"stage": "CH STAGE AFTER CH9.6 START", "blocked_by": "CH9_6_AUTOMATED_GRAPHICAL_ACCEPTANCE_AND_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"}
   ],
