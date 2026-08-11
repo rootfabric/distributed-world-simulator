@@ -9,10 +9,10 @@
   "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
   "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
   "current_stage": "ECO.P1A Environmental Causality Baseline",
-  "stage_status": "P1A_S1_ACCEPTED_P1A_S2_LINUX_FOCUSED_PASS_WINDOWS_PENDING_RESEARCH_ONLY",
-  "progress_note": "P1A-S1 is fully accepted including clean exact-Windows runner evidence. P1A-S2 now implements one fixed PlantGenome, explicit light/water/nutrient/temperature responses, maintenance/root/structural/growth/reproduction/stress costs, dominant limiting factors and a bounded 120-season aggregate biomass simulation. Local Godot 4.7.1 double focused acceptance passed 235/235 with simulation hash 618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c; parent S1 regression remained 109/109 with unchanged environment hash. Exact Windows confirmation is the only S2 gate before S3.",
-  "last_accepted_checkpoint": "ECO.P1A-S1 Environment Contracts + Deterministic Fixture",
-  "next_stage": "Run RUN_ECO_P1A_S2_TESTS.ps1 on exact Windows checkout. Require parent S1 109/109 and S2 235/235 with simulation hash 618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c. On PASS, record P1A-S2 ACCEPTED and open P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes; mutation/evolution remains blocked.",
+  "stage_status": "P1A_S2_ACCEPTED_P1A_S3_HEADLESS_PASS_WINDOWS_GRAPHICAL_PENDING_RESEARCH_ONLY",
+  "progress_note": "P1A-S1 and P1A-S2 are accepted on exact Windows evidence. P1A-S3 now adds a presentation-only diagnostic heatmap lab plus seven controlled trait probes on top of accepted S1/S2 truth. Local Godot 4.7.1 double focused acceptance passes 114/114 with dataset hash dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690; scene headless smoke passes on a 33x33 dataset with hash 9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c; parent S2 remains 235/235 and S1 remains 109/109. Published S3 blobs match locally tested content. Exact Windows automated confirmation and manual graphical review are the remaining S3 gates.",
+  "last_accepted_checkpoint": "ECO.P1A-S2 Single-Plant Resource Model",
+  "next_stage": "Run RUN_ECO_P1A_S3_TESTS.ps1 on exact Windows checkout, then launch scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn graphically and inspect views 1-8, Q/E controlled probes and click diagnostics. On automated + graphical PASS, accept P1A-S3 and open P1A-S4 Determinism, Sensitivity and Failure Classification. Mutation/evolution remains blocked until P1A acceptance.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -60,7 +60,16 @@
     "validation/ecology/eco-p1a-s2-single-plant-resource-model-validation.json",
     "tests/research/ecology/eco_p1a_s2_single_plant_resource_acceptance.gd",
     "RUN_ECO_P1A_S2_TESTS.ps1",
-    "docs/checkpoints/ECO_P1A_S2_SINGLE_PLANT_RESOURCE_MODEL_CANDIDATE_RU.md",
+    "docs/checkpoints/ECO_P1A_S2_SINGLE_PLANT_RESOURCE_MODEL_ACCEPTED_RU.md",
+    "config/ecology/eco-p1a-s3-diagnostic-visual-lab.v1.json",
+    "validation/ecology/eco-p1a-s3-diagnostic-visual-lab-validation.json",
+    "tests/research/ecology/eco_p1a_s3_visual_lab_acceptance.gd",
+    "RUN_ECO_P1A_S3_TESTS.ps1",
+    "scripts/research/ecology/controlled_trait_probes_v1.gd",
+    "scripts/research/ecology/eco_p1a_s3_lab_dataset_v1.gd",
+    "scripts/labs/ecology/eco_p1a_s3_visual_lab.gd",
+    "scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn",
+    "docs/checkpoints/ECO_P1A_S3_DIAGNOSTIC_VISUAL_LAB_CANDIDATE_RU.md",
     "docs/future_features/evolutionary_ecology/README_RU.md",
     "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
     "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
@@ -68,12 +77,13 @@
     "docs/future_features/evolutionary_ecology/P0_TECHNICAL_ALIGNMENT_RU.md"
   ],
   "tested_heads": {
-    "documentation": "c1350e04c34bafb1c6c634d10bbd2f736bd75da3",
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
-    "p1a_s1_focused": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7_WINDOWS_CLEAN",
-    "p1a_s2_focused_content_boundary": "e691d8f3447c3b3c3ee6f08d648989ab0ae5bb7c",
-    "p1a_s2_focused": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c_LINUX",
-    "p1a_s2_windows": "PENDING",
+    "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7_WINDOWS_CLEAN",
+    "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c_WINDOWS_CLEAN",
+    "p1a_s3_focused": "PASS_114_ASSERTIONS_DATASET_HASH_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690_LINUX",
+    "p1a_s3_scene_headless": "PASS_33x33_HASH_9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c_LINUX",
+    "p1a_s3_windows": "PENDING",
+    "p1a_s3_graphical": "PENDING",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
   "ownership_claims": [
@@ -100,7 +110,7 @@
     "PRESENTATION_MESH_AS_TRUTH"
   ],
   "blockers": [
-    "P1A_S2_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_P1A_S3",
+    "P1A_S3_EXACT_WINDOWS_AND_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
