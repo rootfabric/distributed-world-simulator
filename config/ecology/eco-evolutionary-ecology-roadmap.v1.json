@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R18-2026-08-12",
+  "revision": "ECO-R19-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
   "current_checkpoint": "ECO.PH",
-  "current_step": "PH4 Seed Development Lifecycle implemented; local focused/restart PASS; exact-Windows pending",
-  "last_accepted_step": "ECO.PH3C Morphology-Aware Selection / Competition Convergence",
+  "current_step": "PH5-S1 PlantRenderDescription + RendererProfile Foundation implemented; local core fixture PASS; exact-Windows real-PH2 + graphical pending",
+  "last_accepted_step": "ECO.PH4 Seed Development Lifecycle",
   "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -19,7 +19,8 @@
     "INHERITED_DEVELOPMENT_PROGRAM_NE_REALIZED_PHENOTYPE",
     "SEED_HEREDITY_NE_REALIZED_PHENOTYPE",
     "SEED_PAYLOAD_NE_GROWTH_GRAPH_OR_MESH",
-    "GROWTH_GRAPH_NE_RENDERER_PROFILE_NE_LOD",
+    "GROWTH_GRAPH_NE_PLANT_RENDER_DESCRIPTION_NE_RENDERER_PROFILE_NE_LOD",
+    "RENDER_PROFILE_NE_ECOLOGY_IDENTITY",
     "ACCEPTED_P1_RESOURCE_TRUTH_NE_PH3_MORPHOLOGY_RESEARCH_OVERLAY",
     "MORPHOLOGY_SELECTION_CLAIM_REQUIRES_RESOURCE_ONLY_CAUSAL_CONTROL",
     "REPRESENTATION_LEVEL_NE_SPECIES_OR_POPULATION_IDENTITY",
@@ -32,9 +33,10 @@
     {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","decision":"ACCEPTED","scope":"environment/resource causality + local adaptation + ecological-trait strategy coexistence; morphology coupling was outside this acceptance"},
     {"id":"ECO.PH0","name":"Development Trait Contract","decision":"ACCEPTED","evidence":"exact Windows 63/63; development hash 9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea; IndividualSeed 959597643576420676"},
     {"id":"ECO.PH1","name":"Deterministic GrowthGraph Skeleton Lab","decision":"ACCEPTED","evidence":"exact Windows focused 128 + visual smoke 10 + restart 4; graph hash 6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451; graphical PASS_BY_USER_OBSERVATION"},
-    {"id":"ECO.PH2","name":"Environment-Coupled Development / Plasticity","decision":"ACCEPTED","evidence":"exact Windows P1C-S4 15 + PH0 63 + PH1 128 + PH2 107 + visual smoke 12 + restart 5; reference da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10; diagnostic graphical PASS_BY_USER_OBSERVATION"},
+    {"id":"ECO.PH2","name":"Environment-Coupled Development / Plasticity","decision":"ACCEPTED","evidence":"exact Windows P1C-S4 15 + PH0 63 + PH1 128 + PH2 107 + visual smoke 12 + restart 5; reference da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10; graphical PASS_BY_USER_OBSERVATION_DIAGNOSTIC"},
     {"id":"ECO.PH3","name":"Morphology-to-Resource Coupling","decision":"ACCEPTED","evidence":"exact Windows P1C-S4 15 + PH0 63 + PH1 128 + PH2 107 + PH3 217 + visual smoke 17 + restart 5; profile 1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a; reference 58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e; graphical PASS_BY_USER_OBSERVATION_DIAGNOSTIC"},
-    {"id":"ECO.PH3C","name":"Morphology-Aware Selection / Competition Convergence","decision":"ACCEPTED_CAUSAL_PAIRWISE_SCOPE","evidence":"exact Windows focused 97 + restart 6; aggregate 294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb; SUN wide share 0.64978120448288; DRY same-pair wide share 0.31553289557419 so winner reverses to narrow; branch-low 0.67681023488994; height-low 0.88312054209733; giant-dense 0.00014414428813; all resource-only controls neutral"}
+    {"id":"ECO.PH3C","name":"Morphology-Aware Selection / Competition Convergence","decision":"ACCEPTED_CAUSAL_PAIRWISE_SCOPE","evidence":"exact Windows focused 97 + restart 6; aggregate 294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb; SUN wide share 0.64978120448288; DRY same-pair wide share 0.31553289557419 so winner reverses to narrow; branch-low 0.67681023488994; height-low 0.88312054209733; giant-dense 0.00014414428813; all resource-only controls neutral"},
+    {"id":"ECO.PH4","name":"Seed Development Lifecycle","decision":"ACCEPTED","evidence":"exact Windows P1C-S4 15 + PH0 63 + PH1 128 + PH2 107 + PH3 217 + PH3C 97/restart 6 + PH4 focused 718/restart 5; profile d8c8b9ff56ec630b832c4b6bdbb49d39147586f4d97e6535dcc6fbd37c29a795; founder 1b5ff858fc57fdf98d75eb796cc6d7e6aa68b0b0e51e8321611e13b024cdc396; lifecycle 88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1; batch 48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"}
   ],
   "next_checkpoint": {
     "id": "ECO.PH",
@@ -44,12 +46,15 @@
     "rendering_architecture_doc": "docs/future_features/evolutionary_ecology/PLANT_RENDERING_ARCHITECTURE_RU.md",
     "steps": [
       {"id":"PH0","name":"Development Trait Contract","status":"ACCEPTED","evidence":{"assertions":63,"development_traits_hash":"9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea","individual_seed":959597643576420676,"platform":"exact Windows"}},
-      {"id":"PH1","name":"Deterministic GrowthGraph Skeleton Lab","status":"ACCEPTED","evidence":{"focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"base_graph_hash":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451","probe_count":9,"graphical":"PASS_BY_USER_OBSERVATION","renderer_scope":"DEBUG_SKELETON_ONLY"}},
-      {"id":"PH2","name":"Environment-Coupled Development / Plasticity","status":"ACCEPTED","evidence":{"focused_assertions":107,"visual_smoke_assertions":12,"restart_assertions":5,"plasticity_profile_hash":"16016a3ffb14c63d442a1f466bd7527754b89a43f8d8ab0af9b60c1a7cd0866d","reference_phenotype_hash":"da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10","shade_phenotype_hash":"bf939daf1cd04e0b06f48e23feae9714326827a8e86d2125a03484f1892537f0","sun_phenotype_hash":"b195338cc51b717893a6e23e9e7e962cef0e9b7b0f764054c1dc90962998fdaa","dry_phenotype_hash":"7efb4998e6122c75d8ebf54157d7c692365d28f3abe20d891c4d3a5a05c7f61f","platform":"exact Windows","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC"}},
-      {"id":"PH3","name":"Morphology-to-Resource Coupling","status":"ACCEPTED","evidence":{"focused_assertions":217,"visual_smoke_assertions":17,"restart_assertions":5,"profile_hash":"1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a","reference_coupling_hash":"58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e","giant_dense_hash":"eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704","platform":"exact Windows","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC","tradeoffs":["HEIGHT_BENEFIT_AND_STRUCTURAL_COST","CROWN_LIGHT_AND_DROUGHT_WATER_COST","BRANCH_CAPTURE_AND_BUILD_MAINTENANCE_COST","BIGGER_ALWAYS_BETTER_REJECTED"]}},
-      {"id":"PH3C","name":"Morphology-Aware Selection / Competition Convergence","status":"ACCEPTED","scope":"CAUSAL_PAIRWISE_SELECTION_NOT_GLOBAL_COEXISTENCE","evidence":{"focused_assertions":97,"restart_assertions":6,"aggregate_hash":"294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb","sun_wide_share":0.64978120448288,"dry_wide_share":0.31553289557419,"branch_low_share":0.67681023488994,"height_low_share":0.88312054209733,"giant_dense_share":0.00014414428813,"platform":"exact Windows"}},
-      {"id":"PH4","name":"Seed Development Lifecycle","status":"LOCAL_FOCUSED_PASS_WINDOWS_PENDING","purpose":"Carry heredity and deterministic development through seed -> germination/dormancy -> juvenile -> adult -> reproduction -> seed without transporting GrowthGraph, phenotype or mesh.","evidence":{"focused_assertions":718,"restart_assertions":5,"profile_hash":"d8c8b9ff56ec630b832c4b6bdbb49d39147586f4d97e6535dcc6fbd37c29a795","founder_payload_hash":"1b5ff858fc57fdf98d75eb796cc6d7e6aa68b0b0e51e8321611e13b024cdc396","lifecycle_hash":"88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1","offspring_batch_hash":"48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce","reference_timeline":["SEED","GERMINATED","JUVENILE","ADULT","REPRODUCTIVE"],"offspring_count":80,"dormancy_recovery":"PASS","mutation":"DISABLED_PENDING_FULL_POOL_CALIBRATION","platform":"local Linux; exact Windows pending"}},
-      {"id":"PH5","name":"Extensible Procedural Visual Materialization","status":"PLANNED_P3","required_pipeline":"GrowthGraph -> PlantRenderDescription -> RendererProfile -> LOD","planned_profiles":["DEBUG_SKELETON","BRANCH_TUBES","BRANCH_LEAF_INSTANCED","CANOPY_APPROXIMATION","FULL_PROCEDURAL","IMPOSTOR_BILLBOARD"]},
+      {"id":"PH1","name":"Deterministic GrowthGraph Skeleton Lab","status":"ACCEPTED","evidence":{"focused_assertions":128,"visual_smoke_assertions":10,"restart_assertions":4,"base_graph_hash":"6470722b770afee48def9ee06cc44a36640734abc9fc362a2fed6eb648779451","graphical":"PASS_BY_USER_OBSERVATION"}},
+      {"id":"PH2","name":"Environment-Coupled Development / Plasticity","status":"ACCEPTED","evidence":{"focused_assertions":107,"visual_smoke_assertions":12,"restart_assertions":5,"reference_phenotype_hash":"da2345004422b3fe6e53eff32f5c2e9e6417e164abdff7a27471ac989fdedf10","platform":"exact Windows","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC"}},
+      {"id":"PH3","name":"Morphology-to-Resource Coupling","status":"ACCEPTED","evidence":{"focused_assertions":217,"visual_smoke_assertions":17,"restart_assertions":5,"profile_hash":"1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a","reference_coupling_hash":"58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e","platform":"exact Windows","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC"}},
+      {"id":"PH3C","name":"Morphology-Aware Selection / Competition Convergence","status":"ACCEPTED","scope":"CAUSAL_PAIRWISE_SELECTION_NOT_GLOBAL_COEXISTENCE","evidence":{"focused_assertions":97,"restart_assertions":6,"aggregate_hash":"294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb","platform":"exact Windows"}},
+      {"id":"PH4","name":"Seed Development Lifecycle","status":"ACCEPTED","evidence":{"focused_assertions":718,"restart_assertions":5,"profile_hash":"d8c8b9ff56ec630b832c4b6bdbb49d39147586f4d97e6535dcc6fbd37c29a795","founder_payload_hash":"1b5ff858fc57fdf98d75eb796cc6d7e6aa68b0b0e51e8321611e13b024cdc396","lifecycle_hash":"88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1","offspring_batch_hash":"48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce","timeline":["SEED","GERMINATED","JUVENILE","ADULT","REPRODUCTIVE"],"offspring_count":80,"platform":"exact Windows"}},
+      {"id":"PH5-S1","name":"PlantRenderDescription + RendererProfile Foundation","status":"LOCAL_CORE_FIXTURE_PASS_REAL_PH2_WINDOWS_AND_GRAPHICAL_PENDING","purpose":"Create deterministic derived render metadata and profile abstraction while proving presentation cannot mutate GrowthGraph/ecology truth.","profiles":["DEBUG_SKELETON","BRANCH_TUBES","BRANCH_LEAF_INSTANCED","CANOPY_APPROXIMATION","FULL_PROCEDURAL","IMPOSTOR_BILLBOARD"],"local_evidence":{"focused_assertions":492,"visual_smoke_assertions":15,"restart_assertions":4,"scope":"isolated synthetic GrowthGraph core fixture; real PH2 exact Windows pending"}},
+      {"id":"PH5-S2","name":"3D Tapered Branch Tubes + Instanced Foliage","status":"BLOCKED_BY_PH5_S1_ACCEPTANCE"},
+      {"id":"PH5-S3","name":"Canopy Approximation + Impostor/LOD Truth-Invariance","status":"BLOCKED_BY_PH5_S2_ACCEPTANCE"},
+      {"id":"PH5-S4","name":"Visual Robustness / Handoff","status":"BLOCKED_BY_PH5_S3_ACCEPTANCE"},
       {"id":"PH6","name":"Promoted Individual Persistence","status":"DEFERRED_RUNTIME_PROMOTION"}
     ],
     "acceptance_gate": [
@@ -66,7 +71,9 @@
       "seed payload carries heredity but no GrowthGraph/phenotype/mesh",
       "dormancy advances chronological age without advancing development age",
       "offspring regenerate phenotype from local environment through PH2",
-      "renderer/mesh/LOD changes cannot modify ecology/genome/GrowthGraph/resource truth hashes"
+      "PlantRenderDescription is deterministic and derived only from GrowthGraph",
+      "renderer profile/LOD changes cannot modify GrowthGraph, ecology, resource, selection or lifecycle hashes",
+      "production 3D rendering is not claimed before PH5-S2/S3 evidence"
     ]
   },
   "open_research_risks": [
@@ -74,8 +81,8 @@
   ],
   "waves": [
     {"id":"ECO.P1","name":"Plant Adaptation and Strategy Proof","status":"ACCEPTED"},
-    {"id":"ECO.PH","name":"Plant Development & Phenotype","status":"PH0_PH1_PH2_PH3_PH3C_ACCEPTED_PH4_ACTIVE_RESEARCH"},
-    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_PH4_PREREQUISITES"},
+    {"id":"ECO.PH","name":"Plant Development & Phenotype","status":"PH0_PH1_PH2_PH3_PH3C_PH4_ACCEPTED_PH5_S1_ACTIVE_RESEARCH"},
+    {"id":"ECO.P2","name":"History, Disturbance, Succession and Dispersal","status":"PLANNED_AFTER_PH5_PREREQUISITES"},
     {"id":"ECO.P3","name":"Species Catalog, Phenotype Projection and Population Representation","status":"PLANNED_AFTER_P2"}
   ],
   "production_blockers": [
