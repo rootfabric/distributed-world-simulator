@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 64,
+  "registry_generation": 65,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T07:04:00Z",
+  "updated_at_utc": "2026-08-11T07:10:00Z",
   "control_checkpoint": "H0 restart-safe scaffold gate canonical baseline @ c24b821dcfe5d590199d0894c2afd54a04a53e34",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "Distributed World Simulator is controlled from main. The immediate autonomous-development checkpoint is H0.0 Restart-Safe Harness Scaffold; autonomous runtime work is blocked until H0_0_SCAFFOLD_READY. G8.6 and CH9.6 may continue as manual observation gates, R3 analysis may continue without promotion, C22 becomes the H0.1 closed-loop runtime pilot after H0.0, and NX runtime starts only after H0.1 proves the closed loop. ECO is registered as a research-only frontier: P1A-S1/P1A-S2 are accepted, P1A-S3 automated acceptance is complete with manual graphical confirmation pending, and its branch passport watches canonical G and MAT/Matter dependencies.",
+  "project_summary": "Distributed World Simulator is controlled from main. The immediate autonomous-development checkpoint is H0.0 Restart-Safe Harness Scaffold; autonomous runtime work is blocked until H0_0_SCAFFOLD_READY. G8.6 and CH9.6 may continue as manual observation gates, R3 analysis may continue without promotion, C22 becomes the H0.1 closed-loop runtime pilot after H0.0, and NX runtime starts only after H0.1 proves the closed loop. ECO is registered as a research-only frontier: P1A-S1/P1A-S2 are accepted; the first P1A-S3 graphical review required presentation-only Fix1, Fix1 passes local headless validation, and exact Windows plus graphical reruns remain pending. Its branch passport watches canonical G and MAT/Matter dependencies.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -52,17 +52,17 @@
       "passport_path": "config/control/branches/feature__eco-evolutionary-ecology.v1.json",
       "requires_passport": true,
       "role": "RESEARCH_DESIGN_FRONTIER",
-      "short_description": "Evolutionary ecology research for environment-driven plant specialization without creating duplicate world foundations.",
-      "purpose": "Prove deterministic ecology and vegetation behavior in research scope before any production runtime promotion.",
-      "expected_outcome": "Accepted research evidence for environment-driven plant behavior and portable ecology concepts that later converge through a fresh harness-controlled runtime frontier.",
+      "short_description": "Evolutionary ecology research for continuous environment-driven plant specialization, species catalogs, population truth and representation-safe future runtime integration.",
+      "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
+      "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
       "current_stage": "ECO.P1A Environmental Causality Baseline",
-      "stage_status": "P1A_S2_ACCEPTED_P1A_S3_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING_RESEARCH_ONLY",
-      "progress_note": "P1A-S1 and P1A-S2 are accepted. P1A-S3 automated Windows acceptance is complete; only manual graphical confirmation remains. The registered branch passport supplies watched and critical watched paths for canonical G environment/query contracts and MAT/Matter substrate dependencies, so PC0 directional dependency auditing now covers ECO.",
+      "stage_status": "P1A_S2_ACCEPTED_P1A_S3_FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING_RESEARCH_ONLY",
+      "progress_note": "P1A-S1 and P1A-S2 remain accepted. The first S3 graphical review found presentation-only defects; S3 Fix1 now separates diagnostics into a dedicated panel and exposes probe-vs-BASE and selected-patch causality. Local Godot 4.7.1 double regression is S1 109/109, S2 235/235, S3 Fix1 208/208 with unchanged dataset and scene hashes. Exact Windows Fix1 automated and graphical reruns are required before S3 acceptance. The registered passport keeps canonical G environment/query contracts and MAT/Matter substrate paths under PC0 watch.",
       "last_accepted_checkpoint": "ECO.P1A-S2 Single-Plant Resource Model",
-      "next_stage": "Complete the P1A-S3 manual graphical gate before P1A-S4. Keep ECO research-only; any production runtime promotion requires a fresh PC0/harness-controlled frontier and current canonical G/MAT contracts.",
+      "next_stage": "Pull S3 Fix1 on the exact Windows worktree, require S1 109/109, S2 235/235, S3 208/208 with unchanged hashes, then rerun the S3 visual lab graphically. On PASS accept P1A-S3 and open P1A-S4. Mutation/evolution remains blocked until P1A acceptance.",
       "health_declared": "GREEN",
       "blockers": [
-        "P1A_S3_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
+        "P1A_S3_FIX1_EXACT_WINDOWS_AND_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
         "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
         "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
         "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
@@ -202,7 +202,7 @@
       "G8.6 manual graphical acceptance",
       "CH9.6 manual graphical acceptance",
       "R3 current-main candidate analysis/refresh without promotion",
-      "ECO P1A-S3 manual graphical acceptance (research-only)"
+      "ECO P1A-S3 Fix1 exact-Windows + graphical rerun (research-only)"
     ],
     "harness_train": [
       "H0.0 executable Status/Plan/Resume + reducer + contracts + epoch + Git-only recovery",
