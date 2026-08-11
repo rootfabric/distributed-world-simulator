@@ -73,6 +73,10 @@ func _setup_first_person_embodiment() -> void:
 	if not bool(fpe_setup_result.get("success", false)):
 		push_error("FPE prototype setup failed: %s" % JSON.stringify(fpe_setup_result))
 		return
+	# The first-person ray starts at the camera inside the player capsule. Keep
+	# self-collision out explicitly instead of relying on hit-from-inside details.
+	if first_person_embodiment.interaction_raycast != null:
+		first_person_embodiment.interaction_raycast.add_exception(player)
 	first_person_embodiment.interaction_result_changed.connect(_on_fpe_interaction_result_changed)
 	first_person_embodiment.grab_state_changed.connect(_on_fpe_grab_state_changed)
 
@@ -148,6 +152,10 @@ func _spawn_local_grab_sandbox() -> void:
 		body.gravity_scale = 0.0
 		body.linear_damp = 3.0
 		body.angular_damp = 4.0
+		# Sandbox targets remain ray-queryable on layer 1 but do not produce
+		# physical contacts with the gameplay capsule while carried.
+		body.collision_layer = 1
+		body.collision_mask = 0
 		body.set_meta("fpe_local_sandbox_grabbable", true)
 		body.set_meta("fpe_demo_target", true)
 		add_child(body)
