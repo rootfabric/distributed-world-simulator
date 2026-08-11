@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH0",
+  "name": "Development Trait Contract",
+  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1 Plant Adaptation and Strategy Proof ACCEPTED",
+  "experiment_revision": "ECO.PH0.1",
+  "purpose": "Define the inherited developmental trait contract, deterministic IndividualSeed, SeedGenomeEnvelope, DevelopmentState and derived GrowthGraph boundary before any morphology generator is treated as ecology truth.",
+  "development_traits": ["max_height_m","internode_length_m","apical_dominance","branch_probability","branch_angle_deg","branch_length_ratio","branching_depth","crown_spread_m"],
+  "determinism_baseline": {"development_traits_hash":"9d812950f421c2618ce0c62aa30e417e953dd9a61abdc14a03f9d129df876dea","individual_seed":959597643576420676,"assertions":63},
+  "boundaries": {"tree_bush_grass_canonical_types":false,"growth_graph_is_derived_representation":true,"development_state_mutates_genome":false,"renderer_affects_genome_or_environment_truth":false,"authority_network_persistence_owned":false},
+  "next_after_acceptance": "ECO.PH1 Deterministic GrowthGraph Skeleton Lab"
+}
