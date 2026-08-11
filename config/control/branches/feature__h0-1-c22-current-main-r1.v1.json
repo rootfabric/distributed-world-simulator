@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "feature/h0-1-c22-current-main-r1",
+  "program": "TS",
+  "role": "CONVERGENCE_FRONTIER",
+  "short_description": "H0.1 fresh-current-main C22 convergence pilot transferring the SOURCE_ACCEPTED incremental local rebuild capability without importing stale source history.",
+  "purpose": "Prove that accepted C22 incremental proxy rebuild semantics compose with current canonical main under a single harness-controlled runtime Work Order.",
+  "expected_outcome": "The transferred production blobs remain equivalent to the accepted C22 source; focused C22, C24 graphical/contracts and full world/core regression pass on the exact fresh-current-main head; evidence/review/PC0/recovery close H0_1_PASS without runtime merge.",
+  "current_stage": "H0.1 / C22 Fresh Current-Main Convergence",
+  "stage_status": "CAPABILITY_TRANSFERRED_VERIFICATION_PENDING",
+  "progress_note": "Director dispatch completed under E2026-08-11-H0-1-R6 on canonical main 1112d1f7 / registry generation 75. One runtime branch was created and the accepted C22 production/test/validation blobs from source head e3b865e7 were transferred atomically in commit c5e452bb. Windows focused/graphical/full regression and final exact-head evidence remain pending.",
+  "last_accepted_checkpoint": "TS0.3 / C22 Production Incremental Convergence SOURCE_ACCEPTED (source evidence)",
+  "next_stage": "Prove exact source blob/diff equivalence, run C22 focused + C24 + graphical + full world/core regression on Windows, complete Evidence Map/Reviewer/Verifier/PC0/recovery, open Draft PR, and stop at H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY.",
+  "parent_branch_or_checkpoint": "main @ 1112d1f7cfad1df18fb3621a537e191e674848c6 + H0_0_SCAFFOLD_READY + C22 SOURCE_ACCEPTED evidence @ PR #59",
+  "base_commit": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+  "dependencies": [
+    "H0_0_SCAFFOLD_READY",
+    "E2026-08-11-H0-1-R6",
+    "C22_SOURCE_ACCEPTED_PR_59",
+    "C24_ARRAY_MESH_BACKEND",
+    "CONSTRUCT_SNAPSHOT"
+  ],
+  "owned_paths": [
+    "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid",
+    "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
+    "tests/construction/test_c22_incremental_local_rebuild.gd",
+    "tests/construction/test_c22_incremental_local_rebuild.gd.uid",
+    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1",
+    "RUN_C22_INCREMENTAL_REBUILD_TESTS.sh",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "validation/c22-incremental-local-rebuild-validation.json"
+  ],
+  "watched_paths": [
+    "scripts/construction/proxies/construction_proxy_compiler.gd",
+    "scripts/construction/proxies/construction_proxy_section_topology.gd",
+    "scripts/construction/proxies/construction_exposed_surface_extractor.gd",
+    "scripts/construction/proxies/construction_greedy_mesh_compiler.gd",
+    "scripts/construction/proxies/construction_proxy_manifest.gd",
+    "scripts/construction/proxies/construction_proxy_cache.gd",
+    "scripts/construction/contracts/construct_snapshot.gd",
+    "scripts/construction/behavior/**",
+    "scripts/construction/authoritative/**",
+    "scripts/labs/t1/t1a7/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/construction/proxies/construction_proxy_compiler.gd",
+    "scripts/construction/proxies/construction_proxy_section_topology.gd",
+    "scripts/construction/proxies/construction_exposed_surface_extractor.gd",
+    "scripts/construction/proxies/construction_proxy_manifest.gd",
+    "scripts/construction/contracts/construct_snapshot.gd"
+  ],
+  "runtime_paths": [
+    "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
+    "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd"
+  ],
+  "validation_paths": [
+    "validation/c22-incremental-local-rebuild-validation.json",
+    "tests/construction/test_c22_incremental_local_rebuild.gd",
+    "tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
+    "RUN_WORLD_REGRESSION_TESTS.ps1"
+  ],
+  "tested_heads": {},
+  "ownership_claims": [
+    {"foundation": "DERIVED_PRESENTATION", "claimed_owner": "DOMAIN_ADAPTERS", "scope": "C22 proxy compilation, HLOD artifacts and incremental presentation rebuild"},
+    {"foundation": "CONSTRUCTION_TRUTH", "claimed_owner": "CONSTRUCTION", "scope": "Consumes ConstructSnapshot only; no canonical mutation or authority semantics added"}
+  ],
+  "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET"],
+  "blockers": ["WINDOWS_C22_C24_GRAPHICAL_FULL_REGRESSION_PENDING", "FINAL_H0_1_REVIEW_EVIDENCE_PC0_RECOVERY_PENDING"],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true
+}

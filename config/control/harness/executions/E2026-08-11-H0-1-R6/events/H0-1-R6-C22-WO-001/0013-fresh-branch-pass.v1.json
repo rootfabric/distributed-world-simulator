@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R6-H0-1-R6-C22-WO-001-0013",
+  "project_epoch": "E2026-08-11-H0-1-R6",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "sequence": 13,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T14:36:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/h0-1-c22-current-main-r1",
+  "head_sha": "6569b3e51c0d77c1b573f9c733892691cdb95501",
+  "predicate": "FRESH_CURRENT_MAIN_C22_BRANCH_CREATED",
+  "command": "VERIFY_RUNTIME_BRANCH_ANCESTRY",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-H0-1-R6/events/H0-1-R6-C22-WO-001/0003-fresh-runtime-branch-created.v1.json"],
+  "summary": "Verified the only H0.1 runtime branch was created after Director dispatch from the fresh control head rooted at exact canonical main 1112d1f7."
+}

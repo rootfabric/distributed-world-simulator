@@ -1,0 +1,18 @@
+{
+  "schema":"distributed_world_simulator.harness_event.v1",
+  "event_id":"E2026-08-11-H0-1-R6-H0-1-R6-C22-WO-001-0023",
+  "project_epoch":"E2026-08-11-H0-1-R6",
+  "work_order_id":"H0-1-R6-C22-WO-001",
+  "sequence":23,
+  "event_type":"VERIFICATION_STARTED",
+  "work_state":"VERIFYING",
+  "recorded_at_utc":"2026-08-11T23:54:20Z",
+  "actor":"VERIFIER",
+  "branch":"feature/h0-1-c22-current-main-r1",
+  "head_sha":"f2b794e6cf252b7b5cfe4bf6e025385b5a58b644",
+  "predicate":"H0_1_VERIFICATION_RESUMED_AFTER_WORK_ORDER_TYPE_REPAIR",
+  "command":"RESUME_VERIFICATION_AFTER_CANONICAL_SCHEMA_REPAIR",
+  "exit_code":0,
+  "evidence_paths":["config/control/harness/executions/E2026-08-11-H0-1-R6/repairs/H0-1-R6-C22-WO-001-WORK-ORDER-TYPE-001.v1.json","config/control/harness/executions/E2026-08-11-H0-1-R6/reviews/H0-1-R6-C22-WO-001-WORK-ORDER-TYPE-REPAIR-REVIEW-001.v1.json"],
+  "summary":"Verification resumes after guarded repair. Canonical schema classification is fixed; runtime scope and the transferred C22 blobs are unchanged. Fresh exact-head harness/control verification is required before promoting runtime evidence predicates."
+}

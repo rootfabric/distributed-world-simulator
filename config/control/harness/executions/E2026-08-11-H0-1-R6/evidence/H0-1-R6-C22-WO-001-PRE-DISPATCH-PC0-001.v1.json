@@ -1,0 +1,47 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "program": "TS",
+  "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+  "risk_class": "HIGH",
+  "evidence_head_sha": "336e87966986ce83b056e143ccc475935b616461",
+  "intent": "Record the fresh pre-dispatch Project Control result for H0.1 R6. This evidence authorizes Director dispatch only; it does not claim C22 runtime validation or checkpoint readiness.",
+  "root_cause_or_reason": "H0.1 runtime branch creation requires a fresh current-main epoch, HIGH pre-build review and NON_RED standard/directional PC0 before a runtime worker is dispatched.",
+  "changed_surfaces": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "config/control/harness/executions/E2026-08-11-H0-1-R6/**",
+    "tests/harness/test_h0_control_harness.py",
+    "docs/checkpoints/2026-08-11_H0_1_C22_CONTROL_DISPATCH_R6_RU.md"
+  ],
+  "canonical_owner": "MAIN/HARNESS dispatch control with TS/C22 bounded runtime scope",
+  "entry_points": ["PR #84", "Project Control run 31501919106", "H0-1-R6-C22-WO-001"],
+  "callers": ["Director dispatch", "H0.1 scheduler"],
+  "callees": ["standard PC0", "directional PC0", "future C22 runtime worker"],
+  "sibling_surfaces_checked": [
+    "project registry generation 75",
+    "G/ECO directional watch",
+    "CH/NX directional watch",
+    "C22 source passport"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "NOT_REQUIRED",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Pre-dispatch branch contains control/harness changes only. Project Control run 31501919106 on merge ref f250d7fa reported registry 75, standard Overall YELLOW and directional Overall YELLOW with no blocking RED.",
+  "remaining_risks": [
+    "C22 production capability has not yet been transferred",
+    "Windows C22/C24/graphical/full regression remains pending",
+    "Current main must remain fresh until runtime branch creation"
+  ],
+  "required_fixes": [],
+  "rank_up_moves": ["Preserve exact tested source and target heads throughout capability transfer"],
+  "evidence_gaps": [
+    "FRESH_RUNTIME_BRANCH_NOT_CREATED",
+    "C22_TRANSFER_PENDING",
+    "WINDOWS_RUNTIME_VALIDATION_PENDING",
+    "FINAL_REVIEWER_VERIFIER_RECOVERY_PENDING"
+  ],
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
+}

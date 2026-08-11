@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-1-R6-C22-WO-001-SCOPE-DECLARATION-001",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "H0.1 Work Order allowed-path declaration for the already-reviewed phase-aware harness test",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": ["tests/harness/test_h0_control_harness.py", "H0-1-R6-C22-WO-001.allowed_paths"],
+  "callers": ["H0.1 focused harness suite", "scope audit"],
+  "callees": ["checkpoint planner", "event reducer", "Git diff scope predicate"],
+  "sibling_paths": ["CONTROL_DEVELOPMENT.ps1", "config/control/harness/executions/E2026-08-11-H0-1-R6/**"],
+  "existing_tests": ["test_current_diff_stays_inside_declared_scope", "test_plan_is_zero_workers_before_dispatch_and_one_after"],
+  "missing_tests": [],
+  "public_or_internal_contracts": ["All branch diff paths must be declared by the active Work Order", "H0.1 remains limited to one runtime worker", "Runtime/domain scope must not broaden during repair"],
+  "expected_shipped_behavior": "The active Work Order explicitly includes tests/harness/** because that pre-dispatch control test is part of the H0.1 execution scaffold. No additional production/runtime path is added; all existing forbidden domains remain forbidden.",
+  "relevant_history_or_evidence": ["HIGH pre-build review head 09ef6e67 already reviewed tests/harness/test_h0_control_harness.py", "Current main 1112d1f7 is unchanged", "13/13 C22 source blobs were transferred exactly", "No network/items/characters/ecology/architecture runtime path appears in the branch diff"],
+  "root_cause_hypothesis": "The Work Order allowed_paths list was copied from the runtime ownership set and included CONTROL_DEVELOPMENT plus R6 evidence, but omitted the phase-aware tests/harness path that had been added to the control scaffold before dispatch.",
+  "canonical_fix_location": "H0-1-R6-C22-WO-001.allowed_paths: add tests/harness/** only.",
+  "why_not_symptom_patch": "Removing the already-reviewed harness test from the runtime branch would hide the phase-aware H0.1 safety coverage. Broadening scripts/construction/** would weaken scope. The canonical repair is the single missing control-test path declaration."
+}

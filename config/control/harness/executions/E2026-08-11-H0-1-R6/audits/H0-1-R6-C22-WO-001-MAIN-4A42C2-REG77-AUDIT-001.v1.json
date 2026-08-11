@@ -1,0 +1,30 @@
+{
+  "schema":"distributed_world_simulator.harness_epoch_audit.v1",
+  "audit_id":"H0-1-R6-C22-WO-001-MAIN-4A42C2-REG77-AUDIT-001",
+  "work_order_id":"H0-1-R6-C22-WO-001",
+  "project_epoch":"E2026-08-11-H0-1-R6",
+  "base_sha":"1112d1f7cfad1df18fb3621a537e191e674848c6",
+  "main_sha":"4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+  "base_registry_generation":75,
+  "main_registry_generation":77,
+  "main_delta":["config/control/project-program-registry.v1.json"],
+  "main_delta_classification":"MAIN_OWNED_REGISTRY_ONLY_ECO_ADVISORY_STATE",
+  "decision":"CONTINUE",
+  "pc0":"NON_RED",
+  "directional_pc0":"NON_RED",
+  "project_control":{
+    "run_id":31548473609,
+    "job_id":93965848994,
+    "merge_checkout_sha":"27e0e169185b55f3e9638a56997b793e13c9aa02",
+    "candidate_head_sha":"06af7769b80df22b1bd262b7689eb08f03a78d0a",
+    "main_sha":"4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+    "registry_generation":77,
+    "standard_overall":"YELLOW",
+    "harness":"GREEN",
+    "eco":"RED_ADVISORY",
+    "directional_overall":"YELLOW",
+    "directional_findings":["G -> ECO YELLOW ADVISORY: 12 paths","CH -> NX YELLOW BLOCK consumer: 2 paths"]
+  },
+  "audited_at_utc":"2026-08-11T23:59:00Z",
+  "reason":"Canonical main advanced from the R6 base by two descendant commits whose net file delta is only the main-owned project-program registry, first tracking ECO PH4 and then ECO PH5 advisory research state. Compare confirms no H0, C22, Construction runtime/test, canonical architecture or harness schema path changed. Fresh Project Control on the repaired H0.1 exact merge composition is standard YELLOW/NON_RED and directional YELLOW/NON_RED with HARNESS GREEN. This audit document is prepared evidence only and cannot authorize continuation until a post-VERIFIED AUDIT_COMPLETED event explicitly references it."
+}

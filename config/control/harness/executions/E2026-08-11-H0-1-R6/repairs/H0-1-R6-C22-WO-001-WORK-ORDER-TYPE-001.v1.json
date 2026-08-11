@@ -1,0 +1,20 @@
+{
+  "schema":"distributed_world_simulator.harness_repair_map.v1",
+  "repair_id":"H0-1-R6-C22-WO-001-WORK-ORDER-TYPE-001",
+  "work_order_id":"H0-1-R6-C22-WO-001",
+  "state":"REPAIR_MAP_READY",
+  "affected_module":"H0.1 C22 Work Order canonical schema classification",
+  "canonical_owner":"MAIN/HARNESS",
+  "entry_points":["CONTROL_DEVELOPMENT.ps1 -Status","CONTROL_DEVELOPMENT.ps1 -Plan","CONTROL_DEVELOPMENT.ps1 -Resume","H0-1-R6-C22-WO-001.work_order_type"],
+  "callers":["ContractBundle work_order_schema validation","Git-only H0.1 state reconstruction","exact-Windows control verification"],
+  "callees":["distributed_world_simulator.work_order.v1 enum validation","event reducer","checkpoint planner"],
+  "sibling_paths":["tests/harness/test_h0_control_harness.py","config/control/harness/work-order.schema.v1.json"],
+  "existing_tests":["test_canonical_contracts_and_r6_instances_validate"],
+  "missing_tests":["Explicit assertion that the H0.1 C22 Work Order uses canonical work_order_type=IMPLEMENTATION"],
+  "public_or_internal_contracts":["work_order_type must be one of the canonical work-order schema enum values","Runtime implementation is represented by work_order_type=IMPLEMENTATION; RUNTIME is descriptive scope language, not a schema enum","Invalid Work Orders fail before reducer/planner/resume authorization"],
+  "expected_shipped_behavior":"The H0.1 C22 Work Order validates as canonical IMPLEMENTATION work, while retaining its bounded runtime scope and HIGH-risk review policy. Status/Plan/Resume proceed past schema loading and then enforce the expected descendant-main fail-closed audit gate. C22 production/runtime blobs remain unchanged.",
+  "relevant_history_or_evidence":["Exact-Windows world/core regression completed successfully through NX4 with clean STOPPED lifecycle","Exact-Windows Status/Plan/Resume each failed closed with SCHEMA_INVALID because work_order_type=RUNTIME is not one of the canonical enum values","Canonical work-order.schema.v1 permits IMPLEMENTATION, VALIDATION, CONTROL, HUMAN_OBSERVATION, RECOVERY, FIX, REVIEW and INTEGRATION only","No C22 production file is implicated by the contract-load failure"],
+  "root_cause_hypothesis":"During H0.1 planning, the semantic phrase runtime worker was incorrectly copied into the schema discriminator work_order_type. Pre-build review checked risk/scope/dispatch semantics but did not execute canonical Work Order schema validation against the newly authored R6 instance before runtime dispatch.",
+  "canonical_fix_location":"H0-1-R6-C22-WO-001.work_order_type: RUNTIME -> IMPLEMENTATION; tests/harness/test_h0_control_harness.py: assert the canonical enum value.",
+  "why_not_symptom_patch":"Adding RUNTIME to the canonical schema would unnecessarily broaden a project-wide contract merely to legitimize one malformed instance. Skipping schema validation would weaken fail-closed recovery. The correct repair is to classify this bounded runtime-development Work Order using the existing IMPLEMENTATION type and add regression coverage."
+}
