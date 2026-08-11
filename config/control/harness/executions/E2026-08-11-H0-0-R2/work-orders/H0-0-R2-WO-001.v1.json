@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R2",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "VERIFYING",
+  "state": "FIX_REQUIRED",
   "work_order_type": "CONTROL",
   "base_sha": "40c117bb16a635b03acfbaa7d9fe18b74245c989",
   "branch": "control/h0-closed-loop-development-r2",
@@ -144,5 +144,5 @@
   "human_approval_required_for": [
     "CONTROL_DOCS_ONLY_MERGE"
   ],
-  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Phase-independent R2 isolation is implemented. Verification is active; PC0_NON_RED is proven by GitHub Actions run 31480090577, while the fresh H0 harness unit suite and public Status/Plan/Resume predicates remain pending."
+  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only on its historical branch and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Verification discovered a scope/freshness repair requirement: remove R1 execution files from the active net diff, replace physical R1 test dependencies with synthetic historical fixtures, and narrow implementation-head freshness. Repair Map H0-0-R2-WO-001-SCOPE-ISOLATION-001 is active; continuation requires repair review and fresh verification."
 }
