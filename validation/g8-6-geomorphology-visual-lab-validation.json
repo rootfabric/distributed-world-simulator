@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_6_geomorphology_visual_lab.v1",
   "checkpoint": "g8.6-geomorphology-visual-lab",
-  "decision": "FIX2_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+  "decision": "AUTOMATED_ACCEPTED_MANUAL_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -98,8 +98,9 @@
     }
   },
   "fix2": {
-    "status": "IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+    "status": "AUTOMATED_RETEST_PASSED",
     "runtime_head": "6d461ea5b201047cf12f1d284fb08e93ceae1689",
+    "tested_head": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
     "scope": "Presentation-only wrapper preserves the accepted G6 radial centerline elevation, finds the PX/PZ seam on the same radial interpolation used by G6, derives a local tangent there, and samples the corridor on that centerline radius instead of forcing Fixture.RADIUS_M.",
     "base_lab_runtime_changes": false,
     "accepted_g8_1_to_g8_5_runtime_changes": false,
@@ -110,13 +111,32 @@
     "headless_component_visibility_gate_relaxed": false
   },
   "automated_evidence": {
-    "focused": "PENDING_FIX2_RETEST",
-    "headless_lab": "PENDING_FIX2_RETEST",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "status": "PASS",
+    "tested_head": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_runner": "PASS_BY_AUTOMATED_ACCEPTANCE_RUNNER",
+    "headless_lab": "PASS",
+    "g8_5_parent": "PASS",
+    "derived_presentation_lod_truth_separation": "PASS",
+    "px_pz_seam_diagnostic_corridor": "PASS",
+    "world_core_regression": "PASS_THROUGH_NX4_CLIENT_PREDICTION_AND_RECONCILIATION",
+    "visible_regression_counts": {
+      "mw10_cross_region_matter_processes": "PASS_51_ASSERTIONS",
+      "mw10_lock_release_retry": "PASS_12_ASSERTIONS",
+      "rl0_representation_contracts": "PASS_92_ASSERTIONS",
+      "rl1_matter_summary_pyramid": "PASS_245_ASSERTIONS",
+      "rl2_matter_multiresolution_meshing": "PASS_153_ASSERTIONS",
+      "rl2_real_asteroid_multiresolution": "PASS_44_ASSERTIONS",
+      "rl3_representation_aware_network_streaming": "PASS_175_ASSERTIONS",
+      "rl3_representation_streaming_processes": "PASS_37_ASSERTIONS",
+      "main_scene_cli_all": "PASS_6_FAIL_0"
+    },
+    "lifecycle_final_state": "STOPPED",
+    "working_tree": "CLEAN",
+    "final_marker": "G8.6 AUTOMATED ACCEPTANCE: PASS"
   },
   "manual_graphical_acceptance": {
-    "status": "PENDING",
+    "status": "REQUIRED_PENDING",
     "checks": [
       "G toggles source G3 vs resolved G8 geometry and produces visible deformation without changing canonical truth hash",
       "1..7 expose resolved height, total deformation and all five component views",
@@ -126,12 +146,8 @@
     ]
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FIX2_AUTOMATED_AND_MANUAL_PASS",
-    "blockers": [
-      "G8_6_FIX2_FOCUSED_RETEST_REQUIRED",
-      "G8_6_AUTOMATED_VALIDATION_REQUIRED",
-      "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
-    ]
+    "expected_health": "YELLOW_UNTIL_MANUAL_GRAPHICAL_PASS",
+    "blockers": ["G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"]
   },
   "next_if_accepted": "G8_FULL_ACCEPTANCE"
 }
