@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1B-S3",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_evidence": {
+    "p1a_s1": "ACCEPTED_WINDOWS_109",
+    "p1a_s2": "ACCEPTED_WINDOWS_235",
+    "p1a_s3": "ACCEPTED_WINDOWS_208_GRAPHICAL_PASS",
+    "p1a_s4": "ACCEPTED_WINDOWS_165_RESTART_5",
+    "p1b_s1": "ACCEPTED_WINDOWS_5834_RESTART_6",
+    "p1b_s2": "ACCEPTED_WINDOWS_364_RESTART_6"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1b_s3_regional_population_field_acceptance.gd",
+    "assertions": 388,
+    "failures": 0,
+    "result_hash": "cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56",
+    "neutral_hash": "b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6",
+    "alternate_result_hash": "ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1b_s3_restart_replay_probe.gd",
+    "assertions": 6,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "causal_evidence": [
+    "49 patches start from one accepted ancestor genotype and one lineage_id",
+    "each patch has unique individuals while diagnostic region labels are absent from mutation and selection inputs",
+    "the field average accepted net resource balance improves from -0.15744 to +0.18194 over eight generations",
+    "water preference correlates positively with soil moisture at +0.84993",
+    "root depth correlates negatively with soil moisture at -0.59843",
+    "shade tolerance correlates negatively with sunlight at -0.44674",
+    "wet-vs-dry and shaded-vs-sunlit trait distributions begin identical and diverge over generations",
+    "neutral-control uses identical first-generation candidate pools patch-by-patch but does not reproduce the real trait-environment correlations",
+    "alternate mutation seed changes exact genomes/hash while preserving the three specialization signals",
+    "dispersal remains frozen because migration benefit is not part of P1B"
+  ],
+  "windows_confirmation": "PENDING",
+  "truth_boundary": "P1B-S3 proves spatial regional trait distributions under local selection on one heterogeneous fixture. It is not a migration, species, biome, authority, persistence, networking or presentation system.",
+  "next": "Run RUN_ECO_P1B_S3_TESTS.ps1 on exact Windows worktree. On matching hashes and parent regressions, accept S3 and open P1B-S4 robustness/aggregate gate."
+}
