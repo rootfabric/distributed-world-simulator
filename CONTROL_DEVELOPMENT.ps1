@@ -10,7 +10,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
-$executionPath = 'config/control/harness/executions/E2026-08-11-H0-1-R5'
+$executionPath = 'config/control/harness/executions/E2026-08-11-H0-1-R6'
 $selectedModes = @($Status, $Plan, $Resume) | Where-Object { $_ }
 if ($Execute -or $UnexpectedArguments.Count -gt 0 -or $selectedModes.Count -ne 1) {
     Write-Output '{"schema":"distributed_world_simulator.control_development_output.v1","command":"UNKNOWN","ok":false,"error":{"code":"INVALID_INVOCATION","detail":"EXACTLY_ONE_OF_STATUS_PLAN_RESUME_REQUIRED; EXECUTE_IS_FORBIDDEN"},"exit_codes":{"INVALID_INVOCATION":2,"CONTRACT_OR_DEPENDENCY_INVALID":3,"GIT_STATE_INVALID":4,"EXECUTION_STATE_INVALID":5,"INTERNAL_ERROR":6}}'
@@ -25,7 +25,7 @@ try {
     Write-Host "[CONTROL][CONTRACT_LOAD] loading canonical contracts"
     Write-Host "[CONTROL][STATE_BUILD] reducing append-only execution ledger"
     Write-Host "[CONTROL][EPOCH_CHECK] validating epoch against canonical main"
-    if ($Plan) { Write-Host "[CONTROL][PLAN] planning H0.1 closed-loop C22 pilot; runtime remains gated by fresh post-checkpoint execution and Director dispatch" }
+    if ($Plan) { Write-Host "[CONTROL][PLAN] executing H0.1 closed-loop C22 pilot under a single Director-dispatched runtime worker" }
     if ($Resume) { Write-Host "[CONTROL][RESUME] reconstructing Git-only recovery state" }
     $harnessPythonPath = Join-Path $repoRoot 'scripts'
     $env:PYTHONPATH = if ($previousPythonPath) { "$harnessPythonPath;$previousPythonPath" } else { $harnessPythonPath }
