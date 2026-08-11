@@ -22,15 +22,21 @@ func setup(config: Dictionary) -> Dictionary:
 	_owner_state_messages_received = 0
 	_owner_state_messages_accepted = 0
 	_owner_state_messages_rejected = 0
-	var result: Dictionary = super.setup(config)
+	# Hide the base READY file until the owner service has replaced the empty
+	# server-predicted service. Otherwise an external process can observe READY and
+	# start clients in the few instructions between the two service instances.
+	var published_result_file: String = String(config.get("result_file", "")).strip_edges()
+	var base_config: Dictionary = config.duplicate(true)
+	base_config["result_file"] = ""
+	var result: Dictionary = super.setup(base_config)
 	if not bool(result.get("success", false)):
 		return result
 	if not bool(config.get("playable_sandbox", false)):
 		return _failure("OWNER_MOVEMENT_REQUIRES_PLAYABLE_SANDBOX")
 
 	# super.setup() has only created the empty service and network boundary; no
-	# client can join before this synchronous setup returns, so replacing the empty
-	# service here cannot lose gameplay state.
+	# external client sees READY before the replacement because result publication
+	# is held above.
 	var replacement = OwnerMovementService.new()
 	var replacement_setup: Dictionary = replacement.setup(
 		_authority_owner_id,
@@ -50,6 +56,7 @@ func setup(config: Dictionary) -> Dictionary:
 		_service.shutdown()
 	_service = replacement
 	_peer_input_buffers.clear()
+	_result_file = published_result_file
 	_write_report("READY", false)
 	return result
 
