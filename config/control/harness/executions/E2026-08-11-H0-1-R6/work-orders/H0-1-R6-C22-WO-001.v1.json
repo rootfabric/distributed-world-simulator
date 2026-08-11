@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-1-R6",
   "program": "TS",
   "goal_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-  "state": "FIX_REQUIRED",
+  "state": "VERIFYING",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
   "branch": "feature/h0-1-c22-current-main-r1",
@@ -110,10 +110,10 @@
     "expected_risks": ["Source branch divergence hides unrelated historical changes", "Accepted source files depend on watched current-main files that changed semantically", "Graphical output regresses despite focused tests passing"],
     "validation_plan": ["HIGH pre-build review before Director dispatch", "Create fresh branch from exact current main only after dispatch", "Prove transferred production diff equivalence to accepted C22 source", "Run C22 focused, C24 contracts, C22 graphical and full world/core regression", "Run standard and directional PC0 and require NON_RED", "Complete recovery drill, Evidence Map, independent Reviewer and Verifier", "Open Draft PR and stop at H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY"]
   },
-  "repair_context_required": true,
+  "repair_context_required": false,
   "evidence_map_required": true,
   "human_attention_triggers": ["CANONICAL_CONTRACT_CHANGE_REQUIRED", "RISK_RECLASSIFIED_CRITICAL", "RUNTIME_FEATURE_MERGE"],
   "issued_at_utc": "2026-08-11T14:23:00Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE"],
-  "notes": "Fail-closed repair for a canonical schema violation discovered by the exact-Windows control interface after runtime regression PASS. work_order_type=RUNTIME was never a valid distributed_world_simulator.work_order.v1 enum value; this implementation Work Order is classified as IMPLEMENTATION. C22 runtime blobs are unchanged. Verification remains blocked until the repair ledger, independent review and Director redispatch are complete."
+  "notes": "Canonical Work Order schema repair completed and independently reviewed. The H0.1 C22 Work Order is an IMPLEMENTATION Work Order with bounded runtime scope; RUNTIME remains descriptive terminology only. Ledger returned through guarded redispatch to VERIFYING. C22 production/runtime/test/validation blobs are unchanged from the Windows-tested head. Fresh harness/control verification on this repaired head remains required before runtime evidence predicates are promoted. Runtime merge is not authorized."
 }
