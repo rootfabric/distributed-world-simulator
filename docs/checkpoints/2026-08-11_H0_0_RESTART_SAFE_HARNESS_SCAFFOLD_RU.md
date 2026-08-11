@@ -38,9 +38,26 @@ review/evidence/human-attention state
 
 Тонкий PowerShell entrypoint вызывает небольшие Python modules. Derived state всегда перестраивается из Git и canonical JSON. `artifacts/harness/**` остаётся удаляемым кешем.
 
-Append-only events являются авторитетной execution history. Поле `Work Order.state` рассматривается только как сверяемый derived snapshot: расхождение должно быть явно показано как finding, а не молча разрешено в пользу mutable summary.
+Append-only events являются авторитетной execution history. Поле `Work Order.state` рассматривается только как сверяемый derived snapshot.
 
-`event.head_sha` обозначает subject head, к которому относится событие. Фактический Git/ref head, содержащий ledger, выводится отдельно; `Resume` не имеет права подменять один другим.
+```text
+event-derived state != Work Order.state
+  → WORK_ORDER_SNAPSHOT_STATE_MISMATCH
+  → EXECUTION_STATE_INVALID
+  → Plan/Resume continuation blocked
+```
+
+Mutable snapshot никогда не побеждает events.
+
+`event.head_sha` обозначает subject head, к которому относится событие. CLI публикует три независимых поля:
+
+```text
+event_subject_head_sha
+event_ledger_head_sha
+current_branch_head_sha
+```
+
+`event_ledger_head_sha` — первый commit, добавивший конкретный immutable event path. `current_branch_head_sha` — атомарно захваченный фактический branch/ref head. Subject head никогда не используется как recoverable current head.
 
 ### Почему не монолитный PowerShell
 
@@ -97,6 +114,14 @@ EPOCH_INVALIDATED event or explicit refresh decision
 - normalized allowlist без absolute path, `..` и выхода через symlink;
 - fail-closed поведение для malformed/duplicate-key JSON и partial ledger.
 
+Полная machine-readable transition table находится в:
+
+```text
+config/control/harness/executions/E2026-08-11-H0-0-R1/transition-table.v1.json
+```
+
+Она определяет event-type/state pairs, все допустимые transitions, terminal states и evidence guards для redispatch после `FIX_REQUIRED`, `BLOCKED` и `WAITING_HUMAN`.
+
 ### Versioned CLI contract
 
 Каждая команда печатает читаемые stage-сообщения через host/information stream и завершает success stream одним JSON envelope:
@@ -115,6 +140,16 @@ findings: deterministic diagnostics
 next: checkpoint/work order/verification/human gate
 ```
 
+Обязательные поля `repository`:
+
+```text
+event_subject_head_sha
+event_ledger_head_sha
+current_branch_head_sha
+origin_main_head_sha
+worktree_dirty
+```
+
 Exit codes:
 
 ```text
@@ -131,6 +166,10 @@ Exit codes:
 ### Dependency strategy
 
 `scripts/harness/requirements.txt` фиксирует используемую версию `jsonschema`. Harness не устанавливает пакеты и не обращается в сеть автоматически. Отсутствующая/несовместимая dependency даёт стабильный `CONTRACT_OR_DEPENDENCY_INVALID`.
+
+### Governance correction
+
+Event `0006` преждевременно объявил redispatch до Reviewer PASS. Он не переписывается. Event `0007` немедленно вернул execution в `FIX_REQUIRED`, до него не было `IMPLEMENTATION_COMMITTED`. Transition table классифицирует это как `PREMATURE_TRANSITION_CORRECTED_BY_APPEND_ONLY_FIX_REQUIRED`. Новый dispatch разрешён только после свежего Reviewer PASS.
 
 ### Evidence review circularity
 

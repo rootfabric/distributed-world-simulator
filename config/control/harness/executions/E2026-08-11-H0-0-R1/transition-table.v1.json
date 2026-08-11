@@ -1,0 +1,85 @@
+{
+  "schema": "distributed_world_simulator.harness_transition_table.v1",
+  "version": 1,
+  "authority": {
+    "execution_state_source": "APPEND_ONLY_EVENTS",
+    "work_order_state_role": "DERIVED_SNAPSHOT_ONLY",
+    "snapshot_mismatch": {
+      "error_code": "WORK_ORDER_SNAPSHOT_STATE_MISMATCH",
+      "result": "EXECUTION_STATE_INVALID",
+      "blocks": ["PLAN_CONTINUATION", "RESUME_CONTINUATION", "CHECKPOINT_PROPOSAL"],
+      "events_always_win": true
+    }
+  },
+  "sequence_rules": {
+    "starts_at": 1,
+    "contiguous": true,
+    "unique_sequence": true,
+    "unique_event_id": true,
+    "ordering_source": "sequence",
+    "timestamps_must_not_decrease": true,
+    "malformed_event_invalidates_entire_work_order": true
+  },
+  "event_type_states": {
+    "WORK_ORDER_CREATED": ["PLANNED"],
+    "DISPATCHED": ["DISPATCHED"],
+    "IMPLEMENTATION_COMMITTED": ["IN_PROGRESS", "IMPLEMENTED"],
+    "VERIFICATION_STARTED": ["VERIFYING"],
+    "PREDICATE_VERIFIED": ["VERIFYING", "VERIFIED"],
+    "AUDIT_COMPLETED": ["AUDITED"],
+    "FIX_REQUIRED": ["FIX_REQUIRED"],
+    "BLOCKED": ["BLOCKED"],
+    "WAITING_HUMAN": ["WAITING_HUMAN"],
+    "EPOCH_INVALIDATED": ["EPOCH_INVALIDATED"],
+    "CHECKPOINT_PROPOSED": ["CHECKPOINT_PROPOSED"],
+    "RECOVERY_RESUMED": ["DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN"],
+    "CANCELLED": ["CANCELLED"]
+  },
+  "allowed_state_transitions": {
+    "NONE": ["PLANNED"],
+    "PLANNED": ["DISPATCHED", "CANCELLED"],
+    "DISPATCHED": ["IN_PROGRESS", "IMPLEMENTED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"],
+    "IN_PROGRESS": ["IN_PROGRESS", "IMPLEMENTED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"],
+    "IMPLEMENTED": ["VERIFYING", "FIX_REQUIRED", "BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"],
+    "VERIFYING": ["VERIFYING", "VERIFIED", "FIX_REQUIRED", "BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"],
+    "VERIFIED": ["AUDITED", "FIX_REQUIRED", "BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"],
+    "AUDITED": ["CHECKPOINT_PROPOSED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"],
+    "FIX_REQUIRED": ["DISPATCHED", "BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"],
+    "BLOCKED": ["DISPATCHED", "FIX_REQUIRED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"],
+    "WAITING_HUMAN": ["DISPATCHED", "BLOCKED", "EPOCH_INVALIDATED", "CANCELLED"],
+    "EPOCH_INVALIDATED": [],
+    "CHECKPOINT_PROPOSED": [],
+    "CANCELLED": []
+  },
+  "guarded_transitions": [
+    {
+      "from": "FIX_REQUIRED",
+      "to": "DISPATCHED",
+      "requires": ["REPAIR_MAP_READY", "REQUIRED_REVIEWER_PASS_IF_REVIEW_RAISED_FIX", "DIRECTOR_REDISPATCH"]
+    },
+    {
+      "from": "BLOCKED",
+      "to": "DISPATCHED",
+      "requires": ["BLOCKER_RESOLUTION_EVIDENCE", "DIRECTOR_REDISPATCH"]
+    },
+    {
+      "from": "WAITING_HUMAN",
+      "to": "DISPATCHED",
+      "requires": ["HUMAN_ATTENTION_ITEM_RESOLVED", "DIRECTOR_REDISPATCH"]
+    },
+    {
+      "from": "AUDITED",
+      "to": "CHECKPOINT_PROPOSED",
+      "requires": ["REVIEWER_PASS", "VERIFIER_PASS", "PC0_NON_RED", "NO_BLOCKING_HUMAN_ATTENTION"]
+    }
+  ],
+  "guard_violation_recovery": {
+    "permitted_only_when_no_implementation_event_followed": true,
+    "required_immediate_next_event_type": "FIX_REQUIRED",
+    "required_actor": "REVIEWER_OR_DIRECTOR",
+    "required_blocker": true,
+    "resulting_finding": "PREMATURE_TRANSITION_CORRECTED_BY_APPEND_ONLY_FIX_REQUIRED",
+    "checkpoint_remains_blocked_until_fresh_reviewer_pass": true
+  },
+  "terminal_states": ["EPOCH_INVALIDATED", "CHECKPOINT_PROPOSED", "CANCELLED"]
+}

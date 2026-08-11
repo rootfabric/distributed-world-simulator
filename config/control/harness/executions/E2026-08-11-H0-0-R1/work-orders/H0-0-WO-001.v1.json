@@ -87,7 +87,7 @@
   "design_brief": {
     "problem_statement": "Canonical harness, risk, review and evidence contracts exist in main, but no executable Status, Plan or Resume implementation exists.",
     "current_behavior": "A new session must manually interpret control files and cannot reconstruct an active execution train through one canonical command.",
-    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, treat append-only events as the authoritative execution state, validate any mutable Work Order state only as a derived snapshot, expose a versioned JSON result contract with stable exit codes, validate epochs fail-closed, build status, plan the declared checkpoint and resume from Git-only state.",
+    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, treat append-only events as the authoritative execution state, fail with WORK_ORDER_SNAPSHOT_STATE_MISMATCH when the mutable Work Order snapshot differs, expose explicit event subject/ledger/current branch heads in a versioned JSON result contract, validate epochs fail-closed, build status, plan the declared checkpoint and resume from Git-only state.",
     "alternatives_considered": [
       "Implement all behavior in one PowerShell script.",
       "Implement a thin PowerShell entrypoint over focused Python modules.",
@@ -126,8 +126,9 @@
       "Validate all canonical control, review and evidence contracts load.",
       "Exercise valid and invalid Work Order, Event, Epoch, Evidence Map and Human Attention instances.",
       "Reduce ordered fixtures including FIX_REQUIRED and recovery continuation.",
-      "Reject or report disagreement between event-derived state and the Work Order state snapshot.",
-      "Report event subject head and actual ledger/ref head as distinct fields.",
+      "Reject disagreement between event-derived state and the Work Order state snapshot as WORK_ORDER_SNAPSHOT_STATE_MISMATCH / EXECUTION_STATE_INVALID and block Plan/Resume continuation.",
+      "Report event_subject_head_sha, event_ledger_head_sha and current_branch_head_sha as distinct fields; never use subject head as recoverable current head.",
+      "Validate the published branch-local transition table including guarded redispatch and terminal behavior.",
       "Validate semantic cross-contract invariants that JSON Schema alone cannot express.",
       "Treat moved main without a recorded PC0/directional decision as MAIN_MOVED_REVIEW_REQUIRED and block continuation.",
       "Validate the versioned CLI envelope, stable exit-code mapping and stdout/stderr discipline from repo and non-root working directories.",
