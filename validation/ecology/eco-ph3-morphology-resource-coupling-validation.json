@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.PH3",
-  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
   "execution": {
     "profile": "res://scripts/research/ecology/plant_morphology_resource_profile_v1.gd",
     "kernel": "res://scripts/research/ecology/plant_morphology_resource_coupling_v1.gd",
@@ -39,7 +39,7 @@
     "REPLAY_DIVERGENCE": "PASS_EXACT_HASH_CONTRACT"
   },
   "truth_boundary": "PH3 is a research-only adapter over accepted P1 resource truth and PH2 phenotype/GrowthGraph evidence. It introduces no runtime ownership, renderer truth, species class, authority, network or persistence semantics.",
-  "windows_confirmation": "PENDING",
-  "graphical_confirmation": "OPTIONAL_DIAGNOSTIC_NOT_ACCEPTANCE_BLOCKER",
-  "next": "Exact Windows PH3 pass accepts the coupling gate and opens morphology-aware selection/competition convergence before PH4 lifecycle work."
+  "windows_confirmation": "PASS_EXACT_HASH",
+  "graphical_confirmation": "PASS_BY_USER_OBSERVATION_DIAGNOSTIC; GIANT_DENSE and BRANCH_HIGH visibly differ and ledger values are coherent with automated evidence",
+  "next": "PH3 accepted. Open ECO.PH3C Morphology-Aware Selection / Competition Convergence before PH4 lifecycle work."
 }
