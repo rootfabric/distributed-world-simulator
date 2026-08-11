@@ -47,6 +47,20 @@
 - одинаковый canonical sample для общей координаты при разных sampling resolutions;
 - отсутствие camera/network/authority/material/biome-specific ownership в research source.
 
+## Exact Windows confirmation
+
+После исправления fresh-worktree UID-cache preflight пользовательский exact-Windows прогон на checkout `C:\Godot\lunar-world-eco-evolutionary-ecology` выполнил полный Godot import/UID initialization и затем завершился чисто:
+
+`ECO.P1A-S1 Environment Baseline: PASS (109 assertions)`
+
+`ECO.P1A-S1 focused acceptance: PASS`
+
+Environment hash совпал с принятым baseline:
+
+`b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7`
+
+Предыдущие `Resource file not found: res://` / autoload errors после теста больше не воспроизводятся. Runner hygiene fix `0f91a48b09b7e1ffb3f8ddbe9e3045c28df5888e` подтверждён на чистом Windows worktree.
+
 ## Проверка опубликованного содержимого
 
 После публикации GitHub blobs были сравнены с локально протестированными файлами через Git blob SHA-1:
@@ -60,7 +74,7 @@
 
 ## Ограничение проверки
 
-Execution container не имел прямого DNS-доступа к GitHub, поэтому полный repository checkout не мог быть клонирован. Focused test запускался в минимальном Godot checkout на предоставленном Godot double binary. ECO-файлы не подключены к production runtime, поэтому world/core full regression для этого research-only шага классифицирован как `NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED`.
+ECO-файлы не подключены к production runtime, поэтому world/core full regression для этого research-only шага классифицирован как `NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED`.
 
 ## Что этот checkpoint пока НЕ доказывает
 
@@ -78,4 +92,4 @@ Execution container не имел прямого DNS-доступа к GitHub, �
 
 `ECO.P1A-S2 — Single-Plant Resource Model`.
 
-На том же принятом EnvironmentSample вводится один фиксированный plant genome. Следующий эксперимент должен показать причинный energy/resource balance и получить favourable / marginal / unsustainable зоны без evolution и без hardcoded biome roles.
+S2 уже реализован как candidate поверх этого принятого EnvironmentSample. Его следующий gate — exact-Windows focused confirmation; после него можно открыть `P1A-S3 Diagnostic Visual Lab + Controlled Trait Probes`.
