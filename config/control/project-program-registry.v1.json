@@ -1,10 +1,10 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 54,
+  "registry_generation": 55,
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-11T01:47:00Z",
+  "updated_at_utc": "2026-08-11T02:12:00Z",
   "project_summary": "Distributed World Simulator is developed through parallel domain programs under one canonical main-owned architecture and control ledger.",
   "programs": {
     "G": {
@@ -36,12 +36,12 @@
       "purpose": "Make multi-fixture Construction failure and recovery explicit in canonical runtime state while reusing existing store, persistence, authority and network foundations.",
       "expected_outcome": "T1B closes with a real M3 process composition proving failure, durable restart recovery, external-interest visibility, replica convergence and derived presentation before heterogeneous T2 scale.",
       "current_stage": "T1B.4 Composition Acceptance",
-      "stage_status": "IMPLEMENTED_CANDIDATE_WINDOWS_FOCUSED_PENDING",
-      "progress_note": "T1B.3 Recovery / Reconnect Composition is ACCEPTED on FIX1 Windows checkout 3a2a6a3e14f97e070139a00402d0cf0e19238622 after the required focused/full execution sequence. The shown full tail passes RL3 representation-aware network streaming 175, RL3 representation streaming processes 37, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle, exit 0 and the NX4 final marker; the omitted T1B.3 focused assertion count is not reconstructed. T1B.4 is implemented as the final production-shaped live M3 process gate. Its server adapter inherits accepted T1A.7 interest-aware M3 and swaps only the runtime factory to accepted T1B.3. Graphical clients reuse accepted T1A.6 M3 client/presenter. The process scenario covers two initial interested clients, live outage fanout, OFFLINE command rejection, M0 checkpoint, dedicated-server process restart on the same durable root, recovered failure truth, no Construction snapshot before external interest is re-applied, reconnect plus late-interest recovered baselines, terminal rejection replay, dependency recovery, ONLINE convergence, post-recovery command success, derived OPEN presentation and a final ONLINE/OPEN checkpoint. No production-owned executor, persistence, authority, network protocol/channel or transaction foundation is modified. T2.0 remains blocked by the canonical convergence gate.",
+      "stage_status": "FOCUSED_PASS_FULL_REGRESSION_PENDING",
+      "progress_note": "T1B.3 Recovery / Reconnect Composition remains ACCEPTED on FIX1 Windows checkout 3a2a6a3e14f97e070139a00402d0cf0e19238622. T1B.4 final production-shaped live M3 process composition passed its Windows focused gate on executable checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3 with 93 assertions and 0 failures. Supplied evidence confirms OPEN mutation reached reconnect and late-interest replicas with semantic convergence; A and C presenters derived OPEN from canonical runtime; final ONLINE/OPEN M0 checkpoint succeeded; server recorded no failure-plan or checkpoint failures, recorded dependency recovery and replayed OFFLINE command rejection; reconnect, late join and server shutdown were clean. This focused PASS proves the live outage/restart/reconnect/recovery process path but does not yet close T1B. Full world/core regression remains required on exactly the same local executable checkout without fetch/reset. No accepted production executor, persistence, authority, network protocol/channel or transaction foundation is modified. T2.0 remains blocked by the canonical convergence gate.",
       "last_accepted_checkpoint": "T1B.3 Recovery / Reconnect Composition",
-      "next_stage": "Run RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1 on exact Windows double Godot. If focused is green, preserve the exact checkout and run RUN_WORLD_REGRESSION_TESTS.ps1 without fetch/reset. Only the green pair closes T1B aggregate; T2.0 remains blocked until C22 MAIN_INTEGRATED + T runtime-scale evidence + TS0.4 ceiling classification + PC0 convergence.",
+      "next_stage": "Do not fetch/reset the Windows worktree. Run RUN_WORLD_REGRESSION_TESTS.ps1 on exact checkout 88736b1e57a5fb96d80c8842ea983c20d8b833f3. Only a green full world/core regression accepts T1B.4 and closes the T1B aggregate; T2.0 remains blocked until C22 MAIN_INTEGRATED + T runtime-scale evidence + TS0.4 ceiling classification + PC0 convergence.",
       "health_declared": "YELLOW",
-      "blockers": ["T1B4_WINDOWS_FOCUSED_VALIDATION_PENDING", "T1B4_FULL_WORLD_REGRESSION_PENDING"]
+      "blockers": ["T1B4_FULL_WORLD_REGRESSION_PENDING"]
     },
     "TS": {
       "program": "TS",
