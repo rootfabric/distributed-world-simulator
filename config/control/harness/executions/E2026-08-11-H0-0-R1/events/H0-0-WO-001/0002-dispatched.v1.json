@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R1-H0-0-WO-001-0002",
+  "project_epoch": "E2026-08-11-H0-0-R1",
+  "work_order_id": "H0-0-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-11T04:27:32Z",
+  "actor": "DIRECTOR",
+  "branch": "control/h0-closed-loop-development",
+  "head_sha": "018d27c5f9189d31cd9edfeec4426831390bbc67",
+  "predicate": "H0_0_IMPLEMENTATION_DISPATCHED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R1/work-orders/H0-0-WO-001.v1.json",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"
+  ],
+  "summary": "Director dispatched the reviewed MEDIUM-risk H0.0 Work Order to an independent IMPLEMENTER after the Project Epoch and Design Brief were published."
+}
