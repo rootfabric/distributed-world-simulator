@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_checkpoint_candidate_prevalidation.v1",
+  "candidate": "H0_0_SCAFFOLD_READY_PROJECT_CANONICALIZATION",
+  "source_main_sha": "82835a37bab1390b6b3f87fb18903070fdd64256",
+  "registry_generation": 71,
+  "active_planning_epoch": "E2026-08-11-H0-1-R5",
+  "active_planning_work_order": "H0-1-R5-DISPATCH-WO-001",
+  "runtime_authorized": false,
+  "c22_branch_creation": "FORBIDDEN_UNTIL_FRESH_POST_CHECKPOINT_H0_1_EXECUTION_AND_DIRECTOR_DISPATCH",
+  "validation_required": [
+    "FOCUSED_CANONICAL_HANDOFF_SUITE_PASS",
+    "STATUS_PLAN_RESUME_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED",
+    "NO_RUNTIME_DOMAIN_DIFF",
+    "PR_MERGEABLE",
+    "MAIN_FRESH"
+  ],
+  "note": "Unique prevalidation marker created after registry-generation-71 and H0.1-R5 synchronization so GitHub Actions evaluates the exact final checkpoint candidate tree. This marker does not authorize runtime or checkpoint merge."
+}
