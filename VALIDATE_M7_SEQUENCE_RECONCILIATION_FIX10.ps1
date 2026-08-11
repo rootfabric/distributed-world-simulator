@@ -179,7 +179,8 @@ if ($FocusedOnly) {
 elseif (-not $IncludeTwoClientProcess) {
     Write-Host "Run with -IncludeTwoClientProcess before manual acceptance." -ForegroundColor Yellow
 }
-Write-Host "Final FIX10 server-predicted acceptance remains unchanged until owner-authority visual diagnostics are explicitly accepted." -ForegroundColor Yellow
+Write-Host "OWNER_AUTHORITATIVE_VALIDATED vertical slice accepted on 2026-08-11 after focused PASS plus manual two-client visual/item diagnostic; see docs/validation/M7_OWNER_AUTHORITY_ACCEPTANCE_2026-08-11.md." -ForegroundColor Green
+Write-Host "Legacy FIX10 server-predicted acceptance remains preserved as a fallback/reference regression path and its thresholds are not weakened by owner-authority acceptance." -ForegroundColor Yellow
 Write-Host "Owner movement target: local transform is authored by the owning client, PLAYER_STATE is validated by the server and relayed through the existing remote snapshot/interpolation path; ownership/items/world authority remain server-side." -ForegroundColor Yellow
 Write-Host "Item projection target: optimistic item presentation may change without changing authoritative revision; rejected predictions must reapply the same-revision canonical graph so ghost inventory ownership cannot survive rollback." -ForegroundColor Yellow
 Write-Host "FIX10 fix8 target: exact or conservatively phase-equivalent authoritative ACKs confirm local owner prediction without rewind/replay or visible correction; real kinematic divergence keeps the authoritative correction path." -ForegroundColor Yellow
