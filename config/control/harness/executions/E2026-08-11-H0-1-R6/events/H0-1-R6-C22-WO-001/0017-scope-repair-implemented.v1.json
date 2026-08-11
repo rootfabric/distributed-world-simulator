@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-1-R6-H0-1-R6-C22-WO-001-0017",
+  "project_epoch": "E2026-08-11-H0-1-R6",
+  "work_order_id": "H0-1-R6-C22-WO-001",
+  "sequence": 17,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-11T14:37:30Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/h0-1-c22-current-main-r1",
+  "head_sha": "cec9eabd584a393d6787fe4990a4256c07be2a9b",
+  "predicate": "H0_1_SCOPE_DECLARATION_REPAIR_IMPLEMENTED",
+  "command": "ADD_TESTS_HARNESS_TO_ALLOWED_PATHS_ONLY",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-11-H0-1-R6/work-orders/H0-1-R6-C22-WO-001.v1.json"],
+  "summary": "Implemented the reviewed declaration-only repair. The 13 C22 source blobs were not changed and no runtime/domain scope was broadened."
+}
