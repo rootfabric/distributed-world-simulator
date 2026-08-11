@@ -21,8 +21,21 @@
   },
   "post_acceptance_pc0": {
     "required": true,
-    "status": "PENDING_CANONICAL_PC0_EXECUTION",
-    "rule": "No later Character stage is authorized until canonical Project Control reports CH non-RED."
+    "status": "PASSED_NON_RED",
+    "command": ".\\CONTROL_PROJECT.ps1 -NoFailOnRed",
+    "executed_from_main_head": "be6ea2a8636a9242fc808aea377d9144ef9bc9eb",
+    "registry_generation": 69,
+    "base_overall": "YELLOW",
+    "character": "YELLOW",
+    "directional_overall": "YELLOW",
+    "directional_findings": [
+      "YELLOW CH -> NX WATCH_HIT BLOCK: 2 path(s)"
+    ],
+    "combined_health": "YELLOW",
+    "canonical_auditors_completed": true,
+    "decision": "PASS_FOR_CH9_6_POST_ACCEPTANCE_GATE",
+    "rule": "No later Character stage is authorized until canonical Project Control reports CH non-RED.",
+    "rule_satisfied": true
   },
   "goal": "Prove the actual component Inventory UI routes wearable drag/drop through NetworkCharacterEquipmentGameplayController and the accepted ITEM/ENet authority path into a persistent canonical server Item Graph, then rebuild the same real Quaternius presentation after restart.",
   "architecture": {
@@ -125,7 +138,8 @@
     "real GUI equipped-item drag can return the item to backpack through equipment.unequip",
     "real Quaternius presentation follows the replicated equipment state",
     "earlier CH9.6 automated restart/recovery baseline remains accepted",
-    "operator explicitly accepted the graphical CH9.6 stage on implementation head e547ba52a440e72cc02c6bbe449edaf160bae7ab"
+    "operator explicitly accepted the graphical CH9.6 stage on implementation head e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+    "post-acceptance canonical Project Control on main be6ea2a8636a9242fc808aea377d9144ef9bc9eb reported CH YELLOW / non-RED and completed both base and directional auditors"
   ],
   "non_blocking_followups": [
     {
@@ -147,7 +161,8 @@
     "ch9_5_persistent_enet_regression": "PASS_41_ASSERTIONS_BASELINE",
     "ch9_6_playable_network_equipment_ui": "PASS_22_ASSERTIONS_BASELINE",
     "wearable_inventory_presentation": "PASS_31_ASSERTIONS_OBSERVED_DURING_GRAPHICAL_PREFLIGHT",
-    "graphical": "OPERATOR_ACCEPTED"
+    "graphical": "OPERATOR_ACCEPTED",
+    "post_acceptance_pc0": "PASS_CH_NON_RED"
   },
-  "next_control_gate": "POST_ACCEPTANCE_PC0_AUDIT_REQUIRED_BEFORE_NEXT_CH_STAGE"
+  "next_control_gate": "CH9_6_COMPLETE_FREEZE_SLICE_WAIT_FOR_MAIN_DECLARED_NEXT_CHARACTER_FRONTIER"
 }
