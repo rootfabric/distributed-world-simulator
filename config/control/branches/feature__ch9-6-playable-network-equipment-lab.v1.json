@@ -9,10 +9,10 @@
   "purpose": "Close the post-CH9.5 playable integration gap by routing the accepted component Inventory UI through NetworkCharacterEquipmentGameplayController and the existing ITEM/ENet authority path.",
   "expected_outcome": "A player can drag wearables in the real Inventory UI, observe server-authoritative canonical equipment and real Quaternius presentation, restart the persistent runtime and see the same equipped items restored automatically.",
   "current_stage": "CH9.6 Playable Network Equipment Lab",
-  "stage_status": "FOCUSED_ACCEPTED",
-  "progress_note": "CH9.6 is FOCUSED_ACCEPTED on implementation head e547ba52a440e72cc02c6bbe449edaf160bae7ab after explicit Windows operator acceptance. The accepted lineage retains the earlier Windows automated baseline (CH9.2 UI routes 16, CH9.3 real ENet 20, CH9.4 reconnect/recovery 53, CH9.5 persistent ENet recovery 41, CH9.6 playable network equipment UI 22) and adds graphical hardening discovered during manual operation: fail-closed graphical launch/preflight, required Quaternius asset/import checks, visible wearable inventory metadata, and the real GUI preview->drop route for equipped-item unequip back to backpack. The operator verified that clothing equips and the corrected graphical unequip returns it to backpack, then explicitly directed acceptance of CH9.6. The local machine-readable acceptance JSON/pass marker was not pasted into the repository conversation, so no evidence path is fabricated here. Direct equipment->hotbar is a non-blocking interaction follow-up and is not part of the CH9.6 exit contract. Mandatory post-acceptance PC0 remains before any later Character stage.",
-  "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Run the mandatory post-acceptance Project Control audit from an up-to-date main checkout. No later Character stage is authorized until CH is non-RED and main explicitly declares the next Character frontier. Track direct equipment->hotbar atomic routing as a non-blocking follow-up rather than reopening CH9.6.",
+  "stage_status": "FOCUSED_ACCEPTED_POST_PC0_NON_RED_FROZEN",
+  "progress_note": "CH9.6 is FOCUSED_ACCEPTED on implementation head e547ba52a440e72cc02c6bbe449edaf160bae7ab after explicit Windows operator acceptance. The accepted lineage retains the earlier Windows automated baseline (CH9.2 UI routes 16, CH9.3 real ENet 20, CH9.4 reconnect/recovery 53, CH9.5 persistent ENet recovery 41, CH9.6 playable network equipment UI 22) and adds graphical hardening discovered during manual operation: fail-closed graphical launch/preflight, required Quaternius asset/import checks, visible wearable inventory metadata, and the real GUI preview->drop route for equipped-item unequip back to backpack. The operator verified that clothing equips and the corrected graphical unequip returns it to backpack, then explicitly directed acceptance of CH9.6. The local machine-readable acceptance JSON/pass marker was not pasted into the repository conversation, so no evidence path is fabricated here. Canonical post-acceptance Project Control was then run from main be6ea2a8636a9242fc808aea377d9144ef9bc9eb, registry generation 69: base Overall=YELLOW, CH=YELLOW, directional Overall=YELLOW, with CH->NX WATCH_HIT BLOCK on 2 paths. Because CH is non-RED and both canonical auditors completed, the mandatory CH9.6 post-acceptance gate is PASSED. The slice is now frozen. Direct equipment->hotbar remains a non-blocking interaction follow-up and does not reopen CH9.6.",
+  "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ implementation e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+  "next_stage": "Freeze the accepted CH9.6 slice. Do not create CH9.7 from this stacked lineage. No later Character runtime stage is authorized until canonical main explicitly declares the next Character frontier. Track direct equipment->hotbar atomic routing and occupied-hotbar replacement UX as non-blocking follow-ups for a future declared interaction/runtime stage.",
   "parent_branch_or_checkpoint": "feature/ch9-5-live-equipment-runtime-composition @ 9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "base_commit": "9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "candidate_runtime_head": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
@@ -72,6 +72,16 @@
     "full_regression": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
     "operator_graphical": "e547ba52a440e72cc02c6bbe449edaf160bae7ab"
   },
+  "post_acceptance_pc0": {
+    "status": "PASSED_NON_RED",
+    "main_head": "be6ea2a8636a9242fc808aea377d9144ef9bc9eb",
+    "registry_generation": 69,
+    "base_overall": "YELLOW",
+    "character": "YELLOW",
+    "directional_overall": "YELLOW",
+    "directional_watch": "CH -> NX WATCH_HIT BLOCK: 2 path(s)",
+    "combined": "YELLOW"
+  },
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
     "ITEM_IDENTITY_AND_GRAPH",
@@ -83,9 +93,7 @@
     "MATERIAL_ONTOLOGY",
     "WORLD_WORK_BUDGET"
   ],
-  "blockers": [
-    "CH9_6_POST_ACCEPTANCE_PC0_AUDIT_REQUIRED"
-  ],
+  "blockers": [],
   "non_blocking_followups": [
     "DIRECT_EQUIPMENT_TO_HOTBAR_ATOMIC_ROUTE",
     "HOTBAR_OCCUPIED_SLOT_REPLACEMENT_UX"
