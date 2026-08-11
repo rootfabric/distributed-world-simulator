@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.g8_6_geomorphology_visual_lab.v1",
   "checkpoint": "g8.6-geomorphology-visual-lab",
-  "status": "IMPLEMENTED_CANDIDATE",
+  "status": "AUTOMATED_ACCEPTED_MANUAL_PENDING",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -87,10 +87,12 @@
     "network_ownership": false
   },
   "acceptance": {
-    "headless_lab": "PENDING",
-    "focused": "PENDING",
-    "full_world_regression": "PENDING",
-    "manual_graphical": "PENDING"
+    "automated_tested_head": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "headless_lab": "PASS",
+    "focused": "PASS_BY_AUTOMATED_ACCEPTANCE_RUNNER",
+    "full_world_regression": "PASS",
+    "working_tree": "CLEAN",
+    "manual_graphical": "PENDING_REQUIRED"
   },
   "next_if_accepted": "G8_FULL_ACCEPTANCE"
 }
