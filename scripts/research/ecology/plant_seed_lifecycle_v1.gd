@@ -25,7 +25,14 @@ const VALID_STAGES: Array[String] = [
 	STAGE_ADULT, STAGE_REPRODUCTIVE, STAGE_SENESCENT,
 ]
 
-static func create_founder_payload(genome: Dictionary, inherited_traits: Dictionary, lineage_id: String, reproduction_event: String = "founder/ph4", seed_index: int = 0, stored_energy: float = 1.0) -> Dictionary:
+static func create_founder_payload(
+	genome: Dictionary,
+	inherited_traits: Dictionary,
+	lineage_id: String,
+	reproduction_event: String = "founder/ph4",
+	seed_index: int = 0,
+	stored_energy: float = 1.0
+) -> Dictionary:
 	if lineage_id.is_empty():
 		return {}
 	var envelope := Contract.create_seed_envelope(genome, inherited_traits, lineage_id, reproduction_event, seed_index, stored_energy)
@@ -33,14 +40,26 @@ static func create_founder_payload(genome: Dictionary, inherited_traits: Diction
 		return {}
 	return _payload(genome, inherited_traits, envelope, lineage_id, 0, -1)
 
-static func create_offspring_payload(parent_payload: Dictionary, reproduction_event: String, seed_index: int, stored_energy: float) -> Dictionary:
+static func create_offspring_payload(
+	parent_payload: Dictionary,
+	reproduction_event: String,
+	seed_index: int,
+	stored_energy: float
+) -> Dictionary:
 	if not bool(validate_payload(parent_payload).get("success", false)):
 		return {}
 	var genome: Dictionary = parent_payload["genome"]
 	var inherited: Dictionary = parent_payload["inherited_development_traits"]
 	var parent_seed := int(parent_payload["envelope"]["individual_seed"])
 	var lineage_id := String(parent_payload["lineage_id"])
-	var envelope := Contract.create_seed_envelope(genome, inherited, "%s/parent/%d" % [lineage_id, parent_seed], reproduction_event, seed_index, stored_energy)
+	var envelope := Contract.create_seed_envelope(
+		genome,
+		inherited,
+		"%s/parent/%d" % [lineage_id, parent_seed],
+		reproduction_event,
+		seed_index,
+		stored_energy
+	)
 	if envelope.is_empty():
 		return {}
 	return _payload(genome, inherited, envelope, lineage_id, int(parent_payload["generation"]) + 1, parent_seed)
@@ -94,7 +113,13 @@ static func create_initial_state(payload: Dictionary) -> Dictionary:
 	state["state_hash"] = compute_state_hash(state)
 	return state
 
-static func advance(state: Dictionary, payload: Dictionary, environment: Dictionary, delta_years: float, lifecycle_profile: Dictionary = {}) -> Dictionary:
+static func advance(
+	state: Dictionary,
+	payload: Dictionary,
+	environment: Dictionary,
+	delta_years: float,
+	lifecycle_profile: Dictionary = {}
+) -> Dictionary:
 	var profile := Profile.create_default() if lifecycle_profile.is_empty() else lifecycle_profile
 	if not bool(validate_payload(payload).get("success", false)):
 		return {}
@@ -111,6 +136,7 @@ static func advance(state: Dictionary, payload: Dictionary, environment: Diction
 
 	var next := state.duplicate(true)
 	next["chronological_age_years"] = float(next["chronological_age_years"]) + delta_years
+
 	var genome: Dictionary = payload["genome"]
 	var inherited: Dictionary = payload["inherited_development_traits"]
 	var phenotype := PH2.realize(payload["envelope"], inherited, environment)
@@ -120,6 +146,7 @@ static func advance(state: Dictionary, payload: Dictionary, environment: Diction
 	if coupling.is_empty():
 		return {}
 	var coupled_net := float(coupling["coupled_net_resource_balance"])
+
 	next["last_environment_checksum"] = String(environment["checksum"])
 	next["last_phenotype_hash"] = String(phenotype["phenotype_hash"])
 	next["last_coupling_hash"] = String(coupling["coupling_hash"])
@@ -168,9 +195,20 @@ static func advance(state: Dictionary, payload: Dictionary, environment: Diction
 		next["offspring_batch_hash"] = compute_offspring_batch_hash(offspring)
 
 	next["state_hash"] = compute_state_hash(next)
-	return {"state": next, "phenotype": phenotype, "coupling": coupling, "offspring": offspring}
+	return {
+		"state": next,
+		"phenotype": phenotype,
+		"coupling": coupling,
+		"offspring": offspring,
+	}
 
-static func run_to_first_reproduction(payload: Dictionary, environment: Dictionary, step_years: float = 0.10, max_years: float = 3.0, lifecycle_profile: Dictionary = {}) -> Dictionary:
+static func run_to_first_reproduction(
+	payload: Dictionary,
+	environment: Dictionary,
+	step_years: float = 0.10,
+	max_years: float = 3.0,
+	lifecycle_profile: Dictionary = {}
+) -> Dictionary:
 	var state := create_initial_state(payload)
 	if state.is_empty() or step_years <= 0.0 or max_years <= 0.0:
 		return {}
@@ -184,21 +222,20 @@ static func run_to_first_reproduction(payload: Dictionary, environment: Dictiona
 		if result.is_empty():
 			return {}
 		state = result["state"]
-		var current_stage := String(state["stage"])
-		if timeline.is_empty() or timeline[timeline.size() - 1] != current_stage:
-			timeline.append(current_stage)
+		var stage := String(state["stage"])
+		if timeline.is_empty() or timeline[timeline.size() - 1] != stage:
+			timeline.append(stage)
 		phenotype_hashes.append(String(result["phenotype"]["phenotype_hash"]))
 		coupling_hashes.append(String(result["coupling"]["coupling_hash"]))
 		if not result["offspring"].is_empty():
 			offspring = result["offspring"]
 			break
-	var profile := Profile.create_default() if lifecycle_profile.is_empty() else lifecycle_profile
 	var run := {
 		"schema": RUN_SCHEMA,
 		"version": VERSION,
 		"payload_hash": String(payload["payload_hash"]),
 		"environment_checksum": String(environment["checksum"]),
-		"profile_checksum": String(profile["checksum"]),
+		"profile_checksum": String((Profile.create_default() if lifecycle_profile.is_empty() else lifecycle_profile)["checksum"]),
 		"timeline": timeline,
 		"final_state": state,
 		"offspring": offspring,
@@ -209,10 +246,35 @@ static func run_to_first_reproduction(payload: Dictionary, environment: Dictiona
 	return run
 
 static func compute_payload_hash(payload: Dictionary) -> String:
-	return "|".join(PackedStringArray([SEED_PAYLOAD_SCHEMA, VERSION, String(payload.get("lineage_id", "")), str(int(payload.get("generation", -1))), str(int(payload.get("parent_individual_seed", -1))), String(payload.get("genome", {}).get("checksum", "")), String(payload.get("inherited_development_traits", {}).get("checksum", "")), String(payload.get("envelope", {}).get("checksum", ""))])).sha256_text()
+	return "|".join(PackedStringArray([
+		SEED_PAYLOAD_SCHEMA,
+		VERSION,
+		String(payload.get("lineage_id", "")),
+		str(int(payload.get("generation", -1))),
+		str(int(payload.get("parent_individual_seed", -1))),
+		String(payload.get("genome", {}).get("checksum", "")),
+		String(payload.get("inherited_development_traits", {}).get("checksum", "")),
+		String(payload.get("envelope", {}).get("checksum", "")),
+	])).sha256_text()
 
 static func compute_state_hash(state: Dictionary) -> String:
-	return "|".join(PackedStringArray([STATE_SCHEMA, VERSION, String(state.get("payload_hash", "")), str(int(state.get("individual_seed", -1))), String(state.get("stage", "")), "%.9f" % float(state.get("chronological_age_years", 0.0)), "%.9f" % float(state.get("development_age_years", 0.0)), "%.9f" % float(state.get("reserve_energy", 0.0)), str(int(bool(state.get("germinated", false)))), str(int(state.get("reproduction_count", 0))), str(int(state.get("offspring_count", 0))), String(state.get("offspring_batch_hash", "")), String(state.get("last_environment_checksum", "")), String(state.get("last_phenotype_hash", "")), String(state.get("last_coupling_hash", "")), "%.9f" % float(state.get("last_coupled_net", 0.0))])).sha256_text()
+	return "|".join(PackedStringArray([
+		STATE_SCHEMA, VERSION,
+		String(state.get("payload_hash", "")),
+		str(int(state.get("individual_seed", -1))),
+		String(state.get("stage", "")),
+		"%.9f" % float(state.get("chronological_age_years", 0.0)),
+		"%.9f" % float(state.get("development_age_years", 0.0)),
+		"%.9f" % float(state.get("reserve_energy", 0.0)),
+		str(int(bool(state.get("germinated", false)))),
+		str(int(state.get("reproduction_count", 0))),
+		str(int(state.get("offspring_count", 0))),
+		String(state.get("offspring_batch_hash", "")),
+		String(state.get("last_environment_checksum", "")),
+		String(state.get("last_phenotype_hash", "")),
+		String(state.get("last_coupling_hash", "")),
+		"%.9f" % float(state.get("last_coupled_net", 0.0)),
+	])).sha256_text()
 
 static func compute_offspring_batch_hash(offspring: Array) -> String:
 	var hashes := PackedStringArray()
@@ -221,7 +283,14 @@ static func compute_offspring_batch_hash(offspring: Array) -> String:
 	return "|".join(hashes).sha256_text()
 
 static func compute_run_hash(run: Dictionary) -> String:
-	var tokens := PackedStringArray([RUN_SCHEMA, VERSION, String(run.get("payload_hash", "")), String(run.get("environment_checksum", "")), String(run.get("profile_checksum", "")), String(run.get("final_state", {}).get("state_hash", "")), String(run.get("final_state", {}).get("offspring_batch_hash", ""))])
+	var tokens := PackedStringArray([
+		RUN_SCHEMA, VERSION,
+		String(run.get("payload_hash", "")),
+		String(run.get("environment_checksum", "")),
+		String(run.get("profile_checksum", "")),
+		String(run.get("final_state", {}).get("state_hash", "")),
+		String(run.get("final_state", {}).get("offspring_batch_hash", "")),
+	])
 	for stage in run.get("timeline", []):
 		tokens.append(String(stage))
 	for value in run.get("phenotype_hashes", []):
@@ -230,8 +299,24 @@ static func compute_run_hash(run: Dictionary) -> String:
 		tokens.append(String(value))
 	return "|".join(tokens).sha256_text()
 
-static func _payload(genome: Dictionary, inherited_traits: Dictionary, envelope: Dictionary, lineage_id: String, generation: int, parent_individual_seed: int) -> Dictionary:
-	var payload := {"schema": SEED_PAYLOAD_SCHEMA, "version": VERSION, "lineage_id": lineage_id, "generation": generation, "parent_individual_seed": parent_individual_seed, "genome": genome.duplicate(true), "inherited_development_traits": inherited_traits.duplicate(true), "envelope": envelope.duplicate(true)}
+static func _payload(
+	genome: Dictionary,
+	inherited_traits: Dictionary,
+	envelope: Dictionary,
+	lineage_id: String,
+	generation: int,
+	parent_individual_seed: int
+) -> Dictionary:
+	var payload := {
+		"schema": SEED_PAYLOAD_SCHEMA,
+		"version": VERSION,
+		"lineage_id": lineage_id,
+		"generation": generation,
+		"parent_individual_seed": parent_individual_seed,
+		"genome": genome.duplicate(true),
+		"inherited_development_traits": inherited_traits.duplicate(true),
+		"envelope": envelope.duplicate(true),
+	}
 	payload["payload_hash"] = compute_payload_hash(payload)
 	return payload
 
