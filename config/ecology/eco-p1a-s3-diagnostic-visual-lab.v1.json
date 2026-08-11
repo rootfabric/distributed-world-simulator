@@ -2,14 +2,11 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1A-S3",
   "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-  "status": "FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "parents": {
-    "p1a_s1": "ACCEPTED",
-    "p1a_s2": "ACCEPTED"
-  },
+  "parents": {"p1a_s1": "ACCEPTED", "p1a_s2": "ACCEPTED"},
   "truth_sources": [
     "scripts/research/ecology/environment_sample_v1.gd",
     "scripts/research/ecology/synthetic_environment_fixture_v1.gd",
@@ -23,51 +20,16 @@
     "scripts/labs/ecology/eco_p1a_s3_visual_lab.gd",
     "scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn"
   ],
-  "views": [
-    "temperature_c",
-    "soil_moisture",
-    "sunlight",
-    "nutrients",
-    "flood_frequency",
-    "final_biomass_kg_m2",
-    "net_resource_balance",
-    "dominant_limiting_factor"
-  ],
-  "controlled_probes": [
-    "BASE",
-    "SHALLOW_ROOT",
-    "DEEP_ROOT",
-    "WATER_LOVING",
-    "DROUGHT_TOLERANT",
-    "SHADE_TOLERANT",
-    "SUN_FAVORED"
-  ],
-  "fix1_headless_evidence": {
-    "assertions": 208,
-    "failures": 0,
-    "dataset_grid": 17,
-    "dataset_seasons": 24,
+  "views": ["temperature_c", "soil_moisture", "sunlight", "nutrients", "flood_frequency", "final_biomass_kg_m2", "net_resource_balance", "dominant_limiting_factor"],
+  "controlled_probes": ["BASE", "SHALLOW_ROOT", "DEEP_ROOT", "WATER_LOVING", "DROUGHT_TOLERANT", "SHADE_TOLERANT", "SUN_FAVORED"],
+  "accepted_evidence": {
+    "windows_s1": "PASS_109_ASSERTIONS",
+    "windows_s2": "PASS_235_ASSERTIONS",
+    "windows_s3": "PASS_208_ASSERTIONS",
     "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
     "scene_grid": 33,
-    "scene_seasons": 24,
     "scene_dataset_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
-    "parent_s2": "PASS_235_ASSERTIONS",
-    "parent_s1": "PASS_109_ASSERTIONS"
-  },
-  "graphical_review": {
-    "pre_fix_result": "FIX_REQUIRED_PRESENTATION_ONLY",
-    "pre_fix_findings": [
-      "diagnostic text intruded visually on the heatmap at the observed window size",
-      "insufficient explanation of probe effect and selected-patch causality"
-    ],
-    "fix1_targets": [
-      "dedicated right-side scrollable panel",
-      "view explanation and legend",
-      "global probe-vs-BASE effect",
-      "selected patch responses, limitations, energy equation and WHY explanation"
-    ],
-    "fix1_windows_automated": "PENDING",
-    "fix1_manual_graphical": "PENDING"
+    "graphical": "PASS_BY_USER_OBSERVATION"
   },
   "invariants": {
     "presentation_is_truth": false,
@@ -78,15 +40,5 @@
     "network_authority_owned": false,
     "material_truth_owned": false
   },
-  "manual_review_required": true,
-  "manual_review_targets": [
-    "heatmap and diagnostics panel do not overlap",
-    "heatmaps are readable and spatially coherent",
-    "biomass and net-balance views visibly differ from raw environment fields",
-    "limiting-factor view exposes water/light/nutrient/flood structure",
-    "Q/E probe switching produces explainable niche changes",
-    "global probe-vs-BASE summary explains the direction of change",
-    "click inspection exposes environment, responses, limitations, costs, biomass and a causal WHY statement",
-    "no visual state changes accepted S1/S2 hashes"
-  ]
+  "next": "ECO.P1A-S4 Determinism, Sensitivity and Failure Classification"
 }
