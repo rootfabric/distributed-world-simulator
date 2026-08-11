@@ -1,7 +1,7 @@
-# G8.6 — Geomorphology Visual Lab — candidate
+# G8.6 — Geomorphology Visual Lab — automated accepted / manual pending
 
-**Architecture:** `GLOBAL-P0-2026-08-10-R2`
-**Project Control:** `PC0-2026-08-10-R1`
+**Architecture:** `GLOBAL-P0-2026-08-10-R2`  
+**Project Control:** `PC0-2026-08-10-R1`  
 **Branch:** `feature/g8-geomorphology`
 
 ## Parent
@@ -14,132 +14,78 @@ Tested head:
 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736
 ```
 
-## Цель
+## Purpose
 
-Показать принятую G8 geomorphology на масштабе, где физически различимы русло шириной десятки метров, bank shoulder, floodplain и erosion/deposition, не превращая presentation mesh или LOD в canonical truth.
+G8.6 is a derived presentation lab over accepted G3+G5+G6 semantic truth and accepted G8.4 geomorphology deformation. It does not make camera, mesh density, cube face, LOD or presentation geometry canonical truth.
 
-Visual Lab центрируется на реальном переходе принятой G6 river spline через PX/PZ cube-sphere seam и строит локальный corridor `440 m × 1600 m`, 33×17 = 561 canonical samples.
+The lab renders a local `440 m × 1600 m` corridor around a real accepted G6 river crossing of the PX/PZ cube-sphere seam using a canonical source grid `33×17 = 561` samples.
 
-## Визуальные режимы
+## FIX history
 
-```text
-1  resolved surface height
-2  total deformation
-3  valley incision
-4  river channel incision
-5  bank shaping
-6  floodplain shaping
-7  erosion / deposition
-```
+The first exact-Windows run exposed only a JSON numeric Array type-sensitivity bug in the acceptance harness. FIX1 corrected the harness without changing runtime.
 
-Дополнительно:
+The second exact-Windows run passed contracts but the headless lab found `river_channel_delta_m` zero throughout the corridor. The cause was presentation-only: the original lab forced the corridor onto `Fixture.RADIUS_M` while the accepted G6 river centerline carried real radial elevation. FIX2 therefore preserves the upstream G6 centerline radius and derives the local seam frame there. Accepted G8.1–G8.5 runtime and formulas remain unchanged.
+
+## Automated acceptance
+
+Exact automated acceptance checkout:
 
 ```text
-G       source G3 geometry / resolved G8 geometry
-F       canonical river overlay
-X       PX/PZ representation seam overlay
-W / S   zoom + derived presentation LOD
-A / D   yaw
-Q / E   pitch
-Space   auto orbit
-R       reset
+a9ca1f8b723e4edc5ebff40db26e41283d464597
 ```
 
-Presentation LOD использует те же 561 canonical samples:
+Engine:
 
 ```text
-LOD0 stride 1  -> 33×17
-LOD1 stride 2  -> 17×9
-LOD2 stride 4  -> 9×5
-LOD3 stride 8  -> 5×3
+4.7.1.stable.double.custom_build.a13da4feb
 ```
 
-Camera, color mode, mesh density, overlays и 3.5× vertical display exaggeration не входят в canonical geomorphology truth/checksum.
-
-## First Windows attempt / FIX1
-
-Первый exact-Windows focused run на head `87acbc69854336fa52b5b4c66069ec56a555c1a4` прошёл editor import и G8.5 invariance `PASS (150 assertions)`, после чего contract harness остановился на `source grid pinned` (`35 assertions, 1 failure`). Manifest был корректен; причиной оказалась type-sensitive Array equality после JSON decode. FIX1 `05757e69b7e73139226c68702f4bb81c31840469` приводит оба JSON numeric значения к `int` и не меняет runtime.
-
-## Second Windows attempt / FIX2
-
-Второй exact-Windows run на head:
+Final evidence:
 
 ```text
-666a56e104b521c642afd3168f9d3e3b3f1d9ad4
+G8.6 AUTOMATED ACCEPTANCE: PASS
+G8.5 parent ACCEPTED: PASS
+G8.6 headless local corridor lab: PASS
+Derived presentation LOD / truth separation: PASS
+PX/PZ seam diagnostic corridor: PASS
+World/core regression: PASS
+Working tree: CLEAN
+MANUAL GRAPHICAL ACCEPTANCE: REQUIRED
 ```
 
-дошёл дальше:
+Visible regression counts from the supplied Windows run include:
 
 ```text
-editor import                                               PASS
-G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance       PASS (150 assertions)
-G8.6 Geomorphology Visual Lab Contracts                    PASS (35 assertions)
-G8.6 headless semantic / geomorphology lab                  FAIL
+MW10 cross-region Matter processes          PASS 51
+MW10 lock release retry                     PASS 12
+RL0 representation contracts                PASS 92
+RL1 matter summary pyramid                  PASS 245
+RL2 Matter multiresolution meshing          PASS 153
+RL2 real asteroid multiresolution           PASS 44
+RL3 representation-aware streaming          PASS 175
+RL3 representation streaming processes      PASS 37
+main_scene_cli_all                           6 PASS / 0 FAIL
+lifecycle                                    STOPPED
+NX4 final world/core marker                  PASS
 ```
 
-Headless smoke сообщил:
+G8.6 is therefore `AUTOMATED_ACCEPTED_MANUAL_PENDING`.
 
-```text
-G8_6_COMPONENT_NOT_VISIBLE_IN_CORRIDOR
-component = river_channel_delta_m
-```
+## Manual graphical gate
 
-Это уже ошибка локального presentation corridor, но не G8.2/G8.4 runtime. Accepted G6 river spline хранит реальную radial elevation. В районе выбранного PX/PZ seam centerline находится примерно на `+70 m` относительно `Fixture.RADIUS_M`, тогда как исходный G8.6 lab после нахождения seam делал проекцию обратно на `Fixture.RADIUS_M`. Поскольку G6 `river_distance_m` — полный 3D distance до centerline, все 561 samples оказались ниже канала и G8.2 корректно выдавал нулевой `river_channel_delta_m`.
-
-FIX2 runtime commit:
-
-```text
-6d461ea5b201047cf12f1d284fb08e93ceae1689
-```
-
-FIX2 реализован отдельным presentation-only wrapper:
-
-```text
-res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd
-```
-
-Он:
-
-- находит PX/PZ seam на той же radial interpolation, что использует G6 resolver;
-- сохраняет настоящий radius G6 centerline вместо принудительного `Fixture.RADIUS_M`;
-- строит локальный tangent/cross frame в этой точке;
-- семплирует corridor на centerline radius;
-- не меняет accepted G8.1–G8.5 geomorphology runtime, формулы или canonical identity.
-
-Headless smoke **не ослаблен**: он всё ещё требует ненулевую видимость каждого из пяти deformation components.
-
-## Automated sequence
-
-После sync latest branch на одном clean checkout:
+Launch on the same automated-tested checkout if it is still clean. Do not fetch/reset merely for the manual observation.
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1 `
-    -GodotPath $Godot
-
-.\RUN_G8_6_AUTOMATED_ACCEPTANCE.ps1 `
-    -GodotPath $Godot
+& $Godot --path . res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn
 ```
 
-Второй runner включает свежий world/core regression. Между focused PASS и automated runner нельзя делать `fetch/reset`.
+Confirm:
 
-## Graphical launch
+1. `G` visibly switches source G3 ↔ resolved G8 geometry while HUD `Truth hash` remains unchanged.
+2. `1..7` show resolved height, total deformation, valley, channel, bank, floodplain and erosion/deposition views.
+3. `W/S` changes derived presentation LOD/mesh-grid while `Canonical samples=561` and `Truth hash` remain unchanged.
+4. With `X`, the magenta PX/PZ seam crosses the resolved surface without a visible crack/discontinuity.
+5. With `F`, the cyan canonical river overlay agrees with the visible channel/bank/floodplain structure.
 
-```powershell
-& $Godot `
-    --path . `
-    res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn
-```
-
-## Manual acceptance
-
-Нужно подтвердить:
-
-1. `G` заметно переключает source ↔ resolved geometry, а HUD `Truth hash` не меняется.
-2. `1..7` показывают разные ожидаемые формы полного G8 deformation.
-3. `W/S` меняют LOD/mesh-grid, но `Canonical samples=561` и `Truth hash` остаются неизменными.
-4. При включённом `X` magenta PX/PZ seam пересекает поверхность без видимого геометрического разрыва.
-5. При включённом `F` cyan river overlay согласован с channel/bank/floodplain формой.
-
-Только focused FIX2 + automated + manual graphical PASS переводят G8.6 в ACCEPTED и открывают `G8 Full Acceptance`.
+Only user-observed graphical PASS moves G8.6 to `ACCEPTED`. After that, run G8 Full Acceptance. No automatic PR merge.
