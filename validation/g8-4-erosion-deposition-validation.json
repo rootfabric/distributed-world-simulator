@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_4_erosion_deposition.v1",
   "checkpoint": "g8.4-erosion-deposition-baseline",
-  "decision": "IMPLEMENTED_CANDIDATE_FOCUSED_AND_FULL_VALIDATION_PENDING",
+  "decision": "ACCEPTED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -55,13 +55,24 @@
     "network_ownership": false
   },
   "automated_evidence": {
-    "focused": "PENDING",
-    "full_world_regression": "PENDING",
-    "working_tree": "TO_BE_VERIFIED"
+    "focused": "PASS_ON_FULL_ACCEPTANCE_CHECKOUT",
+    "full_world_regression": "PASS",
+    "tested_head": "82cc31429f2bf2ea419bf1b50159838eea51c727",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "g8_3_parent_accepted": "PASS",
+    "erosion_deposition_baseline": "PASS",
+    "full_geomorphology_composition": "PASS",
+    "geomorphology_ownership_boundary": "PASS",
+    "rl3_representation_aware_network_streaming_assertions": 175,
+    "rl3_representation_streaming_process_assertions": 37,
+    "main_scene_cli_all": {"pass": 6, "fail": 0},
+    "world_core_regression_through_nx4": "PASS",
+    "lifecycle": "STOPPED",
+    "working_tree": "CLEAN"
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FOCUSED_AND_FULL_PASS",
-    "blockers": ["G8_4_FOCUSED_VALIDATION_REQUIRED", "G8_4_FULL_WORLD_REGRESSION_REQUIRED"]
+    "expected_health": "GREEN_AT_ACCEPTED_CHECKPOINT",
+    "blockers": []
   },
   "next_if_accepted": "G8.5_CROSS_CELL_CROSS_LOD_GEOMORPHOLOGY_INVARIANCE"
 }
