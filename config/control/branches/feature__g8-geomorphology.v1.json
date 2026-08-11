@@ -32,7 +32,7 @@
     "config/procedural/g8-2-river-channel-incision.v1.json",
     "validation/g8-2-river-channel-incision-validation.json",
     "tests/procedural/geomorphology/g8_2_river_channel_incision_acceptance.gd",
-    "docs/checkpoints/G8_2_RIVER_CHANNEL_INcision_ACCEPTED_RU.md",
+    "docs/checkpoints/G8_2_RIVER_CHANNEL_INCISION_ACCEPTED_RU.md",
     "config/procedural/g8-3-banks-floodplain-shaping.v1.json",
     "validation/g8-3-banks-floodplain-validation.json",
     "tests/procedural/geomorphology/g8_3_banks_floodplain_acceptance.gd",
