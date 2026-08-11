@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_6_geomorphology_visual_lab.v1",
   "checkpoint": "g8.6-geomorphology-visual-lab",
-  "decision": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+  "decision": "FIX2_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -12,7 +12,8 @@
   },
   "implementation": {
     "scene": "res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn",
-    "script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd",
+    "base_script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd",
+    "runtime_script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd",
     "manifest": "config/procedural/g8-6-geomorphology-visual-lab.v1.json",
     "acceptance_test": "tests/procedural/geomorphology/g8_6_geomorphology_visual_lab_acceptance.gd",
     "focused_runner": "RUN_G8_6_GEOMORPHOLOGY_VISUAL_LAB_TESTS.ps1",
@@ -37,7 +38,8 @@
     "source_vs_resolved_toggle": true,
     "river_overlay": true,
     "px_pz_seam_overlay": true,
-    "vertical_exaggeration_is_presentation_only": true
+    "vertical_exaggeration_is_presentation_only": true,
+    "corridor_sampling_radius_follows_upstream_g6_centerline": true
   },
   "architecture": {
     "canonical_truth_source": "accepted G3+G5+G6 semantics composed through G7 and evaluated through accepted G8.4",
@@ -69,7 +71,7 @@
     }
   },
   "fix1": {
-    "status": "IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+    "status": "RETEST_PASSED",
     "head": "05757e69b7e73139226c68702f4bb81c31840469",
     "scope": "Acceptance harness only: validate source_grid length and cast both JSON numeric values to int before comparing 33x17.",
     "manifest_changes": false,
@@ -77,9 +79,39 @@
     "geomorphology_formula_changes": false,
     "canonical_truth_changes": false
   },
+  "second_windows_attempt": {
+    "status": "HEADLESS_PRESENTATION_CORRIDOR_FAIL",
+    "tested_head": "666a56e104b521c642afd3168f9d3e3b3f1d9ad4",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "g8_5_parent_invariance": "PASS_150_ASSERTIONS",
+    "g8_6_contracts": "PASS_35_ASSERTIONS",
+    "g8_6_headless_lab": "FAIL",
+    "failure": {
+      "error_code": "G8_6_COMPONENT_NOT_VISIBLE_IN_CORRIDOR",
+      "component": "river_channel_delta_m",
+      "cause": "The original visual corridor found the PX/PZ seam direction but then normalized seam_center_world and every sample to Fixture.RADIUS_M. Accepted G6 river spline control points carry real radial elevation; around this seam the centerline is roughly 70 m above the body reference radius. G6 river_distance_m is full 3D distance to centerline, so all 561 presentation samples were displaced vertically away from the channel and G8.2 correctly produced zero river-channel incision.",
+      "g8_2_runtime_regression": false,
+      "canonical_geomorphology_regression": false,
+      "presentation_corridor_bug": true,
+      "world_regression_executed": false
+    }
+  },
+  "fix2": {
+    "status": "IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+    "runtime_head": "6d461ea5b201047cf12f1d284fb08e93ceae1689",
+    "scope": "Presentation-only wrapper preserves the accepted G6 radial centerline elevation, finds the PX/PZ seam on the same radial interpolation used by G6, derives a local tangent there, and samples the corridor on that centerline radius instead of forcing Fixture.RADIUS_M.",
+    "base_lab_runtime_changes": false,
+    "accepted_g8_1_to_g8_5_runtime_changes": false,
+    "geomorphology_formula_changes": false,
+    "canonical_truth_contract_changes": false,
+    "scene_rebound_to_fix2_wrapper": true,
+    "manifest_documents_upstream_centerline_radius": true,
+    "headless_component_visibility_gate_relaxed": false
+  },
   "automated_evidence": {
-    "focused": "PENDING_FIX1_RETEST",
-    "headless_lab": "PENDING",
+    "focused": "PENDING_FIX2_RETEST",
+    "headless_lab": "PENDING_FIX2_RETEST",
     "full_world_regression": "PENDING",
     "working_tree": "TO_BE_VERIFIED"
   },
@@ -94,9 +126,9 @@
     ]
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_FIX1_AUTOMATED_AND_MANUAL_PASS",
+    "expected_health": "YELLOW_UNTIL_FIX2_AUTOMATED_AND_MANUAL_PASS",
     "blockers": [
-      "G8_6_FIX1_FOCUSED_RETEST_REQUIRED",
+      "G8_6_FIX2_FOCUSED_RETEST_REQUIRED",
       "G8_6_AUTOMATED_VALIDATION_REQUIRED",
       "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
     ]
