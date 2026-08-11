@@ -2,10 +2,9 @@ extends "res://scripts/labs/t1/t1a7/t1_d0_recoverable_runtime_executor.gd"
 
 const DependencyPropagatorScript = preload("res://scripts/construction/behavior/construction_runtime_dependency_failure_propagator.gd")
 const CommandFailureHandlerScript = preload("res://scripts/construction/behavior/construction_runtime_command_failure_handler.gd")
-const RuntimeExecutorScript = preload("res://scripts/construction/behavior/construction_affordance_runtime_executor.gd")
 const RuntimeSnapshotScript = preload("res://scripts/runtime/networked_gameplay/contracts/construction_runtime_snapshot.gd")
 
-const SCHEMA: String = "planet_simulator.t1b3_recoverable_failure_runtime.v1"
+const T1B3_SCHEMA: String = "planet_simulator.t1b3_recoverable_failure_runtime.v1"
 
 var _failure_handler
 
@@ -41,7 +40,7 @@ func setup(m0_root: String) -> Dictionary:
 		return _failure("T1B3_RUNTIME_EXECUTOR_SETUP_FAILED", {"cause": executor_setup})
 
 	return _success({
-		"schema": SCHEMA,
+		"schema": T1B3_SCHEMA,
 		"report": get_report(),
 		"failure_handler": _failure_handler.report(),
 	})
@@ -86,7 +85,7 @@ func apply_failure_plan(
 		applied.append(runtime_id)
 
 	return _success({
-		"schema": SCHEMA,
+		"schema": T1B3_SCHEMA,
 		"plan": plan.duplicate(true),
 		"applied_runtime_ids": applied,
 		"runtime_state": _runtime_store.to_dict(),
