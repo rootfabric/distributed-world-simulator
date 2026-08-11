@@ -364,11 +364,18 @@ minus human dependency
 minus stale/diverged branch cost
 ```
 
-Однако до завершения H0.1 действует pilot override:
+Pilot выполняется в два шага:
 
 ```text
-max autonomous runtime workers = 1
-target = H0_1_CLOSED_LOOP_C22_PILOT
+H0.0:
+  max autonomous runtime workers = 0
+  target = H0_0_SCAFFOLD_READY
+
+после H0_0_SCAFFOLD_READY:
+
+H0.1:
+  max autonomous runtime workers = 1
+  target = H0_1_CLOSED_LOOP_C22_PILOT
 ```
 
 G8.6/CH9.6 могут существовать параллельно как `HUMAN_OBSERVATION / WAITING_HUMAN`.
@@ -428,9 +435,9 @@ continuation after result
 
 ## 13. Recovery drill
 
-До H0.1 PASS требуется реальный recovery drill.
+H0.0 обязан доказать recovery на fixture/event-ledger без runtime-разработки. До H0.1 PASS требуется повторить recovery уже на реальном C22 execution train.
 
-Новый чистый checkout/session должен выполнить будущий:
+Новый чистый checkout/session должен выполнить:
 
 ```powershell
 .\CONTROL_DEVELOPMENT.ps1 -Resume
@@ -452,9 +459,59 @@ human approval requirement
 
 ---
 
-## 14. Первый pilot
+## 14. Двухшаговый pilot
 
-Ближайшая двойная цель:
+### H0.0 — Restart-Safe Harness Scaffold
+
+**Это ближайший checkpoint. Runtime-код пока не разрабатывается.**
+
+Нужно реализовать:
+
+```text
+CONTROL_DEVELOPMENT.ps1
+scripts/harness/state_builder.py
+scripts/harness/checkpoint_planner.py
+scripts/harness/verifier.py
+scripts/harness/decision_engine.py
+event reducer / schema loader / epoch validator
+```
+
+Минимальные команды:
+
+```powershell
+.\CONTROL_DEVELOPMENT.ps1 -Status
+.\CONTROL_DEVELOPMENT.ps1 -Plan
+.\CONTROL_DEVELOPMENT.ps1 -Resume
+```
+
+H0.0 predicates:
+
+```text
+canonical contracts load
+Status works
+Plan works
+Resume works
+work-order schema validation
+event reducer rebuilds state
+Project Epoch validation
+main movement -> epoch invalidation detection
+dry-run C22 plan
+Git-only recovery fixture
+NO runtime scope changes
+PC0 non-RED
+```
+
+Checkpoint:
+
+```text
+H0_0_SCAFFOLD_READY
+```
+
+До него запрещено автоматически создавать runtime C22/NX branches.
+
+### H0.1 — Closed-Loop C22 Pilot
+
+Только после `H0_0_SCAFFOLD_READY` активируется двойная цель:
 
 ```text
 HARNESS:
@@ -492,7 +549,7 @@ exact tested heads
 standard PC0 non-RED
 directional PC0 without critical hits
 critical overlap = 0
-recovery drill PASS
+real clean-session recovery drill PASS
 draft PR
 checkpoint proposal
 ```
