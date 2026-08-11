@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-H0-0-R1",
   "program": "HARNESS",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "FIX_REQUIRED",
+  "state": "DISPATCHED",
   "work_order_type": "CONTROL",
   "base_sha": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "branch": "control/h0-closed-loop-development",
@@ -56,6 +56,8 @@
     "Modular scripts/harness implementation",
     "Negative and recovery fixture tests",
     "Machine-readable validation summary",
+    "Versioned CONTROL_DEVELOPMENT output schema and documented exit-code contract",
+    "Pinned harness dependency manifest with fail-closed missing-dependency behavior",
     "Post-build critique",
     "Evidence Map",
     "Changed-file archive",
@@ -85,14 +87,14 @@
   "design_brief": {
     "problem_statement": "Canonical harness, risk, review and evidence contracts exist in main, but no executable Status, Plan or Resume implementation exists.",
     "current_behavior": "A new session must manually interpret control files and cannot reconstruct an active execution train through one canonical command.",
-    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, treat append-only events as the authoritative execution state, validate any mutable Work Order state only as a derived snapshot, validate epochs, build status, plan the declared checkpoint and resume from Git-only state.",
+    "desired_behavior": "A thin PowerShell entrypoint and modular Python implementation load canonical contracts, treat append-only events as the authoritative execution state, validate any mutable Work Order state only as a derived snapshot, expose a versioned JSON result contract with stable exit codes, validate epochs fail-closed, build status, plan the declared checkpoint and resume from Git-only state.",
     "alternatives_considered": [
       "Implement all behavior in one PowerShell script.",
       "Implement a thin PowerShell entrypoint over focused Python modules.",
       "Build a full autonomous execution engine in H0.0."
     ],
-    "selected_design": "Use a thin PowerShell entrypoint over focused Python modules with JSON output derived from canonical contracts and branch-local execution instances.",
-    "why_selected": "The modular design is testable and cross-session recoverable while keeping H0.0 bounded to read/plan/resume behavior and excluding autonomous runtime execution.",
+    "selected_design": "Use a thin PowerShell 5.1-compatible entrypoint over focused Python modules. Human stage messages use the host/information stream; the success stream ends in one versioned JSON envelope. Dependencies are pinned under scripts/harness and never installed implicitly.",
+    "why_selected": "The modular design is testable and cross-session recoverable, gives automation a stable versioned output/error boundary, and keeps H0.0 bounded to read/plan/resume behavior without autonomous runtime execution.",
     "affected_owners": [
       "MAIN/HARNESS",
       "PC0"
@@ -127,13 +129,16 @@
       "Reject or report disagreement between event-derived state and the Work Order state snapshot.",
       "Report event subject head and actual ledger/ref head as distinct fields.",
       "Validate semantic cross-contract invariants that JSON Schema alone cannot express.",
+      "Treat moved main without a recorded PC0/directional decision as MAIN_MOVED_REVIEW_REQUIRED and block continuation.",
+      "Validate the versioned CLI envelope, stable exit-code mapping and stdout/stderr discipline from repo and non-root working directories.",
+      "Prove pinned dependency availability is checked without network bootstrap or ambient fallback.",
       "Detect exact-main, moved-main CONTINUE and REFRESH_REQUIRED epoch states.",
       "Prove Status, Plan and Resume output from a clean checkout after artifacts are removed.",
       "Prove dry-run C22 remains blocked until H0_0_SCAFFOLD_READY.",
       "Run git diff --check and Project Control non-RED."
     ]
   },
-  "repair_context_required": true,
+  "repair_context_required": false,
   "evidence_map_required": true,
   "human_attention_triggers": [
     "CANONICAL_CONTRACT_CHANGE_REQUIRED",
@@ -144,5 +149,5 @@
   "human_approval_required_for": [
     "CONTROL_DOCS_ONLY_MERGE"
   ],
-  "notes": "H0.0 may prepare HUMAN_OBSERVATION work-order shapes and R3 analysis state, but it must not create autonomous runtime branches."
+  "notes": "H0.0 implementation scope is executable harness control and fixtures only. HUMAN_OBSERVATION and R3 may appear only as canonical goal/catalog data consumed read-only; no new work orders or branches are created for them."
 }

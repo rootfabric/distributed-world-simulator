@@ -64,6 +64,78 @@ Reducer, schema validation, epoch comparison и planner требуют неза�
 - потеря Reviewer/Evidence Map/Human Attention state;
 - обход pilot override и преждевременный выбор C22.
 
+### Fail-closed epoch semantics
+
+```text
+origin/main == epoch.base_sha
+  → EXACT_BASE
+
+origin/main moved, audit decision absent
+  → MAIN_MOVED_REVIEW_REQUIRED
+  → continuation blocked
+
+AUDIT_COMPLETED event explicitly permits continuation
+  → CONTINUE
+
+EPOCH_INVALIDATED event or explicit refresh decision
+  → REFRESH_REQUIRED
+```
+
+Движение `main` само по себе не доказывает ни безопасность продолжения, ни необходимость refresh. Без PC0/directional evidence planner обязан закрыться.
+
+### Semantic validation
+
+Помимо Draft 2020-12 schema validation проверяются:
+
+- совпадение epoch/work-order/event identity и base SHA;
+- risk minimum и required roles;
+- полный Design Brief для `MEDIUM+`;
+- непрерывная уникальная event sequence с явной transition table;
+- authoritative reducer state против `Work Order.state` snapshot;
+- membership checkpoint/predicates в canonical catalog;
+- Git reachability base/subject/ledger/current heads;
+- normalized allowlist без absolute path, `..` и выхода через symlink;
+- fail-closed поведение для malformed/duplicate-key JSON и partial ledger.
+
+### Versioned CLI contract
+
+Каждая команда печатает читаемые stage-сообщения через host/information stream и завершает success stream одним JSON envelope:
+
+```text
+schema: distributed_world_simulator.control_development_output.v1
+command: STATUS | PLAN | RESUME
+ok: true | false
+error_code: null | stable machine code
+repository: captured ref/head/dirty state
+epoch: reconstructed epoch and freshness
+work_order: event-derived state plus snapshot consistency
+review: risk/reviewer/evidence freshness
+human_attention: open/resolved items
+findings: deterministic diagnostics
+next: checkpoint/work order/verification/human gate
+```
+
+Exit codes:
+
+```text
+0  command executed and state was reconstructed (workflow may still be BLOCKED)
+2  INVALID_INVOCATION
+3  CONTRACT_OR_DEPENDENCY_INVALID
+4  GIT_STATE_INVALID
+5  EXECUTION_STATE_INVALID
+6  INTERNAL_ERROR
+```
+
+Ошибки идут в stderr без Python traceback. `PowerShell` явно проверяет `$LASTEXITCODE`.
+
+### Dependency strategy
+
+`scripts/harness/requirements.txt` фиксирует используемую версию `jsonschema`. Harness не устанавливает пакеты и не обращается в сеть автоматически. Отсутствующая/несовместимая dependency даёт стабильный `CONTRACT_OR_DEPENDENCY_INVALID`.
+
+### Evidence review circularity
+
+До review создаётся candidate Evidence Map с `INSUFFICIENT_EVIDENCE`. Reviewer выпускает отдельный review result. После verdict Director формирует отдельную reviewed Evidence Map; исходный candidate не переписывается.
+
 ### Проверка
 
 Нужны schema/semantic negative tests, reducer replay, moved-main fixtures, dry-run C22 block, clean-checkout `Resume`, post-build critique, Evidence Map, независимые Reviewer и Verifier, затем PC0.
