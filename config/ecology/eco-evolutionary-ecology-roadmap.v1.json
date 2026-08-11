@@ -60,7 +60,7 @@
         "status": "ACCEPTED",
         "output": "Headless EXP-V0 with stable environment queries, control samples and environment hash.",
         "evidence": {
-          "assertions": 108,
+          "assertions": 109,
           "failures": 0,
           "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
           "validation": "validation/ecology/eco-p1a-s1-environment-baseline-validation.json"
