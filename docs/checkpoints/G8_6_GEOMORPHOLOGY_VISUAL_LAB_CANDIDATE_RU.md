@@ -56,9 +56,42 @@ LOD3 stride 8  -> 5×3
 
 Camera, color mode, mesh density, overlays и 3.5× vertical display exaggeration не входят в canonical geomorphology truth/checksum.
 
+## First Windows attempt / FIX1
+
+Первый exact-Windows focused run на head:
+
+```text
+87acbc69854336fa52b5b4c66069ec56a555c1a4
+```
+
+прошёл editor import и принятый G8.5 invariance regression:
+
+```text
+G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance: PASS (150 assertions)
+```
+
+После этого G8.6 contract harness остановился на:
+
+```text
+G8.6 Geomorphology Visual Lab Contracts: FAIL (35 assertions, 1 failures)
+- source grid pinned
+```
+
+Это не geomorphology/runtime regression. Manifest содержит правильный `source_grid: [33, 17]`. Причина в test harness: `JSON.parse_string()` декодирует JSON numbers как `float`, а GDScript Array equality type-sensitive, поэтому `[33.0, 17.0] != [33, 17]`.
+
+Поведение отдельно воспроизведено на exact Godot `4.7.1.stable.double.custom_build.a13da4feb` Linux double build.
+
+FIX1 implementation commit:
+
+```text
+05757e69b7e73139226c68702f4bb81c31840469
+```
+
+FIX1 меняет только acceptance harness: проверяет размер массива и приводит оба значения `source_grid` к `int` перед сравнением. Manifest, lab runtime, geomorphology formulas, canonical truth, identity и presentation behavior не менялись.
+
 ## Automated sequence
 
-На одном clean checkout:
+После sync latest branch на одном clean checkout:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
@@ -70,7 +103,7 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
     -GodotPath $Godot
 ```
 
-Второй runner включает свежий world/core regression. После automated PASS checkout не менять до graphical review.
+Второй runner включает свежий world/core regression. Между focused PASS и automated runner нельзя делать `fetch/reset`.
 
 ## Graphical launch
 
@@ -90,4 +123,4 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 4. При включённом `X` magenta PX/PZ seam пересекает поверхность без видимого геометрического разрыва.
 5. При включённом `F` cyan river overlay согласован с channel/bank/floodplain формой.
 
-Только automated + manual graphical PASS переводят G8.6 в ACCEPTED и открывают `G8 Full Acceptance`.
+Только focused FIX1 + automated + manual graphical PASS переводят G8.6 в ACCEPTED и открывают `G8 Full Acceptance`.
