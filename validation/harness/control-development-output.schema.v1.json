@@ -32,11 +32,12 @@
     "source": {"const": "GIT_ONLY_WORKER_DATA"},
     "repository": {
       "type": "object",
-      "required": ["event_subject_head_sha", "event_ledger_head_sha", "current_branch_head_sha", "current_branch", "origin_main_head_sha", "worktree_dirty"],
+      "required": ["event_subject_head_sha", "event_ledger_head_sha", "current_branch_head_sha", "implementation_head_sha", "current_branch", "origin_main_head_sha", "worktree_dirty"],
       "properties": {
         "event_subject_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "event_ledger_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "current_branch_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "implementation_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "current_branch": {"type": "string", "minLength": 1},
         "origin_main_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "worktree_dirty": {"type": "boolean"}
@@ -73,11 +74,12 @@
     "resume": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["active_epoch", "branch", "current_branch_head_sha", "last_completed_predicate", "open_blocker", "next_work_order", "review_state", "open_human_attention", "human_approval_required_for", "verification_commands"],
+      "required": ["active_epoch", "branch", "current_branch_head_sha", "implementation_head_sha", "last_completed_predicate", "open_blocker", "next_work_order", "review_state", "open_human_attention", "human_approval_required_for", "verification_commands"],
       "properties": {
         "active_epoch": {"type": "string", "minLength": 1},
         "branch": {"type": "string", "minLength": 1},
         "current_branch_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "implementation_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "last_completed_predicate": {"type": ["string", "null"]},
         "open_blocker": {"type": ["string", "null"]},
         "next_work_order": {"type": "string", "minLength": 1},

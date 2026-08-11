@@ -61,7 +61,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.mode == "resume":
             state["resume"] = {
                 "active_epoch": state["epoch"]["epoch_id"], "branch": state["active_work_order"]["branch"],
-                "current_branch_head_sha": state["repository"]["current_branch_head_sha"], "last_completed_predicate": state["reduced_work_order"]["last_completed_predicate"],
+                "current_branch_head_sha": state["repository"]["current_branch_head_sha"], "implementation_head_sha": state["repository"]["implementation_head_sha"],
+                "last_completed_predicate": state["reduced_work_order"]["last_completed_predicate"],
                 "open_blocker": state["reduced_work_order"]["open_blocker"], "next_work_order": state["active_work_order"]["work_order_id"],
                 "review_state": state["review"]["state"], "open_human_attention": state["human_attention"]["open_items"],
                 "human_approval_required_for": state["active_work_order"].get("human_approval_required_for", []),

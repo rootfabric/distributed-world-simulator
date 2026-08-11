@@ -53,6 +53,12 @@ class H0ControlHarnessTests(unittest.TestCase):
         self.assertEqual(40, len(heads["event_subject_head_sha"]))
         self.assertEqual(40, len(heads["event_ledger_head_sha"]))
         self.assertEqual(40, len(heads["current_branch_head_sha"]))
+        self.assertEqual(40, len(heads["implementation_head_sha"]))
+        expected_implementation_head = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", "CONTROL_DEVELOPMENT.ps1", "scripts/harness", "tests/harness", "validation/harness", "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md"],
+            cwd=ROOT, text=True, capture_output=True, check=True,
+        ).stdout.strip()
+        self.assertEqual(expected_implementation_head, heads["implementation_head_sha"])
 
     def test_plan_keeps_c22_dry_run_blocked(self) -> None:
         reduced = self.reduce()

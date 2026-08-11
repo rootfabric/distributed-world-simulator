@@ -27,6 +27,24 @@ def _git_branch(root: Path) -> str:
     return branch
 
 
+def _git_implementation_head(root: Path) -> str:
+    implementation_paths = [
+        "CONTROL_DEVELOPMENT.ps1",
+        "scripts/harness",
+        "tests/harness",
+        "validation/harness",
+        "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_RU.md",
+    ]
+    output = subprocess.run(
+        ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
+        cwd=root, text=True, capture_output=True, check=False,
+    )
+    value = output.stdout.strip()
+    if output.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", value):
+        raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
+    return value
+
+
 def _git_path_head(root: Path, path: Path) -> str:
     relative = path.resolve().relative_to(root.resolve()).as_posix()
     output = subprocess.run(["git", "log", "-1", "--format=%H", "--", relative], cwd=root, text=True, capture_output=True, check=False)
@@ -229,6 +247,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     )
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
+    implementation_head = _git_implementation_head(root)
     ledger_head = _validate_event_git_provenance(root, active["event_paths"], active["events"], current_head)
     exact_audit = _select_epoch_audit(guard_context, active["events"])
     epoch_validation = validate_epoch(root, epoch, canonical_branch, exact_audit)
@@ -261,9 +280,9 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     post_build_state = "MISSING"
     if post_build_reviews:
         latest_review = post_build_reviews[-1]
-        post_build_state = latest_review["verdict"] if latest_review["reviewed_head_sha"] == current_head else "STALE"
+        post_build_state = latest_review["verdict"] if latest_review["reviewed_head_sha"] == implementation_head else "STALE"
     review_state = "READY" if post_build_state == "PASS" else "PENDING_POST_BUILD_REVIEW"
-    if evidence and evidence[-1]["evidence_head_sha"] != current_head:
+    if evidence and evidence[-1]["evidence_head_sha"] != implementation_head:
         findings.append("EVIDENCE_HEAD_STALE")
     checkpoint_blockers = []
     required_predicates = active["definition"]["required_predicates"]
@@ -274,7 +293,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         checkpoint_blockers.append("POST_BUILD_REVIEW_NOT_FRESH_PASS")
     if not evidence:
         checkpoint_blockers.append("EVIDENCE_MAP_MISSING")
-    elif evidence[-1]["evidence_head_sha"] != current_head or evidence[-1]["review_verdict"] != "PASS":
+    elif evidence[-1]["evidence_head_sha"] != implementation_head or evidence[-1]["review_verdict"] != "PASS":
         checkpoint_blockers.append("EVIDENCE_MAP_NOT_FRESH_PASS")
     if blocking_attention:
         checkpoint_blockers.append("BLOCKING_HUMAN_ATTENTION")
@@ -286,6 +305,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         "repository": {"event_subject_head_sha": active["reduced"]["event_subject_head_sha"],
                        "event_ledger_head_sha": ledger_head,
                        "current_branch_head_sha": current_head,
+                       "implementation_head_sha": implementation_head,
                        "current_branch": current_branch,
                        "origin_main_head_sha": epoch_validation["main_sha"],
                        "worktree_dirty": bool(subprocess.run(["git", "status", "--porcelain"], cwd=root, text=True, capture_output=True, check=True).stdout.strip())},
@@ -295,7 +315,8 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         "reduced_work_order": active["reduced"],
         "review": {"required": active["definition"]["review_required"], "roles": active["definition"].get("required_review_roles", []),
                    "reviews": reviews, "evidence_maps": evidence, "state": review_state,
-                   "pre_build_state": pre_build_state, "post_build_state": post_build_state},
+                   "pre_build_state": pre_build_state, "post_build_state": post_build_state,
+                   "review_target_head_sha": implementation_head},
         "repair": {"map": repair_map, "required": active["reduced"]["state"] == "FIX_REQUIRED"},
         "human_attention": {"open_items": [item for item in attention if item["status"] == "OPEN"], "all_items": attention},
         "findings": findings,
