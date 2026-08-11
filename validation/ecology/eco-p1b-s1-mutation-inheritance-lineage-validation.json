@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.P1B-S1",
-  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64 double",
   "parent_regression": {
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
@@ -60,7 +60,7 @@
     "160-generation chain preserves parent pointers, one lineage_id and valid genomes",
     "mutation and lineage source contains no predefined species/biome/presentation/authority dependency"
   ],
-  "truth_boundary": "P1B-S1 adds inheritance/provenance research only. It does not enable selection, spatial population dynamics, species classes, biome roles, presentation coupling, authority, persistence or network replication and does not modify accepted P1A equations.",
-  "windows_confirmation": "PENDING",
-  "next": "Run RUN_ECO_P1B_S1_TESTS.ps1 on exact Windows worktree. On matching hashes and parent regressions, accept P1B-S1 and open P1B-S2 Spatial Selection Baseline."
+  "truth_boundary": "P1B-S1 adds inheritance/provenance research only. It does not itself encode environment-specific selection, species classes, biome roles, presentation coupling, authority, persistence or network replication and does not modify accepted P1A equations.",
+  "windows_confirmation": "PASS_CLEAN_BY_USER_RUN",
+  "next": "ECO.P1B-S2 Spatial Selection Baseline is opened. Identical mutation candidates must be exposed to contrasting accepted P1A environments so differences arise from selection rather than site-specific mutation."
 }
