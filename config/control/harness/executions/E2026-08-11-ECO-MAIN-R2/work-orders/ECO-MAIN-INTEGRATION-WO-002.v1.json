@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-11-ECO-MAIN-R2",
   "program": "ECO",
   "goal_checkpoint": "H0_0_SCAFFOLD_READY",
-  "state": "WAITING_HUMAN",
+  "state": "EPOCH_INVALIDATED",
   "work_order_type": "INTEGRATION",
   "base_sha": "5ba1dcb7b7671bff519739387513a50d90e8feac",
   "branch": "control/eco-main-integration-r2",
@@ -44,7 +44,7 @@
     "Draft PR targeting feature/eco-evolutionary-ecology"
   ],
   "stop_conditions": [
-    "origin/main, ECO source, passport blob, or source dry-merge tree moves at any point through merge creation, verification, evidence, review, draft PR, or human merge",
+    "origin/main, ECO source, passport blob, or source dry-merge tree moves at any point through merge creation, synthetic PC0, evidence, exact review, draft PR, or human merge",
     "Merge conflict or non-control tree delta appears",
     "Synthetic standard PC0 remains RED or directional PC0 becomes RED",
     "Any runtime, passport, ecology, registry, or architecture edit is required",
@@ -59,25 +59,20 @@
   "review_required": true,
   "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"],
   "design_brief": {
-    "problem_statement": "ECO is now paused at 67e23224, but its merge-base with main remains 790fd79f. Its copied registry content cannot remove the resulting critical dependency-drift RED.",
-    "current_behavior": "Live pre-merge PC0 is RED for ECO because canonical main 5ba1dcb7 is not in ECO ancestry, while the source dry merge already proves that integrating main needs no tree change.",
-    "desired_behavior": "A normal two-parent merge of exact main 5ba1dcb7 into a durable control head descended from exact ECO 67e23224 updates ancestry without merge-induced runtime or passport tree delta. A synthetic exact ref at that merge must make aggregate PC0 NON_RED while directional findings remain YELLOW/non-critical.",
-    "alternatives_considered": ["Ignore drift", "Copy registry again", "Rebase or force-push ECO", "Create a normal-merge draft PR into ECO"],
-    "selected_design": "Use a replacement control branch from the exact paused ECO head, persist reviewed control records, pin the final pre-merge control head, create a no-fast-forward normal merge with that head first and exact main second, verify synthetic remote topology in a clean clone, and open a draft PR targeting ECO.",
-    "why_selected": "The normal merge preserves recovery history, integrates canonical ancestry instead of copying files, avoids force-push, and gives the ECO owner a zero-runtime-delta candidate to approve.",
+    "problem_statement": "ECO was paused at 67e23224, but its merge-base with main remained 790fd79f. Its copied registry content could not remove the resulting critical dependency-drift RED.",
+    "current_behavior": "R2 produced a reviewed draft candidate and then correctly stopped at the human merge gate. Before approval, the ECO target advanced from 67e23224 to 2a4c3103, invalidating the exact-source freshness pin.",
+    "desired_behavior": "R2 remains immutable historical evidence and cannot authorize promotion after source movement; a fresh R3 must repin the current ECO source and repeat the complete integration verification lifecycle.",
+    "alternatives_considered": ["Merge stale PR #68", "Rewrite R2 evidence to the new target", "Force-push ECO", "Invalidate R2 and create fresh R3"],
+    "selected_design": "Fail closed: preserve all R2 evidence and Draft PR #68, append an EPOCH_INVALIDATED event, mark the epoch/work order invalidated, and require a fresh R3 from the exact current ECO target.",
+    "why_selected": "This follows the recorded freshness rule and prevents stale PASS evidence from authorizing a different target SHA.",
     "affected_owners": ["ECO branch history", "MAIN/PC0 dependency state"],
-    "dependencies": ["origin/main 5ba1dcb7 generation 66", "paused ECO source 67e23224", "passport source 20f8bd90", "PC0 critical watched registry path"],
-    "non_goals": ["No registry edit", "No passport edit", "No ECO runtime or research edit", "No G-to-ECO convergence", "No direct push to ECO", "No PR merge"],
-    "expected_risks": ["Input moves during lifecycle", "Incorrect normal-merge parent order", "Hidden merge tree delta", "Synthetic verification with stale refs", "PR accidentally targets main"],
+    "dependencies": ["origin/main 5ba1dcb7 generation 66", "stale ECO source 67e23224", "current ECO source 2a4c3103", "PC0 critical watched registry path"],
+    "non_goals": ["No registry edit", "No passport edit", "No ECO runtime or research edit", "No direct push to ECO", "No PR merge"],
+    "expected_risks": ["Accidental stale PR merge", "Reusing stale review/verifier evidence", "Losing historical R2 evidence"],
     "validation_plan": [
-      "Fetch and require exact main/ECO/passport/tree identities before merge creation, synthetic PC0, evidence, exact review, draft PR, and human merge.",
-      "Record live pre-merge PC0 RED as expected diagnosis, not candidate failure.",
-      "Pin the exact pre-merge control head; prove its first-parent ancestry contains the exact ECO source and its source delta contains only allowed control records.",
-      "Create a normal two-parent merge; assert parents are exact pre-merge head then exact main, and candidate tree equals immediate first-parent tree.",
-      "Prove source dry-merge tree equals original ECO tree and source-to-candidate changes avoid runtime, passport, registry, and architecture surfaces.",
-      "In a fresh URL clone, set only a disposable synthetic ECO remote-tracking ref to the exact candidate while keeping origin/main exact; run standard and directional PC0.",
-      "Require standard aggregate NON_RED and directional no RED critical hit; perform independent exact-head review and verification before draft PR.",
-      "Open only a draft PR targeting ECO and stop in WAITING_HUMAN for CONTROL_DOCS_ONLY_MERGE."
+      "Keep Draft PR #68 open/unmerged as historical evidence.",
+      "Require project epoch INVALIDATED and work order EPOCH_INVALIDATED.",
+      "Start R3 only from exact current ECO target and repeat all source pins, merge topology, synthetic PC0, review and verifier checks."
     ]
   },
   "repair_context_required": false,
@@ -85,5 +80,5 @@
   "human_attention_triggers": ["CONTROL_DOCS_ONLY_MERGE", "INPUT_SHA_MOVED", "PC0_REMAINS_RED"],
   "issued_at_utc": "2026-08-11T08:06:53Z",
   "human_approval_required_for": ["CONTROL_DOCS_ONLY_MERGE"],
-  "notes": "R1 remains terminal EPOCH_INVALIDATED because ECO moved after dispatch. R2 starts only after the user-confirmed pause and retains a fail-closed lifecycle freshness rule."
+  "notes": "R1 remains terminal EPOCH_INVALIDATED. R2 is now terminal EPOCH_INVALIDATED because ECO advanced from 67e23224ae153a9fc43ca5feea21c50165a99f1d to 2a4c3103234717f813cd6fe8f60de0d50f3012ba before human merge. All R2 evidence and Draft PR #68 remain historical and must not authorize promotion."
 }
