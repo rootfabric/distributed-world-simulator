@@ -29,6 +29,7 @@ ARTIFACT_DIR = ROOT / "artifacts" / "control"
 REGISTRY_PATH = "config/control/project-program-registry.v1.json"
 POLICY_PATH = "config/control/project-control-policy.v1.json"
 HEALTH_RANK = {"GREEN": 0, "YELLOW": 1, "RED": 2}
+NON_BLOCKING_GLOBAL_ROLES = {"RESEARCH_DESIGN_FRONTIER"}
 
 
 def git(*args: str, allow_fail: bool = False) -> str:
@@ -84,6 +85,12 @@ def matches_any(path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
 
 
+def program_blocks_global_progress(central: dict[str, Any]) -> bool:
+    if "blocks_global_progress" in central:
+        return bool(central.get("blocks_global_progress"))
+    return str(central.get("role", "")) not in NON_BLOCKING_GLOBAL_ROLES
+
+
 def program_scope(
     key: str,
     central: dict[str, Any],
@@ -127,6 +134,8 @@ def program_scope(
     return {
         "program": key,
         "branch": branch,
+        "role": str(central.get("role", "")),
+        "blocks_global_progress": program_blocks_global_progress(central),
         "stage_status": stage_status,
         "producer_enabled": producer_enabled,
         "changed_files": changed,
@@ -158,16 +167,19 @@ def markdown_report(report: dict[str, Any]) -> str:
     else:
         for finding in report["findings"]:
             paths = ", ".join(f"`{x}`" for x in finding["files"][:20])
+            gate = "BLOCKING" if finding.get("global_blocking", True) else "ADVISORY_RESEARCH"
             lines.append(
                 f"- **{finding['level']}** `{finding['producer']} → {finding['consumer']}` "
-                f"({finding['kind']}): {paths}"
+                f"({finding['kind']}, {gate}): {paths}"
             )
     lines.extend(
         [
             "",
             "Accepted handoff/evidence stages listed in "
             "`directional_watch_policy.producer_suppression_stage_statuses` "
-            "remain consumers but no longer act as active producers.",
+            "remain consumers but no longer act as active producers. "
+            "RESEARCH_DESIGN_FRONTIER consumers remain fully visible but are advisory to global health. "
+            "If a research producer touches a watched path of a blocking consumer, that consumer finding still affects global health.",
             "",
         ]
     )
@@ -223,6 +235,7 @@ def main() -> int:
                 if path not in critical_set
                 and matches_any(path, list(consumer["watched_paths"]))
             ]
+            global_blocking = bool(consumer.get("blocks_global_progress", True))
 
             if critical_hits:
                 findings.append(
@@ -233,10 +246,11 @@ def main() -> int:
                         "producer_branch": producer["branch"],
                         "consumer": consumer["program"],
                         "consumer_branch": consumer["branch"],
+                        "global_blocking": global_blocking,
                         "files": critical_hits,
                     }
                 )
-                if HEALTH_RANK[critical_level] > HEALTH_RANK[overall]:
+                if global_blocking and HEALTH_RANK[critical_level] > HEALTH_RANK[overall]:
                     overall = critical_level
 
             if watched_hits:
@@ -248,10 +262,11 @@ def main() -> int:
                         "producer_branch": producer["branch"],
                         "consumer": consumer["program"],
                         "consumer_branch": consumer["branch"],
+                        "global_blocking": global_blocking,
                         "files": watched_hits,
                     }
                 )
-                if HEALTH_RANK[watched_level] > HEALTH_RANK[overall]:
+                if global_blocking and HEALTH_RANK[watched_level] > HEALTH_RANK[overall]:
                     overall = watched_level
 
     report = {
@@ -282,10 +297,11 @@ def main() -> int:
     print(f"Registry: {report['registry_generation']}")
     print(f"Overall:  {overall}")
     for finding in findings:
+        gate = "BLOCK" if finding.get("global_blocking", True) else "ADVISORY"
         print(
             f"  {finding['level']:<6} "
             f"{finding['producer']} -> {finding['consumer']} "
-            f"{finding['kind']}: {len(finding['files'])} path(s)"
+            f"{finding['kind']} {gate}: {len(finding['files'])} path(s)"
         )
     print(f"Report: {ARTIFACT_DIR / 'DIRECTIONAL_WATCH_STATUS_RU.md'}")
 
