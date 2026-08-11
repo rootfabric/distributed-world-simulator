@@ -8,11 +8,11 @@
   "short_description": "Evolutionary ecology research for continuous environment-driven plant specialization, species catalogs, population truth and representation-safe future runtime integration.",
   "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
   "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
-  "current_stage": "ECO.R0 Program Definition / Vegetation Experiment Design",
-  "stage_status": "RESEARCH_ONLY_ACTIVE_NOT_CANONICAL_RUNTIME",
-  "progress_note": "Research program, P0 alignment, machine-readable roadmap and vegetation experiment ladder are documented. No production runtime ownership is claimed and no canonical world state is changed.",
+  "current_stage": "ECO.P1A Environmental Causality Baseline",
+  "stage_status": "PLANNED_EXECUTION_READY_RESEARCH_ONLY",
+  "progress_note": "ECO.R1 defines the nearest checkpoint as five coarse execution steps. The immediate work is P1A-S1 Environment Contracts + Deterministic Fixture. No mutation/evolution work should start until the fixed-genome causal resource baseline is accepted.",
   "last_accepted_checkpoint": "NONE_RESEARCH_FRONTIER_CREATED",
-  "next_stage": "ECO.P1 Plant Adaptation Proof: implement EXP-V0 Environmental Field Determinism, EXP-V1 Single Species Resource Response, EXP-V2 Mutation and Local Adaptation, and EXP-V3 Competition of Strategies on a deterministic synthetic fixture; stop for evidence review before succession/speciation work.",
+  "next_stage": "Implement P1A-S1: research EnvironmentSample/field contracts and a deterministic 4x4 km synthetic fixture with temperature, soil_moisture, sunlight, nutrients and flood_frequency; prove repeatable coordinate queries, seam-safe samples and stable environment hash in headless EXP-V0 before adding plant resource logic.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -54,6 +54,7 @@
     "docs/future_features/evolutionary_ecology/README_RU.md",
     "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
     "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
+    "docs/future_features/evolutionary_ecology/ECO_P1A_EXECUTION_PLAN_RU.md",
     "docs/future_features/evolutionary_ecology/P0_TECHNICAL_ALIGNMENT_RU.md"
   ],
   "tested_heads": {
