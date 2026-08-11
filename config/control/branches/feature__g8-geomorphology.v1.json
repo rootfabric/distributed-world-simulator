@@ -56,6 +56,9 @@
     "docs/checkpoints/G8_6_GEOMORPHOLOGY_VISUAL_LAB_CANDIDATE_RU.md"
   ],
   "tested_heads": {
+    "runtime": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "focused": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "full_regression": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
     "g7_full_acceptance": "a75a60b6da739cc759e1fb40510a98942bce4cde",
     "g8_0_full_acceptance": "7a34c5d58b5a766fd8f4da46073dfcea29673fe9",
     "g8_1_first_windows_attempt": "5de8716fc5b2893e00d31f109b73d0974891aca9",
