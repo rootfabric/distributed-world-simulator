@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.ecology_checkpoint_decision.v1",
+  "checkpoint": "ECO.P1B",
+  "name": "Local Adaptation Proof",
+  "decision": "ACCEPTED",
+  "branch": "feature/eco-evolutionary-ecology",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "parent_checkpoint": "ECO.P1A ACCEPTED",
+  "steps": [
+    {"id": "P1B-S1", "status": "ACCEPTED", "windows": "PASS_5834_RESTART_6", "evidence": "deterministic mutation/inheritance/lineage from one ancestor"},
+    {"id": "P1B-S2", "status": "ACCEPTED", "windows": "PASS_364_RESTART_6", "evidence": "same candidate mutation pool diverges only after accepted resource selection"},
+    {"id": "P1B-S3", "status": "ACCEPTED", "windows": "PASS_388_RESTART_6", "evidence": "49-patch regional trait distributions with neutral control"},
+    {"id": "P1B-S4", "status": "ACCEPTED", "windows": "PASS_86_RESTART_5", "evidence": "multi-seed + neutral + longer-horizon robustness"}
+  ],
+  "acceptance_gate": {
+    "criteria_total": 10,
+    "criteria_passed": 10,
+    "criteria_failed": 0,
+    "criteria": [
+      "one ancestor only",
+      "mutation deterministic and bidirectional",
+      "genotype identity separated from individual identity",
+      "selection uses accepted P1A resource consequences only",
+      "no predefined species or biome roles",
+      "regional trait distributions emerge from initially identical founders",
+      "real spatial signal exceeds neutral-control mutation noise",
+      "specialization repeats across multiple seeds",
+      "longer run preserves specialization without runaway traits",
+      "fresh-process hashes are deterministic"
+    ]
+  },
+  "aggregate_evidence": {
+    "water_preference_vs_moisture_mean": 0.90029838256578,
+    "root_depth_vs_moisture_mean": -0.53806074795987,
+    "shade_tolerance_vs_sunlight_mean": -0.42182297846991,
+    "robustness_aggregate_hash": "2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05"
+  },
+  "truth_boundary": "Research-only local adaptation proof. No migration, species classes, biome placement, production persistence, authority, networking or renderer-owned ecology truth.",
+  "next": "ECO.P1C Strategy Competition Proof; PH0/PH1 may continue in parallel research scope."
+}
