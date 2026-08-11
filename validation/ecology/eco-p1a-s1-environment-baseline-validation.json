@@ -12,11 +12,23 @@
     "failures": 0,
     "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
   },
+  "windows_evidence": {
+    "checkout_head": "5c747a548baf62170f8c1dbe1d7edf13de0ac04f",
+    "worktree": "C:\\Godot\\lunar-world-eco-evolutionary-ecology",
+    "result": "PASS_109_ASSERTIONS",
+    "environment_hash_match": true,
+    "post_test_noise": "fresh-worktree UID cache was absent, so project autoload resolution printed Resource file not found: res:// and Failed to instantiate an autoload after the ECO test had already passed",
+    "classification": "TEST_PASS_RUNNER_HYGIENE_ISSUE_NOT_ECO_FAILURE"
+  },
+  "runner_hygiene_fix": {
+    "commit": "0f91a48b09b7e1ffb3f8ddbe9e3045c28df5888e",
+    "change": "initialize Godot import/UID cache before focused --script execution when .godot/uid_cache.bin is absent",
+    "verification": "PENDING_CLEAN_WINDOWS_RERUN"
+  },
   "published_blob_verification": {
     "environment_sample": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
     "synthetic_fixture": "ff7bcff3f825fbb0595fb57d2b85d899a7888a80",
     "acceptance_test": "afb8faa54a5ef9ac1b5d165dc23d760dab8ba056",
-    "accepted_manifest": "80b8d900893ddc0e80069b4d431a902a0d53fc7d",
     "result": "MATCHED_LOCAL_TESTED_CONTENT"
   },
   "evidence": [
@@ -31,6 +43,6 @@
     "research sources contain no camera, LOD-cell, authority, network, material or hardcoded biome-plant ownership"
   ],
   "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
-  "execution_note": "The execution container had no direct GitHub DNS access. The focused test was executed in a minimal local Godot project with the provided Godot 4.7.1 double binary. Published GitHub blobs for source/fixture/test were compared to the local tested files using Git blob SHA-1 and matched exactly. After correcting the manifest evidence count to 109, the focused test was rerun and remained PASS with the same environment hash.",
+  "execution_note": "Focused ECO truth is accepted. Exact Windows on 5c747a54 passed 109 assertions and matched the accepted hash; only fresh-worktree autoload UID resolution produced post-test log noise. Runner 0f91a48 adds import/UID-cache preflight and awaits one clean Windows rerun before runner hygiene is closed.",
   "next": "ECO.P1A-S2 Single-Plant Resource Model"
 }
