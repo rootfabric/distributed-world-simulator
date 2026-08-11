@@ -9,10 +9,10 @@
   "purpose": "Prove that vegetation diversity and plant form can emerge from environmental fields, resource trade-offs, inherited developmental programs, mutation, competition, dispersal and history without hardcoded biome placement or canonical TREE/BUSH/GRASS classes.",
   "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence, a developmental Genome-to-GrowthGraph-to-Phenotype track, seed-carried heredity design and portable SpeciesCatalog contracts that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
   "current_stage": "ECO.P1B Local Adaptation Proof",
-  "stage_status": "P1B_S1_ACCEPTED_P1B_S2_LOCAL_FOCUSED_PASS_WINDOWS_PENDING_PH0_OPEN_RESEARCH_ONLY",
-  "progress_note": "ECO.P1A remains ACCEPTED 10/10. P1B-S1 Deterministic Mutation/Inheritance/Lineage is now ACCEPTED by exact Windows: P1A regressions 109/235/208/165, P1B-S1 5834/5834, restart replay 6/6, hashes ancestor 73621a2c49d6496bb89faef63a8350f2a76b553fd718fa88d1bc6b21b83a230f, population 83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84 and chain 3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874. P1B-S2 Spatial Selection Baseline is implemented without modifying accepted P1A or P1B-S1 truth. The exact same generation-one mutation candidate pool hash 9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd is presented to floodplain, sunny slope, shaded slope and dry ridge; environment selection then creates distinct populations. Local Godot double evidence is 364/364 plus restart 6/6, result a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80 and alternate-seed result 507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521. Native populations are best in their own diagnostic environments and a second seed repeats the specialization phenomenon. Exact Windows S2 confirmation remains before the next P1B step. PH0 remains open in parallel research scope.",
-  "last_accepted_checkpoint": "ECO.P1B-S1 Deterministic Mutation, Inheritance and Lineage Kernel",
-  "next_stage": "Run RUN_ECO_P1B_S2_TESTS.ps1 on the exact Windows worktree. Require P1A regressions, P1B-S1 5834/5834, P1B-S2 364/364, restart 6/6 and exact result/candidate-pool hashes. On PASS accept P1B-S2 and open the next regional population/divergence step. PH0 may continue only as representation-safe research contract work.",
+  "stage_status": "P1B_S2_ACCEPTED_P1B_S3_LOCAL_FOCUSED_PASS_WINDOWS_PENDING_PH0_OPEN_RESEARCH_ONLY",
+  "progress_note": "ECO.P1A remains ACCEPTED 10/10. P1B-S1 is ACCEPTED by exact Windows at 5834/5834 plus restart 6/6. P1B-S2 Spatial Selection Baseline is now ACCEPTED by exact Windows at 364/364 plus restart 6/6 with exact result a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80, alternate 507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521 and first-candidate-pool 9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd. P1B-S3 Regional Population Field is implemented over 49 patches from one ancestor lineage. Local focused evidence is 388/388 plus restart 6/6: result cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56, neutral b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6, alternate ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b. Real field shows strong water/moisture, root/moisture and shade/sunlight specialization signals that exceed neutral-control spatial noise. Exact Windows S3 confirmation remains before P1B-S4. PH0 remains open in parallel research scope.",
+  "last_accepted_checkpoint": "ECO.P1B-S2 Spatial Selection Baseline",
+  "next_stage": "Run RUN_ECO_P1B_S3_TESTS.ps1 on the exact Windows worktree. Require P1A regressions, P1B-S1 5834/5834, P1B-S2 364/364, P1B-S3 388/388, restart 6/6 and exact real/neutral/alternate hashes. On PASS accept P1B-S3 and open P1B-S4 Local Adaptation Robustness Gate. Migration remains deferred to ECO.P2.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -104,7 +104,14 @@
     "tests/research/ecology/eco_p1b_s2_spatial_selection_acceptance.gd",
     "tests/research/ecology/eco_p1b_s2_restart_replay_probe.gd",
     "RUN_ECO_P1B_S2_TESTS.ps1",
-    "docs/checkpoints/ECO_P1B_S2_SPATIAL_SELECTION_BASELINE_CANDIDATE_RU.md",
+    "docs/checkpoints/ECO_P1B_S2_SPATIAL_SELECTION_BASELINE_ACCEPTED_RU.md",
+    "config/ecology/eco-p1b-s3-regional-population-field.v1.json",
+    "validation/ecology/eco-p1b-s3-regional-population-field-validation.json",
+    "scripts/research/ecology/plant_regional_population_field_v1.gd",
+    "tests/research/ecology/eco_p1b_s3_regional_population_field_acceptance.gd",
+    "tests/research/ecology/eco_p1b_s3_restart_replay_probe.gd",
+    "RUN_ECO_P1B_S3_TESTS.ps1",
+    "docs/checkpoints/ECO_P1B_S3_REGIONAL_POPULATION_FIELD_CANDIDATE_RU.md",
     "docs/future_features/evolutionary_ecology/README_RU.md",
     "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
     "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
@@ -120,7 +127,8 @@
     "p1a_s4": "ACCEPTED_WINDOWS_165_ASSERTIONS_RESTART_5_ASSERTIONS_SUMMARY_327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a_RESULT_cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e_SERIES_7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c",
     "p1a_aggregate": "ACCEPTED_10_OF_10_GATE_PASS",
     "p1b_s1": "ACCEPTED_WINDOWS_5834_ASSERTIONS_RESTART_6_ANCESTOR_73621a2c49d6496bb89faef63a8350f2a76b553fd718fa88d1bc6b21b83a230f_POPULATION_83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84_CHAIN_3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874",
-    "p1b_s2_local": "PASS_364_ASSERTIONS_RESTART_6_RESULT_a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80_ALT_507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521_POOL_9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd_WINDOWS_PENDING",
+    "p1b_s2": "ACCEPTED_WINDOWS_364_ASSERTIONS_RESTART_6_RESULT_a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80_ALT_507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521_POOL_9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd",
+    "p1b_s3_local": "PASS_388_ASSERTIONS_RESTART_6_RESULT_cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56_NEUTRAL_b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6_ALT_ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b_WINDOWS_PENDING",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
   "ownership_claims": [
@@ -148,7 +156,7 @@
     "PLANET_WIDE_INDIVIDUAL_GROWTH_GRAPH_TRUTH"
   ],
   "blockers": [
-    "P1B_S2_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_NEXT_P1B_STEP",
+    "P1B_S3_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_P1B_S4",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
