@@ -8,15 +8,15 @@
   "short_description": "Procedural geomorphology derived from accepted G7 semantic fields and G3/G5/G6 surface, feature and hydrology truth.",
   "purpose": "Add deterministic valley, river-channel, bank, floodplain and erosion/deposition shaping without taking ownership of persistent Matter mutations, world identity, authority, persistence or material ontology.",
   "expected_outcome": "A replaceable, provenance-friendly geomorphology layer that produces stable surface deformation independent from SurfaceCellKey, LOD, camera and representation and can later feed geology/volume/detail stages.",
-  "current_stage": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
-  "stage_status": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
-  "progress_note": "G8.4 Erosion / Deposition Baseline is ACCEPTED after exact-Windows full acceptance on tested head 82cc31429f2bf2ea419bf1b50159838eea51c727 with full G8.1-G8.4 composition and world/core regression through NX4 PASS. G8.5 remains a proof-only stage with no new terrain runtime. First exact-Windows focused attempt on 00de94e2a75320de3ab66b9e4a52f55aa9067c75 passed editor import plus accepted regressions G7.3=122, G8.0=84, G8.1=49, G8.2=63, G8.3=107 and G8.4=93 assertions, then stopped before executing the G8.5 proof because three local results from the dynamically typed addressing harness used := and Godot could not infer their Dictionary type. This is classified as TEST_HARNESS_PARSE_ONLY, not a semantic/runtime regression. FIX1 at fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a explicitly types only those three direction_to_cell results as Dictionary; runtime, geomorphology formulas, semantic inputs and proof meaning are unchanged. Focused retest and full acceptance remain required.",
-  "last_accepted_checkpoint": "G8.4 Erosion / Deposition Baseline",
-  "next_stage": "Sync latest feature/g8-geomorphology and rerun RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1 on exact Windows Godot 4.7.1 double. If green, without fetch/reset run RUN_G8_5_FULL_ACCEPTANCE.ps1 on the same clean checkout. Only full PASS unlocks G8.6 Geomorphology Visual Lab.",
-  "parent_branch_or_checkpoint": "G8.4 ACCEPTED @ d42b8ecb1dcf09f4317c0ef212e46df295c0ebdd",
+  "current_stage": "G8.6 Geomorphology Visual Lab",
+  "stage_status": "DECLARED_PENDING_IMPLEMENTATION",
+  "progress_note": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance is ACCEPTED after exact-Windows focused + full acceptance on tested head 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736 using Godot 4.7.1.stable.double.custom_build.a13da4feb. G8.4 parent PASS, G7.3 semantic parent proof PASS, full geomorphology cross-cell/cross-LOD invariance PASS, SurfaceCellKey/cube-face/LOD exclusion from canonical deformation identity PASS, world/core regression through NX4 PASS, main_scene_cli_all 6 PASS / 0 FAIL, STOPPED lifecycle and CLEAN working tree. First G8.5 Windows attempt was a test-harness parse-only failure and FIX1 changed only three local Dictionary annotations. G8.6 is now authorized as a derived-presentation visual laboratory over accepted G8.5 truth. It must make valley, river channel, banks, floodplain and erosion/deposition inspectable at useful scale while preserving canonical semantic/deformation checksums across camera, colors and presentation LOD. No seam-fixing truth, new identity or runtime ownership is allowed.",
+  "last_accepted_checkpoint": "G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance",
+  "next_stage": "Implement G8.6 Geomorphology Visual Lab, run focused/headless acceptance and full world/core regression, then perform manual graphical checks for source-vs-resolved geometry, component visualization, derived presentation LOD and PX/PZ seam continuity. Only G8.6 acceptance unlocks G8 Full Acceptance.",
+  "parent_branch_or_checkpoint": "G8.5 ACCEPTED @ 6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
   "base_commit": "d9a900c28dee3914bcaa4d6f6bde126aef56a77e",
-  "dependencies": ["G3", "G5", "G6", "G7", "G7_3", "G8_0", "G8_1", "G8_2", "G8_3", "G8_4"],
-  "owned_paths": ["config/procedural/g8-*", "scripts/simulation/procedural/geomorphology/**", "tests/procedural/geomorphology/**", "docs/procedural/*G8*", "docs/checkpoints/G8_*", "RUN_G8_*"],
+  "dependencies": ["G3", "G5", "G6", "G7", "G7_3", "G8_0", "G8_1", "G8_2", "G8_3", "G8_4", "G8_5"],
+  "owned_paths": ["config/procedural/g8-*", "scripts/simulation/procedural/geomorphology/**", "scripts/labs/procedural/g8_*", "scenes/labs/procedural/g8_*", "tests/procedural/geomorphology/**", "docs/procedural/*G8*", "docs/checkpoints/G8_*", "RUN_G8_*"],
   "watched_paths": ["scripts/simulation/procedural/contracts/semantic_field_*.gd", "scripts/simulation/procedural/semantic_fields/**", "scripts/simulation/procedural/providers/**", "scripts/simulation/procedural/features/**", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/matter/**"],
   "critical_watched_paths": ["scripts/simulation/procedural/semantic_fields/semantic_field_registry_v1.gd", "scripts/simulation/procedural/semantic_fields/semantic_field_composer_v1.gd", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/matter/**"],
   "runtime_paths": ["scripts/simulation/procedural/geomorphology/**"],
@@ -44,9 +44,7 @@
     "config/procedural/g8-5-cross-cell-cross-lod-geomorphology-invariance.v1.json",
     "validation/g8-5-cross-cell-cross-lod-geomorphology-invariance-validation.json",
     "tests/procedural/geomorphology/g8_5_cross_cell_cross_lod_invariance_acceptance.gd",
-    "RUN_G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_TESTS.ps1",
-    "RUN_G8_5_FULL_ACCEPTANCE.ps1",
-    "docs/checkpoints/G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_CANDIDATE_RU.md"
+    "docs/checkpoints/G8_5_CROSS_CELL_CROSS_LOD_INVARIANCE_ACCEPTED_RU.md"
   ],
   "tested_heads": {
     "g7_full_acceptance": "a75a60b6da739cc759e1fb40510a98942bce4cde",
@@ -58,12 +56,14 @@
     "g8_4_full_acceptance": "82cc31429f2bf2ea419bf1b50159838eea51c727",
     "g8_5_first_windows_attempt": "00de94e2a75320de3ab66b9e4a52f55aa9067c75",
     "g8_5_fix1": "fa841b3bcbe6c37f34efbe338d8ebff49b4ae00a",
-    "g8_5_focused": "PENDING_FIX1_RETEST",
-    "g8_5_full_acceptance": "PENDING"
+    "g8_5_full_acceptance": "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736",
+    "g8_6_focused": "PENDING",
+    "g8_6_full_acceptance": "PENDING",
+    "g8_6_manual_graphical": "PENDING"
   },
   "ownership_claims": [{"foundation": "GEO_PROCEDURAL_BASELINE", "claimed_owner": "G", "scope": "procedural geomorphology deformation only"}],
-  "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE", "SEDIMENT_INVENTORY", "TIME_INTEGRATION", "REPRESENTATION_CELL_IDENTITY"],
-  "blockers": ["G8_5_FOCUSED_INVARIANCE_VALIDATION_REQUIRED", "G8_5_FULL_WORLD_REGRESSION_REQUIRED"],
+  "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE", "SEDIMENT_INVENTORY", "TIME_INTEGRATION", "REPRESENTATION_CELL_IDENTITY", "PRESENTATION_MESH_AS_TRUTH"],
+  "blockers": ["G8_6_IMPLEMENTATION_REQUIRED", "G8_6_AUTOMATED_VALIDATION_REQUIRED", "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
 }
