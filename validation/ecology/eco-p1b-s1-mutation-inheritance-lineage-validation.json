@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1B-S1",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_regression": {
+    "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
+    "p1a_s3": "PASS_208_ASSERTIONS_DATASET_HASH_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "p1a_s4": "PASS_165_ASSERTIONS_SUMMARY_327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1b_s1_mutation_lineage_acceptance.gd",
+    "assertions": 5834,
+    "failures": 0,
+    "ancestor_lineage_hash": "73621a2c49d6496bb89faef63a8350f2a76b553fd718fa88d1bc6b21b83a230f",
+    "population_hash": "83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84",
+    "chain_hash": "3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1b_s1_restart_replay_probe.gd",
+    "assertions": 6,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "sibling_population_evidence": {
+    "offspring": 256,
+    "unchanged_genotypes": 12,
+    "mutated_genotypes": 244,
+    "mutation_counts": {
+      "water_preference": 109,
+      "root_depth_m": 106,
+      "growth_rate": 127,
+      "shade_tolerance": 108,
+      "seed_dispersal_distance_m": 111
+    },
+    "positive_direction_counts": {
+      "water_preference": 51,
+      "root_depth_m": 46,
+      "growth_rate": 68,
+      "shade_tolerance": 46,
+      "seed_dispersal_distance_m": 53
+    },
+    "negative_direction_counts": {
+      "water_preference": 58,
+      "root_depth_m": 60,
+      "growth_rate": 59,
+      "shade_tolerance": 62,
+      "seed_dispersal_distance_m": 58
+    }
+  },
+  "contract_evidence": [
+    "same ancestor + lineage seed produces exact ancestor identity",
+    "same parent + mutation seed + offspring index + policy produces exact descendant result",
+    "offspring index and mutation seed alter the deterministic event stream",
+    "zero-mutation offspring preserves genotype while receiving a new individual identity",
+    "probability-one probe mutates all five P1B-S1 ecological traits",
+    "all effective mutation deltas remain inside explicit per-trait steps and biological ranges",
+    "160-generation chain preserves parent pointers, one lineage_id and valid genomes",
+    "mutation and lineage source contains no predefined species/biome/presentation/authority dependency"
+  ],
+  "truth_boundary": "P1B-S1 adds inheritance/provenance research only. It does not enable selection, spatial population dynamics, species classes, biome roles, presentation coupling, authority, persistence or network replication and does not modify accepted P1A equations.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1B_S1_TESTS.ps1 on exact Windows worktree. On matching hashes and parent regressions, accept P1B-S1 and open P1B-S2 Spatial Selection Baseline."
+}
