@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.architecture_revision_transition_policy.v1",
+  "policy_id": "GLOBAL-P0-R2-TO-R3-2026-08-12-R1",
+  "from_revision": "GLOBAL-P0-2026-08-10-R2",
+  "to_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "status": "CANDIDATE_POLICY_NO_PROMOTION",
+  "source_main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+  "source_registry_generation": 75,
+  "rules": [
+    {
+      "id": "FROZEN_R2_EVIDENCE_GRANDFATHERED",
+      "applies_to": ["G8", "T1B", "C22_SOURCE_ACCEPTED", "H0_0_HISTORY", "OTHER_ACCEPTED_FROZEN_EVIDENCE"],
+      "rule": "Accepted/frozen R2 evidence remains valid historical evidence after R3 promotion and is not rewritten merely to change architecture_revision labels. It cannot authorize new post-promotion runtime work by itself."
+    },
+    {
+      "id": "ACTIVE_R2_RUNTIME_MUST_REACH_BOUNDARY",
+      "applies_to": ["H0_1_R6_C22_PILOT", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
+      "rule": "R3 promotion is forbidden while an R2 runtime checkpoint is actively executing unless that epoch is explicitly invalidated and rebuilt against R3. Preferred path for H0.1 R6 is to finish at its checkpoint boundary before promotion."
+    },
+    {
+      "id": "NEW_RUNTIME_AFTER_PROMOTION_USES_R3",
+      "applies_to": ["NX_C1", "G9", "T2_0", "NEW_RUNTIME_FRONTIERS"],
+      "rule": "Every runtime frontier created after canonical R3 promotion must start from then-current canonical main and declare the canonical R3 architecture revision."
+    },
+    {
+      "id": "RESEARCH_FRONTIERS_MAY_REMAIN_ADVISORY",
+      "applies_to": ["ECO", "DOCTRINE", "RESEARCH_ONLY_FRONTIERS"],
+      "rule": "Research/advisory branches may continue as historical or research evidence without forced architecture relabeling. Any later production/runtime promotion must create a fresh controlled frontier using canonical R3."
+    },
+    {
+      "id": "STABLE_FOUNDATIONS_PRESERVED",
+      "applies_to": ["MATTER", "S1", "M0", "ITEM", "CONSTRUCTION", "A1", "S0"],
+      "rule": "Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. R3 does not replace them by declaration."
+    },
+    {
+      "id": "WAVE_A_SINGLE_BASE",
+      "applies_to": ["IAM0_IAM1", "MAT0", "WT0", "WQ0_WQ1"],
+      "rule": "Wave A branches may be created only after GLOBAL_ARCHITECTURE_PROMOTION and must all branch from one accepted canonical R3 main base or a later explicitly audited descendant."
+    },
+    {
+      "id": "PROMOTION_ATOMIC_CONTROL_CHANGE",
+      "applies_to": ["MAIN", "PROJECT_REGISTRY", "ARCHITECTURE_OWNERSHIP", "GLOBAL_ROADMAP"],
+      "rule": "Promotion must be a control/docs/config change with no gameplay/runtime mutation, must update canonical architecture identity consistently, must pass standard and directional PC0 NON_RED, and requires explicit human GLOBAL_ARCHITECTURE_PROMOTION authorization."
+    },
+    {
+      "id": "POST_PROMOTION_DRIFT_FAILS_CLOSED",
+      "applies_to": ["ACTIVE_WORK_ORDERS", "BRANCH_PASSPORTS"],
+      "rule": "If an active frontier claims an architecture revision that is no longer valid for new runtime work, the harness/control plane must stop or require explicit audit/refresh rather than silently accepting mixed architecture identity."
+    }
+  ],
+  "current_h0_1_disposition": {
+    "epoch": "E2026-08-11-H0-1-R6",
+    "work_order": "H0-1-R6-C22-WO-001",
+    "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+    "state_observed": "PLANNED",
+    "preferred_transition": "FINISH_H0_1_CHECKPOINT_BEFORE_R3_PROMOTION",
+    "promotion_while_open": "FORBIDDEN_WITHOUT_EXPLICIT_INVALIDATION_AND_REFRESH"
+  },
+  "human_gate": "GLOBAL_ARCHITECTURE_PROMOTION"
+}
