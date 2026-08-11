@@ -15,9 +15,9 @@ from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
 from harness.state_builder import _validate_semantics, build_state
 
-ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-1-R3"
-ACTIVE_WORK_ORDER_ID = "H0-1-R3-DISPATCH-WO-001"
-EPOCH_BASE_SHA = "be6ea2a8636a9242fc808aea377d9144ef9bc9eb"
+ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-1-R4"
+ACTIVE_WORK_ORDER_ID = "H0-1-R4-DISPATCH-WO-001"
+EPOCH_BASE_SHA = "82835a37bab1390b6b3f87fb18903070fdd64256"
 H0_0_R3_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R3"
 
 
@@ -36,7 +36,7 @@ class CanonicalHandoffTests(unittest.TestCase):
         for event in self.events:
             self.bundle.validate("event_schema", event, "h0_1_event")
         _validate_semantics(self.bundle, self.epoch, self.work_order)
-        self.assertEqual(69, self.epoch["registry_generation"])
+        self.assertEqual(70, self.epoch["registry_generation"])
         self.assertEqual(EPOCH_BASE_SHA, self.epoch["base_sha"])
         self.assertEqual("H0_1_CLOSED_LOOP_C22_PILOT", self.work_order["goal_checkpoint"])
 
@@ -48,7 +48,7 @@ class CanonicalHandoffTests(unittest.TestCase):
 
     def test_public_state_selects_fresh_h0_1_epoch(self):
         state = build_state(ROOT, ACTIVE_EXECUTION)
-        self.assertEqual("E2026-08-11-H0-1-R3", state["epoch"]["epoch_id"])
+        self.assertEqual("E2026-08-11-H0-1-R4", state["epoch"]["epoch_id"])
         self.assertEqual(ACTIVE_WORK_ORDER_ID, state["active_work_order"]["work_order_id"])
         self.assertFalse(state["runtime_authorized"])
         self.assertEqual("EXACT_BASE", state["epoch"]["validation"]["status"])
@@ -71,12 +71,11 @@ class CanonicalHandoffTests(unittest.TestCase):
         self.assertEqual(1, plan["autonomous_runtime_workers"])
         self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["c22_dry_run"]["branch_creation"])
 
-    def test_launcher_points_only_to_fresh_h0_1_r3_execution(self):
+    def test_launcher_points_only_to_fresh_h0_1_r4_execution(self):
         launcher = (ROOT / "CONTROL_DEVELOPMENT.ps1").read_text(encoding="utf-8")
-        self.assertIn("E2026-08-11-H0-1-R3", launcher)
-        self.assertNotIn("$executionPath = 'config/control/harness/executions/E2026-08-11-H0-0-R3'", launcher)
-        self.assertNotIn("$executionPath = 'config/control/harness/executions/E2026-08-11-H0-1-R1'", launcher)
-        self.assertNotIn("$executionPath = 'config/control/harness/executions/E2026-08-11-H0-1-R2'", launcher)
+        self.assertIn("E2026-08-11-H0-1-R4", launcher)
+        for old in ("H0-0-R3", "H0-1-R1", "H0-1-R2", "H0-1-R3"):
+            self.assertNotIn(f"$executionPath = 'config/control/harness/executions/E2026-08-11-{old}'", launcher)
 
     def test_h0_0_r3_checkpoint_evidence_is_historical_and_terminal(self):
         self.assertTrue(H0_0_R3_EXECUTION.exists())
@@ -88,7 +87,7 @@ class CanonicalHandoffTests(unittest.TestCase):
 
     def test_registry_generation_identity_remains_fail_closed(self):
         changed = copy.deepcopy(self.epoch)
-        changed["registry_generation"] = 68
+        changed["registry_generation"] = 69
         with self.assertRaisesRegex(ContractValidationError, "EPOCH_REGISTRY_GENERATION_MISMATCH"):
             _validate_semantics(self.bundle, changed, self.work_order)
 
@@ -110,6 +109,14 @@ class CanonicalHandoffTests(unittest.TestCase):
         self.assertIn("scripts/runtime/**", forbidden)
         self.assertIn("scripts/simulation/**", forbidden)
         self.assertIn("config/control/project-program-registry.v1.json", forbidden)
+
+    def test_post_merge_self_movement_is_expected_to_fail_closed_until_fresh_worker_epoch(self):
+        simulated_main = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()
+        if simulated_main == EPOCH_BASE_SHA:
+            self.skipTest("candidate head equals canonical base")
+        result = validate_epoch(ROOT, self.epoch, "main", None, main_sha=simulated_main)
+        self.assertIn(result["status"], {"MAIN_MOVED_REVIEW_REQUIRED", "EPOCH_INVALIDATED"})
+        self.assertNotEqual("CONTINUE", result["action"])
 
 
 if __name__ == "__main__":
