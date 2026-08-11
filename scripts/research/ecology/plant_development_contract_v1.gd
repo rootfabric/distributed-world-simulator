@@ -12,6 +12,7 @@ static func derive_individual_seed(parent_lineage: String, reproduction_event: S
 	if parent_lineage.is_empty() or reproduction_event.is_empty() or seed_index < 0 or genome_revision.is_empty():
 		return -1
 	var digest := "%s|%s|%d|%s" % [parent_lineage, reproduction_event, seed_index, genome_revision]
+	# Keep the deterministic seed in positive signed-63-bit range.
 	return digest.sha256_text().substr(0, 15).hex_to_int()
 
 static func create_seed_envelope(
