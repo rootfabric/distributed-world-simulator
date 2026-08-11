@@ -58,36 +58,55 @@ Camera, color mode, mesh density, overlays и 3.5× vertical display exaggeratio
 
 ## First Windows attempt / FIX1
 
-Первый exact-Windows focused run на head:
+Первый exact-Windows focused run на head `87acbc69854336fa52b5b4c66069ec56a555c1a4` прошёл editor import и G8.5 invariance `PASS (150 assertions)`, после чего contract harness остановился на `source grid pinned` (`35 assertions, 1 failure`). Manifest был корректен; причиной оказалась type-sensitive Array equality после JSON decode. FIX1 `05757e69b7e73139226c68702f4bb81c31840469` приводит оба JSON numeric значения к `int` и не меняет runtime.
+
+## Second Windows attempt / FIX2
+
+Второй exact-Windows run на head:
 
 ```text
-87acbc69854336fa52b5b4c66069ec56a555c1a4
+666a56e104b521c642afd3168f9d3e3b3f1d9ad4
 ```
 
-прошёл editor import и принятый G8.5 invariance regression:
+дошёл дальше:
 
 ```text
-G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance: PASS (150 assertions)
+editor import                                               PASS
+G8.5 Cross-Cell / Cross-LOD Geomorphology Invariance       PASS (150 assertions)
+G8.6 Geomorphology Visual Lab Contracts                    PASS (35 assertions)
+G8.6 headless semantic / geomorphology lab                  FAIL
 ```
 
-После этого G8.6 contract harness остановился на:
+Headless smoke сообщил:
 
 ```text
-G8.6 Geomorphology Visual Lab Contracts: FAIL (35 assertions, 1 failures)
-- source grid pinned
+G8_6_COMPONENT_NOT_VISIBLE_IN_CORRIDOR
+component = river_channel_delta_m
 ```
 
-Это не geomorphology/runtime regression. Manifest содержит правильный `source_grid: [33, 17]`. Причина в test harness: `JSON.parse_string()` декодирует JSON numbers как `float`, а GDScript Array equality type-sensitive, поэтому `[33.0, 17.0] != [33, 17]`.
+Это уже ошибка локального presentation corridor, но не G8.2/G8.4 runtime. Accepted G6 river spline хранит реальную radial elevation. В районе выбранного PX/PZ seam centerline находится примерно на `+70 m` относительно `Fixture.RADIUS_M`, тогда как исходный G8.6 lab после нахождения seam делал проекцию обратно на `Fixture.RADIUS_M`. Поскольку G6 `river_distance_m` — полный 3D distance до centerline, все 561 samples оказались ниже канала и G8.2 корректно выдавал нулевой `river_channel_delta_m`.
 
-Поведение отдельно воспроизведено на exact Godot `4.7.1.stable.double.custom_build.a13da4feb` Linux double build.
-
-FIX1 implementation commit:
+FIX2 runtime commit:
 
 ```text
-05757e69b7e73139226c68702f4bb81c31840469
+6d461ea5b201047cf12f1d284fb08e93ceae1689
 ```
 
-FIX1 меняет только acceptance harness: проверяет размер массива и приводит оба значения `source_grid` к `int` перед сравнением. Manifest, lab runtime, geomorphology formulas, canonical truth, identity и presentation behavior не менялись.
+FIX2 реализован отдельным presentation-only wrapper:
+
+```text
+res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd
+```
+
+Он:
+
+- находит PX/PZ seam на той же radial interpolation, что использует G6 resolver;
+- сохраняет настоящий radius G6 centerline вместо принудительного `Fixture.RADIUS_M`;
+- строит локальный tangent/cross frame в этой точке;
+- семплирует corridor на centerline radius;
+- не меняет accepted G8.1–G8.5 geomorphology runtime, формулы или canonical identity.
+
+Headless smoke **не ослаблен**: он всё ещё требует ненулевую видимость каждого из пяти deformation components.
 
 ## Automated sequence
 
@@ -123,4 +142,4 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 4. При включённом `X` magenta PX/PZ seam пересекает поверхность без видимого геометрического разрыва.
 5. При включённом `F` cyan river overlay согласован с channel/bank/floodplain формой.
 
-Только focused FIX1 + automated + manual graphical PASS переводят G8.6 в ACCEPTED и открывают `G8 Full Acceptance`.
+Только focused FIX2 + automated + manual graphical PASS переводят G8.6 в ACCEPTED и открывают `G8 Full Acceptance`.
