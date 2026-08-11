@@ -19,15 +19,16 @@ T composition             TS scale/visual
                T2.0
 ```
 
-T1B не заменяет TS0.4 и не снимает PC0 blocker T2.0.
+T1B не заменяет TS0.4 и не снимает глобальный PC0 blocker T2.0.
 
-## 2. Принятая база
+## 2. Принятая цепочка
 
 ```text
 T1A.7 Runtime Recovery / Interest / Scale         ACCEPTED
 T1B.0 Runtime Failure Contract                    ACCEPTED
 T1B.1 Dependency Failure Propagation              ACCEPTED
 T1B.2 Runtime Command Failure Semantics           ACCEPTED
+T1B.3 Recovery / Reconnect Composition            ACCEPTED
 ```
 
 Accepted Windows heads:
@@ -36,9 +37,10 @@ Accepted Windows heads:
 T1B.0  1f08defe57f592f5e2698da71a1e3180b0875014
 T1B.1  faff5f10f42d30a8769ee796fce26d93b8d24bcf
 T1B.2  067fa6d8440ecc52771a5b8b5bb7a1e66b075192
+T1B.3  3a2a6a3e14f97e070139a00402d0cf0e19238622
 ```
 
-T1B.2 full world/core regression прошёл на том же preserved checkout: MW9/MW10, RL0-RL3, `main_scene_cli_all 6 PASS / 0 FAIL`, lifecycle `STOPPED`, exit 0 и финальный NX4 marker.
+T1B.3 был принят только после FIX1. Первый candidate `373cdd4...` не является evidence из-за inherited-member parse collision и false-positive harness `PASS (0 assertions)`. FIX1 устранил обе проблемы; после этого required focused -> full world/core sequence прошла green. Показанный full tail: RL3 `175 + 37`, `main_scene_cli_all 6 PASS / 0 FAIL`, lifecycle `STOPPED`, exit 0 и финальный NX4 marker.
 
 ## 3. Архитектурная формула
 
@@ -56,7 +58,9 @@ existing executor / ledger / effect rollback
         ↓
 existing T1A.7 M0 durability
         ↓
-existing ConstructionRuntimeSnapshot / replica / interest-session binding
+existing interest/session + ConstructionRuntimeSnapshot/replica
+        ↓
+derived M3 client presentation
 ```
 
 Запрещённые подмены:
@@ -72,20 +76,11 @@ network delivery order != gameplay correctness
 
 ## 4. T1B.0 — Runtime Failure Contract — ACCEPTED
 
-Canonical runtime subject получает derived failure fields:
-
-```text
-operability: ONLINE / DEGRADED / OFFLINE
-failure_codes: POWER_UNAVAILABLE / DATA_UNAVAILABLE / DEPENDENCY_UNAVAILABLE
-```
-
-`NONE / OPTIONAL / REQUIRED` requirements определяют OFFLINE/DEGRADED/ONLINE. Projection pure; commit остаётся у существующего runtime store.
+Canonical runtime subject получает `operability: ONLINE / DEGRADED / OFFLINE` и deterministic `failure_codes`. `NONE / OPTIONAL / REQUIRED` requirements определяют результат. Projection pure; commit остаётся у existing runtime store.
 
 ## 5. T1B.1 — Dependency Failure Propagation — ACCEPTED
 
-Bounded deterministic propagation только внутри одного canonical construct по существующим runtime IDs.
-
-Правила:
+Bounded deterministic construct-local propagation по существующим runtime IDs:
 
 - OFFLINE upstream => dependency unavailable;
 - DEGRADED upstream остаётся dependency-available;
@@ -93,12 +88,12 @@ Bounded deterministic propagation только внутри одного canonic
 - optional outage => DEGRADED;
 - recovery => deterministic ONLINE;
 - cycle/duplicate/self/missing/mixed-construct rejected;
-- default bounds: 1024 nodes / 4096 edges;
-- propagator proposals-only, canonical commit не принадлежит propagator.
+- bounds 1024 nodes / 4096 edges;
+- planner proposals-only.
 
 ## 6. T1B.2 — Runtime Command Failure Semantics — ACCEPTED
 
-Failure-aware handler-policy встроен в существующую executor handler boundary без изменения executor core.
+Failure-aware handler-policy в существующей executor handler boundary:
 
 ```text
 REQUIRE_ONLINE
@@ -106,95 +101,137 @@ ALLOW_DEGRADED
 ALLOW_OFFLINE
 ```
 
-Rejection происходит до gameplay handler/effect work, terminal result хранится существующим operation ledger, replay idempotent, exactly-once effect и rollback остаются принятым T1A.5 transaction boundary.
+Rejection происходит до gameplay handler/effect work, existing operation ledger хранит terminal result, replay idempotent, exactly-once effect/rollback остаются принятым T1A.5 boundary.
 
-Accepted checkpoint:
+## 7. T1B.3 — Recovery / Reconnect Composition — ACCEPTED
 
-```text
-docs/checkpoints/2026-08-11_T1B2_RUNTIME_COMMAND_FAILURE_SEMANTICS_ACCEPTED_RU.md
-```
-
-## 7. T1B.3 — Recovery / Reconnect Composition — IMPLEMENTED CANDIDATE
-
-Цель:
+Доказано:
 
 ```text
 failure
-  -> command rejected + ledgered
-  -> runtime checkpoint
-  -> server/runtime restart
-  -> exact failure truth recovered from existing M0
-  -> logical interest re-projected by external authoritative source
-  -> new reconnect session receives full recovered baseline
-  -> late-interest client receives same full recovered baseline
-  -> dependency restored
-  -> canonical state returns ONLINE
-  -> replicas converge
-  -> command becomes executable again
-  -> second checkpoint/restart preserves recovery and command replay
+ -> command rejected + ledgered
+ -> M0 checkpoint
+ -> fresh runtime restart
+ -> recovered failure truth
+ -> external authoritative interest projection restore
+ -> reconnect + late-interest full baselines
+ -> dependency recovery
+ -> ONLINE replicas
+ -> command re-enabled
+ -> second checkpoint/restart + replay
 ```
 
-Новый lab-only adapter:
+Construction persistence не владеет client/session/interest state. Interest после restart подаётся отдельно внешним authoritative source.
+
+Checkpoint:
 
 ```text
-scripts/labs/t1/t1b/t1b3_recoverable_failure_runtime.gd
+docs/checkpoints/2026-08-11_T1B3_RECOVERY_RECONNECT_COMPOSITION_ACCEPTED_RU.md
 ```
 
-Он только соединяет принятые блоки:
+## 8. T1B.4 — Composition Acceptance — IMPLEMENTED CANDIDATE
 
-- `T1A.7` recoverable D0 runtime;
-- `T1B.1` bounded failure planner;
-- `T1B.2` failure-aware command handler;
-- existing `ConstructionRuntimeStateStore`;
-- existing `ConstructionRuntimeSnapshot`;
-- existing `ConstructionRuntimeReplicaStore`.
+T1B.4 — финальный production-shaped process gate для T1B.
 
-Он не создаёт новый persistence format, reconnect protocol, network channel, authority registry или persistent interest truth.
-
-Acceptance:
+Новые T1B-owned lab/process файлы:
 
 ```text
-tests/construction/t1b3_recovery_reconnect_composition_acceptance.gd
-RUN_T1B3_RECOVERY_RECONNECT_TESTS.ps1
-validation/t1b3-recovery-reconnect-composition-validation.json
+scripts/labs/t1/t1b/t1b4_m3_failure_server_adapter.gd
+tools/runtime/t1b4_runtime_server.gd
+tools/runtime/t1b4_runtime_client.gd
+tests/construction/t1b4_m3_failure_recovery_composition_acceptance.gd
+RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1
+validation/t1b4-composition-acceptance-validation.json
 ```
 
-Scenario:
+Server adapter наследует accepted T1A.7 interest-aware M3 adapter и меняет только runtime factory на accepted T1B.3 recoverable failure runtime. Existing M3 control/resync channels, authority/session rules и ConstructionRuntimeSnapshot остаются неизменными.
+
+Client process использует accepted T1A.6 graphical M3 client adapter с existing `T1A6 D0 RuntimePresenter`.
+
+### Process scenario
 
 ```text
-generator --required--> console --required--> door
-     |
-     +--optional-----------------------------> lamp
+server process #1
+  + client A in interest
+  + client B in interest
+        ↓
+construct-local outage through T1B.1/T1B.3 runtime
+        ↓
+A/B receive OFFLINE/DEGRADED authoritative snapshots
+        ↓
+A OPEN_DOOR command over real M3 => OFFLINE rejection
+        ↓
+M0 checkpoint
+        ↓
+kill server + clients
+        ↓
+server process #2, same durable M0 root
+        ↓
+recovered OFFLINE truth before clients regain Construction visibility
+        ↓
+A reconnect logical identity + C late join
+        ↓
+external interest projection re-applied explicitly
+        ↓
+A/C receive recovered failure baseline
+        ↓
+replay rejected operation remains terminal
+        ↓
+dependency restoration
+        ↓
+A/C converge ONLINE
+        ↓
+OPEN_DOOR succeeds over real M3
+        ↓
+both derived presenters converge OPEN
+        ↓
+final ONLINE/OPEN checkpoint
 ```
 
-Outage:
+Critical ownership proof: after server process restart no Construction runtime snapshot may reach A/C before external interest selection is re-applied. Durable failure truth comes from M0; visibility comes from interest; transport only delivers current authoritative state.
+
+Harness has explicit `scenario_completed` fail-closed marker; an early parse/runtime/process abort cannot emit a successful acceptance.
+
+## 9. T1B.4 validation protocol
+
+Focused Windows gate:
+
+```powershell
+.\RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1 -GodotPath $Godot
+```
+
+Runner first reruns accepted T1B.3 parent chain, performs editor parse/import, then launches the real M3 process scenario.
+
+A valid result must end with:
 
 ```text
-generator OFFLINE  POWER_UNAVAILABLE
-console   OFFLINE  DEPENDENCY_UNAVAILABLE
-door      OFFLINE  DEPENDENCY_UNAVAILABLE
-lamp      DEGRADED DEPENDENCY_UNAVAILABLE
+T1B.4 M3 failure/recovery composition: <N> assertions, 0 failures
+T1B.4 composition focused gate passed.
 ```
 
-После checkpoint/restart эти состояния должны восстановиться byte/semantic-equivalent через существующий runtime persistence checksum. Старый rejected command replay должен остаться terminal и не менять revision.
+После focused PASS, **на том же checkout без fetch/reset**:
 
-Interest после server restart **не объявляется T1B persistence**. Test восстанавливает `client_state` через существующий `restore_client_state()` как projection от внешнего authoritative interest/world-query owner, затем bind нового session должен получить recovered full baseline. Старый session остаётся invalid.
+```powershell
+.\RUN_WORLD_REGRESSION_TESTS.ps1
+```
 
-После восстановления dependency все четыре subjects переходят в ONLINE, A/B replicas принимают новый authoritative snapshot, door command снова проходит, а второй checkpoint/restart сохраняет ONLINE + gameplay state + successful command replay.
+Только green pair закрывает T1B.4 и aggregate T1B.
 
-## 8. Следующий stage после T1B.3
+## 10. После T1B.4
+
+Если T1B.4 accepted:
 
 ```text
-T1B.4 Composition Acceptance
-  - production-shaped multi-fixture outage/recovery
-  - real M3/ENet clients
-  - presentation remains derived
-  - full T1B composition acceptance
+T1B aggregate handoff complete
+SOURCE_ACCEPTED = true
+COMPOSITION_VERIFIED = true
+MAIN_INTEGRATED = false until explicit integration
+PRODUCTION_READY = false until global convergence gates
 ```
 
-T1B.4 не стартует до focused + full acceptance T1B.3.
+Следующий Construction stage T2.0 **не стартует автоматически**.
 
-## 9. Stop gates
+## 11. Stop gates
 
 STOP и перенос в owner-program/P0, если потребуется:
 
@@ -208,35 +245,17 @@ STOP и перенос в owner-program/P0, если потребуется:
 - correctness через RPC ordering;
 - persistent client/session/interest state внутри Construction runtime aggregate.
 
-## 10. Validation protocol T1B.3
-
-Standalone:
-
-```powershell
-& $Godot --headless --path . --script res://tests/construction/t1b3_recovery_reconnect_composition_acceptance.gd
-```
-
-Focused:
-
-```powershell
-.\RUN_T1B3_RECOVERY_RECONNECT_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner сначала повторяет accepted T1B.2/T1B.1/T1B.0/T1A.7 chain, затем T1B.3 acceptance.
-
-Если focused green, на том же checkout без fetch/reset:
-
-```powershell
-.\RUN_WORLD_REGRESSION_TESTS.ps1
-```
-
-Только green pair принимает T1B.3 и открывает T1B.4.
-
-## 11. T2.0 gate остаётся закрытым
+## 12. T2.0 global gate остаётся закрытым
 
 ```text
-C22 MAIN_INTEGRATED
+C22_MAIN_INTEGRATED
 T runtime/composition evidence
 TS0.4 1M ceiling classification
 PC0 convergence
+```
+
+Canonical blocker string:
+
+```text
+C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED
 ```
