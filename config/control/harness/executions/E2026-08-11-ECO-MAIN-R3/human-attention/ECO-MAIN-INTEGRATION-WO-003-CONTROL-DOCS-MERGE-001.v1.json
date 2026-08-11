@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "ECO-MAIN-INTEGRATION-WO-003-CONTROL-DOCS-MERGE-001",
+  "program": "ECO",
+  "checkpoint": "H0_0_SCAFFOLD_READY",
+  "risk_class": "HIGH",
+  "reason": "The fresh R3 candidate changes ECO ancestry to remove a verified control-only PC0 RED while preserving the exact current ECO content tree. The autonomy ceiling permits a draft PR but requires a human decision before merge.",
+  "decision_required": "Approve or decline CONTROL_DOCS_ONLY_MERGE for Draft PR #70 into feature/eco-evolutionary-ecology.",
+  "options": ["Approve PR #70 merge after reviewing the R3 evidence package", "Decline and retain the current paused ECO branch unchanged"],
+  "recommended_option": "Approve PR #70 merge after reviewing the R3 evidence package",
+  "recommendation_reason": "The candidate preserves current ECO content, integrates exact canonical main ancestry, removes ECO critical main-dependency drift in the synthetic audit, adds no runtime/ecology/passport/registry/architecture content delta, and has independent HIGH-risk Reviewer and Verifier PASS verdicts.",
+  "blast_radius": ["ECO branch ancestry", "PC0 dependency-drift evaluation", "H0.0 PC0_NON_RED blocker"],
+  "blocking": true,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/evidence/ECO-MAIN-INTEGRATION-WO-003-EVIDENCE-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/verification/ECO-MAIN-INTEGRATION-WO-003-VERIFIER-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/reviews/ECO-MAIN-INTEGRATION-WO-003-POSTBUILD-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-ECO-MAIN-R3/pr/ECO-MAIN-INTEGRATION-WO-003-DRAFT-PR-001.v1.json"
+  ],
+  "status": "OPEN"
+}
