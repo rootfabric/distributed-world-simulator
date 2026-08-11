@@ -1,7 +1,7 @@
 {
   "schema": "planet_simulator.validation.g8_6_geomorphology_visual_lab.v1",
   "checkpoint": "g8.6-geomorphology-visual-lab",
-  "decision": "IMPLEMENTED_CANDIDATE_AUTOMATED_AND_MANUAL_VALIDATION_PENDING",
+  "decision": "FIX1_IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
   "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/g8-geomorphology",
@@ -52,8 +52,33 @@
     "persistence_ownership": false,
     "network_ownership": false
   },
+  "first_windows_attempt": {
+    "status": "TEST_HARNESS_CONTRACT_FAIL_ONLY",
+    "tested_head": "87acbc69854336fa52b5b4c66069ec56a555c1a4",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "g8_5_parent_invariance": "PASS_150_ASSERTIONS",
+    "g8_6_contracts": "FAIL_35_ASSERTIONS_1_FAILURE",
+    "failure": {
+      "label": "source grid pinned",
+      "cause": "JSON.parse_string decodes numeric array elements as float; GDScript Array equality is type-sensitive, so [33.0, 17.0] != [33, 17].",
+      "manifest_values_correct": true,
+      "runtime_or_geomorphology_regression": false,
+      "headless_lab_executed": false,
+      "world_regression_executed": false
+    }
+  },
+  "fix1": {
+    "status": "IMPLEMENTED_FOCUSED_RETEST_REQUIRED",
+    "head": "05757e69b7e73139226c68702f4bb81c31840469",
+    "scope": "Acceptance harness only: validate source_grid length and cast both JSON numeric values to int before comparing 33x17.",
+    "manifest_changes": false,
+    "lab_runtime_changes": false,
+    "geomorphology_formula_changes": false,
+    "canonical_truth_changes": false
+  },
   "automated_evidence": {
-    "focused": "PENDING",
+    "focused": "PENDING_FIX1_RETEST",
     "headless_lab": "PENDING",
     "full_world_regression": "PENDING",
     "working_tree": "TO_BE_VERIFIED"
@@ -69,8 +94,9 @@
     ]
   },
   "project_control": {
-    "expected_health": "YELLOW_UNTIL_AUTOMATED_AND_MANUAL_PASS",
+    "expected_health": "YELLOW_UNTIL_FIX1_AUTOMATED_AND_MANUAL_PASS",
     "blockers": [
+      "G8_6_FIX1_FOCUSED_RETEST_REQUIRED",
       "G8_6_AUTOMATED_VALIDATION_REQUIRED",
       "G8_6_MANUAL_GRAPHICAL_ACCEPTANCE_REQUIRED"
     ]
