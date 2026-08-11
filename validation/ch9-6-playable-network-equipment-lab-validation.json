@@ -6,17 +6,23 @@
   "base_checkpoint": "9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "accepted_parent_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
   "accepted_parent_focused_head": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
-  "candidate_runtime_head": "7b2269b39952b8201714a7078a62b8f97057325c",
-  "tested_focused_head": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
-  "decision": "WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
-  "pc0_audit": {
+  "accepted_runtime_head": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+  "tested_focused_head": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+  "automated_full_regression_head": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
+  "decision": "FOCUSED_ACCEPTED",
+  "pre_ch9_6_pc0_context": {
     "registry_generation": 49,
     "overall": "RED",
     "character": "YELLOW",
     "overall_red_source": "T1B.3 Recovery / Reconnect Composition",
     "character_red": false,
     "construction_overlap_review": "NO_CH_RUNTIME_PATH_OVERLAP",
-    "status": "CH_POST_ACCEPTANCE_AUDIT_PASSED_NON_RED"
+    "status": "CH_NON_RED_CONTEXT_BEFORE_CH9_6_ACCEPTANCE"
+  },
+  "post_acceptance_pc0": {
+    "required": true,
+    "status": "PENDING_CANONICAL_PC0_EXECUTION",
+    "rule": "No later Character stage is authorized until canonical Project Control reports CH non-RED."
   },
   "goal": "Prove the actual component Inventory UI routes wearable drag/drop through NetworkCharacterEquipmentGameplayController and the accepted ITEM/ENet authority path into a persistent canonical server Item Graph, then rebuild the same real Quaternius presentation after restart.",
   "architecture": {
@@ -43,6 +49,8 @@
     "operator_evidence_root": "artifacts/ch9-6-manual",
     "operator_evidence_schema": "planet_simulator.ch9_6_manual_graphical_acceptance_evidence.v1",
     "automated_test": "res://tests/characters/test_ch9_6_playable_network_equipment_ui.gd",
+    "wearable_presentation_test": "res://tests/characters/test_ch9_6_wearable_inventory_presentation.gd",
+    "graphical_unequip_route_test": "res://tests/characters/test_ch9_6_graphical_unequip_route.gd",
     "runner": ".\\RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1"
   },
   "windows_attempt_1": {
@@ -56,30 +64,18 @@
       "equipment.equip returned M4_ITEM_COMMAND_TIMEOUT",
       "subsequent item.transfer and equipment.equip returned M4_ITEM_COMMAND_SEND_FAILED"
     ],
-    "classification": "LIVE_COMPOSITION_BLOCKING_COMMAND_DEADLOCK",
-    "runtime_assertions_executed": true
-  },
-  "root_cause": {
-    "bridge": "Ch9NetworkItemCommandBridge inherited generic M7 submit_item_command behavior",
-    "generic_behavior": "the NX6 nonblocking pump is used only for PredictedItemInteractionJournal.PREDICTABLE_COMMANDS",
-    "equipment_predictable": false,
-    "result": "equipment.equip fell through to execute_item_command_blocking",
-    "same_scene_tree_effect": "blocking client polling prevented the colocated CH9.5 server Node from processing the request until timeout"
+    "classification": "LIVE_COMPOSITION_BLOCKING_COMMAND_DEADLOCK"
   },
   "fix1": {
     "bridge_runtime_commit": "7b2269b39952b8201714a7078a62b8f97057325c",
     "changes": [
-      "Ch9NetworkItemCommandBridge routes equipment.equip and equipment.unequip through the existing Ch9GraphicalClientRuntime.submit_equipment_command_nonblocking public API when available",
-      "replica item_id is converted to the canonical Item UUID before send",
-      "the UI result is success+pending+authoritative_pending and does not create a speculative equipment projection",
-      "canonical Item Graph delta remains the only trigger for replica graph and Quaternius presentation change",
-      "generic M7/NX predicted-item commands and blocking fallback for runtimes without the CH9 helper remain unchanged",
-      "bridge submitted/rejected telemetry remains compatible"
-    ],
-    "foundation_files_modified": false,
-    "nx_prediction_semantics_modified": false
+      "equipment.equip and equipment.unequip use the existing CH9 nonblocking authoritative client API when available",
+      "replica item_id is converted to canonical Item UUID before send",
+      "no speculative equipment presentation is introduced",
+      "canonical Item Graph remains the only equipment truth"
+    ]
   },
-  "windows_attempt_2": {
+  "windows_automated_baseline": {
     "tested_branch_head": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
     "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
     "focused": {
@@ -95,55 +91,63 @@
       "ch9_5_persistent_enet_equipment_recovery": {"result": "PASS", "assertions": 41},
       "ch9_6_playable_network_equipment_ui": {"result": "PASS", "assertions": 22},
       "final_marker": "CH9.6 Playable Network Equipment Lab candidate runner: PASS"
-    },
-    "classification": "AUTOMATED_ACCEPTED"
+    }
   },
-  "automated_acceptance_contract": [
-    "instantiate the same graphical CH9.6 lab scene headlessly",
-    "wait for real persistent ENet server/client JOIN",
-    "use the actual CharacterEquipmentInventoryScreen preview/drop route",
-    "equip lower wearable through NetworkCharacterEquipmentGameplayController and Ch9NetworkItemCommandBridge",
-    "verify canonical server/client Item Graph places the canonical wearable UUID in equipment/a slot lower",
-    "verify local replica Item Graph and real CharacterEquipmentPresenter show the corresponding replica wearable",
-    "verify the network bridge submitted the UI operation without rejection",
-    "verify movement/gameplay snapshot does not contain the canonical equipment UUID",
-    "unequip through the actual UI route and verify canonical inventory plus removed presentation",
-    "equip again, commit checkpoint and destroy generation 1 lab",
-    "instantiate a fresh generation 2 lab from the same persistence root",
-    "verify server recovery, same canonical wearable UUID, recovered replica equipment slot, recovered Inventory UI binding and real Quaternius presentation"
+  "graphical_hardening_after_automated_baseline": [
+    "fail closed when graphical launcher does not actually start",
+    "validate base character, animation library and modular outfit assets before graphical launch",
+    "run editor import/parse and targeted CH9.6 probes before opening the client",
+    "preserve unrelated Quaternius FBX/Unity diagnostics as non-authoritative while testing required Godot glTF paths",
+    "restore visible icon metadata for network-replica wearable definitions",
+    "route real GUI equipped-item drag preview to authoritative equipment.unequip instead of generic transfer preview",
+    "accept an ordinary backpack cell as the graphical unequip target while preserving canonical backpack semantics"
   ],
   "manual_graphical_gate": {
     "required": true,
-    "status": "PENDING_USER_OBSERVATION",
-    "runner": ".\\ACCEPT_CH9_6_GRAPHICAL.ps1",
-    "runner_behavior": [
-      "launch generation 1 through PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1 with ResetState in an isolated child PowerShell process",
-      "collect explicit operator observations only after the graphical process exits",
-      "launch generation 2 through the same launcher without ResetState in a new isolated child PowerShell process",
-      "collect explicit restart recovery and unequip presentation observations",
-      "write a local machine-readable evidence JSON under artifacts/ch9-6-manual by default",
-      "never infer graphical PASS from automated state or process exit codes alone"
+    "status": "OPERATOR_ACCEPTED",
+    "accepted_head": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+    "operator_decision": "ACCEPTED",
+    "operator_report_source": "explicit user instruction in project conversation: принимаем",
+    "observed_during_debugging": [
+      "real graphical client launched",
+      "wearable items became visibly distinguishable in Inventory UI",
+      "clothing equipped onto the real character",
+      "corrected equipped-item drag returned the item to the backpack"
     ],
-    "steps": [
-      "run ACCEPT_CH9_6_GRAPHICAL.ps1 on Windows",
-      "generation 1: wait for READY, equip real wearables through visible Inventory UI, verify real Quaternius presentation, verify movement/jump/crouch, close normally",
-      "answer the generation-1 visual questions explicitly",
-      "generation 2: verify equipment and presentation restore without a new drag, unequip one restored item and verify its visual disappears, close normally",
-      "answer the generation-2 visual questions explicitly",
-      "preserve the generated evidence JSON and report its decision"
-    ],
-    "pass_marker": "OPERATOR_REPORTED_PASS",
-    "fail_marker": "OPERATOR_REPORTED_FAIL"
+    "local_runner_evidence_attached_to_repository": false,
+    "local_runner_pass_marker_pasted_in_conversation": false,
+    "evidence_note": "The operator explicitly accepted the manual graphical gate. No local JSON path or OPERATOR_REPORTED_PASS console marker was supplied in the conversation, so this validation record does not invent either one."
   },
+  "accepted_evidence": [
+    "server-authoritative equipment remains canonical Item Graph container state",
+    "real component Inventory UI can equip wearables through the network-aware controller",
+    "network replica wearable definitions are visibly operable in the Inventory UI",
+    "real GUI equipped-item drag can return the item to backpack through equipment.unequip",
+    "real Quaternius presentation follows the replicated equipment state",
+    "earlier CH9.6 automated restart/recovery baseline remains accepted",
+    "operator explicitly accepted the graphical CH9.6 stage on implementation head e547ba52a440e72cc02c6bbe449edaf160bae7ab"
+  ],
+  "non_blocking_followups": [
+    {
+      "id": "DIRECT_EQUIPMENT_TO_HOTBAR_ATOMIC_ROUTE",
+      "status": "DEFERRED",
+      "note": "Current CH9.6 unequip preview intentionally supports equipment->backpack only. A future interaction hardening step should make equipment->hotbar one atomic authority operation rather than client-side unequip then hotbar assignment."
+    },
+    {
+      "id": "HOTBAR_OCCUPIED_SLOT_REPLACEMENT_UX",
+      "status": "DEFERRED",
+      "note": "Backpack->hotbar foundation exists; occupied-slot replacement semantics should be hardened separately and do not reopen CH9.6."
+    }
+  ],
   "windows_results": {
-    "editor_import": "PASS",
-    "ch9_2_inventory_ui_routes_regression": "PASS_16_ASSERTIONS",
-    "ch9_3_real_enet_regression": "PASS_20_ASSERTIONS",
-    "ch9_4_reconnect_recovery_regression": "PASS_53_ASSERTIONS",
-    "ch9_5_persistent_enet_regression": "PASS_41_ASSERTIONS",
-    "ch9_6_playable_network_equipment_ui": "PASS_22_ASSERTIONS",
-    "candidate_runner": "PASS",
-    "graphical": "PENDING_USER_OBSERVATION"
+    "editor_import": "PASS_ON_ACCEPTED_LINEAGE",
+    "ch9_2_inventory_ui_routes_regression": "PASS_16_ASSERTIONS_BASELINE",
+    "ch9_3_real_enet_regression": "PASS_20_ASSERTIONS_BASELINE",
+    "ch9_4_reconnect_recovery_regression": "PASS_53_ASSERTIONS_BASELINE",
+    "ch9_5_persistent_enet_regression": "PASS_41_ASSERTIONS_BASELINE",
+    "ch9_6_playable_network_equipment_ui": "PASS_22_ASSERTIONS_BASELINE",
+    "wearable_inventory_presentation": "PASS_31_ASSERTIONS_OBSERVED_DURING_GRAPHICAL_PREFLIGHT",
+    "graphical": "OPERATOR_ACCEPTED"
   },
-  "next_control_gate": "MANUAL_GRAPHICAL_RESTART_RECOVERY_ACCEPTANCE"
+  "next_control_gate": "POST_ACCEPTANCE_PC0_AUDIT_REQUIRED_BEFORE_NEXT_CH_STAGE"
 }
