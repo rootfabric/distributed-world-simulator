@@ -3,345 +3,203 @@
 **Operational owner:** `main`  
 **Architecture baseline:** `GLOBAL-P0-2026-08-10-R2`  
 **Control plane:** `PC0-2026-08-10-R1`  
-**Harness:** `H0-2026-08-11-R1`  
-**Review layer:** `H0-REVIEW-2026-08-11-R1`
+**Harness:** `H0-2026-08-11-R1`
 
-> Human-facing snapshot. Machine operational truth is `config/control/project-program-registry.v1.json`; if they differ, the registry wins.
+> Human-facing snapshot. Machine truth is `config/control/project-program-registry.v1.json`.
 
----
+## Project milestone
 
-## 1. Current operating rule
-
-```text
-BRANCHES REPORT FACTS
-MAIN DECLARES PROJECT STATE
-HARNESS MOVES ONLY BETWEEN DECLARED CHECKPOINTS
-RISK ROUTES REVIEW DEPTH
-EVIDENCE MAP IS THE REVIEW UNIT
-EXCEPTION IS THE HUMAN ATTENTION UNIT
-```
-
-New runtime work does not continue old stacked lineage by default:
+The project has reached the H0.0 convergence milestone:
 
 ```text
-accepted evidence
-      +
-then-current canonical main
-      ↓
-Project Epoch
-      ↓
-bounded Work Order
-      ↓
-risk/design gate
-      ↓
-implementation
-      ↓
-validation + Evidence Map + independent review
-      ↓
-PC0 / composition
-      ↓
-checkpoint proposal
+H0.0 verified checkpoint evidence     COMPLETE
+G8 Full Acceptance                    COMPLETE / FROZEN
+T1B aggregate handoff                 COMPLETE
+MATTER / S1                           STABLE
 ```
 
----
-
-## 2. Active and tracked frontiers
-
-| Program | Current state | What may be done now | Next checkpoint | Gate after checkpoint |
-|---|---|---|---|---|
-| **HARNESS** | H0.0 planned; canonical contracts ready | Implement **control-only** Status/Plan/Resume, reducer, contract loader, epoch validator, Git-only recovery fixtures | **H0_0_SCAFFOLD_READY** | Then H0.1/C22 becomes first autonomous runtime pilot |
-| **G** | G8.6 automated accepted, graphical pending | Manual graphical acceptance only | **G8.6 ACCEPTED**, then **G8 Full Acceptance** | Freeze G8; G9 waits canonical R3 + MAT0 |
-| **T** | T1B.0–T1B.4 accepted handoff | No new T1B work | HANDOFF COMPLETE already reached | Resume at T2.0 after C22 + TS0.4 + PC0 |
-| **TS / C22** | Accepted evidence; waiting H0.0 before fresh convergence | No autonomous C22 runtime yet | After H0.0: **H0.1 + C22 SOURCE_ACCEPTED_MERGE_READY** | Explicit runtime merge → PC0 → MAIN_INTEGRATED → TS0.4 |
-| **CH** | Windows automated accepted, graphical pending | Two-pass graphical/recovery acceptance | **CH9.6 ACCEPTED** | Post-acceptance PC0; freeze slice |
-| **NX** | NX.C0 preparation complete; runtime waiting H0.1 | Analysis/evidence only; do not start NX.C1 runtime | After H0.1: H0.2/NX → **NX SOURCE_ACCEPTED** | HIGH-risk evidence/review + network/reconnect gates |
-| **R3** | Architecture candidate; refresh required | Analysis/current-main refresh may proceed; **no promotion** | **R3 REFRESHED CANDIDATE / PC0 NON-RED** | CRITICAL review + human promotion gate |
-| **DOCTRINE** | Active design reference | Update only from new gameplay/system evidence | next doctrine alignment checkpoint | Must not own technical foundations |
-| **MATTER** | MW10 stable accepted | No new branch without registered composition need | future GM/Geo-Matter gate | Keep Matter truth canonical |
-| **S1** | Stable proposal-only compute | No new branch until concrete workload | workload-specific frontier | Workers remain proposal-only |
-
----
-
-## 3. What can proceed in parallel now
-
-```text
-A. H0.0 restart-safe harness scaffold (control-only)
-B. G8.6 manual graphical acceptance
-C. CH9.6 manual graphical/recovery acceptance
-D. R3 current-main analysis/refresh without promotion
-```
-
-Explicitly **not yet allowed**:
-
-```text
-C22 autonomous runtime convergence  → waits H0_0_SCAFFOLD_READY
-NX.C1 runtime                        → waits H0.1 PASS
-multiple autonomous runtime workers → waits H0.3
-```
-
-This intentionally slows runtime branching for one checkpoint so the development control loop becomes restart-safe before scaling agent concurrency.
-
----
-
-## 4. HARNESS — immediate critical path
-
-### H0.0 — Restart-Safe Harness Scaffold
-
-Nearest project-wide checkpoint:
+The canonicalization candidate preserves the terminal H0.0 R3 evidence and switches the active development control surface to a fresh generation-70 **H0.1 planning epoch**.
 
 ```text
 H0_0_SCAFFOLD_READY
+        ↓ canonical control integration
+H0.1 planning state
+        ↓ post-merge main audit
+        ↓ Director dispatch
+fresh current-main C22 child Work Order
 ```
 
-Implement from then-current canonical `main`:
+No C22 runtime branch is authorized merely by the H0.0 checkpoint merge.
+
+## Live frontiers
+
+| Program | Current state | What may happen next |
+|---|---|---|
+| **HARNESS** | H0.0 verified; H0.1 planning prepared | Canonicalize checkpoint, post-merge audit, Director-dispatch the C22 child Work Order |
+| **G** | **G8 FULL ACCEPTED / FROZEN** | No G8 work. G9 waits canonical GLOBAL-P0 R3 + MAT0 |
+| **T** | **T1B HANDOFF COMPLETE** | No T1B.5. T2.0 waits C22 integration + TS0.4 + PC0 |
+| **TS/C22** | SOURCE_ACCEPTED evidence; fresh convergence pending | H0.1 will create a fresh current-main C22 convergence branch only after dispatch |
+| **CH** | Windows automated accepted; graphical recovery gate pending | Finish two-pass manual CH9.6 observation; this does not block H0.1 |
+| **NX** | NX.C0 preparation complete | Runtime NX.C1 waits H0.1 PASS |
+| **ECO** | advisory research; P1C-S3 exact Windows pending | Continue independently; does not block mainline delivery |
+| **GLOBAL-P0 R3** | architecture candidate; refresh required | Refresh/review in parallel; promotion remains CRITICAL + human gate |
+| **DOCTRINE** | design reference | Update from new evidence only |
+| **MATTER** | MW10 stable | No active frontier |
+| **S1** | stable proposal-only compute | No active frontier |
+
+## H0.0 evidence preserved
+
+Terminal historical execution:
 
 ```text
-CONTROL_DEVELOPMENT.ps1
--Status
--Plan
--Resume
-
-state/event reducer
-contract/schema loader
-Project Epoch validator + invalidation detection
-Git-only recovery fixtures
-review/evidence contract loading
+E2026-08-11-H0-0-R3
+Work Order: H0-0-R3-WO-001
+implementation head: 8deffb80c3e445ef9b8d556d2a1fc2666abea8fc
+terminal control head: 53533c8bb7d185b4617adcb2561cb322e5297e8e
+state: CHECKPOINT_PROPOSED
 ```
 
-Required properties:
+Evidence includes:
 
 ```text
-NO runtime branch creation
-NO gameplay/domain changes
-state reconstructs without chat
-review/evidence contracts parse/load
-PC0 non-RED
+13 / 13 required predicates
+Windows clean-clone focused suite PASS
+Status / Plan / Resume PASS
+Git-only recovery PASS
+main-movement audit continuation PASS
+Evidence Map PASS
+Independent Reviewer PASS
+Independent Verifier PASS
+standard PC0 NON_RED
+directional PC0 NON_RED
+runtime_authorized = false
 ```
 
-Only after H0.0 is accepted and integrated may H0.1 create the fresh C22 runtime branch.
+R3 execution identity is historical and must not be rewritten to follow later registry generations.
 
-### H0.1 — C22 Closed Loop
-
-H0.1 must prove not only tests, but the full evidence-driven flow:
+## Active canonical planning state
 
 ```text
-risk classification
-Design Brief when required
-fresh current-main C22 branch
-bounded capability transfer
-focused + graphical + C24 + full regression
+E2026-08-11-H0-1-R1
+base main: be6ea2a8636a9242fc808aea377d9144ef9bc9eb
+registry generation: 70 candidate / generation-69 source base
+checkpoint: H0_1_CLOSED_LOOP_C22_PILOT
+Work Order: H0-1-R1-DISPATCH-WO-001
+state: PLANNED
+branch: main
+```
+
+The planning Work Order explicitly forbids runtime/domain paths. Before Director dispatch:
+
+```text
+autonomous_runtime_workers = 0
+C22 branch creation = FORBIDDEN_UNTIL_DISPATCH
+```
+
+After actual canonical merge, main has moved relative to the epoch base by definition. H0 must therefore first record a post-merge NON_RED main audit. Only after that audit may the Director dispatch H0.1 and create the fresh C22 child Work Order/branch.
+
+## G8 achievement
+
+Live G passport records:
+
+```text
+G8.0 ACCEPTED
+G8.1 ACCEPTED
+G8.2 ACCEPTED
+G8.3 ACCEPTED
+G8.4 ACCEPTED
+G8.5 ACCEPTED
+G8.6 ACCEPTED
+G8 FULL ACCEPTANCE
+SOURCE_ACCEPTED_FROZEN_WAITING_R3_MAT0
+```
+
+Acceptance anchors:
+
+```text
+runtime automated: a9ca1f8b723e4edc5ebff40db26e41283d464597
+manual graphical:  b91ed3eb8664ec1aee28453947a84c6a56acb95b
+aggregate Windows: 31c0d4eef30544d4d5090b14721585047a97b979
+```
+
+Do not extend the frozen G8 branch into G9.
+
+## T1B achievement
+
+```text
+T1B.0 ACCEPTED
+T1B.1 ACCEPTED
+T1B.2 ACCEPTED
+T1B.3 ACCEPTED
+T1B.4 ACCEPTED
+T1B Aggregate HANDOFF COMPLETE
+```
+
+There is no T1B.5.
+
+## Nonblocking unfinished work
+
+These do not block the H0.0 project checkpoint:
+
+```text
+CH9.6 manual graphical/recovery observation
+ECO.P1C-S3 exact-Windows research acceptance
+GLOBAL-P0 R3 current-main refresh/promotion work
+```
+
+They remain governed by their own stop gates.
+
+## Critical path after canonical checkpoint
+
+```text
+H0_0_SCAFFOLD_READY canonical
+        ↓
+post-merge H0.1 main audit
+        ↓
+Director dispatch
+        ↓
+fresh C22 convergence branch / child Work Order
+        ↓
+semantic production-diff equivalence
+focused C22 + C24 contracts + graphical
+full world/core regression
 post-build critique
 Evidence Map
-independent Reviewer verdict PASS
-exact fresh review/test heads
-PC0 + directional PC0
-Human Attention Queue empty/resolved
-clean-session recovery drill
+independent review
+standard + directional PC0
+recovery drill
 Draft PR
-STOP before merge
-```
-
-Target:
-
-```text
-H0_1_PASS
-+
-C22 SOURCE_ACCEPTED_MERGE_READY
-```
-
----
-
-## 5. Risk/review routing
-
-```text
-LOW      → Implementer + Verifier
-MEDIUM   → Implementer + Reviewer + Verifier
-HIGH     → Implementer + Reviewer + Verifier + Director
-CRITICAL → Implementer + Reviewer + Verifier + Director + Human
-```
-
-Mandatory review rules for runtime checkpoints:
-
-```text
-Evidence Map complete
-Reviewer verdict = PASS
-INSUFFICIENT_EVIDENCE blocks checkpoint
-reviewed HEAD == evidence HEAD == tested runtime HEAD for runtime scope
-FIX_REQUIRED on MEDIUM+ → Repair Map before next non-trivial fix
-```
-
-Human attention is exception-driven; commit count is never the control interface.
-
----
-
-## 6. G — exact continuation
-
-Tested automated head:
-
-```text
-a9ca1f8b723e4edc5ebff40db26e41283d464597
-```
-
-Manual checks:
-
-```text
-G     source/resolved changes; Truth hash stable
-1..7  semantic views meaningful
-W/S   LOD/stride/grid changes; canonical samples=561 and hash stable
-X     PX/PZ seam has no crack
-F     river overlay coherent with channel/bank/floodplain
-```
-
-Sequence:
-
-```text
-manual PASS → G8.6 ACCEPTED → G8 Full Acceptance → PC0 → freeze G8
-```
-
-Do not start G9 before canonical R3 + MAT0.
-
----
-
-## 7. CH — exact continuation
-
-Preserved tested head:
-
-```text
-4cdafddce7cd6b5fa7ff45a06ae00f06320464ab
-```
-
-Run 1 with ResetState: equip/unequip through real Inventory UI, verify presentation, movement/jump/crouch, normal close.
-
-Run 2 without ResetState: durable equipment restores before new drag; post-recovery unequip removes presentation.
-
-Sequence:
-
-```text
-manual PASS → CH9.6 ACCEPTED → post-acceptance PC0 → freeze slice
-```
-
-Do not create CH9.7 to bypass the gate.
-
----
-
-## 8. Construction train
-
-```text
-H0_0_SCAFFOLD_READY
         ↓
-H0.1 fresh C22 convergence
-        ↓
-C22 SOURCE_ACCEPTED_MERGE_READY
-        ↓ human runtime merge authorization
-C22 MAIN_INTEGRATED
-        ↓
-TS0.4 1M Research Ceiling
-        ↓
-classification: PASSABLE / DEGRADED / CURRENT_CEILING_EXCEEDED
-        ↓
-PC0 convergence with accepted T evidence
-        ↓
-T2.0 Real Heterogeneous Base / Station
+H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY
+        ↓ STOP / explicit runtime merge gate
 ```
 
-T1B has no T1B.5.
+NX.C1 remains blocked until H0.1 PASS. Multiple autonomous runtime workers remain blocked until H0.3.
 
----
-
-## 9. NX train
-
-NX runtime is intentionally held until H0.1 proves the closed loop.
-
-Then NX becomes H0.2 and has minimum HIGH risk because it touches authority/protocol/recovery behavior.
-
-Authorized capability remains minimal:
+## Immediate stop gates
 
 ```text
-MovementAuthorityProfile
-owner movement service
-client/server locomotion composition
-remote snapshot interpolation presentation
-same-revision optimistic item rollback
-```
-
-Never transfer:
-
-```text
-legacy FIX ladder
-render _process() writing CharacterBody3D transform
-unbounded relative client_tick scheduler
-```
-
-NX acceptance additionally requires Evidence Map, independent review and exact-head freshness on top of focused/full/two-client/impaired-network/reconnect/dependency gates.
-
----
-
-## 10. R3 train
-
-R3 may be refreshed/analyzed in parallel but promotion remains a CRITICAL risk/human gate.
-
-Required candidate path:
-
-```text
-current-main refresh
-CRITICAL risk classification
-Design Brief
-frontier guards
-R2→R3 transition policy
-ownership/intersection review
-Evidence Map
-Reviewer PASS
-PC0 non-RED
-Human Attention item when architectural choice exists
-```
-
-Only human-approved canonical R3 may start IAM/MAT/WT/WQ Wave A from one exact SHA.
-
----
-
-## 11. Immediate stop gates
-
-```text
-NO autonomous runtime before H0_0_SCAFFOLD_READY
+NO C22 runtime branch before post-merge H0.1 audit + Director dispatch
+NO C22 runtime merge without explicit human authorization
 NO NX.C1 runtime before H0.1 PASS
-NO multiple autonomous runtime workers before H0.3
+NO multiple runtime workers before H0.3
 NO T1B.5
 NO G9 before canonical R3 + MAT0
-NO CH9.7 to bypass graphical gate
-NO legacy N direct merge
-NO FIX7 render/physics writes
-NO TS0.4 before C22 MAIN_INTEGRATED
-NO T2.0 before TS0.4 classification + PC0 convergence
-NO R3 promotion without CRITICAL review + human approval
-NO Wave A from divergent bases
-NO new global Registry/Manager/Authority/Material/Transaction/Query foundation in a domain branch
+NO CH stage after CH9.6 before graphical acceptance + post-PC0
+NO GLOBAL-P0 R3 promotion without CRITICAL review + human approval
+NO ECO production promotion from research state without fresh controlled frontier
 ```
 
----
-
-## 12. Canonical entry points
+## Canonical entry points
 
 ```text
 PROJECT_CONTROL.md
 AGENTS.md
 HARNESS_CONTROL.md
-docs/control/DEVELOPMENT_HARNESS_RU.md
-docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
+CONTROL_PROJECT.ps1
+CONTROL_DEVELOPMENT.ps1
 config/control/project-program-registry.v1.json
-config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
-```
-
-Live control:
-
-```powershell
-.\CONTROL_PROJECT.ps1 -NoFailOnRed
-```
-
-When H0.0 is implemented, development control adds:
-
-```powershell
-.\CONTROL_DEVELOPMENT.ps1 -Status
-.\CONTROL_DEVELOPMENT.ps1 -Plan
-.\CONTROL_DEVELOPMENT.ps1 -Resume
+config/control/harness/scheduler-policy.v1.json
+docs/checkpoints/2026-08-11_PROJECT_CHECKPOINT_READINESS_AUDIT_RU.md
 ```
