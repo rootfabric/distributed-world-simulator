@@ -42,6 +42,7 @@ class H01ClosedLoopControlTests(unittest.TestCase):
         self.assertEqual(75, self.bundle.contracts["project_registry"]["registry_generation"])
         self.assertEqual(EPOCH_BASE_SHA, self.epoch["base_sha"])
         self.assertEqual("H0_1_CLOSED_LOOP_C22_PILOT", self.work_order["goal_checkpoint"])
+        self.assertEqual("IMPLEMENTATION", self.work_order["work_order_type"])
         self.assertEqual("HIGH", self.work_order["risk_class"])
 
     def test_ledger_is_rebuildable_and_snapshot_matches(self):
