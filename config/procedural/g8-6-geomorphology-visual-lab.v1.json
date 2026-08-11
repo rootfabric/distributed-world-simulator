@@ -11,10 +11,12 @@
     "full_acceptance_tested_head": "6cc0c2b5ff1bc21a5b488a8492ef8cce28fa4736"
   },
   "scene": "res://scenes/labs/procedural/g8_6_geomorphology_visual_lab.tscn",
-  "script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd",
+  "script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab_fix2.gd",
+  "base_script": "res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd",
   "lab_kind": "DERIVED_PRESENTATION_LOCAL_RIVER_CORRIDOR",
   "corridor": {
     "center": "real G6 river crossing of PX/PZ cube-sphere seam",
+    "centerline_radius_source": "accepted G6 radial river spline; never forced to body reference radius",
     "cross_m": [-220.0, 220.0],
     "along_m": [-800.0, 800.0],
     "source_grid": [33, 17],
@@ -56,7 +58,9 @@
     "px_pz_seam_overlay": true,
     "camera_and_color_are_truth": false,
     "mesh_density_is_truth": false,
-    "vertical_exaggeration_is_truth": false
+    "vertical_exaggeration_is_truth": false,
+    "corridor_sampling_radius_is_truth": false,
+    "corridor_sampling_radius_follows_upstream_g6_centerline": true
   },
   "manual_controls": {
     "1_7": "resolved / total / valley / channel / bank / floodplain / erosion-deposition views",
