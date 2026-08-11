@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.P1C-S3",
   "name": "Niche/Cluster Diagnostics + Multi-seed Coexistence",
-  "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -48,10 +48,14 @@
     ],
     "uniform_dynamic_hash": "47f0e9c7573bf002151718a57c930d400682c3d86dbd3a8b96b8ddf48c4a01a2"
   },
-  "local_evidence": {
-    "seed_case_assertions": {"1138701": 64, "1138702": 63, "1138703": 63, "uniform_1138701": 64},
-    "aggregate_contract_assertions": 5,
-    "restart_assertions": 5,
+  "accepted_evidence": {
+    "linux_seed_case_assertions": {"1138701": 64, "1138702": 63, "1138703": 63, "uniform_1138701": 64},
+    "linux_aggregate_contract_assertions": 5,
+    "linux_restart_assertions": 5,
+    "windows_seed_case_assertions": {"1138701": 64, "1138702": 63, "1138703": 63, "uniform_1138701": 64},
+    "windows_aggregate_contract_assertions": 5,
+    "windows_restart_assertions": 5,
+    "windows_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Windows x86_64",
     "aggregate": {
       "minimum_effective_founders_1pct": 18,
       "maximum_top1_biomass_share": 0.241343184231652,
