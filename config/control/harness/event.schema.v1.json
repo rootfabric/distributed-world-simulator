@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.harness_event.schema.v1",
+  "title": "Distributed World Simulator Harness Immutable Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "project_epoch", "work_order_id", "sequence", "event_type", "work_state", "recorded_at_utc", "actor", "branch", "head_sha", "summary"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.harness_event.v1"},
+    "event_id": {"type": "string", "minLength": 1},
+    "project_epoch": {"type": "string", "minLength": 1},
+    "work_order_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer", "minimum": 1},
+    "event_type": {"enum": ["WORK_ORDER_CREATED", "DISPATCHED", "IMPLEMENTATION_COMMITTED", "VERIFICATION_STARTED", "PREDICATE_VERIFIED", "AUDIT_COMPLETED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CHECKPOINT_PROPOSED", "RECOVERY_RESUMED", "CANCELLED"]},
+    "work_state": {"enum": ["PLANNED", "DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED", "CHECKPOINT_PROPOSED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"]},
+    "recorded_at_utc": {"type": "string", "format": "date-time"},
+    "actor": {"type": "string", "minLength": 1},
+    "branch": {"type": "string", "minLength": 1},
+    "head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "predicate": {"type": "string"},
+    "command": {"type": "string"},
+    "exit_code": {"type": "integer"},
+    "evidence_paths": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "string", "minLength": 1},
+    "blocker": {"type": "string"}
+  }
+}
