@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-11-H0-0-R2-H0-0-R2-WO-001-0009",
+  "project_epoch": "E2026-08-11-H0-0-R2",
+  "work_order_id": "H0-0-R2-WO-001",
+  "sequence": 9,
+  "event_type": "VERIFICATION_STARTED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-11T10:16:00Z",
+  "actor": "VERIFIER",
+  "branch": "control/h0-closed-loop-development-r2",
+  "head_sha": "905f0d7db974c5ddde67bdf71ae48bb84b5fdfdb",
+  "predicate": "R2_SCOPE_REPAIR_FRESH_VERIFICATION_STARTED",
+  "command": "Begin fresh H0 unit/public-command/clean-clone verification after reviewed scope-isolation repair",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/repairs/H0-0-R2-WO-001-SCOPE-ISOLATION-001.v1.json",
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/reviews/H0-0-R2-WO-001-SCOPE-REPAIR-REVIEW-001.v1.json"
+  ],
+  "summary": "Verification restarted after the reviewed scope-isolation repair. The next admissible evidence is a fresh exact-checkout harness suite plus Status/Plan/Resume and clean-clone recovery; no runtime work is authorized.",
+  "blocker": "FRESH_H0_UNIT_SUITE_STATUS_PLAN_RESUME_AND_CLEAN_CLONE_EVIDENCE_REQUIRED"
+}
