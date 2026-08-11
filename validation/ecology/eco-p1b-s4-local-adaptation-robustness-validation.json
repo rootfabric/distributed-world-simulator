@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1B-S4",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_regression": {
+    "p1a_s1": "ACCEPTED_109_ASSERTIONS",
+    "p1a_s2": "ACCEPTED_235_ASSERTIONS",
+    "p1a_s3": "ACCEPTED_208_ASSERTIONS_GRAPHICAL_PASS",
+    "p1a_s4": "ACCEPTED_165_ASSERTIONS_RESTART_5",
+    "p1b_s1": "ACCEPTED_WINDOWS_5834_ASSERTIONS_RESTART_6",
+    "p1b_s2": "ACCEPTED_WINDOWS_364_ASSERTIONS_RESTART_6",
+    "p1b_s3": "ACCEPTED_WINDOWS_388_ASSERTIONS_RESTART_6"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1b_s4_local_adaptation_robustness_acceptance.gd",
+    "assertions": 86,
+    "failures": 0,
+    "aggregate_hash": "2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05",
+    "neutral_hash": "175bbef1c085d0783bd0d48f23bbc9a865cc438ae09e15785d4e48cdf1cc27bf",
+    "long_run_hash": "7f68ed87e10fa7dd6f9f79c6d50d0a82cf4360e4a416dc481e0e6005bcfb44f3"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1b_s4_restart_replay_probe.gd",
+    "assertions": 5,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "robustness_evidence": [
+    "three deterministic evolution seeds produce different exact fields but the same specialization signs",
+    "every seed improves the accepted P1A net_resource_balance from a common negative ancestor field",
+    "every seed produces positive water_preference-vs-moisture correlation, negative root_depth-vs-moisture correlation and negative shade_tolerance-vs-sunlight correlation",
+    "post-hoc regional trait means preserve wet/dry/root/shade causal ordering for every seed",
+    "neutral control using the same spatial mutation machinery does not reproduce the real signal",
+    "12-generation longer horizon preserves all three specialization axes",
+    "mean ecological traits remain away from hard biological bounds and dispersal remains frozen at 15 m"
+  ],
+  "truth_boundary": "P1B-S4 is an aggregate research acceptance gate over the already implemented regional population field. It adds no new fitness equation, migration, species classes, biome placement, presentation truth, authority, persistence or networking.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1B_S4_TESTS.ps1 on the exact Windows worktree. Matching parent regressions, 86/86 focused, 5/5 restart and exact aggregate/neutral/long hashes allow aggregate ECO.P1B acceptance."
+}
