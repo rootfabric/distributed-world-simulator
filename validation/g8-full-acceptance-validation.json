@@ -1,0 +1,47 @@
+{
+  "schema": "planet_simulator.validation.g8_full_acceptance.v1",
+  "checkpoint": "g8-full-acceptance",
+  "decision": "IMPLEMENTED_CANDIDATE",
+  "global_program_revision": "GLOBAL-P0-2026-08-10-R2",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "branch": "feature/g8-geomorphology",
+  "accepted_parent": {
+    "checkpoint": "G8.6 Geomorphology Visual Lab",
+    "decision": "ACCEPTED",
+    "accepted_metadata_head": "f2c5b99ee3940e2515ab758ab3077ff09bf081fd",
+    "automated_tested_head": "a9ca1f8b723e4edc5ebff40db26e41283d464597",
+    "manual_observed_head": "b91ed3eb8664ec1aee28453947a84c6a56acb95b"
+  },
+  "runner": "RUN_G8_FULL_ACCEPTANCE.ps1",
+  "requirements": {
+    "clean_exact_windows_checkout": true,
+    "accepted_chain_g8_0_through_g8_6": true,
+    "g8_6_manual_graphical_pass": true,
+    "no_executable_drift_after_g8_6_automated_head": true,
+    "pc0_g_non_red": true,
+    "fresh_g8_6_focused_headless": true,
+    "full_world_core_regression": true,
+    "final_working_tree_clean": true
+  },
+  "execution": {
+    "status": "PENDING_EXACT_WINDOWS_RUN",
+    "tested_head": "PENDING",
+    "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+    "g8_0_to_g8_6_chain": "PENDING",
+    "pc0_g_health": "PENDING",
+    "focused_g8_6": "PENDING",
+    "world_core_regression": "PENDING",
+    "working_tree": "PENDING",
+    "final_marker": "PENDING_G8_FULL_ACCEPTANCE_PASS"
+  },
+  "if_pass": {
+    "decision": "G8_FULL_ACCEPTED",
+    "branch_disposition": "FREEZE_ACCEPTED_EVIDENCE",
+    "next_runtime_stage": "G9_BLOCKED",
+    "g9_requires": ["CANONICAL_GLOBAL_P0_R3", "MAT0_CANONICAL_MATERIAL_IDENTITY"]
+  },
+  "project_control": {
+    "expected_pre_acceptance_health": "YELLOW",
+    "blockers": ["G8_FULL_ACCEPTANCE_REQUIRED"]
+  }
+}
