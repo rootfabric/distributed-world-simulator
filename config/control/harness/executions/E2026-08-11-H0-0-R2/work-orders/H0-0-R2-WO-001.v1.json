@@ -1,0 +1,148 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "H0-0-R2-WO-001",
+  "project_epoch": "E2026-08-11-H0-0-R2",
+  "program": "HARNESS",
+  "goal_checkpoint": "H0_0_SCAFFOLD_READY",
+  "state": "FIX_REQUIRED",
+  "work_order_type": "CONTROL",
+  "base_sha": "40c117bb16a635b03acfbaa7d9fe18b74245c989",
+  "branch": "control/h0-closed-loop-development-r2",
+  "scope": "Refresh the proven H0.0 control-only scaffold onto current canonical main, preserve the historical R1 execution ledger unchanged, complete phase-independent active-Work-Order evidence isolation, and re-prove the H0_0_SCAFFOLD_READY predicates without creating or modifying runtime scope.",
+  "allowed_paths": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "scripts/harness/**",
+    "tests/harness/**",
+    "validation/harness/**",
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/**",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R2_RU.md"
+  ],
+  "forbidden_paths": [
+    "project.godot",
+    "scenes/**",
+    "scripts/construction/**",
+    "scripts/network/**",
+    "scripts/runtime/**",
+    "scripts/simulation/**",
+    "scripts/items/**",
+    "scripts/characters/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/architecture/**",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/event.schema.v1.json",
+    "config/control/harness/evidence-map.schema.v1.json",
+    "config/control/harness/harness-policy.v1.json",
+    "config/control/harness/human-attention.schema.v1.json",
+    "config/control/harness/project-epoch.schema.v1.json",
+    "config/control/harness/project-goals.v1.json",
+    "config/control/harness/repair-doctrine.v1.json",
+    "config/control/harness/review-policy.v1.json",
+    "config/control/harness/risk-policy.v1.json",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/harness/work-order.schema.v1.json"
+  ],
+  "required_predicates": [
+    "CONTROL_DEVELOPMENT_STATUS_WORKS",
+    "CONTROL_DEVELOPMENT_PLAN_WORKS",
+    "CONTROL_DEVELOPMENT_RESUME_WORKS",
+    "CANONICAL_CONTRACTS_LOAD_PASS",
+    "REVIEW_AND_EVIDENCE_CONTRACTS_LOAD_PASS",
+    "WORK_ORDER_SCHEMA_VALIDATION_PASS",
+    "EVENT_REDUCER_REBUILDS_STATE_PASS",
+    "PROJECT_EPOCH_VALIDATION_PASS",
+    "MAIN_MOVEMENT_EPOCH_INVALIDATION_DETECTION_PASS",
+    "DRY_RUN_C22_PLAN_PASS",
+    "RECOVERY_FIXTURE_WITHOUT_CHAT_PASS",
+    "NO_RUNTIME_SCOPE_CHANGES",
+    "PC0_NON_RED"
+  ],
+  "required_outputs": [
+    "Current-main H0.0 scaffold with the historical R1 execution ledger retained as evidence only",
+    "Phase-independent active Work Order evidence/review isolation",
+    "Clean Git-only Status/Plan/Resume recovery proof",
+    "Fresh exact-head H0.0 validation summary",
+    "Fresh Evidence Map and post-build critique",
+    "Independent Reviewer PASS and Verifier PASS",
+    "H0_0_SCAFFOLD_READY checkpoint proposal"
+  ],
+  "stop_conditions": [
+    "Any gameplay/runtime/domain path would need to change",
+    "Any canonical harness schema or checkpoint contract would need to change",
+    "Historical E2026-08-11-H0-0-R1 execution records would need mutation",
+    "Current main moves away from the epoch base before checkpoint proposal",
+    "PC0 has an unresolved blocking RED after advisory research semantics are applied",
+    "A blocking Human Attention decision is required"
+  ],
+  "risk_class": "HIGH",
+  "risk_reasons": [
+    "The scaffold reconstructs authorization state from immutable evidence and review records.",
+    "Incorrect historical/active Work Order partitioning could reuse stale PASS evidence.",
+    "The refresh must preserve current-main control semantics while transferring only control-only capability from historical H0 work."
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR"
+  ],
+  "design_brief": {
+    "problem_statement": "The prior H0.0 implementation and evidence were created from main 790fd79f, while canonical main is now 40c117bb after project-control and ECO advisory-control changes. Continuing the old Project Epoch would violate epoch freshness.",
+    "current_behavior": "The historical control/h0-closed-loop-development branch contains useful scaffold implementation and evidence, but its active epoch base is stale and its latest Work Order is BLOCKED.",
+    "desired_behavior": "A fresh current-main H0.0 branch owns a new Project Epoch, transfers only the already-reviewed control scaffold capability, completes phase-independent evidence isolation, and re-verifies every H0.0 predicate against the fresh base.",
+    "alternatives_considered": [
+      "Continue the old epoch despite main movement.",
+      "Merge the entire historical branch including its execution ledger into the fresh branch.",
+      "Create a fresh current-main epoch and selectively transfer only current H0 scaffold capability while keeping R1 as immutable historical evidence."
+    ],
+    "selected_design": "Create E2026-08-11-H0-0-R2 at exact current main, use a new bounded Work Order, preserve E2026-08-11-H0-0-R1 unchanged, and transfer only control-only scaffold implementation/tests required by H0_0_SCAFFOLD_READY.",
+    "why_selected": "This preserves restart-safe epoch semantics, avoids stale evidence authorization, keeps historical forensic value, and prevents unrelated ECO research movement from blocking H0 while retaining normal control gates.",
+    "affected_owners": [
+      "MAIN/HARNESS",
+      "PC0"
+    ],
+    "dependencies": [
+      "main @ 40c117bb16a635b03acfbaa7d9fe18b74245c989",
+      "canonical H0-2026-08-11-R1 contracts",
+      "historical control/h0-closed-loop-development scaffold capability @ 51bf235da643d62bb9f0e655a75404bd0c9ed6a1",
+      "PC0 advisory research semantics merged by PR #71"
+    ],
+    "non_goals": [
+      "No C22 runtime branch creation",
+      "No NX runtime work",
+      "No ECO integration",
+      "No canonical schema changes",
+      "No gameplay/domain changes",
+      "No rewrite of historical H0 R1 events"
+    ],
+    "expected_risks": [
+      "Accidentally copying historical authorization evidence into the active R2 epoch",
+      "Dropping a needed scaffold fix while transferring files",
+      "Tests passing because of historical documents rather than active Work Order evidence",
+      "Epoch becoming stale if main moves again"
+    ],
+    "validation_plan": [
+      "Compare the fresh branch against current main and require control-only paths.",
+      "Pin and review the historical scaffold source before transfer.",
+      "Run phase-independent harness tests before and after fresh R2 review/evidence records exist.",
+      "Prove historical R1 evidence is not part of active R2 authorization.",
+      "Run Status, Plan and Resume from clean Git-only recovery context.",
+      "Run standard and directional PC0 and require no blocking RED.",
+      "Require fresh exact-head Reviewer, Verifier and Evidence Map before checkpoint proposal."
+    ]
+  },
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "human_attention_triggers": [
+    "CANONICAL_CONTRACT_CHANGE_REQUIRED",
+    "RISK_RECLASSIFIED_CRITICAL",
+    "CONTROL_DOCS_MERGE_APPROVAL"
+  ],
+  "issued_at_utc": "2026-08-11T09:33:00Z",
+  "human_approval_required_for": [
+    "CONTROL_DOCS_ONLY_MERGE"
+  ],
+  "notes": "Historical epoch E2026-08-11-H0-0-R1 remains evidence-only on its historical branch and cannot authorize this Work Order. The capability source is pinned at 51bf235da643d62bb9f0e655a75404bd0c9ed6a1. Verification discovered a scope/freshness repair requirement: remove R1 execution files from the active net diff, replace physical R1 test dependencies with synthetic historical fixtures, and narrow implementation-head freshness. Repair Map H0-0-R2-WO-001-SCOPE-ISOLATION-001 is active; continuation requires repair review and fresh verification."
+}

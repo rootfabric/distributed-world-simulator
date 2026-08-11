@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-0-R2-WO-001-SCOPE-ISOLATION-001",
+  "work_order_id": "H0-0-R2-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "H0.0 R2 capability-transfer scope, phase-independent historical authorization fixtures, and implementation freshness surface",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume",
+    "python -m unittest discover -s tests/harness -v",
+    "Draft PR #73 main diff"
+  ],
+  "callers": [
+    "H0.0 checkpoint verifier",
+    "independent Reviewer",
+    "future clean-checkout recovery",
+    "control-docs merge gate"
+  ],
+  "callees": [
+    "scripts/harness/state_builder.py implementation-head selection",
+    "tests/harness/test_h0_control_harness.py historical isolation fixtures",
+    "Git net-diff scope audit"
+  ],
+  "sibling_paths": [
+    "config/control/harness/executions/E2026-08-11-H0-0-R2/**",
+    "historical control/h0-closed-loop-development branch",
+    "validation/harness/control-development-output.schema.v1.json",
+    "docs/checkpoints/2026-08-11_H0_0_RESTART_SAFE_HARNESS_SCAFFOLD_R2_RU.md"
+  ],
+  "existing_tests": [
+    "R2 active Work Order snapshot/reducer consistency",
+    "historical PASS fixture validates but cannot authorize R2",
+    "malformed historical claim fails before Work Order partition",
+    "active evidence/review freshness matrix",
+    "selected execution directory drives implementation head",
+    "C22 dry-run stays blocked"
+  ],
+  "missing_tests": [
+    "Fresh exact-checkout unit-suite execution on the repaired R2 head",
+    "Fresh Status/Plan/Resume public-command execution on the repaired R2 head",
+    "Clean-clone recovery execution on the repaired R2 head"
+  ],
+  "public_or_internal_contracts": [
+    "Work Order allowed-path boundary",
+    "Historical evidence cannot authorize active Work Order",
+    "Implementation-head freshness must ignore append-only ledgers and unrelated checkpoint docs",
+    "H0_0_SCAFFOLD_READY requires fresh exact-head evidence"
+  ],
+  "expected_shipped_behavior": "The R2 net diff contains only active H0 scaffold, active R2 execution evidence and validation surfaces. Historical R1 remains on its historical branch, is represented in tests by structurally valid synthetic fixtures, and cannot enter active authorization. Implementation freshness follows only active H0 implementation surfaces and the active R2 transition/checkpoint contract.",
+  "relevant_history_or_evidence": [
+    "PR #73 initially exposed 130 changed files including the full R1 execution ledger",
+    "main..control/h0-closed-loop-development-r2 after cleanup exposes 24 active H0/R2 files and zero R1 execution files",
+    "Historical source branch control/h0-closed-loop-development remains unchanged",
+    "state_builder R1 hardcode removed in 690813ae699b5207e199d7dce0a91daedc21dca2",
+    "R2 synthetic historical isolation tests updated in c49618ff120296662864d32110eb82cdd6f725ec"
+  ],
+  "root_cause_hypothesis": "The first capability transfer used a normal merge of the complete historical H0 branch. That preserved provenance but also placed the entire R1 execution ledger in the R2 net diff, contradicting the selected design of transferring capability while keeping historical execution evidence separate. In addition, implementation freshness watched all docs/checkpoints, allowing unrelated docs to stale H0 evidence.",
+  "canonical_fix_location": "tests/harness/test_h0_control_harness.py for synthetic historical authorization fixtures; scripts/harness/state_builder.py for active execution/freshness selection; R2 Git tree for removal of R1 ledger from the net diff.",
+  "why_not_symptom_patch": "Merely ignoring R1 paths in a PR review would leave stale historical records mergeable into main and would preserve a phase-coupled fixture dependency. The repair removes those records from the net diff, removes the physical R1 fixture dependency, and narrows the implementation freshness surface at the canonical state builder."
+}
