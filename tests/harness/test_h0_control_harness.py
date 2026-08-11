@@ -17,7 +17,7 @@ from harness.state_builder import _validate_semantics, build_state
 
 ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-1-R5"
 ACTIVE_WORK_ORDER_ID = "H0-1-R5-DISPATCH-WO-001"
-EPOCH_BASE_SHA = "82835a37bab1390b6b3f87fb18903070fdd64256"
+EPOCH_BASE_SHA = "9ab5b16332de47fe6a9c525442d4efa882c9a71c"
 H0_0_R3_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-11-H0-0-R3"
 
 
