@@ -13,17 +13,17 @@
     "environment_hash": "b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7"
   },
   "windows_evidence": {
-    "checkout_head": "5c747a548baf62170f8c1dbe1d7edf13de0ac04f",
     "worktree": "C:\\Godot\\lunar-world-eco-evolutionary-ecology",
-    "result": "PASS_109_ASSERTIONS",
+    "result": "PASS_109_ASSERTIONS_CLEAN",
     "environment_hash_match": true,
-    "post_test_noise": "fresh-worktree UID cache was absent, so project autoload resolution printed Resource file not found: res:// and Failed to instantiate an autoload after the ECO test had already passed",
-    "classification": "TEST_PASS_RUNNER_HYGIENE_ISSUE_NOT_ECO_FAILURE"
+    "runner_preflight": "Godot import/UID cache initialized successfully on first clean run",
+    "autoload_errors": 0,
+    "classification": "EXACT_WINDOWS_FOCUSED_ACCEPTED"
   },
   "runner_hygiene_fix": {
     "commit": "0f91a48b09b7e1ffb3f8ddbe9e3045c28df5888e",
     "change": "initialize Godot import/UID cache before focused --script execution when .godot/uid_cache.bin is absent",
-    "verification": "PENDING_CLEAN_WINDOWS_RERUN"
+    "verification": "PASS_EXACT_WINDOWS_CLEAN_RERUN"
   },
   "published_blob_verification": {
     "environment_sample": "7ae8cc2534940ceb3c69879f8850467ba32fea8c",
@@ -40,9 +40,10 @@
     "river/floodplain/lowland/slope/ridge control-point relations are causally ordered",
     "five sampled logical x boundaries and five sampled logical z boundaries are continuous within strict tolerances",
     "33x33 and 65x65 sampling share identical canonical sample at the same coordinate",
-    "research sources contain no camera, LOD-cell, authority, network, material or hardcoded biome-plant ownership"
+    "research sources contain no camera, LOD-cell, authority, network, material or hardcoded biome-plant ownership",
+    "fresh Windows worktree preflight builds UID cache and focused test completes without autoload resolution errors"
   ],
   "full_world_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED",
-  "execution_note": "Focused ECO truth is accepted. Exact Windows on 5c747a54 passed 109 assertions and matched the accepted hash; only fresh-worktree autoload UID resolution produced post-test log noise. Runner 0f91a48 adds import/UID-cache preflight and awaits one clean Windows rerun before runner hygiene is closed.",
+  "execution_note": "Focused ECO truth and runner hygiene are both accepted. Exact Windows clean-worktree execution on Godot 4.7.1 double completed the UID/import preflight, reproduced the accepted environment hash and passed 109/109 assertions without the previous autoload resolution noise.",
   "next": "ECO.P1A-S2 Single-Plant Resource Model"
 }
