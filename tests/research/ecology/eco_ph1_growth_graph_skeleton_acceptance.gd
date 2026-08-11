@@ -18,6 +18,7 @@ func _init() -> void:
 		_check(Array(graph.get("segments", [])).size() > 0, "%s has segments" % name)
 		_check(int(graph.get("metrics", {}).get("segment_count", 0)) == Array(graph.get("segments", [])).size(), "%s segment metrics exact" % name)
 		_check(float(graph.get("metrics", {}).get("height_m", 0.0)) > 0.0, "%s positive height" % name)
+
 	var base_traits := Traits.create_default()
 	var a := Skeleton.build(base_traits, Probes.DEFAULT_INDIVIDUAL_SEED)
 	var b := Skeleton.build(base_traits, Probes.DEFAULT_INDIVIDUAL_SEED)
@@ -25,22 +26,28 @@ func _init() -> void:
 	_check(String(a["graph_hash"]) == String(b["graph_hash"]), "same genome/traits/individual seed exact graph replay")
 	_check(String(a["graph_hash"]) != String(c["graph_hash"]), "individual seed changes stochastic realization")
 	_check(String(a["development_traits_checksum"]) == String(base_traits["checksum"]), "graph binds exact development traits")
+
 	var low_apical: Dictionary = results["APICAL_LOW"]["metrics"]
 	var high_apical: Dictionary = results["APICAL_HIGH"]["metrics"]
 	_check(int(low_apical["lateral_branch_count"]) > int(high_apical["lateral_branch_count"]), "lower apical dominance increases branching")
 	_check(float(low_apical["total_length_m"]) > float(high_apical["total_length_m"]), "lower apical dominance produces more shoot length")
+
 	var low_branch: Dictionary = results["BRANCH_LOW"]["metrics"]
 	var high_branch: Dictionary = results["BRANCH_HIGH"]["metrics"]
 	_check(int(high_branch["lateral_branch_count"]) > int(low_branch["lateral_branch_count"]), "higher branch probability increases branch count")
 	_check(int(high_branch["lateral_segment_count"]) > int(low_branch["lateral_segment_count"]), "higher branch probability increases lateral segments")
+
 	var narrow: Dictionary = results["ANGLE_NARROW"]["metrics"]
 	var wide: Dictionary = results["ANGLE_WIDE"]["metrics"]
 	_check(float(wide["mean_lateral_angle_deg"]) > float(narrow["mean_lateral_angle_deg"]) + 30.0, "branch-angle trait produces continuous angular morphology change")
 	_check(float(wide["horizontal_radius_m"]) > float(narrow["horizontal_radius_m"]), "wide branches increase crown radius")
+
 	var short_i: Dictionary = results["INTERNODE_SHORT"]["metrics"]
 	var long_i: Dictionary = results["INTERNODE_LONG"]["metrics"]
 	_check(int(short_i["main_axis_segment_count"]) > int(long_i["main_axis_segment_count"]), "short internodes create more main-axis segments")
 	_check(absf(float(short_i["height_m"]) - float(long_i["height_m"])) < 1e-9, "internode probe preserves inherited max height")
+
+	# Smooth transition, not type switching: sweep branch probability and require nondecreasing branch count.
 	var previous_count := -1
 	for p in [0.05, 0.20, 0.35, 0.50, 0.65, 0.80, 0.95]:
 		var traits := Traits.with_trait(base_traits, "branch_probability", p, "/sweep")
@@ -48,6 +55,7 @@ func _init() -> void:
 		var count := int(graph["metrics"]["lateral_branch_count"])
 		_check(count >= previous_count, "branch probability sweep nondecreasing at %.2f" % p)
 		previous_count = count
+
 	_test_graph_integrity(a)
 	_test_source_boundaries()
 	print("ECO.PH1 base_graph_hash=%s base_metrics=%s" % [String(a["graph_hash"]), str(a["metrics"])])
