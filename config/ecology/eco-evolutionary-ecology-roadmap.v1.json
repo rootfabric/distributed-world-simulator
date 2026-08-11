@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R7-2026-08-11",
+  "revision": "ECO-R8-2026-08-11",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
   "current_checkpoint": "ECO.P1A",
-  "current_step": "P1A-S3",
-  "last_accepted_step": "P1A-S2",
+  "current_step": "P1A-S4",
+  "last_accepted_step": "P1A-S3",
   "mission": "Prove that continuous environmental fields plus resource competition, mutation, dispersal, developmental programs and history can generate reusable plant species whose ecological strategies and visible forms emerge without hardcoded biome or tree/bush/grass placement classes.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
@@ -70,35 +70,45 @@
       {
         "id": "P1A-S3",
         "name": "Diagnostic Visual Lab + Controlled Trait Probes",
-        "status": "FIX1_LOCAL_HEADLESS_PASS_WINDOWS_GRAPHICAL_RERUN_PENDING",
+        "status": "ACCEPTED",
         "depends_on": ["P1A-S2"],
         "output": "Presentation-only heatmap lab and controlled sensitivity probes sharing the accepted S1/S2 truth model.",
         "evidence": {
-          "pre_fix_windows": "PASS_114_ASSERTIONS_ON_6b5f3592696dc7db0897ca8cef69c3c395f32589",
-          "manual_pre_fix": "FIX_REQUIRED_PRESENTATION_ONLY",
-          "fix1_focused_assertions": 208,
-          "fix1_focused_failures": 0,
+          "focused_assertions": 208,
+          "focused_failures": 0,
           "dataset_hash": "dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
           "scene_headless_hash": "9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c",
           "parent_s2_regression": "PASS_235_ASSERTIONS",
           "parent_s1_regression": "PASS_109_ASSERTIONS",
           "fix1_presentation": "DEDICATED_SCROLLABLE_PANEL_PLUS_CAUSAL_AND_PROBE_VS_BASE_DIAGNOSTICS",
-          "fix1_windows": "PENDING",
-          "fix1_graphical": "PENDING",
+          "windows": "PASS_CLEAN",
+          "graphical": "PASS_BY_USER_OBSERVATION",
           "validation": "validation/ecology/eco-p1a-s3-diagnostic-visual-lab-validation.json"
         }
       },
       {
         "id": "P1A-S4",
         "name": "Determinism, Sensitivity and Failure Classification",
-        "status": "BLOCKED_BY_P1A_S3_FIX1_ACCEPTANCE",
+        "status": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
         "depends_on": ["P1A-S3"],
-        "output": "Replay acceptance runner, sensitivity evidence and explicit failure matrix."
+        "output": "Replay acceptance runner, sensitivity evidence and explicit failure matrix.",
+        "evidence": {
+          "focused_assertions": 165,
+          "focused_failures": 0,
+          "restart_process_assertions": 5,
+          "restart_process_failures": 0,
+          "baseline_summary_hash": "327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a",
+          "baseline_result_hash": "cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e",
+          "biomass_series_hash": "7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c",
+          "failure_matrix": "LOCAL_PASS",
+          "windows": "PENDING",
+          "validation": "validation/ecology/eco-p1a-s4-determinism-sensitivity-validation.json"
+        }
       },
       {
         "id": "P1A-S5",
         "name": "P1A Acceptance + Evolution Decision",
-        "status": "PLANNED",
+        "status": "BLOCKED_BY_P1A_S4_ACCEPTANCE",
         "depends_on": ["P1A-S4"],
         "output": "ACCEPTED or classified FAIL decision and handoff to ECO.P1B Local Adaptation Proof plus ECO.PH0 Development Trait Contract."
       }
