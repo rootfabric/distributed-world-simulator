@@ -1,0 +1,103 @@
+{
+  "schema": "planet_simulator.t1b4_composition_acceptance_validation.v1",
+  "checkpoint": "T1B4_COMPOSITION_ACCEPTANCE",
+  "decision": "ACCEPTED",
+  "branch": "feature/t1b-composition-failure-recovery",
+  "parent_checkpoint": "T1B.3 Recovery / Reconnect Composition ACCEPTED",
+  "parent_tested_checkout": "3a2a6a3e14f97e070139a00402d0cf0e19238622",
+  "accepted_executable_checkout": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "implementation": {
+    "server_adapter": "scripts/labs/t1/t1b/t1b4_m3_failure_server_adapter.gd",
+    "server_process_tool": "tools/runtime/t1b4_runtime_server.gd",
+    "client_process_tool": "tools/runtime/t1b4_runtime_client.gd",
+    "acceptance": "tests/construction/t1b4_m3_failure_recovery_composition_acceptance.gd",
+    "runner": "RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1"
+  },
+  "composition": {
+    "server_base": "T1A.7 interest-aware M3 server adapter",
+    "runtime_factory": "T1B.3 recoverable failure runtime",
+    "client_base": "T1A.6 M3 graphical client adapter",
+    "presentation": "T1A.6 D0 runtime presenter derived from ConstructionRuntimeSnapshot",
+    "transport_channels_unchanged": true,
+    "persistence_format_unchanged": true,
+    "authority_model_unchanged": true
+  },
+  "process_scenario": {
+    "initial_clients": 2,
+    "outage_over_live_m3": true,
+    "offline_command_rejected_over_live_m3": true,
+    "m0_checkpoint_before_process_restart": true,
+    "dedicated_server_process_restart": true,
+    "recovered_failure_truth_from_m0": true,
+    "construction_truth_not_sent_before_external_interest_after_restart": true,
+    "reconnected_logical_client": true,
+    "late_join_client": true,
+    "external_interest_reapplied_after_restart": true,
+    "reconnect_and_late_join_receive_recovered_failure_baseline": true,
+    "terminal_rejected_operation_replays_after_restart": true,
+    "dependency_recovery_broadcasts_online_truth": true,
+    "post_recovery_command_succeeds_over_live_m3": true,
+    "presenters_derive_open_door_from_canonical_runtime": true,
+    "final_online_open_checkpoint": true,
+    "completion_marker_required": true
+  },
+  "architecture": {
+    "new_canonical_store": false,
+    "new_persistence_repository": false,
+    "new_persistence_format": false,
+    "new_transaction_coordinator": false,
+    "new_authority_registry": false,
+    "new_network_channel": false,
+    "new_reconnect_protocol": false,
+    "new_global_interest_identity": false,
+    "new_global_dependency_identity": false,
+    "new_world_work_budget": false,
+    "failure_correctness_depends_on_rpc_order": false
+  },
+  "required_validation": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_runner": "RUN_T1B4_COMPOSITION_ACCEPTANCE.ps1",
+    "focused_result": "PASS_93_ASSERTIONS_0_FAILURES",
+    "focused_evidence": [
+      "OPEN mutation reached reconnect and late-interest replicas",
+      "OPEN mutation semantic convergence",
+      "A presenter derived OPEN from canonical runtime",
+      "C presenter derived OPEN from canonical runtime",
+      "final ONLINE/OPEN runtime checkpoint succeeded",
+      "server recorded replayed OFFLINE command rejection",
+      "A reconnect/C late join/server clean shutdown"
+    ],
+    "full_regression_after_focused": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "full_regression_result": "PASS_BY_REQUIRED_PRESERVED_CHECKOUT_SEQUENCE",
+    "full_regression_evidence": {
+      "rl2_real_asteroid_multiresolution_assertions": 44,
+      "rl3_representation_aware_network_streaming_assertions": 175,
+      "rl3_representation_streaming_processes_assertions": 37,
+      "main_scene_cli_all_pass": 6,
+      "main_scene_cli_all_fail": 0,
+      "lifecycle": "STOPPED",
+      "exit_code": 0,
+      "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+      "report": "C:\\Godot\\lunar-world-t1-construct\\artifacts\\test-results\\world-regression-summary.json"
+    }
+  },
+  "tested_heads": {
+    "runtime": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
+    "focused": "88736b1e57a5fb96d80c8842ea983c20d8b833f3",
+    "full_regression": "88736b1e57a5fb96d80c8842ea983c20d8b833f3"
+  },
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
+  "t2_control_gate": {
+    "t2_0_active": false,
+    "blocked_until": ["C22_MAIN_INTEGRATED", "T_RUNTIME_SCALE_EVIDENCE", "TS0_4_CEILING_CLASSIFICATION", "PC0_CONVERGENCE"],
+    "canonical_blocker": "C22_MAIN_INTEGRATED_PLUS_T_RUNTIME_SCALE_EVIDENCE_PLUS_TS0_4_CEILING_CLASSIFICATION_AND_PC0_CONVERGENCE_REQUIRED"
+  },
+  "next_stage_if_accepted": "T1B aggregate handoff complete; no T1B.5; wait for global T2.0 convergence gate"
+}
