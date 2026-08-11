@@ -5,14 +5,14 @@
   "branch": "feature/eco-evolutionary-ecology",
   "program": "ECO",
   "role": "RESEARCH_DESIGN_FRONTIER",
-  "short_description": "Evolutionary ecology research for continuous environment-driven plant specialization, developmental genotype-to-phenotype programs, species catalogs, population truth and representation-safe future runtime integration.",
-  "purpose": "Prove that vegetation diversity and plant form can emerge from environmental fields, resource trade-offs, inherited developmental programs, mutation, competition, dispersal and history without hardcoded biome placement or canonical TREE/BUSH/GRASS classes.",
-  "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence, a developmental Genome-to-GrowthGraph-to-Phenotype track, seed-carried heredity design and portable SpeciesCatalog contracts that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
-  "current_stage": "ECO.P1B Local Adaptation Proof",
-  "stage_status": "P1B_S3_ACCEPTED_P1B_S4_LOCAL_FOCUSED_PASS_WINDOWS_PENDING_PH0_OPEN_RESEARCH_ONLY",
-  "progress_note": "ECO.P1A remains ACCEPTED 10/10. P1B-S1 is ACCEPTED by exact Windows at 5834/5834 plus restart 6/6. P1B-S2 Spatial Selection Baseline is ACCEPTED by exact Windows at 364/364 plus restart 6/6. P1B-S3 Regional Population Field is now ACCEPTED by exact Windows at 388/388 plus restart 6/6 with exact result cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56, neutral b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6 and alternate ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b. P1B-S4 Local Adaptation Robustness Gate is implemented as an aggregate check over the accepted regional population field: three evolution seeds plus neutral control plus a longer horizon. Local Godot double evidence is 86/86 plus fresh-process restart 5/5, aggregate 2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05, neutral 175bbef1c085d0783bd0d48f23bbc9a865cc438ae09e15785d4e48cdf1cc27bf and long-run 7f68ed87e10fa7dd6f9f79c6d50d0a82cf4360e4a416dc481e0e6005bcfb44f3. Exact Windows S4 confirmation remains before aggregate P1B acceptance. PH0 remains open in parallel research scope.",
-  "last_accepted_checkpoint": "ECO.P1B-S3 Regional Population Field and Trait Distribution",
-  "next_stage": "Run RUN_ECO_P1B_S4_TESTS.ps1 on the exact Windows worktree. Require all parent regressions, P1B-S4 86/86, restart 5/5 and exact aggregate/neutral/long hashes. On PASS accept P1B-S4 and the aggregate ECO.P1B Local Adaptation Proof, then choose the next ecology checkpoint while keeping migration deferred to the dedicated dispersal/biogeography stage. PH0 may continue only as representation-safe research contract work.",
+  "short_description": "Evolutionary ecology research for continuous environment-driven adaptation, strategy competition and developmental genotype-to-phenotype programs.",
+  "purpose": "Prove that plant adaptation and strategy diversity emerge from environmental fields, resource trade-offs, inheritance and competition without hardcoded biome/species placement classes.",
+  "expected_outcome": "Deterministic ecology research evidence for local adaptation, coexistence, developmental phenotype contracts and later portable SpeciesCatalog/population representations suitable for controlled runtime convergence.",
+  "current_stage": "ECO.P1C Strategy Competition Proof",
+  "stage_status": "P1B_ACCEPTED_P1C_S1_LOCAL_FOCUSED_PASS_WINDOWS_PENDING_PH0_OPEN_RESEARCH_ONLY",
+  "progress_note": "ECO.P1A is ACCEPTED 10/10. ECO.P1B Local Adaptation Proof is ACCEPTED 10/10 after exact Windows S1 5834+6, S2 364+6, S3 388+6 and S4 86+5; robustness aggregate hash 2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05. Intermediate PC0 control audit passes for continued advisory research. P1C-S1 is implemented: 20 unlabeled founders on 49 heterogeneous patches retain 15 founders versus 4 under an exact-same-founder uniform control; local focused 116/116, restart 5/5, result cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928. Default top1 dominance 0.8367 is a declared pressure for P1C-S2, not hidden as acceptance.",
+  "last_accepted_checkpoint": "ECO.P1B Local Adaptation Proof",
+  "next_stage": "Run RUN_ECO_P1C_S1_TESTS.ps1 on exact Windows. On matching 116/116 + restart 5/5 and hashes, accept S1 and implement P1C-S2 Dynamic Shared-Patch Abundance Competition. PH0 remains open in parallel research scope.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -21,16 +21,6 @@
     "G environment semantics as future production input",
     "Matter/Material Ontology as future substrate truth",
     "Harness gate before production runtime promotion"
-  ],
-  "planned_cross_tracks": [
-    {
-      "id": "ECO.PH",
-      "name": "Plant Development and Phenotype",
-      "status": "PH0_OPEN_RESEARCH_ONLY",
-      "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
-      "ownership": "research-only inherited development traits, DevelopmentState/GrowthGraph candidate contracts, seed heredity and representation projection",
-      "convergence": ["PH0 now open after P1A acceptance", "PH1 parallel with P1B", "PH3 before morphology-aware strategy competition acceptance", "PH4 before EXP-V6 seed/dispersal biogeography", "PH5 with EXP-V9 developmental phenotype materialization", "PH6 waits for canonical persistence/authority adapters"]
-    }
   ],
   "owned_paths": [
     "config/ecology/**",
@@ -44,6 +34,8 @@
   "watched_paths": [
     "config/architecture/**",
     "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/control/**",
     "scripts/simulation/procedural/contracts/**",
     "scripts/simulation/procedural/semantic_fields/**",
     "scripts/simulation/procedural/hydrology/**",
@@ -55,95 +47,38 @@
   "critical_watched_paths": [
     "config/architecture/global-program-roadmap.v1.json",
     "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
     "scripts/simulation/procedural/contracts/**",
     "scripts/simulation/matter/**"
   ],
   "runtime_paths": [],
   "validation_paths": [
     "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
-    "config/ecology/eco-p1a-s1-environment-baseline.v1.json",
-    "validation/ecology/eco-p1a-s1-environment-baseline-validation.json",
-    "tests/research/ecology/eco_p1a_s1_environment_acceptance.gd",
-    "RUN_ECO_P1A_S1_TESTS.ps1",
-    "docs/checkpoints/ECO_P1A_S1_ENVIRONMENT_BASELINE_ACCEPTED_RU.md",
-    "config/ecology/eco-p1a-s2-single-plant-resource-model.v1.json",
-    "validation/ecology/eco-p1a-s2-single-plant-resource-model-validation.json",
-    "tests/research/ecology/eco_p1a_s2_single_plant_resource_acceptance.gd",
-    "RUN_ECO_P1A_S2_TESTS.ps1",
-    "docs/checkpoints/ECO_P1A_S2_SINGLE_PLANT_RESOURCE_MODEL_ACCEPTED_RU.md",
-    "config/ecology/eco-p1a-s3-diagnostic-visual-lab.v1.json",
-    "validation/ecology/eco-p1a-s3-diagnostic-visual-lab-validation.json",
-    "tests/research/ecology/eco_p1a_s3_visual_lab_acceptance.gd",
-    "RUN_ECO_P1A_S3_TESTS.ps1",
-    "scripts/research/ecology/controlled_trait_probes_v1.gd",
-    "scripts/research/ecology/eco_p1a_s3_lab_dataset_v1.gd",
-    "scripts/labs/ecology/eco_p1a_s3_visual_lab.gd",
-    "scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn",
-    "docs/checkpoints/ECO_P1A_S3_DIAGNOSTIC_VISUAL_LAB_ACCEPTED_RU.md",
-    "config/ecology/eco-p1a-s4-determinism-sensitivity.v1.json",
-    "validation/ecology/eco-p1a-s4-determinism-sensitivity-validation.json",
-    "scripts/research/ecology/eco_p1a_s4_sensitivity_harness_v1.gd",
-    "tests/research/ecology/eco_p1a_s4_determinism_sensitivity_acceptance.gd",
-    "tests/research/ecology/eco_p1a_s4_restart_replay_probe.gd",
-    "RUN_ECO_P1A_S4_TESTS.ps1",
-    "docs/checkpoints/ECO_P1A_S4_DETERMINISM_SENSITIVITY_ACCEPTED_RU.md",
-    "config/ecology/eco-p1a-s5-acceptance-decision.v1.json",
-    "validation/ecology/eco-p1a-s5-acceptance-decision-validation.json",
-    "docs/checkpoints/ECO_P1A_ENVIRONMENTAL_CAUSALITY_BASELINE_ACCEPTED_RU.md",
-    "config/ecology/eco-p1b-s1-mutation-inheritance-lineage.v1.json",
-    "validation/ecology/eco-p1b-s1-mutation-inheritance-lineage-validation.json",
-    "scripts/research/ecology/plant_lineage_record_v1.gd",
-    "scripts/research/ecology/plant_mutation_lineage_kernel_v1.gd",
-    "tests/research/ecology/eco_p1b_s1_mutation_lineage_acceptance.gd",
-    "tests/research/ecology/eco_p1b_s1_restart_replay_probe.gd",
-    "RUN_ECO_P1B_S1_TESTS.ps1",
-    "docs/checkpoints/ECO_P1B_S1_MUTATION_INHERITANCE_LINEAGE_ACCEPTED_RU.md",
-    "config/ecology/eco-p1b-s2-spatial-selection-baseline.v1.json",
-    "validation/ecology/eco-p1b-s2-spatial-selection-baseline-validation.json",
-    "scripts/research/ecology/plant_spatial_selection_baseline_v1.gd",
-    "tests/research/ecology/eco_p1b_s2_spatial_selection_acceptance.gd",
-    "tests/research/ecology/eco_p1b_s2_restart_replay_probe.gd",
-    "RUN_ECO_P1B_S2_TESTS.ps1",
-    "docs/checkpoints/ECO_P1B_S2_SPATIAL_SELECTION_BASELINE_ACCEPTED_RU.md",
-    "config/ecology/eco-p1b-s3-regional-population-field.v1.json",
-    "validation/ecology/eco-p1b-s3-regional-population-field-validation.json",
-    "scripts/research/ecology/plant_regional_population_field_v1.gd",
-    "tests/research/ecology/eco_p1b_s3_regional_population_field_acceptance.gd",
-    "tests/research/ecology/eco_p1b_s3_restart_replay_probe.gd",
-    "RUN_ECO_P1B_S3_TESTS.ps1",
-    "docs/checkpoints/ECO_P1B_S3_REGIONAL_POPULATION_FIELD_ACCEPTED_RU.md",
-    "config/ecology/eco-p1b-s4-local-adaptation-robustness.v1.json",
-    "validation/ecology/eco-p1b-s4-local-adaptation-robustness-validation.json",
-    "scripts/research/ecology/plant_local_adaptation_robustness_gate_v1.gd",
-    "tests/research/ecology/eco_p1b_s4_local_adaptation_robustness_acceptance.gd",
-    "tests/research/ecology/eco_p1b_s4_restart_replay_probe.gd",
-    "RUN_ECO_P1B_S4_TESTS.ps1",
-    "docs/checkpoints/ECO_P1B_S4_LOCAL_ADAPTATION_ROBUSTNESS_CANDIDATE_RU.md",
-    "docs/future_features/evolutionary_ecology/README_RU.md",
-    "docs/future_features/evolutionary_ecology/ECOLOGY_EVOLUTION_PROGRAM_RU.md",
-    "docs/future_features/evolutionary_ecology/VEGETATION_EXPERIMENT_PLAN_RU.md",
-    "docs/future_features/evolutionary_ecology/ECO_P1A_EXECUTION_PLAN_RU.md",
-    "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
-    "docs/future_features/evolutionary_ecology/P0_TECHNICAL_ALIGNMENT_RU.md"
+    "config/ecology/eco-p1b-aggregate-acceptance.v1.json",
+    "validation/ecology/eco-p1b-aggregate-acceptance-validation.json",
+    "validation/ecology/eco-p1b-intermediate-control-audit.json",
+    "docs/checkpoints/ECO_P1B_LOCAL_ADAPTATION_PROOF_ACCEPTED_RU.md",
+    "config/ecology/eco-p1c-s1-strategy-competition-baseline.v1.json",
+    "validation/ecology/eco-p1c-s1-strategy-competition-baseline-validation.json",
+    "scripts/research/ecology/plant_strategy_competition_baseline_v1.gd",
+    "tests/research/ecology/eco_p1c_s1_strategy_competition_acceptance.gd",
+    "tests/research/ecology/eco_p1c_s1_restart_replay_probe.gd",
+    "RUN_ECO_P1C_S1_TESTS.ps1",
+    "docs/checkpoints/ECO_P1C_S1_STRATEGY_COMPETITION_BASELINE_CANDIDATE_RU.md",
+    "docs/future_features/evolutionary_ecology/ECO_P1C_EXECUTION_PLAN_RU.md"
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
-    "p1a_s1": "ACCEPTED_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7_WINDOWS_CLEAN",
-    "p1a_s2": "ACCEPTED_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c_WINDOWS_CLEAN",
-    "p1a_s3": "ACCEPTED_WINDOWS_208_ASSERTIONS_DATASET_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690_SCENE_9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c_GRAPHICAL_PASS",
-    "p1a_s4": "ACCEPTED_WINDOWS_165_ASSERTIONS_RESTART_5_ASSERTIONS_SUMMARY_327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a_RESULT_cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e_SERIES_7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c",
-    "p1a_aggregate": "ACCEPTED_10_OF_10_GATE_PASS",
-    "p1b_s1": "ACCEPTED_WINDOWS_5834_ASSERTIONS_RESTART_6_ANCESTOR_73621a2c49d6496bb89faef63a8350f2a76b553fd718fa88d1bc6b21b83a230f_POPULATION_83a114cd712aacac42e0a1b4d74c0876a441fadb019f6640bfd44c921778ce84_CHAIN_3792cf995265b622ab8817a973f0bd38aedab8ca34721ca9468178e6e1a35874",
-    "p1b_s2": "ACCEPTED_WINDOWS_364_ASSERTIONS_RESTART_6_RESULT_a48df039415162a2e2b75fb9badc12ae35fd0cac9f459ae2ba9df88ab1280e80_ALT_507bcc108d458b685d97b96268d18e307f3cdc36ae0530a75801cddf2e6b8521_POOL_9e4b8eba9d7d6bf915de209814e6edba823f30675c6f2aefa6a209fff135f2fd",
-    "p1b_s3": "ACCEPTED_WINDOWS_388_ASSERTIONS_RESTART_6_RESULT_cbd2f4a65f2a06f8ee9feeea0d9eae90d37cd0ede15df1bd808ef52773089b56_NEUTRAL_b4d18ef35a2a77104fa18c8a3f3004a6f5898d572e57917429cc955cc7e2c5e6_ALT_ca81e0cfea0b05850470276fef10c880d3832613df9ff7f35d3c7395bd32589b",
-    "p1b_s4_local": "PASS_86_ASSERTIONS_RESTART_5_AGGREGATE_2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05_NEUTRAL_175bbef1c085d0783bd0d48f23bbc9a865cc438ae09e15785d4e48cdf1cc27bf_LONG_7f68ed87e10fa7dd6f9f79c6d50d0a82cf4360e4a416dc481e0e6005bcfb44f3_WINDOWS_PENDING",
+    "p1a_aggregate": "ACCEPTED_10_OF_10",
+    "p1b_aggregate": "ACCEPTED_10_OF_10_WINDOWS_S4_86_RESTART_5_HASH_2c37160726c73a9b6b479be67a3cedcd34a1247025b219d2b5ebddbec4e18f05",
+    "p1c_s1_local": "PASS_116_ASSERTIONS_RESTART_5_RESULT_cf3bd5f417c9a49dd1c5eac0d93ea736b02ec0be25afd4945b1424a8dbde3928_UNIFORM_1c5128666314dfeec9ed09094931be58e76253f92bf9da50379a91eeb3b68a58_WINDOWS_PENDING",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
   "ownership_claims": [
     {
       "foundation": "ECOLOGY_RESEARCH_MODEL",
       "claimed_owner": "ECO",
-      "scope": "research-only ecology traits, population models, evolution experiments, developmental phenotype candidate contracts and SpeciesCatalog candidate contracts"
+      "scope": "research-only ecology traits, adaptation, competition experiments, developmental phenotype candidate contracts and future SpeciesCatalog candidates"
     }
   ],
   "forbidden_foundation_ownership": [
@@ -164,11 +99,18 @@
     "PLANET_WIDE_INDIVIDUAL_GROWTH_GRAPH_TRUTH"
   ],
   "blockers": [
-    "P1B_S4_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_P1B_AGGREGATE_ACCEPTANCE",
+    "P1C_S1_EXACT_WINDOWS_CONFIRMATION_REQUIRED_BEFORE_P1C_S2",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
   ],
   "health_declared": "GREEN",
-  "cross_branch_overlap_enabled": false
+  "cross_branch_overlap_enabled": false,
+  "planned_cross_tracks": [
+    {
+      "id": "ECO.PH",
+      "status": "PH0_OPEN_RESEARCH_ONLY",
+      "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md"
+    }
+  ]
 }
