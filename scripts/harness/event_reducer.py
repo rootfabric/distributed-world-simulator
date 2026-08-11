@@ -41,25 +41,36 @@ def _blocked_resolution_proven(
     bundle: ContractBundle,
     work_order: dict[str, Any],
     event: dict[str, Any],
+    previous_event: dict[str, Any] | None,
     documents: list[dict[str, Any]],
     context: dict[str, Any] | None,
 ) -> bool:
     typed_resolution = any(
-        (
-            item.get("schema") == "distributed_world_simulator.harness_repair_resolution.v1"
-            and item.get("work_order_id") == work_order["work_order_id"]
-            and item.get("state") == "FIX_VERIFIED"
-        )
-        or (
-            item.get("schema") == "distributed_world_simulator.harness_review_result.v1"
-            and item.get("work_order_id") == work_order["work_order_id"]
-            and item.get("verdict") == "PASS"
-        )
+        item.get("schema") == "distributed_world_simulator.harness_blocker_resolution.v1"
+        and item.get("work_order_id") == work_order["work_order_id"]
+        and previous_event is not None
+        and item.get("blocker") == previous_event.get("blocker")
+        and item.get("status") == "RESOLVED"
+        and bool(item.get("resolution"))
+        and item.get("resolved_head_sha") == event["head_sha"]
+        and item.get("resolved_by") == "DIRECTOR"
         for item in documents
     )
     if typed_resolution:
         return True
-    if context is None:
+    legacy_risk_reclassification = bool(
+        previous_event
+        and previous_event.get("sequence") == 3
+        and previous_event.get("event_type") == "BLOCKED"
+        and previous_event.get("blocker") == "HIGH_RISK_RECLASSIFICATION_AND_RECOVERY_SEMANTICS_CLARIFICATION_REQUIRED"
+        and event.get("sequence") == 4
+        and event.get("predicate") == "H0_0_HIGH_RISK_DESIGN_ACCEPTED"
+        and {
+            "config/control/harness/risk-policy.v1.json",
+            "config/control/harness/review-policy.v1.json",
+        }.issubset({path.replace("\\", "/") for path in event.get("evidence_paths", [])})
+    )
+    if not legacy_risk_reclassification or context is None:
         return False
     work_order_paths = [
         path.replace("\\", "/") for path in event.get("evidence_paths", [])
@@ -100,7 +111,8 @@ def _enforce_guard(
     transition = (previous_state, event["work_state"])
     documents = _referenced_documents(event, context)
     if transition == ("BLOCKED", "DISPATCHED"):
-        if event["actor"] != "DIRECTOR" or not _blocked_resolution_proven(bundle, work_order, event, documents, context):
+        previous_event = ordered[index - 1] if index > 0 else None
+        if event["actor"] != "DIRECTOR" or not _blocked_resolution_proven(bundle, work_order, event, previous_event, documents, context):
             raise ContractValidationError("GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING")
     elif transition == ("WAITING_HUMAN", "DISPATCHED"):
         resolved = any(

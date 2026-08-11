@@ -145,6 +145,17 @@ class H0ControlHarnessTests(unittest.TestCase):
         blocked[3]["evidence_paths"] = ["AGENTS.md"]
         with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
             self.reduce(blocked)
+        arbitrary_blocker = copy.deepcopy(self.events[:4])
+        arbitrary_blocker[2]["blocker"] = "PC0_RED_UNRESOLVED"
+        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
+            self.reduce(arbitrary_blocker)
+        future_block = copy.deepcopy(self.events[:4])
+        blocker = copy.deepcopy(self.events[2])
+        blocker.update({"event_id": "future-block", "sequence": 5, "blocker": "UNRELATED_SECURITY_STOP", "recorded_at_utc": "2026-08-11T06:00:00Z"})
+        dispatch = copy.deepcopy(self.events[3])
+        dispatch.update({"event_id": "future-dispatch", "sequence": 6, "recorded_at_utc": "2026-08-11T06:00:01Z"})
+        with self.assertRaisesRegex(ContractValidationError, "GUARDED_BLOCKED_REDISPATCH_EVIDENCE_MISSING"):
+            self.reduce([*future_block, blocker, dispatch])
 
         waiting = copy.deepcopy(self.events[:4])
         waiting[2].update({"event_type": "WAITING_HUMAN", "work_state": "WAITING_HUMAN", "blocker": "DECISION"})
@@ -373,6 +384,21 @@ class H0ControlHarnessTests(unittest.TestCase):
             candidate = json.loads(completed.stdout.splitlines()[-1])
             candidate.pop(section)
             self.assertTrue(list(Draft202012Validator(schema).iter_errors(candidate)))
+            empty_section = json.loads(completed.stdout.splitlines()[-1])
+            empty_section[section] = {}
+            self.assertTrue(list(Draft202012Validator(schema).iter_errors(empty_section)))
+        status_with_sections = copy.deepcopy(envelope)
+        status_with_sections.update({"plan": {}, "resume": {}})
+        self.assertTrue(list(Draft202012Validator(schema).iter_errors(status_with_sections)))
+        error_with_plan = {
+            "schema": "distributed_world_simulator.control_development_output.v1",
+            "command": "PLAN",
+            "ok": False,
+            "error": {"code": "INVALID_INVOCATION", "detail": "bad"},
+            "exit_codes": envelope["exit_codes"],
+            "plan": {},
+        }
+        self.assertTrue(list(Draft202012Validator(schema).iter_errors(error_with_plan)))
 
     def test_plan_lists_required_unsatisfied_predicates_and_c22_gate(self) -> None:
         state = build_state(ROOT, EXECUTION)
