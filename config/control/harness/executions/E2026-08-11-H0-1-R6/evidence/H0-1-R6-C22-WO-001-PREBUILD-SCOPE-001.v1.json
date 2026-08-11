@@ -1,26 +1,63 @@
 {
   "schema": "distributed_world_simulator.harness_evidence_map.v1",
   "work_order_id": "H0-1-R6-C22-WO-001",
+  "program": "TS",
+  "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+  "risk_class": "HIGH",
   "evidence_head_sha": "09ef6e6707b002fef7c79ddd96727f59e893cd91",
-  "tests": [],
-  "test_environment": {
-    "platform": "GITHUB_CONTROL_REVIEW",
-    "engine": "NOT_APPLICABLE",
-    "notes": "Pre-dispatch evidence only; no runtime tests are claimed."
-  },
-  "review_status": "PASS",
+  "intent": "Pre-dispatch scope and design evidence only. This record proves that the fresh H0.1 execution scaffold is current-main based and runtime-clean before Director dispatch; it does not claim runtime validation or checkpoint readiness.",
+  "root_cause_or_reason": "The accepted C22 capability lives on a highly divergent legacy branch and must be transferred selectively into a fresh current-main branch under H0.1.",
+  "changed_surfaces": [
+    "CONTROL_DEVELOPMENT.ps1",
+    "config/control/harness/executions/E2026-08-11-H0-1-R6/**",
+    "tests/harness/test_h0_control_harness.py"
+  ],
+  "canonical_owner": "TS/C22 with MAIN/HARNESS dispatch control",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume",
+    "H0-1-R6-C22-WO-001"
+  ],
+  "callers": [
+    "H0.1 scheduler",
+    "Director dispatch",
+    "future C22 runtime worker"
+  ],
+  "callees": [
+    "harness state builder",
+    "event reducer",
+    "checkpoint planner",
+    "future C22 proxy/rebuild transfer"
+  ],
+  "sibling_surfaces_checked": [
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/branches/feature__c22-incremental-local-rebuild.v1.json",
+    "H0.0 terminal evidence"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "NOT_REQUIRED",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "production_diff_summary": "No production/runtime C22 file has changed before Director dispatch. The branch is exact-current-main plus control/harness execution records and a phase-aware harness test update.",
+  "remaining_risks": [
+    "Current main may move before runtime branch creation",
+    "Accepted C22 source dependencies may have changed semantically on current main",
+    "Graphical or full regression may fail after capability transfer"
+  ],
   "required_fixes": [],
+  "rank_up_moves": [
+    "Pin source blob identities during capability transfer",
+    "Add the H0.1 focused harness suite to CI after the pilot"
+  ],
   "evidence_gaps": [
     "RUNTIME_NOT_DISPATCHED",
+    "FRESH_RUNTIME_BRANCH_NOT_CREATED",
     "C22_TRANSFER_PENDING",
-    "WINDOWS_RUNTIME_VALIDATION_PENDING"
+    "WINDOWS_C22_C24_GRAPHICAL_FULL_REGRESSION_PENDING",
+    "FINAL_PC0_REVIEWER_VERIFIER_RECOVERY_PENDING"
   ],
-  "invariants": [
-    "branch merge-base equals current main 1112d1f7cfad1df18fb3621a537e191e674848c6",
-    "pre-dispatch diff contains control/harness files only",
-    "no C22 production/runtime file changed before Director dispatch",
-    "scheduler permits at most one H0.1 runtime worker"
-  ],
-  "pc0_standard": "PENDING",
-  "pc0_directional": "PENDING"
+  "review_verdict": "INSUFFICIENT_EVIDENCE"
 }
