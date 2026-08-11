@@ -49,7 +49,14 @@ static func build(development_traits: Dictionary, individual_seed: int) -> Dicti
 	graph["graph_hash"] = compute_graph_hash(graph)
 	return graph
 
-static func _add_lateral_chain(segments: Array, development_traits: Dictionary, individual_seed: int, main_index: int, origin: Vector3, branch_index: int) -> void:
+static func _add_lateral_chain(
+	segments: Array,
+	development_traits: Dictionary,
+	individual_seed: int,
+	main_index: int,
+	origin: Vector3,
+	branch_index: int
+) -> void:
 	var depth := int(development_traits["branching_depth"])
 	var nominal_angle := deg_to_rad(float(development_traits["branch_angle_deg"]))
 	var azimuth := TAU * _unit(individual_seed, "azimuth/%d" % main_index)
@@ -78,7 +85,15 @@ static func _add_lateral_chain(segments: Array, development_traits: Dictionary, 
 		current = end
 
 static func _segment(id: String, parent_id: String, axis_order: int, start: Vector3, end: Vector3, length: float, main_axis: bool) -> Dictionary:
-	return {"segment_id":id,"parent_segment_id":parent_id,"axis_order":axis_order,"main_axis":main_axis,"start":[start.x,start.y,start.z],"end":[end.x,end.y,end.z],"length_m":length}
+	return {
+		"segment_id": id,
+		"parent_segment_id": parent_id,
+		"axis_order": axis_order,
+		"main_axis": main_axis,
+		"start": [start.x, start.y, start.z],
+		"end": [end.x, end.y, end.z],
+		"length_m": length,
+	}
 
 static func _metrics(segments: Array, lateral_branch_count: int) -> Dictionary:
 	var max_height := 0.0
@@ -100,13 +115,30 @@ static func _metrics(segments: Array, lateral_branch_count: int) -> Dictionary:
 			lateral_count += 1
 			var direction := (b - a).normalized()
 			angle_sum += rad_to_deg(acos(clampf(direction.dot(Vector3.UP), -1.0, 1.0)))
-	return {"segment_count":segments.size(),"main_axis_segment_count":main_count,"lateral_segment_count":lateral_count,"lateral_branch_count":lateral_branch_count,"height_m":max_height,"horizontal_radius_m":radius,"total_length_m":total_length,"mean_lateral_angle_deg":0.0 if lateral_count == 0 else angle_sum / lateral_count}
+	return {
+		"segment_count": segments.size(),
+		"main_axis_segment_count": main_count,
+		"lateral_segment_count": lateral_count,
+		"lateral_branch_count": lateral_branch_count,
+		"height_m": max_height,
+		"horizontal_radius_m": radius,
+		"total_length_m": total_length,
+		"mean_lateral_angle_deg": 0.0 if lateral_count == 0 else angle_sum / lateral_count,
+	}
 
 static func compute_graph_hash(graph: Dictionary) -> String:
-	var tokens := PackedStringArray([SCHEMA,VERSION,str(int(graph.get("individual_seed", -1))),String(graph.get("development_traits_checksum", ""))])
+	var tokens := PackedStringArray([
+		SCHEMA,
+		VERSION,
+		str(int(graph.get("individual_seed", -1))),
+		String(graph.get("development_traits_checksum", "")),
+	])
 	for segment in Array(graph.get("segments", [])):
 		var s: Dictionary = segment
-		tokens.append("%s|%s|%d|%s|%s|%.9f" % [String(s["segment_id"]),String(s["parent_segment_id"]),int(s["axis_order"]),_vec_token(Array(s["start"])),_vec_token(Array(s["end"])),float(s["length_m"])])
+		tokens.append("%s|%s|%d|%s|%s|%.9f" % [
+			String(s["segment_id"]), String(s["parent_segment_id"]), int(s["axis_order"]),
+			_vec_token(Array(s["start"])), _vec_token(Array(s["end"])), float(s["length_m"])
+		])
 	return "\n".join(tokens).sha256_text()
 
 static func _unit(seed: int, key: String) -> float:
