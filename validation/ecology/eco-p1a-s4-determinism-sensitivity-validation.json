@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1A-S4",
+  "decision": "CANDIDATE_LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_regression": {
+    "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7",
+    "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c",
+    "p1a_s3": "PASS_208_ASSERTIONS_DATASET_HASH_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690",
+    "p1a_s3_scene": "PASS_33x33_HASH_9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c"
+  },
+  "focused_test": {
+    "script": "res://tests/research/ecology/eco_p1a_s4_determinism_sensitivity_acceptance.gd",
+    "assertions": 165,
+    "failures": 0,
+    "baseline_summary_hash": "327d211d24f8f74251e02f0ced22323b4120c18d9b42a9cfcf99974cf9accc5a",
+    "baseline_result_hash": "cb1641a6b49dfa2be3f64c94f2ebc3240327eaca559d025d34e72ba74c0aa11e",
+    "biomass_series_hash": "7c621f1a8c302fdd10f60fd4e576b7688a3bd1065f84c84b7c391e5031f05e0c"
+  },
+  "restart_replay": {
+    "script": "res://tests/research/ecology/eco_p1a_s4_restart_replay_probe.gd",
+    "assertions": 5,
+    "failures": 0,
+    "result": "PASS_IN_SEPARATE_GODOT_PROCESS"
+  },
+  "baseline_summary": {
+    "grid": "17x17",
+    "average_initial_net": -0.116069,
+    "viability": {"FAVOURABLE": 39, "MARGINAL": 61, "UNSUSTAINABLE": 189},
+    "limits": {"LIGHT": 38, "WATER": 153, "NUTRIENT": 83, "TEMPERATURE": 0, "FLOOD": 15}
+  },
+  "sensitivity_evidence": {
+    "moisture_0_95_avg_net": -0.145365,
+    "moisture_1_05_avg_net": -0.087506,
+    "sunlight_0_95_avg_net": -0.139996,
+    "sunlight_1_05_avg_net": -0.098353,
+    "root_cost_0_95_avg_net": -0.107908,
+    "root_cost_1_05_avg_net": -0.124231,
+    "maintenance_0_95_avg_net": -0.086019,
+    "maintenance_1_05_avg_net": -0.146119,
+    "flood_penalty_0_95_avg_net": -0.114360,
+    "flood_penalty_1_05_avg_net": -0.117778,
+    "root_depth_scale_0_50_avg_net": -0.142693,
+    "root_depth_scale_1_50_avg_net": -0.107649,
+    "root_depth_scale_2_20_avg_net": -0.128666,
+    "interpretation": "Small +/-5% perturbations move aggregate net continuously and in expected directions. Root-depth benefit peaks and then falls globally; deep roots help dry ridge while harming wet floodplain, rejecting free escalation."
+  },
+  "failure_matrix": {
+    "global_extinction": "PASS",
+    "unbounded_biomass": "PASS_BOUNDED_FAR_BELOW_CAP",
+    "one_field_domination": "PASS_MULTIPLE_LIMITERS_MAX_SHARE_BELOW_75_PERCENT",
+    "free_trait_escalation": "PASS_NON_MONOTONIC_GLOBAL_AND_OPPOSITE_LOCAL_EFFECT",
+    "boundary_seams": "PASS_PARENT_CONTINUITY_RECHECKED",
+    "hidden_biome_conditionals": "PASS_SOURCE_SCAN",
+    "presentation_resolution_dependency": "PASS_NO_PRESENTATION_INPUTS",
+    "floating_point_replay_divergence": "PASS_EXACT_HASH"
+  },
+  "truth_boundary": "S4 is a research-only experiment harness. The accepted S1 fixture, S2 resource equations and S2 PatchSimulator remain unchanged. Full biomass runs use the accepted PatchSimulator; coefficient perturbations are applied only to exposed cost terms for sensitivity summaries.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1A_S4_TESTS.ps1 on the exact Windows worktree. On clean matching hashes, accept S4 and open P1A-S5 final P1A decision."
+}
