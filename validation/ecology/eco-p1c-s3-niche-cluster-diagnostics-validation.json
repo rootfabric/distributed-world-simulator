@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.P1C-S3",
+  "decision": "LOCAL_FOCUSED_PASS_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "tested_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb Linux x86_64",
+  "parent_evidence": {
+    "p1a": "ACCEPTED",
+    "p1b": "ACCEPTED",
+    "p1c_s1": "ACCEPTED_WINDOWS_116_RESTART_5",
+    "p1c_s2": "ACCEPTED_WINDOWS_101_RESTART_5"
+  },
+  "execution": {
+    "seed_test": "res://tests/research/ecology/eco_p1c_s3_niche_cluster_seed_acceptance.gd",
+    "aggregate_test": "res://tests/research/ecology/eco_p1c_s3_aggregate_contract.gd",
+    "restart_test": "res://tests/research/ecology/eco_p1c_s3_restart_replay_probe.gd",
+    "runner": "RUN_ECO_P1C_S3_TESTS.ps1",
+    "seed_case_assertions": {"1138701": 64, "1138702": 63, "1138703": 63, "uniform_1138701": 64},
+    "aggregate_assertions": 5,
+    "restart_assertions": 5,
+    "failures": 0
+  },
+  "hashes": {
+    "aggregate": "75512459aa4a7d97b7e9549842c41a5ebf4b5574575bac9fec3ee51fd92d44a9",
+    "default": "33de1af8e20e45eea88d9ddc20ee0664b6c53f20282995c593c1738e9105db2d",
+    "alternate": "960ddf64b554e096e966796e6d614b75dfe2455259502310d75f700995d946a6",
+    "third": "cfe5778cf188ce06b512ce77e35ec6675cdc65703b1c8f437dcaa70db93b1c92",
+    "uniform": "b7a93ccdf4af05d92d2324a89331200a6957ce1433688dbe9ce70ded5e9c96f9"
+  },
+  "coexistence_evidence": [
+    "three independent heterogeneous founder seeds retain at least eighteen founders above one percent global biomass",
+    "maximum top founder biomass share across seeds is 0.241343184231652 and minimum Shannon abundance diversity is 2.49393796434879",
+    "all three anonymous trait clusters hold at least ten percent global biomass on every heterogeneous seed",
+    "minimum three-way silhouette across seeds is 0.132726365954859",
+    "at least two anonymous clusters per heterogeneous seed have regional enrichment span >=0.30",
+    "uniform control still contains trait-space clusters but every cluster regional enrichment span is exactly zero",
+    "therefore clustering alone is not treated as niche evidence; environment-dependent abundance enrichment is required"
+  ],
+  "truth_boundary": "P1C-S3 is post-hoc research diagnostics over accepted P1C-S2 abundance truth. Cluster indices are not species identities or biome roles and do not feed back into simulation, selection, mutation, placement or presentation.",
+  "windows_confirmation": "PENDING",
+  "next": "Run RUN_ECO_P1C_S3_TESTS.ps1 on exact Windows. Matching parent regressions, four seed/control cases, aggregate hash and restart replay allow S3 acceptance and P1C-S4 opening."
+}
