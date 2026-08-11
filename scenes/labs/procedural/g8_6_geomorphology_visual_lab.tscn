@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/procedural/g8_6_geomorphology_visual_lab.gd" id="1_g86"]
+
+[node name="G86GeomorphologyVisualLab" type="Node3D"]
+script = ExtResource("1_g86")
+
+[node name="GeomorphologyPatch" type="MeshInstance3D" parent="."]
+
+[node name="RiverOverlay" type="MeshInstance3D" parent="."]
+
+[node name="SeamOverlay" type="MeshInstance3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -32, 0)
+light_energy = 1.25
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(10, 7, 10)
+current = true
+fov = 52.0
+near = 0.01
+far = 100.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 1110.0
+offset_bottom = 292.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Panel/Margin"]
+
+[node name="Status" type="Label" parent="HUD/Panel/Margin/VBox"]
+theme_override_font_sizes/font_size = 15
+text = "G8.6 — Geomorphology Visual Lab"
