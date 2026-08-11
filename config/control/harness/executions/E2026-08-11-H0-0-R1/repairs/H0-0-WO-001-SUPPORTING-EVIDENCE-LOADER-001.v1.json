@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.harness_repair_map.v1",
+  "repair_id": "H0-0-WO-001-SUPPORTING-EVIDENCE-LOADER-001",
+  "work_order_id": "H0-0-WO-001",
+  "state": "REPAIR_MAP_READY",
+  "affected_module": "Evidence document discovery during Git-only Status, Plan and Resume state reconstruction",
+  "canonical_owner": "MAIN/HARNESS",
+  "entry_points": [
+    "CONTROL_DEVELOPMENT.ps1 -Status",
+    "CONTROL_DEVELOPMENT.ps1 -Plan",
+    "CONTROL_DEVELOPMENT.ps1 -Resume"
+  ],
+  "callers": [
+    "Director checkpoint proposal flow",
+    "Reviewer and Verifier recovery checks",
+    "future CI and scheduler consumers"
+  ],
+  "callees": [
+    "scripts/harness/state_builder.py evidence discovery",
+    "scripts/harness/contracts.py schema validation",
+    "canonical Evidence Map schema"
+  ],
+  "sibling_paths": [
+    "reviews directory typed document discovery",
+    "repairs directory typed document discovery",
+    "human-attention directory typed document discovery",
+    "event evidence_paths resolution",
+    "checkpoint review/evidence freshness gates"
+  ],
+  "existing_tests": [
+    "Evidence Map schema and freshness fixtures",
+    "root and non-root Status, Plan and Resume",
+    "clean canonical URL checkout recovery",
+    "strict malformed and unknown Evidence Map rejection"
+  ],
+  "missing_tests": [
+    "A typed non-Evidence-Map supporting JSON document may coexist in the evidence directory without entering review state",
+    "A malformed document claiming the Evidence Map schema still fails closed",
+    "Checkpoint reconstruction selects only validated Evidence Maps"
+  ],
+  "public_or_internal_contracts": [
+    "distributed_world_simulator.harness_evidence_map.v1",
+    "distributed_world_simulator.harness_changed_file_archive.v1",
+    "distributed_world_simulator.control_development_output.v1",
+    "Git-only recovery semantics"
+  ],
+  "expected_shipped_behavior": "Evidence discovery routes typed JSON documents by their schema identity, validates every document that claims to be an Evidence Map, ignores typed supporting evidence for review-state selection, and preserves fail-closed behavior for malformed or ambiguous map claims.",
+  "relevant_history_or_evidence": [
+    "3bf704243e38b6a9dd6a4a72434907ae776db019 exact implementation PASS",
+    "e71940bfa65f4e601d90a3e7c547d82c9b70a310 audited evidence ledger",
+    "CONTRACT_OR_DEPENDENCY_INVALID on all three public commands after the changed-file archive was added"
+  ],
+  "root_cause_hypothesis": "The evidence loader used directory membership as document type identity and validated every JSON file against the Evidence Map schema, while the checkpoint workflow legitimately stored a typed changed-file archive in the same evidence directory.",
+  "canonical_fix_location": "scripts/harness/state_builder.py evidence document routing plus focused tests/harness regression fixtures; canonical main-owned schemas and policies remain read-only.",
+  "why_not_symptom_patch": "Moving or renaming the one archive would leave the directory-type assumption intact and could break the next typed supporting artifact. Schema-based routing repairs the owning discovery boundary while retaining strict validation for every claimed Evidence Map."
+}
