@@ -4,7 +4,7 @@
 **Work Order:** `H0-0-WO-001`  
 **Base:** `790fd79f8055fefa19cf9d7263441fc9f4326ebd`  
 **Branch:** `control/h0-closed-loop-development`  
-**Risk:** `HIGH`  
+**Risk:** `HIGH`
 **Target:** `H0_0_SCAFFOLD_READY`
 
 ## Решение Director
