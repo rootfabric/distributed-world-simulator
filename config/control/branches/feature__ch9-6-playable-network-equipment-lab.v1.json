@@ -10,9 +10,9 @@
   "expected_outcome": "A player can drag wearables in the real Inventory UI, observe server-authoritative canonical equipment and real Quaternius presentation, restart the persistent runtime and see the same equipped items restored automatically.",
   "current_stage": "CH9.6 Playable Network Equipment Lab",
   "stage_status": "WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
-  "progress_note": "CH9.5 is FOCUSED_ACCEPTED and the mandatory post-acceptance PC0 audit returned CH YELLOW. CH9.6 attempt 1 exposed a live same-SceneTree blocking equipment-command deadlock. FIX1 runtime head 7b2269b39952b8201714a7078a62b8f97057325c keeps equipment.equip/unequip server-authoritative but nonblocking through the existing CH9 client API, with no speculative equipment prediction. Exact Windows Godot 4.7.1 double on tested head 4cdafddce7cd6b5fa7ff45a06ae00f06320464ab now passes the focused CH9.6 UI/network/presenter/restart test with 22 assertions. The complete CH9.6 runner also passes editor import, CH9.2 UI routes 16, CH9.3 real ENet 20, CH9.4 reconnect/recovery 53, CH9.5 persistent ENet recovery 41 and CH9.6 playable network equipment UI 22 assertions. Automated acceptance is complete; only the manual graphical restart/recovery observation remains before CH9.6 can be focused accepted.",
+  "progress_note": "CH9.5 is FOCUSED_ACCEPTED and the mandatory post-acceptance PC0 audit returned CH YELLOW. CH9.6 attempt 1 exposed a live same-SceneTree blocking equipment-command deadlock. FIX1 runtime head 7b2269b39952b8201714a7078a62b8f97057325c keeps equipment.equip/unequip server-authoritative but nonblocking through the existing CH9 client API, with no speculative equipment prediction. Exact Windows Godot 4.7.1 double on tested head 4cdafddce7cd6b5fa7ff45a06ae00f06320464ab passes the focused CH9.6 UI/network/presenter/restart test with 22 assertions. The complete CH9.6 runner also passes editor import, CH9.2 UI routes 16, CH9.3 real ENet 20, CH9.4 reconnect/recovery 53, CH9.5 persistent ENet recovery 41 and CH9.6 playable network equipment UI 22 assertions. Automated acceptance is complete. ACCEPT_CH9_6_GRAPHICAL.ps1 now provides a guided two-generation Windows operator gate: reset-state playable observation, normal shutdown, persisted-state restart observation, explicit yes/no visual evidence and local machine-readable evidence JSON. It changes no runtime, authority, Item Graph or persistence semantics. Only the manual graphical restart/recovery observation remains before CH9.6 can be focused accepted.",
   "last_accepted_checkpoint": "CH9.5 Live Equipment Runtime Composition FOCUSED_ACCEPTED @ runtime c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
-  "next_stage": "Run PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1 with -ResetState, equip real wearables through the visible Inventory UI, verify real Quaternius presentation and movement, close normally, relaunch without -ResetState and verify recovered equipment presentation plus visual removal on unequip. No later Character stage is authorized before graphical acceptance and post-acceptance PC0 audit.",
+  "next_stage": "Run ACCEPT_CH9_6_GRAPHICAL.ps1 on Windows. The runner performs the reset-state first generation and persisted-state second generation in isolated child PowerShell processes, asks for explicit graphical observations and writes local evidence JSON. If and only if it reports OPERATOR_REPORTED_PASS, record CH9.6 focused acceptance and run the mandatory post-acceptance PC0 audit. No later Character stage is authorized before that audit.",
   "parent_branch_or_checkpoint": "feature/ch9-5-live-equipment-runtime-composition @ 9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "base_commit": "9d1ca8e1f9acf296041df466b8eb3e8910c09936",
   "candidate_runtime_head": "7b2269b39952b8201714a7078a62b8f97057325c",
@@ -30,6 +30,7 @@
     "scenes/labs/character/quaternius_playable_network_equipment_lab.tscn",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "PLAY_CH9_6_NETWORK_EQUIPMENT_LAB.ps1",
+    "ACCEPT_CH9_6_GRAPHICAL.ps1",
     "tests/characters/test_ch9_6_playable_network_equipment_ui.gd",
     "RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1",
     "docs/characters/ch9-6-playable-network-equipment-lab.md",
@@ -57,6 +58,7 @@
   "validation_paths": [
     "tests/characters/test_ch9_6_playable_network_equipment_ui.gd",
     "RUN_CH9_6_PLAYABLE_NETWORK_EQUIPMENT_TESTS.ps1",
+    "ACCEPT_CH9_6_GRAPHICAL.ps1",
     "validation/ch9-6-playable-network-equipment-lab-validation.json"
   ],
   "tested_heads": {
