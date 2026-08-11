@@ -22,8 +22,11 @@ func _run() -> void:
 
 	var lab = LabScene.instantiate()
 	root.add_child(lab)
-	var ready := await _wait_until(func() -> bool:
-		return bool(lab.ch9_setup_result.get("success", false)) or not lab.network_setup_in_progress
+	var ready: bool = await _wait_until(func() -> bool:
+		return bool(lab.ch9_setup_result.get("success", false)) or (
+			not lab.network_setup_in_progress
+			and String(lab.ch9_setup_result.get("code", "")) != "CH9_6_NETWORK_BOOTSTRAP_PENDING"
+		)
 	, READY_TIMEOUT_MS)
 	_assert(ready, "CH9.6 graphical unequip route lab did not finish bootstrap")
 	_assert(bool(lab.ch9_setup_result.get("success", false)), "CH9.6 graphical unequip route setup failed: %s" % JSON.stringify(lab.ch9_setup_result))
