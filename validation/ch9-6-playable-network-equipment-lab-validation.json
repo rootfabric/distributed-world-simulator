@@ -7,7 +7,8 @@
   "accepted_parent_runtime_head": "c65b0b51f62be21f6c5d8e266a720a49bddf4c02",
   "accepted_parent_focused_head": "0ebffb57b0e4e5d4db092f56dd96df107cb8b0f1",
   "candidate_runtime_head": "7b2269b39952b8201714a7078a62b8f97057325c",
-  "decision": "FIX1_IMPLEMENTED_PENDING_WINDOWS_RERUN",
+  "tested_focused_head": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
+  "decision": "WINDOWS_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING",
   "pc0_audit": {
     "registry_generation": 49,
     "overall": "RED",
@@ -60,8 +61,7 @@
     "generic_behavior": "the NX6 nonblocking pump is used only for PredictedItemInteractionJournal.PREDICTABLE_COMMANDS",
     "equipment_predictable": false,
     "result": "equipment.equip fell through to execute_item_command_blocking",
-    "same_scene_tree_effect": "blocking client polling prevented the colocated CH9.5 server Node from processing the request until timeout",
-    "server_transport_disproven": false
+    "same_scene_tree_effect": "blocking client polling prevented the colocated CH9.5 server Node from processing the request until timeout"
   },
   "fix1": {
     "bridge_runtime_commit": "7b2269b39952b8201714a7078a62b8f97057325c",
@@ -75,6 +75,25 @@
     ],
     "foundation_files_modified": false,
     "nx_prediction_semantics_modified": false
+  },
+  "windows_attempt_2": {
+    "tested_branch_head": "4cdafddce7cd6b5fa7ff45a06ae00f06320464ab",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused": {
+      "test": "test_ch9_6_playable_network_equipment_ui.gd",
+      "result": "PASS",
+      "assertions": 22
+    },
+    "full_runner": {
+      "editor_import": "PASS",
+      "ch9_2_inventory_ui_equipment_routes": {"result": "PASS", "assertions": 16},
+      "ch9_3_real_enet_replication": {"result": "PASS", "assertions": 20},
+      "ch9_4_equipment_checkpoint_reconnect_recovery": {"result": "PASS", "assertions": 53},
+      "ch9_5_persistent_enet_equipment_recovery": {"result": "PASS", "assertions": 41},
+      "ch9_6_playable_network_equipment_ui": {"result": "PASS", "assertions": 22},
+      "final_marker": "CH9.6 Playable Network Equipment Lab candidate runner: PASS"
+    },
+    "classification": "AUTOMATED_ACCEPTED"
   },
   "automated_acceptance_contract": [
     "instantiate the same graphical CH9.6 lab scene headlessly",
@@ -105,14 +124,14 @@
     ]
   },
   "windows_results": {
-    "editor_import": "PENDING_RERUN",
-    "ch9_2_inventory_ui_routes_regression": "PENDING_RERUN",
-    "ch9_3_real_enet_regression": "PENDING_RERUN",
-    "ch9_4_reconnect_recovery_regression": "PENDING_RERUN",
-    "ch9_5_persistent_enet_regression": "PENDING_RERUN",
-    "ch9_6_playable_network_equipment_ui": "FIX1_PENDING_RERUN",
-    "candidate_runner": "PENDING_RERUN",
+    "editor_import": "PASS",
+    "ch9_2_inventory_ui_routes_regression": "PASS_16_ASSERTIONS",
+    "ch9_3_real_enet_regression": "PASS_20_ASSERTIONS",
+    "ch9_4_reconnect_recovery_regression": "PASS_53_ASSERTIONS",
+    "ch9_5_persistent_enet_regression": "PASS_41_ASSERTIONS",
+    "ch9_6_playable_network_equipment_ui": "PASS_22_ASSERTIONS",
+    "candidate_runner": "PASS",
     "graphical": "PENDING_USER_OBSERVATION"
   },
-  "next_control_gate": "WINDOWS_FIX1_RERUN_THEN_GRAPHICAL_ACCEPTANCE"
+  "next_control_gate": "MANUAL_GRAPHICAL_RESTART_RECOVERY_ACCEPTANCE"
 }
