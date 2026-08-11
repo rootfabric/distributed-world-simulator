@@ -20,6 +20,8 @@ var _owner_state_send_failures: int = 0
 var _owner_snapshot_reconciliations_skipped: int = 0
 var _owner_last_state_send_ms: int = 0
 var _owner_last_state_sequence: int = 0
+var _owner_pending_state_sequence: int = 0
+var _owner_state_submit_deferrals: int = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -28,6 +30,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_owner_snapshot_reconciliations_skipped = 0
 	_owner_last_state_send_ms = 0
 	_owner_last_state_sequence = 0
+	_owner_pending_state_sequence = 0
+	_owner_state_submit_deferrals = 0
 	return super.setup(config)
 
 
@@ -42,6 +46,7 @@ func submit_movement_intent_nonblocking(
 	if not is_ready():
 		return _failure("M7_CLIENT_NOT_READY")
 	_input_sequence = InputSequence.next(_input_sequence)
+	_owner_pending_state_sequence = _input_sequence
 	var operation_id: String = "operation/m7/%s/owner-state/%d/%d" % [
 		_logical_player_id, OS.get_process_id(), _input_sequence
 	]
@@ -67,13 +72,20 @@ func advance_local_prediction(
 	var result: Dictionary = super.advance_local_prediction(intent, frame_delta_seconds)
 	if not bool(result.get("success", false)):
 		return result
-	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
-	if not bool(details.get("submission_attempted", false)):
+	if _owner_pending_state_sequence < 1:
 		return result
+	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
 	var predicted_state: Dictionary = Dictionary(details.get("predicted_state", {}))
 	if predicted_state.is_empty():
-		_owner_state_send_failures += 1
-		return _failure("OWNER_PREDICTED_STATE_REQUIRED")
+		_owner_state_submit_deferrals += 1
+		return result
+	var predicted_sequence: int = int(predicted_state.get("last_input_sequence", 0))
+	if predicted_sequence != _owner_pending_state_sequence:
+		# A semantic sequence can be latched on a render call before the next fixed
+		# simulation tick. Never advance server sequence identity with an old pose;
+		# wait until that sequence has actually authored the predicted state.
+		_owner_state_submit_deferrals += 1
+		return result
 	var player_state: Dictionary = _owner_playable_state(predicted_state)
 	if player_state.is_empty():
 		_owner_state_send_failures += 1
@@ -82,14 +94,16 @@ func advance_local_prediction(
 		player_state,
 		_owner_state_delta_seconds()
 	)
-	details["submission"] = state_submission.duplicate(true)
 	details["owner_state_submission"] = state_submission.duplicate(true)
+	if bool(details.get("submission_attempted", false)):
+		details["submission"] = state_submission.duplicate(true)
 	result["details"] = details
 	if not bool(state_submission.get("success", false)):
 		_owner_state_send_failures += 1
 		return state_submission
 	_owner_state_submissions += 1
-	_owner_last_state_sequence = int(player_state.get("last_input_sequence", 0))
+	_owner_last_state_sequence = predicted_sequence
+	_owner_pending_state_sequence = 0
 	return result
 
 
@@ -203,4 +217,6 @@ func get_report() -> Dictionary:
 	report["owner_snapshot_reconciliations_skipped"] = \
 		_owner_snapshot_reconciliations_skipped
 	report["owner_last_state_sequence"] = _owner_last_state_sequence
+	report["owner_pending_state_sequence"] = _owner_pending_state_sequence
+	report["owner_state_submit_deferrals"] = _owner_state_submit_deferrals
 	return report
