@@ -9,10 +9,10 @@
   "purpose": "Prove that vegetation diversity can emerge from environmental fields, resource trade-offs, mutation, competition, dispersal and history without hardcoded biome placement or duplicate world foundations.",
   "expected_outcome": "A deterministic plant ecology research model, accepted experiment evidence and portable SpeciesCatalog design that can later converge into canonical runtime through a fresh PC0/harness-controlled branch.",
   "current_stage": "ECO.P1A Environmental Causality Baseline",
-  "stage_status": "P1A_S2_ACCEPTED_P1A_S3_HEADLESS_PASS_WINDOWS_GRAPHICAL_PENDING_RESEARCH_ONLY",
-  "progress_note": "P1A-S1 and P1A-S2 are accepted on exact Windows evidence. P1A-S3 now adds a presentation-only diagnostic heatmap lab plus seven controlled trait probes on top of accepted S1/S2 truth. Local Godot 4.7.1 double focused acceptance passes 114/114 with dataset hash dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690; scene headless smoke passes on a 33x33 dataset with hash 9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c; parent S2 remains 235/235 and S1 remains 109/109. Published S3 blobs match locally tested content. Exact Windows automated confirmation and manual graphical review are the remaining S3 gates.",
+  "stage_status": "P1A_S2_ACCEPTED_P1A_S3_AUTOMATED_ACCEPTED_GRAPHICAL_PENDING_RESEARCH_ONLY",
+  "progress_note": "P1A-S1 and P1A-S2 are accepted on exact Windows evidence. P1A-S3 presentation-only diagnostic lab and seven controlled trait probes now also pass the exact Windows automated runner on checkout 6b5f3592: S1 109/109, S2 235/235, S3 114/114, focused dataset hash dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690, and scene headless 33x33 BASE hash 9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c. Published S3 blobs match tested content. Manual graphical review is now the only S3 gate.",
   "last_accepted_checkpoint": "ECO.P1A-S2 Single-Plant Resource Model",
-  "next_stage": "Run RUN_ECO_P1A_S3_TESTS.ps1 on exact Windows checkout, then launch scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn graphically and inspect views 1-8, Q/E controlled probes and click diagnostics. On automated + graphical PASS, accept P1A-S3 and open P1A-S4 Determinism, Sensitivity and Failure Classification. Mutation/evolution remains blocked until P1A acceptance.",
+  "next_stage": "Launch scenes/labs/ecology/eco_p1a_s3_visual_lab.tscn graphically and inspect views 1-8, Q/E controlled probes and click diagnostics. On manual graphical PASS, accept P1A-S3 and open P1A-S4 Determinism, Sensitivity and Failure Classification. Mutation/evolution remains blocked until P1A acceptance.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": [
@@ -80,9 +80,9 @@
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
     "p1a_s1": "PASS_109_ASSERTIONS_ENV_HASH_b862c4fc529b5fd8229355c4c38b96a429e4ef1d902d6dd86b27860d8ce51af7_WINDOWS_CLEAN",
     "p1a_s2": "PASS_235_ASSERTIONS_SIM_HASH_618ec5c188fcb8b7c27a1e95147fcb9c9646eb6448c68a57a90cd525d5a9492c_WINDOWS_CLEAN",
-    "p1a_s3_focused": "PASS_114_ASSERTIONS_DATASET_HASH_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690_LINUX",
-    "p1a_s3_scene_headless": "PASS_33x33_HASH_9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c_LINUX",
-    "p1a_s3_windows": "PENDING",
+    "p1a_s3_focused": "PASS_114_ASSERTIONS_DATASET_HASH_dff41c7b5ae3e2744b957ea0dd81fa3830de6365711b34d66024115509aa3690_WINDOWS_CLEAN",
+    "p1a_s3_scene_headless": "PASS_33x33_HASH_9713cd410b54731fb151893ea78bec056672e6ad344c47a10046ab34d5dd2a7c_WINDOWS_CLEAN",
+    "p1a_s3_windows_checkout_head": "6b5f3592696dc7db0897ca8cef69c3c395f32589",
     "p1a_s3_graphical": "PENDING",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
@@ -110,7 +110,7 @@
     "PRESENTATION_MESH_AS_TRUTH"
   ],
   "blockers": [
-    "P1A_S3_EXACT_WINDOWS_AND_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
+    "P1A_S3_GRAPHICAL_CONFIRMATION_REQUIRED_BEFORE_P1A_S4",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
     "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
