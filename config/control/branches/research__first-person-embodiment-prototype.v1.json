@@ -8,14 +8,14 @@
   "short_description": "Non-canonical FirstPersonEmbodiment research layered on accepted CH9.6, with S4 first-person two-hand grip accepted and S5 evaluating third-person secondary-hand support through native TwoBoneIK3D or a collision-free fallback procedural arm.",
   "purpose": "Evaluate first-person articulated one/two-hand held-item presentation, third-person held-item visibility and secondary-hand support, catalogued item silhouettes, grip profiles, clothing-visible viewmodels and low-latency item selection without reopening frozen CH9.6 and without weakening authority over concrete item actions.",
   "expected_outcome": "The selected canonical replica item resolves through presentation-only visual/grip catalogs. One-hand items occupy only the primary right hand. Two-hand profiles reserve the left articulated first-person hand and, in third person, drive the world-avatar left arm toward the same secondary grip target using native Skeleton3D TwoBoneIK3D where available or a presentation-only fallback arm solver when the graphical lab is using the fallback humanoid. Empty/one-hand selection restores both left-hand presentations immediately. Concrete item mutations remain server-authoritative and hotbar selection remains transient/local.",
-  "current_stage": "FPE-R2 S5 — third-person secondary-hand support",
-  "stage_status": "RESEARCH_R2_S5_IMPLEMENTED_OPERATOR_RERUN_PENDING",
-  "progress_note": "R2/S1 remains accepted with clean focused and graphical evidence. R2/S2 and R2/S3 are now revalidated by the clean full S4 focused suite on 8754891d; S3 also has graphical evidence with articulated fingers visibly wrapping the selected item. R2/S4 is accepted for research progression by operator instruction after the full suite passed cleanly: two-hand grip contract 20 assertions, two-hand viewmodel 36, owner-collision isolation 30, performance 10 and graphical scene-load 21, while the operator separately confirmed that a held sandbox RigidBody no longer self-moves the CharacterBody3D. S5 extends only the research presentation surface. ThirdPersonSecondaryHandSupport resolves a real left upper-arm/forearm/hand chain and installs Godot TwoBoneIK3D as a SkeletonModifier3D when a source Skeleton3D exists. The current fallback humanoid has no skeleton, so S5 also provides a collision-free procedural two-segment world arm that hides only the fallback LeftArm while active and restores it on one-hand/empty selection. TwoHandCataloguedThirdPersonHeldItemPresenter creates a secondary grip target under the existing catalogued world held-item grip, while QuaterniusFirstPersonEmbodimentFix13 composes the S5 presenter without changing accepted CH9.6. S5 creates no collision body and owns no item/network/gameplay transform state.",
+  "current_stage": "FPE-R2 S5 Fix2 — replica mount-base classification precedence",
+  "stage_status": "RESEARCH_R2_S5_FIX2_OPERATOR_RERUN_PENDING",
+  "progress_note": "R2/S1 remains accepted with clean focused and graphical evidence. R2/S2 and R2/S3 were revalidated by the clean full S4 focused suite on 8754891d; S3 also has graphical evidence with articulated fingers visibly wrapping the selected item. R2/S4 is accepted for research progression with clean focused evidence and operator-confirmed zero self-push sandbox physics. S5 Fix1 removed an inherited VisualFactoryType compile collision. The operator then ran a clean full suite on 5bafc479, including S5 secondary-hand support 33 assertions, S5 two-hand third-person presenter 20, collision isolation 30, performance 10 and graphical scene-load 22. The following graphical run exposed a coverage gap: switching slot 1 to slot 2 changed item identity/color but the right hand remained beacon_pinch, S4 remained FREE and S5 remained FREE. Root cause is now confirmed: the accepted M7 replica adapter maps canonical item/mount-base to replica definition beacon_mount_base. Both ItemViewmodelCatalog and HeldItemGripProfileCatalog matched the generic beacon token before the more specific mountbase token. The old tests used item/mount-base and therefore missed the actual replica identity collision. Fix2 gives mount-base family precedence in both catalogs. beacon_mount_base now resolves BOX/mount_base plus mount_base_two_hand instead of CYLINDER/beacon plus beacon_vertical. Regression coverage now uses the actual replica definition and accepted tags assembly_root/placeable/mount_socket. Accepted CH9.6 remains unchanged.",
   "last_accepted_checkpoint": "FPE-R2 S4 RESEARCH ACCEPTED: clean full focused suite on 8754891dad2300eeb9a2e60e9a8a6e3482dcaee1 plus operator-confirmed zero self-push sandbox physics; accepted CH9.6 base e547ba52a440e72cc02c6bbe449edaf160bae7ab remains frozen",
-  "next_stage": "Operator updates the detached FPE worktree and runs RUN_FPE_RESEARCH_TESTS.ps1. Two new mandatory S5 gates validate native TwoBoneIK3D and fallback procedural-arm support plus catalogued two-hand third-person presentation. Then run PLAY_FPE_RESEARCH.ps1. Graphical acceptance: in third person slot 1 beacon leaves the world left arm free; slot 2 mount-base engages the world left secondary support toward the same item; slot 1 or empty restores the normal left arm. On a real Quaternius Skeleton3D the HUD should report NATIVE_TWO_BONE_IK; on the current fallback avatar it should report FALLBACK_PROCEDURAL_ARM. Switching 1/2/empty while moving must remain zero-stall and S5 must create no physics collider. Production skinned first-person hand mesh substitution remains a separate asset-quality follow-up.",
+  "next_stage": "Operator updates the detached FPE worktree and reruns RUN_FPE_RESEARCH_TESTS.ps1. The S2 catalog gate now explicitly validates replica definition beacon_mount_base and should report 27 assertions; S4 two-hand grip contract now also uses beacon_mount_base. Then run PLAY_FPE_RESEARCH.ps1. In first person slot 1 must report R:beacon_pinch and S4 FREE; slot 2 must switch the right pose away from beacon_pinch, report profile mount_base_two_hand and S4 ACTIVE with left support_cradle. In third person slot 2 must report S5 world left ACTIVE with FALLBACK_PROCEDURAL_ARM on the current fallback avatar. Slot 1/empty must release secondary support. Switching while moving must remain zero-stall.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "candidate_runtime_head": "f6544a338675c7773f5635e92541ac0a5ea47aae",
+  "candidate_runtime_head": "1757c901f28d7481247678af8f97a23dc2b58a93",
   "dependencies": [
     "CH9.6 accepted playable network equipment composition",
     "FPE-R2 S1 accepted shared transient held-item state",
@@ -184,8 +184,10 @@
     "focused_repository_r2_s4": "PASS_CLEAN_FULL_SUITE_ON_8754891D_CONTRACT20_VIEWMODEL36_COLLISION30_PERFORMANCE10_SCENE21",
     "graphical_r2_s4": "PASS_OPERATOR_AUTHORIZED_FIXATION_AND_ADVANCE",
     "graphical_s4_owner_collision_fix1": "PASS_HELD_SANDBOX_ITEM_NO_LONGER_MOVES_CHARACTER",
-    "focused_repository_r2_s5": "PENDING_OPERATOR_RERUN",
-    "graphical_r2_s5": "PENDING_OPERATOR_RERUN"
+    "focused_repository_r2_s5_pre_fix2": "PASS_CLEAN_FULL_SUITE_ON_5BAFC479_BUT_REPLICA_BEACON_MOUNT_BASE_CLASSIFICATION_WAS_NOT_COVERED",
+    "graphical_r2_s5_pre_fix2": "FAIL_SLOT2_ITEM_CHANGED_BUT_HAND_REMAINED_BEACON_PINCH_S4_FREE_S5_FREE",
+    "focused_repository_r2_s5": "PENDING_FIX2_OPERATOR_RERUN",
+    "graphical_r2_s5": "PENDING_FIX2_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "FIX6_PERFORMANCE_PASS_DOES_NOT_IMPLY_TRANSIENT_HOTBAR_INPUT_IS_FREE_OF_DURABILITY_WORK",
@@ -194,7 +196,8 @@
     "R2_SYNTHETIC_BONE_ATTACHMENT_PASS_DOES_NOT_REPLACE_REAL_QUATERNIUS_GRAPHICAL_GRIP_ALIGNMENT",
     "S3_SKELETON3D_PROCEDURAL_SEGMENT_PASS_DOES_NOT_CLAIM_A_PRODUCTION_SKINNED_HAND_ASSET",
     "S4_FIRST_PERSON_TWO_HAND_ACCEPTANCE_DOES_NOT_CLAIM_NATIVE_THIRD_PERSON_TWO_ARM_IK",
-    "S5_FALLBACK_PROCEDURAL_WORLD_ARM_PASS_WILL_NOT_CLAIM_NATIVE_SKELETON_IK; NATIVE_TWO_BONE_IK_REQUIRES_A_REAL_RESOLVED_LEFT_ARM_CHAIN"
+    "S5_FALLBACK_PROCEDURAL_WORLD_ARM_PASS_WILL_NOT_CLAIM_NATIVE_SKELETON_IK; NATIVE_TWO_BONE_IK_REQUIRES_A_REAL_RESOLVED_LEFT_ARM_CHAIN",
+    "PRE_FIX2_S5_CLEAN_SUITE_DID_NOT_VALIDATE_THE_REAL_M7_REPLICA_DEFINITION_BEACON_MOUNT_BASE_AND_THEREFORE_DID_NOT_DETECT_BEACON_TOKEN_PRECEDENCE"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -208,8 +211,8 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "R2_S5_FULL_FOCUSED_OPERATOR_RERUN_PENDING",
-    "R2_S5_GRAPHICAL_WORLD_SECONDARY_HAND_PENDING"
+    "R2_S5_FIX2_FULL_FOCUSED_OPERATOR_RERUN_PENDING",
+    "R2_S5_FIX2_GRAPHICAL_WORLD_SECONDARY_HAND_PENDING"
   ],
   "non_blocking_followups": [
     "FIX7_GRAPHICAL_EQUIPMENT_RESULT_POLICY_OPERATOR_RERUN_NOT_YET_ACCEPTED",
