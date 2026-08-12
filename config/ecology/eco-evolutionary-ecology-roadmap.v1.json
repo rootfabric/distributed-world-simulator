@@ -1,15 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R37-2026-08-12",
+  "revision": "ECO-R38-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_1_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_2",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_checkpoint": "ECO.EVO1/P2.1",
-  "current_step": "P2.1 Seed Dispersal Kernel / Exact Windows Canonical Gate",
-  "last_accepted_step": "ECO.CAL1-F Calibration + Full-Pool Robustness",
+  "current_checkpoint": "ECO.EVO1/P2.2",
+  "current_step": "P2.2 Establishment / Recruitment / Seed Bank — EXECUTE_NOW",
+  "last_accepted_step": "ECO.EVO1/P2.1 Seed Dispersal Kernel",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -17,23 +17,17 @@
     "ECO.PH0..PH5-S4 ACCEPTED",
     "ECO.CONV0-A ACCEPTED",
     "ECO.CAL1-A..F ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.CAL1-F ROBUST_UNITY_CALIBRATION"
+    "ECO.CAL1-F ROBUST_UNITY_CALIBRATION",
+    "ECO.EVO1/P2.1 ACCEPTED_EXACT_WINDOWS_CANONICAL"
   ],
   "accepted_evidence": {
-    "cal1_a_baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
-    "ph3c_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
-    "cal1_b_aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c",
-    "cal1_c_aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a",
-    "cal1_d_aggregate_hash": "c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6",
-    "cal1_e_aggregate_hash": "6214b8348b16acd005979c3e8ea88eca202acac0ffe835fc899cef27fbe50814",
-    "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed"
-  },
-  "candidate_evidence": {
-    "p2_1_implementation_head": "5a325549dd2b8bca64437fd42c549d798e7e3905",
-    "p2_1_checkpoint": "docs/checkpoints/ECO_EVO1_P2_1_SEED_DISPERSAL_KERNEL_CANDIDATE_RU.md",
-    "p2_1_validation": "validation/ecology/eco-evo1-p2-1-seed-dispersal-validation.json",
-    "p2_1_runner": "RUN_ECO_EVO1_P2_1_TESTS.ps1",
-    "p2_1_truth": "bounded lineage-preserving seed cohort packets with deterministic destinations and explicit boundary accounting"
+    "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
+    "p2_1_aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
+    "p2_1_distance_ratio": 6.0,
+    "p2_1_release_ratio": 2.0,
+    "p2_1_boundary_outside": 80,
+    "p2_1_local": 70,
+    "p2_1_long_tail": 10
   },
   "EVO0": {
     "name": "Plant Causal Ecology Foundation",
@@ -42,12 +36,12 @@
   },
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_1_CANDIDATE",
+    "status": "ACTIVE_P2_2",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
-      {"id":"P2.1","name":"Seed Dispersal Kernel","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
-      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"BLOCKED_BY_P2_1_ACCEPTANCE"},
-      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"BLOCKED_BY_P2_2"},
+      {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
+      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"EXECUTE_NOW"},
+      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"BLOCKED_BY_P2_2_ACCEPTANCE"},
       {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"BLOCKED_BY_P2_3"},
       {"id":"P2.5","name":"Disturbance + Recovery","status":"BLOCKED_BY_P2_4"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"BLOCKED_BY_P2_5"},
@@ -62,7 +56,7 @@
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
   "production_blockers": [
-    "P2_2_REQUIRES_P2_1_EXACT_WINDOWS_ACCEPTANCE",
+    "P2_3_REQUIRES_P2_2_EXACT_WINDOWS_ACCEPTANCE",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
     "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
   ]

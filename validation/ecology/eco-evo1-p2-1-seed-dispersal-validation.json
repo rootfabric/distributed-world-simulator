@@ -1,15 +1,34 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_1_seed_dispersal_validation.v1",
-  "revision": "ECO-EVO1-P2.1-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-EVO1-P2.1-2026-08-12-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "5a325549dd2b8bca64437fd42c549d798e7e3905",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.CAL1-F",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
     "classification": "ROBUST_UNITY_CALIBRATION"
+  },
+  "canonical_environment": {
+    "platform": "Windows branch checkout",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb"
+  },
+  "canonical_evidence": {
+    "assertions": 811,
+    "aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
+    "distance_ratio": 6.0,
+    "release_ratio": 2.0,
+    "east_low": 15.180360007930,
+    "east_high": 5.205483576745,
+    "west_x": -15.505240296661,
+    "boundary_outside": 80,
+    "local": 70,
+    "long_tail": 10,
+    "event_hashes_differ": true,
+    "fresh_process_replay_a": "PASS_EXACT_AGGREGATE",
+    "fresh_process_replay_b": "PASS_EXACT_AGGREGATE"
   },
   "kernel": {
     "source": "scripts/research/ecology/plant_seed_dispersal_kernel_v1.gd",
@@ -22,35 +41,22 @@
     "boundary_policy": "outside-domain seeds are explicitly counted, never silently destroyed",
     "identity": "every packet preserves lineage_id, genome_checksum and reproduction_event"
   },
-  "controlled_cases": [
-    "BASE_STILL",
-    "SHORT_DISTANCE",
-    "LONG_DISTANCE",
-    "LOW_RELEASE",
-    "HIGH_RELEASE",
-    "EAST_BIAS_LOW_TURBULENCE",
-    "EAST_BIAS_HIGH_TURBULENCE",
-    "WEST_BIAS_LOW_TURBULENCE",
-    "BOUNDARY_EAST",
-    "EVENT_A",
-    "EVENT_B"
-  ],
-  "required_properties": [
+  "accepted_properties": [
     "CAL1_F_PARENT_HASH_UNCHANGED",
     "EXACT_EMITTED_SEED_COUNT_CONSERVATION",
-    "INSIDE_PLUS_OUTSIDE_BOUNDARY_ACCOUNTING_CONSERVES_COUNT",
-    "LOCAL_PLUS_LONG_TAIL_ACCOUNTING_CONSERVES_COUNT",
-    "PACKET_COUNT_BOUNDED_NOT_PER_SEED_ENTITY_TRUTH",
-    "LINEAGE_AND_GENOME_IDENTITY_PRESERVED_ON_ALL_PACKETS",
-    "LONGER_INHERITED_DISPERSAL_INCREASES_DISTANCE",
-    "RELEASE_HEIGHT_USES_ACCEPTED_SQRT_HEIGHT_SCALING",
-    "TRANSPORT_VECTOR_CREATES_DIRECTIONAL_ANISOTROPY",
-    "TURBULENCE_WEAKENS_MATCHED_DIRECTIONAL_BIAS",
-    "BOUNDARY_EXPORT_EXPLICITLY_ACCOUNTED",
-    "DIFFERENT_REPRODUCTION_EVENTS_CREATE_DIFFERENT_DETERMINISTIC_SPATIAL_REALIZATIONS",
-    "SAME_PROCESS_AND_FRESH_PROCESS_HASH_DETERMINISM",
+    "BOUNDARY_ACCOUNTING_CONSERVES_COUNT",
+    "LOCAL_LONG_TAIL_ACCOUNTING_CONSERVES_COUNT",
+    "PACKET_COUNT_BOUNDED",
+    "LINEAGE_AND_GENOME_IDENTITY_PRESERVED",
+    "INHERITED_DISTANCE_SCALING_EXACT",
+    "SQRT_RELEASE_HEIGHT_SCALING_EXACT",
+    "DIRECTIONAL_ANISOTROPY",
+    "TURBULENCE_WEAKENS_DIRECTIONAL_BIAS",
+    "BOUNDARY_EXPORT_EXPLICIT",
+    "EVENT_VARIATION_DETERMINISTIC",
+    "FRESH_PROCESS_HASH_DETERMINISM",
     "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
-    "NO_ESTABLISHMENT_RECRUITMENT_SEED_BANK_OR_CARRYING_CAPACITY_SEMANTICS"
+    "NO_ESTABLISHMENT_OR_SEED_BANK_SEMANTICS_IN_P2_1"
   ],
   "implementation_diff": {
     "base": "98b6a6f5605fcc07ceee74cd853818c610dcc431",
@@ -59,11 +65,6 @@
     "accepted_cal1_sources_modified": false,
     "runtime_paths_modified": false
   },
-  "tests": {
-    "acceptance": "tests/research/ecology/eco_evo1_p2_1_seed_dispersal_acceptance.gd",
-    "restart": "tests/research/ecology/eco_evo1_p2_1_restart_replay_probe.gd",
-    "runner": "RUN_ECO_EVO1_P2_1_TESTS.ps1"
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.EVO1 / P2.2 Establishment / Recruitment / Seed Bank"
+  "decision": "ECO_EVO1_P2_1_ACCEPTED",
+  "next": "ECO.EVO1 / P2.2 Establishment / Recruitment / Seed Bank"
 }
