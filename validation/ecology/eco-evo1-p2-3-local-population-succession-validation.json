@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_3_local_population_succession_validation.v1",
+  "revision": "ECO-EVO1-P2.3-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.2",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86"
+  },
+  "truth": {
+    "adult_granularity": "bounded lineage/age cohorts with biomass, never one entity per plant",
+    "seed_memory": "accepted P2.2 seed-bank cohorts",
+    "reproduction_chain": "CAL1-D -> P2.1 -> P2.2 -> local adult/bank cohorts",
+    "capacity": "reuse P1 single-patch MAX_BIOMASS_KG_M2=8.0",
+    "export_policy": "outside local domain is counted but not inserted into another patch"
+  },
+  "turnover": {
+    "baseline_survival": "exp(-1/lifespan)",
+    "stress_survival": "exp(-0.24*max(-net_resource_balance,0))",
+    "vegetative_growth": "positive_net*growth_rate*surviving_biomass*0.20",
+    "coefficient_origin": "reuse existing P1 single-plant patch research coefficients where applicable"
+  },
+  "controlled_runs": [
+    "OPEN_CONTROL_12Y",
+    "OPEN_TO_SHADE_SUCCESSION_12Y",
+    "MATCHED_SHORT_LIFE_8Y_NO_REPRODUCTION",
+    "MATCHED_LONG_LIFE_8Y_NO_REPRODUCTION"
+  ],
+  "required_properties": [
+    "P2_2_PARENT_HASH_UNCHANGED",
+    "INITIAL_LOW_DORMANCY_EARLY_LINEAGE_SHARE_GT_BANKED",
+    "BANKED_LINEAGE_GAINS_SHARE_AFTER_SHADE_TRANSITION",
+    "SHADE_SCHEDULE_INCREASES_BANKED_FINAL_SHARE_VS_OPEN_CONTROL",
+    "SEED_BANK_REACTIVATION_CONTRIBUTES_RECRUITS",
+    "ADULT_REPRODUCTION_EVENTS_OCCUR_AFTER_FOUNDER_PULSE",
+    "SHORT_LIFESPAN_INCREASES_MATCHED_ADULT_TURNOVER",
+    "TOTAL_LOCAL_BIOMASS_NEVER_EXCEEDS_ACCEPTED_P1_CAPACITY",
+    "ADULT_AND_BANK_COHORT_COUNTS_REMAIN_BOUNDED",
+    "LINEAGE_IDENTITY_PRESERVED",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "NO_P2_4_MIGRATION_GRAPH_OR_CROSS_PATCH_INSERTION",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "ec1a7aa8d2e30b876496fd01693d1a6a0257c4dd",
+    "head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+    "changed_files": 5,
+    "accepted_p2_2_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "local_sanity": "FULL_CHECKOUT_UNAVAILABLE_DUE_TO_GITHUB_DNS_NO_LOCAL_PASS_CLAIMED",
+  "tests": {
+    "acceptance": "tests/research/ecology/eco_evo1_p2_3_local_population_succession_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_3_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_3_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 / P2.4 Patch Colonization / Isolation / Migration"
+}

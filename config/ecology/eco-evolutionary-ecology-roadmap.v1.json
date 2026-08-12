@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R40-2026-08-12",
+  "revision": "ECO-R41-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_3",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_3_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.EVO1/P2.3",
-  "current_step": "P2.3 Local Population Turnover + Succession / EXECUTE_NOW",
+  "current_step": "P2.3 Local Population Turnover + Succession / Exact Windows Canonical Gate",
   "last_accepted_step": "ECO.EVO1/P2.2 Establishment / Recruitment / Seed Bank",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
@@ -24,29 +24,25 @@
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
     "p2_1_aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
-    "p2_2_aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86",
-    "p2_2_favourable_recruited": 46,
-    "p2_2_dry_recruited": 21,
-    "p2_2_flooded_recruited": 26,
-    "p2_2_high_dormancy_bank": 66,
-    "p2_2_long_half_life_bank": 61,
-    "p2_2_reactivation_recruited": 33
+    "p2_2_aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86"
   },
-  "candidate_evidence": {},
-  "EVO0": {
-    "name": "Plant Causal Ecology Foundation",
-    "status": "COMPLETE",
-    "selected_calibration": "UNITY"
+  "candidate_evidence": {
+    "p2_3_implementation_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+    "p2_3_checkpoint": "docs/checkpoints/ECO_EVO1_P2_3_LOCAL_POPULATION_TURNOVER_SUCCESSION_CANDIDATE_RU.md",
+    "p2_3_validation": "validation/ecology/eco-evo1-p2-3-local-population-succession-validation.json",
+    "p2_3_runner": "RUN_ECO_EVO1_P2_3_TESTS.ps1",
+    "p2_3_truth": "bounded local adult lineage/age cohorts + accepted seed-bank memory + repeated CAL1-D/P2.1/P2.2 reproduction chain"
   },
+  "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_3",
+    "status": "ACTIVE_P2_3_CANDIDATE",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
       {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"ACCEPTED"},
-      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"EXECUTE_NOW"},
-      {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"BLOCKED_BY_P2_3"},
+      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
+      {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"BLOCKED_BY_P2_3_ACCEPTANCE"},
       {"id":"P2.5","name":"Disturbance + Recovery","status":"BLOCKED_BY_P2_4"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"BLOCKED_BY_P2_5"},
       {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"BLOCKED_BY_P2_6"},
@@ -59,9 +55,5 @@
   "XFER": {"XFER0":{"status":"DESIGN_DURING_EVO"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
-  "production_blockers": [
-    "P2_4_REQUIRES_P2_3_ACCEPTANCE",
-    "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
-    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
-  ]
+  "production_blockers": ["P2_4_REQUIRES_P2_3_EXACT_WINDOWS_ACCEPTANCE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
 }

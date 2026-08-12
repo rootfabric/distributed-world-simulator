@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 EXECUTE_NOW`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -26,8 +26,6 @@ P2.1    cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6
 P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
 ```
 
-P2.2 exact Windows findings: favourable/dry/flooded recruits `46/21/26`; low/high dormancy bank `8/66`; short/long half-life bank `4/61`; reactivation `33`; boundary export `80`.
-
 ## Central route
 
 ```text
@@ -37,8 +35,8 @@ P2.1 Seed Dispersal Kernel ACCEPTED
    ↓
 P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
    ↓
-P2.3 Local Population Turnover + Succession ← CURRENT
-   ↓
+P2.3 Local Population Turnover + Succession ← CURRENT CANDIDATE
+   ↓ PASS
 P2.4 Patch Colonization / Isolation / Migration
    ↓
 P2.5 Disturbance + Recovery
@@ -54,30 +52,79 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.2 accepted meaning
+## P2.3 implementation
 
-P2.2 established persistent local propagule memory while preserving exact integer conservation. Germination, establishment and seed-bank survival are separate causal stages. High dormancy trades immediate recruitment for persistent bank; long half-life preserves historical opportunity; improved conditions can reactivate dormant propagules. Outside-domain propagules remain export.
+Implementation head: `b8d6553df911a4eca9765509c018987fe9f5cd4b`.
 
-## P2.3 authorization
+Diff from accepted P2.2 adds exactly five ECO research/test files and modifies no accepted P2.2/P2.1/CAL1 source or runtime path.
 
-P2.3 may now connect recruited cohorts and seed-bank memory into repeated local time steps.
+### Local adult cohort state
 
-Required scope:
+P2.3 uses bounded lineage/age cohorts with biomass and ancestry identity. Recruitment cohorts are merged by lineage/year instead of becoming one entity per plant.
 
-- cohort/population truth rather than one entity per plant;
-- explicit adult cohort age, abundance/biomass and lineage identity;
-- resource-causal growth and stress mortality;
-- lifespan/age turnover;
-- local density/capacity competition without a species lookup table;
-- repeated recruitment from current reproduction and existing seed bank;
-- succession measured as changing lineage abundance through time;
-- deterministic history/hash replay.
+### Turnover and local density
 
-Strict boundary:
+Annual adult survival has explicit lifespan and resource-stress terms. Productive net balance drives vegetative growth. The implementation reuses the existing P1 `0.24` stress-mortality and `0.20` vegetative-growth research coefficients and the accepted single-patch capacity `8.0 kg/m²` rather than creating a second capacity model.
 
-- no inter-patch propagule transfer or migration graph in P2.3;
-- no explicit disturbance-event scheduler (P2.5);
-- no long-horizon regional biogeography (P2.6);
-- no speciation decision (P2.7).
+### Persistent history
 
-Current resolver: `IMPLEMENT EVO1/P2.3 LOCAL POPULATION TURNOVER + SUCCESSION`.
+P2.2 seed banks are advanced every year. Their reactivation feeds new adult cohorts. Mature lineage aggregates also reproduce through the accepted chain:
+
+```text
+CAL1-D lifecycle seed output
+  -> P2.1 dispersal
+  -> P2.2 establishment/seed bank
+  -> P2.3 local adults
+```
+
+This is the first self-renewing local plant-population loop in EVO1.
+
+### Succession control
+
+The controlled run starts with two causal life histories:
+
+- EARLY: fast growth, short lifespan, low dormancy, low shade tolerance;
+- BANKED: slower growth, long lifespan, high dormancy/long seed bank, high shade tolerance.
+
+Both start under open light. At year 4 the succession run enters deep shade; an open control does not. Acceptance requires EARLY to lead initially, BANKED to gain after the transition, and BANKED final share to be higher under the shade history than in the open control. A matched short-vs-long lifespan control isolates turnover direction.
+
+`top_lineage_changed` is diagnostic only; continuous abundance-share movement is the actual succession evidence.
+
+### Strict P2.4 boundary
+
+Outside-domain seeds are counted as export but never inserted into a second patch. No neighbour graph, colonization topology or migration routing exists in P2.3.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_3_TESTS.ps1 -GodotPath $Godot
+```
+
+Required evidence:
+
+- exact P2.2 parent aggregate;
+- bounded total biomass/capacity and cohort counts;
+- seed-bank reactivation > 0;
+- adult reproduction events > 0 beyond founder pulse;
+- matched short lifespan has greater cumulative adult turnover;
+- BANKED share gains after shade transition;
+- BANKED shade-history final share > open-control final share;
+- same/fresh-process aggregate equality.
+
+Until PASS:
+
+```text
+P2.3 = IMPLEMENTED_CANDIDATE
+P2.3 != ACCEPTED
+P2.4 = BLOCKED
+```
+
+The assistant environment could not obtain a full checkout because GitHub DNS resolution is unavailable, so no local full-source PASS is claimed.
+
+Current resolver: `RUN EVO1/P2.3 EXACT WINDOWS LOCAL POPULATION TURNOVER + SUCCESSION GATE`.
