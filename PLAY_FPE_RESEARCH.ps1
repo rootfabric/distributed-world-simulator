@@ -126,7 +126,7 @@ if ([int]$SceneGate.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($SceneG
 }
 Write-Host "FPE graphical composition preflight: PASS" -ForegroundColor Green
 
-$GarmentAvailable = Test-Path -LiteralPath $Garment
+$GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $UserArgs = @(
     "--ch9-6-port=$Port"
