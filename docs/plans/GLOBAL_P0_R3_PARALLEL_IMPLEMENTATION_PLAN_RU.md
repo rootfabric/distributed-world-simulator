@@ -34,13 +34,19 @@ Current critical path:
 ```text
 C22 MAIN_INTEGRATED
         ↓
-R3 exact-head semantic repair
+R3 review-surface repair
+        ↓
+freeze new exact mutable review target
         ↓
 R2→R3 + ownership/runtime/overlap audits
         ↓
+exact-head Project Control
 standard + directional PC0 NON_RED
         ↓
-R3_REPAIR_COMPLETE_REVIEW_READY
+external Evidence Map
+bound to exact frozen mutable target
+        ↓
+R3_REVIEW_SURFACE_REPAIR_COMPLETE
         ↓
 Independent Reviewer
         ↓
@@ -50,7 +56,7 @@ R3_REFRESHED_CANDIDATE_READY
         ↓
 HUMAN GLOBAL_ARCHITECTURE_PROMOTION
         ↓
-post-R3 PC0
+mandatory post-R3 PC0
         ↓
 fresh H0.2 / NX.C1 dispatch
 ```
@@ -601,20 +607,23 @@ Research/foundation work without direct V0 payoff can still be valid, but it doe
 ## 9. R3 promotion sequence
 
 ```text
-R3 semantic repair
+R3 review-surface repair
     ↓
-freeze exact mutable head V2
+freeze new exact mutable review target
     ↓
 R2→R3 transition audit PASS
 ownership/intersection audit PASS
 runtime files = 0
 critical overlap = 0
+    ↓
+exact-head Project Control
 standard PC0 NON_RED
 directional PC0 NON_RED
     ↓
-Evidence Map bound to exact mutable head V2
+external Evidence Map
+bound to exact frozen mutable target
     ↓
-R3_REPAIR_COMPLETE_REVIEW_READY
+R3_REVIEW_SURFACE_REPAIR_COMPLETE
     ↓
 Independent Reviewer PASS
     ↓
@@ -626,8 +635,10 @@ HUMAN GLOBAL_ARCHITECTURE_PROMOTION
     ↓
 control-only canonical promotion
     ↓
-post-R3 PC0
+mandatory post-R3 PC0
 ```
+
+The CURRENT lifecycle never uses a historical V2/V3 review target as authorization. Exact SHA binding belongs to the frozen Git target and its external Evidence Map, not to self-referential prose in this plan.
 
 No implementer session may self-award the Reviewer or Verifier verdict.
 
