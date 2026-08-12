@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 REPAIRED CANDIDATE / EXACT WINDOWS RE-RUN`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -35,7 +35,7 @@ P2.1 Seed Dispersal Kernel ACCEPTED
    ↓
 P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
    ↓
-P2.3 Local Population Turnover + Succession ← CURRENT CANDIDATE
+P2.3 Local Population Turnover + Succession ← REPAIRED CANDIDATE
    ↓ PASS
 P2.4 Patch Colonization / Isolation / Migration
    ↓
@@ -52,11 +52,27 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.3 implementation
+## P2.3 implementation and parser repair
 
-Implementation head: `b8d6553df911a4eca9765509c018987fe9f5cd4b`.
+Implementation origin: `b8d6553df911a4eca9765509c018987fe9f5cd4b`.
 
-Diff from accepted P2.2 adds exactly five ECO research/test files and modifies no accepted P2.2/P2.1/CAL1 source or runtime path.
+Initial candidate control: `39ceac4412f284fb263ee100df6ad223b9780d53`.
+
+Exact Windows finding:
+
+```text
+Parse Error: The member "Engine" shadows a native class.
+```
+
+Repair head: `87c7838f9d476735ef92db0d662290b58861cd56`.
+
+The repair changes only the preload alias in `plant_local_population_succession_experiment_v1.gd`:
+
+```text
+Engine -> PopulationEngine
+```
+
+No ecological formula, control strategy, threshold, accepted parent, runtime path or P2.4 boundary changed.
 
 ### Local adult cohort state
 
@@ -68,7 +84,7 @@ Annual adult survival has explicit lifespan and resource-stress terms. Productiv
 
 ### Persistent history
 
-P2.2 seed banks are advanced every year. Their reactivation feeds new adult cohorts. Mature lineage aggregates also reproduce through the accepted chain:
+P2.2 seed banks are advanced every year. Their reactivation feeds new adult cohorts. Mature lineage aggregates also reproduce through:
 
 ```text
 CAL1-D lifecycle seed output
@@ -77,8 +93,6 @@ CAL1-D lifecycle seed output
   -> P2.3 local adults
 ```
 
-This is the first self-renewing local plant-population loop in EVO1.
-
 ### Succession control
 
 The controlled run starts with two causal life histories:
@@ -86,15 +100,13 @@ The controlled run starts with two causal life histories:
 - EARLY: fast growth, short lifespan, low dormancy, low shade tolerance;
 - BANKED: slower growth, long lifespan, high dormancy/long seed bank, high shade tolerance.
 
-Both start under open light. At year 4 the succession run enters deep shade; an open control does not. Acceptance requires EARLY to lead initially, BANKED to gain after the transition, and BANKED final share to be higher under the shade history than in the open control. A matched short-vs-long lifespan control isolates turnover direction.
-
-`top_lineage_changed` is diagnostic only; continuous abundance-share movement is the actual succession evidence.
+Both start under open light. At year 4 the succession run enters deep shade; an open control does not. Acceptance still requires EARLY to lead initially, BANKED to gain after transition, and BANKED final share to be higher under shade history than open control.
 
 ### Strict P2.4 boundary
 
 Outside-domain seeds are counted as export but never inserted into a second patch. No neighbour graph, colonization topology or migration routing exists in P2.3.
 
-## Exact Windows gate
+## Exact Windows re-run
 
 ```powershell
 cd C:\Godot\lunar-world-eco-evolutionary-ecology
@@ -106,25 +118,12 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_ECO_EVO1_P2_3_TESTS.ps1 -GodotPath $Godot
 ```
 
-Required evidence:
-
-- exact P2.2 parent aggregate;
-- bounded total biomass/capacity and cohort counts;
-- seed-bank reactivation > 0;
-- adult reproduction events > 0 beyond founder pulse;
-- matched short lifespan has greater cumulative adult turnover;
-- BANKED share gains after shade transition;
-- BANKED shade-history final share > open-control final share;
-- same/fresh-process aggregate equality.
-
 Until PASS:
 
 ```text
-P2.3 = IMPLEMENTED_CANDIDATE
+P2.3 = REPAIRED_IMPLEMENTED_CANDIDATE
 P2.3 != ACCEPTED
 P2.4 = BLOCKED
 ```
 
-The assistant environment could not obtain a full checkout because GitHub DNS resolution is unavailable, so no local full-source PASS is claimed.
-
-Current resolver: `RUN EVO1/P2.3 EXACT WINDOWS LOCAL POPULATION TURNOVER + SUCCESSION GATE`.
+Current resolver: `RE-RUN EVO1/P2.3 EXACT WINDOWS LOCAL POPULATION TURNOVER + SUCCESSION GATE`.

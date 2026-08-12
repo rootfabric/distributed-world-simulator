@@ -1,14 +1,22 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_3_local_population_succession_validation.v1",
-  "revision": "ECO-EVO1-P2.3-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-EVO1-P2.3-2026-08-12-R2-PARSER-REPAIR",
   "branch": "feature/eco-evolutionary-ecology",
-  "implementation_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "implementation_origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+  "repair_head": "87c7838f9d476735ef92db0d662290b58861cd56",
+  "status": "REPAIRED_CANDIDATE_EXACT_WINDOWS_PENDING",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.2",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86"
+  },
+  "windows_finding": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "result": "PARSE_FAIL_BEFORE_P2_3_EXECUTION",
+    "message": "The member Engine shadows a native class",
+    "file": "scripts/research/ecology/plant_local_population_succession_experiment_v1.gd",
+    "repair": "rename preload alias Engine to PopulationEngine only; no model semantics changed"
   },
   "truth": {
     "adult_granularity": "bounded lineage/age cohorts with biomass, never one entity per plant",
@@ -46,10 +54,16 @@
   ],
   "implementation_diff": {
     "base": "ec1a7aa8d2e30b876496fd01693d1a6a0257c4dd",
-    "head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+    "origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
     "changed_files": 5,
     "accepted_p2_2_or_earlier_sources_modified": false,
     "runtime_paths_modified": false
+  },
+  "repair_diff": {
+    "base": "39ceac4412f284fb263ee100df6ad223b9780d53",
+    "head": "87c7838f9d476735ef92db0d662290b58861cd56",
+    "changed_files": 1,
+    "semantic_change": false
   },
   "local_sanity": "FULL_CHECKOUT_UNAVAILABLE_DUE_TO_GITHUB_DNS_NO_LOCAL_PASS_CLAIMED",
   "tests": {
@@ -57,6 +71,6 @@
     "restart": "tests/research/ecology/eco_evo1_p2_3_restart_replay_probe.gd",
     "runner": "RUN_ECO_EVO1_P2_3_TESTS.ps1"
   },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "decision": "REPAIRED_CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
   "next_if_pass": "ECO.EVO1 / P2.4 Patch Colonization / Isolation / Migration"
 }

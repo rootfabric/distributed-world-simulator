@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R41-2026-08-12",
+  "revision": "ECO-R42-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_3_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_3_REPAIRED_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.EVO1/P2.3",
-  "current_step": "P2.3 Local Population Turnover + Succession / Exact Windows Canonical Gate",
+  "current_step": "P2.3 Local Population Turnover + Succession / Parser Repair / Exact Windows Canonical Re-run",
   "last_accepted_step": "ECO.EVO1/P2.2 Establishment / Recruitment / Seed Bank",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
@@ -27,7 +27,9 @@
     "p2_2_aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86"
   },
   "candidate_evidence": {
-    "p2_3_implementation_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+    "p2_3_implementation_origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+    "p2_3_parser_repair_head": "87c7838f9d476735ef92db0d662290b58861cd56",
+    "p2_3_parser_finding": "The member Engine shadows a native class",
     "p2_3_checkpoint": "docs/checkpoints/ECO_EVO1_P2_3_LOCAL_POPULATION_TURNOVER_SUCCESSION_CANDIDATE_RU.md",
     "p2_3_validation": "validation/ecology/eco-evo1-p2-3-local-population-succession-validation.json",
     "p2_3_runner": "RUN_ECO_EVO1_P2_3_TESTS.ps1",
@@ -36,12 +38,12 @@
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_3_CANDIDATE",
+    "status": "ACTIVE_P2_3_REPAIRED_CANDIDATE",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
       {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"ACCEPTED"},
-      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
+      {"id":"P2.3","name":"Local Population Turnover + Succession","status":"REPAIRED_CANDIDATE_EXACT_WINDOWS_PENDING"},
       {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"BLOCKED_BY_P2_3_ACCEPTANCE"},
       {"id":"P2.5","name":"Disturbance + Recovery","status":"BLOCKED_BY_P2_4"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"BLOCKED_BY_P2_5"},
