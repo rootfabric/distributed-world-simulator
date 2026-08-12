@@ -1,0 +1,51 @@
+{
+  "schema": "planet_simulator.fpe_hand_asset_profile.v1",
+  "profile_id": "s9-rounded-internal",
+  "display_name": "S9 Rounded Internal Hand",
+  "status": "INTERNAL_VALIDATED",
+  "provider": "SKINNED_NAMED_BIND",
+  "hand_layout": "BOTH_COMPATIBLE",
+  "license": {
+    "spdx": "LicenseRef-Project-Internal",
+    "source_url": "",
+    "redistributable": true,
+    "attribution_required": false
+  },
+  "asset": {
+    "scene_path": "res://tests/fixtures/fpe_s9_volumetric_skinned_hand_visual.tscn",
+    "format": "tscn",
+    "external": false
+  },
+  "selection": {
+    "mesh_node_paths": ["VolumetricSkinnedHand"],
+    "mesh_node_paths_by_hand": {},
+    "recursive_mesh_discovery": true
+  },
+  "retarget": {
+    "rest_space_policy": "CANONICAL_COMPATIBLE_BIND_SPACE",
+    "bone_map": {
+      "src_palm": "Palm",
+      "src_thumb_1": "ThumbProximal",
+      "src_thumb_2": "ThumbMiddle",
+      "src_thumb_3": "ThumbDistal",
+      "src_index_1": "IndexProximal",
+      "src_index_2": "IndexMiddle",
+      "src_index_3": "IndexDistal",
+      "src_middle_1": "MiddleProximal",
+      "src_middle_2": "MiddleMiddle",
+      "src_middle_3": "MiddleDistal",
+      "src_ring_1": "RingProximal",
+      "src_ring_2": "RingMiddle",
+      "src_ring_3": "RingDistal",
+      "src_pinky_1": "PinkyProximal",
+      "src_pinky_2": "PinkyMiddle",
+      "src_pinky_3": "PinkyDistal"
+    },
+    "bind_pose_adjustments": {}
+  },
+  "presentation": {
+    "position": [0.0, 0.0, 0.0],
+    "rotation_degrees": [0.0, 0.0, 0.0],
+    "scale": [1.0, 1.0, 1.0]
+  }
+}
