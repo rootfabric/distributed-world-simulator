@@ -1,0 +1,74 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_b_relative_vertical_light_competition_validation.v1",
+  "revision": "ECO-CAL1-B-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "561daee4cd9fa48bcef5c78e6f2b0d050451f3b9",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_CANONICAL_PENDING",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "parent": {
+    "checkpoint": "ECO.CAL1-A",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
+    "legacy_ph3c_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+    "finding": "HEIGHT_LOW wins all four controlled environments; HEIGHT_HIGH ranks seventh in all four; structural_cost is the strongest pairwise driver everywhere."
+  },
+  "goal": "Introduce the missing neighbour-relative height/light causal path without changing accepted PH3 coefficients and without making height an unconditional advantage.",
+  "mechanism": {
+    "source": "scripts/research/ecology/plant_relative_vertical_light_competition_v1.gd",
+    "experiment": "scripts/research/ecology/plant_vertical_light_competition_experiment_v1.gd",
+    "accepted_profile_usage": "read-only MorphologyProfile.create_default(); no custom profile creation",
+    "competition_intensity": "canopy_overlap * local_density",
+    "relative_height_bias": "(height_a - height_b) / (height_a + height_b)",
+    "contested_light_pool": "accepted PH3 height_light_access_gain * environment sunlight * competition_intensity",
+    "redistribution": "a_light_delta = pool * relative_height_bias; b_light_delta = -a_light_delta",
+    "conservation": "pair light delta is zero-sum"
+  },
+  "causal_cases": [
+    "NO_NEIGHBOURS",
+    "EQUAL_HEIGHT_DENSE",
+    "TALL_SHORT_DENSE",
+    "TALL_SHORT_SPARSE",
+    "DRY_TALL_SHORT_DENSE",
+    "TALL_SHORT_DENSE_SWAP"
+  ],
+  "required_properties": [
+    "NO_NEIGHBOURS_DELTA_ZERO",
+    "EQUAL_HEIGHT_SYMMETRIC_ZERO_DELTA",
+    "DENSE_TALL_GAINS_SHORT_LOSES",
+    "DENSE_EFFECT_MUCH_GREATER_THAN_SPARSE",
+    "DRY_DENSE_HEIGHT_ADVANTAGE_EXISTS_BUT_DOES_NOT_ERASE_ACCEPTED_STRUCTURE_WATER_COSTS",
+    "A_B_SWAP_EXACT_SYMMETRY",
+    "ZERO_SUM_LIGHT_REDISTRIBUTION",
+    "DETERMINISTIC_FRESH_PROCESS_HASH",
+    "CAL1_A_BASELINE_HASH_UNCHANGED",
+    "PH3C_HASH_UNCHANGED",
+    "NO_ACCEPTED_PH3_COEFFICIENT_CHANGE"
+  ],
+  "tests": {
+    "acceptance": "tests/research/ecology/eco_cal1_b_relative_vertical_light_competition_acceptance.gd",
+    "restart": "tests/research/ecology/eco_cal1_b_restart_replay_probe.gd",
+    "runner": "RUN_ECO_CAL1_B_TESTS.ps1"
+  },
+  "implementation_diff": {
+    "base": "6934d7265aaabddb0c60ffcf1bd948bc604d9310",
+    "head": "561daee4cd9fa48bcef5c78e6f2b0d050451f3b9",
+    "changed_files": 5,
+    "accepted_ph3_ph3c_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "canonical_gate": {
+    "required_platform": "exact user Windows Godot 4.7.1 double checkout",
+    "command": ".\\RUN_ECO_CAL1_B_TESTS.ps1 -GodotPath $Godot",
+    "required_outputs": [
+      "CAL1-A accepted parent runner PASS",
+      "CAL1-B acceptance PASS",
+      "CAL1-B fresh-process replay A/B PASS",
+      "aggregate_hash",
+      "dense_delta and sparse_delta",
+      "dense_to_sparse ratio",
+      "reference gap before/after",
+      "dry gap before/after"
+    ]
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE"
+}
