@@ -8,11 +8,11 @@
   "short_description": "Non-canonical FirstPersonEmbodiment prototype layered on the accepted CH9.6 character, clothing, Item Graph and ENet presentation stack.",
   "purpose": "Evaluate first-person hands, clothing-visible viewmodels, independent left/right grip UX and low-latency item-selection presentation without reopening or mutating the frozen CH9.6 checkpoint and without weakening authority over concrete item actions.",
   "expected_outcome": "A separate research lab can render two first-person hands, switch the local active hotbar slot without a durable Item Graph round-trip, project upper clothing into first person, exercise local-only grab targets, and keep concrete item mutations server-authoritative.",
-  "current_stage": "FPE-R1 Fix8 — zero-stall local hotbar selection validated graphically",
-  "stage_status": "RESEARCH_FIX8_GRAPHICAL_ACCEPTED_FOCUSED_RERUN_PENDING",
-  "progress_note": "Operator graphical evidence now confirms the Fix8 hotbar architecture change removes the approximately half-second total SceneTree freeze. With 1..0 selection removed from the durable Item Graph command/checkpoint path, the character continues moving without delay while slots are switched. This closes the severe interactive main-thread stall that remained after Fix6. The validated semantic boundary is: active hotbar slot is CLIENT_LOCAL_PRESENTATION/transient input state, while concrete item actions remain server-authoritative and carry explicit canonical item identity through accepted M7/CH9 command paths. Earlier Fix7 also fixed immediate empty-slot hand clearing. The operator has not yet supplied a clean post-test-double full focused-suite rerun after commit 7012a163, so focused_repository_fix8 remains pending rather than being inferred from graphical success. Equipment drag false-negative handling still needs an operator rerun: CHARACTER_EQUIPMENT_NETWORK_APPLY_FAILED may only be normalized when the server operation succeeded and the already-installed replica proves the requested target relation. Third-person held-item presentation remains deferred.",
+  "current_stage": "FPE-R1 Fix8 — focused and zero-stall hotbar graphical acceptance complete; equipment drag verification pending",
+  "stage_status": "RESEARCH_FIX8_FOCUSED_AND_HOTBAR_GRAPHICAL_ACCEPTED_EQUIPMENT_RERUN_PENDING",
+  "progress_note": "Operator evidence now closes both Fix8 gates for the hotbar path. Graphically, with 1..0 selection removed from the durable Item Graph command/checkpoint path, the character continues moving without delay while slots are switched, eliminating the approximately half-second total SceneTree freeze. The subsequent full focused suite on branch head 8ff3078f completed cleanly with all seven gates PASS: FirstPersonEmbodiment contract 23 assertions, hotbar nonblocking adapter 17, hotbar presentation prediction 11, hotbar local selection 19, equipment result policy 11, performance gate 10, graphical scene load 13, followed by FirstPersonEmbodiment focused tests PASS. This validates the research semantic boundary: active hotbar slot is CLIENT_LOCAL_PRESENTATION/transient input state, while concrete item actions remain server-authoritative and carry explicit canonical item identity through accepted M7/CH9 command paths. Earlier Fix7 also fixed immediate empty-slot hand clearing. The only remaining interaction-level operator check before freezing FPE-R1 is real graphical equipment drag/equip/unequip: CHARACTER_EQUIPMENT_NETWORK_APPLY_FAILED may be normalized only when the server operation succeeded and the already-installed replica proves the requested target relation; genuine server rejection must remain an error. Third-person held-item presentation remains deferred.",
   "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "First, rerun RUN_FPE_RESEARCH_TESTS.ps1 on the current research head to obtain clean focused evidence after the FakeEmbodiment create_report test-double correction. Then rerun PLAY_FPE_RESEARCH.ps1 and verify equipment drag/equip/unequip no longer reports CHARACTER_EQUIPMENT_NETWORK_APPLY_FAILED when canonical replica state proves success; genuine server rejection must remain an error. Once that passes, FPE-R1 interaction can be frozen as a research checkpoint. Follow-on presentation work: third-person held-item rendering, real hand skeleton/poses, real Quaternius sleeves when the external asset is available, and an item viewmodel catalog. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier. Canonical project follow-up should move selected_hotbar_index out of durable Item Graph mutation semantics and represent remote held-item visibility through a lightweight transient player/presentation state rather than recovery persistence.",
+  "next_stage": "Run PLAY_FPE_RESEARCH.ps1 on the current research head and verify real equipment drag/equip/unequip. Move a wearable Backpack into an equipment slot and back to inventory. Acceptance: no CHARACTER_EQUIPMENT_NETWORK_APPLY_FAILED when the authoritative replica actually reaches the requested relation, no regression in movement or hotbar smoothness, and any genuine server rejection remains visible as an error. If this passes, freeze FPE-R1 interaction as a research checkpoint. Follow-on presentation work is separate: third-person held-item rendering, real hand skeleton/poses, real Quaternius sleeves when the external asset is available, and an item viewmodel catalog. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier. Canonical project follow-up should move selected_hotbar_index out of durable Item Graph mutation semantics and represent remote held-item visibility through a lightweight transient player/presentation state rather than recovery persistence.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "candidate_runtime_head": "de11252149c6d2b8341f4dde94ec15b549bd67e2",
@@ -103,14 +103,15 @@
   "tested_heads": {
     "operator_graphical_fix6": "PASS_MAIN_THREAD_PERIODIC_HITCH_REMOVED_AND_TAB_SMOOTH",
     "operator_graphical_fix7": "PARTIAL_PASS_EMPTY_SLOT_HAND_CLEAR_FIXED_BUT_HOTBAR_SWITCH_STILL_CAUSES_APPROX_HALF_SECOND_TOTAL_SCENETREE_FREEZE",
-    "focused_repository_fix8": "PENDING_OPERATOR_RERUN_AFTER_TEST_DOUBLE_FIX_7012A163",
-    "graphical_fix8": "PASS_ZERO_STALL_HOTBAR_CHARACTER_CONTINUES_MOVING_WITHOUT_DELAY"
+    "focused_repository_fix8": "PASS_7_GATES_CLEAN_ON_8FF3078F_CONTRACT23_HOTBAR17_PRESENTATION11_LOCAL19_EQUIPMENT11_PERFORMANCE10_SCENE13",
+    "graphical_fix8": "PASS_ZERO_STALL_HOTBAR_CHARACTER_CONTINUES_MOVING_WITHOUT_DELAY",
+    "graphical_equipment_fix7_policy": "PENDING_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "FIX6_PERFORMANCE_PASS_DOES_NOT_IMPLY_TRANSIENT_HOTBAR_INPUT_IS_FREE_OF_DURABILITY_WORK",
     "FIX7_NONBLOCKING_CLIENT_SEND_DOES_NOT_IMPLY_NONBLOCKING_END_TO_END_BECAUSE_SAME_PROCESS_SERVER_PERFORMS_SYNCHRONOUS_DURABLE_CHECKPOINT",
     "NETWORK_RTT_IS_NOT_THE_FIX7_FREEZE_ROOT_CAUSE_BECAUSE_THE_ENTIRE_LOCAL_CHARACTER_AND_RENDER_LOOP_STALLS",
-    "FIX8_GRAPHICAL_ZERO_STALL_PASS_DOES_NOT_REPLACE_A_CLEAN_FULL_FOCUSED_SUITE_RERUN_AFTER_TEST_DOUBLE_CORRECTION"
+    "PRE_7012A163_FIX8_LOCAL_SELECTION_PASS_WITH_SCRIPT_ERROR_WAS_REJECTED_BY_FAIL_CLOSED_RUNNER_AND_IS_NOT_ACCEPTANCE_EVIDENCE"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -125,7 +126,6 @@
   ],
   "blockers": [
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_NOT_AUTHORIZED",
-    "FIX8_FOCUSED_OPERATOR_RERUN_PENDING",
     "FIX7_EQUIPMENT_RESULT_OPERATOR_RERUN_PENDING"
   ],
   "non_blocking_followups": [
