@@ -14,7 +14,7 @@ func set_catalogued_hand_item(
 	display_name: String,
 	item_color: Color,
 	visual_descriptor: Dictionary,
-	grip_transform: Dictionary
+	grip_profile: Dictionary
 ) -> Dictionary:
 	var hand := _normalize_hand(hand_id)
 	if hand.is_empty():
@@ -26,7 +26,9 @@ func set_catalogued_hand_item(
 		return clear_authoritative_hand_item(hand)
 
 	var visual_profile := String(visual_descriptor.get("profile_id", "generic_box"))
-	var grip_signature := JSON.stringify(grip_transform)
+	var grip_profile_id := String(grip_profile.get("profile_id", "generic"))
+	var first_person_transform: Dictionary = Dictionary(grip_profile.get("first_person", {}))
+	var grip_signature := "%s|%s" % [grip_profile_id, JSON.stringify(first_person_transform)]
 	if (
 		String(_authoritative_item_id_by_hand.get(hand, "")) == normalized_item_id
 		and String(_catalog_profile_by_hand.get(hand, "")) == visual_profile
@@ -37,15 +39,13 @@ func set_catalogued_hand_item(
 			"hand_id": hand,
 			"item_id": normalized_item_id,
 			"visual_profile": visual_profile,
+			"grip_profile": grip_profile_id,
 			"catalogued": true,
 		})
 
-	_clear_authoritative_proxy(hand)
-	_authoritative_item_id_by_hand[hand] = normalized_item_id
 	var held_root := _held_root(hand)
 	if held_root == null:
 		return _failure("FPE_HAND_ROOT_UNAVAILABLE", {"hand_id": hand})
-
 	var built: Dictionary = _catalog_visual_factory.create_proxy(
 		visual_descriptor,
 		item_color,
@@ -57,10 +57,13 @@ func set_catalogued_hand_item(
 	if not proxy_value is MeshInstance3D:
 		return _failure("FPE_CATALOG_PROXY_INVALID")
 	var proxy := proxy_value as MeshInstance3D
-	_catalog_visual_factory.apply_local_transform(proxy, grip_transform)
+	_catalog_visual_factory.apply_local_transform(proxy, first_person_transform)
 	proxy.set_meta("canonical_item_id", normalized_item_id)
 	proxy.set_meta("display_name", display_name)
-	proxy.set_meta("held_grip_profile", String(grip_transform.get("profile_id", "")))
+	proxy.set_meta("held_grip_profile", grip_profile_id)
+
+	_clear_authoritative_proxy(hand)
+	_authoritative_item_id_by_hand[hand] = normalized_item_id
 	held_root.add_child(proxy)
 	_authoritative_proxy_by_hand[hand] = proxy
 	_catalog_profile_by_hand[hand] = visual_profile
@@ -74,6 +77,7 @@ func set_catalogued_hand_item(
 		"display_name": display_name,
 		"visual_profile": visual_profile,
 		"visual_kind": String(visual_descriptor.get("visual_kind", "BOX")),
+		"grip_profile": grip_profile_id,
 		"catalogued": true,
 		"presentation_only": true,
 	})
@@ -92,6 +96,7 @@ func create_report() -> Dictionary:
 	report["catalogued_viewmodel"] = {
 		"enabled": true,
 		"profiles_by_hand": _catalog_profile_by_hand.duplicate(true),
+		"grips_by_hand": _catalog_grip_by_hand.duplicate(true),
 		"presentation_only": true,
 		"owns_item_state": false,
 		"owns_network_state": false,
