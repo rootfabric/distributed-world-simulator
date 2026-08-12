@@ -101,6 +101,14 @@ $Tests = @(
         PassMarker = "FirstPerson hotbar nonblocking adapter: PASS"
     },
     @{
+        Path = "res://tests/characters/test_first_person_hotbar_presentation_prediction.gd"
+        PassMarker = "FirstPerson hotbar presentation prediction: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_first_person_equipment_result_policy.gd"
+        PassMarker = "FirstPerson equipment result policy: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
         PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
