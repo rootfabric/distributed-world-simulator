@@ -1,0 +1,39 @@
+{
+  "schema": "planet_simulator.fpe_hand_asset_profile.v1",
+  "profile_id": "wrad-arms-cc0",
+  "display_name": "WRAD ARMS (wriks)",
+  "status": "ASSET_FILE_REQUIRED_AND_INSPECTION_PENDING",
+  "provider": "SKINNED_NAMED_BIND",
+  "hand_layout": "AUTO_INSPECT",
+  "license": {
+    "spdx": "CC0-1.0",
+    "source_url": "https://wriks.itch.io/wrad-arms",
+    "redistributable": true,
+    "attribution_required": false,
+    "notes": "Author page states CC0/public domain and no attribution required. Keep source metadata with the profile even when attribution is optional."
+  },
+  "asset": {
+    "scene_path": "res://assets/external/fpe_hands/wrad_arms/wrad_arms.glb",
+    "format": "glb",
+    "external": true,
+    "expected_archive": "WRAD_ARMS.zip",
+    "install_note": "Extract the GLB from WRAD_ARMS.zip and rename/copy it to wrad_arms.glb at the scene_path above. Textures referenced by the GLB should stay beside it."
+  },
+  "selection": {
+    "mesh_node_paths": [],
+    "mesh_node_paths_by_hand": {},
+    "recursive_mesh_discovery": true,
+    "inspection_required_before_runtime": true
+  },
+  "retarget": {
+    "rest_space_policy": "INSPECT_REQUIRED",
+    "bone_map": {},
+    "bind_pose_adjustments": {},
+    "notes": "Populate after INSPECT_FPE_HAND_ASSET.ps1 reports the imported GLB mesh paths and named Skin binds."
+  },
+  "presentation": {
+    "position": [0.0, 0.0, 0.0],
+    "rotation_degrees": [0.0, 0.0, 0.0],
+    "scale": [1.0, 1.0, 1.0]
+  }
+}
