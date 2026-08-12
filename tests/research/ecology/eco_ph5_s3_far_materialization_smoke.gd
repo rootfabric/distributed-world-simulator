@@ -20,6 +20,11 @@ func _init() -> void:
 	_assert(bool(canopy["success"]) and canopy["mesh"] is SphereMesh)
 	_assert(bool(impostor["success"]) and impostor["mesh"] is QuadMesh)
 	_assert(bool(impostor["billboard"]))
+	var impostor_mesh := impostor["mesh"] as QuadMesh
+	_assert(impostor_mesh.material is BaseMaterial3D)
+	var impostor_material := impostor_mesh.material as BaseMaterial3D
+	_assert(impostor_material.billboard_mode == BaseMaterial3D.BILLBOARD_ENABLED)
+	_assert(impostor_material.cull_mode == BaseMaterial3D.CULL_DISABLED)
 	_assert(bool(population["success"]) and population["mesh"] == null)
 	_assert(not bool(population["individual_node_required"]))
 	_assert(int(population["primitive_count"]) == 0)
