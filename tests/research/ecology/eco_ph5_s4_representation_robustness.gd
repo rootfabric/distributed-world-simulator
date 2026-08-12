@@ -7,11 +7,13 @@ func _init() -> void:
 	var description := _description(128, 256)
 	var truth_snapshot := JSON.stringify(description)
 
+	# Invalid projection inputs fail closed to the cheapest non-individual representation.
 	_assert(Representation.select_tier(NAN) == Representation.TIER_4_POPULATION_ONLY)
 	_assert(Representation.select_tier(INF) == Representation.TIER_4_POPULATION_ONLY)
 	_assert(Representation.select_tier(-INF) == Representation.TIER_4_POPULATION_ONLY)
 	_assert(Representation.select_tier(-1.0) == Representation.TIER_4_POPULATION_ONLY)
 
+	# Hysteresis keeps a stable tier during threshold noise and changes only after leaving the expanded band.
 	var tier := Representation.TIER_2_CANOPY
 	for index in range(1000):
 		var px := 96.0 + (-1.0 if index % 2 == 0 else 1.0)
@@ -20,6 +22,7 @@ func _init() -> void:
 	_assert(Representation.select_tier_hysteretic(120.0, Representation.TIER_2_CANOPY) == Representation.TIER_1_REDUCED)
 	_assert(Representation.select_tier_hysteretic(20.0, Representation.TIER_2_CANOPY) == Representation.TIER_3_IMPOSTOR)
 
+	# Dematerialize/rematerialize is deterministic and leaves ecology truth untouched.
 	var full_before := Representation.build(description, Representation.TIER_0_FULL)
 	var population := Representation.build(description, Representation.TIER_4_POPULATION_ONLY)
 	var full_after := Representation.build(description, Representation.TIER_0_FULL)
@@ -27,6 +30,7 @@ func _init() -> void:
 	_assert(String(full_before["ecological_truth_hash"]) == String(population["ecological_truth_hash"]))
 	_assert(JSON.stringify(description) == truth_snapshot)
 
+	# Empty geometry is legal ecological truth; no representation invents individual primitives.
 	var empty := _description(0, 0)
 	for current_tier in Representation.TIER_ORDER:
 		var built := Representation.build(empty, current_tier)
@@ -35,6 +39,7 @@ func _init() -> void:
 			_assert(int(built["branch_primitive_count"]) == 0)
 			_assert(int(built["foliage_instance_count"]) == 0)
 
+	# Invalid source descriptions are rejected without partial representation output.
 	var invalid_hash := description.duplicate(true)
 	invalid_hash["source_graph_hash"] = "bad"
 	_assert(not bool(Representation.build(invalid_hash, Representation.TIER_0_FULL).get("success", false)))
@@ -52,6 +57,7 @@ func _init() -> void:
 	_assert(not bool(Representation.build(invalid_arrays, Representation.TIER_0_FULL).get("success", false)))
 	_assert(not bool(Representation.build(description, "TIER_99_UNKNOWN").get("success", false)))
 
+	# Repeated rebuild and broad deterministic tier churn remain stable.
 	var digest_tokens := PackedStringArray()
 	var previous := Representation.TIER_4_POPULATION_ONLY
 	for index in range(2000):
