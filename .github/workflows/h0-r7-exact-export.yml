@@ -1,4 +1,4 @@
-name: H0.1 R7 Exact Validation Export
+name: H0.1 R8 Exact Validation Export
 
 on:
   push:
@@ -12,10 +12,10 @@ jobs:
   verify-and-export:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact R7 branch
+      - name: Checkout exact R8 branch
         uses: actions/checkout@v4
         with:
-          ref: feature/h0-1-c22-current-main-r2
+          ref: feature/h0-1-c22-current-main-r3
           fetch-depth: 0
 
       - name: Pin exact Git state
@@ -23,8 +23,8 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r2"
-          test "$(git rev-parse HEAD)" = "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4"
+          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r3"
+          test "$(git rev-parse HEAD)" = "b06688bcfeecbd948b313ca2a1bf1acd5d17c1be"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
           test -z "$(git status --porcelain)"
 
@@ -32,51 +32,51 @@ jobs:
         shell: bash
         run: python -m pip install -r scripts/harness/requirements.txt
 
-      - name: Run R7 harness unit suite
+      - name: Run R8 harness unit suite
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/h0-r7-evidence"
-          python -m unittest discover -s tests/harness -v 2>&1 | tee "$RUNNER_TEMP/h0-r7-evidence/harness-unit.log"
+          mkdir -p "$RUNNER_TEMP/h0-r8-evidence"
+          python -m unittest discover -s tests/harness -v 2>&1 | tee "$RUNNER_TEMP/h0-r8-evidence/harness-unit.log"
 
       - name: Run public Status Plan Resume
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          & ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r7-evidence/control-status.log"
+          & ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-status.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r7-evidence/control-plan.log"
+          & ./CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-plan.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r7-evidence/control-resume.log"
+          & ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-resume.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run Git-only recovery drill
         shell: bash
         run: |
           set -euo pipefail
-          recovery="$RUNNER_TEMP/h0-r7-recovery"
+          recovery="$RUNNER_TEMP/h0-r8-recovery"
           git clone --no-tags https://github.com/rootfabric/distributed-world-simulator.git "$recovery"
           cd "$recovery"
-          git checkout -B feature/h0-1-c22-current-main-r2 5169e7037b4ba6c40608d772560dd6eaa9c0e9e4
+          git checkout -B feature/h0-1-c22-current-main-r3 b06688bcfeecbd948b313ca2a1bf1acd5d17c1be
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r2"
-          test "$(git rev-parse HEAD)" = "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4"
+          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r3"
+          test "$(git rev-parse HEAD)" = "b06688bcfeecbd948b313ca2a1bf1acd5d17c1be"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
           python -m pip install -r scripts/harness/requirements.txt
-          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee "$RUNNER_TEMP/h0-r7-evidence/git-only-recovery-resume.log"
+          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee "$RUNNER_TEMP/h0-r8-evidence/git-only-recovery-resume.log"
 
       - name: Pack exact validation checkout
         if: always()
         shell: bash
-        run: tar -czf "$RUNNER_TEMP/h0-r7-exact-5169e703.tar.gz" .
+        run: tar -czf "$RUNNER_TEMP/h0-r8-exact-b06688bc.tar.gz" .
 
       - name: Upload exact validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: h0-r7-exact-validation-5169e703
+          name: h0-r8-exact-validation-b06688bc
           path: |
-            ${{ runner.temp }}/h0-r7-evidence
-            ${{ runner.temp }}/h0-r7-exact-5169e703.tar.gz
+            ${{ runner.temp }}/h0-r8-evidence
+            ${{ runner.temp }}/h0-r8-exact-b06688bc.tar.gz
           if-no-files-found: error
           retention-days: 1
