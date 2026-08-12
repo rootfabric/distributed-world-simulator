@@ -1,6 +1,6 @@
 # ECO.PH — Extensible Plant Rendering Architecture
 
-Статус: `DESIGN_CONTRACT / PH5 ACTIVE RESEARCH / RESEARCH_ONLY`.
+Статус: `DESIGN_CONTRACT / PH5-S1 ACCEPTED / PH5-S2 ACTIVE CANDIDATE / RESEARCH_ONLY`.
 
 Цель: line-skeleton PH1 является только debug renderer. Рост визуальной сложности не должен менять genome, ecology, population identity, lifecycle или GrowthGraph semantics.
 
@@ -25,31 +25,38 @@
 
 ### PH5-S1 — PlantRenderDescription + RendererProfile Foundation
 
-Статус: `ACTIVE CANDIDATE`.
+Статус: `ACCEPTED`.
 
-Реализуются и проверяются:
+Exact Windows evidence: focused `720`, visual smoke `15`, restart `4`; exact hashes:
 
-- deterministic `PlantRenderDescription`;
-- tapered branch metadata;
-- foliage/bud anchors;
-- canopy/bounds metadata;
-- six renderer profiles;
-- profile-specific materialization hashes/counts;
-- diagnostic 2D lab, показывающий различия profiles без изменения source GrowthGraph hash.
+- description `72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3`;
+- profile matrix `2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0`;
+- full materialization `374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c`.
 
-S1 **не** заявляет production 3D rendering.
+Graphical profile switching confirmed by user. S1 proves renderer/profile truth separation, not production 3D quality.
 
 ### PH5-S2 — 3D Tapered Branch Tubes + Instanced Foliage
 
-После S1 acceptance:
+Статус: `ACTIVE CANDIDATE / EXACT WINDOWS PENDING`.
 
-- реальная 3D mesh/tube materialization из branch primitives;
-- taper и branch radius profiles;
-- foliage MultiMesh/instancing или эквивалентный representation layer;
-- leaves/buds как replaceable assets/material slots;
-- никакого влияния mesh density/leaf asset на ecology truth.
+Реализовано:
+
+- реальная triangle mesh materialization через `SurfaceTool -> ArrayMesh`;
+- taper из `radius_start_m/radius_end_m` accepted PlantRenderDescription;
+- profile-controlled radial tessellation (`branch_sides`);
+- foliage `MultiMesh` с deterministic anchor transforms;
+- leaf mesh/material остаётся replaceable presentation asset;
+- отдельный Node3D graphical lab для `BRANCH_TUBES`, `BRANCH_LEAF_INSTANCED`, `FULL_PROCEDURAL`.
+
+S2 invariant:
+
+`mesh vertices / branch sides / leaf asset / MultiMesh instances != GrowthGraph / genome / species / population / ecology truth`.
+
+Следующий gate: exact Windows focused + fresh-process geometry hash equality + graphical confirmation на contrasting PH2 phenotypes.
 
 ### PH5-S3 — Canopy Approximation + Impostor/LOD
+
+После S2 acceptance:
 
 - near/mid/far renderer selection;
 - canopy cluster representation;
@@ -88,7 +95,9 @@ S1 **не** заявляет production 3D rendering.
 - PH3: morphology pays resource costs/benefits — ACCEPTED.
 - PH3C: morphology consequences affect pairwise selection — ACCEPTED causal scope.
 - PH4: heredity/lifecycle transports program, not prebuilt phenotype/mesh — ACCEPTED.
-- PH5: staged extensible visual materialization — ACTIVE.
+- PH5-S1: renderer contract/diagnostic foundation — ACCEPTED.
+- PH5-S2: real 3D branch/foliage materialization — ACTIVE CANDIDATE.
+- PH5-S3/S4: LOD robustness and handoff — BLOCKED by previous PH5 stage.
 - PH6: only promoted interacted individuals may persist detailed development/damage deltas under future canonical persistence ownership.
 
 Запрещено вводить renderer-specific `TREE/BUSH/GRASS` canonical classes. Такие слова могут быть только post-hoc visual/ecological observations of continuous morphology space.
