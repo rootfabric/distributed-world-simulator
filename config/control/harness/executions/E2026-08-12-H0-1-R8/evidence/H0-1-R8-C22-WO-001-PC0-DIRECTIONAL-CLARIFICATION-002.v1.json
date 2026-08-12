@@ -1,0 +1,45 @@
+{
+  "schema": "distributed_world_simulator.h0_1_r8_pc0_directional_clarification.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
+  "implementation_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "canonical_main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+  "clarifies": "config/control/harness/executions/E2026-08-12-H0-1-R8/evidence/H0-1-R8-C22-WO-001-PC0-001.v1.json",
+  "reason": "The earlier PC0 evidence grouped both directional findings under a nonblocking label. Final user-authored Project Control confirms that CH->NX is global-blocking for future NX progression, while remaining unrelated to the already accepted H0.1/C22 checkpoint.",
+  "final_project_control": {
+    "workflow_run_id": 31556489523,
+    "head_sha": "64978039de95abe9c07d0d6262536269d87f4e44",
+    "artifact_id": 9126166195,
+    "artifact_digest": "sha256:2869d332894b69b0c9ed9e545bc057585ea771a6ee586882e179a50b90d82165",
+    "workflow_conclusion": "SUCCESS",
+    "standard_pc0": "YELLOW_NON_RED",
+    "directional_pc0": "YELLOW_NON_RED",
+    "cross_branch_overlaps": 0
+  },
+  "directional_findings": [
+    {
+      "from_program": "G",
+      "to_program": "ECO",
+      "classification": "WATCH_HIT",
+      "global_blocking": false,
+      "blocks_h0_1_c22": false
+    },
+    {
+      "from_program": "CH",
+      "to_program": "NX",
+      "classification": "WATCH_HIT",
+      "global_blocking": true,
+      "blocks_h0_1_c22": false,
+      "blocks_future_nx_progression_until_revalidated_or_resolved": true
+    }
+  ],
+  "h0_1_c22_acceptance": {
+    "directional_pc0_non_red_for_critical_hits": true,
+    "c22_critical_directional_hits": 0,
+    "c22_cross_branch_overlap": 0,
+    "checkpoint_reopened": false,
+    "result": "PASS"
+  },
+  "future_gate": "Fresh CH->NX directional dependency revalidation/resolution is mandatory before H0.2/NX.C1 source acceptance.",
+  "history_policy": "Append-only clarification. The original evidence file is intentionally not rewritten."
+}

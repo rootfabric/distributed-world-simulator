@@ -39,23 +39,44 @@ def _repo_relative(root: Path, path: Path) -> str:
         raise ContractValidationError("EXECUTION_PATH_ESCAPES_REPOSITORY") from exc
 
 
-def _git_implementation_head(root: Path, execution_dir: Path) -> str:
-    """Return the latest commit touching active H0 implementation surfaces.
+def _implementation_pathspecs(
+    root: Path,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+) -> tuple[str, ...]:
+    """Return review-freshness pathspecs for the active bounded implementation.
 
-    The active transition table is derived from ``execution_dir`` instead of a
-    hard-coded epoch. Append-only event/review/evidence ledgers and unrelated
-    checkpoint documentation are deliberately excluded so recording evidence
-    or another program's docs cannot stale the H0 implementation target.
+    The Work Order is the authority for implementation scope. Append-only execution
+    records, branch passports and checkpoint-only documents are intentionally
+    excluded so writing evidence cannot stale its own review target. The active
+    transition table remains part of the implementation fence because it controls
+    reducer semantics for this execution.
     """
+    execution_prefix = f"{_repo_relative(root, execution_dir).rstrip('/')}/"
+    excluded_prefixes = (execution_prefix, "config/control/branches/", "docs/checkpoints/")
+    pathspecs: list[str] = []
+    for raw_path in work_order["allowed_paths"]:
+        normalized = raw_path.replace("\\", "/")
+        if any(normalized.startswith(prefix) for prefix in excluded_prefixes):
+            continue
+        if normalized not in pathspecs:
+            pathspecs.append(normalized)
+
     transition_path = _repo_relative(root, execution_dir / "transition-table.v1.json")
-    implementation_paths = [
-        "CONTROL_DEVELOPMENT.ps1",
-        "scripts/harness",
-        "tests/harness",
-        "validation/harness",
-        _H0_0_CHECKPOINT_DOC,
-        transition_path,
-    ]
+    if transition_path not in pathspecs:
+        pathspecs.append(transition_path)
+    if not pathspecs:
+        raise ContractValidationError("IMPLEMENTATION_PATHS_UNAVAILABLE")
+    return tuple(pathspecs)
+
+
+def _git_implementation_head(
+    root: Path,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+) -> str:
+    """Return the latest commit touching the active bounded implementation."""
+    implementation_paths = _implementation_pathspecs(root, execution_dir, work_order)
     output = subprocess.run(
         ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
         cwd=root,
@@ -392,7 +413,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
 
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
-    implementation_head = _git_implementation_head(root, execution_dir)
+    implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
     ledger_head = _validate_event_git_provenance(
         root,
         active["event_paths"],

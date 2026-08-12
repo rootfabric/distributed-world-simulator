@@ -9,6 +9,7 @@ const Packet = preload("res://scripts/construction/proxies/construction_proxy_ne
 const RuntimeNode = preload("res://scripts/construction/proxies/construction_proxy_runtime_node.gd")
 const MeshCache = preload("res://scripts/construction/proxies/construction_proxy_mesh_cache.gd")
 const Invalidation = preload("res://scripts/construction/proxies/construction_proxy_invalidation_plan.gd")
+const IncrementalRebuilder = preload("res://scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd")
 
 var _cache = Cache.new()
 var _mesh_cache = MeshCache.new()
@@ -61,12 +62,35 @@ func present(client_id: String, interest: Dictionary) -> Dictionary:
 func recompile_incremental(request: Dictionary, dirty_part_ids: Array) -> Dictionary:
 	var construct_id := String(request["runtime_projection_request"]["construct_snapshot"]["construct_id"])
 	if not _compiled.has(construct_id): return C.failure("CONSTRUCTION_PROXY_CONSTRUCT_NOT_COMPILED")
-	if not C.sorted_unique_strings(C.sorted_strings(dirty_part_ids), "part/"): return C.failure("INVALID_CONSTRUCTION_PROXY_DIRTY_PARTS")
+	var sorted_dirty := C.sorted_strings(dirty_part_ids)
+	if not C.sorted_unique_strings(sorted_dirty, "part/"): return C.failure("INVALID_CONSTRUCTION_PROXY_DIRTY_PARTS")
 	var previous: Dictionary = _compiled[construct_id]
 	var previous_manifest: Dictionary = previous["manifest"]
 	var previous_topology: Dictionary = previous["topology"]
+
+	var incremental := IncrementalRebuilder.try_rebuild(request, sorted_dirty, previous, _cache)
+	if not bool(incremental.get("success", false)): return incremental
+	if bool(incremental.get("fast_path_applied", false)):
+		_compiled[construct_id] = {
+			"request_checksum": String(request["checksum"]),
+			"request": request.duplicate(true),
+			"manifest": Dictionary(incremental["manifest"]).duplicate(true),
+			"topology": Dictionary(incremental["topology"]).duplicate(true),
+			"descriptor_by_part": Dictionary(incremental.get("descriptor_by_part", {})).duplicate(true),
+			"stats": Dictionary(incremental["stats"]).duplicate(true),
+		}
+		_generation += 1
+		return C.success({
+			"invalidation_plan": incremental["invalidation_plan"],
+			"manifest": incremental["manifest"],
+			"stats": incremental["stats"],
+			"generation": _generation,
+			"incremental_fast_path": true,
+			"fallback_reason": "",
+		})
+
 	var dirty_sections := {}
-	for part_id in dirty_part_ids:
+	for part_id in sorted_dirty:
 		var section_id := String(previous_topology["part_section_index"].get(part_id, ""))
 		if not section_id.is_empty(): dirty_sections[section_id] = true
 	var result := compile_construct(request)
@@ -81,9 +105,16 @@ func recompile_incremental(request: Dictionary, dirty_part_ids: Array) -> Dictio
 	var shell_rebuilt := String(previous_manifest["shell_artifact_id"]) != String(current["manifest"]["shell_artifact_id"])
 	if shell_rebuilt: invalidated.append(String(previous_manifest["shell_artifact_id"]))
 	else: reused.append(String(previous_manifest["shell_artifact_id"]))
-	var plan := Invalidation.create(construct_id, String(previous_manifest["source_checksum"]), String(current["manifest"]["source_checksum"]), C.sorted_strings(dirty_part_ids), C.sorted_strings(dirty_sections.keys()), _unique_sorted(invalidated), _unique_sorted(reused), shell_rebuilt)
+	var plan := Invalidation.create(construct_id, String(previous_manifest["source_checksum"]), String(current["manifest"]["source_checksum"]), sorted_dirty, C.sorted_strings(dirty_sections.keys()), _unique_sorted(invalidated), _unique_sorted(reused), shell_rebuilt)
 	var checked := Invalidation.validate(plan)
-	return C.success({"invalidation_plan": plan, "manifest": current["manifest"], "stats": current["stats"]}) if bool(checked.get("success", false)) else checked
+	return C.success({
+		"invalidation_plan": plan,
+		"manifest": current["manifest"],
+		"stats": current["stats"],
+		"generation": _generation,
+		"incremental_fast_path": false,
+		"fallback_reason": String(incremental.get("fallback_reason", "UNSPECIFIED")),
+	}) if bool(checked.get("success", false)) else checked
 
 func get_manifest(construct_id: String) -> Dictionary: return Dictionary(_compiled.get(construct_id, {})).get("manifest", {}).duplicate(true)
 func get_topology(construct_id: String) -> Dictionary: return Dictionary(_compiled.get(construct_id, {})).get("topology", {}).duplicate(true)
