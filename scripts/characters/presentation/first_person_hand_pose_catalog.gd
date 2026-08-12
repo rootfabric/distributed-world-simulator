@@ -8,6 +8,8 @@ const POSE_BEACON_PINCH := "beacon_pinch"
 const POSE_BULKY_CARRY := "bulky_carry"
 const POSE_ROUND_CRADLE := "round_cradle"
 const POSE_LONG_WRAP := "long_wrap"
+const POSE_SUPPORT_WRAP := "support_wrap"
+const POSE_SUPPORT_CRADLE := "support_cradle"
 
 
 func resolve(grip_profile: Dictionary, visual_descriptor: Dictionary = {}) -> Dictionary:
@@ -19,6 +21,8 @@ func resolve(grip_profile: Dictionary, visual_descriptor: Dictionary = {}) -> Di
 		pose_id = POSE_FLASHLIGHT_WRAP
 	elif grip_id.contains("beacon") or visual_profile.contains("beacon"):
 		pose_id = POSE_BEACON_PINCH
+	elif grip_id.contains("mount_base"):
+		pose_id = POSE_BULKY_CARRY
 	elif grip_id.contains("bulky_carry") or visual_profile.contains("backpack"):
 		pose_id = POSE_BULKY_CARRY
 	elif grip_id.contains("bulky_round") or visual_profile.contains("helmet"):
@@ -108,6 +112,30 @@ func get_pose(pose_id: String) -> Dictionary:
 				Vector3(-4.0, 0.0, 2.0),
 				105
 			)
+		POSE_SUPPORT_WRAP:
+			return _pose(
+				POSE_SUPPORT_WRAP,
+				[26.0, 34.0, 20.0],
+				[42.0, 54.0, 34.0],
+				[46.0, 58.0, 36.0],
+				[48.0, 60.0, 38.0],
+				[52.0, 62.0, 40.0],
+				-10.0,
+				Vector3(2.0, -4.0, -4.0),
+				105
+			)
+		POSE_SUPPORT_CRADLE:
+			return _pose(
+				POSE_SUPPORT_CRADLE,
+				[18.0, 24.0, 14.0],
+				[26.0, 34.0, 22.0],
+				[30.0, 38.0, 24.0],
+				[34.0, 42.0, 26.0],
+				[38.0, 44.0, 28.0],
+				-14.0,
+				Vector3(5.0, -8.0, -6.0),
+				115
+			)
 		_:
 			return _pose(
 				POSE_GENERIC_WRAP,
@@ -124,7 +152,7 @@ func get_pose(pose_id: String) -> Dictionary:
 
 func create_report() -> Dictionary:
 	return {
-		"schema": "planet_simulator.first_person_hand_pose_catalog.v1",
+		"schema": "planet_simulator.first_person_hand_pose_catalog.v2",
 		"pose_ids": [
 			POSE_OPEN,
 			POSE_GENERIC_WRAP,
@@ -133,7 +161,10 @@ func create_report() -> Dictionary:
 			POSE_BULKY_CARRY,
 			POSE_ROUND_CRADLE,
 			POSE_LONG_WRAP,
+			POSE_SUPPORT_WRAP,
+			POSE_SUPPORT_CRADLE,
 		],
+		"two_hand_support_poses": [POSE_SUPPORT_WRAP, POSE_SUPPORT_CRADLE],
 		"presentation_only": true,
 		"owns_item_state": false,
 		"owns_network_state": false,
