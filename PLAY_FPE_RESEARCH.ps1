@@ -46,6 +46,71 @@ if ($InflationScale -lt 0.10 -or $InflationScale -gt 2.00) {
     throw "InflationScale must be in range 0.10..2.00."
 }
 
+function Invoke-GodotCaptured {
+    param(
+        [string[]]$Arguments
+    )
+
+    $OutputLines = [System.Collections.Generic.List[string]]::new()
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
+    $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    $ExitCode = 1
+    try {
+        $ErrorActionPreference = "Continue"
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+        }
+        & $GodotPath @Arguments 2>&1 | ForEach-Object {
+            $Line = [string]$_
+            $OutputLines.Add($Line)
+            Write-Host $Line
+        }
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
+        }
+    }
+
+    return @{
+        ExitCode = $ExitCode
+        OutputText = ($OutputLines -join "`n")
+    }
+}
+
+$FatalMarkers = @(
+    "SCRIPT ERROR:",
+    "Parse Error:",
+    "Compile Error:",
+    "ERROR: Failed to load script"
+)
+
+# Branch switching can leave Godot's generated global class cache stale. CH9.6
+# contains legitimate class_name inheritance chains, so refresh the generated
+# cache before loading the graphical composition instead of modifying accepted
+# CH9/ItemGraph runtime scripts.
+Write-Host "Refreshing Godot global script class cache" -ForegroundColor Cyan
+$Preflight = Invoke-GodotCaptured -Arguments @(
+    "--headless",
+    "--editor",
+    "--path", $Root,
+    "--quit"
+)
+$PreflightFatal = ""
+foreach ($Marker in $FatalMarkers) {
+    if (([string]$Preflight.OutputText).Contains($Marker)) {
+        $PreflightFatal = $Marker
+        break
+    }
+}
+if ([int]$Preflight.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($PreflightFatal)) {
+    throw "Godot class-cache preflight failed (exit=$($Preflight.ExitCode), fatal_marker=$PreflightFatal). Run RUN_FPE_RESEARCH_TESTS.ps1 for the captured diagnostics."
+}
+Write-Host "Godot class-cache preflight: PASS" -ForegroundColor Green
+
 $GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $UserArgs = @(
@@ -77,28 +142,10 @@ if ($GarmentAvailable) {
 }
 Write-Host "Canonical world-item hand grabbing remains fail-closed until a server hand.grab authority contract exists." -ForegroundColor Yellow
 
-$PreviousErrorActionPreference = $ErrorActionPreference
-$NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
-$PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
-$ExitCode = 1
-try {
-    $ErrorActionPreference = "Continue"
-    if ($null -ne $NativePreference) {
-        Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
-    }
-    $GodotArgs = @(
-        "--path", $Root,
-        "res://scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
-        "--"
-    ) + $UserArgs
-    & $GodotPath @GodotArgs 2>&1 | ForEach-Object { Write-Host $_ }
-    $ExitCode = $LASTEXITCODE
-}
-finally {
-    $ErrorActionPreference = $PreviousErrorActionPreference
-    if ($null -ne $NativePreference) {
-        Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
-    }
-}
-
-exit $ExitCode
+$GodotArgs = @(
+    "--path", $Root,
+    "res://scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
+    "--"
+) + $UserArgs
+$Run = Invoke-GodotCaptured -Arguments $GodotArgs
+exit [int]$Run.ExitCode
