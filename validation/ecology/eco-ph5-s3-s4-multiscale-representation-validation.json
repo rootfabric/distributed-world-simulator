@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.ecology.ph5_s3_s4_multiscale_validation.v1",
+  "checkpoint": "ECO.PH5-S3/S4",
+  "branch": "feature/eco-evolutionary-ecology",
+  "candidate_head": "ec24f3c912b65376042e050d3c14df7e1c446efd",
+  "accepted_parent": "ECO.PH5-S2 @ ddf4d89f8127efbbea7d0571192e6297127a6ec0",
+  "status": "IMPLEMENTED_LOCAL_GODOT_PASS_EXACT_WINDOWS_AND_GRAPHICAL_PENDING",
+  "engine_probe": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "invariants": [
+    "REPRESENTATION_LEVEL_NE_ECOLOGY_IDENTITY",
+    "LOD_DISTANCE_SCREEN_SIZE_NE_GROWTH_GRAPH_OR_ECOLOGY_TRUTH",
+    "DECLARED_TIER_COST_MUST_MATCH_REAL_MATERIALIZATION_COUNTS",
+    "POPULATION_ONLY_REQUIRES_NO_INDIVIDUAL_GEOMETRY",
+    "RENDERER_HAS_NO_BACK_EDGE_TO_RESOURCE_SELECTION_OR_LIFECYCLE_TRUTH"
+  ],
+  "local_probe_evidence": {
+    "ph5_s3_tier_policy": {"decision":"PASS","assertions":49},
+    "ph5_s3_far_materialization": {"decision":"PASS","assertions":16,"canopy_hash":"ba3b64b604f14e1ba2935c82e694605953480f0de77a0599faa2a495125fdac9","impostor_hash":"d292449bbcba5e61c60ac0fe7775ecdec274c45b9bc03c97c0b75bd03286c136"},
+    "ph5_s3_real_multiscale_materialization": {"decision":"PASS","assertions":61,"matrix_hash":"f0a2b391c2c1ded19f8d44e0fb46b66256ad98e09366eab40b094ea4903e3b20"},
+    "ph5_s4_robustness": {"decision":"PASS","assertions":5026,"digest":"dea86645cc86bb4996106047ad3d229eede83f74bf82f139d2480275942dfb51"},
+    "ph5_s4_matrix_interface_probe": {"decision":"PASS","assertions":430,"matrix_hash":"6ebaa8e6a16a6083b517731ab004c43d5f384431561c3aa1e0cc33bc3d40f8b6","scope":"SYNTHETIC_API_COMPATIBLE_PROBES_ONLY_NOT_CANONICAL_PH2_EVIDENCE"},
+    "ph5_s4_visual_lab_interface_probe": {"decision":"PASS","assertions":40,"scope":"SYNTHETIC_API_COMPATIBLE_PROBES_ONLY_NOT_GRAPHICAL_USER_ACCEPTANCE"}
+  },
+  "parent_regression_provenance": {
+    "compare_base": "ddf4d89f8127efbbea7d0571192e6297127a6ec0",
+    "compare_head": "ec24f3c912b65376042e050d3c14df7e1c446efd",
+    "status": "ahead",
+    "ahead_by": 12,
+    "behind_by": 0,
+    "ph5_s2_paths_modified": false,
+    "note": "All changes after accepted PH5-S2 are additive PH5-S3/S4 surfaces. Exact Windows runner still replays PH5-S2 before S3/S4."
+  },
+  "canonical_acceptance_pending": [
+    "RUN_ECO_PH5_S3_S4_TESTS.ps1 on exact Windows Godot 4.7.1 double using canonical PH2 probes",
+    "canonical contrasting PH2 phenotype x five-tier matrix PASS and stable matrix hash",
+    "multiscale visual lab smoke PASS on exact Windows",
+    "human graphical observation of FULL/REDUCED/CANOPY/IMPOSTOR/POPULATION_ONLY transitions while growth_graph_hash remains fixed per environment",
+    "human confirmation that POPULATION_ONLY has no individual plant geometry"
+  ],
+  "decision": "CANDIDATE_NOT_YET_ACCEPTED"
+}
