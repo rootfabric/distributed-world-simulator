@@ -5,14 +5,14 @@
   "branch": "control/global-p0-r3-refresh-r1",
   "program": "GLOBAL_ARCHITECTURE",
   "role": "ARCHITECTURE_REVISION_CANDIDATE",
-  "short_description": "GLOBAL-P0 R3 exact-current-main frozen review target; machine lifecycle repaired, no promotion and no runtime changes.",
+  "short_description": "GLOBAL-P0 R3 exact-current-main frozen review target with external exact-head evidence; no promotion and no runtime changes.",
   "purpose": "Preserve the frozen R3 candidate against canonical main f6d68fc7 / registry 78, bind external exact-head control/evidence to that target, obtain independent Reviewer and Verifier proof, and stop at the human promotion gate.",
-  "expected_outcome": "R3_MACHINE_LIFECYCLE_REPAIR_COMPLETE / INDEPENDENT_REVIEW_READY, followed by separate independent review roles and only then the HUMAN GLOBAL_ARCHITECTURE_PROMOTION gate.",
+  "expected_outcome": "INDEPENDENT_REVIEW_READY; then distinct Independent Reviewer and Independent Verifier; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
   "current_stage": "GLOBAL-P0 R3 independent final review",
   "stage_status": "R3_FROZEN_TARGET_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "Machine lifecycle self-staling is repaired. The mutable R3 candidate is a frozen review target; Project Control, PC0, directional PC0 and Evidence Map are external evidence surfaces bound to its exact SHA and do not mutate candidate state. Independent Reviewer and Verifier remain pending; promotion is absent.",
+  "progress_note": "The mutable R3 candidate is a frozen review target. Project Control, PC0, directional PC0 and Evidence Map are external evidence surfaces bound to its exact SHA and do not mutate candidate state. Independent Reviewer and Verifier remain pending; promotion is absent.",
   "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
-  "next_stage": "Build/confirm external exact-head evidence for the frozen V3 target, then run distinct read-only Independent Reviewer and Independent Verifier sessions; stop at GLOBAL_ARCHITECTURE_PROMOTION.",
+  "next_stage": "Confirm external exact-head evidence bound to the exact frozen mutable review target, then run distinct read-only Independent Reviewer and Independent Verifier sessions; stop at GLOBAL_ARCHITECTURE_PROMOTION.",
   "parent_branch_or_checkpoint": "Canonical current main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry generation 78; historical construction/pre-C22 pins and V2 review target remain provenance only.",
   "dependencies": [
     "GLOBAL_P0_R2",
@@ -68,7 +68,7 @@
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE",
-    "focused": "FROZEN_MUTABLE_REVIEW_TARGET_V3_EXTERNAL_EVIDENCE_BOUND",
+    "focused": "FROZEN_MUTABLE_REVIEW_TARGET_EXTERNAL_EVIDENCE_BOUND",
     "full_regression": "NOT_APPLICABLE"
   },
   "ownership_claims": [
@@ -118,7 +118,7 @@
     "EPHEMERAL_GUARD_REFRESH",
     "OWNERSHIP_INTERSECTION_REVIEW_PASS",
     "R2_TO_R3_TRANSITION_AUDIT_PASS",
-    "MACHINE_LIFECYCLE_SELF_STALING_REPAIRED"
+    "FROZEN_TARGET_EXTERNAL_EVIDENCE_LIFECYCLE_DECLARED"
   ],
   "blockers": [
     "INDEPENDENT_REVIEWER_PASS_REQUIRED",

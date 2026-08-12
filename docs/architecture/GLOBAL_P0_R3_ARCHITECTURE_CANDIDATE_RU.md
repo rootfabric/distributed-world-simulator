@@ -5,7 +5,7 @@
 **Current finalization base:** `main @ f6d68fc7c594b371f48a9bcff056e2478e04f317`  
 **Current registry:** `78`  
 **Risk:** `CRITICAL`  
-**Status:** `SEMANTIC REPAIR / INDEPENDENT REVIEW PENDING / NO PROMOTION`
+**Status:** `FROZEN MUTABLE REVIEW TARGET / INDEPENDENT REVIEW PENDING / NO PROMOTION`
 
 Historical construction provenance is preserved separately and is never authorization:
 
@@ -287,35 +287,60 @@ dynamic shard split/merge
 
 ## 12. Finalization and promotion boundary
 
-The repair implementer session may reach only:
+This candidate describes a stable review/promotion boundary and does not encode the current repair iteration, a repair-specific checkpoint, or post-freeze evidence state as candidate-internal mutable truth.
+
+The lifecycle is:
 
 ```text
-R3_REPAIR_COMPLETE_REVIEW_READY
+frozen mutable R3 target
+        ↓
+external exact-head Project Control
+        ↓
+standard PC0 NON_RED
+directional PC0 NON_RED
+        ↓
+external Evidence Map bound to exact target
+        ↓
+INDEPENDENT_REVIEW_READY
+        ↓
+Independent Reviewer PASS
+        ↓
+Independent Verifier PASS
+        ↓
+R3_REFRESHED_CANDIDATE_READY
+        ↓
+HUMAN GLOBAL_ARCHITECTURE_PROMOTION
+        ↓
+mandatory post-R3 PC0
 ```
 
-Required for that stop condition:
+The candidate-side requirements are stable invariants rather than repair-iteration state:
 
 ```text
-CURRENT_MAIN_REFRESH                         DONE
-CURRENT_REGISTRY_REFRESH                     DONE
-C22_MAIN_INTEGRATED                         DONE
-H0_1_RUNTIME_SLOT_RELEASED                  DONE
-CRITICAL_RISK_CLASSIFIED                    DONE
-DESIGN_BRIEF_READY                          DONE
-FRONTIER_GUARDS_REFRESHED                   DONE
-R2_TO_R3_TRANSITION_AUDIT_PASS              REQUIRED ON NEW EXACT MUTABLE HEAD
-OWNERSHIP_INTERSECTION_REVIEW_PASS          REQUIRED ON NEW EXACT MUTABLE HEAD
-RUNTIME_SURFACE_ZERO                        REQUIRED ON NEW EXACT MUTABLE HEAD
-CRITICAL_CROSS_BRANCH_OVERLAP_ZERO          REQUIRED ON NEW EXACT MUTABLE HEAD
-STANDARD_PC0_NON_RED                        REQUIRED ON NEW EXACT MUTABLE HEAD
-DIRECTIONAL_PC0_NON_RED                     REQUIRED ON NEW EXACT MUTABLE HEAD
-EVIDENCE_MAP_BOUND_TO_NEW_EXACT_HEAD        REQUIRED
-INDEPENDENT_REVIEWER                        PENDING / DISTINCT ROLE
-INDEPENDENT_VERIFIER                        PENDING / DISTINCT ROLE
-HUMAN_GLOBAL_ARCHITECTURE_PROMOTION         ABSENT
+CURRENT_MAIN_REFRESH                         REQUIRED
+CURRENT_REGISTRY_REFRESH                     REQUIRED
+C22_MAIN_INTEGRATED                         REQUIRED
+H0_1_RUNTIME_SLOT_RELEASED                  REQUIRED
+CRITICAL_RISK_CLASSIFIED                    REQUIRED
+DESIGN_BRIEF_READY                          REQUIRED
+FRONTIER_GUARDS_REFRESHED                   REQUIRED
+R2_TO_R3_TRANSITION_AUDIT_PASS              REQUIRED ON EXACT MUTABLE TARGET
+OWNERSHIP_INTERSECTION_REVIEW_PASS          REQUIRED ON EXACT MUTABLE TARGET
+RUNTIME_SURFACE_ZERO                        REQUIRED ON EXACT MUTABLE TARGET
+CRITICAL_CROSS_BRANCH_OVERLAP_ZERO          REQUIRED ON EXACT MUTABLE TARGET
+EXTERNAL_EXACT_HEAD_PROJECT_CONTROL_SUCCESS REQUIRED
+STANDARD_PC0_NON_RED                        REQUIRED EXTERNAL EVIDENCE
+DIRECTIONAL_PC0_NON_RED                     REQUIRED EXTERNAL EVIDENCE
+EVIDENCE_MAP_BOUND_TO_EXACT_HEAD            REQUIRED EXTERNAL EVIDENCE
+INDEPENDENT_REVIEWER                        DISTINCT ROLE / REQUIRED BEFORE CANDIDATE READY
+INDEPENDENT_VERIFIER                        DISTINCT ROLE / REQUIRED BEFORE CANDIDATE READY
+HUMAN_GLOBAL_ARCHITECTURE_PROMOTION         SEPARATE HUMAN GATE
+POST_R3_PC0                                 REQUIRED AFTER HUMAN-AUTHORIZED PROMOTION
 ```
 
-Only separate clean Reviewer and Verifier sessions may advance the package from repair-ready to the eventual candidate-review checkpoint:
+`Project Control`, PC0 results, Evidence Map completion, Reviewer/Verifier verdicts and exact review-target SHAs are external lifecycle evidence. They must be bound to the frozen target without being copied back into this immutable candidate as pass/pending state.
+
+Only separate clean Reviewer and Verifier sessions may advance the package to:
 
 ```text
 R3_REFRESHED_CANDIDATE_READY
