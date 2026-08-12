@@ -8,14 +8,14 @@
   "short_description": "Non-canonical FirstPersonEmbodiment prototype layered on the accepted CH9.6 character, clothing, Item Graph and ENet presentation stack.",
   "purpose": "Evaluate first-person hands, clothing-visible viewmodels, independent left/right grip UX and network-state projection without reopening or mutating the frozen CH9.6 checkpoint and without claiming item/network authority.",
   "expected_outcome": "A separate research lab can render two first-person hands, mirror the server-backed selected hotbar item, project upper clothing into first person, exercise local-only grab targets, and fail closed for canonical world-item grabbing until an explicit hand authority contract is authorized.",
-  "current_stage": "FPE-R1 Fix5.1 — restore graphical FPE load and make performance gate deterministic",
-  "stage_status": "RESEARCH_FIX5_1_PENDING_OPERATOR_RERUN",
-  "progress_note": "The dedicated detached FPE worktree reached a clean Fix4.1 focused pass on Windows Godot 4.7.1 stable double a13da4feb: class-cache preflight PASS, FirstPersonEmbodiment contract PASS 23 assertions, nonblocking hotbar adapter PASS 17 assertions, and graphical scene-load PASS 5 assertions. PLAY still exhibited severe continuous frame hitching in an otherwise trivial scene. Fix5 isolated two 60 Hz CPU/main-thread churn paths and added a throttled CH9.6 research host plus dirty/event-driven FPE equipment/hotbar synchronization. The first operator Fix5 run exposed two validation defects before performance could be accepted. First, test_first_person_embodiment_performance_gate added the full CH9.6 host to SceneTree, so accepted _ready() calls incremented status counters before the synthetic 180-call burst and also triggered the known optional Male_Peasant.gltf fallback errors; the gate therefore compared absolute counters against a nonzero baseline. Second, quaternius_first_person_embodiment_lab.gd used inferred typing for hotbar_pending even though hotbar_network_adapter is dynamically typed, producing a Godot parse error. Because the FPE root script failed to bind, PLAY displayed only its CH9.6 child in third person, which explains the operator screenshot with no first-person hands. Fix5.1 makes hotbar/HUD locals explicitly typed, makes the performance gate instantiate the host without adding it to SceneTree so the throttle is tested in isolation, and upgrades PLAY_FPE_RESEARCH.ps1 with an exact headless FPE graphical scene-load gate after class-cache refresh. PLAY can no longer report preflight PASS and silently fall through to a child lab when the FPE root script has a parse/compile regression. Accepted CH9.6 remains untouched.",
+  "current_stage": "FPE-R1 Fix6 — remove periodic main-thread diagnostic stalls and hotbar full-graph rebuilds",
+  "stage_status": "RESEARCH_FIX6_PENDING_OPERATOR_RERUN",
+  "progress_note": "Fix5.1 restored the FPE root and produced decisive runtime performance evidence. The operator reports Tab/inventory opening is smooth, while movement still freezes periodically and rapid hotbar selection still hitches. The FPE HUD measured its own process at only 0.004 ms average / 0.010 ms maximum, while the inherited CH9.6 diagnostic chain reached 195.137 ms maximum with 210 heavy executions and 5683 suppressed calls. This directly identifies the periodic movement hitch as a main-thread diagnostic rebuild rather than GPU/viewmodel cost. Code review also confirmed a second hotbar-specific waste path: canonical inventory.select_hotbar changes only selected_hotbar_index, but accepted CH9.6 handles every projected Item Graph update by converting the entire canonical graph, loading a new replica graph snapshot, refreshing the full inventory UI, synchronizing equipment presentation, repopulating wearable mappings, and refreshing inherited diagnostics. Fix6 leaves accepted CH9.6 untouched. QuaterniusFpeCh9_6Host now suppresses every automatic inherited heavy _refresh_status call; a heavy status refresh is available only as an explicit manual diagnostic. The host classifies canonical projections after removing revision/tick/checksum and selected_hotbar_index metadata. Proven hotbar-metadata-only projections update only selected_hotbar_index, replica revision/checksum and the persistent hotbar; any structural Item Graph difference fails safe to the accepted full CH9.6 projection path. QuaterniusFpeOptimizedLab consumes the host classification signal so hotbar-only updates no longer dirty/rebuild equipment viewmodel state. Structural equipment/item changes still trigger the full dirty path. New gates assert zero automatic heavy HUD executions, hotbar-only classification, structural mutation fallback, optimized scene root, classified projection signal, and inherited CH9.6 network behavior.",
   "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Operator updates the detached FPE worktree to the current remote research head and reruns RUN_FPE_RESEARCH_TESTS.ps1. Required gates are class-cache PASS, 23-assertion FPE contract PASS, 17-assertion hotbar adapter PASS, deterministic 7-assertion performance throttle PASS, and 7-assertion graphical scene-load PASS. Then rerun PLAY_FPE_RESEARCH.ps1; it must additionally print FPE graphical composition preflight: PASS before opening the window. Confirm the scene starts in first person with hands visible, then evaluate continuous WASD/mouselook, rapid 1..0 and Tab. Record FPE HUD perf avg/max and base HUD executed/skipped counters. If continuous hitching remains while FPE process cost is low and base HUD is mostly skipped, profile the accepted CH9.6 local server/client loop as the next isolated performance frontier. Missing Male_Peasant.gltf remains allowed for procedural sleeves. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
+  "next_stage": "Operator updates the dedicated detached FPE worktree and reruns RUN_FPE_RESEARCH_TESTS.ps1. Required gates are class-cache PASS, FPE contract PASS, nonblocking hotbar adapter PASS, Fix6 performance gate PASS, and optimized graphical scene-load PASS. Then PLAY_FPE_RESEARCH.ps1 must pass its exact graphical composition preflight before opening. In runtime, first observe continuous WASD/mouselook without pressing hotbar for 20-30 seconds: base HUD executed must remain 0 while skipped increases and the periodic hitch should disappear. Then press 1/2 rapidly: the new HUD line projection fast/full should increment fast for selection-only updates, fast max should remain small, and no full graph/equipment rebuild should occur. Tab is already operator-reported smooth. If periodic movement hitch remains with inherited HUD executions at 0, profile the persistent CH9.6 local server/client process and persistence checkpoint loop next. If hotbar still hitches while projection_hotbar_fast increments, profile canonical item delta application / transport processing separately. Missing Male_Peasant.gltf remains allowed for procedural sleeves. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "candidate_runtime_head": "6739bd01ce497831447478a4cd26fbb99ca22eee",
+  "candidate_runtime_head": "8c2ab2305036afdb8a4e4174960b907241ecf68b",
   "dependencies": [
     "CH9.6 accepted playable network equipment composition",
     "CH8 real Quaternius character and layered clothing presentation",
@@ -30,6 +30,7 @@
     "scripts/characters/interaction/first_person_hotbar_network_adapter.gd",
     "scripts/characters/lab/quaternius_fpe_ch9_6_host.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_lab.gd",
+    "scripts/characters/lab/quaternius_fpe_optimized_lab.gd",
     "scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
     "tests/characters/test_first_person_embodiment_contract.gd",
     "tests/characters/test_first_person_hotbar_network_adapter.gd",
@@ -54,6 +55,7 @@
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
     "scripts/items/presentation/item_gameplay_controller.gd",
     "scripts/items/presentation/item_inventory_ui.gd",
     "scripts/ui/inventory/inventory_screen.gd",
@@ -65,6 +67,7 @@
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_3_network_item_command_bridge.gd",
     "scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
     "scripts/items/presentation/item_gameplay_controller.gd",
     "scripts/ui/inventory/inventory_screen.gd",
     "scenes/labs/character/quaternius_playable_network_equipment_lab.tscn"
@@ -76,6 +79,7 @@
     "scripts/characters/interaction/first_person_hotbar_network_adapter.gd",
     "scripts/characters/lab/quaternius_fpe_ch9_6_host.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_lab.gd",
+    "scripts/characters/lab/quaternius_fpe_optimized_lab.gd",
     "scenes/labs/character/quaternius_first_person_embodiment_lab.tscn"
   ],
   "validation_paths": [
@@ -103,8 +107,9 @@
     "operator_hotbar_fix5": "PASS_17_ASSERTIONS_CLEAN",
     "operator_performance_fix5": "FAILED_GATE_BASELINE_CONTAMINATED_BY_FULL_HOST_READY_CHAIN",
     "operator_graphical_fix5": "FAILED_FPE_ROOT_PARSE_HOTBAR_PENDING_TYPE_INFERENCE_CHILD_CH9_6_ONLY_VISIBLE",
-    "focused_repository_fix5_1": "PENDING_OPERATOR_RERUN",
-    "graphical_fix5_1": "PENDING_OPERATOR_RERUN"
+    "operator_graphical_fix5_1": "PARTIAL_PASS_FIRST_PERSON_RUNTIME_VISIBLE_TAB_SMOOTH_FPE_MAX_0_010MS_BASE_HUD_MAX_195_137MS_PERIODIC_AND_HOTBAR_HITCH_REMAIN",
+    "focused_repository_fix6": "PENDING_OPERATOR_RERUN",
+    "graphical_fix6": "PENDING_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "PRE_FIX1_SYNTHETIC_PASS_INVALIDATED_BY_REAL_WINDOWS_PARSE_ERRORS",
@@ -115,7 +120,8 @@
     "FIX4_SYNTHETIC_HOTBAR_PASS_INVALIDATED_FOR_REPOSITORY_ACCEPTANCE_BECAUSE_EXACT_SEND_PORT_SIGNATURE_WAS_NOT_COVERED",
     "FIX4_1_FOCUSED_PASS_DOES_NOT_IMPLY_ACCEPTABLE_CONTINUOUS_FRAME_COST",
     "FIX5_PERFORMANCE_GATE_RESULT_INVALIDATED_AS_THROTTLE_EVIDENCE_BECAUSE_FULL_HOST_READY_CHAIN_MUTATED_COUNTER_BASELINE_BEFORE_MEASUREMENT",
-    "FIX5_PLAY_CLASS_CACHE_PREFLIGHT_PASS_INVALIDATED_AS_GRAPHICAL_COMPOSITION_COMPILE_EVIDENCE"
+    "FIX5_PLAY_CLASS_CACHE_PREFLIGHT_PASS_INVALIDATED_AS_GRAPHICAL_COMPOSITION_COMPILE_EVIDENCE",
+    "FIX5_1_THROTTLING_REDUCED_FREQUENCY_BUT_DID_NOT_MAKE_A_195MS_DIAGNOSTIC_REBUILD_SAFE_FOR_REALTIME"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -130,12 +136,12 @@
   ],
   "blockers": [
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_NOT_AUTHORIZED",
-    "FIX5_1_FOCUSED_OPERATOR_RERUN_PENDING",
-    "FIX5_1_GRAPHICAL_PERFORMANCE_RERUN_PENDING"
+    "FIX6_FOCUSED_OPERATOR_RERUN_PENDING",
+    "FIX6_GRAPHICAL_MAIN_THREAD_HITCH_RERUN_PENDING"
   ],
   "non_blocking_followups": [
-    "IF_FIX5_1_CONTINUOUS_HITCH_REMAINS_PROFILE_ACCEPTED_CH9_6_LOCAL_SERVER_CLIENT_PROCESS_LOOP",
-    "IF_TAB_ONLY_HITCH_REMAINS_PROFILE_INVENTORY_SCREEN_REFRESH_AND_RENDER_SEPARATELY",
+    "IF_FIX6_PERIODIC_HITCH_REMAINS_WITH_AUTO_HEAVY_HUD_OFF_PROFILE_CH9_6_PERSISTENT_SERVER_CLIENT_PROCESS_AND_CHECKPOINT_LOOP",
+    "IF_FIX6_HOTBAR_HITCH_REMAINS_WHILE_FAST_PROJECTION_INCREMENTS_PROFILE_CANONICAL_ITEM_DELTA_AND_TRANSPORT_PROCESSING",
     "GODOT_EDITOR_PREFLIGHT_GENERATES_UNTRACKED_GD_UID_SIDECARS_IN_DETACHED_WORKTREE",
     "EXTERNAL_QUATERNIUS_MALE_PEASANT_ASSET_NOT_PRESENT_IN_THIS_CHECKOUT_REAL_SLEEVES_DISABLED",
     "REAL_HAND_SKELETON_AND_POSE_LIBRARY",
