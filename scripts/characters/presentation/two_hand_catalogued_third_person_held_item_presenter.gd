@@ -2,7 +2,7 @@ class_name TwoHandCataloguedThirdPersonHeldItemPresenter
 extends "res://scripts/characters/presentation/catalogued_third_person_held_item_presenter.gd"
 
 const SecondarySupportType = preload("res://scripts/characters/presentation/third_person_secondary_hand_support.gd")
-const VisualFactoryType = preload("res://scripts/characters/presentation/held_item_visual_factory.gd")
+const SecondaryTransformFactoryType = preload("res://scripts/characters/presentation/held_item_visual_factory.gd")
 
 var secondary_hand_support
 var _secondary_grip_target: Node3D
@@ -70,7 +70,7 @@ func present_catalogued_item(
 	var target_descriptor: Dictionary = Dictionary(
 		two_hand.get("third_person_secondary_anchor", two_hand.get("secondary_anchor", {}))
 	).duplicate(true)
-	VisualFactoryType.new().apply_local_transform(_secondary_grip_target, target_descriptor)
+	SecondaryTransformFactoryType.new().apply_local_transform(_secondary_grip_target, target_descriptor)
 	_secondary_target_builds += 1
 
 	var support_result: Dictionary = secondary_hand_support.activate(
