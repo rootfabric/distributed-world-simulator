@@ -6,6 +6,7 @@ const GrabAuthorityBridgeType = preload("res://scripts/characters/interaction/fi
 const HotbarNetworkAdapterType = preload("res://scripts/characters/interaction/first_person_hotbar_network_adapter.gd")
 const UPPER_PROFILE_ID := "equipment.layer.upper.peasant"
 const LOGICAL_PLAYER_ID := "a"
+const PERF_HUD_INTERVAL_MS := 1000
 
 var base_lab
 var first_person_embodiment
@@ -19,6 +20,24 @@ var _last_upper_clothing_enabled := false
 var _last_fpe_status_code := ""
 var _hotbar_prediction_index := -1
 var _sandbox_targets: Array[RigidBody3D] = []
+
+# FPE presentation is derived from canonical state. It does not need to rebuild
+# Item Graph equipment every render frame. Canonical network projection marks
+# these lanes dirty and the next process frame consumes each lane once.
+var _network_projection_signal_bound := false
+var _equipment_sync_dirty := true
+var _hotbar_presentation_dirty := true
+var _equipment_sync_runs := 0
+var _hotbar_sync_runs := 0
+
+# Lightweight local instrumentation. This measures only the FPE composition
+# process cost; inherited CH9.6 diagnostic cost is reported by the research host.
+var _perf_window_frames := 0
+var _perf_window_total_us := 0
+var _perf_window_max_us := 0
+var _perf_last_average_us := 0.0
+var _perf_last_max_us := 0
+var _perf_last_publish_ms := 0
 
 
 func _ready() -> void:
@@ -36,14 +55,27 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	var started_us := Time.get_ticks_usec()
 	if first_person_embodiment == null or base_lab == null:
+		_record_process_cost(started_us)
 		return
 	if base_lab.character_gameplay_controller == null:
+		_record_process_cost(started_us)
 		return
+
 	_ensure_hotbar_network_adapter()
+	_bind_network_projection_signal()
 	_poll_hotbar_authority()
-	_sync_authoritative_hotbar_presentation()
-	_sync_equipment_viewmodel()
+
+	if _hotbar_presentation_dirty:
+		_hotbar_presentation_dirty = false
+		_sync_authoritative_hotbar_presentation()
+	if _equipment_sync_dirty:
+		_equipment_sync_dirty = false
+		_sync_equipment_viewmodel()
+
+	_record_process_cost(started_us)
+	_publish_performance_window_if_due()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -101,8 +133,6 @@ func _setup_first_person_embodiment() -> void:
 	if not bool(fpe_setup_result.get("success", false)):
 		push_error("FPE prototype setup failed: %s" % JSON.stringify(fpe_setup_result))
 		return
-	# The first-person ray starts at the camera inside the player capsule. Keep
-	# self-collision out explicitly instead of relying on hit-from-inside details.
 	if first_person_embodiment.interaction_raycast != null:
 		first_person_embodiment.interaction_raycast.add_exception(base_lab.player)
 	first_person_embodiment.interaction_result_changed.connect(_on_fpe_interaction_result_changed)
@@ -120,7 +150,33 @@ func _ensure_hotbar_network_adapter() -> bool:
 		_last_fpe_status_code = String(setup_result.get("error_code", "FPE_HOTBAR_ADAPTER_SETUP_FAILED"))
 		return false
 	hotbar_network_adapter = candidate
+	_hotbar_presentation_dirty = true
 	return true
+
+
+func _bind_network_projection_signal() -> void:
+	if _network_projection_signal_bound or base_lab == null or base_lab.network_bridge == null:
+		return
+	if not base_lab.network_bridge.has_signal("projected_item_graph_updated"):
+		return
+	var callback := Callable(self, "_on_base_projected_item_graph_updated")
+	if not base_lab.network_bridge.is_connected("projected_item_graph_updated", callback):
+		base_lab.network_bridge.connect("projected_item_graph_updated", callback)
+	_network_projection_signal_bound = true
+	_equipment_sync_dirty = true
+	_hotbar_presentation_dirty = true
+
+
+func _on_base_projected_item_graph_updated(_snapshot: Dictionary) -> void:
+	# Base CH9.6 also consumes this signal to install the canonical replica. Defer
+	# the FPE dirty mark so our next-frame presentation read happens after every
+	# synchronous signal handler has finished applying that replica.
+	call_deferred("_mark_canonical_projection_dirty")
+
+
+func _mark_canonical_projection_dirty() -> void:
+	_equipment_sync_dirty = true
+	_hotbar_presentation_dirty = true
 
 
 func _select_hotbar_nonblocking(index: int) -> Dictionary:
@@ -142,17 +198,23 @@ func _select_hotbar_nonblocking(index: int) -> Dictionary:
 	if not bool(submitted.get("success", false)):
 		return submitted
 
-	# Presentation prediction only. The server remains the canonical owner and
-	# the replica snapshot will confirm or roll this index back without blocking
-	# the render thread waiting for COMMAND_RESULT.
+	# Presentation prediction only. Do not call controller._refresh_ui(): that
+	# rebuilds the full inventory/equipment screen. Only the persistent hotbar is
+	# needed for immediate feedback while server authority is pending.
 	controller.selected_hotbar_index = index
-	if controller.has_method("_refresh_ui"):
-		controller.call("_refresh_ui")
-	if controller.has_signal("gameplay_state_changed"):
-		controller.emit_signal("gameplay_state_changed")
+	_refresh_persistent_hotbar_only()
 	_hotbar_prediction_index = index
 	_last_hotbar_item_id = ""
+	_hotbar_presentation_dirty = true
 	return submitted
+
+
+func _refresh_persistent_hotbar_only() -> void:
+	if base_lab == null or base_lab.character_gameplay_controller == null:
+		return
+	var inventory_ui = base_lab.character_gameplay_controller.inventory_ui
+	if inventory_ui != null and inventory_ui.has_method("_refresh_persistent_hotbar"):
+		inventory_ui.call("_refresh_persistent_hotbar")
 
 
 func _poll_hotbar_authority() -> void:
@@ -164,6 +226,7 @@ func _poll_hotbar_authority() -> void:
 		if bool(details.get("confirmed", false)):
 			_hotbar_prediction_index = -1
 			_last_fpe_status_code = "HOTBAR_AUTHORITY_CONFIRMED"
+			_hotbar_presentation_dirty = true
 			_refresh_status()
 		return
 	if not bool(details.get("rollback_required", false)):
@@ -171,9 +234,9 @@ func _poll_hotbar_authority() -> void:
 	var canonical_index := int(details.get("canonical_selected_hotbar_index", -1))
 	if canonical_index >= 0 and base_lab.character_gameplay_controller != null:
 		base_lab.character_gameplay_controller.selected_hotbar_index = canonical_index
-		if base_lab.character_gameplay_controller.has_method("_refresh_ui"):
-			base_lab.character_gameplay_controller.call("_refresh_ui")
+		_refresh_persistent_hotbar_only()
 		_last_hotbar_item_id = ""
+		_hotbar_presentation_dirty = true
 	_hotbar_prediction_index = -1
 	_last_fpe_status_code = String(polled.get("error_code", "FPE_HOTBAR_AUTHORITY_CONFIRM_TIMEOUT"))
 	_refresh_status()
@@ -181,14 +244,15 @@ func _poll_hotbar_authority() -> void:
 
 func _sync_authoritative_hotbar_presentation() -> void:
 	if not bool(base_lab.network_ready):
+		_hotbar_presentation_dirty = true
 		return
+	_hotbar_sync_runs += 1
 	var selected_item_id: String = String(base_lab.character_gameplay_controller.get_selected_hotbar_item_id())
 	if selected_item_id == _last_hotbar_item_id:
 		return
 	_last_hotbar_item_id = selected_item_id
 	if selected_item_id.is_empty():
 		first_person_embodiment.clear_authoritative_hand_item("right")
-		_refresh_status()
 		return
 	var item: Variant = base_lab.character_gameplay_controller.get_item(selected_item_id)
 	if item == null:
@@ -206,12 +270,16 @@ func _sync_authoritative_hotbar_presentation() -> void:
 		display_name,
 		item_color
 	)
-	_refresh_status()
 
 
 func _sync_equipment_viewmodel() -> void:
 	if base_lab.item_graph_equipment_source == null:
+		_equipment_sync_dirty = true
 		return
+	_equipment_sync_runs += 1
+	# get_snapshot() performs a full Item Graph equipment refresh. This is now
+	# intentionally reached only after initial binding or a canonical projection,
+	# never from every render frame.
 	var snapshot: Variant = base_lab.item_graph_equipment_source.get_snapshot()
 	if snapshot == null:
 		return
@@ -239,7 +307,6 @@ func _sync_equipment_viewmodel() -> void:
 	)
 	if not bool(clothing_result.get("success", false)):
 		_last_fpe_status_code = String(clothing_result.get("error_code", "FPE_CLOTHING_SYNC_FAILED"))
-	_refresh_status()
 
 
 func _spawn_local_grab_sandbox() -> void:
@@ -250,8 +317,6 @@ func _spawn_local_grab_sandbox() -> void:
 		body.gravity_scale = 0.0
 		body.linear_damp = 3.0
 		body.angular_damp = 4.0
-		# Sandbox targets remain ray-queryable on layer 1 but do not produce
-		# physical contacts with the gameplay capsule while carried.
 		body.collision_layer = 1
 		body.collision_mask = 0
 		body.set_meta("fpe_local_sandbox_grabbable", true)
@@ -287,13 +352,35 @@ func _build_status_overlay() -> void:
 	add_child(canvas)
 	fpe_status_label = Label.new()
 	fpe_status_label.name = "FPEStatusLabel"
-	# Keep the research overlay away from the inherited CH6-CH9 diagnostics.
 	fpe_status_label.position = Vector2(430.0, 12.0)
-	fpe_status_label.size = Vector2(390.0, 180.0)
+	fpe_status_label.size = Vector2(520.0, 220.0)
 	fpe_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	fpe_status_label.add_theme_font_size_override("font_size", 13)
 	fpe_status_label.add_theme_constant_override("outline_size", 3)
 	canvas.add_child(fpe_status_label)
+
+
+func _record_process_cost(started_us: int) -> void:
+	var elapsed_us := maxi(Time.get_ticks_usec() - started_us, 0)
+	_perf_window_frames += 1
+	_perf_window_total_us += elapsed_us
+	_perf_window_max_us = maxi(_perf_window_max_us, elapsed_us)
+
+
+func _publish_performance_window_if_due() -> void:
+	var now_ms := Time.get_ticks_msec()
+	if now_ms - _perf_last_publish_ms < PERF_HUD_INTERVAL_MS:
+		return
+	_perf_last_publish_ms = now_ms
+	_perf_last_average_us = (
+		float(_perf_window_total_us) / float(_perf_window_frames)
+		if _perf_window_frames > 0 else 0.0
+	)
+	_perf_last_max_us = _perf_window_max_us
+	_perf_window_frames = 0
+	_perf_window_total_us = 0
+	_perf_window_max_us = 0
+	_refresh_status()
 
 
 func _metadata_color(metadata_value: Variant, fallback: Color) -> Color:
@@ -348,8 +435,8 @@ func _on_fpe_grab_state_changed(_hand_id: String, _occupied: bool, _target_path:
 
 func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 	return {
-		"schema": "planet_simulator.quaternius_first_person_embodiment_lab.v3",
-		"composition_mode": "CH9_6_SCENE_CHILD",
+		"schema": "planet_simulator.quaternius_first_person_embodiment_lab.v4",
+		"composition_mode": "THROTTLED_CH9_6_RESEARCH_HOST",
 		"base_lab_present": base_lab != null,
 		"setup": fpe_setup_result.duplicate(true),
 		"network_ready": bool(base_lab.network_ready) if base_lab != null else false,
@@ -362,6 +449,16 @@ func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 		"grab_authority": grab_authority_bridge.create_report() if grab_authority_bridge != null else {},
 		"sandbox_target_count": _sandbox_targets.size(),
 		"canonical_world_grab_contract": "PENDING_SEPARATE_AUTHORITY_FRONTIER",
+		"performance": {
+			"fpe_process_average_us": _perf_last_average_us,
+			"fpe_process_max_us": _perf_last_max_us,
+			"equipment_sync_runs": _equipment_sync_runs,
+			"hotbar_sync_runs": _hotbar_sync_runs,
+			"equipment_sync_dirty": _equipment_sync_dirty,
+			"hotbar_presentation_dirty": _hotbar_presentation_dirty,
+			"network_projection_signal_bound": _network_projection_signal_bound,
+			"base_status": base_lab.get_fpe_status_performance_report() if base_lab != null and base_lab.has_method("get_fpe_status_performance_report") else {},
+		},
 	}
 
 
@@ -370,15 +467,18 @@ func _refresh_status() -> void:
 		return
 	var embodiment_report: Dictionary = first_person_embodiment.create_report() if first_person_embodiment != null else {}
 	var grab_report: Dictionary = grab_authority_bridge.create_report() if grab_authority_bridge != null else {}
-	var hotbar_report: Dictionary = hotbar_network_adapter.get_report() if hotbar_network_adapter != null else {}
+	var hotbar_pending := hotbar_network_adapter != null and hotbar_network_adapter.has_pending()
 	var sleeve_mode := "REAL_QUATERNIUS" if bool(embodiment_report.get("real_quaternius_sleeves_ready", false)) else "PROCEDURAL" if _last_upper_clothing_enabled else "OFF"
 	var network_state := "READY" if base_lab != null and bool(base_lab.network_ready) else "BOOTSTRAPPING"
-	var hotbar_state := "PENDING" if bool(hotbar_report.get("pending", false)) else "READY" if hotbar_network_adapter != null else "BOOTSTRAP"
-	fpe_status_label.text = (
+	var hotbar_state := "PENDING" if hotbar_pending else "READY" if hotbar_network_adapter != null else "BOOTSTRAP"
+	var base_perf: Dictionary = base_lab.get_fpe_status_performance_report() if base_lab != null and base_lab.has_method("get_fpe_status_performance_report") else {}
+	var text := (
 		"FPE research — FirstPersonEmbodiment"
 		+ "\nC 1/3 person | Q left | E right | 1..0 hotbar"
 		+ "\nnetwork: %s | hotbar: NONBLOCKING/%s | sleeves: %s"
 		+ "\nselected: %s | world grab: %s | sandbox: %s"
+		+ "\nperf FPE avg/max: %.3f / %.3f ms | sync eq/hotbar: %d / %d"
+		+ "\nbase HUD executed/skipped: %d / %d | max %.3f ms"
 		+ "\nlast: %s"
 	) % [
 		network_state,
@@ -387,8 +487,17 @@ func _refresh_status() -> void:
 		_last_hotbar_item_id if not _last_hotbar_item_id.is_empty() else "EMPTY",
 		"READY" if bool(grab_report.get("canonical_grab_authority_ready", false)) else "FAIL_CLOSED",
 		"ON" if bool(grab_report.get("local_sandbox_enabled", false)) else "OFF",
+		_perf_last_average_us / 1000.0,
+		float(_perf_last_max_us) / 1000.0,
+		_equipment_sync_runs,
+		_hotbar_sync_runs,
+		int(base_perf.get("executed", 0)),
+		int(base_perf.get("skipped", 0)),
+		float(base_perf.get("max_us", 0)) / 1000.0,
 		_last_fpe_status_code if not _last_fpe_status_code.is_empty() else "OK",
 	]
+	if fpe_status_label.text != text:
+		fpe_status_label.text = text
 
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
