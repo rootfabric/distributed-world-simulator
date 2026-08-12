@@ -1,7 +1,7 @@
 class_name QuaterniusFirstPersonEmbodimentFix12
 extends "res://scripts/characters/lab/quaternius_first_person_embodiment_fix11.gd"
 
-const TwoHandFirstPersonType = preload("res://scripts/characters/presentation/two_hand_posed_first_person_embodiment.gd")
+const TwoHandFirstPersonType = preload("res://scripts/characters/presentation/owner_collision_isolated_two_hand_first_person_embodiment.gd")
 const S4GrabBridgeType = preload("res://scripts/characters/interaction/first_person_grab_authority_bridge.gd")
 
 
@@ -26,7 +26,7 @@ func _setup_first_person_embodiment() -> void:
 			source_skeleton = skeleton_value as Skeleton3D
 
 	first_person_embodiment = TwoHandFirstPersonType.new()
-	first_person_embodiment.name = "TwoHandPosedFirstPersonEmbodiment"
+	first_person_embodiment.name = "OwnerCollisionIsolatedTwoHandFirstPersonEmbodiment"
 	base_lab.player.add_child(first_person_embodiment)
 	fpe_setup_result = first_person_embodiment.setup(
 		base_lab.player,
@@ -62,9 +62,24 @@ func get_r2_s4_two_hand_report() -> Dictionary:
 	}
 
 
+func get_sandbox_collision_isolation_report() -> Dictionary:
+	if first_person_embodiment != null and first_person_embodiment.has_method("get_owner_collision_isolation_report"):
+		var value: Variant = first_person_embodiment.call("get_owner_collision_isolation_report")
+		if value is Dictionary:
+			return Dictionary(value).duplicate(true)
+	return {
+		"schema": "planet_simulator.fpe_owner_collision_isolation.v1",
+		"active": 0,
+		"owner_only_exception": false,
+		"world_collisions_preserved": true,
+		"presentation_sandbox_only": true,
+	}
+
+
 func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 	var snapshot: Dictionary = super.get_first_person_embodiment_debug_snapshot()
 	snapshot["r2_s4"] = get_r2_s4_two_hand_report()
+	snapshot["sandbox_collision_isolation"] = get_sandbox_collision_isolation_report()
 	return snapshot
 
 
@@ -76,8 +91,13 @@ func _refresh_status() -> void:
 	var state := "ACTIVE" if bool(report.get("active", false)) else "FREE"
 	var profile := String(report.get("profile_id", ""))
 	var pose := String(report.get("secondary_pose_id", ""))
+	var isolation := get_sandbox_collision_isolation_report()
 	fpe_status_label.text += "\nS4 two-hand: %s | profile: %s | left pose: %s" % [
 		state,
 		profile if not profile.is_empty() else "-",
 		pose if not pose.is_empty() else "open",
+	]
+	fpe_status_label.text += "\nsandbox owner collision: %s | grace: %d ms" % [
+		"ISOLATED" if int(isolation.get("active", 0)) > 0 else "FREE",
+		int(isolation.get("release_grace_ms", 0)),
 	]
