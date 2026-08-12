@@ -145,16 +145,15 @@ if ($ResetState) {
 }
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - R2 S4 two-hand grip presentation over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 S5 third-person secondary-hand support over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
-Write-Host "R2 S2/S3: selected ItemDefinition resolves visual/grip profiles and articulated finger poses." -ForegroundColor Cyan
-Write-Host "R2 S4 gate: sandbox slot 1 beacon remains one-hand; slot 2 mount-base is the bounded two-hand demonstration item. Selecting slot 2 must move the LEFT articulated hand onto the item's secondary support anchor while the RIGHT remains primary." -ForegroundColor Cyan
-Write-Host "Switch 1 -> 2 -> 1 -> empty while moving. Slot 2 must engage both hands; slot 1/empty must release the left hand back to its normal OPEN pose with no frame stall." -ForegroundColor Cyan
-Write-Host "Q is intentionally reserved while the left hand is acting as the secondary support hand. This is presentation-only reservation, not gameplay authority." -ForegroundColor Cyan
-Write-Host "Third-person still shows the existing right-hand world proxy; third-person two-arm IK is NOT claimed by S4 and remains a later animation task." -ForegroundColor Cyan
-Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left hand is free." -ForegroundColor Cyan
-Write-Host "S4 Fix1 physics gate: while Q/E holds a local sandbox RigidBody, it must NOT push or self-move the CharacterBody3D. Owner/body collision is mutually excluded only during hold and a 200 ms release grace; world collision layers/masks stay unchanged." -ForegroundColor Cyan
+Write-Host "R2 S2/S3: selected ItemDefinition resolves visual/grip profiles and articulated first-person finger poses." -ForegroundColor Cyan
+Write-Host "R2 S4 is accepted: slot 2 mount-base uses a bounded two-hand first-person grip; slot 1 beacon remains one-hand. Owner collision isolation prevents held sandbox RigidBody self-push." -ForegroundColor Cyan
+Write-Host "R2 S5 gate: press C while slot 2 is selected. The WORLD avatar left arm/hand must now support the same item secondary grip. With a real Skeleton3D this uses Godot TwoBoneIK3D; the current fallback humanoid uses a presentation-only procedural two-segment arm solver." -ForegroundColor Cyan
+Write-Host "Switch 1 -> 2 -> 1 -> empty while in third person. Slot 2 must engage the world LEFT support hand; slot 1/empty must restore the normal left arm. No collision body is created by S5." -ForegroundColor Cyan
+Write-Host "Switch back to first person with C and verify the existing S4 articulated two-hand viewmodel is unchanged." -ForegroundColor Cyan
+Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left first-person hand is free." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
     Write-Host "Equip Peasant Upper in the inventory to test first-person sleeve synchronization." -ForegroundColor Cyan
