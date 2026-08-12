@@ -1,12 +1,12 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-F IMPLEMENTED CANDIDATE / EXACT WINDOWS ROBUSTNESS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.1 SEED DISPERSAL KERNEL`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
-## Accepted chain
+## Accepted foundation
 
 ```text
 ECO.P1                    ACCEPTED
@@ -17,6 +17,7 @@ ECO.CAL1-B                ACCEPTED
 ECO.CAL1-C                ACCEPTED
 ECO.CAL1-D                ACCEPTED
 ECO.CAL1-E                ACCEPTED
+ECO.CAL1-F                ACCEPTED / ROBUST_UNITY_CALIBRATION
 ```
 
 Canonical hashes:
@@ -26,115 +27,74 @@ Canonical hashes:
 - CAL1-B `c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c`;
 - CAL1-C `d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a`;
 - CAL1-D `c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6`;
-- CAL1-E `6214b8348b16acd005979c3e8ea88eca202acac0ffe835fc899cef27fbe50814`.
+- CAL1-E `6214b8348b16acd005979c3e8ea88eca202acac0ffe835fc899cef27fbe50814`;
+- CAL1-F `f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed`.
 
-CAL1-E canonical matrix: `192` rows / `24` contexts, `96` dense interaction rows, `0` sparse interaction rows, multi-member Pareto in all `24` contexts, `2` distinct Pareto signatures.
+CAL1-F canonical classification: `ROBUST_UNITY_CALIBRATION`.
+
+CAL1-F evidence: five distinct deterministic seed signatures; 100% multi-member Pareto retention in seed contexts; two environment Pareto signatures; zero density/disturbance monotonicity violations; ±15% mechanism envelope with min/mean Pareto Jaccard `1.0`; three resource signatures; twenty pool contexts; zero pairwise/full-pool resource contradictions; exact fresh-process replay.
 
 ## Central route
 
 ```text
-CAL1-A ACCEPTED
+EVO0 / CAL1 COMPLETE
    ↓
-CAL1-B ACCEPTED
+EVO1 / P2.1 ← CURRENT
+Seed Dispersal Kernel
    ↓
-CAL1-C ACCEPTED
+P2.2 Establishment / Recruitment / Seed Bank
    ↓
-CAL1-D ACCEPTED
+P2.3 Local Population Turnover + Succession
    ↓
-CAL1-E ACCEPTED
+P2.4 Patch Colonization / Isolation / Migration
    ↓
-CAL1-F ← CURRENT CANDIDATE GATE
-calibration + full-pool robustness
-   ↓ PASS
-CAL1 ACCEPTED / EVO0 CAUSAL FOUNDATION COMPLETE
+P2.5 Disturbance + Recovery
    ↓
-EVO1 / P2.1 Seed Dispersal Kernel
+P2.6 Long-Horizon Biogeography
+   ↓
+P2.7 Lineage Divergence / Speciation Candidate Diagnostics
+   ↓
+P2.8 Deterministic Save/Restart Plant World Proof
 ```
 
-## CAL1-F implementation
+EVO1 final acceptance remains:
 
-Implementation head: `e5a42237d025ff0f0e28623b5f9461ed65149874`.
+`NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-The implementation commit adds exactly five ECO-owned files and modifies no accepted A-E source or runtime path.
+## P2.1 boundary
 
-### Calibration rule
+P2.1 is the first step that creates autonomous spatial ecology transport. It does **not** establish or kill plants; recruitment belongs to P2.2.
 
-No empirical external target exists yet, so CAL1-F does not invent one. Selected baseline is `UNITY` only if it survives robustness:
+Required semantics:
 
 ```text
-morphology = 1.0
-vertical   = 1.0
-crown      = 1.0
-root       = 1.0
+source reproductive output
++ inherited/effective dispersal distance
++ deterministic transport context
+        ↓
+portable seed packets / spatial destination distribution
 ```
 
-Sensitivity envelope is symmetric `±15%` over morphology, vertical-light, spatial crown/root, and all channels together. Small perturbations are allowed to move winners/Pareto membership; they are not allowed to create a completely unrelated regime without failing the robustness gate.
+P2.1 must preserve:
 
-### Sweep surface
+- emitted seed-count conservation within explicit boundary-loss accounting;
+- lineage/genome identity on every packet;
+- deterministic replay from the same source/event/seed;
+- different transport under different inherited dispersal distance;
+- release-height effect from accepted CAL1-D semantics;
+- anisotropic transport via explicit environmental vector/context, not biome lookup;
+- local and long-tail transport bins;
+- no species placement table;
+- no establishment probability, carrying capacity or seed-bank survival logic yet.
 
-```text
-phenotype seeds:     5 seeds / 40 contexts / 320 rows
-environment:         5 variants per accepted environment / 20 contexts / 160 rows
-density:             5 controlled points / 20 contexts / 160 rows
-disturbance:         5 severities / 20 contexts / 160 rows
-calibration profile: 9 profiles / 72 contexts / 576 rows
-strategy pools:      5 pool compositions / 20 contexts
-```
+The existing P1C dynamic-abundance experiment is not a dispersal implementation: it advances independent patch biomass and does not move lineage propagules between patches. P2.1 therefore adds the missing spatial transport kernel rather than extending that old abundance fixture.
 
-Seed `0` reproduces the accepted CAL1-E phenotype event. Seeds `1..4` use distinct deterministic events.
+## Calibration inheritance
 
-Environment perturbations are ±10% moisture or sunlight around each accepted environment.
-
-Density moves from `0.50m @ 1.00` through the accepted `0.75m @ 0.90` toward the `50m @ 0.15` sparse anchor. Interaction magnitude must be monotonic non-increasing along that controlled sequence.
-
-Disturbance severity runs `0 / 0.1 / 0.2 / 0.5 / 0.9`; survival and post-disturbance seed potential must be non-increasing.
-
-### Robustness classification
-
-CAL1-F accepts only as:
-
-`ROBUST_UNITY_CALIBRATION`.
-
-Important gates:
-
-- exact CAL1-E parent hash;
-- seed sweep actually changes deterministic phenotype realization;
-- at least 75% seed contexts retain multi-member Pareto fronts;
-- environment perturbations retain at least two Pareto signatures;
-- zero density monotonicity violations;
-- zero disturbance monotonicity violations;
-- UNITY recomposition exactly matches accepted CAL1-E metrics;
-- ±15% profile envelope has minimum Pareto Jaccard >= `0.25` and mean >= `0.50` versus UNITY;
-- all restricted strategy pools retain valid Pareto fronts;
-- zero resource pairwise/full-pool contradictions;
-- exact same/fresh-process aggregate replay.
-
-If any of these fail, CAL1-F remains open and the finding must be diagnosed. The implementation must not be retuned merely to produce PASS.
-
-## Exact Windows gate
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_CAL1_F_TESTS.ps1 -GodotPath $Godot
-```
-
-Until PASS:
-
-```text
-CAL1-F = IMPLEMENTED_CANDIDATE
-CAL1-F != ACCEPTED
-EVO1 = BLOCKED
-```
-
-After PASS, CAL1 closes. The next executable checkpoint is not more morphology calibration or presentation; it is `ECO.EVO1 / P2.1 Seed Dispersal Kernel`, beginning the autonomous spatial Plant World Proof.
+The accepted CAL1-F UNITY profile remains the EVO0 causal baseline. P2.1 must not reopen CAL1 coefficient tuning. Any new dispersal-kernel shape parameters must be explicit transport semantics and tested for conservation/determinism rather than tuned to create desired species geography.
 
 ## Global boundary
 
-Standalone EVO remains research-only. `XFER1/LIVE` wait for canonical simulator foundations. ECO does not create private global runtime foundations.
+EVO1 remains standalone/research-only. It may own ecology semantics and portable ecology state meaning, but it must not create private replacements for canonical spatial/time/environment/runtime foundations. `XFER1/LIVE` remain deferred until their global contracts exist.
 
-Current resolver: `RUN CAL1-F EXACT WINDOWS CALIBRATION + FULL-POOL ROBUSTNESS GATE`.
+Current resolver: `IMPLEMENT AND VALIDATE ECO.EVO1/P2.1 SEED DISPERSAL KERNEL`.
