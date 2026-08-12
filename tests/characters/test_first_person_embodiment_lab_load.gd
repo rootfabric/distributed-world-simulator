@@ -17,8 +17,8 @@ func _run() -> void:
 	if lab != null:
 		_assert(lab.has_method("get_first_person_embodiment_debug_snapshot"), "FPE graphical lab script did not bind")
 		_assert(
-			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix15.gd",
-			"FPE graphical root is not the R2 S7 Fix15 resource-backed hand composition"
+			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix16.gd",
+			"FPE graphical root is not the R2 S8 Fix16 skinned hand composition"
 		)
 		_assert(lab.has_method("_apply_hotbar_presentation_for_index"), "FPE immediate hotbar presentation port is missing")
 		_assert(lab.has_method("_select_hotbar_nonblocking"), "FPE local hotbar selection port is missing")
@@ -33,6 +33,8 @@ func _run() -> void:
 		_assert(lab.has_method("get_r2_s6_hand_visual_provider_report"), "FPE R2 S6 hand visual provider report is missing")
 		_assert(lab.has_method("get_r2_s7_resource_hand_visual_report"), "FPE R2 S7 resource hand visual report is missing")
 		_assert(lab.has_method("_find_requested_hand_visual_scene_path"), "FPE R2 S7 resource scene argument resolver is missing")
+		_assert(lab.has_method("get_r2_s8_skinned_hand_visual_report"), "FPE R2 S8 skinned hand visual report is missing")
+		_assert(lab.has_method("_find_requested_skinned_hand_scene_path"), "FPE R2 S8 skinned scene argument resolver is missing")
 		_assert(lab.item_viewmodel_catalog != null, "FPE R2 S2 item viewmodel catalog is missing")
 		_assert(lab.held_item_grip_catalog != null, "FPE R2 S2/S4 grip profile catalog is missing")
 		var base_lab: Node = lab.get_node_or_null("CH9_6BaseLab")
