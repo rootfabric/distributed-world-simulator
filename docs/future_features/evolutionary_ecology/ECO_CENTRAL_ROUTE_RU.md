@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.6 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.7 READY`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -18,6 +18,7 @@ ECO.EVO1 / P2.2           ACCEPTED
 ECO.EVO1 / P2.3           ACCEPTED
 ECO.EVO1 / P2.4           ACCEPTED
 ECO.EVO1 / P2.5           ACCEPTED
+ECO.EVO1 / P2.6           ACCEPTED
 ```
 
 Canonical hashes:
@@ -29,7 +30,31 @@ P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
 P2.3    15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e
 P2.4    78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97
 P2.5    292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696
+P2.6    3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c
 ```
+
+## P2.6 accepted proof
+
+Exact Windows / Godot `4.7.1.stable.double.custom_build.a13da4feb` produced:
+
+```text
+colonized=1
+extinct=18
+recolonized=19
+control_extinction=-1
+long_patch_years=90
+short_patch_years=61
+far_long=29
+far_short=0
+event_absence=1
+control_absence=0
+final_reoccupied=true
+regional_persist=true
+```
+
+Two fresh processes reproduced exact aggregate `3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c`.
+
+Thus the accepted regional ecology can express `colonization -> local extinction -> recolonization` while the lineage persists elsewhere, without biome/species placement rules.
 
 ## Central route
 
@@ -46,93 +71,32 @@ P2.4 Patch Colonization / Isolation / Migration ACCEPTED
    ↓
 P2.5 Disturbance + Recovery ACCEPTED
    ↓
-P2.6 Long-Horizon Biogeography ← CURRENT CANDIDATE
-   ↓ PASS
-P2.7 Lineage Divergence / Speciation Candidate Diagnostics
+P2.6 Long-Horizon Biogeography ACCEPTED
+   ↓
+P2.7 Lineage Divergence / Speciation Candidate Diagnostics ← CURRENT
    ↓
 P2.8 Deterministic Save/Restart Plant World Proof
 ```
 
-EVO1 final acceptance remains:
+## P2.7 boundary
 
-`NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
+P2.7 is a diagnostic layer over lineage evidence. It may consume:
 
-## P2.6 implementation
+- ancestry/split chronology;
+- inherited PlantGenome and recruitment traits;
+- P2.6 geographic occupancy history;
+- ecological-history summaries;
+- evidence of continued connectivity/gene-flow opportunity.
 
-Implementation head: `9aa4678e9be99556fb54057f6580f219325c0126`.
+It must expose the dimensions separately rather than hide them in one fitness score. A `SPECIATION_CANDIDATE` marker is only a research flag requiring convergent evidence. It is explicitly **not** a canonical species declaration and cannot create or place a `species_id`.
 
-Diff from accepted P2.5 adds exactly five ECO research/test files and modifies no accepted P2.5/P2.4/P2.3/P2.2/P2.1/CAL1 source or runtime path.
+Required controls must distinguish at least:
 
-### Regional composition, not a second local ecology
+1. isolated + substantially diverged lineage pair -> candidate;
+2. substantially diverged but still connected pair -> not candidate;
+3. isolated but only weakly diverged pair -> not candidate;
+4. recent/near-identical pair -> not candidate.
 
-P2.6 is a metapopulation orchestrator. Patch-local annual ecology still runs through accepted `DisturbanceRecovery.advance_year`; event response still runs through accepted `DisturbanceRecovery.apply_event`; inter-patch propagules still run through accepted `PatchMigration.migrate_reproduction_event`.
+The detector therefore cannot reduce speciation to distance alone, isolation alone, biome membership, or an arbitrary species table.
 
-Local adult occupancy is evaluated with the accepted P2.3 `EXTINCTION_BIOMASS_KG_M2` threshold by reference.
-
-### Controlled thirty-year history
-
-Research geography reuses P2.4 SOURCE / NEAR / FAR patches. Only SOURCE is the propagule reservoir.
-
-Two causal strategies are tracked:
-
-```text
-PERSISTENT_SHORT  1.6m height / 1.2m roots / 5m dispersal / long bank
-FRAGILE_LONG      3.0m height / 0.05m roots / 20m dispersal / shorter bank
-```
-
-Chronology:
-
-```text
-y1..14   east transport
-y15..18  west transport
-          + FAR mechanical=1.0 / bank mortality=1.0 each year
-y19..30  east transport restored
-```
-
-A no-disturbance control uses the same transport schedule. Migration is applied before same-year disturbance, so event-year immigrants receive the same damage pressure rather than bypassing it.
-
-The gate requires a complete biogeographic cycle for the broad disperser:
-
-```text
-regional persistence
-      +
-FAR colonization
-      ↓
-local FAR adult extinction during disturbance/isolation interval
-      ↓
-FAR recolonization after transport recovery
-```
-
-It also requires FAR and regional patch-year filtering toward the broader disperser, exact migration/event conservation, bounded cohort counts and deterministic replay.
-
-### Ownership boundary
-
-Patch geometry, year index and transport history remain research experiment inputs. P2.6 does not claim canonical Spatial Domain Fabric, Time Fabric, Environment simulation/event generation, World Lifecycle, Work Budget, persistence, authority or networking.
-
-### Strict P2.7 boundary
-
-P2.6 records lineage range histories only. It does not define species, reproductive isolation, divergence thresholds or speciation verdicts. P2.7 owns those diagnostics.
-
-## Exact Windows gate
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_EVO1_P2_6_TESTS.ps1 -GodotPath $Godot
-```
-
-The runner performs parser/preload `--check-only`, then the full accepted P2.5 parent regression, P2.6 acceptance and two fresh-process replay probes.
-
-Until PASS:
-
-```text
-P2.6 = IMPLEMENTED_CANDIDATE
-P2.6 != ACCEPTED
-P2.7 = BLOCKED
-```
-
-Current resolver: `RUN EVO1/P2.6 EXACT WINDOWS LONG-HORIZON BIOGEOGRAPHY GATE`.
+P2.8 remains blocked until P2.7 exact-Windows acceptance.
