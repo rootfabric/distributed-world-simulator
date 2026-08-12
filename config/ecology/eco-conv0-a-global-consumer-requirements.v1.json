@@ -1,0 +1,216 @@
+{
+  "schema": "distributed_world_simulator.ecology.conv0_a_global_consumer_requirements.v1",
+  "revision": "ECO-CONV0-A-2026-08-12-R1",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "DESIGN_REQUIREMENTS_READY_FOR_GLOBAL_REVIEW",
+  "scope": "RESEARCH_DESIGN_CONTRACT_ONLY",
+  "global_context": {
+    "canonical_main_observed": "eefd75fa3badec10c6e7db959e2a3992dba30f0e",
+    "canonical_main_event": "H0.1 R8 / C22 PR #90 normal merge",
+    "canonical_architecture": "GLOBAL-P0-2026-08-10-R2",
+    "r3_candidate_revision": "GLOBAL-P0-2026-08-11-R3-CANDIDATE",
+    "r3_candidate_config_blob": "0a7b5b322f9d928fd6ec295753b9b0e18d2fc464",
+    "r3_ownership_candidate_blob": "9271ecc03f87fbb4f6a9ea1bd0889bdefc73f6a3",
+    "r3_state": "NONCANONICAL_REFRESH_REQUIRED_HUMAN_PROMOTION_PENDING"
+  },
+  "domain_boundary": {
+    "ECO_owns": [
+      "ecological model semantics",
+      "genome/development/reproduction research semantics",
+      "resource competition and selection research semantics",
+      "ecological population state meaning",
+      "dispersal/recruitment/biogeography research semantics",
+      "derived plant representation requirements"
+    ],
+    "ECO_does_not_own": [
+      "generic runtime population field fabric",
+      "WorldAddress or spatial routing",
+      "simulation clock or domain tick fabric",
+      "environment canonical simulation",
+      "material identity/registry",
+      "World Query engine/store",
+      "promotion/dormancy/demotion foundation",
+      "authority/persistence/transport",
+      "global work budget/scheduler",
+      "network interest/replication policy",
+      "world transaction engine"
+    ]
+  },
+  "canonical_owner_mapping": [
+    {
+      "foundation": "TIME_FABRIC",
+      "owner": "TF",
+      "eco_usage": "simulation time, domain tick, history windows, dormant/catch-up timing requirements",
+      "forbidden_local_substitute": "EcoGlobalClock/EcoSchedulerClock"
+    },
+    {
+      "foundation": "SPATIAL_DOMAIN_FABRIC",
+      "owner": "SD",
+      "eco_usage": "WorldAddress/domain scope and mapping to ecology/population patch identities",
+      "forbidden_local_substitute": "EcoWorldAddress/EcoChunkId"
+    },
+    {
+      "foundation": "ENVIRONMENT_SIMULATION",
+      "owner": "ENV_FUTURE",
+      "eco_usage": "temperature/moisture/sunlight/flood/disturbance environmental truth projection",
+      "forbidden_local_substitute": "production ECO atmosphere/hydrology/environment store"
+    },
+    {
+      "foundation": "MATERIAL_ONTOLOGY",
+      "owner": "MAT",
+      "eco_usage": "substrate MaterialDefinitionId plus domain property projection needed for nutrients/rooting/chemistry",
+      "forbidden_local_substitute": "EcoMaterialRegistry/EcoSoilMaterialId"
+    },
+    {
+      "foundation": "WORLD_QUERY_FABRIC",
+      "owner": "WQ",
+      "eco_usage": "non-authoritative retrieval/merge of environment, substrate and world-context projections",
+      "forbidden_local_substitute": "EcoWorldQueryDatabase"
+    },
+    {
+      "foundation": "POPULATION_FIELD",
+      "owner": "POP_FUTURE",
+      "eco_usage": "production aggregate container/promotion substrate for ecological population state",
+      "forbidden_local_substitute": "planet-wide ECO runtime population manager/fabric"
+    },
+    {
+      "foundation": "WORLD_LIFECYCLE_FABRIC",
+      "owner": "LIFE",
+      "eco_usage": "ABSTRACT/DORMANT/SIMULATED/ACTIVE/PRESENTED resolution lifecycle and promoted-individual boundary",
+      "forbidden_local_substitute": "EcoPromotionManager/EcoDormancyManager"
+    },
+    {
+      "foundation": "WORLD_WORK_BUDGET",
+      "owner": "WB",
+      "eco_usage": "full/coarse/defer/batch/S1-dispatch decision for ecology work proposals",
+      "forbidden_local_substitute": "EcoGlobalWorkScheduler"
+    },
+    {
+      "foundation": "NETWORK_REPLICATION_POLICY",
+      "owner": "NX",
+      "eco_usage": "population/domain projection interest and promoted-individual replication policy",
+      "forbidden_local_substitute": "EcoReplicationManager"
+    },
+    {
+      "foundation": "WORLD_TRANSACTION_MODEL",
+      "owner": "WT_M0",
+      "eco_usage": "future cross-domain interaction effects such as harvesting/planting/damage when they cross Item/Matter/world semantics",
+      "forbidden_local_substitute": "EcoTransactionCoordinator"
+    },
+    {
+      "foundation": "SCHEMA_COMPATIBILITY_GOVERNANCE",
+      "owner": "COMPAT",
+      "eco_usage": "versioning/migration envelope for long-lived ecology state and projections",
+      "forbidden_local_substitute": "unversioned ecology persistence schema"
+    }
+  ],
+  "environment_projection_requirements": {
+    "request_context": [
+      "WorldAddress_or_canonical_domain_scope",
+      "simulation_time_or_interval",
+      "history_window_when_required",
+      "requested_field_set",
+      "caller/query scope",
+      "input_revision_constraints"
+    ],
+    "required_projection_fields": [
+      "temperature",
+      "moisture",
+      "sunlight",
+      "nutrient_availability",
+      "flood_or_water_stress",
+      "disturbance_history_or_summary",
+      "substrate_material_projection"
+    ],
+    "required_provenance": [
+      "spatial/domain reference",
+      "simulation-time interval",
+      "source revisions",
+      "query/projection revision",
+      "quality/completeness flags"
+    ],
+    "invariant": "ENVIRONMENT_QUERY_RESULT_REVISION_NE_ECOLOGY_STATE_REVISION"
+  },
+  "population_projection_requirements": {
+    "semantic_owner": "ECOLOGY_MODEL",
+    "runtime_container_owner": "POP_FUTURE",
+    "required_fields": [
+      "ecology population/lineage identity reference",
+      "canonical spatial/domain reference",
+      "population count or density",
+      "biomass summary",
+      "seed-bank/recruitment summary",
+      "phenotype/development distribution",
+      "health/stress distribution",
+      "representation hints",
+      "promotion/interaction relevance hints",
+      "source revision/provenance"
+    ],
+    "representation_rule": "derived visual samples are not canonical organisms",
+    "individual_rule": "planet-wide individual GrowthGraph array is forbidden"
+  },
+  "promotion_requirements": {
+    "states_consumed_from_LIFE": ["ABSTRACT", "DORMANT", "SIMULATED", "ACTIVE", "PRESENTED"],
+    "promotion_triggers": ["observation relevance", "interaction", "damage", "ownership/authority relevance"],
+    "demotion_rule": "representation/detail may disappear without deleting canonical ecological identity/state",
+    "identity_rule": "LOD_OR_NODE_EXISTENCE_NE_CANONICAL_IDENTITY"
+  },
+  "work_budget_requirements": {
+    "proposal_fields": ["domain scope", "simulation interval", "input revisions", "estimated cost", "priority/relevance", "quality options"],
+    "allowed_outcomes": ["full", "coarse", "defer", "batch", "S1_dispatch"],
+    "invariant": "WORLD_WORK_BUDGET_NE_AUTHORITY"
+  },
+  "network_interest_requirements": {
+    "default": "replicate population/domain truth or compact projection, not every plant",
+    "individual_replication": "only after explicit promotion/interaction relevance",
+    "invariant": "REPLICATION_LOD_NE_ECOLOGY_IDENTITY"
+  },
+  "r3_gaps": [
+    {
+      "id": "R3_ECO_PROGRAM_ID_COLLISION",
+      "severity": "HIGH_ARCHITECTURE",
+      "finding": "Current canonical Project Registry uses ECO for Evolutionary Ecology Research, while R3 candidate p1_programs.ECO and WORLD_ECONOMY/ECO_FUTURE use ECO for physical world economy.",
+      "recommended_resolution": "Reserve ECO for Evolutionary Ecology; rename future world economy program/owner token to ECON, matching the later R3 prepromotion control intent that future economy remains ECON.",
+      "required_before": "GLOBAL-P0 R3 promotion or any program-ledger canonicalization"
+    },
+    {
+      "id": "R3_WQ_SYSTEM_DOMAIN_SCOPE_UNSPECIFIED",
+      "severity": "MEDIUM_ARCHITECTURE",
+      "finding": "R3 WQ is described as actor-scoped and mandatory consumers list AI/NAV/gameplay, but autonomous ENV/POP/ECO simulation also needs deterministic non-authoritative world projections.",
+      "recommended_resolution": "Clarify whether WQ supports system/domain-scoped query principals/plans or whether ECO must consume a canonical ENV projection adapter outside actor-scoped WQ. Do not create ECO-private WQ.",
+      "required_before": "CONV0-B contract freeze"
+    },
+    {
+      "id": "R3_ECO_POP_OWNERSHIP_INTERSECTION_UNSPECIFIED",
+      "severity": "HIGH_ARCHITECTURE",
+      "finding": "R3 assigns generic POPULATION_FIELD ownership to POP_FUTURE while evolutionary ecology research already treats population state as ecological truth.",
+      "recommended_resolution": "ECO owns ecological population model semantics; POP owns generic production aggregate/runtime field and LIFE integration. Define an adapter boundary, not two population fabrics.",
+      "required_before": "production ECO/POP implementation"
+    },
+    {
+      "id": "R3_ENV_ECO_PROJECTION_PATH_UNSPECIFIED",
+      "severity": "MEDIUM_ARCHITECTURE",
+      "finding": "ENV owns physical environment simulation and MAT owns materials, but the canonical ENV/MAT/WQ -> evolutionary ECO projection contract is not declared.",
+      "recommended_resolution": "Add explicit ecology consumer intersection for environmental and substrate projections.",
+      "required_before": "CONV0-B contract freeze"
+    },
+    {
+      "id": "R3_WB_ECO_CONSUMER_UNSPECIFIED",
+      "severity": "MEDIUM_ARCHITECTURE",
+      "finding": "WB consumers explicitly include POP/ENV but not evolutionary ECO, leaving unclear whether ecology work is budgeted through POP/ENV adapters or as its own domain adapter.",
+      "recommended_resolution": "Choose one explicit path while preserving WB ownership and no ECO scheduler.",
+      "required_before": "production ecology scheduling"
+    }
+  ],
+  "prohibited": [
+    "production EcoEnvironmentQuery adapter before canonical foundation contracts",
+    "ECO-private WorldAddress/spatial fabric",
+    "ECO-private material ontology",
+    "ECO-private generic population runtime fabric",
+    "ECO-private lifecycle/authority/persistence/transport foundation",
+    "ECO-private global work scheduler",
+    "production network protocol freeze",
+    "ECO.P3 or PH6 runtime work"
+  ],
+  "decision": "CONV0_A_REQUIREMENTS_COMPLETE_GLOBAL_GAPS_IDENTIFIED"
+}
