@@ -29,8 +29,11 @@ canonical main:
 R8 exact implementation / review target:
 4c69de50c8374112d82efee2fd6917c770b3eae0
 
-R8 checkpoint control head before this documentation commit:
+R8 checkpoint control head:
 5bd4a2d2fa1bed600ced88cac9def893263e8a6e
+
+first checkpoint documentation commit:
+0178db196d0d1aff1324ad247a98491dca3df3d1
 
 Draft PR:
 #90
@@ -53,7 +56,7 @@ implementation_head_sha == review_target_head_sha
 == 4c69de50c8374112d82efee2fd6917c770b3eae0
 ```
 
-и поздние evidence/control commits этот target не сдвигают.
+и поздние evidence/control/docs commits этот target не сдвигают.
 
 ## C22 source equivalence
 
@@ -106,7 +109,7 @@ C22 production, construction tests, C22/C24 runners и `RUN_WORLD_REGRESSION_TES
 
 ## PC0 / overlap
 
-Executable Project Control на exact implementation head:
+До checkpoint proposal executable Project Control на exact implementation head прошёл:
 
 ```text
 workflow run: 31555576318
@@ -117,7 +120,27 @@ cross-branch overlaps: 0
 blocking human-attention items: 0
 ```
 
-Оставшиеся directional findings относятся к другим программам и не блокируют H0.1/C22.
+После полного `CHECKPOINT_PROPOSED` и checkpoint documentation был запущен отдельный user-authored final Project Control:
+
+```text
+workflow run: 31556349861
+conclusion:       SUCCESS
+standard PC0:     YELLOW / NON_RED
+directional PC0:  YELLOW / NON_RED
+canonical main:   4a42c2fb6befb386f5c3eb48d9ba070745e25bbb
+cross-branch overlaps: 0
+```
+
+Directional findings нужно интерпретировать точно:
+
+```text
+G  -> ECO   WATCH_HIT   global_blocking=false
+CH -> NX    WATCH_HIT   global_blocking=true
+```
+
+`CH -> NX` **не является блокером H0.1/C22**, поэтому текущий checkpoint сохраняет PASS. Но этот finding является отдельным fail-closed gate для будущего NX: перед фактическим `H0.2 / NX.C1` runtime/source acceptance его необходимо переоценить или разрешить в рамках NX directional dependency revalidation. Это не следует называть «nonblocking вообще».
+
+Таким образом, для текущей цели выполнено требуемое условие `DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS`: C22 critical hit отсутствует, C22 overlap отсутствует, PC0 не RED. Одновременно Project Control корректно продолжает блокировать преждевременный переход в NX.
 
 ## Final evidence chain
 
@@ -137,8 +160,8 @@ VERIFYING
 - Evidence Map PASS;
 - exact tested/review heads;
 - standard/directional PC0 NON_RED;
-- zero critical overlap;
-- empty blocking Human Attention;
+- zero C22 critical overlap;
+- empty blocking Human Attention для H0.1;
 - Git-only recovery PASS;
 - Draft PR #90 open;
 - `C22_CHECKPOINT_PROPOSED`.
@@ -153,7 +176,7 @@ checkpoint_proposal_blocked = false
 
 ## STOP boundary
 
-Разрешено только следующее действие:
+Разрешено только следующее runtime-действие:
 
 ```text
 HUMAN: C22_RUNTIME_MERGE
@@ -165,5 +188,17 @@ HUMAN: C22_RUNTIME_MERGE
 - запускать runtime H0.2 / NX.C1;
 - выполнять GLOBAL-P0 R3 promotion;
 - использовать source branch C22 как скрытую canonical truth для V0/NET/GEO/ITEM runtime.
+
+После C22 merge последовательность остаётся строгой:
+
+```text
+C22_RUNTIME_MERGE
+      ↓
+post-C22 PC0
+      ↓
+C22 MAIN_INTEGRATED
+      ↓
+GLOBAL-P0 R3 current-main refresh
+```
 
 Подготовительные `PREPARE_NOW` работы остаются допустимыми согласно central Project Control dashboard.
