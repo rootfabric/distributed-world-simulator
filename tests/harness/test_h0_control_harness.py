@@ -14,7 +14,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.epoch_validator import validate_epoch
 from harness.event_reducer import load_guard_context, reduce_events
-from harness.state_builder import _validate_semantics, build_state
+from harness.state_builder import _implementation_pathspecs, _validate_semantics, build_state
 
 ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-12-H0-1-R8"
 ACTIVE_WORK_ORDER_ID = "H0-1-R8-C22-WO-001"
@@ -115,13 +115,24 @@ class H01R8ClosedLoopControlTests(unittest.TestCase):
         self.assertIn("scripts/items/**", forbidden)
         self.assertIn("scripts/characters/**", forbidden)
 
-    def test_implementation_freshness_scope_declares_runtime_and_excludes_ledger(self):
-        allowed = tuple(self.work_order["allowed_paths"])
-        self.assertIn("scripts/harness/**", allowed)
-        self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", allowed)
-        self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", allowed)
+    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):
+        pathspecs = _implementation_pathspecs(ROOT, ACTIVE_EXECUTION, self.work_order)
+        self.assertIn("scripts/harness/**", pathspecs)
+        self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", pathspecs)
+        self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", pathspecs)
         execution_prefix = f"config/control/harness/executions/{self.epoch['epoch_id']}/"
-        self.assertTrue(any(path.startswith(execution_prefix) for path in allowed))
+        self.assertNotIn(f"{execution_prefix}**", pathspecs)
+        self.assertIn(f"{execution_prefix}transition-table.v1.json", pathspecs)
+        self.assertFalse(any(path.startswith("config/control/branches/") for path in pathspecs))
+        self.assertFalse(any(path.startswith("docs/checkpoints/") for path in pathspecs))
+
+        state = build_state(ROOT, ACTIVE_EXECUTION)
+        expected = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", *pathspecs],
+            cwd=ROOT, text=True, capture_output=True, check=True,
+        ).stdout.strip()
+        self.assertEqual(expected, state["repository"]["implementation_head_sha"])
+        self.assertEqual(expected, state["review"]["review_target_head_sha"])
 
     def test_current_diff_stays_inside_declared_scope(self):
         base = subprocess.run(["git", "merge-base", "origin/main", "HEAD"], cwd=ROOT, text=True, capture_output=True, check=True).stdout.strip()

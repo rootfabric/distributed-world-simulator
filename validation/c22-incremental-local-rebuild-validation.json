@@ -1,0 +1,134 @@
+{
+  "schema": "distributed_world_simulator.c22_incremental_local_rebuild_validation.v1",
+  "branch": "feature/c22-incremental-local-rebuild",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "base_main": "0cb0416f20946afc85abe9abcded07bfcc493bf7",
+  "source_evidence": {
+    "branch": "feature/ts0-large-structural-visual-lab",
+    "checkpoint": "TS0.3_LOCAL_MUTATION_DIRTY_SECTION_REBUILD",
+    "windows_focused": "PASS_24_ASSERTIONS",
+    "c24_contracts": "PASS_81_ASSERTIONS",
+    "evidence_only": true
+  },
+  "decision": "SOURCE_ACCEPTED_MERGE_READY",
+  "status_dimensions": {
+    "SOURCE_ACCEPTED": true,
+    "MAIN_INTEGRATED": false,
+    "COMPOSITION_VERIFIED": true,
+    "PRODUCTION_READY": false
+  },
+  "production_changes": {
+    "incremental_rebuilder": "scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd",
+    "artifact_merger": "scripts/construction/proxies/construction_proxy_artifact_merger.gd",
+    "controller_integration": "scripts/construction/proxies/construction_proxy_streaming_controller.gd",
+    "c24_clockwise_prerequisite": "scripts/construction/proxies/construction_proxy_array_mesh_backend.gd",
+    "canonical_construction_truth_changed": false,
+    "authority_or_persistence_changed": false
+  },
+  "fast_path_contract": {
+    "eligible": "UNIT_AXIS_GRID_NO_INTERIOR_NO_INTERACTIVE_SAME_COMPILE_POLICY",
+    "dirty_lookup": "BINARY_SEARCH_CANONICALLY_SORTED_CONSTRUCT_SNAPSHOT_PARTS",
+    "base_dirty_sections": "OLD_AND_NEW_DIRTY_PART_SECTION_COORDS",
+    "rebuild_scope": "DIRTY_SECTIONS_PLUS_ONE_SECTION_NEIGHBORHOOD",
+    "surface_context": "REBUILD_SCOPE_PLUS_ONE_SECTION_NEIGHBORHOOD",
+    "unchanged_sections": "REUSE_CONTENT_ADDRESSED_SECTION_ARTIFACTS",
+    "far_shell": "SECOND_PASS_GREEDY_MERGE_FROM_SECTION_ARTIFACTS",
+    "unsupported_cases": "SAFE_FULL_COMPILE_FALLBACK",
+    "full_snapshot_scan_required_on_fast_path": false,
+    "full_c22_compile_required_on_fast_path": false
+  },
+  "focused_acceptance": {
+    "fixture": "32x32x32 unit grid",
+    "canonical_parts": 32768,
+    "section_size_m": 8,
+    "total_sections": 64,
+    "mutation": "REMOVE_CORNER_4x4x4",
+    "dirty_parts": 64,
+    "expected_base_dirty_sections": 1,
+    "expected_rebuild_sections": 8,
+    "expected_reused_sections": 56,
+    "expected_context_sections": 27,
+    "reference_equivalence_required": [
+      "TOPOLOGY_CHECKSUM_EQUALS_FULL_COMPILE",
+      "SECTION_ARTIFACT_IDS_EQUAL_FULL_COMPILE",
+      "SHELL_ARTIFACT_ID_EQUALS_FULL_COMPILE"
+    ],
+    "fallback_policy_change_test_required": true,
+    "c22_graphical_regression_required": true,
+    "c24_backend_contracts_required": true
+  },
+  "windows_attempt_1": {
+    "tested_head": "127aad8058cd5f8daf5b5fed524dbeaac75979d2",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "focused_result": "REJECTED_PARSE_ERROR",
+    "failure": "GDSCRIPT_TYPE_INFERENCE_DYNAMIC_CACHE_PUBLISH",
+    "lines": [151, 192]
+  },
+  "fix1": {
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "change": "Explicit Dictionary result types for both dynamic cache.publish calls",
+    "algorithm_changed": false,
+    "revalidation_required": false
+  },
+  "windows_attempt_2": {
+    "tested_head": "ece092753a4ae44f7de5b89d4e5681306cb05308",
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_import": "PASS",
+    "c22_incremental_local_rebuild": "PASS_28_ASSERTIONS",
+    "c22_compiled_proxy_graphical": "PASS_35_ASSERTIONS",
+    "c24_proxy_mesh_backend_contracts": "PASS_81_ASSERTIONS",
+    "focused_gate": "PASS"
+  },
+  "full_regression_attempt_1": {
+    "branch_head_before_attempt": "aead56ea8bad4b3ebbf0ca862f615e4cdb3c0765",
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "result": "BLOCKED_BEFORE_GODOT_TEST_EXECUTION",
+    "gate": "TEST_MANIFEST_COVERAGE",
+    "missing_from_runner": "res://tests/construction/test_c22_incremental_local_rebuild.gd",
+    "runtime_regression_failure": false
+  },
+  "fix2": {
+    "world_regression_runner_commit": "f36a6501741fb4e407108243f08be4453c5be1e4",
+    "change": "Add the production incremental rebuild test to RUN_WORLD_REGRESSION_TESTS.ps1 declared coverage and track stable Godot UID sidecars for new GDScript files",
+    "runtime_algorithm_changed": false,
+    "focused_runtime_evidence_invalidated": false,
+    "full_regression_revalidation_required": false
+  },
+  "full_regression_attempt_2": {
+    "tested_branch_head": "1eb3397d52bd2a402bd3736c0e57ea7f2719b56e",
+    "runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "test_manifest_coverage": "PASS",
+    "world_core_regression": "PASS",
+    "main_scene_cli_all": "PASS_6_FAIL_0",
+    "lifecycle_final_state": "STOPPED",
+    "final_marker": "All world/core regression tests through NX4 client prediction and reconciliation passed.",
+    "report_path": "artifacts/test-results/world-regression-summary.json"
+  },
+  "final_control_review": {
+    "main_head_checked": "c3c8ad1f2087ba9c9ea84adbf9058d2db4c032e0",
+    "main_changes_since_base": [
+      "PROJECT_CONTROL.md",
+      "config/control/project-program-registry.v1.json",
+      "scripts/control/project_control.py"
+    ],
+    "critical_c22_dependency_drift": false,
+    "t1a7_runtime_or_contract_overlap_with_c22_proxy_paths": false,
+    "shared_non_runtime_file": "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "ownership_conflict": false,
+    "result": "PASS"
+  },
+  "acceptance": {
+    "source_accepted": true,
+    "merge_ready": true,
+    "accepted_runtime_head": "12b8375182fb855478325435a927228e34d21133",
+    "accepted_full_regression_head": "1eb3397d52bd2a402bd3736c0e57ea7f2719b56e",
+    "remaining_before_main_integration": [
+      "Merge accepted convergence branch into main",
+      "Run post-merge Project Control audit and mark MAIN_INTEGRATED"
+    ]
+  }
+}
