@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_f_full_pool_robustness_validation.v1",
+  "revision": "ECO-CAL1-F-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "e5a42237d025ff0f0e28623b5f9461ed65149874",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "parent": {
+    "checkpoint": "ECO.CAL1-E",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "6214b8348b16acd005979c3e8ea88eca202acac0ffe835fc899cef27fbe50814"
+  },
+  "calibration": {
+    "selected_profile_before_gate": "UNITY_PENDING_ROBUSTNESS",
+    "reason": "No external empirical target justifies coefficient movement.",
+    "perturbation_fraction": 0.15,
+    "profiles": ["UNITY","MORPHOLOGY_LOW","MORPHOLOGY_HIGH","VERTICAL_LOW","VERTICAL_HIGH","SPATIAL_LOW","SPATIAL_HIGH","ALL_LOW","ALL_HIGH"],
+    "policy": "Perturbation is diagnostic; never tune toward a preferred morphology winner."
+  },
+  "sweeps": {
+    "phenotype_seed": {"seeds":5,"contexts":40,"rows":320},
+    "environment": {"variants_per_environment":5,"contexts":20,"rows":160},
+    "density": {"points":5,"contexts":20,"rows":160},
+    "disturbance": {"severities":5,"contexts":20,"rows":160},
+    "calibration_profile": {"profiles":9,"representative_contexts_per_profile":8,"contexts":72,"rows":576},
+    "strategy_pool": {"pools":5,"contexts":20,"expected_rows":128}
+  },
+  "acceptance_thresholds": {
+    "minimum_seed_multi_member_pareto_fraction": 0.75,
+    "minimum_environment_pareto_signatures": 2,
+    "maximum_density_monotonicity_violations": 0,
+    "maximum_disturbance_survival_violations": 0,
+    "maximum_disturbance_post_seed_violations": 0,
+    "maximum_unity_parent_metric_mismatches": 0,
+    "minimum_calibration_pareto_jaccard": 0.25,
+    "minimum_mean_calibration_pareto_jaccard": 0.50,
+    "maximum_empty_pool_pareto_contexts": 0,
+    "maximum_resource_pairwise_contradictions": 0
+  },
+  "required_classification": "ROBUST_UNITY_CALIBRATION",
+  "implementation_diff": {
+    "base": "c396561fc77f2c9c31dd00cd8c3f1bdd8822da10",
+    "head": "e5a42237d025ff0f0e28623b5f9461ed65149874",
+    "changed_files": 5,
+    "accepted_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "local_validation": "NOT_CLAIMED_FULL_CANONICAL_RUN",
+  "tests": {
+    "acceptance": "tests/research/ecology/eco_cal1_f_full_pool_robustness_acceptance.gd",
+    "restart": "tests/research/ecology/eco_cal1_f_restart_replay_probe.gd",
+    "runner": "RUN_ECO_CAL1_F_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "Close ECO.CAL1 and begin ECO.EVO1 / P2.1 Seed Dispersal Kernel"
+}
