@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R7-H0-1-R7-C22-WO-001-0003",
+  "project_epoch": "E2026-08-12-H0-1-R7",
+  "work_order_id": "H0-1-R7-C22-WO-001",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-12T00:56:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/h0-1-c22-current-main-r2",
+  "head_sha": "83954a5ca2b4f47ea140de208f572ee495378fca",
+  "predicate": "C22_ACCEPTED_CAPABILITY_TRANSFERRED_WITHIN_SCOPE",
+  "command": "ATOMIC_SOURCE_ACCEPTED_C22_BLOB_TRANSFER",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-12-H0-1-R7/evidence/H0-1-R7-C22-WO-001-BLOB-EQUIVALENCE-001.v1.json"],
+  "summary": "Transferred exactly 13 bounded SOURCE_ACCEPTED C22 runtime/test/validation blobs into R7 at implementation head 83954a5c. No source passport, checkpoint history or unrelated runtime surface was imported."
+}
