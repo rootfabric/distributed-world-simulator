@@ -1,56 +1,15 @@
 {
-  "schema": "distributed_world_simulator.global_p0_r3_prepromotion_guards.v1",
-  "candidate_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
-  "status": "R3_EXACT_CURRENT_MAIN_REFRESHED_FINAL_VERIFICATION_PENDING",
-  "mode": "FINALIZATION_ONLY_NO_PROMOTION",
-  "candidate_construction_provenance": {
-    "main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
-    "registry_generation": 75,
-    "note": "Historical construction provenance only. These pins never authorize promotion or new runtime work."
-  },
-  "prepromotion_observation": {
-    "main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
-    "registry_generation": 77,
-    "note": "Historical pre-C22 preparation observation only; retained as provenance and not authorization."
-  },
-  "current_authorization_epoch": {
-    "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
-    "registry_generation": 78,
-    "canonical_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
-    "c22_state": "MAIN_INTEGRATED",
-    "h0_1_runtime_slot": "RELEASED",
-    "r3_branch_contains_exact_main_as_ancestor": true,
-    "note": "Fresh post-C22 facts for R3 final verification only. They do not authorize promotion without final evidence and the human gate."
-  },
-  "finalization_required": [
-    "CONTROL_PROJECT_PASS",
-    "PC0_NON_RED",
-    "DIRECTIONAL_PC0_NON_RED",
-    "OWNERSHIP_INTERSECTION_REVIEW_RECONFIRMED",
-    "R2_TO_R3_TRANSITION_AUDIT_RECONFIRMED",
-    "EVIDENCE_MAP_FINALIZED",
-    "INDEPENDENT_REVIEWER_PASS",
-    "INDEPENDENT_VERIFIER_PASS"
-  ],
-  "human_gate_required": ["GLOBAL_ARCHITECTURE_PROMOTION"],
-  "ownership_invariants": {
-    "ITEM": "STABLE_CANONICAL_FOUNDATION",
-    "V0": "COMPOSITION_CONSUMER_ONLY",
-    "H0_3": "DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER",
-    "ECO": "ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER",
-    "ECON": "RESERVED_FUTURE_ECONOMY_PROGRAM",
-    "H0_1_after_c22_main_integrated": "MUST_NOT_OWN_RUNTIME_SLOT",
-    "NX_C1": "MAY_START_ONLY_FROM_FRESH_POST_R3_CANONICAL_MAIN"
-  },
-  "directional_watches": {
-    "G_to_ECO": "ADVISORY_NON_GLOBAL_BLOCKING",
-    "CH_to_NX": "FUTURE_NX_GLOBAL_BLOCKING_GATE_NOT_CURRENT_R3_BLOCKER"
-  },
-  "authorization_policy": {
-    "stale_sha_authorizes": false,
-    "stale_registry_generation_authorizes": false,
-    "branch_local_state_authorizes": false,
-    "historical_evidence_authorizes_new_runtime": false,
-    "promotion_requires_human_gate": true
-  }
+  "schema":"distributed_world_simulator.global_p0_r3_prepromotion_guards.v1",
+  "candidate_revision":"GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "status":"R3_MUTABLE_FINALIZATION_COMPLETE_FINAL_PC0_PENDING",
+  "mode":"FINALIZATION_ONLY_NO_PROMOTION",
+  "candidate_construction_provenance":{"main_sha":"1112d1f7cfad1df18fb3621a537e191e674848c6","registry_generation":75,"note":"Historical construction provenance only. These pins never authorize promotion or new runtime work."},
+  "prepromotion_observation":{"main_sha":"4a42c2fb6befb386f5c3eb48d9ba070745e25bbb","registry_generation":77,"note":"Historical pre-C22 preparation observation only; retained as provenance and not authorization."},
+  "current_authorization_epoch":{"main_sha":"f6d68fc7c594b371f48a9bcff056e2478e04f317","registry_generation":78,"canonical_architecture_revision":"GLOBAL-P0-2026-08-10-R2","c22_state":"MAIN_INTEGRATED","h0_1_runtime_slot":"RELEASED","r3_branch_contains_exact_main_as_ancestor":true,"note":"Fresh post-C22 facts for R3 final verification only. They do not authorize promotion without final evidence and the human gate."},
+  "completed_guards":["C22_MAIN_INTEGRATED","H0_1_RUNTIME_SLOT_RELEASED","EXACT_CURRENT_MAIN_ANCESTOR_REPIN","EPHEMERAL_GUARDS_REFRESHED","OWNERSHIP_INTERSECTION_REVIEW_PASS","R2_TO_R3_TRANSITION_AUDIT_PASS"],
+  "finalization_required":["FINAL_EXACT_HEAD_CONTROL_PROJECT_PASS","FINAL_EXACT_HEAD_PC0_NON_RED","FINAL_EXACT_HEAD_DIRECTIONAL_PC0_NON_RED","EVIDENCE_MAP_FINALIZED","INDEPENDENT_REVIEWER_PASS","INDEPENDENT_VERIFIER_PASS"],
+  "human_gate_required":["GLOBAL_ARCHITECTURE_PROMOTION"],
+  "ownership_invariants":{"ITEM":"STABLE_CANONICAL_FOUNDATION","V0":"COMPOSITION_CONSUMER_ONLY","H0_3":"DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER","ECO":"ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER","ECON":"RESERVED_FUTURE_ECONOMY_PROGRAM","H0_1_after_c22_main_integrated":"MUST_NOT_OWN_RUNTIME_SLOT","NX_C1":"MAY_START_ONLY_FROM_FRESH_POST_R3_CANONICAL_MAIN"},
+  "directional_watches":{"G_to_ECO":"ADVISORY_NON_GLOBAL_BLOCKING","CH_to_NX":"FUTURE_NX_GLOBAL_BLOCKING_GATE_NOT_CURRENT_R3_BLOCKER"},
+  "authorization_policy":{"stale_sha_authorizes":false,"stale_registry_generation_authorizes":false,"branch_local_state_authorizes":false,"historical_evidence_authorizes_new_runtime":false,"promotion_requires_human_gate":true}
 }
