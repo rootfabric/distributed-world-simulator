@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.4 EXECUTE_NOW`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.4 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -27,29 +27,7 @@ P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
 P2.3    15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e
 ```
 
-## P2.3 accepted evidence
-
-Exact Windows Godot: `4.7.1.stable.double.custom_build.a13da4feb`.
-
-```text
-EARLY initial share       0.875000000000
-BANKED initial share      0.125000000000
-BANKED pre-change         0.199612211554
-BANKED shade final        0.964707699557
-BANKED open final         0.369379521845
-shade delta               0.595328177712
-banked gain               0.765095488003
-reactivated               48
-reproduction events       15
-emitted                   325
-short mortality           0.050232535701
-long mortality            0.028476366298
-max biomass               0.101663621317
-```
-
-Acceptance: 168 assertions PASS; fresh-process A/B exact hash match.
-
-Historical parser finding `Engine shadows a native class` was repaired only by alias rename `Engine -> PopulationEngine`; model semantics did not change.
+P2.3 exact Windows succession evidence includes `shade_delta=0.595328177712`, `banked_gain=0.765095488003`, seed-bank reactivation `48`, reproduction events `15`, and exact fresh-process replay.
 
 ## Central route
 
@@ -62,8 +40,8 @@ P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
    ↓
 P2.3 Local Population Turnover + Succession ACCEPTED
    ↓
-P2.4 Patch Colonization / Isolation / Migration ← CURRENT
-   ↓
+P2.4 Patch Colonization / Isolation / Migration ← CURRENT CANDIDATE
+   ↓ PASS
 P2.5 Disturbance + Recovery
    ↓
 P2.6 Long-Horizon Biogeography
@@ -77,20 +55,75 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.4 boundary
+## P2.4 implementation
 
-P2.4 may now turn P2.3 export accounting into explicit research-scale inter-patch movement. It must preserve:
+Implementation head: `01042d585fa46aebe5fde090e217c9fcb58be68f`.
 
-- P2.1 propagule spatial semantics;
-- P2.2 establishment/seed-bank semantics;
-- P2.3 local turnover/succession semantics;
-- lineage/genome/reproduction-event identity;
-- cohort-bounded truth.
+Diff from accepted P2.3 adds exactly five ECO research/test files and modifies no accepted P2.3/P2.2/P2.1/CAL1 source or runtime path.
 
-It must demonstrate causally that nearby connected patches colonize more readily than isolated patches, and that changed connectivity/history changes persistent community state without a biome/species placement table.
+### Spatial migration semantics
 
-P2.4 remains research-only and must not claim canonical simulator Spatial Domain Fabric ownership. Patch graph/geometry here is a local experiment input. `XFER1/LIVE` remain deferred to global foundations.
+P2.4 takes the real `destination_position` produced by P2.1. A seed packet that leaves the source patch is routed only if that coordinate intersects a known target patch rectangle. Otherwise it remains unresolved external export.
 
-P2.4 must not introduce explicit disturbance-event scheduling; that begins at P2.5.
+```text
+emitted
+ = source-retained
+ + routed to known target
+ + unresolved export
+```
 
-Current resolver: `IMPLEMENT EVO1/P2.4 PATCH COLONIZATION / ISOLATION / MIGRATION`.
+Arrival is then passed to the accepted P2.2 establishment/seed-bank kernel, preserving lineage/genome/reproduction event and packet provenance.
+
+### Isolation experiment
+
+Two otherwise matched causal lineages differ only by inherited seed dispersal distance:
+
+```text
+SHORT = 5 m
+LONG  = 20 m
+```
+
+Both emit eight 160-seed events from the same source into the same favourable environment and eastward transport.
+
+Targets:
+
+```text
+NEAR Rect2(11,-20,24,40)
+FAR  Rect2(50,-40,80,80)
+```
+
+Acceptance requires NEAR to recruit both SHORT and LONG, FAR to recruit LONG but not SHORT, NEAR total recruitment to exceed FAR, and LONG share to increase with isolation. A westward LONG control must route zero seeds into the east-side targets.
+
+Thus connectivity and community filtering emerge from inherited dispersal + real transport geometry, not a migration table.
+
+### Ownership boundary
+
+Research patch `Rect2` records are experiment inputs only. P2.4 does not claim canonical Spatial Domain Fabric, terrain/world-query, network authority or persistence ownership. Production transfer still waits for XFER/global foundations.
+
+### Strict P2.5 boundary
+
+No explicit disturbance event scheduler or disturbance recovery chronology is introduced here. P2.5 owns those semantics.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_4_TESTS.ps1 -GodotPath $Godot
+```
+
+The runner first performs a parser/preload `--check-only` preflight, then the accepted P2.3 parent regression, P2.4 acceptance and two fresh-process replay probes.
+
+Until PASS:
+
+```text
+P2.4 = IMPLEMENTED_CANDIDATE
+P2.4 != ACCEPTED
+P2.5 = BLOCKED
+```
+
+Current resolver: `RUN EVO1/P2.4 EXACT WINDOWS PATCH COLONIZATION / ISOLATION / MIGRATION GATE`.

@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_4_patch_colonization_validation.v1",
+  "revision": "ECO-EVO1-P2.4-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "01042d585fa46aebe5fde090e217c9fcb58be68f",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.3",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e"
+  },
+  "truth": {
+    "migration_unit": "P2.1 propagule cohort packet",
+    "routing_basis": "actual packet destination_position intersecting research patch Rect2",
+    "target_settlement": "accepted P2.2 establishment and seed-bank kernel",
+    "local_population_parent": "accepted P2.3 turnover/succession semantics",
+    "patch_geometry": "research experiment input only, not canonical Spatial Domain Fabric",
+    "identity": "lineage/genome/reproduction-event plus source and arrival packet hashes"
+  },
+  "controlled_design": {
+    "source_bounds": "Rect2(-10,-10,20,20)",
+    "near_bounds": "Rect2(11,-20,24,40)",
+    "far_bounds": "Rect2(50,-40,80,80)",
+    "target_environment": "identical favourable environment",
+    "short_dispersal_m": 5.0,
+    "long_dispersal_m": 20.0,
+    "east_events_per_lineage": 8,
+    "seeds_per_event": 160,
+    "east_transport": "Vector2(1,0), turbulence=0.20",
+    "west_control": "LONG lineage, 4 events, Vector2(-1,0), same east targets"
+  },
+  "required_properties": [
+    "P2_3_PARENT_HASH_UNCHANGED",
+    "MIGRATION_INTEGER_CONSERVATION_EXACT",
+    "TARGET_SETTLEMENT_INTEGER_CONSERVATION_EXACT",
+    "NEAR_SHORT_ARRIVAL_AND_RECRUITMENT_GT_ZERO",
+    "NEAR_LONG_ARRIVAL_AND_RECRUITMENT_GT_ZERO",
+    "FAR_SHORT_ARRIVAL_AND_RECRUITMENT_EQ_ZERO",
+    "FAR_LONG_ARRIVAL_AND_RECRUITMENT_GT_ZERO",
+    "NEAR_COLONIZED_LINEAGES_EQ_2",
+    "FAR_COLONIZED_LINEAGES_EQ_1",
+    "NEAR_TOTAL_RECRUITMENT_GT_FAR",
+    "FAR_LONG_SHARE_GT_NEAR_LONG_SHARE",
+    "WESTWARD_CONTROL_EAST_TARGET_ROUTING_EQ_ZERO",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "NO_P2_5_DISTURBANCE_SCHEDULER",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "89aec8f317d8046f86369510e5d685fd6a8f2b06",
+    "head": "01042d585fa46aebe5fde090e217c9fcb58be68f",
+    "changed_files": 5,
+    "accepted_p2_3_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "parser_preflight": true,
+    "acceptance": "tests/research/ecology/eco_evo1_p2_4_patch_colonization_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_4_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_4_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 / P2.5 Disturbance + Recovery"
+}
