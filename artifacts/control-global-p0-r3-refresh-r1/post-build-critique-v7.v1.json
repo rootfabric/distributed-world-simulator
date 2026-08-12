@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.harness_post_build_critique.v1",
+  "work_order_id": "GLOBAL-P0-R3-DIRECTOR-GATE-LIFECYCLE-SEMANTIC-REPAIR-V7",
+  "project_epoch": "GLOBAL-P0-R3-V7-DIRECTOR-GATE-LIFECYCLE-REPAIR",
+  "implementation_head_sha": "2735000bea4bf47af2059d36041e672297cf4c39",
+  "control_head_observed_sha": "2735000bea4bf47af2059d36041e672297cf4c39",
+  "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "reviewed_at_utc": "2026-08-12T15:16:52Z",
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "strengths": [
+    "unnecessary_complexity: V7 repairs the missing CRITICAL Director lifecycle gate in the existing R3 surfaces and reuses canonical risk routing; it adds no new approval role, policy layer, runtime subsystem, scheduler, store, or architecture owner.",
+    "duplicate_truth: the repair does not duplicate Harness policy. Canonical CRITICAL role routing remains owned by config/control/harness/risk-policy.v1.json; R3 candidate/control/docs now consistently consume that policy by requiring Reviewer -> Verifier -> Director -> READY -> Human.",
+    "implicit_owner: no domain, architecture, runtime, or promotion ownership is transferred. Reviewer, Verifier, Director, and Human remain distinct roles; Director may gate candidate readiness but does not perform Human GLOBAL_ARCHITECTURE_PROMOTION.",
+    "coupling_reduction: stable candidate semantics name only the role ordering and keep post-role lifecycle synchronization external, preventing transient evidence/pass state or control-head SHA values from becoming immutable candidate truth.",
+    "sibling_surface_fix: the active-surface sweep covered candidate blockers/validation, prepromotion guards, architecture doc, implementation plan, R2-to-R3 transition policy, and CURRENT_PROJECT_FRONTIERS; dated V2-V6 checkpoint/review artifacts remain historical provenance rather than being cosmetically rewritten.",
+    "removable_code: V7 adds no runtime/domain code and no redundant control implementation. The six-file semantic delta is architecture/control/docs only, so there is no new code layer to remove.",
+    "design_regression: the 11/11 Design Brief remains complete; ITEM stays canonical, V0 stays consumer-only, H0.3 stays DEVELOPMENT Work-Order control only, ECO/ECON remain distinct, NX.C1 remains post-R3 gated, and shared Harness policy is unchanged.",
+    "refactor_if_redesigned: from the current canonical contracts the same bounded repair would be chosen: add Director to active R3 gate ordering, repair all same-class active omissions in one semantic commit, freeze the target, and keep dynamic Reviewer/Verifier/Director/Human state external."
+  ],
+  "remaining_risks": [
+    "Independent Reviewer PASS for exact V7 target 2735000bea4bf47af2059d36041e672297cf4c39 is still required.",
+    "Independent Verifier PASS for exact V7 target 2735000bea4bf47af2059d36041e672297cf4c39 remains a separate later role.",
+    "Director final-gate PASS for exact V7 target 2735000bea4bf47af2059d36041e672297cf4c39 remains a separate later role after durable Reviewer and Verifier PASS.",
+    "Human GLOBAL_ARCHITECTURE_PROMOTION remains pending and may not be inferred or synthesized.",
+    "Future CH -> NX dependency revalidation remains required before NX source acceptance.",
+    "HARNESS_SCHEMA_INSTANCE_VALIDATION_GAP remains a non-blocking Harness follow-up."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Run NEW SESSION R / GLOBAL-P0 R3 INDEPENDENT REVIEWER against exact frozen V7 target 2735000bea4bf47af2059d36041e672297cf4c39; do not reuse the historical V6 Reviewer PASS."
+  ]
+}
