@@ -1,90 +1,69 @@
 # GLOBAL-P0 R3 — Parallel Implementation Plan (Refresh R1)
 
 **Candidate:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Base:** `main @ 1112d1f7cfad1df18fb3621a537e191e674848c6`  
-**Registry:** `75`  
+**Current finalization base:** `main @ f6d68fc7c594b371f48a9bcff056e2478e04f317`  
+**Current registry:** `78`  
 **Promotion:** forbidden in this plan
+
+Historical construction provenance is preserved only as provenance:
+
+```text
+construction main     1112d1f7cfad1df18fb3621a537e191e674848c6
+construction registry 75
+```
+
+The old planning assumption that treated H0.3 as a game/runtime-process scheduler is explicitly superseded by canonical Harness semantics below. Historical preparation documents may retain the old assumption as historical evidence, but this CURRENT implementation plan must not activate it.
 
 ## 1. Immediate project rule
 
-R3 preparation may run in parallel with H0.1/C22, but R3 promotion may not invalidate the active H0.1 R2 checkpoint.
-
-Current primary runtime/control sequence is:
+Canonical current state:
 
 ```text
-             CURRENT PRIMARY
-                   │
-                   ▼
-             H0.1 / C22
-                   │
-                   ▼
-              H0_1_PASS
-                   │
-                   ▼
-      HUMAN: C22 runtime merge
-                   │
-                   ▼
-            post-C22 PC0
-                   │
-                   ▼
-         C22 MAIN_INTEGRATED
-                   │
-                   ▼
-         GLOBAL-P0 R3 promotion
-                   │
-                   ▼
-             post-R3 PC0
-                   │
-                   ▼
-            H0.2 / NX.C1
-                   │
-                   ▼
-         NX SOURCE_ACCEPTED
-                   │
-                   ▼
-                 H0.3
-      multi-runtime-worker scheduler
-                   │
-                   ▼
-       H0_3_ORCHESTRATION_ACCEPTED
-                   │
-                   ▼
-            capability fan-out
-                   │
-          NET / GEO-MAT / WT-WQ
-                   │
-                   ▼
-              V0 composition
+main                     f6d68fc7c594b371f48a9bcff056e2478e04f317
+registry                 78
+architecture             GLOBAL-P0-2026-08-10-R2
+H0.1                     H0_1_PASS
+C22                      MAIN_INTEGRATED
+H0.1 runtime slot        RELEASED
+GLOBAL-P0 R3             final repair/review sequence
+NX.C1                    BLOCKED
 ```
 
-R3 architecture preparation therefore remains parallel, but **runtime progression is serialized at the named checkpoint boundaries**.
+Current critical path:
 
 ```text
-H0.1 / C22 runtime train          GLOBAL-R3 architecture train
-        |                                  |
-        |                                  +-- refresh ownership
-        |                                  +-- transition policy
-        |                                  +-- evidence/review/PC0
-        |                                  |
-        +-- reach checkpoint boundary      +-- R3_REFRESHED_CANDIDATE
-                         \                 /
-                          \               /
-                           +-- human promotion gate
-                                      |
-                                      +-- post-R3 PC0
-                                      |
-                                      +-- H0.2 / NX.C1
-                                      |
-                                      +-- H0.3
+C22 MAIN_INTEGRATED
+        ↓
+R3 exact-head semantic repair
+        ↓
+R2→R3 + ownership/runtime/overlap audits
+        ↓
+standard + directional PC0 NON_RED
+        ↓
+R3_REPAIR_COMPLETE_REVIEW_READY
+        ↓
+Independent Reviewer
+        ↓
+Independent Verifier
+        ↓
+R3_REFRESHED_CANDIDATE_READY
+        ↓
+HUMAN GLOBAL_ARCHITECTURE_PROMOTION
+        ↓
+post-R3 PC0
+        ↓
+fresh H0.2 / NX.C1 dispatch
 ```
+
+`GLOBAL_ARCHITECTURE_PROMOTION` remains a CRITICAL human gate. Nothing in this plan authorizes it automatically.
 
 ## 2. Activation classes
 
 ```text
-A CONTRACT_NOW
-  DTO/value objects/interfaces/validators/fakes/tests only
+A CONTRACT_AFTER_GATE
+  DTO/value objects/interfaces/validators/fakes/tests
 
-B ADAPTER_NOW
+B ADAPTER_AFTER_GATE
   adapters around accepted domains, no truth migration
 
 C PRODUCTION_AFTER_GATE
@@ -94,19 +73,17 @@ D RESERVE_ONLY
   ownership reserved, no implementation yet
 ```
 
-The fresh candidate itself creates no new runtime branch.
+The R3 candidate itself creates no runtime/domain implementation.
 
 ## 3. Wave A — only after canonical R3 promotion
 
-Maximum four new foundation frontiers.
-
-These frontiers may progress in parallel with the primary H0.2/H0.3 runtime train where control-plane worker limits permit, but they do not replace that train.
+Maximum four new foundation frontiers may start from one accepted canonical R3 base or a later explicitly audited descendant.
 
 ### IAM0 / IAM1 — Identity and Session
 
 Class: A/B
 
-Implement later:
+Planned contracts:
 
 ```text
 AccountId
@@ -119,7 +96,7 @@ IdentityProviderPort
 LocalIdentityProvider
 ```
 
-Acceptance:
+Acceptance intent:
 
 - reconnect changes SessionId without changing AccountId;
 - network peer ID never becomes account identity;
@@ -130,7 +107,7 @@ Acceptance:
 
 Class: A
 
-Implement later:
+Planned contracts:
 
 ```text
 MaterialDefinitionId
@@ -140,9 +117,7 @@ MaterialRegistryPort
 MaterialProjectionDescriptor
 ```
 
-Fixture identities may include water, ice, oxygen, nitrogen, iron, steel, basalt, granite and soil. They are test fixtures, not final scientific content.
-
-Acceptance:
+Acceptance intent:
 
 - stable IDs/checksums;
 - duplicate ID rejected;
@@ -156,7 +131,7 @@ MAT0 is a hard prerequisite for G9.
 
 Class: A
 
-Implement later:
+Planned contracts:
 
 ```text
 WorldOperationId
@@ -168,7 +143,7 @@ WorldOperationResult
 WorldTransactionCompilerPort
 ```
 
-Mock fixture:
+Reference fixture:
 
 ```text
 MOCK_MINE
@@ -182,7 +157,7 @@ WT plans only; M0 remains the atomic commit owner.
 
 Class: A
 
-Implement later:
+Planned contracts:
 
 ```text
 WorldQuery
@@ -207,29 +182,37 @@ WB0/WB1   work-budget contracts + fake arbiter
 COMPAT0   compatibility/version taxonomy
 ```
 
-SD0 may start after RF0 shape is frozen.
+`SD0` follows RF0 shape.
 
-Wave B is not a prerequisite for the first V0 playable composition unless a concrete V0 scenario explicitly consumes one of these capabilities.
+Wave B is capability-driven. It is not a blanket prerequisite for early V0 stages unless a concrete V0 stage consumes the capability.
 
 ## 5. Existing frontiers and R3 interaction
 
 ### H0.1 / C22
 
-Current observed H0.1 R6 Work Order is PLANNED on exact current-main base. It remains R2 until its checkpoint boundary.
-
-R3 rules:
+Current canonical disposition:
 
 ```text
-no architecture mutation inside H0.1 C22 Work Order
-no R3 promotion while H0.1 is open
-finish H0.1 or explicitly invalidate/rebuild it
+H0.1 R8       H0_1_PASS
+C22           MAIN_INTEGRATED
+runtime slot  RELEASED
 ```
+
+H0.1/C22 is historical/accepted for this transition and owns no current runtime slot.
 
 ### H0.2 / NX.C1
 
-After C22 is `MAIN_INTEGRATED`, R3 is promoted, and post-R3 PC0 is NON_RED, H0.2 consumes NX.C1 as the next primary runtime capability transfer.
+H0.2/NX.C1 remains blocked until all of the following are true:
 
-Target boundary:
+```text
+canonical R3
++
+mandatory post-R3 PC0 NON_RED
++
+fresh H0.2/NX.C1 dispatch from then-current main
+```
+
+Target source boundary remains:
 
 ```text
 H0.2 / NX.C1
@@ -237,56 +220,75 @@ H0.2 / NX.C1
 NX SOURCE_ACCEPTED
 ```
 
-H0.2 must not become a private network implementation. It proves that the runtime/control mechanism can consume an accepted NX capability through the controlled source/worker path.
+Fresh CH→NX directional dependency revalidation is required before NX source acceptance.
 
-### H0.3 — multi-runtime-worker scheduler
+### H0.3 — DEVELOPMENT multi-worker Work-Order scheduler/control layer
 
-H0.3 is the next tactical foundation checkpoint after H0.2.
+H0.3 is a development-control checkpoint after H0.2/NX source acceptance.
+
+Invariant:
+
+```text
+H0.3
+=
+DEVELOPMENT multi-worker Work-Order scheduler/control layer
+
+H0.3
+!= game-runtime process scheduler
+!= gameplay authority owner
+!= simulation/game-time owner
+!= production boot owner
+```
 
 Purpose:
 
-> prove that more than one accepted runtime capability can be scheduled, observed, failed, recovered/stopped and coordinated without creating hidden ownership or startup-order correctness.
+> prove that multiple development Work Orders can be admitted, blocked, run, reviewed and integrated under explicit ownership/path/watch constraints without allowing conflicting work to proceed concurrently.
 
 Minimum target semantics:
 
 ```text
-worker registry / assignment
-explicit lifecycle
-bounded concurrent runtime workers
-observable READY / FAILED / STOPPED state
-owner-attributed failure
-controlled startup/shutdown
-no private gameplay truth in scheduler
+WorkOrderCandidate
+ownership claims
+allowed_paths
+forbidden_paths
+watched_paths
+critical_watched_paths
+intersection classification
+compatible → RUN
+conflicting → BLOCK
+bounded development-worker concurrency
+checkpoint/evidence/review routing
+integration ordering
 ```
+
+H0.3 does not start, stop, schedule or own gameplay runtime processes.
 
 Checkpoint target:
 
 ```text
-H0_3_ORCHESTRATION_ACCEPTED
+H0_3_SCHEDULER_ACCEPTED
 ```
 
-H0.3 is the **last mandatory runtime-foundation gate before V0 runtime composition begins**.
+This is the development-control gate required before V0 runtime implementation is authorized.
 
 ### G
 
 G8 is frozen accepted evidence. Do not rewrite G8 for R3.
 
-After promotion + MAT0:
+After canonical R3 + MAT0:
 
 ```text
 fresh current-main G9
--> layered geology/material composition
+→ layered geology/material composition
 ```
 
-G9–G13 deepen world-generation capability, but they are not an unconditional barrier for the first V0 world scenario if an accepted/current-canonical terrain capability already satisfies that scenario.
+G9–G13 deepen world-generation capability, but are not blanket blockers for an early V0 stage if the stage only requires an already accepted/current-canonical terrain capability.
 
 ### NX
 
-NX.C0 remains preparation.
+NX.C0 remains preparation-only.
 
-NX.C1 starts after H0.1 PASS and the required architecture/control boundary. In the preferred current train it follows canonical R3 promotion + post-R3 PC0.
-
-After H0.2/NX.C1 reaches `NX SOURCE_ACCEPTED`, later NX work can fan out:
+NX.C1 starts only after canonical R3 + post-R3 PC0 + fresh H0.2 dispatch. After the required NX source acceptance/integration boundary, later capabilities can fan out as separately justified work:
 
 ```text
 NX.C2
@@ -295,74 +297,90 @@ NX8 interest / replication budget
 NX9 persistence / hardening
 ```
 
-These stages expand V0/network capability progressively. They must not all be treated as a blanket prerequisite for the first two-client V0 scenario when the accepted canonical NX path already provides the required semantics.
+They are capability extensions, not an automatic waterfall that blocks all earlier composition.
 
 ### T / Construction
 
-T1B stays frozen evidence. C22 convergence is handled by H0.1. T2.0 remains gated by C22 MAIN_INTEGRATED + TS0.4 + PC0 convergence.
+T1B stays frozen evidence. C22 is now MAIN_INTEGRATED.
 
-For V0, a small real Construction outpost may use accepted/current-canonical Construction/C22 paths without waiting for the 1M construction ceiling or full T2 scale program.
+T2.0 remains separately gated by its own canonical conditions, including TS0.4 ceiling evidence and PC0 convergence. V0-S1 may consume a bounded accepted/current-canonical Construction/C22 capability without claiming that full T2 scale work is complete.
 
 ### CH
 
-Character/embodiment is a V0 consumer dependency only at the capability needed for the scenario: player spawn, movement/presentation and item/equipment presentation where applicable.
+CH9.6 is accepted/frozen. Character is a V0 consumer dependency only at the capability required by the scenario: player spawn, movement/presentation and item/equipment presentation where applicable.
 
-Character clothing/ECO polish is not allowed to become a blocker for the primary V0 composition train.
+CH→NX remains a future NX dependency revalidation gate, not a current R3 blocker.
 
 ### ECO / ECON
 
-`ECO` is the live Evolutionary Ecology research program. It remains advisory/nonblocking and may continue research.
+```text
+ECO  = Evolutionary Ecology advisory/research
+ECON = reserved future economy/markets/contracts
+```
 
-`ECON` is reserved for future world economy/markets/contracts. No ECON runtime work begins in this refresh.
+ECO is nonblocking for current R3 finalization. ECON has no runtime work in this refresh.
 
-Neither ECO nor ECON is a base V0 prerequisite.
+### ITEM
+
+```text
+ITEM = STABLE_CANONICAL_FOUNDATION
+```
+
+V0 consumes Item identity/container/transfer semantics and must not introduce private item truth.
 
 ### MATTER / S1
 
-Remain stable foundations. New R3 programs consume them through explicit contracts; they are not replaced.
+Remain stable foundations. R3 adds contracts/adapters at named intersections; it does not replace them.
 
-## 6. Parallel work allowed before and after promotion
+## 6. Parallel work policy
 
-### Safe before promotion
+### Before human R3 promotion
+
+Allowed:
 
 ```text
-GLOBAL-R3 ownership/intersection review
-GLOBAL-R3 Evidence Map
-GLOBAL-R3 PC0/reviewer/verifier
-ECO research validation
-H0.1/C22 single runtime worker
-V0 composition planning only
+GLOBAL-R3 repair/final evidence work
+Independent Reviewer session
+Independent Verifier session
+H0.2/NX.C1 preparation only
+H0.3 design/preparation only
+V0 design/preparation only
+GEO-min / ITEM-min / NET-min contract planning only
+ECO advisory research/design
 ```
 
-Do not start before promotion:
+Forbidden:
 
 ```text
-IAM0 production branch
-MAT0 production branch
-WT0 production branch
-WQ0 production branch
+H0.2/NX.C1 runtime
+H0.3 implementation
+V0 runtime
 G9 runtime
-NX runtime because of R3 alone
-ECON runtime
-SP/ENV/AI/POP production
-V0 runtime branch
+TS0.4 runtime
+T2.0 runtime
+Wave A production branches
+GLOBAL_ARCHITECTURE_PROMOTION without explicit human authorization
 ```
 
-### Safe after canonical R3 promotion + post-R3 PC0
+### After canonical R3 promotion + mandatory post-R3 PC0
 
-Primary runtime train:
+Primary train:
 
 ```text
-H0.2 / NX.C1
-    ↓
+fresh H0.2 / NX.C1
+        ↓
 NX SOURCE_ACCEPTED
-    ↓
-H0.3
-    ↓
-H0_3_ORCHESTRATION_ACCEPTED
+        ↓
+required NX integration boundary
+        ↓
+H0.3 development scheduler implementation
+        ↓
+H0_3_SCHEDULER_ACCEPTED
+        ↓
+V0-S0 runtime implementation may start
 ```
 
-Parallel contract lanes, subject to worker/control limits:
+Wave A contract lanes may run in parallel only under control-plane worker limits and ownership/intersection checks:
 
 ```text
 IAM0/IAM1
@@ -371,73 +389,60 @@ WT0
 WQ0/WQ1
 ```
 
-After H0.3 the project may start **composition-driven fan-out**:
+There is no global adapter/runtime-worker waterfall.
+
+## 7. V0 — capability-driven playable composition
+
+V0 is a **composition consumer**, not a canonical truth owner.
+
+Invariant:
 
 ```text
-          H0.3 ACCEPTED
-                │
-     ┌──────────┼──────────┐
-     ▼          ▼          ▼
-    NET       GEO/MAT     WT/WQ
- capability  capability  capability
-  adapters    adapters    adapters
-     │          │          │
-     └──────────┼──────────┘
-                ▼
-               V0
+V0 = COMPOSITION_CONSUMER_NOT_CANONICAL_TRUTH_OWNER
 ```
 
-## 7. V0 — staged playable composition
-
-V0 is a **composition consumer**, not a new owner.
-
-Its purpose is to answer:
-
-> can accepted runtime/world/item/network capabilities execute a small reproducible playable scenario together?
-
-The detailed design lane is:
-
-```text
-docs/v0-playable-composition-design
-```
-
-The runtime branch remains forbidden until H0.3 acceptance.
+V0 does not own a global runtime scheduler. It consumes existing production runtime lifecycle and accepted domain capabilities.
 
 ### V0.0 — Composition Contract Freeze
 
-Define:
+Define only the composition contract needed to prove staged scenarios:
 
 ```text
-ScenarioSpec
 capability matrix
 canonical owners
-worker set
+required minimal capabilities
 operator flows
 focused tests
-telemetry
+telemetry/evidence
 ```
 
-No new canonical schema is allowed merely for the showcase.
+No private V0 world/item/network truth and no new universal scheduler schema.
 
-### V0-S0 — Runtime Boot
+### V0-S0 — Production Runtime Boot
 
 Dependency:
 
 ```text
-H0_3_ORCHESTRATION_ACCEPTED
+H0_3_SCHEDULER_ACCEPTED
 ```
 
-Proof:
+Production boot path:
 
 ```text
-ScenarioSpec
- -> canonical scheduler
- -> world/query worker
- -> network worker
- -> item/query worker
- -> READY
- -> controlled shutdown
+project.godot
+    ↓
+main.tscn
+    ↓
+scripts/app/simulator_app.gd
+    ↓
+existing production runtime lifecycle
+    ↓
+READY
+    ↓
+controlled shutdown
 ```
+
+H0.3 does not participate in this runtime call chain; it only governs development Work Orders that produced/validated the stage.
 
 Target checkpoint:
 
@@ -447,22 +452,30 @@ V0_S0_RUNTIME_BOOT_ACCEPTED
 
 ### V0-S1 — World Scenario
 
-Proof:
+Capability gate:
+
+```text
+GEO-min
++
+player
++
+T/C22 accepted capability
+```
+
+Proof intent:
 
 ```text
 procedural/current-canonical terrain
 + player
-+ small real Construction outpost
++ bounded real Construction outpost
 = walkable integrated world
 ```
 
 Operator flow:
 
 ```text
-spawn -> walk surface -> approach outpost -> enter -> leave
+spawn → walk surface → approach outpost → enter → leave
 ```
-
-G9–G13 and MAT0 are not mandatory for S1 unless S1 explicitly consumes those semantics.
 
 Target checkpoint:
 
@@ -472,17 +485,23 @@ V0_S1_WORLD_ACCEPTED
 
 ### V0-S2 — Item Scenario
 
-Proof:
+Capability gate:
+
+```text
+ITEM-min
+```
+
+Proof intent:
 
 ```text
 open real container
- -> pickup/transfer through Item Graph
- -> inventory/equipment
- -> drop/return
- -> one coherent identity/state
+→ pickup/transfer through Item Graph
+→ inventory/equipment
+→ drop/return
+→ one coherent identity/state
 ```
 
-WT/WQ adapters should be used where required by the canonical interaction path. No `V0Inventory` or private item truth is permitted.
+No `V0Inventory` or private item truth is permitted.
 
 Target checkpoint:
 
@@ -491,6 +510,14 @@ V0_S2_ITEM_ACCEPTED
 ```
 
 ### V0-S3 — Network Scenario
+
+Capability gate:
+
+```text
+NX MAIN_INTEGRATED
++
+NET-min
+```
 
 Minimum fixture:
 
@@ -502,18 +529,16 @@ Minimum fixture:
 1 shared item
 ```
 
-Proof:
+Proof intent:
 
 ```text
 A and B connect
- -> A moves
- -> A picks item
- -> B observes authoritative result
- -> A drops item
- -> B observes new authoritative world state
+→ A moves
+→ A picks item
+→ B observes authoritative result
+→ A drops item
+→ B observes new authoritative world state
 ```
-
-NX7/NX8/NX9 are capability extensions, not a blanket gate. The first S3 requires only the accepted/current-canonical NX semantics necessary for this two-client roundtrip.
 
 Target checkpoint:
 
@@ -521,76 +546,107 @@ Target checkpoint:
 V0_S3_NETWORK_ACCEPTED
 ```
 
-Final V0 checkpoint:
+Final staged V0 checkpoint remains:
 
 ```text
 V0_PLAYABLE_COMPOSITION_ACCEPTED
 ```
 
+The intended dependency shape is capability-driven:
+
+```text
+H0.3 accepted
+   ↓
+V0-S0
+
+GEO-min + player + T/C22
+   ↓
+V0-S1
+
+ITEM-min
+   ↓
+V0-S2
+
+NX MAIN_INTEGRATED + NET-min
+   ↓
+V0-S3
+```
+
+A V0 stage waits only for capabilities it actually consumes, plus its declared checkpoint/control gates.
+
 ## 8. Tactical dependency policy after H0.3
 
-After H0.3, every new primary/sub-primary task should answer:
+Every new primary/sub-primary task should answer:
 
-> **Which V0 scenario/capability does this unlock, harden or scale?**
-
-Capability mapping:
+> Which V0 scenario/capability does this unlock, harden or scale?
 
 | Program | Immediate V0 contribution | Not a blanket blocker for |
 |---|---|---|
-| H0.3 | scheduling/lifecycle/orchestration | V0-S0 after acceptance |
+| H0.3 | development Work-Order concurrency/control | runtime scheduling semantics |
 | G8/current G | walkable procedural world | S1 waiting for G9–G13 |
-| Construction/C22 | small real outpost/presentation | S1 waiting for T2 scale ceiling |
-| CH | player embodiment/presentation | S1 waiting for clothing/ECO polish |
+| Construction/C22 | bounded real outpost/presentation | S1 waiting for T2 scale ceiling |
+| CH | player embodiment/presentation | S1 waiting for ECO polish |
 | Item Graph | identity/container/transfer truth | S2 |
-| WT/WQ | world-operation/query adapters | S2 waiting for all future Work Fabric |
-| NX.C1/C2/current NX | canonical two-client path | S3 waiting for all NX7–9 |
-| NX7 | physics authority policy | S0/S1/S2 |
-| NX8 | interest/replication scaling | first minimal S3 |
-| NX9 | hardening/async persistence/soak | first functional S3 |
-| MAT0/G9 | material/geology semantics | base S1/S2 |
+| WT/WQ | world-operation/query contracts when required | unrelated V0 stages |
+| NX.C1/current NX | canonical network capability path | S0/S1/S2 |
+| NX7 | physics authority policy | S0/S1/S2 unless consumed |
+| NX8 | interest/replication scaling | first minimal S3 unless required |
+| NX9 | hardening/async persistence/soak | first functional S3 unless required |
+| MAT0/G9 | material/geology semantics | base S1/S2 unless consumed |
 | G10/G11 | volumetric/heterogeneous worlds | base S1 |
 | G12/G13 | cache/provenance/detail maturity | early V0 proof ladder |
 
-Work with no clear composition payoff can still be valid research/foundation work, but it must not automatically enter the primary critical path.
+Research/foundation work without direct V0 payoff can still be valid, but it does not automatically become primary critical path work.
 
-## 9. Promotion sequence
+## 9. R3 promotion sequence
 
 ```text
-R3_REFRESHED_CANDIDATE
-    |
-    +-- verify active runtime checkpoints are at safe boundaries
-    +-- final current-main freshness
-    +-- CRITICAL review
-    +-- ownership/intersection PASS
-    +-- Evidence Map PASS
-    +-- standard + directional PC0 NON_RED
-    |
-    +-- HUMAN: GLOBAL_ARCHITECTURE_PROMOTION
-            |
-            +-- control-only canonical architecture update
-            +-- post-merge PC0
-            +-- create Wave A from one accepted R3 base
-            +-- start H0.2 / NX.C1 primary runtime train
-                    |
-                    +-- NX SOURCE_ACCEPTED
-                    +-- H0.3
-                            |
-                            +-- H0_3_ORCHESTRATION_ACCEPTED
-                            +-- V0 staged composition
+R3 semantic repair
+    ↓
+freeze exact mutable head V2
+    ↓
+R2→R3 transition audit PASS
+ownership/intersection audit PASS
+runtime files = 0
+critical overlap = 0
+standard PC0 NON_RED
+directional PC0 NON_RED
+    ↓
+Evidence Map bound to exact mutable head V2
+    ↓
+R3_REPAIR_COMPLETE_REVIEW_READY
+    ↓
+Independent Reviewer PASS
+    ↓
+Independent Verifier PASS
+    ↓
+R3_REFRESHED_CANDIDATE_READY
+    ↓
+HUMAN GLOBAL_ARCHITECTURE_PROMOTION
+    ↓
+control-only canonical promotion
+    ↓
+post-R3 PC0
 ```
+
+No implementer session may self-award the Reviewer or Verifier verdict.
 
 ## 10. Long-range convergence
 
-The revised convergence model deliberately introduces playable composition **before** waiting for every deep subsystem program to finish:
+Current intended convergence:
 
 ```text
-R3 promotion
+canonical R3 + post-R3 PC0
     ↓
-H0.2 / NX.C1
+fresh H0.2 / NX.C1
     ↓
-H0.3 multi-runtime orchestration
+NX source/integration boundary
     ↓
-V0-S0 runtime composition
+H0.3 DEVELOPMENT scheduler
+    ↓
+H0_3_SCHEDULER_ACCEPTED
+    ↓
+V0-S0 production boot
     ↓
 V0-S1 world composition
     ↓
@@ -601,44 +657,31 @@ V0-S3 two-client network composition
 V0_PLAYABLE_COMPOSITION_ACCEPTED
 ```
 
-In parallel and progressively:
+In parallel, where explicit gates allow:
 
 ```text
 R3 + Wave A
-    -> IAM/MAT/WT/WQ foundations
-    -> RF/TF/AUTHZ/LIFE/WB/COMPAT
+    → IAM/MAT/WT/WQ foundations
+    → RF/TF/AUTHZ/LIFE/WB/COMPAT
 
 NET
-    -> NX.C2 / NX7 / NX8 / NX9
+    → NX.C2 / NX7 / NX8 / NX9
 
 GEO/MAT
-    -> MAT0 / G9 / G10 / G11 / G12 / G13 / GM
+    → MAT0 / G9 / G10 / G11 / G12 / G13 / GM
 
 WT/WQ
-    -> real cross-domain item/construction/matter operations
+    → real cross-domain item/construction/matter operations
 ```
 
-After V0 the next integrated targets can become:
+After V0, later integrated targets can remain capability-driven:
 
 ```text
 V1 persistent planet outpost
-    -> material-aware terrain/resources
-    -> persistent mutations
-
 V2 seamless two-region world
-    -> interest/authority region crossing
-
 V3 moving ship/station reference frames
-    -> RF/SD/network handoff
-
 V4 autonomous settlement
-    -> AUTHZ/WQ/WT + AI/economy
-
 V5 distributed living world
 ```
 
-The architecture train remains subordinate to checkpointed project development: architecture revision is a controlled compatibility boundary, not a reason to churn accepted runtime branches.
-
-The composition train has the complementary rule:
-
-> do not wait for every future subsystem to become production-complete before proving that the capabilities already accepted can actually form a playable world together.
+Architecture revision is a controlled compatibility boundary, not a reason to churn accepted runtime branches. Playable composition should prove accepted capabilities together without inventing duplicate truth owners or a second runtime scheduler.
