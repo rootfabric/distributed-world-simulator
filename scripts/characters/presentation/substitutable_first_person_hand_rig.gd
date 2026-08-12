@@ -20,8 +20,17 @@ func configure_visual_provider(provider) -> Dictionary:
 
 func setup(
 	p_hand_id: String,
-	p_viewmodel_layer_index: int = DEFAULT_VIEWMODEL_LAYER
+	p_viewmodel_layer_index: int = DEFAULT_VIEWMODEL_LAYER,
+	p_visual_provider: Variant = null
 ) -> Dictionary:
+	# S6 exposed a two-argument setup plus configure_visual_provider(). S7 needs
+	# a direct resource-provider injection path. Keep the old calls valid while
+	# allowing an optional third provider argument through the same validation
+	# boundary.
+	if p_visual_provider != null:
+		var provider_config: Dictionary = configure_visual_provider(p_visual_provider)
+		if not bool(provider_config.get("success", false)):
+			return provider_config
 	if visual_provider == null:
 		visual_provider = DefaultVisualProviderType.new()
 	_visual_provider_result.clear()
