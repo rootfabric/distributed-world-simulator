@@ -1,0 +1,50 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_c_crown_root_spatial_competition_validation.v1",
+  "revision": "ECO-CAL1-C-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "parent": {
+    "checkpoint": "ECO.CAL1-B",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c"
+  },
+  "mechanism": {
+    "source": "scripts/research/ecology/plant_spatial_crown_root_competition_v1.gd",
+    "experiment": "scripts/research/ecology/plant_crown_root_competition_experiment_v1.gd",
+    "crown_geometry": "exact circle intersection from realized crown spread and positions",
+    "crown_loss": "accepted PH3 saturating crown-light potential * own overlap fraction * neighbour branch probability",
+    "root_geometry_proxy": "root_zone_radius_m = root_depth_m; research proxy, not canonical trait law",
+    "root_shared_claim": "root_depth * growth_rate normalized across the pair",
+    "root_resource_effect": "reduce only geometrically shared local soil moisture/nutrients by competitor claim, then re-evaluate accepted P1 ResourceModel",
+    "coefficient_policy": "no tuning; accepted models reused read-only"
+  },
+  "cases": [
+    "CROWN_NO_OVERLAP","CROWN_EQUAL_CLOSE","CROWN_EQUAL_FAR","CROWN_HIGH_BRANCH_NEIGHBOUR","CROWN_LOW_BRANCH_NEIGHBOUR","CROWN_WIDE_NARROW","CROWN_WIDE_NARROW_SWAP",
+    "ROOT_NO_OVERLAP","ROOT_EQUAL_DENSE","ROOT_DEEP_SHALLOW_DENSE","ROOT_DEEP_SHALLOW_SPARSE","ROOT_DRY_DEEP_SHALLOW_DENSE","ROOT_DEEP_SHALLOW_SWAP"
+  ],
+  "required_properties": [
+    "CAL1_B_PARENT_HASH_UNCHANGED",
+    "CROWN_NO_OVERLAP_NEUTRAL",
+    "CROWN_DISTANCE_OVERLAP_MONOTONIC",
+    "CROWN_NEIGHBOUR_CANOPY_DENSITY_CAUSAL",
+    "CROWN_SWAP_SYMMETRY",
+    "ROOT_NO_OVERLAP_NEUTRAL",
+    "ROOT_EQUAL_PAIR_SYMMETRIC_HALF_CLAIMS",
+    "ROOT_SHARED_CLAIM_CONSERVES_ONE",
+    "DEEP_ROOT_GREATER_SHARED_CLAIM_THAN_SHALLOW_CONTROL",
+    "DENSE_ROOT_OVERLAP_STRONGER_THAN_SPARSE",
+    "ROOT_SWAP_SYMMETRY",
+    "DRY_ROOT_CONTEXT_FINITE",
+    "DETERMINISTIC_SAME_AND_FRESH_PROCESS_HASH",
+    "NO_ACCEPTED_PH3_P1_SOURCE_CHANGE",
+    "NO_COEFFICIENT_CALIBRATION"
+  ],
+  "tests": {
+    "acceptance": "tests/research/ecology/eco_cal1_c_crown_root_spatial_competition_acceptance.gd",
+    "restart": "tests/research/ecology/eco_cal1_c_restart_replay_probe.gd",
+    "runner": "RUN_ECO_CAL1_C_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.CAL1-D Lifetime / Reproduction / Dispersal / Disturbance Payoffs"
+}
