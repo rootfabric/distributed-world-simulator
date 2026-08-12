@@ -113,6 +113,14 @@ $Tests = @(
         PassMarker = "FirstPerson equipment result policy: PASS"
     },
     @{
+        Path = "res://tests/characters/test_fpe_r2_shared_held_item_state.gd"
+        PassMarker = "FPE R2 shared held-item state: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_third_person_held_item_presenter.gd"
+        PassMarker = "FPE R2 third-person held-item presenter: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
         PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
