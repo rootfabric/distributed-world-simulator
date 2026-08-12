@@ -3,6 +3,7 @@ extends Node3D
 const Probes = preload("res://scripts/research/ecology/plant_render_description_probes_v1.gd")
 const Representation = preload("res://scripts/research/ecology/plant_multiscale_representation_v1.gd")
 const MultiscaleMaterializer = preload("res://scripts/research/ecology/plant_multiscale_materializer_v1.gd")
+const DISTANCE_SCALE_BY_TIER: Array[float] = [1.0, 1.8, 3.2, 7.0, 12.0]
 
 var environment_index := 0
 var tier_index := 0
@@ -91,7 +92,7 @@ func _refresh() -> void:
 	_materialize_nodes(tier, last_materialization)
 	var height := maxf(0.5, float(description["bounds"]["height_m"]))
 	var radius := maxf(0.4, float(description["bounds"]["radius_xz_m"]))
-	var distance_scale := [1.0, 1.8, 3.2, 7.0, 12.0][tier_index]
+	var distance_scale: float = DISTANCE_SCALE_BY_TIER[tier_index]
 	var distance := maxf(3.0, maxf(height, radius * 2.0) * 1.15 * distance_scale)
 	camera.position = Vector3(distance * 0.55, height * 0.60, distance)
 	camera.look_at(Vector3(0.0, height * 0.50, 0.0), Vector3.UP)
