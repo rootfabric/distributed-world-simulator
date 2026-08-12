@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.h0_1_r8_pc0_evidence.v1",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "tested_head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+  "workflow_run_id": 31555576318,
+  "artifact_id": 9125862845,
+  "artifact_digest": "sha256:454e8d6bd13aa6510662b1e2c4da79819e36e41c6c8579277402fbe2b5e56a25",
+  "standard": {
+    "overall_health": "YELLOW",
+    "gate": "NON_RED"
+  },
+  "directional": {
+    "overall_health": "YELLOW",
+    "gate": "NON_RED",
+    "critical_c22_hits": 0
+  },
+  "cross_branch_overlaps": [],
+  "human_attention_open_count": 0,
+  "nonblocking_directional_findings": [
+    "G->ECO advisory geomorphology watch",
+    "CH->NX directional equipment watch"
+  ],
+  "result": "PASS"
+}
