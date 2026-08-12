@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.harness_review_result.v1",
   "review_id": "GLOBAL-P0-R3-V6-FINAL-REVIEW-001",
   "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
-  "work_order_id": "GLOBAL-P0-R3-DURABLE-INDEPENDENT-REVIEWER-REATTESTATION-V6",
+  "work_order_id": "GLOBAL-P0-R3-FINAL-GATE-SCHEMA-CONTRACT-REPAIR",
   "risk_class": "CRITICAL",
   "reviewed_head_sha": "f78847624a9016d1e8ed39c12b5291d91037ea53",
   "reviewer": "INDEPENDENT_REVIEWER_SOL",
