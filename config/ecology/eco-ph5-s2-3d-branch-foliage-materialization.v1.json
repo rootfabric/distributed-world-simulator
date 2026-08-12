@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.PH5-S2",
   "name": "3D Tapered Branch Tubes + Instanced Foliage",
-  "status": "IMPLEMENTED_WINDOWS_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "parent_checkpoint": "ECO.PH5-S1 PlantRenderDescription + RendererProfile Foundation ACCEPTED",
   "experiment_revision": "ECO.PH5-S2.1",
@@ -15,6 +15,15 @@
     "scene": "res://scenes/labs/ecology/eco_ph5_s2_3d_materialization_lab.tscn",
     "materializer": "res://scripts/research/ecology/plant_3d_materializer_v1.gd"
   },
+  "accepted_evidence": {
+    "platform": "exact Windows Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "focused_assertions": 387,
+    "visual_smoke_assertions": 12,
+    "restart_assertions": 5,
+    "reference_branch_leaf_geometry_hash": "2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f",
+    "full_geometry_hash": "5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e",
+    "graphical": "PASS_BY_USER_OBSERVATION_REAL_3D_TREE_FORMATION"
+  },
   "truth_invariants": [
     "Plant3DMaterializer consumes PlantRenderDescription and never writes GrowthGraph",
     "mesh vertex count, radial sides, foliage asset and foliage instance count are presentation only",
@@ -22,13 +31,6 @@
     "same accepted description/profile rebuilds the same geometry hash in a fresh process",
     "TREE/BUSH/GRASS remain non-canonical observations, not renderer identities"
   ],
-  "windows_gate": {
-    "parent_ph5_s1": "re-run accepted PH5-S1 focused + restart",
-    "focused": "build all three 3D profiles across all seven accepted PH2 phenotypes; verify mesh counts/AABB/MultiMesh counts and source graph immutability",
-    "visual_smoke": "instantiate the real Node3D lab and switch branch-only/full procedural modes",
-    "restart": "focused and fresh-process REFERENCE BRANCH_LEAF_INSTANCED/FULL_PROCEDURAL geometry hashes must match",
-    "graphical": "inspect contrasting environments and confirm visible tapered 3D branches and foliage while GrowthGraph hash remains unchanged"
-  },
   "scope_boundary": "S2 proves actual 3D branch and foliage materialization, not final botanical assets, wind, bark/leaf shaders, production GPU batching, canopy clustering or impostor baking.",
-  "next_after_acceptance": "ECO.PH5-S3 Canopy Approximation + Impostor/LOD Truth-Invariance"
+  "next_after_acceptance": "ECO.PH5-S3 Multi-Scale Plant Representation / Canopy Approximation + Impostor/LOD Truth-Invariance"
 }
