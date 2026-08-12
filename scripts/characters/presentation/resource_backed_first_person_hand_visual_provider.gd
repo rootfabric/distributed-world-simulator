@@ -110,10 +110,12 @@ func install_visuals(
 		visual.layers = 0
 		visual.set_layer_mask_value(viewmodel_layer_index, true)
 
-	# The authored contract is deliberately narrow in S7: direct
-	# BoneAttachment3D children are moved onto the canonical pose skeleton.
-	# Their local transforms and child mesh hierarchy are preserved.
+	# PackedScene nodes retain their original scene owner after instantiate().
+	# Clear it recursively before moving the attachment subtree onto the canonical
+	# skeleton; otherwise Godot reports an inconsistent owner when the old asset
+	# root is released.
 	for attachment in attachments:
+		_clear_owner_recursive(attachment)
 		asset_root.remove_child(attachment)
 		skeleton.add_child(attachment)
 	asset_root.free()
@@ -156,6 +158,12 @@ func _collect_meshes(node: Node, output: Array[MeshInstance3D]) -> void:
 		if child is MeshInstance3D:
 			output.append(child as MeshInstance3D)
 		_collect_meshes(child, output)
+
+
+func _clear_owner_recursive(node: Node) -> void:
+	node.owner = null
+	for child in node.get_children():
+		_clear_owner_recursive(child)
 
 
 func _success(details: Dictionary = {}) -> Dictionary:
