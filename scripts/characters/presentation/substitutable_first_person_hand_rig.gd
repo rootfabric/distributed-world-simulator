@@ -9,12 +9,21 @@ var _visual_provider_result: Dictionary = {}
 var _visual_provider_report: Dictionary = {}
 
 
+func configure_visual_provider(provider) -> Dictionary:
+	if _configured:
+		return _failure("FPE_S6_PROVIDER_CONFIGURATION_AFTER_SETUP")
+	if provider == null or not provider.has_method("install_visuals"):
+		return _failure("FPE_S6_HAND_VISUAL_PROVIDER_REQUIRED")
+	visual_provider = provider
+	return _success({"configured": true})
+
+
 func setup(
 	p_hand_id: String,
-	p_viewmodel_layer_index: int = DEFAULT_VIEWMODEL_LAYER,
-	p_visual_provider = null
+	p_viewmodel_layer_index: int = DEFAULT_VIEWMODEL_LAYER
 ) -> Dictionary:
-	visual_provider = p_visual_provider if p_visual_provider != null else DefaultVisualProviderType.new()
+	if visual_provider == null:
+		visual_provider = DefaultVisualProviderType.new()
 	_visual_provider_result.clear()
 	_visual_provider_report.clear()
 
