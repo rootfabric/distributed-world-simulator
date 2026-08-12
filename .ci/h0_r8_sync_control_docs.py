@@ -1,0 +1,400 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def replace_once(text: str, old: str, new: str, label: str) -> str:
+    count = text.count(old)
+    if count != 1:
+        raise RuntimeError(f"{label}: expected exactly one match, got {count}")
+    return text.replace(old, new, 1)
+
+
+def replace_section(text: str, start_marker: str, end_marker: str, replacement: str, label: str) -> str:
+    start_count = text.count(start_marker)
+    end_count = text.count(end_marker)
+    if start_count != 1 or end_count != 1:
+        raise RuntimeError(f"{label}: markers start={start_count}, end={end_count}")
+    start = text.index(start_marker)
+    end = text.index(end_marker, start)
+    return text[:start] + replacement + text[end:]
+
+
+def patch_dashboard(path: Path) -> None:
+    text = path.read_text(encoding="utf-8")
+    text = replace_once(
+        text,
+        "**Observed active runtime pilot:** `H0.1 R7 / PR #88`",
+        "**Current primary gate:** `HUMAN: C22_RUNTIME_MERGE` after `H0_1_PASS + C22 SOURCE_ACCEPTED_MERGE_READY` on R8 / PR #90",
+        "dashboard active pilot",
+    )
+
+    section2 = """# 2. CURRENT PRIMARY — один критический путь
+
+```text
+                         CURRENT
+                           │
+                           ▼
+                HUMAN: C22_RUNTIME_MERGE
+               R8 / PR #90 / DRAFT / READY
+                           │
+                           ▼
+                    post-C22 PC0
+                           │
+                           ▼
+                  C22 MAIN_INTEGRATED
+                           │
+                           ▼
+              GLOBAL-P0 R3 current-main refresh
+                           │
+                           ▼
+             HUMAN: GLOBAL_ARCHITECTURE_PROMOTION
+                           │
+                           ▼
+                     post-R3 PC0
+                           │
+                           ▼
+                     H0.2 / NX.C1
+              + CH→NX dependency revalidation
+                           │
+                           ▼
+                       H0_2_PASS
+                  NX SOURCE_ACCEPTED
+                           │
+                           ▼
+                         H0.3
+             DEVELOPMENT multi-worker scheduler
+                           │
+                           ▼
+              H0_3_SCHEDULER_ACCEPTED
+                           │
+                           ▼
+                controlled parallel work
+                           │
+             ┌─────────────┼──────────────┐
+             ▼             ▼              ▼
+           V0.0          GEO-min        ITEM-min
+             │             │              │
+             ▼             ▼              ▼
+           V0-S0         V0-S1          V0-S2
+
+NX SOURCE_ACCEPTED
+        ↓
+HUMAN NX runtime merge / integration gate
+        ↓
+post-NX PC0
+        ↓
+NX MAIN_INTEGRATED
+        ↓
+NET-min
+        ↓
+V0-S3 two-client network scenario
+        ↓
+V0-S4 recovery/restart
+        ↓
+V0-S5 final acceptance
+        ↓
+V0_PLAYABLE_COMPOSITION_ACCEPTED
+```
+
+`H0.1` уже закрыт на source side. Сейчас **нет разрешённого autonomous primary runtime worker**: следующий runtime mutation — только explicit human C22 merge. Подготовительные `PREPARE_NOW` lanes остаются допустимы.
+
+No new primary runtime frontier may bypass this train.
+
+"""
+    text = replace_section(
+        text,
+        "# 2. CURRENT PRIMARY — один критический путь\n",
+        "# 3. CURRENT — H0.1 R7\n",
+        section2,
+        "dashboard section2",
+    )
+
+    section3 = """# 3. CURRENT — HUMAN C22_RUNTIME_MERGE
+
+H0.1 R8 закрыт в source branch и остановлен на human gate:
+
+```text
+epoch:        E2026-08-12-H0-1-R8
+checkpoint:   H0_1_CLOSED_LOOP_C22_PILOT
+Work Order:   H0-1-R8-C22-WO-001
+state:        CHECKPOINT_PROPOSED
+runtime PR:   #90 / DRAFT / OPEN / UNMERGED
+branch:       feature/h0-1-c22-current-main-r3
+base main:    4a42c2fb6befb386f5c3eb48d9ba070745e25bbb
+registry:     77
+implementation/review target:
+              4c69de50c8374112d82efee2fd6917c770b3eae0
+validated checkpoint control head:
+              5bd4a2d2fa1bed600ced88cac9def893263e8a6e
+latest checkpoint-doc head:
+              64978039de95abe9c07d0d6262536269d87f4e44
+C22 source:   e3b865e763212e2b61ab1361afd2aa57fe2a0cbe
+```
+
+Принято:
+
+```text
+H0_1_PASS                                      PASS
+C22 SOURCE_ACCEPTED_MERGE_READY                PASS
+HIGH pre-build review                          PASS
+single Director-dispatched runtime worker      PASS
+C22 SOURCE_ACCEPTED blob identity              13 / 13 PASS
+fresh harness                                  13 / 13 PASS
+fresh Git-only recovery                        PASS
+C22 incremental                                28 assertions PASS
+C22 graphical                                  35 assertions PASS
+C24 contracts                                  81 assertions PASS
+fresh focused total                            144 / 0 failures
+final reducer ledger                           28 events / CHECKPOINT_PROPOSED
+Evidence Map / Reviewer / Verifier             PASS
+checkpoint_blockers                            []
+Project Control run 31556489523                SUCCESS / NON_RED
+cross-branch overlaps                          0
+C22 critical directional hits                  0
+```
+
+R7 / PR #88 — historical `CANCELLED / DO NOT MERGE`: R7 verification обнаружила, что прежний implementation freshness fence не включал bounded C22 runtime surfaces. R8 исправил fence в заранее разрешённом `scripts/harness/**` scope и повторил acceptance на свежем current-main epoch.
+
+Directional state после checkpoint:
+
+```text
+G  -> ECO   WATCH_HIT   global_blocking=false
+CH -> NX    WATCH_HIT   global_blocking=true
+```
+
+`CH -> NX` не отменяет H0.1/C22 PASS, но **обязан быть revalidated/resolved до фактического NX.C1 source acceptance**. Это отдельный будущий NX gate.
+
+## EXECUTE_NOW — только human gate
+
+```text
+HUMAN: review PR #90
+        ↓
+HUMAN: C22_RUNTIME_MERGE
+        ↓
+STOP / immediately recompute Project Control
+        ↓
+post-C22 standard + directional PC0
+        ↓
+C22 MAIN_INTEGRATED   only if PC0 NON_RED
+```
+
+Автоматически merge PR #90 запрещено. До human merge нельзя запускать H0.2/NX.C1 runtime, GLOBAL-P0 R3 promotion или считать C22 canonical main truth.
+
+"""
+    text = replace_section(
+        text,
+        "# 3. CURRENT — H0.1 R7\n",
+        "# 4. Operational state by program\n",
+        section3,
+        "dashboard section3",
+    )
+
+    replacements = [
+        (
+            "| **H / C22** | H0.1 R7 verification, PR #88 | **PRIMARY / EXECUTE_NOW** |",
+            "| **H / C22** | H0.1 R8 PASS; PR #90 SOURCE_ACCEPTED_MERGE_READY / Draft | **CURRENT = HUMAN C22_RUNTIME_MERGE** |",
+            "dashboard H row",
+        ),
+        (
+            "| **GLOBAL-P0 R3** | refreshed candidate PR #85 | **PREPARE_NOW**, promotion blocked until H0.1 boundary |",
+            "| **GLOBAL-P0 R3** | refreshed candidate PR #85 | **PREPARE_NOW**; promotion blocked until C22 MAIN_INTEGRATED + post-C22 PC0 + human gate |",
+            "dashboard R3 row",
+        ),
+        (
+            "| **NX** | NX.C0 preparation complete; NX.C1 is next high-risk pilot | **PREPARE_NOW docs/contracts only; runtime BLOCKED** |",
+            "| **NX** | NX.C0 preparation complete; NX.C1 is next high-risk pilot; CH→NX watch is global-blocking for NX | **PREPARE_NOW docs/contracts only; runtime BLOCKED + dependency revalidation required** |",
+            "dashboard NX row",
+        ),
+        (
+            "Эти задачи **не получают второй primary runtime worker**, не меняют canonical runtime truth и не двигают `main` во время H0.1.",
+            "Эти задачи **не получают primary runtime worker**, не меняют canonical runtime truth и не двигают `main`, пока проект стоит на human C22 merge gate.",
+            "dashboard prepare preface",
+        ),
+        (
+            "Результат сейчас: только `R3_REFRESHED_CANDIDATE` readiness. Promotion запрещён до safe H0.1 boundary и human gate.",
+            "Результат сейчас: только `R3_REFRESHED_CANDIDATE` readiness. H0.1 boundary уже достигнута, но promotion всё ещё запрещён до `C22 MAIN_INTEGRATED + post-C22 PC0` и отдельного human architecture gate.",
+            "dashboard R3 prep",
+        ),
+        (
+            "Runtime branch создаётся только после canonical R3 + post-R3 PC0.",
+            "Runtime branch создаётся только после `C22 MAIN_INTEGRATED`, canonical R3 и post-R3 PC0. До dispatch также обязательна fresh CH→NX directional dependency revalidation, потому что текущий CH→NX WATCH_HIT имеет `global_blocking=true` для NX.",
+            "dashboard NX prep",
+        ),
+        (
+            "C22 runtime merge\n  blocked until H0_1_PASS + human authorization",
+            "C22 runtime merge\n  H0_1_PASS satisfied; blocked only by explicit human authorization",
+            "dashboard C22 blocked",
+        ),
+        (
+            "GLOBAL-P0 R3 promotion\n  blocked while H0.1 is open; human gate required",
+            "GLOBAL-P0 R3 promotion\n  blocked until C22 MAIN_INTEGRATED + post-C22 PC0; human architecture gate required",
+            "dashboard R3 blocked",
+        ),
+    ]
+    for old, new, label in replacements:
+        text = replace_once(text, old, new, label)
+
+    path.write_text(text, encoding="utf-8")
+
+
+def patch_roadmap(path: Path) -> None:
+    text = path.read_text(encoding="utf-8")
+    text = replace_once(
+        text,
+        "**Observed active pilot:** `H0.1 R7 / PR #88`",
+        "**Current primary gate:** `HUMAN: C22_RUNTIME_MERGE` after accepted `H0.1 R8 / PR #90`",
+        "roadmap active pilot",
+    )
+
+    section2 = """## 2. CURRENT — H0.1 R8 accepted / HUMAN C22 merge gate
+
+```text
+H0.0 SCAFFOLD READY                         CANONICAL
+        ↓
+H0.1 R8 C22 CLOSED-LOOP PILOT               PASS / CHECKPOINT_PROPOSED
+        ↓
+C22 SOURCE_ACCEPTED_MERGE_READY              PASS
+        ↓
+HUMAN: C22_RUNTIME_MERGE                     CURRENT
+```
+
+Accepted source surface:
+
+```text
+epoch:      E2026-08-12-H0-1-R8
+WorkOrder:  H0-1-R8-C22-WO-001
+branch:     feature/h0-1-c22-current-main-r3
+PR:         #90 / Draft / open / unmerged
+base main:  4a42c2fb6befb386f5c3eb48d9ba070745e25bbb
+registry:   77
+impl/review:4c69de50c8374112d82efee2fd6917c770b3eae0
+checkpoint: 5bd4a2d2fa1bed600ced88cac9def893263e8a6e
+```
+
+R8 завершил H0.1 ровно в требуемой boundary и **не авторизует merge сам по себе**. Следующее runtime действие принадлежит человеку.
+
+"""
+    text = replace_section(
+        text,
+        "## 2. CURRENT — H0.1 R7 / C22\n",
+        "## 3. Жёсткий critical path\n",
+        section2,
+        "roadmap section2",
+    )
+
+    text = replace_once(
+        text,
+        "H0.1 / C22 R7 verification\n        ↓\nH0_1_PASS\n        ↓\nHUMAN: C22_RUNTIME_MERGE",
+        "H0.1 R8 PASS / C22 SOURCE_ACCEPTED_MERGE_READY\n        ↓\nHUMAN: C22_RUNTIME_MERGE",
+        "roadmap critical path",
+    )
+    text = replace_once(
+        text,
+        "H0.2 / fresh NX.C1 high-risk pilot\n        ↓",
+        "H0.2 / fresh NX.C1 high-risk pilot\n+ fresh CH→NX directional dependency revalidation\n        ↓",
+        "roadmap NX path",
+    )
+
+    section5 = """## 5. H0.1 R8 accepted evidence
+
+R7 был корректно fail-closed и отменён, потому что прежний `implementation_head_sha` fence не включал C22 runtime surfaces. R8 был создан заново от неизменившегося canonical main и заранее разрешил harness-fence repair в Work Order scope.
+
+Финальный R8 proof:
+
+```text
+fresh HIGH pre-build review                   PASS
+Director dispatch                             exactly one worker
+freshness fence repair                        PASS
+implementation == review target               4c69de50...
+SOURCE_ACCEPTED C22 blobs                     13 / 13 identical
+pinned harness                                13 / 13 PASS
+Git-only recovery                             PASS
+C22 incremental                               28 PASS
+C22 graphical                                 35 PASS
+C24 contracts                                 81 PASS
+focused total                                 144 assertions / 0 failures
+full world/core regression promotion fence    PASS
+Evidence Map / Reviewer / Verifier            PASS
+append-only ledger                            28 events
+checkpoint_blockers                           []
+Project Control                               YELLOW / NON_RED
+C22 critical overlap                          0
+        ↓
+H0_1_PASS
+C22 SOURCE_ACCEPTED_MERGE_READY
+        ↓
+STOP BEFORE HUMAN MERGE
+```
+
+Последний user-authored Project Control run после checkpoint documentation: `31556489523 / SUCCESS`.
+
+Directional finding `CH → NX` имеет `global_blocking=true` для будущего NX, но не блокирует уже закрытый H0.1/C22. Поэтому H0.2 обязан выполнить fresh directional dependency revalidation до NX source acceptance.
+
+"""
+    text = replace_section(
+        text,
+        "## 5. H0.1 R7 acceptance chain\n",
+        "## 6. H0.2 — NX.C1 Network High-Risk Pilot\n",
+        section5,
+        "roadmap section5",
+    )
+
+    text = replace_once(
+        text,
+        "NO second primary runtime worker during H0.1",
+        "NO autonomous primary runtime worker while CURRENT = HUMAN C22_RUNTIME_MERGE",
+        "roadmap stop worker",
+    )
+    text = replace_once(
+        text,
+        "NO R3 promotion while H0.1 is open",
+        "NO R3 promotion before C22 MAIN_INTEGRATED + post-C22 PC0 + human architecture authorization",
+        "roadmap stop R3",
+    )
+
+    section17 = """## 17. Immediate operator action
+
+Текущий runtime action теперь не агентный, а человеческий:
+
+```text
+review PR #90
+        ↓
+HUMAN: C22_RUNTIME_MERGE
+        ↓
+recompute Project Control immediately
+        ↓
+post-C22 standard + directional PC0
+        ↓
+C22 MAIN_INTEGRATED only on NON_RED
+        ↓
+GLOBAL-P0 R3 current-main refresh
+```
+
+До human merge агентам разрешён только `PREPARE_NOW` design/control work из `docs/control/CURRENT_PROJECT_FRONTIERS_RU.md`.
+
+"""
+    text = replace_section(
+        text,
+        "## 17. Immediate operator action\n",
+        "## 18. Merge policy\n",
+        section17,
+        "roadmap section17",
+    )
+    text = replace_once(
+        text,
+        "Этот roadmap остаётся docs-only на отдельной branch. Пока H0.1 активен, merge этого документа в `main` создаст новый descendant-main movement и дополнительный audit. Предпочтительно landing на safe H0.1/C22 checkpoint boundary или в ближайшей main-owned control synchronization после неё.",
+        "Этот roadmap остаётся docs-only на отдельной branch. H0.1 source checkpoint уже достигнут, но merge PR #87 **перед** C22 runtime merge всё равно сдвинет `main` и сделает текущий C22 merge candidate descendant-stale. Поэтому PR #87 остаётся Draft/merge-deferred до C22 runtime merge + post-C22 PC0; затем его нужно включить в ближайшую main-owned control synchronization.",
+        "roadmap merge policy",
+    )
+
+    path.write_text(text, encoding="utf-8")
+
+
+def main() -> None:
+    patch_dashboard(Path("docs/control/CURRENT_PROJECT_FRONTIERS_RU.md"))
+    patch_roadmap(Path("docs/plans/H_PRIMARY_EXECUTION_ROADMAP_RU.md"))
+
+
+if __name__ == "__main__":
+    main()
