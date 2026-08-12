@@ -1,12 +1,7 @@
 extends RefCounted
 
-const StrictIndividual = preload("res://scripts/research/ecology/plant_individual_lod_projection_v1.gd")
-const StrictPopulation = preload("res://scripts/research/ecology/plant_population_lod_projection_v1.gd")
-
 const SCHEMA := "distributed_world_simulator.ecology.plant_multiscale_representation.v1"
 const VERSION := "1.0.0"
-const RENDERER_VERSION := "ECO_PH5_S3_MULTI_SCALE_V1"
-const POPULATION_SOURCE_SCHEMA := "distributed_world_simulator.ecology.population_representation_source.v1"
 
 const TIER_0_FULL := "TIER_0_FULL"
 const TIER_1_REDUCED := "TIER_1_REDUCED"
@@ -21,8 +16,6 @@ const TIER_ORDER: Array[String] = [
 	TIER_3_IMPOSTOR,
 	TIER_4_POPULATION_ONLY,
 ]
-const INDIVIDUAL_TIERS: Array[String] = [TIER_0_FULL, TIER_1_REDUCED, TIER_2_CANOPY, TIER_3_IMPOSTOR]
-const MAX_POPULATION_VISUAL_INSTANCES := 128
 
 const PROFILE_BY_TIER := {
 	TIER_0_FULL: "FULL_PROCEDURAL",
@@ -58,7 +51,7 @@ static func select_tier(projected_height_px: float) -> String:
 
 static func select_tier_hysteretic(projected_height_px: float, previous_tier: String, margin_ratio: float = 0.12) -> String:
 	var base_tier := select_tier(projected_height_px)
-	if previous_tier not in TIER_ORDER or not is_finite(projected_height_px) or projected_height_px < 0.0:
+	if not previous_tier in TIER_ORDER or not is_finite(projected_height_px) or projected_height_px < 0.0:
 		return base_tier
 	var margin := clampf(margin_ratio, 0.0, 0.49)
 	var index := TIER_ORDER.find(previous_tier)
@@ -70,12 +63,11 @@ static func select_tier_hysteretic(projected_height_px: float, previous_tier: St
 		return previous_tier
 	return base_tier
 
-# Compatibility path retained for the incremental PH5-S3 probes already on the branch.
 static func build(description: Dictionary, tier: String) -> Dictionary:
 	var validation := validate_source(description)
 	if not bool(validation["success"]):
 		return validation
-	if tier not in TIER_ORDER:
+	if not tier in TIER_ORDER:
 		return _failure("ECO_PH5_S3_UNKNOWN_TIER", {"tier": tier})
 
 	var branches: Array = description.get("branches", [])
@@ -123,23 +115,6 @@ static func build(description: Dictionary, tier: String) -> Dictionary:
 	result["representation_hash"] = compute_hash(result)
 	return result
 
-static func build_individual(description: Dictionary, tier: String, source_ecology_identity: String, deterministic_seed: int, profile: Dictionary = {}) -> Dictionary:
-	return StrictIndividual.build(description, tier, source_ecology_identity, deterministic_seed, profile)
-
-static func build_population(population_truth: Dictionary, profile: Dictionary, deterministic_seed: int) -> Dictionary:
-	return StrictPopulation.build(population_truth, profile, deterministic_seed)
-
-static func materialize_near(description: Dictionary, tier: String, profile: Dictionary) -> Dictionary:
-	return StrictIndividual.materialize_near(description, tier, profile)
-
-static func validate_artifact(representation: Dictionary) -> Dictionary:
-	if String(representation.get("tier", "")) == TIER_4_POPULATION_ONLY:
-		return StrictPopulation.validate_artifact(representation)
-	return StrictIndividual.validate_artifact(representation)
-
-static func compute_population_truth_hash(source: Dictionary) -> String:
-	return StrictPopulation.compute_truth_hash(source)
-
 static func validate_source(description: Dictionary) -> Dictionary:
 	var graph_hash := String(description.get("source_graph_hash", ""))
 	var render_hash := String(description.get("render_description_hash", ""))
@@ -152,7 +127,6 @@ static func validate_source(description: Dictionary) -> Dictionary:
 			return _failure("ECO_PH5_S3_INVALID_DESCRIPTOR", {"field": field_name})
 	return _success()
 
-# Compatibility hash intentionally stays byte-for-byte equivalent to the pre-existing S3 descriptor contract.
 static func compute_hash(representation: Dictionary) -> String:
 	return "|".join(PackedStringArray([
 		SCHEMA,
