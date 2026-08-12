@@ -55,7 +55,7 @@ func _run() -> void:
 	_assert(not bool(posed_report.get("transitioning", true)), "S3 hand rig kept processing after transition completed")
 	_assert(int(posed_report.get("pose_apply_count", 0)) >= 2, "S3 hand rig pose apply counter mismatch")
 
-	var index_bone := rig.skeleton.find_bone("IndexProximal")
+	var index_bone: int = rig.skeleton.find_bone("IndexProximal")
 	if index_bone >= 0:
 		var index_rotation: Quaternion = rig.skeleton.get_bone_pose_rotation(index_bone)
 		_assert(absf(index_rotation.w) < 0.999, "S3 flashlight pose left index proximal bone effectively unrotated")
