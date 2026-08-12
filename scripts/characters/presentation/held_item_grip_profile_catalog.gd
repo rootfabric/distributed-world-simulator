@@ -1,0 +1,128 @@
+class_name HeldItemGripProfileCatalog
+extends RefCounted
+
+
+func resolve(
+	definition_id: String,
+	visual_descriptor: Dictionary,
+	tags = [],
+	metadata: Dictionary = {}
+) -> Dictionary:
+	var visual_kind := String(visual_descriptor.get("visual_kind", "BOX")).to_upper()
+	var visual_profile := String(visual_descriptor.get("profile_id", "generic_box"))
+	var normalized_id := _normalize_token(definition_id)
+	var normalized_tags := _normalize_tags(tags)
+	var profile_id := visual_profile
+
+	var first_position := Vector3(0.0, 0.0, -0.17)
+	var first_rotation := Vector3(-12.0, 0.0, 0.0)
+	var first_scale := Vector3.ONE
+	var third_position := Vector3(0.0, -0.035, -0.075)
+	var third_rotation := Vector3(5.0, 0.0, 90.0)
+	var third_scale := Vector3.ONE
+
+	if _contains_any(normalized_id, normalized_tags, ["flashlight", "torch", "lamp"]):
+		profile_id = "flashlight_forward"
+		first_position = Vector3(0.0, -0.005, -0.20)
+		first_rotation = Vector3(0.0, 0.0, 90.0)
+		third_position = Vector3(0.0, -0.025, -0.095)
+		third_rotation = Vector3(0.0, 0.0, 0.0)
+	elif _contains_any(normalized_id, normalized_tags, ["beacon", "signal", "locator"]):
+		profile_id = "beacon_vertical"
+		first_position = Vector3(0.0, -0.015, -0.18)
+		first_rotation = Vector3(0.0, 0.0, 0.0)
+		third_position = Vector3(0.0, -0.045, -0.055)
+		third_rotation = Vector3(0.0, 0.0, 8.0)
+	elif _contains_any(normalized_id, normalized_tags, ["backpack", "rucksack", "pack"]):
+		profile_id = "bulky_carry"
+		first_position = Vector3(0.02, 0.015, -0.20)
+		first_rotation = Vector3(-15.0, 10.0, 0.0)
+		first_scale = Vector3(0.85, 0.85, 0.85)
+		third_position = Vector3(0.0, -0.06, -0.10)
+		third_rotation = Vector3(10.0, 0.0, 75.0)
+		third_scale = Vector3(0.85, 0.85, 0.85)
+	elif _contains_any(normalized_id, normalized_tags, ["helmet", "headgear"]):
+		profile_id = "bulky_round"
+		first_position = Vector3(0.0, 0.015, -0.19)
+		first_rotation = Vector3(-10.0, 0.0, 0.0)
+		first_scale = Vector3(0.85, 0.85, 0.85)
+		third_position = Vector3(0.0, -0.06, -0.08)
+		third_rotation = Vector3(0.0, 0.0, 75.0)
+		third_scale = Vector3(0.85, 0.85, 0.85)
+	elif visual_kind in ["CYLINDER", "CAPSULE"]:
+		profile_id = "generic_long"
+		first_position = Vector3(0.0, -0.01, -0.19)
+		first_rotation = Vector3(0.0, 0.0, 90.0)
+		third_position = Vector3(0.0, -0.035, -0.085)
+		third_rotation = Vector3(0.0, 0.0, 0.0)
+
+	var metadata_profile := String(metadata.get("held_grip_profile", "")).strip_edges()
+	if not metadata_profile.is_empty():
+		profile_id = metadata_profile
+
+	first_position = _metadata_vector3(metadata, "held_fp_position", first_position)
+	first_rotation = _metadata_vector3(metadata, "held_fp_rotation_deg", first_rotation)
+	first_scale = _metadata_vector3(metadata, "held_fp_scale", first_scale)
+	third_position = _metadata_vector3(metadata, "held_tp_position", third_position)
+	third_rotation = _metadata_vector3(metadata, "held_tp_rotation_deg", third_rotation)
+	third_scale = _metadata_vector3(metadata, "held_tp_scale", third_scale)
+
+	return {
+		"schema": "planet_simulator.held_item_grip_profile.v1",
+		"definition_id": definition_id,
+		"profile_id": profile_id,
+		"first_person": _transform_dict(first_position, first_rotation, first_scale),
+		"third_person": _transform_dict(third_position, third_rotation, third_scale),
+		"presentation_only": true,
+		"owns_gameplay_transform": false,
+		"owns_item_state": false,
+		"owns_network_state": false,
+	}
+
+
+func _transform_dict(position: Vector3, rotation_deg: Vector3, scale: Vector3) -> Dictionary:
+	return {
+		"position": [position.x, position.y, position.z],
+		"rotation_deg": [rotation_deg.x, rotation_deg.y, rotation_deg.z],
+		"scale": [scale.x, scale.y, scale.z],
+	}
+
+
+func _contains_any(normalized_id: String, normalized_tags: Array[String], needles: Array[String]) -> bool:
+	for needle in needles:
+		var normalized_needle := _normalize_token(needle)
+		if normalized_id.contains(normalized_needle):
+			return true
+		for tag in normalized_tags:
+			if tag.contains(normalized_needle):
+				return true
+	return false
+
+
+func _normalize_tags(tags) -> Array[String]:
+	var result: Array[String] = []
+	for raw_tag in tags:
+		result.append(_normalize_token(String(raw_tag)))
+	return result
+
+
+func _normalize_token(value: String) -> String:
+	var normalized := value.to_lower()
+	for token in ["_", "-", ".", ":", " ", "/", "\\"]:
+		normalized = normalized.replace(token, "")
+	return normalized
+
+
+func _metadata_vector3(metadata: Dictionary, key: String, fallback: Vector3) -> Vector3:
+	var value: Variant = metadata.get(key)
+	if value is Vector3:
+		return value as Vector3
+	if value is Array:
+		var components: Array = value
+		if components.size() >= 3:
+			return Vector3(
+				float(components[0]),
+				float(components[1]),
+				float(components[2])
+			)
+	return fallback
