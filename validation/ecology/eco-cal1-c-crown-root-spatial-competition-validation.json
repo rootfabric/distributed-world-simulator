@@ -1,13 +1,21 @@
 {
   "schema": "distributed_world_simulator.ecology.cal1_c_crown_root_spatial_competition_validation.v1",
-  "revision": "ECO-CAL1-C-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-CAL1-C-2026-08-12-R2-CANDIDATE",
   "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "69910d1bd2ed7983df9c0d40213012a11dcb2f6a",
   "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
   "scope": "RESEARCH_ONLY_EVO0",
   "parent": {
     "checkpoint": "ECO.CAL1-B",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c"
+  },
+  "implementation_diff": {
+    "base": "7f39e22dc3c45a6851aee737a5c59e10b8c413a3",
+    "head": "69910d1bd2ed7983df9c0d40213012a11dcb2f6a",
+    "changed_files": 7,
+    "accepted_ph3_p1_cal1_b_sources_modified": false,
+    "runtime_paths_modified": false
   },
   "mechanism": {
     "source": "scripts/research/ecology/plant_spatial_crown_root_competition_v1.gd",
@@ -40,6 +48,16 @@
     "NO_ACCEPTED_PH3_P1_SOURCE_CHANGE",
     "NO_COEFFICIENT_CALIBRATION"
   ],
+  "local_noncanonical_sanity": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "mode": "CORE_FORMULA_PROBE_ONLY_NOT_FULL_CANONICAL_SOURCE_RUN",
+    "crown_close_overlap_m2": 2.009302166860,
+    "crown_far_overlap_m2": 0.388093912912,
+    "deep_claim": 0.820512820513,
+    "shallow_claim": 0.179487179487,
+    "result": "PASS",
+    "note": "This validates the numeric geometry/claim path only. Exact Windows project runner remains the acceptance authority."
+  },
   "tests": {
     "acceptance": "tests/research/ecology/eco_cal1_c_crown_root_spatial_competition_acceptance.gd",
     "restart": "tests/research/ecology/eco_cal1_c_restart_replay_probe.gd",
