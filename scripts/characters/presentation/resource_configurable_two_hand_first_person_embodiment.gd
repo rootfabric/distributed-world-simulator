@@ -52,7 +52,7 @@ func _install_hand_rig(hand: String, hand_root: Node3D, viewmodel_layer: int) ->
 	if hand_root == null:
 		return _failure("FPE_S3_HAND_ROOT_REQUIRED", {"hand_id": hand})
 
-	var provider = null
+	var provider: Variant = null
 	var config: Dictionary = Dictionary(_hand_visual_resource_by_hand.get(hand, {}))
 	if not config.is_empty():
 		var scene_value: Variant = config.get("scene")
