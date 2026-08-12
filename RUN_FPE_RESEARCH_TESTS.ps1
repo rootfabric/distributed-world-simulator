@@ -104,6 +104,10 @@ $Tests = @(
         PassMarker = "FirstPersonEmbodiment contract: PASS"
     },
     @{
+        Path = "res://tests/characters/test_first_person_hotbar_network_adapter.gd"
+        PassMarker = "FirstPerson hotbar nonblocking adapter: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_lab_load.gd"
         PassMarker = "FirstPersonEmbodiment graphical scene load: PASS"
     }
