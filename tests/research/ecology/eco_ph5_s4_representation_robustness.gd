@@ -38,6 +38,15 @@ func _init() -> void:
 	var invalid_hash := description.duplicate(true)
 	invalid_hash["source_graph_hash"] = "bad"
 	_assert(not bool(Representation.build(invalid_hash, Representation.TIER_0_FULL).get("success", false)))
+	var invalid_hex_hash := description.duplicate(true)
+	invalid_hex_hash["source_graph_hash"] = "z".repeat(64)
+	_assert(not bool(Representation.build(invalid_hex_hash, Representation.TIER_0_FULL).get("success", false)))
+	var invalid_render_hex := description.duplicate(true)
+	invalid_render_hex["render_description_hash"] = "_".repeat(64)
+	_assert(not bool(Representation.build(invalid_render_hex, Representation.TIER_0_FULL).get("success", false)))
+	var uppercase_hash := description.duplicate(true)
+	uppercase_hash["source_graph_hash"] = String(description["source_graph_hash"]).to_upper()
+	_assert(bool(Representation.build(uppercase_hash, Representation.TIER_0_FULL).get("success", false)))
 	var invalid_arrays := description.duplicate(true)
 	invalid_arrays["branches"] = {"not": "array"}
 	_assert(not bool(Representation.build(invalid_arrays, Representation.TIER_0_FULL).get("success", false)))
