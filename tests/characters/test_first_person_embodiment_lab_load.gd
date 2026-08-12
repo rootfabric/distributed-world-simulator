@@ -17,8 +17,8 @@ func _run() -> void:
 	if lab != null:
 		_assert(lab.has_method("get_first_person_embodiment_debug_snapshot"), "FPE graphical lab script did not bind")
 		_assert(
-			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix11.gd",
-			"FPE graphical root is not the R2 S3 Fix11 articulated-hand composition"
+			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix12.gd",
+			"FPE graphical root is not the R2 S4 Fix12 two-hand composition"
 		)
 		_assert(lab.has_method("_apply_hotbar_presentation_for_index"), "FPE immediate hotbar presentation port is missing")
 		_assert(lab.has_method("_select_hotbar_nonblocking"), "FPE local hotbar selection port is missing")
@@ -27,8 +27,9 @@ func _run() -> void:
 		_assert(lab.has_method("_on_held_item_presentation_changed"), "FPE R2 shared held-state consumer is missing")
 		_assert(lab.has_method("get_r2_s2_catalog_report"), "FPE R2 S2 catalog report is missing")
 		_assert(lab.has_method("get_r2_s3_hand_pose_report"), "FPE R2 S3 hand pose report is missing")
+		_assert(lab.has_method("get_r2_s4_two_hand_report"), "FPE R2 S4 two-hand report is missing")
 		_assert(lab.item_viewmodel_catalog != null, "FPE R2 S2 item viewmodel catalog is missing")
-		_assert(lab.held_item_grip_catalog != null, "FPE R2 S2 grip profile catalog is missing")
+		_assert(lab.held_item_grip_catalog != null, "FPE R2 S2/S4 grip profile catalog is missing")
 		var base_lab: Node = lab.get_node_or_null("CH9_6BaseLab")
 		_assert(base_lab != null, "FPE graphical lab does not compose a CH9.6 host")
 		if base_lab != null:
