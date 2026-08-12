@@ -3,6 +3,7 @@ param(
     [int]$Port = 39965,
     [switch]$ResetState,
     [string]$HandVisualScene = "",
+    [string]$SkinnedHandScene = "",
     [double]$UpperInflation = 0.032,
     [double]$LowerInflation = 0.042,
     [double]$FeetInflation = 0.040,
@@ -35,6 +36,12 @@ if ($Port -lt 1024 -or $Port -gt 65535) {
 }
 if (-not [string]::IsNullOrWhiteSpace($HandVisualScene) -and -not $HandVisualScene.StartsWith("res://")) {
     throw "HandVisualScene must be a Godot res:// PackedScene path."
+}
+if (-not [string]::IsNullOrWhiteSpace($SkinnedHandScene) -and -not $SkinnedHandScene.StartsWith("res://")) {
+    throw "SkinnedHandScene must be a Godot res:// PackedScene path."
+}
+if (-not [string]::IsNullOrWhiteSpace($HandVisualScene) -and -not [string]::IsNullOrWhiteSpace($SkinnedHandScene)) {
+    throw "Choose either -HandVisualScene (S7 BoneAttachment path) or -SkinnedHandScene (S8 weighted Skin path), not both."
 }
 
 foreach ($Pair in @(
@@ -144,22 +151,28 @@ if ($ResetState) {
 if (-not [string]::IsNullOrWhiteSpace($HandVisualScene)) {
     $UserArgs += "--fpe-hand-visual-scene=$HandVisualScene"
 }
+if (-not [string]::IsNullOrWhiteSpace($SkinnedHandScene)) {
+    $UserArgs += "--fpe-skinned-hand-scene=$SkinnedHandScene"
+}
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - R2 S7 resource-backed first-person hand visuals over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 S8 skinned first-person hand retargeting over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
-Write-Host "R2 S2-S6 are retained: catalogued items, articulated poses, two-hand first/third-person support and the substitutable 17-bone hand visual boundary remain unchanged." -ForegroundColor Cyan
-Write-Host "R2 S7 adds a real PackedScene hand-visual adapter. An authored scene must declare the FPE hand visual asset schema and provide BoneAttachment3D children targeting the canonical hand skeleton." -ForegroundColor Cyan
-if ([string]::IsNullOrWhiteSpace($HandVisualScene)) {
-    Write-Host "S7 runtime mode: no resource requested; procedural hand provider remains active. HUD should show S7 resource hand: DEFAULT and S6 L/R:PROCEDURAL_SEGMENTS." -ForegroundColor Cyan
-    Write-Host "Optional adapter demo: rerun with -HandVisualScene 'res://tests/fixtures/fpe_s7_authored_hand_visual.tscn'." -ForegroundColor Cyan
+Write-Host "R2 S2-S7 are retained: item/grip catalogs, articulated poses, two-hand first/third-person support, substitutable visuals and the PackedScene BoneAttachment adapter remain available." -ForegroundColor Cyan
+Write-Host "R2 S8 adds a weighted ArrayMesh + Skin route. Source named skin binds are validated and retargeted to the canonical 17-bone hand skeleton; index-only skins fail closed." -ForegroundColor Cyan
+if (-not [string]::IsNullOrWhiteSpace($SkinnedHandScene)) {
+    Write-Host "S8 runtime mode: weighted skinned resource requested: $SkinnedHandScene" -ForegroundColor Cyan
+    Write-Host "HUD should report S8 skinned hand: REQUESTED and L/R:RESOURCE_SKINNED_RETARGETED." -ForegroundColor Cyan
+} elseif (-not [string]::IsNullOrWhiteSpace($HandVisualScene)) {
+    Write-Host "S8 runtime mode: legacy S7 BoneAttachment resource requested: $HandVisualScene" -ForegroundColor Cyan
+    Write-Host "HUD should retain S7 REQUESTED and S8 DEFAULT." -ForegroundColor Cyan
 } else {
-    Write-Host "S7 runtime mode: resource requested: $HandVisualScene" -ForegroundColor Cyan
-    Write-Host "HUD should report S7 resource hand: REQUESTED and L/R:RESOURCE_BONE_ATTACHMENTS." -ForegroundColor Cyan
+    Write-Host "S8 runtime mode: no hand resource requested; procedural S6 provider remains active." -ForegroundColor Cyan
+    Write-Host "Weighted demo: rerun with -SkinnedHandScene 'res://tests/fixtures/fpe_s8_skinned_hand_visual.tscn'." -ForegroundColor Cyan
 }
 Write-Host "Switch 1 -> 2 -> empty while moving. Beacon pinch, mount-base two-hand support, S5 world-left support, empty release and zero-stall movement must remain unchanged." -ForegroundColor Cyan
-Write-Host "A production authored/skinned hand asset remains a later visual asset implementation; S7 validates the resource loading/binding contract, not final art quality." -ForegroundColor Cyan
+Write-Host "S8 proves real weighted skin binding and named-bone retargeting. The fixture is still contract geometry, not final hand art; arbitrary incompatible rest spaces remain fail-closed." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left first-person hand is free." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
