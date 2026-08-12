@@ -15,14 +15,28 @@ func _run() -> void:
 	var visuals = ViewmodelCatalogType.new()
 	var grips = GripCatalogType.new()
 
-	var beacon_visual: Dictionary = visuals.resolve("item/beacon", ["signal"], {}, "", Color(1.0, 0.3, 0.05, 1.0))
-	var beacon_grip: Dictionary = grips.resolve("item/beacon", beacon_visual, ["signal"], {})
+	var beacon_visual: Dictionary = visuals.resolve("survey_beacon", ["beacon", "mountable", "electronic"], {}, "", Color(1.0, 0.3, 0.05, 1.0))
+	var beacon_grip: Dictionary = grips.resolve("survey_beacon", beacon_visual, ["beacon", "mountable", "electronic"], {})
 	var beacon_two: Dictionary = Dictionary(beacon_grip.get("two_hand", {}))
 	_assert(not bool(beacon_two.get("required", true)), "S4 beacon unexpectedly requires two hands")
 	_assert(String(beacon_two.get("secondary_hand", "")) == "left", "S4 one-hand contract lost deterministic secondary-hand identity")
 
-	var mount_visual: Dictionary = visuals.resolve("item/mount-base", ["structure"], {}, "", Color(0.15, 0.45, 0.65, 1.0))
-	var mount_grip: Dictionary = grips.resolve("item/mount-base", mount_visual, ["structure"], {})
+	# Match the actual M7 replica identity instead of the canonical server id.
+	# `beacon_mount_base` contains `beacon`, which is exactly the precedence case
+	# that previously made graphical slot 2 keep beacon_pinch and one-hand mode.
+	var mount_visual: Dictionary = visuals.resolve(
+		"beacon_mount_base",
+		["assembly_root", "placeable", "mount_socket"],
+		{},
+		"",
+		Color(0.15, 0.45, 0.65, 1.0)
+	)
+	var mount_grip: Dictionary = grips.resolve(
+		"beacon_mount_base",
+		mount_visual,
+		["assembly_root", "placeable", "mount_socket"],
+		{}
+	)
 	var mount_two: Dictionary = Dictionary(mount_grip.get("two_hand", {}))
 	_assert(bool(mount_two.get("required", false)), "S4 playable mount-base did not resolve as two-hand demonstration item")
 	_assert(String(mount_grip.get("profile_id", "")) == "mount_base_two_hand", "S4 mount-base grip profile mismatch")
@@ -35,17 +49,17 @@ func _run() -> void:
 	_assert(bool(mount_two.get("presentation_only", false)), "S4 secondary grip contract is not presentation-only")
 
 	var forced_one: Dictionary = grips.resolve(
-		"item/mount-base",
+		"beacon_mount_base",
 		mount_visual,
-		["structure"],
+		["assembly_root", "placeable", "mount_socket"],
 		{"held_two_hand": false}
 	)
 	_assert(not bool(Dictionary(forced_one.get("two_hand", {})).get("required", true)), "S4 metadata could not explicitly disable two-hand support")
 
 	var forced_two: Dictionary = grips.resolve(
-		"item/beacon",
+		"survey_beacon",
 		beacon_visual,
-		["signal"],
+		["beacon", "mountable", "electronic"],
 		{
 			"held_two_hand": true,
 			"held_secondary_pose": "support_wrap",
