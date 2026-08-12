@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-E EXECUTE_NOW / NO CALIBRATION`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-E IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE / NO CALIBRATION`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -26,8 +26,6 @@ Canonical hashes:
 - CAL1-C `d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a`;
 - CAL1-D `c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6`.
 
-CAL1-D exact Windows evidence proved maturity/reserve reproduction gating, release-height dispersal, maturity timing, lifespan structural amortization, disturbance anchoring/survival and growth-rate recovery without a combined lifecycle-fitness scalar.
-
 ## Central route
 
 ```text
@@ -39,79 +37,115 @@ CAL1-C ACCEPTED
    ↓
 CAL1-D ACCEPTED
    ↓
-CAL1-E ← CURRENT
-combined mechanism matrix / no calibration
+CAL1-E ← CURRENT CANDIDATE GATE
+combined mechanisms / Pareto / no calibration
    ↓
 CAL1-F calibration + full-pool robustness
    ↓
 EVO1 PLANT WORLD PROOF
 ```
 
-## CAL1-E purpose
+## CAL1-E implementation
 
-CAL1-E is the first integration checkpoint for the accepted causal layers. It must reveal interactions and trade-offs without hiding them inside a tuned scalar.
+Implementation head: `69a6f569d3a0f6ecbad641fb45b21340323f118e`.
+
+Implementation diff from accepted CAL1-D changes exactly four new ECO files and modifies no accepted mechanism source or runtime path.
 
 Matrix:
 
 ```text
-8 morphology strategies
-× 4 environments
-× 2 density regimes
-× 3 disturbance regimes
-= 192 strategy-context rows
+8 strategies
+× REFERENCE/SHADE/SUN/DRY
+× SPARSE/DENSE
+× NONE/MILD/SEVERE
+= 192 rows / 24 contexts
 ```
-
-Environments: `REFERENCE`, `SHADE`, `SUN`, `DRY`.
-
-Density: `SPARSE`, `DENSE`.
-
-Disturbance: `NONE`, `MILD`, `SEVERE`.
 
 ### Resource ledger
 
-Only quantities already expressed as resource/selection deltas are combined:
-
 ```text
-accepted PH3 coupled resource balance
+PH3 coupled resource
 + CAL1-B relative vertical-light delta
 - CAL1-C crown-overlap loss
 + CAL1-C root-competition delta
-= combined resource ledger
+= combined_resource_balance
 ```
 
-No new coefficients are introduced.
+These terms already live on the accepted resource/selection-delta axis. No new coefficient is introduced.
+
+`SPARSE` is a 50 m no-overlap anchor. `DENSE` is a 0.75 m geometry-active context with local density 0.90.
 
 ### Lifecycle vector
 
-CAL1-D observables remain separate:
+CAL1-D stays multi-objective. Each realized phenotype is projected into the accepted lifecycle model at common development fraction `0.75`, biomass `1.0` and reserve `1.0`. The projected lifecycle target height is the realized adult phenotype height; other base ecological genome traits remain unchanged.
 
-- maturity time;
-- post-disturbance seed potential;
-- effective seed dispersal;
-- disturbance survival;
-- recovery time;
-- annual structural amortization.
+Tracked objectives:
 
-CAL1-E must not add meters, seeds and resource balance with arbitrary weights.
+- maximize combined resource balance;
+- maximize post-disturbance seed potential;
+- maximize effective seed dispersal;
+- maximize disturbance survival;
+- minimize maturity time;
+- minimize recovery time;
+- minimize annual structural amortization.
 
-### Comparison policy
+### Pareto comparison
 
-Each context reports separate metric winners and a Pareto front across accepted objectives. A strategy is Pareto-dominated only if another strategy is no worse on every tracked objective and strictly better on at least one.
+No `combined_fitness` or `weighted_fitness` exists in CAL1-E. Every context reports separate metric winner sets plus the non-dominated Pareto front. This makes trade-offs visible before CAL1-F chooses/calibrates magnitudes.
 
-This is the no-calibration bridge from mechanism proofs to CAL1-F.
+## Exact Windows gate
 
-## CAL1-F boundary
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
 
-CAL1-F remains the first checkpoint allowed to calibrate magnitudes and perform full-pool robustness across seeds, environments, density, disturbance, parameter perturbations and strategy-pool changes.
+git pull
 
-CAL1-E may diagnose dominance or missing interactions but must not tune them away.
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 
-## After CAL1
+.\RUN_ECO_CAL1_E_TESTS.ps1 -GodotPath $Godot
+```
 
-After CAL1-F acceptance the branch moves directly to `ECO.EVO1_PLANT_WORLD_PROOF`: autonomous spatial plant ecology with dispersal, recruitment, succession, disturbance/recovery, migration/isolation and lineage divergence. Presentation work remains secondary.
+Runner sequence:
+
+```text
+accepted CAL1-D full chain
+        ↓
+CAL1-E 192-row acceptance
+        ↓
+fresh process A
+        ↓
+fresh process B
+        ↓
+aggregate equality
+```
+
+Required evidence includes:
+
+- 24 contexts / 192 rows;
+- sparse interaction rows = 0;
+- dense interaction rows > 0;
+- disturbance monotonicity;
+- matched height benefit/cost trade-offs;
+- non-empty Pareto front in every context;
+- at least one multi-member Pareto context;
+- aggregate hash equality across fresh processes.
+
+Until PASS:
+
+```text
+CAL1-E = IMPLEMENTED_CANDIDATE
+CAL1-E != ACCEPTED
+CAL1-F = BLOCKED
+```
+
+## After CAL1-E
+
+CAL1-F is the first legal calibration stage. It will sweep seeds, environments, density, disturbance, parameter perturbations and strategy-pool composition and determine whether observed dominance is robust rather than an artifact of missing mechanisms or fragile coefficients.
+
+After CAL1-F acceptance the branch moves to `ECO.EVO1_PLANT_WORLD_PROOF`, not to additional presentation work.
 
 ## Global boundary
 
 Standalone EVO remains research-only. `XFER1/LIVE` wait for canonical simulator foundations. ECO does not create private global runtime foundations.
 
-Current resolver: `EXECUTE CAL1-E COMBINED MECHANISM MATRIX WITHOUT CALIBRATION`.
+Current resolver: `RUN CAL1-E EXACT WINDOWS COMBINED MECHANISM MATRIX GATE`.

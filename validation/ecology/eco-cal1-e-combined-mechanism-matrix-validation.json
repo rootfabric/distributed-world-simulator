@@ -1,0 +1,63 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_e_combined_mechanism_matrix_validation.v1",
+  "revision": "ECO-CAL1-E-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "69a6f569d3a0f6ecbad641fb45b21340323f118e",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "parent": {
+    "checkpoint": "ECO.CAL1-D",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6"
+  },
+  "matrix": {
+    "strategies": 8,
+    "environments": 4,
+    "density_regimes": 2,
+    "disturbance_regimes": 3,
+    "contexts": 24,
+    "rows": 192
+  },
+  "composition_policy": {
+    "resource_ledger": "PH3 coupled resource + CAL1-B relative-light delta - CAL1-C crown-overlap loss + CAL1-C root-competition delta",
+    "lifecycle": "CAL1-D vector evaluated at common developmental-stage fraction 0.75, biomass 1.0, reserve 1.0",
+    "comparison": "separate metric winners plus Pareto front",
+    "weighted_scalar": false,
+    "calibration": false
+  },
+  "density_controls": {
+    "SPARSE": {"distance_m": 50.0, "local_density": 0.15, "role": "no-overlap anchor"},
+    "DENSE": {"distance_m": 0.75, "local_density": 0.90, "role": "geometry-active neighbour context"}
+  },
+  "disturbance_severity": {"NONE": 0.0, "MILD": 0.2, "SEVERE": 0.9},
+  "required_properties": [
+    "CAL1_D_PARENT_HASH_UNCHANGED",
+    "EXACT_24_CONTEXTS_192_ROWS",
+    "SPARSE_NEIGHBOUR_INTERACTIONS_ZERO",
+    "DENSE_NEIGHBOUR_INTERACTIONS_NONZERO",
+    "DISTURBANCE_SURVIVAL_MONOTONIC",
+    "DISTURBANCE_POST_SEED_POTENTIAL_MONOTONIC",
+    "DENSE_HEIGHT_HIGH_RELATIVE_LIGHT_DELTA_GT_HEIGHT_LOW",
+    "TALLER_MATCHED_STAGE_DISPERSAL_GREATER",
+    "TALLER_MATCHED_GROWTH_MATURITY_TIME_LONGER",
+    "NONEMPTY_PARETO_FRONT_EVERY_CONTEXT",
+    "MULTI_MEMBER_PARETO_EXISTS",
+    "DETERMINISTIC_SAME_AND_FRESH_PROCESS_HASH",
+    "NO_WEIGHTED_FITNESS_SCALAR",
+    "NO_COEFFICIENT_CALIBRATION"
+  ],
+  "implementation_diff": {
+    "base": "8ebeed5ba4721b45d9d4bf0600b3af0691a8d399",
+    "head": "69a6f569d3a0f6ecbad641fb45b21340323f118e",
+    "changed_files": 4,
+    "accepted_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "acceptance": "tests/research/ecology/eco_cal1_e_combined_mechanism_matrix_acceptance.gd",
+    "restart": "tests/research/ecology/eco_cal1_e_restart_replay_probe.gd",
+    "runner": "RUN_ECO_CAL1_E_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.CAL1-F Calibration + Full-Pool Robustness"
+}
