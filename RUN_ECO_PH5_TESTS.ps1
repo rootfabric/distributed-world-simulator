@@ -10,8 +10,25 @@ if (-not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) { throw "Godot bina
 
 function Invoke-GodotScript([string]$Label, [string]$ScriptPath) {
     Write-Host "=== $Label ==="
-    $output = & $GodotPath --headless --path $RootDir --script $ScriptPath 2>&1
-    $exitCode = $LASTEXITCODE
+    $hadRuntimeDisabled = Test-Path Env:BREAKPOINT_RUNTIME_DISABLED
+    $previousRuntimeDisabled = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        # breakpoint_mcp is an editor/runtime diagnostic bridge, not ECO truth.
+        # Every PH5 gate is a separate Godot process, so disable its fixed-port
+        # runtime listener to prevent 127.0.0.1:9081 collisions with an editor,
+        # graphical lab, or another acceptance process.
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        $output = & $GodotPath --headless --path $RootDir --script $ScriptPath 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        if ($hadRuntimeDisabled) {
+            $env:BREAKPOINT_RUNTIME_DISABLED = $previousRuntimeDisabled
+        }
+        else {
+            Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue
+        }
+    }
     $output | ForEach-Object { Write-Host $_ }
     if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
     return ($output -join "`n")
