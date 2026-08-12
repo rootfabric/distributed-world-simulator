@@ -17,6 +17,7 @@ func _attach_local_sandbox_target(hand: String, target: Node) -> Dictionary:
 		return result
 
 	var body := target as RigidBody3D
+	var body_id := body.get_instance_id()
 	var body_had_owner_exception := _has_collision_exception(body, player)
 	var owner_had_body_exception := _has_collision_exception(player, body)
 	if not body_had_owner_exception:
@@ -24,7 +25,8 @@ func _attach_local_sandbox_target(hand: String, target: Node) -> Dictionary:
 	if not owner_had_body_exception:
 		player.add_collision_exception_with(body)
 
-	_owner_collision_isolation_by_body_id[body.get_instance_id()] = {
+	_owner_collision_isolation_by_body_id[body_id] = {
+		"body_id": body_id,
 		"body": body,
 		"body_had_owner_exception": body_had_owner_exception,
 		"owner_had_body_exception": owner_had_body_exception,
@@ -95,15 +97,14 @@ func _schedule_owner_collision_restore(body: RigidBody3D, isolation: Dictionary)
 
 
 func _finish_owner_collision_restore(body: RigidBody3D, isolation: Dictionary) -> void:
-	if body == null:
-		return
-	var body_id := body.get_instance_id()
-	if is_instance_valid(body) and player != null and is_instance_valid(player):
+	var body_id := int(isolation.get("body_id", 0))
+	if body != null and is_instance_valid(body) and player != null and is_instance_valid(player):
 		if not bool(isolation.get("body_had_owner_exception", false)):
 			body.remove_collision_exception_with(player)
 		if not bool(isolation.get("owner_had_body_exception", false)):
 			player.remove_collision_exception_with(body)
-	_owner_collision_isolation_by_body_id.erase(body_id)
+	if body_id > 0:
+		_owner_collision_isolation_by_body_id.erase(body_id)
 	_owner_collision_isolation_restores += 1
 
 
