@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_5_disturbance_recovery_validation.v1",
+  "revision": "ECO-EVO1-P2.5-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "b645ee451dd5c1c2558647c8e50eb293ec80c21c",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.4",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97"
+  },
+  "truth": {
+    "event_channels": "mechanical_severity + seed_bank_mortality_fraction",
+    "adult_damage": "accepted CAL1-D exposure/anchoring disturbance survival",
+    "seed_bank_damage": "explicit event mortality with integer conservation and P2.2-valid cohort rebuild",
+    "recovery": "accepted ResourceModel + P2.2 bank reactivation + P2.3 turnover coefficients by reference",
+    "capacity": "accepted P1 single-patch MAX_BIOMASS_KG_M2",
+    "production_boundary": "research event input only; no canonical ENV/TF/LIFE/WB ownership"
+  },
+  "controlled_runs": {
+    "CONTROL": "8y, no event",
+    "MILD": "year1 mechanical=0.35 bank_mortality=0.10",
+    "SEVERE": "year1 mechanical=0.85 bank_mortality=0.35",
+    "REPEATED": "SEVERE year1 + year6 mechanical=0.75 bank_mortality=0.30"
+  },
+  "required_properties": [
+    "P2_4_PARENT_HASH_UNCHANGED",
+    "SEVERE_ADULT_LOSS_GT_MILD",
+    "SEVERE_SEED_BANK_KILL_GT_MILD",
+    "DEEP_ROOT_MECHANICAL_SURVIVAL_GT_SHALLOW_ROOT",
+    "ADULT_EVENT_BIOMASS_CONSERVATION",
+    "SEED_BANK_EVENT_INTEGER_CONSERVATION",
+    "SEVERE_IMMEDIATE_BIOMASS_LOSS",
+    "SURVIVING_SEED_BANK_REACTIVATION_GT_ZERO",
+    "SINGLE_SEVERE_MULTIYEAR_RECOVERY_GAIN_GT_ZERO",
+    "SECOND_EVENT_ADDITIONAL_DAMAGE_GT_ZERO",
+    "REPEATED_FINAL_BIOMASS_LT_SINGLE_SEVERE_FINAL",
+    "ALL_RUNS_CAPACITY_BOUNDED",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "NO_P2_6_BIOGEOGRAPHY_IMPLEMENTATION",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "122ed0c5f0f08ec36bd4fdec8fda8af1c9e9270b",
+    "head": "b645ee451dd5c1c2558647c8e50eb293ec80c21c",
+    "changed_files": 5,
+    "accepted_p2_4_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "parser_preflight": true,
+    "acceptance": "tests/research/ecology/eco_evo1_p2_5_disturbance_recovery_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_5_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_5_TESTS.ps1"
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 / P2.6 Long-Horizon Biogeography"
+}

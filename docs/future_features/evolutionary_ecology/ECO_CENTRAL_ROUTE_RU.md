@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.4 ACCEPTED / P2.5 EXECUTE_NOW`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.5 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -29,24 +29,6 @@ P2.3    15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e
 P2.4    78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97
 ```
 
-P2.4 exact Windows evidence:
-
-```text
-near_arrived=800
-far_arrived=160
-near_recruited=430
-far_recruited=87
-near_short=84
-near_long=346
-far_short=0
-far_long=87
-near_long_share=0.804651162791
-far_long_share=1.000000000000
-west_routed=0
-```
-
-This proves causal distance isolation and transport-direction filtering through actual P2.1 packet coordinates.
-
 ## Central route
 
 ```text
@@ -60,8 +42,8 @@ P2.3 Local Population Turnover + Succession ACCEPTED
    ↓
 P2.4 Patch Colonization / Isolation / Migration ACCEPTED
    ↓
-P2.5 Disturbance + Recovery ← EXECUTE NOW
-   ↓
+P2.5 Disturbance + Recovery ← CURRENT CANDIDATE
+   ↓ PASS
 P2.6 Long-Horizon Biogeography
    ↓
 P2.7 Lineage Divergence / Speciation Candidate Diagnostics
@@ -73,26 +55,72 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.5 boundary
+## P2.5 implementation
 
-P2.5 introduces explicit disturbance events and recovery chronology. It must not reinterpret a disturbance as a species-specific modifier or biome table.
+Implementation head: `b645ee451dd5c1c2558647c8e50eb293ec80c21c`.
 
-The event contract is decomposed into causal channels:
+Diff from accepted P2.4 adds exactly five ECO research/test files and modifies no accepted P2.4/P2.3/P2.2/P2.1/CAL1 source or runtime path.
+
+### Disturbance is an event, not a species modifier
+
+P2.5 event input has two independent channels:
 
 ```text
-mechanical_severity          -> CAL1-D adult exposure/anchoring survival
-seed_bank_mortality_fraction -> direct event pressure on dormant propagules
+mechanical_severity
+seed_bank_mortality_fraction
 ```
 
-Recovery must preserve accepted ecology semantics:
+Adult mechanical response is delegated to accepted CAL1-D exposure/anchoring mechanics. Seed-bank mortality is explicit event pressure and maintains exact integer conservation.
 
-- adult turnover/growth remains compatible with P2.3 coefficients;
-- surviving seed-bank cohorts reactivate through P2.2;
-- disturbance history can alter later lineage abundance without placing species;
-- state and damage/recovery ledgers remain deterministic and conservative.
+### Recovery
 
-P2.5 remains research-only. It does not claim canonical environment-event, time-fabric, persistence, world lifecycle, or work-budget ownership. Those production bridges remain XFER/LIVE concerns.
+Annual recovery advances surviving P2.2 banks through the accepted bank kernel. Recruits re-enter adult cohort truth. Adult background turnover and productive regrowth reference P2.3 `STRESS_MORTALITY_RATE` and `VEGETATIVE_GROWTH_RATE` directly, while capacity remains the accepted P1 patch capacity.
 
-P2.6 stays blocked until exact Windows P2.5 acceptance.
+Thus P2.5 does not create a second hidden turnover calibration.
 
-Current resolver: `IMPLEMENT EVO1/P2.5 DISTURBANCE + RECOVERY`.
+### Controlled chronology
+
+All runs start from the same two-lineage community, equal adult biomass and equal seed-bank counts in the same favourable environment:
+
+```text
+CONTROL   no event
+MILD      y1 mechanical .35 / bank mortality .10
+SEVERE    y1 mechanical .85 / bank mortality .35
+REPEATED  SEVERE y1 + y6 mechanical .75 / bank mortality .30
+```
+
+`SHALLOW_FAST` is taller/shallow-rooted; `DEEP_BANKED` is shorter/deep-rooted. Acceptance requires CAL1-D mechanical survival to favour the better anchored lineage under the same severe event, while recovery emerges from surviving adults and bank history rather than a recovery bonus.
+
+Required directions include severe loss > mild, severe bank kill > mild, deep survival > shallow, positive recovery after single severe, additional damage from the second event, and repeated final biomass below single-severe final biomass.
+
+### Ownership boundary
+
+P2.5 does not claim canonical disturbance generation, weather/environment event truth, Time Fabric, World Lifecycle, Work Budget, persistence or authority ownership. Its event record is a research input contract for ecology response semantics.
+
+### Strict P2.6 boundary
+
+No long-horizon range map, regional climate-history series, geographic occupancy metric or biogeographic persistence analysis exists yet. P2.6 remains blocked.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_5_TESTS.ps1 -GodotPath $Godot
+```
+
+The runner performs parser/preload `--check-only` before the long accepted P2.4 parent regression, then acceptance and two fresh-process replay probes.
+
+Until PASS:
+
+```text
+P2.5 = IMPLEMENTED_CANDIDATE
+P2.5 != ACCEPTED
+P2.6 = BLOCKED
+```
+
+Current resolver: `RUN EVO1/P2.5 EXACT WINDOWS DISTURBANCE + RECOVERY GATE`.
