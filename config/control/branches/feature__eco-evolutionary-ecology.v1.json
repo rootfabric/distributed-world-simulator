@@ -7,12 +7,13 @@
   "role": "RESEARCH_DESIGN_FRONTIER",
   "short_description": "Evolutionary ecology research for continuous environment-driven adaptation, developmental morphology, lifecycle and derived plant representation.",
   "purpose": "Prove that plant adaptation, strategy diversity, developmental morphology and lifecycle emerge from environmental fields, resource trade-offs and inheritance, while visual fidelity remains derived representation without hardcoded biome/species/plant-type placement classes.",
-  "expected_outcome": "Deterministic ecology evidence through seed lifecycle plus an extensible GrowthGraph -> PlantRenderDescription -> RendererProfile -> 3D/LOD representation pipeline.",
-  "current_stage": "ECO.PH5-S2 3D Tapered Branch Tubes + Instanced Foliage",
-  "stage_status": "P1_PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_ACCEPTED_PH5_S2_IMPLEMENTED_WINDOWS_AND_GRAPHICAL_PENDING_RESEARCH_ONLY",
-  "progress_note": "PH5-S1 accepted on exact Windows Godot 4.7.1 double: focused 720, visual smoke 15, restart 4; exact hashes description 72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3, profile matrix 2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0, full materialization 374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c. Graphical PASS by user observation confirmed visibly distinct BRANCH_LEAF_INSTANCED/CANOPY_APPROXIMATION/IMPOSTOR_BILLBOARD representations with stable source GrowthGraph. PH5-S2 is now implemented as real Godot 3D presentation: SurfaceTool/ArrayMesh tapered branch tubes and MultiMesh foliage over accepted PlantRenderDescription. S2 exact Windows, fresh-process hashes and graphical review are pending.",
-  "last_accepted_checkpoint": "ECO.PH5-S1 PlantRenderDescription + RendererProfile Foundation",
-  "next_stage": "Run RUN_ECO_PH5_S2_TESTS.ps1 on exact Windows, require parent PH5-S1 regression/replay plus S2 real ArrayMesh/MultiMesh, source GrowthGraph immutability, scene smoke and focused/fresh-process geometry-hash equality. Then run OPEN_ECO_PH5_S2_LAB.ps1 and inspect contrasting environments in BRANCH_TUBES, BRANCH_LEAF_INSTANCED and FULL_PROCEDURAL. On PASS accept S2 and open PH5-S3 canopy/impostor/LOD truth-invariance.",
+  "expected_outcome": "Deterministic ecology evidence through seed lifecycle plus an extensible GrowthGraph -> PlantRenderDescription -> RendererProfile -> multi-scale 3D/LOD representation pipeline, followed by explicit calibration and world-integration contract lanes before any production promotion.",
+  "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+  "current_stage": "ECO.PH5-S3 Multi-Scale Plant Representation / Canopy Approximation + Impostor/LOD Truth-Invariance",
+  "stage_status": "P1_PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_PH5_S2_ACCEPTED_PH5_S3_NEXT_RESEARCH_ONLY",
+  "progress_note": "PH5-S2 accepted on exact Windows Godot 4.7.1 double after accepted PH5-S1 parent regression: focused real 3D materialization 387, visual smoke 12, fresh-process restart 5. Exact geometry hashes reference BRANCH_LEAF_INSTANCED 2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f and FULL_PROCEDURAL 5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e matched restart. User graphical observation confirmed real 3D tree formation with tapered branch geometry and instanced foliage. Central route R21 now requires PH5-S3 multi-scale representation, then PH5-S4 robustness/handoff, then separate ECO.CONV0 world-contract and ECO.CAL1 morphology-calibration lanes. CAL1 must close full-pool compact/HEIGHT_LOW dominance before unrestricted morphology evolution; P2 follows CAL1. P3/PH6 remain deferred behind canonical production foundations and Harness control.",
+  "last_accepted_checkpoint": "ECO.PH5-S2 3D Tapered Branch Tubes + Instanced Foliage",
+  "next_stage": "Implement PH5-S3 representation tiers FULL/REDUCED/CANOPY/IMPOSTOR/POPULATION_ONLY and prove LOD/profile switching cannot change GrowthGraph/ecology/resource/selection/lifecycle truth. Prove far population patches need not materialize individual GrowthGraphs. Then run exact Windows + graphical acceptance before PH5-S4.",
   "parent_branch_or_checkpoint": "main @ 790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "base_commit": "790fd79f8055fefa19cf9d7263441fc9f4326ebd",
   "dependencies": ["GLOBAL-P0-2026-08-10-R2", "PC0-2026-08-10-R1", "G environment semantics as future production input", "Matter/Material Ontology as future substrate truth", "Harness gate before production runtime promotion"],
@@ -21,6 +22,8 @@
   "critical_watched_paths": ["config/architecture/global-program-roadmap.v1.json", "config/control/project-program-registry.v1.json", "config/control/project-control-policy.v1.json", "scripts/simulation/procedural/contracts/**", "scripts/simulation/matter/**"],
   "runtime_paths": [],
   "validation_paths": [
+    "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
+    "config/ecology/eco-evolutionary-ecology-roadmap.v1.json",
     "config/ecology/eco-p1-aggregate-acceptance.v1.json",
     "config/ecology/eco-p1c-aggregate-acceptance.v1.json",
     "config/ecology/eco-ph0-development-trait-contract.v1.json",
@@ -34,7 +37,7 @@
     "docs/checkpoints/ECO_PH5_S1_RENDER_DESCRIPTION_PROFILE_FOUNDATION_ACCEPTED_RU.md",
     "config/ecology/eco-ph5-s2-3d-branch-foliage-materialization.v1.json",
     "validation/ecology/eco-ph5-s2-3d-branch-foliage-materialization-validation.json",
-    "docs/checkpoints/ECO_PH5_S2_3D_BRANCH_FOLIAGE_MATERIALIZATION_CANDIDATE_RU.md",
+    "docs/checkpoints/ECO_PH5_S2_3D_BRANCH_FOLIAGE_MATERIALIZATION_ACCEPTED_RU.md",
     "scripts/research/ecology/plant_3d_materializer_v1.gd",
     "tests/research/ecology/eco_ph5_s2_3d_materialization_acceptance.gd",
     "tests/research/ecology/eco_ph5_s2_restart_replay_probe.gd",
@@ -48,20 +51,29 @@
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
     "p1": "ACCEPTED",
     "ph0_ph4": "ACCEPTED",
-    "ph5_s1": "ACCEPTED_WINDOWS_720_VISUAL_15_RESTART_4_GRAPHICAL_PASS_DESCRIPTION_72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3_MATRIX_2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0_FULL_374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c",
-    "ph5_s2": "IMPLEMENTED_WINDOWS_PENDING",
+    "ph5_s1": "ACCEPTED_WINDOWS_720_VISUAL_15_RESTART_4_GRAPHICAL_PASS",
+    "ph5_s2": "ACCEPTED_WINDOWS_387_VISUAL_12_RESTART_5_GRAPHICAL_PASS_REFERENCE_2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f_FULL_5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e",
     "full_regression": "NOT_REQUIRED_RESEARCH_ONLY_UNREFERENCED"
   },
   "ownership_claims": [{"foundation":"ECOLOGY_RESEARCH_MODEL","claimed_owner":"ECO","scope":"research-only ecology traits, developmental morphology, lifecycle and derived plant representation contracts; future SpeciesCatalog candidates"}],
   "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "MATERIAL_ONTOLOGY", "WORLD_TRANSACTION_MODEL", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_WORK_BUDGET", "WORLD_QUERY_FABRIC", "MATTER_MUTATION_STORAGE", "GEOLOGY_TRUTH", "HYDROLOGY_TRUTH", "TERRAIN_SURFACE_IDENTITY", "REPRESENTATION_CELL_IDENTITY", "PRESENTATION_MESH_AS_TRUTH", "PLANET_WIDE_INDIVIDUAL_GROWTH_GRAPH_TRUTH"],
   "blockers": [
-    "PH5_S2_EXACT_WINDOWS_AND_GRAPHICAL_ACCEPTANCE_REQUIRED_BEFORE_PH5_S3",
-    "FULL_POOL_COMPACT_DOMINANCE_CALIBRATION_REQUIRED_BEFORE_UNCONSTRAINED_MORPHOLOGY_EVOLUTION",
+    "PH5_S3_ACCEPTANCE_REQUIRED_BEFORE_PH5_S4",
+    "FULL_POOL_COMPACT_DOMINANCE_CAL1_REQUIRED_BEFORE_UNCONSTRAINED_MORPHOLOGY_EVOLUTION",
+    "ECO_P2_REQUIRES_CAL1_ACCEPTANCE",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
-    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
+    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION",
+    "PRODUCTION_ECO_REQUIRES_CANONICAL_SPATIAL_PROMOTION_DORMANCY_DEMOTION_BOUNDARY",
+    "PRODUCTION_ECO_REQUIRES_CANONICAL_WORLD_WORK_BUDGET"
   ],
   "health_declared": "GREEN",
   "cross_branch_overlap_enabled": false,
-  "planned_cross_tracks": [{"id":"ECO.PH","status":"PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_ACCEPTED_PH5_S2_ACTIVE_RESEARCH","design_doc":"docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md","rendering_doc":"docs/future_features/evolutionary_ecology/PLANT_RENDERING_ARCHITECTURE_RU.md"}]
+  "planned_cross_tracks": [
+    {"id":"ECO.PH","status":"PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_PH5_S2_ACCEPTED_PH5_S3_NEXT","design_doc":"docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md","rendering_doc":"docs/future_features/evolutionary_ecology/PLANT_RENDERING_ARCHITECTURE_RU.md"},
+    {"id":"ECO.CONV0","status":"PLANNED_AFTER_PH5_S4_DESIGN_CONTRACT_ONLY","route_doc":"docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md"},
+    {"id":"ECO.CAL1","status":"PLANNED_AFTER_PH5_S4_REQUIRED_BEFORE_UNRESTRICTED_MORPHOLOGY_EVOLUTION","route_doc":"docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md"},
+    {"id":"ECO.P2","status":"BLOCKED_BY_CAL1_ACCEPTANCE","route_doc":"docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md"},
+    {"id":"ECO.P3_PH6","status":"DEFERRED_PRODUCTION_FOUNDATIONS","route_doc":"docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md"}
+  ]
 }
