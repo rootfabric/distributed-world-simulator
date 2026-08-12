@@ -129,6 +129,18 @@ $Tests = @(
         PassMarker = "FPE R2 S2 profiled presenters: PASS"
     },
     @{
+        Path = "res://tests/characters/test_fpe_r2_s3_hand_pose_catalog.gd"
+        PassMarker = "FPE R2 S3 hand pose catalog: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_s3_articulated_hand_rig.gd"
+        PassMarker = "FPE R2 S3 articulated hand rig: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_s3_posed_viewmodel.gd"
+        PassMarker = "FPE R2 S3 posed viewmodel: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
         PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
