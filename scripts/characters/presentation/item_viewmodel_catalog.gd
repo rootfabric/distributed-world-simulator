@@ -36,6 +36,14 @@ func resolve(
 		if profile_id.is_empty():
 			profile_id = "metadata"
 		source = "METADATA"
+	# Replica definition `beacon_mount_base` contains the token `beacon` even
+	# though it is structurally a mount-base. Resolve the more specific family
+	# before generic beacon heuristics so slot 2 does not collapse to slot 1.
+	elif _contains_any(normalized_id, normalized_tags, ["mountbase", "fixturebase", "structuralbase"]):
+		profile_id = "mount_base"
+		visual_kind = VISUAL_BOX
+		dimensions = Vector3(0.28, 0.22, 0.36)
+		source = "HEURISTIC_SPECIFIC"
 	elif _contains_any(normalized_id, normalized_tags, ["flashlight", "torch", "lamp"]):
 		profile_id = "flashlight"
 		visual_kind = VISUAL_CYLINDER
