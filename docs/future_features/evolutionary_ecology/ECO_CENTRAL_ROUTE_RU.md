@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.2 ESTABLISHMENT + RECRUITMENT + SEED BANK`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.2 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -24,8 +24,6 @@ CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
 P2.1    cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6
 ```
 
-P2.1 exact evidence includes 811 assertions PASS, exact fresh-process replay, inherited-distance ratio `6.0`, release-height ratio `2.0`, explicit boundary export `80`, local seeds `70` and long-tail seeds `10`.
-
 ## Central route
 
 ```text
@@ -33,8 +31,8 @@ EVO0 / CAL1 COMPLETE
    ↓
 P2.1 Seed Dispersal Kernel ACCEPTED
    ↓
-P2.2 Establishment / Recruitment / Seed Bank ← CURRENT
-   ↓
+P2.2 Establishment / Recruitment / Seed Bank ← CURRENT CANDIDATE
+   ↓ PASS
 P2.3 Local Population Turnover + Succession
    ↓
 P2.4 Patch Colonization / Isolation / Migration
@@ -52,31 +50,83 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## Accepted P2.1 truth
+## P2.2 implementation
 
-P2.1 owns transport of propagule cohorts only. It uses bounded lineage-preserving seed packets, exact count conservation, explicit domain export, inherited dispersal distance, release-height scaling and deterministic anisotropic transport context.
+Implementation head: `d09857528adee1010f2177095f2afb04bf651532`.
 
-It does **not** decide establishment.
+Implementation diff from accepted P2.1 adds exactly six ECO files and modifies no accepted P2.1/CAL1 source or runtime path.
 
-## P2.2 purpose
+### Cohort transition
 
-P2.2 consumes P2.1 inside-domain seed packets and introduces the first persistent local propagule state:
+P2.2 consumes an inside-domain P2.1 seed packet and resolves it into integer cohort counts:
 
-- environment-dependent germination opportunity;
-- deterministic recruitment cohort counts;
-- non-germinated viable seed-bank cohorts;
-- seed-bank aging and viability loss;
-- explicit failure/death accounting;
-- lineage/genome/event identity preservation.
+```text
+input
+= exported
++ decayed
++ failed after germination
++ recruited
++ remaining seed bank
+```
 
-P2.2 must stay cohort-based. It must not create one entity per seed.
+Outside-domain P2.1 packets remain export and bypass local establishment.
 
-P2.2 must not introduce biome/species placement tables. Environment suitability must emerge from genome/environment relations already present in the ECO model.
+### Recruitment traits
 
-P2.2 also does not yet own multi-cycle local population turnover, succession, regional migration or disturbance recovery. Those remain P2.3+.
+A sidecar trait contract adds `dormancy_fraction` and `seed_bank_half_life_years` without changing the accepted plant genome schema. Defaults are research defaults, not empirical calibration.
+
+### Germination
+
+Seed-stage water matching uses inherited water preference/tolerance but deliberately does not grant adult root-depth moisture access. Germination activation combines seed water response and temperature, then dormancy reduces immediate activation.
+
+### Establishment
+
+Post-germination establishment separately combines accepted light response, nutrient response and flood survival. No biome name, species name or habitat lookup participates.
+
+### Seed bank
+
+Viability follows half-life decay. Nongerminated viable seeds remain explicit seed-bank cohorts with age and identity. The bank can later reactivate when environment improves.
+
+### P2.3 boundary
+
+P2.2 does not update adult population biomass, carrying-capacity competition, succession, repeated reproductive cycles or regional migration. Those begin at P2.3+.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_2_TESTS.ps1 -GodotPath $Godot
+```
+
+Required evidence includes:
+
+- exact accepted P2.1 parent;
+- conservation in every controlled case;
+- favourable > dry and favourable > flooded recruitment;
+- low dormancy increases immediate recruitment;
+- high dormancy increases bank size;
+- long half-life retains more bank after two years;
+- bank reactivation produces recruitment after improvement;
+- outside-domain 80-seed control remains export-only;
+- cohort counts stay bounded by packet outcomes;
+- lineage/genome/event identity survives;
+- same/fresh-process aggregate equality.
+
+Until PASS:
+
+```text
+P2.2 = IMPLEMENTED_CANDIDATE
+P2.2 != ACCEPTED
+P2.3 = BLOCKED
+```
 
 ## Global boundary
 
 Standalone EVO remains research-only. ECO owns ecology semantics, not canonical spatial/weather/runtime foundations. `XFER1/LIVE` remain deferred until global contracts exist.
 
-Current resolver: `IMPLEMENT EVO1/P2.2 ESTABLISHMENT / RECRUITMENT / SEED BANK`.
+Current resolver: `RUN EVO1/P2.2 EXACT WINDOWS ESTABLISHMENT / RECRUITMENT / SEED BANK GATE`.

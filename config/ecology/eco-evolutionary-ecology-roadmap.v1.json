@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R38-2026-08-12",
+  "revision": "ECO-R39-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_2",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_2_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.EVO1/P2.2",
-  "current_step": "P2.2 Establishment / Recruitment / Seed Bank — EXECUTE_NOW",
+  "current_step": "P2.2 Establishment / Recruitment / Seed Bank / Exact Windows Canonical Gate",
   "last_accepted_step": "ECO.EVO1/P2.1 Seed Dispersal Kernel",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
@@ -25,9 +25,14 @@
     "p2_1_aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
     "p2_1_distance_ratio": 6.0,
     "p2_1_release_ratio": 2.0,
-    "p2_1_boundary_outside": 80,
-    "p2_1_local": 70,
-    "p2_1_long_tail": 10
+    "p2_1_boundary_outside": 80
+  },
+  "candidate_evidence": {
+    "p2_2_implementation_head": "d09857528adee1010f2177095f2afb04bf651532",
+    "p2_2_checkpoint": "docs/checkpoints/ECO_EVO1_P2_2_ESTABLISHMENT_RECRUITMENT_SEED_BANK_CANDIDATE_RU.md",
+    "p2_2_validation": "validation/ecology/eco-evo1-p2-2-establishment-validation.json",
+    "p2_2_runner": "RUN_ECO_EVO1_P2_2_TESTS.ps1",
+    "p2_2_truth": "integer-conserving recruitment and viable seed-bank cohorts consuming P2.1 inside-domain seed packets"
   },
   "EVO0": {
     "name": "Plant Causal Ecology Foundation",
@@ -36,11 +41,11 @@
   },
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_2",
+    "status": "ACTIVE_P2_2_CANDIDATE",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
-      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"EXECUTE_NOW"},
+      {"id":"P2.2","name":"Establishment / Recruitment / Seed Bank","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
       {"id":"P2.3","name":"Local Population Turnover + Succession","status":"BLOCKED_BY_P2_2_ACCEPTANCE"},
       {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"BLOCKED_BY_P2_3"},
       {"id":"P2.5","name":"Disturbance + Recovery","status":"BLOCKED_BY_P2_4"},
