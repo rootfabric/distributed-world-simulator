@@ -1,26 +1,17 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R28-2026-08-12",
+  "revision": "ECO-R29-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1_C",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1_C_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.CAL1-C",
-  "current_step": "CAL1-C Crown + Root Spatial Competition / EXECUTE_NOW",
+  "current_step": "CAL1-C Implemented Candidate / Exact Windows Crown+Root Spatial Causal Gate",
   "last_accepted_step": "ECO.CAL1-B Relative Vertical Light Competition",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
-  "core_invariants": [
-    "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
-    "SPECIES_ARE_DISCOVERED_NOT_PLACED",
-    "FITNESS_EMERGES_FROM_CAUSAL_RESOURCES_COSTS_COMPETITION_AND_HISTORY",
-    "POPULATION_OR_COHORT_STATE_IS_PLANET_SCALE_TRUTH_INDIVIDUAL_DETAIL_IS_PROMOTED",
-    "INCUBATE_FAST_BACKGROUND_COARSE_LOCAL_ACTIVE_SHARE_ONE_ECOLOGY_STATE_MEANING",
-    "ECOLOGY_CAN_ADVANCE_WITHOUT_PLAYER_PRESENCE",
-    "PRESENTATION_LEVEL_NE_ECOLOGY_IDENTITY"
-  ],
   "accepted_summary": [
     "ECO.P1 ACCEPTED",
     "ECO.PH0..PH5-S4 ACCEPTED",
@@ -32,25 +23,30 @@
     "cal1_a_baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
     "ph3c_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
     "cal1_b_aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c",
-    "cal1_b_dense_delta": 0.099556363636,
-    "cal1_b_sparse_delta": 0.002765454545,
     "cal1_b_dense_to_sparse": 36.0,
     "cal1_b_reference_gap_after": -0.378692580210,
     "cal1_b_dry_gap_after": -0.255940250941
   },
+  "candidate_evidence": {
+    "cal1_c_implementation_head": "69910d1bd2ed7983df9c0d40213012a11dcb2f6a",
+    "cal1_c_checkpoint": "docs/checkpoints/ECO_CAL1_C_CROWN_ROOT_SPATIAL_COMPETITION_CANDIDATE_RU.md",
+    "cal1_c_validation": "validation/ecology/eco-cal1-c-crown-root-spatial-competition-validation.json",
+    "cal1_c_runner": "RUN_ECO_CAL1_C_TESTS.ps1",
+    "cal1_c_diff": "7 new ECO research/test/runner/evidence files; no accepted PH3/P1/B or runtime modifications"
+  },
   "EVO0": {
     "name": "Plant Causal Ecology Foundation",
-    "status": "ACTIVE_CAL1_C",
+    "status": "ACTIVE_CAL1_C_CANDIDATE",
     "steps": [
       {"id":"CAL1-A","name":"Baseline Decomposition / Mechanism Audit","status":"ACCEPTED"},
       {"id":"CAL1-B","name":"Relative Vertical Light Competition","status":"ACCEPTED"},
-      {"id":"CAL1-C","name":"Crown + Root Spatial Competition","status":"EXECUTE_NOW"},
-      {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"BLOCKED_BY_CAL1_C"},
+      {"id":"CAL1-C","name":"Crown + Root Spatial Competition","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
+      {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"BLOCKED_BY_CAL1_C_ACCEPTANCE"},
       {"id":"CAL1-E","name":"Combined Mechanism Matrix","status":"BLOCKED_BY_COMPONENT_ACCEPTANCE"},
       {"id":"CAL1-F","name":"Calibration + Full-Pool Robustness","status":"BLOCKED_BY_CAL1_E"}
     ],
     "calibration_forbidden_before": "CAL1-E mechanism acceptance",
-    "cal1_c_goal": "Add explicit spatial crown overlap and root-zone competition so neighbours alter light/resource access through geometry rather than static environment-only scalars."
+    "cal1_c_mechanism": "exact crown/root circle overlap; crown neighbour shading uses accepted PH3 saturating crown potential; root shared resource claims reduce only overlapped local moisture/nutrients then reuse accepted P1 ResourceModel"
   },
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
@@ -64,9 +60,9 @@
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
   "production_blockers": [
+    "CAL1_D_REQUIRES_CAL1_C_EXACT_WINDOWS_ACCEPTANCE",
     "EVO1_REQUIRES_CAL1_ACCEPTANCE",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
-    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER",
-    "NO_ECO_PRIVATE_DUPLICATE_GLOBAL_FOUNDATIONS"
+    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
   ]
 }
