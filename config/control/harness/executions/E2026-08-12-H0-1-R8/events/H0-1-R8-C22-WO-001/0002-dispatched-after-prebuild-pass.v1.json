@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0002",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-12T01:50:40Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "b06688bcfeecbd948b313ca2a1bf1acd5d17c1be",
+  "predicate": "H0_1_R8_HIGH_DESIGN_AUTHORIZED",
+  "command": "DIRECTOR_DISPATCH_SINGLE_C22_WORKER_AFTER_EXACT_HEAD_REVIEW",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-12-H0-1-R8/reviews/H0-1-R8-C22-WO-001-PREBUILD-REVIEW-001.v1.json", "config/control/harness/executions/E2026-08-12-H0-1-R8/work-orders/H0-1-R8-C22-WO-001.v1.json"],
+  "summary": "Director dispatches exactly one bounded R8 worker. The dispatch head_sha is the exact pre-build reviewed head b06688bc; harness/runtime mutation is now authorized only inside the predeclared Work Order scope."
+}
