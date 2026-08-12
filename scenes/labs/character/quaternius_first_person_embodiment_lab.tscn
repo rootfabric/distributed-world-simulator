@@ -1,9 +1,10 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/characters/lab/quaternius_first_person_embodiment_lab.gd" id="1_fpe"]
-[ext_resource type="PackedScene" path="res://scenes/labs/character/quaternius_playable_network_equipment_lab.tscn" id="2_ch9_6"]
+[ext_resource type="Script" path="res://scripts/characters/lab/quaternius_fpe_ch9_6_host.gd" id="2_host"]
 
 [node name="QuaterniusFirstPersonEmbodimentLab" type="Node3D"]
 script = ExtResource("1_fpe")
 
-[node name="CH9_6BaseLab" parent="." instance=ExtResource("2_ch9_6")]
+[node name="CH9_6BaseLab" type="Node3D" parent="."]
+script = ExtResource("2_host")
