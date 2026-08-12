@@ -170,3 +170,11 @@ func _load_fpe_packed_scene(path: String, stage_prefix: String) -> Dictionary:
 	if not resource is PackedScene:
 		return _failure("%s_HAND_VISUAL_RESOURCE_NOT_PACKED_SCENE" % stage_prefix, {"resource_path": path})
 	return _success({"scene": resource as PackedScene, "resource_path": path})
+
+
+func _success(details: Dictionary = {}) -> Dictionary:
+	return {
+		"success": true,
+		"error_code": "",
+		"details": details.duplicate(true),
+	}
