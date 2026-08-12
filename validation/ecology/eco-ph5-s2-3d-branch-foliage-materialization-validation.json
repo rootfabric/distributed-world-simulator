@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.ecology_validation.v1",
+  "checkpoint": "ECO.PH5-S2",
+  "decision": "WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "execution": {
+    "materializer": "res://scripts/research/ecology/plant_3d_materializer_v1.gd",
+    "focused_test": "res://tests/research/ecology/eco_ph5_s2_3d_materialization_acceptance.gd",
+    "visual_smoke": "res://tests/research/ecology/eco_ph5_s2_visual_lab_smoke.gd",
+    "restart": "res://tests/research/ecology/eco_ph5_s2_restart_replay_probe.gd",
+    "scene": "res://scenes/labs/ecology/eco_ph5_s2_3d_materialization_lab.tscn",
+    "runner": "RUN_ECO_PH5_S2_TESTS.ps1",
+    "opener": "OPEN_ECO_PH5_S2_LAB.ps1"
+  },
+  "parent_gate": {
+    "ph5_s1_decision": "ACCEPTED",
+    "reference_description_hash": "72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3",
+    "profile_matrix_hash": "2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0",
+    "full_materialization_hash": "374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c"
+  },
+  "acceptance_matrix": {
+    "REAL_ARRAY_MESH": "REQUIRE non-empty ArrayMesh surface for every active branch profile/environment",
+    "TAPERED_TUBE_TOPOLOGY": "REQUIRE vertex_count = branch_count * branch_sides * 6 and positive vertical AABB",
+    "PROFILE_GEOMETRY_DENSITY": "REQUIRE renderer-profile branch_sides drives geometry density without source truth changes",
+    "INSTANCED_FOLIAGE": "REQUIRE BRANCH_LEAF_INSTANCED and FULL_PROCEDURAL use MultiMesh with deterministic positive instance count",
+    "REPLACEABLE_LEAF_ASSET": "REQUIRE foliage MultiMesh references a presentation mesh, not ecology identity",
+    "GROWTH_GRAPH_IMMUTABILITY": "REQUIRE JSON source GrowthGraph unchanged before/after all mesh builds",
+    "DERIVED_HASH": "REQUIRE deterministic 64-char geometry hash bound to source graph/description/profile",
+    "RESTART_REPLAY": "REQUIRE REFERENCE geometry hashes match fresh-process replay",
+    "REAL_3D_SCENE": "REQUIRE Node3D lab instantiates branch MeshInstance3D/MultiMeshInstance3D path",
+    "GRAPHICAL": "PENDING_USER_OBSERVATION"
+  },
+  "truth_boundary": "Mesh resources, radial tessellation, leaf geometry/materials and instance counts are presentation resources only and never enter ecology/resource/selection/lifecycle semantics.",
+  "windows_confirmation": "PENDING",
+  "graphical_confirmation": "PENDING"
+}
