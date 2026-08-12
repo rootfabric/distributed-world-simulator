@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="BoxMesh" id="BoxMesh_palm"]
+size = Vector3(0.12, 0.05, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_index"]
+size = Vector3(0.026, 0.026, 0.075)
+
+[sub_resource type="BoxMesh" id="BoxMesh_thumb"]
+size = Vector3(0.03, 0.03, 0.065)
+
+[node name="FpeS7AuthoredHandVisual" type="Node3D"]
+metadata/fpe_hand_visual_schema = "planet_simulator.fpe_hand_visual_asset.v1"
+metadata/fpe_compatible_skeleton_schema = "planet_simulator.fpe_hand_skeleton.v1"
+metadata/fpe_hand = "both"
+metadata/fpe_provider_id = "fpe_s7_fixture_authored_hand_v1"
+
+[node name="PalmAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "Palm"
+
+[node name="PalmVisual" type="MeshInstance3D" parent="PalmAttachment"]
+position = Vector3(0, 0, -0.03)
+mesh = SubResource("BoxMesh_palm")
+
+[node name="IndexAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "IndexProximal"
+
+[node name="IndexVisual" type="MeshInstance3D" parent="IndexAttachment"]
+position = Vector3(0, 0, -0.035)
+mesh = SubResource("BoxMesh_index")
+
+[node name="ThumbAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "ThumbProximal"
+
+[node name="ThumbVisual" type="MeshInstance3D" parent="ThumbAttachment"]
+position = Vector3(0, 0, -0.03)
+mesh = SubResource("BoxMesh_thumb")
