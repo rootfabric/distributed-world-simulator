@@ -4,14 +4,15 @@
   "program": "GLOBAL_ARCHITECTURE",
   "checkpoint": "R3_PREPROMOTION_PACKAGE_READY",
   "risk_class": "CRITICAL",
-  "evidence_head_sha": "3900d9115d3e0f6a43f385a5a61a4e2e7b0f730b",
+  "evidence_head_sha": "9c9fa0f784ca37f8484e9bb21437de6486f5271a",
   "intent": "Prepare GLOBAL-P0 R3 for a fresh post-C22 repin and human-gated promotion without promoting, merging, or modifying runtime/domain code.",
   "root_cause_or_reason": "The R3 candidate was constructed from main 1112d1f7 / registry 75 while the central project advanced to main 4a42c2fb / registry 77 and H0.1 R7 C22. Preparation must make stale pins non-authorizing and reduce post-C22 work to repin, final verification, independent review/verifier, and human promotion gate.",
   "changed_surfaces": [
     "config/control/global-p0-r3-prepromotion-guards.v1.json",
     "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
     "config/control/branches/control__global-p0-r3-refresh-r1.v1.json",
-    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md"
+    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md",
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
   ],
   "canonical_owner": "MAIN/GLOBAL_ARCHITECTURE_CONTROL",
   "entry_points": [
@@ -44,15 +45,15 @@
   "architecture_ownership_changed": false,
   "focused_validation": "NOT_REQUIRED",
   "full_regression": "NOT_REQUIRED",
-  "pc0": "NOT_RUN",
-  "directional_pc0": "NOT_RUN",
-  "production_diff_summary": "Preparation changes are architecture/control/docs/evidence only. No runtime or domain implementation is authorized or modified.",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "production_diff_summary": "Preparation changes are architecture/control/docs/evidence only. No runtime or domain implementation is authorized or modified. GitHub Project Control workflow #264 passed on evidence head 9c9fa0f784ca37f8484e9bb21437de6486f5271a, including control-candidate syntax validation, PC0 auditor and PC0 directional watch auditor.",
   "remaining_risks": [
     "C22 has not yet been proven MAIN_INTEGRATED in fresh canonical main for the promotion epoch.",
     "H0.1 runtime-slot release must be proven from fresh canonical control state.",
     "R3 candidate is still based on historical construction base 1112d1f7 / registry 75 and must be repinned after C22.",
-    "Standard PC0 and directional-PC0 must be rerun on the exact post-C22 repinned candidate.",
-    "Independent Reviewer and Verifier PASS are still required.",
+    "Current NON_RED PC0 evidence is prepromotion-only and must be rerun on the exact post-C22 repinned candidate.",
+    "Independent Reviewer and Verifier PASS are still required after post-C22 repin.",
     "Human GLOBAL_ARCHITECTURE_PROMOTION gate is still required."
   ],
   "required_fixes": [],
@@ -60,15 +61,15 @@
     "After C22 MAIN_INTEGRATED: fetch fresh main and record exact SHA/registry generation.",
     "Confirm H0.1 runtime slot is released.",
     "Rebase/repin PR #85 to fresh post-C22 main and refresh all ephemeral candidate pins.",
-    "Run CONTROL_PROJECT, standard PC0 and directional-PC0.",
-    "Finalize Evidence Map against exact tested head.",
+    "Rerun CONTROL_PROJECT, standard PC0 and directional-PC0 on the repinned exact head.",
+    "Finalize Evidence Map against the post-C22 tested head.",
     "Obtain independent Reviewer and Verifier PASS.",
     "Present GLOBAL_ARCHITECTURE_PROMOTION human gate and stop."
   ],
   "evidence_gaps": [
     "Post-C22 fresh-main SHA and registry generation are intentionally not available yet.",
-    "Exact-head CONTROL_PROJECT PASS is intentionally pending the post-C22 repin.",
-    "PC0 NON_RED and directional-PC0 NON_RED are intentionally pending the post-C22 repin.",
+    "Post-C22 exact-head CONTROL_PROJECT/PC0/directional-PC0 rerun is intentionally pending the C22 boundary.",
+    "Independent post-C22 Reviewer and Verifier verdicts are intentionally absent.",
     "Human promotion authorization is intentionally absent."
   ],
   "review_verdict": "INSUFFICIENT_EVIDENCE"
