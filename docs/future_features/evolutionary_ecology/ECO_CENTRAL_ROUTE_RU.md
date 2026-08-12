@@ -10,9 +10,9 @@
 
 `Environment -> Genome -> Phenotype -> GrowthGraph -> Morphology Costs/Benefits -> Selection -> Seed Lifecycle -> PlantRenderDescription -> Real 3D Materialization`
 
-Приняты: `ECO.P1`, `PH0`, `PH1`, `PH2`, `PH3`, `PH3C`, `PH4`, `PH5-S1`.
+Приняты: `ECO.P1`, `PH0`, `PH1`, `PH2`, `PH3`, `PH3C`, `PH4`, `PH5-S1`, `PH5-S2`.
 
-`PH5-S2` после exact Windows + fresh-process replay + graphical user observation считается принятым. Следующий исполняемый этап: `PH5-S3`.
+`PH5-S2` принят после exact Windows + fresh-process replay + graphical user observation. Следующий исполняемый этап: `PH5-S3`.
 
 ## Центральная дорожная карта
 
