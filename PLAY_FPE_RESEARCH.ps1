@@ -126,7 +126,7 @@ if ([int]$SceneGate.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($SceneG
 }
 Write-Host "FPE graphical composition preflight: PASS" -ForegroundColor Green
 
-$GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
+$GarmentAvailable = Test-Path -LiteralPath $Garment
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $UserArgs = @(
     "--ch9-6-port=$Port"
@@ -154,6 +154,7 @@ Write-Host "Switch 1 -> 2 -> 1 -> empty while moving. Slot 2 must engage both ha
 Write-Host "Q is intentionally reserved while the left hand is acting as the secondary support hand. This is presentation-only reservation, not gameplay authority." -ForegroundColor Cyan
 Write-Host "Third-person still shows the existing right-hand world proxy; third-person two-arm IK is NOT claimed by S4 and remains a later animation task." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left hand is free." -ForegroundColor Cyan
+Write-Host "S4 Fix1 physics gate: while Q/E holds a local sandbox RigidBody, it must NOT push or self-move the CharacterBody3D. Owner/body collision is mutually excluded only during hold and a 200 ms release grace; world collision layers/masks stay unchanged." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
     Write-Host "Equip Peasant Upper in the inventory to test first-person sleeve synchronization." -ForegroundColor Cyan
