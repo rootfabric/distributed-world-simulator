@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.ecology.cal1_a_baseline_decomposition_validation.v1",
+  "revision": "ECO-CAL1-A-2026-08-12-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e",
+  "status": "IMPLEMENTED_LOCAL_INTERFACE_PASS_EXACT_WINDOWS_CANONICAL_ECOLOGY_PENDING",
+  "scope": "RESEARCH_ONLY_EVO0",
+  "goal": "Measure the existing PH3/PH3C morphology economics without tuning coefficients, reproduce the known HEIGHT_LOW broad advantage, and explain score/rank margins by causal benefit/cost components before adding new mechanisms.",
+  "implementation": {
+    "diagnostic": "scripts/research/ecology/plant_morphology_economics_baseline_v1.gd",
+    "acceptance_test": "tests/research/ecology/eco_cal1_a_baseline_decomposition_acceptance.gd",
+    "restart_probe": "tests/research/ecology/eco_cal1_a_restart_replay_probe.gd",
+    "windows_runner": "RUN_ECO_CAL1_A_TESTS.ps1"
+  },
+  "matrix": {
+    "environments": ["REFERENCE", "SHADE", "SUN", "DRY"],
+    "strategies": ["BASE", "HEIGHT_LOW", "HEIGHT_HIGH", "CROWN_NARROW", "CROWN_WIDE", "BRANCH_LOW", "BRANCH_HIGH", "GIANT_DENSE"],
+    "row_count": 32,
+    "isolation": "one genome + PH3C common IndividualSeed; morphology strategy is the intended controlled variable",
+    "ranking": "coupled_net_resource_balance descending with deterministic strategy-name tie break",
+    "full_pool": "eight equal initial shares, PH3C selection strength 0.35, 10 cycles",
+    "sensitivity": "remove one existing morphology component globally and record rank shift",
+    "explanation": "winner-vs-runner and HEIGHT_LOW-vs-HEIGHT_HIGH signed component deltas"
+  },
+  "invariants": [
+    "NO_COEFFICIENT_CHANGE",
+    "NO_MORPHOLOGY_RESOURCE_PROFILE_IMPORT_IN_CAL1_A_DIAGNOSTIC",
+    "ACCEPTED_PH3_PH3C_SOURCES_UNMODIFIED",
+    "COMMON_INDIVIDUAL_SEED_ISOLATES_MORPHOLOGY",
+    "COMPONENT_SUM_RECONSTRUCTS_MORPHOLOGY_DELTA_AND_SELECTION_SCORE",
+    "FULL_POOL_SHARES_CONSERVE_ONE",
+    "LEGACY_PH3C_PAIRWISE_HASH_RECORDED",
+    "HEIGHT_LOW_VS_HEIGHT_HIGH_REPRODUCED_IN_ALL_CONTROLLED_ENVIRONMENTS"
+  ],
+  "local_interface_validation": {
+    "engine": "Godot 4.7.1 stable double custom a13da4feb",
+    "mode": "API_COMPATIBLE_SYNTHETIC_STUB_ONLY_NOT_CANONICAL_ECOLOGY_EVIDENCE",
+    "acceptance_assertions": 1094,
+    "acceptance_result": "PASS",
+    "fresh_process_probe_assertions_each": 5,
+    "fresh_process_replay": "PASS_EXACT_SYNTHETIC_HASH",
+    "synthetic_baseline_hash": "11bec1c8e36ca8a162cb6d2b151f8abf8116c84c25bb200acb58213f3e7268d9",
+    "synthetic_legacy_ph3c_hash": "7530d4844fbb3afa386aaee00559485b1a2002760cb82c93b30fb6d00e459705",
+    "note": "Synthetic hashes validate the new diagnostic/test algorithms only and MUST NOT be promoted as real PH3/PH3C evidence."
+  },
+  "canonical_gate": {
+    "required_platform": "exact user Windows Godot 4.7.1 double project checkout",
+    "command": ".\\RUN_ECO_CAL1_A_TESTS.ps1 -GodotPath $Godot",
+    "runner_must_execute": [
+      "accepted PH3 morphology/resource regression",
+      "accepted PH3 restart regression",
+      "accepted PH3C morphology-aware selection regression",
+      "accepted PH3C replay regression",
+      "CAL1-A baseline decomposition acceptance",
+      "CAL1-A fresh process replay A",
+      "CAL1-A fresh process replay B"
+    ],
+    "required_outputs": [
+      "real baseline_hash",
+      "real legacy_ph3c_pairwise_hash",
+      "dominance_classification",
+      "environment winner/runner/margin/component-driver lines",
+      "exact fresh-process baseline equality"
+    ]
+  },
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_BASELINE"
+}

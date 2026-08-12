@@ -10,11 +10,11 @@
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "north_star_config": "config/ecology/eco-evolutionary-ecosystem-vision.v1.json",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_stage": "ECO.EVO0 / CAL1-A Baseline Decomposition / Mechanism Audit",
-  "stage_status": "PH_RESEARCH_COMPLETE_CONV0_A_ACCEPTED_EVO0_CAL1_A_EXECUTE_NOW_RESEARCH_ONLY",
-  "progress_note": "Plant ecology/resource/development/representation foundations are accepted through PH5-S4. The branch North Star is now explicitly restored to the original Evolutionary Ecosystem mission: run a standalone headless ecology on arbitrary landscapes, evolve spatial plant communities and later multi-trophic systems, save/restart/export an EcologyArchive, then use canonical simulator foundations to materialize and continue the same ecology at local/background resolution. CAL1 is EVO0 hardening before the first autonomous Plant World Proof, not the destination. CONV0-A global gaps remain active design findings for later XFER/LIVE convergence.",
+  "current_stage": "ECO.EVO0 / CAL1-A Implemented Candidate / Exact Windows Canonical Baseline Gate",
+  "stage_status": "PH_RESEARCH_COMPLETE_CONV0_A_ACCEPTED_EVO0_CAL1_A_IMPLEMENTED_CANDIDATE_WINDOWS_PENDING_RESEARCH_ONLY",
+  "progress_note": "The branch North Star is autonomous evolutionary ecosystem growth and later transfer/continuation in the simulator. CAL1 is only EVO0 hardening before the Plant World Proof. CAL1-A implementation now exists at 20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e: a controlled common-Genome/common-IndividualSeed 4x8 morphology economics audit, deterministic full-pool ranking/share diagnostic, signed component explanation and leave-one-component-out rank sensitivity. It does not import or tune the morphology coefficient profile. Local Godot 4.7.1 double API-compatible synthetic validation passed 1094 assertions plus two fresh-process probes, but this is explicitly noncanonical; exact Windows project evidence is still required before CAL1-A acceptance or CAL1-B execution.",
   "last_accepted_checkpoint": "ECO.CONV0-A Global Alignment / World Integration Consumer Requirements",
-  "next_stage": "Execute CAL1-A without coefficient changes, finish CAL1 causal plant economics, then begin ECO.EVO1_PLANT_WORLD_PROOF: deterministic heterogeneous landscape + ancestral pool -> dispersal, recruitment, succession, disturbance, spatial communities and lineage divergence without biome/species placement tables.",
+  "next_stage": "Run RUN_ECO_CAL1_A_TESTS.ps1 on the exact Windows checkout. Record the real baseline_hash, legacy PH3C pairwise hash, environment winner/runner/margin/component-driver diagnostics and fresh-process equality. If and only if CAL1-A is accepted, start CAL1-B Relative Vertical Light Competition. After CAL1 closure begin ECO.EVO1_PLANT_WORLD_PROOF.",
   "owned_paths": [
     "config/ecology/**",
     "docs/future_features/evolutionary_ecology/**",
@@ -48,7 +48,7 @@
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
     "ph": "RESEARCH_COMPLETE_PH0_THROUGH_PH5_S4_ACCEPTED",
     "conv0_a": "ACCEPTED_DESIGN_REQUIREMENTS_GLOBAL_GAPS_REPORTED",
-    "evo0_cal1": "CAL1_A_EXECUTE_NOW_NO_CALIBRATION_YET",
+    "evo0_cal1_a": "IMPLEMENTED_20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e_LOCAL_SYNTHETIC_INTERFACE_PASS_EXACT_WINDOWS_PENDING",
     "evo1_plus": "PLANNED_NOT_STARTED"
   },
   "ownership_claims": [
@@ -78,16 +78,17 @@
     "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH"
   ],
   "blockers": [
+    "CAL1_B_REQUIRES_CAL1_A_EXACT_WINDOWS_ACCEPTANCE",
     "NO_COEFFICIENT_CALIBRATION_BEFORE_CAL1_MECHANISM_ACCEPTANCE",
     "EVO1_PLANT_WORLD_PROOF_REQUIRES_CAL1_ACCEPTANCE",
     "EVO3_MULTI_TROPHIC_REQUIRES_STABLE_PLANT_WORLD_FOUNDATION",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
     "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
   ],
-  "health_declared": "GREEN_RESEARCH_ONLY_WITH_GLOBAL_R3_GAPS_REPORTED",
+  "health_declared": "GREEN_RESEARCH_ONLY_CAL1_A_CANONICAL_GATE_PENDING_WITH_GLOBAL_R3_GAPS_REPORTED",
   "cross_branch_overlap_enabled": false,
   "planned_cross_tracks": [
-    {"id":"ECO.EVO0","status":"CAL1_A_EXECUTE_NOW","goal":"causal plant economics hardening"},
+    {"id":"ECO.EVO0","status":"CAL1_A_IMPLEMENTED_CANDIDATE_WINDOWS_PENDING","goal":"causal plant economics hardening"},
     {"id":"ECO.EVO1","status":"BLOCKED_BY_CAL1","goal":"autonomous spatial plant ecosystem / Plant World Proof"},
     {"id":"ECO.EVO2","status":"PLANNED_AFTER_EVO1","goal":"long-run landscape evolution/history/lineage divergence"},
     {"id":"ECO.EVO3","status":"PLANNED_AFTER_PLANT_FOUNDATION","goal":"multi-trophic ecosystem and coevolution"},

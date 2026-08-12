@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-A EXECUTE_NOW`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-A IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star:
 
@@ -33,9 +33,7 @@ C. DERIVED PRESENTATION
    mesh / assets / animation / LOD
 ```
 
-PH5 относится к слою C и уже дал достаточно representation foundation для текущего research stage.
-
-Основная работа теперь возвращается в слой A.
+PH5 относится к слою C и уже дал достаточно representation foundation для текущего research stage. Основная работа теперь идёт в слой A.
 
 ## 3. Один ecological state, три режима исполнения
 
@@ -68,7 +66,7 @@ ECO.CONV0-A               ACCEPTED DESIGN REQUIREMENTS
 
 CONV0-A показал, что future simulator bridge должен использовать canonical `G/ENV/MAT/WQ/SD/TF/POP/LIFE/WB/NX/WT` foundations, а не ECO-private substitutes.
 
-## 5. Новый центральный маршрут
+## 5. Центральный маршрут
 
 ```text
 FOUNDATION ACCEPTED
@@ -76,8 +74,11 @@ P1 + PH0..PH5-S4
         │
         ▼
 EVO0 — PLANT CAUSAL ECOLOGY
-CAL1 ← CURRENT
-morphology economics / missing mechanisms
+CAL1-A ← CURRENT CANONICAL GATE
+        │
+        ▼
+CAL1-B/C/D/E/F
+missing mechanisms → combined model → calibration
         │
         ▼
 EVO1 — PLANT WORLD PROOF
@@ -129,22 +130,100 @@ LIVE3 — WORLD/PLAYER DISTURBANCE FEEDBACK
 PRES1+ — richer derived visuals later
 ```
 
-## 6. EVO0 — текущая работа
+## 6. EVO0 / CAL1-A — текущая работа
 
-`ECO.CAL1` остаётся текущим checkpoint.
-
-Но его роль уточнена:
+Роль CAL1:
 
 ```text
 CAL1 != цель ECO
 CAL1 = hardening plant economics before autonomous ecosystem proof
 ```
 
-Current:
+### CAL1-A implementation
 
-`CAL1-A Baseline Decomposition / Mechanism Audit`.
+Implementation head:
 
-Далее:
+`20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e`.
+
+Добавлены:
+
+- `scripts/research/ecology/plant_morphology_economics_baseline_v1.gd`;
+- `tests/research/ecology/eco_cal1_a_baseline_decomposition_acceptance.gd`;
+- `tests/research/ecology/eco_cal1_a_restart_replay_probe.gd`;
+- `RUN_ECO_CAL1_A_TESTS.ps1`.
+
+Candidate checkpoint:
+
+`docs/checkpoints/ECO_CAL1_A_BASELINE_DECOMPOSITION_CANDIDATE_RU.md`.
+
+Validation:
+
+`validation/ecology/eco-cal1-a-baseline-decomposition-validation.json`.
+
+### Что измеряет CAL1-A
+
+```text
+REFERENCE / SHADE / SUN / DRY
+            ×
+BASE / HEIGHT_LOW / HEIGHT_HIGH /
+CROWN_NARROW / CROWN_WIDE /
+BRANCH_LOW / BRANCH_HIGH / GIANT_DENSE
+```
+
+Для каждой строки:
+
+- same Genome;
+- same PH3C IndividualSeed;
+- realized morphology;
+- accepted PH3 benefit/cost components;
+- reconstructed selection score;
+- deterministic full-pool rank/share;
+- winner margin;
+- leave-one-component-out rank sensitivity.
+
+Environment summary объясняет winner-vs-runner и `HEIGHT_LOW-vs-HEIGHT_HIGH` через signed component deltas.
+
+### Неподвижная граница
+
+CAL1-A **не импортирует** `plant_morphology_resource_profile_v1.gd` и не создаёт tuned profile. Никакие accepted PH3/PH3C sources не изменялись.
+
+### Локальная interface validation
+
+На Godot `4.7.1 stable double a13da4feb` новый surface прошёл API-compatible synthetic validation:
+
+- acceptance `1094 PASS`;
+- fresh process probe `5 PASS × 2`;
+- exact synthetic replay.
+
+Эти числа и synthetic hashes не являются canonical ecology evidence.
+
+### Current gate
+
+На exact Windows checkout выполнить:
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_CAL1_A_TESTS.ps1 -GodotPath $Godot
+```
+
+Runner повторяет accepted PH3/PH3C regressions, затем CAL1-A и два fresh processes.
+
+До этого:
+
+```text
+CAL1-A = IMPLEMENTED_CANDIDATE
+CAL1-A != ACCEPTED
+CAL1-B = BLOCKED
+```
+
+## 7. CAL1-B..F
+
+После CAL1-A acceptance:
 
 - CAL1-B relative vertical light competition;
 - CAL1-C crown/root competition;
@@ -152,18 +231,32 @@ Current:
 - CAL1-E combined mechanisms;
 - CAL1-F calibration/full-pool robustness.
 
+Принцип:
+
+```text
+observe missing mechanism
+        ↓
+causal experiment
+        ↓
+accept mechanism
+        ↓
+combine
+        ↓
+only then calibrate
+```
+
 После CAL1 не продолжать morphology tuning ради tuning.
 
-## 7. EVO1 — следующий главный milestone
+## 8. EVO1 — следующий главный milestone
 
-Новый target:
+Target:
 
 `ECO.EVO1_PLANT_WORLD_PROOF`.
 
 Нужно взять небольшой детерминированный неоднородный landscape, общий ancestral pool и доказать:
 
 - никакой biome->species placement table;
-- seed dispersal создаёт реальное spatial propagation;
+- seed dispersal создаёт spatial propagation;
 - establishment зависит от local conditions;
 - competition меняет состав сообщества;
 - seed bank и recruitment дают continuity;
@@ -172,16 +265,16 @@ Current:
 - isolation/migration создают различия между patches;
 - long run не runaway-collapse/explosion;
 - save/restart сохраняет ecology history;
-- lineages начинают занимать разные ecological niches.
+- lineages занимают разные ecological niches.
 
-P2 теперь является execution plan внутри EVO1, а не просто мостом к production P3.
+P2 является execution plan внутри EVO1, а не мостом к production ради самого production.
 
-## 8. EVO2 — история и эволюция ландшафта
+## 9. EVO2 — история и эволюция ландшафта
 
-После plant-world proof расширить масштаб времени/пространства:
+После plant-world proof:
 
 - ecology epoch/time;
-- multiple connected/isolated regions;
+- connected/isolated regions;
 - migration flux;
 - local extinction/recolonization;
 - historical contingency;
@@ -192,7 +285,7 @@ P2 теперь является execution plan внутри EVO1, а не пр�
 
 Цель: одинаковая среда с разной историей может иметь разную экологию.
 
-## 9. EVO3 — животные и прочая органика
+## 10. EVO3 — животные и прочая органика
 
 Животные добавляются только после устойчивого plant substrate.
 
@@ -206,7 +299,7 @@ consumer metabolism / diet / mobility / defense
 reproduction / predation / territory
 ```
 
-Первый порядок:
+Порядок:
 
 1. decomposition / organic-matter loop;
 2. herbivore population;
@@ -216,26 +309,22 @@ reproduction / predation / territory
 
 Detailed fauna meshes/animation не являются acceptance requirement.
 
-## 10. EVO4 — автономный Ecology Runner
+## 11. EVO4 — автономный Ecology Runner
 
 ECO должен реально запускаться отдельно от игрового клиента.
 
 Обязательные режимы:
 
-- `INCUBATE_FAST` — accelerated evolution;
-- `BACKGROUND_COARSE` — living ecology without player;
+- `INCUBATE_FAST`;
+- `BACKGROUND_COARSE`;
 - pause/save/restart;
 - deterministic seeded run;
 - bounded population/cohort representation;
-- diagnostics/dashboard достаточный для research.
+- research diagnostics/dashboard.
 
-Это и делает ветку самостоятельным mini-project.
+## 12. XFER0 — EcologyArchive
 
-## 11. XFER0 — EcologyArchive
-
-Переносимый результат должен включать не только SpeciesCatalog.
-
-Минимально:
+Переносимый результат включает:
 
 ```text
 EcologyWorldState snapshot
@@ -247,13 +336,9 @@ EcologyWorldState snapshot
 + ruleset/provenance/replay metadata
 ```
 
-`EcologyArchive` позволяет взять экологию конкретной планеты и воспроизводимо материализовать её в симуляторе.
+## 13. XFER1 — bridge в G / world generation
 
-## 12. XFER1 — bridge в G / world generation
-
-Только после готовности canonical simulator foundations.
-
-Целевая зависимость:
+Только после готовности canonical simulator foundations:
 
 ```text
 G / MAT / ENV
@@ -266,22 +351,16 @@ EcologyLocalProjection
 local placement/materialization
 ```
 
-ECO определяет экологическую occupancy/distribution.
+ECO определяет ecological occupancy/distribution; G/MAT/ENV владеют terrain/geology/material/environment truth.
 
-G/MAT/ENV продолжают владеть terrain/geology/material/environment truth.
-
-Rock placement не является ecology responsibility.
-
-## 13. LIVE — продолжение той же экосистемы
-
-При активации участка:
+## 14. LIVE — продолжение той же экосистемы
 
 ```text
 EcologyPatchState
       ↓
 LocalEcologyState
       ↓
-promoted plants/animals when necessary
+promoted organisms when necessary
       ↓
 interaction / growth / feeding / reproduction / damage
       ↓
@@ -290,45 +369,34 @@ aggregate result
 EcologyPatchState
 ```
 
-При уходе игрока ecology не исчезает — patch возвращается в background/coarse execution.
+При уходе игрока patch возвращается в background/coarse execution. Нельзя иметь unrelated offline ecology и runtime ecology для одной planet state.
 
-Нельзя иметь одну independent offline ecology и вторую unrelated runtime ecology для одной canonical planet state.
+## 15. Presentation
 
-## 14. Presentation
+Текущего PH5 достаточно как proof derived representation. До EVO major proofs не приоритизировать photorealistic vegetation, final animal animation или final art pipeline.
 
-Текущего PH5 достаточно как proof того, что visual representation derived.
-
-До завершения ECO/EVO major proofs не приоритизировать:
-
-- photorealistic vegetation;
-- complex procedural leaf assets;
-- animal animation system;
-- final art pipeline.
-
-Позже presentation может стать отдельным track и свободно улучшаться поверх ecology state.
-
-## 15. Глобальные gates
+## 16. Глобальные gates
 
 Standalone `EVO0..EVO4` можно развивать независимо от runtime critical path основного проекта.
 
 `XFER1/LIVE` ждут canonical foundations и Harness-controlled runtime frontier.
 
-CONV0-A findings остаются действующими, включая:
+CONV0-A findings остаются действующими:
 
-- `ECO` должен означать Evolutionary Ecology; future economy — `ECON`;
-- generic production population fabric остаётся `POP`-owned;
+- `ECO` = Evolutionary Ecology; future economy = `ECON`;
+- generic production population fabric = `POP`-owned;
 - ECO не создаёт private WQ/SD/TF/MAT/LIFE/WB/NX/WT/persistence/authority foundations.
 
-## 16. Операционный resolver
+## 17. Операционный resolver
 
 При команде «продолжай ECO»:
 
-1. прочитать North Star vision;
+1. прочитать North Star;
 2. прочитать machine roadmap;
 3. выполнить `current_step`;
-4. не перескакивать в XFER/LIVE до gates;
-5. после каждого acceptance проверять, приближает ли следующий этап к автономной экосистеме, а не только к локальному subsystem sophistication.
+4. не перескакивать через acceptance gates;
+5. проверять, приближает ли работа к автономной экосистеме.
 
 Сейчас resolver однозначен:
 
-`ECO.CAL1-A EXECUTE_NOW`.
+`RUN CAL1-A EXACT WINDOWS CANONICAL BASELINE GATE`.

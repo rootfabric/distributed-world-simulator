@@ -1,17 +1,17 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R24-2026-08-12",
+  "revision": "ECO-R25-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1_A_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "north_star_config": "config/ecology/eco-evolutionary-ecosystem-vision.v1.json",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "global_alignment_doc": "docs/future_features/evolutionary_ecology/ECO_CONV0_GLOBAL_ALIGNMENT_RU.md",
   "cal1_plan_doc": "docs/future_features/evolutionary_ecology/ECO_CAL1_MORPHOLOGY_ECONOMICS_PLAN_RU.md",
-  "current_checkpoint": "ECO.CAL1",
-  "current_step": "CAL1-A Baseline Decomposition / Mechanism Audit",
+  "current_checkpoint": "ECO.CAL1-A",
+  "current_step": "CAL1-A Implemented Candidate / Exact Windows Canonical Baseline Gate",
   "last_accepted_step": "ECO.CONV0-A Global Alignment / World Integration Consumer Requirements",
   "mission": "Build a standalone evolutionary ecosystem that can take a landscape and ancestry, grow persistent plant and later multi-trophic ecology without a player, export restartable spatial ecology state, and later let the world simulator materialize and continue that same ecology at local/background resolution.",
   "program_layers": {
@@ -48,19 +48,27 @@
     "ph5_graphical": "PASS_BY_USER_CONFIRMATION_AFTER_ACCEPTANCE_LAB_EXECUTION",
     "conv0_a_contract": "config/ecology/eco-conv0-a-global-consumer-requirements.v1.json"
   },
+  "candidate_evidence": {
+    "cal1_a_implementation_head": "20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e",
+    "cal1_a_checkpoint": "docs/checkpoints/ECO_CAL1_A_BASELINE_DECOMPOSITION_CANDIDATE_RU.md",
+    "cal1_a_validation": "validation/ecology/eco-cal1-a-baseline-decomposition-validation.json",
+    "cal1_a_runner": "RUN_ECO_CAL1_A_TESTS.ps1",
+    "local_interface_validation": "Godot 4.7.1 double / synthetic API-compatible model / 1094 assertions PASS / fresh-process probe 5x2 PASS / NOT canonical ecology evidence"
+  },
   "EVO0": {
     "name": "Plant Causal Ecology Foundation",
-    "status": "ACTIVE_CAL1",
+    "status": "ACTIVE_CAL1_A_CANDIDATE",
     "goal": "Remove known artificial morphology economics bias before autonomous landscape ecology.",
     "steps": [
-      {"id":"CAL1-A","name":"Baseline Decomposition / Mechanism Audit","status":"EXECUTE_NOW"},
-      {"id":"CAL1-B","name":"Relative Vertical Light Competition","status":"NEXT_AFTER_CAL1_A"},
+      {"id":"CAL1-A","name":"Baseline Decomposition / Mechanism Audit","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
+      {"id":"CAL1-B","name":"Relative Vertical Light Competition","status":"BLOCKED_BY_CAL1_A_ACCEPTANCE"},
       {"id":"CAL1-C","name":"Crown + Root Competition","status":"BLOCKED_BY_CAL1_B"},
       {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"BLOCKED_BY_CAL1_C"},
       {"id":"CAL1-E","name":"Combined Mechanism Matrix","status":"BLOCKED_BY_COMPONENT_ACCEPTANCE"},
       {"id":"CAL1-F","name":"Calibration + Full-Pool Robustness","status":"BLOCKED_BY_CAL1_E"}
     ],
-    "calibration_forbidden_before": "CAL1-E mechanism acceptance"
+    "calibration_forbidden_before": "CAL1-E mechanism acceptance",
+    "cal1_a_gate": "RUN_ECO_CAL1_A_TESTS.ps1 on exact Windows checkout; record real baseline/component margins and fresh-process hash"
   },
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
@@ -157,6 +165,8 @@
     "highest_priority_finding": "Reserve ECO for Evolutionary Ecology and use ECON for future World Economy before R3 canonicalization."
   },
   "production_blockers": [
+    "CAL1_B_REQUIRES_CAL1_A_EXACT_WINDOWS_ACCEPTANCE",
+    "EVO1_REQUIRES_CAL1_ACCEPTANCE",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
     "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER",
     "NO_ECO_PRIVATE_DUPLICATE_GLOBAL_FOUNDATIONS"
