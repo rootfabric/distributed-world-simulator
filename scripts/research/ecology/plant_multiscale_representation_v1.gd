@@ -118,7 +118,7 @@ static func build(description: Dictionary, tier: String) -> Dictionary:
 static func validate_source(description: Dictionary) -> Dictionary:
 	var graph_hash := String(description.get("source_graph_hash", ""))
 	var render_hash := String(description.get("render_description_hash", ""))
-	if graph_hash.length() != 64 or render_hash.length() != 64:
+	if not _is_sha256_hex(graph_hash) or not _is_sha256_hex(render_hash):
 		return _failure("ECO_PH5_S3_INVALID_TRUTH_HASH")
 	if not description.get("branches", []) is Array or not description.get("foliage_anchors", []) is Array:
 		return _failure("ECO_PH5_S3_INVALID_ARRAYS")
@@ -144,6 +144,18 @@ static func compute_hash(representation: Dictionary) -> String:
 		JSON.stringify(representation.get("canopy", {})),
 		JSON.stringify(representation.get("bounds", {})),
 	])).sha256_text()
+
+static func _is_sha256_hex(value: String) -> bool:
+	if value.length() != 64:
+		return false
+	for index in range(value.length()):
+		var code := value.unicode_at(index)
+		var decimal := code >= 48 and code <= 57
+		var lower_hex := code >= 97 and code <= 102
+		var upper_hex := code >= 65 and code <= 70
+		if not decimal and not lower_hex and not upper_hex:
+			return false
+	return true
 
 static func _reduced_count(source_count: int, fraction: float) -> int:
 	if source_count <= 0:
