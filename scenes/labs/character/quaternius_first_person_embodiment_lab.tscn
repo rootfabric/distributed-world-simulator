@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/characters/lab/quaternius_first_person_embodiment_fix7.gd" id="1_fpe"]
+[ext_resource type="Script" path="res://scripts/characters/lab/quaternius_first_person_embodiment_fix8.gd" id="1_fpe"]
 [ext_resource type="Script" path="res://scripts/characters/lab/quaternius_fpe_ch9_6_host.gd" id="2_host"]
 
 [node name="QuaterniusFirstPersonEmbodimentLab" type="Node3D"]
