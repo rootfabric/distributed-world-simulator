@@ -2,138 +2,145 @@
 
 Статус: `ACTIVE / RESEARCH_ONLY / OPERATIONAL ROUTE`.
 
-Этот документ задаёт центральный маршрут ветки `feature/eco-evolutionary-ecology` после завершения доказательной цепочки P1 и перехода к развитию representation/integration. Он отвечает на вопрос: **что делать дальше, в каком порядке и какие этапы нельзя перескакивать**.
+Этот документ задаёт центральный маршрут `feature/eco-evolutionary-ecology` и отвечает на вопрос: **что делать дальше, в каком порядке и какие этапы нельзя перескакивать**.
 
 ## Текущее состояние
 
-Уже доказана цепочка:
+Доказана цепочка:
 
-`Environment -> Genome -> Phenotype -> GrowthGraph -> Morphology Costs/Benefits -> Selection -> Seed Lifecycle -> PlantRenderDescription -> Real 3D Materialization`
+`Environment -> Genome -> Phenotype -> GrowthGraph -> Morphology Costs/Benefits -> Selection -> Seed Lifecycle -> PlantRenderDescription -> Real 3D Materialization -> Multi-Scale Representation`.
 
-Приняты: `ECO.P1`, `PH0`, `PH1`, `PH2`, `PH3`, `PH3C`, `PH4`, `PH5-S1`, `PH5-S2`.
+Приняты:
 
-`PH5-S2` принят после exact Windows + fresh-process replay + graphical user observation. Следующий исполняемый этап: `PH5-S3`.
+`ECO.P1`, `PH0`, `PH1`, `PH2`, `PH3`, `PH3C`, `PH4`, `PH5-S1`, `PH5-S2`, `PH5-S3`, `PH5-S4`.
+
+`ECO.PH RESEARCH COMPLETE`.
+
+Accepted PH5-S3/S4 checkpoint:
+
+`docs/checkpoints/ECO_PH5_S3_S4_MULTISCALE_REPRESENTATION_ACCEPTED_RU.md`.
+
+Главные PH5 invariants:
+
+- `identity != LOD`;
+- representation не имеет обратного пути в ecology/resource/selection/lifecycle truth;
+- FULL/REDUCED/CANOPY/IMPOSTOR/POPULATION_ONLY являются derived representation tiers;
+- `POPULATION_ONLY` не требует individual plant geometry/GrowthGraph materialization.
+
+## Global alignment после PH5
+
+Полный разбор:
+
+`docs/future_features/evolutionary_ecology/ECO_CONV0_GLOBAL_ALIGNMENT_RU.md`.
+
+На момент closure PH5 canonical `main` уже содержит H0.1 R8 / C22 merge `eefd75fa3badec10c6e7db959e2a3992dba30f0e`, но main-owned registry/current dashboard ещё требуют post-C22 control synchronization. ECO не входит в runtime critical path и не имеет права использовать stale control text для production promotion.
+
+Глобальный critical path остаётся:
+
+```text
+C22 MAIN_INTEGRATED verification / post-C22 PC0
+        ↓
+GLOBAL-P0 R3 exact-current-main refresh
+        ↓
+HUMAN R3 promotion
+        ↓
+post-R3 PC0
+        ↓
+H0.2 / NX.C1
+```
+
+ECO в это время продолжает только research/design work без runtime ownership.
 
 ## Центральная дорожная карта
 
 ```text
-                  PH5-S2 ACCEPTED
-                         │
-                         ▼
-              PH5-S3 Multi-scale LOD
-                         │
-                         ▼
-              PH5-S4 Robustness
-                         │
-                         ▼
-              ECO.PH RESEARCH COMPLETE
-                         │
-                ┌────────┴────────┐
-                ▼                 ▼
-          ECO.CONV0            ECO.CAL1
-        World contracts     morphology economics
-                │                 │
-                │                 ▼
-                │               ECO.P2
-                │      dispersal / recruitment /
-                │           biogeography
-                │                 │
-                └────────┬────────┘
-                         ▼
-                WAIT FOR FOUNDATIONS
-         World Query + Material Ontology
-          + Spatial/Work Budget + Harness
-                         │
-                         ▼
-                      ECO.P3
-          controlled world integration
-                         │
-                         ▼
-                     ECO.PH6
-        promoted persistent individuals
+            PH5-S3 ACCEPTED
+                   ↓
+            PH5-S4 ACCEPTED
+                   ↓
+         ECO.PH RESEARCH COMPLETE
+                   ↓
+              CONV0-A NOW
+     global consumer requirements
+                   ↓
+        ┌──────────┴──────────┐
+        ▼                     ▼
+      CAL1               WAIT R3/WQ/MAT
+ morphology economics          │
+        │                       ▼
+        ▼                  CONV0-B FREEZE
+       P2                       │
+ dispersal/recruitment          │
+ biogeography                   │
+        └──────────┬────────────┘
+                   ▼
+          WAIT FOR FOUNDATIONS
+ World Query + Material Ontology
+ Spatial/LIFE + Work Budget + Harness
+                   ↓
+                  P3
+      controlled world integration
+                   ↓
+                 PH6
+      promoted persistent individuals
 ```
 
 ## Операционный resolver
 
 При продолжении ветки:
 
-1. прочитать machine roadmap `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`;
+1. прочитать `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`;
 2. выполнить `current_step`;
-3. после acceptance перечитать roadmap;
-4. не выполнять этапы, помеченные `BLOCKED`/`DEFERRED`;
-5. не переносить runtime ownership в ECO.
+3. перед major stage перечитать fresh `origin/main` Project Control;
+4. после acceptance перечитать roadmap;
+5. не выполнять `BLOCKED`/`DEFERRED` stages;
+6. не переносить runtime/foundation ownership в ECO.
 
-## PH5-S3 — Multi-Scale Plant Representation
+## ECO.CONV0-A — Global Consumer Requirements
 
-Цель: доказать, что одна и та же ecological truth может иметь radically different representation cost.
+Статус: `EXECUTE_NOW / DESIGN_CONTRACT_ONLY`.
 
-Предлагаемые tiers:
+Цель: до freeze GLOBAL-P0 R3 сформулировать, что ecology **потребляет** от canonical foundations и что ecology **публикует** как derived/domain output, не создавая private substitutes.
 
-- `TIER_0_FULL` — promoted/hero individual, detailed branch tubes + foliage;
-- `TIER_1_REDUCED` — reduced GrowthGraph representation;
-- `TIER_2_CANOPY` — canopy/cluster approximation;
-- `TIER_3_IMPOSTOR` — billboard/impostor;
-- `TIER_4_POPULATION_ONLY` — population field, без materialized individual GrowthGraph.
+Обязательные границы:
 
-Ключевой invariant:
+- `SD / Spatial Domain Fabric` — addressing/domain requirements;
+- `TF / Time Fabric` — simulation-time/history requirements;
+- `WQ / World Query Fabric` — environmental projection requirements;
+- `MAT / Material Ontology` — substrate/material projection requirements;
+- `LIFE / Promotion-Dormancy-Demotion` — aggregate ↔ promoted-individual lifecycle requirements;
+- `WB / World Work Budget` — bounded ecology-work proposal requirements;
+- `NX8` — population/domain truth vs individual replication boundary;
+- `WT` — future cross-domain effect boundary only.
 
-`LOD / distance / screen size / renderer profile != ecology state / species / identity / authority`.
-
-Far population patches не обязаны существовать как миллионы `Node3D`/GrowthGraph instances.
-
-## PH5-S4 — Visual Robustness / Handoff
-
-Проверить матрицу contrasting phenotypes × representation tiers × renderer profiles × deterministic seeds.
-
-Обязательные свойства:
-
-- неизменность GrowthGraph/ecology/resource/selection/lifecycle truth;
-- deterministic presentation descriptors;
-- switching/dematerialization/rematerialization;
-- bounded resource usage;
-- отсутствие renderer -> ecology обратного пути;
-- graphical transitions near/mid/far/population-only.
-
-После acceptance: `ECO.PH RESEARCH COMPLETE`.
-
-## ECO.CONV0 — World Integration Contracts
-
-Статус после PH5-S4: `DESIGN/CONTRACT LANE`, не runtime implementation.
-
-ECO должен описать только границы потребления/проекции:
-
-`WorldAddress + time/history -> EcoEnvironmentQuery -> temperature/moisture/sunlight/nutrients/flood/disturbance/substrate projection`
-
-и обратный derived output:
-
-`EcoPopulationProjection -> population/species-candidate/phenotype distribution/biomass/density/development distribution/render hints`.
-
-Ownership реализации остаётся у canonical World Query / G / Matter / runtime foundations.
-
-Нельзя создавать ECO-private версии Spatial Fabric, Material Ontology, persistence, authority, transport или global work budget.
+CONV0-A должен завершиться ownership/compatibility matrix и списком architecture gaps. Никакой production adapter не создаётся.
 
 ## ECO.CAL1 — Morphology Economics Calibration
 
-Перед unrestricted morphology evolution требуется закрыть известный риск `PH3C_FULL_POOL_COMPACT_DOMINANCE`.
+Статус: `NEXT_AFTER_CONV0_A`.
 
-Принцип: не подгонять коэффициенты под красивый результат. Сначала проверять отсутствующие causal mechanisms, например:
+Перед unrestricted morphology evolution требуется закрыть риск `PH3C_FULL_POOL_COMPACT_DOMINANCE`.
+
+Не подгонять коэффициенты под красивый результат. Порядок:
+
+`missing mechanism -> causal experiment -> calibration -> full-pool robustness`.
+
+Первыми кандидатами на causal mechanisms остаются:
 
 - neighbour/self shading;
 - vertical light competition;
 - crown overlap;
-- root overlap/below-ground competition;
+- root overlap / below-ground competition;
 - size-dependent reproduction;
 - dispersal benefit from height;
 - long-lived structural payoff;
 - disturbance resistance.
 
-Порядок: `missing mechanism -> causal experiment -> calibration -> full-pool robustness`.
-
 До CAL1 acceptance запрещено заявлять unrestricted morphology/species emergence.
 
 ## ECO.P2 — Dispersal / Recruitment / Biogeography
 
-После CAL1 основная research-линия:
+После CAL1:
 
 - P2.1 Seed Dispersal Kernel;
 - P2.2 Establishment / Recruitment;
@@ -143,21 +150,29 @@ Ownership реализации остаётся у canonical World Query / G / M
 - P2.6 Long-Horizon Biogeography;
 - P2.7 Speciation Candidate Diagnostics.
 
-Цель: lineage divergence должен возникать из migration + environment + resource competition + history, а не из hardcoded biome/species placement.
+Цель: lineage divergence возникает из migration + environment + resource competition + history, а не из hardcoded biome/species placement.
+
+## ECO.CONV0-B — Canonical Contract Freeze
+
+Статус: `WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS`.
+
+После появления canonical R3/WQ/MAT/LIFE/WB contracts повторить compatibility review и привязать ECO-side requirements к реальным canonical interfaces.
+
+До этого запрещено invent private production API только потому, что canonical API ещё не готов.
 
 ## ECO.P3 и PH6 — только после production foundations
 
 Не начинать production world integration, persistent detailed plants или networked individual vegetation до появления canonical foundations:
 
-- World Query Fabric / current canonical G environment contracts;
+- World Query Fabric / canonical environment contracts;
 - Unified Material Ontology projection;
-- Spatial Domain Fabric / representation identity boundary;
+- Spatial Domain Fabric;
 - Promotion/Dormancy/Demotion semantics;
 - World Work Budget;
-- canonical authority/persistence/transport integration;
+- authority/persistence/transport integration;
 - fresh PC0/Harness-controlled runtime frontier.
 
-После этих gates:
+После gates:
 
 `ECO.P3 -> controlled world integration -> ECO.PH6 promoted persistent individuals`.
 
@@ -165,21 +180,20 @@ PH6 хранит detailed development/damage/pruning state только для p
 
 ## Network convergence principle
 
-Будущая сеть должна по возможности передавать population/domain truth, а не каждое дерево:
+Default:
 
-`server ecology population state -> client deterministic derived representation`.
+`server ecology population/domain truth -> client deterministic derived representation`.
 
-Индивидуальный сетевой/persistent object появляется только через explicit promotion boundary при interaction/damage/ownership-relevant state.
+Индивидуальный network/persistent object появляется только через explicit promotion boundary при interaction/damage/ownership relevance.
 
 ## Главный порядок
 
-1. `PH5-S2 ACCEPTED`.
-2. `PH5-S3`.
-3. `PH5-S4`.
-4. `ECO.PH RESEARCH COMPLETE`.
-5. Открыть `ECO.CONV0` и `ECO.CAL1` как независимые non-runtime lanes.
-6. `CAL1 -> P2`.
-7. Ждать production foundations.
-8. Только затем `P3 -> PH6`.
+1. `ECO.PH RESEARCH COMPLETE`.
+2. `CONV0-A` — короткий global consumer-requirements pass.
+3. `CAL1` — основная research-линия.
+4. `CAL1 -> P2`.
+5. Когда canonical R3/WQ/MAT/LIFE/WB готовы — `CONV0-B` compatibility/freeze.
+6. Ждать production foundations/Harness frontier.
+7. Только затем `P3 -> PH6`.
 
-Этот порядок является центральным маршрутом ECO и имеет приоритет над старым линейным прочтением `PH5 -> PH6`.
+Старое линейное направление `PH5 -> PH6` запрещено.
