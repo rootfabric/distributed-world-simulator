@@ -2,9 +2,9 @@
   "schema": "distributed_world_simulator.architecture_ownership_r3_candidate.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
-  "status": "CANDIDATE_REVIEW_PENDING",
-  "source_main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
-  "source_registry_generation": 75,
+  "status": "CANDIDATE_FINAL_REVIEW_PENDING",
+  "source_main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "source_registry_generation": 78,
   "foundations": {
     "PROGRAM_LEDGER": {"owner": "MAIN", "rule": "Main declares canonical architecture, active frontiers, project state and global decisions."},
     "DEVELOPMENT_HARNESS": {"owner": "MAIN/HARNESS", "rule": "Harness owns Work Orders, checkpoint state, evidence/review routing and runtime-worker authorization; WB/OPS must not absorb development control."},
@@ -24,7 +24,7 @@
     "MATTER_TRUTH": {"owner": "MATTER", "rule": "Matter owns authoritative mutable material/volume truth and durable Matter transactions."},
     "CONSTRUCTION_TRUTH": {"owner": "CONSTRUCTION", "rule": "Construction owns canonical construct/part/bond semantics."},
     "GEO_PROCEDURAL_BASELINE": {"owner": "G", "rule": "World Generation owns deterministic procedural baseline and Geo feature/field contracts."},
-    "EVOLUTIONARY_ECOLOGY_RESEARCH": {"owner": "ECO", "rule": "ECO owns evolutionary ecology research semantics and later controlled adapters; it does not own economy/market accounting."},
+    "EVOLUTIONARY_ECOLOGY_RESEARCH": {"owner": "ECO", "rule": "ECO owns evolutionary ecology research semantics and later controlled adapters; it does not own economy/market accounting or production scheduling."},
     "WORLD_ECONOMY": {"owner": "ECON_FUTURE", "rule": "ECON owns future market/contracts/economy semantics and consumes physical Item/MAT/WT truth without duplicate resource accounting."},
     "AUTHORITY_FOUNDATION": {"owner": "AUTHORITY", "rule": "Authority leases/epochs/routing remain separate from identity, frames, cells and compute assignment."},
     "NETWORK_REPLICATION_POLICY": {"owner": "NX", "rule": "Network owns transport/replication policy, not gameplay truth or global work scheduling."},
@@ -53,24 +53,14 @@
     {"producer": "AI", "consumers": ["WT", "WQ", "AUTHZ", "GAMEPLAY"], "rule": "human and AI actors converge on the same WorldOperation path"}
   ],
   "forbidden_duplicate_foundation_tokens": [
-    "GLOBAL_ACCOUNT_REGISTRY",
-    "PLAYER_ID_EQUALS_PEER_ID",
-    "GLOBAL_PERMISSION_MANAGER",
-    "GLOBAL_REFERENCE_FRAME_REGISTRY_OUTSIDE_RF",
-    "GLOBAL_SIMULATION_CLOCK_OUTSIDE_TF",
-    "WORLD_ADDRESS_OUTSIDE_SD",
-    "UNIVERSAL_CHUNK_ID",
-    "GLOBAL_MATERIAL_REGISTRY_OUTSIDE_MAT",
-    "WORLD_TRANSACTION_COORDINATOR_OUTSIDE_M0_WT",
-    "GLOBAL_WORLD_QUERY_DATABASE",
-    "GLOBAL_ACTIVITY_MANAGER_OUTSIDE_LIFE",
-    "GLOBAL_WORK_SCHEDULER_OUTSIDE_WB",
-    "GLOBAL_AUTHORITY_REGISTRY",
-    "GLOBAL_INTEREST_REGION_IDENTITY",
-    "GLOBAL_PERSISTENCE_MODEL",
-    "DIRECT_AI_CANONICAL_STORE_WRITE",
-    "LLM_DIRECT_WORLD_MUTATION",
-    "ECONOMY_USING_ECO_PROGRAM_ID"
+    "GLOBAL_ACCOUNT_REGISTRY", "PLAYER_ID_EQUALS_PEER_ID", "GLOBAL_PERMISSION_MANAGER", "GLOBAL_REFERENCE_FRAME_REGISTRY_OUTSIDE_RF", "GLOBAL_SIMULATION_CLOCK_OUTSIDE_TF", "WORLD_ADDRESS_OUTSIDE_SD", "UNIVERSAL_CHUNK_ID", "GLOBAL_MATERIAL_REGISTRY_OUTSIDE_MAT", "WORLD_TRANSACTION_COORDINATOR_OUTSIDE_M0_WT", "GLOBAL_WORLD_QUERY_DATABASE", "GLOBAL_ACTIVITY_MANAGER_OUTSIDE_LIFE", "GLOBAL_WORK_SCHEDULER_OUTSIDE_WB", "GLOBAL_AUTHORITY_REGISTRY", "GLOBAL_INTEREST_REGION_IDENTITY", "GLOBAL_PERSISTENCE_MODEL", "DIRECT_AI_CANONICAL_STORE_WRITE", "LLM_DIRECT_WORLD_MUTATION", "ECONOMY_USING_ECO_PROGRAM_ID"
   ],
-  "review_state": "PENDING_INDEPENDENT_OWNERSHIP_INTERSECTION_REVIEW"
+  "explicit_consumer_boundaries": {
+    "ITEM": "STABLE_CANONICAL_FOUNDATION",
+    "V0": "COMPOSITION_PRESENTATION_READBACK_CONSUMER_NOT_TRUTH_OWNER",
+    "H0_3": "DEVELOPMENT_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER",
+    "ECO": "ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER",
+    "ECON": "RESERVED_FUTURE_ECONOMY_PROGRAM"
+  },
+  "review_state": "READY_FOR_FINAL_INDEPENDENT_OWNERSHIP_INTERSECTION_REVIEW"
 }
