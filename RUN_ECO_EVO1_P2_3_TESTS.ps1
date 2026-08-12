@@ -25,6 +25,25 @@ function Invoke-GodotScript([string]$Label, [string]$ScriptPath) {
     return ($output -join "`n")
 }
 
+function Invoke-GodotParsePreflight([string]$Label, [string]$ScriptPath) {
+    Write-Host "=== $Label ==="
+    $previous = $env:BREAKPOINT_RUNTIME_DISABLED
+    try {
+        $env:BREAKPOINT_RUNTIME_DISABLED = "1"
+        $output = & $GodotPath --headless --path $RootDir --check-only --script $ScriptPath 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        if ($null -eq $previous) { Remove-Item Env:BREAKPOINT_RUNTIME_DISABLED -ErrorAction SilentlyContinue }
+        else { $env:BREAKPOINT_RUNTIME_DISABLED = $previous }
+    }
+    $output | ForEach-Object { Write-Host $_ }
+    if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
+}
+
+# Fail fast on parser/preload errors before the long accepted-parent regression chain.
+Invoke-GodotParsePreflight "ECO EVO1 P2.3 parser/preload preflight" "res://tests/research/ecology/eco_evo1_p2_3_local_population_succession_acceptance.gd"
+
 Write-Host "=== ECO EVO1 P2.2 accepted parent regression ==="
 & (Join-Path $RootDir "RUN_ECO_EVO1_P2_2_TESTS.ps1") -GodotPath $GodotPath
 if ($LASTEXITCODE -ne 0) { throw "P2.2 accepted parent regression failed" }
