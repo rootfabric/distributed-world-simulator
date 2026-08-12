@@ -2,10 +2,17 @@
 
 **Candidate revision:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
 **Parent:** `GLOBAL-P0-2026-08-10-R2`  
-**Fresh base:** `main @ 1112d1f7cfad1df18fb3621a537e191e674848c6`  
-**Registry:** `75`  
+**Current finalization base:** `main @ f6d68fc7c594b371f48a9bcff056e2478e04f317`  
+**Current registry:** `78`  
 **Risk:** `CRITICAL`  
-**Status:** `REFRESH IN PROGRESS / NO PROMOTION`
+**Status:** `SEMANTIC REPAIR / INDEPENDENT REVIEW PENDING / NO PROMOTION`
+
+Historical construction provenance is preserved separately and is never authorization:
+
+```text
+construction main     1112d1f7cfad1df18fb3621a537e191e674848c6
+construction registry 75
+```
 
 ## 1. Purpose
 
@@ -29,23 +36,44 @@ Core rule:
 
 ## 2. Current project boundary
 
-This refresh is intentionally built from current main rather than the old R3 ancestry.
+This candidate is finalized against the current canonical post-C22 state, not against its historical construction snapshot.
 
-Current canonical state used by the candidate:
+Current canonical state used for finalization:
 
 ```text
-H0.0     CANONICAL
-H0.1 R6  fresh-current-main C22 pilot preparation on R2
-G8       FULL ACCEPTED / FROZEN
-T1B      HANDOFF COMPLETE
-C22      SOURCE_ACCEPTED evidence; fresh convergence under H0.1
-NX.C0    preparation; NX.C1 waits H0.1 PASS
-MATTER   stable
-S1       stable
-ECO      Evolutionary Ecology research; PH3 accepted, PH3C Windows pending
+main      f6d68fc7c594b371f48a9bcff056e2478e04f317
+registry  78
+arch      GLOBAL-P0-2026-08-10-R2
+
+H0.0      CANONICAL
+H0.1 R8   H0_1_PASS
+C22       MAIN_INTEGRATED
+H0.1 slot RELEASED
+G8        FULL ACCEPTED / FROZEN
+T1B       HANDOFF COMPLETE
+CH9.6     ACCEPTED / FROZEN
+NX.C0     preparation only
+NX.C1     BLOCKED until canonical R3 + post-R3 PC0 + fresh H0.2 dispatch
+MATTER    stable
+S1        stable
+ECO       PH research complete; CONV0-A design-only; advisory/nonblocking
 ```
 
-**R3 promotion is forbidden while H0.1 R6 is an open R2 runtime checkpoint unless H0.1 is explicitly invalidated and rebuilt.** Preferred path: complete H0.1 to its checkpoint boundary, then promote R3 separately.
+`C22 MAIN_INTEGRATED` authorizes only this R3 finalization sequence. It does **not** authorize NX.C1, R3 promotion, H0.3, V0, G9, TS0.4 or T2.0.
+
+### Historical construction provenance only
+
+The candidate was originally constructed while the repository was at:
+
+```text
+main      1112d1f7cfad1df18fb3621a537e191e674848c6
+registry  75
+H0.1      R6 preparation
+C22       not yet MAIN_INTEGRATED
+ECO       earlier research frontier
+```
+
+Those facts remain useful only for provenance. They are intentionally not rewritten as if the old preparation happened on generation 78, and they must not be read as current project state or authorization.
 
 ## 3. Canonical separation invariants
 
@@ -200,7 +228,7 @@ AI   -> AUTHZ/WQ/WT        human and AI actors use the same mutation path
 The candidate does not relabel accepted history.
 
 1. Frozen R2 evidence stays valid evidence-only.
-2. Active R2 runtime work must finish at a checkpoint boundary or be explicitly invalidated/refreshed before R3 promotion.
+2. Active R2 runtime work must finish at a checkpoint boundary or be explicitly invalidated/refreshed before R3 promotion. H0.1 has now reached that boundary and released the runtime slot.
 3. All runtime branches created after promotion use canonical R3 from then-current main.
 4. Research/advisory branches may remain historical R2 evidence; production promotion requires a fresh R3 frontier.
 5. Stable foundations remain owners; R3 adds adapters/contracts only where named intersections require them.
@@ -257,33 +285,46 @@ OPS migrations
 dynamic shard split/merge
 ```
 
-## 12. Promotion checkpoint
+## 12. Finalization and promotion boundary
 
-Target is only:
+The repair implementer session may reach only:
 
 ```text
-R3_REFRESHED_CANDIDATE
+R3_REPAIR_COMPLETE_REVIEW_READY
 ```
 
-Required before that checkpoint can be proposed:
+Required for that stop condition:
 
 ```text
-CURRENT_MAIN_REFRESH                         DONE by construction
+CURRENT_MAIN_REFRESH                         DONE
+CURRENT_REGISTRY_REFRESH                     DONE
+C22_MAIN_INTEGRATED                         DONE
+H0_1_RUNTIME_SLOT_RELEASED                  DONE
 CRITICAL_RISK_CLASSIFIED                    DONE
 DESIGN_BRIEF_READY                          DONE
 FRONTIER_GUARDS_REFRESHED                   DONE
-R2_TO_R3_TRANSITION_POLICY_IMPLEMENTED      DONE
-OWNERSHIP_INTERSECTION_REVIEW_PASS          PENDING
-EVIDENCE_MAP_COMPLETE                       PENDING
-REVIEWER_VERDICT_PASS                       PENDING
-PC0_NON_RED                                 PENDING
-HUMAN_ATTENTION_ITEM_IF_REQUIRED            PENDING/NOT YET REQUIRED
+R2_TO_R3_TRANSITION_AUDIT_PASS              REQUIRED ON NEW EXACT MUTABLE HEAD
+OWNERSHIP_INTERSECTION_REVIEW_PASS          REQUIRED ON NEW EXACT MUTABLE HEAD
+RUNTIME_SURFACE_ZERO                        REQUIRED ON NEW EXACT MUTABLE HEAD
+CRITICAL_CROSS_BRANCH_OVERLAP_ZERO          REQUIRED ON NEW EXACT MUTABLE HEAD
+STANDARD_PC0_NON_RED                        REQUIRED ON NEW EXACT MUTABLE HEAD
+DIRECTIONAL_PC0_NON_RED                     REQUIRED ON NEW EXACT MUTABLE HEAD
+EVIDENCE_MAP_BOUND_TO_NEW_EXACT_HEAD        REQUIRED
+INDEPENDENT_REVIEWER                        PENDING / DISTINCT ROLE
+INDEPENDENT_VERIFIER                        PENDING / DISTINCT ROLE
+HUMAN_GLOBAL_ARCHITECTURE_PROMOTION         ABSENT
 ```
 
-After `R3_REFRESHED_CANDIDATE`, stop. Canonical promotion requires a separate explicit:
+Only separate clean Reviewer and Verifier sessions may advance the package from repair-ready to the eventual candidate-review checkpoint:
+
+```text
+R3_REFRESHED_CANDIDATE_READY
+```
+
+Even that does not promote R3. Canonical promotion still requires a separate explicit:
 
 ```text
 GLOBAL_ARCHITECTURE_PROMOTION
 ```
 
-No promotion is authorized by this branch.
+No promotion is authorized by this branch, this document, Project Control, or an Evidence Map.
