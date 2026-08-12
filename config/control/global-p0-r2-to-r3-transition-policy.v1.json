@@ -14,8 +14,13 @@
     },
     {
       "id": "ACTIVE_R2_RUNTIME_MUST_REACH_BOUNDARY",
-      "applies_to": ["H0_1_R6_C22_PILOT", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
-      "rule": "R3 promotion is forbidden while an R2 runtime checkpoint is actively executing unless that epoch is explicitly invalidated and rebuilt against R3. Preferred path for H0.1 R6 is to finish at its checkpoint boundary before promotion."
+      "applies_to": ["H0_1_R7_C22_RUNTIME", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
+      "rule": "R3 promotion is forbidden while an R2 runtime checkpoint is actively executing. For the observed H0.1 R7 frontier, C22 must become MAIN_INTEGRATED and the H0.1 runtime slot must be released before R3 may enter final promotion verification."
+    },
+    {
+      "id": "C22_MAIN_INTEGRATED_IS_REPIN_GATE_NOT_NX_C1_AUTHORIZATION",
+      "applies_to": ["GLOBAL_P0_R3", "NX_C1"],
+      "rule": "C22 MAIN_INTEGRATED authorizes only the fresh-main R3 repin/final verification sequence. NX.C1 remains blocked until canonical R3 promotion is complete and NX.C1 is created from fresh post-R3 current main."
     },
     {
       "id": "NEW_RUNTIME_AFTER_PROMOTION_USES_R3",
@@ -25,12 +30,17 @@
     {
       "id": "RESEARCH_FRONTIERS_MAY_REMAIN_ADVISORY",
       "applies_to": ["ECO", "DOCTRINE", "RESEARCH_ONLY_FRONTIERS"],
-      "rule": "Research/advisory branches may continue as historical or research evidence without forced architecture relabeling. Any later production/runtime promotion must create a fresh controlled frontier using canonical R3."
+      "rule": "Research/advisory branches may remain historical or research evidence without forced architecture relabeling. ECO never becomes a game-runtime scheduler or a mandatory foundation gate merely because R3 is promoted."
     },
     {
       "id": "STABLE_FOUNDATIONS_PRESERVED",
       "applies_to": ["MATTER", "S1", "M0", "ITEM", "CONSTRUCTION", "A1", "S0"],
-      "rule": "Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. R3 does not replace them by declaration."
+      "rule": "Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. ITEM remains the stable canonical item foundation; R3 does not replace it by declaration."
+    },
+    {
+      "id": "COMPOSITION_CONSUMERS_DO_NOT_GAIN_TRUTH",
+      "applies_to": ["V0", "H0_3"],
+      "rule": "V0 remains a composition/presentation/readback consumer and cannot promote its own domain truth. H0.3 remains launch/restart/dev scaffold and cannot become the game-runtime scheduler or game-time owner."
     },
     {
       "id": "WAVE_A_SINGLE_BASE",
@@ -43,18 +53,38 @@
       "rule": "Promotion must be a control/docs/config change with no gameplay/runtime mutation, must update canonical architecture identity consistently, must pass standard and directional PC0 NON_RED, and requires explicit human GLOBAL_ARCHITECTURE_PROMOTION authorization."
     },
     {
-      "id": "POST_PROMOTION_DRIFT_FAILS_CLOSED",
-      "applies_to": ["ACTIVE_WORK_ORDERS", "BRANCH_PASSPORTS"],
-      "rule": "If an active frontier claims an architecture revision that is no longer valid for new runtime work, the harness/control plane must stop or require explicit audit/refresh rather than silently accepting mixed architecture identity."
+      "id": "STALE_AUTHORIZATION_FAILS_CLOSED",
+      "applies_to": ["SHA_PINS", "REGISTRY_GENERATIONS", "BRANCH_LOCAL_STATE", "ACTIVE_WORK_ORDERS", "BRANCH_PASSPORTS"],
+      "rule": "Stale SHA, stale registry generation, branch-local state and historical evidence are provenance only. None can authorize R3 promotion or new runtime work. Fresh current-main and canonical-registry facts must be recaptured at the promotion epoch."
     }
   ],
   "current_h0_1_disposition": {
-    "epoch": "E2026-08-11-H0-1-R6",
-    "work_order": "H0-1-R6-C22-WO-001",
-    "base_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
-    "state_observed": "PLANNED",
-    "preferred_transition": "FINISH_H0_1_CHECKPOINT_BEFORE_R3_PROMOTION",
-    "promotion_while_open": "FORBIDDEN_WITHOUT_EXPLICIT_INVALIDATION_AND_REFRESH"
+    "rerun": "R7",
+    "pr": 88,
+    "head_sha_observed_for_preparation": "107603a29c3776cc3fe7e94693e90aaaf15fa603",
+    "base_main_sha_observed_for_preparation": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+    "source_registry_generation_observed_for_preparation": 77,
+    "state_observed": "VERIFYING_C22_COMPLETION",
+    "preferred_transition": "C22_MAIN_INTEGRATED_THEN_RELEASE_H0_1_RUNTIME_SLOT_THEN_REPIN_R3",
+    "promotion_while_open": "FORBIDDEN"
+  },
+  "post_c22_finalization": {
+    "required": [
+      "FETCH_AND_CAPTURE_FRESH_ORIGIN_MAIN",
+      "READ_FRESH_CANONICAL_REGISTRY_AND_CURRENT_DASHBOARD",
+      "CONFIRM_C22_MAIN_INTEGRATED",
+      "CONFIRM_H0_1_RUNTIME_SLOT_RELEASED",
+      "REPIN_R3_CANDIDATE_TO_FRESH_MAIN",
+      "UPDATE_ALL_EPHEMERAL_SOURCE_PINS_AND_FRONTIER_GUARDS",
+      "RUN_CONTROL_PROJECT",
+      "RUN_STANDARD_PC0",
+      "RUN_DIRECTIONAL_PC0",
+      "RECONFIRM_OWNERSHIP_INTERSECTIONS",
+      "RECONFIRM_R2_TO_R3_TRANSITION_AUDIT",
+      "FINALIZE_EVIDENCE_MAP",
+      "OBTAIN_INDEPENDENT_REVIEWER_AND_VERIFIER_PASS",
+      "STOP_AT_HUMAN_GLOBAL_ARCHITECTURE_PROMOTION_GATE"
+    ]
   },
   "human_gate": "GLOBAL_ARCHITECTURE_PROMOTION"
 }
