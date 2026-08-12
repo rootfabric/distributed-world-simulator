@@ -1,30 +1,130 @@
 {
-  "schema":"distributed_world_simulator.branch_passport.v1",
-  "control_plane_revision":"PC0-2026-08-10-R1",
-  "architecture_revision":"GLOBAL-P0-2026-08-10-R2",
-  "branch":"control/global-p0-r3-refresh-r1",
-  "program":"GLOBAL_ARCHITECTURE",
-  "role":"ARCHITECTURE_REVISION_CANDIDATE",
-  "short_description":"GLOBAL-P0 R3 exact-current-main finalization candidate; mutable architecture/control scope complete, no promotion and no runtime changes.",
-  "purpose":"Finalize prepared R3 against canonical main f6d68fc7 / registry 78, freeze mutable candidate scope, obtain exact-head control/evidence/reviewer/verifier proof, and stop at the human promotion gate.",
-  "expected_outcome":"R3_REFRESHED_CANDIDATE_READY followed by HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
-  "current_stage":"GLOBAL-P0 R3 frozen mutable candidate final verification",
-  "stage_status":"R3_MUTABLE_SCOPE_FROZEN_FINAL_EXACT_HEAD_PC0_PENDING",
-  "progress_note":"Descendant/no-force repin is complete. Canonical main f6d68fc7c594b371f48a9bcff056e2478e04f317 is an ancestor; registry generation 78 is the authorization epoch. Ownership/intersection and R2-to-R3 transition audits PASS. No runtime files are present. No mutable candidate file may change after the final exact-head PC0 without restarting the freshness chain.",
-  "last_accepted_checkpoint":"GLOBAL-P0-2026-08-10-R2",
-  "next_stage":"Final exact-head Project Control/PC0, Evidence Map, independent Reviewer and Verifier against the frozen mutable candidate; then stop at GLOBAL_ARCHITECTURE_PROMOTION.",
-  "parent_branch_or_checkpoint":"Canonical current main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry generation 78; historical construction/pre-C22 pins remain provenance only.",
-  "dependencies":["GLOBAL_P0_R2","C22_MAIN_INTEGRATED","H0_1_RUNTIME_SLOT_RELEASED","G8_FULL_ACCEPTANCE","T1B_HANDOFF_COMPLETE","ITEM_STABLE_CANONICAL_FOUNDATION","MATTER_STABLE","S1_STABLE","V0_COMPOSITION_CONSUMER_ONLY","ECO_ADVISORY_RESEARCH","ECON_RESERVED_FUTURE_ECONOMY"],
-  "owned_paths":["config/architecture/global-p0-r3-architecture-candidate.v1.json","config/control/architecture-ownership-r3-candidate.v1.json","config/control/global-p0-r2-to-r3-transition-policy.v1.json","config/control/global-p0-r3-prepromotion-guards.v1.json","config/control/branches/control__global-p0-r3-refresh-r1.v1.json","docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md","docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md","docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md","artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"],
-  "watched_paths":["config/control/project-program-registry.v1.json","config/control/architecture-ownership.v1.json","config/control/project-control-policy.v1.json","config/control/harness/checkpoint-catalog.v1.json","config/control/harness/**","docs/control/CURRENT_PROJECT_FRONTIERS_RU.md","docs/plans/H_PRIMARY_EXECUTION_ROADMAP_RU.md","docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md","config/architecture/global-program-roadmap.v1.json","scripts/construction/**","scripts/network/**","scripts/research/ecology/**"],
-  "critical_watched_paths":["config/control/project-program-registry.v1.json","config/control/architecture-ownership.v1.json","config/control/project-control-policy.v1.json","config/control/harness/checkpoint-catalog.v1.json"],
-  "runtime_paths":[],
-  "validation_paths":["config/architecture/global-p0-r3-architecture-candidate.v1.json","config/control/architecture-ownership-r3-candidate.v1.json","config/control/global-p0-r2-to-r3-transition-policy.v1.json","config/control/global-p0-r3-prepromotion-guards.v1.json","artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"],
-  "tested_heads":{"runtime":"NOT_APPLICABLE","focused":"FROZEN_MUTABLE_HEAD_PENDING_FINAL_PC0","full_regression":"NOT_APPLICABLE"},
-  "ownership_claims":[{"foundation":"PROGRAM_LEDGER","claimed_owner":"MAIN","scope":"Candidate only; canonical ownership changes require promotion."},{"foundation":"DEVELOPMENT_HARNESS","claimed_owner":"MAIN/HARNESS","scope":"Development-control ownership remains separate from WB/OPS/runtime scheduling."},{"foundation":"ITEM","claimed_owner":"ITEM","scope":"Stable canonical item truth foundation."},{"foundation":"EVOLUTIONARY_ECOLOGY_RESEARCH","claimed_owner":"ECO","scope":"Advisory/research only; not economy or scheduler."},{"foundation":"WORLD_ECONOMY","claimed_owner":"ECON_FUTURE","scope":"Reserved future economy."},{"foundation":"V0","claimed_owner":"PRESENTATION_COMPOSITION_CONSUMER","scope":"Consumer only; no domain truth."}],
-  "forbidden_foundation_ownership":["ITEM_IDENTITY_AND_GRAPH","MATTER_TRUTH","CONSTRUCTION_TRUTH","GEO_PROCEDURAL_BASELINE","AUTHORITY_FOUNDATION","NETWORK_REPLICATION_POLICY","PERSISTENCE_DURABILITY","COMPUTE_EXECUTION"],
-  "completed_guards":["POST_C22_EXACT_MAIN_REPIN","EPHEMERAL_GUARD_REFRESH","OWNERSHIP_INTERSECTION_REVIEW_PASS","R2_TO_R3_TRANSITION_AUDIT_PASS"],
-  "blockers":["FINAL_EXACT_HEAD_PC0_NON_RED_REQUIRED","FINAL_EXACT_HEAD_DIRECTIONAL_PC0_NON_RED_REQUIRED","EXACT_HEAD_EVIDENCE_MAP_FINAL_REQUIRED","INDEPENDENT_REVIEWER_PASS_REQUIRED","INDEPENDENT_VERIFIER_PASS_REQUIRED","GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"],
-  "health_declared":"YELLOW",
-  "cross_branch_overlap_enabled":false
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "control/global-p0-r3-refresh-r1",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "ARCHITECTURE_REVISION_CANDIDATE",
+  "short_description": "GLOBAL-P0 R3 exact-current-main frozen review target; machine lifecycle repaired, no promotion and no runtime changes.",
+  "purpose": "Preserve the frozen R3 candidate against canonical main f6d68fc7 / registry 78, bind external exact-head control/evidence to that target, obtain independent Reviewer and Verifier proof, and stop at the human promotion gate.",
+  "expected_outcome": "R3_MACHINE_LIFECYCLE_REPAIR_COMPLETE / INDEPENDENT_REVIEW_READY, followed by separate independent review roles and only then the HUMAN GLOBAL_ARCHITECTURE_PROMOTION gate.",
+  "current_stage": "GLOBAL-P0 R3 independent final review",
+  "stage_status": "R3_FROZEN_TARGET_AWAITING_INDEPENDENT_REVIEW",
+  "progress_note": "Machine lifecycle self-staling is repaired. The mutable R3 candidate is a frozen review target; Project Control, PC0, directional PC0 and Evidence Map are external evidence surfaces bound to its exact SHA and do not mutate candidate state. Independent Reviewer and Verifier remain pending; promotion is absent.",
+  "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
+  "next_stage": "Build/confirm external exact-head evidence for the frozen V3 target, then run distinct read-only Independent Reviewer and Independent Verifier sessions; stop at GLOBAL_ARCHITECTURE_PROMOTION.",
+  "parent_branch_or_checkpoint": "Canonical current main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry generation 78; historical construction/pre-C22 pins and V2 review target remain provenance only.",
+  "dependencies": [
+    "GLOBAL_P0_R2",
+    "C22_MAIN_INTEGRATED",
+    "H0_1_RUNTIME_SLOT_RELEASED",
+    "G8_FULL_ACCEPTANCE",
+    "T1B_HANDOFF_COMPLETE",
+    "ITEM_STABLE_CANONICAL_FOUNDATION",
+    "MATTER_STABLE",
+    "S1_STABLE",
+    "V0_COMPOSITION_CONSUMER_ONLY",
+    "ECO_ADVISORY_RESEARCH",
+    "ECON_RESERVED_FUTURE_ECONOMY"
+  ],
+  "owned_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/global-p0-r3-prepromotion-guards.v1.json",
+    "config/control/branches/control__global-p0-r3-refresh-r1.v1.json",
+    "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
+    "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
+    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md",
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
+  ],
+  "watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "config/control/harness/**",
+    "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+    "docs/plans/H_PRIMARY_EXECUTION_ROADMAP_RU.md",
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json",
+    "scripts/construction/**",
+    "scripts/network/**",
+    "scripts/research/ecology/**"
+  ],
+  "critical_watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/global-p0-r3-prepromotion-guards.v1.json",
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "FROZEN_MUTABLE_REVIEW_TARGET_V3_EXTERNAL_EVIDENCE_BOUND",
+    "full_regression": "NOT_APPLICABLE"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "PROGRAM_LEDGER",
+      "claimed_owner": "MAIN",
+      "scope": "Candidate only; canonical ownership changes require promotion."
+    },
+    {
+      "foundation": "DEVELOPMENT_HARNESS",
+      "claimed_owner": "MAIN/HARNESS",
+      "scope": "Development-control ownership remains separate from WB/OPS/runtime scheduling."
+    },
+    {
+      "foundation": "ITEM",
+      "claimed_owner": "ITEM",
+      "scope": "Stable canonical item truth foundation."
+    },
+    {
+      "foundation": "EVOLUTIONARY_ECOLOGY_RESEARCH",
+      "claimed_owner": "ECO",
+      "scope": "Advisory/research only; not economy or scheduler."
+    },
+    {
+      "foundation": "WORLD_ECONOMY",
+      "claimed_owner": "ECON_FUTURE",
+      "scope": "Reserved future economy."
+    },
+    {
+      "foundation": "V0",
+      "claimed_owner": "PRESENTATION_COMPOSITION_CONSUMER",
+      "scope": "Consumer only; no domain truth."
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "completed_guards": [
+    "POST_C22_EXACT_MAIN_REPIN",
+    "EPHEMERAL_GUARD_REFRESH",
+    "OWNERSHIP_INTERSECTION_REVIEW_PASS",
+    "R2_TO_R3_TRANSITION_AUDIT_PASS",
+    "MACHINE_LIFECYCLE_SELF_STALING_REPAIRED"
+  ],
+  "blockers": [
+    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
+    "INDEPENDENT_VERIFIER_PASS_REQUIRED",
+    "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
 }
