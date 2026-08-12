@@ -16,11 +16,11 @@
       "program": "H0.1",
       "rerun": "R7",
       "pr": 88,
-      "head_sha": "107603a29c3776cc3fe7e94693e90aaaf15fa603",
-      "state": "VERIFYING_C22_COMPLETION",
-      "runtime_slot_owner": "H0.1"
+      "head_sha": "9ca9527a27b30b39c18b66bf5ae18bc31350d25d",
+      "state": "R7_CANCELLED_FRESHNESS_FENCE_DEFECT_SUCCESSOR_REQUIRED",
+      "runtime_slot_owner": "H0.1_PRIMARY_LANE_SUCCESSOR_PENDING"
     },
-    "note": "Observation for preparation only. It must be replaced by fresh post-C22 main/registry facts before any promotion decision."
+    "note": "R7 is historical failed-closed provenance, not authorization. A fresh H0.1 successor must repair the harness freshness fence and reach H0_1_PASS/C22 MAIN_INTEGRATED before R3 final repin or promotion. All observations must still be replaced by fresh post-C22 main/registry facts before any promotion decision."
   },
   "ready_now_guards": [
     "R3_OWNERSHIP_INTERSECTION_REVIEW_PREPARED",
@@ -56,7 +56,7 @@
   "ownership_invariants": {
     "ITEM": "STABLE_CANONICAL_FOUNDATION",
     "V0": "COMPOSITION_CONSUMER_ONLY",
-    "H0_3": "LAUNCH_RESTART_DEV_SCAFFOLD_NOT_GAME_RUNTIME_SCHEDULER",
+    "H0_3": "DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAME_TIME_OWNER",
     "ECO": "ADVISORY_RESEARCH_NOT_RUNTIME_SCHEDULER",
     "H0_1_after_c22_main_integrated": "MUST_NOT_OWN_RUNTIME_SLOT",
     "NX_C1": "MAY_START_ONLY_FROM_FRESH_POST_R3_CANONICAL_MAIN"
