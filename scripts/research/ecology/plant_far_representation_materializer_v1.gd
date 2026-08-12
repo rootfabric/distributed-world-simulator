@@ -35,6 +35,10 @@ static func build(representation: Dictionary) -> Dictionary:
 		var height := _finite_positive(float(bounds.get("height_m", 0.0)), 0.10)
 		var quad := QuadMesh.new()
 		quad.size = Vector2(radius * 2.0, height)
+		var material := StandardMaterial3D.new()
+		material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		quad.material = material
 		mesh = quad
 		origin = Vector3(0.0, height * 0.5, 0.0)
 		primitive_count = 1
@@ -61,8 +65,11 @@ static func build(representation: Dictionary) -> Dictionary:
 static func compute_hash(materialization: Dictionary) -> String:
 	var mesh: Mesh = materialization.get("mesh")
 	var size := Vector3.ZERO
+	var billboard_mode := BaseMaterial3D.BILLBOARD_DISABLED
 	if mesh != null:
 		size = mesh.get_aabb().size
+		if mesh.material is BaseMaterial3D:
+			billboard_mode = (mesh.material as BaseMaterial3D).billboard_mode
 	return "|".join(PackedStringArray([
 		SCHEMA,
 		VERSION,
@@ -71,6 +78,7 @@ static func compute_hash(materialization: Dictionary) -> String:
 		String(materialization.get("tier", "")),
 		str(int(materialization.get("primitive_count", 0))),
 		str(int(materialization.get("billboard", false))),
+		str(int(billboard_mode)),
 		"%.9f,%.9f,%.9f" % [size.x, size.y, size.z],
 	])).sha256_text()
 
