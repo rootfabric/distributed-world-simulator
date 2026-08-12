@@ -1,9 +1,8 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 REPAIRED CANDIDATE / EXACT WINDOWS RE-RUN`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.4 EXECUTE_NOW`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
-
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
 ## Accepted foundation
@@ -16,6 +15,7 @@ ECO.CAL1-A..F             ACCEPTED
 CAL1-F                    ROBUST_UNITY_CALIBRATION
 ECO.EVO1 / P2.1           ACCEPTED
 ECO.EVO1 / P2.2           ACCEPTED
+ECO.EVO1 / P2.3           ACCEPTED
 ```
 
 Canonical hashes:
@@ -24,7 +24,32 @@ Canonical hashes:
 CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
 P2.1    cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6
 P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
+P2.3    15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e
 ```
+
+## P2.3 accepted evidence
+
+Exact Windows Godot: `4.7.1.stable.double.custom_build.a13da4feb`.
+
+```text
+EARLY initial share       0.875000000000
+BANKED initial share      0.125000000000
+BANKED pre-change         0.199612211554
+BANKED shade final        0.964707699557
+BANKED open final         0.369379521845
+shade delta               0.595328177712
+banked gain               0.765095488003
+reactivated               48
+reproduction events       15
+emitted                   325
+short mortality           0.050232535701
+long mortality            0.028476366298
+max biomass               0.101663621317
+```
+
+Acceptance: 168 assertions PASS; fresh-process A/B exact hash match.
+
+Historical parser finding `Engine shadows a native class` was repaired only by alias rename `Engine -> PopulationEngine`; model semantics did not change.
 
 ## Central route
 
@@ -35,9 +60,9 @@ P2.1 Seed Dispersal Kernel ACCEPTED
    ↓
 P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
    ↓
-P2.3 Local Population Turnover + Succession ← REPAIRED CANDIDATE
-   ↓ PASS
-P2.4 Patch Colonization / Isolation / Migration
+P2.3 Local Population Turnover + Succession ACCEPTED
+   ↓
+P2.4 Patch Colonization / Isolation / Migration ← CURRENT
    ↓
 P2.5 Disturbance + Recovery
    ↓
@@ -52,78 +77,20 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.3 implementation and parser repair
+## P2.4 boundary
 
-Implementation origin: `b8d6553df911a4eca9765509c018987fe9f5cd4b`.
+P2.4 may now turn P2.3 export accounting into explicit research-scale inter-patch movement. It must preserve:
 
-Initial candidate control: `39ceac4412f284fb263ee100df6ad223b9780d53`.
+- P2.1 propagule spatial semantics;
+- P2.2 establishment/seed-bank semantics;
+- P2.3 local turnover/succession semantics;
+- lineage/genome/reproduction-event identity;
+- cohort-bounded truth.
 
-Exact Windows finding:
+It must demonstrate causally that nearby connected patches colonize more readily than isolated patches, and that changed connectivity/history changes persistent community state without a biome/species placement table.
 
-```text
-Parse Error: The member "Engine" shadows a native class.
-```
+P2.4 remains research-only and must not claim canonical simulator Spatial Domain Fabric ownership. Patch graph/geometry here is a local experiment input. `XFER1/LIVE` remain deferred to global foundations.
 
-Repair head: `87c7838f9d476735ef92db0d662290b58861cd56`.
+P2.4 must not introduce explicit disturbance-event scheduling; that begins at P2.5.
 
-The repair changes only the preload alias in `plant_local_population_succession_experiment_v1.gd`:
-
-```text
-Engine -> PopulationEngine
-```
-
-No ecological formula, control strategy, threshold, accepted parent, runtime path or P2.4 boundary changed.
-
-### Local adult cohort state
-
-P2.3 uses bounded lineage/age cohorts with biomass and ancestry identity. Recruitment cohorts are merged by lineage/year instead of becoming one entity per plant.
-
-### Turnover and local density
-
-Annual adult survival has explicit lifespan and resource-stress terms. Productive net balance drives vegetative growth. The implementation reuses the existing P1 `0.24` stress-mortality and `0.20` vegetative-growth research coefficients and the accepted single-patch capacity `8.0 kg/m²` rather than creating a second capacity model.
-
-### Persistent history
-
-P2.2 seed banks are advanced every year. Their reactivation feeds new adult cohorts. Mature lineage aggregates also reproduce through:
-
-```text
-CAL1-D lifecycle seed output
-  -> P2.1 dispersal
-  -> P2.2 establishment/seed bank
-  -> P2.3 local adults
-```
-
-### Succession control
-
-The controlled run starts with two causal life histories:
-
-- EARLY: fast growth, short lifespan, low dormancy, low shade tolerance;
-- BANKED: slower growth, long lifespan, high dormancy/long seed bank, high shade tolerance.
-
-Both start under open light. At year 4 the succession run enters deep shade; an open control does not. Acceptance still requires EARLY to lead initially, BANKED to gain after transition, and BANKED final share to be higher under shade history than open control.
-
-### Strict P2.4 boundary
-
-Outside-domain seeds are counted as export but never inserted into a second patch. No neighbour graph, colonization topology or migration routing exists in P2.3.
-
-## Exact Windows re-run
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_EVO1_P2_3_TESTS.ps1 -GodotPath $Godot
-```
-
-Until PASS:
-
-```text
-P2.3 = REPAIRED_IMPLEMENTED_CANDIDATE
-P2.3 != ACCEPTED
-P2.4 = BLOCKED
-```
-
-Current resolver: `RE-RUN EVO1/P2.3 EXACT WINDOWS LOCAL POPULATION TURNOVER + SUCCESSION GATE`.
+Current resolver: `IMPLEMENT EVO1/P2.4 PATCH COLONIZATION / ISOLATION / MIGRATION`.

@@ -1,76 +1,62 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_3_local_population_succession_validation.v1",
-  "revision": "ECO-EVO1-P2.3-2026-08-12-R2-PARSER-REPAIR",
+  "revision": "ECO-EVO1-P2.3-2026-08-12-R3-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "implementation_origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
-  "repair_head": "87c7838f9d476735ef92db0d662290b58861cd56",
-  "status": "REPAIRED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO1",
+  "implementation_origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
+  "parser_repair_head": "87c7838f9d476735ef92db0d662290b58861cd56",
+  "tested_control_head": "7f7ca23f001fed3979900684cc260978b6e781a3",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.2",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86"
   },
-  "windows_finding": {
+  "exact_windows": {
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "result": "PARSE_FAIL_BEFORE_P2_3_EXECUTION",
+    "parser_preflight": "PASS",
+    "acceptance_assertions": 168,
+    "aggregate_hash": "15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e",
+    "fresh_replay_a": "EXACT_MATCH",
+    "fresh_replay_b": "EXACT_MATCH"
+  },
+  "metrics": {
+    "initial_early_share": 0.875,
+    "initial_banked_share": 0.125,
+    "banked_pre_change_share": 0.199612211554,
+    "banked_final_shade_share": 0.964707699557,
+    "banked_final_open_share": 0.369379521845,
+    "shade_delta": 0.595328177712,
+    "banked_gain_after_shift": 0.765095488003,
+    "seed_bank_reactivated": 48,
+    "reproduction_events": 15,
+    "emitted_seeds": 325,
+    "short_life_mortality": 0.050232535701,
+    "long_life_mortality": 0.028476366298,
+    "max_biomass_kg_m2": 0.101663621317,
+    "max_adult_cohorts": 17,
+    "max_seed_bank_cohorts": 31,
+    "top_lineage_changed": true
+  },
+  "historical_parser_finding": {
     "message": "The member Engine shadows a native class",
-    "file": "scripts/research/ecology/plant_local_population_succession_experiment_v1.gd",
-    "repair": "rename preload alias Engine to PopulationEngine only; no model semantics changed"
-  },
-  "truth": {
-    "adult_granularity": "bounded lineage/age cohorts with biomass, never one entity per plant",
-    "seed_memory": "accepted P2.2 seed-bank cohorts",
-    "reproduction_chain": "CAL1-D -> P2.1 -> P2.2 -> local adult/bank cohorts",
-    "capacity": "reuse P1 single-patch MAX_BIOMASS_KG_M2=8.0",
-    "export_policy": "outside local domain is counted but not inserted into another patch"
-  },
-  "turnover": {
-    "baseline_survival": "exp(-1/lifespan)",
-    "stress_survival": "exp(-0.24*max(-net_resource_balance,0))",
-    "vegetative_growth": "positive_net*growth_rate*surviving_biomass*0.20",
-    "coefficient_origin": "reuse existing P1 single-plant patch research coefficients where applicable"
-  },
-  "controlled_runs": [
-    "OPEN_CONTROL_12Y",
-    "OPEN_TO_SHADE_SUCCESSION_12Y",
-    "MATCHED_SHORT_LIFE_8Y_NO_REPRODUCTION",
-    "MATCHED_LONG_LIFE_8Y_NO_REPRODUCTION"
-  ],
-  "required_properties": [
-    "P2_2_PARENT_HASH_UNCHANGED",
-    "INITIAL_LOW_DORMANCY_EARLY_LINEAGE_SHARE_GT_BANKED",
-    "BANKED_LINEAGE_GAINS_SHARE_AFTER_SHADE_TRANSITION",
-    "SHADE_SCHEDULE_INCREASES_BANKED_FINAL_SHARE_VS_OPEN_CONTROL",
-    "SEED_BANK_REACTIVATION_CONTRIBUTES_RECRUITS",
-    "ADULT_REPRODUCTION_EVENTS_OCCUR_AFTER_FOUNDER_PULSE",
-    "SHORT_LIFESPAN_INCREASES_MATCHED_ADULT_TURNOVER",
-    "TOTAL_LOCAL_BIOMASS_NEVER_EXCEEDS_ACCEPTED_P1_CAPACITY",
-    "ADULT_AND_BANK_COHORT_COUNTS_REMAIN_BOUNDED",
-    "LINEAGE_IDENTITY_PRESERVED",
-    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
-    "NO_P2_4_MIGRATION_GRAPH_OR_CROSS_PATCH_INSERTION",
-    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
-  ],
-  "implementation_diff": {
-    "base": "ec1a7aa8d2e30b876496fd01693d1a6a0257c4dd",
-    "origin_head": "b8d6553df911a4eca9765509c018987fe9f5cd4b",
-    "changed_files": 5,
-    "accepted_p2_2_or_earlier_sources_modified": false,
-    "runtime_paths_modified": false
-  },
-  "repair_diff": {
-    "base": "39ceac4412f284fb263ee100df6ad223b9780d53",
-    "head": "87c7838f9d476735ef92db0d662290b58861cd56",
-    "changed_files": 1,
+    "resolution": "rename experiment preload alias Engine to PopulationEngine",
     "semantic_change": false
   },
-  "local_sanity": "FULL_CHECKOUT_UNAVAILABLE_DUE_TO_GITHUB_DNS_NO_LOCAL_PASS_CLAIMED",
-  "tests": {
-    "acceptance": "tests/research/ecology/eco_evo1_p2_3_local_population_succession_acceptance.gd",
-    "restart": "tests/research/ecology/eco_evo1_p2_3_restart_replay_probe.gd",
-    "runner": "RUN_ECO_EVO1_P2_3_TESTS.ps1"
-  },
-  "decision": "REPAIRED_CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.EVO1 / P2.4 Patch Colonization / Isolation / Migration"
+  "accepted_properties": [
+    "P2_2_PARENT_HASH_UNCHANGED",
+    "INITIAL_EARLY_SHARE_GT_BANKED",
+    "BANKED_GAINS_AFTER_SHADE_TRANSITION",
+    "SHADE_HISTORY_BANKED_FINAL_SHARE_GT_OPEN_CONTROL",
+    "SEED_BANK_REACTIVATION_GT_ZERO",
+    "REPEATED_ADULT_REPRODUCTION_GT_ZERO",
+    "SHORT_LIFESPAN_TURNOVER_GT_LONG_LIFESPAN",
+    "LOCAL_BIOMASS_CAPACITY_BOUNDED",
+    "ADULT_AND_BANK_COHORT_COUNTS_BOUNDED",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "NO_CROSS_PATCH_INSERTION",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "decision": "ACCEPTED",
+  "next": "ECO.EVO1 / P2.4 Patch Colonization / Isolation / Migration"
 }
