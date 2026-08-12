@@ -1,14 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R20-2026-08-12",
+  "revision": "ECO-R21-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
   "status": "RESEARCH_ONLY_ACTIVE",
+  "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.PH",
-  "current_step": "PH5-S2 3D Tapered Branch Tubes + Instanced Foliage implemented; exact Windows + graphical pending",
-  "last_accepted_step": "ECO.PH5-S1 PlantRenderDescription + RendererProfile Foundation",
-  "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes.",
+  "current_step": "PH5-S3 Multi-Scale Plant Representation / Canopy Approximation + Impostor/LOD Truth-Invariance",
+  "last_accepted_step": "ECO.PH5-S2 3D Tapered Branch Tubes + Instanced Foliage",
+  "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes, while representation scales independently from canonical ecology truth.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
     "SPECIES_ARE_DISCOVERED_NOT_PLACED",
@@ -25,6 +26,8 @@
     "ACCEPTED_P1_RESOURCE_TRUTH_NE_PH3_MORPHOLOGY_RESEARCH_OVERLAY",
     "MORPHOLOGY_SELECTION_CLAIM_REQUIRES_RESOURCE_ONLY_CAUSAL_CONTROL",
     "REPRESENTATION_LEVEL_NE_SPECIES_OR_POPULATION_IDENTITY",
+    "DISTANCE_AND_SCREEN_SIZE_NE_ECOLOGY_STATE",
+    "FAR_POPULATION_NE_REQUIRED_INDIVIDUAL_GROWTH_GRAPH_MATERIALIZATION",
     "ECOLOGY_DOES_NOT_OWN_GEOLOGY_HYDROLOGY_MATTER_AUTHORITY_TRANSPORT_PERSISTENCE_QUERY_OR_GLOBAL_WORK_BUDGET"
   ],
   "accepted_checkpoints": [
@@ -38,7 +41,8 @@
     {"id":"ECO.PH3","decision":"ACCEPTED","profile_hash":"1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a","reference_hash":"58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e"},
     {"id":"ECO.PH3C","decision":"ACCEPTED_CAUSAL_PAIRWISE_SCOPE","aggregate_hash":"294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb"},
     {"id":"ECO.PH4","decision":"ACCEPTED","lifecycle_hash":"88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1","offspring_batch_hash":"48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"},
-    {"id":"ECO.PH5-S1","name":"PlantRenderDescription + RendererProfile Foundation","decision":"ACCEPTED","evidence":{"platform":"exact Windows Godot 4.7.1 double","focused_assertions":720,"visual_smoke_assertions":15,"restart_assertions":4,"reference_description_hash":"72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3","profile_matrix_hash":"2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0","full_materialization_hash":"374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c","graphical":"PASS_BY_USER_OBSERVATION"}}
+    {"id":"ECO.PH5-S1","name":"PlantRenderDescription + RendererProfile Foundation","decision":"ACCEPTED","evidence":{"platform":"exact Windows Godot 4.7.1 double","focused_assertions":720,"visual_smoke_assertions":15,"restart_assertions":4,"reference_description_hash":"72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3","profile_matrix_hash":"2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0","full_materialization_hash":"374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c","graphical":"PASS_BY_USER_OBSERVATION"}},
+    {"id":"ECO.PH5-S2","name":"3D Tapered Branch Tubes + Instanced Foliage","decision":"ACCEPTED","evidence":{"platform":"exact Windows Godot 4.7.1 double","focused_assertions":387,"visual_smoke_assertions":12,"restart_assertions":5,"reference_branch_leaf_geometry_hash":"2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f","full_geometry_hash":"5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e","graphical":"PASS_BY_USER_OBSERVATION_REAL_3D_TREE_FORMATION"}}
   ],
   "next_checkpoint": {
     "id": "ECO.PH",
@@ -46,6 +50,7 @@
     "status": "ACTIVE_RESEARCH",
     "design_doc": "docs/future_features/evolutionary_ecology/PLANT_DEVELOPMENT_PHENOTYPE_TRACK_RU.md",
     "rendering_architecture_doc": "docs/future_features/evolutionary_ecology/PLANT_RENDERING_ARCHITECTURE_RU.md",
+    "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
     "steps": [
       {"id":"PH0","status":"ACCEPTED"},
       {"id":"PH1","status":"ACCEPTED"},
@@ -53,33 +58,63 @@
       {"id":"PH3","status":"ACCEPTED"},
       {"id":"PH3C","status":"ACCEPTED","scope":"CAUSAL_PAIRWISE_SELECTION_NOT_GLOBAL_COEXISTENCE"},
       {"id":"PH4","status":"ACCEPTED"},
-      {"id":"PH5-S1","name":"PlantRenderDescription + RendererProfile Foundation","status":"ACCEPTED","evidence":{"focused_assertions":720,"visual_smoke_assertions":15,"restart_assertions":4,"graphical":"PASS_BY_USER_OBSERVATION"}},
-      {"id":"PH5-S2","name":"3D Tapered Branch Tubes + Instanced Foliage","status":"IMPLEMENTED_WINDOWS_AND_GRAPHICAL_PENDING","implementation":{"branch_mesh":"SurfaceTool/ArrayMesh tapered tubes","foliage":"MultiMesh replaceable leaf asset","profiles":["BRANCH_TUBES","BRANCH_LEAF_INSTANCED","FULL_PROCEDURAL"]}},
-      {"id":"PH5-S3","name":"Canopy Approximation + Impostor/LOD Truth-Invariance","status":"BLOCKED_BY_PH5_S2_ACCEPTANCE"},
+      {"id":"PH5-S1","name":"PlantRenderDescription + RendererProfile Foundation","status":"ACCEPTED"},
+      {"id":"PH5-S2","name":"3D Tapered Branch Tubes + Instanced Foliage","status":"ACCEPTED","evidence":{"focused_assertions":387,"visual_smoke_assertions":12,"restart_assertions":5,"graphical":"PASS_BY_USER_OBSERVATION_REAL_3D_TREE_FORMATION"}},
+      {"id":"PH5-S3","name":"Multi-Scale Plant Representation / Canopy Approximation + Impostor/LOD Truth-Invariance","status":"NEXT","target_tiers":["TIER_0_FULL","TIER_1_REDUCED","TIER_2_CANOPY","TIER_3_IMPOSTOR","TIER_4_POPULATION_ONLY"]},
       {"id":"PH5-S4","name":"Visual Robustness / Handoff","status":"BLOCKED_BY_PH5_S3_ACCEPTANCE"},
-      {"id":"PH6","name":"Promoted Individual Persistence","status":"DEFERRED_RUNTIME_PROMOTION"}
+      {"id":"PH6","name":"Promoted Individual Persistence","status":"DEFERRED_RUNTIME_PROMOTION_AFTER_P3_AND_FOUNDATIONS"}
     ],
     "acceptance_gate": [
       "developmental traits remain separate from accepted environment/resource truth",
       "GrowthGraph remains derived morphology",
       "PlantRenderDescription remains deterministic derived presentation metadata",
       "renderer profile/LOD/mesh density/leaf asset cannot modify GrowthGraph, ecology, resource, selection or lifecycle hashes",
-      "PH5-S2 must prove actual 3D mesh + foliage instancing while retaining exact source truth",
-      "production canopy/impostor/LOD is not claimed before PH5-S3 evidence"
+      "PH5-S3 must prove representation tier switching including population-only without making LOD canonical identity",
+      "PH5-S4 must prove robust rematerialization/dematerialization and handoff before ECO.PH completion"
     ]
   },
+  "central_route": {
+    "principle": "Finish PH5 representation research, then separate world-integration contracts from morphology calibration. Do not jump directly from PH5 to PH6/runtime.",
+    "sequence": [
+      "PH5-S2 ACCEPTED",
+      "PH5-S3 Multi-Scale Plant Representation",
+      "PH5-S4 Visual Robustness / Handoff",
+      "ECO.PH RESEARCH COMPLETE",
+      "ECO.CONV0 World Integration Contracts + ECO.CAL1 Morphology Economics Calibration may proceed as separate non-runtime lanes",
+      "ECO.CAL1 ACCEPTED",
+      "ECO.P2 Dispersal / Recruitment / Biogeography",
+      "WAIT_FOR_CANONICAL_PRODUCTION_FOUNDATIONS",
+      "ECO.P3 Controlled World Integration",
+      "ECO.PH6 Promoted Persistent Individuals"
+    ],
+    "post_ph5_parallel": {
+      "ECO.CONV0": {"status":"PLANNED_AFTER_PH5_S4","scope":"DESIGN_CONTRACT_ONLY","goal":"Define EcoEnvironmentQuery, EcoPopulationProjection and promotion/demotion boundaries without owning World Query, Spatial, Matter, authority, persistence, transport or work budget."},
+      "ECO.CAL1": {"status":"PLANNED_AFTER_PH5_S4","scope":"RESEARCH_CALIBRATION","goal":"Resolve PH3C full-pool compact/HEIGHT_LOW dominance through missing-mechanism causal experiments before unrestricted morphology evolution."}
+    },
+    "p2": {
+      "status": "BLOCKED_BY_CAL1_ACCEPTANCE",
+      "name": "Dispersal / Recruitment / Biogeography",
+      "steps": ["P2.1 Seed Dispersal Kernel","P2.2 Establishment / Recruitment","P2.3 Local Population Turnover","P2.4 Patch Colonization","P2.5 Disturbance + Recovery","P2.6 Long-Horizon Biogeography","P2.7 Speciation Candidate Diagnostics"]
+    },
+    "runtime_boundary": "ECO.P3/PH6 require canonical World Query/G environment contracts, Material Ontology projection, Spatial/promotion semantics, World Work Budget, authority/persistence/transport integration and a fresh PC0/Harness-controlled runtime frontier."
+  },
   "open_research_risks": [
-    {"id":"PH3C_FULL_POOL_COMPACT_DOMINANCE","status":"OBSERVED_IN_ANALYTIC_DIAGNOSTIC_NOT_HIDDEN","finding":"The unrestricted eight-strategy diagnostic currently gives HEIGHT_LOW a broad advantage across REFERENCE/SHADE/SUN/DRY.","implication":"PH3C proves causal pairwise morphology-aware selection but must not be generalized to unrestricted morphology coexistence.","required_before":"Any unconstrained morphology mutation/evolution or species-emergence claim","future_gate":"Calibrate frequency-dependent/resource-access mechanics or morphology benefit/cost profile and re-run full-pool robustness without rewriting accepted PH3/PH3C evidence."}
+    {"id":"PH3C_FULL_POOL_COMPACT_DOMINANCE","status":"OBSERVED_IN_ANALYTIC_DIAGNOSTIC_NOT_HIDDEN","finding":"The unrestricted eight-strategy diagnostic currently gives HEIGHT_LOW a broad advantage across REFERENCE/SHADE/SUN/DRY.","implication":"PH3C proves causal pairwise morphology-aware selection but must not be generalized to unrestricted morphology coexistence.","required_before":"Any unconstrained morphology mutation/evolution or species-emergence claim","future_gate":"ECO.CAL1: test missing causal mechanisms such as light/root competition, crown overlap, reproduction/dispersal payoff and disturbance resistance before coefficient calibration; then re-run full-pool robustness without rewriting accepted PH3/PH3C evidence."}
   ],
   "waves": [
     {"id":"ECO.P1","status":"ACCEPTED"},
-    {"id":"ECO.PH","status":"PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_ACCEPTED_PH5_S2_ACTIVE_RESEARCH"},
-    {"id":"ECO.P2","status":"PLANNED_AFTER_PH5_PREREQUISITES"},
-    {"id":"ECO.P3","status":"PLANNED_AFTER_P2"}
+    {"id":"ECO.PH","status":"PH0_PH1_PH2_PH3_PH3C_PH4_PH5_S1_PH5_S2_ACCEPTED_PH5_S3_NEXT"},
+    {"id":"ECO.CONV0","status":"PLANNED_AFTER_PH5_S4_DESIGN_CONTRACT_ONLY"},
+    {"id":"ECO.CAL1","status":"PLANNED_AFTER_PH5_S4_REQUIRED_BEFORE_UNRESTRICTED_MORPHOLOGY_EVOLUTION"},
+    {"id":"ECO.P2","status":"BLOCKED_BY_CAL1_ACCEPTANCE"},
+    {"id":"ECO.P3","status":"DEFERRED_UNTIL_CANONICAL_PRODUCTION_FOUNDATIONS"},
+    {"id":"ECO.PH6","status":"DEFERRED_AFTER_P3_CONTROLLED_RUNTIME_INTEGRATION"}
   ],
   "production_blockers": [
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
     "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CURRENT_CANONICAL_G_QUERY_CONTRACTS",
-    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION"
+    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION",
+    "PRODUCTION_ECO_REQUIRES_CANONICAL_SPATIAL_PROMOTION_DORMANCY_DEMOTION_BOUNDARY",
+    "PRODUCTION_ECO_REQUIRES_CANONICAL_WORLD_WORK_BUDGET"
   ]
 }
