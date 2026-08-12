@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R7-H0-1-R7-C22-WO-001-0002",
+  "project_epoch": "E2026-08-12-H0-1-R7",
+  "work_order_id": "H0-1-R7-C22-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-12T00:13:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-1-c22-current-main-r2",
+  "head_sha": "72c34c30fc545f0487ffb4cbdde6a2dbb394441f",
+  "predicate": "H0_1_R7_HIGH_DESIGN_AUTHORIZED",
+  "command": "DIRECTOR_DISPATCH_SINGLE_C22_WORKER_AFTER_EXACT_HEAD_REVIEW",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-12-H0-1-R7/reviews/H0-1-R7-C22-WO-001-PREBUILD-REVIEW-001.v1.json", "config/control/harness/executions/E2026-08-12-H0-1-R7/work-orders/H0-1-R7-C22-WO-001.v1.json"],
+  "summary": "Director dispatches exactly one bounded C22 runtime worker. The dispatch head_sha is the exact pre-build reviewed head 72c34c30, not the later commit that stores review evidence."
+}
