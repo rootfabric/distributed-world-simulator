@@ -12,10 +12,10 @@ jobs:
   verify-and-export:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact R7 head
+      - name: Checkout exact R7 branch
         uses: actions/checkout@v4
         with:
-          ref: 5169e7037b4ba6c40608d772560dd6eaa9c0e9e4
+          ref: feature/h0-1-c22-current-main-r2
           fetch-depth: 0
 
       - name: Pin exact Git state
@@ -23,6 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r2"
           test "$(git rev-parse HEAD)" = "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
           test -z "$(git status --porcelain)"
@@ -56,8 +57,9 @@ jobs:
           recovery="$RUNNER_TEMP/h0-r7-recovery"
           git clone --no-tags https://github.com/rootfabric/distributed-world-simulator.git "$recovery"
           cd "$recovery"
-          git checkout 5169e7037b4ba6c40608d772560dd6eaa9c0e9e4
+          git checkout -B feature/h0-1-c22-current-main-r2 5169e7037b4ba6c40608d772560dd6eaa9c0e9e4
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r2"
           test "$(git rev-parse HEAD)" = "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
           python -m pip install -r scripts/harness/requirements.txt
