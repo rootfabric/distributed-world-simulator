@@ -1,0 +1,34 @@
+{
+  "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
+  "checkpoint": "ECO.PH5-S2",
+  "name": "3D Tapered Branch Tubes + Instanced Foliage",
+  "status": "IMPLEMENTED_WINDOWS_PENDING",
+  "branch": "feature/eco-evolutionary-ecology",
+  "parent_checkpoint": "ECO.PH5-S1 PlantRenderDescription + RendererProfile Foundation ACCEPTED",
+  "experiment_revision": "ECO.PH5-S2.1",
+  "purpose": "Materialize real 3D tapered branch geometry and replaceable instanced foliage strictly downstream of accepted PlantRenderDescription.",
+  "pipeline": "accepted GrowthGraph -> accepted PlantRenderDescription -> RendererProfile -> Plant3DMaterializer -> ArrayMesh branches + MultiMesh foliage",
+  "implemented_profiles": ["BRANCH_TUBES", "BRANCH_LEAF_INSTANCED", "FULL_PROCEDURAL"],
+  "implementation": {
+    "branch_geometry": "SurfaceTool triangle tubes with per-segment start/end radii and profile-controlled radial sides",
+    "foliage": "MultiMesh using replaceable QuadMesh leaf asset and deterministic anchor transforms",
+    "scene": "res://scenes/labs/ecology/eco_ph5_s2_3d_materialization_lab.tscn",
+    "materializer": "res://scripts/research/ecology/plant_3d_materializer_v1.gd"
+  },
+  "truth_invariants": [
+    "Plant3DMaterializer consumes PlantRenderDescription and never writes GrowthGraph",
+    "mesh vertex count, radial sides, foliage asset and foliage instance count are presentation only",
+    "geometry hash is derived from source GrowthGraph hash + render description + renderer profile + active primitives",
+    "same accepted description/profile rebuilds the same geometry hash in a fresh process",
+    "TREE/BUSH/GRASS remain non-canonical observations, not renderer identities"
+  ],
+  "windows_gate": {
+    "parent_ph5_s1": "re-run accepted PH5-S1 focused + restart",
+    "focused": "build all three 3D profiles across all seven accepted PH2 phenotypes; verify mesh counts/AABB/MultiMesh counts and source graph immutability",
+    "visual_smoke": "instantiate the real Node3D lab and switch branch-only/full procedural modes",
+    "restart": "focused and fresh-process REFERENCE BRANCH_LEAF_INSTANCED/FULL_PROCEDURAL geometry hashes must match",
+    "graphical": "inspect contrasting environments and confirm visible tapered 3D branches and foliage while GrowthGraph hash remains unchanged"
+  },
+  "scope_boundary": "S2 proves actual 3D branch and foliage materialization, not final botanical assets, wind, bark/leaf shaders, production GPU batching, canopy clustering or impostor baking.",
+  "next_after_acceptance": "ECO.PH5-S3 Canopy Approximation + Impostor/LOD Truth-Invariance"
+}
