@@ -5,36 +5,42 @@
   "branch": "control/global-p0-r3-refresh-r1",
   "program": "GLOBAL_ARCHITECTURE",
   "role": "ARCHITECTURE_REVISION_CANDIDATE",
-  "short_description": "Fresh current-main GLOBAL-P0 R3 architecture candidate; control/docs/config only, no promotion and no runtime ownership changes.",
-  "purpose": "Refresh R3 against main 1112d1f7 / registry generation 75, resolve current ownership/intersection drift, add explicit R2-to-R3 transition semantics, and prepare the R3_REFRESHED_CANDIDATE checkpoint without promoting architecture.",
-  "expected_outcome": "A CRITICAL-reviewed, PC0 NON_RED, evidence-complete R3 candidate ready for a separate human GLOBAL_ARCHITECTURE_PROMOTION gate after the active H0.1 R2 runtime checkpoint reaches a safe boundary.",
-  "current_stage": "GLOBAL-P0 R3 fresh candidate construction",
-  "stage_status": "REFRESHED_CURRENT_MAIN_DESIGN_AND_TRANSITION_POLICY_READY_REVIEW_PENDING",
-  "progress_note": "Fresh candidate starts from exact main 1112d1f7 / registry 75. Architecture design, frontier guards and R2-to-R3 transition policy are refreshed. H0.1 R6 C22 remains an active R2 pilot preparation and blocks R3 promotion while open. ECO remains Evolutionary Ecology; ECON is reserved for future economy to eliminate the old R3 program-ID collision. Ownership/intersection review, Evidence Map, Reviewer PASS and PC0 remain pending.",
+  "short_description": "GLOBAL-P0 R3 pre-promotion architecture/control candidate; preparation only, no promotion and no runtime ownership changes.",
+  "purpose": "Keep the R3 architecture candidate ready for a fresh post-C22 repin, final control verification, independent review/verifier pass and explicit human promotion gate without touching runtime/domain code.",
+  "expected_outcome": "R3_PREPROMOTION_PACKAGE_READY now; after C22 MAIN_INTEGRATED only fresh-main repin, final PC0/directional-PC0/evidence verification and the separate human GLOBAL_ARCHITECTURE_PROMOTION gate remain.",
+  "current_stage": "GLOBAL-P0 R3 pre-promotion preparation",
+  "stage_status": "R3_PREPROMOTION_PACKAGE_READY_POST_C22_REPIN_REQUIRED",
+  "progress_note": "Candidate construction provenance remains main 1112d1f7 / registry 75 and is non-authorizing. Preparation observed main 4a42c2fb / registry 77 with H0.1 R7 PR #88 @ 107603a2 verifying C22 completion. Ownership/intersection, transition, Evidence Map, reviewer/verifier, PC0, directional-PC0, freshness, promotion and post-promotion checklists are prepared. Promotion remains forbidden until C22 MAIN_INTEGRATED, H0.1 runtime-slot release, fresh repin/final verification and explicit human gate.",
   "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
-  "next_stage": "Complete independent ownership/intersection review, build Evidence Map, run Project Control/PC0, and stop at R3_REFRESHED_CANDIDATE. Do not promote until H0.1 boundary and explicit GLOBAL_ARCHITECTURE_PROMOTION.",
-  "parent_branch_or_checkpoint": "main @ 1112d1f7cfad1df18fb3621a537e191e674848c6 / registry generation 75 / H0_0_SCAFFOLD_READY canonical",
+  "next_stage": "Wait for C22 MAIN_INTEGRATED; then fetch fresh main, confirm H0.1 runtime slot release, repin R3, refresh ephemeral pins, run CONTROL_PROJECT plus standard/directional PC0, finalize exact-head Evidence Map, obtain independent Reviewer/Verifier PASS, and stop at GLOBAL_ARCHITECTURE_PROMOTION human gate.",
+  "parent_branch_or_checkpoint": "Historical construction base main @ 1112d1f7cfad1df18fb3621a537e191e674848c6 / registry generation 75; provenance only, never promotion authorization.",
   "dependencies": [
     "GLOBAL_P0_R2",
     "H0_0_SCAFFOLD_READY",
-    "H0_1_R6_ACTIVE_R2_BOUNDARY",
-    "PC0_REGISTRY_GENERATION_75",
+    "H0_1_R7_C22_ACTIVE_R2_BOUNDARY",
+    "PREPROMOTION_MAIN_OBSERVATION_4a42c2fb_REGISTRY_77",
+    "C22_MAIN_INTEGRATED_REQUIRED_BEFORE_REPIN",
+    "H0_1_RUNTIME_SLOT_RELEASE_REQUIRED",
     "G8_FULL_ACCEPTANCE",
     "T1B_HANDOFF_COMPLETE",
     "C22_SOURCE_ACCEPTED",
     "NX_C0_PREPARATION",
+    "ITEM_STABLE_CANONICAL_FOUNDATION",
     "MATTER_STABLE",
     "S1_STABLE",
-    "ECO_PH3_ACCEPTED_PH3C_RESEARCH_PENDING"
+    "V0_COMPOSITION_CONSUMER_ONLY",
+    "ECO_ADVISORY_RESEARCH"
   ],
   "owned_paths": [
     "config/architecture/global-p0-r3-architecture-candidate.v1.json",
     "config/control/architecture-ownership-r3-candidate.v1.json",
     "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/global-p0-r3-prepromotion-guards.v1.json",
     "config/control/branches/control__global-p0-r3-refresh-r1.v1.json",
     "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
     "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
-    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md"
+    "docs/checkpoints/2026-08-12_GLOBAL_P0_R3_REFRESH_R1_RU.md",
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
   ],
   "watched_paths": [
     "config/control/project-program-registry.v1.json",
@@ -43,6 +49,7 @@
     "config/control/harness/checkpoint-catalog.v1.json",
     "config/control/harness/**",
     "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+    "docs/plans/H_PRIMARY_EXECUTION_ROADMAP_RU.md",
     "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
     "config/architecture/global-program-roadmap.v1.json",
     "scripts/construction/**",
@@ -59,18 +66,22 @@
   "validation_paths": [
     "config/architecture/global-p0-r3-architecture-candidate.v1.json",
     "config/control/architecture-ownership-r3-candidate.v1.json",
-    "config/control/global-p0-r2-to-r3-transition-policy.v1.json"
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/global-p0-r3-prepromotion-guards.v1.json",
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE",
-    "focused": "PENDING_CONTROL_VALIDATION",
+    "focused": "PENDING_POST_C22_EXACT_HEAD_CONTROL_VALIDATION",
     "full_regression": "NOT_APPLICABLE"
   },
   "ownership_claims": [
     {"foundation": "PROGRAM_LEDGER", "claimed_owner": "MAIN", "scope": "Candidate only; canonical ownership changes require promotion."},
-    {"foundation": "DEVELOPMENT_HARNESS", "claimed_owner": "MAIN/HARNESS", "scope": "Protect development-control ownership from WB/OPS runtime scheduling concepts."},
-    {"foundation": "EVOLUTIONARY_ECOLOGY_RESEARCH", "claimed_owner": "ECO", "scope": "Preserve live ECO program identity."},
-    {"foundation": "WORLD_ECONOMY", "claimed_owner": "ECON_FUTURE", "scope": "Avoid collision with ECO Evolutionary Ecology."}
+    {"foundation": "DEVELOPMENT_HARNESS", "claimed_owner": "MAIN/HARNESS", "scope": "Protect development-control ownership from WB/OPS/H0.3 runtime scheduling concepts."},
+    {"foundation": "ITEM", "claimed_owner": "ITEM", "scope": "Stable canonical item truth foundation; H/V/R3 do not take ownership."},
+    {"foundation": "EVOLUTIONARY_ECOLOGY_RESEARCH", "claimed_owner": "ECO", "scope": "Advisory/research only; not game-runtime scheduler or economy owner."},
+    {"foundation": "WORLD_ECONOMY", "claimed_owner": "ECON_FUTURE", "scope": "Avoid collision with ECO Evolutionary Ecology."},
+    {"foundation": "V0", "claimed_owner": "PRESENTATION_COMPOSITION_CONSUMER", "scope": "Consumer only; no domain truth promotion."}
   ],
   "forbidden_foundation_ownership": [
     "ITEM_IDENTITY_AND_GRAPH",
@@ -83,11 +94,15 @@
     "COMPUTE_EXECUTION"
   ],
   "blockers": [
-    "OWNERSHIP_INTERSECTION_REVIEW_REQUIRED",
-    "EVIDENCE_MAP_REQUIRED",
-    "REVIEWER_PASS_REQUIRED",
+    "C22_MAIN_INTEGRATED_REQUIRED",
+    "H0_1_RUNTIME_SLOT_RELEASE_REQUIRED",
+    "POST_C22_FRESH_MAIN_REPIN_REQUIRED",
+    "CONTROL_PROJECT_PASS_REQUIRED",
     "PC0_NON_RED_REQUIRED",
-    "H0_1_R2_RUNTIME_CHECKPOINT_MUST_REACH_BOUNDARY_BEFORE_PROMOTION",
+    "DIRECTIONAL_PC0_NON_RED_REQUIRED",
+    "EXACT_HEAD_EVIDENCE_MAP_FINAL_REQUIRED",
+    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
+    "INDEPENDENT_VERIFIER_PASS_REQUIRED",
     "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
   ],
   "health_declared": "YELLOW",
