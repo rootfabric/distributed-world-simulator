@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R52-2026-08-13",
+  "revision": "ECO-R53-2026-08-13",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_REPAIRED_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.EVO1/P2.8",
-  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / Exact Windows Canonical Gate",
+  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / Repaired Candidate / Exact Windows Canonical Rerun",
   "last_accepted_step": "ECO.EVO1/P2.7 Lineage Divergence / Speciation Candidate Diagnostics",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
@@ -38,15 +38,22 @@
   },
   "candidate_evidence": {
     "p2_8_implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
+    "p2_8_original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
+    "p2_8_codec_repair_commit": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
+    "p2_8_codec_preflight_commit": "31fd42a503875247cc758b36d7915a99a6a72698",
+    "p2_8_fail_fast_runner_commit": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
+    "p2_8_finding": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
     "p2_8_checkpoint": "docs/checkpoints/ECO_EVO1_P2_8_DETERMINISTIC_SAVE_RESTART_PLANT_WORLD_CANDIDATE_RU.md",
     "p2_8_validation": "validation/ecology/eco-evo1-p2-8-save-restart-validation.json",
     "p2_8_runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
-    "p2_8_truth": "typed deterministic research checkpoint of complete regional plant-world state with absolute-year continuation, double cut 14/18, P2.6 result-hash equivalence and persisted P2.7 diagnostic evidence"
+    "p2_8_truth": "typed deterministic research checkpoint of complete regional plant-world state with absolute-year continuation, double cut 14/18, P2.6 result-hash equivalence and persisted P2.7 diagnostic evidence",
+    "supplementary_attached_engine": "same Godot 4.7.1 double engine commit confirms int->float JSON erasure before repair and three deterministic repaired two-cut fresh-process probes",
+    "exact_windows_status": "RERUN_PENDING"
   },
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_8_CANDIDATE",
+    "status": "ACTIVE_P2_8_REPAIRED_CANDIDATE",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
@@ -56,7 +63,7 @@
       {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
       {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"}
+      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"REPAIRED_CANDIDATE_EXACT_WINDOWS_RERUN_PENDING"}
     ]
   },
   "EVO2": {"status":"BLOCKED_BY_EVO1_P2_8_ACCEPTANCE"},
