@@ -107,6 +107,7 @@ $Tests = @(
     @{ Path = "res://tests/characters/test_fpe_r2_s6_hand_visual_provider_boundary.gd"; PassMarker = "FPE R2 S6 hand visual provider boundary: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s7_resource_backed_hand_visual_provider.gd"; PassMarker = "FPE R2 S7 resource-backed hand visual provider: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s8_skinned_hand_retarget_provider.gd"; PassMarker = "FPE R2 S8 skinned hand retarget provider: PASS" },
+    @{ Path = "res://tests/characters/test_fpe_r2_s8_skinned_configurable_viewmodel.gd"; PassMarker = "FPE R2 S8 skinned configurable viewmodel: PASS" },
     @{ Path = "res://tests/characters/test_fpe_sandbox_owner_collision_isolation.gd"; PassMarker = "FPE sandbox owner collision isolation: PASS" },
     @{ Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"; PassMarker = "FirstPersonEmbodiment performance gate: PASS" },
     @{ Path = "res://tests/characters/test_first_person_embodiment_lab_load.gd"; PassMarker = "FirstPersonEmbodiment graphical scene load: PASS" }
