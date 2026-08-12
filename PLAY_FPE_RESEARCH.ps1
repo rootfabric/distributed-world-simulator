@@ -88,6 +88,18 @@ $FatalMarkers = @(
     "ERROR: Failed to load script"
 )
 
+function Get-FatalGodotMarker {
+    param(
+        [string]$OutputText
+    )
+    foreach ($Marker in $FatalMarkers) {
+        if ($OutputText.Contains($Marker)) {
+            return $Marker
+        }
+    }
+    return ""
+}
+
 # Branch switching can leave Godot's generated global class cache stale. CH9.6
 # contains legitimate class_name inheritance chains, so refresh the generated
 # cache before loading the graphical composition instead of modifying accepted
@@ -99,17 +111,27 @@ $Preflight = Invoke-GodotCaptured -Arguments @(
     "--path", $Root,
     "--quit"
 )
-$PreflightFatal = ""
-foreach ($Marker in $FatalMarkers) {
-    if (([string]$Preflight.OutputText).Contains($Marker)) {
-        $PreflightFatal = $Marker
-        break
-    }
-}
+$PreflightFatal = Get-FatalGodotMarker -OutputText ([string]$Preflight.OutputText)
 if ([int]$Preflight.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($PreflightFatal)) {
     throw "Godot class-cache preflight failed (exit=$($Preflight.ExitCode), fatal_marker=$PreflightFatal). Run RUN_FPE_RESEARCH_TESTS.ps1 for the captured diagnostics."
 }
 Write-Host "Godot class-cache preflight: PASS" -ForegroundColor Green
+
+# Editor scanning alone does not guarantee that the complete FPE composition
+# parses. Run the exact scene-load gate before opening a graphical window so a
+# parse/compile regression cannot silently fall through to the CH9.6 child lab.
+Write-Host "Validating FPE graphical composition" -ForegroundColor Cyan
+$SceneGate = Invoke-GodotCaptured -Arguments @(
+    "--headless",
+    "--path", $Root,
+    "--script", "res://tests/characters/test_first_person_embodiment_lab_load.gd"
+)
+$SceneGateFatal = Get-FatalGodotMarker -OutputText ([string]$SceneGate.OutputText)
+$SceneGatePass = ([string]$SceneGate.OutputText).Contains("FirstPersonEmbodiment graphical scene load: PASS")
+if ([int]$SceneGate.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($SceneGateFatal) -or -not $SceneGatePass) {
+    throw "FPE graphical composition preflight failed (exit=$($SceneGate.ExitCode), fatal_marker=$SceneGateFatal, pass_marker=$SceneGatePass). Run RUN_FPE_RESEARCH_TESTS.ps1 before PLAY."
+}
+Write-Host "FPE graphical composition preflight: PASS" -ForegroundColor Green
 
 $GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
