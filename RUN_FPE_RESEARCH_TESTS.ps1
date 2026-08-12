@@ -149,6 +149,14 @@ $Tests = @(
         PassMarker = "FPE R2 S4 two-hand viewmodel: PASS"
     },
     @{
+        Path = "res://tests/characters/test_fpe_r2_s5_secondary_hand_support.gd"
+        PassMarker = "FPE R2 S5 secondary-hand support: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_s5_two_hand_third_person_presenter.gd"
+        PassMarker = "FPE R2 S5 two-hand third-person presenter: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_fpe_sandbox_owner_collision_isolation.gd"
         PassMarker = "FPE sandbox owner collision isolation: PASS"
     },
