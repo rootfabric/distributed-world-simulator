@@ -23,6 +23,81 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path $GodotPath)) {
     throw "Godot executable not found. Pass -GodotPath or set GODOT_BIN."
 }
 
+$FatalMarkers = @(
+    "SCRIPT ERROR:",
+    "Parse Error:",
+    "Compile Error:",
+    "ERROR: Failed to load script"
+)
+
+function Invoke-GodotCaptured {
+    param(
+        [string[]]$Arguments
+    )
+
+    $OutputLines = [System.Collections.Generic.List[string]]::new()
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $NativePreference = Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue
+    $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
+    $ExitCode = 1
+    try {
+        # Windows PowerShell can surface native stderr as ErrorRecord objects.
+        # Keep them in the captured stream instead of letting $ErrorActionPreference=Stop
+        # abort before we can apply the explicit Godot fatal-marker policy below.
+        $ErrorActionPreference = "Continue"
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+        }
+        & $GodotPath @Arguments 2>&1 | ForEach-Object {
+            $Line = [string]$_
+            $OutputLines.Add($Line)
+            Write-Host $Line
+        }
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+        if ($null -ne $NativePreference) {
+            Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $PreviousNativePreference
+        }
+    }
+
+    return @{
+        ExitCode = $ExitCode
+        OutputText = ($OutputLines -join "`n")
+    }
+}
+
+function Get-FatalGodotMarker {
+    param(
+        [string]$OutputText
+    )
+    foreach ($Marker in $FatalMarkers) {
+        if ($OutputText.Contains($Marker)) {
+            return $Marker
+        }
+    }
+    return ""
+}
+
+# FPE is commonly exercised from worktrees that switch between long-lived
+# research/control branches. Godot resolves class_name dependencies through
+# .godot/global_script_class_cache.cfg. Refresh that cache before loading CH9.6
+# so a stale cache cannot make accepted classes appear missing.
+Write-Host "Refreshing Godot global script class cache" -ForegroundColor Cyan
+$Preflight = Invoke-GodotCaptured -Arguments @(
+    "--headless",
+    "--editor",
+    "--path", $Root,
+    "--quit"
+)
+$PreflightFatal = Get-FatalGodotMarker -OutputText ([string]$Preflight.OutputText)
+if ([int]$Preflight.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($PreflightFatal)) {
+    Write-Host "FAIL: Godot class-cache preflight (exit=$($Preflight.ExitCode), fatal_marker=$PreflightFatal)" -ForegroundColor Red
+    exit 1
+}
+Write-Host "PASS: Godot class-cache preflight" -ForegroundColor Green
+
 $Tests = @(
     @{
         Path = "res://tests/characters/test_first_person_embodiment_contract.gd"
@@ -34,48 +109,24 @@ $Tests = @(
     }
 )
 
-$FatalMarkers = @(
-    "SCRIPT ERROR:",
-    "Parse Error:",
-    "Compile Error:",
-    "ERROR: Failed to load script"
-)
-
-$Failed = $false
 foreach ($Test in $Tests) {
     $TestPath = [string]$Test.Path
     Write-Host "Running $TestPath" -ForegroundColor Cyan
 
-    $OutputLines = [System.Collections.Generic.List[string]]::new()
-    & $GodotPath --headless --path $Root --script $TestPath 2>&1 | ForEach-Object {
-        $Line = [string]$_
-        $OutputLines.Add($Line)
-        Write-Host $Line
-    }
-    $ExitCode = $LASTEXITCODE
-    $OutputText = $OutputLines -join "`n"
+    $Run = Invoke-GodotCaptured -Arguments @(
+        "--headless",
+        "--path", $Root,
+        "--script", $TestPath
+    )
+    $EngineFatal = Get-FatalGodotMarker -OutputText ([string]$Run.OutputText)
+    $PassMarkerSeen = ([string]$Run.OutputText).Contains([string]$Test.PassMarker)
 
-    $EngineError = $false
-    foreach ($Marker in $FatalMarkers) {
-        if ($OutputText.Contains($Marker)) {
-            $EngineError = $true
-            Write-Host "Detected fatal Godot marker: $Marker" -ForegroundColor Red
-            break
-        }
-    }
-
-    $PassMarkerSeen = $OutputText.Contains([string]$Test.PassMarker)
-    if ($ExitCode -ne 0 -or $EngineError -or -not $PassMarkerSeen) {
-        $Failed = $true
-        Write-Host "FAIL: $TestPath (exit=$ExitCode, engine_error=$EngineError, pass_marker=$PassMarkerSeen)" -ForegroundColor Red
-        break
+    if ([int]$Run.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($EngineFatal) -or -not $PassMarkerSeen) {
+        Write-Host "FAIL: $TestPath (exit=$($Run.ExitCode), fatal_marker=$EngineFatal, pass_marker=$PassMarkerSeen)" -ForegroundColor Red
+        exit 1
     }
 
     Write-Host "PASS: $TestPath" -ForegroundColor Green
-}
-
-if ($Failed) {
-    exit 1
 }
 
 Write-Host "FirstPersonEmbodiment focused tests: PASS" -ForegroundColor Green
