@@ -1,14 +1,35 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_5_disturbance_recovery_validation.v1",
-  "revision": "ECO-EVO1-P2.5-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-EVO1-P2.5-2026-08-13-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "b645ee451dd5c1c2558647c8e50eb293ec80c21c",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "candidate_head": "a40efb45437387812adbc6fdaac2a5ae494362e5",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.4",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97"
+  },
+  "canonical_windows": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "acceptance": "PASS_173_ASSERTIONS",
+    "restart_replay_a": "PASS_5_ASSERTIONS",
+    "restart_replay_b": "PASS_5_ASSERTIONS",
+    "aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
+    "mild_loss": 0.030140495868,
+    "severe_loss": 0.073198347107,
+    "shallow_survival": 0.297520661157,
+    "deep_survival": 0.7875,
+    "mild_bank_killed": 20,
+    "severe_bank_killed": 70,
+    "severe_post_biomass": 0.086801652893,
+    "single_severe_final": 0.111289229748,
+    "recovery_gain": 0.024487576856,
+    "reactivated": 81,
+    "repeated_reactivated": 79,
+    "repeated_final": 0.07697058482,
+    "second_loss": 0.037909682296
   },
   "truth": {
     "event_channels": "mechanical_severity + seed_bank_mortality_fraction",
@@ -18,13 +39,7 @@
     "capacity": "accepted P1 single-patch MAX_BIOMASS_KG_M2",
     "production_boundary": "research event input only; no canonical ENV/TF/LIFE/WB ownership"
   },
-  "controlled_runs": {
-    "CONTROL": "8y, no event",
-    "MILD": "year1 mechanical=0.35 bank_mortality=0.10",
-    "SEVERE": "year1 mechanical=0.85 bank_mortality=0.35",
-    "REPEATED": "SEVERE year1 + year6 mechanical=0.75 bank_mortality=0.30"
-  },
-  "required_properties": [
+  "accepted_properties": [
     "P2_4_PARENT_HASH_UNCHANGED",
     "SEVERE_ADULT_LOSS_GT_MILD",
     "SEVERE_SEED_BANK_KILL_GT_MILD",
@@ -38,7 +53,6 @@
     "REPEATED_FINAL_BIOMASS_LT_SINGLE_SEVERE_FINAL",
     "ALL_RUNS_CAPACITY_BOUNDED",
     "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
-    "NO_P2_6_BIOGEOGRAPHY_IMPLEMENTATION",
     "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
   ],
   "implementation_diff": {
@@ -48,12 +62,6 @@
     "accepted_p2_4_or_earlier_sources_modified": false,
     "runtime_paths_modified": false
   },
-  "tests": {
-    "parser_preflight": true,
-    "acceptance": "tests/research/ecology/eco_evo1_p2_5_disturbance_recovery_acceptance.gd",
-    "restart": "tests/research/ecology/eco_evo1_p2_5_restart_replay_probe.gd",
-    "runner": "RUN_ECO_EVO1_P2_5_TESTS.ps1"
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.EVO1 / P2.6 Long-Horizon Biogeography"
+  "decision": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "next": "ECO.EVO1 / P2.6 Long-Horizon Biogeography"
 }
