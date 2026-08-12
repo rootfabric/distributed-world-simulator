@@ -28,6 +28,7 @@ func _run() -> void:
 		_assert(lab.has_method("get_r2_s2_catalog_report"), "FPE R2 S2 catalog report is missing")
 		_assert(lab.has_method("get_r2_s3_hand_pose_report"), "FPE R2 S3 hand pose report is missing")
 		_assert(lab.has_method("get_r2_s4_two_hand_report"), "FPE R2 S4 two-hand report is missing")
+		_assert(lab.has_method("get_sandbox_collision_isolation_report"), "FPE sandbox owner-collision isolation report is missing")
 		_assert(lab.item_viewmodel_catalog != null, "FPE R2 S2 item viewmodel catalog is missing")
 		_assert(lab.held_item_grip_catalog != null, "FPE R2 S2/S4 grip profile catalog is missing")
 		var base_lab: Node = lab.get_node_or_null("CH9_6BaseLab")
