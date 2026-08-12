@@ -17,9 +17,14 @@ func _run() -> void:
 	if lab != null:
 		_assert(lab.has_method("get_first_person_embodiment_debug_snapshot"), "FPE graphical lab script did not bind")
 		var base_lab: Node = lab.get_node_or_null("CH9_6BaseLab")
-		_assert(base_lab != null, "FPE graphical lab does not compose accepted CH9.6 scene")
+		_assert(base_lab != null, "FPE graphical lab does not compose a CH9.6 host")
 		if base_lab != null:
-			_assert(String(base_lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_playable_network_equipment_lab.gd", "FPE graphical lab child is not the accepted CH9.6 script")
+			_assert(
+				String(base_lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_fpe_ch9_6_host.gd",
+				"FPE graphical lab child is not the throttled CH9.6 research host"
+			)
+			_assert(base_lab.has_method("get_fpe_status_performance_report"), "FPE CH9.6 host performance port is missing")
+			_assert(base_lab.has_method("get_network_debug_snapshot"), "FPE CH9.6 host no longer inherits accepted network lab behavior")
 		lab.free()
 	_finish()
 
