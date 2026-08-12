@@ -4,7 +4,7 @@ const Genome = preload("res://scripts/research/ecology/plant_genome_v1.gd")
 const EnvironmentSample = preload("res://scripts/research/ecology/environment_sample_v1.gd")
 const RecruitmentTraits = preload("res://scripts/research/ecology/plant_recruitment_traits_v1.gd")
 const P2_2 = preload("res://scripts/research/ecology/plant_establishment_seed_bank_experiment_v1.gd")
-const Engine = preload("res://scripts/research/ecology/plant_local_population_succession_v1.gd")
+const PopulationEngine = preload("res://scripts/research/ecology/plant_local_population_succession_v1.gd")
 
 const SCHEMA := "distributed_world_simulator.ecology.evo1_p2_3_local_population_succession_experiment.v1"
 const VERSION := "1.0.0"
@@ -39,8 +39,8 @@ static func run() -> Dictionary:
 		{"year_start": 0, "environment": open_environment},
 		{"year_start": 4, "environment": shade_environment},
 	]
-	var shift := Engine.simulate(strategies, shift_schedule, 12, true)
-	var open_control := Engine.simulate(strategies, open_schedule, 12, true)
+	var shift := PopulationEngine.simulate(strategies, shift_schedule, 12, true)
+	var open_control := PopulationEngine.simulate(strategies, open_schedule, 12, true)
 	if shift.is_empty() or open_control.is_empty():
 		return {}
 
@@ -49,8 +49,8 @@ static func run() -> Dictionary:
 	var matched_traits := RecruitmentTraits.create("recruitment-traits/p2-3-matched", 0.45, 3.0)
 	if matched_base.is_empty() or matched_long.is_empty() or matched_traits.is_empty():
 		return {}
-	var short_run := Engine.simulate([{"lineage_id": "lineage/p2-3-matched", "genome": matched_base, "recruitment_traits": matched_traits, "source_position": Vector2.ZERO}], open_schedule, 8, false)
-	var long_run := Engine.simulate([{"lineage_id": "lineage/p2-3-matched", "genome": matched_long, "recruitment_traits": matched_traits, "source_position": Vector2.ZERO}], open_schedule, 8, false)
+	var short_run := PopulationEngine.simulate([{"lineage_id": "lineage/p2-3-matched", "genome": matched_base, "recruitment_traits": matched_traits, "source_position": Vector2.ZERO}], open_schedule, 8, false)
+	var long_run := PopulationEngine.simulate([{"lineage_id": "lineage/p2-3-matched", "genome": matched_long, "recruitment_traits": matched_traits, "source_position": Vector2.ZERO}], open_schedule, 8, false)
 	if short_run.is_empty() or long_run.is_empty():
 		return {}
 
