@@ -5,7 +5,7 @@
 **Current finalization base:** `main @ f6d68fc7c594b371f48a9bcff056e2478e04f317`  
 **Current registry:** `78`  
 **Risk:** `CRITICAL`  
-**Status:** `FROZEN MUTABLE REVIEW TARGET / INDEPENDENT REVIEW PENDING / NO PROMOTION`
+**Status:** `FROZEN MUTABLE REVIEW TARGET / NO PROMOTION`
 
 Historical construction provenance is preserved separately and is never authorization:
 
@@ -307,6 +307,8 @@ Independent Reviewer PASS
         ↓
 Independent Verifier PASS
         ↓
+Director final gate PASS
+        ↓
 R3_REFRESHED_CANDIDATE_READY
         ↓
 HUMAN GLOBAL_ARCHITECTURE_PROMOTION
@@ -334,19 +336,22 @@ DIRECTIONAL_PC0_NON_RED                     REQUIRED EXTERNAL EVIDENCE
 EVIDENCE_MAP_BOUND_TO_EXACT_HEAD            REQUIRED EXTERNAL EVIDENCE
 INDEPENDENT_REVIEWER                        DISTINCT ROLE / REQUIRED BEFORE CANDIDATE READY
 INDEPENDENT_VERIFIER                        DISTINCT ROLE / REQUIRED BEFORE CANDIDATE READY
+DIRECTOR                                    DISTINCT ROLE / REQUIRED BEFORE CANDIDATE READY
 HUMAN_GLOBAL_ARCHITECTURE_PROMOTION         SEPARATE HUMAN GATE
 POST_R3_PC0                                 REQUIRED AFTER HUMAN-AUTHORIZED PROMOTION
 ```
 
-`Project Control`, PC0 results, Evidence Map completion, Reviewer/Verifier verdicts and exact review-target SHAs are external lifecycle evidence. They must be bound to the frozen target without being copied back into this immutable candidate as pass/pending state.
+`Project Control`, PC0 results, Evidence Map completion, Reviewer/Verifier/Director verdicts and exact review-target SHAs are external lifecycle evidence. They must be bound to the frozen target without being copied back into this immutable candidate as pass/pending state.
 
-Only separate clean Reviewer and Verifier sessions may advance the package to:
+Independent Reviewer and Independent Verifier must produce separate durable PASS evidence against the exact frozen target. A separate Director final gate is then required before:
 
 ```text
 R3_REFRESHED_CANDIDATE_READY
 ```
 
-Even that does not promote R3. Canonical promotion still requires a separate explicit:
+may be declared. Neither Reviewer nor Verifier declares the ready-state, and the Director final gate does not perform the Human promotion.
+
+Canonical promotion still requires a separate explicit:
 
 ```text
 GLOBAL_ARCHITECTURE_PROMOTION

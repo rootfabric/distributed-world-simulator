@@ -53,6 +53,8 @@ C22 MAIN_INTEGRATED
         ↓
 GLOBAL-P0 R3 exact-current-main refresh/final verification
         ↓
+CRITICAL Reviewer → Verifier → Director final-gate sequence
+        ↓
 R3_REFRESHED_CANDIDATE_READY
         ↓
 HUMAN GLOBAL_ARCHITECTURE_PROMOTION
@@ -82,6 +84,10 @@ fresh exact-head Evidence Map
 Independent Reviewer PASS
         ↓
 Independent Verifier PASS
+        ↓
+Director final gate PASS
+        ↓
+R3_REFRESHED_CANDIDATE_READY
         ↓
 STOP at HUMAN GLOBAL_ARCHITECTURE_PROMOTION
 ```

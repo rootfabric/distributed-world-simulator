@@ -20,7 +20,7 @@
     "c22_state": "MAIN_INTEGRATED",
     "h0_1_runtime_slot": "RELEASED",
     "r3_branch_contains_exact_main_as_ancestor": true,
-    "note": "Fresh post-C22 facts define the frozen R3 candidate epoch only. Project Control/PC0/Evidence Map are external evidence bound to the exact frozen target; Reviewer/Verifier and human promotion remain separate gates."
+    "note": "Fresh post-C22 facts define the frozen R3 candidate epoch only. Project Control/PC0/Evidence Map are external evidence bound to the exact frozen target; Reviewer/Verifier/Director and human promotion remain separate gates."
   },
   "completed_candidate_guards": [
     "C22_MAIN_INTEGRATED",
@@ -39,7 +39,8 @@
   ],
   "external_review_required": [
     "INDEPENDENT_REVIEWER_PASS",
-    "INDEPENDENT_VERIFIER_PASS"
+    "INDEPENDENT_VERIFIER_PASS",
+    "DIRECTOR_FINAL_GATE_PASS"
   ],
   "human_gate_required": [
     "GLOBAL_ARCHITECTURE_PROMOTION"

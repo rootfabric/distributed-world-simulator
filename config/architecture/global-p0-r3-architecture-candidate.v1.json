@@ -97,8 +97,12 @@
       "Freeze mutable candidate head",
       "External exact-head Project Control plus standard and directional PC0 NON_RED against the frozen target",
       "Schema-valid Evidence Map bound to the same frozen target",
-      "Independent Reviewer and Verifier against the frozen target",
-      "Stop at HUMAN GLOBAL_ARCHITECTURE_PROMOTION"
+      "Independent Reviewer against the exact frozen target",
+      "Independent Verifier against the same exact frozen target",
+      "Director final gate after durable Independent Reviewer and Independent Verifier PASS evidence",
+      "R3_REFRESHED_CANDIDATE_READY may be declared only after Director final gate PASS",
+      "Separate HUMAN GLOBAL_ARCHITECTURE_PROMOTION after candidate-ready state",
+      "Mandatory post-R3 PC0 after human-authorized promotion"
     ]
   },
   "principles": [
@@ -282,6 +286,7 @@
   "remaining_promotion_blockers": [
     "INDEPENDENT_REVIEWER_PASS_REQUIRED",
     "INDEPENDENT_VERIFIER_PASS_REQUIRED",
+    "DIRECTOR_FINAL_GATE_REQUIRED",
     "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
   ],
   "target_checkpoint": "R3_REFRESHED_CANDIDATE"

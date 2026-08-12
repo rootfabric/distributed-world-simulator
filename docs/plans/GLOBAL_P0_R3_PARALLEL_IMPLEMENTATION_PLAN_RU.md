@@ -34,7 +34,7 @@ Current critical path:
 ```text
 C22 MAIN_INTEGRATED
         ↓
-R3 review-surface repair
+R3 semantic lifecycle repair
         ↓
 freeze new exact mutable review target
         ↓
@@ -46,11 +46,15 @@ standard + directional PC0 NON_RED
 external Evidence Map
 bound to exact frozen mutable target
         ↓
-R3_REVIEW_SURFACE_REPAIR_COMPLETE
-        ↓
 Independent Reviewer
         ↓
+external lifecycle synchronization
+        ↓
 Independent Verifier
+        ↓
+external lifecycle synchronization
+        ↓
+Director final gate
         ↓
 R3_REFRESHED_CANDIDATE_READY
         ↓
@@ -60,6 +64,8 @@ mandatory post-R3 PC0
         ↓
 fresh H0.2 / NX.C1 dispatch
 ```
+
+External lifecycle synchronization only rolls durable control/evidence state between approval roles; it is not an approval role and is not candidate-internal immutable truth.
 
 `GLOBAL_ARCHITECTURE_PROMOTION` remains a CRITICAL human gate. Nothing in this plan authorizes it automatically.
 
@@ -348,6 +354,7 @@ Allowed:
 GLOBAL-R3 repair/final evidence work
 Independent Reviewer session
 Independent Verifier session
+Director final-gate session
 H0.2/NX.C1 preparation only
 H0.3 design/preparation only
 V0 design/preparation only
@@ -607,7 +614,7 @@ Research/foundation work without direct V0 payoff can still be valid, but it doe
 ## 9. R3 promotion sequence
 
 ```text
-R3 review-surface repair
+R3 semantic lifecycle repair
     ↓
 freeze new exact mutable review target
     ↓
@@ -623,11 +630,15 @@ directional PC0 NON_RED
 external Evidence Map
 bound to exact frozen mutable target
     ↓
-R3_REVIEW_SURFACE_REPAIR_COMPLETE
-    ↓
 Independent Reviewer PASS
     ↓
+external lifecycle synchronization
+    ↓
 Independent Verifier PASS
+    ↓
+external lifecycle synchronization
+    ↓
+Director final gate PASS
     ↓
 R3_REFRESHED_CANDIDATE_READY
     ↓
@@ -640,7 +651,7 @@ mandatory post-R3 PC0
 
 The CURRENT lifecycle never uses a historical V2/V3 review target as authorization. Exact SHA binding belongs to the frozen Git target and its external Evidence Map, not to self-referential prose in this plan.
 
-No implementer session may self-award the Reviewer or Verifier verdict.
+No implementer session may self-award the Reviewer, Verifier, or Director verdict.
 
 ## 10. Long-range convergence
 
