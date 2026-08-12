@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_7_lineage_divergence_validation.v1",
+  "revision": "ECO-EVO1-P2.7-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "8da9c039a8591d61a0d542aa4e4695a51a9d20d6",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.6",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c"
+  },
+  "truth": {
+    "diagnostic_only": true,
+    "canonical_species_declared": false,
+    "dimensions": ["shared_ancestry","split_age","spatial_isolation","connection_history","genome_distance","recruitment_trait_distance","ecological_history_distance"],
+    "aggregation": "NO_WEIGHTED_SPECIATION_SCORE; candidate is conjunction of explicit evidence gates",
+    "genome_source": "accepted PlantGenome fields",
+    "recruitment_source": "accepted P2.2 recruitment traits",
+    "environment_source": "accepted EnvironmentSample dimensions",
+    "geography_semantics": "post-split observed patch occupancy; research evidence only"
+  },
+  "candidate_policy": {
+    "min_split_age_years": 12,
+    "min_isolation_fraction": 0.75,
+    "max_connection_fraction": 0.10,
+    "min_genome_distance": 0.18,
+    "min_ecological_history_distance": 0.10,
+    "policy_status": "RESEARCH_DETECTION_POLICY_NOT_EMPIRICAL_SPECIES_DEFINITION"
+  },
+  "controlled_cases": {
+    "isolated_diverged": "must candidate",
+    "connected_diverged": "must not candidate despite same genome/ecology divergence",
+    "isolated_similar": "must not candidate despite long isolation",
+    "recent_diverged": "must not candidate despite divergence/isolation because split age is short"
+  },
+  "required_properties": [
+    "P2_6_PARENT_HASH_UNCHANGED",
+    "ISOLATED_DIVERGED_IS_CANDIDATE",
+    "CONNECTED_DIVERGED_IS_NOT_CANDIDATE",
+    "ISOLATED_SIMILAR_IS_NOT_CANDIDATE",
+    "RECENT_DIVERGED_IS_NOT_CANDIDATE",
+    "ALL_EVIDENCE_DIMENSIONS_EXPOSED_SEPARATELY",
+    "CANDIDATE_REQUIRES_SHARED_ANCESTRY",
+    "CANDIDATE_REQUIRES_MINIMUM_SPLIT_AGE",
+    "CANDIDATE_REQUIRES_SPATIAL_ISOLATION",
+    "CANDIDATE_REQUIRES_LOW_CONNECTION",
+    "CANDIDATE_REQUIRES_GENOME_DIVERGENCE",
+    "CANDIDATE_REQUIRES_ECOLOGICAL_HISTORY_DIVERGENCE",
+    "RECRUITMENT_DISTANCE_REPORTED_INDEPENDENTLY",
+    "NO_CANONICAL_SPECIES_DECLARATION",
+    "NO_SPECIES_ID_ASSIGNMENT",
+    "NO_BIOME_LOOKUP",
+    "NO_WEIGHTED_FITNESS_OR_SPECIATION_SCORE",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "a47127b09dde280525bf5e076b8e3a99d8a7d9a9",
+    "head": "8da9c039a8591d61a0d542aa4e4695a51a9d20d6",
+    "changed_files": 5,
+    "accepted_p2_6_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "parser_preflight": true,
+    "acceptance": "tests/research/ecology/eco_evo1_p2_7_lineage_divergence_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_7_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1"
+  },
+  "local_sanity": "NO_EXACT_WINDOWS_PASS_CLAIMED_BEFORE_USER_GATE",
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 / P2.8 Deterministic Save/Restart Plant World Proof"
+}

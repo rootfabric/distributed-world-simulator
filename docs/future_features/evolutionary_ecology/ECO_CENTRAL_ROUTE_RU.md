@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.7 READY`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.7 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -33,29 +33,6 @@ P2.5    292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696
 P2.6    3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c
 ```
 
-## P2.6 accepted proof
-
-Exact Windows / Godot `4.7.1.stable.double.custom_build.a13da4feb` produced:
-
-```text
-colonized=1
-extinct=18
-recolonized=19
-control_extinction=-1
-long_patch_years=90
-short_patch_years=61
-far_long=29
-far_short=0
-event_absence=1
-control_absence=0
-final_reoccupied=true
-regional_persist=true
-```
-
-Two fresh processes reproduced exact aggregate `3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c`.
-
-Thus the accepted regional ecology can express `colonization -> local extinction -> recolonization` while the lineage persists elsewhere, without biome/species placement rules.
-
 ## Central route
 
 ```text
@@ -73,30 +50,90 @@ P2.5 Disturbance + Recovery ACCEPTED
    ↓
 P2.6 Long-Horizon Biogeography ACCEPTED
    ↓
-P2.7 Lineage Divergence / Speciation Candidate Diagnostics ← CURRENT
-   ↓
+P2.7 Lineage Divergence / Speciation Candidate Diagnostics ← CURRENT CANDIDATE
+   ↓ PASS
 P2.8 Deterministic Save/Restart Plant World Proof
 ```
 
-## P2.7 boundary
+## P2.7 implementation
 
-P2.7 is a diagnostic layer over lineage evidence. It may consume:
+Implementation head: `8da9c039a8591d61a0d542aa4e4695a51a9d20d6`.
 
-- ancestry/split chronology;
-- inherited PlantGenome and recruitment traits;
-- P2.6 geographic occupancy history;
-- ecological-history summaries;
-- evidence of continued connectivity/gene-flow opportunity.
+P2.7 adds a **diagnostic-only** lineage evidence contract. It does not create species taxonomy and does not simulate a mutation trajectory tuned to a desired endpoint.
 
-It must expose the dimensions separately rather than hide them in one fitness score. A `SPECIATION_CANDIDATE` marker is only a research flag requiring convergent evidence. It is explicitly **not** a canonical species declaration and cannot create or place a `species_id`.
+### Evidence dimensions remain separate
 
-Required controls must distinguish at least:
+```text
+shared ancestry
+split age
+spatial isolation
+connection history
+genome distance
+recruitment-trait distance
+ecological-history distance
+```
 
-1. isolated + substantially diverged lineage pair -> candidate;
-2. substantially diverged but still connected pair -> not candidate;
-3. isolated but only weakly diverged pair -> not candidate;
-4. recent/near-identical pair -> not candidate.
+There is no weighted scalar `speciation score` or combined fitness. The research candidate flag is a conjunction of explicit gates:
 
-The detector therefore cannot reduce speciation to distance alone, isolation alone, biome membership, or an arbitrary species table.
+```text
+split age >= 12 y
+isolation fraction >= 0.75
+connection fraction <= 0.10
+genome distance >= 0.18
+ecological-history distance >= 0.10
+shared ancestry required
+```
 
-P2.8 remains blocked until P2.7 exact-Windows acceptance.
+These thresholds are candidate-detection policy, not a universal species definition.
+
+### Controlled falsification matrix
+
+```text
+ISOLATED + DIVERGED
+  -> candidate=true
+
+DIVERGED + CONNECTED
+  -> candidate=false
+
+ISOLATED + SIMILAR
+  -> candidate=false
+
+RECENT + DIVERGED + ISOLATED
+  -> candidate=false
+```
+
+This prevents geography alone, genome distance alone or a recent dramatic phenotype contrast from being mistaken for speciation evidence.
+
+Every positive candidate still exports:
+
+`canonical_species_declared=false`.
+
+The kernel contains no `species_id` assignment, no biome lookup and no species placement table.
+
+### Implementation boundary
+
+`a47127b09dde280525bf5e076b8e3a99d8a7d9a9 -> 8da9c039a8591d61a0d542aa4e4695a51a9d20d6` is one commit adding exactly five P2.7 research/test files. Accepted P2.6-or-earlier sources and runtime paths are unchanged.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_7_TESTS.ps1 -GodotPath $Godot
+```
+
+The gate is fail-closed: parser/preload preflight -> full accepted P2.6 regression -> P2.7 acceptance -> two fresh-process replay probes.
+
+Until PASS:
+
+```text
+P2.7 = IMPLEMENTED_CANDIDATE
+P2.7 != ACCEPTED
+P2.8 = BLOCKED
+```
+
+Current resolver: `RUN EVO1/P2.7 EXACT WINDOWS LINEAGE DIVERGENCE DIAGNOSTICS GATE`.
