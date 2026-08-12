@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.global_p0_r3_prepromotion_guards.v1",
   "candidate_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
-  "status": "R3_PREPROMOTION_PACKAGE_READY",
-  "mode": "PREPARATION_ONLY_NO_PROMOTION",
+  "status": "R3_EXACT_CURRENT_MAIN_REFRESHED_FINAL_VERIFICATION_PENDING",
+  "mode": "FINALIZATION_ONLY_NO_PROMOTION",
   "candidate_construction_provenance": {
     "main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
     "registry_generation": 75,
@@ -11,36 +11,18 @@
   "prepromotion_observation": {
     "main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
     "registry_generation": 77,
-    "r3_candidate_head_before_package": "fbc563c80eb55e960356f23e91bfb8f436bbff9a",
-    "active_runtime_frontier": {
-      "program": "H0.1",
-      "rerun": "R7",
-      "pr": 88,
-      "head_sha": "9ca9527a27b30b39c18b66bf5ae18bc31350d25d",
-      "state": "R7_CANCELLED_FRESHNESS_FENCE_DEFECT_SUCCESSOR_REQUIRED",
-      "runtime_slot_owner": "H0.1_PRIMARY_LANE_SUCCESSOR_PENDING"
-    },
-    "note": "R7 is historical failed-closed provenance, not authorization. A fresh H0.1 successor must repair the harness freshness fence and reach H0_1_PASS/C22 MAIN_INTEGRATED before R3 final repin or promotion. All observations must still be replaced by fresh post-C22 main/registry facts before any promotion decision."
+    "note": "Historical pre-C22 preparation observation only; retained as provenance and not authorization."
   },
-  "ready_now_guards": [
-    "R3_OWNERSHIP_INTERSECTION_REVIEW_PREPARED",
-    "R3_EVIDENCE_MAP_STRUCTURE_PREPARED",
-    "REVIEWER_CHECKLIST_PREPARED",
-    "VERIFIER_CHECKLIST_PREPARED",
-    "PC0_EXECUTION_PLAN_PREPARED",
-    "DIRECTIONAL_PC0_PLAN_PREPARED",
-    "CURRENT_MAIN_FRESHNESS_PROCEDURE_PREPARED",
-    "PROMOTION_CHECKLIST_PREPARED",
-    "POST_PROMOTION_PC0_CHECKLIST_PREPARED",
-    "R2_TO_R3_TRANSITION_AUDIT_PREPARED"
-  ],
-  "post_c22_repin_required": [
-    "C22_MAIN_INTEGRATED_ON_ORIGIN_MAIN",
-    "H0_1_RUNTIME_SLOT_RELEASED",
-    "FRESH_ORIGIN_MAIN_SHA_CAPTURED",
-    "FRESH_REGISTRY_GENERATION_CAPTURED",
-    "R3_REPIN_OR_REBASE_TO_FRESH_POST_C22_MAIN",
-    "ALL_SOURCE_PINS_AND_FRONTIER_GUARDS_REFRESHED",
+  "current_authorization_epoch": {
+    "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+    "registry_generation": 78,
+    "canonical_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "c22_state": "MAIN_INTEGRATED",
+    "h0_1_runtime_slot": "RELEASED",
+    "r3_branch_contains_exact_main_as_ancestor": true,
+    "note": "Fresh post-C22 facts for R3 final verification only. They do not authorize promotion without final evidence and the human gate."
+  },
+  "finalization_required": [
     "CONTROL_PROJECT_PASS",
     "PC0_NON_RED",
     "DIRECTIONAL_PC0_NON_RED",
@@ -50,28 +32,25 @@
     "INDEPENDENT_REVIEWER_PASS",
     "INDEPENDENT_VERIFIER_PASS"
   ],
-  "human_gate_required": [
-    "GLOBAL_ARCHITECTURE_PROMOTION"
-  ],
+  "human_gate_required": ["GLOBAL_ARCHITECTURE_PROMOTION"],
   "ownership_invariants": {
     "ITEM": "STABLE_CANONICAL_FOUNDATION",
     "V0": "COMPOSITION_CONSUMER_ONLY",
-    "H0_3": "DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAME_TIME_OWNER",
-    "ECO": "ADVISORY_RESEARCH_NOT_RUNTIME_SCHEDULER",
+    "H0_3": "DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER",
+    "ECO": "ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER",
+    "ECON": "RESERVED_FUTURE_ECONOMY_PROGRAM",
     "H0_1_after_c22_main_integrated": "MUST_NOT_OWN_RUNTIME_SLOT",
     "NX_C1": "MAY_START_ONLY_FROM_FRESH_POST_R3_CANONICAL_MAIN"
+  },
+  "directional_watches": {
+    "G_to_ECO": "ADVISORY_NON_GLOBAL_BLOCKING",
+    "CH_to_NX": "FUTURE_NX_GLOBAL_BLOCKING_GATE_NOT_CURRENT_R3_BLOCKER"
   },
   "authorization_policy": {
     "stale_sha_authorizes": false,
     "stale_registry_generation_authorizes": false,
     "branch_local_state_authorizes": false,
     "historical_evidence_authorizes_new_runtime": false,
-    "required_authorization_basis": [
-      "FRESH_CURRENT_MAIN",
-      "FRESH_CANONICAL_REGISTRY",
-      "POST_C22_REPINNED_R3_CANDIDATE",
-      "NON_RED_CONTROL_VALIDATION",
-      "HUMAN_GLOBAL_ARCHITECTURE_PROMOTION_GATE"
-    ]
+    "promotion_requires_human_gate": true
   }
 }
