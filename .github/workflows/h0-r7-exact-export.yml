@@ -35,6 +35,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import textwrap
 
           state_path = Path("scripts/harness/state_builder.py")
           state = state_path.read_text(encoding="utf-8")
@@ -90,16 +91,11 @@ jobs:
                   raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
               return value
           '''
-          import textwrap
           state = state[:start] + textwrap.dedent(replacement) + state[end:]
           old_call = "implementation_head = _git_implementation_head(root, execution_dir)"
           if state.count(old_call) != 1:
               raise SystemExit("IMPLEMENTATION_HEAD_CALL_NOT_UNIQUE")
-          state = state.replace(
-              old_call,
-              'implementation_head = _git_implementation_head(root, execution_dir, active["definition"])',
-              1,
-          )
+          state = state.replace(old_call, 'implementation_head = _git_implementation_head(root, execution_dir, active["definition"])', 1)
           state_path.write_text(state, encoding="utf-8")
 
           test_path = Path("tests/harness/test_h0_control_harness.py")
@@ -111,34 +107,28 @@ jobs:
           tests = tests.replace(old_import, new_import, 1)
           test_start = tests.index("    def test_implementation_freshness_scope_declares_runtime_and_excludes_ledger(self):\n")
           test_end = tests.index("    def test_current_diff_stays_inside_declared_scope(self):\n", test_start)
-          test_block = '''    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):
-              pathspecs = _implementation_pathspecs(ROOT, ACTIVE_EXECUTION, self.work_order)
-              self.assertIn("scripts/harness/**", pathspecs)
-              self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", pathspecs)
-              self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", pathspecs)
-              execution_prefix = f"config/control/harness/executions/{self.epoch['epoch_id']}/"
-              self.assertNotIn(f"{execution_prefix}**", pathspecs)
-              self.assertIn(f"{execution_prefix}transition-table.v1.json", pathspecs)
-              self.assertFalse(any(path.startswith("config/control/branches/") for path in pathspecs))
-              self.assertFalse(any(path.startswith("docs/checkpoints/") for path in pathspecs))
-
-              state = build_state(ROOT, ACTIVE_EXECUTION)
-              expected = subprocess.run(
-                  ["git", "log", "-1", "--format=%H", "--", *pathspecs],
-                  cwd=ROOT,
-                  text=True,
-                  capture_output=True,
-                  check=True,
-              ).stdout.strip()
-              self.assertEqual(expected, state["repository"]["implementation_head_sha"])
-              self.assertEqual(expected, state["review"]["review_target_head_sha"])
-
-          '''
-          tests = tests[:test_start] + textwrap.dedent(test_block).replace("\ndef ", "\n    def ", 1) + tests[test_end:]
-          # The block begins with a class-level method and must retain four spaces.
-          if not tests[test_start:].startswith("    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence"):
-              block = textwrap.indent(textwrap.dedent(test_block), "    ")
-              tests = tests[:test_start] + block + tests[test_end:]
+          block = (
+              "    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):\n"
+              "        pathspecs = _implementation_pathspecs(ROOT, ACTIVE_EXECUTION, self.work_order)\n"
+              "        self.assertIn(\"scripts/harness/**\", pathspecs)\n"
+              "        self.assertIn(\"scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd\", pathspecs)\n"
+              "        self.assertIn(\"RUN_WORLD_REGRESSION_TESTS.ps1\", pathspecs)\n"
+              "        execution_prefix = f\"config/control/harness/executions/{self.epoch['epoch_id']}/\"\n"
+              "        self.assertNotIn(f\"{execution_prefix}**\", pathspecs)\n"
+              "        self.assertIn(f\"{execution_prefix}transition-table.v1.json\", pathspecs)\n"
+              "        self.assertFalse(any(path.startswith(\"config/control/branches/\") for path in pathspecs))\n"
+              "        self.assertFalse(any(path.startswith(\"docs/checkpoints/\") for path in pathspecs))\n"
+              "\n"
+              "        state = build_state(ROOT, ACTIVE_EXECUTION)\n"
+              "        expected = subprocess.run(\n"
+              "            [\"git\", \"log\", \"-1\", \"--format=%H\", \"--\", *pathspecs],\n"
+              "            cwd=ROOT, text=True, capture_output=True, check=True,\n"
+              "        ).stdout.strip()\n"
+              "        self.assertEqual(expected, state[\"repository\"][\"implementation_head_sha\"])\n"
+              "        self.assertEqual(expected, state[\"review\"][\"review_target_head_sha\"])\n"
+              "\n"
+          )
+          tests = tests[:test_start] + block + tests[test_end:]
           test_path.write_text(tests, encoding="utf-8")
           PY
           python -m py_compile scripts/harness/state_builder.py tests/harness/test_h0_control_harness.py
