@@ -5,11 +5,11 @@
   "checkpoint": "R3_FINAL_GATE_SCHEMA_CONTRACT_REPAIR_COMPLETE",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "f78847624a9016d1e8ed39c12b5291d91037ea53",
-  "intent": "Conform the R3 final-gate Evidence Map and Human Attention control artifacts to their canonical Draft 2020-12 schemas without changing the frozen V6 architecture candidate or satisfying any pending independent, Director, or human gate.",
-  "root_cause_or_reason": "The predecessor control head 2dfb4721ac30388878f015e750fc1ba6ae113e43 serialized both structured final-gate control records with parallel field vocabularies rejected by their canonical schemas. Project Control run #313 succeeded without validating these instances against the harness schemas, leaving a separate non-blocking harness enforcement gap.",
+  "intent": "Conform the R3 final-gate structured control artifacts to their canonical Draft 2020-12 schemas and roll the active external lifecycle forward after the existing durable Independent Reviewer PASS, without changing the frozen V6 architecture candidate or satisfying any pending Verifier, Director, or human gate.",
+  "root_cause_or_reason": "The predecessor control head 2dfb4721ac30388878f015e750fc1ba6ae113e43 serialized both structured final-gate control records with parallel field vocabularies rejected by their canonical schemas. Project Control run #313 succeeded without validating these instances against the harness schemas, leaving a separate non-blocking harness enforcement gap. The later durable Reviewer record at control predecessor 6870b3d24a53cc6d3ea708c1c6e753a40a7a303f passed the exact frozen V6 target and requires active lifecycle state to advance to Independent Verifier next.",
   "changed_surfaces": [
     "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json",
-    "artifacts/control-global-p0-r3-refresh-r1/human-attention-global-architecture-promotion.v1.json"
+    "config/control/branches/control__global-p0-r3-refresh-r1.v1.json"
   ],
   "canonical_owner": "MAIN/GLOBAL_ARCHITECTURE_CONTROL",
   "entry_points": [
@@ -21,7 +21,6 @@
     "config/control/harness/review-policy.v1.json"
   ],
   "callers": [
-    "SESSION R: DURABLE INDEPENDENT REVIEWER RE-ATTESTATION",
     "SESSION V: INDEPENDENT VERIFIER after durable Reviewer PASS",
     "Director final gate after durable Reviewer and Verifier PASS",
     "HUMAN GLOBAL_ARCHITECTURE_PROMOTION only after prior gates complete"
@@ -29,15 +28,21 @@
   "callees": [
     "config/architecture/global-p0-r3-architecture-candidate.v1.json",
     "artifacts/control-global-p0-r3-refresh-r1/post-build-critique.v1.json",
-    "artifacts/control-global-p0-r3-refresh-r1/human-attention-global-architecture-promotion.v1.json"
+    "artifacts/control-global-p0-r3-refresh-r1/human-attention-global-architecture-promotion.v1.json",
+    "artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V6-FINAL-REVIEW-001.v1.json"
   ],
   "sibling_surfaces_checked": [
     "source_main_sha=f6d68fc7c594b371f48a9bcff056e2478e04f317",
     "R3_FINAL_MUTABLE_HEAD_V6=f78847624a9016d1e8ed39c12b5291d91037ea53",
     "schema-invalid predecessor=2dfb4721ac30388878f015e750fc1ba6ae113e43",
-    "evidence_head_sha remains bound to the exact frozen mutable V6 target rather than the external control commit",
+    "pre-review schema-valid control head=fc74bc42dc92e3eaabe79788b35e51bb7c3bab16",
+    "durable Reviewer control predecessor=6870b3d24a53cc6d3ea708c1c6e753a40a7a303f",
+    "durable Reviewer PASS record artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V6-FINAL-REVIEW-001.v1.json binds reviewed_head_sha=f78847624a9016d1e8ed39c12b5291d91037ea53",
+    "evidence_head_sha remains bound to the exact frozen mutable V6 target rather than any external control commit",
     "post-build critique remains unchanged with verdict NO_MATERIAL_REFACTOR_REQUIRED",
-    "R3_REFRESHED_CANDIDATE prepares Human Attention before human_gate_after=GLOBAL_ARCHITECTURE_PROMOTION; OPEN does not satisfy the human gate",
+    "Human Attention remains OPEN and blocking; no Human GLOBAL_ARCHITECTURE_PROMOTION decision has been taken",
+    "Independent Verifier is PENDING / NEXT; Director final gate is PENDING",
+    "R3_REFRESHED_CANDIDATE_READY=NO; GLOBAL_ARCHITECTURE_PROMOTION=NOT_PERFORMED",
     "no V7 candidate created",
     "no runtime/domain or architecture-candidate surface changed"
   ],
@@ -47,9 +52,8 @@
   "full_regression": "NOT_REQUIRED",
   "pc0": "NON_RED",
   "directional_pc0": "NON_RED",
-  "production_diff_summary": "Bounded final-gate control/evidence repair only: the Evidence Map and Human Attention instances are normalized to canonical schema vocabulary. No canonical schema, architecture candidate, architecture ownership, runtime, or domain implementation is changed.",
+  "production_diff_summary": "Bounded post-review lifecycle roll-forward only: active external control now records the existing durable Independent Reviewer PASS and advances NEXT to the distinct Independent Verifier gate. The frozen candidate, canonical schemas, architecture ownership, runtime/domain implementation, Human Attention status, and promotion state are unchanged.",
   "remaining_risks": [
-    "Durable Independent Reviewer re-attestation is pending.",
     "Durable Independent Verifier attestation is pending.",
     "Director final gate is pending.",
     "Human GLOBAL_ARCHITECTURE_PROMOTION decision is pending; the Human Attention item remains OPEN and no human decision has been taken.",
@@ -58,11 +62,6 @@
   ],
   "required_fixes": [],
   "rank_up_moves": [],
-  "evidence_gaps": [
-    "No durable Independent Reviewer PASS record exists for exact frozen target f78847624a9016d1e8ed39c12b5291d91037ea53 at this repaired control head.",
-    "No durable Independent Verifier PASS record exists for exact frozen target f78847624a9016d1e8ed39c12b5291d91037ea53 at this repaired control head.",
-    "No Director final-gate PASS record exists for exact frozen target f78847624a9016d1e8ed39c12b5291d91037ea53 at this repaired control head.",
-    "Human Attention remains OPEN; no Human GLOBAL_ARCHITECTURE_PROMOTION decision has been taken."
-  ],
-  "review_verdict": "INSUFFICIENT_EVIDENCE"
+  "evidence_gaps": [],
+  "review_verdict": "PASS"
 }

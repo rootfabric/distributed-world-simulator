@@ -6,13 +6,13 @@
   "program": "GLOBAL_ARCHITECTURE",
   "role": "ARCHITECTURE_REVISION_CANDIDATE",
   "short_description": "GLOBAL-P0 R3 exact-current-main frozen review target with external exact-head evidence; no promotion and no runtime changes.",
-  "purpose": "Preserve the frozen R3 candidate against canonical main f6d68fc7 / registry 78, bind external exact-head control/evidence to that target, obtain independent Reviewer and Verifier proof, and stop at the human promotion gate.",
-  "expected_outcome": "INDEPENDENT_REVIEW_READY; then distinct Independent Reviewer and Independent Verifier; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
-  "current_stage": "GLOBAL-P0 R3 independent final review",
-  "stage_status": "R3_FROZEN_TARGET_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "The mutable R3 candidate is a frozen review target. Project Control, PC0, directional PC0 and Evidence Map are external evidence surfaces bound to its exact SHA and do not mutate candidate state. Independent Reviewer and Verifier remain pending; promotion is absent.",
+  "purpose": "Preserve the frozen R3 candidate against canonical main f6d68fc7 / registry 78, bind external exact-head control/evidence to that target, preserve the existing durable Independent Reviewer PASS, obtain independent Verifier proof, and stop at the later Director and human promotion gates.",
+  "expected_outcome": "INDEPENDENT_REVIEWER_PASS_DURABLE; then distinct Independent Verifier; then Director final gate; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
+  "current_stage": "GLOBAL-P0 R3 independent verification",
+  "stage_status": "R3_REVIEWER_PASS_AWAITING_INDEPENDENT_VERIFIER",
+  "progress_note": "The mutable R3 V6 candidate remains frozen at f78847624a9016d1e8ed39c12b5291d91037ea53. Durable Independent Reviewer PASS exists at artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V6-FINAL-REVIEW-001.v1.json and binds to that exact frozen target. Independent Verifier is PENDING / NEXT; Director and human promotion remain pending; R3_REFRESHED_CANDIDATE_READY is NO and promotion is absent.",
   "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
-  "next_stage": "Confirm external exact-head evidence bound to the exact frozen mutable review target, then run distinct read-only Independent Reviewer and Independent Verifier sessions; stop at GLOBAL_ARCHITECTURE_PROMOTION.",
+  "next_stage": "Run a distinct read-only Independent Verifier session against exact frozen target f78847624a9016d1e8ed39c12b5291d91037ea53 using the current external control/evidence head; after Verifier PASS, proceed only through the separate Director final gate and later Human GLOBAL_ARCHITECTURE_PROMOTION gate.",
   "parent_branch_or_checkpoint": "Canonical current main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry generation 78; historical construction/pre-C22 pins and V2 review target remain provenance only.",
   "dependencies": [
     "GLOBAL_P0_R2",
@@ -118,11 +118,12 @@
     "EPHEMERAL_GUARD_REFRESH",
     "OWNERSHIP_INTERSECTION_REVIEW_PASS",
     "R2_TO_R3_TRANSITION_AUDIT_PASS",
-    "FROZEN_TARGET_EXTERNAL_EVIDENCE_LIFECYCLE_DECLARED"
+    "FROZEN_TARGET_EXTERNAL_EVIDENCE_LIFECYCLE_DECLARED",
+    "DURABLE_INDEPENDENT_REVIEWER_PASS"
   ],
   "blockers": [
-    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
     "INDEPENDENT_VERIFIER_PASS_REQUIRED",
+    "DIRECTOR_FINAL_GATE_REQUIRED",
     "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
   ],
   "health_declared": "YELLOW",
