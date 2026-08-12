@@ -1,5 +1,5 @@
 class_name QuaterniusFirstPersonEmbodimentFix7
-extends "res://scripts/characters/lab/quaternius_first_person_embodiment_lab.gd"
+extends "res://scripts/characters/lab/quaternius_fpe_optimized_lab.gd"
 
 const ResearchInventoryUIType = preload("res://scripts/items/presentation/first_person_character_equipment_inventory_ui.gd")
 const PROJECTION_HOTBAR_METADATA_ONLY := "HOTBAR_METADATA_ONLY"
