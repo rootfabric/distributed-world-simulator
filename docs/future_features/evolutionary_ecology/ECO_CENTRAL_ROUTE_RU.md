@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 REPAIRED CANDIDATE / EXACT WINDOWS RERUN`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -35,7 +35,7 @@ P2.6    3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c
 P2.7    7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe
 ```
 
-## Central route
+## Current route
 
 ```text
 EVO0 / CAL1 COMPLETE
@@ -54,67 +54,113 @@ P2.6 Long-Horizon Biogeography ACCEPTED
    ↓
 P2.7 Lineage Divergence / Speciation Candidate Diagnostics ACCEPTED
    ↓
-P2.8 Deterministic Save/Restart Plant World Proof ← CURRENT CANDIDATE
-   ↓ PASS
+P2.8 Deterministic Save/Restart Plant World Proof
+   ├─ original candidate 8cd4c440... → exact Windows FAIL
+   ├─ finding P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE
+   ├─ codec repair dc910baa...
+   ├─ codec preflight 31fd42a...
+   └─ fail-fast runner 8d5de417... ← CURRENT REPAIRED CANDIDATE
+        ↓ exact Windows PASS required
 EVO1 COMPLETE
    ↓
 post-EVO1 route resolution: EVO2 + XFER0
 ```
 
-## P2.8 implementation
+## What the exact Windows log proved
 
-Implementation head: `f7147082e0ca1e8913885b8ad47d76dc9b086416`.
+The first P2.8 candidate run used Godot `4.7.1.stable.double.custom_build.a13da4feb`.
 
-P2.8 introduces a research-only typed checkpoint for the complete Plant World state. It does not change accepted P2.7/P2.6 ecology mechanics.
+Before P2.8 execution it repeated the full accepted parent chain. P2.1 through P2.7 all passed again with their accepted hashes. P2.7 again produced:
 
-### Strong semantic equivalence gate
+`7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe`.
 
-The new stateful persistence driver mirrors accepted P2.6 annual orchestration using accepted helpers/contracts. Before testing restart it must reproduce the exact uninterrupted P2.6 `result_hash` for the same 30-year disturbed mainland/near/far scenario.
-
-Then the same world follows:
+P2.8 parser/preload also passed. The first P2.8 assertion then failed:
 
 ```text
-0 -> 14 -> SAVE A -> RESTORE -> 18 -> SAVE B -> RESTORE -> 30
+ECO.EVO1-P2.8 assertion failed: experiment result exists
 ```
 
-and must end with exactly the same:
+Thus the failure was isolated to `Experiment.run()` and was not a regression in P2.7-or-earlier ecology.
 
-- P2.6 result hash;
-- final adult/seed-bank state hash;
-- migration and disturbance conservation;
-- P2.7 divergence-diagnostic payload hash.
+## Root cause
 
-### Why years 14 and 18
+Original P2.8 typed JSON handled `Vector2`, `Rect2`, `StringName` and packed strings explicitly, but emitted integer Variant values as ordinary JSON numbers.
 
-Cut A occurs before years 15..18 westward transport + severe FAR events. Therefore future schedules must survive serialization.
-
-Cut B occurs after all severe events but before eastward transport resumes at year 19. Therefore accumulated event/history truth must survive serialization.
-
-Absolute `current_year` is persisted. Deterministic emission/reproduction/event keys never restart at year 1.
-
-### Checkpoint integrity
-
-The checkpoint has typed JSON encoding for Godot values plus:
+Direct execution on the project-attached Godot Linux double build with the same engine commit proved:
 
 ```text
-world_hash
-evidence_hash
-checkpoint_hash
+before JSON: int -> TYPE_INT
+JSON.parse_string: same numeric value -> TYPE_FLOAT
 ```
 
-Dictionary hashing is canonical/sorted and serialization uses full float precision. A controlled mutation of the persisted P2.7 evidence hash must be rejected rather than repaired or regenerated.
+P2.8 canonical hashing intentionally distinguishes:
 
-### Fresh-process gate
+```text
+TYPE_INT   -> I...
+TYPE_FLOAT -> F...
+```
 
-Acceptance writes year-14 state to `user://eco_evo1_p2_8_plant_world_checkpoint.json`.
+Therefore a newly serialized checkpoint could change `current_year`, `seed_count`, counters and other integer truth from TYPE_INT to TYPE_FLOAT during parse, causing its own `world_hash` / `checkpoint_hash` verification to fail closed.
 
-Fresh process A and B independently read that file, continue through year 18, serialize/restore again, finish year 30 and must reproduce the exact acceptance aggregate and result hash.
+Finding:
 
-### Ownership boundary
+`P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE`.
 
-This is research persistence semantics, not production persistence infrastructure. No claim is made over durability backend, transactions, authority, networking, canonical Time Fabric, canonical Spatial Domain Fabric or species taxonomy.
+## Repair
 
-## Exact Windows gate
+`dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1` changes only the P2.8 persistence codec:
+
+```text
+TYPE_INT
+  -> typed Int JSON wrapper
+  -> int(value) during decode
+```
+
+Diff from original candidate for the semantic repair itself is one P2.8 file, `+5/-1`. No accepted P2.7-or-earlier source and no runtime path changed.
+
+`31fd42a503875247cc758b36d7915a99a6a72698` adds a dedicated checkpoint codec regression. It verifies nested integer/float types, `Vector2`, `Rect2`, `PackedStringArray` and exact canonical value hash across JSON round-trip.
+
+`8d5de417f83ac257ee3bc1ae40c02847ac82de82` moves that regression before the long parent chain in the P2.8 runner.
+
+## Supplementary same-engine verification
+
+The attached Linux binary reports the exact same engine source revision:
+
+`4.7.1.stable.double.custom_build.a13da4feb`.
+
+On it, repaired codec probe reproduced the same canonical hash before and after JSON round-trip:
+
+`563208df7930f3ca9e341076c9dbe23f71c59d559f9206d615b164fb981cbab1`.
+
+A two-cut representative checkpoint flow was then run in three fresh Godot processes. Every run produced:
+
+```text
+cut A year 14
+checkpoint A = e10eed0d6979e4f0f3ed605a3d1a53c8688d3638fc5dc8aa586fe124c6724e41
+
+cut B year 18
+checkpoint B = 52fe07c45258cef3f90e03aaed65d1e5ad35bad8be77defb3ad1de01848845e4
+
+final year = 30
+P2.7 evidence preserved = true
+tamper rejected = true
+```
+
+This is supplementary evidence, not a substitute for exact Windows canonical acceptance.
+
+## P2.8 final proof still required
+
+P2.8 must still establish the full semantic equality:
+
+```text
+P2.6-equivalent baseline result_hash
+  == stateful uninterrupted result_hash
+  == save14/restore/save18/restore result_hash
+```
+
+plus exact final cohort state, persisted P2.7 diagnostics, conservation and fresh-process disk restore A/B.
+
+## Exact Windows rerun
 
 ```powershell
 cd C:\Godot\lunar-world-eco-evolutionary-ecology
@@ -126,10 +172,11 @@ $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
 .\RUN_ECO_EVO1_P2_8_TESTS.ps1 -GodotPath $Godot
 ```
 
-Runner is fail-closed:
+Runner is now fail-fast:
 
 ```text
 parser/preload preflight
+P2.8 checkpoint codec preflight
 accepted P2.7 full regression
 P2.8 acceptance / disk checkpoint creation
 fresh process replay A
@@ -137,13 +184,13 @@ fresh process replay B
 aggregate + P2.6 result equality
 ```
 
-Until PASS:
+Until exact Windows PASS:
 
 ```text
-P2.8 = IMPLEMENTED_CANDIDATE
+P2.8 = REPAIRED_CANDIDATE
 P2.8 != ACCEPTED
 EVO1 != COMPLETE
 EVO2 = BLOCKED
 ```
 
-Current resolver: `RUN EVO1/P2.8 EXACT WINDOWS DETERMINISTIC SAVE/RESTART PLANT WORLD GATE`.
+Current resolver: `RERUN EVO1/P2.8 EXACT WINDOWS AFTER CHECKPOINT CODEC REPAIR`.
