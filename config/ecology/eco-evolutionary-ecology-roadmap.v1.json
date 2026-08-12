@@ -1,15 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R50-2026-08-13",
+  "revision": "ECO-R51-2026-08-13",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_7_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_AUTHORIZED",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_checkpoint": "ECO.EVO1/P2.7",
-  "current_step": "P2.7 Lineage Divergence / Speciation Candidate Diagnostics / Exact Windows Canonical Gate",
-  "last_accepted_step": "ECO.EVO1/P2.6 Long-Horizon Biogeography",
+  "current_checkpoint": "ECO.EVO1/P2.8",
+  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / IMPLEMENT",
+  "last_accepted_step": "ECO.EVO1/P2.7 Lineage Divergence / Speciation Candidate Diagnostics",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -23,7 +23,8 @@
     "ECO.EVO1/P2.3 ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "ECO.EVO1/P2.4 ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "ECO.EVO1/P2.5 ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.EVO1/P2.6 ACCEPTED_EXACT_WINDOWS_CANONICAL"
+    "ECO.EVO1/P2.6 ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "ECO.EVO1/P2.7 ACCEPTED_EXACT_WINDOWS_CANONICAL"
   ],
   "accepted_evidence": {
     "cal1_f_aggregate_hash": "f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed",
@@ -32,19 +33,14 @@
     "p2_3_aggregate_hash": "15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e",
     "p2_4_aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97",
     "p2_5_aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
-    "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c"
+    "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
+    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
   },
-  "candidate_evidence": {
-    "p2_7_implementation_head": "8da9c039a8591d61a0d542aa4e4695a51a9d20d6",
-    "p2_7_checkpoint": "docs/checkpoints/ECO_EVO1_P2_7_LINEAGE_DIVERGENCE_SPECIATION_CANDIDATE_RU.md",
-    "p2_7_validation": "validation/ecology/eco-evo1-p2-7-lineage-divergence-validation.json",
-    "p2_7_runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1",
-    "p2_7_truth": "diagnostic-only convergent evidence over ancestry + split age + isolation + connection + genome divergence + ecological-history divergence; no canonical species declaration"
-  },
+  "candidate_evidence": {},
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_7_CANDIDATE",
+    "status": "ACTIVE_P2_8_AUTHORIZED",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
@@ -53,8 +49,8 @@
       {"id":"P2.4","name":"Patch Colonization / Isolation / Migration","status":"ACCEPTED"},
       {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
-      {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"BLOCKED_BY_P2_7_ACCEPTANCE"}
+      {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
+      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"AUTHORIZED_IMPLEMENTATION"}
     ]
   },
   "EVO2": {"status":"AFTER_EVO1"},
@@ -63,5 +59,5 @@
   "XFER": {"XFER0":{"status":"DESIGN_DURING_EVO"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
-  "production_blockers": ["P2_8_REQUIRES_P2_7_EXACT_WINDOWS_ACCEPTANCE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
+  "production_blockers": ["P2_8_EXACT_WINDOWS_ACCEPTANCE_REQUIRED_FOR_EVO1_CLOSURE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
 }
