@@ -1,0 +1,43 @@
+name: Patch H0.1 R8 Finalizer Assertion
+
+on:
+  push:
+    branches:
+      - validation/h0-1-r7-exact-export
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: validation/h0-1-r7-exact-export
+      - name: Patch only obsolete human-attention assertion
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=.github/workflows/h0-r7-exact-export.yml
+          if ! grep -Fq "state['human_attention']['open_count'] == 0" "$file"; then
+            echo 'Assertion already corrected; no mutation required.'
+            exit 0
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/h0-r7-exact-export.yml')
+          text = path.read_text(encoding='utf-8')
+          old = "assert state['human_attention']['open_count'] == 0, state['human_attention']"
+          new = "assert len(state['human_attention']['open_items']) == 0, state['human_attention']"
+          if text.count(old) != 1:
+              raise SystemExit('EXPECTED_EXACTLY_ONE_ASSERTION')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- .github/workflows/h0-r7-exact-export.yml
+          git config user.name 'H0 R8 validation helper'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/h0-r7-exact-export.yml
+          git commit -m 'ci: fix R8 finalizer human-attention assertion'
+          git push origin HEAD:validation/h0-1-r7-exact-export
