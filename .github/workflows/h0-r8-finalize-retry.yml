@@ -1,0 +1,131 @@
+name: H0.1 R8 Final Checkpoint Retry
+
+on:
+  push:
+    branches:
+      - validation/h0-1-r7-exact-export
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-retry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout helper scripts as immutable input
+        uses: actions/checkout@v4
+        with:
+          ref: validation/h0-1-r7-exact-export
+          path: helper
+
+      - name: Checkout exact R8 verification branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/h0-1-c22-current-main-r3
+          fetch-depth: 0
+          path: repo
+
+      - name: Pin R8 and canonical main
+        working-directory: repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r3"
+          test "$(git rev-parse HEAD)" = "e8493d7164661cb9ef6695b54b133fd7f0ae0647"
+          test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
+          test -z "$(git status --porcelain)"
+
+      - name: Extract already-reviewed finalization scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install pyyaml
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import yaml
+          workflow = yaml.safe_load(Path('helper/.github/workflows/h0-r7-exact-export.yml').read_text(encoding='utf-8'))
+          steps = workflow['jobs']['finalize']['steps']
+          wanted = {
+              'Prove exact-Windows regression promotion boundary':'promotion.sh',
+              'Generate final evidence, reviews and append-only checkpoint ledger':'generate.sh',
+              'Commit candidate locally before validation':'commit.sh',
+          }
+          out = Path(os.environ['RUNNER_TEMP'])
+          found = set()
+          for step in steps:
+              name = step.get('name')
+              if name in wanted:
+                  path = out / wanted[name]
+                  path.write_text(step['run'], encoding='utf-8')
+                  path.chmod(0o755)
+                  found.add(name)
+          missing = set(wanted) - found
+          if missing:
+              raise SystemExit(f'MISSING_FINALIZER_STEPS:{sorted(missing)}')
+          PY
+
+      - name: Rebuild identical final candidate locally
+        working-directory: repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash "$RUNNER_TEMP/promotion.sh"
+          bash "$RUNNER_TEMP/generate.sh"
+          bash "$RUNNER_TEMP/commit.sh"
+
+      - name: Validate corrected public state and all guards
+        working-directory: repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r scripts/harness/requirements.txt
+          python -m unittest discover -s tests/harness -v 2>&1 | tee "$RUNNER_TEMP/r8-retry-harness.log"
+          PYTHONPATH=scripts python - <<'PY'
+          from pathlib import Path
+          from harness.state_builder import build_state
+          root = Path('.').resolve()
+          execution = root / 'config/control/harness/executions/E2026-08-12-H0-1-R8'
+          state = build_state(root, execution)
+          assert state['active_work_order']['state'] == 'CHECKPOINT_PROPOSED', state['active_work_order']['state']
+          assert state['reduced_work_order']['state'] == 'CHECKPOINT_PROPOSED', state['reduced_work_order']['state']
+          assert state['reduced_work_order']['last_event_sequence'] == 28, state['reduced_work_order']['last_event_sequence']
+          assert state['repository']['implementation_head_sha'] == '4c69de50c8374112d82efee2fd6917c770b3eae0', state['repository']['implementation_head_sha']
+          assert state['review']['review_target_head_sha'] == '4c69de50c8374112d82efee2fd6917c770b3eae0', state['review']['review_target_head_sha']
+          assert state['review']['post_build_state'] == 'PASS', state['review']
+          assert len(state['human_attention']['open_items']) == 0, state['human_attention']
+          assert state['epoch']['validation']['status'] == 'EXACT_BASE', state['epoch']['validation']
+          required = set(state['active_work_order']['required_predicates'])
+          completed = set(state['reduced_work_order']['completed_predicates'])
+          assert required <= completed, sorted(required - completed)
+          assert state['checkpoint_proposal_blocked'] is False, state['checkpoint_blockers']
+          assert state['checkpoint_blockers'] == [], state['checkpoint_blockers']
+          print('R8 FINAL CHECKPOINT CANDIDATE: PASS')
+          print('implementation_head=', state['repository']['implementation_head_sha'])
+          print('current_control_head=', state['repository']['current_branch_head_sha'])
+          print('completed_predicates=', len(completed))
+          PY
+          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Status
+          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Plan
+          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Resume
+
+      - name: Push only fully validated R8 checkpoint candidate
+        working-directory: repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:feature/h0-1-c22-current-main-r3
+          echo "R8_FINAL_HEAD=$(git rev-parse HEAD)" | tee "$RUNNER_TEMP/r8-retry-final-head.txt"
+
+      - name: Upload retry proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h0-r8-finalization-retry-proof
+          path: |
+            ${{ runner.temp }}/r8-retry-final-head.txt
+            ${{ runner.temp }}/r8-retry-harness.log
+            ${{ runner.temp }}/r8-regression-boundary.txt
+          if-no-files-found: warn
+          retention-days: 1
