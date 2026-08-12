@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-C IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-D EXECUTE_NOW`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -8,38 +8,27 @@ Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
 ## North Star
 
-```text
-landscape + environment/history + initial ancestry
-                       ↓
-             EVOLUTIONARY ECOLOGY
-                       ↓
- spatial populations / lineages / succession /
- migration / extinction / later trophic webs
-                       ↓
-              restartable ecology state
-                       ↓
-          later XFER into World Simulator
-```
+ECO остаётся standalone evolutionary-ecology mini-project: landscape + environment/history + initial ancestry должны автономно порождать spatial populations, lineages, succession, migration/extinction и позже trophic webs. Один ecological state meaning должен сохраняться между `INCUBATE_FAST`, `BACKGROUND_COARSE` и `LOCAL_ACTIVE`.
 
-The same ecological state meaning must survive `INCUBATE_FAST`, `BACKGROUND_COARSE` and `LOCAL_ACTIVE` execution resolutions.
-
-## Accepted
+## Accepted chain
 
 ```text
 ECO.P1                    ACCEPTED
 ECO.PH0..PH5-S4           ACCEPTED
 ECO.CONV0-A               ACCEPTED
-ECO.CAL1-A                ACCEPTED EXACT WINDOWS CANONICAL
-ECO.CAL1-B                ACCEPTED EXACT WINDOWS CANONICAL
+ECO.CAL1-A                ACCEPTED
+ECO.CAL1-B                ACCEPTED
+ECO.CAL1-C                ACCEPTED
 ```
 
-CAL1-A baseline: `280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f`.
+Canonical hashes:
 
-PH3C parent: `294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb`.
+- CAL1-A `280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f`;
+- PH3C `294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb`;
+- CAL1-B `c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c`;
+- CAL1-C `d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a`.
 
-CAL1-B aggregate: `c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c`.
-
-CAL1-B proved neighbour-relative height benefit without coefficient tuning: dense effect `0.099556363636`, sparse `0.002765454545`, ratio `36×`; reference HEIGHT_HIGH-vs-HEIGHT_LOW gap moved `-0.577805307483 -> -0.378692580210`, dry `-0.455052978213 -> -0.255940250941` while tall did not become universally superior.
+CAL1-C proved that crown competition depends on actual pair overlap and neighbour canopy density, while root competition depends on geometrically shared resource zones and normalized claims. Dense root overlap was materially stronger than sparse; deep/shallow shared claims were `0.820512820513 / 0.179487179487` and conserved one.
 
 ## Central route
 
@@ -49,10 +38,10 @@ CAL1-A ACCEPTED
         ↓
 CAL1-B ACCEPTED
         ↓
-CAL1-C ← CURRENT CANDIDATE GATE
-crown + root spatial competition
+CAL1-C ACCEPTED
         ↓
-CAL1-D lifetime/reproduction/dispersal/disturbance payoffs
+CAL1-D ← CURRENT
+lifetime / reproduction / dispersal / disturbance
         ↓
 CAL1-E combined mechanism matrix
         ↓
@@ -67,111 +56,48 @@ EVO3 multi-trophic ecosystem
 EVO4 autonomous regional/planet runner
         ↓
 XFER0 EcologyArchive
-        ↓ when simulator foundations are canonical
+        ↓ when canonical simulator foundations exist
 XFER1 world-generation ecology bridge
         ↓
 LIVE local/background continuation
 ```
 
-## CAL1-C implementation
+## CAL1-D — current work
 
-Implementation head: `69910d1bd2ed7983df9c0d40213012a11dcb2f6a`.
+The current selection surfaces are still too close to instantaneous resource balance. CAL1-D must add lifecycle-scale causal observables without inventing one abstract `tall_bonus` or calibrating magnitudes.
 
-The implementation commit adds seven ECO-only files and changes no accepted PH3/P1/CAL1-B source or runtime path.
+Required independent causal paths:
 
-### Crown competition
+1. **Size-dependent reproduction** — an immature/small individual cannot realize the same reproductive output as a mature one.
+2. **Reserve-constrained seed output** — seed production is limited by current reserve/biomass state, not only the genome's seed-count ceiling.
+3. **Release-height dispersal** — for the same seed dispersal trait, greater release height increases potential travel distance through an explicit geometric/flight-time path.
+4. **Time-to-maturity** — expensive large morphology and low growth rate delay reproductive onset.
+5. **Longevity / structural amortization** — structural investment is interpreted across lifetime rather than only as an instantaneous recurring penalty.
+6. **Disturbance survival** — damage depends on disturbance severity and causal morphology/anchoring exposure.
+7. **Recovery cost** — surviving damage consumes time/resources before reproduction returns.
 
-Crown footprint is an actual circle derived from realized crown spread. Pair overlap uses exact circle-intersection geometry from two world-local positions.
+### Acceptance principle
 
-```text
-overlap_fraction_focal
-    × neighbour realized branch_probability
-    ↓
-neighbour_shading_pressure
-    × accepted PH3 saturating crown-light potential
-    ↓
-crown_overlap_loss
-```
-
-Controls require:
-
-- no overlap -> zero loss;
-- closer crowns -> larger overlap/loss than farther crowns;
-- denser-branching neighbour -> larger focal shading at equal geometry;
-- wide/narrow swap symmetry.
-
-The accepted PH3 crown benefit already saturates; CAL1-C does not create a new free crown bonus.
-
-### Root competition
-
-Temporary controlled research geometry proxy:
-
-`root_zone_radius_m = root_depth_m`.
-
-This is not a canonical botanical law and may later be replaced by an evolved root-spread trait.
-
-Shared uptake capacity:
-
-`capacity = root_depth × growth_rate`.
-
-Within geometrically overlapped root area, pair claims are normalized to sum to one. The competitor removes only its claim from the focal plant's shared resource fraction. Resulting local moisture/nutrients are then passed back through accepted P1 `plant_resource_model_v1.gd`.
-
-Thus there is no duplicate ECO-private water/nutrient fitness equation.
-
-Controls require:
-
-- no root overlap -> no resource delta;
-- equal roots -> symmetric 0.5/0.5 claims;
-- deep/shallow pair -> deeper controlled root gets larger shared claim;
-- dense root overlap -> stronger effect than sparse;
-- swap symmetry;
-- dry context remains finite and causal.
-
-## Current exact Windows gate
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_CAL1_C_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner sequence:
+CAL1-D does **not** need one lifecycle strategy to win everywhere. It must prove contextual trade-offs such as:
 
 ```text
-accepted CAL1-B full runner
-        ↓
-CAL1-C crown/root acceptance
-        ↓
-fresh process A
-        ↓
-fresh process B
-        ↓
-aggregate hash equality
+fast growth -> earlier maturity / faster recovery
+large release height -> farther dispersal
+long lifespan -> more opportunities to amortize structure
+high seed ceiling -> useless without maturity/reserves
+severe disturbance -> reduced survival/lifetime output
+strong anchoring -> better survival under the matched disturbance control
 ```
 
-Required evidence includes aggregate hash, close/far crown overlap/loss, high/low neighbour shading loss, dense/sparse deep/shallow root competition deltas, deep/shallow shared claims and fresh-process equality.
+All terms must remain separately observable in diagnostics.
 
-Until PASS:
+## After CAL1-D
 
-```text
-CAL1-C = IMPLEMENTED_CANDIDATE
-CAL1-C != ACCEPTED
-CAL1-D = BLOCKED
-```
+CAL1-E combines A/B/C/D mechanisms **without calibration** into strategies × environments × density × disturbance matrix.
 
-## After CAL1
+CAL1-F is the first stage allowed to tune magnitudes and run full-pool robustness.
 
-CAL1-D adds lifecycle-scale payoffs: maturity, reproduction, seed output/dispersal, longevity and disturbance response.
-
-CAL1-E combines accepted mechanisms without calibration.
-
-CAL1-F is the first stage allowed to calibrate magnitudes and perform full-pool robustness.
-
-After CAL1 closure, the next major target is `ECO.EVO1_PLANT_WORLD_PROOF`: a heterogeneous deterministic landscape plus common ancestral pool must autonomously produce dispersal, recruitment, succession, disturbance/recovery, migration/isolation and lineage niche divergence without biome→species placement tables.
+After CAL1 closure the branch must immediately prioritize `ECO.EVO1_PLANT_WORLD_PROOF`, not more isolated morphology sophistication.
 
 ## Global boundary
 
@@ -182,9 +108,9 @@ Standalone EVO work remains research-only. `XFER1/LIVE` wait for canonical G/ENV
 When told `continue ECO`:
 
 1. read North Star and machine roadmap;
-2. execute current gate only;
+2. execute current checkpoint only;
 3. preserve accepted hashes;
-4. do not calibrate before CAL1-E;
-5. after CAL1, prioritize autonomous Plant World over presentation work.
+4. no calibration before CAL1-E mechanism acceptance;
+5. after CAL1, move to autonomous Plant World.
 
-Current resolver: `RUN CAL1-C EXACT WINDOWS CROWN+ROOT SPATIAL CAUSAL GATE`.
+Current resolver: `EXECUTE ECO.CAL1-D LIFECYCLE PAYOFFS`.

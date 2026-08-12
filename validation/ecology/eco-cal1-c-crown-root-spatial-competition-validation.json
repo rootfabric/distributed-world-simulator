@@ -1,41 +1,40 @@
 {
   "schema": "distributed_world_simulator.ecology.cal1_c_crown_root_spatial_competition_validation.v1",
-  "revision": "ECO-CAL1-C-2026-08-12-R2-CANDIDATE",
+  "revision": "ECO-CAL1-C-2026-08-12-R3-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "69910d1bd2ed7983df9c0d40213012a11dcb2f6a",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO0",
   "parent": {
     "checkpoint": "ECO.CAL1-B",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c"
   },
-  "implementation_diff": {
-    "base": "7f39e22dc3c45a6851aee737a5c59e10b8c413a3",
-    "head": "69910d1bd2ed7983df9c0d40213012a11dcb2f6a",
-    "changed_files": 7,
-    "accepted_ph3_p1_cal1_b_sources_modified": false,
-    "runtime_paths_modified": false
+  "canonical_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a",
+    "fresh_process_a": "PASS_EXACT_HASH",
+    "fresh_process_b": "PASS_EXACT_HASH",
+    "acceptance_assertions": 73,
+    "restart_assertions_each": 5,
+    "crown_close_overlap_m2": 2.009302166860,
+    "crown_far_overlap_m2": 0.388093912912,
+    "crown_close_loss": 0.047875621286,
+    "crown_far_loss": 0.009247109521,
+    "high_neighbour_loss": 0.066432935629,
+    "low_neighbour_loss": 0.014469693843,
+    "root_dense_delta_deep": -0.000826156005,
+    "root_dense_delta_shallow": -2.124931479778,
+    "root_sparse_delta_deep": -0.000142154530,
+    "root_sparse_delta_shallow": -0.218000687034,
+    "deep_claim": 0.820512820513,
+    "shallow_claim": 0.179487179487
   },
-  "mechanism": {
-    "source": "scripts/research/ecology/plant_spatial_crown_root_competition_v1.gd",
-    "experiment": "scripts/research/ecology/plant_crown_root_competition_experiment_v1.gd",
-    "crown_geometry": "exact circle intersection from realized crown spread and positions",
-    "crown_loss": "accepted PH3 saturating crown-light potential * own overlap fraction * neighbour branch probability",
-    "root_geometry_proxy": "root_zone_radius_m = root_depth_m; research proxy, not canonical trait law",
-    "root_shared_claim": "root_depth * growth_rate normalized across the pair",
-    "root_resource_effect": "reduce only geometrically shared local soil moisture/nutrients by competitor claim, then re-evaluate accepted P1 ResourceModel",
-    "coefficient_policy": "no tuning; accepted models reused read-only"
-  },
-  "cases": [
-    "CROWN_NO_OVERLAP","CROWN_EQUAL_CLOSE","CROWN_EQUAL_FAR","CROWN_HIGH_BRANCH_NEIGHBOUR","CROWN_LOW_BRANCH_NEIGHBOUR","CROWN_WIDE_NARROW","CROWN_WIDE_NARROW_SWAP",
-    "ROOT_NO_OVERLAP","ROOT_EQUAL_DENSE","ROOT_DEEP_SHALLOW_DENSE","ROOT_DEEP_SHALLOW_SPARSE","ROOT_DRY_DEEP_SHALLOW_DENSE","ROOT_DEEP_SHALLOW_SWAP"
-  ],
-  "required_properties": [
+  "accepted_findings": [
     "CAL1_B_PARENT_HASH_UNCHANGED",
     "CROWN_NO_OVERLAP_NEUTRAL",
-    "CROWN_DISTANCE_OVERLAP_MONOTONIC",
-    "CROWN_NEIGHBOUR_CANOPY_DENSITY_CAUSAL",
+    "CROWN_DISTANCE_OVERLAP_AND_LOSS_MONOTONIC",
+    "CROWN_NEIGHBOUR_BRANCH_DENSITY_CAUSAL",
     "CROWN_SWAP_SYMMETRY",
     "ROOT_NO_OVERLAP_NEUTRAL",
     "ROOT_EQUAL_PAIR_SYMMETRIC_HALF_CLAIMS",
@@ -44,25 +43,17 @@
     "DENSE_ROOT_OVERLAP_STRONGER_THAN_SPARSE",
     "ROOT_SWAP_SYMMETRY",
     "DRY_ROOT_CONTEXT_FINITE",
-    "DETERMINISTIC_SAME_AND_FRESH_PROCESS_HASH",
-    "NO_ACCEPTED_PH3_P1_SOURCE_CHANGE",
+    "DETERMINISTIC_FRESH_PROCESS_HASH",
+    "NO_ACCEPTED_PH3_P1_CAL1_B_SOURCE_CHANGE",
     "NO_COEFFICIENT_CALIBRATION"
   ],
-  "local_noncanonical_sanity": {
-    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
-    "mode": "CORE_FORMULA_PROBE_ONLY_NOT_FULL_CANONICAL_SOURCE_RUN",
-    "crown_close_overlap_m2": 2.009302166860,
-    "crown_far_overlap_m2": 0.388093912912,
-    "deep_claim": 0.820512820513,
-    "shallow_claim": 0.179487179487,
-    "result": "PASS",
-    "note": "This validates the numeric geometry/claim path only. Exact Windows project runner remains the acceptance authority."
+  "mechanism_boundary": {
+    "crown_geometry": "exact circle intersection from realized crown spread and pair positions",
+    "crown_loss": "accepted PH3 saturating crown-light potential * own overlap fraction * neighbour branch probability",
+    "root_geometry_proxy": "root_zone_radius_m = root_depth_m; research proxy only",
+    "root_shared_claim": "root_depth * growth_rate normalized across pair",
+    "root_resource_effect": "reduce only shared local soil moisture/nutrients by competitor claim and re-evaluate accepted P1 ResourceModel"
   },
-  "tests": {
-    "acceptance": "tests/research/ecology/eco_cal1_c_crown_root_spatial_competition_acceptance.gd",
-    "restart": "tests/research/ecology/eco_cal1_c_restart_replay_probe.gd",
-    "runner": "RUN_ECO_CAL1_C_TESTS.ps1"
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.CAL1-D Lifetime / Reproduction / Dispersal / Disturbance Payoffs"
+  "decision": "ACCEPTED",
+  "next": "ECO.CAL1-D Lifetime / Reproduction / Dispersal / Disturbance Payoffs"
 }
