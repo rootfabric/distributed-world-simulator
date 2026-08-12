@@ -1,14 +1,32 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_2_establishment_validation.v1",
-  "revision": "ECO-EVO1-P2.2-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-EVO1-P2.2-2026-08-12-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "d09857528adee1010f2177095f2afb04bf651532",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.1",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6"
+  },
+  "canonical_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86",
+    "acceptance_assertions": 59,
+    "fresh_process_replay_a": "PASS_EXACT_HASH",
+    "fresh_process_replay_b": "PASS_EXACT_HASH",
+    "favourable_recruited": 46,
+    "dry_recruited": 21,
+    "flooded_recruited": 26,
+    "low_dormancy_recruited": 71,
+    "high_dormancy_recruited": 14,
+    "low_dormancy_bank": 8,
+    "high_dormancy_bank": 66,
+    "short_half_life_bank": 4,
+    "long_half_life_bank": 61,
+    "reactivation_recruited": 33,
+    "boundary_exported": 80
   },
   "truth": {
     "input": "inside-domain P2.1 seed packets or existing P2.2 seed-bank cohorts",
@@ -21,41 +39,6 @@
     "seed_bank_half_life_years": 3.0,
     "status": "PROVISIONAL_CAUSAL_DEFAULTS_NOT_EMPIRICAL_CALIBRATION"
   },
-  "mechanisms": {
-    "bank_survival": "exp(-ln(2) * years / half_life)",
-    "germination": "sqrt(seed-stage water match * temperature response) * (1 - dormancy)",
-    "establishment": "geometric mean(light response, nutrient response, 1 - flood frequency)",
-    "integer_counts": "deterministic hash-based fractional rounding",
-    "identity": "lineage/genome/event/recruitment-trait checksum preserved"
-  },
-  "required_properties": [
-    "P2_1_PARENT_HASH_UNCHANGED",
-    "INTEGER_SEED_CONSERVATION_EVERY_CASE",
-    "FAVOURABLE_RECRUITMENT_GT_DRY",
-    "FAVOURABLE_RECRUITMENT_GT_FLOODED",
-    "LOW_DORMANCY_INCREASES_IMMEDIATE_RECRUITMENT",
-    "HIGH_DORMANCY_INCREASES_SEED_BANK",
-    "LONG_HALF_LIFE_RETAINS_MORE_BANK_AFTER_TWO_YEARS",
-    "SEED_BANK_CAN_REACTIVATE_AFTER_ENVIRONMENT_IMPROVES",
-    "OUTSIDE_DOMAIN_SEEDS_REMAIN_EXPORT_NOT_LOCAL_RECRUITMENT",
-    "COHORT_TRUTH_BOUNDED_BY_INPUT_PACKET_COUNT",
-    "LINEAGE_GENOME_EVENT_IDENTITY_PRESERVED",
-    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
-    "NO_P2_3_POPULATION_TURNOVER_OR_SUCCESSION_SEMANTICS",
-    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
-  ],
-  "implementation_diff": {
-    "base": "380620ff371321a53959d7d2985670b3133d1df4",
-    "head": "d09857528adee1010f2177095f2afb04bf651532",
-    "changed_files": 6,
-    "accepted_p2_1_or_cal1_sources_modified": false,
-    "runtime_paths_modified": false
-  },
-  "tests": {
-    "acceptance": "tests/research/ecology/eco_evo1_p2_2_establishment_seed_bank_acceptance.gd",
-    "restart": "tests/research/ecology/eco_evo1_p2_2_restart_replay_probe.gd",
-    "runner": "RUN_ECO_EVO1_P2_2_TESTS.ps1"
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.EVO1 / P2.3 Local Population Turnover + Succession"
+  "decision": "ECO_EVO1_P2_2_ACCEPTED_EXACT_WINDOWS_CANONICAL",
+  "next": "ECO.EVO1 / P2.3 Local Population Turnover + Succession"
 }

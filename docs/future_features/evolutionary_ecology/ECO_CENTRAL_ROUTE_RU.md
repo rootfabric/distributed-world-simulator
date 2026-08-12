@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.2 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.3 EXECUTE_NOW`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -15,6 +15,7 @@ ECO.CONV0-A               ACCEPTED
 ECO.CAL1-A..F             ACCEPTED
 CAL1-F                    ROBUST_UNITY_CALIBRATION
 ECO.EVO1 / P2.1           ACCEPTED
+ECO.EVO1 / P2.2           ACCEPTED
 ```
 
 Canonical hashes:
@@ -22,7 +23,10 @@ Canonical hashes:
 ```text
 CAL1-F  f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed
 P2.1    cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6
+P2.2    633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86
 ```
+
+P2.2 exact Windows findings: favourable/dry/flooded recruits `46/21/26`; low/high dormancy bank `8/66`; short/long half-life bank `4/61`; reactivation `33`; boundary export `80`.
 
 ## Central route
 
@@ -31,9 +35,9 @@ EVO0 / CAL1 COMPLETE
    ↓
 P2.1 Seed Dispersal Kernel ACCEPTED
    ↓
-P2.2 Establishment / Recruitment / Seed Bank ← CURRENT CANDIDATE
-   ↓ PASS
-P2.3 Local Population Turnover + Succession
+P2.2 Establishment / Recruitment / Seed Bank ACCEPTED
+   ↓
+P2.3 Local Population Turnover + Succession ← CURRENT
    ↓
 P2.4 Patch Colonization / Isolation / Migration
    ↓
@@ -50,83 +54,30 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.2 implementation
+## P2.2 accepted meaning
 
-Implementation head: `d09857528adee1010f2177095f2afb04bf651532`.
+P2.2 established persistent local propagule memory while preserving exact integer conservation. Germination, establishment and seed-bank survival are separate causal stages. High dormancy trades immediate recruitment for persistent bank; long half-life preserves historical opportunity; improved conditions can reactivate dormant propagules. Outside-domain propagules remain export.
 
-Implementation diff from accepted P2.1 adds exactly six ECO files and modifies no accepted P2.1/CAL1 source or runtime path.
+## P2.3 authorization
 
-### Cohort transition
+P2.3 may now connect recruited cohorts and seed-bank memory into repeated local time steps.
 
-P2.2 consumes an inside-domain P2.1 seed packet and resolves it into integer cohort counts:
+Required scope:
 
-```text
-input
-= exported
-+ decayed
-+ failed after germination
-+ recruited
-+ remaining seed bank
-```
+- cohort/population truth rather than one entity per plant;
+- explicit adult cohort age, abundance/biomass and lineage identity;
+- resource-causal growth and stress mortality;
+- lifespan/age turnover;
+- local density/capacity competition without a species lookup table;
+- repeated recruitment from current reproduction and existing seed bank;
+- succession measured as changing lineage abundance through time;
+- deterministic history/hash replay.
 
-Outside-domain P2.1 packets remain export and bypass local establishment.
+Strict boundary:
 
-### Recruitment traits
+- no inter-patch propagule transfer or migration graph in P2.3;
+- no explicit disturbance-event scheduler (P2.5);
+- no long-horizon regional biogeography (P2.6);
+- no speciation decision (P2.7).
 
-A sidecar trait contract adds `dormancy_fraction` and `seed_bank_half_life_years` without changing the accepted plant genome schema. Defaults are research defaults, not empirical calibration.
-
-### Germination
-
-Seed-stage water matching uses inherited water preference/tolerance but deliberately does not grant adult root-depth moisture access. Germination activation combines seed water response and temperature, then dormancy reduces immediate activation.
-
-### Establishment
-
-Post-germination establishment separately combines accepted light response, nutrient response and flood survival. No biome name, species name or habitat lookup participates.
-
-### Seed bank
-
-Viability follows half-life decay. Nongerminated viable seeds remain explicit seed-bank cohorts with age and identity. The bank can later reactivate when environment improves.
-
-### P2.3 boundary
-
-P2.2 does not update adult population biomass, carrying-capacity competition, succession, repeated reproductive cycles or regional migration. Those begin at P2.3+.
-
-## Exact Windows gate
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_EVO1_P2_2_TESTS.ps1 -GodotPath $Godot
-```
-
-Required evidence includes:
-
-- exact accepted P2.1 parent;
-- conservation in every controlled case;
-- favourable > dry and favourable > flooded recruitment;
-- low dormancy increases immediate recruitment;
-- high dormancy increases bank size;
-- long half-life retains more bank after two years;
-- bank reactivation produces recruitment after improvement;
-- outside-domain 80-seed control remains export-only;
-- cohort counts stay bounded by packet outcomes;
-- lineage/genome/event identity survives;
-- same/fresh-process aggregate equality.
-
-Until PASS:
-
-```text
-P2.2 = IMPLEMENTED_CANDIDATE
-P2.2 != ACCEPTED
-P2.3 = BLOCKED
-```
-
-## Global boundary
-
-Standalone EVO remains research-only. ECO owns ecology semantics, not canonical spatial/weather/runtime foundations. `XFER1/LIVE` remain deferred until global contracts exist.
-
-Current resolver: `RUN EVO1/P2.2 EXACT WINDOWS ESTABLISHMENT / RECRUITMENT / SEED BANK GATE`.
+Current resolver: `IMPLEMENT EVO1/P2.3 LOCAL POPULATION TURNOVER + SUCCESSION`.
