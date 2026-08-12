@@ -20,7 +20,9 @@ func _run() -> void:
 	var skeleton := Skeleton3D.new()
 	skeleton.name = "Skeleton3D"
 	avatar.add_child(skeleton)
-	skeleton.add_bone("mixamorig:RightHand")
+	# Skeleton3D.add_bone() rejects ':' and '/', so use the Godot-safe form that
+	# still exercises the normalized right-hand matcher.
+	skeleton.add_bone("mixamorig_RightHand")
 
 	var presenter = PresenterType.new()
 	root.add_child(presenter)
@@ -28,7 +30,7 @@ func _run() -> void:
 	_assert(bool(setup_result.get("success", false)), "R2 third-person presenter setup failed")
 	var setup_report: Dictionary = presenter.create_report()
 	_assert(String(setup_report.get("attachment_mode", "")) == "BONE_RIGHT_HAND", "R2 presenter did not bind the right-hand bone")
-	_assert(String(setup_report.get("matched_bone_name", "")) == "mixamorig:RightHand", "R2 presenter matched the wrong hand bone")
+	_assert(String(setup_report.get("matched_bone_name", "")) == "mixamorig_RightHand", "R2 presenter matched the wrong hand bone")
 	_assert(bool(setup_report.get("source_skeleton_present", false)), "R2 presenter lost its source skeleton")
 
 	var presented: Dictionary = presenter.present_item("item/beacon", "Beacon", Color(0.8, 0.3, 0.1, 1.0))
