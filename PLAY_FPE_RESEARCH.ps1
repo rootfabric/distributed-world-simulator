@@ -2,6 +2,7 @@ param(
     [string]$GodotPath = "",
     [int]$Port = 39965,
     [switch]$ResetState,
+    [string]$HandVisualScene = "",
     [double]$UpperInflation = 0.032,
     [double]$LowerInflation = 0.042,
     [double]$FeetInflation = 0.040,
@@ -32,6 +33,9 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path $GodotPath)) {
 if ($Port -lt 1024 -or $Port -gt 65535) {
     throw "Port must be in range 1024..65535."
 }
+if (-not [string]::IsNullOrWhiteSpace($HandVisualScene) -and -not $HandVisualScene.StartsWith("res://")) {
+    throw "HandVisualScene must be a Godot res:// PackedScene path."
+}
 
 foreach ($Pair in @(
     @{ Name = "UpperInflation"; Value = $UpperInflation },
@@ -47,9 +51,7 @@ if ($InflationScale -lt 0.10 -or $InflationScale -gt 2.00) {
 }
 
 function Invoke-GodotCaptured {
-    param(
-        [string[]]$Arguments
-    )
+    param([string[]]$Arguments)
 
     $OutputLines = [System.Collections.Generic.List[string]]::new()
     $PreviousErrorActionPreference = $ErrorActionPreference
@@ -89,9 +91,7 @@ $FatalMarkers = @(
 )
 
 function Get-FatalGodotMarker {
-    param(
-        [string]$OutputText
-    )
+    param([string]$OutputText)
     foreach ($Marker in $FatalMarkers) {
         if ($OutputText.Contains($Marker)) {
             return $Marker
@@ -128,9 +128,7 @@ Write-Host "FPE graphical composition preflight: PASS" -ForegroundColor Green
 
 $GarmentAvailable = Test-Path -LiteralPath $Garment -PathType Leaf
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
-$UserArgs = @(
-    "--ch9-6-port=$Port"
-)
+$UserArgs = @("--ch9-6-port=$Port")
 if ($GarmentAvailable) {
     $UserArgs = @(
         "--ch8c-upper-inflation=$($UpperInflation.ToString('0.######', $Invariant))",
@@ -143,16 +141,25 @@ if ($GarmentAvailable) {
 if ($ResetState) {
     $UserArgs += "--ch9-6-reset-state"
 }
+if (-not [string]::IsNullOrWhiteSpace($HandVisualScene)) {
+    $UserArgs += "--fpe-hand-visual-scene=$HandVisualScene"
+}
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - R2 S6 substitutable first-person hand visual boundary over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 S7 resource-backed first-person hand visuals over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
-Write-Host "R2 S2-S5 are retained: catalogued items, articulated poses, first-person two-hand support and third-person secondary-hand support remain unchanged." -ForegroundColor Cyan
-Write-Host "R2 S6 gate: the 17-bone hand skeleton and pose logic are now independent from hand geometry through a visual-provider contract. The default provider intentionally reproduces the current procedural palm/fingers." -ForegroundColor Cyan
-Write-Host "HUD must report: S6 hand visuals: L:PROCEDURAL_SEGMENTS | R:PROCEDURAL_SEGMENTS | substitutable:YES." -ForegroundColor Cyan
-Write-Host "Switch 1 -> 2 -> empty while moving. Beacon pinch, mount-base two-hand support, S5 world left support and zero-stall movement must remain unchanged after the provider boundary was inserted." -ForegroundColor Cyan
-Write-Host "A production compatible hand asset can later replace the provider without changing grip, pose, two-hand, Item Graph or network authority code." -ForegroundColor Cyan
+Write-Host "R2 S2-S6 are retained: catalogued items, articulated poses, two-hand first/third-person support and the substitutable 17-bone hand visual boundary remain unchanged." -ForegroundColor Cyan
+Write-Host "R2 S7 adds a real PackedScene hand-visual adapter. An authored scene must declare the FPE hand visual asset schema and provide BoneAttachment3D children targeting the canonical hand skeleton." -ForegroundColor Cyan
+if ([string]::IsNullOrWhiteSpace($HandVisualScene)) {
+    Write-Host "S7 runtime mode: no resource requested; procedural hand provider remains active. HUD should show S7 resource hand: DEFAULT and S6 L/R:PROCEDURAL_SEGMENTS." -ForegroundColor Cyan
+    Write-Host "Optional adapter demo: rerun with -HandVisualScene 'res://tests/fixtures/fpe_s7_authored_hand_visual.tscn'." -ForegroundColor Cyan
+} else {
+    Write-Host "S7 runtime mode: resource requested: $HandVisualScene" -ForegroundColor Cyan
+    Write-Host "HUD should report S7 resource hand: REQUESTED and L/R:RESOURCE_BONE_ATTACHMENTS." -ForegroundColor Cyan
+}
+Write-Host "Switch 1 -> 2 -> empty while moving. Beacon pinch, mount-base two-hand support, S5 world-left support, empty release and zero-stall movement must remain unchanged." -ForegroundColor Cyan
+Write-Host "A production authored/skinned hand asset remains a later visual asset implementation; S7 validates the resource loading/binding contract, not final art quality." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left first-person hand is free." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
