@@ -153,7 +153,8 @@ if ($ResetState) {
 
 Write-Host "Godot: $GodotPath"
 Write-Host "FPE research - FirstPersonEmbodiment over accepted CH9.6" -ForegroundColor Cyan
-Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: network hotbar" -ForegroundColor Cyan
+Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
+Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
