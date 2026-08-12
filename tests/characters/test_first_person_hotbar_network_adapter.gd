@@ -34,16 +34,16 @@ class FakeRuntime:
 	func _send_on_channel(
 		message_type: String,
 		payload: Dictionary,
-		channel: int,
-		reliability: String,
-		expect_result: bool
+		channel: String,
+		delivery_mode: String,
+		track_operation: bool
 	) -> bool:
 		sent_frames.append({
 			"message_type": message_type,
 			"payload": payload.duplicate(true),
 			"channel": channel,
-			"reliability": reliability,
-			"expect_result": expect_result,
+			"delivery_mode": delivery_mode,
+			"track_operation": track_operation,
 		})
 		return true
 
@@ -70,10 +70,12 @@ func _run() -> void:
 		var frame: Dictionary = runtime.sent_frames[0]
 		var payload: Dictionary = Dictionary(frame.get("payload", {}))
 		_assert(String(frame.get("message_type", "")) == "ITEM_COMMAND", "wrong network message type")
+		_assert(String(frame.get("channel", "")) == "ITEM", "hotbar command must use ITEM channel")
 		_assert(String(payload.get("command_type", "")) == "inventory.select_hotbar", "wrong item command type")
 		_assert(int(payload.get("ownership_epoch", 0)) == 7, "ownership epoch not forwarded")
 		_assert(int(Dictionary(payload.get("payload", {})).get("selected_hotbar_index", -1)) == 1, "hotbar index not forwarded")
-		_assert(String(frame.get("reliability", "")) == "RELIABLE_ORDERED", "hotbar authority command must remain reliable ordered")
+		_assert(String(frame.get("delivery_mode", "")) == "RELIABLE_ORDERED", "hotbar authority command must remain reliable ordered")
+		_assert(bool(frame.get("track_operation", false)), "hotbar command must keep operation tracking enabled")
 
 	var pending: Dictionary = adapter.poll()
 	_assert(bool(pending.get("success", false)) and bool(Dictionary(pending.get("details", {})).get("pending", false)), "hotbar command was not reported pending before authority snapshot")
