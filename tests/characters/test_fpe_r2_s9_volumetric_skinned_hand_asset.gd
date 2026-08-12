@@ -20,6 +20,7 @@ func _run() -> void:
 	var fixture: Node = VolumetricFixture.instantiate()
 	_assert(fixture is Node3D, "S9 volumetric fixture did not instantiate as Node3D")
 	root.add_child(fixture)
+	_assert(String(fixture.get_meta("fpe_visual_quality", "")) == "ROUNDED_VOLUMETRIC_V2", "S9 Fix1 rounded visual-quality marker missing")
 	var fixture_visual := fixture.get_node_or_null("VolumetricSkinnedHand") as MeshInstance3D
 	_assert(fixture_visual != null, "S9 volumetric fixture MeshInstance3D missing")
 	if fixture_visual != null:
@@ -28,13 +29,15 @@ func _run() -> void:
 		if fixture_visual.mesh != null:
 			var aabb := fixture_visual.mesh.get_aabb()
 			_assert(aabb.size.x > 0.10, "S9 hand mesh width is unexpectedly flat")
-			_assert(aabb.size.y > 0.035, "S9 hand mesh thickness is unexpectedly flat")
+			_assert(aabb.size.y > 0.045, "S9 rounded hand mesh thickness is unexpectedly flat")
 			_assert(aabb.size.z > 0.20, "S9 hand mesh length is unexpectedly short")
 			var arrays: Array = (fixture_visual.mesh as ArrayMesh).surface_get_arrays(0)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 			var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
 			var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-			_assert(vertices.size() >= 300, "S9 full-hand mesh does not contain enough volumetric vertices")
+			_assert(vertices.size() >= 650, "S9 Fix1 full-hand mesh does not contain enough rounded volumetric vertices")
+			_assert(normals.size() == vertices.size(), "S9 Fix1 rounded hand normal count mismatch")
 			_assert(bones.size() == vertices.size() * 4, "S9 full-hand bone array is not four influences per vertex")
 			_assert(weights.size() == vertices.size() * 4, "S9 full-hand weight array is not four influences per vertex")
 		if fixture_visual.skin != null:
@@ -57,7 +60,7 @@ func _run() -> void:
 	_assert(int(report.get("bone_count", 0)) == 17, "S9 changed canonical hand bone count")
 	_assert(int(report.get("visual_segments", 0)) == 1, "S9 should install one weighted hand MeshInstance3D")
 	_assert(String(report.get("visual_provider_mode", "")) == "RESOURCE_SKINNED_RETARGETED", "S9 provider mode mismatch")
-	_assert(String(report.get("visual_provider_id", "")) == "fpe_s9_volumetric_skinned_hand_v1", "S9 provider id mismatch")
+	_assert(String(report.get("visual_provider_id", "")) == "fpe_s9_rounded_volumetric_skinned_hand_v2", "S9 Fix1 provider id mismatch")
 	_assert(int(provider_report.get("skin_bind_count", 0)) == 16, "S9 retargeted Skin bind count mismatch")
 	_assert(int(provider_report.get("retargeted_bind_count", 0)) == 16, "S9 all source hand binds must retarget")
 	_assert(int(provider_report.get("weighted_surface_count", 0)) == 1, "S9 weighted surface count mismatch")
