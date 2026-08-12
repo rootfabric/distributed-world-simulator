@@ -1,4 +1,4 @@
-name: H0.1 R8 Exact Validation Export
+name: H0.1 R8 Bounded Implementation
 
 on:
   push:
@@ -6,77 +6,253 @@ on:
       - validation/h0-1-r7-exact-export
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify-and-export:
+  implement:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact R8 branch
+      - name: Checkout dispatched R8 branch
         uses: actions/checkout@v4
         with:
           ref: feature/h0-1-c22-current-main-r3
           fetch-depth: 0
 
-      - name: Pin exact Git state
+      - name: Pin dispatch and canonical main
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r3"
-          test "$(git rev-parse HEAD)" = "b06688bcfeecbd948b313ca2a1bf1acd5d17c1be"
+          test "$(git rev-parse HEAD)" = "f5f8e9adff508678c2e2f8d0cb1ddadae6db4b95"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
+          git cat-file -e 83954a5ca2b4f47ea140de208f572ee495378fca^{commit}
           test -z "$(git status --porcelain)"
 
-      - name: Install pinned harness dependency
-        shell: bash
-        run: python -m pip install -r scripts/harness/requirements.txt
-
-      - name: Run R8 harness unit suite
+      - name: Repair freshness fence and regression tests
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/h0-r8-evidence"
-          python -m unittest discover -s tests/harness -v 2>&1 | tee "$RUNNER_TEMP/h0-r8-evidence/harness-unit.log"
+          python - <<'PY'
+          from pathlib import Path
 
-      - name: Run public Status Plan Resume
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          & ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-status.log"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-plan.log"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h0-r8-evidence/control-resume.log"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          state_path = Path('scripts/harness/state_builder.py')
+          state = state_path.read_text(encoding='utf-8')
+          old = '''def _git_implementation_head(root: Path, execution_dir: Path) -> str:
+              """Return the latest commit touching active H0 implementation surfaces.
 
-      - name: Run Git-only recovery drill
+              The active transition table is derived from ``execution_dir`` instead of a
+              hard-coded epoch. Append-only event/review/evidence ledgers and unrelated
+              checkpoint documentation are deliberately excluded so recording evidence
+              or another program's docs cannot stale the H0 implementation target.
+              """
+              transition_path = _repo_relative(root, execution_dir / "transition-table.v1.json")
+              implementation_paths = [
+                  "CONTROL_DEVELOPMENT.ps1",
+                  "scripts/harness",
+                  "tests/harness",
+                  "validation/harness",
+                  _H0_0_CHECKPOINT_DOC,
+                  transition_path,
+              ]
+              output = subprocess.run(
+                  ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
+                  cwd=root,
+                  text=True,
+                  capture_output=True,
+                  check=False,
+              )
+              value = output.stdout.strip()
+              if output.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", value):
+                  raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
+              return value
+          '''
+          new = '''def _implementation_pathspecs(
+              root: Path,
+              execution_dir: Path,
+              work_order: dict[str, Any],
+          ) -> tuple[str, ...]:
+              """Return review-freshness pathspecs for the active bounded implementation.
+
+              The Work Order is the authority for implementation scope. Append-only execution
+              records, branch passports and checkpoint-only documents are intentionally
+              excluded so writing evidence cannot stale its own review target. The active
+              transition table remains part of the implementation fence because it controls
+              reducer semantics for this execution.
+              """
+              execution_prefix = f"{_repo_relative(root, execution_dir).rstrip('/')}/"
+              excluded_prefixes = (execution_prefix, "config/control/branches/", "docs/checkpoints/")
+              pathspecs: list[str] = []
+              for raw_path in work_order["allowed_paths"]:
+                  normalized = raw_path.replace("\\\\", "/")
+                  if any(normalized.startswith(prefix) for prefix in excluded_prefixes):
+                      continue
+                  if normalized not in pathspecs:
+                      pathspecs.append(normalized)
+
+              transition_path = _repo_relative(root, execution_dir / "transition-table.v1.json")
+              if transition_path not in pathspecs:
+                  pathspecs.append(transition_path)
+              if not pathspecs:
+                  raise ContractValidationError("IMPLEMENTATION_PATHS_UNAVAILABLE")
+              return tuple(pathspecs)
+
+
+          def _git_implementation_head(
+              root: Path,
+              execution_dir: Path,
+              work_order: dict[str, Any],
+          ) -> str:
+              """Return the latest commit touching the active bounded implementation."""
+              implementation_paths = _implementation_pathspecs(root, execution_dir, work_order)
+              output = subprocess.run(
+                  ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
+                  cwd=root,
+                  text=True,
+                  capture_output=True,
+                  check=False,
+              )
+              value = output.stdout.strip()
+              if output.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", value):
+                  raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
+              return value
+          '''
+          # Dedent workflow indentation from the literal blocks above.
+          import textwrap
+          old = textwrap.dedent(old)
+          new = textwrap.dedent(new)
+          if old not in state:
+              raise SystemExit('OLD_IMPLEMENTATION_HEAD_BLOCK_NOT_FOUND')
+          state = state.replace(old, new, 1)
+          needle = 'implementation_head = _git_implementation_head(root, execution_dir)'
+          replacement = 'implementation_head = _git_implementation_head(root, execution_dir, active["definition"])'
+          if state.count(needle) != 1:
+              raise SystemExit('IMPLEMENTATION_HEAD_CALL_NOT_UNIQUE')
+          state = state.replace(needle, replacement, 1)
+          state_path.write_text(state, encoding='utf-8')
+
+          test_path = Path('tests/harness/test_h0_control_harness.py')
+          tests = test_path.read_text(encoding='utf-8')
+          import_old = 'from harness.state_builder import _validate_semantics, build_state'
+          import_new = 'from harness.state_builder import _implementation_pathspecs, _validate_semantics, build_state'
+          if tests.count(import_old) != 1:
+              raise SystemExit('STATE_BUILDER_IMPORT_NOT_UNIQUE')
+          tests = tests.replace(import_old, import_new, 1)
+          old_test = '''    def test_implementation_freshness_scope_declares_runtime_and_excludes_ledger(self):
+              allowed = tuple(self.work_order["allowed_paths"])
+              self.assertIn("scripts/harness/**", allowed)
+              self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", allowed)
+              self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", allowed)
+              execution_prefix = f"config/control/harness/executions/{self.epoch['epoch_id']}/"
+              self.assertTrue(any(path.startswith(execution_prefix) for path in allowed))
+
+          '''
+          new_test = '''    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):
+              pathspecs = _implementation_pathspecs(ROOT, ACTIVE_EXECUTION, self.work_order)
+              self.assertIn("scripts/harness/**", pathspecs)
+              self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", pathspecs)
+              self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", pathspecs)
+              execution_prefix = f"config/control/harness/executions/{self.epoch['epoch_id']}/"
+              self.assertNotIn(f"{execution_prefix}**", pathspecs)
+              self.assertIn(f"{execution_prefix}transition-table.v1.json", pathspecs)
+              self.assertFalse(any(path.startswith("config/control/branches/") for path in pathspecs))
+              self.assertFalse(any(path.startswith("docs/checkpoints/") for path in pathspecs))
+
+              state = build_state(ROOT, ACTIVE_EXECUTION)
+              expected = subprocess.run(
+                  ["git", "log", "-1", "--format=%H", "--", *pathspecs],
+                  cwd=ROOT,
+                  text=True,
+                  capture_output=True,
+                  check=True,
+              ).stdout.strip()
+              self.assertEqual(expected, state["repository"]["implementation_head_sha"])
+              self.assertEqual(expected, state["review"]["review_target_head_sha"])
+
+          '''
+          old_test = textwrap.dedent(old_test)
+          new_test = textwrap.dedent(new_test)
+          if old_test not in tests:
+              raise SystemExit('OLD_FRESHNESS_TEST_BLOCK_NOT_FOUND')
+          tests = tests.replace(old_test, new_test, 1)
+          test_path.write_text(tests, encoding='utf-8')
+          PY
+          python -m py_compile scripts/harness/state_builder.py tests/harness/test_h0_control_harness.py
+
+      - name: Transfer exact SOURCE_ACCEPTED C22 blobs
         shell: bash
         run: |
           set -euo pipefail
-          recovery="$RUNNER_TEMP/h0-r8-recovery"
-          git clone --no-tags https://github.com/rootfabric/distributed-world-simulator.git "$recovery"
-          cd "$recovery"
-          git checkout -B feature/h0-1-c22-current-main-r3 b06688bcfeecbd948b313ca2a1bf1acd5d17c1be
-          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git branch --show-current)" = "feature/h0-1-c22-current-main-r3"
-          test "$(git rev-parse HEAD)" = "b06688bcfeecbd948b313ca2a1bf1acd5d17c1be"
-          test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
-          python -m pip install -r scripts/harness/requirements.txt
-          pwsh -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee "$RUNNER_TEMP/h0-r8-evidence/git-only-recovery-resume.log"
+          paths=(
+            RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1
+            RUN_C22_INCREMENTAL_REBUILD_TESTS.sh
+            RUN_WORLD_REGRESSION_TESTS.ps1
+            scripts/construction/proxies/construction_proxy_array_mesh_backend.gd
+            scripts/construction/proxies/construction_proxy_artifact_merger.gd
+            scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid
+            scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd
+            scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid
+            scripts/construction/proxies/construction_proxy_streaming_controller.gd
+            tests/construction/test_c22_incremental_local_rebuild.gd
+            tests/construction/test_c22_incremental_local_rebuild.gd.uid
+            tests/construction/test_c24_proxy_mesh_backend_contracts.gd
+            validation/c22-incremental-local-rebuild-validation.json
+          )
+          git checkout 83954a5ca2b4f47ea140de208f572ee495378fca -- "${paths[@]}"
+          declare -A expected=(
+            [RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1]=00aff2ea79b18b2d3df8477ba6f384274f91d021
+            [RUN_C22_INCREMENTAL_REBUILD_TESTS.sh]=5fd401bd23e74848695b4355a661eea78bde8178
+            [RUN_WORLD_REGRESSION_TESTS.ps1]=56dbe3e9510675ff99fa1bc6ca5156591c52ddbc
+            [scripts/construction/proxies/construction_proxy_array_mesh_backend.gd]=9292910452ab8a729744dcdefaac0acfaaf3339b
+            [scripts/construction/proxies/construction_proxy_artifact_merger.gd]=3946919011663e874179080aeba31f0cef4aa0ba
+            [scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid]=110c07cd03d89f77035b93495ccba49a7c6c4705
+            [scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd]=eb7ae1bde276d6354465bacc22a3b51d084d0538
+            [scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid]=24ea3d281929c0e81f4ce26663d03900b68baf1f
+            [scripts/construction/proxies/construction_proxy_streaming_controller.gd]=423c141a9017e272ea6c38ca67e469eb6c692926
+            [tests/construction/test_c22_incremental_local_rebuild.gd]=bcd57e832d11cb72994d9054e9d07387a320fdbc
+            [tests/construction/test_c22_incremental_local_rebuild.gd.uid]=940dbf523d7ca2b95c92ed4049bcb2f05d7dd323
+            [tests/construction/test_c24_proxy_mesh_backend_contracts.gd]=74d87b70c902762f40e8e281cf492ab9ef7be218
+            [validation/c22-incremental-local-rebuild-validation.json]=9fe3b7701f20bb83377a548c5da8131ca2160989
+          )
+          for path in "${paths[@]}"; do
+            test "$(git hash-object "$path")" = "${expected[$path]}"
+          done
 
-      - name: Pack exact validation checkout
-        if: always()
+      - name: Enforce bounded implementation diff
         shell: bash
-        run: tar -czf "$RUNNER_TEMP/h0-r8-exact-b06688bc.tar.gz" .
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only)
+          printf '%s\n' "${changed[@]}"
+          allowed_regex='^(scripts/harness/state_builder\.py|tests/harness/test_h0_control_harness\.py|RUN_C22_INCREMENTAL_REBUILD_TESTS\.ps1|RUN_C22_INCREMENTAL_REBUILD_TESTS\.sh|RUN_WORLD_REGRESSION_TESTS\.ps1|scripts/construction/proxies/construction_proxy_(array_mesh_backend|artifact_merger|incremental_local_rebuilder|streaming_controller)\.gd(\.uid)?|tests/construction/test_c22_incremental_local_rebuild\.gd(\.uid)?|tests/construction/test_c24_proxy_mesh_backend_contracts\.gd|validation/c22-incremental-local-rebuild-validation\.json)$'
+          test "${#changed[@]}" -eq 15
+          for path in "${changed[@]}"; do
+            [[ "$path" =~ $allowed_regex ]] || { echo "OUT_OF_SCOPE:$path" >&2; exit 1; }
+          done
 
-      - name: Upload exact validation evidence
-        if: always()
+      - name: Commit and push exact R8 implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'H0 R8 bounded worker'
+          git config user.email 'actions@users.noreply.github.com'
+          git add scripts/harness/state_builder.py tests/harness/test_h0_control_harness.py \
+            RUN_C22_INCREMENTAL_REBUILD_TESTS.ps1 RUN_C22_INCREMENTAL_REBUILD_TESTS.sh RUN_WORLD_REGRESSION_TESTS.ps1 \
+            scripts/construction/proxies/construction_proxy_array_mesh_backend.gd \
+            scripts/construction/proxies/construction_proxy_artifact_merger.gd scripts/construction/proxies/construction_proxy_artifact_merger.gd.uid \
+            scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd.uid \
+            scripts/construction/proxies/construction_proxy_streaming_controller.gd \
+            tests/construction/test_c22_incremental_local_rebuild.gd tests/construction/test_c22_incremental_local_rebuild.gd.uid \
+            tests/construction/test_c24_proxy_mesh_backend_contracts.gd validation/c22-incremental-local-rebuild-validation.json
+          git commit -m 'fix(h0.1): repair freshness fence and transfer C22'
+          new_head="$(git rev-parse HEAD)"
+          git push origin HEAD:feature/h0-1-c22-current-main-r3
+          echo "R8_IMPLEMENTATION_HEAD=$new_head" | tee "$RUNNER_TEMP/r8-implementation-head.txt"
+
+      - name: Upload implementation head
         uses: actions/upload-artifact@v4
         with:
-          name: h0-r8-exact-validation-b06688bc
-          path: |
-            ${{ runner.temp }}/h0-r8-evidence
-            ${{ runner.temp }}/h0-r8-exact-b06688bc.tar.gz
+          name: h0-r8-implementation-head
+          path: ${{ runner.temp }}/r8-implementation-head.txt
           if-no-files-found: error
           retention-days: 1
