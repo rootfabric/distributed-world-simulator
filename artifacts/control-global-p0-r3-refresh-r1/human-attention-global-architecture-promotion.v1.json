@@ -1,25 +1,25 @@
 {
-  "schema_version": "harness_human_attention.v1",
-  "attention_id": "R3-GLOBAL-ARCHITECTURE-PROMOTION-V6-001",
-  "status": "OPEN",
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "R3-GLOBAL-ARCHITECTURE-PROMOTION-V6-001",
   "program": "R3",
   "checkpoint": "R3_REFRESHED_CANDIDATE",
   "risk_class": "CRITICAL",
-  "decision_required": "Whether to authorize GLOBAL_ARCHITECTURE_PROMOTION for exact frozen R3 V6 target f78847624a9016d1e8ed39c12b5291d91037ea53.",
+  "reason": "After machine control and durable independent Reviewer, Verifier, and Director gates are complete, promotion of the exact frozen R3 V6 candidate changes canonical global architecture truth and therefore requires a separate explicit Human decision.",
+  "decision_required": "Whether to authorize GLOBAL_ARCHITECTURE_PROMOTION for exact frozen R3 V6 target f78847624a9016d1e8ed39c12b5291d91037ea53",
   "options": [
     "APPROVE_PROMOTION",
     "REJECT_OR_RETURN_FOR_REPAIR"
   ],
-  "system_recommendation": "DEFER_DECISION_UNTIL_DURABLE_REVIEWER_VERIFIER_AND_DIRECTOR_STAGES_COMPLETE",
-  "human_decision": null,
-  "evidence_refs": [
-    "git:f78847624a9016d1e8ed39c12b5291d91037ea53",
-    "artifacts/control-global-p0-r3-refresh-r1/post-build-critique.v1.json",
-    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
+  "blast_radius": [
+    "canonical global architecture revision",
+    "downstream H0.2/NX.C1 eligibility after post-R3 PC0",
+    "downstream architecture-gated lanes"
   ],
-  "notes": [
-    "HUMAN DECISION REQUEST PREPARED; HUMAN DECISION NOT TAKEN.",
-    "This OPEN item does not authorize promotion, merge, H0.2/NX.C1, H0.3, V0, G9, TS0.4 or T2.0.",
-    "Frozen mutable target remains f78847624a9016d1e8ed39c12b5291d91037ea53."
-  ]
+  "blocking": true,
+  "evidence_paths": [
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json",
+    "artifacts/control-global-p0-r3-refresh-r1/post-build-critique.v1.json",
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json"
+  ],
+  "status": "OPEN"
 }
