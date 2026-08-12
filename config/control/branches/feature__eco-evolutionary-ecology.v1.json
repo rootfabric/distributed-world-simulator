@@ -5,43 +5,96 @@
   "branch": "feature/eco-evolutionary-ecology",
   "program": "ECO",
   "role": "RESEARCH_DESIGN_FRONTIER",
-  "short_description": "Evolutionary ecology research: emergent morphology/population dynamics, accepted multi-scale representation, global consumer-contract alignment and morphology economics calibration.",
-  "purpose": "Prove that ecological strategies and later lineage divergence emerge from causal environmental/resource/competition/history processes while future world integration consumes canonical shared foundations instead of creating ECO-private truth layers.",
+  "short_description": "Standalone evolutionary ecosystem research: grow ecology from landscape/history without player or biome species tables, then later transfer and continue the same ecology inside the world simulator.",
+  "purpose": "Build a reusable autonomous evolutionary ecology mini-project that evolves plant and later multi-trophic ecosystems from causal environment/resource/competition/history rules, exports portable spatial ecology state, and eventually feeds World Generation/local/background simulation without duplicate ecology truth.",
+  "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
+  "north_star_config": "config/ecology/eco-evolutionary-ecosystem-vision.v1.json",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_stage": "ECO.CAL1-A Baseline Decomposition / Mechanism Audit",
-  "stage_status": "PH_RESEARCH_COMPLETE_CONV0_A_ACCEPTED_CAL1_A_EXECUTE_NOW_RESEARCH_ONLY",
-  "progress_note": "PH5-S3/S4 accepted on exact Windows Godot 4.7.1 double, including 49/16/61 S3 assertions, 5026 S4 robustness assertions, 430 canonical phenotype×tier assertions, 40 exact-Windows visual smoke assertions and user-confirmed graphical lab completion. CONV0-A global alignment is accepted as design requirements: ECO needs no new global foundation, but R3 has five explicit gaps. Highest priority is program-ID collision: canonical ECO means Evolutionary Ecology while R3 candidate reuses ECO/ECO_FUTURE for World Economy; recommended token is ECON. Generic production POPULATION_FIELD remains POP-owned; ECO owns ecological population model semantics only. CAL1 source audit shows current height benefit depends on absolute shade while structure cost scales height^1.55 and relative neighbour-height/light competition is absent. CAL1-A now records baseline score decomposition before any coefficient calibration.",
+  "current_stage": "ECO.EVO0 / CAL1-A Baseline Decomposition / Mechanism Audit",
+  "stage_status": "PH_RESEARCH_COMPLETE_CONV0_A_ACCEPTED_EVO0_CAL1_A_EXECUTE_NOW_RESEARCH_ONLY",
+  "progress_note": "Plant ecology/resource/development/representation foundations are accepted through PH5-S4. The branch North Star is now explicitly restored to the original Evolutionary Ecosystem mission: run a standalone headless ecology on arbitrary landscapes, evolve spatial plant communities and later multi-trophic systems, save/restart/export an EcologyArchive, then use canonical simulator foundations to materialize and continue the same ecology at local/background resolution. CAL1 is EVO0 hardening before the first autonomous Plant World Proof, not the destination. CONV0-A global gaps remain active design findings for later XFER/LIVE convergence.",
   "last_accepted_checkpoint": "ECO.CONV0-A Global Alignment / World Integration Consumer Requirements",
-  "next_stage": "Execute CAL1-A baseline decomposition: reproduce the unrestricted HEIGHT_LOW finding across controlled environments, record all PH3 coupling score components and sensitivity without changing coefficients, preserve accepted PH3C pairwise hashes/behavior, and establish deterministic baseline evidence. Then CAL1-B introduces relative vertical light competition as a separate causal research mechanism.",
-  "owned_paths": ["config/ecology/**", "docs/future_features/evolutionary_ecology/**", "scripts/research/ecology/**", "tests/research/ecology/**", "validation/ecology/**", "scripts/labs/ecology/**", "scenes/labs/ecology/**"],
-  "watched_paths": ["config/architecture/**", "config/control/project-program-registry.v1.json", "config/control/project-control-policy.v1.json", "scripts/control/**", "scripts/simulation/procedural/contracts/**", "scripts/simulation/procedural/semantic_fields/**", "scripts/simulation/procedural/hydrology/**", "scripts/simulation/procedural/geomorphology/**", "scripts/simulation/matter/**", "scripts/network/**"],
-  "critical_watched_paths": ["config/architecture/global-program-roadmap.v1.json", "config/control/project-program-registry.v1.json", "config/control/project-control-policy.v1.json", "scripts/simulation/procedural/contracts/**", "scripts/simulation/matter/**"],
+  "next_stage": "Execute CAL1-A without coefficient changes, finish CAL1 causal plant economics, then begin ECO.EVO1_PLANT_WORLD_PROOF: deterministic heterogeneous landscape + ancestral pool -> dispersal, recruitment, succession, disturbance, spatial communities and lineage divergence without biome/species placement tables.",
+  "owned_paths": [
+    "config/ecology/**",
+    "docs/future_features/evolutionary_ecology/**",
+    "scripts/research/ecology/**",
+    "tests/research/ecology/**",
+    "validation/ecology/**",
+    "scripts/labs/ecology/**",
+    "scenes/labs/ecology/**"
+  ],
+  "watched_paths": [
+    "config/architecture/**",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/control/**",
+    "scripts/simulation/procedural/contracts/**",
+    "scripts/simulation/procedural/semantic_fields/**",
+    "scripts/simulation/procedural/hydrology/**",
+    "scripts/simulation/procedural/geomorphology/**",
+    "scripts/simulation/matter/**",
+    "scripts/network/**"
+  ],
+  "critical_watched_paths": [
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/simulation/procedural/contracts/**",
+    "scripts/simulation/matter/**"
+  ],
   "runtime_paths": [],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE_RESEARCH_ONLY",
     "ph": "RESEARCH_COMPLETE_PH0_THROUGH_PH5_S4_ACCEPTED",
     "conv0_a": "ACCEPTED_DESIGN_REQUIREMENTS_GLOBAL_GAPS_REPORTED",
-    "cal1": "CAL1_A_NEXT_EXECUTION_NO_CALIBRATION_YET"
+    "evo0_cal1": "CAL1_A_EXECUTE_NOW_NO_CALIBRATION_YET",
+    "evo1_plus": "PLANNED_NOT_STARTED"
   },
   "ownership_claims": [
-    {"foundation":"ECOLOGY_RESEARCH_MODEL","claimed_owner":"ECO","scope":"ecological genome/development/resource competition/selection/lifecycle/population/dispersal/biogeography semantics and derived representation requirements"}
+    {
+      "foundation": "ECOLOGY_RESEARCH_MODEL",
+      "claimed_owner": "ECO",
+      "scope": "organism/lineage ecological semantics, causal resource economics, population/cohort ecological state meaning, dispersal/recruitment/succession/disturbance/biogeography, trophic interaction research semantics, EcologyArchive meaning and derived ecology projection requirements"
+    }
   ],
-  "forbidden_foundation_ownership": ["SPATIAL_DOMAIN_FABRIC", "TIME_FABRIC", "ENVIRONMENT_SIMULATION", "MATERIAL_ONTOLOGY", "WORLD_QUERY_FABRIC", "GENERIC_POPULATION_FIELD_RUNTIME", "WORLD_LIFECYCLE_FABRIC", "WORLD_WORK_BUDGET", "AUTHORITY_FOUNDATION", "NETWORK_REPLICATION_POLICY", "PERSISTENCE_DURABILITY", "WORLD_TRANSACTION_MODEL", "PRESENTATION_MESH_AS_TRUTH", "PLANET_WIDE_INDIVIDUAL_GROWTH_GRAPH_TRUTH"],
+  "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
+  "execution_invariant": "ALL_MODES_SHARE_ONE_ECOLOGY_STATE_MEANING",
+  "forbidden_foundation_ownership": [
+    "GEOLOGY_OR_TERRAIN_TRUTH",
+    "SPATIAL_DOMAIN_FABRIC",
+    "TIME_FABRIC",
+    "ENVIRONMENT_SIMULATION",
+    "MATERIAL_ONTOLOGY",
+    "WORLD_QUERY_FABRIC",
+    "GENERIC_POPULATION_FIELD_RUNTIME",
+    "WORLD_LIFECYCLE_FABRIC",
+    "WORLD_WORK_BUDGET",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "WORLD_TRANSACTION_MODEL",
+    "PRESENTATION_MESH_AS_TRUTH",
+    "PLANET_WIDE_INDIVIDUAL_ENTITY_TRUTH"
+  ],
   "blockers": [
     "NO_COEFFICIENT_CALIBRATION_BEFORE_CAL1_MECHANISM_ACCEPTANCE",
-    "FULL_POOL_COMPACT_DOMINANCE_CAL1_REQUIRED_BEFORE_UNCONSTRAINED_MORPHOLOGY_EVOLUTION",
-    "ECO_P2_REQUIRES_CAL1_ACCEPTANCE",
-    "CONV0_B_REQUIRES_CANONICAL_R3_FOUNDATION_CONTRACTS",
-    "PRODUCTION_ECO_REQUIRES_CANONICAL_ENV_WQ_MAT_POP_LIFE_SD_WB_AND_HARNESS_FRONTIER"
+    "EVO1_PLANT_WORLD_PROOF_REQUIRES_CAL1_ACCEPTANCE",
+    "EVO3_MULTI_TROPHIC_REQUIRES_STABLE_PLANT_WORLD_FOUNDATION",
+    "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
+    "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
   ],
-  "health_declared": "GREEN_WITH_GLOBAL_R3_GAPS_REPORTED",
+  "health_declared": "GREEN_RESEARCH_ONLY_WITH_GLOBAL_R3_GAPS_REPORTED",
   "cross_branch_overlap_enabled": false,
   "planned_cross_tracks": [
-    {"id":"ECO.PH","status":"RESEARCH_COMPLETE"},
-    {"id":"ECO.CONV0-A","status":"ACCEPTED_REQUIREMENTS_GLOBAL_GAPS_REPORTED"},
-    {"id":"ECO.CAL1","status":"CAL1_A_EXECUTE_NOW","plan":"docs/future_features/evolutionary_ecology/ECO_CAL1_MORPHOLOGY_ECONOMICS_PLAN_RU.md"},
-    {"id":"ECO.P2","status":"BLOCKED_BY_CAL1_ACCEPTANCE"},
-    {"id":"ECO.CONV0-B","status":"WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS"},
-    {"id":"ECO.P3_PH6","status":"DEFERRED_PRODUCTION_FOUNDATIONS"}
+    {"id":"ECO.EVO0","status":"CAL1_A_EXECUTE_NOW","goal":"causal plant economics hardening"},
+    {"id":"ECO.EVO1","status":"BLOCKED_BY_CAL1","goal":"autonomous spatial plant ecosystem / Plant World Proof"},
+    {"id":"ECO.EVO2","status":"PLANNED_AFTER_EVO1","goal":"long-run landscape evolution/history/lineage divergence"},
+    {"id":"ECO.EVO3","status":"PLANNED_AFTER_PLANT_FOUNDATION","goal":"multi-trophic ecosystem and coevolution"},
+    {"id":"ECO.EVO4","status":"PLANNED","goal":"headless regional/planet ecology runner with accelerated/background modes"},
+    {"id":"ECO.XFER0","status":"DESIGN_DURING_EVO","goal":"portable EcologyArchive"},
+    {"id":"ECO.XFER1","status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS","goal":"world-generation ecology bridge"},
+    {"id":"ECO.LIVE","status":"DEFERRED_UNTIL_XFER_AND_FOUNDATIONS","goal":"local/background continuation of same ecology state"},
+    {"id":"ECO.PRES","status":"LOW_PRIORITY","goal":"derived visual quality only"}
   ]
 }

@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.ecology_evolutionary_ecosystem_vision.v1",
+  "revision": "ECO-VISION-R1-2026-08-12",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANONICAL_BRANCH_NORTH_STAR_RESEARCH_MINI_PROJECT",
+  "vision_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
+  "mission": "Given a landscape/environment and initial ancestry, autonomously grow an evolving ecosystem whose organisms, populations, niches, succession and later food webs emerge from causal rules and history; export portable ecology state that the world simulator can materialize and continue under the same ecological semantics without requiring a player.",
+  "layers": [
+    {
+      "id": "EVO",
+      "name": "Evolutionary Ecosystem",
+      "role": "standalone ecology/evolution mini-project",
+      "player_required": false
+    },
+    {
+      "id": "XFER_LIVE",
+      "name": "Simulator Living Ecology",
+      "role": "transfer ecology state into the world simulator and continue the same ecology at local/background resolutions",
+      "player_required": false
+    },
+    {
+      "id": "PRES",
+      "name": "Derived Presentation",
+      "role": "flora/fauna visual projection only",
+      "priority": "DEFERRED_QUALITY_LAYER"
+    }
+  ],
+  "execution_modes": [
+    {
+      "id": "INCUBATE_FAST",
+      "purpose": "accelerated standalone long-horizon evolution/bake"
+    },
+    {
+      "id": "BACKGROUND_COARSE",
+      "purpose": "continue a planet/region without player presence at population/patch resolution"
+    },
+    {
+      "id": "LOCAL_ACTIVE",
+      "purpose": "continue the same ecology in an active region with local detail and interaction"
+    }
+  ],
+  "core_invariant": "INCUBATE_FAST_BACKGROUND_COARSE_LOCAL_ACTIVE_SHARE_ONE_ECOLOGY_STATE_MEANING",
+  "conceptual_artifacts": [
+    "LandscapeEcologyInput",
+    "EcologyWorldState",
+    "EcologyArchive",
+    "EcologyLocalProjection"
+  ],
+  "route": [
+    "FOUNDATION: P1 + PH0..PH5-S4 ACCEPTED",
+    "EVO0: CAL1 plant causal economics",
+    "EVO1: autonomous spatial plant ecosystem",
+    "EVO2: long-run evolutionary landscape / succession / lineage divergence",
+    "EVO3: multi-trophic ecology / food web / coevolution",
+    "EVO4: autonomous regional/planet ecology runner with accelerated and background modes",
+    "XFER0: portable EcologyArchive",
+    "XFER1: world-generation bridge after canonical simulator foundations",
+    "LIVE1: local active ecology continuation",
+    "LIVE2: background/offscreen continuation and coarse/fine convergence",
+    "LIVE3: bidirectional world/player disturbance feedback",
+    "PRES1_PLUS: richer derived visual presentation"
+  ],
+  "current_position": {
+    "checkpoint": "ECO.CAL1",
+    "step": "CAL1-A Baseline Decomposition / Mechanism Audit",
+    "meaning": "EVO0 hardening before first autonomous plant ecosystem proof"
+  },
+  "first_major_ecosystem_proof": {
+    "id": "ECO.EVO1_PLANT_WORLD_PROOF",
+    "goal": "On a small deterministic heterogeneous landscape, a broad ancestral plant pool forms multiple persistent communities, succession and spatial structure without biome/species placement tables, with deterministic save/restart and explainable causal history."
+  },
+  "world_generation_bridge": {
+    "flow": [
+      "G/MAT/ENV landscape truth",
+      "environment/substrate projection",
+      "EcologyWorldState or EcologyArchive query",
+      "EcologyLocalProjection",
+      "deterministic local materialization"
+    ],
+    "ownership_rule": "ECO owns ecological occupancy/distribution semantics; G/MAT/ENV retain terrain, geology, substrate and environment truth ownership."
+  },
+  "runtime_rule": "An activated local patch is a higher-resolution continuation of the same ecology state, not a second ecology simulation.",
+  "background_rule": "Ecology may continue without any player present.",
+  "presentation_rule": "Mesh/asset/animation/LOD may change without changing ecological truth.",
+  "non_goals_now": [
+    "production simulator integration before canonical shared foundations",
+    "high-quality art pipeline",
+    "one runtime entity per organism at planet scale",
+    "hardcoded biome-to-species tables",
+    "separate offline and runtime ecology truth models"
+  ]
+}
