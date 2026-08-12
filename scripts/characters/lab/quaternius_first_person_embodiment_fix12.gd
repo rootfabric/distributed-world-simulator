@@ -66,3 +66,18 @@ func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 	var snapshot: Dictionary = super.get_first_person_embodiment_debug_snapshot()
 	snapshot["r2_s4"] = get_r2_s4_two_hand_report()
 	return snapshot
+
+
+func _refresh_status() -> void:
+	super._refresh_status()
+	if fpe_status_label == null:
+		return
+	var report := get_r2_s4_two_hand_report()
+	var state := "ACTIVE" if bool(report.get("active", false)) else "FREE"
+	var profile := String(report.get("profile_id", ""))
+	var pose := String(report.get("secondary_pose_id", ""))
+	fpe_status_label.text += "\nS4 two-hand: %s | profile: %s | left pose: %s" % [
+		state,
+		profile if not profile.is_empty() else "-",
+		pose if not pose.is_empty() else "open",
+	]
