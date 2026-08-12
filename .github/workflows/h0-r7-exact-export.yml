@@ -1,4 +1,4 @@
-name: H0.1 R8 Ledger Transition
+name: H0.1 R8 Read-Only Verification
 
 on:
   push:
@@ -6,90 +6,46 @@ on:
       - validation/h0-1-r7-exact-export
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  record:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact R8 branch
+      - name: Checkout named R8 branch
         uses: actions/checkout@v4
         with:
           ref: feature/h0-1-c22-current-main-r3
           fetch-depth: 0
 
-      - name: Pin exact implementation/control state
+      - name: Pin control head and canonical main
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git rev-parse HEAD)" = "4c69de50c8374112d82efee2fd6917c770b3eae0"
+          test "$(git rev-parse HEAD)" = "e8493d7164661cb9ef6695b54b133fd7f0ae0647"
           test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
           test -z "$(git status --porcelain)"
 
-      - name: Append implementation and verification events atomically
+      - name: Install pinned harness dependency
+        shell: bash
+        run: python -m pip install -r scripts/harness/requirements.txt
+
+      - name: Verify exact implementation target survives evidence commits
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json
+          python -m unittest discover -s tests/harness -v
+          PYTHONPATH=scripts python - <<'PY'
           from pathlib import Path
-
-          root = Path('config/control/harness/executions/E2026-08-12-H0-1-R8')
-          wo_path = root / 'work-orders/H0-1-R8-C22-WO-001.v1.json'
-          wo = json.loads(wo_path.read_text(encoding='utf-8'))
-          if wo['state'] != 'DISPATCHED':
-              raise SystemExit(f"EXPECTED_DISPATCHED_GOT_{wo['state']}")
-          wo['state'] = 'VERIFYING'
-          wo['notes'] = (
-              'HIGH pre-build review PASS on exact setup head b06688bc. Director dispatch authorized exactly one bounded R8 worker. '
-              'Implementation committed at exact freshness target 4c69de50c8374112d82efee2fd6917c770b3eae0: state_builder now derives the implementation fence from the predeclared Work Order scope while excluding append-only evidence, branch passports and checkpoint-only docs; active transition table remains fenced. '
-              'Exactly 13 SOURCE_ACCEPTED C22 blobs were transferred and hash-verified. Fresh pinned harness 13/13 PASS, public Status/Plan/Resume PASS and Git-only recovery PASS. Fresh exact-Godot C22 incremental 28 PASS, graphical 35 PASS and C24 contracts 81 PASS; final PC0/review evidence are VERIFYING. Runtime merge remains forbidden.'
-          )
-          wo_path.write_text(json.dumps(wo, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')
-
-          events = root / 'events/H0-1-R8-C22-WO-001'
-          payloads = [
-              (3, {
-                  'schema':'distributed_world_simulator.harness_event.v1','event_id':'E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0003',
-                  'project_epoch':'E2026-08-12-H0-1-R8','work_order_id':'H0-1-R8-C22-WO-001','sequence':3,
-                  'event_type':'IMPLEMENTATION_COMMITTED','work_state':'IMPLEMENTED','recorded_at_utc':'2026-08-12T02:03:00Z','actor':'IMPLEMENTER',
-                  'branch':'feature/h0-1-c22-current-main-r3','head_sha':'4c69de50c8374112d82efee2fd6917c770b3eae0',
-                  'predicate':'C22_ACCEPTED_CAPABILITY_TRANSFERRED_WITHIN_SCOPE','command':'COMMIT_BOUNDED_R8_FRESHNESS_REPAIR_AND_EXACT_C22_TRANSFER','exit_code':0,
-                  'evidence_paths':['scripts/harness/state_builder.py','tests/harness/test_h0_control_harness.py','validation/c22-incremental-local-rebuild-validation.json'],
-                  'summary':'Bounded R8 implementation committed at 4c69de50: two harness files plus exactly 13 hash-verified SOURCE_ACCEPTED C22 blobs, with no out-of-scope runtime surfaces.'
-              }),
-              (4, {
-                  'schema':'distributed_world_simulator.harness_event.v1','event_id':'E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0004',
-                  'project_epoch':'E2026-08-12-H0-1-R8','work_order_id':'H0-1-R8-C22-WO-001','sequence':4,
-                  'event_type':'VERIFICATION_STARTED','work_state':'VERIFYING','recorded_at_utc':'2026-08-12T02:03:01Z','actor':'VERIFIER',
-                  'branch':'feature/h0-1-c22-current-main-r3','head_sha':'4c69de50c8374112d82efee2fd6917c770b3eae0',
-                  'predicate':'R8_EXACT_IMPLEMENTATION_VERIFICATION_STARTED','command':'VERIFY_EXACT_R8_IMPLEMENTATION_HEAD','exit_code':0,
-                  'evidence_paths':['scripts/harness/state_builder.py','tests/harness/test_h0_control_harness.py'],
-                  'summary':'Verification started on exact implementation/review target 4c69de50 after pinned harness 13/13, public control commands, Git-only recovery, C22 incremental/graphical and C24 gates passed.'
-              })
-          ]
-          for seq, event in payloads:
-              path = events / f'{seq:04d}-r8-{event["event_type"].lower().replace("_","-")}.v1.json'
-              if path.exists():
-                  raise SystemExit(f'APPEND_ONLY_EVENT_ALREADY_EXISTS:{path}')
-              path.write_text(json.dumps(event, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          from harness.state_builder import build_state
+          root = Path('.').resolve()
+          execution = root / 'config/control/harness/executions/E2026-08-12-H0-1-R8'
+          state = build_state(root, execution)
+          assert state['active_work_order']['state'] == 'VERIFYING', state['active_work_order']['state']
+          assert state['reduced_work_order']['state'] == 'VERIFYING', state['reduced_work_order']['state']
+          assert state['repository']['implementation_head_sha'] == '4c69de50c8374112d82efee2fd6917c770b3eae0', state['repository']['implementation_head_sha']
+          assert state['review']['review_target_head_sha'] == '4c69de50c8374112d82efee2fd6917c770b3eae0', state['review']['review_target_head_sha']
+          assert state['human_attention']['open_count'] == 0, state['human_attention']
+          print('R8 VERIFYING exact implementation fence: PASS')
           PY
-
-      - name: Validate bounded ledger mutation and push
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add config/control/harness/executions/E2026-08-12-H0-1-R8
-          mapfile -t changed < <(git diff --cached --name-only)
-          printf '%s\n' "${changed[@]}"
-          test "${#changed[@]}" -eq 3
-          for path in "${changed[@]}"; do
-            [[ "$path" == config/control/harness/executions/E2026-08-12-H0-1-R8/* ]] || exit 1
-          done
-          git config user.name 'H0 R8 ledger recorder'
-          git config user.email 'actions@users.noreply.github.com'
-          git commit -m 'control(h0.1): advance R8 into verification'
-          head="$(git rev-parse HEAD)"
-          git push origin HEAD:feature/h0-1-c22-current-main-r3
-          echo "R8_CONTROL_HEAD=$head"
