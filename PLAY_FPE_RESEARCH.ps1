@@ -145,14 +145,14 @@ if ($ResetState) {
 }
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - R2 S5 third-person secondary-hand support over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 S6 substitutable first-person hand visual boundary over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
-Write-Host "R2 S2/S3: selected ItemDefinition resolves visual/grip profiles and articulated first-person finger poses." -ForegroundColor Cyan
-Write-Host "R2 S4 is accepted: slot 2 mount-base uses a bounded two-hand first-person grip; slot 1 beacon remains one-hand. Owner collision isolation prevents held sandbox RigidBody self-push." -ForegroundColor Cyan
-Write-Host "R2 S5 gate: press C while slot 2 is selected. The WORLD avatar left arm/hand must now support the same item secondary grip. With a real Skeleton3D this uses Godot TwoBoneIK3D; the current fallback humanoid uses a presentation-only procedural two-segment arm solver." -ForegroundColor Cyan
-Write-Host "Switch 1 -> 2 -> 1 -> empty while in third person. Slot 2 must engage the world LEFT support hand; slot 1/empty must restore the normal left arm. No collision body is created by S5." -ForegroundColor Cyan
-Write-Host "Switch back to first person with C and verify the existing S4 articulated two-hand viewmodel is unchanged." -ForegroundColor Cyan
+Write-Host "R2 S2-S5 are retained: catalogued items, articulated poses, first-person two-hand support and third-person secondary-hand support remain unchanged." -ForegroundColor Cyan
+Write-Host "R2 S6 gate: the 17-bone hand skeleton and pose logic are now independent from hand geometry through a visual-provider contract. The default provider intentionally reproduces the current procedural palm/fingers." -ForegroundColor Cyan
+Write-Host "HUD must report: S6 hand visuals: L:PROCEDURAL_SEGMENTS | R:PROCEDURAL_SEGMENTS | substitutable:YES." -ForegroundColor Cyan
+Write-Host "Switch 1 -> 2 -> empty while moving. Beacon pinch, mount-base two-hand support, S5 world left support and zero-stall movement must remain unchanged after the provider boundary was inserted." -ForegroundColor Cyan
+Write-Host "A production compatible hand asset can later replace the provider without changing grip, pose, two-hand, Item Graph or network authority code." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left first-person hand is free." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
