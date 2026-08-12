@@ -467,12 +467,12 @@ func _refresh_status() -> void:
 		return
 	var embodiment_report: Dictionary = first_person_embodiment.create_report() if first_person_embodiment != null else {}
 	var grab_report: Dictionary = grab_authority_bridge.create_report() if grab_authority_bridge != null else {}
-	var hotbar_pending := hotbar_network_adapter != null and hotbar_network_adapter.has_pending()
-	var sleeve_mode := "REAL_QUATERNIUS" if bool(embodiment_report.get("real_quaternius_sleeves_ready", false)) else "PROCEDURAL" if _last_upper_clothing_enabled else "OFF"
-	var network_state := "READY" if base_lab != null and bool(base_lab.network_ready) else "BOOTSTRAPPING"
-	var hotbar_state := "PENDING" if hotbar_pending else "READY" if hotbar_network_adapter != null else "BOOTSTRAP"
+	var hotbar_pending: bool = hotbar_network_adapter != null and bool(hotbar_network_adapter.has_pending())
+	var sleeve_mode: String = "REAL_QUATERNIUS" if bool(embodiment_report.get("real_quaternius_sleeves_ready", false)) else "PROCEDURAL" if _last_upper_clothing_enabled else "OFF"
+	var network_state: String = "READY" if base_lab != null and bool(base_lab.network_ready) else "BOOTSTRAPPING"
+	var hotbar_state: String = "PENDING" if hotbar_pending else "READY" if hotbar_network_adapter != null else "BOOTSTRAP"
 	var base_perf: Dictionary = base_lab.get_fpe_status_performance_report() if base_lab != null and base_lab.has_method("get_fpe_status_performance_report") else {}
-	var text := (
+	var text: String = (
 		"FPE research — FirstPersonEmbodiment"
 		+ "\nC 1/3 person | Q left | E right | 1..0 hotbar"
 		+ "\nnetwork: %s | hotbar: NONBLOCKING/%s | sleeves: %s"
