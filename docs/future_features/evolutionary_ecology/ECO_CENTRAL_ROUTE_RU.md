@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.5 ACCEPTED / P2.6 EXECUTE NOW`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.6 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -31,23 +31,6 @@ P2.4    78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97
 P2.5    292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696
 ```
 
-P2.5 exact Windows evidence:
-
-```text
-mild_loss            0.030140495868
-severe_loss          0.073198347107
-shallow_survival     0.297520661157
-deep_survival        0.787500000000
-mild_bank_killed     20
-severe_bank_killed   70
-recovery_gain        0.024487576856
-reactivated          81
-repeated_final       0.076970584820
-single_severe_final  0.111289229748
-```
-
-Fresh-process replay A/B reproduced the same P2.5 aggregate exactly on Godot `4.7.1.stable.double.custom_build.a13da4feb`.
-
 ## Central route
 
 ```text
@@ -63,7 +46,7 @@ P2.4 Patch Colonization / Isolation / Migration ACCEPTED
    ↓
 P2.5 Disturbance + Recovery ACCEPTED
    ↓
-P2.6 Long-Horizon Biogeography ← EXECUTE NOW
+P2.6 Long-Horizon Biogeography ← CURRENT CANDIDATE
    ↓ PASS
 P2.7 Lineage Divergence / Speciation Candidate Diagnostics
    ↓
@@ -74,50 +57,82 @@ EVO1 final acceptance remains:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.5 accepted semantics
+## P2.6 implementation
 
-P2.5 proves explicit event chronology with independent mechanical and seed-bank pressure channels. Adult damage is delegated to accepted CAL1-D exposure/anchoring mechanics; seed-bank damage conserves integer counts exactly; recovery reuses P2.2 bank reactivation, P2.3 turnover coefficients, ResourceModel and accepted P1 capacity.
+Implementation head: `9aa4678e9be99556fb54057f6580f219325c0126`.
 
-The exact Windows run confirms stronger severe than mild damage, stronger survival of the better anchored deep-root lineage, positive recovery after a single severe event, and suppression of recovery by a second event.
+Diff from accepted P2.5 adds exactly five ECO research/test files and modifies no accepted P2.5/P2.4/P2.3/P2.2/P2.1/CAL1 source or runtime path.
 
-## P2.6 scope
+### Regional composition, not a second local ecology
 
-P2.6 must integrate already accepted local and spatial semantics rather than replace them.
+P2.6 is a metapopulation orchestrator. Patch-local annual ecology still runs through accepted `DisturbanceRecovery.advance_year`; event response still runs through accepted `DisturbanceRecovery.apply_event`; inter-patch propagules still run through accepted `PatchMigration.migrate_reproduction_event`.
 
-Target structure:
+Local adult occupancy is evaluated with the accepted P2.3 `EXTINCTION_BIOMASS_KG_M2` threshold by reference.
+
+### Controlled thirty-year history
+
+Research geography reuses P2.4 SOURCE / NEAR / FAR patches. Only SOURCE is the propagule reservoir.
+
+Two causal strategies are tracked:
 
 ```text
-research patch set
-   +
-patch-local P2.5 cohort state
-   +
-repeated P2.4 propagule transfer
-   +
-patch-specific disturbance chronology
-   ↓
-long-horizon occupancy history
-range expansion
-local extinction
-recolonization
-regional persistence
-lineage range filtering
+PERSISTENT_SHORT  1.6m height / 1.2m roots / 5m dispersal / long bank
+FRAGILE_LONG      3.0m height / 0.05m roots / 20m dispersal / shorter bank
 ```
 
-P2.6 is a metapopulation orchestrator/observer. It must not introduce a second local growth/turnover model, a species-placement table, or canonical production Spatial/Time fabrics.
+Chronology:
 
-Required proof direction for the implementation candidate:
+```text
+y1..14   east transport
+y15..18  west transport
+          + FAR mechanical=1.0 / bank mortality=1.0 each year
+y19..30  east transport restored
+```
 
-- a source lineage expands to additional patches only through accepted P2.4 propagule routing;
-- geographic isolation filters inherited dispersal traits;
-- a severe local disturbance can remove local adult presence without deleting regional lineage truth;
-- later propagule flow and/or surviving bank memory can recolonize the disturbed patch;
-- repeated disturbance changes long-horizon occupancy/persistence relative to a no-disturbance control;
-- range/occupancy histories are deterministic and bounded;
-- all local event and migration ledgers remain conserved;
-- no biome/species placement table appears.
+A no-disturbance control uses the same transport schedule. Migration is applied before same-year disturbance, so event-year immigrants receive the same damage pressure rather than bypassing it.
 
-## Ownership boundary
+The gate requires a complete biogeographic cycle for the broad disperser:
 
-P2.6 research patch geometry and year index remain experiment inputs. ECO does not claim canonical Spatial Domain Fabric, Time Fabric, Environment event generation, World Lifecycle, Work Budget, persistence, authority or networking.
+```text
+regional persistence
+      +
+FAR colonization
+      ↓
+local FAR adult extinction during disturbance/isolation interval
+      ↓
+FAR recolonization after transport recovery
+```
 
-Current resolver: `IMPLEMENT EVO1/P2.6 LONG-HORIZON BIOGEOGRAPHY`.
+It also requires FAR and regional patch-year filtering toward the broader disperser, exact migration/event conservation, bounded cohort counts and deterministic replay.
+
+### Ownership boundary
+
+Patch geometry, year index and transport history remain research experiment inputs. P2.6 does not claim canonical Spatial Domain Fabric, Time Fabric, Environment simulation/event generation, World Lifecycle, Work Budget, persistence, authority or networking.
+
+### Strict P2.7 boundary
+
+P2.6 records lineage range histories only. It does not define species, reproductive isolation, divergence thresholds or speciation verdicts. P2.7 owns those diagnostics.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_6_TESTS.ps1 -GodotPath $Godot
+```
+
+The runner performs parser/preload `--check-only`, then the full accepted P2.5 parent regression, P2.6 acceptance and two fresh-process replay probes.
+
+Until PASS:
+
+```text
+P2.6 = IMPLEMENTED_CANDIDATE
+P2.6 != ACCEPTED
+P2.7 = BLOCKED
+```
+
+Current resolver: `RUN EVO1/P2.6 EXACT WINDOWS LONG-HORIZON BIOGEOGRAPHY GATE`.

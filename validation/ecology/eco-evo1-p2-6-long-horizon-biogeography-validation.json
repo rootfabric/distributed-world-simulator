@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_6_long_horizon_biogeography_validation.v1",
+  "revision": "ECO-EVO1-P2.6-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "9aa4678e9be99556fb54057f6580f219325c0126",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.5",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696"
+  },
+  "truth": {
+    "regional_role": "metapopulation orchestrator/observer over accepted patch-local cohort truth",
+    "migration": "accepted P2.4 PatchMigration.migrate_reproduction_event using actual propagule coordinates",
+    "disturbance": "accepted P2.5 DisturbanceRecovery.apply_event",
+    "local_annual_dynamics": "accepted P2.5 DisturbanceRecovery.advance_year",
+    "adult_extinction_threshold": "accepted P2.3 EXTINCTION_BIOMASS_KG_M2 by reference",
+    "patch_geometry": "research input only; not canonical Spatial Domain Fabric",
+    "year_and_transport_history": "research input only; not canonical Time/Environment ownership"
+  },
+  "controlled_design": {
+    "years": 30,
+    "source": "Rect2(-10,-10,20,20)",
+    "near": "Rect2(11,-20,24,40)",
+    "far": "Rect2(50,-40,80,80)",
+    "source_patch_ids": ["patch/source"],
+    "transport": [
+      "years 1..14 east Vector2(1,0), turbulence 0.20",
+      "years 15..18 west Vector2(-1,0), turbulence 0.20",
+      "years 19..30 east Vector2(1,0), turbulence 0.20"
+    ],
+    "disturbed_far_events": "years 15,16,17,18 mechanical=1.0 bank_mortality=1.0",
+    "control": "same initial state and transport history, no disturbance",
+    "lineages": {
+      "persistent_short": "1.6m height / 1.2m root / 5m dispersal / high dormancy",
+      "fragile_long": "3.0m height / 0.05m root / 20m dispersal / lower dormancy"
+    }
+  },
+  "required_properties": [
+    "P2_5_PARENT_HASH_UNCHANGED",
+    "FAR_LONG_COLONIZATION_BEFORE_DISTURBANCE",
+    "FAR_LONG_LOCAL_ADULT_EXTINCTION_DURING_EVENT_WINDOW",
+    "FAR_LONG_RECOLONIZATION_AFTER_EVENT_WINDOW",
+    "CONTROL_HAS_NO_POST_YEAR_14_FAR_LONG_EXTINCTION",
+    "REGIONAL_LONG_LINEAGE_NEVER_ADULT_ABSENT",
+    "FINAL_FAR_LONG_REOCCUPIED",
+    "DISTURBANCE_INCREASES_FAR_ABSENCE_VS_IDENTICAL_TRANSPORT_CONTROL",
+    "FAR_LONG_PATCH_YEARS_GT_FAR_SHORT_PATCH_YEARS",
+    "REGIONAL_LONG_PATCH_YEARS_GT_SHORT_PATCH_YEARS",
+    "LONG_RANGE_EXPANDS_BEYOND_SOURCE",
+    "P2_4_MIGRATION_INTEGER_CONSERVATION",
+    "P2_5_EVENT_ADULT_AND_BANK_CONSERVATION",
+    "ADULT_COHORTS_BOUNDED",
+    "SEED_BANK_COHORTS_BOUNDED",
+    "NO_BIOME_OR_SPECIES_PLACEMENT_TABLE",
+    "NO_P2_7_SPECIATION_DECLARATION",
+    "SAME_AND_FRESH_PROCESS_HASH_DETERMINISM"
+  ],
+  "implementation_diff": {
+    "base": "22bad1fcc9302c03a52eee5585691192ebd6e37b",
+    "head": "9aa4678e9be99556fb54057f6580f219325c0126",
+    "changed_files": 5,
+    "accepted_p2_5_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "parser_preflight": true,
+    "acceptance": "tests/research/ecology/eco_evo1_p2_6_long_horizon_biogeography_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_6_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_6_TESTS.ps1"
+  },
+  "local_sanity": "NO_EXACT_WINDOWS_PASS_CLAIMED_BEFORE_USER_GATE",
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 / P2.7 Lineage Divergence / Speciation Candidate Diagnostics"
+}
