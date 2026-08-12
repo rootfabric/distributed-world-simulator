@@ -1,7 +1,7 @@
 class_name PosedCataloguedFirstPersonEmbodiment
 extends "res://scripts/characters/presentation/catalogued_first_person_embodiment.gd"
 
-const HandRigType = preload("res://scripts/characters/presentation/articulated_first_person_hand_rig.gd")
+const HandRigType = preload("res://scripts/characters/presentation/substitutable_first_person_hand_rig.gd")
 const HandPoseCatalogType = preload("res://scripts/characters/presentation/first_person_hand_pose_catalog.gd")
 
 var hand_pose_catalog = HandPoseCatalogType.new()
@@ -47,6 +47,7 @@ func setup(
 	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
 	details["articulated_hands"] = true
 	details["hand_pose_catalog"] = hand_pose_catalog.create_report()
+	details["hand_visual_provider_boundary"] = true
 	result["details"] = details
 	return result
 
@@ -99,13 +100,15 @@ func get_hand_pose_report() -> Dictionary:
 		if rig_value != null and is_instance_valid(rig_value) and rig_value.has_method("create_report"):
 			rigs[hand] = rig_value.call("create_report")
 	return {
-		"schema": "planet_simulator.fpe_r2_s3_hand_pose_composition.v1",
+		"schema": "planet_simulator.fpe_r2_s3_hand_pose_composition.v2",
 		"rigs": rigs,
 		"last_pose_by_hand": _last_pose_by_hand.duplicate(true),
 		"pose_apply_count": _pose_apply_count,
 		"pose_catalog": hand_pose_catalog.create_report(),
 		"articulated_skeleton": true,
 		"procedural_segment_visuals": true,
+		"hand_visual_provider_boundary": true,
+		"external_compatible_visual_provider_supported": true,
 		"external_skinned_hand_mesh_required": false,
 		"presentation_only": true,
 		"owns_item_state": false,
@@ -132,7 +135,9 @@ func _install_hand_rig(hand: String, hand_root: Node3D, viewmodel_layer: int) ->
 		return setup_result
 
 	# The old FPE palm was a single box. Keep the sleeve but replace that palm with
-	# the Skeleton3D-driven palm/finger segments so S3 has one visible hand model.
+	# the provider-driven Skeleton3D hand. The default provider reproduces the S3
+	# procedural segments; a compatible later provider may substitute authored
+	# visuals without changing pose/grip/two-hand logic.
 	var old_palm: Node = hand_root.get_node_or_null("%sPalm" % hand.capitalize())
 	if old_palm is GeometryInstance3D:
 		(old_palm as GeometryInstance3D).visible = false
