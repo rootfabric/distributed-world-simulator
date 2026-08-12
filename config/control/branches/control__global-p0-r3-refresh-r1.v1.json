@@ -5,15 +5,15 @@
   "branch": "control/global-p0-r3-refresh-r1",
   "program": "GLOBAL_ARCHITECTURE",
   "role": "ARCHITECTURE_REVISION_CANDIDATE",
-  "short_description": "GLOBAL-P0 R3 V8 exact-current-main frozen review target after R3-R-003 canonical execution-route Director-gate repair, with external exact-target evidence; no promotion and no runtime changes.",
-  "purpose": "Preserve exact frozen R3 V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82 against canonical main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry 78, bind external evidence to that target, require fresh V8 Independent Reviewer, Verifier, and Director gates, preserve V6 Reviewer PASS only as historical provenance, preserve V7 as a historical defective review target after R3-R-003 with no durable V7 Reviewer PASS, and stop at the separate Human promotion gate.",
-  "expected_outcome": "INDEPENDENT_REVIEWER_PASS for exact V8; then distinct Independent Verifier PASS; then Director final-gate PASS; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
+  "short_description": "GLOBAL-P0 R3 V9 exact-current-main frozen review target after R3-R-003 repair and transparent main recovery/repin; external exact-target evidence only, no promotion and no runtime changes.",
+  "purpose": "Preserve exact frozen R3 V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 against recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d / registry 78, bind external evidence to that target, require fresh V9 Independent Reviewer, Verifier and Director gates, retain V6-V8 only as historical provenance, and stop at the separate Human promotion gate.",
+  "expected_outcome": "INDEPENDENT_REVIEWER_PASS for exact V9; then distinct Independent Verifier PASS; then Director final-gate PASS; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
   "current_stage": "GLOBAL-P0 R3 independent final review",
-  "stage_status": "R3_V8_FROZEN_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "R3-R-003 was independently identified during V7 review and repaired across every proven CURRENT same-class authorization surface. Historical defective V7 target 2735000bea4bf47af2059d36041e672297cf4c39 has no durable Reviewer PASS. The semantic V8 target is frozen at 0583a7b5559af1efc13382d2380b53ce44ddbe82; candidate blob be0899b4565a2a1aaada7409ee5adf5d6c4b959e. V8 exact-target Project Control #320 is SUCCESS/NON_RED with critical overlap 0 and runtime/domain delta 0. V8 Reviewer=PENDING/NEXT, Verifier=PENDING, Director=PENDING, V8 Human Attention=OPEN, R3_REFRESHED_CANDIDATE_READY=NO, promotion=NOT_PERFORMED.",
+  "stage_status": "R3_V9_FROZEN_AWAITING_INDEPENDENT_REVIEW",
+  "progress_note": "R3-R-003 remains repaired. A mistaken GitHub file-write later created empty __nonexistent__ directly on main at 194a26e2980c45a413cdfa65e96536a329d16c88. Transparent recovery commit ce40dd075045078ed70924f8d5a1011eb3eff03d removed only that file; the recovered main has zero net file differences from pre-accident f6d68fc7c594b371f48a9bcff056e2478e04f317 but a new SHA epoch. V8 therefore became exact-main stale with no durable Reviewer PASS. V9 repins all current exact-main authorization/audit surfaces to ce40dd075045078ed70924f8d5a1011eb3eff03d and is frozen at 595263c4c925c122a09876cb29b87f5ca5fef1d2. Exact-target Project Control #324 is SUCCESS/NON_RED with cross_branch_overlaps=[] and runtime/domain delta 0. V9 Reviewer=PENDING/NEXT, Verifier=PENDING, Director=PENDING, V9 Human Attention=OPEN, R3_REFRESHED_CANDIDATE_READY=NO, promotion=NOT_PERFORMED.",
   "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
-  "next_stage": "NEW SESSION R / Independent Reviewer against exact frozen V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82. After a durable V8 Reviewer PASS, proceed to a distinct Verifier session; after durable Reviewer + Verifier PASS, proceed to a separate Director final gate; only Director PASS may precede R3_REFRESHED_CANDIDATE_READY, then stop at Human GLOBAL_ARCHITECTURE_PROMOTION.",
-  "parent_branch_or_checkpoint": "Canonical current main f6d68fc7c594b371f48a9bcff056e2478e04f317 / registry generation 78; historical construction/pre-C22 pins and V2-V7 review targets remain provenance only. V7 2735000bea4bf47af2059d36041e672297cf4c39 is historical defective after R3-R-003.",
+  "next_stage": "NEW SESSION R / Independent Reviewer against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2. After durable V9 Reviewer PASS, use a separate lifecycle synchronization before distinct Verifier; after durable Reviewer + Verifier PASS, use a separate Director final gate; only Director PASS may precede R3_REFRESHED_CANDIDATE_READY, then stop at Human GLOBAL_ARCHITECTURE_PROMOTION.",
+  "parent_branch_or_checkpoint": "Recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d / registry generation 78. Pre-accident main f6d68fc7c594b371f48a9bcff056e2478e04f317 has identical recovered content but is no longer the current authorization SHA. V2-V8 review targets remain provenance only.",
   "dependencies": [
     "GLOBAL_P0_R2",
     "C22_MAIN_INTEGRATED",
@@ -71,19 +71,19 @@
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE",
-    "focused": "R3_V8_FROZEN_EXACT_TARGET_EXTERNAL_EVIDENCE_BOUND",
+    "focused": "R3_V9_FROZEN_EXACT_TARGET_EXTERNAL_EVIDENCE_BOUND",
     "full_regression": "NOT_APPLICABLE"
   },
   "ownership_claims": [
     {
       "foundation": "PROGRAM_LEDGER",
       "claimed_owner": "MAIN",
-      "scope": "Candidate only; canonical ownership changes require promotion. The V8 branch proposes bounded correction of current execution ordering without transferring registry ownership."
+      "scope": "Candidate only; canonical ownership changes require promotion. V9 only repins current authorization facts after transparent main recovery."
     },
     {
       "foundation": "DEVELOPMENT_HARNESS",
       "claimed_owner": "MAIN/HARNESS",
-      "scope": "Development-control ownership remains separate from WB/OPS/runtime scheduling. V8 strengthens the existing CRITICAL checkpoint gate and does not create a second Harness policy."
+      "scope": "Development-control ownership remains separate from WB/OPS/runtime scheduling. V9 preserves the repaired CRITICAL Reviewer/Verifier/Director/Human routing."
     },
     {
       "foundation": "ITEM",
@@ -123,9 +123,11 @@
     "R2_TO_R3_TRANSITION_AUDIT_PASS",
     "R3_V_001_DIRECTOR_GATE_SEMANTIC_REPAIR_COMPLETE",
     "R3_R_003_CANONICAL_EXECUTION_ROUTE_REPAIR_COMPLETE",
-    "V8_EXACT_TARGET_PROJECT_CONTROL_NON_RED",
-    "V8_POST_BUILD_CRITIQUE_NO_MATERIAL_REFACTOR_REQUIRED",
-    "V8_FROZEN_TARGET_EXTERNAL_EVIDENCE_BOUND"
+    "ACCIDENTAL_MAIN_EMPTY_FILE_TRANSPARENT_RECOVERY_COMPLETE",
+    "V9_EXACT_CURRENT_MAIN_REPIN_COMPLETE",
+    "V9_EXACT_TARGET_PROJECT_CONTROL_NON_RED",
+    "V9_POST_BUILD_CRITIQUE_NO_MATERIAL_REFACTOR_REQUIRED",
+    "V9_FROZEN_TARGET_EXTERNAL_EVIDENCE_BOUND"
   ],
   "blockers": [
     "INDEPENDENT_REVIEWER_PASS_REQUIRED",
