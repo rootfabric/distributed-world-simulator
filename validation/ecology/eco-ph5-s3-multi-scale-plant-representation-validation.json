@@ -1,0 +1,133 @@
+{
+  "schema": "distributed_world_simulator.ecology.ph5_s3_validation.v1",
+  "checkpoint": "ECO.PH5-S3",
+  "milestone": "ECO_PH5_S3_ACCEPTANCE_READY",
+  "lane": "RESEARCH_ONLY",
+  "source_branch_base_head": "d40aaeb801f0915de1cf5400f778ee039b823b29",
+  "engine": {
+    "platform": "linuxbsd",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "precision": "double",
+    "binary_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "focused_acceptance": {
+    "result": "PASS",
+    "assertions": 148,
+    "proofs": [
+      "FULL deterministic",
+      "REDUCED deterministic",
+      "CANOPY deterministic",
+      "IMPOSTOR deterministic",
+      "POPULATION_ONLY deterministic",
+      "FULL->REDUCED->CANOPY->IMPOSTOR->FULL truth-invariant roundtrip",
+      "genome/resource/lifecycle/selection/reproduction snapshot invariant",
+      "one-million-organism population patch uses zero materialized GrowthGraphs",
+      "population truth hash is content-bound; altered aggregate truth with stale hash is rejected"
+    ]
+  },
+  "parent_regression": {
+    "PH5_S1": {
+      "result": "PASS",
+      "assertions": 720,
+      "reference_description_hash": "72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3",
+      "profile_matrix_hash": "2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0",
+      "full_materialization_hash": "374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c"
+    },
+    "PH5_S2": {
+      "result": "PASS",
+      "assertions": 387,
+      "branch_leaf_geometry_hash": "2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f",
+      "full_geometry_hash": "5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e"
+    }
+  },
+  "restart_determinism": {
+    "result": "PASS",
+    "fresh_process_runs": 2,
+    "assertions_per_run": 14,
+    "hash": "35137559c3951d784ffeaa8aedfc150fc10b0d94c7874c7388dff99b32525fc7",
+    "equal": true
+  },
+  "performance_sample_linux_double": {
+    "FULL": {
+      "representation_object_count": 3,
+      "geometry_primitive_count": 300,
+      "instance_count": 18,
+      "estimated_memory_bytes": 30752,
+      "materialized_growth_graph_count": 1,
+      "generation_time_us_mean_20": 1368.6
+    },
+    "REDUCED": {
+      "representation_object_count": 3,
+      "geometry_primitive_count": 60,
+      "instance_count": 6,
+      "estimated_memory_bytes": 6752,
+      "materialized_growth_graph_count": 1,
+      "generation_time_us_mean_20": 856.65
+    },
+    "CANOPY": {
+      "representation_object_count": 1,
+      "geometry_primitive_count": 1,
+      "instance_count": 0,
+      "estimated_memory_bytes": 512,
+      "materialized_growth_graph_count": 1,
+      "generation_time_us_mean_20": 348.35
+    },
+    "IMPOSTOR": {
+      "representation_object_count": 1,
+      "geometry_primitive_count": 2,
+      "instance_count": 1,
+      "estimated_memory_bytes": 262400,
+      "materialized_growth_graph_count": 1,
+      "generation_time_us_mean_20": 321.3
+    },
+    "POPULATION_ONLY": {
+      "representation_object_count": 1,
+      "geometry_primitive_count": 1,
+      "instance_count": 128,
+      "estimated_memory_bytes": 8576,
+      "materialized_growth_graph_count": 0,
+      "generation_time_us_mean_20": 70.15,
+      "canonical_organism_count": 1000000
+    }
+  },
+  "graphical": {
+    "automated_lab_smoke": "PASS_30_ASSERTIONS",
+    "actual_observation": "AUTOMATED_READY_GRAPHICAL_PENDING",
+    "reason": "session headless renderer exposes dummy texture storage; real framebuffer capture is unavailable, so no visual PASS is inferred from logs"
+  },
+  "windows": "NOT_AVAILABLE_IN_SESSION",
+  "known_limitations": [
+    "impostor memory estimate models one uncompressed 256x256 RGBA image; atlas sharing/compression is not implemented at this research stage",
+    "POPULATION_ONLY is an aggregate presentation proof, not a canonical population runtime implementation",
+    "FULL_POOL_COMPACT / HEIGHT_LOW dominance remains CAL1-owned",
+    "no production ECO adapter and no CONV0 execution"
+  ],
+  "production_runtime_changed": false,
+  "main_changed": false,
+  "incremental_s3_regression": {
+    "multiscale_acceptance": {
+      "result": "PASS",
+      "assertions": 49
+    },
+    "far_materialization_smoke": {
+      "result": "PASS",
+      "assertions": 16,
+      "canopy_hash": "efb31671b9f11152789a98d66e79515ff85f2a5f39184a6d4391067a6b9b416e",
+      "impostor_hash": "fb38ae96c9fe205216c5ef6f94b40b4654097d5cc47685d2a24fa0edfc1184ab"
+    },
+    "multiscale_materialization_acceptance": {
+      "result": "PASS",
+      "assertions": 61,
+      "matrix_hash": "89856f267d2f5d151f8f766487318e9f2c309dd3896a17c10bb065285bf39310"
+    }
+  },
+  "population_only_proof": {
+    "canonical_organism_count": 1000000,
+    "visual_sample_count": 128,
+    "materialized_growth_graph_count": 0,
+    "population_layout_hash": "f8fdcc076733432b154f09230bbea80ec84f14c02f53fa4dc902d73329bdd7b4",
+    "individual_growth_graph_array_required": false,
+    "canonical_organism_array_required": false,
+    "population_truth_hash_is_content_bound": true
+  }
+}

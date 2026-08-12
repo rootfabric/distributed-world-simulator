@@ -1,0 +1,69 @@
+{
+  "schema": "distributed_world_simulator.ecology.ph5_s3_multi_scale_representation.v1",
+  "version": "1.0.0",
+  "lane": "ECO_RESEARCH_ONLY",
+  "checkpoint": "ECO.PH5-S3",
+  "status": "ACCEPTANCE_READY_NOT_PROMOTED",
+  "renderer_version": "ECO_PH5_S3_MULTI_SCALE_V1",
+  "pipeline": [
+    "GrowthGraph",
+    "PlantRenderDescription",
+    "representation projection"
+  ],
+  "tiers": [
+    "FULL",
+    "REDUCED",
+    "CANOPY",
+    "IMPOSTOR",
+    "POPULATION_ONLY"
+  ],
+  "truth_invariants": [
+    "LOD_OR_PROFILE_SWITCH_NE_GROWTH_GRAPH_MUTATION",
+    "LOD_OR_PROFILE_SWITCH_NE_GENOME_MUTATION",
+    "LOD_OR_PROFILE_SWITCH_NE_RESOURCE_MUTATION",
+    "LOD_OR_PROFILE_SWITCH_NE_LIFECYCLE_MUTATION",
+    "LOD_OR_PROFILE_SWITCH_NE_SELECTION_MUTATION",
+    "LOD_OR_PROFILE_SWITCH_NE_REPRODUCTION_MUTATION",
+    "PRESENTATION_IDENTITY_MAY_CHANGE_WHILE_SOURCE_ECOLOGY_IDENTITY_REMAINS_CONSTANT",
+    "POPULATION_ONLY_NE_CANONICAL_ORGANISM_CREATION_OR_DELETION"
+  ],
+  "individual_provenance": [
+    "source_ecology_identity",
+    "source_graph_hash",
+    "render_description_hash",
+    "profile_id",
+    "profile_hash",
+    "tier",
+    "renderer_version",
+    "deterministic_seed",
+    "deterministic_input_identity",
+    "representation_hash"
+  ],
+  "population_only_contract": {
+    "input": "aggregate population/ecology truth projection source",
+    "requires_individual_growth_graph_array": false,
+    "materialized_growth_graph_count": 0,
+    "max_visual_samples_per_patch": 128,
+    "canonical_organism_count_is_read_only": true
+  },
+  "full_contract": "PH5-S2 tapered branch geometry plus instanced foliage",
+  "reduced_contract": "derived branch-chain collapse plus bounded foliage sampling while retaining source bounds and source identities",
+  "canopy_contract": "derived canopy ellipsoid with density, height, radius, foliage mass projection, and branch envelope",
+  "impostor_contract": "derived billboard descriptor carrying source-shape identity and full provenance",
+  "performance_evidence_fields": [
+    "representation_object_count",
+    "geometry_primitive_count",
+    "instance_count",
+    "estimated_memory_bytes",
+    "materialized_growth_graph_count",
+    "generation_time_us_mean_20"
+  ],
+  "prohibited": [
+    "production ECO adapter",
+    "ECO.CONV0 execution",
+    "unrestricted morphology evolution",
+    "production runtime ownership changes",
+    "main mutation"
+  ],
+  "known_external_blocker": "FULL_POOL_COMPACT / HEIGHT_LOW dominance remains CAL1-owned"
+}
