@@ -48,8 +48,21 @@ func _run() -> void:
 
 	var visuals = ViewmodelCatalogType.new()
 	var grips = GripCatalogType.new()
-	var mount_visual: Dictionary = visuals.resolve("item/mount-base", ["structure"], {}, "", Color(0.15, 0.45, 0.65, 1.0))
-	var mount_grip: Dictionary = grips.resolve("item/mount-base", mount_visual, ["structure"], {})
+	# Use the actual M7 replica definition and tags. This guards the graphical
+	# slot-2 path where `beacon_mount_base` previously collapsed to beacon_pinch.
+	var mount_visual: Dictionary = visuals.resolve(
+		"beacon_mount_base",
+		["assembly_root", "placeable", "mount_socket"],
+		{},
+		"",
+		Color(0.15, 0.45, 0.65, 1.0)
+	)
+	var mount_grip: Dictionary = grips.resolve(
+		"beacon_mount_base",
+		mount_visual,
+		["assembly_root", "placeable", "mount_socket"],
+		{}
+	)
 	var mount_result: Dictionary = posed.set_catalogued_hand_item(
 		"right",
 		"item/player/a/mount-bases",
@@ -74,7 +87,7 @@ func _run() -> void:
 		_assert(String(left_rig.create_report().get("current_pose_id", "")) == "support_cradle", "S4 left hand did not use support_cradle pose")
 	if right_rig != null:
 		right_rig._process(0.2)
-		_assert(String(right_rig.create_report().get("current_pose_id", "")) == "bulky_carry", "S4 right hand did not keep primary bulky_carry pose")
+		_assert(String(right_rig.create_report().get("current_pose_id", "")) == "bulky_carry", "S4 right hand did not switch from beacon_pinch to bulky_carry on replica mount-base")
 
 	var active_report: Dictionary = posed.get_two_hand_report()
 	_assert(bool(active_report.get("active", false)), "S4 two-hand report is not active")
@@ -86,8 +99,8 @@ func _run() -> void:
 	_assert(not bool(reserved_result.get("success", true)), "S4 reserved left support hand incorrectly accepted a local grab")
 	_assert(String(reserved_result.get("error_code", "")) == "FPE_S4_SECONDARY_HAND_RESERVED", "S4 reserved-hand failure code mismatch")
 
-	var beacon_visual: Dictionary = visuals.resolve("item/beacon", ["signal"], {}, "", Color(1.0, 0.3, 0.05, 1.0))
-	var beacon_grip: Dictionary = grips.resolve("item/beacon", beacon_visual, ["signal"], {})
+	var beacon_visual: Dictionary = visuals.resolve("survey_beacon", ["beacon", "mountable", "electronic"], {}, "", Color(1.0, 0.3, 0.05, 1.0))
+	var beacon_grip: Dictionary = grips.resolve("survey_beacon", beacon_visual, ["beacon", "mountable", "electronic"], {})
 	var beacon_result: Dictionary = posed.set_catalogued_hand_item(
 		"right",
 		"item/player/a/beacons",
