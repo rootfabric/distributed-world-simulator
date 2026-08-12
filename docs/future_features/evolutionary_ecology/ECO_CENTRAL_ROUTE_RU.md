@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.1 SEED DISPERSAL KERNEL`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.1 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
@@ -12,36 +12,24 @@ Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 ECO.P1                    ACCEPTED
 ECO.PH0..PH5-S4           ACCEPTED
 ECO.CONV0-A               ACCEPTED
-ECO.CAL1-A                ACCEPTED
-ECO.CAL1-B                ACCEPTED
-ECO.CAL1-C                ACCEPTED
-ECO.CAL1-D                ACCEPTED
-ECO.CAL1-E                ACCEPTED
-ECO.CAL1-F                ACCEPTED / ROBUST_UNITY_CALIBRATION
+ECO.CAL1-A..F             ACCEPTED
+CAL1-F classification     ROBUST_UNITY_CALIBRATION
 ```
 
-Canonical hashes:
+Canonical CAL1-F aggregate:
 
-- CAL1-A `280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f`;
-- PH3C `294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb`;
-- CAL1-B `c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c`;
-- CAL1-C `d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a`;
-- CAL1-D `c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6`;
-- CAL1-E `6214b8348b16acd005979c3e8ea88eca202acac0ffe835fc899cef27fbe50814`;
-- CAL1-F `f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed`.
+`f531fe844ceaa77094f6d259601f0df2f4b8b421328a221a1bab14196ccad1ed`.
 
-CAL1-F canonical classification: `ROBUST_UNITY_CALIBRATION`.
-
-CAL1-F evidence: five distinct deterministic seed signatures; 100% multi-member Pareto retention in seed contexts; two environment Pareto signatures; zero density/disturbance monotonicity violations; ±15% mechanism envelope with min/mean Pareto Jaccard `1.0`; three resource signatures; twenty pool contexts; zero pairwise/full-pool resource contradictions; exact fresh-process replay.
+EVO0 / Plant Causal Ecology Foundation is complete.
 
 ## Central route
 
 ```text
 EVO0 / CAL1 COMPLETE
    ↓
-EVO1 / P2.1 ← CURRENT
+EVO1 / P2.1 ← CURRENT CANDIDATE GATE
 Seed Dispersal Kernel
-   ↓
+   ↓ PASS
 P2.2 Establishment / Recruitment / Seed Bank
    ↓
 P2.3 Local Population Turnover + Succession
@@ -57,44 +45,107 @@ P2.7 Lineage Divergence / Speciation Candidate Diagnostics
 P2.8 Deterministic Save/Restart Plant World Proof
 ```
 
-EVO1 final acceptance remains:
+EVO1 final acceptance:
 
 `NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES`.
 
-## P2.1 boundary
+## P2.1 implementation
 
-P2.1 is the first step that creates autonomous spatial ecology transport. It does **not** establish or kill plants; recruitment belongs to P2.2.
+Implementation head: `5a325549dd2b8bca64437fd42c549d798e7e3905`.
 
-Required semantics:
+Implementation diff from accepted CAL1 closure adds exactly five ECO files and modifies no accepted CAL1 source or runtime path.
+
+### Cohort truth
+
+P2.1 never creates planet-scale individual seed entities. One reproduction event is represented as a bounded set of seed packets. Default packet count is at most 16.
+
+Each packet preserves:
 
 ```text
-source reproductive output
-+ inherited/effective dispersal distance
-+ deterministic transport context
-        ↓
-portable seed packets / spatial destination distribution
+lineage_id
+genome_checksum
+reproduction_event
+seed_count
+source position
+destination position
+local or long-tail stratum
+inside or outside current domain
 ```
 
-P2.1 must preserve:
+### Transport scale
 
-- emitted seed-count conservation within explicit boundary-loss accounting;
-- lineage/genome identity on every packet;
-- deterministic replay from the same source/event/seed;
-- different transport under different inherited dispersal distance;
-- release-height effect from accepted CAL1-D semantics;
-- anisotropic transport via explicit environmental vector/context, not biome lookup;
-- local and long-tail transport bins;
-- no species placement table;
-- no establishment probability, carrying capacity or seed-bank survival logic yet.
+Accepted lifecycle release-height semantics are reused:
 
-The existing P1C dynamic-abundance experiment is not a dispersal implementation: it advances independent patch biomass and does not move lineage propagules between patches. P2.1 therefore adds the missing spatial transport kernel rather than extending that old abundance fixture.
+```text
+effective dispersal distance
+= inherited seed_dispersal_distance_m
+× sqrt(release_height_m)
+```
 
-## Calibration inheritance
+Controlled exact checks are `30m / 5m -> 6×` mean distance and `4m / 1m release height -> 2×` mean distance.
 
-The accepted CAL1-F UNITY profile remains the EVO0 causal baseline. P2.1 must not reopen CAL1 coefficient tuning. Any new dispersal-kernel shape parameters must be explicit transport semantics and tested for conservation/determinism rather than tuned to create desired species geography.
+### Radial transport
+
+The deterministic stratified kernel contains a local core and explicit long-tail strata. It does not query a biome, species name or target habitat table.
+
+Different reproduction event hashes change spatial phase/jitter while preserving the same transport scale.
+
+### Directional environment projection
+
+The kernel accepts a dimensionless transport vector and turbulence. This is not a private wind/weather foundation; it is a projection seam for later canonical ENV/WQ integration.
+
+East and west vectors must produce opposite mean transport directions. Higher turbulence must weaken matched directional bias.
+
+### Conservation and domain boundaries
+
+Seeds leaving the current domain remain explicit output:
+
+```text
+emitted
+= transported
+= inside + outside
+= local + long-tail
+```
+
+This is required for later regional/planet migration rather than silently treating domain exit as death.
+
+### Strict P2.2 boundary
+
+P2.1 does not decide:
+
+- germination;
+- establishment;
+- seed-bank survival;
+- carrying capacity;
+- recruitment competition;
+- local mortality.
+
+Those enter only in P2.2.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_1_TESTS.ps1 -GodotPath $Godot
+```
+
+Runner first repeats the full accepted CAL1-F chain, then P2.1 acceptance and two fresh-process replay probes.
+
+Until PASS:
+
+```text
+P2.1 = IMPLEMENTED_CANDIDATE
+P2.1 != ACCEPTED
+P2.2 = BLOCKED
+```
 
 ## Global boundary
 
-EVO1 remains standalone/research-only. It may own ecology semantics and portable ecology state meaning, but it must not create private replacements for canonical spatial/time/environment/runtime foundations. `XFER1/LIVE` remain deferred until their global contracts exist.
+Standalone EVO remains research-only. P2.1 owns ecological dispersal semantics and portable propagule cohort meaning, not canonical spatial/weather/runtime foundations. `XFER1/LIVE` remain deferred until their global contracts exist.
 
-Current resolver: `IMPLEMENT AND VALIDATE ECO.EVO1/P2.1 SEED DISPERSAL KERNEL`.
+Current resolver: `RUN EVO1/P2.1 EXACT WINDOWS SEED DISPERSAL GATE`.
