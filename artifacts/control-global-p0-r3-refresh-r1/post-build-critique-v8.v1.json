@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.harness_post_build_critique.v1",
+  "work_order_id": "GLOBAL-P0-R3-CANONICAL-EXECUTION-ROUTE-DIRECTOR-GATE-REPAIR-V8",
+  "project_epoch": "GLOBAL-P0-R3-V8-CANONICAL-EXECUTION-ROUTE-DIRECTOR-GATE-REPAIR",
+  "implementation_head_sha": "0583a7b5559af1efc13382d2380b53ce44ddbe82",
+  "control_head_observed_sha": "0583a7b5559af1efc13382d2380b53ce44ddbe82",
+  "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "reviewed_at_utc": "2026-08-12T16:09:34Z",
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "strengths": [
+    "unnecessary_complexity: V8 repairs the remaining Director-gate omission by aligning three proven CURRENT authorization surfaces with the already-canonical CRITICAL role route. It adds no new role, manager, runtime subsystem, store, scheduler, or architecture foundation.",
+    "duplicate_truth: V8 does not create a second risk policy. config/control/harness/risk-policy.v1.json remains unchanged as the canonical CRITICAL routing source; H_PRIMARY, project registry, and checkpoint catalog consume that routing explicitly.",
+    "implicit_owner: no architecture/domain ownership is transferred. The project registry remains main-owned, Harness remains MAIN/HARNESS-owned, and the branch only proposes bounded control corrections for eventual gated promotion.",
+    "coupling_reduction: the execution route, machine registry train, and checkpoint predicates now share one explicit Reviewer -> Verifier -> Director -> READY -> Human ordering, reducing ambiguity without coupling the frozen candidate to transient Reviewer/Verifier/Director verdict state.",
+    "sibling_surface_fix: the second full CURRENT sweep extended beyond R3-local filenames and caught H_PRIMARY plus the registry and checkpoint catalog. CURRENT_PROJECT_FRONTIERS, candidate, prepromotion guards, transition policy, architecture document, and R3 implementation plan were independently checked and already correct.",
+    "removable_code: V8 adds no runtime/domain code. The three-file semantic delta is control/execution text and machine control configuration only; no code layer or duplicate implementation exists to remove.",
+    "design_regression: candidate blob and architecture semantics are unchanged. ITEM remains canonical; V0 remains consumer-only; H0.3 remains DEVELOPMENT Work-Order control; ECO/ECON remain distinct; NX.C1 stays gated; Human promotion remains distinct from Director.",
+    "refactor_if_redesigned: the same bounded design would be chosen again—repair all proven CURRENT same-class omissions in one semantic target, freeze it, prove exact-target PC0, then roll only external evidence/control state to the new target."
+  ],
+  "remaining_risks": [
+    "Independent Reviewer PASS for exact V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82 is still required.",
+    "Independent Verifier PASS for exact V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82 remains a separate later role.",
+    "Director final-gate PASS for exact V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82 remains a separate later role after durable Reviewer and Verifier PASS.",
+    "Human GLOBAL_ARCHITECTURE_PROMOTION remains pending and may not be inferred or synthesized.",
+    "Future CH -> NX dependency revalidation remains required before NX source acceptance.",
+    "HARNESS_SCHEMA_INSTANCE_VALIDATION_GAP remains a non-blocking Harness follow-up."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Run NEW SESSION R / GLOBAL-P0 R3 INDEPENDENT REVIEWER against exact frozen V8 target 0583a7b5559af1efc13382d2380b53ce44ddbe82; do not reuse historical V6 evidence or the non-durable V7 review finding as a PASS."
+  ]
+}
