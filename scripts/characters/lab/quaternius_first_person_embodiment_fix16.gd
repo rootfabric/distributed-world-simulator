@@ -49,7 +49,12 @@ func _setup_first_person_embodiment() -> void:
 			_s7_resource_error = String(s7_load.get("error_code", "FPE_S7_HAND_VISUAL_LOAD_FAILED"))
 			fpe_setup_result = s7_load
 			return
-		var s7_scene: PackedScene = Dictionary(s7_load.get("details", {})).get("scene")
+		var s7_scene_value: Variant = Dictionary(s7_load.get("details", {})).get("scene")
+		if not s7_scene_value is PackedScene:
+			_s7_resource_error = "FPE_S7_HAND_VISUAL_RESOURCE_NOT_PACKED_SCENE"
+			fpe_setup_result = _failure(_s7_resource_error, {"resource_path": _s7_requested_resource_path})
+			return
+		var s7_scene := s7_scene_value as PackedScene
 		for hand in ["left", "right"]:
 			var configure_s7: Dictionary = candidate.configure_hand_visual_resource(
 				hand,
@@ -67,7 +72,12 @@ func _setup_first_person_embodiment() -> void:
 			_s8_resource_error = String(s8_load.get("error_code", "FPE_S8_SKINNED_HAND_LOAD_FAILED"))
 			fpe_setup_result = s8_load
 			return
-		var s8_scene: PackedScene = Dictionary(s8_load.get("details", {})).get("scene")
+		var s8_scene_value: Variant = Dictionary(s8_load.get("details", {})).get("scene")
+		if not s8_scene_value is PackedScene:
+			_s8_resource_error = "FPE_S8_HAND_VISUAL_RESOURCE_NOT_PACKED_SCENE"
+			fpe_setup_result = _failure(_s8_resource_error, {"resource_path": _s8_requested_resource_path})
+			return
+		var s8_scene := s8_scene_value as PackedScene
 		for hand in ["left", "right"]:
 			var configure_s8: Dictionary = candidate.configure_skinned_hand_visual_resource(
 				hand,
@@ -136,11 +146,12 @@ func _refresh_status() -> void:
 	if fpe_status_label == null:
 		return
 	var report := get_r2_s8_skinned_hand_visual_report()
+	var error_code := String(report.get("error_code", ""))
 	fpe_status_label.text += "\nS8 skinned hand: %s | L:%s R:%s%s" % [
 		"REQUESTED" if bool(report.get("requested", false)) else "DEFAULT",
 		String(report.get("left_mode", "UNAVAILABLE")),
 		String(report.get("right_mode", "UNAVAILABLE")),
-		" | error:%s" % String(report.get("error_code", "")) if not String(report.get("error_code", "")).is_empty() else "",
+		" | error:%s" % error_code if not error_code.is_empty() else "",
 	]
 
 
