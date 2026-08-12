@@ -121,6 +121,14 @@ $Tests = @(
         PassMarker = "FPE R2 third-person held-item presenter: PASS"
     },
     @{
+        Path = "res://tests/characters/test_fpe_r2_s2_item_viewmodel_catalog.gd"
+        PassMarker = "FPE R2 S2 item viewmodel catalog: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_s2_profiled_presenters.gd"
+        PassMarker = "FPE R2 S2 profiled presenters: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
         PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
