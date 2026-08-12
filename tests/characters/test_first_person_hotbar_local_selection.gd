@@ -61,6 +61,16 @@ class FakeEmbodiment:
 		right_item_id = ""
 		clear_calls += 1
 		return {"success": true}
+	func create_report() -> Dictionary:
+		# The production lab debug snapshot asks the embodiment for its report.
+		# This test double intentionally implements that observable port as well as
+		# set/clear so a PASS cannot coexist with a GDScript SCRIPT ERROR.
+		return {
+			"schema": "test.fake_first_person_embodiment.v1",
+			"right_item_id": right_item_id,
+			"set_calls": set_calls,
+			"clear_calls": clear_calls,
+		}
 
 var failures: Array[String] = []
 var assertions := 0
