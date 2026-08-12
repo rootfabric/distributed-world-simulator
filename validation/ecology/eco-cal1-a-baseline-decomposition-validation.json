@@ -1,67 +1,72 @@
 {
   "schema": "distributed_world_simulator.ecology.cal1_a_baseline_decomposition_validation.v1",
-  "revision": "ECO-CAL1-A-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-CAL1-A-2026-08-12-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e",
-  "status": "IMPLEMENTED_LOCAL_INTERFACE_PASS_EXACT_WINDOWS_CANONICAL_ECOLOGY_PENDING",
+  "acceptance_evidence_head": "960231ba08b0e196ab78226098322ddc0ab5a900",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO0",
-  "goal": "Measure the existing PH3/PH3C morphology economics without tuning coefficients, reproduce the known HEIGHT_LOW broad advantage, and explain score/rank margins by causal benefit/cost components before adding new mechanisms.",
-  "implementation": {
-    "diagnostic": "scripts/research/ecology/plant_morphology_economics_baseline_v1.gd",
-    "acceptance_test": "tests/research/ecology/eco_cal1_a_baseline_decomposition_acceptance.gd",
-    "restart_probe": "tests/research/ecology/eco_cal1_a_restart_replay_probe.gd",
-    "windows_runner": "RUN_ECO_CAL1_A_TESTS.ps1"
+  "decision": "ACCEPTED",
+  "goal": "Measure existing PH3/PH3C morphology economics without tuning coefficients and explain HEIGHT_LOW broad full-pool dominance before introducing new causal mechanisms.",
+  "canonical_windows_evidence": {
+    "engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+    "platform": "Windows exact user checkout",
+    "runner": "RUN_ECO_CAL1_A_TESTS.ps1",
+    "ph3_regression": {
+      "result": "PASS",
+      "assertions": 217,
+      "profile_hash": "1051df16a4718a3bc33be99b8394da400bc8bd7d1b8e1f86a8d190229b59a67a",
+      "reference_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+      "giant_hash": "eaa6b1d6b452adb7ee8549baecc06c99cbb26cbce86cb34f364e36c0c152d704"
+    },
+    "ph3_restart": {
+      "result": "PASS",
+      "assertions": 5,
+      "reference_hash": "58161227616f083ab29426931ce91e24f6354f5b3d96d9020af6f8b60b72a43e",
+      "shade_high_hash": "d437d45d4beea747df717703afb1e536e5712df837677956f16c24953e5c2759",
+      "dry_wide_hash": "ef7a8f84bd1a6bf27ad87d0e8d2933627b755d200cae7722f31d6c83d54e4466"
+    },
+    "ph3c_regression": {
+      "result": "PASS",
+      "assertions": 97,
+      "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+      "height_low_share": 0.88312054209733,
+      "giant_dense_share": 0.00014414428813
+    },
+    "ph3c_restart": {
+      "result": "PASS",
+      "assertions": 6,
+      "aggregate_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb"
+    },
+    "cal1_a": {
+      "result": "PASS",
+      "assertions": 1094,
+      "baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
+      "legacy_ph3c_pairwise_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
+      "dominance_classification": "HEIGHT_LOW_BROAD_FULL_POOL_WINNER",
+      "height_low_wins": 4,
+      "height_low_top2": 4,
+      "fresh_process_a": "PASS",
+      "fresh_process_b": "PASS"
+    },
+    "environment_diagnostics": {
+      "REFERENCE": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.028264166,"driver":"structural_cost","driver_delta":0.071206790,"height_low_rank":1,"height_high_rank":7,"height_delta":0.577805307,"height_driver":"structural_cost"},
+      "SHADE": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.004685816,"driver":"structural_cost","driver_delta":0.079952795,"height_low_rank":1,"height_high_rank":7,"height_delta":0.545990845,"height_driver":"structural_cost"},
+      "SUN": {"winner":"HEIGHT_LOW","runner":"CROWN_WIDE","margin":0.043289224,"driver":"structural_cost","driver_delta":0.071206790,"height_low_rank":1,"height_high_rank":7,"height_delta":0.614010029,"height_driver":"structural_cost"},
+      "DRY": {"winner":"HEIGHT_LOW","runner":"BRANCH_LOW","margin":0.022911560,"driver":"structural_cost","driver_delta":0.057786857,"height_low_rank":1,"height_high_rank":7,"height_delta":0.455052978,"height_driver":"structural_cost"}
+    }
   },
-  "matrix": {
-    "environments": ["REFERENCE", "SHADE", "SUN", "DRY"],
-    "strategies": ["BASE", "HEIGHT_LOW", "HEIGHT_HIGH", "CROWN_NARROW", "CROWN_WIDE", "BRANCH_LOW", "BRANCH_HIGH", "GIANT_DENSE"],
-    "row_count": 32,
-    "isolation": "one genome + PH3C common IndividualSeed; morphology strategy is the intended controlled variable",
-    "ranking": "coupled_net_resource_balance descending with deterministic strategy-name tie break",
-    "full_pool": "eight equal initial shares, PH3C selection strength 0.35, 10 cycles",
-    "sensitivity": "remove one existing morphology component globally and record rank shift",
-    "explanation": "winner-vs-runner and HEIGHT_LOW-vs-HEIGHT_HIGH signed component deltas"
-  },
-  "invariants": [
-    "NO_COEFFICIENT_CHANGE",
-    "NO_MORPHOLOGY_RESOURCE_PROFILE_IMPORT_IN_CAL1_A_DIAGNOSTIC",
-    "ACCEPTED_PH3_PH3C_SOURCES_UNMODIFIED",
-    "COMMON_INDIVIDUAL_SEED_ISOLATES_MORPHOLOGY",
-    "COMPONENT_SUM_RECONSTRUCTS_MORPHOLOGY_DELTA_AND_SELECTION_SCORE",
-    "FULL_POOL_SHARES_CONSERVE_ONE",
-    "LEGACY_PH3C_PAIRWISE_HASH_RECORDED",
-    "HEIGHT_LOW_VS_HEIGHT_HIGH_REPRODUCED_IN_ALL_CONTROLLED_ENVIRONMENTS"
+  "accepted_findings": [
+    "HEIGHT_LOW is the full-pool winner in all four controlled environments.",
+    "HEIGHT_HIGH ranks seventh in all four controlled environments.",
+    "The strongest HEIGHT_LOW-vs-HEIGHT_HIGH score driver in every environment is structural_cost.",
+    "The accepted PH3/PH3C hashes remain unchanged.",
+    "The CAL1-A baseline is deterministic across two fresh Godot processes.",
+    "No morphology coefficient calibration occurred."
   ],
-  "local_interface_validation": {
-    "engine": "Godot 4.7.1 stable double custom a13da4feb",
-    "mode": "API_COMPATIBLE_SYNTHETIC_STUB_ONLY_NOT_CANONICAL_ECOLOGY_EVIDENCE",
-    "acceptance_assertions": 1094,
-    "acceptance_result": "PASS",
-    "fresh_process_probe_assertions_each": 5,
-    "fresh_process_replay": "PASS_EXACT_SYNTHETIC_HASH",
-    "synthetic_baseline_hash": "11bec1c8e36ca8a162cb6d2b151f8abf8116c84c25bb200acb58213f3e7268d9",
-    "synthetic_legacy_ph3c_hash": "7530d4844fbb3afa386aaee00559485b1a2002760cb82c93b30fb6d00e459705",
-    "note": "Synthetic hashes validate the new diagnostic/test algorithms only and MUST NOT be promoted as real PH3/PH3C evidence."
-  },
-  "canonical_gate": {
-    "required_platform": "exact user Windows Godot 4.7.1 double project checkout",
-    "command": ".\\RUN_ECO_CAL1_A_TESTS.ps1 -GodotPath $Godot",
-    "runner_must_execute": [
-      "accepted PH3 morphology/resource regression",
-      "accepted PH3 restart regression",
-      "accepted PH3C morphology-aware selection regression",
-      "accepted PH3C replay regression",
-      "CAL1-A baseline decomposition acceptance",
-      "CAL1-A fresh process replay A",
-      "CAL1-A fresh process replay B"
-    ],
-    "required_outputs": [
-      "real baseline_hash",
-      "real legacy_ph3c_pairwise_hash",
-      "dominance_classification",
-      "environment winner/runner/margin/component-driver lines",
-      "exact fresh-process baseline equality"
-    ]
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_BASELINE"
+  "next": {
+    "checkpoint": "ECO.CAL1-B",
+    "name": "Relative Vertical Light Competition",
+    "principle": "Add a neighbour-dependent light redistribution term whose effect vanishes without neighbours and is symmetric for equal-height competitors; do not alter accepted PH3 coefficients."
+  }
 }

@@ -1,60 +1,41 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-A IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO0 CAL1-B EXECUTE_NOW`.
 
 Canonical North Star:
 
 `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 
-Machine vision:
+Machine roadmap:
 
-`config/ecology/eco-evolutionary-ecosystem-vision.v1.json`.
+`config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
 
-## 1. Что строит эта ветка
+## 1. Что строит ECO
 
 ECO — самостоятельный evolutionary-ecology mini-project внутри Distributed World Simulator.
 
-Его конечная задача:
+Цель:
 
-> взять ландшафт и initial ancestry, автономно вырастить на нём экологию без hardcoded biome/species placement, сохранить spatial/history state, а позднее позволить World Simulator материализовать и продолжить ту же экологию локально и в background.
+> взять landscape + environment/history + initial ancestry, автономно вырастить spatial ecology без hardcoded biome/species placement, сохранить её restartable state и позднее позволить World Simulator материализовать и продолжить ту же ecology локально и в background.
 
-Ветка не стремится напрямую к «красивым деревьям» или к раннему runtime integration.
-
-## 2. Три слоя
+Три слоя:
 
 ```text
 A. EVOLUTIONARY ECOSYSTEM
-   standalone / headless / no player required
+   standalone / headless / no player
                 ↓
 B. SIMULATOR LIVING ECOLOGY
-   import/query/activate/background continuation
+   import / local activation / background continuation
                 ↓
 C. DERIVED PRESENTATION
    mesh / assets / animation / LOD
 ```
 
-PH5 относится к слою C и уже дал достаточно representation foundation для текущего research stage. Основная работа теперь идёт в слой A.
+Один ecological state должен поддерживать три режима исполнения:
 
-## 3. Один ecological state, три режима исполнения
+`INCUBATE_FAST / BACKGROUND_COARSE / LOCAL_ACTIVE`.
 
-```text
-INCUBATE_FAST
-    accelerated long-horizon evolution
-
-BACKGROUND_COARSE
-    region/planet lives without observer
-
-LOCAL_ACTIVE
-    active local simulation and interaction
-```
-
-Ключевая инварианта:
-
-`execution resolution != different ecology truth model`.
-
-Offline evolution и runtime continuation не должны разойтись в две независимые системы правил.
-
-## 4. Уже принято
+## 2. Accepted foundation
 
 ```text
 ECO.P1                    ACCEPTED
@@ -62,341 +43,254 @@ ECO.PH0..PH4              ACCEPTED
 ECO.PH5-S1..S4            ACCEPTED
 ECO.PH representation     RESEARCH COMPLETE
 ECO.CONV0-A               ACCEPTED DESIGN REQUIREMENTS
+ECO.CAL1-A                ACCEPTED EXACT WINDOWS CANONICAL
 ```
 
-CONV0-A показал, что future simulator bridge должен использовать canonical `G/ENV/MAT/WQ/SD/TF/POP/LIFE/WB/NX/WT` foundations, а не ECO-private substitutes.
+CAL1-A canonical baseline:
 
-## 5. Центральный маршрут
+`280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f`.
+
+Accepted PH3C aggregate preserved:
+
+`294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb`.
+
+## 3. Центральный маршрут
 
 ```text
 FOUNDATION ACCEPTED
-P1 + PH0..PH5-S4
         │
         ▼
 EVO0 — PLANT CAUSAL ECOLOGY
-CAL1-A ← CURRENT CANONICAL GATE
+CAL1-A ACCEPTED
         │
         ▼
-CAL1-B/C/D/E/F
-missing mechanisms → combined model → calibration
+CAL1-B ← EXECUTE_NOW
+relative vertical light competition
+        │
+        ▼
+CAL1-C crown/root competition
+        │
+        ▼
+CAL1-D lifetime/reproduction/disturbance payoffs
+        │
+        ▼
+CAL1-E combined mechanism matrix
+        │
+        ▼
+CAL1-F calibration/full-pool robustness
         │
         ▼
 EVO1 — PLANT WORLD PROOF
-P2 dispersal / recruitment / seed bank /
+seed dispersal / recruitment / seed bank /
 succession / disturbance / migration /
 biogeography / lineage divergence
         │
         ▼
 EVO2 — LONG-RUN EVOLUTIONARY LANDSCAPE
 history / isolation / extinction-recolonization /
-dynamic attractors / save-restart / ecology epochs
+dynamic attractors / save-restart
         │
         ▼
 EVO3 — MULTI-TROPHIC ECOSYSTEM
-organic matter + decomposers
-        ↓
-plant ↔ herbivore
-        ↓
-plant ↔ herbivore ↔ predator
-        ↓
-coevolution
+organic matter → herbivores → predators → coevolution
         │
         ▼
 EVO4 — AUTONOMOUS REGIONAL / PLANET ECOLOGY
-headless runner
 INCUBATE_FAST + BACKGROUND_COARSE
         │
         ▼
 XFER0 — PORTABLE ECOLOGY ARCHIVE
-state + lineage catalog + spatial atlas + history
         │
-        ├──────────── wait canonical simulator foundations
-        │
+        ├──── wait canonical simulator foundations
         ▼
 XFER1 — WORLD GENERATION BRIDGE
-G/MAT/ENV → ecology projection → local materialization
+G/MAT/ENV → EcologyLocalProjection → materialization
         │
         ▼
-LIVE1 — LOCAL ACTIVE ECOLOGY
-        │
-        ▼
-LIVE2 — BACKGROUND/OFFSCREEN CONTINUATION
-+ coarse/fine convergence
-        │
-        ▼
-LIVE3 — WORLD/PLAYER DISTURBANCE FEEDBACK
-        │
-        ▼
-PRES1+ — richer derived visuals later
+LIVE1/2/3
+local active ↔ background ↔ world/player feedback
 ```
 
-## 6. EVO0 / CAL1-A — текущая работа
+## 4. CAL1-A — что доказано
 
-Роль CAL1:
+Exact Windows Godot 4.7.1 double runner прошёл:
+
+- PH3 `217 PASS`;
+- PH3 fresh-process `5 PASS`;
+- PH3C `97 PASS`;
+- PH3C fresh-process `6 PASS`;
+- CAL1-A `1094 PASS`;
+- CAL1-A fresh-process `5 PASS × 2`.
+
+Full-pool result:
 
 ```text
-CAL1 != цель ECO
-CAL1 = hardening plant economics before autonomous ecosystem proof
+REFERENCE  HEIGHT_LOW rank 1 / HEIGHT_HIGH rank 7
+SHADE      HEIGHT_LOW rank 1 / HEIGHT_HIGH rank 7
+SUN        HEIGHT_LOW rank 1 / HEIGHT_HIGH rank 7
+DRY        HEIGHT_LOW rank 1 / HEIGHT_HIGH rank 7
 ```
 
-### CAL1-A implementation
+Exact `HEIGHT_LOW - HEIGHT_HIGH` selection-score deltas:
 
-Implementation head:
+```text
+REFERENCE  0.577805307
+SHADE      0.545990845
+SUN        0.614010029
+DRY        0.455052978
+```
 
-`20e083d32d8dc9ff1f4a5f3f600a49a53f7a076e`.
+Strongest driver in every environment:
 
-Добавлены:
+`structural_cost`.
 
-- `scripts/research/ecology/plant_morphology_economics_baseline_v1.gd`;
-- `tests/research/ecology/eco_cal1_a_baseline_decomposition_acceptance.gd`;
-- `tests/research/ecology/eco_cal1_a_restart_replay_probe.gd`;
-- `RUN_ECO_CAL1_A_TESTS.ps1`.
+Interpretation:
 
-Candidate checkpoint:
+```text
+height cost = super-linear and always active
+relative neighbour-height payoff = absent
+```
 
-`docs/checkpoints/ECO_CAL1_A_BASELINE_DECOMPOSITION_CANDIDATE_RU.md`.
+This does not authorize lowering structural cost. It authorizes testing the missing competition mechanism.
+
+Accepted checkpoint:
+
+`docs/checkpoints/ECO_CAL1_A_BASELINE_DECOMPOSITION_ACCEPTED_RU.md`.
 
 Validation:
 
 `validation/ecology/eco-cal1-a-baseline-decomposition-validation.json`.
 
-### Что измеряет CAL1-A
+## 5. CAL1-B — EXECUTE_NOW
+
+Name:
+
+`Relative Vertical Light Competition`.
+
+Goal:
+
+> prove that height can become beneficial because overlapping shorter neighbours exist, not because tall plants receive an unconditional bonus.
+
+CAL1-B is a separate research layer over accepted PH3/PH3C. Accepted PH3 coefficients remain unchanged.
+
+Required causal controls:
 
 ```text
-REFERENCE / SHADE / SUN / DRY
-            ×
-BASE / HEIGHT_LOW / HEIGHT_HIGH /
-CROWN_NARROW / CROWN_WIDE /
-BRANCH_LOW / BRANCH_HIGH / GIANT_DENSE
+NO_NEIGHBOURS
+  → competition delta ~ 0
+
+EQUAL_HEIGHT
+  → symmetric / no fake height winner
+
+TALL_VS_SHORT_DENSE
+  → tall gains relative light access
+  → short loses relative light access
+
+TALL_VS_SHORT_SPARSE
+  → effect collapses strongly
+
+DRY_DENSE
+  → relative light advantage exists
+  → but water/structure costs remain active
+
+A/B SWAP
+  → exact symmetric output swap
 ```
 
-Для каждой строки:
-
-- same Genome;
-- same PH3C IndividualSeed;
-- realized morphology;
-- accepted PH3 benefit/cost components;
-- reconstructed selection score;
-- deterministic full-pool rank/share;
-- winner margin;
-- leave-one-component-out rank sensitivity.
-
-Environment summary объясняет winner-vs-runner и `HEIGHT_LOW-vs-HEIGHT_HIGH` через signed component deltas.
-
-### Неподвижная граница
-
-CAL1-A **не импортирует** `plant_morphology_resource_profile_v1.gd` и не создаёт tuned profile. Никакие accepted PH3/PH3C sources не изменялись.
-
-### Локальная interface validation
-
-На Godot `4.7.1 stable double a13da4feb` новый surface прошёл API-compatible synthetic validation:
-
-- acceptance `1094 PASS`;
-- fresh process probe `5 PASS × 2`;
-- exact synthetic replay.
-
-Эти числа и synthetic hashes не являются canonical ecology evidence.
-
-### Current gate
-
-На exact Windows checkout выполнить:
-
-```powershell
-cd C:\Godot\lunar-world-eco-evolutionary-ecology
-
-git pull
-
-$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
-
-.\RUN_ECO_CAL1_A_TESTS.ps1 -GodotPath $Godot
-```
-
-Runner повторяет accepted PH3/PH3C regressions, затем CAL1-A и два fresh processes.
-
-До этого:
+Mechanism concept:
 
 ```text
-CAL1-A = IMPLEMENTED_CANDIDATE
-CAL1-A != ACCEPTED
-CAL1-B = BLOCKED
+canopy overlap/density
+        ×
+relative canopy height
+        ×
+available incoming light
+        ↓
+redistribution of contested light
+        ↓
++delta for exposed canopy
+-delta for suppressed canopy
 ```
 
-## 7. CAL1-B..F
+Important properties:
 
-После CAL1-A acceptance:
+- no neighbour -> no competition redistribution;
+- no crown overlap -> near-zero redistribution;
+- equal height -> equal shares;
+- competition should redistribute a bounded light pool rather than invent unlimited energy;
+- deterministic hash/restart required;
+- CAL1-B acceptance does not require HEIGHT_HIGH to become global winner.
 
-- CAL1-B relative vertical light competition;
-- CAL1-C crown/root competition;
-- CAL1-D lifetime/reproduction/dispersal/disturbance payoffs;
-- CAL1-E combined mechanisms;
-- CAL1-F calibration/full-pool robustness.
+## 6. CAL1-C..F
 
-Принцип:
+After CAL1-B acceptance:
+
+- CAL1-C: crown overlap/self shading + root water/nutrient competition;
+- CAL1-D: maturity/reproduction/dispersal/longevity/disturbance payoffs;
+- CAL1-E: combine accepted mechanisms without calibration;
+- CAL1-F: only then calibrate magnitudes and run full-pool robustness.
+
+Forbidden sequence:
 
 ```text
-observe missing mechanism
-        ↓
-causal experiment
-        ↓
-accept mechanism
-        ↓
-combine
-        ↓
-only then calibrate
+HEIGHT_LOW wins
+→ turn knobs until it stops
 ```
 
-После CAL1 не продолжать morphology tuning ради tuning.
+Required sequence:
 
-## 8. EVO1 — следующий главный milestone
+```text
+missing mechanism
+→ causal control
+→ mechanism acceptance
+→ combination
+→ calibration
+```
 
-Target:
+## 7. EVO1 — следующий большой milestone
+
+После CAL1:
 
 `ECO.EVO1_PLANT_WORLD_PROOF`.
 
-Нужно взять небольшой детерминированный неоднородный landscape, общий ancestral pool и доказать:
+A small deterministic heterogeneous landscape + common ancestral pool must generate:
 
-- никакой biome->species placement table;
-- seed dispersal создаёт spatial propagation;
-- establishment зависит от local conditions;
-- competition меняет состав сообщества;
-- seed bank и recruitment дают continuity;
-- succession возникает из механики, не state machine;
-- disturbance меняет trajectory;
-- isolation/migration создают различия между patches;
-- long run не runaway-collapse/explosion;
-- save/restart сохраняет ecology history;
-- lineages занимают разные ecological niches.
+- spatial propagation from seed dispersal;
+- condition-dependent establishment;
+- competition-driven community change;
+- seed-bank continuity;
+- emergent succession;
+- disturbance/recovery;
+- isolation/migration differences;
+- bounded long-run dynamics;
+- deterministic save/restart;
+- lineage niche divergence.
 
-P2 является execution plan внутри EVO1, а не мостом к production ради самого production.
+No biome->species table.
 
-## 9. EVO2 — история и эволюция ландшафта
+## 8. Future convergence boundary
 
-После plant-world proof:
+Standalone `EVO0..EVO4` may progress without becoming the main runtime critical path.
 
-- ecology epoch/time;
-- connected/isolated regions;
-- migration flux;
-- local extinction/recolonization;
-- historical contingency;
-- lineage tracking;
-- dynamic attractors;
-- speciation candidate diagnostics;
-- deterministic replay/provenance.
+`XFER1/LIVE` wait for canonical simulator foundations.
 
-Цель: одинаковая среда с разной историей может иметь разную экологию.
+CONV0-A findings remain active:
 
-## 10. EVO3 — животные и прочая органика
+- `ECO` means Evolutionary Ecology; future economy should use `ECON`;
+- generic production population fabric remains `POP`-owned;
+- ECO must not create private G/WQ/SD/TF/MAT/LIFE/WB/NX/WT/persistence/authority foundations.
 
-Животные добавляются только после устойчивого plant substrate.
+## 9. Operational resolver
 
-Не вводить hardcoded `Rabbit eats Grass01`.
+When told `continue ECO`:
 
-Пищевые связи должны следовать из свойств:
+1. read North Star;
+2. read machine roadmap/passport;
+3. execute `current_step` only;
+4. preserve accepted evidence;
+5. never calibrate before mechanism acceptance;
+6. after CAL1, move toward autonomous Plant World rather than renderer sophistication.
 
-```text
-food biomass / chemistry / digestibility
-consumer metabolism / diet / mobility / defense
-reproduction / predation / territory
-```
+Current resolver:
 
-Порядок:
-
-1. decomposition / organic-matter loop;
-2. herbivore population;
-3. predator population;
-4. multi-trophic robustness;
-5. coevolution experiments.
-
-Detailed fauna meshes/animation не являются acceptance requirement.
-
-## 11. EVO4 — автономный Ecology Runner
-
-ECO должен реально запускаться отдельно от игрового клиента.
-
-Обязательные режимы:
-
-- `INCUBATE_FAST`;
-- `BACKGROUND_COARSE`;
-- pause/save/restart;
-- deterministic seeded run;
-- bounded population/cohort representation;
-- research diagnostics/dashboard.
-
-## 12. XFER0 — EcologyArchive
-
-Переносимый результат включает:
-
-```text
-EcologyWorldState snapshot
-+ lineage catalog
-+ spatial population atlas
-+ biomass/density/age distributions
-+ seed/recruitment state
-+ disturbance/history state
-+ ruleset/provenance/replay metadata
-```
-
-## 13. XFER1 — bridge в G / world generation
-
-Только после готовности canonical simulator foundations:
-
-```text
-G / MAT / ENV
-terrain + substrate + environment
-           ↓
-EcologyArchive / EcologyWorldState
-           ↓
-EcologyLocalProjection
-           ↓
-local placement/materialization
-```
-
-ECO определяет ecological occupancy/distribution; G/MAT/ENV владеют terrain/geology/material/environment truth.
-
-## 14. LIVE — продолжение той же экосистемы
-
-```text
-EcologyPatchState
-      ↓
-LocalEcologyState
-      ↓
-promoted organisms when necessary
-      ↓
-interaction / growth / feeding / reproduction / damage
-      ↓
-aggregate result
-      ↓
-EcologyPatchState
-```
-
-При уходе игрока patch возвращается в background/coarse execution. Нельзя иметь unrelated offline ecology и runtime ecology для одной planet state.
-
-## 15. Presentation
-
-Текущего PH5 достаточно как proof derived representation. До EVO major proofs не приоритизировать photorealistic vegetation, final animal animation или final art pipeline.
-
-## 16. Глобальные gates
-
-Standalone `EVO0..EVO4` можно развивать независимо от runtime critical path основного проекта.
-
-`XFER1/LIVE` ждут canonical foundations и Harness-controlled runtime frontier.
-
-CONV0-A findings остаются действующими:
-
-- `ECO` = Evolutionary Ecology; future economy = `ECON`;
-- generic production population fabric = `POP`-owned;
-- ECO не создаёт private WQ/SD/TF/MAT/LIFE/WB/NX/WT/persistence/authority foundations.
-
-## 17. Операционный resolver
-
-При команде «продолжай ECO»:
-
-1. прочитать North Star;
-2. прочитать machine roadmap;
-3. выполнить `current_step`;
-4. не перескакивать через acceptance gates;
-5. проверять, приближает ли работа к автономной экосистеме.
-
-Сейчас resolver однозначен:
-
-`RUN CAL1-A EXACT WINDOWS CANONICAL BASELINE GATE`.
+`ECO.CAL1-B RELATIVE VERTICAL LIGHT COMPETITION — EXECUTE_NOW`.
