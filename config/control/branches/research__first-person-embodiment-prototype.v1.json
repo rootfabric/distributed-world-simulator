@@ -5,19 +5,20 @@
   "branch": "research/first-person-embodiment-prototype",
   "program": "CH",
   "role": "RESEARCH_DESIGN_FRONTIER",
-  "short_description": "Non-canonical FirstPersonEmbodiment research layered on accepted CH9.6, now evaluating one transient held-item presentation state across first- and third-person views.",
-  "purpose": "Evaluate first-person hands, third-person held-item visibility, clothing-visible viewmodels, independent left/right grip UX and low-latency item-selection presentation without reopening frozen CH9.6 and without weakening authority over concrete item actions.",
-  "expected_outcome": "A separate research lab can render two first-person hands, switch the local active hotbar slot without a durable Item Graph round-trip, project the same selected item onto the third-person avatar right hand from one transient presentation state, clear both views on an empty slot, and keep concrete item mutations server-authoritative.",
-  "current_stage": "FPE-R2 S1 — shared transient held-item state and third-person right-hand presentation",
-  "stage_status": "RESEARCH_R2_S1_IMPLEMENTED_FOCUSED_AND_GRAPHICAL_PENDING",
-  "progress_note": "FPE-R1 core interaction evidence is now sufficient to move forward: the full focused suite passed cleanly on the Fix8 line, continuous movement and Tab are smooth, hotbar selection is instant CLIENT_LOCAL_PRESENTATION with zero durable Item Graph command/checkpoint, and empty-slot selection clears the first-person hand immediately. The user explicitly authorized advancing without making the remaining graphical equipment-drag verification a blocker; the focused equipment result policy remains green, but real CHARACTER_EQUIPMENT_NETWORK_APPLY_FAILED normalization is not claimed graphically accepted and is retained as a non-blocking follow-up. R2/S1 adds HeldItemPresentationState, a transient non-authoritative state keyed by hand, plus ThirdPersonHeldItemPresenter. The presenter attaches a presentation-only proxy to a normalized right-hand Skeleton3D bone through BoneAttachment3D when available and degrades to an AvatarYawRoot-local fallback anchor when no recognizable hand bone exists. The proxy is placed only on the accepted world render layer so first-person camera-layer isolation remains intact. QuaterniusFirstPersonEmbodimentFix9 makes the shared held state the presentation fan-out point: an occupied local hotbar slot updates both the existing first-person viewmodel and the third-person world proxy; an empty slot clears both. Item identity is still read from the installed canonical replica, slot selection remains transient/local, and concrete item mutations remain on accepted M7/CH9 server-authoritative paths. A synthetic Godot 4.7.1 double run has already validated the BoneAttachment3D right-hand path plus world-layer/default-layer isolation. No accepted CH9.6 runtime file is modified.",
-  "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Operator updates the dedicated detached FPE worktree and runs RUN_FPE_RESEARCH_TESTS.ps1. Two new mandatory R2 gates must pass: FPE R2 shared held-item state and FPE R2 third-person held-item presenter, followed by the existing performance and graphical scene-load gates now bound to quaternius_first_person_embodiment_fix9.gd. Then run PLAY_FPE_RESEARCH.ps1. Graphical acceptance: select an occupied hotbar slot in first person, press C, verify the same item proxy is visible at the world avatar right hand and follows avatar animation/movement; press C back and verify no duplicate world proxy leaks into the first-person view; select an empty slot and verify both views clear immediately; repeated 1..0/C switching must not reintroduce frame stalls. If the bone grip transform is visibly misaligned but follows the correct hand, record it as R2 pose-tuning rather than an authority failure. After S1 acceptance, proceed to R2/S2 item viewmodel catalog + grip profiles, then real hand skeleton/pose work. Canonical world grabbing still requires a separate authority/network contract frontier.",
+  "short_description": "Non-canonical FirstPersonEmbodiment research layered on accepted CH9.6, now evaluating catalog-driven item silhouettes and grip profiles shared by first- and third-person held-item presentation.",
+  "purpose": "Evaluate first-person hands, third-person held-item visibility, catalogued viewmodels, grip profiles, clothing-visible viewmodels and low-latency item-selection presentation without reopening frozen CH9.6 and without weakening authority over concrete item actions.",
+  "expected_outcome": "A separate research lab resolves the selected canonical replica item through a presentation-only ItemViewmodelCatalog and HeldItemGripProfileCatalog, applies one transient selected-item state to both first- and third-person proxies, clears both on empty slots, and keeps concrete item mutations server-authoritative.",
+  "current_stage": "FPE-R2 S2 — Item Viewmodel Catalog + Grip Profile Catalog",
+  "stage_status": "RESEARCH_R2_S2_IMPLEMENTED_OPERATOR_RERUN_PENDING",
+  "progress_note": "R2/S1 is accepted as research evidence. The operator ran the expanded nine-gate focused suite on 9aed4065: the original FPE gates, shared held-item state, third-person held-item presenter, performance gate and graphical scene-load all passed cleanly. In the graphical lab the selected item appears on the world avatar right hand and disappears when an empty hotbar slot is selected; Fix8 zero-stall behavior remains intact. S2 now replaces the single universal held-item box assumption with three research-only presentation services: ItemViewmodelCatalog resolves a visual descriptor from ItemDefinition id/tags/metadata with deterministic procedural fallback; HeldItemGripProfileCatalog resolves separate first-person and third-person transforms with metadata overrides; HeldItemVisualFactory builds the presentation proxy. CataloguedFirstPersonEmbodiment and CataloguedThirdPersonHeldItemPresenter consume the same descriptor/profile, while QuaterniusFirstPersonEmbodimentFix10 remains the fan-out from the shared transient HeldItemPresentationState. Heuristics currently distinguish beacon/signal, flashlight/torch, backpack, helmet and tool families; unknown definitions remain a generic box. Preferred world_scene_path is retained in the descriptor for later real-asset work but S2 deliberately uses bounded procedural primitives to avoid arbitrary asset-loading cost or scale assumptions. The catalogs and presenters explicitly own no Item Graph, network or gameplay transform truth. No accepted CH9.6 runtime file is modified. The previously unverified graphical equipment-drag result policy remains a non-blocking follow-up and is not claimed accepted.",
+  "last_accepted_checkpoint": "FPE-R2 S1 RESEARCH ACCEPTED over CH9.6 accepted base e547ba52a440e72cc02c6bbe449edaf160bae7ab",
+  "next_stage": "Operator updates the detached FPE worktree and runs RUN_FPE_RESEARCH_TESTS.ps1. New S2 gates: FPE R2 S2 item viewmodel catalog and FPE R2 S2 profiled presenters, followed by performance and graphical scene-load now bound to quaternius_first_person_embodiment_fix10.gd. Then run PLAY_FPE_RESEARCH.ps1. Graphical acceptance: occupied slots still switch instantly with no frame stall; first- and third-person show the same selected item family/profile; known differently classified definitions should have visibly different silhouette and/or grip orientation; C must not create a duplicate world proxy in first-person; empty slot clears both. Grip misalignment that still follows the correct hand is pose-tuning, not authority failure. After S2 acceptance proceed to R2/S3 real hand skeleton/pose library and then two-hand grip presentation. Canonical world grabbing remains a separate authority/network frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "candidate_runtime_head": "c2b047fbedb2504c5b3fd71f8ba4b3c617f359ea",
+  "candidate_runtime_head": "04237d1f29eb4fe374977a058e2530f40f72228c",
   "dependencies": [
     "CH9.6 accepted playable network equipment composition",
+    "FPE-R2 S1 accepted shared transient held-item state",
     "CH8 real Quaternius character and layered clothing presentation",
     "CH5/CH7 first-person camera-layer presentation adapters",
     "NX/M7 server-authoritative concrete Item Graph mutations",
@@ -29,6 +30,11 @@
     "scripts/characters/presentation/first_person_embodiment.gd",
     "scripts/characters/presentation/held_item_presentation_state.gd",
     "scripts/characters/presentation/third_person_held_item_presenter.gd",
+    "scripts/characters/presentation/item_viewmodel_catalog.gd",
+    "scripts/characters/presentation/held_item_grip_profile_catalog.gd",
+    "scripts/characters/presentation/held_item_visual_factory.gd",
+    "scripts/characters/presentation/catalogued_first_person_embodiment.gd",
+    "scripts/characters/presentation/catalogued_third_person_held_item_presenter.gd",
     "scripts/characters/interaction/first_person_grab_authority_bridge.gd",
     "scripts/characters/interaction/first_person_hotbar_network_adapter.gd",
     "scripts/characters/interaction/first_person_equipment_result_policy.gd",
@@ -38,6 +44,7 @@
     "scripts/characters/lab/quaternius_first_person_embodiment_fix7.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_fix8.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_fix9.gd",
+    "scripts/characters/lab/quaternius_first_person_embodiment_fix10.gd",
     "scripts/items/presentation/first_person_character_equipment_inventory_ui.gd",
     "scripts/ui/inventory/first_person_character_equipment_inventory_screen.gd",
     "scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
@@ -49,6 +56,8 @@
     "tests/characters/test_first_person_equipment_result_policy.gd",
     "tests/characters/test_fpe_r2_shared_held_item_state.gd",
     "tests/characters/test_fpe_r2_third_person_held_item_presenter.gd",
+    "tests/characters/test_fpe_r2_s2_item_viewmodel_catalog.gd",
+    "tests/characters/test_fpe_r2_s2_profiled_presenters.gd",
     "tests/characters/test_first_person_embodiment_performance_gate.gd",
     "tests/characters/test_first_person_embodiment_lab_load.gd",
     "RUN_FPE_RESEARCH_TESTS.ps1",
@@ -66,6 +75,7 @@
     "scripts/characters/presentation/quaternius_avatar_presenter.gd",
     "scripts/characters/presentation/quaternius_grounded_avatar_presenter.gd",
     "scripts/characters/presentation/controllable_presentation_profile.gd",
+    "scripts/items/domain/item_definition.gd",
     "scripts/characters/equipment/network_character_equipment_gameplay_controller.gd",
     "scripts/runtime/networked_gameplay/ch9/ch9_5_persistent_dedicated_server_runtime.gd",
     "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd",
@@ -74,8 +84,8 @@
     "scripts/items/presentation/item_gameplay_controller.gd"
   ],
   "critical_watched_paths": [
-    "scripts/characters/presentation/quaternius_avatar_presenter.gd",
     "scripts/characters/presentation/controllable_presentation_profile.gd",
+    "scripts/items/domain/item_definition.gd",
     "scripts/runtime/networked_gameplay/m7/m7_network_item_command_bridge.gd",
     "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
     "scripts/items/presentation/item_gameplay_controller.gd"
@@ -85,6 +95,11 @@
     "scripts/characters/presentation/first_person_embodiment.gd",
     "scripts/characters/presentation/held_item_presentation_state.gd",
     "scripts/characters/presentation/third_person_held_item_presenter.gd",
+    "scripts/characters/presentation/item_viewmodel_catalog.gd",
+    "scripts/characters/presentation/held_item_grip_profile_catalog.gd",
+    "scripts/characters/presentation/held_item_visual_factory.gd",
+    "scripts/characters/presentation/catalogued_first_person_embodiment.gd",
+    "scripts/characters/presentation/catalogued_third_person_held_item_presenter.gd",
     "scripts/characters/interaction/first_person_grab_authority_bridge.gd",
     "scripts/characters/interaction/first_person_hotbar_network_adapter.gd",
     "scripts/characters/interaction/first_person_equipment_result_policy.gd",
@@ -94,6 +109,7 @@
     "scripts/characters/lab/quaternius_first_person_embodiment_fix7.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_fix8.gd",
     "scripts/characters/lab/quaternius_first_person_embodiment_fix9.gd",
+    "scripts/characters/lab/quaternius_first_person_embodiment_fix10.gd",
     "scripts/items/presentation/first_person_character_equipment_inventory_ui.gd",
     "scripts/ui/inventory/first_person_character_equipment_inventory_screen.gd",
     "scenes/labs/character/quaternius_first_person_embodiment_lab.tscn",
@@ -107,6 +123,8 @@
     "tests/characters/test_first_person_equipment_result_policy.gd",
     "tests/characters/test_fpe_r2_shared_held_item_state.gd",
     "tests/characters/test_fpe_r2_third_person_held_item_presenter.gd",
+    "tests/characters/test_fpe_r2_s2_item_viewmodel_catalog.gd",
+    "tests/characters/test_fpe_r2_s2_profiled_presenters.gd",
     "tests/characters/test_first_person_embodiment_performance_gate.gd",
     "tests/characters/test_first_person_embodiment_lab_load.gd",
     "RUN_FPE_RESEARCH_TESTS.ps1",
@@ -114,20 +132,21 @@
   ],
   "tested_heads": {
     "operator_graphical_fix6": "PASS_MAIN_THREAD_PERIODIC_HITCH_REMOVED_AND_TAB_SMOOTH",
-    "operator_graphical_fix7": "PARTIAL_PASS_EMPTY_SLOT_HAND_CLEAR_FIXED_BUT_HOTBAR_SWITCH_STILL_CAUSES_APPROX_HALF_SECOND_TOTAL_SCENETREE_FREEZE",
     "focused_repository_fix8": "PASS_7_GATES_CLEAN_ON_8FF3078F_CONTRACT23_HOTBAR17_PRESENTATION11_LOCAL19_EQUIPMENT11_PERFORMANCE10_SCENE13",
     "graphical_fix8": "PASS_ZERO_STALL_HOTBAR_CHARACTER_CONTINUES_MOVING_WITHOUT_DELAY",
     "graphical_equipment_fix7_policy": "NON_BLOCKING_OPERATOR_FOLLOWUP_NOT_CLAIMED_ACCEPTED",
     "synthetic_r2_third_person_presenter": "PASS_GODOT_4_7_1_DOUBLE_BONE_RIGHT_HAND_AND_WORLD_LAYER_ISOLATION",
-    "focused_repository_r2_s1": "PENDING_OPERATOR_RERUN",
-    "graphical_r2_s1": "PENDING_OPERATOR_RERUN"
+    "focused_repository_r2_s1": "PASS_9_GATES_ON_9AED4065_SHARED20_THIRD20_PERFORMANCE10_SCENE15",
+    "graphical_r2_s1": "PASS_RIGHT_HAND_ITEM_VISIBLE_AND_EMPTY_SLOT_CLEARS_WORLD_PROXY",
+    "focused_repository_r2_s2": "PENDING_OPERATOR_RERUN",
+    "graphical_r2_s2": "PENDING_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "FIX6_PERFORMANCE_PASS_DOES_NOT_IMPLY_TRANSIENT_HOTBAR_INPUT_IS_FREE_OF_DURABILITY_WORK",
     "FIX7_NONBLOCKING_CLIENT_SEND_DOES_NOT_IMPLY_NONBLOCKING_END_TO_END_BECAUSE_SAME_PROCESS_SERVER_PERFORMS_SYNCHRONOUS_DURABLE_CHECKPOINT",
-    "NETWORK_RTT_IS_NOT_THE_FIX7_FREEZE_ROOT_CAUSE_BECAUSE_THE_ENTIRE_LOCAL_CHARACTER_AND_RENDER_LOOP_STALLS",
     "PRE_7012A163_FIX8_LOCAL_SELECTION_PASS_WITH_SCRIPT_ERROR_WAS_REJECTED_BY_FAIL_CLOSED_RUNNER_AND_IS_NOT_ACCEPTANCE_EVIDENCE",
-    "R2_SYNTHETIC_BONE_ATTACHMENT_PASS_DOES_NOT_REPLACE_REAL_QUATERNIUS_GRAPHICAL_GRIP_ALIGNMENT"
+    "R2_SYNTHETIC_BONE_ATTACHMENT_PASS_DOES_NOT_REPLACE_REAL_QUATERNIUS_GRAPHICAL_GRIP_ALIGNMENT",
+    "R2_S1_GRAPHICAL_PROXY_PASS_DOES_NOT_VALIDATE_S2_CATALOG_CLASSIFICATION_OR_PROFILE_TRANSFORMS"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -141,8 +160,8 @@
     "WORLD_WORK_BUDGET"
   ],
   "blockers": [
-    "R2_S1_FOCUSED_OPERATOR_RERUN_PENDING",
-    "R2_S1_GRAPHICAL_THIRD_PERSON_HELD_ITEM_PENDING"
+    "R2_S2_FOCUSED_OPERATOR_RERUN_PENDING",
+    "R2_S2_GRAPHICAL_CATALOG_AND_GRIP_RERUN_PENDING"
   ],
   "non_blocking_followups": [
     "FIX7_GRAPHICAL_EQUIPMENT_RESULT_POLICY_OPERATOR_RERUN_NOT_YET_ACCEPTED",
@@ -152,10 +171,8 @@
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_REQUIRES_SEPARATE_FRONTIER",
     "GODOT_EDITOR_PREFLIGHT_GENERATES_UNTRACKED_GD_UID_SIDECARS_IN_DETACHED_WORKTREE",
     "EXTERNAL_QUATERNIUS_MALE_PEASANT_ASSET_NOT_PRESENT_IN_THIS_CHECKOUT_REAL_SLEEVES_DISABLED",
-    "R2_S2_ITEM_VIEWMODEL_PRESENTATION_CATALOG",
-    "R2_S2_GRIP_PROFILE_CATALOG",
-    "REAL_HAND_SKELETON_AND_POSE_LIBRARY",
-    "TWO_HAND_GRIP_PRESENTATION"
+    "R2_S3_REAL_HAND_SKELETON_AND_POSE_LIBRARY",
+    "R2_S4_TWO_HAND_GRIP_PRESENTATION"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
