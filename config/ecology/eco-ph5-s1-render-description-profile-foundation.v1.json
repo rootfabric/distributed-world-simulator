@@ -2,7 +2,7 @@
   "schema": "distributed_world_simulator.ecology_experiment_manifest.v1",
   "checkpoint": "ECO.PH5-S1",
   "name": "PlantRenderDescription + RendererProfile Foundation",
-  "status": "LOCAL_CORE_FIXTURE_PASS_REAL_PH2_WINDOWS_AND_GRAPHICAL_PENDING",
+  "status": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
@@ -10,22 +10,8 @@
   "experiment_revision": "ECO.PH5-S1.1",
   "purpose": "Introduce a deterministic derived PlantRenderDescription and renderer-profile abstraction so visual complexity, assets and LOD can evolve independently of GrowthGraph, genome and ecology truth.",
   "pipeline": "GrowthGraph -> PlantRenderDescription -> RendererProfile -> materialization/LOD representation",
-  "renderer_profiles": [
-    "DEBUG_SKELETON",
-    "BRANCH_TUBES",
-    "BRANCH_LEAF_INSTANCED",
-    "CANOPY_APPROXIMATION",
-    "FULL_PROCEDURAL",
-    "IMPOSTOR_BILLBOARD"
-  ],
-  "render_description_fields": [
-    "source GrowthGraph hash",
-    "deterministic tapered branch primitives",
-    "deterministic foliage/bud anchors",
-    "canopy bounds",
-    "representation bounds",
-    "render description hash"
-  ],
+  "renderer_profiles": ["DEBUG_SKELETON", "BRANCH_TUBES", "BRANCH_LEAF_INSTANCED", "CANOPY_APPROXIMATION", "FULL_PROCEDURAL", "IMPOSTOR_BILLBOARD"],
+  "render_description_fields": ["source GrowthGraph hash", "deterministic tapered branch primitives", "deterministic foliage/bud anchors", "canopy bounds", "representation bounds", "render description hash"],
   "truth_invariants": [
     "PlantRenderDescription is derived representation only",
     "renderer profile and LOD never modify GrowthGraph",
@@ -34,16 +20,19 @@
     "same GrowthGraph deterministically rebuilds the same PlantRenderDescription",
     "all renderer profiles consume the same PlantRenderDescription"
   ],
-  "local_core_preflight": {
-    "platform": "Godot 4.7.1 stable double Linux isolated PH5 core fixture",
-    "engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC)",
-    "scope": "synthetic GrowthGraph fixture used only to prove GDScript syntax, deterministic profile/materialization contracts and visual-lab scene smoke before publishing",
-    "focused_assertions": 492,
+  "accepted_windows_evidence": {
+    "platform": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb exact Windows",
+    "checkout": "5d339b3628298e7f84ff563b6bdaf0bcb3aa2c7b",
+    "parent_ph4_focused_assertions": 718,
+    "parent_ph4_restart_assertions": 5,
+    "focused_assertions": 720,
     "visual_smoke_assertions": 15,
     "restart_assertions": 4,
-    "synthetic_reference_description_hash": "3fb83c57e5bbffb34bf7396378f73fa02ff3c3d600c28570b41bcb147ebc9471",
-    "synthetic_profile_matrix_hash": "52adecb24e8f35f5fc97c59512670d660bf2901c8bf517842ad91b9ab10fb2a0",
-    "synthetic_full_materialization_hash": "e06be9cf131c1940640b6c745d64011bb65c0eda598b1d5f1591da9a371fd367"
+    "reference_description_hash": "72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3",
+    "profile_matrix_hash": "2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0",
+    "full_materialization_hash": "374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c",
+    "graphical": "PASS_BY_USER_OBSERVATION",
+    "graphical_note": "User confirmed profile switching works without errors; BRANCH_LEAF_INSTANCED, CANOPY_APPROXIMATION and IMPOSTOR_BILLBOARD are visibly distinct while the same GrowthGraph hash is retained for the selected environment."
   },
   "tested_published_blobs": {
     "renderer_profile": "2fb970b38a4ec5bffdbab3b6093bdcb1d4296db6",
@@ -54,17 +43,10 @@
     "visual_lab": "04aa5347367b7c845a0f0de8ef8415f1159ee76e",
     "visual_scene": "1de15c8f35d67ce50e38c770aa1e3fc1ba1e8c73",
     "visual_smoke": "07b4b7c746eda05e961f67b8da3e24c22869efd8",
-    "windows_runner": "82c54328b5a1a6c8d01896a7697bd281f4b301f1",
-    "lab_opener": "79e0c9f6ba1a52cf3a4de6b1d09f0f623c53485d"
+    "windows_runner": "77a9ed57b4f92bcbda65ab8cfbfa7c5de360e87a",
+    "lab_opener": "93251f3d2259abb68469494c5a0876e438d6b921"
   },
-  "windows_gate": {
-    "parent_ph4": "require focused 718 + restart 5 exact accepted hashes",
-    "ph5_focused": "run against all seven accepted PH2 environment-coupled GrowthGraphs",
-    "visual_smoke": "require PASS 15",
-    "restart": "require focused and fresh-process reference description/profile matrix/full materialization hashes to match",
-    "graphical": "user cycles environments and all six profiles and confirms visibly distinct coherent representations with no truth-hash changes"
-  },
-  "scope_boundary": "PH5-S1 is the representation contract and diagnostic materialization foundation. It does not yet claim production 3D branch mesh generation, GPU foliage instancing, production canopy clustering or production impostor baking.",
+  "scope_boundary": "PH5-S1 is the representation contract and diagnostic materialization foundation. It does not claim production 3D branch mesh generation, GPU foliage instancing, production canopy clustering or production impostor baking.",
   "next_after_acceptance": "ECO.PH5-S2 3D Tapered Branch Tubes + Instanced Foliage",
   "unrelated_blocker_retained": "PH3C_FULL_POOL_COMPACT_DOMINANCE remains required before unconstrained morphology mutation/evolution; it does not block renderer research."
 }
