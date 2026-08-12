@@ -1,0 +1,78 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-11-R3-CANDIDATE",
+  "branch": "feature/global-p0-r3-architecture",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "ARCHITECTURE_REVISION_CANDIDATE",
+  "short_description": "R3 candidate defining missing cross-domain foundations, ownership boundaries, parallel contract waves and long-range convergence milestones.",
+  "purpose": "Extend GLOBAL-P0 R2 with Identity, Authorization, Reference Frames, Time, Spatial Domain, Material, World Operation, World Query, Lifecycle, Work Budget, Compatibility and Security foundations while preserving accepted domain/runtime ownership.",
+  "expected_outcome": "A refreshed current-main R3 architecture change-set that can be promoted canonically without turning frozen accepted R2 evidence into false architecture drift, followed by selected Wave A contract branches from one R3 base.",
+  "current_stage": "GLOBAL-P0 R3 architecture candidate current-main refresh",
+  "stage_status": "DOCUMENTED_CANDIDATE_REFRESH_REQUIRED",
+  "progress_note": "The R3 architecture content remains the preferred candidate and no production runtime path is changed. However the original candidate ancestry predates T1B aggregate handoff, G8.6 automated acceptance, CH9.6 Windows automated acceptance, C22 current-main convergence disposition, NX.C0 declaration and PC0 directional-watch hardening. Machine-readable R3 frontier guards have been updated, but direct promotion from the stale ancestry is blocked. The candidate must be refreshed onto current main after project-control convergence, then reviewed with an explicit R2->R3 transition rule that distinguishes active new runtime frontiers from frozen accepted evidence.",
+  "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
+  "next_stage": "Integrate the PC0 project-convergence hardening first. Rebuild/refresh the R3 candidate on then-current main, verify current ownership/intersections and frontier guards, implement the architecture-revision transition policy, require non-RED PC0, then promote to canonical R3. Only after that register IAM0/IAM1, MAT0, WT0 and WQ0/WQ1 from one accepted R3 base.",
+  "parent_branch_or_checkpoint": "main / GLOBAL-P0-2026-08-10-R2; refresh target is current main after PC0 convergence hardening",
+  "dependencies": ["GLOBAL_P0_R2", "PC0_PROJECT_CONVERGENCE_2026_08_11", "A1", "S0", "S1", "M0", "A3", "G8_6_CURRENT", "T1B_HANDOFF_COMPLETE", "C22_CURRENT_MAIN_REFRESH", "NX_C0", "MATTER", "RL", "CH9_6_CURRENT"],
+  "owned_paths": [
+    "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
+    "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/branches/feature__global-p0-r3-architecture.v1.json"
+  ],
+  "watched_paths": [
+    "docs/plans/GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md",
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json",
+    "scripts/control/**",
+    "docs/plans/PROJECT_CONVERGENCE_2026-08-11_RU.md",
+    "docs/plans/DISTRIBUTED_RUNTIME_FOUNDATION_ROADMAP_RU.md",
+    "docs/plans/SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md"
+  ],
+  "critical_watched_paths": [
+    "config/architecture/global-program-roadmap.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/project-program-registry.v1.json",
+    "config/control/project-control-policy.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "NOT_APPLICABLE",
+    "full_regression": "NOT_APPLICABLE"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "PROGRAM_LEDGER",
+      "claimed_owner": "MAIN",
+      "scope": "candidate proposes future owner names but does not change main project state before canonical promotion"
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "blockers": [
+    "CURRENT_MAIN_REFRESH_REQUIRED",
+    "R3_REVISION_TRANSITION_POLICY_REQUIRED",
+    "ARCHITECTURE_REVIEW_REQUIRED",
+    "PC0_NON_RED_REQUIRED_BEFORE_PROMOTION",
+    "MAIN_PROMOTION_AND_PC0_REQUIRED_BEFORE_WAVE_A_ACTIVATION"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}
