@@ -1,9 +1,10 @@
 {
   "schema": "distributed_world_simulator.ecology_validation.v1",
   "checkpoint": "ECO.PH5-S1",
-  "decision": "LOCAL_CORE_FIXTURE_PASS_REAL_PH2_WINDOWS_AND_GRAPHICAL_PENDING",
+  "decision": "ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "tested_engine": "LOCAL_LINUX_GODOT_4_7_1_DOUBLE_CORE_FIXTURE; EXACT_WINDOWS_REAL_PH2_PENDING",
+  "tested_engine": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb exact Windows",
+  "tested_checkout": "5d339b3628298e7f84ff563b6bdaf0bcb3aa2c7b",
   "execution": {
     "renderer_profile": "res://scripts/research/ecology/plant_renderer_profile_v1.gd",
     "render_description": "res://scripts/research/ecology/plant_render_description_v1.gd",
@@ -22,31 +23,32 @@
     "ph4_offspring_batch_hash": "48d1ba23151ad5cf02f4d0de2ebbf9559da99612c852c6ec97029254159ee5ce"
   },
   "acceptance_matrix": {
-    "DERIVED_DESCRIPTION": "REQUIRE source_graph_hash preserved and derived_representation=true",
-    "GROWTH_GRAPH_IMMUTABILITY": "REQUIRE source graph JSON unchanged before/after description and profile materialization",
-    "PROFILE_INDEPENDENCE": "REQUIRE six renderer profiles over the same description with distinct materialization hashes",
-    "DETERMINISTIC_REBUILD": "REQUIRE same GrowthGraph -> same render_description_hash",
-    "TAPER": "REQUIRE all branch radii positive and start radius >= end radius",
-    "FOLIAGE_ANCHORS": "REQUIRE deterministic positive foliage anchor set",
-    "CANOPY": "REQUIRE positive derived canopy bounds",
-    "DEBUG_SKELETON": "REQUIRE no foliage instances",
-    "BRANCH_TUBES": "REQUIRE tapered branch profile metadata",
-    "BRANCH_LEAF_INSTANCED": "REQUIRE foliage instances",
-    "CANOPY_APPROXIMATION": "REQUIRE canopy primitive",
-    "FULL_PROCEDURAL": "REQUIRE all branch and foliage primitives exposed",
-    "IMPOSTOR_BILLBOARD": "REQUIRE one impostor and zero branch primitives",
-    "NO_CANONICAL_PLANT_TYPES": "REQUIRE no tree_type/bush_type/grass_type fields",
-    "RESTART_REPLAY": "REQUIRE focused and fresh-process reference description, profile matrix and full materialization hashes equal",
-    "GRAPHICAL": "PENDING_USER_OBSERVATION"
+    "DERIVED_DESCRIPTION": "PASS",
+    "GROWTH_GRAPH_IMMUTABILITY": "PASS",
+    "PROFILE_INDEPENDENCE": "PASS_SIX_PROFILES_DISTINCT_MATERIALIZATION",
+    "DETERMINISTIC_REBUILD": "PASS_EXACT_HASH",
+    "TAPER": "PASS",
+    "FOLIAGE_ANCHORS": "PASS",
+    "CANOPY": "PASS",
+    "DEBUG_SKELETON": "PASS",
+    "BRANCH_TUBES": "PASS_METADATA_FOUNDATION",
+    "BRANCH_LEAF_INSTANCED": "PASS_METADATA_FOUNDATION",
+    "CANOPY_APPROXIMATION": "PASS_DIAGNOSTIC_FOUNDATION",
+    "FULL_PROCEDURAL": "PASS_DIAGNOSTIC_FOUNDATION",
+    "IMPOSTOR_BILLBOARD": "PASS_DIAGNOSTIC_FOUNDATION",
+    "NO_CANONICAL_PLANT_TYPES": "PASS",
+    "RESTART_REPLAY": "PASS_EXACT_HASH",
+    "GRAPHICAL": "PASS_BY_USER_OBSERVATION"
   },
-  "local_core_preflight": {
-    "focused": "PASS_492_SYNTHETIC_CORE_FIXTURE",
+  "windows_confirmation": {
+    "focused": "PASS_720",
     "visual_smoke": "PASS_15",
     "restart": "PASS_4",
-    "tested_equals_published": "PASS_ALL_10_FILES_EXACT_GIT_BLOBS"
+    "reference_description_hash": "72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3",
+    "profile_matrix_hash": "2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0",
+    "full_materialization_hash": "374eade14f40d3d42491ca24dfaae69adc511dea47e76bc629a5d3abf5a2028c"
   },
-  "windows_confirmation": "PENDING_REAL_PH2_EXECUTION",
-  "graphical_confirmation": "PENDING",
+  "graphical_confirmation": "PASS_BY_USER_OBSERVATION_PROFILE_SWITCHING_VISIBLE_NO_ERRORS",
   "truth_boundary": "PH5-S1 defines derived presentation metadata only. No renderer output participates in ecology, resource, selection, lifecycle, authority, networking or persistence semantics.",
-  "next": "On exact Windows + graphical PASS accept PH5-S1, then implement PH5-S2 actual 3D branch tubes and foliage instancing."
+  "next": "ECO.PH5-S2 actual 3D tapered branch tubes and instanced foliage."
 }
