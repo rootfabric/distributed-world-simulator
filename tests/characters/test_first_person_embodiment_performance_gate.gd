@@ -31,7 +31,7 @@ func _run() -> void:
 	_assert(not bool(report.get("changes_network_authority", true)), "research host claims network authority changes")
 	_assert(elapsed_us < 50000, "suppressed 180-call status burst took unexpectedly long")
 
-	var base_snapshot := {
+	var base_snapshot: Dictionary = {
 		"schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
 		"revision": 10,
 		"tick": 10,
@@ -52,9 +52,13 @@ func _run() -> void:
 	hotbar_only["revision"] = 11
 	hotbar_only["tick"] = 11
 	hotbar_only["checksum"] = "hotbar"
-	hotbar_only["inventories"]["a"]["selected_hotbar_index"] = 1
+	var hotbar_inventories: Dictionary = Dictionary(hotbar_only["inventories"])
+	var local_inventory: Dictionary = Dictionary(hotbar_inventories["a"])
+	local_inventory["selected_hotbar_index"] = 1
+	hotbar_inventories["a"] = local_inventory
+	hotbar_only["inventories"] = hotbar_inventories
 	_assert(
-		host._classify_fpe_projection(base_snapshot, hotbar_only) == host.PROJECTION_HOTBAR_METADATA_ONLY,
+		String(host._classify_fpe_projection(base_snapshot, hotbar_only)) == "HOTBAR_METADATA_ONLY",
 		"selected_hotbar_index-only canonical change was not classified for fast path"
 	)
 
@@ -62,9 +66,13 @@ func _run() -> void:
 	structural["revision"] = 12
 	structural["tick"] = 12
 	structural["checksum"] = "structural"
-	structural["items"][0]["quantity"] = 2
+	var structural_items: Array = Array(structural["items"]).duplicate(true)
+	var changed_item: Dictionary = Dictionary(structural_items[0]).duplicate(true)
+	changed_item["quantity"] = 2
+	structural_items[0] = changed_item
+	structural["items"] = structural_items
 	_assert(
-		host._classify_fpe_projection(hotbar_only, structural) == host.PROJECTION_FULL,
+		String(host._classify_fpe_projection(hotbar_only, structural)) == "FULL_GRAPH",
 		"structural Item Graph mutation was incorrectly classified as hotbar metadata"
 	)
 
