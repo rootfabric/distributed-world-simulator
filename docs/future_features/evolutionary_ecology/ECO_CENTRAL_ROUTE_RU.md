@@ -1,146 +1,133 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / OPERATIONAL ROUTE`.
-
-Этот документ задаёт центральный маршрут `feature/eco-evolutionary-ecology` и отвечает на вопрос: **что делать дальше, в каком порядке и какие этапы нельзя перескакивать**.
+Статус: `ACTIVE / RESEARCH_ONLY / CAL1-A EXECUTE_NOW`.
 
 ## Текущее состояние
 
-Доказана цепочка:
+Доказана и принята цепочка:
 
 `Environment -> Genome -> Phenotype -> GrowthGraph -> Morphology Costs/Benefits -> Selection -> Seed Lifecycle -> PlantRenderDescription -> Real 3D Materialization -> Multi-Scale Representation`.
 
-Приняты:
-
-`ECO.P1`, `PH0`, `PH1`, `PH2`, `PH3`, `PH3C`, `PH4`, `PH5-S1`, `PH5-S2`, `PH5-S3`, `PH5-S4`.
-
 `ECO.PH RESEARCH COMPLETE`.
 
-Accepted PH5-S3/S4 checkpoint:
+После PH5 выполнен `ECO.CONV0-A` global consumer-requirements review. Вывод: evolutionary ECO не требует нового global foundation; будущая production integration должна использовать canonical `TF / SD / ENV / MAT / WQ / POP / LIFE / WB / NX / WT / COMPAT`.
 
-`docs/checkpoints/ECO_PH5_S3_S4_MULTISCALE_REPRESENTATION_ACCEPTED_RU.md`.
+CONV0-A выявил пять R3 gaps, включая два high-architecture:
 
-Главные PH5 invariants:
+1. `ECO` program-ID collision: evolutionary ecology vs future world economy — economy следует именовать `ECON`;
+2. ECO ecological population semantics vs generic `POPULATION_FIELD` ownership — нужен adapter boundary, не два population fabrics.
 
-- `identity != LOD`;
-- representation не имеет обратного пути в ecology/resource/selection/lifecycle truth;
-- FULL/REDUCED/CANOPY/IMPOSTOR/POPULATION_ONLY являются derived representation tiers;
-- `POPULATION_ONLY` не требует individual plant geometry/GrowthGraph materialization.
+Полный gap report:
 
-## Global alignment после PH5
+`docs/future_features/evolutionary_ecology/ECO_CONV0_A_R3_GAP_REPORT_RU.md`.
 
-Полный разбор:
-
-`docs/future_features/evolutionary_ecology/ECO_CONV0_GLOBAL_ALIGNMENT_RU.md`.
-
-На момент closure PH5 canonical `main` уже содержит H0.1 R8 / C22 merge `eefd75fa3badec10c6e7db959e2a3992dba30f0e`, но main-owned registry/current dashboard ещё требуют post-C22 control synchronization. ECO не входит в runtime critical path и не имеет права использовать stale control text для production promotion.
-
-Глобальный critical path остаётся:
+## Центральный маршрут
 
 ```text
-C22 MAIN_INTEGRATED verification / post-C22 PC0
-        ↓
-GLOBAL-P0 R3 exact-current-main refresh
-        ↓
-HUMAN R3 promotion
-        ↓
-post-R3 PC0
-        ↓
-H0.2 / NX.C1
+       ECO.PH RESEARCH COMPLETE
+                ↓
+          CONV0-A ACCEPTED
+                ↓
+          CAL1-A EXECUTE_NOW
+       baseline decomposition
+                ↓
+          CAL1-B relative
+       vertical light competition
+                ↓
+          CAL1-C crown/root
+             competition
+                ↓
+          CAL1-D lifetime /
+        reproduction / disturbance
+                ↓
+          CAL1-E combined matrix
+                ↓
+          CAL1-F calibration /
+          full-pool robustness
+                ↓
+          CAL1 ACCEPTED
+                ↓
+               P2
+ dispersal / recruitment / biogeography
+                │
+                ├───────────────┐
+                │               │
+                │       CONV0-B when canonical
+                │       R3/WQ/MAT/POP/LIFE/WB
+                │               │
+                └───────┬───────┘
+                        ↓
+             WAIT FOR FOUNDATIONS
+                        ↓
+                       P3
+                        ↓
+                      PH6
 ```
 
-ECO в это время продолжает только research/design work без runtime ownership.
+## CAL1 — Morphology Economics Calibration
 
-## Центральная дорожная карта
+Plan:
+
+`docs/future_features/evolutionary_ecology/ECO_CAL1_MORPHOLOGY_ECONOMICS_PLAN_RU.md`.
+
+Known finding:
+
+`HEIGHT_LOW/full-pool dominance`.
+
+Source audit показывает структурную асимметрию текущей модели:
 
 ```text
-            PH5-S3 ACCEPTED
-                   ↓
-            PH5-S4 ACCEPTED
-                   ↓
-         ECO.PH RESEARCH COMPLETE
-                   ↓
-              CONV0-A NOW
-     global consumer requirements
-                   ↓
-        ┌──────────┴──────────┐
-        ▼                     ▼
-      CAL1               WAIT R3/WQ/MAT
- morphology economics          │
-        │                       ▼
-        ▼                  CONV0-B FREEZE
-       P2                       │
- dispersal/recruitment          │
- biogeography                   │
-        └──────────┬────────────┘
-                   ▼
-          WAIT FOR FOUNDATIONS
- World Query + Material Ontology
- Spatial/LIFE + Work Budget + Harness
-                   ↓
-                  P3
-      controlled world integration
-                   ↓
-                 PH6
-      promoted persistent individuals
+height benefit
+  -> absolute shade_pressure(environment)
+
+height cost
+  -> structural_cost ~ height^1.55
 ```
 
-## Операционный resolver
+При этом отсутствует главное relative benefit path:
 
-При продолжении ветки:
+```text
+neighbour height / canopy overlap
+      ↓
+vertical light competition
+      ↓
+relative canopy exposure
+```
 
-1. прочитать `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`;
-2. выполнить `current_step`;
-3. перед major stage перечитать fresh `origin/main` Project Control;
-4. после acceptance перечитать roadmap;
-5. не выполнять `BLOCKED`/`DEFERRED` stages;
-6. не переносить runtime/foundation ownership в ECO.
+Поэтому первое правило CAL1:
 
-## ECO.CONV0-A — Global Consumer Requirements
+> Не калибровать коэффициенты до проверки missing causal mechanisms.
 
-Статус: `EXECUTE_NOW / DESIGN_CONTRACT_ONLY`.
+### CAL1-A — EXECUTE_NOW
 
-Цель: до freeze GLOBAL-P0 R3 сформулировать, что ecology **потребляет** от canonical foundations и что ecology **публикует** как derived/domain output, не создавая private substitutes.
+Построить deterministic baseline decomposition для полного strategy pool по environment matrix.
 
-Обязательные границы:
+Для каждой стратегии фиксировать realized morphology и все существующие PH3 score components. Никаких coefficient changes.
 
-- `SD / Spatial Domain Fabric` — addressing/domain requirements;
-- `TF / Time Fabric` — simulation-time/history requirements;
-- `WQ / World Query Fabric` — environmental projection requirements;
-- `MAT / Material Ontology` — substrate/material projection requirements;
-- `LIFE / Promotion-Dormancy-Demotion` — aggregate ↔ promoted-individual lifecycle requirements;
-- `WB / World Work Budget` — bounded ecology-work proposal requirements;
-- `NX8` — population/domain truth vs individual replication boundary;
-- `WT` — future cross-domain effect boundary only.
+CAL1-A должен:
 
-CONV0-A должен завершиться ownership/compatibility matrix и списком architecture gaps. Никакой production adapter не создаётся.
+- воспроизвести `HEIGHT_LOW` dominance, а не скрыть его;
+- показать, какие terms создают margin;
+- сохранить accepted PH3C pairwise behavior;
+- получить deterministic/restart baseline hash.
 
-## ECO.CAL1 — Morphology Economics Calibration
+### CAL1-B — NEXT
 
-Статус: `NEXT_AFTER_CONV0_A`.
+Relative vertical light competition с causal controls `NO_NEIGHBOURS`, `EQUAL_HEIGHT`, `TALL_VS_SHORT_DENSE`, `TALL_VS_SHORT_SPARSE`, `DRY_DENSE`, A/B swap symmetry.
 
-Перед unrestricted morphology evolution требуется закрыть риск `PH3C_FULL_POOL_COMPACT_DOMINANCE`.
+Цель:
 
-Не подгонять коэффициенты под красивый результат. Порядок:
+`height may become beneficial because of competitors`,
 
-`missing mechanism -> causal experiment -> calibration -> full-pool robustness`.
+а не `tall always wins`.
 
-Первыми кандидатами на causal mechanisms остаются:
+### CAL1-C/D/E/F
 
-- neighbour/self shading;
-- vertical light competition;
-- crown overlap;
-- root overlap / below-ground competition;
-- size-dependent reproduction;
-- dispersal benefit from height;
-- long-lived structural payoff;
-- disturbance resistance.
+Дальше: crown/root overlap, lifetime/reproduction/dispersal/disturbance payoffs, combined mechanism matrix, и только затем coefficient calibration + full-pool robustness.
 
-До CAL1 acceptance запрещено заявлять unrestricted morphology/species emergence.
+После CAL1 открывается P2.
 
-## ECO.P2 — Dispersal / Recruitment / Biogeography
-
-После CAL1:
+## P2 — Dispersal / Recruitment / Biogeography
 
 - P2.1 Seed Dispersal Kernel;
 - P2.2 Establishment / Recruitment;
@@ -150,50 +137,32 @@ CONV0-A должен завершиться ownership/compatibility matrix и с
 - P2.6 Long-Horizon Biogeography;
 - P2.7 Speciation Candidate Diagnostics.
 
-Цель: lineage divergence возникает из migration + environment + resource competition + history, а не из hardcoded biome/species placement.
+Цель: lineage divergence возникает из migration + environment + competition + history, а не из hardcoded biome/species placement.
 
-## ECO.CONV0-B — Canonical Contract Freeze
+## CONV0-B
 
-Статус: `WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS`.
+`WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS`.
 
-После появления canonical R3/WQ/MAT/LIFE/WB contracts повторить compatibility review и привязать ECO-side requirements к реальным canonical interfaces.
+После canonical R3 и реальных `WQ/MAT/POP/LIFE/WB/ENV` contracts выполнить compatibility/freeze. До этого не создавать ECO-private production substitutes.
 
-До этого запрещено invent private production API только потому, что canonical API ещё не готов.
+## Production boundary
 
-## ECO.P3 и PH6 — только после production foundations
+`P3/PH6` остаются blocked до canonical foundations + fresh PC0/Harness-controlled runtime frontier.
 
-Не начинать production world integration, persistent detailed plants или networked individual vegetation до появления canonical foundations:
+Запрещены:
 
-- World Query Fabric / canonical environment contracts;
-- Unified Material Ontology projection;
-- Spatial Domain Fabric;
-- Promotion/Dormancy/Demotion semantics;
-- World Work Budget;
-- authority/persistence/transport integration;
-- fresh PC0/Harness-controlled runtime frontier.
+- ECO-private WorldAddress/WQ/material registry;
+- generic ECO population runtime fabric вместо POP;
+- ECO lifecycle/authority/persistence/transport;
+- ECO global scheduler вместо WB;
+- planet-wide individual GrowthGraph truth;
+- переход `PH5 -> PH6` напрямую.
 
-После gates:
+## Global project alignment
 
-`ECO.P3 -> controlled world integration -> ECO.PH6 promoted persistent individuals`.
+ECO служит global North Star четырьмя способами:
 
-PH6 хранит detailed development/damage/pruning state только для promoted/interacted individuals; planet-wide individual GrowthGraph truth запрещён.
-
-## Network convergence principle
-
-Default:
-
-`server ecology population/domain truth -> client deterministic derived representation`.
-
-Индивидуальный network/persistent object появляется только через explicit promotion boundary при interaction/damage/ownership relevance.
-
-## Главный порядок
-
-1. `ECO.PH RESEARCH COMPLETE`.
-2. `CONV0-A` — короткий global consumer-requirements pass.
-3. `CAL1` — основная research-линия.
-4. `CAL1 -> P2`.
-5. Когда canonical R3/WQ/MAT/LIFE/WB готовы — `CONV0-B` compatibility/freeze.
-6. Ждать production foundations/Harness frontier.
-7. Только затем `P3 -> PH6`.
-
-Старое линейное направление `PH5 -> PH6` запрещено.
+1. **canonical truth integrity** — ecology state не дублируется renderer/runtime foundations;
+2. **incremental representation** — PH5 доказал disposable LOD от FULL до POPULATION_ONLY;
+3. **parallel convergence** — CONV0-A заранее выявил R3 intersections/gaps, не блокируя runtime critical path;
+4. **distributed living world** — CAL1/P2 строят population-scale causal ecology, которую позже можно подключить к POP/LIFE/WB вместо миллионов постоянно активных plant objects.

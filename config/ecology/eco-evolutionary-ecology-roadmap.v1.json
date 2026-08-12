@@ -1,105 +1,88 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R22-2026-08-12",
+  "revision": "ECO-R23-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_POST_PH5",
+  "status": "RESEARCH_ONLY_ACTIVE_CAL1",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "global_alignment_doc": "docs/future_features/evolutionary_ecology/ECO_CONV0_GLOBAL_ALIGNMENT_RU.md",
-  "current_checkpoint": "ECO.CONV0",
-  "current_step": "CONV0-A Global Alignment / World Integration Consumer Requirements",
-  "last_accepted_step": "ECO.PH5-S4 Visual Robustness / Handoff — ECO.PH RESEARCH COMPLETE",
-  "mission": "Prove that continuous environmental fields, resource competition, inheritance, developmental programs and history can generate reusable plant strategies and later species without hardcoded biome or TREE/BUSH/GRASS placement classes, while representation scales independently from canonical ecology truth and future world integration consumes shared canonical foundations instead of duplicating them.",
+  "cal1_plan_doc": "docs/future_features/evolutionary_ecology/ECO_CAL1_MORPHOLOGY_ECONOMICS_PLAN_RU.md",
+  "current_checkpoint": "ECO.CAL1",
+  "current_step": "CAL1-A Baseline Decomposition / Mechanism Audit",
+  "last_accepted_step": "ECO.CONV0-A Global Alignment / World Integration Consumer Requirements",
+  "mission": "Develop evolutionary ecology whose population and morphology dynamics emerge from environmental fields, competition, heredity and history, while representation and future world integration reuse canonical shared foundations without duplicate truth layers.",
   "core_invariants": [
     "BIOMES_ARE_OBSERVATIONS_NOT_RULES",
     "SPECIES_ARE_DISCOVERED_NOT_PLACED",
     "POPULATION_IS_TRUTH_INDIVIDUAL_IS_REPRESENTATION",
-    "FITNESS_EMERGES_FROM_RESOURCES_AND_COSTS",
+    "FITNESS_EMERGES_FROM_CAUSAL_RESOURCES_COSTS_AND_COMPETITION",
     "TREE_BUSH_GRASS_ARE_EMERGENT_MORPHOLOGIES_NOT_CANONICAL_TYPES",
-    "GENOME_DEFINES_DEVELOPMENT_PROGRAM_NOT_MESH_ASSET",
-    "INHERITED_DEVELOPMENT_PROGRAM_NE_REALIZED_PHENOTYPE",
-    "SEED_HEREDITY_NE_REALIZED_PHENOTYPE",
     "GROWTH_GRAPH_NE_PLANT_RENDER_DESCRIPTION_NE_RENDERER_PROFILE_NE_LOD",
     "REPRESENTATION_LEVEL_NE_SPECIES_OR_POPULATION_IDENTITY",
-    "DISTANCE_AND_SCREEN_SIZE_NE_ECOLOGY_STATE",
-    "FAR_POPULATION_NE_REQUIRED_INDIVIDUAL_GROWTH_GRAPH_MATERIALIZATION",
-    "ECOLOGY_DOES_NOT_OWN_SPATIAL_TIME_MATERIAL_QUERY_LIFECYCLE_AUTHORITY_TRANSPORT_PERSISTENCE_OR_GLOBAL_WORK_BUDGET"
+    "ECO_MODEL_SEMANTICS_NE_GENERIC_POP_RUNTIME_FABRIC",
+    "ECOLOGY_DOES_NOT_OWN_SD_TF_ENV_MAT_WQ_LIFE_WB_NX_WT_PERSISTENCE_OR_AUTHORITY"
   ],
-  "accepted_checkpoints": [
-    {"id":"ECO.P1","decision":"ACCEPTED"},
-    {"id":"ECO.PH0","decision":"ACCEPTED"},
-    {"id":"ECO.PH1","decision":"ACCEPTED","graphical":"PASS_BY_USER_OBSERVATION"},
-    {"id":"ECO.PH2","decision":"ACCEPTED","graphical":"PASS_BY_USER_OBSERVATION_DIAGNOSTIC"},
-    {"id":"ECO.PH3","decision":"ACCEPTED"},
-    {"id":"ECO.PH3C","decision":"ACCEPTED_CAUSAL_PAIRWISE_SCOPE"},
-    {"id":"ECO.PH4","decision":"ACCEPTED","lifecycle_hash":"88d8b3f53a5233d675eb75f1fe94c017b4f435ca91c34ce145d9b93f3c72d6d1"},
-    {"id":"ECO.PH5-S1","decision":"ACCEPTED","evidence":{"platform":"exact Windows Godot 4.7.1 double","focused_assertions":720,"visual_smoke_assertions":15,"restart_assertions":4,"reference_description_hash":"72196b2711322160e95dca32c0e4729dcf009f7c817a1448e53bd7de02ce97a3","profile_matrix_hash":"2121aaf7f0e725bcf9a8216784ad835bb488c0e6b5a3a1e24604220779c302e0"}},
-    {"id":"ECO.PH5-S2","decision":"ACCEPTED","evidence":{"platform":"exact Windows Godot 4.7.1 double","focused_assertions":387,"visual_smoke_assertions":12,"restart_assertions":5,"reference_branch_leaf_geometry_hash":"2e66860bff80fbf56274e211fcefe0ba4f895a39e76e153e835021a814305f0f","full_geometry_hash":"5b869596e4c341f1f43aa457828016ec8af657a1c0e771b22a7348f1e8ae743e"}},
-    {"id":"ECO.PH5-S3","decision":"ACCEPTED","evidence":{"tier_policy_assertions":49,"far_materialization_assertions":16,"real_multiscale_assertions":61,"materialization_matrix_hash":"f0a2b391c2c1ded19f8d44e0fb46b66256ad98e09366eab40b094ea4903e3b20"}},
-    {"id":"ECO.PH5-S4","decision":"ACCEPTED","evidence":{"robustness_assertions":5026,"robustness_digest":"dea866454f7655067fe739803c00663a0bb08c6f1649ce899044c5a4ea04fb51","canonical_matrix_assertions":430,"canonical_matrix_hash":"e0522bb289060d064134a3955a3979a9b5fc0066500d5ca082f3eaf99666a68d","visual_lab_smoke_assertions":40,"graphical":"PASS_BY_USER_CONFIRMATION_AFTER_ACCEPTANCE_LAB_EXECUTION"}},
-    {"id":"ECO.PH","decision":"RESEARCH_COMPLETE"}
+  "accepted_summary": [
+    "ECO.P1 ACCEPTED",
+    "ECO.PH0..PH4 ACCEPTED",
+    "ECO.PH5-S1..S4 ACCEPTED / ECO.PH RESEARCH COMPLETE",
+    "ECO.CONV0-A ACCEPTED_DESIGN_REQUIREMENTS_GLOBAL_GAPS_REPORTED"
   ],
-  "next_checkpoint": {
-    "id": "ECO.CONV0-A",
-    "name": "Global Alignment / World Integration Consumer Requirements",
-    "status": "EXECUTE_NOW_DESIGN_CONTRACT_ONLY",
-    "acceptance_gate": [
-      "ownership matrix maps each ECO requirement to canonical SD/TF/WQ/MAT/LIFE/WB/NX8/WT owner",
-      "environment query requirements are explicit without implementing private World Query",
-      "aggregate population projection requirements are explicit without creating a new canonical population store",
-      "promotion/dormancy/demotion requirements preserve identity != representation",
-      "work-budget requirements do not create a scheduler or authority owner",
-      "network/interest requirements prefer population/domain truth over planet-wide individual replication",
-      "compatibility review against current GLOBAL-P0 R3 candidate is recorded",
-      "no production runtime code or foundation ownership is introduced"
-    ],
-    "after_acceptance": "Make ECO.CAL1 the primary research step. Keep CONV0-B blocked until canonical R3/WQ/MAT/LIFE/WB contracts exist."
+  "accepted_evidence": {
+    "ph5_s3_materialization_matrix_hash": "f0a2b391c2c1ded19f8d44e0fb46b66256ad98e09366eab40b094ea4903e3b20",
+    "ph5_s4_robustness_digest": "dea866454f7655067fe739803c00663a0bb08c6f1649ce899044c5a4ea04fb51",
+    "ph5_s4_canonical_matrix_hash": "e0522bb289060d064134a3955a3979a9b5fc0066500d5ca082f3eaf99666a68d",
+    "ph5_graphical": "PASS_BY_USER_CONFIRMATION_AFTER_ACCEPTANCE_LAB_EXECUTION",
+    "conv0_a_contract": "config/ecology/eco-conv0-a-global-consumer-requirements.v1.json",
+    "conv0_a_validation": "validation/ecology/eco-conv0-a-global-alignment-validation.json"
   },
-  "central_route": {
-    "principle": "PH representation research is complete. Feed consumer requirements into global architecture now, then resolve morphology economics before P2. Freeze real integration contracts only after canonical foundations exist.",
-    "sequence": [
-      "ECO.PH RESEARCH COMPLETE",
-      "ECO.CONV0-A Consumer Requirements",
-      "ECO.CAL1 Morphology Economics Calibration",
-      "ECO.P2 Dispersal / Recruitment / Biogeography",
-      "ECO.CONV0-B Canonical Contract Freeze when R3/WQ/MAT/LIFE/WB are available",
-      "WAIT_FOR_CANONICAL_PRODUCTION_FOUNDATIONS",
-      "ECO.P3 Controlled World Integration",
-      "ECO.PH6 Promoted Persistent Individuals"
+  "cal1": {
+    "status": "ACTIVE",
+    "known_problem": "PH3C_FULL_POOL_COMPACT_DOMINANCE / HEIGHT_LOW broad advantage",
+    "source_audit": "Current height benefit depends on absolute environment shade pressure while structural cost rises approximately height^1.55; relative neighbour height and vertical light competition are absent.",
+    "principle": "MISSING_MECHANISM_THEN_CAUSAL_EXPERIMENT_THEN_COMBINATION_THEN_CALIBRATION",
+    "steps": [
+      {"id":"CAL1-A","name":"Baseline Decomposition / Mechanism Audit","status":"EXECUTE_NOW"},
+      {"id":"CAL1-B","name":"Relative Vertical Light Competition","status":"NEXT_AFTER_CAL1_A"},
+      {"id":"CAL1-C","name":"Crown + Root Competition","status":"BLOCKED_BY_CAL1_B"},
+      {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"BLOCKED_BY_CAL1_C"},
+      {"id":"CAL1-E","name":"Combined Mechanism Matrix","status":"BLOCKED_BY_COMPONENT_ACCEPTANCE"},
+      {"id":"CAL1-F","name":"Calibration + Full-Pool Robustness","status":"BLOCKED_BY_CAL1_E"}
     ],
-    "conv0": {
-      "A": {"status":"EXECUTE_NOW","scope":"DESIGN_REQUIREMENTS_ONLY"},
-      "B": {"status":"WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS","scope":"COMPATIBILITY_AND_FREEZE_ONLY"}
-    },
-    "cal1": {
-      "status":"NEXT_AFTER_CONV0_A",
-      "goal":"Resolve PH3C full-pool compact/HEIGHT_LOW dominance through missing-mechanism causal experiments before unrestricted morphology evolution."
-    },
-    "p2": {
-      "status":"BLOCKED_BY_CAL1_ACCEPTANCE",
-      "steps":["P2.1 Seed Dispersal Kernel","P2.2 Establishment / Recruitment","P2.3 Local Population Turnover","P2.4 Patch Colonization","P2.5 Disturbance + Recovery","P2.6 Long-Horizon Biogeography","P2.7 Speciation Candidate Diagnostics"]
-    }
+    "calibration_forbidden_before": "CAL1-E mechanism acceptance"
   },
-  "open_research_risks": [
-    {"id":"PH3C_FULL_POOL_COMPACT_DOMINANCE","status":"OPEN_CAL1_REQUIRED","finding":"The unrestricted eight-strategy diagnostic gives HEIGHT_LOW a broad advantage across REFERENCE/SHADE/SUN/DRY.","required_before":"Any unconstrained morphology mutation/evolution or species-emergence claim"},
-    {"id":"GLOBAL_CONTRACT_DRIFT","status":"WATCH","finding":"Canonical main has moved through C22 while registry/current docs remain pre-C22; R3 is not yet canonical.","required_action":"CONV0-A may state requirements now, but CONV0-B must re-read canonical R3/WQ/MAT/LIFE/WB contracts before freeze."}
-  ],
-  "waves": [
-    {"id":"ECO.P1","status":"ACCEPTED"},
-    {"id":"ECO.PH","status":"RESEARCH_COMPLETE_PH0_THROUGH_PH5_S4_ACCEPTED"},
-    {"id":"ECO.CONV0-A","status":"EXECUTE_NOW_DESIGN_REQUIREMENTS_ONLY"},
-    {"id":"ECO.CAL1","status":"NEXT_AFTER_CONV0_A"},
-    {"id":"ECO.P2","status":"BLOCKED_BY_CAL1_ACCEPTANCE"},
-    {"id":"ECO.CONV0-B","status":"WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS"},
-    {"id":"ECO.P3","status":"DEFERRED_UNTIL_CANONICAL_PRODUCTION_FOUNDATIONS"},
-    {"id":"ECO.PH6","status":"DEFERRED_AFTER_P3_CONTROLLED_RUNTIME_INTEGRATION"}
-  ],
+  "conv0": {
+    "A": {
+      "status": "ACCEPTED_REQUIREMENTS_GLOBAL_GAPS_REPORTED",
+      "findings": [
+        "R3_ECO_PROGRAM_ID_COLLISION",
+        "R3_ECO_POP_OWNERSHIP_INTERSECTION_UNSPECIFIED",
+        "R3_WQ_SYSTEM_DOMAIN_SCOPE_UNSPECIFIED",
+        "R3_ENV_ECO_PROJECTION_PATH_UNSPECIFIED",
+        "R3_WB_ECO_CONSUMER_UNSPECIFIED"
+      ]
+    },
+    "B": {"status":"WAIT_CANONICAL_R3_FOUNDATION_CONTRACTS"}
+  },
+  "p2": {
+    "status": "BLOCKED_BY_CAL1_ACCEPTANCE",
+    "steps": ["P2.1 Seed Dispersal Kernel","P2.2 Establishment / Recruitment","P2.3 Local Population Turnover","P2.4 Patch Colonization","P2.5 Disturbance + Recovery","P2.6 Long-Horizon Biogeography","P2.7 Speciation Candidate Diagnostics"]
+  },
+  "future": {
+    "CONV0-B": "After canonical R3/WQ/MAT/LIFE/WB/POP/ENV contracts, compatibility/freeze only",
+    "P3": "DEFERRED_UNTIL_CANONICAL_PRODUCTION_FOUNDATIONS_AND_HARNESS_FRONTIER",
+    "PH6": "DEFERRED_AFTER_P3_CONTROLLED_RUNTIME_INTEGRATION"
+  },
+  "global_alignment_watch": {
+    "main_observed_at_conv0_a": "eefd75fa3badec10c6e7db959e2a3992dba30f0e",
+    "r3_state": "NONCANONICAL_REFRESH_AND_HUMAN_PROMOTION_PENDING_AT_REVIEW",
+    "highest_priority_finding": "R3 currently collides ECO Evolutionary Ecology with future World Economy; reserve ECO for ecology and use ECON for economy before R3 canonicalization."
+  },
   "production_blockers": [
+    "CONV0_B_REQUIRES_CANONICAL_R3_FOUNDATION_CONTRACTS",
     "PRODUCTION_RUNTIME_PROMOTION_REQUIRES_FRESH_PC0_HARNESS_CONTROLLED_FRONTIER",
-    "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CANONICAL_WORLD_QUERY_CONTRACTS",
-    "RICH_SUBSTRATE_MODEL_REQUIRES_CANONICAL_MATERIAL_ONTOLOGY_PROJECTION",
-    "PRODUCTION_ECO_REQUIRES_CANONICAL_SPATIAL_PROMOTION_DORMANCY_DEMOTION_BOUNDARY",
-    "PRODUCTION_ECO_REQUIRES_CANONICAL_WORLD_WORK_BUDGET"
+    "PRODUCTION_ENVIRONMENT_ADAPTER_REQUIRES_CANONICAL_ENV_WQ_MAT_CONTRACTS",
+    "PRODUCTION_ECO_REQUIRES_CANONICAL_POP_LIFE_SD_WB_INTEGRATION"
   ]
 }
