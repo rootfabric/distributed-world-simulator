@@ -3,88 +3,41 @@
   "policy_id": "GLOBAL-P0-R2-TO-R3-2026-08-12-R1",
   "from_revision": "GLOBAL-P0-2026-08-10-R2",
   "to_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
-  "status": "CANDIDATE_POLICY_NO_PROMOTION",
-  "source_main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
-  "source_registry_generation": 75,
+  "status": "FINAL_TRANSITION_AUDIT_PENDING_NO_PROMOTION",
+  "source_main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "source_registry_generation": 78,
   "rules": [
-    {
-      "id": "FROZEN_R2_EVIDENCE_GRANDFATHERED",
-      "applies_to": ["G8", "T1B", "C22_SOURCE_ACCEPTED", "H0_0_HISTORY", "OTHER_ACCEPTED_FROZEN_EVIDENCE"],
-      "rule": "Accepted/frozen R2 evidence remains valid historical evidence after R3 promotion and is not rewritten merely to change architecture_revision labels. It cannot authorize new post-promotion runtime work by itself."
-    },
-    {
-      "id": "ACTIVE_R2_RUNTIME_MUST_REACH_BOUNDARY",
-      "applies_to": ["H0_1_R7_CANCELLED_HISTORY", "H0_1_SUCCESSOR_C22_RUNTIME", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
-      "rule": "R7 is failed-closed historical provenance and cannot authorize continuation. R3 promotion remains forbidden until a fresh H0.1 successor repairs the freshness fence, reaches H0_1_PASS, C22 becomes MAIN_INTEGRATED, and the H0.1 runtime slot is released. Any other active R2 runtime Work Order must likewise reach an explicit safe boundary before promotion."
-    },
-    {
-      "id": "C22_MAIN_INTEGRATED_IS_REPIN_GATE_NOT_NX_C1_AUTHORIZATION",
-      "applies_to": ["GLOBAL_P0_R3", "NX_C1"],
-      "rule": "C22 MAIN_INTEGRATED authorizes only the fresh-main R3 repin/final verification sequence. NX.C1 remains blocked until canonical R3 promotion is complete and NX.C1 is created from fresh post-R3 current main."
-    },
-    {
-      "id": "NEW_RUNTIME_AFTER_PROMOTION_USES_R3",
-      "applies_to": ["NX_C1", "G9", "T2_0", "NEW_RUNTIME_FRONTIERS"],
-      "rule": "Every runtime frontier created after canonical R3 promotion must start from then-current canonical main and declare the canonical R3 architecture revision."
-    },
-    {
-      "id": "RESEARCH_FRONTIERS_MAY_REMAIN_ADVISORY",
-      "applies_to": ["ECO", "DOCTRINE", "RESEARCH_ONLY_FRONTIERS"],
-      "rule": "Research/advisory branches may remain historical or research evidence without forced architecture relabeling. ECO never becomes a game-runtime scheduler or a mandatory foundation gate merely because R3 is promoted."
-    },
-    {
-      "id": "STABLE_FOUNDATIONS_PRESERVED",
-      "applies_to": ["MATTER", "S1", "M0", "ITEM", "CONSTRUCTION", "A1", "S0"],
-      "rule": "Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. ITEM remains the stable canonical item foundation; R3 does not replace it by declaration."
-    },
-    {
-      "id": "V0_CONSUMER_AND_H0_3_DEVELOPMENT_SCHEDULER_BOUNDARY",
-      "applies_to": ["V0", "H0_3"],
-      "rule": "V0 remains a composition/presentation/readback consumer and cannot promote its own domain truth. H0.3 is the DEVELOPMENT multi-worker Work-Order scheduler/control layer: it may coordinate bounded development workers, ownership/path intersections, watched dependencies, evidence and integration ordering, but it is not a game-runtime process scheduler, gameplay authority owner, simulation-time owner, or replacement for domain runtime scheduling."
-    },
-    {
-      "id": "WAVE_A_SINGLE_BASE",
-      "applies_to": ["IAM0_IAM1", "MAT0", "WT0", "WQ0_WQ1"],
-      "rule": "Wave A branches may be created only after GLOBAL_ARCHITECTURE_PROMOTION and must all branch from one accepted canonical R3 main base or a later explicitly audited descendant."
-    },
-    {
-      "id": "PROMOTION_ATOMIC_CONTROL_CHANGE",
-      "applies_to": ["MAIN", "PROJECT_REGISTRY", "ARCHITECTURE_OWNERSHIP", "GLOBAL_ROADMAP"],
-      "rule": "Promotion must be a control/docs/config change with no gameplay/runtime mutation, must update canonical architecture identity consistently, must pass standard and directional PC0 NON_RED, and requires explicit human GLOBAL_ARCHITECTURE_PROMOTION authorization."
-    },
-    {
-      "id": "STALE_AUTHORIZATION_FAILS_CLOSED",
-      "applies_to": ["SHA_PINS", "REGISTRY_GENERATIONS", "BRANCH_LOCAL_STATE", "ACTIVE_WORK_ORDERS", "BRANCH_PASSPORTS"],
-      "rule": "Stale SHA, stale registry generation, branch-local state and historical evidence are provenance only. None can authorize R3 promotion or new runtime work. Fresh current-main and canonical-registry facts must be recaptured at the promotion epoch."
-    }
+    {"id":"FROZEN_R2_EVIDENCE_GRANDFATHERED","applies_to":["G8","T1B","C22_SOURCE_ACCEPTED","H0_0_HISTORY","OTHER_ACCEPTED_FROZEN_EVIDENCE"],"rule":"Accepted/frozen R2 evidence remains valid historical evidence after R3 promotion and is not rewritten merely to change architecture_revision labels. It cannot authorize new post-promotion runtime work by itself."},
+    {"id":"ACTIVE_R2_RUNTIME_MUST_REACH_BOUNDARY","applies_to":["H0_1_HISTORY","ANY_ACTIVE_RUNTIME_WORK_ORDER"],"rule":"R3 promotion is forbidden while an R2 runtime Work Order owns the runtime slot. Current canonical generation 78 records H0_1_PASS, C22 MAIN_INTEGRATED and H0.1 runtime slot RELEASED."},
+    {"id":"C22_MAIN_INTEGRATED_IS_REPIN_GATE_NOT_NX_C1_AUTHORIZATION","applies_to":["GLOBAL_P0_R3","NX_C1"],"rule":"C22 MAIN_INTEGRATED authorizes only the fresh-main R3 repin/final verification sequence. NX.C1 remains blocked until canonical R3 promotion, mandatory post-R3 PC0, and fresh NX.C1 dispatch from then-current main."},
+    {"id":"NEW_RUNTIME_AFTER_PROMOTION_USES_R3","applies_to":["NX_C1","G9","T2_0","NEW_RUNTIME_FRONTIERS"],"rule":"Every runtime frontier created after canonical R3 promotion must start from then-current canonical main and declare the canonical R3 architecture revision."},
+    {"id":"RESEARCH_FRONTIERS_MAY_REMAIN_ADVISORY","applies_to":["ECO","DOCTRINE","RESEARCH_ONLY_FRONTIERS"],"rule":"Research/advisory branches may remain historical or research evidence without forced architecture relabeling. ECO never becomes economy, a game-runtime scheduler, or a mandatory foundation gate merely because R3 is promoted."},
+    {"id":"STABLE_FOUNDATIONS_PRESERVED","applies_to":["MATTER","S1","M0","ITEM","CONSTRUCTION","A1","S0"],"rule":"Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. ITEM remains the stable canonical item foundation; R3 does not replace it by declaration."},
+    {"id":"V0_CONSUMER_AND_H0_3_DEVELOPMENT_SCHEDULER_BOUNDARY","applies_to":["V0","H0_3"],"rule":"V0 remains a composition/presentation/readback consumer and cannot promote its own domain truth. H0.3 is the DEVELOPMENT multi-worker Work-Order scheduler/control layer; it is not a game-runtime process scheduler, gameplay authority owner, simulation/game-time owner, or replacement for domain runtime scheduling."},
+    {"id":"ECO_ECON_NAMESPACE_BOUNDARY","applies_to":["ECO","ECON"],"rule":"ECO is evolutionary-ecology research/advisory. ECON is the reserved future economy program. Economy semantics must not reuse ECO ownership or identifiers."},
+    {"id":"WAVE_A_SINGLE_BASE","applies_to":["IAM0_IAM1","MAT0","WT0","WQ0_WQ1"],"rule":"Wave A branches may be created only after GLOBAL_ARCHITECTURE_PROMOTION and must all branch from one accepted canonical R3 main base or a later explicitly audited descendant."},
+    {"id":"PROMOTION_ATOMIC_CONTROL_CHANGE","applies_to":["MAIN","PROJECT_REGISTRY","ARCHITECTURE_OWNERSHIP","GLOBAL_ROADMAP"],"rule":"Promotion must be a control/docs/config change with no gameplay/runtime mutation, must update canonical architecture identity consistently, must pass standard and directional PC0 NON_RED, and requires explicit human GLOBAL_ARCHITECTURE_PROMOTION authorization."},
+    {"id":"STALE_AUTHORIZATION_FAILS_CLOSED","applies_to":["SHA_PINS","REGISTRY_GENERATIONS","BRANCH_LOCAL_STATE","ACTIVE_WORK_ORDERS","BRANCH_PASSPORTS"],"rule":"Stale SHA, stale registry generation, branch-local state and historical evidence are provenance only. None can authorize R3 promotion or new runtime work. Fresh current-main and canonical-registry facts must be recaptured at the promotion epoch."}
   ],
+  "historical_prep_observation": {
+    "main_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+    "registry_generation": 77,
+    "state": "PRE_C22_PREPARATION_ONLY"
+  },
   "current_h0_1_disposition": {
-    "rerun": "R7",
-    "pr": 88,
-    "head_sha_observed_for_preparation": "9ca9527a27b30b39c18b66bf5ae18bc31350d25d",
-    "base_main_sha_observed_for_preparation": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
-    "source_registry_generation_observed_for_preparation": 77,
-    "state_observed": "R7_CANCELLED_FRESHNESS_FENCE_DEFECT_SUCCESSOR_REQUIRED",
-    "preferred_transition": "FRESH_H0_1_SUCCESSOR_REPAIR_AND_PASS_THEN_C22_MAIN_INTEGRATED_THEN_RELEASE_H0_1_RUNTIME_SLOT_THEN_REPIN_R3",
-    "promotion_while_open": "FORBIDDEN_UNTIL_SUCCESSOR_H0_1_PASS_AND_C22_MAIN_INTEGRATED"
+    "rerun": "R8",
+    "pr": 90,
+    "accepted_branch_head_sha": "ab674669b9a293d898e5ca5983b4918cc685d990",
+    "accepted_implementation_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+    "canonical_main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+    "source_registry_generation": 78,
+    "state": "H0_1_PASS_C22_MAIN_INTEGRATED_RUNTIME_SLOT_RELEASED",
+    "nx_c1_authorization": "BLOCKED_UNTIL_R3_CANONICAL_AND_POST_R3_PC0"
   },
   "post_c22_finalization": {
-    "required": [
-      "FETCH_AND_CAPTURE_FRESH_ORIGIN_MAIN",
-      "READ_FRESH_CANONICAL_REGISTRY_AND_CURRENT_DASHBOARD",
-      "CONFIRM_C22_MAIN_INTEGRATED",
-      "CONFIRM_H0_1_RUNTIME_SLOT_RELEASED",
-      "REPIN_R3_CANDIDATE_TO_FRESH_MAIN",
-      "UPDATE_ALL_EPHEMERAL_SOURCE_PINS_AND_FRONTIER_GUARDS",
-      "RUN_CONTROL_PROJECT",
-      "RUN_STANDARD_PC0",
-      "RUN_DIRECTIONAL_PC0",
-      "RECONFIRM_OWNERSHIP_INTERSECTIONS",
-      "RECONFIRM_R2_TO_R3_TRANSITION_AUDIT",
-      "FINALIZE_EVIDENCE_MAP",
-      "OBTAIN_INDEPENDENT_REVIEWER_AND_VERIFIER_PASS",
-      "STOP_AT_HUMAN_GLOBAL_ARCHITECTURE_PROMOTION_GATE"
-    ]
+    "completed": ["FETCH_AND_CAPTURE_FRESH_ORIGIN_MAIN","READ_FRESH_CANONICAL_REGISTRY_AND_CURRENT_DASHBOARD","CONFIRM_C22_MAIN_INTEGRATED","CONFIRM_H0_1_RUNTIME_SLOT_RELEASED","REPIN_R3_CANDIDATE_TO_FRESH_MAIN","UPDATE_ALL_EPHEMERAL_SOURCE_PINS_AND_FRONTIER_GUARDS"],
+    "required": ["RUN_CONTROL_PROJECT","RUN_STANDARD_PC0","RUN_DIRECTIONAL_PC0","RECONFIRM_OWNERSHIP_INTERSECTIONS","RECONFIRM_R2_TO_R3_TRANSITION_AUDIT","FINALIZE_EVIDENCE_MAP","OBTAIN_INDEPENDENT_REVIEWER_AND_VERIFIER_PASS","STOP_AT_HUMAN_GLOBAL_ARCHITECTURE_PROMOTION_GATE"]
   },
+  "transition_audit_state": "PENDING_FINAL_EXACT_HEAD_VALIDATION",
   "human_gate": "GLOBAL_ARCHITECTURE_PROMOTION"
 }
