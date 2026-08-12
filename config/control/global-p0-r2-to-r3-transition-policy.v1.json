@@ -14,8 +14,8 @@
     },
     {
       "id": "ACTIVE_R2_RUNTIME_MUST_REACH_BOUNDARY",
-      "applies_to": ["H0_1_R7_C22_RUNTIME", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
-      "rule": "R3 promotion is forbidden while an R2 runtime checkpoint is actively executing. For the observed H0.1 R7 frontier, C22 must become MAIN_INTEGRATED and the H0.1 runtime slot must be released before R3 may enter final promotion verification."
+      "applies_to": ["H0_1_R7_CANCELLED_HISTORY", "H0_1_SUCCESSOR_C22_RUNTIME", "ANY_ACTIVE_RUNTIME_WORK_ORDER"],
+      "rule": "R7 is failed-closed historical provenance and cannot authorize continuation. R3 promotion remains forbidden until a fresh H0.1 successor repairs the freshness fence, reaches H0_1_PASS, C22 becomes MAIN_INTEGRATED, and the H0.1 runtime slot is released. Any other active R2 runtime Work Order must likewise reach an explicit safe boundary before promotion."
     },
     {
       "id": "C22_MAIN_INTEGRATED_IS_REPIN_GATE_NOT_NX_C1_AUTHORIZATION",
@@ -38,9 +38,9 @@
       "rule": "Stable accepted foundations remain canonical truth owners unless a named R3 intersection requires an adapter or contract extension. ITEM remains the stable canonical item foundation; R3 does not replace it by declaration."
     },
     {
-      "id": "COMPOSITION_CONSUMERS_DO_NOT_GAIN_TRUTH",
+      "id": "V0_CONSUMER_AND_H0_3_DEVELOPMENT_SCHEDULER_BOUNDARY",
       "applies_to": ["V0", "H0_3"],
-      "rule": "V0 remains a composition/presentation/readback consumer and cannot promote its own domain truth. H0.3 remains launch/restart/dev scaffold and cannot become the game-runtime scheduler or game-time owner."
+      "rule": "V0 remains a composition/presentation/readback consumer and cannot promote its own domain truth. H0.3 is the DEVELOPMENT multi-worker Work-Order scheduler/control layer: it may coordinate bounded development workers, ownership/path intersections, watched dependencies, evidence and integration ordering, but it is not a game-runtime process scheduler, gameplay authority owner, simulation-time owner, or replacement for domain runtime scheduling."
     },
     {
       "id": "WAVE_A_SINGLE_BASE",
@@ -61,12 +61,12 @@
   "current_h0_1_disposition": {
     "rerun": "R7",
     "pr": 88,
-    "head_sha_observed_for_preparation": "107603a29c3776cc3fe7e94693e90aaaf15fa603",
+    "head_sha_observed_for_preparation": "9ca9527a27b30b39c18b66bf5ae18bc31350d25d",
     "base_main_sha_observed_for_preparation": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
     "source_registry_generation_observed_for_preparation": 77,
-    "state_observed": "VERIFYING_C22_COMPLETION",
-    "preferred_transition": "C22_MAIN_INTEGRATED_THEN_RELEASE_H0_1_RUNTIME_SLOT_THEN_REPIN_R3",
-    "promotion_while_open": "FORBIDDEN"
+    "state_observed": "R7_CANCELLED_FRESHNESS_FENCE_DEFECT_SUCCESSOR_REQUIRED",
+    "preferred_transition": "FRESH_H0_1_SUCCESSOR_REPAIR_AND_PASS_THEN_C22_MAIN_INTEGRATED_THEN_RELEASE_H0_1_RUNTIME_SLOT_THEN_REPIN_R3",
+    "promotion_while_open": "FORBIDDEN_UNTIL_SUCCESSOR_H0_1_PASS_AND_C22_MAIN_INTEGRATED"
   },
   "post_c22_finalization": {
     "required": [
