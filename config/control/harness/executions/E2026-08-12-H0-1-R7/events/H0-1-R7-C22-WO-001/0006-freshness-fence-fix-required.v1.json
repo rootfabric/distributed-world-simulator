@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "project_epoch": "E2026-08-12-H0-1-R7",
+  "work_order_id": "H0-1-R7-C22-WO-001",
+  "branch": "feature/h0-1-c22-current-main-r2",
+  "head_sha": "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4",
+  "event_id": "E2026-08-12-H0-1-R7-H0-1-R7-C22-WO-001-0006",
+  "sequence": 6,
+  "event_type": "FIX_REQUIRED",
+  "work_state": "FIX_REQUIRED",
+  "recorded_at_utc": "2026-08-12T01:42:30Z",
+  "actor": "VERIFIER",
+  "summary": "Fail-closed verification found that H0 implementation freshness is computed without C22 runtime surfaces: current state reports implementation_head_sha 72c34c30 even though accepted C22 runtime transfer committed at 83954a5c. A Reviewer/Verifier PASS would therefore not prove exact runtime-head freshness.",
+  "blocker": "H0_IMPLEMENTATION_FRESHNESS_FENCE_EXCLUDES_C22_RUNTIME_SURFACES"
+}
