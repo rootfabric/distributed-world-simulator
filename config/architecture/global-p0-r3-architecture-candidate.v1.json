@@ -15,7 +15,7 @@
     "refresh_reason": "Historical construction base only; stale construction pins never authorize promotion."
   },
   "current_finalization_epoch": {
-    "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+    "main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
     "registry_generation": 78,
     "canonical_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
     "c22": "MAIN_INTEGRATED",
@@ -24,7 +24,7 @@
   },
   "design_brief": {
     "problem_statement": "Finalize explicit cross-domain ownership for identity/session, authorization, reference frames, simulation time, spatial addressing, material identity, world operations, world queries, lifecycle, work budgeting, compatibility and security without duplicate truth ownership.",
-    "current_behavior": "Canonical main f6d68fc7c594b371f48a9bcff056e2478e04f317 is GLOBAL-P0 R2 at registry generation 78. H0.1 passed; C22 is MAIN_INTEGRATED; the H0.1 runtime slot is RELEASED. CH9.6 is accepted/frozen; ECO is advisory/research; CH->NX remains a future NX dependency gate. R3 is not promoted.",
+    "current_behavior": "Canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d is GLOBAL-P0 R2 at registry generation 78. H0.1 passed; C22 is MAIN_INTEGRATED; the H0.1 runtime slot is RELEASED. CH9.6 is accepted/frozen; ECO is advisory/research; CH->NX remains a future NX dependency gate. R3 is not promoted.",
     "desired_behavior": "Finalize prepared R3 from exact current main. Frozen R2 evidence remains historical evidence; all new post-promotion runtime work begins from one canonical R3 base after mandatory post-R3 control verification.",
     "alternatives_considered": [
       "REJECTED: one global WorldManager owning cross-domain truth. This would create duplicate/implicit ownership over accepted domain foundations and violate CANONICAL WORLD separation.",
@@ -232,7 +232,7 @@
     "ECON": "RESERVED_FUTURE_ECONOMY_PROGRAM"
   },
   "current_frontier_guards": [
-    "Canonical main is f6d68fc7c594b371f48a9bcff056e2478e04f317 at registry generation 78 and remains GLOBAL-P0 R2 until explicit GLOBAL_ARCHITECTURE_PROMOTION.",
+    "Canonical main is ce40dd075045078ed70924f8d5a1011eb3eff03d at registry generation 78 and remains GLOBAL-P0 R2 until explicit GLOBAL_ARCHITECTURE_PROMOTION.",
     "H0.1 has H0_1_PASS; C22 is MAIN_INTEGRATED; H0.1 runtime slot is RELEASED. These authorize R3 finalization only, not promotion or NX.C1.",
     "G8 is accepted/frozen; G9 requires canonical R3 plus MAT0 and fresh post-promotion main.",
     "CH9.6 is accepted/frozen. CH->NX remains a real future dependency gate and must be freshly revalidated before NX.C1.",

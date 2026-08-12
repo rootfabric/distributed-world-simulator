@@ -3,7 +3,7 @@
   "control_plane_revision": "PC0-2026-08-10-R1",
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "status": "CANDIDATE_OWNERSHIP_INTERSECTION_REVIEW_PASS",
-  "source_main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "source_main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
   "source_registry_generation": 78,
   "foundations": {
     "PROGRAM_LEDGER":{"owner":"MAIN","rule":"Main declares canonical architecture, active frontiers, project state and global decisions."},
@@ -54,6 +54,6 @@
   ],
   "forbidden_duplicate_foundation_tokens":["GLOBAL_ACCOUNT_REGISTRY","PLAYER_ID_EQUALS_PEER_ID","GLOBAL_PERMISSION_MANAGER","GLOBAL_REFERENCE_FRAME_REGISTRY_OUTSIDE_RF","GLOBAL_SIMULATION_CLOCK_OUTSIDE_TF","WORLD_ADDRESS_OUTSIDE_SD","UNIVERSAL_CHUNK_ID","GLOBAL_MATERIAL_REGISTRY_OUTSIDE_MAT","WORLD_TRANSACTION_COORDINATOR_OUTSIDE_M0_WT","GLOBAL_WORLD_QUERY_DATABASE","GLOBAL_ACTIVITY_MANAGER_OUTSIDE_LIFE","GLOBAL_WORK_SCHEDULER_OUTSIDE_WB","GLOBAL_AUTHORITY_REGISTRY","GLOBAL_INTEREST_REGION_IDENTITY","GLOBAL_PERSISTENCE_MODEL","DIRECT_AI_CANONICAL_STORE_WRITE","LLM_DIRECT_WORLD_MUTATION","ECONOMY_USING_ECO_PROGRAM_ID"],
   "explicit_consumer_boundaries":{"ITEM":"STABLE_CANONICAL_FOUNDATION","V0":"COMPOSITION_PRESENTATION_READBACK_CONSUMER_NOT_TRUTH_OWNER","H0_3":"DEVELOPMENT_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER","ECO":"ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER","ECON":"RESERVED_FUTURE_ECONOMY_PROGRAM"},
-  "audit_basis":{"canonical_r2_ownership_sha":"0cebf594ac7900292318d7533e4439cc7f3764d6","canonical_main_sha":"f6d68fc7c594b371f48a9bcff056e2478e04f317","registry_generation":78,"runtime_paths_in_pr":0,"critical_cross_branch_overlap":0},
+  "audit_basis":{"canonical_r2_ownership_sha":"0cebf594ac7900292318d7533e4439cc7f3764d6","canonical_main_sha":"ce40dd075045078ed70924f8d5a1011eb3eff03d","registry_generation":78,"runtime_paths_in_pr":0,"critical_cross_branch_overlap":0},
   "review_state":"PASS"
 }

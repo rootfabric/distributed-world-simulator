@@ -1,7 +1,7 @@
 # GLOBAL-P0 R3 — Parallel Implementation Plan (Refresh R1)
 
 **Candidate:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Current finalization base:** `main @ f6d68fc7c594b371f48a9bcff056e2478e04f317`  
+**Current finalization base:** `main @ ce40dd075045078ed70924f8d5a1011eb3eff03d`  
 **Current registry:** `78`  
 **Promotion:** forbidden in this plan
 
@@ -19,7 +19,7 @@ The old planning assumption that treated H0.3 as a game/runtime-process schedule
 Canonical current state:
 
 ```text
-main                     f6d68fc7c594b371f48a9bcff056e2478e04f317
+main                     ce40dd075045078ed70924f8d5a1011eb3eff03d
 registry                 78
 architecture             GLOBAL-P0-2026-08-10-R2
 H0.1                     H0_1_PASS

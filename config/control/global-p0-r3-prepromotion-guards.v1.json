@@ -14,7 +14,7 @@
     "note": "Historical pre-C22 preparation observation only; retained as provenance and not authorization."
   },
   "current_authorization_epoch": {
-    "main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+    "main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
     "registry_generation": 78,
     "canonical_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
     "c22_state": "MAIN_INTEGRATED",

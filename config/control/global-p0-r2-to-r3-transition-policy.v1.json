@@ -4,7 +4,7 @@
   "from_revision":"GLOBAL-P0-2026-08-10-R2",
   "to_revision":"GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "status":"FINAL_TRANSITION_AUDIT_PASS_NO_PROMOTION",
-  "source_main_sha":"f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "source_main_sha":"ce40dd075045078ed70924f8d5a1011eb3eff03d",
   "source_registry_generation":78,
   "rules":[
     {"id":"FROZEN_R2_EVIDENCE_GRANDFATHERED","applies_to":["G8","T1B","C22_SOURCE_ACCEPTED","H0_0_HISTORY","OTHER_ACCEPTED_FROZEN_EVIDENCE"],"rule":"Accepted/frozen R2 evidence remains valid historical evidence after R3 promotion and is not rewritten merely to change architecture_revision labels. It cannot authorize new post-promotion runtime work by itself."},
@@ -20,9 +20,9 @@
     {"id":"STALE_AUTHORIZATION_FAILS_CLOSED","applies_to":["SHA_PINS","REGISTRY_GENERATIONS","BRANCH_LOCAL_STATE","ACTIVE_WORK_ORDERS","BRANCH_PASSPORTS"],"rule":"Stale SHA, stale registry generation, branch-local state and historical evidence are provenance only. None can authorize R3 promotion or new runtime work. Fresh current-main and canonical-registry facts must be recaptured at the promotion epoch."}
   ],
   "historical_prep_observation":{"main_sha":"4a42c2fb6befb386f5c3eb48d9ba070745e25bbb","registry_generation":77,"state":"PRE_C22_PREPARATION_ONLY"},
-  "current_h0_1_disposition":{"rerun":"R8","pr":90,"accepted_branch_head_sha":"ab674669b9a293d898e5ca5983b4918cc685d990","accepted_implementation_sha":"4c69de50c8374112d82efee2fd6917c770b3eae0","canonical_main_sha":"f6d68fc7c594b371f48a9bcff056e2478e04f317","source_registry_generation":78,"state":"H0_1_PASS_C22_MAIN_INTEGRATED_RUNTIME_SLOT_RELEASED","nx_c1_authorization":"BLOCKED_UNTIL_R3_CANONICAL_AND_POST_R3_PC0"},
+  "current_h0_1_disposition":{"rerun":"R8","pr":90,"accepted_branch_head_sha":"ab674669b9a293d898e5ca5983b4918cc685d990","accepted_implementation_sha":"4c69de50c8374112d82efee2fd6917c770b3eae0","canonical_main_sha":"ce40dd075045078ed70924f8d5a1011eb3eff03d","source_registry_generation":78,"state":"H0_1_PASS_C22_MAIN_INTEGRATED_RUNTIME_SLOT_RELEASED","nx_c1_authorization":"BLOCKED_UNTIL_R3_CANONICAL_AND_POST_R3_PC0"},
   "post_c22_finalization":{"completed":["FETCH_AND_CAPTURE_FRESH_ORIGIN_MAIN","READ_FRESH_CANONICAL_REGISTRY_AND_CURRENT_DASHBOARD","CONFIRM_C22_MAIN_INTEGRATED","CONFIRM_H0_1_RUNTIME_SLOT_RELEASED","REPIN_R3_CANDIDATE_TO_FRESH_MAIN","UPDATE_ALL_EPHEMERAL_SOURCE_PINS_AND_FRONTIER_GUARDS","RECONFIRM_OWNERSHIP_INTERSECTIONS","RECONFIRM_R2_TO_R3_TRANSITION_AUDIT"],"required":["RUN_FINAL_EXACT_HEAD_CONTROL_PROJECT","FINALIZE_EVIDENCE_MAP","OBTAIN_INDEPENDENT_REVIEWER_PASS","OBTAIN_INDEPENDENT_VERIFIER_PASS","OBTAIN_DIRECTOR_FINAL_GATE_PASS","DECLARE_R3_REFRESHED_CANDIDATE_READY_ONLY_AFTER_DIRECTOR_PASS","STOP_AT_HUMAN_GLOBAL_ARCHITECTURE_PROMOTION_GATE"]},
-  "transition_audit_basis":{"main_sha":"f6d68fc7c594b371f48a9bcff056e2478e04f317","registry_generation":78,"c22":"MAIN_INTEGRATED","h0_1_runtime_slot":"RELEASED","ownership_intersection":"PASS","runtime_surface_changed":false},
+  "transition_audit_basis":{"main_sha":"ce40dd075045078ed70924f8d5a1011eb3eff03d","registry_generation":78,"c22":"MAIN_INTEGRATED","h0_1_runtime_slot":"RELEASED","ownership_intersection":"PASS","runtime_surface_changed":false},
   "transition_audit_state":"PASS",
   "human_gate":"GLOBAL_ARCHITECTURE_PROMOTION"
 }
