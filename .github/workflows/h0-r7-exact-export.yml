@@ -1,0 +1,37 @@
+name: H0.1 R7 Exact Validation Export
+
+on:
+  push:
+    branches:
+      - validation/h0-1-r7-exact-export
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact R7 head
+        uses: actions/checkout@v4
+        with:
+          ref: 5169e7037b4ba6c40608d772560dd6eaa9c0e9e4
+          fetch-depth: 0
+
+      - name: Pin and prepare Git-only validation checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "5169e7037b4ba6c40608d772560dd6eaa9c0e9e4"
+          test "$(git rev-parse origin/main)" = "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb"
+          git status --short
+          tar -czf "$RUNNER_TEMP/h0-r7-exact-5169e703.tar.gz" .
+
+      - name: Upload exact validation checkout
+        uses: actions/upload-artifact@v4
+        with:
+          name: h0-r7-exact-source-5169e703
+          path: ${{ runner.temp }}/h0-r7-exact-5169e703.tar.gz
+          if-no-files-found: error
+          retention-days: 1
