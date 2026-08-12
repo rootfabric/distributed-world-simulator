@@ -100,10 +100,6 @@ function Get-FatalGodotMarker {
     return ""
 }
 
-# Branch switching can leave Godot's generated global class cache stale. CH9.6
-# contains legitimate class_name inheritance chains, so refresh the generated
-# cache before loading the graphical composition instead of modifying accepted
-# CH9/ItemGraph runtime scripts.
 Write-Host "Refreshing Godot global script class cache" -ForegroundColor Cyan
 $Preflight = Invoke-GodotCaptured -Arguments @(
     "--headless",
@@ -117,9 +113,6 @@ if ([int]$Preflight.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($Prefli
 }
 Write-Host "Godot class-cache preflight: PASS" -ForegroundColor Green
 
-# Editor scanning alone does not guarantee that the complete FPE composition
-# parses. Run the exact scene-load gate before opening a graphical window so a
-# parse/compile regression cannot silently fall through to the CH9.6 child lab.
 Write-Host "Validating FPE graphical composition" -ForegroundColor Cyan
 $SceneGate = Invoke-GodotCaptured -Arguments @(
     "--headless",
@@ -152,14 +145,15 @@ if ($ResetState) {
 }
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - R2 S3 articulated hand skeleton + pose library over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 S4 two-hand grip presentation over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
-Write-Host "R2 S2: selected ItemDefinition resolves a shared visual/grip profile for first- and third-person presentation." -ForegroundColor Cyan
-Write-Host "R2 S3 gate: first-person hands now use a real Skeleton3D with articulated finger chains. Occupied item profiles should close the right fingers into different poses; an empty slot must return the right hand to OPEN." -ForegroundColor Cyan
-Write-Host "S3 uses bounded procedural finger segments on the Skeleton3D; a production skinned hand mesh is a later asset substitution, not an authority dependency." -ForegroundColor Cyan
-Write-Host "Switch 1/2/empty repeatedly while moving: pose transitions must not reintroduce frame stalls." -ForegroundColor Cyan
-Write-Host "Aim at one of the three floating cubes to test local hand grabbing." -ForegroundColor Cyan
+Write-Host "R2 S2/S3: selected ItemDefinition resolves visual/grip profiles and articulated finger poses." -ForegroundColor Cyan
+Write-Host "R2 S4 gate: sandbox slot 1 beacon remains one-hand; slot 2 mount-base is the bounded two-hand demonstration item. Selecting slot 2 must move the LEFT articulated hand onto the item's secondary support anchor while the RIGHT remains primary." -ForegroundColor Cyan
+Write-Host "Switch 1 -> 2 -> 1 -> empty while moving. Slot 2 must engage both hands; slot 1/empty must release the left hand back to its normal OPEN pose with no frame stall." -ForegroundColor Cyan
+Write-Host "Q is intentionally reserved while the left hand is acting as the secondary support hand. This is presentation-only reservation, not gameplay authority." -ForegroundColor Cyan
+Write-Host "Third-person still shows the existing right-hand world proxy; third-person two-arm IK is NOT claimed by S4 and remains a later animation task." -ForegroundColor Cyan
+Write-Host "Aim at one of the three floating cubes to test local hand grabbing when the left hand is free." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
     Write-Host "Equip Peasant Upper in the inventory to test first-person sleeve synchronization." -ForegroundColor Cyan
