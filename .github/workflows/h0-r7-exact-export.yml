@@ -176,7 +176,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t changed < <(git diff --name-only)
+          mapfile -t changed < <(git diff HEAD --name-only)
           printf '%s\n' "${changed[@]}"
           test "${#changed[@]}" -eq 15
           git config user.name 'H0 R8 bounded worker'
