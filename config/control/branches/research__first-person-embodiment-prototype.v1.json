@@ -8,11 +8,11 @@
   "short_description": "Non-canonical FirstPersonEmbodiment prototype layered on the accepted CH9.6 character, clothing, Item Graph and ENet presentation stack.",
   "purpose": "Evaluate first-person hands, clothing-visible viewmodels, independent left/right grip UX and network-state projection without reopening or mutating the frozen CH9.6 checkpoint and without claiming item/network authority.",
   "expected_outcome": "A separate research lab can render two first-person hands, mirror the server-backed selected hotbar item, project upper clothing into first person, exercise local-only grab targets, and fail closed for canonical world-item grabbing until an explicit hand authority contract is authorized.",
-  "current_stage": "FPE-R1 Fix4 — nonblocking authoritative hotbar selection",
-  "stage_status": "RESEARCH_FIX4_PENDING_OPERATOR_RERUN",
-  "progress_note": "Fix3 succeeded on the Windows Godot 4.7.1 stable double a13da4feb operator checkout. Godot class-cache preflight passed; the core FirstPersonEmbodiment contract passed 23 assertions; the exact graphical scene-load gate passed 5 assertions; PLAY launched successfully; first/third person switching rendered the procedural FPE hands; and Q/E local sandbox interaction worked. The operator then observed severe runtime hitches while selecting hotbar slots / interacting with inventory plus M4_ITEM_COMMAND_TIMEOUT and M4_ITEM_COMMAND_SEND_FAILED. Code review isolated the hotbar hitch: ItemGameplayController.select_hotbar routes replica mode to the M7 bridge; inventory.select_hotbar is not in the NX6 predictable-command set, so M7 falls through to _submit_blocking and waits for COMMAND_RESULT on the main thread. In the single-process CH9.6 graphical lab this can starve the local client/server process loop until timeout. Fix4 leaves accepted M7/CH9 authority code untouched and adds an FPE-owned FirstPersonHotbarNetworkAdapter. It sends inventory.select_hotbar directly as RELIABLE_ORDERED ITEM_COMMAND without waiting, applies only an immediate local presentation index, and confirms or rolls back that presentation from the canonical server Item Graph snapshot. A focused adapter test passed synthetically on Godot 4.7.1 double with 15 assertions and verifies blocking_waits=0. The FPE HUD was also moved away from inherited CH6-CH9 diagnostics to reduce overlap. Missing Male_Peasant.gltf remains a separate nonfatal external-asset condition and is not the hotbar hitch root cause.",
+  "current_stage": "FPE-R1 Fix4.1 — exact hotbar transport-port contract validation",
+  "stage_status": "RESEARCH_FIX4_1_PENDING_OPERATOR_RERUN",
+  "progress_note": "Fix3 succeeded on the Windows Godot 4.7.1 stable double a13da4feb operator checkout. Godot class-cache preflight passed; the core FirstPersonEmbodiment contract passed 23 assertions; the exact graphical scene-load gate passed 5 assertions; PLAY launched successfully; first/third person switching rendered the procedural FPE hands; and Q/E local sandbox interaction worked. The operator then observed severe runtime hitches while selecting hotbar slots / interacting with inventory plus M4_ITEM_COMMAND_TIMEOUT and M4_ITEM_COMMAND_SEND_FAILED. Code review isolated the hotbar hitch: ItemGameplayController.select_hotbar routes replica mode to the M7 bridge; inventory.select_hotbar is not in the NX6 predictable-command set, so M7 falls through to _submit_blocking and waits for COMMAND_RESULT on the main thread. Fix4 leaves accepted M7/CH9 authority code untouched and adds an FPE-owned FirstPersonHotbarNetworkAdapter that sends inventory.select_hotbar as RELIABLE_ORDERED ITEM_COMMAND without blocking and confirms/rolls back presentation from the canonical Item Graph snapshot. The first repository operator run of the new adapter gate correctly failed before runtime behavior was exercised because the test FakeRuntime declared the transport channel parameter as int while the actual M3/NX6 _send_on_channel contract is channel:String, delivery_mode:String, track_operation:bool and RealtimeChannelPolicy.ITEM is the string ITEM. Fix4.1 changes only the test double to the exact accepted transport-port signature and adds assertions for channel=ITEM and operation tracking. No production/research runtime file changed in Fix4.1. The earlier synthetic hotbar PASS is invalidated as repository acceptance evidence because it did not prove exact transport-port signature compatibility. Missing Male_Peasant.gltf remains a separate nonfatal external-asset condition and is not the hotbar hitch root cause.",
   "last_accepted_checkpoint": "CH9.6 Playable Network Equipment Lab FOCUSED_ACCEPTED + POST_ACCEPTANCE_PC0_NON_RED @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
-  "next_stage": "Operator pulls Fix4 and reruns RUN_FPE_RESEARCH_TESTS.ps1. The runner must pass class-cache preflight, the 23-assertion FPE contract, the nonblocking hotbar adapter gate, and the graphical scene-load gate. Then PLAY_FPE_RESEARCH.ps1 is rerun and 1..0 hotbar switching is exercised rapidly while watching for any M4_ITEM_COMMAND_TIMEOUT/SEND_FAILED and visible frame freeze. If the hotbar hitch is removed but Tab/inventory opening still produces a distinct hitch, capture that separately as an inventory-refresh performance defect rather than conflating it with the resolved blocking command path. Missing Male_Peasant.gltf remains allowed for procedural sleeves. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
+  "next_stage": "Operator updates the detached FPE worktree to the current remote research head and reruns RUN_FPE_RESEARCH_TESTS.ps1. The runner must pass class-cache preflight, the 23-assertion FPE contract, the corrected exact-port nonblocking hotbar adapter gate, and the 5-assertion graphical scene-load gate. Then PLAY_FPE_RESEARCH.ps1 is rerun and 1..0 hotbar switching is exercised rapidly while watching for any M4_ITEM_COMMAND_TIMEOUT/SEND_FAILED and visible frame freeze. If hotbar becomes smooth but Tab/inventory opening still hitches, capture that separately as an inventory-refresh performance defect. Missing Male_Peasant.gltf remains allowed for procedural sleeves. Do not rename this work CH9.7. Canonical world grabbing still requires a separate authority/network contract frontier.",
   "parent_branch_or_checkpoint": "feature/ch9-6-playable-network-equipment-lab @ e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "base_commit": "e547ba52a440e72cc02c6bbe449edaf160bae7ab",
   "candidate_runtime_head": "0e7deffc6f32e879280fcbfe4fc25ea275ed8a66",
@@ -97,16 +97,18 @@
     "operator_core_fix3": "PASS_23_ASSERTIONS_CLEAN",
     "operator_scene_load_fix3": "PASS_5_ASSERTIONS_CLEAN",
     "operator_graphical_fix3": "PARTIAL_PASS_HANDS_VIEW_SWITCH_AND_LOCAL_GRAB_VISIBLE_HOTBAR_BLOCKING_TIMEOUT_FOUND",
-    "synthetic_hotbar_fix4": "PASS_15_ASSERTIONS_GODOT_4_7_1_DOUBLE",
-    "focused_repository_fix4": "PENDING_OPERATOR_RERUN",
-    "graphical_fix4": "PENDING_OPERATOR_RERUN"
+    "synthetic_hotbar_fix4": "INVALIDATED_EXACT_TRANSPORT_PORT_SIGNATURE_NOT_PROVEN",
+    "operator_hotbar_fix4": "FAILED_TEST_DOUBLE_CHANNEL_TYPE_MISMATCH_BEFORE_RUNTIME_BEHAVIOR",
+    "focused_repository_fix4_1": "PENDING_OPERATOR_RERUN",
+    "graphical_fix4_1": "PENDING_OPERATOR_RERUN"
   },
   "evidence_invalidations": [
     "PRE_FIX1_SYNTHETIC_PASS_INVALIDATED_BY_REAL_WINDOWS_PARSE_ERRORS",
     "PRE_FIX1_RUNNER_PASS_INVALIDATED_BECAUSE_FATAL_GODOT_ERRORS_DID_NOT_FORCE_NONZERO_EXIT",
     "FIX1_CORE_PASS_DOES_NOT_IMPLY_GRAPHICAL_COMPOSITION_PASS",
     "FIX2_CORE_PASS_DOES_NOT_IMPLY_GENERATED_GODOT_CLASS_CACHE_IS_CURRENT",
-    "FIX3_GRAPHICAL_LAUNCH_DOES_NOT_IMPLY_INTERACTIVE_HOTBAR_PATH_IS_NONBLOCKING"
+    "FIX3_GRAPHICAL_LAUNCH_DOES_NOT_IMPLY_INTERACTIVE_HOTBAR_PATH_IS_NONBLOCKING",
+    "FIX4_SYNTHETIC_HOTBAR_PASS_INVALIDATED_FOR_REPOSITORY_ACCEPTANCE_BECAUSE_EXACT_SEND_PORT_SIGNATURE_WAS_NOT_COVERED"
   ],
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -121,8 +123,8 @@
   ],
   "blockers": [
     "CANONICAL_HAND_GRAB_AUTHORITY_CONTRACT_NOT_AUTHORIZED",
-    "FIX4_FOCUSED_OPERATOR_RERUN_PENDING",
-    "FIX4_GRAPHICAL_HOTBAR_HITCH_RERUN_PENDING"
+    "FIX4_1_FOCUSED_OPERATOR_RERUN_PENDING",
+    "FIX4_1_GRAPHICAL_HOTBAR_HITCH_RERUN_PENDING"
   ],
   "non_blocking_followups": [
     "IF_TAB_ONLY_HITCH_REMAINS_PROFILE_INVENTORY_UI_REFRESH_SEPARATELY",
