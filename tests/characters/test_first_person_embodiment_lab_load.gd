@@ -17,12 +17,14 @@ func _run() -> void:
 	if lab != null:
 		_assert(lab.has_method("get_first_person_embodiment_debug_snapshot"), "FPE graphical lab script did not bind")
 		_assert(
-			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix8.gd",
-			"FPE graphical root is not the Fix8 local-hotbar lab"
+			String(lab.get_script().resource_path) == "res://scripts/characters/lab/quaternius_first_person_embodiment_fix9.gd",
+			"FPE graphical root is not the R2 Fix9 held-item composition"
 		)
 		_assert(lab.has_method("_apply_hotbar_presentation_for_index"), "FPE immediate hotbar presentation port is missing")
 		_assert(lab.has_method("_select_hotbar_nonblocking"), "FPE local hotbar selection port is missing")
 		_assert(lab.has_method("_poll_hotbar_authority"), "FPE hotbar authority compatibility port is missing")
+		_assert(lab.has_method("get_held_item_presentation_report"), "FPE R2 held-item presentation report is missing")
+		_assert(lab.has_method("_on_held_item_presentation_changed"), "FPE R2 shared held-state consumer is missing")
 		var base_lab: Node = lab.get_node_or_null("CH9_6BaseLab")
 		_assert(base_lab != null, "FPE graphical lab does not compose a CH9.6 host")
 		if base_lab != null:
