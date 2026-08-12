@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0013",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 13,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "VERIFYING",
+  "recorded_at_utc": "2026-08-12T02:11:08Z",
+  "actor": "VERIFIER",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "predicate": "C24_CONTRACTS_PASS",
+  "command": "VERIFY_C24_CONTRACTS_PASS",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-12-H0-1-R8/evidence/H0-1-R8-C22-WO-001-EXACT-RUNTIME-001.v1.json"
+  ],
+  "summary": "R8 predicate verified on exact implementation/review target 4c69de50c8374112d82efee2fd6917c770b3eae0: C24_CONTRACTS_PASS."
+}

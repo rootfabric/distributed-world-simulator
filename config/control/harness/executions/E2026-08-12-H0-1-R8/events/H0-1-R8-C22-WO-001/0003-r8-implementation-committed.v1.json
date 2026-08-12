@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R8-H0-1-R8-C22-WO-001-0003",
+  "project_epoch": "E2026-08-12-H0-1-R8",
+  "work_order_id": "H0-1-R8-C22-WO-001",
+  "sequence": 3,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IMPLEMENTED",
+  "recorded_at_utc": "2026-08-12T02:03:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/h0-1-c22-current-main-r3",
+  "head_sha": "4c69de50c8374112d82efee2fd6917c770b3eae0",
+  "predicate": "C22_ACCEPTED_CAPABILITY_TRANSFERRED_WITHIN_SCOPE",
+  "command": "COMMIT_BOUNDED_R8_FRESHNESS_REPAIR_AND_EXACT_C22_TRANSFER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "scripts/harness/state_builder.py",
+    "tests/harness/test_h0_control_harness.py",
+    "validation/c22-incremental-local-rebuild-validation.json"
+  ],
+  "summary": "Bounded R8 implementation committed at 4c69de50: two harness files plus exactly 13 hash-verified SOURCE_ACCEPTED C22 blobs, with no out-of-scope runtime surfaces."
+}
