@@ -152,9 +152,11 @@ if ($ResetState) {
 }
 
 Write-Host "Godot: $GodotPath"
-Write-Host "FPE research - FirstPersonEmbodiment over accepted CH9.6" -ForegroundColor Cyan
+Write-Host "FPE research - R2 shared held-item presentation over accepted CH9.6" -ForegroundColor Cyan
 Write-Host "C: first/third person | Q: left grab/release | E: right grab/release | 1..0: instant local hotbar selection" -ForegroundColor Cyan
 Write-Host "Fix8 hotbar rule: slot selection sends NO Item Graph command and requests NO durable checkpoint; concrete item actions remain server-authoritative." -ForegroundColor Cyan
+Write-Host "R2 gate: choose an occupied slot, press C, and verify the same item appears on the world avatar right hand; an empty slot must clear both first- and third-person presentation." -ForegroundColor Cyan
+Write-Host "R2 third-person item is presentation-only and uses the world render layer; it does not own item/network/gameplay transform state." -ForegroundColor Cyan
 Write-Host "Aim at one of the three floating cubes to test local hand grabbing." -ForegroundColor Cyan
 if ($GarmentAvailable) {
     Write-Host "Quaternius Male_Peasant asset found: real clothing + first-person sleeve path enabled." -ForegroundColor Cyan
