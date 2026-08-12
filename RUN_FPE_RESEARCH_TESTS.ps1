@@ -105,6 +105,10 @@ $Tests = @(
         PassMarker = "FirstPerson hotbar presentation prediction: PASS"
     },
     @{
+        Path = "res://tests/characters/test_first_person_hotbar_local_selection.gd"
+        PassMarker = "FirstPerson hotbar local selection: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_equipment_result_policy.gd"
         PassMarker = "FirstPerson equipment result policy: PASS"
     },
