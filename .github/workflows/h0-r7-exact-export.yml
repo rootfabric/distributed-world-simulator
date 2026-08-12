@@ -36,38 +36,11 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          state_path = Path('scripts/harness/state_builder.py')
-          state = state_path.read_text(encoding='utf-8')
-          old = '''def _git_implementation_head(root: Path, execution_dir: Path) -> str:
-              """Return the latest commit touching active H0 implementation surfaces.
-
-              The active transition table is derived from ``execution_dir`` instead of a
-              hard-coded epoch. Append-only event/review/evidence ledgers and unrelated
-              checkpoint documentation are deliberately excluded so recording evidence
-              or another program's docs cannot stale the H0 implementation target.
-              """
-              transition_path = _repo_relative(root, execution_dir / "transition-table.v1.json")
-              implementation_paths = [
-                  "CONTROL_DEVELOPMENT.ps1",
-                  "scripts/harness",
-                  "tests/harness",
-                  "validation/harness",
-                  _H0_0_CHECKPOINT_DOC,
-                  transition_path,
-              ]
-              output = subprocess.run(
-                  ["git", "log", "-1", "--format=%H", "--", *implementation_paths],
-                  cwd=root,
-                  text=True,
-                  capture_output=True,
-                  check=False,
-              )
-              value = output.stdout.strip()
-              if output.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", value):
-                  raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
-              return value
-          '''
-          new = '''def _implementation_pathspecs(
+          state_path = Path("scripts/harness/state_builder.py")
+          state = state_path.read_text(encoding="utf-8")
+          start = state.index("def _git_implementation_head(root: Path, execution_dir: Path) -> str:\n")
+          end = state.index("\n\ndef _git_path_head", start)
+          replacement = '''def _implementation_pathspecs(
               root: Path,
               execution_dir: Path,
               work_order: dict[str, Any],
@@ -117,37 +90,28 @@ jobs:
                   raise ContractValidationError("GIT_IMPLEMENTATION_HEAD_UNAVAILABLE")
               return value
           '''
-          # Dedent workflow indentation from the literal blocks above.
           import textwrap
-          old = textwrap.dedent(old)
-          new = textwrap.dedent(new)
-          if old not in state:
-              raise SystemExit('OLD_IMPLEMENTATION_HEAD_BLOCK_NOT_FOUND')
-          state = state.replace(old, new, 1)
-          needle = 'implementation_head = _git_implementation_head(root, execution_dir)'
-          replacement = 'implementation_head = _git_implementation_head(root, execution_dir, active["definition"])'
-          if state.count(needle) != 1:
-              raise SystemExit('IMPLEMENTATION_HEAD_CALL_NOT_UNIQUE')
-          state = state.replace(needle, replacement, 1)
-          state_path.write_text(state, encoding='utf-8')
+          state = state[:start] + textwrap.dedent(replacement) + state[end:]
+          old_call = "implementation_head = _git_implementation_head(root, execution_dir)"
+          if state.count(old_call) != 1:
+              raise SystemExit("IMPLEMENTATION_HEAD_CALL_NOT_UNIQUE")
+          state = state.replace(
+              old_call,
+              'implementation_head = _git_implementation_head(root, execution_dir, active["definition"])',
+              1,
+          )
+          state_path.write_text(state, encoding="utf-8")
 
-          test_path = Path('tests/harness/test_h0_control_harness.py')
-          tests = test_path.read_text(encoding='utf-8')
-          import_old = 'from harness.state_builder import _validate_semantics, build_state'
-          import_new = 'from harness.state_builder import _implementation_pathspecs, _validate_semantics, build_state'
-          if tests.count(import_old) != 1:
-              raise SystemExit('STATE_BUILDER_IMPORT_NOT_UNIQUE')
-          tests = tests.replace(import_old, import_new, 1)
-          old_test = '''    def test_implementation_freshness_scope_declares_runtime_and_excludes_ledger(self):
-              allowed = tuple(self.work_order["allowed_paths"])
-              self.assertIn("scripts/harness/**", allowed)
-              self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", allowed)
-              self.assertIn("RUN_WORLD_REGRESSION_TESTS.ps1", allowed)
-              execution_prefix = f"config/control/harness/executions/{self.epoch['epoch_id']}/"
-              self.assertTrue(any(path.startswith(execution_prefix) for path in allowed))
-
-          '''
-          new_test = '''    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):
+          test_path = Path("tests/harness/test_h0_control_harness.py")
+          tests = test_path.read_text(encoding="utf-8")
+          old_import = "from harness.state_builder import _validate_semantics, build_state"
+          new_import = "from harness.state_builder import _implementation_pathspecs, _validate_semantics, build_state"
+          if tests.count(old_import) != 1:
+              raise SystemExit("STATE_BUILDER_IMPORT_NOT_UNIQUE")
+          tests = tests.replace(old_import, new_import, 1)
+          test_start = tests.index("    def test_implementation_freshness_scope_declares_runtime_and_excludes_ledger(self):\n")
+          test_end = tests.index("    def test_current_diff_stays_inside_declared_scope(self):\n", test_start)
+          test_block = '''    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence(self):
               pathspecs = _implementation_pathspecs(ROOT, ACTIVE_EXECUTION, self.work_order)
               self.assertIn("scripts/harness/**", pathspecs)
               self.assertIn("scripts/construction/proxies/construction_proxy_incremental_local_rebuilder.gd", pathspecs)
@@ -170,12 +134,12 @@ jobs:
               self.assertEqual(expected, state["review"]["review_target_head_sha"])
 
           '''
-          old_test = textwrap.dedent(old_test)
-          new_test = textwrap.dedent(new_test)
-          if old_test not in tests:
-              raise SystemExit('OLD_FRESHNESS_TEST_BLOCK_NOT_FOUND')
-          tests = tests.replace(old_test, new_test, 1)
-          test_path.write_text(tests, encoding='utf-8')
+          tests = tests[:test_start] + textwrap.dedent(test_block).replace("\ndef ", "\n    def ", 1) + tests[test_end:]
+          # The block begins with a class-level method and must retain four spaces.
+          if not tests[test_start:].startswith("    def test_implementation_freshness_scope_covers_runtime_without_self_staling_evidence"):
+              block = textwrap.indent(textwrap.dedent(test_block), "    ")
+              tests = tests[:test_start] + block + tests[test_end:]
+          test_path.write_text(tests, encoding="utf-8")
           PY
           python -m py_compile scripts/harness/state_builder.py tests/harness/test_h0_control_harness.py
 
@@ -218,22 +182,13 @@ jobs:
             test "$(git hash-object "$path")" = "${expected[$path]}"
           done
 
-      - name: Enforce bounded implementation diff
+      - name: Enforce bounded diff, commit and push
         shell: bash
         run: |
           set -euo pipefail
           mapfile -t changed < <(git diff --name-only)
           printf '%s\n' "${changed[@]}"
-          allowed_regex='^(scripts/harness/state_builder\.py|tests/harness/test_h0_control_harness\.py|RUN_C22_INCREMENTAL_REBUILD_TESTS\.ps1|RUN_C22_INCREMENTAL_REBUILD_TESTS\.sh|RUN_WORLD_REGRESSION_TESTS\.ps1|scripts/construction/proxies/construction_proxy_(array_mesh_backend|artifact_merger|incremental_local_rebuilder|streaming_controller)\.gd(\.uid)?|tests/construction/test_c22_incremental_local_rebuild\.gd(\.uid)?|tests/construction/test_c24_proxy_mesh_backend_contracts\.gd|validation/c22-incremental-local-rebuild-validation\.json)$'
           test "${#changed[@]}" -eq 15
-          for path in "${changed[@]}"; do
-            [[ "$path" =~ $allowed_regex ]] || { echo "OUT_OF_SCOPE:$path" >&2; exit 1; }
-          done
-
-      - name: Commit and push exact R8 implementation
-        shell: bash
-        run: |
-          set -euo pipefail
           git config user.name 'H0 R8 bounded worker'
           git config user.email 'actions@users.noreply.github.com'
           git add scripts/harness/state_builder.py tests/harness/test_h0_control_harness.py \
@@ -244,15 +199,19 @@ jobs:
             scripts/construction/proxies/construction_proxy_streaming_controller.gd \
             tests/construction/test_c22_incremental_local_rebuild.gd tests/construction/test_c22_incremental_local_rebuild.gd.uid \
             tests/construction/test_c24_proxy_mesh_backend_contracts.gd validation/c22-incremental-local-rebuild-validation.json
+          git diff --cached --name-only | tee "$RUNNER_TEMP/r8-changed-files.txt"
+          test "$(git diff --cached --name-only | wc -l)" -eq 15
           git commit -m 'fix(h0.1): repair freshness fence and transfer C22'
           new_head="$(git rev-parse HEAD)"
           git push origin HEAD:feature/h0-1-c22-current-main-r3
-          echo "R8_IMPLEMENTATION_HEAD=$new_head" | tee "$RUNNER_TEMP/r8-implementation-head.txt"
+          printf 'R8_IMPLEMENTATION_HEAD=%s\n' "$new_head" | tee "$RUNNER_TEMP/r8-implementation-head.txt"
 
-      - name: Upload implementation head
+      - name: Upload implementation evidence
         uses: actions/upload-artifact@v4
         with:
           name: h0-r8-implementation-head
-          path: ${{ runner.temp }}/r8-implementation-head.txt
+          path: |
+            ${{ runner.temp }}/r8-implementation-head.txt
+            ${{ runner.temp }}/r8-changed-files.txt
           if-no-files-found: error
           retention-days: 1
