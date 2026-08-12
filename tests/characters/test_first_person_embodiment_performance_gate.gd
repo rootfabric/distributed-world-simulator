@@ -11,8 +11,12 @@ func _init() -> void:
 
 
 func _run() -> void:
+	# Do not add the host to SceneTree here. Adding it executes the whole accepted
+	# CH6->CH9 _ready() chain, including optional external garment loading and
+	# network bootstrap, before this unit gate can establish a clean counter
+	# baseline. The throttle itself only depends on Time and the virtual status
+	# call, and super._refresh_status() is null-safe before the lab is ready.
 	var host = HostType.new()
-	root.add_child(host)
 
 	var started_us := Time.get_ticks_usec()
 	for _index in range(180):
