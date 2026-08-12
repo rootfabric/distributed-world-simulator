@@ -1,4 +1,4 @@
-﻿# Accepted M7 validation marker: v16.10.6.1-testing-m7-playable-networked-playground
+# Accepted M7 validation marker: v16.10.6.1-testing-m7-playable-networked-playground
 # Accepted architecture coverage marker: v16.10.6-architecture-a3-single-server-multiplayer
 $ErrorActionPreference = "Stop"
 
@@ -192,6 +192,7 @@ $Tests = @(
     "res://tests/construction/test_c22_compiled_proxy_integration.gd",
     "res://tests/construction/test_c22_compiled_proxy_graphical.gd",
     "res://tests/construction/test_c22_compiled_proxy_scale_soak.gd",
+    "res://tests/construction/test_c22_incremental_local_rebuild.gd",
     "res://tests/construction/test_c23_production_hardening_contracts.gd",
     "res://tests/construction/test_c23_production_hardening_integration.gd",
     "res://tests/construction/test_c23_production_hardening_chaos.gd",
