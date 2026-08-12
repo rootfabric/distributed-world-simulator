@@ -1,67 +1,45 @@
 {
   "schema": "distributed_world_simulator.ecology.cal1_d_lifecycle_payoff_validation.v1",
-  "revision": "ECO-CAL1-D-2026-08-12-R1-CANDIDATE",
+  "revision": "ECO-CAL1-D-2026-08-12-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "88adcc609fdfbc5511dc2aa0a4b779edc9a114e0",
-  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO0",
   "parent": {
     "checkpoint": "ECO.CAL1-C",
-    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a"
+    "aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a",
+    "preserved": true
   },
-  "mechanism": {
-    "source": "scripts/research/ecology/plant_lifecycle_payoff_v1.gd",
-    "experiment": "scripts/research/ecology/plant_lifecycle_payoff_experiment_v1.gd",
-    "selection_policy": "no final lifecycle fitness score in CAL1-D; expose independent observables for CAL1-E",
-    "maturity_fraction": "current_height / inherited_target_height bounded 0..1",
-    "reserve_fraction": "reserve / (reserve + standing biomass)",
-    "realized_seed_output": "genome seed ceiling * maturity fraction * reserve fraction",
-    "release_height_dispersal": "genome dispersal baseline * sqrt(release_height / 1m)",
-    "maturity_time_index": "target_height / growth_rate",
-    "structural_amortization": "accepted P1 structural_cost / lifespan",
-    "disturbance_damage": "severity * height/(height+root_depth) * (1 - root_depth/(height+root_depth))",
-    "recovery_time_index": "damage / growth_rate"
+  "canonical_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb",
+  "canonical_aggregate_hash": "c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6",
+  "fresh_process_replay_equal": true,
+  "canonical_observations": {
+    "mature_to_immature_seed_ratio": 4.0,
+    "high_to_low_reserve_seed_ratio": 3.333333333333,
+    "high_to_low_release_distance_ratio": 2.0,
+    "fast_maturity_time": 2.5,
+    "slow_maturity_time": 8.0,
+    "short_life_amortized_structure": 0.043650537490,
+    "long_life_amortized_structure": 0.007275089582,
+    "shallow_survival": 0.412244897959,
+    "deep_survival": 0.8,
+    "fast_recovery_time": 0.446428571429,
+    "slow_recovery_time": 1.428571428571,
+    "mild_post_seed_potential": 462.357351103707,
+    "severe_post_seed_potential": 268.807788421491
   },
-  "cases": [
-    "IMMATURE_CONTROL","MATURE_CONTROL","MATURE_LOW_RESERVE","MATURE_HIGH_RESERVE","RELEASE_LOW","RELEASE_HIGH",
-    "FAST_GROWTH","SLOW_GROWTH","SHORT_LIFE","LONG_LIFE","NO_DISTURBANCE",
-    "DISTURBANCE_SHALLOW_ROOT","DISTURBANCE_DEEP_ROOT","DISTURBANCE_FAST_RECOVERY","DISTURBANCE_SLOW_RECOVERY",
-    "DISTURBANCE_MILD","DISTURBANCE_SEVERE"
-  ],
-  "required_properties": [
-    "CAL1_C_PARENT_HASH_UNCHANGED",
-    "MATURE_REPRODUCTION_GREATER_THAN_IMMATURE_MATCHED_CONTROL",
-    "RESERVE_LIMITS_REALIZED_SEED_OUTPUT",
-    "RELEASE_HEIGHT_INCREASES_DISPERSAL_FOR_SAME_SEED_TRAIT",
-    "FASTER_GROWTH_REDUCES_MATURITY_TIME_INDEX",
-    "LONGER_LIFESPAN_REDUCES_ANNUAL_STRUCTURAL_AMORTIZATION_FOR_MATCHED_STRUCTURE",
-    "NO_DISTURBANCE_DAMAGE_ZERO_SURVIVAL_ONE_RECOVERY_ZERO",
-    "DEEPER_MATCHED_ROOTS_IMPROVE_MECHANICAL_DISTURBANCE_SURVIVAL",
-    "FASTER_MATCHED_GROWTH_REDUCES_RECOVERY_TIME_FOR_SAME_DAMAGE",
-    "SEVERE_DISTURBANCE_REDUCES_SURVIVAL_AND_POST_DISTURBANCE_REPRODUCTION",
-    "SEED_OUTPUT_NEVER_EXCEEDS_GENOME_CEILING",
-    "DETERMINISTIC_SAME_AND_FRESH_PROCESS_HASH",
+  "accepted_properties": [
+    "MATURITY_GATES_REPRODUCTION",
+    "RESERVE_GATES_REALIZED_SEED_OUTPUT",
+    "RELEASE_HEIGHT_CAUSALLY_INCREASES_DISPERSAL",
+    "GROWTH_RATE_CAUSALLY_CHANGES_MATURITY_AND_RECOVERY_TIME",
+    "LIFESPAN_AMORTIZES_STRUCTURE",
+    "ROOT_DEPTH_CAUSALLY_CHANGES_DISTURBANCE_SURVIVAL",
+    "SEVERITY_REDUCES_POST_DISTURBANCE_REPRODUCTION",
+    "NO_FINAL_LIFECYCLE_FITNESS_SCALAR",
     "NO_TALL_BONUS",
     "NO_COEFFICIENT_CALIBRATION"
   ],
-  "noncanonical_formula_sanity": {
-    "mature_to_immature_seed_ratio_expected": 4.0,
-    "high_to_low_reserve_seed_ratio_expected": 3.333333333333,
-    "high_to_low_release_distance_ratio_expected": 2.0,
-    "fast_maturity_expected": 2.5,
-    "slow_maturity_expected": 8.0,
-    "shallow_survival_expected_approx": 0.412244897959,
-    "deep_survival_expected": 0.8,
-    "fast_recovery_expected_approx": 0.446428571429,
-    "slow_recovery_expected_approx": 1.428571428571,
-    "note": "These are pre-run controlled-formula expectations, not canonical acceptance evidence and not calibration targets."
-  },
-  "tests": {
-    "acceptance": "tests/research/ecology/eco_cal1_d_lifecycle_payoff_acceptance.gd",
-    "restart": "tests/research/ecology/eco_cal1_d_restart_replay_probe.gd",
-    "runner": "RUN_ECO_CAL1_D_TESTS.ps1"
-  },
-  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
-  "next_if_pass": "ECO.CAL1-E Combined Mechanism Matrix without calibration"
+  "checkpoint": "docs/checkpoints/ECO_CAL1_D_LIFECYCLE_PAYOFFS_ACCEPTED_RU.md",
+  "decision": "ACCEPTED_OPEN_CAL1_E"
 }

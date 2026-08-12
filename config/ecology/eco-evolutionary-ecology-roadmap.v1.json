@@ -1,15 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R31-2026-08-12",
+  "revision": "ECO-R32-2026-08-12",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1_D_CANDIDATE",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO0_CAL1_E",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
-  "current_checkpoint": "ECO.CAL1-D",
-  "current_step": "CAL1-D Implemented Candidate / Exact Windows Lifecycle Causal Gate",
-  "last_accepted_step": "ECO.CAL1-C Crown + Root Spatial Competition",
+  "current_checkpoint": "ECO.CAL1-E",
+  "current_step": "CAL1-E Combined Mechanism Matrix — EXECUTE_NOW / NO CALIBRATION",
+  "last_accepted_step": "ECO.CAL1-D Lifecycle / Reproduction / Dispersal / Disturbance Payoffs",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
   "accepted_summary": [
@@ -18,33 +18,35 @@
     "ECO.CONV0-A ACCEPTED",
     "ECO.CAL1-A ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "ECO.CAL1-B ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "ECO.CAL1-C ACCEPTED_EXACT_WINDOWS_CANONICAL"
+    "ECO.CAL1-C ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "ECO.CAL1-D ACCEPTED_EXACT_WINDOWS_CANONICAL"
   ],
   "accepted_evidence": {
     "cal1_a_baseline_hash": "280980c13b2545e66af94d10cc35f707c506365c65df9efeddb07b037588cb0f",
     "ph3c_hash": "294ebcd81db924421a916ad599711146c4047f0e295fe76f715fff11e548b7fb",
     "cal1_b_aggregate_hash": "c101ba420aeeeac5f3ee0defa3f8773ad2bf0e9ef24c18f4c7ba6f8ec146e88c",
-    "cal1_c_aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a"
-  },
-  "candidate_evidence": {
-    "cal1_d_implementation_head": "88adcc609fdfbc5511dc2aa0a4b779edc9a114e0",
-    "cal1_d_checkpoint": "docs/checkpoints/ECO_CAL1_D_LIFECYCLE_PAYOFFS_CANDIDATE_RU.md",
-    "cal1_d_validation": "validation/ecology/eco-cal1-d-lifecycle-payoff-validation.json",
-    "cal1_d_runner": "RUN_ECO_CAL1_D_TESTS.ps1",
-    "cal1_d_policy": "vector of independently observable lifecycle payoffs; no combined lifecycle fitness in CAL1-D"
+    "cal1_c_aggregate_hash": "d48919f42e2da92d32b3cbb8b344cb4ba0a2357411707781725a6873f40c3f1a",
+    "cal1_d_aggregate_hash": "c295da316e42fdf2f1073f8853709482191818a23763e9991d473cb5064992b6"
   },
   "EVO0": {
     "name": "Plant Causal Ecology Foundation",
-    "status": "ACTIVE_CAL1_D_CANDIDATE",
+    "status": "ACTIVE_CAL1_E",
     "steps": [
       {"id":"CAL1-A","name":"Baseline Decomposition / Mechanism Audit","status":"ACCEPTED"},
       {"id":"CAL1-B","name":"Relative Vertical Light Competition","status":"ACCEPTED"},
       {"id":"CAL1-C","name":"Crown + Root Spatial Competition","status":"ACCEPTED"},
-      {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"},
-      {"id":"CAL1-E","name":"Combined Mechanism Matrix","status":"BLOCKED_BY_CAL1_D_ACCEPTANCE"},
-      {"id":"CAL1-F","name":"Calibration + Full-Pool Robustness","status":"BLOCKED_BY_CAL1_E"}
+      {"id":"CAL1-D","name":"Lifetime / Reproduction / Dispersal / Disturbance Payoffs","status":"ACCEPTED"},
+      {"id":"CAL1-E","name":"Combined Mechanism Matrix","status":"EXECUTE_NOW_NO_CALIBRATION"},
+      {"id":"CAL1-F","name":"Calibration + Full-Pool Robustness","status":"BLOCKED_BY_CAL1_E_ACCEPTANCE"}
     ],
-    "calibration_forbidden_before": "CAL1-E mechanism acceptance"
+    "calibration_forbidden_before": "CAL1-E mechanism acceptance",
+    "cal1_e_policy": {
+      "matrix": "8 strategies x 4 environments x 2 density regimes x 3 disturbance regimes",
+      "resource_ledger": "accepted PH3 coupled resource + CAL1-B relative-light delta - CAL1-C crown overlap loss + CAL1-C root competition delta",
+      "lifecycle_vector": "accepted CAL1-D observables evaluated at a common developmental-stage fraction",
+      "comparison": "separate metric winners plus Pareto fronts; no arbitrary weighted scalar",
+      "calibration": "FORBIDDEN"
+    }
   },
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
@@ -58,7 +60,7 @@
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
   "production_blockers": [
-    "CAL1_E_REQUIRES_CAL1_D_EXACT_WINDOWS_ACCEPTANCE",
+    "CAL1_F_REQUIRES_CAL1_E_EXACT_WINDOWS_ACCEPTANCE",
     "EVO1_REQUIRES_CAL1_ACCEPTANCE",
     "XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS",
     "LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"
