@@ -30,14 +30,23 @@ Expected local asset path:
 
 `res://assets/external/fpe_hands/wrad_arms/wrad_arms.glb`
 
-Download `WRAD_ARMS.zip` from the author page, extract the GLB and copy/rename it to the path above. Keep any referenced textures beside the GLB.
-
-The WRAD profile intentionally starts with `INSPECT_REQUIRED` and an empty bone map. We must not invent source bone names or claim rest-space compatibility before importing the real file.
-
-Run:
+Download `WRAD_ARMS.zip` from the author page. The generic importer can then copy the payload into the profile's stable path and immediately run the Godot inspector:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+.\IMPORT_FPE_HAND_ASSET.ps1 `
+    -ProfileId "wrad-arms-cc0" `
+    -ArchivePath "$env:USERPROFILE\Downloads\WRAD_ARMS.zip" `
+    -GodotPath $Godot
+```
+
+If the archive contains multiple GLB files, the importer prints them and fails closed. Rerun with `-SourceGlb '<name-or-relative-suffix>'` to choose one explicitly.
+
+The WRAD profile intentionally starts with `INSPECT_REQUIRED` and an empty bone map. We must not invent source bone names or claim rest-space compatibility before importing the real file.
+
+You can also inspect any already-copied external scene directly:
+
+```powershell
 .\INSPECT_FPE_HAND_ASSET.ps1 `
     -GodotPath $Godot `
     -Scene "res://assets/external/fpe_hands/wrad_arms/wrad_arms.glb"
