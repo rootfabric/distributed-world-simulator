@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-12-H0-1-R7-H0-1-R7-C22-WO-001-0001",
+  "project_epoch": "E2026-08-12-H0-1-R7",
+  "work_order_id": "H0-1-R7-C22-WO-001",
+  "sequence": 1,
+  "event_type": "WORK_ORDER_CREATED",
+  "work_state": "PLANNED",
+  "recorded_at_utc": "2026-08-12T00:10:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-1-c22-current-main-r2",
+  "head_sha": "4a42c2fb6befb386f5c3eb48d9ba070745e25bbb",
+  "predicate": "H0_1_R7_FRESH_WORK_ORDER_READY",
+  "command": "CREATE_FRESH_R7_FROM_REGISTRY_77_MAIN",
+  "exit_code": 0,
+  "evidence_paths": ["config/control/harness/executions/E2026-08-12-H0-1-R7/project-epoch.v1.json", "config/control/harness/executions/E2026-08-12-H0-1-R7/work-orders/H0-1-R7-C22-WO-001.v1.json"],
+  "summary": "Created fresh H0.1 R7 planning ledger from exact canonical main 4a42c2fb / registry 77. R6 remains historical failed provenance and is not authorization authority."
+}
