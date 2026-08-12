@@ -141,6 +141,14 @@ $Tests = @(
         PassMarker = "FPE R2 S3 posed viewmodel: PASS"
     },
     @{
+        Path = "res://tests/characters/test_fpe_r2_s4_two_hand_grip_contract.gd"
+        PassMarker = "FPE R2 S4 two-hand grip contract: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_fpe_r2_s4_two_hand_viewmodel.gd"
+        PassMarker = "FPE R2 S4 two-hand viewmodel: PASS"
+    },
+    @{
         Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
         PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
