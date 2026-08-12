@@ -440,8 +440,10 @@ static func _canonical_value(value) -> String:
 
 static func _encode_value(value):
 	match typeof(value):
-		TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING:
+		TYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:
 			return value
+		TYPE_INT:
+			return {"__eco_type": "Int", "value": int(value)}
 		TYPE_STRING_NAME:
 			return {"__eco_type": "StringName", "value": String(value)}
 		TYPE_VECTOR2:
@@ -487,6 +489,8 @@ static func _decode_value(value):
 	var wrapper: Dictionary = value
 	var type_name := String(wrapper.get("__eco_type", ""))
 	match type_name:
+		"Int":
+			return int(wrapper.get("value", 0))
 		"StringName":
 			return StringName(String(wrapper.get("value", "")))
 		"Vector2":
