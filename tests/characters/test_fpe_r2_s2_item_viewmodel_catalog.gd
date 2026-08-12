@@ -34,6 +34,28 @@ func _run() -> void:
 	_assert(String(beacon_grip.get("profile_id", "")) == "beacon_vertical", "S2 beacon grip profile mismatch")
 	_assert(not bool(beacon_grip.get("owns_gameplay_transform", true)), "S2 grip catalog incorrectly owns gameplay transform")
 
+	# The real M7/CH9 replica definition for canonical item/mount-base is
+	# `beacon_mount_base`. It contains the word beacon, so this is the regression
+	# case that used to collapse slot 2 into the slot-1 beacon profile.
+	var replica_mount: Dictionary = catalog.resolve(
+		"beacon_mount_base",
+		["assembly_root", "placeable", "mount_socket"],
+		{},
+		"",
+		Color(0.18, 0.48, 0.60, 1.0)
+	)
+	_assert(String(replica_mount.get("profile_id", "")) == "mount_base", "S2 replica mount-base collapsed to generic beacon profile")
+	_assert(String(replica_mount.get("visual_kind", "")) == "BOX", "S2 replica mount-base did not resolve box silhouette")
+	_assert(String(replica_mount.get("resolution_source", "")) == "HEURISTIC_SPECIFIC", "S2 replica mount-base did not use specific-family precedence")
+	var replica_mount_grip: Dictionary = grips.resolve(
+		"beacon_mount_base",
+		replica_mount,
+		["assembly_root", "placeable", "mount_socket"],
+		{}
+	)
+	_assert(String(replica_mount_grip.get("profile_id", "")) == "mount_base_two_hand", "S2 replica mount-base grip collapsed to beacon_vertical")
+	_assert(bool(Dictionary(replica_mount_grip.get("two_hand", {})).get("required", false)), "S2 replica mount-base lost two-hand requirement")
+
 	var flashlight: Dictionary = catalog.resolve("utility_flashlight", ["tool", "light"], {}, "")
 	_assert(String(flashlight.get("profile_id", "")) == "flashlight", "S2 flashlight did not resolve flashlight profile")
 	_assert(String(flashlight.get("visual_kind", "")) == "CYLINDER", "S2 flashlight silhouette mismatch")
