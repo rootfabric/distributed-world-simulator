@@ -66,3 +66,17 @@ func get_first_person_embodiment_debug_snapshot() -> Dictionary:
 	var snapshot: Dictionary = super.get_first_person_embodiment_debug_snapshot()
 	snapshot["r2_s3"] = get_r2_s3_hand_pose_report()
 	return snapshot
+
+
+func _refresh_status() -> void:
+	super._refresh_status()
+	if fpe_status_label == null:
+		return
+	var pose_report: Dictionary = get_r2_s3_hand_pose_report()
+	var rigs: Dictionary = Dictionary(pose_report.get("rigs", {}))
+	var left_report: Dictionary = Dictionary(rigs.get("left", {}))
+	var right_report: Dictionary = Dictionary(rigs.get("right", {}))
+	var left_pose := String(left_report.get("current_pose_id", "UNAVAILABLE"))
+	var right_pose := String(right_report.get("current_pose_id", "UNAVAILABLE"))
+	var skeleton_state := "READY" if bool(pose_report.get("articulated_skeleton", false)) else "PENDING"
+	fpe_status_label.text += "\nS3 hands: %s | L:%s | R:%s" % [skeleton_state, left_pose, right_pose]
