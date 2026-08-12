@@ -1,126 +1,84 @@
 {
-  "schema": "distributed_world_simulator.harness_evidence_map.v1",
-  "work_order_id": "GLOBAL-P0-R3-DESIGN-BRIEF-CONTRACT-REPAIR-V6",
-  "program": "GLOBAL_ARCHITECTURE",
-  "checkpoint": "R3_DESIGN_BRIEF_CONTRACT_REPAIR_COMPLETE",
+  "schema_version": "harness_evidence_map.v1",
+  "work_id": "GLOBAL-P0-R3-DESIGN-BRIEF-CONTRACT-REPAIR-V6",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "f78847624a9016d1e8ed39c12b5291d91037ea53",
-  "intent": "Repair independent-review finding R3-R-003 without changing the accepted R3 architecture design: complete the existing candidate-owned Design Brief to satisfy the canonical review-policy contract, freeze the new exact V6 mutable target, and bind external exact-head control evidence for new distinct Independent Reviewer and Independent Verifier sessions.",
-  "root_cause_or_reason": "Independent Reviewer found R3-R-003: the CRITICAL R3 candidate declared DESIGN_BRIEF_READY as required but its existing design_brief contained only 6 of the 11 fields mandated by config/control/harness/review-policy.v1.json. V6 repairs contract completeness at the canonical candidate-owned design_brief surface rather than weakening review policy, removing DESIGN_BRIEF_READY, or creating a competing Design Brief artifact.",
-  "changed_surfaces": [
-    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
-    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json"
+  "source_main_sha": "f6d68fc7c594b371f48a9bcff056e2478e04f317",
+  "required_checks": [
+    "Project Control run #311: SUCCESS on exact evidence head f78847624a9016d1e8ed39c12b5291d91037ea53",
+    "Project Control run #312: SUCCESS after external evidence publication at 691cca151b4d0e228b96dfa9746a124210a5afe7",
+    "Fresh Project Control on the final control-record repair head (post-commit external validation; not self-embedded)",
+    "python3 scripts/control/project_control.py --no-fetch --no-fail-on-red",
+    "python3 scripts/control/project_control_directional_watch.py --no-fail-on-red",
+    "JSON parse and canonical schema validation for Human Attention and Evidence Map staged payloads",
+    "git diff --name-only f6d68fc7c594b371f48a9bcff056e2478e04f317...f78847624a9016d1e8ed39c12b5291d91037ea53 | guard audit: standard blockers, custom guard blockers, Project Control global line, fail on RED",
+    "critical overlap count = 0",
+    "runtime file count = 0"
   ],
-  "canonical_owner": "MAIN/GLOBAL_ARCHITECTURE_CONTROL",
-  "entry_points": [
-    "PROJECT_CONTROL.md",
-    "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-    "config/control/project-program-registry.v1.json",
-    "config/control/harness/review-policy.v1.json",
-    "config/control/harness/checkpoint-catalog.v1.json"
+  "test_runs": [
+    {
+      "command": "Project Control / run #311 / exact frozen V6 head f78847624a9016d1e8ed39c12b5291d91037ea53",
+      "exit_code": 0,
+      "summary": "Historical live CI run #311 completed SUCCESS on commit f78847624a9016d1e8ed39c12b5291d91037ea53."
+    },
+    {
+      "command": "Project Control / run #312 / external evidence head 691cca151b4d0e228b96dfa9746a124210a5afe7",
+      "exit_code": 0,
+      "summary": "Historical live CI run #312 completed SUCCESS after evidence publication; external evidence remained bound to frozen V6 target f78847624a9016d1e8ed39c12b5291d91037ea53."
+    },
+    {
+      "command": "JSON parse and canonical schema validation for staged final-gate control-record payloads",
+      "exit_code": 0,
+      "summary": "Post-build critique JSON parses; Human Attention validates against human-attention.schema.v1.json; Evidence Map validates against evidence-map.schema.v1.json."
+    },
+    {
+      "command": "python3 scripts/control/project_control.py --no-fetch --no-fail-on-red",
+      "exit_code": 0,
+      "summary": "Previous external evidence-stage standard PC0 was NON_RED; a fresh run on the final control-record head remains required externally after commit."
+    },
+    {
+      "command": "python3 scripts/control/project_control_directional_watch.py --no-fail-on-red",
+      "exit_code": 0,
+      "summary": "Previous external evidence-stage directional PC0 was NON_RED; a fresh run on the final control-record head remains required externally after commit."
+    },
+    {
+      "command": "critical cross-branch overlap audit",
+      "exit_code": 0,
+      "summary": "Previous external evidence-stage critical overlap count = 0; final-head Project Control must confirm no new blocker."
+    },
+    {
+      "command": "runtime file diff audit",
+      "exit_code": 0,
+      "summary": "Frozen V6 mutable target changed no runtime files; this repair is constrained to external control/evidence records."
+    }
   ],
-  "callers": [
-    "SESSION R: NEW INDEPENDENT R3 REVIEWER against V6",
-    "SESSION V: INDEPENDENT R3 VERIFIER only after Reviewer PASS",
-    "DIRECTOR consistency/gate check only after Reviewer+Verifier PASS",
-    "HUMAN GLOBAL_ARCHITECTURE_PROMOTION only after distinct-role PASS"
+  "review_summary": [
+    "Durable post-build critique is recorded at artifacts/control-global-p0-r3-refresh-r1/post-build-critique.v1.json with outcome NO_MATERIAL_REFACTOR_REQUIRED for exact frozen V6 target f78847624a9016d1e8ed39c12b5291d91037ea53.",
+    "Schema-valid Human Attention request is recorded at artifacts/control-global-p0-r3-refresh-r1/human-attention-global-architecture-promotion.v1.json with status OPEN; human_decision is null.",
+    "Historical Reviewer and Verifier conclusions remain provenance/context only; this implementer-authored package does not create durable Reviewer or Verifier attestations.",
+    "Reviewer durable record: PENDING. Verifier durable record: PENDING. Director final gate: PENDING. Human decision: NOT TAKEN.",
+    "R3_REFRESHED_CANDIDATE_READY = NO and GLOBAL_ARCHITECTURE_PROMOTION is not performed."
   ],
-  "callees": [
-    "config/architecture/global-p0-r3-architecture-candidate.v1.json",
-    "config/control/architecture-ownership-r3-candidate.v1.json",
-    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
-    "config/control/global-p0-r3-prepromotion-guards.v1.json",
-    "config/control/branches/control__global-p0-r3-refresh-r1.v1.json",
-    "docs/architecture/GLOBAL_P0_R3_ARCHITECTURE_CANDIDATE_RU.md",
-    "docs/plans/GLOBAL_P0_R3_PARALLEL_IMPLEMENTATION_PLAN_RU.md",
-    "config/control/harness/risk-policy.v1.json",
-    "config/control/harness/review-policy.v1.json",
-    "config/control/harness/checkpoint-catalog.v1.json",
-    "config/control/harness/evidence-map.schema.v1.json",
-    "config/control/harness/repair-doctrine.v1.json",
-    "scripts/control/project_control.py",
-    "scripts/control/project_control_directional_watch.py"
+  "verification_summary": [
+    "Frozen target binding remains exactly f78847624a9016d1e8ed39c12b5291d91037ea53; evidence_head_sha intentionally names the reviewed/tested mutable candidate rather than a self-referential external control commit.",
+    "Previous external evidence/control head is 691cca151b4d0e228b96dfa9746a124210a5afe7. The final control-record head is observed externally through Git/CI/PR metadata after commit and is intentionally not embedded in this same commit.",
+    "Human Attention request: OPEN / PREPARED. Human decision: NOT TAKEN.",
+    "No Reviewer PASS, Verifier PASS, Director PASS or Human approval is synthesized by this implementer session.",
+    "Fresh standard and directional Project Control must run on the final control-record head after this commit."
   ],
-  "sibling_surfaces_checked": [
-    "source_main_sha=f6d68fc7c594b371f48a9bcff056e2478e04f317",
-    "source_registry_generation=78",
-    "canonical_architecture_revision=GLOBAL-P0-2026-08-10-R2",
-    "R3_FINAL_MUTABLE_HEAD_V6=f78847624a9016d1e8ed39c12b5291d91037ea53",
-    "evidence_head_sha == tested_candidate_head_sha == f78847624a9016d1e8ed39c12b5291d91037ea53",
-    "previous reviewer verdict=R3_INDEPENDENT_REVIEW_FIX_REQUIRED HISTORICAL against V5",
-    "previous finding=R3-R-003 HISTORICAL_REPAIRED",
-    "previous V5 target=c61a0d60eb82544b40e2134067f77d4a479a8815 HISTORICAL_FAILED_REVIEW_TARGET_NOT_AUTHORIZATION",
-    "previous V5 evidence=ea23ba074143dba50223363e9b4a46ca01edb379 HISTORICAL_EVIDENCE_NOT_AUTHORIZATION",
-    "R3-R-001=HISTORICAL_REPAIRED",
-    "R3-R-002=HISTORICAL_REPAIRED",
-    "R3-R-003=HISTORICAL_REPAIRED_ON_V6",
-    "risk_class=CRITICAL",
-    "review-policy pre_build.required_for includes CRITICAL",
-    "required_design_brief_fields=11",
-    "actual_required_fields_present=11",
-    "missing_design_brief_fields=0",
-    "unexpected_contract_breaking_design_brief_fields=0",
-    "required design_brief fields=problem_statement,current_behavior,desired_behavior,alternatives_considered,selected_design,why_selected,affected_owners,dependencies,non_goals,expected_risks,validation_plan",
-    "V6 design_brief keeps existing six fields consistent and adds alternatives_considered, why_selected, affected_owners, dependencies, expected_risks",
-    "alternatives_considered records repository-supported rejected architecture classes only and does not claim prototype testing",
-    "affected_owners is aligned to architecture-ownership-r3-candidate.v1.json; ownership transfer=NO for existing owners/consumers",
-    "dependencies separates preconditions from downstream gates; C22 MAIN_INTEGRATED does not authorize NX.C1",
-    "expected_risks includes duplicate truth, hidden global manager, identity/authority, RF/authority route, TF/scheduling, WT/M0, WQ/store, WB/authority-scheduler, V0 truth, H0.3 runtime scheduling, ECO/ECON, stale authorization, dependency drift, single-base Wave A, premature NX.C1",
-    "candidate target_checkpoint=R3_REFRESHED_CANDIDATE and checkpoint catalog still requires DESIGN_BRIEF_READY",
-    "candidate status=FROZEN_MUTABLE_REVIEW_TARGET_NO_PROMOTION",
-    "passport remains generic exact-target lifecycle; Reviewer/Verifier/human blockers remain active",
-    "architecture document section 12 remains generic frozen-target -> external evidence -> Reviewer -> Verifier -> candidate ready -> human promotion -> post-R3 PC0",
-    "V6 mutable diff from V5 evidence head changes exactly config/architecture/global-p0-r3-architecture-candidate.v1.json (+56/-0)",
-    "full PR diff from canonical main remains exactly 10 architecture/control/docs/evidence files",
-    "runtime files=0 across main...V6 mutable target",
-    "ownership/intersection audit=PASS on V6: added Design Brief metadata matches unchanged ownership manifest and transfers no truth ownership",
-    "R2 -> R3 transition audit=PASS on V6: H0_1_PASS + C22 MAIN_INTEGRATED + runtime slot RELEASED; NX.C1 remains post-R3 gated",
-    "Project Control exact mutable run=31588502186/#311 SUCCESS",
-    "exact mutable Project Control synthetic PR merge tree=f490440197bf25cc16eaff63b74e8655742bdf45 equals V6 target tree=f490440197bf25cc16eaff63b74e8655742bdf45",
-    "exact mutable standard PC0=YELLOW/NON_RED",
-    "exact mutable directional PC0=YELLOW/NON_RED",
-    "critical_cross_branch_overlap=0",
-    "G -> ECO=YELLOW WATCH_HIT ADVISORY 12 paths; current_r3_blocker=false",
-    "CH -> NX=YELLOW WATCH_HIT BLOCK 2 paths; future NX dependency gate; current_r3_blocker=false",
-    "ITEM=STABLE_CANONICAL_FOUNDATION",
-    "WT -> existing M0 atomic commit; no second coordinator",
-    "WQ -> no canonical store",
-    "WB -> no authority and no development scheduling",
-    "RF -> no authority routing",
-    "TF -> no work/development scheduling",
-    "V0=COMPOSITION_CONSUMER_NOT_CANONICAL_TRUTH_OWNER",
-    "H0.3=DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER",
-    "ECO=ADVISORY_RESEARCH",
-    "ECON=RESERVED_FUTURE_ECONOMY",
-    "Reviewer=PENDING_ON_V6",
-    "Verifier=PENDING_ON_V6",
-    "Human promotion=ABSENT"
+  "rank_moves": [
+    "No R3 rank move is authorized by this final-gate control-record repair.",
+    "R3_REFRESHED_CANDIDATE_READY = NO until durable Reviewer, Verifier and Director stages complete and the subsequent gate sequence is satisfied."
   ],
-  "canonical_truth_changed": false,
-  "architecture_ownership_changed": false,
-  "focused_validation": "PASS",
-  "full_regression": "NOT_REQUIRED",
-  "pc0": "NON_RED",
-  "directional_pc0": "NON_RED",
-  "production_diff_summary": "V6 repairs only R3 Design Brief contract completeness. The mutable V6 commit changes exactly the existing architecture candidate JSON and adds the five missing review-policy fields plus an explicit mechanical contract check in validation_plan; no accepted R3 ownership or lifecycle semantics are redesigned. Mechanical contract proof is 11 required / 11 present / 0 missing / 0 unexpected contract-breaking fields. Exact-target Project Control run 31588502186/#311 succeeded with standard and directional YELLOW/NON_RED, critical overlap 0, expected G->ECO advisory 12-path and CH->NX future-gate 2-path findings, and runtime files 0 across the full 10-file PR surface.",
-  "remaining_risks": [
-    "Independent Reviewer=PENDING against exact frozen mutable V6 head f78847624a9016d1e8ed39c12b5291d91037ea53; historical V5 FIX_REQUIRED and R3-R-003 do not authorize or decide V6.",
-    "Independent Verifier=PENDING against the same exact V6 frozen target and must not run before Reviewer PASS.",
-    "Human promotion=ABSENT; GLOBAL_ARCHITECTURE_PROMOTION remains a separate CRITICAL human gate.",
-    "CH -> NX remains a future globally blocking dependency for NX source acceptance and requires fresh revalidation in the H0.2/NX.C1 epoch; it is not a current R3 blocker.",
-    "G -> ECO remains advisory/non-global-blocking and is not a current R3 blocker."
-  ],
-  "required_fixes": [],
-  "rank_up_moves": [
-    "Run a NEW SESSION R as INDEPENDENT R3 REVIEWER, STRICT READ-ONLY from scratch against exact V6 target f78847624a9016d1e8ed39c12b5291d91037ea53.",
-    "Only after new Reviewer PASS, run a NEW SESSION V as INDEPENDENT R3 VERIFIER, READ-ONLY against the same exact V6 target f78847624a9016d1e8ed39c12b5291d91037ea53.",
-    "Only after Reviewer+Verifier PASS may a Director perform the consistency/gate check and the package advance toward R3_REFRESHED_CANDIDATE_READY; human GLOBAL_ARCHITECTURE_PROMOTION remains separate."
+  "sibling_impacts": [
+    "H0.2 / NX.C1 remain NOT STARTED.",
+    "H0.3, V0, G9, TS0.4 and T2.0 remain untouched and unauthorized by this external control/evidence layer."
   ],
   "evidence_gaps": [
-    "Independent Reviewer=PENDING on V6.",
-    "Independent Verifier=PENDING on V6.",
-    "Director consistency/gate check=PENDING after Reviewer+Verifier PASS.",
-    "Human promotion=ABSENT."
+    "Independent Reviewer durable re-attestation is pending.",
+    "Independent Verifier durable re-attestation is pending.",
+    "Director final gate is pending.",
+    "Human GLOBAL_ARCHITECTURE_PROMOTION decision is not taken."
   ],
   "review_verdict": "INSUFFICIENT_EVIDENCE"
 }
