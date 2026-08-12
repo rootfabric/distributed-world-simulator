@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology_research_roadmap.v1",
-  "revision": "ECO-R51-2026-08-13",
+  "revision": "ECO-R52-2026-08-13",
   "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
   "control_plane_revision": "PC0-2026-08-10-R1",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_AUTHORIZED",
+  "status": "RESEARCH_ONLY_ACTIVE_EVO1_P2_8_CANDIDATE",
   "north_star_doc": "docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md",
   "central_route_doc": "docs/future_features/evolutionary_ecology/ECO_CENTRAL_ROUTE_RU.md",
   "current_checkpoint": "ECO.EVO1/P2.8",
-  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / IMPLEMENT",
+  "current_step": "P2.8 Deterministic Save/Restart Plant World Proof / Exact Windows Canonical Gate",
   "last_accepted_step": "ECO.EVO1/P2.7 Lineage Divergence / Speciation Candidate Diagnostics",
   "mission": "Build a standalone evolutionary ecosystem that grows persistent plant and later multi-trophic ecology from landscape, resources, competition and history, then transfers and continues the same ecology in the world simulator.",
   "execution_modes": ["INCUBATE_FAST", "BACKGROUND_COARSE", "LOCAL_ACTIVE"],
@@ -36,11 +36,17 @@
     "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
     "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
   },
-  "candidate_evidence": {},
+  "candidate_evidence": {
+    "p2_8_implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
+    "p2_8_checkpoint": "docs/checkpoints/ECO_EVO1_P2_8_DETERMINISTIC_SAVE_RESTART_PLANT_WORLD_CANDIDATE_RU.md",
+    "p2_8_validation": "validation/ecology/eco-evo1-p2-8-save-restart-validation.json",
+    "p2_8_runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
+    "p2_8_truth": "typed deterministic research checkpoint of complete regional plant-world state with absolute-year continuation, double cut 14/18, P2.6 result-hash equivalence and persisted P2.7 diagnostic evidence"
+  },
   "EVO0": {"name":"Plant Causal Ecology Foundation","status":"COMPLETE","selected_calibration":"UNITY"},
   "EVO1": {
     "name": "Autonomous Spatial Plant Ecosystem / Plant World Proof",
-    "status": "ACTIVE_P2_8_AUTHORIZED",
+    "status": "ACTIVE_P2_8_CANDIDATE",
     "acceptance": "NO_BIOME_SPECIES_TABLES_AND_MULTIPLE_CAUSALLY_EXPLAINABLE_PERSISTENT_COMMUNITIES",
     "steps": [
       {"id":"P2.1","name":"Seed Dispersal Kernel","status":"ACCEPTED"},
@@ -50,14 +56,14 @@
       {"id":"P2.5","name":"Disturbance + Recovery","status":"ACCEPTED"},
       {"id":"P2.6","name":"Long-Horizon Biogeography","status":"ACCEPTED"},
       {"id":"P2.7","name":"Lineage Divergence / Speciation Candidate Diagnostics","status":"ACCEPTED"},
-      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"AUTHORIZED_IMPLEMENTATION"}
+      {"id":"P2.8","name":"Deterministic Save/Restart Plant World Proof","status":"IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING"}
     ]
   },
-  "EVO2": {"status":"AFTER_EVO1"},
+  "EVO2": {"status":"BLOCKED_BY_EVO1_P2_8_ACCEPTANCE"},
   "EVO3": {"status":"AFTER_PLANT_WORLD_PROOF"},
   "EVO4": {"status":"AFTER_EVO2_EVO3_FOUNDATIONS"},
   "XFER": {"XFER0":{"status":"DESIGN_DURING_EVO"},"XFER1":{"status":"WAIT_CANONICAL_SIMULATOR_FOUNDATIONS"}},
   "LIVE": {"status":"DEFERRED_UNTIL_XFER1_AND_CANONICAL_FOUNDATIONS"},
   "PRES": {"status":"LOW_PRIORITY"},
-  "production_blockers": ["P2_8_EXACT_WINDOWS_ACCEPTANCE_REQUIRED_FOR_EVO1_CLOSURE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
+  "production_blockers": ["P2_8_EXACT_WINDOWS_ACCEPTANCE_REQUIRED_FOR_EVO1_CLOSURE","EVO2_REQUIRES_EVO1_P2_8_ACCEPTANCE","XFER1_REQUIRES_CANONICAL_G_ENV_MAT_WQ_SD_TF_CONTRACTS","LIVE_REQUIRES_CANONICAL_POP_LIFE_WB_NX_AUTHORITY_PERSISTENCE_AND_HARNESS_FRONTIER"]
 }

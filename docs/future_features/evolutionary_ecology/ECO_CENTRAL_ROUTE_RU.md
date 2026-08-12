@@ -1,6 +1,6 @@
 # ECO — Центральный маршрут развития ветки
 
-Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 AUTHORIZED`.
+Статус: `ACTIVE / RESEARCH_ONLY / EVO1 P2.8 IMPLEMENTED CANDIDATE / EXACT WINDOWS GATE`.
 
 Canonical North Star: `docs/future_features/evolutionary_ecology/ECO_EVOLUTIONARY_ECOSYSTEM_VISION_RU.md`.
 Machine roadmap: `config/ecology/eco-evolutionary-ecology-roadmap.v1.json`.
@@ -54,58 +54,96 @@ P2.6 Long-Horizon Biogeography ACCEPTED
    ↓
 P2.7 Lineage Divergence / Speciation Candidate Diagnostics ACCEPTED
    ↓
-P2.8 Deterministic Save/Restart Plant World Proof ← CURRENT
+P2.8 Deterministic Save/Restart Plant World Proof ← CURRENT CANDIDATE
+   ↓ PASS
+EVO1 COMPLETE
+   ↓
+post-EVO1 route resolution: EVO2 + XFER0
 ```
 
-## P2.7 accepted result
+## P2.8 implementation
 
-Exact Windows Godot `4.7.1.stable.double.custom_build.a13da4feb` produced:
+Implementation head: `f7147082e0ca1e8913885b8ad47d76dc9b086416`.
+
+P2.8 introduces a research-only typed checkpoint for the complete Plant World state. It does not change accepted P2.7/P2.6 ecology mechanics.
+
+### Strong semantic equivalence gate
+
+The new stateful persistence driver mirrors accepted P2.6 annual orchestration using accepted helpers/contracts. Before testing restart it must reproduce the exact uninterrupted P2.6 `result_hash` for the same 30-year disturbed mainland/near/far scenario.
+
+Then the same world follows:
 
 ```text
-aggregate_hash=7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe
-candidate=true
-connected=false
-similar=false
-recent=false
-split_age=25
-isolation=1.0
-connection=0.0
-genome=0.473241998529
-ecology=0.130666666667
+0 -> 14 -> SAVE A -> RESTORE -> 18 -> SAVE B -> RESTORE -> 30
 ```
 
-Both fresh-process probes reproduced the exact aggregate. P2.7 therefore establishes a deterministic, falsifiable divergence-diagnostic layer while keeping `canonical_species_declared=false`.
+and must end with exactly the same:
 
-## P2.8 objective
+- P2.6 result hash;
+- final adult/seed-bank state hash;
+- migration and disturbance conservation;
+- P2.7 divergence-diagnostic payload hash.
 
-P2.8 is the final EVO1 proof. It must establish that a complete autonomous Plant World state can cross a process boundary without changing ecology semantics.
+### Why years 14 and 18
 
-The proof must preserve and validate:
+Cut A occurs before years 15..18 westward transport + severe FAR events. Therefore future schedules must survive serialization.
+
+Cut B occurs after all severe events but before eastward transport resumes at year 19. Therefore accumulated event/history truth must survive serialization.
+
+Absolute `current_year` is persisted. Deterministic emission/reproduction/event keys never restart at year 1.
+
+### Checkpoint integrity
+
+The checkpoint has typed JSON encoding for Godot values plus:
 
 ```text
-absolute simulation year
-patch definitions + environments
-adult cohort truth
-seed-bank cohort truth
-strategies / genome + recruitment checksums
-source patch set
-transport schedule
-future disturbance schedule
-regional history and transition history
-migration/disturbance accounting
-lineage ancestry + divergence observations/diagnostics
+world_hash
+evidence_hash
+checkpoint_hash
 ```
 
-The canonical comparison is:
+Dictionary hashing is canonical/sorted and serialization uses full float precision. A controlled mutation of the persisted P2.7 evidence hash must be rejected rather than repaired or regenerated.
+
+### Fresh-process gate
+
+Acceptance writes year-14 state to `user://eco_evo1_p2_8_plant_world_checkpoint.json`.
+
+Fresh process A and B independently read that file, continue through year 18, serialize/restore again, finish year 30 and must reproduce the exact acceptance aggregate and result hash.
+
+### Ownership boundary
+
+This is research persistence semantics, not production persistence infrastructure. No claim is made over durability backend, transactions, authority, networking, canonical Time Fabric, canonical Spatial Domain Fabric or species taxonomy.
+
+## Exact Windows gate
+
+```powershell
+cd C:\Godot\lunar-world-eco-evolutionary-ecology
+
+git pull
+
+$Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+
+.\RUN_ECO_EVO1_P2_8_TESTS.ps1 -GodotPath $Godot
+```
+
+Runner is fail-closed:
 
 ```text
-uninterrupted run 1..30
-        ==
-run 1..K -> serialize -> validate -> deserialize in fresh process -> continue K+1..30
+parser/preload preflight
+accepted P2.7 full regression
+P2.8 acceptance / disk checkpoint creation
+fresh process replay A
+fresh process replay B
+aggregate + P2.6 result equality
 ```
 
-Deterministic event/reproduction keys must continue to use absolute year. Restart is not allowed to reset time to year 1 or regenerate ecology from presentation/biome labels.
+Until PASS:
 
-P2.8 remains research persistence semantics only. It does not claim production persistence durability, transactions, authority or canonical Time/Spatial ownership.
+```text
+P2.8 = IMPLEMENTED_CANDIDATE
+P2.8 != ACCEPTED
+EVO1 != COMPLETE
+EVO2 = BLOCKED
+```
 
-Current resolver: `IMPLEMENT EVO1/P2.8 DETERMINISTIC SAVE/RESTART PLANT WORLD PROOF`.
+Current resolver: `RUN EVO1/P2.8 EXACT WINDOWS DETERMINISTIC SAVE/RESTART PLANT WORLD GATE`.

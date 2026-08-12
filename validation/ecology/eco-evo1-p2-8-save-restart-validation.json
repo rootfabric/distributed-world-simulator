@@ -1,0 +1,71 @@
+{
+  "schema": "distributed_world_simulator.ecology.evo1_p2_8_save_restart_validation.v1",
+  "revision": "ECO-EVO1-P2.8-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
+  "status": "IMPLEMENTED_CANDIDATE_EXACT_WINDOWS_PENDING",
+  "scope": "RESEARCH_ONLY_EVO1",
+  "parent": {
+    "checkpoint": "ECO.EVO1/P2.7",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
+  },
+  "truth": {
+    "absolute_time": "current_year is persisted and deterministic keys continue with absolute year after restore",
+    "patch_truth": "patch definitions + EnvironmentSample + Rect2 geometry persisted as research inputs",
+    "population_truth": "adult cohorts and seed-bank cohorts persisted directly; no per-plant reconstruction",
+    "strategy_truth": "PlantGenome and P2.2 recruitment traits persisted with accepted checksums",
+    "regional_truth": "history, occupancy, transition, migration and disturbance logs + cumulative accounting persisted",
+    "diagnostic_truth": "accepted P2.7 divergence result persisted as diagnostic evidence; no species identity declared",
+    "format": "typed JSON envelope with full float precision and canonical order-independent integrity hashing",
+    "production_boundary": "research persistence proof only; no production durability/transactions/authority claim"
+  },
+  "controlled_design": {
+    "total_years": 30,
+    "cut_a_year": 14,
+    "cut_b_year": 18,
+    "cut_a_meaning": "before westward transport and severe FAR disturbance window",
+    "cut_b_meaning": "after four severe FAR events, before eastward transport resumes",
+    "fresh_process_checkpoint": "user://eco_evo1_p2_8_plant_world_checkpoint.json",
+    "baseline": "accepted-P2.6-equivalent disturbed 30-year biogeography run",
+    "required_equality": "P2.6 baseline result_hash == stateful uninterrupted result_hash == double-save/restart result_hash"
+  },
+  "required_properties": [
+    "P2_7_PARENT_HASH_UNCHANGED",
+    "STATEFUL_UNINTERRUPTED_MATCHES_P2_6_RESULT_HASH",
+    "SAVE_AT_YEAR_14_RESTORES_WITH_ABSOLUTE_YEAR",
+    "FUTURE_DISTURBANCE_SCHEDULE_SURVIVES_CUT_A",
+    "SAVE_AT_YEAR_18_PRESERVES_ACCUMULATED_EVENT_HISTORY",
+    "DOUBLE_RESTART_FINAL_RESULT_HASH_EQUALS_UNINTERRUPTED",
+    "FINAL_ADULT_AND_SEED_BANK_STATE_HASH_EQUALS_UNINTERRUPTED",
+    "P2_7_DIVERGENCE_DIAGNOSTICS_HASH_PRESERVED",
+    "PATCH_STRATEGY_TRANSPORT_AND_DISTURBANCE_CONFIG_PRESERVED",
+    "REGIONAL_HISTORY_TRANSITIONS_MIGRATION_DISTURBANCE_LOGS_PRESERVED",
+    "MIGRATION_CONSERVATION_PRESERVED",
+    "DISTURBANCE_CONSERVATION_PRESERVED",
+    "CHECKPOINT_WORLD_EVIDENCE_AND_ENVELOPE_HASHES_VALIDATED",
+    "TAMPERED_JSON_VALID_CHECKPOINT_REJECTED_FAIL_CLOSED",
+    "FRESH_PROCESS_DISK_RESTORE_A_AND_B_MATCH_ACCEPTANCE_AGGREGATE",
+    "NO_BIOME_REGENERATION",
+    "NO_SPECIES_ID_ASSIGNMENT",
+    "NO_ACCEPTED_P2_7_OR_EARLIER_SOURCE_MODIFICATION",
+    "NO_RUNTIME_PATH_MODIFICATION"
+  ],
+  "implementation_diff": {
+    "base": "f55d87a5bd5c45f98bbcb1180e73429b65f3b162",
+    "head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
+    "changed_files": 5,
+    "accepted_p2_7_or_earlier_sources_modified": false,
+    "runtime_paths_modified": false
+  },
+  "tests": {
+    "parser_preflight": true,
+    "acceptance": "tests/research/ecology/eco_evo1_p2_8_save_restart_acceptance.gd",
+    "restart": "tests/research/ecology/eco_evo1_p2_8_restart_replay_probe.gd",
+    "runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
+    "parent_runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1"
+  },
+  "local_sanity": "NO_EXACT_WINDOWS_PASS_CLAIMED_BEFORE_USER_GATE",
+  "decision": "CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_EVIDENCE",
+  "next_if_pass": "ECO.EVO1 COMPLETE; open post-EVO1 route resolution for EVO2 and XFER0"
+}
