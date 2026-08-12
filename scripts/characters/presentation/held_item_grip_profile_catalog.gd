@@ -30,7 +30,20 @@ func resolve(
 	var secondary_hand_rotation := Vector3(0.0, 0.0, 0.0)
 	var secondary_hand_scale := Vector3.ONE
 
-	if _contains_any(normalized_id, normalized_tags, ["flashlight", "torch", "lamp"]):
+	# The replica adapter maps canonical item/mount-base to `beacon_mount_base`.
+	# That id contains `beacon`, so the specific mount family must win before the
+	# generic beacon family or slot 2 incorrectly inherits beacon_pinch/one-hand.
+	if _contains_any(normalized_id, normalized_tags, ["mountbase", "fixturebase", "structuralbase"]):
+		profile_id = "mount_base_two_hand"
+		first_position = Vector3(0.0, 0.005, -0.205)
+		first_rotation = Vector3(-8.0, 8.0, 4.0)
+		third_position = Vector3(0.0, -0.055, -0.10)
+		third_rotation = Vector3(8.0, 0.0, 78.0)
+		two_hand_required = true
+		secondary_pose_id = "support_cradle"
+		secondary_anchor_position = Vector3(-0.20, 0.01, 0.01)
+		secondary_anchor_rotation = Vector3(0.0, 0.0, -8.0)
+	elif _contains_any(normalized_id, normalized_tags, ["flashlight", "torch", "lamp"]):
 		profile_id = "flashlight_forward"
 		first_position = Vector3(0.0, -0.005, -0.20)
 		first_rotation = Vector3(0.0, 0.0, 90.0)
@@ -42,20 +55,6 @@ func resolve(
 		first_rotation = Vector3(0.0, 0.0, 0.0)
 		third_position = Vector3(0.0, -0.045, -0.055)
 		third_rotation = Vector3(0.0, 0.0, 8.0)
-	elif _contains_any(normalized_id, normalized_tags, ["mountbase", "mount-base", "fixturebase", "structuralbase"]):
-		# The playable CH9.6 sandbox seeds item/mount-base into hotbar slot 2.
-		# Treat it as the bounded S4 two-hand demonstration object: the item itself
-		# remains canonical, while only the local presentation asks the left hand
-		# to occupy a secondary support anchor.
-		profile_id = "mount_base_two_hand"
-		first_position = Vector3(0.0, 0.005, -0.205)
-		first_rotation = Vector3(-8.0, 8.0, 4.0)
-		third_position = Vector3(0.0, -0.055, -0.10)
-		third_rotation = Vector3(8.0, 0.0, 78.0)
-		two_hand_required = true
-		secondary_pose_id = "support_cradle"
-		secondary_anchor_position = Vector3(-0.20, 0.01, 0.01)
-		secondary_anchor_rotation = Vector3(0.0, 0.0, -8.0)
 	elif _contains_any(normalized_id, normalized_tags, ["rifle", "carbine", "longgun", "twohand", "two-handed", "large_tool"]):
 		profile_id = "two_hand_long"
 		first_position = Vector3(0.015, -0.01, -0.22)
