@@ -9,7 +9,7 @@ var assertions := 0
 class FakeRuntime:
 	extends Node
 
-	var ready := true
+	var runtime_ready := true
 	var ownership_epoch := 7
 	var sent_frames: Array[Dictionary] = []
 	var item_graph_snapshot: Dictionary = {
@@ -23,7 +23,7 @@ class FakeRuntime:
 	}
 
 	func is_ready() -> bool:
-		return ready
+		return runtime_ready
 
 	func get_local_player_record() -> Dictionary:
 		return {"logical_player_id": "a", "ownership_epoch": ownership_epoch}
