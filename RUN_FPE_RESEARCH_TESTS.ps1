@@ -41,9 +41,6 @@ function Invoke-GodotCaptured {
     $PreviousNativePreference = if ($null -ne $NativePreference) { $NativePreference.Value } else { $null }
     $ExitCode = 1
     try {
-        # Windows PowerShell can surface native stderr as ErrorRecord objects.
-        # Keep them in the captured stream instead of letting $ErrorActionPreference=Stop
-        # abort before we can apply the explicit Godot fatal-marker policy below.
         $ErrorActionPreference = "Continue"
         if ($null -ne $NativePreference) {
             Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
@@ -80,10 +77,6 @@ function Get-FatalGodotMarker {
     return ""
 }
 
-# FPE is commonly exercised from worktrees that switch between long-lived
-# research/control branches. Godot resolves class_name dependencies through
-# .godot/global_script_class_cache.cfg. Refresh that cache before loading CH9.6
-# so a stale cache cannot make accepted classes appear missing.
 Write-Host "Refreshing Godot global script class cache" -ForegroundColor Cyan
 $Preflight = Invoke-GodotCaptured -Arguments @(
     "--headless",
@@ -106,6 +99,10 @@ $Tests = @(
     @{
         Path = "res://tests/characters/test_first_person_hotbar_network_adapter.gd"
         PassMarker = "FirstPerson hotbar nonblocking adapter: PASS"
+    },
+    @{
+        Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"
+        PassMarker = "FirstPersonEmbodiment performance gate: PASS"
     },
     @{
         Path = "res://tests/characters/test_first_person_embodiment_lab_load.gd"
