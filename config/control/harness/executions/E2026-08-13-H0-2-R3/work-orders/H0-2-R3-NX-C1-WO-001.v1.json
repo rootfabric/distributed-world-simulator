@@ -4,11 +4,11 @@
   "project_epoch": "E2026-08-13-H0-2-R3",
   "program": "NX",
   "goal_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-  "state": "PLANNED",
+  "state": "DISPATCHED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
   "branch": "feature/h0-2-nx-c1-owner-authority-r3",
-  "scope": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / registry generation 79 after canonical Project Control pinned-dependency repair. Reimplement only the minimal validated realtime owner-locomotion authorship profile, bounded server validation/client composition, remote snapshot reuse and same-revision optimistic item-presentation rollback required by NX.C1. Preserve server/domain authority, Item Graph truth, physics/render single-writer separation and existing persistence/ownership foundations. This PLANNED branch is control-only until explicit Director dispatch; no production/runtime mutation is authorized before DISPATCHED.",
+  "scope": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / registry generation 79 after canonical Project Control pinned-dependency repair. Reimplement only the minimal validated realtime owner-locomotion authorship profile, bounded server validation/client composition, remote snapshot reuse and same-revision optimistic item-presentation rollback required by NX.C1. Preserve server/domain authority, Item Graph truth, physics/render single-writer separation and existing persistence/ownership foundations. Exact-head HIGH pre-build review PASS has been recorded; DISPATCHED authorizes exactly one bounded runtime worker on this branch within the declared paths.",
   "allowed_paths": [
     "config/control/harness/executions/E2026-08-13-H0-2-R3/**",
     "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
@@ -122,7 +122,7 @@
   ],
   "design_brief": {
     "problem_statement": "Canonical main has server-predicted multiplayer foundations and accepted legacy evidence that owner-authoritative realtime locomotion removes local movement stutter, but the accepted M7 evidence lives on a heavily diverged FIX lineage and cannot be merged as production architecture. H0.2 must prove a minimal current-main implementation and the Harness HIGH-risk path without importing duplicate authority layers.",
-    "current_behavior": "Canonical R3 generation 79 main is 09714b6f2681e3b5cf3f2f9e28416cf9a7378304. Project Control now installs its canonical pinned Harness dependency before contract validation. Current networked gameplay remains server/domain authoritative and includes the existing M3/NX6 runtime, while the fresh H0.2 R3 branch contains control records only. Legacy M7 owner-authority runtime 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are evidence only, not merge bases or cherry-pick authorization.",
+    "current_behavior": "Canonical R3 generation 79 main is 09714b6f2681e3b5cf3f2f9e28416cf9a7378304. Project Control now installs its canonical pinned Harness dependency before contract validation. Current networked gameplay remains server/domain authoritative and includes the existing M3/NX6 runtime, while the fresh H0.2 R3 branch contains only reviewed control records at dispatch time. Legacy M7 owner-authority runtime 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are evidence only, not merge bases or cherry-pick authorization.",
     "desired_behavior": "Provide a selectable OWNER_AUTHORITATIVE_VALIDATED realtime locomotion authorship profile in which the local deterministic physics controller is the sole local body writer, the server validates owner/session/epoch/playable state and bounded movement before updating the canonical player record, remote players continue through snapshots/interpolation, ordinary accepted snapshots do not rewind the local owner, and same-revision item rejection rolls back presentation without moving Item Graph authority to the client.",
     "alternatives_considered": [
       "Merge or cherry-pick the historical M7 FIX6/FIX7/FIX8/FIX9/FIX10 lineage",
@@ -195,5 +195,5 @@
   "human_approval_required_for": [
     "RUNTIME_FEATURE_MERGE"
   ],
-  "notes": "PLANNED only. This branch may contain control/evidence records before dispatch, but production/runtime mutation is forbidden until an exact-head HIGH pre-build review PASS is durably recorded and the Director appends DISPATCHED. Runtime merge remains a Human gate."
+  "notes": "DISPATCHED after exact-head HIGH pre-build review PASS on 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 and Project Control run 31687497672 standard/directional NON_RED. Exactly one bounded runtime worker is authorized within allowed_paths. Runtime merge remains a Human gate."
 }
