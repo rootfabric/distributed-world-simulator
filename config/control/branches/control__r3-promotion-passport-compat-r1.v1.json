@@ -8,11 +8,11 @@
   "short_description": "Fail-closed Project Control compatibility repair for historical R2 Branch Passports across the Human-approved R3 canonical promotion boundary.",
   "purpose": "Permit only explicitly main-registry-allowlisted historical passport architecture revisions after canonical promotion while keeping every unlisted mismatch RED and without rewriting frozen R2 evidence.",
   "expected_outcome": "R3 promotion preflight can preserve accepted/preparation/research R2 provenance without globally weakening ARCHITECTURE_REVISION_MISMATCH; new post-promotion frontiers still require the canonical R3 revision.",
-  "current_stage": "R3 promotion Project Control compatibility repair implementation",
-  "stage_status": "IMPLEMENTED_CANDIDATE_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "Repair is isolated from canonical main and from the frozen R3 V9 candidate. It adds an explicit per-program historical revision allowlist contract, a compatibility facade over the byte-preserved PC0 core, and focused regression coverage. No main, runtime/domain, frozen branch, Human decision, Reviewer, Verifier or Director evidence is changed.",
+  "current_stage": "R3 promotion Project Control compatibility repair independent review",
+  "stage_status": "IMPLEMENTED_VALIDATED_AWAITING_INDEPENDENT_REVIEW",
+  "progress_note": "Control-only implementation head 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6 is validated. Project Control 31665234844/#339 completed SUCCESS with overall YELLOW/NON_RED on canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d, architecture R2, registry 78 and cross_branch_overlaps=[]. Focused compatibility regression uses live fetched branch passports and a synthetic R3 registry: G/ECO/T/CH/DOCTRINE/NX remain compatible only when their exact R2 revision is explicitly per-program allowlisted; removing G's allowlist restores ARCHITECTURE_REVISION_MISMATCH/RED. Existing ECO local RED remains advisory/non-global-blocking; directional G->ECO and CH->NX watches remain unchanged. No main, runtime/domain, frozen branch, Human decision, Reviewer, Verifier or Director evidence was changed.",
   "last_accepted_checkpoint": "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED",
-  "next_stage": "Run focused regression and Project Control on this repair branch, then obtain independent review of the control-semantics repair before consuming it in a new promotion preflight. Do not mutate main in this repair session.",
+  "next_stage": "Obtain a new independent review of exact implementation head 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6 and this lifecycle state. If PASS is durable, rerun the R3 promotion preflight using the reviewed compatibility repair as an input. Do not mutate main before that review.",
   "parent_branch_or_checkpoint": "canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + durable R3 V9 Human APPROVE_PROMOTION + failed promotion compatibility preflight",
   "base_commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
   "dependencies": [
@@ -48,7 +48,7 @@
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE",
-    "focused": "PENDING_CI",
+    "focused": "7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6",
     "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
   },
   "ownership_claims": [
