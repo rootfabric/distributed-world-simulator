@@ -83,6 +83,9 @@ jobs:
       - name: Run H0.2 machine checkpoint regression
         run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
 
+      - name: Run V0-S1 networked checkpoint regression
+        run: python3 -m unittest tests.harness.test_v0_s1_networked_checkpoint_contract
+
       - name: Run PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
 
