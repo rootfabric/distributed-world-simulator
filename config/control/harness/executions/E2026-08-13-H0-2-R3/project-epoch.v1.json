@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-08-13-H0-2-R3",
+  "base_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "registry_generation": 79,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-08-13T09:36:00Z",
+  "eligible_checkpoints": [
+    "H0_2_NX_C1_HIGH_RISK_PILOT"
+  ],
+  "status": "ACTIVE",
+  "decision": "CONTINUE"
+}
