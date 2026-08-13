@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.ecology.p4_1_production_region_state_validation.v1",
+  "revision": "ECO-P4.1-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_CONTRACT_PASS_FULL_REPOSITORY_GATE_PENDING",
+  "scope": "PRODUCTION_FACING_ECOLOGY_REGION_CONTRACT_ONLY",
+  "parent": {
+    "checkpoint": "ECO.P3.8",
+    "status_required": "ACCEPTED*",
+    "accepted_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
+    "kernel_blob": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e"
+  },
+  "candidate_blobs": {
+    "kernel": "b651d208abd17050367fed4541c92f58de0f3c3f",
+    "acceptance_test": "f1d607a08c2c3f35f5a582557adcd3e2b9a60ab3",
+    "runner": "1360e458a7c71a4c05fa4f108db113bfa6d78726"
+  },
+  "contract": {
+    "state_owner_boundary": "one immutable-by-contract ecology state wrapper per canonical production region identity",
+    "region_id": "ASCII canonical identifier token; 1..256 chars; [A-Za-z0-9._:-] only",
+    "ecology_generation": "exact integer mirror of embedded validated P3.8 generation",
+    "last_simulated_world_time": "finite non-negative canonical float; metadata only in P4.1",
+    "embedded_state": "deep-copied validated P3.8 semantic state, not P3.8 checkpoint bytes",
+    "hashing": "SHA-256 of fixed-order JSON scalar vector; nested P3 state committed through validated P3.8 state_hash",
+    "mutation_boundary": "create and extract use deep copies; caller aliasing cannot mutate stored region state",
+    "rng": "no global RNG consumption",
+    "not_authorized": ["ecology tick cadence", "offline catch-up", "production file/database persistence", "server/region ownership or handoff", "network replication/client read model", "P3.8 research checkpoint codec as production save format"]
+  },
+  "attached_godot_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "contract_harness": {
+      "parent_boundary": "strict API-compatible P3.8 harness; real P3.8 acceptance remains separately frozen/accepted",
+      "process_runs": 3,
+      "assertions_per_run": 47,
+      "all_process_logs_byte_identical": true,
+      "fresh_process_log_sha256": "dd0956c3d2618358ec5987f1b9b2ddb6a411f8e9f55d3e2336379f0e17ff4315",
+      "supplemental_harness_aggregate_hash": "a4b97f3dd0e8508683e02b911362141e3d9d0204d06d87c56e7aa17fdf1623ce"
+    },
+    "real_parent_hash_vector_recheck": {
+      "authority": "exact P4.1 hashing semantics executed on attached Godot using frozen accepted P3.8 semantic state hashes",
+      "p3_8_initial_state_hash": "6070494e77828f4e25a00eed9695de9e87fdf94e472f5018d660a7c20b15d7fb",
+      "p3_8_generation_5_state_hash": "07f6ecaa00d508b87042948a23cf4e0eaa600d79a8229e16b859c461dada509d",
+      "expected_region_zero_hash": "2d7fc8f595dbe5e55e29a0dca1256a9f4ccebe4176ec8d53c9bf66671ac3b7b4",
+      "expected_region_cut_hash": "fbc2072e388b2c9b02ff5755815821391bcf23b97cab35a5a8b1452bc4e5999c",
+      "expected_other_region_hash": "d4f0cd4890678747ef2f2399bcfd500282a3840af43ea37913ee78c39b17c3e5",
+      "expected_full_repository_aggregate_hash": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717"
+    },
+    "real_fixture_parser_preload": "PASS_WITH_API_COMPATIBLE_DEPENDENCY_STUBS_ONLY_NOT_FULL_REPOSITORY_RUNTIME"
+  },
+  "covered_properties": ["P3_8_ACCEPTED_AGGREGATE_PINNED", "VALIDATED_P3_8_STATE_REQUIRED", "REGION_ID_CANONICAL", "GENERATION_MIRRORS_P3_8", "FINITE_NON_NEGATIVE_WORLD_TIME", "REGION_IDENTITY_HASHED", "WORLD_TIME_HASHED", "P3_STATE_HASHED_BY_P3_8_STATE_HASH", "TOP_LEVEL_DICTIONARY_ORDER_INDEPENDENT", "CREATE_DEEP_COPY_BOUNDARY", "EXTRACT_DEEP_COPY_BOUNDARY", "EXACT_FIELD_SET_FAIL_CLOSED", "TAMPER_REJECTION", "GLOBAL_RNG_NOT_CONSUMED"],
+  "full_repository_gate": {
+    "runner": "RUN_ECO_P4_1_TESTS.ps1",
+    "requires_exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "requires_parent_status": "P3.8 ACCEPTED*",
+    "requires_exact_parent_kernel_blob": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e",
+    "expected_aggregate_hash": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717",
+    "current_authorization": "READY_AFTER_CANDIDATE_PUBLICATION"
+  },
+  "decision": "IMPLEMENT_P4_1_CANDIDATE; DO_NOT_OPEN_P4_2_UNTIL_FULL_REPOSITORY_GATE_AND_ACCEPTANCE"
+}
