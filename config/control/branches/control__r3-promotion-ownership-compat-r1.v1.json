@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "control/r3-promotion-ownership-compat-r1",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "CONTROL_COMPATIBILITY_REPAIR",
+  "short_description": "Fail-closed historical ownership compatibility repair layered over the independently accepted R3 historical architecture-passport compatibility auditor.",
+  "purpose": "Allow immutable historical R2 passports to preserve ownership claims that were canonical at their reviewed historical identity only when an exact main-owned per-program/per-foundation R2-to-R3 ownership transition is present.",
+  "expected_outcome": "The Human-approved R3 promotion path can retain historically correct T ownership provenance for WORLD_QUERY_FABRIC and WORLD_TRANSACTION_MODEL without weakening FOUNDATION_OWNERSHIP_CONFLICT for any new, refreshed, copied, unrelated or ambiguous passport.",
+  "current_stage": "R3 promotion historical ownership compatibility repair",
+  "stage_status": "IMPLEMENTED_VALIDATED_AWAITING_NEW_INDEPENDENT_REVIEW",
+  "progress_note": "The failed R3 promotion preflight exposed T historical ownership claims WORLD_QUERY_FABRIC=P1_FUTURE and WORLD_TRANSACTION_MODEL=P0. Both claims are canonical in R2 ownership blob 0cebf594ac7900292318d7533e4439cc7f3764d6 at main ce40dd075045078ed70924f8d5a1011eb3eff03d, while frozen reviewed R3 ownership canonicalizes them to WQ and WT. The previously independently accepted architecture-compatibility layer remains byte-preserved as blob 0f27934968960da14c44d7fd66f78b6d364e809b over unchanged legacy core blob 3d68d65e58aff37ab04c971c942efb815fbd374f. The new ownership layer is additive, exact and fail-closed. Implementation head b704990af99e280efbab259fc4613b08f7fae7ae passed 64/64 compatibility tests in Project Control 31673064543/#349, including a live disposable gen79/R3 projection using fresh G/ECO/T/CH/DOCTRINE/NX passport identities, exact frozen R3 ownership blob ad2aaac2c5f942b9748b5cf391038a7ce122d073, exactly the two T transitions, projected standard NON_RED, projected directional NON_RED, and fail-closed negative mutations. Current-R2 standard and directional Project Control are also NON_RED. Promotion was NOT PERFORMED; main remains R2/gen78; Human approval was not reopened; runtime/domain delta is 0.",
+  "last_accepted_checkpoint": "R3 architecture-passport compatibility independently accepted @ 53eed6dbfab38b95cdbac3bc8a621590c20a1208; subsequent promotion preflight failed closed on historical T ownership transition",
+  "next_stage": "NEW INDEPENDENT HISTORICAL OWNERSHIP-COMPATIBILITY REVIEW. Do not retry promotion preflight until that review passes and this branch lifecycle is rolled forward after PASS.",
+  "parent_branch_or_checkpoint": "control/r3-promotion-passport-compat-r1 @ 53eed6dbfab38b95cdbac3bc8a621590c20a1208 + canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + preserved durable R3 V9 Human authorization",
+  "base_commit": "53eed6dbfab38b95cdbac3bc8a621590c20a1208",
+  "dependencies": [
+    "GLOBAL-P0-2026-08-10-R2",
+    "GLOBAL-P0-2026-08-12-R3-REFRESH-R1_CANDIDATE",
+    "R3_V9_HUMAN_APPROVE_PROMOTION_DURABLE",
+    "R3_HISTORICAL_ARCHITECTURE_PASSPORT_COMPATIBILITY_INDEPENDENT_PASS",
+    "R3_V9_PROMOTION_PREFLIGHT_HISTORICAL_T_OWNERSHIP_TRANSITION_DISCOVERED"
+  ],
+  "owned_paths": [
+    ".github/workflows/project-control.yml",
+    "config/control/project-control-policy.v1.json",
+    "scripts/control/project_control.py",
+    "scripts/control/project_control_architecture_compat.py",
+    "tests/harness/test_project_control_historical_ownership_compatibility.py",
+    "tests/harness/test_project_control_proposed_r3_ownership_projection.py",
+    "config/control/branches/control__r3-promotion-ownership-compat-r1.v1.json"
+  ],
+  "watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/harness/**"
+  ],
+  "critical_watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/architecture-ownership-r3-candidate.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    "tests/harness/test_project_control_historical_ownership_compatibility.py",
+    "tests/harness/test_project_control_proposed_r3_ownership_projection.py",
+    "scripts/control/project_control.py",
+    "scripts/control/project_control_architecture_compat.py",
+    "config/control/project-control-policy.v1.json",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "b704990af99e280efbab259fc4613b08f7fae7ae",
+    "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "DEVELOPMENT_HARNESS",
+      "claimed_owner": "MAIN/HARNESS",
+      "scope": "This repair changes Project Control historical compatibility semantics only; it does not transfer Harness, architecture, runtime, domain or frozen branch ownership."
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "WORLD_QUERY_FABRIC",
+    "WORLD_TRANSACTION_MODEL",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "blockers": [
+    "NEW_INDEPENDENT_HISTORICAL_OWNERSHIP_COMPATIBILITY_REVIEW_REQUIRED"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}
