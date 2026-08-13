@@ -46,7 +46,7 @@
       ],
       "target_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
       "project_checkpoint": "NX_SOURCE_ACCEPTED",
-      "reason": "The second pilot must prove the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. Planning may begin only from canonical R3 generation 79; runtime branch creation requires a fresh Work Order plus explicit dispatch, and source acceptance requires CH->NX directional dependency revalidation."
+      "reason": "The second pilot must prove the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. A fresh exact-main planning branch may durably hold the epoch, Work Order and pre-build review, but production/runtime mutation on that branch requires explicit Director dispatch; source acceptance still requires CH->NX directional dependency revalidation."
     },
     {
       "id": "CONSTRUCTION_TRAIN",
