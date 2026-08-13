@@ -3,6 +3,7 @@ extends "res://scripts/characters/presentation/skinned_resource_configurable_two
 
 const ProfileType = preload("res://scripts/characters/presentation/first_person_hand_asset_profile.gd")
 const ProfiledProviderType = preload("res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider_fix2.gd")
+const NativeProfiledProviderType = preload("res://scripts/characters/presentation/native_skeleton_profiled_first_person_hand_visual_provider.gd")
 
 var _hand_asset_profile_by_hand: Dictionary = {}
 
@@ -66,6 +67,7 @@ func get_hand_asset_profile_report() -> Dictionary:
 	for hand in [HAND_LEFT, HAND_RIGHT]:
 		var entry := Dictionary(_hand_asset_profile_by_hand.get(hand, {}))
 		var profile := Dictionary(entry.get("profile", {}))
+		var retarget := Dictionary(profile.get("retarget", {}))
 		configured[hand] = {
 			"configured": not entry.is_empty(),
 			"profile_id": String(profile.get("profile_id", "")),
@@ -74,12 +76,15 @@ func get_hand_asset_profile_report() -> Dictionary:
 			"scene_path": String(entry.get("scene_path", "")),
 			"license_spdx": String(Dictionary(profile.get("license", {})).get("spdx", "")),
 			"status": String(profile.get("status", "")),
+			"runtime_driver": String(retarget.get("runtime_driver", "")),
+			"rest_space_policy": String(retarget.get("rest_space_policy", "")),
 		}
 	return {
 		"schema": "planet_simulator.fpe_profiled_hand_asset_config.v1",
 		"configured": configured,
 		"portable_profiles_supported": true,
 		"drop_in_json_registration": true,
+		"native_skeleton_pose_driver_supported": true,
 		"presentation_only": true,
 		"owns_item_state": false,
 		"owns_network_state": false,
@@ -98,10 +103,17 @@ func _install_hand_rig(hand: String, hand_root: Node3D, viewmodel_layer: int) ->
 	if not scene_value is PackedScene or not profile_value is Dictionary:
 		return _failure("FPE_HAND_PROFILE_RUNTIME_CONFIG_INVALID", {"hand_id": hand})
 
-	var provider = ProfiledProviderType.new()
+	var profile := Dictionary(profile_value)
+	var retarget := Dictionary(profile.get("retarget", {}))
+	var runtime_driver := String(retarget.get("runtime_driver", "")).strip_edges().to_upper()
+	var provider
+	if runtime_driver == ProfileType.DRIVER_NATIVE_SKELETON_POSE:
+		provider = NativeProfiledProviderType.new()
+	else:
+		provider = ProfiledProviderType.new()
 	var provider_setup: Dictionary = provider.setup_profiled(
 		scene_value as PackedScene,
-		Dictionary(profile_value),
+		profile,
 		String(config.get("profile_path", "")),
 		String(config.get("scene_path", ""))
 	)
@@ -129,7 +141,8 @@ func _install_hand_rig(hand: String, hand_root: Node3D, viewmodel_layer: int) ->
 		"hand_id": hand,
 		"rig": rig.create_report(),
 		"profiled_hand_asset": true,
-		"profile_id": String(Dictionary(profile_value).get("profile_id", "")),
+		"profile_id": String(profile.get("profile_id", "")),
+		"runtime_driver": runtime_driver,
 	})
 
 
