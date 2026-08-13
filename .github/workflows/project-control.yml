@@ -20,6 +20,21 @@ jobs:
       - name: Fetch all branch refs
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
 
+      - name: Install pinned Harness dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+
+          required = Path("scripts/harness/requirements.txt").read_text(encoding="utf-8").strip()
+          expected = required.split("==", 1)[1]
+          actual = importlib.metadata.version("jsonschema")
+          if actual != expected:
+              raise SystemExit(f"PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}")
+          print(f"PINNED DEPENDENCY OK: jsonschema=={actual}")
+          PY
+
       - name: Validate control candidate syntax
         run: |
           python3 -m py_compile \
