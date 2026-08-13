@@ -1,299 +1,236 @@
 #!/usr/bin/env python3
-"""PC0 project control auditor with fail-closed architecture passport compatibility.
+"""PC0 outer auditor for fail-closed historical ownership compatibility.
 
-The legacy auditor implementation remains byte-preserved in
-project_control_core.py. Exact canonical architecture equality is accepted
-without exception metadata. A historical architecture mismatch is accepted only
-when the main-owned policy explicitly enables the compatibility contract, the
-exact historical revision is allowlisted for the audited program, and exactly
-one immutable historical passport identity matches observed Git evidence.
+The accepted architecture-compatibility auditor remains byte-preserved in
+project_control_architecture_compat.py. This module only filters exact historical
+FOUNDATION_OWNERSHIP_CONFLICT findings after that preserved layer has proved one
+immutable historical passport identity.
 """
 
 from __future__ import annotations
 
-import re
+import json
+from copy import deepcopy
 from typing import Any
 
-import project_control_core as _core
-from project_control_core import *  # noqa: F401,F403
+import project_control_architecture_compat as _arch
+from project_control_architecture_compat import *  # noqa: F401,F403
 
-_ORIGINAL_AUDIT_PROGRAM = _core.audit_program
-_COMPATIBILITY_MODE = "EXPLICIT_PER_PROGRAM_HISTORICAL_ALLOWLIST"
-_REVISION_REGISTRY_FIELD = "historical_passport_architecture_revisions"
-_IDENTITY_REGISTRY_FIELD = "historical_passport_identities"
-_REQUIRED_IDENTITY_FIELDS = (
+_core = _arch._core
+_ORIGINAL_AUDIT_PROGRAM = _arch._ORIGINAL_AUDIT_PROGRAM
+_ARCHITECTURE_AUDIT_PROGRAM = _arch.audit_program
+
+_OWNERSHIP_COMPAT_MODE = "EXPLICIT_PER_PROGRAM_HISTORICAL_OWNERSHIP_TRANSITIONS"
+_OWNERSHIP_TRANSITION_REGISTRY_FIELD = "historical_passport_ownership_transitions"
+_ARCHITECTURE_COMPAT_PREREQUISITE = "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED"
+_HISTORICAL_OWNERSHIP_REVISION = "GLOBAL-P0-2026-08-10-R2"
+_HISTORICAL_OWNERSHIP_COMMIT = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+_HISTORICAL_OWNERSHIP_PATH = "config/control/architecture-ownership.v1.json"
+_HISTORICAL_OWNERSHIP_BLOB = "0cebf594ac7900292318d7533e4439cc7f3764d6"
+_REQUIRED_TRANSITION_FIELDS = (
     "program",
-    "branch",
-    "passport_path",
     "architecture_revision",
-    "pinned_head_sha",
-    "passport_blob_sha",
+    "foundation",
+    "historical_owner",
+    "canonical_owner",
 )
-_FULL_GIT_SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
-
-
-def _is_full_git_sha(value: Any) -> bool:
-    return isinstance(value, str) and bool(_FULL_GIT_SHA_RE.fullmatch(value))
-
-
-def _compatibility_result(
-    *,
-    compatible: bool,
-    mode: str,
-    passport_revision: str,
-    canonical_revision: str,
-    allowlist_field: Any = None,
-    identity_field: Any = None,
-    allowed_historical_revisions: list[str] | None = None,
-    matching_historical_identities: int = 0,
-    observed_head_sha: str = "",
-    observed_passport_blob_sha: str = "",
-) -> dict[str, Any]:
-    return {
-        "compatible": compatible,
-        "mode": mode,
-        "passport_revision": passport_revision,
-        "canonical_revision": canonical_revision,
-        "allowlist_field": allowlist_field,
-        "identity_field": identity_field,
-        "allowed_historical_revisions": allowed_historical_revisions or [],
-        "matching_historical_identities": matching_historical_identities,
-        "observed_head_sha": observed_head_sha,
-        "observed_passport_blob_sha": observed_passport_blob_sha,
-    }
-
-
-def evaluate_passport_architecture_compatibility(
-    central: dict[str, Any],
-    registry: dict[str, Any],
-    passport: dict[str, Any],
-    policy: dict[str, Any],
-    *,
-    audited_program: str = "",
-    observed_branch: str = "",
-    observed_passport_path: str = "",
-    observed_head_sha: str = "",
-    observed_passport_blob_sha: str = "",
-) -> dict[str, Any]:
-    """Return a deterministic fail-closed architecture compatibility decision.
-
-    Exact canonical equality requires no historical exception. A mismatch is
-    compatible only when both the explicit historical revision allowlist and
-    one exact immutable historical identity match the observed branch head and
-    passport blob. Missing or malformed policy, registry identity, or Git
-    evidence fails closed.
-    """
-    canonical_raw = registry.get("architecture_revision")
-    passport_raw = passport.get("architecture_revision")
-    canonical_revision = canonical_raw if isinstance(canonical_raw, str) else ""
-    passport_revision = passport_raw if isinstance(passport_raw, str) else ""
-
-    if canonical_revision and passport_revision == canonical_revision:
-        return _compatibility_result(
-            compatible=True,
-            mode="EXACT_CANONICAL_REVISION",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-        )
-
-    compatibility_policy = policy.get("passport_architecture_compatibility")
-    if not isinstance(compatibility_policy, dict):
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_POLICY_NOT_ENABLED",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-        )
-
-    mode = compatibility_policy.get("mode")
-    if mode != _COMPATIBILITY_MODE:
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_POLICY_NOT_ENABLED",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-        )
-
-    revision_field = compatibility_policy.get("central_registry_field")
-    if not isinstance(revision_field, str) or revision_field != _REVISION_REGISTRY_FIELD:
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_REVISION_POLICY_FIELD_INVALID",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-        )
-
-    identity_field = compatibility_policy.get("historical_identity_registry_field")
-    if not isinstance(identity_field, str) or identity_field != _IDENTITY_REGISTRY_FIELD:
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_IDENTITY_POLICY_FIELD_INVALID",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-        )
-
-    allowed_raw = central.get(revision_field)
-    if (
-        not isinstance(allowed_raw, list)
-        or any(not isinstance(value, str) or not value for value in allowed_raw)
-    ):
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_MALFORMED_ALLOWLIST",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-        )
-
-    allowed = list(dict.fromkeys(allowed_raw))
-    if not passport_revision or passport_revision not in allowed:
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_NOT_ALLOWLISTED",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-            allowed_historical_revisions=allowed,
-        )
-
-    identities_raw = central.get(identity_field)
-    if not isinstance(identities_raw, list) or any(not isinstance(item, dict) for item in identities_raw):
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_MALFORMED_IDENTITY_LIST",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-            allowed_historical_revisions=allowed,
-        )
-
-    identities: list[dict[str, Any]] = []
-    for identity in identities_raw:
-        if any(
-            field not in identity
-            or not isinstance(identity.get(field), str)
-            or not identity.get(field)
-            for field in _REQUIRED_IDENTITY_FIELDS
-        ):
-            return _compatibility_result(
-                compatible=False,
-                mode="STRICT_MISMATCH_MALFORMED_IDENTITY_RECORD",
-                passport_revision=passport_revision,
-                canonical_revision=canonical_revision,
-                allowlist_field=revision_field,
-                identity_field=identity_field,
-                allowed_historical_revisions=allowed,
-            )
-        if not _is_full_git_sha(identity["pinned_head_sha"]) or not _is_full_git_sha(identity["passport_blob_sha"]):
-            return _compatibility_result(
-                compatible=False,
-                mode="STRICT_MISMATCH_MALFORMED_IDENTITY_SHA",
-                passport_revision=passport_revision,
-                canonical_revision=canonical_revision,
-                allowlist_field=revision_field,
-                identity_field=identity_field,
-                allowed_historical_revisions=allowed,
-            )
-        identities.append(identity)
-
-    expected_branch = central.get("branch")
-    expected_path = central.get("passport_path")
-    if (
-        not isinstance(audited_program, str)
-        or not audited_program
-        or not isinstance(expected_branch, str)
-        or not expected_branch
-        or not isinstance(expected_path, str)
-        or not expected_path
-        or central.get("program") != audited_program
-        or observed_branch != expected_branch
-        or observed_passport_path != expected_path
-        or passport.get("program") != audited_program
-        or passport.get("branch") != expected_branch
-    ):
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_OBSERVED_IDENTITY_CONTEXT_MISMATCH",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-            allowed_historical_revisions=allowed,
-            observed_head_sha=observed_head_sha,
-            observed_passport_blob_sha=observed_passport_blob_sha,
-        )
-
-    if not _is_full_git_sha(observed_head_sha) or not _is_full_git_sha(observed_passport_blob_sha):
-        return _compatibility_result(
-            compatible=False,
-            mode="STRICT_MISMATCH_OBSERVED_GIT_IDENTITY_UNRESOLVED",
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-            allowed_historical_revisions=allowed,
-            observed_head_sha=observed_head_sha,
-            observed_passport_blob_sha=observed_passport_blob_sha,
-        )
-
-    matches = [
-        identity
-        for identity in identities
-        if identity["program"] == audited_program
-        and identity["branch"] == expected_branch
-        and identity["passport_path"] == expected_path
-        and identity["architecture_revision"] == passport_revision
-        and identity["pinned_head_sha"] == observed_head_sha
-        and identity["passport_blob_sha"] == observed_passport_blob_sha
-    ]
-    if len(matches) != 1:
-        return _compatibility_result(
-            compatible=False,
-            mode=(
-                "STRICT_MISMATCH_HISTORICAL_IDENTITY_NOT_PINNED"
-                if not matches
-                else "STRICT_MISMATCH_HISTORICAL_IDENTITY_AMBIGUOUS"
-            ),
-            passport_revision=passport_revision,
-            canonical_revision=canonical_revision,
-            allowlist_field=revision_field,
-            identity_field=identity_field,
-            allowed_historical_revisions=allowed,
-            matching_historical_identities=len(matches),
-            observed_head_sha=observed_head_sha,
-            observed_passport_blob_sha=observed_passport_blob_sha,
-        )
-
-    return _compatibility_result(
-        compatible=True,
-        mode="EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
-        passport_revision=passport_revision,
-        canonical_revision=canonical_revision,
-        allowlist_field=revision_field,
-        identity_field=identity_field,
-        allowed_historical_revisions=allowed,
-        matching_historical_identities=1,
-        observed_head_sha=observed_head_sha,
-        observed_passport_blob_sha=observed_passport_blob_sha,
-    )
+_WILDCARD_MARKERS = ("*", "?", "[")
 
 
 def _recompute_health(result: dict[str, Any]) -> None:
-    declared = str(result.get("health_declared", "GREEN"))
-    health = declared if declared in _core.HEALTH_RANK else "YELLOW"
-    for finding in result.get("findings", []):
-        if not isinstance(finding, dict):
+    _arch._recompute_health(result)
+
+
+def _strict_ownership_metadata(reason: str) -> dict[str, Any]:
+    return {
+        "mode": "STRICT_HISTORICAL_OWNERSHIP_TRANSITION_REQUIRED",
+        "reason": reason,
+        "historical_source_revision": _HISTORICAL_OWNERSHIP_REVISION,
+        "historical_source_commit_sha": _HISTORICAL_OWNERSHIP_COMMIT,
+        "historical_source_blob_sha": _HISTORICAL_OWNERSHIP_BLOB,
+        "authorized_conflicts": [],
+    }
+
+
+def _ownership_metadata(authorized_conflicts: list[dict[str, str]]) -> dict[str, Any]:
+    return {
+        "mode": _OWNERSHIP_COMPAT_MODE,
+        "historical_source_revision": _HISTORICAL_OWNERSHIP_REVISION,
+        "historical_source_commit_sha": _HISTORICAL_OWNERSHIP_COMMIT,
+        "historical_source_blob_sha": _HISTORICAL_OWNERSHIP_BLOB,
+        "authorized_conflicts": authorized_conflicts,
+    }
+
+
+def _fail_closed(result: dict[str, Any], reason: str) -> dict[str, Any]:
+    result["ownership_compatibility"] = _strict_ownership_metadata(reason)
+    return result
+
+
+def _load_historical_ownership_source(
+    policy: dict[str, Any],
+) -> tuple[dict[str, Any] | None, str]:
+    section = policy.get("passport_ownership_compatibility")
+    if not isinstance(section, dict):
+        return None, "OWNERSHIP_COMPATIBILITY_POLICY_MISSING"
+    if section.get("mode") != _OWNERSHIP_COMPAT_MODE:
+        return None, "OWNERSHIP_COMPATIBILITY_MODE_INVALID"
+
+    registry_field = section.get("central_registry_field")
+    if not isinstance(registry_field, str) or registry_field != _OWNERSHIP_TRANSITION_REGISTRY_FIELD:
+        return None, "OWNERSHIP_TRANSITION_REGISTRY_FIELD_INVALID"
+    prerequisite = section.get("architecture_compatibility_prerequisite")
+    if prerequisite != _ARCHITECTURE_COMPAT_PREREQUISITE:
+        return None, "OWNERSHIP_ARCHITECTURE_PREREQUISITE_INVALID"
+
+    required_fields = section.get("required_transition_fields")
+    if required_fields != list(_REQUIRED_TRANSITION_FIELDS):
+        return None, "OWNERSHIP_TRANSITION_REQUIRED_FIELDS_INVALID"
+
+    source = section.get("historical_canonical_ownership_source")
+    if not isinstance(source, dict):
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_INVALID"
+    expected_source = {
+        "architecture_revision": _HISTORICAL_OWNERSHIP_REVISION,
+        "commit_sha": _HISTORICAL_OWNERSHIP_COMMIT,
+        "path": _HISTORICAL_OWNERSHIP_PATH,
+        "blob_sha": _HISTORICAL_OWNERSHIP_BLOB,
+    }
+    if source != expected_source:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_PIN_INVALID"
+
+    resolved_commit = _core.git(
+        "rev-parse", "--verify", f"{_HISTORICAL_OWNERSHIP_COMMIT}^{{commit}}", allow_fail=True
+    )
+    if resolved_commit != _HISTORICAL_OWNERSHIP_COMMIT:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_COMMIT_MISSING"
+    resolved_blob = _core.git(
+        "rev-parse",
+        "--verify",
+        f"{_HISTORICAL_OWNERSHIP_COMMIT}:{_HISTORICAL_OWNERSHIP_PATH}",
+        allow_fail=True,
+    )
+    if resolved_blob != _HISTORICAL_OWNERSHIP_BLOB:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_BLOB_MISMATCH"
+    raw = _core.git(
+        "show", f"{_HISTORICAL_OWNERSHIP_COMMIT}:{_HISTORICAL_OWNERSHIP_PATH}", allow_fail=True
+    )
+    if not raw:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_PATH_MISSING"
+    try:
+        historical = json.loads(raw)
+    except json.JSONDecodeError:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_JSON_INVALID"
+    if not isinstance(historical, dict):
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_JSON_INVALID"
+    if historical.get("architecture_revision") != _HISTORICAL_OWNERSHIP_REVISION:
+        return None, "HISTORICAL_OWNERSHIP_SOURCE_REVISION_MISMATCH"
+    return historical, ""
+
+
+def _load_transitions(central: dict[str, Any]) -> tuple[list[dict[str, str]] | None, str]:
+    raw = central.get(_OWNERSHIP_TRANSITION_REGISTRY_FIELD, [])
+    if not isinstance(raw, list):
+        return None, "OWNERSHIP_TRANSITION_LIST_MALFORMED"
+    transitions: list[dict[str, str]] = []
+    for item in raw:
+        if not isinstance(item, dict) or set(item) != set(_REQUIRED_TRANSITION_FIELDS):
+            return None, "OWNERSHIP_TRANSITION_RECORD_MALFORMED"
+        normalized: dict[str, str] = {}
+        for field in _REQUIRED_TRANSITION_FIELDS:
+            value = item.get(field)
+            if not isinstance(value, str) or not value or any(marker in value for marker in _WILDCARD_MARKERS):
+                return None, "OWNERSHIP_TRANSITION_RECORD_MALFORMED"
+            normalized[field] = value
+        transitions.append(normalized)
+    return transitions, ""
+
+
+def _matching_claim(
+    result: dict[str, Any], foundation: str, claimed_owner: str
+) -> dict[str, Any] | None:
+    matches = [
+        claim
+        for claim in result.get("ownership_claims", [])
+        if isinstance(claim, dict)
+        and claim.get("foundation") == foundation
+        and claim.get("claimed_owner") == claimed_owner
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _authorized_conflict(
+    *,
+    program: str,
+    passport_revision: str,
+    finding: dict[str, Any],
+    result: dict[str, Any],
+    transitions: list[dict[str, str]],
+    historical_ownership: dict[str, Any],
+    current_ownership: dict[str, Any],
+) -> tuple[dict[str, str] | None, bool]:
+    if finding.get("code") != "FOUNDATION_OWNERSHIP_CONFLICT":
+        return None, False
+
+    historical_foundations = historical_ownership.get("foundations")
+    current_foundations = current_ownership.get("foundations")
+    if not isinstance(historical_foundations, dict) or not isinstance(current_foundations, dict):
+        return None, False
+
+    candidate_matches: list[tuple[dict[str, str], str, str]] = []
+    for transition in transitions:
+        if transition["program"] != program or transition["architecture_revision"] != passport_revision:
             continue
-        level = str(finding.get("level", "GREEN"))
-        if _core.HEALTH_RANK.get(level, 0) > _core.HEALTH_RANK.get(health, 0):
-            health = level
-    result["health"] = health
+        foundation = transition["foundation"]
+        historical_entry = historical_foundations.get(foundation)
+        current_entry = current_foundations.get(foundation)
+        if not isinstance(historical_entry, dict) or not isinstance(current_entry, dict):
+            continue
+        historical_owner = historical_entry.get("owner")
+        canonical_owner = current_entry.get("owner")
+        if historical_owner != transition["historical_owner"]:
+            continue
+        if canonical_owner != transition["canonical_owner"]:
+            continue
+        claim = _matching_claim(result, foundation, transition["historical_owner"])
+        if claim is None:
+            continue
+        exact_detail = (
+            f"{foundation}: claimed={transition['historical_owner']}, "
+            f"canonical={transition['canonical_owner']}"
+        )
+        if finding.get("detail") != exact_detail:
+            continue
+        candidate_matches.append((transition, transition["historical_owner"], transition["canonical_owner"]))
+
+    if len(candidate_matches) > 1:
+        return None, True
+    if not candidate_matches:
+        return None, False
+    transition, historical_owner, canonical_owner = candidate_matches[0]
+    return {
+        "foundation": transition["foundation"],
+        "historical_owner": historical_owner,
+        "canonical_owner": canonical_owner,
+    }, False
+
+
+def _call_architecture_auditor(
+    key: str,
+    central: dict[str, Any],
+    registry: dict[str, Any],
+    policy: dict[str, Any],
+    ownership: dict[str, Any],
+) -> dict[str, Any]:
+    # Preserve the accepted wrapper as an immutable module while retaining its
+    # test seam: callers that patch this outer module's original auditor still
+    # exercise the exact accepted architecture-compatibility implementation.
+    previous = _arch._ORIGINAL_AUDIT_PROGRAM
+    _arch._ORIGINAL_AUDIT_PROGRAM = _ORIGINAL_AUDIT_PROGRAM
+    try:
+        return _ARCHITECTURE_AUDIT_PROGRAM(key, central, registry, policy, ownership)
+    finally:
+        _arch._ORIGINAL_AUDIT_PROGRAM = previous
 
 
 def audit_program(
@@ -303,52 +240,76 @@ def audit_program(
     policy: dict[str, Any],
     ownership: dict[str, Any],
 ) -> dict[str, Any]:
-    result = _ORIGINAL_AUDIT_PROGRAM(key, central, registry, policy, ownership)
+    result = _call_architecture_auditor(key, central, registry, policy, ownership)
+    architecture_compatibility = result.get("architecture_compatibility")
+    if (
+        not isinstance(architecture_compatibility, dict)
+        or architecture_compatibility.get("mode") != _ARCHITECTURE_COMPAT_PREREQUISITE
+        or architecture_compatibility.get("compatible") is not True
+        or architecture_compatibility.get("matching_historical_identities") != 1
+    ):
+        return result
+
+    conflicts = [
+        finding
+        for finding in result.get("findings", [])
+        if isinstance(finding, dict) and finding.get("code") == "FOUNDATION_OWNERSHIP_CONFLICT"
+    ]
+    if not conflicts:
+        return result
+
     passport_path = str(central.get("passport_path", ""))
     branch = str(central.get("branch", ""))
     if not branch or not passport_path or not result.get("passport_loaded"):
-        return result
-
-    branch_ref = _core.remote_ref(branch)
-    passport = _core.load_branch_json(branch_ref, passport_path)
-    if passport is None:
-        return result
-
-    observed_head_sha = ""
-    observed_passport_blob_sha = ""
-    canonical_revision = registry.get("architecture_revision")
+        return _fail_closed(result, "HISTORICAL_PASSPORT_CONTEXT_MISSING")
+    passport = _core.load_branch_json(_core.remote_ref(branch), passport_path)
+    if not isinstance(passport, dict):
+        return _fail_closed(result, "HISTORICAL_PASSPORT_UNREADABLE")
     passport_revision = passport.get("architecture_revision")
-    if passport_revision != canonical_revision:
-        observed_head_sha = _core.git("rev-parse", branch_ref, allow_fail=True)
-        observed_passport_blob_sha = _core.git(
-            "rev-parse", f"{branch_ref}:{passport_path}", allow_fail=True
+    if passport_revision != _HISTORICAL_OWNERSHIP_REVISION:
+        return _fail_closed(result, "HISTORICAL_PASSPORT_REVISION_NOT_PINNED_SOURCE")
+
+    historical_ownership, source_error = _load_historical_ownership_source(policy)
+    if historical_ownership is None:
+        return _fail_closed(result, source_error)
+    transitions, transition_error = _load_transitions(central)
+    if transitions is None:
+        return _fail_closed(result, transition_error)
+    if not transitions:
+        return _fail_closed(result, "OWNERSHIP_TRANSITION_NOT_AUTHORIZED")
+
+    authorized_by_finding: dict[int, dict[str, str]] = {}
+    for index, finding in enumerate(result.get("findings", [])):
+        if not isinstance(finding, dict) or finding.get("code") != "FOUNDATION_OWNERSHIP_CONFLICT":
+            continue
+        authorized, ambiguous = _authorized_conflict(
+            program=key,
+            passport_revision=passport_revision,
+            finding=finding,
+            result=result,
+            transitions=transitions,
+            historical_ownership=historical_ownership,
+            current_ownership=ownership,
         )
+        if ambiguous:
+            return _fail_closed(result, "OWNERSHIP_TRANSITION_AMBIGUOUS")
+        if authorized is not None:
+            authorized_by_finding[index] = authorized
 
-    decision = evaluate_passport_architecture_compatibility(
-        central,
-        registry,
-        passport,
-        policy,
-        audited_program=key,
-        observed_branch=branch,
-        observed_passport_path=passport_path,
-        observed_head_sha=observed_head_sha,
-        observed_passport_blob_sha=observed_passport_blob_sha,
-    )
-    result["architecture_compatibility"] = decision
-    if not decision["compatible"] or decision["mode"] == "EXACT_CANONICAL_REVISION":
-        return result
+    if not authorized_by_finding:
+        return _fail_closed(result, "OWNERSHIP_TRANSITION_NOT_AUTHORIZED")
 
-    result["findings"] = [
+    filtered = [
         finding
-        for finding in result.get("findings", [])
-        if not (
-            isinstance(finding, dict)
-            and finding.get("code") == "ARCHITECTURE_REVISION_MISMATCH"
-        )
+        for index, finding in enumerate(result.get("findings", []))
+        if index not in authorized_by_finding
     ]
-    _recompute_health(result)
-    return result
+    updated = deepcopy(result)
+    updated["findings"] = filtered
+    authorized_conflicts = [authorized_by_finding[index] for index in sorted(authorized_by_finding)]
+    updated["ownership_compatibility"] = _ownership_metadata(authorized_conflicts)
+    _recompute_health(updated)
+    return updated
 
 
 _core.audit_program = audit_program
