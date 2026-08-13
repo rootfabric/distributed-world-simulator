@@ -4,11 +4,11 @@
   "project_epoch": "E2026-08-13-H0-2-R3",
   "program": "NX",
   "goal_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-  "state": "IN_PROGRESS",
+  "state": "IMPLEMENTED",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
   "branch": "feature/h0-2-nx-c1-owner-authority-r3",
-  "scope": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / registry generation 79 after canonical Project Control pinned-dependency repair. Reimplement only the minimal validated realtime owner-locomotion authorship profile, bounded server validation/client composition, remote snapshot reuse and same-revision optimistic item-presentation rollback required by NX.C1. Preserve server/domain authority, Item Graph truth, physics/render single-writer separation and existing persistence/ownership foundations. Exact-head HIGH pre-build review PASS has been recorded; DISPATCHED authorizes exactly one bounded runtime worker on this branch within the declared paths.",
+  "scope": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence from exact canonical main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304 / registry generation 79 after canonical Project Control pinned-dependency repair. Reimplement only the minimal validated realtime owner-locomotion authorship profile, bounded server validation/client composition, remote snapshot reuse and same-revision optimistic item-presentation rollback required by NX.C1. Preserve server/domain authority, Item Graph truth, physics/render single-writer separation and existing persistence/ownership foundations. Exact-head HIGH pre-build review PASS and Director dispatch authorized one bounded worker; the bounded source implementation is complete at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 and awaits exact-Godot runtime verification.",
   "allowed_paths": [
     "config/control/harness/executions/E2026-08-13-H0-2-R3/**",
     "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
@@ -122,14 +122,14 @@
   ],
   "design_brief": {
     "problem_statement": "Canonical main has server-predicted multiplayer foundations and accepted legacy evidence that owner-authoritative realtime locomotion removes local movement stutter, but the accepted M7 evidence lives on a heavily diverged FIX lineage and cannot be merged as production architecture. H0.2 must prove a minimal current-main implementation and the Harness HIGH-risk path without importing duplicate authority layers.",
-    "current_behavior": "Canonical R3 generation 79 main is 09714b6f2681e3b5cf3f2f9e28416cf9a7378304. Project Control now installs its canonical pinned Harness dependency before contract validation. Current networked gameplay remains server/domain authoritative and includes the existing M3/NX6 runtime, while the fresh H0.2 R3 branch contains only reviewed control records at dispatch time. Legacy M7 owner-authority runtime 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are evidence only, not merge bases or cherry-pick authorization.",
-    "desired_behavior": "Provide a selectable OWNER_AUTHORITATIVE_VALIDATED realtime locomotion authorship profile in which the local deterministic physics controller is the sole local body writer, the server validates owner/session/epoch/playable state and bounded movement before updating the canonical player record, remote players continue through snapshots/interpolation, ordinary accepted snapshots do not rewind the local owner, and same-revision item rejection rolls back presentation without moving Item Graph authority to the client.",
+    "current_behavior": "Canonical R3 generation 79 main is 09714b6f2681e3b5cf3f2f9e28416cf9a7378304. Project Control installs its canonical pinned Harness dependency before contract validation. Current networked gameplay remains server/domain authoritative with the existing M3/NX6 runtime as default; the H0.2 branch now contains the bounded opt-in NX.C1 owner-authority leaf implementation. Legacy M7 owner-authority runtime 464e1b8dd27fad8b4d477f6e76ca52a449893353 and acceptance record 538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6 are evidence only, not merge bases or cherry-pick authorization.",
+    "desired_behavior": "Provide a selectable OWNER_AUTHORITATIVE_VALIDATED realtime locomotion authorship profile in which the local deterministic physics controller is the sole local body writer, the server validates owner/session/epoch/playable state and bounded movement before updating the canonical player record, remote players continue through snapshots/interpolation, ordinary accepted snapshots do not rewind the local owner, explicit server rejection permits one authoritative reconciliation, and same-revision item rejection rolls back presentation without moving Item Graph authority to the client.",
     "alternatives_considered": [
       "Merge or cherry-pick the historical M7 FIX6/FIX7/FIX8/FIX9/FIX10 lineage",
       "Keep server-predicted locomotion only and accept the known local presentation symptom",
       "Reimplement only the proven capability units on exact current R3 main behind a bounded authority profile with explicit validation and rollback contracts"
     ],
-    "selected_design": "Reimplement the minimal capability units on the fresh R3 Work Order branch: a small MovementAuthorityProfile, owner movement server validation/service composition, owner-specific graphical/dedicated runtime composition, reuse of current remote snapshot interpolation, and same-revision optimistic item-presentation rollback. Do not import legacy render-body writes, the FIX ladder, Character UI overlays, protocol-manifest changes or new canonical authority foundations.",
+    "selected_design": "Reimplement the minimal capability units on the fresh R3 Work Order branch: a small MovementAuthorityProfile, owner movement server validation/service composition, owner-specific graphical/dedicated runtime composition, reuse of current remote snapshot interpolation, rejection-triggered one-shot reconciliation, and existing same-revision optimistic item-presentation rollback. Do not import legacy render-body writes, the FIX ladder, Character UI overlays, protocol-manifest changes or new canonical authority foundations.",
     "why_selected": "It preserves current canonical ownership and persistence truth, directly targets the accepted owner-authority capability, minimizes blast radius, keeps the change in HIGH rather than silently escalating to CRITICAL, and makes every risky boundary independently testable under the H0.2 checkpoint.",
     "affected_owners": [
       "NX/NETWORK_REPLICATION_POLICY",
@@ -165,6 +165,7 @@
       "Local and server player records could become competing truth if realtime authorship is confused with canonical gameplay authority",
       "A render/presentation path could accidentally mutate CharacterBody transform or velocity outside physics tick",
       "Accepted snapshots could reintroduce local rewind/jitter",
+      "A rejected owner state could diverge indefinitely unless one authoritative correction is armed",
       "Same-revision item rejection could be swallowed if client presentation generation and canonical server revision are conflated",
       "Client tick metadata could permit unbounded future scheduling if legacy relative-tick behavior is copied",
       "Changes observable through Character composition could invalidate CH assumptions until directional revalidation"
@@ -174,7 +175,7 @@
       "Director-dispatch exactly one bounded runtime worker only after pre-build PASS; before dispatch the branch remains control-only",
       "Implement owner-authority profile and service/composition without protocol-manifest or canonical ownership changes",
       "Run exact-Godot owner authority focused tests including server validation and Basis(-Z)/yaw round-trip",
-      "Run physics/render single-writer regression proving render frames cannot mutate local CharacterBody truth",
+      "Run physics/render single-writer regression proving render frames cannot mutate local CharacterBody truth and rejected states can reconcile once",
       "Run same-revision optimistic item pickup/drop rejection and rollback regression",
       "Run client tick duplicate/backward/huge-jump fuzz tests if tick scheduling metadata is touched",
       "Run full world/core regression, two-client process validation, at least one impaired network profile, and reconnect/ownership-epoch validation",
@@ -195,5 +196,5 @@
   "human_approval_required_for": [
     "RUNTIME_FEATURE_MERGE"
   ],
-  "notes": "IN_PROGRESS after exact-head HIGH pre-build review PASS on 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 and Director DISPATCHED event #2. Exactly one bounded runtime worker is now executing within allowed_paths. Runtime merge remains a Human gate."
+  "notes": "IMPLEMENTED source state. Exact bounded implementation head is 1814ca72c9569ea2aa7e3d1dd4a69eb790888908. Project Control run 31690226579 succeeded on that exact head. No Godot runtime predicate, tested_head, post-build review, H0_2_PASS or NX SOURCE_ACCEPTED is claimed yet; exact-Godot focused/runtime verification remains mandatory. Runtime merge remains a Human gate."
 }
