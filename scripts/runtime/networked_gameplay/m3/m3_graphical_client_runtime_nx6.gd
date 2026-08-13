@@ -3,6 +3,7 @@ extends Node
 signal session_ready(runtime)
 signal replica_updated(snapshot: Dictionary)
 signal item_graph_updated(snapshot: Dictionary)
+signal construction_updated(bundle: Dictionary)
 signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
 signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
@@ -23,6 +24,7 @@ const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gamepla
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
 const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
 const ClientPredictionReconciler = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
+const ConstructionReplica = preload("res://scripts/construction/multiplayer/construction_multiplayer_replica.gd")
 
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const NX2_INPUT_SEND_INTERVAL_MS := 33
@@ -106,6 +108,10 @@ var _prediction_submit_failures: int = 0
 var _prediction_advance_failures: int = 0
 var _prediction_reconcile_failures: int = 0
 var _prediction_updates_emitted: int = 0
+var _construction_replica
+var _construction_snapshot_updates := 0
+var _construction_event_updates := 0
+var _construction_rejections := 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -146,6 +152,10 @@ func setup(config: Dictionary) -> Dictionary:
 	_compact_snapshot_rejections = 0
 	_compact_snapshot_clock_updates = 0
 	_prediction_reconciler = ClientPredictionReconciler.new()
+	_construction_replica = ConstructionReplica.new()
+	_construction_snapshot_updates = 0
+	_construction_event_updates = 0
+	_construction_rejections = 0
 	_prediction_input_accumulator = 0.0
 	_prediction_last_network_intent.clear()
 	_prediction_frames = 0
@@ -281,6 +291,8 @@ func _handle_message(payload: Dictionary) -> void:
 		"COMPACT_GAMEPLAY_SNAPSHOT": _accept_compact_snapshot(payload.get("snapshot", {}))
 		"ITEM_GRAPH_SNAPSHOT": _accept_item_snapshot(payload.get("snapshot", {}))
 		"ITEM_GRAPH_DELTA": _accept_item_delta(payload.get("delta", {}))
+		"CONSTRUCTION_SNAPSHOT": _accept_construction_snapshot(payload)
+		"CONSTRUCTION_EVENT": _accept_construction_event(payload.get("event", {}))
 		"COMMAND_RESULT":
 			var result_operation_id: String = String(payload.get("operation_id", ""))
 			_observe_operation_latency(result_operation_id)
@@ -893,6 +905,59 @@ func execute_item_command_blocking(
 	return _failure("M4_ITEM_COMMAND_TIMEOUT")
 
 func get_item_graph_snapshot() -> Dictionary: return _item_graph_snapshot.duplicate(true)
+
+func _accept_construction_snapshot(payload: Dictionary) -> void:
+	if _construction_replica == null:
+		_construction_rejections += 1
+		_last_error_code = "CONSTRUCTION_REPLICA_NOT_READY"
+		return
+	var bundle_value = payload.get("state_bundle", {})
+	if not bundle_value is Dictionary:
+		_construction_rejections += 1
+		_last_error_code = "INVALID_CONSTRUCTION_SNAPSHOT"
+		return
+	var initialized: Dictionary = _construction_replica.initialize(Dictionary(bundle_value), int(payload.get("last_event_index", -1)))
+	if not bool(initialized.get("success", false)):
+		_construction_rejections += 1
+		_last_error_code = String(initialized.get("error_code", "CONSTRUCTION_SNAPSHOT_REJECTED"))
+		return
+	_construction_snapshot_updates += 1
+	construction_updated.emit(_construction_replica.get_bundle())
+
+func _accept_construction_event(event_value) -> void:
+	if _construction_replica == null or not event_value is Dictionary:
+		_construction_rejections += 1
+		_last_error_code = "INVALID_CONSTRUCTION_EVENT"
+		return
+	var applied: Dictionary = _construction_replica.apply_event(Dictionary(event_value))
+	if not bool(applied.get("success", false)):
+		_construction_rejections += 1
+		_last_error_code = String(applied.get("error_code", "CONSTRUCTION_EVENT_REJECTED"))
+		return
+	_construction_event_updates += 1
+	construction_updated.emit(_construction_replica.get_bundle())
+
+func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
+	if not is_ready(): return _failure("M3_CONSTRUCTION_CLIENT_NOT_READY")
+	var op := operation_id if not operation_id.is_empty() else "operation/m3/%s/construction/%d" % [_logical_player_id, Time.get_ticks_msec()]
+	_command_results.erase(op)
+	_awaited_command_ids[op] = true
+	if not _send_on_channel("CONSTRUCTION_COMMAND", {"operation_id": op, "command": command.duplicate(true)}, RealtimeChannelPolicy.CONTROL, "RELIABLE_ORDERED", true):
+		_awaited_command_ids.erase(op)
+		return _failure("M3_CONSTRUCTION_COMMAND_SEND_FAILED")
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started <= _command_timeout_ms:
+		_poll_blocking_once()
+		if _command_results.has(op):
+			var result: Dictionary = _command_results[op]; _command_results.erase(op); _awaited_command_ids.erase(op)
+			if String(result.get("status", "")) != "SUCCEEDED": return _failure(String(result.get("error_code", "M3_CONSTRUCTION_COMMAND_REJECTED")), result)
+			return _success({"operation_id": op, "result": result})
+		OS.delay_msec(2)
+	_awaited_command_ids.erase(op)
+	_discard_operation_timer(op)
+	return _failure("M3_CONSTRUCTION_COMMAND_TIMEOUT")
+
+func get_construction_bundle() -> Dictionary: return _construction_replica.get_bundle() if _construction_replica != null else {}
 
 func request_graceful_leave(timeout_ms: int = 2500) -> Dictionary:
 	if not _joined: return _success({"already_left": true})

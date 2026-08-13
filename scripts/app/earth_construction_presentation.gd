@@ -2,12 +2,14 @@ extends Node3D
 
 # Derived C22/C24 presentation only. Canonical Construction state remains server-owned.
 const ControllerScript = preload("res://scripts/construction/proxies/construction_proxy_streaming_controller.gd")
+const BundleScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd")
 
 var _controller
 var _observer_id := "client/mvp/earth"
 var _last_construct_id := ""
 var _last_checksum := ""
 var _last_detail_mode := ""
+var _authoritative_bundle: Dictionary = {}
 
 
 func setup(observer_id: String) -> Dictionary:
@@ -43,6 +45,17 @@ func apply_authoritative_projection(compile_request: Dictionary, interest: Dicti
 	})
 
 
+func apply_authoritative_bundle(bundle: Dictionary) -> Dictionary:
+	var checked: Dictionary = BundleScript.validate(bundle)
+	if not bool(checked.get("success", false)):
+		return checked
+	_authoritative_bundle = bundle.duplicate(true)
+	return _success({
+		"server_generation": int(_authoritative_bundle.get("server_generation", 0)),
+		"checksum": String(_authoritative_bundle.get("checksum", "")),
+	})
+
+
 func get_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.earth_construction_presentation.v1",
@@ -50,6 +63,8 @@ func get_report() -> Dictionary:
 		"construct_id": _last_construct_id,
 		"source_checksum": _last_checksum,
 		"detail_mode": _last_detail_mode,
+		"authoritative_bundle_checksum": String(_authoritative_bundle.get("checksum", "")),
+		"authoritative_bundle_generation": int(_authoritative_bundle.get("server_generation", -1)),
 		"direct_authority_references": 0,
 	}
 

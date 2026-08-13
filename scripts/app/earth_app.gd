@@ -312,11 +312,16 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		runtime.replica_updated.connect(_on_m3_replica_updated)
 	if not runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
 		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
+	if runtime.has_signal("construction_updated"):
+		if not runtime.construction_updated.is_connected(_on_m3_construction_updated):
+			runtime.construction_updated.connect(_on_m3_construction_updated)
 	_m3_attached = true
 	if earth_explorer != null:
 		earth_explorer.set_network_replica_mode(true)
 	_on_m3_replica_updated(runtime.get_snapshot())
 	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	if runtime.has_method("get_construction_bundle"):
+		_on_m3_construction_updated(runtime.get_construction_bundle())
 	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR", "m4_item_graph": not _m4_item_graph_snapshot.is_empty()}}
 
 
@@ -388,6 +393,14 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
 		return
 	_m4_item_graph_snapshot = snapshot.duplicate(true)
 	_m4_item_snapshot_updates += 1
+
+
+func _on_m3_construction_updated(bundle: Dictionary) -> void:
+	if construction_presentation == null or bundle.is_empty():
+		return
+	var accepted: Dictionary = construction_presentation.apply_authoritative_bundle(bundle)
+	if not bool(accepted.get("success", false)):
+		last_diagnostic_path = String(accepted.get("error_code", "EARTH_CONSTRUCTION_BUNDLE_REJECTED"))
 
 
 func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:

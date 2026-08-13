@@ -23,6 +23,7 @@ const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gamepla
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
 const FixedTickScheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const FixedTickInputBuffer = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
+const ConstructionBridge = preload("res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd")
 
 const SCHEMA := "planet_simulator.m3_dedicated_server_runtime.v1"
 const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
@@ -118,6 +119,17 @@ var _compact_movement_snapshots_published := 0
 var _movement_snapshot_retransmit_requests := 0
 var _movement_snapshot_enqueue_failures := 0
 var _compact_movement_snapshot_failures := 0
+var _construction_bridge
+var _construction_events_published := 0
+var _construction_snapshots_published := 0
+
+func set_construction_bridge(bridge) -> Dictionary:
+	if _configured:
+		return _failure("M3_CONSTRUCTION_BRIDGE_MUST_BE_SET_BEFORE_SETUP")
+	if bridge == null or not bridge.has_method("connect_player") or not bridge.has_method("submit_player_command"):
+		return _failure("M3_CONSTRUCTION_BRIDGE_INVALID")
+	_construction_bridge = bridge
+	return _success()
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured:
@@ -259,6 +271,7 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 			"PRESENTATION": _handle_presentation(peer_id, session_id, payload)
 			"ITEM_COMMAND": _handle_item_command(peer_id, session_id, payload)
 			"ITEM_GRAPH_RESYNC_REQUEST": _handle_item_graph_resync_request(peer_id, session_id, payload)
+			"CONSTRUCTION_COMMAND": _handle_construction_command(peer_id, session_id, payload)
 			"LEAVE": _handle_leave(peer_id, session_id, payload)
 			_: _send_result(peer_id, String(payload.get("operation_id", "")), "UNKNOWN", _failure("UNKNOWN_M3_MESSAGE_TYPE"))
 	_telemetry.observe("server_message_processing_ms", float(Time.get_ticks_usec() - handled_started_us) / 1000.0)
@@ -370,6 +383,15 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 	}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 	if join_sent:
 		_item_graph_full_snapshots_published += 1
+	if _construction_bridge != null:
+		var player: Dictionary = Dictionary(result.get("details", {}).get("player", {}))
+		var construction_join: Dictionary = _construction_bridge.connect_player(logical_id, int(player.get("ownership_epoch", 0)))
+		if bool(construction_join.get("success", false)):
+			var construction_snapshot: Dictionary = Dictionary(construction_join.get("details", {}).get("snapshot", {}))
+			if not construction_snapshot.is_empty() and _send_on_channel(peer_id, "CONSTRUCTION_SNAPSHOT", construction_snapshot, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED"):
+				_construction_snapshots_published += 1
+		else:
+			_last_error_code = String(construction_join.get("error_code", "M3_CONSTRUCTION_JOIN_FAILED"))
 	if not replay:
 		_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
 		_broadcast_snapshot("PLAYER_JOINED")
@@ -789,6 +811,34 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		_rejections += 1
 	if result_sent:
 		_mark_operation_delivered(operation_id)
+	_write_report("READY", false)
+
+
+func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	var operation_id := String(payload.get("operation_id", "")).strip_edges()
+	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("STALE_TRANSPORT_SESSION"))
+		return
+	if _construction_bridge == null:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("M3_CONSTRUCTION_NOT_ENABLED"))
+		return
+	var command_value = payload.get("command", {})
+	if not command_value is Dictionary:
+		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
+		return
+	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var submitted: Dictionary = _construction_bridge.submit_player_command(logical_id, Dictionary(command_value))
+	_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", submitted)
+	if not bool(submitted.get("success", false)):
+		_rejections += 1
+		return
+	var event_packet: Dictionary = Dictionary(submitted.get("details", {}).get("event_packet", {}))
+	if event_packet.is_empty():
+		_last_error_code = "M3_CONSTRUCTION_EVENT_MISSING"
+		return
+	for peer_id_value in _peer_to_player.keys():
+		if _send_on_channel(String(peer_id_value), "CONSTRUCTION_EVENT", event_packet, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED"):
+			_construction_events_published += 1
 	_write_report("READY", false)
 
 func _broadcast_item_delta(delta: Dictionary, excluded_peer_id: String, reason: String) -> void:
