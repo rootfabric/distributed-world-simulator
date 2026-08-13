@@ -23,6 +23,7 @@ var frame_position: Vector3 = Vector3.ZERO
 var orientation := Basis.IDENTITY
 var linear_velocity_mps: Vector3 = Vector3.ZERO
 var angular_velocity_rps: Vector3 = Vector3.ZERO
+var network_replica_mode: bool = false
 
 
 func setup(
@@ -96,6 +97,18 @@ func deactivate() -> void:
 	set_process_unhandled_input(false)
 
 
+func set_network_replica_mode(enabled: bool) -> void:
+	network_replica_mode = enabled
+	# Network snapshots own the spectator pose while attached.  The camera stays
+	# active so a graphical client remains a usable observer.
+	set_physics_process(active and not enabled)
+	set_process_unhandled_input(active and not enabled)
+
+
+func is_network_replica_mode() -> bool:
+	return network_replica_mode
+
+
 func teleport_to_direction(direction_value: Vector3, altitude_m: float = 450.0) -> void:
 	teleport_to_body_surface("earth", direction_value, altitude_m)
 
@@ -125,6 +138,28 @@ func teleport_to_body_surface(
 	global_transform = Transform3D(orientation, Vector3.ZERO)
 	reset_physics_interpolation()
 	_update_camera_clipping()
+
+
+func apply_network_replica_pose(
+	direction_value: Vector3,
+	altitude_m: float
+) -> void:
+	if celestial_system == null or earth_world == null:
+		return
+	# Replica snapshots arrive at the normal M3 cadence.  Do not use the
+	# teleport path here: it eagerly rebuilds a terrain region and would turn
+	# every snapshot into a multi-second render stall.  EarthWorld's ordinary
+	# update_for_view path owns streaming and recentering.
+	var direction: Vector3 = direction_value.normalized()
+	reference_frame_id = celestial_system.get_body_fixed_frame_id("earth")
+	frame_position = earth_world.get_surface_point(direction) + direction * altitude_m
+	orientation = _surface_orientation(direction)
+	linear_velocity_mps = Vector3.ZERO
+	angular_velocity_rps = Vector3.ZERO
+	global_transform = Transform3D(orientation, Vector3.ZERO)
+	reset_physics_interpolation()
+	_update_camera_clipping()
+	set_network_replica_mode(true)
 
 
 func set_reference_frame(target_frame_id: String, preserve_world_state: bool = true) -> bool:

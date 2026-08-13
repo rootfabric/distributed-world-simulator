@@ -18,6 +18,9 @@ const PlanetaryOverlayScript = preload(
 const LoggerScript = preload(
 	"res://scripts/diagnostics/lunar_logger.gd"
 )
+const RemotePlayerPresenterScript = preload(
+	"res://scripts/app/earth_m3_remote_spectator_presenter.gd"
+)
 
 var simulator_app
 var simulation_clock
@@ -29,6 +32,9 @@ var runtime_test_registry
 var runtime_world_definition: Dictionary = {}
 var runtime_command_owner: String = "active_world"
 var runtime_test_owner: String = "active_world"
+var runtime_role: String = "offline"
+var presentation_enabled: bool = true
+var local_input_enabled: bool = true
 
 var logger
 var celestial_system
@@ -40,6 +46,15 @@ var initialized: bool = false
 var atmosphere_initialized: bool = false
 var last_diagnostic_path: String = "-"
 var visible_body_ids: Array[String] = ["earth"]
+var m3_multiplayer_client_runtime
+var _m3_attached: bool = false
+var _m3_remote_presenters: Dictionary = {}
+var _m3_local_sync_count: int = 0
+var _m3_remote_spawn_count: int = 0
+var _m3_remote_despawn_count: int = 0
+var _m3_remote_update_count: int = 0
+var _m3_input_accumulator: float = 0.0
+var _m3_local_planar_position := Vector2.ZERO
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -55,9 +70,14 @@ func configure_runtime(context: Dictionary) -> void:
 		context.get("command_owner_id", runtime_command_owner)
 	)
 	runtime_test_owner = String(context.get("test_owner_id", runtime_test_owner))
+	runtime_role = String(context.get("runtime_role", runtime_role))
+	presentation_enabled = bool(context.get("presentation_enabled", true))
+	local_input_enabled = bool(context.get("local_input_enabled", true))
 
 
 func _ready() -> void:
+	if simulator_app == null:
+		_ensure_input_actions()
 	logger = LoggerScript.new()
 	logger.name = "EarthRuntimeLogger"
 	add_child(logger)
@@ -150,6 +170,7 @@ func _process(delta: float) -> void:
 			atmosphere_manager if atmosphere_initialized else null,
 			visible_body_ids
 		)
+	_apply_m3_network_input(delta)
 
 
 func register_runtime_commands(registry, owner_id: String) -> void:
@@ -252,6 +273,163 @@ func create_runtime_snapshot() -> Dictionary:
 			else {}
 		),
 		"last_diagnostic_path": last_diagnostic_path,
+		"m3_spectator": create_m3_graphical_client_report(),
+	}
+
+
+func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	if runtime_role != "game-client":
+		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
+	if (
+		runtime == null
+		or not runtime.has_signal("replica_updated")
+		or not runtime.has_method("get_snapshot")
+		or not runtime.has_method("get_local_player_id")
+		or not runtime.has_method("move_blocking")
+		or not runtime.has_method("move_nonblocking")
+	):
+		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
+	if _m3_attached:
+		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+	m3_multiplayer_client_runtime = runtime
+	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
+		runtime.replica_updated.connect(_on_m3_replica_updated)
+	_m3_attached = true
+	if earth_explorer != null:
+		earth_explorer.set_network_replica_mode(true)
+	_on_m3_replica_updated(runtime.get_snapshot())
+	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR"}}
+
+
+func _on_m3_replica_updated(snapshot: Dictionary) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return
+	var local_id: String = m3_multiplayer_client_runtime.get_local_player_id()
+	var seen: Dictionary = {}
+	for player_value in snapshot.get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var record: Dictionary = player_value
+		var logical_id: String = String(record.get("logical_player_id", ""))
+		if logical_id == local_id:
+			if bool(record.get("connected", false)):
+				_apply_m3_local_spectator_record(record)
+				_m3_local_sync_count += 1
+			continue
+		if not bool(record.get("connected", false)):
+			continue
+		seen[logical_id] = true
+		var presenter = _m3_remote_presenters.get(logical_id)
+		if presenter == null or not is_instance_valid(presenter):
+			presenter = RemotePlayerPresenterScript.new()
+			add_child(presenter)
+			var setup_result: Dictionary = presenter.setup(
+				record, snapshot, Callable(self, "_map_m3_position_to_earth_world")
+			)
+			if not bool(setup_result.get("success", false)):
+				presenter.queue_free()
+				continue
+			presenter.set_local_planar_position(_m3_local_planar_position)
+			_m3_remote_presenters[logical_id] = presenter
+			_m3_remote_spawn_count += 1
+		else:
+			presenter.set_local_planar_position(_m3_local_planar_position)
+			presenter.apply_replica(record, snapshot)
+		_m3_remote_update_count += 1
+	for logical_id_value in _m3_remote_presenters.keys().duplicate():
+		var logical_id: String = String(logical_id_value)
+		if seen.has(logical_id):
+			continue
+		var stale_presenter = _m3_remote_presenters.get(logical_id)
+		if stale_presenter != null and is_instance_valid(stale_presenter):
+			stale_presenter.queue_free()
+		_m3_remote_presenters.erase(logical_id)
+		_m3_remote_despawn_count += 1
+
+
+func _apply_m3_local_spectator_record(record: Dictionary) -> void:
+	if earth_world == null or earth_explorer == null:
+		return
+	var position: Dictionary = record.get("position", {})
+	_m3_local_planar_position = Vector2(
+		float(position.get("x", 0.0)), float(position.get("z", 0.0))
+	)
+	var mapped_direction: Vector3 = _map_m3_position_to_earth_direction(
+		float(position.get("x", 0.0)),
+		float(position.get("z", 0.0))
+	)
+	earth_explorer.apply_network_replica_pose(
+		mapped_direction,
+		earth_world.get_canonical_spawn_altitude_m()
+	)
+
+
+func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:
+	var up: Vector3 = earth_world.get_canonical_spawn_direction()
+	var east: Vector3 = Vector3.UP.cross(up)
+	if east.length_squared() < 0.000001:
+		east = Vector3.RIGHT.cross(up)
+	east = east.normalized()
+	var north: Vector3 = up.cross(east).normalized()
+	var surface: Vector3 = earth_world.get_surface_point(up)
+	return (surface + east * x + north * z).normalized()
+
+
+func _map_m3_position_to_earth_world(x: float, z: float) -> Vector3:
+	var direction: Vector3 = _map_m3_position_to_earth_direction(x, z)
+	return earth_world.get_surface_point(direction) + direction * earth_world.get_canonical_spawn_altitude_m()
+
+
+func _apply_m3_network_input(delta: float) -> void:
+	if not _m3_attached or m3_multiplayer_client_runtime == null or not local_input_enabled:
+		return
+	if m3_multiplayer_client_runtime.has_method("is_automated_acceptance") and m3_multiplayer_client_runtime.is_automated_acceptance():
+		return
+	_m3_input_accumulator += delta
+	if _m3_input_accumulator < 0.05:
+		return
+	var input_vector: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if input_vector.length_squared() < 0.000001:
+		return
+	var step: float = minf(_m3_input_accumulator, 0.1)
+	_m3_input_accumulator = 0.0
+	var speed: float = 11.0 if Input.is_action_pressed("boost") else 6.0
+	m3_multiplayer_client_runtime.move_nonblocking(input_vector.x * speed * step, -input_vector.y * speed * step)
+
+
+func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M3_GAME_CLIENT_NOT_READY"}
+	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
+
+
+func create_m3_graphical_client_report() -> Dictionary:
+	var presenters: Dictionary = {}
+	for logical_id_value in _m3_remote_presenters.keys():
+		var presenter = _m3_remote_presenters[logical_id_value]
+		if presenter != null and is_instance_valid(presenter):
+			presenters[String(logical_id_value)] = presenter.get_report()
+	return {
+		"schema": "planet_simulator.m3_earth_spectator_report.v1",
+		"world_id": get_runtime_id(),
+		"runtime_role": runtime_role,
+		"attached": _m3_attached,
+		"spectator_ready": earth_explorer != null and earth_explorer.active,
+		"local_player_id": m3_multiplayer_client_runtime.get_local_player_id() if m3_multiplayer_client_runtime != null else "",
+		"local_player_position": _vector_to_array(earth_explorer.get_world_position()) if earth_explorer != null else [],
+		"active_camera": String(earth_explorer.get_camera().get_path()) if earth_explorer != null and earth_explorer.get_camera() != null and earth_explorer.get_camera().current else "",
+		"presentation_enabled": presentation_enabled,
+		"local_input_enabled": local_input_enabled,
+		"network_replica_mode": bool(earth_explorer.is_network_replica_mode()) if earth_explorer != null else false,
+		"local_sync_count": _m3_local_sync_count,
+		"remote_presenter_count": _m3_remote_presenters.size(),
+		"remote_spawn_count": _m3_remote_spawn_count,
+		"remote_despawn_count": _m3_remote_despawn_count,
+		"remote_update_count": _m3_remote_update_count,
+		"remote_presenters": presenters,
+		"canonical_spawn": earth_world.get_canonical_spawn_snapshot() if earth_world != null else {},
+		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
+		"direct_authority_references": 0,
 	}
 
 
@@ -472,3 +650,20 @@ func _register_command(
 
 func _vector_to_array(value: Vector3) -> Array[float]:
 	return [value.x, value.y, value.z]
+
+
+func _ensure_input_actions() -> void:
+	for binding in [
+		["move_forward", KEY_W], ["move_back", KEY_S],
+		["move_left", KEY_A], ["move_right", KEY_D],
+		["move_up", KEY_SPACE], ["move_down", KEY_CTRL],
+		["boost", KEY_SHIFT], ["roll_left", KEY_E],
+		["roll_right", KEY_Q], ["level_horizon", KEY_H],
+	]:
+		var action: StringName = StringName(binding[0])
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+		if InputMap.action_get_events(action).is_empty():
+			var event := InputEventKey.new()
+			event.physical_keycode = int(binding[1])
+			InputMap.action_add_event(action, event)

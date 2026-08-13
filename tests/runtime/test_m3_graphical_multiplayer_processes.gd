@@ -19,8 +19,8 @@ func _init() -> void:
 	).strip_edges().to_lower()
 	if not requested_world.is_empty():
 		test_world = requested_world
-	_assert(test_world in ["moon", "playground"], "supported graphical process world")
-	if test_world not in ["moon", "playground"]:
+	_assert(test_world in ["moon", "earth", "playground"], "supported graphical process world")
+	if test_world not in ["moon", "earth", "playground"]:
 		_finish()
 		return
 	var port := _find_available_port()
@@ -118,6 +118,11 @@ func _start_virtual_display(root: String) -> String:
 
 func _validate(a1: Dictionary, b: Dictionary, a2: Dictionary, server: Dictionary) -> void:
 	for report in [a1, b, a2]:
+		if test_world == "earth":
+			_assert(String(report.get("world", {}).get("world_id", "")) == "earth", "client loaded Earth")
+			_assert(bool(report.get("world", {}).get("attached", false)), "Earth M3 spectator attached")
+			_assert(bool(report.get("world", {}).get("spectator_ready", false)), "Earth network spectator ready")
+			_assert(not Dictionary(report.get("world", {}).get("canonical_spawn", {})).is_empty(), "Earth canonical spawn reported")
 		if test_world == "playground":
 			_assert(
 				String(report.get("world", {}).get("world_id", "")) == test_world,
