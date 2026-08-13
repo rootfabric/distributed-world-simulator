@@ -1,0 +1,629 @@
+name: R3 V9 Promotion Executor Ephemeral
+
+on:
+  push:
+    branches:
+      - control/r3-v9-promotion-executor-ephemeral
+
+permissions:
+  contents: write
+
+jobs:
+  validate-future-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: ce40dd075045078ed70924f8d5a1011eb3eff03d
+          fetch-depth: 0
+
+      - name: Fetch all live refs
+        run: |
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+
+      - name: Verify immutable authorization epoch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse origin/main)" = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+          test "$(git rev-parse origin/control/global-p0-r3-refresh-r1)" = "c703a5e22622813169624f7ce4ec9ea9f362f8df"
+          test "$(git rev-parse origin/control/r3-promotion-passport-compat-r1)" = "53eed6dbfab38b95cdbac3bc8a621590c20a1208"
+          test "$(git rev-parse origin/control/r3-promotion-ownership-compat-r1)" = "5a08def5fa61bca913c7cab3d976fda4e77b7263"
+          git cat-file -e 595263c4c925c122a09876cb29b87f5ca5fef1d2^{commit}
+          test "$(git rev-parse 595263c4c925c122a09876cb29b87f5ca5fef1d2:config/architecture/global-p0-r3-architecture-candidate.v1.json)" = "c569d90b9aa2d4675e8ef30cb524aef5771f1522"
+          test "$(git rev-parse 595263c4c925c122a09876cb29b87f5ca5fef1d2:config/control/architecture-ownership-r3-candidate.v1.json)" = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
+
+      - name: Project reviewed control surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          copy_from() {
+            local ref="$1"
+            local path="$2"
+            mkdir -p "$(dirname "$path")"
+            git show "$ref:$path" > "$path"
+          }
+
+          COMPAT=origin/control/r3-promotion-ownership-compat-r1
+          FROZEN=595263c4c925c122a09876cb29b87f5ca5fef1d2
+
+          copy_from "$COMPAT" .github/workflows/project-control.yml
+          copy_from "$COMPAT" config/control/project-control-policy.v1.json
+          copy_from "$COMPAT" scripts/control/project_control.py
+          copy_from "$COMPAT" scripts/control/project_control_architecture_compat.py
+          copy_from "$COMPAT" scripts/control/project_control_core.py
+          copy_from "$COMPAT" tests/harness/test_project_control_architecture_compatibility.py
+          copy_from "$COMPAT" tests/harness/test_project_control_historical_ownership_compatibility.py
+          copy_from "$COMPAT" tests/harness/test_project_control_proposed_r3_ownership_projection.py
+
+          copy_from "$FROZEN" config/architecture/global-p0-r3-architecture-candidate.v1.json
+          copy_from "$FROZEN" config/control/architecture-ownership-r3-candidate.v1.json
+          copy_from "$FROZEN" config/control/global-p0-r2-to-r3-transition-policy.v1.json
+          copy_from "$FROZEN" config/control/global-p0-r3-prepromotion-guards.v1.json
+          copy_from "$FROZEN" config/control/harness/checkpoint-catalog.v1.json
+
+      - name: Build fresh R3 canonical projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import copy
+          import hashlib
+          import json
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          R2 = "GLOBAL-P0-2026-08-10-R2"
+          R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
+          MAIN = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+          CANDIDATE_BLOB = "c569d90b9aa2d4675e8ef30cb524aef5771f1522"
+          OWNERSHIP_CANDIDATE_BLOB = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
+          HISTORICAL_OWNERSHIP_BLOB = "0cebf594ac7900292318d7533e4439cc7f3764d6"
+
+          def git(*args: str) -> str:
+              return subprocess.check_output(["git", *args], text=True).strip()
+
+          def load(path: str) -> dict:
+              value = json.loads(Path(path).read_text(encoding="utf-8"))
+              assert isinstance(value, dict), path
+              return value
+
+          def dump(path: str, value: dict) -> None:
+              Path(path).parent.mkdir(parents=True, exist_ok=True)
+              Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+          registry = load("config/control/project-program-registry.v1.json")
+          policy = load("config/control/project-control-policy.v1.json")
+          roadmap = load("config/architecture/global-program-roadmap.v1.json")
+          ownership_candidate = load("config/control/architecture-ownership-r3-candidate.v1.json")
+
+          assert registry["registry_generation"] == 78
+          assert registry["architecture_revision"] == R2
+          assert policy["architecture_revision"] == R2
+          assert roadmap["global_revision"] == R2
+          assert ownership_candidate["architecture_revision"] == R3
+          assert git("rev-parse", f"{MAIN}:config/control/architecture-ownership.v1.json") == HISTORICAL_OWNERSHIP_BLOB
+
+          # Fresh promotion-boundary identity epoch derived from the canonical registry.
+          identities = []
+          for program, central in registry["programs"].items():
+              if not isinstance(central, dict) or not central.get("requires_passport", False):
+                  continue
+              branch = str(central["branch"])
+              passport_path = str(central["passport_path"])
+              ref = f"origin/{branch}"
+              head = git("rev-parse", ref)
+              blob = git("rev-parse", f"{ref}:{passport_path}")
+              passport = json.loads(git("show", f"{ref}:{passport_path}"))
+              assert passport["program"] == program
+              assert passport["branch"] == branch
+              assert passport["architecture_revision"] == R2
+              identity = {
+                  "program": program,
+                  "branch": branch,
+                  "passport_path": passport_path,
+                  "architecture_revision": R2,
+                  "pinned_head_sha": head,
+                  "passport_blob_sha": blob,
+              }
+              identities.append(identity)
+              central["historical_passport_architecture_revisions"] = [R2]
+              central["historical_passport_identities"] = [copy.deepcopy(identity)]
+              central.pop("historical_passport_ownership_transitions", None)
+
+          required_programs = {x["program"] for x in identities}
+          assert required_programs == {"G", "ECO", "T", "CH", "DOCTRINE", "NX"}, required_programs
+
+          t_transitions = [
+              {
+                  "program": "T",
+                  "architecture_revision": R2,
+                  "foundation": "WORLD_QUERY_FABRIC",
+                  "historical_owner": "P1_FUTURE",
+                  "canonical_owner": "WQ",
+              },
+              {
+                  "program": "T",
+                  "architecture_revision": R2,
+                  "foundation": "WORLD_TRANSACTION_MODEL",
+                  "historical_owner": "P0",
+                  "canonical_owner": "WT",
+              },
+          ]
+          registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(t_transitions)
+
+          now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+          registry["registry_generation"] = 79
+          registry["architecture_revision"] = R3
+          registry["updated_at_utc"] = now
+          registry["control_checkpoint"] = "GLOBAL-P0 R3 V9 canonical promotion boundary; mandatory post-R3 Project Control required before runtime dispatch"
+          registry["project_summary"] = "GLOBAL-P0 R3 V9 is the canonical architecture at registry generation 79. The promotion is control/docs/config only. Mandatory post-R3 Project Control must be NON_RED before fresh H0.2/NX.C1 dispatch; H0.3 and V0 remain downstream of H0.2/NX source acceptance."
+
+          harness = registry["programs"]["HARNESS"]
+          harness["current_stage"] = "GLOBAL-P0 R3 Canonical Promotion Boundary"
+          harness["stage_status"] = "R3_CANONICAL_POST_R3_PC0_PENDING"
+          harness["progress_note"] = "The Human-approved R3 V9 architecture has been projected canonically with no runtime/domain mutation. Mandatory post-R3 Project Control is the next gate; the runtime slot remains released and no H0.2/NX.C1 runtime work is authorized until that gate passes."
+          harness["next_stage"] = "Run mandatory post-R3 Project Control. If NON_RED, resolve the H0.2 machine checkpoint contract and dispatch fresh H0.2/NX.C1 from exact canonical R3 main."
+
+          g = registry["programs"]["G"]
+          g["stage_status"] = "SOURCE_ACCEPTED_FROZEN_WAITING_MAT0"
+          g["next_stage"] = "Keep G8 frozen. G9 remains off the V0 critical path and may start only after MAT0 canonical material identity."
+          g["blockers"] = [x for x in g.get("blockers", []) if "CANONICAL_GLOBAL_P0_R3" not in x]
+
+          t = registry["programs"]["T"]
+          t["next_stage"] = "Keep T1B frozen. T2.0 is not on the V0 critical path and still waits post-R3 control plus TS0.4 ceiling evidence and PC0 convergence."
+
+          ts = registry["programs"]["TS"]
+          ts["stage_status"] = "C22_MAIN_INTEGRATED_FROZEN_WAITING_POST_R3_PC0"
+          ts["next_stage"] = "Do not start TS0.4 on the V0 critical path. It remains gated by mandatory post-R3 Project Control."
+          ts["blockers"] = ["POST_R3_PC0_REQUIRED_BEFORE_TS0_4"]
+
+          nx = registry["programs"]["NX"]
+          nx["stage_status"] = "PREPARATION_COMPLETE_WAITING_POST_R3_PC0"
+          nx["progress_note"] = "Canonical R3 is established by this promotion boundary. NX runtime remains blocked until mandatory post-R3 Project Control passes and a fresh H0.2/NX.C1 Work Order is issued from exact current main. CH->NX remains a blocking dependency revalidation gate for source acceptance."
+          nx["next_stage"] = "After mandatory post-R3 PC0 NON_RED, create/register fresh H0.2/NX.C1 from exact canonical R3 main, apply HIGH-risk routing, and require fresh CH->NX dependency revalidation before NX source acceptance."
+          nx["blockers"] = [
+              "POST_R3_PC0_PLUS_FRESH_H0_2_DISPATCH_REQUIRED_BEFORE_H0_2_NX_C1",
+              "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE",
+          ]
+
+          blocked = []
+          for item in registry.get("global_blocked_transitions", []):
+              if item.get("stage") == "GLOBAL-P0 R3 PROMOTION":
+                  continue
+              item = copy.deepcopy(item)
+              if item.get("stage") == "NX.C1 RUNTIME START":
+                  item["blocked_by"] = "POST_R3_PC0_PLUS_FRESH_H0_2_DISPATCH_REQUIRED"
+              elif item.get("stage") == "G9 START":
+                  item["blocked_by"] = "MAT0_REQUIRED"
+              elif item.get("stage") == "TS0.4 START":
+                  item["blocked_by"] = "POST_R3_PC0_REQUIRED"
+              blocked.append(item)
+          registry["global_blocked_transitions"] = blocked
+
+          order = registry.get("convergence_order", {})
+          order["now_parallel"] = [
+              "mandatory post-R3 Project Control and lifecycle roll-forward",
+              "ECO research/design-only work",
+              "H0.2/NX.C1 preparation only until post-R3 PC0",
+              "H0.3/V0 preparation only",
+          ]
+          order["architecture_train"] = [
+              "GLOBAL-P0 R3 canonical promotion",
+              "mandatory post-R3 PC0",
+              "fresh H0.2/NX.C1",
+              "then next declared runtime checkpoint",
+          ]
+
+          # The reviewed compatibility policy changes only its canonical identity marker.
+          architecture_compat = copy.deepcopy(policy["passport_architecture_compatibility"])
+          ownership_compat = copy.deepcopy(policy["passport_ownership_compatibility"])
+          policy["architecture_revision"] = R3
+          assert policy["passport_architecture_compatibility"] == architecture_compat
+          assert policy["passport_ownership_compatibility"] == ownership_compat
+          source = policy["passport_ownership_compatibility"]["historical_canonical_ownership_source"]
+          assert source == {
+              "architecture_revision": R2,
+              "commit_sha": MAIN,
+              "path": "config/control/architecture-ownership.v1.json",
+              "blob_sha": HISTORICAL_OWNERSHIP_BLOB,
+          }
+
+          # Canonical ownership is the reviewed R3 candidate foundation map, with canonical metadata only.
+          ownership = copy.deepcopy(ownership_candidate)
+          ownership["schema"] = "distributed_world_simulator.architecture_ownership.v1"
+          ownership["status"] = "CANONICAL_R3_V9"
+          ownership["promoted_from_frozen_target"] = "595263c4c925c122a09876cb29b87f5ca5fef1d2"
+          ownership["promoted_from_candidate_blob"] = OWNERSHIP_CANDIDATE_BLOB
+          assert ownership["foundations"] == ownership_candidate["foundations"]
+
+          # Canonical roadmap remains the existing operational roadmap plus an exact normative R3 source.
+          roadmap["global_revision"] = R3
+          roadmap["updated_at_utc"] = now
+          roadmap["operational_snapshot_note"] = "The operational frontier snapshot in this roadmap may contain historical R2-era wording. Canonical fast-moving project state is config/control/project-program-registry.v1.json generation 79. Canonical R3 architecture semantics are pinned by canonical_architecture_source below."
+          roadmap["canonical_architecture_source"] = {
+              "revision": R3,
+              "path": "config/architecture/global-p0-r3-architecture-candidate.v1.json",
+              "frozen_target_sha": "595263c4c925c122a09876cb29b87f5ca5fef1d2",
+              "blob_sha": CANDIDATE_BLOB,
+              "status": "PROMOTED_CANONICAL_V9",
+          }
+          frontiers = roadmap.setdefault("active_frontiers", {})
+          frontiers.pop("architecture_candidate", None)
+          frontiers["canonical_architecture"] = {
+              "branch": "main",
+              "stage": "GLOBAL-P0 R3 V9 canonical architecture",
+              "status": "PROMOTED_CANONICAL_POST_R3_PC0_PENDING",
+              "note": "Human-approved V9 promotion; mandatory post-R3 Project Control is required before new runtime dispatch.",
+          }
+
+          dump("config/control/project-program-registry.v1.json", registry)
+          dump("config/control/project-control-policy.v1.json", policy)
+          dump("config/control/architecture-ownership.v1.json", ownership)
+          dump("config/architecture/global-program-roadmap.v1.json", roadmap)
+
+          snapshot_path = Path("/tmp/r3-v9-promotion-boundary-identities.json")
+          snapshot_path.write_text(json.dumps(identities, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          snapshot_digest = hashlib.sha256(snapshot_path.read_bytes()).hexdigest()
+          Path("/tmp/r3-v9-snapshot-sha256.txt").write_text(snapshot_digest + "\n", encoding="utf-8")
+
+          current_doc = f'''# Distributed World Simulator — Current Project Frontiers
+
+**Operational owner:** `main`  
+**Architecture baseline:** `{R3}`  
+**Registry generation:** `79`  
+**Control plane:** `PC0-2026-08-10-R1`  
+**Harness:** `H0-2026-08-11-R1`
+
+> Machine truth remains `config/control/project-program-registry.v1.json`.
+
+## Canonical state
+
+`GLOBAL-P0 R3 V9` is the Human-approved canonical architecture projection. The promotion contains no gameplay/runtime/domain mutation. Frozen R2 passports remain immutable historical evidence only through exact architecture-identity compatibility; T additionally has exactly the reviewed `WORLD_QUERY_FABRIC: P1_FUTURE -> WQ` and `WORLD_TRANSACTION_MODEL: P0 -> WT` historical ownership transitions.
+
+## Immediate gate
+
+Mandatory **post-R3 Project Control** must be `NON_RED` before any new runtime Work Order.
+
+## V0 critical path
+
+```text
+R3 canonical
+ -> post-R3 PC0 NON_RED
+ -> H0.2 machine checkpoint contract + fresh H0.2/NX.C1
+ -> NX SOURCE_ACCEPTED / H0_2_PASS
+ -> H0.3 development scheduler acceptance
+ -> V0.0
+ -> V0-S0
+```
+
+Wave A, G9, MAT0 and TS0.4 are not inserted into the sequential V0 critical path unless a later machine gate proves they are required by a specific V0 scenario.
+
+## Still blocked
+
+- H0.2/NX.C1 runtime before post-R3 PC0 and fresh H0.2 dispatch.
+- NX source acceptance before fresh CH->NX directional dependency revalidation and the declared HIGH-risk evidence gates.
+- H0.3 implementation before `H0_2_PASS + NX SOURCE_ACCEPTED`.
+- V0 runtime before H0.3 acceptance plus its per-scenario capability gates.
+
+Historical R2 evidence is not rewritten merely to change labels and cannot authorize new post-promotion runtime work.
+'''
+          Path("docs/control/CURRENT_PROJECT_FRONTIERS_RU.md").write_text(current_doc, encoding="utf-8")
+
+          print("PROMOTION_BOUNDARY_SNAPSHOT_SHA256=" + snapshot_digest)
+          print(snapshot_path.read_text(encoding="utf-8"))
+          PY
+
+      - name: Make projection test dual-mode for canonical R3
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/harness/test_project_control_proposed_r3_ownership_projection.py")
+          text = path.read_text(encoding="utf-8")
+          start = text.index("    def _projection(self)")
+          end = text.index("    @staticmethod\n    def _standard_overall", start)
+          replacement = '''    def _projection(self) -> tuple[dict, dict, dict, dict[str, dict[str, str]]]:
+              if os.environ.get("GITHUB_ACTIONS") != "true":
+                  self.skipTest("live proposed-R3 projection requires GitHub Actions with all remote refs fetched")
+
+              registry = copy.deepcopy(self._load_local_json("config/control/project-program-registry.v1.json"))
+              policy = copy.deepcopy(self._load_local_json("config/control/project-control-policy.v1.json"))
+
+              ownership_blob = pc._core.git(
+                  "rev-parse", f"{FROZEN_R3_TARGET}:{FROZEN_R3_OWNERSHIP_PATH}", allow_fail=True
+              )
+              self.assertEqual(FROZEN_R3_OWNERSHIP_BLOB, ownership_blob)
+              frozen_ownership = self._load_git_json(FROZEN_R3_TARGET, FROZEN_R3_OWNERSHIP_PATH)
+              self.assertEqual(R3, frozen_ownership.get("architecture_revision"))
+
+              identities: dict[str, dict[str, str]] = {}
+              if registry.get("registry_generation") == 78 and registry.get("architecture_revision") == R2:
+                  ownership = frozen_ownership
+                  registry["registry_generation"] = 79
+                  registry["architecture_revision"] = R3
+                  policy["architecture_revision"] = R3
+                  for key in LEGACY_PROGRAMS:
+                      central = registry["programs"][key]
+                      branch = str(central["branch"])
+                      passport_path = str(central["passport_path"])
+                      branch_ref = pc._core.remote_ref(branch)
+                      passport = pc._core.load_branch_json(branch_ref, passport_path)
+                      self.assertIsNotNone(passport, (key, branch, passport_path))
+                      self.assertEqual(R2, passport.get("architecture_revision"), key)
+                      head = pc._core.git("rev-parse", branch_ref, allow_fail=True)
+                      blob = pc._core.git("rev-parse", f"{branch_ref}:{passport_path}", allow_fail=True)
+                      identity = {
+                          "program": key,
+                          "branch": branch,
+                          "passport_path": passport_path,
+                          "architecture_revision": R2,
+                          "pinned_head_sha": head,
+                          "passport_blob_sha": blob,
+                      }
+                      central["historical_passport_architecture_revisions"] = [R2]
+                      central["historical_passport_identities"] = [identity]
+                      central.pop("historical_passport_ownership_transitions", None)
+                      identities[key] = identity
+                  registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(T_TRANSITIONS)
+                  return registry, policy, ownership, identities
+
+              self.assertEqual(79, registry.get("registry_generation"))
+              self.assertEqual(R3, registry.get("architecture_revision"))
+              self.assertEqual(R3, policy.get("architecture_revision"))
+              ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
+              self.assertEqual(R3, ownership.get("architecture_revision"))
+              self.assertEqual(frozen_ownership.get("foundations"), ownership.get("foundations"))
+
+              for key in LEGACY_PROGRAMS:
+                  central = registry["programs"][key]
+                  branch = str(central["branch"])
+                  passport_path = str(central["passport_path"])
+                  branch_ref = pc._core.remote_ref(branch)
+                  passport = pc._core.load_branch_json(branch_ref, passport_path)
+                  self.assertIsNotNone(passport, (key, branch, passport_path))
+                  self.assertEqual(R2, passport.get("architecture_revision"), key)
+                  records = central.get("historical_passport_identities", [])
+                  self.assertEqual(1, len(records), key)
+                  identity = records[0]
+                  expected = {
+                      "program": key,
+                      "branch": branch,
+                      "passport_path": passport_path,
+                      "architecture_revision": R2,
+                      "pinned_head_sha": pc._core.git("rev-parse", branch_ref, allow_fail=True),
+                      "passport_blob_sha": pc._core.git("rev-parse", f"{branch_ref}:{passport_path}", allow_fail=True),
+                  }
+                  self.assertEqual(expected, identity, key)
+                  self.assertEqual([R2], central.get("historical_passport_architecture_revisions"), key)
+                  identities[key] = identity
+
+              self.assertEqual(T_TRANSITIONS, registry["programs"]["T"].get("historical_passport_ownership_transitions"))
+              return registry, policy, ownership, identities
+
+'''
+          path.write_text(text[:start] + replacement + text[end:], encoding="utf-8")
+          PY
+
+      - name: Create local atomic promotion commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "GLOBAL-P0 R3 Promotion Executor"
+          git config user.email "r3-promotion@users.noreply.github.com"
+          git add \
+            .github/workflows/project-control.yml \
+            config/architecture/global-program-roadmap.v1.json \
+            config/architecture/global-p0-r3-architecture-candidate.v1.json \
+            config/control/architecture-ownership.v1.json \
+            config/control/architecture-ownership-r3-candidate.v1.json \
+            config/control/global-p0-r2-to-r3-transition-policy.v1.json \
+            config/control/global-p0-r3-prepromotion-guards.v1.json \
+            config/control/harness/checkpoint-catalog.v1.json \
+            config/control/project-control-policy.v1.json \
+            config/control/project-program-registry.v1.json \
+            docs/control/CURRENT_PROJECT_FRONTIERS_RU.md \
+            scripts/control/project_control.py \
+            scripts/control/project_control_architecture_compat.py \
+            scripts/control/project_control_core.py \
+            tests/harness/test_project_control_architecture_compatibility.py \
+            tests/harness/test_project_control_historical_ownership_compatibility.py \
+            tests/harness/test_project_control_proposed_r3_ownership_projection.py
+
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(["git", "diff", "--cached", "--name-only"], text=True).splitlines()
+          allowed = (
+              ".github/workflows/project-control.yml",
+              "config/architecture/",
+              "config/control/",
+              "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
+              "scripts/control/",
+              "tests/harness/",
+          )
+          bad = [p for p in files if not any(p == a or p.startswith(a) for a in allowed)]
+          if bad:
+              raise SystemExit(f"runtime/domain or unexpected promotion paths: {bad}")
+          print("PROMOTION_FILES")
+          print("\n".join(files))
+          PY
+
+          git commit -m "control(r3): promote canonical global architecture V9"
+          CANDIDATE="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+          test "$(git rev-list --parents -n 1 HEAD | wc -w)" -eq 2
+          echo "CANDIDATE=$CANDIDATE" >> "$GITHUB_ENV"
+          echo "PROPOSED_PROMOTION_COMMIT=$CANDIDATE"
+          git diff --stat ce40dd075045078ed70924f8d5a1011eb3eff03d..HEAD
+
+      - name: Validate exact future-main environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git update-ref refs/remotes/origin/main "$CANDIDATE"
+
+          python3 -m py_compile \
+            scripts/control/project_control.py \
+            scripts/control/project_control_architecture_compat.py \
+            scripts/control/project_control_core.py \
+            scripts/control/project_control_directional_watch.py
+
+          python3 -m unittest \
+            tests.harness.test_project_control_architecture_compatibility \
+            tests.harness.test_project_control_historical_ownership_compatibility \
+            tests.harness.test_project_control_proposed_r3_ownership_projection 2>&1 | tee /tmp/r3-tests.log
+
+          grep -Eq 'Ran 64 tests' /tmp/r3-tests.log
+          grep -Eq '^OK$' /tmp/r3-tests.log
+
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          standard = json.loads(Path("artifacts/control/project-control-report.json").read_text(encoding="utf-8"))
+          directional = json.loads(Path("artifacts/control/directional-watch-report.json").read_text(encoding="utf-8"))
+          assert standard["main_head"] == __import__("os").environ["CANDIDATE"]
+          assert standard["architecture_revision"] == "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
+          assert standard["registry_generation"] == 79
+          assert standard["overall_health"] != "RED", standard
+          assert directional["overall_health"] != "RED", directional
+          programs = {p["program"]: p for p in standard["programs"]}
+          t = programs["T"]
+          assert t["health"] != "RED", t
+          assert t["architecture_compatibility"]["mode"] == "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED", t
+          assert t["architecture_compatibility"]["matching_historical_identities"] == 1, t
+          authorized = t["ownership_compatibility"]["authorized_conflicts"]
+          assert authorized == [
+              {"foundation": "WORLD_QUERY_FABRIC", "historical_owner": "P1_FUTURE", "canonical_owner": "WQ"},
+              {"foundation": "WORLD_TRANSACTION_MODEL", "historical_owner": "P0", "canonical_owner": "WT"},
+          ], authorized
+          assert standard.get("cross_branch_overlaps", []) == [], standard.get("cross_branch_overlaps")
+          print("PROJECTED_STANDARD=" + standard["overall_health"])
+          print("PROJECTED_DIRECTIONAL=" + directional["overall_health"])
+          print("PROJECTED_T=" + t["health"])
+          PY
+
+      - name: Static canonical consistency and reviewed semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          R2 = "GLOBAL-P0-2026-08-10-R2"
+          R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
+          MAIN = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+
+          registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text())
+          policy = json.loads(Path("config/control/project-control-policy.v1.json").read_text())
+          ownership = json.loads(Path("config/control/architecture-ownership.v1.json").read_text())
+          roadmap = json.loads(Path("config/architecture/global-program-roadmap.v1.json").read_text())
+          current = Path("docs/control/CURRENT_PROJECT_FRONTIERS_RU.md").read_text()
+
+          assert registry["architecture_revision"] == R3 and registry["registry_generation"] == 79
+          assert policy["architecture_revision"] == R3
+          assert ownership["architecture_revision"] == R3
+          assert roadmap["global_revision"] == R3
+          assert R3 in current
+          assert "GLOBAL-P0 R3 PROMOTION" not in {x.get("stage") for x in registry.get("global_blocked_transitions", [])}
+
+          source = policy["passport_ownership_compatibility"]["historical_canonical_ownership_source"]
+          assert source["architecture_revision"] == R2
+          assert source["commit_sha"] == MAIN
+          assert source["blob_sha"] == "0cebf594ac7900292318d7533e4439cc7f3764d6"
+
+          transitions = registry["programs"]["T"]["historical_passport_ownership_transitions"]
+          assert len(transitions) == 2
+          assert {x["foundation"] for x in transitions} == {"WORLD_QUERY_FABRIC", "WORLD_TRANSACTION_MODEL"}
+          for key, central in registry["programs"].items():
+              if not isinstance(central, dict) or not central.get("requires_passport", False):
+                  continue
+              assert central["historical_passport_architecture_revisions"] == [R2]
+              assert len(central["historical_passport_identities"]) == 1
+          print("STATIC_CANONICAL_CONSISTENCY=PASS")
+          PY
+
+          test "$(git rev-parse HEAD:scripts/control/project_control_core.py)" = "3d68d65e58aff37ab04c971c942efb815fbd374f"
+          test "$(git rev-parse HEAD:scripts/control/project_control_architecture_compat.py)" = "0f27934968960da14c44d7fd66f78b6d364e809b"
+          test "$(git rev-parse HEAD:scripts/control/project_control.py)" = "b505bcba8fbd5f59389ca7971f71a6f55023043a"
+          test "$(git rev-parse HEAD:.github/workflows/project-control.yml)" = "05c99c0464e4d86973fb31e0241a460c85e36d6d"
+          test "$(git rev-parse HEAD:tests/harness/test_project_control_architecture_compatibility.py)" = "f25b71175f1318cedce395ad8372d18c5d52f8e6"
+          test "$(git rev-parse HEAD:tests/harness/test_project_control_historical_ownership_compatibility.py)" = "af9ce23fe5a96f371bc859f33b19ab57a4c1e201"
+
+      - name: Final live identity race recheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/live/*' --prune
+          test "$(git rev-parse refs/remotes/live/main)" = "ce40dd075045078ed70924f8d5a1011eb3eff03d"
+          test "$(git rev-parse refs/remotes/live/control/global-p0-r3-refresh-r1)" = "c703a5e22622813169624f7ce4ec9ea9f362f8df"
+          test "$(git rev-parse refs/remotes/live/control/r3-promotion-passport-compat-r1)" = "53eed6dbfab38b95cdbac3bc8a621590c20a1208"
+          test "$(git rev-parse refs/remotes/live/control/r3-promotion-ownership-compat-r1)" = "5a08def5fa61bca913c7cab3d976fda4e77b7263"
+
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          def git(*args):
+              return subprocess.check_output(["git", *args], text=True).strip()
+
+          identities = json.loads(Path("/tmp/r3-v9-promotion-boundary-identities.json").read_text())
+          for identity in identities:
+              ref = "refs/remotes/live/" + identity["branch"]
+              head = git("rev-parse", ref)
+              blob = git("rev-parse", f"{ref}:{identity['passport_path']}")
+              if head != identity["pinned_head_sha"] or blob != identity["passport_blob_sha"]:
+                  raise SystemExit(f"R3_V9_PROMOTION_IDENTITY_EPOCH_STALE: {identity['program']} captured={identity['pinned_head_sha']}/{identity['passport_blob_sha']} live={head}/{blob}")
+          print("FINAL_IDENTITY_RACE_RECHECK=PASS")
+          PY
+
+      - name: Publish validated candidate ref only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "$CANDIDATE:refs/heads/control/r3-v9-promotion-candidate-ephemeral"
+          echo "$CANDIDATE" > /tmp/r3-v9-candidate-sha.txt
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          summary = {
+              "candidate": os.environ["CANDIDATE"],
+              "parent": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+              "snapshot_sha256": Path("/tmp/r3-v9-snapshot-sha256.txt").read_text().strip(),
+              "standard": json.loads(Path("artifacts/control/project-control-report.json").read_text())["overall_health"],
+              "directional": json.loads(Path("artifacts/control/directional-watch-report.json").read_text())["overall_health"],
+              "main_mutated": False,
+              "candidate_ref": "control/r3-v9-promotion-candidate-ephemeral",
+          }
+          Path("/tmp/r3-v9-validation-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Upload promotion validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r3-v9-promotion-validation
+          path: |
+            /tmp/r3-v9-promotion-boundary-identities.json
+            /tmp/r3-v9-snapshot-sha256.txt
+            /tmp/r3-v9-candidate-sha.txt
+            /tmp/r3-v9-validation-summary.json
+            /tmp/r3-tests.log
+            artifacts/control/project-control-report.json
+            artifacts/control/directional-watch-report.json
+            artifacts/control/PROJECT_STATUS_RU.md
+            artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
+          if-no-files-found: warn
