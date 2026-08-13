@@ -42,6 +42,7 @@ function Invoke-GodotParsePreflight([string]$Label, [string]$ScriptPath) {
 }
 
 Invoke-GodotParsePreflight "ECO EVO1 P2.8 parser/preload preflight" "res://tests/research/ecology/eco_evo1_p2_8_save_restart_acceptance.gd"
+Invoke-GodotParsePreflight "ECO EVO1 P2.8 failure-stage probe parser/preload preflight" "res://tests/research/ecology/eco_evo1_p2_8_failure_stage_probe.gd"
 $codecPreflight = Invoke-GodotScript "ECO EVO1 P2.8 checkpoint codec preflight" "res://tests/research/ecology/eco_evo1_p2_8_checkpoint_codec_preflight.gd"
 $codecHash = [regex]::Match($codecPreflight, 'value_hash=([0-9a-f]{64})')
 if (-not $codecHash.Success) { throw "Unable to parse P2.8 checkpoint codec preflight output" }
