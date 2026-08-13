@@ -22,6 +22,8 @@ const DedicatedGameplayServerRuntimeScript = preload("res://scripts/runtime/netw
 const GraphicalGameClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/transports/graphical_game_client_runtime.gd")
 const M2GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m2_graphical_acceptance_driver.gd")
 const M3DedicatedServerRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+const M3ConstructionBridgeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd")
+const MvpEarthOutpostAuthorityScript = preload("res://scripts/construction/mvp/mvp_earth_outpost_authority.gd")
 const M3GraphicalClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_acceptance_driver.gd")
 const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd")
@@ -191,6 +193,19 @@ func _ready() -> void:
 			else DedicatedGameplayServerRuntimeScript.new()
 		)
 		dedicated_gameplay_server_runtime.name = "M3DedicatedServerRuntime" if _m3_mode else "DedicatedGameplayServerRuntime"
+		if _m3_mode and requested_world == "earth":
+			var mvp_outpost: Dictionary = MvpEarthOutpostAuthorityScript.create_gateway()
+			if not bool(mvp_outpost.get("success", false)):
+				push_error("MVP Earth construction bootstrap failed: %s" % mvp_outpost)
+				get_tree().quit(5)
+				return
+			var construction_bridge = M3ConstructionBridgeScript.new()
+			var bridge_setup: Dictionary = construction_bridge.setup(mvp_outpost["gateway"])
+			var bridge_bound: Dictionary = dedicated_gameplay_server_runtime.set_construction_bridge(construction_bridge)
+			if not bool(bridge_setup.get("success", false)) or not bool(bridge_bound.get("success", false)):
+				push_error("MVP Earth construction bridge setup failed: %s %s" % [bridge_setup, bridge_bound])
+				get_tree().quit(5)
+				return
 		add_child(dedicated_gameplay_server_runtime)
 		var dedicated_config := {
 			"host": String(launch_options.get("server_address", "127.0.0.1")),

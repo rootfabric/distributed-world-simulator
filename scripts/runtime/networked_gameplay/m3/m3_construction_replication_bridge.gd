@@ -5,6 +5,7 @@ extends RefCounted
 const CommandScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_command.gd")
 const EventScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_event.gd")
 const BundleScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd")
+const GrantScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_permission_grant.gd")
 
 const SNAPSHOT_TYPE := "CONSTRUCTION_SNAPSHOT"
 const EVENT_TYPE := "CONSTRUCTION_EVENT"
@@ -27,6 +28,11 @@ func connect_player(logical_player_id: String, ownership_epoch: int, last_seen_e
 		return _failure("INVALID_M3_CONSTRUCTION_PLAYER")
 	var client_id := "client/m3/%s" % logical_player_id
 	var session_id := "session/m3/%s/%d" % [logical_player_id, ownership_epoch]
+	var permissions = _gateway.get_permission_store() if _gateway.has_method("get_permission_store") else null
+	if permissions != null and permissions.has_method("get_grant") and permissions.get_grant("permission/mvp/m3/%s/build" % logical_player_id).is_empty():
+		var grant: Dictionary = GrantScript.create("permission/mvp/m3/%s/build" % logical_player_id, client_id, "*", [GrantScript.ACTION_BUILD, GrantScript.ACTION_READ], int(permissions.get_epoch()))
+		var published: Dictionary = permissions.publish(grant)
+		if not bool(published.get("success", false)): return published
 	var connected: Dictionary = _gateway.connect_client(client_id, session_id, last_seen_event_index)
 	if not bool(connected.get("success", false)):
 		return connected
