@@ -110,6 +110,7 @@ $Tests = @(
     @{ Path = "res://tests/characters/test_fpe_r2_s8_skinned_configurable_viewmodel.gd"; PassMarker = "FPE R2 S8 skinned configurable viewmodel: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s9_volumetric_skinned_hand_asset.gd"; PassMarker = "FPE R2 S9 volumetric skinned hand asset: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s10_hand_asset_profiles.gd"; PassMarker = "FPE R2 S10 portable hand asset profiles: PASS" },
+    @{ Path = "res://tests/characters/test_fpe_r2_s10_paired_single_mesh_adapter.gd"; PassMarker = "FPE R2 S10 paired single-mesh adapter: PASS" },
     @{ Path = "res://tests/characters/test_fpe_sandbox_owner_collision_isolation.gd"; PassMarker = "FPE sandbox owner collision isolation: PASS" },
     @{ Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"; PassMarker = "FirstPersonEmbodiment performance gate: PASS" },
     @{ Path = "res://tests/characters/test_first_person_embodiment_lab_load.gd"; PassMarker = "FirstPersonEmbodiment graphical scene load: PASS" }
