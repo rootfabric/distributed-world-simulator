@@ -58,15 +58,18 @@ function Invoke-GodotCaptured {
     }
 }
 
-Write-Host "Refreshing Godot import/class cache before hand asset inspection" -ForegroundColor Cyan
+Write-Host "Importing pending Godot resources before hand asset inspection" -ForegroundColor Cyan
+# --import waits for pending resource imports to finish, unlike --editor --quit,
+# which may exit after the filesystem scan while a freshly copied external GLB
+# still has no ResourceLoader-visible imported scene.
 $Preflight = Invoke-GodotCaptured -Arguments @(
     "--headless",
-    "--editor",
     "--path", $Root,
-    "--quit"
+    "--import"
 )
-if ([int]$Preflight.ExitCode -ne 0 -or ([string]$Preflight.OutputText).Contains("SCRIPT ERROR:")) {
-    throw "Godot preflight failed before hand asset inspection."
+$PreflightText = [string]$Preflight.OutputText
+if ([int]$Preflight.ExitCode -ne 0 -or $PreflightText.Contains("SCRIPT ERROR:") -or $PreflightText.Contains("Parse Error:") -or $PreflightText.Contains("Compile Error:")) {
+    throw "Godot import preflight failed before hand asset inspection (exit=$($Preflight.ExitCode))."
 }
 
 Write-Host "Inspecting hand asset: $Scene" -ForegroundColor Cyan
