@@ -2,11 +2,11 @@
 
 **Operational owner:** `main`  
 **Architecture baseline:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation:** `79` until the routing proposal is canonically activated  
+**Registry generation:** `80` activation candidate on PR #98; live `main` remains generation `79` until acceptance/merge  
 **Control plane:** `PC0-2026-08-10-R1`  
 **Harness:** `H0-2026-08-11-R1`
 
-> Machine project-state truth remains `config/control/project-program-registry.v1.json`. This branch prepares a product-checkpoint routing change; main must still activate it with the corresponding registry update.
+> Machine project-state truth remains `config/control/project-program-registry.v1.json`. PR #98 now contains the complete generation-80 routing candidate; it becomes canonical only after the control change is accepted into `main` and post-main Project Control is NON_RED.
 
 ## Canonical state
 
