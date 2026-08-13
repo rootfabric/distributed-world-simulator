@@ -4,7 +4,7 @@
   "project_epoch": "E2026-08-13-H0-2-R3",
   "program": "NX",
   "goal_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-  "state": "DISPATCHED",
+  "state": "IN_PROGRESS",
   "work_order_type": "IMPLEMENTATION",
   "base_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
   "branch": "feature/h0-2-nx-c1-owner-authority-r3",
@@ -195,5 +195,5 @@
   "human_approval_required_for": [
     "RUNTIME_FEATURE_MERGE"
   ],
-  "notes": "DISPATCHED after exact-head HIGH pre-build review PASS on 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 and Project Control run 31687497672 standard/directional NON_RED. Exactly one bounded runtime worker is authorized within allowed_paths. Runtime merge remains a Human gate."
+  "notes": "IN_PROGRESS after exact-head HIGH pre-build review PASS on 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 and Director DISPATCHED event #2. Exactly one bounded runtime worker is now executing within allowed_paths. Runtime merge remains a Human gate."
 }
