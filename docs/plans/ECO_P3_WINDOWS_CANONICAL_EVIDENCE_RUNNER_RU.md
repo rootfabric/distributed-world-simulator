@@ -1,6 +1,6 @@
 # ECO P3 — Windows Canonical Evidence Runner
 
-Статус: `IMPLEMENTED / EVIDENCE-ONLY / P3.1→P3.3 / NO ACCEPTANCE MUTATION`.
+Статус: `IMPLEMENTED / EVIDENCE-ONLY / P3.1→P3.4 / NO ACCEPTANCE MUTATION`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -19,7 +19,9 @@ P3.1 Windows canonical evidence
 -> separate P3.2 ACCEPTED lifecycle commit
 -> P3.3 Windows canonical evidence
 -> separate P3.3 ACCEPTED lifecycle commit
--> P3.4 may open
+-> P3.4 Windows canonical evidence
+-> separate P3.4 ACCEPTED lifecycle commit
+-> P3.5 may open
 ```
 
 ## Fail-closed preflight
@@ -29,9 +31,10 @@ P3.1 Windows canonical evidence
 - exact branch `feature/eco-evolutionary-ecology`;
 - отсутствие staged/unstaged изменений tracked files;
 - exact Godot `4.7.1.stable.double.custom_build.a13da4feb`;
-- byte-identical pinned P2.8/P3.1/P3.2/P3.3 runner, kernel и acceptance-test surfaces;
+- byte-identical pinned P2.8/P3.1/P3.2/P3.3/P3.4 runner, kernel и acceptance-test surfaces;
 - для P3.2 — factual P3.1 validation status `ACCEPTED*`;
-- для P3.3 — factual P3.2 validation status `ACCEPTED*`.
+- для P3.3 — factual P3.2 validation status `ACCEPTED*`;
+- для P3.4 — factual P3.3 validation status `ACCEPTED*`.
 
 Pinned Git blob identities:
 
@@ -65,9 +68,18 @@ scripts/research/ecology/plant_spatial_dispersal_v1.gd
 
 tests/research/ecology/eco_p3_3_spatial_dispersal_acceptance.gd
 9911c9197663098e1efa8875332b9d7c88ca34c6
+
+RUN_ECO_P3_4_TESTS.ps1
+25f096ec918115f5b7d9447bfad0377dc93d2fd5
+
+scripts/research/ecology/plant_environmental_gradient_v1.gd
+11e2b281c48d378da906f0739c739eecf9aa8465
+
+tests/research/ecology/eco_p3_4_environmental_gradient_acceptance.gd
+f3412bd53ebe7d647b83266e4945d758924ab66b
 ```
 
-Collector также пишет в evidence JSON собственный current blob, validation-file blobs/status для P3.1/P3.2/P3.3, HEAD/tree, PowerShell version, OS/architecture и exact Godot identity.
+Collector также пишет в evidence JSON собственный current blob, validation-file blobs/status для P3.1/P3.2/P3.3/P3.4, HEAD/tree, PowerShell version, OS/architecture и exact Godot identity.
 
 ## Expected immutable aggregates
 
@@ -83,6 +95,9 @@ ECO.P3.2
 
 ECO.P3.3
 37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41
+
+ECO.P3.4
+a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813
 ```
 
 Canonical run fail-closed останавливается, если observed aggregate или parent identity отличается от ожидаемого immutable value.
@@ -102,9 +117,10 @@ Explicit stages:
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P31 -GodotPath $Godot
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P32 -GodotPath $Godot
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P33 -GodotPath $Godot
+.\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P34 -GodotPath $Godot
 ```
 
-`P32` fail-closed blocked пока P3.1 не `ACCEPTED*`; `P33` blocked пока P3.2 не `ACCEPTED*`.
+`P32` fail-closed blocked пока P3.1 не `ACCEPTED*`; `P33` blocked пока P3.2 не `ACCEPTED*`; `P34` blocked пока P3.3 не `ACCEPTED*`.
 
 ## Evidence output
 
@@ -120,6 +136,7 @@ Successful run writes matching raw log + JSON pair:
 P31-<UTC>-<HEAD12>.log/.json
 P32-<UTC>-<HEAD12>.log/.json
 P33-<UTC>-<HEAD12>.log/.json
+P34-<UTC>-<HEAD12>.log/.json
 ```
 
 JSON содержит:
@@ -130,11 +147,11 @@ JSON содержит:
 - tracked-worktree cleanliness assertion;
 - host/PowerShell/Godot identity;
 - pinned source blob identities;
-- P3.1/P3.2/P3.3 validation status/blob identities;
+- P3.1/P3.2/P3.3/P3.4 validation status/blob identities;
 - canonical runner name;
 - observed aggregate and parent hash;
 - raw-log filename and SHA-256;
-- immutable expected P2.8/P3.1/P3.2/P3.3 aggregates;
+- immutable expected P2.8/P3.1/P3.2/P3.3/P3.4 aggregates;
 - explicit `acceptance_mutation_performed = false`;
 - next lifecycle action for the selected stage.
 
@@ -148,6 +165,7 @@ Current factual state:
 P3.1 = ACCEPTED_EXACT_WINDOWS_CANONICAL
 P3.2 = ACCEPTED_EXACT_WINDOWS_CANONICAL
 P3.3 = CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING
+P3.4 = CANDIDATE_TARGETED_LINUX_PASS_P3_3_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING
 ```
 
 Therefore `-Stage Auto` resolves to:
@@ -156,4 +174,4 @@ Therefore `-Stage Auto` resolves to:
 P33 / P3.3 Spatial Dispersal
 ```
 
-P3.4 remains closed until a separate reviewed lifecycle commit accepts exact P3.3 Windows canonical evidence.
+P3.4 implementation already exists as a targeted candidate, but its canonical gate remains closed until a separate reviewed lifecycle commit accepts exact P3.3 Windows canonical evidence. After P3.3 acceptance, `Auto` advances to `P34`; P3.5 remains closed until P3.4 is independently accepted.
