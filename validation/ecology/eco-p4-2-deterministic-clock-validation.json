@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_2_deterministic_clock_validation.v1",
-  "revision": "ECO-P4.2-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P4.2-2026-08-13-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_FULL_CHAIN_PASS",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_REMOTE_BLOBS_MATCH",
   "scope": "DETERMINISTIC_WORLD_TIME_TO_ECOLOGY_GENERATION_CLOCK_ONLY",
   "parent": {
     "checkpoint": "ECO.P4.1",
@@ -11,7 +11,7 @@
     "kernel_blob": "b651d208abd17050367fed4541c92f58de0f3c3f",
     "validation_blob_after_acceptance": "9a18978a4206452d58d32eb3ec49e2effdff26f6"
   },
-  "candidate_blobs": {
+  "accepted_blobs": {
     "kernel": "e6a1336059fdfa16143df0957206cc78b0f86bff",
     "acceptance_test": "2ac25dbdd2644b72ddbfe14db3c35434bfaac7c7",
     "runner": "ba79a9e941279dfb7d94d9fac1c066b53be3085c"
@@ -24,11 +24,16 @@
     "cadence_independence": "direct advance and any partition of intermediate observations converge to identical P3 and RegionState hashes",
     "drift_control": "boundary time is derived as origin + generation_offset * interval, not accumulated by repeated additions",
     "rebase": "a clock recreated at an already canonical boundary yields the same future region identity for the same interval",
-    "backlog_boundary": "due_plan may report backlog beyond one P3.8 call; advance_to fails closed above P3.8 MAX_ADVANCE_STEPS; P4.3 owns catch-up policy",
+    "large_due_boundary": "due_plan may describe more than one P3.8 call can execute; advance_to fails closed there and leaves staged catch-up to P4.3",
     "rng": "no global RNG consumption",
-    "not_authorized": ["offline catch-up batching/backlog policy", "production persistence", "region/server ownership or handoff", "network replication", "client authority"]
+    "not_authorized": ["staged catch-up policy", "production persistence", "region/server ownership or handoff", "network replication", "client authority"]
   },
-  "exact_attached_godot_evidence": {
+  "acceptance_evidence": {
+    "source_head_with_candidate_package": "d2b814ce460d206984de0ca34ecd4689c05a82de",
+    "remote_delta_from_p4_1_acceptance": ["RUN_ECO_P4_2_TESTS.ps1", "scripts/ecology/production/ecology_clock_v1.gd", "tests/ecology/production/eco_p4_2_deterministic_clock_acceptance.gd", "validation/ecology/eco-p4-2-deterministic-clock-validation.json"],
+    "remote_kernel_blob_match": true,
+    "remote_test_blob_match": true,
+    "remote_runner_blob_match": true,
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "parser_preload": "PASS",
     "parser_log_sha256": "39fde4591a5b4e0b04ce5153e2250cb1acf164a74c7a9335186d68f9edcccc3a",
@@ -42,6 +47,6 @@
     "decimal_generation_100_region_hash": "6b291c025ec6f2eb5904741b1c09959942f1bd10ef10a5e5b14886bf63a62692",
     "parent_p4_1": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717"
   },
-  "covered_properties": ["P4_1_ACCEPTED_PARENT_PINNED", "CLOCK_HASHED", "EXACT_REGION_CLOCK_BINDING", "WORLD_TIME_REWIND_REJECTED", "COMPLETED_BOUNDARY_MAPPING", "DIRECT_PARTITION_CONVERGENCE", "OBSERVATION_CADENCE_INDEPENDENCE", "DECIMAL_INTERVAL_DRIFT_FREE", "CLOCK_REBASE_EQUIVALENCE", "OVERSIZED_BACKLOG_FAIL_CLOSED", "HASH_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
-  "decision": "IMPLEMENT_P4_2_CANDIDATE; LIFECYCLE_ACCEPT_AFTER_REMOTE_BLOB_AND_SOURCE_HEAD_RECHECK; DO_NOT_OPEN_P4_3_BEFORE_ACCEPTANCE"
+  "covered_properties": ["P4_1_ACCEPTED_PARENT_PINNED", "CLOCK_HASHED", "EXACT_REGION_CLOCK_BINDING", "WORLD_TIME_REWIND_REJECTED", "COMPLETED_BOUNDARY_MAPPING", "DIRECT_PARTITION_CONVERGENCE", "OBSERVATION_CADENCE_INDEPENDENCE", "DECIMAL_INTERVAL_DRIFT_FREE", "CLOCK_REBASE_EQUIVALENCE", "LARGE_DUE_FAIL_CLOSED", "HASH_TAMPER_REJECTED", "EXACT_FIELD_SET", "GLOBAL_RNG_NOT_CONSUMED"],
+  "decision": "ACCEPT_P4_2; OPEN_P4_3_OFFLINE_CATCH_UP"
 }
