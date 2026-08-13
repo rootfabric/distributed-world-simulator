@@ -1,11 +1,12 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_8_save_restart_validation.v1",
-  "revision": "ECO-EVO1-P2.8-2026-08-13-R2-REPAIRED-CANDIDATE",
+  "revision": "ECO-EVO1-P2.8-2026-08-13-R3-FAILURE-STAGE-LOCALIZATION",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
   "original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
-  "repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-  "status": "REPAIRED_CANDIDATE_EXACT_WINDOWS_RERUN_PENDING",
+  "codec_repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
+  "stage_probe_head": "ca8d9c38a48b4da9244f2daf7174e79014ab846f",
+  "status": "REPAIRED_CANDIDATE_SECOND_FAILURE_STAGE_LOCALIZATION_PENDING",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.7",
@@ -27,9 +28,6 @@
     "total_years": 30,
     "cut_a_year": 14,
     "cut_b_year": 18,
-    "cut_a_meaning": "before westward transport and severe FAR disturbance window",
-    "cut_b_meaning": "after four severe FAR events, before eastward transport resumes",
-    "fresh_process_checkpoint": "user://eco_evo1_p2_8_plant_world_checkpoint.json",
     "baseline": "accepted-P2.6-equivalent disturbed 30-year biogeography run",
     "required_equality": "P2.6 baseline result_hash == stateful uninterrupted result_hash == double-save/restart result_hash"
   },
@@ -38,97 +36,97 @@
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "parser_preflight": "PASS",
     "accepted_parent_chain": "PASS_THROUGH_P2_7",
-    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
     "p2_8_result": "FAIL_BEFORE_EXPERIMENT_RESULT",
     "first_failed_assertion": "experiment result exists",
     "classification": "P2_8_CHECKPOINT_CODEC_DEFECT_NOT_PARENT_REGRESSION"
   },
-  "repair_finding": {
+  "codec_repair_finding": {
     "id": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
-    "root_cause": "Godot JSON.parse_string restores JSON numbers as TYPE_FLOAT. The original P2.8 codec emitted TYPE_INT values as untagged JSON numbers, so current_year, seed_count and other integer truth changed Variant type after restore. Canonical hashing distinguishes TYPE_INT from TYPE_FLOAT; deserialize_checkpoint therefore rejected its own freshly serialized checkpoint fail-closed.",
-    "direct_engine_probe": "original int typeof=TYPE_INT(2); parsed int typeof=TYPE_FLOAT(3)",
-    "semantic_effect": "world_hash and checkpoint_hash mismatch after first save/deserialize; Experiment.run returns empty before P2.8 result",
-    "repair": "encode TYPE_INT as {__eco_type:Int,value:n} and restore with int(value)",
+    "root_cause": "Godot JSON.parse_string restores untagged JSON numbers as TYPE_FLOAT, erasing TYPE_INT identity required by P2.8 canonical hashing.",
+    "repair": "encode TYPE_INT with an explicit Int wrapper and restore with int(value)",
+    "codec_fix_commit": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
+    "codec_preflight_commit": "31fd42a503875247cc758b36d7915a99a6a72698",
+    "runner_fail_fast_commit": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
     "biology_or_population_semantics_changed": false,
     "accepted_p2_7_or_earlier_sources_changed": false
   },
-  "repair_commits": {
-    "codec_fix": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
-    "codec_preflight_test": "31fd42a503875247cc758b36d7915a99a6a72698",
-    "runner_fail_fast": "8d5de417f83ac257ee3bc1ae40c02847ac82de82"
+  "second_exact_windows_attempt": {
+    "checkout_head": "6eb1974337b9f655cd78efda791a94c13c9efb5b",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preflight": "PASS",
+    "codec_preflight": "PASS_17_ASSERTIONS",
+    "codec_preflight_value_hash": "fa1add678255ba79fe4dcf4cee516e56f0bcf9679586c6a04b64b70a299af209",
+    "accepted_parent_chain": "PASS_PH3_PH3C_CAL1_A_TO_F_P2_1_TO_P2_7_WITH_FRESH_PROCESS_REPLAYS",
+    "p2_1_aggregate_hash": "cf620f1d7896502a29a67d52f3700a570a4c585ff21a002b750e9440aee717e6",
+    "p2_2_aggregate_hash": "633c797526347aa65470ad3d20490f4fe042efa9d20d5e0e68c1ff4c01182f86",
+    "p2_3_aggregate_hash": "15752b545460541f5e4257c94fa5b75973274cfecc707106c24f574269f7df3e",
+    "p2_4_aggregate_hash": "78273550a6a5dcb3597aa7c176683ed6b58f7238c7e51418a27f72c52f3c6c97",
+    "p2_5_aggregate_hash": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
+    "p2_6_aggregate_hash": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
+    "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
+    "p2_8_result": "FAIL_BEFORE_EXPERIMENT_RESULT",
+    "first_failed_assertion": "experiment result exists",
+    "classification": "CODEC_001_FIXED_BUT_SECOND_FAIL_CLOSED_BOUNDARY_REMAINS",
+    "important_negative_evidence": [
+      "NOT_A_PARSER_FAILURE",
+      "NOT_A_CODEC_PREFLIGHT_FAILURE",
+      "NOT_A_P2_7_OR_EARLIER_REGRESSION"
+    ]
+  },
+  "failure_stage_localization": {
+    "test": "tests/research/ecology/eco_evo1_p2_8_failure_stage_probe.gd",
+    "runner_order": "parser/preload -> codec preflight -> fail-closed execution stage probe -> full P2.7 parent regression -> P2.8 acceptance -> fresh process A/B",
+    "stage_boundaries": [
+      "P2_7_PARENT",
+      "FIXTURE",
+      "P2_6_BASELINE",
+      "CREATE_WORLD",
+      "ADVANCE_UNINTERRUPTED_TO_30",
+      "UNINTERRUPTED_P2_6_HASH_EQUALITY",
+      "ADVANCE_TO_CUT_A",
+      "SERIALIZE_DESERIALIZE_CHECKPOINT_A",
+      "ADVANCE_TO_CUT_B",
+      "SERIALIZE_DESERIALIZE_CHECKPOINT_B",
+      "ADVANCE_AFTER_CUT_B_TO_30_AND_FINAL_EQUALITY"
+    ],
+    "checkpoint_failure_diagnostics": "prints restored world validation plus stored/original/restored world and evidence hashes and recomputed checkpoint hash",
+    "variant_audit": "prints unsupported value types or non-string dictionary keys if serialization returns empty"
   },
   "supplementary_attached_engine_evidence": {
     "authority": "SUPPLEMENTARY_NOT_EXACT_WINDOWS_CANONICAL",
     "binary": "uploaded Godot 4.7.1 Linux double build from project attachment",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "raw_json_probe": "CONFIRMED_JSON_INT_TO_FLOAT_VARIANT_ERASURE",
-    "fixed_codec_probe": {
-      "hash_match": true,
-      "restored_current_year_type": "TYPE_INT",
-      "restored_seed_count_type": "TYPE_INT"
-    },
-    "two_cut_probe": {
-      "fresh_process_runs": 3,
-      "cut_a_year": 14,
-      "cut_b_year": 18,
-      "final_year": 30,
-      "cut_a_hash": "e10eed0d6979e4f0f3ed605a3d1a53c8688d3638fc5dc8aa586fe124c6724e41",
-      "cut_b_hash": "52fe07c45258cef3f90e03aaed65d1e5ad35bad8be77defb3ad1de01848845e4",
-      "p2_7_evidence_preserved": true,
-      "tamper_rejected": true,
-      "all_runs_identical": true
-    }
+    "fixed_codec_probe": "PASS_HASH_AND_INT_VARIANT_IDENTITY",
+    "two_cut_codec_probe": "PASS_3_FRESH_PROCESSES_WITH_IDENTICAL_HASHES_AND_TAMPER_REJECTION"
   },
   "required_properties": [
     "P2_7_PARENT_HASH_UNCHANGED",
     "STATEFUL_UNINTERRUPTED_MATCHES_P2_6_RESULT_HASH",
     "SAVE_AT_YEAR_14_RESTORES_WITH_ABSOLUTE_YEAR",
-    "FUTURE_DISTURBANCE_SCHEDULE_SURVIVES_CUT_A",
     "SAVE_AT_YEAR_18_PRESERVES_ACCUMULATED_EVENT_HISTORY",
     "DOUBLE_RESTART_FINAL_RESULT_HASH_EQUALS_UNINTERRUPTED",
     "FINAL_ADULT_AND_SEED_BANK_STATE_HASH_EQUALS_UNINTERRUPTED",
     "P2_7_DIVERGENCE_DIAGNOSTICS_HASH_PRESERVED",
-    "PATCH_STRATEGY_TRANSPORT_AND_DISTURBANCE_CONFIG_PRESERVED",
-    "REGIONAL_HISTORY_TRANSITIONS_MIGRATION_DISTURBANCE_LOGS_PRESERVED",
     "MIGRATION_CONSERVATION_PRESERVED",
     "DISTURBANCE_CONSERVATION_PRESERVED",
     "CHECKPOINT_WORLD_EVIDENCE_AND_ENVELOPE_HASHES_VALIDATED",
     "INTEGER_VARIANT_TYPES_PRESERVED_ACROSS_JSON_ROUND_TRIP",
     "TAMPERED_JSON_VALID_CHECKPOINT_REJECTED_FAIL_CLOSED",
     "FRESH_PROCESS_DISK_RESTORE_A_AND_B_MATCH_ACCEPTANCE_AGGREGATE",
-    "NO_BIOME_REGENERATION",
-    "NO_SPECIES_ID_ASSIGNMENT",
     "NO_ACCEPTED_P2_7_OR_EARLIER_SOURCE_MODIFICATION",
     "NO_RUNTIME_PATH_MODIFICATION"
   ],
-  "implementation_diff": {
-    "base": "f55d87a5bd5c45f98bbcb1180e73429b65f3b162",
-    "head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
-    "changed_files": 5,
-    "accepted_p2_7_or_earlier_sources_modified": false,
-    "runtime_paths_modified": false
-  },
-  "repair_diff": {
-    "base": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
-    "head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-    "commits": 3,
-    "changed_files": 3,
-    "persistence_diff": "+5/-1",
-    "new_codec_preflight": true,
-    "runner_added_lines": 5,
-    "accepted_p2_7_or_earlier_sources_modified": false,
-    "runtime_paths_modified": false
-  },
   "tests": {
     "parser_preflight": true,
     "codec_preflight": "tests/research/ecology/eco_evo1_p2_8_checkpoint_codec_preflight.gd",
+    "failure_stage_probe": "tests/research/ecology/eco_evo1_p2_8_failure_stage_probe.gd",
     "acceptance": "tests/research/ecology/eco_evo1_p2_8_save_restart_acceptance.gd",
     "restart": "tests/research/ecology/eco_evo1_p2_8_restart_replay_probe.gd",
     "runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
-    "parent_runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1",
-    "runner_order": "parser/preload -> checkpoint codec preflight -> full accepted P2.7 regression -> P2.8 acceptance -> fresh process A -> fresh process B"
+    "parent_runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1"
   },
-  "local_sanity": "ATTACHED_LINUX_DOUBLE_SAME_ENGINE_COMMIT_SUPPLEMENTARY_PASS; EXACT_WINDOWS_RERUN_STILL_REQUIRED",
-  "decision": "REPAIRED_CANDIDATE_AWAIT_EXACT_WINDOWS_CANONICAL_RERUN",
+  "decision": "DO_NOT_ACCEPT_P2_8; LOCALIZE_SECOND_FAIL_CLOSED_BOUNDARY_BEFORE_ANY_FURTHER_SEMANTIC_REPAIR",
+  "next_if_stage_identified": "repair only the identified P2.8 persistence/orchestration boundary, preserve accepted P2.7 and earlier sources, then exact-Windows rerun",
   "next_if_pass": "ECO.EVO1 COMPLETE; open post-EVO1 route resolution for EVO2 and XFER0"
 }
