@@ -8,11 +8,11 @@
   "short_description": "Fail-closed Project Control compatibility repair for historical R2 Branch Passports across the Human-approved R3 canonical promotion boundary.",
   "purpose": "Permit only explicitly main-registry-allowlisted historical passport architecture revisions after canonical promotion while keeping every unlisted mismatch RED and without rewriting frozen R2 evidence.",
   "expected_outcome": "R3 promotion preflight can preserve accepted/preparation/research R2 provenance without globally weakening ARCHITECTURE_REVISION_MISMATCH; new post-promotion frontiers still require the canonical R3 revision.",
-  "current_stage": "R3 promotion Project Control compatibility repair after independent review",
-  "stage_status": "INDEPENDENT_REVIEW_FIX_REQUIRED_AWAITING_IMPLEMENTER_REPAIR",
-  "progress_note": "Durable Independent Review recorded FIX_REQUIRED on review commit c8cb9e9f537a773a65232d5b68f6b9b5f6462484. Review artifact blob is 4d8744d698024243829d6d531b94a3cf2d5497b5 and reviewed implementation remains 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6. Fresh reviewer-head Project Control 31665735256/#341 completed SUCCESS; this does not convert the review verdict to PASS. Runtime/domain delta remains 0. R3 promotion remains NOT PERFORMED. Canonical main remains ce40dd075045078ed70924f8d5a1011eb3eff03d on GLOBAL-P0-2026-08-10-R2 with registry generation 78. Required implementation repairs are exactly R3-COMPAT-FIX-001, R3-COMPAT-FIX-002 and R3-COMPAT-FIX-003, followed by a new independent compatibility review.",
+  "current_stage": "R3 promotion compatibility repair fixed after independent review",
+  "stage_status": "FIX_001_003_IMPLEMENTED_VALIDATED_AWAITING_NEW_INDEPENDENT_REVIEW",
+  "progress_note": "Previous durable Independent Review remains FIX_REQUIRED at review commit c8cb9e9f537a773a65232d5b68f6b9b5f6462484. R3-COMPAT-FIX-001, R3-COMPAT-FIX-002 and R3-COMPAT-FIX-003 are implemented on fixed implementation head 4699c99cf65d6786312f89a8abcfbb662a577327 and validated by fresh Project Control 31667301379/#343 completed SUCCESS, including 27/27 architecture compatibility regression tests, standard PC0 YELLOW/NON_RED and directional PC0 YELLOW/NON_RED. Implementer evidence proves revision allowlist alone is insufficient, exact immutable program/branch/passport_path/architecture_revision/pinned_head_sha/passport_blob_sha identity is required, missing or wrong policy field literals fail closed, and moved/head/blob identity mutations restore ARCHITECTURE_REVISION_MISMATCH/RED. This is implementer validation only and does not self-award independent review PASS. Runtime/domain delta remains 0. R3 promotion remains NOT PERFORMED. Canonical main remains ce40dd075045078ed70924f8d5a1011eb3eff03d on GLOBAL-P0-2026-08-10-R2 with registry generation 78.",
   "last_accepted_checkpoint": "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED",
-  "next_stage": "Implement exactly R3-COMPAT-FIX-001..003, validate on a new implementation head, then obtain a NEW independent compatibility review. Do not retry R3 promotion before that PASS.",
+  "next_stage": "Obtain a NEW independent R3 promotion control-compatibility review of fixed implementation head 4699c99cf65d6786312f89a8abcfbb662a577327 and this lifecycle state. Do not retry R3 promotion before a durable independent PASS.",
   "parent_branch_or_checkpoint": "canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + durable R3 V9 Human APPROVE_PROMOTION + failed promotion compatibility preflight",
   "base_commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
   "dependencies": [
@@ -48,7 +48,7 @@
   ],
   "tested_heads": {
     "runtime": "NOT_APPLICABLE",
-    "focused": "7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6",
+    "focused": "4699c99cf65d6786312f89a8abcfbb662a577327",
     "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
   },
   "ownership_claims": [
@@ -69,9 +69,6 @@
     "COMPUTE_EXECUTION"
   ],
   "blockers": [
-    "R3_COMPAT_FIX_001_EXECUTABLE_HISTORICAL_IDENTITY_REQUIRED",
-    "R3_COMPAT_FIX_002_MISSING_POLICY_FIELD_FAIL_CLOSED_REQUIRED",
-    "R3_COMPAT_FIX_003_NEGATIVE_REGRESSION_COVERAGE_REQUIRED",
     "NEW_INDEPENDENT_CONTROL_REPAIR_REVIEW_REQUIRED_AFTER_FIX"
   ],
   "health_declared": "YELLOW",
