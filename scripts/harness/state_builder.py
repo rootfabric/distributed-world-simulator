@@ -10,6 +10,10 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
+from .checkpoint_planner import (
+    arbitrate_pre_h0_3_runtime_mutation,
+    classify_v0_nx_foundation_scope,
+)
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -108,6 +112,41 @@ def _git_path_head(root: Path, path: Path) -> str:
 def _git(root: Path, *args: str) -> tuple[int, str]:
     output = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True, check=False)
     return output.returncode, output.stdout.strip()
+
+
+def _git_changed_paths(root: Path, base_sha: str, implementation_head: str) -> list[str]:
+    code, output = _git(root, "diff", "--name-only", f"{base_sha}..{implementation_head}")
+    if code != 0:
+        raise ContractValidationError("IMPLEMENTATION_DIFF_UNAVAILABLE")
+    return sorted({line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()})
+
+
+def _load_global_work_order_states(
+    root: Path,
+    bundle: ContractBundle,
+) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Reduce every versioned execution so concurrency is repository-global."""
+    result: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    executions_root = root / "config" / "control" / "harness" / "executions"
+    for candidate in sorted(executions_root.iterdir() if executions_root.exists() else []):
+        if not candidate.is_dir():
+            continue
+        transition_path = candidate / "transition-table.v1.json"
+        work_order_dir = candidate / "work-orders"
+        if not transition_path.is_file() or not work_order_dir.is_dir():
+            continue
+        transition_table = read_json(transition_path)
+        guard_context = load_guard_context(root, candidate)
+        for work_order_path in _json_files(work_order_dir):
+            definition = read_json(work_order_path)
+            bundle.validate("work_order_schema", definition, f"work_order:{work_order_path.name}")
+            events = [
+                read_json(path)
+                for path in _json_files(candidate / "events" / definition["work_order_id"])
+            ]
+            reduced = reduce_events(bundle, definition, events, transition_table, guard_context)
+            result.append((definition, reduced))
+    return result
 
 
 def _validate_event_git_provenance(
@@ -414,6 +453,11 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
     implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
+    implementation_changed_paths = _git_changed_paths(
+        root,
+        str(active["definition"]["base_sha"]),
+        implementation_head,
+    )
     ledger_head = _validate_event_git_provenance(
         root,
         active["event_paths"],
@@ -438,6 +482,19 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
         findings.append("EPOCH_INVALIDATED")
     if active["reduced"]["state"] == "FIX_REQUIRED" and repair_map is None:
         findings.append("REPAIR_MAP_REQUIRED")
+
+    global_mutation = arbitrate_pre_h0_3_runtime_mutation(
+        bundle.contracts,
+        _load_global_work_order_states(root, bundle),
+    )
+    if not global_mutation["authorized"]:
+        findings.append("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LIMIT_EXCEEDED")
+
+    classified_work_order = dict(active["definition"])
+    classified_work_order["implementation_changed_paths"] = implementation_changed_paths
+    v0_foundation_scope = classify_v0_nx_foundation_scope(classified_work_order)
+    if v0_foundation_scope["blocked"]:
+        findings.append("V0_S1_BLOCKED_REQUIRES_NX")
 
     blocking_attention = [
         item
@@ -517,6 +574,7 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "event_ledger_head_sha": ledger_head,
             "current_branch_head_sha": current_head,
             "implementation_head_sha": implementation_head,
+            "implementation_changed_paths": implementation_changed_paths,
             "current_branch": current_branch,
             "origin_main_head_sha": epoch_validation["main_sha"],
             "worktree_dirty": bool(
@@ -552,6 +610,8 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "all_items": attention,
         },
         "findings": findings,
+        "global_runtime_mutation_arbiter": global_mutation,
+        "v0_nx_foundation_scope": v0_foundation_scope,
         "continuation_blocked": bool(findings)
         or active["reduced"]["state"]
         in {

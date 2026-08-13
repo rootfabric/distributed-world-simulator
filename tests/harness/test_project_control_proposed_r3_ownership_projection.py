@@ -15,7 +15,7 @@ import project_control_directional_watch as directional
 
 R2 = "GLOBAL-P0-2026-08-10-R2"
 R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
-R3_CANONICAL_MIN_REGISTRY_GENERATION = 79
+R3_SUPPORTED_REGISTRY_GENERATIONS = {79, 80}
 FROZEN_R3_TARGET = "595263c4c925c122a09876cb29b87f5ca5fef1d2"
 FROZEN_R3_OWNERSHIP_PATH = "config/control/architecture-ownership-r3-candidate.v1.json"
 FROZEN_R3_OWNERSHIP_BLOB = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
@@ -36,6 +36,12 @@ T_TRANSITIONS = [
         "canonical_owner": "WT",
     },
 ]
+
+
+def require_supported_r3_registry_generation(value: object) -> int:
+    if not isinstance(value, int) or value not in R3_SUPPORTED_REGISTRY_GENERATIONS:
+        raise AssertionError(f"UNSUPPORTED_R3_REGISTRY_GENERATION:{value}")
+    return value
 
 
 class ProposedR3OwnershipProjectionTests(unittest.TestCase):
@@ -64,7 +70,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         identities: dict[str, dict[str, str]] = {}
         if registry.get("registry_generation") == 78 and registry.get("architecture_revision") == R2:
             ownership = frozen_ownership
-            registry["registry_generation"] = R3_CANONICAL_MIN_REGISTRY_GENERATION
+            registry["registry_generation"] = min(R3_SUPPORTED_REGISTRY_GENERATIONS)
             registry["architecture_revision"] = R3
             policy["architecture_revision"] = R3
             for key in LEGACY_PROGRAMS:
@@ -85,9 +91,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(T_TRANSITIONS)
             return registry, policy, ownership, identities
 
-        generation = registry.get("registry_generation")
-        self.assertIsInstance(generation, int)
-        self.assertGreaterEqual(generation, R3_CANONICAL_MIN_REGISTRY_GENERATION)
+        generation = require_supported_r3_registry_generation(registry.get("registry_generation"))
         self.assertEqual(R3, registry.get("architecture_revision"))
         self.assertEqual(R3, policy.get("architecture_revision"))
         ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
@@ -180,7 +184,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
 
         self.assertNotEqual("RED", standard, [(p["program"], p["health"], p.get("findings")) for p in programs])
         self.assertNotEqual("RED", directional_health)
-        self.assertGreaterEqual(registry["registry_generation"], R3_CANONICAL_MIN_REGISTRY_GENERATION)
+        self.assertIn(registry["registry_generation"], R3_SUPPORTED_REGISTRY_GENERATIONS)
         self.assertEqual(R3, registry["architecture_revision"])
         self.assertEqual(set(LEGACY_PROGRAMS), set(identities))
 
@@ -281,6 +285,14 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
                 result.get("architecture_compatibility", {}).get("mode"),
             )
             self.assertNotIn("ownership_compatibility", result)
+
+    def test_unrecognized_future_registry_generation_fails_closed(self):
+        for generation in (79, 80):
+            self.assertEqual(generation, require_supported_r3_registry_generation(generation))
+        for generation in (81, 90, 999):
+            with self.subTest(generation=generation):
+                with self.assertRaisesRegex(AssertionError, "UNSUPPORTED_R3_REGISTRY_GENERATION"):
+                    require_supported_r3_registry_generation(generation)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import sys
 import unittest
 from pathlib import Path
@@ -8,7 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from harness.checkpoint_planner import build_plan
+from harness.checkpoint_planner import (
+    arbitrate_pre_h0_3_runtime_mutation,
+    build_plan,
+    classify_v0_nx_foundation_scope,
+)
 
 CHECKPOINT = "V0_S1_NETWORKED_PLANETARY_OUTPOST"
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
@@ -67,10 +72,14 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
         expected = {
             "V0_S1_SERVER_BOOT_PASS",
             "V0_S1_PROCEDURAL_PLANET_PASS",
+            "V0_S1_CANONICAL_SPAWN_POINT_PASS",
+            "V0_S1_PLAYER_OR_SPECTATOR_CONTROL_PASS",
             "V0_S1_TWO_CLIENT_JOIN_SAME_WORLD_PASS",
             "V0_S1_TWO_PLAYABLE_CHARACTERS_PASS",
             "V0_S1_REMOTE_CHARACTER_VISIBILITY_PASS",
             "V0_S1_BIDIRECTIONAL_MOVEMENT_REPLICATION_PASS",
+            "V0_S1_CANONICAL_ITEM_PICKUP_MOVE_DROP_PASS",
+            "V0_S1_SECOND_CLIENT_ITEM_REPLICATION_PASS",
             "V0_S1_CANONICAL_CONSTRUCTION_COMMIT_PASS",
             "V0_S1_SECOND_CLIENT_CONSTRUCTION_REPLICATION_PASS",
             "V0_S1_NO_CLIENT_PRIVATE_CONSTRUCTION_TRUTH_PASS",
@@ -123,8 +132,8 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
         self.assertTrue(rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"])
         self.assertTrue(rules["v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden"])
 
-    def test_v0_planner_waits_for_dispatch_then_allocates_exactly_one_mutation_worker(self):
-        work_order = {"goal_checkpoint": CHECKPOINT}
+    def test_v0_planner_waits_for_dispatch_and_global_reservation_release(self):
+        work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
         planned = {
             "completed_predicates": [],
             "work_order_id": "V0-S1-WO-TEST",
@@ -142,15 +151,22 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
             "work_order_id": "V0-S1-WO-TEST",
             "state": "DISPATCHED",
         }
-        plan = build_plan(self.contracts, work_order, dispatched)
+        reserved = dict(work_order)
+        reserved["global_mutation_authorized"] = False
+        plan = build_plan(self.contracts, reserved, dispatched)
+        self.assertEqual(0, plan["autonomous_runtime_workers"])
+        self.assertEqual("BLOCKED_BY_GLOBAL_MUTATION_RESERVATION", plan["v0_s1_gate"]["runtime_mutation"])
+        self.assertEqual("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_SLOT_UNAVAILABLE", plan["next_action"])
+
+        released = dict(work_order)
+        released["global_mutation_authorized"] = True
+        plan = build_plan(self.contracts, released, dispatched)
         self.assertEqual("SINGLE_HIGH_RISK_PRODUCT_SLICE", plan["mode"])
         self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["v0_s1_gate"]["runtime_mutation"])
         self.assertEqual("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION", plan["next_action"])
-        self.assertIn("SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER", plan["stop_gates"])
 
     def test_verifying_releases_mutation_slot_for_both_v0_and_h0_2(self):
-        v0_work_order = {"goal_checkpoint": CHECKPOINT}
+        v0_work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
         v0_verifying = {
             "completed_predicates": ["V0_S1_SERVER_BOOT_PASS"],
             "work_order_id": "V0-S1-WO-TEST",
@@ -171,6 +187,60 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
         self.assertEqual("HIGH_RISK_RUNTIME_VERIFICATION", h0_2_plan["mode"])
         self.assertEqual(0, h0_2_plan["autonomous_runtime_workers"])
         self.assertEqual("NO_ACTIVE_MUTATION_SLOT", h0_2_plan["nx_c1_gate"]["runtime_mutation"])
+
+    def test_global_pre_h0_3_mutation_arbiter_is_fail_closed(self):
+        contracts = copy.deepcopy(self.contracts)
+        contracts["scheduler_policy"]["pre_h0_3_runtime_mutation_reservations"] = []
+        v0 = ({"work_order_id": "V0"}, {"work_order_id": "V0", "state": "DISPATCHED"})
+        nx_fix = ({"work_order_id": "NX"}, {"work_order_id": "NX", "state": "IN_PROGRESS"})
+        verifying = ({"work_order_id": "VERIFY"}, {"work_order_id": "VERIFY", "state": "VERIFYING"})
+
+        blocked = arbitrate_pre_h0_3_runtime_mutation(contracts, [v0, nx_fix])
+        self.assertFalse(blocked["authorized"])
+        self.assertEqual("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LIMIT_EXCEEDED", blocked["status"])
+
+        for allowed in ([v0, verifying], [verifying, nx_fix]):
+            result = arbitrate_pre_h0_3_runtime_mutation(contracts, allowed)
+            self.assertTrue(result["authorized"], result)
+            self.assertEqual(1, len(result["active_mutation_work_orders"]))
+
+        two_v0_mutators = arbitrate_pre_h0_3_runtime_mutation(
+            contracts,
+            [v0, ({"work_order_id": "V0-B"}, {"work_order_id": "V0-B", "state": "IMPLEMENTED"})],
+        )
+        self.assertFalse(two_v0_mutators["authorized"])
+
+        reserved = arbitrate_pre_h0_3_runtime_mutation(self.contracts, [v0])
+        self.assertFalse(reserved["authorized"])
+        self.assertIn("H0-2-R3-NX-C1-WO-001", reserved["active_mutation_work_orders"])
+
+    def test_v0_network_foundation_scope_classifier_blocks_all_forbidden_categories(self):
+        forbidden = [
+            "scripts/network/contracts/network_protocol_manifest.gd",
+            "scripts/runtime/networked_gameplay/networked_gameplay_service.gd",
+            "scripts/runtime/networked_gameplay/transports/dedicated_gameplay_server_runtime.gd",
+            "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+            "scripts/characters/character_owner.gd",
+            "config/network/nx4-client-prediction-reconciliation.v1.json",
+        ]
+        for path in forbidden:
+            with self.subTest(path=path):
+                work_order = {"goal_checkpoint": CHECKPOINT, "allowed_paths": [path]}
+                result = classify_v0_nx_foundation_scope(work_order)
+                self.assertTrue(result["blocked"], result)
+                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", result["status"])
+                plan = build_plan(
+                    self.contracts,
+                    work_order,
+                    {"completed_predicates": [], "work_order_id": "V0", "state": "DISPATCHED"},
+                )
+                self.assertEqual(0, plan["autonomous_runtime_workers"])
+                self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", plan["next_action"])
+
+        safe = classify_v0_nx_foundation_scope(
+            {"goal_checkpoint": CHECKPOINT, "allowed_paths": ["scripts/app/lunar_app.gd"]}
+        )
+        self.assertFalse(safe["blocked"], safe)
 
     def test_nx_c1_acceptance_contract_is_still_strict(self):
         required = set(self.catalog["checkpoints"][H0_2]["required_predicates"])

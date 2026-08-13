@@ -8,6 +8,8 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+__pycache__/
+*.py[cod]
 
 # Temporary and diagnostic output created outside user://.
 *.tmp
