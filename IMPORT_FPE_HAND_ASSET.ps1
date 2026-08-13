@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$ProfileId,
     [string]$ArchivePath = "",
     [string]$GodotPath = "",
-    [string]$SourceGlb = ""
+    [string]$SourceGlb = "",
+    [switch]$OpenDownloadPage
 )
 
 $ErrorActionPreference = "Stop"
@@ -87,7 +88,23 @@ function Find-ProfileArchive {
         Write-Host "Requested archive was not found: $RequestedPath" -ForegroundColor Yellow
     }
     $Locations = if ($SearchDirs.Count -gt 0) { $SearchDirs -join "; " } else { "<no standard Downloads directory found>" }
-    throw "No ZIP archive for profile '$ProfileId' was found. Download it first, or pass -ArchivePath with the real file path. Searched: $Locations"
+    $DownloadPage = [string]$ProfileObject.asset.download_page_url
+    if ([string]::IsNullOrWhiteSpace($DownloadPage)) {
+        $DownloadPage = [string]$ProfileObject.license.source_url
+    }
+    if (-not [string]::IsNullOrWhiteSpace($DownloadPage)) {
+        Write-Host "Asset download page: $DownloadPage" -ForegroundColor Cyan
+        if ($OpenDownloadPage) {
+            Write-Host "Opening the asset download page in the default browser..." -ForegroundColor Cyan
+            Start-Process $DownloadPage
+        } else {
+            Write-Host "Tip: rerun with -OpenDownloadPage to open it automatically." -ForegroundColor DarkGray
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedArchive)) {
+        Write-Host "Expected downloaded file: $ExpectedArchive" -ForegroundColor Cyan
+    }
+    throw "No ZIP archive for profile '$ProfileId' was found. The importer does not bypass interactive vendor download pages. Download the asset first, then rerun this command. Searched: $Locations"
 }
 
 $ArchivePath = Find-ProfileArchive -ProfileObject $Profile -RequestedPath $ArchivePath
