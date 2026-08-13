@@ -42,7 +42,7 @@ P3.4 Environmental Gradient = IMPLEMENTATION CANDIDATE / targeted Linux PASS / c
 P3.5 Seasonal World = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.4 ACCEPTED
 P3.6 Disturbance & Succession = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.5 ACCEPTED
 P3.7 Multi-Niche / Stable Coexistence = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.6 ACCEPTED
-P3.8 Deterministic Ecosystem Persistence = NOT OPENED
+P3.8 Deterministic Ecosystem Persistence = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.7 ACCEPTED
 ```
 
 Accepted P3.2 aggregate:
@@ -185,7 +185,22 @@ aggregate_hash=ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a
 parent_p3_6=a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
 ```
 
-P3.7 canonical runner remains blocked until `P3.6 = ACCEPTED*`. P3.8 remains unopened.
+P3.7 canonical runner remains blocked until `P3.6 = ACCEPTED*`.
+
+P3.8 Deterministic Ecosystem Persistence implementation candidate now exists on the exact P3.7 candidate identity. It stores a validated typed current P3.7 state, which recursively retains P3.6/P3.5/P3.4/P3.3 state and P3.2 ancestry, inside a SHA-256 + exact-length checkpoint envelope.
+
+Targeted exact-Godot evidence:
+
+```text
+P3.7 parent regression = PASS (64 assertions)
+P3.8 fresh A/B/C = PASS (52 assertions each; byte-identical logs)
+P3.8 cross-process writer/resume = PASS
+aggregate_hash=6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0
+checkpoint_sha256=1722f3ce96a8244bfaf2f8295c162b51552c6c5cc4cfd1126b40691a37bab367
+final_state_hash=1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9
+```
+
+P3 implementation sequence P3.1..P3.8 is now complete-as-candidate. Canonical P3 completion remains blocked until the exact Windows acceptance chain is advanced sequentially from P3.3 through P3.8.
 
 ## Observer lane — low priority
 
