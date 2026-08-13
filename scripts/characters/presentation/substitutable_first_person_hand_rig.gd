@@ -93,7 +93,9 @@ func _sync_visual_provider_pose() -> void:
 		return
 	if not visual_provider.has_method("sync_pose_from_canonical"):
 		return
-	var value: Variant = visual_provider.call("sync_pose_from_canonical", skeleton, hand_id, current_pose_id)
+	if visual_provider.has_method("set_canonical_pose_context"):
+		visual_provider.call("set_canonical_pose_context", current_pose_id)
+	var value: Variant = visual_provider.call("sync_pose_from_canonical", skeleton, hand_id)
 	if value is Dictionary:
 		_visual_provider_pose_sync_result = Dictionary(value).duplicate(true)
 	else:
@@ -126,5 +128,6 @@ func create_report() -> Dictionary:
 	report["visual_provider_substitutable"] = true
 	report["pose_logic_independent_of_visual_provider"] = true
 	report["visual_provider_pose_sync_supported"] = visual_provider != null and visual_provider.has_method("sync_pose_from_canonical")
+	report["visual_provider_pose_context_supported"] = visual_provider != null and visual_provider.has_method("set_canonical_pose_context")
 	report["visual_provider_pose_sync"] = _visual_provider_pose_sync_result.duplicate(true)
 	return report
