@@ -1,7 +1,7 @@
 extends SceneTree
 
 const ProfileType = preload("res://scripts/characters/presentation/first_person_hand_asset_profile.gd")
-const ProviderType = preload("res://scripts/characters/presentation/native_skeleton_profiled_first_person_hand_visual_provider.gd")
+const ProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider.gd")
 const RigType = preload("res://scripts/characters/presentation/substitutable_first_person_hand_rig.gd")
 const PoseCatalogType = preload("res://scripts/characters/presentation/first_person_hand_pose_catalog.gd")
 const PROFILE_PATH := "res://config/characters/hand-assets/wrad-arms-cc0.v1.json"
@@ -38,35 +38,40 @@ func _run() -> void:
 	get_root().add_child(host)
 	for hand in ["right", "left"]:
 		var provider = ProviderType.new()
-		var provider_setup: Dictionary = provider.setup_profiled(
-			resource as PackedScene,
-			profile,
-			PROFILE_PATH,
-			scene_path
-		)
-		_assert(bool(provider_setup.get("success", false)), "WRAD %s native provider setup failed: %s" % [hand, JSON.stringify(provider_setup)])
+		var provider_setup: Dictionary = provider.setup_profiled(resource as PackedScene, profile, PROFILE_PATH, scene_path)
+		_assert(bool(provider_setup.get("success", false)), "WRAD %s calibrated provider setup failed: %s" % [hand, JSON.stringify(provider_setup)])
 		var rig = RigType.new()
 		host.add_child(rig)
 		var rig_setup: Dictionary = rig.setup(hand, 19, provider)
-		_assert(bool(rig_setup.get("success", false)), "WRAD %s native rig setup failed: %s" % [hand, JSON.stringify(rig_setup)])
+		_assert(bool(rig_setup.get("success", false)), "WRAD %s calibrated rig setup failed: %s" % [hand, JSON.stringify(rig_setup)])
 		if bool(rig_setup.get("success", false)):
 			var rig_report := rig.create_report()
 			var provider_report := Dictionary(rig_report.get("visual_provider", {}))
 			_assert(String(rig_report.get("visual_provider_mode", "")) == "RESOURCE_NATIVE_SKELETON_RETARGETED", "WRAD %s native provider mode mismatch" % hand)
 			_assert(String(provider_report.get("runtime_driver", "")) == ProfileType.DRIVER_NATIVE_SKELETON_POSE, "WRAD %s native driver marker missing" % hand)
 			_assert(String(provider_report.get("rest_space_policy", "")) == ProfileType.REST_SOURCE_NATIVE_BIND_SPACE, "WRAD %s source bind-space marker missing" % hand)
-			_assert(bool(provider_report.get("paired_single_mesh_split", false)), "WRAD %s paired split marker missing" % hand)
 			_assert(bool(provider_report.get("source_skin_preserved", false)), "WRAD %s source Skin was not preserved" % hand)
 			_assert(bool(provider_report.get("source_bind_poses_preserved", false)), "WRAD %s source bind poses were not preserved" % hand)
 			_assert(bool(provider_report.get("source_skeleton_preserved", false)), "WRAD %s source skeleton was not preserved" % hand)
 			_assert(not bool(provider_report.get("canonical_skin_rebind", true)), "WRAD %s still performs canonical Skin rebind" % hand)
+			_assert(String(provider_report.get("pose_calibration_mode", "")) == "AUTO_CHAIN_PALM_V1", "WRAD %s pose calibration mode missing" % hand)
+			_assert(String(provider_report.get("root_orientation_mode", "")) == "PRESERVE_SOURCE_BASIS", "WRAD %s source root basis is not preserved" % hand)
+			_assert(bool(provider_report.get("open_pose_preserves_source_rest", false)), "WRAD %s open/rest preservation marker missing" % hand)
 			_assert(int(provider_report.get("native_pose_pair_count", 0)) == 15, "WRAD %s native finger mapping is incomplete" % hand)
 			_assert(int(provider_report.get("kept_faces", 0)) > 0, "WRAD %s kept no triangles" % hand)
 			_assert(int(provider_report.get("dropped_faces", 0)) > 0, "WRAD %s did not remove opposite-side triangles" % hand)
 			_assert(int(provider_report.get("compact_bind_count", 0)) > 0, "WRAD %s compact Skin is empty" % hand)
 			_assert(int(provider_report.get("compact_bind_count", 0)) < 50, "WRAD %s did not compact the 50-bind paired Skin" % hand)
-			_assert(float(provider_report.get("calibration_scale", 0.0)) > 0.0, "WRAD %s calibration scale is invalid" % hand)
-			var initial_sync_count := int(provider_report.get("native_pose_sync_count", 0))
+			_assert(float(provider_report.get("root_calibration_scale", 0.0)) > 0.0, "WRAD %s root calibration scale is invalid" % hand)
+			var source_index_name := "finger_index1.%s" % ("r" if hand == "right" else "l")
+			var source_index := provider._native_skeleton.find_bone(source_index_name)
+			_assert(source_index >= 0, "WRAD %s source index bone missing" % hand)
+			var open_result: Dictionary = rig.apply_pose(PoseCatalogType.new().get_pose("open"))
+			_assert(bool(open_result.get("success", false)), "WRAD %s open pose failed" % hand)
+			rig._process(0.2)
+			var open_rotation := provider._native_skeleton.get_bone_pose_rotation(source_index) if source_index >= 0 else Quaternion.IDENTITY
+			_assert(Quaternion.IDENTITY.angle_to(open_rotation) < 0.001, "WRAD %s open pose twists source index bone" % hand)
+			var initial_sync_count := int(Dictionary(rig.create_report().get("visual_provider", {})).get("native_pose_sync_count", 0))
 			var pose_result: Dictionary = rig.apply_pose(PoseCatalogType.new().get_pose("beacon_pinch"))
 			_assert(bool(pose_result.get("success", false)), "WRAD %s beacon pose failed" % hand)
 			rig._process(0.2)
@@ -75,6 +80,7 @@ func _run() -> void:
 			_assert(String(settled_report.get("settled_pose_id", "")) == "beacon_pinch", "WRAD %s beacon pose did not settle" % hand)
 			_assert(int(settled_provider.get("native_pose_sync_count", 0)) > initial_sync_count, "WRAD %s native skeleton was not synced during pose transition" % hand)
 			_assert(int(settled_provider.get("last_driven_bone_count", 0)) == 15, "WRAD %s did not drive all 15 finger bones" % hand)
+			_assert(float(settled_provider.get("max_native_pose_angle_deg", 999.0)) <= 90.1, "WRAD %s calibrated pose exceeded safe angle bound" % hand)
 		host.remove_child(rig)
 		rig.free()
 	host.queue_free()
