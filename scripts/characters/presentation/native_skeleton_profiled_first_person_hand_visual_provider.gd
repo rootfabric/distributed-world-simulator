@@ -1,7 +1,7 @@
 class_name NativeSkeletonProfiledFirstPersonHandVisualProvider
 extends "res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider.gd"
 
-const MODE := "RESOURCE_NATIVE_SKELETON_RETARGETED"
+const NATIVE_MODE := "RESOURCE_NATIVE_SKELETON_RETARGETED"
 const DRIVER := "NATIVE_SKELETON_POSE"
 const SOURCE_NATIVE_BIND_SPACE := "SOURCE_NATIVE_BIND_SPACE"
 const CANONICAL_FINGER_BONES: Array[String] = [
@@ -167,7 +167,7 @@ func install_visuals(
 	_last_report = {
 		"schema": "planet_simulator.fpe_native_skeleton_hand_visual_provider.v1",
 		"provider_id": String(hand_asset_profile.get("profile_id", "native_profiled_hand")),
-		"mode": MODE,
+		"mode": NATIVE_MODE,
 		"compatible_skeleton_schema": SKELETON_SCHEMA,
 		"runtime_driver": DRIVER,
 		"rest_space_policy": SOURCE_NATIVE_BIND_SPACE,
@@ -223,7 +223,7 @@ func create_report(installed_visual_count: int = 1) -> Dictionary:
 		report = {
 			"schema": "planet_simulator.fpe_native_skeleton_hand_visual_provider.v1",
 			"provider_id": String(hand_asset_profile.get("profile_id", "native_profiled_hand")),
-			"mode": MODE,
+			"mode": NATIVE_MODE,
 			"runtime_driver": DRIVER,
 			"rest_space_policy": SOURCE_NATIVE_BIND_SPACE,
 			"installed_visual_count": installed_visual_count,
