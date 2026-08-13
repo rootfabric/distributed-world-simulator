@@ -10,8 +10,10 @@ class FakeM3Client:
 	extends Node
 
 	signal replica_updated(snapshot: Dictionary)
+	signal item_graph_updated(snapshot: Dictionary)
 
 	var snapshot: Dictionary = {}
+	var item_graph_snapshot: Dictionary = {}
 	var moves: Array[Vector2] = []
 
 	func get_snapshot() -> Dictionary:
@@ -19,6 +21,9 @@ class FakeM3Client:
 
 	func get_local_player_id() -> String:
 		return "a"
+
+	func get_item_graph_snapshot() -> Dictionary:
+		return item_graph_snapshot.duplicate(true)
 
 	func move_blocking(x: float, z: float) -> Dictionary:
 		moves.append(Vector2(x, z))
@@ -30,6 +35,13 @@ class FakeM3Client:
 
 	func is_automated_acceptance() -> bool:
 		return true
+
+	func execute_item_command_blocking(
+		command_type: String, _payload: Dictionary, _operation_id: String = ""
+	) -> Dictionary:
+		item_graph_snapshot["revision"] = int(item_graph_snapshot.get("revision", 0)) + 1
+		item_graph_updated.emit(get_item_graph_snapshot())
+		return {"success": command_type == "item.pickup", "error_code": "" if command_type == "item.pickup" else "TEST_UNSUPPORTED_COMMAND"}
 
 
 func _init() -> void:
@@ -50,6 +62,7 @@ func _run() -> void:
 	_assert(bool(earth.initialized), "Earth procedural spectator initialized")
 	var client := FakeM3Client.new()
 	client.snapshot = _snapshot(0.0, 0.0, true)
+	client.item_graph_snapshot = {"revision": 0, "checksum": "earth-item-0"}
 	root.add_child(client)
 	var attached: Dictionary = earth.attach_m3_multiplayer_client(client)
 	_assert(bool(attached.get("success", false)), "M3 client attached to Earth spectator")
@@ -65,6 +78,7 @@ func _run() -> void:
 	_assert(String(report.get("world_id", "")) == "earth", "Earth report identifies world")
 	_assert(bool(report.get("spectator_ready", false)), "Earth spectator is active")
 	_assert(bool(report.get("network_replica_mode", false)), "Earth spectator is replica-driven")
+	_assert(int(report.get("m4_item_graph_revision", -1)) == 0, "Earth received canonical M4 item graph")
 	_assert(int(report.get("remote_presenter_count", 0)) == 1, "remote M3 participant has presenter")
 	var remote: Dictionary = Dictionary(report.get("remote_presenters", {}).get("b", {}))
 	_assert(not bool(remote.get("input_authority", true)), "remote presenter has no input authority")
@@ -77,6 +91,11 @@ func _run() -> void:
 		_assert(absf(earth.earth_world.get_altitude(remote_position) - altitude) < 0.1, "remote spectator retains canonical altitude")
 	var move_result: Dictionary = earth.m3_apply_test_input_offset(Vector3(1.0, 0.0, 2.0))
 	_assert(bool(move_result.get("success", false)) and client.moves.size() == 1, "Earth routes test movement to M3 client")
+	var pickup: Dictionary = earth.m4_execute_item_command("item.pickup", {"item_id": "item/shared/beacon/1"}, "operation/test/earth/pickup/1")
+	_assert(bool(pickup.get("success", false)), "Earth routes pickup to canonical M4 authority")
+	report = earth.create_m3_graphical_client_report()
+	_assert(int(report.get("m4_item_graph_revision", -1)) == 1, "Earth receives canonical item mutation")
+	_assert(int(report.get("m4_item_commands", 0)) == 1 and int(report.get("m4_item_rejections", -1)) == 0, "Earth has no private item authority")
 	earth.queue_free()
 	client.queue_free()
 	await process_frame

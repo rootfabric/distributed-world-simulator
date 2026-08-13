@@ -123,6 +123,8 @@ func _validate(a1: Dictionary, b: Dictionary, a2: Dictionary, server: Dictionary
 			_assert(bool(report.get("world", {}).get("attached", false)), "Earth M3 spectator attached")
 			_assert(bool(report.get("world", {}).get("spectator_ready", false)), "Earth network spectator ready")
 			_assert(not Dictionary(report.get("world", {}).get("canonical_spawn", {})).is_empty(), "Earth canonical spawn reported")
+			_assert(int(report.get("world", {}).get("m4_item_graph_revision", -1)) >= 0, "Earth received canonical M4 item graph")
+			_assert(int(report.get("world", {}).get("m4_item_snapshot_updates", 0)) >= 1, "Earth received M4 item graph replication")
 		if test_world == "playground":
 			_assert(
 				String(report.get("world", {}).get("world_id", "")) == test_world,

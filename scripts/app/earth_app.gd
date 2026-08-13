@@ -55,6 +55,10 @@ var _m3_remote_despawn_count: int = 0
 var _m3_remote_update_count: int = 0
 var _m3_input_accumulator: float = 0.0
 var _m3_local_planar_position := Vector2.ZERO
+var _m4_item_graph_snapshot: Dictionary = {}
+var _m4_item_snapshot_updates: int = 0
+var _m4_item_commands: int = 0
+var _m4_item_rejections: int = 0
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -287,6 +291,9 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		or not runtime.has_method("get_local_player_id")
 		or not runtime.has_method("move_blocking")
 		or not runtime.has_method("move_nonblocking")
+		or not runtime.has_method("get_item_graph_snapshot")
+		or not runtime.has_method("execute_item_command_blocking")
+		or not runtime.has_signal("item_graph_updated")
 	):
 		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
 	if _m3_attached:
@@ -294,11 +301,14 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	m3_multiplayer_client_runtime = runtime
 	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
 		runtime.replica_updated.connect(_on_m3_replica_updated)
+	if not runtime.item_graph_updated.is_connected(_on_m4_item_graph_updated):
+		runtime.item_graph_updated.connect(_on_m4_item_graph_updated)
 	_m3_attached = true
 	if earth_explorer != null:
 		earth_explorer.set_network_replica_mode(true)
 	_on_m3_replica_updated(runtime.get_snapshot())
-	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR"}}
+	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR", "m4_item_graph": not _m4_item_graph_snapshot.is_empty()}}
 
 
 func _on_m3_replica_updated(snapshot: Dictionary) -> void:
@@ -364,6 +374,13 @@ func _apply_m3_local_spectator_record(record: Dictionary) -> void:
 	)
 
 
+func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	_m4_item_graph_snapshot = snapshot.duplicate(true)
+	_m4_item_snapshot_updates += 1
+
+
 func _map_m3_position_to_earth_direction(x: float, z: float) -> Vector3:
 	var up: Vector3 = earth_world.get_canonical_spawn_direction()
 	var east: Vector3 = Vector3.UP.cross(up)
@@ -403,6 +420,22 @@ func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
 	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
 
 
+func m4_execute_item_command(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M4_EARTH_SPECTATOR_NOT_READY"}
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_blocking(
+		command_type, payload, operation_id
+	)
+	_m4_item_commands += 1
+	if not bool(result.get("success", false)):
+		_m4_item_rejections += 1
+	return result
+
+
 func create_m3_graphical_client_report() -> Dictionary:
 	var presenters: Dictionary = {}
 	for logical_id_value in _m3_remote_presenters.keys():
@@ -428,6 +461,11 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"remote_update_count": _m3_remote_update_count,
 		"remote_presenters": presenters,
 		"canonical_spawn": earth_world.get_canonical_spawn_snapshot() if earth_world != null else {},
+		"m4_item_graph_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+		"m4_item_graph_checksum": String(_m4_item_graph_snapshot.get("checksum", "")),
+		"m4_item_snapshot_updates": _m4_item_snapshot_updates,
+		"m4_item_commands": _m4_item_commands,
+		"m4_item_rejections": _m4_item_rejections,
 		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
 		"direct_authority_references": 0,
 	}
