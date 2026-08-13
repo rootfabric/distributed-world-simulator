@@ -17,7 +17,8 @@
     "format": "glb",
     "external": true,
     "expected_archive": "WRAD_ARMS.zip",
-    "install_note": "Extract the GLB from WRAD_ARMS.zip and rename/copy it to wrad_arms.glb at the scene_path above. Textures referenced by the GLB should stay beside it."
+    "download_page_url": "https://wriks.itch.io/wrad-arms/purchase",
+    "install_note": "Open the download page, choose 'No thanks, just take me to the downloads', download WRAD_ARMS.zip, then rerun IMPORT_FPE_HAND_ASSET.ps1. The importer extracts the GLB and copies/renames it to wrad_arms.glb at the stable scene_path."
   },
   "selection": {
     "mesh_node_paths": [],
