@@ -94,14 +94,9 @@ func _process(_delta: float) -> void:
 					_failures.append("Earth M4 item command adapter is missing")
 					_finish(false)
 					return
-				_earth_item_result = runtime.m4_execute_item_command(
-					"item.pickup",
-					{"item_id": "item/shared/beacon/1"},
-					"operation/m4/earth/acceptance/%s/%d/%d"
-					% [_client_id, _phase, OS.get_process_id()]
-				)
+				_earth_item_result = _run_earth_item_workflow(runtime)
 				if not bool(_earth_item_result.get("success", false)):
-					_failures.append("Earth M4 pickup failed: %s" % _earth_item_result)
+					_failures.append("Earth M4 item workflow failed: %s" % _earth_item_result)
 					_finish(false)
 					return
 				_earth_item_verified = true
@@ -203,6 +198,27 @@ func _begin_convergence(world: Dictionary) -> void:
 		return
 	_write_report("READY_TO_CONVERGE", false, world, _convergence_checksum)
 	_stage = "WAIT_CONVERGENCE_PEER"
+
+func _run_earth_item_workflow(runtime) -> Dictionary:
+	var operation_prefix := "operation/m4/earth/acceptance/%s/%d/%d" % [_client_id, _phase, OS.get_process_id()]
+	var commands: Array[Dictionary] = [
+		{"type": "item.pickup", "payload": {"item_id": "item/shared/beacon/1"}},
+		{"type": "container.open", "payload": {"container_id": "container/shared/crate/1"}},
+		{"type": "item.move_to_container", "payload": {"item_id": "item/shared/beacon/1", "container_id": "container/shared/crate/1"}},
+		{"type": "item.move_to_inventory", "payload": {"item_id": "item/shared/beacon/1"}},
+		{"type": "item.drop", "payload": {"item_id": "item/shared/beacon/1", "quantity": -1}},
+		{"type": "item.pickup", "payload": {"item_id": "item/shared/beacon/1"}},
+	]
+	var steps: Array[Dictionary] = []
+	for index in range(commands.size()):
+		var command: Dictionary = commands[index]
+		var result: Dictionary = runtime.m4_execute_item_command(
+			String(command["type"]), Dictionary(command["payload"]), "%s/%d" % [operation_prefix, index + 1]
+		)
+		steps.append({"type": String(command["type"]), "success": bool(result.get("success", false)), "error_code": String(result.get("error_code", ""))})
+		if not bool(result.get("success", false)):
+			return {"success": false, "error_code": String(result.get("error_code", "EARTH_M4_WORKFLOW_FAILED")), "steps": steps}
+	return {"success": true, "error_code": "", "steps": steps}
 
 func _validate_graphical_world(world: Dictionary) -> void:
 	if DisplayServer.get_name().to_lower() in ["headless", "dummy"]: _failures.append("Client is not graphical")
