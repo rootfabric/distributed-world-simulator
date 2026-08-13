@@ -8,11 +8,11 @@
   "short_description": "Fail-closed Project Control compatibility repair for historical R2 Branch Passports across the Human-approved R3 canonical promotion boundary.",
   "purpose": "Permit only explicitly main-registry-allowlisted historical passport architecture revisions after canonical promotion while keeping every unlisted mismatch RED and without rewriting frozen R2 evidence.",
   "expected_outcome": "R3 promotion preflight can preserve accepted/preparation/research R2 provenance without globally weakening ARCHITECTURE_REVISION_MISMATCH; new post-promotion frontiers still require the canonical R3 revision.",
-  "current_stage": "R3 promotion Project Control compatibility repair independent review",
-  "stage_status": "IMPLEMENTED_VALIDATED_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "Control-only implementation head 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6 is validated. Project Control 31665234844/#339 completed SUCCESS with overall YELLOW/NON_RED on canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d, architecture R2, registry 78 and cross_branch_overlaps=[]. Focused compatibility regression uses live fetched branch passports and a synthetic R3 registry: G/ECO/T/CH/DOCTRINE/NX remain compatible only when their exact R2 revision is explicitly per-program allowlisted; removing G's allowlist restores ARCHITECTURE_REVISION_MISMATCH/RED. Existing ECO local RED remains advisory/non-global-blocking; directional G->ECO and CH->NX watches remain unchanged. No main, runtime/domain, frozen branch, Human decision, Reviewer, Verifier or Director evidence was changed.",
+  "current_stage": "R3 promotion Project Control compatibility repair after independent review",
+  "stage_status": "INDEPENDENT_REVIEW_FIX_REQUIRED_AWAITING_IMPLEMENTER_REPAIR",
+  "progress_note": "Durable Independent Review recorded FIX_REQUIRED on review commit c8cb9e9f537a773a65232d5b68f6b9b5f6462484. Review artifact blob is 4d8744d698024243829d6d531b94a3cf2d5497b5 and reviewed implementation remains 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6. Fresh reviewer-head Project Control 31665735256/#341 completed SUCCESS; this does not convert the review verdict to PASS. Runtime/domain delta remains 0. R3 promotion remains NOT PERFORMED. Canonical main remains ce40dd075045078ed70924f8d5a1011eb3eff03d on GLOBAL-P0-2026-08-10-R2 with registry generation 78. Required implementation repairs are exactly R3-COMPAT-FIX-001, R3-COMPAT-FIX-002 and R3-COMPAT-FIX-003, followed by a new independent compatibility review.",
   "last_accepted_checkpoint": "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED",
-  "next_stage": "Obtain a new independent review of exact implementation head 7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6 and this lifecycle state. If PASS is durable, rerun the R3 promotion preflight using the reviewed compatibility repair as an input. Do not mutate main before that review.",
+  "next_stage": "Implement exactly R3-COMPAT-FIX-001..003, validate on a new implementation head, then obtain a NEW independent compatibility review. Do not retry R3 promotion before that PASS.",
   "parent_branch_or_checkpoint": "canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + durable R3 V9 Human APPROVE_PROMOTION + failed promotion compatibility preflight",
   "base_commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
   "dependencies": [
@@ -69,7 +69,10 @@
     "COMPUTE_EXECUTION"
   ],
   "blockers": [
-    "INDEPENDENT_CONTROL_REPAIR_REVIEW_REQUIRED_BEFORE_PROMOTION_RETRY"
+    "R3_COMPAT_FIX_001_EXECUTABLE_HISTORICAL_IDENTITY_REQUIRED",
+    "R3_COMPAT_FIX_002_MISSING_POLICY_FIELD_FAIL_CLOSED_REQUIRED",
+    "R3_COMPAT_FIX_003_NEGATIVE_REGRESSION_COVERAGE_REQUIRED",
+    "NEW_INDEPENDENT_CONTROL_REPAIR_REVIEW_REQUIRED_AFTER_FIX"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": false
