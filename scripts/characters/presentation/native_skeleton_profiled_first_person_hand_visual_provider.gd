@@ -20,7 +20,7 @@ var _normalized_hand := ""
 var _pose_pairs: Array[Dictionary] = []
 var _sync_count := 0
 var _last_driven_bone_count := 0
-var _last_report: Dictionary = {}
+var _native_report: Dictionary = {}
 
 
 func setup_profiled(
@@ -164,7 +164,7 @@ func install_visuals(
 	_last_driven_bone_count = 0
 	_sync_pose_from_canonical_internal()
 
-	_last_report = {
+	_native_report = {
 		"schema": "planet_simulator.fpe_native_skeleton_hand_visual_provider.v1",
 		"provider_id": String(hand_asset_profile.get("profile_id", "native_profiled_hand")),
 		"mode": NATIVE_MODE,
@@ -203,7 +203,7 @@ func install_visuals(
 	}
 	return _success({
 		"visuals": [candidate],
-		"report": _last_report.duplicate(true),
+		"report": _native_report.duplicate(true),
 	})
 
 
@@ -218,7 +218,7 @@ func sync_pose_from_canonical(canonical_skeleton: Skeleton3D, hand_id: String) -
 
 
 func create_report(installed_visual_count: int = 1) -> Dictionary:
-	var report := _last_report.duplicate(true)
+	var report := _native_report.duplicate(true)
 	if report.is_empty():
 		report = {
 			"schema": "planet_simulator.fpe_native_skeleton_hand_visual_provider.v1",
@@ -294,9 +294,9 @@ func _sync_pose_from_canonical_internal() -> Dictionary:
 		driven += 1
 	_sync_count += 1
 	_last_driven_bone_count = driven
-	if not _last_report.is_empty():
-		_last_report["native_pose_sync_count"] = _sync_count
-		_last_report["last_driven_bone_count"] = _last_driven_bone_count
+	if not _native_report.is_empty():
+		_native_report["native_pose_sync_count"] = _sync_count
+		_native_report["last_driven_bone_count"] = _last_driven_bone_count
 	return _success({
 		"sync_count": _sync_count,
 		"driven_bone_count": driven,
