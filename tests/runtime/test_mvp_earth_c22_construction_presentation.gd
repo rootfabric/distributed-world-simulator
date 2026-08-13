@@ -2,6 +2,7 @@ extends SceneTree
 
 const AdapterScript = preload("res://scripts/app/earth_construction_presentation.gd")
 const Fixture = preload("res://tests/construction/fixtures/c22_compiled_proxy_fixture.gd")
+const BundleScript = preload("res://scripts/construction/multiplayer/construction_multiplayer_state_bundle.gd")
 
 var assertions := 0
 var failures: Array[String] = []
@@ -22,9 +23,12 @@ func _init() -> void:
 	_assert(String(local.get("details", {}).get("detail_mode", "")) == "LOCAL_EXTERIOR", "local C22 mode")
 	_assert(int(local.get("details", {}).get("proxy_mesh_count", 99)) <= 8, "local mesh budget")
 	_assert(int(local.get("details", {}).get("collision_proxy_count", -1)) == int(local.get("details", {}).get("proxy_mesh_count", -2)), "local collision follows proxy")
+	var bundle: Dictionary = BundleScript.create(0, [], [])
+	_assert(bool(adapter.apply_authoritative_bundle(bundle).get("success", false)), "adapter accepts canonical construction bundle")
 	var report: Dictionary = adapter.get_report()
 	_assert(int(report.get("direct_authority_references", -1)) == 0, "presentation owns no authority")
 	_assert(not String(report.get("source_checksum", "")).is_empty(), "canonical source checksum recorded")
+	_assert(String(report.get("authoritative_bundle_checksum", "")) == String(bundle.get("checksum", "")), "adapter reports canonical bundle checksum")
 	adapter.queue_free()
 	_finish()
 
