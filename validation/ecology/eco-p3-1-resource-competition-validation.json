@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_1_resource_competition_validation.v1",
+  "revision": "ECO-P3.1-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "control_head": "4a1a4788bf3c1d0704cc1f56bd0815eebfcf7302",
+    "checkpoint": "ECO.EVO1/P2.8",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
+  },
+  "contract": {
+    "resources": ["light", "water", "nutrients"],
+    "allocation": "deterministic weighted water-filling with demand caps and canonical plant-id order",
+    "capture_efficiency": "finite ratio in [0,1] per resource",
+    "growth_response": "minimum demanded-resource uptake ratio; deterministic resource-order tie break",
+    "order_independence": "input plant permutation must not alter canonical plant order or result_hash",
+    "conservation": "for every resource supply == total_uptake + remaining within 1e-12 and total_uptake never exceeds supply",
+    "production_boundary": "research competition kernel only; no production physiology, authority, persistence or rendering ownership"
+  },
+  "targeted_linux_evidence": {
+    "authority": "TARGETED_LINUX_REPRODUCTION_NOT_FULL_REPOSITORY_CANONICAL_RUNNER",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "process_runs": 3,
+    "all_process_hashes_identical": true,
+    "assertions_per_run": 47,
+    "aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "constrained_hash": "5d082433bff9cf5b29707da53657bb02e4575ba018544ebbe86cbfde5fd58dec",
+    "abundant_hash": "bcd82bb49edbf159c31d8fb15c8aef243d63619e12868b3cfd3d0c06003a7c60",
+    "water_limited_hash": "d22c326115f880562ed1858ebeeee805d54240d663fbee87a8eb8b7ceec95e84",
+    "parent_p2_8": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
+  },
+  "covered_properties": [
+    "P2_8_PARENT_PINNED",
+    "CONSTRAINED_WEIGHTED_SHARING",
+    "LIGHT_WATER_NUTRIENT_CONSERVATION",
+    "NO_OVERCONSUMPTION",
+    "CANONICAL_PLANT_ORDER",
+    "INPUT_PERMUTATION_INDEPENDENCE",
+    "REPEAT_PROCESS_DETERMINISM",
+    "ABUNDANT_RESOURCE_DEMAND_FULFILLMENT",
+    "LIEBIG_LIMITING_RESOURCE_RESPONSE",
+    "ZERO_SUPPLY_RESPONSE",
+    "EMPTY_POPULATION_CONSERVATION",
+    "NEGATIVE_SUPPLY_FAIL_CLOSED",
+    "DUPLICATE_ID_FAIL_CLOSED",
+    "INVALID_EFFICIENCY_FAIL_CLOSED",
+    "UNEXPECTED_FIELD_FAIL_CLOSED",
+    "TAMPERED_RESULT_REJECTED"
+  ],
+  "canonical_gate": {
+    "runner": "RUN_ECO_P3_1_TESTS.ps1",
+    "required": true,
+    "required_parent_regression": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
+    "required_fresh_processes": 2,
+    "required_aggregate_equality": true,
+    "required_parent_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
+  },
+  "decision": "DO_NOT_ACCEPT_P3_1_YET; TARGETED_LINUX_PASS; RUN_EXACT_WINDOWS_CANONICAL_GATE",
+  "next_if_passes": "accept P3.1, then open P3.2 Density & Carrying Capacity",
+  "observer_note": "after P3.2 a non-gating read-only low-poly OBS1 step viewer may be added without simulation-state writes, simulation RNG use or hash impact"
+}
