@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p4_1_production_region_state_validation.v1",
-  "revision": "ECO-P4.1-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P4.1-2026-08-13-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_EXACT_ATTACHED_GODOT_CONTRACT_PASS_FULL_REPOSITORY_GATE_PENDING",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_FULL_COMMITTED_CHAIN",
   "scope": "PRODUCTION_FACING_ECOLOGY_REGION_CONTRACT_ONLY",
   "parent": {
     "checkpoint": "ECO.P3.8",
@@ -10,10 +10,22 @@
     "accepted_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
     "kernel_blob": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e"
   },
-  "candidate_blobs": {
+  "accepted_blobs": {
     "kernel": "b651d208abd17050367fed4541c92f58de0f3c3f",
     "acceptance_test": "f1d607a08c2c3f35f5a582557adcd3e2b9a60ab3",
     "runner": "1360e458a7c71a4c05fa4f108db113bfa6d78726"
+  },
+  "exact_committed_chain_blobs": {
+    "p3_1": "c667569b40775a1a1898d7b911a610ca5795f380",
+    "p3_2": "8e635f8915ad53cac9a37917df32036cf92907b2",
+    "p3_3": "43a25eb0e6677749162de99c251231c94d243dc1",
+    "p3_4": "11e2b281c48d378da906f0739c739eecf9aa8465",
+    "p3_5": "649d26457ac8383f890f0dfca890353cc200ee7e",
+    "p3_6": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+    "p3_7": "7379c422f2d3f5723a2bfff8b46790f9cce30ddc",
+    "p3_8": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e",
+    "p4_1": "b651d208abd17050367fed4541c92f58de0f3c3f",
+    "p4_1_test": "f1d607a08c2c3f35f5a582557adcd3e2b9a60ab3"
   },
   "contract": {
     "state_owner_boundary": "one immutable-by-contract ecology state wrapper per canonical production region identity",
@@ -24,37 +36,25 @@
     "hashing": "SHA-256 of fixed-order JSON scalar vector; nested P3 state committed through validated P3.8 state_hash",
     "mutation_boundary": "create and extract use deep copies; caller aliasing cannot mutate stored region state",
     "rng": "no global RNG consumption",
-    "not_authorized": ["ecology tick cadence", "offline catch-up", "production file/database persistence", "server/region ownership or handoff", "network replication/client read model", "P3.8 research checkpoint codec as production save format"]
+    "not_authorized": ["offline catch-up policy", "production file/database persistence", "server/region ownership or handoff", "network replication/client read model", "P3.8 research checkpoint codec as production save format"]
   },
-  "attached_godot_evidence": {
+  "acceptance_evidence": {
+    "source_head_before_acceptance": "2744ff5ad40bd84b90c7285fe49adc4c88035c52",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "contract_harness": {
-      "parent_boundary": "strict API-compatible P3.8 harness; real P3.8 acceptance remains separately frozen/accepted",
-      "process_runs": 3,
-      "assertions_per_run": 47,
-      "all_process_logs_byte_identical": true,
-      "fresh_process_log_sha256": "dd0956c3d2618358ec5987f1b9b2ddb6a411f8e9f55d3e2336379f0e17ff4315",
-      "supplemental_harness_aggregate_hash": "a4b97f3dd0e8508683e02b911362141e3d9d0204d06d87c56e7aa17fdf1623ce"
-    },
-    "real_parent_hash_vector_recheck": {
-      "authority": "exact P4.1 hashing semantics executed on attached Godot using frozen accepted P3.8 semantic state hashes",
-      "p3_8_initial_state_hash": "6070494e77828f4e25a00eed9695de9e87fdf94e472f5018d660a7c20b15d7fb",
-      "p3_8_generation_5_state_hash": "07f6ecaa00d508b87042948a23cf4e0eaa600d79a8229e16b859c461dada509d",
-      "expected_region_zero_hash": "2d7fc8f595dbe5e55e29a0dca1256a9f4ccebe4176ec8d53c9bf66671ac3b7b4",
-      "expected_region_cut_hash": "fbc2072e388b2c9b02ff5755815821391bcf23b97cab35a5a8b1452bc4e5999c",
-      "expected_other_region_hash": "d4f0cd4890678747ef2f2399bcfd500282a3840af43ea37913ee78c39b17c3e5",
-      "expected_full_repository_aggregate_hash": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717"
-    },
-    "real_fixture_parser_preload": "PASS_WITH_API_COMPATIBLE_DEPENDENCY_STUBS_ONLY_NOT_FULL_REPOSITORY_RUNTIME"
+    "source_reconstruction": "all P3.1-P3.8 kernels plus P4.1 kernel/test verified byte-for-byte by Git blob SHA against source_head_before_acceptance",
+    "parser_preload": "PASS",
+    "parser_log_sha256": "39fde4591a5b4e0b04ce5153e2250cb1acf164a74c7a9335186d68f9edcccc3a",
+    "fresh_process_runs": 3,
+    "assertions_per_run": 52,
+    "all_process_logs_byte_identical": true,
+    "fresh_process_log_sha256": "2e7f7efaad505cc126b9ccbc614ecc6b6fe550acbb6867584faf602f807f0566",
+    "aggregate_hash": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717",
+    "region_zero_hash": "2d7fc8f595dbe5e55e29a0dca1256a9f4ccebe4176ec8d53c9bf66671ac3b7b4",
+    "region_cut_hash": "fbc2072e388b2c9b02ff5755815821391bcf23b97cab35a5a8b1452bc4e5999c",
+    "other_region_hash": "d4f0cd4890678747ef2f2399bcfd500282a3840af43ea37913ee78c39b17c3e5",
+    "reproduced_parent_p3_8_initial_state_hash": "6070494e77828f4e25a00eed9695de9e87fdf94e472f5018d660a7c20b15d7fb",
+    "reproduced_parent_p3_8_generation_5_state_hash": "07f6ecaa00d508b87042948a23cf4e0eaa600d79a8229e16b859c461dada509d"
   },
   "covered_properties": ["P3_8_ACCEPTED_AGGREGATE_PINNED", "VALIDATED_P3_8_STATE_REQUIRED", "REGION_ID_CANONICAL", "GENERATION_MIRRORS_P3_8", "FINITE_NON_NEGATIVE_WORLD_TIME", "REGION_IDENTITY_HASHED", "WORLD_TIME_HASHED", "P3_STATE_HASHED_BY_P3_8_STATE_HASH", "TOP_LEVEL_DICTIONARY_ORDER_INDEPENDENT", "CREATE_DEEP_COPY_BOUNDARY", "EXTRACT_DEEP_COPY_BOUNDARY", "EXACT_FIELD_SET_FAIL_CLOSED", "TAMPER_REJECTION", "GLOBAL_RNG_NOT_CONSUMED"],
-  "full_repository_gate": {
-    "runner": "RUN_ECO_P4_1_TESTS.ps1",
-    "requires_exact_godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "requires_parent_status": "P3.8 ACCEPTED*",
-    "requires_exact_parent_kernel_blob": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e",
-    "expected_aggregate_hash": "1acb55e1e825872943eac438303f03b979f33778a87c227d9819f74bff44b717",
-    "current_authorization": "READY_AFTER_CANDIDATE_PUBLICATION"
-  },
-  "decision": "IMPLEMENT_P4_1_CANDIDATE; DO_NOT_OPEN_P4_2_UNTIL_FULL_REPOSITORY_GATE_AND_ACCEPTANCE"
+  "decision": "ACCEPT_P4_1; OPEN_P4_2_DETERMINISTIC_ECOLOGY_CLOCK"
 }
