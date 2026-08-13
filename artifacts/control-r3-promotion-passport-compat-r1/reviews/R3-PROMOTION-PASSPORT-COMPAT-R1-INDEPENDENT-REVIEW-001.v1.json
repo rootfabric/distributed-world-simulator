@@ -1,0 +1,145 @@
+{
+  "schema": "distributed_world_simulator.r3_promotion_control_compatibility_independent_review.v1",
+  "review_id": "R3-PROMOTION-PASSPORT-COMPAT-R1-INDEPENDENT-REVIEW-001",
+  "reviewer_role": "GLOBAL-P0 R3 PROMOTION CONTROL-COMPATIBILITY INDEPENDENT REVIEWER",
+  "review_target_head_sha": "eecfc3c2bfe1285b782c406bafc0baef446366b4",
+  "reviewed_implementation_sha": "7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6",
+  "base_main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+  "risk_class": "CRITICAL",
+  "scope": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "pr": 91,
+    "repair_branch": "control/r3-promotion-passport-compat-r1",
+    "changed_files": [
+      ".github/workflows/project-control.yml",
+      "config/control/branches/control__r3-promotion-passport-compat-r1.v1.json",
+      "config/control/project-control-policy.v1.json",
+      "scripts/control/project_control.py",
+      "scripts/control/project_control_core.py",
+      "tests/harness/test_project_control_architecture_compatibility.py"
+    ],
+    "architecture_review_reopened": false,
+    "reviewer_v9_reopened": false,
+    "verifier_v9_reopened": false,
+    "director_v9_reopened": false,
+    "human_decision_reopened": false,
+    "promotion_executed": false,
+    "merge_executed": false
+  },
+  "predicates": {
+    "freshness_main_exact": "PASS",
+    "freshness_r3_lifecycle_exact": "PASS",
+    "freshness_repair_target_exact": "PASS",
+    "pr_91_open_draft_not_merged": "PASS",
+    "scope_bounded_to_expected_six_files": "PASS",
+    "runtime_domain_delta_zero": "PASS",
+    "frozen_candidate_mutation": "PASS_NONE",
+    "r3_evidence_mutation": "PASS_NONE",
+    "main_mutation_before_review": "PASS_NONE",
+    "core_byte_preservation": "PASS",
+    "core_expected_blob": "3d68d65e58aff37ab04c971c942efb815fbd374f",
+    "policy_mode_exact": "PASS",
+    "policy_central_registry_field_exact_in_current_file": "PASS",
+    "default_mismatch_fail_closed": "PASS",
+    "per_program_exact_revision_allowlist": "PASS",
+    "missing_allowlist_fail_closed": "PASS",
+    "malformed_allowlist_type_fail_closed": "PASS",
+    "unlisted_revision_fail_closed": "PASS",
+    "other_findings_preserved": "PASS",
+    "health_recomputed_from_declared_and_remaining_findings": "PASS",
+    "no_role_or_stage_string_heuristic_grants_compatibility": "PASS",
+    "live_r2_passports_synthetic_r3_regression": "PASS",
+    "live_r2_program_set_g_eco_t_ch_doctrine_nx": "PASS",
+    "g_allowlist_removal_restores_architecture_mismatch_red": "PASS",
+    "historical_allowlist_provenance_only_is_executable": "FAIL",
+    "new_runtime_after_promotion_uses_r3_is_enforced_by_compatibility_path": "FAIL",
+    "missing_central_registry_field_fails_closed": "FAIL",
+    "future_allowlist_copy_cannot_authorize_refreshed_runtime": "FAIL"
+  },
+  "critical_findings": [
+    {
+      "id": "R3-COMPAT-R-001",
+      "severity": "CRITICAL",
+      "title": "Historical revision allowlist is not executable provenance-only authorization",
+      "detail": "evaluate_passport_architecture_compatibility() decides a mismatched passport compatible using only the enabled policy mode, the policy-selected registry field, and membership of the passport architecture revision in that program entry's allowlist. audit_program() then removes ARCHITECTURE_REVISION_MISMATCH and recomputes health. No executable predicate binds the exception to an already-historical/frozen passport identity or rejects a newly created/refreshed post-promotion runtime frontier. Therefore adding or retaining the historical allowlist on a future runtime registry entry is sufficient to suppress the architecture mismatch when all other findings are clean. The textual transition rules FROZEN_R2_EVIDENCE_GRANDFATHERED, NEW_RUNTIME_AFTER_PROMOTION_USES_R3 and STALE_AUTHORIZATION_FAILS_CLOSED are not consumed by this compatibility path.",
+      "counterexample": {
+        "canonical_architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+        "future_program_entry_historical_passport_architecture_revisions": [
+          "GLOBAL-P0-2026-08-10-R2"
+        ],
+        "future_runtime_passport_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "compatibility_result_under_current_function": "EXPLICIT_HISTORICAL_REVISION_ALLOWED",
+        "effect": "ARCHITECTURE_REVISION_MISMATCH is removed; no separate compatibility-path rule rejects the new/refreshed R2 runtime frontier"
+      }
+    },
+    {
+      "id": "R3-COMPAT-R-002",
+      "severity": "HIGH",
+      "title": "Missing central_registry_field is not fail-closed",
+      "detail": "When passport_architecture_compatibility.mode is enabled but central_registry_field is absent, the implementation silently substitutes historical_passport_architecture_revisions via _DEFAULT_REGISTRY_FIELD. A malformed/incomplete compatibility policy can therefore still authorize a historical mismatch instead of failing closed. The current policy file contains the correct field, but the implementation contract is weaker than the required fail-closed semantics."
+    },
+    {
+      "id": "R3-COMPAT-R-003",
+      "severity": "HIGH",
+      "title": "Regression suite does not prove provenance-only denial for new runtime",
+      "detail": "The focused tests prove exact-match, disabled policy, exact allowlist, unlisted revision, malformed allowlist type, health preservation, the six live R2 passports in synthetic R3, and G allowlist removal. They do not include the critical negative case where a new/refreshed post-promotion runtime frontier carries R2 plus an allowlist and must remain RED, nor the missing-central_registry_field fail-closed case."
+    }
+  ],
+  "project_control_run": {
+    "implementation": {
+      "run_id": 31665234844,
+      "run_number": 339,
+      "head_sha": "7dbc2279207c4e50f37e3c7c42e04e1c0f7b6ec6",
+      "status": "completed",
+      "conclusion": "success",
+      "compatibility_regression_step": "success",
+      "artifact": {
+        "artifact_id": 9167661449,
+        "name": "project-control-report",
+        "digest": "sha256:067ad33c70fa22416ac639a3d49037707b60327ac7af39643784b492ec12efc7",
+        "overall_health": "YELLOW",
+        "non_red": true,
+        "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+        "registry_generation": 78,
+        "main_head": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+        "cross_branch_overlaps": [],
+        "eco_health": "RED",
+        "eco_blocks_global_progress": false,
+        "g_to_eco": {
+          "level": "YELLOW",
+          "global_blocking": false
+        },
+        "ch_to_nx": {
+          "level": "YELLOW",
+          "global_blocking": true
+        }
+      }
+    },
+    "lifecycle": {
+      "run_id": 31665310373,
+      "run_number": 340,
+      "head_sha": "eecfc3c2bfe1285b782c406bafc0baef446366b4",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 9167688984,
+      "artifact_digest": "sha256:5291109c8069f5864acd447038df83c083906c0571ec00c2c1ab7367c9d83d3e"
+    }
+  },
+  "runtime_domain_delta": 0,
+  "required_fixes": [
+    {
+      "id": "R3-COMPAT-FIX-001",
+      "requirement": "Make provenance-only eligibility executable and independent of role/status string heuristics. A historical architecture allowlist must not, by itself, be sufficient to suppress ARCHITECTURE_REVISION_MISMATCH for a new or refreshed post-promotion frontier. Bind compatibility to an explicit main-owned historical passport identity captured at the promotion boundary (at minimum exact program, branch/passport identity, historical architecture revision, and immutable/pinned historical head or equivalent durable provenance identity), and fail closed when that identity no longer matches. A fresh runtime frontier must require the canonical architecture revision even if an old allowlist is accidentally copied or retained."
+    },
+    {
+      "id": "R3-COMPAT-FIX-002",
+      "requirement": "Require passport_architecture_compatibility.central_registry_field to be present and exactly equal historical_passport_architecture_revisions when compatibility mode is enabled. Remove the permissive fallback for an omitted field; missing, empty, or different field names must fail closed for mismatched revisions."
+    },
+    {
+      "id": "R3-COMPAT-FIX-003",
+      "requirement": "Add regression tests proving: (a) a newly created/refreshed post-promotion runtime frontier on R2 remains RED even when its program entry contains the R2 historical allowlist; (b) copying/retaining a historical allowlist onto a different/new passport identity cannot suppress ARCHITECTURE_REVISION_MISMATCH; (c) missing central_registry_field with mode enabled fails closed; and (d) the existing six historical R2 passport synthetic-R3 compatibility cases still pass. Rerun Project Control on the fixed implementation and lifecycle head and attach actual artifacts."
+    }
+  ],
+  "evidence_gaps": [],
+  "verdict": "FIX_REQUIRED"
+}
