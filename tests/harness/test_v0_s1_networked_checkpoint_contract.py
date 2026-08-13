@@ -23,6 +23,7 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
         self.catalog = load_json("config/control/harness/checkpoint-catalog.v1.json")
         self.scheduler = load_json("config/control/harness/scheduler-policy.v1.json")
         self.goals = load_json("config/control/harness/project-goals.v1.json")
+        self.registry = load_json("config/control/project-program-registry.v1.json")
         self.contracts = {
             "checkpoint_catalog": self.catalog,
             "scheduler_policy": self.scheduler,
@@ -93,6 +94,24 @@ class V0S1NetworkedCheckpointContractTests(unittest.TestCase):
         self.assertIn("C22_MAIN_INTEGRATED", goals["V0_S1_PRODUCT"]["depends_on"])
         self.assertEqual(H0_2, self.scheduler["current_pilot_override"]["current_checkpoint"])
         self.assertIn(CHECKPOINT, self.scheduler["parallel_product_checkpoints"]["checkpoints"])
+
+    def test_registry_generation_80_activates_scenario_gate_without_weakening_nx(self):
+        self.assertEqual(80, self.registry["registry_generation"])
+        self.assertIn("V0", self.registry["programs"])
+        v0 = self.registry["programs"]["V0"]
+        self.assertEqual("COMPOSITION_FRONTIER", v0["role"])
+        self.assertEqual("ELIGIBLE_FOR_FRESH_EXACT_MAIN_HIGH_RISK_WORK_ORDER", v0["stage_status"])
+
+        transitions = {
+            item["stage"]: item["blocked_by"]
+            for item in self.registry["global_blocked_transitions"]
+        }
+        self.assertNotIn("V0 RUNTIME START", transitions)
+        self.assertIn("V0-S1 NETWORKED PLANETARY OUTPOST START", transitions)
+        self.assertNotIn("H0_3_SCHEDULER_ACCEPTED", transitions["V0-S1 NETWORKED PLANETARY OUTPOST START"])
+        self.assertEqual("H0_3_SCHEDULER_ACCEPTED_REQUIRED", transitions["MULTI_RUNTIME_IMPLEMENTATION_WORKERS"])
+        self.assertIn("CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED", transitions["NX.C1 SOURCE ACCEPTANCE"])
+        self.assertEqual("V0_S1_BLOCKED_REQUIRES_NX", transitions["V0-S1 NETWORK FOUNDATION OR AUTHORITY CHANGE"])
 
     def test_pre_h0_3_concurrency_is_one_mutation_worker_and_verification_can_coexist(self):
         concurrency = self.scheduler["concurrency"]
