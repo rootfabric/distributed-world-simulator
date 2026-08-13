@@ -1,15 +1,16 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_6_disturbance_succession_validation.v1",
-  "revision": "ECO-P3.6-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P3.6-2026-08-13-R2-PARENT-READY",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_5_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
-    "control_head": "7af2a114ab7891d3ee16cd2b82f637ea73863f3e",
+    "acceptance_head": "2b4e4953abea554e6ea6299c08b0afd8c8a3e875",
     "checkpoint": "ECO.P3.5",
-    "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_4_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
-    "candidate_aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+    "aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
     "kernel_blob": "649d26457ac8383f890f0dfca890353cc200ee7e",
+    "acceptance_test_blob": "c91ed0c25c418be1a7c7c4352423b7214c8706f8",
     "targeted_source_result_hash": "2ee8d7c6dc55a7c55af35cc945b0b85f79cc27fe0145b921eb5b9f0023b5d060"
   },
   "accepted_ancestor": {
@@ -47,28 +48,14 @@
     "acceptance_test_blob": "ef8e8565246fb454ed6483f95df3b33c1d253802",
     "fresh_process_log_sha256": "71cb3bbfac17b2bc3667b0ffc3ab8055ff0a9c9c04e2c7d1cdb63a4cf0c0c537"
   },
-  "covered_properties": [
-    "P3_5_CANDIDATE_PARENT_PINNED",
-    "P3_5_SOURCE_NOT_MUTATED",
-    "HEAT_FLOOD_DROUGHT_PRESSURE_CHANNELS",
-    "TRAIT_ORDER_PERMUTATION_INDEPENDENCE",
-    "MATCHING_RESISTANCE_REDUCES_DAMAGE",
-    "RECOVERY_MONOTONIC_WITH_TIME",
-    "SEASONAL_RESOURCE_SUPPORT_MODULATES_RECOVERY",
-    "PIONEER_RECOVERY_TRAITS_SHIFT_SUCCESSION",
-    "ZERO_SEVERITY_IDENTITY",
-    "NO_RECOVERY_IDENTITY_TO_POST_DISTURBANCE",
-    "PRE_DISTURBANCE_BIOMASS_UPPER_BOUND",
-    "DIRECT_EVALUATION_NO_DRIFT",
-    "GLOBAL_RNG_UNCHANGED",
-    "EMPTY_SYSTEM_VALID",
-    "MALFORMED_TAMPERED_STATE_FAIL_CLOSED"
-  ],
   "canonical_gate": {
+    "parent_requirement_satisfied": true,
+    "parent_status_required": "ACCEPTED*",
     "runner": "RUN_ECO_P3_6_TESTS.ps1",
-    "blocked_until": "P3.5 status starts ACCEPTED",
     "expected_aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
-    "expected_parent_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83"
+    "expected_parent_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "current_authorization": "READY_FOR_OWN_CANONICAL_GATE",
+    "note": "The Human attached-Godot override applied to the requested P3.3-P3.5 lifecycle points only; P3.6 has not been accepted."
   },
-  "decision": "CANDIDATE_ONLY_DO_NOT_ACCEPT_OR_OPEN_P3_7_CANONICALLY_UNTIL_PARENT_CHAIN_ACCEPTED"
+  "decision": "P3_6_PARENT_GATE_OPEN; CANDIDATE_ONLY; RUN_OWN_CANONICAL_GATE_BEFORE_ACCEPTANCE"
 }
