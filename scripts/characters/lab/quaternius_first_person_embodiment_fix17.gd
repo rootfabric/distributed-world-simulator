@@ -170,8 +170,15 @@ func _profile_runtime_readiness_error(profile: Dictionary) -> String:
 	var rest_policy := String(retarget.get("rest_space_policy", "")).strip_edges().to_upper()
 	if rest_policy == "INSPECT_REQUIRED" or rest_policy.is_empty():
 		return "FPE_HAND_PROFILE_REST_SPACE_NOT_CALIBRATED"
-	if Dictionary(retarget.get("bone_map", {})).is_empty():
+	var common_map := Dictionary(retarget.get("bone_map", {}))
+	var by_hand_value: Variant = retarget.get("bone_map_by_hand", {})
+	var by_hand := Dictionary(by_hand_value) if by_hand_value is Dictionary else {}
+	if common_map.is_empty() and by_hand.is_empty():
 		return "FPE_HAND_PROFILE_BONE_MAP_REQUIRED"
+	if String(profile.get("hand_layout", "")).strip_edges().to_upper() == "PAIRED_SINGLE_MESH":
+		var split := Dictionary(selection.get("paired_split", {}))
+		if String(split.get("strategy", "")).strip_edges().is_empty():
+			return "FPE_HAND_PROFILE_PAIRED_SPLIT_CONFIG_REQUIRED"
 	return ""
 
 
