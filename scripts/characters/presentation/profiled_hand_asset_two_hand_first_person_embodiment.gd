@@ -2,7 +2,7 @@ class_name ProfiledHandAssetTwoHandFirstPersonEmbodiment
 extends "res://scripts/characters/presentation/skinned_resource_configurable_two_hand_first_person_embodiment.gd"
 
 const ProfileType = preload("res://scripts/characters/presentation/first_person_hand_asset_profile.gd")
-const ProfiledProviderType = preload("res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider.gd")
+const ProfiledProviderType = preload("res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider_fix2.gd")
 
 var _hand_asset_profile_by_hand: Dictionary = {}
 
