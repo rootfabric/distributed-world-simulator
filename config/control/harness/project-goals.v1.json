@@ -35,6 +35,20 @@
       "reason": "First autonomous pilot must prove restart-safe branch creation, constrained implementation, independent verification, PC0 audit and checkpoint proposal on a high-value but bounded Construction convergence task."
     },
     {
+      "id": "HARNESS_H0_2",
+      "program": "HARNESS/NX",
+      "title": "H0.2 High-Risk NX.C1 Pilot",
+      "priority": 105,
+      "depends_on": [
+        "HARNESS_H0_1",
+        "GLOBAL_P0_R3_CANONICAL",
+        "POST_R3_PC0_NON_RED"
+      ],
+      "target_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
+      "project_checkpoint": "NX_SOURCE_ACCEPTED",
+      "reason": "The second pilot must prove the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. Planning may begin only from canonical R3 generation 79; runtime branch creation requires a fresh Work Order plus explicit dispatch, and source acceptance requires CH->NX directional dependency revalidation."
+    },
+    {
       "id": "CONSTRUCTION_TRAIN",
       "program": "TS/T",
       "title": "Construction convergence to real heterogeneous base",
@@ -47,7 +61,7 @@
       "program": "NX",
       "title": "Owner-authority runtime convergence",
       "priority": 80,
-      "depends_on": ["HARNESS_H0_1"],
+      "depends_on": ["HARNESS_H0_2"],
       "sequence": ["NX_C1_IMPLEMENTED_CANDIDATE", "NX_SOURCE_ACCEPTED"]
     },
     {

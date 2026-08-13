@@ -26,7 +26,8 @@ jobs:
             scripts/control/project_control.py \
             scripts/control/project_control_architecture_compat.py \
             scripts/control/project_control_core.py \
-            scripts/control/project_control_directional_watch.py
+            scripts/control/project_control_directional_watch.py \
+            scripts/harness/checkpoint_planner.py
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -63,6 +64,9 @@ jobs:
             tests.harness.test_project_control_architecture_compatibility \
             tests.harness.test_project_control_historical_ownership_compatibility \
             tests.harness.test_project_control_proposed_r3_ownership_projection
+
+      - name: Run H0.2 machine checkpoint regression
+        run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
 
       - name: Run PC0 auditor
         run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red

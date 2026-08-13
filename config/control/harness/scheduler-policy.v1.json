@@ -13,13 +13,18 @@
   },
   "current_pilot_override": {
     "enabled": true,
-    "checkpoint_sequence": ["H0_0_SCAFFOLD_READY", "H0_1_CLOSED_LOOP_C22_PILOT"],
-    "current_checkpoint": "H0_1_CLOSED_LOOP_C22_PILOT",
-    "reason": "H0.0 has verified terminal evidence and is being canonicalized. H0.1 is the next planning target, but C22 runtime branch creation remains forbidden until post-merge main audit and explicit Director dispatch."
+    "checkpoint_sequence": [
+      "H0_0_SCAFFOLD_READY",
+      "H0_1_CLOSED_LOOP_C22_PILOT",
+      "H0_2_NX_C1_HIGH_RISK_PILOT"
+    ],
+    "current_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
+    "reason": "H0.1 is accepted and C22 is main-integrated. Canonical R3 generation 79 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2 is now the planning target, but NX.C1 runtime branch creation remains forbidden until a fresh R3-bound Work Order is issued and explicitly dispatched."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,
+    "h0_2_max_autonomous_runtime_workers": 1,
     "human_observation_orders_may_wait_in_parallel": true,
     "architecture_candidate_analysis_may_run_in_parallel": true,
     "h0_3_required_before_multi_runtime_worker_scheduler": true
