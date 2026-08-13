@@ -1,12 +1,15 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_8_save_restart_validation.v1",
-  "revision": "ECO-EVO1-P2.8-2026-08-13-R3-FAILURE-STAGE-LOCALIZATION",
+  "revision": "ECO-EVO1-P2.8-2026-08-13-R4-EXACT-DOUBLE-REPAIRED-CANDIDATE",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
   "original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
-  "codec_repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-  "stage_probe_head": "ca8d9c38a48b4da9244f2daf7174e79014ab846f",
-  "status": "REPAIRED_CANDIDATE_SECOND_FAILURE_STAGE_LOCALIZATION_PENDING",
+  "integer_codec_repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
+  "failure_stage_probe_head": "98a340581af33c43491e8eff4096b1a752ff77f8",
+  "runner_stage_probe_head": "cd68c2014446504990cb0f1dbf3fedc0bc2eb701",
+  "exact_float_codec_repair_head": "1e74792c53bbcaa5807097630321dd7abc0ba88c",
+  "exact_float_codec_preflight_head": "6f60f6eacfe58f60740318cd9f91262f83f508f5",
+  "status": "REPAIRED_CANDIDATE_EXACT_WINDOWS_STAGE_AND_FULL_RERUN_PENDING",
   "scope": "RESEARCH_ONLY_EVO1",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.7",
@@ -20,8 +23,8 @@
     "strategy_truth": "PlantGenome and P2.2 recruitment traits persisted with accepted checksums",
     "regional_truth": "history, occupancy, transition, migration and disturbance logs + cumulative accounting persisted",
     "diagnostic_truth": "accepted P2.7 divergence result persisted as diagnostic evidence; no species identity declared",
-    "format": "typed JSON envelope with full float precision and canonical order-independent integrity hashing",
-    "numeric_variant_contract": "integer and floating-point Variant types are encoded distinctly so canonical hashes survive JSON round-trip",
+    "format": "typed JSON envelope with canonical order-independent integrity hashing",
+    "numeric_variant_contract": "TYPE_INT is tagged explicitly; TYPE_FLOAT, Vector2 and Rect2 use exact Godot Variant bytes encoded as base64 so JSON never rewrites their binary value",
     "production_boundary": "research persistence proof only; no production durability/transactions/authority claim"
   },
   "controlled_design": {
@@ -37,12 +40,11 @@
     "parser_preflight": "PASS",
     "accepted_parent_chain": "PASS_THROUGH_P2_7",
     "p2_8_result": "FAIL_BEFORE_EXPERIMENT_RESULT",
-    "first_failed_assertion": "experiment result exists",
-    "classification": "P2_8_CHECKPOINT_CODEC_DEFECT_NOT_PARENT_REGRESSION"
+    "first_failed_assertion": "experiment result exists"
   },
-  "codec_repair_finding": {
+  "codec_finding_001": {
     "id": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
-    "root_cause": "Godot JSON.parse_string restores untagged JSON numbers as TYPE_FLOAT, erasing TYPE_INT identity required by P2.8 canonical hashing.",
+    "root_cause": "Godot JSON.parse_string restores untagged integer JSON numbers as TYPE_FLOAT, erasing TYPE_INT identity required by canonical hashing.",
     "repair": "encode TYPE_INT with an explicit Int wrapper and restore with int(value)",
     "codec_fix_commit": "dc910baa78c5b68f606210a7bd60fe9e5cc0d4f1",
     "codec_preflight_commit": "31fd42a503875247cc758b36d7915a99a6a72698",
@@ -66,16 +68,39 @@
     "p2_7_aggregate_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
     "p2_8_result": "FAIL_BEFORE_EXPERIMENT_RESULT",
     "first_failed_assertion": "experiment result exists",
-    "classification": "CODEC_001_FIXED_BUT_SECOND_FAIL_CLOSED_BOUNDARY_REMAINS",
+    "classification": "INTEGER_VARIANT_DEFECT_FIXED_BUT_A_SECOND_NUMERIC_OR_STATEFUL_FAIL_CLOSED_BOUNDARY_REMAINED",
     "important_negative_evidence": [
       "NOT_A_PARSER_FAILURE",
-      "NOT_A_CODEC_PREFLIGHT_FAILURE",
+      "NOT_AN_INTEGER_CODEC_PREFLIGHT_FAILURE",
       "NOT_A_P2_7_OR_EARLIER_REGRESSION"
     ]
   },
+  "codec_finding_002": {
+    "id": "P2_8_CODEC_002_JSON_DOUBLE_PRECISION_ERASURE",
+    "root_cause": "On the exact attached Godot a13da4feb build, JSON.stringify(..., full_precision=true) followed by JSON.parse_string can restore an adjacent TYPE_FLOAT value. P2.8 canonical hashing uses %.17f, so this changes world/evidence/checkpoint hashes for ordinary computed ecology doubles.",
+    "attached_engine_range_probe": {
+      "sample_count": 100000,
+      "range": "computed values centered in ecological-scale [-1000,1000] inputs",
+      "raw_json_bit_level_mismatches": 34878,
+      "raw_json_canonical_17f_mismatches": 20488
+    },
+    "repair": "encode TYPE_FLOAT, Vector2 and Rect2 using var_to_bytes -> base64 and decode base64 -> bytes_to_var with exact expected Variant type checks",
+    "repair_commit": "1e74792c53bbcaa5807097630321dd7abc0ba88c",
+    "repair_diff": "plant_world_persistence_v1.gd only, +22/-7 in codec block",
+    "post_repair_attached_engine_probe": {
+      "sample_count": 100000,
+      "float_mismatches": 0,
+      "vector2_mismatches": 0,
+      "rect2_mismatches": 0
+    },
+    "strengthened_preflight_commit": "6f60f6eacfe58f60740318cd9f91262f83f508f5",
+    "strengthened_preflight": "adds adversarial computed-scale doubles, tiny double, exact Variant-byte equality for float/Vector2/Rect2, and fail-closed accumulated assertion status",
+    "biology_or_population_semantics_changed": false,
+    "accepted_p2_7_or_earlier_sources_changed": false
+  },
   "failure_stage_localization": {
     "test": "tests/research/ecology/eco_evo1_p2_8_failure_stage_probe.gd",
-    "runner_order": "parser/preload -> codec preflight -> fail-closed execution stage probe -> full P2.7 parent regression -> P2.8 acceptance -> fresh process A/B",
+    "runner_order": "acceptance parser -> failure-stage parser -> codec preflight -> fail-closed execution stage probe -> full P2.7 parent regression -> P2.8 acceptance -> fresh process A/B",
     "stage_boundaries": [
       "P2_7_PARENT",
       "FIXTURE",
@@ -92,14 +117,6 @@
     "checkpoint_failure_diagnostics": "prints restored world validation plus stored/original/restored world and evidence hashes and recomputed checkpoint hash",
     "variant_audit": "prints unsupported value types or non-string dictionary keys if serialization returns empty"
   },
-  "supplementary_attached_engine_evidence": {
-    "authority": "SUPPLEMENTARY_NOT_EXACT_WINDOWS_CANONICAL",
-    "binary": "uploaded Godot 4.7.1 Linux double build from project attachment",
-    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "raw_json_probe": "CONFIRMED_JSON_INT_TO_FLOAT_VARIANT_ERASURE",
-    "fixed_codec_probe": "PASS_HASH_AND_INT_VARIANT_IDENTITY",
-    "two_cut_codec_probe": "PASS_3_FRESH_PROCESSES_WITH_IDENTICAL_HASHES_AND_TAMPER_REJECTION"
-  },
   "required_properties": [
     "P2_7_PARENT_HASH_UNCHANGED",
     "STATEFUL_UNINTERRUPTED_MATCHES_P2_6_RESULT_HASH",
@@ -112,6 +129,7 @@
     "DISTURBANCE_CONSERVATION_PRESERVED",
     "CHECKPOINT_WORLD_EVIDENCE_AND_ENVELOPE_HASHES_VALIDATED",
     "INTEGER_VARIANT_TYPES_PRESERVED_ACROSS_JSON_ROUND_TRIP",
+    "FLOAT_VECTOR2_RECT2_BINARY_VALUES_PRESERVED_EXACTLY_ACROSS_JSON_ROUND_TRIP",
     "TAMPERED_JSON_VALID_CHECKPOINT_REJECTED_FAIL_CLOSED",
     "FRESH_PROCESS_DISK_RESTORE_A_AND_B_MATCH_ACCEPTANCE_AGGREGATE",
     "NO_ACCEPTED_P2_7_OR_EARLIER_SOURCE_MODIFICATION",
@@ -126,7 +144,7 @@
     "runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
     "parent_runner": "RUN_ECO_EVO1_P2_7_TESTS.ps1"
   },
-  "decision": "DO_NOT_ACCEPT_P2_8; LOCALIZE_SECOND_FAIL_CLOSED_BOUNDARY_BEFORE_ANY_FURTHER_SEMANTIC_REPAIR",
-  "next_if_stage_identified": "repair only the identified P2.8 persistence/orchestration boundary, preserve accepted P2.7 and earlier sources, then exact-Windows rerun",
-  "next_if_pass": "ECO.EVO1 COMPLETE; open post-EVO1 route resolution for EVO2 and XFER0"
+  "decision": "DO_NOT_ACCEPT_P2_8_YET; EXACT_WINDOWS_STAGE_PROBE_AND_FULL_RERUN_REQUIRED_AFTER_EXACT_DOUBLE_REPAIR",
+  "next_if_stage_passes": "run full P2.8 runner; if full PASS, accept P2.8 and close EVO1",
+  "next_if_stage_fails": "repair only the named P2.8 boundary and preserve accepted P2.7 and earlier sources"
 }
