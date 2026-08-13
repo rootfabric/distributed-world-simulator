@@ -111,6 +111,7 @@ $Tests = @(
     @{ Path = "res://tests/characters/test_fpe_r2_s9_volumetric_skinned_hand_asset.gd"; PassMarker = "FPE R2 S9 volumetric skinned hand asset: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s10_hand_asset_profiles.gd"; PassMarker = "FPE R2 S10 portable hand asset profiles: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s10_paired_single_mesh_adapter.gd"; PassMarker = "FPE R2 S10 paired single-mesh adapter: PASS" },
+    @{ Path = "res://tests/characters/test_fpe_r2_s10_native_skeleton_pose_driver.gd"; PassMarker = "FPE R2 S10 native skeleton pose driver: PASS" },
     @{ Path = "res://tests/characters/test_fpe_r2_s10_wrad_external_probe.gd"; PassMarker = "FPE R2 S10 WRAD external probe: PASS" },
     @{ Path = "res://tests/characters/test_fpe_sandbox_owner_collision_isolation.gd"; PassMarker = "FPE sandbox owner collision isolation: PASS" },
     @{ Path = "res://tests/characters/test_first_person_embodiment_performance_gate.gd"; PassMarker = "FirstPersonEmbodiment performance gate: PASS" },
