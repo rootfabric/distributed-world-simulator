@@ -1,111 +1,299 @@
 #!/usr/bin/env python3
-"""PC0 project control auditor.
+"""PC0 project control auditor with fail-closed architecture passport compatibility.
 
-origin/main owns operational project state. Active branches only report local
-facts through unique branch passports. The auditor compares those declarations
-with real Git refs and writes a derived dashboard/report.
+The legacy auditor implementation remains byte-preserved in
+project_control_core.py. Exact canonical architecture equality is accepted
+without exception metadata. A historical architecture mismatch is accepted only
+when the main-owned policy explicitly enables the compatibility contract, the
+exact historical revision is allowlisted for the audited program, and exactly
+one immutable historical passport identity matches observed Git evidence.
 """
 
 from __future__ import annotations
 
-import argparse
-import fnmatch
-import json
-import subprocess
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
+import re
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
-ARTIFACT_DIR = ROOT / "artifacts" / "control"
-REGISTRY_PATH = "config/control/project-program-registry.v1.json"
-POLICY_PATH = "config/control/project-control-policy.v1.json"
-OWNERSHIP_PATH = "config/control/architecture-ownership.v1.json"
-HEALTH_RANK = {"GREEN": 0, "YELLOW": 1, "RED": 2}
-NON_BLOCKING_GLOBAL_ROLES = {"RESEARCH_DESIGN_FRONTIER"}
+import project_control_core as _core
+from project_control_core import *  # noqa: F401,F403
+
+_ORIGINAL_AUDIT_PROGRAM = _core.audit_program
+_COMPATIBILITY_MODE = "EXPLICIT_PER_PROGRAM_HISTORICAL_ALLOWLIST"
+_REVISION_REGISTRY_FIELD = "historical_passport_architecture_revisions"
+_IDENTITY_REGISTRY_FIELD = "historical_passport_identities"
+_REQUIRED_IDENTITY_FIELDS = (
+    "program",
+    "branch",
+    "passport_path",
+    "architecture_revision",
+    "pinned_head_sha",
+    "passport_blob_sha",
+)
+_FULL_GIT_SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 
 
-def git(*args: str, allow_fail: bool = False) -> str:
-    proc = subprocess.run(
-        ["git", *args], cwd=ROOT, text=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    )
-    if proc.returncode != 0 and not allow_fail:
-        raise RuntimeError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
-    return proc.stdout.strip() if proc.returncode == 0 else ""
+def _is_full_git_sha(value: Any) -> bool:
+    return isinstance(value, str) and bool(_FULL_GIT_SHA_RE.fullmatch(value))
 
 
-def load_json_text(text: str, label: str) -> dict[str, Any]:
-    try:
-        value = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Invalid JSON in {label}: {exc}") from exc
-    if not isinstance(value, dict):
-        raise RuntimeError(f"Expected JSON object in {label}")
-    return value
+def _compatibility_result(
+    *,
+    compatible: bool,
+    mode: str,
+    passport_revision: str,
+    canonical_revision: str,
+    allowlist_field: Any = None,
+    identity_field: Any = None,
+    allowed_historical_revisions: list[str] | None = None,
+    matching_historical_identities: int = 0,
+    observed_head_sha: str = "",
+    observed_passport_blob_sha: str = "",
+) -> dict[str, Any]:
+    return {
+        "compatible": compatible,
+        "mode": mode,
+        "passport_revision": passport_revision,
+        "canonical_revision": canonical_revision,
+        "allowlist_field": allowlist_field,
+        "identity_field": identity_field,
+        "allowed_historical_revisions": allowed_historical_revisions or [],
+        "matching_historical_identities": matching_historical_identities,
+        "observed_head_sha": observed_head_sha,
+        "observed_passport_blob_sha": observed_passport_blob_sha,
+    }
 
 
-def load_main_owned(path: str) -> dict[str, Any]:
-    text = git("show", f"origin/main:{path}", allow_fail=True)
-    if text:
-        return load_json_text(text, f"origin/main:{path}")
-    local = ROOT / path
-    if local.exists():
-        return load_json_text(local.read_text(encoding="utf-8"), str(local))
-    raise RuntimeError(f"Control-plane file missing in origin/main and checkout: {path}")
+def evaluate_passport_architecture_compatibility(
+    central: dict[str, Any],
+    registry: dict[str, Any],
+    passport: dict[str, Any],
+    policy: dict[str, Any],
+    *,
+    audited_program: str = "",
+    observed_branch: str = "",
+    observed_passport_path: str = "",
+    observed_head_sha: str = "",
+    observed_passport_blob_sha: str = "",
+) -> dict[str, Any]:
+    """Return a deterministic fail-closed architecture compatibility decision.
 
-
-def load_branch_json(branch_ref: str, path: str) -> dict[str, Any] | None:
-    text = git("show", f"{branch_ref}:{path}", allow_fail=True)
-    return load_json_text(text, f"{branch_ref}:{path}") if text else None
-
-
-def ref_exists(ref: str) -> bool:
-    return bool(git("rev-parse", "--verify", ref, allow_fail=True))
-
-
-def changed_files(base: str, head: str) -> list[str]:
-    if not base or not head or not ref_exists(base) or not ref_exists(head):
-        return []
-    out = git("diff", "--name-only", f"{base}..{head}", allow_fail=True)
-    return sorted({x.strip() for x in out.splitlines() if x.strip()})
-
-
-def matches_any(path: str, patterns: list[str]) -> bool:
-    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
-
-
-def program_blocks_global_progress(central: dict[str, Any]) -> bool:
-    """Return whether this program contributes its own health to global health.
-
-    Research/design frontiers stay fully audited, but their local drift does not
-    stop unrelated mainline delivery. An explicit registry override remains
-    available for future exceptional cases.
+    Exact canonical equality requires no historical exception. A mismatch is
+    compatible only when both the explicit historical revision allowlist and
+    one exact immutable historical identity match the observed branch head and
+    passport blob. Missing or malformed policy, registry identity, or Git
+    evidence fails closed.
     """
-    if "blocks_global_progress" in central:
-        return bool(central.get("blocks_global_progress"))
-    return str(central.get("role", "")) not in NON_BLOCKING_GLOBAL_ROLES
+    canonical_raw = registry.get("architecture_revision")
+    passport_raw = passport.get("architecture_revision")
+    canonical_revision = canonical_raw if isinstance(canonical_raw, str) else ""
+    passport_revision = passport_raw if isinstance(passport_raw, str) else ""
+
+    if canonical_revision and passport_revision == canonical_revision:
+        return _compatibility_result(
+            compatible=True,
+            mode="EXACT_CANONICAL_REVISION",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+        )
+
+    compatibility_policy = policy.get("passport_architecture_compatibility")
+    if not isinstance(compatibility_policy, dict):
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_POLICY_NOT_ENABLED",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+        )
+
+    mode = compatibility_policy.get("mode")
+    if mode != _COMPATIBILITY_MODE:
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_POLICY_NOT_ENABLED",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+        )
+
+    revision_field = compatibility_policy.get("central_registry_field")
+    if not isinstance(revision_field, str) or revision_field != _REVISION_REGISTRY_FIELD:
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_REVISION_POLICY_FIELD_INVALID",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+        )
+
+    identity_field = compatibility_policy.get("historical_identity_registry_field")
+    if not isinstance(identity_field, str) or identity_field != _IDENTITY_REGISTRY_FIELD:
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_IDENTITY_POLICY_FIELD_INVALID",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+        )
+
+    allowed_raw = central.get(revision_field)
+    if (
+        not isinstance(allowed_raw, list)
+        or any(not isinstance(value, str) or not value for value in allowed_raw)
+    ):
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_MALFORMED_ALLOWLIST",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+        )
+
+    allowed = list(dict.fromkeys(allowed_raw))
+    if not passport_revision or passport_revision not in allowed:
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_NOT_ALLOWLISTED",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+            allowed_historical_revisions=allowed,
+        )
+
+    identities_raw = central.get(identity_field)
+    if not isinstance(identities_raw, list) or any(not isinstance(item, dict) for item in identities_raw):
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_MALFORMED_IDENTITY_LIST",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+            allowed_historical_revisions=allowed,
+        )
+
+    identities: list[dict[str, Any]] = []
+    for identity in identities_raw:
+        if any(
+            field not in identity
+            or not isinstance(identity.get(field), str)
+            or not identity.get(field)
+            for field in _REQUIRED_IDENTITY_FIELDS
+        ):
+            return _compatibility_result(
+                compatible=False,
+                mode="STRICT_MISMATCH_MALFORMED_IDENTITY_RECORD",
+                passport_revision=passport_revision,
+                canonical_revision=canonical_revision,
+                allowlist_field=revision_field,
+                identity_field=identity_field,
+                allowed_historical_revisions=allowed,
+            )
+        if not _is_full_git_sha(identity["pinned_head_sha"]) or not _is_full_git_sha(identity["passport_blob_sha"]):
+            return _compatibility_result(
+                compatible=False,
+                mode="STRICT_MISMATCH_MALFORMED_IDENTITY_SHA",
+                passport_revision=passport_revision,
+                canonical_revision=canonical_revision,
+                allowlist_field=revision_field,
+                identity_field=identity_field,
+                allowed_historical_revisions=allowed,
+            )
+        identities.append(identity)
+
+    expected_branch = central.get("branch")
+    expected_path = central.get("passport_path")
+    if (
+        not isinstance(audited_program, str)
+        or not audited_program
+        or not isinstance(expected_branch, str)
+        or not expected_branch
+        or not isinstance(expected_path, str)
+        or not expected_path
+        or central.get("program") != audited_program
+        or observed_branch != expected_branch
+        or observed_passport_path != expected_path
+        or passport.get("program") != audited_program
+        or passport.get("branch") != expected_branch
+    ):
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_OBSERVED_IDENTITY_CONTEXT_MISMATCH",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+            allowed_historical_revisions=allowed,
+            observed_head_sha=observed_head_sha,
+            observed_passport_blob_sha=observed_passport_blob_sha,
+        )
+
+    if not _is_full_git_sha(observed_head_sha) or not _is_full_git_sha(observed_passport_blob_sha):
+        return _compatibility_result(
+            compatible=False,
+            mode="STRICT_MISMATCH_OBSERVED_GIT_IDENTITY_UNRESOLVED",
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+            allowed_historical_revisions=allowed,
+            observed_head_sha=observed_head_sha,
+            observed_passport_blob_sha=observed_passport_blob_sha,
+        )
+
+    matches = [
+        identity
+        for identity in identities
+        if identity["program"] == audited_program
+        and identity["branch"] == expected_branch
+        and identity["passport_path"] == expected_path
+        and identity["architecture_revision"] == passport_revision
+        and identity["pinned_head_sha"] == observed_head_sha
+        and identity["passport_blob_sha"] == observed_passport_blob_sha
+    ]
+    if len(matches) != 1:
+        return _compatibility_result(
+            compatible=False,
+            mode=(
+                "STRICT_MISMATCH_HISTORICAL_IDENTITY_NOT_PINNED"
+                if not matches
+                else "STRICT_MISMATCH_HISTORICAL_IDENTITY_AMBIGUOUS"
+            ),
+            passport_revision=passport_revision,
+            canonical_revision=canonical_revision,
+            allowlist_field=revision_field,
+            identity_field=identity_field,
+            allowed_historical_revisions=allowed,
+            matching_historical_identities=len(matches),
+            observed_head_sha=observed_head_sha,
+            observed_passport_blob_sha=observed_passport_blob_sha,
+        )
+
+    return _compatibility_result(
+        compatible=True,
+        mode="EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
+        passport_revision=passport_revision,
+        canonical_revision=canonical_revision,
+        allowlist_field=revision_field,
+        identity_field=identity_field,
+        allowed_historical_revisions=allowed,
+        matching_historical_identities=1,
+        observed_head_sha=observed_head_sha,
+        observed_passport_blob_sha=observed_passport_blob_sha,
+    )
 
 
-def set_health(record: dict[str, Any], level: str, code: str, detail: str) -> None:
-    if HEALTH_RANK[level] > HEALTH_RANK.get(str(record.get("health", "GREEN")), 0):
-        record["health"] = level
-    record.setdefault("findings", []).append({"level": level, "code": code, "detail": detail})
-
-
-def remote_ref(branch: str) -> str:
-    return f"origin/{branch}"
-
-
-def branch_divergence(branch_ref: str) -> tuple[int, int, str]:
-    raw = git("rev-list", "--left-right", "--count", f"origin/main...{branch_ref}", allow_fail=True)
-    behind = ahead = 0
-    if raw:
-        parts = raw.replace("\t", " ").split()
-        if len(parts) >= 2:
-            behind, ahead = int(parts[0]), int(parts[1])
-    return behind, ahead, git("merge-base", "origin/main", branch_ref, allow_fail=True)
+def _recompute_health(result: dict[str, Any]) -> None:
+    declared = str(result.get("health_declared", "GREEN"))
+    health = declared if declared in _core.HEALTH_RANK else "YELLOW"
+    for finding in result.get("findings", []):
+        if not isinstance(finding, dict):
+            continue
+        level = str(finding.get("level", "GREEN"))
+        if _core.HEALTH_RANK.get(level, 0) > _core.HEALTH_RANK.get(health, 0):
+            health = level
+    result["health"] = health
 
 
 def audit_program(
@@ -115,334 +303,56 @@ def audit_program(
     policy: dict[str, Any],
     ownership: dict[str, Any],
 ) -> dict[str, Any]:
-    declared = str(central.get("health_declared", "GREEN"))
-    result: dict[str, Any] = {
-        "program": key,
-        "program_name": central.get("program_name", key),
-        "branch": central.get("branch", ""),
-        "role": central.get("role", ""),
-        "blocks_global_progress": program_blocks_global_progress(central),
-        "short_description": central.get("short_description", ""),
-        "purpose": central.get("purpose", ""),
-        "expected_outcome": central.get("expected_outcome", ""),
-        "current_stage": central.get("current_stage", ""),
-        "stage_status": central.get("stage_status", ""),
-        "progress_note": central.get("progress_note", ""),
-        "last_accepted_checkpoint": central.get("last_accepted_checkpoint", ""),
-        "next_stage": central.get("next_stage", ""),
-        "blockers": list(central.get("blockers", [])),
-        "health_declared": declared,
-        "health": declared if declared in HEALTH_RANK else "YELLOW",
-        "findings": [],
-    }
-
-    branch = str(central.get("branch", ""))
-    if not branch:
-        if central.get("requires_passport", False):
-            set_health(result, "RED", "ACTIVE_BRANCH_REQUIRED", "Program requires a passport but main declares no active branch.")
-        return result
-
-    branch_ref = remote_ref(branch)
-    if not ref_exists(branch_ref):
-        set_health(result, "RED", "BRANCH_REF_MISSING", branch_ref)
-        return result
-
-    result["head"] = git("rev-parse", branch_ref)
-    behind, ahead, merge_base = branch_divergence(branch_ref)
-    result["main_commits_since_merge_base"] = behind
-    result["branch_commits_since_merge_base"] = ahead
-    result["merge_base"] = merge_base
-
+    result = _ORIGINAL_AUDIT_PROGRAM(key, central, registry, policy, ownership)
     passport_path = str(central.get("passport_path", ""))
-    passport = load_branch_json(branch_ref, passport_path) if passport_path else None
-    if central.get("requires_passport", False) and passport is None:
-        set_health(result, "RED", "BRANCH_PASSPORT_MISSING", f"Missing {passport_path} on {branch}")
+    branch = str(central.get("branch", ""))
+    if not branch or not passport_path or not result.get("passport_loaded"):
         return result
+
+    branch_ref = _core.remote_ref(branch)
+    passport = _core.load_branch_json(branch_ref, passport_path)
     if passport is None:
         return result
 
-    result["passport_path"] = passport_path
-    result["passport_loaded"] = True
-    result["dependencies"] = list(passport.get("dependencies", []))
-    result["ownership_claims"] = [
-        dict(claim) for claim in passport.get("ownership_claims", [])
-        if isinstance(claim, dict)
+    observed_head_sha = ""
+    observed_passport_blob_sha = ""
+    canonical_revision = registry.get("architecture_revision")
+    passport_revision = passport.get("architecture_revision")
+    if passport_revision != canonical_revision:
+        observed_head_sha = _core.git("rev-parse", branch_ref, allow_fail=True)
+        observed_passport_blob_sha = _core.git(
+            "rev-parse", f"{branch_ref}:{passport_path}", allow_fail=True
+        )
+
+    decision = evaluate_passport_architecture_compatibility(
+        central,
+        registry,
+        passport,
+        policy,
+        audited_program=key,
+        observed_branch=branch,
+        observed_passport_path=passport_path,
+        observed_head_sha=observed_head_sha,
+        observed_passport_blob_sha=observed_passport_blob_sha,
+    )
+    result["architecture_compatibility"] = decision
+    if not decision["compatible"] or decision["mode"] == "EXACT_CANONICAL_REVISION":
+        return result
+
+    result["findings"] = [
+        finding
+        for finding in result.get("findings", [])
+        if not (
+            isinstance(finding, dict)
+            and finding.get("code") == "ARCHITECTURE_REVISION_MISMATCH"
+        )
     ]
-    result["forbidden_foundation_ownership"] = list(passport.get("forbidden_foundation_ownership", []))
-
-    missing = [f for f in policy.get("required_branch_passport_fields", []) if f not in passport]
-    if missing:
-        set_health(result, "RED", "PASSPORT_FIELDS_MISSING", ", ".join(missing))
-
-    if str(passport.get("branch", "")) != branch or str(passport.get("program", "")) != key:
-        set_health(result, "RED", "PASSPORT_IDENTITY_MISMATCH", "Branch/program differs from main registry")
-
-    expected_arch = str(registry.get("architecture_revision", ""))
-    if str(passport.get("architecture_revision", "")) != expected_arch:
-        set_health(result, "RED", "ARCHITECTURE_REVISION_MISMATCH", f"passport={passport.get('architecture_revision')} main={expected_arch}")
-
-    expected_control = str(registry.get("control_plane_revision", ""))
-    if str(passport.get("control_plane_revision", "")) != expected_control:
-        set_health(result, "YELLOW", "CONTROL_REVISION_MISMATCH", f"passport={passport.get('control_plane_revision')} main={expected_control}")
-
-    drift = [
-        field for field in policy.get("central_registry_mirror_fields", [])
-        if passport.get(field) != central.get(field)
-    ]
-    if drift:
-        set_health(result, "YELLOW", "CENTRAL_PASSPORT_DRIFT", ", ".join(drift))
-
-    foundations = dict(ownership.get("foundations", {}))
-    for claim in passport.get("ownership_claims", []):
-        if not isinstance(claim, dict):
-            set_health(result, "RED", "INVALID_OWNERSHIP_CLAIM", str(claim))
-            continue
-        foundation = str(claim.get("foundation", ""))
-        claimed_owner = str(claim.get("claimed_owner", ""))
-        canonical = foundations.get(foundation)
-        if canonical and claimed_owner and claimed_owner != str(canonical.get("owner", "")):
-            set_health(result, "RED", "FOUNDATION_OWNERSHIP_CONFLICT", f"{foundation}: claimed={claimed_owner}, canonical={canonical.get('owner')}")
-
-    # Main dependency drift since the real merge-base.
-    main_changes = changed_files(merge_base, "origin/main") if merge_base else []
-    watched = list(passport.get("watched_paths", []))
-    critical = list(passport.get("critical_watched_paths", []))
-    watched_hits = [p for p in main_changes if matches_any(p, watched)]
-    critical_hits = [p for p in watched_hits if matches_any(p, critical)]
-    result["dependency_drift"] = watched_hits
-    result["critical_dependency_drift"] = critical_hits
-    if critical_hits:
-        set_health(result, "RED", "CRITICAL_DEPENDENCY_DRIFT", "; ".join(critical_hits[:12]))
-    elif watched_hits:
-        set_health(result, "YELLOW", "DEPENDENCY_DRIFT", "; ".join(watched_hits[:12]))
-
-    # Only branches that own runtime paths need runtime-tested-head freshness.
-    runtime_paths = list(passport.get("runtime_paths", []))
-    tested = passport.get("tested_heads", {}) if isinstance(passport.get("tested_heads"), dict) else {}
-    result["tested_heads"] = {
-        "runtime": str(tested.get("runtime", "")),
-        "focused": str(tested.get("focused", "")),
-        "full_regression": str(tested.get("full_regression", "")),
-    }
-    runtime_tested = str(result["tested_heads"]["runtime"])
-    result["runtime_tested_head"] = runtime_tested
-    result["runtime_validation_freshness"] = "NOT_APPLICABLE" if not runtime_paths else "PENDING"
-    if runtime_paths:
-        if runtime_tested:
-            if not ref_exists(runtime_tested):
-                result["runtime_validation_freshness"] = "MISSING_HEAD"
-                set_health(result, "RED", "TESTED_HEAD_MISSING", runtime_tested)
-            else:
-                post_test = changed_files(runtime_tested, branch_ref)
-                runtime_after = [p for p in post_test if matches_any(p, runtime_paths)]
-                result["runtime_changes_after_test"] = runtime_after
-                if runtime_after:
-                    result["runtime_validation_freshness"] = "STALE"
-                    set_health(result, "RED", "RUNTIME_VALIDATION_STALE", "; ".join(runtime_after[:12]))
-                else:
-                    result["runtime_validation_freshness"] = "FRESH"
-        elif str(central.get("stage_status", "")) == "ACCEPTED":
-            set_health(result, "RED", "ACCEPTED_WITHOUT_RUNTIME_TESTED_HEAD", "Accepted active stage has no tested_heads.runtime")
-        else:
-            set_health(result, "YELLOW", "RUNTIME_TEST_PENDING", "No runtime tested head declared for the active candidate/stage")
-    else:
-        result["runtime_validation_not_applicable"] = True
-
-    scope_base = str(passport.get("base_commit", ""))
-    if scope_base and ref_exists(scope_base) and bool(passport.get("cross_branch_overlap_enabled", True)):
-        result["scope_changed_files"] = changed_files(scope_base, branch_ref)
-    else:
-        result["scope_changed_files"] = []
+    _recompute_health(result)
     return result
 
 
-def apply_cross_branch_overlap(programs: list[dict[str, Any]], policy: dict[str, Any]) -> list[dict[str, Any]]:
-    overlap_policy = dict(policy.get("overlap_policy", {}))
-    ignored = list(overlap_policy.get("ignored_patterns", []))
-    yellow_patterns = list(overlap_policy.get("yellow_patterns", []))
-    overlaps: list[dict[str, Any]] = []
-    active = [p for p in programs if p.get("branch") and p.get("scope_changed_files")]
-    for i, left in enumerate(active):
-        left_files = set(left.get("scope_changed_files", []))
-        for right in active[i + 1:]:
-            common = sorted(left_files.intersection(set(right.get("scope_changed_files", []))))
-            common = [p for p in common if not matches_any(p, ignored)]
-            if not common:
-                continue
-            yellow_only = all(matches_any(p, yellow_patterns) for p in common)
-            level = "YELLOW" if yellow_only else "RED"
-            code = "CROSS_BRANCH_DOCUMENT_OVERLAP" if yellow_only else "CROSS_BRANCH_RUNTIME_OR_CONTRACT_OVERLAP"
-            detail = f"{left['program']} <-> {right['program']}: " + "; ".join(common[:20])
-            set_health(left, level, code, detail)
-            set_health(right, level, code, detail)
-            overlaps.append({"left": left["program"], "right": right["program"], "level": level, "files": common})
-    return overlaps
-
-
-def markdown_report(report: dict[str, Any]) -> str:
-    lines: list[str] = [
-        "# Distributed World Simulator — Project Control Report",
-        "",
-        f"Generated: `{report['generated_at_utc']}`  ",
-        f"Control plane: `{report['control_plane_revision']}`  ",
-        f"Architecture: `{report['architecture_revision']}`  ",
-        f"Registry generation: `{report['registry_generation']}`  ",
-        f"Overall health: **{report['overall_health']}**",
-        "",
-        "## Project dynamics",
-        "",
-        "| Program | Branch | Global gate | Что это / зачем | Current stage | Сейчас | Next | Health |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for p in report["programs"]:
-        branch = p.get("branch") or "—"
-        gate = "BLOCKING" if p.get("blocks_global_progress", True) else "ADVISORY"
-        why = f"{p.get('short_description','')} {p.get('purpose','')}".replace("|", "/")
-        progress = str(p.get("progress_note", "")).replace("|", "/")
-        stage = f"{p.get('current_stage','')} (`{p.get('stage_status','')}`)"
-        lines.append(f"| {p['program']} | `{branch}` | **{gate}** | {why} | {stage} | {progress} | {p.get('next_stage','')} | **{p.get('health','')}** |")
-
-    lines.extend(["", "## Detailed branch cards", ""])
-    for p in report["programs"]:
-        gate = "BLOCKING" if p.get("blocks_global_progress", True) else "ADVISORY_RESEARCH"
-        lines.extend([
-            f"### {p['program']} — {p.get('program_name','')}",
-            "",
-            f"**Branch:** `{p.get('branch') or 'not declared'}`  ",
-            f"**Role:** `{p.get('role','')}`  ",
-            f"**Global gate:** `{gate}`  ",
-            f"**Health:** **{p.get('health','')}**  ",
-            f"**Stage:** {p.get('current_stage','')} (`{p.get('stage_status','')}`)  ",
-            f"**Last accepted:** {p.get('last_accepted_checkpoint','')}  ",
-            f"**Next:** {p.get('next_stage','')}",
-            "",
-            f"**Что это:** {p.get('short_description','')}",
-            "",
-            f"**Зачем:** {p.get('purpose','')}",
-            "",
-            f"**Ожидаемый результат:** {p.get('expected_outcome','')}",
-            "",
-            f"**Сейчас:** {p.get('progress_note','')}",
-        ])
-        if p.get("blockers"):
-            lines.extend(["", "**Blockers:** " + ", ".join(f"`{x}`" for x in p["blockers"])])
-        if p.get("tested_heads"):
-            tested_heads = dict(p.get("tested_heads", {}))
-            lines.extend([
-                "",
-                "**Validation heads:** "
-                + f"runtime `{tested_heads.get('runtime') or '—'}`, "
-                + f"focused `{tested_heads.get('focused') or '—'}`, "
-                + f"full regression `{tested_heads.get('full_regression') or '—'}`.  ",
-                f"**Runtime freshness:** `{p.get('runtime_validation_freshness', 'UNKNOWN')}`",
-            ])
-            if p.get("runtime_changes_after_test"):
-                lines.append("Runtime changes after tested head: " + ", ".join(f"`{x}`" for x in p["runtime_changes_after_test"][:20]))
-        if p.get("dependencies"):
-            lines.extend(["", "**Dependencies:** " + ", ".join(f"`{x}`" for x in p["dependencies"])])
-        if p.get("ownership_claims"):
-            lines.extend(["", "**Ownership / foundation boundaries:**"])
-            for claim in p["ownership_claims"]:
-                lines.append(
-                    f"- `{claim.get('foundation','')}` → `{claim.get('claimed_owner','')}` — {claim.get('scope','')}"
-                )
-        if p.get("forbidden_foundation_ownership"):
-            lines.extend([
-                "",
-                "**Must not own:** " + ", ".join(f"`{x}`" for x in p["forbidden_foundation_ownership"]),
-            ])
-        if p.get("branch"):
-            lines.extend(["", f"Git: head `{p.get('head','?')}`, main-only `{p.get('main_commits_since_merge_base','?')}`, branch-only `{p.get('branch_commits_since_merge_base','?')}`."])
-        if p.get("findings"):
-            lines.extend(["", "Findings:"])
-            for finding in p["findings"]:
-                lines.append(f"- **{finding['level']}** `{finding['code']}` — {finding['detail']}")
-        lines.append("")
-
-    lines.extend(["## Cross-branch overlap", ""])
-    if report.get("cross_branch_overlaps"):
-        for item in report["cross_branch_overlaps"]:
-            files = ", ".join(f"`{x}`" for x in item["files"][:20])
-            lines.append(f"- **{item['level']}** `{item['left']} ↔ {item['right']}`: {files}")
-    else:
-        lines.append("No overlap detected in enabled branch-local audit scopes.")
-
-    lines.extend([
-        "",
-        "## Interpretation",
-        "",
-        "`GREEN` — continue. `YELLOW` — converge/review before next major acceptance. `RED` — the affected program's next declared major stage/acceptance is blocked until resolved or explicitly reclassified in main. A program with global gate `ADVISORY_RESEARCH` keeps its own health/findings but does not raise project-wide health by itself; promotion into canonical/runtime scope still requires its normal merge and dependency gates.",
-        "",
-    ])
-    return "\n".join(lines)
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--no-fetch", action="store_true")
-    parser.add_argument("--no-fail-on-red", action="store_true")
-    args = parser.parse_args()
-
-    if not (ROOT / ".git").exists():
-        print(f"ERROR: {ROOT} is not a Git checkout", file=sys.stderr)
-        return 3
-    if not args.no_fetch:
-        print("PC0: fetching origin refs...")
-        git("fetch", "origin", "--prune")
-
-    registry = load_main_owned(REGISTRY_PATH)
-    policy = load_main_owned(POLICY_PATH)
-    ownership = load_main_owned(OWNERSHIP_PATH)
-    if registry.get("architecture_revision") != policy.get("architecture_revision"):
-        raise RuntimeError("Central registry and control policy architecture revisions differ")
-    if registry.get("control_plane_revision") != policy.get("control_plane_revision"):
-        raise RuntimeError("Central registry and control policy revisions differ")
-
-    programs = [
-        audit_program(key, central, registry, policy, ownership)
-        for key, central in dict(registry.get("programs", {})).items()
-        if isinstance(central, dict)
-    ]
-    overlaps = apply_cross_branch_overlap(programs, policy)
-    overall = "GREEN"
-    for program in programs:
-        if not bool(program.get("blocks_global_progress", True)):
-            continue
-        if HEALTH_RANK.get(str(program.get("health", "GREEN")), 0) > HEALTH_RANK[overall]:
-            overall = str(program["health"])
-
-    report = {
-        "schema": "distributed_world_simulator.project_control_report.v1",
-        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "control_plane_revision": registry.get("control_plane_revision"),
-        "registry_generation": registry.get("registry_generation"),
-        "architecture_revision": registry.get("architecture_revision"),
-        "main_head": git("rev-parse", "origin/main", allow_fail=True),
-        "overall_health": overall,
-        "programs": programs,
-        "cross_branch_overlaps": overlaps,
-        "global_blocked_transitions": registry.get("global_blocked_transitions", []),
-    }
-
-    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
-    (ARTIFACT_DIR / "project-control-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (ARTIFACT_DIR / "PROJECT_STATUS_RU.md").write_text(markdown_report(report), encoding="utf-8")
-
-    print("\nDistributed World Simulator — Project Control")
-    print(f"Architecture: {report['architecture_revision']}")
-    print(f"Control:      {report['control_plane_revision']}")
-    print(f"Registry:     {report['registry_generation']}")
-    print(f"Overall:      {overall}")
-    for p in programs:
-        branch = p.get("branch") or "tracked/stable"
-        gate = "BLOCK" if p.get("blocks_global_progress", True) else "ADVISORY"
-        print(f"  {p['program']:<10} {p.get('health',''):<6} {gate:<8} {p.get('current_stage','')} [{branch}]")
-    print(f"\nReport: {ARTIFACT_DIR / 'PROJECT_STATUS_RU.md'}")
-    print(f"JSON:   {ARTIFACT_DIR / 'project-control-report.json'}")
-
-    if overall == "RED" and not args.no_fail_on_red:
-        return 2
-    return 0
+_core.audit_program = audit_program
+main = _core.main
 
 
 if __name__ == "__main__":

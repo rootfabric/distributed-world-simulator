@@ -1,0 +1,207 @@
+{
+  "schema": "distributed_world_simulator.r3_promotion_control_compatibility_independent_review.v1",
+  "review_id": "R3-PROMOTION-PASSPORT-COMPAT-R1-INDEPENDENT-REVIEW-002",
+  "reviewer_role": "GLOBAL-P0 R3 PROMOTION CONTROL-COMPATIBILITY POST-FIX INDEPENDENT REVIEWER R2",
+  "review_target_head_sha": "425565f3d11ba0f9d53effe5f7b9ec65e456fbfb",
+  "reviewed_implementation_sha": "4699c99cf65d6786312f89a8abcfbb662a577327",
+  "base_main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+  "r3_human_approved_lifecycle_sha": "c703a5e22622813169624f7ce4ec9ea9f362f8df",
+  "previous_review_commit": "c8cb9e9f537a773a65232d5b68f6b9b5f6462484",
+  "previous_review_artifact_blob": "4d8744d698024243829d6d531b94a3cf2d5497b5",
+  "previous_review_verdict": "FIX_REQUIRED",
+  "risk_class": "CRITICAL",
+  "scope": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "pr": 91,
+    "repair_branch": "control/r3-promotion-passport-compat-r1",
+    "architecture_review_reopened": false,
+    "reviewer_v9_reopened": false,
+    "verifier_v9_reopened": false,
+    "director_v9_reopened": false,
+    "human_decision_reopened": false,
+    "promotion_executed": false,
+    "merge_executed": false,
+    "runtime_domain_delta": 0
+  },
+  "freshness": {
+    "main_exact": "PASS",
+    "r3_lifecycle_exact": "PASS",
+    "repair_review_target_exact_before_review_commit": "PASS",
+    "pr_91_open": "PASS",
+    "pr_91_draft": "PASS",
+    "pr_91_not_merged": "PASS"
+  },
+  "previous_review_preservation": {
+    "artifact_path": "artifacts/control-r3-promotion-passport-compat-r1/reviews/R3-PROMOTION-PASSPORT-COMPAT-R1-INDEPENDENT-REVIEW-001.v1.json",
+    "artifact_blob": "4d8744d698024243829d6d531b94a3cf2d5497b5",
+    "verdict": "FIX_REQUIRED",
+    "required_fix_ids": [
+      "R3-COMPAT-FIX-001",
+      "R3-COMPAT-FIX-002",
+      "R3-COMPAT-FIX-003"
+    ],
+    "unchanged": true
+  },
+  "implementation_scope": {
+    "base_sha": "7c1dd44920df1bdafef47a91f54793e2cad2cad9",
+    "head_sha": "4699c99cf65d6786312f89a8abcfbb662a577327",
+    "commit_count": 1,
+    "modified_files": [
+      "config/control/project-control-policy.v1.json",
+      "scripts/control/project_control.py",
+      "tests/harness/test_project_control_architecture_compatibility.py"
+    ],
+    "core_blob": "3d68d65e58aff37ab04c971c942efb815fbd374f",
+    "runtime_domain_delta": 0,
+    "result": "PASS"
+  },
+  "fix_001_review": {
+    "result": "PASS",
+    "policy_mode_exact": true,
+    "revision_registry_field_exact": true,
+    "identity_registry_field_exact": true,
+    "allowlist_alone_sufficient": false,
+    "exact_program_required": true,
+    "exact_branch_required": true,
+    "exact_passport_path_required": true,
+    "exact_historical_architecture_revision_required": true,
+    "observed_remote_head_required": true,
+    "observed_passport_blob_required": true,
+    "exactly_one_identity_match_required": true,
+    "git_evidence_commands": [
+      "rev-parse origin/<branch>",
+      "rev-parse origin/<branch>:<passport_path>"
+    ],
+    "registry_provided_head_or_blob_is_not_observed_truth": true,
+    "moved_or_copied_or_refreshed_identity_fails_closed": true,
+    "role_stage_status_blocker_heuristics_absent": true
+  },
+  "fix_002_review": {
+    "result": "PASS",
+    "authorization_fallback_present": false,
+    "required_revision_field_literal": "historical_passport_architecture_revisions",
+    "required_identity_field_literal": "historical_passport_identities",
+    "missing_null_empty_wrong_non_string_policy_fields_fail_closed": true,
+    "fallback_get_with_default_found": false,
+    "fallback_or_default_found": false
+  },
+  "fix_003_review": {
+    "result": "PASS",
+    "focused_test_count": 27,
+    "required_negative_cases_present": [
+      "no_policy",
+      "missing_revision_field",
+      "empty_or_wrong_revision_field",
+      "missing_identity_field",
+      "wrong_identity_field",
+      "missing_identity_list",
+      "wrong_program",
+      "wrong_branch",
+      "wrong_passport_path",
+      "wrong_revision",
+      "wrong_pinned_head",
+      "wrong_blob",
+      "malformed_head_sha",
+      "malformed_blob_sha",
+      "malformed_identity_list_or_record",
+      "copied_allowlist",
+      "new_or_refreshed_r2_frontier",
+      "moved_historical_branch",
+      "existing_red_preservation",
+      "existing_yellow_preservation"
+    ],
+    "live_synthetic_r3_programs": [
+      "G",
+      "ECO",
+      "T",
+      "CH",
+      "DOCTRINE",
+      "NX"
+    ],
+    "github_actions_missing_live_refs_fails_test": true,
+    "negative_g_cases": {
+      "remove_revision_allowlist_restores_red": true,
+      "alter_pinned_head_restores_red": true,
+      "alter_passport_blob_restores_red": true
+    }
+  },
+  "adversarial_review": {
+    "allowlist_only": "FAIL_CLOSED",
+    "duplicated_exact_identity_records": "FAIL_CLOSED",
+    "identity_for_another_program": "FAIL_CLOSED",
+    "identity_for_another_branch": "FAIL_CLOSED",
+    "identity_for_another_passport": "FAIL_CLOSED",
+    "old_pinned_head_after_branch_moved": "FAIL_CLOSED",
+    "valid_head_with_old_passport_blob": "FAIL_CLOSED",
+    "malformed_policy": "FAIL_CLOSED",
+    "missing_git_evidence": "FAIL_CLOSED",
+    "new_or_refreshed_frontier_without_exact_immutable_historical_head_and_blob": "FAIL_CLOSED",
+    "bypass_found": false
+  },
+  "project_control_runs": {
+    "implementation": {
+      "run_id": 31667301379,
+      "run_number": 343,
+      "head_sha": "4699c99cf65d6786312f89a8abcfbb662a577327",
+      "status": "completed",
+      "conclusion": "success",
+      "regression": "Ran 27 tests / OK",
+      "artifact_id": 9168389319,
+      "artifact_digest": "sha256:56397fea542a94057018765d67074f94b7a4c8aee247b658f76e2e0a40b98338",
+      "overall_health": "YELLOW",
+      "non_red": true,
+      "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+      "registry_generation": 78,
+      "main_head": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+      "cross_branch_overlaps": [],
+      "eco": {
+        "health": "RED",
+        "blocks_global_progress": false
+      },
+      "g_to_eco": {
+        "level": "YELLOW",
+        "global_blocking": false
+      },
+      "ch_to_nx": {
+        "level": "YELLOW",
+        "global_blocking": true
+      }
+    },
+    "lifecycle": {
+      "run_id": 31667430560,
+      "run_number": 344,
+      "head_sha": "425565f3d11ba0f9d53effe5f7b9ec65e456fbfb",
+      "status": "completed",
+      "conclusion": "success",
+      "regression": "Ran 27 tests / OK",
+      "artifact_id": 9168431771,
+      "artifact_digest": "sha256:2f4abd8d4bbf26b39cbf4109874c4b96659ca8fde498978037b0dc7c17a97f2d",
+      "overall_health": "YELLOW",
+      "non_red": true,
+      "directional_overall_health": "YELLOW",
+      "directional_non_red": true
+    }
+  },
+  "lifecycle_review": {
+    "implementation_sha": "4699c99cf65d6786312f89a8abcfbb662a577327",
+    "lifecycle_sha": "425565f3d11ba0f9d53effe5f7b9ec65e456fbfb",
+    "commit_count": 1,
+    "modified_files": [
+      "config/control/branches/control__r3-promotion-passport-compat-r1.v1.json"
+    ],
+    "stage_status": "FIX_001_003_IMPLEMENTED_VALIDATED_AWAITING_NEW_INDEPENDENT_REVIEW",
+    "tested_heads_focused": "4699c99cf65d6786312f89a8abcfbb662a577327",
+    "blockers": [
+      "NEW_INDEPENDENT_CONTROL_REPAIR_REVIEW_REQUIRED_AFTER_FIX"
+    ],
+    "result": "PASS"
+  },
+  "closed_previous_fixes": [
+    "R3-COMPAT-FIX-001",
+    "R3-COMPAT-FIX-002",
+    "R3-COMPAT-FIX-003"
+  ],
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "verdict": "PASS"
+}

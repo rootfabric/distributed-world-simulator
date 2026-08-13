@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "control/r3-promotion-passport-compat-r1",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "CONTROL_COMPATIBILITY_REPAIR",
+  "short_description": "Fail-closed Project Control compatibility repair for historical R2 Branch Passports across the Human-approved R3 canonical promotion boundary.",
+  "purpose": "Permit only explicitly main-registry-allowlisted historical passport architecture revisions after canonical promotion while keeping every unlisted mismatch RED and without rewriting frozen R2 evidence.",
+  "expected_outcome": "R3 promotion preflight can preserve accepted/preparation/research R2 provenance without globally weakening ARCHITECTURE_REVISION_MISMATCH; new post-promotion frontiers still require the canonical R3 revision.",
+  "current_stage": "R3 promotion compatibility repair independently accepted",
+  "stage_status": "INDEPENDENT_REVIEW_PASS_READY_FOR_R3_PROMOTION_PREFLIGHT_RETRY",
+  "progress_note": "Fixed implementation 4699c99cf65d6786312f89a8abcfbb662a577327 was independently accepted by durable post-fix Independent Review #002 at commit 8b22461296c1cffc3836599ef6db96179e038893. Review artifact blob de4fe0653be51a8257a0a6421a729c0a9c164ca3 records verdict PASS with required_fixes=[] and evidence_gaps=[]. Reviewer-head Project Control 31668003219/#345 completed SUCCESS/NON_RED, including 27/27 architecture compatibility regression tests, standard PC0 YELLOW/NON_RED and directional PC0 YELLOW/NON_RED. Runtime/domain delta remains 0. R3 promotion remains NOT PERFORMED. Canonical main remains ce40dd075045078ed70924f8d5a1011eb3eff03d on GLOBAL-P0-2026-08-10-R2 with registry generation 78.",
+  "last_accepted_checkpoint": "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED",
+  "next_stage": "Rerun the Human-approved R3 V9 promotion preflight from exact canonical main, consuming this independently reviewed compatibility repair. Promotion remains fail-closed and must not execute unless the full proposed R3 main projection is NON_RED.",
+  "parent_branch_or_checkpoint": "canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + durable R3 V9 Human APPROVE_PROMOTION + failed promotion compatibility preflight",
+  "base_commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+  "dependencies": [
+    "GLOBAL-P0-2026-08-10-R2",
+    "GLOBAL-P0-2026-08-12-R3-REFRESH-R1_CANDIDATE",
+    "R3_V9_HUMAN_APPROVE_PROMOTION_DURABLE",
+    "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED"
+  ],
+  "owned_paths": [
+    "scripts/control/project_control.py",
+    "scripts/control/project_control_core.py",
+    "config/control/project-control-policy.v1.json",
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    ".github/workflows/project-control.yml",
+    "config/control/branches/control__r3-promotion-passport-compat-r1.v1.json"
+  ],
+  "watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/harness/**"
+  ],
+  "critical_watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    "scripts/control/project_control.py",
+    "config/control/project-control-policy.v1.json",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "4699c99cf65d6786312f89a8abcfbb662a577327",
+    "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "DEVELOPMENT_HARNESS",
+      "claimed_owner": "MAIN/HARNESS",
+      "scope": "This repair changes Project Control compatibility semantics only; it does not transfer Harness, domain, runtime, architecture or branch-history ownership."
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "blockers": [
+    "R3_V9_PROMOTION_PREFLIGHT_RETRY_REQUIRED_BEFORE_PROMOTION"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}
