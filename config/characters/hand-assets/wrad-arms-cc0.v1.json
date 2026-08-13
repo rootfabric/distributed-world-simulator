@@ -2,7 +2,7 @@
   "schema": "planet_simulator.fpe_hand_asset_profile.v1",
   "profile_id": "wrad-arms-cc0",
   "display_name": "WRAD ARMS (wriks)",
-  "status": "IMPORTED_INSPECTED_RUNTIME_PROBE_READY",
+  "status": "IMPORTED_INSPECTED_NATIVE_SKELETON_PROBE_READY",
   "provider": "SKINNED_NAMED_BIND",
   "hand_layout": "PAIRED_SINGLE_MESH",
   "license": {
@@ -46,7 +46,8 @@
     }
   },
   "retarget": {
-    "rest_space_policy": "AUTO_CANONICAL_REBIND",
+    "runtime_driver": "NATIVE_SKELETON_POSE",
+    "rest_space_policy": "SOURCE_NATIVE_BIND_SPACE",
     "bone_map": {
       "root": "HandRoot",
       "head": "HandRoot"
@@ -91,10 +92,6 @@
         "finger_pinky3.l": "PinkyDistal"
       }
     },
-    "unmapped_used_bind_target_by_hand": {
-      "left": "HandRoot",
-      "right": "HandRoot"
-    },
     "auto_calibration": {
       "source_anchor_by_hand": {
         "left": "wrist.l",
@@ -108,8 +105,14 @@
       "target_scale_reference": "MiddleProximal",
       "uniform_scale_multiplier": 1.0
     },
-    "bind_pose_adjustments": {},
-    "notes": "WRAD is one paired 50-bind mesh. Runtime splits triangles by .l/.r Skin weight ownership, compacts used binds, aligns wrist to canonical Palm, estimates uniform scale from wrist-to-middle-base distance and rebuilds bind poses from canonical rest transforms."
+    "native_pose_driver": {
+      "preserve_source_skin": true,
+      "preserve_source_bind_poses": true,
+      "preserve_source_rest_hierarchy": true,
+      "drive_finger_pose_deltas_only": true,
+      "local_rest_basis_conversion": true
+    },
+    "notes": "WRAD remains in its source-native Skeleton3D/Skin bind space. Runtime splits the paired mesh by .l/.r weight ownership, aligns the whole native rig by wrist, and converts canonical finger pose deltas into each source bone local rest basis. No canonical Skin bind-pose rebuild is performed."
   },
   "presentation": {
     "position": [0.0, 0.0, 0.0],
