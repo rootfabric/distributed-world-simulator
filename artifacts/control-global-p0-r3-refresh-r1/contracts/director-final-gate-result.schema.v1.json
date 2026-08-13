@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.r3_director_final_gate_result.schema.v1",
+  "title": "Distributed World Simulator R3 Director Final Gate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_order_id",
+    "checkpoint",
+    "risk_class",
+    "target_head_sha",
+    "control_evidence_head_sha",
+    "director",
+    "verdict",
+    "decided_at_utc",
+    "evidence_paths",
+    "predicates",
+    "required_fixes",
+    "evidence_gaps",
+    "risk_assessment",
+    "summary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "distributed_world_simulator.r3_director_final_gate_result.v1"
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checkpoint": {
+      "const": "R3_REFRESHED_CANDIDATE"
+    },
+    "risk_class": {
+      "const": "CRITICAL"
+    },
+    "target_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "control_evidence_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "director": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "decided_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "predicates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical_main_fresh",
+        "frozen_target_exact",
+        "candidate_unchanged",
+        "reviewer_pass_durable",
+        "verifier_pass_durable",
+        "current_project_control_non_red",
+        "critical_overlap_zero",
+        "design_brief_substantive",
+        "architecture_invariants_preserved",
+        "ownership_preserved",
+        "director_route_complete",
+        "human_gate_separate",
+        "runtime_domain_mutation_zero",
+        "checkpoint_predicates_sufficient",
+        "ready_not_predeclared",
+        "promotion_not_performed",
+        "merge_not_performed"
+      ],
+      "properties": {
+        "canonical_main_fresh": {"type": "boolean"},
+        "frozen_target_exact": {"type": "boolean"},
+        "candidate_unchanged": {"type": "boolean"},
+        "reviewer_pass_durable": {"type": "boolean"},
+        "verifier_pass_durable": {"type": "boolean"},
+        "current_project_control_non_red": {"type": "boolean"},
+        "critical_overlap_zero": {"type": "boolean"},
+        "design_brief_substantive": {"type": "boolean"},
+        "architecture_invariants_preserved": {"type": "boolean"},
+        "ownership_preserved": {"type": "boolean"},
+        "director_route_complete": {"type": "boolean"},
+        "human_gate_separate": {"type": "boolean"},
+        "runtime_domain_mutation_zero": {"type": "boolean"},
+        "checkpoint_predicates_sufficient": {"type": "boolean"},
+        "ready_not_predeclared": {"type": "boolean"},
+        "promotion_not_performed": {"type": "boolean"},
+        "merge_not_performed": {"type": "boolean"}
+      }
+    },
+    "required_fixes": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "evidence_gaps": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "risk_assessment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
