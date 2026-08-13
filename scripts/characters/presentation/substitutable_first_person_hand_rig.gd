@@ -7,6 +7,7 @@ const SKELETON_SCHEMA := "planet_simulator.fpe_hand_skeleton.v1"
 var visual_provider
 var _visual_provider_result: Dictionary = {}
 var _visual_provider_report: Dictionary = {}
+var _visual_provider_pose_sync_result: Dictionary = {}
 
 
 func configure_visual_provider(provider) -> Dictionary:
@@ -35,6 +36,7 @@ func setup(
 		visual_provider = DefaultVisualProviderType.new()
 	_visual_provider_result.clear()
 	_visual_provider_report.clear()
+	_visual_provider_pose_sync_result.clear()
 
 	# ArticulatedFirstPersonHandRig.setup() builds the canonical 17-bone hand.
 	# Its virtual _build_visuals() call dispatches here, so geometry is supplied
@@ -51,6 +53,7 @@ func setup(
 			"skeleton_ok": skeleton_ok,
 			"visuals_ok": visuals_ok,
 		})
+	_sync_visual_provider_pose()
 	return _success(create_report())
 
 
@@ -89,6 +92,27 @@ func _build_visuals() -> void:
 			_visual_provider_report = Dictionary(report_value).duplicate(true)
 
 
+func _apply_transition(weight: float) -> void:
+	super._apply_transition(weight)
+	_sync_visual_provider_pose()
+
+
+func _sync_visual_provider_pose() -> void:
+	if visual_provider == null or skeleton == null:
+		return
+	if not visual_provider.has_method("sync_pose_from_canonical"):
+		return
+	var value: Variant = visual_provider.call("sync_pose_from_canonical", skeleton, hand_id)
+	if value is Dictionary:
+		_visual_provider_pose_sync_result = Dictionary(value).duplicate(true)
+	else:
+		_visual_provider_pose_sync_result = _failure("FPE_S6_VISUAL_PROVIDER_POSE_SYNC_RESULT_INVALID")
+	if visual_provider.has_method("create_report"):
+		var report_value: Variant = visual_provider.call("create_report", _visual_segments.size())
+		if report_value is Dictionary:
+			_visual_provider_report = Dictionary(report_value).duplicate(true)
+
+
 func create_report() -> Dictionary:
 	var report: Dictionary = super.create_report()
 	report["schema"] = "planet_simulator.substitutable_first_person_hand_rig.v1"
@@ -101,4 +125,6 @@ func create_report() -> Dictionary:
 	)
 	report["visual_provider_substitutable"] = true
 	report["pose_logic_independent_of_visual_provider"] = true
+	report["visual_provider_pose_sync_supported"] = visual_provider != null and visual_provider.has_method("sync_pose_from_canonical")
+	report["visual_provider_pose_sync"] = _visual_provider_pose_sync_result.duplicate(true)
 	return report
