@@ -1,17 +1,18 @@
 {
   "schema": "distributed_world_simulator.ecology.evo1_p2_8_save_restart_validation.v1",
-  "revision": "ECO-EVO1-P2.8-2026-08-13-R5-EXACT-WINDOWS-STAGE-PASS",
+  "revision": "ECO-EVO1-P2.8-2026-08-13-R6-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
   "implementation_head": "f7147082e0ca1e8913885b8ad47d76dc9b086416",
+  "acceptance_source_head": "1a0366d293b7b686c0e4adcb13f4ad44645e64ee",
   "original_candidate_head": "8cd4c44006867c5ee85b6f21f67dc4290c939506",
   "integer_codec_repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
   "failure_stage_probe_head": "98a340581af33c43491e8eff4096b1a752ff77f8",
   "runner_stage_probe_head": "cd68c2014446504990cb0f1dbf3fedc0bc2eb701",
   "exact_float_codec_repair_head": "1e74792c53bbcaa5807097630321dd7abc0ba88c",
   "exact_float_codec_preflight_head": "6f60f6eacfe58f60740318cd9f91262f83f508f5",
-  "stage_evidence_source_head": "c8ba594e683c34340b66dddeee98080e57f49849",
-  "status": "REPAIRED_CANDIDATE_EXACT_WINDOWS_STAGE_PROVEN_FULL_CANONICAL_RUNNER_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_EVO1",
+  "lifecycle": "EVO1_COMPLETE",
   "parent": {
     "checkpoint": "ECO.EVO1/P2.7",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
@@ -35,71 +36,73 @@
     "baseline": "accepted-P2.6-equivalent disturbed 30-year biogeography run",
     "required_equality": "P2.6 baseline result_hash == stateful uninterrupted result_hash == double-save/restart result_hash"
   },
-  "codec_finding_001": {
-    "id": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
-    "root_cause": "Godot JSON.parse_string restores untagged integer JSON numbers as TYPE_FLOAT, erasing TYPE_INT identity required by canonical hashing.",
-    "repair": "encode TYPE_INT with an explicit Int wrapper and restore with int(value)",
-    "repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
-    "exact_windows_stage_status": "CLOSED_BY_25_ASSERTION_CODEC_PREFLIGHT_AND_TWO_CUT_STAGE_PROOF",
-    "biology_or_population_semantics_changed": false,
-    "accepted_p2_7_or_earlier_sources_changed": false
-  },
-  "codec_finding_002": {
-    "id": "P2_8_CODEC_002_JSON_DOUBLE_PRECISION_ERASURE",
-    "root_cause": "JSON stringify/parse can restore an adjacent TYPE_FLOAT value; P2.8 canonical %.17f hashing therefore requires lossless floating Variant representation.",
-    "repair": "TYPE_FLOAT, Vector2 and Rect2 use var_to_bytes -> base64 -> JSON -> base64 -> bytes_to_var with expected-type checks",
-    "repair_commit": "1e74792c53bbcaa5807097630321dd7abc0ba88c",
-    "preflight_commit": "6f60f6eacfe58f60740318cd9f91262f83f508f5",
-    "exact_windows_stage_status": "CLOSED_BY_25_ASSERTION_CODEC_PREFLIGHT_AND_TWO_CUT_STAGE_PROOF",
-    "biology_or_population_semantics_changed": false,
-    "accepted_p2_7_or_earlier_sources_changed": false
-  },
-  "exact_windows_stage_proof": {
-    "authority": "EXACT_WINDOWS_CANONICAL_STAGE_EVIDENCE_NOT_FINAL_P2_8_ACCEPTANCE",
-    "checkout_source_head": "c8ba594e683c34340b66dddeee98080e57f49849",
+  "closed_findings": [
+    {
+      "id": "P2_8_CODEC_001_JSON_NUMBER_VARIANT_ERASURE",
+      "repair": "encode TYPE_INT with an explicit Int wrapper and restore with int(value)",
+      "repair_head": "8d5de417f83ac257ee3bc1ae40c02847ac82de82",
+      "status": "CLOSED",
+      "biology_or_population_semantics_changed": false,
+      "accepted_p2_7_or_earlier_sources_changed": false
+    },
+    {
+      "id": "P2_8_CODEC_002_JSON_DOUBLE_PRECISION_ERASURE",
+      "repair": "TYPE_FLOAT, Vector2 and Rect2 use var_to_bytes -> base64 -> JSON -> base64 -> bytes_to_var with expected-type checks",
+      "repair_head": "1e74792c53bbcaa5807097630321dd7abc0ba88c",
+      "preflight_head": "6f60f6eacfe58f60740318cd9f91262f83f508f5",
+      "status": "CLOSED",
+      "biology_or_population_semantics_changed": false,
+      "accepted_p2_7_or_earlier_sources_changed": false
+    }
+  ],
+  "canonical_acceptance": {
+    "authority": "EXACT_WINDOWS_CANONICAL_FULL_RUNNER",
+    "checkout_source_head": "1a0366d293b7b686c0e4adcb13f4ad44645e64ee",
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
-    "failure_stage_parser_preflight": "PASS",
+    "runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
+    "runner_status": "PASS",
     "codec_preflight": "PASS_25_ASSERTIONS",
     "codec_preflight_value_hash": "d39b60931c5c3a69102897af57e28555de6cdd9bf00cd035d06540afd5a4da44",
     "codec_preflight_bytes": 1174,
+    "failure_stage_probe": "PASS",
+    "p2_8_acceptance": "PASS_32_ASSERTIONS",
+    "aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
     "p2_7_parent_hash": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe",
     "baseline_result_hash": "06c100622794fdb4153ec93f0d341b90fb76c21e57be06faab8bb81ca3129d4d",
-    "baseline_final_state_hash": "50ca2aca3acd98d54eaff88cc709db12094a8b2cec33a97762680526d55e2345",
-    "p2_7_diagnostics_hash": "b76b0afda1b4fdf298313934d4cb5bd06764a3959f8c599bc163eb2953495c79",
-    "initial_world_hash": "069e64ff8a7ab44477164e1dd8e6b8746547fc70e3e3743e7f2479e916c921f7",
-    "uninterrupted_result_hash": "06c100622794fdb4153ec93f0d341b90fb76c21e57be06faab8bb81ca3129d4d",
-    "uninterrupted_matches_baseline": true,
-    "cut_a_year": 14,
-    "cut_a_world_hash": "e907052c74c3996a6c2eb9864b3e03940de355ea649a55dfb32baa201b7c8c65",
-    "checkpoint_a_bytes": 84465,
-    "checkpoint_a_hash": "827a13fa52c80569d37bbabe744cd8c41e6e192c5ab64ff4d88779ad4ccfa7fd",
-    "checkpoint_a_deserialize": "PASS",
-    "cut_b_year": 18,
-    "cut_b_world_hash": "75e968b042e1e8271b22f051061ec7d32ae4bf6f90e172e0036a26b49bbb0f19",
-    "checkpoint_b_hash": "bd177a95662a7e80c11881163178c555d7704b5035abcac6fa85a1e577359915",
-    "checkpoint_b_deserialize": "PASS",
     "resumed_result_hash": "06c100622794fdb4153ec93f0d341b90fb76c21e57be06faab8bb81ca3129d4d",
-    "resumed_matches_baseline": true,
-    "failure_stage_probe": "PASS",
-    "proven_boundaries": [
-      "P2_7_PARENT",
-      "FIXTURE",
-      "P2_6_BASELINE",
-      "CREATE_WORLD",
-      "ADVANCE_UNINTERRUPTED_TO_30",
-      "UNINTERRUPTED_P2_6_HASH_EQUALITY",
-      "ADVANCE_TO_CUT_A",
-      "SERIALIZE_DESERIALIZE_CHECKPOINT_A",
-      "ADVANCE_TO_CUT_B",
-      "SERIALIZE_DESERIALIZE_CHECKPOINT_B",
-      "ADVANCE_AFTER_CUT_B_TO_30_AND_FINAL_RESULT_EQUALITY"
-    ]
+    "final_state_hash": "50ca2aca3acd98d54eaff88cc709db12094a8b2cec33a97762680526d55e2345",
+    "p2_7_diagnostics_hash": "b76b0afda1b4fdf298313934d4cb5bd06764a3959f8c599bc163eb2953495c79",
+    "cut_a": {
+      "year": 14,
+      "world_hash": "e907052c74c3996a6c2eb9864b3e03940de355ea649a55dfb32baa201b7c8c65",
+      "serialized_bytes": 84465,
+      "checkpoint_hash": "827a13fa52c80569d37bbabe744cd8c41e6e192c5ab64ff4d88779ad4ccfa7fd"
+    },
+    "cut_b": {
+      "year": 18,
+      "world_hash": "75e968b042e1e8271b22f051061ec7d32ae4bf6f90e172e0036a26b49bbb0f19",
+      "serialized_bytes": 99365,
+      "checkpoint_hash": "bd177a95662a7e80c11881163178c555d7704b5035abcac6fa85a1e577359915"
+    },
+    "tamper_rejected": true,
+    "fresh_process_a": "PASS_10_ASSERTIONS",
+    "fresh_process_b": "PASS_10_ASSERTIONS",
+    "fresh_process_hashes_match_acceptance": true,
+    "accepted_parent_regression": "PASS_PH3_THROUGH_P2_7",
+    "parent_hashes": {
+      "p2_5": "292f3aba448a38e5802cfef4fc95ecbcb84fc2b89416ffc34a034cfa5705b696",
+      "p2_6": "3ea48d77dd44640e14ddf064e8b6b028e27a1c0fabfd36ff57461ceed054671c",
+      "p2_7": "7e814c0d8bdff952f9b86579b95fe305212ec02017c2298437e2ba3e46d2babe"
+    }
   },
-  "remaining_final_gate": {
-    "runner": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
-    "required": true,
-    "reason": "final acceptance still requires the complete accepted P2.7 parent regression plus P2.8 acceptance assertions, disk checkpoint write/read, fresh-process A/B replay, tamper rejection and canonical aggregate equality in one exact-Windows runner",
-    "expected_order": "acceptance parser -> failure-stage parser -> codec preflight -> failure-stage execution probe -> full P2.7 parent regression -> P2.8 acceptance -> fresh-process A -> fresh-process B -> aggregate/equality gates"
+  "linux_corroboration": {
+    "authority": "TARGETED_CODEC_PREFLIGHT_ONLY_NOT_FULL_REPOSITORY_SUITE",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "status": "PASS_25_ASSERTIONS",
+    "value_hash": "d39b60931c5c3a69102897af57e28555de6cdd9bf00cd035d06540afd5a4da44",
+    "bytes": 1174,
+    "fresh_process_repetitions": 3,
+    "all_identical": true
   },
   "required_properties": [
     "P2_7_PARENT_HASH_UNCHANGED",
@@ -119,7 +122,6 @@
     "NO_ACCEPTED_P2_7_OR_EARLIER_SOURCE_MODIFICATION",
     "NO_RUNTIME_PATH_MODIFICATION"
   ],
-  "decision": "DO_NOT_ACCEPT_P2_8_YET; EXACT_WINDOWS_STAGE_PROOF_PASS; RUN_FULL_CANONICAL_P2_8_RUNNER",
-  "next_if_full_runner_passes": "accept P2.8, close EVO1, then open post-EVO1 route resolution for EVO2 and XFER0",
-  "next_if_full_runner_fails": "repair only the failing P2.8 acceptance/disk/fresh-process boundary; preserve accepted P2.7 and earlier sources"
+  "decision": "ACCEPT_P2_8_AND_CLOSE_EVO1",
+  "next": "P3.1 Resource Competition: deterministic light/water/nutrient competition with conservation, limiting-resource response and permutation independence"
 }
