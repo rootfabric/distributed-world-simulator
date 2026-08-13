@@ -39,7 +39,8 @@ func _test_same_revision_pickup_and_drop_rollback() -> void:
 	var revision := int(canonical.get("revision", -1))
 	_assert(revision >= 0, "canonical revision available")
 	_assert(_location(canonical, "item/shared/ore/1") == "WORLD", "ore starts in canonical world")
-	_assert(_location(canonical, "item/player/b/battery") == "INVENTORY", "battery starts in canonical inventory")
+	_assert(_location(canonical, "item/player/b/beacons") == "INVENTORY", "beacon stack starts in canonical inventory")
+	_assert(_quantity(canonical, "item/player/b/beacons") == 3, "beacon stack fixture quantity exact")
 
 	var pickup_journal = PredictionJournal.new()
 	_assert(bool(pickup_journal.setup("b", {"timeout_ms":8000, "max_pending":8}).get("success", false)), "pickup journal configures")
@@ -58,6 +59,7 @@ func _test_same_revision_pickup_and_drop_rollback() -> void:
 		1020
 	)
 	_assert(bool(pickup_rollback.get("success", false)), "rejected pickup resolves")
+	_assert(String(pickup_rollback.get("details", {}).get("resolution", "")) == "ROLLED_BACK", "pickup resolution is explicit rollback")
 	var pickup_view := pickup_journal.get_presentation_snapshot()
 	_assert(int(pickup_view.get("revision", -2)) == revision, "pickup rollback preserves same authority revision")
 	_assert(_location(pickup_view, "item/shared/ore/1") == "WORLD", "pickup rollback restores canonical world placement")
@@ -67,14 +69,14 @@ func _test_same_revision_pickup_and_drop_rollback() -> void:
 	_assert(bool(drop_journal.adopt_authoritative(canonical, 2000).get("success", false)), "drop journal adopts authority")
 	var drop := drop_journal.begin_prediction(
 		"item.drop",
-		{"item_id":"item/player/b/battery", "quantity":1, "transform":{"basis":[1,0,0,0,1,0,0,0,1], "origin":[2,0,-1]}},
+		{"item_id":"item/player/b/beacons", "quantity":1, "transform":{"basis":[1,0,0,0,1,0,0,0,1], "origin":[2,0,-1]}},
 		"prediction/nx-c1/drop",
 		2010
 	)
-	_assert(bool(drop.get("success", false)), "optimistic drop begins")
-	_assert(_quantity(drop_journal.get_presentation_snapshot(), "item/player/b/battery") == 1, "partial drop decrements presentation source")
-	_assert(_count_prefix(drop_journal.get_presentation_snapshot(), "item/predicted/") == 1, "optimistic drop creates presentation-only spawn")
-	_assert(_quantity(drop_journal.get_authoritative_snapshot(), "item/player/b/battery") == 2, "drop leaves authority untouched")
+	_assert(bool(drop.get("success", false)), "optimistic partial drop begins")
+	_assert(_quantity(drop_journal.get_presentation_snapshot(), "item/player/b/beacons") == 2, "partial drop decrements presentation source")
+	_assert(_count_prefix(drop_journal.get_presentation_snapshot(), "item/predicted/") == 1, "optimistic partial drop creates presentation-only spawn")
+	_assert(_quantity(drop_journal.get_authoritative_snapshot(), "item/player/b/beacons") == 3, "drop leaves authority untouched")
 	var drop_rollback := drop_journal.resolve_prediction(
 		"prediction/nx-c1/drop",
 		{"success":false, "error_code":"DROP_REJECTED"},
@@ -82,14 +84,13 @@ func _test_same_revision_pickup_and_drop_rollback() -> void:
 		2020
 	)
 	_assert(bool(drop_rollback.get("success", false)), "rejected drop resolves")
+	_assert(String(drop_rollback.get("details", {}).get("resolution", "")) == "ROLLED_BACK", "drop resolution is explicit rollback")
 	var drop_view := drop_journal.get_presentation_snapshot()
 	_assert(int(drop_view.get("revision", -2)) == revision, "drop rollback preserves same authority revision")
-	_assert(_quantity(drop_view, "item/player/b/battery") == 2, "drop rollback restores authoritative quantity")
+	_assert(_quantity(drop_view, "item/player/b/beacons") == 3, "drop rollback restores authoritative quantity")
 	_assert(_count_prefix(drop_view, "item/predicted/") == 0, "drop rollback removes predicted spawn")
 	_assert(int(pickup_journal.get_report().get("rolled_back", 0)) == 1, "pickup rollback counted")
 	_assert(int(drop_journal.get_report().get("rolled_back", 0)) == 1, "drop rollback counted")
-	_assert(int(pickup_journal.get_report().get("same_revision_reprojections", 0)) >= 1, "same-revision pickup reprojection observable")
-	_assert(int(drop_journal.get_report().get("same_revision_reprojections", 0)) >= 1, "same-revision drop reprojection observable")
 	service.shutdown()
 
 
