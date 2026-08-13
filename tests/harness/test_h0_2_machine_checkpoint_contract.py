@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import fnmatch
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -9,12 +11,25 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from harness.checkpoint_planner import build_plan
+from harness.contracts import ContractBundle, read_json
+from harness.event_reducer import load_guard_context, reduce_events
+from harness.state_builder import _validate_semantics
 
 CHECKPOINT = "H0_2_NX_C1_HIGH_RISK_PILOT"
+ACTIVE_EXECUTION = ROOT / "config/control/harness/executions/E2026-08-13-H0-2-R3"
+ACTIVE_WORK_ORDER_ID = "H0-2-R3-NX-C1-WO-001"
+ACTIVE_BRANCH = "feature/h0-2-nx-c1-owner-authority-r3"
+ACTIVE_BASE = "09714b6f2681e3b5cf3f2f9e28416cf9a7378304"
+R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
 
 
 def load_json(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
+
+
+def git(*args: str) -> str:
+    completed = subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=True)
+    return completed.stdout.strip()
 
 
 class H02MachineCheckpointContractTests(unittest.TestCase):
@@ -107,6 +122,82 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
         self.assertEqual("BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH", plan["next_action"])
         self.assertEqual("CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS", plan["nx_c1_gate"]["source_acceptance_requires"])
+
+    def test_active_execution_identity_schema_and_high_risk_design_are_exact(self):
+        if not ACTIVE_EXECUTION.exists():
+            self.skipTest("active H0.2 execution package is branch-local")
+        bundle = ContractBundle.load(ROOT)
+        epoch = read_json(ACTIVE_EXECUTION / "project-epoch.v1.json")
+        work_order = read_json(ACTIVE_EXECUTION / f"work-orders/{ACTIVE_WORK_ORDER_ID}.v1.json")
+        bundle.validate("project_epoch_schema", epoch, "h0_2_r3_epoch")
+        bundle.validate("work_order_schema", work_order, "h0_2_r3_work_order")
+        _validate_semantics(bundle, epoch, work_order)
+        self.assertEqual(ACTIVE_BASE, epoch["base_sha"])
+        self.assertEqual(ACTIVE_BASE, work_order["base_sha"])
+        self.assertEqual(79, epoch["registry_generation"])
+        self.assertEqual(R3, epoch["architecture_revision"])
+        self.assertEqual(ACTIVE_BRANCH, work_order["branch"])
+        self.assertEqual("NX", work_order["program"])
+        self.assertEqual(CHECKPOINT, work_order["goal_checkpoint"])
+        self.assertEqual("HIGH", work_order["risk_class"])
+        self.assertEqual(["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR"], work_order["required_review_roles"])
+        self.assertTrue(work_order["review_required"])
+        self.assertTrue(work_order["evidence_map_required"])
+        self.assertIn("scripts/network/contracts/network_protocol_manifest.gd", work_order["forbidden_paths"])
+        self.assertIn("scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd", work_order["forbidden_paths"])
+        self.assertIn("scripts/items/**", work_order["forbidden_paths"])
+        self.assertIn("scripts/characters/**", work_order["forbidden_paths"])
+        self.assertIn("RUNTIME_FEATURE_MERGE", work_order["human_approval_required_for"])
+
+    def test_active_append_only_ledger_and_dispatch_authorization_are_fail_closed(self):
+        if not ACTIVE_EXECUTION.exists():
+            self.skipTest("active H0.2 execution package is branch-local")
+        bundle = ContractBundle.load(ROOT)
+        work_order = read_json(ACTIVE_EXECUTION / f"work-orders/{ACTIVE_WORK_ORDER_ID}.v1.json")
+        transition = read_json(ACTIVE_EXECUTION / "transition-table.v1.json")
+        event_dir = ACTIVE_EXECUTION / "events" / ACTIVE_WORK_ORDER_ID
+        events = [read_json(path) for path in sorted(event_dir.glob("*.json"))]
+        for event in events:
+            bundle.validate("event_schema", event, "h0_2_r3_event")
+        reduced = reduce_events(bundle, work_order, events, transition, load_guard_context(ROOT, ACTIVE_EXECUTION))
+        self.assertEqual(work_order["state"], reduced["state"])
+        self.assertEqual(ACTIVE_BRANCH, work_order["branch"])
+        self.assertEqual("WORK_ORDER_CREATED", events[0]["event_type"])
+        self.assertEqual(ACTIVE_BASE, events[0]["head_sha"])
+
+        changed = git("diff", "--name-only", "origin/main...HEAD").splitlines()
+        if reduced["state"] == "PLANNED":
+            control_only = (
+                "config/control/harness/executions/E2026-08-13-H0-2-R3/**",
+                "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+                "docs/plans/H0_2_NX_C1_OWNER_AUTHORITY_R3_RU.md",
+                "tests/harness/test_h0_2_machine_checkpoint_contract.py",
+            )
+            violations = [path for path in changed if not any(fnmatch.fnmatch(path, pattern) for pattern in control_only)]
+            self.assertFalse(violations, violations)
+            plan = build_plan(self.contracts, work_order, reduced)
+            self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
+            self.assertEqual(0, plan["autonomous_runtime_workers"])
+            self.assertEqual(1, len(events))
+        elif reduced["state"] == "DISPATCHED":
+            self.assertEqual(2, len(events))
+            self.assertEqual("DISPATCHED", events[1]["event_type"])
+            reviews = [read_json(path) for path in sorted((ACTIVE_EXECUTION / "reviews").glob("*.json"))]
+            prebuild = [item for item in reviews if item.get("review_type") == "PRE_BUILD_DESIGN_AUTHORIZATION"]
+            self.assertEqual(1, len(prebuild))
+            self.assertEqual("PASS", prebuild[0]["verdict"])
+            self.assertEqual(prebuild[0]["reviewed_head_sha"], events[1]["head_sha"])
+            self.assertNotIn("IMPLEMENTER", prebuild[0]["reviewer"].upper())
+            plan = build_plan(self.contracts, work_order, reduced)
+            self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
+            self.assertEqual(1, plan["autonomous_runtime_workers"])
+            scope_violations = [
+                path for path in changed
+                if not any(fnmatch.fnmatch(path, pattern) for pattern in work_order["allowed_paths"])
+            ]
+            self.assertFalse(scope_violations, scope_violations)
+        else:
+            self.assertIn(reduced["state"], {"IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED", "CHECKPOINT_PROPOSED", "FIX_REQUIRED", "BLOCKED", "WAITING_HUMAN", "EPOCH_INVALIDATED", "CANCELLED"})
 
 
 if __name__ == "__main__":
