@@ -111,8 +111,10 @@ func _require(condition: bool, stage: String) -> void:
 		_fail(stage)
 
 func _fail(stage: String) -> void:
-	push_error("ECO.EVO1-P2.8 FAILURE_STAGE=" + stage)
+	var message := "ECO.EVO1-P2.8 FAILURE_STAGE=" + stage
+	push_error(message)
 	quit(1)
+	assert(false, message)
 
 func _debug_decode(text: String, original_world: Dictionary, evidence: Dictionary, label: String) -> void:
 	var parsed = JSON.parse_string(text)
