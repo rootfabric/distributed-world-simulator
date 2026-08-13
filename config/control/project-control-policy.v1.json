@@ -70,12 +70,27 @@
   "passport_architecture_compatibility": {
     "mode": "EXPLICIT_PER_PROGRAM_HISTORICAL_ALLOWLIST",
     "central_registry_field": "historical_passport_architecture_revisions",
+    "historical_identity_registry_field": "historical_passport_identities",
     "exact_canonical_revision_always_allowed": true,
     "historical_revision_requires_explicit_main_registry_declaration": true,
+    "historical_identity_required_for_mismatch": true,
+    "historical_identity_required_fields": [
+      "program",
+      "branch",
+      "passport_path",
+      "architecture_revision",
+      "pinned_head_sha",
+      "passport_blob_sha"
+    ],
+    "historical_mismatch_requires": [
+      "revision_allowlist",
+      "exact_immutable_identity_match"
+    ],
     "missing_or_malformed_allowlist_fails_closed": true,
+    "missing_or_malformed_historical_identity_fails_closed": true,
     "historical_allowlist_is_provenance_only": true,
     "new_or_refreshed_post_promotion_frontiers_must_use_canonical_revision": true,
-    "rule": "A Branch Passport whose architecture_revision differs from the canonical registry remains RED unless that exact historical revision is explicitly allowlisted by the main-owned central registry entry for that exact program. The allowlist preserves accepted/preparation/research provenance across a canonical architecture promotion; it does not relabel history, authorize new runtime work, or permit a newly dispatched frontier to start on the historical revision."
+    "rule": "A Branch Passport whose architecture_revision differs from the canonical registry remains RED unless the main-owned policy explicitly names both historical registry fields, the exact historical revision is allowlisted for the audited program, and exactly one historical_passport_identities record matches the exact program, branch, passport_path, historical architecture revision, observed remote branch head, and observed passport blob SHA. Revision allowlist membership alone never authorizes a mismatch. Missing, malformed, moved, copied, refreshed, or ambiguous identity evidence fails closed. No role, stage, blocker, status, or branch-name heuristic may grant compatibility."
   },
   "branch_lifecycle": [
     "PLANNED",
