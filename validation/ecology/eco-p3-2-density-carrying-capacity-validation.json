@@ -1,14 +1,14 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_2_density_carrying_capacity_validation.v1",
-  "revision": "ECO-P3.2-2026-08-13-R2-PARENT-ACCEPTED",
+  "revision": "ECO-P3.2-2026-08-13-R3-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
     "control_head": "f614d67f7db5be093e46a3d8b8ea4e3fd5d166be",
     "checkpoint": "ECO.P3.1",
     "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
-    "candidate_aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
     "kernel_blob": "c667569b40775a1a1898d7b911a610ca5795f380",
     "acceptance_evidence_head": "882fadfbce1808ba1ee52eae0cfdf0caa0b6b079",
     "acceptance_evidence_sha256": "4999281a070e2043f8eb56823fcacbc35a94f73eed679524dcddf7cd4356d03b"
@@ -19,7 +19,7 @@
     "aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
   },
   "contract": {
-    "domain": "single local patch; spatial neighbourhoods and dispersal remain out of scope until P3.3",
+    "domain": "single local patch; spatial neighbourhoods and dispersal are delegated to P3.3",
     "resource_support": "minimum light/water/nutrient total-uptake to total-demand ratio; no-demand resource is neutral support 1",
     "carrying_capacity": "reference K = area * reference_capacity; effective K interpolates from minimum_capacity_fraction to reference K by P3.1 resource_support",
     "density_feedback_below_k": "1 - total_biomass/effective_K",
@@ -43,6 +43,28 @@
     "resource_limited_hash": "8711ee9d04f20489eff580ff798d3ee799c9c02a12d4dc0c8ac0fa9801fdaca4",
     "parent_p3_1": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
   },
+  "exact_windows_canonical_evidence": {
+    "authority": "USER_EXECUTED_EXACT_WINDOWS_CANONICAL_COLLECTOR",
+    "collector_head": "4ade178fc394cb5b220d206465310f06f63e4cfb",
+    "collector_tree": "b15abc86feb1d672340279568e61ad4e9eea19ab",
+    "collector": "RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1",
+    "stage": "P3.2",
+    "timestamp_utc": "2026-08-13T06:19:02Z",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "canonical_runner": "RUN_ECO_P3_2_TESTS.ps1",
+    "parent_regression": "RUN_ECO_P3_1_TESTS.ps1",
+    "process_runs": 2,
+    "assertions_per_run": 79,
+    "fresh_process_hashes_identical": true,
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
+    "under_capacity_hash": "8f08ce09fe5d6db5e34d1109e0899b680fb5b877ec790d3c39cc376b5c0f56b8",
+    "over_capacity_hash": "b93d073f06c878fb3ea52b98b898ff7fce8bf97e6f1cf4e28c6af7e0d4cb721f",
+    "resource_limited_hash": "8711ee9d04f20489eff580ff798d3ee799c9c02a12d4dc0c8ac0fa9801fdaca4",
+    "parent_p3_1": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "raw_log_sha256": "a60db1644a45917c73d2eedaee9e244e33acd4fcbdcfd385a964e6798a4035eb",
+    "evidence_sha256": "6619064b6770438c5d63661aff65c5a92dddc7740655f67b13644daa7ee98a26",
+    "acceptance_mutation_performed_by_collector": false
+  },
   "covered_properties": [
     "P3_1_PARENT_PINNED",
     "P2_8_ANCESTOR_PINNED",
@@ -65,7 +87,9 @@
     "DUPLICATE_ID_FAIL_CLOSED",
     "P3_1_P3_2_PLANT_SET_MISMATCH_FAIL_CLOSED",
     "MALFORMED_PARENT_CONTAINER_FAIL_CLOSED",
-    "TAMPERED_DERIVED_STATE_REJECTED"
+    "TAMPERED_DERIVED_STATE_REJECTED",
+    "EXACT_WINDOWS_CANONICAL_PARENT_REGRESSION_PASS",
+    "EXACT_WINDOWS_CANONICAL_FRESH_PROCESS_EQUALITY"
   ],
   "canonical_gate": {
     "runner": "RUN_ECO_P3_2_TESTS.ps1",
@@ -75,9 +99,10 @@
     "required_parent_regression": "RUN_ECO_P3_1_TESTS.ps1",
     "required_fresh_processes": 2,
     "required_aggregate_equality": true,
-    "required_parent_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
+    "required_parent_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "result": "PASS"
   },
-  "decision": "DO_NOT_ACCEPT_P3_2_YET; P3_1_PARENT_ACCEPTED; RUN_EXACT_WINDOWS_CANONICAL_GATE",
-  "next_if_passes": "accept P3.2, then open P3.3 Spatial Dispersal",
+  "decision": "ACCEPT_P3_2_EXACT_WINDOWS_CANONICAL",
+  "next": "P3.3 Spatial Dispersal is now allowed to open",
   "observer_note": "OBS1 remains non-gating read-only visualization and cannot mutate simulation state, consume simulation RNG or affect acceptance hashes"
 }

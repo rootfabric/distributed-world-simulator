@@ -36,26 +36,56 @@ contract
 ```text
 ECO.EVO1 / P2.8 = ACCEPTED
 P3.1 Resource Competition = ACCEPTED / exact Windows canonical
-P3.2 Density & Carrying Capacity = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
-P3.3 = NOT OPENED
+P3.2 Density & Carrying Capacity = ACCEPTED / exact Windows canonical
+P3.3 Spatial Dispersal = OPEN / implementation next
 ```
 
-P3.1 exact Windows canonical evidence was captured from control head `882fadfbce1808ba1ee52eae0cfdf0caa0b6b079` with Godot `4.7.1.stable.double.custom_build.a13da4feb` and matched the immutable aggregate `f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a` plus accepted P2.8 parent `ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6`.
-
-P3.2 introduces a soft resource-coupled carrying-capacity response rather than reusing older hard proportional patch clipping. Its parent-status gate is now satisfied because P3.1 is accepted; P3.2 itself still requires its own exact Windows canonical run and separate acceptance lifecycle update.
-
-Acceptance order remains strict:
+P3.1 exact Windows canonical aggregate:
 
 ```text
-P3.1 = ACCEPTED
--> run exact P3.2 canonical gate
--> accept P3.2
--> open P3.3
+f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a
+```
+
+P3.2 exact Windows canonical evidence was captured from head `4ade178fc394cb5b220d206465310f06f63e4cfb` with Godot `4.7.1.stable.double.custom_build.a13da4feb`. Both canonical P3.2 processes matched:
+
+```text
+aggregate_hash=172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639
+parent_p3_1=f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a
+```
+
+Evidence integrity:
+
+```text
+raw_log_sha256=a60db1644a45917c73d2eedaee9e244e33acd4fcbdcfd385a964e6798a4035eb
+evidence_sha256=6619064b6770438c5d63661aff65c5a92dddc7740655f67b13644daa7ee98a26
+```
+
+P3.3 is therefore allowed to open. It must treat accepted P3.2 as immutable parent and add spatial topology/dispersal as a separate deterministic layer.
+
+## P3.3 opening boundary
+
+P3.3 should introduce explicit patch/cell identities and directed or undirected neighbourhood edges with deterministic canonical ordering. Dispersal must conserve transferred biomass/propagule mass within the modelled system unless an explicitly modelled boundary-export sink is present.
+
+Required P3.3 properties include:
+
+```text
+accepted P3.2 parent pin
+canonical patch order
+canonical edge order
+input permutation independence
+no duplicate patch IDs / duplicate directed edges
+bounded dispersal fractions
+source export never exceeds available biomass
+closed-system conservation
+explicit boundary export accounting
+no species-name / plant-id winner table
+same input / fresh process -> same result_hash
+tampered derived state -> validation FAIL
 ```
 
 ## Observer lane — low priority
 
-`OBS1.1 Read-only Low-poly Observer` is implemented as a non-gating parallel lane with targeted Linux PASS and a successful interactive Windows launch. It remains presentation-only and does not change P3.1/P3.2 acceptance state.
+`OBS1.1 Read-only Low-poly Observer` is implemented as a non-gating parallel lane with targeted Linux PASS and a successful interactive Windows launch. It remains presentation-only and does not change P3 acceptance state.
 
 Current OBS1 surface:
 
@@ -75,8 +105,6 @@ simulation state != visual state != network transport
 ```
 
 OBS1 reads immutable/reproducible snapshots only. It does not mutate ecology state, consume simulation RNG, alter time stepping, persistence or acceptance hashes. Current proxy placement/palette is deterministic from canonical plant order and uses no randomness.
-
-Targeted evidence: `ECO.OBS1 Read-only Snapshot Boundary: PASS (49 assertions)` in three identical fresh processes plus `ECO.OBS1 Scene Smoke: PASS (9 assertions)`. OBS1 stays `NON_GATING`; P3.3 remains closed until P3.2 is canonically accepted.
 
 ## Later integration boundary
 
