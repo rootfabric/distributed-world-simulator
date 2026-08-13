@@ -36,7 +36,6 @@ var earth_world
 var earth_explorer
 var atmosphere_manager
 var planetary_overlay
-var default_earth_biome: String = "forest"
 var initialized: bool = false
 var atmosphere_initialized: bool = false
 var last_diagnostic_path: String = "-"
@@ -56,8 +55,6 @@ func configure_runtime(context: Dictionary) -> void:
 		context.get("command_owner_id", runtime_command_owner)
 	)
 	runtime_test_owner = String(context.get("test_owner_id", runtime_test_owner))
-	var options: Dictionary = runtime_world_definition.get("options", {})
-	default_earth_biome = String(options.get("default_biome", "forest"))
 
 
 func _ready() -> void:
@@ -105,13 +102,13 @@ func _ready() -> void:
 	planetary_overlay.setup()
 
 	initialized = true
-	_teleport_to_earth_biome(default_earth_biome)
+	_spawn_explorer_at_canonical_spawn()
 	earth_world.set_primary_lighting_enabled(true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	logger.info("application", "earth_runtime_ready", {
 		"world_id": get_runtime_id(),
 		"body_ids": celestial_system.get_body_ids(),
-		"default_biome": default_earth_biome,
+		"canonical_spawn": earth_world.get_canonical_spawn_snapshot(),
 		"atmosphere_initialized": atmosphere_initialized,
 	})
 
@@ -212,6 +209,11 @@ func register_runtime_tests(registry, owner_id: String) -> void:
 		"category": "world",
 	}, Callable(self, "_test_earth_reference_frame"), owner_id)
 	registry.register_test({
+		"id": "world.earth.canonical_spawn",
+		"description": "Earth runtime запускает наблюдателя из неизменяемой координаты default_spawn.",
+		"category": "world",
+	}, Callable(self, "_test_earth_canonical_spawn"), owner_id)
+	registry.register_test({
 		"id": "world.earth.body_isolation",
 		"description": "Каталог тел Earth runtime не содержит скрытой Луны.",
 		"category": "world",
@@ -226,7 +228,6 @@ func create_runtime_snapshot() -> Dictionary:
 		"instance_id": runtime_instance_id,
 		"local_authority_id": local_authority_id,
 		"initialized": initialized,
-		"default_biome": default_earth_biome,
 		"observer_position_m": _vector_to_array(
 			earth_explorer.get_world_position()
 			if earth_explorer != null
@@ -242,6 +243,9 @@ func create_runtime_snapshot() -> Dictionary:
 			celestial_system.create_snapshot() if celestial_system != null else {}
 		),
 		"earth": earth_world.create_snapshot() if earth_world != null else {},
+		"canonical_spawn": (
+			earth_world.get_canonical_spawn_snapshot() if earth_world != null else {}
+		),
 		"atmosphere": (
 			atmosphere_manager.create_snapshot()
 			if atmosphere_manager != null
@@ -287,7 +291,7 @@ func _command_space_teleport_body(arguments: Array[String]) -> Dictionary:
 			"success": false,
 			"output": "В мире earth доступно только тело earth",
 		}
-	_teleport_to_earth_biome(default_earth_biome)
+	_spawn_explorer_at_canonical_spawn()
 	return {"success": true, "output": "Переход к поверхности Земли"}
 
 
@@ -354,6 +358,15 @@ func _teleport_to_earth_biome(biome_name: String) -> Dictionary:
 	return {"success": true, "output": "Биом Земли: %s" % biome_name}
 
 
+func _spawn_explorer_at_canonical_spawn() -> void:
+	if earth_world == null or earth_explorer == null:
+		return
+	earth_explorer.activate(
+		earth_world.get_canonical_spawn_direction(),
+		earth_world.get_canonical_spawn_altitude_m()
+	)
+
+
 func _save_diagnostic_snapshot() -> String:
 	var directory_path: String = "user://diagnostics"
 	DirAccess.make_dir_recursive_absolute(
@@ -411,6 +424,27 @@ func _test_earth_reference_frame() -> Dictionary:
 		"success": passed,
 		"passed": passed,
 		"output": "PASS: earth body-fixed frame" if passed else "FAIL: frame=%s expected=%s" % [actual, expected],
+	}
+
+
+func _test_earth_canonical_spawn() -> Dictionary:
+	if earth_world == null or earth_explorer == null or celestial_system == null:
+		return {"success": false, "passed": false, "output": "FAIL: earth canonical spawn unavailable"}
+	var direction: Vector3 = earth_world.get_canonical_spawn_direction()
+	var altitude: float = earth_world.get_canonical_spawn_altitude_m()
+	var expected_position: Vector3 = earth_world.get_surface_point(direction) + direction * altitude
+	var actual_position: Vector3 = earth_explorer.get_frame_position()
+	var expected_frame: String = celestial_system.get_body_fixed_frame_id("earth")
+	var passed: bool = (
+		earth_explorer.get_reference_frame_id() == expected_frame
+		and actual_position.distance_to(expected_position) < 0.1
+		and absf(earth_world.get_altitude(actual_position) - altitude) < 0.1
+	)
+	return {
+		"success": passed,
+		"passed": passed,
+		"output": "PASS: earth canonical spawn" if passed else "FAIL: earth canonical spawn",
+		"canonical_spawn": earth_world.get_canonical_spawn_snapshot(),
 	}
 
 

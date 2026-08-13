@@ -33,8 +33,7 @@
         "startup_mode": "earth",
         "visible_bodies": [
           "earth"
-        ],
-        "default_biome": "forest"
+        ]
       },
       "universe_id": "main",
       "instance_id": "persistent",

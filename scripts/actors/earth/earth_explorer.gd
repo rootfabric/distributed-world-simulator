@@ -47,9 +47,9 @@ func setup(
 	set_process_unhandled_input(false)
 
 
-func activate(direction: Vector3) -> void:
+func activate(direction: Vector3, altitude_m: float = 450.0) -> void:
 	active = true
-	teleport_to_direction(direction, 450.0)
+	teleport_to_direction(direction, altitude_m)
 	camera.current = true
 	set_physics_process(true)
 	set_process_unhandled_input(true)
