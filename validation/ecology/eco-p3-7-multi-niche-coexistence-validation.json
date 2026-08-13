@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_7_multi_niche_coexistence_validation.v1",
-  "revision": "ECO-P3.7-2026-08-13-R2-PARENT-READY",
+  "revision": "ECO-P3.7-2026-08-13-R3-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
     "checkpoint": "ECO.P3.6",
@@ -14,15 +14,16 @@
   "contract": {
     "domain": "deterministic multi-niche community stabilization over immutable P3.6 state",
     "niche_model": "continuous temperature/moisture/light/nutrient optima with positive breadths; no lineage-name winner table",
-    "frequency_feedback": "bounded relaxation toward environment-derived target shares",
+    "frequency_feedback": "bounded relaxation from current shares toward environment-derived target shares",
     "conservation": "patch total biomass exactly conserved",
-    "stable_coexistence": "partial steps monotonically approach fixed point; full step reaches target",
-    "symmetry": "identical niches produce exact equal target shares",
+    "stable_coexistence": "repeated partial steps monotonically approach niche fixed point; full step reaches it exactly",
+    "symmetry": "identical niches produce exact equal target shares independent of lexical order",
     "rng": "no simulation/global RNG consumption"
   },
-  "targeted_linux_evidence": {
+  "frozen_full_exact_godot_evidence": {
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "parser_preload": "PASS",
+    "parent_p3_6_validation": "PASS",
     "process_runs": 3,
     "all_process_logs_byte_identical": true,
     "assertions_per_run": 64,
@@ -42,14 +43,21 @@
     "all_process_logs_byte_identical": true,
     "checks_per_run": 32,
     "log_sha256": "18a21dfbc585326d971d88fda568d77e1a54ba84cef538c532ae73babfb03318",
-    "p3_7_fixture_hash": "d8f47dc9c8f363d2bdf495b8279d4ee95f6f382032657a6b6bead081f95661ab"
+    "p3_6_fixture_hash": "388fc9500345691bd5fa4064787206de331b5cc862b3ed92dfb23fac819c64f5",
+    "p3_7_fixture_hash": "d8f47dc9c8f363d2bdf495b8279d4ee95f6f382032657a6b6bead081f95661ab",
+    "p3_8_initial_state_hash": "4935a05b3cce4a20c5bb293f71185d54ef7de48741b27af2b16cced789c85735",
+    "p3_8_final_state_hash": "1027eda45de0749ca30a0c49963a638e07277e191939c6ce10f78db806035412",
+    "p3_8_serialized_sha256": "58c251bf77a66793aa6a16e3dc42243372314e9b3c452f4ef4b539292d94b77e"
   },
-  "canonical_gate": {
-    "parent_requirement_satisfied": true,
-    "runner": "RUN_ECO_P3_7_TESTS.ps1",
-    "expected_aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
-    "expected_parent_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
-    "current_authorization": "READY_FOR_OWN_CANONICAL_GATE"
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_CANONICAL_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-13",
+    "aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
+    "parent_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "kernel_blob": "7379c422f2d3f5723a2bfff8b46790f9cce30ddc",
+    "acceptance_test_blob": "d14a24aaef42379ed199b9fbe3b4c3e9db58e15d",
+    "windows_evidence_claimed": false,
+    "decision": "ACCEPT_P3_7"
   },
-  "decision": "P3_7_PARENT_GATE_OPEN; CANDIDATE_ONLY; RUN_OWN_GATE_BEFORE_ACCEPTANCE"
+  "next": "P3.8 own gate is now authorized; no P3.8 acceptance is implied by this record."
 }
