@@ -3,7 +3,7 @@ extends "res://scripts/characters/presentation/skinned_resource_configurable_two
 
 const ProfileType = preload("res://scripts/characters/presentation/first_person_hand_asset_profile.gd")
 const ProfiledProviderType = preload("res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider_fix2.gd")
-const NativeProfiledProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider.gd")
+const NativeProfiledProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider_fix2.gd")
 
 var _hand_asset_profile_by_hand: Dictionary = {}
 
@@ -87,6 +87,7 @@ func get_hand_asset_profile_report() -> Dictionary:
 		"drop_in_json_registration": true,
 		"native_skeleton_pose_driver_supported": true,
 		"native_axis_calibration_supported": true,
+		"native_open_reference_supported": true,
 		"presentation_only": true,
 		"owns_item_state": false,
 		"owns_network_state": false,
@@ -122,8 +123,6 @@ func _install_hand_rig(hand: String, hand_root: Node3D, viewmodel_layer: int) ->
 	if not bool(provider_setup.get("success", false)):
 		return provider_setup
 
-	# SubstitutableRigType is inherited from ResourceConfigurableTwoHandFirstPersonEmbodiment.
-	# Do not redeclare it here: GDScript treats duplicate inherited members as a parse error.
 	var rig = SubstitutableRigType.new()
 	rig.name = "%sArticulatedHandRig" % hand.capitalize()
 	hand_root.add_child(rig)
