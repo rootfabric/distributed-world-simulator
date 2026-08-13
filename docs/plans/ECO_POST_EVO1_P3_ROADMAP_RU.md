@@ -31,6 +31,26 @@ contract
 -> ACCEPTED
 ```
 
+## Current checkpoint state — 2026-08-13
+
+```text
+ECO.EVO1 / P2.8 = ACCEPTED
+P3.1 Resource Competition = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
+P3.2 Density & Carrying Capacity = CANDIDATE / targeted Linux PASS / blocked on P3.1 ACCEPTED + exact Windows canonical
+P3.3 = NOT OPENED
+```
+
+P3.2 introduces a soft resource-coupled carrying-capacity response rather than reusing older hard proportional patch clipping. Its canonical runner intentionally fails closed while P3.1 factual validation status is not `ACCEPTED*`.
+
+Acceptance order is therefore strict:
+
+```text
+accept P3.1
+-> run exact P3.2 canonical gate
+-> accept P3.2
+-> open P3.3
+```
+
 ## Observer lane — low priority
 
 After P3.2, a small `OBS1` may be implemented in parallel as a non-gating, casual low-poly observer:

@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_2_density_carrying_capacity_validation.v1",
+  "revision": "ECO-P3.2-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_1_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "control_head": "f614d67f7db5be093e46a3d8b8ea4e3fd5d166be",
+    "checkpoint": "ECO.P3.1",
+    "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+    "candidate_aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "kernel_blob": "c667569b40775a1a1898d7b911a610ca5795f380"
+  },
+  "frozen_ancestor": {
+    "checkpoint": "ECO.EVO1/P2.8",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
+  },
+  "contract": {
+    "domain": "single local patch; spatial neighbourhoods and dispersal remain out of scope until P3.3",
+    "resource_support": "minimum light/water/nutrient total-uptake to total-demand ratio; no-demand resource is neutral support 1",
+    "carrying_capacity": "reference K = area * reference_capacity; effective K interpolates from minimum_capacity_fraction to reference K by P3.1 resource_support",
+    "density_feedback_below_k": "1 - total_biomass/effective_K",
+    "density_feedback_above_k": "effective_K/total_biomass - 1",
+    "recovery": "bounded max_recovery_fraction * P3.1 plant growth_factor * positive density_feedback",
+    "decline": "bounded shared max_decline_fraction * negative density_feedback",
+    "winner_policy": "no plant-id/species-name winner table and no P3.2-specific rank bias",
+    "hard_cap_policy": "no instantaneous proportional clipping to K",
+    "production_boundary": "research kernel only; no spatial ownership, persistence, networking, rendering or production ecology authority"
+  },
+  "targeted_linux_evidence": {
+    "authority": "TARGETED_LINUX_REPRODUCTION_NOT_FULL_REPOSITORY_CANONICAL_RUNNER",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "process_runs": 3,
+    "all_process_hashes_identical": true,
+    "assertions_per_run": 79,
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
+    "under_capacity_hash": "8f08ce09fe5d6db5e34d1109e0899b680fb5b877ec790d3c39cc376b5c0f56b8",
+    "over_capacity_hash": "b93d073f06c878fb3ea52b98b898ff7fce8bf97e6f1cf4e28c6af7e0d4cb721f",
+    "resource_limited_hash": "8711ee9d04f20489eff580ff798d3ee799c9c02a12d4dc0c8ac0fa9801fdaca4",
+    "parent_p3_1": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
+  },
+  "covered_properties": [
+    "P3_1_PARENT_PINNED",
+    "P2_8_ANCESTOR_PINNED",
+    "EXACT_P3_1_KERNEL_BLOB_REPRODUCED",
+    "CANONICAL_PLANT_ORDER",
+    "INPUT_PERMUTATION_INDEPENDENCE",
+    "REPEAT_PROCESS_DETERMINISM",
+    "FULL_RESOURCE_REFERENCE_CAPACITY",
+    "RESOURCE_PRESSURE_LOWERS_EFFECTIVE_CAPACITY",
+    "BELOW_CAPACITY_BOUNDED_RECOVERY",
+    "AT_CAPACITY_STATIONARY_DENSITY_RESPONSE",
+    "ABOVE_CAPACITY_BOUNDED_DECLINE",
+    "NO_INSTANT_HARD_CAP",
+    "OVER_CAPACITY_COMPOSITION_PRESERVATION",
+    "MONOTONIC_SOFT_CONVERGENCE_TOWARD_K",
+    "RESOURCE_LIMITATION_SLOWS_RECOVERY",
+    "EMPTY_POPULATION_NO_BIOMASS_CREATION",
+    "MALFORMED_PATCH_FAIL_CLOSED",
+    "NEGATIVE_BIOMASS_FAIL_CLOSED",
+    "DUPLICATE_ID_FAIL_CLOSED",
+    "P3_1_P3_2_PLANT_SET_MISMATCH_FAIL_CLOSED",
+    "MALFORMED_PARENT_CONTAINER_FAIL_CLOSED",
+    "TAMPERED_DERIVED_STATE_REJECTED"
+  ],
+  "canonical_gate": {
+    "runner": "RUN_ECO_P3_2_TESTS.ps1",
+    "required": true,
+    "requires_parent_status_prefix": "ACCEPTED",
+    "required_parent_regression": "RUN_ECO_P3_1_TESTS.ps1",
+    "required_fresh_processes": 2,
+    "required_aggregate_equality": true,
+    "required_parent_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
+  },
+  "decision": "DO_NOT_ACCEPT_P3_2_YET; TARGETED_LINUX_PASS; P3_1_PARENT_NOT_ACCEPTED; RUN_EXACT_WINDOWS_CANONICAL_GATE_AFTER_P3_1_ACCEPTANCE",
+  "next_if_passes": "accept P3.2, then open P3.3 Spatial Dispersal",
+  "observer_note": "OBS1 remains non-gating read-only visualization and cannot mutate simulation state, consume simulation RNG or affect acceptance hashes"
+}
