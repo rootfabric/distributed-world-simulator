@@ -38,7 +38,7 @@ ECO.EVO1 / P2.8 = ACCEPTED
 P3.1 Resource Competition = ACCEPTED / exact Windows canonical
 P3.2 Density & Carrying Capacity = ACCEPTED / exact Windows canonical
 P3.3 Spatial Dispersal = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
-P3.4 Environmental Gradient = NOT OPENED
+P3.4 Environmental Gradient = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.3 ACCEPTED
 ```
 
 Accepted P3.2 aggregate:
@@ -87,7 +87,41 @@ P3.2 = ACCEPTED
 -> open P3.4 Environmental Gradient
 ```
 
-P3.4 remains closed until P3.3 is canonically accepted.
+P3.4 canonical lifecycle remains closed until P3.3 is canonically accepted. A pre-acceptance implementation candidate now exists so development can continue without falsifying the parent gate.
+
+P3.4 candidate contract:
+
+```text
+explicit x/y/altitude coordinate per P3.3 patch
+continuous affine temperature/moisture/light/nutrient fields
+configurable origin and per-channel x/y/altitude slopes
+normalized moisture/light/nutrient bounds in [0,1]
+no biome enum/table or threshold ownership
+resource availability bridge: light->light, moisture->water, nutrients->nutrients
+P3.3 edge environmental delta diagnostics
+coordinate permutation independence
+no RNG
+fail-closed malformed/tampered state
+```
+
+Targeted exact-Godot evidence:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+P3.3 parent regression = PASS (66 assertions)
+P3.4 fresh A/B/C = PASS (56 assertions each; byte-identical logs)
+aggregate_hash=a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813
+gradient_hash=2651bb4da195af4c1d2ba7f6b09ef9bdc9e459f9206c32ef1e9eb0dbddd6b293
+```
+
+Strict acceptance order is still:
+
+```text
+accept P3.3
+-> run exact P3.4 Windows canonical gate
+-> accept P3.4
+-> open P3.5 Seasonal World
+```
 
 ## Observer lane — low priority
 
