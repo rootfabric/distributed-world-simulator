@@ -79,7 +79,7 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         self.assertEqual("NX_SOURCE_ACCEPTED", goals["HARNESS_H0_2"]["project_checkpoint"])
         self.assertEqual(["HARNESS_H0_2"], goals["NETWORK_TRAIN"]["depends_on"])
 
-    def test_planner_forbids_runtime_branch_before_dispatch(self):
+    def test_planner_allows_control_only_planning_branch_but_forbids_runtime_mutation_before_dispatch(self):
         reduced = {
             "completed_predicates": [],
             "work_order_id": "H0-2-NX-C1-WO-TEST",
@@ -88,12 +88,13 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         plan = build_plan(self.contracts, self.work_order, reduced)
         self.assertEqual("PLANNING_ONLY", plan["mode"])
         self.assertEqual(0, plan["autonomous_runtime_workers"])
-        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["nx_c1_gate"]["branch_creation"])
+        self.assertEqual("PLANNING_BRANCH_ALLOWED_CONTROL_ONLY", plan["nx_c1_gate"]["branch_creation"])
+        self.assertEqual("FORBIDDEN_UNTIL_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
         self.assertEqual("HIGH", plan["nx_c1_gate"]["risk_floor"])
-        self.assertIn("NX_C1_RUNTIME_BRANCH_CREATION_BEFORE_DISPATCH", plan["stop_gates"])
+        self.assertIn("NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", plan["stop_gates"])
         self.assertIn("H0_3_IMPLEMENTATION", plan["stop_gates"])
 
-    def test_planner_dispatch_authorizes_exactly_one_high_risk_worker(self):
+    def test_planner_dispatch_authorizes_exactly_one_high_risk_worker_on_current_work_order_branch(self):
         reduced = {
             "completed_predicates": ["PROJECT_EPOCH_CREATED"],
             "work_order_id": "H0-2-NX-C1-WO-TEST",
@@ -102,7 +103,9 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
         plan = build_plan(self.contracts, self.work_order, reduced)
         self.assertEqual("SINGLE_HIGH_RISK_RUNTIME_PILOT", plan["mode"])
         self.assertEqual(1, plan["autonomous_runtime_workers"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["nx_c1_gate"]["branch_creation"])
+        self.assertEqual("CURRENT_WORK_ORDER_BRANCH", plan["nx_c1_gate"]["branch_creation"])
+        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
+        self.assertEqual("BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH", plan["next_action"])
         self.assertEqual("CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS", plan["nx_c1_gate"]["source_acceptance_requires"])
 
 
