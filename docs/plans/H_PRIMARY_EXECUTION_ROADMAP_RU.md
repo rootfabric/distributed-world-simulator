@@ -29,11 +29,21 @@ C22 MAIN_INTEGRATED                   DONE
         ↓
 GLOBAL-P0 R3 exact-current-main refresh
         ↓
-final R3 Evidence Map / Reviewer / Verifier / PC0
+final R3 Evidence Map / exact-target Project Control
+        ↓
+standard + directional PC0 NON_RED
+        ↓
+Independent Reviewer PASS
+        ↓
+Independent Verifier PASS
+        ↓
+Director final gate PASS
+        ↓
+R3_REFRESHED_CANDIDATE_READY
         ↓
 HUMAN GLOBAL_ARCHITECTURE_PROMOTION   STOP GATE
         ↓
-post-R3 PC0
+mandatory post-R3 PC0
         ↓
 H0.2 / fresh NX.C1 high-risk pilot
         ↓
@@ -69,16 +79,20 @@ Required finalization:
 
 ```text
 fresh main SHA + registry generation
-→ repin/rebase current PR #85
+→ repin/freeze candidate
 → refresh frontier/main guards
 → R2→R3 transition audit
 → ownership/intersection PASS
+→ exact-target Project Control
 → standard PC0 NON_RED
 → directional PC0 NON_RED
-→ exact-head Evidence Map
+→ exact-target Evidence Map
 → independent Reviewer PASS
 → independent Verifier PASS
+→ Director final gate PASS
+→ R3_REFRESHED_CANDIDATE_READY
 → HUMAN GLOBAL_ARCHITECTURE_PROMOTION
+→ mandatory post-R3 PC0
 ```
 
 Required invariants:

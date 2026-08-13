@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "R3-GLOBAL-ARCHITECTURE-PROMOTION-V6-001",
+  "program": "R3",
+  "checkpoint": "R3_REFRESHED_CANDIDATE",
+  "risk_class": "CRITICAL",
+  "reason": "After machine control and durable independent Reviewer, Verifier, and Director gates are complete, promotion of the exact frozen R3 V6 candidate changes canonical global architecture truth and therefore requires a separate explicit Human decision.",
+  "decision_required": "Whether to authorize GLOBAL_ARCHITECTURE_PROMOTION for exact frozen R3 V6 target f78847624a9016d1e8ed39c12b5291d91037ea53",
+  "options": [
+    "APPROVE_PROMOTION",
+    "REJECT_OR_RETURN_FOR_REPAIR"
+  ],
+  "blast_radius": [
+    "canonical global architecture revision",
+    "downstream H0.2/NX.C1 eligibility after post-R3 PC0",
+    "downstream architecture-gated lanes"
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json",
+    "artifacts/control-global-p0-r3-refresh-r1/post-build-critique.v1.json",
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json"
+  ],
+  "status": "SUPERSEDED",
+  "resolution": "Superseded without Human decision because semantic target V6 f78847624a9016d1e8ed39c12b5291d91037ea53 was replaced by V7 after R3-V-001 lifecycle repair."
+}

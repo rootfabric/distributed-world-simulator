@@ -1,0 +1,26 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "R3-GLOBAL-ARCHITECTURE-PROMOTION-V7-001",
+  "program": "R3",
+  "checkpoint": "R3_REFRESHED_CANDIDATE",
+  "risk_class": "CRITICAL",
+  "reason": "Promotion of the exact frozen R3 V7 target changes canonical global architecture truth. It remains a separate Human gate after durable Independent Reviewer PASS, Independent Verifier PASS, Director final-gate PASS, and R3_REFRESHED_CANDIDATE_READY.",
+  "decision_required": "Whether to authorize GLOBAL_ARCHITECTURE_PROMOTION for exact frozen R3 V7 target 2735000bea4bf47af2059d36041e672297cf4c39",
+  "options": [
+    "APPROVE_PROMOTION",
+    "REJECT_OR_RETURN_FOR_REPAIR"
+  ],
+  "blast_radius": [
+    "canonical global architecture revision",
+    "downstream H0.2/NX.C1 eligibility after mandatory post-R3 PC0",
+    "downstream architecture-gated lanes"
+  ],
+  "blocking": true,
+  "evidence_paths": [
+    "artifacts/control-global-p0-r3-refresh-r1/evidence-map.json",
+    "artifacts/control-global-p0-r3-refresh-r1/post-build-critique-v7.v1.json",
+    "config/architecture/global-p0-r3-architecture-candidate.v1.json"
+  ],
+  "status": "SUPERSEDED",
+  "resolution": "Superseded without Human decision because V7 target 2735000bea4bf47af2059d36041e672297cf4c39 was replaced by V8 after R3-R-003 canonical execution-route authorization repair."
+}
