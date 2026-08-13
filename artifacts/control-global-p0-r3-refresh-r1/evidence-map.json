@@ -5,7 +5,7 @@
   "checkpoint": "R3_REFRESHED_CANDIDATE",
   "risk_class": "CRITICAL",
   "evidence_head_sha": "595263c4c925c122a09876cb29b87f5ca5fef1d2",
-  "intent": "Bind the current R3 external evidence/control package to the exact V9 frozen target after transparent recovery from an accidental empty-file main commit and an exact-current-main repin. Preserve the completed R3-R-003 Director-gate repair, reset all V9 independent role gates to pending, and keep V6-V8 records as historical provenance only without promotion or runtime/domain mutation.",
+  "intent": "Synchronize the current R3 external lifecycle/control package with the durable Independent Reviewer V9 PASS while keeping evidence bound to the exact frozen V9 target. Preserve frozen semantics, authorize only a new independent Verifier session as the next role, and keep Director, R3_REFRESHED_CANDIDATE_READY, Human promotion and merge pending.",
   "root_cause_or_reason": "The V8 implementation correctly repaired R3-R-003, but a later mistaken GitHub file-write without an explicit branch created empty __nonexistent__ directly on default branch main. The accidental commit was recovered transparently by deleting only that empty file, producing canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d with zero net file differences from the pre-accident main tree. Because R3 uses exact-current-main authorization pins, V8 became stale despite identical recovered content. V9 preserves the repaired R3 semantics and repins every current exact-main authorization/audit surface to ce40dd075045078ed70924f8d5a1011eb3eff03d.",
   "changed_surfaces": [
     "config/architecture/global-p0-r3-architecture-candidate.v1.json",
@@ -32,8 +32,7 @@
     "config/control/global-p0-r3-prepromotion-guards.v1.json"
   ],
   "callers": [
-    "NEW SESSION R: Independent Reviewer against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2",
-    "Independent Verifier only after a durable V9 Independent Reviewer PASS",
+    "NEW SESSION V: Independent Verifier against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 after durable Independent Reviewer PASS",
     "Director final gate only after durable V9 Reviewer and Verifier PASS evidence",
     "HUMAN GLOBAL_ARCHITECTURE_PROMOTION only after Director PASS and R3_REFRESHED_CANDIDATE_READY"
   ],
@@ -50,6 +49,7 @@
     "config/control/harness/checkpoint-catalog.v1.json",
     "artifacts/control-global-p0-r3-refresh-r1/post-build-critique-v9.v1.json",
     "artifacts/control-global-p0-r3-refresh-r1/human-attention-global-architecture-promotion-v9.v1.json",
+    "artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V9-FINAL-REVIEW-001.v1.json",
     "artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V6-FINAL-REVIEW-001.v1.json"
   ],
   "sibling_surfaces_checked": [
@@ -66,7 +66,9 @@
     "V9 exact-target standard PC0=YELLOW/NON_RED and directional PC0=YELLOW/NON_RED",
     "V9 exact-target project-control-report cross_branch_overlaps=[] / critical overlap=0",
     "G -> ECO remains WATCH_HIT/ADVISORY/12 and is not a current R3 blocker",
-    "CH -> NX remains WATCH_HIT/BLOCK/2 as a future NX acceptance revalidation gate, not a current R3 blocker"
+    "CH -> NX remains WATCH_HIT/BLOCK/2 as a future NX acceptance revalidation gate, not a current R3 blocker",
+    "Durable Independent Reviewer PASS exists at control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0 in artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V9-FINAL-REVIEW-001.v1.json and is bound to exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2; required_fixes=[] and evidence_gaps=[].",
+    "Post-review Project Control run 31652895340 / #328 completed SUCCESS on Reviewer control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0; standard=YELLOW/NON_RED, directional=YELLOW/NON_RED, cross_branch_overlaps=[], critical overlap=0, registry generation=78, architecture=GLOBAL-P0-2026-08-10-R2."
   ],
   "canonical_truth_changed": false,
   "architecture_ownership_changed": false,
@@ -74,9 +76,8 @@
   "full_regression": "NOT_REQUIRED",
   "pc0": "NON_RED",
   "directional_pc0": "NON_RED",
-  "production_diff_summary": "V9 is a control-only recovery repin. It preserves the V8 R3-R-003 repair and changes only six current exact-main authorization/audit pins from the pre-accident SHA to recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d. Runtime/domain files changed: 0. No architecture ownership transfer, Human decision, promotion or merge is performed.",
+  "production_diff_summary": "V9 remains a control-only recovery repin with a post-review lifecycle roll-forward. The exact frozen target and candidate blob are unchanged; the durable Reviewer PASS is recorded only as external evidence, and the next lifecycle role is Independent Verifier. Runtime/domain files changed: 0. No architecture ownership transfer, Human decision, promotion or merge is performed.",
   "remaining_risks": [
-    "Independent Reviewer PASS for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 is pending.",
     "Independent Verifier PASS for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 is pending.",
     "Director final-gate PASS for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 is pending.",
     "Human GLOBAL_ARCHITECTURE_PROMOTION decision is pending; the V9 Human Attention item is OPEN and no Human decision has been taken.",
@@ -86,10 +87,9 @@
   "required_fixes": [],
   "rank_up_moves": [],
   "evidence_gaps": [
-    "No durable Independent Reviewer PASS exists for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2.",
     "No durable Independent Verifier PASS exists for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2.",
     "No Director final-gate PASS exists for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2.",
     "Human GLOBAL_ARCHITECTURE_PROMOTION has not been taken for exact V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2."
   ],
-  "review_verdict": "INSUFFICIENT_EVIDENCE"
+  "review_verdict": "PASS"
 }

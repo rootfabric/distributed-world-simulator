@@ -5,14 +5,14 @@
   "branch": "control/global-p0-r3-refresh-r1",
   "program": "GLOBAL_ARCHITECTURE",
   "role": "ARCHITECTURE_REVISION_CANDIDATE",
-  "short_description": "GLOBAL-P0 R3 V9 exact-current-main frozen review target after R3-R-003 repair and transparent main recovery/repin; external exact-target evidence only, no promotion and no runtime changes.",
-  "purpose": "Preserve exact frozen R3 V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 against recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d / registry 78, bind external evidence to that target, require fresh V9 Independent Reviewer, Verifier and Director gates, retain V6-V8 only as historical provenance, and stop at the separate Human promotion gate.",
-  "expected_outcome": "INDEPENDENT_REVIEWER_PASS for exact V9; then distinct Independent Verifier PASS; then Director final-gate PASS; then R3_REFRESHED_CANDIDATE_READY; then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
-  "current_stage": "GLOBAL-P0 R3 independent final review",
-  "stage_status": "R3_V9_FROZEN_AWAITING_INDEPENDENT_REVIEW",
-  "progress_note": "R3-R-003 remains repaired. A mistaken GitHub file-write later created empty __nonexistent__ directly on main at 194a26e2980c45a413cdfa65e96536a329d16c88. Transparent recovery commit ce40dd075045078ed70924f8d5a1011eb3eff03d removed only that file; the recovered main has zero net file differences from pre-accident f6d68fc7c594b371f48a9bcff056e2478e04f317 but a new SHA epoch. V8 therefore became exact-main stale with no durable Reviewer PASS. V9 repins all current exact-main authorization/audit surfaces to ce40dd075045078ed70924f8d5a1011eb3eff03d and is frozen at 595263c4c925c122a09876cb29b87f5ca5fef1d2. Exact-target Project Control #324 is SUCCESS/NON_RED with cross_branch_overlaps=[] and runtime/domain delta 0. V9 Reviewer=PENDING/NEXT, Verifier=PENDING, Director=PENDING, V9 Human Attention=OPEN, R3_REFRESHED_CANDIDATE_READY=NO, promotion=NOT_PERFORMED.",
+  "short_description": "GLOBAL-P0 R3 V9 exact-current-main frozen target after R3-R-003 repair and transparent main recovery/repin; durable Independent Reviewer PASS exists and the lifecycle now awaits an independent Verifier, with no promotion and no runtime changes.",
+  "purpose": "Preserve exact frozen R3 V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 against recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d / registry 78, retain durable Reviewer PASS evidence at 0c840dd3f73651cb4052064c341bd4fce0a47fc0, require a distinct Independent Verifier PASS and Director final-gate PASS before R3_REFRESHED_CANDIDATE_READY, retain V6-V8 only as historical provenance, and stop at the separate Human promotion gate.",
+  "expected_outcome": "DURABLE INDEPENDENT_REVIEWER_PASS for exact V9 is complete; next obtain distinct Independent Verifier PASS, then Director final-gate PASS, then R3_REFRESHED_CANDIDATE_READY, then HUMAN GLOBAL_ARCHITECTURE_PROMOTION.",
+  "current_stage": "GLOBAL-P0 R3 independent verification",
+  "stage_status": "R3_V9_REVIEWER_PASS_AWAITING_INDEPENDENT_VERIFIER",
+  "progress_note": "Frozen V9 target=595263c4c925c122a09876cb29b87f5ca5fef1d2. Durable Independent Reviewer PASS exists at control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0 in artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V9-FINAL-REVIEW-001.v1.json; reviewed_head_sha is the exact frozen V9 target, verdict=PASS, required_fixes=[], evidence_gaps=[]. Post-review Project Control run 31652895340 / #328 is SUCCESS with standard and directional NON_RED, cross_branch_overlaps=[] and critical overlap=0. Candidate blob remains c569d90b9aa2d4675e8ef30cb524aef5771f1522 and runtime/domain delta remains 0. Verifier=PENDING/NEXT, Director=PENDING, V9 Human Attention=OPEN / Human decision NOT_TAKEN, R3_REFRESHED_CANDIDATE_READY=NO, promotion=NOT_PERFORMED, merge=NOT_PERFORMED.",
   "last_accepted_checkpoint": "GLOBAL-P0-2026-08-10-R2",
-  "next_stage": "NEW SESSION R / Independent Reviewer against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2. After durable V9 Reviewer PASS, use a separate lifecycle synchronization before distinct Verifier; after durable Reviewer + Verifier PASS, use a separate Director final gate; only Director PASS may precede R3_REFRESHED_CANDIDATE_READY, then stop at Human GLOBAL_ARCHITECTURE_PROMOTION.",
+  "next_stage": "NEW SESSION V / Independent Verifier against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2, using the current post-review lifecycle control/evidence head. After durable Verifier PASS, use a separate Director final gate; only Director PASS may precede R3_REFRESHED_CANDIDATE_READY, then stop at Human GLOBAL_ARCHITECTURE_PROMOTION.",
   "parent_branch_or_checkpoint": "Recovered canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d / registry generation 78. Pre-accident main f6d68fc7c594b371f48a9bcff056e2478e04f317 has identical recovered content but is no longer the current authorization SHA. V2-V8 review targets remain provenance only.",
   "dependencies": [
     "GLOBAL_P0_R2",
@@ -127,10 +127,10 @@
     "V9_EXACT_CURRENT_MAIN_REPIN_COMPLETE",
     "V9_EXACT_TARGET_PROJECT_CONTROL_NON_RED",
     "V9_POST_BUILD_CRITIQUE_NO_MATERIAL_REFACTOR_REQUIRED",
-    "V9_FROZEN_TARGET_EXTERNAL_EVIDENCE_BOUND"
+    "V9_FROZEN_TARGET_EXTERNAL_EVIDENCE_BOUND",
+    "V9_DURABLE_INDEPENDENT_REVIEWER_PASS"
   ],
   "blockers": [
-    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
     "INDEPENDENT_VERIFIER_PASS_REQUIRED",
     "DIRECTOR_FINAL_GATE_REQUIRED",
     "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
