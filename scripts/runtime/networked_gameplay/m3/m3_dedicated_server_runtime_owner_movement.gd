@@ -23,17 +23,20 @@ func setup(config: Dictionary) -> Dictionary:
 	_owner_state_messages_received = 0
 	_owner_state_messages_accepted = 0
 	_owner_state_messages_rejected = 0
+	if not bool(config.get("playable_sandbox", false)):
+		return _failure("OWNER_MOVEMENT_REQUIRES_PLAYABLE_SANDBOX")
 
-	# Do not publish READY while the default service is being replaced. External
-	# clients must only observe a fully configured owner-authority server.
+	# super.setup() starts the socket and normally emits ready_for_clients. Block
+	# local signals until the owner-validation service (and persistence adapters,
+	# if enabled) are fully rebound so in-process launchers cannot race the swap.
 	var published_result_file := String(config.get("result_file", "")).strip_edges()
 	var base_config := config.duplicate(true)
 	base_config["result_file"] = ""
+	set_block_signals(true)
 	var result := super.setup(base_config)
+	set_block_signals(false)
 	if not bool(result.get("success", false)):
 		return result
-	if not bool(config.get("playable_sandbox", false)):
-		return _failure("OWNER_MOVEMENT_REQUIRES_PLAYABLE_SANDBOX")
 
 	var replacement = OwnerMovementService.new()
 	var replacement_setup := replacement.setup(
@@ -49,13 +52,25 @@ func setup(config: Dictionary) -> Dictionary:
 		}
 	)
 	if not bool(replacement_setup.get("success", false)):
+		_cleanup_setup_failure()
 		return replacement_setup
 	if _service != null:
 		_service.shutdown()
 	_service = replacement
+
+	# Base persistence/recovery objects bind to the service instance that existed
+	# during super.setup(). Rebuild them against the replacement so owner movement
+	# does not silently disconnect canonical durability/replay semantics.
+	if _persistence_enabled:
+		var recovery_rebind := _setup_recovery()
+		if not bool(recovery_rebind.get("success", false)):
+			_cleanup_setup_failure()
+			return recovery_rebind
+
 	_peer_input_buffers.clear()
 	_result_file = published_result_file
 	_write_report("READY", false)
+	ready_for_clients.emit(get_report())
 	return result
 
 

@@ -136,16 +136,19 @@ func _test_owner_runtime_source_contract() -> void:
 	var server_source := FileAccess.get_file_as_string("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd")
 	_assert(client_source.contains("PLAYER_STATE"), "owner client sends PLAYER_STATE")
 	_assert(client_source.contains("UNRELIABLE_SEQUENCED"), "owner state uses realtime unreliable stream")
-	_assert(client_source.contains("LOCAL_TRANSFORM_SINGLE_WRITER_STATE_POSTFACTUM_TO_SERVER_V1"), "single-writer client policy explicit")
+	_assert(client_source.contains("LOCAL_TRANSFORM_SINGLE_WRITER_RECONCILE_ON_REJECTION_V1"), "single-writer correction policy explicit")
 	_assert(server_source.contains("OwnerMovementService"), "dedicated owner runtime composes validated service")
 	_assert(not server_source.contains("network_protocol_manifest"), "owner runtime does not fork protocol manifest")
+	_assert(server_source.contains("set_block_signals(true)"), "READY cannot race owner service installation")
+	_assert(server_source.contains("recovery_rebind"), "persistence adapters rebound when enabled")
 	var reconcile_start := client_source.find("func _reconcile_prediction_from_snapshot")
-	var playable_start := client_source.find("func _owner_playable_state", reconcile_start)
-	_assert(reconcile_start >= 0 and playable_start > reconcile_start, "owner snapshot override present")
-	if reconcile_start >= 0 and playable_start > reconcile_start:
-		var body := client_source.substr(reconcile_start, playable_start - reconcile_start)
-		_assert(not body.contains("super._reconcile_prediction_from_snapshot"), "routine snapshots cannot rewind local owner")
-		_assert(body.contains("_owner_snapshot_reconciliations_skipped"), "snapshot suppression observable")
+	var operation_start := client_source.find("func _is_owner_state_operation", reconcile_start)
+	_assert(reconcile_start >= 0 and operation_start > reconcile_start, "owner snapshot override present")
+	if reconcile_start >= 0 and operation_start > reconcile_start:
+		var body := client_source.substr(reconcile_start, operation_start - reconcile_start)
+		_assert(body.contains("if _owner_reconciliation_required"), "routine snapshots remain no-rewind unless rejection armed")
+		_assert(body.contains("super._reconcile_prediction_from_snapshot(snapshot)"), "rejected owner state gets authoritative correction")
+		_assert(body.contains("_owner_snapshot_reconciliations_skipped"), "routine snapshot suppression observable")
 
 
 func _configured_owner_service(owner_id: String):

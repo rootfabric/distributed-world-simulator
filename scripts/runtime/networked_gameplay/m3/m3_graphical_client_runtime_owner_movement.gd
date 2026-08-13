@@ -9,14 +9,19 @@ const OwnerPlayableStateCodec = preload(
 
 # The local prediction kernel is the only writer of the owning player's
 # locomotion presentation. After local fixed simulation, the resulting state is
-# sent to the server for validation and relay. Routine server snapshots continue
-# to update replicas/remote players but must not rewind the local owner.
+# sent to the server for validation and relay. Routine accepted snapshots update
+# replicas/remote players without rewinding the local owner. An explicit server
+# rejection arms exactly one authoritative reconciliation so invalid local state
+# cannot diverge forever.
 const OWNER_MOVEMENT_CLIENT_POLICY: String = \
-	"LOCAL_TRANSFORM_SINGLE_WRITER_STATE_POSTFACTUM_TO_SERVER_V1"
+	"LOCAL_TRANSFORM_SINGLE_WRITER_RECONCILE_ON_REJECTION_V1"
 
 var _owner_state_submissions: int = 0
 var _owner_state_send_failures: int = 0
+var _owner_state_rejections_received: int = 0
 var _owner_snapshot_reconciliations_skipped: int = 0
+var _owner_rejection_reconciliations: int = 0
+var _owner_reconciliation_required: bool = false
 var _owner_last_state_send_ms: int = 0
 var _owner_last_state_sequence: int = 0
 var _owner_pending_state_sequence: int = 0
@@ -26,7 +31,10 @@ var _owner_state_submit_deferrals: int = 0
 func setup(config: Dictionary) -> Dictionary:
 	_owner_state_submissions = 0
 	_owner_state_send_failures = 0
+	_owner_state_rejections_received = 0
 	_owner_snapshot_reconciliations_skipped = 0
+	_owner_rejection_reconciliations = 0
+	_owner_reconciliation_required = false
 	_owner_last_state_send_ms = 0
 	_owner_last_state_sequence = 0
 	_owner_pending_state_sequence = 0
@@ -158,11 +166,34 @@ func submit_player_state_blocking(
 	return result
 
 
-func _reconcile_prediction_from_snapshot(_snapshot: Dictionary) -> void:
-	# Replica ingestion still happens in the base runtime. Only local prediction
-	# rewind is suppressed so render/network frames cannot become a second writer
-	# of the owner's CharacterBody transform.
+func _handle_message(payload: Dictionary) -> void:
+	if (
+		String(payload.get("type", "")) == "COMMAND_RESULT"
+		and String(payload.get("command_type", "")) == "PLAYER_STATE"
+		and String(payload.get("status", "")) != "SUCCEEDED"
+		and _is_owner_state_operation(String(payload.get("operation_id", "")))
+	):
+		_owner_state_rejections_received += 1
+		_owner_reconciliation_required = true
+	super._handle_message(payload)
+
+
+func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
+	if _owner_reconciliation_required:
+		# The server explicitly rejected an owner-authored state. Apply one normal
+		# authoritative reconciliation on the next usable snapshot, then resume
+		# the no-routine-rewind policy.
+		var local_player := _player_from_snapshot(snapshot, _logical_player_id)
+		if not local_player.is_empty():
+			super._reconcile_prediction_from_snapshot(snapshot)
+			_owner_reconciliation_required = false
+			_owner_rejection_reconciliations += 1
+			return
 	_owner_snapshot_reconciliations_skipped += 1
+
+
+func _is_owner_state_operation(operation_id: String) -> bool:
+	return operation_id.begins_with("operation/nx-c1/%s/owner-state/" % _logical_player_id)
 
 
 func _owner_playable_state(predicted_state: Dictionary) -> Dictionary:
@@ -212,7 +243,10 @@ func get_report() -> Dictionary:
 	report["movement_authority_policy"] = OWNER_MOVEMENT_CLIENT_POLICY
 	report["owner_state_submissions"] = _owner_state_submissions
 	report["owner_state_send_failures"] = _owner_state_send_failures
+	report["owner_state_rejections_received"] = _owner_state_rejections_received
 	report["owner_snapshot_reconciliations_skipped"] = _owner_snapshot_reconciliations_skipped
+	report["owner_rejection_reconciliations"] = _owner_rejection_reconciliations
+	report["owner_reconciliation_required"] = _owner_reconciliation_required
 	report["owner_last_state_sequence"] = _owner_last_state_sequence
 	report["owner_pending_state_sequence"] = _owner_pending_state_sequence
 	report["owner_state_submit_deferrals"] = _owner_state_submit_deferrals
