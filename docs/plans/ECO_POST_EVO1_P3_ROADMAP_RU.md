@@ -53,7 +53,9 @@ accept P3.1
 
 ## Observer lane — low priority
 
-After P3.2, a small `OBS1` may be implemented in parallel as a non-gating, casual low-poly observer:
+`OBS1.1 Read-only Low-poly Observer` is now implemented as a non-gating parallel lane with targeted Linux PASS. It remains presentation-only and does not change P3.1/P3.2 acceptance state.
+
+Current OBS1 surface:
 
 ```text
 simple ground / patches
@@ -70,7 +72,9 @@ Hard boundary:
 simulation state != visual state != network transport
 ```
 
-OBS1 reads immutable/reproducible snapshots only. It must not mutate ecology state, consume simulation RNG, alter time stepping, persistence or acceptance hashes. Visual randomness, if any, uses a renderer-only seed derived from already frozen state.
+OBS1 reads immutable/reproducible snapshots only. It does not mutate ecology state, consume simulation RNG, alter time stepping, persistence or acceptance hashes. Current proxy placement/palette is deterministic from canonical plant order and uses no randomness.
+
+Targeted evidence: `ECO.OBS1 Read-only Snapshot Boundary: PASS (49 assertions)` in three identical fresh processes plus `ECO.OBS1 Scene Smoke: PASS (9 assertions)`. OBS1 stays `NON_GATING`; P3.3 remains closed until P3.1 and P3.2 are canonically accepted.
 
 ## Later integration boundary
 
