@@ -217,7 +217,7 @@ func sync_pose_from_canonical(canonical_skeleton: Skeleton3D, hand_id: String) -
 	return _sync_pose_from_canonical_internal()
 
 
-func create_report(installed_visual_count: int = 1) -> Dictionary:
+func create_live_report(installed_visual_count: int = 1) -> Dictionary:
 	var report := _native_report.duplicate(true)
 	if report.is_empty():
 		report = {
