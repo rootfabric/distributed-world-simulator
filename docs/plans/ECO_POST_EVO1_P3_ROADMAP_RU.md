@@ -91,9 +91,11 @@ P3.4 remains closed until P3.3 is canonically accepted.
 
 ## Observer lane — low priority
 
-`OBS1.1 Read-only Low-poly Observer` is implemented as a non-gating parallel lane with targeted Linux PASS and a successful interactive Windows launch. It remains presentation-only and does not change P3 acceptance state.
+`OBS1.1 Read-only Low-poly Observer` is implemented as a non-gating single-patch viewer with targeted Linux PASS and a successful interactive Windows launch.
 
-A later observer increment may render multiple P3.3 patches and transfer arrows, but only from immutable/reproducible snapshots. Observer code must never own graph topology, transfer decisions, simulation RNG or canonical hashes.
+`OBS1.2 Read-only Spatial Ecology Observer` is now implemented as a non-gating P3.3 viewer. It renders deterministic multi-patch tiles, plant proxies and directed transfer flows only from defensive P3.3 snapshots. Targeted exact-Godot evidence: `PASS (47 assertions)` in three byte-identical fresh processes plus `Spatial Scene Smoke: PASS (12 assertions)` with no Godot `ERROR:` lines.
+
+OBS1.2 snapshot arithmetic independently reconciles patch source/incoming/final biomass, edge transfers, outgoing shares, explicit boundary export and global conservation. Observer code does not own graph topology, transfer decisions, simulation RNG or canonical hashes.
 
 Hard boundary:
 

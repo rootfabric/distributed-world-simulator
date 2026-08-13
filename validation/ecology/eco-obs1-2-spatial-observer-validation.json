@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.ecology.obs1_2_spatial_observer_validation.v1",
+  "revision": "ECO-OBS1.2-2026-08-13-R1-TARGETED-PASS",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "IMPLEMENTED_NON_GATING_TARGETED_LINUX_PASS_P3_3_CANDIDATE_SOURCE",
+  "scope": "PRESENTATION_ONLY_READ_ONLY",
+  "source": {
+    "checkpoint": "ECO.P3.3 Spatial Dispersal",
+    "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+    "candidate_aggregate_hash": "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41",
+    "kernel_blob": "43a25eb0e6677749162de99c251231c94d243dc1",
+    "accepted_parent_p3_2": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+  },
+  "boundary": {
+    "ownership": "observer owns only defensive snapshot copies, frame index and presentation nodes",
+    "forbidden": [
+      "simulation state writes",
+      "P3.3 graph/topology mutation",
+      "P3.3 transfer decision ownership",
+      "simulation/global RNG consumption",
+      "canonical acceptance hash ownership",
+      "network or persistence authority"
+    ],
+    "layout": "patch positions, plant proxy positions and palette are deterministic from canonical snapshot order only"
+  },
+  "targeted_linux_evidence": {
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "boundary_parser_preload": "PASS",
+    "scene_parser_preload": "PASS",
+    "fresh_process_runs": 3,
+    "fresh_process_logs_byte_identical": true,
+    "assertions_per_boundary_run": 47,
+    "snapshot_hash": "ced399dbe56336d00953f9f369c462178b457b846a1c219de396d6724d77cc87",
+    "timeline_hash": "7a686275024912134b758c19c42040507b97a696a06ad178111dd06c884c00e8",
+    "source_p3_3_result_hash": "84c802032740c23e65714c2e3c2c7e5679c3b51e95b8f61b4a6ca64408925779",
+    "parent_p3_2": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639",
+    "scene_smoke": "PASS_12_ASSERTIONS_NO_GODOT_ERROR_LINES",
+    "scene_initial_source_hash": "c3e3a7005d8e2bb39bf09ac62d49e48d888c1523c40be48fb52ef7aec58654f6"
+  },
+  "covered_properties": [
+    "P3_3_SOURCE_VALIDATES_BEFORE_SNAPSHOT",
+    "P3_3_SOURCE_DICTIONARY_NOT_MUTATED",
+    "P3_3_SOURCE_HASH_NOT_MUTATED",
+    "P3_2_PARENT_PIN_PRESERVED",
+    "CANONICAL_PATCH_ORDER",
+    "CANONICAL_PLANT_ORDER",
+    "CANONICAL_EDGE_ORDER",
+    "PATCH_SOURCE_TOTAL_RECONCILIATION",
+    "PATCH_INCOMING_TOTAL_RECONCILIATION",
+    "PATCH_FINAL_TOTAL_RECONCILIATION",
+    "EDGE_TRANSFER_TOTAL_RECONCILIATION",
+    "OUTGOING_EDGE_SHARE_SUM_RECONCILIATION",
+    "BOUNDARY_EXPORT_TOTAL_RECONCILIATION",
+    "GLOBAL_CONSERVATION_RECONCILIATION",
+    "SNAPSHOT_HASH_DETERMINISM",
+    "TIMELINE_HASH_DETERMINISM",
+    "GLOBAL_RNG_SEQUENCE_UNCHANGED",
+    "TAMPERED_SNAPSHOT_FAIL_CLOSED",
+    "DEFENSIVE_CURRENT_SNAPSHOT_COPY",
+    "PLAY_PAUSE_STEP_PRESENTATION_ONLY",
+    "ACTUAL_SCENE_INSTANTIATION",
+    "NO_GODOT_ERROR_OUTPUT_IN_SCENE_SMOKE"
+  ],
+  "decision": "OBS1_2_IMPLEMENTED_NON_GATING; DOES_NOT_ACCEPT_P3_3; DOES_NOT_OPEN_P3_4",
+  "next": "P3.3 exact Windows canonical remains the gating mainline action"
+}
