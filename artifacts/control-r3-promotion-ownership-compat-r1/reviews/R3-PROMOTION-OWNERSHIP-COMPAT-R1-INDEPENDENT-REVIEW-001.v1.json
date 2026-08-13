@@ -1,0 +1,197 @@
+{
+  "schema": "distributed_world_simulator.r3_promotion_historical_ownership_compatibility_independent_review.v1",
+  "review_id": "R3-PROMOTION-OWNERSHIP-COMPAT-R1-INDEPENDENT-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_CONTROL_COMPATIBILITY_REVIEW",
+  "risk_class": "CRITICAL",
+  "review_target": "e3c889cf7b5521cc44154e13006ff96c69d6a1c1",
+  "base_accepted_architecture_compatibility": "53eed6dbfab38b95cdbac3bc8a621590c20a1208",
+  "semantic_implementation": "99e8fb3b284756faa540baf400e0f4d7210c7efa",
+  "validated_implementation": "b704990af99e280efbab259fc4613b08f7fae7ae",
+  "canonical_main": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+  "frozen_r3_target": "595263c4c925c122a09876cb29b87f5ca5fef1d2",
+  "frozen_r3_ownership_blob": "ad2aaac2c5f942b9748b5cf391038a7ce122d073",
+  "legacy_core_blob": "3d68d65e58aff37ab04c971c942efb815fbd374f",
+  "preserved_architecture_compatibility_blob": "0f27934968960da14c44d7fd66f78b6d364e809b",
+  "historical_r2_ownership_blob": "0cebf594ac7900292318d7533e4439cc7f3764d6",
+  "freshness": {
+    "main": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+    "r3_lifecycle": "c703a5e22622813169624f7ce4ec9ea9f362f8df",
+    "previous_compatibility": "53eed6dbfab38b95cdbac3bc8a621590c20a1208",
+    "review_target": "e3c889cf7b5521cc44154e13006ff96c69d6a1c1",
+    "pr_92": "OPEN_DRAFT_NOT_MERGED",
+    "result": "PASS"
+  },
+  "previous_accepted_foundation": {
+    "implementation": "4699c99cf65d6786312f89a8abcfbb662a577327",
+    "review_commit": "8b22461296c1cffc3836599ef6db96179e038893",
+    "review_artifact_blob": "de4fe0653be51a8257a0a6421a729c0a9c164ca3",
+    "review_verdict": "PASS",
+    "lifecycle": "53eed6dbfab38b95cdbac3bc8a621590c20a1208",
+    "architecture_compatibility_test_blob": "f25b71175f1318cedce395ad8372d18c5d52f8e6",
+    "focused_cases": 27
+  },
+  "ancestry": [
+    "53eed6dbfab38b95cdbac3bc8a621590c20a1208",
+    "99e8fb3b284756faa540baf400e0f4d7210c7efa",
+    "b704990af99e280efbab259fc4613b08f7fae7ae",
+    "e3c889cf7b5521cc44154e13006ff96c69d6a1c1"
+  ],
+  "bounded_scope": {
+    "changed_paths": [
+      ".github/workflows/project-control.yml",
+      "config/control/project-control-policy.v1.json",
+      "scripts/control/project_control.py",
+      "scripts/control/project_control_architecture_compat.py",
+      "tests/harness/test_project_control_historical_ownership_compatibility.py",
+      "tests/harness/test_project_control_proposed_r3_ownership_projection.py",
+      "config/control/branches/control__r3-promotion-ownership-compat-r1.v1.json"
+    ],
+    "runtime_domain_delta": 0,
+    "architecture_compatibility_test_unchanged": true,
+    "frozen_or_human_evidence_mutated": false
+  },
+  "historical_source": {
+    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+    "path": "config/control/architecture-ownership.v1.json",
+    "blob": "0cebf594ac7900292318d7533e4439cc7f3764d6",
+    "owners": {
+      "WORLD_QUERY_FABRIC": "P1_FUTURE",
+      "WORLD_TRANSACTION_MODEL": "P0"
+    }
+  },
+  "T_transitions": [
+    {
+      "program": "T",
+      "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+      "foundation": "WORLD_QUERY_FABRIC",
+      "historical_owner": "P1_FUTURE",
+      "canonical_owner": "WQ"
+    },
+    {
+      "program": "T",
+      "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+      "foundation": "WORLD_TRANSACTION_MODEL",
+      "historical_owner": "P0",
+      "canonical_owner": "WT"
+    }
+  ],
+  "contract": {
+    "mode": "EXPLICIT_PER_PROGRAM_HISTORICAL_OWNERSHIP_TRANSITIONS",
+    "registry_field": "historical_passport_ownership_transitions",
+    "architecture_identity_prerequisite": "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
+    "matching_historical_identities_required": 1,
+    "exact_historical_source_required": true,
+    "exact_per_conflict_transition_required": true,
+    "current_canonical_owner_required": true,
+    "wildcards_forbidden": true,
+    "duplicate_matching_transition_fails_closed": true,
+    "role_stage_status_blocker_heuristics_absent": true,
+    "unrelated_findings_preserved": true,
+    "current_r3_wrong_claim_bypass": false
+  },
+  "tests": {
+    "count": 64,
+    "result": "PASS",
+    "actual": "Ran 64 tests / OK",
+    "original_architecture_compatibility_cases": 27,
+    "command": "python3 -m unittest tests.harness.test_project_control_architecture_compatibility tests.harness.test_project_control_historical_ownership_compatibility tests.harness.test_project_control_proposed_r3_ownership_projection"
+  },
+  "fresh_review_projection": {
+    "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "registry_generation": 79,
+    "ownership_blob": "ad2aaac2c5f942b9748b5cf391038a7ce122d073",
+    "identities": {
+      "G": {
+        "head": "d7d7160b89878ba44204688686ad837bf6664d70",
+        "passport_blob": "8d35cb5b92d0ebf259d0e9468f2833972735ce2e"
+      },
+      "ECO": {
+        "head": "bd9df42c6baf2774ec48be580c33b58e076938a4",
+        "passport_blob": "0424374e88f053070b72e1bcfc579915d0b9955f"
+      },
+      "T": {
+        "head": "54c6f2700c37ea5379b2e1060f40c5daeb324a5c",
+        "passport_blob": "a6c3094e72ce8a8bce3557b6db8366747a6d0f12"
+      },
+      "CH": {
+        "head": "59cd5f311adcb5b327634ce00a93e0ee044470db",
+        "passport_blob": "68138e7ca9b790ab58fa0e1692d2476200926a9e"
+      },
+      "DOCTRINE": {
+        "head": "ae060dfe260d726f3a750a53d2802e0d87f8725f",
+        "passport_blob": "c8e4f1212b789bbf407819cb606ae801cad3726d"
+      },
+      "NX": {
+        "head": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
+        "passport_blob": "b46e1310678ab962983a62410cee1521d7ec56c4"
+      }
+    },
+    "T_architecture_compatibility": "EXPLICIT_HISTORICAL_IDENTITY_ALLOWED",
+    "T_matching_historical_identities": 1,
+    "T_authorized_ownership_conflicts": 2,
+    "standard": "NON_RED",
+    "directional": "NON_RED",
+    "review_evidence_only": true,
+    "not_later_promotion_authorization": true,
+    "freshness_basis": "Blocking program heads are unchanged from verified #350; ECO moved only in advisory research/lab/docs/tests/validation scope and retains its R2 passport blob."
+  },
+  "projected_r3_standard": "NON_RED",
+  "projected_r3_directional": "NON_RED",
+  "negative_projection": {
+    "remove_WQ_transition": "RED",
+    "remove_WT_transition": "RED",
+    "change_target_canonical_owner": "RED",
+    "duplicate_matching_transition": "RED",
+    "change_T_captured_branch_head": "RED",
+    "change_T_captured_passport_blob": "RED"
+  },
+  "adversarial_bypass_found": false,
+  "implementation_project_control": {
+    "run_id": 31673064543,
+    "run_number": 349,
+    "head": "b704990af99e280efbab259fc4613b08f7fae7ae",
+    "status": "completed",
+    "conclusion": "success",
+    "tests": "64 / OK",
+    "standard": "NON_RED",
+    "directional": "NON_RED",
+    "T": "NON_RED",
+    "artifact_id": 9170428394,
+    "artifact_digest": "sha256:2191ef3c09dd767a625dcbbc504c4f6140a675ddecd15c5b12ed7651ec9fb18f"
+  },
+  "lifecycle_project_control": {
+    "run_id": 31673157052,
+    "run_number": 350,
+    "head": "e3c889cf7b5521cc44154e13006ff96c69d6a1c1",
+    "status": "completed",
+    "conclusion": "success",
+    "tests": "64 / OK",
+    "standard": "NON_RED",
+    "directional": "NON_RED",
+    "T": "NON_RED",
+    "cross_branch_overlaps": [],
+    "artifact_id": 9170463069,
+    "artifact_digest": "sha256:fbbd49a57319aba1637536870b3a772e9ef663abfbb500f8b1f78ad0a92e603d"
+  },
+  "lifecycle_passport": {
+    "current_stage": "R3 promotion historical ownership compatibility repair",
+    "stage_status": "IMPLEMENTED_VALIDATED_AWAITING_NEW_INDEPENDENT_REVIEW",
+    "tested_heads": {
+      "runtime": "NOT_APPLICABLE",
+      "focused": "b704990af99e280efbab259fc4613b08f7fae7ae",
+      "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
+    },
+    "blockers": [
+      "NEW_INDEPENDENT_HISTORICAL_OWNERSHIP_COMPATIBILITY_REVIEW_REQUIRED"
+    ],
+    "health_declared": "YELLOW",
+    "result": "PASS"
+  },
+  "runtime_domain_delta": 0,
+  "promotion": "NOT_PERFORMED",
+  "human_authorization": "PRESERVED_NOT_REOPENED",
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "verdict": "PASS"
+}
