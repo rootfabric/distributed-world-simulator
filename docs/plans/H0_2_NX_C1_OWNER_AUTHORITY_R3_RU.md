@@ -9,68 +9,130 @@
 - Registry generation: `79`
 - Architecture: `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`
 - Risk: `HIGH`
+- Exact source implementation head: `1814ca72c9569ea2aa7e3d1dd4a69eb790888908`
+- Source state: `IMPLEMENTED`
+- Runtime verification state: `PENDING_EXACT_GODOT_EXECUTION`
 
-## Pre-dispatch boundary
+## Implemented capability
 
-The branch may contain only control/evidence/planning records before explicit Director dispatch. Production/runtime mutation is forbidden until an exact-head `PRE_BUILD_DESIGN_AUTHORIZATION` review returns `PASS` and the append-only ledger records `DISPATCHED`.
+NX.C1 is implemented as an **opt-in realtime locomotion authorship profile**, not as a new owner of gameplay truth.
 
-Exactly one autonomous runtime worker is permitted after dispatch.
+Supported modes:
 
-Project Control must install `scripts/harness/requirements.txt` before contract-dependent regressions. The canonical pin is not bypassed or relaxed.
+- `SERVER_PREDICTED` — existing canonical default, unchanged;
+- `OWNER_AUTHORITATIVE_VALIDATED` — the local deterministic movement controller authors realtime locomotion, while the server validates and only then accepts/relays the canonical player record.
 
-## Minimal runtime target
+New leaf components:
 
-1. Add a bounded `MovementAuthorityProfile` with `SERVER_PREDICTED` and `OWNER_AUTHORITATIVE_VALIDATED` realtime locomotion modes.
-2. Add owner-movement server validation for owner/session/epoch/playable-state identity, bounded plausibility and Godot `Basis(-Z) <-> yaw` round-trip.
-3. Keep the local deterministic physics controller as the sole local body writer; accepted ordinary snapshots must not rewind the local owner.
-4. Reuse current-main remote snapshot/interpolation behavior instead of importing the legacy FIX ladder.
-5. Preserve canonical server Item Graph ownership while making same-revision optimistic pickup/drop rejection visible to the client presentation rollback path.
+- `scripts/network/authority/movement_authority_profile.gd`;
+- `scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd`;
+- `scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd`;
+- `scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd`.
 
-## Explicitly forbidden
+No existing canonical M3/NX6 runtime file was rewritten to enable the feature.
 
-- No wholesale legacy M7/FIX6-FIX10 cherry-pick.
-- No FIX7 `_process()` writer to `CharacterBody3D` transform or velocity.
-- No `network_protocol_manifest.gd` change under this HIGH Work Order.
-- No architecture ownership/global identity/new foundation change.
-- No cross-server authority change.
-- No transfer of Item Graph, Character, Construction, Matter or persistence ownership into NX.
-- No runtime merge and no H0.3 implementation.
+## Authority boundary
 
-If any forbidden capability becomes necessary, stop and replan/reclassify rather than widening scope silently.
+Owner-authority is limited to realtime locomotion authorship.
 
-## Validation ladder
+The server still validates:
 
-Before implementation:
+- active player connection;
+- bound transport session;
+- ownership epoch;
+- monotonic input sequence;
+- player-state schema;
+- maximum velocity;
+- maximum player/interaction displacement.
 
-- canonical schema/semantic validation of epoch, Work Order and immutable event ledger with the repository-pinned Harness dependency;
-- Project Control standard + directional NON_RED;
-- exact-head HIGH pre-build independent review PASS;
-- explicit Director dispatch.
+Only after those checks does the server update canonical player state.
 
-After implementation, before H0.2/NX acceptance:
+Item Graph, inventory/container truth, persistence, Character ownership, Construction, Matter and cross-server authority remain with their canonical owners.
 
-- focused owner-authority tests;
-- physics/render single-writer test;
-- same-revision item pickup/drop rollback test;
-- client-tick duplicate/backward/huge-jump fuzz if touched;
-- full world/core regression;
-- two-client process validation;
-- impaired-network validation;
-- reconnect/ownership-epoch validation;
-- post-build critique;
-- exact-head Evidence Map and independent Reviewer/Verifier evidence;
-- standard/directional PC0 NON_RED;
-- mandatory fresh CH->NX directional dependency revalidation;
-- recovery drill;
-- draft PR and final `H0_2_PASS + NX SOURCE_ACCEPTED` proposal.
+## Snapshot correction contract
+
+Routine accepted snapshots do not rewind the local owner and therefore do not become a second local body writer.
+
+An explicit rejected `PLAYER_STATE` arms exactly one canonical reconciliation on the next usable authoritative snapshot. After that correction, routine no-rewind behavior resumes.
+
+This closes both failure modes:
+
+- constant server rewind of valid local movement;
+- permanent divergence after an invalid/rejected owner state.
+
+## Dedicated-server readiness and recovery
+
+The owner-runtime leaf blocks `ready_for_clients` while base setup is still using the default service. READY is emitted only after the owner validation service is installed.
+
+When persistence is enabled, recovery/outbox adapters are rebound to the replacement service. The owner-authority leaf therefore does not bypass the existing durability/replay foundation.
+
+## Item rollback contract
+
+NX.C1 does **not** introduce another Item authority layer.
+
+It reuses the canonical `PredictedItemInteractionJournal`:
+
+- optimistic pickup/drop changes presentation only;
+- authoritative snapshot remains unchanged;
+- rejected pickup/drop at the same canonical revision restores presentation to authority;
+- a partial predicted drop uses a temporary presentation item and removes it on rollback.
+
+The focused partial-drop fixture uses the real sandbox beacon stack `3 -> 2 -> rollback -> 3`.
+
+## Focused tests and runners
+
+Added:
+
+- `tests/network/test_nx_owner_movement_authority.gd`;
+- `tests/network/test_nx_render_physics_separation.gd`;
+- `tests/network/test_nx_owner_item_projection_rollback.gd`;
+- `tests/network/test_nx_client_tick_robustness.gd`.
+
+Focused runner also includes existing `tests/network/test_nx6_predicted_item_interactions.gd`.
+
+Runners:
+
+- `RUN_H0_2_NX_C1_TESTS.ps1`;
+- `RUN_H0_2_NX_C1_TESTS.sh`.
+
+## Source/control evidence
+
+Project Control run `31690226579` on exact implementation head `1814ca72c9569ea2aa7e3d1dd4a69eb790888908`:
+
+- pinned Harness dependency: PASS;
+- architecture/ownership regressions: `64/64 PASS`;
+- H0.2 machine regressions: `9/9 PASS`;
+- standard PC0: `YELLOW / NON_RED`;
+- directional PC0: `YELLOW / NON_RED`;
+- `CH -> NX WATCH_HIT BLOCK` remains the expected revalidation gate before `NX SOURCE_ACCEPTED`.
+
+The subsequent lifecycle state with Work Order=`IMPLEMENTED` was accepted by Project Control run `31690441709`.
+
+## Explicitly not claimed yet
+
+The following remain unaccepted until real exact-head Godot/runtime execution:
+
+- `OWNER_AUTHORITY_FOCUSED_PASS`;
+- `PHYSICS_PRESENTATION_SINGLE_WRITER_PASS`;
+- `ITEM_ROLLBACK_PICKUP_DROP_PASS`;
+- `CLIENT_TICK_FUZZ_PASS_IF_TOUCHED`;
+- `FULL_WORLD_CORE_REGRESSION_PASS`;
+- `TWO_CLIENT_PASS`;
+- `IMPAIRED_NETWORK_PASS`;
+- `RECONNECT_OWNERSHIP_EPOCH_PASS`;
+- any tested head;
+- post-build Reviewer/Verifier PASS;
+- `H0_2_PASS`;
+- `NX SOURCE_ACCEPTED`.
+
+## Next gate
+
+Run exact implementation head `1814ca72c9569ea2aa7e3d1dd4a69eb790888908` with the supplied Godot 4.7.1 stable double, starting with `RUN_H0_2_NX_C1_TESTS`, then execute full world/core, two-client, impaired-network and reconnect/ownership-epoch validation.
+
+Only after exact runtime evidence may the Work Order enter `VERIFYING`, followed by post-build independent review, CH->NX directional revalidation and a possible `H0_2_PASS + NX SOURCE_ACCEPTED` proposal.
+
+Runtime merge and H0.3 remain gated.
 
 ## Legacy evidence policy
 
-Legacy runtime `464e1b8dd27fad8b4d477f6e76ca52a449893353` and acceptance record `538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6` may inform behavior and tests. They are not merge bases and do not authorize importing the historical FIX lineage.
-
-## Superseded attempts
-
-- R1 was a planning probe created before the planning-branch/runtime-mutation semantic split was canonicalized. It is not authorization.
-- R2 was cancelled before dispatch after Project Control correctly exposed the missing pinned Harness dependency setup. PR #95 was closed without merge and without runtime/domain mutation.
-
-Only this R3 epoch is active authority for the H0.2 dispatch sequence.
+Legacy runtime `464e1b8dd27fad8b4d477f6e76ca52a449893353` and acceptance record `538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6` informed behavior/tests only. They were not merge bases and did not authorize importing the historical FIX6-FIX10 lineage.
