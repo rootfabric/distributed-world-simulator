@@ -1,9 +1,9 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_8_deterministic_ecosystem_persistence_validation.v1",
-  "revision": "ECO-P3.8-2026-08-13-R2-PARENT-READY",
+  "revision": "ECO-P3.8-2026-08-13-R3-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
-  "scope": "RESEARCH_ONLY_POST_EVO1_FINAL_P3_IMPLEMENTATION_CHECKPOINT",
+  "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
+  "scope": "RESEARCH_ONLY_POST_EVO1_FINAL_P3_CHECKPOINT",
   "parent": {
     "checkpoint": "ECO.P3.7",
     "status": "ACCEPTED_EXACT_ATTACHED_GODOT_CANONICAL",
@@ -14,12 +14,14 @@
   "contract": {
     "domain": "deterministic persistence/restart of complete P3 state represented by validated P3.7 result plus generation metadata",
     "state_ancestry": "embedded current P3.7 result retains P3.6/P3.5/P3.4/P3.3 and P3.2 ancestry",
-    "continuation": "advance(state,N) continues only from persisted P3.7 next_community; no wall clock or hidden state",
-    "codec": "typed Godot Variant payload wrapped by magic + payload SHA-256 + exact byte length + semantic state hash",
-    "restart_equivalence": "uninterrupted equals multiple save/restart cuts by exact state/result hashes",
-    "cross_process": "real writer process and separate resume process reproduce uninterrupted final state"
+    "continuation": "advance(state,N) continues only from persisted P3.7 next_community; no wall clock or hidden mutable state",
+    "codec": "typed Godot Variant payload wrapped by explicit magic + payload SHA-256 + exact byte length + semantic state hash",
+    "decode_boundary": "magic/length/payload SHA are checked before bytes_to_var; full embedded semantic validation is checked after decode",
+    "restart_equivalence": "uninterrupted generation 12 equals cuts 5+7 and 9+3 by exact state/result/community hashes",
+    "cross_process": "writer process saves generation 5 to a real file; separate Godot process loads and resumes to exact uninterrupted generation-12 state",
+    "rng": "checkpoint/serialize/deserialize/advance consume no global RNG"
   },
-  "targeted_linux_evidence": {
+  "frozen_full_exact_godot_evidence": {
     "godot": "4.7.1.stable.double.custom_build.a13da4feb",
     "parser_preload": "PASS",
     "parent_p3_7_regression": "PASS_64_ASSERTIONS_AGGREGATE_REPRODUCED",
@@ -46,19 +48,28 @@
     "all_process_logs_byte_identical": true,
     "checks_per_run": 32,
     "log_sha256": "18a21dfbc585326d971d88fda568d77e1a54ba84cef538c532ae73babfb03318",
-    "p3_6_fixture_hash": "388fc9500345691bd5fa4064787206de331b5cc862b3ed92dfb23fac819c64f5",
-    "p3_7_fixture_hash": "d8f47dc9c8f363d2bdf495b8279d4ee95f6f382032657a6b6bead081f95661ab",
     "p3_8_initial_state_hash": "4935a05b3cce4a20c5bb293f71185d54ef7de48741b27af2b16cced789c85735",
     "p3_8_final_state_hash": "1027eda45de0749ca30a0c49963a638e07277e191939c6ce10f78db806035412",
-    "p3_8_serialized_sha256": "58c251bf77a66793aa6a16e3dc42243372314e9b3c452f4ef4b539292d94b77e"
+    "p3_8_serialized_sha256": "58c251bf77a66793aa6a16e3dc42243372314e9b3c452f4ef4b539292d94b77e",
+    "verified_properties": [
+      "CURRENT_LIVE_KERNEL_VALIDATION",
+      "TYPED_BINARY_ROUNDTRIP",
+      "BYTE_IDENTICAL_RESERIALIZATION",
+      "CUT_2_PLUS_4_EQUALS_UNINTERRUPTED_6",
+      "REAL_FILEACCESS_SAVE_LOAD"
+    ]
   },
-  "canonical_gate": {
-    "parent_requirement_satisfied": true,
-    "runner": "RUN_ECO_P3_8_TESTS.ps1",
-    "expected_aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
-    "expected_checkpoint_sha256": "1722f3ce96a8244bfaf2f8295c162b51552c6c5cc4cfd1126b40691a37bab367",
-    "expected_final_state_hash": "1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9",
-    "current_authorization": "READY_FOR_OWN_CANONICAL_GATE"
+  "acceptance": {
+    "authority": "EXACT_ATTACHED_GODOT_CANONICAL_BY_HUMAN_DIRECTED_EXECUTION_GATE",
+    "accepted_date": "2026-08-13",
+    "aggregate_hash": "6132820a5c6597765b4f3abeeb8cf9fc9e6aaffb90ba83a1263997b17fc6f3a0",
+    "parent_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
+    "checkpoint_sha256": "1722f3ce96a8244bfaf2f8295c162b51552c6c5cc4cfd1126b40691a37bab367",
+    "final_state_hash": "1395e6cdfc6dc5ea963b0d077fc00c618645c8866a7e47e822bcbdd98e429cf9",
+    "kernel_blob": "3d752f0d0a91fbbca5303b8ac7d49a8d8065c14e",
+    "acceptance_test_blob": "e0cef778f69ddd78b3f7d7aba6c3e2b8b9eef51c",
+    "windows_evidence_claimed": false,
+    "decision": "ACCEPT_P3_8_AND_CLOSE_P3_ROUTE"
   },
-  "decision": "P3_8_PARENT_GATE_OPEN; CANDIDATE_ONLY; RUN_OWN_GATE_BEFORE_ACCEPTANCE"
+  "next": "P3.1 through P3.8 are accepted. Production integration remains a separate route and is not authorized by this research acceptance."
 }
