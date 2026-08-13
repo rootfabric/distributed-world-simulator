@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+  "branch": "control/r3-promotion-passport-compat-r1",
+  "program": "GLOBAL_ARCHITECTURE",
+  "role": "CONTROL_COMPATIBILITY_REPAIR",
+  "short_description": "Fail-closed Project Control compatibility repair for historical R2 Branch Passports across the Human-approved R3 canonical promotion boundary.",
+  "purpose": "Permit only explicitly main-registry-allowlisted historical passport architecture revisions after canonical promotion while keeping every unlisted mismatch RED and without rewriting frozen R2 evidence.",
+  "expected_outcome": "R3 promotion preflight can preserve accepted/preparation/research R2 provenance without globally weakening ARCHITECTURE_REVISION_MISMATCH; new post-promotion frontiers still require the canonical R3 revision.",
+  "current_stage": "R3 promotion Project Control compatibility repair implementation",
+  "stage_status": "IMPLEMENTED_CANDIDATE_AWAITING_INDEPENDENT_REVIEW",
+  "progress_note": "Repair is isolated from canonical main and from the frozen R3 V9 candidate. It adds an explicit per-program historical revision allowlist contract, a compatibility facade over the byte-preserved PC0 core, and focused regression coverage. No main, runtime/domain, frozen branch, Human decision, Reviewer, Verifier or Director evidence is changed.",
+  "last_accepted_checkpoint": "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED",
+  "next_stage": "Run focused regression and Project Control on this repair branch, then obtain independent review of the control-semantics repair before consuming it in a new promotion preflight. Do not mutate main in this repair session.",
+  "parent_branch_or_checkpoint": "canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d + durable R3 V9 Human APPROVE_PROMOTION + failed promotion compatibility preflight",
+  "base_commit": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+  "dependencies": [
+    "GLOBAL-P0-2026-08-10-R2",
+    "GLOBAL-P0-2026-08-12-R3-REFRESH-R1_CANDIDATE",
+    "R3_V9_HUMAN_APPROVE_PROMOTION_DURABLE",
+    "R3_V9_PROMOTION_PREFLIGHT_CONTROL_COMPATIBILITY_FIX_REQUIRED"
+  ],
+  "owned_paths": [
+    "scripts/control/project_control.py",
+    "scripts/control/project_control_core.py",
+    "config/control/project-control-policy.v1.json",
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    ".github/workflows/project-control.yml",
+    "config/control/branches/control__r3-promotion-passport-compat-r1.v1.json"
+  ],
+  "watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json",
+    "config/control/harness/**"
+  ],
+  "critical_watched_paths": [
+    "config/control/project-program-registry.v1.json",
+    "config/control/global-p0-r2-to-r3-transition-policy.v1.json"
+  ],
+  "runtime_paths": [],
+  "validation_paths": [
+    "tests/harness/test_project_control_architecture_compatibility.py",
+    "scripts/control/project_control.py",
+    "config/control/project-control-policy.v1.json",
+    ".github/workflows/project-control.yml"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_APPLICABLE",
+    "focused": "PENDING_CI",
+    "full_regression": "NOT_REQUIRED_CONTROL_ONLY"
+  },
+  "ownership_claims": [
+    {
+      "foundation": "DEVELOPMENT_HARNESS",
+      "claimed_owner": "MAIN/HARNESS",
+      "scope": "This repair changes Project Control compatibility semantics only; it does not transfer Harness, domain, runtime, architecture or branch-history ownership."
+    }
+  ],
+  "forbidden_foundation_ownership": [
+    "ITEM_IDENTITY_AND_GRAPH",
+    "MATTER_TRUTH",
+    "CONSTRUCTION_TRUTH",
+    "GEO_PROCEDURAL_BASELINE",
+    "AUTHORITY_FOUNDATION",
+    "NETWORK_REPLICATION_POLICY",
+    "PERSISTENCE_DURABILITY",
+    "COMPUTE_EXECUTION"
+  ],
+  "blockers": [
+    "INDEPENDENT_CONTROL_REPAIR_REVIEW_REQUIRED_BEFORE_PROMOTION_RETRY"
+  ],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": false
+}

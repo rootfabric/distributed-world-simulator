@@ -67,6 +67,16 @@
     "promotion_boundary": "A research/design frontier becomes subject to normal blocking merge/dependency/review gates when it is explicitly promoted toward canonical or runtime scope.",
     "directional_exception": "A research producer that touches paths watched by a blocking consumer can still make that blocking consumer YELLOW/RED; only findings whose consumer is advisory are excluded from directional overall_health."
   },
+  "passport_architecture_compatibility": {
+    "mode": "EXPLICIT_PER_PROGRAM_HISTORICAL_ALLOWLIST",
+    "central_registry_field": "historical_passport_architecture_revisions",
+    "exact_canonical_revision_always_allowed": true,
+    "historical_revision_requires_explicit_main_registry_declaration": true,
+    "missing_or_malformed_allowlist_fails_closed": true,
+    "historical_allowlist_is_provenance_only": true,
+    "new_or_refreshed_post_promotion_frontiers_must_use_canonical_revision": true,
+    "rule": "A Branch Passport whose architecture_revision differs from the canonical registry remains RED unless that exact historical revision is explicitly allowlisted by the main-owned central registry entry for that exact program. The allowlist preserves accepted/preparation/research provenance across a canonical architecture promotion; it does not relabel history, authorize new runtime work, or permit a newly dispatched frontier to start on the historical revision."
+  },
   "branch_lifecycle": [
     "PLANNED",
     "ACTIVE",
