@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider.gd")
+const ProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider_fix2.gd")
 const RigType = preload("res://scripts/characters/presentation/substitutable_first_person_hand_rig.gd")
 const PoseCatalogType = preload("res://scripts/characters/presentation/first_person_hand_pose_catalog.gd")
 
@@ -40,6 +40,8 @@ func _run() -> void:
 			_assert(not bool(visual.get("canonical_skin_rebind", true)), "%s unexpectedly canonical-rebound Skin" % hand)
 			_assert(int(visual.get("native_pose_pair_count", 0)) == 15, "%s native pose map is incomplete" % hand)
 			_assert(String(visual.get("pose_calibration_mode", "")) == "AUTO_CHAIN_PALM_V1", "%s calibrated pose mode missing" % hand)
+			_assert(String(visual.get("canonical_reference_pose", "")) == "open", "%s canonical open reference missing" % hand)
+			_assert(bool(visual.get("pose_delta_relative_to_open", false)), "%s pose is not driven relative to open" % hand)
 			_assert(String(visual.get("root_orientation_mode", "")) == "PRESERVE_SOURCE_BASIS", "%s source root orientation was not preserved" % hand)
 			_assert(bool(visual.get("axis_calibrated_native_pose", false)), "%s axis-calibrated pose marker missing" % hand)
 			_assert(bool(visual.get("open_pose_preserves_source_rest", false)), "%s open pose rest-preservation marker missing" % hand)
@@ -108,7 +110,6 @@ func _build_source_scene() -> PackedScene:
 	for index in range(vertices.size()):
 		normals.append(Vector3.UP)
 		uvs.append(Vector2(float(index % 3) * 0.5, float(index / 3)))
-
 	var bones := PackedInt32Array([
 		1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 2, 2,
 		3, 4, 3, 3, 3, 4, 3, 3, 4, 3, 4, 4,
@@ -129,13 +130,7 @@ func _build_source_scene() -> PackedScene:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 	var skin := Skin.new()
-	var bind_bones: Array[int] = [
-		root_bone,
-		int(wrists.get("r", -1)),
-		int(middle_base.get("r", -1)),
-		int(wrists.get("l", -1)),
-		int(middle_base.get("l", -1)),
-	]
+	var bind_bones: Array[int] = [root_bone, int(wrists.get("r", -1)), int(middle_base.get("r", -1)), int(wrists.get("l", -1)), int(middle_base.get("l", -1))]
 	skin.set_bind_count(bind_bones.size())
 	for bind_index in range(bind_bones.size()):
 		var bone_index := bind_bones[bind_index]
@@ -177,52 +172,16 @@ func _profile() -> Dictionary:
 		"hand_layout": "PAIRED_SINGLE_MESH",
 		"license": {"spdx": "LicenseRef-Test", "source_url": "", "redistributable": false, "attribution_required": false},
 		"asset": {"scene_path": "res://synthetic/native-hands.glb", "format": "glb", "external": false},
-		"selection": {
-			"mesh_node_paths": ["Skeleton3D/paired_mesh"],
-			"mesh_node_paths_by_hand": {},
-			"recursive_mesh_discovery": false,
-			"inspection_required_before_runtime": false,
-			"paired_split": {
-				"strategy": "SKIN_BIND_SUFFIX",
-				"suffix_by_hand": {"left": ".l", "right": ".r"},
-				"shared_bind_names": ["root"]
-			}
-		},
+		"selection": {"mesh_node_paths": ["Skeleton3D/paired_mesh"], "mesh_node_paths_by_hand": {}, "recursive_mesh_discovery": false, "inspection_required_before_runtime": false, "paired_split": {"strategy": "SKIN_BIND_SUFFIX", "suffix_by_hand": {"left": ".l", "right": ".r"}, "shared_bind_names": ["root"]}},
 		"retarget": {
 			"runtime_driver": "NATIVE_SKELETON_POSE",
 			"rest_space_policy": "SOURCE_NATIVE_BIND_SPACE",
 			"bone_map": {"root": "HandRoot"},
 			"bone_map_by_hand": maps,
-			"auto_calibration": {
-				"source_anchor_by_hand": {"left": "wrist.l", "right": "wrist.r"},
-				"source_scale_reference_by_hand": {"left": "finger_middle1.l", "right": "finger_middle1.r"},
-				"target_anchor": "Palm",
-				"target_scale_reference": "MiddleProximal",
-				"uniform_scale_multiplier": 1.0,
-				"orientation_mode": "PRESERVE_SOURCE_BASIS"
-			},
-			"native_pose_calibration": {
-				"mode": "AUTO_CHAIN_PALM_V1",
-				"default": {
-					"curl_sign": 1.0,
-					"curl_scale": 0.65,
-					"opposition_sign": 1.0,
-					"opposition_scale": 0.55,
-					"max_abs_curl_deg": 90.0,
-					"max_abs_opposition_deg": 45.0,
-					"base_rotation_degrees": [0.0, 0.0, 0.0]
-				},
-				"by_hand": {"left": {}, "right": {}},
-				"by_finger": {"thumb": {"curl_scale": 0.5, "opposition_scale": 0.45}},
-				"by_bone": {}
-			}
+			"auto_calibration": {"source_anchor_by_hand": {"left": "wrist.l", "right": "wrist.r"}, "source_scale_reference_by_hand": {"left": "finger_middle1.l", "right": "finger_middle1.r"}, "target_anchor": "Palm", "target_scale_reference": "MiddleProximal", "uniform_scale_multiplier": 1.0, "orientation_mode": "PRESERVE_SOURCE_BASIS"},
+			"native_pose_calibration": {"mode": "AUTO_CHAIN_PALM_V1", "default": {"curl_sign": 1.0, "curl_scale": 0.65, "opposition_sign": 1.0, "opposition_scale": 0.55, "max_abs_curl_deg": 90.0, "max_abs_opposition_deg": 45.0, "base_rotation_degrees": [0.0, 0.0, 0.0]}, "by_hand": {"left": {}, "right": {}}, "by_finger": {"thumb": {"curl_scale": 0.5, "opposition_scale": 0.45}}, "by_bone": {}}
 		},
-		"presentation": {
-			"position": [0.0, 0.0, 0.0],
-			"rotation_degrees": [0.0, 0.0, 0.0],
-			"scale": [1.0, 1.0, 1.0],
-			"by_hand": {"left": {}, "right": {}}
-		}
+		"presentation": {"position": [0.0, 0.0, 0.0], "rotation_degrees": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0], "by_hand": {"left": {}, "right": {}}}
 	}
 
 
