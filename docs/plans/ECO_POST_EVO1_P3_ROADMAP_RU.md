@@ -35,17 +35,19 @@ contract
 
 ```text
 ECO.EVO1 / P2.8 = ACCEPTED
-P3.1 Resource Competition = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
-P3.2 Density & Carrying Capacity = CANDIDATE / targeted Linux PASS / blocked on P3.1 ACCEPTED + exact Windows canonical
+P3.1 Resource Competition = ACCEPTED / exact Windows canonical
+P3.2 Density & Carrying Capacity = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
 P3.3 = NOT OPENED
 ```
 
-P3.2 introduces a soft resource-coupled carrying-capacity response rather than reusing older hard proportional patch clipping. Its canonical runner intentionally fails closed while P3.1 factual validation status is not `ACCEPTED*`.
+P3.1 exact Windows canonical evidence was captured from control head `882fadfbce1808ba1ee52eae0cfdf0caa0b6b079` with Godot `4.7.1.stable.double.custom_build.a13da4feb` and matched the immutable aggregate `f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a` plus accepted P2.8 parent `ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6`.
 
-Acceptance order is therefore strict:
+P3.2 introduces a soft resource-coupled carrying-capacity response rather than reusing older hard proportional patch clipping. Its parent-status gate is now satisfied because P3.1 is accepted; P3.2 itself still requires its own exact Windows canonical run and separate acceptance lifecycle update.
+
+Acceptance order remains strict:
 
 ```text
-accept P3.1
+P3.1 = ACCEPTED
 -> run exact P3.2 canonical gate
 -> accept P3.2
 -> open P3.3
@@ -53,7 +55,7 @@ accept P3.1
 
 ## Observer lane — low priority
 
-`OBS1.1 Read-only Low-poly Observer` is now implemented as a non-gating parallel lane with targeted Linux PASS. It remains presentation-only and does not change P3.1/P3.2 acceptance state.
+`OBS1.1 Read-only Low-poly Observer` is implemented as a non-gating parallel lane with targeted Linux PASS and a successful interactive Windows launch. It remains presentation-only and does not change P3.1/P3.2 acceptance state.
 
 Current OBS1 surface:
 
@@ -74,7 +76,7 @@ simulation state != visual state != network transport
 
 OBS1 reads immutable/reproducible snapshots only. It does not mutate ecology state, consume simulation RNG, alter time stepping, persistence or acceptance hashes. Current proxy placement/palette is deterministic from canonical plant order and uses no randomness.
 
-Targeted evidence: `ECO.OBS1 Read-only Snapshot Boundary: PASS (49 assertions)` in three identical fresh processes plus `ECO.OBS1 Scene Smoke: PASS (9 assertions)`. OBS1 stays `NON_GATING`; P3.3 remains closed until P3.1 and P3.2 are canonically accepted.
+Targeted evidence: `ECO.OBS1 Read-only Snapshot Boundary: PASS (49 assertions)` in three identical fresh processes plus `ECO.OBS1 Scene Smoke: PASS (9 assertions)`. OBS1 stays `NON_GATING`; P3.3 remains closed until P3.2 is canonically accepted.
 
 ## Later integration boundary
 

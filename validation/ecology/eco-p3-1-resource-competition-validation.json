@@ -1,8 +1,8 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_1_resource_competition_validation.v1",
-  "revision": "ECO-P3.1-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P3.1-2026-08-13-R2-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
     "control_head": "4a1a4788bf3c1d0704cc1f56bd0815eebfcf7302",
@@ -32,6 +32,28 @@
     "water_limited_hash": "d22c326115f880562ed1858ebeeee805d54240d663fbee87a8eb8b7ceec95e84",
     "parent_p2_8": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
   },
+  "windows_canonical_evidence": {
+    "authority": "USER_EXECUTED_EXACT_WINDOWS_CANONICAL_COLLECTOR_OUTPUT",
+    "collector": "RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1",
+    "collector_control_head": "882fadfbce1808ba1ee52eae0cfdf0caa0b6b079",
+    "collector_tree": "447fd147237bcc3c688315593838488791230d0a",
+    "evidence_file": "P31-20260813T061230Z-882fadfbce18.json",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "canonical_runner": "RUN_ECO_P3_1_TESTS.ps1",
+    "parent_regression": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
+    "parent_regression_result": "PASS",
+    "fresh_processes": 2,
+    "assertions_per_p3_1_process": 47,
+    "aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
+    "parent_p2_8": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
+    "constrained_hash": "5d082433bff9cf5b29707da53657bb02e4575ba018544ebbe86cbfde5fd58dec",
+    "abundant_hash": "bcd82bb49edbf159c31d8fb15c8aef243d63619e12868b3cfd3d0c06003a7c60",
+    "water_limited_hash": "d22c326115f880562ed1858ebeeee805d54240d663fbee87a8eb8b7ceec95e84",
+    "raw_log_sha256": "cc757900ca483f6942ba5488acc262f2df7145acc70c9e718feaab2a20bf3dc8",
+    "evidence_sha256": "4999281a070e2043f8eb56823fcacbc35a94f73eed679524dcddf7cd4356d03b",
+    "collector_result": "PASS",
+    "acceptance_mutation_performed_by_collector": false
+  },
   "covered_properties": [
     "P2_8_PARENT_PINNED",
     "CONSTRAINED_WEIGHTED_SHARING",
@@ -48,7 +70,9 @@
     "DUPLICATE_ID_FAIL_CLOSED",
     "INVALID_EFFICIENCY_FAIL_CLOSED",
     "UNEXPECTED_FIELD_FAIL_CLOSED",
-    "TAMPERED_RESULT_REJECTED"
+    "TAMPERED_RESULT_REJECTED",
+    "EXACT_WINDOWS_CANONICAL_PARENT_REGRESSION_PASS",
+    "EXACT_WINDOWS_CANONICAL_FRESH_PROCESS_EQUALITY"
   ],
   "canonical_gate": {
     "runner": "RUN_ECO_P3_1_TESTS.ps1",
@@ -56,9 +80,10 @@
     "required_parent_regression": "RUN_ECO_EVO1_P2_8_TESTS.ps1",
     "required_fresh_processes": 2,
     "required_aggregate_equality": true,
-    "required_parent_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
+    "required_parent_hash": "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6",
+    "satisfied": true
   },
-  "decision": "DO_NOT_ACCEPT_P3_1_YET; TARGETED_LINUX_PASS; RUN_EXACT_WINDOWS_CANONICAL_GATE",
-  "next_if_passes": "accept P3.1, then open P3.2 Density & Carrying Capacity",
-  "observer_note": "after P3.2 a non-gating read-only low-poly OBS1 step viewer may be added without simulation-state writes, simulation RNG use or hash impact"
+  "decision": "ACCEPT_P3_1_EXACT_WINDOWS_CANONICAL",
+  "next": "run exact Windows canonical gate for P3.2 Density & Carrying Capacity; do not open P3.3 until P3.2 is separately accepted",
+  "observer_note": "OBS1 remains non-gating read-only visualization and does not affect P3 acceptance state"
 }

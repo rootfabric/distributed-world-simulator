@@ -1,15 +1,17 @@
 {
   "schema": "distributed_world_simulator.ecology.p3_2_density_carrying_capacity_validation.v1",
-  "revision": "ECO-P3.2-2026-08-13-R1-CANDIDATE",
+  "revision": "ECO-P3.2-2026-08-13-R2-PARENT-ACCEPTED",
   "branch": "feature/eco-evolutionary-ecology",
-  "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_1_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
   "scope": "RESEARCH_ONLY_POST_EVO1",
   "parent": {
     "control_head": "f614d67f7db5be093e46a3d8b8ea4e3fd5d166be",
     "checkpoint": "ECO.P3.1",
-    "status": "CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
     "candidate_aggregate_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a",
-    "kernel_blob": "c667569b40775a1a1898d7b911a610ca5795f380"
+    "kernel_blob": "c667569b40775a1a1898d7b911a610ca5795f380",
+    "acceptance_evidence_head": "882fadfbce1808ba1ee52eae0cfdf0caa0b6b079",
+    "acceptance_evidence_sha256": "4999281a070e2043f8eb56823fcacbc35a94f73eed679524dcddf7cd4356d03b"
   },
   "frozen_ancestor": {
     "checkpoint": "ECO.EVO1/P2.8",
@@ -69,12 +71,13 @@
     "runner": "RUN_ECO_P3_2_TESTS.ps1",
     "required": true,
     "requires_parent_status_prefix": "ACCEPTED",
+    "parent_status_satisfied": true,
     "required_parent_regression": "RUN_ECO_P3_1_TESTS.ps1",
     "required_fresh_processes": 2,
     "required_aggregate_equality": true,
     "required_parent_hash": "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
   },
-  "decision": "DO_NOT_ACCEPT_P3_2_YET; TARGETED_LINUX_PASS; P3_1_PARENT_NOT_ACCEPTED; RUN_EXACT_WINDOWS_CANONICAL_GATE_AFTER_P3_1_ACCEPTANCE",
+  "decision": "DO_NOT_ACCEPT_P3_2_YET; P3_1_PARENT_ACCEPTED; RUN_EXACT_WINDOWS_CANONICAL_GATE",
   "next_if_passes": "accept P3.2, then open P3.3 Spatial Dispersal",
   "observer_note": "OBS1 remains non-gating read-only visualization and cannot mutate simulation state, consume simulation RNG or affect acceptance hashes"
 }
