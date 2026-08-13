@@ -39,6 +39,7 @@ P3.1 Resource Competition = ACCEPTED / exact Windows canonical
 P3.2 Density & Carrying Capacity = ACCEPTED / exact Windows canonical
 P3.3 Spatial Dispersal = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
 P3.4 Environmental Gradient = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.3 ACCEPTED
+P3.5 Seasonal World = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.4 ACCEPTED
 ```
 
 Accepted P3.2 aggregate:
@@ -120,8 +121,44 @@ Strict acceptance order is still:
 accept P3.3
 -> run exact P3.4 Windows canonical gate
 -> accept P3.4
--> open P3.5 Seasonal World
+-> run exact P3.5 Windows canonical gate
+-> accept P3.5
+-> open P3.6 Disturbance & Succession
 ```
+
+P3.5 pre-acceptance implementation candidate now exists on top of the immutable P3.4 candidate identity. This does not promote P3.4 or P3.5.
+
+P3.5 candidate contract:
+
+```text
+direct environment(time) evaluation from P3.4 baseline
+finite period/epoch and continuous global phase
+continuous x/y/altitude spatial phase shift
+piecewise-linear triangle seasonal waveform; no sin/cos hash dependency
+independent temperature/moisture/light/nutrient amplitudes and phase offsets
+P3.4 bounds preserved
+seasonal light/moisture/nutrients -> P3.1 resource-supply bridge
+resource-mediated growth response without species-name winner table
+P3.4 edge topology preserved with current seasonal environmental deltas
+periodic patch state without cumulative timestep drift
+negative-time deterministic wrap
+no RNG
+fail-closed malformed/tampered state
+```
+
+Targeted exact-Godot evidence:
+
+```text
+Godot 4.7.1.stable.double.custom_build.a13da4feb
+P3.4 parent regression = PASS (56 assertions)
+P3.5 fresh A/B/C = PASS (74 assertions each; byte-identical logs)
+aggregate_hash=255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83
+phase0_hash=2ee8d7c6dc55a7c55af35cc945b0b85f79cc27fe0145b921eb5b9f0023b5d060
+quarter_hash=3e9ae067e034b4a4ce4b149ee0306ecfae7d12189d82d55e6d2e5e541dab1bb2
+half_hash=aec09a3a29d5c528140e70d79cd7970e3d3d09ee9e4f848d854cd205bc13b790
+```
+
+P3.5 remains canonical-gated on `P3.4 = ACCEPTED*`; its targeted pass does not authorize P3.6.
 
 ## Observer lane — low priority
 
