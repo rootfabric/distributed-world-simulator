@@ -21,6 +21,9 @@ const LoggerScript = preload(
 const RemotePlayerPresenterScript = preload(
 	"res://scripts/app/earth_m3_remote_spectator_presenter.gd"
 )
+const ConstructionPresentationScript = preload(
+	"res://scripts/app/earth_construction_presentation.gd"
+)
 
 var simulator_app
 var simulation_clock
@@ -59,6 +62,7 @@ var _m4_item_graph_snapshot: Dictionary = {}
 var _m4_item_snapshot_updates: int = 0
 var _m4_item_commands: int = 0
 var _m4_item_rejections: int = 0
+var construction_presentation
 
 
 func configure_runtime(context: Dictionary) -> void:
@@ -109,6 +113,11 @@ func _ready() -> void:
 	earth_explorer.name = "EarthExplorer"
 	add_child(earth_explorer)
 	earth_explorer.setup(earth_world, celestial_system, null)
+	if presentation_enabled:
+		construction_presentation = ConstructionPresentationScript.new()
+		construction_presentation.name = "EarthConstructionPresentation"
+		add_child(construction_presentation)
+		construction_presentation.setup("client/earth/%s" % runtime_instance_id.replace("/", "-"))
 
 	atmosphere_manager = AtmosphereManagerScript.new()
 	atmosphere_manager.name = "AtmosphereManager"
@@ -466,6 +475,7 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"m4_item_snapshot_updates": _m4_item_snapshot_updates,
 		"m4_item_commands": _m4_item_commands,
 		"m4_item_rejections": _m4_item_rejections,
+		"construction_presentation": construction_presentation.get_report() if construction_presentation != null else {},
 		"snapshot_checksum": String(m3_multiplayer_client_runtime.get_snapshot().get("checksum", "")) if m3_multiplayer_client_runtime != null else "",
 		"direct_authority_references": 0,
 	}
