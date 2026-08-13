@@ -46,7 +46,21 @@
       ],
       "target_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
       "project_checkpoint": "NX_SOURCE_ACCEPTED",
-      "reason": "The second pilot must prove the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. A fresh exact-main planning branch may durably hold the epoch, Work Order and pre-build review, but production/runtime mutation on that branch requires explicit Director dispatch; source acceptance still requires CH->NX directional dependency revalidation."
+      "reason": "The second pilot proves the Harness on a post-R3 HIGH-risk owner-authority runtime frontier. Its runtime/source acceptance remains independent and requires exact runtime evidence plus CH->NX directional dependency revalidation."
+    },
+    {
+      "id": "V0_S1_PRODUCT",
+      "program": "V0",
+      "title": "V0-S1 Networked Planetary Outpost",
+      "priority": 108,
+      "depends_on": [
+        "HARNESS_H0_1",
+        "GLOBAL_P0_R3_CANONICAL",
+        "POST_R3_PC0_NON_RED",
+        "C22_MAIN_INTEGRATED"
+      ],
+      "target_checkpoint": "V0_S1_NETWORKED_PLANETARY_OUTPOST",
+      "reason": "Create the first real product vertical slice: one procedural planet, one server, two playable network characters, shared canonical Construction and reconnect-safe live-world state. Use current canonical SERVER_PREDICTED networking first; do not make unfinished NX.C1 acceptance or H0.3 a blanket prerequisite."
     },
     {
       "id": "CONSTRUCTION_TRAIN",
@@ -63,6 +77,19 @@
       "priority": 80,
       "depends_on": ["HARNESS_H0_2"],
       "sequence": ["NX_C1_IMPLEMENTED_CANDIDATE", "NX_SOURCE_ACCEPTED"]
+    },
+    {
+      "id": "V0_PRODUCT_TRAIN",
+      "program": "V0",
+      "title": "Playable simulator vertical slices",
+      "priority": 108,
+      "depends_on": ["V0_S1_PRODUCT"],
+      "sequence": [
+        "V0_S1_NETWORKED_PLANETARY_OUTPOST",
+        "V0_S2_NETWORKED_LANDED_SHIP_0",
+        "V0_S3_MOVABLE_SHIP",
+        "V0_S4_PLANET_SPACE_TRANSITION"
+      ]
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -92,5 +119,5 @@
       "work_order_type": "HUMAN_OBSERVATION"
     }
   ],
-  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy; never bypass dependency, ownership, validation, epoch or human-approval gates."
+  "selection_rule": "Choose the highest-value eligible checkpoint using scheduler policy; never bypass dependency, ownership, validation, epoch, mutation-worker concurrency or human-approval gates."
 }

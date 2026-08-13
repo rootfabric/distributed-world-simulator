@@ -2,24 +2,96 @@
 
 **Operational owner:** `main`  
 **Architecture baseline:** `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`  
-**Registry generation:** `79`  
+**Registry generation:** `79` until the routing proposal is canonically activated  
 **Control plane:** `PC0-2026-08-10-R1`  
 **Harness:** `H0-2026-08-11-R1`
 
-> Machine truth remains `config/control/project-program-registry.v1.json`.
+> Machine project-state truth remains `config/control/project-program-registry.v1.json`. This branch prepares a product-checkpoint routing change; main must still activate it with the corresponding registry update.
 
 ## Canonical state
 
-GLOBAL-P0 R3 V9 is the Human-approved canonical architecture projection. Promotion contains no gameplay/runtime/domain mutation. Frozen R2 passports remain immutable historical evidence only through exact architecture-identity compatibility; T additionally has exactly the reviewed WORLD_QUERY_FABRIC P1_FUTURE -> WQ and WORLD_TRANSACTION_MODEL P0 -> WT historical ownership transitions.
+GLOBAL-P0 R3 V9 is canonical. C22 is MAIN_INTEGRATED. Mandatory post-R3 Project Control is NON_RED. H0.2/NX.C1 bounded source implementation exists but its exact Godot/runtime verification and source acceptance are still pending.
 
-## Immediate gate
+## Product critical path
 
-Mandatory post-R3 Project Control must be NON_RED before any new runtime Work Order.
+The first product checkpoint is:
 
-## V0 critical path
+```text
+V0_S1_NETWORKED_PLANETARY_OUTPOST
+```
 
-R3 canonical -> post-R3 PC0 NON_RED -> H0.2 machine checkpoint contract + fresh H0.2/NX.C1 -> NX SOURCE_ACCEPTED / H0_2_PASS -> H0.3 acceptance -> V0.0 -> V0-S0.
+Target runtime:
 
-Wave A, G9, MAT0 and TS0.4 are not inserted into the sequential V0 critical path unless a later machine gate proves a specific V0 scenario requires them.
+```text
+one procedural planet
++ one server
++ two clients
++ two playable characters
++ bidirectional remote movement
++ canonical Construction commit
++ replicated small outpost
++ reconnect to the same live world state
++ 30-minute two-client soak
+```
 
-Historical R2 evidence is not rewritten merely to change labels and cannot authorize new post-promotion runtime work.
+V0-S1 uses the canonical current-main `SERVER_PREDICTED` network behavior first. It does not infer acceptance of the in-progress `OWNER_AUTHORITATIVE_VALIDATED` NX.C1 profile.
+
+## Parallel NX lane
+
+```text
+H0.2 / NX.C1 source IMPLEMENTED
+        ↓
+exact Godot focused validation
+        ↓
+full world/core
+        ↓
+two-client + impaired-network
+        ↓
+reconnect / ownership epoch
+        ↓
+independent review + CH -> NX revalidation
+        ↓
+H0_2_PASS + NX SOURCE_ACCEPTED
+```
+
+NX acceptance remains strict and independent.
+
+## H0.3 boundary
+
+H0.3 is not a gameplay prerequisite for one V0 branch. It is required before more than one concurrent autonomous runtime **mutation** worker.
+
+Before H0.3:
+
+```text
+runtime mutation workers <= 1
+```
+
+NX verification/review-only activity may coexist with one V0 implementation worker. NX non-trivial FIX mutation and V0 mutation must be serialized.
+
+## Fail-closed V0 -> NX rule
+
+V0 may not implement a private protocol, authority model, ownership epoch or reconciliation contract.
+
+If the canonical `SERVER_PREDICTED` path cannot close the V0 scenario without such a change:
+
+```text
+V0_S1_BLOCKED_REQUIRES_NX
+```
+
+The defect/requirement returns to the NX lane.
+
+## Following slices
+
+```text
+V0-S1 NETWORKED PLANETARY OUTPOST
+        ↓
+V0-S2 NETWORKED LANDED SHIP-0
+        ↓
+V0-S3 MOVABLE SHIP
+        ↓
+V0-S4 PLANET <-> SPACE
+```
+
+Wave A, G9, MAT0, TS0.4, ECO production, terrain mutation and server handoff are not inserted into V0-S1 unless a concrete scenario gate proves they are required.
+
+Historical R2 evidence remains immutable provenance and cannot authorize new post-R3 runtime work.

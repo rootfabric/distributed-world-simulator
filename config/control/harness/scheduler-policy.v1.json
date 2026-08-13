@@ -19,13 +19,30 @@
       "H0_2_NX_C1_HIGH_RISK_PILOT"
     ],
     "current_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-    "reason": "H0.1 is accepted and C22 is main-integrated. Canonical R3 generation 79 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2 may create a control-only planning branch to durably hold its exact-main epoch, Work Order and pre-build review; production/runtime mutation on that branch remains forbidden until explicit Director dispatch."
+    "reason": "H0.2 remains the active Harness pilot and keeps all HIGH-risk acceptance predicates. Product V0-S1 is declared separately as a parallel eligible checkpoint and does not replace or self-accept H0.2."
+  },
+  "parallel_product_checkpoints": {
+    "enabled": true,
+    "checkpoints": [
+      "V0_S1_NETWORKED_PLANETARY_OUTPOST"
+    ],
+    "rules": {
+      "requires_explicit_work_order": true,
+      "requires_exact_current_main": true,
+      "pre_h0_3_total_runtime_mutation_workers_max": 1,
+      "verification_or_review_only_work_does_not_consume_mutation_worker_slot": true,
+      "v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden": true,
+      "v0_network_foundation_change_fails_closed_to": "V0_S1_BLOCKED_REQUIRES_NX"
+    }
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,
     "h0_2_max_autonomous_runtime_workers": 1,
+    "v0_s1_max_autonomous_runtime_mutation_workers": 1,
+    "pre_h0_3_total_autonomous_runtime_mutation_workers": 1,
     "human_observation_orders_may_wait_in_parallel": true,
+    "verification_review_only_may_wait_in_parallel_with_one_runtime_mutation_worker": true,
     "architecture_candidate_analysis_may_run_in_parallel": true,
     "h0_3_required_before_multi_runtime_worker_scheduler": true
   },
@@ -33,6 +50,7 @@
     "same_defect_failed_attempts_before_stronger_model_or_director_takeover": 2,
     "architecture_or_ownership_question": "DIRECTOR_OR_HUMAN",
     "unexpected_scope_expansion": "STOP_AND_REPLAN",
-    "critical_pc0_red": "STOP_PROGRAM"
+    "critical_pc0_red": "STOP_PROGRAM",
+    "v0_requires_network_protocol_or_authority_change": "BLOCK_V0_AND_ROUTE_TO_NX"
   }
 }
