@@ -1,6 +1,7 @@
 """Build complete H0.0 status using only versioned JSON and Git metadata."""
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import datetime
@@ -10,9 +11,10 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
-from .checkpoint_planner import (
-    arbitrate_pre_h0_3_runtime_mutation,
-    classify_v0_nx_foundation_scope,
+from .checkpoint_planner import classify_v0_nx_foundation_scope
+from .global_mutation_arbiter import (
+    evaluate_pre_h0_3_runtime_mutation_lease,
+    requires_runtime_mutation_lease,
 )
 
 
@@ -121,32 +123,70 @@ def _git_changed_paths(root: Path, base_sha: str, implementation_head: str) -> l
     return sorted({line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()})
 
 
-def _load_global_work_order_states(
+def _git_late_delta_paths(
+    root: Path,
+    implementation_head: str,
+    current_head: str,
+    execution_dir: Path,
+) -> tuple[list[str], list[str]]:
+    """Return post-implementation paths and non-evidence paths that must be fenced.
+
+    The implementation head intentionally excludes append-only evidence. A later
+    runtime change is therefore not allowed to disappear from V0->NX
+    classification merely because it is newer than that head.
+    """
+    code, _ = _git(root, "merge-base", "--is-ancestor", implementation_head, current_head)
+    if code != 0:
+        raise ContractValidationError("IMPLEMENTATION_HEAD_NOT_ANCESTOR_OF_CURRENT_HEAD")
+    late_paths = _git_changed_paths(root, implementation_head, current_head)
+    execution_prefix = f"{_repo_relative(root, execution_dir).rstrip('/')}/"
+    evidence_only_prefixes = (execution_prefix, "config/control/branches/", "docs/checkpoints/")
+    unexpected = [
+        path for path in late_paths
+        if not any(path.startswith(prefix) for prefix in evidence_only_prefixes)
+    ]
+    return late_paths, unexpected
+
+
+def _load_main_owned_runtime_mutation_lease_registry(
     root: Path,
     bundle: ContractBundle,
-) -> list[tuple[dict[str, Any], dict[str, Any]]]:
-    """Reduce every versioned execution so concurrency is repository-global."""
-    result: list[tuple[dict[str, Any], dict[str, Any]]] = []
-    executions_root = root / "config" / "control" / "harness" / "executions"
-    for candidate in sorted(executions_root.iterdir() if executions_root.exists() else []):
-        if not candidate.is_dir():
-            continue
-        transition_path = candidate / "transition-table.v1.json"
-        work_order_dir = candidate / "work-orders"
-        if not transition_path.is_file() or not work_order_dir.is_dir():
-            continue
-        transition_table = read_json(transition_path)
-        guard_context = load_guard_context(root, candidate)
-        for work_order_path in _json_files(work_order_dir):
-            definition = read_json(work_order_path)
-            bundle.validate("work_order_schema", definition, f"work_order:{work_order_path.name}")
-            events = [
-                read_json(path)
-                for path in _json_files(candidate / "events" / definition["work_order_id"])
-            ]
-            reduced = reduce_events(bundle, definition, events, transition_table, guard_context)
-            result.append((definition, reduced))
-    return result
+) -> tuple[dict[str, Any] | None, str, str, str | None]:
+    """Read the lease registry from origin/main, never from a candidate branch."""
+    relative_path = str(bundle.contracts["harness_policy"]["runtime_mutation_lease_registry"])
+    code, main_sha = _git(root, "rev-parse", "origin/main")
+    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", main_sha):
+        return None, "", "", "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_MAIN_REF_UNAVAILABLE"
+    code, registry_blob_sha = _git(root, "rev-parse", "origin/main:%s" % relative_path)
+    if code != 0 or not re.fullmatch(r"[0-9a-f]{40}", registry_blob_sha):
+        return None, main_sha, "", "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_UNAVAILABLE_ON_MAIN"
+    code, payload = _git(root, "show", "origin/main:%s" % relative_path)
+    if code != 0:
+        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_UNAVAILABLE_ON_MAIN"
+    try:
+        registry = json.loads(payload)
+    except json.JSONDecodeError:
+        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_JSON_INVALID"
+    if not isinstance(registry, dict):
+        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_OBJECT_REQUIRED"
+    try:
+        bundle.validate(
+            "runtime_mutation_lease_registry_schema",
+            registry,
+            "origin_main_runtime_mutation_lease_registry",
+        )
+    except ContractValidationError as exc:
+        return None, main_sha, registry_blob_sha, str(exc)
+    registry_issued_sha = str(registry.get("issued_main_sha", ""))
+    code, _ = _git(root, "merge-base", "--is-ancestor", registry_issued_sha, main_sha)
+    if code != 0:
+        return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_REGISTRY_ISSUED_SHA_NOT_ON_MAIN"
+    for reservation in registry.get("reservations", []):
+        lease_issued_sha = str(reservation.get("issued_main_sha", ""))
+        code, _ = _git(root, "merge-base", "--is-ancestor", lease_issued_sha, main_sha)
+        if code != 0:
+            return None, main_sha, registry_blob_sha, "PRE_H0_3_RUNTIME_MUTATION_LEASE_ISSUED_SHA_NOT_ON_MAIN"
+    return registry, main_sha, registry_blob_sha, None
 
 
 def _validate_event_git_provenance(
@@ -452,11 +492,18 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
 
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
+    current_branch = _git_branch(root)
     implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
     implementation_changed_paths = _git_changed_paths(
         root,
         str(active["definition"]["base_sha"]),
         implementation_head,
+    )
+    late_delta_paths, unexpected_late_delta_paths = _git_late_delta_paths(
+        root,
+        implementation_head,
+        current_head,
+        execution_dir,
     )
     ledger_head = _validate_event_git_provenance(
         root,
@@ -483,18 +530,27 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if active["reduced"]["state"] == "FIX_REQUIRED" and repair_map is None:
         findings.append("REPAIR_MAP_REQUIRED")
 
-    global_mutation = arbitrate_pre_h0_3_runtime_mutation(
-        bundle.contracts,
-        _load_global_work_order_states(root, bundle),
+    lease_registry, lease_main_sha, lease_registry_blob_sha, lease_error = _load_main_owned_runtime_mutation_lease_registry(root, bundle)
+    global_mutation = evaluate_pre_h0_3_runtime_mutation_lease(
+        lease_registry,
+        active["definition"],
+        active["reduced"],
+        lease_main_sha,
+        current_branch,
     )
-    if not global_mutation["authorized"]:
+    global_mutation["registry_path"] = str(bundle.contracts["harness_policy"]["runtime_mutation_lease_registry"])
+    global_mutation["registry_blob_sha"] = lease_registry_blob_sha
+    global_mutation["registry_error"] = lease_error
+    if requires_runtime_mutation_lease(active["definition"], active["reduced"]) and not global_mutation["authorized"]:
         findings.append("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LIMIT_EXCEEDED")
 
     classified_work_order = dict(active["definition"])
     classified_work_order["implementation_changed_paths"] = implementation_changed_paths
+    classified_work_order["late_delta_changed_paths"] = late_delta_paths
+    classified_work_order["unexpected_late_delta_paths"] = unexpected_late_delta_paths
     v0_foundation_scope = classify_v0_nx_foundation_scope(classified_work_order)
     if v0_foundation_scope["blocked"]:
-        findings.append("V0_S1_BLOCKED_REQUIRES_NX")
+        findings.append(v0_foundation_scope["status"])
 
     blocking_attention = [
         item
@@ -515,7 +571,6 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     if blocking_attention:
         findings.append("BLOCKING_HUMAN_ATTENTION")
 
-    current_branch = _git_branch(root)
     if current_branch != active["definition"]["branch"]:
         findings.append("WORK_ORDER_BRANCH_NOT_CHECKED_OUT")
 
@@ -575,6 +630,8 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
             "current_branch_head_sha": current_head,
             "implementation_head_sha": implementation_head,
             "implementation_changed_paths": implementation_changed_paths,
+            "late_delta_paths": late_delta_paths,
+            "unexpected_late_delta_paths": unexpected_late_delta_paths,
             "current_branch": current_branch,
             "origin_main_head_sha": epoch_validation["main_sha"],
             "worktree_dirty": bool(

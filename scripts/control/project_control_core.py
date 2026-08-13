@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from project_control_registry_generation import evaluate_canonical_r3_registry_generation
+
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACT_DIR = ROOT / "artifacts" / "control"
 REGISTRY_PATH = "config/control/project-program-registry.v1.json"
@@ -391,6 +393,16 @@ def main() -> int:
         git("fetch", "origin", "--prune")
 
     registry = load_main_owned(REGISTRY_PATH)
+    generation_guard = evaluate_canonical_r3_registry_generation(registry)
+    if not generation_guard["allowed"]:
+        print(
+            "PC0: RED "
+            f"{generation_guard['code']} "
+            f"(registry_generation={generation_guard['registry_generation']!r}; "
+            f"supported={generation_guard['supported_registry_generations']})",
+            file=sys.stderr,
+        )
+        return 2
     policy = load_main_owned(POLICY_PATH)
     ownership = load_main_owned(OWNERSHIP_PATH)
     if registry.get("architecture_revision") != policy.get("architecture_revision"):

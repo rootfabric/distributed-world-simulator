@@ -7,81 +7,108 @@ from typing import Any
 
 _ACTIVE_TRAIN_STATES = {"DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED"}
 _MUTATION_SLOT_STATES = {"DISPATCHED", "IN_PROGRESS", "IMPLEMENTED"}
-_V0_NX_FOUNDATION_PATHS = (
-    "scripts/network/contracts/**",
-    "config/network/**",
-    "scripts/runtime/networked_gameplay/networked_gameplay_service*.gd",
-    "scripts/runtime/networked_gameplay/transports/**",
-    "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
-    "scripts/characters/**",
-)
+_V0_NX_FOUNDATION_PATHS: dict[str, tuple[str, ...]] = {
+    "PROTOCOL": (
+        "config/network/**",
+        "scripts/network/contracts/**",
+        "scripts/network/observability/network_protocol_manifest.gd",
+        "scripts/network/transports/**",
+        "scripts/runtime/networked_gameplay/contracts/**",
+    ),
+    "AUTHORITY": (
+        "scripts/runtime/networked_gameplay/networked_gameplay_service*.gd",
+        "scripts/runtime/networked_gameplay/backends/**",
+        "scripts/runtime/networked_gameplay/services/player_movement_service.gd",
+        "scripts/runtime/networked_gameplay/services/replication_publisher.gd",
+        "scripts/runtime/networked_gameplay/transports/**",
+    ),
+    "OWNERSHIP_EPOCH": (
+        "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+        "scripts/runtime/networked_gameplay/services/player_registry.gd",
+        "scripts/runtime/networked_gameplay/contracts/player_ownership_snapshot.gd",
+        "scripts/network/session/**",
+        "scripts/runtime/networked_gameplay/m6/**",
+    ),
+    "RECONCILIATION": (
+        "scripts/network/prediction/**",
+        "scripts/network/interpolation/**",
+        "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    ),
+    "CHARACTER_OWNERSHIP": (
+        "scripts/characters/**",
+    ),
+}
 
 
 def _worker_count(state: str, limit: int) -> int:
     return limit if state in _MUTATION_SLOT_STATES else 0
 
 
-def _is_runtime_mutator(reduced: dict[str, Any]) -> bool:
-    return str(reduced.get("state", "")) in _MUTATION_SLOT_STATES
-
-
-def arbitrate_pre_h0_3_runtime_mutation(
-    contracts: dict[str, dict[str, Any]],
-    work_orders: list[tuple[dict[str, Any], dict[str, Any]]],
-) -> dict[str, Any]:
-    """Apply the global pre-H0.3 mutation limit across all visible Work Orders."""
-    limit = int(
-        contracts["scheduler_policy"]["concurrency"]
-        ["pre_h0_3_total_autonomous_runtime_mutation_workers"]
-    )
-    mutators = [
-        str(reduced.get("work_order_id", definition.get("work_order_id", "UNKNOWN")))
-        for definition, reduced in work_orders
-        if _is_runtime_mutator(reduced)
-    ]
-    mutators.extend(
-        str(reservation.get("work_order_id", "UNKNOWN"))
-        for reservation in contracts["scheduler_policy"].get(
-            "pre_h0_3_runtime_mutation_reservations", []
-        )
-        if bool(reservation.get("mutation_slot_reserved", False))
-    )
-    mutators = sorted(set(mutators))
-    if len(mutators) > limit:
-        return {
-            "authorized": False,
-            "status": "PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LIMIT_EXCEEDED",
-            "limit": limit,
-            "active_mutation_work_orders": mutators,
-        }
-    return {
-        "authorized": True,
-        "status": "PRE_H0_3_GLOBAL_RUNTIME_MUTATION_SLOT_AVAILABLE",
-        "limit": limit,
-        "active_mutation_work_orders": mutators,
-    }
-
-
 def classify_v0_nx_foundation_scope(work_order: dict[str, Any]) -> dict[str, Any]:
-    """Fail closed when a V0 Work Order claims an NX-owned foundation surface."""
+    """Classify V0's actual diff and fail closed on NX-owned foundations.
+
+    Planning may use a declared scope before an implementation exists. Once
+    ``implementation_changed_paths`` is supplied by state_builder, it is the
+    authoritative input. Late, non-evidence deltas are a separate fail-closed
+    input so an out-of-scope runtime commit cannot hide behind the freshness
+    implementation head.
+    """
     if work_order.get("goal_checkpoint") != "V0_S1_NETWORKED_PLANETARY_OUTPOST":
-        return {"blocked": False, "status": "NOT_V0_S1", "matched_paths": []}
-    scope_paths = work_order.get("implementation_changed_paths", work_order.get("allowed_paths", []))
-    matched = sorted(
-        {
-            path.replace("\\", "/")
-            for path in scope_paths
-            if any(
-                fnmatch.fnmatch(path.replace("\\", "/"), pattern)
-                for pattern in _V0_NX_FOUNDATION_PATHS
-            )
+        return {
+            "blocked": False,
+            "status": "NOT_V0_S1",
+            "matched_paths": [],
+            "matched_categories": [],
+            "source": "NOT_APPLICABLE",
+            "classification_complete": True,
+            "late_delta_paths": [],
         }
+
+    has_actual_diff = "implementation_changed_paths" in work_order
+    implementation_paths = work_order.get(
+        "implementation_changed_paths",
+        work_order.get("allowed_paths", []),
+    )
+    late_delta_paths = work_order.get("late_delta_changed_paths", []) if has_actual_diff else []
+    normalized_implementation_paths = {
+        str(path).replace("\\", "/") for path in implementation_paths
+    }
+    normalized_late_delta_paths = {
+        str(path).replace("\\", "/") for path in late_delta_paths
+    }
+    scope_paths = sorted(normalized_implementation_paths | normalized_late_delta_paths)
+    matches_by_category = {
+        category: sorted(
+            path
+            for path in scope_paths
+            if any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+        )
+        for category, patterns in _V0_NX_FOUNDATION_PATHS.items()
+    }
+    matches_by_category = {
+        category: paths for category, paths in matches_by_category.items() if paths
+    }
+    matched = sorted({path for paths in matches_by_category.values() for path in paths})
+    unexpected_late_delta_paths = sorted(
+        str(path).replace("\\", "/")
+        for path in work_order.get("unexpected_late_delta_paths", [])
+    )
+    blocked = bool(matched or unexpected_late_delta_paths)
+    status = "V0_S1_BLOCKED_REQUIRES_NX" if matched else (
+        "V0_S1_BLOCKED_UNCLASSIFIED_LATE_DELTA"
+        if unexpected_late_delta_paths
+        else "V0_S1_SCOPE_CLASSIFIED_COMPOSITION_ONLY"
     )
     return {
-        "blocked": bool(matched),
-        "status": "V0_S1_BLOCKED_REQUIRES_NX" if matched else "V0_S1_SCOPE_CLASSIFIED_COMPOSITION_ONLY",
+        "blocked": blocked,
+        "status": status,
         "matched_paths": matched,
-        "source": "IMPLEMENTATION_GIT_DIFF" if "implementation_changed_paths" in work_order else "DECLARED_ALLOWED_PATHS",
+        "matched_categories": sorted(matches_by_category),
+        "matches_by_category": matches_by_category,
+        "source": "IMPLEMENTATION_GIT_DIFF" if has_actual_diff else "DECLARED_ALLOWED_PATHS",
+        "classification_complete": has_actual_diff,
+        "late_delta_paths": sorted(normalized_late_delta_paths),
+        "unexpected_late_delta_paths": unexpected_late_delta_paths,
     }
 
 
@@ -138,7 +165,12 @@ def build_plan(
 
     if current == "H0_2_NX_C1_HIGH_RISK_PILOT":
         active = state in _ACTIVE_TRAIN_STATES
-        mutating = state in _MUTATION_SLOT_STATES
+        requested_mutation = state in _MUTATION_SLOT_STATES
+        mutating = requested_mutation
+        global_mutation = work_order.get("global_runtime_mutation_arbiter", {})
+        global_mutation_authorized = bool(global_mutation.get("authorized", False))
+        if requested_mutation and not global_mutation_authorized:
+            mutating = False
         return {
             "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_RUNTIME_PILOT" if mutating else "HIGH_RISK_RUNTIME_VERIFICATION"),
             "selected_checkpoint": current,
@@ -146,7 +178,7 @@ def build_plan(
             "active_work_order": reduced["work_order_id"],
             "satisfied_predicates": [item for item in required if item in satisfied],
             "unsatisfied_predicates": [item for item in required if item not in satisfied],
-            "autonomous_runtime_workers": _worker_count(state, scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"]),
+            "autonomous_runtime_workers": scheduler["concurrency"]["h0_2_max_autonomous_runtime_workers"] if mutating else 0,
             "nx_c1_gate": {
                 "requested_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
                 "project_checkpoint": "NX_SOURCE_ACCEPTED",
@@ -154,21 +186,24 @@ def build_plan(
                 "status": "READY_FOR_BOUNDED_RUNTIME_IMPLEMENTATION" if mutating else ("VERIFYING_IMPLEMENTED_HEAD" if active else "PLANNING_BRANCH_READY_WAITING_DIRECTOR_DISPATCH"),
                 "reason": "DIRECTOR_DISPATCHED_H0_2" if mutating else ("IMPLEMENTATION_COMPLETE_MUTATION_SLOT_RELEASED_FOR_VERIFICATION" if active else "PLANNING_BRANCH_MAY_EXIST_CONTROL_ONLY_RUNTIME_MUTATION_REQUIRES_DISPATCH"),
                 "branch_creation": "CURRENT_WORK_ORDER_BRANCH" if active else "PLANNING_BRANCH_ALLOWED_CONTROL_ONLY",
-                "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
+                "runtime_mutation": "AUTHORIZED_BY_MAIN_OWNED_LEASE" if mutating else ("BLOCKED_BY_GLOBAL_MUTATION_LEASE" if requested_mutation else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH")),
+                "global_mutation_arbiter": global_mutation,
                 "source_acceptance_requires": "CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS",
             },
-            "next_action": "BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH" if mutating else ("RUN_EXACT_NX_C1_RUNTIME_VERIFICATION" if active else "ISSUE_FRESH_R3_H0_2_NX_C1_WORK_ORDER_AND_DIRECTOR_DISPATCH"),
+            "next_action": "BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH" if mutating else ("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LEASE_REQUIRED" if requested_mutation else ("RUN_EXACT_NX_C1_RUNTIME_VERIFICATION" if active else "ISSUE_FRESH_R3_H0_2_NX_C1_WORK_ORDER_AND_DIRECTOR_DISPATCH")),
             "stop_gates": ["NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", "NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"],
         }
 
     if current == "V0_S1_NETWORKED_PLANETARY_OUTPOST":
         active = state in _ACTIVE_TRAIN_STATES
-        mutating = state in _MUTATION_SLOT_STATES
+        requested_mutation = state in _MUTATION_SLOT_STATES
+        mutating = requested_mutation
         parallel = scheduler["parallel_product_checkpoints"]
         rules = parallel["rules"]
         foundation_scope = classify_v0_nx_foundation_scope(work_order)
-        global_mutation_authorized = bool(work_order.get("global_mutation_authorized", True))
-        if foundation_scope["blocked"] or not global_mutation_authorized:
+        global_mutation = work_order.get("global_runtime_mutation_arbiter", {})
+        global_mutation_authorized = bool(global_mutation.get("authorized", False))
+        if foundation_scope["blocked"] or (requested_mutation and not global_mutation_authorized):
             mutating = False
         return {
             "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
@@ -184,15 +219,15 @@ def build_plan(
                 "risk_floor": "HIGH",
                 "network_baseline": "SERVER_PREDICTED",
                 "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
-                "runtime_mutation": "BLOCKED_BY_GLOBAL_MUTATION_RESERVATION" if not global_mutation_authorized else ("AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH")),
+                "runtime_mutation": "BLOCKED_BY_GLOBAL_MUTATION_LEASE" if requested_mutation and not global_mutation_authorized else ("AUTHORIZED_BY_MAIN_OWNED_LEASE" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH")),
                 "pre_h0_3_total_mutation_workers_max": rules["pre_h0_3_total_runtime_mutation_workers_max"],
                 "nx_verification_review_only_may_coexist": rules["verification_or_review_only_work_does_not_consume_mutation_worker_slot"],
                 "v0_plus_nx_fix_mutation_forbidden": rules["v0_mutation_plus_nx_nontrivial_fix_mutation_forbidden"],
                 "network_foundation_change_fails_closed_to": rules["v0_network_foundation_change_fails_closed_to"],
                 "foundation_scope": foundation_scope,
-                "global_mutation_authorized": global_mutation_authorized,
+                "global_mutation_arbiter": global_mutation,
             },
-            "next_action": "PRE_H0_3_GLOBAL_RUNTIME_MUTATION_SLOT_UNAVAILABLE" if not global_mutation_authorized else ("V0_S1_BLOCKED_REQUIRES_NX" if foundation_scope["blocked"] else ("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION" if mutating else ("VERIFY_V0_S1_EXACT_HEAD" if active else "ISSUE_EXACT_MAIN_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH"))),
+            "next_action": foundation_scope["status"] if foundation_scope["blocked"] else ("PRE_H0_3_GLOBAL_RUNTIME_MUTATION_LEASE_REQUIRED" if requested_mutation and not global_mutation_authorized else ("BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION" if mutating else ("VERIFY_V0_S1_EXACT_HEAD" if active else "ISSUE_EXACT_MAIN_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH"))),
             "stop_gates": [
                 "V0_RUNTIME_MUTATION_BEFORE_DISPATCH",
                 "PRIVATE_V0_NETWORK_AUTHORITY",

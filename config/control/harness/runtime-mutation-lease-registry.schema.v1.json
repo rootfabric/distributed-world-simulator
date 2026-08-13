@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.runtime_mutation_lease_registry.schema.v1",
+  "title": "Main-owned pre-H0.3 runtime mutation lease registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "registry_id", "canonical_ref", "issued_main_sha", "max_active_runtime_mutators", "reservations"],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.runtime_mutation_lease_registry.v1"},
+    "registry_id": {"type": "string", "minLength": 1},
+    "canonical_ref": {"const": "origin/main"},
+    "issued_main_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "max_active_runtime_mutators": {"const": 1},
+    "reservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reservation_id", "work_order_id", "project_epoch", "branch", "checkpoint", "kind", "state", "issued_by", "issued_main_sha"],
+        "properties": {
+          "reservation_id": {"type": "string", "minLength": 1},
+          "work_order_id": {"type": "string", "minLength": 1},
+          "project_epoch": {"type": "string", "minLength": 1},
+          "branch": {"type": "string", "minLength": 1},
+          "checkpoint": {"type": "string", "minLength": 1},
+          "kind": {"const": "RUNTIME_MUTATION"},
+          "state": {"enum": ["ACTIVE", "RELEASED", "CANCELLED"]},
+          "issued_by": {"const": "DIRECTOR"},
+          "issued_main_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "release_evidence": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

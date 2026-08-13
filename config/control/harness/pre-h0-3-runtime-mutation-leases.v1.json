@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.runtime_mutation_lease_registry.v1",
+  "registry_id": "PRE_H0_3_RUNTIME_MUTATION_LEASES",
+  "canonical_ref": "origin/main",
+  "issued_main_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
+  "max_active_runtime_mutators": 1,
+  "reservations": [
+    {
+      "reservation_id": "PRE-H0-3-RUNTIME-LEASE-001",
+      "work_order_id": "H0-2-R3-NX-C1-WO-001",
+      "project_epoch": "E2026-08-13-H0-2-R3",
+      "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
+      "kind": "RUNTIME_MUTATION",
+      "state": "ACTIVE",
+      "issued_by": "DIRECTOR",
+      "issued_main_sha": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304"
+    }
+  ]
+}

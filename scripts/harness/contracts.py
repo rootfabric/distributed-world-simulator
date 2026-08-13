@@ -62,6 +62,8 @@ class ContractBundle:
             "project_goals": policy["project_goals"],
             "checkpoint_catalog": policy["checkpoint_catalog"],
             "scheduler_policy": policy["scheduler_policy"],
+            "runtime_mutation_lease_registry": policy["runtime_mutation_lease_registry"],
+            "runtime_mutation_lease_registry_schema": policy["runtime_mutation_lease_registry_schema"],
             "work_order_schema": policy["work_order_schema"],
             "event_schema": policy["event_schema"],
             "project_epoch_schema": policy["project_epoch_schema"],
@@ -82,7 +84,7 @@ class ContractBundle:
             raise ContractValidationError("CANONICAL_BRANCH_MISMATCH")
         if policy.get("harness_revision") != self.contracts["project_goals"].get("harness_revision"):
             raise ContractValidationError("HARNESS_REVISION_MISMATCH")
-        for name in ("work_order_schema", "event_schema", "project_epoch_schema", "evidence_map_schema", "human_attention_schema"):
+        for name in ("work_order_schema", "event_schema", "project_epoch_schema", "evidence_map_schema", "human_attention_schema", "runtime_mutation_lease_registry_schema"):
             schema = self.contracts[name]
             if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
                 raise ContractValidationError(f"JSON_SCHEMA_DRAFT_REQUIRED:{name}")
@@ -95,6 +97,11 @@ class ContractBundle:
             raise ContractValidationError("SCHEDULER_HARNESS_REVISION_MISMATCH")
         if self.contracts["checkpoint_catalog"].get("harness_revision") != policy.get("harness_revision"):
             raise ContractValidationError("CHECKPOINT_HARNESS_REVISION_MISMATCH")
+        self.validate(
+            "runtime_mutation_lease_registry_schema",
+            self.contracts["runtime_mutation_lease_registry"],
+            "runtime_mutation_lease_registry",
+        )
 
     def validate(self, schema_name: str, instance: dict[str, Any], label: str) -> None:
         schema = self.contracts[schema_name]

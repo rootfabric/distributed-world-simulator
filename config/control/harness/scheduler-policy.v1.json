@@ -35,16 +35,6 @@
       "v0_network_foundation_change_fails_closed_to": "V0_S1_BLOCKED_REQUIRES_NX"
     }
   },
-  "pre_h0_3_runtime_mutation_reservations": [
-    {
-      "work_order_id": "H0-2-R3-NX-C1-WO-001",
-      "program": "NX",
-      "checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-      "mutation_slot_reserved": true,
-      "reason": "H0_2_RUNTIME_VERIFICATION_FIX_REQUIRED",
-      "release_states": ["VERIFYING", "VERIFIED", "AUDITED", "CANCELLED"]
-    }
-  ],
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
     "h0_1_max_autonomous_runtime_workers": 1,

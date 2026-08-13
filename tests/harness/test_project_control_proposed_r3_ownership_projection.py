@@ -12,10 +12,13 @@ sys.path.insert(0, str(ROOT / "scripts" / "control"))
 
 import project_control as pc
 import project_control_directional_watch as directional
+from project_control_registry_generation import (
+    SUPPORTED_R3_REGISTRY_GENERATIONS as R3_SUPPORTED_REGISTRY_GENERATIONS,
+    require_canonical_r3_registry_generation,
+)
 
 R2 = "GLOBAL-P0-2026-08-10-R2"
 R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
-R3_SUPPORTED_REGISTRY_GENERATIONS = {79, 80}
 FROZEN_R3_TARGET = "595263c4c925c122a09876cb29b87f5ca5fef1d2"
 FROZEN_R3_OWNERSHIP_PATH = "config/control/architecture-ownership-r3-candidate.v1.json"
 FROZEN_R3_OWNERSHIP_BLOB = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
@@ -36,12 +39,6 @@ T_TRANSITIONS = [
         "canonical_owner": "WT",
     },
 ]
-
-
-def require_supported_r3_registry_generation(value: object) -> int:
-    if not isinstance(value, int) or value not in R3_SUPPORTED_REGISTRY_GENERATIONS:
-        raise AssertionError(f"UNSUPPORTED_R3_REGISTRY_GENERATION:{value}")
-    return value
 
 
 class ProposedR3OwnershipProjectionTests(unittest.TestCase):
@@ -91,7 +88,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(T_TRANSITIONS)
             return registry, policy, ownership, identities
 
-        generation = require_supported_r3_registry_generation(registry.get("registry_generation"))
+        generation = require_canonical_r3_registry_generation(registry)
         self.assertEqual(R3, registry.get("architecture_revision"))
         self.assertEqual(R3, policy.get("architecture_revision"))
         ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
@@ -288,11 +285,18 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
 
     def test_unrecognized_future_registry_generation_fails_closed(self):
         for generation in (79, 80):
-            self.assertEqual(generation, require_supported_r3_registry_generation(generation))
+            self.assertEqual(
+                generation,
+                require_canonical_r3_registry_generation(
+                    {"architecture_revision": R3, "registry_generation": generation}
+                ),
+            )
         for generation in (81, 90, 999):
             with self.subTest(generation=generation):
                 with self.assertRaisesRegex(AssertionError, "UNSUPPORTED_R3_REGISTRY_GENERATION"):
-                    require_supported_r3_registry_generation(generation)
+                    require_canonical_r3_registry_generation(
+                        {"architecture_revision": R3, "registry_generation": generation}
+                    )
 
 
 if __name__ == "__main__":

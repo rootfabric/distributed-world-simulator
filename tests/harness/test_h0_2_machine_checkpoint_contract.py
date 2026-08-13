@@ -27,7 +27,10 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
             "scheduler_policy": self.scheduler,
         }
         self.work_order = {
+            "work_order_id": "H0-2-NX-C1-WO-TEST",
+            "project_epoch": "E-test",
             "goal_checkpoint": CHECKPOINT,
+            "branch": "feature/h0-2-test",
         }
 
     def test_h0_2_checkpoint_exists_and_has_distinct_success_state(self):
@@ -100,11 +103,13 @@ class H02MachineCheckpointContractTests(unittest.TestCase):
             "work_order_id": "H0-2-NX-C1-WO-TEST",
             "state": "DISPATCHED",
         }
-        plan = build_plan(self.contracts, self.work_order, reduced)
+        work_order = dict(self.work_order)
+        work_order["global_runtime_mutation_arbiter"] = {"authorized": True}
+        plan = build_plan(self.contracts, work_order, reduced)
         self.assertEqual("SINGLE_HIGH_RISK_RUNTIME_PILOT", plan["mode"])
         self.assertEqual(1, plan["autonomous_runtime_workers"])
         self.assertEqual("CURRENT_WORK_ORDER_BRANCH", plan["nx_c1_gate"]["branch_creation"])
-        self.assertEqual("AUTHORIZED_BY_DISPATCH", plan["nx_c1_gate"]["runtime_mutation"])
+        self.assertEqual("AUTHORIZED_BY_MAIN_OWNED_LEASE", plan["nx_c1_gate"]["runtime_mutation"])
         self.assertEqual("BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH", plan["next_action"])
         self.assertEqual("CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS", plan["nx_c1_gate"]["source_acceptance_requires"])
 
