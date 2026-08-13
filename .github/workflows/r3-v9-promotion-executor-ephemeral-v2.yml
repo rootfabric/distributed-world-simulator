@@ -1,0 +1,29 @@
+name: R3 V9 Promotion Executor Ephemeral V2
+
+on:
+  push:
+    branches:
+      - control/r3-v9-promotion-executor-ephemeral
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout executor branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Execute validated promotion candidate build
+        run: python3 .github/r3_v9_promotion_executor.py
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r3-v9-promotion-validation
+          path: .r3-validation
+          if-no-files-found: warn
