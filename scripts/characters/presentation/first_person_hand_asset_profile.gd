@@ -9,6 +9,9 @@ const PROVIDER_INSPECT_ONLY := "INSPECT_ONLY"
 const REST_CANONICAL_COMPATIBLE := "CANONICAL_COMPATIBLE_BIND_SPACE"
 const REST_INSPECT_REQUIRED := "INSPECT_REQUIRED"
 const REST_AUTO_CANONICAL_REBIND := "AUTO_CANONICAL_REBIND"
+const REST_SOURCE_NATIVE_BIND_SPACE := "SOURCE_NATIVE_BIND_SPACE"
+const DRIVER_CANONICAL_SKIN_REBIND := "CANONICAL_SKIN_REBIND"
+const DRIVER_NATIVE_SKELETON_POSE := "NATIVE_SKELETON_POSE"
 
 const ALLOWED_PROVIDERS: Array[String] = [
 	PROVIDER_SKINNED_NAMED_BIND,
@@ -27,6 +30,12 @@ const ALLOWED_REST_POLICIES: Array[String] = [
 	REST_CANONICAL_COMPATIBLE,
 	REST_INSPECT_REQUIRED,
 	REST_AUTO_CANONICAL_REBIND,
+	REST_SOURCE_NATIVE_BIND_SPACE,
+]
+const ALLOWED_RUNTIME_DRIVERS: Array[String] = [
+	"",
+	DRIVER_CANONICAL_SKIN_REBIND,
+	DRIVER_NATIVE_SKELETON_POSE,
 ]
 
 
@@ -93,6 +102,14 @@ static func validate(profile: Dictionary) -> Dictionary:
 		var policy := String(retarget.get("rest_space_policy", "")).strip_edges().to_upper()
 		if policy not in ALLOWED_REST_POLICIES:
 			return _failure("FPE_HAND_PROFILE_REST_POLICY_UNSUPPORTED", {"rest_space_policy": policy})
+		var runtime_driver := String(retarget.get("runtime_driver", "")).strip_edges().to_upper()
+		if runtime_driver not in ALLOWED_RUNTIME_DRIVERS:
+			return _failure("FPE_HAND_PROFILE_RUNTIME_DRIVER_UNSUPPORTED", {"runtime_driver": runtime_driver})
+		if policy == REST_SOURCE_NATIVE_BIND_SPACE and runtime_driver != DRIVER_NATIVE_SKELETON_POSE:
+			return _failure("FPE_HAND_PROFILE_NATIVE_BIND_SPACE_REQUIRES_NATIVE_DRIVER", {
+				"rest_space_policy": policy,
+				"runtime_driver": runtime_driver,
+			})
 		var bone_map_value: Variant = retarget.get("bone_map", {})
 		if not bone_map_value is Dictionary:
 			return _failure("FPE_HAND_PROFILE_BONE_MAP_INVALID")
@@ -124,6 +141,7 @@ static func create_report(profile: Dictionary, profile_path: String = "") -> Dic
 		"source_url": String(license_data.get("source_url", "")),
 		"license_spdx": String(license_data.get("spdx", "")),
 		"rest_space_policy": String(retarget.get("rest_space_policy", "")),
+		"runtime_driver": String(retarget.get("runtime_driver", "")),
 		"bone_map_count": common_map.size(),
 		"bone_map_by_hand_count": per_hand_counts,
 		"bone_map_total_count": common_map.size() + int(per_hand_counts.left) + int(per_hand_counts.right),
