@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Auto", "P31", "P32")]
+    [ValidateSet("Auto", "P31", "P32", "P33")]
     [string]$Stage = "Auto",
     [string]$GodotPath = $env:GODOT_BIN,
     [string]$OutputRoot = ""
@@ -12,6 +12,7 @@ $ExpectedGodotVersion = "4.7.1.stable.double.custom_build.a13da4feb"
 $ExpectedP28Aggregate = "ba4e4bcef779764c86b20f1a76b452e0a2edcc88d351a1f9b4d2d41e10c420d6"
 $ExpectedP31Aggregate = "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df548c7cc425a"
 $ExpectedP32Aggregate = "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+$ExpectedP33Aggregate = "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41"
 
 $PinnedSurfaceBlobs = [ordered]@{
     "RUN_ECO_EVO1_P2_8_TESTS.ps1" = "2f263f562bbdde60e2cf2868c1bb30dd49ed4835"
@@ -21,6 +22,9 @@ $PinnedSurfaceBlobs = [ordered]@{
     "RUN_ECO_P3_2_TESTS.ps1" = "9056e180bf806547b6ecd8ae9a75f8cc83fccdfc"
     "scripts/research/ecology/plant_density_carrying_capacity_v1.gd" = "8e635f8915ad53cac9a37917df32036cf92907b2"
     "tests/research/ecology/eco_p3_2_density_carrying_capacity_acceptance.gd" = "c07e2c211ac9a5bf8ce58f323b3684b1e1e04028"
+    "RUN_ECO_P3_3_TESTS.ps1" = "f6ebb17bc26b916711406c1808779f22dd20c496"
+    "scripts/research/ecology/plant_spatial_dispersal_v1.gd" = "43a25eb0e6677749162de99c251231c94d243dc1"
+    "tests/research/ecology/eco_p3_3_spatial_dispersal_acceptance.gd" = "9911c9197663098e1efa8875332b9d7c88ca34c6"
 }
 
 function Get-GitValue([string[]]$Arguments) {
@@ -131,8 +135,10 @@ if ($godotVersion -ne $ExpectedGodotVersion) {
 
 $p31Validation = Read-Validation "validation/ecology/eco-p3-1-resource-competition-validation.json"
 $p32Validation = Read-Validation "validation/ecology/eco-p3-2-density-carrying-capacity-validation.json"
+$p33Validation = Read-Validation "validation/ecology/eco-p3-3-spatial-dispersal-validation.json"
 $p31Accepted = Test-AcceptedStatus $p31Validation
 $p32Accepted = Test-AcceptedStatus $p32Validation
+$p33Accepted = Test-AcceptedStatus $p33Validation
 
 $resolvedStage = $Stage
 if ($resolvedStage -eq "Auto") {
@@ -142,12 +148,18 @@ if ($resolvedStage -eq "Auto") {
     elseif (-not $p32Accepted) {
         $resolvedStage = "P32"
     }
+    elseif (-not $p33Accepted) {
+        $resolvedStage = "P33"
+    }
     else {
-        throw "NO_PENDING_P3_CANONICAL_STAGE: P3.1 and P3.2 are already ACCEPTED*"
+        throw "NO_PENDING_P3_CANONICAL_STAGE: P3.1, P3.2 and P3.3 are already ACCEPTED*"
     }
 }
 if ($resolvedStage -eq "P32" -and -not $p31Accepted) {
     throw "P3_2_CANONICAL_BLOCKED: P3.1 validation status is not ACCEPTED*: $([string]$p31Validation.status)"
+}
+if ($resolvedStage -eq "P33" -and -not $p32Accepted) {
+    throw "P3_3_CANONICAL_BLOCKED: P3.2 validation status is not ACCEPTED*: $([string]$p32Validation.status)"
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
@@ -161,7 +173,13 @@ $tree = Get-GitValue -Arguments @("rev-parse", "HEAD^{tree}")
 $collectorBlob = Get-GitValue -Arguments @("hash-object", "--", "RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1")
 $validationP31Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-1-resource-competition-validation.json")
 $validationP32Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-2-density-carrying-capacity-validation.json")
-$stageLabel = if ($resolvedStage -eq "P31") { "P3.1" } else { "P3.2" }
+$validationP33Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-3-spatial-dispersal-validation.json")
+$stageLabel = switch ($resolvedStage) {
+    "P31" { "P3.1" }
+    "P32" { "P3.2" }
+    "P33" { "P3.3" }
+    default { throw "UNSUPPORTED_RESOLVED_STAGE: $resolvedStage" }
+}
 $fileStem = "$resolvedStage-$timestamp-$($head.Substring(0, 12))"
 $rawLogPath = Join-Path $OutputRoot "$fileStem.log"
 $evidencePath = Join-Path $OutputRoot "$fileStem.json"
@@ -192,7 +210,7 @@ if ($resolvedStage -eq "P31") {
         throw "P3_1_PARENT_MISMATCH: expected=$ExpectedP28Aggregate actual=$parentHash"
     }
 }
-else {
+elseif ($resolvedStage -eq "P32") {
     $runner = "RUN_ECO_P3_2_TESTS.ps1"
     $rawOutput = Invoke-CanonicalRunner $runner $rawLogPath
     if ($rawOutput -notmatch 'ECO\.P3\.2 candidate automated gates: PASS') {
@@ -207,8 +225,30 @@ else {
         throw "P3_2_PARENT_MISMATCH: expected=$ExpectedP31Aggregate actual=$parentHash"
     }
 }
+else {
+    $runner = "RUN_ECO_P3_3_TESTS.ps1"
+    $rawOutput = Invoke-CanonicalRunner $runner $rawLogPath
+    if ($rawOutput -notmatch 'ECO\.P3\.3 candidate automated gates: PASS') {
+        throw "P3_3_CANONICAL_PASS_MARKER_MISSING"
+    }
+    $aggregate = Require-Match $rawOutput 'ECO\.P3\.3 aggregate_hash=([0-9a-f]{64})' "P3.3 aggregate"
+    $parentHash = Require-Match $rawOutput 'ECO\.P3\.3 parent_p3_2=([0-9a-f]{64})' "P3.3 parent P3.2"
+    if ($aggregate -ne $ExpectedP33Aggregate) {
+        throw "P3_3_AGGREGATE_MISMATCH: expected=$ExpectedP33Aggregate actual=$aggregate"
+    }
+    if ($parentHash -ne $ExpectedP32Aggregate) {
+        throw "P3_3_PARENT_MISMATCH: expected=$ExpectedP32Aggregate actual=$parentHash"
+    }
+}
 
 $rawLogSha256 = (Get-FileHash -LiteralPath $RawLogPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$nextAction = switch ($resolvedStage) {
+    "P31" { "Review this exact evidence, then update P3.1 validation to ACCEPTED in a separate lifecycle commit before running P3.2 canonical." }
+    "P32" { "Review this exact evidence, then update P3.2 validation to ACCEPTED in a separate lifecycle commit before opening/running P3.3." }
+    "P33" { "Review this exact evidence, then update P3.3 validation to ACCEPTED in a separate lifecycle commit before opening P3.4 Environmental Gradient." }
+    default { throw "UNSUPPORTED_RESOLVED_STAGE: $resolvedStage" }
+}
+
 $evidence = [ordered]@{
     schema = "distributed_world_simulator.ecology.p3_windows_canonical_evidence.v1"
     result = "PASS"
@@ -232,6 +272,8 @@ $evidence = [ordered]@{
         p31_validation_status = [string]$p31Validation.status
         p32_validation_blob = $validationP32Blob
         p32_validation_status = [string]$p32Validation.status
+        p33_validation_blob = $validationP33Blob
+        p33_validation_status = [string]$p33Validation.status
         acceptance_mutation_performed = $false
     }
     pinned_surface_blobs = $surfaceBlobs
@@ -246,14 +288,10 @@ $evidence = [ordered]@{
         p2_8_aggregate_hash = $ExpectedP28Aggregate
         p3_1_aggregate_hash = $ExpectedP31Aggregate
         p3_2_aggregate_hash = $ExpectedP32Aggregate
+        p3_3_aggregate_hash = $ExpectedP33Aggregate
         godot_version = $ExpectedGodotVersion
     }
-    next_action = if ($resolvedStage -eq "P31") {
-        "Review this exact evidence, then update P3.1 validation to ACCEPTED in a separate lifecycle commit before running P3.2 canonical."
-    }
-    else {
-        "Review this exact evidence, then update P3.2 validation to ACCEPTED in a separate lifecycle commit before opening P3.3."
-    }
+    next_action = $nextAction
 }
 
 $evidence | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $evidencePath -Encoding UTF8
