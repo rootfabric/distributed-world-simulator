@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Auto", "P31", "P32", "P33", "P34")]
+    [ValidateSet("Auto", "P31", "P32", "P33", "P34", "P35")]
     [string]$Stage = "Auto",
     [string]$GodotPath = $env:GODOT_BIN,
     [string]$OutputRoot = ""
@@ -14,6 +14,7 @@ $ExpectedP31Aggregate = "f3e5ff9efbdee004cde58bc7de4a971cc9a17b51a13060cfc98df54
 $ExpectedP32Aggregate = "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
 $ExpectedP33Aggregate = "37342327500b79f71ff2f5adbab51b659015311039ae5105eb00bb1705ac6c41"
 $ExpectedP34Aggregate = "a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813"
+$ExpectedP35Aggregate = "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83"
 
 $PinnedSurfaceBlobs = [ordered]@{
     "RUN_ECO_EVO1_P2_8_TESTS.ps1" = "2f263f562bbdde60e2cf2868c1bb30dd49ed4835"
@@ -29,6 +30,9 @@ $PinnedSurfaceBlobs = [ordered]@{
     "RUN_ECO_P3_4_TESTS.ps1" = "25f096ec918115f5b7d9447bfad0377dc93d2fd5"
     "scripts/research/ecology/plant_environmental_gradient_v1.gd" = "11e2b281c48d378da906f0739c739eecf9aa8465"
     "tests/research/ecology/eco_p3_4_environmental_gradient_acceptance.gd" = "f3412bd53ebe7d647b83266e4945d758924ab66b"
+    "RUN_ECO_P3_5_TESTS.ps1" = "510ceaa8ed82902ea8a0b0c62f87fe038894b674"
+    "scripts/research/ecology/plant_seasonal_world_v1.gd" = "649d26457ac8383f890f0dfca890353cc200ee7e"
+    "tests/research/ecology/eco_p3_5_seasonal_world_acceptance.gd" = "c91ed0c25c418be1a7c7c4352423b7214c8706f8"
 }
 
 function Get-GitValue([string[]]$Arguments) {
@@ -141,10 +145,12 @@ $p31Validation = Read-Validation "validation/ecology/eco-p3-1-resource-competiti
 $p32Validation = Read-Validation "validation/ecology/eco-p3-2-density-carrying-capacity-validation.json"
 $p33Validation = Read-Validation "validation/ecology/eco-p3-3-spatial-dispersal-validation.json"
 $p34Validation = Read-Validation "validation/ecology/eco-p3-4-environmental-gradient-validation.json"
+$p35Validation = Read-Validation "validation/ecology/eco-p3-5-seasonal-world-validation.json"
 $p31Accepted = Test-AcceptedStatus $p31Validation
 $p32Accepted = Test-AcceptedStatus $p32Validation
 $p33Accepted = Test-AcceptedStatus $p33Validation
 $p34Accepted = Test-AcceptedStatus $p34Validation
+$p35Accepted = Test-AcceptedStatus $p35Validation
 
 $resolvedStage = $Stage
 if ($resolvedStage -eq "Auto") {
@@ -160,8 +166,11 @@ if ($resolvedStage -eq "Auto") {
     elseif (-not $p34Accepted) {
         $resolvedStage = "P34"
     }
+    elseif (-not $p35Accepted) {
+        $resolvedStage = "P35"
+    }
     else {
-        throw "NO_PENDING_P3_CANONICAL_STAGE: P3.1 through P3.4 are already ACCEPTED*"
+        throw "NO_PENDING_P3_CANONICAL_STAGE: P3.1 through P3.5 are already ACCEPTED*"
     }
 }
 if ($resolvedStage -eq "P32" -and -not $p31Accepted) {
@@ -172,6 +181,9 @@ if ($resolvedStage -eq "P33" -and -not $p32Accepted) {
 }
 if ($resolvedStage -eq "P34" -and -not $p33Accepted) {
     throw "P3_4_CANONICAL_BLOCKED: P3.3 validation status is not ACCEPTED*: $([string]$p33Validation.status)"
+}
+if ($resolvedStage -eq "P35" -and -not $p34Accepted) {
+    throw "P3_5_CANONICAL_BLOCKED: P3.4 validation status is not ACCEPTED*: $([string]$p34Validation.status)"
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
@@ -187,11 +199,13 @@ $validationP31Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/
 $validationP32Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-2-density-carrying-capacity-validation.json")
 $validationP33Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-3-spatial-dispersal-validation.json")
 $validationP34Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-4-environmental-gradient-validation.json")
+$validationP35Blob = Get-GitValue -Arguments @("hash-object", "--", "validation/ecology/eco-p3-5-seasonal-world-validation.json")
 $stageLabel = switch ($resolvedStage) {
     "P31" { "P3.1" }
     "P32" { "P3.2" }
     "P33" { "P3.3" }
     "P34" { "P3.4" }
+    "P35" { "P3.5" }
     default { throw "UNSUPPORTED_RESOLVED_STAGE: $resolvedStage" }
 }
 $fileStem = "$resolvedStage-$timestamp-$($head.Substring(0, 12))"
@@ -248,7 +262,7 @@ elseif ($resolvedStage -eq "P33") {
     if ($aggregate -ne $ExpectedP33Aggregate) { throw "P3_3_AGGREGATE_MISMATCH: expected=$ExpectedP33Aggregate actual=$aggregate" }
     if ($parentHash -ne $ExpectedP32Aggregate) { throw "P3_3_PARENT_MISMATCH: expected=$ExpectedP32Aggregate actual=$parentHash" }
 }
-else {
+elseif ($resolvedStage -eq "P34") {
     $runner = "RUN_ECO_P3_4_TESTS.ps1"
     $rawOutput = Invoke-CanonicalRunner $runner $rawLogPath
     if ($rawOutput -notmatch 'ECO\.P3\.4 candidate automated gates: PASS') { throw "P3_4_CANONICAL_PASS_MARKER_MISSING" }
@@ -257,13 +271,23 @@ else {
     if ($aggregate -ne $ExpectedP34Aggregate) { throw "P3_4_AGGREGATE_MISMATCH: expected=$ExpectedP34Aggregate actual=$aggregate" }
     if ($parentHash -ne $ExpectedP33Aggregate) { throw "P3_4_PARENT_MISMATCH: expected=$ExpectedP33Aggregate actual=$parentHash" }
 }
+else {
+    $runner = "RUN_ECO_P3_5_TESTS.ps1"
+    $rawOutput = Invoke-CanonicalRunner $runner $rawLogPath
+    if ($rawOutput -notmatch 'ECO\.P3\.5 candidate automated gates: PASS') { throw "P3_5_CANONICAL_PASS_MARKER_MISSING" }
+    $aggregate = Require-Match $rawOutput 'ECO\.P3\.5 aggregate_hash=([0-9a-f]{64})' "P3.5 aggregate"
+    $parentHash = Require-Match $rawOutput 'ECO\.P3\.5 parent_p3_4=([0-9a-f]{64})' "P3.5 parent P3.4"
+    if ($aggregate -ne $ExpectedP35Aggregate) { throw "P3_5_AGGREGATE_MISMATCH: expected=$ExpectedP35Aggregate actual=$aggregate" }
+    if ($parentHash -ne $ExpectedP34Aggregate) { throw "P3_5_PARENT_MISMATCH: expected=$ExpectedP34Aggregate actual=$parentHash" }
+}
 
 $rawLogSha256 = (Get-FileHash -LiteralPath $RawLogPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $nextAction = switch ($resolvedStage) {
     "P31" { "Review this exact evidence, then update P3.1 validation to ACCEPTED in a separate lifecycle commit before running P3.2 canonical." }
     "P32" { "Review this exact evidence, then update P3.2 validation to ACCEPTED in a separate lifecycle commit before opening/running P3.3." }
     "P33" { "Review this exact evidence, then update P3.3 validation to ACCEPTED in a separate lifecycle commit before running P3.4 canonical." }
-    "P34" { "Review this exact evidence, then update P3.4 validation to ACCEPTED in a separate lifecycle commit before opening P3.5 Seasonal World." }
+    "P34" { "Review this exact evidence, then update P3.4 validation to ACCEPTED in a separate lifecycle commit before running P3.5 canonical." }
+    "P35" { "Review this exact evidence, then update P3.5 validation to ACCEPTED in a separate lifecycle commit before opening P3.6 Disturbance & Succession." }
     default { throw "UNSUPPORTED_RESOLVED_STAGE: $resolvedStage" }
 }
 
@@ -294,6 +318,8 @@ $evidence = [ordered]@{
         p33_validation_status = [string]$p33Validation.status
         p34_validation_blob = $validationP34Blob
         p34_validation_status = [string]$p34Validation.status
+        p35_validation_blob = $validationP35Blob
+        p35_validation_status = [string]$p35Validation.status
         acceptance_mutation_performed = $false
     }
     pinned_surface_blobs = $surfaceBlobs
@@ -310,6 +336,7 @@ $evidence = [ordered]@{
         p3_2_aggregate_hash = $ExpectedP32Aggregate
         p3_3_aggregate_hash = $ExpectedP33Aggregate
         p3_4_aggregate_hash = $ExpectedP34Aggregate
+        p3_5_aggregate_hash = $ExpectedP35Aggregate
         godot_version = $ExpectedGodotVersion
     }
     next_action = $nextAction

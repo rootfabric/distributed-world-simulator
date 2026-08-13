@@ -1,6 +1,6 @@
 # ECO P3 — Windows Canonical Evidence Runner
 
-Статус: `IMPLEMENTED / EVIDENCE-ONLY / P3.1→P3.4 / NO ACCEPTANCE MUTATION`.
+Статус: `IMPLEMENTED / EVIDENCE-ONLY / P3.1→P3.5 / NO ACCEPTANCE MUTATION`.
 
 Ветка: `feature/eco-evolutionary-ecology`.
 
@@ -10,78 +10,46 @@
 
 Collector не изменяет validation JSON, не переводит checkpoint в `ACCEPTED` и не открывает следующий P3 checkpoint. Acceptance всегда остаётся отдельным lifecycle commit после проверки evidence.
 
-Последовательность:
+Строгая последовательность:
 
 ```text
-P3.1 Windows canonical evidence
--> separate P3.1 ACCEPTED lifecycle commit
--> P3.2 Windows canonical evidence
--> separate P3.2 ACCEPTED lifecycle commit
--> P3.3 Windows canonical evidence
--> separate P3.3 ACCEPTED lifecycle commit
--> P3.4 Windows canonical evidence
--> separate P3.4 ACCEPTED lifecycle commit
--> P3.5 may open
+P3.1 Windows canonical -> accept P3.1
+P3.2 Windows canonical -> accept P3.2
+P3.3 Windows canonical -> accept P3.3
+P3.4 Windows canonical -> accept P3.4
+P3.5 Windows canonical -> accept P3.5
+P3.6 may open
 ```
 
 ## Fail-closed preflight
 
-Перед canonical runner collector требует:
+Collector требует:
 
 - exact branch `feature/eco-evolutionary-ecology`;
-- отсутствие staged/unstaged изменений tracked files;
+- отсутствие staged/unstaged tracked changes;
 - exact Godot `4.7.1.stable.double.custom_build.a13da4feb`;
-- byte-identical pinned P2.8/P3.1/P3.2/P3.3/P3.4 runner, kernel и acceptance-test surfaces;
-- для P3.2 — factual P3.1 validation status `ACCEPTED*`;
-- для P3.3 — factual P3.2 validation status `ACCEPTED*`;
-- для P3.4 — factual P3.3 validation status `ACCEPTED*`.
+- byte-identical pinned P2.8/P3.1/P3.2/P3.3/P3.4/P3.5 runner, kernel и acceptance-test surfaces;
+- P3.2 требует `P3.1 = ACCEPTED*`;
+- P3.3 требует `P3.2 = ACCEPTED*`;
+- P3.4 требует `P3.3 = ACCEPTED*`;
+- P3.5 требует `P3.4 = ACCEPTED*`.
 
-Pinned Git blob identities:
+Новые P3.5 pins:
 
 ```text
-RUN_ECO_EVO1_P2_8_TESTS.ps1
-2f263f562bbdde60e2cf2868c1bb30dd49ed4835
+RUN_ECO_P3_5_TESTS.ps1
+510ceaa8ed82902ea8a0b0c62f87fe038894b674
 
-RUN_ECO_P3_1_TESTS.ps1
-3a4f1cf35f530da08485638cd907283cd9d6cc30
+scripts/research/ecology/plant_seasonal_world_v1.gd
+649d26457ac8383f890f0dfca890353cc200ee7e
 
-scripts/research/ecology/plant_resource_competition_v1.gd
-c667569b40775a1a1898d7b911a610ca5795f380
-
-tests/research/ecology/eco_p3_1_resource_competition_acceptance.gd
-421bf16651da64f92690ba2d676ecee7b3f97cf0
-
-RUN_ECO_P3_2_TESTS.ps1
-9056e180bf806547b6ecd8ae9a75f8cc83fccdfc
-
-scripts/research/ecology/plant_density_carrying_capacity_v1.gd
-8e635f8915ad53cac9a37917df32036cf92907b2
-
-tests/research/ecology/eco_p3_2_density_carrying_capacity_acceptance.gd
-c07e2c211ac9a5bf8ce58f323b3684b1e1e04028
-
-RUN_ECO_P3_3_TESTS.ps1
-f6ebb17bc26b916711406c1808779f22dd20c496
-
-scripts/research/ecology/plant_spatial_dispersal_v1.gd
-43a25eb0e6677749162de99c251231c94d243dc1
-
-tests/research/ecology/eco_p3_3_spatial_dispersal_acceptance.gd
-9911c9197663098e1efa8875332b9d7c88ca34c6
-
-RUN_ECO_P3_4_TESTS.ps1
-25f096ec918115f5b7d9447bfad0377dc93d2fd5
-
-scripts/research/ecology/plant_environmental_gradient_v1.gd
-11e2b281c48d378da906f0739c739eecf9aa8465
-
-tests/research/ecology/eco_p3_4_environmental_gradient_acceptance.gd
-f3412bd53ebe7d647b83266e4945d758924ab66b
+tests/research/ecology/eco_p3_5_seasonal_world_acceptance.gd
+c91ed0c25c418be1a7c7c4352423b7214c8706f8
 ```
 
-Collector также пишет в evidence JSON собственный current blob, validation-file blobs/status для P3.1/P3.2/P3.3/P3.4, HEAD/tree, PowerShell version, OS/architecture и exact Godot identity.
+Предыдущие P3.1→P3.4 pins остаются неизменными и также проверяются collector'ом.
 
-## Expected immutable aggregates
+## Immutable aggregates
 
 ```text
 ECO.EVO1/P2.8
@@ -98,13 +66,16 @@ ECO.P3.3
 
 ECO.P3.4
 a4464e5d42fb4a9e29c4a6ddfcb4c338ecbb4547bcd8bd80f430a7565df90813
+
+ECO.P3.5
+255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83
 ```
 
-Canonical run fail-closed останавливается, если observed aggregate или parent identity отличается от ожидаемого immutable value.
+Canonical run fail-closed останавливается при любом несовпадении aggregate или parent identity.
 
 ## Usage
 
-Normal mode выбирает следующий legal stage по factual validation status:
+Следующий legal stage автоматически:
 
 ```powershell
 $Godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
@@ -118,9 +89,8 @@ Explicit stages:
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P32 -GodotPath $Godot
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P33 -GodotPath $Godot
 .\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P34 -GodotPath $Godot
+.\RUN_ECO_P3_WINDOWS_CANONICAL_EVIDENCE.ps1 -Stage P35 -GodotPath $Godot
 ```
-
-`P32` fail-closed blocked пока P3.1 не `ACCEPTED*`; `P33` blocked пока P3.2 не `ACCEPTED*`; `P34` blocked пока P3.3 не `ACCEPTED*`.
 
 ## Evidence output
 
@@ -130,48 +100,32 @@ Default directory:
 test-results/ecology/p3-windows-canonical/
 ```
 
-Successful run writes matching raw log + JSON pair:
+Successful stage writes matching `.log` and `.json`:
 
 ```text
 P31-<UTC>-<HEAD12>.log/.json
 P32-<UTC>-<HEAD12>.log/.json
 P33-<UTC>-<HEAD12>.log/.json
 P34-<UTC>-<HEAD12>.log/.json
+P35-<UTC>-<HEAD12>.log/.json
 ```
 
-JSON содержит:
+Evidence JSON records repository/branch/HEAD/tree, tracked-worktree cleanliness, OS/PowerShell/Godot identity, all pinned source blobs, P3.1→P3.5 validation blob/status identities, canonical runner, observed aggregate/parent, raw-log SHA-256 and expected immutable aggregates.
 
-- stage/result;
-- UTC timestamp;
-- repository/branch/HEAD/tree;
-- tracked-worktree cleanliness assertion;
-- host/PowerShell/Godot identity;
-- pinned source blob identities;
-- P3.1/P3.2/P3.3/P3.4 validation status/blob identities;
-- canonical runner name;
-- observed aggregate and parent hash;
-- raw-log filename and SHA-256;
-- immutable expected P2.8/P3.1/P3.2/P3.3/P3.4 aggregates;
-- explicit `acceptance_mutation_performed = false`;
-- next lifecycle action for the selected stage.
-
-Console additionally prints `evidence_sha256` after JSON creation.
+`acceptance_mutation_performed = false` remains mandatory.
 
 ## Current legal next run
 
-Current factual state:
+Current lifecycle state remains:
 
 ```text
 P3.1 = ACCEPTED_EXACT_WINDOWS_CANONICAL
 P3.2 = ACCEPTED_EXACT_WINDOWS_CANONICAL
-P3.3 = CANDIDATE_TARGETED_LINUX_PASS_EXACT_WINDOWS_CANONICAL_PENDING
-P3.4 = CANDIDATE_TARGETED_LINUX_PASS_P3_3_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING
+P3.3 = CANDIDATE / Windows canonical pending
+P3.4 = implementation candidate / blocked on P3.3 ACCEPTED
+P3.5 = implementation candidate / blocked on P3.4 ACCEPTED
 ```
 
-Therefore `-Stage Auto` resolves to:
+Therefore `-Stage Auto` still resolves to `P33`.
 
-```text
-P33 / P3.3 Spatial Dispersal
-```
-
-P3.4 implementation already exists as a targeted candidate, but its canonical gate remains closed until a separate reviewed lifecycle commit accepts exact P3.3 Windows canonical evidence. After P3.3 acceptance, `Auto` advances to `P34`; P3.5 remains closed until P3.4 is independently accepted.
+After a separate P3.3 acceptance commit Auto advances to `P34`; after P3.4 acceptance it advances to `P35`. P3.5 targeted Linux PASS never authorizes P3.6 by itself.
