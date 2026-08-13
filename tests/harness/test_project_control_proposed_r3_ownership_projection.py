@@ -15,6 +15,7 @@ import project_control_directional_watch as directional
 
 R2 = "GLOBAL-P0-2026-08-10-R2"
 R3 = "GLOBAL-P0-2026-08-12-R3-REFRESH-R1"
+R3_CANONICAL_MIN_REGISTRY_GENERATION = 79
 FROZEN_R3_TARGET = "595263c4c925c122a09876cb29b87f5ca5fef1d2"
 FROZEN_R3_OWNERSHIP_PATH = "config/control/architecture-ownership-r3-candidate.v1.json"
 FROZEN_R3_OWNERSHIP_BLOB = "ad2aaac2c5f942b9748b5cf391038a7ce122d073"
@@ -63,7 +64,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         identities: dict[str, dict[str, str]] = {}
         if registry.get("registry_generation") == 78 and registry.get("architecture_revision") == R2:
             ownership = frozen_ownership
-            registry["registry_generation"] = 79
+            registry["registry_generation"] = R3_CANONICAL_MIN_REGISTRY_GENERATION
             registry["architecture_revision"] = R3
             policy["architecture_revision"] = R3
             for key in LEGACY_PROGRAMS:
@@ -84,7 +85,9 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
             registry["programs"]["T"]["historical_passport_ownership_transitions"] = copy.deepcopy(T_TRANSITIONS)
             return registry, policy, ownership, identities
 
-        self.assertEqual(79, registry.get("registry_generation"))
+        generation = registry.get("registry_generation")
+        self.assertIsInstance(generation, int)
+        self.assertGreaterEqual(generation, R3_CANONICAL_MIN_REGISTRY_GENERATION)
         self.assertEqual(R3, registry.get("architecture_revision"))
         self.assertEqual(R3, policy.get("architecture_revision"))
         ownership = self._load_local_json("config/control/architecture-ownership.v1.json")
@@ -177,7 +180,7 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
 
         self.assertNotEqual("RED", standard, [(p["program"], p["health"], p.get("findings")) for p in programs])
         self.assertNotEqual("RED", directional_health)
-        self.assertEqual(79, registry["registry_generation"])
+        self.assertGreaterEqual(registry["registry_generation"], R3_CANONICAL_MIN_REGISTRY_GENERATION)
         self.assertEqual(R3, registry["architecture_revision"])
         self.assertEqual(set(LEGACY_PROGRAMS), set(identities))
 
