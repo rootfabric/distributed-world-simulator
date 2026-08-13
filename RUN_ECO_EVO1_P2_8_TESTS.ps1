@@ -45,6 +45,7 @@ Invoke-GodotParsePreflight "ECO EVO1 P2.8 parser/preload preflight" "res://tests
 $codecPreflight = Invoke-GodotScript "ECO EVO1 P2.8 checkpoint codec preflight" "res://tests/research/ecology/eco_evo1_p2_8_checkpoint_codec_preflight.gd"
 $codecHash = [regex]::Match($codecPreflight, 'value_hash=([0-9a-f]{64})')
 if (-not $codecHash.Success) { throw "Unable to parse P2.8 checkpoint codec preflight output" }
+Invoke-GodotScript "ECO EVO1 P2.8 fail-closed execution stage probe" "res://tests/research/ecology/eco_evo1_p2_8_failure_stage_probe.gd" | Out-Null
 
 Write-Host "=== ECO EVO1 P2.7 accepted parent regression ==="
 & (Join-Path $RootDir "RUN_ECO_EVO1_P2_7_TESTS.ps1") -GodotPath $GodotPath
@@ -82,6 +83,7 @@ if ($cuts.Groups[1].Value -ne "14" -or $cuts.Groups[2].Value -ne "18" -or $cuts.
 
 Write-Host "ECO.EVO1-P2.8 checkpoint codec preflight: PASS"
 Write-Host "ECO.EVO1-P2.8 checkpoint codec value_hash=$($codecHash.Groups[1].Value)"
+Write-Host "ECO.EVO1-P2.8 fail-closed execution stage probe: PASS"
 Write-Host "ECO.EVO1-P2.7 accepted regression: PASS"
 Write-Host "ECO.EVO1-P2.8 deterministic save/restart plant world proof: PASS"
 Write-Host "ECO.EVO1-P2.8 fresh-process replay: PASS"
