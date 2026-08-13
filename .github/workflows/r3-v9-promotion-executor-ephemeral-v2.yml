@@ -17,8 +17,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare fresh immutable candidate ref
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/r3_v9_promotion_executor.py')
+          text = path.read_text(encoding='utf-8')
+          old = 'CANDIDATE_BRANCH = "control/r3-v9-promotion-candidate-ephemeral"'
+          new = 'CANDIDATE_BRANCH = "control/r3-v9-promotion-candidate-ephemeral-retry-2"'
+          if text.count(old) != 1:
+              raise SystemExit('unexpected candidate branch declaration')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
       - name: Execute validated promotion candidate build
-        run: python3 .github/r3_v9_promotion_executor.py
+        shell: bash
+        run: |
+          mkdir -p .r3-validation
+          set -o pipefail
+          python3 .github/r3_v9_promotion_executor.py 2>&1 | tee .r3-validation/executor.log
 
       - name: Upload validation evidence
         if: always()
@@ -26,4 +43,4 @@ jobs:
         with:
           name: r3-v9-promotion-validation
           path: .r3-validation
-          if-no-files-found: warn
+          if-no-files-found: error
