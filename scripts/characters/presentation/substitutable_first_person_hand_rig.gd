@@ -24,10 +24,6 @@ func setup(
 	p_viewmodel_layer_index: int = DEFAULT_VIEWMODEL_LAYER,
 	p_visual_provider: Variant = null
 ) -> Dictionary:
-	# S6 exposed a two-argument setup plus configure_visual_provider(). S7 needs
-	# a direct resource-provider injection path. Keep the old calls valid while
-	# allowing an optional third provider argument through the same validation
-	# boundary.
 	if p_visual_provider != null:
 		var provider_config: Dictionary = configure_visual_provider(p_visual_provider)
 		if not bool(provider_config.get("success", false)):
@@ -38,9 +34,6 @@ func setup(
 	_visual_provider_report.clear()
 	_visual_provider_pose_sync_result.clear()
 
-	# ArticulatedFirstPersonHandRig.setup() builds the canonical 17-bone hand.
-	# Its virtual _build_visuals() call dispatches here, so geometry is supplied
-	# through the provider without changing pose/grip logic.
 	var inherited_result: Dictionary = super.setup(p_hand_id, p_viewmodel_layer_index)
 	var provider_ok := bool(_visual_provider_result.get("success", false))
 	var skeleton_ok := skeleton != null and skeleton.get_bone_count() >= 17
@@ -86,10 +79,8 @@ func _build_visuals() -> void:
 		_visual_provider_report = Dictionary(raw_report).duplicate(true)
 	else:
 		_visual_provider_report = {}
-	if _visual_provider_report.is_empty() and visual_provider.has_method("create_report"):
-		var report_value: Variant = visual_provider.call("create_report", _visual_segments.size())
-		if report_value is Dictionary:
-			_visual_provider_report = Dictionary(report_value).duplicate(true)
+	if _visual_provider_report.is_empty():
+		_refresh_visual_provider_report()
 
 
 func _apply_transition(weight: float) -> void:
@@ -107,10 +98,19 @@ func _sync_visual_provider_pose() -> void:
 		_visual_provider_pose_sync_result = Dictionary(value).duplicate(true)
 	else:
 		_visual_provider_pose_sync_result = _failure("FPE_S6_VISUAL_PROVIDER_POSE_SYNC_RESULT_INVALID")
-	if visual_provider.has_method("create_report"):
-		var report_value: Variant = visual_provider.call("create_report", _visual_segments.size())
-		if report_value is Dictionary:
-			_visual_provider_report = Dictionary(report_value).duplicate(true)
+	_refresh_visual_provider_report()
+
+
+func _refresh_visual_provider_report() -> void:
+	if visual_provider == null:
+		return
+	var report_value: Variant = null
+	if visual_provider.has_method("create_live_report"):
+		report_value = visual_provider.call("create_live_report", _visual_segments.size())
+	elif visual_provider.has_method("create_report"):
+		report_value = visual_provider.call("create_report", _visual_segments.size())
+	if report_value is Dictionary:
+		_visual_provider_report = Dictionary(report_value).duplicate(true)
 
 
 func create_report() -> Dictionary:
