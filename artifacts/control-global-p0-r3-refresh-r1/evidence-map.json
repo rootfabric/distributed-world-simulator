@@ -32,7 +32,8 @@
     "config/control/global-p0-r3-prepromotion-guards.v1.json"
   ],
   "callers": [
-    "NEW SESSION V: Independent Verifier against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2 after durable Independent Reviewer PASS",
+    "NEW SESSION V / GLOBAL-P0 R3 INDEPENDENT VERIFIER V9 RETRY against exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2.",
+    "Durable Verifier output contract: schema=distributed_world_simulator.harness_verification_result.v1; work_order_id=GLOBAL-P0-R3-RECOVERED-MAIN-EXACT-REPIN-V9; verified_head_sha=595263c4c925c122a09876cb29b87f5ca5fef1d2; output=artifacts/control-global-p0-r3-refresh-r1/verification/GLOBAL-P0-R3-RECOVERED-MAIN-EXACT-REPIN-V9-VERIFIER-001.v1.json; verifier identity for intended next Sol session=INDEPENDENT_VERIFIER_SOL; no new Harness execution epoch; Verifier artifact is still absent/pending and may be created only by the subsequent Independent Verifier session.",
     "Director final gate only after durable V9 Reviewer and Verifier PASS evidence",
     "HUMAN GLOBAL_ARCHITECTURE_PROMOTION only after Director PASS and R3_REFRESHED_CANDIDATE_READY"
   ],
@@ -68,7 +69,9 @@
     "G -> ECO remains WATCH_HIT/ADVISORY/12 and is not a current R3 blocker",
     "CH -> NX remains WATCH_HIT/BLOCK/2 as a future NX acceptance revalidation gate, not a current R3 blocker",
     "Durable Independent Reviewer PASS exists at control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0 in artifacts/control-global-p0-r3-refresh-r1/reviews/GLOBAL-P0-R3-V9-FINAL-REVIEW-001.v1.json and is bound to exact frozen V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2; required_fixes=[] and evidence_gaps=[].",
-    "Post-review Project Control run 31652895340 / #328 completed SUCCESS on Reviewer control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0; standard=YELLOW/NON_RED, directional=YELLOW/NON_RED, cross_branch_overlaps=[], critical overlap=0, registry generation=78, architecture=GLOBAL-P0-2026-08-10-R2."
+    "Post-review Project Control run 31652895340 / #328 completed SUCCESS on Reviewer control head 0c840dd3f73651cb4052064c341bd4fce0a47fc0; standard=YELLOW/NON_RED, directional=YELLOW/NON_RED, cross_branch_overlaps=[], critical overlap=0, registry generation=78, architecture=GLOBAL-P0-2026-08-10-R2.",
+    "V9 durable Verifier artifact contract is explicitly bound without creating an artifact: schema=distributed_world_simulator.harness_verification_result.v1; work_order_id=GLOBAL-P0-R3-RECOVERED-MAIN-EXACT-REPIN-V9; verified_head_sha=595263c4c925c122a09876cb29b87f5ca5fef1d2; path=artifacts/control-global-p0-r3-refresh-r1/verification/GLOBAL-P0-R3-RECOVERED-MAIN-EXACT-REPIN-V9-VERIFIER-001.v1.json; filename convention=<WORK_ORDER_ID>-VERIFIER-001.v1.json.",
+    "No new Harness execution epoch or Work Order is created by this contract binding; the future Verifier artifact remains absent/pending and is intentionally not listed as a factual callee."
   ],
   "canonical_truth_changed": false,
   "architecture_ownership_changed": false,
