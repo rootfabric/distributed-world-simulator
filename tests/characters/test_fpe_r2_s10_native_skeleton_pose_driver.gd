@@ -118,7 +118,13 @@ func _build_source_scene() -> PackedScene:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 	var skin := Skin.new()
-	var bind_bones: Array[int] = [root_bone, int(wrists.r), int(middle_base.r), int(wrists.l), int(middle_base.l)]
+	var bind_bones: Array[int] = [
+		root_bone,
+		int(wrists.get("r", -1)),
+		int(middle_base.get("r", -1)),
+		int(wrists.get("l", -1)),
+		int(middle_base.get("l", -1)),
+	]
 	skin.set_bind_count(bind_bones.size())
 	for bind_index in range(bind_bones.size()):
 		var bone_index := bind_bones[bind_index]
@@ -195,9 +201,13 @@ func _skin_bind_pose_matches_source(skin: Skin, skeleton: Skeleton3D) -> bool:
 			return false
 		var expected := skeleton.get_bone_global_rest(bone_index).affine_inverse()
 		var actual := skin.get_bind_pose(bind_index)
-		if not actual.is_equal_approx(expected):
+		if not _transform_approx(actual, expected):
 			return false
 	return true
+
+
+func _transform_approx(a: Transform3D, b: Transform3D) -> bool:
+	return a.origin.is_equal_approx(b.origin) and a.basis.is_equal_approx(b.basis)
 
 
 func _add_bone(skeleton: Skeleton3D, name: String, parent: int, rest: Transform3D) -> int:
