@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory=$true)][string]$ProfileId,
-    [Parameter(Mandatory=$true)][string]$ArchivePath,
+    [string]$ArchivePath = "",
     [string]$GodotPath = "",
     [string]$SourceGlb = ""
 )
@@ -8,13 +8,6 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 $ProfileDir = Join-Path $Root "config\characters\hand-assets"
-
-if (-not (Test-Path -LiteralPath $ArchivePath -PathType Leaf)) {
-    throw "Archive not found: $ArchivePath"
-}
-if ([IO.Path]::GetExtension($ArchivePath).ToLowerInvariant() -ne ".zip") {
-    throw "The generic importer currently supports ZIP archives. Extract other archive types manually, then run INSPECT_FPE_HAND_ASSET.ps1 on the GLB."
-}
 
 $ProfileFile = $null
 $Profile = $null
@@ -27,6 +20,79 @@ Get-ChildItem -LiteralPath $ProfileDir -Filter *.json -File | ForEach-Object {
 }
 if ($null -eq $Profile -or [string]::IsNullOrWhiteSpace($ProfileFile)) {
     throw "Hand asset profile id not found: $ProfileId"
+}
+
+function Find-ProfileArchive {
+    param(
+        [object]$ProfileObject,
+        [string]$RequestedPath
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath) -and (Test-Path -LiteralPath $RequestedPath -PathType Leaf)) {
+        return (Resolve-Path -LiteralPath $RequestedPath).Path
+    }
+
+    $SearchDirs = [System.Collections.Generic.List[string]]::new()
+    $UserProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+    foreach ($Dir in @(
+        (Join-Path $UserProfile "Downloads"),
+        (Join-Path $UserProfile "OneDrive\Downloads")
+    )) {
+        if ((Test-Path -LiteralPath $Dir -PathType Container) -and -not $SearchDirs.Contains($Dir)) {
+            $SearchDirs.Add($Dir)
+        }
+    }
+
+    $ExpectedArchive = [string]$ProfileObject.asset.expected_archive
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedArchive)) {
+        foreach ($Dir in $SearchDirs) {
+            $Exact = Join-Path $Dir $ExpectedArchive
+            if (Test-Path -LiteralPath $Exact -PathType Leaf) {
+                Write-Host "Auto-discovered expected archive: $Exact" -ForegroundColor Cyan
+                return (Resolve-Path -LiteralPath $Exact).Path
+            }
+        }
+    }
+
+    $Tokens = @([string]$ProfileObject.profile_id -split '[-_]' | Where-Object { $_.Length -ge 4 })
+    $Candidates = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+    foreach ($Dir in $SearchDirs) {
+        Get-ChildItem -LiteralPath $Dir -Filter *.zip -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $NameLower = $_.Name.ToLowerInvariant()
+            $Matched = $false
+            foreach ($Token in $Tokens) {
+                if ($NameLower.Contains($Token.ToLowerInvariant())) {
+                    $Matched = $true
+                    break
+                }
+            }
+            if ($Matched) {
+                $Candidates.Add($_)
+            }
+        }
+    }
+
+    $Unique = @($Candidates | Sort-Object FullName -Unique)
+    if ($Unique.Count -eq 1) {
+        Write-Host "Auto-discovered matching archive: $($Unique[0].FullName)" -ForegroundColor Cyan
+        return $Unique[0].FullName
+    }
+    if ($Unique.Count -gt 1) {
+        Write-Host "Multiple matching ZIP archives found:" -ForegroundColor Yellow
+        $Unique | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Yellow }
+        throw "Pass -ArchivePath with the exact ZIP to import."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
+        Write-Host "Requested archive was not found: $RequestedPath" -ForegroundColor Yellow
+    }
+    $Locations = if ($SearchDirs.Count -gt 0) { $SearchDirs -join "; " } else { "<no standard Downloads directory found>" }
+    throw "No ZIP archive for profile '$ProfileId' was found. Download it first, or pass -ArchivePath with the real file path. Searched: $Locations"
+}
+
+$ArchivePath = Find-ProfileArchive -ProfileObject $Profile -RequestedPath $ArchivePath
+if ([IO.Path]::GetExtension($ArchivePath).ToLowerInvariant() -ne ".zip") {
+    throw "The generic importer currently supports ZIP archives. Extract other archive types manually, then run INSPECT_FPE_HAND_ASSET.ps1 on the GLB."
 }
 
 $ScenePath = [string]$Profile.asset.scene_path
@@ -73,6 +139,7 @@ Copy-Item -LiteralPath $Chosen.FullName -Destination $TargetPath -Force
 
 Write-Host "Imported hand asset profile: $ProfileId" -ForegroundColor Green
 Write-Host "Profile: $ProfileFile"
+Write-Host "Archive: $ArchivePath"
 Write-Host "Source GLB: $($Chosen.FullName)"
 Write-Host "Stable Godot scene path: $ScenePath" -ForegroundColor Cyan
 
