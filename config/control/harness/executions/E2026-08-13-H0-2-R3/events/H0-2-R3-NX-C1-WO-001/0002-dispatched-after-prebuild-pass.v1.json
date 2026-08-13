@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-13-H0-2-R3-H0-2-R3-NX-C1-WO-001-0002",
+  "project_epoch": "E2026-08-13-H0-2-R3",
+  "work_order_id": "H0-2-R3-NX-C1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-08-13T09:39:30Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "head_sha": "7d0acd4b19e2a08027396cc55e0808a5d5664ae4",
+  "predicate": "H0_2_R3_EXACT_HEAD_HIGH_PREBUILD_PASS_DISPATCHED",
+  "command": "DIRECTOR_DISPATCH_AFTER_PROJECT_CONTROL_RUN_31687497672_AND_PREBUILD_REVIEW_001",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/reviews/H0-2-R3-NX-C1-WO-001-PREBUILD-REVIEW-001.v1.json",
+    "config/control/harness/executions/E2026-08-13-H0-2-R3/work-orders/H0-2-R3-NX-C1-WO-001.v1.json",
+    "docs/plans/H0_2_NX_C1_OWNER_AUTHORITY_R3_RU.md"
+  ],
+  "summary": "Director dispatch after exact reviewed head 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 passed pinned Harness schema/semantic regression, architecture/ownership regressions and Project Control standard/directional NON_RED. Exactly one HIGH-risk runtime worker is authorized on the current Work Order branch and only within predeclared allowed_paths. No runtime predicate is accepted yet; runtime merge, H0.3 and NX source acceptance remain gated."
+}
