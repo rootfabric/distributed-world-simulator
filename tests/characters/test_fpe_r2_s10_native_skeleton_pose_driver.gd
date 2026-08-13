@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ProviderType = preload("res://scripts/characters/presentation/native_skeleton_profiled_first_person_hand_visual_provider.gd")
+const ProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider.gd")
 const RigType = preload("res://scripts/characters/presentation/substitutable_first_person_hand_rig.gd")
 const PoseCatalogType = preload("res://scripts/characters/presentation/first_person_hand_pose_catalog.gd")
 
@@ -39,6 +39,10 @@ func _run() -> void:
 			_assert(bool(visual.get("source_skeleton_preserved", false)), "%s source skeleton not preserved" % hand)
 			_assert(not bool(visual.get("canonical_skin_rebind", true)), "%s unexpectedly canonical-rebound Skin" % hand)
 			_assert(int(visual.get("native_pose_pair_count", 0)) == 15, "%s native pose map is incomplete" % hand)
+			_assert(String(visual.get("pose_calibration_mode", "")) == "AUTO_CHAIN_PALM_V1", "%s calibrated pose mode missing" % hand)
+			_assert(String(visual.get("root_orientation_mode", "")) == "PRESERVE_SOURCE_BASIS", "%s source root orientation was not preserved" % hand)
+			_assert(bool(visual.get("axis_calibrated_native_pose", false)), "%s axis-calibrated pose marker missing" % hand)
+			_assert(bool(visual.get("open_pose_preserves_source_rest", false)), "%s open pose rest-preservation marker missing" % hand)
 			_assert(provider._native_skeleton != null and provider._native_skeleton.get_bone_count() == 33, "%s native skeleton hierarchy was not preserved" % hand)
 			_assert(provider._native_mesh != null and provider._native_mesh.skin != null, "%s native split mesh missing Skin" % hand)
 			if provider._native_mesh != null and provider._native_mesh.skin != null:
@@ -47,16 +51,23 @@ func _run() -> void:
 			var source_index_name := "finger_index1.%s" % ("r" if hand == "right" else "l")
 			var source_index := provider._native_skeleton.find_bone(source_index_name)
 			_assert(source_index >= 0, "%s source index bone missing" % hand)
-			var before := provider._native_skeleton.get_bone_pose_rotation(source_index) if source_index >= 0 else Quaternion.IDENTITY
+			var open_result: Dictionary = rig.apply_pose(PoseCatalogType.new().get_pose("open"))
+			_assert(bool(open_result.get("success", false)), "%s native open pose failed" % hand)
+			rig._process(0.2)
+			var open_rotation := provider._native_skeleton.get_bone_pose_rotation(source_index) if source_index >= 0 else Quaternion.IDENTITY
+			_assert(Quaternion.IDENTITY.angle_to(open_rotation) < 0.001, "%s open pose changed native source rest" % hand)
 			var pose_result: Dictionary = rig.apply_pose(PoseCatalogType.new().get_pose("beacon_pinch"))
 			_assert(bool(pose_result.get("success", false)), "%s native beacon pose failed" % hand)
 			rig._process(0.2)
 			var after := provider._native_skeleton.get_bone_pose_rotation(source_index) if source_index >= 0 else Quaternion.IDENTITY
-			_assert(before.angle_to(after) > 0.01, "%s native finger pose did not change" % hand)
+			var native_angle_deg := rad_to_deg(Quaternion.IDENTITY.angle_to(after))
+			_assert(native_angle_deg > 0.5, "%s native finger pose did not change" % hand)
+			_assert(native_angle_deg < 95.0, "%s native calibrated finger exceeded safe pose bound" % hand)
 			var settled := rig.create_report()
 			var settled_visual := Dictionary(settled.get("visual_provider", {}))
 			_assert(String(settled.get("settled_pose_id", "")) == "beacon_pinch", "%s canonical pose did not settle" % hand)
 			_assert(int(settled_visual.get("last_driven_bone_count", 0)) == 15, "%s did not drive 15 native finger bones" % hand)
+			_assert(float(settled_visual.get("max_native_pose_angle_deg", 999.0)) <= 90.1, "%s provider report exceeded calibrated pose limit" % hand)
 		host.remove_child(rig)
 		rig.free()
 	host.queue_free()
@@ -81,7 +92,8 @@ func _build_source_scene() -> PackedScene:
 			var parent := wrist
 			for segment in range(1, 4):
 				var basis := Basis.from_euler(Vector3(0.0, deg_to_rad(10.0 * side), deg_to_rad(7.0 * side))) if segment == 1 else Basis.IDENTITY
-				var origin := Vector3(0.0, 0.0, -0.45) if segment > 1 else Vector3(0.05 * side, 0.0, -0.25)
+				var finger_offset := {"thumb": 0.11, "index": 0.08, "middle": 0.02, "ring": -0.04, "pinky": -0.10}.get(finger, 0.0)
+				var origin := Vector3(0.0, 0.0, -0.45) if segment > 1 else Vector3(float(finger_offset) * side, 0.0, -0.25)
 				var bone := _add_bone(skeleton, "finger_%s%d.%s" % [finger, segment, hand_suffix], parent, Transform3D(basis, origin))
 				if finger == "middle" and segment == 1:
 					middle_base[hand_suffix] = bone
@@ -97,7 +109,6 @@ func _build_source_scene() -> PackedScene:
 		normals.append(Vector3.UP)
 		uvs.append(Vector2(float(index % 3) * 0.5, float(index / 3)))
 
-	# Skin bind indexes: 0=root, 1=wrist.r, 2=middle.r, 3=wrist.l, 4=middle.l.
 	var bones := PackedInt32Array([
 		1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 2, 2,
 		3, 4, 3, 3, 3, 4, 3, 3, 4, 3, 4, 4,
@@ -187,10 +198,31 @@ func _profile() -> Dictionary:
 				"source_scale_reference_by_hand": {"left": "finger_middle1.l", "right": "finger_middle1.r"},
 				"target_anchor": "Palm",
 				"target_scale_reference": "MiddleProximal",
-				"uniform_scale_multiplier": 1.0
+				"uniform_scale_multiplier": 1.0,
+				"orientation_mode": "PRESERVE_SOURCE_BASIS"
+			},
+			"native_pose_calibration": {
+				"mode": "AUTO_CHAIN_PALM_V1",
+				"default": {
+					"curl_sign": 1.0,
+					"curl_scale": 0.65,
+					"opposition_sign": 1.0,
+					"opposition_scale": 0.55,
+					"max_abs_curl_deg": 90.0,
+					"max_abs_opposition_deg": 45.0,
+					"base_rotation_degrees": [0.0, 0.0, 0.0]
+				},
+				"by_hand": {"left": {}, "right": {}},
+				"by_finger": {"thumb": {"curl_scale": 0.5, "opposition_scale": 0.45}},
+				"by_bone": {}
 			}
 		},
-		"presentation": {"position": [0.0, 0.0, 0.0], "rotation_degrees": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+		"presentation": {
+			"position": [0.0, 0.0, 0.0],
+			"rotation_degrees": [0.0, 0.0, 0.0],
+			"scale": [1.0, 1.0, 1.0],
+			"by_hand": {"left": {}, "right": {}}
+		}
 	}
 
 
