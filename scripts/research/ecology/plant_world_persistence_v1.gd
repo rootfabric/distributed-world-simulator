@@ -440,18 +440,18 @@ static func _canonical_value(value) -> String:
 
 static func _encode_value(value):
 	match typeof(value):
-		TYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:
+		TYPE_NIL, TYPE_BOOL, TYPE_STRING:
 			return value
 		TYPE_INT:
 			return {"__eco_type": "Int", "value": int(value)}
+		TYPE_FLOAT:
+			return _encode_variant_bytes("Float64", float(value))
 		TYPE_STRING_NAME:
 			return {"__eco_type": "StringName", "value": String(value)}
 		TYPE_VECTOR2:
-			var vector := Vector2(value)
-			return {"__eco_type": "Vector2", "x": vector.x, "y": vector.y}
+			return _encode_variant_bytes("Vector2", Vector2(value))
 		TYPE_RECT2:
-			var rect := Rect2(value)
-			return {"__eco_type": "Rect2", "x": rect.position.x, "y": rect.position.y, "w": rect.size.x, "h": rect.size.y}
+			return _encode_variant_bytes("Rect2", Rect2(value))
 		TYPE_PACKED_STRING_ARRAY:
 			var values: Array = []
 			for item in PackedStringArray(value):
@@ -491,12 +491,14 @@ static func _decode_value(value):
 	match type_name:
 		"Int":
 			return int(wrapper.get("value", 0))
+		"Float64":
+			return _decode_variant_bytes(wrapper, TYPE_FLOAT)
 		"StringName":
 			return StringName(String(wrapper.get("value", "")))
 		"Vector2":
-			return Vector2(float(wrapper.get("x", 0.0)), float(wrapper.get("y", 0.0)))
+			return _decode_variant_bytes(wrapper, TYPE_VECTOR2)
 		"Rect2":
-			return Rect2(float(wrapper.get("x", 0.0)), float(wrapper.get("y", 0.0)), float(wrapper.get("w", 0.0)), float(wrapper.get("h", 0.0)))
+			return _decode_variant_bytes(wrapper, TYPE_RECT2)
 		"PackedStringArray":
 			var packed := PackedStringArray()
 			for item in Array(wrapper.get("values", [])):
@@ -517,3 +519,16 @@ static func _decode_value(value):
 			return dictionary
 		_:
 			return null
+
+static func _encode_variant_bytes(type_name: String, value) -> Dictionary:
+	return {"__eco_type": type_name, "value": Marshalls.raw_to_base64(var_to_bytes(value))}
+
+static func _decode_variant_bytes(wrapper: Dictionary, expected_type: int):
+	var encoded := String(wrapper.get("value", ""))
+	if encoded.is_empty():
+		return null
+	var raw := Marshalls.base64_to_raw(encoded)
+	if raw.is_empty():
+		return null
+	var decoded = bytes_to_var(raw)
+	return decoded if typeof(decoded) == expected_type else null
