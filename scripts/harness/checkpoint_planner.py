@@ -68,13 +68,14 @@ def build_plan(
                 "requested_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
                 "project_checkpoint": "NX_SOURCE_ACCEPTED",
                 "risk_floor": "HIGH",
-                "status": "READY_FOR_FRESH_R3_BRANCH" if dispatched else "WAITING_DIRECTOR_DISPATCH",
-                "reason": "DIRECTOR_DISPATCHED_H0_2" if dispatched else "FRESH_R3_H0_2_WORK_ORDER_NOT_DISPATCHED",
-                "branch_creation": "AUTHORIZED_BY_DISPATCH" if dispatched else "FORBIDDEN_UNTIL_DISPATCH",
+                "status": "READY_FOR_BOUNDED_RUNTIME_IMPLEMENTATION" if dispatched else "PLANNING_BRANCH_READY_WAITING_DIRECTOR_DISPATCH",
+                "reason": "DIRECTOR_DISPATCHED_H0_2" if dispatched else "PLANNING_BRANCH_MAY_EXIST_CONTROL_ONLY_RUNTIME_MUTATION_REQUIRES_DISPATCH",
+                "branch_creation": "CURRENT_WORK_ORDER_BRANCH" if dispatched else "PLANNING_BRANCH_ALLOWED_CONTROL_ONLY",
+                "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if dispatched else "FORBIDDEN_UNTIL_DISPATCH",
                 "source_acceptance_requires": "CH_TO_NX_DIRECTIONAL_REVALIDATION_PASS",
             },
-            "next_action": "CREATE_FRESH_CURRENT_MAIN_NX_C1_CHILD_WORK_ORDER" if dispatched else "ISSUE_FRESH_R3_H0_2_NX_C1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
-            "stop_gates": ["NX_C1_RUNTIME_BRANCH_CREATION_BEFORE_DISPATCH", "NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"],
+            "next_action": "BEGIN_BOUNDED_NX_C1_IMPLEMENTATION_ON_DISPATCHED_BRANCH" if dispatched else "ISSUE_FRESH_R3_H0_2_NX_C1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
+            "stop_gates": ["NX_C1_RUNTIME_MUTATION_BEFORE_DISPATCH", "NX_C1_RUNTIME_MERGE", "H0_3_IMPLEMENTATION"],
         }
 
     raise ValueError(f"UNSUPPORTED_CHECKPOINT:{current}")
