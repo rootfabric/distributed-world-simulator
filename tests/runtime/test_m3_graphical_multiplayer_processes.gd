@@ -123,7 +123,7 @@ func _validate(a1: Dictionary, b: Dictionary, a2: Dictionary, server: Dictionary
 			_assert(bool(report.get("world", {}).get("attached", false)), "Earth M3 spectator attached")
 			_assert(bool(report.get("world", {}).get("spectator_ready", false)), "Earth network spectator ready")
 			_assert(not Dictionary(report.get("world", {}).get("canonical_spawn", {})).is_empty(), "Earth canonical spawn reported")
-			_assert(int(report.get("world", {}).get("m4_item_graph_revision", -1)) >= 0, "Earth received canonical M4 item graph")
+			_assert(int(report.get("world", {}).get("m4_item_graph_revision", -1)) >= 1, "Earth received canonical M4 pickup graph")
 			_assert(int(report.get("world", {}).get("m4_item_snapshot_updates", 0)) >= 1, "Earth received M4 item graph replication")
 		if test_world == "playground":
 			_assert(
@@ -159,6 +159,17 @@ func _validate(a1: Dictionary, b: Dictionary, a2: Dictionary, server: Dictionary
 	_assert(int(b.get("world", {}).get("remote_spawn_count", 0)) >= 2, "B respawned A on reconnect")
 	_assert(bool(b.get("second_move_result", {}).get("success", false)), "B continued movement while A offline")
 	_assert(bool(a1.get("presentation_result", {}).get("success", false)), "A authoritative flashlight update succeeded")
+	if test_world == "earth":
+		_assert(bool(a1.get("earth_item_result", {}).get("success", false)), "A pickup committed through Earth M4 authority")
+		_assert(int(a1.get("world", {}).get("m4_item_commands", 0)) == 1, "only A issued the Earth pickup")
+		_assert(int(b.get("world", {}).get("m4_item_commands", 0)) == 0, "B observed the Earth pickup without private command")
+		_assert(int(a2.get("world", {}).get("m4_item_commands", 0)) == 0, "A reconnect restored item state without replaying pickup")
+		var earth_item_checksum := String(a1.get("world", {}).get("m4_item_graph_checksum", ""))
+		_assert(not earth_item_checksum.is_empty(), "Earth canonical M4 checksum is reported")
+		_assert(earth_item_checksum == String(b.get("world", {}).get("m4_item_graph_checksum", "")), "B converged to A canonical M4 checksum")
+		_assert(earth_item_checksum == String(a2.get("world", {}).get("m4_item_graph_checksum", "")), "A reconnect restored canonical M4 checksum")
+		_assert(int(server.get("item_graph_snapshot", {}).get("revision", -1)) >= 1, "server committed Earth M4 pickup")
+		_assert(int(server.get("realtime_traffic", {}).get("item_graph_deltas_published", 0)) >= 1, "server published Earth M4 item delta")
 	var b_remote_a: Dictionary = b.get("world", {}).get("remote_presenters", {}).get("a", {})
 	_assert(bool(b_remote_a.get("flashlight_enabled", false)), "B observed A flashlight state")
 	_assert(absf(float(b_remote_a.get("orientation_yaw", 99.0))) <= PI, "B observed canonical A orientation")
