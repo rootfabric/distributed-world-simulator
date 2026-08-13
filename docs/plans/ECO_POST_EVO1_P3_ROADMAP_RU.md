@@ -41,6 +41,8 @@ P3.3 Spatial Dispersal = CANDIDATE / targeted Linux PASS / exact Windows canonic
 P3.4 Environmental Gradient = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.3 ACCEPTED
 P3.5 Seasonal World = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.4 ACCEPTED
 P3.6 Disturbance & Succession = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.5 ACCEPTED
+P3.7 Multi-Niche / Stable Coexistence = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.6 ACCEPTED
+P3.8 Deterministic Ecosystem Persistence = NOT OPENED
 ```
 
 Accepted P3.2 aggregate:
@@ -172,6 +174,18 @@ aggregate_hash=a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
 ```
 
 P3.6 canonical runner remains blocked until `P3.5 = ACCEPTED*`.
+
+P3.7 pre-acceptance implementation candidate now exists on top of the exact P3.6 candidate identity. It proves environment-differentiated niche targets, strict biomass conservation, negative frequency feedback, monotonic convergence to a multi-lineage fixed point and exact symmetry without ID-based winner selection.
+
+Targeted exact-Godot evidence:
+
+```text
+P3.7 fresh A/B/C = PASS (64 assertions each; byte-identical logs)
+aggregate_hash=ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a
+parent_p3_6=a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
+```
+
+P3.7 canonical runner remains blocked until `P3.6 = ACCEPTED*`. P3.8 remains unopened.
 
 ## Observer lane — low priority
 

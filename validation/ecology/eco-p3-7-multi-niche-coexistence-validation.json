@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_7_multi_niche_coexistence_validation.v1",
+  "revision": "ECO-P3.7-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_6_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "control_head": "ba600601efccdef05926878fe1517297f74e8d19",
+    "checkpoint": "ECO.P3.6",
+    "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_5_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+    "candidate_aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "kernel_blob": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+    "targeted_source_result_hash": "7c6b21d85342835f8c29aad745ed3931fce7b50284509f7eaf0a4f31e0214f10"
+  },
+  "accepted_ancestor": {
+    "checkpoint": "ECO.P3.2",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+  },
+  "contract": {
+    "domain": "deterministic multi-niche community stabilization over immutable P3.6 state",
+    "niche_model": "continuous temperature/moisture/light/nutrient optima with positive breadths; no lineage-name winner table",
+    "suitability": "bounded linear distance response per environmental axis; arithmetic mean across four axes",
+    "frequency_feedback": "bounded relaxation from current shares toward environment-derived target shares",
+    "conservation": "patch total biomass is exactly conserved by coexistence update",
+    "stable_coexistence": "repeated partial steps monotonically approach the niche fixed point; full step reaches it exactly",
+    "symmetry": "identical niches produce exact equal target shares independent of lexical order",
+    "rng": "no simulation/global RNG consumption",
+    "production_boundary": "research coexistence proof only; no production persistence, mutation, speciation or server authority"
+  },
+  "targeted_linux_evidence": {
+    "authority": "TARGETED_LINUX_REPRODUCTION_USING_ATTACHED_EXACT_GODOT_NOT_WINDOWS_CANONICAL",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parent_p3_6_final_candidate_validation": "PASS",
+    "process_runs": 3,
+    "all_process_logs_byte_identical": true,
+    "assertions_per_run": 64,
+    "aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
+    "coexistence_hash": "d3a5755300e9e19f87adc2406a420ae6ea2789f0d503542453435de83e6218a9",
+    "equilibrium_hash": "d47616868aff8235c74842e84a8819e3ebf8b21133aebbb7708d85d309fd2326",
+    "symmetric_hash": "9c598e58df8ae385d5958281756a533286bec08554789369b1c6c368bf2ee27e",
+    "parent_p3_6": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "source_p3_6_result_hash": "7c6b21d85342835f8c29aad745ed3931fce7b50284509f7eaf0a4f31e0214f10",
+    "kernel_blob": "7379c422f2d3f5723a2bfff8b46790f9cce30ddc",
+    "acceptance_test_blob": "d14a24aaef42379ed199b9fbe3b4c3e9db58e15d",
+    "fresh_process_log_sha256": "aafefc1c129e5c82378a5a71ab428c53a2054c07e43996a57ca3c7641ef4437c"
+  },
+  "covered_properties": [
+    "P3_6_CANDIDATE_PARENT_PINNED",
+    "P3_6_SOURCE_NOT_MUTATED",
+    "CANONICAL_NICHE_ORDER",
+    "NICHE_INPUT_PERMUTATION_INDEPENDENCE",
+    "COMMUNITY_INPUT_PERMUTATION_INDEPENDENCE",
+    "DIFFERENT_ENVIRONMENTS_FAVOR_DIFFERENT_NICHES",
+    "RARE_FAVORED_LINEAGE_INCREASES",
+    "NEGATIVE_FREQUENCY_FEEDBACK_REDUCES_TARGET_DISTANCE",
+    "PATCH_BIOMASS_CONSERVATION",
+    "REGIONAL_MULTI_LINEAGE_PERSISTENCE",
+    "MONOTONIC_CONVERGENCE_TO_FIXED_POINT",
+    "FULL_STABILIZATION_REACHES_TARGET",
+    "ZERO_STABILIZATION_IDENTITY",
+    "SYMMETRIC_NICHES_NO_LEXICAL_WINNER",
+    "GLOBAL_RNG_UNCHANGED",
+    "MALFORMED_TAMPERED_STATE_FAIL_CLOSED",
+    "EMPTY_SYSTEM_VALID"
+  ],
+  "canonical_gate": {
+    "runner": "RUN_ECO_P3_7_TESTS.ps1",
+    "blocked_until": "P3.6 status starts ACCEPTED",
+    "expected_aggregate_hash": "ef05ffb15d33819d3a6c4a1d534670e570ecb2ec674ad4a232e151e680a0e53a",
+    "expected_parent_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc"
+  },
+  "decision": "CANDIDATE_ONLY_DO_NOT_ACCEPT_OR_OPEN_P3_8_UNTIL_PARENT_CHAIN_ACCEPTED"
+}
