@@ -1,13 +1,13 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 79,
+  "registry_generation": 80,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-08-13T09:03:15Z",
-  "control_checkpoint": "GLOBAL-P0 R3 V9 canonical promotion boundary; mandatory post-R3 Project Control required before runtime dispatch",
+  "updated_at_utc": "2026-08-13T10:50:00Z",
+  "control_checkpoint": "V0-S1 networked planetary outpost route activation candidate on canonical R3; H0.2/NX.C1 verification continues independently",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
-  "project_summary": "GLOBAL-P0 R3 V9 is the canonical architecture at registry generation 79. Promotion is control/docs/config only. Mandatory post-R3 Project Control must be NON_RED before fresh H0.2/NX.C1 dispatch; H0.3 and V0 remain downstream of H0.2/NX source acceptance.",
+  "project_summary": "GLOBAL-P0 R3 V9 is canonical and mandatory post-R3 Project Control is NON_RED. H0.2/NX.C1 bounded source implementation exists and remains runtime-verification/source-acceptance pending. V0_S1_NETWORKED_PLANETARY_OUTPOST is the first product checkpoint and may start from exact current main using the canonical SERVER_PREDICTED network path with one pre-H0.3 runtime mutation worker; unfinished OWNER_AUTHORITATIVE_VALIDATED acceptance is not a blanket V0-S1 prerequisite.",
   "programs": {
     "HARNESS": {
       "program": "HARNESS",
@@ -18,12 +18,12 @@
       "role": "CONTROL_INFRASTRUCTURE",
       "short_description": "Restart-safe checkpoint-driven development control with risk routing, evidence review and human-exception compression.",
       "purpose": "Move runtime capabilities between declared checkpoints from exact current main without treating commit volume as progress.",
-      "expected_outcome": "H0.1 proves the first closed-loop C22 pilot; the next runtime pilot is H0.2/NX.C1 only after canonical R3 and post-R3 PC0.",
-      "current_stage": "GLOBAL-P0 R3 Canonical Promotion Boundary",
-      "stage_status": "R3_CANONICAL_POST_R3_PC0_PENDING",
-      "progress_note": "Human-approved R3 V9 is projected canonically with no runtime/domain mutation. Mandatory post-R3 Project Control is next; the runtime slot remains released and H0.2/NX.C1 is not yet dispatched.",
-      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED @ eefd75fa3badec10c6e7db959e2a3992dba30f0e",
-      "next_stage": "Run mandatory post-R3 Project Control. If NON_RED, resolve the H0.2 machine checkpoint contract and dispatch fresh H0.2/NX.C1 from exact canonical R3 main.",
+      "expected_outcome": "H0.2/NX.C1 continues exact runtime verification while the first bounded V0 product checkpoint may execute under the same pre-H0.3 single-mutation-worker ceiling.",
+      "current_stage": "H0.2 NX.C1 Verification + V0-S1 Product Route Activation",
+      "stage_status": "H0_2_IMPLEMENTED_RUNTIME_VERIFICATION_PENDING_V0_S1_ROUTE_DECLARED",
+      "progress_note": "Canonical R3 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2/NX.C1 bounded source implementation exists on PR #97 and remains exact Godot/runtime verification pending. V0-S1 is declared separately as a HIGH-risk product composition checkpoint using current canonical SERVER_PREDICTED networking; verification/review-only H0.2 work does not consume a mutation slot, but any NX FIX mutation must serialize with V0 mutation before H0.3.",
+      "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + GLOBAL-P0 R3 canonical + post-R3 Project Control NON_RED",
+      "next_stage": "Keep H0.2 verification exact and independent. Activate a fresh exact-current-main V0_S1_NETWORKED_PLANETARY_OUTPOST Work Order only when the pre-H0.3 total runtime mutation-worker count is <= 1.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -157,14 +157,12 @@
       "purpose": "Preserve integrated C22 truth and reopen scale work only from an explicitly authorized current-main frontier.",
       "expected_outcome": "C22 remains canonical; TS0.4 is a later bounded research-ceiling checkpoint, not an implicit continuation of the old convergence branch.",
       "current_stage": "C22 Main Integration Complete",
-      "stage_status": "C22_MAIN_INTEGRATED_FROZEN_WAITING_POST_R3_PC0",
-      "progress_note": "Whole PR #90 was merged normally as eefd75fa. Accepted implementation provenance is retained; post-C22 standard/directional Project Control is NON_RED. The source convergence branch is retired as canonical runtime authority and remains historical evidence only.",
+      "stage_status": "C22_MAIN_INTEGRATED_FROZEN",
+      "progress_note": "Whole PR #90 was merged normally as eefd75fa. Accepted implementation provenance is retained; post-C22 and post-R3 standard/directional Project Control are NON_RED. The source convergence branch is retired as canonical runtime authority and remains historical evidence only.",
       "last_accepted_checkpoint": "C22 MAIN_INTEGRATED @ eefd75fa3badec10c6e7db959e2a3992dba30f0e",
-      "next_stage": "Do not start TS0.4 on the V0 critical path. It remains gated by mandatory post-R3 Project Control.",
+      "next_stage": "Keep C22 canonical and consume it from V0-S1. TS0.4 remains outside the V0-S1 critical path.",
       "health_declared": "GREEN",
-      "blockers": [
-        "POST_R3_PC0_REQUIRED_BEFORE_TS0_4"
-      ]
+      "blockers": []
     },
     "CH": {
       "program": "CH",
@@ -231,21 +229,26 @@
     "NX": {
       "program": "NX",
       "program_name": "Network / Realtime",
-      "branch": "feature/nx-m7-owner-authority-convergence",
-      "passport_path": "config/control/branches/feature__nx-m7-owner-authority-convergence.v1.json",
+      "branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
       "requires_passport": true,
       "role": "CONVERGENCE_FRONTIER",
-      "short_description": "Preparation/evidence for minimal owner-authority convergence without the legacy FIX ladder.",
-      "purpose": "Reimplement minimal owner-authority capability while preserving canonical domain/server truth and physics/presentation separation.",
-      "expected_outcome": "A fresh post-R3 H0.2/NX.C1 high-risk pilot may prove the minimal capability; source acceptance still requires CH->NX dependency revalidation.",
-      "current_stage": "NX.C0 Owner Authority Convergence Preparation",
-      "stage_status": "PREPARATION_COMPLETE_WAITING_POST_R3_PC0",
-      "progress_note": "Canonical R3 is established by this promotion boundary. NX runtime remains blocked until mandatory post-R3 Project Control passes and a fresh H0.2/NX.C1 Work Order is issued. CH->NX remains a blocking source-acceptance dependency revalidation gate.",
-      "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; M7 owner-authority vertical slice retained as legacy evidence",
-      "next_stage": "After mandatory post-R3 PC0 NON_RED, create/register fresh H0.2/NX.C1 from exact canonical R3 main, apply HIGH-risk routing, and require fresh CH->NX dependency revalidation before NX source acceptance.",
-      "health_declared": "GREEN",
+      "short_description": "Fresh post-R3 H0.2/NX.C1 owner-authority convergence implementation under exact runtime verification.",
+      "purpose": "Prove opt-in OWNER_AUTHORITATIVE_VALIDATED locomotion while preserving SERVER_PREDICTED as the canonical default and retaining canonical domain/server truth.",
+      "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED only after exact Godot runtime evidence, full/two-client/impaired/reconnect validation, independent review/verifier and fresh CH->NX dependency revalidation.",
+      "current_stage": "H0.2 / NX.C1 Source Implemented — Runtime Verification Pending",
+      "stage_status": "IMPLEMENTED_WAITING_EXACT_GODOT_RUNTIME_VERIFICATION",
+      "progress_note": "PR #97 bounded source implementation exists at 1814ca72c9569ea2aa7e3d1dd4a69eb790888908 with lifecycle head d1a4466775a6e08192179dfc9af397eafbf574c0. Project Control is NON_RED, but no runtime/tested-head predicate is inferred. OWNER_AUTHORITATIVE_VALIDATED remains opt-in and is not a V0-S1 prerequisite; V0-S1 uses current canonical SERVER_PREDICTED networking unless a required authority change is proven.",
+      "last_accepted_checkpoint": "NX5 Remote Snapshot Interpolation baseline; H0.2 pre-build authorization PASS; bounded NX.C1 source implementation present but not source-accepted",
+      "next_stage": "Run exact Godot focused validation, full world/core, two-client, impaired-network and reconnect/ownership-epoch validation; then post-build independent review/verifier and fresh CH->NX revalidation before any H0_2_PASS / NX SOURCE_ACCEPTED proposal.",
+      "health_declared": "YELLOW",
       "blockers": [
-        "POST_R3_PC0_PLUS_FRESH_H0_2_DISPATCH_REQUIRED_BEFORE_H0_2_NX_C1",
+        "EXACT_GODOT_RUNTIME_VERIFICATION_REQUIRED",
+        "FULL_WORLD_CORE_REGRESSION_REQUIRED",
+        "TWO_CLIENT_PROCESS_VALIDATION_REQUIRED",
+        "IMPAIRED_NETWORK_VALIDATION_REQUIRED",
+        "RECONNECT_OWNERSHIP_EPOCH_VALIDATION_REQUIRED",
+        "POST_BUILD_INDEPENDENT_REVIEW_REQUIRED",
         "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE"
       ],
       "historical_passport_architecture_revisions": [
@@ -260,6 +263,27 @@
           "pinned_head_sha": "e2bcf86ebc7dc4fe37e21d3dfa3f141499ad1ded",
           "passport_blob_sha": "b46e1310678ab962983a62410cee1521d7ec56c4"
         }
+      ]
+    },
+    "V0": {
+      "program": "V0",
+      "program_name": "Playable Vertical Slice",
+      "branch": "",
+      "passport_path": "",
+      "requires_passport": false,
+      "role": "COMPOSITION_FRONTIER",
+      "short_description": "First product-facing integrated simulator checkpoints consuming canonical world, character, network and Construction foundations without owning duplicate truth.",
+      "purpose": "Prove a real networked procedural-world user scenario early, then grow through landed ship, movable ship and planet-space transition slices.",
+      "expected_outcome": "V0_S1_NETWORKED_PLANETARY_OUTPOST proves one procedural planet, one server, two playable clients, mutually visible movement, one shared canonical Construction outpost, reconnect continuity and a 30-minute two-client soak.",
+      "current_stage": "V0-S1 Networked Planetary Outpost Route Declared",
+      "stage_status": "ELIGIBLE_FOR_FRESH_EXACT_MAIN_HIGH_RISK_WORK_ORDER",
+      "progress_note": "V0-S1 is a composition consumer and uses the canonical current-main SERVER_PREDICTED network baseline. It does not require H0_2_PASS, NX SOURCE_ACCEPTED, H0_3_SCHEDULER_ACCEPTED or OWNER_AUTHORITATIVE_VALIDATED acceptance. If the scenario requires protocol/authority/reconciliation/Character ownership changes, V0 fails closed as V0_S1_BLOCKED_REQUIRES_NX rather than creating private network truth.",
+      "last_accepted_checkpoint": "V0 route machine contract declared; no V0 runtime acceptance claimed",
+      "next_stage": "Issue one explicit HIGH-risk V0_S1_NETWORKED_PLANETARY_OUTPOST Work Order from exact current main and execute the bounded server + procedural planet + two clients + canonical Construction scenario.",
+      "health_declared": "GREEN",
+      "blockers": [
+        "EXPLICIT_V0_S1_WORK_ORDER_REQUIRED",
+        "PRE_H0_3_TOTAL_RUNTIME_MUTATION_WORKERS_MUST_BE_LE_1"
       ]
     },
     "MATTER": {
@@ -302,47 +326,50 @@
   "convergence_order": {
     "principle": "Branches report facts; main declares project state; the auditor checks consistency; runtime work moves only between declared checkpoints from exact current main.",
     "now_parallel": [
-      "mandatory post-R3 Project Control and lifecycle roll-forward",
+      "H0.2/NX.C1 exact runtime verification and review-only lifecycle work",
+      "V0-S1 Networked Planetary Outpost may execute with one runtime mutation worker",
       "ECO research/design-only work",
-      "H0.2/NX.C1 preparation only until post-R3 PC0",
-      "H0.3/V0 preparation only"
+      "H0.3 preparation only until H0_2_PASS + NX SOURCE_ACCEPTED"
     ],
     "harness_train": [
       "H0_0_SCAFFOLD_READY canonical",
       "H0.1 C22 closed-loop pilot PASS",
       "C22 MAIN_INTEGRATED",
-      "GLOBAL-P0 R3 promotion + post-R3 PC0",
-      "H0.2 NX high-risk pilot",
-      "H0.3 development multi-worker scheduler",
+      "GLOBAL-P0 R3 promotion + post-R3 PC0 NON_RED",
+      "H0.2 NX high-risk pilot verification",
+      "H0.3 development multi-worker scheduler after H0_2_PASS + NX SOURCE_ACCEPTED",
       "H1 multi-program autonomous development"
     ],
     "construction_train": [
       "C22 MAIN_INTEGRATED",
-      "GLOBAL-P0 R3 + post-R3 PC0",
-      "TS0.4 1M Research Ceiling",
+      "GLOBAL-P0 R3 + post-R3 PC0 NON_RED",
+      "V0-S1 consumes canonical Construction",
+      "TS0.4 1M Research Ceiling remains separate",
       "PC0 convergence with T",
       "T2.0"
     ],
     "network_train": [
-      "GLOBAL-P0 R3 + post-R3 PC0",
-      "fresh H0.2/NX.C1",
+      "canonical SERVER_PREDICTED baseline available for V0-S1",
+      "fresh H0.2/NX.C1 OWNER_AUTHORITATIVE_VALIDATED verification",
       "HIGH-risk owner-authority transfer",
       "CH->NX dependency revalidation",
       "network/reconnect/review gates",
       "NX SOURCE_ACCEPTED"
     ],
+    "v0_train": [
+      "V0_S1_NETWORKED_PLANETARY_OUTPOST",
+      "V0_S2_NETWORKED_LANDED_SHIP_0",
+      "V0_S3_MOVABLE_SHIP",
+      "V0_S4_PLANET_SPACE_TRANSITION"
+    ],
     "architecture_train": [
       "GLOBAL-P0 R3 canonical promotion",
-      "mandatory post-R3 PC0",
-      "fresh H0.2/NX.C1",
+      "mandatory post-R3 PC0 NON_RED",
+      "V0-S1 and H0.2 verification are scenario-gated parallel lanes",
       "then next declared runtime checkpoint"
     ]
   },
   "global_blocked_transitions": [
-    {
-      "stage": "NX.C1 RUNTIME START",
-      "blocked_by": "POST_R3_PC0_PLUS_FRESH_H0_2_DISPATCH_REQUIRED"
-    },
     {
       "stage": "NX.C1 SOURCE ACCEPTANCE",
       "blocked_by": "FRESH_CURRENT_MAIN_NX_C1_PLUS_HIGH_RISK_RUNTIME_VALIDATION_PLUS_CH_TO_NX_DIRECTIONAL_DEPENDENCY_REVALIDATION_REQUIRED"
@@ -352,8 +379,20 @@
       "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_REQUIRED"
     },
     {
-      "stage": "V0 RUNTIME START",
-      "blocked_by": "H0_3_SCHEDULER_ACCEPTED_PLUS_SCENARIO_CAPABILITY_GATES_REQUIRED"
+      "stage": "MULTI_RUNTIME_IMPLEMENTATION_WORKERS",
+      "blocked_by": "H0_3_SCHEDULER_ACCEPTED_REQUIRED"
+    },
+    {
+      "stage": "V0-S1 NETWORKED PLANETARY OUTPOST START",
+      "blocked_by": "EXACT_CURRENT_MAIN_PLUS_EXPLICIT_HIGH_RISK_WORK_ORDER_PLUS_R3_POST_R3_PC0_C22_CANONICAL_NETWORK_RUNTIME_PLUS_PRE_H0_3_TOTAL_MUTATION_WORKERS_LE_1_REQUIRED"
+    },
+    {
+      "stage": "V0-S1 NETWORK FOUNDATION OR AUTHORITY CHANGE",
+      "blocked_by": "V0_S1_BLOCKED_REQUIRES_NX"
+    },
+    {
+      "stage": "V0-S1 OWNER_AUTHORITATIVE_VALIDATED AXIS",
+      "blocked_by": "H0_2_PASS_PLUS_NX_SOURCE_ACCEPTED_PLUS_REQUIRED_NX_MAIN_INTEGRATION"
     },
     {
       "stage": "G9 START",
@@ -361,7 +400,7 @@
     },
     {
       "stage": "TS0.4 START",
-      "blocked_by": "POST_R3_PC0_REQUIRED"
+      "blocked_by": "FRESH_EXPLICIT_TS0_4_WORK_ORDER_REQUIRED"
     },
     {
       "stage": "T2.0 START",
