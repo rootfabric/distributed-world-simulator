@@ -103,7 +103,7 @@ func _bake_array_mesh_transform(source: ArrayMesh, transform: Transform3D) -> Di
 		var vertices_value: Variant = arrays[Mesh.ARRAY_VERTEX]
 		if typeof(vertices_value) != TYPE_PACKED_VECTOR3_ARRAY:
 			return _failure("FPE_HAND_PROFILE_BIND_SPACE_FIX_VERTICES_REQUIRED", {"surface": surface_index})
-		var vertices := vertices_value as PackedVector3Array
+		var vertices := (vertices_value as PackedVector3Array).duplicate()
 		for vertex_index in range(vertices.size()):
 			vertices[vertex_index] = transform * vertices[vertex_index]
 			transformed_vertices += 1
@@ -111,14 +111,14 @@ func _bake_array_mesh_transform(source: ArrayMesh, transform: Transform3D) -> Di
 
 		var normals_value: Variant = arrays[Mesh.ARRAY_NORMAL]
 		if typeof(normals_value) == TYPE_PACKED_VECTOR3_ARRAY:
-			var normals := normals_value as PackedVector3Array
+			var normals := (normals_value as PackedVector3Array).duplicate()
 			for normal_index in range(normals.size()):
 				normals[normal_index] = (normal_basis * normals[normal_index]).normalized()
 			arrays[Mesh.ARRAY_NORMAL] = normals
 
 		var tangents_value: Variant = arrays[Mesh.ARRAY_TANGENT]
 		if typeof(tangents_value) == TYPE_PACKED_FLOAT32_ARRAY:
-			var tangents := tangents_value as PackedFloat32Array
+			var tangents := (tangents_value as PackedFloat32Array).duplicate()
 			for tangent_index in range(0, tangents.size(), 4):
 				if tangent_index + 3 >= tangents.size():
 					break
