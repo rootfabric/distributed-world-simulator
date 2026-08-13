@@ -93,7 +93,7 @@ func _sync_visual_provider_pose() -> void:
 		return
 	if not visual_provider.has_method("sync_pose_from_canonical"):
 		return
-	var value: Variant = visual_provider.call("sync_pose_from_canonical", skeleton, hand_id)
+	var value: Variant = visual_provider.call("sync_pose_from_canonical", skeleton, hand_id, current_pose_id)
 	if value is Dictionary:
 		_visual_provider_pose_sync_result = Dictionary(value).duplicate(true)
 	else:
