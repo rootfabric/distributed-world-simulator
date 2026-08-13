@@ -40,6 +40,7 @@ P3.2 Density & Carrying Capacity = ACCEPTED / exact Windows canonical
 P3.3 Spatial Dispersal = CANDIDATE / targeted Linux PASS / exact Windows canonical pending
 P3.4 Environmental Gradient = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.3 ACCEPTED
 P3.5 Seasonal World = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.4 ACCEPTED
+P3.6 Disturbance & Succession = IMPLEMENTATION CANDIDATE / targeted Linux PASS / canonical gate blocked on P3.5 ACCEPTED
 ```
 
 Accepted P3.2 aggregate:
@@ -159,6 +160,18 @@ half_hash=aec09a3a29d5c528140e70d79cd7970e3d3d09ee9e4f848d854cd205bc13b790
 ```
 
 P3.5 remains canonical-gated on `P3.4 = ACCEPTED*`; its targeted pass does not authorize P3.6.
+
+P3.6 pre-acceptance implementation candidate now exists, without opening P3.7 canonically. Contract: continuous heat/flood/drought pressure channels, functional resistance/recovery/pioneer traits, seasonal resource-limited recovery, bounded pre-disturbance biomass ceiling, direct no-drift recovery evaluation and no RNG.
+
+Targeted exact-Godot evidence:
+
+```text
+P3.5 parent regression = PASS (74 assertions)
+P3.6 fresh A/B/C = PASS (33 assertions each; byte-identical logs)
+aggregate_hash=a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc
+```
+
+P3.6 canonical runner remains blocked until `P3.5 = ACCEPTED*`.
 
 ## Observer lane — low priority
 

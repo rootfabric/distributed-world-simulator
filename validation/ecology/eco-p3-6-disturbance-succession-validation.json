@@ -1,0 +1,74 @@
+{
+  "schema": "distributed_world_simulator.ecology.p3_6_disturbance_succession_validation.v1",
+  "revision": "ECO-P3.6-2026-08-13-R1-CANDIDATE",
+  "branch": "feature/eco-evolutionary-ecology",
+  "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_5_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+  "scope": "RESEARCH_ONLY_POST_EVO1",
+  "parent": {
+    "control_head": "7af2a114ab7891d3ee16cd2b82f637ea73863f3e",
+    "checkpoint": "ECO.P3.5",
+    "status": "CANDIDATE_TARGETED_LINUX_PASS_P3_4_ACCEPTANCE_AND_EXACT_WINDOWS_CANONICAL_PENDING",
+    "candidate_aggregate_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "kernel_blob": "649d26457ac8383f890f0dfca890353cc200ee7e",
+    "targeted_source_result_hash": "2ee8d7c6dc55a7c55af35cc945b0b85f79cc27fe0145b921eb5b9f0023b5d060"
+  },
+  "accepted_ancestor": {
+    "checkpoint": "ECO.P3.2",
+    "status": "ACCEPTED_EXACT_WINDOWS_CANONICAL",
+    "aggregate_hash": "172ff809b1442fc43c2534c46f1fe59363efda7d04a3f128832d61e39e144639"
+  },
+  "contract": {
+    "domain": "deterministic disturbance pressure and direct succession/recovery evaluation over immutable P3.5 seasonal state and P3.3 final biomass",
+    "disturbance_profile": "continuous severity plus heat/flood/drought pressure channels in [0,1]; no event-name winner table",
+    "functional_traits": "per-lineage heat/flood/drought resistance, recovery rate and pioneer capacity; canonicalized by lineage ID",
+    "environment_coupling": "heat load uses normalized current temperature, flood uses current moisture, drought uses 1-moisture",
+    "damage": "bounded multiplicative survival across active pressure channels",
+    "recovery": "direct recovery from post-disturbance loss using recovery_years/(recovery_years+time_scale), current seasonal resource support and trait-derived allocation weights",
+    "succession": "recovered biomass may change composition through recovery_rate/pioneer_capacity but total final biomass never exceeds pre-disturbance reference",
+    "no_drift": "same P3.5 source + disturbance + traits + recovery time reconstructs exactly; no cumulative timestep integration",
+    "rng": "no simulation/global RNG consumption",
+    "production_boundary": "research disturbance/succession only; no production hazard scheduler, persistence owner or server authority"
+  },
+  "targeted_linux_evidence": {
+    "authority": "TARGETED_LINUX_REPRODUCTION_USING_ATTACHED_EXACT_GODOT_NOT_WINDOWS_CANONICAL",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "parser_preload": "PASS",
+    "parent_p3_5_targeted_regression": "PASS_74_ASSERTIONS_CANDIDATE_AGGREGATE_REPRODUCED",
+    "process_runs": 3,
+    "all_process_logs_byte_identical": true,
+    "assertions_per_run": 33,
+    "aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "heat_hash": "7c6b21d85342835f8c29aad745ed3931fce7b50284509f7eaf0a4f31e0214f10",
+    "flood_hash": "d7fb655873afb749433151d9262f04f9e9542ffb94e3c7cea04b8538fc534f94",
+    "drought_hash": "2ac7cd6beaf26326a88e7ad16c47fe25d0022d69c19e5b7297df6aa6b8261994",
+    "parent_p3_5": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83",
+    "source_p3_5_result_hash": "2ee8d7c6dc55a7c55af35cc945b0b85f79cc27fe0145b921eb5b9f0023b5d060",
+    "kernel_blob": "ee83e97e3f4dbea23a591e745101aa3e2d235433",
+    "acceptance_test_blob": "ef8e8565246fb454ed6483f95df3b33c1d253802",
+    "fresh_process_log_sha256": "71cb3bbfac17b2bc3667b0ffc3ab8055ff0a9c9c04e2c7d1cdb63a4cf0c0c537"
+  },
+  "covered_properties": [
+    "P3_5_CANDIDATE_PARENT_PINNED",
+    "P3_5_SOURCE_NOT_MUTATED",
+    "HEAT_FLOOD_DROUGHT_PRESSURE_CHANNELS",
+    "TRAIT_ORDER_PERMUTATION_INDEPENDENCE",
+    "MATCHING_RESISTANCE_REDUCES_DAMAGE",
+    "RECOVERY_MONOTONIC_WITH_TIME",
+    "SEASONAL_RESOURCE_SUPPORT_MODULATES_RECOVERY",
+    "PIONEER_RECOVERY_TRAITS_SHIFT_SUCCESSION",
+    "ZERO_SEVERITY_IDENTITY",
+    "NO_RECOVERY_IDENTITY_TO_POST_DISTURBANCE",
+    "PRE_DISTURBANCE_BIOMASS_UPPER_BOUND",
+    "DIRECT_EVALUATION_NO_DRIFT",
+    "GLOBAL_RNG_UNCHANGED",
+    "EMPTY_SYSTEM_VALID",
+    "MALFORMED_TAMPERED_STATE_FAIL_CLOSED"
+  ],
+  "canonical_gate": {
+    "runner": "RUN_ECO_P3_6_TESTS.ps1",
+    "blocked_until": "P3.5 status starts ACCEPTED",
+    "expected_aggregate_hash": "a7abcc49c2b9e7d473ceefb147996cb2febf6248bafe7004e3d5da01827cc5cc",
+    "expected_parent_hash": "255912c4da9f1296d11f9e64bf91812ae3d32dff2726b4866c4ba761be8b8c83"
+  },
+  "decision": "CANDIDATE_ONLY_DO_NOT_ACCEPT_OR_OPEN_P3_7_CANONICALLY_UNTIL_PARENT_CHAIN_ACCEPTED"
+}
