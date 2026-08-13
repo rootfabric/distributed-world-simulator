@@ -3,7 +3,7 @@ extends "res://scripts/characters/presentation/skinned_resource_configurable_two
 
 const ProfileType = preload("res://scripts/characters/presentation/first_person_hand_asset_profile.gd")
 const ProfiledProviderType = preload("res://scripts/characters/presentation/profiled_skinned_first_person_hand_visual_provider_fix2.gd")
-const NativeProfiledProviderType = preload("res://scripts/characters/presentation/native_skeleton_profiled_first_person_hand_visual_provider.gd")
+const NativeProfiledProviderType = preload("res://scripts/characters/presentation/calibrated_native_skeleton_first_person_hand_visual_provider.gd")
 
 var _hand_asset_profile_by_hand: Dictionary = {}
 
@@ -78,6 +78,7 @@ func get_hand_asset_profile_report() -> Dictionary:
 			"status": String(profile.get("status", "")),
 			"runtime_driver": String(retarget.get("runtime_driver", "")),
 			"rest_space_policy": String(retarget.get("rest_space_policy", "")),
+			"native_pose_calibration_mode": String(Dictionary(retarget.get("native_pose_calibration", {})).get("mode", "")),
 		}
 	return {
 		"schema": "planet_simulator.fpe_profiled_hand_asset_config.v1",
@@ -85,6 +86,7 @@ func get_hand_asset_profile_report() -> Dictionary:
 		"portable_profiles_supported": true,
 		"drop_in_json_registration": true,
 		"native_skeleton_pose_driver_supported": true,
+		"native_axis_calibration_supported": true,
 		"presentation_only": true,
 		"owns_item_state": false,
 		"owns_network_state": false,
