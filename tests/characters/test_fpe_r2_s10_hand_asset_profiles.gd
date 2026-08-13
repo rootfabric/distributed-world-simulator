@@ -42,12 +42,7 @@ func _run() -> void:
 	var root := Node3D.new()
 	get_root().add_child(root)
 	var provider = ProviderType.new()
-	var provider_setup: Dictionary = provider.setup_profiled(
-		s9_scene_value as PackedScene,
-		s9_profile,
-		String(s9_details.get("profile_path", "")),
-		s9_scene_path
-	)
+	var provider_setup: Dictionary = provider.setup_profiled(s9_scene_value as PackedScene, s9_profile, String(s9_details.get("profile_path", "")), s9_scene_path)
 	_assert(bool(provider_setup.get("success", false)), "profiled S9 provider setup failed")
 	var rig = RigType.new()
 	root.add_child(rig)
@@ -74,7 +69,7 @@ func _run() -> void:
 	_assert(bool(wrad_resolved.get("success", false)), "WRAD profile did not resolve")
 	var wrad_details := Dictionary(wrad_resolved.get("details", {}))
 	var wrad_profile := Dictionary(wrad_details.get("profile", {}))
-	_assert(String(wrad_profile.get("status", "")) == "IMPORTED_INSPECTED_NATIVE_SKELETON_PROBE_READY", "WRAD profile status is not native-skeleton probe ready")
+	_assert(String(wrad_profile.get("status", "")) == "IMPORTED_INSPECTED_NATIVE_CALIBRATION_PROBE_READY", "WRAD profile status is not calibration-probe ready")
 	_assert(String(wrad_profile.get("hand_layout", "")) == "PAIRED_SINGLE_MESH", "WRAD layout is not paired single mesh")
 	_assert(String(Dictionary(wrad_profile.get("license", {})).get("spdx", "")) == "CC0-1.0", "WRAD license metadata mismatch")
 	_assert(String(Dictionary(wrad_profile.get("license", {})).get("source_url", "")).contains("wriks.itch.io/wrad-arms"), "WRAD source metadata missing")
@@ -92,6 +87,8 @@ func _run() -> void:
 	_assert(bool(native_driver.get("preserve_source_skin", false)), "WRAD native driver does not preserve source Skin")
 	_assert(bool(native_driver.get("preserve_source_bind_poses", false)), "WRAD native driver does not preserve source bind poses")
 	_assert(bool(native_driver.get("preserve_source_rest_hierarchy", false)), "WRAD native driver does not preserve source rest hierarchy")
+	_assert(bool(native_driver.get("axis_calibrated_semantic_pose", false)), "WRAD native driver does not enable semantic axis calibration")
+	_assert(not bool(native_driver.get("local_rest_basis_conversion", true)), "WRAD still enables incompatible local-rest conjugation")
 	var by_hand := Dictionary(wrad_retarget.get("bone_map_by_hand", {}))
 	_assert(Dictionary(by_hand.get("right", {})).size() >= 17, "WRAD right bone mapping incomplete")
 	_assert(Dictionary(by_hand.get("left", {})).size() >= 17, "WRAD left bone mapping incomplete")
@@ -100,6 +97,15 @@ func _run() -> void:
 	var calibration := Dictionary(wrad_retarget.get("auto_calibration", {}))
 	_assert(String(Dictionary(calibration.get("source_anchor_by_hand", {})).get("right", "")) == "wrist.r", "WRAD right calibration anchor mismatch")
 	_assert(String(Dictionary(calibration.get("source_anchor_by_hand", {})).get("left", "")) == "wrist.l", "WRAD left calibration anchor mismatch")
+	_assert(String(calibration.get("orientation_mode", "")) == "PRESERVE_SOURCE_BASIS", "WRAD root calibration does not preserve source basis")
+	var pose_calibration := Dictionary(wrad_retarget.get("native_pose_calibration", {}))
+	_assert(String(pose_calibration.get("mode", "")) == "AUTO_CHAIN_PALM_V1", "WRAD pose calibration mode missing")
+	_assert(float(Dictionary(pose_calibration.get("default", {})).get("curl_scale", 0.0)) > 0.0, "WRAD default curl scale missing")
+	_assert(Dictionary(pose_calibration.get("by_hand", {})).has("left"), "WRAD left calibration slot missing")
+	_assert(Dictionary(pose_calibration.get("by_hand", {})).has("right"), "WRAD right calibration slot missing")
+	var presentation := Dictionary(wrad_profile.get("presentation", {}))
+	_assert(Dictionary(presentation.get("by_hand", {})).has("left"), "WRAD left presentation calibration slot missing")
+	_assert(Dictionary(presentation.get("by_hand", {})).has("right"), "WRAD right presentation calibration slot missing")
 
 	root.queue_free()
 	_finish()
