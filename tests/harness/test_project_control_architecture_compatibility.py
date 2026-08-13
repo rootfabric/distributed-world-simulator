@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -18,6 +20,7 @@ POLICY = {
         "central_registry_field": "historical_passport_architecture_revisions",
     }
 }
+LEGACY_R2_PROGRAMS_AT_R3_PROMOTION = {"G", "ECO", "T", "CH", "DOCTRINE", "NX"}
 
 
 class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
@@ -89,6 +92,67 @@ class ProjectControlArchitectureCompatibilityTests(unittest.TestCase):
         }
         pc._recompute_health(result)
         self.assertEqual("YELLOW", result["health"])
+
+    def _load_json(self, relative: str) -> dict:
+        return json.loads((ROOT / relative).read_text(encoding="utf-8"))
+
+    def _synthetic_r3_inputs(self):
+        registry = copy.deepcopy(self._load_json("config/control/project-program-registry.v1.json"))
+        policy = copy.deepcopy(self._load_json("config/control/project-control-policy.v1.json"))
+        ownership = copy.deepcopy(self._load_json("config/control/architecture-ownership.v1.json"))
+        registry["architecture_revision"] = R3
+        policy["architecture_revision"] = R3
+        ownership["architecture_revision"] = R3
+        for key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION:
+            registry["programs"][key]["historical_passport_architecture_revisions"] = [R2]
+        return registry, policy, ownership
+
+    def test_live_registered_r2_passports_survive_synthetic_r3_with_explicit_allowlists(self):
+        registry, policy, ownership = self._synthetic_r3_inputs()
+        results = []
+        seen_legacy = set()
+        for key, central in registry["programs"].items():
+            if not isinstance(central, dict):
+                continue
+            branch = str(central.get("branch", ""))
+            passport_path = str(central.get("passport_path", ""))
+            if branch and passport_path:
+                passport = pc._core.load_branch_json(pc._core.remote_ref(branch), passport_path)
+                if passport and str(passport.get("architecture_revision", "")) == R2:
+                    self.assertIn(key, LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, (key, branch, passport_path))
+                    seen_legacy.add(key)
+            result = pc.audit_program(key, central, registry, policy, ownership)
+            results.append(result)
+            if key in LEGACY_R2_PROGRAMS_AT_R3_PROMOTION and result.get("passport_loaded"):
+                self.assertFalse(
+                    any(f.get("code") == "ARCHITECTURE_REVISION_MISMATCH" for f in result.get("findings", [])),
+                    (key, result.get("findings")),
+                )
+                self.assertEqual(
+                    "EXPLICIT_HISTORICAL_REVISION_ALLOWED",
+                    result.get("architecture_compatibility", {}).get("mode"),
+                    key,
+                )
+
+        self.assertEqual(LEGACY_R2_PROGRAMS_AT_R3_PROMOTION, seen_legacy)
+        blocking_health = "GREEN"
+        for result in results:
+            if not result.get("blocks_global_progress", True):
+                continue
+            if pc.HEALTH_RANK.get(result.get("health", "GREEN"), 0) > pc.HEALTH_RANK[blocking_health]:
+                blocking_health = result["health"]
+        self.assertNotEqual("RED", blocking_health, [(r["program"], r["health"], r.get("findings")) for r in results])
+
+    def test_live_g_passport_becomes_red_again_when_allowlist_is_removed(self):
+        registry, policy, ownership = self._synthetic_r3_inputs()
+        central = registry["programs"]["G"]
+        central.pop("historical_passport_architecture_revisions", None)
+        result = pc.audit_program("G", central, registry, policy, ownership)
+        self.assertEqual("RED", result["health"])
+        self.assertTrue(
+            any(f.get("code") == "ARCHITECTURE_REVISION_MISMATCH" for f in result.get("findings", [])),
+            result.get("findings"),
+        )
 
 
 if __name__ == "__main__":
