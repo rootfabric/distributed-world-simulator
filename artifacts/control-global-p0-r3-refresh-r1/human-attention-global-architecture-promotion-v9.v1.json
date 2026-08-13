@@ -21,5 +21,6 @@
     "artifacts/control-global-p0-r3-refresh-r1/post-build-critique-v9.v1.json",
     "config/architecture/global-p0-r3-architecture-candidate.v1.json"
   ],
-  "status": "OPEN"
+  "status": "RESOLVED",
+  "resolution": "Human decision: APPROVE_PROMOTION for exact frozen R3 V9 target 595263c4c925c122a09876cb29b87f5ca5fef1d2. This durable Human approval authorizes only a separate subsequent GLOBAL_ARCHITECTURE_PROMOTION execution. Promotion, merge and post-R3 PC0 are not performed by this decision-record session."
 }
