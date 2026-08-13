@@ -119,7 +119,6 @@ if ([string]::IsNullOrWhiteSpace($ScenePath) -or -not $ScenePath.StartsWith("res
 $RelativeTarget = $ScenePath.Substring("res://".Length).Replace('/', [IO.Path]::DirectorySeparatorChar)
 $TargetPath = Join-Path $Root $RelativeTarget
 $TargetDir = Split-Path -Parent $TargetPath
-New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
 
 $TempRoot = Join-Path $Root "artifacts\fpe_hand_import\$ProfileId"
 if (Test-Path -LiteralPath $TempRoot) {
@@ -146,11 +145,31 @@ if (-not [string]::IsNullOrWhiteSpace($SourceGlb)) {
     throw "Rerun with -SourceGlb '<file name or relative suffix>' to select the hand model."
 }
 
-# Keep the extracted payload beside the canonical target so external textures or
-# auxiliary files remain available. The selected GLB is additionally copied to
-# the profile's stable scene_path, decoupling runtime profiles from vendor names.
-Get-ChildItem -LiteralPath $TempRoot | ForEach-Object {
-    Copy-Item -LiteralPath $_.FullName -Destination $TargetDir -Recurse -Force
+# Rebuild the dedicated profile payload so stale vendor files from a previous
+# import cannot trigger unrelated importers (for example Blender .blend import
+# in a headless environment). Keep only the selected GLB plus non-3D support
+# files from the selected GLB directory, preserving texture subdirectories.
+if (Test-Path -LiteralPath $TargetDir) {
+    Remove-Item -LiteralPath $TargetDir -Recurse -Force
+}
+New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
+
+$ChosenDir = Split-Path -Parent $Chosen.FullName
+$Excluded3DExtensions = @(".blend", ".fbx", ".obj", ".gltf", ".glb")
+Get-ChildItem -LiteralPath $ChosenDir -File -Recurse | ForEach-Object {
+    if ($_.FullName -eq $Chosen.FullName) {
+        return
+    }
+    if ($Excluded3DExtensions -contains $_.Extension.ToLowerInvariant()) {
+        return
+    }
+    $Relative = $_.FullName.Substring($ChosenDir.Length).TrimStart('\', '/')
+    $Destination = Join-Path $TargetDir $Relative
+    $DestinationDir = Split-Path -Parent $Destination
+    if (-not (Test-Path -LiteralPath $DestinationDir -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
+    }
+    Copy-Item -LiteralPath $_.FullName -Destination $Destination -Force
 }
 Copy-Item -LiteralPath $Chosen.FullName -Destination $TargetPath -Force
 
@@ -159,6 +178,7 @@ Write-Host "Profile: $ProfileFile"
 Write-Host "Archive: $ArchivePath"
 Write-Host "Source GLB: $($Chosen.FullName)"
 Write-Host "Stable Godot scene path: $ScenePath" -ForegroundColor Cyan
+Write-Host "Staged payload intentionally excludes alternate .blend/.fbx/.obj sources." -ForegroundColor DarkGray
 
 $Inspector = Join-Path $Root "INSPECT_FPE_HAND_ASSET.ps1"
 $InspectorArgs = @{
