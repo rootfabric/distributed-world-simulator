@@ -8,11 +8,11 @@
   "short_description": "Fresh Harness H0.2 HIGH-risk NX.C1 owner-authority convergence branch from repaired exact canonical R3 generation-79 main.",
   "purpose": "Prove minimal realtime owner-locomotion authorship and rollback-safe presentation on current main without importing legacy FIX layers or moving gameplay/domain authority into NX.",
   "expected_outcome": "H0_2_PASS plus NX SOURCE_ACCEPTED on an exact tested/reviewed head, with CH->NX directional revalidation complete and runtime merge still gated.",
-  "current_stage": "H0.2 / NX.C1 Pre-Build Planning",
-  "stage_status": "PLANNED_CONTROL_ONLY_WAITING_EXACT_HEAD_PREBUILD_REVIEW_AND_DIRECTOR_DISPATCH",
-  "progress_note": "R3 epoch and HIGH Work Order are bound to exact main 09714b6f2681e3b5cf3f2f9e28416cf9a7378304, registry generation 79 and canonical R3. Project Control now installs canonical pinned Harness dependencies. No production/runtime mutation is authorized before a fresh exact-head pre-build PASS plus Director DISPATCHED event.",
-  "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED; canonical R3 V9 + post-R3 Project Control NON_RED; Project Control pinned Harness dependencies canonicalized",
-  "next_stage": "Validate the control-only R3 package, obtain exact-head HIGH pre-build review PASS, append Director DISPATCHED, then begin one-worker bounded NX.C1 implementation within the Work Order scope.",
+  "current_stage": "H0.2 / NX.C1 Dispatched Runtime Pilot",
+  "stage_status": "DISPATCHED_ONE_HIGH_RISK_RUNTIME_WORKER_AUTHORIZED_WITHIN_PREDECLARED_SCOPE",
+  "progress_note": "Exact reviewed head 7d0acd4b19e2a08027396cc55e0808a5d5664ae4 passed pinned Harness schema/semantic regression, architecture/ownership regressions and Project Control run 31687497672 with standard YELLOW plus directional YELLOW, both NON_RED. Pre-build review PASS is durable and Director DISPATCHED event #2 authorizes exactly one bounded runtime worker. No production/runtime predicate is accepted yet and runtime delta remains zero at dispatch.",
+  "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED; canonical R3 V9 + post-R3 Project Control NON_RED; H0.2 R3 exact-head PRE_BUILD_DESIGN_AUTHORIZATION PASS",
+  "next_stage": "Begin one-worker bounded NX.C1 implementation only within Work Order H0-2-R3-NX-C1-WO-001 allowed_paths. Stop/replan on any forbidden ownership/protocol/cross-server need. Then execute the declared validation ladder and CH->NX revalidation before source acceptance.",
   "parent_branch_or_checkpoint": "main @ 09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
   "base_commit": "09714b6f2681e3b5cf3f2f9e28416cf9a7378304",
   "dependencies": [
@@ -23,6 +23,7 @@
     "POST_R3_STANDARD_PC0_NON_RED",
     "POST_R3_DIRECTIONAL_PC0_NON_RED",
     "PROJECT_CONTROL_PINNED_HARNESS_DEPENDENCIES_PASS",
+    "H0_2_R3_PREBUILD_REVIEW_PASS_ON_7d0acd4b19e2a08027396cc55e0808a5d5664ae4",
     "NX5_REMOTE_SNAPSHOT_INTERPOLATION_BASELINE",
     "M7_OWNER_AUTHORITY_LEGACY_EVIDENCE_RUNTIME_464e1b8dd27fad8b4d477f6e76ca52a449893353",
     "M7_OWNER_AUTHORITY_ACCEPTANCE_RECORD_538674d1f3f991c9e04d77b0ce0a4dfea24d9ce6",
@@ -91,9 +92,9 @@
     "DEVELOPMENT_HARNESS"
   ],
   "blockers": [
-    "EXACT_HEAD_HIGH_PREBUILD_REVIEW_PASS_REQUIRED_BEFORE_DISPATCH",
-    "DIRECTOR_DISPATCH_REQUIRED_BEFORE_RUNTIME_MUTATION",
-    "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE"
+    "RUNTIME_VALIDATION_LADDER_REQUIRED_BEFORE_H0_2_PASS",
+    "CH_TO_NX_DIRECTIONAL_REVALIDATION_REQUIRED_BEFORE_NX_SOURCE_ACCEPTANCE",
+    "RUNTIME_FEATURE_MERGE_REMAINS_HUMAN_GATED"
   ],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true
