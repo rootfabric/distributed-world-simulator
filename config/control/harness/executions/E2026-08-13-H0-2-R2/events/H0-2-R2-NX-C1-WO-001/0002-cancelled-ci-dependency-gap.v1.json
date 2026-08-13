@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-08-13-H0-2-R2-H0-2-R2-NX-C1-WO-001-0002",
+  "project_epoch": "E2026-08-13-H0-2-R2",
+  "work_order_id": "H0-2-R2-NX-C1-WO-001",
+  "sequence": 2,
+  "event_type": "CANCELLED",
+  "work_state": "CANCELLED",
+  "recorded_at_utc": "2026-08-13T09:32:30Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/h0-2-nx-c1-owner-authority-r2",
+  "head_sha": "b651af2a09bc5db15847c707e7987586bfd64ea6",
+  "predicate": "PREBUILD_CI_PINNED_DEPENDENCY_GAP_DETECTED",
+  "command": "PROJECT_CONTROL_RUN_31686955254",
+  "exit_code": 1,
+  "blocker": "PROJECT_CONTROL_MUST_INSTALL_PINNED_HARNESS_DEPENDENCIES_BEFORE_SCHEMA_VALIDATION",
+  "evidence_paths": [
+    "scripts/harness/requirements.txt",
+    "scripts/harness/contracts.py",
+    "tests/harness/test_h0_2_machine_checkpoint_contract.py"
+  ],
+  "summary": "Cancelled R2 before dispatch and before any runtime mutation. Project Control run 31686955254 reached the H0.2 execution regression but Harness schema validation failed closed because the runner had jsonschema 4.10.3 while canonical Harness contracts require the pinned jsonschema 4.22.0. Fix must be main-owned CI dependency setup; this epoch will not be reused after main moves."
+}
