@@ -19,7 +19,7 @@
       "H0_2_NX_C1_HIGH_RISK_PILOT"
     ],
     "current_checkpoint": "H0_2_NX_C1_HIGH_RISK_PILOT",
-    "reason": "H0.1 is accepted and C22 is main-integrated. Canonical R3 generation 79 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2 is now the planning target, but NX.C1 runtime branch creation remains forbidden until a fresh R3-bound Work Order is issued and explicitly dispatched."
+    "reason": "H0.1 is accepted and C22 is main-integrated. Canonical R3 generation 79 and mandatory post-R3 standard/directional Project Control are NON_RED. H0.2 may create a control-only planning branch to durably hold its exact-main epoch, Work Order and pre-build review; production/runtime mutation on that branch remains forbidden until explicit Director dispatch."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,
