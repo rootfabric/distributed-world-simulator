@@ -1,0 +1,293 @@
+{
+  "schema": "distributed_world_simulator.global_p0_r3_candidate.v1",
+  "revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "parent_revision": "GLOBAL-P0-2026-08-10-R2",
+  "status": "FROZEN_MUTABLE_REVIEW_TARGET_NO_PROMOTION",
+  "risk_class": "CRITICAL",
+  "canonical_branch_after_acceptance": "main",
+  "candidate_base_state": {
+    "main_sha": "1112d1f7cfad1df18fb3621a537e191e674848c6",
+    "registry_generation": 75,
+    "control_plane_revision": "PC0-2026-08-10-R1",
+    "harness_revision": "H0-2026-08-11-R1",
+    "architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "provenance_only": true,
+    "refresh_reason": "Historical construction base only; stale construction pins never authorize promotion."
+  },
+  "current_finalization_epoch": {
+    "main_sha": "ce40dd075045078ed70924f8d5a1011eb3eff03d",
+    "registry_generation": 78,
+    "canonical_architecture_revision": "GLOBAL-P0-2026-08-10-R2",
+    "c22": "MAIN_INTEGRATED",
+    "h0_1_runtime_slot": "RELEASED",
+    "branch_contains_main_as_ancestor": true
+  },
+  "design_brief": {
+    "problem_statement": "Finalize explicit cross-domain ownership for identity/session, authorization, reference frames, simulation time, spatial addressing, material identity, world operations, world queries, lifecycle, work budgeting, compatibility and security without duplicate truth ownership.",
+    "current_behavior": "Canonical main ce40dd075045078ed70924f8d5a1011eb3eff03d is GLOBAL-P0 R2 at registry generation 78. H0.1 passed; C22 is MAIN_INTEGRATED; the H0.1 runtime slot is RELEASED. CH9.6 is accepted/frozen; ECO is advisory/research; CH->NX remains a future NX dependency gate. R3 is not promoted.",
+    "desired_behavior": "Finalize prepared R3 from exact current main. Frozen R2 evidence remains historical evidence; all new post-promotion runtime work begins from one canonical R3 base after mandatory post-R3 control verification.",
+    "alternatives_considered": [
+      "REJECTED: one global WorldManager owning cross-domain truth. This would create duplicate/implicit ownership over accepted domain foundations and violate CANONICAL WORLD separation.",
+      "REJECTED: reuse existing domain identifiers as universal global identifiers (for example peer/entity/cell/frame/authority identities). This would conflate identity, transport, spatial addressing and authority semantics.",
+      "REJECTED: make WT a second transaction coordinator. WT instead compiles WorldOperation intents into the existing M0 atomic commit engine so canonical commit truth remains single-owned.",
+      "REJECTED: make WQ a global canonical world database. WQ instead plans actor-scoped reads through domain adapters and owns no canonical store.",
+      "REJECTED: make WB an authority owner, production runtime scheduler or development scheduler. WB is limited to work-budget/quality/defer/dispatch policy; authority and MAIN/HARNESS development control remain separate.",
+      "REJECTED: treat H0.3 as a game-runtime scheduler. H0.3 remains the DEVELOPMENT multi-worker Work-Order scheduler/control layer and does not own gameplay authority, simulation/game time or production boot.",
+      "REJECTED: let V0 create canonical composition truth. V0 remains a composition/presentation/readback consumer of existing domain truth.",
+      "REJECTED: reuse ECO as the economy program identifier. ECO remains Evolutionary Ecology advisory/research; ECON is reserved for future economy/markets/contracts.",
+      "REJECTED: immediately rewrite stable ITEM/MATTER/G/NX or other accepted foundations under new R3 names. R3 adds only named cross-domain contracts/adapters and preserves existing canonical truth owners."
+    ],
+    "selected_design": "Retain prepared R3 cross-domain foundations, preserve domain truth owners, reserve ECO for Evolutionary Ecology and ECON for economy, and activate new waves only after human-gated canonical promotion.",
+    "why_selected": "This design preserves existing canonical truth owners while adding only named cross-domain contracts/adapters; avoids duplicate global truth and hidden managers; keeps identity, authority, routing, compute, transport and presentation distinct; reuses M0 as the sole atomic commit engine under WT; keeps V0 consumer-only and H0.3 development-only; separates ECO from ECON; and permits staged Wave A/Wave B activation from one canonical post-promotion base instead of forcing a simultaneous rewrite.",
+    "affected_owners": [
+      "MAIN/HARNESS — preserves project state, checkpoint/evidence/review routing and development Work-Order authorization; R3 interaction is through control gates only; ownership transfer=NO.",
+      "ITEM — preserves permanent Item identity and Item Graph semantics; MAT/WT/WQ may reference or adapt Item truth without replacing it; ownership transfer=NO.",
+      "MATTER — preserves authoritative mutable material/volume truth and durable Matter transactions; MAT/WT/WQ intersect through shared identity/operations/query adapters; ownership transfer=NO.",
+      "CONSTRUCTION — preserves construct/part/bond truth; MAT/WT/WQ provide shared contracts without absorbing Construction semantics; ownership transfer=NO.",
+      "G — preserves deterministic procedural natural baseline and Geo feature/field contracts; RF/SD/MAT/WB intersect as contracts and G9 remains separately gated; ownership transfer=NO.",
+      "NX — preserves realtime transport/replication policy; IAM/RF/WB interactions do not transfer gameplay truth, identity truth or authority; ownership transfer=NO.",
+      "AUTHORITY — preserves authority leases/epochs/routing; IAM/RF/SD/WB remain distinct from authority ownership; ownership transfer=NO.",
+      "M0 — preserves the atomic multi-domain commit engine; WT compiles plans into M0 and never becomes a second coordinator; ownership transfer=NO.",
+      "S1 — preserves proposal-only distributed compute; WB may dispatch work but workers remain non-authoritative; ownership transfer=NO.",
+      "R3_M0_MW — preserves persistence/replay/recovery durability semantics; COMPAT/WT integrations must preserve accepted commit/recovery behavior; ownership transfer=NO.",
+      "V0 — composition/presentation/readback consumer only; consumes accepted domain capabilities and creates no private canonical world/item/network truth; ownership transfer=NO.",
+      "H0.3 — DEVELOPMENT multi-worker Work-Order scheduler/control layer only; does not become game-runtime scheduling, gameplay authority, simulation/game-time or production-boot ownership; ownership transfer=NO.",
+      "ECO — preserves Evolutionary Ecology advisory/research semantics; may later consume MAT/TF/LIFE/WB/environment adapters; ownership transfer=NO.",
+      "ECON_FUTURE — reserved future economy/markets/contracts semantics; consumes physical Item/MAT/WT truth without duplicate resource accounting; ownership transfer=NO.",
+      "AI_FUTURE, NAV_FUTURE, ENV_FUTURE, POP_FUTURE, SP_FUTURE and ORG_FUTURE — retain their declared future domain semantics while consuming named R3 foundations through adapters/contracts; no R3 foundation becomes a second owner of those domains; ownership transfer=NO."
+    ],
+    "dependencies": [
+      "PRECONDITION: canonical GLOBAL-P0-2026-08-10-R2 base on main.",
+      "PRECONDITION: H0.1 = H0_1_PASS, C22 = MAIN_INTEGRATED and H0.1 runtime slot = RELEASED.",
+      "PRECONDITION: ITEM remains the stable canonical Item foundation; MATTER and S1 remain stable foundations.",
+      "PRECONDITION: G8 and CH9.6 remain accepted/frozen evidence; their accepted history is not rewritten for R3.",
+      "PRECONDITION: Project Control/Harness risk, review, checkpoint and evidence contracts remain canonical control inputs.",
+      "DOWNSTREAM GATE: Wave A IAM0/IAM1, MAT0, WT0 and WQ0/WQ1 may start only after HUMAN GLOBAL_ARCHITECTURE_PROMOTION from one accepted canonical R3 base.",
+      "DOWNSTREAM GATE: NX.C1 requires canonical R3 + mandatory post-R3 PC0 + fresh H0.2/NX.C1 dispatch from then-current main; CH->NX must be freshly revalidated before NX source acceptance.",
+      "DOWNSTREAM GATE: G9 requires canonical R3 + MAT0; C22 MAIN_INTEGRATED alone does not authorize G9 or NX.C1."
+    ],
+    "non_goals": [
+      "No gameplay/runtime implementation",
+      "No C22/NX/G/CH/ECO runtime mutation",
+      "No architecture promotion in this branch",
+      "No Wave A production branches before the human promotion gate",
+      "No replacement of M0, Item, Matter, Construction, G, NX or S1 truth owners"
+    ],
+    "expected_risks": [
+      "CRITICAL: duplicate canonical truth ownership or an implicit global manager. Mitigation: explicit ownership manifest, forbidden duplicate foundation tokens, named adapter/intersection boundaries and independent ownership review.",
+      "CRITICAL: identity/authority conflation. Mitigation: AccountId/PrincipalId/SessionId remain distinct from NetworkPeerId, PlayerEntityId and AuthorityLeaseId; AUTHZ does not replace domain semantic validation.",
+      "CRITICAL: reference-frame identity becoming authority routing. Mitigation: RF owns frame identity/transforms only; ReferenceFrameId != AuthorityRegionId and AUTHORITY remains the routing/lease owner.",
+      "CRITICAL: simulation time becoming work/development scheduling. Mitigation: TF separates simulation/domain time from wall/network/presentation clocks; WB is work-budget policy and MAIN/HARNESS owns development scheduling.",
+      "CRITICAL: WT becoming a second commit coordinator. Mitigation: WT only compiles WorldOperation/WorldTransactionPlan into existing M0 atomic commit semantics.",
+      "CRITICAL: WQ becoming a canonical world store. Mitigation: actor-scoped query planning through domain adapters; WQ owns no canonical database.",
+      "CRITICAL: WB becoming authority or a game-runtime/development scheduler. Mitigation: WORLD_WORK_BUDGET_NE_AUTHORITY plus explicit separation from MAIN/HARNESS and domain runtime scheduling.",
+      "CRITICAL: V0 becoming a truth owner. Mitigation: V0 is composition/presentation/readback consumer-only and may not introduce private terrain/item/network truth.",
+      "CRITICAL: H0.3 becoming gameplay/runtime scheduling or game-time authority. Mitigation: H0.3 is explicitly DEVELOPMENT Work-Order control only and excluded from production boot/runtime ownership.",
+      "CRITICAL: ECO/ECON identifier collision. Mitigation: ECO is reserved for Evolutionary Ecology; ECON_FUTURE is reserved for economy/markets/contracts.",
+      "CRITICAL: stale SHA, stale registry generation or historical evidence authorizing promotion/new work. Mitigation: stale authorization fails closed; exact current-main facts and external exact-head evidence are required.",
+      "CRITICAL: cross-branch dependency drift. Mitigation: standard/directional PC0, watched/critical_watched paths and fresh dependency revalidation at the consuming checkpoint.",
+      "CRITICAL: post-promotion branches starting from different canonical bases. Mitigation: Wave A branches start from one accepted canonical R3 main base or an explicitly audited descendant.",
+      "CRITICAL: NX.C1 starting before post-R3 gates. Mitigation: NX.C1 remains blocked until canonical R3, mandatory post-R3 PC0 and fresh H0.2/NX.C1 dispatch; CH->NX is revalidated before NX source acceptance."
+    ],
+    "validation_plan": [
+      "Exact current main and registry freshness",
+      "Ownership/intersection PASS",
+      "R2-to-R3 transition audit PASS",
+      "Mechanical Design Brief contract check: required fields from review-policy == present required fields in candidate.design_brief",
+      "Freeze mutable candidate head",
+      "External exact-head Project Control plus standard and directional PC0 NON_RED against the frozen target",
+      "Schema-valid Evidence Map bound to the same frozen target",
+      "Independent Reviewer against the exact frozen target",
+      "Independent Verifier against the same exact frozen target",
+      "Director final gate after durable Independent Reviewer and Independent Verifier PASS evidence",
+      "R3_REFRESHED_CANDIDATE_READY may be declared only after Director final gate PASS",
+      "Separate HUMAN GLOBAL_ARCHITECTURE_PROMOTION after candidate-ready state",
+      "Mandatory post-R3 PC0 after human-authorized promotion"
+    ]
+  },
+  "principles": [
+    "CANONICAL_WORLD_NE_PRESENTATION",
+    "CANONICAL_WORLD_NE_TRANSPORT",
+    "CANONICAL_WORLD_NE_COMPUTE",
+    "ACCOUNT_ID_NE_PLAYER_ENTITY_ID",
+    "PRINCIPAL_ID_NE_NETWORK_PEER_ID",
+    "SESSION_ID_NE_AUTHORITY_LEASE_ID",
+    "AUTHORIZATION_NE_AUTHENTICATION",
+    "REFERENCE_FRAME_ID_NE_AUTHORITY_REGION_ID",
+    "SIMULATION_TIME_NE_WALL_CLOCK",
+    "DOMAIN_TICK_NE_NETWORK_TICK",
+    "WORLD_QUERY_NE_CANONICAL_STORE",
+    "WORLD_WORK_BUDGET_NE_AUTHORITY",
+    "DORMANT_NE_DELETED",
+    "MATERIAL_DEFINITION_ID_NE_RENDER_MATERIAL",
+    "ORGANIZATION_CLAIM_NE_SERVER_SHARD",
+    "AI_PLANNER_NE_AUTHORITY",
+    "LLM_OUTPUT_NE_WORLD_MUTATION",
+    "LOWER_RESOLUTION_MAY_REDUCE_COST_BUT_NOT_TRUTH"
+  ],
+  "p0_cross_domain_foundations": [
+    "IAM",
+    "AUTHZ",
+    "RF",
+    "TF",
+    "SD",
+    "MAT",
+    "WT",
+    "WQ",
+    "LIFE",
+    "WB",
+    "COMPAT",
+    "SEC"
+  ],
+  "existing_truth_owners_preserved": [
+    "MAIN/HARNESS",
+    "A1",
+    "S0",
+    "S1",
+    "M0",
+    "ITEM",
+    "MATTER",
+    "CONSTRUCTION",
+    "G",
+    "NX",
+    "AUTHORITY",
+    "R3_M0_MW"
+  ],
+  "p1_composition_programs": [
+    "GM",
+    "SP",
+    "ENV",
+    "NAV",
+    "AI",
+    "POP",
+    "ECO",
+    "ECON",
+    "ORG",
+    "OPS",
+    "MOD"
+  ],
+  "programs": {
+    "IAM": {
+      "purpose": "Account/principal/session identities separate from peer/world identity.",
+      "activation": "WAVE_A_AFTER_R3_PROMOTION"
+    },
+    "AUTHZ": {
+      "purpose": "Policy decision boundary; domain owners retain semantic validation.",
+      "activation": "WAVE_B_OR_CONTRACT_PREP"
+    },
+    "RF": {
+      "purpose": "Reference-frame identity/transforms separate from authority routing.",
+      "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"
+    },
+    "TF": {
+      "purpose": "Simulation/domain time separate from wall/network/presentation clocks.",
+      "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"
+    },
+    "SD": {
+      "purpose": "Frame-aware WorldAddress without universal ChunkId.",
+      "activation": "AFTER_RF0"
+    },
+    "MAT": {
+      "purpose": "Canonical MaterialDefinitionId; projections remain domain-owned.",
+      "activation": "WAVE_A_AFTER_R3_PROMOTION"
+    },
+    "WT": {
+      "purpose": "Compile WorldOperation intents to existing M0 atomic commit semantics, never a second coordinator.",
+      "activation": "WAVE_A_AFTER_R3_PROMOTION"
+    },
+    "WQ": {
+      "purpose": "Actor-scoped cross-domain query planning without canonical-store ownership.",
+      "activation": "WAVE_A_AFTER_R3_PROMOTION"
+    },
+    "LIFE": {
+      "purpose": "Lifecycle vocabulary preserving canonical identity/truth.",
+      "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"
+    },
+    "WB": {
+      "purpose": "Work budget/quality/dispatch policy without authority ownership or development scheduling.",
+      "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"
+    },
+    "COMPAT": {
+      "purpose": "Schema/protocol/content/migration governance.",
+      "activation": "WAVE_B_AFTER_FIRST_CONTRACT_FREEZE"
+    },
+    "SEC": {
+      "purpose": "Trust boundaries without gameplay-truth ownership.",
+      "activation": "DOCUMENTATION_NOW_PRODUCTION_LATER"
+    },
+    "ECO": {
+      "purpose": "Evolutionary Ecology advisory/research; not economy or production scheduler.",
+      "activation": "EXISTING_ADVISORY_RESEARCH_FRONTIER"
+    },
+    "ECON": {
+      "purpose": "Reserved future physical economy/markets/contracts on Item/MAT/WT truth.",
+      "activation": "RESERVE_ONLY_UNTIL_FOUNDATIONS"
+    }
+  },
+  "consumer_boundaries": {
+    "ITEM": "STABLE_CANONICAL_FOUNDATION",
+    "V0": "COMPOSITION_CONSUMER_NOT_CANONICAL_TRUTH_OWNER",
+    "H0_3": "DEVELOPMENT_MULTI_WORKER_WORK_ORDER_SCHEDULER_NOT_GAME_RUNTIME_SCHEDULER_OR_GAMEPLAY_AUTHORITY_OR_GAME_TIME_OWNER",
+    "ECO": "ADVISORY_RESEARCH_NOT_ECONOMY_OR_PRODUCTION_SCHEDULER",
+    "ECON": "RESERVED_FUTURE_ECONOMY_PROGRAM"
+  },
+  "current_frontier_guards": [
+    "Canonical main is ce40dd075045078ed70924f8d5a1011eb3eff03d at registry generation 78 and remains GLOBAL-P0 R2 until explicit GLOBAL_ARCHITECTURE_PROMOTION.",
+    "H0.1 has H0_1_PASS; C22 is MAIN_INTEGRATED; H0.1 runtime slot is RELEASED. These authorize R3 finalization only, not promotion or NX.C1.",
+    "G8 is accepted/frozen; G9 requires canonical R3 plus MAT0 and fresh post-promotion main.",
+    "CH9.6 is accepted/frozen. CH->NX remains a real future dependency gate and must be freshly revalidated before NX.C1.",
+    "NX.C1 waits canonical R3 plus mandatory post-R3 PC0 and fresh dispatch.",
+    "ECO is Evolutionary Ecology advisory/research; ECON is reserved for economy.",
+    "No stale SHA, registry generation, branch-local state or historical evidence authorizes promotion or new runtime work."
+  ],
+  "audit_results": {
+    "ownership_intersection": "PASS",
+    "r2_to_r3_transition": "PASS",
+    "runtime_files_in_pr": 0,
+    "critical_cross_branch_overlap": 0
+  },
+  "parallel_waves_after_promotion": {
+    "wave_a_max_four": [
+      "IAM0/IAM1",
+      "MAT0",
+      "WT0",
+      "WQ0/WQ1"
+    ],
+    "wave_b": [
+      "RF0/RF1",
+      "TF0",
+      "AUTHZ0",
+      "LIFE0",
+      "WB0/WB1",
+      "COMPAT0"
+    ],
+    "reserve_only": [
+      "distributed SD routing",
+      "production global TF scheduler",
+      "production global WB arbiter",
+      "WT cross-authority commit",
+      "distributed WQ fan-out",
+      "GM production",
+      "SP interplanetary handoff",
+      "ENV large-scale atmosphere",
+      "AI LLM execution",
+      "POP runtime",
+      "ECON markets",
+      "OPS migrations",
+      "dynamic shard split/merge"
+    ]
+  },
+  "external_evidence_contract": [
+    "PROJECT_CONTROL_SUCCESS_ON_EXACT_FROZEN_TARGET",
+    "STANDARD_PC0_NON_RED_ON_EXACT_FROZEN_TARGET",
+    "DIRECTIONAL_PC0_NON_RED_ON_EXACT_FROZEN_TARGET",
+    "SCHEMA_VALID_EVIDENCE_MAP_BOUND_TO_EXACT_FROZEN_TARGET"
+  ],
+  "remaining_promotion_blockers": [
+    "INDEPENDENT_REVIEWER_PASS_REQUIRED",
+    "INDEPENDENT_VERIFIER_PASS_REQUIRED",
+    "DIRECTOR_FINAL_GATE_REQUIRED",
+    "GLOBAL_ARCHITECTURE_PROMOTION_HUMAN_GATE_REQUIRED"
+  ],
+  "target_checkpoint": "R3_REFRESHED_CANDIDATE"
+}
