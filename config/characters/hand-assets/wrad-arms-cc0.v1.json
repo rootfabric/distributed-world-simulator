@@ -2,9 +2,9 @@
   "schema": "planet_simulator.fpe_hand_asset_profile.v1",
   "profile_id": "wrad-arms-cc0",
   "display_name": "WRAD ARMS (wriks)",
-  "status": "ASSET_FILE_REQUIRED_AND_INSPECTION_PENDING",
+  "status": "IMPORTED_INSPECTED_RUNTIME_PROBE_READY",
   "provider": "SKINNED_NAMED_BIND",
-  "hand_layout": "AUTO_INSPECT",
+  "hand_layout": "PAIRED_SINGLE_MESH",
   "license": {
     "spdx": "CC0-1.0",
     "source_url": "https://wriks.itch.io/wrad-arms",
@@ -18,19 +18,98 @@
     "external": true,
     "expected_archive": "WRAD_ARMS.zip",
     "download_page_url": "https://wriks.itch.io/wrad-arms/purchase",
-    "install_note": "Open the download page, choose 'No thanks, just take me to the downloads', download WRAD_ARMS.zip, then rerun IMPORT_FPE_HAND_ASSET.ps1. The importer extracts the GLB and copies/renames it to wrad_arms.glb at the stable scene_path."
+    "install_note": "IMPORT_FPE_HAND_ASSET.ps1 stages only arms.glb plus textures at the stable wrad_arms.glb scene path."
+  },
+  "inspection": {
+    "source_root": "wrad_arms",
+    "mesh_node_path": "arms/Skeleton3D/arms_mesh",
+    "skeleton_node_path": "arms/Skeleton3D",
+    "mesh_count": 1,
+    "skeleton_count": 1,
+    "skin_bind_count": 50,
+    "named_skin_bind_count": 50,
+    "weighted_surface_count": 1,
+    "source_aabb_size": [10.9717683792114, 4.93161582946777, 4.40503948926926]
   },
   "selection": {
-    "mesh_node_paths": [],
+    "mesh_node_paths": ["arms/Skeleton3D/arms_mesh"],
     "mesh_node_paths_by_hand": {},
-    "recursive_mesh_discovery": true,
-    "inspection_required_before_runtime": true
+    "recursive_mesh_discovery": false,
+    "inspection_required_before_runtime": false,
+    "paired_split": {
+      "strategy": "SKIN_BIND_SUFFIX",
+      "suffix_by_hand": {
+        "left": ".l",
+        "right": ".r"
+      },
+      "shared_bind_names": ["root", "head"]
+    }
   },
   "retarget": {
-    "rest_space_policy": "INSPECT_REQUIRED",
-    "bone_map": {},
+    "rest_space_policy": "AUTO_CANONICAL_REBIND",
+    "bone_map": {
+      "root": "HandRoot",
+      "head": "HandRoot"
+    },
+    "bone_map_by_hand": {
+      "right": {
+        "wrist.r": "Palm",
+        "socket.r": "Palm",
+        "finger_thumb1.r": "ThumbProximal",
+        "finger_thumb2.r": "ThumbMiddle",
+        "finger_thumb3.r": "ThumbDistal",
+        "finger_index1.r": "IndexProximal",
+        "finger_index2.r": "IndexMiddle",
+        "finger_index3.r": "IndexDistal",
+        "finger_middle1.r": "MiddleProximal",
+        "finger_middle2.r": "MiddleMiddle",
+        "finger_middle3.r": "MiddleDistal",
+        "finger_ring1.r": "RingProximal",
+        "finger_ring2.r": "RingMiddle",
+        "finger_ring3.r": "RingDistal",
+        "finger_pinky1.r": "PinkyProximal",
+        "finger_pinky2.r": "PinkyMiddle",
+        "finger_pinky3.r": "PinkyDistal"
+      },
+      "left": {
+        "wrist.l": "Palm",
+        "socket.l": "Palm",
+        "finger_thumb1.l": "ThumbProximal",
+        "finger_thumb2.l": "ThumbMiddle",
+        "finger_thumb3.l": "ThumbDistal",
+        "finger_index1.l": "IndexProximal",
+        "finger_index2.l": "IndexMiddle",
+        "finger_index3.l": "IndexDistal",
+        "finger_middle1.l": "MiddleProximal",
+        "finger_middle2.l": "MiddleMiddle",
+        "finger_middle3.l": "MiddleDistal",
+        "finger_ring1.l": "RingProximal",
+        "finger_ring2.l": "RingMiddle",
+        "finger_ring3.l": "RingDistal",
+        "finger_pinky1.l": "PinkyProximal",
+        "finger_pinky2.l": "PinkyMiddle",
+        "finger_pinky3.l": "PinkyDistal"
+      }
+    },
+    "unmapped_used_bind_target_by_hand": {
+      "left": "HandRoot",
+      "right": "HandRoot"
+    },
+    "auto_calibration": {
+      "source_anchor_by_hand": {
+        "left": "wrist.l",
+        "right": "wrist.r"
+      },
+      "source_scale_reference_by_hand": {
+        "left": "finger_middle1.l",
+        "right": "finger_middle1.r"
+      },
+      "target_anchor": "Palm",
+      "target_scale_reference": "MiddleProximal",
+      "uniform_scale_multiplier": 1.0
+    },
     "bind_pose_adjustments": {},
-    "notes": "Populate after INSPECT_FPE_HAND_ASSET.ps1 reports the imported GLB mesh paths and named Skin binds."
+    "notes": "WRAD is one paired 50-bind mesh. Runtime splits triangles by .l/.r Skin weight ownership, compacts used binds, aligns wrist to canonical Palm, estimates uniform scale from wrist-to-middle-base distance and rebuilds bind poses from canonical rest transforms."
   },
   "presentation": {
     "position": [0.0, 0.0, 0.0],
